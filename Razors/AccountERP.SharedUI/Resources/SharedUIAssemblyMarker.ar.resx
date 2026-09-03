@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <data name="AppTitle" xml:space="preserve"><value>نظام الحسابات ERP</value></data>
+  <data name="NavHome" xml:space="preserve"><value>الرئيسية</value></data>
+  <data name="NavAbout" xml:space="preserve"><value>من نحن</value></data>
+  <data name="MainMenuTitle" xml:space="preserve"><value>القائمة الرئيسية</value></data>
+  <data name="ErpModulesSection" xml:space="preserve"><value>وحدات النظام</value></data>
+  <data name="LoadingModules" xml:space="preserve"><value>جاري تحميل القوائم...</value></data>
+  <data name="NoModulesAvailable" xml:space="preserve"><value>لا توجد قوائم متاحة لحسابك. برجاء التواصل مع مسؤول النظام.</value></data>
+  <data name="ComingSoon" xml:space="preserve"><value>قريباً</value></data>
+  <data name="ScreenNotBuiltYet" xml:space="preserve"><value>شاشة "{0}" قيد الإنشاء ولم تُبنَ بعد على الويب</value></data>
+  <data name="HomeSubtitle" xml:space="preserve"><value>تابع أعمالك من مكان واحد — اختر وحدة من القائمة الجانبية أو من الاختصارات أدناه للبدء.</value></data>
+  <data name="HomeQuickAccessTitle" xml:space="preserve"><value>الوحدات المتاحة لك</value></data>
+  <data name="ExpandAllMenus" xml:space="preserve"><value>توسيع الكل</value></data>
+  <data name="CollapseAllMenus" xml:space="preserve"><value>طي الكل</value></data>
+
+  <data name="MenuChangePassword" xml:space="preserve"><value>تغيير كلمة المرور</value></data>
+  <data name="ChangePasswordTitle" xml:space="preserve"><value>تغيير كلمة المرور</value></data>
+  <data name="ChangePasswordSubtitle" xml:space="preserve"><value>حدّث كلمة المرور الخاصة بحسابك</value></data>
+  <data name="OldPassword" xml:space="preserve"><value>كلمة المرور الحالية</value></data>
+  <data name="EnterOldPassword" xml:space="preserve"><value>أدخل كلمة المرور الحالية</value></data>
+  <data name="NewPassword" xml:space="preserve"><value>كلمة المرور الجديدة</value></data>
+  <data name="EnterNewPassword" xml:space="preserve"><value>أدخل كلمة المرور الجديدة</value></data>
+  <data name="ConfirmNewPassword" xml:space="preserve"><value>تأكيد كلمة المرور الجديدة</value></data>
+  <data name="EnterConfirmNewPassword" xml:space="preserve"><value>أعد إدخال كلمة المرور الجديدة</value></data>
+  <data name="SaveNewPassword" xml:space="preserve"><value>حفظ كلمة المرور الجديدة</value></data>
+  <data name="SavingPassword" xml:space="preserve"><value>جاري الحفظ...</value></data>
+  <data name="ChangePasswordSuccess" xml:space="preserve"><value>تم تغيير كلمة المرور بنجاح</value></data>
+  <data name="InvalidOldPassword" xml:space="preserve"><value>كلمة المرور الحالية غير صحيحة</value></data>
+  <data name="NewPasswordAlreadyUsed" xml:space="preserve"><value>كلمة المرور الجديدة مستخدمة بالفعل، برجاء اختيار كلمة مرور أخرى</value></data>
+  <data name="NewPasswordMustDiffer" xml:space="preserve"><value>يجب أن تكون كلمة المرور الجديدة مختلفة عن الحالية</value></data>
+  <data name="PasswordsDoNotMatch" xml:space="preserve"><value>كلمتا المرور غير متطابقتين</value></data>
+  <data name="BackToHome" xml:space="preserve"><value>رجوع للرئيسية</value></data>
+
+  <data name="NavNotifications" xml:space="preserve"><value>الإشعارات</value></data>
+  <data name="NotificationsTitle" xml:space="preserve"><value>الإشعارات</value></data>
+  <data name="NotificationsEmpty" xml:space="preserve"><value>لا توجد إشعارات جديدة</value></data>
+
+  <data name="ToggleTheme" xml:space="preserve"><value>تبديل الثيم</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>فاتح</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>داكن</value></data>
+  <data name="ThemesTitle" xml:space="preserve"><value>الثيمات</value></data>
+  <data name="ThemeModeLabel" xml:space="preserve"><value>الوضع</value></data>
+  <data name="ThemeColorLabel" xml:space="preserve"><value>اللون</value></data>
+
+  <data name="ChangeLanguage" xml:space="preserve"><value>تغيير اللغة</value></data>
+
+  <data name="Login" xml:space="preserve"><value>تسجيل الدخول</value></data>
+  <data name="Logout" xml:space="preserve"><value>تسجيل الخروج</value></data>
+  <data name="LoginTitle" xml:space="preserve"><value>تسجيل الدخول - نظام الحسابات ERP</value></data>
+  <data name="Username" xml:space="preserve"><value>اسم المستخدم</value></data>
+  <data name="Password" xml:space="preserve"><value>كلمة المرور</value></data>
+  <data name="EnterUsername" xml:space="preserve"><value>أدخل اسم المستخدم</value></data>
+  <data name="EnterPassword" xml:space="preserve"><value>أدخل كلمة المرور</value></data>
+  <data name="LoginButton" xml:space="preserve"><value>دخول النظام</value></data>
+  <data name="VerifyingLogin" xml:space="preserve"><value>جاري التحقق...</value></data>
+  <data name="InvalidCredentials" xml:space="preserve"><value>اسم المستخدم أو كلمة المرور غير صحيحة، أو الحساب غير نشط.</value></data>
+  <data name="SystemError" xml:space="preserve"><value>حدث خطأ في النظام: {0}</value></data>
+  <data name="WelcomeUser" xml:space="preserve"><value>مرحباً، {0}</value></data>
+  <data name="LoginSubtitle" xml:space="preserve"><value>سجّل الدخول للمتابعة إلى حسابك</value></data>
+  <data name="LoginWelcomeTitle" xml:space="preserve"><value>أدر أعمالك بثقة</value></data>
+  <data name="LoginWelcomeSubtitle" xml:space="preserve"><value>نظام واحد للمحاسبة والمخزون والمبيعات والفاتورة الإلكترونية — مصمم على طبيعة عملك الفعلية.</value></data>
+  <data name="LoginFeatureAccounting" xml:space="preserve"><value>دفتر أستاذ عام ومحاسبة متعددة الفروع</value></data>
+  <data name="LoginFeatureInventory" xml:space="preserve"><value>إدارة المخزون والمخازن</value></data>
+  <data name="LoginFeatureMultiBranch" xml:space="preserve"><value>تعدد العملات والفروع بالتصميم</value></data>
+  <data name="ShowPassword" xml:space="preserve"><value>إظهار كلمة المرور</value></data>
+  <data name="HidePassword" xml:space="preserve"><value>إخفاء كلمة المرور</value></data>
+  <data name="CopyrightText" xml:space="preserve"><value>© {0} {1}. جميع الحقوق محفوظة.</value></data>
+
+  <data name="AboutUsTitle" xml:space="preserve"><value>عن نظام الحسابات ERP</value></data>
+  <data name="AboutUsBody" xml:space="preserve"><value>نظام الحسابات ERP هو نظام محاسبي ومخزني متعدد الوحدات، متكامل مع المبيعات والمشتريات والضرائب والفاتورة الإلكترونية وغيرها. هذه النسخة على الويب والموبايل والديسك توب هي إعادة بناء حديثة للنظام الأصلي باستخدام تقنية Blazor.</value></data>
+
+  <data name="Save" xml:space="preserve"><value>حفظ</value></data>
+  <data name="Cancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="Yes" xml:space="preserve"><value>نعم</value></data>
+  <data name="No" xml:space="preserve"><value>لا</value></data>
+
+  <data name="CustomerGroupsTitle" xml:space="preserve"><value>مجموعات العملاء</value></data>
+  <data name="SupplierGroupsTitle" xml:space="preserve"><value>مجموعات الموردين</value></data>
+  <data name="GroupName" xml:space="preserve"><value>إسم المجموعة</value></data>
+  <data name="AddGroup" xml:space="preserve"><value>مجموعة جديدة</value></data>
+  <data name="NoGroupsYet" xml:space="preserve"><value>لا توجد مجموعات لعرضها حتى الآن.</value></data>
+  <data name="GroupNameRequired" xml:space="preserve"><value>الرجاء إدخال إسم المجموعة</value></data>
+  <data name="GroupNameAlreadyUsed" xml:space="preserve"><value>الإسم مستخدم من قبل</value></data>
+  <data name="GroupAdded" xml:space="preserve"><value>تمت إضافة المجموعة بنجاح</value></data>
+  <data name="GroupDeleted" xml:space="preserve"><value>تم حذف المجموعة بنجاح</value></data>
+  <data name="DeleteGroupTitle" xml:space="preserve"><value>حذف المجموعة</value></data>
+  <data name="DeleteGroupConfirm" xml:space="preserve"><value>هل أنت متأكد من حذف المجموعة "{0}"؟</value></data>
+  <data name="GroupInUseCannotDelete" xml:space="preserve"><value>لا يمكن حذف المجموعة لوجود عملاء/موردين مرتبطين بها</value></data>
+</root>

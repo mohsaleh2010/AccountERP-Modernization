@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <data name="AppTitle" xml:space="preserve"><value>Account ERP</value></data>
+  <data name="NavHome" xml:space="preserve"><value>Home</value></data>
+  <data name="NavAbout" xml:space="preserve"><value>About Us</value></data>
+  <data name="MainMenuTitle" xml:space="preserve"><value>Main Menu</value></data>
+  <data name="ErpModulesSection" xml:space="preserve"><value>ERP Modules</value></data>
+  <data name="LoadingModules" xml:space="preserve"><value>Loading modules...</value></data>
+  <data name="NoModulesAvailable" xml:space="preserve"><value>No modules available for your account. Please contact the administrator.</value></data>
+  <data name="ComingSoon" xml:space="preserve"><value>Coming soon</value></data>
+  <data name="ScreenNotBuiltYet" xml:space="preserve"><value>The "{0}" screen is not built on the web yet</value></data>
+  <data name="HomeSubtitle" xml:space="preserve"><value>Manage your business from one place — pick a module from the sidebar or the shortcuts below to get started.</value></data>
+  <data name="HomeQuickAccessTitle" xml:space="preserve"><value>Your available modules</value></data>
+  <data name="ExpandAllMenus" xml:space="preserve"><value>Expand all</value></data>
+  <data name="CollapseAllMenus" xml:space="preserve"><value>Collapse all</value></data>
+
+  <data name="MenuChangePassword" xml:space="preserve"><value>Change Password</value></data>
+  <data name="ChangePasswordTitle" xml:space="preserve"><value>Change Password</value></data>
+  <data name="ChangePasswordSubtitle" xml:space="preserve"><value>Update your account password</value></data>
+  <data name="OldPassword" xml:space="preserve"><value>Current Password</value></data>
+  <data name="EnterOldPassword" xml:space="preserve"><value>Enter current password</value></data>
+  <data name="NewPassword" xml:space="preserve"><value>New Password</value></data>
+  <data name="EnterNewPassword" xml:space="preserve"><value>Enter new password</value></data>
+  <data name="ConfirmNewPassword" xml:space="preserve"><value>Confirm New Password</value></data>
+  <data name="EnterConfirmNewPassword" xml:space="preserve"><value>Re-enter new password</value></data>
+  <data name="SaveNewPassword" xml:space="preserve"><value>Save New Password</value></data>
+  <data name="SavingPassword" xml:space="preserve"><value>Saving...</value></data>
+  <data name="ChangePasswordSuccess" xml:space="preserve"><value>Password changed successfully</value></data>
+  <data name="InvalidOldPassword" xml:space="preserve"><value>Current password is incorrect</value></data>
+  <data name="NewPasswordAlreadyUsed" xml:space="preserve"><value>This password is already in use, please choose a different one</value></data>
+  <data name="NewPasswordMustDiffer" xml:space="preserve"><value>New password must be different from the current password</value></data>
+  <data name="PasswordsDoNotMatch" xml:space="preserve"><value>Passwords do not match</value></data>
+  <data name="BackToHome" xml:space="preserve"><value>Back to Home</value></data>
+
+  <data name="NavNotifications" xml:space="preserve"><value>Notifications</value></data>
+  <data name="NotificationsTitle" xml:space="preserve"><value>Notifications</value></data>
+  <data name="NotificationsEmpty" xml:space="preserve"><value>No new notifications</value></data>
+
+  <data name="ToggleTheme" xml:space="preserve"><value>Toggle theme</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>Light</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>Dark</value></data>
+  <data name="ThemesTitle" xml:space="preserve"><value>Themes</value></data>
+  <data name="ThemeModeLabel" xml:space="preserve"><value>Mode</value></data>
+  <data name="ThemeColorLabel" xml:space="preserve"><value>Color</value></data>
+
+  <data name="ChangeLanguage" xml:space="preserve"><value>Change language</value></data>
+
+  <data name="Login" xml:space="preserve"><value>Login</value></data>
+  <data name="Logout" xml:space="preserve"><value>Logout</value></data>
+  <data name="LoginTitle" xml:space="preserve"><value>Account ERP Login</value></data>
+  <data name="Username" xml:space="preserve"><value>Username</value></data>
+  <data name="Password" xml:space="preserve"><value>Password</value></data>
+  <data name="EnterUsername" xml:space="preserve"><value>Enter username</value></data>
+  <data name="EnterPassword" xml:space="preserve"><value>Enter password</value></data>
+  <data name="LoginButton" xml:space="preserve"><value>Login to System</value></data>
+  <data name="VerifyingLogin" xml:space="preserve"><value>Verifying...</value></data>
+  <data name="InvalidCredentials" xml:space="preserve"><value>Invalid username, password, or inactive account.</value></data>
+  <data name="SystemError" xml:space="preserve"><value>System error: {0}</value></data>
+  <data name="WelcomeUser" xml:space="preserve"><value>Welcome, {0}</value></data>
+  <data name="LoginSubtitle" xml:space="preserve"><value>Sign in to continue to your account</value></data>
+  <data name="LoginWelcomeTitle" xml:space="preserve"><value>Run your business with confidence</value></data>
+  <data name="LoginWelcomeSubtitle" xml:space="preserve"><value>One system for accounting, inventory, sales, and e-invoicing — built for how your business actually works.</value></data>
+  <data name="LoginFeatureAccounting" xml:space="preserve"><value>General ledger &amp; multi-branch accounting</value></data>
+  <data name="LoginFeatureInventory" xml:space="preserve"><value>Inventory &amp; warehouse management</value></data>
+  <data name="LoginFeatureMultiBranch" xml:space="preserve"><value>Multi-currency, multi-branch by design</value></data>
+  <data name="ShowPassword" xml:space="preserve"><value>Show password</value></data>
+  <data name="HidePassword" xml:space="preserve"><value>Hide password</value></data>
+  <data name="CopyrightText" xml:space="preserve"><value>© {0} {1}. All rights reserved.</value></data>
+
+  <data name="AboutUsTitle" xml:space="preserve"><value>About Account ERP</value></data>
+  <data name="AboutUsBody" xml:space="preserve"><value>Account ERP is a multi-module accounting and inventory management system, integrated with sales, purchasing, taxes, e-invoicing, and more. This web/mobile/desktop experience is a modern rebuild of the original desktop system, built with Blazor.</value></data>
+
+  <data name="Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Yes" xml:space="preserve"><value>Yes</value></data>
+  <data name="No" xml:space="preserve"><value>No</value></data>
+
+  <data name="CustomerGroupsTitle" xml:space="preserve"><value>Customer Groups</value></data>
+  <data name="SupplierGroupsTitle" xml:space="preserve"><value>Supplier Groups</value></data>
+  <data name="GroupName" xml:space="preserve"><value>Group Name</value></data>
+  <data name="AddGroup" xml:space="preserve"><value>New Group</value></data>
+  <data name="NoGroupsYet" xml:space="preserve"><value>No groups to display yet.</value></data>
+  <data name="GroupNameRequired" xml:space="preserve"><value>Please enter a group name</value></data>
+  <data name="GroupNameAlreadyUsed" xml:space="preserve"><value>This name is already in use</value></data>
+  <data name="GroupAdded" xml:space="preserve"><value>Group added successfully</value></data>
+  <data name="GroupDeleted" xml:space="preserve"><value>Group deleted successfully</value></data>
+  <data name="DeleteGroupTitle" xml:space="preserve"><value>Delete Group</value></data>
+  <data name="DeleteGroupConfirm" xml:space="preserve"><value>Are you sure you want to delete the group "{0}"?</value></data>
+  <data name="GroupInUseCannotDelete" xml:space="preserve"><value>This group cannot be deleted because it is assigned to one or more customers/suppliers</value></data>
+</root>

@@ -1,0 +1,179 @@
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI
+@using AccountERP.SharedUI.Services
+@inject MenuStateService MenuState
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject NotificationCenterService NotificationCenter
+@implements IDisposable
+
+<MudNavMenu Bordered="true" Class="pt-2 sidebar-menu">
+    @* 1. الرئيسية: متاحة دائماً بغض النظر عن الصلاحيات *@
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">@Tr("NavHome")</MudNavLink>
+
+    <MudDivider Class="my-2" />
+    <MudText Typo="Typo.caption" Class="px-4 sidebar-section-label">@Tr("ErpModulesSection")</MudText>
+
+    @* 2. القوائم الديناميكية حسب صلاحيات المستخدم المسجّل دخوله فعلياً (SysConfigMenus + SysConfigMenusPERMATIONS)،
+         بنفس أسلوب القائمة الجانبية القابلة للطي (MudNavGroup لكل وحدة رئيسية تحتوي على شاشاتها الفرعية) *@
+    @if (MenuState?.UserAllowedMenus != null && MenuState.UserAllowedMenus.Any())
+    {
+        @foreach (var menu in MenuState.UserAllowedMenus.Where(m => m != null && m.ParentId == 0))
+        {
+            var children = MenuState.UserAllowedMenus.Where(c => c.ParentId == menu.Menu_ID).ToList();
+
+            @if (children.Any())
+            {
+                @* 🟢 الطي/التوسيع أصبح مستقلاً لكل وحدة رئيسية (عبر MenuState.ExpandedMenuIds) بدلاً من
+                   accordion يفتح وحدة واحدة فقط فى كل مرة (كان مربوطاً بـ SelectedMainMenuId) - يلزم هذا
+                   حتى يعمل زر "توسيع/طي الكل" فى رأس الـ Drawer (MainLayoutMud) على كل الوحدات معاً.
+                   SelectMainMenu لا تزال تُستدعى عند التوسّع للحفاظ على معنى "الوحدة النشطة حالياً" المستخدَم
+                   فى أماكن أخرى (مثل Home.razor)، لكنها لم تعد تتحكم فى حالة الطي/التوسيع نفسها. *@
+                <MudNavGroup Title="@menu.GetLocalizedDescription(LangService.CurrentLanguage)" Icon="@GetModuleIcon(menu.Description)"
+                             Expanded="@MenuState.IsMenuExpanded(menu.Menu_ID)" ExpandedChanged="@((bool v) => OnGroupExpandedChanged(menu.Menu_ID, v))">
+                    @* 🟢 MenuNode يتكرر ذاتياً لأي عمق (فرع داخل فرع...) بدلاً من الاقتصار على مستوى فرعي واحد فقط *@
+                    @foreach (var child in children)
+                    {
+                        <MenuNode Menu="@child" />
+                    }
+                </MudNavGroup>
+            }
+            else if (KnownRoutes.IsImplemented(menu.KeysData))
+            {
+                <MudNavLink Href="@menu.KeysData" Match="NavLinkMatch.Prefix"
+                            OnClick="@(() => MenuState.SelectMainMenu(menu.Menu_ID))"
+                            Icon="@GetModuleIcon(menu.Description)">
+                    @menu.GetLocalizedDescription(LangService.CurrentLanguage)
+                </MudNavLink>
+            }
+            else
+            {
+                @* 🟢 بدون Href: يمنع تنقّلاً كاملاً (ودائرة/Circuit جديدة تُعيد تحميل كل القوائم من قاعدة
+                   البيانات من الصفر) لأي وحدة رئيسية بلا شاشة Blazor حقيقية بعد - راجع KnownRoutes.cs. *@
+                <MudNavLink OnClick="@(() => ShowNotImplemented(menu.GetLocalizedDescription(LangService.CurrentLanguage)))"
+                            Icon="@GetModuleIcon(menu.Description)" Class="menu-node-pending">
+                    @menu.GetLocalizedDescription(LangService.CurrentLanguage)
+                    @* 🟢 Text="..." بدلاً من ChildContent: راجع نفس التعليق فى Home.razor - MudChip لا يُحدّث
+                       نص ChildContent بشكل موثوق عند تبديل اللغة فقط، بعكس خاصية Text العادية. *@
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Class="ms-2 menu-node-pending-chip" Text="@Tr("ComingSoon")" />
+                </MudNavLink>
+            }
+        }
+    }
+    else
+    {
+        <MudText Typo="Typo.body2" Class="px-4 py-2 text-muted fst-italic">
+            @Tr("NoModulesAvailable")
+        </MudText>
+    }
+</MudNavMenu>
+
+@code {
+    protected override void OnInitialized()
+    {
+        MenuState.OnMainMenuChanged += OnMenuChanged;
+        // 🟢 لا نعتمد على أن يُعيد MainLayoutMud رسم هذا المكوّن تلقائياً عند تبديل اللغة (لوحظ أنه لا يحدث
+        // بشكل موثوق داخل MudDrawer) - اشتراك مباشر هنا يضمن إعادة رسم السايد بار فوراً بغض النظر عن ذلك.
+        LangService.OnLanguageChanged += OnMenuChanged;
+        // 🟢 نفس السبب بالضبط، لكن لحالة أخرى: بعد Refresh كامل للمتصفح مع وجود كوكي دخول موقّع، يُستعاد
+        // الدخول فى MainLayoutMud.TryRestoreSessionFromCookieAsync (AuthService.RestoreSessionAsync) بشكل
+        // غير متزامن - يُملأ MenuState.UserAllowedMenus فعلياً وتُطلَق OnAuthChanged، لكن هذا المكوّن كان
+        // يعتمد فقط على رندرة MainLayoutMud المتتالية (غير موثوقة داخل MudDrawer كما هو موثّق أعلاه)
+        // فيبقى السايد بار عالقاً على أول رندرة له (بلا قوائم، قبل اكتمال الاستعادة) - "لا توجد قوائم متاحة
+        // لحسابك" رغم أن المستخدم مسجّل دخوله فعلاً - راجع MODERNIZATION_NOTES.md.
+        MenuState.OnAuthChanged += OnMenuChanged;
+        // 🟢 يعيد رسم السايد بار (وبالتبعية كل عقد MenuNode المتداخلة أسفله) عند الضغط على زر "توسيع/طي
+        // الكل" فى رأس الـ Drawer - راجع MenuStateService.ExpandAllMenus/CollapseAllMenus.
+        MenuState.OnExpandCollapseAll += OnMenuChanged;
+    }
+
+    private void OnMenuChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnGroupExpandedChanged(long menuId, bool expanded)
+    {
+        MenuState.SetMenuExpanded(menuId, expanded);
+        if (expanded)
+        {
+            MenuState.SelectMainMenu(menuId);
+        }
+    }
+
+    // 🟢 Tr(...) بدلاً من Lang[...] مباشرة (اسم مختلف عمداً عن "T" لتفادي أي تضارب مع خاصية النوع العام
+    // T="string" على MudChip فى نفس الشجرة): IStringLocalizer.WithCulture(...) لم يعد موجوداً
+    // فى net10.0 (Obsolete/محذوفة)، فنُبدّل CultureInfo.CurrentUICulture مؤقتاً لثقافة LangService الصحيحة
+    // (LangService.CurrentCultureInfo) وقت استدعاء Lang[...] فقط ثم نُعيدها - بدلاً من الاعتماد على أنها
+    // ضُبطت مسبقاً بشكل صحيح على الخيط الفعلي وقت الرندرة (لوحظ أنها لا تُضبط بشكل موثوق فى هذا المكوّن رغم
+    // ShouldRender). كانت نصوص "قيد الإنشاء"/"قريباً" هنا تبقى بلغتها القديمة بعد تبديل اللغة رغم أن القيم
+    // الأخرى المبنية على LangService.CurrentLanguage مباشرة (مثل GetLocalizedDescription) كانت تتحدّث بشكل
+    // صحيح فى نفس الرندرة - راجع MODERNIZATION_NOTES.md.
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private void ShowNotImplemented(string? description)
+    {
+        var message = Tr("ScreenNotBuiltYet", description ?? "");
+        Snackbar.Add(message, MudBlazor.Severity.Info);
+        NotificationCenter.Add(message, MudBlazor.Severity.Info);
+    }
+
+    // 🟢 لا يوجد عمود أيقونة في SysConfigMenus/SysConfigMenusPERMATIONS، فنحدد أيقونة مناسبة لكل وحدة
+    // بمطابقة كلمات مفتاحية شائعة (عربي/إنجليزي) في اسم القائمة نفسه - بنفس روح السايد بار فى القالب
+    // المرجعي (templatecrm) حيث لكل قسم أيقونة خاصة به، مع أيقونة افتراضية عامة لأي قائمة غير معروفة.
+    private static readonly (string[] Keywords, string Icon)[] ModuleIconMap = new (string[], string)[]
+    {
+        (new[] { "حساب", "قيود", "استاذ", "ميزان", "account", "ledger", "journal", "trial" }, Icons.Material.Filled.AccountBalance),
+        (new[] { "مخزن", "صنف", "اصناف", "مخزون", "store", "inventory", "item", "warehouse" }, Icons.Material.Filled.Inventory2),
+        (new[] { "مبيع", "فاتورة بيع", "sale", "sales" }, Icons.Material.Filled.PointOfSale),
+        (new[] { "مشتري", "شراء", "purchase", "buying" }, Icons.Material.Filled.ShoppingCart),
+        (new[] { "عميل", "عملاء", "customer", "client" }, Icons.Material.Filled.People),
+        (new[] { "مورد", "موردين", "supplier", "vendor" }, Icons.Material.Filled.Store),
+        (new[] { "تقرير", "report" }, Icons.Material.Filled.Assessment),
+        (new[] { "ضريب", "فاتورة الكترونية", "tax", "einvoice", "e-invoice" }, Icons.Material.Filled.Receipt),
+        (new[] { "بنك", "شيك", "خزينة", "صندوق", "bank", "check", "cash", "treasury" }, Icons.Material.Filled.AccountBalanceWallet),
+        (new[] { "سيار", "صيانة", "ورشة", "car", "workshop", "maintenance" }, Icons.Material.Filled.CarRepair),
+        (new[] { "حجز", "سياح", "فندق", "طيران", "reservation", "tourism", "hotel", "flight" }, Icons.Material.Filled.FlightTakeoff),
+        (new[] { "موارد بشرية", "موظف", "حضور", "انصراف", "hr", "employee", "attendance" }, Icons.Material.Filled.Badge),
+        (new[] { "انتاج", "تصنيع", "نسيج", "production", "manufacturing" }, Icons.Material.Filled.PrecisionManufacturing),
+        (new[] { "مقاول", "عقار", "مشروع", "construction", "real estate", "project" }, Icons.Material.Filled.Apartment),
+        (new[] { "اعداد", "صلاحي", "مستخدم", "setting", "permission", "user", "admin" }, Icons.Material.Filled.Settings),
+        (new[] { "باركود", "bar code", "barcode" }, Icons.Material.Filled.QrCode2),
+    };
+
+    private static string GetModuleIcon(string? description)
+    {
+        if (string.IsNullOrWhiteSpace(description)) return Icons.Material.Filled.Apps;
+
+        foreach (var (keywords, icon) in ModuleIconMap)
+        {
+            if (keywords.Any(k => description.Contains(k, StringComparison.OrdinalIgnoreCase)))
+            {
+                return icon;
+            }
+        }
+
+        return Icons.Material.Filled.Apps;
+    }
+
+    public void Dispose()
+    {
+        MenuState.OnMainMenuChanged -= OnMenuChanged;
+        LangService.OnLanguageChanged -= OnMenuChanged;
+        MenuState.OnAuthChanged -= OnMenuChanged;
+        MenuState.OnExpandCollapseAll -= OnMenuChanged;
+    }
+}

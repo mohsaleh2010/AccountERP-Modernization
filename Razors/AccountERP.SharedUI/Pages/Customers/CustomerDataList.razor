@@ -1,0 +1,133 @@
+﻿@page "/customers/list"
+@using Microsoft.AspNetCore.Components.Web
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.ViewModels
+@inject AccountERP.SharedUI.LanguageService LangService
+
+@* 1. القراءة مباشرة من الخدمة المحقونة *@
+<div class="container-fluid" style="direction: @(LangService.IsArabic ? "rtl" : "ltr"); text-align: @(LangService.IsArabic ? "right" : "left");">
+
+    <!-- عنوان الشاشة والشريط العلوي -->
+    <div class="row bg-light p-2 mb-3 border-bottom align-items-center">
+        <div class="col-md-4">
+            <h5 class="m-0 text-primary fw-bold">@(LangService.IsArabic ? "بيانات العملاء" : "Customer Data")</h5>
+        </div>
+        <div class="col-md-8 text-@(LangService.IsArabic ? "left" : "right")">
+            <button class="btn btn-primary px-4 mx-1" @onclick="LoadData">@(LangService.IsArabic ? "عرض" : "View")</button>
+            <button class="btn btn-secondary px-4 mx-1" @onclick="CloseScreen">@(LangService.IsArabic ? "غلق" : "Close")</button>
+        </div>
+    </div>
+
+    <!-- فلاتر البحث والفلترة -->
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body bg-light">
+            <div class="row g-3 align-items-center">
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">@(LangService.IsArabic ? "العميل:" : "Customer:")</label>
+                    <select class="form-select" @bind="viewModel.SelectedCustomerId">
+                        <option value="">@(LangService.IsArabic ? "التوحيد والنور (فرع المهندسين)" : "Al-Tawheed Wal-Noor (Mohandessin)")</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">@(LangService.IsArabic ? "الاسم:" : "Name:")</label>
+                    <input type="text" class="form-control text-@(LangService.IsArabic ? "end" : "start")" @bind="viewModel.SearchName" placeholder="@(LangService.IsArabic ? "ابحث هنا..." : "Search here...")" />
+                </div>
+
+                <div class="col-md-4 d-flex align-items-center justify-content-around pt-4">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="custType" id="type1" value="Misc" checked @onchange="@(() => viewModel.CustomerTypeFilter = "Misc")" />
+                        <label class="form-check-label ms-2 me-2" for="type1">@(LangService.IsArabic ? "عملاء متنوعون" : "Misc Customers")</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="custType" id="type2" value="Regular" @onchange="@(() => viewModel.CustomerTypeFilter = "Regular")" />
+                        <label class="form-check-label ms-2 me-2" for="type2">@(LangService.IsArabic ? "عملاء دائمون" : "Regular Customers")</label>
+                    </div>
+                </div>
+
+                <div class="col-md-2 pt-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="isActive" @bind="viewModel.IsActiveOnly" />
+                        <label class="form-check-label ms-2 me-2 fw-bold" for="isActive">@(LangService.IsArabic ? "الفاعلين" : "Active Only")</label>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- جدول عرض البيانات (DataGrid) -->
+    <div class="table-responsive border rounded shadow-sm bg-white" style="max-height: 550px; overflow-y: auto;">
+        <table class="table table-striped table-hover m-0 table-bordered align-middle">
+            <thead class="table-primary text-center sticky-top">
+                <tr>
+                    <th style="width: 5%">#</th>
+                    <th style="width: 35%">@(LangService.IsArabic ? "اسم العميل" : "Customer Name")</th>
+                    <th style="width: 30%">@(LangService.IsArabic ? "العنوان" : "Address")</th>
+                    <th style="width: 15%">@(LangService.IsArabic ? "السجل التجاري" : "Commercial Register")</th>
+                    <th style="width: 15%">@(LangService.IsArabic ? "رقم التسجيل الضريبي" : "Tax No")</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (viewModel.CustomersLstVM == null || !viewModel.CustomersLstVM.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            @(LangService.IsArabic ? "لا توجد بيانات لعرضها. اضغط على \"عرض\" لجلب البيانات." : "No data available. Click \"View\" to load data.")
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    int index = 1;
+                    foreach (var customer in viewModel.CustomersLstVM)
+                    {
+                        <tr>
+                            <td class="text-center fw-bold bg-light">@index</td>
+                            <td class="fw-bold text-primary">@customer.Name</td>
+                            <td>@customer.Address</td>
+                            <td class="text-center">@customer.Commercial_Register</td>
+                            <td class="text-center text-danger fw-bold">@customer.Tax_No</td>
+                        </tr>
+                        index++;
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private CustomerListViewModel viewModel = new CustomerListViewModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // ❌ تم إزالة السطر القديم الذي كان يعيد تعيين المتغير المحلي ويسبب التضارب
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var customers = await Task.Run(() =>
+        {
+            CustomerCLS cs = new CustomerCLS();
+            AccountModelsLib.operations opp = new AccountModelsLib.operations();
+            string NameSearch = string.IsNullOrEmpty(viewModel.SearchName) ? "" : viewModel.SearchName;
+            int Active = viewModel.IsActiveOnly ? 1 : -1;
+            int General_Customer_Flage = 0;
+
+            viewModel.CustomersLstVM = cs.GetCustomersOnlyList(ref opp, NameSearch, Active, General_Customer_Flage);
+            return viewModel.CustomersLstVM;
+        });
+
+        viewModel.CustomersLstVM = customers;
+        StateHasChanged();
+    }
+
+    private void CloseScreen()
+    {
+        // منطق إغلاق الشاشة
+    }
+}

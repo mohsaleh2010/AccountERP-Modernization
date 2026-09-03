@@ -1,0 +1,51 @@
+/* 🟢 تم استبدال هذا الملف بالكامل: كان يحتوي CSS بالكامل من مكوّن Bootstrap القديم الميت (NavMenu.razor)
+   بأصناف (.nav-item, .navbar-toggler, .bi-*) لا وجود لها إطلاقاً فى الـ DOM الفعلي لـ MudNavMenu/
+   MudNavLink/MudNavGroup - أي أنه لم يكن يُطبَّق أي تنسيق حقيقي على القائمة الجانبية الحالية على الإطلاق،
+   وهو السبب الجوهري وراء "شكل القائمة سيء". هذا الملف الآن يستهدف أصناف MudBlazor الفعلية عبر ::deep،
+   ويستخدم متغيرات ثيم MudBlazor (لا ألوان ثابتة) ليعمل بشكل صحيح فى الوضعين الفاتح والداكن. */
+
+.sidebar-menu {
+    padding-inline: 0.5rem;
+}
+
+.sidebar-section-label {
+    color: var(--mud-palette-text-secondary);
+    letter-spacing: 0.02em;
+    display: block;
+    padding-block: 0.25rem 0.5rem;
+}
+
+/* إيقاع تباعد متّسق بين عناصر المستوى الأول (8px scale) وحجم لمس مريح (≥44px) */
+.sidebar-menu ::deep > .mud-nav-item > .mud-nav-link {
+    min-height: 44px;
+    border-radius: 8px;
+    margin-block: 2px;
+}
+
+/* كل مستوى أعمق فى الشجرة يُزاح بمقدار ثابت بدل الاعتماد فقط على تعشيش MudBlazor الافتراضي،
+   ليكون واضحاً بصرياً أي عنصر تابع لأي عنصر (هرمية واضحة بدل قائمة مسطحة الشكل) */
+.sidebar-menu ::deep .mud-nav-group .mud-nav-group .mud-nav-link {
+    padding-inline-start: 2.25rem;
+}
+
+.sidebar-menu ::deep .mud-nav-group .mud-nav-group .mud-nav-group .mud-nav-link {
+    padding-inline-start: 3.25rem;
+}
+
+/* شاشات لم تُبنَ بعد على الويب (بدون Href - راجع KnownRoutes.cs): مظهر مخفّف واضح مع مؤشر
+   "غير قابل للتنقّل الحقيقي" حتى لا يشعر المستخدم أن الرابط "لا يستجيب" بلا سبب */
+.sidebar-menu ::deep .menu-node-pending,
+.menu-node-pending {
+    opacity: 0.72;
+}
+
+.sidebar-menu ::deep .menu-node-pending-chip,
+.menu-node-pending-chip {
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+/* تمييز بصري خفيف لعناوين المجموعات القابلة للطي عن الشاشات النهائية تحتها */
+.sidebar-menu ::deep .menu-node-group > .mud-nav-link {
+    font-weight: 600;
+}

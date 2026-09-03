@@ -1,0 +1,203 @@
+@* 🎨 لوحة اختيار الثيم (فاتح/داكن + لون أساسي) - يُستخدم من MainLayoutMud وشاشة تسجيل الدخول (AuthLayout)
+   عبر زر واحد بدل تبديل فاتح/داكن المباشر السابق، بنفس فكرة قائمة الثيمات فى مشروع MudBlazorCrmApp النموذجي.
+
+   🐛 ملاحظة مهمة: أول نسخة كانت تستخدم MudDrawer/MudOverlay، لكن تبيّن على الموبايل (عدة متصفحات) أن اللوحة
+   كانت تُفتح ولا تُغلق أبداً حتى بالضغط على X. السبب: MudDrawer يفترض ضمنياً أنه Child مباشر لـ MudLayout
+   (هو مصمم أصلاً ليعمل جنباً إلى جنب مع MudMainContent) - وبدون MudLayout كأب مباشر يرسم نفسه بـ
+   position:absolute بدل position:fixed (تأكدنا من هذا فعلياً عبر فحص DOM/computed style)، فيتموضع بالنسبة
+   لطول الصفحة كاملة لا الشاشة الظاهرة، فينزلق خارج الشاشة الفعلية على الموبايل (بسبب اختلاف ارتفاع شريط
+   العنوان الديناميكي) رغم أن الـ Overlay (المُثبّت بشكل صحيح دائماً) يبقى ظاهراً معتماً فوق الصفحة - فيبدو
+   للمستخدم وكأن اللوحة "عالقة مفتوحة" لأن العنصر الحقيقي القابل للنقر (زر X) لم يعد فعلياً أمامه.
+   الحل: بناء اللوحة بعناصر HTML/CSS مباشرة بدل MudDrawer/MudOverlay، بـ position:fixed صريح دائماً
+   (لا يعتمد على وجود MudLayout كأب)، باستخدام خاصية CSS المنطقية inset-inline-end حتى تنعكس تلقائياً
+   يمين/يسار حسب اتجاه اللغة (RTL/LTR) بدون أي جافاسكريبت. *@
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@inject ThemeService ThemeService
+@inject LanguageService LangService
+@inject AppSettings Settings
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<div class="themes-menu-overlay @(Open ? "open" : "")" @onclick="@(() => SetOpenAsync(false))"></div>
+
+<div class="themes-menu-panel @(Open ? "open" : "")">
+    <div class="d-flex align-items-center pa-4">
+        <MudText Typo="Typo.subtitle1" Class="fw-bold">@Tr("ThemesTitle")</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="@(() => SetOpenAsync(false))" />
+    </div>
+    <MudDivider Style="flex:none;" />
+
+    <div class="pa-4">
+        <MudText Typo="Typo.body2" Class="fw-bold mb-2">@Tr("ThemeModeLabel")</MudText>
+        <MudGrid Spacing="2" Class="mb-4">
+            <MudItem xs="6">
+                <MudButton FullWidth="true" Variant="Variant.Outlined"
+                           Class="@("theme-mode-button" + (!ThemeService.IsDarkMode ? " theme-mode-button-selected" : ""))"
+                           OnClick="@(() => SetDarkModeAsync(false))">
+                    <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                        <MudIcon Icon="@Icons.Material.Filled.LightMode" Color="Color.Warning" />
+                        <MudText Typo="Typo.caption">@Tr("ThemeLight")</MudText>
+                    </MudStack>
+                </MudButton>
+            </MudItem>
+            <MudItem xs="6">
+                <MudButton FullWidth="true" Variant="Variant.Outlined"
+                           Class="@("theme-mode-button" + (ThemeService.IsDarkMode ? " theme-mode-button-selected" : ""))"
+                           OnClick="@(() => SetDarkModeAsync(true))">
+                    <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                        <MudIcon Icon="@Icons.Material.Filled.DarkMode" />
+                        <MudText Typo="Typo.caption">@Tr("ThemeDark")</MudText>
+                    </MudStack>
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+
+        <MudText Typo="Typo.body2" Class="fw-bold mb-2">@Tr("ThemeColorLabel")</MudText>
+        <div class="d-flex flex-wrap" style="gap:12px;">
+            @foreach (var color in AppTheme.PrimaryColorSwatches)
+            {
+                var isSelected = string.Equals(color, ThemeService.PrimaryColor, StringComparison.OrdinalIgnoreCase);
+                <MudTooltip Text="@color">
+                    <div class="@("theme-color-swatch" + (isSelected ? " theme-color-swatch-selected" : ""))"
+                         style="@($"background:{color};")"
+                         @onclick="@(() => SetPrimaryColorAsync(color))">
+                        @if (isSelected)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Style="color:#fff;" />
+                        }
+                    </div>
+                </MudTooltip>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 🔒 position:fixed صريح دائماً - لا يعتمد على MudLayout كأب، فيبقى مثبتاً على الشاشة الفعلية
+       على كل الأجهزة (خصوصاً الموبايل حيث يتغيّر ارتفاع شريط العنوان ديناميكياً) */
+    .themes-menu-overlay {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, .5);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .225s ease;
+        z-index: 1300;
+    }
+
+    .themes-menu-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .themes-menu-panel {
+        position: fixed;
+        top: 0;
+        height: 100dvh;
+        width: 280px;
+        max-width: 85vw;
+        /* inset-inline-end بدل right: تنعكس تلقائياً حسب اتجاه اللغة (RTL/LTR) بدون أي جافاسكريبت */
+        inset-inline-end: -300px;
+        background-color: var(--mud-palette-surface);
+        color: var(--mud-palette-text-primary);
+        box-shadow: 0 2px 8px rgba(0,0,0,.24), 0 0 2px rgba(0,0,0,.12);
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        transition: inset-inline-end .225s ease;
+        z-index: 1301;
+    }
+
+    .themes-menu-panel.open {
+        inset-inline-end: 0;
+    }
+
+    .theme-mode-button { height: 72px; }
+    .theme-mode-button-selected { border-color: var(--mud-palette-primary) !important; border-width: 2px !important; }
+
+    .theme-color-swatch {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--mud-palette-lines-default);
+    }
+
+    .theme-color-swatch-selected {
+        box-shadow: 0 0 0 2px var(--mud-palette-surface), 0 0 0 4px var(--mud-palette-primary);
+    }
+</style>
+
+@code {
+    [Parameter] public bool Open { get; set; }
+    [Parameter] public EventCallback<bool> OpenChanged { get; set; }
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    // 🟢 Tr(...) بدلاً من Lang[...] مباشرة: نفس السبب والحل المُستخدَمين فى Login.razor/NavMenuMud.razor -
+    // راجع MODERNIZATION_NOTES.md. هذا المكوّن يظهر قبل وبعد تسجيل الدخول (AuthLayout وMainLayoutMud معاً).
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private Task SetOpenAsync(bool value)
+    {
+        Open = value;
+        return OpenChanged.InvokeAsync(value);
+    }
+
+    // 🟢 اختيار المستخدم لوضع الثيم/اللون يُحفَظ الآن (كوكي على الويب - راجع "/Theme/Set" فى
+    // AccountERP.Web\Program.cs وinterop.js) حتى يبقى نفس الاختيار عند إغلاق النظام وفتحه من جديد، بنفس
+    // فكرة حفظ اللغة تماماً فى LanguageSwitcher.razor: تبديل فوري فى الذاكرة أولاً (يعمل فى كل البيئات)
+    // ثم حفظ الكوكي فى الخلفية بدون Navigation على الويب فقط.
+    private async Task SetDarkModeAsync(bool isDark)
+    {
+        ThemeService.SetDarkMode(isDark);
+        await PersistThemeAsync();
+    }
+
+    private async Task SetPrimaryColorAsync(string color)
+    {
+        ThemeService.SetPrimaryColor(color);
+        await PersistThemeAsync();
+    }
+
+    private async Task PersistThemeAsync()
+    {
+        if (!Settings.IsWeb) return;
+
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("accountErpInterop.persistThemeCookie", ThemeService.IsDarkMode, ThemeService.PrimaryColor);
+        }
+        catch
+        {
+            // غير حرج: لو فشل حفظ الكوكي يظل الثيم مُطبَّقاً فعلياً لهذه الدائرة الحالية بالفعل
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

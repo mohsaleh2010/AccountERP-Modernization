@@ -1,0 +1,151 @@
+﻿@inherits LayoutComponentBase
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI
+
+@inject NavigationManager NavigationManager
+@inject MenuStateService MenuState
+@inject LanguageService LangService
+@implements IDisposable
+  
+@{
+    // التقاط مسار الصفحة الحالية لإعادة التوجيه إليها بعد تغيير اللغة (للويب فقط)
+    var currentUri = new Uri(NavigationManager.Uri).GetComponents(UriComponents.PathAndQuery, UriFormat.SafeUnescaped);
+}
+
+@* 🟢 حقن خاصية الـ IsRtl لقلب اتجاه الواجهة بالكامل (يمين/يسار) فوراً عند تبديل اللغة *@
+<div class="page" dir="@(LangService.IsArabic ? "rtl" : "ltr")">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4 d-flex align-items-center justify-content-between">
+
+            <!-- قسم الروابط الأيسر (يحتوي على About والقوائم الفرعية الديناميكية بنفس التنسيق) -->
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+
+                @if (MenuState.SelectedMainMenuId != 0 && MenuState.SelectedMainMenuId != null)
+                {
+                    @foreach (var subMenu in MenuState.UserAllowedMenus.Where(m => m.ParentId == MenuState.SelectedMainMenuId))
+                    {
+                        <NavLink class="sub-menu-link text-decoration-none" href="@subMenu.KeysData" Match="NavLinkMatch.All">
+                            @subMenu.Description
+                        </NavLink>
+                    }
+                }
+            </div>
+
+            <!-- قسم تغيير اللغة الأيمن التكيفي -->
+            <!-- قسم تغيير اللغة الأيمن التكيفي والمقاوم للمشاكل -->
+            <div class="d-flex align-items-center px-3">
+                @if (LangService.IsArabic)
+                {
+                    @if (IsHybridPlatform())
+                    {
+                        <!-- 💻 يظهر فقط على الديسك توب والموبايل كـ Button مستقر -->
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick='() => ChangeLangHybrid("en-US")'>
+                            English 🌐
+                        </button>
+                    }
+                    else
+                    {
+                        <!-- 🌐 يظهر فقط على الويب لضرب الـ Minimal API والسيرفر -->
+                        <a class="btn btn-sm btn-outline-secondary"
+                           href="/Culture/SetCulture?culture=en-US&redirectUri=@Uri.EscapeDataString(currentUri)">
+                            English 🌐
+                        </a>
+                    }
+                }
+                else
+                {
+                    @if (IsHybridPlatform())
+                    {
+                        <!-- 💻 يظهر فقط على الديسك توب والموبايل كـ Button مستقر -->
+                        <button type="button" class="btn btn-sm btn-outline-primary" @onclick='() => ChangeLangHybrid("ar-EG")'>
+                            العربية 🌐
+                        </button>
+                    }
+                    else
+                    {
+                        <!-- 🌐 يظهر فقط على الويب لضرب الـ Minimal API والسيرفر -->
+                        <a class="btn btn-sm btn-outline-primary"
+                           href="/Culture/SetCulture?culture=ar-EG&redirectUri=@Uri.EscapeDataString(currentUri)">
+                            العربية 🌐
+                        </a>
+                    }
+                }
+            </div>
+
+ 
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        // 🔄 الاشتراك في الأحداث
+        MenuState.OnMainMenuChanged += OnMenuChanged;
+        LangService.OnLanguageChanged += OnLanguageChanged;
+
+
+        LangService.OnLanguageChanged += StateHasChanged;
+
+        // 🟢 الإصلاح: الفحص الذكي المرن بدلاً من الإجبار الصارم
+        var currentCulture = CultureInfo.CurrentCulture.Name;
+
+        // إذا كانت اللغة الحالية لا تبدأ بـ "ar" ولا بـ "en"، وقتها فقط ضع الافتراضي
+        if (!currentCulture.StartsWith("ar", StringComparison.OrdinalIgnoreCase) &&
+            !currentCulture.StartsWith("en", StringComparison.OrdinalIgnoreCase))
+        {
+            LangService.SetCultureDefault();
+        }
+
+    }
+
+    private void OnMenuChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnLanguageChanged()
+    {
+        // إجبار الـ Layout على إعادة الرندرة لقلب الـ dir وتحديث ترجمة القوائم فوراً
+        InvokeAsync(StateHasChanged);
+    }
+
+    // الدالة الخاصة بالديسك توب والموبايل لتغيير اللغة في الذاكرة مباشرة
+    private void ChangeLangHybrid(string cultureName)
+    {
+        LangService.SetCulture(cultureName);
+    }
+    // دالة ذكية تفحص بدقة وبأمان شديد هل نحن نشتغل داخل بيئة ديسك توب/موبايل أم متصفح ويب عالي
+    private bool IsHybridPlatform()
+    {
+        // إذا كان الرابط يبدأ بـ app:// (بيئة أندرويد/iOS ماوي) أو رابط محلي مخصص للويندوز Hybrid
+        // أو ببساطة نستخدم فحص نظام التشغيل الفيزيائي المباشر للـ Client
+        return Environment.OSVersion.Platform == PlatformID.Win32NT ||
+               System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription.Contains("MAUI", StringComparison.OrdinalIgnoreCase) ||
+               !NavigationManager.Uri.StartsWith("http://", StringComparison.OrdinalIgnoreCase) && !NavigationManager.Uri.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+    }
+
+ 
+    public void Dispose()
+    {
+        // إلغاء كافة الاشتراكات لحماية الذاكرة من الـ Memory Leak
+        MenuState.OnMainMenuChanged -= OnMenuChanged;
+        LangService.OnLanguageChanged -= OnLanguageChanged;
+    }
+}

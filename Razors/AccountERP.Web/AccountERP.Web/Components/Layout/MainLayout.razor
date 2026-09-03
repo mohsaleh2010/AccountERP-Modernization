@@ -1,0 +1,90 @@
+﻿@inherits LayoutComponentBase
+@using System.Globalization
+@using AccountModelsLib
+
+@inject NavigationManager NavigationManager
+@inject MenuStateService MenuState
+@implements IDisposable
+
+@{
+    // التقاط مسار الصفحة الحالية لإعادة التوجيه إليها بعد تغيير اللغة
+    var currentUri = new Uri(NavigationManager.Uri).GetComponents(UriComponents.PathAndQuery, UriFormat.SafeUnescaped);
+}
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4 d-flex align-items-center justify-content-between">
+
+            <!-- قسم الروابط الأيسر (يحتوي على About والقوائم الفرعية الديناميكية بنفس التنسيق) -->
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+
+                @* 🟢 شريط القوائم الفرعية الديناميكي المدمج بنفس التنسيق *@
+                @if (MenuState.SelectedMainMenuId != 0 && MenuState.SelectedMainMenuId != null)
+                {
+                    @* جلب القوائم الفرعية التي تتبع المعرف الرئيسي المختار حالياً *@
+                    @foreach (var subMenu in MenuState.UserAllowedMenus.Where(m => m.ParentId == MenuState.SelectedMainMenuId))
+                    {
+                        @* استخدام NavLink بالرابط (Route) لتفتح الصفحة الخاصة بها، مع إعطائها نفس تنسيق About الأصلي *@
+                        <NavLink class="sub-menu-link text-decoration-none" href="@subMenu.KeysData" Match="NavLinkMatch.All">
+                            @subMenu.Description
+                        </NavLink>
+                    }
+                }
+            </div>
+
+            <!-- قسم تغيير اللغة الأيمن -->
+            <div class="d-flex align-items-center px-3">
+                @if (CultureInfo.CurrentCulture.Name.StartsWith("ar"))
+                {
+                    <!-- استخدام وسم <a> العادي للانتقال إلى الـ Minimal API مباشرة -->
+                    <a class="btn btn-sm btn-outline-secondary"
+                       href="/Culture/SetCulture?culture=en-US&redirectUri=@Uri.EscapeDataString(currentUri)">
+                        English 🌐
+                    </a>
+                }
+                else
+                {
+                    <a class="btn btn-sm btn-outline-primary"
+                       href="/Culture/SetCulture?culture=ar-EG&redirectUri=@Uri.EscapeDataString(currentUri)">
+                        العربية 🌐
+                    </a>
+                }
+            </div>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        // 🔄 الاشتراك في الحدث: عندما يضغط المستخدم في الـ NavMenu، يتم استدعاء OnMenuChanged هنا فوراً
+        MenuState.OnMainMenuChanged += OnMenuChanged;
+    }
+
+    private void OnMenuChanged()
+    {
+        // إجبار الـ MainLayout على إعادة رسم المكونات وعرض القوائم الفرعية الجديدة
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        // إلغاء الاشتراك عند تدمير الكامبوننت لمنع تسريب الذاكرة (Memory Leak)
+        MenuState.OnMainMenuChanged -= OnMenuChanged;
+    }
+}

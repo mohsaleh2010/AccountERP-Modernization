@@ -1,0 +1,155 @@
+@* 🟢 عقدة قائمة قابلة للتكرار الذاتي: تعرض أي عمق من القوائم الفرعية (فرع داخل فرع...)
+   بدلاً من الاقتصار على مستويين فقط (قائمة رئيسية + فرعية مباشرة). إذا كان لدى العنصر
+   أبناء يُعرض كـ MudNavGroup قابل للطي يحتوي على MenuNode لكل ابن (تكرار ذاتي حقيقي)،
+   وإلا يُعرض كرابط MudNavLink نهائي يفتح شاشته مباشرة (إن كانت مبنية فعلاً) أو يعرض
+   تنبيه "قيد الإنشاء" بدون أي تنقّل (راجع KnownRoutes.cs لسبب ذلك). *@
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@inject MenuStateService MenuState
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject NotificationCenterService NotificationCenter
+@implements IDisposable
+
+@if (Children.Any())
+{
+    <MudNavGroup Title="@Menu.GetLocalizedDescription(LangService.CurrentLanguage)" Icon="@GetGroupIcon(Menu.Description)" Expanded="@MenuState.IsMenuExpanded(Menu.Menu_ID)"
+                 ExpandedChanged="@((bool v) => MenuState.SetMenuExpanded(Menu.Menu_ID, v))" Class="menu-node-group">
+        @foreach (var child in Children)
+        {
+            <MenuNode Menu="@child" />
+        }
+    </MudNavGroup>
+}
+else
+{
+    var implemented = KnownRoutes.IsImplemented(Menu.KeysData);
+    @if (implemented)
+    {
+        <MudNavLink Href="@Menu.KeysData" Match="NavLinkMatch.Prefix" Icon="@GetLeafIcon(Menu.Description)">
+            @Menu.GetLocalizedDescription(LangService.CurrentLanguage)
+        </MudNavLink>
+    }
+    else
+    {
+        @* 🟢 بدون Href إطلاقاً: يمنع أي محاولة تنقّل (وبالتالي دائرة/Circuit جديدة وإعادة تحميل القوائم
+           من قاعدة البيانات من الصفر) لأي شاشة لم تُبنَ بعد بـ Blazor - راجع KnownRoutes.cs. *@
+        <MudNavLink OnClick="@ShowNotImplemented" Icon="@GetLeafIcon(Menu.Description)" Class="menu-node-pending">
+            @Menu.GetLocalizedDescription(LangService.CurrentLanguage)
+            @* 🟢 Text="..." بدلاً من ChildContent: راجع نفس التعليق فى Home.razor - MudChip لا يُحدّث نص
+               ChildContent بشكل موثوق عند تبديل اللغة فقط، بعكس خاصية Text العادية. *@
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Class="ms-2 menu-node-pending-chip" Text="@Tr("ComingSoon")" />
+        </MudNavLink>
+    }
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public MenuViewModel Menu { get; set; } = null!;
+
+    // 🟢 حالة الطي/التوسيع لم تعد محلية هنا (كانت _expanded = false افتراضياً) بل مركزية فى
+    // MenuState.ExpandedMenuIds - راجع MenuStateService فى SysConfigMenusCLS.cs. لا يزال السلوك الافتراضي
+    // نفسه (كل القوائم مطوية بعد تسجيل الدخول لأن المجموعة فارغة فى البداية)، لكن الآن يمكن لزر "توسيع/طي
+    // الكل" فى رأس القائمة الجانبية (MainLayoutMud) التحكم فى كل الأعماق دفعة واحدة بدلاً من عقدة واحدة فقط.
+    protected override void OnInitialized()
+    {
+        // 🟢 اشتراك مباشر بدلاً من الاعتماد فقط على إعادة الرندرة المتتالية من الأب (NavMenuMud/MenuNode
+        // الأعلى) - نفس السبب الموثّق فى NavMenuMud.razor: لوحظ أن الرندرة المتتالية داخل MudDrawer/
+        // MudNavGroup غير موثوقة 100% من الوقت.
+        MenuState.OnExpandCollapseAll += OnExpandCollapseAllHandler;
+    }
+
+    private void OnExpandCollapseAllHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        MenuState.OnExpandCollapseAll -= OnExpandCollapseAllHandler;
+    }
+
+    private List<MenuViewModel> Children =>
+        MenuState.UserAllowedMenus.Where(c => c.ParentId == Menu.Menu_ID).ToList();
+
+    private void ShowNotImplemented()
+    {
+        var message = Tr("ScreenNotBuiltYet", Menu.GetLocalizedDescription(LangService.CurrentLanguage));
+        Snackbar.Add(message, MudBlazor.Severity.Info);
+        NotificationCenter.Add(message, MudBlazor.Severity.Info);
+    }
+
+    // 🟢 Tr(...) بدلاً من Lang[...] مباشرة (اسم مختلف عمداً عن "T" لتفادي أي تضارب مع خاصية النوع العام
+    // T="string" على MudChip فى نفس الشجرة): راجع نفس التعليق فى NavMenuMud.razor - يضمن ترجمة "قيد الإنشاء"/
+    // "قريباً" هنا بالثقافة الصحيحة بغض النظر عن ثقافة الخيط الفعلي وقت الرندرة (IStringLocalizer.
+    // WithCulture(...) غير متاحة فى net10.0).
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    // 🟢 أيقونة كل وحدة رئيسية/فرعية تحتوي على شاشات (Group) - نفس منطق NavMenuMud لكن بنمط Outlined
+    // لتمييزها بصرياً عن الوحدات الرئيسية (Filled) دون أن تبدو متطابقة فى كل مستوى.
+    private static readonly (string[] Keywords, string Icon)[] GroupIconMap = new (string[], string)[]
+    {
+        (new[] { "حساب", "قيود", "استاذ", "ميزان", "account", "ledger", "journal", "trial" }, Icons.Material.Outlined.AccountBalance),
+        (new[] { "مخزن", "صنف", "اصناف", "مخزون", "store", "inventory", "item", "warehouse" }, Icons.Material.Outlined.Inventory2),
+        (new[] { "مبيع", "فاتورة بيع", "sale", "sales" }, Icons.Material.Outlined.PointOfSale),
+        (new[] { "مشتري", "شراء", "purchase", "buying" }, Icons.Material.Outlined.ShoppingCart),
+        (new[] { "عميل", "عملاء", "customer", "client" }, Icons.Material.Outlined.People),
+        (new[] { "مورد", "موردين", "supplier", "vendor" }, Icons.Material.Outlined.Store),
+        (new[] { "تقرير", "report" }, Icons.Material.Outlined.Assessment),
+        (new[] { "ضريب", "فاتورة الكترونية", "tax", "einvoice", "e-invoice" }, Icons.Material.Outlined.Receipt),
+        (new[] { "بنك", "شيك", "خزينة", "صندوق", "bank", "check", "cash", "treasury" }, Icons.Material.Outlined.AccountBalanceWallet),
+        (new[] { "سيار", "صيانة", "ورشة", "car", "workshop", "maintenance" }, Icons.Material.Outlined.CarRepair),
+        (new[] { "حجز", "سياح", "فندق", "طيران", "reservation", "tourism", "hotel", "flight" }, Icons.Material.Outlined.FlightTakeoff),
+        (new[] { "موارد بشرية", "موظف", "حضور", "انصراف", "hr", "employee", "attendance" }, Icons.Material.Outlined.Badge),
+        (new[] { "انتاج", "تصنيع", "نسيج", "production", "manufacturing" }, Icons.Material.Outlined.PrecisionManufacturing),
+        (new[] { "مقاول", "عقار", "مشروع", "construction", "real estate", "project" }, Icons.Material.Outlined.Apartment),
+        (new[] { "اعداد", "صلاحي", "مستخدم", "setting", "permission", "user", "admin" }, Icons.Material.Outlined.Settings),
+        (new[] { "باركود", "bar code", "barcode" }, Icons.Material.Outlined.QrCode2),
+    };
+
+    // 🟢 أيقونة كل شاشة نهائية (ورقة/Leaf) - مطابقة بكلمات مفتاحية أدق لطبيعة الشاشة نفسها (قائمة/إضافة/
+    // تقرير/طباعة...) بدلاً من سهم ChevronRight الثابت الذى كان يظهر لكل الشاشات بلا تمييز ويوحي خطأً
+    // بإمكانية توسيع الرابط رغم أنه نهائي (لا يحتوي أبناء).
+    private static readonly (string[] Keywords, string Icon)[] LeafIconMap = new (string[], string)[]
+    {
+        (new[] { "شجرة", "tree" }, Icons.Material.Outlined.AccountTree),
+        (new[] { "قائمة", "list", "عرض", "استعلام", "inquiry" }, Icons.Material.Outlined.ViewList),
+        (new[] { "اضافة", "إضافة", "جديد", "add", "new" }, Icons.Material.Outlined.AddCircleOutline),
+        (new[] { "تعديل", "edit" }, Icons.Material.Outlined.EditNote),
+        (new[] { "تقرير", "report" }, Icons.Material.Outlined.Assessment),
+        (new[] { "طباعة", "print" }, Icons.Material.Outlined.Print),
+        (new[] { "قيد", "journal", "entry" }, Icons.Material.Outlined.MenuBook),
+        (new[] { "ميزان", "trial", "balance" }, Icons.Material.Outlined.Balance),
+        (new[] { "اصل", "أصل", "asset" }, Icons.Material.Outlined.Domain),
+        (new[] { "اعداد", "صلاحي", "setting", "permission" }, Icons.Material.Outlined.Tune),
+    };
+
+    private static string GetGroupIcon(string? description) => MatchIcon(description, GroupIconMap, Icons.Material.Outlined.FolderOpen);
+
+    private static string GetLeafIcon(string? description) => MatchIcon(description, LeafIconMap, Icons.Material.Outlined.Description);
+
+    private static string MatchIcon(string? description, (string[] Keywords, string Icon)[] map, string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(description)) return fallback;
+
+        foreach (var (keywords, icon) in map)
+        {
+            if (keywords.Any(k => description.Contains(k, StringComparison.OrdinalIgnoreCase)))
+            {
+                return icon;
+            }
+        }
+
+        return fallback;
+    }
+}

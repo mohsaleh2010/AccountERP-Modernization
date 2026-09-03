@@ -1,0 +1,89 @@
+﻿@using AccountModelsLib
+@inject MenuStateService MenuState
+@inject LanguageService LangService
+<!-- 🟢 شريط العناوين العلوي -->
+<div class="page" dir="@(LangService.IsArabic ? "rtl" : "ltr")">
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid d-flex justify-content-between align-items-center w-100">
+        <a class="navbar-brand text-white text-decoration-none" href="">نظام الحسابات ERP</a>
+    </div>
+</div>
+</div>
+<!-- 🟢 نقل الـ Checkbox هنا ليكون أخاً مباشراً لـ nav-scrollable ليعمل الـ CSS فوراً -->
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<!-- الحاوية القابلة للتمرير -->
+<div class="nav-scrollable">
+    <nav class="nav flex-column">
+
+        <!-- 1. القوائم الافتراضية الثابتة للمشروع -->
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="counter">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/login">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> login
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="customers/list">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Customers
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="invoice">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Invoice
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="weather">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+            </NavLink>
+        </div>
+
+        <!-- 2. خط فاصل أنيق وعنوان لقوائم الـ ERP الديناميكية -->
+        <div class="px-3 py-2 text-white-50 small fw-bold border-top border-secondary mt-3 mb-1">
+            📋   (ERP Modules)
+        </div>
+
+        <!-- 3. القوائم الديناميكية المدمجة مع حماية كاملة من الـ Null -->
+        @if (MenuState?.UserAllowedMenus != null && MenuState.SelectedMainMenuId != 0)
+        {
+            @foreach (var menu in MenuState.UserAllowedMenus.Where(m => m != null && m.ParentId == 0))
+            {
+                var isActive = MenuState.SelectedMainMenuId == menu.Menu_ID;
+
+                <div class="nav-item px-3">
+                    <button class="nav-link w-100 text-start border-0 bg-transparent @(isActive ? "active fw-bold" : "")"
+                            @onclick="() => OnMenuClick(menu.Menu_ID)"
+                            style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span>
+                        @menu.Description
+                    </button>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="px-3 py-1 text-muted small italic">
+                ⏳ Loading modules...
+            </div>
+        }
+
+    </nav>
+</div>
+
+@code {
+    private void OnMenuClick(long menuId)
+    {
+        MenuState.SelectMainMenu(menuId);
+    }
+}

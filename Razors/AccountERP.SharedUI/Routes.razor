@@ -1,0 +1,56 @@
+﻿@namespace AccountERP.SharedUI
+@using Microsoft.AspNetCore.Components.Routing
+@using AccountERP.SharedUI
+@using AccountERP.SharedUI.Components.Layout
+@inject AccountERP.SharedUI.AppSettings Settings
+@* 
+  🔥 الحل المعماري هنا: جعل الـ AppAssembly يبحث داخل المشروع المشترك نفسه 
+  باستخدام الـ Marker الخاص بك، ليعمل التوجيه تلقائياً على الويب، الديسك توب، والموبايل.
+*@
+
+ 
+@* <MudThemeProvider />
+<MudDialogProvider FullWidth="true" MaxWidth="MaxWidth.ExtraLarge" CloseButton="true" />
+<MudSnackbarProvider />
+ @if (_isInteractive)
+{
+    <MudPopoverProvider />
+} *@
+
+<Router AppAssembly="@typeof(SharedUIAssemblyMarker).Assembly">
+    <Found Context="routeData"> 
+        @if (Settings.IsWinForms)
+        {
+            @* 🟢 إذا كان ويندوز فورمز، تجاهل الـ Layout الافتراضي المكتوب في الصفحة وافتحها صافية *@
+            @if (Settings.IsLoadMainLayout)
+           {
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(EmptyLayout)" />
+        }
+        }
+        else
+        {
+            @* 🔴 إذا كان ويب أو ماوي، استخدم الـ Layout الاحترافي المبني على MudBlazor (Theme/RTL/Notifications/Language) *@
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayoutMud)" />
+        }
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <PageTitle>Not found</PageTitle>
+        <LayoutView Layout="@typeof(MainLayoutMud)">
+            <p role="alert">Sorry, the content you are looking for does not exist.</p>
+        </LayoutView>
+    </NotFound>
+</Router>
+ @* @code {
+    private bool _isInteractive = false;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // 🟢 أول لما المتصفح يربط مع السيرفر وتشتغل التفاعلية، نرفع العلم ليفتح الـ Popover بسلام
+            _isInteractive = true;
+            StateHasChanged();
+        }
+    }
+} *@

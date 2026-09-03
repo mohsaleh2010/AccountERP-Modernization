@@ -1,0 +1,42 @@
+@* 🔓 Layout مخصص للشاشات العامة قبل تسجيل الدخول (حالياً: Login). لا يحمل الـ AppBar/Drawer/Logout
+   الخاصة بالتطبيق بعد الدخول - فقط مزودات MudBlazor الأساسية + قلب اتجاه RTL/LTR ديناميكياً،
+   حتى لا يرى المستخدم قائمة جانبية فارغة أو زر خروج قبل أن يدخل أصلاً. *@
+@inherits LayoutComponentBase
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject ThemeService ThemeService
+@implements IDisposable
+
+<MudThemeProvider Theme="@AppTheme.Build(ThemeService.PrimaryColor)" IsDarkMode="@ThemeService.IsDarkMode" />
+<MudPopoverProvider />
+<MudSnackbarProvider />
+
+<div dir="@(LangService.IsRtl ? "rtl" : "ltr")" style="min-height:100dvh;">
+    <MudRTLProvider RightToLeft="@LangService.IsRtl">
+        @Body
+    </MudRTLProvider>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnChanged;
+        ThemeService.OnThemeChanged += OnChanged;
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    // 🟢 نفس منطق MainLayoutMud: يضمن أن CultureInfo.CurrentUICulture صحيحة على خيط الرندرة الفعلي
+    // الحالي دائماً، بغض النظر عن الخيط الذى نفَّذ آخر تبديل لغة (راجع التعليق فى MainLayoutMud).
+    protected override bool ShouldRender()
+    {
+        LangService.ApplyToCurrentThread();
+        return true;
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnChanged;
+        ThemeService.OnThemeChanged -= OnChanged;
+    }
+}

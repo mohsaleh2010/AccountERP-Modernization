@@ -1,0 +1,330 @@
+ @inherits LayoutComponentBase
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using Microsoft.Extensions.DependencyInjection
+
+@inject NavigationManager NavigationManager
+@inject MenuStateService MenuState
+@inject LanguageService LangService
+@inject ThemeService ThemeService
+@inject IServiceProvider ServiceProvider
+@inject IJSRuntime JSRuntime
+@inject AppSettings Settings
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+@* 1. مزود الثيمات (فاتح/داكن) والمودال والقوائم المنبثقة والرسائل - العناصر الأساسية التي يحتاجها أي تطبيق MudBlazor احترافي *@
+<MudThemeProvider Theme="_currentTheme" IsDarkMode="@ThemeService.IsDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider FullWidth="true" MaxWidth="MaxWidth.ExtraLarge" CloseButton="true" />
+<MudSnackbarProvider />
+
+@* 2. مزود الـ RTL الديناميكي يلتف حول التطبيق بالكامل ويقرأ مباشرة من الـ Service القائمة *@
+<MudRTLProvider RightToLeft="@LangService.IsRtl">
+    <MudLayout>
+
+        @* شريط الأدوات العلوي (Top Row / AppBar) - متجاوب تلقائياً (Responsive) عبر مكونات MudBlazor *@
+        <MudAppBar Elevation="1" Color="Color.Primary" Dense="true">
+
+            <!-- زر فتح/إغلاق القائمة الجانبية -->
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@DrawerToggle" />
+
+            <MudText Typo="Typo.h6" Class="mx-3 fw-bold d-none d-sm-block">@Lang["AppTitle"]</MudText>
+
+            @* 🟢 كانت هنا روابط فرعية للوحدة المختارة مكررة خارج تصميم القائمة الجانبية تماماً (بلا أيقونات
+               ولا تمييز للحالة النشطة ولا Href محمي)، رغم أن نفس الروابط تظهر فعلياً ومنسّقة بشكل صحيح
+               داخل الـ Drawer نفسه (MudNavGroup الموسّع تلقائياً الآن). أُزيلت لأنها تكرار بلا فائدة
+               ومصدر آخر لمشكلة "إعادة التحميل من قاعدة البيانات عند أي كليك" (KeysData غير محمي بـ KnownRoutes) -
+               راجع MODERNIZATION_NOTES.md. *@
+
+            <MudSpacer />
+
+            <!-- إجراءات الشريط العلوي: من نحن، الإشعارات، الثيم، اللغة، وحالة المستخدم -->
+            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+
+                <MudTooltip Text="@Lang["NavAbout"]">
+                    <MudIconButton Icon="@Icons.Material.Filled.Info" Color="Color.Inherit" Href="/about" />
+                </MudTooltip>
+
+                <NotificationsMenu />
+
+                <MudTooltip Text="@Lang["ThemesTitle"]">
+                    <MudIconButton Icon="@Icons.Material.Outlined.Palette" Color="Color.Inherit" OnClick="@(() => _themesMenuOpen = true)" />
+                </MudTooltip>
+
+                <LanguageSwitcher />
+
+                @if (MenuState.IsLoaded)
+                {
+                    <MudDivider Vertical="true" FlexItem="true" Class="mx-1" />
+                    <MudText Typo="Typo.body2" Class="d-none d-md-block px-1">@Common.FullUserName</MudText>
+
+                    @* 🟢 قائمة حساب المستخدم: تجمع "تغيير كلمة المرور" و"تسجيل الخروج" معاً بدل زر خروج مباشر
+                       وحيد كما كان سابقاً - مع فصل بصري واضح (Divider + لون تحذيري أحمر لتسجيل الخروج)
+                       حتى لا يُضغط زر الخروج بالخطأ أثناء الوصول لتغيير كلمة المرور. *@
+                    <MudMenu Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" Size="Size.Medium"
+                             AnchorOrigin="@(LangService.IsRtl ? Origin.BottomLeft : Origin.BottomRight)"
+                             TransformOrigin="@(LangService.IsRtl ? Origin.TopLeft : Origin.TopRight)">
+                        <MudMenuItem OnClick="@(() => NavigationManager.NavigateTo("/change-password"))">
+                            <div class="d-flex align-items-center" style="gap:8px; min-width:180px;">
+                                <MudIcon Icon="@Icons.Material.Filled.LockReset" Size="Size.Small" />
+                                <span>@Tr("MenuChangePassword")</span>
+                            </div>
+                        </MudMenuItem>
+                        <MudDivider Class="my-1" />
+                        <MudMenuItem OnClick="@LogoutClick">
+                            <div class="d-flex align-items-center" style="gap:8px; min-width:180px;">
+                                <MudIcon Icon="@Icons.Material.Filled.Logout" Size="Size.Small" Color="Color.Error" />
+                                <span style="color:var(--mud-palette-error);">@Tr("Logout")</span>
+                            </div>
+                        </MudMenuItem>
+                    </MudMenu>
+                }
+            </MudStack>
+        </MudAppBar>
+
+        @* القائمة الجانبية (Sidebar / NavMenu) - Variant.Responsive يحوّلها تلقائياً لقائمة منزلقة فوق المحتوى على الموبايل *@
+        <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2" Variant="@DrawerVariant.Responsive">
+            <MudDrawerHeader Class="px-2 py-3 bg-light border-bottom">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="w-100" Spacing="1">
+                    <MudText Typo="Typo.subtitle1" Class="fw-bold text-secondary">
+                        @Lang["MainMenuTitle"]
+                    </MudText>
+                    @* 🟢 زرّان منفصلان (توسيع الكل / طي الكل) بدلاً من زر واحد يبدّل بينهما - بناءً على طلب المستخدم
+                       صراحةً. كل زر يستدعي فعله مباشرة (ExpandAllMenus/CollapseAllMenus) بدون اعتماد على حالة
+                       AllMenusExpanded لتحديد أيهما يظهر - كلاهما ظاهر دائماً معاً. راجع MenuStateService فى
+                       SysConfigMenusCLS.cs. *@
+                    @if (MenuState.IsLoaded)
+                    {
+                        <MudStack Row="true" Spacing="0">
+                            <MudTooltip Text="@Tr("ExpandAllMenus")">
+                                <MudIconButton Icon="@Icons.Material.Filled.UnfoldMore" Size="Size.Small" Color="Color.Default"
+                                               OnClick="@(() => MenuState.ExpandAllMenus())" />
+                            </MudTooltip>
+                            <MudTooltip Text="@Tr("CollapseAllMenus")">
+                                <MudIconButton Icon="@Icons.Material.Filled.UnfoldLess" Size="Size.Small" Color="Color.Default"
+                                               OnClick="@(() => MenuState.CollapseAllMenus())" />
+                            </MudTooltip>
+                        </MudStack>
+                    }
+                </MudStack>
+            </MudDrawerHeader>
+            <NavMenuMud />
+        </MudDrawer>
+
+        @* منطقة محتوى الصفحة الرئيسي - Container متجاوب يعمل على الويب والموبايل والديسك توب.
+           🟢 pa-2/pa-md-4 عمداً على الـ MudContainer الداخلي وليس على MudMainContent نفسه: تلك أصناف
+           MudBlazor الجاهزة تُطبَّق بـ !important (راجع padding:...!important فى MudBlazor.min.css)،
+           فكانت تكسر قاعدة MudBlazor الخاصة بمساحة إفلات الـ AppBar الثابت (.mud-main-content{padding-top:
+           var(--mud-appbar-height)}) رغم أن الأخيرة بلا !important - أي محتوى الصفحة (ومنها "Hello, world!"
+           سابقاً) كان يُرسم بمساحة 8px فقط أسفل الشريط العلوي بدلاً من ارتفاعه الكامل فيبدو ملتصقاً وغير
+           واضح تحته. راجع MODERNIZATION_NOTES.md. *@
+        <MudMainContent Class="bg-light" Style="min-height:100vh;">
+            <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-2 pa-md-4 mt-3">
+                @Body
+            </MudContainer>
+        </MudMainContent>
+
+    </MudLayout>
+</MudRTLProvider>
+
+<ThemesMenu @bind-Open="_themesMenuOpen" />
+
+@* واجهة الأخطاء العادية للمتصفح *@
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    private bool _drawerOpen = true;
+    private bool _themesMenuOpen = false;
+
+    // ثيم موحّد لكل الشاشات (بما فيها شاشة تسجيل الدخول عبر AuthLayout)، يُعاد بناؤه كلما غيّر
+    // المستخدم اللون الأساسي من ThemesMenu (راجع OnThemeChanged) - القيمة الافتراضية في Services/AppTheme.cs
+    private MudTheme _currentTheme = AppTheme.Build(AppTheme.DefaultPrimaryColor);
+
+    // 🔐 المسارات المتاحة بدون تسجيل دخول. أي مسار آخر (الرئيسية وكل شاشات الـ ERP القادمة) محمي.
+    private static readonly string[] PublicPaths = { "login", "about" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _currentTheme = AppTheme.Build(ThemeService.PrimaryColor);
+        ApplySnackbarPosition();
+
+        // 🔄 الاشتراك في الأحداث
+        MenuState.OnMainMenuChanged += OnMenuChanged;
+        MenuState.OnAuthChanged += OnAuthChanged;
+        LangService.OnLanguageChanged += OnLanguageChanged;
+        ThemeService.OnThemeChanged += OnThemeChanged;
+        NavigationManager.LocationChanged += OnLocationChanged;
+
+        // 🟢 دائرة (Circuit) جديدة قد تحمل كوكي دخول موقّع من دخول سابق فعلي (مثلاً بعد إعادة تحميل كاملة
+        // للصفحة عبر عنصر قائمة لشاشة لم تُبنَ بعد - راجع MODERNIZATION_NOTES.md) - نحاول استعادة الجلسة
+        // منه قبل تطبيق بوابة الحماية، حتى لا يُعاد توجيه مستخدم مسجَّل دخوله فعلاً إلى شاشة الدخول من جديد.
+        if (!MenuState.IsAuthenticated)
+        {
+            await TryRestoreSessionFromCookieAsync();
+        }
+
+        EnforceAuthGuard();
+    }
+
+    private async Task TryRestoreSessionFromCookieAsync()
+    {
+        try
+        {
+            // 🟢 غير مسجَّلة إطلاقاً على الديسك توب/الموبايل (لا كوكي/متصفح هناك أصلاً) - GetService (وليس
+            // GetRequiredService) يعيد null بأمان فى تلك الحالة فنتجاهل الاستعادة بصمت.
+            var sessionReader = ServiceProvider.GetService<IPersistedSessionReader>();
+            var userId = sessionReader?.TryReadUserId();
+            if (userId is null) return;
+
+            var authService = ServiceProvider.GetService<IAuthService>();
+            if (authService == null) return;
+
+            await authService.RestoreSessionAsync(userId.Value);
+        }
+        catch
+        {
+            // غير حرج: أي فشل هنا يعني ببساطة عدم استعادة الجلسة - EnforceAuthGuard سيوجّه لشاشة الدخول كالمعتاد
+        }
+    }
+
+    // 🟢 فى Blazor Server قد تُنفَّذ رندرات نفس الدائرة (Circuit) على خيوط فعلية مختلفة من الـ ThreadPool
+    // المشترك بين كل المستخدمين، و IStringLocalizer (خاصية Lang[...]) يقرأ الثقافة من الخيط الحالي وقت
+    // الرندرة. إعادة ضبطها هنا قبل كل رندرة (بغض النظر عن الحدث الذى تسبب فيها) يضمن ترجمة صحيحة دائماً
+    // بدلاً من أن يبدو تبديل اللغة "بلا استجابة" أحياناً بحسب الخيط الذى نفَّذ الرندرة تحديداً.
+    protected override bool ShouldRender()
+    {
+        LangService.ApplyToCurrentThread();
+        return true;
+    }
+
+    // 🟢 Tr(...) خاصة بمحتوى قائمة حساب المستخدم (MudMenu) فقط: لوحظ أن نصوص Lang[...] العادية فى هذا
+    // الملف (مثل MainMenuTitle فى رأس الـ Drawer) تتحدّث بشكل صحيح مع تبديل اللغة فى نفس الدائرة لأنها
+    // جزء من الرندرة المتزامنة لهذا المكوّن نفسه، لكن محتوى MudMenu (MudMenuItem) يُرسم عبر MudPopoverProvider
+    // (شجرة رندرة منفصلة فعلياً) فيبقى بلغته القديمة بدون هذا - نفس السبب والحل المُستخدَمين فى
+    // LanguageSwitcher.razor/ThemesMenu.razor لقوائمهما المنبثقة - راجع MODERNIZATION_NOTES.md.
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private void OnLocationChanged(object sender, LocationChangedEventArgs e) => EnforceAuthGuard();
+
+    // بوابة الحماية: أي مسار غير موجود في PublicPaths يتطلب MenuState.IsAuthenticated == true،
+    // وإلا تتم إعادة التوجيه فوراً لشاشة تسجيل الدخول. لا تعتمد على قاعدة بيانات، فقط على حالة الجلسة الحالية.
+    private void EnforceAuthGuard()
+    {
+        if (MenuState.IsAuthenticated) return;
+
+        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).Split('?')[0].TrimEnd('/');
+        var isPublic = PublicPaths.Any(p => string.Equals(p, relativePath, StringComparison.OrdinalIgnoreCase));
+
+        if (!isPublic)
+        {
+            NavigationManager.NavigateTo("/login");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ApplyHtmlDirection();
+        }
+    }
+
+    private void OnMenuChanged() => InvokeAsync(StateHasChanged);
+
+    private void OnThemeChanged() => InvokeAsync(() =>
+    {
+        _currentTheme = AppTheme.Build(ThemeService.PrimaryColor);
+        StateHasChanged();
+    });
+
+    private void OnAuthChanged() => InvokeAsync(() =>
+    {
+        EnforceAuthGuard();
+        StateHasChanged();
+    });
+
+    private async void OnLanguageChanged()
+    {
+        // إجبار الـ Layout على إعادة الرندرة لقلب الـ dir وتحديث ترجمة القوائم فوراً،
+        // وتحديث عنصر <html> مباشرة للمنصات التي لا تُعيد تحميل الصفحة عند تبديل اللغة (الديسك توب/الموبايل)
+        ApplySnackbarPosition();
+        await InvokeAsync(StateHasChanged);
+        await ApplyHtmlDirection();
+    }
+
+    // 🟢 MudSnackbarProvider يستخدم إحداثيات فيزيائية ثابتة (left/right بالبكسل عبر CSS classes مثل
+    // mud-snackbar-location-top-right) ولا يلتف تلقائياً مع MudRTLProvider/dir="rtl" - نفس مشكلة
+    // AnchorOrigin/TransformOrigin فى MudMenu (راجع NotificationsMenu.razor/LanguageSwitcher.razor)،
+    // لذا يجب قلب الزاوية يدوياً هنا كلما تغيّرت اللغة حتى لا تبقى رسائل التنبيه (مثل "الشاشة قيد الإنشاء")
+    // ظاهرة فى أعلى اليمين الفيزيائي حتى فى الوضع العربي RTL.
+    private void ApplySnackbarPosition()
+    {
+        Snackbar.Configuration.PositionClass = LangService.IsRtl
+            ? Defaults.Classes.Position.TopLeft
+            : Defaults.Classes.Position.TopRight;
+    }
+
+    private async Task ApplyHtmlDirection()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("accountErpInterop.setDirection",
+                LangService.IsRtl ? "rtl" : "ltr", LangService.CurrentLanguage);
+        }
+        catch
+        {
+            // يُتجاهل بأمان: قد لا يكون الـ JS Runtime جاهزاً بعد أثناء الـ Prerendering على الويب
+        }
+    }
+
+    private void DrawerToggle() => _drawerOpen = !_drawerOpen;
+
+    private async Task LogoutClick()
+    {
+        // 🟢 يُحلّ IAuthService كسولاً (وليس عبر @inject) عمداً: @inject يُنشئ الخدمة فوراً عند تحميل
+        // الـ Layout نفسه - أي على كل صفحة بما فيها الصفحات العامة - وهو ما يعني بناء My_DbContext
+        // (ومحاولة الاتصال الفعلي بقاعدة البيانات) حتى لو لم يضغط المستخدم زر الخروج إطلاقاً.
+        var authService = ServiceProvider.GetRequiredService<IAuthService>();
+        await authService.LogoutAsync();
+
+        // 🟢 وإلا ستعيد الدائرة التالية (بعد forceLoad أسفل هذا السطر) استعادة نفس الجلسة تلقائياً من الكوكي
+        if (Settings.IsWeb)
+        {
+            try { await JSRuntime.InvokeVoidAsync("accountErpInterop.clearLoginCookie"); }
+            catch { /* غير حرج */ }
+        }
+
+        NavigationManager.NavigateTo("/login", forceLoad: true);
+    }
+
+    public void Dispose()
+    {
+        // إلغاء كافة الاشتراكات لحماية الذاكرة من الـ Memory Leak
+        MenuState.OnMainMenuChanged -= OnMenuChanged;
+        MenuState.OnAuthChanged -= OnAuthChanged;
+        LangService.OnLanguageChanged -= OnLanguageChanged;
+        ThemeService.OnThemeChanged -= OnThemeChanged;
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}

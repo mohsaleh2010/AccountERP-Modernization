@@ -1,0 +1,63 @@
+﻿@using AccountModelsLib
+@inject MenuStateService MenuState
+
+
+    <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler')?.click()">
+    <nav class="nav flex-column">
+        
+        <!-- 1. القوائم الافتراضية الثابتة للمشروع -->
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="counter">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+            </NavLink>
+        </div>
+        
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="customers/list">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Customers
+            </NavLink>
+        </div>
+        
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="weather">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+            </NavLink>
+        </div>
+
+        <!-- 2. خط فاصل أنيق وعنوان لقوائم الـ ERP الديناميكية -->
+        <div class="px-3 py-2 text-white-50 small fw-bold border-top border-secondary mt-3 mb-1">
+            📋   (ERP Modules)
+        </div>
+
+        <!-- 3. القوائم الديناميكية المدمجة بنفس الستايل الافتراضي -->
+        @foreach (var menu in MenuState.UserAllowedMenus.Where(m => m.ParentId == 0))
+        {
+            // تحديد إذا كانت هذه القائمة هي المختارة حالياً لإعطائها مظهر نشط (Active)
+            var isActive = MenuState.SelectedMainMenuId == menu.Id; // أو menu.Menu_ID حسب تعريف الكلاس لديك
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="#">
+                <button class="nav-link w-100 text-start border-0 bg-transparent @(isActive ? "active fw-bold" : "")"
+                        @onclick="() => OnMenuClick(menu.Menu_ID)" style="cursor: pointer;">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span>   @menu.Description
+                </button>
+                </NavLink>
+            </div>
+        }
+
+    </nav>
+</div>
+
+@code {
+    private void OnMenuClick(int menuId)
+    {
+        // إرسال رقم القائمة للخدمة المشتركة لتحديث الشريط العلوي في MainLayout
+        MenuState.SelectMainMenu(menuId);
+    }
+}

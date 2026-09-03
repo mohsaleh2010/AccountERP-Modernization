@@ -1,0 +1,339 @@
+@page "/customers/groups"
+@page "/suppliers/groups"
+
+@* 🟢 شاشة "مجموعات العملاء"/"مجموعات الموردين" - النسخة Blazor من GroupsListFrm (WinForms، فى
+   connectionit\SupplierAndCustomer\Groups\GroupsListFrm.cs). نفس النموذج الوحيد يخدم مسارين هنا
+   بالضبط كما كان يخدم عنصرَي قائمة مختلفين فى MainFrm_AccountUpdate (GroupType=Common.Customer_Account_Type
+   أو Common.Supplier_Account_Type) - تجنباً لتكرار الشاشة كملفين منفصلين. كل عمليات القراءة/الإضافة/
+   التعديل/الحذف تمر عبر AccountModelsLib.GroupsCLS (نفس الكلاس المستخدَم الآن من GroupsListFrm/AddGroup
+   بعد نقل المنطق إليه من نسخة Connection4It القديمة المرتبطة بـ WinForms) - راجع MODERNIZATION_NOTES.md. *@
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr(IsSupplier ? "SupplierGroupsTitle" : "CustomerGroupsTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudGrid AlignItems="AlignItems.Center">
+            <MudItem xs="12" sm="6">
+                <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
+                    @Tr(IsSupplier ? "SupplierGroupsTitle" : "CustomerGroupsTitle")
+                </MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6" Class="@(LangService.IsRtl ? "d-flex justify-start" : "d-flex justify-end")">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddDialog">
+                    @Tr("AddGroup")
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@errorMessage</MudAlert>
+    }
+
+    <MudTable Items="@groups" Hover="true" Striped="true" Bordered="true" Loading="@isLoading" Elevation="1">
+        <HeaderContent>
+            <MudTh>@Tr("GroupName")</MudTh>
+            <MudTh Style="width:140px;"></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            @if (editingId == context.Id)
+            {
+                <MudTd>
+                    <MudTextField T="string" @bind-Value="editingName" Immediate="true" AutoFocus="true" />
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Check" Color="Color.Success" Size="Size.Small"
+                                   OnClick="@(() => SaveEdit(context.Id))" Disabled="@isSavingEdit" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="CancelEdit" />
+                </MudTd>
+            }
+            else
+            {
+                <MudTd>@context.GroupName</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => StartEdit(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                                   OnClick="@(() => DeleteGroup(context))" />
+                </MudTd>
+            }
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoGroupsYet")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<MudDialog @bind-Visible="addDialogOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true })">
+    <TitleContent>@Tr("AddGroup")</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(addErrorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@addErrorMessage</MudAlert>
+        }
+        <MudTextField T="string" @bind-Value="newGroupName" Label="@Tr("GroupName")" Variant="Variant.Outlined"
+                      FullWidth="true" AutoFocus="true" Immediate="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => addDialogOpen = false)">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ConfirmAdd" Disabled="@isSavingAdd">
+            @if (isSavingAdd)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private record GroupRow(long Id, string GroupName);
+
+    private List<GroupRow> groups = new();
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+
+    private long? editingId;
+    private string editingName = string.Empty;
+    private bool isSavingEdit;
+
+    private bool addDialogOpen;
+    private string newGroupName = string.Empty;
+    private string addErrorMessage = string.Empty;
+    private bool isSavingAdd;
+
+    private int _loadedForGroupType = -1;
+
+    // 🟢 نفس النموذج/الكلاس يخدم "/customers/groups" و"/suppliers/groups" معاً (راجع تعليق الشاشة أعلاه) -
+    // نوع المجموعة يُحدَّد من المسار الحالي، تماماً كما كان GroupType يُمرَّر لـ GroupsListFrm عبر الـ
+    // constructor حسب عنصر القائمة الذى فتح الشاشة (Common.Customer_Account_Type أو Supplier_Account_Type).
+    private bool IsSupplier => NavigationManager.ToBaseRelativePath(NavigationManager.Uri)
+        .StartsWith("suppliers", StringComparison.OrdinalIgnoreCase);
+
+    private int GroupType => IsSupplier ? AccountModelsLib.Common.Supplier_Account_Type : AccountModelsLib.Common.Customer_Account_Type;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    // 🟢 نفس المكوّن يُعاد استخدامه بين المسارين بدون إعادة إنشاء - لازم إعادة تحميل القائمة عند تغيّر
+    // GroupType الفعلي فقط (وليس عند كل رندرة)، بنفس فكرة GroupsListFrm الذى يحمّل بيانات مختلفة حسب الـ
+    // constructor عند كل فتح.
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loadedForGroupType != GroupType)
+        {
+            _loadedForGroupType = GroupType;
+            await LoadGroups();
+        }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private async Task LoadGroups()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+        try
+        {
+            var groupType = GroupType;
+            var dt = await Task.Run(() =>
+            {
+                var cls = new AccountModelsLib.GroupsCLS();
+                AccountModelsLib.operations? opp = null;
+                return cls.Get_Customer_Supplier_Group(ref opp!, groupType);
+            });
+
+            groups = dt.Rows.Cast<System.Data.DataRow>()
+                .Select(r => new GroupRow(Convert.ToInt64(r["ID"]), r["GroupName"]?.ToString() ?? string.Empty))
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OpenAddDialog()
+    {
+        newGroupName = string.Empty;
+        addErrorMessage = string.Empty;
+        addDialogOpen = true;
+    }
+
+    private async Task ConfirmAdd()
+    {
+        if (string.IsNullOrWhiteSpace(newGroupName))
+        {
+            addErrorMessage = Tr("GroupNameRequired");
+            return;
+        }
+
+        isSavingAdd = true;
+        addErrorMessage = string.Empty;
+        try
+        {
+            int excp = 0;
+            string msg = string.Empty;
+            var name = newGroupName;
+            var groupType = GroupType;
+
+            await Task.Run(() =>
+            {
+                var cls = new AccountModelsLib.GroupsCLS();
+                cls.Add_Group(ref excp, ref msg, name, groupType);
+            });
+
+            if (excp == 0)
+            {
+                addDialogOpen = false;
+                await LoadGroups();
+                Snackbar.Add(Tr("GroupAdded"), MudBlazor.Severity.Success);
+            }
+            else
+            {
+                addErrorMessage = string.IsNullOrEmpty(msg) ? Tr("GroupNameAlreadyUsed") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            addErrorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSavingAdd = false;
+        }
+    }
+
+    private void StartEdit(GroupRow row)
+    {
+        editingId = row.Id;
+        editingName = row.GroupName;
+        errorMessage = string.Empty;
+    }
+
+    private void CancelEdit()
+    {
+        editingId = null;
+        editingName = string.Empty;
+    }
+
+    private async Task SaveEdit(long id)
+    {
+        if (string.IsNullOrWhiteSpace(editingName))
+        {
+            errorMessage = Tr("GroupNameRequired");
+            return;
+        }
+
+        isSavingEdit = true;
+        errorMessage = string.Empty;
+        try
+        {
+            int excp = 0;
+            string msg = string.Empty;
+            var name = editingName;
+            var idStr = id.ToString();
+            var groupType = GroupType;
+
+            await Task.Run(() =>
+            {
+                var cls = new AccountModelsLib.GroupsCLS();
+                cls.Update_Group(ref excp, ref msg, idStr, name, groupType);
+            });
+
+            if (excp == 0)
+            {
+                editingId = null;
+                await LoadGroups();
+            }
+            else
+            {
+                errorMessage = string.IsNullOrEmpty(msg) ? Tr("GroupNameAlreadyUsed") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSavingEdit = false;
+        }
+    }
+
+    private async Task DeleteGroup(GroupRow row)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("DeleteGroupTitle"),
+            Tr("DeleteGroupConfirm", row.GroupName),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        errorMessage = string.Empty;
+        try
+        {
+            int excp = 0;
+            string msg = string.Empty;
+            var idStr = row.Id.ToString();
+
+            await Task.Run(() =>
+            {
+                var cls = new AccountModelsLib.GroupsCLS();
+                cls.Delete_Customer_Supplier_Group(ref excp, ref msg, idStr);
+            });
+
+            if (excp == 0)
+            {
+                await LoadGroups();
+                Snackbar.Add(Tr("GroupDeleted"), MudBlazor.Severity.Success);
+            }
+            else
+            {
+                errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

@@ -1,0 +1,28 @@
+﻿@* 1. المكتبات الأساسية من دوت نت *@
+@using System.Net.Http
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.JSInterop
+
+@* 2. مساحات الأسماء المحلية الخاصة بمشروع الويب الحالي *@
+@using AccountERP.Web
+@using AccountERP.Web.Client
+@using AccountERP.Web.Components
+
+@* 3. مساحات الأسماء الموجهة للمشروع المشترك الجديد (SharedUI) *@
+@using AccountERP.SharedUI
+@using AccountERP.SharedUI.Components
+@using AccountERP.SharedUI.Components.Layout
+@using AccountERP.SharedUI.Pages
+@using AccountERP.SharedUI.Pages.Customers
+
+@* 4. مكتبات الموديلات والترجمة المشتركة *@
+@using AccountModelsLib
+@using Microsoft.Extensions.Localization
+
+@* 5. حقن مترجم النصوص المشترك *@
+@inject IStringLocalizer<AccountERP.SharedUI.SharedUIAssemblyMarker> Lang

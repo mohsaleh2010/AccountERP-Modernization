@@ -1,0 +1,98 @@
+@* 🔔 جرس الإشعارات فى الشريط العلوي. يعرض تاريخ آخر الإشعارات الفعلية التى ظهرت كـ Snackbar
+   (مثل "الشاشة قيد الإنشاء") عبر NotificationCenterService، بدلاً من قائمة فارغة ثابتة. *@
+@using System.Globalization
+@using AccountERP.SharedUI
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject NotificationCenterService NotificationCenter
+@implements IDisposable
+
+@* 🟢 ملاحظة تصميم مهمة: تعمّدنا عدم وضع MudIconButton منفصل داخل ActivatorContent (كما كانت المحاولة الأولى) -
+   عنصر تفاعلي (button) متداخل داخل منطقة تفعيل MudMenu يبتلع حدث الـ click قبل أن تفتح القائمة نفسها،
+   وهي مشكلة حقيقية تم اكتشافها بالاختبار الفعلي فى المتصفح، وليست افتراضية. الاعتماد على معامل Icon
+   المدمج فى MudMenu نفسه (بنفس نمط LanguageSwitcher المؤكد عمله) هو الحل الموثوق. *@
+<MudTooltip Text="@Tr("NavNotifications")">
+    <MudBadge Content="@NotificationCenter.UnreadCount" Overlap="true" Color="Color.Error" Visible="@(NotificationCenter.UnreadCount > 0)" BadgeClass="notification-badge">
+        <MudMenu Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit"
+                 AnchorOrigin="@(LangService.IsRtl ? Origin.BottomLeft : Origin.BottomRight)"
+                 TransformOrigin="@(LangService.IsRtl ? Origin.TopLeft : Origin.TopRight)"
+                 OpenChanged="OnMenuOpenChanged">
+            <MudText Typo="Typo.subtitle2" Class="px-4 pt-2 pb-1 fw-bold">@Tr("NotificationsTitle")</MudText>
+            <MudDivider />
+            @if (NotificationCenter.Items.Count == 0)
+            {
+                <MudText Typo="Typo.body2" Class="px-4 py-3 text-muted" Style="min-width:220px;">@Tr("NotificationsEmpty")</MudText>
+            }
+            else
+            {
+                @* 🟢 عمداً div عادي وليس MudMenuItem: MudMenuItem يُغلق القائمة بالكامل عند أي ضغط بداخله،
+                   فلو استخدمناه هنا لَأُغلقت القائمة بمجرد الضغط على زر الحذف (X) بدلاً من حذف هذا العنصر
+                   فقط وإبقاء القائمة مفتوحة لحذف عناصر أخرى - راجع MODERNIZATION_NOTES.md. *@
+                @foreach (var item in NotificationCenter.Items)
+                {
+                    <div class="d-flex align-items-start px-4 py-2" style="gap:8px; min-width:220px; max-width:320px; white-space:normal;">
+                        <MudIcon Icon="@SeverityIcon(item.Severity)" Color="@SeverityColor(item.Severity)" Size="Size.Small" Class="mt-1" />
+                        <span class="flex-grow-1">@item.Message</span>
+                        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Class="mt-n1"
+                                       OnClick="@(() => NotificationCenter.Remove(item))" />
+                    </div>
+                }
+            }
+        </MudMenu>
+    </MudBadge>
+</MudTooltip>
+
+@code {
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnRerenderNeeded;
+        NotificationCenter.OnChanged += OnRerenderNeeded;
+    }
+
+    private void OnRerenderNeeded() => InvokeAsync(StateHasChanged);
+
+    // 🟢 تُصفَّر شارة العدد غير المقروء فور فتح القائمة فعلياً (وليس فور مجرد ظهور الإشعار كـ Snackbar) -
+    // العناصر نفسها تبقى فى القائمة (راجع NotificationCenterService)، فقط عدد "غير المقروء" يُصفَّر.
+    private void OnMenuOpenChanged(bool isOpen)
+    {
+        if (isOpen) NotificationCenter.MarkAllAsRead();
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnRerenderNeeded;
+        NotificationCenter.OnChanged -= OnRerenderNeeded;
+    }
+
+    // 🟢 Tr(...) بدلاً من Lang[...] مباشرة: نفس السبب والحل المُستخدَمين فى LanguageSwitcher.razor -
+    // تبديل اللغة فوري في الذاكرة بدون forceLoad، فلا يُحدَّث CultureInfo.CurrentUICulture تلقائياً.
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private static string SeverityIcon(Severity severity) => severity switch
+    {
+        Severity.Success => Icons.Material.Filled.CheckCircle,
+        Severity.Warning => Icons.Material.Filled.Warning,
+        Severity.Error => Icons.Material.Filled.Error,
+        _ => Icons.Material.Filled.Info,
+    };
+
+    private static Color SeverityColor(Severity severity) => severity switch
+    {
+        Severity.Success => Color.Success,
+        Severity.Warning => Color.Warning,
+        Severity.Error => Color.Error,
+        _ => Color.Info,
+    };
+}

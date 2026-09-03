@@ -1,0 +1,68 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+	<PropertyGroup>
+		<TargetFrameworks>net10.0 </TargetFrameworks>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<!-- نضمن تماماً عدم استدعاء أي ميزات تخص سيرفر الـ MVC التقليدي -->
+		<AddRazorSupportForMvc>false</AddRazorSupportForMvc>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Components\Layout1\**" />
+	  <Content Remove="Components\Layout1\**" />
+	  <EmbeddedResource Remove="Components\Layout1\**" />
+	  <None Remove="Components\Layout1\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="..\..\..\Backup\Razors\AccountERP.MobileDesktop\wwwroot\app.css" Link="wwwroot\app.css" />
+	</ItemGroup>
+
+	<!-- نقلنا الـ SupportedPlatform إلى ItemGroup مستقل وصحيح برمجياً ليفهمه الـ MSBuild -->
+	<ItemGroup>
+		<SupportedPlatform Include="browser" />
+	</ItemGroup>
+
+	<!-- نسحب فقط الحزم الأساسية لبناء المكونات والمطورة لتعمل Cross-Platform -->
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.9" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.9" />
+ 
+		<PackageReference Include="Microsoft.AspNetCore.Localization" Version="2.3.11" />
+ 
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
+ 
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
+ 
+		<PackageReference Include="MudBlazor" Version="9.7.0" />
+	</ItemGroup>
+	<!-- حزم عامة تدعم المنصتين -->
+ 
+	<ItemGroup>
+		<ProjectReference Include="..\..\AccountModelsLib\AccountModelsLib.csproj" SetTargetFramework="TargetFramework=net10.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Areas\" />
+		<Folder Include="Pages\Invoices\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- ملفات الترجمة الخاصة بـ IStringLocalizer<SharedUIAssemblyMarker> (المُحقن باسم Lang في كل الشاشات) -->
+		<EmbeddedResource Update="Resources\SharedUIAssemblyMarker.ar.resx">
+			<Generator></Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\SharedUIAssemblyMarker.en.resx">
+			<Generator></Generator>
+		</EmbeddedResource>
+		<!-- فرنسي وألماني: بنية جاهزة (Culture مدعومة + Resx موجود) بقيم إنجليزية مؤقتة لحين توفر ترجمة كاملة -->
+		<EmbeddedResource Update="Resources\SharedUIAssemblyMarker.fr.resx">
+			<Generator></Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Resources\SharedUIAssemblyMarker.de.resx">
+			<Generator></Generator>
+		</EmbeddedResource>
+	</ItemGroup>
+
+</Project>

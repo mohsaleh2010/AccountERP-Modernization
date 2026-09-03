@@ -1,0 +1,105 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- 🟢 إضافة net10.0-android لدعم الأندرويد في الـ Debug والـ Release -->
+		<!--<TargetFrameworks Condition="'$(Configuration)' == 'Debug'">net10.0-windows;net10.0;net10.0-android</TargetFrameworks>-->
+		<TargetFrameworks Condition="'$(Configuration)' != 'Debug'">net10.0-windows;net10.0;net10.0-android;net48</TargetFrameworks>
+		<TargetFrameworks>net10.0</TargetFrameworks>
+		<!-- 🛑 تعيين القيمة الافتراضية -->
+		<IsWinFormsTarget>false</IsWinFormsTarget>
+		<IsWinFormsTarget Condition="('$(TargetFramework)' == 'net10.0-windows' or '$(TargetFramework)' == 'net48') and !$(TargetFramework.Contains('19041')) and !$(TargetFramework.Contains('android')) and !$(TargetFramework.Contains('browser'))">true</IsWinFormsTarget>
+
+		<!-- تفعيل خصائص الويندوز ديسكتوب فقط وحصرياً عند بناء نسخة الويندوز فورمس الصافية -->
+		<UseWindowsForms Condition="'$(IsWinFormsTarget)' == 'true'">true</UseWindowsForms>
+		<ImportWindowsDesktopTargets Condition="'$(IsWinFormsTarget)' == 'true'">true</ImportWindowsDesktopTargets>
+		<SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net10.0-windows'">7.0</SupportedOSPlatformVersion>
+
+		<!-- 🟢 تعيين إصدار الأندرويد الأدنى المدعوم (مثلاً أندرويد 5.0 أو أحدث) لنسخة الأندرويد -->
+		<SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('android'))">21.0</SupportedOSPlatformVersion>
+
+		<InvariantGlobalization>true</InvariantGlobalization>
+		<OutputType>Library</OutputType>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<!-- 🟢 تفعيل رموز الـ Debugging للأندرويد بشكل صريح لحل المشكلة -->
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>portable</DebugType>
+    <AndroidIncludeDebugSymbols>true</AndroidIncludeDebugSymbols>
+    
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Models\Tax\BusinessCLS\API\Signer.cs" />
+	  <Compile Remove="Models\Tax\BusinessCLS\API\SignFromToken.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="appsettings.json" Link="appsettings.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="IdGen" Version="3.0.7" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2" />
+		<PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.10" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.10" />
+		<PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.11" />
+		<PackageReference Include="System.Resources.Extensions" Version="10.0.0-preview.*" />
+	</ItemGroup>
+
+	<!-- الحزم العامة المتوافقة تماماً مع الـ Web Assembly والـ Mobile -->
+	<ItemGroup>
+		 
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+		<PackageReference Include="RestSharp" Version="114.0.0" />
+		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+		<PackageReference Include="System.Net.Http" Version="4.3.4" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(RuntimeIdentifier)' != 'browser-wasm'">
+		<Reference Include="Pkcs11Interop">
+			<HintPath>..\packages\Einvoice-Express\Pkcs11Interop.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	<!-- 🛑 التعديل الجوهري: إضافة PrivateAssets="All" لمنع تسريب حزمة WinForms للمشاريع المشتركة ومشاريع MAUI -->
+	<ItemGroup Condition="'$(IsWinFormsTarget)' == 'true'">
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebView.WindowsForms" Version="10.0.80" PrivateAssets="All" />
+	</ItemGroup>
+
+	<!-- 🛑 عزل محولات الـ SystemWeb وحظر تسريبها أيضاً -->
+	<ItemGroup Condition="'$(IsWinFormsTarget)' == 'true' and '$(TargetFramework)' == 'net10.0-windows'">
+		<PackageReference Include="Microsoft.AspNetCore.SystemWebAdapters" Version="2.3.0" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.AspNetCore.SystemWebAdapters.CoreServices" Version="2.3.0" PrivateAssets="All" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(IsWinFormsTarget)' == 'true' and '$(TargetFramework)' == 'net48'">
+		<PackageReference Include="Microsoft.AspNetCore.SystemWebAdapters" Version="2.3.0" PrivateAssets="All" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="11111\" />
+		<Folder Include="Models\BeautyCenter\enum\" />
+		<Folder Include="Models\DBContext\" />
+		<Folder Include="Models\Invoice\NewFolder2\" />
+		<Folder Include="Models\ModelJson\" />
+		<Folder Include="Models\Tax\1Ref\ModelJson\Common\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\TafkeetProj\TafkeetProj.csproj" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+		<!-- شحن حزمة الموائمة لإضافة ميزات الـ Json داخل الـ System.Net.Http لمنصة net48 -->
+		<PackageReference Include="System.Net.Http.Json" Version="10.0.0" />
+	</ItemGroup>
+	<!-- 🎯 شحن حزمة الـ SqlClient لمنصات دوت نت الحديثة (الويندوز والأندرويد والصافي) وتجاهلها في net48 -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' or '$(TargetFramework)' == 'net10.0' or $(TargetFramework.Contains('android'))">
+		<PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+	</ItemGroup>
+</Project>

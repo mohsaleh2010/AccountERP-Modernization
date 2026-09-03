@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <!-- 🚧 لغة قيد التجهيز: القيم أدناه إنجليزية مؤقتاً (Placeholder) لحين اعتماد ترجمة فرنسية حقيقية. لا تُحذف التعليقات عند الترجمة. -->
+  <data name="AppTitle" xml:space="preserve"><value>Account ERP</value><comment>TODO: translate to French</comment></data>
+  <data name="NavHome" xml:space="preserve"><value>Home</value><comment>TODO: translate to French</comment></data>
+  <data name="NavAbout" xml:space="preserve"><value>About Us</value><comment>TODO: translate to French</comment></data>
+  <data name="MainMenuTitle" xml:space="preserve"><value>Main Menu</value><comment>TODO: translate to French</comment></data>
+  <data name="ErpModulesSection" xml:space="preserve"><value>ERP Modules</value><comment>TODO: translate to French</comment></data>
+  <data name="LoadingModules" xml:space="preserve"><value>Loading modules...</value><comment>TODO: translate to French</comment></data>
+  <data name="NoModulesAvailable" xml:space="preserve"><value>No modules available for your account. Please contact the administrator.</value><comment>TODO: translate to French</comment></data>
+  <data name="ComingSoon" xml:space="preserve"><value>Coming soon</value><comment>TODO: translate to French</comment></data>
+  <data name="ScreenNotBuiltYet" xml:space="preserve"><value>The "{0}" screen is not built on the web yet</value><comment>TODO: translate to French</comment></data>
+  <data name="HomeSubtitle" xml:space="preserve"><value>Manage your business from one place — pick a module from the sidebar or the shortcuts below to get started.</value><comment>TODO: translate to French</comment></data>
+  <data name="HomeQuickAccessTitle" xml:space="preserve"><value>Your available modules</value><comment>TODO: translate to French</comment></data>
+  <data name="ExpandAllMenus" xml:space="preserve"><value>Tout développer</value></data>
+  <data name="CollapseAllMenus" xml:space="preserve"><value>Tout réduire</value></data>
+
+  <data name="MenuChangePassword" xml:space="preserve"><value>Change Password</value><comment>TODO: translate to French</comment></data>
+  <data name="ChangePasswordTitle" xml:space="preserve"><value>Change Password</value><comment>TODO: translate to French</comment></data>
+  <data name="ChangePasswordSubtitle" xml:space="preserve"><value>Update your account password</value><comment>TODO: translate to French</comment></data>
+  <data name="OldPassword" xml:space="preserve"><value>Current Password</value><comment>TODO: translate to French</comment></data>
+  <data name="EnterOldPassword" xml:space="preserve"><value>Enter current password</value><comment>TODO: translate to French</comment></data>
+  <data name="NewPassword" xml:space="preserve"><value>New Password</value><comment>TODO: translate to French</comment></data>
+  <data name="EnterNewPassword" xml:space="preserve"><value>Enter new password</value><comment>TODO: translate to French</comment></data>
+  <data name="ConfirmNewPassword" xml:space="preserve"><value>Confirm New Password</value><comment>TODO: translate to French</comment></data>
+  <data name="EnterConfirmNewPassword" xml:space="preserve"><value>Re-enter new password</value><comment>TODO: translate to French</comment></data>
+  <data name="SaveNewPassword" xml:space="preserve"><value>Save New Password</value><comment>TODO: translate to French</comment></data>
+  <data name="SavingPassword" xml:space="preserve"><value>Saving...</value><comment>TODO: translate to French</comment></data>
+  <data name="ChangePasswordSuccess" xml:space="preserve"><value>Password changed successfully</value><comment>TODO: translate to French</comment></data>
+  <data name="InvalidOldPassword" xml:space="preserve"><value>Current password is incorrect</value><comment>TODO: translate to French</comment></data>
+  <data name="NewPasswordAlreadyUsed" xml:space="preserve"><value>This password is already in use, please choose a different one</value><comment>TODO: translate to French</comment></data>
+  <data name="NewPasswordMustDiffer" xml:space="preserve"><value>New password must be different from the current password</value><comment>TODO: translate to French</comment></data>
+  <data name="PasswordsDoNotMatch" xml:space="preserve"><value>Passwords do not match</value><comment>TODO: translate to French</comment></data>
+  <data name="BackToHome" xml:space="preserve"><value>Back to Home</value><comment>TODO: translate to French</comment></data>
+
+  <data name="NavNotifications" xml:space="preserve"><value>Notifications</value><comment>TODO: translate to French</comment></data>
+  <data name="NotificationsTitle" xml:space="preserve"><value>Notifications</value><comment>TODO: translate to French</comment></data>
+  <data name="NotificationsEmpty" xml:space="preserve"><value>No new notifications</value><comment>TODO: translate to French</comment></data>
+
+  <data name="ToggleTheme" xml:space="preserve"><value>Toggle theme</value><comment>TODO: translate to French</comment></data>
+  <data name="ThemeLight" xml:space="preserve"><value>Light</value><comment>TODO: translate to French</comment></data>
+  <data name="ThemeDark" xml:space="preserve"><value>Dark</value><comment>TODO: translate to French</comment></data>
+  <data name="ThemesTitle" xml:space="preserve"><value>Themes</value><comment>TODO: translate to French</comment></data>
+  <data name="ThemeModeLabel" xml:space="preserve"><value>Mode</value><comment>TODO: translate to French</comment></data>
+  <data name="ThemeColorLabel" xml:space="preserve"><value>Color</value><comment>TODO: translate to French</comment></data>
+
+  <data name="ChangeLanguage" xml:space="preserve"><value>Change language</value><comment>TODO: translate to French</comment></data>
+
+  <data name="Login" xml:space="preserve"><value>Login</value><comment>TODO: translate to French</comment></data>
+  <data name="Logout" xml:space="preserve"><value>Logout</value><comment>TODO: translate to French</comment></data>
+  <data name="LoginTitle" xml:space="preserve"><value>Account ERP Login</value><comment>TODO: translate to French</comment></data>
+  <data name="Username" xml:space="preserve"><value>Username</value><comment>TODO: translate to French</comment></data>
+  <data name="Password" xml:space="preserve"><value>Password</value><comment>TODO: translate to French</comment></data>
+  <data name="EnterUsername" xml:space="preserve"><value>Enter username</value><comment>TODO: translate to French</comment></data>
+  <data name="EnterPassword" xml:space="preserve"><value>Enter password</value><comment>TODO: translate to French</comment></data>
+  <data name="LoginButton" xml:space="preserve"><value>Login to System</value><comment>TODO: translate to French</comment></data>
+  <data name="VerifyingLogin" xml:space="preserve"><value>Verifying...</value><comment>TODO: translate to French</comment></data>
+  <data name="InvalidCredentials" xml:space="preserve"><value>Invalid username, password, or inactive account.</value><comment>TODO: translate to French</comment></data>
+  <data name="SystemError" xml:space="preserve"><value>System error: {0}</value><comment>TODO: translate to French</comment></data>
+  <data name="WelcomeUser" xml:space="preserve"><value>Welcome, {0}</value><comment>TODO: translate to French</comment></data>
+  <data name="LoginSubtitle" xml:space="preserve"><value>Sign in to continue to your account</value><comment>TODO: translate to French</comment></data>
+  <data name="LoginWelcomeTitle" xml:space="preserve"><value>Run your business with confidence</value><comment>TODO: translate to French</comment></data>
+  <data name="LoginWelcomeSubtitle" xml:space="preserve"><value>One system for accounting, inventory, sales, and e-invoicing — built for how your business actually works.</value><comment>TODO: translate to French</comment></data>
+  <data name="LoginFeatureAccounting" xml:space="preserve"><value>General ledger &amp; multi-branch accounting</value><comment>TODO: translate to French</comment></data>
+  <data name="LoginFeatureInventory" xml:space="preserve"><value>Inventory &amp; warehouse management</value><comment>TODO: translate to French</comment></data>
+  <data name="LoginFeatureMultiBranch" xml:space="preserve"><value>Multi-currency, multi-branch by design</value><comment>TODO: translate to French</comment></data>
+  <data name="ShowPassword" xml:space="preserve"><value>Show password</value><comment>TODO: translate to French</comment></data>
+  <data name="HidePassword" xml:space="preserve"><value>Hide password</value><comment>TODO: translate to French</comment></data>
+  <data name="CopyrightText" xml:space="preserve"><value>© {0} {1}. All rights reserved.</value><comment>TODO: translate to French</comment></data>
+
+  <data name="AboutUsTitle" xml:space="preserve"><value>About Account ERP</value><comment>TODO: translate to French</comment></data>
+  <data name="AboutUsBody" xml:space="preserve"><value>Account ERP is a multi-module accounting and inventory management system, integrated with sales, purchasing, taxes, e-invoicing, and more. This web/mobile/desktop experience is a modern rebuild of the original desktop system, built with Blazor.</value><comment>TODO: translate to French</comment></data>
+
+  <data name="Save" xml:space="preserve"><value>Save</value><comment>TODO: translate to French</comment></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancel</value><comment>TODO: translate to French</comment></data>
+  <data name="Yes" xml:space="preserve"><value>Yes</value><comment>TODO: translate to French</comment></data>
+  <data name="No" xml:space="preserve"><value>No</value><comment>TODO: translate to French</comment></data>
+
+  <data name="CustomerGroupsTitle" xml:space="preserve"><value>Customer Groups</value><comment>TODO: translate to French</comment></data>
+  <data name="SupplierGroupsTitle" xml:space="preserve"><value>Supplier Groups</value><comment>TODO: translate to French</comment></data>
+  <data name="GroupName" xml:space="preserve"><value>Group Name</value><comment>TODO: translate to French</comment></data>
+  <data name="AddGroup" xml:space="preserve"><value>New Group</value><comment>TODO: translate to French</comment></data>
+  <data name="NoGroupsYet" xml:space="preserve"><value>No groups to display yet.</value><comment>TODO: translate to French</comment></data>
+  <data name="GroupNameRequired" xml:space="preserve"><value>Please enter a group name</value><comment>TODO: translate to French</comment></data>
+  <data name="GroupNameAlreadyUsed" xml:space="preserve"><value>This name is already in use</value><comment>TODO: translate to French</comment></data>
+  <data name="GroupAdded" xml:space="preserve"><value>Group added successfully</value><comment>TODO: translate to French</comment></data>
+  <data name="GroupDeleted" xml:space="preserve"><value>Group deleted successfully</value><comment>TODO: translate to French</comment></data>
+  <data name="DeleteGroupTitle" xml:space="preserve"><value>Delete Group</value><comment>TODO: translate to French</comment></data>
+  <data name="DeleteGroupConfirm" xml:space="preserve"><value>Are you sure you want to delete the group "{0}"?</value><comment>TODO: translate to French</comment></data>
+  <data name="GroupInUseCannotDelete" xml:space="preserve"><value>This group cannot be deleted because it is assigned to one or more customers/suppliers</value><comment>TODO: translate to French</comment></data>
+</root>

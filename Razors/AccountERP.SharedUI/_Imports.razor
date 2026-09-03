@@ -1,0 +1,31 @@
+﻿@* 1. المكتبات الأساسية من دوت نت لـ Blazor *@
+@using System.Net.Http
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.JSInterop
+
+@* 2. مكتبة الموديلات والـ Localizer المشتركة *@
+@using AccountModelsLib
+@using Microsoft.Extensions.Localization
+
+@* 3. مساحات الأسماء الخاصة بالمشروع المشترك (SharedUI) فقط *@
+@using AccountERP.SharedUI
+@using AccountERP.SharedUI.Components
+@using AccountERP.SharedUI.Components.Layout
+ 
+@* 
+  🔄 تحديث مسارات الصفحات: تأكد من مطابقة أسماء المجلدات 
+  إذا كانت الصفحات داخل مجلد Pages أو داخل Components مباشرة
+*@
+@using AccountERP.SharedUI.Pages
+@using AccountERP.SharedUI.Pages.Account
+@using AccountERP.SharedUI.Pages.Customers
+@using AccountERP.SharedUI.Pages.Login
+ @using MudBlazor
+ 
+@* 4. حقن مترجم النصوص المشترك لكافة المكونات *@
+@inject IStringLocalizer<AccountERP.SharedUI.SharedUIAssemblyMarker> Lang

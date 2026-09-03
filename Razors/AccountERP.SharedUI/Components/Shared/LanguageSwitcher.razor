@@ -1,0 +1,86 @@
+@* 🌐 مكوّن تبديل اللغة الموحّد: يُستخدم في شريط الأعلى وفي شاشة تسجيل الدخول.
+   يُقرأ من LanguageService.SupportedLanguages تلقائياً، فإضافة لغة جديدة مستقبلاً
+   (إيطالية، تركية، ...) لا تحتاج تعديل أي شاشة تستخدم هذا المكوّن. *@
+@using System.Globalization
+@using AccountERP.SharedUI
+@inject LanguageService LangService
+@inject NavigationManager NavigationManager
+@inject AppSettings Settings
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<MudTooltip Text="@Tr("ChangeLanguage")">
+    <MudMenu Icon="@Icons.Material.Filled.Language" Color="Color.Inherit" Size="Size.Medium"
+             AnchorOrigin="@(LangService.IsRtl ? Origin.BottomLeft : Origin.BottomRight)"
+             TransformOrigin="@(LangService.IsRtl ? Origin.TopLeft : Origin.TopRight)">
+        @foreach (var lang in LanguageService.SupportedLanguages)
+        {
+            var code = lang.CultureCode;
+            <MudMenuItem OnClick="@(() => ChangeLanguage(code))">
+                <div class="d-flex align-items-center" style="gap:8px; min-width:150px;">
+                    <span style="font-size:1.1rem;">@lang.Flag</span>
+                    <span class="flex-grow-1">@lang.NativeName</span>
+                    @if (!lang.IsFullyTranslated)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">beta</MudChip>
+                    }
+                    @if (string.Equals(lang.CultureCode, LangService.CurrentLanguage, StringComparison.OrdinalIgnoreCase))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Primary" />
+                    }
+                </div>
+            </MudMenuItem>
+        }
+    </MudMenu>
+</MudTooltip>
+
+@code {
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    // 🟢 Tr(...) بدلاً من Lang[...] مباشرة: نفس السبب والحل المُستخدَمين فى Login.razor/NavMenuMud.razor -
+    // راجع MODERNIZATION_NOTES.md. هذا المكوّن يظهر قبل وبعد تسجيل الدخول.
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    private async Task ChangeLanguage(string cultureCode)
+    {
+        // 🟢 لا يجوز تمييز الويب عن الديسك توب/الموبايل عبر Environment.OSVersion.Platform: كود الـ Blazor
+        // Server ينفَّذ على السيرفر نفسه، فلو كان السيرفر Windows (وهو الحال هنا) ستكون النتيجة Win32NT فى
+        // الحالتين معاً. الفيصل الموثوق هو علم AppSettings.IsWeb المضبوط صراحةً فى كل مشروع مضيف (Program.cs/MauiProgram.cs).
+        //
+        // 🔥 مهم جداً: لا يجوز استخدام forceLoad:true هنا بعد الآن. كانت تعمل إعادة تحميل كاملة للمتصفح
+        // لضبط الكوكي عبر /Culture/SetCulture، وهو ما يُنهي دائرة Blazor Server الحالية (SignalR circuit)
+        // ويُعيد بناء كل الخدمات الـ Scoped من جديد - بما فيها MenuStateService.IsAuthenticated التي لا
+        // تُخزَّن إلا في الذاكرة - فيُعاد توجيه المستخدم المسجّل دخوله فعلياً إلى شاشة /login فور تغيير اللغة.
+        // البديل: تبديل فوري في الذاكرة (نفس مسار الديسك توب/الموبايل) + حفظ الكوكي في الخلفية بدون Navigation.
+        LangService.SetCulture(cultureCode);
+
+        if (Settings.IsWeb)
+        {
+            // 🌐 حفظ الكوكي فى الخلفية فقط (بدون Navigation) حتى تُقرأ الثقافة الصحيحة عند أي تحميل كامل
+            // لاحق للصفحة (فتح تبويب جديد، تحديث المتصفح F5) - لا تؤثر على الدائرة الحالية إطلاقاً.
+            await JSRuntime.InvokeVoidAsync("accountErpInterop.persistCultureCookie", cultureCode);
+        }
+    }
+}

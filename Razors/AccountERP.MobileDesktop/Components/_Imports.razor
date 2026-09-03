@@ -1,0 +1,26 @@
+﻿@* 1. المكتبات الأساسية لمنصة Blazor Hybrid (MAUI) *@
+@using System.Net.Http
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.JSInterop
+
+@* 2. مساحة الاسم المحلية لمشروع الديسك توب *@
+@using AccountERP.MobileDesktop
+
+@* 3. مساحات الأسماء الموجهة للمشروع المشترك (SharedUI) بعد نقل الـ Layouts والصفحات *@
+@using AccountERP.SharedUI
+@using AccountERP.SharedUI.Components
+@using AccountERP.SharedUI.Components.Layout
+@using AccountERP.SharedUI.Pages
+@using AccountERP.SharedUI.Pages.Customers
+
+@* 4. مكتبات الموديلات والترجمة والخدمات المشتركة *@
+@using AccountModelsLib
+@using Microsoft.Extensions.Localization
+
+@* 5. حقن مترجم النصوص وخدمة اللغة *@
+@inject IStringLocalizer<AccountERP.SharedUI.SharedUIAssemblyMarker> Lang
+@inject LanguageService LangService

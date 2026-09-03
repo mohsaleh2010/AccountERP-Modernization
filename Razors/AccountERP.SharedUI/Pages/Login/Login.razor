@@ -1,0 +1,222 @@
+@page "/login"
+@layout AccountERP.SharedUI.Components.Layout.AuthLayout
+
+@using System.Globalization
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Components.Shared
+@using AccountERP.SharedUI.Services
+@using Microsoft.Extensions.DependencyInjection
+@inject IServiceProvider ServiceProvider
+@inject LanguageService LangService
+@inject ThemeService ThemeService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject AppSettings Settings
+@implements IDisposable
+
+<PageTitle>@Tr("LoginTitle")</PageTitle>
+
+<MudGrid Spacing="0" Class="ma-0" Style="min-height:100dvh;">
+
+    @* ============ لوحة الهوية/البراند - مخفية على الموبايل، تظهر من md فأعلى ============ *@
+    <MudItem xs="0" md="6" Class="d-none d-md-flex flex-column justify-space-between pa-10"
+             Style="background:linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%); color:#fff;">
+
+        <div class="d-flex align-items-center" style="gap:12px;">
+            <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Size="Size.Large" />
+            <MudText Typo="Typo.h6" Class="fw-bold">@Tr("AppTitle")</MudText>
+        </div>
+
+        <div>
+            <MudText Typo="Typo.h3" Class="fw-bold mb-4" Style="line-height:1.25;">@Tr("LoginWelcomeTitle")</MudText>
+            <MudText Typo="Typo.body1" Class="mb-8" Style="opacity:.85; max-width:32rem;">@Tr("LoginWelcomeSubtitle")</MudText>
+
+            <MudStack Spacing="4">
+                <div class="d-flex align-items-center" style="gap:12px;">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" Size="Size.Small" />
+                    <MudText Typo="Typo.body1">@Tr("LoginFeatureAccounting")</MudText>
+                </div>
+                <div class="d-flex align-items-center" style="gap:12px;">
+                    <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Small" />
+                    <MudText Typo="Typo.body1">@Tr("LoginFeatureInventory")</MudText>
+                </div>
+                <div class="d-flex align-items-center" style="gap:12px;">
+                    <MudIcon Icon="@Icons.Material.Filled.Sync" Size="Size.Small" />
+                    <MudText Typo="Typo.body1">@Tr("LoginFeatureMultiBranch")</MudText>
+                </div>
+            </MudStack>
+        </div>
+
+        <MudText Typo="Typo.caption" Style="opacity:.7;">
+            @Tr("CopyrightText", DateTime.Now.Year, Tr("AppTitle"))
+        </MudText>
+    </MudItem>
+
+    @* ============ لوحة النموذج ============ *@
+    <MudItem xs="12" md="6" Class="d-flex flex-column pa-4 pa-sm-8" Style="min-height:100dvh;">
+
+        @* شريط علوي: العلامة على الموبايل فقط (تظهر لوحة الهوية بدلاً منها من md فأعلى) + تبديل الثيم/اللغة دائماً *@
+        <div class="d-flex align-items-center justify-content-between mb-6">
+            <div class="d-flex align-items-center d-md-none" style="gap:8px;">
+                <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Color="Color.Primary" />
+                <MudText Typo="Typo.subtitle1" Class="fw-bold">@Tr("AppTitle")</MudText>
+            </div>
+            <MudSpacer />
+            <MudTooltip Text="@Tr("ThemesTitle")">
+                <MudIconButton Icon="@Icons.Material.Outlined.Palette" OnClick="@(() => _themesMenuOpen = true)" />
+            </MudTooltip>
+            <LanguageSwitcher />
+        </div>
+
+        <ThemesMenu @bind-Open="_themesMenuOpen" />
+
+        @* منطقة النموذج تتوسط باقي المساحة رأسياً *@
+        <div class="d-flex flex-grow-1 align-items-center justify-content-center">
+            <div style="width:100%; max-width:400px;">
+
+                <MudText Typo="Typo.h5" Class="fw-bold mb-1">@Tr("LoginTitle")</MudText>
+                <MudText Typo="Typo.body2" Class="mb-6 mud-text-secondary">@Tr("LoginSubtitle")</MudText>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">
+                        @errorMessage
+                    </MudAlert>
+                }
+
+                <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+                    <DataAnnotationsValidator />
+
+                    <MudTextField T="string" @bind-Value="loginModel.Username" Label="@Tr("Username")"
+                                  Placeholder="@Tr("EnterUsername")" Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person"
+                                  Class="mb-4" FullWidth="true" For="@(() => loginModel.Username)"
+                                  UserAttributes="@(new Dictionary<string, object> { ["autocomplete"] = "username" })" />
+
+                    <MudTextField T="string" @bind-Value="loginModel.Password" Label="@Tr("Password")"
+                                  Placeholder="@Tr("EnterPassword")" Variant="Variant.Outlined"
+                                  InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                                  Adornment="Adornment.End"
+                                  AdornmentIcon="@(_showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                                  AdornmentAriaLabel="@(_showPassword ? Tr("HidePassword") : Tr("ShowPassword"))"
+                                  OnAdornmentClick="@(() => _showPassword = !_showPassword)"
+                                  Class="mb-2" FullWidth="true" For="@(() => loginModel.Password)"
+                                  UserAttributes="@(new Dictionary<string, object> { ["autocomplete"] = "current-password" })" />
+
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary"
+                               FullWidth="true" Size="Size.Large" Disabled="@isProcessing" Class="mt-4">
+                        @if (isProcessing)
+                        {
+                            <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+                            @Tr("VerifyingLogin")
+                        }
+                        else
+                        {
+                            @Tr("LoginButton")
+                        }
+                    </MudButton>
+                </EditForm>
+            </div>
+        </div>
+
+        @* التذييل يظهر دائماً في لوحة النموذج (على الموبايل هو المصدر الوحيد لنص الحقوق، لأن لوحة الهوية مخفية) *@
+        <MudText Typo="Typo.caption" Align="Align.Center" Class="d-md-none mud-text-secondary">
+            @Tr("CopyrightText", DateTime.Now.Year, Tr("AppTitle"))
+        </MudText>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private LoginViewModel loginModel = new();
+    private string errorMessage = string.Empty;
+    private bool isProcessing = false;
+    private bool _showPassword = false;
+    private bool _themesMenuOpen = false;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    // 🟢 Tr(...) بدلاً من Lang[...] مباشرة فى كل هذا الملف: قبل تسجيل الدخول، تبديل اللغة كان يقلب اتجاه
+    // الصفحة (rtl/ltr - مربوطة مباشرة بـ AuthLayout.LangService.IsRtl، فتتحدّث فوراً بلا مشاكل) لكن نص
+    // الصفحة نفسه (Lang[...]) يبقى بلغته القديمة حتى يعمل المستخدم Refresh كامل للمتصفح - لأن
+    // IStringLocalizer يقرأ الثقافة من CultureInfo.CurrentUICulture الطموح وقت الرندرة الفعلي، وهي لا
+    // تُضبط بشكل موثوق 100% داخل نفس الدائرة فقط بالاعتماد على ShouldRender/ApplyToCurrentThread (نفس
+    // السبب والحل المُستخدَمين فى NavMenuMud.razor/MenuNode.razor/Home.razor - راجع MODERNIZATION_NOTES.md).
+    // Tr هنا يُبدّل الثقافة صراحةً وقت كل استدعاء بغض النظر عن حالة الخيط الفعلي، فيضمن ظهور النص الصحيح
+    // فوراً بدون أي حاجة لإعادة تحميل الصفحة.
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        isProcessing = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            // 🟢 يُحلّ IAuthService كسولاً هنا فقط عند الضغط الفعلي على "دخول" - وليس عبر @inject الذي كان
+            // يُنشئ My_DbContext (ويحاول فتح اتصال حقيقي بقاعدة البيانات) بمجرد فتح شاشة تسجيل الدخول
+            // حتى قبل أن يكتب المستخدم أي بيانات، فيتسبب ذلك فى فشل عرض الشاشة بالكامل عند تعطل قاعدة البيانات
+            var authService = ServiceProvider.GetRequiredService<IAuthService>();
+            var result = await authService.LoginAsync(loginModel);
+
+            if (result)
+            {
+                // 🟢 على الويب فقط: إصدار كوكي دخول موقّع يبقى الدخول ثابتاً حتى بعد إعادة تحميل كاملة
+                // للصفحة (مثل الضغط على عنصر قائمة جانبية لشاشة لم تُبنَ بعد بـ Blazor). لا يوجد
+                // LoginTokenStore مسجَّلة على الديسك توب/الموبايل عمداً، فنتجاهل بأمان هناك.
+                if (Settings.IsWeb)
+                {
+                    var tokenStore = ServiceProvider.GetService<AccountModelsLib.Models.LoginTokenStore>();
+                    if (tokenStore != null)
+                    {
+                        var token = tokenStore.IssueToken(Common.User_Id);
+                        try
+                        {
+                            await JSRuntime.InvokeVoidAsync("accountErpInterop.persistLoginCookie", token);
+                        }
+                        catch
+                        {
+                            // غير حرج: لو فشل حفظ الكوكي يظل المستخدم مسجَّلاً دخوله لهذه الدائرة الحالية بالفعل
+                        }
+                    }
+                }
+
+                // نجاح الدخول -> التوجيه إلى الصفحة الرئيسية حيث شُحنت القوائم المسموح بها بنجاح
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = Tr("InvalidCredentials");
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

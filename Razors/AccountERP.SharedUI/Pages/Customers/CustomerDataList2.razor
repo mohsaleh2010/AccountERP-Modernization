@@ -1,0 +1,150 @@
+﻿@page "/customers/list2"
+@using Microsoft.AspNetCore.Components.Web
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.ViewModels
+@inject AccountERP.SharedUI.LanguageService LangService
+ 
+
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+ 
+    <MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsArabic ? "rtl" : "ltr")}; text-align: {(LangService.IsArabic ? "right" : "left")};")">
+
+        <!-- عنوان الشاشة والشريط العلوي -->
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudGrid AlignItems="AlignItems.Center">
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
+                        @(LangService.IsArabic ? "بيانات العملاء" : "Customer Data")
+                    </MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6" Class="@(LangService.IsArabic ? "text-left" : "text-right")">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadData" Class="mx-1 px-6">
+                        @(LangService.IsArabic ? "عرض" : "View")
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="CloseScreen" Class="mx-1 px-6">
+                        @(LangService.IsArabic ? "غلق" : "Close")
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <!-- فلاتر البحث والفلترة -->
+        <MudCard Elevation="1" Class="mb-4 bg-light">
+            <MudCardContent>
+                <MudGrid AlignItems="AlignItems.Center">
+
+                    <!-- اختيار العميل -->
+                    <MudItem xs="12" md="3">
+                        <MudSelect T="long?" 
+                        Label="@(LangService.IsArabic ? "العميل:" : "Customer:")" 
+                        @bind-Value="viewModel.SelectedCustomerId" 
+                        Variant="Variant.Outlined" 
+                        Dense="true">
+
+                            <MudSelectItem T="long?" Value="((long?)null)">
+                                @(LangService.IsArabic ? "-- اختر العميل --" : "-- Select Customer --")
+                            </MudSelectItem>
+
+                            <MudSelectItem T="long?" Value="((long?)1)">
+                                @(LangService.IsArabic ? "التوحيد والنور (فرع المهندسين)" : "Al-Tawheed Wal-Noor (Mohandessin)")
+                            </MudSelectItem>
+
+                            <MudSelectItem T="long?" Value="((long?)2)">
+                                @(LangService.IsArabic ? "السروجى" : "Client")
+                            </MudSelectItem>
+
+                        </MudSelect>
+                    </MudItem>
+
+
+                    <!-- حقل البحث بالاسم -->
+                    <MudItem xs="12" md="3">
+                        <MudTextField T="string" Label="@(LangService.IsArabic ? "الاسم:" : "Name:")" 
+                        @bind-Value="viewModel.SearchName" 
+                        Placeholder="@(LangService.IsArabic ? "ابحث هنا..." : "Search here...")" 
+                        Variant="Variant.Outlined" Dense="true" Immediate="true" />
+                    </MudItem>
+
+                    <!-- أزرار اختيار نوع العميل (Radio Buttons) -->
+                    <MudItem xs="12" md="4" Class="d-flex justify-space-around align-center">
+                        <!-- استخدم الربط الثنائي الذكي هنا واقضِ على الخطأ -->
+                        <MudRadioGroup T="string" @bind-SelectedOption="viewModel.CustomerTypeFilter">
+                            <MudRadio T="string" Option="@("Misc")" Color="Color.Primary">
+                                @(LangService.IsArabic ? "عملاء متنوعون" : "Misc Customers")
+                            </MudRadio>
+                            <MudRadio T="string" Option="@("Regular")" Color="Color.Primary">
+                                @(LangService.IsArabic ? "عملاء دائمون" : "Regular Customers")
+                            </MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+
+                    <!-- خيار النشطين فقط (Checkbox) -->
+                    <MudItem xs="12" md="2" Class="d-flex align-center">
+                        <MudCheckBox T="bool" @bind-Value="viewModel.IsActiveOnly" Color="Color.Primary" Label="@(LangService.IsArabic ? "الفاعلين" : "Active Only")" Dense="true" />
+                    </MudItem>
+
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+
+        <!-- جدول عرض البيانات (MudTable) -->
+        <MudTable Items="@viewModel.CustomersLstVM" Hover="true" Striped="true" Bordered="true" FixedHeader="true" Height="550px" Elevation="1">
+            <HeaderContent>
+                <MudTh Style="width: 5%; text-align: center; font-weight: bold;">#</MudTh>
+                <MudTh Style="width: 35%; font-weight: bold;">@(LangService.IsArabic ? "اسم العميل" : "Customer Name")</MudTh>
+                <MudTh Style="width: 30%; font-weight: bold;">@(LangService.IsArabic ? "العنوان" : "Address")</MudTh>
+                <MudTh Style="width: 15%; text-align: center; font-weight: bold;">@(LangService.IsArabic ? "السجل التجاري" : "Commercial Register")</MudTh>
+                <MudTh Style="width: 15%; text-align: center; font-weight: bold;">@(LangService.IsArabic ? "رقم التسجيل الضريبي" : "Tax No")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="#" Style="text-align: center; font-weight: bold;">@(viewModel.CustomersLstVM.IndexOf(context) + 1)</MudTd>
+                <MudTd DataLabel="Name" Class="blue-text text-darken-2 font-weight-bold">@context.Name</MudTd>
+                <MudTd DataLabel="Address">@context.Address</MudTd>
+                <MudTd DataLabel="Commercial Register" Style="text-align: center;">@context.Commercial_Register</MudTd>
+                <MudTd DataLabel="Tax No" Style="text-align: center; font-weight: bold;" Class="red-text">@context.Tax_No</MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Typo="Typo.body1" Align="Align.Center" Class="py-4 gray-text">
+                    @(LangService.IsArabic ? "لا توجد بيانات لعرضها. اضغط على \"عرض\" لجلب البيانات." : "No data available. Click \"View\" to load data.")
+
+                    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                </MudText>
+            </NoRecordsContent>
+        </MudTable>
+
+    </MudContainer>
+ 
+@code {
+    private CustomerListViewModel viewModel = new CustomerListViewModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var customers = await Task.Run(() =>
+        {
+            CustomerCLS cs = new CustomerCLS();
+            AccountModelsLib.operations opp = new AccountModelsLib.operations();
+            string NameSearch = string.IsNullOrEmpty(viewModel.SearchName) ? "" : viewModel.SearchName;
+            int Active = viewModel.IsActiveOnly ? 1 : -1;
+            int General_Customer_Flage = 0;
+
+            return cs.GetCustomersOnlyList(ref opp, NameSearch, Active, General_Customer_Flage);
+        });
+
+        viewModel.CustomersLstVM = customers;
+        StateHasChanged();
+    }
+
+    private void CloseScreen()
+    {
+        // منطق إغلاق الشاشة
+    }
+}
