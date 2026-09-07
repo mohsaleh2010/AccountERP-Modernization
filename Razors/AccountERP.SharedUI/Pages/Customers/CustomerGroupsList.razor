@@ -20,20 +20,21 @@
 
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
 
+    @* 🟢 MudStack بعرض السطر (Row) + Justify.SpaceBetween بدلاً من تقسيم الصف قسمين (MudItem sm="6" لكل
+       عنصر) مع justify-start/justify-end يدوياً حسب IsRtl: التقسيم لعمودين كان يضع الزرار عند الحافة
+       الداخلية لعموده هو (نصف الشاشة تقريباً)، فيظهر قريباً من المنتصف بدل الحافة الخارجية الفعلية للصفحة.
+       SpaceBetween على صف واحد يدفع العنوان والزرار كل لحافته الخارجية المنطقية (Start/End) تلقائياً حسب
+       اتجاه الصفحة (dir=rtl/ltr) دون أي شرط IsRtl يدوي - عربي: العنوان يميناً والزرار يساراً، غير ذلك: العكس. *@
     <MudPaper Class="pa-4 mb-4" Elevation="1">
-        <MudGrid AlignItems="AlignItems.Center">
-            <MudItem xs="12" sm="6">
-                <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
-                    @Tr(IsSupplier ? "SupplierGroupsTitle" : "CustomerGroupsTitle")
-                </MudText>
-            </MudItem>
-            <MudItem xs="12" sm="6" Class="@(LangService.IsRtl ? "d-flex justify-start" : "d-flex justify-end")">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="OpenAddDialog">
-                    @Tr("AddGroup")
-                </MudButton>
-            </MudItem>
-        </MudGrid>
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
+                @Tr(IsSupplier ? "SupplierGroupsTitle" : "CustomerGroupsTitle")
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenAddDialog">
+                @Tr("AddGroup")
+            </MudButton>
+        </MudStack>
     </MudPaper>
 
     @if (!string.IsNullOrEmpty(errorMessage))
@@ -41,7 +42,12 @@
         <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@errorMessage</MudAlert>
     }
 
-    <MudTable Items="@groups" Hover="true" Striped="true" Bordered="true" Loading="@isLoading" Elevation="1">
+    @* 🟢 Breakpoint="Breakpoint.None": يعطّل تحوّل MudTable التلقائي على الموبايل إلى شكل "بطاقة" يكدّس كل
+       خلية فى صف منفصل بلا تسمية (بما أن أعمدة MudTd هنا بلا DataLabel) - وهو ما كان يُظهر زرّي التعديل/الحذف
+       أسفل اسم المجموعة متفرقين بدل أن يظهرا بجوار بعضهما فى نفس الصف. الجدول هنا بعمودين بسيطين فقط (اسم
+       نصي قصير + أيقونتا إجراء صغيرتان) فيسع صف الجدول العادي بسهولة حتى على عرض شاشة موبايل ضيق، فتعطيل
+       التكديس هنا أنسب من الاعتماد على السلوك الافتراضي. *@
+    <MudTable Items="@groups" Hover="true" Striped="true" Bordered="true" Loading="@isLoading" Elevation="1" Breakpoint="Breakpoint.None">
         <HeaderContent>
             <MudTh>@Tr("GroupName")</MudTh>
             <MudTh Style="width:140px;"></MudTh>
@@ -74,7 +80,13 @@
     </MudTable>
 </MudContainer>
 
-<MudDialog @bind-Visible="addDialogOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true })">
+@* 🟢 Options مُحدَّدة صراحة هنا (بدلاً من الاعتماد فقط على افتراضيات MudDialogProvider العامة فى
+   MainLayoutMud.razor) لضمان نفس السلوك دائماً لهذا المودال تحديداً: عرض معقول (Small + FullWidth=true معاً -
+   FullWidth=false وحده كان يجعله ينكمش على عرض حقل الإدخال الواحد فقط فيبدو ضيقاً جداً/غير طبيعي رغم أن
+   MaxWidth نفسه كان معقولاً)، زر إغلاق X ظاهر، وعدم الإغلاق بالضغط خارج المودال بالخطأ (BackdropClick=false) -
+   راجع MODERNIZATION_NOTES.md. *@
+<MudDialog @bind-Visible="addDialogOpen"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
     <TitleContent>@Tr("AddGroup")</TitleContent>
     <DialogContent>
         @if (!string.IsNullOrEmpty(addErrorMessage))
@@ -125,11 +137,18 @@
     protected override void OnInitialized()
     {
         LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        // 🟢 الانتقال بين "/customers/groups" و"/suppliers/groups" (نفس المكوّن لكلا المسارين - راجع التعليق
+        // أعلاه) عبر رابط فى السايد بار كان يحتاج Refresh يدوي للمتصفح ليعرض المجموعات الصحيحة: الاعتماد على
+        // OnParametersSetAsync وحده لالتقاط تغيّر GroupType غير موثوق هنا بنفس السبب الموثّق فى NavMenuMud.razor
+        // (الرندرة المتتالية داخل MudDrawer/MudNavGroup لا تستدعي دورة حياة المكوّن الهدف بشكل موثوق 100% من
+        // الوقت) - اشتراك مباشر فى NavigationManager.LocationChanged يضمن إعادة التحميل فوراً بغض النظر عن ذلك.
+        NavigationManager.LocationChanged += OnLocationChangedHandler;
     }
 
     // 🟢 نفس المكوّن يُعاد استخدامه بين المسارين بدون إعادة إنشاء - لازم إعادة تحميل القائمة عند تغيّر
     // GroupType الفعلي فقط (وليس عند كل رندرة)، بنفس فكرة GroupsListFrm الذى يحمّل بيانات مختلفة حسب الـ
-    // constructor عند كل فتح.
+    // constructor عند كل فتح. يبقى هذا احتياطياً (راجع الاشتراك المباشر فى OnInitialized أعلاه) - الحارس
+    // (_loadedForGroupType != GroupType) يمنع أي تحميل مزدوج لو استُدعيت الدالتان لنفس التنقّل.
     protected override async Task OnParametersSetAsync()
     {
         if (_loadedForGroupType != GroupType)
@@ -140,6 +159,27 @@
     }
 
     private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private async void OnLocationChangedHandler(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        if (_loadedForGroupType == GroupType)
+        {
+            return;
+        }
+
+        // 🟢 تفريغ حالة التعديل/الإضافة الجارية عند التنقّل بين النوعين (عميل/مورد) - وإلا قد يبقى صف فى
+        // وضع التعديل (editingId) ينتمي لقائمة المجموعات السابقة معروضاً فوق قائمة المجموعات الجديدة.
+        editingId = null;
+        addDialogOpen = false;
+        errorMessage = string.Empty;
+
+        _loadedForGroupType = GroupType;
+        await InvokeAsync(async () =>
+        {
+            await LoadGroups();
+            StateHasChanged();
+        });
+    }
 
     private string Tr(string key, params object[] args)
     {
@@ -335,5 +375,6 @@
     public void Dispose()
     {
         LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+        NavigationManager.LocationChanged -= OnLocationChangedHandler;
     }
 }

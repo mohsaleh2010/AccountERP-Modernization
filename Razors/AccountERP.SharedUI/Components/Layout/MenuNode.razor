@@ -24,10 +24,11 @@
 }
 else
 {
-    var implemented = KnownRoutes.IsImplemented(Menu.KeysData);
+    var route = Menu.GetEffectiveRoute();
+    var implemented = KnownRoutes.IsImplemented(route);
     @if (implemented)
     {
-        <MudNavLink Href="@Menu.KeysData" Match="NavLinkMatch.Prefix" Icon="@GetLeafIcon(Menu.Description)">
+        <MudNavLink Href="@route" Match="NavLinkMatch.Prefix" Icon="@GetLeafIcon(Menu.Description)">
             @Menu.GetLocalizedDescription(LangService.CurrentLanguage)
         </MudNavLink>
     }
@@ -120,23 +121,11 @@ else
     // 🟢 أيقونة كل شاشة نهائية (ورقة/Leaf) - مطابقة بكلمات مفتاحية أدق لطبيعة الشاشة نفسها (قائمة/إضافة/
     // تقرير/طباعة...) بدلاً من سهم ChevronRight الثابت الذى كان يظهر لكل الشاشات بلا تمييز ويوحي خطأً
     // بإمكانية توسيع الرابط رغم أنه نهائي (لا يحتوي أبناء).
-    private static readonly (string[] Keywords, string Icon)[] LeafIconMap = new (string[], string)[]
-    {
-        (new[] { "شجرة", "tree" }, Icons.Material.Outlined.AccountTree),
-        (new[] { "قائمة", "list", "عرض", "استعلام", "inquiry" }, Icons.Material.Outlined.ViewList),
-        (new[] { "اضافة", "إضافة", "جديد", "add", "new" }, Icons.Material.Outlined.AddCircleOutline),
-        (new[] { "تعديل", "edit" }, Icons.Material.Outlined.EditNote),
-        (new[] { "تقرير", "report" }, Icons.Material.Outlined.Assessment),
-        (new[] { "طباعة", "print" }, Icons.Material.Outlined.Print),
-        (new[] { "قيد", "journal", "entry" }, Icons.Material.Outlined.MenuBook),
-        (new[] { "ميزان", "trial", "balance" }, Icons.Material.Outlined.Balance),
-        (new[] { "اصل", "أصل", "asset" }, Icons.Material.Outlined.Domain),
-        (new[] { "اعداد", "صلاحي", "setting", "permission" }, Icons.Material.Outlined.Tune),
-    };
-
+    // 🟢 نُقلت لـ MenuIcons.cs (Services) لتُستخدَم أيضاً من شريط التبويبات (TabHost.razor) بدل تكرارها هنا
+    // كنسخة خاصة - نفس الأيقونة الآن لأي شاشة سواء بالقائمة الجانبية أو كتبويب مفتوح.
     private static string GetGroupIcon(string? description) => MatchIcon(description, GroupIconMap, Icons.Material.Outlined.FolderOpen);
 
-    private static string GetLeafIcon(string? description) => MatchIcon(description, LeafIconMap, Icons.Material.Outlined.Description);
+    private static string GetLeafIcon(string? description) => MenuIcons.GetLeafIcon(description);
 
     private static string MatchIcon(string? description, (string[] Keywords, string Icon)[] map, string fallback)
     {

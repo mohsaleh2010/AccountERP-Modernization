@@ -1,0 +1,366 @@
+@* 🟢 "إضافة حساب" من شاشة مستقلة (بطلب المستخدم صراحة) - نظير Account_Common_LIB.Account_Common.Account_Tree_Codes.
+   Add_Account_Codes.cs (WinForms، ShowDialog() مودال فعلياً) بدل شاشة WinForms نفسها. تُفتَح دائماً كابن مباشر
+   للعقدة المختارة حالياً فى الشجرة (ParentNode) - تماماً كما يتطلب BtnAddNewAccounts_Click فى الأصل وجود عقدة
+   مختارة أولاً. كل القراءة/الإضافة تمر عبر نفس الكلاسات التى تستخدمها شاشة الويندوز فورمز:
+   AccountModelsLib.Common.MakeAutomatic_AccontCode (توليد الكود التالي تلقائياً) وAccountModelsLib.
+   Add_Account_CodesCLS.AddNewAccount (الإضافة الفعلية، بما فيها إنشاء سجل عميل/مورد/بنك/... مرتبط تلقائياً
+   إن كان نوع الحساب يطابق أحدها - راجع MODERNIZATION_NOTES.md لتفاصيل هذا المسار). *@
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@inject LanguageService LangService
+
+<MudDialog @bind-Visible="Visible"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr("AddAccountTitle")</TitleContent>
+    <DialogContent>
+        @if (ParentNode == null)
+        {
+            <MudAlert Severity="Severity.Warning">@Tr("SelectParentAccountFirst")</MudAlert>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                @Tr("ParentAccountLabel"): <strong>@ParentNode.SubAccount_NO &nbsp; @ParentNode.SubAccount_Name</strong>
+            </MudText>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_errorMessage</MudAlert>
+            }
+
+            <MudGrid Spacing="3">
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" @bind-Value="_accountName" Label="@Tr("AccountNameLabel")" Required="true" AutoFocus="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" @bind-Value="_accountCode" Label="@Tr("AccountCodeLabel")" Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int" Value="_currencyId ?? 0" ValueChanged="@((int v) => { _currencyId = v; })" Label="@Tr("CurrencyLabel")">
+                        @foreach (var c in _currencies)
+                        {
+                            <MudSelectItem T="int" Value="@c.Id">@c.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int" Value="_accountTypeValue" ValueChanged="OnAccountTypeSelected" Label="@Tr("AccountTypeLabel")" Disabled="_accountTypeLocked">
+                        @foreach (var t in _accountTypes)
+                        {
+                            <MudSelectItem T="int" Value="@t.Value">@t.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int" @bind-Value="_accountFollows" Label="@Tr("AccountFollowsLabel")" Disabled="_accountFollowsLocked">
+                        @foreach (var f in AccountLookups.AccountFollows)
+                        {
+                            <MudSelectItem T="int" Value="@int.Parse(f.Value)">@f.TextAr</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int" @bind-Value="_cashFlowType" Label="@Tr("CashFlowTypeLabel")">
+                        @foreach (var c in AccountLookups.CashFlowTypes)
+                        {
+                            <MudSelectItem T="int" Value="@int.Parse(c.Value)">@c.TextAr</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="string" @bind-Value="_firstSubCode" Label="@Tr("FirstSubCodeLabel")">
+                        @foreach (var f in AccountLookups.FirstSubCodes)
+                        {
+                            <MudSelectItem T="string" Value="@f.Value">@f.TextAr</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6" Class="d-flex align-items-center">
+                    <MudRadioGroup T="int" @bind-Value="_natureType">
+                        <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("NatureDebitLabel")</MudRadio>
+                        <MudRadio T="int" Value="2" Color="Color.Primary">@Tr("NatureCreditLabel")</MudRadio>
+                    </MudRadioGroup>
+                </MudItem>
+
+                @if (_accountTypeValue == AccountModelsLib.Common.Customer_Account_Type)
+                {
+                    <MudItem xs="12">
+                        <MudRadioGroup T="bool" @bind-Value="_isGeneralCustomer">
+                            <MudRadio T="bool" Value="false" Color="Color.Primary">@Tr("CompanyCustomerLabel")</MudRadio>
+                            <MudRadio T="bool" Value="true" Color="Color.Primary">@Tr("GeneralCustomerLabel")</MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+                }
+
+                <MudItem xs="12">
+                    <MudTextField T="string" @bind-Value="_notes" Label="@Tr("NotesLabel")" Lines="2" />
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudSwitch T="bool" @bind-Value="_hasSubAccounts" Color="Color.Primary" Label="@Tr("HasSubAccountsLabel")" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSwitch T="bool" @bind-Value="_acceptEntry" Color="Color.Primary" Label="@Tr("AcceptEntryLabel")" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSwitch T="bool" @bind-Value="_accountTypeChangeForChildren" Color="Color.Primary" Label="@Tr("AccountTypeChangeForChildrenLabel")" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSwitch T="bool" @bind-Value="_accountFollowChangeForChildren" Color="Color.Primary" Label="@Tr("AccountFollowChangeForChildrenLabel")" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSwitch T="bool" @bind-Value="_masrofatAffect" Color="Color.Primary" Label="@Tr("MasrofatAffectLabel")" />
+                </MudItem>
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseAsync">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@(_isSaving || ParentNode == null)">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public AccountTreeNodeViewModel? ParentNode { get; set; }
+    [Parameter] public long BranchId { get; set; }
+    [Parameter] public EventCallback<long> OnAccountAdded { get; set; }
+
+    private List<(long Id, string Name, int Value, int HeadMainAccount)> _accountTypes = new();
+    private List<(int Id, string Name)> _currencies = new();
+
+    private string _accountName = "";
+    private string _accountCode = "";
+    private string _notes = "";
+    private int _natureType = 1;
+    private int _accountTypeValue;
+    private int _accountFollows = int.Parse(AccountLookups.AccountFollowsDefault);
+    private int _cashFlowType = int.Parse(AccountLookups.CashFlowTypeDefault);
+    private string _firstSubCode = AccountLookups.FirstSubCodeDefault;
+    private int? _currencyId;
+    private bool _acceptEntry = true;
+    private bool _accountTypeChangeForChildren;
+    private bool _accountFollowChangeForChildren;
+    private bool _hasSubAccounts = true;
+    private bool _masrofatAffect = true;
+    private bool _isGeneralCustomer;
+    private bool _accountFollowsLocked;
+    private bool _accountTypeLocked;
+    private int _accountLevel;
+    private long _code;
+    private long _lastPartIncrease;
+    private bool _isSaving;
+    private string? _errorMessage;
+    private long _lastLoadedParentId = -1;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Visible && ParentNode != null && ParentNode.Id != _lastLoadedParentId)
+        {
+            _lastLoadedParentId = ParentNode.Id;
+            await LoadDefaultsAsync();
+        }
+        else if (!Visible)
+        {
+            _lastLoadedParentId = -1;
+        }
+    }
+
+    private async Task LoadDefaultsAsync()
+    {
+        _errorMessage = null;
+        if (_accountTypes.Count == 0 || _currencies.Count == 0)
+        {
+            await LoadLookupsAsync();
+        }
+
+        var parent = ParentNode!;
+        _accountName = "";
+        _notes = "";
+        _natureType = parent.Account_Nature_Type == 2 ? 2 : 1;
+        _accountTypeValue = parent.Account_Customer_Type_Value;
+        _accountFollows = parent.Account_Follows > 0 ? parent.Account_Follows : int.Parse(AccountLookups.AccountFollowsDefault);
+        _cashFlowType = parent.CashFlowType;
+        _currencyId = parent.Currency_Id;
+        _firstSubCode = AccountLookups.FirstSubCodeDefault;
+        _acceptEntry = true;
+        _accountTypeChangeForChildren = false;
+        _accountFollowChangeForChildren = false;
+        _hasSubAccounts = true;
+        _masrofatAffect = true;
+        _isGeneralCustomer = false;
+        // 🟢 يقفل السهمين تماماً كما يفعل BtnAddNewAccounts_Click فى الأصل: عندما يحدد الأب أن أبناءه يجب أن
+        // يتبعوا نفس نوع الحساب/نفس التوجيه المحاسبى، لا يُسمح للمستخدم بمخالفة ذلك عند إضافة ابن جديد.
+        _accountFollowsLocked = parent.IS_SubAccount_FollowingAccount == 1;
+        _accountTypeLocked = parent.IS_SubAccount_AccountType == 1;
+
+        var parentId = parent.Id;
+        int excp = 0;
+        string msg = "";
+        long lastPart = 0;
+        string accountCode = "";
+        long code = 0;
+        int level = 0;
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var opp = new operations();
+            Common.MakeAutomatic_AccontCode(ref excp, ref msg, ref opp, parentId, ref lastPart, ref accountCode, ref code, ref level);
+        });
+        _lastPartIncrease = lastPart;
+        _accountCode = accountCode;
+        _code = code;
+        _accountLevel = level;
+        StateHasChanged();
+    }
+
+    private async Task LoadLookupsAsync()
+    {
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var opp = new operations();
+            var dt = opp.return_DataTable("SELECT * FROM Account_Type WHERE Active=1 ORDER BY Value");
+            var types = new List<(long, string, int, int)>();
+            foreach (DataRow r in dt.Rows)
+            {
+                types.Add((
+                    Convert.ToInt64(r["Id"]),
+                    r["Name"]?.ToString() ?? "",
+                    Convert.ToInt32(r["Value"]),
+                    Convert.ToInt32(r["Head_Main_Account"])));
+            }
+            _accountTypes = types;
+
+            var currencyDt = new CurrencyFactorsCLS_().GetCurrencyList();
+            var currencies = new List<(int, string)>();
+            foreach (DataRow r in currencyDt.Rows)
+            {
+                currencies.Add((Convert.ToInt32(r["ID"]), r["Currency_Name"]?.ToString() ?? ""));
+            }
+            _currencies = currencies;
+        });
+    }
+
+    private void OnAccountTypeSelected(int value) => _accountTypeValue = value;
+
+    private async Task SaveAsync()
+    {
+        if (ParentNode == null) return;
+        if (string.IsNullOrWhiteSpace(_accountName)) { _errorMessage = Tr("AccountNameRequired"); return; }
+        if (string.IsNullOrWhiteSpace(_accountCode)) { _errorMessage = Tr("AccountCodeRequired"); return; }
+        if (_currencyId is null or 0) { _errorMessage = Tr("CurrencyRequired"); return; }
+        if (_accountTypeValue == 0) { _errorMessage = Tr("AccountTypeRequired"); return; }
+
+        _isSaving = true;
+        _errorMessage = null;
+        int excp = 0;
+        string msg = "";
+        long newId = -1;
+        var parent = ParentNode;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var matched = _accountTypes.FirstOrDefault(t => t.Value == _accountTypeValue);
+                var headMainAccount = _accountTypeLocked
+                    ? parent.Head_Main_Account
+                    : (matched.HeadMainAccount > 0 ? matched.HeadMainAccount : parent.Head_Main_Account);
+
+                var sa = new Submain_AccountCLS();
+                sa.sb.Id = -1;
+                sa.sb.Main_Account_Id = parent.Id;
+                sa.sb.SubAccount_Name = _accountName.Trim();
+                sa.sb.SubAccount_NO = _accountCode.Trim();
+                sa.sb.FirstSubCode = _firstSubCode;
+                sa.sb.Code = _code;
+                sa.sb.Account_Level = _accountLevel;
+                sa.sb.lastPartIncrease = _lastPartIncrease;
+                sa.sb.Head_Main_Account = headMainAccount;
+                sa.sb.Currency_Id = _currencyId;
+                sa.sb.CanDelete = 1;
+                sa.sb.Account_Follows = _accountFollowsLocked ? parent.Account_Follows : _accountFollows;
+                sa.sb.CashFlowType = _cashFlowType;
+                sa.sb.Notes = _notes;
+                sa.sb.Accept_EntryNew_Flage = _acceptEntry ? 1 : 0;
+                sa.sb.Accept_Cost_Center_Flage = 0;
+                sa.sb.Cost_Center_Tree_Id = 0;
+                sa.sb.Account_Nature_Type = _natureType;
+                sa.sb.Account_Customer_Type_Value = _accountTypeLocked ? parent.Account_Customer_Type_Value : _accountTypeValue;
+                sa.sb.IS_SubAccount_AccountType = _accountTypeChangeForChildren ? 1 : 0;
+                sa.sb.IS_SubAccount_FollowingAccount = _accountFollowChangeForChildren ? 1 : 0;
+                sa.sb.Branch_Id = BranchId;
+                sa.sb.Is_MasrofatAffect = _masrofatAffect ? 1 : 0;
+                sa.sb.Account_Type_ValueGeneralCustomer = _isGeneralCustomer ? 1 : 0;
+
+                long submainAccountId = -1;
+                int branchIdInt = (int)BranchId;
+                string newNo = sa.sb.SubAccount_NO;
+
+                // 🟢 معكوس عمداً: cbHaveChildAccount فى النموذج الأصلي مفعّل افتراضياً ("هذا حساب سيحتوي حسابات
+                // فرعية لاحقاً") ويُمرَّر معكوساً لـ AddNewAccount - عندما تبقى القيمة الافتراضية (مفعّلة) لا
+                // يُنشأ أي سجل عميل/مورد/بنك/موظف/أصل ثابت/مخزن مرتبط حتى لو طابق نوع الحساب أحدها؛ فقط عند
+                // إلغاء تفعيلها ("لا، هذا حساب نهائي/تحليلي بلا أبناء") تُنشأ تلك السجلات المرتبطة تلقائياً -
+                // راجع Add_Account_FromAccountTree/AddAnother_Submain_Account فى Sub_Account.cs وMODERNIZATION_NOTES.md.
+                var isHaveChildAccountParam = !_hasSubAccounts;
+
+                new Add_Account_CodesCLS().AddNewAccount(ref excp, ref msg, sa, ref submainAccountId, ref branchIdInt, ref newNo, isHaveChildAccountParam);
+                newId = submainAccountId;
+            });
+
+            if (excp == 0)
+            {
+                await OnAccountAdded.InvokeAsync(newId);
+                await CloseAsync();
+            }
+            else
+            {
+                _errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

@@ -3,6 +3,7 @@ using Microsoft.Data.SqlClient;
 using Net.Pkcs11Interop.Common;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
@@ -223,17 +224,17 @@ namespace AccountModelsLib
                 DataTable dt = opp.return_DataTable(mysql);
                 if (dt.Rows.Count > 0)
                 {
-                    Msg = "åĞÇ ÇáÍÓÇÈ ãæÌæÏ İì ÔÌÑÉ ÇáÍÓÇÈÇÊ åá ÊÑíÏ ÇáÅÓÊãÑÇÑ æ ÅÖÇİÉ ÇáÍÓÇÈ";
-                    Msg = "åĞÇ ÇáÍÓÇÈ ãæÌæÏ İì ÔÌÑÉ ÇáÍÓÇÈÇÊ  ";
+                    Msg = "ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+                    Msg = "ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  ";
                     Excp = 10;
-                    // MessageBox.Show("åĞÇ ÇáÍÓÇÈ ãæÌæÏ İì ÔÌÑÉ ÇáÍÓÇÈÇÊ");
+                    // MessageBox.Show("ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
                     opp.Rollback();
                     return;
 
-                    //if (!AccountCommonDataLIB.Common.MsgBoxYesNo("åĞÇ ÇáÍÓÇÈ ãæÌæÏ İì ÔÌÑÉ ÇáÍÓÇÈÇÊ åá ÊÑíÏ ÇáÅÓÊãÑÇÑ æ ÅÖÇİÉ ÇáÍÓÇÈ", ""))
+                    //if (!AccountCommonDataLIB.Common.MsgBoxYesNo("ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", ""))
                     //{
                     //    Excp = 10;
-                    //    // MessageBox.Show("åĞÇ ÇáÍÓÇÈ ãæÌæÏ İì ÔÌÑÉ ÇáÍÓÇÈÇÊ");
+                    //    // MessageBox.Show("ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
                     //    opp.Rollback();
                     //    return;
                     //}
@@ -244,7 +245,7 @@ namespace AccountModelsLib
                 // Common.GETAutoNumber(ref opp, ref Submain_Account_Id);
 
 
-                ////////////////////////ÑŞã ÍÓÇÈ ÇáİÑÚ
+                ////////////////////////ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                 long Main_Account_Id = 0;
                 mysql = " select * from Submain_Account where (Head_Main_Account= 0) And (Branch_Id= " + Branch_Id + ") ";
                 DataTable dt2 = opp.return_DataTable(mysql);
@@ -345,7 +346,7 @@ namespace AccountModelsLib
                 {
                     if (IsUse_SubAccount_Id_Select == false)
                     {
-                        /////ÇÖÇİÉ İì ÌÏæá ÇÓãÇÁ ÇáÍÓÇÈÇÊ
+                        /////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                         Add_Submain_Account(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, sa.sb, Add_Account_Customer_List);
                     }
                 }
@@ -354,7 +355,7 @@ namespace AccountModelsLib
                 //{
                 //    sa.sb = sa.Get_Submain_Account(ref   opp, New_Submain_Account_Id);
                 //}
-                //ÇÖÇİÉ ÚãáÇÁ ãæÑÏíä æÎÒíäÉ æÈäß æãæÙİ
+                //ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                 AddAnother_Submain_Account(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, sa.sb, Add_Account_Customer_List);
                 UpdateSubmain_SubAccount_Id(ref Excp, ref opp, ref Msg);
 
@@ -404,7 +405,7 @@ namespace AccountModelsLib
                     if (IsUse_SubAccount_Id_Select == false)
                     {
                         sa = SetUpSubmain_AccountCLS(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, ref Account_Code, Account_Type_Value, Account_Name, Account_Branch_Id, Currency_Id, Account_Type_ValueGeneralCustomer);
-                        /////ÇÖÇİÉ İì ÌÏæá ÇÓãÇÁ ÇáÍÓÇÈÇÊ
+                        /////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                         Add_Submain_Account(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, sa.sb, Add_Account_Customer_List);
                     }
                 }
@@ -418,13 +419,13 @@ namespace AccountModelsLib
                         {
                             New_Submain_Account_Id = -1;
                             sa = SetUpSubmain_AccountCLS(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, ref Account_Code, Account_Type_Value, Account_Name, Account_Branch_Id, Currency_Id, Account_Type_ValueGeneralCustomer);
-                            /////ÇÖÇİÉ İì ÌÏæá ÇÓãÇÁ ÇáÍÓÇÈÇÊ
+                            /////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                             Add_Submain_Account(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, sa.sb, Add_Account_Customer_List);
                         }
                     }
                 }
 
-                //ÇÖÇİÉ ÚãáÇÁ ãæÑÏíä æÎÒíäÉ æÈäß æãæÙİ
+                //ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                 UpdateAnother_Submain_Account(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, sa.sb, Add_Account_Customer_List);
 
 
@@ -454,7 +455,7 @@ namespace AccountModelsLib
                 }
                 if (IsUse_SubAccount_Id_Select == false)
                 {
-                    /////ÇÖÇİÉ İì ÌÏæá ÇÓãÇÁ ÇáÍÓÇÈÇÊ
+                    /////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                     Add_Submain_Account(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, sa.sb, Add_Account_Customer_List);
                 }
                 Excp = 0;
@@ -480,7 +481,7 @@ namespace AccountModelsLib
 
                 if (IsUse_SubAccount_Id_Select == false)
                 {
-                    /////ÇÖÇİÉ İì ÌÏæá ÇÓãÇÁ ÇáÍÓÇÈÇÊ
+                    /////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                     //Add_Submain_Account(ref Excp, ref Msg, ref opp, ref Submain_Account_Id, sa_, Add_Account_Customer_List);
                     if (sa.sb.Account_Customer_Type_Value == Common.Customer_Account_Type)
                     {
@@ -531,7 +532,7 @@ namespace AccountModelsLib
             //   ref   Excp, ref   Msg,
 
 
-            //İì ÍÇáÉ ÚãáÇÁ ãÊäæÚæä
+            //ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             if (Account_Type_ValueGeneralCustomer == 1 & Main_Account_Id > 0)
             {
                 sa.sb = new Submain_Account();
@@ -602,7 +603,7 @@ namespace AccountModelsLib
             int Account_Follows = 4;
             int Head_Main_Account = 1;
             string Account_Type_Name = dt.Rows[0]["Name"].ToString();
-            Account_Type_Name = Account_Type_Name + " (ÅÖÇİÉ ÇøáíÉ) ";
+            Account_Type_Name = Account_Type_Name + " (ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½) ";
             try
             {
                 Account_Follows = int.Parse(dt.Rows[0]["Account_Follows"].ToString());
@@ -696,10 +697,10 @@ namespace AccountModelsLib
         {
             if (IsUse_SubAccount_Id_Select == false)
             {
-                /////ÇÖÇİÉ İì ÌÏæá ÇÓãÇÁ ÇáÍÓÇÈÇÊ
+                /////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 Add_Submain_Account(ref Excp, ref Msg, ref opp, ref Submain_Account_Id, sa_, Add_Account_Customer_List);
             }
-            //ÇÖÇİÉ ÚãáÇÁ ãæÑÏíä æÎÒíäÉ æÈäß æãæÙİ
+            //ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
             AddAnother_Submain_Account(ref Excp, ref Msg, ref opp, ref Submain_Account_Id, sa_, Add_Account_Customer_List);
         }
 
@@ -716,27 +717,27 @@ namespace AccountModelsLib
         }
         void AddAnother_Submain_Account(ref int Excp, ref string Msg, ref operations opp, ref long Submain_Account_Id, Submain_Account sa_, bool Add_Account_Customer_List)
         {
-            //////////////ÇÖÇİÉ ÑŞã ÇáÍÓÇÈ ÇáÑÆíÓì æäæÚ İì  ÌÏæá ÇäæÇÚ ÍÓÇÈÇÊ ÇáİÑæÚ
+            //////////////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½  ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             //Account_Customer_Type_Value
             string mysql = "";
-            if (Add_Account_Customer_List) /////ÊÖÇİ İì ÍÇáå ÇáÇÖÇİÉ ãä ÔÌÑÉ ÇáÍÓÇÈÇÊ
+            if (Add_Account_Customer_List) /////ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             {
-                if (sa_.Account_Customer_Type_Value == Common.Customer_Account_Type) ///ÍÓÇÈ Úãíá
+                if (sa_.Account_Customer_Type_Value == Common.Customer_Account_Type) ///ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 {
                     New_Account_Id = cuCls.InsertCustomer(ref Excp, ref Msg, ref opp, sa_);
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Supplier_Account_Type) ///ÍÓÇÈ ãæÑÏ
+                else if (sa_.Account_Customer_Type_Value == Common.Supplier_Account_Type) ///ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 {
                     New_Account_Id = spCls.InsertSupplier(ref Excp, ref Msg, ref opp, sa_);
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Sandouk_Account_Type) ///ÇáÕäÏæŞ
+                else if (sa_.Account_Customer_Type_Value == Common.Sandouk_Account_Type) ///ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     BanksClss bcls = new BanksClss();
 
                     ba.Is_Bank = 0;
                     New_Account_Id = bcls.InsertBank(ref Excp, ref Msg, ref opp, ba, sa_);
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Bank_Account_Type) ///ÇáÈäß
+                else if (sa_.Account_Customer_Type_Value == Common.Bank_Account_Type) ///ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     BanksClss bcls = new BanksClss();
 
@@ -745,30 +746,30 @@ namespace AccountModelsLib
                     New_Account_Id = bcls.InsertBank(ref Excp, ref Msg, ref opp, ba, sa_);
 
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Employee_Account_Type) ///ãæÙİ
+                else if (sa_.Account_Customer_Type_Value == Common.Employee_Account_Type) ///ï¿½ï¿½ï¿½ï¿½
                 {
                     EmployeeListCLS employeeListCLS = new EmployeeListCLS();
                     New_Account_Id = employeeListCLS.AddUpdteEmployee(ref Excp, ref Msg, ref opp, sa_);
 
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) ///ÇÕæá ËÇÈÊå
+                else if (sa_.Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) ///ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     New_Account_Id = fixedAssetCLS.InsertFixedAsset(ref Excp, ref Msg, ref opp, sa_);
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreEntagTam) ////ãÎÒä ÇäÊÇÌ ÊÇã
+                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreEntagTam) ////ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
                 {
                     StoreCLS storeCLS = new StoreCLS();
                     storeCLS.store = store;
                     New_Account_Id = storeCLS.AddNewServiceStore(ref Excp, ref Msg, ref opp, sa_);
                 }
 
-                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreKhamat)  // ÍÓÇÈ ãÎÒä ÎÇãÇÊ
+                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreKhamat)  // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     StoreCLS storeCLS = new StoreCLS();
                     storeCLS.store = store;
                     New_Account_Id = storeCLS.AddNewServiceStore(ref Excp, ref Msg, ref opp, sa_);
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete) //ÍÓÇÈ ãÎÒä ÅäÊÇÌ ÛíÑ ãßÊãá
+                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete) //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     StoreCLS storeCLS = new StoreCLS();
                     storeCLS.store = store;
@@ -780,15 +781,15 @@ namespace AccountModelsLib
         }
         void UpdateAnother_Submain_Account(ref int Excp, ref string Msg, ref operations opp, ref long Submain_Account_Id, Submain_Account sa_, bool Add_Account_Customer_List)
         {
-            //////////////ÇÖÇİÉ ÑŞã ÇáÍÓÇÈ ÇáÑÆíÓì æäæÚ İì  ÌÏæá ÇäæÇÚ ÍÓÇÈÇÊ ÇáİÑæÚ
+            //////////////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½  ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             //Account_Customer_Type_Value
             string SubAccount_Name = "";
             long SubAccount_Id = 0;
             long Account_Customer_Type_ID = 0;
             string mysql = "";
-            if (Add_Account_Customer_List) /////ÊÖÇİ İì ÍÇáå ÇáÇÖÇİÉ ãä ÔÌÑÉ ÇáÍÓÇÈÇÊ
+            if (Add_Account_Customer_List) /////ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             {
-                if (sa_.Account_Customer_Type_Value == Common.Customer_Account_Type) ///ÍÓÇÈ Úãíá
+                if (sa_.Account_Customer_Type_Value == Common.Customer_Account_Type) ///ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 {
                     cuCls.cs.SubAccount_Id = sa_.Id;
                     New_Account_Id = cuCls.UpdateCustomerOnly(ref Excp, ref Msg, ref opp);
@@ -797,7 +798,7 @@ namespace AccountModelsLib
                     Account_Customer_Type_ID = cuCls.cs.Id;
 
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Supplier_Account_Type) ///ÍÓÇÈ ãæÑÏ
+                else if (sa_.Account_Customer_Type_Value == Common.Supplier_Account_Type) ///ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 {
                     spCls.sp.SubAccount_Id = sa_.Id;
                     New_Account_Id = spCls.UpdateSupplierOnly(ref Excp, ref Msg, ref opp);
@@ -807,7 +808,7 @@ namespace AccountModelsLib
 
 
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Sandouk_Account_Type) ///ÇáÕäÏæŞ
+                else if (sa_.Account_Customer_Type_Value == Common.Sandouk_Account_Type) ///ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     ba.SubAccount_Id = sa_.Id;
                     BanksClss bcls = new BanksClss();
@@ -819,7 +820,7 @@ namespace AccountModelsLib
                     SubAccount_Id = sa_.Id;
 
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Bank_Account_Type) ///ÇáÈäß
+                else if (sa_.Account_Customer_Type_Value == Common.Bank_Account_Type) ///ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     ba.SubAccount_Id = sa_.Id;
                     BanksClss bcls = new BanksClss();
@@ -831,7 +832,7 @@ namespace AccountModelsLib
                     SubAccount_Name = ba.Branch_Name;
                     SubAccount_Id = sa_.Id;
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Employee_Account_Type) ///ãæÙİ
+                else if (sa_.Account_Customer_Type_Value == Common.Employee_Account_Type) ///ï¿½ï¿½ï¿½ï¿½
                 {
 
                     EmployeeListCLS employeeListCLS = new EmployeeListCLS();
@@ -841,7 +842,7 @@ namespace AccountModelsLib
                     SubAccount_Name = employeeListCLS.emp.name;
                     SubAccount_Id = sa_.Id;
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) ///ÇÕæá ËÇÈÊå
+                else if (sa_.Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) ///ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     fixedAssetCLS.fxd.SubAccount_Id = sa_.Id;
                     New_Account_Id = fixedAssetCLS.UpdateFixedAsset(ref opp);
@@ -850,7 +851,7 @@ namespace AccountModelsLib
                     SubAccount_Id = sa_.Id;
 
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreEntagTam) ////ãÎÒä ÇäÊÇÌ ÊÇã
+                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreEntagTam) ////ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
                 {
                     StoreCLS storeCLS = new StoreCLS();
                     storeCLS.store = store;
@@ -863,7 +864,7 @@ namespace AccountModelsLib
 
                 }
 
-                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreKhamat)  // ÍÓÇÈ ãÎÒä ÎÇãÇÊ
+                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreKhamat)  // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     StoreCLS storeCLS = new StoreCLS();
                     storeCLS.store = store;
@@ -874,7 +875,7 @@ namespace AccountModelsLib
                     SubAccount_Name = storeCLS.store.Store_Name;
                     SubAccount_Id = sa_.Id;
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete) //ÍÓÇÈ ãÎÒä ÅäÊÇÌ ÛíÑ ãßÊãá
+                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete) //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     StoreCLS storeCLS = new StoreCLS();
                     storeCLS.store = store;
@@ -959,7 +960,7 @@ namespace AccountModelsLib
                 //sa = SetUpSubmain_AccountCLS(ref Excp, ref Msg, ref opp, ref SubAccount_Id, ref Account_Code, Account_Type_Value, SubAccount_Name, Account_Branch_Id);
                 //sa.sb.Account_Customer_Type_ID = Account_Customer_Type_ID;
                 //sa.sb.Account_Customer_Type_Value = Account_Customer_Type_Value;
-                ///////ÇÖÇİÉ İì ÌÏæá ÇÓãÇÁ ÇáÍÓÇÈÇÊ
+                ///////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 Add_Submain_Account(ref Excp, ref Msg, ref opp, ref SubAccount_Id, sa.sb, false);
 
             }
@@ -979,7 +980,7 @@ namespace AccountModelsLib
                 int Account_Customer_Type_Value = sa.sb.Account_Customer_Type_Value;
                 int Currency_Id = sa.sb.Currency_Id??1;
                 string SubAccount_NO = sa.sb.SubAccount_NO;
-                if (sa.sb.Account_Customer_Type_Value == Common.Customer_Account_Type) ///2ÍÓÇÈ Úãíá
+                if (sa.sb.Account_Customer_Type_Value == Common.Customer_Account_Type) ///2ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 {
 
                     //cs.Id = sa.Account_Customer_Type_ID;
@@ -998,13 +999,13 @@ namespace AccountModelsLib
 
 
                 }
-                if (Account_Customer_Type_Value == Common.Supplier_Account_Type) ///5ÍÓÇÈ ãæÑÏ
+                if (Account_Customer_Type_Value == Common.Supplier_Account_Type) ///5ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 {
                     spCls.UpdateSupplier(ref Excp, ref Msg, ref opp, sa.sb);
                     sa.sb.Account_Customer_Type_ID = cuCls.cs.Id;
 
                 }
-                if (Account_Customer_Type_Value == Common.Sandouk_Account_Type) ///6ÇáÕäÏæŞ
+                if (Account_Customer_Type_Value == Common.Sandouk_Account_Type) ///6ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     BanksClss bankCLS = new BanksClss();
                     ba.Is_Bank = 0;
@@ -1014,7 +1015,7 @@ namespace AccountModelsLib
 
 
                 }
-                if (Account_Customer_Type_Value == Common.Bank_Account_Type) ///7ÇáÈäß
+                if (Account_Customer_Type_Value == Common.Bank_Account_Type) ///7ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     BanksClss bankCLS = new BanksClss();
                     ba.Is_Bank = 1;
@@ -1022,7 +1023,7 @@ namespace AccountModelsLib
                     sa.sb.Account_Customer_Type_ID = ba.Id;
 
                 }
-                if (Account_Customer_Type_Value == Common.Employee_Account_Type) //4/ãæÙİ
+                if (Account_Customer_Type_Value == Common.Employee_Account_Type) //4/ï¿½ï¿½ï¿½ï¿½
                 {
                     EmployeeListCLS employeeListCLS = new EmployeeListCLS(true);
 
@@ -1030,7 +1031,7 @@ namespace AccountModelsLib
 
 
                 }
-                if (sa.sb.Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) ///ÇÕæá ËÇÈÊå
+                if (sa.sb.Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) ///ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     fixedAssetCLS.UpdateFixedAsset(ref Excp, ref opp, sa.sb);
                     sa.sb.Account_Customer_Type_ID = ba.Id;
@@ -1057,6 +1058,91 @@ namespace AccountModelsLib
             submain_AccountCLS.Edit_AccountsPosition(ref Excp, SubAccount_Id, NewMain_Account_Id);
 
 
+        }
+
+        // ğŸŸ¢ ÙŠÙ‚Ø§Ø¨Ù„ Ø²Ø± "Ù…ÙˆØ¶Ø¹ Ø¬Ø¯ÙŠØ¯" ÙÙ‰ Ø§Ù„ÙˆÙŠÙ†Ø¯ÙˆØ² ÙÙˆØ±Ù…Ø² (ØªØºÙŠÙŠØ± Ø£Ø¨ Ø§Ù„Ø­Ø³Ø§Ø¨ Ù…Ù† Ø¯Ø§Ø®Ù„ Ù†Ø§ÙØ°Ø© Ø´Ø¬Ø±Ø© Ù…Ù†Ø¨Ø«Ù‚Ø©) - Ù„ÙƒÙ† Ù‡Ø°Ù‡
+        // Ø¯Ø§Ù„Ø© Ø¬Ø¯ÙŠØ¯Ø©ØŒ ÙˆÙ„ÙŠØ³Øª Ø§Ø³ØªØ¯Ø¹Ø§Ø¡Ù‹ Ù„ÙÙ€ Submain_AccountCLS.Edit_AccountsPosition Ø£Ø¹Ù„Ø§Ù‡: ØªÙ„Ùƒ Ø§Ù„Ø¯Ø§Ù„Ø© Ù…Ø¹Ø·ÙˆØ¨Ø© ÙØ¹Ù„Ø§Ù‹
+        // ÙÙ‰ Ø´ÙØ±Ø© Ø§Ù„Ù…ØµØ¯Ø± Ù†ÙØ³Ù‡Ø§ (ØªØ³ØªØ®Ø¯Ù… Ø§Ø³Ù… Ø¹Ù…ÙˆØ¯ "SubAccount_Id" ØºÙŠØ± Ø§Ù„Ù…ÙˆØ¬ÙˆØ¯ ÙÙ‰ Ø§Ù„Ø¬Ø¯ÙˆÙ„ - Ø§Ù„Ù…ÙØªØ§Ø­ Ø§Ù„ÙØ¹Ù„ÙŠ Ù‡Ùˆ
+        // "Id" - ÙˆØªØ³ØªØ®Ø¯Ù… Ù‚ÙŠÙ…Ø© sb.Id Ø§Ù„Ø«Ø§Ø¨ØªØ© Ø¹Ù„Ù‰ Ø§Ù„ÙƒÙ„Ø§Ø³ Ø¨Ø¯Ù„ Ù…Ø¹Ø§Ù…Ù„ SubAccount_Id Ø§Ù„Ù…ÙÙ…Ø±ÙÙ‘Ø±ØŒ ÙˆØªØ¨ØªÙ„Ø¹ Ø£ÙŠ Ø§Ø³ØªØ«Ù†Ø§Ø¡
+        // Ø¨ØµÙ…Øª Ø¨Ù„Ø§ Ø±Ø³Ø§Ù„Ø© Ø®Ø·Ø£) ÙØ§Ø³ØªØ¯Ø¹Ø§Ø¤Ù‡Ø§ ÙƒÙ…Ø§ Ù‡Ù‰ ÙƒØ§Ù† Ø³ÙŠÙØ³Ù„Ù‘Ù… Ø´Ø§Ø´Ø© Ù„Ø§ ØªØ¹Ù…Ù„ ÙØ¹Ù„ÙŠØ§Ù‹. Ø§Ù„Ø¯Ø§Ù„Ø© Ø§Ù„Ø¬Ø¯ÙŠØ¯Ø© Ù‡Ù†Ø§ ØªÙ†ÙÙ‘Ø° Ù†ÙØ³
+        // Ø§Ù„Ù†ÙŠÙ‘Ø© Ø§Ù„Ù…Ù‚ØµÙˆØ¯Ø© (ØªØºÙŠÙŠØ± Main_Account_Id) Ø¨Ø´ÙƒÙ„ ØµØ­ÙŠØ­ØŒ ÙˆØªØ¶ÙŠÙ Ù…Ø§ ÙƒØ§Ù† Ù†Ø§Ù‚ØµØ§Ù‹ Ø¨Ø§Ù„Ø¶Ø±ÙˆØ±Ø© Ù„ØµØ­Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª:
+        // 1) Ù…Ù†Ø¹ Ø¬Ø¹Ù„ Ø§Ù„Ø­Ø³Ø§Ø¨ Ø£Ø¨Ø§Ù‹ Ù„Ù†ÙØ³Ù‡ Ø£Ùˆ Ù†Ù‚Ù„Ù‡ Ø¯Ø§Ø®Ù„ Ø£Ø­Ø¯ ÙØ±ÙˆØ¹Ù‡ (Ø¯ÙˆØ±Ø© ÙÙ‰ Ø§Ù„Ø´Ø¬Ø±Ø©). 2) ØªØ­Ø¯ÙŠØ« Head_Main_Account
+        // Ù„ÙŠØ·Ø§Ø¨Ù‚ ØªØµÙ†ÙŠÙ Ø§Ù„Ø£Ø¨ Ø§Ù„Ø¬Ø¯ÙŠØ¯ (Ø£ØµÙˆÙ„/Ø®ØµÙˆÙ…/Ø­Ù‚ÙˆÙ‚ Ù…Ù„ÙƒÙŠØ©/Ù…ØµØ±ÙˆÙØ§Øª/Ø¥ÙŠØ±Ø§Ø¯Ø§Øª) - ÙˆØ¥Ù„Ø§ Ø¨Ù‚ÙŠ Ø§Ù„Ø­Ø³Ø§Ø¨ Ù…ØµÙ†ÙÙ‘ÙØ§Ù‹ ØªØ­Øª ÙØ¦ØªÙ‡
+        // Ø§Ù„Ù‚Ø¯ÙŠÙ…Ø© ÙÙ‰ Ø§Ù„Ù‚ÙˆØ§Ø¦Ù… Ø§Ù„Ù…Ø§Ù„ÙŠØ© Ø±ØºÙ… Ø§Ù†ØªÙ‚Ø§Ù„Ù‡ Ø´Ø¬Ø±ÙŠØ§Ù‹ØŒ ÙˆÙ‡Ø°Ø§ ÙØ¹Ù„ÙŠØ§Ù‹ Ù†ÙØ³ Ù†ÙˆØ¹ Ø§Ù„Ø®Ø·Ø± Ø§Ù„Ø°Ù‰ Ø±ØµØ¯Ù†Ø§Ù‡ ÙÙ‰ ØªØ¯Ù‚ÙŠÙ‚ Ø§ÙƒØªÙ…Ø§Ù„
+        // Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø­Ø³Ø§Ø¨Ø§Øª. 3) Ø¥Ø¹Ø§Ø¯Ø© ØªÙƒÙˆÙŠØ¯ Ø§Ù„Ø­Ø³Ø§Ø¨ Ù†ÙØ³Ù‡ ØªØ­Øª Ø£Ø¨ÙŠÙ‡ Ø§Ù„Ø¬Ø¯ÙŠØ¯ Ø¹Ø¨Ø± Ù†ÙØ³ Common.MakeAutomatic_AccontCode
+        // Ø§Ù„Ù…Ø³ØªØ®Ø¯ÙÙ… Ø¨Ø§Ù„Ø¶Ø¨Ø· Ù„Ø¥Ø¶Ø§ÙØ© Ø­Ø³Ø§Ø¨ Ø¬Ø¯ÙŠØ¯ (AddAccountDialog.razor)ØŒ Ø«Ù… Ø¥Ø¹Ø§Ø¯Ø© ØªÙƒÙˆÙŠØ¯ ÙƒÙ„ Ø´Ø¬Ø±ØªÙ‡ Ø§Ù„ÙØ±Ø¹ÙŠØ© Ø¨Ø§Ù„ÙƒØ§Ù…Ù„
+        // Ø¹Ø¨Ø± Submain_AccountCLS.MakeSubNewCode_ALLCHILDE Ø§Ù„Ù…ÙˆØ¬ÙˆØ¯Ø© Ø£ØµÙ„Ø§Ù‹ (Ù†ÙØ³ Ø²Ø± "Ø¥Ø¹Ø§Ø¯Ø© ØªØ±Ù‚ÙŠÙ… Ø§Ù„ÙƒÙ„" ÙÙ‰ Ø§Ù„Ø´Ø§Ø´Ø©) -
+        // ÙˆØ¥Ù„Ø§ Ø¨Ù‚ÙŠØª Ø£ÙƒÙˆØ§Ø¯ Ø£Ø¨Ù†Ø§Ø¦Ù‡ ÙˆØ£Ø­ÙØ§Ø¯Ù‡ ØªØ­Ù…Ù„ Ø¨Ø§Ø¯Ø¦Ø© Ø§Ù„ÙƒÙˆØ¯ Ø§Ù„Ù‚Ø¯ÙŠÙ… ÙˆÙ‡Ù‰ Ø§Ù„Ø¢Ù† Ù…Ù†ØªÙ‚Ù„Ø© ØªØ­Øª Ø£Ø¨ Ù…Ø®ØªÙ„Ù ØªÙ…Ø§Ù…Ø§Ù‹.
+        public void Move_Account(ref int Excp, ref string Msg, long SubAccount_Id, long NewMain_Account_Id)
+        {
+            Excp = 0;
+            Msg = "";
+            try
+            {
+                if (SubAccount_Id == NewMain_Account_Id)
+                {
+                    Excp = 1;
+                    Msg = "Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø£Ù† ÙŠÙƒÙˆÙ† Ø§Ù„Ø­Ø³Ø§Ø¨ Ø£Ø¨Ø§Ù‹ Ù„Ù†ÙØ³Ù‡";
+                    return;
+                }
+
+                operations opp = new operations();
+
+                DataTable allDt = opp.return_DataTable("SELECT Id, Main_Account_Id FROM Submain_Account");
+                var parentOf = new Dictionary<long, long>();
+                foreach (DataRow r in allDt.Rows)
+                {
+                    parentOf[Convert.ToInt64(r["Id"])] = Convert.ToInt64(r["Main_Account_Id"]);
+                }
+
+                if (!parentOf.ContainsKey(NewMain_Account_Id))
+                {
+                    Excp = 1;
+                    Msg = "Ø§Ù„Ø­Ø³Ø§Ø¨ Ø§Ù„Ø£Ø¨ Ø§Ù„Ø¬Ø¯ÙŠØ¯ ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯";
+                    return;
+                }
+
+                long? walk = NewMain_Account_Id;
+                while (walk.HasValue && walk.Value != 0)
+                {
+                    if (walk.Value == SubAccount_Id)
+                    {
+                        Excp = 1;
+                        Msg = "Ù„Ø§ ÙŠÙ…ÙƒÙ† Ù†Ù‚Ù„ Ø§Ù„Ø­Ø³Ø§Ø¨ Ø¥Ù„Ù‰ Ø£Ø­Ø¯ ÙØ±ÙˆØ¹Ù‡";
+                        return;
+                    }
+                    walk = parentOf.TryGetValue(walk.Value, out var p) ? p : (long?)null;
+                }
+
+                DataTable newParentDt = opp.return_DataTable("SELECT Head_Main_Account FROM Submain_Account WHERE Id = " + NewMain_Account_Id);
+                int newHead = newParentDt.Rows.Count > 0 ? Convert.ToInt32(newParentDt.Rows[0]["Head_Main_Account"]) : 0;
+
+                long lastPartIncrease = 0;
+                string Account_Code = "";
+                long Code = 0;
+                int Account_Level = 0;
+                string codeMsg = "";
+                Common.MakeAutomatic_AccontCode(ref Excp, ref codeMsg, NewMain_Account_Id, ref lastPartIncrease, ref Account_Code, ref Code, ref Account_Level);
+
+                string mysql = "UPDATE Submain_Account SET Main_Account_Id = " + NewMain_Account_Id +
+                    (newHead > 0 ? ", Head_Main_Account = " + newHead : "") +
+                    ", Code = " + Code +
+                    ", Account_Code = N'" + Account_Code + "'" +
+                    ", SubAccount_NO = N'" + Account_Code + "'" +
+                    ", lastPartIncrease = " + lastPartIncrease +
+                    ", Account_Level = " + Account_Level +
+                    " WHERE Id = " + SubAccount_Id;
+                opp.insert_me(mysql);
+
+                new Submain_AccountCLS().MakeSubNewCode_ALLCHILDE(ref Excp, SubAccount_Id);
+
+                Excp = 0;
+            }
+            catch (Exception e)
+            {
+                Excp = 1;
+                Msg = e.Message;
+            }
         }
 
         public void Edit_AccountsName(ref int Excp, ref operations opp, long SubAccount_Id, string SubAccount_Name)
@@ -1184,55 +1270,55 @@ namespace AccountModelsLib
                     EmployeeListCLS emp = new EmployeeListCLS();
                     string mysql = "";
 
-                    if (Account_Customer_Type_Value == Common.Customer_Account_Type) ///2ÍÓÇÈ Úãíá
+                    if (Account_Customer_Type_Value == Common.Customer_Account_Type) ///2ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                     {
 
                         cs.MakeDeleteCustomer(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
 
                     }
 
-                    if (Account_Customer_Type_Value == Common.Supplier_Account_Type) //5/ÍÓÇÈ ãæÑÏ
+                    if (Account_Customer_Type_Value == Common.Supplier_Account_Type) //5/ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                     {
 
                         sp.MakeDeleteSupplier(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
 
                     }
-                    if (Account_Customer_Type_Value == Common.Sandouk_Account_Type) //6/ÇáÕäÏæŞ
+                    if (Account_Customer_Type_Value == Common.Sandouk_Account_Type) //6/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                     {
 
                         bankCLS.MakeDeleteBanks(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
 
 
                     }
-                    if (Account_Customer_Type_Value == Common.Bank_Account_Type) //7/ÇáÈäß
+                    if (Account_Customer_Type_Value == Common.Bank_Account_Type) //7/ï¿½ï¿½ï¿½ï¿½ï¿½
                     {
 
                         bankCLS.MakeDeleteBanks(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
                     }
-                    if (Account_Customer_Type_Value == Common.Employee_Account_Type) //4/ãæÙİ
+                    if (Account_Customer_Type_Value == Common.Employee_Account_Type) //4/ï¿½ï¿½ï¿½ï¿½
                     {
 
                         emp.MakeDeleteEmployee(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
                     }
-                    if (Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) //8/ÇÕæá ËÇÈÊå
+                    if (Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) //8/ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                     {
 
                         fixedAssetCLS.MakeDeleteFixedAssetData(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
                     }
-                    if (Account_Customer_Type_Value == Common.Account_Type_ForStoreEntagTam) ////ãÎÒä ÇäÊÇÌ ÊÇã
+                    if (Account_Customer_Type_Value == Common.Account_Type_ForStoreEntagTam) ////ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
                     {
                         StoreCLS storeCLS = new StoreCLS();
                         storeCLS.store = store;
                         //New_Account_Id = storeCLS.AddNewServiceStore(ref Excp, ref Msg, ref opp, sa_);
                     }
 
-                    if (Account_Customer_Type_Value == Common.Account_Type_ForStoreKhamat)  // ÍÓÇÈ ãÎÒä ÎÇãÇÊ
+                    if (Account_Customer_Type_Value == Common.Account_Type_ForStoreKhamat)  // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                     {
                         StoreCLS storeCLS = new StoreCLS();
                         storeCLS.store = store;
                         //New_Account_Id = storeCLS.AddNewServiceStore(ref Excp, ref Msg, ref opp, sa_);
                     }
-                    if (Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete) //ÍÓÇÈ ãÎÒä ÅäÊÇÌ ÛíÑ ãßÊãá
+                    if (Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete) //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                     {
                         StoreCLS storeCLS = new StoreCLS();
                         storeCLS.store = store;
@@ -1257,39 +1343,39 @@ namespace AccountModelsLib
             }
             string mysql = "";
 
-            if (Account_Customer_Type_Value == Common.Customer_Account_Type) ///2ÍÓÇÈ Úãíá
+            if (Account_Customer_Type_Value == Common.Customer_Account_Type) ///2ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             {
                 cuCls.MakeDeleteCustomer(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
 
             }
 
-            if (Account_Customer_Type_Value == Common.Supplier_Account_Type) //5/ÍÓÇÈ ãæÑÏ
+            if (Account_Customer_Type_Value == Common.Supplier_Account_Type) //5/ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             {
                 spCls.MakeDeleteSupplier(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
 
             }
-            if (Account_Customer_Type_Value == Common.Sandouk_Account_Type) //6/ÇáÕäÏæŞ
+            if (Account_Customer_Type_Value == Common.Sandouk_Account_Type) //6/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             {
                 BanksClss bankCLS = new BanksClss();
                 bankCLS.MakeDeleteBanks(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
 
 
             }
-            if (Account_Customer_Type_Value == Common.Bank_Account_Type) //7/ÇáÈäß
+            if (Account_Customer_Type_Value == Common.Bank_Account_Type) //7/ï¿½ï¿½ï¿½ï¿½ï¿½
             {
                 BanksClss bankCLS = new BanksClss();
                 bankCLS.MakeDeleteBanks(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
             }
-            if (Account_Customer_Type_Value == Common.Employee_Account_Type) //4/ãæÙİ
+            if (Account_Customer_Type_Value == Common.Employee_Account_Type) //4/ï¿½ï¿½ï¿½ï¿½
             {
                 EmployeeListCLS emp = new EmployeeListCLS();
                 emp.MakeDeleteEmployee(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
             }
-            if (Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) //8/ÇÕæá ËÇÈÊå
+            if (Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) //8/ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
             {
                 fixedAssetCLS.MakeDeleteFixedAssetData(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
             }
-            else if (Account_Customer_Type_Value == Common.Account_Type_ForStoreEntagTam) ////ãÎÒä ÇäÊÇÌ ÊÇã
+            else if (Account_Customer_Type_Value == Common.Account_Type_ForStoreEntagTam) ////ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
             {
                 StoreCLS storeCLS = new StoreCLS();
                 //storeCLS.store = store;
@@ -1297,14 +1383,14 @@ namespace AccountModelsLib
                 storeCLS.MakeDeleteStore(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
             }
 
-            if (Account_Customer_Type_Value == Common.Account_Type_ForStoreKhamat)  // ÍÓÇÈ ãÎÒä ÎÇãÇÊ
+            if (Account_Customer_Type_Value == Common.Account_Type_ForStoreKhamat)  // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
             {
                 StoreCLS storeCLS = new StoreCLS();
                 //storeCLS.store = store;
 
                 storeCLS.MakeDeleteStore(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
             }
-            if (Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete) //ÍÓÇÈ ãÎÒä ÅäÊÇÌ ÛíÑ ãßÊãá
+            if (Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete) //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
             {
                 StoreCLS storeCLS = new StoreCLS();
                 //storeCLS.store = store;

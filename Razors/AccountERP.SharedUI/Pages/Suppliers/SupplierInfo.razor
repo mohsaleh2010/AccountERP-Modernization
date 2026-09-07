@@ -1,0 +1,637 @@
+@page "/suppliers/info"
+@page "/suppliers/info/{SupplierId:long}"
+
+@* 🟢 شاشة "بيانات الموردين" - النسخة Blazor من GroupCustomer_List... لا، من Connection4It.Supplier_Info
+   (WinForms، فى connectionit\SupplierAndCustomer\Supplier_Info.cs، تُفتح من MainFrm_AccountUpdate).
+   نفس تصميم التفاعل الأصلي (Master-Detail: اختيار مورد من الأعلى + لوحة حقول أسفله + أزرار جديد/إضافة/
+   حفظ/حذف) بدلاً من قائمة+مودال كما فى CustomerGroupsList.razor - لأن الشاشة الأصلية نفسها Master-Detail
+   وليست قائمة، فالحفاظ على نفس نموذج التفاعل أولى من فرض نمط قائمة مختلف. كل عمليات القراءة/الإضافة/
+   التعديل/الحذف تمر عبر AccountModelsLib.Models.SupplierCLS (نفس الكلاس المستخدَم من Supplier_Info نفسه)
+   - راجع MODERNIZATION_NOTES.md لتفاصيل الخطة الكاملة قبل التنفيذ. *@
+
+@using System.Globalization
+@using System.Data
+@using AccountERP.SharedUI.Services
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("SupplierInfoTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("SupplierInfoTitle")</MudText>
+            <MudButton Variant="Variant.Filled" Color="@(isAddingNew ? Color.Default : Color.Primary)"
+                       StartIcon="@(isAddingNew ? Icons.Material.Filled.Close : Icons.Material.Filled.Add)"
+                       OnClick="ToggleNew" Disabled="@isSaving">
+                @(isAddingNew ? Tr("Cancel") : Tr("NewSupplierButton"))
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudAutocomplete T="SupplierViewModel" Label="@Tr("SelectSupplierLabel")" Placeholder="@Tr("SelectSupplierPlaceholder")"
+                          Value="selectedSupplier" ValueChanged="OnSupplierSelectedAsync"
+                          SearchFunc="SearchSuppliersAsync" ToStringFunc="@(s => s?.Name)"
+                          Disabled="@(isAddingNew || isLoadingList)" Clearable="true" ResetValueOnEmptyText="true"
+                          Variant="Variant.Outlined" FullWidth="true" Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search" />
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@errorMessage</MudAlert>
+    }
+
+    @if (isAddingNew || selectedSupplier != null)
+    {
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4 h-100" Elevation="1">
+                    <MudText Typo="Typo.subtitle1" Class="fw-bold mb-3">@Tr("ContactInfoSection")</MudText>
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.Code" Label="@Tr("SupplierCode")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="long?" @bind-Value="model.Group_Id" Label="@Tr("SupplierGroupLabel")"
+                                       Variant="Variant.Outlined" Required="true">
+                                @foreach (var g in groups)
+                                {
+                                    <MudSelectItem T="long?" Value="@((long?)g.Id)">@g.GroupName</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.Name" Label="@Tr("SupplierName")" Variant="Variant.Outlined" Required="true" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.Address" Label="@Tr("Address")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.Tel" Label="@Tr("Tel")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.Tel2" Label="@Tr("Tel2")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.Mobile" Label="@Tr("Mobile")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.Fax" Label="@Tr("Fax")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.E_Mail" Label="@Tr("Email")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.Web_Site" Label="@Tr("Website")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.Tax_Registration_No" Label="@Tr("TaxRegistrationNo")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.Commercial_Register" Label="@Tr("CommercialRegister")" Variant="Variant.Outlined" />
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4 h-100" Elevation="1">
+                    <MudText Typo="Typo.subtitle1" Class="fw-bold mb-3">@Tr("CompanyPersonSection")</MudText>
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="6">
+                            <MudDatePicker @bind-Date="registrationDate" Label="@Tr("RegistrationDate")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="long?" @bind-Value="model.LookUp_PersonCompany_TypeId" Label="@Tr("PersonCompanyTypeLabel")"
+                                       Variant="Variant.Outlined">
+                                @foreach (var pc in personCompanyTypes)
+                                {
+                                    <MudSelectItem T="long?" Value="@((long?)pc.Value)">@pc.Text</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.CompanyName" Label="@Tr("CompanyName")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.CompanyContactName" Label="@Tr("CompanyContactName")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.CompanyContactData" Label="@Tr("CompanyContactData")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.NationalId" Label="@Tr("NationalId")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.PassportNo" Label="@Tr("PassportNo")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.PostalNo" Label="@Tr("PostalNo")" Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        @* 🟢 4 قوائم متتالية (Country -> Area -> Governorate -> City)، كل قائمة تُحمَّل من جديد عند
+                           تغيّر القائمة الأعلى منها مباشرة - نفس منطق setQueries() فى Supplier_Info.cs الأصلي
+                           (govern_AreaUSR1/govern_ListUSR1/gov_City_ListUSR1 كانت تُعاد تعبئتها عند Leave لكل
+                           قائمة أعلى) لكن هنا عند التغيير الفعلي (ValueChanged) بدل حدث Leave. *@
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="long?" Value="selectedCountryId" ValueChanged="OnCountryChangedAsync"
+                                       Label="@Tr("CountryLabel")" Variant="Variant.Outlined" Clearable="true">
+                                @foreach (var c in countries)
+                                {
+                                    <MudSelectItem T="long?" Value="@((long?)c.Id)">@c.NameAr</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="long?" Value="selectedAreaId" ValueChanged="OnAreaChangedAsync"
+                                       Label="@Tr("GovAreaLabel")" Variant="Variant.Outlined" Clearable="true"
+                                       Disabled="@(selectedCountryId is null or 0)">
+                                @foreach (var a in areas)
+                                {
+                                    <MudSelectItem T="long?" Value="@((long?)a.Id)">@a.AreaName</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="long?" Value="selectedGovernId" ValueChanged="OnGovernChangedAsync"
+                                       Label="@Tr("GovernorateLabel")" Variant="Variant.Outlined" Clearable="true"
+                                       Disabled="@(selectedAreaId is null or 0)">
+                                @foreach (var g in governs)
+                                {
+                                    <MudSelectItem T="long?" Value="@((long?)g.Id)">@g.GovName</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="long?" @bind-Value="model.Gov_City_ListId" Label="@Tr("CityLabel")"
+                                       Variant="Variant.Outlined" Clearable="true"
+                                       Disabled="@(selectedGovernId is null or 0)">
+                                @foreach (var ci in cities)
+                                {
+                                    <MudSelectItem T="long?" Value="@((long?)ci.Id)">@ci.CityName</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <MudStack Row="true" Justify="@(LangService.IsRtl ? Justify.FlexStart : Justify.FlexEnd)" Spacing="2" Class="mt-4">
+            @if (isAddingNew)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAddAsync" Disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+                    }
+                    @Tr("AddSupplier")
+                </MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEditAsync" Disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+                    }
+                    @Tr("Save")
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                           OnClick="DeleteSupplierAsync" Disabled="@isSaving">
+                    @Tr("Delete")
+                </MudButton>
+            }
+        </MudStack>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("NoSupplierSelected")</MudAlert>
+    }
+</MudContainer>
+
+@code {
+    // 🟢 يقبل SupplierId اختيارياً فى الرابط (/suppliers/info/{id}) ليُفتَح مباشرة على مورد بعينه - يقابل
+    // new Supplier_Info(Supplier_Id) فى الأصل (نفس المسار الذى تفتح به SupplierDataListFRM شاشة التعديل،
+    // راجع CustomerSupplierDataList.razor).
+    [Parameter] public long? SupplierId { get; set; }
+
+    private record GroupRow(long Id, string GroupName);
+    private record PersonCompanyTypeRow(long Value, string Text);
+
+    private List<SupplierViewModel> allSuppliers = new();
+    private List<GroupRow> groups = new();
+    private List<PersonCompanyTypeRow> personCompanyTypes = new();
+    private List<Gov_Country_List> countries = new();
+    private List<Govern_AreaViewModel> areas = new();
+    private List<Govern_ListViewModel> governs = new();
+    private List<City_ListViewModel> cities = new();
+
+    private SupplierViewModel? selectedSupplier;
+    private Supplier model = new();
+    private DateTime? registrationDate = DateTime.Now.Date;
+
+    private long? selectedCountryId;
+    private long? selectedAreaId;
+    private long? selectedGovernId;
+
+    private bool isAddingNew;
+    private bool isSaving;
+    private bool isLoadingList = true;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadStaticLookupsAsync();
+        await LoadSuppliersAsync();
+
+        if (SupplierId is > 0)
+        {
+            await LoadSupplierDetailAsync(SupplierId.Value);
+            selectedSupplier = allSuppliers.FirstOrDefault(s => s.Id == SupplierId.Value);
+        }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    // 🟢 قوائم لا تعتمد على اختيار مورد معيّن (المجموعات، نوع الحساب، قائمة الدول) - تُحمَّل مرة واحدة فقط
+    // عند فتح الشاشة، بنفس فكرة fill_cbCustomers/personCompanyType1.Get_Data فى النموذج الأصلي.
+    private async Task LoadStaticLookupsAsync()
+    {
+        await Task.Run(() =>
+        {
+            operations? gopp = null;
+            var groupsDt = new GroupsCLS().Get_Customer_Supplier_Group(ref gopp!, Common.Supplier_Account_Type);
+            groups = groupsDt.Rows.Cast<DataRow>()
+                .Select(r => new GroupRow(Convert.ToInt64(r["ID"]), r["GroupName"]?.ToString() ?? string.Empty))
+                .ToList();
+
+            // 🟢 نفس مصدر البيانات المستخدَم فى PersonCompanyType.cs الأصلي (CustomerType.PersonCompany_Type) -
+            // بما فى ذلك تكرار القيمة "2" بين "شركة" و"أجنبى" (خطأ موجود فعلاً فى البيانات المصدرية، لم يُصلَح
+            // هنا عمداً حتى لا نُغيّر سلوكاً موجوداً بدون طلب صريح - راجع MODERNIZATION_NOTES.md).
+            personCompanyTypes = CustomerType.PersonCompany_Type(false)
+                .Cast<Employees>()
+                .Select(e => new PersonCompanyTypeRow(long.Parse(e.Emp_Value), e.Emp_Text))
+                .ToList();
+
+            var countryDt = new CountryCLS().GetData();
+            countries = countryDt.Rows.Cast<DataRow>()
+                .Select(r => new Gov_Country_List
+                {
+                    Id = Convert.ToInt64(r["Id"]),
+                    NameAr = r["NameAr"]?.ToString() ?? string.Empty,
+                    NameEn = r["NameEn"]?.ToString() ?? string.Empty,
+                })
+                .OrderBy(c => c.NameAr)
+                .ToList();
+        });
+    }
+
+    // 🟢 GetSupplier(ref opp) الأصلية (فى Supplier_Info.cs) كانت تُعيد DataTable خام لتعبئة الكومبو فقط -
+    // هنا نستخدم Get_SupplierVMByActive بدلاً منها (نفس SupplierCLS، دالة موجودة فعلاً) لأنها تُعيد
+    // List<SupplierViewModel> قوي النوع مع أسماء المجموعة/المدينة/المحافظة... جاهزة، أنسب لعنصر Autocomplete.
+    private async Task LoadSuppliersAsync()
+    {
+        isLoadingList = true;
+        await Task.Run(() =>
+        {
+            var opp = new operations();
+            allSuppliers = new SupplierCLS().Get_SupplierVMByActive(ref opp, 1);
+        });
+        isLoadingList = false;
+    }
+
+    private Task<IEnumerable<SupplierViewModel>> SearchSuppliersAsync(string value, System.Threading.CancellationToken token)
+    {
+        IEnumerable<SupplierViewModel> result = string.IsNullOrWhiteSpace(value)
+            ? allSuppliers.Take(30)
+            : allSuppliers.Where(s => !string.IsNullOrEmpty(s.Name) && s.Name.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(30);
+        return Task.FromResult(result);
+    }
+
+    private async Task OnSupplierSelectedAsync(SupplierViewModel? sp)
+    {
+        selectedSupplier = sp;
+        errorMessage = string.Empty;
+        if (sp == null)
+        {
+            model = new Supplier();
+            return;
+        }
+        await LoadSupplierDetailAsync(sp.Id);
+    }
+
+    // 🟢 يقابل Select_Supplier() فى الأصل: يقرأ بيانات المورد المختار عبر SupplierCLS.Get_SupplierById (نفس
+    // الاستدعاء بالضبط)، ثم يُعيد تحميل قوائم المنطقة/المحافظة/المدينة المتتالية لتُظهر الاختيار الحالي.
+    private async Task LoadSupplierDetailAsync(long id)
+    {
+        await Task.Run(() =>
+        {
+            var opp = new operations();
+            var cls = new SupplierCLS();
+            cls.Get_SupplierById(ref opp, id);
+            model = cls.sp ?? new Supplier();
+        });
+
+        registrationDate = model.RegistrationDate ?? DateTime.Now.Date;
+        selectedCountryId = model.Gov_Country_ListId > 0 ? model.Gov_Country_ListId : null;
+        selectedAreaId = model.Govern_Area_ListId > 0 ? model.Govern_Area_ListId : null;
+        selectedGovernId = model.Govern_ListId > 0 ? model.Govern_ListId : null;
+
+        await ReloadCascadeListsAsync();
+    }
+
+    private async Task ReloadCascadeListsAsync()
+    {
+        await Task.Run(() =>
+        {
+            var opp = new operations();
+            areas = selectedCountryId is > 0
+                ? new Govern_AreaCLS().Get_Govern_Area(ref opp, selectedCountryId.Value)
+                : new List<Govern_AreaViewModel>();
+
+            governs = selectedCountryId is > 0 && selectedAreaId is > 0
+                ? new Govern_ListCLS().Get_Govern_List(ref opp, selectedCountryId.Value, selectedAreaId.Value)
+                : new List<Govern_ListViewModel>();
+
+            cities = selectedCountryId is > 0 && selectedAreaId is > 0 && selectedGovernId is > 0
+                ? new Gov_City_ListCLS().Get_City_List(ref opp, selectedCountryId.Value, selectedAreaId.Value, selectedGovernId.Value)
+                : new List<City_ListViewModel>();
+        });
+    }
+
+    private async Task OnCountryChangedAsync(long? id)
+    {
+        selectedCountryId = id;
+        model.Gov_Country_ListId = id;
+        selectedAreaId = null;
+        selectedGovernId = null;
+        model.Govern_Area_ListId = null;
+        model.Govern_ListId = null;
+        model.Gov_City_ListId = null;
+        await ReloadCascadeListsAsync();
+    }
+
+    private async Task OnAreaChangedAsync(long? id)
+    {
+        selectedAreaId = id;
+        model.Govern_Area_ListId = id;
+        selectedGovernId = null;
+        model.Govern_ListId = null;
+        model.Gov_City_ListId = null;
+        await ReloadCascadeListsAsync();
+    }
+
+    private async Task OnGovernChangedAsync(long? id)
+    {
+        selectedGovernId = id;
+        model.Govern_ListId = id;
+        model.Gov_City_ListId = null;
+        await ReloadCascadeListsAsync();
+    }
+
+    // 🟢 يقابل MakeNew()/clear() فى الأصل: يبدّل بين حالتَي "تعديل مورد مختار" و"إضافة مورد جديد" (بدلاً من
+    // نص زر BtnNew المتغيّر "جديد"/"إلغاء" فى الويندوز فورمز، هنا isAddingNew صراحة تتحكم فى الأزرار الظاهرة).
+    private void ToggleNew()
+    {
+        errorMessage = string.Empty;
+        if (isAddingNew)
+        {
+            isAddingNew = false;
+            if (selectedSupplier != null)
+            {
+                _ = LoadSupplierDetailAsync(selectedSupplier.Id);
+            }
+            else
+            {
+                model = new Supplier();
+            }
+        }
+        else
+        {
+            isAddingNew = true;
+            selectedSupplier = null;
+            model = new Supplier { RegistrationDate = DateTime.Now.Date, Active = 1, LookUp_PersonCompany_TypeId = 1 };
+            registrationDate = DateTime.Now.Date;
+            selectedCountryId = null;
+            selectedAreaId = null;
+            selectedGovernId = null;
+            areas = new();
+            governs = new();
+            cities = new();
+        }
+    }
+
+    // 🟢 يقابل ValidateSupplierData() فى الأصل بنفس القواعد (اسم مطلوب، بدون '، مجموعة مطلوبة) - إضافة واحدة
+    // متعمّدة: فحص تكرار الاسم (IsFoundName، نفس الدالة المُعاد استخدامها من SupplierCLS) يعمل هنا دائماً عند
+    // الإضافة والتعديل معاً، بينما فى الأصل كان يعمل فقط فى وضع "ISAddNewOnly" الخاص (شاشة embedded) ولم يكن
+    // يُستدعى إطلاقاً فى الاستخدام العادي لهذه الشاشة - قرار تصميم أفضل لسلامة البيانات دون تغيير أي منطق عمل.
+    private async Task<bool> ValidateSupplierAsync(bool isNew)
+    {
+        errorMessage = string.Empty;
+        if (string.IsNullOrWhiteSpace(model.Name))
+        {
+            errorMessage = Tr("SupplierNameRequired");
+            return false;
+        }
+        if (model.Name.Contains('\''))
+        {
+            errorMessage = Tr("SupplierNameNoQuote");
+            return false;
+        }
+        if (model.Group_Id is null or 0)
+        {
+            errorMessage = Tr("SupplierGroupRequired");
+            return false;
+        }
+
+        bool duplicate = false;
+        await Task.Run(() =>
+        {
+            var opp = new operations();
+            duplicate = new SupplierCLS().IsFoundName(ref opp, model.Name, isNew ? 0 : model.Id);
+        });
+        if (duplicate)
+        {
+            errorMessage = Tr("SupplierNameAlreadyUsed");
+            return false;
+        }
+
+        return true;
+    }
+
+    // 🟢 يقابل AddNewSupplier() فى الأصل: نفس الاستدعاء بالضبط SupplierCLS.AddNewSupplier (معاملاتي، إنشاء
+    // حساب فرعي جديد فى شجرة الحسابات تلقائياً بداخلها) - IsUse_SubAccount_Id_Select=false دائماً هنا لأن
+    // مسار "اختيار حساب موجود" كان مخفياً (Visible=false) فى الويندوز فورمز الأصلي، لم يُبنَ فى هذه الشاشة.
+    private async Task SaveAddAsync()
+    {
+        if (!await ValidateSupplierAsync(isNew: true))
+        {
+            return;
+        }
+
+        isSaving = true;
+        int excp = 0;
+        string msg = string.Empty;
+        try
+        {
+            model.RegistrationDate = registrationDate;
+            model.Currency_Id = Common.Entry_Currency_Id;
+            model.Active = 1;
+            model.Balance = Common.RoundMe(model.Balance ?? 0);
+
+            await Task.Run(() =>
+            {
+                new SupplierCLS().AddNewSupplier(ref excp, ref msg, model, false);
+            });
+
+            if (excp == 0)
+            {
+                Snackbar.Add(Tr("SupplierAdded"), Severity.Success);
+                isAddingNew = false;
+                selectedSupplier = null;
+                model = new Supplier();
+                await LoadSuppliersAsync();
+            }
+            else
+            {
+                errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // 🟢 يقابل BtnEdit_Click() فى الأصل: نفس الاستدعاء بالضبط SupplierCLS.UpdateSupplier (يُحدِّث المورد
+    // والحساب الفرعي المرتبط به معاً فى معاملة واحدة).
+    private async Task SaveEditAsync()
+    {
+        if (selectedSupplier == null)
+        {
+            errorMessage = Tr("NoSupplierSelected");
+            return;
+        }
+        if (!await ValidateSupplierAsync(isNew: false))
+        {
+            return;
+        }
+
+        isSaving = true;
+        int excp = 0;
+        string msg = string.Empty;
+        try
+        {
+            model.RegistrationDate = registrationDate;
+            model.Balance = Common.RoundMe(model.Balance ?? 0);
+
+            await Task.Run(() =>
+            {
+                new SupplierCLS().UpdateSupplier(ref excp, ref msg, model, 0, false);
+            });
+
+            if (excp == 0)
+            {
+                Snackbar.Add(Tr("SupplierUpdated"), Severity.Success);
+                await LoadSuppliersAsync();
+                await LoadSupplierDetailAsync(model.Id);
+            }
+            else
+            {
+                errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // 🟢 يقابل BtnDelete_Click() فى الأصل: نفس الاستدعاء بالضبط SupplierCLS.DeleteSupplier (يمنع الحذف تلقائياً
+    // لو للمورد عمليات محاسبية مسجَّلة - رسالة الخطأ Msg تأتي جاهزة من نفس الدالة).
+    private async Task DeleteSupplierAsync()
+    {
+        if (selectedSupplier == null)
+        {
+            return;
+        }
+
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("DeleteSupplierTitle"),
+            Tr("DeleteSupplierConfirm", model.Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        isSaving = true;
+        int excp = 0;
+        string msg = string.Empty;
+        try
+        {
+            await Task.Run(() =>
+            {
+                var opp = new operations();
+                new SupplierCLS().DeleteSupplier(ref opp, ref excp, ref msg, model.Id);
+            });
+
+            if (excp == 0)
+            {
+                Snackbar.Add(Tr("SupplierDeleted"), Severity.Success);
+                selectedSupplier = null;
+                model = new Supplier();
+                await LoadSuppliersAsync();
+            }
+            else
+            {
+                errorMessage = string.IsNullOrEmpty(msg) ? Tr("SupplierCannotDelete") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

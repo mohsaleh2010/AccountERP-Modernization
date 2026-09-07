@@ -47,6 +47,14 @@
   <data name="HomeQuickAccessTitle" xml:space="preserve"><value>Your available modules</value></data>
   <data name="ExpandAllMenus" xml:space="preserve"><value>Expand all</value></data>
   <data name="CollapseAllMenus" xml:space="preserve"><value>Collapse all</value></data>
+  <data name="OpenNewTabTooltip" xml:space="preserve"><value>Open a new screen</value></data>
+  <data name="AccountSettingsTooltip" xml:space="preserve"><value>Account settings</value></data>
+  <data name="UserSettingsTitle" xml:space="preserve"><value>Account settings</value></data>
+  <data name="ShowBreadcrumbSetting" xml:space="preserve"><value>Show navigation path</value></data>
+  <data name="ShowBreadcrumbSettingHint" xml:space="preserve"><value>Shows the path to each screen at the top of the page (Available modules ‹ ... ‹ current screen)</value></data>
+  <data name="ShowTabsSetting" xml:space="preserve"><value>Enable tabs</value></data>
+  <data name="ShowTabsSettingHint" xml:space="preserve"><value>Opens each screen as its own closable tab you can switch between without losing your data, instead of showing one screen at a time</value></data>
+  <data name="UserSettingsSavedHint" xml:space="preserve"><value>These settings are saved automatically to your account and apply on any device you sign in from</value></data>
 
   <data name="MenuChangePassword" xml:space="preserve"><value>Change Password</value></data>
   <data name="ChangePasswordTitle" xml:space="preserve"><value>Change Password</value></data>
@@ -105,9 +113,70 @@
   <data name="AboutUsBody" xml:space="preserve"><value>Account ERP is a multi-module accounting and inventory management system, integrated with sales, purchasing, taxes, e-invoicing, and more. This web/mobile/desktop experience is a modern rebuild of the original desktop system, built with Blazor.</value></data>
 
   <data name="Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Delete" xml:space="preserve"><value>Delete</value></data>
   <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Yes" xml:space="preserve"><value>Yes</value></data>
   <data name="No" xml:space="preserve"><value>No</value></data>
+
+  <data name="AccountsTreeTitle" xml:space="preserve"><value>Chart of Accounts</value></data>
+  <data name="BranchLabel" xml:space="preserve"><value>Branch</value></data>
+  <data name="AddAccountButton" xml:space="preserve"><value>Add Account</value></data>
+  <data name="NoAccountsYet" xml:space="preserve"><value>No accounts yet</value></data>
+  <data name="NoAccountSelected" xml:space="preserve"><value>Select an account from the tree to view its details</value></data>
+  <data name="AccountNameLabel" xml:space="preserve"><value>Account Name</value></data>
+  <data name="AccountCodeLabel" xml:space="preserve"><value>Account Code</value></data>
+  <data name="CurrencyLabel" xml:space="preserve"><value>Currency</value></data>
+  <data name="AccountTypeLabel" xml:space="preserve"><value>Account Type</value></data>
+  <data name="AccountFollowsLabel" xml:space="preserve"><value>Account Follows</value></data>
+  <data name="CashFlowTypeLabel" xml:space="preserve"><value>Cash Flow Type</value></data>
+  <data name="NatureDebitLabel" xml:space="preserve"><value>Debit</value></data>
+  <data name="NatureCreditLabel" xml:space="preserve"><value>Credit</value></data>
+  <data name="AccountLevelLabel" xml:space="preserve"><value>Account Level</value></data>
+  <data name="NotesLabel" xml:space="preserve"><value>Notes</value></data>
+  <data name="AcceptEntryLabel" xml:space="preserve"><value>Accepts journal entries</value></data>
+  <data name="AcceptCostCenterLabel" xml:space="preserve"><value>Accepts cost centers</value></data>
+  <data name="AccountTypeChangeForChildrenLabel" xml:space="preserve"><value>Sub-accounts have the same account type</value></data>
+  <data name="AccountFollowChangeForChildrenLabel" xml:space="preserve"><value>Sub-accounts have the same account follow-up</value></data>
+  <data name="MasrofatAffectLabel" xml:space="preserve"><value>Shows in expenses/revenue report</value></data>
+  <data name="SaveEditButton" xml:space="preserve"><value>Save Changes</value></data>
+  <data name="DeleteAccountButton" xml:space="preserve"><value>Delete</value></data>
+  <data name="DeleteAllChildrenButton" xml:space="preserve"><value>Delete Sub-Accounts</value></data>
+  <data name="RecodeChildrenButton" xml:space="preserve"><value>Re-code</value></data>
+  <data name="RecodeAllChildrenButton" xml:space="preserve"><value>Re-code All</value></data>
+  <data name="MoveAccountButton" xml:space="preserve"><value>New Position</value></data>
+  <data name="MoveAccountTitle" xml:space="preserve"><value>Change Account Position</value></data>
+  <data name="MoveAccountInstructions" xml:space="preserve"><value>Pick from the tree the account that will become the new parent of this account</value></data>
+  <data name="MoveAccountCurrentLabel" xml:space="preserve"><value>Account to move</value></data>
+  <data name="MoveAccountNewParentLabel" xml:space="preserve"><value>Selected new parent</value></data>
+  <data name="MoveAccountSelfError" xml:space="preserve"><value>An account cannot be its own parent</value></data>
+  <data name="MoveAccountDescendantError" xml:space="preserve"><value>Cannot move an account into one of its own descendants</value></data>
+  <data name="MoveAccountSelectTarget" xml:space="preserve"><value>Select the new parent account first</value></data>
+  <data name="MoveAccountSaveButton" xml:space="preserve"><value>Confirm Move</value></data>
+  <data name="AccountAdded" xml:space="preserve"><value>Account added successfully</value></data>
+  <data name="AccountUpdated" xml:space="preserve"><value>Account updated</value></data>
+  <data name="AccountDeleted" xml:space="preserve"><value>Account deleted</value></data>
+  <data name="SubAccountsDeleted" xml:space="preserve"><value>Sub-accounts deleted</value></data>
+  <data name="AccountCannotDelete" xml:space="preserve"><value>This account cannot be deleted</value></data>
+  <data name="DeleteAccountTitle" xml:space="preserve"><value>Delete Account</value></data>
+  <data name="DeleteAccountConfirm" xml:space="preserve"><value>Delete account "{0}"? It may have been used before and other accounts could be affected</value></data>
+  <data name="DeleteAllSubAccountsTitle" xml:space="preserve"><value>Delete Sub-Accounts</value></data>
+  <data name="DeleteAllSubAccountsConfirm" xml:space="preserve"><value>Delete all direct sub-accounts of "{0}"?</value></data>
+  <data name="AddAccountTitle" xml:space="preserve"><value>Add New Account</value></data>
+  <data name="SelectParentAccountFirst" xml:space="preserve"><value>You must select the parent account before adding</value></data>
+  <data name="ParentAccountLabel" xml:space="preserve"><value>Parent Account</value></data>
+  <data name="FirstSubCodeLabel" xml:space="preserve"><value>Sub-account numbering pattern</value></data>
+  <data name="CompanyCustomerLabel" xml:space="preserve"><value>Company Customer</value></data>
+  <data name="GeneralCustomerLabel" xml:space="preserve"><value>General Customer</value></data>
+  <data name="HasSubAccountsLabel" xml:space="preserve"><value>Has sub-accounts</value></data>
+  <data name="AccountNameRequired" xml:space="preserve"><value>Enter the account name</value></data>
+  <data name="AccountCodeRequired" xml:space="preserve"><value>Account code is required</value></data>
+  <data name="CurrencyRequired" xml:space="preserve"><value>Select the currency</value></data>
+  <data name="AccountTypeRequired" xml:space="preserve"><value>Select the account type</value></data>
+  <data name="ExpandAllAccounts" xml:space="preserve"><value>Expand all</value></data>
+  <data name="CollapseAllAccounts" xml:space="preserve"><value>Collapse all</value></data>
+  <data name="SearchAccountLabel" xml:space="preserve"><value>Search for an account</value></data>
+  <data name="ScrollTreeToTop" xml:space="preserve"><value>Back to top of the tree</value></data>
+  <data name="SearchAccountPlaceholder" xml:space="preserve"><value>Type an account name or code...</value></data>
 
   <data name="CustomerGroupsTitle" xml:space="preserve"><value>Customer Groups</value></data>
   <data name="SupplierGroupsTitle" xml:space="preserve"><value>Supplier Groups</value></data>
@@ -121,4 +190,85 @@
   <data name="DeleteGroupTitle" xml:space="preserve"><value>Delete Group</value></data>
   <data name="DeleteGroupConfirm" xml:space="preserve"><value>Are you sure you want to delete the group "{0}"?</value></data>
   <data name="GroupInUseCannotDelete" xml:space="preserve"><value>This group cannot be deleted because it is assigned to one or more customers/suppliers</value></data>
+
+  <data name="SupplierInfoTitle" xml:space="preserve"><value>Supplier Info</value></data>
+  <data name="SelectSupplierLabel" xml:space="preserve"><value>Select Supplier</value></data>
+  <data name="SelectSupplierPlaceholder" xml:space="preserve"><value>Search for a supplier by name...</value></data>
+  <data name="NewSupplierButton" xml:space="preserve"><value>New Supplier</value></data>
+  <data name="AddSupplier" xml:space="preserve"><value>Add</value></data>
+  <data name="DeleteSupplierTitle" xml:space="preserve"><value>Delete Supplier</value></data>
+  <data name="DeleteSupplierConfirm" xml:space="preserve"><value>Are you sure you want to delete supplier "{0}"?</value></data>
+  <data name="SupplierAdded" xml:space="preserve"><value>Supplier added successfully</value></data>
+  <data name="SupplierUpdated" xml:space="preserve"><value>Supplier updated successfully</value></data>
+  <data name="SupplierDeleted" xml:space="preserve"><value>Supplier deleted successfully</value></data>
+  <data name="SupplierNameRequired" xml:space="preserve"><value>Please enter the supplier name</value></data>
+  <data name="SupplierNameNoQuote" xml:space="preserve"><value>The single quote (') character is not allowed in the name</value></data>
+  <data name="SupplierNameAlreadyUsed" xml:space="preserve"><value>This supplier name is already in use</value></data>
+  <data name="SupplierGroupRequired" xml:space="preserve"><value>Please select the supplier group</value></data>
+  <data name="NoSupplierSelected" xml:space="preserve"><value>No supplier selected</value></data>
+  <data name="SupplierCannotDelete" xml:space="preserve"><value>This supplier cannot be deleted because it has accounting transactions</value></data>
+
+  <data name="ContactInfoSection" xml:space="preserve"><value>Contact Information</value></data>
+  <data name="CompanyPersonSection" xml:space="preserve"><value>Company / Person Details</value></data>
+
+  <data name="SupplierCode" xml:space="preserve"><value>Code</value></data>
+  <data name="SupplierName" xml:space="preserve"><value>Name</value></data>
+  <data name="Address" xml:space="preserve"><value>Address</value></data>
+  <data name="Tel" xml:space="preserve"><value>Phone</value></data>
+  <data name="Tel2" xml:space="preserve"><value>Phone 2</value></data>
+  <data name="Mobile" xml:space="preserve"><value>Mobile</value></data>
+  <data name="Fax" xml:space="preserve"><value>Fax</value></data>
+  <data name="Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Website" xml:space="preserve"><value>Website</value></data>
+  <data name="TaxRegistrationNo" xml:space="preserve"><value>Tax Registration No.</value></data>
+  <data name="CommercialRegister" xml:space="preserve"><value>Commercial Register No.</value></data>
+  <data name="SupplierGroupLabel" xml:space="preserve"><value>Supplier Group</value></data>
+  <data name="RegistrationDate" xml:space="preserve"><value>Registration Date</value></data>
+  <data name="PersonCompanyTypeLabel" xml:space="preserve"><value>Account Type</value></data>
+  <data name="CompanyName" xml:space="preserve"><value>Company Name</value></data>
+  <data name="CompanyContactName" xml:space="preserve"><value>Contact Person Name</value></data>
+  <data name="CompanyContactData" xml:space="preserve"><value>Contact Person Details</value></data>
+  <data name="NationalId" xml:space="preserve"><value>National ID</value></data>
+  <data name="PassportNo" xml:space="preserve"><value>Passport No.</value></data>
+  <data name="PostalNo" xml:space="preserve"><value>Postal Code</value></data>
+  <data name="CountryLabel" xml:space="preserve"><value>Country</value></data>
+  <data name="GovAreaLabel" xml:space="preserve"><value>Region</value></data>
+  <data name="GovernorateLabel" xml:space="preserve"><value>Governorate</value></data>
+  <data name="CityLabel" xml:space="preserve"><value>City</value></data>
+  <data name="LoadingSettingsTitle" xml:space="preserve"><value>Loading Settings</value></data>
+  <data name="LoadingSettingsSubtitle" xml:space="preserve"><value>Setting up your account, please wait...</value></data>
+
+  <data name="CustomerInfoTitle" xml:space="preserve"><value>Customer Info</value></data>
+  <data name="NewCustomerButton" xml:space="preserve"><value>New Customer</value></data>
+  <data name="SelectCustomerLabel" xml:space="preserve"><value>Select Customer</value></data>
+  <data name="SelectCustomerPlaceholder" xml:space="preserve"><value>Search for a customer by name...</value></data>
+  <data name="CustomerCode" xml:space="preserve"><value>Code</value></data>
+  <data name="CustomerGroupLabel" xml:space="preserve"><value>Customer Group</value></data>
+  <data name="CustomerName" xml:space="preserve"><value>Name</value></data>
+  <data name="MainCustomer" xml:space="preserve"><value>Main Customer</value></data>
+  <data name="GeneralCustomer" xml:space="preserve"><value>General Customer</value></data>
+  <data name="IsInsuranceCompany" xml:space="preserve"><value>Insurance Company</value></data>
+  <data name="TaxCompanyName" xml:space="preserve"><value>Tax Portal Company Name</value></data>
+  <data name="AddCustomer" xml:space="preserve"><value>Add</value></data>
+  <data name="NoCustomerSelected" xml:space="preserve"><value>No customer selected</value></data>
+  <data name="CustomerNameRequired" xml:space="preserve"><value>Customer name is required</value></data>
+  <data name="CustomerNameNoQuote" xml:space="preserve"><value>Customer name cannot contain an apostrophe (')</value></data>
+  <data name="CustomerGroupRequired" xml:space="preserve"><value>Customer group is required</value></data>
+  <data name="CustomerNameAlreadyUsed" xml:space="preserve"><value>Another customer already has this name</value></data>
+  <data name="CustomerAdded" xml:space="preserve"><value>Customer added successfully</value></data>
+  <data name="CustomerUpdated" xml:space="preserve"><value>Customer updated successfully</value></data>
+  <data name="DeleteCustomerTitle" xml:space="preserve"><value>Delete Customer</value></data>
+  <data name="DeleteCustomerConfirm" xml:space="preserve"><value>Are you sure you want to delete customer "{0}"?</value></data>
+  <data name="CustomerDeleted" xml:space="preserve"><value>Customer deleted successfully</value></data>
+  <data name="CustomerCannotDelete" xml:space="preserve"><value>This customer cannot be deleted because it has recorded transactions</value></data>
+  <data name="CustomerListTitle" xml:space="preserve"><value>Customer List</value></data>
+  <data name="SupplierListTitle" xml:space="preserve"><value>Supplier List</value></data>
+  <data name="ActiveOnly" xml:space="preserve"><value>Active only</value></data>
+  <data name="SearchByName" xml:space="preserve"><value>Search by name</value></data>
+  <data name="AllCustomers" xml:space="preserve"><value>All</value></data>
+  <data name="ShowButton" xml:space="preserve"><value>Show</value></data>
+  <data name="NoCustomersYet" xml:space="preserve"><value>No customers to show</value></data>
+  <data name="NoSuppliersYet" xml:space="preserve"><value>No suppliers to show</value></data>
+  <data name="CustomerCarsListTitle" xml:space="preserve"><value>Customer Cars List</value></data>
+  <data name="AddCarNewCustomerButton" xml:space="preserve"><value>Add Car + New Customer</value></data>
 </root>

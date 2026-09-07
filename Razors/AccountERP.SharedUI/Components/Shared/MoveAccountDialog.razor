@@ -1,0 +1,155 @@
+@* 🟢 "موضع جديد" - نظير زر مماثل فى شاشة شجرة الحسابات بالويندوز فورمز يفتح نافذة منبثقة بها شجرة+بحث لاختيار
+   أب جديد للحساب المحدد، بطلب المستخدم صراحة. تستخدم نفس المكوّن القابل لإعادة الاستخدام AccountTreePicker.razor
+   المستخدَم فى الشاشة الرئيسية (AccountsTreeList.razor) - وليس نسخة أخرى منه - تماماً كما تُستخدَم
+   Connection4It.AccountTreeViewUSCTRL نفسها فى أكثر من شاشة بالويندوز فورمز.
+
+   ⚠️ لا تستدعي هذه الشاشة Submain_AccountCLS.Edit_AccountsPosition (الاستدعاء الأصلي المقابل لزر "موضع جديد"):
+   تلك الدالة معطوبة فعلاً فى شفرة المصدر (WHERE SubAccount_Id = ... - عمود غير موجود بالجدول، والقيمة sb.Id
+   الثابتة على الكلاس بدل معامل الدالة نفسه)؛ استدعاؤها كما هى كان سيُسلّم زراً لا يعمل. بدلاً من ذلك تستدعي
+   Sub_Account.Move_Account الجديدة (نفس الملف/الكلاس الذى تُستدعى منه بقية عمليات الشجرة: Delete_Account،
+   Delete_AllSubAccount) التى تنفّذ نفس النيّة بشكل صحيح مع تحقق من الدورات وإعادة تكويد صحيحة - راجع
+   MODERNIZATION_NOTES.md للتفاصيل الكاملة. *@
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@inject LanguageService LangService
+
+<MudDialog @bind-Visible="Visible"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr("MoveAccountTitle")</TitleContent>
+    <DialogContent>
+        @if (AccountToMove == null)
+        {
+            <MudAlert Severity="Severity.Warning">@Tr("SelectParentAccountFirst")</MudAlert>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">
+                @Tr("MoveAccountCurrentLabel"): <strong>@AccountToMove.SubAccount_NO &nbsp; @AccountToMove.SubAccount_Name</strong>
+            </MudText>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3">@Tr("MoveAccountInstructions")</MudText>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_errorMessage</MudAlert>
+            }
+
+            @if (_targetNode != null)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3">
+                    @Tr("MoveAccountNewParentLabel"): <strong>@_targetNode.SubAccount_NO &nbsp; @_targetNode.SubAccount_Name</strong>
+                </MudAlert>
+            }
+
+            <div style="height:45vh;">
+                <AccountTreePicker @ref="_picker" BranchId="BranchId" SelectedValue="_targetNode" SelectedValueChanged="OnTargetSelected" Height="45vh" />
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseAsync">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@(_isSaving || AccountToMove == null)">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("MoveAccountSaveButton")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public AccountTreeNodeViewModel? AccountToMove { get; set; }
+    [Parameter] public long BranchId { get; set; }
+    [Parameter] public EventCallback<long> OnMoved { get; set; }
+
+    private AccountTreePicker? _picker;
+    private AccountTreeNodeViewModel? _targetNode;
+    private bool _isSaving;
+    private string? _errorMessage;
+    private long _lastOpenedForId = -1;
+
+    protected override void OnParametersSet()
+    {
+        if (Visible && AccountToMove != null && AccountToMove.Id != _lastOpenedForId)
+        {
+            _lastOpenedForId = AccountToMove.Id;
+            _targetNode = null;
+            _errorMessage = null;
+        }
+        else if (!Visible)
+        {
+            _lastOpenedForId = -1;
+        }
+    }
+
+    private void OnTargetSelected(AccountTreeNodeViewModel? node)
+    {
+        _targetNode = node;
+        _errorMessage = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (AccountToMove == null) return;
+        if (_targetNode == null) { _errorMessage = Tr("MoveAccountSelectTarget"); return; }
+        if (_targetNode.Id == AccountToMove.Id) { _errorMessage = Tr("MoveAccountSelfError"); return; }
+
+        _isSaving = true;
+        _errorMessage = null;
+        int excp = 0;
+        string msg = "";
+        var accountId = AccountToMove.Id;
+        var newParentId = _targetNode.Id;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new Sub_Account().Move_Account(ref excp, ref msg, accountId, newParentId);
+            });
+
+            if (excp == 0)
+            {
+                await OnMoved.InvokeAsync(accountId);
+                await CloseAsync();
+            }
+            else
+            {
+                _errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

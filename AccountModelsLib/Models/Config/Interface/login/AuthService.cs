@@ -70,6 +70,11 @@ namespace AccountModelsLib.Models
             Common.FullUserName = user.Name;
             Common.Branch_Id = user.Branch_Id ?? 1;
 
+            // 🟢 مكافئ استدعاء Common.Get_Is_Force_Admin_Permission() داخل Accounts.LoadingFrm فى تطبيق
+            // الويندوز فورمز (يعمل هناك بعد الدخول مباشرة وقبل الشاشة الرئيسية) - يعتمد على Common.User_Id
+            // المضبوط للتو أعلاه، فلا يصح تشغيله قبله. راجع MODERNIZATION_NOTES.md لتفاصيل الخطة الكاملة.
+            try { Common.Get_Is_Force_Admin_Permission(); } catch { }
+
             // جلب وتجهيز الصلاحيات والقوائم ديناميكياً لهذا المستخدم فوراً
             // نمرر الـ USER_ID الخاص به، والمشروع رقم 2 (Accounting) كما حددنا سابقاً
             var allowedMenus = _menuRepo.GetUserAllowedMenus(  projectId: 2,  user.USER_ID);

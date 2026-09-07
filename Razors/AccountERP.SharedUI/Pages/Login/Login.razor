@@ -197,8 +197,9 @@
                     }
                 }
 
-                // نجاح الدخول -> التوجيه إلى الصفحة الرئيسية حيث شُحنت القوائم المسموح بها بنجاح
-                NavigationManager.NavigateTo("/");
+                // نجاح الدخول -> شاشة "تحميل الإعدادات" الانتقالية (مكافئ Accounts.LoadingFrm فى الويندوز
+                // فورمز) ثم الصفحة الرئيسية حيث شُحنت القوائم المسموح بها بنجاح - راجع MODERNIZATION_NOTES.md
+                NavigationManager.NavigateTo("/loading");
             }
             else
             {

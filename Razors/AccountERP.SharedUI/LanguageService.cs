@@ -134,13 +134,32 @@ namespace AccountERP.SharedUI
         // CurrentUICulture الخاصين بالخيط الفعلي الذى ستُنفَّذ عليه هذه الرندرة تحديداً - وهو ما يحتاجه
         // IStringLocalizer (خاصية Lang[...]) ليختار ملف الـ .resx الصحيح، لأنه يقرأ الثقافة من الخيط الحالي
         // وقت الاستدعاء، وليس من حقل _currentCultureCode مباشرة.
+        // 🐛 CurrentCulture (بعكس CurrentUICulture) لم يعد يُضبَط على ثقافة الواجهة (مثل ar-EG) هنا عمداً منذ
+        // اكتشاف خطأ حقيقي بسببه: عمليات DAL فى AccountModelsLib تبني SQL خام بتجميع نصوص (raw string
+        // concatenation) لأرقام (مثال: "Where Id=" + SubAccount_ID) عبر Task.Run - وTask.Run يرث CurrentCulture
+        // (وليس فقط CurrentUICulture) من الخيط المستدعي وقتها. تنسيق الأرقام السالبة بثقافة ar-EG فى .NET يُدرج
+        // علامة اتجاه Unicode غير مرئية (Arabic Letter Mark، U+061C) حول علامة السالب - فيتحول "-1" فعلياً إلى
+        // "‎-1" (بحرف غير مرئي إضافي) عند إدراجه فى نص SQL، فيفشل أي WHERE Id=-1 بصمت (يُطابق صفراً من الصفوف
+        // أو تحدث استثناءات تُبتلَع فى catch عام). أول ظهور فعلي: AccountModelsLib.Sub_Account.
+        // Check_SubAccount_ID_Found يعيد "الحساب موجود من قبل" خطأً لكل محاولة إضافة حساب جديد من شجرة
+        // الحسابات (Submain_Account_Id=-1 دائماً لحساب جديد) - راجع MODERNIZATION_NOTES.md لتفاصيل التشخيص
+        // الكامل. CurrentUICulture يبقى مضبوطاً كالمعتاد (هو وحده ما يحتاجه IStringLocalizer/Lang[...] لاختيار
+        // ملف .resx الصحيح) - فقط CurrentCulture/DefaultThreadCurrentCulture (المسؤولان عن تنسيق الأرقام/
+        // التواريخ) يبقيان على الثقافة الغازية (Invariant) بغض النظر عن لغة الواجهة المختارة.
         public void ApplyToCurrentThread()
         {
             var culture = new CultureInfo(_currentCultureCode);
-            CultureInfo.CurrentCulture = culture;
             CultureInfo.CurrentUICulture = culture;
-            CultureInfo.DefaultThreadCurrentCulture = culture;
             CultureInfo.DefaultThreadCurrentUICulture = culture;
+
+            // 🐛 لا يكفي "عدم ضبط" CurrentCulture هنا - شيء آخر (على الأرجح UseRequestLocalization فى
+            // Program.cs، المُطبَّق وقت طلب HTTP الذى يُنشئ دائرة Blazor Server نفسها) يضبطها فعلياً = ar-EG
+            // وتبقى (تتدفّق عبر ExecutionContext إلى أي Task.Run لاحق طوال عمر الدائرة كلها) - تأكَّدنا من هذا
+            // بالتتبع الفعلي (raw SQL يحمل "؜-1" بدل "-1" حتى بعد إزالة الضبط من هنا). الإصلاح الفعلي: ضبطها
+            // بقوة لكل من CurrentCulture وDefaultThreadCurrentCulture = InvariantCulture صراحة فى كل مرة، بدل
+            // مجرد الامتناع عن تغييرها - راجع MODERNIZATION_NOTES.md.
+            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
         }
     }
 }

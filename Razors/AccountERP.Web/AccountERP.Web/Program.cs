@@ -33,6 +33,25 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 // عند بدء التشغيل، لكن مضيف الويب هذا لا يستدعيها إطلاقاً.
 AccountModelsLib.operations.conn_str_ = connectionString ?? string.Empty;
 
+// 🔥 يجب ضبط هذا العلم = 1 دائماً هنا وقبل أي استدعاء لـ Common.SetSystemParametersDB() أدناه: تلك الدالة
+// تنتهي باستدعاء operations.ReturnConnStr()، والذي - إن كان IS_ReadConStrFromXMLInfo لا يساوي 1 - يقوم
+// **بالكتابة فوق** الـ connection string الصحيح أعلاه بقيمة قديمة مكتوبة يدوياً داخل تلك الدالة (لقاعدة
+// بيانات مختلفة تماماً). فى تطبيقات الويندوز فورمز يُضبط هذا العلم=1 تلقائياً من ملف ConnInfo.xml المشفر عبر
+// Common.SetSystemParameters() قبل أي استدعاء مشابه؛ مضيف الويب هذا لا يقرأ ملف XML إطلاقاً (يعتمد على
+// appsettings.json مباشرة أعلاه)، فيجب ضبط العلم يدوياً هنا ليكون ReturnConnStr() بلا أثر (no-op) تماماً
+// كحاله على الديسك توب. راجع MODERNIZATION_NOTES.md ("SetSystemParametersDB()'s last line is dangerous...").
+AccountModelsLib.Common.IS_ReadConStrFromXMLInfo = 1;
+
+// 🔥 تحميل إعدادات النظام (SysConfig بالكامل) مرة واحدة فقط عند بدء تشغيل العملية - وليس عند كل تسجيل دخول:
+// هذا هو الجزء "الخاص بكل المنشأة/قاعدة البيانات" (وليس الخاص بمستخدم بعينه) من تسلسل Accounts.LoadingFrm
+// الأصلي فى تطبيق الويندوز فورمز (يعمل هناك بعد الدخول مباشرة لأن كل Process يخدم مستخدماً واحداً فقط؛ هنا
+// عملية واحدة تخدم عشرات المستخدمين المتزامنين، فتحميلها مرة واحدة عند الإقلاع أدق وأوفر). التسلسل نفسه
+// مجمَّع فى AccountModelsLib.SystemSettingsLoader.LoadTenantSettings() - مصدر حقيقة واحد يستدعيه هذا
+// الملف وAccounts.LoadingFrm فى الويندوز فورمز كلاهما، بدل تكرار نفس الأسطر فى مكانين. راجع
+// MODERNIZATION_NOTES.md لتفاصيل الخطوات والتصنيف الكامل. أي فشل هنا (قاعدة بيانات غير متاحة مؤقتاً عند
+// الإقلاع) لا يجب أن يمنع التطبيق من البدء - تماماً كما يفعل Program.cs الأصلي فى الويندوز فورمز.
+try { AccountModelsLib.SystemSettingsLoader.LoadTenantSettings(); } catch { }
+
 // 2. تسجيل الخدمة وتمرير الـ string داخل الـ Constructor مانيوال
 builder.Services.AddScoped<My_DbContext>(provider => new My_DbContext(connectionString));
 builder.Services.AddScoped<operations>(provider => {
@@ -69,6 +88,12 @@ builder.Services.AddSingleton<AccountModelsLib.MenuRepository>();
 //    الشحن الحقيقي بالبيانات وضبط IsAuthenticated يتمّان فقط داخل AuthService.LoginAsync عند نجاح الدخول.
 builder.Services.AddScoped<AccountModelsLib.MenuStateService>();
 builder.Services.AddScoped<InvoiceStateService>();
+// 🗂️ مساحة عمل التبويبات (بديل نوافذ MDI فى الويندوز فورمز) - Scoped لتكون مستقلة لكل مستخدم/دائرة،
+// وتُصفَّر عند تسجيل الخروج (راجع MainLayoutMud.LogoutClick وTabWorkspaceService.cs).
+builder.Services.AddScoped<AccountERP.SharedUI.Services.TabWorkspaceService>();
+// ⚙️ تفضيلات واجهة خاصة بكل مستخدم (إظهار الـ Breadcrumb/تفعيل التبويبات...) - محفوظة فى قاعدة البيانات
+// (USER_DETAILES_Setting) لا كوكي، فتتبع حساب المستخدم عبر أي جهاز/متصفح - راجع UserPreferencesService.cs.
+builder.Services.AddScoped<AccountERP.SharedUI.Services.UserPreferencesService>();
 // خدمة الثيم (فاتح/داكن) - Scoped لتكون مستقلة لكل مستخدم على الويب
 builder.Services.AddScoped<AccountERP.SharedUI.Services.ThemeService>();
 // سجلّ الإشعارات (جرس الإشعارات فى الشريط العلوي) - Scoped لتكون مستقلة لكل مستخدم على الويب

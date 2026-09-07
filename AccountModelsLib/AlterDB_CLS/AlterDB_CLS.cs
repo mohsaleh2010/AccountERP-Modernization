@@ -10,6 +10,7 @@
     using System.ComponentModel.DataAnnotations;
     using System.Data;
     using System.Drawing;
+    using System.Reflection.Metadata;
     using System.Security.Cryptography.X509Certificates;
     using System.Threading;
     using System.Xml.Linq;
@@ -44,7 +45,7 @@
             ChangeType(ref opp, "numeric", d);
             ChangeType(ref opp, "float", d);
             //ChangeType(ref opp, "decimal(18, 2)");
-
+            AlterColumnAddKey(ref   opp, "SysConfigMenus", "Id");
 
             AlterColumn(ref opp, "Employee", "jobsListId", "bigint");
             AlterColumn(ref opp, "Employee", "Edit_User_Id", "bigint");
@@ -7043,6 +7044,27 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             }
 
 
+        }
+        public static void AlterColumnAddKey(ref operations opp, string TableName, string ColumnName )
+        {
+            IsColumnAltered = false;
+            string mysql = "";
+            try
+            {
+  
+
+                mysql = @" Alter Table " + TableName + "  ADD CONSTRAINT  PK_" + TableName + "  PRIMARY KEY(" + ColumnName + ")   ";
+                opp.insert_me(mysql);
+                IsColumnAltered = true;
+                Thread.Sleep(xmiliseconds);
+            }
+            catch (Exception ee)
+            {
+                Thread.Sleep(xmiliseconds);
+                 
+
+
+            }
         }
 
         public static void AlterColumn(ref operations opp, string TableName, string ColumnName, string DataType)

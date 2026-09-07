@@ -1,0 +1,66 @@
+@* 🟢 المكافئ فى Blazor لشاشة Accounts.LoadingFrm فى تطبيق الويندوز فورمز (WinForms): شاشة انتقالية تظهر
+   بعد نجاح تسجيل الدخول وقبل الوصول للصفحة الرئيسية. فى WinForms كانت هذه الشاشة تُنفّذ فعلياً كل خطوات
+   تحميل إعدادات SysConfig (لأن كل Process يخدم مستخدماً واحداً فقط)؛ هنا تلك الخطوات "الخاصة بكل المنشأة"
+   تُنفَّذ مرة واحدة فقط عند إقلاع العملية (AccountERP.Web/Program.cs)، والخطوة الوحيدة "الخاصة بالمستخدم"
+   (Common.Get_Is_Force_Admin_Permission) تُنفَّذ بالفعل داخل AuthService.PopulateSessionForUserAsync قبل
+   الوصول لهذه الصفحة أصلاً - فهذه الصفحة لا "تُحمِّل" شيئاً بنفسها اليوم، بل توفّر نفس التجربة البصرية
+   الانتقالية (ولمكان جاهز لأي خطوة تحميل تُضاف مستقبلاً) بدلاً من قفزة فورية من شاشة الدخول للرئيسية.
+   راجع MODERNIZATION_NOTES.md ("Accounts.LoadingFrm → Blazor 'loading settings' step") للخطة الكاملة. *@
+@page "/loading"
+@layout AccountERP.SharedUI.Components.Layout.AuthLayout
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject NavigationManager NavigationManager
+@implements IDisposable
+
+<PageTitle>@Tr("LoadingSettingsTitle")</PageTitle>
+
+<div class="d-flex flex-column align-items-center justify-content-center" style="min-height:100dvh; gap:24px;">
+    <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Color="Color.Primary" Style="font-size:3rem;" />
+    <MudText Typo="Typo.h6" Class="fw-bold">@Tr("LoadingSettingsTitle")</MudText>
+    <MudText Typo="Typo.body2" Class="mud-text-secondary">@Tr("LoadingSettingsSubtitle")</MudText>
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Style="max-width:20rem; width:80%;" />
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    // 🟢 التنقّل يحدث بعد أول Render (وليس داخل OnInitialized مباشرة) لضمان ظهور هذه الشاشة الانتقالية
+    // فعلياً ولو للحظة، بدلاً من قفزة فورية غير مرئية من شاشة الدخول للرئيسية - نفس الغرض من شاشة
+    // Accounts.LoadingFrm الأصلية (تظهر دائماً، حتى لو كان التحميل الفعلي سريعاً جداً).
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Yield();
+            NavigationManager.NavigateTo("/", replace: true);
+        }
+    }
+
+    // 🟢 نفس نمط Tr(...) المستخدم فى Login.razor/Home.razor - راجع التعليق هناك.
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

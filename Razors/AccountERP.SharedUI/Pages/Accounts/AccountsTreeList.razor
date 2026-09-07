@@ -1,0 +1,557 @@
+@* 🟢 شاشة "شجرة الحسابات" - النسخة Blazor من Account_Common_LIB.Account_Common.Account_Tree_Codes.
+   Account_Tree_CodesFrm.cs (WinForms، تُفتَح من MainFrm_AccountUpdate.menuAccountsTree_Click). تعرض شجرة
+   الحسابات الرئيسية (الأصول/الخصوم/حقوق الملكية/المصروفات/الإيرادات هى نفسها عقد الجذر الخمس، Head_Main_Account
+   1-5) والحسابات الفرعية تحتها (جدول Submain_Account، ذاتي الإحالة عبر Main_Account_Id - بنفس مبدأ شجرة
+   القوائم الجانبية بالضبط: Main_Account_Id==0 يعنى جذر تماماً كما ParentId==0 هناك). الضغط على أي حساب يعرض كل
+   بياناته فى اللوحة اليمنى القابلة للتعديل مباشرة (بنفس تصميم الأصل: لا فرق بين "عرض" و"تعديل" - الحقول محرَّرة
+   دائماً بمجرد اختيار عقدة). "إضافة حساب" من شاشة مستقلة (AddAccountDialog.razor، مودال) بطلب المستخدم صراحة.
+
+   كل القراءة/الإضافة/التعديل/الحذف تمر عبر نفس كلاسات AccountModelsLib التى تستخدمها شاشة الويندوز فورمز نفسها
+   (AccountsTree، Submain_AccountCLS، Sub_Account، Add_Account_CodesCLS) - بدون أي منطق أعمال جديد هنا، فقط
+   واجهة Blazor فوق نفس الاستدعاءات بالضبط. راجع MODERNIZATION_NOTES.md لتفاصيل الخطة والقرارات. *@
+
+@page "/accounts/tree"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("AccountsTreeTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")}; height: calc(100vh - 100px); display:flex; flex-direction:column; min-height:0;")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1" Style="flex: 0 0 auto;">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("AccountsTreeTitle")</MudText>
+            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                <MudSelect T="long" Value="_branchId" ValueChanged="OnBranchChanged" Label="@Tr("BranchLabel")" Style="min-width:220px;" Dense="true">
+                    @foreach (var b in _branches)
+                    {
+                        <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddDialog" Disabled="@(_selected == null || _isBusy)">
+                    @Tr("AddAccountButton")
+                </MudButton>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4" Style="flex: 0 0 auto;" ContentAlignment="HorizontalAlignment.Left">@_errorMessage</MudAlert>
+    }
+
+    @* 🟢 السكرول هنا (بطلب المستخدم صراحة) يحدث داخل كل عمود على حدة (الشجرة يسار، بيانات الحساب يمين) -
+       flex:1 1 auto + min-height:0 على الصف نفسه يجعله يأخذ كل الارتفاع المتبقي من الحاوية أعلاه المحسوب
+       بـ calc(100vh...)، بدل أن تعتمد الأعمدة على ارتفاع محتواها الطبيعي فيطول السكرول للصفحة كلها. *@
+    <MudGrid Spacing="3" Style="flex: 1 1 auto; min-height: 0;">
+        <MudItem xs="12" md="5" Style="height:100%;">
+            <MudPaper Class="pa-3" Elevation="1" Style="height:100%; overflow:hidden;">
+                @* 🟢 المكوّن القابل لإعادة الاستخدام (AccountTreePicker) بطلب المستخدم صراحة: نفس الشجرة+البحث+
+                   التوسيع/الطي هنا هى ذاتها المستخدَمة داخل MoveAccountDialog.razor أدناه لاختيار "الأب الجديد" -
+                   تماماً كما أن AccountTreeViewUSCTRL نفسه UserControl واحد يُستخدَم فى أكثر من شاشة بالويندوز
+                   فورمز (شجرة الحسابات، القيود). *@
+                <AccountTreePicker @ref="_treePicker" BranchId="_branchId" SelectedValue="_selected"
+                                    SelectedValueChanged="OnNodeSelected" Height="100%" />
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="7" Style="height:100%;">
+            <MudPaper Class="pa-4" Elevation="1" Style="height:100%; overflow-y:auto;">
+                @if (_selected == null)
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("NoAccountSelected")</MudAlert>
+                }
+                else
+                {
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" sm="6">
+                            <MudTextField T="string" @bind-Value="_selected.SubAccount_Name" Label="@Tr("AccountNameLabel")" Required="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField T="string" @bind-Value="_selected.SubAccount_NO" Label="@Tr("AccountCodeLabel")" Required="true" />
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="int" Value="_selected.Currency_Id ?? 0" ValueChanged="@((int v) => { _selected.Currency_Id = v; })" Label="@Tr("CurrencyLabel")">
+                                @foreach (var c in _currencies)
+                                {
+                                    <MudSelectItem T="int" Value="@c.Id">@c.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="int" Value="_selected.Account_Customer_Type_Value" ValueChanged="OnAccountTypeChanged" Label="@Tr("AccountTypeLabel")">
+                                @foreach (var t in _accountTypes)
+                                {
+                                    <MudSelectItem T="int" Value="@t.Value">@t.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="int" @bind-Value="_selected.Account_Follows" Label="@Tr("AccountFollowsLabel")">
+                                @foreach (var f in AccountLookups.AccountFollows)
+                                {
+                                    <MudSelectItem T="int" Value="@int.Parse(f.Value)">@f.TextAr</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="int" @bind-Value="_selected.CashFlowType" Label="@Tr("CashFlowTypeLabel")">
+                                @foreach (var c in AccountLookups.CashFlowTypes)
+                                {
+                                    <MudSelectItem T="int" Value="@int.Parse(c.Value)">@c.TextAr</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" Class="d-flex align-items-center">
+                            <MudRadioGroup T="int" @bind-Value="_selected.Account_Nature_Type">
+                                <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("NatureDebitLabel")</MudRadio>
+                                <MudRadio T="int" Value="2" Color="Color.Primary">@Tr("NatureCreditLabel")</MudRadio>
+                            </MudRadioGroup>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("AccountLevelLabel"): @_selected.Account_Level</MudText>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudTextField T="string" @bind-Value="_selected.Notes" Label="@Tr("NotesLabel")" Lines="2" />
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <MudSwitch T="bool" Value="@(_selected.Accept_EntryNew_Flage == 1)" ValueChanged="@((bool v) => { _selected.Accept_EntryNew_Flage = v ? 1 : 0; })"
+                                       Color="Color.Primary" Label="@Tr("AcceptEntryLabel")" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSwitch T="bool" Value="@(_selected.Accept_Cost_Center_Flage == 1)" ValueChanged="@((bool v) => { _selected.Accept_Cost_Center_Flage = v ? 1 : 0; })"
+                                       Color="Color.Primary" Label="@Tr("AcceptCostCenterLabel")" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSwitch T="bool" Value="@(_selected.IS_SubAccount_AccountType == 1)" ValueChanged="@((bool v) => { _selected.IS_SubAccount_AccountType = v ? 1 : 0; })"
+                                       Color="Color.Primary" Label="@Tr("AccountTypeChangeForChildrenLabel")" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSwitch T="bool" Value="@(_selected.IS_SubAccount_FollowingAccount == 1)" ValueChanged="@((bool v) => { _selected.IS_SubAccount_FollowingAccount = v ? 1 : 0; })"
+                                       Color="Color.Primary" Label="@Tr("AccountFollowChangeForChildrenLabel")" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSwitch T="bool" Value="@(_selected.Is_MasrofatAffect == 1)" ValueChanged="@((bool v) => { _selected.Is_MasrofatAffect = v ? 1 : 0; })"
+                                       Color="Color.Primary" Label="@Tr("MasrofatAffectLabel")" />
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudDivider Class="my-4" />
+
+                    <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
+                                   OnClick="SaveEditAsync" Disabled="_isBusy">
+                            @Tr("SaveEditButton")
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                                   OnClick="DeleteAsync" Disabled="_isBusy">
+                            @Tr("DeleteAccountButton")
+                        </MudButton>
+                        @if (_selected.HasChildren)
+                        {
+                            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteSweep"
+                                       OnClick="DeleteAllChildrenAsync" Disabled="_isBusy">
+                                @Tr("DeleteAllChildrenButton")
+                            </MudButton>
+                        }
+                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Refresh"
+                                   OnClick="@(() => RecodeAsync(false))" Disabled="_isBusy">
+                            @Tr("RecodeChildrenButton")
+                        </MudButton>
+                        @if (AccountModelsLib.Common.Is_User_Admin == 1)
+                        {
+                            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Refresh"
+                                       OnClick="@(() => RecodeAsync(true))" Disabled="_isBusy">
+                                @Tr("RecodeAllChildrenButton")
+                            </MudButton>
+                        }
+                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.DriveFileMove"
+                                   OnClick="OpenMoveDialog" Disabled="_isBusy">
+                            @Tr("MoveAccountButton")
+                        </MudButton>
+                    </MudStack>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+<AddAccountDialog @bind-Visible="_addDialogOpen" ParentNode="_selected" BranchId="_branchId" OnAccountAdded="OnAccountAddedAsync" />
+<MoveAccountDialog @bind-Visible="_moveDialogOpen" AccountToMove="_selected" BranchId="_branchId" OnMoved="OnAccountMovedAsync" />
+
+@code {
+    private List<(long Id, string Name)> _branches = new();
+    private List<(long Id, string Name, int Value, int HeadMainAccount)> _accountTypes = new();
+    private List<(int Id, string Name)> _currencies = new();
+
+    private long _branchId;
+    private AccountTreePicker? _treePicker;
+    private AccountTreeNodeViewModel? _selected;
+    private bool _addDialogOpen;
+    private bool _moveDialogOpen;
+    private bool _isBusy;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLookupsAsync();
+        if (_branches.Count > 0)
+        {
+            _branchId = _branches[0].Id;
+        }
+    }
+
+    private async Task LoadLookupsAsync()
+    {
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var branchDt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, (int)Common.User_Id);
+            var branches = new List<(long, string)>();
+            foreach (DataRow r in branchDt.Rows)
+            {
+                branches.Add((Convert.ToInt64(r["Id"]), r["Branch_Name"]?.ToString() ?? ""));
+            }
+            _branches = branches;
+
+            var opp = new operations();
+            var typeDt = opp.return_DataTable("SELECT * FROM Account_Type WHERE Active=1 ORDER BY Value");
+            var types = new List<(long, string, int, int)>();
+            foreach (DataRow r in typeDt.Rows)
+            {
+                types.Add((
+                    Convert.ToInt64(r["Id"]),
+                    r["Name"]?.ToString() ?? "",
+                    Convert.ToInt32(r["Value"]),
+                    Convert.ToInt32(r["Head_Main_Account"])));
+            }
+            _accountTypes = types;
+
+            var currencyDt = new CurrencyFactorsCLS_().GetCurrencyList();
+            var currencies = new List<(int, string)>();
+            foreach (DataRow r in currencyDt.Rows)
+            {
+                currencies.Add((Convert.ToInt32(r["ID"]), r["Currency_Name"]?.ToString() ?? ""));
+            }
+            _currencies = currencies;
+        });
+    }
+
+    private void OnBranchChanged(long branchId)
+    {
+        _branchId = branchId;
+        _selected = null;
+    }
+
+    private void OnNodeSelected(AccountTreeNodeViewModel? node)
+    {
+        _selected = node;
+        _errorMessage = null;
+    }
+
+    private void OnAccountTypeChanged(int value)
+    {
+        if (_selected == null) return;
+        _selected.Account_Customer_Type_Value = value;
+        var matched = _accountTypes.FirstOrDefault(t => t.Value == value);
+        if (matched.HeadMainAccount > 0)
+        {
+            _selected.Head_Main_Account = matched.HeadMainAccount;
+        }
+    }
+
+    private void OpenAddDialog()
+    {
+        if (_selected == null) return;
+        _addDialogOpen = true;
+    }
+
+    private void OpenMoveDialog()
+    {
+        if (_selected == null) return;
+        _moveDialogOpen = true;
+    }
+
+    private async Task OnAccountAddedAsync(long newAccountId)
+    {
+        Snackbar.Add(Tr("AccountAdded"), Severity.Success);
+        if (_treePicker != null)
+        {
+            await _treePicker.ReloadAsync();
+            await _treePicker.SelectAndRevealAsync(newAccountId);
+        }
+    }
+
+    private async Task OnAccountMovedAsync(long movedAccountId)
+    {
+        Snackbar.Add(Tr("AccountUpdated"), Severity.Success);
+        if (_treePicker != null)
+        {
+            await _treePicker.ReloadAsync();
+            await _treePicker.SelectAndRevealAsync(movedAccountId);
+        }
+    }
+
+    // 🟢 يقابل BtnEdit_Click فى الأصل: نفس الاستدعاء بالضبط Add_Account_CodesCLS.EditAccount.
+    private async Task SaveEditAsync()
+    {
+        if (_selected == null) return;
+        if (string.IsNullOrWhiteSpace(_selected.SubAccount_Name)) { _errorMessage = Tr("AccountNameRequired"); return; }
+        if (string.IsNullOrWhiteSpace(_selected.SubAccount_NO)) { _errorMessage = Tr("AccountCodeRequired"); return; }
+
+        _isBusy = true;
+        _errorMessage = null;
+        int excp = 0;
+        string msg = "";
+        var node = _selected;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var sa = new Submain_AccountCLS();
+                sa.sb.Id = node.Id;
+                sa.sb.Main_Account_Id = node.Main_Account_Id;
+                sa.sb.SubAccount_Name = node.SubAccount_Name;
+                sa.sb.SubAccount_NO = node.SubAccount_NO;
+                sa.sb.Head_Main_Account = node.Head_Main_Account;
+                // 🐛 Currency_Id/Account_Customer_Type_ID nullable (int?/long?) - Submain_AccountCLS.
+                // UpdateSubmain_Account يبنى SQL خام بتجميع نصوص لهما مباشرة؛ null.ToString() يُنتج نصاً فارغاً
+                // فيتحوّل مثلاً "Currency_Id= ," إلى SQL غير صالح (نفس فئة خطأ الثقافة السالب لكن هنا سببه القيمة
+                // الفارغة نفسها لا الثقافة) - حسابات قديمة بلا عملة/بلا ربط عميل قد تكون null فعلاً فى القاعدة.
+                // 0 قيمة افتراضية آمنة لكليهما (لا تمثل عملة/نوع عميل حقيقيين). راجع MODERNIZATION_NOTES.md.
+                sa.sb.Currency_Id = node.Currency_Id ?? 0;
+                sa.sb.Notes = node.Notes;
+                sa.sb.Account_Follows = node.Account_Follows;
+                sa.sb.CashFlowType = node.CashFlowType;
+                sa.sb.Account_Nature_Type = node.Account_Nature_Type;
+                sa.sb.Account_Customer_Type_Value = node.Account_Customer_Type_Value;
+                sa.sb.Account_Customer_Type_ID = node.Account_Customer_Type_ID ?? 0;
+                sa.sb.Accept_EntryNew_Flage = node.Accept_EntryNew_Flage;
+                sa.sb.Accept_Cost_Center_Flage = node.Accept_Cost_Center_Flage;
+                sa.sb.Is_MasrofatAffect = node.Is_MasrofatAffect;
+                sa.sb.IS_SubAccount_AccountType = node.IS_SubAccount_AccountType;
+                sa.sb.IS_SubAccount_FollowingAccount = node.IS_SubAccount_FollowingAccount;
+                sa.sb.Branch_Id = node.Branch_Id;
+                sa.sb.CanDelete = node.CanDelete;
+                sa.sb.Cost_Center_Tree_Id = node.Cost_Center_Tree_Id;
+                sa.sb.FirstSubCode = node.FirstSubCode;
+                sa.sb.Code = node.Code;
+                sa.sb.Account_Level = node.Account_Level;
+                sa.sb.IS_Last_Level = node.IS_Last_Level;
+                sa.sb.Account_Type_ValueGeneralCustomer = node.Account_Type_ValueGeneralCustomer;
+
+                new Add_Account_CodesCLS().EditAccount(ref excp, ref msg, sa);
+            });
+
+            if (excp == 0)
+            {
+                Snackbar.Add(Tr("AccountUpdated"), Severity.Success);
+                var selectedId = node.Id;
+                if (_treePicker != null)
+                {
+                    await _treePicker.ReloadAsync();
+                    await _treePicker.SelectAndRevealAsync(selectedId);
+                }
+            }
+            else
+            {
+                _errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    // 🟢 يقابل btnDelete_Click فى الأصل: نفس الاستدعاء بالضبط Sub_Account.Delete_Account - يشمل نفس تحققَي
+    // الأمان (لا يُحذَف حساب له حسابات فرعية، ولا حساب استُخدم فى قيود محاسبية) لأنهما داخل الكلاس نفسه.
+    private async Task DeleteAsync()
+    {
+        if (_selected == null) return;
+
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("DeleteAccountTitle"),
+            Tr("DeleteAccountConfirm", _selected.SubAccount_Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+
+        if (confirmed != true) return;
+
+        _isBusy = true;
+        _errorMessage = null;
+        int excp = 0;
+        string msg = "";
+        var id = _selected.Id;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new Sub_Account().Delete_Account(ref excp, ref msg, id);
+            });
+
+            if (excp == 0)
+            {
+                Snackbar.Add(Tr("AccountDeleted"), Severity.Success);
+                _selected = null;
+                if (_treePicker != null)
+                {
+                    await _treePicker.ReloadAsync();
+                }
+            }
+            else
+            {
+                _errorMessage = string.IsNullOrEmpty(msg) ? Tr("AccountCannotDelete") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    // 🟢 يقابل BtnDeletAllSub_Click فى الأصل: نفس الاستدعاء بالضبط Sub_Account.Delete_AllSubAccount - يحذف
+    // الأبناء المباشرين فقط (وليس الشجرة الفرعية كاملة بعمق - هذا سلوك الأصل نفسه، ليس تبسيطاً هنا).
+    private async Task DeleteAllChildrenAsync()
+    {
+        if (_selected == null) return;
+
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("DeleteAllSubAccountsTitle"),
+            Tr("DeleteAllSubAccountsConfirm", _selected.SubAccount_Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+
+        if (confirmed != true) return;
+
+        _isBusy = true;
+        _errorMessage = null;
+        int excp = 0;
+        string msg = "";
+        var id = _selected.Id;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var parent = new Submain_Account { Id = id };
+                new Sub_Account().Delete_AllSubAccount(ref excp, ref msg, parent);
+            });
+
+            if (excp == 0)
+            {
+                Snackbar.Add(Tr("SubAccountsDeleted"), Severity.Success);
+                if (_treePicker != null)
+                {
+                    await _treePicker.ReloadAsync();
+                    await _treePicker.SelectAndRevealAsync(id);
+                }
+            }
+            else
+            {
+                _errorMessage = string.IsNullOrEmpty(msg) ? Tr("AccountCannotDelete") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    // 🟢 يقابل BtnMakeNewCode_Click/button1_Click_2 (BtnMakeNewCodeAll) فى الأصل: نفس الاستدعاء بالضبط
+    // Submain_AccountCLS.MakeSubNewCode/MakeSubNewCode_ALLCHILDE.
+    private async Task RecodeAsync(bool allSubtree)
+    {
+        if (_selected == null) return;
+
+        _isBusy = true;
+        _errorMessage = null;
+        int excp = 0;
+        var id = _selected.Id;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var cls = new Submain_AccountCLS();
+                if (allSubtree)
+                {
+                    cls.MakeSubNewCode_ALLCHILDE(ref excp, id);
+                }
+                else
+                {
+                    cls.MakeSubNewCode(ref excp, id);
+                }
+            });
+
+            Snackbar.Add(Tr("AccountUpdated"), Severity.Success);
+            if (_treePicker != null)
+            {
+                await _treePicker.ReloadAsync();
+                await _treePicker.SelectAndRevealAsync(id);
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

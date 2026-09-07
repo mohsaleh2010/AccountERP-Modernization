@@ -39,9 +39,9 @@
                     }
                 </MudNavGroup>
             }
-            else if (KnownRoutes.IsImplemented(menu.KeysData))
+            else if (KnownRoutes.IsImplemented(menu.GetEffectiveRoute()))
             {
-                <MudNavLink Href="@menu.KeysData" Match="NavLinkMatch.Prefix"
+                <MudNavLink Href="@menu.GetEffectiveRoute()" Match="NavLinkMatch.Prefix"
                             OnClick="@(() => MenuState.SelectMainMenu(menu.Menu_ID))"
                             Icon="@GetModuleIcon(menu.Description)">
                     @menu.GetLocalizedDescription(LangService.CurrentLanguage)

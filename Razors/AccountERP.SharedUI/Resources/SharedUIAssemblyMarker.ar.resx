@@ -47,6 +47,14 @@
   <data name="HomeQuickAccessTitle" xml:space="preserve"><value>الوحدات المتاحة لك</value></data>
   <data name="ExpandAllMenus" xml:space="preserve"><value>توسيع الكل</value></data>
   <data name="CollapseAllMenus" xml:space="preserve"><value>طي الكل</value></data>
+  <data name="OpenNewTabTooltip" xml:space="preserve"><value>فتح شاشة جديدة</value></data>
+  <data name="AccountSettingsTooltip" xml:space="preserve"><value>إعدادات الحساب</value></data>
+  <data name="UserSettingsTitle" xml:space="preserve"><value>إعدادات الحساب</value></data>
+  <data name="ShowBreadcrumbSetting" xml:space="preserve"><value>إظهار مسار التنقّل</value></data>
+  <data name="ShowBreadcrumbSettingHint" xml:space="preserve"><value>يعرض مسار الوصول لكل شاشة أعلى الصفحة (الوحدات المتاحة لك ‹ ... ‹ الشاشة الحالية)</value></data>
+  <data name="ShowTabsSetting" xml:space="preserve"><value>تفعيل نظام التبويبات</value></data>
+  <data name="ShowTabsSettingHint" xml:space="preserve"><value>فتح كل شاشة كتبويب منفصل يمكن التنقّل بينه دون فقد بياناتك، بدلاً من عرض شاشة واحدة فقط فى كل مرة</value></data>
+  <data name="UserSettingsSavedHint" xml:space="preserve"><value>تُحفَظ هذه الإعدادات تلقائياً لحسابك وتُطبَّق على أي جهاز تدخل منه</value></data>
 
   <data name="MenuChangePassword" xml:space="preserve"><value>تغيير كلمة المرور</value></data>
   <data name="ChangePasswordTitle" xml:space="preserve"><value>تغيير كلمة المرور</value></data>
@@ -105,9 +113,70 @@
   <data name="AboutUsBody" xml:space="preserve"><value>نظام الحسابات ERP هو نظام محاسبي ومخزني متعدد الوحدات، متكامل مع المبيعات والمشتريات والضرائب والفاتورة الإلكترونية وغيرها. هذه النسخة على الويب والموبايل والديسك توب هي إعادة بناء حديثة للنظام الأصلي باستخدام تقنية Blazor.</value></data>
 
   <data name="Save" xml:space="preserve"><value>حفظ</value></data>
+  <data name="Delete" xml:space="preserve"><value>حذف</value></data>
   <data name="Cancel" xml:space="preserve"><value>إلغاء</value></data>
   <data name="Yes" xml:space="preserve"><value>نعم</value></data>
   <data name="No" xml:space="preserve"><value>لا</value></data>
+
+  <data name="AccountsTreeTitle" xml:space="preserve"><value>شجرة الحسابات</value></data>
+  <data name="BranchLabel" xml:space="preserve"><value>الفرع</value></data>
+  <data name="AddAccountButton" xml:space="preserve"><value>إضافة حساب</value></data>
+  <data name="NoAccountsYet" xml:space="preserve"><value>لا توجد حسابات بعد</value></data>
+  <data name="NoAccountSelected" xml:space="preserve"><value>اختر حساباً من الشجرة لعرض بياناته</value></data>
+  <data name="AccountNameLabel" xml:space="preserve"><value>اسم الحساب</value></data>
+  <data name="AccountCodeLabel" xml:space="preserve"><value>كود الحساب</value></data>
+  <data name="CurrencyLabel" xml:space="preserve"><value>العملة</value></data>
+  <data name="AccountTypeLabel" xml:space="preserve"><value>نوع الحساب</value></data>
+  <data name="AccountFollowsLabel" xml:space="preserve"><value>التوجيه المحاسبى</value></data>
+  <data name="CashFlowTypeLabel" xml:space="preserve"><value>نوع التدفق النقدى</value></data>
+  <data name="NatureDebitLabel" xml:space="preserve"><value>مدين</value></data>
+  <data name="NatureCreditLabel" xml:space="preserve"><value>دائن</value></data>
+  <data name="AccountLevelLabel" xml:space="preserve"><value>مستوى الحساب</value></data>
+  <data name="NotesLabel" xml:space="preserve"><value>ملاحظات</value></data>
+  <data name="AcceptEntryLabel" xml:space="preserve"><value>يقبل إدخال القيود</value></data>
+  <data name="AcceptCostCenterLabel" xml:space="preserve"><value>يقبل مراكز تكلفة</value></data>
+  <data name="AccountTypeChangeForChildrenLabel" xml:space="preserve"><value>الحسابات الفرعية لها نفس نوع الحساب</value></data>
+  <data name="AccountFollowChangeForChildrenLabel" xml:space="preserve"><value>الحسابات الفرعية لها نفس التوجيه المحاسبى</value></data>
+  <data name="MasrofatAffectLabel" xml:space="preserve"><value>يظهر فى تقرير المصروفات والإيرادات</value></data>
+  <data name="SaveEditButton" xml:space="preserve"><value>حفظ التعديل</value></data>
+  <data name="DeleteAccountButton" xml:space="preserve"><value>حذف</value></data>
+  <data name="DeleteAllChildrenButton" xml:space="preserve"><value>حذف الحسابات الفرعية</value></data>
+  <data name="RecodeChildrenButton" xml:space="preserve"><value>إعادة تكويد</value></data>
+  <data name="RecodeAllChildrenButton" xml:space="preserve"><value>إعادة تكويد الكل</value></data>
+  <data name="MoveAccountButton" xml:space="preserve"><value>موضع جديد</value></data>
+  <data name="MoveAccountTitle" xml:space="preserve"><value>تغيير موضع الحساب</value></data>
+  <data name="MoveAccountInstructions" xml:space="preserve"><value>اختر من الشجرة الحساب الذى سيصبح أباً جديداً لهذا الحساب</value></data>
+  <data name="MoveAccountCurrentLabel" xml:space="preserve"><value>الحساب المطلوب نقله</value></data>
+  <data name="MoveAccountNewParentLabel" xml:space="preserve"><value>الأب الجديد المختار</value></data>
+  <data name="MoveAccountSelfError" xml:space="preserve"><value>لا يمكن أن يكون الحساب أباً لنفسه</value></data>
+  <data name="MoveAccountDescendantError" xml:space="preserve"><value>لا يمكن نقل الحساب إلى أحد فروعه</value></data>
+  <data name="MoveAccountSelectTarget" xml:space="preserve"><value>اختر الحساب الأب الجديد أولاً</value></data>
+  <data name="MoveAccountSaveButton" xml:space="preserve"><value>تأكيد النقل</value></data>
+  <data name="AccountAdded" xml:space="preserve"><value>تم إضافة الحساب بنجاح</value></data>
+  <data name="AccountUpdated" xml:space="preserve"><value>تم تعديل الحساب</value></data>
+  <data name="AccountDeleted" xml:space="preserve"><value>تم حذف الحساب</value></data>
+  <data name="SubAccountsDeleted" xml:space="preserve"><value>تم حذف الحسابات الفرعية</value></data>
+  <data name="AccountCannotDelete" xml:space="preserve"><value>لا يمكن حذف هذا الحساب</value></data>
+  <data name="DeleteAccountTitle" xml:space="preserve"><value>حذف الحساب</value></data>
+  <data name="DeleteAccountConfirm" xml:space="preserve"><value>هل تريد حذف الحساب "{0}"؟ ربما يكون قد استُخدم من قبل فيتأثر بذلك حسابات أخرى</value></data>
+  <data name="DeleteAllSubAccountsTitle" xml:space="preserve"><value>حذف الحسابات الفرعية</value></data>
+  <data name="DeleteAllSubAccountsConfirm" xml:space="preserve"><value>هل تريد حذف كل الحسابات الفرعية المباشرة لـ "{0}"؟</value></data>
+  <data name="AddAccountTitle" xml:space="preserve"><value>إضافة حساب جديد</value></data>
+  <data name="SelectParentAccountFirst" xml:space="preserve"><value>يجب اختيار الحساب الرئيسى قبل الإضافة</value></data>
+  <data name="ParentAccountLabel" xml:space="preserve"><value>الحساب الرئيسى</value></data>
+  <data name="FirstSubCodeLabel" xml:space="preserve"><value>نمط ترقيم الحسابات الفرعية</value></data>
+  <data name="CompanyCustomerLabel" xml:space="preserve"><value>عميل شركة</value></data>
+  <data name="GeneralCustomerLabel" xml:space="preserve"><value>عميل عام</value></data>
+  <data name="HasSubAccountsLabel" xml:space="preserve"><value>يحتوى على حسابات فرعية</value></data>
+  <data name="AccountNameRequired" xml:space="preserve"><value>أدخل اسم الحساب</value></data>
+  <data name="AccountCodeRequired" xml:space="preserve"><value>كود الحساب غير موجود</value></data>
+  <data name="CurrencyRequired" xml:space="preserve"><value>حدد العملة</value></data>
+  <data name="AccountTypeRequired" xml:space="preserve"><value>حدد نوع الحساب</value></data>
+  <data name="ExpandAllAccounts" xml:space="preserve"><value>توسيع الكل</value></data>
+  <data name="CollapseAllAccounts" xml:space="preserve"><value>طي الكل</value></data>
+  <data name="SearchAccountLabel" xml:space="preserve"><value>بحث عن حساب</value></data>
+  <data name="ScrollTreeToTop" xml:space="preserve"><value>العودة لأعلى الشجرة</value></data>
+  <data name="SearchAccountPlaceholder" xml:space="preserve"><value>اكتب اسم الحساب أو كوده...</value></data>
 
   <data name="CustomerGroupsTitle" xml:space="preserve"><value>مجموعات العملاء</value></data>
   <data name="SupplierGroupsTitle" xml:space="preserve"><value>مجموعات الموردين</value></data>
@@ -121,4 +190,85 @@
   <data name="DeleteGroupTitle" xml:space="preserve"><value>حذف المجموعة</value></data>
   <data name="DeleteGroupConfirm" xml:space="preserve"><value>هل أنت متأكد من حذف المجموعة "{0}"؟</value></data>
   <data name="GroupInUseCannotDelete" xml:space="preserve"><value>لا يمكن حذف المجموعة لوجود عملاء/موردين مرتبطين بها</value></data>
+
+  <data name="SupplierInfoTitle" xml:space="preserve"><value>بيانات الموردين</value></data>
+  <data name="SelectSupplierLabel" xml:space="preserve"><value>اختر مورد</value></data>
+  <data name="SelectSupplierPlaceholder" xml:space="preserve"><value>ابحث عن مورد بالاسم...</value></data>
+  <data name="NewSupplierButton" xml:space="preserve"><value>مورد جديد</value></data>
+  <data name="AddSupplier" xml:space="preserve"><value>إضافة</value></data>
+  <data name="DeleteSupplierTitle" xml:space="preserve"><value>حذف المورد</value></data>
+  <data name="DeleteSupplierConfirm" xml:space="preserve"><value>هل أنت متأكد من حذف المورد "{0}"؟</value></data>
+  <data name="SupplierAdded" xml:space="preserve"><value>تمت إضافة المورد بنجاح</value></data>
+  <data name="SupplierUpdated" xml:space="preserve"><value>تم تحديث بيانات المورد بنجاح</value></data>
+  <data name="SupplierDeleted" xml:space="preserve"><value>تم حذف المورد بنجاح</value></data>
+  <data name="SupplierNameRequired" xml:space="preserve"><value>الرجاء إدخال اسم المورد</value></data>
+  <data name="SupplierNameNoQuote" xml:space="preserve"><value>غير مسموح باستخدام علامة الاقتباس المفردة (') في الاسم</value></data>
+  <data name="SupplierNameAlreadyUsed" xml:space="preserve"><value>اسم المورد مستخدم من قبل</value></data>
+  <data name="SupplierGroupRequired" xml:space="preserve"><value>الرجاء اختيار مجموعة المورد</value></data>
+  <data name="NoSupplierSelected" xml:space="preserve"><value>لم يتم اختيار مورد</value></data>
+  <data name="SupplierCannotDelete" xml:space="preserve"><value>لا يمكن حذف المورد نظراً لوجود عمليات محاسبية على الحساب</value></data>
+
+  <data name="ContactInfoSection" xml:space="preserve"><value>بيانات الاتصال</value></data>
+  <data name="CompanyPersonSection" xml:space="preserve"><value>بيانات الشركة / الشخص</value></data>
+
+  <data name="SupplierCode" xml:space="preserve"><value>الكود</value></data>
+  <data name="SupplierName" xml:space="preserve"><value>الاسم</value></data>
+  <data name="Address" xml:space="preserve"><value>العنوان</value></data>
+  <data name="Tel" xml:space="preserve"><value>تليفون</value></data>
+  <data name="Tel2" xml:space="preserve"><value>تليفون 2</value></data>
+  <data name="Mobile" xml:space="preserve"><value>موبايل</value></data>
+  <data name="Fax" xml:space="preserve"><value>فاكس</value></data>
+  <data name="Email" xml:space="preserve"><value>البريد الإلكتروني</value></data>
+  <data name="Website" xml:space="preserve"><value>الموقع الإلكتروني</value></data>
+  <data name="TaxRegistrationNo" xml:space="preserve"><value>الرقم الضريبي</value></data>
+  <data name="CommercialRegister" xml:space="preserve"><value>السجل التجاري</value></data>
+  <data name="SupplierGroupLabel" xml:space="preserve"><value>مجموعة المورد</value></data>
+  <data name="RegistrationDate" xml:space="preserve"><value>تاريخ التسجيل</value></data>
+  <data name="PersonCompanyTypeLabel" xml:space="preserve"><value>نوع الحساب</value></data>
+  <data name="CompanyName" xml:space="preserve"><value>اسم الشركة</value></data>
+  <data name="CompanyContactName" xml:space="preserve"><value>اسم المسؤول</value></data>
+  <data name="CompanyContactData" xml:space="preserve"><value>بيانات التواصل مع المسؤول</value></data>
+  <data name="NationalId" xml:space="preserve"><value>الرقم القومي</value></data>
+  <data name="PassportNo" xml:space="preserve"><value>رقم جواز السفر</value></data>
+  <data name="PostalNo" xml:space="preserve"><value>الرمز البريدي</value></data>
+  <data name="CountryLabel" xml:space="preserve"><value>الدولة</value></data>
+  <data name="GovAreaLabel" xml:space="preserve"><value>المنطقة</value></data>
+  <data name="GovernorateLabel" xml:space="preserve"><value>المحافظة</value></data>
+  <data name="CityLabel" xml:space="preserve"><value>المدينة</value></data>
+  <data name="LoadingSettingsTitle" xml:space="preserve"><value>تحميل الإعدادات</value></data>
+  <data name="LoadingSettingsSubtitle" xml:space="preserve"><value>جاري تجهيز حسابك، برجاء الانتظار...</value></data>
+
+  <data name="CustomerInfoTitle" xml:space="preserve"><value>بيانات العملاء</value></data>
+  <data name="NewCustomerButton" xml:space="preserve"><value>عميل جديد</value></data>
+  <data name="SelectCustomerLabel" xml:space="preserve"><value>اختر عميل</value></data>
+  <data name="SelectCustomerPlaceholder" xml:space="preserve"><value>ابحث عن عميل بالاسم...</value></data>
+  <data name="CustomerCode" xml:space="preserve"><value>الكود</value></data>
+  <data name="CustomerGroupLabel" xml:space="preserve"><value>مجموعة العميل</value></data>
+  <data name="CustomerName" xml:space="preserve"><value>الاسم</value></data>
+  <data name="MainCustomer" xml:space="preserve"><value>عميل دائم</value></data>
+  <data name="GeneralCustomer" xml:space="preserve"><value>عميل متنوع</value></data>
+  <data name="IsInsuranceCompany" xml:space="preserve"><value>شركة تأمين</value></data>
+  <data name="TaxCompanyName" xml:space="preserve"><value>الإسم على منصة الضرائب</value></data>
+  <data name="AddCustomer" xml:space="preserve"><value>إضافة</value></data>
+  <data name="NoCustomerSelected" xml:space="preserve"><value>لم يتم اختيار عميل</value></data>
+  <data name="CustomerNameRequired" xml:space="preserve"><value>اسم العميل مطلوب</value></data>
+  <data name="CustomerNameNoQuote" xml:space="preserve"><value>لا يجوز أن يحتوي اسم العميل على علامة اقتباس (')</value></data>
+  <data name="CustomerGroupRequired" xml:space="preserve"><value>يجب اختيار مجموعة العميل</value></data>
+  <data name="CustomerNameAlreadyUsed" xml:space="preserve"><value>يوجد عميل آخر بنفس الاسم بالفعل</value></data>
+  <data name="CustomerAdded" xml:space="preserve"><value>تمت إضافة العميل بنجاح</value></data>
+  <data name="CustomerUpdated" xml:space="preserve"><value>تم تعديل بيانات العميل بنجاح</value></data>
+  <data name="DeleteCustomerTitle" xml:space="preserve"><value>حذف عميل</value></data>
+  <data name="DeleteCustomerConfirm" xml:space="preserve"><value>هل أنت متأكد من حذف العميل "{0}"؟</value></data>
+  <data name="CustomerDeleted" xml:space="preserve"><value>تم حذف العميل بنجاح</value></data>
+  <data name="CustomerCannotDelete" xml:space="preserve"><value>لا يمكن حذف هذا العميل لوجود عمليات مسجَّلة عليه</value></data>
+  <data name="CustomerListTitle" xml:space="preserve"><value>كشف بيانات العملاء</value></data>
+  <data name="SupplierListTitle" xml:space="preserve"><value>كشف بيانات الموردين</value></data>
+  <data name="ActiveOnly" xml:space="preserve"><value>الفاعلين فقط</value></data>
+  <data name="SearchByName" xml:space="preserve"><value>بحث بالاسم</value></data>
+  <data name="AllCustomers" xml:space="preserve"><value>الكل</value></data>
+  <data name="ShowButton" xml:space="preserve"><value>عرض</value></data>
+  <data name="NoCustomersYet" xml:space="preserve"><value>لا يوجد عملاء لعرضهم</value></data>
+  <data name="NoSuppliersYet" xml:space="preserve"><value>لا يوجد موردين لعرضهم</value></data>
+  <data name="CustomerCarsListTitle" xml:space="preserve"><value>بيانات سيارات العملاء</value></data>
+  <data name="AddCarNewCustomerButton" xml:space="preserve"><value>إضافة سيارة عميل جديد</value></data>
 </root>

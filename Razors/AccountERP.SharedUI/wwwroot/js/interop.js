@@ -47,5 +47,13 @@ window.accountErpInterop = {
             var url = '/Theme/Set?isDark=' + (isDark ? 'true' : 'false') + '&primaryColor=' + encodeURIComponent(primaryColor);
             fetch(url, { method: 'POST', credentials: 'same-origin' }).catch(function () { /* غير حرج: تجاهل فشل الحفظ الخلفي */ });
         } catch (e) { /* تجاهل بأمان */ }
+    },
+
+    // 🟢 يُستخدَم فى AccountTreePicker.razor (زرّ "العودة لأعلى الشجرة" الطائر عند توسيع شجرة الحسابات) -
+    // تمرير خاصية ElementReference من Blazor يصل هنا كعنصر DOM فعلي مباشرة، فلا حاجة لأي بحث بالمعرّف.
+    scrollElementToTop: function (el) {
+        try {
+            if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (e) { /* تجاهل بأمان */ }
     }
 };

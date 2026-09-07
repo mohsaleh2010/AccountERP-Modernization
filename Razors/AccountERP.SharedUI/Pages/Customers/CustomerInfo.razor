@@ -1,0 +1,656 @@
+@* 🟢 شاشة "بيانات العملاء" - النسخة Blazor من Connection4It.Customer_Info (WinForms، فى
+   connectionit\SupplierAndCustomer\Customer_Info.cs، تُفتح من MainFrm_AccountUpdate وأيضاً من
+   CustomerDataListFRM لإضافة/تعديل عميل). نفس نمط SupplierInfo.razor بالضبط (Master-Detail: بحث/اختيار
+   عميل + لوحة حقول + أزرار جديد/إضافة/حفظ/حذف) لأن الشاشة الأصلية نفسها بهذا الشكل. كل القراءة/الإضافة/
+   التعديل/الحذف تمر عبر AccountModelsLib.Models.CustomerSupplier.CustomerCLS (نفس الكلاس المستخدَم من
+   Customer_Info نفسه، مُتاح بالفعل فى AccountModelsLib بدون أي نقل مطلوب هذه المرة).
+
+   فروق متعمَّدة عن الأصل (قرارات تصميم هذه الجلسة، راجع MODERNIZATION_NOTES.md):
+   - لم يُنقَل حقل "رصيد أول المدة" (Balance_First، كان يُحسَب فى الأصل عبر SQL خام مباشر داخل الفورم نفسه
+     ضد جدول Financial_Period_Begining_Balance، وليس عبر CustomerCLS) - حقل عرض فقط، أُجِّل لدفعة لاحقة.
+   - لم يُبنَ حقلا "الفيزا" (VisaNo/VisaPassword) لأنهما مشروطان بعلم Common.ShowCustomerVisaData نادر
+     الاستخدام، ولا زر صورة العميل (frmImagesStore) لأنه حوار WinForms مستقل بلا مكافئ Blazor بعد.
+   - فحص تكرار الاسم (IsFoundName) يعمل هنا دائماً عند الإضافة والتعديل، بنفس القرار المتخذ فى SupplierInfo.razor. *@
+
+@page "/customers/info"
+@page "/customers/info/{CustomerId:long}"
+
+@using System.Globalization
+@using System.Data
+@using AccountERP.SharedUI.Services
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+@implements IDisposable
+
+<PageTitle>@Tr("CustomerInfoTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("CustomerInfoTitle")</MudText>
+            <MudButton Variant="Variant.Filled" Color="@(isAddingNew ? Color.Default : Color.Primary)"
+                       StartIcon="@(isAddingNew ? Icons.Material.Filled.Close : Icons.Material.Filled.Add)"
+                       OnClick="ToggleNew" Disabled="@isSaving">
+                @(isAddingNew ? Tr("Cancel") : Tr("NewCustomerButton"))
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudAutocomplete T="CustomerViewModel" Label="@Tr("SelectCustomerLabel")" Placeholder="@Tr("SelectCustomerPlaceholder")"
+                          Value="selectedCustomer" ValueChanged="OnCustomerSelectedAsync"
+                          SearchFunc="SearchCustomersAsync" ToStringFunc="@(c => c?.Name)"
+                          Disabled="@(isAddingNew || isLoadingList)" Clearable="true" ResetValueOnEmptyText="true"
+                          Variant="Variant.Outlined" FullWidth="true" Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search" />
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@errorMessage</MudAlert>
+    }
+
+    @if (isAddingNew || selectedCustomer != null)
+    {
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4 h-100" Elevation="1">
+                    <MudText Typo="Typo.subtitle1" Class="fw-bold mb-3">@Tr("ContactInfoSection")</MudText>
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.Code" Label="@Tr("CustomerCode")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="long?" @bind-Value="model.Group_Id" Label="@Tr("CustomerGroupLabel")"
+                                       Variant="Variant.Outlined" Required="true">
+                                @foreach (var g in groups)
+                                {
+                                    <MudSelectItem T="long?" Value="@((long?)g.Id)">@g.GroupName</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.Name" Label="@Tr("CustomerName")" Variant="Variant.Outlined" Required="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudRadioGroup T="int" @bind-Value="generalCustomerFlag">
+                                <MudRadio T="int" Value="0" Color="Color.Primary">@Tr("MainCustomer")</MudRadio>
+                                <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("GeneralCustomer")</MudRadio>
+                            </MudRadioGroup>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudCheckBox T="bool" @bind-Value="isInsuranceCompany" Label="@Tr("IsInsuranceCompany")" Color="Color.Primary" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.Address" Label="@Tr("Address")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.Tel" Label="@Tr("Tel")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.Tel2" Label="@Tr("Tel2")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.Mobile" Label="@Tr("Mobile")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.Fax" Label="@Tr("Fax")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.E_Mail" Label="@Tr("Email")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.Web_Site" Label="@Tr("Website")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.Tax_No" Label="@Tr("TaxRegistrationNo")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.TaxCompanyName" Label="@Tr("TaxCompanyName")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.Commercial_Register" Label="@Tr("CommercialRegister")" Variant="Variant.Outlined" />
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4 h-100" Elevation="1">
+                    <MudText Typo="Typo.subtitle1" Class="fw-bold mb-3">@Tr("CompanyPersonSection")</MudText>
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="6">
+                            <MudDatePicker @bind-Date="registrationDate" Label="@Tr("RegistrationDate")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="long?" @bind-Value="model.LookUp_PersonCompany_TypeId" Label="@Tr("PersonCompanyTypeLabel")"
+                                       Variant="Variant.Outlined">
+                                @foreach (var pc in personCompanyTypes)
+                                {
+                                    <MudSelectItem T="long?" Value="@((long?)pc.Value)">@pc.Text</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.CompanyName" Label="@Tr("CompanyName")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.CompanyContactName" Label="@Tr("CompanyContactName")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.CompanyContactData" Label="@Tr("CompanyContactData")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.NationalId" Label="@Tr("NationalId")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.PassportNo" Label="@Tr("PassportNo")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="model.PostalNo" Label="@Tr("PostalNo")" Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        @* 🟢 نفس منطق setQueries() فى Customer_Info.cs الأصلي (4 قوائم متتالية) - راجع
+                           التعليق المطابق فى SupplierInfo.razor. *@
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="long?" Value="selectedCountryId" ValueChanged="OnCountryChangedAsync"
+                                       Label="@Tr("CountryLabel")" Variant="Variant.Outlined" Clearable="true">
+                                @foreach (var c in countries)
+                                {
+                                    <MudSelectItem T="long?" Value="@((long?)c.Id)">@c.NameAr</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="long?" Value="selectedAreaId" ValueChanged="OnAreaChangedAsync"
+                                       Label="@Tr("GovAreaLabel")" Variant="Variant.Outlined" Clearable="true"
+                                       Disabled="@(selectedCountryId is null or 0)">
+                                @foreach (var a in areas)
+                                {
+                                    <MudSelectItem T="long?" Value="@((long?)a.Id)">@a.AreaName</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="long?" Value="selectedGovernId" ValueChanged="OnGovernChangedAsync"
+                                       Label="@Tr("GovernorateLabel")" Variant="Variant.Outlined" Clearable="true"
+                                       Disabled="@(selectedAreaId is null or 0)">
+                                @foreach (var g in governs)
+                                {
+                                    <MudSelectItem T="long?" Value="@((long?)g.Id)">@g.GovName</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="long?" @bind-Value="model.Gov_City_ListId" Label="@Tr("CityLabel")"
+                                       Variant="Variant.Outlined" Clearable="true"
+                                       Disabled="@(selectedGovernId is null or 0)">
+                                @foreach (var ci in cities)
+                                {
+                                    <MudSelectItem T="long?" Value="@((long?)ci.Id)">@ci.CityName</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <MudStack Row="true" Justify="@(LangService.IsRtl ? Justify.FlexStart : Justify.FlexEnd)" Spacing="2" Class="mt-4">
+            @if (isAddingNew)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAddAsync" Disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+                    }
+                    @Tr("AddCustomer")
+                </MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEditAsync" Disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+                    }
+                    @Tr("Save")
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                           OnClick="DeleteCustomerAsync" Disabled="@isSaving">
+                    @Tr("Delete")
+                </MudButton>
+            }
+        </MudStack>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("NoCustomerSelected")</MudAlert>
+    }
+</MudContainer>
+
+@code {
+    // 🟢 يقبل CustomerId اختيارياً فى الرابط (/customers/info/{id}) ليُفتَح مباشرة على عميل بعينه - يقابل
+    // new Customer_Info(Customer_Id_) فى الأصل (نفس المسار الذى تفتح به CustomerDataListFRM شاشة التعديل).
+    [Parameter] public long? CustomerId { get; set; }
+
+    private record GroupRow(long Id, string GroupName);
+    private record PersonCompanyTypeRow(long Value, string Text);
+
+    private List<CustomerViewModel> allCustomers = new();
+    private List<GroupRow> groups = new();
+    private List<PersonCompanyTypeRow> personCompanyTypes = new();
+    private List<Gov_Country_List> countries = new();
+    private List<Govern_AreaViewModel> areas = new();
+    private List<Govern_ListViewModel> governs = new();
+    private List<City_ListViewModel> cities = new();
+
+    private CustomerViewModel? selectedCustomer;
+    private Customer model = new();
+    private DateTime? registrationDate = DateTime.Now.Date;
+    private int generalCustomerFlag;
+    private bool isInsuranceCompany;
+
+    private long? selectedCountryId;
+    private long? selectedAreaId;
+    private long? selectedGovernId;
+
+    private bool isAddingNew;
+    private bool isSaving;
+    private bool isLoadingList = true;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadStaticLookupsAsync();
+        await LoadCustomersAsync();
+
+        if (CustomerId is > 0)
+        {
+            await LoadCustomerDetailAsync(CustomerId.Value);
+            selectedCustomer = allCustomers.FirstOrDefault(c => c.Id == CustomerId.Value);
+        }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    private async Task LoadStaticLookupsAsync()
+    {
+        await Task.Run(() =>
+        {
+            operations? gopp = null;
+            var groupsDt = new GroupsCLS().Get_Customer_Supplier_Group(ref gopp!, Common.Customer_Account_Type);
+            groups = groupsDt.Rows.Cast<DataRow>()
+                .Select(r => new GroupRow(Convert.ToInt64(r["ID"]), r["GroupName"]?.ToString() ?? string.Empty))
+                .ToList();
+
+            personCompanyTypes = CustomerType.PersonCompany_Type(false)
+                .Cast<Employees>()
+                .Select(e => new PersonCompanyTypeRow(long.Parse(e.Emp_Value), e.Emp_Text))
+                .ToList();
+
+            var countryDt = new CountryCLS().GetData();
+            countries = countryDt.Rows.Cast<DataRow>()
+                .Select(r => new Gov_Country_List
+                {
+                    Id = Convert.ToInt64(r["Id"]),
+                    NameAr = r["NameAr"]?.ToString() ?? string.Empty,
+                    NameEn = r["NameEn"]?.ToString() ?? string.Empty,
+                })
+                .OrderBy(c => c.NameAr)
+                .ToList();
+        });
+    }
+
+    // 🟢 Active=1، General_Customer_Flage=-1 (كل الأنواع، دائمون + متنوعون معاً) - نفس دالة CustomerCLS
+    // المستخدَمة أيضاً فى CustomerList.razor لعرض الجدول الكامل.
+    private async Task LoadCustomersAsync()
+    {
+        isLoadingList = true;
+        await Task.Run(() =>
+        {
+            var opp = new operations();
+            allCustomers = new CustomerCLS().GetCustomersOnlyList(ref opp, string.Empty, 1, -1);
+        });
+        isLoadingList = false;
+    }
+
+    private Task<IEnumerable<CustomerViewModel>> SearchCustomersAsync(string value, System.Threading.CancellationToken token)
+    {
+        IEnumerable<CustomerViewModel> result = string.IsNullOrWhiteSpace(value)
+            ? allCustomers.Take(30)
+            : allCustomers.Where(c => !string.IsNullOrEmpty(c.Name) && c.Name.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(30);
+        return Task.FromResult(result);
+    }
+
+    private async Task OnCustomerSelectedAsync(CustomerViewModel? cu)
+    {
+        selectedCustomer = cu;
+        errorMessage = string.Empty;
+        if (cu == null)
+        {
+            model = new Customer();
+            return;
+        }
+        await LoadCustomerDetailAsync(cu.Id);
+    }
+
+    // 🟢 يقابل Select_Customer() فى الأصل: CustomerCLS.GetCustomerByIdAsNoTracking (نفس الاستدعاء بالضبط)،
+    // ثم إعادة تحميل قوائم المنطقة/المحافظة/المدينة المتتالية.
+    private async Task LoadCustomerDetailAsync(long id)
+    {
+        await Task.Run(() =>
+        {
+            var opp = new operations();
+            var cls = new CustomerCLS();
+            cls.GetCustomerByIdAsNoTracking(ref opp, id);
+            model = cls.cs ?? new Customer();
+        });
+
+        registrationDate = model.RegistrationDate ?? DateTime.Now.Date;
+        generalCustomerFlag = model.General_Customer_Flage ?? 0;
+        isInsuranceCompany = model.IsInsuranceCompany == 1;
+        selectedCountryId = model.Gov_Country_ListId > 0 ? model.Gov_Country_ListId : null;
+        selectedAreaId = model.Govern_Area_ListId > 0 ? model.Govern_Area_ListId : null;
+        selectedGovernId = model.Govern_ListId > 0 ? model.Govern_ListId : null;
+
+        await ReloadCascadeListsAsync();
+    }
+
+    private async Task ReloadCascadeListsAsync()
+    {
+        await Task.Run(() =>
+        {
+            var opp = new operations();
+            areas = selectedCountryId is > 0
+                ? new Govern_AreaCLS().Get_Govern_Area(ref opp, selectedCountryId.Value)
+                : new List<Govern_AreaViewModel>();
+
+            governs = selectedCountryId is > 0 && selectedAreaId is > 0
+                ? new Govern_ListCLS().Get_Govern_List(ref opp, selectedCountryId.Value, selectedAreaId.Value)
+                : new List<Govern_ListViewModel>();
+
+            cities = selectedCountryId is > 0 && selectedAreaId is > 0 && selectedGovernId is > 0
+                ? new Gov_City_ListCLS().Get_City_List(ref opp, selectedCountryId.Value, selectedAreaId.Value, selectedGovernId.Value)
+                : new List<City_ListViewModel>();
+        });
+    }
+
+    private async Task OnCountryChangedAsync(long? id)
+    {
+        selectedCountryId = id;
+        model.Gov_Country_ListId = id;
+        selectedAreaId = null;
+        selectedGovernId = null;
+        model.Govern_Area_ListId = null;
+        model.Govern_ListId = null;
+        model.Gov_City_ListId = null;
+        await ReloadCascadeListsAsync();
+    }
+
+    private async Task OnAreaChangedAsync(long? id)
+    {
+        selectedAreaId = id;
+        model.Govern_Area_ListId = id;
+        selectedGovernId = null;
+        model.Govern_ListId = null;
+        model.Gov_City_ListId = null;
+        await ReloadCascadeListsAsync();
+    }
+
+    private async Task OnGovernChangedAsync(long? id)
+    {
+        selectedGovernId = id;
+        model.Govern_ListId = id;
+        model.Gov_City_ListId = null;
+        await ReloadCascadeListsAsync();
+    }
+
+    // 🟢 يقابل MakeNew()/AddNewOnly() فى الأصل: نفس فكرة التبديل بين "تعديل عميل مختار" و"إضافة عميل جديد"
+    // المستخدَمة فى SupplierInfo.razor. الافتراضي هنا "عميل دائم" (generalCustomerFlag=0)، مطابقاً لما
+    // يبدأ به الفورم الأصلي (rdMainCustomer مُختار افتراضياً فى الـ Designer).
+    private void ToggleNew()
+    {
+        errorMessage = string.Empty;
+        if (isAddingNew)
+        {
+            isAddingNew = false;
+            if (selectedCustomer != null)
+            {
+                _ = LoadCustomerDetailAsync(selectedCustomer.Id);
+            }
+            else
+            {
+                model = new Customer();
+            }
+        }
+        else
+        {
+            isAddingNew = true;
+            selectedCustomer = null;
+            model = new Customer { RegistrationDate = DateTime.Now.Date, Active = 1, LookUp_PersonCompany_TypeId = 1 };
+            registrationDate = DateTime.Now.Date;
+            generalCustomerFlag = 0;
+            isInsuranceCompany = false;
+            selectedCountryId = null;
+            selectedAreaId = null;
+            selectedGovernId = null;
+            areas = new();
+            governs = new();
+            cities = new();
+        }
+    }
+
+    // 🟢 يقابل ValidateCustomer_Data() فى الأصل: اسم مطلوب، بدون '، مجموعة مطلوبة. لم تُنقَل هنا حالتا
+    // "الرقم الضريبي بدون اسم ضريبي" و"لا يوجد نوع سعر" (كلاهما تأكيد Yes/No فى الأصل يمكن تجاوزه باختيار
+    // "نعم" فيتابع الحفظ بلا قيمة - أثرهما العملي معدوم على قاعدة البيانات، فتبسيطهما هنا قرار آمن). فحص
+    // تكرار الاسم (IsFoundName) يعمل دائماً هنا، كما فى SupplierInfo.razor.
+    private async Task<bool> ValidateCustomerAsync(bool isNew)
+    {
+        errorMessage = string.Empty;
+        if (string.IsNullOrWhiteSpace(model.Name))
+        {
+            errorMessage = Tr("CustomerNameRequired");
+            return false;
+        }
+        if (model.Name.Contains('\''))
+        {
+            errorMessage = Tr("CustomerNameNoQuote");
+            return false;
+        }
+        if (model.Group_Id is null or 0)
+        {
+            errorMessage = Tr("CustomerGroupRequired");
+            return false;
+        }
+
+        bool duplicate = false;
+        await Task.Run(() =>
+        {
+            var opp = new operations();
+            duplicate = new CustomerCLS().IsFoundName(ref opp, model.Name, isNew ? 0 : model.Id);
+        });
+        if (duplicate)
+        {
+            errorMessage = Tr("CustomerNameAlreadyUsed");
+            return false;
+        }
+
+        return true;
+    }
+
+    // 🟢 يقابل AddNewCustomer() فى الأصل: نفس الاستدعاء بالضبط CustomerCLS.AddNewCustomer (يحتاج opp صراحة
+    // هنا على عكس SupplierCLS.AddNewSupplier - التوقيع المتاح الوحيد الذى يأخذ IsUse_SubAccount_Id_Select
+    // يطلب opp - opp عادي بلا معاملة مسبقة لأن AddNewCustomer نفسها تبدأ/تُنهي معاملتها الخاصة داخلياً).
+    private async Task SaveAddAsync()
+    {
+        if (!await ValidateCustomerAsync(isNew: true))
+        {
+            return;
+        }
+
+        isSaving = true;
+        int excp = 0;
+        string msg = string.Empty;
+        try
+        {
+            model.RegistrationDate = registrationDate;
+            model.Currency_Id = Common.Entry_Currency_Id;
+            model.Active = 1;
+            model.General_Customer_Flage = generalCustomerFlag;
+            model.IsInsuranceCompany = isInsuranceCompany ? 1 : 0;
+            model.IsSalesMan = 0;
+
+            await Task.Run(() =>
+            {
+                var opp = new operations();
+                new CustomerCLS().AddNewCustomer(ref excp, ref msg, ref opp, model, false);
+            });
+
+            if (excp == 0)
+            {
+                Snackbar.Add(Tr("CustomerAdded"), Severity.Success);
+                isAddingNew = false;
+                selectedCustomer = null;
+                model = new Customer();
+                await LoadCustomersAsync();
+            }
+            else
+            {
+                errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // 🟢 يقابل BtnEdit_Click() فى الأصل: نفس الاستدعاء بالضبط CustomerCLS.UpdateCustomer.
+    private async Task SaveEditAsync()
+    {
+        if (selectedCustomer == null)
+        {
+            errorMessage = Tr("NoCustomerSelected");
+            return;
+        }
+        if (!await ValidateCustomerAsync(isNew: false))
+        {
+            return;
+        }
+
+        isSaving = true;
+        int excp = 0;
+        string msg = string.Empty;
+        try
+        {
+            model.RegistrationDate = registrationDate;
+            model.General_Customer_Flage = generalCustomerFlag;
+            model.IsInsuranceCompany = isInsuranceCompany ? 1 : 0;
+
+            await Task.Run(() =>
+            {
+                new CustomerCLS().UpdateCustomer(ref excp, ref msg, model, 0, false);
+            });
+
+            if (excp == 0)
+            {
+                Snackbar.Add(Tr("CustomerUpdated"), Severity.Success);
+                await LoadCustomersAsync();
+                await LoadCustomerDetailAsync(model.Id);
+            }
+            else
+            {
+                errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // 🟢 يقابل BtnDelete_Click() فى الأصل: نفس الاستدعاء بالضبط CustomerCLS.DeleteCustomer.
+    private async Task DeleteCustomerAsync()
+    {
+        if (selectedCustomer == null)
+        {
+            return;
+        }
+
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("DeleteCustomerTitle"),
+            Tr("DeleteCustomerConfirm", model.Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        isSaving = true;
+        int excp = 0;
+        string msg = string.Empty;
+        try
+        {
+            await Task.Run(() =>
+            {
+                var opp = new operations();
+                new CustomerCLS().DeleteCustomer(ref opp, ref excp, ref msg, model.Id);
+            });
+
+            if (excp == 0)
+            {
+                Snackbar.Add(Tr("CustomerDeleted"), Severity.Success);
+                selectedCustomer = null;
+                model = new Customer();
+                await LoadCustomersAsync();
+            }
+            else
+            {
+                errorMessage = string.IsNullOrEmpty(msg) ? Tr("CustomerCannotDelete") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

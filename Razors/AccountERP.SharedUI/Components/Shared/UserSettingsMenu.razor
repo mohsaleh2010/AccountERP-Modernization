@@ -1,0 +1,81 @@
+@* ⚙️ لوحة "إعدادات الحساب" - تفضيلات واجهة خاصة بالمستخدم الحالي (إظهار مسار التنقّل/تفعيل نظام
+   التبويبات...)، محفوظة فى قاعدة البيانات (USER_DETAILES_Setting) لا كوكي، فتتبع الحساب نفسه على أي جهاز.
+   نفس بنية ThemesMenu.razor بالضبط (لوحة منزلقة بـ position:fixed صريح، وليس MudDrawer/MudOverlay - راجع
+   التعليق فى أعلى ذلك الملف لسبب ذلك) حفاظاً على نفس الشكل/السلوك لكل لوحات الإعدادات الجانبية فى التطبيق. *@
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@inject UserPreferencesService Prefs
+@inject LanguageService LangService
+@implements IDisposable
+
+<div class="themes-menu-overlay @(Open ? "open" : "")" @onclick="@(() => SetOpenAsync(false))"></div>
+
+<div class="themes-menu-panel @(Open ? "open" : "")">
+    <div class="d-flex align-items-center pa-4">
+        <MudText Typo="Typo.subtitle1" Class="fw-bold">@Tr("UserSettingsTitle")</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="@(() => SetOpenAsync(false))" />
+    </div>
+    <MudDivider Style="flex:none;" />
+
+    <div class="pa-4">
+        <MudStack Spacing="1" Class="mb-2">
+            <MudSwitch T="bool" Value="@Prefs.ShowBreadcrumb" ValueChanged="@((bool v) => Prefs.SetShowBreadcrumb(v))"
+                       Color="Color.Primary" Label="@Tr("ShowBreadcrumbSetting")" />
+            <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="margin-inline-start:52px;">@Tr("ShowBreadcrumbSettingHint")</MudText>
+        </MudStack>
+
+        <MudDivider Class="my-3" />
+
+        <MudStack Spacing="1" Class="mb-2">
+            <MudSwitch T="bool" Value="@Prefs.ShowTabs" ValueChanged="@((bool v) => Prefs.SetShowTabs(v))"
+                       Color="Color.Primary" Label="@Tr("ShowTabsSetting")" />
+            <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="margin-inline-start:52px;">@Tr("ShowTabsSettingHint")</MudText>
+        </MudStack>
+
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-4">
+            @Tr("UserSettingsSavedHint")
+        </MudAlert>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool Open { get; set; }
+    [Parameter] public EventCallback<bool> OpenChanged { get; set; }
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnChangedHandler;
+        // 🟢 لتحديث المفتاحين فوراً لو تغيّرت التفضيلات من مكان آخر (نادر، لكن نفس مبدأ ThemeService) -
+        // بلا هذا الاشتراك تبقى اللوحة على أول قيم قرأتها عند فتحها حتى لو تغيّرت Prefs بعد ذلك.
+        Prefs.OnChanged += OnChangedHandler;
+    }
+
+    private void OnChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private Task SetOpenAsync(bool value)
+    {
+        Open = value;
+        return OpenChanged.InvokeAsync(value);
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnChangedHandler;
+        Prefs.OnChanged -= OnChangedHandler;
+    }
+}

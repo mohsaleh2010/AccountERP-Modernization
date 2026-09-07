@@ -71,7 +71,7 @@ else
         @foreach (var menu in currentLevelMenus)
         {
             var hasChildren = MenuState!.UserAllowedMenus.Any(c => c.ParentId == menu.Menu_ID);
-            var implemented = hasChildren || KnownRoutes.IsImplemented(menu.KeysData);
+            var implemented = hasChildren || KnownRoutes.IsImplemented(menu.GetEffectiveRoute());
             <MudItem xs="12" sm="6" md="4" lg="3">
                 <MudCard Outlined="true" Class="h-100 module-quick-card" @onclick="@(() => OpenModule(menu))">
                     <MudCardContent Class="d-flex align-items-center justify-content-between" Style="gap:12px;">
@@ -141,6 +141,22 @@ else
     // البطاقات (راجع أعلى الملف) بدلاً من التنقّل الفوري لشاشة أو رسالة "قيد الإنشاء" لأي بطاقة لها أبناء.
     private List<MenuViewModel> _path = new();
 
+    // 🟢 يدعم الروابط الوسيطة فى MenuBreadcrumb.razor (مثال: "/?openMenu=123" عند الضغط على "بيانات أساسية"
+    // أو "العملاء" فى مسار شاشة مفتوحة): يعيد فتح الرئيسية مباشرة عند نفس مستوى ذلك العنصر، بدل الرجوع دائماً
+    // لأعلى مستوى فقط. أي تنقّل عادي للرئيسية بدون هذا الباراميتر (مثل رابط "الرئيسية" فى الشريط العلوي)
+    // يُصفِّر المسار للمستوى الأعلى كالمعتاد.
+    [SupplyParameterFromQuery(Name = "openMenu")]
+    public long? OpenMenu { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        var target = OpenMenu.HasValue
+            ? MenuState.UserAllowedMenus.FirstOrDefault(m => m.Menu_ID == OpenMenu.Value)
+            : null;
+
+        _path = target == null ? new List<MenuViewModel>() : MenuState.UserAllowedMenus.BuildAncestorPath(target);
+    }
+
     private long CurrentParentId => _path.Count > 0 ? _path[^1].Menu_ID : 0;
 
     // 🟢 نفس منطق الاختيار/التنقّل المستخدم فى NavMenuMud لأعلى مستوى من القوائم (SelectMainMenu + حماية
@@ -161,9 +177,10 @@ else
             return;
         }
 
-        if (KnownRoutes.IsImplemented(menu.KeysData))
+        var route = menu.GetEffectiveRoute();
+        if (KnownRoutes.IsImplemented(route))
         {
-            NavigationManager.NavigateTo(menu.KeysData);
+            NavigationManager.NavigateTo(route);
         }
         else
         {

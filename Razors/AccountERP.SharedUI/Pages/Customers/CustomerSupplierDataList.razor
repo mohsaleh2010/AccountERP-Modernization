@@ -1,0 +1,309 @@
+@* 🟢 شاشة "كشف بيانات العملاء/الموردين" - النسخة Blazor من Accounts.CustomerDataListFRM و
+   Accounts.SupplierDataListFRM معاً (نموذج واحد مشترك يخدم ثلاثة مسارات، بنفس فكرة CustomerGroupsList.razor
+   لمجموعات العملاء/الموردين). عمليات القراءة/الحذف تمر عبر
+   AccountModelsLib.Models.CustomerSupplier.CustomerCLS/SupplierCLS (نفس الكلاسات المستخدَمة من الشاشتين
+   الأصليتين)، والإضافة/التعديل تفوَّض لشاشتَي CustomerInfo.razor/SupplierInfo.razor تماماً كما كانت
+   CustomerDataListFRM/SupplierDataListFRM تفوّضان لـ Customer_Info/Supplier_Info (WinForms) - راجع
+   MODERNIZATION_NOTES.md للخطة الكاملة.
+
+   فرق متعمَّد عن الأصل: فلتر "دائم/متنوع" فى نسخة العملاء كان Radio بخيارين فقط (لا يوجد "الكل") - أُضيف
+   خيار ثالث "الكل" هنا (قرار تصميم هذه الجلسة) لأنه أكثر فائدة على الويب من إجبار المستخدم على اختيار نوع
+   واحد دائماً، دون أي تغيير فى منطق العمل نفسه (GetCustomersOnlyList تدعم already General_Customer_Flage=-1
+   لمعنى "الكل").
+
+   🟢 وضع "بيانات سيارات العملاء" (CustomerDataListFRM(true)، مسار /customers/cars-list هنا): نفس الأصل
+   الوحيد بالضبط - CustomerDataListFRM_Update_Load يُبدّل العنوان فقط ويُظهر زرين إضافيين
+   (btnAddCarNewCustomer/BtnAddNewCarForCustomer) فوق نفس منطق البحث/العرض/الحذف/التعديل تماماً (لا يوجد
+   أي فرق فى استعلام البيانات نفسه بين الوضعين) - فبدل تكرار الصفحة بالكامل لفرق عنوان وزرّين فقط، أُضيف
+   هذا المسار الثالث لنفس المكوّن. الزرّان أنفسهما يفتحان CarsSystemLib.AddCarFrm فى الأصل - وحدة صيانة
+   السيارات هذه لم تُبنَ بعد فى Blazor إطلاقاً، فيُستخدَم نفس أسلوب "الشاشة قيد الإنشاء" المُتَّبع فعلاً فى
+   Home.razor لأي وحدة غير مبنية بعد (رسالة Snackbar بدل رابط معطَّل) بدلاً من ترك الزرّين بلا أي أثر. *@
+
+@page "/customers/list"
+@page "/suppliers/list"
+@page "/customers/cars-list"
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@inject LanguageService LangService
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr(TitleKey)</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
+                @Tr(TitleKey)
+            </MudText>
+            <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+                @if (IsCarsMode)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.DirectionsCar"
+                               OnClick="ShowCarModuleNotBuiltYet">
+                        @Tr("AddCarNewCustomerButton")
+                    </MudButton>
+                }
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="GoToAddNew">
+                    @Tr(IsSupplier ? "NewSupplierButton" : "NewCustomerButton")
+                </MudButton>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudGrid Spacing="2" AlignItems="AlignItems.Center">
+            <MudItem xs="12" sm="4">
+                <MudCheckBox T="bool" @bind-Value="activeOnly" Label="@Tr("ActiveOnly")" Color="Color.Primary" />
+            </MudItem>
+            @if (!IsSupplier)
+            {
+                <MudItem xs="12" sm="4">
+                    <MudTextField @bind-Value="nameSearch" Label="@Tr("SearchByName")" Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" />
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudRadioGroup T="int" @bind-Value="generalCustomerFlag">
+                        <MudRadio T="int" Value="-1" Color="Color.Primary">@Tr("AllCustomers")</MudRadio>
+                        <MudRadio T="int" Value="0" Color="Color.Primary">@Tr("MainCustomer")</MudRadio>
+                        <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("GeneralCustomer")</MudRadio>
+                    </MudRadioGroup>
+                </MudItem>
+            }
+            <MudItem xs="12" sm="4">
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadRowsAsync">
+                    @Tr("ShowButton")
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@errorMessage</MudAlert>
+    }
+
+    <MudTable Items="@rows" Hover="true" Striped="true" Bordered="true" Loading="@isLoading" Elevation="1">
+        <HeaderContent>
+            <MudTh>@Tr("CustomerName")</MudTh>
+            <MudTh>@Tr("Address")</MudTh>
+            <MudTh>@Tr("CommercialRegister")</MudTh>
+            <MudTh>@Tr("TaxRegistrationNo")</MudTh>
+            <MudTh Style="width:150px;"></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Name</MudTd>
+            <MudTd>@context.Address</MudTd>
+            <MudTd>@context.CommercialRegister</MudTd>
+            <MudTd>@context.TaxNo</MudTd>
+            <MudTd>
+                @if (IsCarsMode)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.DirectionsCar" Size="Size.Small"
+                                   OnClick="@(() => ShowCarModuleNotBuiltYet())" />
+                }
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => GoToEdit(context.Id))" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                               OnClick="@(() => DeleteRowAsync(context))" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr(IsSupplier ? "NoSuppliersYet" : "NoCustomersYet")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private record Row(long Id, string Name, string? Address, string? CommercialRegister, string? TaxNo);
+
+    private List<Row> rows = new();
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+
+    private bool activeOnly = true;
+    private string nameSearch = string.Empty;
+    private int generalCustomerFlag = -1;
+
+    private int _loadedForIsSupplier = -1;
+
+    // 🟢 نفس فكرة IsSupplier/GroupType فى CustomerGroupsList.razor: نفس المكوّن يخدم /customers/list،
+    // /suppliers/list، و/customers/cars-list معاً، والوضع يُحدَّد من المسار الحالي.
+    private bool IsSupplier => NavigationManager.ToBaseRelativePath(NavigationManager.Uri)
+        .StartsWith("suppliers", StringComparison.OrdinalIgnoreCase);
+
+    private bool IsCarsMode => NavigationManager.ToBaseRelativePath(NavigationManager.Uri)
+        .StartsWith("customers/cars-list", StringComparison.OrdinalIgnoreCase);
+
+    private string TitleKey => IsCarsMode ? "CustomerCarsListTitle" : IsSupplier ? "SupplierListTitle" : "CustomerListTitle";
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        NavigationManager.LocationChanged += OnLocationChangedHandler;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var key = IsSupplier ? 1 : 0;
+        if (_loadedForIsSupplier != key)
+        {
+            _loadedForIsSupplier = key;
+            await LoadRowsAsync();
+        }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private async void OnLocationChangedHandler(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        var key = IsSupplier ? 1 : 0;
+        if (_loadedForIsSupplier == key)
+        {
+            return;
+        }
+
+        _loadedForIsSupplier = key;
+        nameSearch = string.Empty;
+        generalCustomerFlag = -1;
+        await InvokeAsync(async () =>
+        {
+            await LoadRowsAsync();
+            StateHasChanged();
+        });
+    }
+
+    // 🟢 يقابل GetCustomersOnlyList/Get_SupplierVMByActive فى BtnShow_Click الأصلي بالضبط - نفس دوال
+    // CustomerCLS/SupplierCLS المستخدَمة أيضاً فى CustomerInfo.razor/SupplierInfo.razor.
+    private async Task LoadRowsAsync()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+        try
+        {
+            var isSupplier = IsSupplier;
+            var active = activeOnly ? 1 : -1;
+            var search = nameSearch;
+            var flag = generalCustomerFlag;
+
+            await Task.Run(() =>
+            {
+                var opp = new operations();
+                if (isSupplier)
+                {
+                    var list = new SupplierCLS().Get_SupplierVMByActive(ref opp, active);
+                    rows = list.Select(s => new Row(s.Id, s.Name, s.Address, s.Commercial_Register, s.Tax_Registration_No)).ToList();
+                }
+                else
+                {
+                    var list = new CustomerCLS().GetCustomersOnlyList(ref opp, search, active, flag);
+                    rows = list.Select(c => new Row(c.Id, c.Name, c.Address, c.Commercial_Register, c.Tax_No)).ToList();
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // 🟢 يقابل AddNew() فى الأصل (فتح Customer_Info/Supplier_Info بلا معرّف) - هنا تنقّل لصفحة الإضافة
+    // بدلاً من فتح حوار منفصل.
+    private void GoToAddNew()
+    {
+        NavigationManager.NavigateTo(IsSupplier ? "/suppliers/info" : "/customers/info");
+    }
+
+    // 🟢 يقابل EditCustomerInfo()/دبل-كليك على صف فى الأصل (فتح Customer_Info(Id)/Supplier_Info(Id)).
+    private void GoToEdit(long id)
+    {
+        NavigationManager.NavigateTo(IsSupplier ? $"/suppliers/info/{id}" : $"/customers/info/{id}");
+    }
+
+    // 🟢 يقابل btnAddCarNewCustomer_Click/BtnAddNewCarForCustomer_Click فى الأصل (يفتحان
+    // CarsSystemLib.AddCarFrm) - وحدة صيانة السيارات لم تُبنَ بعد فى Blazor، فيُستخدَم نفس أسلوب
+    // "الشاشة قيد الإنشاء" المُتَّبع فعلاً فى Home.razor لأي وحدة غير مبنية بعد.
+    private void ShowCarModuleNotBuiltYet()
+    {
+        Snackbar.Add(Tr("ScreenNotBuiltYet", Tr("CustomerCarsListTitle")), Severity.Info);
+    }
+
+    // 🟢 يقابل BtnDelete_Click فى الأصل: نفس الاستدعاء بالضبط CustomerCLS.DeleteCustomer/SupplierCLS.DeleteSupplier.
+    private async Task DeleteRowAsync(Row row)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr(IsSupplier ? "DeleteSupplierTitle" : "DeleteCustomerTitle"),
+            Tr(IsSupplier ? "DeleteSupplierConfirm" : "DeleteCustomerConfirm", row.Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        errorMessage = string.Empty;
+        try
+        {
+            var isSupplier = IsSupplier;
+            int excp = 0;
+            string msg = string.Empty;
+
+            await Task.Run(() =>
+            {
+                var opp = new operations();
+                if (isSupplier)
+                {
+                    new SupplierCLS().DeleteSupplier(ref opp, ref excp, ref msg, row.Id);
+                }
+                else
+                {
+                    new CustomerCLS().DeleteCustomer(ref opp, ref excp, ref msg, row.Id);
+                }
+            });
+
+            if (excp == 0)
+            {
+                Snackbar.Add(Tr(isSupplier ? "SupplierDeleted" : "CustomerDeleted"), Severity.Success);
+                await LoadRowsAsync();
+            }
+            else
+            {
+                errorMessage = string.IsNullOrEmpty(msg) ? Tr(isSupplier ? "SupplierCannotDelete" : "CustomerCannotDelete") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+        NavigationManager.LocationChanged -= OnLocationChangedHandler;
+    }
+}

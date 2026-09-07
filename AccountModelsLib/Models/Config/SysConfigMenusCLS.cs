@@ -34,7 +34,7 @@ namespace AccountModelsLib
             // MenuRepository.GetUserAllowedMenus بخطأ "Column ... does not belong to table" رغم وجود
             // الأعمدة فعلياً فى قاعدة البيانات، لأن DataTable المُعاد لا يحتوي إلا على الأعمدة المُحدَّدة هنا.
             string mysql = @" SELECT SysConfigMenus.KeysData, SysConfigMenus.Description, SysConfigMenus.Description_En,
-                                SysConfigMenus.Description_Fr, SysConfigMenus.Description_DE, SysConfigMenusPERMATIONS.*
+                                SysConfigMenus.Description_Fr, SysConfigMenus.Description_DE, SysConfigMenus.RazorPath, SysConfigMenusPERMATIONS.*
                                 FROM SysConfigMenusPERMATIONS INNER JOIN
                          SysConfigMenus ON SysConfigMenusPERMATIONS.Menu_ID = SysConfigMenus.Id ";
             mysql = mysql + " WHERE (SysConfigMenusPERMATIONS.USER_ID = " + USER_ID + ") ";
@@ -68,16 +68,17 @@ namespace AccountModelsLib
                 for (int x=0;x<dtConfig.Rows.Count ;x++)
             {
                 MenuViewModel menuViewModel = new MenuViewModel();
-                menuViewModel.Id = int.Parse(dtConfig.Rows[x]["Id"].ToString());
+                menuViewModel.Id = long.Parse(dtConfig.Rows[x]["Id"].ToString());
                 menuViewModel.Menu_ID = int.Parse(dtConfig.Rows[x]["Menu_ID"].ToString());
                 menuViewModel.ParentId = int.Parse(dtConfig.Rows[x]["Parent_Id"].ToString());
+                menuViewModel.RazorPath = Common.DecryptMe(dtConfig.Rows[x]["RazorPath"].ToString());
                 menuViewModel.KeysData = Common.DecryptMe(dtConfig.Rows[x]["KeysData"].ToString());
                 menuViewModel.Description = Common.DecryptMe(dtConfig.Rows[x]["Description"].ToString());
                 menuViewModel.Description_En = Common.DecryptMe(dtConfig.Rows[x]["Description_En"].ToString());
                 menuViewModel.Description_Fr = Common.DecryptMe(dtConfig.Rows[x]["Description_Fr"].ToString());
                 menuViewModel.Description_DE = Common.DecryptMe(dtConfig.Rows[x]["Description_DE"].ToString());
                 menuViewModel.ProjectId = int.Parse(dtConfig.Rows[x]["PROJECT_ID"].ToString());
- 
+                
 
 
         menuViewModels.Add(menuViewModel);
@@ -93,6 +94,7 @@ namespace AccountModelsLib
         public long Menu_ID { get; set; }
         public string KeysData { get; set; } // اسم القائمة أو الرابط (مثلاً "Sales", "Customers")
         public string Description { get; set; }  
+        public string RazorPath { get; set; }  
         public string Description_En { get; set; }  
         public string Description_Fr { get; set; }  
         public string Description_DE { get; set; }  

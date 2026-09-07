@@ -32,6 +32,8 @@
 	<ItemGroup>
 	  <Compile Remove="Models\Tax\BusinessCLS\API\Signer.cs" />
 	  <Compile Remove="Models\Tax\BusinessCLS\API\SignFromToken.cs" />
+	  <Compile Remove="XmlDataSet\ConnConfigInfoXML.cs" />
+	  <Compile Remove="XmlDataSet\XmlDataSet.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -83,12 +85,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="11111\" />
 		<Folder Include="Models\BeautyCenter\enum\" />
 		<Folder Include="Models\DBContext\" />
 		<Folder Include="Models\Invoice\NewFolder2\" />
 		<Folder Include="Models\ModelJson\" />
 		<Folder Include="Models\Tax\1Ref\ModelJson\Common\" />
+		<Folder Include="XmlDataSet\" />
 	</ItemGroup>
 
 	<ItemGroup>

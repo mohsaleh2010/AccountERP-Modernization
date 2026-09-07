@@ -1,0 +1,178 @@
+@* 🟢 مسار التنقّل الهرمي (Breadcrumb) أعلى كل شاشة حقيقية مفتوحة من القوائم: "الوحدات المتاحة لك > بيانات
+   أساسية > العملاء > بيانات العملاء" - بطلب المستخدم صراحة لسهولة معرفة "أين أنا" والعودة لأي مستوى أعلى
+   بضغطة واحدة، بدل الاعتماد فقط على القائمة الجانبية. يُعاد بناؤه من نفس بيانات SysConfigMenus المستخدَمة
+   فى القائمة الجانبية (MenuState.UserAllowedMenus) عبر FindMenuForRoute/BuildAncestorPath (راجع
+   MenuLocalization.cs) - وليس نصاً ثابتاً لكل شاشة، فيعمل تلقائياً لأي شاشة جديدة تُربَط بـ RazorPath مستقبلاً
+   بدون أي تعديل هنا. يختفي تماماً على أي مسار لا يقابل عنصر قائمة (الرئيسية/الدخول/تغيير كلمة المرور...)،
+   وبالكامل لو ألغى المستخدم إظهاره من إعدادات حسابه (راجع UserPreferencesService.cs وMainLayoutMud.razor).
+   العنصر الجذر ("الوحدات المتاحة لك") والعناصر الوسيطة (الوحدات/المجموعات التى لا تفتح شاشة بنفسها) روابط
+   تعيد المستخدم لنفس المستوى فى بطاقات الرئيسية الهرمية (Home.razor)، وعنصر الشاشة الحالية نص غير قابل للنقر.
+
+   🟢 شكل "متقدّم" بطلب المستخدم: أي عنصر فى المسار له "قوائم فرعية" (أبناء حقيقيون - عناصر ParentId الخاصة
+   بهم تساوي Menu_ID لهذا العنصر) يظهر بجواره سهم صغير لأسفل يفتح قائمة منسدلة بهذه القوائم الفرعية، للانتقال
+   المباشر لأي منها (أو الدخول لها إن كانت تحتوي هى نفسها شاشات فرعية أعمق) بدون العودة للرئيسية والنقر خطوة
+   بخطوة - مثال: السهم بجوار "الموردين" يعرض "مجموعات الموردين"/"بيانات الموردين"/"قائمة الموردين"... (أبناء
+   الموردين نفسها)، وليس "العملاء"/"الأصناف" (تلك أشقاء الموردين تحت بيانات أساسية، لا صلة لها بهذا السهم -
+   كان هذا خطأ فى محاولة أولى مبنية على "الأشقاء" بدل "الأبناء"، صُحِّح بناءً على ملاحظة المستخدم المباشرة).
+   الجذر ("الوحدات المتاحة لك") حالة خاصة: "أبناؤه" هى الوحدات الرئيسية نفسها (ParentId == 0) لعدم وجود عنصر
+   MenuViewModel حقيقي يمثّله. الضغط على النص نفسه يبقى بنفس سلوكه الحالي (الانتقال لمستوى هذا العنصر تحديداً)
+   - السهم إضافة، وليس تغييراً لذلك السلوك. أي عنصر بلا أبناء (كالشاشة الحالية نفسها عادة) لا يظهر بجواره سهم. *@
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@inject MenuStateService MenuState
+@inject LanguageService LangService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject NotificationCenterService NotificationCenter
+@implements IDisposable
+
+@if (_ancestors.Count > 0)
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3 page-breadcrumb">
+        <MudLink Underline="Underline.Hover" Href="/" Class="d-flex align-items-center" Style="gap:4px;">
+            <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small" />
+            @Tr("HomeQuickAccessTitle")
+        </MudLink>
+        @{ var rootChildren = GetTopLevelModules(); }
+        @if (rootChildren.Count > 0)
+        {
+            @ChildrenCaret(rootChildren)
+        }
+
+        @for (var i = 0; i < _ancestors.Count; i++)
+        {
+            var idx = i;
+            var node = _ancestors[idx];
+            var isLast = idx == _ancestors.Count - 1;
+            var children = GetChildrenOf(node);
+
+            <MudIcon Icon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)" Size="Size.Small" Class="mud-text-secondary" />
+
+            @if (isLast)
+            {
+                <MudText Typo="Typo.body2" Class="fw-medium">@node.GetLocalizedDescription(LangService.CurrentLanguage)</MudText>
+            }
+            else
+            {
+                <MudLink Underline="Underline.Hover" Href="@("/?openMenu=" + node.Menu_ID)" Style="cursor:pointer;">
+                    @node.GetLocalizedDescription(LangService.CurrentLanguage)
+                </MudLink>
+            }
+
+            @if (children.Count > 0)
+            {
+                @ChildrenCaret(children)
+            }
+        }
+    </MudStack>
+}
+
+@code {
+    private List<MenuViewModel> _ancestors = new();
+
+    protected override void OnInitialized()
+    {
+        Recompute();
+        NavigationManager.LocationChanged += OnLocationChanged;
+        MenuState.OnAuthChanged += OnStateChanged;
+        MenuState.OnMainMenuChanged += OnStateChanged;
+        LangService.OnLanguageChanged += OnStateChanged;
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e) => OnStateChanged();
+
+    private void OnStateChanged()
+    {
+        Recompute();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void Recompute()
+    {
+        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        var leaf = MenuState.UserAllowedMenus.FindMenuForRoute(relativePath);
+        _ancestors = leaf == null ? new List<MenuViewModel>() : MenuState.UserAllowedMenus.BuildAncestorPath(leaf);
+    }
+
+    // "أبناء" الجذر = الوحدات الرئيسية نفسها (ParentId == 0) - لا يوجد عنصر MenuViewModel حقيقي يمثّل الجذر
+    // نفسه، فتُعامَل كل الوحدات الرئيسية كخيارات القائمة المنسدلة الخاصة به مباشرة.
+    private List<MenuViewModel> GetTopLevelModules() =>
+        MenuState.UserAllowedMenus.Where(m => m != null && m.ParentId == 0).ToList();
+
+    // أبناء أي عنصر آخر فى المسار = كل عنصر ParentId الخاص به يساوي Menu_ID هذا العنصر - أي المستوى التالي
+    // مباشرة تحته (وليس أشقاءه على نفس مستواه هو).
+    private List<MenuViewModel> GetChildrenOf(MenuViewModel node) =>
+        MenuState.UserAllowedMenus.Where(m => m != null && m.ParentId == node.Menu_ID).ToList();
+
+    // 🟢 RenderFragment مشترك لسهم "القوائم الفرعية" حتى لا يتكرر نفس الـ MudMenu مرتين (الجذر + الحلقة) -
+    // Dense/Size.Small لتصغير مساحة الزر قدر الإمكان فيبدو تفصيلة صغيرة بجانب النص لا عنصراً منفصلاً بارزاً.
+    private RenderFragment ChildrenCaret(List<MenuViewModel> children) => @<MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Size="Size.Small" Dense="true"
+             Class="breadcrumb-caret" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+        @foreach (var item in children)
+        {
+            <MudMenuItem OnClick="@(() => GoToMenuItem(item))">@item.GetLocalizedDescription(LangService.CurrentLanguage)</MudMenuItem>
+        }
+    </MudMenu>;
+
+    // نفس منطق فتح عنصر قائمة المستخدَم فى NavMenuMud.razor/MenuNode.razor/Home.razor بالضبط: عنصر له أبناء
+    // يفتح الرئيسية عند مستواه هو (وليس شاشة له بنفسه)، وإلا يُفتَح كشاشة حقيقية إن وُجدت أو "قيد الإنشاء".
+    private void GoToMenuItem(MenuViewModel menu)
+    {
+        var hasChildren = MenuState.UserAllowedMenus.Any(c => c.ParentId == menu.Menu_ID);
+        if (hasChildren)
+        {
+            NavigationManager.NavigateTo("/?openMenu=" + menu.Menu_ID);
+            return;
+        }
+
+        var route = menu.GetEffectiveRoute();
+        if (KnownRoutes.IsImplemented(route))
+        {
+            NavigationManager.NavigateTo(route);
+        }
+        else
+        {
+            var message = Tr("ScreenNotBuiltYet", menu.GetLocalizedDescription(LangService.CurrentLanguage));
+            Snackbar.Add(message, MudBlazor.Severity.Info);
+            NotificationCenter.Add(message, MudBlazor.Severity.Info);
+        }
+    }
+
+    // 🟢 Tr(...) بدلاً من Lang[...] مباشرة: راجع نفس التعليق فى MainLayoutMud.razor/NavMenuMud.razor -
+    // يضمن ترجمة "الوحدات المتاحة لك" بالثقافة الصحيحة بغض النظر عن ثقافة الخيط الفعلي وقت الرندرة.
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+        MenuState.OnAuthChanged -= OnStateChanged;
+        MenuState.OnMainMenuChanged -= OnStateChanged;
+        LangService.OnLanguageChanged -= OnStateChanged;
+    }
+}
+
+<style>
+    /* 🟢 يصغّر مساحة زر السهم المنسدل (الافتراضي لأي MudMenu بأيقونة أكبر من اللازم لتفصيلة صغيرة بجانب نص) */
+    .breadcrumb-caret.mud-icon-button {
+        padding: 2px;
+        margin-inline-start: -6px;
+    }
+
+    .breadcrumb-caret .mud-icon-root {
+        font-size: 1.1rem;
+    }
+</style>

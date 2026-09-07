@@ -89,7 +89,7 @@ WHERE        (Submain_Account_ID = " + Submain_Account_ID + ") AND (Year_Financi
             }
             catch (Exception ee)
             {
-               
+
                 Msg = "خطأ فى تعديل رصيد أول المده";
                 Msg = Msg + "\r\n" + ee.Message;
                 Excp = 1;

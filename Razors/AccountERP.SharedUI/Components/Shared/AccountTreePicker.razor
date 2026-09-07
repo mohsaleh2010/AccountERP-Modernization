@@ -1,0 +1,284 @@
+@* 🟢 مكوّن شجرة الحسابات القابل لإعادة الاستخدام - بطلب المستخدم صراحة: نفس الشجرة والبحث المستخدَمين فى
+   شاشة "شجرة الحسابات" (AccountsTreeList.razor) هما أنفسهما ما تحتاجه أي شاشة أخرى تريد "اختيار حساب من
+   الشجرة" (كشاشة "موضع جديد"/MoveAccountDialog.razor، وأي شاشة قيود/إدخال مستقبلية) - تماماً كما أن
+   Connection4It.AccountTreeViewUSCTRL نفسه UserControl واحد يُستخدَم فى شاشات متعددة على الويندوز فورمز
+   (شجرة الحسابات، القيود، ...) بدل تكراره فى كل شاشة. يحمّل بياناته بنفسه (Get_SubMain_Account لكل Branch_Id)
+   ولا يفترض شيئاً عن استخدام المستدعي له - عرض فقط + اختيار، لا حفظ/تعديل/حذف هنا إطلاقاً (تلك مسؤولية الشاشة
+   المستضيفة، كما فى AccountsTreeList.razor نفسها).
+
+   🟢 تخطيط السكرول (بطلب المستخدم صراحة): عند توسيع الشجرة لطول أكبر من ارتفاع الشاشة، السكرول يحدث داخل
+   هذا المكوّن نفسه فقط (.account-tree-scroll) - وليس على مستوى الصفحة كلها - حتى تبقى لوحة بيانات الحساب
+   (فى الشاشة المستضيفة، AccountsTreeList.razor) ثابتة ظاهرة دائماً بلا اختفاء. صفّ الأزرار+البحث موضوع عمداً
+   *داخل* نفس حاوية السكرول (وليس مثبَّتاً خارجها) فيختفي هو نفسه عند النزول لأسفل الشجرة ويظهر من جديد عند
+   الصعود لأعلاها - هذا هو المقصود صراحة، وليس خطأً. زرّ "العودة لأعلى الشجرة" الطائر (Class=account-tree-
+   scrolltop-fab) موضوع خارج حاوية السكرول (position:absolute نسبةً للجذر) فيبقى ظاهراً دائماً بصرف النظر عن
+   موضع السكرول، بنفس فكرة روابط "العودة لأعلى الصفحة" فى صفحات الويب الطويلة. *@
+
+@using System.Data
+@using System.Globalization
+@using Microsoft.AspNetCore.Components
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@inject LanguageService LangService
+@inject IJSRuntime JSRuntime
+
+<div class="account-tree-picker-root" style="@($"height:{Height ?? "100%"};")">
+    <div class="account-tree-scroll" @ref="_scrollRef">
+        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-2">
+            <MudTooltip Text="@Tr("ExpandAllAccounts")">
+                <MudIconButton Icon="@Icons.Material.Filled.UnfoldMore" Size="Size.Small" OnClick="ExpandAll" Disabled="@(_roots.Count == 0)" />
+            </MudTooltip>
+            <MudTooltip Text="@Tr("CollapseAllAccounts")">
+                <MudIconButton Icon="@Icons.Material.Filled.UnfoldLess" Size="Size.Small" OnClick="CollapseAll" Disabled="@(_roots.Count == 0)" />
+            </MudTooltip>
+            <MudAutocomplete T="AccountTreeNodeViewModel" Value="null" ValueChanged="OnSearchResultSelected"
+                              SearchFunc="SearchAccountsAsync" ToStringFunc="@(a => a == null ? null : $"{a.SubAccount_NO}  {a.SubAccount_Name}")"
+                              Label="@Tr("SearchAccountLabel")" Placeholder="@Tr("SearchAccountPlaceholder")"
+                              Variant="Variant.Outlined" Dense="true" Clearable="true" ResetValueOnEmptyText="true"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Style="flex:1; min-width:200px;" />
+        </MudStack>
+
+        @if (_isLoading)
+        {
+            <MudProgressLinear Indeterminate="true" Class="mb-2" />
+        }
+
+        <div class="account-tree-guides">
+            @if (_roots.Count == 0 && !_isLoading)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("NoAccountsYet")</MudAlert>
+            }
+            else
+            {
+                <MudTreeView T="AccountTreeNodeViewModel" Items="@_treeItems" Hover="true" ExpandOnClick="true"
+                             SelectedValue="SelectedValue" SelectedValueChanged="OnNodeSelected">
+                    <ItemTemplate>
+                        @* 🐛 لازم ربط Expanded ثنائي الاتجاه صراحة: بدونه MudTreeViewItem يهيّئ حالة التوسيع الداخلية
+                           له مرة واحدة فقط من القيمة الابتدائية ثم يتجاهل أي تعديل لاحق على TreeItemData.Expanded من
+                           الخارج (ExpandAll/CollapseAll/ExpandAncestors) - كانت تلك الأزرار لا تُحدث أي تأثير مرئي
+                           فعلياً قبل هذا الربط رغم أنها تُعدّل الحقل بشكل صحيح فى الكود. *@
+                        <MudTreeViewItem T="AccountTreeNodeViewModel" Value="@context.Value" Items="@context.Children"
+                                          Icon="@context.Icon" Text="@context.Text"
+                                          @bind-Expanded="context.Expanded" />
+                    </ItemTemplate>
+                </MudTreeView>
+            }
+        </div>
+    </div>
+
+    @if (_roots.Count > 0)
+    {
+        <MudTooltip Text="@Tr("ScrollTreeToTop")">
+            <MudIconButton Icon="@Icons.Material.Filled.KeyboardDoubleArrowUp" Color="Color.Primary" Variant="Variant.Filled"
+                           Size="Size.Small" Class="account-tree-scrolltop-fab" OnClick="ScrollToTopAsync" />
+        </MudTooltip>
+    }
+</div>
+
+<style>
+    .account-tree-picker-root {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    .account-tree-scroll {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    .account-tree-guides .mud-treeview-group {
+        border-inline-start: 1px dashed var(--mud-palette-lines-default);
+    }
+
+    .account-tree-guides .mud-treeview-group .mud-treeview-item-content {
+        padding-inline-start: 4px;
+    }
+
+    .account-tree-scrolltop-fab {
+        position: absolute;
+        bottom: 8px;
+        inset-inline-end: 8px;
+        z-index: 2;
+        box-shadow: 0 2px 6px rgba(0,0,0,.3);
+    }
+</style>
+
+@code {
+    [Parameter] public long BranchId { get; set; }
+    [Parameter] public AccountTreeNodeViewModel? SelectedValue { get; set; }
+    [Parameter] public EventCallback<AccountTreeNodeViewModel?> SelectedValueChanged { get; set; }
+    [Parameter] public string? Height { get; set; }
+
+    private long _loadedForBranchId = -1;
+    private bool _isLoading;
+    private List<AccountTreeNodeViewModel> _roots = new();
+    private List<TreeItemData<AccountTreeNodeViewModel>> _treeItems = new();
+    private Dictionary<long, AccountTreeNodeViewModel> _nodeById = new();
+    private Dictionary<long, TreeItemData<AccountTreeNodeViewModel>> _treeItemById = new();
+    private ElementReference _scrollRef;
+
+    private async Task ScrollToTopAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("accountErpInterop.scrollElementToTop", _scrollRef);
+        }
+        catch
+        {
+            // 🟢 غير حرج: قد يفشل النداء إن لم يكتمل ربط JS بعد أو أُزيل العنصر - لا داعٍ لإظهار خطأ للمستخدم لمجرد فشل تمرير مساعد.
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (BranchId != 0 && BranchId != _loadedForBranchId)
+        {
+            _loadedForBranchId = BranchId;
+            await ReloadAsync();
+        }
+    }
+
+    // 🟢 عام (public) عمداً - قابل للاستدعاء من الشاشة/المودال المستضيف عبر @ref بعد أي إضافة/تعديل/حذف/
+    // إعادة تكويد يغيّر شكل الشجرة، بدل انتظار BranchId نفسه أن يتغيّر (لن يتغيّر عادةً فى تلك الحالات).
+    public async Task ReloadAsync()
+    {
+        _isLoading = true;
+        StateHasChanged();
+        try
+        {
+            var branchId = (int)BranchId;
+            var roots = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                int excp = 0;
+                var dt = new AccountsTree().Get_SubMain_Account(ref excp, branchId);
+                return AccountTreeNodeViewModel.BuildTree(dt);
+            });
+            _roots = roots;
+            _nodeById = FlattenById(_roots);
+            _treeItemById = new Dictionary<long, TreeItemData<AccountTreeNodeViewModel>>();
+            _treeItems = BuildTreeItems(_roots, _treeItemById);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    // 🟢 عام أيضاً - يتيح لأي مستدعٍ (بعد إضافة حساب جديد مثلاً) تحديد عقدة معيّنة بالـ Id وكشفها فى الشجرة
+    // (فتح كل آبائها) دفعة واحدة، بنفس فكرة SelectNodeById فى AccountsTreeList.razor.
+    public async Task SelectAndRevealAsync(long id)
+    {
+        if (!_nodeById.TryGetValue(id, out var node)) return;
+        ExpandAncestors(node);
+        await OnNodeSelected(node);
+    }
+
+    public void ExpandAncestors(AccountTreeNodeViewModel node)
+    {
+        AccountTreeNodeViewModel? current = node;
+        while (current != null)
+        {
+            if (_treeItemById.TryGetValue(current.Id, out var item))
+            {
+                item.Expanded = true;
+            }
+
+            current = current.Main_Account_Id != 0 && _nodeById.TryGetValue(current.Main_Account_Id, out var parent)
+                ? parent
+                : null;
+        }
+    }
+
+    private void ExpandAll() => SetExpandedRecursive(_treeItems, true);
+
+    private void CollapseAll() => SetExpandedRecursive(_treeItems, false);
+
+    private static void SetExpandedRecursive(List<TreeItemData<AccountTreeNodeViewModel>> items, bool expanded)
+    {
+        foreach (var item in items)
+        {
+            item.Expanded = expanded;
+            if (item.Children is List<TreeItemData<AccountTreeNodeViewModel>> children)
+            {
+                SetExpandedRecursive(children, expanded);
+            }
+        }
+    }
+
+    private Task<IEnumerable<AccountTreeNodeViewModel>> SearchAccountsAsync(string value, System.Threading.CancellationToken token)
+    {
+        IEnumerable<AccountTreeNodeViewModel> result = string.IsNullOrWhiteSpace(value)
+            ? Enumerable.Empty<AccountTreeNodeViewModel>()
+            : _nodeById.Values.Where(a =>
+                (!string.IsNullOrEmpty(a.SubAccount_Name) && a.SubAccount_Name.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrEmpty(a.SubAccount_NO) && a.SubAccount_NO.Contains(value, StringComparison.OrdinalIgnoreCase)))
+                .Take(30);
+        return Task.FromResult(result);
+    }
+
+    private async Task OnSearchResultSelected(AccountTreeNodeViewModel? node)
+    {
+        if (node == null) return;
+        ExpandAncestors(node);
+        await OnNodeSelected(node);
+    }
+
+    private async Task OnNodeSelected(AccountTreeNodeViewModel? node)
+    {
+        SelectedValue = node;
+        await SelectedValueChanged.InvokeAsync(node);
+    }
+
+    private static List<TreeItemData<AccountTreeNodeViewModel>> BuildTreeItems(
+        List<AccountTreeNodeViewModel> nodes, Dictionary<long, TreeItemData<AccountTreeNodeViewModel>> index)
+    {
+        var list = new List<TreeItemData<AccountTreeNodeViewModel>>();
+        foreach (var n in nodes)
+        {
+            var item = new TreeItemData<AccountTreeNodeViewModel>
+            {
+                Value = n,
+                Text = $"{n.SubAccount_NO}  {n.SubAccount_Name}",
+                Icon = n.HasChildren ? Icons.Material.Filled.Folder : Icons.Material.Filled.Description,
+                Expandable = n.HasChildren,
+                Children = n.HasChildren ? BuildTreeItems(n.Children, index) : null,
+            };
+            index[n.Id] = item;
+            list.Add(item);
+        }
+        return list;
+    }
+
+    private static Dictionary<long, AccountTreeNodeViewModel> FlattenById(List<AccountTreeNodeViewModel> roots)
+    {
+        var dict = new Dictionary<long, AccountTreeNodeViewModel>();
+        void Walk(List<AccountTreeNodeViewModel> nodes)
+        {
+            foreach (var n in nodes)
+            {
+                dict[n.Id] = n;
+                Walk(n.Children);
+            }
+        }
+        Walk(roots);
+        return dict;
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

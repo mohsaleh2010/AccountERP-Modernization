@@ -15,16 +15,36 @@
 @inject IJSRuntime JSRuntime
 @inject AppSettings Settings
 @inject ISnackbar Snackbar
+@inject TabWorkspaceService TabWorkspace
+@inject UserPreferencesService Prefs
 @implements IDisposable
 
-@* 1. مزود الثيمات (فاتح/داكن) والمودال والقوائم المنبثقة والرسائل - العناصر الأساسية التي يحتاجها أي تطبيق MudBlazor احترافي *@
+@* 1. مزود الثيمات (فاتح/داكن) - يبقى خارج مزود الـ RTL (لا علاقة له باتجاه النص) *@
 <MudThemeProvider Theme="_currentTheme" IsDarkMode="@ThemeService.IsDarkMode" />
-<MudPopoverProvider />
-<MudDialogProvider FullWidth="true" MaxWidth="MaxWidth.ExtraLarge" CloseButton="true" />
-<MudSnackbarProvider />
 
-@* 2. مزود الـ RTL الديناميكي يلتف حول التطبيق بالكامل ويقرأ مباشرة من الـ Service القائمة *@
+@* 2. مزود الـ RTL الديناميكي يلتف حول التطبيق بالكامل ويقرأ مباشرة من الـ Service القائمة.
+   🟢 MudPopoverProvider/MudDialogProvider/MudSnackbarProvider انتقلوا إلى داخل MudRTLProvider (كانوا خارجه
+   تماماً قبل ذلك): هذه المزوّدات الثلاثة تعرض محتواها فعلياً (المودالات/القوائم المنبثقة/رسائل التنبيه) فى
+   مكان DOM الخاص بها هى نفسها كـ"بوابة" (Portal) - وليس فى مكان استدعاء <MudDialog>/<MudMenu> داخل الصفحة -
+   فكان أي مودال (مثل مودال "مجموعة جديدة" فى CustomerGroupsList.razor) يُرسم خارج نطاق dir="rtl" الذى يضبطه
+   MudRTLProvider على شجرته فقط، فيظهر بترتيب LTR دائماً بغض النظر عن لغة الواجهة الحالية. *@
 <MudRTLProvider RightToLeft="@LangService.IsRtl">
+    <MudPopoverProvider />
+    @* 🟢 MaxWidth=Small كافتراضي عام لكل المودالات (بدلاً من ExtraLarge القديم): كان يجعل أي مودال صغير
+       (مثل مودال "مجموعة جديدة" بحقل نصي واحد فقط، أو أي MessageBox تأكيد) يمتد تقريباً بعرض الشاشة كاملة
+       بلا داعٍ بدل أن يظهر فى المنتصف بحجم معقول. أي شاشة مودال تحتاج فعلياً عرضاً أكبر (نموذج بحقول كثيرة/
+       جدول بيانات) تُحدِّد ذلك صراحة عبر DialogOptions الخاصة بها (MaxWidth أكبر) بدلاً من الاعتماد على هذا
+       الافتراضي العام.
+       🟢 FullWidth=true (وليس false): FullWidth=false يجعل عرض المودال "ينكمش" على عرض محتواه الفعلي فقط
+       (Shrink-to-fit) - لمودال بحقل واحد فقط كان هذا يظهر ضيقاً جداً وغير طبيعي بصرياً رغم أن MaxWidth نفسه
+       معقول. FullWidth=true يمدد المودال ليملأ عرض MaxWidth المحدد (600px هنا تقريباً ضعف العرض السابق)
+       فيظهر بحجم طبيعي مريح للعين، مع بقاء MaxWidth نفسه هو الحد الأقصى (لا يتحول لعرض الشاشة كاملة).
+       🟢 BackdropClick=false: بطلب المستخدم صراحة، لا يُغلَق أي مودال بالضغط فى أي مكان خارجه بالخطأ (قد
+       يفقد المستخدم بيانات أدخلها فى نموذج لم يحفظه بعد) - الإغلاق فقط عبر زر X/الإغلاق الصريح، أو زر
+       الإجراء نفسه (موافق/تعديل/إضافة...)، أو زر "إلغاء" الصريح فى كل مودال. *@
+    <MudDialogProvider FullWidth="true" MaxWidth="MaxWidth.Small" CloseButton="true" BackdropClick="false" />
+    <MudSnackbarProvider />
+
     <MudLayout>
 
         @* شريط الأدوات العلوي (Top Row / AppBar) - متجاوب تلقائياً (Responsive) عبر مكونات MudBlazor *@
@@ -57,6 +77,17 @@
                 </MudTooltip>
 
                 <LanguageSwitcher />
+
+                @if (MenuState.IsAuthenticated)
+                {
+                    @* ⚙️ إعدادات الحساب: إظهار/إخفاء مسار التنقّل وتفعيل/إلغاء نظام التبويبات - راجع
+                       UserSettingsMenu.razor وUserPreferencesService.cs. مرتبطة بـ IsAuthenticated (وليس
+                       IsLoaded كباقي هذا الشريط) عمداً: مستخدم مسجَّل دخوله بلا أي صلاحيات قوائم يجب أن يظل
+                       قادراً على الوصول لإعداداته الخاصة رغم عدم وجود أي عنصر قائمة له. *@
+                    <MudTooltip Text="@Tr("AccountSettingsTooltip")">
+                        <MudIconButton Icon="@Icons.Material.Outlined.Settings" Color="Color.Inherit" OnClick="@(() => _userSettingsMenuOpen = true)" />
+                    </MudTooltip>
+                }
 
                 @if (MenuState.IsLoaded)
                 {
@@ -125,7 +156,26 @@
            واضح تحته. راجع MODERNIZATION_NOTES.md. *@
         <MudMainContent Class="bg-light" Style="min-height:100vh;">
             <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-2 pa-md-4 mt-3">
-                @Body
+                @if (Prefs.ShowBreadcrumb)
+                {
+                    <MenuBreadcrumb />
+                }
+                @* 🟢 _showTabWorkspace: أي شاشة حقيقية (لها @page مطابق فعلياً - راجع RoutePageRegistry.cs)
+                   تُعرض كتبويب عبر TabHost بدلاً من @Body مباشرة، فتبقى حالتها محفوظة عند التنقّل لتبويب آخر
+                   والعودة إليها (نمط MDI) - راجع UpdateWorkspaceForCurrentRoute أدناه. الرئيسية/الدخول/
+                   تغيير كلمة المرور/من نحن... تبقى خارج نظام التبويبات تماماً وتُعرض بـ @Body كالمعتاد. *@
+                @* 🟢 شرط TabWorkspace.Tabs.Count > 0 هو شبكة أمان لحالة نادرة: إغلاق آخر تبويب مفتوح (وهو
+                   الرئيسية نفسها) بينما المسار الحالي لا يزال "/" - التنقّل لنفس الرابط لا يُطلِق LocationChanged
+                   من Blazor (لا تغيير فعلي فى الرابط)، فتبقى قائمة التبويبات فارغة مؤقتاً؛ الرجوع لـ @Body هنا
+                   يعرض المسار الحالي مباشرة بدل شريط تبويبات فارغ بلا محتوى - راجع TabHost.OnCloseTab. *@
+                @if (_showTabWorkspace && TabWorkspace.Tabs.Count > 0)
+                {
+                    <TabHost />
+                }
+                else
+                {
+                    @Body
+                }
             </MudContainer>
         </MudMainContent>
 
@@ -133,6 +183,7 @@
 </MudRTLProvider>
 
 <ThemesMenu @bind-Open="_themesMenuOpen" />
+<UserSettingsMenu @bind-Open="_userSettingsMenuOpen" />
 
 @* واجهة الأخطاء العادية للمتصفح *@
 <div id="blazor-error-ui" data-nosnippet>
@@ -144,6 +195,7 @@
 @code {
     private bool _drawerOpen = true;
     private bool _themesMenuOpen = false;
+    private bool _userSettingsMenuOpen = false;
 
     // ثيم موحّد لكل الشاشات (بما فيها شاشة تسجيل الدخول عبر AuthLayout)، يُعاد بناؤه كلما غيّر
     // المستخدم اللون الأساسي من ThemesMenu (راجع OnThemeChanged) - القيمة الافتراضية في Services/AppTheme.cs
@@ -151,6 +203,15 @@
 
     // 🔐 المسارات المتاحة بدون تسجيل دخول. أي مسار آخر (الرئيسية وكل شاشات الـ ERP القادمة) محمي.
     private static readonly string[] PublicPaths = { "login", "about" };
+
+    // 🟢 مسارات "قشرة" التطبيق التى تبقى خارج نظام التبويبات دائماً (تُعرض بـ @Body كالمعتاد) - كل ما عداها
+    // من مسارات لها @page حقيقي (راجع RoutePageRegistry.cs) يُعامَل كشاشة قابلة للتبويب تلقائياً بدون أي
+    // تسجيل يدوي هنا لكل شاشة جديدة. الرئيسية ("") **ليست** هنا رغم أنها ليست شاشة قائمة عادية - راجع
+    // التعليق على UpdateWorkspaceForCurrentRoute: هى نفسها أول تبويب دائماً حتى يبقى شريط التبويبات (وبالتالي
+    // كل شاشة أخرى مفتوحة) ظاهراً ومتاحاً حتى أثناء تصفّح بطاقات الرئيسية، بدل أن يختفي الشريط بالكامل.
+    private static readonly string[] NonTabbedPaths = { "login", "about", "change-password", "notfound", "error", "loading" };
+
+    private bool _showTabWorkspace;
 
     protected override async Task OnInitializedAsync()
     {
@@ -163,6 +224,11 @@
         LangService.OnLanguageChanged += OnLanguageChanged;
         ThemeService.OnThemeChanged += OnThemeChanged;
         NavigationManager.LocationChanged += OnLocationChanged;
+        // 🟢 ضروري تحديداً لحالة إغلاق آخر تبويب مفتوح: TabHost يعيد رسم نفسه فارغاً بمجرد أن تصبح
+        // TabWorkspace.Tabs فارغة، لكن القرار بين عرض <TabHost/> أو @Body نفسه يُتَّخذ هنا فى MainLayoutMud -
+        // بدون هذا الاشتراك يبقى المحتوى فارغاً لحين أي رندرة تالية غير مرتبطة، بدل التبديل الفوري لـ @Body.
+        TabWorkspace.OnChanged += OnTabWorkspaceChanged;
+        Prefs.OnChanged += OnPrefsChanged;
 
         // 🟢 دائرة (Circuit) جديدة قد تحمل كوكي دخول موقّع من دخول سابق فعلي (مثلاً بعد إعادة تحميل كاملة
         // للصفحة عبر عنصر قائمة لشاشة لم تُبنَ بعد - راجع MODERNIZATION_NOTES.md) - نحاول استعادة الجلسة
@@ -172,7 +238,70 @@
             await TryRestoreSessionFromCookieAsync();
         }
 
+        // ⚙️ تُغطّي حالتين معاً: (1) دخول طازج على AuthLayout ثم تنقّل لأول صفحة MainLayoutMud - Prefs
+        // فارغة هنا وIsAuthenticated سبق ضبطها true قبل هذا التنقّل، فتُحمَّل بالفحص المباشر أدناه؛ (2) دائرة
+        // جديدة استعادت جلسة من الكوكي للتو (السطر أعلاه) - نفس الفحص يغطيها أيضاً. الاشتراك فى OnAuthChanged
+        // أسفل هذا الملف يغطي أي تغيير لاحق (دخول/خروج فعلي أثناء حياة هذه الدائرة).
+        if (MenuState.IsAuthenticated)
+        {
+            Prefs.Load();
+        }
+
         EnforceAuthGuard();
+        UpdateWorkspaceForCurrentRoute();
+    }
+
+    // 🟢 يقرر لكل تنقّل: هل المسار الحالي شاشة حقيقية قابلة للتبويب (@page فعلي وليس من NonTabbedPaths)؟
+    // لو كذلك، يفتح/يفعّل تبويبها فى TabWorkspace (بعنوان/أيقونة من نفس عنصر القائمة المطابق - راجع
+    // MenuLocalization.FindMenuForRoute) قبل الرندرة، حتى يجد TabHost التبويب جاهزاً فوراً.
+    private void UpdateWorkspaceForCurrentRoute()
+    {
+        // ⚙️ المستخدم ألغى نظام التبويبات من إعداداته (راجع UserSettingsMenu.razor) - كل شاشة تُعرض بـ
+        // @Body مباشرة كأنها لم تُبنَ فى نظام تبويبات إطلاقاً (شاشة واحدة، بلا شريط تبويبات). أي تبويبات
+        // كانت مفتوحة بالفعل قبل الإلغاء تُفرَّغ من OnPrefsChanged فور تبديل المفتاح، لا هنا.
+        if (!Prefs.ShowTabs)
+        {
+            _showTabWorkspace = false;
+            return;
+        }
+
+        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).Split('?')[0].Trim('/');
+
+        if (NonTabbedPaths.Contains(relativePath, StringComparer.OrdinalIgnoreCase))
+        {
+            _showTabWorkspace = false;
+            return;
+        }
+
+        if (!RoutePageRegistry.TryMatch(relativePath, out var pageType, out var routeValues, out _) || pageType == null)
+        {
+            _showTabWorkspace = false;
+            return;
+        }
+
+        _showTabWorkspace = true;
+
+        string title;
+        string icon;
+        if (relativePath.Length == 0)
+        {
+            // 🟢 الرئيسية ليست شاشة مرتبطة بعنصر قائمة (لا تطابق أي SysConfigMenus.RazorPath) - عنوان/أيقونة
+            // ثابتان بدلاً من الاعتماد على FindMenuForRoute الذى يعيد null هنا دائماً.
+            title = Tr("NavHome");
+            icon = Icons.Material.Filled.Home;
+        }
+        else
+        {
+            var menu = MenuState.UserAllowedMenus.FindMenuForRoute(relativePath);
+            title = menu?.GetLocalizedDescription(LangService.CurrentLanguage);
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                title = relativePath.Split('/').LastOrDefault(s => !string.IsNullOrWhiteSpace(s)) ?? relativePath;
+            }
+            icon = MenuIcons.GetLeafIcon(menu?.Description);
+        }
+
+        TabWorkspace.OpenOrActivate("/" + relativePath, pageType, routeValues, title, icon);
     }
 
     private async Task TryRestoreSessionFromCookieAsync()
@@ -225,7 +354,12 @@
         }
     }
 
-    private void OnLocationChanged(object sender, LocationChangedEventArgs e) => EnforceAuthGuard();
+    private void OnLocationChanged(object sender, LocationChangedEventArgs e)
+    {
+        EnforceAuthGuard();
+        UpdateWorkspaceForCurrentRoute();
+        InvokeAsync(StateHasChanged);
+    }
 
     // بوابة الحماية: أي مسار غير موجود في PublicPaths يتطلب MenuState.IsAuthenticated == true،
     // وإلا تتم إعادة التوجيه فوراً لشاشة تسجيل الدخول. لا تعتمد على قاعدة بيانات، فقط على حالة الجلسة الحالية.
@@ -250,7 +384,15 @@
         }
     }
 
-    private void OnMenuChanged() => InvokeAsync(StateHasChanged);
+    private void OnTabWorkspaceChanged() => InvokeAsync(StateHasChanged);
+
+    private void OnMenuChanged()
+    {
+        // 🟢 القوائم (ومن ثم عنوان/أيقونة أي تبويب مفتوح بالفعل قبل اكتمال تحميلها) قد تصل بعد أول رندرة -
+        // إعادة الحساب هنا تلتقط العنوان الصحيح بدل أن يبقى التبويب عالقاً على العنوان الاحتياطي المؤقت.
+        UpdateWorkspaceForCurrentRoute();
+        InvokeAsync(StateHasChanged);
+    }
 
     private void OnThemeChanged() => InvokeAsync(() =>
     {
@@ -260,7 +402,33 @@
 
     private void OnAuthChanged() => InvokeAsync(() =>
     {
+        // ⚙️ نفس الحدث المستخدَم بالفعل لتحميل/تفريغ القوائم (MenuState.UserAllowedMenus فى AuthService) -
+        // تفضيلات الواجهة تتبع دورة حياة الجلسة نفسها بالضبط: تُحمَّل عند نجاح دخول/استعادة جلسة، وتعود
+        // لقيمها الافتراضية عند الخروج، بدون أي تعديل على AuthService.cs نفسه فى AccountModelsLib.
+        if (MenuState.IsAuthenticated)
+        {
+            Prefs.Load();
+        }
+        else
+        {
+            Prefs.ResetToDefaults();
+        }
+
         EnforceAuthGuard();
+        StateHasChanged();
+    });
+
+    // ⚙️ يُستدعى عند أي تبديل فى لوحة إعدادات الحساب (UserSettingsMenu.razor). إلغاء التبويبات تحديداً
+    // يُفرِّغ أي تبويبات مفتوحة بالفعل فوراً (لا فائدة من إبقائها حيّة فى الذاكرة وهى غير قابلة للعرض أصلاً
+    // بينما الإعداد معطَّل) بدل تركها معلَّقة حتى يُعيد المستخدم تفعيل التبويبات لاحقاً.
+    private void OnPrefsChanged() => InvokeAsync(() =>
+    {
+        if (!Prefs.ShowTabs && TabWorkspace.Tabs.Count > 0)
+        {
+            TabWorkspace.Clear();
+        }
+
+        UpdateWorkspaceForCurrentRoute();
         StateHasChanged();
     });
 
@@ -307,6 +475,7 @@
         // (ومحاولة الاتصال الفعلي بقاعدة البيانات) حتى لو لم يضغط المستخدم زر الخروج إطلاقاً.
         var authService = ServiceProvider.GetRequiredService<IAuthService>();
         await authService.LogoutAsync();
+        TabWorkspace.Clear();
 
         // 🟢 وإلا ستعيد الدائرة التالية (بعد forceLoad أسفل هذا السطر) استعادة نفس الجلسة تلقائياً من الكوكي
         if (Settings.IsWeb)
@@ -326,5 +495,7 @@
         LangService.OnLanguageChanged -= OnLanguageChanged;
         ThemeService.OnThemeChanged -= OnThemeChanged;
         NavigationManager.LocationChanged -= OnLocationChanged;
+        TabWorkspace.OnChanged -= OnTabWorkspaceChanged;
+        Prefs.OnChanged -= OnPrefsChanged;
     }
 }

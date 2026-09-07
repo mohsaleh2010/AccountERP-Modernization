@@ -1,0 +1,99 @@
+@* 🟢 مساحة عمل بنمط MDI (تبويبات قابلة للإغلاق، بديل نوافذ MDI فى الويندوز فورمز): كل شاشة حقيقية تُفتح من
+   القائمة/المسار تُعرض كتبويب هنا بدلاً من @Body مباشرة (راجع MainLayoutMud.razor). KeepPanelsAlive="true"
+   يبقي كل تبويب مكوّناً حياً بكامل حالته (بيانات مُدخَلة لم تُحفَظ بعد، فرز/بحث جارٍ...) عند التبديل لتبويب
+   آخر - بدل إعادة بنائه من الصفر عند كل تبديل كما لو كان تنقّلاً عادياً. @key="tab.Key" على كل MudTabPanel
+   ضروري هنا تحديداً: بدونه قد يُعيد Blazor استخدام نفس نسخة <DynamicComponent> (وحالتها الداخلية) لتبويب
+   مختلف تماماً عند حذف/إضافة تبويبات فى المنتصف، لأن التطابق الافتراضي يعتمد على الموضع فى القائمة وليس هوية
+   التبويب - راجع RoutePageRegistry.cs/TabWorkspaceService.cs. *@
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@inject TabWorkspaceService TabWorkspace
+@inject NavigationManager NavigationManager
+@inject LanguageService LangService
+@implements IDisposable
+
+@if (TabWorkspace.Tabs.Count > 0)
+{
+    @* 🟢 زر "+" فى بداية شريط التبويبات مدمج فى MudDynamicTabs نفسه (لا يمكن إخفاؤه من مكوّن "تبويبات
+       ديناميكية" بتصميمه) - رُبط بفتح الرئيسية (اختيار شاشة جديدة) بدل تركه بلا وظيفة، بنفس منطق زر "+"
+       لفتح تبويب جديد فى متصفحات الويب. *@
+    <MudDynamicTabs Rounded="true" Border="true" ApplyEffectsToContainer="true" Elevation="1"
+                    KeepPanelsAlive="true" RightToLeft="@LangService.IsRtl"
+                    PanelClass="pa-3 pa-md-4" Class="tab-workspace mb-3"
+                    ActivePanelIndex="@_activeIndex" ActivePanelIndexChanged="OnActivePanelIndexChanged"
+                    CloseTab="OnCloseTab" AddTab="@(() => NavigationManager.NavigateTo("/"))"
+                    AddIconToolTip="@Tr("OpenNewTabTooltip")">
+        @foreach (var tab in TabWorkspace.Tabs)
+        {
+            <MudTabPanel @key="tab.Key" Text="@tab.Title" Icon="@tab.Icon" ID="@tab.Key" ShowCloseIcon="true">
+                <DynamicComponent Type="@tab.PageType" Parameters="@tab.Parameters" />
+            </MudTabPanel>
+        }
+    </MudDynamicTabs>
+}
+
+@code {
+    private int _activeIndex;
+
+    protected override void OnInitialized()
+    {
+        TabWorkspace.OnChanged += HandleChanged;
+        SyncActiveIndex();
+    }
+
+    private void HandleChanged()
+    {
+        SyncActiveIndex();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void SyncActiveIndex()
+    {
+        var index = TabWorkspace.Tabs.FindIndex(t => t.Key == TabWorkspace.ActiveKey);
+        _activeIndex = index >= 0 ? index : 0;
+    }
+
+    // 🟢 عند ضغط المستخدم مباشرة على رأس تبويب آخر (وليس عبر القائمة الجانبية/مسار التنقّل): نُزامن كلاً من
+    // TabWorkspace.ActiveKey ورابط المتصفح (NavigationManager) معه - حتى يبقى الرابط الظاهر مطابقاً دائماً
+    // للتبويب المعروض فعلياً (نسخ الرابط/تحديث الصفحة يعيد فتح نفس التبويب النشط بالضبط).
+    private void OnActivePanelIndexChanged(int index)
+    {
+        _activeIndex = index;
+        if (index < 0 || index >= TabWorkspace.Tabs.Count) return;
+
+        var tab = TabWorkspace.Tabs[index];
+        if (tab.Key == TabWorkspace.ActiveKey) return;
+
+        TabWorkspace.Activate(tab.Key);
+        NavigationManager.NavigateTo(tab.Key);
+    }
+
+    private void OnCloseTab(MudTabPanel panel)
+    {
+        var key = panel.ID as string ?? panel.Tag as string;
+        if (string.IsNullOrEmpty(key)) return;
+
+        var nextKey = TabWorkspace.Close(key);
+        NavigationManager.NavigateTo(nextKey ?? "/");
+    }
+
+    public void Dispose()
+    {
+        TabWorkspace.OnChanged -= HandleChanged;
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

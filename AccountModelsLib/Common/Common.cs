@@ -920,44 +920,8 @@ namespace AccountModelsLib
             return Value;
 
         }
-        public static int Is_EncryptedDataSetting(DataTable dtConfig)
-        {
-            int value = 0;
-            if (Is_Ecrypted_Config > -1)
-            { value = Is_Ecrypted_Config; }
-            else
-            {
-                DataRow[] dr = dtConfig.Select("KeysData = 'Is_Ecrypted'");
-                if (dr.Length == 0)
-                {
-                    value = 1;
-                    Is_Ecrypted_Config = 1;
-                }
-                else
-                {
-                    value = 0;
-                    Is_Ecrypted_Config = 0;
-                }
-            }
-            return value;
-        }
-        public static int Is_EncryptedDataSetting(ref AccountModelsLib.operations opp)
-        {
-            int value = 0;
-            if (Is_Ecrypted_Config > -1)
-            { value = Is_Ecrypted_Config; }
-
-            else
-            {
-                string mysql = "Select * from SysConfig Where KeysData='Is_Ecrypted'";
-
-
-                DataTable dt = opp.return_DataTable(mysql);
-
-                value = Is_EncryptedDataSetting(dt);
-            }
-            return value;
-        }
+        
+       
         public static string Get_SystemParametersDB(string KeysData)
         {
             string Id = "0";
@@ -1106,7 +1070,97 @@ namespace AccountModelsLib
         }
 
 
-       
+        public static int Is_EncryptedDataSetting()
+        {
+            int value = 0;
+            if (Is_Ecrypted_Config > -1)
+            { value = Is_Ecrypted_Config; }
+
+            else
+            {
+                AccountModelsLib.operations opp = new AccountModelsLib.operations(true);
+
+                value = Is_EncryptedDataSetting(ref opp);
+            }
+            return value;
+
+        }
+        //public static int Is_EncryptedDataSetting(ref AccountModelsLib.operations opp)
+        //{
+        //    int value = 0;
+        //    if (Is_Ecrypted_Config > -1)
+        //    { value = Is_Ecrypted_Config; }
+
+        //    else
+        //    {
+        //        string mysql = "Select * from SysConfig Where KeysData='Is_Ecrypted'";
+
+
+        //        DataTable dt = opp.return_DataTable(mysql);
+
+        //        value = Is_EncryptedDataSetting(dt);
+        //    }
+        //    return value;
+        //}
+        public static int Is_EncryptedDataSetting(ref AccountModelsLib.operations opp)
+        {
+            int value = 0;
+            if (Is_Ecrypted_Config > -1)
+            { value = Is_Ecrypted_Config; }
+
+            else
+            {
+                string mysql = "Select * from SysConfig Where KeysData='Is_Ecrypted'";
+
+
+                DataTable dt = opp.return_DataTable(mysql);
+
+                value = Is_EncryptedDataSetting(dt);
+            }
+            return value;
+        }
+        public static int Is_EncryptedDataSetting(DataTable dtConfig)
+        {
+            int value = 0;
+            if (Is_Ecrypted_Config > -1)
+            { value = Is_Ecrypted_Config; }
+            else
+            {
+                DataRow[] dr = dtConfig.Select("KeysData = 'Is_Ecrypted'");
+                if (dr.Length == 0)
+                {
+                    value = 1;
+                    Is_Ecrypted_Config = 1;
+                }
+                else
+                {
+                    value = 0;
+                    Is_Ecrypted_Config = 0;
+                }
+            }
+            return value;
+        }
+        //public static int Is_EncryptedDataSetting(DataTable dtConfig)
+        //{
+        //    int value = 0;
+        //    if (Is_Ecrypted_Config > -1)
+        //    { value = Is_Ecrypted_Config; }
+        //    else
+        //    {
+        //        DataRow[] dr = dtConfig.Select("KeysData = 'Is_Ecrypted'");
+        //        if (dr.Length == 0)
+        //        {
+        //            value = 1;
+        //            Is_Ecrypted_Config = 1;
+        //        }
+        //        else
+        //        {
+        //            value = 0;
+        //            Is_Ecrypted_Config = 0;
+        //        }
+        //    }
+        //    return value;
+        //}
         //public static void ExpirationVersion_()
         //{
 
@@ -1172,7 +1226,7 @@ namespace AccountModelsLib
         //}
 
 
-       
+
 
         public static ArrayList ProjectList()
         {
@@ -4489,7 +4543,52 @@ namespace AccountModelsLib
 
             return Column_;
         }
+        public static void SetSystemParametersDB()
+        {
+            string Msg = "";
+            //XmlDataSet.ReadXmlDataSetConnStr();
+            //TestDBConn();
+            try
+            {
+                AccountModelsLib.operations opp = new AccountModelsLib.operations(true);
+                string mysql = " Select * from SysConfig ";
+                dtConfig = opp.return_DataTableWithBuilder(mysql);
+                //dtConfig = new AccountModelsLib.operations(true).return_DataTable("Select * from SysConfig ");
+                Is_Ecrypted_Config = Is_EncryptedDataSetting(dtConfig);
+                int index = 0;
+                while (true)
+                {
+                    if (index >= dtConfig.Rows.Count)
+                    {
+                        AccountModelsLib.operations.ReturnConnStr();
+                        Get_Tax_Rate();
+                        break;
+                    }
+                    try
+                    {
+                        dtConfig.Rows[index]["Value"] = DecryptMe(dtConfig.Rows[index]["Value"].ToString());
+                        string str3 = dtConfig.Rows[index]["Id"].ToString();
+                        string KeysData = DecryptMe(dtConfig.Rows[index]["KeysData"].ToString());
+                        if (KeysData == "InstituteName")
+                        {
+                            int x = 0;
+                        }
 
+                        SearchSystemParametersDB(KeysData, index);
+
+                    }
+                    catch (Exception ee)
+                    {
+
+                    }
+                    index++;
+                }
+            }
+            catch (Exception ee)
+            {
+                Msg = ee.Message;
+            }
+        }
         public static void SearchSystemParametersDB(string KeysData, int index)
         {
 

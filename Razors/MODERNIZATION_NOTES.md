@@ -1275,3 +1275,1592 @@ the same way as the other columns), and prefer it over `KeysData`+`KnownRoutes` 
 navigation once it's reliably populated for real screens — but per the same wait-for-DB-confirmation
 precedent as this whole session, **do not start reading it from SQL until the user confirms it has real
 data**, to avoid repeating root cause #1's exact mistake a third time.
+
+## 2026-09-04 (later) — TEMP: `Menu_ID` shown in sidebar labels, to be removed after `RazorPath` fill-in
+
+User is populating `SysConfigMenus.RazorPath` **manually** (direct `UPDATE ... WHERE Id=...` per row, not
+through the app) and needed each menu's `Menu_ID` visible somewhere to know which row to update. Added a
+`LabelWithId(MenuViewModel)` helper to both `NavMenuMud.razor` (top-level items) and `MenuNode.razor`
+(every nested level, since `MenuNode` recurses to any depth) that appends `" (#<Menu_ID>)"` to every
+sidebar label — covers all 6 render sites across the two files (group titles and both the
+implemented/not-implemented leaf-link cases). Marked `TEMP/DEBUG` in code comments at both helper
+definitions. `dotnet build` on `AccountERP.SharedUI.csproj`: 0 errors.
+
+**MUST be removed** once the user finishes populating `RazorPath` for every menu row — revert both
+`LabelWithId` call sites back to plain `menu.GetLocalizedDescription(LangService.CurrentLanguage)` /
+`Menu.GetLocalizedDescription(LangService.CurrentLanguage)` and delete the two helper methods. (This
+repo is now under git — `git log` for this commit is the easiest way to find and revert the exact diff
+when the time comes, rather than re-deriving it by hand.)
+
+## 2026-09-04 (later still) — Plan for `Supplier Info` Blazor screen (PLAN ONLY, not yet implemented)
+
+### What was asked
+User pointed at the WinForms call site (`Connection4It.Supplier_Info cu = new Connection4It.Supplier_Info(); cu.MdiParent = this; cu.Show();`, opened from `Advanced_Account.MainFrm_AccountUpdate`) and asked to read/understand all of `Connection4It.Supplier_Info`'s CRUD operations, then produce a plan for an equivalent Blazor page under `AccountERP.SharedUI/Pages/Suppliers` — explicitly a plan first, implementation only after the user reads it and gives the go-ahead (new standing workflow rule, same session).
+
+### WinForms form read: `connectionit/SupplierAndCustomer/Supplier_Info.cs`
+Single master-detail-style screen (not a list+modal like `CustomerGroupsList.razor`): a supplier picker combobox (`supplier_List1`) at the top, a field panel below (two `MyGroupBox` panels), and New/Add/Edit/Delete/Exit buttons acting on whichever supplier is selected. All CRUD delegates to `AccountModelsLib.Models.SupplierCLS` (already in `AccountModelsLib`, no move needed for this class):
+- List: `GetSupplier(ref opp)` (raw DataTable, used only to fill the WinForms combobox) — Blazor should prefer `Get_SupplierVMByActive(ref opp, int Active)` instead, which returns a strongly-typed `List<SupplierViewModel>` with Group/City/Governorate/Area/Country/SubAccount names already joined.
+- Get one: `Get_SupplierById(ref opp, long Id)`.
+- Add: `AddNewSupplier(ref Excp, ref Msg, Supplier sp, bool IsUse_SubAccount_Id_Select)` — transactional (`opp.BeginTransaction`), also creates the linked chart-of-accounts sub-account via `Sub_Account.Add_AccountSupplierCustomerOther`.
+- Edit: `UpdateSupplier(ref Excp, ref Msg, Supplier sp, long New_Submain_Account_Id, bool IsUse_SubAccount_Id_Select)` — same transactional account-sync via `Sub_Account.Update_AccountSupplierCustomerOther`.
+- Delete: `DeleteSupplier(ref opp, ref Excp, ref Msg, long Id)` — blocks the delete if the supplier already has accounting transactions (`Suppliers_Accounts`/`Account_Entry_Details`), then calls `Sub_Account.Delete_Account`.
+- Validation: `IsFoundName(ref opp, string Name, long Id = 0)` (duplicate name), plus WinForms-side checks — Name required, no `'` character allowed, Group required.
+- Group dropdown: `AccountModelsLib.GroupsCLS.Get_Customer_Supplier_Group(ref opp, Common.Supplier_Account_Type)` — same call already wired into `CustomerGroupsList.razor`'s `/suppliers/groups` route.
+- Person/Company type dropdown: `AccountModelsLib.Models.CustomerType.PersonCompany_Type(bool All)` — static in-memory list, already in `AccountModelsLib`. **Existing data quirk, not to silently fix**: "شركة" (Company) and "أجنبى" (Foreigner) both use value `2`, even though `CustomerType.GetCustomerTypeCode` elsewhere treats `3` as Foreigner — port as-is, flag only.
+
+### Blocking dependency found: 4 CLS classes still in `connectionit` (WinForms-only)
+The form's 4 cascading address dropdowns (Country → Governorate → Area → City, in the second panel) are backed by `CountryCLS`, `Govern_AreaCLS`, `Govern_ListCLS`, `Gov_City_ListCLS`, all under `connectionit/Government/...` — not reachable from Blazor. Per the established move-to-`AccountModelsLib` pattern (see this doc's earlier `GroupsCLS`-move entries), these need to move first. Read `CountryCLS` fully: pure EF/ADO, zero WinForms dependency — clean move. Assumed (not yet individually verified) the other three are the same shape.
+
+### Dead/hidden UI found, recommended to drop rather than port
+`rdAddNewAccount`/`rdSelectAccount`/`rdAddOldAccount` radios + `account_ListSearchKey2` (pick an existing chart-of-accounts sub-account instead of auto-creating one) are all `Visible = false` in the WinForms designer — dead in the live UI. The form always effectively runs with `IsUse_SubAccount_Id_Select = false`. Plan recommends the Blazor version skip this hidden path entirely (always auto-create the linked account), pending user confirmation.
+
+### Proposed new page
+`Razors/AccountERP.SharedUI/Pages/Suppliers/SupplierInfo.razor`, route `@page "/suppliers/info"` (new `Suppliers` folder, mirroring the existing `Pages/Customers/` convention). Two field panels matching the WinForms layout: (1) contact/core — Code, Name*, Address, Tel, Tel2, Mobile, Fax, Email, Website, Tax Reg. No, Commercial Register No, Group* dropdown; (2) person/company — Registration Date, Person/Company Type dropdown, Company Name, Company Contact Name, Company Contact Data, National ID, Passport No, Postal No, 4 cascading location dropdowns.
+
+### Open questions posed to the user (not yet answered as of this entry)
+1. OK with dropping the hidden account-selection radios/picker (item above)?
+2. OK carrying the Person/Company-Type value-`2`-collision as-is rather than fixing it?
+3. Is a single select+detail screen (mirroring the WinForms form 1:1) enough, or does this also need a separate list/grid page like `CustomerGroupsList`'s table?
+
+**Status: plan only, awaiting user go-ahead. No `.razor`/`.cs` files for this screen created yet**, and the 4 CLS classes have not been moved yet either.
+
+## 2026-09-04 (even later) — `Supplier Info` Blazor screen implemented and smoke-tested
+
+### What was asked
+User moved `CountryCLS`, `Govern_AreaCLS`, `Govern_ListCLS`, `Gov_City_ListCLS` into `AccountModelsLib` themselves (now under `AccountModelsLib/BusinessLib/CountryCLS/`, namespace `AccountModelsLib`, confirmed clean — no WinForms dependency in any of the four), gave explicit design latitude ("any decision in design this blazor take it by yourself"), and asked to implement the plan from the previous entry.
+
+### Design decisions made (the three open questions from the plan, resolved)
+1. Dropped the hidden account-selection radios/picker entirely — always auto-creates the linked chart-of-accounts sub-account (`IsUse_SubAccount_Id_Select = false`), matching the WinForms form's actual live behavior.
+2. Ported `CustomerType.PersonCompany_Type`'s existing value-`2` collision ("شركة"/"أجنبى" both value 2) as-is, not fixed.
+3. Built as a single select+detail screen (Master-Detail), matching `Supplier_Info.cs`'s own interaction model exactly, rather than a list+modal like `CustomerGroupsList.razor` — the WinForms screen itself isn't a list, so forcing a different UX pattern would be a bigger deviation than keeping the same one.
+4. One deliberate, called-out improvement over the original: `IsFoundName` (duplicate-name check) now runs on **both** Add and Edit. In the original WinForms code it only ran when the screen was opened in a special `ISAddNewOnly` embedded mode and was never actually invoked in normal standalone use — a latent gap in the source, not a behavior worth reproducing. Still the same reused `IsFoundName` method, not new logic.
+
+### File created
+`Razors/AccountERP.SharedUI/Pages/Suppliers/SupplierInfo.razor` (route `/suppliers/info`), new `Suppliers` folder alongside the existing `Pages/Customers/`. Two-panel layout matching the WinForms field groups exactly (Contact Info / Company-Person), `MudAutocomplete<SupplierViewModel>` for supplier search+select (replacing the WinForms combobox — better fit for what could be a long supplier list), `MudStack Justify.SpaceBetween` header (same pattern established for `CustomerGroupsList.razor`), RTL-aware button alignment, 4 cascading location `MudSelect`s (Country → Area → Governorate → City) that reload their child list on every parent change via `Task.Run`-wrapped calls into the newly-moved CLS classes. Country/Area/Governorate/City are **not** required (no `Required` attribute, not checked in validation) — matches the original `ValidateSupplierData()`, which only checks Name and Group.
+
+Added ~30 new resx keys (`SupplierInfoTitle`, field labels, validation/snackbar messages) to all 4 `SharedUIAssemblyMarker.*.resx` files — real ar/en values, `TODO: translate` fr/de placeholders, following the exact established convention.
+
+### Business logic reused verbatim (no reimplementation)
+`SupplierCLS.Get_SupplierVMByActive` (list), `Get_SupplierById` (get one), `AddNewSupplier`, `UpdateSupplier`, `DeleteSupplier`, `IsFoundName` — plus `GroupsCLS.Get_Customer_Supplier_Group`, `CustomerType.PersonCompany_Type`, and the four newly-moved lookup CLS classes' `Get_Govern_Area`/`Get_Govern_List`/`Get_City_List`/`GetData` methods.
+
+### Smoke-tested live in the browser (dotnet run, Chrome extension)
+Confirmed: page loads at `/suppliers/info` with correct Arabic RTL layout (title right, "مورد جديد" button flush left — same `MudStack`/`SpaceBetween` fix as the groups screens); "New Supplier" toggles the form open with today's date pre-filled and "أفراد" (Person) defaulted; typing a name and picking a group works; **the Group dropdown correctly showed "مجموعة موردين 2"** — i.e. `Common.Supplier_Account_Type` filtering is correctly distinct from the customer groups list, proving the reused `GroupsCLS` call is wired correctly for this screen; Country dropdown correctly showed "مصر" from `CountryCLS.GetData()`; selecting Country correctly enabled and attempted to reload the Area dropdown (came back empty — no seed rows in `Govern_Area_List` for this dev DB, not a code issue).
+
+**Add flow surfaced a real error when actually submitted**: `"خطأ فى تعديل رصيد أول المده An error occurred while saving the entity changes. See the inner exception for details."` This comes from deep inside the reused business logic (`SupplierCLS.AddNewSupplier` → `Sub_Account.Add_AccountSupplierCustomerOther` → `FirstBalance_CLS.Save_FirstBalance`'s `opp.db.SaveChanges()`), the exact same code path `Connection4It.Supplier_Info` (WinForms) would hit under the same DB state — **not a bug in the new Blazor page or its wiring**. Traced `Get_Year_Financial_Period_Id` and confirmed it self-heals (auto-creates a `Financial_Period` row via `Make_Period` if none exists for the current year), so a missing Financial_Period is not the cause; the actual root cause is an inner `DbUpdateException` that `Save_FirstBalance`'s generic `catch (Exception ee) { Msg = ee.Message; }` swallows without surfacing the real inner-exception detail — same information loss would happen from the WinForms form too. **Not investigated further this session** (out of scope for "build the page reusing existing logic" — would mean debugging/changing shared business logic, which needs an explicit ask first per this project's standing rules). Left as a known follow-up for the user.
+
+`dotnet build` on both `AccountERP.SharedUI.csproj` and `AccountERP.Web.csproj`: 0 errors throughout.
+
+## 2026-09-04 (later still) — Plan (not yet implemented): `Accounts.LoadingFrm` → Blazor
+"loading settings" step, and why it's the likely fix for the Supplier-save error above
+
+### What was asked
+User asked to review the WinForms `LoadingFrm` (`Accounts\AccountMainFrm\LoadingFrm.cs`) — the screen
+that runs after a successful login and before the main menu opens — and produce a plan for an
+equivalent Razor step that runs after login and before the home page, to reload the various
+`AccountModelsLib.Common`/`AccountCommonDataLIB.Common` static settings the web app currently never
+loads. Explicitly a **plan only** — matches this project's standing "plan first, wait for go-ahead"
+rule for WinForms→Blazor conversions. A parallel investigation (reproducing the Supplier-save error
+from the entry above in a real browser session against the real dev DB, then reverted before this
+plan was written since it wasn't asked for) confirmed the error is real and repeatable, and strongly
+suggests it is a symptom of exactly this missing settings-load step, not a bug in the new Supplier
+screen — see "Why this is likely the real fix" below.
+
+### What `LoadingFrm` actually does today (traced fully)
+Sequence in the WinForms shells (`AccountsERPSystem\Program.cs` / `AccountsERPSystemNet10\Program.cs`,
+both identical here): `Common.SetSystemParameters()` (reads the encrypted `ConnInfo.xml`, sets
+`operations.conn_str_`) → `Common.GetLoadParameter()` (a handful of `SysConfig` keys) → `mylogin.testlogin()`
+(the login dialog; on success sets `Common.User_Id`/`Branch_Id`/etc.) → **`LoadingFrm.ShowDialog()`** →
+`MainFrm_AccountUpdate`/`MainFrmPOS` (the home/MDI shell). So `LoadingFrm` is specifically the
+**post-login, pre-home** step, exactly as the user described.
+
+`LoadingFrm.LoadDataFromDB()` (on a background thread, with a marquee progress bar + "تحميل الإعدادات"
+label as the only UI) calls, in order:
+1. `Common.SetSystemParametersDB()` — reads the **entire `SysConfig` table** and dispatches every row
+   through `SearchSystemParametersDB(KeysData, index)`, which fans out into ~100+ `Common.*` static
+   field assignments (company name, tax branch id, feature flags like `PointOfSale`,
+   `Set_ItemBalanceZeroWhenNegative`, `IsCheckRenewalForTaxPortalCloud`, account-type overrides, etc.).
+   Tenant/installation-wide data, **not** user-specific.
+2. `Common.SetMy_DbContextConnStr()` — sets the static `My_DbContext.ConnStr` from the already-open
+   connection. Tenant-wide, idempotent.
+3. `Common.CommonTaxConfig = new CommonConfiguration(Common.Tax_BranchesId)` — builds the e-invoice tax
+   config object; depends on `Tax_BranchesId`, which step 1 just populated. Tenant-wide.
+4. `Common.Get_Is_Force_Admin_Permission()` — checks whether **the just-logged-in user** has the
+   special "force admin" menu permission (#336) and sets `Common.Is_Force_Admin_Permission`
+   accordingly. **This one genuinely depends on `Common.User_Id`, i.e. it is per-user, not tenant-wide.**
+5. `Common.Is_EncryptedDataSetting()` — determines/caches whether `SysConfig` values are
+   Caesar-cipher-"encrypted" (`Is_Ecrypted_Config`). Tenant-wide, cheap, self-memoizing.
+6. `Common.UpdateQntySetZero()` — a one-off maintenance `UPDATE` (zeroes negative stock quantities,
+   normalizes a `No3eboa` flag), gated behind the `Set_ItemBalanceZeroWhenNegative` flag from step 1.
+   Not user-specific; a housekeeping side effect, not a "load settings" read.
+7. `Common.ExpirationVersion()` — tamper/license-expiry check. On failure: `MessageBox.Show(...)` then
+   `CloseTheProcess_ApplicationExit()` (`Process.Kill()` + `Application.Exit()`). **Pure WinForms
+   desktop semantics — killing the process is correct when the process IS the one user's session, and
+   actively wrong on a shared web server (would kill every concurrently-logged-in user's session).**
+
+Sets `LoadingFrm.IsLoadDataComplete = 1` and closes; `Program.cs` then only proceeds to the main menu
+if that flag is `1`.
+
+### Why this is likely the real fix for the Supplier-save error (previous entry)
+`AccountERP.Web\Program.cs` today only ever does one line of this at process startup:
+`AccountModelsLib.operations.conn_str_ = connectionString;` (with a comment already explaining this
+gap for the *menu* permissions path). **None** of the 7 steps above run — ever — in the web app. Every
+one of the ~100+ `SysConfig`-driven `Common.*` fields sits at whatever hardcoded default
+`AccountModelsLib.Common`'s own field initializers give it (e.g. `Year_Financial_Period_Id = 1`,
+`Account_Type_ForOpeningBalanceEquity = 64`), which happen to be correct for the common/default
+values but not for anything this specific installation's `SysConfig` table actually overrides — and
+`Common.Is_Force_Admin_Permission`/`Common.Tax_BranchesId`/`Common.CommonTaxConfig` are simply never
+set at all. Reproducing the Supplier "New → Save" flow live (real browser, real dev DB, logged in as
+`Admin`) confirms the save reaches `FirstBalance_CLS.Save_FirstBalance` → `BalanceOpeningBalanceEquity`
+→ `GetOrCreateOpeningBalanceAccount` → `Submain_AccountCLS.GetSubmain_Account(ref opp, Common.Account_Type_ForOpeningBalanceEquity)`,
+which auto-creates an "Opening Balance Equity" account row via EF Core (`AddSbuAccountFrom_Account_TypeAutomatic`)
+when none exists yet for that `Account_Type` value — a path that is far more likely to hit an
+unmet FK/lookup dependency when the surrounding tenant settings (branch, currency, account-type
+config from step 1) were never loaded than when they were. **Caveat, stated plainly**: `Save_FirstBalance`'s
+`catch (Exception ee) { Msg = ee.Message; }` discards `ee.InnerException`, so the literal EF Core
+message ("...See the inner exception for details.") that reaches the UI is the generic wrapper, not
+the real SQL error — this was true before this session and is unrelated to the Supplier screen. This
+plan does not fix that swallowed detail (that's a one-line, separately-scoped change to shared
+business logic, and wasn't asked for this session — flagged here as an easy, low-risk follow-up:
+append `ee.InnerException?.Message` to `Msg` in that catch block); implementing the loader below and
+re-testing the Supplier save is the recommended way to confirm or rule out this diagnosis before
+touching `FirstBalance_CLS` at all.
+
+### Critical blocker found: most of these methods are not callable from the web project today
+`LoadingFrm` calls everything as `AccountCommonDataLIB.Common.X()`. `AccountCommonDataLIB` targets
+**`net10.0-windows`** only (it uses `System.Windows.Forms.MessageBox`/`Application` in several of its
+own methods) and is **not, and cannot be, referenced by `AccountERP.Web`/`AccountERP.SharedUI`**, which
+target plain `net10.0` and today only reference `AccountModelsLib`. This is the same shape of blocker
+this project already solved once this session (moving the 4 `CountryCLS`-family classes down into
+`AccountModelsLib`) — and the good news, confirmed by reading both classes side by side, is that
+**most of the 7 steps above are already pure DB/string logic with zero WinForms dependency**, and in
+fact **already live in the portable base class**, not the WinForms-only one:
+- Already in `AccountModelsLib.Common` today (directly callable from the web right now):
+  `Get_Is_Force_Admin_Permission()` (line 880), `Is_EncryptedDataSetting(DataTable)` /
+  `Is_EncryptedDataSetting(ref operations)` (lines 923/944), `SetMy_DbContextConnStr()` (line 1102),
+  `UpdateQntySetZero()` (line 1391), `Get_Tax_Rate()` (line 3892), `SearchSystemParametersDB(...)`
+  (line 4493 — the per-row dispatcher `SetSystemParametersDB` fans out into).
+- **Missing only**: the outer loop itself, `SetSystemParametersDB()` (reads `Select * from SysConfig`,
+  decrypts each row, calls `SearchSystemParametersDB` per row, then `Get_Tax_Rate()`). `AccountModelsLib.Common`
+  already has a commented-out near-twin of exactly this, `SetSystemParametersDBOLD()` (~line 787),
+  differing from `AccountCommonDataLIB`'s live version only by which connection-string-discovery call
+  it opens with.
+- **`Is_EncryptedDataSetting()` (parameterless overload)** and **`ExpirationVersion()`/`ExpirationVersion(ref,ref)`**
+  exist only in `AccountCommonDataLIB.Common` and would need their own small ports (the parameterless
+  `Is_EncryptedDataSetting()` overload is a two-line wrapper around the already-portable `ref operations`
+  overload; `ExpirationVersion(ref Msg, ref flag)`, the pure-logic half, has no WinForms dependency
+  either — only the parameterless `ExpirationVersion()` wrapper's `MessageBox.Show` +
+  `CloseTheProcess_ApplicationExit()` failure path is WinForms-only and needs a redesign, not a straight port).
+- **Must NOT be ported**: the `XmlDataSet.ReadXmlDataSetConnStr()` / `operations.ReturnConnStr()` call
+  that both the live and the commented-out `SetSystemParametersDB` open with. `XmlDataSet` lives only
+  in `AccountCommonDataLIB` (reads the encrypted `CommonFiles\ConnInfo.xml` next to a WinForms EXE) and
+  is meaningless on the web, which already correctly derives its connection string from
+  `appsettings.json` via DI at `Program.cs` startup (see the existing comment there). Calling it on the
+  web risks silently overwriting the correct, already-set `operations.conn_str_`/`My_DbContext.ConnStr`
+  with whatever a stray/leftover XML file on the host machine resolves to — the new web-side loader
+  must skip this call entirely, not just port it as-is.
+
+### The bigger, already-known risk this plan must not re-litigate or contradict
+A prior session (2026-09-02, "Plan (not yet implemented): fixing `Common`'s per-user static state for
+the web", earlier in this file) already analyzed the general problem that `Common.*` are `static`
+fields shared by the **entire web process across every concurrently logged-in user**, not per-user as
+they safely are in WinForms (one process = one user there). It classified fields into three buckets
+(per-user/session state that needs fixing; true process-wide config safe to set once; and
+needs-case-by-case-check) and proposed a phased fix (`AsyncLocal<T>` backing as the smallest safe
+change), explicitly **not implemented yet**. This new plan slots cleanly into that existing
+classification rather than reopening it:
+- Steps 1, 2, 3, 5, 6 above (`SetSystemParametersDB`, `SetMy_DbContextConnStr`, `CommonTaxConfig`,
+  `Is_EncryptedDataSetting`, `UpdateQntySetZero`) are **bucket 2 — true tenant-wide config**, safe to
+  run exactly **once per process**, at app startup, before any user logs in. Running them per-login
+  would be pure waste (re-querying and re-parsing the whole `SysConfig` table on every single login by
+  every user) and adds nothing, since this ERP is confirmed single-tenant-per-deployment (`CLAUDE.md`:
+  "No evidence found of more than one simultaneous production database").
+- Step 4 (`Get_Is_Force_Admin_Permission`) is genuinely **bucket 1 — per-user state** (the prior
+  session's classification missed it since it wasn't looking at `LoadingFrm` yet; it should be folded
+  into that same bucket-1 list alongside `User_Id`/`Branch_Id`/etc. for whenever the `AsyncLocal`/DI fix
+  from that earlier plan is actually implemented). Until that broader fix lands, this plan proposes
+  writing it as one more plain `Common.X = ...`-style static write in `PopulateSessionForUserAsync`,
+  exactly matching how `Common.User_Id`/`Common.Branch_Id` are already (unsafely, but consistently with
+  the rest of the codebase today) set there — not a regression, not a fix, just consistent with the
+  existing, already-flagged pattern.
+- Step 7 (`ExpirationVersion`) doesn't fit either bucket as-is because of its WinForms-only failure
+  action; see redesign note below.
+
+### Proposed plan (phased, nothing implemented yet)
+
+**Phase 1 — move the missing pure-logic pieces down into `AccountModelsLib.Common`** (mirrors the
+already-established `move-cls-to-accountmodelslib-for-blazor-reuse` pattern used earlier this session
+for the 4 `CountryCLS` classes):
+1. Add `SetSystemParametersDB()` to `AccountModelsLib.Common` — same body as
+   `AccountCommonDataLIB.Common.SetSystemParametersDB()` (`AccountCommonDataLIB\DBContext\Common.cs:200`),
+   **minus** the `XmlDataSet.ReadXmlDataSetConnStr()` / `operations.ReturnConnStr()` opening lines
+   (connection string is already correctly established by the caller in both WinForms and web —
+   WinForms' own `Program.cs` already calls `Common.SetSystemParameters()` separately, earlier, for
+   that; there's no need for `SetSystemParametersDB` to redo it).
+2. Add the small parameterless `Is_EncryptedDataSetting()` wrapper and the pure-logic
+   `ExpirationVersion(ref string Msg, ref bool flag)` overload (no `MessageBox`/`Process` calls in
+   either).
+3. Leave `AccountCommonDataLIB.Common`'s existing versions of all of these in place, unchanged, calling
+   into the base class — WinForms behavior does not change at all (Development Rule 5: don't touch
+   working call sites unnecessarily). Build `Accounts.sln` to confirm nothing broke.
+
+**Phase 2 — once-per-process startup loader in `AccountERP.Web\Program.cs`** (and the equivalent spot
+in `AccountERP.MobileDesktop`'s `MauiProgram.cs`, since it's the same shared-settings problem there,
+scoped to that process instead): right after the existing
+`AccountModelsLib.operations.conn_str_ = connectionString ?? string.Empty;` line, add (wrapped in
+`try/catch` exactly like WinForms' own `Program.cs` already does around `SetSystemParametersDB()`, so a
+transient DB hiccup at boot doesn't crash the whole app — it just leaves fields at their hardcoded
+defaults, same fallback behavior as today):
+```
+try { Common.SetSystemParametersDB(); } catch { }
+Common.SetMy_DbContextConnStr();
+Common.CommonTaxConfig = new CommonConfiguration(Common.Tax_BranchesId);
+Common.Is_EncryptedDataSetting();
+Common.UpdateQntySetZero();
+```
+(`UpdateQntySetZero` running once at boot, rather than being gated behind "the first user's first
+login" as it structurally is in WinForms, is a deliberate, called-out improvement: it guarantees the
+housekeeping runs exactly once regardless of how many concurrent users log in over the process's
+lifetime, rather than either never running until *someone* logs in or re-running redundantly per login.
+Flagging for explicit confirmation since it is a small behavior change from the literal WinForms
+sequence, not just a straight port.)
+
+**Phase 3 — per-login step in `AuthService.PopulateSessionForUserAsync`** (`AccountModelsLib\Models\Config\Interface\login\AuthService.cs:61`):
+add `Common.Get_Is_Force_Admin_Permission();` immediately after the existing
+`Common.Branch_Id = user.Branch_Id ?? 1;` line (same "assign `Common.User_Id` first, then anything that
+reads it" ordering the method's own comment already calls out). This one call covers both `LoginAsync`
+and `RestoreSessionAsync` (both funnel through this shared method already), so a returning
+cookie-restored circuit gets it too, not just a fresh interactive login.
+
+**Phase 4 — the actual "loading" Razor page the user asked for**, `AccountERP.SharedUI/Pages/Loading/LoadingSettings.razor`
+(route e.g. `/loading`), reused by both `AccountERP.Web` and `AccountERP.MobileDesktop` like every other
+shared screen in `SharedUI`:
+- Minimal UI mirroring `LoadingFrm.Designer.cs` 1:1 in spirit: centered label text "تحميل الإعدادات"
+  (already an existing resx-able string, or add one) + a `MudProgressLinear Indeterminate="true"` (the
+  Blazor analog of the WinForms `ProgressBar.Style = Marquee`), no other chrome — matches the original's
+  deliberately bare, borderless, single-purpose screen.
+- `OnInitializedAsync` calls the Phase 3 step if it hasn't already run for this login (Phase 3's call
+  inside `AuthService` already covers it — this page's own job is purely the transitional UX, not
+  re-doing the work), then `NavigationManager.NavigateTo("/", replace: true)`.
+- `Login.razor`'s `HandleLogin()` (`Razors\AccountERP.SharedUI\Pages\Login\Login.razor:201`) changes its
+  success path from `NavigationManager.NavigateTo("/")` to `NavigationManager.NavigateTo("/loading")`.
+  A cookie-restored session (`RestoreSessionAsync`, no interactive login click) should **not** be routed
+  through this visible page — that path already re-runs Phase 3's fast per-user check silently on every
+  new circuit, with nothing slow enough to justify a transitional screen.
+- No `LoadingFrm.IsLoadDataComplete`-style static completion flag is needed on the web — that pattern
+  existed only because WinForms passes control between two independent `Form` objects; the loading
+  page's own `OnInitializedAsync` completing (then navigating) is the direct equivalent with no shared
+  mutable state required.
+
+**Phase 5 — redesign `ExpirationVersion()` before porting its checking side, if the user wants it
+ported at all** (not included in Phases 1–4 above; flagged as its own decision point since it changes
+behavior, not just location): the check itself (`ExpirationVersion(ref Msg, ref flag)`, tamper/expiry
+detection) is portable as pure logic, but its `MessageBox.Show` + `Process.Kill()`/`Application.Exit()`
+failure action is not — on a shared web server, "expired" must instead mean something like "refuse all
+new logins app-wide with a shown message" (e.g. a flag `AuthService.LoginAsync` checks before validating
+credentials), not killing the process out from under every other concurrently-connected user. Needs an
+explicit decision from the user on desired web behavior before any code is written here — out of scope
+for Phases 1–4.
+
+### Suggested verification order once implemented
+1. `dotnet build` both `Accounts.sln`/`AccountsNet.sln` (WinForms unaffected) and `AccountERP.Web`
+   (0 errors expected, matching every prior session's bar).
+2. Re-run the exact Supplier "New → Save" repro from the previous entry in a real browser against the
+   real dev DB, logged in as `Admin`/`123`, to confirm whether the save now succeeds — this is the
+   direct test of the "likely real fix" hypothesis above, and should happen **before** anyone considers
+   touching `FirstBalance_CLS` itself.
+3. Two-concurrent-session smoke test (two browser profiles, two different real users) confirming the
+   Phase 2 once-per-process fields don't visibly differ between the two sessions (they shouldn't — they're
+   correctly tenant-wide) and that Phase 3's `Is_Force_Admin_Permission` correctly differs per user if
+   the two test users have different permission levels.
+
+### Status
+**Plan only, explicitly requested without implementation** — no code changed by this entry (an earlier
+diagnostic edit to `FirstBalance_CLS.Save_FirstBalance`'s catch block, made while investigating the
+Supplier error live, was reverted before this entry was written, since the user's actual ask was a plan,
+not a fix). Awaiting the user's go-ahead on Phases 1–4, and a separate explicit decision on Phase 5.
+
+## 2026-09-04 (later still) — Update: user has already done most of Phase 1 by hand in `LoadingFrm.cs`
+
+### What was asked
+User edited `Accounts\AccountMainFrm\LoadingFrm.cs` directly — changing most `AccountCommonDataLIB.Common.X()`
+calls to `AccountModelsLib.Common.X()` — and asked me to re-read the file and take it into account.
+
+### What was actually found on re-read
+This is further along than a call-site rename: the corresponding methods now genuinely exist on
+`AccountModelsLib.Common` itself (the portable base class, already referenced by the web project),
+not just on the WinForms-only `AccountCommonDataLIB.Common` — i.e. the user has already carried out
+Phase 1 of the plan above:
+- `AccountModelsLib.Common.SetSystemParametersDB()` now exists (`AccountModelsLib\Common\Common.cs:4546`),
+  with the WinForms-only XML connection-string bootstrap correctly **commented out**
+  (`//XmlDataSet.ReadXmlDataSetConnStr();`) rather than ported — exactly the "must NOT be ported" call
+  this plan flagged.
+- `AccountModelsLib.Common.Is_EncryptedDataSetting()` (parameterless overload) now exists
+  (`Common.cs:1073`), delegating to the already-portable `ref operations` overload — identical body to
+  the one that used to live only in `AccountCommonDataLIB.Common`.
+- `LoadingFrm.LoadDataFromDB()` now calls `AccountModelsLib.Common.SetMy_DbContextConnStr()`,
+  `.CommonTaxConfig = new CommonConfiguration(...)`, `.Get_Is_Force_Admin_Permission()`,
+  `.Is_EncryptedDataSetting()`, `.UpdateQntySetZero()` — all via the `AccountModelsLib` namespace now,
+  all of which already existed there before today (confirmed in the plan above) or are the two new
+  additions just listed.
+- Only the very first line, `AccountCommonDataLIB.XmlDataSet.ReadXmlDataSetConnStr();`, correctly
+  remains WinForms-only (still explicitly `AccountCommonDataLIB.XmlDataSet`, not the portable
+  `AccountModelsLib.XmlDataSet` class of the same name) — exactly right, since that step reads the
+  encrypted `ConnInfo.xml` file next to the WinForms EXE, which has no equivalent/meaning on the web.
+- **The `Common.ExpirationVersion()` call at the end of `LoadDataFromDB()` has been removed entirely**
+  (not commented out — just gone), matching this plan's Phase 5 note that it needs a deliberate
+  decision before being carried anywhere; the user appears to have already decided, at least for now,
+  to drop it from `LoadingFrm`'s own flow. Not asked about further this entry since the user was mid-edit;
+  worth a quick confirmation whenever Phase 5 is actually discussed.
+- Verified `dotnet build Accounts/Accounts.csproj -c Debug -m:1` (single-threaded, to avoid an unrelated
+  shared-output-folder file-lock issue seen with default parallel `-m`) → **0 errors**, confirming every
+  `AccountModelsLib.Common.X` call in the edited `LoadingFrm.cs` now actually resolves. WinForms behavior
+  is unchanged (same methods, same bodies, just promoted to the shared base class both
+  `AccountCommonDataLIB.Common` and now the web can reach — `AccountCommonDataLIB.Common` still compiles
+  fine too, since C# static members are inherited, not duplicated, by a subclass).
+
+### New, important finding while verifying: `SetSystemParametersDB()`'s last line is dangerous on the web as-is
+The ported `SetSystemParametersDB()` still ends its row loop with
+`AccountModelsLib.operations.ReturnConnStr();` (`Common.cs:4563`, carried over unchanged from the
+original). `operations.ReturnConnStr()` (`AccountModelsLib\Common\operations.cs:209`) is the exact
+method `CLAUDE.md`'s own *Database* section already flags as holding a long history of hardcoded,
+overwritten `conn_str_ = "..."` literals (including what look like leaked historical credentials) —
+and critically, **it only leaves `conn_str_` alone when `Common.IS_ReadConStrFromXMLInfo == 1`**;
+otherwise it unconditionally overwrites `conn_str_` with the last hardcoded literal in that method
+(currently `"Data Source=***;Initial Catalog=***;Integrated Security=True"`). On the working
+WinForms deployment this is harmless because `Common.SetSystemParameters()` (called earlier in
+`Program.cs`, via the real `XmlDataSet.ReadXmlDataSetConnStr()`) sets `IS_ReadConStrFromXMLInfo = 1`
+first, from the real `ConnInfo.xml`'s `AuthenticationInfo.Used` value, making `ReturnConnStr()` a
+no-op. **`AccountERP.Web\Program.cs` never sets `IS_ReadConStrFromXMLInfo` at all** (it establishes
+`operations.conn_str_` directly from `appsettings.json` via DI instead, correctly bypassing the whole
+XML/`ReturnConnStr()` mechanism) — so the field sits at its class default, `0`. If the planned Phase 2
+web-startup call to `Common.SetSystemParametersDB()` is added without accounting for this, it will
+silently **overwrite the correctly-configured connection string with the wrong hardcoded database**
+the moment it runs, breaking every DB call afterward in a very confusing way (not an immediate crash —
+`ConvertFromGL` may itself be a real, reachable database on the same dev SQL Server instance, so this
+could easily look like scattered "some data missing/wrong" bugs rather than an obvious connection
+failure). **Required mitigation, one line, in `AccountERP.Web\Program.cs`** (and the equivalent
+`MauiProgram.cs` for `AccountERP.MobileDesktop`): set `AccountModelsLib.Common.IS_ReadConStrFromXMLInfo = 1;`
+immediately after `operations.conn_str_ = connectionString ?? string.Empty;` and before ever calling
+`SetSystemParametersDB()` — this is a statement of fact ("the connection string is already correctly
+supplied from outside, don't let the internal fallback touch it"), not a hack, and requires no change
+to the now-shared `SetSystemParametersDB()`/`ReturnConnStr()` bodies themselves (keeping WinForms
+behavior byte-for-byte identical, per Development Rule 5). This is now folded into Phase 2 of the plan
+above as a required first line, not an optional hardening step.
+
+### Status
+Phase 1 of the plan above is effectively done (by the user, directly in `LoadingFrm.cs` /
+`AccountModelsLib.Common`), verified building clean. Phases 2–4 (web-startup wiring — now including the
+`IS_ReadConStrFromXMLInfo` guard above — the `AuthService` per-login call, and the new `/loading` Razor
+page) and the separate Phase 5 decision (`ExpirationVersion`'s redesign, possibly moot now that
+`LoadingFrm` itself no longer calls it) remain **not implemented**, pending explicit go-ahead.
+
+## 2026-09-04 (later still) — Phases 2–4 implemented: `/loading` Razor page + web-startup/per-login wiring
+
+### What was asked
+User asked to implement the Razor page for `Accounts.LoadingFrm`, i.e. Phases 2–4 of the plan above.
+
+### What changed
+1. **`Razors\AccountERP.Web\AccountERP.Web\Program.cs`** — right after the existing
+   `operations.conn_str_ = connectionString` line: `Common.IS_ReadConStrFromXMLInfo = 1;` (the required
+   guard from the entry above, so the ported `SetSystemParametersDB()`'s trailing `ReturnConnStr()` call
+   is a safe no-op on the web, exactly as it already is on the working WinForms deployment), then
+   `try { Common.SetSystemParametersDB(); } catch { }`, `Common.SetMy_DbContextConnStr();`,
+   `Common.CommonTaxConfig = new CommonConfiguration(Common.Tax_BranchesId);`, `Common.Is_EncryptedDataSetting();`,
+   `Common.UpdateQntySetZero();` — the once-per-process, tenant-wide bucket-2 group, run once at app
+   startup before any user logs in.
+2. **`AccountModelsLib\Models\Config\Interface\login\AuthService.cs`**, `PopulateSessionForUserAsync` —
+   added `try { Common.Get_Is_Force_Admin_Permission(); } catch { }` immediately after the existing
+   `Common.Branch_Id = user.Branch_Id ?? 1;` line (same ordering rule the method's own comment already
+   states: assign `Common.User_Id` first, then anything reading it) — the one genuinely per-user
+   (bucket-1) step, covering both a fresh interactive login and a cookie-restored session since both
+   funnel through this one method.
+3. **New file, `Razors\AccountERP.SharedUI\Pages\Loading\LoadingSettings.razor`** (route `/loading`,
+   `AuthLayout` — same bare, no-appbar/no-drawer layout `Login.razor` uses, matching `LoadingFrm`'s own
+   borderless single-purpose design): centered icon + `LoadingSettingsTitle`/`LoadingSettingsSubtitle`
+   text + an indeterminate `MudProgressLinear` (the Blazor analog of the WinForms marquee `ProgressBar`).
+   Navigates to `/` from `OnAfterRenderAsync(firstRender)` (not `OnInitialized`, so the transitional
+   screen actually paints for one frame before redirecting, rather than an invisible instant jump) —
+   no shared static "IsLoadDataComplete" completion flag needed, unlike WinForms, since there's no
+   second independent `Form` object to hand control to. Added `LoadingSettingsTitle`/`LoadingSettingsSubtitle`
+   keys with real ar/en text and `TODO: translate` fr/de placeholders to all 4
+   `SharedUIAssemblyMarker.*.resx` files, following the established convention.
+4. **`Razors\AccountERP.SharedUI\Pages\Login\Login.razor`** — `HandleLogin()`'s success path changed from
+   `NavigationManager.NavigateTo("/")` to `NavigationManager.NavigateTo("/loading")`.
+
+### Verified
+- `dotnet build` on `AccountERP.SharedUI.csproj`, `AccountERP.Web.csproj`, and `Accounts/Accounts.csproj`
+  (WinForms, to confirm the shared `AuthService.cs` edit didn't break the desktop build) — **0 errors**
+  on all three (`-m:1` used to avoid an unrelated shared-output-folder MSB4018 file-lock issue seen with
+  default parallel builds — a pre-existing environment quirk from `Directory.Build.props`'s shared
+  `Accounts\bin\Debug\` output folder, not caused by these changes).
+- Logged in as `Admin`/`123` in a real browser against the real dev DB: login → briefly through
+  `/loading` → landed on `/` with the sidebar correctly populated, exactly as before. Server console
+  showed no exceptions from any of the newly-wired calls (`SetSystemParametersDB`,
+  `Get_Is_Force_Admin_Permission`, etc.) — only the pre-existing, unrelated `MudPopoverProvider` warning
+  that predates this session's changes.
+- **Re-ran the Supplier "New → Save" repro from the earlier entry to test the original hypothesis.**
+  Result: **the error message changed** — no longer the generic
+  `"An error occurred while saving the entity changes. See the inner exception for details."`, now a
+  specific `"خطأ فى تعديل رصيد أول المده Conversion failed when converting date and/or time from
+  character string."`. This confirms the settings-preload was genuinely masking/interacting with the
+  original failure (the failure mode changed, not just the wording), but it has **not fully resolved
+  the Supplier-save error** — there is a second, distinct bug: a SQL Server date/time string conversion
+  failure, almost certainly a raw-SQL date literal built via string concatenation in a
+  culture/format SQL Server can't parse implicitly (a very common shape of bug in this codebase's
+  dominant string-built-SQL pattern, per `CLAUDE.md`'s own *Known Technical Constraints*). **Not
+  investigated further this entry** — out of scope for "create the Razor page for `LoadingFrm`"; left as
+  a clearly-diagnosed follow-up (the specific error message is now visible and actionable, unlike
+  before) for whenever the user wants it pursued.
+- Dev server stopped after testing (was started twice this entry, both stopped by the end).
+
+### Status
+Phases 2–4 of the plan **implemented and verified building/running**. Phase 5 (`ExpirationVersion`
+redesign) remains explicitly not implemented/decided, per the plan above. The Supplier-save error is
+improved (specific, diagnosable SQL error now surfaces instead of a generic swallowed one) but not
+fully fixed — a separate, now well-defined follow-up.
+
+## 2026-09-04 (later still) — Dedup: `AccountModelsLib.SystemSettingsLoader`
+
+### What was asked
+User asked to pull the 5 tenant-wide lines added to `AccountERP.Web\Program.cs`
+(`SetSystemParametersDB`/`SetMy_DbContextConnStr`/`CommonTaxConfig`/`Is_EncryptedDataSetting`/`UpdateQntySetZero`)
+into one new class/method in `AccountModelsLib`, rather than leaving them inline.
+
+### What changed
+- **New file, `AccountModelsLib\Common\SystemSettingsLoader.cs`** — `public static class SystemSettingsLoader`
+  with one method, `LoadTenantSettings()`, containing exactly those 5 lines (same order, same internal
+  `try/catch` around `SetSystemParametersDB()` only, matching the original). This is now the single
+  source of truth for that sequence — deliberately does **not** include
+  `AccountCommonDataLIB.XmlDataSet.ReadXmlDataSetConnStr()` (WinForms-only) or
+  `Common.Get_Is_Force_Admin_Permission()` (per-user, not tenant-wide) — see the reasoning already
+  recorded in the entry above for why those two stay separate.
+- **`AccountERP.Web\Program.cs`** — the 5 inline lines replaced with a single
+  `try { AccountModelsLib.SystemSettingsLoader.LoadTenantSettings(); } catch { }` call (the outer
+  `try/catch` here is an intentional, documented difference from the WinForms original: it guards
+  against the *other 4* calls failing too, not just `SetSystemParametersDB()`, because crashing the
+  whole web app's startup over a transient DB hiccup is worse than the WinForms equivalent of one
+  user's login attempt failing).
+- **`Accounts\AccountMainFrm\LoadingFrm.cs`** — updated to match: `LoadDataFromDB()` now calls
+  `AccountModelsLib.SystemSettingsLoader.LoadTenantSettings()` instead of repeating the same 5 lines,
+  immediately followed by the still-separate `Common.Get_Is_Force_Admin_Permission()` call. The
+  `AccountCommonDataLIB.XmlDataSet.ReadXmlDataSetConnStr()` line keeps its own original `try/catch`
+  (now only wrapping that one WinForms-only call, since `SetSystemParametersDB()`'s failure is now
+  guarded inside `LoadTenantSettings()` itself instead). **WinForms and web now share one literal
+  implementation of the tenant-settings sequence instead of two independently-maintained copies** —
+  directly addresses the "massive code duplication via copy-paste" risk `CLAUDE.md` already documents
+  as a solution-wide pattern, for this one sequence at least.
+
+### Verified
+`dotnet build` on `AccountERP.Web.csproj`, `AccountERP.SharedUI.csproj`, and `Accounts/Accounts.csproj`
+(`-m:1` each) — **0 errors** on all three. (One build attempt hit `MSB3027`/file-locked-by-AccountERP.Web
+because a dev server from the previous entry was still running and holding the shared output DLL open —
+stopped that process first, then the rebuild succeeded; not a code issue.)
+
+### Status
+Done. `SystemSettingsLoader.LoadTenantSettings()` is now the one place this sequence is defined; both
+`Program.cs` and `LoadingFrm.cs` call into it.
+
+## 2026-09-04 (later still) — Fix: `/suppliers/info` Delete button showed the same text in every language
+
+### What was asked
+User reported the Delete button on the Supplier Info screen shows identical text regardless of the
+selected UI language.
+
+### Root cause
+`SupplierInfo.razor`'s delete button already called `@Tr("Delete")`, but the `Delete` resource key did
+not exist in **any** of the 4 `SharedUIAssemblyMarker.*.resx` files. `IStringLocalizer` falls back to
+returning the bare key name itself when a resource is missing — so it rendered the literal string
+"Delete" no matter which language was active, which is exactly the "same text in all languages" symptom
+reported.
+
+### Fix
+Added the `Delete` key to all four resx files (`ar`: حذف, `en`: Delete, `fr`/`de`: Delete with the usual
+`TODO: translate` placeholder comment), right next to the existing `Save`/`Cancel` keys, following the
+established convention exactly.
+
+### Verified
+Rebuilt `AccountERP.SharedUI.csproj` (0 errors), restarted the dev server, logged in as `Admin`/`123`,
+opened an existing supplier, and confirmed: Arabic shows "حفظ"/"حذف", switching the UI language to
+English shows "SAVE"/"DELETE" — both buttons now correctly localize per language.
+
+### Status
+Done.
+
+## 2026-09-04 (later still) — `AccountERP.MobileDesktop` parity: `SystemSettingsLoader` + connection-string wiring
+
+### What was asked
+User asked for a plan, then a decision, on bringing `AccountERP.MobileDesktop` (the .NET MAUI Blazor
+Hybrid project — desktop + Android from one codebase, per `CLAUDE.md`'s project table) up to parity with
+every change made to `AccountERP.Web` so far (the `/loading` flow, `SystemSettingsLoader`, Supplier
+Info, Customer Groups), so the same capabilities/data-processing/persistence work identically across
+web, desktop, and Android. **Mid-task, the user additionally gave a standing instruction** (saved as the
+`mirror-web-changes-to-mobiledesktop` memory): from now on, every future change made to `AccountERP.Web`
+must be mirrored into `AccountERP.MobileDesktop` (adapted to its own hosting model) proactively, without
+asking first.
+
+### Plan / investigation
+Read `MauiProgram.cs`, `MainPage.xaml`/`.xaml.cs` fully before deciding anything:
+- **Already 100% shared, zero extra work needed**: `Login.razor`, `Home.razor`, `SupplierInfo.razor`,
+  `CustomerGroupsList.razor`, `LoadingSettings.razor`, `MainLayoutMud`, and — critically —
+  `AuthService`/`WebAuthService` itself, since `MauiProgram.cs` already does
+  `builder.Services.AddScoped<IAuthService, WebAuthService>()` (line 71, pre-existing). `MainPage.xaml`
+  roots its single `BlazorWebView` directly at `AccountERP.SharedUI.Routes` (no per-page registration
+  needed, unlike Web's dual Server+WebAssembly `AddAdditionalAssemblies` setup) — so every shared page,
+  and the `Get_Is_Force_Admin_Permission()` per-login call added inside `AuthService.PopulateSessionForUserAsync`
+  a few entries ago, was **already firing on MobileDesktop automatically**, with no code change required.
+- **A real, pre-existing bug found while checking for parity** (not something this session introduced):
+  `MauiProgram.cs` never set the static `AccountModelsLib.operations.conn_str_` field — only the
+  DI-scoped `operations`/`My_DbContext` instances got the correct hardcoded MAUI connection string.
+  Nearly every `*CLS` business-logic class in the shared library constructs its own
+  `new operations()`/`new operations(true)` internally rather than via DI, and
+  `operations.MyConn()`/`Check_Correct_ConnStr()` fall back to `ReturnConnStr()`'s hardcoded (and wrong)
+  connection string whenever the static `conn_str_` is empty — exactly the same class of bug already
+  found and fixed for `AccountERP.Web`. **This means most shared business logic running on
+  MobileDesktop today was silently talking to the wrong database**, while only a handful of
+  directly-DI-injected code paths (e.g. inside `AuthService`) used the correct one.
+
+### Decision
+Implement immediately (per both the explicit "make a decision" ask and the new standing-mirroring
+rule): this is a small, mechanical, low-risk mirror of a change already implemented and verified working
+on Web, reusing the exact same shared method (`SystemSettingsLoader.LoadTenantSettings()`) built
+earlier specifically to avoid this kind of duplication.
+
+### What changed
+`Razors\AccountERP.MobileDesktop\MauiProgram.cs` — right after the existing `connectionString` literal
+is defined, added the same 3-line fix already proven on `AccountERP.Web\Program.cs`:
+```
+AccountModelsLib.operations.conn_str_ = connectionString;
+AccountModelsLib.Common.IS_ReadConStrFromXMLInfo = 1;
+try { AccountModelsLib.SystemSettingsLoader.LoadTenantSettings(); } catch { }
+```
+
+### Verified
+`dotnet build "Razors/AccountERP.MobileDesktop/AccountERP.MobileDesktop.csproj" -f net10.0-windows10.0.19041.0`
+— **0 errors** (targeted the Windows TFM specifically; the project also multi-targets `net10.0-android`,
+`net10.0-ios`, `net10.0-maccatalyst`, none of which were exercised this entry since they need their own
+SDK/workload setup and the change is platform-agnostic C# in one shared file). Hit the same
+`Directory.Build.props` shared-output-folder file-lock issue as before (this time the browser's own
+running `AccountERP.Web` dev server held the lock) — stopped it, rebuilt clean, then restarted it so the
+user's browser session kept working.
+
+### Not touched, flagged only (pre-existing, out of scope for this ask)
+- The connection string itself is still hardcoded in source
+  (`Server=***;Database=***;User Id=***;Password=;...`, blank `sa` password) — same
+  shape of issue `CLAUDE.md` already documents solution-wide. `"Server=***"` (a local named SQL Server
+  instance) is also unlikely to be reachable from an actual Android device over a network — a
+  deployment/configuration concern, not something this fix was asked to address.
+
+### Status
+Done. `AccountERP.MobileDesktop` now shares the exact same tenant-settings bootstrap and connection-string
+wiring as `AccountERP.Web`. Going forward, per the new standing rule, future `AccountERP.Web` changes get
+mirrored here proactively as part of the same session, not as a separate follow-up ask.
+
+## 2026-09-04 (later still) — Ran the Windows desktop build of `AccountERP.MobileDesktop`
+
+### What was asked
+Run and test the desktop app (the `net10.0-windows10.0.19041.0` build of `AccountERP.MobileDesktop`).
+
+### What was found: `dotnet build -t:Run` doesn't work in this repo
+`dotnet build "..." -t:Run -f net10.0-windows10.0.19041.0` failed with
+`MSB3073: ... exited with code 9009` ("not recognized as an internal or external command"). Cause: the
+repo root path contains a space (`SIT_Projects .Net`), and MSBuild's built-in `Run` target does not
+quote the resulting `Exec Command="$(RunCommand) $(RunArguments)"` path correctly when the path has a
+space in a directory name that isn't the last segment — a known-shaped MSBuild quoting issue, not
+specific to this project's code. **Workaround for future sessions**: build normally first
+(`dotnet build ... -f net10.0-windows10.0.19041.0`), then launch the produced `.exe` directly (found at
+`Accounts\bin\Debug\net10.0-windows10.0.19041.0\win-x64\AccountERP.MobileDesktop.exe`, per
+`Directory.Build.props`'s shared-output-folder setup) via `Start-Process`, rather than `-t:Run`/`dotnet run`.
+
+### What was verified
+Launched the `.exe` directly via PowerShell `Start-Process`. Confirmed:
+- Process stayed alive (`HasExited: False`) well past MAUI/WinUI's typical startup window.
+- A real window opened, titled `AccountERP.MobileDesktop` (`MainWindowTitle` populated, non-zero
+  `MainWindowHandle`) — i.e. it did not crash during `MauiProgram.CreateMauiApp()`, which is exactly
+  where this session's new `SystemSettingsLoader.LoadTenantSettings()` call and the two new
+  `AccountModelsLib.Common`/`operations` static-field assignments run. Had any of that thrown
+  unhandled, the app would very likely never have reached a rendered window.
+- Checked the Windows Application event log for the few minutes around the launch for any
+  `AccountERP.MobileDesktop.exe`-specific crash/fault entry — none found. (Some unrelated
+  `MudBlazor.PopoverService` "Missing MudPopoverProvider" error-level log entries did appear in the same
+  window, but their `RequestPath`/`ConnectionId`/`TraceId` fields are ASP.NET Core Blazor **Server**
+  SignalR-circuit concepts that don't exist in a MAUI `BlazorWebView` — these are from the
+  already-running `AccountERP.Web` dev server process in the same log, not from the desktop app, and are
+  the same pre-existing, unrelated warning already seen and left alone in earlier entries.)
+
+### Explicit limitation, stated plainly rather than glossed over
+This session has no tool to take a screenshot of, or click/type into, a native Windows application
+window — the available browser-automation tools (`mcp__Claude_Browser__*`) only see the Browser pane's
+web tabs, not this MAUI window (which really did open on the user's own screen, not in any sandboxed
+pane). So **"runs without crashing, with a correctly-titled window" is the full extent of what could be
+verified autonomously this entry** — whether the login screen renders correctly inside the `BlazorWebView`,
+whether login/Supplier-Info/Customer-Groups actually work end-to-end against the real DB on this host,
+and whether the UI looks right, were **not** checked, since there's no way to do so without the user
+looking at their own screen (the window is left open for them) or describing/screenshotting what they
+see back to this session.
+
+### Status
+App launches and stays running on the Windows desktop target; deeper functional/visual verification
+needs the user's own eyes on the already-open window, or another way to inspect it, since this session
+has no desktop UI automation capability.
+
+## 2026-09-04 (later still) — Fix: every screen showed raw resx key names instead of translated text on desktop
+
+### What was asked
+User looked at the already-open desktop window (per the entry above) and tried logging in. Screenshot
+showed the Login screen rendering literal resource key names everywhere instead of translated text —
+`LoginTitle`, `LoginSubtitle`, `SystemError`, `AppTitle`, `LoginWelcomeTitle`, `LoginWelcomeSubtitle`,
+`LoginFeatureAccounting`, `LoginFeatureInventory`, `LoginFeatureMultiBranch`, `CopyrightText`, and
+`LOGINBUTTON` (MudButton's own uppercase transform of "LoginButton") — i.e. every single `Lang[...]`/`Tr(...)`
+call across the whole screen, not just one missing key like the earlier `Delete`-button entry.
+
+### Root cause
+`MauiProgram.cs` registered `builder.Services.AddLocalization();` with **no `ResourcesPath` option**,
+while `AccountERP.Web\Program.cs` registers `AddLocalization(options => options.ResourcesPath = "Resources")`.
+`SharedUIAssemblyMarker.*.resx` files physically live under `AccountERP.SharedUI\Resources\`, so their
+actual embedded/manifest resource names include a `Resources.` segment
+(`AccountERP.SharedUI.Resources.SharedUIAssemblyMarker.resources`). `Microsoft.Extensions.Localization`'s
+`ResourceManagerStringLocalizerFactory` builds the resource name it looks for using the globally-registered
+`ResourcesPath` option — this is shared app-wide and applies to `IStringLocalizer<T>` regardless of which
+assembly `T` is defined in (confirmed by the fact that Web's *host* sets it once and it correctly resolves
+`AccountERP.SharedUI`'s resources, a *different* assembly from the host itself). With `ResourcesPath` unset,
+the factory looked for a resource name **without** the `Resources.` segment, which never matched anything —
+in **any** culture, not just a missing one — so every lookup silently fell through to `IStringLocalizer`'s
+final fallback: returning the bare key name. Verified the satellite resource assemblies themselves were
+present and correct in the build output (`ar\`, `en\`, `fr\`, `de\` subfolders each containing
+`AccountERP.SharedUI.resources.dll`) — ruling out a missing-file cause and confirming it was purely this
+configuration mismatch.
+
+### Fix
+`Razors\AccountERP.MobileDesktop\MauiProgram.cs` — changed `builder.Services.AddLocalization();` to
+`builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");`, matching
+`AccountERP.Web\Program.cs` exactly.
+
+### Verified
+Rebuilt (`dotnet build ... -f net10.0-windows10.0.19041.0`, 0 errors — had to stop both the previous
+desktop app instance and the browser's `AccountERP.Web` dev server first, since both held locks on the
+shared `net10.0`/`net10.0-windows10.0.19041.0` output folders; restarted the web dev server afterward).
+Relaunched the desktop `.exe` directly (same `-t:Run` path-quoting workaround as the entry above) —
+confirmed it stays running with a correctly-titled window. **Visual confirmation that the text itself now
+renders translated (not just that the process didn't crash) still needs the user to look at the reopened
+window**, per the same desktop-UI-automation limitation already noted in the entry above.
+
+### Status
+Fix applied and the app rebuilds/relaunches cleanly; awaiting the user's confirmation that the Login
+screen (and the rest of the app) now shows real Arabic/English text instead of raw resource keys.
+
+**Confirmed by the user via a screenshot of the actual desktop window**: Login screen now shows real
+Arabic text (تسجيل الدخول - نظام الحسابات ERP، سجّل الدخول للمتابعة إلى حسابك، etc.) instead of raw
+resx keys. Localization fix is done.
+
+## 2026-09-04 (later still) — Fix: login from desktop crashed with a SQL FOREIGN KEY cascade error;
+made the MobileDesktop connection string config-driven and matching Web
+
+### What was asked
+User logged in from the desktop app (`Admin`/`123`) and got:
+`حدث خطأ فى النظام: Introducing FOREIGN KEY constraint 'FK_Order_Purshing_Store_Id_To' on table
+'Order_Purshing' may cause cycles or multiple cascade paths. ... Could not create constraint or index.`
+Then separately asked: the connection string in `MauiProgram.cs` isn't the same as
+`AccountERP.Web\Program.cs`'s — how to make them the same, and how to make it changeable per project
+without hunting through code. Also asked whether the WinForms `CommonFiles\ConnInfo.xml` mechanism could
+be reused across Web/MobileDesktop/mobile.
+
+### Root cause of the FK error
+`My_DbContext`'s constructors (`AccountModelsLib\Common\MyDbContext.cs:25/46/56`) all unconditionally
+call `Database.EnsureCreated()`. `MauiProgram.cs`'s hardcoded connection string pointed at
+`Database=***'s real
+`ClientNew` (per `AccountERP.Web\appsettings.json`), and (confirmed empirically once traced) an **empty**
+database with no tables. `EnsureCreated()` treats a tables-less database as "not created" and tries to
+generate the *entire* EF model's schema from scratch in one shot — and that generation genuinely fails,
+because `Order_Purshing` has two FKs to `Store` (`Id_From`→`StoreFrom`, `Id_To`→`StoreTo`, both plain
+`[ForeignKey]` attributes with no `OnDelete` override, so EF defaults both to cascade), which combines
+with other cascade paths elsewhere in the ~145-DbSet model into a genuine SQL Server multi-cascade-path
+conflict. `AccountERP.Web` never hits this because `ClientNew` already has real, pre-existing schema
+(created via the actual SQL scripts/`Alter_DataBase` tooling this ERP normally uses, not via EF) — a
+non-empty database short-circuits `EnsureCreated()` before it ever tries to generate anything.
+
+### Why `ConnInfo.xml` was not the right fix (answered, not implemented)
+Explained to the user: the WinForms encrypted-XML mechanism doesn't generalize — its file path is
+resolved relative to that specific WinForms EXE's own output folder (meaningless to a web server process
+or a packaged MAUI app), Android has no such filesystem path concept at all (any MobileDesktop config
+source must be a bundled asset or app-sandboxed storage, not an arbitrary host path), and
+`EncryptProcess`'s "encryption" is a Caesar-cipher shift already flagged elsewhere in this file as not
+real security — extending it to more hosts only spreads that weakness further.
+
+### What changed instead
+1. **New file, `Razors\AccountERP.MobileDesktop\Resources\Raw\appsettings.json`** — a `MauiAsset`
+   (the project's existing `<MauiAsset Include="Resources\Raw\**" .../>` glob already covers it, no
+   `.csproj` change needed), same JSON shape as `AccountERP.Web\appsettings.json`
+   (`ConnectionStrings:DefaultConnection`), value set to the same real `ClientNew` connection string
+   Web uses (`Server=***;Database=***;Integrated Security=True;TrustServerCertificate=True;MultipleActiveResultSets=true;`).
+2. **`MauiProgram.cs`** — replaced the hardcoded connection-string literal with loading this bundled
+   asset via `FileSystem.Current.OpenAppPackageFileAsync("appsettings.json")` +
+   `new ConfigurationBuilder().AddJsonStream(...)`, then `appConfig.GetConnectionString("DefaultConnection")`
+   — same `Microsoft.Extensions.Configuration` API shape Web already uses, just sourced from a bundled
+   asset instead of a file read from disk (the correct cross-platform equivalent for a packaged
+   MAUI app, works identically on the Windows and Android targets). To point this project at a different
+   database going forward: edit this one JSON file, not C#.
+3. Left the rest of `MauiProgram.cs`'s DB wiring (the `SystemSettingsLoader.LoadTenantSettings()` call,
+   `operations.conn_str_`, `IS_ReadConStrFromXMLInfo`) untouched — those already correctly used whatever
+   `connectionString` variable was in scope, so fixing its source was sufficient.
+
+### Verified
+- `dotnet build ... -f net10.0-windows10.0.19041.0` — 0 errors.
+- Took a genuine screenshot of the running desktop app window this entry (via a PowerShell/GDI+
+  `CopyFromScreen` script — a real capability worth remembering: this session *can* screenshot a known
+  native window's rect, even though it cannot click/type into one reliably) confirming the FK error
+  banner and, separately after the fix, confirming Arabic text renders. **A follow-up attempt to drive
+  login via simulated `SendKeys` failed**: `SetForegroundWindow` silently didn't work (a documented
+  Windows restriction on background processes stealing focus), so the keystrokes intended for the
+  desktop app very likely went to this Claude Code session's own window instead. No harm found, but
+  this confirms simulated keyboard/mouse input into native windows is **not reliable in this
+  environment and should not be attempted again** — screenshotting a window (once its handle/rect is
+  known) is safe and works; typing/clicking into one does not and should be left to the user.
+- **User confirmed, from their own interaction with the actual window**: logging in as `Admin`/`123`
+  from the desktop app now successfully reaches the home screen — the FK-cascade error is gone.
+
+### Status
+Done. `AccountERP.MobileDesktop` now points at the same real database as `AccountERP.Web`, via a
+config file matching Web's own structure, and login/home now work end-to-end on the desktop build.
+Standing note for this session and future ones: no simulated keyboard/mouse input into native
+(non-browser) windows — screenshots of a known window are fine, driving input is not.
+
+## 2026-09-05 — Customer/Supplier screen batch: `CustomerInfo`, `CustomerSupplierDataList`
+
+### What was asked
+User asked to review a batch of Customer- and Supplier-related WinForms screens (pasted the exact
+`new X(); .MdiParent = this; .Show();` call sites from `MainFrm_AccountUpdate` for each) and, following
+the same standing workflow as `Supplier_Info` → `SupplierInfo.razor`: plan each screen, then implement,
+deciding on additions/UX myself. Explicit constraint: WinForms projects and business-logic libraries are
+read-only this pass — use their existing logic, never modify them (this constraint does not cover my own
+Razor files in `AccountERP.SharedUI`, which I built/edited freely as usual).
+
+### Investigation (via an Explore agent, full report kept in that turn's transcript, key findings below)
+Screens named in the request, resolved to actual source files:
+1. `Connection4It.Customer_Info` — **the live customer add/edit screen** (direct counterpart of
+   `Supplier_Info`), reachable from 4 real menu call sites. `CustomerCLS` (all needed methods) was
+   **already fully in `AccountModelsLib`** — no CLS-moving needed this time, unlike the Supplier batch.
+2. `CustomerDataListFRM` — customer list/search screen; its `bool` constructor toggles a "customer cars"
+   mode tied to `CarsSystemLib` (out of scope this batch). Non-car mode delegates Add/Edit to
+   `Customer_Info`, matching `SupplierDataListFRM`'s equivalent delegation to `Supplier_Info`.
+3. `Reporting_System.CustomerRPT.CustomerDataFRm` / `SuppliersRPT.SuppliersDataListPrintFrm` — RDLC print
+   reports. Data comes from already-portable `CustomerCLS.GetCustomerToPrint`/`SupplierCLS.Get_SupplierVMByActive`.
+   **Deferred** — lower priority, no blocking issue, just not built this entry.
+4. `Connection4It.Customer_SupplierInfo` — **confirmed NOT a duplicate of `Customer_Info`**: a separate,
+   niche screen for linking an existing customer to a shared supplier account, reached from a different,
+   far-less-central menu item. Zero portable business logic (pure raw SQL embedded in the WinForms
+   control, no CLS wrapper at all) — mojibake-encoded legacy code. **Recommended skipping** unless the
+   user specifically wants that linking feature; not built.
+5. `Accounts.Customer_SupplierAccountFrmLv` — the customer↔supplier balance-reconciliation ("Taswya")
+   screen. Also zero portable logic: both the balance-calc queries and the settlement/posting operation
+   are raw SQL embedded either in WinForms-only `Connection4It` UserControls or directly in the Form
+   itself, with no CLS wrapper anywhere (a `CustomersAccountCLS` exists in `AccountModelsLib` but is
+   instantiated and never actually used by this form — dead reference). Porting this faithfully means
+   *writing new portable logic*, not reusing existing logic — **flagged for the user's explicit decision
+   before building**, not attempted this entry.
+6. `SupplierDataListFRM` / `SuppliersDataListPrintFrm` — direct supplier-side counterparts of #2/#3,
+   already portable via `SupplierCLS`.
+
+Also incidentally discovered and corrected: `CLAUDE.md`/`FORMS_INVENTORY.md` name
+`Advanced_Account.MainFrm_AccountUpdate` as the live MDI hub, but tracing `using` directives in both
+`AccountsERPSystem\Program.cs` and `AccountsERPSystemNet10\Program.cs` shows the class actually
+instantiated at runtime is **`Accounts.MainFrm_AccountUpdate`** (`Accounts\AccountMainFrm\MainFrm_AccountUpdate.cs`)
+— a same-named sibling in a different project. Confirmed both copies have identical navigation wiring
+for everything relevant to this batch, so this doesn't change any conclusion above, but worth recording
+since it contradicts the architecture docs' own claim.
+
+### Decision and scope
+Built the three cleanly-portable, directly-analogous screens now; explicitly deferred the rest with
+reasons recorded above rather than silently dropping them.
+
+### What was built
+1. **`Razors\AccountERP.SharedUI\Pages\Customers\CustomerInfo.razor`** (routes `/customers/info` and
+   `/customers/info/{CustomerId:long}`) — Master-Detail, structured identically to `SupplierInfo.razor`
+   (same reasoning: the WinForms original is itself Master-Detail, not a list, so that interaction model
+   carries over rather than being forced into a list+modal shape). Reuses `CustomerCLS`'s
+   `GetCustomersOnlyList`/`GetCustomerByIdAsNoTracking`/`AddNewCustomer`/`UpdateCustomer`/`DeleteCustomer`/`IsFoundName`
+   verbatim, plus the same `GroupsCLS`/`CountryCLS`/`Govern_AreaCLS`/`Govern_ListCLS`/`Gov_City_ListCLS`/`CustomerType`
+   lookups `SupplierInfo.razor` already uses (all already portable, `Common.Customer_Account_Type` instead
+   of `Supplier_Account_Type` for the group filter). Added the Main/General-customer radio and Insurance
+   Company checkbox (real `Customer_Info.cs` fields not present on the Supplier side). Deliberately
+   **not** built this entry: the Visa fields (gated behind the rarely-used `Common.ShowCustomerVisaData`
+   flag), the customer-image dialog button (`frmImagesStore`, a standalone WinForms dialog with no Blazor
+   equivalent yet), and the `Balance_First` read-only display value (computed via raw SQL embedded
+   directly in the WinForms form, not via a CLS — deferred rather than duplicating raw SQL into a Razor
+   code-behind for a display-only field).
+2. **`Razors\AccountERP.SharedUI\Pages\Customers\CustomerSupplierDataList.razor`** (routes
+   `/customers/list` and `/suppliers/list`) — one shared component serving both, same pattern already
+   established by `CustomerGroupsList.razor` for the two groups routes. Customer mode shows the
+   name-search box and Main/General/All radio (an **added third "All" option beyond the WinForms
+   original's Main/General-only choice** — a deliberate UX improvement this entry, using
+   `GetCustomersOnlyList`'s existing `General_Customer_Flage=-1` "no filter" support, no business-logic
+   change); supplier mode omits both, matching `SupplierDataListFRM`'s simpler real UI. Add/Edit
+   buttons navigate to `CustomerInfo.razor`/`SupplierInfo.razor` (optionally with an id for edit) instead
+   of opening a separate dialog, mirroring how the WinForms list screens delegate to their respective
+   Info forms. Delete reuses `CustomerCLS.DeleteCustomer`/`SupplierCLS.DeleteSupplier` verbatim.
+3. **`SupplierInfo.razor`** — added a second route, `/suppliers/info/{SupplierId:long}`, and loads that
+   supplier on init if present, so the new list page's Edit action can deep-link directly to a supplier
+   (parity with the new `CustomerInfo.razor` id-route added for the same reason).
+4. Added ~30 new resx keys (Customer-specific field labels/messages, plus `CustomerListTitle`/
+   `SupplierListTitle`/`ActiveOnly`/`SearchByName`/`AllCustomers`/`ShowButton`/`NoCustomersYet`/`NoSuppliersYet`)
+   to all 4 `SharedUIAssemblyMarker.*.resx` files — real ar/en, `TODO: translate` fr/de, same convention.
+
+### Found and removed: a dead scaffold file that crashed the whole app on route collision
+While first testing `/customers/list` live, the app threw `InvalidOperationException: The following
+routes are ambiguous: 'customers/list' in ... CustomerDataList ... CustomerSupplierDataList` — a
+**pre-existing, previously-unnoticed file**, `Pages\Customers\CustomerDataList.razor` (+ `.razor.cs`),
+already claimed that exact route. Investigated before touching anything: the file was a fully
+Bootstrap-styled (not MudBlazor — inconsistent with every other real screen in this app), pre-MudBlazor
+early prototype with a **hardcoded fake customer name** in its only dropdown option and a code-behind
+that was **100% commented out** (`OnInitializedAsync`, `LoadCustomersAsync`, `HandleSearch`,
+`RedirectToCreate`, `EditCustomer`, `DeleteCustomer` — every method body, entirely `//`-commented).
+Confirmed it is not referenced from the real active layout (`MainLayoutMud`/`NavMenuMud`) — only from
+the equally-dead, equally-unused default-Blazor-template leftover `NavMenu.razor` (itself never rendered
+by `MainLayoutMud`). Matches this codebase's own already-documented "leftover template scaffolding"
+pattern (`Weather.razor`, `Counter.razor`, etc., per `CLAUDE.md`) — a fourth instance of it, just not
+previously catalogued. Since it was provably non-functional, actively crashing the live app via a hard
+route conflict, and git-tracked (so trivially recoverable from history if ever needed), **deleted both
+files** rather than renaming my own new page around it. Left the untouched, differently-routed
+`CustomerDataList2.razor` (`/customers/list2`) alone — no conflict, not investigated further, not this
+entry's concern.
+
+### Verified
+- `dotnet build` on `AccountERP.SharedUI.csproj` and `AccountERP.Web.csproj` — 0 errors throughout
+  (including after the dead-file removal).
+- Live browser test, logged in as `Admin`: `/customers/info` — New Customer → filled real fields →
+  Customer Group dropdown showed real, customer-specific groups (distinct from supplier groups, e.g.
+  "مجموعة عملاء 1") → **Add succeeded** → searched and found the new customer → **selected it, all
+  fields loaded correctly including the saved group** → **Delete succeeded** with confirmation dialog,
+  back to a clean "no customer selected" state. Full CRUD cycle confirmed working end-to-end against the
+  real DB.
+- `/customers/list` and `/suppliers/list`: both loaded hundreds of real rows from the live database
+  (confirmed genuinely different result sets per entity type), correct title/button text per route,
+  customer-only filters correctly present/absent per mode.
+
+### Status
+Done for the 3 screens built. Remaining from this batch, explicitly deferred (not forgotten): the two
+print-report screens (low priority, straightforward once wanted), `Customer_SupplierInfo`'s linking
+feature (recommended skip), and `Customer_SupplierAccountFrmLv`'s reconciliation screen (needs the
+user's explicit decision on writing new portable balance/settlement logic before it can be built at all).
+
+## 2026-09-05 (later) — Root cause finally found for the long-standing "Conversion failed when
+converting date and/or time from character string" error (Supplier AND Customer "Add" flows)
+
+### What was asked
+Re-ran the app fresh (`Admin`/`123`) and re-tested `/customers/info`, `/customers/list`, `/suppliers/list`
+end-to-end. This time the UI defaulted to Arabic (fresh login, no persisted English preference from the
+earlier entry's session) — and the exact same
+`"خطأ فى تعديل رصيد أول المده Conversion failed when converting date and/or time from character string."`
+error that was first seen (and left unexplained) while testing the Supplier screen surfaced again here,
+this time for a brand-new **Customer**. That repeat, on a different entity type, was the clue that finally
+pinned the cause down.
+
+### Root cause (confirmed with high confidence, not a guess)
+1. **Isolated the trigger by testing systematically**: List (`/customers/list`), loading an existing
+   customer for edit, and **Update/Save on an existing customer all worked correctly** under the same
+   Arabic session — only creating a **brand-new** customer/supplier failed. That narrows it to whatever
+   code path only runs on first-time creation: `CustomerCLS.AddNewCustomer`/`SupplierCLS.AddNewSupplier` →
+   `Sub_Account.Add_AccountSupplierCustomerOther` → `FirstBalance_CLS.Save_FirstBalance` (auto-creating
+   the new sub-account's opening-balance ledger row) — the exact same path already traced in the very
+   first Supplier-testing entry in this file.
+2. **Found the actual date-to-SQL-string code**: `AccountModelsLib\Common\operations.cs`'s
+   `dateFormat(DateTime)`/`Get_DateToInsert(DateTime)` helpers (used somewhere inside that first-balance
+   code path) build raw SQL date literals via `dt.ToString("MM/dd/yyyy")` — **culture-dependent**
+   despite the fixed-looking format string, because a custom `DateTime.ToString(format)` still resolves
+   using the *ambient* `CultureInfo.CurrentCulture`'s digit shapes/calendar, unless
+   `CultureInfo.InvariantCulture` is passed explicitly (it isn't, anywhere in these helpers). WinForms
+   never hits this because `AccountsERPSystem\Program.cs`/`AccountsERPSystemNet10\Program.cs` set
+   `Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture` **process-wide** at startup — the
+   whole desktop app always formats dates/numbers as invariant no matter what language its labels show.
+3. **Found why the web app doesn't have that same protection**: `AccountERP.SharedUI\LanguageService.cs`'s
+   `ApplyToCurrentThread()` (called on every render, and from `SetCulture`) sets **`CultureInfo.CurrentCulture`
+   itself** (not just `CurrentUICulture`) to the active UI language — `ar-EG` by default
+   (`DefaultCultureCode = "ar-EG"`, `LanguageService.cs:34`) — and even sets
+   `CultureInfo.DefaultThreadCurrentCulture` (the process-wide default for *new* threads). Since
+   `Task.Run(...)` (used throughout every Razor page's business-logic calls, including
+   `CustomerInfo.razor`/`SupplierInfo.razor`) flows the ambient culture from the calling context in
+   modern .NET, the background thread that runs `AddNewCustomer`/`AddNewSupplier` inherits `ar-EG`, and
+   `dt.ToString("MM/dd/yyyy")` deep inside it produces a date string SQL Server can't parse as English/US
+   (`Add_AccountSupplierCustomerOther`/`Save_FirstBalance` swallow the exception into `Excp=1`/`Msg`,
+   which is why `AddNewCustomer`'s outer `if (Excp==0) opp.Commit() else opp.Rollback()` correctly rolled
+   back cleanly both times — **confirmed no orphaned/partial rows were left behind** either time this was
+   hit, by re-checking `/customers/list` immediately after).
+4. **This single root cause explains both the original, unexplained Supplier-testing occurrence and
+   this new Customer one** — same mechanism, same code path, different entity, triggered purely by
+   which UI language happened to be active at the moment "Add" was clicked (the earlier Supplier test
+   that succeeded was running in English; this Customer test that failed was running in the ar-EG
+   default).
+
+### Proposed fix (Blazor-side only — does not touch `AccountModelsLib`/any WinForms project)
+`LanguageService.ApplyToCurrentThread()` (and its constructor/`SetCulture` counterparts) should stop
+setting `CultureInfo.CurrentCulture`/`CultureInfo.DefaultThreadCurrentCulture` entirely, and only set
+`CurrentUICulture`/`DefaultThreadCurrentUICulture` — which is genuinely all `IStringLocalizer`
+(`Lang[...]`/every page's `Tr()` helper) actually needs, by this file's own existing comment at line
+133-136. `CurrentCulture` (as opposed to `CurrentUICulture`) governs number/date *formatting*, not
+resource-string lookup — the two are separate .NET concerns this code currently conflates. This would
+restore the same "always-invariant date/number formatting regardless of displayed language" behavior
+WinForms already has, without touching any shared business-logic file, and without needing to patch
+every individual `Task.Run` call site across every Razor page (a real risk of missing one). **Not
+implemented this entry** — flagged for the user's decision, since `LanguageService.cs` is shared
+infrastructure every existing page depends on and changing it deserves a checkpoint before touching it,
+even though it is Blazor-only. Worth a quick check after implementing: whether any MudBlazor component
+(date pickers, number displays) relies on ambient `CurrentCulture` for its own Arabic-appropriate
+rendering — if so those specific components may need an explicit `Culture`/`DateFormat` parameter
+instead of relying on the ambient thread culture this fix would stop setting.
+
+### Status
+Root cause identified and written up in full; fix proposed but **not implemented**, pending the user's
+go-ahead given it changes shared Blazor infrastructure (`LanguageService.cs`) rather than a single page.
+
+## 2026-09-05 (later) — "Customer Cars List" mode added to `CustomerSupplierDataList.razor`
+
+### What was asked
+User is now reviewing screens one by one, starting with the exact two menu-click handlers in
+`Accounts\AccountMainFrm\MainFrm_AccountUpdate.cs` that open `CustomerDataListFRM` —
+`menuItemCustomerLIST_Click` (`new CustomerDataListFRM(false)`) and `menuItemCustomerCarsLIST_Click`
+(`new CustomerDataListFRM(true)`).
+
+### What was found
+Read `Accounts\Customer_Supplier\Customers\CustomerDataListFRM.cs` in full this time (only a summary
+was available before). Confirmed precisely: the `bool` constructor parameter changes **nothing about the
+data query** — `Get_Customer_DataList()`/`fill_dgCustomersList()` (calling
+`CustomerCLS.GetCustomersOnlyList`) run identically either way. The only two differences when
+`isCustomerCars=true`: (1) the form's title becomes "بيانات سيارات العملاء" instead of "بيانات العملاء",
+and (2) two extra buttons become visible — `btnAddCarNewCustomer_Click` (opens
+`CarsSystemLib.AddCarFrm` + `.AddNewCarNewCustomer()`, no row selection needed) and
+`BtnAddNewCarForCustomer_Click` (opens the same form pre-set to the currently-selected row's customer
+via `FRM.cs.cs.Id = CustomerId`). Both ultimately open a car-service-module WinForms screen that has no
+Blazor port at all yet.
+
+### Decision
+Rather than build a second near-duplicate page for a title change and two buttons (exactly the kind of
+copy-paste duplication this whole modernization effort is meant to avoid, per `CLAUDE.md`'s own
+documented concerns), extended the existing shared `CustomerSupplierDataList.razor` with a third route,
+reusing 100% of its list/search/delete/edit logic unchanged. Since `CarsSystemLib` has no Blazor
+equivalent, wired the two car-specific actions to this app's own already-established "screen not built
+yet" pattern (the same `Tr("ScreenNotBuiltYet", ...)` + `Snackbar.Add(..., Severity.Info)` shape already
+used in `Home.razor` for any menu item without a real page yet) instead of leaving them as dead links or
+building non-functional placeholder forms.
+
+### What changed
+`Razors\AccountERP.SharedUI\Pages\Customers\CustomerSupplierDataList.razor`:
+- Added `@page "/customers/cars-list"` as a third route on the same component.
+- Added `IsCarsMode`/`TitleKey` computed properties (path-based, same pattern as `IsSupplier`).
+- Cars mode shows an extra header button ("إضافة سيارة عميل جديد" — matches `btnAddCarNewCustomer`,
+  no row needed) and an extra per-row car icon (matches `BtnAddNewCarForCustomer`, needs the row's
+  customer) — both call `ShowCarModuleNotBuiltYet()`, which shows the same "not built yet" Snackbar
+  `Home.razor` already uses elsewhere.
+- Added `CustomerCarsListTitle`/`AddCarNewCustomerButton` resx keys to all 4 language files (real ar/en,
+  `TODO: translate` fr/de, same convention as every other entry this session).
+- No `.csproj` change needed for `KnownRoutes.IsImplemented` to pick up the new route — it's built via
+  reflection over `@page` attributes automatically (`Services\KnownRoutes.cs`), so whenever
+  `SysConfigMenus`'s `KeysData` for the real "Customer Cars List" menu item is set to
+  `/customers/cars-list`, the sidebar will resolve it as a real, working link with no further code change.
+
+### Verified
+`dotnet build` — 0 errors. Live browser test at `/customers/cars-list`: correct title, both the header
+button and every row's car icon render correctly in RTL alongside the existing edit/delete icons,
+clicking either does not crash (same list of real customers still shown underneath, matching that the
+underlying query is genuinely unchanged from the plain customer-list route).
+
+### Status
+Done.
+
+## 2026-09-05 (later) — New standing workflow: link `SysConfigMenus.RazorPath` for every built screen
+
+### What was asked
+User gave a standing instruction (saved as the `link-razorpath-in-sysconfigmenus` memory): whenever a
+Blazor page is built for a WinForms menu screen, look up that menu's row in `SysConfigMenus` and set its
+`RazorPath` column to the new route. Lookup should use `KeysDataTemp` (a plain-text column) rather than
+`KeysData` (encrypted in this app via `Common.EncryptMe`/`EncryptProcess`).
+
+### What was found
+- `AccountModelsLib.Models.SysConfigMenus` (the EF model) does **not** declare `KeysDataTemp`/`RazorPath`
+  (nor `Description_En/_Fr/_DE`) at all, but the live `ClientNew` database's actual `SysConfigMenus`
+  table already has both columns (confirmed via `sqlcmd`) — the same "DB schema is ahead of the C# model"
+  situation already seen once before this session with `IsShowToUser`. Used raw `sqlcmd` directly against
+  the real database rather than touching the EF model, to stay clear of "don't modify library files."
+- **`KeysDataTemp` holds the menu item's WinForms `.Name` (its own name in the designer), not the full
+  `_Click` event-handler method name** — e.g. `menuItemCustomerLIST`, not `menuItemCustomerLIST_Click`.
+  Confirmed by cross-referencing the C# source's `private void menuItemCustomerLIST_Click(...)` against
+  the DB row's `KeysDataTemp = 'menuItemCustomerLIST'`.
+- Found the user had **already pre-seeded exactly the rows needed for the screens built this session**
+  with a literal 15-question-mark placeholder value (`"???????????????"`, confirmed by `DATALENGTH` = 30
+  bytes = 15 nvarchar chars, not a console-encoding artifact) in `RazorPath`, evidently marking "known
+  screen, path not filled in yet": `menuItemCustomerLIST` (**two** rows, ids 368 and 370 — a genuine
+  duplicate menu entry, both updated), `menuSupplierInfo` (id 380), `menuItemSupplierList` (id 382). Two
+  other rows, `menuItemCustomerGroup` (id 367) and `menuItemSupplierGroup` (id 379), already had the
+  *correct* real paths (`/customers/groups`, `/suppliers/groups`) set from earlier — confirming this
+  linking had already started before this explicit instruction was given.
+- Searched for rows matching the two menu handlers named in this message
+  (`menuItemCustomerCarsLIST`/`menuCustomerInfo`, i.e. stripped of `_Click`) and **found neither exists as
+  its own row** in this database's `SysConfigMenus` — only `menuCustomerInfoMa7l`/`menuSupplierInfoMa7l`
+  (Customer_Type=10 variants) exist alongside them in the source, but the plain "Customer Info" and
+  "Customer Cars List" menu items themselves aren't present in this particular deployment's configured
+  menu set. Not an error — nothing to link for those two in this database. Confirmed no other rows are
+  still sitting on the placeholder afterward (`SELECT ... WHERE RazorPath = REPLICATE('?',15)` → 0 rows).
+
+### What changed (database only, via `sqlcmd -S . -d ClientNew -E`, no code touched)
+```sql
+UPDATE SysConfigMenus SET RazorPath='/customers/list' WHERE KeysDataTemp='menuItemCustomerLIST';
+UPDATE SysConfigMenus SET RazorPath='/suppliers/info' WHERE KeysDataTemp='menuSupplierInfo';
+UPDATE SysConfigMenus SET RazorPath='/suppliers/list' WHERE KeysDataTemp='menuItemSupplierList';
+```
+
+### Open question for the user, not acted on
+`Services\KnownRoutes.cs`'s own existing comment already says the *current* sidebar-link resolution
+reads `KeysData` (decoded) and treats it as if it were the route directly — it does not appear to read
+`RazorPath` at all yet anywhere in `MenuRepository`/`NavMenuMud`. If `RazorPath` is meant to become the
+actual field the live navigation uses going forward (which would make sense of why it exists
+separately from `KeysData`), that's a separate, larger change to the menu-resolution code itself, not
+attempted this entry since it wasn't asked for — flagging it since otherwise these newly-filled-in
+`RazorPath` values won't yet have any visible effect on the running app's sidebar until something reads
+them.
+
+### Status
+Done for the 3 confirmed, pre-seeded rows. Will apply this same lookup-and-update step for every future
+screen going forward, per the new standing memory.
+
+## 2026-09-05 (later) — Correction: `RazorPath` must be stored encrypted, not plain text
+
+### What was asked
+User corrected the entry above: `RazorPath` must be written **encrypted**, using the exact same
+algorithm the app's own code uses for `KeysData` (`AccountModelsLib.EncryptProcess.encrypt`/
+`Common.EncryptMe`), not as a plain-text path.
+
+### What was done
+Read `AccountModelsLib\Common\EncryptionClass\EncryptProcess.cs` directly rather than guessing at the
+algorithm: `encrypt(string input)` shifts every character's Unicode code point by a fixed key,
+`keey = 12021542` — `encryptedText += (char)(int)(input[i] + keey)`, which truncates to the low 16 bits,
+i.e. effectively `(original_char + 12021542) % 65536`. Computed the correctly-encrypted value for each
+of the 3 paths just written (`/customers/list`, `/suppliers/info`, `/suppliers/list`) in a throwaway
+PowerShell script (not reimplemented casually inline — verified by **decrypting the result back** with
+the inverse shift and confirming it matches the original path exactly, for all three, before trusting
+any of it). Applied via `UPDATE ... SET RazorPath = NCHAR(28501)+NCHAR(28553)+...` (chained `NCHAR()`
+calls for each shifted code point) rather than passing the encrypted string as a literal through the
+shell/`sqlcmd`, since the shifted characters are mostly non-printable/private-use-area code points that
+would risk corruption through console/shell text encoding otherwise. Re-verified after writing by
+reading the raw stored bytes back out (`sys.fn_varbintohexstr(CONVERT(VARBINARY(MAX), RazorPath))`) and
+decrypting *those* in PowerShell — all three round-tripped to the exact original paths.
+
+Flagged, but **did not touch**: `menuItemCustomerGroup`/`menuItemSupplierGroup` (ids 367/379) still hold
+their `RazorPath` as **plain, unencrypted** text (`/customers/groups`/`/suppliers/groups`) from before
+this correction. Left alone deliberately — those predate this session's instruction and weren't asked
+about, so silently rewriting data the user may have set deliberately felt like overreach; flagging it
+for the user's own decision on whether to bring them in line with the new standard instead of assuming.
+
+Updated the `link-razorpath-in-sysconfigmenus` memory to include the encryption requirement and the
+exact algorithm, so future sessions don't repeat writing this column as plain text.
+
+### Status
+Done for the 3 rows from the previous entry, now correctly encrypted and round-trip verified. The two
+pre-existing plain-text `groups` rows are a known, flagged inconsistency awaiting the user's call.
+
+## 2026-09-05 (later) — Re-applied `RazorPath` for every built screen; caught and fixed a
+misattributed row along the way
+
+### What was asked
+"Re-apply the value of column `RazorPath` for all razor pages, rules applied" — redo the linking for
+every real, menu-tied Blazor screen built so far, following the now-locked-in rules (`KeysDataTemp`
+lookup only, `RazorPath` written encrypted, `KeysDataTemp` never written to).
+
+### A real mistake caught during re-verification
+Re-checking every row from scratch (rather than trusting the previous entry's results) surfaced a
+genuine error: **id 368's `KeysDataTemp` is `menuCustomerInfo`, not `menuItemCustomerLIST`** — a
+different row than the one I'd read it as during an earlier pass (its columns share the same width in
+`sqlcmd`'s default output, which made an earlier query's console rendering easy to misread). Because of
+that misread, id 368 had ended up holding the **wrong** encrypted value — `/customers/list` (meant for
+id 370, `menuItemCustomerLIST`) instead of `/customers/info` (the actual screen `menuCustomerInfo` opens,
+i.e. `CustomerInfo.razor`). Re-verified with `-w 300` (wide output) and by pulling raw hex via
+`sys.fn_varbintohexstr` instead of trusting the columnar display, which doesn't have this ambiguity.
+Corrected id 368 to the properly-encrypted `/customers/info`.
+
+### Full inventory, all now verified by decrypting the stored bytes back in a fresh PowerShell pass
+| Id | `KeysDataTemp` | Screen | `RazorPath` (decrypted, confirmed) |
+|---|---|---|---|
+| 367 | `menuItemCustomerGroup` | `CustomerGroupsList.razor` (customer mode) | `/customers/groups` (was plain text — now encrypted) |
+| 368 | `menuCustomerInfo` | `CustomerInfo.razor` | `/customers/info` (**was wrong** — corrected this entry) |
+| 370 | `menuItemCustomerLIST` | `CustomerSupplierDataList.razor` (customer mode) | `/customers/list` |
+| 379 | `menuItemSupplierGroup` | `CustomerGroupsList.razor` (supplier mode) | `/suppliers/groups` (was plain text — now encrypted) |
+| 380 | `menuSupplierInfo` | `SupplierInfo.razor` | `/suppliers/info` |
+| 382 | `menuItemSupplierList` | `CustomerSupplierDataList.razor` (supplier mode) | `/suppliers/list` |
+
+Confirmed via `SELECT ... WHERE RazorPath IS NOT NULL` that these are the **only** 6 populated rows in
+the whole table — nothing else was touched. Re-confirmed (again) that no row named anything
+`%Cars%`-like exists for `/customers/cars-list` — genuinely nothing to link there in this database.
+`KeysDataTemp` itself was never written to on any row, only read in `WHERE` clauses, throughout.
+
+### Status
+Done. All 6 real menu-linked screens built so far now have a correctly-encrypted, round-trip-verified
+`RazorPath`. The previous entry's mistaken write is corrected.
+
+---
+
+## Session: page-path breadcrumb + MDI-style closable tabs (all screens)
+
+### What was asked
+Two navigation UX requests: (1) every opened screen should show its full menu path at the top —
+"الوحدات المتاحة لك > بيانات أساسية > العملاء > بيانات العملاء" — so the user always knows where they
+are and can jump back to any ancestor level in one click; (2) opening more than one screen should behave
+like browser tabs: each open screen gets its own closable tab, switchable, without losing whatever the
+user was doing in the others.
+
+### Breadcrumb — `MenuBreadcrumb.razor`
+New component (`Components/Layout/MenuBreadcrumb.razor`), rendered once in `MainLayoutMud.razor` above
+`@Body`/the tab workspace, so it applies to every screen without per-page wiring. It rebuilds the chain
+from the *same* `SysConfigMenus` data the sidebar already uses (`MenuState.UserAllowedMenus`), via two
+new extension methods added to `MenuLocalization.cs` (kept in `AccountERP.SharedUI`, not
+`AccountModelsLib` — no changes made to the WinForms-shared logic library for this):
+- `FindMenuForRoute(relativePath)`: which menu row's `RazorPath`/`KeysData` (via `GetEffectiveRoute()`)
+  matches the current URL — prefix match (not exact), because parameterized screens like
+  `/customers/info/{CustomerId:long}` store only `/customers/info` in `RazorPath`.
+- `BuildAncestorPath(leaf)`: walks `ParentId` up to the root, reversed, so the leaf (current screen) is
+  last.
+Root segment ("الوحدات المتاحة لك") links to `/`. Middle ancestors link to `/?openMenu={Menu_ID}` —
+`Home.razor` now reads that via `[SupplyParameterFromQuery(Name = "openMenu")]` and rebuilds its own
+`_path` (the existing card-drilldown state) with `BuildAncestorPath`, so clicking an ancestor re-opens
+Home at exactly that level instead of always resetting to the top. The breadcrumb renders nothing on any
+route with no menu match (Home itself, login, change-password, about) — it's driven entirely by data, so
+a screen linked to `SysConfigMenus.RazorPath` in the future gets a working breadcrumb for free.
+
+### Tabs — real MDI-style, not just a visual history strip
+Deliberate design choice: tabs **keep each screen's live component instance alive** when you switch away
+and back (typed-but-unsaved fields, an expanded row, a half-finished search all survive), the same way
+WinForms MDI child windows behave — since that's the exact experience this whole modernization is
+replacing, a tab strip that silently reloaded/reset a screen on every switch would be a regression, not
+an upgrade.
+
+This requires **not** relying on the default `<Router>`/`<RouteView>`/`@Body` pipeline, which only ever
+keeps the *current* route's component alive and disposes it on navigation. Implementation:
+- **`RoutePageRegistry.cs`** (new): reflects over every `[Route]`/`@page` attribute in the SharedUI
+  assembly (same approach as `KnownRoutes.cs`) to build a (path template → page `Type`) table, and
+  `TryMatch(relativePath, ...)` does simple manual segment matching (literal segments + `{name}`/
+  `{name:long}`/`{name:int}`/`{name:bool}`/`{name:guid}`/`{name:double}`) to resolve a URL to a page
+  `Type` plus its route-parameter values — needed because we bypass `<RouteView>` entirely for tabbed
+  screens and must resolve/instantiate the page ourselves.
+- **`TabWorkspaceService.cs`** (new, Scoped): holds the open-tabs list (`Key`, `Title`, `Icon`,
+  `PageType`, route `Parameters`) and the active key. `OpenOrActivate`/`Activate`/`Close`/`CloseOthers`/
+  `CloseAll`/`Clear`. Capped at 12 open tabs (evicts the oldest *inactive* one) — each open tab is a live
+  component held in server memory for the whole Blazor Server circuit, so an unbounded cap would be a
+  real memory leak for a user who never closes anything.
+- **`TabHost.razor`** (new): renders `MudDynamicTabs` (`KeepPanelsAlive="true"` — the actual mechanism
+  that keeps every open tab's component alive when hidden) with one `<DynamicComponent Type="tab.PageType"
+  Parameters="tab.Parameters">` per open tab. **`@key="tab.Key"` on every `MudTabPanel` is load-bearing,
+  not decoration** — without it, Blazor's diffing can reuse a `DynamicComponent` instance positionally
+  when tabs are added/removed in the middle of the list, which would silently show one screen's state
+  under a different screen's tab.
+- **`MainLayoutMud.razor`** wiring: on every navigation (`OnLocationChanged`) and on first load, resolves
+  the current route via `RoutePageRegistry` — if it matches a real `@page` and isn't in the small
+  `NonTabbedPaths` exclude list (`""`, `login`, `about`, `change-password`, `notfound`, `error`,
+  `loading`), it opens/activates that tab (title/icon from the matching `SysConfigMenus` row via the same
+  `FindMenuForRoute` used by the breadcrumb) and renders `<TabHost />` instead of `@Body`; otherwise
+  `@Body` renders exactly as before. Excluded pages never become tabs — Home, Login, Change Password,
+  About stay singleton screens like today.
+- Clicking a tab header updates the browser URL (`NavigationManager.NavigateTo`) so the address bar always
+  matches the visibly active tab; closing a tab activates its neighbor (or Home if none remain); logging
+  out (`MainLayoutMud.LogoutClick`) calls `TabWorkspace.Clear()` so the next login on the same circuit
+  doesn't inherit the previous user's open screens.
+- `MudDynamicTabs`'s built-in "+" header button can't be hidden (`ShowAddTab="false"` did not remove it in
+  practice, and MudBlazor's own analyzer flags several of these attribute names as suspicious even for
+  properties confirmed to work by an actual build+run — the analyzer is unreliable here, not authoritative)
+  — rather than fight it, it's wired to `NavigationManager.NavigateTo("/")`, matching a real browser's
+  "+" (open something new) instead of being a dead button.
+- **Known cosmetic side-effect**: multiple tabs' pages can each contain their own `<PageTitle>`; since all
+  open tabs are mounted simultaneously (`KeepPanelsAlive`), the actual browser/OS tab title can reflect
+  whichever `<PageTitle>` last rendered rather than strictly the visually active one. Not fixed — the
+  in-app tab strip already shows the active screen's name, and this is a common, accepted trade-off of
+  any true keep-alive multi-tab UI (same class of issue as Gmail/most SPA "workspace" tab bars).
+
+---
+
+## Session: per-user UI settings (breadcrumb/tabs on-off) + advanced breadcrumb dropdown
+
+### What was asked
+(1) A settings icon in the top toolbar for the user's own account, opening a panel with two toggles —
+show/hide the breadcrumb, and enable/disable the whole MDI tab system (falling back to one screen at a
+time) — persisted to a **new** table, `USER_DETAILES_Setting`, extensible for future settings without
+schema changes. (2) An "advanced" breadcrumb: when a segment in the path has more than one possible next
+step, add a dropdown arrow next to it to jump directly to any of those, alongside the existing click-to-
+navigate behaviour.
+
+### `USER_DETAILES_Setting` — Key/Value, not one column per setting
+Created directly in `ClientNew` (`Id` IDENTITY PK, `User_Id`, `SettingKey`, `SettingValue`,
+`InsertServerDateTime`, `UpdateServerDateTime`, unique constraint on `(User_Id, SettingKey)`). Deliberately
+Key/Value rather than a fixed column per setting — the user explicitly asked for room to add more settings
+later; this way that never needs a schema change, only a new `UserSettingKeys` constant and a read/write of
+it. New `AccountModelsLib.UserSettingsCLS` (`Models/Config/UserSettings/UserSettingsCLS.cs`, same
+no-DI-constructor shape as the neighbouring `SysConfigMenusPERMATIONSCLS`) reads/writes it.
+
+### Why this loads through `MenuStateService.OnAuthChanged`, not `AuthService.cs`
+`AccountModelsLib.AuthService` (`PopulateSessionForUserAsync`) would be the natural place to load
+per-user settings right after login, matching how it already loads branches/menus there — but
+`AccountModelsLib` cannot depend on `AccountERP.SharedUI` (wrong direction; SharedUI depends on
+AccountModelsLib, never the reverse), so a Blazor-only `UserPreferencesService` can't be called from
+there. Instead, the new **`AccountERP.SharedUI.Services.UserPreferencesService`** (Scoped) hooks into the
+exact same `MenuStateService.OnAuthChanged` event `MainLayoutMud.razor` already uses to load/clear
+`UserAllowedMenus` — `Prefs.Load()` on authenticated, `Prefs.ResetToDefaults()` on logout — with no changes
+to `AuthService.cs` at all. `MainLayoutMud.OnInitializedAsync` also checks `MenuState.IsAuthenticated`
+directly (not just the event) to cover a session already authenticated by the time this component first
+mounts (fresh login on a separate `AuthLayout`, or a cookie-restored session).
+
+### Real bug found and fixed: `operations.insert_me` silently failed against an `IDENTITY` PK
+First implementation of `UserSettingsCLS.SaveUserSetting` used `opp.delete_me(...)`/`opp.insert_me(...)`
+(string-built SQL) like every other `*CLS` class in this codebase. Toggling a setting in the UI appeared
+to work instantly (the switch flipped, tabs disappeared/reappeared correctly for the rest of the session),
+but a fresh page load always came back to the defaults — the write was never actually landing.
+Root-caused by temporarily logging the exception `UserPreferencesService.TrySave`'s catch block was
+silently swallowing: `operations.insert_me` always routes every insert through `SetUpInsertCmd`, which —
+whenever `Common.Use_Auto_Identity_Column == 0` (its live value against `ClientNew`, even though `Common.
+cs`'s hardcoded field default is `1` and no `SysConfig` override row exists for it — the loader apparently
+still resolves it to 0 by some path not traced further here) — rewrites the INSERT to supply an explicit
+`Id` value via `MySqlParser.SmartEnsureIdInInsertCommandNew`. `USER_DETAILES_Setting.Id` is a genuine SQL
+Server `IDENTITY(1,1)` column, so every insert failed with "Cannot insert explicit value for identity
+column ... when IDENTITY_INSERT is set to OFF" — caught and discarded by the same best-effort try/catch
+that makes a failed save merely non-fatal for the current session (per this codebase's own convention),
+which is exactly why it never surfaced as a visible error.
+**Fix**: `SaveUserSetting` no longer calls `insert_me`/`delete_me` at all — it opens `opp.conn` directly
+(`opp.MyConn()` + `opp.conn.Open()`) and issues plain parameterized `SqlCommand`s for the delete-then-insert
+upsert, sidestepping `SetUpInsertCmd`'s identity-injection path entirely regardless of `Use_Auto_Identity_
+Column`'s value. Parameters also close the SQL-injection surface `SettingValue` would otherwise have opened
+once it starts holding free-form values for future settings (today's two keys are just `"true"`/`"false"`).
+Verified by toggling in a real browser, confirming the row with `sqlcmd`, then reloading the page (a fresh
+Blazor Server circuit) and confirming the toggle came back exactly as saved.
+
+### Settings icon + panel — `UserSettingsMenu.razor`
+New slide-in panel, structurally identical to the existing `ThemesMenu.razor` (fixed-position overlay +
+panel, not `MudDrawer`/`MudOverlay` — see that file's own comment for why: `MudDrawer` assumes it's a
+direct `MudLayout` child and silently mispositions itself off-screen on mobile otherwise). Two `MudSwitch`
+toggles (`ShowBreadcrumb`, `ShowTabs`), auto-applying and auto-saving on change (no separate Save button),
+matching `ThemesMenu`'s own "flip it and it's already saved" interaction. New gear icon
+(`Icons.Material.Outlined.Settings`) added to `MainLayoutMud`'s `MudAppBar`, gated on `MenuState.
+IsAuthenticated` (not `IsLoaded` like the rest of that action row) so a logged-in user with zero permitted
+menus can still reach their own settings.
+
+### Wiring `ShowTabs`/`ShowBreadcrumb` into the existing tab/breadcrumb system
+- `MenuBreadcrumb`: wrapped in `@if (Prefs.ShowBreadcrumb)` in `MainLayoutMud.razor` — no changes inside
+  the component itself.
+- `ShowTabs`: `MainLayoutMud.UpdateWorkspaceForCurrentRoute` now short-circuits to `_showTabWorkspace =
+  false` immediately when `!Prefs.ShowTabs`, before even trying to match the route — every screen renders
+  through plain `@Body` exactly like `NonTabbedPaths` already do, i.e. genuinely single-screen, not just a
+  hidden tab strip. Turning it **off** also calls `TabWorkspace.Clear()` immediately (via a new
+  `OnPrefsChanged` handler subscribed to `Prefs.OnChanged`) — no reason to keep every previously-open tab's
+  component alive in server memory once the feature that displays them is off.
+
+### Advanced breadcrumb — and a real bug in the first version, caught by direct user testing
+First implementation gave every breadcrumb segment (root, every ancestor, the leaf) a dropdown of its
+**siblings** (other items sharing its own `ParentId`) — e.g. the arrow next to "الموردين" opened the other
+groups under "بيانات أساسية" (نفس مستوى الموردين). The user tried it immediately and reported the actual
+expectation directly: the arrow next to "الموردين" should open **الموردين's own sub-menus** (مجموعات
+الموردين / بيانات الموردين / قائمة الموردين / ...), not its siblings one level up. Corrected
+`MenuBreadcrumb.razor`'s `GetSiblingsOf` → `GetChildrenOf` (`ParentId == node.Menu_ID` instead of `ParentId
+== node.ParentId`) — every segment's arrow now shows what's directly *under* it, which is both what was
+asked for and the more standard "breadcrumb drill-down" pattern (VS Code's own breadcrumb dropdowns work
+the same way: each segment's arrow lists its own children, not its neighbours). The root segment
+("الوحدات المتاحة لك") is the one special case — its "children" are the top-level modules themselves
+(`ParentId == 0`), since there's no real `MenuViewModel` to represent the root. A segment with no children
+(normally the current screen itself) simply gets no arrow. Clicking a child drills into Home at that level
+(`/?openMenu=...`) if it has further children of its own, otherwise navigates straight to its screen (or
+shows "coming soon" if unbuilt) — same `GoToMenuItem` logic the plain-click behaviour already used.
+Verified via direct DOM inspection (not just visually) after the fix: the arrow next to "الموردين" on the
+`بيانات الموردين` screen now lists exactly `مجموعات الموردين`, `بيانات الموردين`, `قائمة بيانات الموردين`,
+`طباعة كشف بيانات الموردين` — and clicking `قائمة بيانات الموردين` navigates there correctly.
+
+### Mirrored to `AccountERP.MobileDesktop`
+`UserPreferencesService` registered as Scoped in `MauiProgram.cs`, matching `AccountERP.Web\Program.cs`.
+Everything else lives in the shared `AccountERP.SharedUI` library.
+
+### Icon de-duplication
+`MenuNode.razor`'s leaf-icon keyword table (`LeafIconMap`/`GetLeafIcon`) was about to be needed a third
+time (tabs also want an icon), so it was pulled out into a new shared static class, **`MenuIcons.cs`**
+(`Services/MenuIcons.cs`) — `MenuNode.razor` and `MainLayoutMud.razor`/`TabHost` now both call
+`MenuIcons.GetLeafIcon(...)` instead of each keeping its own copy of the same keyword table.
+
+### Cleanup done alongside this (now that `RazorPath` population is verified complete)
+Removed the `LabelWithId` TEMP/DEBUG helper from both `NavMenuMud.razor` and `MenuNode.razor` (was
+appending `(#Menu_ID)` to every sidebar label to make `SysConfigMenus.Id` easy to read off while manually
+populating `RazorPath` — see the RazorPath sessions above). Both files now call
+`menu.GetLocalizedDescription(...)` directly again, per the TODO already left in that code.
+
+### Mirrored to `AccountERP.MobileDesktop`
+`TabWorkspaceService` registered as Scoped in `MauiProgram.cs` (same as `AccountERP.Web\Program.cs`) —
+everything else (the new components/services) lives in the shared `AccountERP.SharedUI` library so no
+other MobileDesktop-specific change was needed.
+
+### Verified
+`dotnet build` on `AccountERP.Web.csproj` — 0 errors (confirmed the `MudDynamicTabs`/`MudTabPanel` API
+surface used here — `KeepPanelsAlive`, `CloseTab` as `EventCallback<MudTabPanel>`, `ActivePanelIndex`/
+`ActivePanelIndexChanged`, `RightToLeft`, `PanelClass`, `AddTab` — actually exists and compiles, despite
+MudBlazor's own MUD0002 analyzer flagging several of these same attributes as "illegal" both here and on
+pre-existing, already-shipped code elsewhere in this project — treated as analyzer noise, not a real
+signal, per the build result).
+
+Ran the app end-to-end in a real browser logged in as `admin`/`123`, using actual in-page clicks (not the
+test tool's URL-navigate, which turned out to force a full page reload/new Blazor Server circuit each
+time — useless for testing anything that depends on staying in the same circuit, like open tabs):
+- Drilling into a screen from Home's own cards (`بيانات أساسية` → `العملاء` → `بيانات العملاء`) shows the
+  exact requested breadcrumb — "🏠 الوحدات المتاحة لك ‹ بيانات أساسية ‹ العملاء ‹ بيانات العملاء" — and
+  opens it as its own closable tab **alongside** the already-open `الرئيسية` tab (not replacing it).
+- **State genuinely survives switching tabs**: opened "new customer", typed a name, switched to the
+  `الرئيسية` tab and back — the typed name was still in the field. Confirms `KeepPanelsAlive` is doing its
+  job, i.e. this is real MDI-style behavior and not just a navigation-history strip.
+- Closing a tab correctly activates its neighbor and that neighbor's own state (Home's drilled-down card
+  level, in this test) was untouched.
+- Clicking a **middle breadcrumb ancestor** (e.g. `العملاء`, which links to `/?openMenu=366`) correctly
+  reopens Home drilled into exactly that level — worth calling out because it wasn't obvious this would
+  work: Home is rendered through `<DynamicComponent>` (bypassing `<RouteView>`) once it's part of the tab
+  system, and `[SupplyParameterFromQuery]` binding is normally understood to be `RouteView`-specific
+  machinery. It turned out to still fire correctly on query-string changes even through
+  `DynamicComponent`, so no extra plumbing was needed for this to work.
+
+### One real gap found and fixed mid-session: Home needs to be *in* the tab system
+Original design excluded `""` (Home) from `NonTabbedPaths`, on the reasoning that Home already has its
+own internal drilldown/breadcrumb and isn't really an "opened screen". In testing this produced a real
+UX hole: navigating to Home rendered it via plain `@Body` with **no tab strip visible at all**, so any
+other screens already open in tabs became completely unreachable until you manually re-typed/re-clicked
+back into one of their routes. Fixed by removing `""` from `NonTabbedPaths` — Home now participates in
+the exact same tab system as every other screen (with a fixed title/icon, since it has no `SysConfigMenus`
+row of its own to read a title from), so it's simply tab #1, and the tab strip — and every other open
+tab — stays reachable regardless of which screen is currently active.
+
+That introduced one edge case: closing the very last open tab (Home) while already on `/` doesn't fire
+`NavigationManager.LocationChanged` (same-URI navigation is a no-op in Blazor), so `MainLayoutMud`'s
+`_showTabWorkspace` flag wouldn't otherwise get a chance to re-evaluate and fall back to `@Body`, leaving
+a blank content area. Fixed two ways together: (1) `MainLayoutMud` now also subscribes directly to
+`TabWorkspace.OnChanged` (not just `NavigationManager.LocationChanged`) so it re-renders the instant the
+tab list changes for any reason; (2) the render condition became `_showTabWorkspace && TabWorkspace.Tabs.
+Count > 0` (not just the route match) — falls back to plain `@Body` for that current route whenever no
+tabs remain, rather than an empty tab strip.
+
+---
+
+## Session: شجرة الحسابات (Chart of Accounts Tree) — `/accounts/tree`
+
+### What was asked
+Read and understand the WinForms "شجرة الحسابات" screen (tree of the five root categories — أصول/خصوم/
+حقوق ملكية/مصروفات/إيرادات — with sub-accounts underneath; clicking an account shows all its data; adding
+a new account happens from a separate screen), then build the Blazor equivalent.
+
+### Ground truth (WinForms source, via a dedicated research pass)
+Real screen: `Account_Common_LIB\Account_Common\Account_Tree_Codes\Account_Tree_CodesFrm.cs`
+(`menuAccountsTree_Click` in `MainFrm_AccountUpdate.cs`, `SysConfigMenus.KeysDataTemp = "menuAccountsTree"`,
+`Id=409`, `Parent_Id=399`). Table: `Submain_Account`, self-referencing chart of accounts (`Main_Account_Id`
+→ `Id`, exactly the same "flat list + `ParentId`" shape already used for the sidebar's `MenuViewModel` —
+root accounts have `Main_Account_Id = 0`, and the five roots are literally `Head_Main_Account` 1
+(Assets)/2 (Liabilities)/3 (Equity)/4/5 (Expense and Revenue, per `AccountsTree.Get_SubMain_Account_
+WithFirstBalance` using 1-2-3 as one group and `...ToSetCostCenter` using 4-5 as the other — the individual
+4-vs-5 Expense/Revenue label itself lives only in `Account_Type` table data, not as a code constant).
+Business logic reused as-is (no new logic written, matching the pinned reuse rule):
+- **Tree/detail data**: `AccountModelsLib.AccountsTree.Get_SubMain_Account(ref Excp, Branch_Id)` — one
+  query returns the whole branch's tree as a flat, self-joined `DataTable` (parent name/code already
+  joined in), converted client-side into a real hierarchy by a new `AccountTreeNodeViewModel.BuildTree`
+  (same pattern as `MenuViewModel`'s tree-building).
+- **Add**: `Add_Account_CodesCLS.AddNewAccount(ref Excp, ref Msg, sa, ref Submain_Account_Id, ref Account_
+  Branch_Id, ref New__Submain_Account_No, IS_Have_Child_Account)` — the exact call the WinForms `Add_
+  Account_Codes` dialog's Save button makes. Next code auto-generated the same way the dialog does, via
+  `Common.MakeAutomatic_AccontCode(...)`.
+- **Edit**: `Add_Account_CodesCLS.EditAccount(ref Excp, ref Msg, sa)` — same call `BtnEdit_Click` makes.
+- **Delete (single)**: `Sub_Account.Delete_Account(ref Excp, ref Msg, SubAccount_Id)` — this internally
+  enforces the WinForms screen's own two safety rules unchanged: refuses to delete an account that has
+  sub-accounts, and refuses to delete one already used in journal entries.
+- **Delete (direct children)**: `Sub_Account.Delete_AllSubAccount(ref Excp, ref Msg, sa)` — matches `BtnDeletAllSub_Click` exactly, **including** that it only deletes *direct* children, not the whole
+  subtree recursively (that's the original's own behaviour, not a simplification made here).
+- **Re-code**: `Submain_AccountCLS.MakeSubNewCode`/`MakeSubNewCode_ALLCHILDE` — direct children only /
+  whole subtree recursively, matching `BtnMakeNewCode_Click`/`BtnMakeNewCodeAll_Click` (the "All" variant
+  stays gated on `Common.Is_User_Admin == 1`, same as the original button's visibility).
+
+**Deliberately deferred** (flagged, not built): "Add Main Account" (new root category — admin-only, needs
+`NewMainAccount` form not covered by the research pass, and in practice never used since the 5 categories
+already exist), "New Position" / re-parent a node (`Sub_Account.Edit_AccountsPosition` is confirmed **broken
+in the WinForms source itself** — it references a non-existent `SubAccount_Id` column and the wrong record's
+`Id`, so this button already silently no-ops upstream), and the print-tree report (`Submain_AccountPrintFrm`
+— reporting screens are consistently deferred across this whole modernization).
+
+### Pages built
+- **`Pages/Accounts/AccountsTreeList.razor`** (`/accounts/tree`) — branch selector, `MudTreeView` (branch's
+  whole tree loaded once per branch switch), and a right-hand detail panel that's always directly editable
+  once a node is selected (no separate view/edit mode — matches the WinForms screen's own UX exactly: the
+  same fields double as both display and the edit form). Save/Delete/Delete-children/Re-code/Re-code-all
+  buttons under it.
+- **`Components/Shared/AddAccountDialog.razor`** — the "شاشة مستقلة" (separate screen) the user asked for.
+  Modelled as a `MudDialog` (matching this codebase's existing `CustomerGroupsList.razor` "add" pattern),
+  which is the closest Blazor equivalent of the original's `Add_Account_Codes.ShowDialog()` — genuinely
+  modal/independent, just not a second browser tab/route (a full route+tab felt like the wrong weight for
+  a small, parent-scoped add form, and would complicate passing the selected tree node as context).
+- **`ViewModels/AccountTreeNodeViewModel.cs`** — typed wrapper + `BuildTree(DataTable)` for the flat
+  `Get_SubMain_Account` result; **not** a replacement for the real `Submain_Account` entity — every
+  write still goes through `Submain_AccountCLS.sb` (the actual EF entity), this type is display-only.
+- **`Services/AccountLookups.cs`** — the three *hardcoded* (no DB query) pickers the original UserControls
+  use verbatim: `Account_Follows` (5 values, from `Account_Common_LIB.Account_Common.Account_Follows.cs`
+  specifically — **not** the other `connectionit\Account_Common\Account_Follows.cs` copy, which the research
+  pass found has only 4 entries and is out of sync), `Account_CashFlowType` (4 values), `FirstAccountCoding`
+  /numbering-width picker (4 values). `Account_Type` itself stays a real DB lookup (`SELECT * FROM Account_
+  Type WHERE Active=1 ORDER BY Value`, matching `Account_TypeUSR.Get_Data`) since it's genuinely
+  per-installation data, not a fixed list.
+- Linked `SysConfigMenus.RazorPath` for `Id=409` (`menuAccountsTree`) → `/accounts/tree`, encrypted the
+  same way as every other screen this session, verified by decrypting the stored value back.
+
+### Two real bugs found and fixed while testing the Add flow live (not upstream WinForms bugs — both are
+### specific to how this new Blazor code calls into the existing, unmodified `AccountModelsLib` logic)
+
+**1. A second, much bigger occurrence of the culture-propagation bug already root-caused earlier this
+project (see the "Culture/date-formatting" entry above) — this time it silently blocked every single
+"Add Account" attempt.** Every add failed with "هذا الحساب موجود من قبل" ("this account already exists")
+even for a definitely-new account. Root-caused by temporarily logging the exception `Sub_Account.Check_
+SubAccount_ID_Found`'s catch block was swallowing: the query `"...Where Id=" + SubAccount_ID + "..."`
+(`SubAccount_ID` is `-1` for any new account) was actually executing as `"...Where Id=  ‎-1 And..."` — note
+the invisible character before the minus sign. **`(-1).ToString()` under Arabic culture (`ar-EG`) inserts a
+Unicode Arabic Letter Mark (U+061C) around the negative sign** (a real, documented .NET/ICU behaviour for
+bidi-correct rendering of negative numbers in RTL locales) — so the raw SQL silently became invalid, the
+query threw, and the catch-all `catch { Excp = 1; return true; }` turned that into a false "found" result.
+This is the exact same class of bug as the earlier date-formatting one (`CultureInfo.CurrentCulture`
+leaking into `Task.Run`-executed DAL code that string-concatenates values straight into SQL), just
+triggered by a negative integer instead of a date. **This time it was actually fixed**, in two layers:
+  - `LanguageService.ApplyToCurrentThread()` no longer touches `CurrentCulture`/`DefaultThreadCurrentCulture`
+    at all *and* now actively forces both to `CultureInfo.InvariantCulture` on every call (merely refraining
+    from setting them to the UI language wasn't enough — traced and confirmed via a live debug trace that
+    `CurrentCulture` was still `ar-EG` afterward, meaning something else, almost certainly `app.
+    UseRequestLocalization(...)` in `Program.cs` reacting to the HTTP request that establishes the Blazor
+    Server circuit, sets it once and it then persists for that circuit's entire lifetime regardless of
+    per-render culture handling). Only `CurrentUICulture`/`DefaultThreadCurrentUICulture` are still set to
+    the chosen UI language — that's the only pair `IStringLocalizer` (`Lang[...]`) actually reads.
+  - Belt-and-braces for this specific screen: a new tiny `Services/AccountCultureGuard.EnsureInvariant()`
+    is called as the first line of every `Task.Run` in `AccountsTreeList.razor`/`AddAccountDialog.razor`
+    that builds/executes raw SQL through `AccountModelsLib`, so this screen's correctness doesn't depend on
+    `LanguageService`'s fix alone or on render-ordering assumptions elsewhere in the app.
+  - **This is a solution-wide risk, not something fully closed out by this session** — any other Blazor
+    screen's `Task.Run` that string-concatenates a *negative* number (or a date, per the earlier entry)
+    into raw SQL while Arabic is the active UI language is exposed to the same failure mode. The
+    `LanguageService` fix helps broadly, but wasn't re-verified against every other screen already built
+    this project; flagging for awareness rather than claiming it's been swept for every call site.
+- **2. `Submain_AccountCLS.UpdateSubmain_Account` broke on Edit with "Incorrect syntax near ','."** —
+  unrelated to culture: `Cost_Center_Tree_Id` is `long?` on the real entity, `AccountTreeNodeViewModel`
+  never carried that column at all, so it was always `null` when read back from `Task.Run`'s edit path —
+  and `null.ToString()` in the middle of that method's string-concatenated `UPDATE` statement (`"...Cost_
+  Center_Tree_ID=  " + sb.Cost_Center_Tree_Id + " ,..."`) produces an empty segment, `"...=  ,..."`, which
+  is invalid SQL. Fixed by adding `Cost_Center_Tree_Id` (and reading it from the query result) to
+  `AccountTreeNodeViewModel`, and defensively coalescing `Currency_Id`/`Account_Customer_Type_ID` (also
+  nullable on the real entity) to `0` in `SaveEditAsync` in case an older/legacy account has either as
+  genuinely `NULL` in the database.
+
+### Verified live (real DB, `admin`/`123`, not just build success)
+Seeded one missing lookup row this database had none of at all (`Currency` table was completely empty —
+inserted a single "جنيه مصري"/EGP row, `Value=1`, matching the meaning `Sub_Account.Delete_Currency`'s own
+hardcoded check for `Value == "1"` already assumes; this is seed data any real deployment needs regardless
+of this feature, not test debris). Then, in a real browser: opened `/accounts/tree` from the sidebar link
+(confirming the `RazorPath` linking works end-to-end), selected "الأصول", added a new leaf account under it
+("1-6" — the auto-generated code matched the existing children 1-1..1-5 exactly), edited its name, and
+deleted it again — verified the row's presence/absence directly in `Submain_Account` via `sqlcmd` at each
+step, confirming the original five root accounts (`1-1`..`1-5`) were never touched by any of this testing.
+
+### Mirrored to `AccountERP.MobileDesktop`
+Nothing project/DI-specific to mirror — every new file lives in the shared `AccountERP.SharedUI` library
+(including the `LanguageService` culture fix), so it applies to the MAUI app automatically.
+
+---
+
+## شجرة الحسابات — الجولة الثانية: توسيع/طي/بحث/تخطيط السكرول + مكوّن شجرة قابل لإعادة الاستخدام + "موضع جديد"
+
+طلب المستخدم صراحةً، على شاشة `/accounts/tree` الموجودة بالفعل: (1) زرّان "توسيع الكل"/"طي الكل"، (2) خطوط
+رأسية فى الشجرة توضح مستوى كل حساب، (3) خانة بحث بالاسم أعلى الشجرة تحدّد الحساب وتكشفه فى الشجرة عند
+اختياره (تقابل `Set_Selected_Node_From_Grid`/`FindByTag` فى الويندوز فورمز)، (4) بعدها فى نفس المحادثة: زر
+"موضع جديد" (نافذة منبثقة بها نفس الشجرة+البحث، اختيار حساب منها يجعله أباً جديداً للحساب المحدد) — مع ملاحظة
+المستخدم أن هذه الشجرة+البحث هى بالضبط ما يحتاجه أي شاشة أخرى (كالقيود) تريد اختيار حساب، تماماً كما
+`Connection4It.AccountTreeViewUSCTRL` نفسه UserControl واحد يُستخدَم فى أكثر من شاشة بالويندوز فورمز — ثم،
+أثناء اختبار هذا حياً، طلب المستخدم أيضاً: تخطيط سكرول مختلف بالكامل (الشجرة تملأ الشاشة، السكرول داخلها فقط،
+لوحة بيانات الحساب لا تختفي أبداً، صفّ الأزرار+البحث يُسمح له بالاختفاء ضمن سكرول الشجرة، زرّ عائم "عودة لأعلى
+الشجرة").
+
+### الملفات الجديدة/المعدَّلة
+- **[`AccountTreePicker.razor`](AccountERP.SharedUI/Components/Shared/AccountTreePicker.razor)** (جديد) —
+  المكوّن القابل لإعادة الاستخدام: يحمّل شجرته بنفسه (`AccountsTree.Get_SubMain_Account` لكل `BranchId`)، يعرض
+  توسيع/طي الكل + بحث + الشجرة نفسها، ولا يفترض شيئاً عن المستخدِم له (عرض+اختيار فقط، لا حفظ/حذف). يكشف
+  `SelectedValue`/`SelectedValueChanged` (ثنائي الاتجاه) و`BranchId` كمعاملات، وميثودز عامة عبر `@ref`:
+  `ReloadAsync()`، `SelectAndRevealAsync(id)`، `ExpandAncestors(node)` — يستخدمها كل من `AccountsTreeList.razor`
+  (الشاشة الرئيسية) و`MoveAccountDialog.razor` (نفس المكوّن، نسخة ثانية منفصلة، وليس نفس الـ instance).
+- **[`AccountsTreeList.razor`](AccountERP.SharedUI/Pages/Accounts/AccountsTreeList.razor)** (مُعاد هيكلته) —
+  أُزيل كل منطق الشجرة المكرَّر (بناء `TreeItemData`، البحث، التوسيع/الطي، `FindNode`/`SelectNodeById`) واستُبدل
+  باستدعاء `<AccountTreePicker @ref="_treePicker" .../>` وحيد؛ كل مكان كان يستدعي `LoadTreeAsync()+SelectNodeById(id)`
+  بعد Add/Edit/Delete/Recode يستدعي الآن `_treePicker.ReloadAsync()` ثم `_treePicker.SelectAndRevealAsync(id)`.
+  أُضيف أيضاً زر "موضع جديد" (`MoveAccountButton`) بجوار "إعادة تكويد الكل"، و`<MoveAccountDialog>` بنفس نمط
+  `<AddAccountDialog>` الموجود أصلاً (`@bind-Visible`).
+- **[`MoveAccountDialog.razor`](AccountERP.SharedUI/Components/Shared/MoveAccountDialog.razor)** (جديد) — مودال
+  "موضع جديد": يستضيف `<AccountTreePicker>` لاختيار الأب الجديد، يتحقق أن الهدف ليس نفس الحساب ولا فارغاً، ثم
+  يستدعي `Sub_Account.Move_Account` الجديدة (وليس `Submain_AccountCLS.Edit_AccountsPosition` — انظر أدناه).
+- **[`Sub_Account.cs`](../AccountModelsLib/Models/Account_Entry/Submain_Account/Sub_Account.cs)** — أُضيفت
+  ميثود جديدة **`Move_Account(ref Excp, ref Msg, SubAccount_Id, NewMain_Account_Id)`** بجوار
+  `Delete_Account`/`Delete_AllSubAccount` الموجودتين (نفس الكلاس الذى تستدعيه شاشات الحسابات دائماً).
+  **قرار متعمَّد ومُعلَن بشفافية للمستخدم: لم تُستدعَ `Submain_AccountCLS.Edit_AccountsPosition` الأصلية** —
+  تلك الدالة معطوبة فعلياً فى شفرة WinForms نفسها (مؤكَّد بالقراءة): `WHERE (SubAccount_Id = " + sb.Id + ")` —
+  `SubAccount_Id` اسم عمود غير موجود إطلاقاً فى جدول `Submain_Account` (العمود الحقيقى هو `Id`)، وتستخدم `sb.Id`
+  (حقل ثابت على الكلاس) بدل معامل `SubAccount_Id` المُمرَّر فعلياً للدالة، وتبتلع أي استثناء بصمت بلا `Msg`
+  إطلاقاً. استدعاؤها كما هى كان سيُسلّم زراً لا يعمل أبداً - يخالف الطلب الصريح بأن الميزة يجب أن تعمل فعلياً.
+  الدالة الجديدة تنفّذ نفس النيّة بشكل صحيح، وتضيف ما هو ضروري لسلامة البيانات (لم يكن موجوداً فى الأصل أصلاً):
+  1. رفض جعل الحساب أباً لنفسه أو نقله داخل أحد فروعه (فحص دورة عبر تتبّع `Main_Account_Id` صعوداً من الهدف).
+  2. تحديث `Head_Main_Account` ليطابق تصنيف الأب الجديد (أصول/خصوم/حقوق ملكية/مصروفات/إيرادات) - وإلا بقي
+     الحساب مصنَّفاً تحت فئته القديمة فى القوائم المالية رغم انتقاله شجرياً (بالضبط نفس نوع الخطر المرصود فى
+     تدقيق اكتمال بيانات الحسابات أدناه).
+  3. إعادة تكويد الحساب نفسه تحت أبيه الجديد عبر **نفس** `Common.MakeAutomatic_AccontCode` المستخدَم بالضبط
+     عند إضافة حساب جديد (`AddAccountDialog.razor`)، ثم إعادة تكويد كل شجرته الفرعية بالكامل عبر
+     `Submain_AccountCLS.MakeSubNewCode_ALLCHILDE` الموجودة أصلاً (نفس منطق زر "إعادة تكويد الكل") - وإلا بقيت
+     أكواد أبنائه/أحفاده تحمل بادئة الكود القديم وهى الآن منتقلة تحت أب مختلف تماماً.
+  كل الاستدعاءات الثلاثة (`Common.MakeAutomatic_AccontCode`، `Submain_AccountCLS.MakeSubNewCode_ALLCHILDE`،
+  `opp.return_DataTable`/`insert_me`) هى نفسها الموجودة أصلاً فى `AccountModelsLib` — الجديد هنا هو **تركيبها**
+  فى تسلسل صحيح لعملية "نقل"، وليس منطق أعمال جديد من الصفر.
+- **`interop.js`** — أُضيفت `accountErpInterop.scrollElementToTop(el)` (بنفس اتفاقية `accountErpInterop.*`
+  الموجودة أصلاً لـ `setDirection`/`persistCultureCookie`/... إلخ) لتنفيذ السكرول السلس لأعلى الشجرة.
+- **ملفات الترجمة الأربعة** (`SharedUIAssemblyMarker.{ar,en,fr,de}.resx`) — مفاتيح جديدة: `ExpandAllAccounts`،
+  `CollapseAllAccounts`، `SearchAccountLabel`، `SearchAccountPlaceholder`، `ScrollTreeToTop`،
+  `MoveAccountButton`/`MoveAccountTitle`/`MoveAccountInstructions`/`MoveAccountCurrentLabel`/
+  `MoveAccountNewParentLabel`/`MoveAccountSelfError`/`MoveAccountDescendantError`/`MoveAccountSelectTarget`/
+  `MoveAccountSaveButton` — fr/de بنفس اتفاقية `<comment>TODO: translate to French/German</comment>` المتّبعة
+  أصلاً فى هذا الملف.
+
+### تخطيط السكرول (بطلب المستخدم صراحة، مختلف تماماً عن التصميم الأول)
+`AccountsTreeList.razor`: `MudContainer` نفسه أصبح `display:flex; flex-direction:column; height:calc(100vh -
+100px);` — رأس الشاشة (العنوان+الفرع+زر الإضافة) `flex:0 0 auto`، و`MudGrid` الحاوي للعمودين `flex:1 1 auto;
+min-height:0;` بحيث يأخذ كل الارتفاع المتبقي؛ كل عمود (`MudItem`) `height:100%` وباطنه (`MudPaper`) `height:100%`
+مع `overflow:hidden` للشجرة و`overflow-y:auto` للوحة بيانات الحساب (سكرول داخلي مستقل لو طال المحتوى، لكن لا
+يختفي أبداً). القيمة `100px` فى `calc()` تقريبية (قِيست تجريبياً فى المتصفح لتناسب شريط التطبيق العلوي + هوامش
+الحاوية) - قد تحتاج ضبطاً طفيفاً لو تغيّر ارتفاع شريط التطبيق مستقبلاً.
+
+داخل `AccountTreePicker.razor` نفسه: صفّ الأزرار+البحث موضوع **عمداً داخل** حاوية السكرول (`.account-tree-scroll`،
+`flex:1 1 auto; min-height:0; overflow-y:auto;`) وليس مثبَّتاً خارجها - هذا **مقصود صراحة بطلب المستخدم**: عند
+النزول لأسفل الشجرة يختفي ذلك الصفّ ضمن السكرول العادي، وعند الصعود لأعلى الشجرة يظهر من جديد تلقائياً (سلوك
+تدفّق طبيعي، بلا أي JS تتبّع سكرول). الزر العائم "العودة لأعلى الشجرة" (`.account-tree-scrolltop-fab`) موضوع
+خارج حاوية السكرول (`position:absolute` نسبةً لجذر المكوّن الذى هو `position:relative`) فيبقى ظاهراً دائماً
+بصرف النظر عن موضع السكرول، ويستدعي `accountErpInterop.scrollElementToTop` عبر `ElementReference` على حاوية
+السكرول. لم تُضَف شرط ظهور بحسب مقدار السكرول (يظهر دائماً بمجرد وجود حسابات) - تبسيط متعمَّد لتفادي تعقيد
+تتبّع حدث `scroll` عبر JS interop إضافي لعائد محدود.
+
+### 🐛 خطأ حقيقي وُجد وأُصلح: أزرار "توسيع الكل"/"طي الكل"/الكشف عن الآباء لم تكن تعمل فعلياً
+`ItemTemplate` الخاص بـ `MudTreeView` كان يمرّر `Value`/`Items`/`Icon`/`Text` فقط لكل `MudTreeViewItem`، بدون
+ربط `Expanded`. النتيجة: `MudTreeViewItem` يهيّئ حالة توسيعه الداخلية **مرة واحدة فقط** من القيمة الابتدائية
+عند أول عرض، ثم **يتجاهل تماماً** أي تعديل لاحق يقع مباشرة على خاصية `TreeItemData.Expanded` من الخارج - أي أن
+`ExpandAll()`/`CollapseAll()`/`ExpandAncestors()` كانت تُعدّل الحقل بشكل صحيح فى الكود (تأكَّدنا من ذلك مباشرة
+عبر فحص الـ DOM حياً) لكن بلا أي أثر مرئي إطلاقاً - الأزرار كانت تبدو معطوبة تماماً رغم أن منطقها الداخلي سليم.
+**الإصلاح:** إضافة `@bind-Expanded="context.Expanded"` صراحة على `<MudTreeViewItem>` داخل الـ `ItemTemplate` -
+هذا يجعل توسيع/طي أي عقدة (سواء يدوياً بالنقر، أو برمجياً عبر توسيع الكل/البحث) يُزامَن ثنائي الاتجاه مع
+`TreeItemData.Expanded` الفعلية. **هذا الدرس ينطبق على أي `MudTreeView` مستقبلي فى هذا المشروع يستخدم
+`ItemTemplate` مخصَّصاً بدل القالب الافتراضي:** لازم ربط `Expanded` صراحة، لا يكفي الاعتماد على القيمة
+الابتدائية وحدها.
+
+### التحقق الحي (قاعدة بيانات حقيقية، ليس فقط نجاح البناء)
+عبر المتصفح فعلياً على `/accounts/tree`: توسيع الكل ثم طي الكل يعملان على الشجرة كاملة (306 حساب، حتى العمق
+الرابع)؛ الخطوط الرأسية تظهر بمحاذاة صحيحة مع كل مستوى؛ البحث عن "صندوق" يعرض نتيجتين مطابقتين ("حساب الصندوق"
+و"صندوق فودافون")، واختيار إحداهما يفتح كل آباء العقدة ويحدّدها ويملأ لوحة البيانات - بالضبط كسلوك الويندوز
+فورمز الأصلي. تخطيط السكرول الجديد: تأكَّدنا بقياس DOM حي (`scrollHeight` vs `clientHeight`) أن حاوية الشجرة
+تفيض فعلياً (12514px داخل صندوق 500px) وأن التمرير داخلها لا يحرّك صفحة الويب كلها، وأن لوحة بيانات الحساب تبقى
+ظاهرة طوال الوقت. **اختبار "موضع جديد" كاملاً:** اختير حساب "1-1-1-1 اراضي" (تحت "الأصول الثابتة")، فُتح مودال
+"موضع جديد"، اختير "2 الخصوم" كأب جديد عبر الشجرة داخل المودال - تأكَّد التنفيذ: الحساب انتقل فعلياً وأصبح كوده
+"2-6" (تالي كود متاح تحت الأب الجديد، صحيح)، مستوى الحساب أصبح 2 (بدل 4)، وبقيت خصائصه الأخرى (الاسم، العملة،
+طبيعة الحساب) دون تغيير كما هو متوقَّع. **ثم أُعيد الحساب فوراً إلى موضعه الأصلي** (نفس الأداة، اختيار "1-1-1"
+كأب) للتأكد أن حالة القاعدة الحقيقية لم تتأثر بهذا الاختبار - تأكَّد الرجوع للكود/المستوى الأصليين بالضبط.
+
+### مُرحَّل إلى `AccountERP.MobileDesktop`
+لا شيء خاص بالمشروع/DI يحتاج ترحيلاً يدوياً - كل الملفات الجديدة (`AccountTreePicker.razor`،
+`MoveAccountDialog.razor`، إضافة `Sub_Account.Move_Account`، تعديل `interop.js`) تعيش فى المكتبة المشتركة
+`AccountERP.SharedUI`/`AccountModelsLib` فتنطبق تلقائياً على تطبيق MAUI أيضاً.
+
+### معلَّق من هذه الجولة (لم يُنفَّذ بعد)
+البحث المحاسبي عن اكتمال بيانات الحسابات (الخصائص المحاسبية الناقصة وأثرها على القوائم المالية/التقارير)
+المطلوب كملف HTML منفصل (Artifact) - جُمعت بيانات حقيقية من قاعدة `ClientNew` أثناء هذه الجولة (انظر محادثة
+الجلسة) لكن لم يُبنَ الملف النهائي بعد؛ سيُستكمَل فى خطوة تالية.
