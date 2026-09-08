@@ -179,6 +179,25 @@
   <data name="ScrollTreeToTop" xml:space="preserve"><value>Back to top of the tree</value><comment>TODO: translate to French</comment></data>
   <data name="SearchAccountPlaceholder" xml:space="preserve"><value>Type an account name or code...</value><comment>TODO: translate to French</comment></data>
 
+  <data name="CurrenciesTitle" xml:space="preserve"><value>Currencies</value><comment>TODO: translate to French</comment></data>
+  <data name="AddCurrencyLabel" xml:space="preserve"><value>New Currency</value><comment>TODO: translate to French</comment></data>
+  <data name="EditCurrencyLabel" xml:space="preserve"><value>Edit Currency</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencyCodeLabel" xml:space="preserve"><value>Code (ISO)</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencyNameArLabel" xml:space="preserve"><value>Currency Name (Arabic)</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencyNameEnLabel" xml:space="preserve"><value>Currency Name (English)</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencyEnumValueLabel" xml:space="preserve"><value>Enum Value</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencyExchangeRateLabel" xml:space="preserve"><value>Exchange Rate</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencyDescArLabel" xml:space="preserve"><value>Arabic Description</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencyDescEnLabel" xml:space="preserve"><value>English Description</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencyActiveLabel" xml:space="preserve"><value>Active</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencyIsGLLabel" xml:space="preserve"><value>Primary (GL)</value><comment>TODO: translate to French</comment></data>
+  <data name="NoCurrenciesYet" xml:space="preserve"><value>No currencies to display yet.</value><comment>TODO: translate to French</comment></data>
+  <data name="SearchCurrencyPlaceholder" xml:space="preserve"><value>Search by name, code or value...</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencySaved" xml:space="preserve"><value>Currency saved successfully</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencyDeleted" xml:space="preserve"><value>Currency deleted successfully</value><comment>TODO: translate to French</comment></data>
+  <data name="DeleteCurrencyTitle" xml:space="preserve"><value>Confirm Currency Deletion</value><comment>TODO: translate to French</comment></data>
+  <data name="DeleteCurrencyConfirm" xml:space="preserve"><value>Are you sure you want to delete currency ({0})?</value><comment>TODO: translate to French</comment></data>
+
   <data name="CustomerGroupsTitle" xml:space="preserve"><value>Customer Groups</value><comment>TODO: translate to French</comment></data>
   <data name="SupplierGroupsTitle" xml:space="preserve"><value>Supplier Groups</value><comment>TODO: translate to French</comment></data>
   <data name="GroupName" xml:space="preserve"><value>Group Name</value><comment>TODO: translate to French</comment></data>
@@ -272,4 +291,104 @@
   <data name="NoSuppliersYet" xml:space="preserve"><value>No suppliers to show</value><comment>TODO: translate to French</comment></data>
   <data name="CustomerCarsListTitle" xml:space="preserve"><value>Customer Cars List</value><comment>TODO: translate to French</comment></data>
   <data name="AddCarNewCustomerButton" xml:space="preserve"><value>Add Car + New Customer</value><comment>TODO: translate to French</comment></data>
+  <data name="CostCentersTitle" xml:space="preserve"><value>Cost Centers</value><comment>TODO: translate to French</comment></data>
+  <data name="AddCostCenterButton" xml:space="preserve"><value>Add Cost Center</value><comment>TODO: translate to French</comment></data>
+  <data name="NoCostCenterSelected" xml:space="preserve"><value>Select a cost center from the tree to view its details</value><comment>TODO: translate to French</comment></data>
+  <data name="NoCostCentersYet" xml:space="preserve"><value>No cost centers yet</value><comment>TODO: translate to French</comment></data>
+  <data name="CostCenterAdded" xml:space="preserve"><value>Cost center added successfully</value><comment>TODO: translate to French</comment></data>
+  <data name="AddCostCenterTitle" xml:space="preserve"><value>Add New Cost Center</value><comment>TODO: translate to French</comment></data>
+  <data name="SelectParentCostCenterFirst" xml:space="preserve"><value>Select the parent cost center from the tree first</value><comment>TODO: translate to French</comment></data>
+  <data name="ParentCostCenterLabel" xml:space="preserve"><value>Parent Cost Center</value><comment>TODO: translate to French</comment></data>
+  <data name="CostCenterNameLabel" xml:space="preserve"><value>Cost Center Name</value><comment>TODO: translate to French</comment></data>
+  <data name="CostCenterCodeLabel" xml:space="preserve"><value>Cost Center Code</value><comment>TODO: translate to French</comment></data>
+  <data name="CostCenterNameRequired" xml:space="preserve"><value>Enter the cost center name</value><comment>TODO: translate to French</comment></data>
+  <data name="CostCenterCodeGenerationFailed" xml:space="preserve"><value>Failed to generate the cost center code</value><comment>TODO: translate to French</comment></data>
+  <data name="DeleteCostCenterTitle" xml:space="preserve"><value>Delete Cost Center</value><comment>TODO: translate to French</comment></data>
+  <data name="DeleteCostCenterConfirm" xml:space="preserve"><value>Do you want to delete the cost center "{0}"? It may have been used before, which would affect other accounts</value><comment>TODO: translate to French</comment></data>
+  <data name="CostCenterCannotDeleteHasChildren" xml:space="preserve"><value>This cost center cannot be deleted because it has sub cost centers</value><comment>TODO: translate to French</comment></data>
+  <data name="SearchCostCenterLabel" xml:space="preserve"><value>Search for a cost center</value><comment>TODO: translate to French</comment></data>
+  <data name="SearchCostCenterPlaceholder" xml:space="preserve"><value>Type the cost center name or code...</value><comment>TODO: translate to French</comment></data>
+  <data name="CostCenterForAccountsTitle" xml:space="preserve"><value>Account Cost Centers</value><comment>TODO: translate to French</comment></data>
+  <data name="AssignCostCenterButton" xml:space="preserve"><value>Assign Cost Center</value><comment>TODO: translate to French</comment></data>
+  <data name="SelectedAccountLabel" xml:space="preserve"><value>Selected Account</value><comment>TODO: translate to French</comment></data>
+  <data name="NoCostCentersAssignedYet" xml:space="preserve"><value>No cost centers assigned to this account yet</value><comment>TODO: translate to French</comment></data>
+  <data name="AssignCostCentersTitle" xml:space="preserve"><value>Assign Cost Centers to Account</value><comment>TODO: translate to French</comment></data>
+  <data name="CostCenterAssigned" xml:space="preserve"><value>Cost center(s) assigned successfully</value><comment>TODO: translate to French</comment></data>
+  <data name="RemoveCostCenterAssignmentTitle" xml:space="preserve"><value>Remove Cost Center Assignment</value><comment>TODO: translate to French</comment></data>
+  <data name="RemoveCostCenterAssignmentConfirm" xml:space="preserve"><value>Do you want to remove the assignment of cost center "{0}" from this account?</value><comment>TODO: translate to French</comment></data>
+  <data name="CostCenterAssignmentRemoved" xml:space="preserve"><value>Assignment removed successfully</value><comment>TODO: translate to French</comment></data>
+  <data name="FinancialPeriodsTitle" xml:space="preserve"><value>Financial Periods</value><comment>TODO: translate to French</comment></data>
+  <data name="AddPeriodButton" xml:space="preserve"><value>Add</value><comment>TODO: translate to French</comment></data>
+  <data name="ActivatePeriodButton" xml:space="preserve"><value>Activate Period</value><comment>TODO: translate to French</comment></data>
+  <data name="DeletePeriodButton" xml:space="preserve"><value>Delete</value><comment>TODO: translate to French</comment></data>
+  <data name="PeriodSerialColumn" xml:space="preserve"><value>No.</value><comment>TODO: translate to French</comment></data>
+  <data name="PeriodDateFromColumn" xml:space="preserve"><value>From</value><comment>TODO: translate to French</comment></data>
+  <data name="PeriodDateToColumn" xml:space="preserve"><value>To</value><comment>TODO: translate to French</comment></data>
+  <data name="PeriodNotesColumn" xml:space="preserve"><value>Notes</value><comment>TODO: translate to French</comment></data>
+  <data name="NoPeriodsYet" xml:space="preserve"><value>No financial periods yet</value><comment>TODO: translate to French</comment></data>
+  <data name="OpeningPeriodNote" xml:space="preserve"><value>Opening Period</value><comment>TODO: translate to French</comment></data>
+  <data name="ClosedPeriodNote" xml:space="preserve"><value>Closed Period</value><comment>TODO: translate to French</comment></data>
+  <data name="PeriodDateRangeInvalid" xml:space="preserve"><value>Invalid financial period date range</value><comment>TODO: translate to French</comment></data>
+  <data name="SelectPeriodToDelete" xml:space="preserve"><value>Please select the financial period to delete</value><comment>TODO: translate to French</comment></data>
+  <data name="OnlyLastPeriodDeletable" xml:space="preserve"><value>Cannot delete this period — only the most recently created period can be deleted</value><comment>TODO: translate to French</comment></data>
+  <data name="ClosedPeriodCannotDelete" xml:space="preserve"><value>Cannot delete this period — it has already been posted and closed</value><comment>TODO: translate to French</comment></data>
+  <data name="FinancialPeriodConfirmTitle" xml:space="preserve"><value>Financial Period</value><comment>TODO: translate to French</comment></data>
+  <data name="ConfirmActivatePeriodMessage" xml:space="preserve"><value>Are you sure you want to activate this financial period?</value><comment>TODO: translate to French</comment></data>
+  <data name="ConfirmDeletePeriodMessage" xml:space="preserve"><value>Are you sure you want to delete this financial period?</value><comment>TODO: translate to French</comment></data>
+  <data name="PeriodAdded" xml:space="preserve"><value>Financial period added successfully</value><comment>TODO: translate to French</comment></data>
+  <data name="JournalDaysTitle" xml:space="preserve"><value>Journal Days</value><comment>TODO: translate to French</comment></data>
+  <data name="AddJournalDayButton" xml:space="preserve"><value>Add</value><comment>TODO: translate to French</comment></data>
+  <data name="EditJournalDayTitle" xml:space="preserve"><value>Edit Journal Day</value><comment>TODO: translate to French</comment></data>
+  <data name="JournalCodeLabel" xml:space="preserve"><value>Code</value><comment>TODO: translate to French</comment></data>
+  <data name="JournalNameLabel" xml:space="preserve"><value>Journal Day</value><comment>TODO: translate to French</comment></data>
+  <data name="NoJournalDaysYet" xml:space="preserve"><value>No journal days yet</value><comment>TODO: translate to French</comment></data>
+  <data name="JournalCodeRequired" xml:space="preserve"><value>Please enter the code</value><comment>TODO: translate to French</comment></data>
+  <data name="JournalNameRequired" xml:space="preserve"><value>Please enter the journal day name</value><comment>TODO: translate to French</comment></data>
+  <data name="JournalDayAdded" xml:space="preserve"><value>Journal day added successfully</value><comment>TODO: translate to French</comment></data>
+  <data name="JournalDayUpdated" xml:space="preserve"><value>Journal day updated successfully</value><comment>TODO: translate to French</comment></data>
+  <data name="JournalDayDeleted" xml:space="preserve"><value>Journal day deleted successfully</value><comment>TODO: translate to French</comment></data>
+  <data name="DeleteJournalDayTitle" xml:space="preserve"><value>Delete Journal Day</value><comment>TODO: translate to French</comment></data>
+  <data name="DeleteJournalDayConfirm" xml:space="preserve"><value>Do you want to delete journal day "{0}"?</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencyFactorsTitle" xml:space="preserve"><value>Currency Exchange Rates</value><comment>TODO: translate to French</comment></data>
+  <data name="AddCurrencyFactorButton" xml:space="preserve"><value>Add</value><comment>TODO: translate to French</comment></data>
+  <data name="EditCurrencyFactorTitle" xml:space="preserve"><value>Edit Exchange Rate</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencyPrimaryLabel" xml:space="preserve"><value>First Currency</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencySecondaryLabel" xml:space="preserve"><value>Second Currency</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencyFactorLabel" xml:space="preserve"><value>Rate</value><comment>TODO: translate to French</comment></data>
+  <data name="NoCurrencyFactorsYet" xml:space="preserve"><value>No exchange rates to display yet.</value><comment>TODO: translate to French</comment></data>
+  <data name="SelectPrimaryCurrencyRequired" xml:space="preserve"><value>Please select the first currency</value><comment>TODO: translate to French</comment></data>
+  <data name="SelectSecondaryCurrencyRequired" xml:space="preserve"><value>Please select the second currency</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencyFactorRequired" xml:space="preserve"><value>Please enter the exchange rate</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencyFactorAdded" xml:space="preserve"><value>Exchange rate added successfully</value><comment>TODO: translate to French</comment></data>
+  <data name="CurrencyFactorUpdated" xml:space="preserve"><value>Data saved successfully</value><comment>TODO: translate to French</comment></data>
+  <data name="StoreItemsMovementTitle" xml:space="preserve"><value>Store Items Movement</value><comment>TODO: translate to French</comment></data>
+  <data name="StoreDailyMovementTitle" xml:space="preserve"><value>Daily Store Movement</value><comment>TODO: translate to French</comment></data>
+  <data name="StoreUsedTypeSell" xml:space="preserve"><value>Sales</value><comment>TODO: translate to French</comment></data>
+  <data name="StoreUsedTypePurchase" xml:space="preserve"><value>Purchases</value><comment>TODO: translate to French</comment></data>
+  <data name="StoreLabel" xml:space="preserve"><value>Store</value><comment>TODO: translate to French</comment></data>
+  <data name="ItemCategoryLabel" xml:space="preserve"><value>Item Category</value><comment>TODO: translate to French</comment></data>
+  <data name="SortByCategoryLabel" xml:space="preserve"><value>Sort by Category</value><comment>TODO: translate to French</comment></data>
+  <data name="SortByDateLabel" xml:space="preserve"><value>Sort by Date</value><comment>TODO: translate to French</comment></data>
+  <data name="DateLabel" xml:space="preserve"><value>Date</value><comment>TODO: translate to French</comment></data>
+  <data name="DateFromLabel" xml:space="preserve"><value>Date From</value><comment>TODO: translate to French</comment></data>
+  <data name="DateToLabel" xml:space="preserve"><value>Date To</value><comment>TODO: translate to French</comment></data>
+  <data name="ShowDataButton" xml:space="preserve"><value>Show Data</value><comment>TODO: translate to French</comment></data>
+  <data name="SarfOutgoingLabel" xml:space="preserve"><value>Outgoing</value><comment>TODO: translate to French</comment></data>
+  <data name="EstlamIncomingLabel" xml:space="preserve"><value>Incoming</value><comment>TODO: translate to French</comment></data>
+  <data name="SerialColumn" xml:space="preserve"><value>#</value><comment>TODO: translate to French</comment></data>
+  <data name="DateColumn" xml:space="preserve"><value>Date</value><comment>TODO: translate to French</comment></data>
+  <data name="DocNoColumn" xml:space="preserve"><value>Document No</value><comment>TODO: translate to French</comment></data>
+  <data name="DescriptionColumn" xml:space="preserve"><value>Description</value><comment>TODO: translate to French</comment></data>
+  <data name="BalanceItemNoColumn" xml:space="preserve"><value>Count</value><comment>TODO: translate to French</comment></data>
+  <data name="BalanceColumn" xml:space="preserve"><value>Balance</value><comment>TODO: translate to French</comment></data>
+  <data name="ItemNoExportColumn" xml:space="preserve"><value>Count</value><comment>TODO: translate to French</comment></data>
+  <data name="QtyExportColumn" xml:space="preserve"><value>Quantity</value><comment>TODO: translate to French</comment></data>
+  <data name="ItemNameColumn" xml:space="preserve"><value>Item</value><comment>TODO: translate to French</comment></data>
+  <data name="CategoryColumn" xml:space="preserve"><value>Item Category</value><comment>TODO: translate to French</comment></data>
+  <data name="OrderTypeColumn" xml:space="preserve"><value>Order Type</value><comment>TODO: translate to French</comment></data>
+  <data name="AllStoresOption" xml:space="preserve"><value>All</value><comment>TODO: translate to French</comment></data>
+  <data name="AllCategoriesOption" xml:space="preserve"><value>All</value><comment>TODO: translate to French</comment></data>
+  <data name="NoMovementYet" xml:space="preserve"><value>No movement to display yet.</value><comment>TODO: translate to French</comment></data>
+  <data name="SelectStoreRequired" xml:space="preserve"><value>Please select the store</value><comment>TODO: translate to French</comment></data>
+  <data name="SelectCategoryRequired" xml:space="preserve"><value>Please select the item category</value><comment>TODO: translate to French</comment></data>
 </root>

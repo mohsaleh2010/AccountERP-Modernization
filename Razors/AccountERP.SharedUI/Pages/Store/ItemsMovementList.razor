@@ -1,0 +1,554 @@
+@* 🟢 شاشة "حركة أصناف المخزن" - النسخة Blazor الموحَّدة لأربع شاشات ويندوز فورمز أصلية (قرار دمج موثَّق
+   فى .claude/docs/menu-main-account-razor-plan.md §1):
+   - Store_LIB\ItemsCards\ItemsCardsStore.cs (StoreUsed_Type=1 مبيعات / =2 مشتريات) → وضع "period"
+   - Store_LIB\ItemsCards\ItemsCardsForDept\ItemsCardsStore_Days.cs (نفس الفرق) → وضع "daily"
+   الأربع شاشات تستدعي نفس الكلاس والدالة بالضبط (ItemsCardsCLS.Get_AllItemCardStore)، والفرق الوحيد بين
+   period/daily هو شكل العرض (قائمة واحدة بعمود تاريخ فى period، مقابل قائمتين "الصادر"/"الوارد" بلا عمود
+   تاريخ فى daily لأن التاريخ ثابت = اليوم المُختار).
+   منطق العمل بالكامل فى Store_LIB.ItemsCardsCLS (مشروع WinForms فقط، UseWindowsForms=true) - **كان
+   يستدعي MessageBox.Show داخل دالة Get_Items_Data الداخلية** (عائق أمام Blazor)، فنُقلت نسخة جديدة إلى
+   AccountModelsLib.BusinessLibShared.Store.ItemsCardsCLS بتغيير واحد فقط (MessageBox.Show → ref string
+   Msg، نفس نمط باقى الكلاسات المنقولة) - الاستعلام والشروط نفسها بالضبط. النسخة الأصلية فى Store_LIB لم
+   تُمَس ولا تزال تُستخدَم كما هى من شاشات الويندوز فورمز الأربع الحية.
+   قوائم الفلترة (المخزن/فئة الصنف) لم تكن أصلاً دوال CLS - كانتا استعلامَين مُضمَّنين داخل عنصرَى تحكم
+   WinForms (Connection4It.Stores_List.Store_DataByStoreUsed_Type وConnection4It.ItemCategory.Item_Data) -
+   نُقلا كدالتين جديدتين لنفس الكلاس المنقول بنفس الاستعلام بالضبط.
+   ملاحظة نطاق: النقر المزدوج على صف فى الأصل يفتح Order_DetailsWorkEdit (شاشة تعديل تفاصيل الإذن) - غير
+   مبنية بعد فى Blazor، فالصفوف هنا للعرض فقط بدون تنقّل، بنفس مبدأ شاشات "كشف الحساب" الموثَّق فى الخطة. *@
+
+@page "/store/item-movement/{Mode}/{StoreUsedType:int}"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.BusinessLibShared.Store
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Tr(IsDaily ? "StoreDailyMovementTitle" : "StoreItemsMovementTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">
+            @Tr(IsDaily ? "StoreDailyMovementTitle" : "StoreItemsMovementTitle")
+            <MudChip T="string" Size="Size.Small" Class="ms-2" Color="Color.Secondary">@Tr(StoreUsedType == 2 ? "StoreUsedTypePurchase" : "StoreUsedTypeSell")</MudChip>
+        </MudText>
+
+        <MudGrid>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="int" Value="_selectedStoreId" ValueChanged="OnStoreChangedAsync" Label="@Tr("StoreLabel")"
+                           Variant="Variant.Outlined" FullWidth="true">
+                    @foreach (var s in _stores)
+                    {
+                        <MudSelectItem T="int" Value="@s.Id">@s.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="int" @bind-Value="_selectedCategoryId" Label="@Tr("ItemCategoryLabel")"
+                           Variant="Variant.Outlined" FullWidth="true">
+                    @foreach (var c in _categories)
+                    {
+                        <MudSelectItem T="int" Value="@c.Id">@c.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="6">
+                <MudRadioGroup T="bool" Value="_sortByCategory" ValueChanged="@((bool v) => _sortByCategory = v)">
+                    <MudRadio T="bool" Value="true" Color="Color.Primary">@Tr("SortByCategoryLabel")</MudRadio>
+                    <MudRadio T="bool" Value="false" Color="Color.Primary" Class="ms-4">@Tr("SortByDateLabel")</MudRadio>
+                </MudRadioGroup>
+            </MudItem>
+
+            @if (IsDaily)
+            {
+                <MudItem xs="12" sm="6" md="3">
+                    <MudDatePicker T="DateTime?" Date="_dailyDate" DateChanged="@((DateTime? d) => _dailyDate = d ?? DateTime.Today)"
+                                   Label="@Tr("DateLabel")" Variant="Variant.Outlined" />
+                </MudItem>
+            }
+            else
+            {
+                <MudItem xs="12" sm="6" md="3">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudCheckBox T="bool" Value="_dateFromEnabled" ValueChanged="@((bool v) => _dateFromEnabled = v)" />
+                        <MudDatePicker T="DateTime?" Date="_dateFromValue" DateChanged="@((DateTime? d) => _dateFromValue = d ?? DateTime.Today)"
+                                       Label="@Tr("DateFromLabel")" Variant="Variant.Outlined" Disabled="@(!_dateFromEnabled)" />
+                    </MudStack>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudCheckBox T="bool" Value="_dateToEnabled" ValueChanged="@((bool v) => _dateToEnabled = v)" />
+                        <MudDatePicker T="DateTime?" Date="_dateToValue" DateChanged="@((DateTime? d) => _dateToValue = d ?? DateTime.Today)"
+                                       Label="@Tr("DateToLabel")" Variant="Variant.Outlined" Disabled="@(!_dateToEnabled)" />
+                    </MudStack>
+                </MudItem>
+            }
+
+            <MudItem xs="12">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
+                           OnClick="ShowAsync" Disabled="@_isLoading">
+                    @Tr("ShowDataButton")
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    @if (IsDaily)
+    {
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.h6" Class="mb-2">@Tr("SarfOutgoingLabel")</MudText>
+                <MudTable Items="@_sarfRows" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Dense="true" Elevation="1">
+                    <HeaderContent>
+                        <MudTh>@Tr("SerialColumn")</MudTh>
+                        <MudTh>@Tr("DocNoColumn")</MudTh>
+                        <MudTh>@Tr("DescriptionColumn")</MudTh>
+                        <MudTh>@Tr("ItemNoExportColumn")</MudTh>
+                        <MudTh>@Tr("QtyExportColumn")</MudTh>
+                        <MudTh>@Tr("ItemNameColumn")</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Serial</MudTd>
+                        <MudTd>@context.DocNo</MudTd>
+                        <MudTd>@context.Description</MudTd>
+                        <MudTd>@context.ItemNoExportText</MudTd>
+                        <MudTd>@context.QtyText</MudTd>
+                        <MudTd>@context.ItemName</MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoMovementYet")</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.h6" Class="mb-2">@Tr("EstlamIncomingLabel")</MudText>
+                <MudTable Items="@_estlamRows" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Dense="true" Elevation="1">
+                    <HeaderContent>
+                        <MudTh>@Tr("SerialColumn")</MudTh>
+                        <MudTh>@Tr("DocNoColumn")</MudTh>
+                        <MudTh>@Tr("DescriptionColumn")</MudTh>
+                        <MudTh>@Tr("ItemNoExportColumn")</MudTh>
+                        <MudTh>@Tr("QtyExportColumn")</MudTh>
+                        <MudTh>@Tr("ItemNameColumn")</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Serial</MudTd>
+                        <MudTd>@context.DocNo</MudTd>
+                        <MudTd>@context.Description</MudTd>
+                        <MudTd>@context.ItemNoExportText</MudTd>
+                        <MudTd>@context.QtyText</MudTd>
+                        <MudTd>@context.ItemName</MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoMovementYet")</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudItem>
+        </MudGrid>
+    }
+    else
+    {
+        <MudTable Items="@_periodRows" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Dense="true" Elevation="1">
+            <HeaderContent>
+                <MudTh>@Tr("SerialColumn")</MudTh>
+                <MudTh>@Tr("DateColumn")</MudTh>
+                <MudTh>@Tr("DocNoColumn")</MudTh>
+                <MudTh>@Tr("DescriptionColumn")</MudTh>
+                <MudTh>@Tr("BalanceItemNoColumn")</MudTh>
+                <MudTh>@Tr("BalanceColumn")</MudTh>
+                <MudTh>@Tr("ItemNoExportColumn")</MudTh>
+                <MudTh>@Tr("QtyExportColumn")</MudTh>
+                <MudTh>@Tr("ItemNameColumn")</MudTh>
+                <MudTh>@Tr("CategoryColumn")</MudTh>
+                <MudTh>@Tr("OrderTypeColumn")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTr Style="@(context.IsFromRow ? "background-color:var(--mud-palette-info-lighten);" : "")">
+                    <MudTd>@context.Serial</MudTd>
+                    <MudTd>@context.Date.ToString("yyyy/MM/dd")</MudTd>
+                    <MudTd>@context.DocNo</MudTd>
+                    <MudTd>@context.Description</MudTd>
+                    <MudTd>@context.BalanceItemNo</MudTd>
+                    <MudTd>@context.BalanceQtyText</MudTd>
+                    <MudTd>@context.ItemNoExportText</MudTd>
+                    <MudTd>@context.QtyExportText</MudTd>
+                    <MudTd>@context.ItemName</MudTd>
+                    <MudTd>@context.CategoryName</MudTd>
+                    <MudTd>@context.OrderTypeName</MudTd>
+                </MudTr>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoMovementYet")</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public string Mode { get; set; } = "period";
+    [Parameter] public int StoreUsedType { get; set; }
+
+    private bool IsDaily => string.Equals(Mode, "daily", StringComparison.OrdinalIgnoreCase);
+
+    private record StoreOption(int Id, string Name, int UsedType);
+    private record CategoryOption(int Id, string Name);
+    private record PeriodRow(int Serial, DateTime Date, string DocNo, string Description, decimal BalanceItemNo, string BalanceQtyText, string ItemNoExportText, string QtyExportText, string ItemName, string CategoryName, string OrderTypeName, bool IsFromRow);
+    private record DailyRow(int Serial, string DocNo, string Description, string ItemNoExportText, string QtyText, string ItemName);
+
+    private readonly ItemsCardsCLS _cls = new();
+
+    private List<StoreOption> _stores = new();
+    private List<CategoryOption> _categories = new();
+    private int _selectedStoreId;
+    private int _selectedCategoryId = -1;
+    private bool _sortByCategory = true;
+    private DateTime _dailyDate = DateTime.Today;
+    private bool _dateFromEnabled;
+    private bool _dateToEnabled;
+    private DateTime _dateFromValue = DateTime.Today;
+    private DateTime _dateToValue = DateTime.Today;
+
+    private List<PeriodRow> _periodRows = new();
+    private List<DailyRow> _sarfRows = new();
+    private List<DailyRow> _estlamRows = new();
+
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStoresAsync();
+        await LoadCategoriesAsync();
+    }
+
+    // 🟢 يقابل Stores_List.Store_DataByStoreUsed_Type + FillStoreData بالضبط: صف "الكل" (Id=0) فى المقدمة،
+    // ثم تُختار افتراضياً أول عملية فعلية (index 1) - وليس "الكل" نفسها - إن وُجدت.
+    private async Task LoadStoresAsync()
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _cls.Get_Stores_By_UsedType(StoreUsedType);
+        });
+
+        var list = new List<StoreOption> { new StoreOption(0, Tr("AllStoresOption"), 0) };
+        foreach (DataRow r in dt.Rows)
+        {
+            list.Add(new StoreOption(
+                Convert.ToInt32(r["Id"]),
+                r["Store_Name"]?.ToString() ?? "",
+                Convert.ToInt32(r["StoreUsed_Type"])));
+        }
+        _stores = list;
+        _selectedStoreId = list.Count > 1 ? list[1].Id : list[0].Id;
+    }
+
+    // 🟢 يقابل ItemCategory.Item_Data(StoreUsed_Type, true) بالضبط: يُفلتَر بنوع استخدام المخزن *المُختار*
+    // (لا بنوع الشاشة الثابت) إن كان هناك مخزن محدَّد فعلياً، وإلا (مخزن = "الكل") تُعرَض كل الفئات دون فلترة.
+    private async Task LoadCategoriesAsync()
+    {
+        var selectedStore = _stores.FirstOrDefault(s => s.Id == _selectedStoreId);
+        bool filterByType = _selectedStoreId > 0;
+        int categoryTypeId = selectedStore?.UsedType ?? StoreUsedType;
+
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _cls.Get_Item_Categories(categoryTypeId, filterByType);
+        });
+
+        var list = new List<CategoryOption> { new CategoryOption(-1, Tr("AllCategoriesOption")) };
+        foreach (DataRow r in dt.Rows)
+        {
+            list.Add(new CategoryOption(Convert.ToInt32(r["ID"]), r["Category_Name"]?.ToString() ?? ""));
+        }
+        _categories = list;
+        _selectedCategoryId = -1;
+    }
+
+    private async Task OnStoreChangedAsync(int storeId)
+    {
+        _selectedStoreId = storeId;
+        await LoadCategoriesAsync();
+    }
+
+    // 🟢 يقابل BtnShow_Click/ShowData بالضبط: فحصَى التحقق (مخزن مُختار، فئة مُختارة) ثم استدعاء
+    // Get_AllItemCardStore بنفس الباراميترات (الوضع اليومى يمرر نفس التاريخ لـ dtFrom/dtTo كلاهما).
+    private async Task ShowAsync()
+    {
+        _errorMessage = null;
+        if (_stores.All(s => s.Id != _selectedStoreId))
+        {
+            _errorMessage = Tr("SelectStoreRequired");
+            return;
+        }
+        if (_categories.All(c => c.Id != _selectedCategoryId))
+        {
+            _errorMessage = Tr("SelectCategoryRequired");
+            return;
+        }
+
+        _isLoading = true;
+        StateHasChanged();
+        try
+        {
+            int sortBy = _sortByCategory ? 1 : 2;
+            int storeId = _selectedStoreId;
+            int categoryId = _selectedCategoryId;
+            int excp = 0;
+            string msg = "";
+            DataTable? dt = null;
+
+            if (IsDaily)
+            {
+                var dailyDate = _dailyDate;
+                dt = await Task.Run(() =>
+                {
+                    AccountCultureGuard.EnsureInvariant();
+                    var ds = _cls.Get_AllItemCardStore(ref excp, ref msg, storeId, StoreUsedType, true, dailyDate, true, dailyDate, categoryId, sortBy);
+                    return ds.Tables.Count > 0 ? ds.Tables[0] : null;
+                });
+            }
+            else
+            {
+                var dtFromEnabled = _dateFromEnabled;
+                var dtFromValue = _dateFromValue;
+                var dtToEnabled = _dateToEnabled;
+                var dtToValue = _dateToValue;
+                dt = await Task.Run(() =>
+                {
+                    AccountCultureGuard.EnsureInvariant();
+                    var ds = _cls.Get_AllItemCardStore(ref excp, ref msg, storeId, StoreUsedType, dtFromEnabled, dtFromValue, dtToEnabled, dtToValue, categoryId, sortBy);
+                    return ds.Tables.Count > 0 ? ds.Tables[0] : null;
+                });
+            }
+
+            if (dt == null)
+            {
+                _periodRows = new();
+                _sarfRows = new();
+                _estlamRows = new();
+                if (!string.IsNullOrEmpty(msg)) _errorMessage = msg;
+                return;
+            }
+
+            if (IsDaily)
+            {
+                BuildDailyRows(dt, storeId);
+            }
+            else
+            {
+                BuildPeriodRows(dt, storeId);
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    // 🟢 يقابل ItemsCardsStore.fill_lv_item_report/GetDataFrom/GetDataTo حرفياً (الوضع الدورى - period).
+    private void BuildPeriodRows(DataTable dt, int storeId)
+    {
+        var rows = new List<PeriodRow>();
+        int serial = 0;
+        for (int i = 0; i < dt.Rows.Count; i++)
+        {
+            var r = dt.Rows[i];
+            serial++;
+            int orderType = Convert.ToInt32(r["Order_Type"]);
+            string caseName = r["Case_Name"]?.ToString() ?? "";
+            string orderEstlamSarf = r["Order_Estlam_Sarf"]?.ToString() ?? "";
+            int idFrom = Convert.ToInt32(r["Id_From"]);
+            int idTo = Convert.ToInt32(r["Id_To"]);
+
+            if (orderType == 1 || orderType == 6)
+            {
+                if (storeId == 0)
+                {
+                    rows.Add(BuildFromRow(dt, i, "صرف", serial));
+                }
+                else
+                {
+                    if (storeId == idFrom) rows.Add(BuildFromRow(dt, i, "صرف", serial));
+                    if (storeId == idTo) rows.Add(BuildToRow(dt, i, "إستلام", serial));
+                }
+            }
+            else if (orderEstlamSarf == "2")
+            {
+                rows.Add(BuildFromRow(dt, i, caseName, serial));
+            }
+            else if (orderEstlamSarf == "1")
+            {
+                rows.Add(BuildToRow(dt, i, caseName, serial));
+            }
+        }
+        _periodRows = rows;
+    }
+
+    private PeriodRow BuildFromRow(DataTable dt, int i, string orderTypeName, int serial)
+    {
+        var r = dt.Rows[i];
+        var date = Convert.ToDateTime(r["Order_date"]);
+        var docNo = r["Order_Purshing_No"]?.ToString() ?? "";
+        var description = GetShowDataFrom(r);
+        var balanceItemNo = Common.Get_Item_No(i, dt, "Balance_Id_From_Larg_Qnty", "Balance_Id_From_Small_Qnty", "Balance_Id_From_Item_No");
+        var balanceQtyText = Common.GetQntyString(r["Balance_Id_From_Larg_Qnty"].ToString(), r["B_Unit"].ToString(), r["Balance_Id_From_Small_Qnty"].ToString(), r["S_unit"].ToString());
+        var itemNoExport = Common.Get_Item_No(i, dt, "qua", "Part_qua", "Detailes_Purshing_Item_No");
+        var qtyExportText = Common.GetQntyString(r["qua"].ToString(), r["B_Unit"].ToString(), r["Part_qua"].ToString(), r["S_unit"].ToString());
+        return new PeriodRow(serial, date, docNo, description, balanceItemNo, balanceQtyText, itemNoExport.ToString(), qtyExportText, r["Item_Name"]?.ToString() ?? "", r["Category_Name"]?.ToString() ?? "", orderTypeName, true);
+    }
+
+    private PeriodRow BuildToRow(DataTable dt, int i, string orderTypeName, int serial)
+    {
+        var r = dt.Rows[i];
+        var date = Convert.ToDateTime(r["Order_date"]);
+        int typeFrom = Convert.ToInt32(r["Type_From"]);
+        var docNo = typeFrom == -1 ? "" : (r["Order_Purshing_No"]?.ToString() ?? "");
+        var description = GetShowDataTo(r);
+        var balanceItemNo = Common.Get_Item_No(i, dt, "Balance_Id_To_Larg_Qnty", "Balance_Id_To_Small_Qnty", "Balance_Id_To_Item_No");
+        var balanceQtyText = Common.GetQntyString(r["Balance_Id_To_Larg_Qnty"].ToString(), r["B_Unit"].ToString(), r["Balance_Id_To_Small_Qnty"].ToString(), r["S_unit"].ToString());
+        string itemNoExportText;
+        string qtyExportText;
+        if (typeFrom == -1)
+        {
+            itemNoExportText = "";
+            qtyExportText = "";
+        }
+        else
+        {
+            itemNoExportText = Common.Get_Item_No(i, dt, "qua", "Part_qua", "Detailes_Purshing_Item_No").ToString();
+            qtyExportText = Common.GetQntyString(r["qua"].ToString(), r["B_Unit"].ToString(), r["Part_qua"].ToString(), r["S_unit"].ToString());
+        }
+        return new PeriodRow(serial, date, docNo, description, balanceItemNo, balanceQtyText, itemNoExportText, qtyExportText, r["Item_Name"]?.ToString() ?? "", r["Category_Name"]?.ToString() ?? "", orderTypeName, false);
+    }
+
+    // 🟢 يقابل ItemsCardsStore_Days.fill_lv_item_report/GetDataFrom/GetDataTo حرفياً (الوضع اليومى - daily):
+    // عمودَى تاريخ/رصيد غائبان (كما فى الأصل)، والعدد (ItemNoExport) قيمة العمود الخام مباشرة بدون
+    // إعادة حسابها بـ Get_Item_No (خلافاً للوضع الدورى) - نفس الفرق الموجود فى الأصل بالضبط.
+    private void BuildDailyRows(DataTable dt, int storeId)
+    {
+        var sarf = new List<DailyRow>();
+        var estlam = new List<DailyRow>();
+        int serialFrom = 0;
+        int serialTo = 0;
+        for (int i = 0; i < dt.Rows.Count; i++)
+        {
+            var r = dt.Rows[i];
+            int orderType = Convert.ToInt32(r["Order_Type"]);
+            string caseName = r["Case_Name"]?.ToString() ?? "";
+            string orderEstlamSarf = r["Order_Estlam_Sarf"]?.ToString() ?? "";
+            int idFrom = Convert.ToInt32(r["Id_From"]);
+            int idTo = Convert.ToInt32(r["Id_To"]);
+
+            if (orderType == 1 || orderType == 6)
+            {
+                if (storeId == 0)
+                {
+                    serialFrom++;
+                    sarf.Add(BuildDailyFromRow(r, serialFrom));
+                }
+                else
+                {
+                    if (storeId == idFrom) { serialFrom++; sarf.Add(BuildDailyFromRow(r, serialFrom)); }
+                    if (storeId == idTo) { serialTo++; estlam.Add(BuildDailyToRow(r, serialTo)); }
+                }
+            }
+            else if (orderEstlamSarf == "2")
+            {
+                serialFrom++;
+                sarf.Add(BuildDailyFromRow(r, serialFrom));
+            }
+            else if (orderEstlamSarf == "1")
+            {
+                serialTo++;
+                estlam.Add(BuildDailyToRow(r, serialTo));
+            }
+        }
+        _sarfRows = sarf;
+        _estlamRows = estlam;
+    }
+
+    private DailyRow BuildDailyFromRow(DataRow r, int serial)
+    {
+        var docNo = r["Order_Purshing_No"]?.ToString() ?? "";
+        var description = GetShowDataFrom(r);
+        var itemNoExportText = r["Detailes_Purshing_Item_No"]?.ToString() ?? "";
+        var qtyText = Common.GetQntyString(r["qua"].ToString(), r["B_Unit"].ToString(), r["Part_qua"].ToString(), r["S_unit"].ToString());
+        return new DailyRow(serial, docNo, description, itemNoExportText, qtyText, r["Item_Name"]?.ToString() ?? "");
+    }
+
+    private DailyRow BuildDailyToRow(DataRow r, int serial)
+    {
+        int typeFrom = Convert.ToInt32(r["Type_From"]);
+        var docNo = typeFrom == -1 ? "" : (r["Order_Purshing_No"]?.ToString() ?? "");
+        var description = GetShowDataTo(r);
+        string itemNoExportText;
+        string qtyText;
+        if (typeFrom == -1)
+        {
+            itemNoExportText = "";
+            qtyText = "";
+        }
+        else
+        {
+            itemNoExportText = r["Detailes_Purshing_Item_No"]?.ToString() ?? "";
+            qtyText = Common.GetQntyString(r["qua"].ToString(), r["B_Unit"].ToString(), r["Part_qua"].ToString(), r["S_unit"].ToString());
+        }
+        return new DailyRow(serial, docNo, description, itemNoExportText, qtyText, r["Item_Name"]?.ToString() ?? "");
+    }
+
+    // 🟢 يقابل GetShowDataFrom/GetShowDataTo الأصليتين حرفياً - بقية الحالات (Type 0..10) فى الأصل كانت
+    // كوداً معلَّقاً (dead code) لا يُنفَّذ إطلاقاً، فلم تُنقَل هنا (الحالتان الوحيدتان الفعليتان: -1 و-2).
+    private static string GetShowDataFrom(DataRow r)
+    {
+        int typeTo = Convert.ToInt32(r["Type_To"]);
+        string titleData = r["Notes_To"]?.ToString() ?? "";
+        if (typeTo == -1) titleData = "رصيد أول المدة";
+        if (typeTo == -2) titleData = "تعديل رصيد أول المدة ";
+        return titleData;
+    }
+
+    private static string GetShowDataTo(DataRow r)
+    {
+        int typeFrom = Convert.ToInt32(r["type_From"]);
+        string titleData = r["Notes_From"]?.ToString() ?? "";
+        if (typeFrom == -1) titleData = "رصيد أول المدة";
+        if (typeFrom == -2) titleData = "تعديل رصيد أول المدة ";
+        return titleData;
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

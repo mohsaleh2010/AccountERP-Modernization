@@ -178,6 +178,25 @@
   <data name="ScrollTreeToTop" xml:space="preserve"><value>العودة لأعلى الشجرة</value></data>
   <data name="SearchAccountPlaceholder" xml:space="preserve"><value>اكتب اسم الحساب أو كوده...</value></data>
 
+  <data name="CurrenciesTitle" xml:space="preserve"><value>العملات</value></data>
+  <data name="AddCurrencyLabel" xml:space="preserve"><value>عملة جديدة</value></data>
+  <data name="EditCurrencyLabel" xml:space="preserve"><value>تعديل عملة</value></data>
+  <data name="CurrencyCodeLabel" xml:space="preserve"><value>الرمز (ISO)</value></data>
+  <data name="CurrencyNameArLabel" xml:space="preserve"><value>اسم العملة (عربي)</value></data>
+  <data name="CurrencyNameEnLabel" xml:space="preserve"><value>اسم العملة (إنجليزي)</value></data>
+  <data name="CurrencyEnumValueLabel" xml:space="preserve"><value>القيمة (Enum)</value></data>
+  <data name="CurrencyExchangeRateLabel" xml:space="preserve"><value>سعر الصرف</value></data>
+  <data name="CurrencyDescArLabel" xml:space="preserve"><value>وصف بالعربي</value></data>
+  <data name="CurrencyDescEnLabel" xml:space="preserve"><value>وصف بالإنجليزي</value></data>
+  <data name="CurrencyActiveLabel" xml:space="preserve"><value>نشطة</value></data>
+  <data name="CurrencyIsGLLabel" xml:space="preserve"><value>رئيسية (GL)</value></data>
+  <data name="NoCurrenciesYet" xml:space="preserve"><value>لا توجد عملات لعرضها حتى الآن.</value></data>
+  <data name="SearchCurrencyPlaceholder" xml:space="preserve"><value>ابحث بالاسم أو الرمز أو القيمة...</value></data>
+  <data name="CurrencySaved" xml:space="preserve"><value>تم حفظ بيانات العملة بنجاح</value></data>
+  <data name="CurrencyDeleted" xml:space="preserve"><value>تم حذف العملة بنجاح</value></data>
+  <data name="DeleteCurrencyTitle" xml:space="preserve"><value>تأكيد حذف العملة</value></data>
+  <data name="DeleteCurrencyConfirm" xml:space="preserve"><value>هل أنت متأكد من حذف العملة ({0})؟</value></data>
+
   <data name="CustomerGroupsTitle" xml:space="preserve"><value>مجموعات العملاء</value></data>
   <data name="SupplierGroupsTitle" xml:space="preserve"><value>مجموعات الموردين</value></data>
   <data name="GroupName" xml:space="preserve"><value>إسم المجموعة</value></data>
@@ -271,4 +290,104 @@
   <data name="NoSuppliersYet" xml:space="preserve"><value>لا يوجد موردين لعرضهم</value></data>
   <data name="CustomerCarsListTitle" xml:space="preserve"><value>بيانات سيارات العملاء</value></data>
   <data name="AddCarNewCustomerButton" xml:space="preserve"><value>إضافة سيارة عميل جديد</value></data>
+  <data name="CostCentersTitle" xml:space="preserve"><value>مراكز التكلفة</value></data>
+  <data name="AddCostCenterButton" xml:space="preserve"><value>إضافة مركز تكلفة</value></data>
+  <data name="NoCostCenterSelected" xml:space="preserve"><value>اختر مركز تكلفة من الشجرة لعرض بياناته</value></data>
+  <data name="NoCostCentersYet" xml:space="preserve"><value>لا توجد مراكز تكلفة بعد</value></data>
+  <data name="CostCenterAdded" xml:space="preserve"><value>تمت إضافة مركز التكلفة بنجاح</value></data>
+  <data name="AddCostCenterTitle" xml:space="preserve"><value>إضافة مركز تكلفة جديد</value></data>
+  <data name="SelectParentCostCenterFirst" xml:space="preserve"><value>اختر مركز التكلفة الأب أولاً من الشجرة</value></data>
+  <data name="ParentCostCenterLabel" xml:space="preserve"><value>مركز التكلفة الأب</value></data>
+  <data name="CostCenterNameLabel" xml:space="preserve"><value>اسم مركز التكلفة</value></data>
+  <data name="CostCenterCodeLabel" xml:space="preserve"><value>كود مركز التكلفة</value></data>
+  <data name="CostCenterNameRequired" xml:space="preserve"><value>أدخل اسم مركز التكلفة</value></data>
+  <data name="CostCenterCodeGenerationFailed" xml:space="preserve"><value>تعذّر توليد كود مركز التكلفة</value></data>
+  <data name="DeleteCostCenterTitle" xml:space="preserve"><value>حذف مركز التكلفة</value></data>
+  <data name="DeleteCostCenterConfirm" xml:space="preserve"><value>هل تريد حذف مركز التكلفة "{0}"؟ ربما يكون قد استُخدم من قبل فيتأثر بذلك حسابات أخرى</value></data>
+  <data name="CostCenterCannotDeleteHasChildren" xml:space="preserve"><value>لا يمكن حذف هذا المركز لأنه مستخدَم فى قائمة مراكز تكلفة فرعية</value></data>
+  <data name="SearchCostCenterLabel" xml:space="preserve"><value>بحث عن مركز تكلفة</value></data>
+  <data name="SearchCostCenterPlaceholder" xml:space="preserve"><value>اكتب اسم مركز التكلفة أو كوده...</value></data>
+  <data name="CostCenterForAccountsTitle" xml:space="preserve"><value>مراكز تكلفة الحسابات</value></data>
+  <data name="AssignCostCenterButton" xml:space="preserve"><value>ربط مركز تكلفة</value></data>
+  <data name="SelectedAccountLabel" xml:space="preserve"><value>الحساب المُختار</value></data>
+  <data name="NoCostCentersAssignedYet" xml:space="preserve"><value>لا توجد مراكز تكلفة مرتبطة بهذا الحساب بعد</value></data>
+  <data name="AssignCostCentersTitle" xml:space="preserve"><value>ربط مراكز تكلفة بالحساب</value></data>
+  <data name="CostCenterAssigned" xml:space="preserve"><value>تم ربط مركز/مراكز التكلفة بنجاح</value></data>
+  <data name="RemoveCostCenterAssignmentTitle" xml:space="preserve"><value>إلغاء ربط مركز التكلفة</value></data>
+  <data name="RemoveCostCenterAssignmentConfirm" xml:space="preserve"><value>هل تريد إلغاء ربط مركز التكلفة "{0}" بهذا الحساب؟</value></data>
+  <data name="CostCenterAssignmentRemoved" xml:space="preserve"><value>تم إلغاء الربط بنجاح</value></data>
+  <data name="FinancialPeriodsTitle" xml:space="preserve"><value>الفترات المالية</value></data>
+  <data name="AddPeriodButton" xml:space="preserve"><value>إضافة</value></data>
+  <data name="ActivatePeriodButton" xml:space="preserve"><value>تنشيط الفترة المالية</value></data>
+  <data name="DeletePeriodButton" xml:space="preserve"><value>حذف</value></data>
+  <data name="PeriodSerialColumn" xml:space="preserve"><value>م</value></data>
+  <data name="PeriodDateFromColumn" xml:space="preserve"><value>من</value></data>
+  <data name="PeriodDateToColumn" xml:space="preserve"><value>إلى</value></data>
+  <data name="PeriodNotesColumn" xml:space="preserve"><value>ملاحظات</value></data>
+  <data name="NoPeriodsYet" xml:space="preserve"><value>لا توجد فترات مالية بعد</value></data>
+  <data name="OpeningPeriodNote" xml:space="preserve"><value>الميزانية الإفتتاحية</value></data>
+  <data name="ClosedPeriodNote" xml:space="preserve"><value>فترة منتهية</value></data>
+  <data name="PeriodDateRangeInvalid" xml:space="preserve"><value>الفترة المالية غير مضبوطة</value></data>
+  <data name="SelectPeriodToDelete" xml:space="preserve"><value>من فضلك حدد الفترة المالية المراد حذفها</value></data>
+  <data name="OnlyLastPeriodDeletable" xml:space="preserve"><value>لا يمكن حذف هذه الفترة، يجب الحذف من آخر فترة مالية تم إنشاؤها</value></data>
+  <data name="ClosedPeriodCannotDelete" xml:space="preserve"><value>لا يمكن حذف هذه الفترة، لقد تم ترحيلها وهى فترة منتهية</value></data>
+  <data name="FinancialPeriodConfirmTitle" xml:space="preserve"><value>فترة مالية</value></data>
+  <data name="ConfirmActivatePeriodMessage" xml:space="preserve"><value>هل أنت متأكد من تنشيط الفترة المالية؟</value></data>
+  <data name="ConfirmDeletePeriodMessage" xml:space="preserve"><value>هل أنت متأكد من حذف الفترة المالية؟</value></data>
+  <data name="PeriodAdded" xml:space="preserve"><value>تمت إضافة الفترة المالية بنجاح</value></data>
+  <data name="JournalDaysTitle" xml:space="preserve"><value>اليوميات</value></data>
+  <data name="AddJournalDayButton" xml:space="preserve"><value>إضافة</value></data>
+  <data name="EditJournalDayTitle" xml:space="preserve"><value>تعديل يومية</value></data>
+  <data name="JournalCodeLabel" xml:space="preserve"><value>الكود</value></data>
+  <data name="JournalNameLabel" xml:space="preserve"><value>اليوميه</value></data>
+  <data name="NoJournalDaysYet" xml:space="preserve"><value>لا توجد يوميات بعد</value></data>
+  <data name="JournalCodeRequired" xml:space="preserve"><value>من فضلك أدخل الكود</value></data>
+  <data name="JournalNameRequired" xml:space="preserve"><value>من فضلك أدخل إسم اليوميه</value></data>
+  <data name="JournalDayAdded" xml:space="preserve"><value>تمت إضافة اليومية بنجاح</value></data>
+  <data name="JournalDayUpdated" xml:space="preserve"><value>تم تعديل اليومية بنجاح</value></data>
+  <data name="JournalDayDeleted" xml:space="preserve"><value>تم حذف اليومية بنجاح</value></data>
+  <data name="DeleteJournalDayTitle" xml:space="preserve"><value>حذف يومية</value></data>
+  <data name="DeleteJournalDayConfirm" xml:space="preserve"><value>هل تريد حذف اليومية "{0}"؟</value></data>
+  <data name="CurrencyFactorsTitle" xml:space="preserve"><value>أسعار العملات</value></data>
+  <data name="AddCurrencyFactorButton" xml:space="preserve"><value>إضافه</value></data>
+  <data name="EditCurrencyFactorTitle" xml:space="preserve"><value>تعديل سعر العملة</value></data>
+  <data name="CurrencyPrimaryLabel" xml:space="preserve"><value>العمله الأولى</value></data>
+  <data name="CurrencySecondaryLabel" xml:space="preserve"><value>العمله الثانيه</value></data>
+  <data name="CurrencyFactorLabel" xml:space="preserve"><value>السعر</value></data>
+  <data name="NoCurrencyFactorsYet" xml:space="preserve"><value>لا توجد أسعار عملات لعرضها حتى الآن</value></data>
+  <data name="SelectPrimaryCurrencyRequired" xml:space="preserve"><value>يجب إختيار العمله الأولى</value></data>
+  <data name="SelectSecondaryCurrencyRequired" xml:space="preserve"><value>يجب إختيار العمله الثانيه</value></data>
+  <data name="CurrencyFactorRequired" xml:space="preserve"><value>يجب إدخال معامل العمله</value></data>
+  <data name="CurrencyFactorAdded" xml:space="preserve"><value>تمت إضافة سعر العملة بنجاح</value></data>
+  <data name="CurrencyFactorUpdated" xml:space="preserve"><value>تم حفظ البيانات</value></data>
+  <data name="StoreItemsMovementTitle" xml:space="preserve"><value>حركة أصناف مخزن</value></data>
+  <data name="StoreDailyMovementTitle" xml:space="preserve"><value>يومية المخزن</value></data>
+  <data name="StoreUsedTypeSell" xml:space="preserve"><value>مبيعات</value></data>
+  <data name="StoreUsedTypePurchase" xml:space="preserve"><value>مشتريات</value></data>
+  <data name="StoreLabel" xml:space="preserve"><value>المخزن</value></data>
+  <data name="ItemCategoryLabel" xml:space="preserve"><value>فئة الصنف</value></data>
+  <data name="SortByCategoryLabel" xml:space="preserve"><value>ترتيب بنوع الصنف</value></data>
+  <data name="SortByDateLabel" xml:space="preserve"><value>ترتيب بتاريخ العملية</value></data>
+  <data name="DateLabel" xml:space="preserve"><value>التاريخ</value></data>
+  <data name="DateFromLabel" xml:space="preserve"><value>التاريخ من</value></data>
+  <data name="DateToLabel" xml:space="preserve"><value>التاريخ إلى</value></data>
+  <data name="ShowDataButton" xml:space="preserve"><value>عرض البيانات</value></data>
+  <data name="SarfOutgoingLabel" xml:space="preserve"><value>الصادر</value></data>
+  <data name="EstlamIncomingLabel" xml:space="preserve"><value>الوارد</value></data>
+  <data name="SerialColumn" xml:space="preserve"><value>م</value></data>
+  <data name="DateColumn" xml:space="preserve"><value>التاريخ</value></data>
+  <data name="DocNoColumn" xml:space="preserve"><value>رقم المستند</value></data>
+  <data name="DescriptionColumn" xml:space="preserve"><value>البيان</value></data>
+  <data name="BalanceItemNoColumn" xml:space="preserve"><value>العدد</value></data>
+  <data name="BalanceColumn" xml:space="preserve"><value>الرصيد</value></data>
+  <data name="ItemNoExportColumn" xml:space="preserve"><value>العدد</value></data>
+  <data name="QtyExportColumn" xml:space="preserve"><value>الكمية</value></data>
+  <data name="ItemNameColumn" xml:space="preserve"><value>الصنف</value></data>
+  <data name="CategoryColumn" xml:space="preserve"><value>فئة الصنف</value></data>
+  <data name="OrderTypeColumn" xml:space="preserve"><value>نوع الإذن</value></data>
+  <data name="AllStoresOption" xml:space="preserve"><value>الكل</value></data>
+  <data name="AllCategoriesOption" xml:space="preserve"><value>الكل</value></data>
+  <data name="NoMovementYet" xml:space="preserve"><value>لا توجد حركة لعرضها</value></data>
+  <data name="SelectStoreRequired" xml:space="preserve"><value>يجب إختيار المخزن</value></data>
+  <data name="SelectCategoryRequired" xml:space="preserve"><value>يجب إختيار فئة الصنف</value></data>
 </root>

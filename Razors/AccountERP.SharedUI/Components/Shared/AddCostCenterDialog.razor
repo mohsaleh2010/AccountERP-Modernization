@@ -1,0 +1,188 @@
+@* 🟢 "إضافة مركز تكلفة" من مودال مستقل - نظير Account_Common_LIB.Account_Common.Account_Tree_Codes.
+   Add_NewCostCenter.cs (WinForms، ShowDialog() مودال فعلياً) بدل شاشة WinForms نفسها. تُفتَح دائماً كابن
+   مباشر للعقدة المختارة حالياً فى الشجرة (ParentNode) - تماماً كما يتطلب BtnAddNewAccounts_Click فى الأصل
+   وجود عقدة مختارة أولاً. القراءة/الإضافة تمران عبر نفس الكلاسات التى تستخدمها شاشة الويندوز فورمز:
+   AccountModelsLib.Common.MakeAutomatic_CostCenterCode (توليد الكود التالي تلقائياً - نفس خوارزمية شجرة
+   الحسابات بالضبط) وAccountModelsLib.CostCenterCLS.Add_NewCostCenter (الإضافة الفعلية). الحقول Currency_Id/
+   Currency_Str/Cost_Type/Head_Main_Cost مُثبَّتة 0/""/0/0 عمداً - نفس القيم المُثبَّتة فى النموذج الأصلي
+   (كود اختيار العملة مُعلَّق هناك ولا توجد أداة لإضافة "رأس" مركز تكلفة من هذه الشاشة). *@
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@inject LanguageService LangService
+
+<MudDialog @bind-Visible="Visible"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr("AddCostCenterTitle")</TitleContent>
+    <DialogContent>
+        @if (ParentNode == null)
+        {
+            <MudAlert Severity="Severity.Warning">@Tr("SelectParentCostCenterFirst")</MudAlert>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                @Tr("ParentCostCenterLabel"): <strong>@ParentNode.Code_Str &nbsp; @ParentNode.Name</strong>
+            </MudText>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_errorMessage</MudAlert>
+            }
+
+            <MudGrid Spacing="3">
+                <MudItem xs="12" sm="7">
+                    <MudTextField T="string" @bind-Value="_name" Label="@Tr("CostCenterNameLabel")" Required="true" AutoFocus="true" />
+                </MudItem>
+                <MudItem xs="12" sm="5">
+                    <MudTextField T="string" Value="_codeStr" ReadOnly="true" Label="@Tr("CostCenterCodeLabel")" />
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="string" @bind-Value="_firstSubCode" Label="@Tr("FirstSubCodeLabel")">
+                        @foreach (var f in AccountLookups.FirstSubCodes)
+                        {
+                            <MudSelectItem T="string" Value="@f.Value">@f.TextAr</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField T="string" @bind-Value="_notes" Label="@Tr("NotesLabel")" Lines="2" />
+                </MudItem>
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseAsync">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@(_isSaving || ParentNode == null)">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public CostCenterNodeViewModel? ParentNode { get; set; }
+    [Parameter] public EventCallback<long> OnCostCenterAdded { get; set; }
+
+    private string _name = "";
+    private string _notes = "";
+    private string _firstSubCode = AccountLookups.FirstSubCodeDefault;
+    private string _codeStr = "";
+    private long _code;
+    private long _lastPartIncrease;
+    private int _costLevel;
+    private bool _isSaving;
+    private string? _errorMessage;
+    private long _lastLoadedParentId = -1;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Visible && ParentNode != null && ParentNode.Id != _lastLoadedParentId)
+        {
+            _lastLoadedParentId = ParentNode.Id;
+            await LoadDefaultsAsync();
+        }
+        else if (!Visible)
+        {
+            _lastLoadedParentId = -1;
+        }
+    }
+
+    private async Task LoadDefaultsAsync()
+    {
+        _errorMessage = null;
+        _name = "";
+        _notes = "";
+        _firstSubCode = AccountLookups.FirstSubCodeDefault;
+
+        var parentId = ParentNode!.Id;
+        int excp = 0;
+        string msg = "";
+        long lastPart = 0;
+        string codeStr = "";
+        long code = 0;
+        int level = 0;
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            Common.MakeAutomatic_CostCenterCode(ref excp, ref msg, parentId, ref lastPart, ref codeStr, ref code, ref level);
+        });
+        _lastPartIncrease = lastPart;
+        _codeStr = codeStr;
+        _code = code;
+        _costLevel = level;
+        StateHasChanged();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (ParentNode == null) return;
+        if (string.IsNullOrWhiteSpace(_name)) { _errorMessage = Tr("CostCenterNameRequired"); return; }
+        if (string.IsNullOrWhiteSpace(_codeStr)) { _errorMessage = Tr("CostCenterCodeGenerationFailed"); return; }
+
+        _isSaving = true;
+        _errorMessage = null;
+        int excp = 0;
+        string msg = "";
+        var parentId = ParentNode.Id;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new CostCenterCLS().Add_NewCostCenter(
+                    ref excp, ref msg,
+                    parentId, _name.Trim(), _code, _codeStr, Cost_Type: 0, Notes: _notes,
+                    Currency_Id: 0, Currency_Str: "", Head_Main_Cost: 0,
+                    lastPartIncrease: _lastPartIncrease, Cost_Level: _costLevel, FirstSubCode: _firstSubCode);
+            });
+
+            if (excp == 0)
+            {
+                await OnCostCenterAdded.InvokeAsync(_code);
+                await CloseAsync();
+            }
+            else
+            {
+                _errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

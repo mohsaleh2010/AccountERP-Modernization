@@ -1,0 +1,257 @@
+@* 🟢 شاشة "مراكز تكلفة الحسابات" (الربط) - النسخة Blazor من Account_Common_LIB.Cost_CenterTree.
+   CostCenterForAccounts_FRM.cs (WinForms، تُفتَح من MainFrm_AccountUpdate.ToolStripMenuItemCostCenterForAccounts_Click).
+   تعرض شجرة حسابات المصروفات/الإيرادات فقط (نفس فلترة الأصل بالضبط - راجع CostCenterAssignableOnly على
+   AccountTreePicker) يسار، ومراكز التكلفة المُخصَّصة للحساب المُختار يمين (CostCenterCLS.Get_CostAssignForCost)
+   مع إمكانية الحذف لكل صف وربط مراكز جديدة عبر مودال اختيار متعدد (AssignCostCentersDialog يوحّد شاشتَي
+   الإضافة الواحدة/المتعددة الأصليتين). كل القراءة/الربط/الحذف تمر عبر AccountModelsLib.CostCenterCLS كما هى
+   تماماً - بدون أي منطق أعمال جديد هنا. *@
+
+@page "/accounts/cost-center-assignment"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("CostCenterForAccountsTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")}; height: calc(100vh - 100px); display:flex; flex-direction:column; min-height:0;")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1" Style="flex: 0 0 auto;">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("CostCenterForAccountsTitle")</MudText>
+            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                <MudSelect T="long" Value="_branchId" ValueChanged="OnBranchChanged" Label="@Tr("BranchLabel")" Style="min-width:220px;" Dense="true">
+                    @foreach (var b in _branches)
+                    {
+                        <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAssignDialog" Disabled="@(_selectedAccount == null || _isBusy)">
+                    @Tr("AssignCostCenterButton")
+                </MudButton>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4" Style="flex: 0 0 auto;" ContentAlignment="HorizontalAlignment.Left">@_errorMessage</MudAlert>
+    }
+
+    <MudGrid Spacing="3" Style="flex: 1 1 auto; min-height: 0;">
+        <MudItem xs="12" md="5" Style="height:100%;">
+            <MudPaper Class="pa-3" Elevation="1" Style="height:100%; overflow:hidden;">
+                <AccountTreePicker @ref="_treePicker" BranchId="_branchId" SelectedValue="_selectedAccount"
+                                    SelectedValueChanged="OnAccountSelected" CostCenterAssignableOnly="true" Height="100%" />
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="7" Style="height:100%;">
+            <MudPaper Class="pa-4" Elevation="1" Style="height:100%; overflow-y:auto;">
+                @if (_selectedAccount == null)
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("NoAccountSelected")</MudAlert>
+                }
+                else
+                {
+                    <MudText Typo="Typo.subtitle1" Class="mb-3">
+                        @Tr("SelectedAccountLabel"): <strong>@_selectedAccount.SubAccount_NO &nbsp; @_selectedAccount.SubAccount_Name</strong>
+                    </MudText>
+
+                    @if (_isLoadingAssigned)
+                    {
+                        <MudProgressLinear Indeterminate="true" Class="mb-2" />
+                    }
+                    else if (_assignedCostCenters.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("NoCostCentersAssignedYet")</MudAlert>
+                    }
+                    else
+                    {
+                        <MudTable Items="@_assignedCostCenters" Hover="true" Dense="true">
+                            <HeaderContent>
+                                <MudTh>@Tr("CostCenterCodeLabel")</MudTh>
+                                <MudTh>@Tr("CostCenterNameLabel")</MudTh>
+                                <MudTh Style="width:60px;"></MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="@Tr("CostCenterCodeLabel")">@context.CodeStr</MudTd>
+                                <MudTd DataLabel="@Tr("CostCenterNameLabel")">@context.Name</MudTd>
+                                <MudTd>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                                                   OnClick="@(() => RemoveAsync(context))" Disabled="_isBusy" />
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+<AssignCostCentersDialog @bind-Visible="_assignDialogOpen" SubmainAccountId="@(_selectedAccount?.Id ?? 0)" OnAssigned="OnAssignedAsync" />
+
+@code {
+    private record AssignedCostCenterRow(long CostCenterId, string CodeStr, string Name);
+
+    private List<(long Id, string Name)> _branches = new();
+    private long _branchId;
+    private AccountTreePicker? _treePicker;
+    private AccountTreeNodeViewModel? _selectedAccount;
+    private List<AssignedCostCenterRow> _assignedCostCenters = new();
+    private bool _assignDialogOpen;
+    private bool _isBusy;
+    private bool _isLoadingAssigned;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var branchDt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, (int)Common.User_Id);
+            var branches = new List<(long, string)>();
+            foreach (DataRow r in branchDt.Rows)
+            {
+                branches.Add((Convert.ToInt64(r["Id"]), r["Branch_Name"]?.ToString() ?? ""));
+            }
+            _branches = branches;
+        });
+        if (_branches.Count > 0)
+        {
+            _branchId = _branches[0].Id;
+        }
+    }
+
+    private void OnBranchChanged(long branchId)
+    {
+        _branchId = branchId;
+        _selectedAccount = null;
+        _assignedCostCenters = new();
+    }
+
+    private async Task OnAccountSelected(AccountTreeNodeViewModel? node)
+    {
+        _selectedAccount = node;
+        _errorMessage = null;
+        await LoadAssignedCostCentersAsync();
+    }
+
+    private async Task LoadAssignedCostCentersAsync()
+    {
+        if (_selectedAccount == null)
+        {
+            _assignedCostCenters = new();
+            return;
+        }
+
+        _isLoadingAssigned = true;
+        try
+        {
+            var accountId = _selectedAccount.Id;
+            var rows = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var dt = new CostCenterCLS().Get_CostAssignForCost(accountId);
+                var list = new List<AssignedCostCenterRow>();
+                foreach (DataRow r in dt.Rows)
+                {
+                    list.Add(new AssignedCostCenterRow(
+                        Convert.ToInt64(r["Cost_Center_Id"]),
+                        r["Code_Str"]?.ToString() ?? "",
+                        r["Name"]?.ToString() ?? ""));
+                }
+                return list;
+            });
+            _assignedCostCenters = rows;
+        }
+        finally
+        {
+            _isLoadingAssigned = false;
+        }
+    }
+
+    private void OpenAssignDialog()
+    {
+        if (_selectedAccount == null) return;
+        _assignDialogOpen = true;
+    }
+
+    private async Task OnAssignedAsync()
+    {
+        Snackbar.Add(Tr("CostCenterAssigned"), Severity.Success);
+        await LoadAssignedCostCentersAsync();
+    }
+
+    // 🟢 يقابل BtnRemove_Click فى الأصل: نفس الاستدعاء بالضبط CostCenterCLS.Delete_CostCenterForAccounts.
+    private async Task RemoveAsync(AssignedCostCenterRow row)
+    {
+        if (_selectedAccount == null) return;
+
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("RemoveCostCenterAssignmentTitle"),
+            Tr("RemoveCostCenterAssignmentConfirm", row.Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+
+        if (confirmed != true) return;
+
+        _isBusy = true;
+        _errorMessage = null;
+        var accountId = _selectedAccount.Id;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new CostCenterCLS().Delete_CostCenterForAccounts(row.CostCenterId, accountId);
+            });
+
+            Snackbar.Add(Tr("CostCenterAssignmentRemoved"), Severity.Success);
+            await LoadAssignedCostCentersAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

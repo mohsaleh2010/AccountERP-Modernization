@@ -112,6 +112,13 @@
     [Parameter] public EventCallback<AccountTreeNodeViewModel?> SelectedValueChanged { get; set; }
     [Parameter] public string? Height { get; set; }
 
+    // 🟢 عام إضافى (بطلب المستخدم صراحة، شاشة "مراكز تكلفة الحسابات"): عند true يستدعي
+    // AccountsTree.Get_SubMain_Account_ToSetCostCenter بدل Get_SubMain_Account العادية - نفس الاستعلام
+    // المُستخدَم فعلياً فى Connection4It/Account_Common_LIB.AccountTreeViewUSCTRL.SetTreeFill_ToSetCostCenter
+    // بالويندوز فورمز (يقتصر على حسابات Head_Main_Account=4 مصروفات أو 5 إيرادات + عُقد الجذر الخمس للتنقل).
+    // القيمة الافتراضية false تحافظ على نفس سلوك شجرة الحسابات العامة الحالي دون أي تغيير.
+    [Parameter] public bool CostCenterAssignableOnly { get; set; }
+
     private long _loadedForBranchId = -1;
     private bool _isLoading;
     private List<AccountTreeNodeViewModel> _roots = new();
@@ -154,7 +161,10 @@
             {
                 AccountCultureGuard.EnsureInvariant();
                 int excp = 0;
-                var dt = new AccountsTree().Get_SubMain_Account(ref excp, branchId);
+                var at = new AccountsTree();
+                var dt = CostCenterAssignableOnly
+                    ? at.Get_SubMain_Account_ToSetCostCenter(ref excp, branchId)
+                    : at.Get_SubMain_Account(ref excp, branchId);
                 return AccountTreeNodeViewModel.BuildTree(dt);
             });
             _roots = roots;

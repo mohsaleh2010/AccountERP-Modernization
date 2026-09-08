@@ -117,7 +117,37 @@ namespace AccountModelsLib
             return Factor;
        }
 
-        public string  Get_CurrencyName(ref AccountModelsLib.operations opp,int Currency_Id)
+        // 🟢 جديدة: تقابل استعلام Fill_Grid فى Account_Common_LIB.Currency_Factors.cs حرفياً (نفس شرط
+       // IS_TheSameCurrencies = 0 لإخفاء صفوف عامل=1 التلقائية) - لم تكن موجودة كدالة مستقلة لأن شاشة
+       // الويندوز فورمز بَنَت الـ SQL مباشرة فى الفورم بدلاً من الكلاس.
+       public DataTable Get_Currency_Factors_List(ref AccountModelsLib.operations opp)
+       {
+           opp = new AccountModelsLib.operations();
+           string mysql = "Select * from Currency_Factor Where IS_TheSameCurrencies = 0";
+           DataTable dt = opp.return_DataTableWithBuilder(mysql);
+           return dt;
+       }
+
+       // 🟢 جديدة: تكييف تقنى بحت يقابل تعديل عمود "السعر" داخل شبكة Currency_Factors.cs وحفظه بزر
+       // "حفظ التعديل" (عبر opp.ada.Update دفعة واحدة) - لا مقابل له فى Blazor فاستُبدل بتحديث صريح
+       // لصف واحد بنفس الأثر بالضبط، بدون أى قاعدة عمل جديدة.
+       public void Update_Factor(ref int Excp, ref string Msg, long Id, decimal Factor)
+       {
+           AccountModelsLib.operations opp = new AccountModelsLib.operations();
+           try
+           {
+               string mysql = " Update Currency_Factor Set Factor=" + Factor + " Where ID=" + Id + "";
+               opp.insert_me(mysql);
+               Excp = 0;
+           }
+           catch (Exception ee)
+           {
+               Excp = 1;
+               Msg = ee.Message;
+           }
+       }
+
+       public string  Get_CurrencyName(ref AccountModelsLib.operations opp,int Currency_Id)
         {
             //opp = new AccountModelsLib.operations();
             string mysql = "Select * from Currency    Wher  Value= "+ Currency_Id;

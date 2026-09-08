@@ -1,0 +1,184 @@
+@* 🟢 مودال "ربط مراكز تكلفة بحساب" - يوحّد شاشتَي الويندوز فورمز الأصليتين (إضافة مركز واحد عبر Combo فى
+   CostCenterForAccounts_FRM، أو عدة مراكز عبر مودال منفصل MultiCostCenterForAccounts_FRM) فى مودال واحد
+   باختيار متعدد (Checkboxes) - كلاهما فى الأصل ينتهيان لنفس الاستدعاء الفعلي على أي حال
+   (CostCenterCLS.Add_NewCostCenterForAccounts overload الخاص بـ ArrayList يتجاهل المُكرَّر بصمت)، فاستُخدِم
+   هذا الـoverload دائماً هنا حتى لعنصر واحد بدل تكرار شاشتين لغرض واحد.
+
+   قائمة "مراكز التكلفة الأوراق فقط" (Connection4It.Cost_Center_Tree.Get_Data الأصلية تفلتر بنفس الشرط
+   بالضبط: WHERE ID NOT IN (SELECT Parent_Id FROM Cost_Center_Tree)) تُحسَب هنا محلياً فى الـBlazor من نفس
+   شجرة CostCenterCLS.Get_CostCenter() المُحمَّلة أصلاً (عقدة !HasChildren = ورقة) - بدون أي استعلام SQL
+   جديد فى AccountModelsLib، فقط إعادة استخدام نفس البيانات بنفس المنطق. *@
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@inject LanguageService LangService
+
+<MudDialog @bind-Visible="Visible"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr("AssignCostCentersTitle")</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_errorMessage</MudAlert>
+        }
+
+        @if (_isLoading)
+        {
+            <MudProgressLinear Indeterminate="true" Class="mb-2" />
+        }
+        else if (_leafCostCenters.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("NoCostCentersYet")</MudAlert>
+        }
+        else
+        {
+            <MudList T="long" Dense="true">
+                @foreach (var cc in _leafCostCenters)
+                {
+                    <MudListItem T="long">
+                        <MudCheckBox T="bool" Value="@_selectedIds.Contains(cc.Id)" ValueChanged="@((bool v) => OnCheckChanged(cc.Id, v))"
+                                     Label="@($"{cc.Code_Str}  {cc.Name}")" Color="Color.Primary" Dense="true" />
+                    </MudListItem>
+                }
+            </MudList>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseAsync">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@(_isSaving || _selectedIds.Count == 0)">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public long SubmainAccountId { get; set; }
+    [Parameter] public EventCallback OnAssigned { get; set; }
+
+    private List<CostCenterNodeViewModel> _leafCostCenters = new();
+    private HashSet<long> _selectedIds = new();
+    private bool _isLoading;
+    private bool _isSaving;
+    private string? _errorMessage;
+    private bool _loadedOnce;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Visible && !_loadedOnce)
+        {
+            _loadedOnce = true;
+            await LoadLeafCostCentersAsync();
+        }
+        else if (!Visible)
+        {
+            _loadedOnce = false;
+            _selectedIds.Clear();
+            _errorMessage = null;
+        }
+    }
+
+    private async Task LoadLeafCostCentersAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            var leaves = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var dt = new CostCenterCLS().Get_CostCenter();
+                var roots = CostCenterNodeViewModel.BuildTree(dt);
+                var flat = new List<CostCenterNodeViewModel>();
+                void Walk(List<CostCenterNodeViewModel> nodes)
+                {
+                    foreach (var n in nodes)
+                    {
+                        if (!n.HasChildren) flat.Add(n);
+                        Walk(n.Children);
+                    }
+                }
+                Walk(roots);
+                flat.Sort((a, b) => string.Compare(a.Code_Str, b.Code_Str, StringComparison.OrdinalIgnoreCase));
+                return flat;
+            });
+            _leafCostCenters = leaves;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OnCheckChanged(long id, bool value)
+    {
+        if (value) _selectedIds.Add(id);
+        else _selectedIds.Remove(id);
+    }
+
+    // 🟢 يقابل BtnSaveFirstBalance_Click (إضافة واحدة) وBtnMultiSelect_Click (إضافة متعددة) معاً فى الأصل:
+    // نفس الاستدعاء بالضبط CostCenterCLS.Add_NewCostCenterForAccounts overload الـArrayList، حتى لعنصر واحد.
+    private async Task SaveAsync()
+    {
+        if (_selectedIds.Count == 0) return;
+
+        _isSaving = true;
+        _errorMessage = null;
+        int excp = 0;
+        string msg = "";
+        var ids = new System.Collections.ArrayList(_selectedIds.Cast<object>().ToArray());
+        var accountId = SubmainAccountId;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new CostCenterCLS().Add_NewCostCenterForAccounts(ref excp, ref msg, ids, accountId);
+            });
+
+            if (excp == 0)
+            {
+                await OnAssigned.InvokeAsync();
+                await CloseAsync();
+            }
+            else
+            {
+                _errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

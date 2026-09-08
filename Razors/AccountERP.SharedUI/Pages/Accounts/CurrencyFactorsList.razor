@@ -1,0 +1,317 @@
+@* 🟢 شاشة "أسعار العملات" - النسخة Blazor من Account_Common_LIB\CurrencyFactors\Currency_Factors.cs
+   (WinForms، تُفتَح من MainFrm_AccountUpdate.ToolStripMenuItemCurrency_Factors_Click) + مربع الحوار
+   Account_Common_LIB\CurrencyFactors\AddCurrencyFactor.cs. منطق العمل الفعلي فى
+   AccountModelsLib.CurrencyFactorsCLS (يرث من CurrencyFactorsCLS_) - كان بالفعل داخل AccountModelsLib
+   ولا يعتمد على WinForms إطلاقاً (كل دوال الحفظ تُعيد النتيجة عبر ref Excp/ref Msg من الأصل، بدون أى
+   MessageBox.Show داخل الكلاس نفسه) فلم يحتج الأمر لأى نقل هذه المرة، خلافاً لبند اليوميات السابق.
+   أُضيفت دالتان فقط لأسباب تقنية بحتة (بدون أى قاعدة عمل جديدة):
+   - Get_Currency_Factors_List: تقابل استعلام Fill_Grid حرفياً (WHERE IS_TheSameCurrencies = 0).
+   - Update_Factor: تكييف تقنى يقابل تعديل عمود "السعر" فى شبكة الويندوز فورمز وحفظه بزر "حفظ التعديل"
+     (عبر SqlDataAdapter.Update دفعة واحدة) - لا مقابل له فى Blazor فاستُبدل بتحديث صريح لصف واحد.
+   ملاحظة تصميم مهمة: زر "حذف" فى شاشة الويندوز فورمز الأصلية موجود فى الفورم لكنه مُخفى فعلياً
+   (deleteButton.Visible = false فى Currency_Factors.designer.cs) - أى أن الحذف غير متاح فعلياً للمستخدم
+   فى التطبيق الحالى، لذلك لم تُضَف أى وظيفة حذف هنا حفاظاً على نفس السلوك الفعلى المُشاهَد فى الإنتاج.
+   AddNewCurrency_Factors تُنشئ تلقائياً صفَّى "عامل=1" الذاتيين لكل عملة (نفس نفسها = 1) بالإضافة لصف
+   السعر الفعلى بين العملتين - نفس القاعدة الأصلية حرفياً، بدون أى تعديل. *@
+
+@page "/accounts/currency-factors"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("CurrencyFactorsTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("CurrencyFactorsTitle")</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenAddDialog">
+                @Tr("AddCurrencyFactorButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudTable Items="@_factors" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Elevation="1">
+        <HeaderContent>
+            <MudTh>@Tr("CurrencyPrimaryLabel")</MudTh>
+            <MudTh>@Tr("CurrencyFactorLabel")</MudTh>
+            <MudTh>@Tr("CurrencySecondaryLabel")</MudTh>
+            <MudTh Style="width:60px;"></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("CurrencyPrimaryLabel")">@context.Currency_Primary_Name</MudTd>
+            <MudTd DataLabel="@Tr("CurrencyFactorLabel")">@context.Factor.ToString("0.0000")</MudTd>
+            <MudTd DataLabel="@Tr("CurrencySecondaryLabel")">@context.Currency_Secondary_Name</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => OpenEditDialog(context))" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoCurrencyFactorsYet")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<MudDialog @bind-Visible="_dialogOpen"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr(_isEditing ? "EditCurrencyFactorTitle" : "AddCurrencyFactorButton")</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_dialogErrorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_dialogErrorMessage</MudAlert>
+        }
+        <MudGrid>
+            @* 🟢 فى وضع التعديل: العملتان تُعرَضان كنص ثابت فقط (لا يمكن تغييرهما من هنا، تماماً كما فى
+               الأصل حيث عمودَى اسم العملة فى الشبكة ReadOnly=true ولا تُغيَّر إلا "السعر") - استخدام
+               MudSelect معطَّل (Disabled) هنا كان يُظهِر القيمة الرقمية الخام بدل اسم العملة (خلل معروف فى
+               MudBlazor: العنصر المعطَّل لا يعرض نص العنصر المُختار بشكل موثوق) فاستُبدل بنص عادي. *@
+            @if (_isEditing)
+            {
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" Value="@_primaryCurrencyName" Label="@Tr("CurrencyPrimaryLabel")"
+                                  Variant="Variant.Outlined" FullWidth="true" ReadOnly="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" Value="@_secondaryCurrencyName" Label="@Tr("CurrencySecondaryLabel")"
+                                  Variant="Variant.Outlined" FullWidth="true" ReadOnly="true" />
+                </MudItem>
+            }
+            else
+            {
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int" @bind-Value="_primaryCurrencyId" Label="@Tr("CurrencyPrimaryLabel")"
+                               Variant="Variant.Outlined" FullWidth="true">
+                        @foreach (var c in _currencyOptions)
+                        {
+                            <MudSelectItem T="int" Value="@c.Value">@c.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int" @bind-Value="_secondaryCurrencyId" Label="@Tr("CurrencySecondaryLabel")"
+                               Variant="Variant.Outlined" FullWidth="true">
+                        @foreach (var c in _currencyOptions)
+                        {
+                            <MudSelectItem T="int" Value="@c.Value">@c.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            }
+            <MudItem xs="12">
+                <MudNumericField T="decimal" @bind-Value="_factorValue" Label="@Tr("CurrencyFactorLabel")"
+                                 Variant="Variant.Outlined" FullWidth="true" Format="0.0000" AutoFocus="true" Required="true" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _dialogOpen = false)">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@_isBusy">
+            @if (_isBusy)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private record CurrencyFactorRow(long Id, string Currency_Primary_Name, decimal Factor, string Currency_Secondary_Name, int Currency_ID_Primary, int Currency_ID_Secondary);
+    private record CurrencyOption(string Name, int Value);
+
+    private readonly CurrencyFactorsCLS _cls = new();
+    private List<CurrencyFactorRow> _factors = new();
+    private List<CurrencyOption> _currencyOptions = new();
+    private bool _isLoading = true;
+    private bool _isBusy;
+    private string? _errorMessage;
+
+    private bool _dialogOpen;
+    private bool _isEditing;
+    private string? _dialogErrorMessage;
+    private long _editId;
+    private int _primaryCurrencyId;
+    private int _secondaryCurrencyId;
+    private string _primaryCurrencyName = string.Empty;
+    private string _secondaryCurrencyName = string.Empty;
+    private decimal _factorValue;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        StateHasChanged();
+        try
+        {
+            var (factors, currencies) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                operations opp = null!;
+                var dt = _cls.Get_Currency_Factors_List(ref opp);
+                var factorList = new List<CurrencyFactorRow>();
+                foreach (DataRow r in dt.Rows)
+                {
+                    factorList.Add(new CurrencyFactorRow(
+                        Convert.ToInt64(r["ID"]),
+                        r["Currency_Primary_Name"]?.ToString() ?? "",
+                        Convert.ToDecimal(r["Factor"]),
+                        r["Currency_Secondary_Name"]?.ToString() ?? "",
+                        Convert.ToInt32(r["Currency_ID_Primary"]),
+                        Convert.ToInt32(r["Currency_ID_Secondary"])));
+                }
+
+                var currencyDt = _cls.GetCurrencyList();
+                var currencyList = new List<CurrencyOption>();
+                foreach (DataRow r in currencyDt.Rows)
+                {
+                    currencyList.Add(new CurrencyOption(
+                        r["Currency_Name"]?.ToString() ?? "",
+                        Convert.ToInt32(r["Value"])));
+                }
+
+                return (factorList, currencyList);
+            });
+            _factors = factors;
+            _currencyOptions = currencies;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OpenAddDialog()
+    {
+        _isEditing = false;
+        _dialogErrorMessage = null;
+        _editId = 0;
+        _primaryCurrencyId = 0;
+        _secondaryCurrencyId = 0;
+        _factorValue = 0;
+        _dialogOpen = true;
+    }
+
+    private void OpenEditDialog(CurrencyFactorRow row)
+    {
+        _isEditing = true;
+        _dialogErrorMessage = null;
+        _editId = row.Id;
+        _primaryCurrencyId = row.Currency_ID_Primary;
+        _secondaryCurrencyId = row.Currency_ID_Secondary;
+        _primaryCurrencyName = row.Currency_Primary_Name;
+        _secondaryCurrencyName = row.Currency_Secondary_Name;
+        _factorValue = row.Factor;
+        _dialogOpen = true;
+    }
+
+    // 🟢 يقابل AddCurrencyFactor.BtnAdd_Click بالضبط (فحوصَى التحقق الثلاثة بنفس الترتيب) فى حالة
+    // الإضافة، ثم AddNewCurrency_Factors التى تُنشئ صفَّى "عامل=1" الذاتيين تلقائياً كما فى الأصل.
+    // حالة التعديل تستدعي Update_Factor الجديدة بدلاً من ذلك (انظر تعليق الملف أعلاه).
+    private async Task SaveAsync()
+    {
+        _dialogErrorMessage = null;
+        if (_primaryCurrencyId <= 0)
+        {
+            _dialogErrorMessage = Tr("SelectPrimaryCurrencyRequired");
+            return;
+        }
+        if (!_isEditing && _secondaryCurrencyId <= 0)
+        {
+            _dialogErrorMessage = Tr("SelectSecondaryCurrencyRequired");
+            return;
+        }
+        if (_factorValue == 0)
+        {
+            _dialogErrorMessage = Tr("CurrencyFactorRequired");
+            return;
+        }
+
+        _isBusy = true;
+        try
+        {
+            int excp = 0;
+            string msg = "";
+            var editId = _editId;
+            var factorValue = _factorValue;
+            var primaryId = _primaryCurrencyId;
+            var secondaryId = _secondaryCurrencyId;
+            var primaryName = _currencyOptions.FirstOrDefault(c => c.Value == primaryId)?.Name ?? "";
+            var secondaryName = _currencyOptions.FirstOrDefault(c => c.Value == secondaryId)?.Name ?? "";
+
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                if (_isEditing)
+                {
+                    _cls.Update_Factor(ref excp, ref msg, editId, factorValue);
+                }
+                else
+                {
+                    _cls.AddNewCurrency_Factors(ref excp, ref msg, primaryName, primaryId, secondaryName, secondaryId, factorValue);
+                }
+            });
+
+            if (excp == 0)
+            {
+                _dialogOpen = false;
+                await LoadAsync();
+                Snackbar.Add(Tr(_isEditing ? "CurrencyFactorUpdated" : "CurrencyFactorAdded"), Severity.Success);
+            }
+            else
+            {
+                _dialogErrorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _dialogErrorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

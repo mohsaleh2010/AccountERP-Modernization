@@ -1,0 +1,314 @@
+@page "/accounts/currencies"
+
+@* 🟢 شاشة "العملات" - النسخة Blazor من CurrencyListFrmNew (WinForms، فى
+   Account_Common_LIB\CurrencyFactors\CurrencyListFrmNew.cs، مفتوحة من menuMainAccount >
+   toolStripMenuItemCurrencyListFrm فى MainFrm_AccountUpdate). كل عمليات القراءة/الإضافة/التعديل/الحذف
+   تمر عبر AccountModelsLib.BusinessLibShared.Currency.CurrencyCLS - نفس الكلاس الذى نُقل من
+   Account_Common_LIB (مشروع WinForms فقط) إلى AccountModelsLib ليصبح قابلاً للاستدعاء من هنا أيضاً
+   (نفس نمط GroupsCLS - راجع MODERNIZATION_NOTES.md)، فتبقى شاشتا الويندوز فورم وRazor تحفظان البيانات
+   بنفس الطريقة تماماً دون أي منطق مُعاد اشتقاقه. *@
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountModelsLib.BusinessLibShared.Currency
+@using CurrencyModel = AccountModelsLib.Models.Currency
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("CurrenciesTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
+                @Tr("CurrenciesTitle")
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenAddDialog">
+                @Tr("AddCurrencyLabel")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@errorMessage</MudAlert>
+    }
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudTextField T="string" Value="@searchText" ValueChanged="OnSearchChanged" Immediate="true"
+                      Label="@Tr("SearchCurrencyPlaceholder")" Variant="Variant.Outlined"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true" />
+    </MudPaper>
+
+    <MudTable Items="@filteredCurrencies" Hover="true" Striped="true" Bordered="true" Loading="@isLoading" Elevation="1">
+        <HeaderContent>
+            <MudTh>@Tr("CurrencyCodeLabel")</MudTh>
+            <MudTh>@Tr("CurrencyNameArLabel")</MudTh>
+            <MudTh>@Tr("CurrencyNameEnLabel")</MudTh>
+            <MudTh>@Tr("CurrencyEnumValueLabel")</MudTh>
+            <MudTh>@Tr("CurrencyExchangeRateLabel")</MudTh>
+            <MudTh>@Tr("CurrencyActiveLabel")</MudTh>
+            <MudTh>@Tr("CurrencyIsGLLabel")</MudTh>
+            <MudTh Style="width:110px;"></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("CurrencyCodeLabel")">@context.code</MudTd>
+            <MudTd DataLabel="@Tr("CurrencyNameArLabel")">@context.Currency_Name</MudTd>
+            <MudTd DataLabel="@Tr("CurrencyNameEnLabel")">@context.Currency_Name_EN</MudTd>
+            <MudTd DataLabel="@Tr("CurrencyEnumValueLabel")">@context.Value</MudTd>
+            <MudTd DataLabel="@Tr("CurrencyExchangeRateLabel")">@(context.rate?.ToString("0.0000"))</MudTd>
+            <MudTd DataLabel="@Tr("CurrencyActiveLabel")">
+                <MudIcon Icon="@(context.Active == 1 ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                         Color="@(context.Active == 1 ? Color.Success : Color.Default)" Size="Size.Small" />
+            </MudTd>
+            <MudTd DataLabel="@Tr("CurrencyIsGLLabel")">
+                @if ((context.IS_GL_Currency_Flage ?? 0) == 1)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" Size="Size.Small" />
+                }
+            </MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => OpenEditDialog(context))" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                               OnClick="@(() => DeleteCurrency(context))" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoCurrenciesYet")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<MudDialog @bind-Visible="dialogOpen"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr(isEditing ? "EditCurrencyLabel" : "AddCurrencyLabel")</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(dialogErrorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@dialogErrorMessage</MudAlert>
+        }
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="string" @bind-Value="editModel.Currency_Name" Label="@Tr("CurrencyNameArLabel")"
+                              Variant="Variant.Outlined" FullWidth="true" AutoFocus="true" Immediate="true" Required="true" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="string" @bind-Value="editModel.Currency_Name_EN" Label="@Tr("CurrencyNameEnLabel")"
+                              Variant="Variant.Outlined" FullWidth="true" Immediate="true" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudTextField T="string" @bind-Value="editModel.code" Label="@Tr("CurrencyCodeLabel")"
+                              Variant="Variant.Outlined" FullWidth="true" Immediate="true" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudNumericField T="int" @bind-Value="editModel.Value" Label="@Tr("CurrencyEnumValueLabel")"
+                                 Variant="Variant.Outlined" FullWidth="true" Min="1" Required="true" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudNumericField T="decimal?" @bind-Value="editModel.rate" Label="@Tr("CurrencyExchangeRateLabel")"
+                                 Variant="Variant.Outlined" FullWidth="true" Format="0.0000" Min="0.0001m" Required="true" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="string" @bind-Value="editModel.Desc_ar" Label="@Tr("CurrencyDescArLabel")"
+                              Variant="Variant.Outlined" FullWidth="true" Lines="2" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="string" @bind-Value="editModel.Desc_en" Label="@Tr("CurrencyDescEnLabel")"
+                              Variant="Variant.Outlined" FullWidth="true" Lines="2" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSwitch T="bool" Value="@(editModel.Active == 1)" ValueChanged="@((bool v) => editModel.Active = v ? 1 : 0)"
+                           Color="Color.Success" Label="@Tr("CurrencyActiveLabel")" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSwitch T="bool" Value="@((editModel.IS_GL_Currency_Flage ?? 0) == 1)"
+                           ValueChanged="@((bool v) => editModel.IS_GL_Currency_Flage = v ? 1 : 0)"
+                           Color="Color.Warning" Label="@Tr("CurrencyIsGLLabel")" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => dialogOpen = false)">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ConfirmSave" Disabled="@isSaving">
+            @if (isSaving)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private readonly CurrencyCLS currencyService = new();
+
+    private List<CurrencyModel> currencies = new();
+    private List<CurrencyModel> filteredCurrencies = new();
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+    private string searchText = string.Empty;
+
+    private bool dialogOpen;
+    private bool isEditing;
+    private bool isSaving;
+    private string dialogErrorMessage = string.Empty;
+    private CurrencyModel editModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadCurrenciesAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private async Task LoadCurrenciesAsync()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+        try
+        {
+            currencies = await currencyService.GetAllCurrenciesAsync();
+            ApplyFilter();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OnSearchChanged(string value)
+    {
+        searchText = value;
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        filteredCurrencies = currencyService.FilterCurrencies(searchText);
+    }
+
+    private async Task OpenAddDialog()
+    {
+        isEditing = false;
+        dialogErrorMessage = string.Empty;
+        editModel = new CurrencyModel
+        {
+            Id = await currencyService.GetNextIdAsync(),
+            Value = 1,
+            Active = 1,
+            IS_GL_Currency_Flage = 0,
+            rate = 1.0000m
+        };
+        dialogOpen = true;
+    }
+
+    private void OpenEditDialog(CurrencyModel row)
+    {
+        isEditing = true;
+        dialogErrorMessage = string.Empty;
+        editModel = new CurrencyModel
+        {
+            Id = row.Id,
+            Currency_Name = row.Currency_Name,
+            Currency_Name_EN = row.Currency_Name_EN,
+            code = row.code,
+            Value = row.Value,
+            rate = row.rate,
+            Desc_ar = row.Desc_ar,
+            Desc_en = row.Desc_en,
+            Active = row.Active,
+            IS_GL_Currency_Flage = row.IS_GL_Currency_Flage
+        };
+        dialogOpen = true;
+    }
+
+    private async Task ConfirmSave()
+    {
+        isSaving = true;
+        dialogErrorMessage = string.Empty;
+        try
+        {
+            var (success, message) = await currencyService.SaveCurrencyAsync(editModel);
+
+            if (success)
+            {
+                dialogOpen = false;
+                await LoadCurrenciesAsync();
+                Snackbar.Add(Tr("CurrencySaved"), MudBlazor.Severity.Success);
+            }
+            else
+            {
+                dialogErrorMessage = message;
+            }
+        }
+        catch (Exception ex)
+        {
+            dialogErrorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task DeleteCurrency(CurrencyModel row)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("DeleteCurrencyTitle"),
+            Tr("DeleteCurrencyConfirm", row.Currency_Name ?? string.Empty),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        errorMessage = string.Empty;
+        try
+        {
+            var (success, message) = await currencyService.DeleteCurrencyAsync(row.Id);
+
+            if (success)
+            {
+                await LoadCurrenciesAsync();
+                Snackbar.Add(Tr("CurrencyDeleted"), MudBlazor.Severity.Success);
+            }
+            else
+            {
+                errorMessage = message;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+}

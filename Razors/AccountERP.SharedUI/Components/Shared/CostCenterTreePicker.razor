@@ -1,0 +1,270 @@
+@* 🟢 مكوّن شجرة مراكز التكلفة القابل لإعادة الاستخدام - نسخة مُقتبَسة من AccountTreePicker.razor بنفس
+   الشكل/السلوك (بحث + توسيع/طي الكل + سكرول داخلي مستقل + زر عودة لأعلى الشجرة)، لكن مبنية على
+   CostCenterNodeViewModel/CostCenterCLS.Get_CostCenter() بدل شجرة الحسابات. لم يُعمَّم AccountTreePicker
+   نفسه عمداً: Cost_Center_Tree لا يحتوي عمود Branch_Id إطلاقاً (شجرة واحدة عامة بلا فلترة فرع - بعكس
+   شجرة الحسابات)، وشكل الأعمدة مختلف تماماً (Code_Str/Cost_Level/FirstSubCode بدل SubAccount_NO/
+   Account_Level) - تعميم قسري كان سيهدد مكوّناً مُختبَراً يعمل بالفعل فى الإنتاج (AccountsTreeList).
+   يحمّل بياناته بنفسه ولا يفترض شيئاً عن استخدام المستدعي له - عرض فقط + اختيار، لا حفظ/تعديل/حذف هنا. *@
+
+@using System.Data
+@using System.Globalization
+@using Microsoft.AspNetCore.Components
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@inject LanguageService LangService
+@inject IJSRuntime JSRuntime
+
+<div class="cost-center-tree-picker-root" style="@($"height:{Height ?? "100%"};")">
+    <div class="cost-center-tree-scroll" @ref="_scrollRef">
+        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-2">
+            <MudTooltip Text="@Tr("ExpandAllAccounts")">
+                <MudIconButton Icon="@Icons.Material.Filled.UnfoldMore" Size="Size.Small" OnClick="ExpandAll" Disabled="@(_roots.Count == 0)" />
+            </MudTooltip>
+            <MudTooltip Text="@Tr("CollapseAllAccounts")">
+                <MudIconButton Icon="@Icons.Material.Filled.UnfoldLess" Size="Size.Small" OnClick="CollapseAll" Disabled="@(_roots.Count == 0)" />
+            </MudTooltip>
+            <MudAutocomplete T="CostCenterNodeViewModel" Value="null" ValueChanged="OnSearchResultSelected"
+                              SearchFunc="SearchCostCentersAsync" ToStringFunc="@(a => a == null ? null : $"{a.Code_Str}  {a.Name}")"
+                              Label="@Tr("SearchCostCenterLabel")" Placeholder="@Tr("SearchCostCenterPlaceholder")"
+                              Variant="Variant.Outlined" Dense="true" Clearable="true" ResetValueOnEmptyText="true"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Style="flex:1; min-width:200px;" />
+        </MudStack>
+
+        @if (_isLoading)
+        {
+            <MudProgressLinear Indeterminate="true" Class="mb-2" />
+        }
+
+        <div class="cost-center-tree-guides">
+            @if (_roots.Count == 0 && !_isLoading)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("NoCostCentersYet")</MudAlert>
+            }
+            else
+            {
+                <MudTreeView T="CostCenterNodeViewModel" Items="@_treeItems" Hover="true" ExpandOnClick="true"
+                             SelectedValue="SelectedValue" SelectedValueChanged="OnNodeSelected">
+                    <ItemTemplate>
+                        @* 🐛 نفس ملاحظة AccountTreePicker: لازم ربط Expanded ثنائي الاتجاه صراحة، وإلا
+                           ExpandAll/CollapseAll لا تُحدث أي تأثير مرئي رغم تعديلها للحقل بشكل صحيح. *@
+                        <MudTreeViewItem T="CostCenterNodeViewModel" Value="@context.Value" Items="@context.Children"
+                                          Icon="@context.Icon" Text="@context.Text"
+                                          @bind-Expanded="context.Expanded" />
+                    </ItemTemplate>
+                </MudTreeView>
+            }
+        </div>
+    </div>
+
+    @if (_roots.Count > 0)
+    {
+        <MudTooltip Text="@Tr("ScrollTreeToTop")">
+            <MudIconButton Icon="@Icons.Material.Filled.KeyboardDoubleArrowUp" Color="Color.Primary" Variant="Variant.Filled"
+                           Size="Size.Small" Class="cost-center-tree-scrolltop-fab" OnClick="ScrollToTopAsync" />
+        </MudTooltip>
+    }
+</div>
+
+<style>
+    .cost-center-tree-picker-root {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    .cost-center-tree-scroll {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    .cost-center-tree-guides .mud-treeview-group {
+        border-inline-start: 1px dashed var(--mud-palette-lines-default);
+    }
+
+    .cost-center-tree-guides .mud-treeview-group .mud-treeview-item-content {
+        padding-inline-start: 4px;
+    }
+
+    .cost-center-tree-scrolltop-fab {
+        position: absolute;
+        bottom: 8px;
+        inset-inline-end: 8px;
+        z-index: 2;
+        box-shadow: 0 2px 6px rgba(0,0,0,.3);
+    }
+</style>
+
+@code {
+    [Parameter] public CostCenterNodeViewModel? SelectedValue { get; set; }
+    [Parameter] public EventCallback<CostCenterNodeViewModel?> SelectedValueChanged { get; set; }
+    [Parameter] public string? Height { get; set; }
+
+    private bool _loaded;
+    private bool _isLoading;
+    private List<CostCenterNodeViewModel> _roots = new();
+    private List<TreeItemData<CostCenterNodeViewModel>> _treeItems = new();
+    private Dictionary<long, CostCenterNodeViewModel> _nodeById = new();
+    private Dictionary<long, TreeItemData<CostCenterNodeViewModel>> _treeItemById = new();
+    private ElementReference _scrollRef;
+
+    private async Task ScrollToTopAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("accountErpInterop.scrollElementToTop", _scrollRef);
+        }
+        catch
+        {
+            // 🟢 غير حرج: قد يفشل النداء إن لم يكتمل ربط JS بعد أو أُزيل العنصر.
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!_loaded)
+        {
+            _loaded = true;
+            await ReloadAsync();
+        }
+    }
+
+    // 🟢 عام (public) عمداً - قابل للاستدعاء من الشاشة المستضيفة بعد أي إضافة/تعديل/حذف يغيّر شكل الشجرة.
+    public async Task ReloadAsync()
+    {
+        _isLoading = true;
+        StateHasChanged();
+        try
+        {
+            var roots = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var dt = new CostCenterCLS().Get_CostCenter();
+                return CostCenterNodeViewModel.BuildTree(dt);
+            });
+            _roots = roots;
+            _nodeById = FlattenById(_roots);
+            _treeItemById = new Dictionary<long, TreeItemData<CostCenterNodeViewModel>>();
+            _treeItems = BuildTreeItems(_roots, _treeItemById);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    // 🟢 عام أيضاً - يتيح لأي مستدعٍ (بعد إضافة مركز تكلفة جديد مثلاً) تحديد عقدة معيّنة بالـ Id وكشفها فى
+    // الشجرة (فتح كل آبائها) دفعة واحدة.
+    public async Task SelectAndRevealAsync(long id)
+    {
+        if (!_nodeById.TryGetValue(id, out var node)) return;
+        ExpandAncestors(node);
+        await OnNodeSelected(node);
+    }
+
+    public void ExpandAncestors(CostCenterNodeViewModel node)
+    {
+        CostCenterNodeViewModel? current = node;
+        while (current != null)
+        {
+            if (_treeItemById.TryGetValue(current.Id, out var item))
+            {
+                item.Expanded = true;
+            }
+
+            current = current.Parent_Id != 0 && _nodeById.TryGetValue(current.Parent_Id, out var parent)
+                ? parent
+                : null;
+        }
+    }
+
+    private void ExpandAll() => SetExpandedRecursive(_treeItems, true);
+
+    private void CollapseAll() => SetExpandedRecursive(_treeItems, false);
+
+    private static void SetExpandedRecursive(List<TreeItemData<CostCenterNodeViewModel>> items, bool expanded)
+    {
+        foreach (var item in items)
+        {
+            item.Expanded = expanded;
+            if (item.Children is List<TreeItemData<CostCenterNodeViewModel>> children)
+            {
+                SetExpandedRecursive(children, expanded);
+            }
+        }
+    }
+
+    private Task<IEnumerable<CostCenterNodeViewModel>> SearchCostCentersAsync(string value, System.Threading.CancellationToken token)
+    {
+        IEnumerable<CostCenterNodeViewModel> result = string.IsNullOrWhiteSpace(value)
+            ? Enumerable.Empty<CostCenterNodeViewModel>()
+            : _nodeById.Values.Where(a =>
+                (!string.IsNullOrEmpty(a.Name) && a.Name.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrEmpty(a.Code_Str) && a.Code_Str.Contains(value, StringComparison.OrdinalIgnoreCase)))
+                .Take(30);
+        return Task.FromResult(result);
+    }
+
+    private async Task OnSearchResultSelected(CostCenterNodeViewModel? node)
+    {
+        if (node == null) return;
+        ExpandAncestors(node);
+        await OnNodeSelected(node);
+    }
+
+    private async Task OnNodeSelected(CostCenterNodeViewModel? node)
+    {
+        SelectedValue = node;
+        await SelectedValueChanged.InvokeAsync(node);
+    }
+
+    private static List<TreeItemData<CostCenterNodeViewModel>> BuildTreeItems(
+        List<CostCenterNodeViewModel> nodes, Dictionary<long, TreeItemData<CostCenterNodeViewModel>> index)
+    {
+        var list = new List<TreeItemData<CostCenterNodeViewModel>>();
+        foreach (var n in nodes)
+        {
+            var item = new TreeItemData<CostCenterNodeViewModel>
+            {
+                Value = n,
+                Text = $"{n.Code_Str}  {n.Name}",
+                Icon = n.HasChildren ? Icons.Material.Filled.Folder : Icons.Material.Filled.Description,
+                Expandable = n.HasChildren,
+                Children = n.HasChildren ? BuildTreeItems(n.Children, index) : null,
+            };
+            index[n.Id] = item;
+            list.Add(item);
+        }
+        return list;
+    }
+
+    private static Dictionary<long, CostCenterNodeViewModel> FlattenById(List<CostCenterNodeViewModel> roots)
+    {
+        var dict = new Dictionary<long, CostCenterNodeViewModel>();
+        void Walk(List<CostCenterNodeViewModel> nodes)
+        {
+            foreach (var n in nodes)
+            {
+                dict[n.Id] = n;
+                Walk(n.Children);
+            }
+        }
+        Walk(roots);
+        return dict;
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

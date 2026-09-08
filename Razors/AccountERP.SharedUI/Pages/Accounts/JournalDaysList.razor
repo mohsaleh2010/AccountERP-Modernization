@@ -1,0 +1,284 @@
+@* 🟢 شاشة "اليوميات" (قائمة اليوميات) - النسخة Blazor من Accounts\General_LedgerAccount\Journal_DaysList\
+   Journal_DaysListFrm.cs (WinForms، تُفتَح من MainFrm_AccountUpdate.ToolStripMenuItem_JournalsDays_Click).
+   منطق العمل الفعلي كان فى General_Ledger.Journal_DaysListCLS (مشروع WinForms فقط، UseWindowsForms=true،
+   والكلاس نفسه كان يستدعي MessageBox.Show مباشرة) - نُقل إلى AccountModelsLib.BusinessLibShared.
+   GeneralLedger.Journal_DaysListCLS (نفس نمط نقل CurrencyCLS سابقاً) لإتاحته لـ Blazor، مع تغيير واحد
+   فقط: استبدال MessageBox.Show برسالة تُعاد عبر ref string Msg (نفس نمط Financial_PeriodCLS الموجود
+   بالفعل) - الاستعلامات والشروط نفسها بالضبط. شاشة الويندوز فورمز عُدِّلت لتستخدم النسخة الجديدة أيضاً
+   (عبر using alias) فبقيت الشاشتان تحفظان البيانات بنفس الطريقة تماماً.
+   ملاحظة تصميم: شاشة الويندوز فورمز تُعدِّل اسم اليومية عبر شبكة مرتبطة (DataGridView) وتحفظ كل التعديلات
+   دفعة واحدة بزر "حفظ" (SqlDataAdapter.Update) - آلية لا مقابل لها فى Blazor، فاستُبدلت بمودال تعديل صريح
+   لكل صف (يستدعي Update_Journal_Name المُضافة حديثاً لنفس الأثر بالضبط، بدون أي قاعدة عمل جديدة). *@
+
+@page "/accounts/journal-days"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using Journal_DaysListCLS = AccountModelsLib.BusinessLibShared.GeneralLedger.Journal_DaysListCLS
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("JournalDaysTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("JournalDaysTitle")</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenAddDialog">
+                @Tr("AddJournalDayButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudTable Items="@_journals" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Elevation="1">
+        <HeaderContent>
+            <MudTh>@Tr("JournalCodeLabel")</MudTh>
+            <MudTh>@Tr("JournalNameLabel")</MudTh>
+            <MudTh Style="width:110px;"></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("JournalCodeLabel")">@context.Code</MudTd>
+            <MudTd DataLabel="@Tr("JournalNameLabel")">@context.Journal_Name</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => OpenEditDialog(context))" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                               OnClick="@(() => DeleteAsync(context))" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoJournalDaysYet")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<MudDialog @bind-Visible="_dialogOpen"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr(_isEditing ? "EditJournalDayTitle" : "AddJournalDayButton")</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_dialogErrorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_dialogErrorMessage</MudAlert>
+        }
+        <MudGrid>
+            <MudItem xs="12">
+                <MudNumericField T="int" @bind-Value="_editCode" Label="@Tr("JournalCodeLabel")"
+                                 Variant="Variant.Outlined" FullWidth="true" Disabled="@_isEditing" Required="true" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" @bind-Value="_editName" Label="@Tr("JournalNameLabel")"
+                              Variant="Variant.Outlined" FullWidth="true" AutoFocus="true" Immediate="true" Required="true" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _dialogOpen = false)">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@_isBusy">
+            @if (_isBusy)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private record JournalRow(int Code, string Journal_Name);
+
+    private readonly Journal_DaysListCLS _cls = new();
+    private List<JournalRow> _journals = new();
+    private bool _isLoading = true;
+    private bool _isBusy;
+    private string? _errorMessage;
+
+    private bool _dialogOpen;
+    private bool _isEditing;
+    private string? _dialogErrorMessage;
+    private int _editCode;
+    private string _editName = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        StateHasChanged();
+        try
+        {
+            var rows = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                operations opp = null!;
+                var dt = _cls.Gey_Journal_Codes(ref opp);
+                var list = new List<JournalRow>();
+                foreach (DataRow r in dt.Rows)
+                {
+                    list.Add(new JournalRow(
+                        Convert.ToInt32(r["Code"]),
+                        r["Journal_Name"]?.ToString() ?? ""));
+                }
+                return list;
+            });
+            _journals = rows;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OpenAddDialog()
+    {
+        _isEditing = false;
+        _dialogErrorMessage = null;
+        _editCode = 0;
+        _editName = string.Empty;
+        _dialogOpen = true;
+    }
+
+    private void OpenEditDialog(JournalRow row)
+    {
+        _isEditing = true;
+        _dialogErrorMessage = null;
+        _editCode = row.Code;
+        _editName = row.Journal_Name;
+        _dialogOpen = true;
+    }
+
+    // 🟢 يقابل AddJournalDays.Btn_Add_Click بالضبط (فى حالة الإضافة): نفس فحوصَى التحقق (الكود غير
+    // فارغ ولا يساوي صفر، اسم اليومية غير فارغ) قبل استدعاء Add_Journal_Codes. حالة التعديل تستدعي
+    // Update_Journal_Name بدلاً من ذلك (انظر تعليق الملف أعلاه لسبب وجودها).
+    private async Task SaveAsync()
+    {
+        _dialogErrorMessage = null;
+        if (_editCode <= 0)
+        {
+            _dialogErrorMessage = Tr("JournalCodeRequired");
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_editName))
+        {
+            _dialogErrorMessage = Tr("JournalNameRequired");
+            return;
+        }
+
+        _isBusy = true;
+        try
+        {
+            var code = _editCode.ToString();
+            var name = _editName.Trim();
+            int excp = 0;
+            string msg = "";
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                if (_isEditing)
+                {
+                    _cls.Update_Journal_Name(ref excp, ref msg, code, name);
+                }
+                else
+                {
+                    _cls.Add_Journal_Codes(ref excp, ref msg, code, name);
+                }
+            });
+
+            if (excp == 0)
+            {
+                _dialogOpen = false;
+                await LoadAsync();
+                Snackbar.Add(Tr(_isEditing ? "JournalDayUpdated" : "JournalDayAdded"), Severity.Success);
+            }
+            else
+            {
+                _dialogErrorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _dialogErrorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    // 🟢 يقابل deleteButton_Click بالضبط: تأكيد أولاً، ثم Delete_Journal_Codes التى تحتوي فحصها
+    // الخاص (رفض الحذف لو الكود مستخدَم فى Account_Entry_List) وتُعيد نفس رسالة الأصل حرفياً.
+    private async Task DeleteAsync(JournalRow row)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("DeleteJournalDayTitle"),
+            Tr("DeleteJournalDayConfirm", row.Journal_Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+
+        if (confirmed != true) return;
+
+        _errorMessage = null;
+        try
+        {
+            var code = row.Code.ToString();
+            int excp = 0;
+            string msg = "";
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                _cls.Delete_Journal_Codes(ref excp, ref msg, code);
+            });
+
+            if (excp == 0)
+            {
+                await LoadAsync();
+                Snackbar.Add(Tr("JournalDayDeleted"), Severity.Success);
+            }
+            else
+            {
+                _errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

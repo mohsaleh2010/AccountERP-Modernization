@@ -1,0 +1,264 @@
+@* 🟢 شاشة "مراكز التكلفة" (الشجرة) - النسخة Blazor من Account_Common_LIB.Cost_CenterTree.
+   Cost_Center_TreeFrm.cs (WinForms، تُفتَح من MainFrm_AccountUpdate.ToolStripMenuItemCostTree_Click).
+   نفس شكل شجرة الحسابات بالضبط (Parent_Id ذاتي المرجعية) لكن بلا فلترة فرع (Cost_Center_Tree لا يحتوي
+   Branch_Id) - راجع CostCenterTreePicker.razor لتفاصيل قرار عدم تعميم AccountTreePicker.
+
+   كل القراءة/الإضافة/التعديل/الحذف تمر عبر AccountModelsLib.CostCenterCLS (موجودة بالفعل فى AccountModelsLib،
+   لم تحتج نقل كـ CurrencyCLS) - بدون أي منطق أعمال جديد هنا، فقط واجهة Blazor فوق نفس الاستدعاءات بالضبط.
+   حقول Code_Str/Name/Notes فقط قابلة للتعديل (نفس CostCenterCLS.Edit_CostCenter بالضبط) - FirstSubCode/
+   Cost_Level للعرض فقط لأن الأصل لا يحفظهما عند التعديل إطلاقاً (راجع MODERNIZATION_NOTES.md). *@
+
+@page "/accounts/cost-centers"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("CostCentersTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")}; height: calc(100vh - 100px); display:flex; flex-direction:column; min-height:0;")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1" Style="flex: 0 0 auto;">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("CostCentersTitle")</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenAddDialog" Disabled="@(_selected == null || _isBusy)">
+                @Tr("AddCostCenterButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4" Style="flex: 0 0 auto;" ContentAlignment="HorizontalAlignment.Left">@_errorMessage</MudAlert>
+    }
+
+    <MudGrid Spacing="3" Style="flex: 1 1 auto; min-height: 0;">
+        <MudItem xs="12" md="5" Style="height:100%;">
+            <MudPaper Class="pa-3" Elevation="1" Style="height:100%; overflow:hidden;">
+                <CostCenterTreePicker @ref="_treePicker" SelectedValue="_selected"
+                                       SelectedValueChanged="OnNodeSelected" Height="100%" />
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="7" Style="height:100%;">
+            <MudPaper Class="pa-4" Elevation="1" Style="height:100%; overflow-y:auto;">
+                @if (_selected == null)
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("NoCostCenterSelected")</MudAlert>
+                }
+                else
+                {
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" sm="7">
+                            <MudTextField T="string" @bind-Value="_selected.Name" Label="@Tr("CostCenterNameLabel")" Required="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="5">
+                            <MudTextField T="string" @bind-Value="_selected.Code_Str" Label="@Tr("CostCenterCodeLabel")" Required="true" />
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6">
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("AccountLevelLabel"): @_selected.Cost_Level</MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("FirstSubCodeLabel"): @_selected.FirstSubCode</MudText>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudTextField T="string" @bind-Value="_selected.Notes" Label="@Tr("NotesLabel")" Lines="2" />
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudDivider Class="my-4" />
+
+                    <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
+                                   OnClick="SaveEditAsync" Disabled="_isBusy">
+                            @Tr("SaveEditButton")
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                                   OnClick="DeleteAsync" Disabled="_isBusy">
+                            @Tr("DeleteAccountButton")
+                        </MudButton>
+                    </MudStack>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+<AddCostCenterDialog @bind-Visible="_addDialogOpen" ParentNode="_selected" OnCostCenterAdded="OnCostCenterAddedAsync" />
+
+@code {
+    private CostCenterTreePicker? _treePicker;
+    private CostCenterNodeViewModel? _selected;
+    private bool _addDialogOpen;
+    private bool _isBusy;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private void OnNodeSelected(CostCenterNodeViewModel? node)
+    {
+        _selected = node;
+        _errorMessage = null;
+    }
+
+    private void OpenAddDialog()
+    {
+        if (_selected == null) return;
+        _addDialogOpen = true;
+    }
+
+    private async Task OnCostCenterAddedAsync(long newCode)
+    {
+        Snackbar.Add(Tr("CostCenterAdded"), Severity.Success);
+        if (_treePicker != null)
+        {
+            var reselectId = _selected?.Id;
+            await _treePicker.ReloadAsync();
+            if (reselectId.HasValue)
+            {
+                await _treePicker.SelectAndRevealAsync(reselectId.Value);
+            }
+        }
+    }
+
+    // 🟢 يقابل BtnEdit_Click فى الأصل: نفس الاستدعاء بالضبط CostCenterCLS.Edit_CostCenter (Name/Code_Str/
+    // Notes فقط - لا يوجد FirstSubCode/Cost_Level ضمن الأعمدة القابلة للحفظ فى الأصل).
+    private async Task SaveEditAsync()
+    {
+        if (_selected == null) return;
+        if (string.IsNullOrWhiteSpace(_selected.Name)) { _errorMessage = Tr("CostCenterNameRequired"); return; }
+        if (string.IsNullOrWhiteSpace(_selected.Code_Str)) { _errorMessage = Tr("CostCenterCodeGenerationFailed"); return; }
+
+        _isBusy = true;
+        _errorMessage = null;
+        int excp = 0;
+        string msg = "";
+        var node = _selected;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new CostCenterCLS().Edit_CostCenter(ref excp, ref msg, node.Id, node.Name.Trim(), node.Code_Str.Trim(), node.Notes ?? "");
+            });
+
+            if (excp == 0)
+            {
+                Snackbar.Add(Tr("AccountUpdated"), Severity.Success);
+                var selectedId = node.Id;
+                if (_treePicker != null)
+                {
+                    await _treePicker.ReloadAsync();
+                    await _treePicker.SelectAndRevealAsync(selectedId);
+                }
+            }
+            else
+            {
+                _errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    // 🟢 يقابل btnDelete_Click فى الأصل: نفس فحص الأمان بالضبط (Check_Account_No_Found_OnSubAccount يمنع
+    // حذف عقدة لها أبناء) قبل استدعاء CostCenterCLS.Delete_CostCenter.
+    private async Task DeleteAsync()
+    {
+        if (_selected == null) return;
+
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("DeleteCostCenterTitle"),
+            Tr("DeleteCostCenterConfirm", _selected.Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+
+        if (confirmed != true) return;
+
+        _isBusy = true;
+        _errorMessage = null;
+        var id = _selected.Id;
+        try
+        {
+            bool hasChildren = false;
+            int excp = 0;
+            string msg = "";
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var cc = new CostCenterCLS();
+                hasChildren = cc.Check_Account_No_Found_OnSubAccount(ref excp, id);
+                if (!hasChildren)
+                {
+                    cc.Delete_CostCenter(ref excp, ref msg, id);
+                }
+            });
+
+            if (hasChildren)
+            {
+                _errorMessage = Tr("CostCenterCannotDeleteHasChildren");
+                return;
+            }
+
+            if (excp == 0)
+            {
+                Snackbar.Add(Tr("AccountDeleted"), Severity.Success);
+                _selected = null;
+                if (_treePicker != null)
+                {
+                    await _treePicker.ReloadAsync();
+                }
+            }
+            else
+            {
+                _errorMessage = string.IsNullOrEmpty(msg) ? Tr("AccountCannotDelete") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

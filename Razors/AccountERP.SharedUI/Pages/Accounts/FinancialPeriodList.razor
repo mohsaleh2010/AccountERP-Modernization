@@ -1,0 +1,354 @@
+@* 🟢 شاشة "الفترات المالية" - النسخة Blazor من Account_Common_LIB.Financial_Period.Financial_PeriodFrm.cs
+   (WinForms، تُفتَح من MainFrm_AccountUpdate.ToolStripMenuItem_FinancialPeriod_Click). كل القراءة/الإضافة/
+   التنشيط/الحذف تمر عبر AccountModelsLib.Financial_PeriodCLS كما هى تماماً - هذا الكلاس لا يعتمد على
+   WinForms أصلاً (لا يحتاج نقل كما احتاجت CurrencyCLS سابقاً) فتم استدعاؤه مباشرة بدون أي تعديل.
+   قواعد العمل المنقولة حرفياً من الفورم الأصلي (وليست من الكلاس - هذه فحوصات طبقة الواجهة فى الأصل):
+   ‌1) عند فراغ القائمة: تاريخ "من" حر ويُقترَح 1 يناير للسنة الحالية، و"إلى" 31 ديسمبر لنفس السنة.
+   2) عند وجود فترات: تاريخ "من" يُقفَل تلقائياً = (آخر "إلى" مسجَّل) + يوم واحد، و"إلى" يبقى قابلاً
+      للتعديل ويُقترَح 31 ديسمبر لنفس سنة "من" الجديدة.
+   3) الحذف مسموح فقط لآخر فترة (زمنياً) فى القائمة، ويُمنع لو كانت مُرحَّلة (IS_Finished_Posted=1) -
+      نفس الفحصين مكرَّران أيضاً داخل Delete_Period نفسها كخط دفاع ثانٍ.
+   4) التنشيط يُلغي تفعيل كل الفترات الأخرى تلقائياً (منطق داخل Active_Period نفسها) ويُمنع لو كانت
+      الفترة المُختارة مُرحَّلة بالفعل.
+   5) زر "إلغاء التنشيط" (BtnNotActive) كان مخفياً (Visible=false) فى الفورم الأصلي وغير قابل للوصول
+      فعلياً من المستخدم - لم يُنقَل هنا لنفس السبب (لا يوجد سلوك حي يجب الحفاظ عليه).
+   رسائل الكلاس المُعادة (Active_Period/Delete_Period) نصوص عربية جاهزة مبنية داخل منطق العمل نفسه
+   (AccountModelsLib) ولا تُترجَم هنا - تُعرَض كما هى تماماً كالأصل (MessageBox.Show(Msg)) حفاظاً على
+   عدم إعادة اشتقاق نص منطق العمل. *@
+
+@page "/accounts/financial-periods"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("FinancialPeriodsTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("FinancialPeriodsTitle")</MudText>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.End" Wrap="Wrap.Wrap">
+            <MudDatePicker @bind-Date="_newDateFrom" Label="@Tr("PeriodDateFromColumn")" Variant="Variant.Outlined"
+                           Disabled="@_dateFromLocked" Style="min-width:200px;" />
+            <MudDatePicker @bind-Date="_newDateTo" Label="@Tr("PeriodDateToColumn")" Variant="Variant.Outlined" Style="min-width:200px;" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="AddPeriodAsync" Disabled="@_isBusy">
+                @Tr("AddPeriodButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudTable Items="@_periods" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Elevation="0">
+            <HeaderContent>
+                <MudTh>@Tr("PeriodSerialColumn")</MudTh>
+                <MudTh>@Tr("PeriodDateFromColumn")</MudTh>
+                <MudTh>@Tr("PeriodDateToColumn")</MudTh>
+                <MudTh>@Tr("PeriodNotesColumn")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTr Class="@(context.Id == _selectedId ? "financial-period-row-selected" : "")"
+                       Style="@(context.IsActive ? "color:var(--mud-palette-error);" : "")"
+                       @onclick="@(() => SelectRow(context))">
+                    <MudTd DataLabel="@Tr("PeriodSerialColumn")">@context.Serial</MudTd>
+                    <MudTd DataLabel="@Tr("PeriodDateFromColumn")">@FormatDateFrom(context)</MudTd>
+                    <MudTd DataLabel="@Tr("PeriodDateToColumn")">@FormatDateTo(context)</MudTd>
+                    <MudTd DataLabel="@Tr("PeriodNotesColumn")">@NotesFor(context)</MudTd>
+                </MudTr>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoPeriodsYet")</MudText>
+            </NoRecordsContent>
+        </MudTable>
+
+        <MudStack Row="true" Spacing="2" Class="mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle"
+                       OnClick="ActivateAsync" Disabled="@(_selectedId == null || _isBusy)">
+                @Tr("ActivatePeriodButton")
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                       OnClick="DeleteAsync" Disabled="@_isBusy">
+                @Tr("DeletePeriodButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+</MudContainer>
+
+<style>
+    .financial-period-row-selected {
+        background-color: var(--mud-palette-action-selected) !important;
+    }
+</style>
+
+@code {
+    private record PeriodRow(long Id, DateTime DateFrom, DateTime DateTo, bool IsActive, bool IsFirstPeriod, bool IsFinishedPosted, int Serial);
+
+    private readonly Financial_PeriodCLS _cls = new();
+    private List<PeriodRow> _periods = new();
+    private bool _isLoading = true;
+    private bool _isBusy;
+    private string? _errorMessage;
+    private long? _selectedId;
+
+    private DateTime? _newDateFrom;
+    private DateTime? _newDateTo;
+    private bool _dateFromLocked;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    protected override async Task OnInitializedAsync()
+    {
+        // 🟢 يقابل Financial_PeriodFrm_Load بالضبط: نفس الاستدعاء الثابت بنفس الأثر الجانبي (ينشئ
+        // فترة السنة الحالية تلقائياً لو الجدول فارغ تماماً) قبل تحميل القائمة لأول مرة.
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            Financial_PeriodCLS.Get_Year_Financial_Period_Id(DateTime.Now.Date);
+        });
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        StateHasChanged();
+        try
+        {
+            var rows = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var dt = _cls.Get_Financial_Period();
+                var list = new List<PeriodRow>();
+                int serial = 0;
+                foreach (DataRow r in dt.Rows)
+                {
+                    serial++;
+                    list.Add(new PeriodRow(
+                        Convert.ToInt64(r["Id"]),
+                        Convert.ToDateTime(r["DateFrom"]),
+                        Convert.ToDateTime(r["DateTo"]),
+                        Convert.ToInt32(r["IS_Active"]) == 1,
+                        r["FirstPeriod"]?.ToString() == "1",
+                        r["IS_Finished_Posted"]?.ToString() == "1",
+                        serial));
+                }
+                return list;
+            });
+            _periods = rows;
+            SetDateSelectionDefaults();
+            _selectedId = null;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    // 🟢 يقابل Set_DateSelection بالضبط.
+    private void SetDateSelectionDefaults()
+    {
+        var today = DateTime.Now.Date;
+        if (_periods.Count == 0)
+        {
+            _dateFromLocked = false;
+            _newDateFrom = new DateTime(today.Year, 1, 1);
+            _newDateTo = new DateTime(today.Year, 12, 31);
+        }
+        else
+        {
+            _dateFromLocked = true;
+            var lastDateTo = _periods[^1].DateTo;
+            var newFrom = lastDateTo.AddDays(1);
+            _newDateFrom = newFrom;
+            _newDateTo = new DateTime(newFrom.Year, 12, 31);
+        }
+    }
+
+    private string FormatDateFrom(PeriodRow row) => row.IsFirstPeriod ? "----" : row.DateFrom.ToString("yyyy/MM/dd");
+
+    private string FormatDateTo(PeriodRow row) => row.DateTo.ToString("yyyy/MM/dd");
+
+    private string NotesFor(PeriodRow row)
+    {
+        var parts = new List<string>();
+        if (row.IsFirstPeriod) parts.Add(Tr("OpeningPeriodNote"));
+        if (row.IsFinishedPosted) parts.Add(Tr("ClosedPeriodNote"));
+        return string.Join("  ", parts);
+    }
+
+    private void SelectRow(PeriodRow row)
+    {
+        _selectedId = _selectedId == row.Id ? null : row.Id;
+    }
+
+    // 🟢 يقابل BtnMakeEhlak_Click بالضبط - نفس فحصَى (من > إلى) و(تداخل مع آخر فترة) قبل استدعاء
+    // Make_Period بنفس الباراميترات (FirstPeriod=0 دائماً - الأصل لا يتيح إنشاء "فترة أولى" من هذه
+    // الشاشة عملياً رغم وجود الباراميتر فى الكلاس نفسه).
+    private async Task AddPeriodAsync()
+    {
+        _errorMessage = null;
+        if (_newDateFrom == null || _newDateTo == null)
+        {
+            return;
+        }
+        if (_newDateFrom.Value > _newDateTo.Value)
+        {
+            _errorMessage = Tr("PeriodDateRangeInvalid");
+            return;
+        }
+        if (_periods.Count > 0 && _newDateFrom.Value < _periods[^1].DateTo)
+        {
+            _errorMessage = Tr("PeriodDateRangeInvalid");
+            return;
+        }
+
+        _isBusy = true;
+        try
+        {
+            var from = _newDateFrom.Value;
+            var to = _newDateTo.Value;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                int excp = 0;
+                _cls.Make_Period(ref excp, from, to, 0);
+            });
+            await LoadAsync();
+            Snackbar.Add(Tr("PeriodAdded"), Severity.Success);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    // 🟢 يقابل BtnActive_Click بالضبط: تأكيد ثم Active_Period(Active:0) ثم عرض الرسالة المُعادة من
+    // الكلاس كما هى (تُلغي كل الفترات الأخرى تلقائياً - منطق داخل الكلاس نفسه، وتُرفَض لو الفترة مُرحَّلة).
+    private async Task ActivateAsync()
+    {
+        if (_selectedId == null) return;
+
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("FinancialPeriodConfirmTitle"),
+            Tr("ConfirmActivatePeriodMessage"),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+        if (confirmed != true) return;
+
+        _isBusy = true;
+        try
+        {
+            var id = (int)_selectedId.Value;
+            string msg = "";
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                int excp = 0;
+                _cls.Active_Period(ref excp, ref msg, id, 0);
+            });
+            if (!string.IsNullOrEmpty(msg))
+            {
+                Snackbar.Add(msg, Severity.Info);
+            }
+            await LoadAsync();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    // 🟢 يقابل btnDelete_Click بالضبط بنفس ترتيب الفحوصات (تأكيد أولاً كالأصل، ثم وجود اختيار، ثم
+    // "آخر فترة فقط"، ثم فحص الترحيل) قبل استدعاء Delete_Period التى تحتوي فحصها الخاص أيضاً (قيود
+    // مسجَّلة داخل نطاق الفترة).
+    private async Task DeleteAsync()
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("FinancialPeriodConfirmTitle"),
+            Tr("ConfirmDeletePeriodMessage"),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+        if (confirmed != true) return;
+
+        _errorMessage = null;
+        if (_selectedId == null)
+        {
+            _errorMessage = Tr("SelectPeriodToDelete");
+            return;
+        }
+
+        var index = _periods.FindIndex(p => p.Id == _selectedId.Value);
+        if (index != _periods.Count - 1)
+        {
+            _errorMessage = Tr("OnlyLastPeriodDeletable");
+            return;
+        }
+
+        var row = _periods[index];
+        if (row.IsFinishedPosted)
+        {
+            _errorMessage = Tr("ClosedPeriodCannotDelete");
+            return;
+        }
+
+        _isBusy = true;
+        try
+        {
+            string msg = "";
+            int excp = 0;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                _cls.Delete_Period(ref excp, ref msg, row.Id, row.DateFrom, row.DateTo);
+            });
+            if (!string.IsNullOrEmpty(msg))
+            {
+                Snackbar.Add(msg, excp == 0 ? Severity.Success : Severity.Warning);
+            }
+            if (excp == 0)
+            {
+                await LoadAsync();
+            }
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

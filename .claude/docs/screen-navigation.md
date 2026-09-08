@@ -1,6 +1,6 @@
 # Screen Navigation
 
-The solution does not have one single navigation tree — it has **several independent MDI hubs**, one per deployable EXE, each opening dozens to hundreds of child forms by menu click (`new SomeForm().Show()`/`.ShowDialog()` with `MdiParent = this`, or a plain `ShowDialog()` for non-MDI dialogs). Only the confirmed top-level structure is given below; the full 700+-node graph is not reproduced here (see the per-project tables in `forms-inventory.md` for individual "Navigates To" edges — do not invent edges not listed there).
+The solution does not have one single navigation tree — it has **several independent MDI hubs**, one per deployable EXE, each opening dozens to hundreds of child forms by menu click (`new SomeForm().Show()`/`.ShowDialog()` with `MdiParent = this`, or a plain `ShowDialog()` for non-MDI dialogs). Only the confirmed top-level structure is given below; for the main ERP app's full menu tree, the complete `mainMenu1` → `ToolStripMenuItem.Name`/`.Click` → target-form map (620 menu-item fields, 477 leaf actions) is now extracted and kept in [`main-menu-screen-map.md`](main-menu-screen-map.md) — use that, not this file, as ground truth for any menu item's target screen. See the per-project tables in `forms-inventory.md` for individual "Navigates To" edges on other hubs — do not invent edges not listed there.
 
 ```text
 Main ERP app (AccountsERPSystem / AccountsERPSystemNet10)
@@ -10,8 +10,11 @@ Main ERP app (AccountsERPSystem / AccountsERPSystemNet10)
   └─ if PointOfSale == 1:
        └─ MainFrmPOS [Accounts]                — POS/restaurant MDI hub (~70 menu actions)
      else:
-       └─ MainFrm_AccountUpdate [Advanced_Account, ~9000 lines, 718 nav calls]
-            — the REAL main menu of the ERP; opens (non-exhaustively):
+       └─ MainFrm_AccountUpdate [Accounts\AccountMainFrm, ~15,300 lines across .cs+.Designer.cs, 620 menu-item fields / 477 leaf actions]
+            — the REAL main menu of the ERP; CONFIRMED live via .csproj ProjectReference inspection
+              (Accounts IS referenced by both EXE shells; Advanced_Account's own same-named/-namespaced
+              copy is NOT referenced anywhere and is dead code for the live app — see main-menu-screen-map.md)
+            — opens (non-exhaustively):
             ├─ General ledger / journal entries (General_Ledger, General_LedgerAccount-under-Accounts)
             ├─ Trial balance / income statement / final accounts (Mezan_Morgaa*, Incoming_Statement*, Profit_Loss_Stat*)
             ├─ Invoicing (InvoicesFrm/*, Requests/*, PointOfSales/*)
