@@ -365,3 +365,7 @@ FodyWeavers.xsd
 # Local-only secrets (deploy credentials, etc.) - never commit
 *.local.json
 deploy/creds.local.json
+
+# Generated codebase-analysis artifacts (graphify tool output)
+architecture-graph.md
+graphify-out/
