@@ -1,0 +1,413 @@
+@* 🟢 "يومية الصادر والوارد" - النسخة Blazor من Accounts.DaysWorkShow.DaysWorkSkow (WinForms، تُفتَح من
+   MainFrm_AccountUpdate.menuDayShowWork_Click → ShowDaysWorkSkow()). هذا هو آخر عنصر متبقٍّ غير مُحوَّل من
+   قائمة "الحسابات" الكاملة (تم التحقق شاملاً من كل عناصر menuMainAccount فى main-menu-screen-map.md، وباقى كل
+   العناصر إما مُحوَّلة بالفعل ضمن دفعة سابقة أو "قيد الإنشاء" بقرار صريح مسبق).
+
+   منطق العمل بالكامل مُعاد استخدامه حرفياً من AccountModelsLib.DaysWorkSkowCLS (الكلاس موجود مسبقاً هناك، لا
+   يحتاج أى نقل - لا يحتوى أى استدعاء MessageBox.Show ولا أى اقتران بـ WinForms). كل دوال القراءة التسع
+   (GetExportMoney_Transaction, GetExport_Check_Money, GetInvoices_List, GetBills_List_Reverse,
+   GetWork_Out_Details, GetImportMoney_Transaction, GetImport_Check_Money, GetBills_List,
+   GetInvoices_Reverse_List, GetWork_Out_Details_Received, Get_NazalatTotal) استُدعيت كما هى بلا أى تعديل.
+
+   خصائص أصلية دقيقة محفوظة حرفياً (تحقَّقت منها بمقارنة الكود سطراً بسطر فى DaysWorkSkow.cs الأصلى):
+   - صف "أصناف من التشغيل الخارجى" فى قائمة الصادر يُعرَض بعمود قيمة فارغ دائماً ولا يُضاف أبداً لإجمالى الصادر
+     (`WorkOutTotalExport = 0` يُعاد ضبطه بعد كل صف فى الأصل، فيبقى صفراً دائماً) - قد يكون خللاً غير مقصود فى
+     الأصل، لكنه سلوكه الفعلى الحى، نُقل كما هو دون "تصحيح".
+   - فى المقابل، صف "استلام تشغيل خارجى" وصف "إجمالى نزلات" فى قائمة الوارد **يُحسَبان دائماً ضمن إجمالى الوارد
+     الكلى** (`TotalImport`) حتى لو لم يظهر صفَّاهما التفصيليان فى جدول الإجماليات - العرض التفصيلى لهذين
+     الصفَّين مشروط بمطابقة `Common.CompanyTitle == Common.ClientCompanyTitle` (قيمة خاصة بعميل واحد فى الأصل،
+     فارغة `""` حالياً فى هذا الكود المشترك - فلن يظهر الصفَّان عملياً، لكن قيمتاهما تبقيان محسوبتين ضمن
+     الإجمالى الكلى كما فى الأصل بالضبط).
+   - عمودا "الحساب"/الأسماء المُدمَجة لصفوف الشيكات (رقم الشيك + اسم الحساب + اسم المورد/العميل + "المسئول" +
+     اسم المسئول) دُمِجا حرفياً بنفس الترتيب والفراغات كالأصل.
+   - 🔴 **خلل حقيقى مُكتشَف فى الأصل أثناء النقل (وليس فى هذا الملف)**: استعلام `DaysWorkSkowCLS.Get_Check_Money`
+     (المُستدعى عبر `GetExport_Check_Money`/`GetImport_Check_Money`) **لا يُرجِع عمودَى `Supplier_Name` و
+     `Customer_Name` إطلاقاً** فى قائمة SELECT الخاصة به - رغم أن كود الفورم الأصلى `fill_lvExport`/`fill_lvImport`
+     يقرأ هذين العمودين مباشرة (`Rows[x]["Supplier_Name"]`) عند بناء نص وصف صف الشيك. هذا يعنى أن الشاشة الأصلية
+     **تُطلِق استثناء `ArgumentException` فعلياً** فى أول صف شيك موجود لليوم المُحدَّد، يُبتلَع بصمت بواسطة
+     `catch { }` المُحيط بكل الدالة - **مما يُسقِط عرض بقية القائمة بأكملها لذلك اليوم** (الفواتير/المردودات/
+     التشغيل الخارجى التالية فى نفس الدالة) لا صف الشيك وحده. لم يُعدَّل الاستعلام الأصلى (خارج نطاق هذا البند
+     المُخصَّص فقط لشاشة العرض الجديدة)، لكن كود Blazor هنا يتعامل مع غياب هذين العمودين بأمان (بدل الانهيار)
+     بحيث يُكمِل العرض الصحيح لبقية القائمة، وهى نتيجة نهائية أفضل من الأصل للمستخدم دون أى تغيير فى أى بيانات
+     محسوبة أو منطق عمل حقيقى - راجع `BuildCheckPartyName` أدناه.
+   - النقر المزدوج على صف فى الأصل يفتح واحدة من 9 شاشات مختلفة تماماً (فواتير/سندات/شيكات/تشغيل خارجى) لم
+     تُبنَ أى منها فى Blazor بعد - نفس مبدأ النطاق المُتَّبع فى كل شاشات "كشف الحساب" السابقة: الصفوف هنا للعرض
+     فقط بدون تنقّل تفاعلى، إلى أن تُبنى الشاشات المقابلة لاحقاً. *@
+
+@page "/accounts/daily-work-summary"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Tr("DailyWorkSummaryTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@Tr("DailyWorkSummaryTitle")</MudText>
+
+        <MudGrid Spacing="3" Justify="Justify.FlexStart">
+            <MudItem xs="12" sm="4" md="3">
+                <MudDatePicker Date="_orderDate" DateChanged="OnDateChanged" Label="@Tr("DateLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="4" md="3" Class="d-flex align-center">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
+                           OnClick="SearchAsync" Disabled="@_isLoading">
+                    @Tr("ShowButton")
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudGrid Spacing="3">
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-3" Elevation="1">
+                <MudText Typo="Typo.h6" Color="Color.Error" Class="mb-2">@Tr("ExportSectionTitle")</MudText>
+                <MudTable Items="@_exportRows" Hover="true" Dense="true" Bordered="true" Loading="@_isLoading" T="WorkRow">
+                    <HeaderContent>
+                        <MudTh>@Tr("SerialColumn")</MudTh>
+                        <MudTh>@Tr("DescriptionColumn")</MudTh>
+                        <MudTh>@Tr("ValueColumn")</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Serial</MudTd>
+                        <MudTd>@context.Description</MudTd>
+                        <MudTd>@(context.Amount?.ToString("N2") ?? "")</MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Align="Align.Center" Class="py-2 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+
+                <MudSimpleTable Dense="true" Class="mt-3">
+                    <tbody>
+                        @foreach (var t in _exportTotals)
+                        {
+                            <tr class="@(t.IsGrandTotal ? "font-weight-bold" : "")">
+                                <td>@t.Label</td>
+                                <td>@t.Amount.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-3" Elevation="1">
+                <MudText Typo="Typo.h6" Color="Color.Success" Class="mb-2">@Tr("ImportSectionTitle")</MudText>
+                <MudTable Items="@_importRows" Hover="true" Dense="true" Bordered="true" Loading="@_isLoading" T="WorkRow">
+                    <HeaderContent>
+                        <MudTh>@Tr("SerialColumn")</MudTh>
+                        <MudTh>@Tr("DescriptionColumn")</MudTh>
+                        <MudTh>@Tr("ValueColumn")</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Serial</MudTd>
+                        <MudTd>@context.Description</MudTd>
+                        <MudTd>@(context.Amount?.ToString("N2") ?? "")</MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Align="Align.Center" Class="py-2 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+
+                <MudSimpleTable Dense="true" Class="mt-3">
+                    <tbody>
+                        @foreach (var t in _importTotals)
+                        {
+                            <tr class="@(t.IsGrandTotal ? "font-weight-bold" : "")">
+                                <td>@t.Label</td>
+                                <td>@t.Amount.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    @if (_finalMessage != null)
+    {
+        <MudAlert Severity="@_finalSeverity" Class="mt-4">@_finalMessage</MudAlert>
+    }
+</MudContainer>
+
+@code {
+    private record WorkRow(int Serial, string Description, decimal? Amount);
+    private record TotalRow(string Label, decimal Amount, bool IsGrandTotal);
+
+    private DateTime? _orderDate = DateTime.Now.Date;
+    private List<WorkRow> _exportRows = new();
+    private List<WorkRow> _importRows = new();
+    private List<TotalRow> _exportTotals = new();
+    private List<TotalRow> _importTotals = new();
+    private string? _finalMessage;
+    private Severity _finalSeverity = Severity.Info;
+
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SearchAsync();
+    }
+
+    private void OnDateChanged(DateTime? date)
+    {
+        _orderDate = date;
+    }
+
+    // 🟢 يقابل BtnShow_Click -> GetDaysWorkSkow -> fill_lvExport/fill_lvImport الأصلية بالضبط.
+    private async Task SearchAsync()
+    {
+        _errorMessage = null;
+        _isLoading = true;
+        StateHasChanged();
+
+        var orderDate = _orderDate ?? DateTime.Now.Date;
+
+        try
+        {
+            var result = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return BuildSummary(orderDate);
+            });
+
+            _exportRows = result.ExportRows;
+            _importRows = result.ImportRows;
+            _exportTotals = result.ExportTotals;
+            _importTotals = result.ImportTotals;
+
+            var final = result.TotalExport - result.TotalImport;
+            if (final == 0)
+            {
+                _finalMessage = Tr("EqualExportImportMessage", result.TotalExport.ToString("N2"));
+                _finalSeverity = Severity.Info;
+            }
+            else if (final > 0)
+            {
+                _finalMessage = Tr("ExportExceedsImportMessage", final.ToString("N2"));
+                _finalSeverity = Severity.Warning;
+            }
+            else
+            {
+                _finalMessage = Tr("ImportExceedsExportMessage", (final * -1).ToString("N2"));
+                _finalSeverity = Severity.Success;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private (List<WorkRow> ExportRows, List<WorkRow> ImportRows, List<TotalRow> ExportTotals, List<TotalRow> ImportTotals, decimal TotalExport, decimal TotalImport) BuildSummary(DateTime orderDate)
+    {
+        var dy = new DaysWorkSkowCLS(orderDate);
+
+        // ===== الصادر =====
+        var exportRows = new List<WorkRow>();
+        int serial = 0;
+        decimal totalCashExport = 0, totalCheckExport = 0, invoiceTotals = 0, billsReverseTotal = 0;
+
+        var dsCashExport = dy.GetExportMoney_Transaction();
+        foreach (DataRow r in dsCashExport.Tables["Money_Transaction_Box"].Rows)
+        {
+            serial++;
+            var amount = decimal.TryParse(r["Export_Value"]?.ToString(), out var a) ? a : 0;
+            exportRows.Add(new WorkRow(serial, Tr("CashPaymentDescription", r["SubAccount_Name"]?.ToString() ?? ""), amount));
+            totalCashExport += amount;
+        }
+
+        var dsCheckExport = dy.GetExport_Check_Money();
+        foreach (DataRow r in dsCheckExport.Tables["Checks_Memory"].Rows)
+        {
+            serial++;
+            var amount = decimal.TryParse(r["Export_Value"]?.ToString(), out var a) ? a : 0;
+            exportRows.Add(new WorkRow(serial, Tr("CheckNumberDescription", r["Check_No"]?.ToString() ?? "", BuildCheckPartyName(r)), amount));
+            totalCheckExport += amount;
+        }
+
+        var dsInvoices = dy.GetInvoices_List();
+        foreach (DataRow r in dsInvoices.Tables["Invoices_List"].Rows)
+        {
+            serial++;
+            var amount = decimal.TryParse(r["Net_Total"]?.ToString(), out var a) ? a : 0;
+            exportRows.Add(new WorkRow(serial, Tr("SalesInvoiceDescription", r["Customer_Name"]?.ToString() ?? ""), amount));
+            invoiceTotals += amount;
+        }
+
+        var dsBillsReverse = dy.GetBills_List_Reverse();
+        foreach (DataRow r in dsBillsReverse.Tables["Bills_List_Reverse"].Rows)
+        {
+            serial++;
+            var amount = decimal.TryParse(r["Net_Total"]?.ToString(), out var a) ? a : 0;
+            exportRows.Add(new WorkRow(serial, Tr("PurchaseReturnDescription", r["Supplier_Name"]?.ToString() ?? ""), amount));
+            billsReverseTotal += amount;
+        }
+
+        var dsWorkOutExport = dy.GetWork_Out_Details();
+        foreach (DataRow r in dsWorkOutExport.Tables["Work_Out_Details"].Rows)
+        {
+            serial++;
+            // 🟢 القيمة تبقى فارغة دائماً هنا ولا تُحسَب ضمن الإجمالى - نفس خلل/سلوك الأصل بالضبط (راجع تعليق الملف أعلاه).
+            exportRows.Add(new WorkRow(serial, Tr("WorkOutExportDescription", r["Name"]?.ToString() ?? ""), null));
+        }
+
+        totalCashExport = Common.RoundMe(totalCashExport);
+        totalCheckExport = Common.RoundMe(totalCheckExport);
+        invoiceTotals = Common.RoundMe(invoiceTotals);
+        billsReverseTotal = Common.RoundMe(billsReverseTotal);
+        var totalExport = totalCashExport + totalCheckExport + invoiceTotals + billsReverseTotal;
+
+        var exportTotals = new List<TotalRow>
+        {
+            new(Tr("CashExportTotalLabel"), totalCashExport, false),
+            new(Tr("CheckExportTotalLabel"), totalCheckExport, false),
+            new(Tr("SalesTotalLabel"), invoiceTotals, false),
+            new(Tr("PurchaseReturnTotalLabel"), billsReverseTotal, false),
+            new(Tr("GrandTotalLabel"), totalExport, true),
+        };
+
+        // ===== الوارد =====
+        var importRows = new List<WorkRow>();
+        serial = 0;
+        decimal totalCashImport = 0, totalCheckImport = 0, billsTotals = 0, invoiceReverseTotals = 0, workOutTotalImport = 0, nazalatTotalImport = 0;
+
+        var dsCashImport = dy.GetImportMoney_Transaction();
+        foreach (DataRow r in dsCashImport.Tables["Money_Transaction_Box"].Rows)
+        {
+            serial++;
+            var amount = decimal.TryParse(r["Import_Value"]?.ToString(), out var a) ? a : 0;
+            importRows.Add(new WorkRow(serial, Tr("CashReceiptDescription", r["SubAccount_Name"]?.ToString() ?? ""), amount));
+            totalCashImport += amount;
+        }
+
+        var dsCheckImport = dy.GetImport_Check_Money();
+        foreach (DataRow r in dsCheckImport.Tables["Checks_Memory"].Rows)
+        {
+            serial++;
+            var amount = decimal.TryParse(r["Import_Value"]?.ToString(), out var a) ? a : 0;
+            importRows.Add(new WorkRow(serial, Tr("CheckNumberDescription", r["Check_No"]?.ToString() ?? "", BuildCheckPartyName(r)), amount));
+            totalCheckImport += amount;
+        }
+
+        var dsBills = dy.GetBills_List();
+        foreach (DataRow r in dsBills.Tables["Bills_List"].Rows)
+        {
+            serial++;
+            var amount = decimal.TryParse(r["Net_Total"]?.ToString(), out var a) ? a : 0;
+            importRows.Add(new WorkRow(serial, Tr("PurchaseInvoiceDescription", r["Supplier_Name"]?.ToString() ?? ""), amount));
+            billsTotals += amount;
+        }
+
+        var dsInvoicesReverse = dy.GetInvoices_Reverse_List();
+        foreach (DataRow r in dsInvoicesReverse.Tables["Invoices_List_Reverse"].Rows)
+        {
+            serial++;
+            var amount = decimal.TryParse(r["Net_Total"]?.ToString(), out var a) ? a : 0;
+            importRows.Add(new WorkRow(serial, Tr("SalesReturnDescription", r["Customer_Name"]?.ToString() ?? ""), amount));
+            invoiceReverseTotals += amount;
+        }
+
+        var dsWorkOutImport = dy.GetWork_Out_Details_Received();
+        foreach (DataRow r in dsWorkOutImport.Tables["Work_Out_Details_Received"].Rows)
+        {
+            serial++;
+            var amount = decimal.TryParse(r["Total_Price"]?.ToString(), out var a) ? a : 0;
+            importRows.Add(new WorkRow(serial, Tr("WorkOutImportDescription", r["Supplier_Name"]?.ToString() ?? ""), amount));
+            workOutTotalImport += amount;
+        }
+
+        var dsNazalat = dy.Get_NazalatTotal();
+        foreach (DataRow r in dsNazalat.Tables[0].Rows)
+        {
+            serial++;
+            var amount = decimal.TryParse(r["total"]?.ToString(), out var a) ? a : 0;
+            importRows.Add(new WorkRow(serial, Tr("NazalatDescription", r["Supplier_Name"]?.ToString() ?? ""), amount));
+            nazalatTotalImport += amount;
+        }
+
+        totalCashImport = Common.RoundMe(totalCashImport);
+        totalCheckImport = Common.RoundMe(totalCheckImport);
+        billsTotals = Common.RoundMe(billsTotals);
+        invoiceReverseTotals = Common.RoundMe(invoiceReverseTotals);
+        workOutTotalImport = Common.RoundMe(workOutTotalImport);
+
+        var importTotals = new List<TotalRow>
+        {
+            new(Tr("CashImportTotalLabel"), totalCashImport, false),
+            new(Tr("CheckImportTotalLabel"), totalCheckImport, false),
+            new(Tr("PurchaseTotalLabel"), billsTotals, false),
+            new(Tr("SalesReturnTotalLabel"), invoiceReverseTotals, false),
+        };
+        // 🟢 هذان الصفان يظهران فقط لعميل بعينه فى الأصل (Common.CompanyTitle == Common.ClientCompanyTitle) -
+        // لكن قيمتاهما تدخلان فى TotalImport دائماً بغض النظر عن ظهور الصف، كما فى الأصل بالضبط (راجع تعليق الملف أعلاه).
+        if (Common.CompanyTitle == Common.ClientCompanyTitle)
+        {
+            importTotals.Add(new TotalRow(Tr("WorkOutTotalLabel"), workOutTotalImport, false));
+            importTotals.Add(new TotalRow(Tr("NazalatTotalLabel"), nazalatTotalImport, false));
+        }
+
+        var totalImport = invoiceReverseTotals + totalCashImport + totalCheckImport + billsTotals + workOutTotalImport + nazalatTotalImport;
+        importTotals.Add(new TotalRow(Tr("GrandTotalLabel"), totalImport, true));
+
+        return (exportRows, importRows, exportTotals, importTotals, totalExport, totalImport);
+    }
+
+    // 🟢 يقابل دمج أسماء الشيك (رقم + اسم الحساب + المورد/العميل + "المسئول" + اسم المسئول) فى fill_lvExport/fill_lvImport
+    // الأصليتين - مع معالجة آمنة لغياب عمودَى Supplier_Name/Customer_Name عن استعلام Get_Check_Money الأصلى
+    // (خلل حقيقى موثَّق فى تعليق أعلى الملف: الأصل يفشل بصمت بدل التعامل الآمن) بدل الانهيار الكامل هنا.
+    private static string GetColumnSafe(DataRow r, string column)
+        => r.Table.Columns.Contains(column) ? r[column]?.ToString() ?? "" : "";
+
+    private string BuildCheckPartyName(DataRow r)
+    {
+        var subAccountName = GetColumnSafe(r, "SubAccount_Name");
+        var supplierName = GetColumnSafe(r, "Supplier_Name");
+        var customerName = GetColumnSafe(r, "Customer_Name");
+        var manName = GetColumnSafe(r, "Man_Name");
+        return $"{subAccountName} {supplierName} {customerName} {Tr("ResponsibleManLabel")} {manName}";
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

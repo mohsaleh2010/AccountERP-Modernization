@@ -1,0 +1,152 @@
+@* 🟢 "إضافة/تعديل صنف" - النسخة Blazor من Account_Common_LIB.Items.AddItemOnFinancialOrder (يُفتَح من
+   Taswya_MoneyMulti_Item/Taswya_MoneyItem الأصليتين لإضافة/تعديل سطر صنف قبل حفظه فى الشبكة). اختيار الصنف
+   عبر ItemCLS.Get_ActiveItemsForPicker (دالة جديدة تقنية فقط - راجع تعليقها فى ItemCLS.cs لتفاصيل لماذا لم
+   يُنقَل Store_LIB.SearchUSR/Connection4It.ItemsSearchAny الأصليان حرفياً). الإجمالى = الكمية × السعر تلقائياً،
+   بنفس منطق Set_Quantity الأصلية بالضبط. *@
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+
+<MudDialog @bind-Visible="Visible" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr("AddItemDialogTitle")</TitleContent>
+    <DialogContent>
+        <MudAutocomplete T="ItemOption" Value="_selectedItem" ValueChanged="OnItemPicked" SearchFunc="SearchItemsAsync"
+                          ToStringFunc="@(o => o?.Name ?? "")" Label="@Tr("ItemNameColumn")" Variant="Variant.Outlined"
+                          ResetValueOnEmptyText="true" Disabled="@LockItem" Class="mb-3" />
+        <MudNumericField T="decimal" Value="_qty" ValueChanged="OnQtyChanged" Label="@Tr("QuantityColumn")" Min="0" Format="N2" Variant="Variant.Outlined" Class="mb-3" />
+        <MudNumericField T="decimal" Value="_price" ValueChanged="OnPriceChanged" Label="@Tr("PriceColumn")" Min="0" Format="N2" Variant="Variant.Outlined" Class="mb-3" />
+        <MudTextField T="decimal" Value="_total" ReadOnly="true" Label="@Tr("TotalColumn")" Variant="Variant.Outlined" Format="N2" Class="mb-3" />
+        <MudTextField T="string" @bind-Value="_notes" Label="@Tr("NotesColumn")" Lines="2" Variant="Variant.Outlined" />
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">@_errorMessage</MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseAsync">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ConfirmAsync">@Tr("Save")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    public record ItemOption(long Id, string Name);
+    public record ItemLineResult(long ItemId, string ItemName, decimal Qty, decimal Price, decimal Total, string Notes);
+
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public EventCallback<ItemLineResult> OnConfirmed { get; set; }
+
+    // 🟢 عند التعديل: يُمرَّر السطر الحالى هنا فتُملأ الحقول به (يقابل Set_EditDataOnFormSarf الأصلية)، ويُقفَل
+    // اختيار الصنف نفسه (نفس searchUSR1.Enabled=false الأصلية).
+    [Parameter] public ItemLineResult? EditingLine { get; set; }
+    private bool LockItem => EditingLine != null;
+
+    private readonly ItemCLS _itemCls = new();
+    private ItemOption? _selectedItem;
+    private decimal _qty;
+    private decimal _price;
+    private decimal _total;
+    private string _notes = "";
+    private string? _errorMessage;
+    private ItemLineResult? _lastLoadedFor;
+
+    protected override void OnParametersSet()
+    {
+        if (Visible && EditingLine != _lastLoadedFor)
+        {
+            _lastLoadedFor = EditingLine;
+            if (EditingLine != null)
+            {
+                _selectedItem = new ItemOption(EditingLine.ItemId, EditingLine.ItemName);
+                _qty = EditingLine.Qty;
+                _price = EditingLine.Price;
+                _total = EditingLine.Total;
+                _notes = EditingLine.Notes;
+            }
+            else
+            {
+                _selectedItem = null;
+                _qty = 0;
+                _price = 0;
+                _total = 0;
+                _notes = "";
+            }
+            _errorMessage = null;
+        }
+        else if (!Visible)
+        {
+            _lastLoadedFor = null;
+        }
+    }
+
+    private async Task<IEnumerable<ItemOption>> SearchItemsAsync(string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _itemCls.Get_ActiveItemsForPicker();
+        }, ct);
+        var list = new List<ItemOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["Item_Name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add(new ItemOption(Convert.ToInt64(r["Id"]), name));
+            }
+        }
+        return list.Take(50);
+    }
+
+    private void OnItemPicked(ItemOption? option)
+    {
+        _selectedItem = option;
+    }
+
+    private void OnQtyChanged(decimal value)
+    {
+        _qty = value;
+        _total = _qty * _price;
+    }
+
+    private void OnPriceChanged(decimal value)
+    {
+        _price = value;
+        _total = _qty * _price;
+    }
+
+    private async Task ConfirmAsync()
+    {
+        _errorMessage = null;
+        if (_selectedItem == null) { _errorMessage = Tr("SelectItemValidation"); return; }
+        if (_qty <= 0) { _errorMessage = Tr("EnterQtyValidation"); return; }
+        if (_price <= 0) { _errorMessage = Tr("EnterPriceValidation"); return; }
+
+        _total = _qty * _price;
+        await OnConfirmed.InvokeAsync(new ItemLineResult(_selectedItem.Id, _selectedItem.Name, _qty, _price, _total, _notes));
+        await CloseAsync();
+    }
+
+    private async Task CloseAsync()
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

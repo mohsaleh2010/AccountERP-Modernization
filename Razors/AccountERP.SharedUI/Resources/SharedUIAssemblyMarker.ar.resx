@@ -390,4 +390,243 @@
   <data name="NoMovementYet" xml:space="preserve"><value>لا توجد حركة لعرضها</value></data>
   <data name="SelectStoreRequired" xml:space="preserve"><value>يجب إختيار المخزن</value></data>
   <data name="SelectCategoryRequired" xml:space="preserve"><value>يجب إختيار فئة الصنف</value></data>
+  <data name="ExpenseDailyJournalTitle" xml:space="preserve"><value>يومية مصروفات</value></data>
+  <data name="CashBoxDailyJournalTitle" xml:space="preserve"><value>يومية الصندوق</value></data>
+  <data name="PayTypeCashLabel" xml:space="preserve"><value>نقدية</value></data>
+  <data name="PayTypeCheckLabel" xml:space="preserve"><value>شيكات</value></data>
+  <data name="DirectionIncomingLabel" xml:space="preserve"><value>وارد</value></data>
+  <data name="DirectionOutgoingLabel" xml:space="preserve"><value>صادر</value></data>
+  <data name="DirectionAllLabel" xml:space="preserve"><value>الكل</value></data>
+  <data name="SortByAccountLabel" xml:space="preserve"><value>ترتيب بالحساب</value></data>
+  <data name="MasrofatAffectingLabel" xml:space="preserve"><value>الحسابات المؤثرة على التقرير</value></data>
+  <data name="MasrofatNotAffectingLabel" xml:space="preserve"><value>الحسابات الغير مؤثرة على التقرير</value></data>
+  <data name="MasrofatAllLabel" xml:space="preserve"><value>غير محدد</value></data>
+  <data name="BoxLabel" xml:space="preserve"><value>الصندوق</value></data>
+  <data name="DetailsTabLabel" xml:space="preserve"><value>تفصيل تحليل المصروفات</value></data>
+  <data name="TotalsTabLabel" xml:space="preserve"><value>إجمالى تحليل المصروفات</value></data>
+  <data name="NotesColumn" xml:space="preserve"><value>ملاحظات</value></data>
+  <data name="MainAccountColumn" xml:space="preserve"><value>الحساب الرئيسى</value></data>
+  <data name="SubAccountColumn" xml:space="preserve"><value>إسم الحساب الفرعى</value></data>
+  <data name="ExportColumn" xml:space="preserve"><value>الصادر</value></data>
+  <data name="ImportColumn" xml:space="preserve"><value>الوارد</value></data>
+  <data name="PaymentMethodColumn" xml:space="preserve"><value>طريقة الدفع</value></data>
+  <data name="CashTotalLabel" xml:space="preserve"><value>إجمالى نقدا</value></data>
+  <data name="ChecksTotalLabel" xml:space="preserve"><value>إجمالى شيكات</value></data>
+  <data name="NetForPeriodLabel" xml:space="preserve"><value>صافى اليوم/الفترة</value></data>
+  <data name="NoExpenseDataYet" xml:space="preserve"><value>لا توجد بيانات</value></data>
+  <data name="SearchButton" xml:space="preserve"><value>بحث</value></data>
+  <data name="OrderNoColumn" xml:space="preserve"><value>رقم السند</value></data>
+  <data name="AccountColumn" xml:space="preserve"><value>الحساب</value></data>
+  <data name="ValueColumn" xml:space="preserve"><value>القيمة</value></data>
+  <data name="PreviousBalanceLabel" xml:space="preserve"><value>الرصيد السابق</value></data>
+  <data name="ReceiptsLabel" xml:space="preserve"><value>المقبوضات</value></data>
+  <data name="SubtotalLabel" xml:space="preserve"><value>الإجمالى</value></data>
+  <data name="PaymentsLabel" xml:space="preserve"><value>المدفوعات</value></data>
+  <data name="CurrentBalanceLabel" xml:space="preserve"><value>الرصيد الحالى</value></data>
+  <data name="SelectBoxRequired" xml:space="preserve"><value>يجب إختيار الصندوق أولا</value></data>
+  <data name="NoReceiptsYet" xml:space="preserve"><value>لا توجد مقبوضات</value></data>
+  <data name="NoPaymentsYet" xml:space="preserve"><value>لا توجد مدفوعات</value></data>
+  <data name="FixedAssetsTitle" xml:space="preserve"><value>دليل الأصول الثابتة</value></data>
+  <data name="AddCategoryButton" xml:space="preserve"><value>إضافة فئة</value></data>
+  <data name="AddAssetButton" xml:space="preserve"><value>إضافة أصل</value></data>
+  <data name="CategoryNodeHint" xml:space="preserve"><value>هذه فئة (حساب رئيسى) - اختر "إضافة أصل" لإضافة أصل جديد تحتها، أو "إضافة فئة" لإضافة فئة فرعية</value></data>
+  <data name="GeneralInfoTab" xml:space="preserve"><value>بيانات عامة</value></data>
+  <data name="AssetCodeLabel" xml:space="preserve"><value>كود الأصل</value></data>
+  <data name="AssetNameArLabel" xml:space="preserve"><value>إسم الإصل</value></data>
+  <data name="AssetNameEnLabel" xml:space="preserve"><value>الإسم باللغه الإنجليزيه</value></data>
+  <data name="PurchaseDateLabel" xml:space="preserve"><value>تاريخ الشراء</value></data>
+  <data name="DepreciationStatusLabel" xml:space="preserve"><value>حالة الإهلاك</value></data>
+  <data name="ResponsibleEmployeeLabel" xml:space="preserve"><value>المؤتمن على الأصل</value></data>
+  <data name="EmpReceiveDateLabel" xml:space="preserve"><value>تاريخ الإستلام</value></data>
+  <data name="ModelLabel" xml:space="preserve"><value>الموديل</value></data>
+  <data name="IndustryFactoryLabel" xml:space="preserve"><value>الشركة المصنعه</value></data>
+  <data name="FixedSerialNoLabel" xml:space="preserve"><value>رقم المسلسل</value></data>
+  <data name="LocationLabel" xml:space="preserve"><value>الموقع</value></data>
+  <data name="SupplierNameLabel" xml:space="preserve"><value>إسم المورد</value></data>
+  <data name="WarrantyFinalDateLabel" xml:space="preserve"><value>تاريخ الإنتهاء</value></data>
+  <data name="WarrantyDetailsLabel" xml:space="preserve"><value>تفاصيل الضمان</value></data>
+  <data name="DepreciationTab" xml:space="preserve"><value>طريقة الإهلاك</value></data>
+  <data name="DepreciationTypeLabel" xml:space="preserve"><value>نوع الإهلاك</value></data>
+  <data name="BeginServiceDateLabel" xml:space="preserve"><value>تاريخ بداية الخدمه</value></data>
+  <data name="MainValueLabel" xml:space="preserve"><value>القيمة الأصليه</value></data>
+  <data name="RateOfDepreciationLabel" xml:space="preserve"><value>نسبة الإهلاك %</value></data>
+  <data name="DefaultAgeLabel" xml:space="preserve"><value>العمر الإفتراضى</value></data>
+  <data name="AccumulatedDepreciationLabel" xml:space="preserve"><value>مجمع الإهلاك</value></data>
+  <data name="BookValueLabel" xml:space="preserve"><value>القيمة الدفتريه</value></data>
+  <data name="PriceScrapValueLabel" xml:space="preserve"><value>سعر البيع خرده</value></data>
+  <data name="LastModifiedValueLabel" xml:space="preserve"><value>أخر قيمة معدله</value></data>
+  <data name="ImagesTab" xml:space="preserve"><value>الصورة</value></data>
+  <data name="ImageDescriptionLabel" xml:space="preserve"><value>وصف الصورة</value></data>
+  <data name="AddImageButton" xml:space="preserve"><value>إضافة صورة</value></data>
+  <data name="UnnamedImage" xml:space="preserve"><value>صورة بدون وصف</value></data>
+  <data name="DeleteImageButton" xml:space="preserve"><value>حذف الصورة</value></data>
+  <data name="AttachOneImageButton" xml:space="preserve"><value>إرفاق صورة</value></data>
+  <data name="Unspecified" xml:space="preserve"><value>غير محدد</value></data>
+  <data name="AssetNameRequired" xml:space="preserve"><value>أدخل إسم الإصل</value></data>
+  <data name="AssetAdded" xml:space="preserve"><value>تم إضافة بيانات الإصل بنجاح</value></data>
+  <data name="AssetUpdated" xml:space="preserve"><value>تم تعديل بيانات الإصل بنجاح</value></data>
+  <data name="CategoryAdded" xml:space="preserve"><value>تم إضافة الحساب بنجاح</value></data>
+  <data name="DeleteAccountTitle" xml:space="preserve"><value>الحسابات</value></data>
+  <data name="DeleteAccountConfirm" xml:space="preserve"><value>هل تريد حذف الحساب {0}؟ ربما يكون تم إستخدامة من قبل فيتأثر بة حسابات أخرى</value></data>
+  <data name="AccountCannotDeleteHasChildren" xml:space="preserve"><value>هذا الحساب لا يمكن حذفة لأنة أستخدم فى قائمة حساب فرعية</value></data>
+  <data name="AccountCannotDeleteUsedInEntries" xml:space="preserve"><value>هذا الحساب تم إستخدامه فى قيود حسابيه ولا يمكن حذفه</value></data>
+  <data name="DeleteImageTitle" xml:space="preserve"><value>حذف</value></data>
+  <data name="DeleteImageConfirm" xml:space="preserve"><value>هل متأكد من حذف الصورة</value></data>
+  <data name="AddFixedAssetCategoryTitle" xml:space="preserve"><value>إضافة حساب جديد</value></data>
+  <data name="NewAccountNameLabel" xml:space="preserve"><value>إسم الحساب الجديد</value></data>
+  <data name="NewAccountCodeLabel" xml:space="preserve"><value>كود الحساب الجديد</value></data>
+  <data name="CanDeleteLabel" xml:space="preserve"><value>يمكن حذفة</value></data>
+  <data name="AcceptCostCenterLabel" xml:space="preserve"><value>يقبل مركز تكلفة</value></data>
+  <data name="NoFixedAssetsYet" xml:space="preserve"><value>لا توجد أصول ثابتة بعد</value></data>
+  <data name="DepreciationCalcTitle" xml:space="preserve"><value>حساب الإهلاك</value></data>
+  <data name="FinancialPeriodLabel" xml:space="preserve"><value>الفترة المالية</value></data>
+  <data name="PendingAssetsHeader" xml:space="preserve"><value>الأصول التى لم يُحسب لها إهلاك لهذه الفترة</value></data>
+  <data name="ComputeButton" xml:space="preserve"><value>حساب الإهلاك</value></data>
+  <data name="DepreciationRateColumn" xml:space="preserve"><value>نسبة الإهلاك</value></data>
+  <data name="AssetNameColumn" xml:space="preserve"><value>الأصل</value></data>
+  <data name="NoPendingAssets" xml:space="preserve"><value>لا توجد أصول بانتظار حساب الإهلاك لهذه الفترة</value></data>
+  <data name="ComputedEhlakHeader" xml:space="preserve"><value>سجلات الإهلاك المحسوبة لهذه الفترة</value></data>
+  <data name="DeleteSelectedButton" xml:space="preserve"><value>حذف المحدد</value></data>
+  <data name="AssetValueNowColumn" xml:space="preserve"><value>قيمة الأصل الآن</value></data>
+  <data name="TotalDepreciationColumn" xml:space="preserve"><value>إجمالى الإهلاك</value></data>
+  <data name="PeriodDepreciationColumn" xml:space="preserve"><value>إهلاك الفترة</value></data>
+  <data name="NoComputedEhlak" xml:space="preserve"><value>لا توجد سجلات إهلاك محسوبة لهذه الفترة</value></data>
+  <data name="ComputeFailedError" xml:space="preserve"><value>حدث خطأ أثناء حساب الإهلاك</value></data>
+  <data name="ComputeSuccessMessage" xml:space="preserve"><value>تم حساب الإهلاك بنجاح</value></data>
+  <data name="DeleteEhlakTitle" xml:space="preserve"><value>حذف</value></data>
+  <data name="DeleteEhlakConfirm" xml:space="preserve"><value>هل تريد حذف {0} من سجلات الإهلاك المحددة؟</value></data>
+  <data name="DeleteFailedError" xml:space="preserve"><value>حدث خطأ أثناء الحذف</value></data>
+  <data name="DeleteSuccessMessage" xml:space="preserve"><value>تم الحذف بنجاح</value></data>
+  <data name="FirstBalanceTitle" xml:space="preserve"><value>رصيد أول المدة</value></data>
+  <data name="CustomerLabel" xml:space="preserve"><value>العميل</value></data>
+  <data name="SupplierLabel" xml:space="preserve"><value>المورد</value></data>
+  <data name="NoOpeningPeriodFound" xml:space="preserve"><value>لا توجد فترة مالية</value></data>
+  <data name="OpeningPeriodLabel" xml:space="preserve"><value>الفترة المالية الافتتاحية</value></data>
+  <data name="FirstBalanceButton" xml:space="preserve"><value>رصيد أول المدة</value></data>
+  <data name="CustomerBalanceSummaryTitle" xml:space="preserve"><value>كشف أرصدة العملاء</value></data>
+  <data name="SupplierBalanceSummaryTitle" xml:space="preserve"><value>كشف أرصدة الموردين</value></data>
+  <data name="GroupLabel" xml:space="preserve"><value>المجموعة</value></data>
+  <data name="CustomerNatureFilterLabel" xml:space="preserve"><value>طبيعة العملاء</value></data>
+  <data name="MixedCustomersOnlyOption" xml:space="preserve"><value>العملاء المختلط فقط</value></data>
+  <data name="NonMixedCustomersOnlyOption" xml:space="preserve"><value>العملاء الغير مختلط</value></data>
+  <data name="CustomerTypeFilterLabel" xml:space="preserve"><value>نوع العميل</value></data>
+  <data name="BalanceStatusFilterLabel" xml:space="preserve"><value>حالة الرصيد</value></data>
+  <data name="AllItemsOption" xml:space="preserve"><value>الكل بأرصدة وبدون</value></data>
+  <data name="ItemsWithBalanceOption" xml:space="preserve"><value>بأرصدة فقط</value></data>
+  <data name="ItemsWithZeroBalanceOption" xml:space="preserve"><value>بأرصدة صفر فقط</value></data>
+  <data name="TotalCreditLabel" xml:space="preserve"><value>إجمالى دائن</value></data>
+  <data name="TotalDebitLabel" xml:space="preserve"><value>إجمالى مدين</value></data>
+  <data name="NetCreditLabel" xml:space="preserve"><value>صافى دائن</value></data>
+  <data name="NetDebitLabel" xml:space="preserve"><value>صافى مدين</value></data>
+  <data name="CreditBalanceColumn" xml:space="preserve"><value>رصيد دائن</value></data>
+  <data name="DebitBalanceColumn" xml:space="preserve"><value>رصيد مدين</value></data>
+  <data name="NameColumn" xml:space="preserve"><value>الإسم</value></data>
+  <data name="NoRecordsFound" xml:space="preserve"><value>لا توجد بيانات</value></data>
+  <data name="ShowMixedAccountLabel" xml:space="preserve"><value>عرض الحساب المختلط</value></data>
+  <data name="MixedBalanceSummaryTitle" xml:space="preserve"><value>بيان بأرصدة الحسابات المختلطة</value></data>
+  <data name="RefreshButton" xml:space="preserve"><value>تحديث</value></data>
+  <data name="CustomerBalanceColumn" xml:space="preserve"><value>رصيد كعميل</value></data>
+  <data name="SupplierBalanceColumn" xml:space="preserve"><value>رصيد كمورد</value></data>
+  <data name="NetBalanceColumn" xml:space="preserve"><value>صافى الرصيد</value></data>
+  <data name="CustomerAccountStatementTitle" xml:space="preserve"><value>كشف حساب عميل</value></data>
+  <data name="SupplierAccountStatementTitle" xml:space="preserve"><value>كشف حساب مورد</value></data>
+  <data name="OperationColumn" xml:space="preserve"><value>العملية</value></data>
+  <data name="RunningDebitBalanceColumn" xml:space="preserve"><value>رصيد مدين</value></data>
+  <data name="RunningCreditBalanceColumn" xml:space="preserve"><value>رصيد دائن</value></data>
+  <data name="CarNumberColumn" xml:space="preserve"><value>السيارة</value></data>
+  <data name="WorkOrderNumberColumn" xml:space="preserve"><value>أمر الشغل</value></data>
+  <data name="TaxInternalIdColumn" xml:space="preserve"><value>الرقم الإلكترونى</value></data>
+  <data name="DocumentColumn" xml:space="preserve"><value>المستند</value></data>
+  <data name="DeleteRowButton" xml:space="preserve"><value>حذف بيان</value></data>
+  <data name="ViewCustomerBalanceListButton" xml:space="preserve"><value>كشف أرصدة العملاء</value></data>
+  <data name="ViewSupplierBalanceListButton" xml:space="preserve"><value>كشف أرصدة الموردين</value></data>
+  <data name="OtherAccountLabel" xml:space="preserve"><value>حساب آخر</value></data>
+  <data name="AccountLabel" xml:space="preserve"><value>الحساب</value></data>
+  <data name="Close" xml:space="preserve"><value>غلق</value></data>
+  <data name="NewButton" xml:space="preserve"><value>جديد</value></data>
+  <data name="FinancialNoticeTitle" xml:space="preserve"><value>إشعار تسوية مالية</value></data>
+  <data name="FinancialNoticeReviewTitle" xml:space="preserve"><value>مراجعة إشعارات التسوية</value></data>
+  <data name="NoticeNoLabel" xml:space="preserve"><value>رقم الإشعار</value></data>
+  <data name="NoticeNoColumn" xml:space="preserve"><value>رقم الإشعار</value></data>
+  <data name="AmountInWordsLabel" xml:space="preserve"><value>مبلغ وقدره</value></data>
+  <data name="AmountInFiguresLabel" xml:space="preserve"><value>المبلغ بالأرقام</value></data>
+  <data name="DeleteNoticeButton" xml:space="preserve"><value>حذف الإشعار</value></data>
+  <data name="SelectCustomerValidation" xml:space="preserve"><value>من فضلك إختار العميل</value></data>
+  <data name="SelectSupplierValidation" xml:space="preserve"><value>من فضلك إختار المورد</value></data>
+  <data name="SelectNatureValidation" xml:space="preserve"><value>يجب إختيار طبيعة الإشعار مدين أم دائن</value></data>
+  <data name="EnterValueValidation" xml:space="preserve"><value>أدخل القيمة</value></data>
+  <data name="EnterValidValueValidation" xml:space="preserve"><value>أدخل قيمة صحيحة</value></data>
+  <data name="EnterOrderNoValidation" xml:space="preserve"><value>من فضلك أدخل رقم الإشعار</value></data>
+  <data name="SelectCurrencyValidation" xml:space="preserve"><value>من فضلك أدخل العملة</value></data>
+  <data name="EnterNotesValidation" xml:space="preserve"><value>أدخل وصف العملية او البيان</value></data>
+  <data name="ConfirmSaveNoticeMessage" xml:space="preserve"><value>هل متأكد من إدخال البيانات وتريد الحفظ</value></data>
+  <data name="ConfirmDeleteNoticeMessage" xml:space="preserve"><value>هل تريد حذف الإشعار</value></data>
+  <data name="NoticeSavedMessage" xml:space="preserve"><value>تم حفظ إشعار التسوية</value></data>
+  <data name="NoticeDeletedMessage" xml:space="preserve"><value>تم حذف إشعار التسوية</value></data>
+  <data name="NoticeSaveErrorMessage" xml:space="preserve"><value>خطأ فى إصدار إشعار التسوية</value></data>
+  <data name="NoticeDeleteErrorMessage" xml:space="preserve"><value>خطأ فى حذف إشعار التسوية</value></data>
+  <data name="ValueColumn" xml:space="preserve"><value>القيمة</value></data>
+  <data name="TypeColumn" xml:space="preserve"><value>النوع</value></data>
+  <data name="DetailsButton" xml:space="preserve"><value>تفاصيل الإشعار</value></data>
+  <data name="QuantityColumn" xml:space="preserve"><value>الكمية</value></data>
+  <data name="PriceColumn" xml:space="preserve"><value>السعر</value></data>
+  <data name="TotalColumn" xml:space="preserve"><value>الإجمالى</value></data>
+  <data name="AddItemButton" xml:space="preserve"><value>إضافة صنف</value></data>
+  <data name="EditItemButton" xml:space="preserve"><value>تعديل صنف</value></data>
+  <data name="DeleteItemButton" xml:space="preserve"><value>حذف صنف</value></data>
+  <data name="SelectItemValidation" xml:space="preserve"><value>يجب إختيار الصنف</value></data>
+  <data name="EnterQtyValidation" xml:space="preserve"><value>أدخل كمية الصنف</value></data>
+  <data name="EnterPriceValidation" xml:space="preserve"><value>أدخل سعر الصنف</value></data>
+  <data name="EnterItemsValidation" xml:space="preserve"><value>أدخل الأصناف</value></data>
+  <data name="AddItemDialogTitle" xml:space="preserve"><value>إضافة صنف</value></data>
+  <data name="ConfirmDeleteItemMessage" xml:space="preserve"><value>هل تريد حذف الصنف</value></data>
+  <data name="ItemsTitle" xml:space="preserve"><value>الأصناف</value></data>
+  <data name="FinancialNoticeByItemTitle" xml:space="preserve"><value>إشعار تسوية مالية بالصنف</value></data>
+  <data name="FinancialNoticeByItemReviewTitle" xml:space="preserve"><value>مراجعة إشعارات التسوية بالصنف</value></data>
+  <data name="OpeningBalanceListTitle" xml:space="preserve"><value>أرصدة أول المدة</value></data>
+  <data name="AccountCodeColumn" xml:space="preserve"><value>كود الحساب</value></data>
+  <data name="DebitFirstBalanceColumn" xml:space="preserve"><value>رصيد أول المده مدين</value></data>
+  <data name="CreditFirstBalanceColumn" xml:space="preserve"><value>رصيد أول المده دائن</value></data>
+  <data name="DebitEquivalentFirstBalanceColumn" xml:space="preserve"><value>مكافأ رصيد أول المده مدين</value></data>
+  <data name="CreditEquivalentFirstBalanceColumn" xml:space="preserve"><value>مكافأ رصيد أول المده دائن</value></data>
+  <data name="EditFirstBalanceButton" xml:space="preserve"><value>تعديل رصيد أول المدة</value></data>
+  <data name="ReviewAddAccountsButton" xml:space="preserve"><value>مراجعة إضافة الحسابات لأرصدة أول المدة</value></data>
+  <data name="SpecificAccountFilterLabel" xml:space="preserve"><value>تحديد حساب بعينه (اختياري)</value></data>
+  <data name="ShowTotalLabel" xml:space="preserve"><value>عرض الإجمالى</value></data>
+  <data name="EditGLFirstBalanceTitle" xml:space="preserve"><value>تعديل رصيد أول المدة</value></data>
+  <data name="EquivalentFactorLabel" xml:space="preserve"><value>معامل التحويل</value></data>
+  <data name="EquivalentBalanceLabel" xml:space="preserve"><value>الرصيد المكافئ</value></data>
+  <data name="ExistingBalancesLabel" xml:space="preserve"><value>الأرصدة الحالية بالعملات</value></data>
+  <data name="GrandTotalLabel" xml:space="preserve"><value>الإجمالى</value></data>
+  <data name="SubtotalPrefixLabel" xml:space="preserve"><value>إجمالى</value></data>
+  <data name="EquivalentCurrencyOption" xml:space="preserve"><value>بالمكافىء</value></data>
+  <data name="AllCurrenciesOption" xml:space="preserve"><value>الكل</value></data>
+  <data name="AccountNameSearchLabel" xml:space="preserve"><value>بحث بالاسم</value></data>
+  <data name="DailyWorkSummaryTitle" xml:space="preserve"><value>يومية الصادر والوارد</value></data>
+  <data name="ExportSectionTitle" xml:space="preserve"><value>الصادر</value></data>
+  <data name="ImportSectionTitle" xml:space="preserve"><value>الوارد</value></data>
+  <data name="CashPaymentDescription" xml:space="preserve"><value>صرف نقدية: {0}</value></data>
+  <data name="CashReceiptDescription" xml:space="preserve"><value>إستلام نقدية: {0}</value></data>
+  <data name="CheckNumberDescription" xml:space="preserve"><value>شيك رقم {0} {1}</value></data>
+  <data name="SalesInvoiceDescription" xml:space="preserve"><value>فاتورة مبيعات للعميل {0}</value></data>
+  <data name="PurchaseReturnDescription" xml:space="preserve"><value>فاتورة مردود المشتريات المورد {0}</value></data>
+  <data name="WorkOutExportDescription" xml:space="preserve"><value>أصناف من التشغيل الخارجى للمورد {0}</value></data>
+  <data name="PurchaseInvoiceDescription" xml:space="preserve"><value>فاتورة مشتريات المورد {0}</value></data>
+  <data name="SalesReturnDescription" xml:space="preserve"><value>فاتورة مرتجع مبيعات للعميل {0}</value></data>
+  <data name="WorkOutImportDescription" xml:space="preserve"><value>إستلام تشغيل خارجى من {0}</value></data>
+  <data name="NazalatDescription" xml:space="preserve"><value>إجمالى نزلات {0}</value></data>
+  <data name="CashExportTotalLabel" xml:space="preserve"><value>صرف نقدية بإجمالى</value></data>
+  <data name="CheckExportTotalLabel" xml:space="preserve"><value>صرف شيكات بإجمالى</value></data>
+  <data name="SalesTotalLabel" xml:space="preserve"><value>مبيعات بإجمالى</value></data>
+  <data name="PurchaseReturnTotalLabel" xml:space="preserve"><value>مردود المشتريات</value></data>
+  <data name="CashImportTotalLabel" xml:space="preserve"><value>إستلام نقدية بإجمالى</value></data>
+  <data name="CheckImportTotalLabel" xml:space="preserve"><value>إستلام شيكات بإجمالى</value></data>
+  <data name="PurchaseTotalLabel" xml:space="preserve"><value>مشتريات بإجمالى</value></data>
+  <data name="SalesReturnTotalLabel" xml:space="preserve"><value>مرتجع مبيعات بإجمالى</value></data>
+  <data name="WorkOutTotalLabel" xml:space="preserve"><value>إجمالى التشغيل الخارجى</value></data>
+  <data name="NazalatTotalLabel" xml:space="preserve"><value>إجمالى النزلات</value></data>
+  <data name="EqualExportImportMessage" xml:space="preserve"><value>الصادر والوارد متساويان بقيمة {0}</value></data>
+  <data name="ExportExceedsImportMessage" xml:space="preserve"><value>قيمة الصادر تزداد عن قيمة الوارد بـ {0}</value></data>
+  <data name="ImportExceedsExportMessage" xml:space="preserve"><value>قيمة الوارد تزداد عن قيمة الصادر بـ {0}</value></data>
+  <data name="ResponsibleManLabel" xml:space="preserve"><value>المسئول</value></data>
 </root>

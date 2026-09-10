@@ -1,0 +1,197 @@
+@* 🟢 "مراجعة إشعارات التسوية بالصنف" - النسخة Blazor الموحَّدة لشاشتَى WinForms المؤكَّد أنهما تُنفِّذان
+   **نفس الاستعلام حرفياً** (قارَنّا الكودَين سطراً بسطر): Taswya_Money_ReviewItem و Taswya_Money_Review_Multi_Item
+   - الفرق الوحيد بينهما فى الأصل هو أى شاشة تفتحانها عند اختيار صف (صنف واحد/أصناف متعددة على الترتيب)؛ بما أن
+   بند 16 وحَّد شاشتَى الإضافة/التعديل أنفسهما فى TaswyaMoneyByItem.razor واحدة، أصبح دمج المراجعة أيضاً بلا أى
+   فقدان فى المنطق. البحث/القائمة عبر AccountModelsLib.Money_Financial_Notice_ItemsCLS.Get_Money_Financial_Notice_Items
+   (بعد إصلاح خلل بناء SQL فيها بموافقتك الصريحة - راجع تعليق الدالة نفسها فى Money_Financial_Notice_ItemsCLS.cs). *@
+
+@page "/accounts/financial-notice/by-item-review"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("FinancialNoticeByItemReviewTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@Tr("FinancialNoticeByItemReviewTitle")</MudText>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="4">
+                <MudNumericField T="long" @bind-Value="_orderNo" Label="@Tr("NoticeNoLabel")" Variant="Variant.Outlined" Min="0" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudCheckBox T="bool" @bind-Value="_dateFromEnabled" Dense="true" />
+                    <MudDatePicker Date="_dateFrom" DateChanged="@(d => _dateFrom = d ?? _dateFrom)" Label="@Tr("DateFromLabel")" Variant="Variant.Outlined" Disabled="@(!_dateFromEnabled)" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudCheckBox T="bool" @bind-Value="_dateToEnabled" Dense="true" />
+                    <MudDatePicker Date="_dateTo" DateChanged="@(d => _dateTo = d ?? _dateTo)" Label="@Tr("DateToLabel")" Variant="Variant.Outlined" Disabled="@(!_dateToEnabled)" />
+                </MudStack>
+            </MudItem>
+        </MudGrid>
+
+        <MudStack Row="true" Spacing="2" Class="mt-3">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="SearchAsync" Disabled="@_isLoading">
+                @Tr("SearchButton")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => Nav.NavigateTo("/accounts/financial-notice/by-item/0"))">
+                @Tr("NewButton")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Info"
+                       OnClick="OpenSelectedAsync" Disabled="@(_selectedRow == null)">
+                @Tr("DetailsButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudTable Items="@_rows" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Dense="true" Elevation="1"
+              T="NoticeRow"
+              OnRowClick="@((TableRowClickEventArgs<NoticeRow> e) => _selectedRow = e.Item)">
+        <HeaderContent>
+            <MudTh>@Tr("SerialColumn")</MudTh>
+            <MudTh>@Tr("NoticeNoColumn")</MudTh>
+            <MudTh>@Tr("DateColumn")</MudTh>
+            <MudTh>@Tr("NameColumn")</MudTh>
+            <MudTh>@Tr("ValueColumn")</MudTh>
+            <MudTh>@Tr("TypeColumn")</MudTh>
+            <MudTh>@Tr("NotesColumn")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("SerialColumn")" Style="@RowStyle(context)">@context.Serial</MudTd>
+            <MudTd DataLabel="@Tr("NoticeNoColumn")" Style="@RowStyle(context)">@context.OrderNo</MudTd>
+            <MudTd DataLabel="@Tr("DateColumn")" Style="@RowStyle(context)">@context.OrderDate?.ToString("yyyy/MM/dd")</MudTd>
+            <MudTd DataLabel="@Tr("NameColumn")" Style="@RowStyle(context)">@context.SubAccountName</MudTd>
+            <MudTd DataLabel="@Tr("ValueColumn")" Style="@RowStyle(context)">@context.Value.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("TypeColumn")" Style="@RowStyle(context)">@context.TransactionTypeStr</MudTd>
+            <MudTd DataLabel="@Tr("NotesColumn")" Style="@RowStyle(context)">@context.Notes</MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private record NoticeRow(long Id, int Serial, long OrderNo, DateTime? OrderDate, string SubAccountName, decimal Value, string TransactionTypeStr, string Notes);
+
+    private readonly Money_Financial_Notice_ItemsCLS _cls = new();
+
+    private long _orderNo;
+    private bool _dateFromEnabled;
+    private bool _dateToEnabled;
+    private DateTime? _dateFrom = DateTime.Now.Date.AddDays(-30);
+    private DateTime? _dateTo = DateTime.Now.Date;
+
+    private List<NoticeRow> _rows = new();
+    private NoticeRow? _selectedRow;
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SearchAsync();
+    }
+
+    private async Task SearchAsync()
+    {
+        _errorMessage = null;
+        _isLoading = true;
+        _selectedRow = null;
+        StateHasChanged();
+
+        var orderNo = _orderNo;
+        var dtFromEnabled = _dateFromEnabled;
+        var dtFromValue = _dateFrom ?? DateTime.Now.Date;
+        var dtToEnabled = _dateToEnabled;
+        var dtToValue = _dateTo ?? DateTime.Now.Date;
+
+        try
+        {
+            var dt = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                int excp = 0;
+                return _cls.Get_Money_Financial_Notice_Items(ref excp, orderNo, dtFromEnabled, dtFromValue, dtToEnabled, dtToValue);
+            });
+
+            var rows = new List<NoticeRow>();
+            int serial = 0;
+            foreach (DataRow r in dt.Rows)
+            {
+                serial++;
+                var transactionType = r.Table.Columns.Contains("Transaction_Type") ? r["Transaction_Type"]?.ToString() : "";
+                rows.Add(new NoticeRow(
+                    Convert.ToInt64(r["Id"]),
+                    serial,
+                    Convert.ToInt64(r["OrderNo"]),
+                    r["OrderDate"] != DBNull.Value ? Convert.ToDateTime(r["OrderDate"]) : null,
+                    r["SubAccount_Name"]?.ToString() ?? "",
+                    Convert.ToDecimal(r["Order_Value"]),
+                    transactionType == "2" ? Tr("NatureDebitLabel") : Tr("NatureCreditLabel"),
+                    r["Notes"]?.ToString() ?? ""));
+            }
+            _rows = rows;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private string RowStyle(NoticeRow row) =>
+        ReferenceEquals(row, _selectedRow) ? "font-weight:bold;color:var(--mud-palette-primary);" : "";
+
+    private Task OpenSelectedAsync()
+    {
+        if (_selectedRow == null) return Task.CompletedTask;
+        Nav.NavigateTo($"/accounts/financial-notice/by-item/{_selectedRow.Id}");
+        return Task.CompletedTask;
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

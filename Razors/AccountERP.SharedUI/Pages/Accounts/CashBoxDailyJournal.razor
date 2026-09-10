@@ -1,0 +1,270 @@
+@* 🟢 شاشة "يومية الصندوق" - النسخة Blazor لـ Account_Common_LIB.New_Money_Transaction.BanksMoneyTransactionAccounts
+   (استدعاء menuItemBoxMonyDays_Click الفعلى فى MainFrm_AccountUpdate.cs). ملاحظة هامة: نفس دالة القائمة كان
+   بها استدعاء قديم لـ Account_Common_LIB.Money_Transaction.Cash_Money.Money_Transaction_Box معلَّق بالكامل
+   (dead code)، والاستدعاء الفعلى الوحيد هو BanksMoneyTransactionAccounts - تم التأكد من ذلك بقراءة الكود
+   مباشرة قبل البدء.
+   منطق العمل بالكامل موجود مسبقاً فى AccountModelsLib.Money_Transaction_BoxOrderReportCLS (بدون أى
+   MessageBox.Show حى - تحقَّق منه بالبحث فى كامل الملف) فلم يحتَج أى نقل، فقط دالة بحث تقنية جديدة واحدة
+   (Get_BoxesList) أُضيفت لنفس الكلاس لقائمة الصناديق (تقابل Connection4It.SandOuk_AccountList.
+   GetSandoukWithout_Perission(0,0) بالضبط - مشروع WinForms فقط).
+   خارج النطاق (كما فى كل الشاشات السابقة): النقر المزدوج على صف يفتح Order_MoneyToShow (تفاصيل السند) وزر
+   الطباعة يفتح MoneyTransactionDayPrint (تقرير RDLC) - كلاهما غير مبنيين فى Blazor بعد. *@
+
+@page "/accounts/cashbox-daily-journal"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Tr("CashBoxDailyJournalTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@Tr("CashBoxDailyJournalTitle")</MudText>
+
+        <MudGrid>
+            <MudItem xs="12" sm="6" md="4">
+                <MudSelect T="long" @bind-Value="_selectedBoxId" Label="@Tr("BoxLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    @foreach (var b in _boxes)
+                    {
+                        <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudDatePicker T="DateTime?" Date="_date" DateChanged="@((DateTime? d) => _date = d ?? DateTime.Today)"
+                               Label="@Tr("DateLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="12" md="4" Class="d-flex align-center">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
+                           OnClick="ShowAsync" Disabled="@_isLoading">
+                    @Tr("ShowDataButton")
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    @if (_hasResults)
+    {
+        <MudGrid Class="mb-4">
+            <MudItem xs="6" sm="4" md="2">
+                <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("PreviousBalanceLabel")</MudText>
+                    <MudText Typo="Typo.h6">@_firstBalance.ToString("N2")</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" sm="4" md="2">
+                <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("ReceiptsLabel")</MudText>
+                    <MudText Typo="Typo.h6">@_totalEstlam.ToString("N2")</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" sm="4" md="2">
+                <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("SubtotalLabel")</MudText>
+                    <MudText Typo="Typo.h6">@_estlamPlusFirst.ToString("N2")</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" sm="4" md="2">
+                <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("PaymentsLabel")</MudText>
+                    <MudText Typo="Typo.h6">@_totalSarf.ToString("N2")</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" sm="4" md="2">
+                <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true" Style="background-color:var(--mud-palette-info-lighten);">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("CurrentBalanceLabel")</MudText>
+                    <MudText Typo="Typo.h6">@_netTotal.ToString("N2")</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.h6" Class="mb-2">@Tr("ReceiptsLabel")</MudText>
+                <MudTable Items="@_estlamRows" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Dense="true" Elevation="1">
+                    <HeaderContent>
+                        <MudTh>@Tr("OrderNoColumn")</MudTh>
+                        <MudTh>@Tr("NotesColumn")</MudTh>
+                        <MudTh>@Tr("AccountColumn")</MudTh>
+                        <MudTh>@Tr("ValueColumn")</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.OrderNo</MudTd>
+                        <MudTd>@context.Notes</MudTd>
+                        <MudTd>@context.AccountName</MudTd>
+                        <MudTd>@context.Value.ToString("N2")</MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoReceiptsYet")</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.h6" Class="mb-2">@Tr("PaymentsLabel")</MudText>
+                <MudTable Items="@_sarfRows" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Dense="true" Elevation="1">
+                    <HeaderContent>
+                        <MudTh>@Tr("OrderNoColumn")</MudTh>
+                        <MudTh>@Tr("NotesColumn")</MudTh>
+                        <MudTh>@Tr("AccountColumn")</MudTh>
+                        <MudTh>@Tr("ValueColumn")</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.OrderNo</MudTd>
+                        <MudTd>@context.Notes</MudTd>
+                        <MudTd>@context.AccountName</MudTd>
+                        <MudTd>@context.Value.ToString("N2")</MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoPaymentsYet")</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private record BoxOption(long Id, string Name);
+    private record TransactionRow(string OrderNo, string Notes, string AccountName, decimal Value);
+
+    private readonly Money_Transaction_BoxOrderReportCLS _cls = new();
+
+    private List<BoxOption> _boxes = new();
+    private long _selectedBoxId;
+    private DateTime _date = DateTime.Today;
+
+    private List<TransactionRow> _estlamRows = new();
+    private List<TransactionRow> _sarfRows = new();
+    private decimal _firstBalance;
+    private decimal _totalEstlam;
+    private decimal _estlamPlusFirst;
+    private decimal _totalSarf;
+    private decimal _netTotal;
+    private bool _hasResults;
+
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBoxesAsync();
+    }
+
+    // 🟢 يقابل banks_List1.Get_Sandouk_DataWithAccount + cmbSandouk.SelectedIndex=0 الافتراضى فى
+    // BanksMoneyTransaction_Load بالضبط.
+    private async Task LoadBoxesAsync()
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _cls.Get_BoxesList();
+        });
+
+        var list = new List<BoxOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            list.Add(new BoxOption(Convert.ToInt64(r["Id"]), r["Bank_Name"]?.ToString() ?? ""));
+        }
+        _boxes = list;
+        _selectedBoxId = list.Count > 0 ? list[0].Id : 0;
+    }
+
+    // 🟢 يقابل toolStripDropDownBtnShow_Click/ShowData بالضبط: التحقق من اختيار الصندوق، ثم استدعاء
+    // Get_Money_Box_Transaction_Details مرتين (استلام Transaction_Type=1 / صرف Transaction_Type=2) و
+    // Compute_Box_BalanceBeforDataDay لحساب الرصيد السابق، ثم نفس معادلات الإجمالى/الصافى بالضبط.
+    private async Task ShowAsync()
+    {
+        _errorMessage = null;
+        if (_boxes.All(b => b.Id != _selectedBoxId))
+        {
+            _errorMessage = Tr("SelectBoxRequired");
+            return;
+        }
+
+        _isLoading = true;
+        StateHasChanged();
+        try
+        {
+            long boxId = _selectedBoxId;
+            var date = _date;
+
+            var result = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var dtEstlam = _cls.Get_Money_Box_Transaction_Details(boxId, date, 1);
+                var dtSarf = _cls.Get_Money_Box_Transaction_Details(boxId, date, 2);
+                var firstBalance = _cls.Compute_Box_BalanceBeforDataDay(boxId, false, date);
+                return (dtEstlam, dtSarf, firstBalance);
+            });
+
+            _estlamRows = BuildRows(result.dtEstlam);
+            _sarfRows = BuildRows(result.dtSarf);
+
+            _firstBalance = Common.RoundMe(result.firstBalance);
+            _totalEstlam = Common.RoundMe(_estlamRows.Sum(r => r.Value));
+            _totalSarf = Common.RoundMe(_sarfRows.Sum(r => r.Value));
+            _estlamPlusFirst = _firstBalance + _totalEstlam;
+            _netTotal = _estlamPlusFirst - _totalSarf;
+            _hasResults = true;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private static List<TransactionRow> BuildRows(DataTable dt)
+    {
+        var rows = new List<TransactionRow>();
+        foreach (DataRow r in dt.Rows)
+        {
+            rows.Add(new TransactionRow(
+                r["Order_No"]?.ToString() ?? "",
+                r["Notes"]?.ToString() ?? "",
+                r["SubAccount_Name"]?.ToString() ?? "",
+                ToDecimal(r["Transaction_Value"])));
+        }
+        return rows;
+    }
+
+    private static decimal ToDecimal(object value)
+    {
+        return decimal.TryParse(value?.ToString(), out var d) ? d : 0;
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

@@ -1,0 +1,194 @@
+@* 🟢 شاشة "كشف أرصدة الحسابات المختلطة" - النسخة Blazor من Accounts.Customer_SupplierAccountFrmLv (WinForms،
+   تُفتَح من MainFrm_AccountUpdate عبر menuItemCustomerAccountBalance_Mokhtalat/menuItem117_Click). القائمة
+   الأساسية (العملاء المرتبطين بحساب مورد) عبر AccountModelsLib.Models.CustomerCLS.Get_CustomerSupplierMokhtalatList -
+   دالة جديدة (تقنية فقط) تقابل حرفياً استعلام Connection4It.Customer_List1.Customer_SupplierData (عنصر تحكم
+   WinForms غير متاح من Blazor، فنُقل نفس الاستعلام بالضبط لـ AccountModelsLib). حساب رصيدَى العميل والمورد
+   لكل صف عبر AccountModelsLib.Models.CustomerCLS.Get_CustomerBalance_SQL وSupplierCLS.Get_Supplier_DataByGroupNew_SQL
+   (نفس الدالتين المُستخدَمتين فعلاً فى بند 12 - موجودتان بالفعل فى AccountModelsLib، لم تحتاجا أى نقل).
+
+   🐛 خلل حقيقى فى الأصل تم إصلاحه هنا بموافقة صريحة من المستخدم (لم يُلمَس ملف Customer_SupplierAccountFrmLv.cs
+   نفسه): fill_Customer_List() الأصلية تستدعى customer_List1(WinForms usercontrol).Get_CustomerBalance(0, 0,
+   Customer_Id, ShowMokhtalat: false) بقيمة false ثابتة لحساب "رصيد كعميل". لكن false تُضيف شرط
+   AND(Customer.Ref_Cust_Supplier_Id = 0) على استعلام SQL - وكل عميل يظهر أصلاً فى هذه الشاشة عنده
+   Ref_Cust_Supplier_Id > 0 حتماً (لأن القائمة الأساسية نفسها مبنية على INNER JOIN مع Supplier عبر
+   Supplier.Ref_Cust_Supplier_Id = Customer.Id، وهو نفس تعريف "الحساب المختلط" المُستخدَم فى فلتر بند 12).
+   فالنتيجة الفعلية فى الأصل: الاستعلام يرجع صفر صفوف دائماً، يُلتقَط الاستثناء بصمت (catch { BalanceCust = 0; })،
+   وعمود "رصيد كعميل" يظهر "0" لكل عميل، فى كل مرة، بغض النظر عن الرصيد الحقيقى. هنا نُمرِّر ShowMokhtalat: true
+   بدلاً من false (بلا أى فلتر إضافى على الاستعلام) - بنفس الطريقة التى يُستدعى بها فعلاً الجانب المقابل لحساب
+   "رصيد كمورد" أصلاً (ss.GetSupplier_DataBalance(..., cbShowMokhtalat.Checked, ...) حيث Checked=true افتراضياً).
+
+   عناصر من الأصل حُذفت من هذه النسخة لأنها معطَّلة/مخفية فعلياً فى واجهة WinForms نفسها (بلا أى تغيير فى
+   السلوك الظاهر للمستخدم النهائى):
+   - زر "تسوية الحساب المختلط كعميل" (BtnTaswya → MakeTaswya): Enabled=false فى الـ Designer الأصلى ولا يوجد
+     أى مكان فى الكود يُعيد تفعيله - أى الزر معطَّل دائماً ولا يمكن الوصول لمنطق MakeTaswya (الذى يُدرِج صفوف
+     تسوية فى Customers_Accounts/Suppliers_Accounts ويُحدِّث Customer.Balance/Supplier.Balance مباشرة) من واجهة
+     المستخدم إطلاقاً فى النسخة الحالية المنشورة.
+   - عنصر تحكم customer_List1 (كومبو بحث/قفز لعميل معيّن) وربطه بتظليل صف فى lvCustomer: Visible=false على كلٍّ
+     من customer_List1 وGroupBox الحاوى له - معطَّل بصرياً بالكامل فى الأصل.
+   - مربع اختيار "عرض الحساب المختلط" (cbShowMokhtalat): Visible=false فى الأصل، لكن قيمته الافتراضية
+     (Checked=true) لا تزال تُستخدَم فعلياً فى استدعاء حساب رصيد المورد - فمُرِّرت هنا كقيمة ثابتة true (نفس
+     الأثر الفعلى بالضبط، بدون عرض عنصر تحكم لا يمكن للمستخدم الوصول إليه أصلاً فى الأصل).
+   - الطباعة (BtnPrint/BtnprintPreview/BtnPrintSetting عبر PrintableListView) - خارج النطاق كباقى الشاشات
+     السابقة فى هذه الخطة. *@
+
+@page "/accounts/mixed-account-balance-summary"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Tr("MixedBalanceSummaryTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@Tr("MixedBalanceSummaryTitle")</MudText>
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="SearchAsync" Disabled="@_isLoading">
+            @Tr("RefreshButton")
+        </MudButton>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudTable Items="@_rows" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Dense="true" Elevation="1"
+              T="MixedBalanceRow">
+        <HeaderContent>
+            <MudTh>@Tr("SerialColumn")</MudTh>
+            <MudTh>@Tr("NameColumn")</MudTh>
+            <MudTh>@Tr("CustomerBalanceColumn")</MudTh>
+            <MudTh>@Tr("SupplierBalanceColumn")</MudTh>
+            <MudTh>@Tr("NetBalanceColumn")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("SerialColumn")">@context.Serial</MudTd>
+            <MudTd DataLabel="@Tr("NameColumn")">@context.Name</MudTd>
+            <MudTd DataLabel="@Tr("CustomerBalanceColumn")">@context.CustomerBalanceDisplay</MudTd>
+            <MudTd DataLabel="@Tr("SupplierBalanceColumn")">@context.SupplierBalanceDisplay</MudTd>
+            <MudTd DataLabel="@Tr("NetBalanceColumn")">@context.FinalBalanceDisplay</MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private record MixedBalanceRow(long Id, string Name, int Serial, string CustomerBalanceDisplay, string SupplierBalanceDisplay, string FinalBalanceDisplay);
+
+    private readonly CustomerCLS _customerCls = new();
+    private readonly SupplierCLS _supplierCls = new();
+
+    private List<MixedBalanceRow> _rows = new();
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SearchAsync();
+    }
+
+    // 🟢 يقابل fill_Customer_List الأصلية بالضبط (راجع تعليق الخلل المُصلَح أعلى الملف).
+    private async Task SearchAsync()
+    {
+        _errorMessage = null;
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var rows = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var opp = new operations();
+                var listDt = _customerCls.Get_CustomerSupplierMokhtalatList(0, 0);
+
+                var result = new List<MixedBalanceRow>();
+                int serial = 0;
+                foreach (DataRow r in listDt.Rows)
+                {
+                    serial++;
+                    var customerId = Convert.ToInt64(r["Id"]);
+                    var name = r["Name"]?.ToString()?.Trim() ?? "";
+
+                    decimal balanceCust = 0;
+                    var custSql = _customerCls.Get_CustomerBalance_SQL(0, 0, customerId, ShowMokhtalat: true);
+                    var custDt = opp.return_DataTable(custSql);
+                    if (custDt.Rows.Count > 0)
+                    {
+                        balanceCust = decimal.TryParse(custDt.Rows[0]["Balance"]?.ToString(), out var bc) ? bc : 0;
+                    }
+
+                    decimal balanceSupplier = 0;
+                    var suppSql = _supplierCls.Get_Supplier_DataByGroupNew_SQL(0, customerId, 0, ShowMokhtalat: true, CustomerBalanceStatus: -1);
+                    var suppDt = opp.return_DataTable(suppSql);
+                    if (suppDt.Rows.Count > 0)
+                    {
+                        balanceSupplier = decimal.TryParse(suppDt.Rows[0]["Balance"]?.ToString(), out var bs) ? bs : 0;
+                    }
+
+                    var finalBalance = balanceCust - balanceSupplier;
+
+                    result.Add(new MixedBalanceRow(customerId, name, serial,
+                        FormatBalance(balanceCust), FormatBalance(balanceSupplier), FormatBalance(finalBalance)));
+                }
+                return result;
+            });
+
+            _rows = rows;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    // 🟢 يقابل منطق التنسيق داخل fill_Customer_List الأصلية بالضبط لكل الأعمدة الثلاثة (Final/Supplier/Customer):
+    // Balance>0 => "دائن"، Balance<0 => قيمة مطلقة + "مدين" (عكس الاصطلاح المُستخدَم فى بند 12).
+    private string FormatBalance(decimal balance)
+    {
+        if (balance == 0) return "0";
+        var rounded = Common.RoundMe(Math.Abs(balance));
+        return balance > 0
+            ? $"{rounded:N2} {Tr("NatureCreditLabel")}"
+            : $"{rounded:N2} {Tr("NatureDebitLabel")}";
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

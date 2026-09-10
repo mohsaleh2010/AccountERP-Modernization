@@ -573,6 +573,18 @@ namespace AccountModelsLib.Models
 
 
         }
+        // 🟢 دالة جديدة (تقنية فقط، لا تقابل أى استعلام أصلى حرفياً): استعلام مُبسَّط "أى صنف نشط" لعنصر اختيار
+        // صنف عام فى شاشات إشعارات التسوية بالصنف (بند 16) - الأصل يستخدم Store_LIB.SearchUSR/Connection4It.
+        // ItemsSearchAny (عناصر تحكم WinForms معقَّدة تدعم بحث متعدد المعايير عبر شاشات كثيرة خارج نطاق هذا
+        // البند) وبناء نظير Blazor كامل لها خارج النطاق هنا؛ اكتُفِى بحد أدنى كافٍ لهذه الشاشة تحديداً (بحث
+        // بالاسم فقط على الأصناف النشطة) - مُوثَّق صراحة هنا لأنه الاستثناء الوحيد فى هذا البند لمبدأ "نفس
+        // الاستعلام الأصلى حرفياً" المُتبَع فى كل مكان آخر.
+        public DataTable Get_ActiveItemsForPicker()
+        {
+            AccountModelsLib.operations opp = new AccountModelsLib.operations();
+            string mysql = " SELECT Id, Item_Name FROM Item WHERE Active_flage=1 ORDER BY Item_Name";
+            return opp.return_DataTable(mysql);
+        }
         public bool IsFoundtemByCodeToEdit(string Code, ref DataTable dt, long Item_Id = 0)
         {
             bool IsFound = false;

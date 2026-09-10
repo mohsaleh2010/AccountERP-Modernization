@@ -1,0 +1,244 @@
+@* 🟢 مكوّن Blazor جديد يقابل Account_Common_LIB.Account_SelectionNew (عنصر تحكم WinForms مُشترك تستخدمه شاشات
+   عديدة، منها إشعارات التسوية المالية - بند 16). الأصل يعتمد على متحكمات WinForms مباشرة (Connection4It.Customer_List1/
+   Supplier_List، Connection4It.Account_Common.Account_ListFrmTree) وحالة داخلية مُعقَّدة - أُعيد بناء الواجهة هنا
+   بشكل Blazor أصيل (MudRadioGroup + MudAutocomplete للعميل/المورد + AccountTreePicker الموجود بالفعل لـ"حساب آخر")
+   بدل نقل عناصر تحكم WinForms حرفياً، مع الحفاظ على نفس منطق العمل تماماً:
+     - رمز "طبيعة الحساب" (AccountSelection): 2=عميل، 1=مورد، 0=حساب آخر - نفس ترقيم Supplier_Customer الأصلى بالضبط.
+     - عند اختيار عميل/مورد: يُستدعى AccountModelsLib.Order_Receipt_Checks.Get_Customer_Supplier_SubAccount_No
+       (نفس الدالة المُستخدَمة أصلاً؛ لاحظ ترقيمها الداخلى المختلف/المعكوس: 1=عميل، 2=مورد) لإيجاد SubAccount_Id/
+       SubAccount_Name/Account_Type_Value المرتبطَين فعلياً بحساب هذا العميل/المورد فى شجرة الحسابات - هذا هو
+       SubAccount_Id الحقيقى الذى يُرحَّل له القيد المحاسبى لاحقاً، وليس Customer_Id/Supplier_Id مباشرة.
+     - عند اختيار "حساب آخر": AccountTreePicker.razor الموجود بالفعل (نفس المكوّن المُستخدَم فى شجرة الحسابات
+       وMoveAccountDialog) داخل حوار مصغَّر، بدل Connection4It.Account_Common.Account_ListFrmTree الأصلى.
+     - الرصيد الحالى (Balance) يُحسَب عبر CustomerCLS.GetCustomerBalance/SupplierCLS.GetSupplier_DataBalance
+       (نفس الدالتين المُستخدَمتين أصلاً فى customer_List1.GetCustomerBalance/supplier_List1.GetSupplier_DataBalance)
+       - يُستخدَم لاحقاً كـBalance_Before عند الحفظ، تماماً كالأصل. *@
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@inject LanguageService LangService
+
+<MudRadioGroup T="int" Value="AccountSelection" ValueChanged="OnSelectionChangedAsync" Row="true">
+    <MudRadio T="int" Value="2" Color="Color.Primary">@Tr("CustomerLabel")</MudRadio>
+    <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("SupplierLabel")</MudRadio>
+    <MudRadio T="int" Value="0" Color="Color.Primary">@Tr("OtherAccountLabel")</MudRadio>
+</MudRadioGroup>
+
+@if (AccountSelection == 2)
+{
+    <MudAutocomplete T="PickerOption" Value="_selectedCustomer" SearchFunc="SearchCustomersAsync"
+                      ToStringFunc="@(o => o?.Name ?? "")" Label="@Tr("CustomerLabel")" Variant="Variant.Outlined"
+                      ValueChanged="OnCustomerPickedAsync" ResetValueOnEmptyText="true" Class="mt-2" />
+}
+else if (AccountSelection == 1)
+{
+    <MudAutocomplete T="PickerOption" Value="_selectedSupplier" SearchFunc="SearchSuppliersAsync"
+                      ToStringFunc="@(o => o?.Name ?? "")" Label="@Tr("SupplierLabel")" Variant="Variant.Outlined"
+                      ValueChanged="OnSupplierPickedAsync" ResetValueOnEmptyText="true" Class="mt-2" />
+}
+else
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
+        <MudTextField T="string" Value="@SubAccountName" ReadOnly="true" Label="@Tr("AccountLabel")" Variant="Variant.Outlined" FullWidth="true" />
+        <MudButton Variant="Variant.Outlined" OnClick="@(() => _pickerOpen = true)">...</MudButton>
+    </MudStack>
+}
+
+@if (!string.IsNullOrEmpty(_balanceLabel))
+{
+    <MudAlert Severity="Severity.Info" Dense="true" Class="mt-2">@_balanceLabel</MudAlert>
+}
+
+<MudDialog @bind-Visible="_pickerOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true })">
+    <TitleContent>@Tr("OtherAccountLabel")</TitleContent>
+    <DialogContent>
+        <div style="height:45vh;">
+            <AccountTreePicker BranchId="BranchId" SelectedValue="_pickedNode" SelectedValueChanged="OnOtherAccountPicked" Height="45vh" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _pickerOpen = false)">@Tr("Cancel")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private record PickerOption(long Id, string Name);
+
+    [Parameter] public int AccountSelection { get; set; } = 2;
+    [Parameter] public EventCallback<int> AccountSelectionChanged { get; set; }
+    [Parameter] public long CustomerId { get; set; }
+    [Parameter] public EventCallback<long> CustomerIdChanged { get; set; }
+    [Parameter] public long SupplierId { get; set; }
+    [Parameter] public EventCallback<long> SupplierIdChanged { get; set; }
+    [Parameter] public long SubAccountId { get; set; }
+    [Parameter] public EventCallback<long> SubAccountIdChanged { get; set; }
+    [Parameter] public string SubAccountName { get; set; } = "";
+    [Parameter] public EventCallback<string> SubAccountNameChanged { get; set; }
+    [Parameter] public int AccountTypeValue { get; set; }
+    [Parameter] public EventCallback<int> AccountTypeValueChanged { get; set; }
+    [Parameter] public decimal Balance { get; set; }
+    [Parameter] public EventCallback<decimal> BalanceChanged { get; set; }
+    [Parameter] public long BranchId { get; set; }
+
+    private readonly CustomerCLS _customerCls = new();
+    private readonly SupplierCLS _supplierCls = new();
+
+    private PickerOption? _selectedCustomer;
+    private PickerOption? _selectedSupplier;
+    private bool _pickerOpen;
+    private AccountTreeNodeViewModel? _pickedNode;
+    private string _balanceLabel = "";
+
+    private async Task<IEnumerable<PickerOption>> SearchCustomersAsync(string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _customerCls.Get_CustomerSupplierListForStatement(0, 0, -1, -1);
+        }, ct);
+        var list = new List<PickerOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["Name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add(new PickerOption(Convert.ToInt64(r["Id"]), name));
+            }
+        }
+        return list.Take(50);
+    }
+
+    private async Task<IEnumerable<PickerOption>> SearchSuppliersAsync(string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _supplierCls.Get_SupplierListForStatement(0, 0, 0, true);
+        }, ct);
+        var list = new List<PickerOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["Name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add(new PickerOption(Convert.ToInt64(r["Id"]), name));
+            }
+        }
+        return list.Take(50);
+    }
+
+    private async Task OnSelectionChangedAsync(int value)
+    {
+        AccountSelection = value;
+        await AccountSelectionChanged.InvokeAsync(value);
+        _balanceLabel = "";
+    }
+
+    // 🟢 يقابل cmbCustomerName_SelectedIndexChanged + Get_SubAccount_info(1, Customer_Id) الأصليتين بالضبط.
+    private async Task OnCustomerPickedAsync(PickerOption? option)
+    {
+        _selectedCustomer = option;
+        var customerId = option?.Id ?? 0;
+        await CustomerIdChanged.InvokeAsync(customerId);
+        if (customerId == 0) return;
+
+        var (balance, name, subId, subNo, subName, accType) = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            decimal bal = 0;
+            var balDt = _customerCls.GetCustomerBalance(customerId);
+            if (balDt.Rows.Count > 0) decimal.TryParse(balDt.Rows[0]["Balance"]?.ToString(), out bal);
+
+            int excp = 0;
+            long subAccountId = 0;
+            string subAccountNo = "", subAccountName = "";
+            int accountType = 0;
+            new Order_Receipt_Checks().Get_Customer_Supplier_SubAccount_No(ref excp, 1, (int)customerId, ref subAccountId, ref subAccountNo, ref subAccountName, ref accountType);
+            return (bal, option?.Name ?? "", subAccountId, subAccountNo, subAccountName, accountType);
+        });
+
+        Balance = balance;
+        await BalanceChanged.InvokeAsync(balance);
+        SubAccountId = subId;
+        await SubAccountIdChanged.InvokeAsync(subId);
+        SubAccountName = subName;
+        await SubAccountNameChanged.InvokeAsync(subName);
+        AccountTypeValue = accType == 0 ? Common.Customer_Account_Type : accType;
+        await AccountTypeValueChanged.InvokeAsync(AccountTypeValue);
+        _balanceLabel = FormatBalanceLabel(balance, name);
+    }
+
+    // 🟢 يقابل cmbSupplierName_SelectedIndexChanged + Get_SubAccount_info(2, Supplier_Id) الأصليتين بالضبط.
+    private async Task OnSupplierPickedAsync(PickerOption? option)
+    {
+        _selectedSupplier = option;
+        var supplierId = option?.Id ?? 0;
+        await SupplierIdChanged.InvokeAsync(supplierId);
+        if (supplierId == 0) return;
+
+        var (balance, name, subId, subNo, subName, accType) = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            decimal bal = 0;
+            var balDt = _supplierCls.GetSupplier_DataBalance(supplierId);
+            if (balDt.Rows.Count > 0) decimal.TryParse(balDt.Rows[0]["Balance"]?.ToString(), out bal);
+
+            int excp = 0;
+            long subAccountId = 0;
+            string subAccountNo = "", subAccountName = "";
+            int accountType = 0;
+            new Order_Receipt_Checks().Get_Customer_Supplier_SubAccount_No(ref excp, 2, (int)supplierId, ref subAccountId, ref subAccountNo, ref subAccountName, ref accountType);
+            return (bal, option?.Name ?? "", subAccountId, subAccountNo, subAccountName, accountType);
+        });
+
+        Balance = balance;
+        await BalanceChanged.InvokeAsync(balance);
+        SubAccountId = subId;
+        await SubAccountIdChanged.InvokeAsync(subId);
+        SubAccountName = subName;
+        await SubAccountNameChanged.InvokeAsync(subName);
+        AccountTypeValue = accType == 0 ? Common.Supplier_Account_Type : accType;
+        await AccountTypeValueChanged.InvokeAsync(AccountTypeValue);
+        _balanceLabel = FormatBalanceLabel(balance, name);
+    }
+
+    private async Task OnOtherAccountPicked(AccountTreeNodeViewModel? node)
+    {
+        _pickedNode = node;
+        if (node == null) return;
+        SubAccountId = node.Id;
+        await SubAccountIdChanged.InvokeAsync(node.Id);
+        SubAccountName = node.SubAccount_Name;
+        await SubAccountNameChanged.InvokeAsync(node.SubAccount_Name);
+        AccountTypeValue = Common.Account_Type_ForOther;
+        await AccountTypeValueChanged.InvokeAsync(AccountTypeValue);
+        _pickerOpen = false;
+    }
+
+    // 🟢 يقابل Get_Balance_CustomerLabel/Get_Balance_SupplierLabel الأصليتين بالضبط (نفس صياغة النص).
+    private string FormatBalanceLabel(decimal balance, string name)
+    {
+        var rounded = Common.RoundMe(Math.Abs(balance));
+        if (balance == 0) return "";
+        var natureKey = balance < 0 ? "NatureCreditLabel" : "NatureDebitLabel";
+        return $"{name} — {Tr(natureKey)}: {rounded:N2}";
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

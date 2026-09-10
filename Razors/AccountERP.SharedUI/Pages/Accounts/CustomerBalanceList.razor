@@ -1,0 +1,283 @@
+@* 🟢 شاشة "كشف أرصدة العملاء" - النسخة Blazor من Accounts.Customer_BalanceMokhtalatList (WinForms، تُفتَح من
+   MainFrm_AccountUpdate.CustomerAccountBalance_Click). كل الحساب/التصفية يمر حرفياً عبر
+   AccountModelsLib.Models.CustomerCLS.MakeCustomer_MokhtalatDataByGroupNew (تُنشئ جدول تجميع مؤقت
+   Customers_Accounts_Mokhtalat ثم تُعيد SQL القراءة النهائى) - نفس منطق العمل تماماً، لم يحتَج أى نقل
+   (موجود بالفعل فى AccountModelsLib بلا أى MessageBox.Show حى). قبل كل استعلام تُستدعى
+   AccountModelsLib.FirstBalance_CLS.SetFirstBalanceForAllCustomers() أولاً - كما فى RefreshData الأصلية
+   بالضبط (تضمن وجود صف "رصيد صفر" لأى عميل بلا حركات إطلاقاً حتى لا يختفى من نتيجة الـ INNER JOIN).
+
+   تبسيط تصميم واحد فقط عن الأصل (بدون تغيير فى النتيجة المنطقية): "نوع العميل" (rdMainCustomer/rdGeneralCustomer
+   الأصليان - قد يكونا مُفعَّلين معاً فى الأصل لأنهما فى GroupBox منفصلين) مُمثَّلان هنا بمجموعة اختيار واحدة
+   بثلاث قيم (الكل=-1 / دائمون فقط=0 / متنوعون فقط=1) بدل مربعَين مستقلَّين - نفس القيم الثلاث الفعلية
+   المُمرَّرة لـ General_Customer_Flage بالضبط فى الأصل. القائمة الثلاثية "طبيعة العملاء" (cbAllCustomer:
+   الكل/-1، المختلط فقط/1، غير المختلط/0 كقيمة ابتدائية غير معدَّلة) نُقلت كما هى حرفياً بنفس الفهرسة.
+
+   خارج النطاق (كباقى الشاشات السابقة): الطباعة (BtnPrint/RDLC عبر CustomerSupplierAccountPrnt) والنقر
+   المزدوج لفتح كشف حساب العميل التفصيلى (شاشة "كشف حساب عميل" موحَّدة لم تُبنَ بعد فى Blazor - بند لاحق فى
+   هذه الخطة). *@
+
+@page "/accounts/customer-balance-summary"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Tr("CustomerBalanceSummaryTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@Tr("CustomerBalanceSummaryTitle")</MudText>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="long" @bind-Value="_groupId" Label="@Tr("GroupLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    <MudSelectItem T="long" Value="0">@Tr("AllCustomers")</MudSelectItem>
+                    @foreach (var g in _groups)
+                    {
+                        <MudSelectItem T="long" Value="@g.Id">@g.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="int" @bind-Value="_refCustSupplierMode" Label="@Tr("CustomerNatureFilterLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    <MudSelectItem T="int" Value="-1">@Tr("AllCustomers")</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">@Tr("MixedCustomersOnlyOption")</MudSelectItem>
+                    <MudSelectItem T="int" Value="0">@Tr("NonMixedCustomersOnlyOption")</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="int" @bind-Value="_generalCustomerFlag" Label="@Tr("CustomerTypeFilterLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    <MudSelectItem T="int" Value="-1">@Tr("AllCustomers")</MudSelectItem>
+                    <MudSelectItem T="int" Value="0">@Tr("MainCustomer")</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">@Tr("GeneralCustomer")</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="int" @bind-Value="_balanceStatus" Label="@Tr("BalanceStatusFilterLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    <MudSelectItem T="int" Value="-1">@Tr("AllItemsOption")</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">@Tr("ItemsWithBalanceOption")</MudSelectItem>
+                    <MudSelectItem T="int" Value="0">@Tr("ItemsWithZeroBalanceOption")</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+        </MudGrid>
+
+        <MudStack Row="true" Spacing="2" Class="mt-3">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="SearchAsync" Disabled="@_isLoading">
+                @Tr("SearchButton")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.AccountBalanceWallet"
+                       OnClick="OpenFirstBalanceDialog" Disabled="@(_selectedId == null)">
+                @Tr("FirstBalanceButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudGrid Class="mb-4">
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("TotalCreditLabel")</MudText>
+                <MudText Typo="Typo.h6">@_totalDa2n.ToString("N2")</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("TotalDebitLabel")</MudText>
+                <MudText Typo="Typo.h6">@_totalMadin.ToString("N2")</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true" Style="background-color:var(--mud-palette-info-lighten);">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("NetCreditLabel")</MudText>
+                <MudText Typo="Typo.h6">@_netDa2n.ToString("N2")</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true" Style="background-color:var(--mud-palette-info-lighten);">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("NetDebitLabel")</MudText>
+                <MudText Typo="Typo.h6">@_netMadin.ToString("N2")</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudTable Items="@_rows" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Dense="true" Elevation="1"
+              T="CustomerBalanceRow"
+              OnRowClick="@((TableRowClickEventArgs<CustomerBalanceRow> e) => _selectedId = e.Item.Id)">
+        <HeaderContent>
+            <MudTh>@Tr("SerialColumn")</MudTh>
+            <MudTh>@Tr("CreditBalanceColumn")</MudTh>
+            <MudTh>@Tr("DebitBalanceColumn")</MudTh>
+            <MudTh>@Tr("NameColumn")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("SerialColumn")" Style="@(context.Id == _selectedId ? "font-weight:bold;color:var(--mud-palette-primary);" : "")">@context.Serial</MudTd>
+            <MudTd DataLabel="@Tr("CreditBalanceColumn")" Style="@(context.Id == _selectedId ? "font-weight:bold;color:var(--mud-palette-primary);" : "")">@context.Da2n.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("DebitBalanceColumn")" Style="@(context.Id == _selectedId ? "font-weight:bold;color:var(--mud-palette-primary);" : "")">@context.Madin.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("NameColumn")" Style="@(context.Id == _selectedId ? "font-weight:bold;color:var(--mud-palette-primary);" : "")">@context.Name</MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<EditFirstBalanceDialog @bind-Visible="_firstBalanceDialogVisible"
+                         EntityId="@(_selectedId ?? 0)"
+                         EntityName="@_selectedName"
+                         IsCustomer="true"
+                         OnSaved="SearchAsync" />
+
+@code {
+    private record GroupOption(long Id, string Name);
+    private record CustomerBalanceRow(long Id, string Name, decimal Da2n, decimal Madin, int Serial);
+
+    private readonly CustomerCLS _cls = new();
+
+    private List<GroupOption> _groups = new();
+    private long _groupId;
+    private int _refCustSupplierMode = -1;
+    private int _generalCustomerFlag = -1;
+    private int _balanceStatus = -1;
+
+    private List<CustomerBalanceRow> _rows = new();
+    private decimal _totalDa2n;
+    private decimal _totalMadin;
+    private decimal _netDa2n;
+    private decimal _netMadin;
+
+    private long? _selectedId;
+    private string _selectedName = "";
+    private bool _firstBalanceDialogVisible;
+
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGroupsAsync();
+        await SearchAsync();
+    }
+
+    // 🟢 يقابل Customer_AccountFrmLv_Load's groupCustomer_List1.GroupCustomer_Data بالضبط.
+    private async Task LoadGroupsAsync()
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _cls.Get_CustomerGroups();
+        });
+
+        var list = new List<GroupOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            list.Add(new GroupOption(Convert.ToInt64(r["Id"]), r["GroupName"]?.ToString() ?? ""));
+        }
+        _groups = list;
+    }
+
+    // 🟢 يقابل RefreshData الأصلية بالضبط: SetFirstBalanceForAllCustomers ثم
+    // Customer_MokhtalatDataByGroupNew (المُنفَّذة عبر MakeCustomer_MokhtalatDataByGroupNew) ثم fill_Customer_List.
+    private async Task SearchAsync()
+    {
+        _errorMessage = null;
+        _isLoading = true;
+        _selectedId = null;
+        StateHasChanged();
+
+        var groupId = _groupId;
+        var refCustSupplierId = _refCustSupplierMode;
+        var generalCustomerFlag = _generalCustomerFlag;
+        var balanceStatus = _balanceStatus;
+
+        try
+        {
+            var dt = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                FirstBalance_CLS.SetFirstBalanceForAllCustomers();
+                var mysql = _cls.MakeCustomer_MokhtalatDataByGroupNew(generalCustomerFlag, groupId, 0, refCustSupplierId, balanceStatus);
+                return new operations().return_DataTable(mysql);
+            });
+
+            var rows = new List<CustomerBalanceRow>();
+            decimal totalDa2n = 0, totalMadin = 0;
+            int serial = 0;
+            foreach (DataRow r in dt.Rows)
+            {
+                serial++;
+                var balance = decimal.TryParse(r["Balance"]?.ToString(), out var b) ? b : 0;
+                decimal da2n = 0, madin = 0;
+                if (balance > 0)
+                {
+                    madin = Common.RoundMe(balance);
+                    totalMadin += madin;
+                }
+                else if (balance < 0)
+                {
+                    da2n = Common.RoundMe(balance * -1);
+                    totalDa2n += da2n;
+                }
+                rows.Add(new CustomerBalanceRow(Convert.ToInt64(r["Id"]), r["Name"]?.ToString()?.Trim() ?? "", da2n, madin, serial));
+            }
+
+            _rows = rows;
+            _totalDa2n = Common.RoundMe(totalDa2n);
+            _totalMadin = Common.RoundMe(totalMadin);
+            var allBalance = _totalMadin - _totalDa2n;
+            _netDa2n = allBalance < 0 ? Common.RoundMe(allBalance * -1) : 0;
+            _netMadin = allBalance > 0 ? Common.RoundMe(allBalance) : 0;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OpenFirstBalanceDialog()
+    {
+        if (_selectedId == null) return;
+        _selectedName = _rows.FirstOrDefault(r => r.Id == _selectedId)?.Name ?? "";
+        _firstBalanceDialogVisible = true;
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

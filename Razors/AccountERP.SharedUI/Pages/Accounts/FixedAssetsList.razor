@@ -1,0 +1,883 @@
+@* 🟢 شاشة "دليل الأصول الثابتة" - النسخة Blazor من Account_Common_LIB.FixesAsset_TreeFrm (WinForms، تُفتَح من
+   MainFrm_AccountUpdate.ToolStripMenuItemMainFixedAssetLists_Click). تضم شجرة حسابات الأصول الثابتة
+   (فئات+أصول فعلية، مفلترة Account_Customer_Type_Value=8 - راجع FixedAssetTreePicker.razor) + لوحة تفاصيل
+   ديناميكية حسب نوع العقدة المختارة (فئة/أصل) + معرض صور + حوار "إضافة فئة" منفصل - نفس تقسيم الشاشة
+   الأصلية بالضبط (FixedAssetTreeViewUSCTRL + FixedAssetsUSCTRL المُدمَجة داخل الفورم نفسه للتعديل، مقابل
+   Add_Account_Category كمودال منفصل للفئات).
+
+   كل القراءة/الإضافة/التعديل/الحذف تمر عبر نفس الكلاسات المستخدَمة من شاشة الويندوز فورمز، الموجودة بالفعل
+   فى AccountModelsLib بدون أى MessageBox.Show حى (لم تحتَج أى نقل): FixedAssetCLS (بيانات الأصل + الصور)،
+   Sub_Account (الحذف بفحوصات الأمان نفسها)، Add_Account_CodesCLS (إضافة الفئات، فى AddFixedAssetCategoryDialog).
+
+   "إضافة أصل جديد": الأصل يفتحها كمودال منفصل (Add_NewFixedAsset) يضمّن نفس لوحة الـ24 حقلاً بالكامل - هنا
+   عُرِضت كوضع بديل *داخل نفس اللوحة* (بدل نافذة منفصلة) لتفادى تكرار الحقول فى مكوّنين مختلفين؛ نفس مبدأ
+   "التعديل بدون حوار منفصل" المُتَّبع فى CostCenterList.razor. النتيجة النهائية للمستخدم مطابقة: يختار فئة
+   ← يضغط "إضافة أصل" ← يعبّئ الحقول ← حفظ ← يظهر الأصل الجديد فى الشجرة مُحدَّداً.
+
+   الصور (بقرار موافَق عليه صراحة من المستخدم): الأصل يقرأ ملف صورة محلياً من القرص (WinForms فقط) ثم يحوّله
+   byte[]. لا يوجد "مسار ملف محلى" فى المتصفح، فالمستخدم يرفع الملف مباشرة (MudFileUpload) والنتيجة
+   byte[] تُمرَّر لدالة FixedAssetCLS.SaveImage(byte[]) الجديدة (تقنية بحت، تخزّن فى نفس FixedAssetData_ImagesStore
+   بنفس الأعمدة بالضبط). عند "الإضافة" صورة واحدة فقط قابلة للإرفاق (نفس قيد الفورم الأصلى: الصورة تُحفَظ فعلياً
+   فقط بعد إنشاء الحساب+FixedAssetData معاً)، بينما "التعديل" يسمح بمعرض صور متعدد كامل (رفع/عرض/حذف) - نفس
+   الفرق الموجود فى الأصل بالضبط بين مساري cmdStoreNewImage_Click (SubAccount_Id==0 مقابل >0). *@
+
+@page "/accounts/fixed-assets"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@using AccountERP.SharedUI.Components.Shared
+@using Microsoft.AspNetCore.Components.Forms
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("FixedAssetsTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")}; height: calc(100vh - 100px); display:flex; flex-direction:column; min-height:0;")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1" Style="flex: 0 0 auto;">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("FixedAssetsTitle")</MudText>
+            <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+                <MudSelect T="long" Value="_branchId" ValueChanged="OnBranchChanged" Label="@Tr("BranchLabel")" Style="min-width:220px;" Dense="true">
+                    @foreach (var b in _branches)
+                    {
+                        <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CreateNewFolder"
+                           OnClick="OpenAddCategoryDialog" Disabled="@(_selected == null || _isAsset || _isBusy)">
+                    @Tr("AddCategoryButton")
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="StartAddAsset" Disabled="@(_selected == null || _isAsset || _isBusy)">
+                    @Tr("AddAssetButton")
+                </MudButton>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4" Style="flex: 0 0 auto;">@_errorMessage</MudAlert>
+    }
+
+    <MudGrid Spacing="3" Style="flex: 1 1 auto; min-height: 0;">
+        <MudItem xs="12" md="4" Style="height:100%;">
+            <MudPaper Class="pa-3" Elevation="1" Style="height:100%; overflow:hidden;">
+                <FixedAssetTreePicker @ref="_treePicker" BranchId="_branchId" SelectedValue="_selected"
+                                       SelectedValueChanged="OnNodeSelectedAsync" Height="100%" />
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="8" Style="height:100%;">
+            <MudPaper Class="pa-4" Elevation="1" Style="height:100%; overflow-y:auto;">
+                @if (_selected == null)
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("NoAccountSelected")</MudAlert>
+                }
+                else if (!_isAsset && !_addingAsset)
+                {
+                    <MudText Typo="Typo.h6" Class="mb-2">@_selected.SubAccount_NO &nbsp; @_selected.SubAccount_Name</MudText>
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">@Tr("CategoryNodeHint")</MudAlert>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                               OnClick="DeleteAsync" Disabled="_isBusy">
+                        @Tr("DeleteAccountButton")
+                    </MudButton>
+                }
+                else
+                {
+                    <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
+                        <MudTabPanel Text="@Tr("GeneralInfoTab")">
+                            <MudGrid Spacing="3">
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField T="string" @bind-Value="_code" Label="@Tr("AssetCodeLabel")" ReadOnly="@(!_addingAsset)" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField T="string" @bind-Value="_nameAr" Label="@Tr("AssetNameArLabel")" Required="true" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField T="string" @bind-Value="_nameEn" Label="@Tr("AssetNameEnLabel")" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudDatePicker T="DateTime?" Date="_purchaseDate" DateChanged="@((DateTime? d) => _purchaseDate = d)" Label="@Tr("PurchaseDateLabel")" />
+                                </MudItem>
+
+                                <MudItem xs="12" sm="6">
+                                    <MudSelect T="int" @bind-Value="_ehlakStatus" Label="@Tr("DepreciationStatusLabel")">
+                                        @foreach (var s in FixedAssetLookups.EhlakStatuses)
+                                        {
+                                            <MudSelectItem T="int" Value="@s.Value">@s.TextAr</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudSelect T="int?" Value="_empId" ValueChanged="@((int? v) => _empId = v)" Label="@Tr("ResponsibleEmployeeLabel")">
+                                        @foreach (var e in _employees)
+                                        {
+                                            <MudSelectItem T="int?" Value="@e.Id">@e.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudDatePicker T="DateTime?" Date="_empReceiveDate" DateChanged="@((DateTime? d) => _empReceiveDate = d)" Label="@Tr("EmpReceiveDateLabel")" />
+                                </MudItem>
+
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField T="string" @bind-Value="_model" Label="@Tr("ModelLabel")" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField T="string" @bind-Value="_industryFactory" Label="@Tr("IndustryFactoryLabel")" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField T="string" @bind-Value="_fixedSerialNo" Label="@Tr("FixedSerialNoLabel")" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField T="string" @bind-Value="_location" Label="@Tr("LocationLabel")" />
+                                </MudItem>
+
+                                <MudItem xs="12" sm="4">
+                                    <MudTextField T="string" @bind-Value="_supplierName" Label="@Tr("SupplierNameLabel")" />
+                                </MudItem>
+                                <MudItem xs="12" sm="4">
+                                    <MudDatePicker T="DateTime?" Date="_warrantyFinalDate" DateChanged="@((DateTime? d) => _warrantyFinalDate = d)" Label="@Tr("WarrantyFinalDateLabel")" />
+                                </MudItem>
+                                <MudItem xs="12" sm="4">
+                                    <MudTextField T="string" @bind-Value="_warrantyDetails" Label="@Tr("WarrantyDetailsLabel")" />
+                                </MudItem>
+                            </MudGrid>
+                        </MudTabPanel>
+
+                        <MudTabPanel Text="@Tr("DepreciationTab")">
+                            <MudGrid Spacing="3">
+                                <MudItem xs="12" sm="6">
+                                    <MudSelect T="int?" Value="_ehlakType" ValueChanged="@((int? v) => _ehlakType = v)" Label="@Tr("DepreciationTypeLabel")">
+                                        @foreach (var t in _depreciationTypes)
+                                        {
+                                            <MudSelectItem T="int?" Value="@t.Id">@t.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudDatePicker T="DateTime?" Date="_beginServiceDate" DateChanged="@((DateTime? d) => _beginServiceDate = d)" Label="@Tr("BeginServiceDateLabel")" />
+                                </MudItem>
+
+                                <MudItem xs="12" sm="4">
+                                    <MudNumericField T="decimal" @bind-Value="_mainValue" Label="@Tr("MainValueLabel")" Format="N2" />
+                                </MudItem>
+                                <MudItem xs="12" sm="4">
+                                    <MudNumericField T="decimal" @bind-Value="_rateOfDepreciation" Label="@Tr("RateOfDepreciationLabel")" Format="N2" />
+                                </MudItem>
+                                <MudItem xs="12" sm="4">
+                                    <MudNumericField T="decimal" @bind-Value="_defaultAge" Label="@Tr("DefaultAgeLabel")" Format="N2" />
+                                </MudItem>
+
+                                <MudItem xs="12" sm="4">
+                                    <MudNumericField T="decimal" @bind-Value="_accumulatedDepreciation" Label="@Tr("AccumulatedDepreciationLabel")" Format="N2" />
+                                </MudItem>
+                                <MudItem xs="12" sm="4">
+                                    <MudNumericField T="decimal" @bind-Value="_bookValue" Label="@Tr("BookValueLabel")" Format="N2" />
+                                </MudItem>
+                                <MudItem xs="12" sm="4">
+                                    <MudNumericField T="decimal" @bind-Value="_priceScrapValue" Label="@Tr("PriceScrapValueLabel")" Format="N2" />
+                                </MudItem>
+
+                                <MudItem xs="12" sm="6">
+                                    <MudNumericField T="decimal" @bind-Value="_lastModifiedValue" Label="@Tr("LastModifiedValueLabel")" Format="N2" />
+                                </MudItem>
+                            </MudGrid>
+                        </MudTabPanel>
+
+                        @if (!_addingAsset)
+                        {
+                            <MudTabPanel Text="@Tr("ImagesTab")">
+                                <MudGrid Spacing="3">
+                                    <MudItem xs="12" sm="6">
+                                        @if (!string.IsNullOrEmpty(_selectedImageDataUrl))
+                                        {
+                                            <MudImage Src="@_selectedImageDataUrl" Width="260" Elevation="2" Class="rounded mb-2" />
+                                        }
+                                        <MudTextField T="string" @bind-Value="_imageDesc" Label="@Tr("ImageDescriptionLabel")" Class="mb-2" />
+                                        <MudFileUpload T="IBrowserFile" FilesChanged="OnImageSelectedAsync" Accept=".jpg,.jpeg,.png,.gif,.bmp">
+                                            <ActivatorContent>
+                                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddPhotoAlternate">
+                                                    @Tr("AddImageButton")
+                                                </MudButton>
+                                            </ActivatorContent>
+                                        </MudFileUpload>
+                                    </MudItem>
+                                    <MudItem xs="12" sm="6">
+                                        <MudList T="long" @bind-SelectedValue="_selectedImageId" Clickable="true">
+                                            @foreach (var img in _images)
+                                            {
+                                                <MudListItem T="long" Value="@img.ImageId" OnClick="@(() => SelectImageAsync(img))">
+                                                    @(string.IsNullOrEmpty(img.Description) ? Tr("UnnamedImage") : img.Description)
+                                                </MudListItem>
+                                            }
+                                        </MudList>
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                                                   OnClick="DeleteImageAsync" Disabled="@(_selectedImageId == 0 || _isBusy)" Class="mt-2">
+                                            @Tr("DeleteImageButton")
+                                        </MudButton>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudTabPanel>
+                        }
+                    </MudTabs>
+
+                    <MudDivider Class="my-4" />
+
+                    <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+                        @if (_addingAsset)
+                        {
+                            @if (!string.IsNullOrEmpty(_newAssetImageName))
+                            {
+                                <MudChip T="string" Icon="@Icons.Material.Filled.Image" OnClose="@(() => { _newAssetImageBytes = null; _newAssetImageName = null; })">@_newAssetImageName</MudChip>
+                            }
+                            <MudFileUpload T="IBrowserFile" FilesChanged="OnNewAssetImageSelectedAsync" Accept=".jpg,.jpeg,.png,.gif,.bmp">
+                                <ActivatorContent>
+                                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.AddPhotoAlternate">@Tr("AttachOneImageButton")</MudButton>
+                                </ActivatorContent>
+                            </MudFileUpload>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
+                                       OnClick="SaveNewAssetAsync" Disabled="_isBusy">
+                                @Tr("Save")
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined" OnClick="CancelAddAsset" Disabled="_isBusy">
+                                @Tr("Cancel")
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
+                                       OnClick="SaveEditAsync" Disabled="_isBusy">
+                                @Tr("Save")
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                                       OnClick="DeleteAsync" Disabled="_isBusy">
+                                @Tr("DeleteAccountButton")
+                            </MudButton>
+                        }
+                    </MudStack>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+<AddFixedAssetCategoryDialog @bind-Visible="_addCategoryDialogOpen" ParentNode="_selected" BranchId="_branchId" OnCategoryAdded="OnCategoryAddedAsync" />
+
+@code {
+    private List<(long Id, string Name)> _branches = new();
+    private long _branchId;
+    private FixedAssetTreePicker? _treePicker;
+    private FixedAssetNodeViewModel? _selected;
+    private bool _isAsset;
+    private bool _addingAsset;
+    private bool _addCategoryDialogOpen;
+    private bool _isBusy;
+    private string? _errorMessage;
+
+    private readonly FixedAssetCLS _cls = new();
+    private long _fixedAssetDataId;
+    private List<(int Id, string Name)> _employees = new();
+    private List<(int Id, string Name)> _depreciationTypes = new();
+
+    // 🟢 حقول لوحة التفاصيل (24 حقلاً) - تقابل بالضبط حقول FixedAssetsUSCTRL/FixedAssetData.
+    private string _code = "";
+    private string _nameAr = "";
+    private string _nameEn = "";
+    private DateTime? _purchaseDate;
+    private int _ehlakStatus = 1;
+    private int? _empId;
+    private DateTime? _empReceiveDate;
+    private string _model = "";
+    private string _industryFactory = "";
+    private string _fixedSerialNo = "";
+    private string _location = "";
+    private DateTime? _warrantyFinalDate;
+    private string _supplierName = "";
+    private string _warrantyDetails = "";
+    private int? _ehlakType;
+    private decimal _mainValue;
+    private decimal _accumulatedDepreciation;
+    private decimal _rateOfDepreciation;
+    private decimal _bookValue;
+    private DateTime? _beginServiceDate;
+    private decimal _priceScrapValue;
+    private decimal _lastModifiedValue;
+    private decimal _defaultAge;
+
+    // 🟢 معرض الصور (وضع التعديل فقط).
+    private record ImageRow(long ImageId, string Description, byte[] Data);
+    private List<ImageRow> _images = new();
+    private long _selectedImageId;
+    private string? _selectedImageDataUrl;
+    private string _imageDesc = "";
+
+    // 🟢 صورة واحدة قابلة للإرفاق أثناء "الإضافة" فقط (نفس قيد الفورم الأصلى - راجع تعليق الرأس).
+    private byte[]? _newAssetImageBytes;
+    private string? _newAssetImageName;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLookupsAsync();
+        if (_branches.Count > 0)
+        {
+            _branchId = _branches[0].Id;
+        }
+    }
+
+    private async Task LoadLookupsAsync()
+    {
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var branchDt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, (int)Common.User_Id);
+            var branches = new List<(long, string)>();
+            foreach (DataRow r in branchDt.Rows)
+            {
+                branches.Add((Convert.ToInt64(r["Id"]), r["Branch_Name"]?.ToString() ?? ""));
+            }
+            _branches = branches;
+
+            var depDt = _cls.Get_DepreciationTypes();
+            var types = new List<(int, string)>();
+            foreach (DataRow r in depDt.Rows)
+            {
+                types.Add((Convert.ToInt32(r["Id"]), r["Name"]?.ToString() ?? ""));
+            }
+            _depreciationTypes = types;
+        });
+    }
+
+    private async Task LoadEmployeesAsync(long branchId)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _cls.Get_EmployeesList(branchId);
+        });
+        var list = new List<(int, string)> { (0, Tr("Unspecified")) };
+        foreach (DataRow r in dt.Rows)
+        {
+            list.Add((Convert.ToInt32(r["Id"]), r["name"]?.ToString() ?? ""));
+        }
+        _employees = list;
+    }
+
+    private void OnBranchChanged(long branchId)
+    {
+        _branchId = branchId;
+        _selected = null;
+        _isAsset = false;
+        _addingAsset = false;
+    }
+
+    // 🟢 يقابل trAccount_Common_LIB_AfterSelect_ بالضبط: يستدعي FixedAssetCLS.Get_FixedAsset لتحديد هل
+    // العقدة المختارة "فئة" أم "أصل فعلى" (لا يوجد عمود يميّز بينهما مباشرة - راجع تعليق FixedAssetNodeViewModel).
+    private async Task OnNodeSelectedAsync(FixedAssetNodeViewModel? node)
+    {
+        _selected = node;
+        _errorMessage = null;
+        _addingAsset = false;
+        if (node == null)
+        {
+            _isAsset = false;
+            return;
+        }
+
+        if (_employees.Count == 0 || true)
+        {
+            await LoadEmployeesAsync(node.Branch_Id);
+        }
+
+        var subAccountId = node.Id;
+        var result = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _cls.Get_FixedAsset(subAccountId);
+        });
+
+        if (result.Rows.Count > 0)
+        {
+            _isAsset = true;
+            LoadFieldsFromRow(result.Rows[0]);
+            await LoadImagesAsync(_fixedAssetDataId);
+        }
+        else
+        {
+            _isAsset = false;
+        }
+    }
+
+    private void LoadFieldsFromRow(DataRow r)
+    {
+        _fixedAssetDataId = Convert.ToInt64(r["Id"]);
+        _code = r["Code"]?.ToString() ?? "";
+        _nameAr = r["Name_Ar"]?.ToString() ?? "";
+        _nameEn = r["Name_En"]?.ToString() ?? "";
+        _purchaseDate = GetDate(r, "Purchase_Date");
+        _ehlakStatus = GetInt(r, "Account_Ehlak_Status");
+        _empId = GetIntNullable(r, "Emp_Id");
+        _empReceiveDate = GetDate(r, "Emp_Receive_Date");
+        _model = r["Model"]?.ToString() ?? "";
+        _industryFactory = r["Industry_Factory"]?.ToString() ?? "";
+        _fixedSerialNo = r["Fixed_Serial_No"]?.ToString() ?? "";
+        _location = r["Location"]?.ToString() ?? "";
+        _warrantyFinalDate = GetDate(r, "Factory_warrantyFinal_Date");
+        _supplierName = r["Supplier_Name"]?.ToString() ?? "";
+        _warrantyDetails = r["Factory_warranty_Details"]?.ToString() ?? "";
+        _ehlakType = GetIntNullable(r, "Account_Ehlak_Type");
+        _mainValue = GetDecimal(r, "Main_Value");
+        _accumulatedDepreciation = GetDecimal(r, "Accumulated_Depreciation_Value");
+        _rateOfDepreciation = GetDecimal(r, "Rate_of_depreciation");
+        _bookValue = GetDecimal(r, "Book_value");
+        _beginServiceDate = GetDate(r, "beginning_service_Date");
+        _priceScrapValue = GetDecimal(r, "Price_scrap_Value");
+        _lastModifiedValue = GetDecimal(r, "Last_Modified_Value");
+        _defaultAge = GetDecimal(r, "Default_Age");
+    }
+
+    private static DateTime? GetDate(DataRow r, string col)
+    {
+        if (!r.Table.Columns.Contains(col) || r[col] == DBNull.Value) return null;
+        return DateTime.TryParse(r[col].ToString(), out var d) ? d : null;
+    }
+
+    private static int GetInt(DataRow r, string col)
+    {
+        if (!r.Table.Columns.Contains(col) || r[col] == DBNull.Value) return 0;
+        return int.TryParse(r[col].ToString(), out var v) ? v : 0;
+    }
+
+    private static int? GetIntNullable(DataRow r, string col)
+    {
+        if (!r.Table.Columns.Contains(col) || r[col] == DBNull.Value) return null;
+        return int.TryParse(r[col].ToString(), out var v) ? v : null;
+    }
+
+    private static decimal GetDecimal(DataRow r, string col)
+    {
+        if (!r.Table.Columns.Contains(col) || r[col] == DBNull.Value) return 0;
+        return decimal.TryParse(r[col].ToString(), out var v) ? v : 0;
+    }
+
+    // 🟢 يقابل BtnAddNewAccounts_Click بالضبط: يتطلب عقدة (فئة) مُختارة أولاً، ثم يُفرِّغ اللوحة لحقول جديدة
+    // (بدل فتح مودال Add_NewFixedAsset منفصل - راجع تعليق الرأس).
+    private void StartAddAsset()
+    {
+        if (_selected == null || _isAsset) return;
+        _addingAsset = true;
+        _code = "";
+        _nameAr = "";
+        _nameEn = "";
+        _purchaseDate = DateTime.Today;
+        _ehlakStatus = 1;
+        _empId = 0;
+        _empReceiveDate = DateTime.Today;
+        _model = "";
+        _industryFactory = "";
+        _fixedSerialNo = "";
+        _location = "";
+        _warrantyFinalDate = DateTime.Today;
+        _supplierName = "";
+        _warrantyDetails = "";
+        _ehlakType = null;
+        _mainValue = 0;
+        _accumulatedDepreciation = 0;
+        _rateOfDepreciation = 0;
+        _bookValue = 0;
+        _beginServiceDate = DateTime.Today;
+        _priceScrapValue = 0;
+        _lastModifiedValue = 0;
+        _defaultAge = 0;
+        _newAssetImageBytes = null;
+        _newAssetImageName = null;
+    }
+
+    private void CancelAddAsset()
+    {
+        _addingAsset = false;
+    }
+
+    private async Task OnNewAssetImageSelectedAsync(IBrowserFile? file)
+    {
+        if (file == null) return;
+        using var stream = file.OpenReadStream(5 * 1024 * 1024);
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        _newAssetImageBytes = ms.ToArray();
+        _newAssetImageName = file.Name;
+    }
+
+    // 🟢 يقابل FixedAssetsUSCTRL.AddFixedAsset (عبر FixedAssetCLS.AddNewFixedAssetsWithImg) بالضبط: يُنشئ
+    // حساباً فرعياً جديداً (Sub_Account.Add_AccountSupplierCustomerOther) ثم صف FixedAssetData المرتبط به
+    // معاً، ثم يحفظ صورة واحدة إن اختيرت.
+    private async Task SaveNewAssetAsync()
+    {
+        if (_selected == null) return;
+        if (string.IsNullOrWhiteSpace(_nameAr)) { _errorMessage = Tr("AssetNameRequired"); return; }
+
+        _isBusy = true;
+        _errorMessage = null;
+        var branchId = _branchId;
+        try
+        {
+            int excp = 0;
+            string msg = "";
+            long newSubAccountId = -1;
+            var imageBytes = _newAssetImageBytes;
+            var imageDesc = _imageDesc;
+
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var fx = BuildFixedAssetCls();
+                var opp = new operations(1);
+                try
+                {
+                    int localExcp = 0;
+                    string localMsg = "";
+                    fx.AddNewFixedAssets(ref localExcp, ref localMsg, ref opp, fx);
+                    if (localExcp == 0)
+                    {
+                        if (imageBytes != null)
+                        {
+                            int imgExcp = 0;
+                            fx.SaveImage(ref imgExcp, ref opp, imageBytes, fx.fxd.Id, imageDesc ?? "");
+                        }
+                        opp.Commit();
+                        newSubAccountId = fx.fxd.SubAccount_Id ?? -1;
+                        excp = 0;
+                    }
+                    else
+                    {
+                        opp.Rollback();
+                        excp = 1;
+                        msg = localMsg;
+                    }
+                }
+                catch (Exception ee)
+                {
+                    opp.Rollback();
+                    excp = 1;
+                    msg = ee.Message;
+                }
+            });
+
+            if (excp == 0)
+            {
+                Snackbar.Add(Tr("AssetAdded"), Severity.Success);
+                _addingAsset = false;
+                if (_treePicker != null)
+                {
+                    await _treePicker.ReloadAsync();
+                    await _treePicker.SelectAndRevealAsync(newSubAccountId);
+                }
+            }
+            else
+            {
+                _errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private FixedAssetCLS BuildFixedAssetCls()
+    {
+        var fx = new FixedAssetCLS();
+        fx.fxd.Code = _code;
+        fx.fxd.Name_Ar = _nameAr.Trim();
+        fx.fxd.Name_En = _nameEn;
+        fx.fxd.Purchase_Date = _purchaseDate;
+        fx.fxd.Account_Ehlak_Status = _ehlakStatus;
+        fx.fxd.Account_Ehlak_Status_Str = FixedAssetLookups.EhlakStatuses.FirstOrDefault(s => s.Value == _ehlakStatus)?.TextAr ?? "";
+        fx.fxd.Emp_Id = _empId;
+        fx.fxd.Emp_Receive_Date = _empReceiveDate;
+        fx.fxd.Model = _model;
+        fx.fxd.Industry_Factory = _industryFactory;
+        fx.fxd.Fixed_Serial_No = _fixedSerialNo;
+        fx.fxd.Location = _location;
+        fx.fxd.Factory_warrantyFinal_Date = _warrantyFinalDate;
+        fx.fxd.Supplier_Name = _supplierName;
+        fx.fxd.Factory_warranty_Details = _warrantyDetails;
+        fx.fxd.Account_Ehlak_Type = _ehlakType;
+        fx.fxd.Account_Ehlak_Type_Str = _depreciationTypes.FirstOrDefault(t => t.Id == _ehlakType).Name ?? "";
+        fx.fxd.Main_Value = _mainValue;
+        fx.fxd.Accumulated_Depreciation_Value = _accumulatedDepreciation;
+        fx.fxd.Rate_of_depreciation = _rateOfDepreciation;
+        fx.fxd.Book_value = _bookValue;
+        fx.fxd.beginning_service_Date = _beginServiceDate;
+        fx.fxd.Price_scrap_Value = _priceScrapValue;
+        fx.fxd.Last_Modified_Value = _lastModifiedValue;
+        fx.fxd.Default_Age = _defaultAge;
+        return fx;
+    }
+
+    // 🟢 يستدعي Update_FixedAssetData_Full (وليس Update_NewFixedAsset الأصلية) - راجع تعليق الرأس: الأصلية
+    // تحذف صف FixedAssetData فعلياً بدل تحديثه (خلل حقيقى فى الشاشة الأصلية، بموافقة صريحة من المستخدم على
+    // إصلاحه فى Blazor فقط دون المساس بالشاشة الأصلية).
+    private async Task SaveEditAsync()
+    {
+        if (_selected == null || !_isAsset) return;
+        if (string.IsNullOrWhiteSpace(_nameAr)) { _errorMessage = Tr("AssetNameRequired"); return; }
+
+        _isBusy = true;
+        _errorMessage = null;
+        var subAccountId = _selected.Id;
+        var fixedAssetDataId = _fixedAssetDataId;
+        try
+        {
+            int excp = 0;
+            string msg = "";
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var fx = BuildFixedAssetCls();
+                fx.fxd.Id = fixedAssetDataId;
+                fx.fxd.SubAccount_Id = subAccountId;
+                fx.Update_FixedAssetData_Full(ref excp, ref msg);
+            });
+
+            if (excp == 0)
+            {
+                Snackbar.Add(Tr("AssetUpdated"), Severity.Success);
+                if (_treePicker != null)
+                {
+                    await _treePicker.ReloadAsync();
+                    await _treePicker.SelectAndRevealAsync(subAccountId);
+                }
+            }
+            else
+            {
+                _errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private void OpenAddCategoryDialog()
+    {
+        if (_selected == null || _isAsset) return;
+        _addCategoryDialogOpen = true;
+    }
+
+    private async Task OnCategoryAddedAsync(long newId)
+    {
+        Snackbar.Add(Tr("CategoryAdded"), Severity.Success);
+        if (_treePicker != null)
+        {
+            var reselectId = _selected?.Id;
+            await _treePicker.ReloadAsync();
+            if (reselectId.HasValue)
+            {
+                await _treePicker.SelectAndRevealAsync(reselectId.Value);
+            }
+        }
+    }
+
+    // 🟢 يقابل btnDelete_Click بالضبط: نفس فحوصَى الأمان (Check_Account_No_Found_OnSubAccount يمنع حذف
+    // عقدة لها أبناء، Check_Account_No_WithEntry_Used يمنع حذف حساب استُخدِم فى قيود) قبل Delete_Account.
+    private async Task DeleteAsync()
+    {
+        if (_selected == null) return;
+
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("DeleteAccountTitle"),
+            Tr("DeleteAccountConfirm", _selected.SubAccount_Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+
+        if (confirmed != true) return;
+
+        _isBusy = true;
+        _errorMessage = null;
+        var id = _selected.Id;
+        try
+        {
+            bool hasChildren = false;
+            bool usedInEntries = false;
+            int excp = 0;
+            string msg = "";
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var acc = new Sub_Account();
+                hasChildren = acc.Check_Account_No_Found_OnSubAccount(ref excp, id);
+                if (!hasChildren)
+                {
+                    usedInEntries = acc.Check_Account_No_WithEntry_Used(ref excp, id);
+                    if (!usedInEntries)
+                    {
+                        acc.Delete_Account(ref excp, ref msg, id);
+                    }
+                }
+            });
+
+            if (hasChildren)
+            {
+                _errorMessage = Tr("AccountCannotDeleteHasChildren");
+                return;
+            }
+            if (usedInEntries)
+            {
+                _errorMessage = Tr("AccountCannotDeleteUsedInEntries");
+                return;
+            }
+
+            if (excp == 0)
+            {
+                Snackbar.Add(Tr("AccountDeleted"), Severity.Success);
+                _selected = null;
+                _isAsset = false;
+                if (_treePicker != null)
+                {
+                    await _treePicker.ReloadAsync();
+                }
+            }
+            else
+            {
+                _errorMessage = string.IsNullOrEmpty(msg) ? Tr("AccountCannotDelete") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    // 🟢 معرض الصور (وضع التعديل) - يقابل FixedAssetsUSCTRL.GetImagesFromDatabase/cmdStoreNewImage_Click/
+    // BtnDelete_Click بالضبط، برفع byte[] مباشرة بدل مسار ملف محلى (راجع تعليق الرأس).
+    private async Task LoadImagesAsync(long fixedAssetDataId)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _cls.Get_FixedAssetData_ImagesStore(fixedAssetDataId);
+        });
+
+        var list = new List<ImageRow>();
+        foreach (DataRow r in dt.Rows)
+        {
+            list.Add(new ImageRow(
+                Convert.ToInt64(r["ImageId"]),
+                r["Description"]?.ToString() ?? "",
+                r["ImageData"] as byte[] ?? Array.Empty<byte>()));
+        }
+        _images = list;
+        _selectedImageId = 0;
+        _selectedImageDataUrl = null;
+        _imageDesc = "";
+    }
+
+    private Task SelectImageAsync(ImageRow img)
+    {
+        _selectedImageId = img.ImageId;
+        _imageDesc = img.Description;
+        _selectedImageDataUrl = $"data:image/png;base64,{Convert.ToBase64String(img.Data)}";
+        return Task.CompletedTask;
+    }
+
+    private async Task OnImageSelectedAsync(IBrowserFile? file)
+    {
+        if (file == null || !_isAsset) return;
+
+        using var stream = file.OpenReadStream(5 * 1024 * 1024);
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        var bytes = ms.ToArray();
+        var desc = _imageDesc;
+        var fixedAssetDataId = _fixedAssetDataId;
+
+        _isBusy = true;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                int excp = 0;
+                var opp = new operations();
+                _cls.SaveImage(ref excp, ref opp, bytes, fixedAssetDataId, desc ?? "", file.Name);
+            });
+            await LoadImagesAsync(fixedAssetDataId);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task DeleteImageAsync()
+    {
+        if (_selectedImageId == 0) return;
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("DeleteImageTitle"), Tr("DeleteImageConfirm"), yesText: Tr("Yes"), cancelText: Tr("No"));
+        if (confirmed != true) return;
+
+        var imageId = _selectedImageId;
+        var fixedAssetDataId = _fixedAssetDataId;
+        _isBusy = true;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                _cls.Delete_FixedAssetData_ImagesStore(imageId.ToString());
+            });
+            await LoadImagesAsync(fixedAssetDataId);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

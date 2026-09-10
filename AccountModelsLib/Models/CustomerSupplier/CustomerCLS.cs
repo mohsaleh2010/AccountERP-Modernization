@@ -1440,6 +1440,15 @@ namespace AccountModelsLib.Models
             DataTable dt = opp.return_DataTable(mysql);
             return dt;
         }
+        // 🟢 دالة بحث جديدة (تقنية فقط): تقابل حرفياً استعلام Connection4It.GroupCustomer_List.GroupCustomer_Data
+        // (عنصر تحكم WinForms فقط) عند استدعائه بـ GroupType=Common.Customer_Account_Type - نفس الاستعلام
+        // والترتيب بالضبط، بدون أى تغيير فى منطق العمل.
+        public DataTable Get_CustomerGroups()
+        {
+            operations opp = new operations();
+            string mysql = " Select * from Customer_Supplier_Group where GroupType=" + Common.Customer_Account_Type + " Order by GroupName";
+            return opp.return_DataTable(mysql);
+        }
         public string MakeCustomer_MokhtalatDataByGroupNew(int General_Customer_Flage, long Group_Id, long Customer_Id, int Ref_Cust_Supplier_Id, int CustomerBalanceStatus)
         {
             DataTable dtAccount = new DataTable();
@@ -1555,6 +1564,60 @@ FROM            Customer INNER JOIN
             mysql = mysql + " ORDER BY Customer.Name ";
 
             return mysql;
+        }
+        // 🟢 دالة جديدة (تقنية فقط): تقابل حرفياً استعلام Connection4It.Customer_List1.Customer_SupplierListData
+        // (عنصر تحكم WinForms فقط، يبنى قائمة العملاء الأساسية لشاشات "كشف حساب عميل" الأربع المُدمَجة -
+        // Customer_AccountMokhtalat[.,_Period,_EF,_EF_Period]) - نفس الاستعلام والترتيب بالضبط، بدون أى تغيير فى
+        // منطق العمل، نُقلت هنا فقط لأن Connection4It غير متاح من مشروع Blazor.
+        public DataTable Get_CustomerSupplierListForStatement(long Group_Id, long Customer_Id, int Ref_Cust_Supplier_Id, int General_Customer_Flage)
+        {
+            string mysql = @" SELECT        Customer.* FROM Customer ";
+            mysql = mysql + " Where Customer.Id > 0 AND  (Active = 1) ";
+            if (Group_Id > 0)
+            {
+                mysql = mysql + " And Customer.Group_Id=" + Group_Id + "";
+            }
+            if (Customer_Id > 0)
+            {
+                mysql = mysql + " And Customer.Id=" + Customer_Id + "";
+            }
+            if (Ref_Cust_Supplier_Id == 0)
+            {
+                mysql = mysql + " And Customer.Ref_Cust_Supplier_Id= 0 ";
+            }
+            else if (Ref_Cust_Supplier_Id > 0)
+            {
+                mysql = mysql + " And Customer.Ref_Cust_Supplier_Id > 0";
+            }
+            if (General_Customer_Flage > -1)
+            {
+                mysql = mysql + " And Customer.General_Customer_Flage =" + General_Customer_Flage + "";
+            }
+            mysql = mysql + " Order by Customer.Name";
+            operations opp3 = new operations();
+            return opp3.return_DataTable(mysql);
+        }
+        // 🟢 دالة جديدة (تقنية فقط): تقابل حرفياً استعلام Connection4It.Customer_List1.Customer_SupplierData
+        // (عنصر تحكم WinForms فقط، يبنى القائمة الأساسية لشاشة "كشف أرصدة الحسابات المختلطة" -
+        // Customer_SupplierAccountFrmLv) - نفس الاستعلام والترتيب بالضبط، بدون أى تغيير فى منطق العمل، نُقلت هنا فقط
+        // لأن Connection4It غير متاح من مشروع Blazor.
+        public DataTable Get_CustomerSupplierMokhtalatList(long Group_Id, long Customer_Id)
+        {
+            string mysql = @" SELECT        Customer.*,Supplier.Id AS Supplier_Id , Supplier.Balance AS SupplierBalance, Supplier.Balance_Actual AS SupplierBalance_Actual
+FROM Customer INNER JOIN
+                         Supplier ON Customer.Id = Supplier.Ref_Cust_Supplier_Id ";
+            mysql = mysql + " Where Customer.Id > 0";
+            if (Group_Id > 0)
+            {
+                mysql = mysql + " And Customer.Group_Id=" + Group_Id + "";
+            }
+            if (Customer_Id > 0)
+            {
+                mysql = mysql + " And Customer.Id=" + Customer_Id + "";
+            }
+            mysql = mysql + " ORDER BY Customer.Name ";
+            operations opp2 = new operations();
+            return opp2.return_DataTable(mysql);
         }
         public string Get_CustomerBalance_SQL(int General_Customer_Flage, long Group_Id, long Customer_Id, bool ShowMokhtalat)
         {

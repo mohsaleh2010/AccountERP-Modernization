@@ -900,8 +900,10 @@ FROM Money_Financial_Notice_Items INNER JOIN
             }
             if (_dtFrom == true & _dtTo == true)
             {
-                mysql = mysql + " And (Money_Financial_Notice_Items.OrderDate > = '" + operations.dateFormat(dtFrom.Date) + "') ";
-                mysql = mysql + " And (Money_Financial_Notice_Items.OrderDate < = '" + operations.dateFormat(dtTo.Date) + "') ";
+                mysql = mysql + " And (Money_Financial_Notice_Items.OrderDate >=@dtFrom) ";
+                mysql = mysql + " And (Money_Financial_Notice_Items.OrderDate <=@dtTo) ";
+                opp.cmd.Parameters.AddWithValue("@dtFrom", dtFrom.Date);
+                opp.cmd.Parameters.AddWithValue("@dtTo", dtTo.Date);
 
             }
             mysql = mysql + " Order By Money_Financial_Notice_Items.OrderNo";

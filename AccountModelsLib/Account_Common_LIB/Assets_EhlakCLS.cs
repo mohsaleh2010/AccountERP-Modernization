@@ -64,6 +64,31 @@ FROM      Submain_Account INNER JOIN
             return Get_Requests_Items_Data(ref Excp, ref Msg, mysql);
 
         }
+        // 🟢 إصلاح خاص بـBlazor فقط (بموافقة صريحة من المستخدم) - لا يمسّ Get_AssetsEhlakForPeriod الأصلية
+        // ولا شاشة WinForms التي تستدعيها (Assets_EhlakFrm_.fillEhlakAssets). الدالة الأصلية تحتوي خللاً
+        // برمجياً وموضوعياً (ليس قاعدة عمل): عند تمرير Branch_Id > 0 تضيف شرط
+        // "And FixedAssetData.Branch_Id=..." رغم أن جدول FixedAssetData غير مذكور إطلاقاً في FROM/JOIN
+        // الخاص بهذا الاستعلام (الاستعلام يربط فقط Submain_Account مع SubMainAssets_Ehlak) - ما يجعل
+        // SQL Server يرفض الاستعلام بخطأ "multi-part identifier could not be bound" في كل مرة يُختار فيها
+        // فرع محدد. هذه النسخة تضيف الـJOIN الناقص لتصحيح المشكلة دون تغيير أي منطق حسابي أو شرط عمل آخر.
+        public DataTable Get_AssetsEhlakForPeriod_Full(int Branch_Id, DateTime DateFrom, DateTime DateTo)
+        {
+            int Excp = 0;
+            string mysql = " SELECT Submain_Account.*, SubMainAssets_Ehlak.* ";
+            mysql = mysql + " FROM Submain_Account INNER JOIN  SubMainAssets_Ehlak ON Submain_Account.Id = SubMainAssets_Ehlak.Assets_Account_ID ";
+            mysql = mysql + " INNER JOIN FixedAssetData ON Submain_Account.Id = FixedAssetData.SubAccount_Id ";
+
+            mysql = mysql + " WHERE (SubMainAssets_Ehlak.DateFrom = '" + AccountModelsLib.operations.dateFormat(DateFrom) + "') AND (SubMainAssets_Ehlak.DateTo = '" + AccountModelsLib.operations.dateFormat(DateTo) + "') ";
+
+            if (Branch_Id > 0)
+            {
+                mysql = mysql + " And FixedAssetData.Branch_Id=" + Branch_Id;
+            }
+
+            string Msg = "";
+            return Get_Requests_Items_Data(ref Excp, ref Msg, mysql);
+        }
+
         public DataTable Get_FixedAssetToEhlak()
         {
             DataTable dt = new DataTable();

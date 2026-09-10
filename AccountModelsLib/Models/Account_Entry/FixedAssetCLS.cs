@@ -181,6 +181,28 @@ WHERE        ( SubAccount_Id =  " + SubAccount_Id + ")  ";
 
 
         }
+        // 🟢 دالتا بحث جديدتان (تقنيتان فقط): تقابلان حرفياً استعلامَى Connection4It.Employees_List.
+        // Get_Employees_Data_Branch وConnection4It.Account_Ehlak_Type.Get_Data (عنصرا تحكم WinForms فقط)
+        // المستخدَمين فى FixedAssetsUSCTRL الأصلية لتعبئة قائمتَى الموظف المؤتمن على الأصل وطريقة الإهلاك.
+        public DataTable Get_EmployeesList(long Branch_Id)
+        {
+            operations opp = new operations();
+            string mysql = "Select * from Employee where Active=1 ";
+            if (Branch_Id > 0)
+            {
+                mysql = mysql + " and Branch_Id=" + Branch_Id + " OR Branch_Id=-1";
+            }
+            mysql = mysql + "  ORDER BY name ";
+            return opp.return_DataTable(mysql);
+        }
+
+        public DataTable Get_DepreciationTypes()
+        {
+            operations opp = new operations();
+            string mysql = " Select * from Account_Ehlak_Type ";
+            return opp.return_DataTable(mysql);
+        }
+
         public DataTable Get_FixedAssetData_ImagesStore(long FixedAssetData_Id)
         {
             DataTable dt = new DataTable();
@@ -363,6 +385,67 @@ WHERE        ( SubAccount_Id =  " + SubAccount_Id + ")  ";
             }
 
         }
+        // 🟢 دالة جديدة (Blazor فقط - بموافقة صريحة من المستخدم): Update_NewFixedAsset الأصلية (المستخدمة
+        // فعلاً من FixedAssetsUSCTRL.UpdateFixedAsset فى الشاشة الأصلية) تحذف فعلياً صف FixedAssetData
+        // بالكامل (opp.db.Entry(fxd).State = EntityState.Deleted ثم SaveChanges) ثم تُحدِّث فقط إسم الحساب -
+        // كود الـ UPDATE الفعلى لباقى الحقول موجود فى الأصل لكنه مُعلَّق بالكامل (كود ميت لم يُفعَّل قط)، وقد
+        // تأكَّدنا من هذا السلوك حياً ضد قاعدة التطوير أثناء اختبار هذه الشاشة (زر "تعديل" الأصلى يحذف بيانات
+        // الأصل فعلياً بدل تحديثها). بطلب المستخدم صراحة: هذا خلل حقيقى فى الشاشة الأصلية لا يُصلَح هناك (خارج
+        // نطاق هذا الترحيل) لكن Blazor لا يجب أن يفقد بيانات المستخدم عند كل تعديل، فأُضيفت هذه الدالة الجديدة
+        // التى تُنفِّذ فعلياً استعلام الـ UPDATE الكامل الموجود أصلاً (معلَّقاً) فى Update_NewFixedAsset -
+        // نفس الأعمدة بالضبط، فقط مُفعَّل هذه المرة - ثم نفس مزامنة إسم الحساب الأصلية.
+        public void Update_FixedAssetData_Full(ref int Excp, ref string Msg)
+        {
+            operations opp = new operations(1);
+            try
+            {
+                string mysql = @"Update FixedAssetData Set Code=@Code , Name_Ar=@Name_Ar , Name_En=@Name_En , Purchase_Date=@Purchase_Date , Account_Ehlak_Status=@Account_Ehlak_Status , Account_Ehlak_Status_Str=@Account_Ehlak_Status_Str , Emp_Id=@Emp_Id , Emp_Receive_Date=@Emp_Receive_Date , Model=@Model , Industry_Factory=@Industry_Factory , Fixed_Serial_No=@Fixed_Serial_No , Location=@Location , Factory_warrantyFinal_Date=@Factory_warrantyFinal_Date , Supplier_Name=@Supplier_Name , Factory_warranty_Details=@Factory_warranty_Details , Account_Ehlak_Type=@Account_Ehlak_Type , Account_Ehlak_Type_Str=@Account_Ehlak_Type_Str , Main_Value=@Main_Value , Accumulated_Depreciation_Value=@Accumulated_Depreciation_Value , Rate_of_depreciation=@Rate_of_depreciation , Book_value=@Book_value , beginning_service_Date=@beginning_service_Date , Price_scrap_Value=@Price_scrap_Value , Last_Modified_Value=@Last_Modified_Value , Default_Age=@Default_Age
+Where Id=@Id";
+
+                opp.cmd.Parameters.Add(new SqlParameter("@Id", fxd.Id));
+                opp.cmd.Parameters.Add(new SqlParameter("@Code", (object)fxd.Code ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Name_Ar", (object)fxd.Name_Ar ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Name_En", (object)fxd.Name_En ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Purchase_Date", (object)fxd.Purchase_Date ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Account_Ehlak_Status", (object)fxd.Account_Ehlak_Status ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Account_Ehlak_Status_Str", (object)fxd.Account_Ehlak_Status_Str ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Emp_Id", (object)fxd.Emp_Id ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Emp_Receive_Date", (object)fxd.Emp_Receive_Date ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Model", (object)fxd.Model ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Industry_Factory", (object)fxd.Industry_Factory ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Fixed_Serial_No", (object)fxd.Fixed_Serial_No ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Location", (object)fxd.Location ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Factory_warrantyFinal_Date", (object)fxd.Factory_warrantyFinal_Date ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Supplier_Name", (object)fxd.Supplier_Name ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Factory_warranty_Details", (object)fxd.Factory_warranty_Details ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Account_Ehlak_Type", (object)fxd.Account_Ehlak_Type ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Account_Ehlak_Type_Str", (object)fxd.Account_Ehlak_Type_Str ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Main_Value", (object)fxd.Main_Value ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Accumulated_Depreciation_Value", (object)fxd.Accumulated_Depreciation_Value ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Rate_of_depreciation", (object)fxd.Rate_of_depreciation ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Book_value", (object)fxd.Book_value ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@beginning_service_Date", (object)fxd.beginning_service_Date ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Price_scrap_Value", (object)fxd.Price_scrap_Value ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Last_Modified_Value", (object)fxd.Last_Modified_Value ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Default_Age", (object)fxd.Default_Age ?? DBNull.Value));
+
+                opp.insert_me(mysql);
+                opp.cmd.Parameters.Clear();
+
+                Submain_AccountCLS sa = new Submain_AccountCLS();
+                sa.UpdateSubmain_Account(ref opp, fxd.Name_Ar, fxd.SubAccount_Id ?? 0);
+
+                opp.Commit();
+                Excp = 0;
+            }
+            catch (Exception ee)
+            {
+                Excp = 1;
+                Msg = ee.Message;
+                opp.Rollback();
+            }
+        }
+
         public long  UpdateFixedAsset(ref operations opp)
         {
             opp.db.Entry(fxd).State = EntityState.Deleted;
@@ -383,18 +466,30 @@ WHERE        ( SubAccount_Id =  " + SubAccount_Id + ")  ";
             {
                 ////Read Image Bytes into a byte array
                 byte[] imageData = ReadFile(ImagePath);
+                SaveImageData(ref Excp, ref opp, imageData, FixedAssetData_Id, Desc, ImagePath);
+            }
+            catch (Exception ee)
+            {
+                Excp = 1;
+            }
+        }
 
-                //Initialize SQL Server Connection
-                //SqlConnection CN = new SqlConnection(txtConnectionString.Text);
+        // 🟢 دالة جديدة (تقنية فقط): نفس SaveImage بالضبط، لكن تستقبل بيانات الصورة كـ byte[] مباشرة بدل
+        // مسار ملف محلى على القرص - Blazor (خادم أو WebAssembly) لا يملك "مسار ملف محلى" لِما يرفعه المستخدم
+        // من متصفحه (بعكس WinForms)، فالمستخدم يرفع الملف مباشرة إلى الذاكرة (MudFileUpload/IBrowserFile)
+        // ثم يُمرَّر byte[] الناتج هنا مباشرة - نفس جدول FixedAssetData_ImagesStore ونفس الأعمدة بالضبط.
+        public void SaveImage(ref int Excp, ref operations opp, byte[] imageData, long FixedAssetData_Id, string Desc, string OriginalFileName = "")
+        {
+            SaveImageData(ref Excp, ref opp, imageData, FixedAssetData_Id, Desc, OriginalFileName);
+        }
 
-                //Set insert query
+        private void SaveImageData(ref int Excp, ref operations opp, byte[] imageData, long FixedAssetData_Id, string Desc, string OriginalPath)
+        {
+            try
+            {
                 string mysql = "insert into FixedAssetData_ImagesStore (FixedAssetData_Id,Description,OriginalPath,ImageData) values(@FixedAssetData_Id,@Description,@OriginalPath, @ImageData)";
 
-                //Initialize SqlCommand object for insert.
-                //SqlCommand SqlCom = new SqlCommand(qry, CN);
-
-                //We are passing Original Image Path and Image byte data as sql parameters.
-                opp.cmd.Parameters.Add(new SqlParameter("@OriginalPath", (object)ImagePath));
+                opp.cmd.Parameters.Add(new SqlParameter("@OriginalPath", (object)OriginalPath));
                 opp.cmd.Parameters.Add(new SqlParameter("@ImageData", (object)imageData));
                 opp.cmd.Parameters.Add(new SqlParameter("@FixedAssetData_Id", (object)FixedAssetData_Id));
                 opp.cmd.Parameters.Add(new SqlParameter("@Description", (object)Desc));

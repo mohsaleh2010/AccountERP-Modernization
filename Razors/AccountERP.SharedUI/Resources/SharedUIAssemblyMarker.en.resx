@@ -390,4 +390,243 @@
   <data name="NoMovementYet" xml:space="preserve"><value>No movement to display yet.</value></data>
   <data name="SelectStoreRequired" xml:space="preserve"><value>Please select the store</value></data>
   <data name="SelectCategoryRequired" xml:space="preserve"><value>Please select the item category</value></data>
+  <data name="ExpenseDailyJournalTitle" xml:space="preserve"><value>Expense Daily Journal</value></data>
+  <data name="CashBoxDailyJournalTitle" xml:space="preserve"><value>Cash Box Daily Journal</value></data>
+  <data name="PayTypeCashLabel" xml:space="preserve"><value>Cash</value></data>
+  <data name="PayTypeCheckLabel" xml:space="preserve"><value>Checks</value></data>
+  <data name="DirectionIncomingLabel" xml:space="preserve"><value>Incoming</value></data>
+  <data name="DirectionOutgoingLabel" xml:space="preserve"><value>Outgoing</value></data>
+  <data name="DirectionAllLabel" xml:space="preserve"><value>All</value></data>
+  <data name="SortByAccountLabel" xml:space="preserve"><value>Sort by Account</value></data>
+  <data name="MasrofatAffectingLabel" xml:space="preserve"><value>Accounts Affecting the Report</value></data>
+  <data name="MasrofatNotAffectingLabel" xml:space="preserve"><value>Accounts Not Affecting the Report</value></data>
+  <data name="MasrofatAllLabel" xml:space="preserve"><value>All</value></data>
+  <data name="BoxLabel" xml:space="preserve"><value>Cash Box</value></data>
+  <data name="DetailsTabLabel" xml:space="preserve"><value>Expense Analysis Details</value></data>
+  <data name="TotalsTabLabel" xml:space="preserve"><value>Expense Analysis Totals</value></data>
+  <data name="NotesColumn" xml:space="preserve"><value>Notes</value></data>
+  <data name="MainAccountColumn" xml:space="preserve"><value>Main Account</value></data>
+  <data name="SubAccountColumn" xml:space="preserve"><value>Sub Account Name</value></data>
+  <data name="ExportColumn" xml:space="preserve"><value>Outgoing</value></data>
+  <data name="ImportColumn" xml:space="preserve"><value>Incoming</value></data>
+  <data name="PaymentMethodColumn" xml:space="preserve"><value>Payment Method</value></data>
+  <data name="CashTotalLabel" xml:space="preserve"><value>Cash Total</value></data>
+  <data name="ChecksTotalLabel" xml:space="preserve"><value>Checks Total</value></data>
+  <data name="NetForPeriodLabel" xml:space="preserve"><value>Net for Day/Period</value></data>
+  <data name="NoExpenseDataYet" xml:space="preserve"><value>No data yet</value></data>
+  <data name="SearchButton" xml:space="preserve"><value>Search</value></data>
+  <data name="OrderNoColumn" xml:space="preserve"><value>Voucher No.</value></data>
+  <data name="AccountColumn" xml:space="preserve"><value>Account</value></data>
+  <data name="ValueColumn" xml:space="preserve"><value>Value</value></data>
+  <data name="PreviousBalanceLabel" xml:space="preserve"><value>Previous Balance</value></data>
+  <data name="ReceiptsLabel" xml:space="preserve"><value>Receipts</value></data>
+  <data name="SubtotalLabel" xml:space="preserve"><value>Subtotal</value></data>
+  <data name="PaymentsLabel" xml:space="preserve"><value>Payments</value></data>
+  <data name="CurrentBalanceLabel" xml:space="preserve"><value>Current Balance</value></data>
+  <data name="SelectBoxRequired" xml:space="preserve"><value>You must select the cash box first</value></data>
+  <data name="NoReceiptsYet" xml:space="preserve"><value>No receipts yet</value></data>
+  <data name="NoPaymentsYet" xml:space="preserve"><value>No payments yet</value></data>
+  <data name="FixedAssetsTitle" xml:space="preserve"><value>Fixed Assets Register</value></data>
+  <data name="AddCategoryButton" xml:space="preserve"><value>Add Category</value></data>
+  <data name="AddAssetButton" xml:space="preserve"><value>Add Asset</value></data>
+  <data name="CategoryNodeHint" xml:space="preserve"><value>This is a category (main account) - choose "Add Asset" to add a new asset under it, or "Add Category" to add a sub-category</value></data>
+  <data name="GeneralInfoTab" xml:space="preserve"><value>General Info</value></data>
+  <data name="AssetCodeLabel" xml:space="preserve"><value>Asset Code</value></data>
+  <data name="AssetNameArLabel" xml:space="preserve"><value>Asset Name</value></data>
+  <data name="AssetNameEnLabel" xml:space="preserve"><value>Name (English)</value></data>
+  <data name="PurchaseDateLabel" xml:space="preserve"><value>Purchase Date</value></data>
+  <data name="DepreciationStatusLabel" xml:space="preserve"><value>Depreciation Status</value></data>
+  <data name="ResponsibleEmployeeLabel" xml:space="preserve"><value>Responsible Employee</value></data>
+  <data name="EmpReceiveDateLabel" xml:space="preserve"><value>Receive Date</value></data>
+  <data name="ModelLabel" xml:space="preserve"><value>Model</value></data>
+  <data name="IndustryFactoryLabel" xml:space="preserve"><value>Manufacturer</value></data>
+  <data name="FixedSerialNoLabel" xml:space="preserve"><value>Serial No.</value></data>
+  <data name="LocationLabel" xml:space="preserve"><value>Location</value></data>
+  <data name="SupplierNameLabel" xml:space="preserve"><value>Supplier Name</value></data>
+  <data name="WarrantyFinalDateLabel" xml:space="preserve"><value>Warranty End Date</value></data>
+  <data name="WarrantyDetailsLabel" xml:space="preserve"><value>Warranty Details</value></data>
+  <data name="DepreciationTab" xml:space="preserve"><value>Depreciation Method</value></data>
+  <data name="DepreciationTypeLabel" xml:space="preserve"><value>Depreciation Type</value></data>
+  <data name="BeginServiceDateLabel" xml:space="preserve"><value>Service Start Date</value></data>
+  <data name="MainValueLabel" xml:space="preserve"><value>Original Value</value></data>
+  <data name="RateOfDepreciationLabel" xml:space="preserve"><value>Depreciation Rate %</value></data>
+  <data name="DefaultAgeLabel" xml:space="preserve"><value>Useful Life</value></data>
+  <data name="AccumulatedDepreciationLabel" xml:space="preserve"><value>Accumulated Depreciation</value></data>
+  <data name="BookValueLabel" xml:space="preserve"><value>Book Value</value></data>
+  <data name="PriceScrapValueLabel" xml:space="preserve"><value>Scrap Value</value></data>
+  <data name="LastModifiedValueLabel" xml:space="preserve"><value>Last Adjusted Value</value></data>
+  <data name="ImagesTab" xml:space="preserve"><value>Image</value></data>
+  <data name="ImageDescriptionLabel" xml:space="preserve"><value>Image Description</value></data>
+  <data name="AddImageButton" xml:space="preserve"><value>Add Image</value></data>
+  <data name="UnnamedImage" xml:space="preserve"><value>Untitled image</value></data>
+  <data name="DeleteImageButton" xml:space="preserve"><value>Delete Image</value></data>
+  <data name="AttachOneImageButton" xml:space="preserve"><value>Attach Image</value></data>
+  <data name="Unspecified" xml:space="preserve"><value>Unspecified</value></data>
+  <data name="AssetNameRequired" xml:space="preserve"><value>Enter the asset name</value></data>
+  <data name="AssetAdded" xml:space="preserve"><value>Asset data added successfully</value></data>
+  <data name="AssetUpdated" xml:space="preserve"><value>Asset data updated successfully</value></data>
+  <data name="CategoryAdded" xml:space="preserve"><value>Account added successfully</value></data>
+  <data name="DeleteAccountTitle" xml:space="preserve"><value>Accounts</value></data>
+  <data name="DeleteAccountConfirm" xml:space="preserve"><value>Delete account {0}? It may already be in use, which would affect other accounts</value></data>
+  <data name="AccountCannotDeleteHasChildren" xml:space="preserve"><value>This account cannot be deleted because it is used as a parent for sub-accounts</value></data>
+  <data name="AccountCannotDeleteUsedInEntries" xml:space="preserve"><value>This account has been used in journal entries and cannot be deleted</value></data>
+  <data name="DeleteImageTitle" xml:space="preserve"><value>Delete</value></data>
+  <data name="DeleteImageConfirm" xml:space="preserve"><value>Are you sure you want to delete this image</value></data>
+  <data name="AddFixedAssetCategoryTitle" xml:space="preserve"><value>Add New Account</value></data>
+  <data name="NewAccountNameLabel" xml:space="preserve"><value>New Account Name</value></data>
+  <data name="NewAccountCodeLabel" xml:space="preserve"><value>New Account Code</value></data>
+  <data name="CanDeleteLabel" xml:space="preserve"><value>Deletable</value></data>
+  <data name="AcceptCostCenterLabel" xml:space="preserve"><value>Accepts Cost Center</value></data>
+  <data name="NoFixedAssetsYet" xml:space="preserve"><value>No fixed assets yet</value></data>
+  <data name="DepreciationCalcTitle" xml:space="preserve"><value>Depreciation Calculation</value></data>
+  <data name="FinancialPeriodLabel" xml:space="preserve"><value>Financial Period</value></data>
+  <data name="PendingAssetsHeader" xml:space="preserve"><value>Assets not yet depreciated for this period</value></data>
+  <data name="ComputeButton" xml:space="preserve"><value>Compute Depreciation</value></data>
+  <data name="DepreciationRateColumn" xml:space="preserve"><value>Depreciation Rate</value></data>
+  <data name="AssetNameColumn" xml:space="preserve"><value>Asset</value></data>
+  <data name="NoPendingAssets" xml:space="preserve"><value>No assets pending depreciation for this period</value></data>
+  <data name="ComputedEhlakHeader" xml:space="preserve"><value>Depreciation records computed for this period</value></data>
+  <data name="DeleteSelectedButton" xml:space="preserve"><value>Delete Selected</value></data>
+  <data name="AssetValueNowColumn" xml:space="preserve"><value>Current Asset Value</value></data>
+  <data name="TotalDepreciationColumn" xml:space="preserve"><value>Total Depreciation</value></data>
+  <data name="PeriodDepreciationColumn" xml:space="preserve"><value>Period Depreciation</value></data>
+  <data name="NoComputedEhlak" xml:space="preserve"><value>No depreciation records computed for this period</value></data>
+  <data name="ComputeFailedError" xml:space="preserve"><value>An error occurred while computing depreciation</value></data>
+  <data name="ComputeSuccessMessage" xml:space="preserve"><value>Depreciation computed successfully</value></data>
+  <data name="DeleteEhlakTitle" xml:space="preserve"><value>Delete</value></data>
+  <data name="DeleteEhlakConfirm" xml:space="preserve"><value>Delete {0} selected depreciation record(s)?</value></data>
+  <data name="DeleteFailedError" xml:space="preserve"><value>An error occurred while deleting</value></data>
+  <data name="DeleteSuccessMessage" xml:space="preserve"><value>Deleted successfully</value></data>
+  <data name="FirstBalanceTitle" xml:space="preserve"><value>Opening Balance</value></data>
+  <data name="CustomerLabel" xml:space="preserve"><value>Customer</value></data>
+  <data name="SupplierLabel" xml:space="preserve"><value>Supplier</value></data>
+  <data name="NoOpeningPeriodFound" xml:space="preserve"><value>No financial period found</value></data>
+  <data name="OpeningPeriodLabel" xml:space="preserve"><value>Opening Financial Period</value></data>
+  <data name="FirstBalanceButton" xml:space="preserve"><value>Opening Balance</value></data>
+  <data name="CustomerBalanceSummaryTitle" xml:space="preserve"><value>Customer Balances</value></data>
+  <data name="SupplierBalanceSummaryTitle" xml:space="preserve"><value>Supplier Balances</value></data>
+  <data name="GroupLabel" xml:space="preserve"><value>Group</value></data>
+  <data name="CustomerNatureFilterLabel" xml:space="preserve"><value>Customer Nature</value></data>
+  <data name="MixedCustomersOnlyOption" xml:space="preserve"><value>Mixed Customers Only</value></data>
+  <data name="NonMixedCustomersOnlyOption" xml:space="preserve"><value>Non-Mixed Customers Only</value></data>
+  <data name="CustomerTypeFilterLabel" xml:space="preserve"><value>Customer Type</value></data>
+  <data name="BalanceStatusFilterLabel" xml:space="preserve"><value>Balance Status</value></data>
+  <data name="AllItemsOption" xml:space="preserve"><value>All, with or without balance</value></data>
+  <data name="ItemsWithBalanceOption" xml:space="preserve"><value>With balance only</value></data>
+  <data name="ItemsWithZeroBalanceOption" xml:space="preserve"><value>Zero balance only</value></data>
+  <data name="TotalCreditLabel" xml:space="preserve"><value>Total Credit</value></data>
+  <data name="TotalDebitLabel" xml:space="preserve"><value>Total Debit</value></data>
+  <data name="NetCreditLabel" xml:space="preserve"><value>Net Credit</value></data>
+  <data name="NetDebitLabel" xml:space="preserve"><value>Net Debit</value></data>
+  <data name="CreditBalanceColumn" xml:space="preserve"><value>Credit Balance</value></data>
+  <data name="DebitBalanceColumn" xml:space="preserve"><value>Debit Balance</value></data>
+  <data name="NameColumn" xml:space="preserve"><value>Name</value></data>
+  <data name="NoRecordsFound" xml:space="preserve"><value>No records found</value></data>
+  <data name="ShowMixedAccountLabel" xml:space="preserve"><value>Show Mixed Account</value></data>
+  <data name="MixedBalanceSummaryTitle" xml:space="preserve"><value>Mixed Accounts Balance Summary</value></data>
+  <data name="RefreshButton" xml:space="preserve"><value>Refresh</value></data>
+  <data name="CustomerBalanceColumn" xml:space="preserve"><value>Balance as Customer</value></data>
+  <data name="SupplierBalanceColumn" xml:space="preserve"><value>Balance as Supplier</value></data>
+  <data name="NetBalanceColumn" xml:space="preserve"><value>Net Balance</value></data>
+  <data name="CustomerAccountStatementTitle" xml:space="preserve"><value>Customer Account Statement</value></data>
+  <data name="SupplierAccountStatementTitle" xml:space="preserve"><value>Supplier Account Statement</value></data>
+  <data name="OperationColumn" xml:space="preserve"><value>Operation</value></data>
+  <data name="RunningDebitBalanceColumn" xml:space="preserve"><value>Running Debit Balance</value></data>
+  <data name="RunningCreditBalanceColumn" xml:space="preserve"><value>Running Credit Balance</value></data>
+  <data name="CarNumberColumn" xml:space="preserve"><value>Car</value></data>
+  <data name="WorkOrderNumberColumn" xml:space="preserve"><value>Work Order</value></data>
+  <data name="TaxInternalIdColumn" xml:space="preserve"><value>Tax Internal ID</value></data>
+  <data name="DocumentColumn" xml:space="preserve"><value>Document</value></data>
+  <data name="DeleteRowButton" xml:space="preserve"><value>Delete Row</value></data>
+  <data name="ViewCustomerBalanceListButton" xml:space="preserve"><value>Customer Balance List</value></data>
+  <data name="ViewSupplierBalanceListButton" xml:space="preserve"><value>Supplier Balance List</value></data>
+  <data name="OtherAccountLabel" xml:space="preserve"><value>Other Account</value></data>
+  <data name="AccountLabel" xml:space="preserve"><value>Account</value></data>
+  <data name="Close" xml:space="preserve"><value>Close</value></data>
+  <data name="NewButton" xml:space="preserve"><value>New</value></data>
+  <data name="FinancialNoticeTitle" xml:space="preserve"><value>Financial Settlement Notice</value></data>
+  <data name="FinancialNoticeReviewTitle" xml:space="preserve"><value>Review Settlement Notices</value></data>
+  <data name="NoticeNoLabel" xml:space="preserve"><value>Notice No.</value></data>
+  <data name="NoticeNoColumn" xml:space="preserve"><value>Notice No.</value></data>
+  <data name="AmountInWordsLabel" xml:space="preserve"><value>Amount in Words</value></data>
+  <data name="AmountInFiguresLabel" xml:space="preserve"><value>Amount in Figures</value></data>
+  <data name="DeleteNoticeButton" xml:space="preserve"><value>Delete Notice</value></data>
+  <data name="SelectCustomerValidation" xml:space="preserve"><value>Please select the customer</value></data>
+  <data name="SelectSupplierValidation" xml:space="preserve"><value>Please select the supplier</value></data>
+  <data name="SelectNatureValidation" xml:space="preserve"><value>You must choose the notice nature (debit or credit)</value></data>
+  <data name="EnterValueValidation" xml:space="preserve"><value>Enter the value</value></data>
+  <data name="EnterValidValueValidation" xml:space="preserve"><value>Enter a valid value</value></data>
+  <data name="EnterOrderNoValidation" xml:space="preserve"><value>Please enter the notice number</value></data>
+  <data name="SelectCurrencyValidation" xml:space="preserve"><value>Please select the currency</value></data>
+  <data name="EnterNotesValidation" xml:space="preserve"><value>Enter the operation description or notes</value></data>
+  <data name="ConfirmSaveNoticeMessage" xml:space="preserve"><value>Are you sure you want to save this data?</value></data>
+  <data name="ConfirmDeleteNoticeMessage" xml:space="preserve"><value>Do you want to delete the notice?</value></data>
+  <data name="NoticeSavedMessage" xml:space="preserve"><value>Settlement notice saved</value></data>
+  <data name="NoticeDeletedMessage" xml:space="preserve"><value>Settlement notice deleted</value></data>
+  <data name="NoticeSaveErrorMessage" xml:space="preserve"><value>Error issuing the settlement notice</value></data>
+  <data name="NoticeDeleteErrorMessage" xml:space="preserve"><value>Error deleting the settlement notice</value></data>
+  <data name="ValueColumn" xml:space="preserve"><value>Value</value></data>
+  <data name="TypeColumn" xml:space="preserve"><value>Type</value></data>
+  <data name="DetailsButton" xml:space="preserve"><value>Notice Details</value></data>
+  <data name="QuantityColumn" xml:space="preserve"><value>Quantity</value></data>
+  <data name="PriceColumn" xml:space="preserve"><value>Price</value></data>
+  <data name="TotalColumn" xml:space="preserve"><value>Total</value></data>
+  <data name="AddItemButton" xml:space="preserve"><value>Add Item</value></data>
+  <data name="EditItemButton" xml:space="preserve"><value>Edit Item</value></data>
+  <data name="DeleteItemButton" xml:space="preserve"><value>Delete Item</value></data>
+  <data name="SelectItemValidation" xml:space="preserve"><value>You must select the item</value></data>
+  <data name="EnterQtyValidation" xml:space="preserve"><value>Enter the item quantity</value></data>
+  <data name="EnterPriceValidation" xml:space="preserve"><value>Enter the item price</value></data>
+  <data name="EnterItemsValidation" xml:space="preserve"><value>Enter the items</value></data>
+  <data name="AddItemDialogTitle" xml:space="preserve"><value>Add Item</value></data>
+  <data name="ConfirmDeleteItemMessage" xml:space="preserve"><value>Do you want to delete the item?</value></data>
+  <data name="ItemsTitle" xml:space="preserve"><value>Items</value></data>
+  <data name="FinancialNoticeByItemTitle" xml:space="preserve"><value>Financial Settlement Notice by Item</value></data>
+  <data name="FinancialNoticeByItemReviewTitle" xml:space="preserve"><value>Review Settlement Notices by Item</value></data>
+  <data name="OpeningBalanceListTitle" xml:space="preserve"><value>Opening Balances</value></data>
+  <data name="AccountCodeColumn" xml:space="preserve"><value>Account Code</value></data>
+  <data name="DebitFirstBalanceColumn" xml:space="preserve"><value>Opening Balance Debit</value></data>
+  <data name="CreditFirstBalanceColumn" xml:space="preserve"><value>Opening Balance Credit</value></data>
+  <data name="DebitEquivalentFirstBalanceColumn" xml:space="preserve"><value>Equivalent Opening Balance Debit</value></data>
+  <data name="CreditEquivalentFirstBalanceColumn" xml:space="preserve"><value>Equivalent Opening Balance Credit</value></data>
+  <data name="EditFirstBalanceButton" xml:space="preserve"><value>Edit Opening Balance</value></data>
+  <data name="ReviewAddAccountsButton" xml:space="preserve"><value>Review New Accounts for Opening Balances</value></data>
+  <data name="SpecificAccountFilterLabel" xml:space="preserve"><value>Specific Account (optional)</value></data>
+  <data name="ShowTotalLabel" xml:space="preserve"><value>Show Totals</value></data>
+  <data name="EditGLFirstBalanceTitle" xml:space="preserve"><value>Edit Opening Balance</value></data>
+  <data name="EquivalentFactorLabel" xml:space="preserve"><value>Exchange Factor</value></data>
+  <data name="EquivalentBalanceLabel" xml:space="preserve"><value>Equivalent Balance</value></data>
+  <data name="ExistingBalancesLabel" xml:space="preserve"><value>Existing Balances by Currency</value></data>
+  <data name="GrandTotalLabel" xml:space="preserve"><value>Grand Total</value></data>
+  <data name="SubtotalPrefixLabel" xml:space="preserve"><value>Total</value></data>
+  <data name="EquivalentCurrencyOption" xml:space="preserve"><value>Equivalent</value></data>
+  <data name="AllCurrenciesOption" xml:space="preserve"><value>All</value></data>
+  <data name="AccountNameSearchLabel" xml:space="preserve"><value>Search by Name</value></data>
+  <data name="DailyWorkSummaryTitle" xml:space="preserve"><value>Daily Export/Import Journal</value></data>
+  <data name="ExportSectionTitle" xml:space="preserve"><value>Export</value></data>
+  <data name="ImportSectionTitle" xml:space="preserve"><value>Import</value></data>
+  <data name="CashPaymentDescription" xml:space="preserve"><value>Cash payment: {0}</value></data>
+  <data name="CashReceiptDescription" xml:space="preserve"><value>Cash receipt: {0}</value></data>
+  <data name="CheckNumberDescription" xml:space="preserve"><value>Check No. {0} {1}</value></data>
+  <data name="SalesInvoiceDescription" xml:space="preserve"><value>Sales invoice for customer {0}</value></data>
+  <data name="PurchaseReturnDescription" xml:space="preserve"><value>Purchase return invoice, supplier {0}</value></data>
+  <data name="WorkOutExportDescription" xml:space="preserve"><value>Items to external processing, supplier {0}</value></data>
+  <data name="PurchaseInvoiceDescription" xml:space="preserve"><value>Purchase invoice, supplier {0}</value></data>
+  <data name="SalesReturnDescription" xml:space="preserve"><value>Sales return invoice for customer {0}</value></data>
+  <data name="WorkOutImportDescription" xml:space="preserve"><value>External processing receipt from {0}</value></data>
+  <data name="NazalatDescription" xml:space="preserve"><value>Discount total {0}</value></data>
+  <data name="CashExportTotalLabel" xml:space="preserve"><value>Total cash payments</value></data>
+  <data name="CheckExportTotalLabel" xml:space="preserve"><value>Total check payments</value></data>
+  <data name="SalesTotalLabel" xml:space="preserve"><value>Total sales</value></data>
+  <data name="PurchaseReturnTotalLabel" xml:space="preserve"><value>Purchase returns</value></data>
+  <data name="CashImportTotalLabel" xml:space="preserve"><value>Total cash receipts</value></data>
+  <data name="CheckImportTotalLabel" xml:space="preserve"><value>Total check receipts</value></data>
+  <data name="PurchaseTotalLabel" xml:space="preserve"><value>Total purchases</value></data>
+  <data name="SalesReturnTotalLabel" xml:space="preserve"><value>Total sales returns</value></data>
+  <data name="WorkOutTotalLabel" xml:space="preserve"><value>Total external processing</value></data>
+  <data name="NazalatTotalLabel" xml:space="preserve"><value>Total discounts</value></data>
+  <data name="EqualExportImportMessage" xml:space="preserve"><value>Export and import are equal at {0}</value></data>
+  <data name="ExportExceedsImportMessage" xml:space="preserve"><value>Export exceeds import by {0}</value></data>
+  <data name="ImportExceedsExportMessage" xml:space="preserve"><value>Import exceeds export by {0}</value></data>
+  <data name="ResponsibleManLabel" xml:space="preserve"><value>Responsible</value></data>
 </root>

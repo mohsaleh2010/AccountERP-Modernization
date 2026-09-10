@@ -1309,6 +1309,19 @@ FROM            Order_Money INNER JOIN
             operations opp = new operations();
             return Compute_Box_BalanceBeforDataDay(ref opp, Bank_Id, Is_ALLDate, Day_Date);
         }
+
+        // 🟢 دالة بحث جديدة (تقنية فقط): نفس استعلام Connection4It.SandOuk_AccountList.GetSandoukWithout_Perission(0,0)
+        // (مشروع WinForms فقط) - قائمة الصناديق/البنوك (Is_Bank=0) بدون تصفية صلاحيات المستخدم، بنفس شرط الفورم
+        // الأصلى تماماً بدون أي تغيير في منطق العمل.
+        public DataTable Get_BoxesList()
+        {
+            operations opp = new operations();
+            string mysql = @" SELECT        Currency.Currency_Name, Currency.Currency_Name_EN, Banks.*
+FROM            Banks INNER JOIN
+                         Currency ON Banks.currency_Id = Currency.Value ";
+            mysql = mysql + " Where    Is_Bank=0 ";
+            return opp.return_DataTable(mysql);
+        }
         public decimal Compute_Box_BalanceBeforDataDay(ref operations opp, long Bank_Id, bool Is_ALLDate, DateTime Day_Date)
         {
 

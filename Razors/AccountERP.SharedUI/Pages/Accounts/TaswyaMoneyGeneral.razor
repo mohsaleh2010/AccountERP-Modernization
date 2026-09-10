@@ -1,0 +1,322 @@
+@* 🟢 "إشعار تسوية مالية" (عام، بدون صنف) - النسخة Blazor من Account_Common_LIB.Taswya_Money (تُفتَح من
+   MainFrm_AccountUpdate عبر menuItemNewTaswya/menuItemNewTaswya_Click). منطق العمل بالكامل عبر
+   AccountModelsLib.Money_Financial_NoticeCLS (موجودة بالفعل، لم تحتَج نقلاً):
+     - Make_New_OrderNo لتوليد رقم إشعار جديد تلقائياً.
+     - Add_New_Financial_Notice / Edit_Financial_Notice / Delete_Financial_Notice / Get_Money_Financial_NoticeById
+       بنفس التوقيعات والباراميترات تماماً - بما فى ذلك ترحيل القيد المحاسبى تلقائياً
+       (Account_Entry_Invoice_CLS.Make_EntryForMoney_Financial_Notice، يستدعيها الـCLS داخلياً).
+   الجدول: Money_Financial_Notice_Items بـ Reference_Type=20 (Common.Taswea_Malia_Reference_Type).
+
+   اختيار الحساب (عميل/مورد/حساب آخر) عبر مكوّن AccountSelector.razor الجديد (راجع تعليق الملف نفسه لتفاصيل
+   إعادة بناء Account_Common_LIB.Account_SelectionNew بشكل Blazor أصيل مع نفس منطق العمل بالضبط).
+
+   التحقق من الصلاحية (زر الحذف/الحفظ عند التعديل): Common.IsHavePermissionSysMenu(User_Id, 327, 2) - نفس
+   المُعرِّف الأصلى بالضبط. مبلغ وقدره (تحويل الرقم لنص عربى) عبر TafkeetProj.NumberToText.GetText - نفس الدالة
+   الأصلية بالضبط (المشروع مُتاح بالفعل من AccountModelsLib، لم يحتَج نقلاً).
+
+   خارج النطاق (كباقى شاشات هذه الخطة): الطباعة. *@
+
+@page "/accounts/financial-notice/general/{Id:long}"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountModelsLib.BusinessLibShared.Currency
+@using CurrencyModel = AccountModelsLib.Models.Currency
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject NavigationManager Nav
+@inject IDialogService DialogService
+@implements IDisposable
+
+<PageTitle>@Tr("FinancialNoticeTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@Tr("FinancialNoticeTitle")</MudText>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+        }
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6">
+                <MudTextField T="long" Value="_orderNo" ReadOnly="true" Label="@Tr("NoticeNoLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudDatePicker Date="_orderDate" DateChanged="@(d => _orderDate = d ?? _orderDate)" Label="@Tr("DateColumn")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect T="int" @bind-Value="_currencyValue" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined">
+                    @foreach (var c in _currencies)
+                    {
+                        <MudSelectItem T="int" Value="@c.Value">@c.Currency_Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudRadioGroup T="int" @bind-Value="_transactionType" Row="true">
+                    <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("NatureCreditLabel")</MudRadio>
+                    <MudRadio T="int" Value="2" Color="Color.Primary">@Tr("NatureDebitLabel")</MudRadio>
+                </MudRadioGroup>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudNumericField T="decimal" @bind-Value="_value" Label="@Tr("AmountInFiguresLabel")" Min="0" Format="N2" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="string" Value="@_valueInWords" ReadOnly="true" Label="@Tr("AmountInWordsLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" @bind-Value="_notes" Label="@Tr("NotesColumn")" Lines="2" Variant="Variant.Outlined" />
+            </MudItem>
+        </MudGrid>
+
+        <MudDivider Class="my-4" />
+
+        <AccountSelector @bind-AccountSelection="_accountSelection"
+                          @bind-CustomerId="_customerId"
+                          @bind-SupplierId="_supplierId"
+                          @bind-SubAccountId="_subAccountId"
+                          @bind-SubAccountName="_subAccountName"
+                          @bind-AccountTypeValue="_accountTypeValue"
+                          @bind-Balance="_balanceBefore"
+                          BranchId="Common.Branch_Id" />
+
+        <MudStack Row="true" Spacing="2" Class="mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync" Disabled="@(_isSaving || _isDisabled)">
+                @if (_isSaving)
+                {
+                    <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+                }
+                @Tr("Save")
+            </MudButton>
+            @if (Id != 0 && _canDelete)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="DeleteAsync" Disabled="@(_isSaving || _isDisabled)">
+                    @Tr("DeleteNoticeButton")
+                </MudButton>
+            }
+            <MudButton Variant="Variant.Text" OnClick="@(() => Nav.NavigateTo("/accounts/financial-notice/general-review"))">
+                @Tr("Close")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter] public long Id { get; set; }
+
+    private readonly Money_Financial_NoticeCLS _cls = new();
+    private readonly AccountModelsLib.BusinessLibShared.Currency.CurrencyCLS _currencyCls = new();
+
+    private long _orderNo;
+    private DateTime? _orderDate = DateTime.Now.Date;
+    private int _currencyValue;
+    private int _transactionType = 1;
+    private decimal _value;
+    private string _valueInWords = "";
+    private string _notes = "";
+
+    private int _accountSelection = 2;
+    private long _customerId;
+    private long _supplierId;
+    private long _subAccountId;
+    private string _subAccountName = "";
+    private int _accountTypeValue;
+    private decimal _balanceBefore;
+
+    private List<CurrencyModel> _currencies = new();
+    private DataTable _oldData = new();
+    private bool _canDelete;
+    private bool _isDisabled;
+    private bool _isSaving;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _currencies = await _currencyCls.GetAllCurrenciesAsync();
+        if (_currencies.Count > 0) _currencyValue = _currencies[0].Value;
+
+        if (Id == 0)
+        {
+            _orderNo = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return Money_Financial_NoticeCLS.Make_New_OrderNo(_orderDate ?? DateTime.Now.Date);
+            });
+        }
+        else
+        {
+            _canDelete = Common.IsHavePermissionSysMenu(Common.User_Id, 327, 2);
+            _isDisabled = !_canDelete;
+            await LoadExistingAsync();
+        }
+    }
+
+    private async Task LoadExistingAsync()
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            int excp = 0;
+            return _cls.Get_Money_Financial_NoticeById(ref excp, Id);
+        });
+        _oldData = dt;
+        if (dt.Rows.Count == 0) return;
+
+        var r = dt.Rows[0];
+        _orderNo = Convert.ToInt64(r["OrderNo"]);
+        _orderDate = Convert.ToDateTime(r["OrderDate"]);
+        _transactionType = Convert.ToInt32(r["Transaction_Type"]);
+        _value = Convert.ToDecimal(r["Order_Value"]);
+        _valueInWords = r["Order_Value_Str"]?.ToString() ?? "";
+        _currencyValue = Convert.ToInt32(r["Currency_Id"]);
+        _notes = r["Notes"]?.ToString() ?? "";
+        _customerId = Convert.ToInt64(r["Customer_Id"]);
+        _supplierId = Convert.ToInt64(r["Supplier_Id"]);
+        var accountSelectionValue = Convert.ToInt32(r["Account_Selection"]);
+        _subAccountId = Convert.ToInt64(r["SubAccount_Id"]);
+        _accountSelection = accountSelectionValue;
+    }
+
+    private void OnValueChanged()
+    {
+        _valueInWords = TafkeetProj.NumberToText.GetText(_value, _currencyValue);
+    }
+
+    protected override void OnParametersSet()
+    {
+        OnValueChanged();
+    }
+
+    private async Task SaveAsync()
+    {
+        OnValueChanged();
+        _errorMessage = null;
+
+        if (_accountSelection == 2 && _customerId == 0) { _errorMessage = Tr("SelectCustomerValidation"); return; }
+        if (_accountSelection == 1 && _supplierId == 0) { _errorMessage = Tr("SelectSupplierValidation"); return; }
+        if (_value <= 0) { _errorMessage = Tr("EnterValueValidation"); return; }
+        if (string.IsNullOrWhiteSpace(_notes)) { _errorMessage = Tr("EnterNotesValidation"); return; }
+
+        var confirmed = await DialogService.ShowMessageBoxAsync(Tr("FinancialNoticeTitle"), Tr("ConfirmSaveNoticeMessage"), yesText: Tr("Save"), cancelText: Tr("Cancel"));
+        if (confirmed != true) return;
+
+        _isSaving = true;
+        var orderNo = Id == 0 ? Money_Financial_NoticeCLS.Make_New_OrderNo(_orderDate ?? DateTime.Now.Date) : _orderNo;
+        var orderDate = _orderDate ?? DateTime.Now.Date;
+        var transactionTypeStr = _transactionType == 2 ? Tr("NatureDebitLabel") : Tr("NatureCreditLabel");
+        var currencyValue = _currencyValue;
+        var notes = _notes;
+        var customerId = _customerId;
+        var supplierId = _supplierId;
+        var subAccountId = _subAccountId;
+        var accountTypeValue = _accountTypeValue;
+        var accountSelection = _accountSelection;
+        var balanceBefore = _balanceBefore;
+        var value = _value;
+        var valueStr = _valueInWords;
+        var isNew = Id == 0;
+        var oldData = _oldData;
+
+        try
+        {
+            var excp = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                int localExcp = 0;
+                if (isNew)
+                {
+                    _cls.Add_New_Financial_Notice(ref localExcp, orderNo, orderDate, _transactionType, transactionTypeStr, value, valueStr, currencyValue, notes, customerId, supplierId, subAccountId, accountTypeValue, subAccountId, accountSelection, balanceBefore, subAccountId);
+                }
+                else
+                {
+                    _cls.Edit_Financial_Notice(ref localExcp, oldData, orderNo, orderDate, _transactionType, transactionTypeStr, value, valueStr, currencyValue, notes, customerId, supplierId, subAccountId, accountTypeValue, subAccountId, accountSelection, balanceBefore, subAccountId);
+                }
+                return localExcp;
+            });
+
+            if (excp == 0)
+            {
+                Nav.NavigateTo("/accounts/financial-notice/general-review");
+            }
+            else
+            {
+                _errorMessage = Tr("NoticeSaveErrorMessage");
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(Tr("FinancialNoticeTitle"), Tr("ConfirmDeleteNoticeMessage"), yesText: Tr("DeleteNoticeButton"), cancelText: Tr("Cancel"));
+        if (confirmed != true) return;
+
+        _isSaving = true;
+        var oldData = _oldData;
+        try
+        {
+            var excp = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                int localExcp = 0;
+                _cls.Delete_Financial_Notice(ref localExcp, oldData);
+                return localExcp;
+            });
+
+            if (excp == 0)
+            {
+                Nav.NavigateTo("/accounts/financial-notice/general-review");
+            }
+            else
+            {
+                _errorMessage = Tr("NoticeDeleteErrorMessage");
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

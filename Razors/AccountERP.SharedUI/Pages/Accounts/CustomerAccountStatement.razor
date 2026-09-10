@@ -1,0 +1,558 @@
+@* 🟢 شاشة "كشف حساب عميل" - النسخة Blazor الموحَّدة لأربع شاشات WinForms شبه متطابقة، مُتحقَّق من ربطها الفعلى
+   بقوائم حية فى MainFrm_AccountUpdate.cs (وليس افتراضاً من اسم الملف فقط):
+     - menuItemCustomerAccount        → Customer_AccountMokhtalat        (بدون فترة، بدون أعمدة سيارات)
+     - menuItemCustomerAccountPeriod  → Customer_AccountMokhtalat_Period (بفترة، بدون أعمدة سيارات)
+     - menuItemCustomerAccountCars       → Customer_AccountMokhtalat_EF       (بدون فترة، DataGridView + أعمدة سيارات)
+     - menuItemCustomerAccountCarsPeriod → Customer_AccountMokhtalatEF_Period (بفترة، DataGridView + أعمدة سيارات)
+   دُمِجت الأربعة فى مكوّن واحد بخاصية المسار Mode ("normal"/"period") - بنفس نمط الدمج المُستخدَم سابقاً لبند
+   "حركة أصناف المخزن" (StoreUsedType/Mode). أعمدة السيارة (السيارة/أمر الشغل/الرقم الإلكترونى) تُعرَض دائماً
+   (بدل Flag منفصل): البيانات موجودة فعلاً فى نفس الجدول لكل الحالات وتكون فارغة ببساطة للعملاء بلا سيارات - نفس
+   الأثر الفعلى للمستخدم النهائى بدون شاشة رابعة منفصلة، بموافقتك الصريحة.
+
+   منطق العمل بالكامل عبر AccountModelsLib.CustomersAccountCLS:
+     - Get_Customer_AccountComputeBalanceMokhtalat[Period] لحساب كشف الحساب (تُفرِّغ وتُعيد ملء جدول مؤقت مشترك
+       Customers_Accounts_Mokhtalat يدمج حركات العميل + حركات المورد المرتبط به إن وُجد - "الحساب المختلط" بمعناه
+       الحرفى، وليس مجرد كشف حساب عميل عادى).
+     - Delete_Customer_Accounts_OneRow(Customers_AccountsId) لحذف صف واحد (بنفس الـoverload المُستخدَم فعلياً فى
+       Customer_AccountMokhtalat_EF.cs، وليس الـoverload الآخر متعدد الباراميترات).
+     - Get_CustomerSupplierListForStatement (دالة جديدة تقنية فقط، تقابل حرفياً Customer_List1.Customer_SupplierListData
+       - عنصر تحكم WinForms غير متاح من Blazor) لقائمة العملاء القابلة للاختيار مع نفس فلاتر "طبيعة العملاء"/"نوع
+       العميل" الفعلية.
+   رصيد أول المدة عبر نفس مكوّن EditFirstBalanceDialog (بند 12). زر "كشف أرصدة العملاء" ينتقل لصفحة بند 12
+   (/accounts/customer-balance-summary) بدل فتح شاشة منفصلة.
+
+   قاموس "العملية" (Reference_Type_View، نحو 40 قيمة: فاتورة مبيعات/مرتجع/شيكات/تسويات/سياحة...) موجود فقط فى
+   كود الفورم الأصلى نفسه (ليس فى أى *CLS) - نُقِل حرفياً كقاموس ثابت هنا. عومل كبيانات عمل (نصوص وصف نوع الحركة
+   المخزَّنة أصلاً فى عمود قاعدة بيانات) وليس كنص واجهة قابل للترجمة، بنفس مبدأ معاملة أسماء الجداول/الأعمدة فى
+   ERP_V1_3.md - لم يُضَف كمفاتيح resx منفصلة (40 مفتاح × 4 لغات) لتجنّب تضخّم غير متناسب مع طبيعتها كبيانات.
+
+   خارج النطاق (كما هو مُقرَّر صراحة فى خطة هذا البند نفسها): التنقل عند النقر المزدوج على صف لفتح الشاشة الفرعية
+   المطابقة (فاتورة/شيك/سند/تسوية/سياحة...) - الصف للعرض فقط حالياً. الطباعة بكل أشكالها. *@
+
+@page "/accounts/customer-account-statement/{Mode}"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("CustomerAccountStatementTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@Tr("CustomerAccountStatementTitle")</MudText>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="long" @bind-Value="_groupId" Label="@Tr("GroupLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    <MudSelectItem T="long" Value="0">@Tr("AllCustomers")</MudSelectItem>
+                    @foreach (var g in _groups)
+                    {
+                        <MudSelectItem T="long" Value="@g.Id">@g.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="int" @bind-Value="_refCustSupplierMode" Label="@Tr("CustomerNatureFilterLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    <MudSelectItem T="int" Value="-1">@Tr("AllCustomers")</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">@Tr("MixedCustomersOnlyOption")</MudSelectItem>
+                    <MudSelectItem T="int" Value="0">@Tr("NonMixedCustomersOnlyOption")</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="int" @bind-Value="_generalCustomerFlag" Label="@Tr("CustomerTypeFilterLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    <MudSelectItem T="int" Value="-1">@Tr("AllCustomers")</MudSelectItem>
+                    <MudSelectItem T="int" Value="0">@Tr("MainCustomer")</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">@Tr("GeneralCustomer")</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="long?" Value="_customerId" ValueChanged="OnCustomerSelectedAsync" Label="@Tr("CustomerLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    @foreach (var c in _customers)
+                    {
+                        <MudSelectItem T="long?" Value="@((long?)c.Id)">@c.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        </MudGrid>
+
+        <MudGrid Spacing="3" Class="mt-1">
+            @if (WithPeriod)
+            {
+                <MudItem xs="12" sm="6" md="3">
+                    <MudSelect T="long" Value="_periodId" ValueChanged="OnPeriodSelectedAsync" Label="@Tr("FinancialPeriodLabel")" Variant="Variant.Outlined" FullWidth="true">
+                        @foreach (var p in _periods)
+                        {
+                            <MudSelectItem T="long" Value="@p.Id">@p.DateFrom.ToString("yyyy/MM/dd") - @p.DateTo.ToString("yyyy/MM/dd")</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            }
+            <MudItem xs="12" sm="6" md="3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudCheckBox T="bool" @bind-Value="_dateFromEnabled" Dense="true" />
+                    <MudDatePicker Date="_dateFrom" DateChanged="@(d => _dateFrom = d ?? _dateFrom)" Label="@Tr("DateFromLabel")" Variant="Variant.Outlined" Disabled="@(!_dateFromEnabled)" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudCheckBox T="bool" @bind-Value="_dateToEnabled" Dense="true" />
+                    <MudDatePicker Date="_dateTo" DateChanged="@(d => _dateTo = d ?? _dateTo)" Label="@Tr("DateToLabel")" Variant="Variant.Outlined" Disabled="@(!_dateToEnabled)" />
+                </MudStack>
+            </MudItem>
+        </MudGrid>
+
+        <MudStack Row="true" Spacing="2" Class="mt-3" Wrap="Wrap.Wrap">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="SearchCustomersAsync" Disabled="@_isLoadingList">
+                @Tr("SearchButton")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Refresh"
+                       OnClick="RefreshAccountAsync" Disabled="@(_customerId == null || _isLoadingAccount)">
+                @Tr("RefreshButton")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.AccountBalanceWallet"
+                       OnClick="OpenFirstBalanceDialog" Disabled="@(_customerId == null)">
+                @Tr("FirstBalanceButton")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.ListAlt"
+                       OnClick="@(() => Nav.NavigateTo("/accounts/customer-balance-summary"))">
+                @Tr("ViewCustomerBalanceListButton")
+            </MudButton>
+            @if (_canDelete)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                           OnClick="DeleteSelectedRowAsync" Disabled="@(_selectedRow == null)">
+                    @Tr("DeleteRowButton")
+                </MudButton>
+            }
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudTable Items="@_rows" Hover="true" Striped="true" Bordered="true" Loading="@_isLoadingAccount" Dense="true" Elevation="1"
+              T="CustomerStatementRow"
+              OnRowClick="@((TableRowClickEventArgs<CustomerStatementRow> e) => _selectedRow = e.Item)">
+        <HeaderContent>
+            <MudTh>@Tr("SerialColumn")</MudTh>
+            <MudTh>@Tr("DateColumn")</MudTh>
+            <MudTh>@Tr("NatureDebitLabel")</MudTh>
+            <MudTh>@Tr("NatureCreditLabel")</MudTh>
+            <MudTh>@Tr("RunningDebitBalanceColumn")</MudTh>
+            <MudTh>@Tr("RunningCreditBalanceColumn")</MudTh>
+            <MudTh>@Tr("OperationColumn")</MudTh>
+            <MudTh>@Tr("NotesColumn")</MudTh>
+            <MudTh>@Tr("CarNumberColumn")</MudTh>
+            <MudTh>@Tr("WorkOrderNumberColumn")</MudTh>
+            <MudTh>@Tr("TaxInternalIdColumn")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("SerialColumn")" Style="@RowStyle(context)">@context.Serial</MudTd>
+            <MudTd DataLabel="@Tr("DateColumn")" Style="@RowStyle(context)">@(context.Date?.ToString("yyyy/MM/dd"))</MudTd>
+            <MudTd DataLabel="@Tr("NatureDebitLabel")" Style="@RowStyle(context)">@context.Export.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("NatureCreditLabel")" Style="@RowStyle(context)">@context.Import.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("RunningDebitBalanceColumn")" Style="@RowStyle(context)">@context.BalanceImport.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("RunningCreditBalanceColumn")" Style="@RowStyle(context)">@context.BalanceExport.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("OperationColumn")" Style="@RowStyle(context)">@context.ReferenceTypeView</MudTd>
+            <MudTd DataLabel="@Tr("NotesColumn")" Style="@RowStyle(context)">@context.Notes</MudTd>
+            <MudTd DataLabel="@Tr("CarNumberColumn")" Style="@RowStyle(context)">@context.CarNumber</MudTd>
+            <MudTd DataLabel="@Tr("WorkOrderNumberColumn")" Style="@RowStyle(context)">@context.WorkOrderNumber</MudTd>
+            <MudTd DataLabel="@Tr("TaxInternalIdColumn")" Style="@RowStyle(context)">@context.TaxInternalId</MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<EditFirstBalanceDialog @bind-Visible="_firstBalanceDialogVisible"
+                         EntityId="@(_customerId ?? 0)"
+                         EntityName="@_customerName"
+                         IsCustomer="true"
+                         OnSaved="RefreshAccountAsync" />
+
+@code {
+    [Parameter] public string Mode { get; set; } = "normal";
+    private bool WithPeriod => string.Equals(Mode, "period", StringComparison.OrdinalIgnoreCase);
+
+    private record GroupOption(long Id, string Name);
+    private record CustomerOption(long Id, string Name);
+    private record PeriodOption(long Id, DateTime DateFrom, DateTime DateTo);
+    private record CustomerStatementRow(long? CustomersAccountsId, int Serial, DateTime? Date, decimal Export, decimal Import, decimal BalanceImport, decimal BalanceExport, string ReferenceTypeView, string Notes, string CarNumber, string WorkOrderNumber, string TaxInternalId);
+
+    private readonly CustomerCLS _customerCls = new();
+    private readonly CustomersAccountCLS _accountCls = new();
+
+    private List<GroupOption> _groups = new();
+    private List<CustomerOption> _customers = new();
+    private List<PeriodOption> _periods = new();
+    private long _groupId;
+    private int _refCustSupplierMode = -1;
+    private int _generalCustomerFlag = -1;
+    private long? _customerId;
+    private string _customerName = "";
+    private long _periodId;
+
+    private bool _dateFromEnabled = true;
+    private bool _dateToEnabled = true;
+    private DateTime? _dateFrom = DateTime.Now.Date.AddDays(-30);
+    private DateTime? _dateTo = DateTime.Now.Date;
+
+    private List<CustomerStatementRow> _rows = new();
+    private CustomerStatementRow? _selectedRow;
+    private bool _firstBalanceDialogVisible;
+    private bool _canDelete;
+
+    private bool _isLoadingList;
+    private bool _isLoadingAccount;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _canDelete = Common.IsHavePermissionSysMenu(Common.User_Id, 811, 2, -1);
+        await LoadGroupsAsync();
+        if (WithPeriod)
+        {
+            await LoadPeriodsAsync();
+        }
+        await SearchCustomersAsync();
+    }
+
+    private async Task LoadGroupsAsync()
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _customerCls.Get_CustomerGroups();
+        });
+        var list = new List<GroupOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            list.Add(new GroupOption(Convert.ToInt64(r["Id"]), r["GroupName"]?.ToString() ?? ""));
+        }
+        _groups = list;
+    }
+
+    // 🟢 يقابل financial_Period1.Get_Financial_Period() الأصلية.
+    private async Task LoadPeriodsAsync()
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return new Financial_PeriodCLS().Get_Financial_Period();
+        });
+        var list = new List<PeriodOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            list.Add(new PeriodOption(Convert.ToInt64(r["Id"]), Convert.ToDateTime(r["DateFrom"]), Convert.ToDateTime(r["DateTo"])));
+        }
+        _periods = list;
+        if (_periods.Count > 0)
+        {
+            _periodId = _periods[0].Id;
+        }
+    }
+
+    // 🟢 يقابل Change_Financial_Period الأصلية بالضبط.
+    private Task OnPeriodSelectedAsync(long periodId)
+    {
+        _periodId = periodId;
+        var period = _periods.FirstOrDefault(p => p.Id == periodId);
+        if (period != null)
+        {
+            _dateFrom = period.DateFrom;
+            _dateTo = period.DateTo;
+        }
+        return Task.CompletedTask;
+    }
+
+    // 🟢 يقابل RefreshData الأصلية: Customer_SupplierListData ثم fill_Customer_List.
+    private async Task SearchCustomersAsync()
+    {
+        _errorMessage = null;
+        _isLoadingList = true;
+        StateHasChanged();
+
+        var groupId = _groupId;
+        var refCustSupplierId = _refCustSupplierMode;
+        var generalCustomerFlag = _generalCustomerFlag;
+        var keepCustomerId = _customerId;
+
+        try
+        {
+            var dt = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return _customerCls.Get_CustomerSupplierListForStatement(groupId, 0, refCustSupplierId, generalCustomerFlag);
+            });
+
+            var list = new List<CustomerOption>();
+            foreach (DataRow r in dt.Rows)
+            {
+                list.Add(new CustomerOption(Convert.ToInt64(r["Id"]), r["Name"]?.ToString()?.Trim() ?? ""));
+            }
+            _customers = list;
+
+            if (keepCustomerId != null && list.Any(c => c.Id == keepCustomerId))
+            {
+                await LoadAccountAsync(keepCustomerId.Value);
+            }
+            else
+            {
+                _customerId = null;
+                _customerName = "";
+                _rows = new();
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoadingList = false;
+        }
+    }
+
+    private async Task OnCustomerSelectedAsync(long? customerId)
+    {
+        _customerId = customerId;
+        if (customerId != null)
+        {
+            await LoadAccountAsync(customerId.Value);
+        }
+        else
+        {
+            _rows = new();
+        }
+    }
+
+    private Task RefreshAccountAsync()
+    {
+        if (_customerId == null) return Task.CompletedTask;
+        return LoadAccountAsync(_customerId.Value);
+    }
+
+    // 🟢 يقابل ViewDetails ثم fill_Customer_Account الأصليتين بالضبط (بما فى ذلك قاموس Reference_Type_View
+    // المنقول حرفياً أدناه من كود الفورم نفسه، وليس من أى CLS).
+    private async Task LoadAccountAsync(long customerId)
+    {
+        _errorMessage = null;
+        _isLoadingAccount = true;
+        _selectedRow = null;
+        StateHasChanged();
+
+        _customerId = customerId;
+        _customerName = _customers.FirstOrDefault(c => c.Id == customerId)?.Name ?? "";
+
+        var supplierId = 0L;
+        var dtFromEnabled = _dateFromEnabled;
+        var dtFromValue = _dateFrom ?? DateTime.Now.Date;
+        var dtToEnabled = _dateToEnabled;
+        var dtToValue = _dateTo ?? DateTime.Now.Date;
+        var withPeriod = WithPeriod;
+
+        try
+        {
+            var dt = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+
+                if (withPeriod)
+                {
+                    var financialPeriodDtFrom = dtFromValue;
+                    int yearFinancialPeriodId = Financial_PeriodCLS.Get_Year_Financial_Period_Id(dtFromValue, ref financialPeriodDtFrom);
+                    if (yearFinancialPeriodId == 0)
+                    {
+                        return (DataTable?)null;
+                    }
+                    return _accountCls.Get_Customer_AccountComputeBalanceMokhtalatPeriod(customerId, supplierId, yearFinancialPeriodId, financialPeriodDtFrom, dtFromEnabled, dtFromValue, dtToEnabled, dtToValue, true);
+                }
+                return _accountCls.Get_Customer_AccountComputeBalanceMokhtalat(customerId, supplierId, dtFromEnabled, dtFromValue, dtToEnabled, dtToValue, true);
+            });
+
+            if (dt == null)
+            {
+                _errorMessage = Tr("NoOpeningPeriodFound");
+                _rows = new();
+                return;
+            }
+
+            var rows = new List<CustomerStatementRow>();
+            foreach (DataRow r in dt.Rows)
+            {
+                var referenceType = r.Table.Columns.Contains("Reference_Type") ? r["Reference_Type"]?.ToString() ?? "" : "";
+                var (viewText, notesOverride) = ResolveReferenceTypeView(referenceType, TryGetInt(r, "Reference_Type_Table_Id"));
+
+                rows.Add(new CustomerStatementRow(
+                    TryGetLong(r, "Customers_AccountsId"),
+                    TryGetInt(r, "Serial") ?? 0,
+                    TryGetDate(r, "Transaction_Date"),
+                    TryGetDecimal(r, "Export"),
+                    TryGetDecimal(r, "Import"),
+                    TryGetDecimal(r, "BalanceImport"),
+                    TryGetDecimal(r, "BalanceExport"),
+                    viewText ?? (r.Table.Columns.Contains("Reference_Type_View") ? r["Reference_Type_View"]?.ToString() ?? "" : ""),
+                    notesOverride ?? (r.Table.Columns.Contains("Notes") ? r["Notes"]?.ToString() ?? "" : ""),
+                    r.Table.Columns.Contains("CarNumber") ? r["CarNumber"]?.ToString() ?? "" : "",
+                    r.Table.Columns.Contains("WorkOrderNumber") ? r["WorkOrderNumber"]?.ToString() ?? "" : "",
+                    r.Table.Columns.Contains("TaxInternalId") ? r["TaxInternalId"]?.ToString() ?? "" : ""));
+            }
+            _rows = rows;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoadingAccount = false;
+        }
+    }
+
+    // 🟢 قاموس "العملية" منقول حرفياً من Customer_AccountMokhtalatEF_Period.cs's fill_Customer_Account (لا يوجد
+    // فى أى CLS). يُعيد (نص العملية أو null لعدم التغيير، نص ملاحظات بديل أو null لعدم التغيير) بنفس منطق الأصل.
+    private static readonly Dictionary<string, string> ReferenceTypeViewMap = new()
+    {
+        ["1"] = "فاتورة مبيعات",
+        ["2"] = "فاتورة مشتريات",
+        ["3"] = "إستلام نقدية",
+        ["27"] = "تعديل إستلام نقدية",
+        ["31"] = "إستلام نقدية محذوف",
+        ["32"] = "صرف نقدية محذوف",
+        ["4"] = "صرف نقدية",
+        ["28"] = "تعديل صرف نقدية",
+        ["35"] = "تعديل إستلام شيك",
+        ["5"] = "إستلام شيك",
+        ["6"] = "صرف شيك",
+        ["36"] = "تعديل صرف شيك",
+        ["37"] = "إستلام شيك محذوف",
+        ["38"] = "صرف شيك محذوف",
+        ["7"] = "مرتجع مبيعات",
+        ["8"] = "مرتجع مشتريات",
+        ["-8"] = "تعديل رصيد أول المدة",
+        ["-9"] = "شيك مرتجع",
+        ["13"] = "تعديل وتسوية الرصيد",
+        ["20"] = "تسوية ماليه",
+        ["25"] = "تسوية مع الحساب المختلط",
+        ["26"] = "تسوية بالصنف",
+        ["29"] = "تسوية بالصنف",
+        ["21"] = "حذف إستلام النقدية",
+        ["22"] = "حذف صرف النقدية",
+        ["40"] = "حجز تذاكر طيران",
+        ["41"] = "مرتجع تذاكر طيران",
+        ["42"] = "حجز تذاكر البرى",
+        ["43"] = "مرتجع تذاكر البرى",
+        ["44"] = "تأشيرات السياحة",
+        ["45"] = "مرتجع تأشيرات السياحة",
+        ["46"] = "برنامج عمرة",
+        ["47"] = "مرتجع برنامج عمرة",
+        ["48"] = "برنامج حج",
+        ["49"] = "مرتجع برنامج حج",
+        ["50"] = "حجز فندق",
+        ["51"] = "حجز باص",
+        ["52"] = "مرتجع حجز باص",
+        ["53"] = "مبيعات دشت",
+        ["100"] = "قيد محاسبى",
+        ["-1"] = "فاتورة تصنيع للغير",
+    };
+
+    private (string? ViewText, string? Notes) ResolveReferenceTypeView(string referenceType, int? referenceTypeTableId)
+    {
+        switch (referenceType)
+        {
+            case "0": return (" ", "رصيد سابق");
+            case "-7": return ("", "رصيد أول المدة");
+            case "-12":
+                var tableId = referenceTypeTableId ?? 0;
+                if (tableId == 0) return ("قيود", null);
+                return (new AccountsTree().Get_Submain_Account_Name(tableId), null);
+            default:
+                return ReferenceTypeViewMap.TryGetValue(referenceType, out var v) ? (v, null) : (null, null);
+        }
+    }
+
+    private void OpenFirstBalanceDialog()
+    {
+        if (_customerId == null) return;
+        _firstBalanceDialogVisible = true;
+    }
+
+    private async Task DeleteSelectedRowAsync()
+    {
+        if (_selectedRow?.CustomersAccountsId == null) return;
+        var id = _selectedRow.CustomersAccountsId.Value;
+        try
+        {
+            var (excp, msg) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                int localExcp = 0;
+                string localMsg = "";
+                _accountCls.Delete_Customer_Accounts_OneRow(ref localExcp, ref localMsg, id);
+                return (localExcp, localMsg);
+            });
+
+            if (excp == 0)
+            {
+                await RefreshAccountAsync();
+            }
+            else
+            {
+                _errorMessage = msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    private string RowStyle(CustomerStatementRow row) =>
+        ReferenceEquals(row, _selectedRow) ? "font-weight:bold;color:var(--mud-palette-primary);" : "";
+
+    private static int? TryGetInt(DataRow r, string col) =>
+        r.Table.Columns.Contains(col) && int.TryParse(r[col]?.ToString(), out var v) ? v : null;
+    private static long? TryGetLong(DataRow r, string col) =>
+        r.Table.Columns.Contains(col) && long.TryParse(r[col]?.ToString(), out var v) ? v : null;
+    private static decimal TryGetDecimal(DataRow r, string col) =>
+        r.Table.Columns.Contains(col) && decimal.TryParse(r[col]?.ToString(), out var v) ? v : 0;
+    private static DateTime? TryGetDate(DataRow r, string col) =>
+        r.Table.Columns.Contains(col) && DateTime.TryParse(r[col]?.ToString(), out var v) ? v : null;
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

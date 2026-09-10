@@ -1,0 +1,236 @@
+@* 🟢 "إضافة فئة أصول" من مودال مستقل - نظير Account_Common_LIB.Fixed_Assets.Add_Account_Category.cs
+   (WinForms، ShowDialog() مودال فعلياً، عنوانها الأصلى "إضافة حساب جديد") بدل شاشة WinForms نفسها. تُفتَح
+   دائماً كابن مباشر للعقدة المختارة حالياً فى شجرة الأصول الثابتة (ParentNode) - تماماً كما يتطلب
+   BtnAddCategory_Click فى الأصل وجود عقدة مختارة أولاً. نفس الكلاسات المستخدَمة من الفورم الأصلى بالضبط:
+   AccountModelsLib.Common.MakeAutomatic_AccontCode (توليد الكود التالي تلقائياً) وAccountModelsLib.
+   Add_Account_CodesCLS.AddNewAccount (الإضافة الفعلية - نفس المسار الحى المستخدَم فى Add_Account_Category.
+   Add_Account_Common_LIB، وليس Add_Account_Common_LIB22 المُعلَّق/غير المُستدعى). Account_Customer_Type_Value
+   مُثبَّت دائماً = Common.Assoul_Sabta_Account_Type (=8) وAccount_Nature_Type=1 - نفس القيم الثابتة فى
+   ReadData الأصلية بالضبط (لا يوجد فى الفورم الأصلى أى اختيار لنوع الحساب أو طبيعته). *@
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@inject LanguageService LangService
+
+<MudDialog @bind-Visible="Visible"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr("AddFixedAssetCategoryTitle")</TitleContent>
+    <DialogContent>
+        @if (ParentNode == null)
+        {
+            <MudAlert Severity="Severity.Warning">@Tr("SelectParentAccountFirst")</MudAlert>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                @Tr("ParentAccountLabel"): <strong>@ParentNode.SubAccount_NO &nbsp; @ParentNode.SubAccount_Name</strong>
+            </MudText>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_errorMessage</MudAlert>
+            }
+
+            <MudGrid Spacing="3">
+                <MudItem xs="12" sm="7">
+                    <MudTextField T="string" @bind-Value="_name" Label="@Tr("NewAccountNameLabel")" Required="true" AutoFocus="true" />
+                </MudItem>
+                <MudItem xs="12" sm="5">
+                    <MudTextField T="string" Value="_codeStr" ReadOnly="true" Label="@Tr("NewAccountCodeLabel")" />
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int" @bind-Value="_accountFollows" Label="@Tr("AccountFollowsLabel")">
+                        @foreach (var f in AccountLookups.AccountFollows)
+                        {
+                            <MudSelectItem T="int" Value="@int.Parse(f.Value)">@f.TextAr</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="string" @bind-Value="_firstSubCode" Label="@Tr("FirstSubCodeLabel")">
+                        @foreach (var f in AccountLookups.FirstSubCodes)
+                        {
+                            <MudSelectItem T="string" Value="@f.Value">@f.TextAr</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudSwitch T="bool" @bind-Value="_canDelete" Color="Color.Primary" Label="@Tr("CanDeleteLabel")" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSwitch T="bool" @bind-Value="_acceptCostCenter" Color="Color.Primary" Label="@Tr("AcceptCostCenterLabel")" />
+                </MudItem>
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseAsync">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@(_isSaving || ParentNode == null)">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public FixedAssetNodeViewModel? ParentNode { get; set; }
+    [Parameter] public long BranchId { get; set; }
+    [Parameter] public EventCallback<long> OnCategoryAdded { get; set; }
+
+    private string _name = "";
+    private string _codeStr = "";
+    private long _code;
+    private long _lastPartIncrease;
+    private int _accountLevel;
+    private int _accountFollows = int.Parse(AccountLookups.AccountFollowsDefault);
+    private string _firstSubCode = AccountLookups.FirstSubCodeDefault;
+    private bool _canDelete;
+    private bool _acceptCostCenter;
+    private bool _isSaving;
+    private string? _errorMessage;
+    private long _lastLoadedParentId = -1;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Visible && ParentNode != null && ParentNode.Id != _lastLoadedParentId)
+        {
+            _lastLoadedParentId = ParentNode.Id;
+            await LoadDefaultsAsync();
+        }
+        else if (!Visible)
+        {
+            _lastLoadedParentId = -1;
+        }
+    }
+
+    private async Task LoadDefaultsAsync()
+    {
+        _errorMessage = null;
+        _name = "";
+        _accountFollows = int.Parse(AccountLookups.AccountFollowsDefault);
+        _firstSubCode = AccountLookups.FirstSubCodeDefault;
+        _canDelete = false;
+        _acceptCostCenter = false;
+
+        var parentId = ParentNode!.Id;
+        int excp = 0;
+        string msg = "";
+        long lastPart = 0;
+        string codeStr = "";
+        long code = 0;
+        int level = 0;
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var opp = new operations();
+            Common.MakeAutomatic_AccontCode(ref excp, ref msg, ref opp, parentId, ref lastPart, ref codeStr, ref code, ref level);
+        });
+        _lastPartIncrease = lastPart;
+        _codeStr = codeStr;
+        _code = code;
+        _accountLevel = level;
+        StateHasChanged();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (ParentNode == null) return;
+        if (string.IsNullOrWhiteSpace(_name)) { _errorMessage = Tr("AccountNameRequired"); return; }
+        if (string.IsNullOrWhiteSpace(_codeStr)) { _errorMessage = Tr("AccountCodeRequired"); return; }
+
+        _isSaving = true;
+        _errorMessage = null;
+        int excp = 0;
+        string msg = "";
+        long newId = -1;
+        var parent = ParentNode;
+        var branchId = BranchId;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+
+                var sa = new Submain_AccountCLS();
+                sa.sb.Id = -1;
+                sa.sb.Main_Account_Id = parent.Id;
+                sa.sb.SubAccount_Name = _name.Trim();
+                sa.sb.SubAccount_NO = _codeStr.Trim();
+                sa.sb.FirstSubCode = _firstSubCode;
+                sa.sb.Code = _code;
+                sa.sb.Account_Level = _accountLevel;
+                sa.sb.lastPartIncrease = _lastPartIncrease;
+                sa.sb.Head_Main_Account = 0;
+                sa.sb.Currency_Id = 1;
+                sa.sb.CanDelete = _canDelete ? 1 : 0;
+                sa.sb.Account_Follows = _accountFollows;
+                sa.sb.Notes = "";
+                sa.sb.Accept_EntryNew_Flage = 1;
+                sa.sb.Accept_Cost_Center_Flage = _acceptCostCenter ? 1 : 0;
+                sa.sb.Cost_Center_Tree_Id = 0;
+                sa.sb.Account_Nature_Type = 1;
+                sa.sb.Account_Customer_Type_Value = Common.Assoul_Sabta_Account_Type;
+                sa.sb.IS_SubAccount_AccountType = 1;
+                sa.sb.IS_SubAccount_FollowingAccount = 1;
+                sa.sb.Branch_Id = branchId;
+                sa.sb.Is_MasrofatAffect = 0;
+
+                long submainAccountId = -1;
+                int branchIdInt = (int)branchId;
+                string newNo = sa.sb.SubAccount_NO;
+                bool isHaveChildAccount = true;
+
+                new Add_Account_CodesCLS().AddNewAccount(ref excp, ref msg, sa, ref submainAccountId, ref branchIdInt, ref newNo, isHaveChildAccount);
+                newId = submainAccountId;
+            });
+
+            if (excp == 0)
+            {
+                await OnCategoryAdded.InvokeAsync(newId);
+                await CloseAsync();
+            }
+            else
+            {
+                _errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

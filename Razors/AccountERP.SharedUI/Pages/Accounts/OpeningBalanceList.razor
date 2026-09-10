@@ -1,0 +1,530 @@
+@* 🟢 شاشة "أرصدة أول المدة" (البند 17 - آخر بند فى الدفعة) - النسخة Blazor من
+   Account_Common_LIB.FirstBalanceMezan_FirstTime (WinForms، تُفتَح من MainFrm_AccountUpdate عبر مسارين:
+   menuItem35_Click و ToolStripMenuItemFinancial_Period_FirstBalance_Click - كلاهما ينشئ نفس
+   FirstBalanceMezan_FirstTime(true) كـ MDI child، لا فرق بينهما). منطق العمل بالكامل مُعاد استخدامه حرفياً من
+   AccountModelsLib.Models.Account_Entry.Entry_Process.Mezan_MorgaaCLS.ShowFirstBalance_Mezan_Morgaa_ByFirstPeiod
+   (تستدعى BalanceOpeningBalanceEquity ثم Get_FirstBalance_By_FirstPeiod، والتى بدورها تستدعى
+   Set_NewAccountInFirstBalanceZero تلقائياً فى كل تحميل - تماماً كالأصل، تضمن صفاً بصفر لأى حساب جديد لم
+   يُسجَّل له رصيد بعد لهذا الفرع/الفترة).
+
+   ملاحظات دقة منقولة حرفياً من الأصل (راجع FirstBalanceMezan_FirstTime.cs/.Designer.cs):
+   - زرّا "ترحيل الأرصدة" (toolStripTar7eelBalance) و"تحديث رصيد أول المدة" (toolStripButtonUpDateBalance)
+     كانا مخفيَّين (Visible=false) فى الأصل بالـ Designer نفسه ولم يظهرا للمستخدم النهائى إطلاقاً (بالإضافة لكون
+     فحوصات الصلاحية المتحكمة فيهما معلَّقة/Commented) - **لم يُنقَلا هنا** بنفس مبدأ استبعاد BtnNotActive المخفى
+     فى البند 4 (الفترات المالية). زر "تحديث" تحديداً كان استدعاؤه الفعلى لـ UpdateFirstBalance معلَّقاً أيضاً
+     فى كود الأصل نفسه (كان لا يفعل شيئاً سوى إعادة تحميل الشبكة) - تأكيد إضافى أنه كود ميت تماماً.
+   - عمود العملة (currency_List_21) الافتراضى فى الأصل هو أول عنصر بالقائمة - "بالمكافىء" (القيمة -1، بلا فلترة
+     على Equivalent_Account_Currency_Id فى الاستعلام، لكن التجميع/الإجمالى يحسب فقط صفوف Equivalent_Account_
+     Currency_Id=0 "المكافئ الكلى" تجنباً لتكرار الحساب عبر العملات) - نفس الافتراضى هنا بالضبط.
+   - خانة "عرض الإجمالى" (cbShowTotal) غير مفعَّلة افتراضياً فى الأصل - عند عدم تفعيلها تُعرض الصفوف كما وردت من
+     الاستعلام مباشرة بلا صفوف تجميع/فواصل مُقحَمة، تماماً كسلوك SetTotal الذى لا يُستدعى أصلاً إلا إذا كانت
+     محدَّدة. عند تفعيلها هنا: تُبنى صفوف عنوان/تجميع فرعى/إجمالى كلى بنفس حسابات SetTotal الأصلية (بما فى ذلك
+     الفارق الدقيق بين صف التجميع الفرعى - يعرض الفارق الصافى مدين أو دائن فى عمود واحد فقط - وصف الإجمالى الكلى
+     فى الأسفل - يعرض إجمالى المدين وإجمالى الدائن معاً فى عمودين منفصلين بلا تصفية، تماماً كالأصل بلا "تصحيح").
+   - مربّع البحث بالحساب المُحدَّد (account_ListSearchKey2) يُغذّى فقط Account_Customer_Type_ID (وليس معرّف حساب
+     مُحدَّد مباشرة - نفس Submain_Account_ID فى الاستعلام الأصلى يبقى صفراً دائماً بسبب نفس الخلل/العرف الموجود
+     فى الأصل: القيمة المحلية المُهيَّأة بصفر لا تُحدَّث أبداً من صندوق البحث) - نفس السلوك محفوظ هنا حرفياً
+     (باستخدام AccountTreePicker الموجود مسبقاً بدل صندوق البحث الأصلى المبنى على Connection4It.Account_ListSearchKey).
+
+   خارج النطاق (كباقى الشاشات السابقة فى هذه الخطة): الطباعة (RDLC عبر printToolStripButton). *@
+
+@page "/accounts/opening-balances"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Tr("OpeningBalanceListTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@Tr("OpeningBalanceListTitle")</MudText>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="long" @bind-Value="_branchId" Label="@Tr("BranchLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    @foreach (var b in _branches)
+                    {
+                        <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="long" @bind-Value="_periodId" Label="@Tr("FinancialPeriodLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    @foreach (var p in _periods)
+                    {
+                        <MudSelectItem T="long" Value="@p.Id">@p.Label</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="int" @bind-Value="_currencyValue" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    <MudSelectItem T="int" Value="-1">@Tr("EquivalentCurrencyOption")</MudSelectItem>
+                    <MudSelectItem T="int" Value="0">@Tr("AllCurrenciesOption")</MudSelectItem>
+                    @foreach (var c in _currencies)
+                    {
+                        <MudSelectItem T="int" Value="@c.Value">@c.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="int" @bind-Value="_accountTypeValue" Label="@Tr("AccountTypeLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    <MudSelectItem T="int" Value="0">@Tr("AllCustomers")</MudSelectItem>
+                    @foreach (var t in _accountTypes)
+                    {
+                        <MudSelectItem T="int" Value="@t.Value">@t.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        </MudGrid>
+
+        <MudGrid Spacing="3" Class="mt-1">
+            <MudItem xs="12" md="6">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudTextField T="string" Value="@_pickedAccountName" ReadOnly="true" Label="@Tr("SpecificAccountFilterLabel")" Variant="Variant.Outlined" FullWidth="true" />
+                    <MudButton Variant="Variant.Outlined" OnClick="@(() => _pickerOpen = true)">@Tr("SearchAccountLabel")</MudButton>
+                    @if (_pickedAccountCustomerTypeId.HasValue)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Clear" OnClick="ClearPickedAccount" />
+                    }
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string" Value="_searchText" Label="@Tr("AccountNameSearchLabel")" Variant="Variant.Outlined" FullWidth="true"
+                              Immediate="true" DebounceInterval="300" ValueChanged="OnSearchTextChanged" />
+            </MudItem>
+        </MudGrid>
+
+        <MudGrid Spacing="3" Class="mt-1">
+            <MudItem xs="12" md="8">
+                <MudRadioGroup T="int" @bind-Value="_showAccountWithBalance" Row="true">
+                    <MudRadio T="int" Value="2" Color="Color.Primary">@Tr("AllItemsOption")</MudRadio>
+                    <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("ItemsWithBalanceOption")</MudRadio>
+                    <MudRadio T="int" Value="0" Color="Color.Primary">@Tr("ItemsWithZeroBalanceOption")</MudRadio>
+                </MudRadioGroup>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudCheckBox T="bool" Value="_showTotal" Label="@Tr("ShowTotalLabel")" Color="Color.Primary" ValueChanged="OnShowTotalChanged" />
+            </MudItem>
+        </MudGrid>
+
+        <MudStack Row="true" Spacing="2" Class="mt-3" Wrap="Wrap.Wrap">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="SearchAsync" Disabled="@_isLoading">
+                @Tr("ShowButton")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Edit"
+                       OnClick="OpenEditDialog" Disabled="@(_selectedRow == null)">
+                @Tr("EditFirstBalanceButton")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.PlaylistAdd"
+                       OnClick="ReviewAddAccountsAsync" Disabled="@_isLoading">
+                @Tr("ReviewAddAccountsButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudTable Items="@_displayRows" Hover="true" Bordered="true" Loading="@_isLoading" Dense="true" Elevation="1"
+              T="DisplayRow" RowClassFunc="@RowClassFunc"
+              OnRowClick="@((TableRowClickEventArgs<DisplayRow> e) => OnRowClicked(e.Item))">
+        <HeaderContent>
+            <MudTh>@Tr("CurrencyLabel")</MudTh>
+            <MudTh>@Tr("AccountNameLabel")</MudTh>
+            <MudTh>@Tr("AccountCodeColumn")</MudTh>
+            <MudTh>@Tr("DebitFirstBalanceColumn")</MudTh>
+            <MudTh>@Tr("CreditFirstBalanceColumn")</MudTh>
+            <MudTh>@Tr("DebitEquivalentFirstBalanceColumn")</MudTh>
+            <MudTh>@Tr("CreditEquivalentFirstBalanceColumn")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            @if (context.Kind == RowKind.Header)
+            {
+                <MudTd colspan="7" Style="font-weight:bold;">@context.DisplayName</MudTd>
+            }
+            else
+            {
+                <MudTd>@context.CurrencyName</MudTd>
+                <MudTd Style="@(context.Kind != RowKind.Data ? "font-weight:bold;" : "")">@context.DisplayName</MudTd>
+                <MudTd>@context.AccountCode</MudTd>
+                <MudTd>@(context.FirstBalanceMadin?.ToString("N2") ?? "")</MudTd>
+                <MudTd>@(context.FirstBalanceDa2n?.ToString("N2") ?? "")</MudTd>
+                <MudTd>@(context.EqMadin?.ToString("N2") ?? "")</MudTd>
+                <MudTd>@(context.EqDa2n?.ToString("N2") ?? "")</MudTd>
+            }
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<MudDialog @bind-Visible="_pickerOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true })">
+    <TitleContent>@Tr("AccountLabel")</TitleContent>
+    <DialogContent>
+        <div style="height:45vh;">
+            <AccountTreePicker BranchId="_branchId" SelectedValue="_pickedNode" SelectedValueChanged="OnAccountPicked" Height="45vh" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _pickerOpen = false)">@Tr("Cancel")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<EditGLFirstBalanceDialog @bind-Visible="_editDialogVisible"
+                           SubAccountId="@(_selectedRow?.SubmainAccountId ?? 0)"
+                           AccountName="@(_selectedRow?.DisplayName ?? "")"
+                           BranchId="_branchId"
+                           YearFinancialPeriodId="_periodId"
+                           OnSaved="SearchAsync" />
+
+@code {
+    private enum RowKind { Header, Data, Subtotal, GrandTotal }
+
+    private record BranchOption(long Id, string Name);
+    private record PeriodOption(long Id, string Label, DateTime DateFrom, bool IsActive);
+    private record CurrencyOption(int Value, string Name);
+    private record AccountTypeOption(int Value, string Name);
+
+    private record BalanceRow(
+        long SubmainAccountId, string AccountCode, string AccountName, string MainAccountName,
+        string CurrencyName, int EquivalentAccountCurrencyId,
+        decimal FirstBalanceMadin, decimal FirstBalanceDa2n,
+        decimal EquivalentFirstBalanceMadin, decimal EquivalentFirstBalanceDa2n);
+
+    private record DisplayRow(RowKind Kind, long SubmainAccountId, string AccountCode, string DisplayName, string CurrencyName,
+        decimal? FirstBalanceMadin, decimal? FirstBalanceDa2n, decimal? EqMadin, decimal? EqDa2n)
+    {
+        public static DisplayRow FromData(BalanceRow r) => new(RowKind.Data, r.SubmainAccountId, r.AccountCode, r.AccountName, r.CurrencyName,
+            r.FirstBalanceMadin, r.FirstBalanceDa2n, r.EquivalentFirstBalanceMadin, r.EquivalentFirstBalanceDa2n);
+
+        public static DisplayRow Header(string mainAccountName) => new(RowKind.Header, 0, "", mainAccountName, "", null, null, null, null);
+
+        public static DisplayRow Subtotal(string prefix, string mainAccountName, decimal diff, decimal eqDiff, bool showFirstBalance)
+        {
+            decimal? madin = null, da2n = null;
+            if (showFirstBalance)
+            {
+                if (diff > 0) madin = diff; else da2n = -diff;
+            }
+            decimal? eqMadin, eqDa2n;
+            if (eqDiff > 0) { eqMadin = eqDiff; eqDa2n = null; } else { eqMadin = null; eqDa2n = -eqDiff; }
+            return new(RowKind.Subtotal, 0, "", $"{prefix} {mainAccountName}", "", madin, da2n, eqMadin, eqDa2n);
+        }
+
+        public static DisplayRow GrandTotal(string label, decimal madin, decimal da2n, decimal eqMadin, decimal eqDa2n, bool showFirstBalance) => new(
+            RowKind.GrandTotal, 0, "", label, "",
+            showFirstBalance ? madin : null, showFirstBalance ? da2n : null, eqMadin, eqDa2n);
+    }
+
+    private List<BranchOption> _branches = new();
+    private List<PeriodOption> _periods = new();
+    private List<CurrencyOption> _currencies = new();
+    private List<AccountTypeOption> _accountTypes = new();
+
+    private long _branchId;
+    private long _periodId;
+    private int _currencyValue = -1;
+    private int _accountTypeValue;
+    private int _showAccountWithBalance = 2;
+    private bool _showTotal;
+    private string _searchText = "";
+
+    private bool _pickerOpen;
+    private AccountTreeNodeViewModel? _pickedNode;
+    private long? _pickedAccountCustomerTypeId;
+    private string _pickedAccountName = "";
+
+    private List<BalanceRow> _rawRows = new();
+    private List<DisplayRow> _displayRows = new();
+    private DisplayRow? _selectedRow;
+    private bool _editDialogVisible;
+
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLookupsAsync();
+        await SearchAsync();
+    }
+
+    private async Task LoadLookupsAsync()
+    {
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+
+            var branchDt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, (int)Common.User_Id);
+            var branches = new List<BranchOption>();
+            foreach (DataRow r in branchDt.Rows)
+            {
+                branches.Add(new BranchOption(Convert.ToInt64(r["Id"]), r["Branch_Name"]?.ToString() ?? ""));
+            }
+            _branches = branches;
+            _branchId = branches.FirstOrDefault(b => b.Id == Common.Branch_Id)?.Id ?? branches.FirstOrDefault()?.Id ?? 0;
+
+            var periodDt = new Financial_PeriodCLS().Get_Financial_Period();
+            var periods = new List<PeriodOption>();
+            foreach (DataRow r in periodDt.Rows)
+            {
+                var dateFrom = Convert.ToDateTime(r["DateFrom"]);
+                var dateTo = Convert.ToDateTime(r["DateTo"]);
+                var isActive = r.Table.Columns.Contains("IS_Active") && Convert.ToInt32(r["IS_Active"]) == 1;
+                periods.Add(new PeriodOption(Convert.ToInt64(r["Id"]), $"{dateFrom:yyyy/MM/dd} - {dateTo:yyyy/MM/dd}", dateFrom, isActive));
+            }
+            _periods = periods;
+            _periodId = periods.FirstOrDefault(p => p.IsActive)?.Id ?? periods.LastOrDefault()?.Id ?? 0;
+
+            var currencyDt = new CurrencyFactorsCLS_().GetCurrencyList();
+            var currencies = new List<CurrencyOption>();
+            foreach (DataRow r in currencyDt.Rows)
+            {
+                currencies.Add(new CurrencyOption(Convert.ToInt32(r["Value"]), r["Currency_Name"]?.ToString() ?? ""));
+            }
+            _currencies = currencies;
+
+            var opp = new operations();
+            var typeDt = opp.return_DataTable("SELECT * FROM Account_Type WHERE Active=1 ORDER BY Value");
+            var types = new List<AccountTypeOption>();
+            foreach (DataRow r in typeDt.Rows)
+            {
+                types.Add(new AccountTypeOption(Convert.ToInt32(r["Value"]), r["Name"]?.ToString() ?? ""));
+            }
+            _accountTypes = types;
+        });
+    }
+
+    // 🟢 يقابل toolStripDropDownBtnSave_Click -> ShowData الأصليتين بالضبط (نفس استدعاء Mezan_MorgaaCLS.ShowFirstBalance_Mezan_Morgaa_ByFirstPeiod).
+    private async Task SearchAsync()
+    {
+        _errorMessage = null;
+        _isLoading = true;
+        _selectedRow = null;
+        StateHasChanged();
+
+        var branchId = _branchId;
+        var periodId = _periodId;
+        var currencyValue = _currencyValue;
+        var accountTypeValue = _accountTypeValue == 0 ? -1 : _accountTypeValue;
+        var accountCustomerTypeId = _pickedAccountCustomerTypeId ?? -1;
+        var showBalance = _showAccountWithBalance;
+        var periodDateFrom = _periods.FirstOrDefault(p => p.Id == periodId)?.DateFrom ?? DateTime.Now.Date;
+
+        try
+        {
+            var dt = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var mm = new Mezan_MorgaaCLS
+                {
+                    Account_Customer_Type_Value = accountTypeValue,
+                    Account_Customer_Type_ID = accountCustomerTypeId,
+                    IsShowTrueAccountOnly = 1
+                };
+                int excp = 0;
+                string msg = "";
+                return mm.ShowFirstBalance_Mezan_Morgaa_ByFirstPeiod(ref excp, ref msg, false, showBalance, branchId, 0, currencyValue, periodId, true, false, periodDateFrom);
+            });
+
+            _rawRows = dt.Rows.Cast<DataRow>().Select(MapRow).ToList();
+            BuildDisplayRows();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+            _rawRows = new();
+            _displayRows = new();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private static BalanceRow MapRow(DataRow r) => new(
+        Convert.ToInt64(r["Submain_Account_ID"]),
+        r["Account_Code"]?.ToString() ?? "",
+        r["Account_Name"]?.ToString() ?? "",
+        r["MainAccount_Name"]?.ToString() ?? "",
+        r["Currency_Name"]?.ToString() ?? "",
+        Convert.ToInt32(r["Equivalent_Account_Currency_Id"]),
+        decimal.TryParse(r["First_Balance_Madin"]?.ToString(), out var m) ? m : 0,
+        decimal.TryParse(r["First_Balance_Da2n"]?.ToString(), out var d) ? d : 0,
+        decimal.TryParse(r["Equivalent_First_Balance_Madin"]?.ToString(), out var em) ? em : 0,
+        decimal.TryParse(r["Equivalent_First_Balance_Da2n"]?.ToString(), out var ed) ? ed : 0);
+
+    private bool CountsForTotal(int equivalentAccountCurrencyId)
+        => (_currencyValue <= 0 && equivalentAccountCurrencyId == 0) || _currencyValue == equivalentAccountCurrencyId;
+
+    // 🟢 يقابل txtAccountName_Search_TextChanged (فلترة العميل بلا استعلام جديد) + SetTotal الأصليتين بالضبط.
+    private void BuildDisplayRows()
+    {
+        var filtered = string.IsNullOrWhiteSpace(_searchText)
+            ? _rawRows
+            : _rawRows.Where(r => r.AccountName.Contains(_searchText, StringComparison.OrdinalIgnoreCase)).ToList();
+
+        if (!_showTotal)
+        {
+            _displayRows = filtered.Select(DisplayRow.FromData).ToList();
+            return;
+        }
+
+        var showFirstBalance = _currencyValue != -1;
+        var display = new List<DisplayRow>();
+        string? currentGroup = null;
+        var groupRows = new List<BalanceRow>();
+
+        void FlushGroup()
+        {
+            if (currentGroup == null || groupRows.Count == 0) return;
+            decimal subMadin = 0, subDa2n = 0, subEqMadin = 0, subEqDa2n = 0;
+            foreach (var r in groupRows)
+            {
+                if (!CountsForTotal(r.EquivalentAccountCurrencyId)) continue;
+                subMadin += r.FirstBalanceMadin;
+                subDa2n += r.FirstBalanceDa2n;
+                subEqMadin += r.EquivalentFirstBalanceMadin;
+                subEqDa2n += r.EquivalentFirstBalanceDa2n;
+            }
+            display.Add(DisplayRow.Subtotal(Tr("SubtotalPrefixLabel"), currentGroup, subMadin - subDa2n, subEqMadin - subEqDa2n, showFirstBalance));
+            groupRows.Clear();
+        }
+
+        foreach (var r in filtered)
+        {
+            if (r.MainAccountName != currentGroup)
+            {
+                FlushGroup();
+                currentGroup = r.MainAccountName;
+                display.Add(DisplayRow.Header(currentGroup));
+            }
+            display.Add(DisplayRow.FromData(r));
+            groupRows.Add(r);
+        }
+        FlushGroup();
+
+        decimal totalMadin = 0, totalDa2n = 0, totalEqMadin = 0, totalEqDa2n = 0;
+        foreach (var r in filtered)
+        {
+            if (!CountsForTotal(r.EquivalentAccountCurrencyId)) continue;
+            totalMadin += r.FirstBalanceMadin;
+            totalDa2n += r.FirstBalanceDa2n;
+            totalEqMadin += r.EquivalentFirstBalanceMadin;
+            totalEqDa2n += r.EquivalentFirstBalanceDa2n;
+        }
+        display.Add(DisplayRow.GrandTotal(Tr("GrandTotalLabel"), totalMadin, totalDa2n, totalEqMadin, totalEqDa2n, showFirstBalance));
+
+        _displayRows = display;
+    }
+
+    private void OnSearchTextChanged(string value)
+    {
+        _searchText = value;
+        BuildDisplayRows();
+    }
+
+    private void OnShowTotalChanged(bool value)
+    {
+        _showTotal = value;
+        BuildDisplayRows();
+    }
+
+    private void OnRowClicked(DisplayRow row)
+    {
+        if (row.Kind != RowKind.Data) return;
+        _selectedRow = row;
+    }
+
+    private string RowClassFunc(DisplayRow row, int index)
+    {
+        if (row.Kind == RowKind.Header) return "mud-theme-secondary";
+        if (row.Kind == RowKind.Subtotal || row.Kind == RowKind.GrandTotal) return "font-weight-bold";
+        return row.SubmainAccountId == _selectedRow?.SubmainAccountId ? "mud-selected-item" : "";
+    }
+
+    private void OpenEditDialog()
+    {
+        if (_selectedRow == null) return;
+        _editDialogVisible = true;
+    }
+
+    // 🟢 يقابل toolStripButtonAddToFirstBalance_Click -> CheckFirstBalanceTree الأصليتين
+    // (Mezan_MorgaaCLS.Check_NewAccountInFirstBalanceZero) - يُعاد تحميل الشبكة بعدها لإظهار أى حسابات جديدة أُضيفت.
+    private async Task ReviewAddAccountsAsync()
+    {
+        _errorMessage = null;
+        _isLoading = true;
+        StateHasChanged();
+
+        var branchId = _branchId;
+        var periodId = _periodId;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new Mezan_MorgaaCLS().Check_NewAccountInFirstBalanceZero(branchId, periodId);
+            });
+            await SearchAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+            _isLoading = false;
+        }
+    }
+
+    private void OnAccountPicked(AccountTreeNodeViewModel? node)
+    {
+        _pickedNode = node;
+        if (node == null) return;
+        _pickedAccountCustomerTypeId = node.Account_Customer_Type_ID;
+        _pickedAccountName = node.SubAccount_Name;
+        _pickerOpen = false;
+    }
+
+    private void ClearPickedAccount()
+    {
+        _pickedNode = null;
+        _pickedAccountCustomerTypeId = null;
+        _pickedAccountName = "";
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

@@ -1,0 +1,222 @@
+@* 🟢 "رصيد أول المدة" (عميل/مورد) - نسخة Blazor موحَّدة لمودالين شبه متطابقين فى الأصل:
+   Account_Common_LIB.EditCustomerFirstBalance و Account_Common_LIB.EditSupplierFirstBalance (كلاهما
+   WinForms، ShowDialog()). كلاهما يستدعيان نفس الدالة بالضبط للحفظ (AccountModelsLib.FirstBalance_CLS.
+   SetCustomerFirstBalanceNew) بفارق باراميتر Account_Customer_Type_Value فقط (Common.Customer_Account_Type /
+   Common.Supplier_Account_Type) - فدُمِجا فى مكوّن واحد بخاصية IsCustomer (bool)، بنفس مبدأ الدمج المتَّبع فى
+   بنود سابقة من هذه الخطة (تفادى تكرار WinForms نفسه فى Blazor).
+
+   قيد الأصل المهم المنقول حرفياً: حقل الفترة المالية فى كلا الفورمين مُقفَل عملياً على "أول فترة مالية" فقط -
+   الكود الأصلى يرفض أى SelectedIndex غير 0 (بعد Get_Financial_Period التى تُرتِّب بـ DateFrom ASC) برسالة
+   "يجب اختيار اول فترة ماليه". بدل عرض قائمة اختيار مُقيَّدة عملياً بخيار واحد فقط، تُعرَض الفترة الأولى هنا
+   كنص للقراءة فقط مباشرة (نفس الأثر الفعلى للمستخدم النهائى: لا يوجد اختيار حقيقى فى الأصل أصلاً).
+
+   فرق فى تفسير الإشارة بين العميل والمورد عند التحميل (منقول حرفياً من كلا الفورمين): للعميل Balance<0 يعنى
+   "دائن" (rdDa2n) وBalance>=0 يعنى "مدين" (rdMadin)؛ للمورد العكس تماماً (Balance<0="مدين"، Balance>=0="دائن") -
+   نفس الفارق المحاسبى الموجود فى الأصلين بالضبط. أما عند الحفظ فالتحويل موحَّد فى الحالتين
+   (rdMadin→Transform_Type=1، rdDa2n→Transform_Type=2) لأنه يستدعى نفس الدالة المشتركة. *@
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+
+<MudDialog @bind-Visible="Visible"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr("FirstBalanceTitle")</TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+            @(IsCustomer ? Tr("CustomerLabel") : Tr("SupplierLabel")): <strong>@EntityName</strong>
+        </MudText>
+
+        @if (!_hasOpeningPeriod)
+        {
+            <MudAlert Severity="Severity.Warning">@Tr("NoOpeningPeriodFound")</MudAlert>
+        }
+        else
+        {
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_errorMessage</MudAlert>
+            }
+
+            <MudText Typo="Typo.caption" Class="mud-text-secondary mb-1">@Tr("OpeningPeriodLabel")</MudText>
+            <MudStack Row="true" Spacing="2" Class="mb-3">
+                <MudTextField T="string" Value="@_openingPeriodDate.ToString("dd/MM/yyyy")" ReadOnly="true" Label="@Tr("DateFromLabel")" />
+                <MudTextField T="string" Value="@_openingPeriodToDate.ToString("dd/MM/yyyy")" ReadOnly="true" Label="@Tr("DateToLabel")" />
+            </MudStack>
+
+            <MudNumericField T="decimal" @bind-Value="_balance" Label="@Tr("BalanceColumn")" Min="0" Format="N2" Class="mb-3" />
+
+            <MudRadioGroup T="int" @bind-Value="_transformType" Class="mb-3">
+                <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("NatureDebitLabel")</MudRadio>
+                <MudRadio T="int" Value="2" Color="Color.Primary">@Tr("NatureCreditLabel")</MudRadio>
+            </MudRadioGroup>
+
+            <MudTextField T="string" @bind-Value="_notes" Label="@Tr("NotesLabel")" Lines="2" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseAsync">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@(_isSaving || !_hasOpeningPeriod)">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public long EntityId { get; set; }
+    [Parameter] public string EntityName { get; set; } = "";
+    [Parameter] public bool IsCustomer { get; set; }
+    [Parameter] public EventCallback OnSaved { get; set; }
+
+    private long _lastLoadedId = -1;
+    private bool _lastLoadedIsCustomer;
+    private bool _hasOpeningPeriod;
+    private long _openingPeriodId;
+    private DateTime _openingPeriodDate;
+    private DateTime _openingPeriodToDate;
+    private decimal _balance;
+    private int _transformType = 1;
+    private string _notes = "";
+    private bool _isSaving;
+    private string? _errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Visible && (EntityId != _lastLoadedId || IsCustomer != _lastLoadedIsCustomer))
+        {
+            _lastLoadedId = EntityId;
+            _lastLoadedIsCustomer = IsCustomer;
+            await LoadAsync();
+        }
+        else if (!Visible)
+        {
+            _lastLoadedId = -1;
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        _errorMessage = null;
+        _balance = 0;
+        _transformType = 1;
+        _notes = "";
+
+        var entityId = EntityId;
+        var isCustomer = IsCustomer;
+
+        var result = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+
+            var periodDt = new Financial_PeriodCLS().Get_Financial_Period();
+            (bool hasPeriod, long periodId, DateTime periodFrom, DateTime periodTo) period = (false, 0, default, default);
+            if (periodDt.Rows.Count > 0)
+            {
+                var r0 = periodDt.Rows[0];
+                period = (true, Convert.ToInt64(r0["Id"]), Convert.ToDateTime(r0["DateFrom"]), Convert.ToDateTime(r0["DateTo"]));
+            }
+
+            DataTable balanceDt = isCustomer
+                ? new CustomersAccountCLS().GetCustomerFirstBalance(entityId)
+                : new Suppliers_AccountsCls().GetSupplierFirstBalance(entityId);
+
+            return (period, balanceDt);
+        });
+
+        _hasOpeningPeriod = result.period.hasPeriod;
+        _openingPeriodId = result.period.periodId;
+        _openingPeriodDate = result.period.periodFrom;
+        _openingPeriodToDate = result.period.periodTo;
+
+        if (result.balanceDt.Rows.Count > 0)
+        {
+            var r = result.balanceDt.Rows[0];
+            var balance = decimal.TryParse(r["Balance"]?.ToString(), out var b) ? b : 0;
+            if (isCustomer)
+            {
+                // نفس تفسير الإشارة فى EditCustomerFirstBalance الأصلية بالضبط
+                _transformType = balance < 0 ? 2 : 1;
+            }
+            else
+            {
+                // نفس تفسير الإشارة فى EditSupplierFirstBalance الأصلية بالضبط (معكوسة عن العميل)
+                _transformType = balance < 0 ? 1 : 2;
+            }
+            _balance = Math.Abs(balance);
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (!_hasOpeningPeriod) return;
+
+        _isSaving = true;
+        _errorMessage = null;
+        var entityId = EntityId;
+        var accountTypeValue = IsCustomer ? Common.Customer_Account_Type : Common.Supplier_Account_Type;
+        var periodId = _openingPeriodId;
+        var periodDate = _openingPeriodDate;
+        var balance = _balance;
+        var transformType = _transformType;
+        var notes = _notes;
+        try
+        {
+            var excp = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                int localExcp = 0;
+                new FirstBalance_CLS().SetCustomerFirstBalanceNew(ref localExcp, entityId, accountTypeValue, periodId, balance, transformType, periodDate, notes);
+                return localExcp;
+            });
+
+            if (excp == 0)
+            {
+                await OnSaved.InvokeAsync();
+                await CloseAsync();
+            }
+            else
+            {
+                _errorMessage = Tr("SystemError", "");
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

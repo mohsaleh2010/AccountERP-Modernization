@@ -796,6 +796,47 @@ namespace AccountModelsLib.Models
             DataTable dt = opp.return_DataTable(mysql);
             return dt;
         }
+        // 🟢 دالة بحث جديدة (تقنية فقط): تقابل حرفياً استعلام Connection4It.GroupCustomer_List.GroupCustomer_Data
+        // (عنصر تحكم WinForms فقط) عند استدعائه بـ GroupType=Common.Supplier_Account_Type - نفس الاستعلام
+        // والترتيب بالضبط، بدون أى تغيير فى منطق العمل.
+        public DataTable Get_SupplierGroups()
+        {
+            operations opp = new operations();
+            string mysql = " Select * from Customer_Supplier_Group where GroupType=" + Common.Supplier_Account_Type + " Order by GroupName";
+            return opp.return_DataTable(mysql);
+        }
+        // 🟢 دالة جديدة (تقنية فقط): تقابل حرفياً استعلام Connection4It.Supplier_List.Get_Supplier_DataByGroupNewList_SQL
+        // (عنصر تحكم WinForms فقط، يبنى قائمة الموردين الأساسية لشاشتَى "كشف حساب مورد" المُدمَجتين -
+        // Supplier_AccountNewFrm[Period]) - نفس الاستعلام والترتيب بالضبط، بدون أى تغيير فى منطق العمل، نُقلت هنا
+        // فقط لأن Connection4It غير متاح من مشروع Blazor.
+        public DataTable Get_SupplierListForStatement(long Group_Id, long Ref_Cust_Supplier_Id, long Supplier_Id, bool ShowMokhtalat)
+        {
+            string mysql = @"SELECT Id, Name, '' AS Serial_ FROM            Supplier ";
+            mysql = mysql + " where Supplier.active=1      ";
+            if (Group_Id > 0)
+            {
+                mysql = mysql + " And  Supplier.Group_Id=" + Group_Id + "";
+            }
+            if (Ref_Cust_Supplier_Id > 0)
+            {
+                mysql = mysql + " And  Supplier.Ref_Cust_Supplier_Id=" + Ref_Cust_Supplier_Id + "";
+            }
+            if (Supplier_Id > 0)
+            {
+                mysql = mysql + " And  Supplier.Id=" + Supplier_Id + "";
+            }
+            if (ShowMokhtalat == true)
+            {
+                ////mysql = mysql + "  AND(Customer.Ref_Cust_Supplier_Id > 0)";
+            }
+            else
+            {
+                mysql = mysql + "  AND(Supplier.Ref_Cust_Supplier_Id = 0)";
+            }
+            mysql = mysql + " ORDER BY  Supplier.Name ";
+            operations opp4 = new operations();
+            return opp4.return_DataTable(mysql);
+        }
         public string Get_Supplier_DataByGroupNew_SQL(long Group_Id, long Ref_Cust_Supplier_Id, long Supplier_Id, bool ShowMokhtalat, int CustomerBalanceStatus)
         {
             string mysql = "";

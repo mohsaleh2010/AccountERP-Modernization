@@ -1,0 +1,276 @@
+@* 🟢 شاشة "كشف أرصدة الموردين" - النسخة Blazor من Accounts.Supplier_BalanceList (WinForms، تُفتَح من
+   MainFrm_AccountUpdate.menuItemSupplier4ListBalance_Click). منطق العمل بالكامل عبر
+   AccountModelsLib.Models.SupplierCLS.Get_Supplier_DataByGroupNew_SQL (موجودة بالفعل فى AccountModelsLib بلا
+   أى MessageBox.Show حى، لم يحتَج نقلاً) + AccountModelsLib.FirstBalance_CLS.SetFirstBalanceForAllSuppliers
+   (تُستدعى أولاً كما فى RefreshData الأصلية بالضبط).
+
+   🐞 خلل حقيقى مُكتشَف بمقارنة الكود مع نظير العميل (مُصلَح فى Blazor فقط، بنفس مبدأ إصلاحات البنود 9/10):
+   BtnFirtBalance_Click الأصلية تفتح EditSupplierFirstBalance(Supplier_id) لكن حقل Supplier_id فى هذا الفورم
+   **لا يُحدَّث أبداً فى أى مكان بالكود** (بعكس Customer_BalanceMokhtalatList's ViewDetails التى تُحدِّث
+   Customer_id فعلياً عند تحديد صف) - يبقى دائماً على قيمته الابتدائية -1 بصرف النظر عن أى صف يُختار فى
+   الأصل، فيفتح مودال "رصيد أول المدة" دائماً بمُعرِّف مورد غير صحيح (-1) مهما كان الصف المُحدَّد فعلياً -
+   ميزة معطوبة فعلياً فى شاشة الويندوز فورمز الحية. هنا رُبِط الزر بالصف المُحدَّد فعلياً (نفس نمط شاشة
+   العميل الصحيح تماماً) بدل تكرار الخلل - الشاشة الأصلية لم تُعدَّل (خارج نطاق هذا الترحيل).
+
+   خارج النطاق (كباقى الشاشات السابقة): الطباعة والنقر المزدوج لفتح كشف حساب مورد تفصيلى (بند لاحق لم يُبنَ
+   بعد). *@
+
+@page "/accounts/supplier-balance-summary"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Tr("SupplierBalanceSummaryTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@Tr("SupplierBalanceSummaryTitle")</MudText>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="4">
+                <MudSelect T="long" @bind-Value="_groupId" Label="@Tr("GroupLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    <MudSelectItem T="long" Value="0">@Tr("AllCustomers")</MudSelectItem>
+                    @foreach (var g in _groups)
+                    {
+                        <MudSelectItem T="long" Value="@g.Id">@g.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudSelect T="int" @bind-Value="_balanceStatus" Label="@Tr("BalanceStatusFilterLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    <MudSelectItem T="int" Value="-1">@Tr("AllItemsOption")</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">@Tr("ItemsWithBalanceOption")</MudSelectItem>
+                    <MudSelectItem T="int" Value="0">@Tr("ItemsWithZeroBalanceOption")</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="4" Class="d-flex align-center">
+                <MudCheckBox T="bool" @bind-Value="_showMokhtalat" Color="Color.Primary" Label="@Tr("ShowMixedAccountLabel")" />
+            </MudItem>
+        </MudGrid>
+
+        <MudStack Row="true" Spacing="2" Class="mt-3">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="SearchAsync" Disabled="@_isLoading">
+                @Tr("SearchButton")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.AccountBalanceWallet"
+                       OnClick="OpenFirstBalanceDialog" Disabled="@(_selectedId == null)">
+                @Tr("FirstBalanceButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudGrid Class="mb-4">
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("TotalCreditLabel")</MudText>
+                <MudText Typo="Typo.h6">@_totalDa2n.ToString("N2")</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("TotalDebitLabel")</MudText>
+                <MudText Typo="Typo.h6">@_totalMadin.ToString("N2")</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true" Style="background-color:var(--mud-palette-info-lighten);">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("NetCreditLabel")</MudText>
+                <MudText Typo="Typo.h6">@_netDa2n.ToString("N2")</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true" Style="background-color:var(--mud-palette-info-lighten);">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("NetDebitLabel")</MudText>
+                <MudText Typo="Typo.h6">@_netMadin.ToString("N2")</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudTable Items="@_rows" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Dense="true" Elevation="1"
+              T="SupplierBalanceRow"
+              OnRowClick="@((TableRowClickEventArgs<SupplierBalanceRow> e) => _selectedId = e.Item.Id)">
+        <HeaderContent>
+            <MudTh>@Tr("SerialColumn")</MudTh>
+            <MudTh>@Tr("CreditBalanceColumn")</MudTh>
+            <MudTh>@Tr("DebitBalanceColumn")</MudTh>
+            <MudTh>@Tr("NameColumn")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("SerialColumn")" Style="@(context.Id == _selectedId ? "font-weight:bold;color:var(--mud-palette-primary);" : "")">@context.Serial</MudTd>
+            <MudTd DataLabel="@Tr("CreditBalanceColumn")" Style="@(context.Id == _selectedId ? "font-weight:bold;color:var(--mud-palette-primary);" : "")">@context.Da2n.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("DebitBalanceColumn")" Style="@(context.Id == _selectedId ? "font-weight:bold;color:var(--mud-palette-primary);" : "")">@context.Madin.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("NameColumn")" Style="@(context.Id == _selectedId ? "font-weight:bold;color:var(--mud-palette-primary);" : "")">@context.Name</MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<EditFirstBalanceDialog @bind-Visible="_firstBalanceDialogVisible"
+                         EntityId="@(_selectedId ?? 0)"
+                         EntityName="@_selectedName"
+                         IsCustomer="false"
+                         OnSaved="SearchAsync" />
+
+@code {
+    private record GroupOption(long Id, string Name);
+    private record SupplierBalanceRow(long Id, string Name, decimal Da2n, decimal Madin, int Serial);
+
+    private readonly SupplierCLS _cls = new();
+
+    private List<GroupOption> _groups = new();
+    private long _groupId;
+    private int _balanceStatus = -1;
+    private bool _showMokhtalat;
+
+    private List<SupplierBalanceRow> _rows = new();
+    private decimal _totalDa2n;
+    private decimal _totalMadin;
+    private decimal _netDa2n;
+    private decimal _netMadin;
+
+    private long? _selectedId;
+    private string _selectedName = "";
+    private bool _firstBalanceDialogVisible;
+
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGroupsAsync();
+        await SearchAsync();
+    }
+
+    private async Task LoadGroupsAsync()
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _cls.Get_SupplierGroups();
+        });
+
+        var list = new List<GroupOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            list.Add(new GroupOption(Convert.ToInt64(r["Id"]), r["GroupName"]?.ToString() ?? ""));
+        }
+        _groups = list;
+    }
+
+    // 🟢 يقابل RefreshData الأصلية بالضبط: SetFirstBalanceForAllSuppliers ثم Supplier_DataByGroupNew
+    // (المُنفَّذة عبر Get_Supplier_DataByGroupNew_SQL) ثم fill_Supplier_List (نفس منطق تفرقة دائن/مدين).
+    private async Task SearchAsync()
+    {
+        _errorMessage = null;
+        _isLoading = true;
+        _selectedId = null;
+        StateHasChanged();
+
+        var groupId = _groupId;
+        var balanceStatus = _balanceStatus;
+        var showMokhtalat = _showMokhtalat;
+
+        try
+        {
+            var dt = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                FirstBalance_CLS.SetFirstBalanceForAllSuppliers();
+                var mysql = _cls.Get_Supplier_DataByGroupNew_SQL(groupId, 0, 0, showMokhtalat, balanceStatus);
+                return new operations().return_DataTable(mysql);
+            });
+
+            var rows = new List<SupplierBalanceRow>();
+            decimal totalDa2n = 0, totalMadin = 0;
+            int serial = 0;
+            foreach (DataRow r in dt.Rows)
+            {
+                serial++;
+                var balance = decimal.TryParse(r["Balance"]?.ToString(), out var b) ? b : 0;
+                decimal da2n = 0, madin = 0;
+                if (balance > 0)
+                {
+                    da2n = Common.RoundMe(balance);
+                    totalDa2n += da2n;
+                }
+                else if (balance < 0)
+                {
+                    madin = Common.RoundMe(balance * -1);
+                    totalMadin += madin;
+                }
+                rows.Add(new SupplierBalanceRow(Convert.ToInt64(r["Id"]), r["Name"]?.ToString()?.Trim() ?? "", da2n, madin, serial));
+            }
+
+            _rows = rows;
+            _totalDa2n = Common.RoundMe(totalDa2n);
+            _totalMadin = Common.RoundMe(totalMadin);
+            var allBalance = _totalDa2n - _totalMadin;
+            if (allBalance > 0)
+            {
+                _netDa2n = Common.RoundMe(allBalance);
+                _netMadin = 0;
+            }
+            else
+            {
+                _netDa2n = 0;
+                _netMadin = Common.RoundMe(allBalance * -1);
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OpenFirstBalanceDialog()
+    {
+        if (_selectedId == null) return;
+        _selectedName = _rows.FirstOrDefault(r => r.Id == _selectedId)?.Name ?? "";
+        _firstBalanceDialogVisible = true;
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

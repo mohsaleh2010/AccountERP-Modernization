@@ -1,0 +1,427 @@
+@* 🟢 "إشعار تسوية مالية بالصنف" - النسخة Blazor الموحَّدة لشاشتَى WinForms شبه متطابقتين:
+     - Account_Common_LIB.Items.Taswya_MoneyItem (menuItemNewTaswyaItems، صنف واحد فقط)
+     - Account_Common_LIB.Items.Taswya_MoneyMulti_Item (menuItemNewTaswyaMultiItems، شبكة أصناف متعددة)
+   دُمِجتا فى شاشة واحدة قائمة على شبكة أصناف تبدأ فارغة (بدل صف واحد إجبارى) وتسمح بالإضافة بحرية - بنفس مبدأ
+   الدمج المُتَّبع فى بنود سابقة من هذه الخطة (حركة أصناف المخزن، كشف حساب عميل...).
+
+   **قرار تصميم بموافقتك الصريحة**: بما أن الواجهة الموحَّدة قائمة على شبكة دوماً (حتى لصنف واحد)، تُستخدَم
+   دوماً دوال Money_Financial_Notice_ItemsCLS's الـ"multi-item"-safe (بالشرطة السفلية: Add_New_Financial_Notice_/
+   Edit_Financial_Notice_/Delete_Financial_Notice_) بدل الـoverloads المفردة - نتيجة طبيعية للتصميم الموحَّد، وهذا
+   يتجنَّب تلقائياً خلل الصفوف اليتيمة الموثَّق فى Delete_Financial_Notice (بلا الشرطة السفلية، لا يحذف صفوف
+   Money_Financial_Notice_Items_Details) دون أى قرار إصلاح منفصل مطلوب.
+
+   قيمة الإشعار (Order_Value) للقراءة فقط دوماً - مجموع "الإجمالى" لكل صفوف الشبكة تلقائياً، بنفس منطق
+   ComputeTotal الأصلية بالضبط (وليس حقل يُدخِله المستخدم يدوياً كما فى الإشعار العام - بند 16 الجزء الأول).
+
+   اختيار الحساب (عميل/مورد/حساب آخر) عبر AccountSelector.razor (بند 16 الجزء الأول). إضافة/تعديل صنف عبر
+   AddFinancialNoticeItemDialog.razor الجديد (يقابل Account_Common_LIB.Items.AddItemOnFinancialOrder).
+
+   خارج النطاق: الطباعة (Money_Financial_NoticePrint). *@
+
+@page "/accounts/financial-notice/by-item/{Id:long}"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountModelsLib.BusinessLibShared.Currency
+@using CurrencyModel = AccountModelsLib.Models.Currency
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject NavigationManager Nav
+@inject IDialogService DialogService
+@implements IDisposable
+
+<PageTitle>@Tr("FinancialNoticeByItemTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@Tr("FinancialNoticeByItemTitle")</MudText>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+        }
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6">
+                <MudTextField T="long" Value="_orderNo" ReadOnly="true" Label="@Tr("NoticeNoLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudDatePicker Date="_orderDate" DateChanged="@(d => _orderDate = d ?? _orderDate)" Label="@Tr("DateColumn")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect T="int" @bind-Value="_currencyValue" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined">
+                    @foreach (var c in _currencies)
+                    {
+                        <MudSelectItem T="int" Value="@c.Value">@c.Currency_Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudRadioGroup T="int" @bind-Value="_transactionType" Row="true">
+                    <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("NatureCreditLabel")</MudRadio>
+                    <MudRadio T="int" Value="2" Color="Color.Primary">@Tr("NatureDebitLabel")</MudRadio>
+                </MudRadioGroup>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="decimal" Value="_value" ReadOnly="true" Label="@Tr("AmountInFiguresLabel")" Format="N2" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="string" Value="@_valueInWords" ReadOnly="true" Label="@Tr("AmountInWordsLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" @bind-Value="_notes" Label="@Tr("NotesColumn")" Lines="2" Variant="Variant.Outlined" />
+            </MudItem>
+        </MudGrid>
+
+        <MudDivider Class="my-4" />
+
+        <AccountSelector @bind-AccountSelection="_accountSelection"
+                          @bind-CustomerId="_customerId"
+                          @bind-SupplierId="_supplierId"
+                          @bind-SubAccountId="_subAccountId"
+                          @bind-SubAccountName="_subAccountName"
+                          @bind-AccountTypeValue="_accountTypeValue"
+                          @bind-Balance="_balanceBefore"
+                          BranchId="Common.Branch_Id" />
+
+        <MudDivider Class="my-4" />
+
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
+            <MudText Typo="Typo.h6">@Tr("ItemsTitle")</MudText>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenAddItemDialog" Disabled="@_isDisabled">
+                @Tr("AddItemButton")
+            </MudButton>
+        </MudStack>
+
+        <MudTable Items="@_items" Hover="true" Bordered="true" Dense="true" Elevation="0" T="AddFinancialNoticeItemDialog.ItemLineResult">
+            <HeaderContent>
+                <MudTh>@Tr("ItemNameColumn")</MudTh>
+                <MudTh>@Tr("QuantityColumn")</MudTh>
+                <MudTh>@Tr("PriceColumn")</MudTh>
+                <MudTh>@Tr("TotalColumn")</MudTh>
+                <MudTh>@Tr("NotesColumn")</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("ItemNameColumn")">@context.ItemName</MudTd>
+                <MudTd DataLabel="@Tr("QuantityColumn")">@context.Qty.ToString("N2")</MudTd>
+                <MudTd DataLabel="@Tr("PriceColumn")">@context.Price.ToString("N2")</MudTd>
+                <MudTd DataLabel="@Tr("TotalColumn")">@context.Total.ToString("N2")</MudTd>
+                <MudTd DataLabel="@Tr("NotesColumn")">@context.Notes</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => OpenEditItemDialog(context))" Disabled="@_isDisabled" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => RemoveItem(context))" Disabled="@_isDisabled" />
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+            </NoRecordsContent>
+        </MudTable>
+
+        <MudStack Row="true" Spacing="2" Class="mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync" Disabled="@(_isSaving || _isDisabled)">
+                @if (_isSaving)
+                {
+                    <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+                }
+                @Tr("Save")
+            </MudButton>
+            @if (Id != 0 && _canDelete)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="DeleteAsync" Disabled="@(_isSaving || _isDisabled)">
+                    @Tr("DeleteNoticeButton")
+                </MudButton>
+            }
+            <MudButton Variant="Variant.Text" OnClick="@(() => Nav.NavigateTo("/accounts/financial-notice/by-item-review"))">
+                @Tr("Close")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+</MudContainer>
+
+<AddFinancialNoticeItemDialog @bind-Visible="_itemDialogVisible" EditingLine="_editingLine" OnConfirmed="OnItemConfirmed" />
+
+@code {
+    [Parameter] public long Id { get; set; }
+
+    private readonly Money_Financial_Notice_ItemsCLS _cls = new();
+    private readonly AccountModelsLib.BusinessLibShared.Currency.CurrencyCLS _currencyCls = new();
+
+    private long _orderNo;
+    private DateTime? _orderDate = DateTime.Now.Date;
+    private int _currencyValue;
+    private int _transactionType = 1;
+    private decimal _value;
+    private string _valueInWords = "";
+    private string _notes = "";
+
+    private int _accountSelection = 2;
+    private long _customerId;
+    private long _supplierId;
+    private long _subAccountId;
+    private string _subAccountName = "";
+    private int _accountTypeValue;
+    private decimal _balanceBefore;
+
+    private List<CurrencyModel> _currencies = new();
+    private List<AddFinancialNoticeItemDialog.ItemLineResult> _items = new();
+    private bool _itemDialogVisible;
+    private AddFinancialNoticeItemDialog.ItemLineResult? _editingLine;
+
+    private DataTable _oldData = new();
+    private bool _canDelete;
+    private bool _isDisabled;
+    private bool _isSaving;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _currencies = await _currencyCls.GetAllCurrenciesAsync();
+        if (_currencies.Count > 0) _currencyValue = _currencies[0].Value;
+
+        if (Id == 0)
+        {
+            _orderNo = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return Money_Financial_Notice_ItemsCLS.Make_New_OrderNo(_orderDate ?? DateTime.Now.Date);
+            });
+        }
+        else
+        {
+            _canDelete = Common.IsHavePermissionSysMenu(Common.User_Id, 328, 2);
+            _isDisabled = !_canDelete;
+            await LoadExistingAsync();
+        }
+    }
+
+    private async Task LoadExistingAsync()
+    {
+        var (header, details) = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            int excp = 0;
+            var h = _cls.Get_Money_Financial_Notice_ItemsById(ref excp, Id);
+            var d = _cls.Get_Money_Financial_Notice_Items_Details_ID(Id);
+            return (h, d);
+        });
+        _oldData = header;
+        if (header.Rows.Count == 0) return;
+
+        var r = header.Rows[0];
+        _orderNo = Convert.ToInt64(r["OrderNo"]);
+        _orderDate = Convert.ToDateTime(r["OrderDate"]);
+        _transactionType = Convert.ToInt32(r["Transaction_Type"]);
+        _valueInWords = r["Order_Value_Str"]?.ToString() ?? "";
+        _currencyValue = Convert.ToInt32(r["Currency_Id"]);
+        _notes = r["Notes"]?.ToString() ?? "";
+        _customerId = Convert.ToInt64(r["Customer_Id"]);
+        _supplierId = Convert.ToInt64(r["Supplier_Id"]);
+        _accountSelection = Convert.ToInt32(r["Account_Selection"]);
+        _subAccountId = Convert.ToInt64(r["SubAccount_Id"]);
+
+        var items = new List<AddFinancialNoticeItemDialog.ItemLineResult>();
+        foreach (DataRow dr in details.Rows)
+        {
+            items.Add(new AddFinancialNoticeItemDialog.ItemLineResult(
+                Convert.ToInt64(dr["Item_Id"]),
+                dr["Item_Name"]?.ToString() ?? "",
+                Convert.ToDecimal(dr["Item_QntyLarge"]),
+                Convert.ToDecimal(dr["Item_Price"]),
+                Convert.ToDecimal(dr["Item_ToTal"]),
+                dr["NotesDetails"]?.ToString() ?? ""));
+        }
+        _items = items;
+        RecomputeValue();
+    }
+
+    private void OpenAddItemDialog()
+    {
+        _editingLine = null;
+        _itemDialogVisible = true;
+    }
+
+    private void OpenEditItemDialog(AddFinancialNoticeItemDialog.ItemLineResult line)
+    {
+        _editingLine = line;
+        _itemDialogVisible = true;
+    }
+
+    private void OnItemConfirmed(AddFinancialNoticeItemDialog.ItemLineResult line)
+    {
+        if (_editingLine != null)
+        {
+            var index = _items.IndexOf(_editingLine);
+            if (index >= 0) _items[index] = line;
+        }
+        else
+        {
+            _items.Add(line);
+        }
+        RecomputeValue();
+    }
+
+    private void RemoveItem(AddFinancialNoticeItemDialog.ItemLineResult line)
+    {
+        _items.Remove(line);
+        RecomputeValue();
+    }
+
+    // 🟢 يقابل ComputeTotal الأصلية بالضبط: مجموع Item_ToTal لكل الصفوف (بدون صف الإجمالى الاصطناعى -
+    // غير موجود هنا أصلاً لأن الشبكة تُعرَض من _items مباشرة بلا صف مُضاف للعرض فقط).
+    private void RecomputeValue()
+    {
+        _value = _items.Sum(i => i.Total);
+        _valueInWords = TafkeetProj.NumberToText.GetText(_value, _currencyValue);
+    }
+
+    private async Task SaveAsync()
+    {
+        _errorMessage = null;
+
+        if (_accountSelection == 2 && _customerId == 0) { _errorMessage = Tr("SelectCustomerValidation"); return; }
+        if (_accountSelection == 1 && _supplierId == 0) { _errorMessage = Tr("SelectSupplierValidation"); return; }
+        if (_value <= 0) { _errorMessage = Tr("EnterValueValidation"); return; }
+        if (string.IsNullOrWhiteSpace(_notes)) { _errorMessage = Tr("EnterNotesValidation"); return; }
+        if (_items.Count == 0) { _errorMessage = Tr("EnterItemsValidation"); return; }
+
+        var confirmed = await DialogService.ShowMessageBoxAsync(Tr("FinancialNoticeByItemTitle"), Tr("ConfirmSaveNoticeMessage"), yesText: Tr("Save"), cancelText: Tr("Cancel"));
+        if (confirmed != true) return;
+
+        _isSaving = true;
+        var orderNo = Id == 0 ? Money_Financial_Notice_ItemsCLS.Make_New_OrderNo(_orderDate ?? DateTime.Now.Date) : _orderNo;
+        var orderDate = _orderDate ?? DateTime.Now.Date;
+        var transactionTypeStr = _transactionType == 2 ? Tr("NatureDebitLabel") : Tr("NatureCreditLabel");
+        var currencyValue = _currencyValue;
+        var notes = _notes;
+        var customerId = _customerId;
+        var supplierId = _supplierId;
+        var subAccountId = _subAccountId;
+        var accountTypeValue = _accountTypeValue;
+        var accountSelection = _accountSelection;
+        var balanceBefore = _balanceBefore;
+        var value = _value;
+        var valueStr = _valueInWords;
+        var isNew = Id == 0;
+        var oldData = _oldData;
+        var items = _items;
+
+        try
+        {
+            var excp = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                int localExcp = 0;
+                long noticeId = Id;
+
+                var dtItems = new DataTable();
+                dtItems.Columns.Add("Item_Name", typeof(string));
+                dtItems.Columns.Add("Item_Id", typeof(long));
+                dtItems.Columns.Add("Item_QntyLarge", typeof(decimal));
+                dtItems.Columns.Add("Item_QntySmall", typeof(decimal));
+                dtItems.Columns.Add("Item_Price", typeof(decimal));
+                dtItems.Columns.Add("Item_ToTal", typeof(decimal));
+                dtItems.Columns.Add("Unit_Item_Id", typeof(long));
+                dtItems.Columns.Add("Store_Id", typeof(long));
+                dtItems.Columns.Add("NotesDetails", typeof(string));
+                foreach (var it in items)
+                {
+                    dtItems.Rows.Add(it.ItemName, it.ItemId, it.Qty, 0m, it.Price, it.Total, 0L, 0L, it.Notes ?? "");
+                }
+
+                if (isNew)
+                {
+                    _cls.Add_New_Financial_Notice_(ref localExcp, ref noticeId, dtItems, orderNo, orderDate, _transactionType, transactionTypeStr, value, valueStr, currencyValue, notes, customerId, supplierId, subAccountId, accountTypeValue, subAccountId, accountSelection, balanceBefore, subAccountId);
+                }
+                else
+                {
+                    _cls.Edit_Financial_Notice_(ref localExcp, ref noticeId, oldData, dtItems, orderNo, orderDate, _transactionType, transactionTypeStr, value, valueStr, currencyValue, notes, customerId, supplierId, subAccountId, accountTypeValue, subAccountId, accountSelection, balanceBefore, subAccountId);
+                }
+                return localExcp;
+            });
+
+            if (excp == 0)
+            {
+                Nav.NavigateTo("/accounts/financial-notice/by-item-review");
+            }
+            else
+            {
+                _errorMessage = Tr("NoticeSaveErrorMessage");
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(Tr("FinancialNoticeByItemTitle"), Tr("ConfirmDeleteNoticeMessage"), yesText: Tr("DeleteNoticeButton"), cancelText: Tr("Cancel"));
+        if (confirmed != true) return;
+
+        _isSaving = true;
+        var oldData = _oldData;
+        try
+        {
+            var excp = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                int localExcp = 0;
+                _cls.Delete_Financial_Notice_(ref localExcp, oldData);
+                return localExcp;
+            });
+
+            if (excp == 0)
+            {
+                Nav.NavigateTo("/accounts/financial-notice/by-item-review");
+            }
+            else
+            {
+                _errorMessage = Tr("NoticeDeleteErrorMessage");
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

@@ -1,0 +1,427 @@
+@* 🟢 شاشة "حساب الإهلاك" - النسخة Blazor من Account_Common_LIB.Assets_EhlakFrm_ (WinForms، تُفتَح من
+   MainFrm_AccountUpdate.ToolStripMenuItemEhlakCompute_Click). كل الحساب/الحفظ/الحذف يمر حرفياً عبر
+   AccountModelsLib.Assets_EhlakCLS (متاح بالفعل فى AccountModelsLib بدون أى MessageBox.Show حى - لم يحتَج
+   أى نقل، كما فى دليل الأصول الثابتة سابقاً).
+
+   تصميم الشاشة الأصلية: اختيار فرع + فترة مالية (Financial_PeriodCLS.Get_Financial_Period) تُحدِّد تلقائياً
+   تاريخ من/إلى (فى الأصل حقلا التاريخ للقراءة فقط Enabled=false، يعتمدان كلياً على الفترة المختارة - نفس
+   السلوك هنا). الفترة المُختارة افتراضياً عند تحميل الشاشة هى الفترة المُعلَّمة IS_Active=1 تحديداً (نفس
+   Connection4It.Financial_Period.Get_Financial_Period الأصلية بالضبط - وليست آخر فترة زمنياً)؛ لو لا توجد
+   فترة نشطة أصلاً، لا يُحدَّد شىء ولا يُنفَّذ بحث تلقائى (يطابق SelectedIndex=-1 فى الأصل). قائمة "الأصول
+   التى لم يُحسب لها إهلاك بعد لهذه الفترة" (Get_AssetsNotAssignEhlakForPeriod)
+   بصندوق اختيار لكل صف (مُفعَّل افتراضياً كالأصل)، وزر "حساب الإهلاك" يجمع مُعرِّفات الأصول المُحدَّدة
+   وينفذ Assets_EhlakCLS.Make_Ehlak حرفياً بمعادلتيه الكاملتين (قسط ثابت Common.Ehlak_Kest_Sabt / قسط
+   متناقص Common.Ehlak_Kest_Motanakes) دون أى إعادة اشتقاق. قائمة ثانية لسجلات الإهلاك المحسوبة فعلاً لنفس
+   الفترة (Get_AssetsEhlakForPeriod) مع زر حذف (Delete_Ehlak) بعد تأكيد. لا يوجد تعديل للسجلات (EditData
+   كانت كوداً ميتاً معلّقاً بالكامل فى الأصل) ولا طباعة (كباقى الشاشات السابقة).
+
+   إصلاح فنى (بموافقة صريحة من المستخدم، بنفس نمط قرار البند 9 / Update_FixedAssetData_Full): الدالة
+   الأصلية Get_AssetsEhlakForPeriod تحتوى خللاً برمجياً حقيقياً - تشير لجدول FixedAssetData فى شرط WHERE
+   دون ضمّه فى FROM/JOIN إطلاقاً، فتفشل بخطأ SQL عند اختيار فرع محدد. تستخدم هذه الشاشة بدلاً منها
+   Get_AssetsEhlakForPeriod_Full (دالة جديدة أُضيفت فى نفس الكلاس المشترك، تضيف الـJOIN الناقص فقط) بينما
+   تبقى الدالة الأصلية وشاشة WinForms التى تستدعيها دون أى تغيير. *@
+
+@page "/accounts/depreciation-calculation"
+
+@using System.Data
+@using System.Globalization
+@using System.Collections
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("DepreciationCalcTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("DepreciationCalcTitle")</MudText>
+        </MudStack>
+        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.End" Wrap="Wrap.Wrap" Class="mt-3">
+            <MudSelect T="long" Value="_branchId" ValueChanged="OnBranchChanged" Label="@Tr("BranchLabel")" Style="min-width:220px;" Dense="true">
+                @foreach (var b in _branches)
+                {
+                    <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="int?" Value="_periodId" ValueChanged="OnPeriodChanged" Label="@Tr("FinancialPeriodLabel")" Style="min-width:260px;" Dense="true">
+                @foreach (var p in _periods)
+                {
+                    <MudSelectItem T="int?" Value="@((int?)p.Id)">@p.DateFrom.ToString("dd/MM/yyyy") - @p.DateTo.ToString("dd/MM/yyyy")</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField T="string" Value="@_dateFrom?.ToString("dd/MM/yyyy")" Label="@Tr("DateFromLabel")" ReadOnly="true" Style="min-width:140px;" />
+            <MudTextField T="string" Value="@_dateTo?.ToString("dd/MM/yyyy")" Label="@Tr("DateToLabel")" ReadOnly="true" Style="min-width:140px;" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="SearchAsync" Disabled="@(_periodId == null || _isBusy)">
+                @Tr("SearchButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+    @if (!string.IsNullOrEmpty(_warningMessage))
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-4" Style="white-space:pre-line;">@_warningMessage</MudAlert>
+    }
+
+    <MudGrid Spacing="3">
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
+                    <MudText Typo="Typo.h6">@Tr("PendingAssetsHeader")</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Calculate"
+                               OnClick="ComputeAsync" Disabled="@(_isBusy || !_pendingAssets.Any(a => a.Selected))">
+                        @Tr("ComputeButton")
+                    </MudButton>
+                </MudStack>
+                <MudTable Items="@_pendingAssets" Hover="true" Dense="true" Bordered="true" Loading="@_isLoading" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>
+                            <MudCheckBox T="bool" Value="@_allPendingSelected" ValueChanged="ToggleSelectAllPending" Dense="true" />
+                        </MudTh>
+                        <MudTh>@Tr("DepreciationRateColumn")</MudTh>
+                        <MudTh>@Tr("AssetNameColumn")</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>
+                            <MudCheckBox T="bool" @bind-Value="context.Selected" Dense="true" />
+                        </MudTd>
+                        <MudTd DataLabel="@Tr("DepreciationRateColumn")">@context.Rate</MudTd>
+                        <MudTd DataLabel="@Tr("AssetNameColumn")">@context.Name</MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoPendingAssets")</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
+                    <MudText Typo="Typo.h6">@Tr("ComputedEhlakHeader")</MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                               OnClick="DeleteSelectedAsync" Disabled="@(_isBusy || !_computedEhlak.Any(r => r.Selected))">
+                        @Tr("DeleteSelectedButton")
+                    </MudButton>
+                </MudStack>
+                <MudTable Items="@_computedEhlak" Hover="true" Dense="true" Bordered="true" Loading="@_isLoading" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>
+                            <MudCheckBox T="bool" Value="@_allComputedSelected" ValueChanged="ToggleSelectAllComputed" Dense="true" />
+                        </MudTh>
+                        <MudTh>@Tr("AssetValueNowColumn")</MudTh>
+                        <MudTh>@Tr("TotalDepreciationColumn")</MudTh>
+                        <MudTh>@Tr("PeriodDepreciationColumn")</MudTh>
+                        <MudTh>@Tr("AssetNameColumn")</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>
+                            <MudCheckBox T="bool" @bind-Value="context.Selected" Dense="true" />
+                        </MudTd>
+                        <MudTd DataLabel="@Tr("AssetValueNowColumn")">@context.AssetValueNow</MudTd>
+                        <MudTd DataLabel="@Tr("TotalDepreciationColumn")">@context.TotalEklak</MudTd>
+                        <MudTd DataLabel="@Tr("PeriodDepreciationColumn")">@context.PeriodEhlak</MudTd>
+                        <MudTd DataLabel="@Tr("AssetNameColumn")">@context.Name</MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoComputedEhlak")</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private class PendingAssetRow
+    {
+        public long SubAccountId { get; set; }
+        public string Name { get; set; } = "";
+        public string Rate { get; set; } = "";
+        public bool Selected { get; set; } = true;
+    }
+
+    private class ComputedEhlakRow
+    {
+        public long Id { get; set; }
+        public string Name { get; set; } = "";
+        public string AssetValueNow { get; set; } = "";
+        public string TotalEklak { get; set; } = "";
+        public string PeriodEhlak { get; set; } = "";
+        public bool Selected { get; set; }
+    }
+
+    private readonly Assets_EhlakCLS _cls = new();
+    private List<(long Id, string Name)> _branches = new();
+    private long _branchId;
+    private List<(int Id, DateTime DateFrom, DateTime DateTo, bool IsActive)> _periods = new();
+    private int? _periodId;
+    private DateTime? _dateFrom;
+    private DateTime? _dateTo;
+
+    private List<PendingAssetRow> _pendingAssets = new();
+    private List<ComputedEhlakRow> _computedEhlak = new();
+
+    private bool _isLoading;
+    private bool _isBusy;
+    private string? _errorMessage;
+    private string? _warningMessage;
+
+    private bool _allPendingSelected => _pendingAssets.Count > 0 && _pendingAssets.All(a => a.Selected);
+    private bool _allComputedSelected => _computedEhlak.Count > 0 && _computedEhlak.All(r => r.Selected);
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var branchDt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, (int)Common.User_Id);
+            var branches = new List<(long, string)>();
+            foreach (DataRow r in branchDt.Rows)
+            {
+                branches.Add((Convert.ToInt64(r["Id"]), r["Branch_Name"]?.ToString() ?? ""));
+            }
+            _branches = branches;
+
+            var periodDt = new Financial_PeriodCLS().Get_Financial_Period();
+            var periods = new List<(int, DateTime, DateTime, bool)>();
+            foreach (DataRow r in periodDt.Rows)
+            {
+                periods.Add((Convert.ToInt32(r["Id"]), Convert.ToDateTime(r["DateFrom"]), Convert.ToDateTime(r["DateTo"]), Convert.ToInt32(r["IS_Active"]) == 1));
+            }
+            _periods = periods;
+        });
+
+        if (_branches.Count > 0)
+        {
+            _branchId = _branches[0].Id;
+        }
+        // نفس سلوك Assets_EhlakFrm_Load الأصلى بالضبط (financial_Period1.Get_Financial_Period): يُحدَّد افتراضياً
+        // الفترة المُعلَّمة IS_Active=1 (لا آخر فترة زمنياً) - لو لا توجد فترة نشطة، لا يُحدَّد شيء (كالأصل: SelectedIndex=-1).
+        if (_periods.Any(p => p.IsActive))
+        {
+            var active = _periods.First(p => p.IsActive);
+            _periodId = active.Id;
+            _dateFrom = active.DateFrom;
+            _dateTo = active.DateTo;
+            await SearchAsync();
+        }
+    }
+
+    private async Task OnBranchChanged(long value)
+    {
+        _branchId = value;
+        await SearchAsync();
+    }
+
+    private async Task OnPeriodChanged(int? value)
+    {
+        _periodId = value;
+        var period = _periods.FirstOrDefault(p => p.Id == value);
+        _dateFrom = period.DateFrom;
+        _dateTo = period.DateTo;
+        await SearchAsync();
+    }
+
+    private void ToggleSelectAllPending(bool value)
+    {
+        foreach (var a in _pendingAssets) a.Selected = value;
+    }
+
+    private void ToggleSelectAllComputed(bool value)
+    {
+        foreach (var r in _computedEhlak) r.Selected = value;
+    }
+
+    private async Task SearchAsync()
+    {
+        if (_periodId == null || _dateFrom == null || _dateTo == null) return;
+
+        _isLoading = true;
+        _errorMessage = null;
+        _warningMessage = null;
+        var branchId = (int)_branchId;
+        var dateFrom = _dateFrom.Value;
+        var dateTo = _dateTo.Value;
+        try
+        {
+            var (pending, computed) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var pendingDt = _cls.Get_AssetsNotAssignEhlakForPeriod(branchId, dateFrom, dateTo);
+                var p = new List<PendingAssetRow>();
+                foreach (DataRow r in pendingDt.Rows)
+                {
+                    p.Add(new PendingAssetRow
+                    {
+                        SubAccountId = Convert.ToInt64(r["SubAccount_Id"]),
+                        Name = r["SubAccount_Name"]?.ToString() ?? "",
+                        Rate = r["Rate_of_depreciation"]?.ToString() ?? "",
+                        Selected = true
+                    });
+                }
+
+                var computedDt = _cls.Get_AssetsEhlakForPeriod_Full(branchId, dateFrom, dateTo);
+                var c = new List<ComputedEhlakRow>();
+                foreach (DataRow r in computedDt.Rows)
+                {
+                    c.Add(new ComputedEhlakRow
+                    {
+                        Id = Convert.ToInt64(r["Id"]),
+                        Name = r["SubAccount_Name"]?.ToString() ?? "",
+                        AssetValueNow = r["Asset_Value_Now"]?.ToString() ?? "",
+                        TotalEklak = r["Total_Eklak"]?.ToString() ?? "",
+                        PeriodEhlak = r["Period_Ehalk"]?.ToString() ?? ""
+                    });
+                }
+
+                return (p, c);
+            });
+
+            _pendingAssets = pending;
+            _computedEhlak = computed;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ComputeAsync()
+    {
+        if (_periodId == null || _dateFrom == null || _dateTo == null) return;
+
+        var selectedIds = _pendingAssets.Where(a => a.Selected).Select(a => a.SubAccountId.ToString()).ToList();
+        if (selectedIds.Count == 0) return;
+
+        _isBusy = true;
+        _errorMessage = null;
+        _warningMessage = null;
+        var branchId = (int)_branchId;
+        var periodId = _periodId.Value;
+        var dateFrom = _dateFrom.Value;
+        var dateTo = _dateTo.Value;
+        try
+        {
+            var (excp, msg) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var arr = new ArrayList(selectedIds);
+                int localExcp = 0;
+                string localMsg = "";
+                _cls.Make_Ehlak(ref localExcp, ref localMsg, branchId, arr, periodId, dateFrom, dateTo);
+                return (localExcp, localMsg);
+            });
+
+            await SearchAsync();
+
+            if (excp != 0)
+            {
+                _errorMessage = Tr("ComputeFailedError");
+            }
+            else if (!string.IsNullOrWhiteSpace(msg))
+            {
+                _warningMessage = msg;
+            }
+            else
+            {
+                Snackbar.Add(Tr("ComputeSuccessMessage"), Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task DeleteSelectedAsync()
+    {
+        var selected = _computedEhlak.Where(r => r.Selected).ToList();
+        if (selected.Count == 0) return;
+
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("DeleteEhlakTitle"),
+            Tr("DeleteEhlakConfirm", selected.Count),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+
+        if (confirmed != true) return;
+
+        _isBusy = true;
+        _errorMessage = null;
+        try
+        {
+            var ids = selected.Select(r => r.Id.ToString()).ToList();
+            var excp = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var arr = new ArrayList(ids);
+                int localExcp = 0;
+                _cls.Delete_Ehlak(ref localExcp, arr);
+                return localExcp;
+            });
+
+            await SearchAsync();
+
+            if (excp != 0)
+            {
+                _errorMessage = Tr("DeleteFailedError");
+            }
+            else
+            {
+                Snackbar.Add(Tr("DeleteSuccessMessage"), Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

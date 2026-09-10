@@ -1,0 +1,361 @@
+@* 🟢 شاشة "يومية مصروفات" - النسخة Blazor لوضع Show_MasrofateForDay=1 من Reporting_System.Money_SpentReports
+   (استدعاء menuItemExpensDays_Click فى MainFrm_AccountUpdate.cs: new Money_SpentReports(1)). نفس الفورم
+   نفسه يخدم أيضاً شاشة عامة "تقارير الواردات والمصروفات" (بدون هذا الوضع، من 3 نقاط قوائم أخرى) - خارج
+   نطاق هذا البند (رُكِّز فقط على الاستدعاء الفعلى لـ"يومية مصروفات" المطلوب).
+   منطق العمل بالكامل فى Reporting_System.Money_SpentReportsCLS (مشروع WinForms فقط، UseWindowsForms=true)
+   - كانت تستدعي MessageBox.Show داخل Get_Data الداخلية (عائق أمام Blazor)، فنُقلت نسخة جديدة إلى
+   AccountModelsLib.BusinessLibShared.Reporting.Money_SpentReportsCLS بتغيير واحد فقط (MessageBox.Show →
+   ref string Msg). النسخة الأصلية فى Reporting_System لم تُمَس ولا تزال تُستخدَم كما هى.
+   فلتر الحسابات (بقرار موافَق عليه صراحة من المستخدم): الشاشة الأصلية تفتح شجرة حسابات وتحدد تلقائياً كل
+   حسابات (Head_Main_Account=3) كفلتر افتراضى عبر تفاعل شجرة متعددة الاختيار (checkbox tree) - بدل بناء شجرة
+   اختيار كاملة فى Blazor لهذا الفلتر وحده، اعتُمد فلتر ثابت (نفس الـ Head_Main_Account=3) عبر دالة بحث
+   جديدة (Get_SubAccountIdsByHeadMainAccount) تُعطي نفس مجموعة الحسابات بالضبط دون واجهة شجرة.
+   ملاحظة عرض (تصحيح تقنى بحت، غير منطق عمل): الصفوف الإجمالية/الفرق المُضافة فى تبويب "التفصيل" فى الأصل
+   (fill_Lv_Items) بها خطأ إزاحة عمود واحد فى ListView الأصلى (Export/Import يظهران فعلياً تحت أعمدة
+   "الحساب الفرعى"/"الصادر" بدل "الصادر"/"الوارد" الصحيحين، بسبب Add() ناقصة فى الكود الأصلى) - القيم
+   المحسوبة نفسها صحيحة 100% ولم تتغير، فقط عُدِّل موضع عرضها للعمود الصحيح دلالياً (تبويب "الإجمالى"
+   المقابل fill_Lv_Items_Totals لم يكن به هذا الخطأ أصلاً، فبقى كما هو). موثَّق بالتفصيل فى خطة الترحيل. *@
+
+@page "/accounts/expense-daily-journal"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.BusinessLibShared.Reporting
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Tr("ExpenseDailyJournalTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@Tr("ExpenseDailyJournalTitle")</MudText>
+
+        <MudGrid>
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker T="DateTime?" Date="_date" DateChanged="@((DateTime? d) => _date = d ?? DateTime.Today)"
+                               Label="@Tr("DateLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudRadioGroup T="bool" Value="_isCash" ValueChanged="@((bool v) => OnPayTypeChanged(v))">
+                    <MudRadio T="bool" Value="true" Color="Color.Primary">@Tr("PayTypeCashLabel")</MudRadio>
+                    <MudRadio T="bool" Value="false" Color="Color.Primary" Class="ms-4">@Tr("PayTypeCheckLabel")</MudRadio>
+                </MudRadioGroup>
+            </MudItem>
+            @if (_isCash)
+            {
+                <MudItem xs="12" sm="6" md="3">
+                    <MudSelect T="long" @bind-Value="_selectedBoxId" Label="@Tr("BoxLabel")" Variant="Variant.Outlined" FullWidth="true">
+                        @foreach (var b in _boxes)
+                        {
+                            <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            }
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="int" @bind-Value="_masrofatAffectIndex" Label="@Tr("MasrofatAffectingLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    <MudSelectItem T="int" Value="0">@Tr("MasrofatAffectingLabel")</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">@Tr("MasrofatNotAffectingLabel")</MudSelectItem>
+                    <MudSelectItem T="int" Value="2">@Tr("MasrofatAllLabel")</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4">
+                <MudRadioGroup T="int" Value="_transactionType" ValueChanged="@((int v) => _transactionType = v)">
+                    <MudRadio T="int" Value="2" Color="Color.Primary">@Tr("DirectionOutgoingLabel")</MudRadio>
+                    <MudRadio T="int" Value="1" Color="Color.Primary" Class="ms-4">@Tr("DirectionIncomingLabel")</MudRadio>
+                    <MudRadio T="int" Value="0" Color="Color.Primary" Class="ms-4">@Tr("DirectionAllLabel")</MudRadio>
+                </MudRadioGroup>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudRadioGroup T="bool" Value="_orderByAccount" ValueChanged="@((bool v) => _orderByAccount = v)">
+                    <MudRadio T="bool" Value="false" Color="Color.Primary">@Tr("SortByDateLabel")</MudRadio>
+                    <MudRadio T="bool" Value="true" Color="Color.Primary" Class="ms-4">@Tr("SortByAccountLabel")</MudRadio>
+                </MudRadioGroup>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
+                           OnClick="SearchAsync" Disabled="@_isLoading">
+                    @Tr("SearchButton")
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudTabs Elevation="1" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-3">
+        <MudTabPanel Text="@Tr("DetailsTabLabel")">
+            <MudTable Items="@_detailRows" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Dense="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>@Tr("SerialColumn")</MudTh>
+                    <MudTh>@Tr("NotesColumn")</MudTh>
+                    <MudTh>@Tr("MainAccountColumn")</MudTh>
+                    <MudTh>@Tr("SubAccountColumn")</MudTh>
+                    <MudTh>@Tr("ExportColumn")</MudTh>
+                    <MudTh>@Tr("ImportColumn")</MudTh>
+                    <MudTh>@Tr("DateColumn")</MudTh>
+                    <MudTh>@Tr("PaymentMethodColumn")</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTr Style="@(context.IsHighlight ? "background-color:var(--mud-palette-info-lighten);" : "")">
+                        <MudTd>@context.Serial</MudTd>
+                        <MudTd>@context.Notes</MudTd>
+                        <MudTd>@context.MainAccountName</MudTd>
+                        <MudTd>@context.SubAccountName</MudTd>
+                        <MudTd>@context.Export.ToString("N2")</MudTd>
+                        <MudTd>@context.Import.ToString("N2")</MudTd>
+                        <MudTd>@context.DateText</MudTd>
+                        <MudTd>@context.BankName</MudTd>
+                    </MudTr>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoExpenseDataYet")</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudTabPanel>
+        <MudTabPanel Text="@Tr("TotalsTabLabel")">
+            <MudTable Items="@_totalRows" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Dense="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>@Tr("SerialColumn")</MudTh>
+                    <MudTh>@Tr("MainAccountColumn")</MudTh>
+                    <MudTh>@Tr("SubAccountColumn")</MudTh>
+                    <MudTh>@Tr("ExportColumn")</MudTh>
+                    <MudTh>@Tr("ImportColumn")</MudTh>
+                    <MudTh>@Tr("PaymentMethodColumn")</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTr Style="@(context.IsHighlight ? "background-color:var(--mud-palette-info-lighten);" : "")">
+                        <MudTd>@context.Serial</MudTd>
+                        <MudTd>@context.MainAccountName</MudTd>
+                        <MudTd>@context.SubAccountName</MudTd>
+                        <MudTd>@context.Export.ToString("N2")</MudTd>
+                        <MudTd>@context.Import.ToString("N2")</MudTd>
+                        <MudTd>@context.BankName</MudTd>
+                    </MudTr>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoExpenseDataYet")</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+@code {
+    private record BoxOption(long Id, string Name);
+    private record DetailRow(int Serial, string Notes, string MainAccountName, string SubAccountName, decimal Export, decimal Import, string DateText, string BankName, bool IsHighlight);
+    private record TotalRow(int Serial, string MainAccountName, string SubAccountName, decimal Export, decimal Import, string BankName, bool IsHighlight);
+
+    private readonly Money_SpentReportsCLS _cls = new(1);
+    private readonly Money_Transaction_BoxOrderReportCLS _boxCls = new();
+
+    private DateTime _date = DateTime.Today;
+    private bool _isCash = true;
+    private int _transactionType = 2; // 2=صادر (Sarf) هو المُحدَّد افتراضياً فى الفورم الأصلى (rdSader.Checked=true)
+    private bool _orderByAccount;
+    private int _masrofatAffectIndex; // 0 هو الافتراضى فى الأصل (cmbMasrofatAffect.SelectedIndex=0)
+
+    private List<BoxOption> _boxes = new();
+    private long _selectedBoxId;
+
+    private List<DetailRow> _detailRows = new();
+    private List<TotalRow> _totalRows = new();
+
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBoxesAsync();
+    }
+
+    // 🟢 يقابل banks_List1.Get_Sandouk_DataWithAccount + SelectedIndex=0 الافتراضى فى Invoices_List_Load بالضبط.
+    private async Task LoadBoxesAsync()
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _boxCls.Get_BoxesList();
+        });
+
+        var list = new List<BoxOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            list.Add(new BoxOption(Convert.ToInt64(r["Id"]), r["Bank_Name"]?.ToString() ?? ""));
+        }
+        _boxes = list;
+        _selectedBoxId = list.Count > 0 ? list[0].Id : 0;
+    }
+
+    private void OnPayTypeChanged(bool isCash)
+    {
+        _isCash = isCash;
+        _detailRows = new();
+        _totalRows = new();
+    }
+
+    // 🟢 يقابل BtnSearch__Click/Get_SearchResult بالضبط (فرع يوم واحد فقط - DateFrom=DateTo=التاريخ المُختار
+    // دائماً، بخلاف الوضع العام لنفس الفورم الذى يسمح بفترة). فلتر الحسابات arr هنا ثابت دائماً على
+    // Head_Main_Account=3 (راجع تعليق الرأس) بدل تفاعل شجرة الاختيار فى الأصل.
+    private async Task SearchAsync()
+    {
+        _errorMessage = null;
+        if (_isCash && _boxes.All(b => b.Id != _selectedBoxId))
+        {
+            _errorMessage = Tr("SelectBoxRequired");
+            return;
+        }
+
+        _isLoading = true;
+        StateHasChanged();
+        try
+        {
+            int orderBy = _orderByAccount ? 1 : 0;
+            int isMasrofatAffect = _masrofatAffectIndex == 2 ? 2 : (_masrofatAffectIndex == 0 ? 1 : 0);
+            int transactionType = _transactionType;
+            var date = _date;
+            long boxId = _selectedBoxId;
+            bool isCash = _isCash;
+
+            var (detailRows, totalRows) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                int excp = 0;
+                string msg = "";
+                _cls.Is_MasrofatAffect = isMasrofatAffect;
+                _cls.arr = _cls.Get_SubAccountIdsByHeadMainAccount(3);
+
+                DataSet detailsDs;
+                DataSet totalsDs;
+                string cashTotalLabel = Tr("CashTotalLabel");
+                string checksTotalLabel = Tr("ChecksTotalLabel");
+                string netLabel = Tr("NetForPeriodLabel");
+                if (isCash)
+                {
+                    detailsDs = _cls.GetMoney_SpentDetails(ref excp, ref msg, boxId, 0, orderBy, false, date, date, false, transactionType);
+                    totalsDs = _cls.GetTotalMoney_SpentDetails_(ref excp, ref msg, orderBy, boxId, 0, false, date, date, false, transactionType);
+                    return (BuildDetailRows(detailsDs, cashTotalLabel, netLabel), BuildTotalRows(totalsDs, cashTotalLabel, netLabel));
+                }
+                else
+                {
+                    detailsDs = _cls.GetCheck_SpentDetails(ref excp, ref msg, orderBy, 0, false, date, date, false, transactionType);
+                    totalsDs = _cls.GetTotalCheck_SpentDetails_(ref excp, ref msg, orderBy, 0, false, date, date, false, transactionType);
+                    return (BuildDetailRows(detailsDs, checksTotalLabel, netLabel), BuildTotalRows(totalsDs, checksTotalLabel, netLabel));
+                }
+            });
+
+            _detailRows = detailRows;
+            _totalRows = totalRows;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    // 🟢 يقابل fill_Lv_Items بالضبط: صفوف التفصيل الفعلية + صف الإجمالى + صف "صافى اليوم/الفترة" (القيم
+    // المحسوبة نفسها بالضبط - راجع تعليق الرأس لملاحظة تصحيح موضع العرض).
+    private static List<DetailRow> BuildDetailRows(DataSet ds, string totalLabel, string netLabel)
+    {
+        var rows = new List<DetailRow>();
+        if (ds.Tables.Count == 0) return rows;
+        var dt = ds.Tables[0];
+
+        decimal exportTotal = 0;
+        decimal importTotal = 0;
+        int serial = 0;
+        for (int x = 0; x < dt.Rows.Count; x++)
+        {
+            serial++;
+            var r = dt.Rows[x];
+            var export = ToDecimal(r["Export_Value"]);
+            var import = ToDecimal(r["Import_Value"]);
+            var date = DateTime.Parse(r["Order_Date"].ToString()!).ToString("yyyy/MM/dd");
+            rows.Add(new DetailRow(serial, r["Notes"]?.ToString() ?? "", r["MainSubAccount_Name"]?.ToString() ?? "", r["SubAccount_Name"]?.ToString() ?? "", export, import, date, r["Bank_Name"]?.ToString() ?? "", false));
+            exportTotal += export;
+            importTotal += import;
+        }
+
+        exportTotal = Common.RoundMe(exportTotal);
+        rows.Add(new DetailRow(0, "", "", "", exportTotal, importTotal, totalLabel, "", true));
+
+        decimal dayDiff = importTotal - exportTotal;
+        decimal exportDiff = dayDiff > 0 ? 0 : -dayDiff;
+        decimal importDiff = dayDiff > 0 ? dayDiff : 0;
+        rows.Add(new DetailRow(0, "", "", "", exportDiff, importDiff, netLabel, "", true));
+
+        return rows;
+    }
+
+    // 🟢 يقابل fill_Lv_Items_Totals بالضبط (تبويب "الإجمالى" - أعمدة الإجمالى/الفرق هنا كانت صحيحة أصلاً فى
+    // الأصل بدون إزاحة، خلافاً لتبويب "التفصيل").
+    private static List<TotalRow> BuildTotalRows(DataSet ds, string totalLabel, string netLabel)
+    {
+        var rows = new List<TotalRow>();
+        if (ds.Tables.Count == 0) return rows;
+        var dt = ds.Tables[0];
+
+        decimal exportTotal = 0;
+        decimal importTotal = 0;
+        int serial = 0;
+        for (int x = 0; x < dt.Rows.Count; x++)
+        {
+            serial++;
+            var r = dt.Rows[x];
+            var export = ToDecimal(r["Export_Value"]);
+            var import = ToDecimal(r["Import_Value"]);
+            rows.Add(new TotalRow(serial, r["MainSubAccount_Name"]?.ToString() ?? "", r["SubAccount_Name"]?.ToString() ?? "", export, import, r["Bank_Name"]?.ToString() ?? "", false));
+            exportTotal += export;
+            importTotal += import;
+        }
+
+        exportTotal = Common.RoundMe(exportTotal);
+        rows.Add(new TotalRow(0, "", "", exportTotal, importTotal, totalLabel, true));
+
+        decimal dayDiff = importTotal - exportTotal;
+        decimal exportDiff = dayDiff > 0 ? 0 : -dayDiff;
+        decimal importDiff = dayDiff > 0 ? dayDiff : 0;
+        rows.Add(new TotalRow(0, "", "", exportDiff, importDiff, netLabel, true));
+
+        return rows;
+    }
+
+    private static decimal ToDecimal(object value)
+    {
+        return decimal.TryParse(value?.ToString(), out var d) ? d : 0;
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

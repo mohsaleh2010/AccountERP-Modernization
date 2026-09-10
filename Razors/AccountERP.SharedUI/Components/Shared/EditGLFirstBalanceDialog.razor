@@ -1,0 +1,293 @@
+@* 🟢 مودال "تعديل رصيد أول المدة" لحساب من دليل الحسابات العام - النسخة Blazor من
+   Account_Common_LIB.FirstBalance_Financial_Period_FRM (يُفتَح أصلاً من النقر المزدوج على صف فى شاشة
+   "أرصدة أول المدة" - FirstBalanceMezan_FirstTime). الأصل يحتوى شجرة حسابات كاملة لاختيار الحساب لأنه
+   يمكن فتحه أيضاً بشكل مستقل بلا حساب محدَّد سلفاً؛ بما أن مسار الاستخدام الوحيد المُتحقَّق فى القائمة الحية
+   (MainFrm_AccountUpdate.menuItem35_Click / ToolStripMenuItemFinancial_Period_FirstBalance_Click) يمرّ
+   دائماً عبر شاشة "أرصدة أول المدة" أولاً (والتى تُمرِّر SubAccount_Id جاهزاً عند النقر على صف)، اسْتُغنِى هنا
+   عن شجرة اختيار الحساب وتحديد الفرع/الفترة (تصل جاهزة من الشاشة الأم) - نفس نمط التبسيط المُتَّبع فى
+   EditFirstBalanceDialog.razor للعميل/المورد (بند 12) الذى استغنى بالمثل عن اختيار الفترة لأنها مُقفَلة عملياً
+   على أول فترة فى الأصل.
+
+   منطق الحفظ نفسه حرفياً (AccountModelsLib.FirstBalance_CLS.Save_FirstBalance) بلا أى تعديل - نفس الدالة
+   التى يستدعيها BtnSaveFirstBalance_Click الأصلى، بما فى ذلك تمرير Account_Customer_Type_ID/Value المأخوذين
+   من صف الحساب نفسه (Submain_Account) تماماً كما يأخذهما الأصل من عقدة الشجرة المختارة. معامل التحويل
+   (Factor) يُحسَب تلقائياً بنفس دالة CurrencyFactorsCLS.GetFactors عند اختيار عملة غير عملة الإدخال
+   الأساسية (Common.Entry_Currency_Id)، ويُقفَل=1 ويُعطَّل عند تطابقهما - نفس ShowFirstBalance الأصلية بالضبط.
+   جدول "الأرصدة الحالية بالعملات" الصغير يعرض نفس بيانات FirstBalance_CLS.Get_Account_First_Balance
+   (يقابل dg_FirstBalanceOneAccount الأصلية) كمرجع فقط دون إعادة حساب صف "مكافئ" إضافى (تبسيط عرضى، البيانات
+   الفعلية المحفوظة فى القاعدة لا تتأثر). *@
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+
+<MudDialog @bind-Visible="Visible"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr("EditGLFirstBalanceTitle")</TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">@AccountName</MudText>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_errorMessage</MudAlert>
+        }
+
+        <MudSelect T="int" Value="_currencyId" ValueChanged="OnCurrencyChangedAsync" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined" Class="mb-3">
+            @foreach (var c in _currencies)
+            {
+                <MudSelectItem T="int" Value="@c.Value">@c.Name</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudNumericField T="decimal" @bind-Value="_factor" Label="@Tr("EquivalentFactorLabel")" Disabled="@_factorLocked" Format="N4" Class="mb-3" />
+
+        <MudNumericField T="decimal" @bind-Value="_balance" Label="@Tr("BalanceColumn")" Min="0" Format="N2" Class="mb-3" />
+
+        <MudRadioGroup T="int" @bind-Value="_transformType" Class="mb-3">
+            <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("NatureDebitLabel")</MudRadio>
+            <MudRadio T="int" Value="2" Color="Color.Primary">@Tr("NatureCreditLabel")</MudRadio>
+        </MudRadioGroup>
+
+        <MudTextField T="string" Value="@((_factor * _balance).ToString("N2"))" ReadOnly="true" Label="@Tr("EquivalentBalanceLabel")" Class="mb-3" />
+
+        @if (_existingRows.Count > 0)
+        {
+            <MudText Typo="Typo.caption" Class="mud-text-secondary mb-1">@Tr("ExistingBalancesLabel")</MudText>
+            <MudSimpleTable Dense="true" Bordered="true" Style="max-height:200px;overflow-y:auto;">
+                <thead>
+                    <tr>
+                        <th>@Tr("CurrencyLabel")</th>
+                        <th>@Tr("NatureDebitLabel")</th>
+                        <th>@Tr("NatureCreditLabel")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in _existingRows)
+                    {
+                        <tr>
+                            <td>@r.CurrencyName</td>
+                            <td>@r.Madin.ToString("N2")</td>
+                            <td>@r.Da2n.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseAsync">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@_isSaving">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public long SubAccountId { get; set; }
+    [Parameter] public string AccountName { get; set; } = "";
+    [Parameter] public long BranchId { get; set; }
+    [Parameter] public long YearFinancialPeriodId { get; set; }
+    [Parameter] public EventCallback OnSaved { get; set; }
+
+    private record CurrencyOption(int Value, string Name);
+    private record ExistingRow(string CurrencyName, decimal Madin, decimal Da2n);
+
+    private long _lastLoadedId = -1;
+    private List<CurrencyOption> _currencies = new();
+    private int _currencyId;
+    private long? _accountCustomerTypeId;
+    private int _accountCustomerTypeValue;
+    private decimal _factor = 1;
+    private bool _factorLocked;
+    private decimal _balance;
+    private int _transformType = 1;
+    private List<ExistingRow> _existingRows = new();
+    private bool _isSaving;
+    private string? _errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Visible && SubAccountId != _lastLoadedId)
+        {
+            _lastLoadedId = SubAccountId;
+            await LoadAsync();
+        }
+        else if (!Visible)
+        {
+            _lastLoadedId = -1;
+        }
+    }
+
+    // 🟢 يقابل FirstBalance_Financial_Period_Load + trAccount_Common_LIB_AfterSelect_ الأصليتين (بدون شجرة، الحساب معروف سلفاً).
+    private async Task LoadAsync()
+    {
+        _errorMessage = null;
+        var subAccountId = SubAccountId;
+        var branchId = BranchId;
+        var periodId = YearFinancialPeriodId;
+
+        var result = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var opp = new operations();
+            var sb = new Submain_AccountCLS().Get_Submain_Account(ref opp, subAccountId);
+            var currencyDt = new CurrencyFactorsCLS_().GetCurrencyList();
+            var existingDt = new FirstBalance_CLS().Get_Account_First_Balance(periodId, branchId, subAccountId);
+            return (sb, currencyDt, existingDt);
+        });
+
+        _currencies = result.currencyDt.Rows.Cast<DataRow>()
+            .Select(r => new CurrencyOption(Convert.ToInt32(r["Value"]), r["Currency_Name"]?.ToString() ?? ""))
+            .ToList();
+
+        _accountCustomerTypeId = result.sb?.Account_Customer_Type_ID;
+        _accountCustomerTypeValue = result.sb?.Account_Customer_Type_Value ?? 0;
+        _currencyId = result.sb?.Currency_Id ?? 1;
+
+        _existingRows = result.existingDt.Rows.Cast<DataRow>()
+            .Select(r => new ExistingRow(
+                r["Currency_Name"]?.ToString() ?? "",
+                decimal.TryParse(r["First_Balance_Madin"]?.ToString(), out var m) ? m : 0,
+                decimal.TryParse(r["First_Balance_Da2n"]?.ToString(), out var d) ? d : 0))
+            .ToList();
+
+        await ApplyCurrencySelectionAsync();
+    }
+
+    // 🟢 يقابل CmbCurrencyName_SelectedIndexChanged -> ShowFirstBalance الأصليتين بالضبط.
+    private async Task OnCurrencyChangedAsync(int value)
+    {
+        _currencyId = value;
+        await ApplyCurrencySelectionAsync();
+    }
+
+    private async Task ApplyCurrencySelectionAsync()
+    {
+        var currencyId = _currencyId;
+        var subAccountId = SubAccountId;
+        var branchId = BranchId;
+        var periodId = YearFinancialPeriodId;
+
+        if (Common.Entry_Currency_Id == currencyId)
+        {
+            _factor = 1;
+            _factorLocked = true;
+        }
+        else
+        {
+            _factorLocked = false;
+            _factor = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var f = new CurrencyFactorsCLS().GetFactors(Common.Entry_Currency_Id, currencyId);
+                return Common.RoundMe(f);
+            });
+        }
+
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return new FirstBalance_CLS().Get_FirstBalance(subAccountId, periodId, currencyId, branchId, currencyId);
+        });
+
+        _balance = 0;
+        _transformType = 1;
+        if (dt.Rows.Count > 0)
+        {
+            var madin = decimal.TryParse(dt.Rows[0]["First_Balance_Madin"]?.ToString(), out var m) ? m : 0;
+            var da2n = decimal.TryParse(dt.Rows[0]["First_Balance_Da2n"]?.ToString(), out var d) ? d : 0;
+            if (madin > 0 && da2n == 0)
+            {
+                _balance = madin;
+                _transformType = 1;
+            }
+            else if (madin == 0 && da2n > 0)
+            {
+                _balance = da2n;
+                _transformType = 2;
+            }
+        }
+        StateHasChanged();
+    }
+
+    // 🟢 يقابل BtnSaveFirstBalance_Click الأصلية بالضبط (نفس استدعاء FirstBalance_CLS.Save_FirstBalance).
+    private async Task SaveAsync()
+    {
+        _isSaving = true;
+        _errorMessage = null;
+        var subAccountId = SubAccountId;
+        var accountName = AccountName;
+        var periodId = YearFinancialPeriodId;
+        var branchId = BranchId;
+        var currencyId = _currencyId;
+        var balance = _balance;
+        var transformType = _transformType;
+        var factor = _factor;
+        var custTypeId = _accountCustomerTypeId ?? 0;
+        var custTypeValue = _accountCustomerTypeValue;
+
+        try
+        {
+            var (excp, msg) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                int localExcp = 0;
+                string localMsg = "";
+                var ff = new FirstBalance_CLS
+                {
+                    Account_Customer_Type_ID = custTypeId,
+                    Account_Customer_Type_Value = custTypeValue
+                };
+                ff.Save_FirstBalance(ref localExcp, ref localMsg, subAccountId, accountName, periodId, branchId, currencyId, balance, transformType, factor);
+                return (localExcp, localMsg);
+            });
+
+            if (excp == 0)
+            {
+                await OnSaved.InvokeAsync();
+                await CloseAsync();
+            }
+            else
+            {
+                _errorMessage = msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}
