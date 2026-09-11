@@ -7,6 +7,7 @@ using System.Data;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 namespace AccountModelsLib.Models
 {
     [NotMapped]
@@ -1457,8 +1458,28 @@ namespace AccountModelsLib.Models
             //string mysql = " Delete From Customers_Accounts_Mokhtalat";
             //opp.insert_me(mysql);
 
+            // 🟢 Customers_Accounts_Mokhtalat.ID هو IDENTITY(1,1) حقيقى من SQL Server نفسه - عكس معظم جداول
+            // هذا المشروع. opp.insert_me(sql) يمرّ دائماً عبر SetUpInsertCmd التى تُدرج قيمة Id صريحة تلقائياً
+            // كلما كان Common.Use_Auto_Identity_Column = 0 (قيمته الفعلية فى قاعدة التطوير)، فيفشل الإدراج هنا
+            // دائماً بصمت بخطأ "Cannot insert explicit value for identity column" (نفس الخلل الموثَّق ومُصلَح
+            // سابقاً بنفس الطريقة فى UserSettingsCLS.SaveUserSetting - راجع تعليقها). الإصلاح: تنفيذ TRUNCATE
+            // والـ INSERT...SELECT...UNION مباشرة عبر SqlCommand على opp.conn، متجاوزَين SetUpInsertCmd تماماً.
             string mysql = " truncate table Customers_Accounts_Mokhtalat";
-            opp.insert_me(mysql);
+            opp.MyConn();
+            if (opp.conn.State == ConnectionState.Closed)
+            {
+                opp.conn.Open();
+            }
+            try
+            {
+                using (var truncateCmd = new SqlCommand(mysql, opp.conn))
+                {
+                    truncateCmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception)
+            {
+            }
             try
             {
 
@@ -1504,12 +1525,19 @@ FROM            Suppliers_Accounts INNER JOIN
 WHERE        (Suppliers_Accounts.Reference_Type <> 25) AND (Supplier.Ref_Cust_Supplier_Id > 0) ";
 
                 //AND (Customer.Ref_Cust_Supplier_Id > 0)
-                opp.insert_me(mysql);
+                using (var insertCmd = new SqlCommand(mysql, opp.conn))
+                {
+                    insertCmd.ExecuteNonQuery();
+                }
 
             }
             catch (Exception ee)
             {
                 //MessageBox.Show(ee.Message);
+            }
+            finally
+            {
+                opp.conn.Close();
             }
             mysql = Get_CustomerBalanceMokhtalat_SQL(General_Customer_Flage, Group_Id, Customer_Id, Ref_Cust_Supplier_Id, CustomerBalanceStatus);
 
