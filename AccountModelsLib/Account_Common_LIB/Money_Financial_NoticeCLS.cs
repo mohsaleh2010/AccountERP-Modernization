@@ -106,15 +106,14 @@ namespace AccountModelsLib
                 mysql = "INSERT INTO Money_Financial_Notice_Items  (OrderNo, OrderDate, Transaction_Type,Transaction_TypeStr, Order_Value, Order_Value_Str, Account_Type, Account_Id, SubAccount_Id, Currency_Id, Notes,Compete_SubAccount_Id,Account_Selection,Customer_Id,Supplier_Id,Reference_Type) ";
                 mysql = mysql + " VALUES(" + OrderNo + ",'" + operations.dateFormat(OrderDate) + "'," + Transaction_Type + ",'" + Transaction_TypeStr + "'," + Order_Value + ",N'" + Order_Value_Str + "'," + Account_Type + "," + Account_Id + "," + SubAccount_Id + "," + Currency_Id + ",'" + Notes + "'," + Compete_SubAccount_Id + "," + Account_Selection_ + "," + Customer_Id + "," + Supplier_Id + "," + Reference_Type + ")";
 
-                Money_Financial_Notice_Id = opp.Insert_me_Return_Last_Identify(mysql, ref Excp);
-
-                /// if the insert  sql not executed
-                if (Excp != 0)
-                {
-
-                    Excp = 1;
-                    return;
-                }
+                // 🟢 Money_Financial_Notice_Items.Id ليست IDENTITY حقيقية (تحقَّق مباشرة عبر sys.columns)، لكن
+                // Insert_me_Return_Last_Identify الأصلية تفترض @@IDENTITY طالما Common.Use_Auto_Identity_Column=1
+                // (قيمتها الفعلية فى هذه القاعدة) - فكان الإدراج يفشل دائماً بصمت (NULL فى عمود Id غير القابل
+                // للـNULL، يُبتلَع فى catch الخارجى). الإصلاح: InsertWithManualId (أسفل الملف) يستدعى نفس آلية
+                // توليد/حقن Id الموجودة أصلاً فى MySqlParser صراحة، بصرف النظر عن قيمة العلم العالمى - بلا أى
+                // تغيير فى بقية منطق العمل. نفس الإصلاح طُبِّق على إدراجَى Customers_Accounts/Suppliers_Accounts
+                // أدناه (لهما نفس المشكلة بالضبط، لكن عمودهما القابل للـNULL يجعلها تفشل بصمت لا بصريح خطأ).
+                Money_Financial_Notice_Id = InsertWithManualId(opp, mysql);
 
 
                 //Add_AnotherStaticAccountOnSubmainTable(ref opp, Account_Id, Transaction_Type, Order_Value, SubAccountRef, Relation_Account_ID, OrderDate, AccS);
@@ -145,7 +144,7 @@ namespace AccountModelsLib
                         { Balance = 0; }
                         mysql = " INSERT INTO Customers_Accounts (Notes,Customer_Id, Reference_Id, Reference_Type_Table_Id, Import , Balance, Reference_Type, Transaction_Type, Transaction_Date,Payment_Type) ";
                         mysql = mysql + " Values ('" + Notes + "'," + Customer_Id + "," + OrderNo + "," + Money_Financial_Notice_Id + "," + Order_Value + "," + Balance + "," + Reference_Type + "," + Transaction_Type + ",'" + operations.dateFormat(OrderDate) + "',0)";
-                        opp.insert_me(mysql);
+                        InsertWithManualId(opp, mysql);
                     }
                     if (Transaction_Type == 2)  // صرف نقدية
                     { ///ليس رصيد أول المدة
@@ -165,7 +164,7 @@ namespace AccountModelsLib
                         { Balance = 0; }
                         mysql = " INSERT INTO Customers_Accounts (Notes,Customer_Id, Reference_Id, Reference_Type_Table_Id, Export , Balance, Reference_Type, Transaction_Type, Transaction_Date,Payment_Type) ";
                         mysql = mysql + " Values ('" + Notes + "'," + Customer_Id + "," + OrderNo + "," + Money_Financial_Notice_Id + "," + Order_Value + "," + Balance + "," + Reference_Type + "," + Transaction_Type + ",'" + operations.dateFormat(OrderDate) + "',0)";
-                        opp.insert_me(mysql);
+                        InsertWithManualId(opp, mysql);
                     }
                 }
                 if (Account_Selection_ == 1)       // موردين
@@ -190,7 +189,7 @@ namespace AccountModelsLib
                         { Balance = 0; }
                         mysql = " INSERT INTO Suppliers_Accounts  (Notes,Supplier_Id,Reference_Id, Reference_Type_Table_Id, Import,Balance,Reference_Type, Transaction_Type, Transaction_Date,Payment_Type) ";
                         mysql = mysql + " Values ('" + Notes + "'," + Supplier_Id + "," + OrderNo + "," + Money_Financial_Notice_Id + "," + Order_Value + "," + Balance + "," + Reference_Type + "," + Transaction_Type + ",'" + operations.dateFormat(OrderDate) + "',0)";
-                        opp.insert_me(mysql);
+                        InsertWithManualId(opp, mysql);
                     }
                     ////////////***********************************************************************************
                     if (Transaction_Type == 2)        // صرف نقدية
@@ -212,7 +211,7 @@ namespace AccountModelsLib
                         { Balance = 0; }
                         mysql = " INSERT INTO Suppliers_Accounts  (Notes,Supplier_Id,Reference_Id, Reference_Type_Table_Id,Export ,Balance,Reference_Type, Transaction_Type, Transaction_Date,Payment_Type) ";
                         mysql = mysql + " Values ('" + Notes + "'," + Supplier_Id + "," + OrderNo + "," + Money_Financial_Notice_Id + "," + Order_Value + "," + Balance + "," + Reference_Type + "," + Transaction_Type + ",'" + operations.dateFormat(OrderDate) + "',0)";
-                        opp.insert_me(mysql);
+                        InsertWithManualId(opp, mysql);
                     }
 
                     Excp = 0;
@@ -233,6 +232,20 @@ namespace AccountModelsLib
             }
 
         }
+
+        // 🟢 مساعد تقنى محلى فقط (بلا أى منطق عمل جديد): يُستدعى لكل إدراج فى هذه الدالة على جدول من الجداول
+        // الثلاثة غير الـIDENTITY (Money_Financial_Notice_Items/Customers_Accounts/Suppliers_Accounts) - راجع
+        // التعليق أعلى إدراج Money_Financial_Notice_Items لتفاصيل السبب الجذرى الكامل. يستدعى نفس آلية توليد/حقن
+        // Id الموجودة أصلاً فى MySqlParser.SmartEnsureIdInInsertCommandNew صراحة، بصرف النظر عن قيمة
+        // Common.Use_Auto_Identity_Column العالمية، ثم يُنفِّذ الاستعلام المُعدَّل عبر opp.insert_me كالمعتاد.
+        private static long InsertWithManualId(operations opp, string sql)
+        {
+            long generatedId = 0;
+            sql = MySqlParser.SmartEnsureIdInInsertCommandNew(sql, ref generatedId, isAutoIncrement: false);
+            opp.insert_me(sql);
+            return generatedId;
+        }
+
         public void Delete_Financial_Notice(ref int Excp, DataTable dtOld)
         {
             operations opp = new operations(1);
