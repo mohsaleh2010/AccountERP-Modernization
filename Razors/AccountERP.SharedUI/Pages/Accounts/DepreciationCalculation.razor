@@ -52,11 +52,11 @@
             <MudSelect T="int?" Value="_periodId" ValueChanged="OnPeriodChanged" Label="@Tr("FinancialPeriodLabel")" Style="min-width:260px;" Dense="true">
                 @foreach (var p in _periods)
                 {
-                    <MudSelectItem T="int?" Value="@((int?)p.Id)">@p.DateFrom.ToString("dd/MM/yyyy") - @p.DateTo.ToString("dd/MM/yyyy")</MudSelectItem>
+                    <MudSelectItem T="int?" Value="@((int?)p.Id)">@p.DateFrom.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) - @p.DateTo.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)</MudSelectItem>
                 }
             </MudSelect>
-            <MudTextField T="string" Value="@_dateFrom?.ToString("dd/MM/yyyy")" Label="@Tr("DateFromLabel")" ReadOnly="true" Style="min-width:140px;" />
-            <MudTextField T="string" Value="@_dateTo?.ToString("dd/MM/yyyy")" Label="@Tr("DateToLabel")" ReadOnly="true" Style="min-width:140px;" />
+            <MudTextField T="string" Value="@_dateFrom?.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)" Label="@Tr("DateFromLabel")" ReadOnly="true" Style="min-width:140px;" />
+            <MudTextField T="string" Value="@_dateTo?.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)" Label="@Tr("DateToLabel")" ReadOnly="true" Style="min-width:140px;" />
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
                        OnClick="SearchAsync" Disabled="@(_periodId == null || _isBusy)">
                 @Tr("SearchButton")

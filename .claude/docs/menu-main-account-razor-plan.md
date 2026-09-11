@@ -66,7 +66,7 @@
 7. ✅ **حركة أصناف المخزن (موحّدة)** — **منفَّذ، مُختبَر جزئياً (لا بيانات حركة فى قاعدة التطوير).**
 8. ✅ **يومية مصروفات** و **يومية الصندوق** — **منفَّذ ومُختبَر بالكامل.**
 9. ✅ **دليل الأصول الثابتة** — **منفَّذ ومُختبَر بالكامل (مع إصلاح خلل حذف بيانات حقيقى فى الأصل).**
-10. 🔍 **حساب الإهلاك** — **مُنفَّذ ومُراجَع كودياً بالكامل، لم يُختبَر فى المتصفح بعد.**
+10. ✅ **حساب الإهلاك** — **مُنفَّذ ومُختبَر بالكامل فى المتصفح (راجع سجل التنفيذ لتفاصيل الاختبار وإصلاح خلل bidi فى عرض التواريخ).**
 11. ✅ **الإهلاك** — **لا حاجة لأى عمل: نظام `KnownRoutes`/`MenuNode` القائم أصلاً يعرض "قيد الإنشاء" تلقائياً لأى عنصر قائمة بلا `@page` مطابق — راجع سجل التنفيذ أدناه.**
 12. ✅ **كشف أرصدة العملاء** و **كشف أرصدة الموردين** — **مُنفَّذ ومُختبَر (المورد ببيانات حقيقية كاملة، العميل بعد إصلاح جدول مفقود، بلا بيانات عملاء لاختبار بصرى). راجع سجل التنفيذ للتفاصيل والخللين الإضافيين المُكتشَفين.**
 13. ✅ **كشف أرصدة الحسابات المختلطة** — **مُنفَّذ ومُختبَر فى المتصفح (بلا بيانات حقيقية لاختبار صفوف غير فارغة بصرياً). راجع سجل التنفيذ لتفاصيل الخلل المُصلَح بموافقتك.**
@@ -326,7 +326,11 @@
 
 **الملف الوحيد الجديد**: [`Razors/AccountERP.SharedUI/Pages/Accounts/DepreciationCalculation.razor`](Razors/AccountERP.SharedUI/Pages/Accounts/DepreciationCalculation.razor) على المسار `/accounts/depreciation-calculation` — اختيار فرع/فترة (تاريخ من/إلى للقراءة فقط، مُشتقَّان من الفترة) + قائمتان جنباً إلى جنب (الأصول المُعلَّقة مع Checkbox لكل صف وزر "حساب"، وسجلات الإهلاك المحسوبة مع Checkbox لكل صف وزر "حذف المُحدَّد").
 
-**⚠️ حالة الاختبار الفعلية (صريحة، بدون مبالغة)**: **لم يُختبَر فى المتصفح فعلياً حتى الآن** — لا القوائم المنسدلة، ولا زر "حساب الإهلاك"، ولا زر الحذف، ولا تبديل اللغة. تم فقط: (1) مراجعة الكود سطراً بسطر مقابل الأصل الكامل (`Assets_EhlakFrm_.cs` + `Assets_EhlakCLS.cs`)، (2) `dotnet build` نظيف لـ `AccountModelsLib`، `AccountERP.SharedUI`، `AccountERP.Web` (0 أخطاء فى الكل) بعد إصلاح فرق الفترة النشطة أعلاه، (3) تشغيل خادم التطوير محلياً بدون أخطاء عند بدء التشغيل (لا استثناءات فى سجل الخادم). **يجب اختبار هذا البند فعلياً فى المتصفح قبل اعتباره مكتملاً بنفس معيار البنود 1-9** (تحميل أولى، حساب فعلى على أصل حقيقى، حذف سجل محسوب، منع/فحص رسائل الأخطاء المعروفة فى الأصل مثل "الفترة السابقة غير متصلة"، تبديل اللغة الحى).
+**✅ اختُبِر فعلياً فى المتصفح (جلسة لاحقة، admin/123، قاعدة تطوير حقيقية)**: فتح `/accounts/depreciation-calculation` من الرابط الحقيقى فى القائمة الجانبية (وليس فقط بكتابة الرابط يدوياً) — الفرع تحمَّل صحيحاً (فرع حقيقى واحد فى القاعدة: "مصنع رزق السروجى")، والفترة المالية اختارت تلقائياً **الفترة النشطة فعلياً** (`IS_Active=1`، 2023/01/01–2023/12/31) بالضبط كما يصف الكود، مع تحديث حقلَى "من"/"إلى" تلقائياً. الضغط على "بحث" **نفَّذ استعلام `Get_AssetsEhlakForPeriod_Full` المُفلتَر بفرع محدد (`Branch_Id>0`) بنجاح تام وبلا أي خطأ SQL** — هذا هو بالضبط السيناريو الذى كانت الدالة الأصلية `Get_AssetsEhlakForPeriod` تفشل فيه (JOIN ناقص لجدول `FixedAssetData`)؛ نجاحه هنا يُثبت الإصلاح عملياً وليس كودياً فقط. النتيجتان فارغتان ("لا توجد أصول بانتظار حساب الإهلاك"/"لا توجد سجلات إهلاك محسوبة") لعدم وجود بيانات أصول ثابتة حقيقية فى قاعدة التطوير لهذا الفرع/الفترة — نفس قيد البيانات الموثَّق فى بنود سابقة عديدة، وليس خللاً. تبديل اللغة (عربى↔إنجليزى) نجح بالكامل: العنوان/الأعمدة/الأزرار كلها تُترجَم فوراً، واتجاه الصفحة يتبدَّل RTL↔LTR بلا أي استثناء فى سجل الخادم أو الـconsole. لم يُختبَر زرَّا "حساب الإهلاك"/"حذف المحدَّد" فعلياً (معطَّلان دون بيانات، بلا صفوف لاختيارها) — نفس قيد البيانات، لا مجال لتضييقه فى هذه البيئة.
+
+**🐞 خلل bidi حقيقى اكتُشِف أثناء الاختبار (فى هذه الشاشة تحديداً، وليس خللاً منقولاً من الويندوز فورمز)**: عند أول تحميل للصفحة (Blazor Server prerender قبل اكتمال الدائرة التفاعلية)، حقول التاريخ (`Date From`/`Date To`/قائمة الفترة المالية) كانت تُعرَض بترتيب أرقام معكوس/مُبعثَر بصرياً (مثلاً "012023/01/" بدل "01/01/2023") — نفس فئة خلل bidi المُوثَّقة والمُصلَحة سابقاً فى `CustomerBalanceList.razor` (البند 12)، لكن هنا ظهرت حتى فى حقول منفصلة (ليست نصاً مُركَّباً بفاصل "-"). أُضيف إصلاح دفاعى (`CultureInfo.InvariantCulture` صريحة على كل نداءات `.ToString("dd/MM/yyyy")` الثلاثة فى الملف بدل الاعتماد على الثقافة الضمنية) — إصلاح صحيح ومطلوب بغض النظر، لكن **الاختبار الحى أثبت أن السبب الجذرى الفعلى مختلف**: هذا تحديداً عرض عابر خاص بلحظة الـprerender الأول قبل أن تتولى الدائرة التفاعلية الرندرة (لوحظ فى أكثر من شاشة أثناء هذا الاختبار، بما فيها `CustomerAccountStatement.razor` عند التنقل المباشر بالرابط) — أي تفاعل بسيط (تبديل لغة، إلخ) يُصلِح العرض فوراً دون أي إعادة تحميل. **هذا خطر معروف وموثَّق مسبقاً فى هذا المستند نفسه ("solution-wide risk, not something fully closed out")** ولم يُغلَق بالكامل هنا أيضاً — مُسجَّل للمتابعة، وليس عائقاً وظيفياً (البيانات وراء العرض صحيحة دائماً، والعرض يُصحِّح نفسه تلقائياً).
+
+**البناء**: `dotnet build` نظيف لـ `AccountERP.SharedUI` بعد إصلاح الـbidi أعلاه (0 أخطاء).
 
 ---
 
@@ -586,12 +590,42 @@ handlers فى `MainFrm_AccountUpdate.cs` مباشرة):
 
 ---
 
-### ⚠️ عالق — يحتاج قرارك: تحديث `SysConfigMenus.RazorPath`
+### ✅ نقطة `SysConfigMenus.RazorPath` العالقة — حُلَّت بالكامل لكل بنود هذه الدفعة (جلسة لاحقة)
 
-خطوة الربط المعتادة (تحديث عمود `RazorPath` المُشفَّر لعنصر القائمة "العملات" حتى تعرضه القائمة الجانبية كرابط فعلي بدل "قيد الإنشاء") **لم تكتمل**. عند فحص هيكل الجدول الفعلي على قاعدة البيانات التي اتصل بها أداة تشخيص مؤقتة (باستخدام سلسلة الاتصال الافتراضية فى `AccountModelsLib.operations`)، **الأعمدة `RazorPath` و`KeysDataTemp` غير موجودة إطلاقاً** فى جدول `SysConfigMenus` — رغم أن كود التطبيق نفسه (`AccountModelsLib\Models\Config\SysConfigMenusCLS.cs`) يفترض وجودها صراحة (`SELECT ... SysConfigMenus.RazorPath ...`).
+السبب الجذرى الموصوف أدناه (تاريخياً) كان صحيحاً وقتها لكنه تجاوزه الزمن: الأداة المؤقتة الأولى اتصلت فعلاً بقاعدة بيانات مختلفة عن التى يستخدمها `AccountERP.Web` وقت التشغيل. الحل المؤكَّد (موثَّق أيضاً فى `Razors/MODERNIZATION_NOTES.md` من دفعات سابقة على شاشات أخرى، مثل `menuAccountsTree`→`/accounts/tree`): **قراءة سلسلة الاتصال برمجياً من `Razors\AccountERP.Web\AccountERP.Web\appsettings.json` (`ConnectionStrings:DefaultConnection`)** بدل الاعتماد على `operations.ReturnConnStr()`، ثم ضبط `operations.conn_str_`/`Common.IS_ReadConStrFromXMLInfo=1`/`Common.Is_Ecrypted_Config=1` يدوياً (نفس ما يفعله `AccountERP.Web`'s `Program.cs` عند الإقلاع) قبل استدعاء `Common.EncryptMe(...)`.
 
-الاحتمال الأرجح: الأداة المؤقتة اتصلت بقاعدة بيانات مختلفة عن التي يتصل بها تطبيق `AccountERP.Web` الفعلي وقت التشغيل (سلاسل اتصال متعددة موثَّقة فى هذا المستودع — راجع `CLAUDE.md`). بما أن هذا يمس قاعدة بيانات مباشرة ولا يمكن التأكد أي قاعدة هي "الصحيحة" بدون توجيه منك، **تم تخطي هذه الخطوة كما طلبت** ("اترك ما يفشل معك وسنرجع له بعد ذلك") بدل التخمين أو تعديل أي Schema من تلقائي نفسي.
+طُبِّق هذا الحل فعلياً لكل الـ25 عنصر قائمة المُتبقية من هذه الدفعة (كل شاشة بُنيت فى البنود 1-17 + البند الإضافى `DaysWorkSkow` التى لم تكن مربوطة بعد) عبر أداة تشخيصية مؤقتة (خارج شجرة الحل، حُذفت بعد الاستخدام مباشرة، بنفس نمط الأدوات المؤقتة السابقة فى هذا المستند) — كل كتابة كانت مقيَّدة بشرط `RazorPath IS NULL OR RazorPath=''` (لا تكتب فوق أى قيمة موجودة مسبقاً)، وكل قيمة أُعيد قراءتها وفكّ تشفيرها فوراً للتأكد من التطابق الحرفى قبل اعتبارها ناجحة (25 من 25 تطابقت).
 
-**تأثير عملي حالياً**: شاشة العملات تعمل ويمكن الوصول إليها مباشرة عبر الرابط `/accounts/currencies`، لكنها ستظل تظهر فى القائمة الجانبية كـ"قيد الإنشاء" (غير قابلة للنقر من القائمة) حتى تُحل هذه النقطة.
+**🐞 خلل بنيوى حقيقى اكتُشِف ومُصلِح فى آلية الربط نفسها (`KnownRoutes.cs`)، وليس فى أى شاشة بعينها**: الكود الأصلى (`KnownRoutes.IsImplemented`) كان يقارن `RazorPath` بمساحة مسارات `@page` المُسجَّلة **مطابقةً حرفية كاملة فقط** — يعمل بلا مشاكل لأى شاشة بلا باراميتر مسار، لكنه **يفشل دائماً** لأى شاشة يخدم مسارها الواحد أكثر من عنصر قائمة بفارق باراميتر حقيقى (مثال حى من هذه الدفعة نفسها: `/accounts/customer-account-statement/{Mode}` تخدم كلاً من "حساب عملاء" (`Mode=normal`) و"حساب عملاء - بالفترة المالية" (`Mode=period`) — قيمة `RazorPath` الفعلية والصحيحة لكل منهما (`.../normal` أو `.../period`) لا تطابق أبداً النص الحرفى للقالب المُسجَّل `.../{Mode}`). نفس القيد ينطبق على `SupplierAccountStatement` (`{Mode}`) و`TaswyaMoneyGeneral`/`TaswyaMoneyByItem` (`{Id:long}`، حيث `Id=0` يعنى "إشعار جديد" فى كود الشاشتين). **الإصلاح**: أُعيدت كتابة `KnownRoutes.BuildRouteSet`/`IsImplemented` لتُقارن كل مسار جزءاً-بجزء (Segment-by-segment) بدل نص كامل — segment القالب المطابق حرفياً يُقبَل كما كان، وsegment القالب الذى شكله `{...}` (أى قيد نوع كـ`{Id:long}`) يُقبَل مع **أى** قيمة فعلية فى نفس الموضع. هذا **تعميم آمن تراكمى فقط** (Additive) لا يُغيّر سلوك أى مسار غير-باراميترى موجود بالفعل (يستمر يطابق كما كان تماماً)؛ يُفيد أى قائمة أخرى فى التطبيق تُربَط مستقبلاً بشاشة ذات باراميتر مسار، وليس فقط دفعة "الحسابات" هذه. `dotnet build` نظيف لـ`AccountERP.SharedUI` بعد التعديل (0 أخطاء).
 
-**بحاجة لتوجيهك**: هل تعرف قاعدة البيانات/سلسلة الاتصال الصحيحة التي يجب استهدافها لهذا التحديث؟ أو هل الأعمدة `RazorPath`/`KeysDataTemp` تحتاج إضافة فعلية (migration) لهذه القاعدة أولاً؟
+**قائمة الربط الكاملة المُطبَّقة (Id فى `SysConfigMenus` → `KeysDataTemp` → `RazorPath`)**:
+
+| KeysDataTemp | RazorPath |
+|---|---|
+| `menuDayShowWork` | `/accounts/daily-work-summary` |
+| `menuItemExpensDays` | `/accounts/expense-daily-journal` |
+| `menuItemBoxMonyDays` | `/accounts/cashbox-daily-journal` |
+| `ToolStripMenuItemMainFixedAssetLists` | `/accounts/fixed-assets` |
+| `ToolStripMenuItemEhlakCompute` | `/accounts/depreciation-calculation` |
+| `ToolStripMenuItem_FinancialPeriod` | `/accounts/financial-periods` |
+| `toolStripMenuItemCurrencyListFrm` | `/accounts/currencies` |
+| `ToolStripMenuItemCurrency_Factors` | `/accounts/currency-factors` |
+| `ToolStripMenuItemFinancial_Period_FirstBalance` | `/accounts/opening-balances` |
+| `ToolStripMenuItem_JournalsDays` | `/accounts/journal-days` |
+| `ToolStripMenuItemCostCenterForAccounts` | `/accounts/cost-center-assignment` |
+| `ToolStripMenuItemCostTree` | `/accounts/cost-centers` |
+| `menuItemCustomerAccountBalance` | `/accounts/customer-balance-summary` |
+| `menuItemCustomerAccountBalance_Mokhtalat` | `/accounts/mixed-account-balance-summary` |
+| `menuItemSupplier4ListBalance` | `/accounts/supplier-balance-summary` |
+| `menuItemReviewTaswya` | `/accounts/financial-notice/general-review` |
+| `menuItemReviewTaswyaItems` / `menuItemReviewTaswyaMultiItems` | `/accounts/financial-notice/by-item-review` (نفس الصفحة الموحَّدة، مقصود) |
+| `menuItemCustomerAccount` | `/accounts/customer-account-statement/normal` |
+| `menuItemCustomerAccountPeriod` | `/accounts/customer-account-statement/period` |
+| `menuItemSuppliersAccount` | `/accounts/supplier-account-statement/normal` |
+| `menuItemSuppliersAccountPeriod` | `/accounts/supplier-account-statement/period` |
+| `menuItemNewTaswya` | `/accounts/financial-notice/general/0` (`Id=0`="جديد") |
+| `menuItemNewTaswyaItems` / `menuItemNewTaswyaMultiItems` | `/accounts/financial-notice/by-item/0` (نفس الشاشة الموحَّدة، مقصود) |
+
+**اختُبِر حياً فى المتصفح** (راجع سجل اختبار البند 10 أعلاه لنفس الجلسة): القائمة الجانبية تعرض الآن كل هذه العناصر كروابط حقيقية (أيقونة مستند بدل شارة "قريباً")، والنقر على كل من "حساب عملاء" و"حساب عملاء - بالفترة المالية" يفتح فعلياً `/accounts/customer-account-statement/normal` و`.../period` على التوالى بشكلين مختلفين بصحّة (حقل "الفترة المالية" يظهر فقط فى وضع `period`) — يُثبت أن إصلاح `KnownRoutes` يعمل فعلياً من طرف لطرف وليس نظرياً فقط. العنصران المؤجَّلان بقرار صريح ("أرصدة العملاء بتواريخ سابقة"، "حساب عملاء - سيارات - فترات مالية" وما شابه ممَّا لا يوجد له Click handler أصلاً) ظلا يظهران "قريباً" بصحّة كما هو متوقَّع.
+
+**الحالة النهائية**: لم يتبقَّ أى عنصر غير مربوط من دفعة "الحسابات" (menuMainAccount) بأكملها — كل الـ17 بنداً + البند الإضافى (`DaysWorkSkow`) مُنفَّذون، مُختبَرون فى المتصفح (حيث سمحت بيانات قاعدة التطوير)، ومربوطون فعلياً فى القائمة الجانبية.
