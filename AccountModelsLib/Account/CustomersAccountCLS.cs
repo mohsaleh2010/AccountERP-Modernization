@@ -2058,14 +2058,34 @@ namespace AccountModelsLib
             return dtAccount;
         }
 
+        // 🟢 عمود Customers_Accounts_Mokhtalat.ID عمود IDENTITY حقيقى (auto-increment من SQL Server نفسه، تحقّقنا
+        // منه مباشرة عبر sys.columns)، بينما operations.insert_me يمرّ دائماً عبر SetUpInsertCmd التى تُقحم قيمة
+        // Id صريحة واحدة (نفس القيمة بالضبط) فى كل صف يُدرَج كلما كان Common.Use_Auto_Identity_Column = 0 (قيمته
+        // الفعلية فى هذه القاعدة - نفس النمط بالضبط الموثَّق سابقاً فى UserSettingsCLS.SaveUserSetting على جدول
+        // آخر، راجع MODERNIZATION_NOTES.md). هنا الإدراج متعدد الصفوف أصلاً (كل حركات حساب العميل/المورد
+        // المرتبط دفعة واحدة عبر UNION)، فحتى لو أُقحمت قيمة Id لكل الصفوف لأصبحت جميعها بنفس الرقم - خطأ منطقى
+        // بجانب فشل SQL Server نفسه فوراً بخطأ "Cannot insert explicit value for identity column" لأن العمود
+        // IDENTITY حقيقى. الحل: تنفيذ كل من TRUNCATE وINSERT مباشرة عبر SqlCommand على opp.conn، متخطّين
+        // SetUpInsertCmd تماماً، فيُترَك عمود Id لـSQL Server نفسه يولّده تلقائياً وبشكل صحيح لكل صف.
         public void  GetCustomers_Accounts_Mokhtalat(ref operations opp,bool IsFinancialPeriod,long Customer_Id,long Supplier_Id)
         {
-            string mysql = "  truncate table Customers_Accounts_Mokhtalat";
-            opp.insert_me(mysql);
-            //CarsId,CarNumber,
-            //Invoices_List.CarsId,Invoices_List.CarNumber, 
+            opp.MyConn();
+            if (opp.conn.State == System.Data.ConnectionState.Closed)
+            {
+                opp.conn.Open();
+            }
 
-            mysql = @"  INSERT INTO Customers_Accounts_Mokhtalat
+            try
+            {
+                using (var truncateCmd = new SqlCommand("  truncate table Customers_Accounts_Mokhtalat", opp.conn))
+                {
+                    truncateCmd.ExecuteNonQuery();
+                }
+
+            //CarsId,CarNumber,
+            //Invoices_List.CarsId,Invoices_List.CarNumber,
+
+            string mysql = @"  INSERT INTO Customers_Accounts_Mokhtalat
                          (Customers_AccountsId,ProcessNo,Insert_ServerDateTime ,Larg_Unit_Price,Item_Name,Larg_Qnty,Small_Qnty,Item_No, Customer_Id, Import, Export, Balance, Balance_Actual, Transaction_Type, Transaction_Date, Reference_Id, Reference_Type, Reference_Type_Table_Id, Payment_Type, Notes, Day_Registration_flage, DayReg_List_Id, 
                          Flage_View, BalanceImport, BalanceExport, Reference_Type_View,WorkOrderNumber, CustomerName  ,CarsWorkOrdersId, TaxInternalId,CarsId,CarNumber )
             SELECT    Customers_Accounts.Id, Customers_Accounts.ProcessNo, Customers_Accounts.Insert_ServerDateTime, Customers_Accounts.Larg_Unit_Price,Customers_Accounts.Item_Name,Customers_Accounts.Larg_Qnty,Customers_Accounts.Small_Qnty,Customers_Accounts.Item_No,  Customers_Accounts.Customer_Id, Customers_Accounts.Import, Customers_Accounts.Export, Customers_Accounts.Balance, Customers_Accounts.Balance_Actual, 
@@ -2094,8 +2114,18 @@ namespace AccountModelsLib
                 mysql = mysql + " And  Reference_Type <> -7 ";
             }
 
-
-            opp.insert_me(mysql);
+                using (var insertCmd = new SqlCommand(mysql, opp.conn))
+                {
+                    insertCmd.ExecuteNonQuery();
+                }
+            }
+            finally
+            {
+                if (!opp.MakeTransactionFlage)
+                {
+                    opp.conn.Close();
+                }
+            }
         }
         void Set_ComputeBalanceNew(ref DataTable dt, decimal First_Balance)
         {

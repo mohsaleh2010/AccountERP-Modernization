@@ -191,9 +191,14 @@ namespace AccountModelsLib
                 // فحص هل Id هو أول عمود
                 if (!HasIdAsFirstColumn(columnsStr))
                 {
-                    // إقحام Id في الأعمدة، وإقحام القيمة بعد كلمة SELECT مباشرة
+                    // إقحام Id في الأعمدة، وإقحام نفس القيمة بعد كلمة SELECT فى بداية *كل* فرع من فروع
+                    // UNION/UNION ALL/INTERSECT/EXCEPT - وليس الفرع الأول فقط كما كان سابقاً. الإقحام فى
+                    // الفرع الأول فقط كان يجعل عدد أعمدة ذلك الفرع أكبر بواحد من باقى الفروع، فيفشل SQL Server
+                    // بخطأ "All queries combined using a UNION, INTERSECT or EXCEPT operator must have an
+                    // equal number of expressions in their target lists" لأى استعلام INSERT...SELECT...UNION
+                    // SELECT... (مثال حقيقى: CustomersAccountCLS.GetCustomers_Accounts_Mokhtalat).
                     string newColumns = $"Id, {columnsStr}";
-                    string newSelectClause = Regex.Replace(selectClause, @"(?i)^SELECT\s+", $"SELECT {formattedIdValue}, ");
+                    string newSelectClause = InjectValueIntoEveryUnionBranch(selectClause, formattedIdValue);
 
                     finalSqlQuery = $"INSERT INTO {tableInfo} ({newColumns}) {newSelectClause}";
                 }
@@ -242,6 +247,21 @@ namespace AccountModelsLib
         }
 
          
+        // يقسّم عبارة الـ SELECT عند كل UNION/UNION ALL/INTERSECT/EXCEPT على المستوى الأعلى (النمط البسيط
+        // لاستعلامات هذا المشروع لا يستخدم هذه الكلمات داخل استعلامات فرعية متداخلة)، ثم يُقحم نفس قيمة الـ Id
+        // بعد كلمة SELECT فى بداية كل فرع على حدة، لا الفرع الأول فقط.
+        private static readonly Regex UnionBranchSeparator = new Regex(@"(?i)\b(UNION\s+ALL|UNION|INTERSECT|EXCEPT)\b", RegexOptions.Compiled);
+
+        private static string InjectValueIntoEveryUnionBranch(string selectClause, string formattedValue)
+        {
+            string[] parts = UnionBranchSeparator.Split(selectClause);
+            for (int i = 0; i < parts.Length; i += 2)
+            {
+                parts[i] = Regex.Replace(parts[i], @"(?i)^\s*SELECT\s+", $"SELECT {formattedValue}, ");
+            }
+            return string.Join(" ", parts);
+        }
+
         private static bool HasIdAsFirstColumn(string columnsStr)
         {
             int firstCommaIndex = columnsStr.IndexOf(',');
