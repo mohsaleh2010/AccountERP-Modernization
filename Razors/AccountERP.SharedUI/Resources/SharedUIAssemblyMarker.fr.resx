@@ -631,4 +631,9 @@
   <data name="ImportExceedsExportMessage" xml:space="preserve"><value>Import exceeds export by {0}</value><comment>TODO: translate to French</comment></data>
   <data name="ResponsibleManLabel" xml:space="preserve"><value>Responsible</value><comment>TODO: translate to French</comment></data>
 
+  <data name="InvoiceNotesSettingsTitle" xml:space="preserve"><value>Fixed Note Printed on Invoice</value><comment>TODO: translate to French</comment></data>
+  <data name="InvoiceNotesLabel" xml:space="preserve"><value>Fixed note text</value><comment>TODO: translate to French</comment></data>
+  <data name="InvoiceNotesSaved" xml:space="preserve"><value>Saved successfully</value><comment>TODO: translate to French</comment></data>
+  <data name="InvoiceNotesSaveError" xml:space="preserve"><value>Error saving: {0}</value><comment>TODO: translate to French</comment></data>
+
 </root>

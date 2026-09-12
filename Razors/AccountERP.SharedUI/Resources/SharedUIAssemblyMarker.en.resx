@@ -629,4 +629,9 @@
   <data name="ExportExceedsImportMessage" xml:space="preserve"><value>Export exceeds import by {0}</value></data>
   <data name="ImportExceedsExportMessage" xml:space="preserve"><value>Import exceeds export by {0}</value></data>
   <data name="ResponsibleManLabel" xml:space="preserve"><value>Responsible</value></data>
+
+  <data name="InvoiceNotesSettingsTitle" xml:space="preserve"><value>Fixed Note Printed on Invoice</value></data>
+  <data name="InvoiceNotesLabel" xml:space="preserve"><value>Fixed note text</value></data>
+  <data name="InvoiceNotesSaved" xml:space="preserve"><value>Saved successfully</value></data>
+  <data name="InvoiceNotesSaveError" xml:space="preserve"><value>Error saving: {0}</value></data>
 </root>

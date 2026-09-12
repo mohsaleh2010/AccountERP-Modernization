@@ -1,0 +1,108 @@
+@* 🟢 النسخة Blazor من شاشتين WinForms مختلفتين تبيّن أنهما تتقاسمان بالضبط نفس مفتاح الإعداد الوحيد
+   (Static_NotesInInvoicePrintNotShowCustomerAccount عبر Common.Get/Save_SystemParametersDB):
+   - Accounts.Requests.Static_NotesInInvoice ("نص بيان الفاتورة")
+   - Connection4It.FrmStaticEditSysConfig ("تغيير الإعدادات"، الملف الفعلى StaticInvoiceNotesSysConfig.cs)
+   لا فرق وظيفى بينهما أصلاً (حقل نصى واحد + زر حفظ)، فبُنيت صفحة واحدة فقط تخدم مدخلَى القائمة كليهما -
+   قرار مؤكَّد مع المستخدم فى .claude/docs/menu-main-data-razor-plan.md. *@
+@page "/settings/invoice-notes"
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("InvoiceNotesSettingsTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("InvoiceNotesSettingsTitle")</MudText>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudTextField T="string" @bind-Value="_notes" Label="@Tr("InvoiceNotesLabel")" Variant="Variant.Outlined"
+                       Lines="4" FullWidth="true" Disabled="@_isLoading" />
+        <MudStack Row="true" Class="mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
+                       OnClick="SaveAsync" Disabled="@(_isLoading || _isBusy)">
+                @Tr("Save")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private const string SettingKey = "Static_NotesInInvoicePrintNotShowCustomerAccount";
+
+    private string _notes = "";
+    private bool _isLoading = true;
+    private bool _isBusy;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _notes = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return AccountModelsLib.Common.Get_SystemParametersDB(SettingKey) ?? "";
+            });
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    // 🟢 يقابل BtnSave_Click فى كلا الشاشتين الأصليتين بالضبط (حفظ مباشر + رسالة نجاح/خطأ).
+    private async Task SaveAsync()
+    {
+        _isBusy = true;
+        try
+        {
+            var value = _notes;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                AccountModelsLib.Common.Save_SystemParametersDB(SettingKey, value);
+            });
+            Snackbar.Add(Tr("InvoiceNotesSaved"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(Tr("InvoiceNotesSaveError", ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

@@ -629,4 +629,9 @@
   <data name="ExportExceedsImportMessage" xml:space="preserve"><value>قيمة الصادر تزداد عن قيمة الوارد بـ {0}</value></data>
   <data name="ImportExceedsExportMessage" xml:space="preserve"><value>قيمة الوارد تزداد عن قيمة الصادر بـ {0}</value></data>
   <data name="ResponsibleManLabel" xml:space="preserve"><value>المسئول</value></data>
+
+  <data name="InvoiceNotesSettingsTitle" xml:space="preserve"><value>البيان الثابت المطبوع بالفاتورة</value></data>
+  <data name="InvoiceNotesLabel" xml:space="preserve"><value>نص البيان الثابت</value></data>
+  <data name="InvoiceNotesSaved" xml:space="preserve"><value>تم حفظ البيان</value></data>
+  <data name="InvoiceNotesSaveError" xml:space="preserve"><value>خطأ فى حفظ البيان: {0}</value></data>
 </root>
