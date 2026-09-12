@@ -3010,3 +3010,39 @@ Blazor لهذا** (نطاق الجلسة كان الزرع لا التصليح �
 (كان يُفترَض إصلاحاً محدوداً لجدولين فقط، فاتضح أنه يمتد لجوهر محرك القيود المحاسبى المشترك)**. يحتاج جلسة
 منفصلة مخصَّصة لهذا الاكتشاف وحده، تبدأ بالتحقق الحى (هل `Account_Entry_List.Id=NULL` موجودة فعلياً فى بيانات
 هذه القاعدة أو غيرها؟) قبل أى قرار إصلاح.
+
+---
+
+## 2026-09-12 — بداية دفعة "بيانات أساسية": `InvoiceNotesSettings.razor` (أول عنصر)
+
+### ما تم
+أول شاشة من دفعة قائمة "بيانات أساسية" (الخطة الكاملة فى `.claude/docs/menu-main-data-razor-plan.md`):
+صفحة واحدة `Razors/AccountERP.SharedUI/Pages/Settings/InvoiceNotesSettings.razor` (`/settings/invoice-notes`)
+تدمج شاشتَى WinForms `Accounts.Requests.Static_NotesInInvoice` و`Connection4It.FrmStaticEditSysConfig`
+(الملف الفعلى `StaticInvoiceNotesSysConfig.cs`) - كلاهما بلا فرق وظيفى، يقرآن/يكتبان نفس مفتاح
+`Static_NotesInInvoicePrintNotShowCustomerAccount` عبر `Common.Get/Save_SystemParametersDB`. أُضيفت 4 مفاتيح
+ترجمة جديدة لملفات `SharedUIAssemblyMarker.{ar,en,fr,de}.resx`.
+
+### ربط `SysConfigMenus.RazorPath` (اتباع الآلية القياسية الموثَّقة أعلاه فى هذا الملف)
+صفَّان: `KeysDataTemp='toolStripMenuItemEditSysConfig'` (Id=386) و`KeysDataTemp='toolStripMenuItemInvoiceNotes'`
+(Id=390)، كلاهما فى `ClientNew`. طُبِّق عبر `sqlcmd -S . -d ClientNew -E` بنفس خوارزمية `EncryptProcess.encrypt`
+(Caesar shift، `key=12021542`) مُرسَلة كسلسلة `NCHAR(x)+NCHAR(y)+...` وليس كنص حرفى (لتفادى تلف الترميز). تحقَّق
+فك التشفير (عبر `SqlClient` مباشرة فى PowerShell، وليس بعرض `sqlcmd` العمودى) أن كلا الصفَّين يُخزِّنان
+`/settings/invoice-notes` بشكل صحيح 100%.
+
+### اختبار حى فى المتصفح (Claude in Chrome browser pane داخل تطبيق Claude Desktop)
+تسجيل دخول `Admin`/`123` حياً، فتح `/settings/invoice-notes` مباشرة (العنوان والتسميات صحيحة من الـresx)،
+التأكد أن **كِلا** عنصرَى القائمة الأصليين تحت "بيانات أساسية" (بطاقتا "تغيير الإعدادات" و"نص بيان الفاتورة" فى
+الصفحة الرئيسية) يفتحان **نفس** الصفحة فعلياً (تأكيد عملى أن الربط أعلاه صحيح لكلا الصفين، وليس افتراضاً)،
+كتابة نص وحفظه (رسالة النجاح "تم حفظ البيان" ظهرت)، ثم **إعادة تحميل الصفحة بالكامل** والتأكد أن النص المحفوظ
+ما زال موجوداً (تأكيد أنه يُقرأ فعلياً من قاعدة البيانات عبر `Get_SystemParametersDB`، وليس حالة Blazor مؤقتة).
+
+### حالة الذاكرة/خادم التطوير (ملاحظة تشغيلية، ليست جزءاً من الكود)
+خادم `dotnet run` لمشروع `AccountERP.Web` تعرَّض للقتل بسبب ضغط الذاكرة أكثر من مرة فى وقت سابق من هذه الجلسة
+أثناء عمل غير متعلق (شرح حى لأخطاء شاشات الدول/المدن). عند إعادة تشغيله لهذه الدفعة كانت الذاكرة الحرة كافية
+(6.2 من 15.8 جيجا) ولم تتكرر المشكلة. لوحظ أن عدة عمليات `claude` منفصلة (على الأرجح بقايا subagents بحث سابقين
+لم تُغلَق) كانت من أكبر المستهلكين وقت المشكلة - يستحق المتابعة إن تكررت.
+
+### الحالة
+مكتمل ومختبَر بالكامل حياً. أول بند فى القسم 3 (المجموعة 1، "الفوز السريع") من خطة "بيانات أساسية". التالى:
+طرق الدفع النقدى (`CashPaymentMethodCLS`).
