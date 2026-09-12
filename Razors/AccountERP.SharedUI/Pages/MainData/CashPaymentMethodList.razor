@@ -1,0 +1,304 @@
+@page "/main-data/cash-payment-methods"
+
+@* 🟢 النسخة Blazor من Account_Common_LIB.Banks.CarEntryTaskeen.CashPaymentMethodFrm (WinForms) - شاشة بسيطة
+   لجدول Lookup_CashPaymentMethod (عمودان فقط: Id/Name). تُستخدَم AccountModelsLib.CashPaymentMethodCLS كما هى
+   دون أى تعديل: GetData() يُرجع DataTable حياً مربوطاً بـ SqlDataAdapter/SqlCommandBuilder (يُولِّد Id جديداً
+   تلقائياً عبر Snowflake عند إضافة صف جديد للـDataTable نفسه)، UpdateDataTable() يحفظ كل التعديلات المعلَّقة
+   على الـDataTable دفعة واحدة، وDeleteNature_Items() يحذف صفاً بعينه مباشرة بالـSQL الخام. النموذج التفاعلى هنا
+   (مودال إضافة + تعديل داخل الصف + حذف بتأكيد) يتبع نفس نمط CustomerGroupsList.razor (نفس شكل شاشة "بسيطة
+   بعمودين" بالضبط)، وليس نمط "تحرير الشبكة الحر ثم حفظ دفعة واحدة" الأصلى فى الـWinForms - توحيداً لتجربة
+   المستخدم عبر كل شاشات "القوائم البسيطة" الجديدة فى Blazor. *@
+
+@using System.Data
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("CashPaymentMethodsTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("CashPaymentMethodsTitle")</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenAddDialog">
+                @Tr("AddCashPaymentMethod")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@errorMessage</MudAlert>
+    }
+
+    <MudTable Items="@rows" Hover="true" Striped="true" Bordered="true" Loading="@isLoading" Elevation="1" Breakpoint="Breakpoint.None">
+        <HeaderContent>
+            <MudTh>@Tr("NameColumn")</MudTh>
+            <MudTh Style="width:140px;"></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            @if (editingId == context.Id)
+            {
+                <MudTd>
+                    <MudTextField T="string" @bind-Value="editingName" Immediate="true" AutoFocus="true" />
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Check" Color="Color.Success" Size="Size.Small"
+                                   OnClick="@(() => SaveEdit(context.Id))" Disabled="@isSavingEdit" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="CancelEdit" />
+                </MudTd>
+            }
+            else
+            {
+                <MudTd>@context.Name</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => StartEdit(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                                   OnClick="@(() => DeleteRow(context))" />
+                </MudTd>
+            }
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoCashPaymentMethodsYet")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<MudDialog @bind-Visible="addDialogOpen"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr("AddCashPaymentMethod")</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(addErrorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@addErrorMessage</MudAlert>
+        }
+        <MudTextField T="string" @bind-Value="newName" Label="@Tr("NameColumn")" Variant="Variant.Outlined"
+                      FullWidth="true" AutoFocus="true" Immediate="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => addDialogOpen = false)">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ConfirmAdd" Disabled="@isSavingAdd">
+            @if (isSavingAdd)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private record Row(long Id, string Name);
+
+    private List<Row> rows = new();
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+
+    private long? editingId;
+    private string editingName = string.Empty;
+    private bool isSavingEdit;
+
+    private bool addDialogOpen;
+    private string newName = string.Empty;
+    private string addErrorMessage = string.Empty;
+    private bool isSavingAdd;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadRows();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private async Task LoadRows()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+        try
+        {
+            rows = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var cls = new AccountModelsLib.CashPaymentMethodCLS();
+                var dt = cls.GetData();
+                return dt.Rows.Cast<DataRow>()
+                    .Select(r => new Row(Convert.ToInt64(r["Id"]), r["Name"]?.ToString() ?? string.Empty))
+                    .ToList();
+            });
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OpenAddDialog()
+    {
+        newName = string.Empty;
+        addErrorMessage = string.Empty;
+        addDialogOpen = true;
+    }
+
+    // 🟢 يقابل addUpadateButton_Click فى الأصل: صف جديد يُضاف لنفس الـDataTable الحى (فيولِّد Id تلقائياً عبر
+    // الحدث TableNewRow المربوط داخل CashPaymentMethodCLS.GetData())، ثم UpdateDataTable() يحفظه عبر الـAdapter.
+    private async Task ConfirmAdd()
+    {
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            addErrorMessage = Tr("CashPaymentMethodNameRequired");
+            return;
+        }
+
+        isSavingAdd = true;
+        addErrorMessage = string.Empty;
+        try
+        {
+            var name = newName;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var cls = new AccountModelsLib.CashPaymentMethodCLS();
+                var dt = cls.GetData();
+                var row = dt.NewRow();
+                row["Name"] = name;
+                dt.Rows.Add(row);
+                cls.UpdateDataTable();
+            });
+
+            addDialogOpen = false;
+            await LoadRows();
+            Snackbar.Add(Tr("CashPaymentMethodAdded"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            addErrorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSavingAdd = false;
+        }
+    }
+
+    private void StartEdit(Row row)
+    {
+        editingId = row.Id;
+        editingName = row.Name;
+        errorMessage = string.Empty;
+    }
+
+    private void CancelEdit()
+    {
+        editingId = null;
+        editingName = string.Empty;
+    }
+
+    private async Task SaveEdit(long id)
+    {
+        if (string.IsNullOrWhiteSpace(editingName))
+        {
+            errorMessage = Tr("CashPaymentMethodNameRequired");
+            return;
+        }
+
+        isSavingEdit = true;
+        errorMessage = string.Empty;
+        try
+        {
+            var name = editingName;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var cls = new AccountModelsLib.CashPaymentMethodCLS();
+                var dt = cls.GetData();
+                var row = dt.Rows.Cast<DataRow>().FirstOrDefault(r => Convert.ToInt64(r["Id"]) == id);
+                if (row != null)
+                {
+                    row["Name"] = name;
+                    cls.UpdateDataTable();
+                }
+            });
+
+            editingId = null;
+            await LoadRows();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSavingEdit = false;
+        }
+    }
+
+    private async Task DeleteRow(Row row)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("DeleteCashPaymentMethodTitle"),
+            Tr("DeleteCashPaymentMethodConfirm", row.Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        errorMessage = string.Empty;
+        try
+        {
+            int excp = 0;
+            string msg = string.Empty;
+            var id = row.Id;
+
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var cls = new AccountModelsLib.CashPaymentMethodCLS();
+                cls.DeleteNature_Items(ref excp, ref msg, id);
+            });
+
+            if (excp == 0)
+            {
+                await LoadRows();
+                Snackbar.Add(Tr("CashPaymentMethodDeleted"), Severity.Success);
+            }
+            else
+            {
+                errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

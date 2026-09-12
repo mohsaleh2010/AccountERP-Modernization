@@ -634,4 +634,13 @@
   <data name="InvoiceNotesLabel" xml:space="preserve"><value>Fixed note text</value></data>
   <data name="InvoiceNotesSaved" xml:space="preserve"><value>Saved successfully</value></data>
   <data name="InvoiceNotesSaveError" xml:space="preserve"><value>Error saving: {0}</value></data>
+
+  <data name="CashPaymentMethodsTitle" xml:space="preserve"><value>Cash Payment Methods</value></data>
+  <data name="AddCashPaymentMethod" xml:space="preserve"><value>New Payment Method</value></data>
+  <data name="NoCashPaymentMethodsYet" xml:space="preserve"><value>No cash payment methods to display yet.</value></data>
+  <data name="CashPaymentMethodNameRequired" xml:space="preserve"><value>Please enter a name</value></data>
+  <data name="CashPaymentMethodAdded" xml:space="preserve"><value>Added successfully</value></data>
+  <data name="CashPaymentMethodDeleted" xml:space="preserve"><value>Deleted successfully</value></data>
+  <data name="DeleteCashPaymentMethodTitle" xml:space="preserve"><value>Delete Payment Method</value></data>
+  <data name="DeleteCashPaymentMethodConfirm" xml:space="preserve"><value>Are you sure you want to delete "{0}"?</value></data>
 </root>
