@@ -61,9 +61,17 @@ namespace AccountModelsLib
 
            DataTable dt = opp.return_DataTable(mysql);
 
+           // 🐛 Factor (decimal) هنا كان يُدمَج فى نص SQL عبر التسلسل الضمنى ToString() الذى يتبع ثقافة
+           // الخيط السائدة وقت التنفيذ - نفس خطأ الفاصلة العشرية الموثَّق فى AccountCultureGuard/LanguageService
+           // (الأرقام العشرية بثقافة ar-EG تُنسَّق بفاصل "٫" بدل "." فتُنتِج SQL غير صالح بصمت). ظهر هذا فعلياً
+           // عند إضافة الربط التلقائى Currency↔Currency_Factor من CurrencyCLS.SaveCurrencyAsync (يُستدعى
+           // مباشرة من دائرة Blazor بدون Task.Run/AccountCultureGuard) - قيمة السعر لم تُحدَّث فى القاعدة رغم
+           // نجاح الحفظ ظاهرياً. الإصلاح: فرض InvariantCulture صراحة عند التحويل، بغض النظر عن ثقافة المستدعى.
+           string FactorText = Factor.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
            if (dt.Rows.Count > 0)
            {
-               mysql = " UPDATE   Currency_Factor SET Factor = " + Factor + " ";
+               mysql = " UPDATE   Currency_Factor SET Factor = " + FactorText + " ";
                mysql = mysql + " WHERE  (Currency_ID_Primary = " + Currency_ID_Primary + ") AND (Currency_ID_Secondary = " + Currency_ID_Secondary + ")";
 
                Count = opp.insert_me(mysql);
@@ -72,7 +80,7 @@ namespace AccountModelsLib
            else
            {
                mysql = " INSERT INTO Currency_Factor(Currency_Primary_Name, Currency_Primary_ISOne, Currency_ID_Primary, Factor, Currency_ID_Secondary, Currency_Secondary_Name,IS_TheSameCurrencies) ";
-               mysql = mysql + " VALUES ('" + Currency_Primary_Name + "'," + Currency_Primary_ISOne + "," + Currency_ID_Primary + "," + Factor + "," + Currency_ID_Secondary + ",'" + Currency_Secondary_Name + "'," + IS_TheSameCurrencies + ")";
+               mysql = mysql + " VALUES ('" + Currency_Primary_Name + "'," + Currency_Primary_ISOne + "," + Currency_ID_Primary + "," + FactorText + "," + Currency_ID_Secondary + ",'" + Currency_Secondary_Name + "'," + IS_TheSameCurrencies + ")";
 
                Count = opp.insert_me(mysql);
 
@@ -136,7 +144,8 @@ namespace AccountModelsLib
            AccountModelsLib.operations opp = new AccountModelsLib.operations();
            try
            {
-               string mysql = " Update Currency_Factor Set Factor=" + Factor + " Where ID=" + Id + "";
+               // 🐛 نفس إصلاح InvariantCulture أعلاه فى Add_TheSameCurrency - راجع تعليقها لتفاصيل الخطأ.
+               string mysql = " Update Currency_Factor Set Factor=" + Factor.ToString(System.Globalization.CultureInfo.InvariantCulture) + " Where ID=" + Id + "";
                opp.insert_me(mysql);
                Excp = 0;
            }

@@ -140,6 +140,36 @@ namespace AccountModelsLib.BusinessLibShared.Currency
                 // تحديث عداد العملات في SysConfig
                 await UpdateCurrencyCountConfigAsync();
 
+                // 🟢 ربط تلقائى بطلب المستخدم صراحة: حقل "rate" هنا كان قبل ذلك بلا أى أثر فعلى على أى
+                // قيد محاسبى - المحرك الحقيقى للتحويل (CurrencyFactorsCLS_.GetFactors، المُستخدَم فى عشرات
+                // شاشات القيود/الفواتير/الخزينة) يقرأ حصرياً من جدول Currency_Factor، وليس من هذا العمود.
+                // فحفظ "rate" هنا الآن يُنشئ/يُحدِّث تلقائياً صف Currency_Factor المقابل (هذه العملة أولية،
+                // العملة الرئيسية GL ثانوية - نفس اتجاه المقارنة الذى يبنيه GetFactors فى كل نداءاته الفعلية
+                // عبر Common.Entry_Currency_Id) بدل أن يبقى المستخدم مضطراً لإدخال نفس السعر مرتين فى شاشتين
+                // منفصلتين قد تختلفان دون تنبيه. لا يُطبَّق على العملة الرئيسية نفسها (سعرها دائماً 1 ضمنياً).
+                var savedCurrency = existing ?? currencyInput;
+                if (savedCurrency.IS_GL_Currency_Flage != 1 && savedCurrency.rate.HasValue && savedCurrency.rate.Value > 0)
+                {
+                    var glCurrency = await opp.db.Currency.AsNoTracking()
+                        .FirstOrDefaultAsync(c => c.IS_GL_Currency_Flage == 1);
+
+                    if (glCurrency != null && glCurrency.Id != savedCurrency.Id)
+                    {
+                        int factorExcp = 0;
+                        string factorMsg = "";
+                        new AccountModelsLib.CurrencyFactorsCLS_().AddNewCurrency_Factors(
+                            ref factorExcp, ref factorMsg,
+                            savedCurrency.Currency_Name ?? "", savedCurrency.Value,
+                            glCurrency.Currency_Name ?? "", glCurrency.Value,
+                            savedCurrency.rate.Value);
+
+                        if (factorExcp != 0)
+                        {
+                            return (true, $"تم حفظ بيانات العملة، لكن تعذَّر تحديث معامل التحويل المقابل فى جدول أسعار العملات تلقائياً:\n{factorMsg}\nيمكنك تعديله يدوياً من شاشة \"أسعار العملات\".");
+                        }
+                    }
+                }
+
                 return (true, "تم حفظ بيانات العملة بنجاح وتحديث الإعدادات.");
             }
             catch (Exception ex)
