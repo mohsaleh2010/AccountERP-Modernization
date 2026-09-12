@@ -105,16 +105,14 @@
                     <MudTh>@Tr("PaymentMethodColumn")</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTr Style="@(context.IsHighlight ? "background-color:var(--mud-palette-info-lighten);" : "")">
-                        <MudTd>@context.Serial</MudTd>
-                        <MudTd>@context.Notes</MudTd>
-                        <MudTd>@context.MainAccountName</MudTd>
-                        <MudTd>@context.SubAccountName</MudTd>
-                        <MudTd>@context.Export.ToString("N2")</MudTd>
-                        <MudTd>@context.Import.ToString("N2")</MudTd>
-                        <MudTd>@context.DateText</MudTd>
-                        <MudTd>@context.BankName</MudTd>
-                    </MudTr>
+                    <MudTd Style="@RowStyle(context)">@context.Serial</MudTd>
+                    <MudTd Style="@RowStyle(context)">@context.Notes</MudTd>
+                    <MudTd Style="@RowStyle(context)">@context.MainAccountName</MudTd>
+                    <MudTd Style="@RowStyle(context)">@context.SubAccountName</MudTd>
+                    <MudTd Style="@RowStyle(context)">@context.Export.ToString("N2")</MudTd>
+                    <MudTd Style="@RowStyle(context)">@context.Import.ToString("N2")</MudTd>
+                    <MudTd Style="@RowStyle(context)">@context.DateText</MudTd>
+                    <MudTd Style="@RowStyle(context)">@context.BankName</MudTd>
                 </RowTemplate>
                 <NoRecordsContent>
                     <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoExpenseDataYet")</MudText>
@@ -132,14 +130,12 @@
                     <MudTh>@Tr("PaymentMethodColumn")</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTr Style="@(context.IsHighlight ? "background-color:var(--mud-palette-info-lighten);" : "")">
-                        <MudTd>@context.Serial</MudTd>
-                        <MudTd>@context.MainAccountName</MudTd>
-                        <MudTd>@context.SubAccountName</MudTd>
-                        <MudTd>@context.Export.ToString("N2")</MudTd>
-                        <MudTd>@context.Import.ToString("N2")</MudTd>
-                        <MudTd>@context.BankName</MudTd>
-                    </MudTr>
+                    <MudTd Style="@RowStyle(context)">@context.Serial</MudTd>
+                    <MudTd Style="@RowStyle(context)">@context.MainAccountName</MudTd>
+                    <MudTd Style="@RowStyle(context)">@context.SubAccountName</MudTd>
+                    <MudTd Style="@RowStyle(context)">@context.Export.ToString("N2")</MudTd>
+                    <MudTd Style="@RowStyle(context)">@context.Import.ToString("N2")</MudTd>
+                    <MudTd Style="@RowStyle(context)">@context.BankName</MudTd>
                 </RowTemplate>
                 <NoRecordsContent>
                     <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoExpenseDataYet")</MudText>
@@ -344,6 +340,12 @@
     {
         return decimal.TryParse(value?.ToString(), out var d) ? d : 0;
     }
+
+    // 📐 معيار قياسى: تنسيق الصف الشرطى (صفوف الإجمالى/الصافى) يُطبَّق هنا كـ Style لكل MudTd على حدة
+    // بدل MudTr صريح (راجع القسم المعنون بذلك فى MODERNIZATION_NOTES.md).
+    private static string RowStyle(DetailRow row) => row.IsHighlight ? "background-color:var(--mud-palette-info-lighten);" : "";
+
+    private static string RowStyle(TotalRow row) => row.IsHighlight ? "background-color:var(--mud-palette-info-lighten);" : "";
 
     private string Tr(string key, params object[] args)
     {
