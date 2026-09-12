@@ -19,6 +19,23 @@
 @inject UserPreferencesService Prefs
 @implements IDisposable
 
+@* 🟢 نمط عام (غير مُعزول Scoped) عمداً - وُضِع هنا كـ<style> صريح بدلاً من MainLayoutMud.razor.css لأن جرِّب
+   فعلياً أن Blazor CSS Isolation لا يُلحِق سمة النطاق (scope attribute) بجذر <MudMainContent> نفسه (عنصر
+   يُرسِمه مكوِّن MudBlazor داخلياً، وليس عنصر HTML مباشر فى ملف هذا المكوِّن) - فأى قاعدة "::deep" فى ملف
+   .razor.css المرتبط بهذا المكوِّن لا تُطابِق شيئاً إطلاقاً وتبقى بلا أثر بصمت. .mud-selected-item الافتراضية
+   من MudBlazor نفسها خافتة جداً (تراكب أسود بشفافية 4% فقط - تحقَّقنا مباشرة عبر getComputedStyle) فلا يتميّز
+   الصف المُحدَّد فعلياً بأى لون واضح عند النقر عليه فى أى جدول MudTable بكامل التطبيق - هذا التنسيق العام
+   يُطبَّق مرة واحدة هنا (المكوِّن الذى يُغلِّف كل صفحة) بدل تكراره فى كل شاشة قائمة على حدة. *@
+<style>
+    .mud-main-content .mud-table-row.mud-selected-item {
+        background-color: rgba(var(--mud-palette-primary-rgb), 0.18) !important;
+    }
+
+    .mud-main-content .mud-table-row.mud-selected-item:hover {
+        background-color: rgba(var(--mud-palette-primary-rgb), 0.26) !important;
+    }
+</style>
+
 @* 1. مزود الثيمات (فاتح/داكن) - يبقى خارج مزود الـ RTL (لا علاقة له باتجاه النص) *@
 <MudThemeProvider Theme="_currentTheme" IsDarkMode="@ThemeService.IsDarkMode" />
 

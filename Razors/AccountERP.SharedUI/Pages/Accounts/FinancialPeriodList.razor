@@ -53,7 +53,9 @@
     </MudPaper>
 
     <MudPaper Class="pa-4 mb-4" Elevation="1">
-        <MudTable Items="@_periods" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Elevation="0">
+        <MudTable Items="@_periods" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Elevation="0"
+                  T="PeriodRow" RowClassFunc="@RowClassFunc"
+                  OnRowClick="@((TableRowClickEventArgs<PeriodRow> e) => SelectRow(e.Item))">
             <HeaderContent>
                 <MudTh>@Tr("PeriodSerialColumn")</MudTh>
                 <MudTh>@Tr("PeriodDateFromColumn")</MudTh>
@@ -61,14 +63,10 @@
                 <MudTh>@Tr("PeriodNotesColumn")</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTr Class="@(context.Id == _selectedId ? "financial-period-row-selected" : "")"
-                       Style="@(context.IsActive ? "color:var(--mud-palette-error);" : "")"
-                       @onclick="@(() => SelectRow(context))">
-                    <MudTd DataLabel="@Tr("PeriodSerialColumn")">@context.Serial</MudTd>
-                    <MudTd DataLabel="@Tr("PeriodDateFromColumn")">@FormatDateFrom(context)</MudTd>
-                    <MudTd DataLabel="@Tr("PeriodDateToColumn")">@FormatDateTo(context)</MudTd>
-                    <MudTd DataLabel="@Tr("PeriodNotesColumn")">@NotesFor(context)</MudTd>
-                </MudTr>
+                <MudTd DataLabel="@Tr("PeriodSerialColumn")" Style="@RowStyle(context)">@context.Serial</MudTd>
+                <MudTd DataLabel="@Tr("PeriodDateFromColumn")" Style="@RowStyle(context)">@FormatDateFrom(context)</MudTd>
+                <MudTd DataLabel="@Tr("PeriodDateToColumn")" Style="@RowStyle(context)">@FormatDateTo(context)</MudTd>
+                <MudTd DataLabel="@Tr("PeriodNotesColumn")" Style="@RowStyle(context)">@NotesFor(context)</MudTd>
             </RowTemplate>
             <NoRecordsContent>
                 <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoPeriodsYet")</MudText>
@@ -199,6 +197,14 @@
     {
         _selectedId = _selectedId == row.Id ? null : row.Id;
     }
+
+    // 🐛 كانت تُعيد كلاساً مخصَّصاً ("financial-period-row-selected") غير مُعرَّف بأى ملف CSS إطلاقاً فى المشروع
+    // (لا Scoped ولا عام) - فالنقر على صف لم يكن يُظهِر أى تمييز بصرى رغم أن SelectRow/_selectedId كانا يعملان
+    // بشكل صحيح داخلياً. الإصلاح: استخدام كلاس MudBlazor المدمج mud-selected-item (له تنسيق حقيقى جاهز من
+    // المكتبة نفسها) بنفس النمط المُتَّبَع بالفعل فى OpeningBalanceList.razor لهذا الغرض بالضبط.
+    private string RowClassFunc(PeriodRow row, int index) => row.Id == _selectedId ? "mud-selected-item" : "";
+
+    private string RowStyle(PeriodRow row) => row.IsActive ? "color:var(--mud-palette-error);" : "";
 
     // 🟢 يقابل BtnMakeEhlak_Click بالضبط - نفس فحصَى (من > إلى) و(تداخل مع آخر فترة) قبل استدعاء
     // Make_Period بنفس الباراميترات (FirstPeriod=0 دائماً - الأصل لا يتيح إنشاء "فترة أولى" من هذه
