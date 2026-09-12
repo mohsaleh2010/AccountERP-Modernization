@@ -61,7 +61,7 @@
 
 1. **فوز سريع منخفض المخاطر (شاشات CRUD مسطَّحة جاهزة تماماً - كلاسات EF Core حديثة موجودة فعلاً فى `AccountModelsLib`)**:
    - ✅ **تم** طرق الدفع النقدى (`CashPaymentMethodCLS`) — `CashPaymentMethodList.razor` (`/main-data/cash-payment-methods`)، `SysConfigMenus.RazorPath` مربوط لصف `toolStripMenuItemCashPaymentMethod`، اختُبِرت حياً (إضافة/تعديل/حذف، تأكيد من قاعدة البيانات مباشرة بعد كل عملية، وفتح الشاشة من بطاقة القائمة الرئيسية)
-   - بيانات شركات الشحن (`ShipmentCompanyEFCLS`)
+   - ✅ **تم** بيانات شركات الشحن (`ShipmentCompanyEFCLS`) — `ShipmentCompanyList.razor` (`/main-data/shipment-companies`)، `SysConfigMenus.RazorPath` مربوط لصف `toolStripMenuItemShipmentCompany`، اختُبِرت حياً (إضافة/تعديل/حذف عبر الكلاس EF Core الحديث، كل عملية مؤكَّدة من قاعدة البيانات مباشرة، Id يُولَّد فعلياً عبر Snowflake هنا بخلاف البند السابق)
    - بيانات الماكينات (`Machin_listCLs`)
    - بيانات الموظفين/العاملين (`EmployeeService`)
    - رسمات التشغيل الخارجى (`DrawsServiceCls`)

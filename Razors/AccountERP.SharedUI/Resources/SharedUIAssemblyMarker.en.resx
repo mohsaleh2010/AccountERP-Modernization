@@ -643,4 +643,13 @@
   <data name="CashPaymentMethodDeleted" xml:space="preserve"><value>Deleted successfully</value></data>
   <data name="DeleteCashPaymentMethodTitle" xml:space="preserve"><value>Delete Payment Method</value></data>
   <data name="DeleteCashPaymentMethodConfirm" xml:space="preserve"><value>Are you sure you want to delete "{0}"?</value></data>
+
+  <data name="ShipmentCompaniesTitle" xml:space="preserve"><value>Shipment Companies</value></data>
+  <data name="AddShipmentCompany" xml:space="preserve"><value>New Shipment Company</value></data>
+  <data name="NoShipmentCompaniesYet" xml:space="preserve"><value>No shipment companies to display yet.</value></data>
+  <data name="ShipmentCompanyNameRequired" xml:space="preserve"><value>Please enter a name</value></data>
+  <data name="ShipmentCompanyAdded" xml:space="preserve"><value>Added successfully</value></data>
+  <data name="ShipmentCompanyDeleted" xml:space="preserve"><value>Deleted successfully</value></data>
+  <data name="DeleteShipmentCompanyTitle" xml:space="preserve"><value>Delete Shipment Company</value></data>
+  <data name="DeleteShipmentCompanyConfirm" xml:space="preserve"><value>Are you sure you want to delete "{0}"?</value></data>
 </root>

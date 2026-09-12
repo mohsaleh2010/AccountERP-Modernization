@@ -645,4 +645,13 @@
   <data name="DeleteCashPaymentMethodTitle" xml:space="preserve"><value>Delete Payment Method</value><comment>TODO: translate to German</comment></data>
   <data name="DeleteCashPaymentMethodConfirm" xml:space="preserve"><value>Are you sure you want to delete "{0}"?</value><comment>TODO: translate to German</comment></data>
 
+  <data name="ShipmentCompaniesTitle" xml:space="preserve"><value>Shipment Companies</value><comment>TODO: translate to German</comment></data>
+  <data name="AddShipmentCompany" xml:space="preserve"><value>New Shipment Company</value><comment>TODO: translate to German</comment></data>
+  <data name="NoShipmentCompaniesYet" xml:space="preserve"><value>No shipment companies to display yet.</value><comment>TODO: translate to German</comment></data>
+  <data name="ShipmentCompanyNameRequired" xml:space="preserve"><value>Please enter a name</value><comment>TODO: translate to German</comment></data>
+  <data name="ShipmentCompanyAdded" xml:space="preserve"><value>Added successfully</value><comment>TODO: translate to German</comment></data>
+  <data name="ShipmentCompanyDeleted" xml:space="preserve"><value>Deleted successfully</value><comment>TODO: translate to German</comment></data>
+  <data name="DeleteShipmentCompanyTitle" xml:space="preserve"><value>Delete Shipment Company</value><comment>TODO: translate to German</comment></data>
+  <data name="DeleteShipmentCompanyConfirm" xml:space="preserve"><value>Are you sure you want to delete "{0}"?</value><comment>TODO: translate to German</comment></data>
+
 </root>

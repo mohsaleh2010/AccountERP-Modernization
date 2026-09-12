@@ -643,4 +643,13 @@
   <data name="CashPaymentMethodDeleted" xml:space="preserve"><value>تم الحذف بنجاح</value></data>
   <data name="DeleteCashPaymentMethodTitle" xml:space="preserve"><value>حذف طريقة الدفع</value></data>
   <data name="DeleteCashPaymentMethodConfirm" xml:space="preserve"><value>هل أنت متأكد من حذف "{0}"؟</value></data>
+
+  <data name="ShipmentCompaniesTitle" xml:space="preserve"><value>بيانات شركات الشحن</value></data>
+  <data name="AddShipmentCompany" xml:space="preserve"><value>شركة شحن جديدة</value></data>
+  <data name="NoShipmentCompaniesYet" xml:space="preserve"><value>لا توجد شركات شحن لعرضها حتى الآن.</value></data>
+  <data name="ShipmentCompanyNameRequired" xml:space="preserve"><value>الرجاء إدخال الاسم</value></data>
+  <data name="ShipmentCompanyAdded" xml:space="preserve"><value>تمت الإضافة بنجاح</value></data>
+  <data name="ShipmentCompanyDeleted" xml:space="preserve"><value>تم الحذف بنجاح</value></data>
+  <data name="DeleteShipmentCompanyTitle" xml:space="preserve"><value>حذف شركة الشحن</value></data>
+  <data name="DeleteShipmentCompanyConfirm" xml:space="preserve"><value>هل أنت متأكد من حذف "{0}"؟</value></data>
 </root>

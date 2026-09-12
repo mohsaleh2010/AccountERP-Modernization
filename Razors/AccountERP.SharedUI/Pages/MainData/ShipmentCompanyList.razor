@@ -1,0 +1,264 @@
+@page "/main-data/shipment-companies"
+
+@* 🟢 النسخة Blazor من Connection4It.ShipmentCompanyLisFrm (WinForms، فى connectionit\ShipmentCompany\
+   ShipmentCompanyLisFrm.cs) - شاشة بسيطة لجدول ShipmentCompany (عمودان فقط: Id/Name، حقلا Phone/Notes معلَّقان
+   فى الموديل الأصلى ولم يُفعَّلا هنا). تُستخدَم AccountModelsLib.Services.ShipmentCompanyEFCLS كما هى دون أى
+   تعديل - كلاس EF Core حديث غير حالة (async، معلَّق فى الأصل صراحة "Used in WinForms and Razor Pages")، بخلاف
+   CashPaymentMethodCLS (نمط DataTable/SqlCommandBuilder الأقدم فى البند السابق من نفس الدفعة). النموذج التفاعلى
+   هنا يتبع نفس أسلوب CustomerGroupsList.razor/CashPaymentMethodList.razor (مودال إضافة + تعديل داخل الصف + حذف
+   بتأكيد) توحيداً لتجربة المستخدم عبر شاشات "القوائم البسيطة". *@
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountModelsLib.Models
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("ShipmentCompaniesTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("ShipmentCompaniesTitle")</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenAddDialog">
+                @Tr("AddShipmentCompany")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@errorMessage</MudAlert>
+    }
+
+    <MudTable Items="@companies" Hover="true" Striped="true" Bordered="true" Loading="@isLoading" Elevation="1" Breakpoint="Breakpoint.None">
+        <HeaderContent>
+            <MudTh>@Tr("NameColumn")</MudTh>
+            <MudTh Style="width:140px;"></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            @if (editingId == context.Id)
+            {
+                <MudTd>
+                    <MudTextField T="string" @bind-Value="editingName" Immediate="true" AutoFocus="true" />
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Check" Color="Color.Success" Size="Size.Small"
+                                   OnClick="@(() => SaveEdit(context.Id))" Disabled="@isSavingEdit" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="CancelEdit" />
+                </MudTd>
+            }
+            else
+            {
+                <MudTd>@context.Name</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => StartEdit(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                                   OnClick="@(() => DeleteCompany(context))" />
+                </MudTd>
+            }
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoShipmentCompaniesYet")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<MudDialog @bind-Visible="addDialogOpen"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr("AddShipmentCompany")</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(addErrorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@addErrorMessage</MudAlert>
+        }
+        <MudTextField T="string" @bind-Value="newName" Label="@Tr("NameColumn")" Variant="Variant.Outlined"
+                      FullWidth="true" AutoFocus="true" Immediate="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => addDialogOpen = false)">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ConfirmAdd" Disabled="@isSavingAdd">
+            @if (isSavingAdd)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<ShipmentCompany> companies = new();
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+
+    private long? editingId;
+    private string editingName = string.Empty;
+    private bool isSavingEdit;
+
+    private bool addDialogOpen;
+    private string newName = string.Empty;
+    private string addErrorMessage = string.Empty;
+    private bool isSavingAdd;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadCompanies();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private async Task LoadCompanies()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+        try
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var service = new AccountModelsLib.Services.ShipmentCompanyEFCLS();
+            companies = await service.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OpenAddDialog()
+    {
+        newName = string.Empty;
+        addErrorMessage = string.Empty;
+        addDialogOpen = true;
+    }
+
+    private async Task ConfirmAdd()
+    {
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            addErrorMessage = Tr("ShipmentCompanyNameRequired");
+            return;
+        }
+
+        isSavingAdd = true;
+        addErrorMessage = string.Empty;
+        try
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var service = new AccountModelsLib.Services.ShipmentCompanyEFCLS();
+            await service.SaveAsync(new ShipmentCompany { Id = 0, Name = newName });
+
+            addDialogOpen = false;
+            await LoadCompanies();
+            Snackbar.Add(Tr("ShipmentCompanyAdded"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            addErrorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSavingAdd = false;
+        }
+    }
+
+    private void StartEdit(ShipmentCompany company)
+    {
+        editingId = company.Id;
+        editingName = company.Name;
+        errorMessage = string.Empty;
+    }
+
+    private void CancelEdit()
+    {
+        editingId = null;
+        editingName = string.Empty;
+    }
+
+    private async Task SaveEdit(long id)
+    {
+        if (string.IsNullOrWhiteSpace(editingName))
+        {
+            errorMessage = Tr("ShipmentCompanyNameRequired");
+            return;
+        }
+
+        isSavingEdit = true;
+        errorMessage = string.Empty;
+        try
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var service = new AccountModelsLib.Services.ShipmentCompanyEFCLS();
+            await service.SaveAsync(new ShipmentCompany { Id = id, Name = editingName });
+
+            editingId = null;
+            await LoadCompanies();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSavingEdit = false;
+        }
+    }
+
+    private async Task DeleteCompany(ShipmentCompany company)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("DeleteShipmentCompanyTitle"),
+            Tr("DeleteShipmentCompanyConfirm", company.Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        errorMessage = string.Empty;
+        try
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var service = new AccountModelsLib.Services.ShipmentCompanyEFCLS();
+            var deleted = await service.DeleteAsync(company.Id);
+
+            if (deleted)
+            {
+                await LoadCompanies();
+                Snackbar.Add(Tr("ShipmentCompanyDeleted"), Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}
