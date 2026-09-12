@@ -27,6 +27,10 @@ namespace AccountModelsLib
                int IS_TheSameCurrencies = 0;
                Count = Add_TheSameCurrency(ref   opp, Currency_Primary_Name, Currency_ID_Primary, Currency_Secondary_Name, Currency_ID_Secondary, Factor, IS_TheSameCurrencies);
 
+               // 🟢 مزامنة عكسية بطلب المستخدم صراحة (تزامن مزدوج بين شاشتَى "العملات" و"أسعار العملات") -
+               // راجع تعليق SyncCurrencyRateFromFactor لتفاصيل الشرط والاتجاه.
+               SyncCurrencyRateFromFactor(ref opp, Currency_ID_Primary, Currency_ID_Secondary, Factor);
+
                ////Insert When Factors=1 the same as   1 LE=1 LE
                IS_TheSameCurrencies = 1;
                Add_TheSameCurrency(ref   opp, Currency_Primary_Name, Currency_ID_Primary, Currency_Primary_Name, Currency_ID_Primary, 1, IS_TheSameCurrencies);
@@ -87,6 +91,50 @@ namespace AccountModelsLib
            }
            return Count;
        }
+
+       // 🟢 مزامنة عكسية بطلب المستخدم صراحة: تعديل السعر من شاشة "أسعار العملات" (Currency_Factor) يُحدِّث
+       // عمود Currency.rate المقابل أيضاً - نفس مبدأ CurrencyCLS.SaveCurrencyAsync (الاتجاه الآخر) لكن هنا
+       // بتحديث مباشر لعمود rate فقط، بدون استدعاء SaveCurrencyAsync، لتفادى أى حلقة استدعاء دائرية بين
+       // الاتجاهين. تُطبَّق فقط عندما يكون أحد طرفَى الزوج هو العملة الرئيسية (GL) - فـCurrency.rate حقل واحد
+       // فقط لكل عملة يمثل سعرها *مقابل الرئيسية تحديداً*، فلا معنى لمزامنته من معامل تحويل متقاطع بين عملتين
+       // أجنبيتين (مثلاً دولار↔يورو). فشل هذه الخطوة (مثلاً: لا توجد عملة رئيسية مُعرَّفة بعد) لا يُفشِل حفظ
+       // معامل العملة نفسه - نفس مبدأ معالجة الأخطاء غير الحرجة المُتَّبَع فى بقية هذا الكلاس.
+       void SyncCurrencyRateFromFactor(ref AccountModelsLib.operations opp, int Currency_ID_Primary, int Currency_ID_Secondary, decimal Factor)
+       {
+           try
+           {
+               DataTable glDt = opp.return_DataTable("SELECT Value FROM Currency WHERE IS_GL_Currency_Flage = 1");
+               if (glDt.Rows.Count == 0) return;
+               int GL_Value = Convert.ToInt32(glDt.Rows[0]["Value"]);
+
+               int OtherCurrencyId;
+               decimal Rate;
+               if (Currency_ID_Secondary == GL_Value && Currency_ID_Primary != GL_Value)
+               {
+                   // العملة الأولية هى العملة الأجنبية، الثانوية هى الرئيسية - Factor يطابق تعريف Currency.rate حرفياً
+                   OtherCurrencyId = Currency_ID_Primary;
+                   Rate = Factor;
+               }
+               else if (Currency_ID_Primary == GL_Value && Currency_ID_Secondary != GL_Value)
+               {
+                   // العكس: الرئيسية أولية، فالمعامل هو "1 رئيسية = Factor أجنبية" - Currency.rate يحتاج المعكوس
+                   OtherCurrencyId = Currency_ID_Secondary;
+                   Rate = Factor == 0 ? 0 : 1 / Factor;
+               }
+               else
+               {
+                   return; // لا علاقة لأى طرف بالعملة الرئيسية (معامل تحويل متقاطع) - لا شىء لمزامنته
+               }
+
+               string RateText = Rate.ToString(System.Globalization.CultureInfo.InvariantCulture);
+               opp.insert_me("UPDATE Currency SET rate = " + RateText + " WHERE Value = " + OtherCurrencyId);
+           }
+           catch
+           {
+               // غير حرج - راجع التعليق أعلى الدالة
+           }
+       }
+
         public decimal GetFactors(int Currency_Id_Needed, int Currency_Id)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
@@ -147,6 +195,17 @@ namespace AccountModelsLib
                // 🐛 نفس إصلاح InvariantCulture أعلاه فى Add_TheSameCurrency - راجع تعليقها لتفاصيل الخطأ.
                string mysql = " Update Currency_Factor Set Factor=" + Factor.ToString(System.Globalization.CultureInfo.InvariantCulture) + " Where ID=" + Id + "";
                opp.insert_me(mysql);
+
+               // 🟢 مزامنة عكسية (راجع SyncCurrencyRateFromFactor) - صفوف "عامل=1" الذاتية (IS_TheSameCurrencies=1)
+               // مُستبعَدة عمداً، لا معنى لمزامنتها.
+               DataTable rowDt = opp.return_DataTable("SELECT Currency_ID_Primary, Currency_ID_Secondary, IS_TheSameCurrencies FROM Currency_Factor WHERE ID=" + Id);
+               if (rowDt.Rows.Count > 0 && Convert.ToInt32(rowDt.Rows[0]["IS_TheSameCurrencies"]) == 0)
+               {
+                   int primaryId = Convert.ToInt32(rowDt.Rows[0]["Currency_ID_Primary"]);
+                   int secondaryId = Convert.ToInt32(rowDt.Rows[0]["Currency_ID_Secondary"]);
+                   SyncCurrencyRateFromFactor(ref opp, primaryId, secondaryId, Factor);
+               }
+
                Excp = 0;
            }
            catch (Exception ee)
