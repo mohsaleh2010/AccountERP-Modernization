@@ -62,7 +62,7 @@
 1. **فوز سريع منخفض المخاطر (شاشات CRUD مسطَّحة جاهزة تماماً - كلاسات EF Core حديثة موجودة فعلاً فى `AccountModelsLib`)**:
    - ✅ **تم** طرق الدفع النقدى (`CashPaymentMethodCLS`) — `CashPaymentMethodList.razor` (`/main-data/cash-payment-methods`)، `SysConfigMenus.RazorPath` مربوط لصف `toolStripMenuItemCashPaymentMethod`، اختُبِرت حياً (إضافة/تعديل/حذف، تأكيد من قاعدة البيانات مباشرة بعد كل عملية، وفتح الشاشة من بطاقة القائمة الرئيسية)
    - ✅ **تم** بيانات شركات الشحن (`ShipmentCompanyEFCLS`) — `ShipmentCompanyList.razor` (`/main-data/shipment-companies`)، `SysConfigMenus.RazorPath` مربوط لصف `toolStripMenuItemShipmentCompany`، اختُبِرت حياً (إضافة/تعديل/حذف عبر الكلاس EF Core الحديث، كل عملية مؤكَّدة من قاعدة البيانات مباشرة، Id يُولَّد فعلياً عبر Snowflake هنا بخلاف البند السابق)
-   - بيانات الماكينات (`Machin_listCLs`)
+   - ✅ **تم** بيانات الماكينات (`Machin_listCLs`) — `MachineList.razor` (`/main-data/machines`)، `SysConfigMenus.RazorPath` مربوط لصف `toolStripMenuItemMachine_List`، اختُبِرت حياً (إضافة/تعديل/حذف منطقى Soft-Delete، + اختبار أمان صريح أن حقولاً غير معروضة فى الشاشة — `price_of_nazlla`/`Code` — تبقى سليمة بعد تعديل الاسم فقط)
    - بيانات الموظفين/العاملين (`EmployeeService`)
    - رسمات التشغيل الخارجى (`DrawsServiceCls`)
    - ✅ **تم** نص بيان الفاتورة + تغيير الإعدادات (صفحة مدمجة واحدة، القسم 1) — `InvoiceNotesSettings.razor` (`/settings/invoice-notes`)، `SysConfigMenus.RazorPath` مربوط ومُشفَّر لصفَّى `toolStripMenuItemEditSysConfig`/`toolStripMenuItemInvoiceNotes`، اختُبِرت حياً فى المتصفح (تسجيل دخول Admin، فتح كِلا عنصرَى القائمة، حفظ نص وتأكيد بقائه بعد إعادة تحميل الصفحة بالكامل)

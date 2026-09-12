@@ -652,4 +652,13 @@
   <data name="ShipmentCompanyDeleted" xml:space="preserve"><value>Deleted successfully</value></data>
   <data name="DeleteShipmentCompanyTitle" xml:space="preserve"><value>Delete Shipment Company</value></data>
   <data name="DeleteShipmentCompanyConfirm" xml:space="preserve"><value>Are you sure you want to delete "{0}"?</value></data>
+
+  <data name="MachinesTitle" xml:space="preserve"><value>Machines</value></data>
+  <data name="AddMachine" xml:space="preserve"><value>New Machine</value></data>
+  <data name="NoMachinesYet" xml:space="preserve"><value>No machines to display yet.</value></data>
+  <data name="MachineNameRequired" xml:space="preserve"><value>Please enter a name</value></data>
+  <data name="MachineAdded" xml:space="preserve"><value>Added successfully</value></data>
+  <data name="MachineDeleted" xml:space="preserve"><value>Deleted successfully</value></data>
+  <data name="DeleteMachineTitle" xml:space="preserve"><value>Delete Machine</value></data>
+  <data name="DeleteMachineConfirm" xml:space="preserve"><value>Are you sure you want to delete "{0}"?</value></data>
 </root>

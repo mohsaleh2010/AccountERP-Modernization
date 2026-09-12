@@ -1,0 +1,269 @@
+@page "/main-data/machines"
+
+@* 🟢 النسخة Blazor من Connection4It.Machin_listFrm (WinForms، فى connectionit\Machin_list\Machin_listFrm.cs).
+   موديل Machin_list يحمل حقولاً أكثر (price_of_nazlla, Code, Speed, Machine_Width, Description,
+   Abstract_Hadafat) ولـMachin_listCLs توابع Add_MachinAsync/Update_MachineAsync تقبلها - لكن الشاشة الحية
+   الفعلية (Machin_listFrm.Designer.cs) **لا تعرض/تُحرِّر سوى عمود Machin_Name** (Id مخفى)، فهذه الصفحة تطابق
+   الشاشة الحية كما هى، وليس كل ما يدعمه الموديل. الحذف **منطقى (Soft Delete: Active=0)** وليس حذفاً فعلياً -
+   GetDataAsync يُرجِع فقط Active=1 أصلاً. 🐛 نقطة أمان مهمة روعيت هنا: التعديل يُرسِل نفس الكائن الكامل
+   المجلوب أصلاً من القاعدة (بكل حقوله الأخرى كما هى) بعد تغيير Machin_Name فقط قبل استدعاء
+   UpdateDataTableAsync - لأن هذه الدالة تستخدم EF `Update()` الذى يُعلِّم الكائن كاملاً كمُعدَّل، فلو أُرسِل
+   كائن جديد ببعض الحقول فارغة لكانت ستُمسَح فعلياً حقول حقيقية موجودة فى القاعدة (price_of_nazlla، Code، ...)
+   رغم أن الشاشة لا تعرضها - هذا هو بالضبط سبب أمان الشاشة الأصلية (BindingList يحتفظ بكل خصائص الصف المجلوب
+   حتى غير المعروضة فى الجدول). *@
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountModelsLib.Models
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("MachinesTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("MachinesTitle")</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenAddDialog">
+                @Tr("AddMachine")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@errorMessage</MudAlert>
+    }
+
+    <MudTable Items="@machines" Hover="true" Striped="true" Bordered="true" Loading="@isLoading" Elevation="1" Breakpoint="Breakpoint.None">
+        <HeaderContent>
+            <MudTh>@Tr("NameColumn")</MudTh>
+            <MudTh Style="width:140px;"></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            @if (editingId == context.Id)
+            {
+                <MudTd>
+                    <MudTextField T="string" @bind-Value="editingName" Immediate="true" AutoFocus="true" />
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Check" Color="Color.Success" Size="Size.Small"
+                                   OnClick="@(() => SaveEdit(context))" Disabled="@isSavingEdit" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="CancelEdit" />
+                </MudTd>
+            }
+            else
+            {
+                <MudTd>@context.Machin_Name</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => StartEdit(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                                   OnClick="@(() => DeleteMachine(context))" />
+                </MudTd>
+            }
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoMachinesYet")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<MudDialog @bind-Visible="addDialogOpen"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr("AddMachine")</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(addErrorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@addErrorMessage</MudAlert>
+        }
+        <MudTextField T="string" @bind-Value="newName" Label="@Tr("NameColumn")" Variant="Variant.Outlined"
+                      FullWidth="true" AutoFocus="true" Immediate="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => addDialogOpen = false)">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ConfirmAdd" Disabled="@isSavingAdd">
+            @if (isSavingAdd)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<Machin_list> machines = new();
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+
+    private long? editingId;
+    private string editingName = string.Empty;
+    private bool isSavingEdit;
+
+    private bool addDialogOpen;
+    private string newName = string.Empty;
+    private string addErrorMessage = string.Empty;
+    private bool isSavingAdd;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadMachines();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private async Task LoadMachines()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+        try
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var cls = new AccountModelsLib.Machin_listCLs();
+            machines = await cls.GetDataAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OpenAddDialog()
+    {
+        newName = string.Empty;
+        addErrorMessage = string.Empty;
+        addDialogOpen = true;
+    }
+
+    private async Task ConfirmAdd()
+    {
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            addErrorMessage = Tr("MachineNameRequired");
+            return;
+        }
+
+        isSavingAdd = true;
+        addErrorMessage = string.Empty;
+        try
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var cls = new AccountModelsLib.Machin_listCLs();
+            var newMachine = new Machin_list { Id = 0, Machin_Name = newName };
+            await cls.UpdateDataTableAsync(new List<Machin_list> { newMachine });
+
+            addDialogOpen = false;
+            await LoadMachines();
+            Snackbar.Add(Tr("MachineAdded"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            addErrorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSavingAdd = false;
+        }
+    }
+
+    private void StartEdit(Machin_list machine)
+    {
+        editingId = machine.Id;
+        editingName = machine.Machin_Name;
+        errorMessage = string.Empty;
+    }
+
+    private void CancelEdit()
+    {
+        editingId = null;
+        editingName = string.Empty;
+    }
+
+    // 🟢 يُرسِل نفس الكائن المجلوب أصلاً (بكل حقوله الأخرى كما هى) بعد تعديل الاسم فقط - راجع التعليق أعلى
+    // الصفحة لسبب أهمية هذا تحديداً (تفادى مسح حقول حقيقية غير معروضة هنا عبر EF Update()).
+    private async Task SaveEdit(Machin_list machine)
+    {
+        if (string.IsNullOrWhiteSpace(editingName))
+        {
+            errorMessage = Tr("MachineNameRequired");
+            return;
+        }
+
+        isSavingEdit = true;
+        errorMessage = string.Empty;
+        try
+        {
+            AccountCultureGuard.EnsureInvariant();
+            machine.Machin_Name = editingName;
+            var cls = new AccountModelsLib.Machin_listCLs();
+            await cls.UpdateDataTableAsync(new List<Machin_list> { machine });
+
+            editingId = null;
+            await LoadMachines();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSavingEdit = false;
+        }
+    }
+
+    private async Task DeleteMachine(Machin_list machine)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("DeleteMachineTitle"),
+            Tr("DeleteMachineConfirm", machine.Machin_Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        errorMessage = string.Empty;
+        try
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var cls = new AccountModelsLib.Machin_listCLs();
+            await cls.DeleteMachin_listAsync(machine.Id);
+
+            await LoadMachines();
+            Snackbar.Add(Tr("MachineDeleted"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

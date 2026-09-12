@@ -654,4 +654,13 @@
   <data name="DeleteShipmentCompanyTitle" xml:space="preserve"><value>Delete Shipment Company</value><comment>TODO: translate to French</comment></data>
   <data name="DeleteShipmentCompanyConfirm" xml:space="preserve"><value>Are you sure you want to delete "{0}"?</value><comment>TODO: translate to French</comment></data>
 
+  <data name="MachinesTitle" xml:space="preserve"><value>Machines</value><comment>TODO: translate to French</comment></data>
+  <data name="AddMachine" xml:space="preserve"><value>New Machine</value><comment>TODO: translate to French</comment></data>
+  <data name="NoMachinesYet" xml:space="preserve"><value>No machines to display yet.</value><comment>TODO: translate to French</comment></data>
+  <data name="MachineNameRequired" xml:space="preserve"><value>Please enter a name</value><comment>TODO: translate to French</comment></data>
+  <data name="MachineAdded" xml:space="preserve"><value>Added successfully</value><comment>TODO: translate to French</comment></data>
+  <data name="MachineDeleted" xml:space="preserve"><value>Deleted successfully</value><comment>TODO: translate to French</comment></data>
+  <data name="DeleteMachineTitle" xml:space="preserve"><value>Delete Machine</value><comment>TODO: translate to French</comment></data>
+  <data name="DeleteMachineConfirm" xml:space="preserve"><value>Are you sure you want to delete "{0}"?</value><comment>TODO: translate to French</comment></data>
+
 </root>
