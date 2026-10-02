@@ -36,7 +36,7 @@ namespace AccountModelsLib
         public int Items_TypesDegreeFarz_NameId = 0;
         string mysql = @"";
 
-        public DataTable CreateTempTableAddLastBalance_PriceFor_ItemQntyGetAVGCostForItemBalance(long Store_Id, bool All, int Item_Category_ID)
+        public DataTable CreateTempTableAddLastBalance_PriceFor_ItemQntyGetAVGCostForItemBalance(long Store_Id, bool All, long Item_Category_ID)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
             Items_dt = CreateTempTableAddLastBalance_PriceFor_ItemQntyGetAVGCostForItemBalance(ref opp, Store_Id, All, Item_Category_ID);
@@ -160,7 +160,7 @@ WHERE  (id NOT IN
             }
 
         }
-        public DataTable CreateTempTableAddLastBalance_PriceFor_ItemQntyGetAVGCostForItemBalance(ref AccountModelsLib.operations opp, long Store_Id, bool All, int Item_Category_ID)
+        public DataTable CreateTempTableAddLastBalance_PriceFor_ItemQntyGetAVGCostForItemBalance(ref AccountModelsLib.operations opp, long Store_Id, bool All, long Item_Category_ID)
         {
 
             CreateDBTable(ref opp);
@@ -208,7 +208,7 @@ FROM     Bills_Details INNER JOIN
             return GetAVGCostForItemBalance(ref opp, Store_Id, All, Item_Category_ID);
         }
 
-        public DataTable GetAVGCostForItemBalance(ref AccountModelsLib.operations opp, long Store_Id, bool All, int Item_Category_ID)
+        public DataTable GetAVGCostForItemBalance(ref AccountModelsLib.operations opp, long Store_Id, bool All, long Item_Category_ID)
         {
 
 
@@ -312,14 +312,14 @@ FROM     Item INNER JOIN
         }
 
 
-        public DataTable CreateTempTableAddLast_DatePurchase_PriceFor_ItemQntyGetAVGCostForItemBalance(long Store_Id, int DaysAdded, bool All, int Item_Category_ID)
+        public DataTable CreateTempTableAddLast_DatePurchase_PriceFor_ItemQntyGetAVGCostForItemBalance(long Store_Id, int DaysAdded, bool All, long Item_Category_ID)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
             Items_dt = CreateTempTableAddLast_DatePurchase_PriceFor_ItemQntyGetAVGCostForItemBalance(ref opp, DaysAdded,Store_Id,  All, Item_Category_ID);
 
             return Items_dt;
         }
-        public DataTable CreateTempTableAddLast_DatePurchase_PriceFor_ItemQntyGetAVGCostForItemBalance(ref AccountModelsLib.operations opp, int DaysAdded, long Store_Id, bool All, int Item_Category_ID)
+        public DataTable CreateTempTableAddLast_DatePurchase_PriceFor_ItemQntyGetAVGCostForItemBalance(ref AccountModelsLib.operations opp, int DaysAdded, long Store_Id, bool All, long Item_Category_ID)
         {
 
             CreateDBTable(ref opp);
@@ -369,14 +369,14 @@ GROUP BY Bills_Details.Id,Bills_Details.Unit_Item_Table_Id, Bills_Details.Larg_U
 
 
 
-        public DataTable CreateTempTableRangeOf_DatePurchase_PriceFor_ItemQntyGetAVGCostForItemBalance(  long Store_Id, bool IsDateFrom, DateTime dtFrom, bool IsDateTo, DateTime dtTo, bool All, int Item_Category_ID)
+        public DataTable CreateTempTableRangeOf_DatePurchase_PriceFor_ItemQntyGetAVGCostForItemBalance(  long Store_Id, bool IsDateFrom, DateTime dtFrom, bool IsDateTo, DateTime dtTo, bool All, long Item_Category_ID)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
             Items_dt = CreateTempTableRangeOf_DatePurchase_PriceFor_ItemQntyGetAVGCostForItemBalance(ref   opp,   Store_Id,   IsDateFrom,   dtFrom,   IsDateTo,   dtTo,   All,   Item_Category_ID);
 
             return Items_dt;
         }
-        DataTable CreateTempTableRangeOf_DatePurchase_PriceFor_ItemQntyGetAVGCostForItemBalance(ref AccountModelsLib.operations opp, long Store_Id, bool IsDateFrom, DateTime dtFrom, bool IsDateTo, DateTime dtTo, bool All, int Item_Category_ID)
+        DataTable CreateTempTableRangeOf_DatePurchase_PriceFor_ItemQntyGetAVGCostForItemBalance(ref AccountModelsLib.operations opp, long Store_Id, bool IsDateFrom, DateTime dtFrom, bool IsDateTo, DateTime dtTo, bool All, long Item_Category_ID)
         {
 
             CreateDBTable(ref opp);

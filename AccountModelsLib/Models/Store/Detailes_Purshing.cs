@@ -56,7 +56,7 @@ namespace AccountModelsLib.Models
         public string Notes_From { get; set; }
         public string Notes_To { get; set; }
         public string Notes { get; set; }
-        public int? Machine_Id { get; set; }
+         public long? Machine_Id { get; set; }
         public long Related_Detailes_Purshing_Id { get; set; }
         public int? Transaction_Type { get; set; }
         public decimal? Qua_Befor { get; set; }
@@ -84,12 +84,12 @@ namespace AccountModelsLib.Models
 
         public string Notes_Item { get; set; }
         public DateTime? OperationDate { get; set; }
-        public int? User_Id { get; set; }
-        public int? Branch_Id { get; set; }
+        public long? User_Id { get; set; }
+        public long? Branch_Id { get; set; }
         public DateTime? Insert_ServerDateTime { get; set; }
         public DateTime? Update_ServerDateTime { get; set; }
         public DateTime? EditOperationDate { get; set; }
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
         public long ProcessNo { get; set; }
         public decimal? S_Price { get; set; }
         public decimal? P_Price { get; set; }

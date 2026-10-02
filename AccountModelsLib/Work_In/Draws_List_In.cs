@@ -48,7 +48,7 @@ namespace AccountModelsLib
 		}
 
 
-        public void Edit_Draws_List(ref int Excp, int Id, string ItemName,  decimal Price)
+        public void Edit_Draws_List(ref int Excp, long Id, string ItemName,  decimal Price)
 		{
 			try
 			{

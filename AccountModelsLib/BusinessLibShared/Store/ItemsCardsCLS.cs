@@ -10,7 +10,7 @@ namespace AccountModelsLib.BusinessLibShared.Store
     // Get_Items_Data الأصلية) بـ ref string Msg (نفس نمط باقى الكلاسات المنقولة).
     public class ItemsCardsCLS
     {
-        public DataSet Get_AllItemCardStore(ref int Excp, ref string Msg, int Store_Id, int StoreUsed_Type_Items, bool _dtFrom, DateTime dtFrom, bool _dtTo, DateTime dtTo, int Item_Category_ID, int SortBy)
+        public DataSet Get_AllItemCardStore(ref int Excp, ref string Msg, long Store_Id, int StoreUsed_Type_Items, bool _dtFrom, DateTime dtFrom, bool _dtTo, DateTime dtTo, long Item_Category_ID, int SortBy)
         {
             //SortBy = 1; if  By Category
             //SortBy = 2;    SortBy Date

@@ -45,10 +45,10 @@ namespace AccountModelsLib.Models
         public Nullable<long> Bills_DetailsId { get; set; }
         public Nullable<int> IsProcessedAsInvoice { get; set; } = 0;
         public Nullable<int> IsProcessedAsBill { get; set; } = 0;
-        public Nullable<int> User_Id { get; set; }
-        public Nullable<int> Branch_Id { get; set; }
+        public Nullable<long> User_Id { get; set; }
+        public Nullable<long> Branch_Id { get; set; }
         
-        public Nullable<int> Edit_User_Id { get; set; }
+        public Nullable<long> Edit_User_Id { get; set; }
         public Nullable<long> ProcessNo { get; set; }
         public Nullable<long> ItemSourceId { get; set; }
 

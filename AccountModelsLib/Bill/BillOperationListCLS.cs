@@ -88,10 +88,10 @@ namespace AccountModelsLib
         public long Order_MoneyId = 0;
 
 
-        public int User_Id = 0;
-        public int Branch_Id = 0;
+        public long   User_Id = 0;
+        public long Branch_Id = 0;
         public int Invoice_Type_Id = 0;
-        public int Salesman_Id = 0;
+        public long Salesman_Id = 0;
        
         public int Is_InvoiceKta3y = 0;
         public int Is_Tax_Per_Item = 0;
@@ -111,7 +111,7 @@ namespace AccountModelsLib
 
         public int Make_Order = 0;
         public string Currency = "";
-        public int Currency_id = 0;
+        public long    Currency_Id = 0;
         public int Invoice_Type = 0;
         public decimal Supplier_BalanceSet = 0;
         public string Notes = "";
@@ -219,7 +219,7 @@ namespace AccountModelsLib
             ATS05_Value = decimal.Parse(dt_Invoices_List.Rows[0]["ATS05_Value"].ToString());
             Net_Total_Price = decimal.Parse(dt_Invoices_List.Rows[0]["Net_Total"].ToString());
             Currency = dt_Invoices_List.Rows[0]["Currency"].ToString();
-            Currency_id = int.Parse(dt_Invoices_List.Rows[0]["Currency_id"].ToString());
+            Currency_Id = long.Parse(dt_Invoices_List.Rows[0]["Currency_id"].ToString());
             Invoice_Type = int.Parse(dt_Invoices_List.Rows[0]["Invoice_Type"].ToString());
 
             Supplier_BalanceSet = decimal.Parse(dt_Invoices_List.Rows[0]["Supplier_BalanceSet"].ToString());
@@ -239,7 +239,7 @@ namespace AccountModelsLib
 
             OperationDate = DateTime.Parse(dt_Invoices_List.Rows[0]["OperationDate"].ToString());
             //AnotherPayment = decimal.Parse(dt_Invoices_List.Rows[0]["AnotherPayment"].ToString());
-            Salesman_Id = int.Parse(dt_Invoices_List.Rows[0]["Salesman_Id"].ToString());
+            Salesman_Id = long.Parse(dt_Invoices_List.Rows[0]["Salesman_Id"].ToString());
 
             IS_Make_Sarf_Item_BalanceFromInvoice = int.Parse(dt_Invoices_List.Rows[0]["IS_Make_Sarf_Item_BalanceFromInvoice"].ToString());
             Is_InvoiceKta3y = int.Parse(dt_Invoices_List.Rows[0]["Is_InvoiceKta3y"].ToString());
@@ -373,11 +373,11 @@ namespace AccountModelsLib
                 string mysql = "";
                 //  Invoice_DateTime   Load_Payment,Second_Total,Damaghat,Load_Payment_OnTax  commission,CommissionValue
                 mysql = " INSERT INTO " + TableName + " (Invoice_Id, Supplier_Id, Invoice_Date,Invoice_DateTime, Total, TaxSales10, ATS05,TaxSales10_Value,ATS05_Value , Net_Total , Currency,Currency_id,Invoice_Type,Supplier_BalanceSet,Notes,PolicaNo, TroodContainerNo, SupplierAccountBefor,  SupplierAccountAfter,SubAccount_Id,SubAccount_Name,User_Id,Branch_Id,Salesman_Id,   IS_Make_Sarf_Item_BalanceFromInvoice,  Is_InvoiceKta3y,OperationDate,Total_PriceWithoutTax,Total_Item_CommissionValue, List_CommissionValue,List_CommissionRate,List_Final_CommissionValue,Net_Total_CommissionValue,Equivalent_Net_Total_CommissionValue,Equivalent_Net_Total_Price,Is_Tax_Per_Item,Load_Payment,Damaghat,Is_Load_Payment_OnTax,Total_PriceWithoutTax_Load_Payment,PriceByTenns ,Equivalent_Total,ProcessNo,Supplier_Notes,Is_Invoice_Agile,Is_Invoice_AgileStr) ";
-                mysql = mysql + " VALUES(@Invoice_Id ,@Supplier_Id ,@Invoice_Date,@Invoice_DateTime ,@Total ,@TaxSales10 ,@ATS05 ,@TaxSales10_Value ,@ATS05_Value ,@Net_Total ,@Currency  ,@Currency_id ,@Invoice_Type ,@Customer_BalanceSet ,@Notes  ,@PolicaNo  ,@TroodContainerNo  ,@SupplierAccountBefor ,@SupplierAccountAfter ,@SubAccount_Id ,@SubAccount_Name  ,@User_Id ,@Branch_Id  ,@Salesman_Id ,@IS_Make_Sarf_Item_BalanceFromInvoice ,@Is_InvoiceKta3y  ,@OperationDate ,@Total_PriceWithoutTax ,@Total_Item_CommissionValue,@List_CommissionValue,@List_CommissionRate,@List_Final_CommissionValue,@Net_Total_CommissionValue ,@Equivalent_Net_Total_CommissionValue,@Equivalent_Net_Total_Price,@Is_Tax_Per_Item,@Load_Payment,@Damaghat,@Is_Load_Payment_OnTax,@Total_PriceWithoutTax_Load_Payment,@PriceByTenns,@Equivalent_Total,@ProcessNo,@Supplier_Notes,@Is_Invoice_Agile,@Is_Invoice_AgileStr)";
+                mysql = mysql + " VALUES(@Invoice_Id ,@Supplier_Id ,@Invoice_Date,@Invoice_DateTime ,@Total ,@TaxSales10 ,@ATS05 ,@TaxSales10_Value ,@ATS05_Value ,@Net_Total ,@Currency  ,@Currency_Id ,@Invoice_Type ,@Customer_BalanceSet ,@Notes  ,@PolicaNo  ,@TroodContainerNo  ,@SupplierAccountBefor ,@SupplierAccountAfter ,@SubAccount_Id ,@SubAccount_Name  ,@User_Id ,@Branch_Id  ,@Salesman_Id ,@IS_Make_Sarf_Item_BalanceFromInvoice ,@Is_InvoiceKta3y  ,@OperationDate ,@Total_PriceWithoutTax ,@Total_Item_CommissionValue,@List_CommissionValue,@List_CommissionRate,@List_Final_CommissionValue,@Net_Total_CommissionValue ,@Equivalent_Net_Total_CommissionValue,@Equivalent_Net_Total_Price,@Is_Tax_Per_Item,@Load_Payment,@Damaghat,@Is_Load_Payment_OnTax,@Total_PriceWithoutTax_Load_Payment,@PriceByTenns,@Equivalent_Total,@ProcessNo,@Supplier_Notes,@Is_Invoice_Agile,@Is_Invoice_AgileStr)";
 
                 ////Load_Payment,Second_Total,Damaghat,Load_Payment_OnTax
                 //string mysql = " INSERT INTO Bills_List (Invoice_Id, Supplier_Id, Invoice_Date, Total, , TaxSales10, ATS05,TaxSales10_Value,ATS05_Value , Net_Total , Currency,Currency_id,Invoice_Type,Supplier_BalanceSet,Notes,PolicaNo, TroodContainerNo,Load_Payment,Second_Total,Damaghat,Load_Payment_OnTax,SupplierAccountBefor, SupplierAccountAfter,User_Id,Branch_Id,    SubAccount_Id,   SubAccount_Name,    IS_Make_Sarf_Item_BalanceFromInvoice,   Is_InvoiceKta3y,OperationDate) ";
-                //mysql = mysql + " VALUES (" + Invoice_Id + "," + Supplier_Id + ",'" + AccountModelsLib.operations.dateFormat(Invoice_Date) + "'," + Total + "," + commission + "," + CommissionValue + "," + TaxSales10 + "," + ATS05 + "," + TaxSales10_Value + "," + ATS05_Value + "," + Net_Total + ",'" + Currency + "'," + Currency_id + "," + Invoice_Type + "," + Customer_BalanceSet + ",'" + Notes + "','" + PolicaNo + "',  '" + TroodContainerNo + "'," + LoadPayment + "," + TotalSecond + "," + Damaghat + "," + Load_Payment_OnTax + "," + SupplierAccountBefor + "," + SupplierAccountAfter + "," + Common.User_Id + "," + Common.Branch_Id + "," + SubAccount_Id + ",'" + SubAccount_Name + "', " + IS_Make_Sarf_Item_BalanceFromInvoice + "," + Is_InvoiceKta3y + "," + AccountModelsLib.operations.Get_DateTimeToInsert(DateTime.Now) + ")";
+                //mysql = mysql + " VALUES (" + Invoice_Id + "," + Supplier_Id + ",'" + AccountModelsLib.operations.dateFormat(Invoice_Date) + "'," + Total + "," + commission + "," + CommissionValue + "," + TaxSales10 + "," + ATS05 + "," + TaxSales10_Value + "," + ATS05_Value + "," + Net_Total + ",'" + Currency + "'," + Currency_Id + "," + Invoice_Type + "," + Customer_BalanceSet + ",'" + Notes + "','" + PolicaNo + "',  '" + TroodContainerNo + "'," + LoadPayment + "," + TotalSecond + "," + Damaghat + "," + Load_Payment_OnTax + "," + SupplierAccountBefor + "," + SupplierAccountAfter + "," + Common.User_Id + "," + Common.Branch_Id + "," + SubAccount_Id + ",'" + SubAccount_Name + "', " + IS_Make_Sarf_Item_BalanceFromInvoice + "," + Is_InvoiceKta3y + "," + AccountModelsLib.operations.Get_DateTimeToInsert(DateTime.Now) + ")";
 
                 opp.cmd.Parameters.AddWithValue("@Invoice_Id", Invoice_No);
                 opp.cmd.Parameters.AddWithValue("@Supplier_Id", Supplier_Id);
@@ -391,7 +391,7 @@ namespace AccountModelsLib
                 opp.cmd.Parameters.AddWithValue("@ATS05_Value", ATS05_Value);
 
                 opp.cmd.Parameters.AddWithValue("@Currency", Currency);
-                opp.cmd.Parameters.AddWithValue("@Currency_id", Currency_id);
+                opp.cmd.Parameters.AddWithValue("@Currency_id", Currency_Id);
                 opp.cmd.Parameters.AddWithValue("@Invoice_Type", Invoice_Type);
 
                 opp.cmd.Parameters.AddWithValue("@Customer_BalanceSet", Supplier_BalanceSet);
@@ -474,7 +474,7 @@ namespace AccountModelsLib
                 mysql = " Update " + TableName + "  Set Invoice_Id=@Invoice_Id, Supplier_Id=@Supplier_Id, Invoice_Date=@Invoice_Date," +
                     "Invoice_DateTime=@Invoice_DateTime  , Total=@Total  , TaxSales10=@TaxSales10 , ATS05=@ATS05" +
                     " ,TaxSales10_Value=@TaxSales10_Value ,ATS05_Value =@ATS05_Value , Net_Total =@Net_Total , Currency=@Currency ," +
-                    "Currency_id=@Currency_id ,Invoice_Type=@Invoice_Type ,Supplier_BalanceSet= @Supplier_BalanceSet ,Notes=@Notes ,PolicaNo=@PolicaNo ," +
+                    "Currency_id=@Currency_Id ,Invoice_Type=@Invoice_Type ,Supplier_BalanceSet= @Supplier_BalanceSet ,Notes=@Notes ,PolicaNo=@PolicaNo ," +
                     " TroodContainerNo=@TroodContainerNo ,SupplierAccountBefor=@SupplierAccountBefor , SupplierAccountAfter=@SupplierAccountAfter ,SubAccount_Id=@SubAccount_Id ," +
                     "SubAccount_Name=@SubAccount_Name   ,Salesman_Id=@Salesman_Id ,   IS_Make_Sarf_Item_BalanceFromInvoice=@IS_Make_Sarf_Item_BalanceFromInvoice ," +
                     "  Is_InvoiceKta3y=@Is_InvoiceKta3y ,OperationDate=@OperationDate ,Total_PriceWithoutTax=@Total_PriceWithoutTax ," +
@@ -504,7 +504,7 @@ namespace AccountModelsLib
                 opp.cmd.Parameters.AddWithValue("@ATS05_Value", ATS05_Value);
 
                 opp.cmd.Parameters.AddWithValue("@Currency", Currency);
-                opp.cmd.Parameters.AddWithValue("@Currency_id", Currency_id);
+                opp.cmd.Parameters.AddWithValue("@Currency_id", Currency_Id);
                 opp.cmd.Parameters.AddWithValue("@Invoice_Type", Invoice_Type);
 
                 opp.cmd.Parameters.AddWithValue("@Supplier_BalanceSet", Supplier_BalanceSet);

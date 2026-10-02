@@ -52,12 +52,12 @@ namespace AccountModelsLib.Models
         public Nullable<decimal> Balance_BeginingPeriod { get; set; }
         public string Check_Notes { get; set; }
         public Nullable<System.DateTime> OperationDate { get; set; }
-        public Nullable<int> User_Id { get; set; }
-        public Nullable<int> Branch_Id { get; set; }
+        public Nullable<long> User_Id { get; set; }
+        public Nullable<long> Branch_Id { get; set; }
         public Nullable<System.DateTime> Insert_ServerDateTime { get; set; }
         public Nullable<System.DateTime> Update_ServerDateTime { get; set; }
         public Nullable<System.DateTime> EditOperationDate { get; set; }
-        public Nullable<int> Edit_User_Id { get; set; }
+        public Nullable<long> Edit_User_Id { get; set; }
         public Nullable<long> Customer_Id { get; set; }
         public Nullable<long> Supplier_Id { get; set; }
         public Nullable<long> Account_Id { get; set; }
@@ -67,7 +67,7 @@ namespace AccountModelsLib.Models
         public Nullable<long> MainSubAccount_ID { get; set; }
 
         public Nullable<int> IS_Posted_Flage { get; set; }
-        public Nullable<int> Currency_Id { get; set; }
+        public Nullable<long> Currency_Id { get; set; }
 
         public Nullable<long> Account_Entry_List_ID { get; set; }
         public Nullable<long> SubAccount_Id_RelatedTo { get; set; }

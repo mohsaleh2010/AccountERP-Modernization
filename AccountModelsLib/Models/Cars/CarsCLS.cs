@@ -1,17 +1,15 @@
 ﻿
 using AccountModelsLib.Models;
-
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-
-using System.Data;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace AccountModelsLib
 {
     public class CarsCLS
@@ -228,7 +226,7 @@ namespace AccountModelsLib
         {
             opp.db.Entry(car).State = EntityState.Modified;
             opp.db.SaveChanges();
-
+            
         }
 
         public void DeletCar(ref int Excp, ref string Msg, long CarId)

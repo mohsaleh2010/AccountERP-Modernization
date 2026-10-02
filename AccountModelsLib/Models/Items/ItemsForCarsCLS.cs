@@ -188,7 +188,7 @@ namespace AccountModelsLib.Models
                 if (im.Lookup_CarTypeId > 0)
                 {
                     ItemsForCars itemsCars = new ItemsForCars();
-                    itemsCars.Item_Id = im.id;
+                    itemsCars.Item_Id = im.Id;
                     itemsCars.Lookup_CarTypeId = im.Lookup_CarTypeId ?? 0;
                     itemsCars.Lookup_CarTypeModeLId = 0;
                     itemsCars.IsMain = 1;
@@ -202,12 +202,12 @@ namespace AccountModelsLib.Models
         {
             if (im != null)
             {
-                ItemsForCars itemsCars = opp.db.ItemsForCars.Where(i => i.Item_Id == im.id & i.IsMain == 1).FirstOrDefault();
+                ItemsForCars itemsCars = opp.db.ItemsForCars.Where(i => i.Item_Id == im.Id & i.IsMain == 1).FirstOrDefault();
                 if (itemsCars != null)
                 {
                     if (im.Lookup_CarTypeId > 0)
                     {
-                        itemsCars.Item_Id = im.id;
+                        itemsCars.Item_Id = im.Id;
                         itemsCars.Lookup_CarTypeId = im.Lookup_CarTypeId ?? 0;
                         itemsCars.Lookup_CarTypeModeLId = 0;
                         itemsCars.IsMain = 1;

@@ -20,6 +20,6 @@ namespace AccountModelsLib.Models
         public decimal Factor { get; set; }
         public string Notes { get; set; }
         //public long SubAccount_Id { get; set; }
-        //public int Currency_Id { get; set; }
+        //public long    Currency_Id { get; set; }
     }
 }

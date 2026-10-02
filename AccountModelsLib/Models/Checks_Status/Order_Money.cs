@@ -24,7 +24,7 @@ namespace AccountModelsLib.Models
         public DateTime Order_Date { get; set; }
         public int  Transaction_type { get; set; }
         public decimal  Total_Value { get; set; }
-        public int  Currency_Id { get; set; }
+        public long  Currency_Id { get; set; }
         public int? Bank_Type { get; set; }
         public long  Bank_Id { get; set; } = 0;
         public string? Man_Name { get; set; }
@@ -44,7 +44,7 @@ namespace AccountModelsLib.Models
         public int? IS_Posted_Flage { get; set; }
         public string? Entry_Currency_Name { get; set; }
         public decimal? Factor { get; set; }
-        public int? Entry_Currency_ID { get; set; }
+        public long? Entry_Currency_ID { get; set; }
         public long? Account_Entry_List_ID { get; set; } = 0;
         public int? Invoice_Type { get; set; }
         public DateTime? OperationDate { get; set; }

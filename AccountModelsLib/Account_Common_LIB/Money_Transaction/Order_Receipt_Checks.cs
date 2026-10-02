@@ -26,7 +26,7 @@ namespace AccountModelsLib
         
         
         
-        public void Get_Customer_Supplier_SubAccount_No(ref int Excp, int CustomerOrSupplierOr_Other, int CustomerOrSupplier_id, ref long SubAccount_Id, ref string SubAccount_No, ref string SubAccount_Name, ref int Account_Type_Value)
+        public void Get_Customer_Supplier_SubAccount_No(ref int Excp, int CustomerOrSupplierOr_Other, long CustomerOrSupplier_id, ref long SubAccount_Id, ref string SubAccount_No, ref string SubAccount_Name, ref int Account_Type_Value)
         {
 
             string mysql = " ";
@@ -108,7 +108,7 @@ namespace AccountModelsLib
                     Excp = 0;
                     if (ds.Tables[0].Rows.Count > 0)
                     {
-                        SubAccount_Id = int.Parse(ds.Tables[0].Rows[0]["SubAccount_Id"].ToString());
+                        SubAccount_Id = long.Parse(ds.Tables[0].Rows[0]["SubAccount_Id"].ToString());
                         SubAccount_No = ds.Tables[0].Rows[0]["SubAccount_NO"].ToString();
                         SubAccount_Name = ds.Tables[0].Rows[0]["SubAccount_Name"].ToString();
                         Account_Type_Value = int.Parse(ds.Tables[0].Rows[0]["Account_Customer_Type_Value"].ToString());

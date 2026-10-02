@@ -132,7 +132,7 @@ namespace AccountModelsLib.Models
             string Account_Code = "";
             Sub_Account acc = new Sub_Account();
 
-            int Currency_Id = 1;
+            long    Currency_Id = 1;
             long Account_Branch_Id = store.Branch_Id ?? 1;
             long New_Submain_Account_Id = -1;
 
@@ -244,11 +244,35 @@ namespace AccountModelsLib.Models
                 return 0;
             }
         }
+        // 🐛 هذه العملية تحذف أصناف المخزن (جدول Item) والمخزن نفسه نهائياً بلا أى تحقق سابق - قبل هذا
+        // الإصلاح كانت تحذف حتى لو كانت الأصناف مستخدَمة فعلياً فى فواتير/مرتجعات/أذون صرف واستلام، مما
+        // يفقد تلك المستندات مرجعها للصنف. المنع هنا صريح بطلب المستخدم: لا تفريغ لأى صنف تابع لهذا المخزن
+        // له أى صف فى الجداول الخمسة التالية (بيع، شراء، مرتجع بيع، مرتجع شراء، حركة صرف/استلام مخزنى).
         public void EmptyItemsStore(ref int Excp, ref string Msg, long Store_Id)
         {
             try
             {
                 operations opp = new operations();
+
+                string checkSql = @"
+SELECT TOP 1 Item.id
+FROM Item
+WHERE Item.S_id = " + Store_Id + @"
+AND (
+    EXISTS (SELECT 1 FROM Invoices_Details WHERE Invoices_Details.Item_Id = Item.id)
+    OR EXISTS (SELECT 1 FROM Invoices_Details_Reverse WHERE Invoices_Details_Reverse.Item_Id = Item.id)
+    OR EXISTS (SELECT 1 FROM Bills_Details WHERE Bills_Details.Item_Id = Item.id)
+    OR EXISTS (SELECT 1 FROM Bills_Details_Reverse WHERE Bills_Details_Reverse.Item_Id = Item.id)
+    OR EXISTS (SELECT 1 FROM Detailes_Purshing WHERE Detailes_Purshing.Item_Id = Item.id)
+)";
+                DataTable dtCheck = opp.return_DataTable(checkSql);
+                if (dtCheck.Rows.Count > 0)
+                {
+                    Excp = 1;
+                    Msg = "لا يمكن تفريغ أصناف هذا المخزن - يوجد صنف واحد على الأقل مرتبط بفاتورة بيع أو شراء أو مرتجع أو إذن صرف/استلام مخزنى.";
+                    return;
+                }
+
                 string mysql = " DELETE FROM  item where  S_id=" + Store_Id;
                 mysql = mysql + " DELETE FROM  Unit_item where Store_Type=4 and  Store_id=" + Store_Id;
                 mysql = mysql + "DELETE FROM  Store where  Id=" + Store_Id;

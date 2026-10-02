@@ -107,7 +107,7 @@ namespace AccountModelsLib
             }
 
         }
-        public bool Check_Account_No_Found(ref int Excp, ref operations opp, string Account_No, int Account_Branch_Id)
+        public bool Check_Account_No_Found(ref int Excp, ref operations opp, string Account_No, long Account_Branch_Id)
         {
             DataTable dt = new DataTable();
             try
@@ -172,7 +172,7 @@ namespace AccountModelsLib
                 return true;
             }
         }
-        public bool Check_SubAccount_ID_Found(ref int Excp, ref operations opp, long SubAccount_ID, ref string Account_Name, int Account_Branch_Id)
+        public bool Check_SubAccount_ID_Found(ref int Excp, ref operations opp, long SubAccount_ID, ref string Account_Name, long Account_Branch_Id)
         {
             G_DS.Clear();
             try
@@ -205,7 +205,7 @@ namespace AccountModelsLib
             }
         }
 
-        public void Add_Main_Account(ref int Excp, ref string Msg, string FirstSubCode, long Code, string Account_Name_, int Head_Main_Account, decimal Primary_Balance, int Currency_Id, int Account_Follows, string Notes, int Branch_Id, int Account_Customer_Type_Value, int Account_Nature_Type)
+        public void Add_Main_Account(ref int Excp, ref string Msg, string FirstSubCode, long Code, string Account_Name_, int Head_Main_Account, decimal Primary_Balance, long Currency_Id, int Account_Follows, string Notes, long Branch_Id, int Account_Customer_Type_Value, int Account_Nature_Type)
         {
             //long Submain_Account_Id,
             operations opp = new operations(1);
@@ -224,8 +224,8 @@ namespace AccountModelsLib
                 DataTable dt = opp.return_DataTable(mysql);
                 if (dt.Rows.Count > 0)
                 {
-                    Msg = "��� ������ ����� �� ���� �������� �� ���� ��������� � ����� ������";
-                    Msg = "��� ������ ����� �� ���� ��������  ";
+                    Msg = "هذا الحساب موجود فى شجرة الحسابات هل تريد الإستمرار و إضافة الحساب";
+                    Msg = "هذا الحساب موجود فى شجرة الحسابات  ";
                     Excp = 10;
                     // MessageBox.Show("��� ������ ����� �� ���� ��������");
                     opp.Rollback();
@@ -271,6 +271,7 @@ namespace AccountModelsLib
                     // Primary & Foreign Key Identifiers
                     Main_Account_Id = Main_Account_Id,
                     Branch_Id = Branch_Id,
+
                     Currency_Id = Currency_Id,
 
                     // Numeric Values
@@ -316,7 +317,7 @@ namespace AccountModelsLib
             Sub_Account acc = new Sub_Account();
             //int Account_Type_Value = 2;
             long New_Submain_Account_Id = -1;
-            int Account_Branch_Id = Common.Branch_Id;
+            long  Account_Branch_Id = Common.Branch_Id;
 
             int Excp = 0;
             acc.SubAccount_Name_En = Name_En;
@@ -325,7 +326,7 @@ namespace AccountModelsLib
             return New_Submain_Account_Id;
         }
 
-        public void Add_AccountSupplierCustomerOther(ref int Excp, ref string Msg, ref operations opp, ref long New_Submain_Account_Id, ref string Account_Code, int Account_Type_Value, string Account_Name, long Account_Branch_Id, int Currency_Id = 1)
+        public void Add_AccountSupplierCustomerOther(ref int Excp, ref string Msg, ref operations opp, ref long New_Submain_Account_Id, ref string Account_Code, int Account_Type_Value, string Account_Name, long Account_Branch_Id, long    Currency_Id = 1)
         {
 
             Excp = 0;
@@ -383,7 +384,7 @@ namespace AccountModelsLib
 
         }
 
-        public void Update_AccountSupplierCustomerOther(ref int Excp, ref string Msg, ref operations opp, ref long New_Submain_Account_Id, ref string Account_Code, int Account_Type_Value, string Account_Name, long Account_Branch_Id, int Currency_Id = 1)
+        public void Update_AccountSupplierCustomerOther(ref int Excp, ref string Msg, ref operations opp, ref long New_Submain_Account_Id, ref string Account_Code, int Account_Type_Value, string Account_Name, long Account_Branch_Id, long    Currency_Id = 1)
         {
 
             Excp = 0;
@@ -437,7 +438,7 @@ namespace AccountModelsLib
             }
 
         }
-        public void Add_AccountSupplierCustomerOnlyAccount(ref int Excp, ref string Msg, ref operations opp, ref long New_Submain_Account_Id, ref string Account_Code, int Account_Type_Value, string Account_Name, int Account_Branch_Id, int Currency_Id = 1)
+        public void Add_AccountSupplierCustomerOnlyAccount(ref int Excp, ref string Msg, ref operations opp, ref long New_Submain_Account_Id, ref string Account_Code, int Account_Type_Value, string Account_Name, long Account_Branch_Id, long    Currency_Id = 1)
         {
 
             Excp = 0;
@@ -467,7 +468,7 @@ namespace AccountModelsLib
             }
 
         }
-        public void Add_AccountSupplierCustomer(ref int Excp, ref string Msg, ref operations opp, ref long New_Submain_Account_Id, ref string Account_Code, int Account_Type_Value, string Account_Name, int Account_Branch_Id, int Currency_Id = 1)
+        public void Add_AccountSupplierCustomer(ref int Excp, ref string Msg, ref operations opp, ref long New_Submain_Account_Id, ref string Account_Code, int Account_Type_Value, string Account_Name, long Account_Branch_Id, long    Currency_Id = 1)
         {
 
             Excp = 0;
@@ -508,7 +509,7 @@ namespace AccountModelsLib
             Add_Account_(ref Excp, ref Msg, ref opp, ref Submain_Account_Id, sa.sb, Add_Account_Customer_List);
         }
 
-        Submain_AccountCLS SetUpSubmain_AccountCLS(ref int Excp, ref string Msg, ref operations opp, ref long New_Submain_Account_Id, ref string Account_Code, int Account_Type_Value, string Account_Name, long Account_Branch_Id, int Currency_Id = 1, int Account_Type_ValueGeneralCustomer = 0)
+        Submain_AccountCLS SetUpSubmain_AccountCLS(ref int Excp, ref string Msg, ref operations opp, ref long New_Submain_Account_Id, ref string Account_Code, int Account_Type_Value, string Account_Name, long Account_Branch_Id, long    Currency_Id = 1, int Account_Type_ValueGeneralCustomer = 0)
         {
 
             int Head_Main_Account = 1;//////////////////////////
@@ -519,7 +520,7 @@ namespace AccountModelsLib
 
             string FirstSubCode = "01";
             int Cost_Center_Tree_ID = 0;
-            /*int Currency_Id = 1*/
+            /*long    Currency_Id = 1*/
             ;
             int Account_Level = 0;
 
@@ -546,7 +547,7 @@ namespace AccountModelsLib
 
             Add_In_Account_Type_Main_Account_Id = false;
 
-            //  string FirstSubCode, long Code, int Account_Level, long lastPartIncrease, long Main_Account_Id, string SubAccount_NO, string SubAccount_Name, int Head_Main_Account, decimal SubMain_Account_Balance, int Currency_Id, int CanDelete, int Account_Follows, string Notes, int Accept_EntryNew_Flage, int Accept_Cost_Center_Flage, long Cost_Center_Tree_ID, int Account_Nature_Type, int Account_Customer_Type_Value, int IS_SubAccount_AccountType, int IS_SubAccount_FollowingAccount, int Account_Branch_Id
+            //  string FirstSubCode, long Code, int Account_Level, long lastPartIncrease, long Main_Account_Id, string SubAccount_NO, string SubAccount_Name, int Head_Main_Account, decimal SubMain_Account_Balance, long Currency_Id, int CanDelete, int Account_Follows, string Notes, int Accept_EntryNew_Flage, int Accept_Cost_Center_Flage, long Cost_Center_Tree_ID, int Account_Nature_Type, int Account_Customer_Type_Value, int IS_SubAccount_AccountType, int IS_SubAccount_FollowingAccount, long Account_Branch_Id
             sa.sb.Id = New_Submain_Account_Id;
             sa.sb.FirstSubCode = FirstSubCode;
             sa.sb.Code = Code;
@@ -651,7 +652,7 @@ namespace AccountModelsLib
         }
 
         */
-        //string FirstSubCode, long Code, int Account_Level, long lastPartIncrease, long Main_Account_Id, string SubAccount_NO, string SubAccount_Name, int Head_Main_Account, decimal SubMain_Account_Balance, int Currency_Id, int CanDelete, int Account_Follows, string Notes, int Accept_EntryNew_Flage, int Accept_Cost_Center_Flage, long Cost_Center_Tree_ID, int Account_Nature_Type, int Account_Customer_Type_Value, int IS_SubAccount_AccountType, int IS_SubAccount_FollowingAccount, int Account_Branch_Id
+        //string FirstSubCode, long Code, int Account_Level, long lastPartIncrease, long Main_Account_Id, string SubAccount_NO, string SubAccount_Name, int Head_Main_Account, decimal SubMain_Account_Balance, long Currency_Id, int CanDelete, int Account_Follows, string Notes, int Accept_EntryNew_Flage, int Accept_Cost_Center_Flage, long Cost_Center_Tree_ID, int Account_Nature_Type, int Account_Customer_Type_Value, int IS_SubAccount_AccountType, int IS_SubAccount_FollowingAccount, long Account_Branch_Id
 
         public bool Add_In_Account_Type_Main_Account_Id = true;
 
@@ -897,9 +898,7 @@ namespace AccountModelsLib
         }
         public void Add_Account_FromAccountTree(ref int Excp, ref string Msg, ref operations opp, ref long Submain_Account_Id, Submain_AccountCLS sa, bool Add_Account_Customer_List)
         {
-            //string FirstSubCode, long Code, int Account_Level, long lastPartIncrease, long Main_Account_Id, string SubAccount_NO, string SubAccount_Name, int Head_Main_Account, decimal SubMain_Account_Balance, int Currency_Id, int CanDelete, int Account_Follows, string Notes, int Accept_EntryNew_Flage, int Accept_Cost_Center_Flage, long Cost_Center_Tree_ID, int Account_Nature_Type, int Account_Customer_Type_Value, int IS_SubAccount_AccountType, int IS_SubAccount_FollowingAccount, int Account_Branch_Id,
-            // Add_Account_(ref Excp, ref opp, ref Submain_Account_Id, FirstSubCode, Code, Account_Level, lastPartIncrease, Main_Account_Id, SubAccount_NO, SubAccount_Name, Head_Main_Account, SubMain_Account_Balance, Currency_Id, CanDelete, Account_Follows, Notes, Accept_EntryNew_Flage, Accept_Cost_Center_Flage, Cost_Center_Tree_ID, Account_Nature_Type, Account_Customer_Type_Value, Add_Account_Customer_List, IS_SubAccount_AccountType, IS_SubAccount_FollowingAccount, Account_Branch_Id);
-            Add_Account_(ref Excp, ref Msg, ref opp, ref Submain_Account_Id, sa.sb, Add_Account_Customer_List);
+             Add_Account_(ref Excp, ref Msg, ref opp, ref Submain_Account_Id, sa.sb, Add_Account_Customer_List);
 
         }
 
@@ -951,8 +950,8 @@ namespace AccountModelsLib
                 //string Account_Code = "";
                 //Sub_Account acc = new Sub_Account();
                 //int Account_Type_Value = Account_Customer_Type_Value;
-                //int Currency_Id = 1;
-                //int Account_Branch_Id = Common.Branch_Id;
+                //long    Currency_Id = 1;
+                //long  Account_Branch_Id = Common.Branch_Id;
                 //SubAccount_Id = -1;
 
 
@@ -978,7 +977,7 @@ namespace AccountModelsLib
                 long SubAccount_Id = sa.sb.Id;
                 string SubAccount_Name = sa.sb.SubAccount_Name;
                 int Account_Customer_Type_Value = sa.sb.Account_Customer_Type_Value;
-                int Currency_Id = sa.sb.Currency_Id??1;
+                long    Currency_Id = sa.sb.Currency_Id??1;
                 string SubAccount_NO = sa.sb.SubAccount_NO;
                 if (sa.sb.Account_Customer_Type_Value == Common.Customer_Account_Type) ///2���� ����
                 {

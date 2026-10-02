@@ -196,32 +196,65 @@ namespace AccountModelsLib
 
         }
 
+        /// <summary>حفظ مدينة لواجهة Razor: التعديل عبر Add_Gov_City_List؛ الإضافة تراعى كون Id عمود IDENTITY (راجع GeoIdentityInsertHelper).</summary>
+        public void SaveCity(ref int Excp, ref string Msg, Gov_City_List city)
+        {
+            if (city.Id > 0) { Add_Gov_City_List(ref Excp, ref Msg, city); return; }
+            try
+            {
+                var o = new AccountModelsLib.operations();
+                if (GeoIdentityInsertHelper.IsIdentityId(o, "Gov_City_List"))
+                {
+                    GeoIdentityInsertHelper.Insert(o,
+                        "INSERT INTO Gov_City_List (NameAr, NameEn, Code, Gov_Country_ListId, Govern_Area_ListId, Govern_ListId, Insert_ServerDateTime) VALUES (@n, @en, @code, @c, @a, @g, GETDATE())",
+                        ("@n", city.NameAr), ("@en", city.NameEn), ("@code", city.Code), ("@c", city.Gov_Country_ListId), ("@a", city.Govern_Area_ListId), ("@g", city.Govern_ListId));
+                    Excp = 0;
+                    return;
+                }
+                Add_Gov_City_List(ref Excp, ref Msg, city);
+            }
+            catch (Exception ee)
+            {
+                Excp = 1;
+                Msg = ee.InnerException != null ? ee.InnerException.Message : ee.Message;
+            }
+        }
+
+        /// <summary>مدينة بمعرّفها بلا تتبع (لتعديلها ثم تمريرها لـAdd_Gov_City_List) - إضافة لواجهة Razor.</summary>
+        public Gov_City_List GetGov_City_ListNoTracking(long Id)
+        {
+            return new AccountModelsLib.operations().db.Gov_City_List.AsNoTracking().Where(i => i.Id == Id).FirstOrDefault();
+        }
+
         public void Delete(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long Id)
         {
             try
             {
                 
 
-                var customerL = opp.db.Customer.Where(i => i.Gov_City_ListId == Id);
-                if (customerL != null)
+                // 🟢 إصلاح خللين حقيقيين فى الأصل (بموافقة المستخدم): (1) فحص `IQueryable != null` دائماً true فكان يمنع حذف أى مدينة،
+                // وفحص الموردين كان يختبر customerL بدل supplierL؛ (2) الأخطر: كان الحذف الفعلى يزيل صف المحافظة من جدول Govern_List
+                // بمعرّف المدينة بدل حذف المدينة من Gov_City_List.
+                bool hasCustomers = opp.db.Customer.Any(i => i.Gov_City_ListId == Id);
+                if (hasCustomers)
                 {
                     Excp = 1;
                     Msg = "لا يمكن حذف المدينة تم تسجيل عميل بها";
                     return;
                 }
 
-                var supplierL = opp.db.Suppliers.Where(i => i.Gov_City_ListId == Id);
-                if (customerL != null)
+                bool hasSuppliers = opp.db.Suppliers.Any(i => i.Gov_City_ListId == Id);
+                if (hasSuppliers)
                 {
                     Excp = 1;
                     Msg = "لا يمكن حذف المدينة تم تسجيل مورد بها";
                     return;
                 }
 
-                Govern_List ga = opp.db.Govern_List.Where(i => i.Id == Id).SingleOrDefault();
+                Gov_City_List ga = opp.db.Gov_City_List.Where(i => i.Id == Id).SingleOrDefault();
                 if (ga != null)
                 {
-                    opp.db.Govern_List.Remove(ga);
+                    opp.db.Gov_City_List.Remove(ga);
                     opp.db.SaveChanges();
                     Excp = 0;
                 }

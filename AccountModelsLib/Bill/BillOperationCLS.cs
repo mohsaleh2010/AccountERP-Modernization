@@ -301,8 +301,8 @@ namespace AccountModelsLib
             Invoice_Item_Name = Invoice_ds.Tables[0].Rows[x]["Item_Name"].ToString();
             Specification = Invoice_ds.Tables[0].Rows[x]["Specification"].ToString();
             NameSpecification = Invoice_ds.Tables[0].Rows[x]["Item_Name"].ToString() + "  " + Invoice_ds.Tables[0].Rows[x]["Specification"].ToString();
-            Item_Id = int.Parse(Invoice_ds.Tables[0].Rows[x]["Item_id"].ToString());
-            Store_Id = int.Parse(Invoice_ds.Tables[0].Rows[x]["Store_Id"].ToString());
+            Item_Id = long.Parse(Invoice_ds.Tables[0].Rows[x]["Item_id"].ToString());
+            Store_Id = long.Parse(Invoice_ds.Tables[0].Rows[x]["Store_Id"].ToString());
 
             Larg_Qnty = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["Larg_Qnty"].ToString());
             Small_Qnty = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["Small_Qnty"].ToString());
@@ -323,8 +323,8 @@ namespace AccountModelsLib
             }
             catch { Unit_Used_for_Price = 0; }
 
-            Unit_Id = int.Parse(Invoice_ds.Tables[0].Rows[x]["unit_id"].ToString());
-            Unit_Item_Table_Id = int.Parse(Invoice_ds.Tables[0].Rows[x]["Unit_Item_Table_Id"].ToString());
+            Unit_Id = long.Parse(Invoice_ds.Tables[0].Rows[x]["unit_id"].ToString());
+            Unit_Item_Table_Id = long.Parse(Invoice_ds.Tables[0].Rows[x]["Unit_Item_Table_Id"].ToString());
             Item_Code = Invoice_ds.Tables[0].Rows[x]["Code"].ToString();
 
 

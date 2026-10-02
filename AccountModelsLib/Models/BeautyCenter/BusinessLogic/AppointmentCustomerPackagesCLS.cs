@@ -75,7 +75,7 @@ namespace AccountModelsLib.Models
                 .Select(s => new PackageServiceDetailDTO
                 {
                     ItemService_Id = s.ItemServiceId,
-                    ServiceName = opp.db.Item.Where(i => i.id == s.ItemServiceId)
+                    ServiceName = opp.db.Item.Where(i => i.Id == s.ItemServiceId)
                                               .Select(i => i.Item_Name).FirstOrDefault(),
                     SessionsCount = s.TotalSessions
                 }).ToList();
@@ -422,7 +422,7 @@ namespace AccountModelsLib.Models
         public long GetServiceIdByName(long packageId, string serviceName)
         {
             var service = (from s in  opp.db.AppointmentCustomerPackageServices
-                           join item in  opp.db.Item on s.ItemService_Id equals item.id
+                           join item in  opp.db.Item on s.ItemService_Id equals item.Id
                            where s.AppointmentPackageId == packageId
                            && item.Item_Name == serviceName
                            select s.ItemService_Id).FirstOrDefault();
@@ -434,7 +434,7 @@ namespace AccountModelsLib.Models
         {
          
             var query = from s in  opp.db.AppointmentCustomerPackageServices
-                        join item in  opp.db.Item on s.ItemService_Id equals item.id
+                        join item in  opp.db.Item on s.ItemService_Id equals item.Id
                         where s.AppointmentCustomerPackageId == packageId
                         select new
                         {

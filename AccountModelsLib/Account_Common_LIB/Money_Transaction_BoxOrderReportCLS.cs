@@ -160,7 +160,7 @@ WHERE        (Order_Money.Id = " + Order_Money_Id + ") ";
         }
         public long Make_New_Order_No(ref int Excp, ref operations opp, int Transaction_type, DateTime dt_Order, long Bank_Id)
         {
-            int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(ref opp, dt_Order);
+            long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(ref opp, dt_Order);
             DataTable dt = new DataTable();
             long Order_No = 1;
             try
@@ -201,7 +201,7 @@ WHERE       (Bank_Type = 0) AND  (Transaction_type =  " + Transaction_type + ") 
 
         public bool Check_Order_NoFound(ref int Excp, ref operations opp, ref long Order_No, int Transaction_type, DateTime dt_Order, long Bank_Id)
         {
-            int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(ref opp, dt_Order);
+            long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(ref opp, dt_Order);
             DataTable dt = new DataTable();
 
             try
@@ -266,7 +266,7 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
             //long  Bank_Id = 0;
             //if (dt.Rows.Count > 0)
             //{
-            //    Bank_Id = int.Parse(dt.Rows[0]["Id"].ToString());
+            //    Bank_Id = long.Parse(dt.Rows[0]["Id"].ToString());
             //}
             //return Bank_Id;
         }
@@ -358,7 +358,7 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
                 dr1["Export_Value_Total"] = T_Export_Value_Total;
                 dr1["Import_Value_Total"] = T_Import_Value_Total;
                 dr1["FinalBalance"] = T_FinalBalance;
-                dr1["DayDate"] = "ÇáÅÌãÇáì";
+                dr1["DayDate"] = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
                 dtTotal.Rows.Add(dr1);
 
 
@@ -465,7 +465,7 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
                 dr1["Export_Value_Total"] = T_Export_Value_Total;
                 dr1["Import_Value_Total"] = T_Import_Value_Total;
                 dr1["FinalBalance"] = T_FinalBalance;
-                dr1["DayDate"] = "ÇáÅÌãÇáì";
+                dr1["DayDate"] = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
                 dtTotal.Rows.Add(dr1);
 
 
@@ -619,7 +619,7 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
                 //dr1["Import_Value_Total"] = T_Import_Value_Total;
                 //T_FinalBalance = T_FirstBalance + T_Import_Value_Total - T_Export_Value_Total;
                 //dr1["FinalBalance"] = T_FinalBalance;
-                //dr1["Bank_Name"] = "ÇáÅÌãÇáì";
+                //dr1["Bank_Name"] = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
                 //dtTotal.Rows.Add(dr1);
 
 
@@ -676,7 +676,7 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
 
                 if (dt.Rows.Count == 0)
                 {
-                    msg = "áÇ ÊæÌÏ äÊíÌÉ ááÈÍË";
+                    msg = "ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½";
                     Excp = 1;
                     return;
                 }
@@ -734,20 +734,20 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
                 //////Add FirstBalance
                 DataRow dr = dt.NewRow();
                 dr["Bank_Balance"] = FirstBalance;
-                dr["Notes"] = "ÇáÑÕíÏ ÇáÅÝÊÊÇÍì";
+                dr["Notes"] = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
                 dt.Rows.InsertAt(dr, 0);
 
 
-                ////ÇÖÇÝÉ ÇÌãÇáì ÇáÕÇÏÑ æÇáæÇÑÏ
+                ////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 //Export_Value_Total = Common.RoundMe(Export_Value_Total);
                 //Import_Value_Total = Common.RoundMe(Import_Value_Total);
 
                 DataRow dr2 = dt.NewRow();
                 dr2["Import_Value"] = Import_Value_Total;
                 dr2["Export_Value"] = Export_Value_Total;
-                dr2["Notes"] = "ÅÌãÇáì ÇáÍÑßÉ  ";
+                dr2["Notes"] = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  ";
                 dt.Rows.Add(dr2);
-                //// ÇÖÇÝÉ ÇáÕÇÝì
+                //// ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 decimal Day_Diff = FirstBalance + Import_Value_Total - Export_Value_Total;
 
                 Day_Diff = Common.RoundMe(Day_Diff);
@@ -755,7 +755,7 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
                 DataRow dr3 = dt.NewRow();
                 dr3["Bank_Balance"] = Day_Diff;
 
-                dr3["Notes"] = "ÕÇÝì ÇáÑÕíÏ ";
+                dr3["Notes"] = "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ";
                 dt.Rows.Add(dr3);
             }
             catch (Exception ee)
@@ -839,7 +839,7 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
                 FirstBalance = Common.RoundMe(FirstBalance);
                 //////Add FirstBalance
 
-                //// ÇÖÇÝÉ ÇáÕÇÝì
+                //// ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 FinalBalance = FirstBalance + Import_Value_Total - Export_Value_Total;
 
 
@@ -863,7 +863,7 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
             try
             {
                 Excp = 0;
-                //bank_Id = int.Parse(banks_List1.cmbBankType.SelectedValue.ToString());
+                //Bank_id = long.Parse(banks_List1.cmbBankType.SelectedValue.ToString());
 
                 //DateFrom = this.dtOrderDateFrom.Value;
                 //DateTo = this.dtOrderDateTo.Value;
@@ -877,7 +877,7 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
 
                 if (dt.Rows.Count == 0)
                 {
-                    msg = "áÇ ÊæÌÏ äÊíÌÉ ááÈÍË";
+                    msg = "ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½";
                     Excp = 1;
                     return;
                 }
@@ -939,16 +939,16 @@ FROM            Order_Money INNER JOIN
             dr["Import_Value"] = Import_Value;
             dr["Export_Value"] = Export_Value;
             dr["Id"] = 0;
-            dr["Order_Notes"] = "ÇáÅÌãÇáì";
-            dr["Bank_Name"] = "ÇáÅÌãÇáì";
+            dr["Order_Notes"] = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+            dr["Bank_Name"] = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
             dt.Rows.Add(dr);
             if (InvoiceNetTotal > 0)
             {
                 decimal Diff = Import_Value - Export_Value;
                 dr = dt.NewRow();
                 dr["Id"] = 0;
-                dr["Order_Notes"] = "ÇáÕÇÝì";
-                dr["Bank_Name"] = "ÇáÕÇÝì";
+                dr["Order_Notes"] = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+                dr["Bank_Name"] = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
                 if (Diff > 0)
                 {
 
@@ -966,12 +966,12 @@ FROM            Order_Money INNER JOIN
                 //dt.Rows.Add(dr);
 
 
-                ///////// ÇáãÊÈÞì ãä ÞíãÉ ÇáÝÇÊæÑÉ
+                ///////// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 decimal DiffStill = InvoiceNetTotal - Diff;
                 dr = dt.NewRow();
                 dr["Id"] = 0;
-                dr["Order_Notes"] = "ÇáãÊÈÞì";
-                dr["Bank_Name"] = "ÇáãÊÈÞì";
+                dr["Order_Notes"] = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+                dr["Bank_Name"] = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
                 if (DiffStill > 0)
                 {
 
@@ -1045,16 +1045,16 @@ FROM            Order_Money INNER JOIN
             dr["Import_Value"] = Import_Value;
             dr["Export_Value"] = Export_Value;
             dr["Id"] = 0;
-            dr["Order_Notes"] = "ÇáÅÌãÇáì";
-            dr["Bank_Name"] = "ÇáÅÌãÇáì";
+            dr["Order_Notes"] = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+            dr["Bank_Name"] = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
             dt.Rows.Add(dr);
             if (InvoiceNetTotal > 0)
             {
                 decimal Diff = Import_Value - Export_Value;
                 dr = dt.NewRow();
                 dr["Id"] = 0;
-                dr["Order_Notes"] = "ÇáÕÇÝì";
-                dr["Bank_Name"] = "ÇáÕÇÝì";
+                dr["Order_Notes"] = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+                dr["Bank_Name"] = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
                 if (Diff > 0)
                 {
 
@@ -1072,12 +1072,12 @@ FROM            Order_Money INNER JOIN
                 //dt.Rows.Add(dr);
 
 
-                ///////// ÇáãÊÈÞì ãä ÞíãÉ ÇáÝÇÊæÑÉ
+                ///////// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 decimal DiffStill = InvoiceNetTotal - Diff;
                 dr = dt.NewRow();
                 dr["Id"] = 0;
-                dr["Order_Notes"] = "ÇáãÊÈÞì";
-                dr["Bank_Name"] = "ÇáãÊÈÞì";
+                dr["Order_Notes"] = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+                dr["Bank_Name"] = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
                 if (DiffStill > 0)
                 {
 
@@ -1366,13 +1366,13 @@ FROM            Money_Transaction_Box  WITH (NOLOCK) ";
             {
                 try
                 {
-                    Import_Value_Old = decimal.Parse(dt.Rows[0]["Import_Value"].ToString());
+                     decimal.TryParse(dt.Rows[0]["Import_Value"].ToString(),out Import_Value_Old);
                 }
                 catch { Import_Value_Old = 0; }
 
                 try
                 {
-                    Export_Value_Old = decimal.Parse(dt.Rows[0]["Export_Value"].ToString());
+                     decimal.TryParse(dt.Rows[0]["Export_Value"].ToString(),out Export_Value_Old);
                 }
                 catch { Export_Value_Old = 0; }
 
@@ -1545,9 +1545,9 @@ FROM            Order_Money INNER JOIN
         }
 
 
-        public static int GetBank_SubAccount_Id(ref operations opp, long Bank_Id)
+        public static long GetBank_SubAccount_Id(ref operations opp, long Bank_Id)
         {
-            int SubAccount_Id = 0;
+            long SubAccount_Id = 0;
 
             try
             {
@@ -1555,7 +1555,7 @@ FROM            Order_Money INNER JOIN
                 DataTable dt = opp.return_DataTable(mysql);
                 if (dt.Rows.Count > 0)
                 {
-                    SubAccount_Id = int.Parse(dt.Rows[0]["SubAccount_Id"].ToString());
+                    SubAccount_Id = long.Parse(dt.Rows[0]["SubAccount_Id"].ToString());
 
                 }
             }
@@ -1564,13 +1564,13 @@ FROM            Order_Money INNER JOIN
             return SubAccount_Id;
         }
 
-        void InsertOrderMoneyNew(ref int Excp, ref string Msg, ref operations opp, ref long Order_Mony_Id2, long Order_No, int Transaction_type, DateTime Order_Date, decimal Total_Value, int Currency_Id, int Bank_Type_, string Man_Name, long Bank_Id, int Order_Mony_Id_Transform, long Invoice_ID, int Invoice_Type, int User_Id, int Branch_Id, int Year_Financial_Period_Id, int Ticket_Supplier_Id, string Order_Tafkeet_Value, string Order_Notes, long Sandouk_Cost_Center_Tree_Id, int IS_Posted_Flage, decimal Factor, int Entry_Currency_ID, string Entry_Currency_Name, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
+        void InsertOrderMoneyNew(ref int Excp, ref string Msg, ref operations opp, ref long Order_Mony_Id2, long Order_No, int Transaction_type, DateTime Order_Date, decimal Total_Value, long Currency_Id, int Bank_Type_, string Man_Name, long Bank_Id, int Order_Mony_Id_Transform, long Invoice_ID, int Invoice_Type, long User_Id, long Branch_Id, long Year_Financial_Period_Id, long Ticket_Supplier_Id, string Order_Tafkeet_Value, string Order_Notes, long Sandouk_Cost_Center_Tree_Id, int IS_Posted_Flage, decimal Factor, long Entry_Currency_ID, string Entry_Currency_Name, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
         {
 
             try
             {
 
-                //int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);
+                //long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);
 
                 Order_MoneyCLS om = new Order_MoneyCLS();
                 Order_Money order_Money = new Order_Money();
@@ -1632,7 +1632,7 @@ FROM            Order_Money INNER JOIN
             mysql = mysql + " WHERE (Bank_Id = " + Bank_Id + ") AND (Balance_Date = " + operations.Get_DateTimeToInsert(Balance_Date.Date) + ")  ";
             DataTable dt = opp.return_DataTable(mysql);
 
-            if (dt.Rows.Count > 0)///Êã  ÍÝÙÙ ÇáÑÕíÏ ãä ÞÈá
+            if (dt.Rows.Count > 0)///ï¿½ï¿½  ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½
             {
                 long Id = long.Parse(dt.Rows[0]["Id"].ToString());
 
@@ -1653,10 +1653,10 @@ FROM            Order_Money INNER JOIN
             }
             else
             {
-                ////ÊÇÑíÎ íÓÊÚãá áÇæá ãÑå
+                ////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
                 decimal Last_Balance = 0;
 
-                ///ÇáÈÍË Úä ÇáÊÇÑíÎ ÇáÓÇÈÞ ÍÊì äÇÎÐ ãäå ÇáÑÕíÏ ÇáäåÇÆì
+                ///ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 mysql = @" SELECT Top(1) Banks_Balance.* FROM    Banks_Balance ";
                 mysql = mysql + " WHERE (Bank_Id = " + Bank_Id + ") AND (Balance_Date < " + operations.Get_DateTimeToInsert(Balance_Date.Date) + ")  ";
                 mysql = mysql + " Order By Balance_Date Desc";
@@ -1668,7 +1668,7 @@ FROM            Order_Money INNER JOIN
                 }
                 else
                 {
-                    ///ÇáÈÍË Úä ÇáÊÇÑíÎ ÇáÊÇáì ÍÊì äÇÎÐ ãäå ÇáÑÕíÏ ÇáäåÇÆì
+                    ///ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                     mysql = @" SELECT Top(1) Banks_Balance.* FROM    Banks_Balance ";
                     mysql = mysql + " WHERE (Bank_Id = " + Bank_Id + ") AND (Balance_Date > " + operations.Get_DateTimeToInsert(Balance_Date.Date) + ")  ";
                     mysql = mysql + " Order By Balance_Date Asc";
@@ -1692,6 +1692,8 @@ FROM            Order_Money INNER JOIN
                 }
                 mysql = " INSERT INTO Banks_Balance(Bank_Id, Balance_Date, First_Balance, Last_Balance)";
                 mysql = mysql + " VALUES     (" + Bank_Id + "," + operations.Get_DateTimeToInsert(Balance_Date) + "," + First_Balance + "," + Last_Balance + ")";
+                //opp.insert_me(mysql);
+                //mysql = " ";
             }
             /////////////////////////////
             if (Transaction_Type == 1)
@@ -1842,19 +1844,19 @@ FROM            Order_Money INNER JOIN
         }
         public long Lookup_CashPaymentMethodId { get; set; } = 0;
         public string Lookup_CashPaymentMethodName { get; set; } = "";
-        public void Make_Transaction_BanksBox_FromInvoices(ref int Excp, ref string Msg, ref operations opp, ref long Order_Mony_Id2, ref long Money_Transaction_Box_ID, int Transaction_Type, string Order_No, long Box_Id, decimal Box_Balance, decimal Cach_Value, DateTime Order_Date, string Man_Name, int Currency_Id, long Customer_ID_Supplier, int Reverse_Order, long Entry_No, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
+        public void Make_Transaction_BanksBox_FromInvoices(ref int Excp, ref string Msg, ref operations opp, ref long Order_Mony_Id2, ref long Money_Transaction_Box_ID, int Transaction_Type, string Order_No, long Box_Id, decimal Box_Balance, decimal Cach_Value, DateTime Order_Date, string Man_Name, long Currency_Id, long Customer_ID_Supplier, int Reverse_Order, long Entry_No, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
         {
 
 
 
-            int User_Id = Common.User_Id;
-            int Branch_Id = Common.Branch_Id;
+            long   User_Id = Common.User_Id;
+            long Branch_Id = Common.Branch_Id;
 
 
             string mysql = "";
 
             decimal Cach_Value_Comput = Cach_Value;
-            int Entry_Currency_ID = 1;
+            long Entry_Currency_ID = 1;
             string Bank_Name = "";
             //Bank bnk = GetBank_Balance(Box_Id, ref opp, ref Box_Balance);
             Bank bnk = opp.db.Banks.AsNoTracking().Where(b => b.Id == Box_Id).FirstOrDefault();
@@ -1863,7 +1865,7 @@ FROM            Order_Money INNER JOIN
                 Entry_Currency_ID = bnk.Currency_Id ?? 1;
                 Bank_Name = bnk.Bank_Name;
             }
-            string Entry_Currency_Name = "ÌäíÉ ãÕÑì";
+            string Entry_Currency_Name = "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½";
             int Ticket_Supplier_Id = 0;
             int Sandouk_Cost_Center_Tree_Id = 0;
             int IS_Posted_Flage = 0;
@@ -1872,7 +1874,7 @@ FROM            Order_Money INNER JOIN
             string Order_Tafkeet_Value = TafkeetProj.NumberToText.GetText(Cach_Value, Entry_Currency_ID);
             int Bank_Type_ = 0;
             int Order_Mony_Id_Transform = -1;
-            int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);
+            long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);
 
 
             try
@@ -1884,8 +1886,8 @@ FROM            Order_Money INNER JOIN
                 Order_Mony_Id2 = B_Id;
                 Money_Transaction_Box_ID = 0;
 
-                //B_Idx= Insert_Order_Money(ref   opp, Order_No, Order_Date, Transaction_Type, Cach_Value, Currency_Id, 0, Box_Id, Man_Name, 0, 0, 0, 0, 0, 0, "", "", 0, 1.0, 1, "ÌäíÉ ãÕÑì");
-                if (Transaction_Type == 1 & Reverse_Order == 0)  //ÇÓÊáÇã ãä Úãíá
+                //B_Idx= Insert_Order_Money(ref   opp, Order_No, Order_Date, Transaction_Type, Cach_Value, Currency_Id, 0, Box_Id, Man_Name, 0, 0, 0, 0, 0, 0, "", "", 0, 1.0, 1, "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½");
+                if (Transaction_Type == 1 & Reverse_Order == 0)  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 {
 
                     GetCustomer_Balance("Customer", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -1904,7 +1906,7 @@ FROM            Order_Money INNER JOIN
                     cu.Set_Customer_Balance_WithMoney_Transaction(ref Excp, ref opp, Customer_ID_Supplier, Transaction_Type, Order_Mony_Id2, Money_Transaction_Box_ID, Cach_Value, Notes);
                 }
 
-                if (Transaction_Type == 2 & Reverse_Order == 0) // ÕÑÝ áãæÑÏ
+                if (Transaction_Type == 2 & Reverse_Order == 0) // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
 
                     GetCustomer_Balance("Supplier", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -1921,7 +1923,7 @@ FROM            Order_Money INNER JOIN
                 }
 
                 //////////////////////////***********************************
-                if (Transaction_Type == 1 & Reverse_Order == 1)  // ÃÓÊáÇã ãä ÇáãæÑÏ
+                if (Transaction_Type == 1 & Reverse_Order == 1)  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     Cach_Value_Comput = Cach_Value_Comput * -1;
                     GetCustomer_Balance("Supplier", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -1936,7 +1938,7 @@ FROM            Order_Money INNER JOIN
                     cu.Set_Supplier_Balance_WithMoney_Transaction(ref Excp, ref opp, Customer_ID_Supplier, Transaction_Type, Order_Mony_Id2, Money_Transaction_Box_ID, Cach_Value, Notes);
                 }
 
-                if (Transaction_Type == 2 & Reverse_Order == 1)   // ÕÑÝ ááÚãáÇÁ
+                if (Transaction_Type == 2 & Reverse_Order == 1)   // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     Cach_Value_Comput = Cach_Value_Comput * -1;
                     GetCustomer_Balance("Customer", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -1952,6 +1954,8 @@ FROM            Order_Money INNER JOIN
                     cu.Set_Customer_Balance_WithMoney_Transaction(ref Excp, ref opp, Customer_ID_Supplier, Transaction_Type, Order_Mony_Id2, Money_Transaction_Box_ID, Cach_Value, Notes);
 
                 }
+                // Keep a failure recorded by the inserts above (they set Excp=1 and Msg); it used to be reset here so a missing order/box row was reported as success.
+                if (Excp == 1 && !string.IsNullOrEmpty(Msg)) { return; }
                 Excp = 0;
 
                 decimal Box_BalanceBeforAction = GetBank_Balance(ref opp, Box_Id, true);
@@ -1985,7 +1989,7 @@ FROM            Order_Money INNER JOIN
             decimal Cach_Value = mtVM.Cach_Value;
             DateTime Order_Date = mtVM.Order_Date;
             string Man_Name = mtVM.Man_Name;
-            int Currency_Id = mtVM.Currency_Id;
+            long    Currency_Id = mtVM.Currency_Id;
             long Customer_ID_Supplier = mtVM.Customer_ID_Supplier;
             int Reverse_Order = mtVM.Reverse_Order;
             long Entry_No = mtVM.Entry_No;
@@ -1994,14 +1998,14 @@ FROM            Order_Money INNER JOIN
             long DataDictionaryProcessesListsId = mtVM.DataDictionaryProcessesListsId;
 
 
-            int User_Id = Common.User_Id;
-            int Branch_Id = Common.Branch_Id;
+            long   User_Id = Common.User_Id;
+            long Branch_Id = Common.Branch_Id;
 
 
             string mysql = "";
 
             decimal Cach_Value_Comput = Cach_Value;
-            int Entry_Currency_ID = 1;
+            long Entry_Currency_ID = 1;
             string Bank_Name = "";
             //Bank bnk = GetBank_Balance(Box_Id, ref opp, ref Box_Balance);
             Bank bnk = opp.db.Banks.AsNoTracking().Where(b => b.Id == Box_Id).FirstOrDefault();
@@ -2010,7 +2014,7 @@ FROM            Order_Money INNER JOIN
                 Entry_Currency_ID = bnk.Currency_Id ?? 1;
                 Bank_Name = bnk.Bank_Name;
             }
-            string Entry_Currency_Name = "ÌäíÉ ãÕÑì";
+            string Entry_Currency_Name = "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½";
             int Ticket_Supplier_Id = 0;
             int Sandouk_Cost_Center_Tree_Id = 0;
             int IS_Posted_Flage = 0;
@@ -2019,7 +2023,7 @@ FROM            Order_Money INNER JOIN
             string Order_Tafkeet_Value = TafkeetProj.NumberToText.GetText(Cach_Value, Entry_Currency_ID);
             int Bank_Type_ = 0;
             int Order_Mony_Id_Transform = -1;
-            int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);
+            long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);
 
 
             try
@@ -2031,8 +2035,8 @@ FROM            Order_Money INNER JOIN
                 Order_Mony_Id2 = B_Id;
                 Money_Transaction_Box_ID = 0;
 
-                //B_Idx= Insert_Order_Money(ref   opp, Order_No, Order_Date, Transaction_Type, Cach_Value, Currency_Id, 0, Box_Id, Man_Name, 0, 0, 0, 0, 0, 0, "", "", 0, 1.0, 1, "ÌäíÉ ãÕÑì");
-                if (Transaction_Type == 1 & Reverse_Order == 0)  //ÇÓÊáÇã ãä Úãíá
+                //B_Idx= Insert_Order_Money(ref   opp, Order_No, Order_Date, Transaction_Type, Cach_Value, Currency_Id, 0, Box_Id, Man_Name, 0, 0, 0, 0, 0, 0, "", "", 0, 1.0, 1, "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½");
+                if (Transaction_Type == 1 & Reverse_Order == 0)  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 {
 
                     GetCustomer_Balance("Customer", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -2051,7 +2055,7 @@ FROM            Order_Money INNER JOIN
                     cu.Set_Customer_Balance_WithMoney_Transaction(ref Excp, ref opp, Customer_ID_Supplier, Transaction_Type, Order_Mony_Id2, Money_Transaction_Box_ID, Cach_Value, Notes);
                 }
 
-                if (Transaction_Type == 2 & Reverse_Order == 0) // ÕÑÝ áãæÑÏ
+                if (Transaction_Type == 2 & Reverse_Order == 0) // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
 
                     GetCustomer_Balance("Supplier", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -2068,7 +2072,7 @@ FROM            Order_Money INNER JOIN
                 }
 
                 //////////////////////////***********************************
-                if (Transaction_Type == 1 & Reverse_Order == 1)  // ÃÓÊáÇã ãä ÇáãæÑÏ
+                if (Transaction_Type == 1 & Reverse_Order == 1)  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     Cach_Value_Comput = Cach_Value_Comput * -1;
                     GetCustomer_Balance("Supplier", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -2083,7 +2087,7 @@ FROM            Order_Money INNER JOIN
                     cu.Set_Supplier_Balance_WithMoney_Transaction(ref Excp, ref opp, Customer_ID_Supplier, Transaction_Type, Order_Mony_Id2, Money_Transaction_Box_ID, Cach_Value, Notes);
                 }
 
-                if (Transaction_Type == 2 & Reverse_Order == 1)   // ÕÑÝ ááÚãáÇÁ
+                if (Transaction_Type == 2 & Reverse_Order == 1)   // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     Cach_Value_Comput = Cach_Value_Comput * -1;
                     GetCustomer_Balance("Customer", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -2136,7 +2140,7 @@ FROM            Order_Money INNER JOIN
             decimal Cach_Value = mtVM.Cach_Value;
             DateTime Order_Date = mtVM.Order_Date;
             string Man_Name = mtVM.Man_Name;
-            int Currency_Id = mtVM.Currency_Id;
+            long    Currency_Id = mtVM.Currency_Id;
             long Customer_ID_Supplier = mtVM.Customer_ID_Supplier;
             int Reverse_Order = mtVM.Reverse_Order;
             long Entry_No = mtVM.Entry_No;
@@ -2145,14 +2149,14 @@ FROM            Order_Money INNER JOIN
             long DataDictionaryProcessesListsId = mtVM.DataDictionaryProcessesListsId;
 
 
-            int User_Id = Common.User_Id;
-            int Branch_Id = Common.Branch_Id;
+            long   User_Id = Common.User_Id;
+            long Branch_Id = Common.Branch_Id;
 
 
             string mysql = "";
 
             decimal Cach_Value_Comput = Cach_Value;
-            int Entry_Currency_ID = 1;
+            long Entry_Currency_ID = 1;
             string Bank_Name = "";
             //Bank bnk = GetBank_Balance(Box_Id, ref opp, ref Box_Balance);
             Bank bnk = opp.db.Banks.AsNoTracking().Where(b => b.Id == Box_Id).FirstOrDefault();
@@ -2161,16 +2165,16 @@ FROM            Order_Money INNER JOIN
                 Entry_Currency_ID = bnk.Currency_Id ?? 1;
                 Bank_Name = bnk.Bank_Name;
             }
-            string Entry_Currency_Name = "ÌäíÉ ãÕÑì";
-            int Ticket_Supplier_Id = 0;
-            int Sandouk_Cost_Center_Tree_Id = 0;
+            string Entry_Currency_Name = "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½";
+            long Ticket_Supplier_Id = 0;
+            long Sandouk_Cost_Center_Tree_Id = 0;
             int IS_Posted_Flage = 0;
             string Order_Notes = Man_Name;
             Notes = Man_Name;
             string Order_Tafkeet_Value = TafkeetProj.NumberToText.GetText(Cach_Value, Entry_Currency_ID);
             int Bank_Type_ = 0;
             int Order_Mony_Id_Transform = -1;
-            int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);
+            long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);
 
 
             try
@@ -2182,8 +2186,8 @@ FROM            Order_Money INNER JOIN
                 Order_Mony_Id2 = B_Id;
                 Money_Transaction_Box_ID = 0;
 
-                //B_Idx= Insert_Order_Money(ref   opp, Order_No, Order_Date, Transaction_Type, Cach_Value, Currency_Id, 0, Box_Id, Man_Name, 0, 0, 0, 0, 0, 0, "", "", 0, 1.0, 1, "ÌäíÉ ãÕÑì");
-                if (Transaction_Type == 1 & Reverse_Order == 0)  //ÇÓÊáÇã ãä Úãíá
+                //B_Idx= Insert_Order_Money(ref   opp, Order_No, Order_Date, Transaction_Type, Cach_Value, Currency_Id, 0, Box_Id, Man_Name, 0, 0, 0, 0, 0, 0, "", "", 0, 1.0, 1, "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½");
+                if (Transaction_Type == 1 & Reverse_Order == 0)  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 {
 
                     GetCustomer_Balance("Customer", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -2202,7 +2206,7 @@ FROM            Order_Money INNER JOIN
                     cu.Set_Customer_Balance_WithMoney_Transaction(ref Excp, ref opp, Customer_ID_Supplier, Transaction_Type, Order_Mony_Id2, Money_Transaction_Box_ID, Cach_Value, Notes);
                 }
 
-                if (Transaction_Type == 2 & Reverse_Order == 0) // ÕÑÝ áãæÑÏ
+                if (Transaction_Type == 2 & Reverse_Order == 0) // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
 
                     GetCustomer_Balance("Supplier", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -2219,7 +2223,7 @@ FROM            Order_Money INNER JOIN
                 }
 
                 //////////////////////////***********************************
-                if (Transaction_Type == 1 & Reverse_Order == 1)  // ÃÓÊáÇã ãä ÇáãæÑÏ
+                if (Transaction_Type == 1 & Reverse_Order == 1)  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     Cach_Value_Comput = Cach_Value_Comput * -1;
                     GetCustomer_Balance("Supplier", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -2234,7 +2238,7 @@ FROM            Order_Money INNER JOIN
                     cu.Set_Supplier_Balance_WithMoney_Transaction(ref Excp, ref opp, Customer_ID_Supplier, Transaction_Type, Order_Mony_Id2, Money_Transaction_Box_ID, Cach_Value, Notes);
                 }
 
-                if (Transaction_Type == 2 & Reverse_Order == 1)   // ÕÑÝ ááÚãáÇÁ
+                if (Transaction_Type == 2 & Reverse_Order == 1)   // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     Cach_Value_Comput = Cach_Value_Comput * -1;
                     GetCustomer_Balance("Customer", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -2322,8 +2326,8 @@ FROM            Order_Money INNER JOIN
                     Order_MoneyCLS om = new Order_MoneyCLS();
                     long Bank_Id = item.Bank_Id;
                     decimal Box_Balance = 0;
-                    int Entry_Currency_ID = 1;
-                    string Entry_Currency_Name = "ÌäíÉ ãÕÑì";
+                    long Entry_Currency_ID = 1;
+                    string Entry_Currency_Name = "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½";
                     Bank bnk = GetBank_Balance(Bank_Id, ref opp, ref Box_Balance);
                     //if (bnk != null)
                     //{
@@ -2411,8 +2415,8 @@ FROM            Order_Money INNER JOIN
                     Order_MoneyCLS om = new Order_MoneyCLS();
                     long Bank_Id = item.Bank_Id;
                     decimal Box_Balance = 0;
-                    int Entry_Currency_ID = 1;
-                    string Entry_Currency_Name = "ÌäíÉ ãÕÑì";
+                    long Entry_Currency_ID = 1;
+                    string Entry_Currency_Name = "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½";
                     Bank bnk = GetBank_Balance(Bank_Id, ref opp, ref Box_Balance);
 
 
@@ -2452,7 +2456,7 @@ FROM            Order_Money INNER JOIN
                     {
 
                         // Money_Transaction_BoxOrderReportCLS mo = new Money_Transaction_BoxOrderReportCLS();
-                        Set_BankBalanceDay(ref opp, item.Transaction_Date.Value, (int)bnk.Id, Box_Balance, item.Transaction_Value.Value, Transaction_Type);
+                        Set_BankBalanceDay(ref opp, item.Transaction_Date.Value, bnk.Id, Box_Balance, item.Transaction_Value.Value, Transaction_Type);
                     }
 
                     //Set_Transaction_Money_Box(omMain, item, bnk, MainOrder_MoneyId);
@@ -2518,8 +2522,8 @@ FROM            Order_Money INNER JOIN
                 Order_MoneyCLS om = new Order_MoneyCLS();
                 long Bank_Id = mbx.Bank_Id;
                 decimal Box_Balance = 0;
-                int Entry_Currency_ID = 1;
-                string Entry_Currency_Name = "ÌäíÉ ãÕÑì";
+                long Entry_Currency_ID = 1;
+                string Entry_Currency_Name = "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½";
                 Bank bnk = GetBank_Balance(Bank_Id, ref opp, ref Box_Balance);
 
 
@@ -2553,7 +2557,7 @@ FROM            Order_Money INNER JOIN
                 {
 
                     // Money_Transaction_BoxOrderReportCLS mo = new Money_Transaction_BoxOrderReportCLS();
-                    Set_BankBalanceDay(ref opp, mbx.Transaction_Date.Value, (int)bnk.Id, Box_Balance, mbx.Transaction_Value.Value, Transaction_Type);
+                    Set_BankBalanceDay(ref opp, mbx.Transaction_Date.Value,bnk.Id, Box_Balance, mbx.Transaction_Value.Value, Transaction_Type);
                 }
 
                 //Set_Transaction_Money_Box(omMain, item, bnk, MainOrder_MoneyId);
@@ -2622,11 +2626,11 @@ FROM            Order_Money INNER JOIN
             Notes = bnk.Bank_Name;
             if (Invoice_No != "")
             {
-                Notes = Notes + "   ÝÇÊæÑÉ ÑÞã " + Invoice_No;
+                Notes = Notes + "   ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ " + Invoice_No;
             }
             if (WorkOrderNumber != "")
             {
-                Notes = Notes + " ÃãÑ ÇáÔÛá ÑÞã " + WorkOrderNumber;
+                Notes = Notes + " ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ " + WorkOrderNumber;
 
             }
             if (omMain.Order_Notes.Trim() != "")
@@ -2719,7 +2723,7 @@ FROM            Order_Money INNER JOIN
 
             //decimal Cach_Value_Comput = item.Transaction_Value ?? 0;
             //decimal Box_Balance = 0;
-            //int Entry_Currency_ID = 1;
+            //long Entry_Currency_ID = 1;
             //string Bank_Name = "";
             //long  Bank_Id = (int)item.Bank_Id;
             //Bank bnk = GetBank_Balance(Bank_Id, ref opp, ref Box_Balance);
@@ -2728,12 +2732,12 @@ FROM            Order_Money INNER JOIN
             //    Entry_Currency_ID = bnk.Currency_Id ?? 1;
             //    Bank_Name = bnk.Bank_Name;
             //}
-            //string Entry_Currency_Name = "ÌäíÉ ãÕÑì";
+            //string Entry_Currency_Name = "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½";
 
 
             string Order_Tafkeet_Value = TafkeetProj.NumberToText.GetText(item.Transaction_Value ?? 0, omMain.Currency_Id);
 
-            //int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(omMain.Order_Date);
+            //long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(omMain.Order_Date);
             order_Money.User_Id = omMain.User_Id;
             order_Money.Branch_Id = omMain.Branch_Id;
 
@@ -2760,6 +2764,7 @@ FROM            Order_Money INNER JOIN
             order_Money.StillValue = omMain.StillValue;
             order_Money.paidTotal = omMain.paidTotal;
             order_Money.IsMoreTheOneBoxShow = omMain.IsMoreTheOneBoxShow;
+            order_Money.Day_Registration_flage = omMain.Day_Registration_flage ?? 0;
 
             return order_Money;
         }
@@ -2782,7 +2787,7 @@ FROM            Order_Money INNER JOIN
 
                     int Id_Test = item.Is_ProcessedFlage ?? 0;// long.Parse(dt_Order.Rows[x]["Id_Test"].ToString());
 
-                    if (Id_Test == 0) ///ÓØÑ ÈÏæä ÊÚÏíá Çì ãä ÇáÞíÏ ÞÈá ÇáÊÚÏíáÇÊ
+                    if (Id_Test == 0) ///ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                     {
                         //
                         //continue;
@@ -2796,10 +2801,10 @@ FROM            Order_Money INNER JOIN
 
                     long Bank_Id = item.Bank_Id;
                     decimal Box_Balance = 0;
-                    //int Entry_Currency_ID = 1;
-                    //string Entry_Currency_Name = "ÌäíÉ ãÕÑì";
+                    //long Entry_Currency_ID = 1;
+                    //string Entry_Currency_Name = "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½";
                     Bank bnk = GetBank_Balance(Bank_Id, ref opp, ref Box_Balance);
-                    if (Id_Test == 1) //   ÇÖÇÝÉ Úáì ÇáÇÐä
+                    if (Id_Test == 1) //   ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                     {
                         Order_Money order_Money = Get_Order_Money(Order_Mony_Id2, bnk, omMain, item);
                         item.Order_No = omMain.Order_No;
@@ -2811,10 +2816,10 @@ FROM            Order_Money INNER JOIN
                         {
 
                             // Money_Transaction_BoxOrderReportCLS mo = new Money_Transaction_BoxOrderReportCLS();
-                            Set_BankBalanceDay(ref opp, item.Transaction_Date.Value, (int)bnk.Id, Box_Balance, item.Transaction_Value.Value, Transaction_Type);
+                            Set_BankBalanceDay(ref opp, item.Transaction_Date.Value, bnk.Id, Box_Balance, item.Transaction_Value.Value, Transaction_Type);
                         }
                     }
-                    if (Id_Test == 2) //ÊÚÏíá
+                    if (Id_Test == 2) //ï¿½ï¿½ï¿½ï¿½ï¿½
                     {
                         Money_Transaction_Box_ID = item.Id;// long.Parse(dt_Order.Rows[x]["Id"].ToString());
                         decimal Transaction_Value_Old = 0;
@@ -2853,7 +2858,7 @@ FROM            Order_Money INNER JOIN
                         {
 
                             // Money_Transaction_BoxOrderReportCLS mo = new Money_Transaction_BoxOrderReportCLS();
-                            Set_BankBalanceDay(ref opp, item.Transaction_Date.Value, (int)bnk.Id, Box_Balance, item.Transaction_Value.Value, Transaction_Type);
+                            Set_BankBalanceDay(ref opp, item.Transaction_Date.Value, bnk.Id, Box_Balance, item.Transaction_Value.Value, Transaction_Type);
                         }
                     }
 
@@ -2872,7 +2877,7 @@ FROM            Order_Money INNER JOIN
                     foreach (var item in arr_IdDelet)
                     {
                         decimal Box_Balance = 0;
-                        Bank bnk = GetBank_Balance((int)item.Bank_Id, ref opp, ref Box_Balance);
+                        Bank bnk = GetBank_Balance( item.Bank_Id, ref opp, ref Box_Balance);
 
                         Money_Transaction_Box_ID = item.Id;// long.Parse(arr_IdDelet[y].ToString());
                         decimal Transaction_Value_Old = 0;
@@ -2911,7 +2916,7 @@ FROM            Order_Money INNER JOIN
                 }
                 if (Excp == 0)
                 {
-                    //ÇäÔÇÁ ÇáÞíÏ
+                    //ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                     Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
                     long Entry_No = 0;
                     aa.IsNotDeletePrevEntry = false;
@@ -2957,11 +2962,11 @@ FROM            Order_Money INNER JOIN
 
                 long Bank_Id = mbx.Bank_Id;
                 decimal Box_Balance = 0;
-                //int Entry_Currency_ID = 1;
-                //string Entry_Currency_Name = "ÌäíÉ ãÕÑì";
+                //long Entry_Currency_ID = 1;
+                //string Entry_Currency_Name = "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½";
                 Bank bnk = GetBank_Balance(Bank_Id, ref opp, ref Box_Balance);
 
-                if (mbx.Is_ProcessedFlage == 2) //ÊÚÏíá
+                if (mbx.Is_ProcessedFlage == 2) //ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     Money_Transaction_Box_ID = mbx.Id;// long.Parse(dt_Order.Rows[x]["Id"].ToString());
                     decimal Transaction_Value_Old = 0;
@@ -3000,7 +3005,7 @@ FROM            Order_Money INNER JOIN
                     {
 
                         // Money_Transaction_BoxOrderReportCLS mo = new Money_Transaction_BoxOrderReportCLS();
-                        Set_BankBalanceDay(ref opp, mbx.Transaction_Date.Value, (int)bnk.Id, Box_Balance, mbx.Transaction_Value.Value, Transaction_Type);
+                        Set_BankBalanceDay(ref opp, mbx.Transaction_Date.Value, bnk.Id, Box_Balance, mbx.Transaction_Value.Value, Transaction_Type);
                     }
                 }
 
@@ -3016,7 +3021,7 @@ FROM            Order_Money INNER JOIN
 
                 if (Excp == 0)
                 {
-                    //ÇäÔÇÁ ÇáÞíÏ
+                    //ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                     Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
                     long Entry_No = 0;
                     aa.IsNotDeletePrevEntry = false;
@@ -3081,9 +3086,9 @@ FROM            Order_Money INNER JOIN
             decimal Balance_After = 0;
             decimal Cach_Value_Comput = item.Transaction_Value.Value;
             int Transaction_Type = item.Transaction_Type.Value;
-            decimal Box_Balance = GetBank_Balance(ref opp, (int)bnk.Id, true);// bnk.Last_Balance ?? 0;
+            decimal Box_Balance = GetBank_Balance(ref opp, bnk.Id, true);// bnk.Last_Balance ?? 0;
             decimal Box_BalanceBeforAction = Box_Balance;
-            //decimal Box_BalanceBeforAction = GetBank_Balance(ref opp, (int)bnk.Id, true);
+            //decimal Box_BalanceBeforAction = GetBank_Balance(ref opp, bnk.Id, true);
             item.Is_ProcessedFlage = 0;
             Notes = item.Notes;
             #region Customer
@@ -3091,7 +3096,7 @@ FROM            Order_Money INNER JOIN
             {
                 CustomersAccountCLS ca = new CustomersAccountCLS();
                 ca.ProcessNo = item.ProcessNo;
-                if (Transaction_Type == 1)  //ÇÓÊáÇã ãä Úãíá
+                if (Transaction_Type == 1)  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 {
                     GetCustomer_Balance("Customer", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
 
@@ -3112,7 +3117,7 @@ FROM            Order_Money INNER JOIN
                     }
 
                 }
-                if (Transaction_Type == 2)   // ÕÑÝ ááÚãáÇÁ
+                if (Transaction_Type == 2)   // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
 
 
@@ -3150,7 +3155,7 @@ FROM            Order_Money INNER JOIN
 
                 Suppliers_AccountsCls sp = new Suppliers_AccountsCls();
                 sp.ProcessNo = item.ProcessNo;
-                if (Transaction_Type == 1)  // ÃÓÊáÇã ãä ÇáãæÑÏ
+                if (Transaction_Type == 1)  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
 
                     Cach_Value_Comput = Cach_Value_Comput * -1;
@@ -3175,7 +3180,7 @@ FROM            Order_Money INNER JOIN
 
 
                 }
-                if (Transaction_Type == 2) // ÕÑÝ áãæÑÏ
+                if (Transaction_Type == 2) // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
 
 
@@ -3204,7 +3209,7 @@ FROM            Order_Money INNER JOIN
             {
 
                 // Money_Transaction_BoxOrderReportCLS mo = new Money_Transaction_BoxOrderReportCLS();
-                Set_BankBalanceDay(ref opp, item.Transaction_Date.Value, (int)bnk.Id, Box_BalanceBeforAction, item.Transaction_Value.Value, Transaction_Type);
+                Set_BankBalanceDay(ref opp, item.Transaction_Date.Value, bnk.Id, Box_BalanceBeforAction, item.Transaction_Value.Value, Transaction_Type);
             }
 
         }
@@ -3229,7 +3234,7 @@ FROM            Order_Money INNER JOIN
             {
                 CustomersAccountCLS ca = new CustomersAccountCLS();
                 ca.ProcessNo = item.ProcessNo;
-                if (Transaction_Type == 1)  //ÇÓÊáÇã ãä Úãíá
+                if (Transaction_Type == 1)  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 {
                     GetCustomer_Balance("Customer", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
 
@@ -3242,7 +3247,7 @@ FROM            Order_Money INNER JOIN
                     }
 
                 }
-                if (Transaction_Type == 2)   // ÕÑÝ ááÚãáÇÁ
+                if (Transaction_Type == 2)   // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
 
 
@@ -3269,7 +3274,7 @@ FROM            Order_Money INNER JOIN
 
                 Suppliers_AccountsCls sp = new Suppliers_AccountsCls();
                 sp.ProcessNo = item.ProcessNo;
-                if (Transaction_Type == 1)  // ÃÓÊáÇã ãä ÇáãæÑÏ
+                if (Transaction_Type == 1)  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
 
                     Cach_Value_Comput = Cach_Value_Comput * -1;
@@ -3286,7 +3291,7 @@ FROM            Order_Money INNER JOIN
 
 
                 }
-                if (Transaction_Type == 2) // ÕÑÝ áãæÑÏ
+                if (Transaction_Type == 2) // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
 
 
@@ -3305,7 +3310,7 @@ FROM            Order_Money INNER JOIN
 
 
         }
-        public void Edit_Transaction_BanksBox_NewSarf(ref int Excp, ref string Msg, ref operations opp, string Bank_Name, ref long Order_Mony_Id2, ArrayList arr_IdDelet, DataTable dt_Order, int Transaction_Type, int Sandouk_Cost_Center_Tree_Id, string Order_No, long Box_Id, decimal Box_Balance, DateTime Order_Date, string Man_Name, int Box_Currency_Id, string Order_Tafkeet_Value, string Order_Notes, decimal Factor, int Entry_Currency_ID, string Entry_Currency_Name, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
+        public void Edit_Transaction_BanksBox_NewSarf(ref int Excp, ref string Msg, ref operations opp, string Bank_Name, ref long Order_Mony_Id2, ArrayList arr_IdDelet, DataTable dt_Order, int Transaction_Type, long Sandouk_Cost_Center_Tree_Id, string Order_No, long Box_Id, decimal Box_Balance, DateTime Order_Date, string Man_Name, long Box_Currency_Id, string Order_Tafkeet_Value, string Order_Notes, decimal Factor, long    Entry_Currency_ID, string Entry_Currency_Name, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
         {
 
 
@@ -3324,7 +3329,7 @@ FROM            Order_Money INNER JOIN
 
                     long Id_Test = long.Parse(dt_Order.Rows[x]["Id_Test"].ToString());
 
-                    if (Id_Test == 0) ///ÓØÑ ÈÏæä ÊÚÏíá Çì ãä ÇáÞíÏ ÞÈá ÇáÊÚÏíáÇÊ
+                    if (Id_Test == 0) ///ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                     {
                         //
                         continue;
@@ -3373,8 +3378,8 @@ FROM            Order_Money INNER JOIN
                     int Account_Type_Value = int.Parse(dt_Order.Rows[x]["Account_Type"].ToString());
                     long SubAccount_Id = long.Parse(dt_Order.Rows[x]["SubAccount_Id"].ToString());
                     long Account_Cost_Center_Tree_Id = long.Parse(dt_Order.Rows[x]["Account_Cost_Center_Tree_Id"].ToString());
-                    int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);// Common.Year_Financial_Period_Id;
-                    int Account_Currency_Id = int.Parse(dt_Order.Rows[x]["Currency_Id"].ToString());
+                    long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);// Common.Year_Financial_Period_Id;
+                    long Account_Currency_Id = long.Parse(dt_Order.Rows[x]["Currency_Id"].ToString());
                     string Account_Code = dt_Order.Rows[x]["Account_Code"].ToString();
                     //if (Account_Type_Value == Common.Customer_Account_Type)
                     //{
@@ -3400,12 +3405,12 @@ FROM            Order_Money INNER JOIN
                         //Supplier_Id = SubAccount_Customer_Supplier_Id;
                     }
                     long ProcessNo = 0;
-                    if (Id_Test == 1) //   ÇÖÇÝÉ Úáì ÇáÇÐä
+                    if (Id_Test == 1) //   ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                     {
                         Money_Transaction_Box_ID = Insert_Money_Transaction_Box(ref opp, Order_Mony_Id2, long.Parse(Order_No), Bank_Name, Order_Date, Box_Currency_Id, Account_Currency_Id, Transaction_Type, Cach_Value, Cach_Value.ToString(), Box_Id, Customer_Id, Supplier_Id, SubAccount_Id, Account_Type_Value, Notes_Details, Balance_Before, Balance_After, Balance_BeforStr, Balance_AfterStr, 0, 0, 0, 0, 0, Account_Cost_Center_Tree_Id, Account_Name, CostCenter_Name, Factor, Account_Code, CarsWorkOrdersId, Reference_Type_Table_Id, DataDictionaryProcessesListsId);
                         Set_TransactionMoney_For_Customer_SupplierAccounts(ref opp, Order_Mony_Id2, Money_Transaction_Box_ID, Transaction_Type, Cach_Value, Customer_Id, Supplier_Id, SubAccount_Id, Account_Type_Value, Notes_Details, ProcessNo);
                     }
-                    if (Id_Test == 2) //ÊÚÏíá
+                    if (Id_Test == 2) //ï¿½ï¿½ï¿½ï¿½ï¿½
                     {
                         Money_Transaction_Box_ID = long.Parse(dt_Order.Rows[x]["Id"].ToString());
                         decimal Transaction_Value_Old = 0;
@@ -3462,7 +3467,7 @@ FROM            Order_Money INNER JOIN
 
         }
 
-        public void Edit_Transaction_BanksBox_NewSarf_(ref int Excp, ref string Msg, ref operations opp, ref long Order_Mony_Id2, string Bank_Name, ArrayList arr_IdDelet, DataTable dt_Order, int Transaction_Type, int Sandouk_Cost_Center_Tree_Id, string Order_No, long Box_Id, decimal Box_Balance, DateTime Order_Date, string Man_Name, int Box_Currency_Id, string Order_Tafkeet_Value, string Order_Notes, decimal Factor, int Entry_Currency_ID, string Entry_Currency_Name, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
+        public void Edit_Transaction_BanksBox_NewSarf_(ref int Excp, ref string Msg, ref operations opp, ref long Order_Mony_Id2, string Bank_Name, ArrayList arr_IdDelet, DataTable dt_Order, int Transaction_Type, long Sandouk_Cost_Center_Tree_Id, string Order_No, long Box_Id, decimal Box_Balance, DateTime Order_Date, string Man_Name, long  Box_Currency_Id, string Order_Tafkeet_Value, string Order_Notes, decimal Factor, long    Entry_Currency_ID, string Entry_Currency_Name, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
         {
 
 
@@ -3481,7 +3486,7 @@ FROM            Order_Money INNER JOIN
 
                     long Id_Test = long.Parse(dt_Order.Rows[x]["Id_Test"].ToString());
 
-                    if (Id_Test == 0) ///ÓØÑ ÈÏæä ÊÚÏíá Çì ãä ÇáÞíÏ ÞÈá ÇáÊÚÏíáÇÊ
+                    if (Id_Test == 0) ///ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                     {
                         //
                         continue;
@@ -3530,8 +3535,8 @@ FROM            Order_Money INNER JOIN
                     int Account_Type_Value = int.Parse(dt_Order.Rows[x]["Account_Type"].ToString());
                     long SubAccount_Id_ = long.Parse(dt_Order.Rows[x]["SubAccount_Id"].ToString());
                     long Account_Cost_Center_Tree_Id = long.Parse(dt_Order.Rows[x]["Account_Cost_Center_Tree_Id"].ToString());
-                    int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);// Common.Year_Financial_Period_Id;
-                    int Account_Currency_Id = int.Parse(dt_Order.Rows[x]["Currency_Id"].ToString());
+                    long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);// Common.Year_Financial_Period_Id;
+                    long Account_Currency_Id = long.Parse(dt_Order.Rows[x]["Currency_Id"].ToString());
                     string Account_Code = dt_Order.Rows[x]["Account_Code"].ToString();
                     //if (Account_Type_Value == Common.Customer_Account_Type)
                     //{
@@ -3557,12 +3562,12 @@ FROM            Order_Money INNER JOIN
                         //Supplier_Id = SubAccount_Customer_Supplier_Id;
                     }
                     long ProcessNo = 0;
-                    if (Id_Test == 1) //   ÇÖÇÝÉ Úáì ÇáÇÐä
+                    if (Id_Test == 1) //   ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                     {
                         Money_Transaction_Box_ID = Insert_Money_Transaction_Box(ref opp, Order_Mony_Id2, long.Parse(Order_No), Bank_Name, Order_Date, Box_Currency_Id, Account_Currency_Id, Transaction_Type, Cach_Value, Cach_Value.ToString(), Box_Id, Customer_Id, Supplier_Id, SubAccount_Id_, Account_Type_Value, Notes_Details, Balance_Before, Balance_After, Balance_BeforStr, Balance_AfterStr, 0, 0, 0, 0, 0, Account_Cost_Center_Tree_Id, Account_Name, CostCenter_Name, Factor, Account_Code, CarsWorkOrdersId, Reference_Type_Table_Id, DataDictionaryProcessesListsId);
                         Set_TransactionMoney_For_Customer_SupplierAccounts(ref opp, Order_Mony_Id2, Money_Transaction_Box_ID, Transaction_Type, Cach_Value, Customer_Id, Supplier_Id, SubAccount_Id_, Account_Type_Value, Notes_Details, ProcessNo);
                     }
-                    if (Id_Test == 2) //ÊÚÏíá
+                    if (Id_Test == 2) //ï¿½ï¿½ï¿½ï¿½ï¿½
                     {
                         Money_Transaction_Box_ID = long.Parse(dt_Order.Rows[x]["Id"].ToString());
                         decimal Transaction_Value_Old = 0;
@@ -3653,7 +3658,7 @@ FROM            Order_Money INNER JOIN
             {
                 CustomersAccountCLS ca = new CustomersAccountCLS();
                 ca.ProcessNo = ProcessNo;
-                if (Transaction_Type == 1)  //ÇÓÊáÇã ãä Úãíá
+                if (Transaction_Type == 1)  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 {
 
                     GetCustomer_Balance("Customer", Customer_Id, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -3663,7 +3668,7 @@ FROM            Order_Money INNER JOIN
 
 
                 }
-                if (Transaction_Type == 2)   // ÕÑÝ ááÚãáÇÁ
+                if (Transaction_Type == 2)   // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     Cach_Value_Comput = Cach_Value_Comput * -1;
                     GetCustomer_Balance("Customer", Customer_Id, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -3685,7 +3690,7 @@ FROM            Order_Money INNER JOIN
 
                 Suppliers_AccountsCls sp = new Suppliers_AccountsCls();
                 sp.ProcessNo = ProcessNo;
-                if (Transaction_Type == 1)  // ÃÓÊáÇã ãä ÇáãæÑÏ
+                if (Transaction_Type == 1)  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
                     Cach_Value_Comput = Cach_Value_Comput * -1;
                     GetCustomer_Balance("Supplier", Supplier_Id, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -3695,7 +3700,7 @@ FROM            Order_Money INNER JOIN
 
 
                 }
-                if (Transaction_Type == 2) // ÕÑÝ áãæÑÏ
+                if (Transaction_Type == 2) // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                 {
 
                     GetCustomer_Balance("Supplier", Supplier_Id, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -3709,7 +3714,7 @@ FROM            Order_Money INNER JOIN
 
         }
 
-        public void Make_Transaction_BanksBox_NewSarf(ref int Excp, ref string Msg, ref operations opp, ref long Order_Mony_Id2, string Bank_Name, DataTable dt_Order, int Transaction_Type, int Sandouk_Cost_Center_Tree_Id, string Order_No, long Box_Id, decimal Box_Balance, DateTime Order_Date, string Man_Name, int Box_Currency_Id, string Order_Tafkeet_Value, string Order_Notes, decimal Factor, int Entry_Currency_ID, string Entry_Currency_Name, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId, int IsMoreTheOneBoxShow)
+        public void Make_Transaction_BanksBox_NewSarf(ref int Excp, ref string Msg, ref operations opp, ref long Order_Mony_Id2, string Bank_Name, DataTable dt_Order, int Transaction_Type, long Sandouk_Cost_Center_Tree_Id, string Order_No, long Box_Id, decimal Box_Balance, DateTime Order_Date, string Man_Name, long Box_Currency_Id, string Order_Tafkeet_Value, string Order_Notes, decimal Factor, long    Entry_Currency_ID, string Entry_Currency_Name, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId, int IsMoreTheOneBoxShow)
         {
             // int Account_Type_Value, int SubAccount_Customer_Supplier_Id  decimal Cach_Value
             //int Account_Cost_Center_Tree_Id, ref long Order_Mony_Id2, int Transaction_Type
@@ -3775,11 +3780,11 @@ FROM            Order_Money INNER JOIN
                     long SubAccount_Customer_Supplier_Id = long.Parse(dt_Order.Rows[x]["SubAccount_Id"].ToString());
                     long SubAccount_Id = long.Parse(dt_Order.Rows[x]["SubAccount_Id"].ToString());
                     long Account_Cost_Center_Tree_Id = long.Parse(dt_Order.Rows[x]["Account_Cost_Center_Tree_Id"].ToString());
-                    int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(ref opp, Order_Date);// Common.Year_Financial_Period_Id;
-                    int Account_Currency_Id = 1;
+                    long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(ref opp, Order_Date);// Common.Year_Financial_Period_Id;
+                    long Account_Currency_Id = 1;
                     try
                     {
-                        Account_Currency_Id = int.Parse(dt_Order.Rows[x]["Currency_Id"].ToString());
+                        Account_Currency_Id = long.Parse(dt_Order.Rows[x]["Currency_Id"].ToString());
                     }
                     catch { }
 
@@ -3891,7 +3896,7 @@ FROM            Order_Money INNER JOIN
 
         public void Make_Transaction_BanksBox_NewSarf_(ref int Excp, ref string Msg, ref operations opp, ref long Order_Mony_Id2, Order_Money omMain, List<Money_Transaction_Box> mbxList)
         {
-            //DataTable dt_Order, int Transaction_Type, int Sandouk_Cost_Center_Tree_Id, string Order_No, long  Box_Id, decimal Box_Balance, DateTime Order_Date, string Man_Name, int Box_Currency_Id, string Order_Tafkeet_Value, string Order_Notes, decimal Factor, int Entry_Currency_ID, string Entry_Currency_Name
+            //DataTable dt_Order, int Transaction_Type, long Sandouk_Cost_Center_Tree_Id, string Order_No, long  Box_Id, decimal Box_Balance, DateTime Order_Date, string Man_Name, long  Box_Currency_Id, string Order_Tafkeet_Value, string Order_Notes, decimal Factor, long    Entry_Currency_ID, string Entry_Currency_Name
             try
             {
                 long Order_No_ = omMain.Order_No;
@@ -3938,21 +3943,21 @@ FROM            Order_Money INNER JOIN
                 {
                     AccountModelsLib.Accounts_Entry_POST_CLS aa = new AccountModelsLib.Accounts_Entry_POST_CLS();
                     int IS_Tar7eel_Sandouk_Automatic = 1;
-                    int Branch_Id = Common.Branch_Id;
+                    long Branch_Id = Common.Branch_Id;
                     DateTime DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
                     DateTime DateTo = new DateTime(DateTime.Now.Year, 12, 31);
                     int Excp_1 = 0;
                     string Msg_1 = "";
 
                     //decimal Factor = 1;
-                    //if (Common.MsgBoxYesNo("åá ÊÑíÏ ÊÑÍíá ÇáÅÐä Çáì ÇáÍÓÇÈÇÊ ÇáÚÇãÉ ÈÅÕÏÇÑ ÇáÞíÏ", "ÇáÕäÏæÞ"))
+                    //if (Common.MsgBoxYesNo("ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½", "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"))
                     //{
                     aa.Make_Entry_For_AccountsSandouk(ref Excp_1, ref Msg_1, ref opp, IS_Tar7eel_Sandouk_Automatic, Branch_Id, DateFrom, DateTo, omMain.Entry_Currency_ID ?? 1, omMain.Entry_Currency_Name, Factor, omMain.Id, 0);
 
                     if (Excp_1 == 0)
                     {
                         Msg_1 = Msg_1 + "\n\r\n";
-                        Msg_1 = Msg_1 + "Êã ÅÕÏÇÑ ÓäÏ ÇáäÞÏíÉ æÊÑÍíáÉ Åáì ÇáÍÓÇÈÇÊ ÇáÚÇãå  ";
+                        Msg_1 = Msg_1 + "ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  ";
                         //opp.Commit();
 
 
@@ -3960,7 +3965,7 @@ FROM            Order_Money INNER JOIN
                     else
                     {
                         //Msg_1 = Msg_1 + "\n\r\n";
-                        Msg_1 = Msg_1 + "ÎØÅ Ýì ÅÕÏÇÑ ÇáÅÐä æ ÎØÃ Ýì ÊÑÍíá ÇáÅÐä Åáì ÇáÍÓÇÈÇÊ ÇáÚÇãå íÑÌì ãÑÇÌÚÉ ÇáÍÓÇÈÇÊ  æÅÏÎÇá ÇáÞíæÏ";
+                        Msg_1 = Msg_1 + "ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
                         //MessageBox.Show(Msg_1);
                         //opp.Rollback(); 
                     }
@@ -4031,7 +4036,7 @@ FROM            Order_Money INNER JOIN
                 if (omMain == null)
                 {
                     Excp = 2;
-                    Msg = "ÅÐä ÇáäÞÏíÉ ÛíÑ ãæÌæÏ";
+                    Msg = "ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½";
                     return;
                 }
                 List<Money_Transaction_Box> mbxlst = opp.db.Money_Transaction_Box.Where(i => i.Order_Mony_Id == Order_MoneyId).ToList();
@@ -4071,7 +4076,7 @@ FROM            Order_Money INNER JOIN
                         opp.insert_me(mysql);
                     }
 
-                    ////////////ÊÚÏíá ÇÌãÇáì ÇáÇÐä
+                    ////////////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
                     mysql = "Update Order_Money Set Total_Value=Total_Value + " + Transaction_Value_Old + " Where Id= " + mbx.Order_Mony_Id;
                     opp.insert_me(mysql);
 
@@ -4079,6 +4084,8 @@ FROM            Order_Money INNER JOIN
 
                     mysql = "Delete From  Money_Transaction_Box Where Id= " + mbx.Id;
                     opp.insert_me(mysql);
+                    // EF still tracks this row after the raw DELETE; a new row that reuses the same Id (MAX+1) would otherwise fail with a tracking-key conflict.
+                    opp.db.Entry(mbx).State = EntityState.Detached;
 
                     try
                     {
@@ -4096,17 +4103,17 @@ FROM            Order_Money INNER JOIN
                 decimal Box_BalanceBeforAction = GetBank_Balance(ref opp, omMain.Bank_Id, true);
                 Set_Delete_BankBalanceDay(ref opp, omMain.Order_Date, omMain.Bank_Id, Box_BalanceBeforAction, Total_Value_New, omMain.Transaction_type);
 
-                Msg = "Êã ÍÐÝ ÅÐä ÇáäÞÏíÉ ÈäÌÇÍ";
+                Msg = "ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½";
                 AccountModelsLib.Accounts_Entry_POST_CLS aa = new AccountModelsLib.Accounts_Entry_POST_CLS();
 
-                int Branch_Id = Common.Branch_Id;
+                long Branch_Id = Common.Branch_Id;
                 DateTime DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
                 DateTime DateTo = new DateTime(DateTime.Now.Year, 12, 31);
                 int Excp_1 = 0;
                 string Msg_1 = "";
 
                 //decimal Factor = 1;
-                //if (Common.MsgBoxYesNo("åá ÊÑíÏ ÊÑÍíá ÇáÅÐä Çáì ÇáÍÓÇÈÇÊ ÇáÚÇãÉ ÈÅÕÏÇÑ ÇáÞíÏ", "ÇáÕäÏæÞ"))
+                //if (Common.MsgBoxYesNo("ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½", "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"))
                 //{
                 string Doc_No = omMain.Order_No.ToString();
 
@@ -4130,7 +4137,7 @@ FROM            Order_Money INNER JOIN
 
 
                     Msg_1 = Msg_1 + "\n\r\n";
-                    Msg_1 = Msg_1 + "Êã   ÍÐÝ ÇáÞíÏ Ýì ÇáÍÓÇÈÇÊ ÇáÚÇãå  ";
+                    Msg_1 = Msg_1 + "ï¿½ï¿½   ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  ";
                 }
 
                 Msg = Msg + "\n\r";
@@ -4141,7 +4148,7 @@ FROM            Order_Money INNER JOIN
             catch (Exception ee)
             {
                 Excp = 1;
-                Msg = Msg + "ÎØÃ Ýì ÍÐÇ ÅÐä ÇáäÞÏíÉ";
+                Msg = Msg + "ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
                 Msg = Msg + "\n\r\n";
                 Msg = Msg + ee.Message;
 
@@ -4149,7 +4156,7 @@ FROM            Order_Money INNER JOIN
 
         }
 
-        public void MakeOrderBetweenTwo_Sandouk(ref int Excp, ref string Msg, ref operations opp, string Bank_Name, ref long Order_Mony_Id2, DateTime Order_Date, string Order_No_S, long Box_Id_S, int Currency_Id_S, string Tafkeet_Value_S, string Order_No_T, long Box_Id_T, int Currency_Id_T, string Tafkeet_Value_T, decimal Cach_Value, decimal Equivalent_Value, string Man_Name, string Order_Notes, string Account_Name, decimal Factor, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId, int IsMoreTheOneBoxShow)
+        public void MakeOrderBetweenTwo_Sandouk(ref int Excp, ref string Msg, ref operations opp, string Bank_Name, ref long Order_Mony_Id2, DateTime Order_Date, string Order_No_S, long Box_Id_S, long Currency_Id_S, string Tafkeet_Value_S, string Order_No_T, long Box_Id_T, long Currency_Id_T, string Tafkeet_Value_T, decimal Cach_Value, decimal Equivalent_Value, string Man_Name, string Order_Notes, string Account_Name, decimal Factor, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId, int IsMoreTheOneBoxShow)
         {
 
             try
@@ -4158,17 +4165,17 @@ FROM            Order_Money INNER JOIN
                 if (Cach_Value > Balance_S)
                 {
                     Excp = 10;
-                    Msg = "ÑÕíÏ ÇáÕäÏæÞ áÇ íÓãÍ ÈÇáÕÑÝ";
+                    Msg = "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
                     return;
                 }
 
                 string Account_Code = "";
-                int SubAccount_Customer_Supplier_Id = 0;
+                long SubAccount_Customer_Supplier_Id = 0;
 
                 int Account_Type_Value_S = 6;
                 int Account_Type_Value_T = 6;
 
-                //ÅÐä ÕÑÝ
+                //ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
                 SubAccount_Customer_Supplier_Id = GetBank_SubAccount_Id(ref opp, Box_Id_T);
                 Equivalent_ValueBetween_Banks = Equivalent_Value;
 
@@ -4191,7 +4198,7 @@ FROM            Order_Money INNER JOIN
                     Equivalent_ValueBetween_Banks = Common.RoundMe(Equivalent_ValueBetween_Banks);
                 }
                 catch { Equivalent_ValueBetween_Banks = 1; }
-                // ÇÐä ÇÓÊáÇã
+                // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 SubAccount_Customer_Supplier_Id = GetBank_SubAccount_Id(ref opp, Box_Id_S);
                 long Order_Mony_Id = 0;
 
@@ -4214,7 +4221,7 @@ FROM            Order_Money INNER JOIN
             }
         }
 
-        public void Make_Transaction_BanksBox_New(ref int Excp, ref string Msg, ref operations opp, string Bank_Name, int Account_Type_Value, long SubAccount_Customer_Supplier_Id, ref long Order_Mony_Id2, int Transaction_Type, string Order_No, long Box_Id, decimal Cach_Value, DateTime Order_Date, string Man_Name, int Box_Currency_Id, int Account_Currency_Id, string Tafkeet_Value, string Order_Notes, string Account_Name, decimal Factor, int Entry_Currency_ID, string Entry_Currency_Name, string Account_Code, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId, int IsMoreTheOneBoxShow)
+        public void Make_Transaction_BanksBox_New(ref int Excp, ref string Msg, ref operations opp, string Bank_Name, int Account_Type_Value, long SubAccount_Customer_Supplier_Id, ref long Order_Mony_Id2, int Transaction_Type, string Order_No, long Box_Id, decimal Cach_Value, DateTime Order_Date, string Man_Name, long  Box_Currency_Id, long Account_Currency_Id, string Tafkeet_Value, string Order_Notes, string Account_Name, decimal Factor, long    Entry_Currency_ID, string Entry_Currency_Name, string Account_Code, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId, int IsMoreTheOneBoxShow)
         {
 
 
@@ -4227,7 +4234,7 @@ FROM            Order_Money INNER JOIN
             string CostCenter_Name = "";
 
             decimal Box_Balance = GetBank_Balance(ref opp, Box_Id, true);
-            //int Year_Financial_Period_Id = Common.Year_Financial_Period_Id;
+            //long Year_Financial_Period_Id = Common.Year_Financial_Period_Id;
             long Customer_Id = 0;
             long Supplier_Id = 0;
 
@@ -4262,7 +4269,7 @@ FROM            Order_Money INNER JOIN
                 long ProcessNo = 0;
                 Set_TransactionMoney_For_Customer_SupplierAccounts(ref opp, Order_Mony_Id2, Money_Transaction_Box_ID, Transaction_Type, Cach_Value, Customer_Id, Supplier_Id, SubAccount_Customer_Supplier_Id, Account_Type_Value, Order_Notes, ProcessNo);
 
-                //////ÞíÏ123
+                //////ï¿½ï¿½ï¿½123
                 Excp = 0;
             }
             catch (Exception ee)
@@ -4276,7 +4283,7 @@ FROM            Order_Money INNER JOIN
         }
         public decimal Purchase_Ticket_Value = 0;
         public decimal Commission_Value = 0;
-        public void Make_Transaction_BanksBox_NewSalesTicket(ref int Excp, ref string Msg, ref operations opp, string Bank_Name, int Account_Type_Value, int Sandouk_Cost_Center_Tree_Id, int Account_Cost_Center_Tree_Id, ref long Order_Mony_Id2, int Transaction_Type, string Order_No, long Box_Id, decimal Box_Balance, decimal Cach_Value, DateTime Order_Date, string Man_Name, int Box_Currency_Id, int Account_Currency_Id, int Ticket_Supplier_Id, int Customer_Id, int Reverse_Order, long SubAccount_Id, string Tafkeet_Value, string Order_Notes, decimal Total_Value, decimal Rest_Value, string Account_Name, string CostCenter_Name, decimal Factor, int Entry_Currency_ID, string Entry_Currency_Name, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId, int IsMoreTheOneBoxShow)
+        public void Make_Transaction_BanksBox_NewSalesTicket(ref int Excp, ref string Msg, ref operations opp, string Bank_Name, int Account_Type_Value, long Sandouk_Cost_Center_Tree_Id, int Account_Cost_Center_Tree_Id, ref long Order_Mony_Id2, int Transaction_Type, string Order_No, long Box_Id, decimal Box_Balance, decimal Cach_Value, DateTime Order_Date, string Man_Name, long  Box_Currency_Id, long Account_Currency_Id, long  Ticket_Supplier_Id, long Customer_Id, int Reverse_Order, long SubAccount_Id, string Tafkeet_Value, string Order_Notes, decimal Total_Value, decimal Rest_Value, string Account_Name, string CostCenter_Name, decimal Factor, long    Entry_Currency_ID, string Entry_Currency_Name, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId, int IsMoreTheOneBoxShow)
         {
             //long Order_No,string Bank_Name = "";
             string mysql = "";
@@ -4288,7 +4295,7 @@ FROM            Order_Money INNER JOIN
 
             decimal Cach_Value_Comput = Cach_Value;
             Box_Balance = GetBank_Balance(ref opp, Box_Id, true);
-            //int Year_Financial_Period_Id=Common.Year_Financial_Period_Id;
+            //long Year_Financial_Period_Id=Common.Year_Financial_Period_Id;
             try
             {
                 #region Customer
@@ -4340,7 +4347,7 @@ FROM            Order_Money INNER JOIN
         }
         int IS_Posted_Flage = 0;
 
-        public long Insert_Order_Money(ref int Excp, ref string Msg, ref operations opp, long Order_No, DateTime Order_Date, int Transaction_type, decimal Total_Value, int Currency_Id, int Bank_Type, long Bank_ID, string Man_Name, int Is_Balances_Set, int Day_Registration_flage, long DayReg_List_Id, int Order_mony_id_Transform, long Invoice_Id, int Ticket_Supplier_Id, string Tafkeet_Value, string Order_Notes, int Sandouk_Cost_Center_Tree_Id, decimal Factor, int Entry_Currency_ID, string Entry_Currency_Name, long CarsWorkOrdersId, int IsMoreTheOneBoxShow)
+        public long Insert_Order_Money(ref int Excp, ref string Msg, ref operations opp, long Order_No, DateTime Order_Date, int Transaction_type, decimal Total_Value, long Currency_Id, int Bank_Type, long Bank_ID, string Man_Name, int Is_Balances_Set, int Day_Registration_flage, long DayReg_List_Id, int Order_mony_id_Transform, long Invoice_Id, long  Ticket_Supplier_Id, string Tafkeet_Value, string Order_Notes, long Sandouk_Cost_Center_Tree_Id, decimal Factor, long    Entry_Currency_ID, string Entry_Currency_Name, long CarsWorkOrdersId, int IsMoreTheOneBoxShow)
         {
             Order_MoneyCLS om = new Order_MoneyCLS();
 
@@ -4366,7 +4373,7 @@ FROM            Order_Money INNER JOIN
             string mysql = " ";
 
 
-            int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);
+            long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);
 
             //Id,Serial,
             mysql = " Update  Order_Money Set  Order_No=" + Order_No + ",Order_Date=" + operations.Get_DateToInsert(Order_Date) + ",  Man_Name='" + Man_Name + "',User_Id=" + Common.User_Id + ",Year_Financial_Period_Id=" + Year_Financial_Period_Id + ",Order_Tafkeet_Value='" + Tafkeet_Value + "',Order_Notes='" + Order_Notes + "',Factor=" + Factor + " ";
@@ -4390,10 +4397,10 @@ FROM            Order_Money INNER JOIN
         }
 
         decimal Equivalent_ValueBetween_Banks = 1;
-        public long InsertMoney_Transaction_Box(ref int Excp, ref string Msg, ref operations opp, long Order_Mony_Id, long Order_No, string Bank_Name, DateTime Transaction_Date, int Transaction_Type, decimal Import_Value, decimal Export_Value, decimal Transaction_Value, string Transaction_Value_, long Bank_Id, decimal Bank_Balance, long Supplier_Id, long Customer_Id, long BankAccount_Id, long Account_Id, int Account_Type, long SubAccount_Id, string Notes, decimal Balance_Before, decimal Balance_After, string Balance_BeforStr, string Balance_AfterStr, string Account_Name, int User_Id, int Branch_Id, decimal Equivalent_Value, decimal Factor, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
+        public long InsertMoney_Transaction_Box(ref int Excp, ref string Msg, ref operations opp, long Order_Mony_Id, long Order_No, string Bank_Name, DateTime Transaction_Date, int Transaction_Type, decimal Import_Value, decimal Export_Value, decimal Transaction_Value, string Transaction_Value_, long Bank_Id, decimal Bank_Balance, long Supplier_Id, long Customer_Id, long BankAccount_Id, long Account_Id, int Account_Type, long SubAccount_Id, string Notes, decimal Balance_Before, decimal Balance_After, string Balance_BeforStr, string Balance_AfterStr, string Account_Name, long User_Id, long Branch_Id, decimal Equivalent_Value, decimal Factor, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
         {
             Money_Transaction_BoxCLS mt = new Money_Transaction_BoxCLS(ref opp);
-            int Currency_Id = 1;
+            long    Currency_Id = 1;
 
             int DestructionSales = 0;
             int Order_mony_id_transform = -1;
@@ -4405,7 +4412,7 @@ FROM            Order_Money INNER JOIN
             string CostCenter_Name = "";
             decimal Purchase_Ticket_Value = 0;
             decimal Commission_Value = 0;
-            int Entry_Currency_ID = 0;
+            long Entry_Currency_ID = 0;
             string Tafkeet_Value = TafkeetProj.NumberToText.GetText(Transaction_Value, 1);
 
             mt.Lookup_CashPaymentMethodId = Lookup_CashPaymentMethodId;
@@ -4416,7 +4423,7 @@ FROM            Order_Money INNER JOIN
 
 
 
-        public long Insert_Money_Transaction_Box(ref operations opp, long Order_Mony_Id, long Order_No, string Bank_Name, DateTime Order_Date, int Box_Currency_Id, int Account_Currency_Id, int Transaction_Type, decimal Transaction_Value, string Transaction_Value_, long Bank_Id, long Customer_Id, long Supplier_Id, long SubAccount_Customer_Supplier_Id, int Account_Type_Value, string Notes, decimal Balance_Before, decimal Balance_After, string Balance_BeforStr, string Balance_AfterStr, int BankAccount_Id, int DestructionSales, int Order_mony_id_Transform, decimal Total_Value, decimal Rest_Value, long Account_Cost_Center_Tree_Id, string Account_Name, string CostCenter_Name, decimal Factor, string Account_Code, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
+        public long Insert_Money_Transaction_Box(ref operations opp, long Order_Mony_Id, long Order_No, string Bank_Name, DateTime Order_Date, long  Box_Currency_Id, long Account_Currency_Id, int Transaction_Type, decimal Transaction_Value, string Transaction_Value_, long Bank_Id, long Customer_Id, long Supplier_Id, long SubAccount_Customer_Supplier_Id, int Account_Type_Value, string Notes, decimal Balance_Before, decimal Balance_After, string Balance_BeforStr, string Balance_AfterStr, int BankAccount_Id, int DestructionSales, int Order_mony_id_Transform, decimal Total_Value, decimal Rest_Value, long Account_Cost_Center_Tree_Id, string Account_Name, string CostCenter_Name, decimal Factor, string Account_Code, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
         {
             int Excp = 0;
             string Msg = "";
@@ -4448,7 +4455,7 @@ FROM            Order_Money INNER JOIN
                 opp.insert_me(mysql);
             }
 
-            ////////////ÊÚÏíá ÇÌãÇáì ÇáÇÐä
+            ////////////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
             mysql = "Update Order_Money Set Total_Value=Total_Value + " + Transaction_Value + " Where Id= " + Order_Mony_Id;
             opp.insert_me(mysql);
             decimal Last_Balance = GetBank_Balance(ref opp, Bank_Id, true);
@@ -4458,8 +4465,8 @@ FROM            Order_Money INNER JOIN
 
             //Common.GetTable_Id(ref opp, "Money_Transaction_Box", "Serial", ref Id, ref B_Id);
 
-            int Currency_Id = 1;
-            int Entry_Currency_ID = 1;
+            long    Currency_Id = 1;
+            long Entry_Currency_ID = 1;
             long Invoice_Id = 0;
             int invoiceType_Id = 0;
 
@@ -4471,7 +4478,7 @@ FROM            Order_Money INNER JOIN
             return B_Id;
 
         }
-        public long Edit_Money_Transaction_Box(ref operations opp, long Order_Mony_Id, long Order_No, string Bank_Name, long Money_Transaction_Box_ID, DateTime Order_Date, int Box_Currency_Id, int Account_Currency_Id, int Transaction_Type, decimal Transaction_Value, string Transaction_Value_, decimal DiffValue, long Bank_Id, long SubAccount_Customer_Supplier_Id, int Account_Type_Value, string Notes, decimal Balance_Before, decimal Balance_After, string Balance_BeforStr, string Balance_AfterStr, int BankAccount_Id, int DestructionSales, int Order_mony_id_Transform, decimal Total_Value, decimal Rest_Value, long Account_Cost_Center_Tree_Id, string Account_Name, string CostCenter_Name, decimal Factor, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
+        public long Edit_Money_Transaction_Box(ref operations opp, long Order_Mony_Id, long Order_No, string Bank_Name, long Money_Transaction_Box_ID, DateTime Order_Date, long  Box_Currency_Id, long Account_Currency_Id, int Transaction_Type, decimal Transaction_Value, string Transaction_Value_, decimal DiffValue, long Bank_Id, long SubAccount_Customer_Supplier_Id, int Account_Type_Value, string Notes, decimal Balance_Before, decimal Balance_After, string Balance_BeforStr, string Balance_AfterStr, int BankAccount_Id, int DestructionSales, int Order_mony_id_Transform, decimal Total_Value, decimal Rest_Value, long Account_Cost_Center_Tree_Id, string Account_Name, string CostCenter_Name, decimal Factor, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
         {
 
 
@@ -4510,7 +4517,7 @@ FROM            Order_Money INNER JOIN
                 opp.insert_me(mysql);
             }
 
-            ////////////ÊÚÏíá ÇÌãÇáì ÇáÇÐä
+            ////////////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
             mysql = "Update Order_Money Set Total_Value=Total_Value + " + DiffValue + " Where Id= " + Order_Mony_Id;
             opp.insert_me(mysql);
             decimal Last_Balance = GetBank_Balance(ref opp, Bank_Id, true);
@@ -4520,8 +4527,8 @@ FROM            Order_Money INNER JOIN
             long Invoice_Id = 0;
             int invoiceType_Id = 0;
             //Common.GetTable_Id(ref opp, "Money_Transaction_Box", "Serial", ref Id, ref B_Id);
-            int Currency_Id = 1;
-            int Entry_Currency_ID = 1;
+            long    Currency_Id = 1;
+            long Entry_Currency_ID = 1;
             string Account_Code = "";
             //B_Id = InsertMoney_Transaction_Box(ref Excp, ref Msg, ref opp, Order_Mony_Id, Order_Date, Transaction_Type, Import_Value, Export_Value, Transaction_Value, Transaction_Value.ToString(), (int)Equivalent_ValueBetween_Banks, Bank_Id, Last_Balance, Supplier_Id, Customer_Id, SubAccount_Customer_Supplier_Id, SubAccount_Customer_Supplier_Id, Notes, Balance_Before, Balance_After, Balance_BeforStr, Balance_AfterStr, BankAccount_Id, DestructionSales, Order_mony_id_Transform, Account_Cost_Center_Tree_Id, Tafkeet_Value, Total_Value, Rest_Value, Account_Name, Account_Code, Account_Type_Value, CostCenter_Name, Currency_Id, Purchase_Ticket_Value, Commission_Value, Factor, Entry_Currency_ID, CostCenter_Name, CarsWorkOrdersId, Reference_Type_Table_Id, DataDictionaryProcessesListsId);
 
@@ -4576,7 +4583,7 @@ FROM            Order_Money INNER JOIN
                 opp.insert_me(mysql);
             }
 
-            ////////////ÊÚÏíá ÇÌãÇáì ÇáÇÐä
+            ////////////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
             mysql = "Update Order_Money Set Total_Value=Total_Value + " + Transaction_Value + " Where Id= " + Order_Mony_Id;
             opp.insert_me(mysql);
 
@@ -4596,7 +4603,7 @@ FROM            Order_Money INNER JOIN
             }
 
         }
-        //public void Add_New_Cash(ref int Excp, long Order_Mony_Id, DateTime Day_Date, int Transaction_Type, long  Bank_Id, decimal Bank_Balance, decimal Cash_Value, string Cash_Value_, int Customer_Id, int Supplier_Id, int Account_Id, string Notes, int Account_Selection_)
+        //public void Add_New_Cash(ref int Excp, long Order_Mony_Id, DateTime Day_Date, int Transaction_Type, long  Bank_Id, decimal Bank_Balance, decimal Cash_Value, string Cash_Value_, long Customer_Id, long Supplier_Id, int Account_Id, string Notes, int Account_Selection_)
         //{
         //    operations opp = new operations(1);
         //    int Supplier_Customer = Account_Selection_;
@@ -4660,7 +4667,7 @@ FROM            Order_Money INNER JOIN
         //                Excp = 1;
         //                return;
         //            }
-        //            ///áíÓ ÑÕíÏ Ãæá ÇáãÏÉ
+        //            ///ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
         //            if (Common.Balance_BeginingPeriod == 0)
         //            {
         //                mysql = "  UPDATE Banks SET Last_Balance = Last_Balance +  " + Cash_Value + "   WHERE (Id = " + Bank_id + ")";
@@ -4695,7 +4702,7 @@ FROM            Order_Money INNER JOIN
         //                Excp = 1;
         //                return;
         //            }
-        //            ///áíÓ ÑÕíÏ Ãæá ÇáãÏÉ
+        //            ///ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
         //            if (Common.Balance_BeginingPeriod == 0)
         //            {
         //                mysql = "  UPDATE Banks SET Last_Balance = Last_Balance -  " + Cash_Value + "   WHERE (Id = " + Bank_id + ")";
@@ -4720,10 +4727,10 @@ FROM            Order_Money INNER JOIN
         //        //arr.Add(mysql);
         //        opp.insert_me(mysql);
 
-        //        //(Account_Selection == 0)             ÍÓÇÈÇÊ ÃÎÑì
-        //        if (Account_Selection_ == 2)  //ÚãáÇÁ
+        //        //(Account_Selection == 0)             ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        //        if (Account_Selection_ == 2)  //ï¿½ï¿½ï¿½ï¿½ï¿½
         //        {
-        //            ///áíÓ ÑÕíÏ Ãæá ÇáãÏÉ
+        //            ///ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
         //            if (Common.Balance_BeginingPeriod == 0)
         //            {
         //                mysql = "  UPDATE Customer SET Balance = Balance -  " + Cash_Value + " , Balance_Actual = Balance_Actual - " + Cash_Value + "  WHERE (Id = " + Customer_Id + ")";
@@ -4739,12 +4746,12 @@ FROM            Order_Money INNER JOIN
         //            // arr.Add(mysql);
         //            opp.insert_me(mysql);
         //        }
-        //        if (Account_Selection_ == 1)       // ãæÑÏíä
+        //        if (Account_Selection_ == 1)       // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         //        {
 
-        //            if (Check_Static_Data.Transaction_Type == 2)  // ÕÑÝ äÞÏíÉ
+        //            if (Check_Static_Data.Transaction_Type == 2)  // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
         //            {
-        //                ///áíÓ ÑÕíÏ Ãæá ÇáãÏÉ
+        //                ///ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
         //                if (Common.Balance_BeginingPeriod == 0)
         //                {
         //                    mysql = " UPDATE Supplier SET Balance = Balance -  " + Cash_Value + "   WHERE (Id = " + Supplier_Id + ")";
@@ -4761,9 +4768,9 @@ FROM            Order_Money INNER JOIN
         //                opp.insert_me(mysql);
         //            }
         //            ////////////***********************************************************************************
-        //            if (Check_Static_Data.Transaction_Type == 1)  // ÇÓÊáÇã äÞÏíÉ
+        //            if (Check_Static_Data.Transaction_Type == 1)  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
         //            {
-        //                ///áíÓ ÑÕíÏ Ãæá ÇáãÏÉ
+        //                ///ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
         //                if (Common.Balance_BeginingPeriod == 0)
         //                {
         //                    mysql = " UPDATE Supplier SET Balance = Balance -  " + Cash_Value + "   WHERE (Id = " + Supplier_Id + ")";
@@ -4815,7 +4822,7 @@ FROM            Order_Money INNER JOIN
         //}
 
 
-        public void MakeMoney_TransactionFromInvoice(ref int Excp, ref string Msg, ref operations opp, DateTime Invoice_Date, long Invoice_No, long Invoice_Id, long Box_Id, int Currency_id, long Customer_Id, decimal PaidValueFromMarket, decimal RestValue, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
+        public void MakeMoney_TransactionFromInvoice(ref int Excp, ref string Msg, ref operations opp, DateTime Invoice_Date, long Invoice_No, long Invoice_Id, long Box_Id, long Currency_Id, long Customer_Id, decimal PaidValueFromMarket, decimal RestValue, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
         {
 
             ////make order Money
@@ -4827,10 +4834,10 @@ FROM            Order_Money INNER JOIN
             int Transaction_Type = 1;
             if (Box_Id == 0)
             {
-                Box_Id = mt.GetDefaultBank_ID();// int.Parse(ot.banks_List1.cmbBankType.SelectedValue.ToString());
+                Box_Id = mt.GetDefaultBank_ID(ref opp);// int.Parse(ot.banks_List1.cmbBankType.SelectedValue.ToString());
             }
             decimal Box_Balance = 0;
-            string Order_No = mt.Make_New_Order_No(ref Excp, Transaction_Type).ToString();
+            string Order_No = mt.Make_New_Order_No(ref Excp,ref opp, Transaction_Type).ToString();
             string mysql = "Select * from Banks Where Id=" + Box_Id;
             DataTable dtBanks = opp.return_DataTable(mysql);
             if (dtBanks.Rows.Count > 0)
@@ -4839,14 +4846,14 @@ FROM            Order_Money INNER JOIN
                 Box_Balance = decimal.Parse(dtBanks.Rows[0]["Last_Balance"].ToString());
                 decimal Cach_Value = PaidValueFromMarket;// ot.nuValue.Value;
                 DateTime Order_Date = Invoice_Date;
-                string Man_Name = " ÝÇÊæÑÉ ãÈíÚÇÊ ÑÞã " + Invoice_No;
+                string Man_Name = " ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ " + Invoice_No;
                 int Reverse_Order = 0;
                 long Order_Mony_Id2 = 0;
                 mt.Invoice_ID = Invoice_Id;
 
                 long Entry_No = 0;
                 long Money_Transaction_Box_ID = 0;
-                mt.Make_Transaction_BanksBox_FromInvoices(ref Excp, ref Msg, ref opp, ref Order_Mony_Id2, ref Money_Transaction_Box_ID, Transaction_Type, Order_No, Box_Id, Box_Balance, Cach_Value, Order_Date, Man_Name, Currency_id, Customer_Id, Reverse_Order, Entry_No, CarsWorkOrdersId, Reference_Type_Table_Id, DataDictionaryProcessesListsId);
+                mt.Make_Transaction_BanksBox_FromInvoices(ref Excp, ref Msg, ref opp, ref Order_Mony_Id2, ref Money_Transaction_Box_ID, Transaction_Type, Order_No, Box_Id, Box_Balance, Cach_Value, Order_Date, Man_Name, Currency_Id, Customer_Id, Reverse_Order, Entry_No, CarsWorkOrdersId, Reference_Type_Table_Id, DataDictionaryProcessesListsId);
                 ////print Order
                 //Order_Receipt_Cash oo = new Order_Receipt_Cash();
                 //DataSet dsOrderMoney = oo.Get_Order_Cash(ref Excp, Order_Mony_Id2);
@@ -4859,16 +4866,18 @@ FROM            Order_Money INNER JOIN
 
                 mysql = "Update Invoices_List Set BanksNamePaymentMethod =N'" + Bank_Name + "' ,RestValue=" + RestValue + ",PaidValue=" + PaidValueFromMarket + " , Order_MoneyId=" + Order_Mony_Id2 + ", BanksId=" + Box_Id + " Where Id=" + Invoice_Id;
                 opp.insert_me(mysql);
+
+                 
             }
             else
             {
                 Msg = Msg + "\n";
-                Msg = "áã íÊã ÅÕÏÇÑ ÇáäÞÏíÉ ÑÈãÇ áÚÏã æÌæÏ ÕäÏæÞ ÅÝÊÑÇÖì ááÝæÇÊíÑ";
+                Msg = "ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
             }
 
         }
 
-        public void MakeMoney_TransactionFromInvoiceReverse(ref int Excp, ref string Msg, ref operations opp, DateTime Invoice_Date, long Invoice_No, long Invoice_Id, long Box_Id, int Currency_id, long Customer_Id, decimal PaidValueFromMarket, decimal RestValue, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
+        public void MakeMoney_TransactionFromInvoiceReverse(ref int Excp, ref string Msg, ref operations opp, DateTime Invoice_Date, long Invoice_No, long Invoice_Id, long Box_Id, long Currency_Id, long Customer_Id, decimal PaidValueFromMarket, decimal RestValue, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
         {
 
             ////make order Money
@@ -4892,14 +4901,14 @@ FROM            Order_Money INNER JOIN
                 Box_Balance = decimal.Parse(dtBanks.Rows[0]["Last_Balance"].ToString());
                 decimal Cach_Value = PaidValueFromMarket;// ot.nuValue.Value;
                 DateTime Order_Date = Invoice_Date;
-                string Man_Name = " ÝÇÊæÑÉ ãÑÊÌÚ ãÈíÚÇÊ ÑÞã " + Invoice_No;
+                string Man_Name = " ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ " + Invoice_No;
                 int Reverse_Order = 1;
                 long Order_Mony_Id2 = 0;
                 mt.Invoice_ID = Invoice_Id;
 
                 long Entry_No = 0;
                 long Money_Transaction_Box_ID = 0;
-                mt.Make_Transaction_BanksBox_FromInvoices(ref Excp, ref Msg, ref opp, ref Order_Mony_Id2, ref Money_Transaction_Box_ID, Transaction_Type, Order_No, Box_Id, Box_Balance, Cach_Value, Order_Date, Man_Name, Currency_id, Customer_Id, Reverse_Order, Entry_No, CarsWorkOrdersId, Reference_Type_Table_Id, DataDictionaryProcessesListsId);
+                mt.Make_Transaction_BanksBox_FromInvoices(ref Excp, ref Msg, ref opp, ref Order_Mony_Id2, ref Money_Transaction_Box_ID, Transaction_Type, Order_No, Box_Id, Box_Balance, Cach_Value, Order_Date, Man_Name, Currency_Id, Customer_Id, Reverse_Order, Entry_No, CarsWorkOrdersId, Reference_Type_Table_Id, DataDictionaryProcessesListsId);
                 ////print Order
                 //Order_Receipt_Cash oo = new Order_Receipt_Cash();
                 //DataSet dsOrderMoney = oo.Get_Order_Cash(ref Excp, Order_Mony_Id2);
@@ -4916,7 +4925,7 @@ FROM            Order_Money INNER JOIN
             else
             {
                 Msg = Msg + "\n";
-                Msg = "áã íÊã ÅÕÏÇÑ ÇáäÞÏíÉ ÑÈãÇ áÚÏã æÌæÏ ÕäÏæÞ ÅÝÊÑÇÖì ááÝæÇÊíÑ";
+                Msg = "ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
             }
 
         }
@@ -4928,7 +4937,7 @@ FROM            Order_Money INNER JOIN
             long Invoice_No = mtVM.Invoice_No;
             long Invoice_Id = mtVM.Invoice_Id;
             long Box_Id = mtVM.Box_Id;
-            int Currency_id = mtVM.Currency_Id;
+            long    Currency_Id = mtVM.Currency_Id;
             long Customer_Id = mtVM.Customer_ID_Supplier;
             decimal Cach_Value = mtVM.Cach_Value;
             decimal RestValue = mtVM.RestValue;
@@ -4955,7 +4964,7 @@ FROM            Order_Money INNER JOIN
                 mtVM.Box_Balance = decimal.Parse(dtBanks.Rows[0]["Last_Balance"].ToString());
 
                 DateTime Order_Date = Invoice_Date;
-                mtVM.Man_Name = " ÝÇÊæÑÉ ãÈíÚÇÊ ÑÞã " + Invoice_No;
+                mtVM.Man_Name = " ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ " + Invoice_No;
                 int Reverse_Order = 0;
                 long Order_Mony_Id2 = 0;
                 mt.Invoice_ID = Invoice_Id;
@@ -4981,12 +4990,12 @@ FROM            Order_Money INNER JOIN
             else
             {
                 Msg = Msg + "\n";
-                Msg = "áã íÊã ÅÕÏÇÑ ÇáäÞÏíÉ ÑÈãÇ áÚÏã æÌæÏ ÕäÏæÞ ÅÝÊÑÇÖì ááÝæÇÊíÑ";
+                Msg = "ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
             }
 
         }
 
-        public void MakeMoney_TransactionFromBill(ref int Excp, ref string Msg, ref operations opp, DateTime Invoice_Date, long Invoice_No, long Bills_Id, long Box_Id, int Currency_id, long Supplier_Id, decimal PaidValueFromMarket, decimal RestValue, int Reverse_Order, long Entry_No, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
+        public void MakeMoney_TransactionFromBill(ref int Excp, ref string Msg, ref operations opp, DateTime Invoice_Date, long Invoice_No, long Bills_Id, long Box_Id, long Currency_Id, long Supplier_Id, decimal PaidValueFromMarket, decimal RestValue, int Reverse_Order, long Entry_No, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
         {
 
             ////make order Money
@@ -4994,7 +5003,7 @@ FROM            Order_Money INNER JOIN
             Money_Transaction_BoxOrderReportCLS mt = new Money_Transaction_BoxOrderReportCLS();
             mt.Invoice_Type = Common.Bill_Type_Id;
             Excp = 0;
-            Bank bank = new Bank();
+            Bank bank;
             int Transaction_Type = 2;
             if (Box_Id == 0)
             {
@@ -5002,16 +5011,27 @@ FROM            Order_Money INNER JOIN
                 bank = mt.GetDefaultBank(ref opp);
                 Box_Id = bank.Id;
             }
+            else
+            {
+                // ÙƒØ§Ù† ÙŠØ¨Ù‚Ù‰ bank = new Bank() Ø§Ù„ÙØ§Ø±ØºØ© Ù‡Ù†Ø§ ÙÙŠÙÙƒØªØ¨ BanksNamePaymentMethod ÙØ§Ø±ØºØ§Ù‹ ÙÙ‰ Bills_List
+                // Ù„ÙƒÙ„ ÙØ§ØªÙˆØ±Ø© ÙÙŠÙ‡Ø§ ØµÙ†Ø¯ÙˆÙ‚ Ù…Ø­Ø¯ÙŽÙ‘Ø¯ ØµØ±Ø§Ø­Ø©Ù‹ (Ø§Ù„Ø­Ø§Ù„Ø© Ø§Ù„Ø´Ø§Ø¦Ø¹Ø©) Ø¨Ø¯Ù„ Ø§Ø³Ù… Ø§Ù„ØµÙ†Ø¯ÙˆÙ‚ Ø§Ù„ÙØ¹Ù„Ù‰.
+                bank = opp.db.Banks.AsNoTracking().Where(b => b.Id == Box_Id).FirstOrDefault();
+            }
 
 
-            decimal Box_BalanceBeforAction = GetBank_Balance(ref opp, (int)Box_Id, true);
+            decimal Box_BalanceBeforAction = GetBank_Balance(ref opp,  Box_Id, true);
 
             if (Transaction_Type == 2)
             {
                 if (Box_BalanceBeforAction < PaidValueFromMarket)
                 {
+                    // ÙƒØ§Ù† ÙŠØ¹ÙˆØ¯ Ù‡Ù†Ø§ Ø¨Ù€Excp=0 ÙÙŠØ¸Ù† Ø§Ù„Ù…Ø³ØªØ¯Ø¹Ù‰ (Ø­ÙØ¸ Ø§Ù„ÙØ§ØªÙˆØ±Ø©) Ø£Ù† ÙƒÙ„ Ø´Ù‰Ø¡ Ù†Ø¬Ø­ ÙˆÙŠØ¹ØªÙ…Ø¯ Ø§Ù„ÙØ§ØªÙˆØ±Ø©
+                    // ÙƒØ§Ù…Ù„Ø© Ø±ØºÙ… Ø¹Ø¯Ù… Ø¥Ù†Ø´Ø§Ø¡ Ø£Ù‰ Ø³Ù†Ø¯ Ø£Ùˆ Ø­Ø±ÙƒØ© Ø®Ø²Ù†Ø© Ø¹Ù„Ù‰ Ø§Ù„Ø¥Ø·Ù„Ø§Ù‚ - Ø¨Ù†Ø¯ Ù†Ù‚Øµ Ø±ØµÙŠØ¯ Ø§Ù„Ø®Ø²Ù†Ø© ØµØ§Ù…Øª.
+                    Excp = 1;
                     Msg = Msg + "\n\r";
-                    Msg = Msg + "áã íÊã ÅÕÏÇÑ ÇáäÞÏíÉ   áÚÏã æÌæÏ ÕäÏæÞ ÅÝÊÑÇÖì ááÝæÇÊíÑ";
+                    // Ø§Ù„Ù†Øµ Ø§Ù„Ø¹Ø±Ø¨Ù‰ Ø§Ù„Ø£ØµÙ„Ù‰ Ù‡Ù†Ø§ ÙƒØ§Ù† ØªØ§Ù„ÙØ§Ù‹ Ø¨Ø§Ù„ÙØ¹Ù„ (Ø¨Ø§ÙŠØªØ§Øª U+FFFD ØºÙŠØ± Ù‚Ø§Ø¨Ù„Ø© Ù„Ù„Ø§Ø³ØªØ±Ø¬Ø§Ø¹) Ù‚Ø¨Ù„ Ù‡Ø°Ø§ Ø§Ù„ØªØ¹Ø¯ÙŠÙ„Ø›
+                    // Ø§Ø³ØªÙØ¨Ø¯Ù„ Ø¨Ù†Øµ ÙˆØ§Ø¶Ø­ Ø¨Ù†ÙØ³ Ø§Ù„Ù…Ø¹Ù†Ù‰ Ù„Ø£Ù† Ø§Ù„Ø®Ø·Ø£ ØµØ§Ø± ÙŠØ¸Ù‡Ø± ÙØ¹Ù„ÙŠØ§Ù‹ Ù„Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø¨Ø¹Ø¯ Ø¥ØµÙ„Ø§Ø­ Ø­Ø§Ø±Ø³ Excp Ø£Ø¹Ù„Ø§Ù‡.
+                    Msg = Msg + "Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø±ØµÙŠØ¯ ÙƒØ§ÙÙ‰ ÙÙ‰ Ø§Ù„Ø®Ø²Ù†Ø© Ù„Ø³Ø¯Ø§Ø¯ Ù‚ÙŠÙ…Ø© Ù‡Ø°Ù‡ Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ù†Ù‚Ø¯Ø§Ù‹";
                     return;
                 }
 
@@ -5027,13 +5047,13 @@ FROM            Order_Money INNER JOIN
                 DateTime Order_Date = Invoice_Date;
 
 
-                string Man_Name = " ÝÇÊæÑÉ ãÔÊÑíÇÊ ÑÞã " + Invoice_No;
+                string Man_Name = " ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ " + Invoice_No;
 
 
                 long Order_Mony_Id2 = 0;
                 mt.Invoice_ID = Bills_Id;
                 long Money_Transaction_Box_ID = 0;
-                mt.Make_Transaction_BanksBox_FromInvoices(ref Excp, ref Msg, ref opp, ref Order_Mony_Id2, ref Money_Transaction_Box_ID, Transaction_Type, Order_No, (int)Box_Id, Box_BalanceBeforAction, Cach_Value, Order_Date, Man_Name, Currency_id, Supplier_Id, Reverse_Order, Entry_No, CarsWorkOrdersId, Reference_Type_Table_Id, DataDictionaryProcessesListsId);
+                mt.Make_Transaction_BanksBox_FromInvoices(ref Excp, ref Msg, ref opp, ref Order_Mony_Id2, ref Money_Transaction_Box_ID, Transaction_Type, Order_No,  Box_Id, Box_BalanceBeforAction, Cach_Value, Order_Date, Man_Name, Currency_Id, Supplier_Id, Reverse_Order, Entry_No, CarsWorkOrdersId, Reference_Type_Table_Id, DataDictionaryProcessesListsId);
                 ////print Order
                 //Order_Receipt_Cash oo = new Order_Receipt_Cash();
                 //DataSet dsOrderMoney = oo.Get_Order_Cash(ref Excp, Order_Mony_Id2);
@@ -5048,17 +5068,19 @@ FROM            Order_Money INNER JOIN
                 opp.insert_me(mysql);
 
                 Msg = Msg + "\n\r";
-                Msg = Msg + "  Êã ÅÕÏÇÑ ÕÑÝ ÇáäÞÏíÉ  ";
+                Msg = Msg + "  ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  ";
             }
             else
             {
+                // Ù†ÙØ³ Ø­Ø§Ø±Ø³ Ø§Ù„Ø¥ÙƒØ³Ø¨Ø´Ù†: ØµÙ†Ø¯ÙˆÙ‚ ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯ (bank=null) ÙŠØ¬Ø¨ Ø£Ù„Ø§ ÙŠÙ…Ø± Ø¨ØµÙ…Øª Ø£ÙŠØ¶Ø§Ù‹.
+                Excp = 1;
                 Msg = Msg + "\n\r";
-                Msg = Msg + "áã íÊã ÅÕÏÇÑ ÇáäÞÏíÉ ÑÈãÇ áÚÏã æÌæÏ ÕäÏæÞ ÅÝÊÑÇÖì ááÝæÇÊíÑ";
+                Msg = Msg + "Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ ØµÙ†Ø¯ÙˆÙ‚ Ù†Ù‚Ø¯ÙŠØ© Ø§ÙØªØ±Ø§Ø¶Ù‰ Ù„ØªØ³Ø¬ÙŠÙ„ Ø³Ø¯Ø§Ø¯ Ù‡Ø°Ù‡ Ø§Ù„ÙØ§ØªÙˆØ±Ø©";
             }
 
         }
 
-        public void MakeMoney_TransactionFromBill_Reverse(ref int Excp, ref string Msg, ref operations opp, DateTime Invoice_Date, long Invoice_No, long Bills_Id, long Box_Id, int Currency_id, long Supplier_Id, decimal PaidValueFromMarket, decimal RestValue, int Reverse_Order, long Entry_No, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
+        public void MakeMoney_TransactionFromBill_Reverse(ref int Excp, ref string Msg, ref operations opp, DateTime Invoice_Date, long Invoice_No, long Bills_Id, long Box_Id, long Currency_Id, long Supplier_Id, decimal PaidValueFromMarket, decimal RestValue, int Reverse_Order, long Entry_No, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
         {
 
             ////make order Money
@@ -5066,7 +5088,7 @@ FROM            Order_Money INNER JOIN
             Money_Transaction_BoxOrderReportCLS mt = new Money_Transaction_BoxOrderReportCLS();
             mt.Invoice_Type = Common.BilleReverse_Type_Id;
             Excp = 0;
-            Bank bank = new Bank();
+            Bank bank;
             int Transaction_Type = 1;
             if (Box_Id == 0)
             {
@@ -5074,16 +5096,21 @@ FROM            Order_Money INNER JOIN
                 bank = mt.GetDefaultBank(ref opp);
                 Box_Id = bank.Id;
             }
+            else
+            {
+                // Ù†ÙØ³ Ø¥ØµÙ„Ø§Ø­ Ø§Ù„Ù…Ø³Ø§Ø± Ø§Ù„Ø£Ù…Ø§Ù…Ù‰ Ø£Ø¹Ù„Ø§Ù‡: ÙŠØ¬Ø¨ ØªØ­Ù…ÙŠÙ„ Ø§Ù„ØµÙ†Ø¯ÙˆÙ‚ Ø§Ù„ÙØ¹Ù„Ù‰ Ù„Ø§ ØªØ±Ùƒ Bank ÙØ§Ø±Øº.
+                bank = opp.db.Banks.AsNoTracking().Where(b => b.Id == Box_Id).FirstOrDefault();
+            }
 
 
-            decimal Box_BalanceBeforAction = GetBank_Balance(ref opp, (int)Box_Id, true);
+            decimal Box_BalanceBeforAction = GetBank_Balance(ref opp,  Box_Id, true);
 
             if (Transaction_Type == 2)
             {
                 if (Box_BalanceBeforAction < PaidValueFromMarket)
                 {
                     Msg = Msg + "\n\r";
-                    Msg = Msg + "áã íÊã ÅÕÏÇÑ ÇáäÞÏíÉ   áÚÏã æÌæÏ ÕäÏæÞ ÅÝÊÑÇÖì ááÝæÇÊíÑ";
+                    Msg = Msg + "ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½   ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
                     return;
 
                 }
@@ -5100,13 +5127,13 @@ FROM            Order_Money INNER JOIN
                 DateTime Order_Date = Invoice_Date;
 
 
-                string Man_Name = " ÝÇÊæÑÉ ãÑÊÌÚ ãÔÊÑíÇÊ ÑÞã " + Invoice_No;
+                string Man_Name = " ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ " + Invoice_No;
 
 
                 long Order_Mony_Id2 = 0;
                 mt.Invoice_ID = Bills_Id;
                 long Money_Transaction_Box_ID = 0;
-                mt.Make_Transaction_BanksBox_FromInvoices(ref Excp, ref Msg, ref opp, ref Order_Mony_Id2, ref Money_Transaction_Box_ID, Transaction_Type, Order_No, (int)Box_Id, Box_BalanceBeforAction, Cach_Value, Order_Date, Man_Name, Currency_id, Supplier_Id, Reverse_Order, Entry_No, CarsWorkOrdersId, Reference_Type_Table_Id, DataDictionaryProcessesListsId);
+                mt.Make_Transaction_BanksBox_FromInvoices(ref Excp, ref Msg, ref opp, ref Order_Mony_Id2, ref Money_Transaction_Box_ID, Transaction_Type, Order_No, Box_Id, Box_BalanceBeforAction, Cach_Value, Order_Date, Man_Name, Currency_Id, Supplier_Id, Reverse_Order, Entry_No, CarsWorkOrdersId, Reference_Type_Table_Id, DataDictionaryProcessesListsId);
                 ////print Order
                 //Order_Receipt_Cash oo = new Order_Receipt_Cash();
                 //DataSet dsOrderMoney = oo.Get_Order_Cash(ref Excp, Order_Mony_Id2);
@@ -5121,12 +5148,14 @@ FROM            Order_Money INNER JOIN
                 opp.insert_me(mysql);
 
                 Msg = Msg + "\n\r";
-                Msg = Msg + "  Êã ÅÕÏÇÑ ÕÑÝ ÇáäÞÏíÉ  ";
+                Msg = Msg + "  ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  ";
             }
             else
             {
+                // Ù†ÙØ³ Ø­Ø§Ø±Ø³ Ø§Ù„Ù…Ø³Ø§Ø± Ø§Ù„Ø£Ù…Ø§Ù…Ù‰ Ø£Ø¹Ù„Ø§Ù‡.
+                Excp = 1;
                 Msg = Msg + "\n\r";
-                Msg = Msg + "áã íÊã ÅÕÏÇÑ ÇáäÞÏíÉ ÑÈãÇ áÚÏã æÌæÏ ÕäÏæÞ ÅÝÊÑÇÖì ááÝæÇÊíÑ";
+                Msg = Msg + "Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ ØµÙ†Ø¯ÙˆÙ‚ Ù†Ù‚Ø¯ÙŠØ© Ø§ÙØªØ±Ø§Ø¶Ù‰ Ù„ØªØ³Ø¬ÙŠÙ„ Ø³Ø¯Ø§Ø¯ Ù‡Ø°Ø§ Ø§Ù„Ù…Ø±ØªØ¬Ø¹";
             }
 
         }

@@ -52,7 +52,7 @@ namespace AccountModelsLib.Models
         }
         public void ReadData(DataTable dt, int index)
         {
-            Id = int.Parse(dt.Rows[index]["Id"].ToString());
+            Id = long.Parse(dt.Rows[index]["Id"].ToString());
             ProjectId = int.Parse(dt.Rows[index]["ProjectId"].ToString());
             Name = dt.Rows[index]["Name"].ToString();
             Size = decimal.Parse(dt.Rows[index]["Size"].ToString());

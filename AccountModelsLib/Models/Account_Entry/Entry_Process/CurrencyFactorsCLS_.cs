@@ -16,7 +16,7 @@ namespace AccountModelsLib
        {
        }
 
-       public void AddNewCurrency_Factors(ref int Excp, ref string Msg, string Currency_Primary_Name, int Currency_ID_Primary, string Currency_Secondary_Name, int Currency_ID_Secondary, decimal Factor)
+       public void AddNewCurrency_Factors(ref int Excp, ref string Msg, string Currency_Primary_Name, long Currency_ID_Primary, string Currency_Secondary_Name, long Currency_ID_Secondary, decimal Factor)
        {
            int Count = 0;
              AccountModelsLib.operations opp = new   AccountModelsLib.operations(1);
@@ -51,7 +51,7 @@ namespace AccountModelsLib
 
 
        }
-       int Add_TheSameCurrency(ref   AccountModelsLib.operations opp, string Currency_Primary_Name, int Currency_ID_Primary, string Currency_Secondary_Name, int Currency_ID_Secondary, decimal Factor, int IS_TheSameCurrencies)
+       int Add_TheSameCurrency(ref   AccountModelsLib.operations opp, string Currency_Primary_Name, long Currency_ID_Primary, string Currency_Secondary_Name, long Currency_ID_Secondary, decimal Factor, int IS_TheSameCurrencies)
        {
            int Count = 0;
 
@@ -99,15 +99,15 @@ namespace AccountModelsLib
        // فقط لكل عملة يمثل سعرها *مقابل الرئيسية تحديداً*، فلا معنى لمزامنته من معامل تحويل متقاطع بين عملتين
        // أجنبيتين (مثلاً دولار↔يورو). فشل هذه الخطوة (مثلاً: لا توجد عملة رئيسية مُعرَّفة بعد) لا يُفشِل حفظ
        // معامل العملة نفسه - نفس مبدأ معالجة الأخطاء غير الحرجة المُتَّبَع فى بقية هذا الكلاس.
-       void SyncCurrencyRateFromFactor(ref AccountModelsLib.operations opp, int Currency_ID_Primary, int Currency_ID_Secondary, decimal Factor)
+       void SyncCurrencyRateFromFactor(ref AccountModelsLib.operations opp, long Currency_ID_Primary, long Currency_ID_Secondary, decimal Factor)
        {
            try
            {
                DataTable glDt = opp.return_DataTable("SELECT Value FROM Currency WHERE IS_GL_Currency_Flage = 1");
                if (glDt.Rows.Count == 0) return;
-               int GL_Value = Convert.ToInt32(glDt.Rows[0]["Value"]);
+               long GL_Value = Convert.ToInt64(glDt.Rows[0]["Value"]);
 
-               int OtherCurrencyId;
+               long OtherCurrencyId;
                decimal Rate;
                if (Currency_ID_Secondary == GL_Value && Currency_ID_Primary != GL_Value)
                {
@@ -135,14 +135,14 @@ namespace AccountModelsLib
            }
        }
 
-        public decimal GetFactors(int Currency_Id_Needed, int Currency_Id)
+        public decimal GetFactors(long Currency_Id_Needed, long Currency_Id)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
             return GetFactors(ref opp, Currency_Id_Needed, Currency_Id);
         }
 
 
-        public decimal GetFactors(ref AccountModelsLib.operations opp, int Currency_Id_Needed,int Currency_Id)
+        public decimal GetFactors(ref AccountModelsLib.operations opp, long Currency_Id_Needed,long Currency_Id)
        {
            decimal Factor = 1;
            try
@@ -215,7 +215,7 @@ namespace AccountModelsLib
            }
        }
 
-       public string  Get_CurrencyName(ref AccountModelsLib.operations opp,int Currency_Id)
+       public string  Get_CurrencyName(ref AccountModelsLib.operations opp,long  Currency_Id)
         {
             //opp = new AccountModelsLib.operations();
             string mysql = "Select * from Currency    Wher  Value= "+ Currency_Id;

@@ -25,7 +25,7 @@ namespace AccountModelsLib.Models
         public long? Code { get; set; }
 
      
-        public int? Currency_Id { get; set; }
+        public long? Currency_Id { get; set; }
 
    
         public string Currency_Name { get; set; }
@@ -33,10 +33,10 @@ namespace AccountModelsLib.Models
         public DateTime? OperationDate { get; set; }
 
      
-        public int? User_Id { get; set; }
+        public long? User_Id { get; set; }
 
  
-        public int? Branch_Id { get; set; }
+        public long? Branch_Id { get; set; }
 
   
         public DateTime? Insert_ServerDateTime { get; set; }
@@ -47,7 +47,7 @@ namespace AccountModelsLib.Models
         public DateTime? EditOperationDate { get; set; }
 
  
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
 
         public long? ProcessNo { get; set; }
     }

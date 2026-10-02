@@ -22,12 +22,12 @@ namespace AccountModelsLib.Models
         public string GroupName { get; set; }
         public Nullable<int> GroupType { get; set; }
         public Nullable<System.DateTime> OperationDate { get; set; }
-        public Nullable<int> User_Id { get; set; }
-        public Nullable<int> Branch_Id { get; set; }
+        public Nullable<long> User_Id { get; set; }
+        public Nullable<long> Branch_Id { get; set; }
         public Nullable<System.DateTime> Insert_ServerDateTime { get; set; }
         public Nullable<System.DateTime> Update_ServerDateTime { get; set; }
         public Nullable<System.DateTime> EditOperationDate { get; set; }
-        public Nullable<int> Edit_User_Id { get; set; }
+        public Nullable<long> Edit_User_Id { get; set; }
         public Nullable<long> ProcessNo { get; set; }
 
         public ICollection<Customer> customers { get; set; }

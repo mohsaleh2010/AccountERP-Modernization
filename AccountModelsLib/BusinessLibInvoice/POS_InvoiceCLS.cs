@@ -15,7 +15,7 @@ namespace AccountModelsLib
         public POS_InvoiceCLS()
         {
         }
-        public DataTable Get_Item_Category(int Id)
+        public DataTable Get_Item_Category(long Id)
         {
             string mysql = " Select * from Item_Category ";
             if (Id > 0)
@@ -29,7 +29,7 @@ namespace AccountModelsLib
             return dt;
 
         }
-        public DataTable GetItemsImage_ByCategory_ID(int Item_Category_ID)
+        public DataTable GetItemsImage_ByCategory_ID(long Item_Category_ID)
         {
             operations opp = new operations();
             string mysql = @" SELECT        Item_ImagesStore.*, Item.Item_Name
@@ -44,7 +44,7 @@ FROM            Item INNER JOIN
             return dt;
 
         }
-        public DataTable GetAllItemsImage_ByCategory_ID(int Item_Category_ID)
+        public DataTable GetAllItemsImage_ByCategory_ID(long Item_Category_ID)
         {
             operations opp = new operations();
             string mysql = @" SELECT        Item_ImagesStore.ImageId, Item_ImagesStore.Description, Item_ImagesStore.OriginalPath, Item_ImagesStore.ImageData, Item_ImagesStore.Default_Img_Flage, Item_ImagesStore.Item_Type, Item.Item_Name, 
@@ -64,7 +64,7 @@ FROM            Item INNER JOIN
             return dt;
 
         }
-        public DataTable GetItemsList_ByCategory_ID(int Item_Category_ID)
+        public DataTable GetItemsList_ByCategory_ID(long Item_Category_ID)
         {
 
             operations opp = new operations();
@@ -82,7 +82,7 @@ FROM            Item INNER JOIN
             DataTable dt = opp.return_DataTable(mysql);  ;
             return dt;
         }
-        public DataTable GetItemsList_ByCategory_IDWithImage(int Item_Category_ID)
+        public DataTable GetItemsList_ByCategory_IDWithImage(long Item_Category_ID)
         {
 
             operations opp = new operations();

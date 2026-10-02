@@ -321,7 +321,7 @@ namespace AccountModelsLib.Models
                 Balance = decimal.Parse(dt.Rows[index]["Balance"].ToString());
                 Balance_Actual = decimal.Parse(dt.Rows[index]["Balance_Actual"].ToString());
                 SubAccount_Id = long.Parse(dt.Rows[index]["SubAccount_Id"].ToString());
-                Currency_Id = int.Parse(dt.Rows[index]["Currency_Id"].ToString());
+                Currency_Id = long.Parse(dt.Rows[index]["Currency_Id"].ToString());
                 try
                 {
                     Supplier_Type = int.Parse(dt.Rows[index]["Supplier_Type"].ToString());
@@ -425,7 +425,7 @@ namespace AccountModelsLib.Models
 
             string Msg = "";
             FirstBalance_CLS ff = new FirstBalance_CLS();
-            int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(DateTime.Now);
+            long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(DateTime.Now);
             ff.IsCheckLastLevel = true;
             ff.Account_Customer_Type_ID = sp.Id;
             ff.Account_Customer_Type_Value = Common.Supplier_Account_Type;
@@ -485,7 +485,7 @@ namespace AccountModelsLib.Models
         void Save_FirstBalance(ref int Excp, ref string Msg, ref operations opp, Supplier sp)
         {
             FirstBalance_CLS ff = new FirstBalance_CLS();
-            int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(DateTime.Now);
+            long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(DateTime.Now);
             ff.IsCheckLastLevel = true;
             ff.Account_Customer_Type_ID = sp.Id;
             ff.Account_Customer_Type_Value = Common.Supplier_Account_Type;
@@ -570,7 +570,7 @@ namespace AccountModelsLib.Models
                 Sub_Account acc = new Sub_Account();
                 int Account_Type_Value = Common.Supplier_Account_Type;
                   
-                int Account_Branch_Id = sp.Branch_Id ?? 1;// Common.Branch_Id;
+                long  Account_Branch_Id = sp.Branch_Id ?? 1;// Common.Branch_Id;
                 string Account_Code = "";
 
 
@@ -710,7 +710,7 @@ namespace AccountModelsLib.Models
                 Sub_Account acc = new Sub_Account();
                 int Account_Type_Value = Common.Supplier_Account_Type;
                 long New_Submain_Account_Id = -1;
-                int Account_Branch_Id = Common.Branch_Id;
+                long  Account_Branch_Id = Common.Branch_Id;
                 string Account_Code = "";
                 sp.SubAccount_Id = sp.SubAccount_Id ?? 0;
                 if (IsUse_SubAccount_Id_Select == true)
@@ -753,7 +753,7 @@ namespace AccountModelsLib.Models
                 Sub_Account acc = new Sub_Account();
                 int Account_Type_Value = Common.Supplier_Account_Type;
                 long New_Submain_Account_Id = -1;
-                int Account_Branch_Id = Common.Branch_Id;
+                long  Account_Branch_Id = Common.Branch_Id;
                 string Account_Code = "";
                 sp.sp.SubAccount_Id = sp.sp.SubAccount_Id ?? 0;
                 if (IsUse_SubAccount_Id_Select == true)

@@ -23,7 +23,7 @@ namespace AccountModelsLib.Models
         {
             Is_ItemOrService = 1;
         }
-        public long id { get; set; }
+        public long Id { get; set; }
         public string code { get; set; }
         public string BarCode2 { get; set; }
         public string BarCode3 { get; set; }
@@ -68,18 +68,18 @@ namespace AccountModelsLib.Models
         public string Somk_Unit { get; set; }
         public string Height_Width_Str { get; set; }
         public string Items_Name_Somk_Str { get; set; }
-        public Nullable<int> User_Id { get; set; }
+        public Nullable<long> User_Id { get; set; }
         public Nullable<System.DateTime> OperationDate { get; set; }
         public Nullable<decimal> S_Price { get; set; }
         public Nullable<decimal> P_Price { get; set; }
         public Nullable<decimal> P_priceAvgCost { get; set; }
         public Nullable<decimal> S_priceAvgCost { get; set; }
         public string item_Name_ { get; set; }
-        public Nullable<int> Branch_Id { get; set; }
+        public Nullable<long> Branch_Id { get; set; }
         public Nullable<System.DateTime> Insert_ServerDateTime { get; set; }
         public Nullable<System.DateTime> Update_ServerDateTime { get; set; }
         public Nullable<System.DateTime> EditOperationDate { get; set; }
-        public Nullable<int> Edit_User_Id { get; set; }
+        public Nullable<long> Edit_User_Id { get; set; }
 
 
         public Nullable<int> Items_TypesDescription_NameId { get; set; }

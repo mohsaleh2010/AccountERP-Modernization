@@ -39,15 +39,8 @@ namespace AccountModelsLib
             opp.insert_me(sql);
 
         }
-        /* date = AccountModelsLib.operations.dateFormat(dateTimePicker1.Value);
-            Capital_id = int.Parse(this.CMB_Capital_name.SelectedValue.ToString());
-            vlaue = decimal.Parse(txt_Value.Text);
-            notes = Txt_Notes.Text;
-            Bank_id=int.Parse(this.banks_List1.cmbBankType.SelectedValue.ToString());
-         
-*/
-
-        public DataSet GetMoneyPulled(ref int Excp, int Bank_Id, DateTime Day_DateFrom, DateTime Day_DateTo, bool Interval)
+        
+        public DataSet GetMoneyPulled(ref int Excp, long Bank_Id, DateTime Day_DateFrom, DateTime Day_DateTo, bool Interval)
         {
             DataSet ds = null;
             string mysql;
@@ -82,7 +75,7 @@ namespace AccountModelsLib
 
             }
         }
-        public void insert_pulled_capital(bool Accepted, ref int Status,DateTime  DATE, int Capital_id, decimal vlaue, int Bank_id, string notes,decimal Bank_Balance)
+        public void insert_pulled_capital(bool Accepted, ref int Status,DateTime  DATE, int Capital_id, decimal vlaue, long Bank_id, string notes,decimal Bank_Balance)
         {
              
             if (Accepted)

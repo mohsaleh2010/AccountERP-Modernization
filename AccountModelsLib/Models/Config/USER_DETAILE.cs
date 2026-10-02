@@ -33,7 +33,7 @@ namespace AccountModelsLib.Models
         public string USER_PASSWORD { get; set; }
 
         [Column("Branch_Id")]
-        public int? Branch_Id { get; set; }
+        public long? Branch_Id { get; set; }
 
         public int? AdminFlage { get; set; }
 
@@ -60,7 +60,7 @@ namespace AccountModelsLib.Models
         public DateTime? EditOperationDate { get; set; }
 
         [Column("Edit_User_Id")]
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
 
         public long? ProcessNo { get; set; }
     }

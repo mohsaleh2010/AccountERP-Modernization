@@ -95,7 +95,7 @@ namespace AccountModelsLib.Models
                 .Select(s => new
                 {
                     s.Id,
-                    ServiceName = opp.db.Item.Where(i => i.id == s.ItemService_Id)
+                    ServiceName = opp.db.Item.Where(i => i.Id == s.ItemService_Id)
                                               .Select(i => i.Item_Name).FirstOrDefault(),
                     s.TotalSessions,
                     s.UsedSessions,

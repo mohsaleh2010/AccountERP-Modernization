@@ -1,5 +1,5 @@
 using AccountModelsLib.Models;
- 
+
 using System;
 using System.Collections;
 using System.ComponentModel;
@@ -8,7 +8,7 @@ using System.Data.OleDb;
 using Microsoft.Data.SqlClient;
 using System.Drawing;
 using System.Reflection;
- 
+
 
 
 
@@ -31,7 +31,7 @@ namespace AccountModelsLib
             G_DS = new DataSet();
         }
 
-        public void Add_Invoice_Total_To_Account(ref int Excp, long Invoice_id, int Customer_Id, decimal Invoice_Net_Total, decimal Invoice_Total)
+        public void Add_Invoice_Total_To_Account(ref int Excp, long Invoice_id, long Customer_Id, decimal Invoice_Net_Total, decimal Invoice_Total)
         {
             /*try
 			{	
@@ -62,7 +62,7 @@ namespace AccountModelsLib
 			*/
         }
         /*
-        public void Set_Customer_Balance(ref int Excp, int Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total)
+        public void Set_Customer_Balance(ref int Excp, long Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total)
         {
 
             try
@@ -101,7 +101,7 @@ namespace AccountModelsLib
         }
         */
         /*
-         public void Set_Customer_Balance(ref int Excp, ref operations opp, int Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
+         public void Set_Customer_Balance(ref int Excp, ref operations opp, long Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
         {
 
 
@@ -126,7 +126,7 @@ namespace AccountModelsLib
         }
 
         */
-        public void Set_Customer_BalanceInvoiceReverse(ref int Excp, ArrayList arr, int Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total)
+        public void Set_Customer_BalanceInvoiceReverse(ref int Excp, ArrayList arr, long Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total)
         {
 
             try
@@ -137,7 +137,7 @@ namespace AccountModelsLib
                 mysql = "  UPDATE Customer SET Balance = Balance - " + Net_Total + " ,Balance_Actual=Balance_Actual -  " + Net_Total + " WHERE (Id = " + Customer_Id + ")";
                 arr.Add(mysql);
 
-               // UpdateProcessNo(ref Excp, ref opp, "Invoices_List_Reverse", New_Invoice_ListTable_id);
+                // UpdateProcessNo(ref Excp, ref opp, "Invoices_List_Reverse", New_Invoice_ListTable_id);
 
 
                 mysql = " INSERT INTO Customers_Accounts (ProcessNo,Customer_Id, Reference_Id,Reference_Type_Table_Id, Import, Balance, Transaction_Type, Transaction_Date,Reference_Type) ";
@@ -171,7 +171,7 @@ namespace AccountModelsLib
 
         }
 
-        public void Set_Customer_BalanceInvoiceReverse(ref int Excp, ref operations opp, int Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
+        public void Set_Customer_BalanceInvoiceReverse(ref int Excp, ref operations opp, long Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
         {
             // CarsId,CarNumber,CustomerName, CarsWorkOrdersId, WorkOrderNumber,TaxInternalId,
             //Invoices_List_Reverse.CarsId,Invoices_List_Reverse.CarNumber,Invoices_List_Reverse.CustomerName, Invoices_List_Reverse.CarsWorkOrdersId, Invoices_List_Reverse.WorkOrderNumber, Invoices_List_Reverse.TaxInternalId,
@@ -193,7 +193,7 @@ namespace AccountModelsLib
         }
 
 
-        public void Set_Customer_BalanceInvoiceReverse_(ref int Excp, ref operations opp, int Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
+        public void Set_Customer_BalanceInvoiceReverse_(ref int Excp, ref operations opp, long Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
         {
             long Customer_Id_RelatedToAccount = GetCustomer_Id_RelatedToAccount(ref opp, Customer_Id);
             string str = "";
@@ -223,8 +223,8 @@ namespace AccountModelsLib
             opp.insert_me(str);
         }
 
-       
-        private void Set_Customer_BalanceInvoiceReverseWithItem(ref int Excp, ref operations opp, int Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
+
+        private void Set_Customer_BalanceInvoiceReverseWithItem(ref int Excp, ref operations opp, long Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
         {
             long Customer_Id_RelatedToAccount = GetCustomer_Id_RelatedToAccount(ref opp, Customer_Id);
             bool Is_SumItemQnty = false;
@@ -257,7 +257,7 @@ namespace AccountModelsLib
             SetCustomers_Accounts_With_Invoices_ListReverseData(ref opp, New_Invoice_ListTable_id);
         }
 
-        private void Set_Customer_Balance_With_Sum_Items_Invoices_List_Reverse(ref int Excp, ref operations opp, int Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
+        private void Set_Customer_Balance_With_Sum_Items_Invoices_List_Reverse(ref int Excp, ref operations opp, long Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
         {
             long Customer_Id_RelatedToAccount = GetCustomer_Id_RelatedToAccount(ref opp, Customer_Id);
             string str = "";
@@ -564,7 +564,7 @@ namespace AccountModelsLib
 
             opp.insert_me(str);
         }
-        public void Set_Customer_SalesMan(ref int Excp, int SalesMan_id, int Customer_Id)
+        public void Set_Customer_SalesMan(ref int Excp, int SalesMan_id, long Customer_Id)
         {
 
             try
@@ -584,7 +584,7 @@ namespace AccountModelsLib
 
         }
 
-        public void NotSet_Customer_SalesMan(ref int Excp, int Customer_Id)
+        public void NotSet_Customer_SalesMan(ref int Excp, long Customer_Id)
         {
 
             try
@@ -679,7 +679,7 @@ namespace AccountModelsLib
             Excp = 0;
 
         }
-        public void Set_CustomersAccount_Balance(ref int Excp, DateTime Transaction_Date_, int Customer_Id, decimal Net_Total, long Process_No, int Reference_Type, int MadinOrDa2n)
+        public void Set_CustomersAccount_Balance(ref int Excp, DateTime Transaction_Date_, long Customer_Id, decimal Net_Total, long Process_No, int Reference_Type, int MadinOrDa2n)
         {
             try
             {
@@ -734,741 +734,21 @@ namespace AccountModelsLib
             }
         }
 
-        public DataSet Get_SalesMAn_List()
-        {
 
-            DataSet dsCustomer = new DataSet();
-            try
-            {
-                string mysql = "SELECT  * FROM Customer WHERE (Active = 1) and IsSalesMan=1 ORDER BY Name ";
-                operations opp = new operations();
-                dsCustomer = opp.return_dataset(mysql, "Customer");
-                // Excp = 1;
-                opp = null;
-                return dsCustomer;
-            }
-            catch
-            {
-                //Excp =  1;
-                return dsCustomer;
-            }
-        }
         public DataTable GetCustomerFirstBalance(long Customer_Id)
         {
 
             DataTable dt = new DataTable();
 
-            string mysql = "SELECT  * FROM Customers_Accounts WHERE (Customer_Id = " + Customer_Id + ")  And Reference_Type = -7";
+            string mysql = "SELECT  * FROM Customers_Accounts WHERE (Customer_Id = " + Customer_Id + ")  And Reference_Type = -7 ";
             operations opp = new operations();
             dt = opp.return_DataTable(mysql);
             return dt;
 
         }
 
-        public DataSet Get_Customer_Account(int Customer_Id, bool _GetDateFrom, DateTime GetDateFrom, bool _GetDateTo, DateTime GetDateTo, bool DESC)
-        {
 
-            G_DS.Clear();
-            string mysql = "";
-            decimal BalanceBefor = 0;
-            try
-            {
-                mysql = " SELECT Customers_Accounts.*,'' As BalanceImport,'' As BalanceExport FROM Customers_Accounts WHERE Flage_View=1  ";
-                if (_GetDateFrom == true)
-                {
-                    mysql = mysql + " AND (Transaction_Date >= '" + operations.dateFormat(GetDateFrom.Date) + "')  ";
-                }
-                if (_GetDateTo == true)
-                {
-                    mysql = mysql + "   AND (Transaction_Date <='" + operations.dateFormat(GetDateTo.Date) + "' )  ";
-                }
-                mysql = mysql + "  AND (Customer_Id = " + Customer_Id + ") ";
-                if (DESC)
-                {
-                    mysql = mysql + "  ORDER BY ID  DESC";
-                }
-                else
-                {
-                    mysql = mysql + "  ORDER BY ID  ASC";
-                }
-                operations opp = new operations();
-                G_DS = opp.return_dataset(mysql, "Customers_Accounts");
 
-                if (_GetDateFrom == true)
-                {
-                    mysql = @"SELECT   SUM(Balance) AS Balance FROM Customers_Accounts ";
-                    mysql = mysql + " Where (Transaction_Date < '" + operations.dateFormat(GetDateFrom.Date) + "')  AND (Customer_Id = " + Customer_Id + ") ";
-                    DataTable dt = opp.return_DataTable(mysql);
-                    if (dt.Rows.Count > 0)
-                    {
-                        try { BalanceBefor = decimal.Parse(dt.Rows[0]["Balance"].ToString()); }
-                        catch { BalanceBefor = 0; }
-                    }
-                }
-
-                int Count = G_DS.Tables[0].Rows.Count;
-                //if (DESC)
-                //{
-                //   DataRow dr= G_DS.Tables[0].NewRow();
-                //    dr["Balance"] = BalanceBefor;
-                //    dr["Reference_Type_View"] = "ÑÕíÏ ÓÇÈŞ";
-                //    G_DS.Tables[0].Rows.InsertAt(dr, Count++);
-
-                //}
-                //else
-                //{
-                //    DataRow dr = G_DS.Tables[0].NewRow();
-                //    dr["Balance"] = BalanceBefor;
-                //    dr["Reference_Type_View"] = "ÑÕíÏ ÓÇÈŞ";
-                //    G_DS.Tables[0].Rows.InsertAt(dr,0);
-                //}
-
-                //  Excp = 1;
-                opp = null;
-                return G_DS;
-            }
-            catch
-            {
-                // Excp = 1;
-                return G_DS;
-            }
-        }
-        public DataTable Get_Customer_AccountComputeBalance_(int Customer_Id, bool _GetDateFrom, DateTime GetDateFrom, bool _GetDateTo, DateTime GetDateTo, bool DESC)
-        {
-            DateTime dtBefor = GetDateFrom;
-
-            TimeSpan ts = new TimeSpan(1, 0, 0, 0);
-
-            dtBefor = dtBefor.Subtract(ts);
-
-            DataTable dtAccount = new DataTable();
-            operations opp = new operations();
-
-            string mysql = "";
-            decimal BalanceBefor = 0;
-            try
-            {
-                bool IsFountBalanceBefor = false;
-                int FirstRowToCompute = 0;
-                if (_GetDateFrom == true)
-                {
-                    mysql = @"SELECT   (SUM(Export) - SUM(Import)) AS Balance FROM Customers_Accounts ";
-                    mysql = mysql + " GROUP BY Customer_Id, Transaction_Date ";
-
-                    mysql = mysql + " HAVING (Transaction_Date < '" + operations.dateFormat(GetDateFrom.Date) + "')  AND (Customer_Id = " + Customer_Id + ") ";
-                    DataTable dt = opp.return_DataTable(mysql);
-                    if (dt.Rows.Count > 0)
-                    {
-                        IsFountBalanceBefor = true;
-                        try { BalanceBefor = decimal.Parse(dt.Rows[0]["Balance"].ToString()); }
-                        catch { BalanceBefor = 0; }
-                    }
-                }
-
-
-                mysql = " SELECT Customers_Accounts.*,0 AS Serial_,'' As BalanceImport,'' As BalanceExport FROM Customers_Accounts WHERE Flage_View=1      ";
-                if (_GetDateFrom == true)
-                {
-                    mysql = mysql + " AND (Transaction_Date >= '" + operations.dateFormat(GetDateFrom.Date) + "')  ";
-                }
-                if (_GetDateTo == true)
-                {
-                    mysql = mysql + "   AND (Transaction_Date <='" + operations.dateFormat(GetDateTo.Date) + "' )  ";
-                }
-                mysql = mysql + "  AND (Customer_Id = " + Customer_Id + ") ";
-
-                mysql = mysql + "  ORDER BY    Transaction_Date";
-
-
-                dtAccount = opp.return_DataTable(mysql);
-
-
-
-                int Count = dtAccount.Rows.Count;
-                if (IsFountBalanceBefor == true)
-                {
-                    DataRow dr2 = dtAccount.NewRow();
-                    dr2["Balance"] = BalanceBefor;
-                    dr2["Import"] = 0;
-                    dr2["Export"] = 0;
-                    dr2["Transaction_Date"] = dtBefor;
-                    dr2["Reference_Type"] = 0;
-
-                    dr2["Reference_Type_View"] = "ÑÕíÏ ÓÇÈŞ";
-                    dtAccount.Rows.InsertAt(dr2, 0);
-                    FirstRowToCompute = 1;
-                }
-                ///////////////////////////////////////////////////////////
-                decimal Balance = BalanceBefor;
-                decimal ImportTotal = 0;
-                decimal ExportTotal = 0;
-                for (int x = FirstRowToCompute; x < dtAccount.Rows.Count; x++)
-                {
-                    decimal Import = decimal.Parse(dtAccount.Rows[x]["Import"].ToString());
-                    decimal Export = decimal.Parse(dtAccount.Rows[x]["Export"].ToString());
-
-                    string Reference_Type = dtAccount.Rows[x]["Reference_Type"].ToString();
-                    if (Reference_Type == "-7")
-                    {
-
-
-                        dtAccount.Rows[x]["Import"] = 0;
-                        dtAccount.Rows[x]["Export"] = 0;
-                        Balance = Export - Import;
-                        dtAccount.Rows[x]["Balance"] = Balance;
-
-
-                    }
-                    else
-                    {
-                        ImportTotal = ImportTotal + Import;
-
-                        ExportTotal = ExportTotal + Export;
-                        Balance = Balance + Export - Import;
-                        dtAccount.Rows[x]["Balance"] = Balance;
-                    }
-                }
-
-                DataRow dr = dtAccount.NewRow();
-                dr["Balance"] = 0;
-                dr["Import"] = ImportTotal;
-                dr["Export"] = ExportTotal;
-                //dr["Reference_Type"] = "-";
-
-                dr["Reference_Type_View"] = "-";
-                dr["Notes"] = "ÅÌãÇáì ÇáÍÑßÇÊ";
-                dtAccount.Rows.Add(dr);
-                decimal FinalBalance = BalanceBefor + ExportTotal - ImportTotal;
-
-                DataRow dr1 = dtAccount.NewRow();
-                dr1["Balance"] = FinalBalance;
-                dr1["Import"] = 0;
-                dr1["Export"] = 0;
-                //dr1["Reference_Type"] = "-";
-
-                dr1["Reference_Type_View"] = "-";
-                dr1["Notes"] = "ÕÇİì ÇáÑÕíÏ  ";
-                dtAccount.Rows.Add(dr1);
-
-
-                //  Excp = 1;
-
-                return dtAccount;
-            }
-            catch (Exception ee)
-            {
-                // Excp = 1;
-
-            }
-            return dtAccount;
-        }
-        public DataTable Get_Customer_AccountComputeBalance(int Customer_Id, bool _GetDateFrom, DateTime GetDateFrom, bool _GetDateTo, DateTime GetDateTo, bool DESC)
-        {
-            DateTime dtBefor = GetDateFrom;
-
-            TimeSpan ts = new TimeSpan(1, 0, 0, 0);
-
-            dtBefor = dtBefor.Subtract(ts);
-
-            DataTable dtAccount = new DataTable();
-            operations opp = new operations();
-
-            string mysql = "";
-            decimal BalanceBefor = 0;
-            decimal ImportBefor = 0;
-            decimal ExportBefor = 0;
-            try
-            {
-                bool IsFountBalanceBefor = false;
-                //int FirstRowToCompute = 0;
-                if (_GetDateFrom == true)
-                {
-                    mysql = @"SELECT  SUM(Import)   AS Import, SUM(Export)   AS Export,  (SUM(Export) - SUM(Import)) AS Balance FROM Customers_Accounts ";
-
-
-                    mysql = mysql + " WHere  (Transaction_Date < '" + operations.dateFormat(GetDateFrom.Date) + "')  AND (Customer_Id = " + Customer_Id + ") ";
-                    DataTable dt = opp.return_DataTable(mysql);
-                    if (dt.Rows.Count > 0)
-                    {
-                        IsFountBalanceBefor = true;
-                        try
-                        {
-                            BalanceBefor = decimal.Parse(dt.Rows[0]["Balance"].ToString());
-                            ImportBefor = decimal.Parse(dt.Rows[0]["Import"].ToString());
-                            ExportBefor = decimal.Parse(dt.Rows[0]["Export"].ToString());
-                        }
-                        catch { BalanceBefor = 0; }
-                    }
-                }
-
-
-                mysql = " SELECT Customers_Accounts.*,0 AS Serial_,0.0 As BalanceImport,0.0 As BalanceExport FROM Customers_Accounts WHERE Flage_View=1      ";
-                if (_GetDateFrom == true)
-                {
-                    mysql = mysql + " AND (Transaction_Date >= '" + operations.dateFormat(GetDateFrom.Date) + "')  ";
-                }
-                if (_GetDateTo == true)
-                {
-                    mysql = mysql + "   AND (Transaction_Date <='" + operations.dateFormat(GetDateTo.Date) + "' )  ";
-                }
-                mysql = mysql + "  AND (Customer_Id = " + Customer_Id + ") ";
-
-                mysql = mysql + "  ORDER BY    Transaction_Date ,Id";
-
-
-                dtAccount = opp.return_DataTable(mysql);
-
-
-
-                ///////////////ÇáÍÕæá Úáì ÇÌãÇáì ÇáÍÑßÇÊ ÇáÓÇÈŞå æÇÖÇİÊåÇ Úáì ÑÕíÏ Çæá ÇáãÏå
-                decimal Final_First_Balance_Madin = 0;
-                decimal Final_First_Balance_Da2n = 0;
-                decimal First_Balance = BalanceBefor;
-
-
-                //ÍÓÇÈ ÑÕíÏ Ãæá ÇáãÏå
-                //decimal First_Balance_Madin = 0;
-                //decimal First_Balance_Da2n = 0;
-
-                //Get_FirstBalance_Period(Year_Financial_Period_Id, Branch_Id, Submain_Account_ID, ref   First_Balance_Madin, ref   First_Balance_Da2n, ref Equivalent_First_Balance_Madin, ref Equivalent_First_Balance_Da2n);
-
-                //ÅÖÇİÉ ÑÕíÏ Çæá ÇáãÏå Úáì ÇáÑÕíÏ ÇáãäŞæá
-                //decimal First_Balance = (First_Balance_Madin - First_Balance_Da2n) + (Prev_Import_Value - Prev_Export_Value);
-                if (First_Balance == 0)
-                {
-                    Final_First_Balance_Madin = 0;
-                    Final_First_Balance_Da2n = 0;
-
-
-
-                }
-                else if (First_Balance > 0)
-                {
-                    Final_First_Balance_Madin = First_Balance;
-                    Final_First_Balance_Da2n = 0;
-
-
-                }
-                else if (First_Balance < 0)
-                {
-
-                    Final_First_Balance_Madin = 0;
-                    Final_First_Balance_Da2n = First_Balance * -1;
-
-
-                }
-
-                /////////////ÍÓÇÈ ÑÕíÏ ÇáÍÑßÇÊ
-                Set_ComputeBalanceNew(ref dtAccount, First_Balance);
-                if (IsFountBalanceBefor == true)
-                {
-                    /////////////// ÅÖÇİÉ ÑÕíÏ Ãæá ÇáãÏå Çæ ÇáÑÕíÏ ÇáãäŞæá
-                    DataRow dr11 = dtAccount.NewRow();
-                    dr11["BalanceImport"] = Final_First_Balance_Madin;
-                    dr11["BalanceExport"] = Final_First_Balance_Da2n;
-                    dr11["Balance"] = First_Balance;
-                    //dr11["Notes"] = " "ÑÕíÏ Ãæá ÇáãÏå"";
-
-                    dr11["Import"] = ImportBefor;
-                    dr11["Export"] = ExportBefor;
-                    dr11["Reference_Type"] = 0;
-
-                    dr11["Reference_Type_View"] = "ÑÕíÏ ÓÇÈŞ";
-                    dtAccount.Rows.InsertAt(dr11, 0);
-
-                }
-
-
-                Common.Make_TableColumnSerialME(ref dtAccount);
-
-                //////////ÅÖÇİÉ ÇáÇÌãÇáì
-                decimal Import = 0;
-                decimal Export = 0;
-
-                decimal Balance_Import_Value = 0;
-                decimal Balance_Export_Value = 0;
-
-
-                for (int x = 0; x < dtAccount.Rows.Count; x++)
-                {
-
-                    try
-                    {
-                        Import = Import + decimal.Parse(dtAccount.Rows[x]["Import"].ToString());
-                        Import = Common.RoundMe(Import);
-                    }
-                    catch { }
-
-                    try
-                    {
-                        Export = Export + decimal.Parse(dtAccount.Rows[x]["Export"].ToString());
-                        Export = Common.RoundMe(Export);
-                    }
-                    catch { }
-
-
-
-                }
-
-                DataRow dr = dtAccount.NewRow();
-
-                dr["Import"] = Import;
-                dr["Export"] = Export;
-                dr["Balance"] = 0;
-                dr["Notes"] = "ÅÌãÇáì ÇáÍÑßå";
-
-                dtAccount.Rows.Add(dr);
-
-                //////////////////ÍÓÇÈ ÇáÑÕíÏ ÇáãäŞæá
-                decimal Balance_Mankool = Export - Import;
-
-                //Balance_Mankool = Balance_Mankool + First_Balance;
-                Balance_Mankool = Common.RoundMe(Balance_Mankool);
-
-
-
-
-
-                if (Balance_Mankool == 0)
-                {
-                    Final_First_Balance_Madin = 0;
-                    Final_First_Balance_Da2n = 0;
-                }
-                else if (Balance_Mankool > 0)
-                {
-                    Final_First_Balance_Madin = Balance_Mankool;
-                    Final_First_Balance_Da2n = 0;
-                }
-                else if (Balance_Mankool < 0)
-                {
-
-                    Final_First_Balance_Madin = 0;
-                    Final_First_Balance_Da2n = Balance_Mankool * -1;
-                }
-
-
-
-                /////////////////////
-                DataRow dr2 = dtAccount.NewRow();
-                dr2["Balance"] = Balance_Mankool;
-                dr2["BalanceImport"] = Final_First_Balance_Madin;
-                dr2["BalanceExport"] = Final_First_Balance_Da2n;
-
-
-                dr2["Notes"] = "ÑÕíÏ ãäŞæá";
-
-                dtAccount.Rows.Add(dr2);
-
-
-
-                return dtAccount;
-            }
-            catch (Exception ee)
-            {
-                // Excp = 1;
-
-            }
-            return dtAccount;
-        }
-        public DataTable Get_Customer_AccountComputeBalanceMokhtalat__(long Customer_Id, long Supplier_Id, bool _GetDateFrom, DateTime GetDateFrom, bool _GetDateTo, DateTime GetDateTo, bool DESC)
-        {
-
-
-            DateTime dtBefor = GetDateFrom;
-
-            TimeSpan ts = new TimeSpan(1, 0, 0, 0);
-
-            dtBefor = dtBefor.Subtract(ts);
-
-            DataTable dtAccount = new DataTable();
-            operations opp = new operations();
-
-            string mysql = "  truncate table Customers_Accounts_Mokhtalat";
-            opp.insert_me(mysql);
-
-
-            mysql = @"  INSERT INTO Customers_Accounts_Mokhtalat
-                         (Customers_AccountsId,ProcessNo,Insert_ServerDateTime ,Larg_Unit_Price,Item_Name,Larg_Qnty,Small_Qnty,Item_No, Customer_Id, Import, Export, Balance, Balance_Actual, Transaction_Type, Transaction_Date, Reference_Id, Reference_Type, Reference_Type_Table_Id, Payment_Type, Notes, Day_Registration_flage, DayReg_List_Id, 
-                         Flage_View, BalanceImport, BalanceExport, Reference_Type_View)
-            SELECT    Customers_Accounts.Id, Customers_Accounts.ProcessNo, Customers_Accounts.Insert_ServerDateTime, Customers_Accounts.Larg_Unit_Price,Customers_Accounts.Item_Name,Customers_Accounts.Larg_Qnty,Customers_Accounts.Small_Qnty,Customers_Accounts.Item_No,  Customers_Accounts.Customer_Id, Customers_Accounts.Import, Customers_Accounts.Export, Customers_Accounts.Balance, Customers_Accounts.Balance_Actual, 
-                                     Customers_Accounts.Transaction_Type, Customers_Accounts.Transaction_Date, Customers_Accounts.Reference_Id, Customers_Accounts.Reference_Type, Customers_Accounts.Reference_Type_Table_Id, 
-                                     Customers_Accounts.Payment_Type, Customers_Accounts.Notes, Customers_Accounts.Day_Registration_flage, Customers_Accounts.DayReg_List_Id, Customers_Accounts.Flage_View, 
-                                     Customers_Accounts.BalanceImport, Customers_Accounts.BalanceExport, Customers_Accounts.Reference_Type_View
-            FROM            Customers_Accounts INNER JOIN
-                                     Customer ON Customers_Accounts.Customer_Id = Customer.Id ";
-            mysql = mysql + " WHERE      (Customers_Accounts.Customer_Id = " + Customer_Id + ") AND  (Customers_Accounts.Reference_Type <> 25)   ";
-            mysql = mysql + "  union ";
-            mysql = mysql + @" SELECT   Suppliers_Accounts.Id,Suppliers_Accounts.ProcessNo, Suppliers_Accounts.Insert_ServerDateTime, Suppliers_Accounts.Larg_Unit_Price,Suppliers_Accounts.Item_Name, Suppliers_Accounts.Larg_Qnty,Suppliers_Accounts.Small_Qnty,Suppliers_Accounts.Item_No,   Supplier.Ref_Cust_Supplier_Id, Suppliers_Accounts.Import, Suppliers_Accounts.Export, Suppliers_Accounts.Balance, Suppliers_Accounts.Balance_Actual, 
-                                     Suppliers_Accounts.Transaction_Type, Suppliers_Accounts.Transaction_Date, Suppliers_Accounts.Reference_Id, Suppliers_Accounts.Reference_Type, Suppliers_Accounts.Reference_Type_Table_Id, 
-                                     Suppliers_Accounts.Payment_Type, Suppliers_Accounts.Notes, Suppliers_Accounts.Day_Registration_flage, Suppliers_Accounts.DayReg_List_Id, Suppliers_Accounts.Flage_View, 
-                                     Suppliers_Accounts.BalanceImport, Suppliers_Accounts.BalanceExport, Suppliers_Accounts.Reference_Type_View
-            FROM            Suppliers_Accounts INNER JOIN
-                                     Supplier ON Suppliers_Accounts.Supplier_Id = Supplier.Id ";
-            mysql = mysql + "  WHERE       (Suppliers_Accounts.Supplier_Id = " + Supplier_Id + ")  AND  (Suppliers_Accounts.Reference_Type <> 25) AND (Supplier.Ref_Cust_Supplier_Id > 0)    ";
-
-
-
-            opp.insert_me(mysql);
-            decimal BalanceBefor = 0;
-            decimal ImportBefor = 0;
-            decimal ExportBefor = 0;
-            try
-            {
-                bool IsFountBalanceBefor = false;
-                int FirstRowToCompute = 0;
-                if (_GetDateFrom == true)
-                {
-                    mysql = @"SELECT  SUM(Import)   AS Import, SUM(Export)   AS Export,  (SUM(Export) - SUM(Import)) AS Balance FROM Customers_Accounts_Mokhtalat ";
-
-
-                    //mysql = mysql + " WHere  (Transaction_Date < '" + operations.dateFormat(GetDateFrom.Date) + "')    ";
-                    mysql = mysql + " WHere (CONVERT(DATE, Transaction_Date)  < '" + operations.dateFormat(GetDateFrom.Date) + "') ";
-
-                    DataTable dt = opp.return_DataTable(mysql);
-                    if (dt.Rows.Count > 0)
-                    {
-                        IsFountBalanceBefor = true;
-                        try
-                        {
-                            BalanceBefor = decimal.Parse(dt.Rows[0]["Balance"].ToString());
-                            ImportBefor = decimal.Parse(dt.Rows[0]["Import"].ToString());
-                            ExportBefor = decimal.Parse(dt.Rows[0]["Export"].ToString());
-                        }
-                        catch { BalanceBefor = 0; }
-                    }
-                }
-
-
-                mysql = " SELECT Customers_Accounts_Mokhtalat.*,0 AS Serial_  FROM Customers_Accounts_Mokhtalat  WHERE Flage_View=1      ";
-                if (_GetDateFrom == true)
-                {
-                    //mysql = mysql + " AND (Transaction_Date >= '" + operations.dateFormat(GetDateFrom.Date) + "')  ";
-                    mysql = mysql + " AND (CONVERT(DATE, Transaction_Date)  >= '" + operations.dateFormat(GetDateFrom.Date) + "') ";
-
-                }
-                if (_GetDateTo == true)
-                {
-                    //mysql = mysql + "   AND (Transaction_Date <='" + operations.dateFormat(GetDateTo) + "' )  ";
-                    mysql = mysql + " AND (CONVERT(DATE, Transaction_Date)  <= '" + operations.dateFormat(GetDateTo.Date) + "') ";
-                }
-
-
-                //mysql = mysql + "  ORDER BY  Transaction_Date ,ProcessNo ";//  Transaction_Date ,Id";
-                mysql = mysql + " ORDER BY ProcessNo, Transaction_Date ";//  Transaction_Date ,Id";
-
-
-                dtAccount = opp.return_DataTable(mysql);
-
-
-                /////////////////////////////////////////////////////////////
-                ///
-
-                //////////////   ÅÌãÇáì ÇáÍÑßÉ ÎáÇá İÊÑÉ ÇáÈÍË
-                decimal Import_Date = 0;
-                decimal Export_Date = 0;
-                for (int x = 0; x < dtAccount.Rows.Count; x++)
-                {
-
-                    try
-                    {
-                        Import_Date = Import_Date + decimal.Parse(dtAccount.Rows[x]["Import"].ToString());
-                        Import_Date = Common.RoundMe(Import_Date);
-                    }
-                    catch { }
-
-                    try
-                    {
-                        Export_Date = Export_Date + decimal.Parse(dtAccount.Rows[x]["Export"].ToString());
-                        Export_Date = Common.RoundMe(Export_Date);
-                    }
-                    catch { }
-
-
-
-                }
-
-
-                ///////////////ÇáÍÕæá Úáì ÇÌãÇáì ÇáÍÑßÇÊ ÇáÓÇÈŞå æÇÖÇİÊåÇ Úáì ÑÕíÏ Çæá ÇáãÏå
-                decimal Final_First_Balance_Madin = 0;
-                decimal Final_First_Balance_Da2n = 0;
-                decimal First_Balance = BalanceBefor;
-
-
-                //ÍÓÇÈ ÑÕíÏ Ãæá ÇáãÏå
-                decimal First_Balance_Madin = 0;
-                decimal First_Balance_Da2n = 0;
-
-                //Get_FirstBalance_Period(Year_Financial_Period_Id, Branch_Id, Submain_Account_ID, ref   First_Balance_Madin, ref   First_Balance_Da2n, ref Equivalent_First_Balance_Madin, ref Equivalent_First_Balance_Da2n);
-
-                //ÅÖÇİÉ ÑÕíÏ Çæá ÇáãÏå Úáì ÇáÑÕíÏ ÇáãäŞæá
-                //decimal First_Balance = (First_Balance_Madin - First_Balance_Da2n) + (Prev_Import_Value - Prev_Export_Value);
-                if (First_Balance == 0)
-                {
-                    Final_First_Balance_Madin = 0;
-                    Final_First_Balance_Da2n = 0;
-
-
-
-                }
-                else if (First_Balance > 0)
-                {
-                    Final_First_Balance_Madin = First_Balance;
-                    Final_First_Balance_Da2n = 0;
-
-
-                }
-                else if (First_Balance < 0)
-                {
-
-                    Final_First_Balance_Madin = 0;
-                    Final_First_Balance_Da2n = First_Balance * -1;
-
-
-                }
-
-                /////////////ÍÓÇÈ ÑÕíÏ ÇáÍÑßÇÊ
-                Set_ComputeBalanceNew(ref dtAccount, First_Balance);
-                if (IsFountBalanceBefor == true)
-                {
-                    /////////////// ÅÖÇİÉ ÑÕíÏ Ãæá ÇáãÏå Çæ ÇáÑÕíÏ ÇáãäŞæá
-                    DataRow dr11 = dtAccount.NewRow();
-                    Final_First_Balance_Madin = Common.RoundMe(Final_First_Balance_Madin);
-                    Final_First_Balance_Da2n = Common.RoundMe(Final_First_Balance_Da2n);
-                    dr11["BalanceImport"] = Final_First_Balance_Madin;
-                    dr11["BalanceExport"] = Final_First_Balance_Da2n;
-                    decimal BalanceDiff1 = Final_First_Balance_Madin - Final_First_Balance_Da2n;
-
-                    SetBalanceDiff(ref BalanceDiff1, ref dr11);
-
-
-
-                    dr11["Balance"] = First_Balance;
-                    //dr11["Notes"] = " "ÑÕíÏ Ãæá ÇáãÏå"";
-
-                    dr11["Import"] = ImportBefor;
-                    dr11["Export"] = ExportBefor;
-                    dr11["Reference_Type"] = 0;
-
-                    dr11["Reference_Type_View"] = "ÑÕíÏ ÓÇÈŞ";
-                    dtAccount.Rows.InsertAt(dr11, 0);
-
-                }
-
-
-                Common.Make_TableColumnSerialME(ref dtAccount);
-
-                //////////ÅÖÇİÉ ÇáÇÌãÇáì
-                decimal Import = 0;
-                decimal Export = 0;
-
-                decimal Balance_Import_Value = 0;
-                decimal Balance_Export_Value = 0;
-
-                //////////////  ÅÌãÇáì ÇáÍÑßÉ
-                for (int x = 0; x < dtAccount.Rows.Count; x++)
-                {
-
-                    try
-                    {
-                        Import = Import + decimal.Parse(dtAccount.Rows[x]["Import"].ToString());
-                        Import = Common.RoundMe(Import);
-                    }
-                    catch { }
-
-                    try
-                    {
-                        Export = Export + decimal.Parse(dtAccount.Rows[x]["Export"].ToString());
-                        Export = Common.RoundMe(Export);
-                    }
-                    catch { }
-
-
-
-                }
-                /////////////////////////////////////
-                /// ÇÖÇİÉ ÇÌãÇáì ÇáÍÑßÉ ÎáÇá İÊÑÉ ÇáÈÍË
-                //   Import_Date = 0;
-                //Export_Date = 0;
-                //dr2["Notes"] = "ÑÕíÏ ãäŞæá";
-
-                if (Common.IsShowTotalTransactionInSearchPeriod == 1)
-                {
-                    DataRow dr_ = dtAccount.NewRow();
-
-                    dr_["Import"] = Import_Date;
-                    dr_["Export"] = Export_Date;
-                    dr_["Balance"] = 0;
-                    dr_["Notes"] = "ÅÌãÇáì ÇáÍÑßÉ áİÊÑÉ ÇáÈÍË";
-
-                    dtAccount.Rows.Add(dr_);
-                }
-                ////////////////////////////////
-                ///ÇÖÇİÉ ÇÌãÇáì ÇáÍÑßÉ
-                ///
-                if (Common.IsShowTotalTransaction == 1)
-                {
-                    DataRow dr = dtAccount.NewRow();
-
-                    dr["Import"] = Import;
-                    dr["Export"] = Export;
-                    dr["Balance"] = 0;
-                    dr["Notes"] = "ÅÌãÇáì ÇáÍÑßå";
-
-                    dtAccount.Rows.Add(dr);
-                }
-                //////////////////ÍÓÇÈ ÇáÑÕíÏ ÇáãäŞæá
-                decimal Balance_Mankool = Export - Import;
-
-                //Balance_Mankool = Balance_Mankool + First_Balance;
-                Balance_Mankool = Common.RoundMe(Balance_Mankool);
-
-                if (Balance_Mankool == 0)
-                {
-                    Final_First_Balance_Madin = 0;
-                    Final_First_Balance_Da2n = 0;
-                }
-                else if (Balance_Mankool > 0)
-                {
-                    Final_First_Balance_Madin = Balance_Mankool;
-                    Final_First_Balance_Da2n = 0;
-                }
-                else if (Balance_Mankool < 0)
-                {
-
-                    Final_First_Balance_Madin = 0;
-                    Final_First_Balance_Da2n = Balance_Mankool * -1;
-                }
-
-
-
-                /////////////////////
-                DataRow dr2 = dtAccount.NewRow();
-                dr2["Balance"] = Balance_Mankool;
-                dr2["BalanceImport"] = Final_First_Balance_Madin;
-                dr2["BalanceExport"] = Final_First_Balance_Da2n;
-
-                decimal BalanceDiff = Final_First_Balance_Madin - Final_First_Balance_Da2n;
-                SetBalanceDiff(ref BalanceDiff, ref dr2);
-                //string BalanceDiff_ = "";
-                //if (BalanceDiff < 0)
-                //{
-                //    BalanceDiff = BalanceDiff * -1;
-                //    BalanceDiff_ = "( " + BalanceDiff_.ToString() + " )";
-                //}
-                //dr2["BalanceDiff"] = BalanceDiff_;
-
-                //dr2["Notes"] = "ÑÕíÏ ãäŞæá";
-                dr2["Notes"] = Common.NotesBalanceLabelMankol;
-                dtAccount.Rows.Add(dr2);
-                return dtAccount;
-            }
-            catch (Exception ee)
-            {
-                // Excp = 1;
-
-            }
-            return dtAccount;
-        }
         public DataTable Get_Customer_AccountComputeBalanceMokhtalat(long Customer_Id, long Supplier_Id, bool _GetDateFrom, DateTime GetDateFrom, bool _GetDateTo, DateTime GetDateTo, bool DESC)
         {
 
@@ -1482,20 +762,20 @@ namespace AccountModelsLib
             DataTable dtAccount = new DataTable();
             operations opp = new operations();
 
-            bool IsFinancialPeriod = false ;
+            bool IsFinancialPeriod = false;
             GetCustomers_Accounts_Mokhtalat(ref opp, IsFinancialPeriod, Customer_Id, Supplier_Id);
-             
+
             decimal BalanceBefor = 0;
             decimal ImportBefor = 0;
             decimal ExportBefor = 0;
             try
             {
+                ////ÍÓÇÈ ÇáÑÕíÏ ÇáÓÇÈŞ  -Çæá ÇáãÏÉ ŞÈá ÇáÊÇÑíÎ ãä
                 bool IsFountBalanceBefor = false;
                 int FirstRowToCompute = 0;
                 if (_GetDateFrom == true)
                 {
                     mysql = @"SELECT  SUM(Import)   AS Import, SUM(Export)   AS Export,  (SUM(Export) - SUM(Import)) AS Balance FROM Customers_Accounts_Mokhtalat ";
-
 
                     //mysql = mysql + " WHere  (Transaction_Date < '" + operations.dateFormat(GetDateFrom.Date) + "')    ";
                     mysql = mysql + " WHere (CONVERT(DATE, Transaction_Date)  < '" + operations.dateFormat(GetDateFrom.Date) + "') ";
@@ -1513,8 +793,29 @@ namespace AccountModelsLib
                         catch { BalanceBefor = 0; }
                     }
                 }
+                else
+                {
+                    mysql = @"SELECT  SUM(Import)   AS Import, SUM(Export)   AS Export,  (SUM(Export) - SUM(Import)) AS Balance FROM Customers_Accounts_Mokhtalat ";
 
+                    //mysql = mysql + " WHere  (Transaction_Date < '" + operations.dateFormat(GetDateFrom.Date) + "')    ";
+                    mysql = mysql + " WHere Reference_Type =-7 ";
 
+                    DataTable dt = opp.return_DataTable(mysql);
+                    if (dt.Rows.Count > 0)
+                    {
+                        IsFountBalanceBefor = true;
+                        try
+                        {
+                            BalanceBefor = decimal.Parse(dt.Rows[0]["Balance"].ToString());
+                            ImportBefor = decimal.Parse(dt.Rows[0]["Import"].ToString());
+                            ExportBefor = decimal.Parse(dt.Rows[0]["Export"].ToString());
+                        }
+                        catch { BalanceBefor = 0; }
+                    }
+
+                }
+
+                //////////áÍÓÇÈ ÇÌãÇáì ÇáÍÑßÇÊ ÎáÇá ÇáİÊÑÉ
                 mysql = " SELECT Customers_Accounts_Mokhtalat.*,0 AS Serial_  FROM Customers_Accounts_Mokhtalat  WHERE Flage_View=1      ";
                 if (_GetDateFrom == true)
                 {
@@ -1773,7 +1074,7 @@ namespace AccountModelsLib
             string Raseed_Awel_Moda = "ÑÕíÏ Ãæá ÇáãÏå";
             try
             {
-                bool IsFountBalanceBefor = false ;
+                bool IsFountBalanceBefor = false;
                 int FirstRowToCompute = 0;
                 if (_GetDateFrom == true)
                 {
@@ -1787,19 +1088,19 @@ namespace AccountModelsLib
                         mysql = @"SELECT  SUM(Import)   AS Import, SUM(Export)   AS Export,  (SUM(Export) - SUM(Import)) AS Balance FROM Customers_Accounts_Mokhtalat ";
                         mysql = mysql + " WHere (CONVERT(DATE, Transaction_Date)  >= '" + operations.dateFormat(Financial_Period_dtFom.Date) + "') AND  (CONVERT(DATE, Transaction_Date)  <  '" + operations.dateFormat(GetDateFrom.Date) + "') ";
                         mysql = mysql + " AND (Customer_Id = " + Customer_Id + ") And  Reference_Type <> -7 ";
-                        
+
 
                         DataTable dt_Prev = opp.return_DataTable(mysql);
 
-                      
+
                         try
                         {
                             if (dt_Prev.Rows.Count > 0)
                             {
-                                Prev_BalanceBefor = decimal.Parse(dt_Prev.Rows[0]["Balance"].ToString());
-                                Prev_Import_Value = decimal.Parse(dt_Prev.Rows[0]["Import"].ToString());
-                                Prev_Export_Value = decimal.Parse(dt_Prev.Rows[0]["Export"].ToString());
-                                IsFountBalanceBefor = true ;
+                                decimal.TryParse(dt_Prev.Rows[0]["Balance"].ToString(), out Prev_BalanceBefor);
+                                decimal.TryParse(dt_Prev.Rows[0]["Import"].ToString(), out Prev_Import_Value);
+                                decimal.TryParse(dt_Prev.Rows[0]["Export"].ToString(), out Prev_Export_Value);
+                                IsFountBalanceBefor = true;
                                 Raseed_Awel_Moda = "ÑÕíÏ ÓÇÈŞ";
                             }
                         }
@@ -1810,17 +1111,17 @@ namespace AccountModelsLib
                     CustomerCLS customerCLS = new CustomerCLS(ref opp);
                     customerCLS.GetCustomerNoTracking(Customer_Id);
                     long Submain_Account_ID = customerCLS.cs.SubAccount_Id;
-                    AccountEntry_CLS accountEntry_CLS= new AccountEntry_CLS();
+                    AccountEntry_CLS accountEntry_CLS = new AccountEntry_CLS();
                     decimal First_Balance_Madin = 0;
-                    decimal First_Balance_Da2n =0;
+                    decimal First_Balance_Da2n = 0;
                     decimal Equivalent_First_Balance_Madin_ = 0;
-                    decimal Equivalent_First_Balance_Da2n_ =0;
+                    decimal Equivalent_First_Balance_Da2n_ = 0;
 
- 
-                    accountEntry_CLS.Get_FirstBalance_Period(  Year_Financial_Period_Id,   Branch_Id,   Submain_Account_ID, ref   First_Balance_Madin, ref   First_Balance_Da2n, ref   Equivalent_First_Balance_Madin_, ref   Equivalent_First_Balance_Da2n_);
+
+                    accountEntry_CLS.Get_FirstBalance_Period(Year_Financial_Period_Id, Branch_Id, Submain_Account_ID, ref First_Balance_Madin, ref First_Balance_Da2n, ref Equivalent_First_Balance_Madin_, ref Equivalent_First_Balance_Da2n_);
 
                     //ÅÖÇİÉ ÑÕíÏ Çæá ÇáãÏå Úáì ÇáÑÕíÏ ÇáãäŞæá
-                      First_Balance = (First_Balance_Madin - First_Balance_Da2n) + (Prev_Import_Value - Prev_Export_Value);
+                    First_Balance = (First_Balance_Madin - First_Balance_Da2n) + (Prev_Import_Value - Prev_Export_Value);
                     if (First_Balance == 0)
                     {
                         Final_First_Balance_Madin = 0;
@@ -1863,7 +1164,7 @@ namespace AccountModelsLib
                     //}
                 }
 
-
+                ///áÍÓÇÈ ÇÌãÇáì ÇáÍÑßÇÊ
                 mysql = " SELECT Customers_Accounts_Mokhtalat.*,0 AS Serial_  FROM Customers_Accounts_Mokhtalat  WHERE Flage_View=1      ";
                 if (_GetDateFrom == true)
                 {
@@ -1911,32 +1212,32 @@ namespace AccountModelsLib
 
 
                 }
-                 
+
 
                 /////////////ÍÓÇÈ ÑÕíÏ ÇáÍÑßÇÊ
                 Set_ComputeBalanceNew(ref dtAccount, First_Balance);
-                
-                    /////////////// ÅÖÇİÉ ÑÕíÏ Ãæá ÇáãÏå Çæ ÇáÑÕíÏ ÇáãäŞæá
-                    DataRow dr11 = dtAccount.NewRow();
-                    Final_First_Balance_Madin = Common.RoundMe(Final_First_Balance_Madin);
-                    Final_First_Balance_Da2n = Common.RoundMe(Final_First_Balance_Da2n);
-                    dr11["BalanceImport"] = Final_First_Balance_Madin;
-                    dr11["BalanceExport"] = Final_First_Balance_Da2n;
-                    decimal BalanceDiff1 = Final_First_Balance_Madin - Final_First_Balance_Da2n;
 
-                    SetBalanceDiff(ref BalanceDiff1, ref dr11); 
+                /////////////// ÅÖÇİÉ ÑÕíÏ Ãæá ÇáãÏå Çæ ÇáÑÕíÏ ÇáãäŞæá
+                DataRow dr11 = dtAccount.NewRow();
+                Final_First_Balance_Madin = Common.RoundMe(Final_First_Balance_Madin);
+                Final_First_Balance_Da2n = Common.RoundMe(Final_First_Balance_Da2n);
+                dr11["BalanceImport"] = Final_First_Balance_Madin;
+                dr11["BalanceExport"] = Final_First_Balance_Da2n;
+                decimal BalanceDiff1 = Final_First_Balance_Madin - Final_First_Balance_Da2n;
 
-                    dr11["Balance"] = First_Balance;
-                    //dr11["Notes"] = " "ÑÕíÏ Ãæá ÇáãÏå"";
+                SetBalanceDiff(ref BalanceDiff1, ref dr11);
 
-                    dr11["Import"] = Prev_Import_Value;
-                    dr11["Export"] = Prev_Export_Value;
-                    dr11["Reference_Type"] = 0;
+                dr11["Balance"] = First_Balance;
+                //dr11["Notes"] = " "ÑÕíÏ Ãæá ÇáãÏå"";
 
-                    dr11["Reference_Type_View"] = Raseed_Awel_Moda;
-                    dtAccount.Rows.InsertAt(dr11, 0);
+                dr11["Import"] = Prev_Import_Value;
+                dr11["Export"] = Prev_Export_Value;
+                dr11["Reference_Type"] = 0;
 
-               
+                dr11["Reference_Type_View"] = Raseed_Awel_Moda;
+                dtAccount.Rows.InsertAt(dr11, 0);
+
+
 
 
                 Common.Make_TableColumnSerialME(ref dtAccount);
@@ -2058,16 +1359,7 @@ namespace AccountModelsLib
             return dtAccount;
         }
 
-        // ğŸŸ¢ Ø¹Ù…ÙˆØ¯ Customers_Accounts_Mokhtalat.ID Ø¹Ù…ÙˆØ¯ IDENTITY Ø­Ù‚ÙŠÙ‚Ù‰ (auto-increment Ù…Ù† SQL Server Ù†ÙØ³Ù‡ØŒ ØªØ­Ù‚Ù‘Ù‚Ù†Ø§
-        // Ù…Ù†Ù‡ Ù…Ø¨Ø§Ø´Ø±Ø© Ø¹Ø¨Ø± sys.columns)ØŒ Ø¨ÙŠÙ†Ù…Ø§ operations.insert_me ÙŠÙ…Ø±Ù‘ Ø¯Ø§Ø¦Ù…Ø§Ù‹ Ø¹Ø¨Ø± SetUpInsertCmd Ø§Ù„ØªÙ‰ ØªÙÙ‚Ø­Ù… Ù‚ÙŠÙ…Ø©
-        // Id ØµØ±ÙŠØ­Ø© ÙˆØ§Ø­Ø¯Ø© (Ù†ÙØ³ Ø§Ù„Ù‚ÙŠÙ…Ø© Ø¨Ø§Ù„Ø¶Ø¨Ø·) ÙÙ‰ ÙƒÙ„ ØµÙ ÙŠÙØ¯Ø±ÙØ¬ ÙƒÙ„Ù…Ø§ ÙƒØ§Ù† Common.Use_Auto_Identity_Column = 0 (Ù‚ÙŠÙ…ØªÙ‡
-        // Ø§Ù„ÙØ¹Ù„ÙŠØ© ÙÙ‰ Ù‡Ø°Ù‡ Ø§Ù„Ù‚Ø§Ø¹Ø¯Ø© - Ù†ÙØ³ Ø§Ù„Ù†Ù…Ø· Ø¨Ø§Ù„Ø¶Ø¨Ø· Ø§Ù„Ù…ÙˆØ«ÙÙ‘Ù‚ Ø³Ø§Ø¨Ù‚Ø§Ù‹ ÙÙ‰ UserSettingsCLS.SaveUserSetting Ø¹Ù„Ù‰ Ø¬Ø¯ÙˆÙ„
-        // Ø¢Ø®Ø±ØŒ Ø±Ø§Ø¬Ø¹ MODERNIZATION_NOTES.md). Ù‡Ù†Ø§ Ø§Ù„Ø¥Ø¯Ø±Ø§Ø¬ Ù…ØªØ¹Ø¯Ø¯ Ø§Ù„ØµÙÙˆÙ Ø£ØµÙ„Ø§Ù‹ (ÙƒÙ„ Ø­Ø±ÙƒØ§Øª Ø­Ø³Ø§Ø¨ Ø§Ù„Ø¹Ù…ÙŠÙ„/Ø§Ù„Ù…ÙˆØ±Ø¯
-        // Ø§Ù„Ù…Ø±ØªØ¨Ø· Ø¯ÙØ¹Ø© ÙˆØ§Ø­Ø¯Ø© Ø¹Ø¨Ø± UNION)ØŒ ÙØ­ØªÙ‰ Ù„Ùˆ Ø£ÙÙ‚Ø­Ù…Øª Ù‚ÙŠÙ…Ø© Id Ù„ÙƒÙ„ Ø§Ù„ØµÙÙˆÙ Ù„Ø£ØµØ¨Ø­Øª Ø¬Ù…ÙŠØ¹Ù‡Ø§ Ø¨Ù†ÙØ³ Ø§Ù„Ø±Ù‚Ù… - Ø®Ø·Ø£ Ù…Ù†Ø·Ù‚Ù‰
-        // Ø¨Ø¬Ø§Ù†Ø¨ ÙØ´Ù„ SQL Server Ù†ÙØ³Ù‡ ÙÙˆØ±Ø§Ù‹ Ø¨Ø®Ø·Ø£ "Cannot insert explicit value for identity column" Ù„Ø£Ù† Ø§Ù„Ø¹Ù…ÙˆØ¯
-        // IDENTITY Ø­Ù‚ÙŠÙ‚Ù‰. Ø§Ù„Ø­Ù„: ØªÙ†ÙÙŠØ° ÙƒÙ„ Ù…Ù† TRUNCATE ÙˆINSERT Ù…Ø¨Ø§Ø´Ø±Ø© Ø¹Ø¨Ø± SqlCommand Ø¹Ù„Ù‰ opp.connØŒ Ù…ØªØ®Ø·Ù‘ÙŠÙ†
-        // SetUpInsertCmd ØªÙ…Ø§Ù…Ø§Ù‹ØŒ ÙÙŠÙØªØ±ÙÙƒ Ø¹Ù…ÙˆØ¯ Id Ù„Ù€SQL Server Ù†ÙØ³Ù‡ ÙŠÙˆÙ„Ù‘Ø¯Ù‡ ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹ ÙˆØ¨Ø´ÙƒÙ„ ØµØ­ÙŠØ­ Ù„ÙƒÙ„ ØµÙ.
-        public void  GetCustomers_Accounts_Mokhtalat(ref operations opp,bool IsFinancialPeriod,long Customer_Id,long Supplier_Id)
+        public void GetCustomers_Accounts_Mokhtalat(ref operations opp, bool IsFinancialPeriod, long Customer_Id, long Supplier_Id)
         {
             opp.MyConn();
             if (opp.conn.State == System.Data.ConnectionState.Closed)
@@ -2082,10 +1374,10 @@ namespace AccountModelsLib
                     truncateCmd.ExecuteNonQuery();
                 }
 
-            //CarsId,CarNumber,
-            //Invoices_List.CarsId,Invoices_List.CarNumber,
+                //CarsId,CarNumber,
+                //Invoices_List.CarsId,Invoices_List.CarNumber,
 
-            string mysql = @"  INSERT INTO Customers_Accounts_Mokhtalat
+                string mysql = @"  INSERT INTO Customers_Accounts_Mokhtalat
                          (Customers_AccountsId,ProcessNo,Insert_ServerDateTime ,Larg_Unit_Price,Item_Name,Larg_Qnty,Small_Qnty,Item_No, Customer_Id, Import, Export, Balance, Balance_Actual, Transaction_Type, Transaction_Date, Reference_Id, Reference_Type, Reference_Type_Table_Id, Payment_Type, Notes, Day_Registration_flage, DayReg_List_Id, 
                          Flage_View, BalanceImport, BalanceExport, Reference_Type_View,WorkOrderNumber, CustomerName  ,CarsWorkOrdersId, TaxInternalId,CarsId,CarNumber )
             SELECT    Customers_Accounts.Id, Customers_Accounts.ProcessNo, Customers_Accounts.Insert_ServerDateTime, Customers_Accounts.Larg_Unit_Price,Customers_Accounts.Item_Name,Customers_Accounts.Larg_Qnty,Customers_Accounts.Small_Qnty,Customers_Accounts.Item_No,  Customers_Accounts.Customer_Id, Customers_Accounts.Import, Customers_Accounts.Export, Customers_Accounts.Balance, Customers_Accounts.Balance_Actual, 
@@ -2095,24 +1387,24 @@ namespace AccountModelsLib
                                     ,Customers_Accounts.WorkOrderNumber, Customers_Accounts.CustomerName  ,Customers_Accounts.CarsWorkOrdersId  ,Customers_Accounts.TaxInternalId,Customers_Accounts.CarsId,Customers_Accounts.CarNumber
             FROM            Customers_Accounts INNER JOIN
                                      Customer ON Customers_Accounts.Customer_Id = Customer.Id ";
-            mysql = mysql + " WHERE      (Customers_Accounts.Customer_Id = " + Customer_Id + ") AND  (Customers_Accounts.Reference_Type <> 25)   ";
-            if (IsFinancialPeriod == true)
-            {
-                mysql = mysql + " And  Reference_Type <> -7 ";
-            }
-            mysql = mysql + "  union ";
-            mysql = mysql + @" SELECT   Suppliers_Accounts.Id,Suppliers_Accounts.ProcessNo, Suppliers_Accounts.Insert_ServerDateTime, Suppliers_Accounts.Larg_Unit_Price,Suppliers_Accounts.Item_Name, Suppliers_Accounts.Larg_Qnty,Suppliers_Accounts.Small_Qnty,Suppliers_Accounts.Item_No,   Supplier.Ref_Cust_Supplier_Id, Suppliers_Accounts.Import, Suppliers_Accounts.Export, Suppliers_Accounts.Balance, Suppliers_Accounts.Balance_Actual, 
+                mysql = mysql + " WHERE      (Customers_Accounts.Customer_Id = " + Customer_Id + ") AND  (Customers_Accounts.Reference_Type <> 25)   ";
+                if (IsFinancialPeriod == true)
+                {
+                    mysql = mysql + " And  Reference_Type <> -7 ";
+                }
+                mysql = mysql + "  union ";
+                mysql = mysql + @" SELECT   Suppliers_Accounts.Id,Suppliers_Accounts.ProcessNo, Suppliers_Accounts.Insert_ServerDateTime, Suppliers_Accounts.Larg_Unit_Price,Suppliers_Accounts.Item_Name, Suppliers_Accounts.Larg_Qnty,Suppliers_Accounts.Small_Qnty,Suppliers_Accounts.Item_No,   Supplier.Ref_Cust_Supplier_Id, Suppliers_Accounts.Import, Suppliers_Accounts.Export, Suppliers_Accounts.Balance, Suppliers_Accounts.Balance_Actual, 
                                      Suppliers_Accounts.Transaction_Type, Suppliers_Accounts.Transaction_Date, Suppliers_Accounts.Reference_Id, Suppliers_Accounts.Reference_Type, Suppliers_Accounts.Reference_Type_Table_Id, 
                                      Suppliers_Accounts.Payment_Type, Suppliers_Accounts.Notes, Suppliers_Accounts.Day_Registration_flage, Suppliers_Accounts.DayReg_List_Id, Suppliers_Accounts.Flage_View, 
                                      Suppliers_Accounts.BalanceImport, Suppliers_Accounts.BalanceExport, Suppliers_Accounts.Reference_Type_View
                                        ,Suppliers_Accounts.WorkOrderNumber, Suppliers_Accounts.SupplierName  ,Suppliers_Accounts.CarsWorkOrdersId ,Suppliers_Accounts.TaxInternalId,Suppliers_Accounts.CarsId,Suppliers_Accounts.CarNumber
             FROM            Suppliers_Accounts INNER JOIN
                                      Supplier ON Suppliers_Accounts.Supplier_Id = Supplier.Id ";
-            mysql = mysql + "  WHERE       (Suppliers_Accounts.Supplier_Id = " + Supplier_Id + ")  AND  (Suppliers_Accounts.Reference_Type <> 25) AND (Supplier.Ref_Cust_Supplier_Id > 0)    ";
-            if (IsFinancialPeriod == true)
-            {
-                mysql = mysql + " And  Reference_Type <> -7 ";
-            }
+                mysql = mysql + "  WHERE       (Suppliers_Accounts.Supplier_Id = " + Supplier_Id + ")  AND  (Suppliers_Accounts.Reference_Type <> 25) AND (Supplier.Ref_Cust_Supplier_Id > 0)    ";
+                if (IsFinancialPeriod == true)
+                {
+                    mysql = mysql + " And  Reference_Type <> -7 ";
+                }
 
                 using (var insertCmd = new SqlCommand(mysql, opp.conn))
                 {
@@ -2220,19 +1512,8 @@ namespace AccountModelsLib
             //}
             //dr11["BalanceDiff"] = BalanceDiff_1;
         }
-        string SetBalanceDiffValue(decimal BalanceDiff)
-        {
 
-
-            string BalanceDiff_ = "";
-            if (BalanceDiff < 0)
-            {
-                BalanceDiff = BalanceDiff * -1;
-                BalanceDiff_ = "( " + BalanceDiff.ToString() + " )";
-            }
-            return BalanceDiff_;
-        }
-        public void Set_Customer_BalanceTotal(ref int Excp, int Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total)
+        public void Set_Customer_BalanceTotal(ref int Excp, long Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total)
         {
             try
             {
@@ -2259,7 +1540,7 @@ namespace AccountModelsLib
                 throw exception;
             }
         }
-        public void Set_Customer_Balance_Invoice(ref int Excp, ref operations opp, int Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
+        public void Set_Customer_Balance_Invoice(ref int Excp, ref operations opp, long Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
         {
             //CarsId,CarNumber,
             //Invoices_List.CarsId,Invoices_List.CarNumber, 
@@ -2288,7 +1569,7 @@ namespace AccountModelsLib
                 throw;
             }
         }
-        public void Set_Customer_Balance_Invoice(ref int Excp, ref operations opp, int Customer_Id, long Customer_Id_RelatedToAccount, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
+        public void Set_Customer_Balance_Invoice(ref int Excp, ref operations opp, long Customer_Id, long Customer_Id_RelatedToAccount, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
         {
             if (Customer_Id_RelatedToAccount == 0)
             {
@@ -2323,7 +1604,7 @@ namespace AccountModelsLib
             }
         }
 
-        private void Set_Customer_Balance_WithItems_Invoices_List(ref int Excp, ref operations opp, int Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
+        private void Set_Customer_Balance_WithItems_Invoices_List(ref int Excp, ref operations opp, long Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
         {
             long Customer_Id_RelatedToAccount = GetCustomer_Id_RelatedToAccount(ref opp, Customer_Id);
             bool Is_SumItemQnty = false;
@@ -2356,7 +1637,7 @@ namespace AccountModelsLib
                 SetCustomers_Accounts_With_Invoices_ListData(ref opp, New_Invoice_ListTable_id);
             }
         }
-        private void Set_Customer_Balance_With_Sum_Items_Invoices_List(ref int Excp, ref operations opp, int Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
+        private void Set_Customer_Balance_With_Sum_Items_Invoices_List(ref int Excp, ref operations opp, long Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
         {
             try
             {
@@ -2372,7 +1653,7 @@ namespace AccountModelsLib
                 //Larg_Unit_Price,Item_Name,
                 //Invoices_Details.Larg_Unit_Price,Item.Item_Name,
 
-              //UpdateProcessNo(ref Excp, ref opp, "Invoices_List", New_Invoice_ListTable_id);
+                //UpdateProcessNo(ref Excp, ref opp, "Invoices_List", New_Invoice_ListTable_id);
 
 
                 str = @" INSERT INTO Customers_Accounts (  CarsId,CarNumber,CustomerName, CarsWorkOrdersId, WorkOrderNumber,TaxInternalId,ProcessNo,Larg_Unit_Price,Item_Id,Item_Name,Notes, Customer_Id,Customer_Id_RelatedToAccount, Reference_Id, Reference_Type_Table_Id, Export, Balance, Transaction_Type, Transaction_Date, Reference_Type, Larg_Qnty,Small_Qnty, Item_No, Qnty_value) ";
@@ -2396,7 +1677,7 @@ namespace AccountModelsLib
             }
 
         }
-        private void Set_Customer_Balance_(ref int Excp, ref operations opp, int Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
+        private void Set_Customer_Balance_(ref int Excp, ref operations opp, long Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
         {
             long Customer_Id_RelatedToAccount = GetCustomer_Id_RelatedToAccount(ref opp, Customer_Id);
             string str = "";
@@ -2406,24 +1687,24 @@ namespace AccountModelsLib
 
             string ccc = Net_Total.GetType().FullName;
 
-           ccc=
-    "Value      = " + Net_Total.ToString() + Environment.NewLine +
-    "Invariant  = " + Net_Total.ToString(System.Globalization.CultureInfo.InvariantCulture) + Environment.NewLine +
-    "SQL String = " + str ;
+            ccc =
+     "Value      = " + Net_Total.ToString() + Environment.NewLine +
+     "Invariant  = " + Net_Total.ToString(System.Globalization.CultureInfo.InvariantCulture) + Environment.NewLine +
+     "SQL String = " + str;
 
 
-    //        var dec = (System.Globalization.NumberFormatInfo)
-    //System.Globalization.CultureInfo.CurrentCulture.NumberFormat.Clone();
+            //        var dec = (System.Globalization.NumberFormatInfo)
+            //System.Globalization.CultureInfo.CurrentCulture.NumberFormat.Clone();
 
-    //        ccc=
-    //            "Culture = " + System.Globalization.CultureInfo.CurrentCulture.DisplayName
-    //            + "\nDecimalSeparator = [" + dec.NumberDecimalSeparator + "]"
-    //            + "\nGroupSeparator = [" + dec.NumberGroupSeparator + "]";
+            //        ccc=
+            //            "Culture = " + System.Globalization.CultureInfo.CurrentCulture.DisplayName
+            //            + "\nDecimalSeparator = [" + dec.NumberDecimalSeparator + "]"
+            //            + "\nGroupSeparator = [" + dec.NumberGroupSeparator + "]";
 
-    //        ccc = System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
-      
+            //        ccc = System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
 
-            str = "  UPDATE Customer SET Balance = Balance + " + Net_Total + " ,Balance_Actual=Balance_Actual +  " + Net_Total  + " WHERE (Id = " + Customer_Id + ")";
+
+            str = "  UPDATE Customer SET Balance = Balance + " + Net_Total + " ,Balance_Actual=Balance_Actual +  " + Net_Total + " WHERE (Id = " + Customer_Id + ")";
             opp.insert_me(str);
 
             //UpdateProcessNo(ref Excp, ref opp, "Invoices_List", New_Invoice_ListTable_id);
@@ -2473,7 +1754,7 @@ namespace AccountModelsLib
                 opp.insert_me(str);
             }
         }
-        private void Set_Customer_Balance_WithItems_Invoices_List_RelatedTo(ref int Excp, ref operations opp, int Customer_Id, long Customer_Id_RelatedToAccount, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
+        private void Set_Customer_Balance_WithItems_Invoices_List_RelatedTo(ref int Excp, ref operations opp, long Customer_Id, long Customer_Id_RelatedToAccount, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
         {
             bool Is_SumItemQnty = false;
             string str = "";
@@ -2506,7 +1787,7 @@ namespace AccountModelsLib
             }
         }
 
-        private void Set_Customer_Balance_With_Sum_Items_Invoices_List_RelatedTo(ref int Excp, ref operations opp, int Customer_Id, long Customer_Id_RelatedToAccount, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
+        private void Set_Customer_Balance_With_Sum_Items_Invoices_List_RelatedTo(ref int Excp, ref operations opp, long Customer_Id, long Customer_Id_RelatedToAccount, long New_Invoice_ListTable_id, decimal Net_Total, string Notes)
         {
 
 
@@ -2538,7 +1819,7 @@ namespace AccountModelsLib
 
         }
 
-        public void Updatet_Customer_BalanceWithEditInvoice(ref int Excp, ref operations opp, DateTime Invoice_Date, int Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, decimal Invoice_NetTotal_Diff, string Notes)
+        public void Updatet_Customer_BalanceWithEditInvoice(ref int Excp, ref operations opp, DateTime Invoice_Date, long Customer_Id, long New_Invoice_ListTable_id, decimal Net_Total, decimal Invoice_NetTotal_Diff, string Notes)
         {
             Set_Customer_Balance_Invoice(ref Excp, ref opp, Customer_Id, New_Invoice_ListTable_id, Net_Total, Notes);
 
@@ -2592,41 +1873,6 @@ namespace AccountModelsLib
             //}
         }
 
-        public void Updatet_Customer_BalanceWithEditInvoiceReverse(ref int Excp, ref operations opp, DateTime Invoice_Date, int Customer_Id, long Invoice_List_Table_Id, decimal Net_Total, decimal Invoice_NetTotal_Diff, string Notes)
-        {
-            string str = "";
-            if (Common.IsHavePermissionSysMenu(Common.User_Id, 342, Common.Project_ID, Common.Is_Force_Admin_Permission) | (Common.Is_Set_Customer_Balance_With_Items == 1))
-            {
-                str = "  Delete from  Customers_Accounts Where Reference_Type_Table_Id=" + Invoice_List_Table_Id.ToString() + " and Reference_Type=7";
-                opp.insert_me(str);
-                this.Set_Customer_BalanceInvoiceReverseWithItem(ref Excp, ref opp, Customer_Id, Invoice_List_Table_Id, Net_Total, Notes);
-            }
-            else
-            {
-                long num = 0L;
-                str = " SELECT  Customers_Accounts.* FROM    Customers_Accounts    Where Reference_Type=" + Common.InvoiceReverse_Type_Id.ToString() + " And Reference_Type_Table_Id=" + Invoice_List_Table_Id.ToString();
-                DataTable table = opp.return_DataTable(str);
-                if (table.Rows.Count > 0)
-                {
-                    num = long.Parse(table.Rows[0]["Id"].ToString());
-                }
-                str = "Select * from Invoices_Details_Reverse Where Invoice_Id=" + Invoice_List_Table_Id.ToString();
-                if (opp.return_DataTable(str).Rows.Count == 0)
-                {
-                    str = " Delete from Customers_Accounts  WHERE (id = " + num.ToString() + ")";
-                    opp.insert_me(str);
-                }
-                string[] textArray1 = new string[] { "UPDATE Customer SET balance =balance + ", Invoice_NetTotal_Diff.ToString(), ",Balance_Actual=Balance_Actual + ", Invoice_NetTotal_Diff.ToString(), " WHERE (id = ", Customer_Id.ToString(), ")" };
-                str = string.Concat(textArray1);
-                opp.insert_me(str);
-                string[] textArray2 = new string[] { "UPDATE Customers_Accounts SET Notes='", Notes, "',Import=", Net_Total.ToString(), "   WHERE (id = ", num.ToString(), ")" };
-                str = string.Concat(textArray2);
-                opp.insert_me(str);
-                string[] textArray3 = new string[] { "UPDATE Customers_Accounts SET balance=balance + ", Invoice_NetTotal_Diff.ToString(), "   WHERE (id >= ", num.ToString(), ") AND (Customer_Id=", Customer_Id.ToString(), ")" };
-                str = string.Concat(textArray3);
-                opp.insert_me(str);
-            }
-        }
 
         public void Set_Customer_Balance_WithMoney_Transaction(ref int Excp, ref operations opp, long Customer_Id, int Transaction_Type, long Order_Mony_Id, long Money_Transaction_BoxId, decimal Cash_Value, string Notes)
         {
@@ -2677,7 +1923,7 @@ namespace AccountModelsLib
             //}
             //UpdateProcessNo(ref Excp, ref opp, "Money_Transaction_Box", Money_Transaction_BoxId);
 
-              mysql = " INSERT INTO Customers_Accounts (CarsId, CarNumber, CustomerName, CarsWorkOrdersId, WorkOrderNumber, TaxInternalId,ProcessNo,Notes,Customer_Id,Customer_Id_RelatedToAccount, Reference_Id, Reference_Type_Table_Id, Import , Balance, Reference_Type, Transaction_Type, Transaction_Date,Payment_Type) ";
+            mysql = " INSERT INTO Customers_Accounts (CarsId, CarNumber, CustomerName, CarsWorkOrdersId, WorkOrderNumber, TaxInternalId,ProcessNo,Notes,Customer_Id,Customer_Id_RelatedToAccount, Reference_Id, Reference_Type_Table_Id, Import , Balance, Reference_Type, Transaction_Type, Transaction_Date,Payment_Type) ";
             mysql = mysql + " SELECT  dbo.Money_Transaction_Box.CarsId, dbo.Money_Transaction_Box.CarNumber, dbo.Money_Transaction_Box.Account_Name, dbo.Money_Transaction_Box.CarsWorkOrdersId, dbo.Money_Transaction_Box.WorkOrderNumber, dbo.Money_Transaction_Box.TaxInternalId, dbo.Money_Transaction_Box.ProcessNo, N'" + Notes + "'," + Customer_Id_RelatedToAccount + ",dbo.Money_Transaction_Box.Customer_Id, dbo.Order_Money.Order_No, dbo.Money_Transaction_Box.Id, dbo.Money_Transaction_Box.Transaction_Value,  dbo.Customer.Balance," + Reference_Type + " as  Reference_Type," + Transaction_Type + " AS Transaction_Type, dbo.Money_Transaction_Box.Transaction_Date ,1 AS Payment_Type";
             mysql = mysql + @"  FROM            dbo.Money_Transaction_Box   WITH (NOLOCK)  
                     INNER JOIN     dbo.Customer WITH (NOLOCK) ON dbo.Money_Transaction_Box.Customer_Id = dbo.Customer.Id INNER JOIN
@@ -2686,7 +1932,7 @@ namespace AccountModelsLib
             opp.insert_me(mysql);
 
 
-        
+
         }
         public void Set_Customer_Balance_WithMoney_TransactionSarf(ref int Excp, ref operations opp, long Customer_Id, int Transaction_Type, long Order_Mony_Id, long Money_Transaction_BoxId, decimal Cash_Value, string Notes)
         {
@@ -2717,7 +1963,6 @@ namespace AccountModelsLib
 
         }
 
-
         public void Set_Customer_Balance_With_CheckMoney(ref int Excp, ref operations opp, long Customer_Id, int Transaction_Type, long Order_Mony_Id, long Checks_MemoryId, decimal Cash_Value, string Notes, DateTime ProcessDate, bool IsDeletePrevOperation = false)
         {
             if (Transaction_Type == 1)
@@ -2731,27 +1976,7 @@ namespace AccountModelsLib
             }
         }
 
-        void UpdateProcessNo(ref int Excp, ref operations opp, string TableName, long TableId)
-        {
-            string mysql = "";
-             
 
-            if (ProcessNo == 0)
-            {
-                ProcessNo = Common.Make_AccountsProcessNo(ref Excp, ref opp);
-            }
-
-
-            try
-            {
-                mysql = "Update " + TableName + " WITH (ROWLOCK)  Set ProcessNo=" + ProcessNo + " Where Id=" + TableId;
-                opp.insert_me(mysql);
-            }
-            catch (Exception ee)
-            {
-
-            }
-        }
         void Set_Customer_Balance_With_CheckMoney_Estlam(ref int Excp, ref operations opp, long Customer_Id, int Transaction_Type, long Order_Mony_Id, long Checks_MemoryId, decimal Check_Value, string Notes, DateTime ProcessDate, bool IsDeletePrevOperation = false)
         {
 
@@ -2893,29 +2118,7 @@ namespace AccountModelsLib
             opp.insert_me(str);
 
         }
-        public int Delete_Customer_Accounts_OneRow(ref int Excp, ref string Msg, long Customer_Id, DateTime Transaction_Date, string Reference_Type, string Reference_Type_Table_Id, string Transaction_Type)
-        {
-            int c = 0;
-            try
-            {
 
-                operations opp = new operations();
-
-                CustomersAccountCLS ac = new CustomersAccountCLS();
-                string mysql = "Delete from Customers_Accounts Where Customer_Id= " + Customer_Id + " AND Transaction_Date='" + operations.dateFormat(Transaction_Date) + "' AND   Reference_Type=" + Reference_Type + " And Reference_Type_Table_Id=" + Reference_Type_Table_Id + " AND Transaction_Type=" + Transaction_Type + "";
-                c = opp.insert_me(mysql);
-                Excp = 0;
-            }
-            catch (Exception ee)
-            {
-
-                Msg = ee.Message;
-                Excp = 1;
-
-            }
-            return c;
-
-        }
         public int Delete_Customer_Accounts_OneRow(ref int Excp, ref string Msg, long Customers_AccountsId)
         {
             int c = 0;
@@ -2939,11 +2142,7 @@ namespace AccountModelsLib
             return c;
 
         }
-        public int Delete_Customer_Accounts_ProcessNo(ref int Excp, ref string Msg, long ProcessNo)
-        {
-            operations opp = new operations();
-            return Delete_Customer_Accounts_ProcessNo(ref Excp, ref Msg, ref opp, ProcessNo);
-        }
+
         public int Delete_Customer_Accounts_ProcessNo(ref int Excp, ref string Msg, ref operations opp, long ProcessNo)
         {
             int c = 0;
@@ -2959,24 +2158,3 @@ namespace AccountModelsLib
     }
 }
 
-
-//else if (Reference_Type == "3" | Reference_Type == "27")
-//           {
-//               // Reference_Type_View = "ÅÓÊáÇã äŞÏíÉ";
-//               View_CachData();
-//           }
-//           else if (Reference_Type == "4" | Reference_Type == "28")
-//           {
-//               //Reference_Type_View = "ÕÑİ äŞÏíÉ";
-//               View_CachData();
-//           }
-//           else if (Reference_Type == "5" | Reference_Type == "35")
-//           {
-//               //  Reference_Type_View = "ÅÓÊáÇã Ôíß";
-//               Read_Selected_Check_Data();
-//           }
-//           else if (Reference_Type == "6" | Reference_Type == "36")
-//           {
-//               // Reference_Type_View = "ÕÑİ Ôíß";
-//               Read_Selected_Check_Data();
-//           }

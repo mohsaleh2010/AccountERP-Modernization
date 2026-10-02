@@ -13,17 +13,17 @@ namespace AccountModelsLib
         {
 
         }
-        public DataTable Get_AssetsNotAssignEhlakForPeriod(ref AccountModelsLib.operations opp,int Branch_Id, DateTime DateFrom, DateTime DateTo)
+        public DataTable Get_AssetsNotAssignEhlakForPeriod(ref AccountModelsLib.operations opp,long Branch_Id, DateTime DateFrom, DateTime DateTo)
         {
             return Get_AssetsNotAssignEhlakForPeriod_(ref opp,   Branch_Id,DateFrom, DateTo);
         }
 
-        public DataTable Get_AssetsNotAssignEhlakForPeriod(int Branch_Id, DateTime DateFrom, DateTime DateTo)
+        public DataTable Get_AssetsNotAssignEhlakForPeriod(long Branch_Id, DateTime DateFrom, DateTime DateTo)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
             return Get_AssetsNotAssignEhlakForPeriod_(ref opp,  Branch_Id, DateFrom, DateTo);
         }
-        DataTable Get_AssetsNotAssignEhlakForPeriod_(ref AccountModelsLib.operations opp,int Branch_Id, DateTime DateFrom, DateTime DateTo)
+        DataTable Get_AssetsNotAssignEhlakForPeriod_(ref AccountModelsLib.operations opp,long Branch_Id, DateTime DateFrom, DateTime DateTo)
         {
             int Excp = 0;
             string mysql = "  ";
@@ -46,7 +46,7 @@ FROM      Submain_Account INNER JOIN
 
         }
 
-        public DataTable Get_AssetsEhlakForPeriod(int Branch_Id, DateTime DateFrom, DateTime DateTo)
+        public DataTable Get_AssetsEhlakForPeriod(long Branch_Id, DateTime DateFrom, DateTime DateTo)
         {
             int Excp = 0;
             string mysql = " SELECT Submain_Account.*, SubMainAssets_Ehlak.* ";
@@ -71,7 +71,7 @@ FROM      Submain_Account INNER JOIN
         // الخاص بهذا الاستعلام (الاستعلام يربط فقط Submain_Account مع SubMainAssets_Ehlak) - ما يجعل
         // SQL Server يرفض الاستعلام بخطأ "multi-part identifier could not be bound" في كل مرة يُختار فيها
         // فرع محدد. هذه النسخة تضيف الـJOIN الناقص لتصحيح المشكلة دون تغيير أي منطق حسابي أو شرط عمل آخر.
-        public DataTable Get_AssetsEhlakForPeriod_Full(int Branch_Id, DateTime DateFrom, DateTime DateTo)
+        public DataTable Get_AssetsEhlakForPeriod_Full(long Branch_Id, DateTime DateFrom, DateTime DateTo)
         {
             int Excp = 0;
             string mysql = " SELECT Submain_Account.*, SubMainAssets_Ehlak.* ";
@@ -115,7 +115,7 @@ FROM            Submain_Account INNER JOIN
             }
             return dt;
         }
-        public void Make_Ehlak(ref int Excp,ref string Msg, int branch_Id, ArrayList arr,  int Financial_Period_Id, DateTime DateFrom, DateTime DateTo)
+        public void Make_Ehlak(ref int Excp,ref string Msg, long branch_Id, ArrayList arr,  long Financial_Period_Id, DateTime DateFrom, DateTime DateTo)
         {
            
             AccountModelsLib.operations opp = new AccountModelsLib.operations(1);
@@ -136,7 +136,7 @@ FROM            Submain_Account INNER JOIN
                 Excp = 1;
             }
         }
-        public void Make_Ehlak(ref int Excp, ref string Msg,int Branch_Id, ArrayList arr, ref AccountModelsLib.operations opp, int Financial_Period_Id, DateTime DateFrom, DateTime DateTo)
+        public void Make_Ehlak(ref int Excp, ref string Msg,long Branch_Id, ArrayList arr, ref AccountModelsLib.operations opp, long Financial_Period_Id, DateTime DateFrom, DateTime DateTo)
         {
         /////////Get_All Asset
              Msg = "";

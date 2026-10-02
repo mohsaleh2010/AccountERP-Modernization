@@ -184,7 +184,7 @@ namespace AccountModelsLib.Models
         public decimal? Prev_Export_Value { get; set; }
         public long? Year_Financial_Period_Id { get; set; }
         public long? Branch_Id { get; set; }
-        public int? Account_Currency_Id { get; set; }
+        public long? Account_Currency_Id { get; set; }
         public int? AccountCode1 { get; set; }
         public int? AccountCode2 { get; set; }
         public int? AccountCode3 { get; set; }
@@ -209,9 +209,9 @@ namespace AccountModelsLib.Models
         public long Id { get; set; }
         public long? Submain_Account_ID { get; set; }
         public string? SubAccount_Name { get; set; }
-        public int? Year_Financial_Period_Id { get; set; }
+        public long? Year_Financial_Period_Id { get; set; }
         public long? Branch_Id { get; set; }
-        public int? Account_Currency_Id { get; set; }
+        public long? Account_Currency_Id { get; set; }
         public int? Equivalent_Account_Currency_Id { get; set; }
         public decimal? First_Balance { get; set; }
         public decimal? Equivalent_First_Balance { get; set; }
@@ -373,7 +373,7 @@ namespace AccountModelsLib.Models
         public string? SubAccount_Name { get; set; }
         public long? Year_Financial_Period_Id { get; set; }
         public long? Branch_Id { get; set; }
-        public int? Account_Currency_Id { get; set; }
+        public long? Account_Currency_Id { get; set; }
         public int? Equivalent_Account_Currency_Id { get; set; }
         public decimal? First_Balance { get; set; }
         public decimal? Equivalent_First_Balance { get; set; }

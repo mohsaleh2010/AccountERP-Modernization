@@ -25,7 +25,7 @@ namespace AccountModelsLib
 			//
 		}
 
-        public void Add_Item(ref int Excp, int Customer_Id, int Item_Id, decimal PriceUnit, int Store_id)
+        public void Add_Item(ref int Excp, long Customer_Id, long Item_Id, decimal PriceUnit, long Store_id)
 		{
 		 
 			try
@@ -56,7 +56,7 @@ namespace AccountModelsLib
 		}
 
 
-        public void Edit_job_List(ref int Excp, int Id, int Customer_Id, int Item_Id, decimal PriceUnit, int Store_id)
+        public void Edit_job_List(ref int Excp, long Id, long Customer_Id, long Item_Id, decimal PriceUnit, long Store_id)
 		{
 			try
 			{
@@ -77,7 +77,7 @@ namespace AccountModelsLib
 			 
 		}
 
-		 public DataSet Get_job_List(ref int Excp,int Ch)
+		 public DataSet Get_job_List(ref int Excp, long Ch)
 		{
 			G_DS.Clear();
 			try
@@ -108,7 +108,7 @@ namespace AccountModelsLib
 			}
 		}
 
-        public DataSet Get_job_List(ref int Excp, int Ch,int Customer_ID)
+        public DataSet Get_job_List(ref int Excp, int Ch,long Customer_ID)
         {
             G_DS.Clear();
             try

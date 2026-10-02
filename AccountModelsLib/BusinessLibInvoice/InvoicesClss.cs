@@ -97,7 +97,9 @@ namespace AccountModelsLib
             DataSet ds = opp.return_dataset(mysql, "Invoices_List");
             try
             {
-                Max_Invoice_Id = long.Parse(ds.Tables["Invoices_List"].Rows[0]["Max_Invoice_Id"].ToString()) + 1;
+                Max_Invoice_Id = 0;
+                  long.TryParse(ds.Tables["Invoices_List"].Rows[0]["Max_Invoice_Id"].ToString(),out Max_Invoice_Id);
+                Max_Invoice_Id = Max_Invoice_Id + 1;
             }
             catch
             {
@@ -178,13 +180,13 @@ namespace AccountModelsLib
         public long Make_New_Invoice_ReverseNo(int Invoice_Type)
         {
 
-            int Max_Invoice_Id = 0;
+            long Max_Invoice_Id = 0;
             string mysql = "SELECT MAX(Invoice_Id) AS Max_Invoice_Id FROM Invoices_List_Reverse where Invoice_Type=" + Invoice_Type;
             operations opp = new operations();
             DataSet ds = opp.return_dataset(mysql, "Invoices_List");
             try
             {
-                Max_Invoice_Id = int.Parse(ds.Tables["Invoices_List"].Rows[0]["Max_Invoice_Id"].ToString()) + 1;
+                Max_Invoice_Id = long.Parse(ds.Tables["Invoices_List"].Rows[0]["Max_Invoice_Id"].ToString()) + 1;
             }
             catch
             {
@@ -358,7 +360,7 @@ namespace AccountModelsLib
         /// <param name="Invoice_No">New_Invoices_No</param>
         /// <returns>bool</returns>
        
-        public void Make_New_Invoice_Id(ref int Excp, ref operations opp, ref long ID, long Invoice_Id, int Customer_Id, DateTime Invoice_Date, int Invoice_Type, decimal Total, int IsCommission_Value, decimal commission, decimal commissionValue, decimal TaxSales10, decimal ATS05, decimal TaxSales10_Value, decimal ATS05_Value, decimal Net_Total, string Currency, int Currency_id, int Customer_BalanceSet, string Notes, string PolicaNo, string TroodContainerNo, decimal CustomerAccountBefor, decimal CustomerAccountAfter, long SubAccount_Id, string SubAccount_Name, decimal AnotherPayment, decimal Total_PriceWithoutTax, long Salesman_Id, string Customer_Notes, int Is_Invoice_Agile, long Emp_Id, string Emp_Name, int IS_Make_Sarf_Item_BalanceFromInvoice = 0, int Is_InvoiceKta3y = 0)
+        public void Make_New_Invoice_Id(ref int Excp, ref operations opp, ref long ID, long Invoice_Id, long Customer_Id, DateTime Invoice_Date, int Invoice_Type, decimal Total, int IsCommission_Value, decimal commission, decimal commissionValue, decimal TaxSales10, decimal ATS05, decimal TaxSales10_Value, decimal ATS05_Value, decimal Net_Total, string Currency, long Currency_Id, int Customer_BalanceSet, string Notes, string PolicaNo, string TroodContainerNo, decimal CustomerAccountBefor, decimal CustomerAccountAfter, long SubAccount_Id, string SubAccount_Name, decimal AnotherPayment, decimal Total_PriceWithoutTax, long Salesman_Id, string Customer_Notes, int Is_Invoice_Agile, long Emp_Id, string Emp_Name, int IS_Make_Sarf_Item_BalanceFromInvoice = 0, int Is_InvoiceKta3y = 0)
         {
             string mysql = " ";
             long ProcessNo = 0;
@@ -369,13 +371,13 @@ namespace AccountModelsLib
                 // "+ ProcessNo + ",
             }
             mysql = " INSERT INTO Invoices_List (ProcessNo,Invoice_Id, Customer_Id, Invoice_Date,Invoice_DateTime, Total,IsCommission_Value, commission,commissionValue, TaxSales10, ATS05,TaxSales10_Value,ATS05_Value , Net_Total , Currency,Currency_id,Invoice_Type,Customer_BalanceSet,Notes,PolicaNo, TroodContainerNo,CustomerAccountBefor, CustomerAccountAfter,SubAccount_Id,   SubAccount_Name,User_Id,Branch_Id,AnotherPayment,Salesman_Id,   IS_Make_Sarf_Item_BalanceFromInvoice,  Is_InvoiceKta3y,OperationDate,Total_PriceWithoutTax,Customer_Notes,Is_Invoice_Agile,Emp_Id,Emp_Name) ";
-            mysql = mysql + " VALUES (" + ProcessNo + "," + Invoice_Id + "," + Customer_Id + ", '" + operations.dateFormat(Invoice_Date) + "' , " + operations.Get_DateTimeToInsert(Invoice_Date) + "," + Total + "," + IsCommission_Value + "," + commission + "," + commissionValue + "," + TaxSales10 + "," + ATS05 + "," + TaxSales10_Value + "," + ATS05_Value + "," + Net_Total + ",'" + Currency + "'," + Currency_id + "," + Invoice_Type + "," + Customer_BalanceSet + ",'" + Notes + "','" + PolicaNo + "',  '" + TroodContainerNo + "'," + CustomerAccountBefor + "," + CustomerAccountAfter + "," + SubAccount_Id + ", '" + SubAccount_Name + "'," + Common.User_Id + "," + Common.Branch_Id + "," + AnotherPayment + "," + Salesman_Id + "," + IS_Make_Sarf_Item_BalanceFromInvoice + "," + Is_InvoiceKta3y + "  ," + operations.Get_DateTimeToInsert(DateTime.Now) + "," + Total_PriceWithoutTax + ",'" + Customer_Notes + "'," + Is_Invoice_Agile + "," + Emp_Id + ",'" + Emp_Name + "')";
+            mysql = mysql + " VALUES (" + ProcessNo + "," + Invoice_Id + "," + Customer_Id + ", '" + operations.dateFormat(Invoice_Date) + "' , " + operations.Get_DateTimeToInsert(Invoice_Date) + "," + Total + "," + IsCommission_Value + "," + commission + "," + commissionValue + "," + TaxSales10 + "," + ATS05 + "," + TaxSales10_Value + "," + ATS05_Value + "," + Net_Total + ",'" + Currency + "'," + Currency_Id + "," + Invoice_Type + "," + Customer_BalanceSet + ",'" + Notes + "','" + PolicaNo + "',  '" + TroodContainerNo + "'," + CustomerAccountBefor + "," + CustomerAccountAfter + "," + SubAccount_Id + ", '" + SubAccount_Name + "'," + Common.User_Id + "," + Common.Branch_Id + "," + AnotherPayment + "," + Salesman_Id + "," + IS_Make_Sarf_Item_BalanceFromInvoice + "," + Is_InvoiceKta3y + "  ," + operations.Get_DateTimeToInsert(DateTime.Now) + "," + Total_PriceWithoutTax + ",'" + Customer_Notes + "'," + Is_Invoice_Agile + "," + Emp_Id + ",'" + Emp_Name + "')";
 
             ID = opp.Insert_me_Return_Last_Identify(mysql, ref Excp);
 
 
         }
-        public void Make_New_Invoice_Id_POS(ref int Excp, ref operations opp, ref long ID, long Invoice_Id, int Customer_Id, DateTime Invoice_Date, int Invoice_Type, decimal Total, int IsCommission_Value, decimal commission, decimal commissionValue, decimal TaxSales10, decimal ATS05, decimal TaxSales10_Value, decimal ATS05_Value, decimal Net_Total, string Currency, int Currency_id, int Customer_BalanceSet, string Notes, string PolicaNo, string TroodContainerNo, decimal CustomerAccountBefor, decimal CustomerAccountAfter, long SubAccount_Id, string SubAccount_Name)
+        public void Make_New_Invoice_Id_POS(ref int Excp, ref operations opp, ref long ID, long Invoice_Id, long Customer_Id, DateTime Invoice_Date, int Invoice_Type, decimal Total, int IsCommission_Value, decimal commission, decimal commissionValue, decimal TaxSales10, decimal ATS05, decimal TaxSales10_Value, decimal ATS05_Value, decimal Net_Total, string Currency, long Currency_Id, int Customer_BalanceSet, string Notes, string PolicaNo, string TroodContainerNo, decimal CustomerAccountBefor, decimal CustomerAccountAfter, long SubAccount_Id, string SubAccount_Name)
         {
             TaxSales10 = Common.RoundMe(TaxSales10);
             TaxSales10_Value = Common.RoundMe(TaxSales10_Value);
@@ -392,7 +394,7 @@ namespace AccountModelsLib
             string mysql = " ";
 
             mysql = " INSERT INTO Invoices_List (ProcessNo,Invoice_Id, Customer_Id, Total,IsCommission_Value,commissionValue, TaxSales10, ATS05,TaxSales10_Value,ATS05_Value , Net_Total , Currency,Currency_id,Invoice_Type,Customer_BalanceSet,Notes,PolicaNo, TroodContainerNo,CustomerAccountBefor, CustomerAccountAfter,SubAccount_Id,   SubAccount_Name,User_Id,Branch_Id  ,OperationDate) ";
-            mysql = mysql + " VALUES (" + ProcessNo + ", " + Invoice_Id + "," + Customer_Id + "," + Total + "," + IsCommission_Value + "," + commissionValue + "," + TaxSales10 + "," + ATS05 + "," + TaxSales10_Value + "," + ATS05_Value + "," + Net_Total + ",'" + Currency + "'," + Currency_id + "," + Invoice_Type + "," + Customer_BalanceSet + ",'" + Notes + "','" + PolicaNo + "',  '" + TroodContainerNo + "'," + CustomerAccountBefor + "," + CustomerAccountAfter + "," + SubAccount_Id + ", '" + SubAccount_Name + "'," + Common.User_Id + "," + Common.Branch_Id + " ," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
+            mysql = mysql + " VALUES (" + ProcessNo + ", " + Invoice_Id + "," + Customer_Id + "," + Total + "," + IsCommission_Value + "," + commissionValue + "," + TaxSales10 + "," + ATS05 + "," + TaxSales10_Value + "," + ATS05_Value + "," + Net_Total + ",'" + Currency + "'," + Currency_Id + "," + Invoice_Type + "," + Customer_BalanceSet + ",'" + Notes + "','" + PolicaNo + "',  '" + TroodContainerNo + "'," + CustomerAccountBefor + "," + CustomerAccountAfter + "," + SubAccount_Id + ", '" + SubAccount_Name + "'," + Common.User_Id + "," + Common.Branch_Id + " ," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
             //'" + operations.Get_DateTimeToInsert(Invoice_Date) + "'
 
             ID = opp.Insert_me_Return_Last_Identify(mysql, ref Excp);
@@ -406,7 +408,7 @@ namespace AccountModelsLib
         }
          public int CommissionISValue = 1;
 
-          public void Make_New_Invoice_Reverse_Id_POS(ref int Excp, ref operations opp, ref long ID, long Invoice_Id, int Customer_Id, DateTime Invoice_Date, int Invoice_Type, decimal Total, int IsCommission_Value, decimal commission, decimal CommissionValue, decimal TaxSales10, decimal ATS05, decimal TaxSales10_Value, decimal ATS05_Value, decimal Net_Total, string Currency, int Currency_id, int Customer_BalanceSet, string Notes, string PolicaNo, string TroodContainerNo, decimal CustomerAccountBefor, decimal CustomerAccountAfter)
+          public void Make_New_Invoice_Reverse_Id_POS(ref int Excp, ref operations opp, ref long ID, long Invoice_Id, long Customer_Id, DateTime Invoice_Date, int Invoice_Type, decimal Total, int IsCommission_Value, decimal commission, decimal CommissionValue, decimal TaxSales10, decimal ATS05, decimal TaxSales10_Value, decimal ATS05_Value, decimal Net_Total, string Currency, long Currency_Id, int Customer_BalanceSet, string Notes, string PolicaNo, string TroodContainerNo, decimal CustomerAccountBefor, decimal CustomerAccountAfter)
         {
 
 
@@ -416,7 +418,7 @@ namespace AccountModelsLib
             // ProcessNo,
             // "+ ProcessNo + ",
             string mysql = " INSERT INTO Invoices_List_Reverse (ProcessNo,Invoice_Id, Customer_Id,   Total,IsCommission_Value, commission,CommissionValue, TaxSales10, ATS05,TaxSales10_Value,ATS05_Value , Net_Total , Currency,Currency_id,Invoice_Type,Customer_BalanceSet,Notes,PolicaNo, TroodContainerNo,CustomerAccountBefor, CustomerAccountAfter,User_Id,Branch_Id) ";
-            mysql = mysql + " VALUES (" + ProcessNo + "," + Invoice_Id + "," + Customer_Id + " ," + Total + "," + IsCommission_Value + "," + commission + "," + CommissionValue + "," + TaxSales10 + "," + ATS05 + "," + TaxSales10_Value + "," + ATS05_Value + "," + Net_Total + ",'" + Currency + "'," + Currency_id + "," + Invoice_Type + "," + Customer_BalanceSet + ",'" + Notes + "','" + PolicaNo + "',  '" + TroodContainerNo + "'," + CustomerAccountBefor + "," + CustomerAccountAfter + "," + Common.User_Id + "," + Common.Branch_Id + ")";
+            mysql = mysql + " VALUES (" + ProcessNo + "," + Invoice_Id + "," + Customer_Id + " ," + Total + "," + IsCommission_Value + "," + commission + "," + CommissionValue + "," + TaxSales10 + "," + ATS05 + "," + TaxSales10_Value + "," + ATS05_Value + "," + Net_Total + ",'" + Currency + "'," +  Currency_Id + "," + Invoice_Type + "," + Customer_BalanceSet + ",'" + Notes + "','" + PolicaNo + "',  '" + TroodContainerNo + "'," + CustomerAccountBefor + "," + CustomerAccountAfter + "," + Common.User_Id + "," + Common.Branch_Id + ")";
 
             ID = opp.Insert_me_Return_Last_Identify(mysql, ref Excp);
 
@@ -436,7 +438,7 @@ namespace AccountModelsLib
         public DataTable Get_Customers_Invoices(ref int Excp, ref operations opp, long Invoices_List)
         {
             decimal nuInvoiceNo = 0;
-            int Customer_Id = 0;
+            long Customer_Id = 0;
             bool _DateFrom = false;
             DateTime DateFrom = DateTime.Now;
             bool _DateTo = false;
@@ -565,6 +567,122 @@ namespace AccountModelsLib
             }
 
         }
+         
+        public DataTable Get_Customers_InvoicesList(ref int Excp, long Invoices_List, decimal nuInvoiceNo, long Customer_Id, bool _DateFrom, DateTime DateFrom, bool _DateTo, DateTime DateTo, bool NewInvoice, int IsInvoiceTaxInfo, int General_Customer_Flage)
+        {
+            operations opp = new operations();
+
+            return Get_Customers_InvoicesList(ref Excp, ref opp, Invoices_List, nuInvoiceNo, Customer_Id, _DateFrom, DateFrom, _DateTo, DateTo, General_Customer_Flage, NewInvoice, IsInvoiceTaxInfo);
+        }
+        DataTable Get_Customers_InvoicesList(ref int Excp, ref operations opp, long Invoices_List, decimal nuInvoiceNo, long Customer_Id, bool _DateFrom, DateTime DateFrom, bool _DateTo, DateTime DateTo, int General_Customer_Flage, bool NewInvoice, int IsInvoiceTaxInfo)
+        {
+
+            IsInvoiceTaxInfo = Common.PermissionToShowTaxInvoiceOrNotORAll();
+            DataTable dt = new DataTable();
+            try
+            {
+                string mysql = @" SELECT   '' as Serial,     USER_DETAILES.USER_NAME, USER_DETAILES.Name AS FullName, Customer.Id AS Customer_Id, Customer.Name, Invoices_List.* ";
+                //mysql = mysql + @" , ISNULL((SELECT SUM(Import_Value) - SUM(Export_Value) AS Expr1 FROM Money_Transaction_Box WHERE   (Invoice_TypeId = 1)  AND (Invoice_Id = Invoices_List.Id)), 0) AS PaymentValue ";
+                //string   StillValues =   @" ,   Invoices_List.Net_Total - ISNULL((SELECT SUM(Import_Value) - SUM(Export_Value) AS Expr1 FROM Money_Transaction_Box AS Money_Transaction_Box_1 WHERE (Invoice_Id = Invoices_List.Id)), 0) AS StillValues ";
+                //string StillValues = @"    Invoices_List.Net_Total - ISNULL((SELECT SUM(Import_Value) - SUM(Export_Value) AS Expr1 FROM Money_Transaction_Box AS Money_Transaction_Box_1 WHERE  (Invoice_TypeId = 1)  AND (Invoice_Id = Invoices_List.Id)), 0)   ";
+
+                //mysql = mysql + @" , IIF (" + StillValues + " > 0 , " + StillValues + ", 0 ) As StillValues ";
+
+                mysql = mysql + @" FROM Invoices_List INNER JOIN
+                         Customer ON Invoices_List.Customer_Id = Customer.Id INNER JOIN
+                         USER_DETAILES ON Invoices_List.User_Id = USER_DETAILES.USER_ID ";
+                //mysql = mysql + " WHERE (Invoices_List.Invoice_Type = " + Invoice_Type + ") ";
+                mysql = mysql + " WHERE (Invoices_List.Is_DeletedProcessed <> 1) ";
+                //(Invoices_List.Id > 0  ) AND 
+                if (Invoices_List > 0)
+                {
+                    mysql = mysql + "  AND (Invoices_List.Id = " + Invoices_List + ")";
+
+                }
+                else
+                {
+                    if (_DateFrom == true)
+                    {
+                        //mysql = mysql + " AND  (Invoices_List.Invoice_Date >='" + operations.dateFormat(DateFrom) + "')   ";
+                        mysql = mysql + " AND (CONVERT(DATE, Invoices_List.Invoice_Date)  >= '" + operations.dateFormat(DateFrom.Date) + "') ";
+
+                    }
+                    if (_DateTo == true)
+                    {
+                        //mysql = mysql + "   AND (Invoices_List.Invoice_Date <='" + operations.dateFormat(DateTo) + "') ";
+                        mysql = mysql + " AND (CONVERT(DATE, Invoices_List.Invoice_Date)  <= '" + operations.dateFormat(DateTo.Date) + "') ";
+
+                    }
+
+                    if (Customer_Id > 0)
+                    {
+                        mysql = mysql + "  AND (Customer.Id = " + Customer_Id + ")";
+                    }
+                    if (NewInvoice)
+                    {
+                        mysql = mysql + "  AND (Invoices_List.Customer_BalanceSet =0) ";
+                    }
+                    else
+                    {
+                        //mysql = mysql + "  AND (Invoices_List.Customer_BalanceSet = 1) ";
+                    }
+                    if (nuInvoiceNo > 0)
+                    {
+                        mysql = mysql + "  AND (Invoices_List.Invoice_Id=" + nuInvoiceNo + ") ";
+                    }
+                    if (IsInvoiceTaxInfo > -1)
+                    {
+                        mysql = mysql + "  AND (Invoices_List.IsInvoiceTaxInfo=" + IsInvoiceTaxInfo + ") ";
+                    }
+
+                    if (Is_Invoice_Agile > -1)
+                    {
+                        mysql = mysql + "  AND (Invoices_List.Is_Invoice_Agile=" + Is_Invoice_Agile + ") ";
+                    }
+                    if (Emp_Id > 0)
+                    {
+                        mysql = mysql + "  AND (Invoices_List.Emp_Id=" + Emp_Id + ") ";
+                    }
+                    //if (Is_Net_Total_Paid > -1)
+                    //{
+                    //    mysql = mysql + @" AND (Invoices_List.Net_Total -  ISNULL((SELECT        SUM(Import_Value) - SUM(Export_Value) AS Expr1 FROM Money_Transaction_Box AS Money_Transaction_Box_1 ";
+                    //    //„œ›Ê⁄…
+                    //    if (Is_Net_Total_Paid == 1)
+                    //    {
+
+                    //        mysql = mysql + @" WHERE(Invoice_Id = Invoices_List.Id)), 0)  = 0)";
+                    //    }
+
+                    //    // €Ì— „œ›Ê⁄…
+                    //    if (Is_Net_Total_Paid == 0)
+                    //    {
+
+                    //        mysql = mysql + @" WHERE(Invoice_Id = Invoices_List.Id)), 0)  <> 0)";
+                    //    }
+                    //}
+                }
+                if (General_Customer_Flage > -1)
+                {
+
+                    mysql = mysql + "  AND (Customer.General_Customer_Flage = " + General_Customer_Flage + ")";
+
+                }
+
+                mysql = mysql + " Order By Invoices_List.Invoice_Id ";
+
+                dt = opp.return_DataTable(mysql);
+
+                Excp = 0;
+                return dt;
+            }
+            catch (Exception e)
+            {
+                Excp = 1;
+                throw (e);
+            }
+
+        }
+        
         public DataTable Get_Customers_InvoicesForTax(ref int Excp, long Invoices_List, decimal nuInvoiceNo, long Customer_Id, bool _DateFrom, DateTime DateFrom, bool _DateTo, DateTime DateTo, bool NewInvoice, int IsInvoiceTaxInfo)
         {
             operations opp = new operations();
@@ -1167,7 +1285,7 @@ FROM            Invoices_List_Reverse INNER JOIN
         public decimal Small_Balance;
         public decimal Larg_Qnty;
         public decimal Small_Qnty;
-        public int Unit_Item_Table_Id;
+        public long Unit_Item_Table_Id;
         public int Invoices_Details_Id;
         public int Bills_Details_Id;
         public int Unit_id;

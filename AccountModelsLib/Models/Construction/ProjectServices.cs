@@ -49,7 +49,7 @@ namespace AccountModelsLib.Models
         {
             Id = long.Parse(dt.Rows[index]["Id"].ToString());
             ProjectId = int.Parse(dt.Rows[index]["ProjectId"].ToString());
-            ServiceId = int.Parse(dt.Rows[index]["ServiceId"].ToString());
+            ServiceId = long.Parse(dt.Rows[index]["ServiceId"].ToString());
             Price = decimal.Parse(dt.Rows[index]["Price"].ToString());
             SubAccount_Id= long.Parse(dt.Rows[index]["SubAccount_Id"].ToString());
 

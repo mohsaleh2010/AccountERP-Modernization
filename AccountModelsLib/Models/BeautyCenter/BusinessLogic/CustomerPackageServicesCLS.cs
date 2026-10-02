@@ -43,7 +43,7 @@ namespace AccountModelsLib.Models
                 .Select(x =>
                 {
                     // get service name from Item table
-                    var svcName = opp.db.Item.Where(i => i.id == x.ItemService_Id)
+                    var svcName = opp.db.Item.Where(i => i.Id == x.ItemService_Id)
                                               .Select(i => i.Item_Name)
                                               .FirstOrDefault() ?? $"Service #{x.ItemService_Id}";
                     return new CustomerPackageServiceDTO

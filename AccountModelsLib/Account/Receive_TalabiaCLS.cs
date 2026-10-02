@@ -8,7 +8,7 @@ namespace AccountModelsLib
 {
     public class Receive_TalabiaCLS
     {
-        public void save(ref int Excp, ref string Msg, int Cust_Id,string Desc,string Dt_Date)
+        public void save(ref int Excp, ref string Msg, long Cust_Id,string Desc,string Dt_Date)
         {
             string Mysql = "INSERT INTO Customer_Receive (customer_id, descreption, dt_date) VALUES('" + Cust_Id + "','" + Desc + "','" + Dt_Date + "')";
             operations opp = new operations();
@@ -16,7 +16,7 @@ namespace AccountModelsLib
             Excp = 0; 
             Msg=             "ÊãÊ ÚãáíÉ ÇáÍÝÙ ÈäÌÇÍ " ;
         }
-        public void delete(ref int Excp, ref string Msg, int ID)
+        public void delete(ref int Excp, ref string Msg, long ID)
         {
             string MySql = "delete from Customer_Receive where id=" + ID;
             operations opp = new operations();
@@ -26,7 +26,7 @@ namespace AccountModelsLib
 
         }
 
-        public DataSet  Get_Talabia(int Customer_Id, DateTime dtFrom, DateTime dtTo)
+        public DataSet  Get_Talabia(long Customer_Id, DateTime dtFrom, DateTime dtTo)
         {
 
             //string MySql = "SELECT * FROM Customer_Receive where dt_date >='" + operations.dateFormat(dtFrom) + "'and dt_date <= '" + operations.dateFormat(dtTo) + "'";

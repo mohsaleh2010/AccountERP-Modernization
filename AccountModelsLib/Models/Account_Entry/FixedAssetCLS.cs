@@ -21,7 +21,7 @@ namespace AccountModelsLib.Models
         public FixedAssetCLS()
         { }
         ////public long Id { get; set; }
-        ////public int Branch_Id { get; set; }
+        ////public long Branch_Id { get; set; }
         ////public string Code { get; set; } = "";
         ////public string Name_Ar { get; set; }
         ////public string Name_En { get; set; } = "";
@@ -233,7 +233,7 @@ WHERE        ( SubAccount_Id =  " + SubAccount_Id + ")  ";
 
 
             //operations opp = new operations(1);
-            //int Currency_Id = 1;
+            //long    Currency_Id = 1;
             //string Account_Code = "";
             //Sub_Account acc = new Sub_Account();
             //int Account_Type_Value = Common.Assoul_Sabta_Account_Type;
@@ -583,8 +583,8 @@ Where Id=@Id";
             string Account_Code = "";
             acc = new Sub_Account();
             int Account_Type_Value = Common.Assoul_Sabta_Account_Type;
-            int Currency_Id = 1;
-            int Account_Branch_Id = Common.Branch_Id;
+            long Currency_Id = 1;
+            long Account_Branch_Id = Common.Branch_Id;
             long New_Submain_Account_Id = -1;
             acc.fixedAssetCLS = fx;
             acc.Add_AccountSupplierCustomerOther(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, ref Account_Code, Account_Type_Value,   fxd.Name_Ar, Account_Branch_Id, Currency_Id);

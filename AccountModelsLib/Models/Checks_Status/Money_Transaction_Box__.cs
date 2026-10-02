@@ -206,15 +206,15 @@ namespace AccountModelsLib.Models
             set { _Account_Cost_Center_Tree_Id = value; }
         }
 
-        private int _User_Id = 0;
-        public int User_Id
+        private long _User_Id = 0;
+        public long User_Id
         {
             get { return _User_Id; }
             set { _User_Id = value; }
         }
 
-        private int _Branch_Id = 0;
-        public int Branch_Id
+        private long _Branch_Id = 0;
+        public long Branch_Id
         {
             get { return _Branch_Id; }
             set { _Branch_Id = value; }
@@ -269,8 +269,8 @@ namespace AccountModelsLib.Models
             set { _Cost_Center = value; }
         }
 
-        private int _Currency_Id = 1;
-        public int Currency_Id
+        private long _Currency_Id = 1;
+        public long Currency_Id
         {
             get { return _Currency_Id; }
             set { _Currency_Id = value; }
@@ -297,8 +297,8 @@ namespace AccountModelsLib.Models
             set { _Factor = value; }
         }
 
-        private int _Entry_Currency_ID = 1;
-        public int Entry_Currency_ID
+        private long _Entry_Currency_ID = 1;
+        public long Entry_Currency_ID
         {
             get { return _Entry_Currency_ID; }
             set { _Entry_Currency_ID = value; }
@@ -339,8 +339,8 @@ namespace AccountModelsLib.Models
             set { _EditOperationDate = value; }
         }
 
-        private int _Edit_User_Id;
-        public int Edit_User_Id
+        private long _Edit_User_Id;
+        public long Edit_User_Id
         {
             get { return _Edit_User_Id; }
             set { _Edit_User_Id = value; }

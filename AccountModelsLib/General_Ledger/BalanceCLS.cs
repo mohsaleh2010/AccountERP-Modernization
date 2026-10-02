@@ -23,7 +23,7 @@ namespace AccountModelsLib
         //                mysql = mysql + @" Where   (Submain_Account.Head_Main_Account = 1 OR Submain_Account.Head_Main_Account = 2 OR Submain_Account.Head_Main_Account = 3 )  AND (Account_Entry_Master_Balance.Year_Financial_Period_Id = " + Year_Financial_Period_Id + ") AND (Account_Entry_Master_Balance.Branch_Id = " + Branch_Id + ") ";
         //  mysql = mysql + @" ORDER BY Submain_Account.Account_Level DESC ";
 
-        public DataTable GetBalanceData_WithLevel_(int Branch_Id, int Year_Financial_Period_Id, int Level_Required, int Entry_Currency_Id)
+        public DataTable GetBalanceData_WithLevel_(long Branch_Id, long Year_Financial_Period_Id, int Level_Required, long Entry_Currency_Id)
         {
             DataTable dt_AccountTempBalance = new DataTable();
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
@@ -148,7 +148,7 @@ namespace AccountModelsLib
             }
 
         }
-        public DataTable GetBalanceData_WithLevel__(int Branch_Id, int Year_Financial_Period_Id, int Level_Required, int Entry_Currency_Id)
+        public DataTable GetBalanceData_WithLevel__(long Branch_Id, long Year_Financial_Period_Id, int Level_Required, long Entry_Currency_Id)
         {
             DataTable dt_AccountTempBalance = new DataTable();
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
@@ -187,7 +187,7 @@ FROM            Submain_Account INNER JOIN
 
                 for (int x = 0; x < dtt.Rows.Count; x++)
                 {
-                    int Equivalent_Account_Currency_Id = int.Parse(dtt.Rows[x]["Equivalent_Account_Currency_Id"].ToString());
+                    long Equivalent_Account_Currency_Id = long.Parse(dtt.Rows[x]["Equivalent_Account_Currency_Id"].ToString());
 
                     for (int y = 0; y < 100; y++)
                     {
@@ -312,7 +312,7 @@ GROUP BY Submain_Account.SubAccount_Name, Submain_Account.Id, Submain_Account.Ma
             }
 
         }
-        public DataTable GetBalanceData_WithLevel(int Branch_Id, int Year_Financial_Period_Id, int Level_Required, int Entry_Currency_Id)
+        public DataTable GetBalanceData_WithLevel(long Branch_Id, long Year_Financial_Period_Id, int Level_Required, long Entry_Currency_Id)
         {
             DataTable dt_AccountTempBalance = new DataTable();
             AccountModelsLib.operations opp = new AccountModelsLib.operations( );
@@ -352,7 +352,7 @@ FROM            Submain_Account INNER JOIN
 
                 for (int x = 0; x < dtt.Rows.Count; x++)
                 {
-                    int Equivalent_Account_Currency_Id = int.Parse(dtt.Rows[x]["Equivalent_Account_Currency_Id"].ToString());
+                    long Equivalent_Account_Currency_Id = long.Parse(dtt.Rows[x]["Equivalent_Account_Currency_Id"].ToString());
 
                     for (int y = 0; y < 100; y++)
                     {

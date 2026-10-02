@@ -22,7 +22,7 @@ namespace AccountModelsLib.Models
         public string?  Account_No { get; set; }
         public long SubAccount_Id { get; set; }
         public int? Is_Bank { get; set; }
-        public int? Currency_Id { get; set; }
+        public long? Currency_Id { get; set; }
         public DateTime? firstBalanceDate { get; set; }
         public int? Supplier_Bank { get; set; }
         public int? Default_Bank { get; set; }
@@ -39,7 +39,7 @@ namespace AccountModelsLib.Models
         public DateTime? Insert_ServerDateTime { get; set; }
         public DateTime? Update_ServerDateTime { get; set; }
         public DateTime? EditOperationDate { get; set; }
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
         public int? Active { get; set; }
         public long? ProcessNo { get; set; } = 0;
     }

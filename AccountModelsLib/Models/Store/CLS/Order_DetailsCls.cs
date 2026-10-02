@@ -20,7 +20,7 @@ namespace AccountModelsLib.Models
         public long Id_To;
         public string Id_ToStr;
         public long InvoiceTable_ID;
-        public int Machine_Id = 0;/// —ﬁ„ «·„Ìﬂ‰… ›Ï Õ«·… ’—› ﬁÿ⁄ €Ì«—
+        public long Machine_Id = 0;/// —ﬁ„ «·„Ìﬂ‰… ›Ï Õ«·… ’—› ﬁÿ⁄ €Ì«—
         public long MainOrderTable_id = 0;
         public long OrderTable_id_C = 0;
         public int Is_Converted = 0;
@@ -563,7 +563,7 @@ namespace AccountModelsLib.Models
 
 
         }
-        long InsertToDetailes_Purshing(ref operations opp, string Order_Estlam_Sarf_Flage, int Order_Type, long OrderTable_id, long Unit_Item_Table_Id, decimal Larg_Qnty, decimal Small_Qnty, decimal ItemNO, decimal Balance_Id_From_Larg_Qnty, decimal Balance_Id_From_Small_Qnty, decimal Balance_Id_From_Item_No, decimal Balance_Id_To_Larg_Qnty, decimal Balance_Id_To_Small_Qnty, decimal Balance_Id_To_Item_No, decimal To_Store_Unit_Item_Table_Id, string Notes_From, string Notes_To, string Notes, int Machine_Id, decimal Qua_Befor, decimal Part_qua_Befor, decimal Item_No_Befor, decimal Qua_After, decimal Part_qua_After, decimal Item_No_After, decimal S_Unit_Value, long Related_Detailes_Purshing_Id, string Notes_Item, long FromStoreId, long ToStoreId)
+        long InsertToDetailes_Purshing(ref operations opp, string Order_Estlam_Sarf_Flage, int Order_Type, long OrderTable_id, long Unit_Item_Table_Id, decimal Larg_Qnty, decimal Small_Qnty, decimal ItemNO, decimal Balance_Id_From_Larg_Qnty, decimal Balance_Id_From_Small_Qnty, decimal Balance_Id_From_Item_No, decimal Balance_Id_To_Larg_Qnty, decimal Balance_Id_To_Small_Qnty, decimal Balance_Id_To_Item_No, decimal To_Store_Unit_Item_Table_Id, string Notes_From, string Notes_To, string Notes, long Machine_Id, decimal Qua_Befor, decimal Part_qua_Befor, decimal Item_No_Befor, decimal Qua_After, decimal Part_qua_After, decimal Item_No_After, decimal S_Unit_Value, long Related_Detailes_Purshing_Id, string Notes_Item, long FromStoreId, long ToStoreId)
         {
 
             decimal qua_Import = 0;
@@ -1620,7 +1620,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
                             string Notes_To = dt.Rows[0]["Notes_To"].ToString();
                             Notes = "  „  ⁄œÌ· «·ﬁÌ„… «·„‰’—›Â „‰ «·’‰›";
 
-                            int Machine_Id = int.Parse(dt.Rows[0]["Machine_Id"].ToString());
+                            long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                             mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
                             mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + OrderTable_id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ",0,0,0,0, " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",1,'" + operations.dateFormat(DateTime.Now.Date) + "',," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                             opp.insert_me(mysql);
@@ -1667,7 +1667,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
                             string Notes_To = dt.Rows[0]["Notes_To"].ToString();
 
                             Notes = "  „  ⁄œÌ· «·ﬁÌ„… «·Ê«—… „‰ «·’‰›";
-                            int Machine_Id = int.Parse(dt.Rows[0]["Machine_Id"].ToString());
+                            long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                             mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,user_Id,OperationDate)";
                             mysql = mysql + " VALUES(" + Related_Detailes_Purshing_Id + "," + MainOrderTable_id + "," + To_Store_Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",0,0,0,0,'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",2,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                             opp.insert_me(mysql);
@@ -1734,7 +1734,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
                             string Notes_To = dt.Rows[0]["Notes_To"].ToString();
                             Notes = "  „  ⁄œÌ· «·ﬁÌ„… «·„‰’—›Â „‰ «·’‰›";
 
-                            int Machine_Id = int.Parse(dt.Rows[0]["Machine_Id"].ToString());
+                            long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                             mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
                             mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + OrderTable_id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ",0,0,0,0, " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",2,'" + operations.dateFormat(DateTime.Now.Date) + "',," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                             opp.insert_me(mysql);
@@ -1781,7 +1781,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
                             string Notes_To = dt.Rows[0]["Notes_To"].ToString();
 
                             Notes = "  „  ⁄œÌ· «·ﬁÌ„… «·„‰’—›Â „‰ «·’‰›";
-                            int Machine_Id = int.Parse(dt.Rows[0]["Machine_Id"].ToString());
+                            long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                             mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
                             mysql = mysql + " VALUES(" + Related_Detailes_Purshing_Id + "," + MainOrderTable_id + "," + To_Store_Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",0,0,0,0,'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",1,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                             opp.insert_me(mysql);
@@ -1872,7 +1872,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
                         string Notes_To = dt.Rows[0]["Notes_To"].ToString();
                         Notes = "  „  ⁄œÌ· «·ﬁÌ„… «·„‰’—›Â „‰ «·’‰›";
 
-                        int Machine_Id = int.Parse(dt.Rows[0]["Machine_Id"].ToString());
+                        long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                         mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
                         mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + OrderTable_id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ",0,0,0,0, " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",2,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                         opp.insert_me(mysql);
@@ -1924,7 +1924,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
                         string Notes_To = dt.Rows[0]["Notes_To"].ToString();
                         Notes = "  „  ⁄œÌ· «·ﬁÌ„… «·„‰’—›Â „‰ «·’‰›";
 
-                        int Machine_Id = int.Parse(dt.Rows[0]["Machine_Id"].ToString());
+                        long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                         mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
                         mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + OrderTable_id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",0,0,0,0,'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",1,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                         opp.insert_me(mysql);
@@ -2148,7 +2148,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
                             string Notes_To = dt_NewOrder.Rows[index]["Notes_To"].ToString();
                             string Notes = dt_NewOrder.Rows[index]["Notes"].ToString();
 
-                            Machine_Id = int.Parse(dt_NewOrder.Rows[index]["Machine_Id"].ToString()); ;
+                            Machine_Id = long.Parse(dt_NewOrder.Rows[index]["Machine_Id"].ToString()); ;
                             long Detailes_Purshing_Id_ = long.Parse(dt_NewOrder.Rows[index]["Detailes_Purshing_Id"].ToString());
 
                             long Related_Detailes_Purshing_Id = 0;
@@ -2373,7 +2373,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
 
             for (int y = 0; y < dt_Stores.Rows.Count; y++)
             {
-                Id_To = int.Parse(dt_Stores.Rows[y]["Store_Id"].ToString());
+                Id_To = long.Parse(dt_Stores.Rows[y]["Store_Id"].ToString());
                 Excp = 0;
                 // when creating new order ,it execute first time click button
 
@@ -2506,7 +2506,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
 
             for (int y = 0; y < dt_Stores.Rows.Count; y++)
             {
-                Id_To = int.Parse(dt_Stores.Rows[y]["Store_Id"].ToString());
+                Id_To = long.Parse(dt_Stores.Rows[y]["Store_Id"].ToString());
                 Excp = 0;
                 // when creating new order ,it execute first time click button
 
@@ -2753,7 +2753,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
                     string Notes_To = dt_NewOrder.Rows[index]["Notes_To"].ToString();
                     string Notes = dt_NewOrder.Rows[index]["Notes"].ToString();
 
-                    Machine_Id = int.Parse(dt_NewOrder.Rows[index]["Machine_Id"].ToString());
+                    Machine_Id = long.Parse(dt_NewOrder.Rows[index]["Machine_Id"].ToString());
                     long FromStoreId = Common.GetColumnValueLong(dt_NewOrder, "FromStoreId", index);
                     long ToStoreId = Common.GetColumnValueLong(dt_NewOrder, "ToStoreId", index);
                      
@@ -2841,7 +2841,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
             long ToStoreId = Common.GetColumnValueLong(dt_NewOrder, "ToStoreId", index);
                      
                   
-            Machine_Id = int.Parse(dt_NewOrder.Rows[index]["Machine_Id"].ToString()); ;
+            Machine_Id = long.Parse(dt_NewOrder.Rows[index]["Machine_Id"].ToString()); ;
 
             long Related_Detailes_Purshing_Id = 0;
 
@@ -2868,7 +2868,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
 
             for (int y = 0; y < dt_Stores.Rows.Count; y++)
             {
-                Id_From = int.Parse(dt_Stores.Rows[y]["S_Id"].ToString());
+                Id_From = long.Parse(dt_Stores.Rows[y]["S_Id"].ToString());
                 Excp = 0;
                 // when creating new order ,it execute first time click button
 
@@ -2986,7 +2986,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
                     string SubItem_Name = dt_RawMaterials.Rows[x]["SubItem_Name"].ToString();
                     string Big_unit = dt_RawMaterials.Rows[x]["Big_unit"].ToString();
                     string Small_unit = dt_RawMaterials.Rows[x]["Small_unit"].ToString();
-                    int Unit_Id = int.Parse(dt_RawMaterials.Rows[x]["Unit_Id"].ToString());
+                    long Unit_Id = long.Parse(dt_RawMaterials.Rows[x]["Unit_Id"].ToString());
                     decimal S_unit_Value = decimal.Parse(dt_RawMaterials.Rows[x]["S_unit_Value"].ToString());
 
                     decimal Larg_Qnty = decimal.Parse(dt_RawMaterials.Rows[x]["Larg_Qnty"].ToString());
@@ -3028,7 +3028,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
             string SubItem_Name = "";
             string Big_unit = "";
             string Small_unit = "";
-            int Unit_Id = 0;
+            long Unit_Id = 0;
             decimal S_unit_Value = 0;
 
             decimal Larg_Qnty = 0;
@@ -3063,7 +3063,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
                 {
                     try
                     {
-                        Unit_Id = int.Parse(dt_NewOrder.Rows[x]["Unit_Id"].ToString());
+                        Unit_Id = long.Parse(dt_NewOrder.Rows[x]["Unit_Id"].ToString());
                     }
                     catch
                     {

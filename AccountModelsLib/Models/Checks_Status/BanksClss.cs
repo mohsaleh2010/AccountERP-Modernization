@@ -41,8 +41,8 @@ namespace AccountModelsLib.Models
         //{
         //    bank
         //}
-        // int Account_Type_Value, int Branch_Id, string Branch_Name, string Bank_Name, decimal Primary_Balance, string Account_No, int Is_Bank, int currency_Id, DateTime dt, int Supplier_Bank, long New_Submain_Account_Id, string Account_Code
-        public List<BanksListViewModel> GetBanksListWithValues(int Is_Bank, int Branch_Id)
+        // int Account_Type_Value, long  Branch_Id, string Branch_Name, string Bank_Name, decimal Primary_Balance, string Account_No, int Is_Bank, long Currency_Id, DateTime dt, int Supplier_Bank, long New_Submain_Account_Id, string Account_Code
+        public List<BanksListViewModel> GetBanksListWithValues(int Is_Bank, long Branch_Id)
         {
             List<BanksListViewModel> banksListViewModels = new List<BanksListViewModel>();
 
@@ -105,7 +105,7 @@ namespace AccountModelsLib.Models
 
             return mm;
         }
-        public List<Money_Transaction_Box> GetBanksListWithNewValues(int Is_Bank, int Branch_Id)
+        public List<Money_Transaction_Box> GetBanksListWithNewValues(int Is_Bank, long Branch_Id)
         {
             List<Money_Transaction_Box> mbx = new List<Money_Transaction_Box>();
 
@@ -135,7 +135,7 @@ namespace AccountModelsLib.Models
             }
             return mbx;
         }
-        decimal GetCurrencyFactor(int Entry_Currency_Id)
+        decimal GetCurrencyFactor(long Entry_Currency_Id)
         {
             decimal Factor = 1;
             if (Entry_Currency_Id == Common.Entry_Currency_Id)
@@ -202,7 +202,7 @@ namespace AccountModelsLib.Models
                 Money_Transaction_Box mbx = mbxLst.Where(d => d.IsDefault_Bank == 1).FirstOrDefault();
                 if (mbx != null)
                 {
-                    mbx.Order_No = ot.Make_New_Order_No(ref Excp, Transaction_Type, dtOrderDate, (int)mbx.Bank_Id);
+                    mbx.Order_No = ot.Make_New_Order_No(ref Excp, Transaction_Type, dtOrderDate, mbx.Bank_Id);
                     Order_No = mbx.Order_No??1;
                     Order_NoSub = mbx.Order_No??1;
                 }
@@ -244,7 +244,7 @@ namespace AccountModelsLib.Models
 
                 if (mbx != null)
                 {
-                    mbx.Order_No = ot.Make_New_Order_No(ref Excp, Transaction_Type, dtOrderDate, (int)mbx.Bank_Id);
+                    mbx.Order_No = ot.Make_New_Order_No(ref Excp, Transaction_Type, dtOrderDate, mbx.Bank_Id);
                     Order_No = mbx.Order_No ?? 1;
                     Order_NoSub = mbx.Order_No ?? 1;
                 }
@@ -265,12 +265,12 @@ namespace AccountModelsLib.Models
             }
         }
         public void GetCurrencyData(List<BanksListViewModel> banksListViewModels)
-        {///ÇáÚãáÉ
+        {///ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             try
             {
                 foreach (var item in banksListViewModels)
                 {
-                    int Entry_Currency_Id = item.Currency_Id ?? 1;
+                    long Entry_Currency_Id = item.Currency_Id ?? 1;
                     if (Entry_Currency_Id == Common.Entry_Currency_Id)
                     {
                         item.Factor = 1;
@@ -299,7 +299,7 @@ namespace AccountModelsLib.Models
             {
                 foreach (var item in mbxLst)
                 {
-                    int Entry_Currency_Id = item.Currency_Id ?? 1;
+                    long Entry_Currency_Id = item.Currency_Id ?? 1;
                     if (Entry_Currency_Id == Common.Entry_Currency_Id)
                     {
                         item.Factor = 1;
@@ -339,7 +339,7 @@ namespace AccountModelsLib.Models
 
         }
 
-        public void Edit_Banks_Balance(ref int Excp, int Bank_Id, string Bank_Name, decimal Primary_Balance, string Account_No)
+        public void Edit_Banks_Balance(ref int Excp, long Bank_Id, string Bank_Name, decimal Primary_Balance, string Account_No)
         {
             try
             {
@@ -359,7 +359,7 @@ namespace AccountModelsLib.Models
 
         }
 
-        public void Edit_Banks_Balance(ref int Excp, int Bank_Id, decimal Last_Balance)
+        public void Edit_Banks_Balance(ref int Excp, long Bank_Id, decimal Last_Balance)
         {
             try
             {
@@ -378,7 +378,7 @@ namespace AccountModelsLib.Models
             }
 
         }
-        public void SetDefaultBankForInvoice(ref int Excp, long Bank_Id, int Currency_Id)
+        public void SetDefaultBankForInvoice(ref int Excp, long Bank_Id, long Currency_Id)
         {
             try
             {
@@ -400,7 +400,7 @@ namespace AccountModelsLib.Models
             }
 
         }
-        public void SetUpdateSandouk(ref int Excp, int Bank_Id, int Is_Default_Bank, int Account_Branches_ID)
+        public void SetUpdateSandouk(ref int Excp, long Bank_Id, int Is_Default_Bank, long Account_Branches_ID)
         {
             string mysql = "";
             try
@@ -424,13 +424,13 @@ namespace AccountModelsLib.Models
             }
 
         }
-        void InsertOrderMoneyNew(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, ref long Order_Mony_Id2, long Order_No, int Transaction_type, DateTime Order_Date, decimal Total_Value, int Currency_Id, int  Bank_Type_, string Man_Name, long Bank_ID, int Order_Mony_Id_Transform, long Invoice_ID, int Invoice_Type, int User_Id, int Branch_Id, int Year_Financial_Period_Id, int Ticket_Supplier_Id, string Order_Tafkeet_Value, string Order_Notes, long Sandouk_Cost_Center_Tree_Id, int IS_Posted_Flage, decimal Factor, int Entry_Currency_ID, string Entry_Currency_Name, long CarsWorkOrdersId)
+        void InsertOrderMoneyNew(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, ref long Order_Mony_Id2, long Order_No, int Transaction_type, DateTime Order_Date, decimal Total_Value, long Currency_Id, int  Bank_Type_, string Man_Name, long Bank_ID, int Order_Mony_Id_Transform, long Invoice_ID, int Invoice_Type, long User_Id, long Branch_Id, long Year_Financial_Period_Id, long  Ticket_Supplier_Id, string Order_Tafkeet_Value, string Order_Notes, long Sandouk_Cost_Center_Tree_Id, int IS_Posted_Flage, decimal Factor, long    Entry_Currency_ID, string Entry_Currency_Name, long CarsWorkOrdersId)
         {
 
             try
             {
 
-                //int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);
+                //long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);
 
                 Order_MoneyCLS om = new Order_MoneyCLS();
 
@@ -484,7 +484,7 @@ namespace AccountModelsLib.Models
 
             Money_Transaction_BoxCLS mt = new Money_Transaction_BoxCLS();
 
-            int Currency_Id = 1;
+            long    Currency_Id = 1;
             //decimal Import_Value = 0;
             //decimal Export_Value = 0;
             decimal Balance_Before = 0;
@@ -501,7 +501,7 @@ namespace AccountModelsLib.Models
             string CostCenter_Name = "";
             decimal Purchase_Ticket_Value = 0;
             decimal Commission_Value = 0;
-            int Entry_Currency_ID = 0;
+            long Entry_Currency_ID = 0;
             string Balance_BeforStr = "";
             string Balance_AfterStr = "";
             return mt.InsertMoney_Transaction_Box(ref Excp, ref Msg, ref opp, Order_Mony_Id, Order_No, Bank_Name, Transaction_Date, Transaction_Type, Import_Value, Export_Value, Transaction_Value, Transaction_Value_, Equivalent_Value, Bank_id, Bank_Balance, Supplier_Id, Customer_Id,   SubAccount_Id, Notes, Balance_Before, Balance_After, Balance_BeforStr, Balance_AfterStr, BankAccount_Id, DestructionSales, Order_mony_id_transform, Account_Cost_Center_Tree_Id, Tafkeet_Value, TotalValueWillPaid, Rest_Value, Account_Name, Account_Code, Account_Type, Cost_Center, Currency_Id, Purchase_Ticket_Value, Commission_Value, Factor, Entry_Currency_ID, CostCenter_Name, Invoice_Id, Invoice_TypeId, CarsWorkOrdersId,   Reference_Type_Table_Id,   DataDictionaryProcessesListsId);
@@ -511,7 +511,7 @@ namespace AccountModelsLib.Models
         public void Edit_BanksFirst_Balance(ref int Excp, ref string Msg, long Bank_Id,long Order_No,string  Bank_Name, decimal Last_Balance, decimal NewFirseBalance, decimal Primary_BalanceDiff, DateTime dtFirstBalance, long Financial_Period_Begining_Balance_Id, int Bank_Type)
         {
             long Order_Mony_Id = 0;
-            int Entry_Currency_ID = 1;
+            long Entry_Currency_ID = 1;
             string Entry_Currency_Name = "";
             int Ticket_Supplier_Id = 0;
             int Sandouk_Cost_Center_Tree_Id = 0;
@@ -520,7 +520,7 @@ namespace AccountModelsLib.Models
             string Order_Tafkeet_Value = TafkeetProj.NumberToText.GetText(Primary_BalanceDiff, Entry_Currency_ID);
             int Bank_Type_ = 0;
             int Order_Mony_Id_Transform = -1;
-            int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(DateTime.Now.Date);
+            long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(DateTime.Now.Date);
             int Factor = 1;
             long Invoice_ID = 0;
             int Invoice_Type = 0;
@@ -617,12 +617,12 @@ namespace AccountModelsLib.Models
                 int Status = opp.insert_me_transaction(arr);
                 if (Status == 1)
                 {
-                    Msg="Êã ÊÚÏíá ÑÕíÏ Ãæá ÇáãÏÉ";
+                    Msg="ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½";
                     Excp = 0;
                 }
                 else
                 {
-                    Msg = "ÎØÃ İì  ÊÚÏíá ÑÕíÏ Ãæá ÇáãÏÉ" ;
+                    Msg = "ï¿½ï¿½ï¿½ ï¿½ï¿½  ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½" ;
                     Excp = 1;
                 }
                 opp = null;
@@ -708,7 +708,7 @@ FROM   Banks LEFT OUTER JOIN
                 return dt;
             }
         }
-        public void Delete_Banks(ref int Excp, ref string Msg, int Bank_Id, long SubAccount_Id)
+        public void Delete_Banks(ref int Excp, ref string Msg, long Bank_Id, long SubAccount_Id)
         {
             try
             {
@@ -718,7 +718,7 @@ FROM   Banks LEFT OUTER JOIN
                 DataSet ds = opp.return_dataset("Select * from Order_Money Where Bank_ID=" + Bank_Id);
                 if (ds.Tables[0].Rows.Count > 0)
                 {
-                    Msg="Êã ÅáÛÇÁ ÚãáíÉ ÇáÍĞİ äÙÑÇ áæÌæÏ ÇĞæäÇÊ ÕÑİ æÅÓÊáÇã áåĞÇ ÇáÈäß \\ ÇáÕäÏæŞ";
+                    Msg="ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ \\ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
                     Excp = 10;
                     return;
                 }
@@ -729,12 +729,12 @@ FROM   Banks LEFT OUTER JOIN
                 if (Excp == 0)
                 {
                     opp.Commit();
-                    Msg = "Êã  ÍĞİ ÇáÈäß/ÇáÕäÏæŞ ÈäÌÇÍ";
+                    Msg = "ï¿½ï¿½  ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½";
                 }
                 else
                 {
                     opp.Rollback();
-                    string Msg2 = "ÎØÃ İì ÍĞİ ÇáÈäß/ÇáÕäÏæŞ";
+                    string Msg2 = "ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
                     Msg = Msg2 + "\n\r" + Msg2;
                 }
             }
@@ -918,7 +918,10 @@ FROM   Banks LEFT OUTER JOIN
                 long New_Submain_Account_Id = ba.SubAccount_Id;
                 acc.ba = ba;
                 //int Account_Type_Value = Common.Bank_Account_Type;
-                acc.Add_AccountSupplierCustomerOther(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, ref Account_Code, ba.Account_Type_Value ?? 6, ba.Bank_Name, Common.Branch_Id, ba.Currency_Id ?? 1);
+                // ğŸŸ¢ ÙŠØ³ØªØ®Ø¯Ù… ÙØ±Ø¹ Ø§Ù„ØµÙ†Ø¯ÙˆÙ‚/Ø§Ù„Ø¨Ù†Ùƒ Ù†ÙØ³Ù‡ (ba.Branch_IdØŒ Ø§Ù„Ø°Ù‰ Ø§Ø®ØªØ§Ø±Ù‡ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… ÙØ¹Ù„ÙŠØ§Ù‹ ÙÙ‰ Ø§Ù„Ø´Ø§Ø´Ø©) Ø¨Ø¯Ù„ Common.Branch_Id
+                // (ÙØ±Ø¹ Ø¬Ù„Ø³Ø© Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø§Ù„Ø­Ø§Ù„ÙŠØ©) - ÙƒØ§Ù†Ø§ Ù‚Ø¯ ÙŠØ®ØªÙ„ÙØ§Ù† Ù„Ùˆ Ø£Ø¶Ø§Ù Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… ØµÙ†Ø¯ÙˆÙ‚Ø§Ù‹ Ù„ÙØ±Ø¹ ØºÙŠØ± ÙØ±Ø¹ Ø¬Ù„Ø³ØªÙ‡ Ø§Ù„Ø­Ø§Ù„ÙŠØ©ØŒ
+                // ÙÙŠÙÙ†Ø´Ø£ Ø­Ø³Ø§Ø¨ Ø§Ù„ØµÙ†Ø¯ÙˆÙ‚ ÙÙ‰ Ø§Ù„Ø´Ø¬Ø±Ø© Ø¨Ø§Ù„ÙØ±Ø¹ Ø§Ù„Ø®Ø·Ø£. Ø±Ø§Ø¬Ø¹ branch-cash-boxes-plan.md (Ø¨Ù†Ø¯ 3).
+                acc.Add_AccountSupplierCustomerOther(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, ref Account_Code, ba.Account_Type_Value ?? 6, ba.Bank_Name, ba.Branch_Id ?? Common.Branch_Id, ba.Currency_Id ?? 1);
 
                 ba.Id = acc.New_Account_Id;
                 ba.SubAccount_Id = New_Submain_Account_Id;

@@ -22,7 +22,7 @@ namespace AccountModelsLib
     
     }
        public  bool SmallTree = false;
-        //public    int Branch_Id=Common.Branch_Id;
+        //public    long Branch_Id=Common.Branch_Id;
         public DataSet Get_SubAccount(ref int Excp,long MainAccount_Id)
         {
             G_DS.Clear();
@@ -53,7 +53,7 @@ FROM            Submain_Account LEFT OUTER JOIN
                 return G_DS;
             }
         }
-    public string Get_Submain_Account_Name(int Account_Id)
+    public string Get_Submain_Account_Name(long Account_Id)
         {
              
             Submain_AccountCLS submain_AccountCLS = new Submain_AccountCLS();
@@ -89,14 +89,14 @@ FROM            Submain_Account LEFT OUTER JOIN
            return  submain_AccountCLS.Get_SQL_AccountsCode();
              
         }
-        public DataTable  Get_SubMain_Account(ref int Excp, int Branch_Id)
+        public DataTable  Get_SubMain_Account(ref int Excp, long Branch_Id)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
         return   Get_SubMain_Account(ref opp,ref   Excp,   Branch_Id);
         }
 
 
-        public DataTable Get_FixedAsset_Account(ref int Excp, int Branch_Id)
+        public DataTable Get_FixedAsset_Account(ref int Excp, long Branch_Id)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
 
@@ -110,7 +110,7 @@ FROM            Submain_Account LEFT OUTER JOIN
             return submain_AccountCLS.get_TreeToPrint(  Branch_Id,   Account_Level);
              
         }
-        public DataTable Get_FixedAsset_Account(ref AccountModelsLib.operations opp, ref int Excp, int Branch_Id)
+        public DataTable Get_FixedAsset_Account(ref AccountModelsLib.operations opp, ref int Excp, long Branch_Id)
         {
             Submain_AccountCLS submain_AccountCLS = new Submain_AccountCLS();
             return submain_AccountCLS.Get_FixedAsset_Account(ref   opp, ref   Excp,   Branch_Id);
@@ -126,7 +126,7 @@ FROM            Submain_Account LEFT OUTER JOIN
 
              
         }
-        public DataTable Get_SubMain_Account(ref AccountModelsLib.operations opp, ref int Excp, int Branch_Id)
+        public DataTable Get_SubMain_Account(ref AccountModelsLib.operations opp, ref int Excp, long Branch_Id)
         {
             DataTable dt = new DataTable();
             try
@@ -175,7 +175,7 @@ FROM            Submain_Account LEFT OUTER JOIN
         }
 
         
-        public DataTable Get_SubMain_Account_WithFirstBalance(ref int Excp, int Branch_Id)
+        public DataTable Get_SubMain_Account_WithFirstBalance(ref int Excp, long Branch_Id)
         {
             DataTable dt = new DataTable();
             try
@@ -204,7 +204,7 @@ FROM            Submain_Account LEFT OUTER JOIN
             return dt;
         }
        
-        public DataTable Get_SubMain_Account_ToSetCostCenter(ref int Excp, int Branch_ID)
+        public DataTable Get_SubMain_Account_ToSetCostCenter(ref int Excp, long Branch_ID)
         {
             DataTable dt = new DataTable();
             try
@@ -234,12 +234,12 @@ FROM            Submain_Account LEFT OUTER JOIN
             }
             return dt;
         }
-        public DataTable Get_Sub_Account(ref int Excp, int Branch_Id)
+        public DataTable Get_Sub_Account(ref int Excp, long Branch_Id)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
           return  Get_Sub_Account(ref opp,ref   Excp,   Branch_Id);
         }
-        public DataTable Get_Sub_Account(ref AccountModelsLib.operations opp, ref int Excp, int Branch_Id)
+        public DataTable Get_Sub_Account(ref AccountModelsLib.operations opp, ref int Excp, long Branch_Id)
         {
             DataTable dt=new DataTable();
             try
@@ -299,7 +299,7 @@ FROM            Submain_Account LEFT OUTER JOIN
 
 //            mysql = mysql + "   ORDER BY MAinAccount_Id";
         }
-        public DataTable Get_Submain_Account_Code(  int Branch_Id, long Code)
+        public DataTable Get_Submain_Account_Code(  long Branch_Id, long Code)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
             DataTable dt = new DataTable();
@@ -331,12 +331,12 @@ FROM            Submain_Account LEFT OUTER JOIN
                 return dt;
             
         }
-        public DataTable Get_Sub_FixedAccount( ref int Excp, int Branch_Id)
+        public DataTable Get_Sub_FixedAccount( ref int Excp, long Branch_Id)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
            return   Get_Sub_FixedAccount(ref   opp, ref   Excp, Branch_Id);
         }
-        public DataTable Get_Sub_FixedAccount( ref AccountModelsLib.operations opp, ref int Excp, int Branch_Id)
+        public DataTable Get_Sub_FixedAccount( ref AccountModelsLib.operations opp, ref int Excp, long Branch_Id)
         {
             DataTable dt = new DataTable();
            

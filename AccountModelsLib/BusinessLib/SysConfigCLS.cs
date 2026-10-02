@@ -1,12 +1,12 @@
-﻿ 
+﻿
 using AccountModelsLib;
- 
+
 using AccountModelsLib.Models;
 using Connection4It;
- 
- 
+
+
 using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore; 
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
- 
+
 namespace AccountModelsLib
 {
 
@@ -75,10 +75,10 @@ namespace AccountModelsLib
 
             return dt;
         }
-        public DataTable Get_SysConfigMenus_List( long Id)
+        public DataTable Get_SysConfigMenus_List(long Id)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
-            string mysql = "Select * from SysConfigMenus       Where Id="+Id+"     Order By Parent_Id  ";
+            string mysql = "Select * from SysConfigMenus       Where Id=" + Id + "     Order By Parent_Id  ";
 
             DataTable dt = opp.return_DataTableWithBuilder(mysql);
 
@@ -262,7 +262,9 @@ namespace AccountModelsLib
             ///
 
         }
-        public void SetUpdateMenusAddedNew()
+
+       
+        public void SetUpdateMenusPermisionAddedNew()
         {
             EncryptProcess en = new EncryptProcess();
             string PERMATION_Ok = en.encrypt("1");
@@ -276,19 +278,23 @@ namespace AccountModelsLib
                 DataTable dtUsers = opp.return_DataTable(mysql);
                 ////////////////////
                 mysql = "Select * from SysConfigMenus";
-                DataTable dt = opp.return_DataTable(mysql);
+                DataTable dtMenus = opp.return_DataTable(mysql);
 
                 for (int y = 0; y < dtUsers.Rows.Count; y++)
                 {
                     long USER_ID = long.Parse(dtUsers.Rows[y]["USER_ID"].ToString());
-                    for (int x = 0; x < dt.Rows.Count; x++)
+                    for (int x = 0; x < dtMenus.Rows.Count; x++)
                     {
-                        string Parent_Id = dt.Rows[x]["Parent_Id"].ToString();
+                        string Parent_Id = dtMenus.Rows[x]["Parent_Id"].ToString();
 
-                        string Menu_ID = dt.Rows[x]["ID"].ToString();
-                        string PROJECT_ID = dt.Rows[x]["PROJECT_ID"].ToString();
-                        int Value = 0;
-                        int.TryParse(dt.Rows[x]["Value"].ToString(), out Value);
+                        string Menu_ID = dtMenus.Rows[x]["ID"].ToString();
+                        if(Menu_ID== "963")
+                        {
+                            int xxxx = 0;
+                        }
+                        string PROJECT_ID = dtMenus.Rows[x]["PROJECT_ID"].ToString();
+                        long Value = 0;
+                        long.TryParse(en.decrypt(dtMenus.Rows[x]["Value"].ToString()), out Value);
 
                         mysql = "Select * from SysConfigMenusPERMATIONS Where USER_ID=" + USER_ID + " And Menu_ID=" + Menu_ID + "";
                         DataTable dtt = opp.return_DataTable(mysql);
@@ -307,7 +313,7 @@ namespace AccountModelsLib
                         }
 
                         mysql = " INSERT INTO SysConfigMenusPERMATIONS (Parent_Id,    PERMATION, PROJECT_ID, Menu_ID, USER_ID)";
-                        mysql = mysql + " Values(" + Parent_Id + ",N'" + PERMATION  + "', " + PROJECT_ID + "," + Menu_ID + "," + USER_ID + ")";
+                        mysql = mysql + " Values(" + Parent_Id + ",N'" + PERMATION + "', " + PROJECT_ID + "," + Menu_ID + "," + USER_ID + ")";
 
                         try
                         {
@@ -338,11 +344,11 @@ namespace AccountModelsLib
                 //mysql = "select * from USER_DETAILES";
                 //DataTable dtUsers = opp.return_DataTable(mysql);
                 ////////////////////
-                mysql = "Select * from SysConfigMenus Where PROJECT_ID=" + PROJECT_ID + "";
+                mysql = " Select * from SysConfigMenus Where PROJECT_ID=" + PROJECT_ID + "";
                 DataTable dt = opp.return_DataTable(mysql);
 
 
-                //int USER_ID = int.Parse(dtUsers.Rows[y]["USER_ID"].ToString());
+                //long   User_Id = long.Parse(dtUsers.Rows[y]["USER_ID"].ToString());
                 for (int x = 0; x < dt.Rows.Count; x++)
                 {
                     string Parent_Id = dt.Rows[x]["Parent_Id"].ToString();
@@ -360,13 +366,16 @@ namespace AccountModelsLib
 
                         opp.insert_me(mysql);
                     }
-                    mysql = "INSERT INTO SysConfigMenusPERMATIONS (Parent_Id,    PERMATION, PROJECT_ID, Menu_ID, USER_ID)";
-                    mysql = mysql + " Values(" + Parent_Id + ",N'" + PERMATION + "', " + PROJECT_ID + "," + Menu_ID + "," + USER_ID + ")";
-                    try
+                    else
                     {
-                        opp.insert_me(mysql);
+                        mysql = "INSERT INTO SysConfigMenusPERMATIONS (Parent_Id,    PERMATION, PROJECT_ID, Menu_ID, USER_ID)";
+                        mysql = mysql + " Values(" + Parent_Id + ",N'" + PERMATION + "', " + PROJECT_ID + "," + Menu_ID + "," + USER_ID + ")";
+                        try
+                        {
+                            opp.insert_me(mysql);
+                        }
+                        catch { }
                     }
-                    catch { }
 
                 }
             }
@@ -587,7 +596,7 @@ namespace AccountModelsLib
                 string Description_Fr = dt.Rows[x]["Description_Fr"].ToString();  //dataGridViewTrial.Rows[x].Cells["Description"].Value.ToString();
                 string Description_DE = dt.Rows[x]["Description_DE"].ToString();  //dataGridViewTrial.Rows[x].Cells["Description"].Value.ToString();
                 string RazorPath = dt.Rows[x]["RazorPath"].ToString();  //dataGridViewTrial.Rows[x].Cells["Description"].Value.ToString();
-                
+
 
 
 
@@ -612,7 +621,7 @@ namespace AccountModelsLib
                 Description_Fr = Common.EncryptMe(Description_Fr);
                 Description_DE = Common.EncryptMe(Description_DE);
                 RazorPath = Common.EncryptMe(RazorPath);
-                
+
                 POS = Common.EncryptMe(POS);
                 Market = Common.EncryptMe(Market);
                 Factory = Common.EncryptMe(Factory);
@@ -634,7 +643,7 @@ namespace AccountModelsLib
                 mysql = mysql + " Description_Fr = N'" + Description_Fr.ToSqlSafe() + "' , ";
                 mysql = mysql + " Description_DE = N'" + Description_DE.ToSqlSafe() + "' , ";
                 mysql = mysql + " RazorPath = N'" + RazorPath + "' , ";
-                
+
                 mysql = mysql + " POS = N'" + POS + "' , ";
                 mysql = mysql + " Market = N'" + Market + "' , ";
                 mysql = mysql + " Factory = N'" + Factory + "' , ";
@@ -653,11 +662,11 @@ namespace AccountModelsLib
                 //catch (Exception ee)
                 //{
 
-                    
+
                 //}
 
             }
-             opp.insert_me(mysql);
+            opp.insert_me(mysql);
 
         }
         public void Decrypt_Config_Menu(ref AccountModelsLib.operations opp)
@@ -717,7 +726,7 @@ namespace AccountModelsLib
 
             //AccountModelsLib.operations opp = new AccountModelsLib.operations();
 
-            string mysql = "";
+            string mysql = " ";
             for (int x = 0; x < dt.Rows.Count; x++)
             {
                 string KeysData = dt.Rows[x]["KeysData"].ToString(); // dataGridViewTrial.Rows[x].Cells["KeysData"].Value.ToString();
@@ -773,11 +782,20 @@ namespace AccountModelsLib
                 mysql = mysql + " Where Id= " + ID + " ";
 
 
+                try
+                {
+                    opp.insert_me(mysql);
+                    mysql = "";
+                }
+                catch (Exception ee)
+                {
 
+                     
+                }
 
 
             }
-            opp.insert_me(mysql);
+            //opp.insert_me(mysql);
 
 
         }
@@ -846,7 +864,7 @@ namespace AccountModelsLib
             opp.insert_me(mysql);
 
         }
-      public   void Decrypt_SysConfigMenus(ref AccountModelsLib.operations opp)
+        public void Decrypt_SysConfigMenus(ref AccountModelsLib.operations opp)
         {
             SysConfigCLS ss = new SysConfigCLS();
             DataTable dt = ss.Get_SysConfigMenus_List(ref opp);
@@ -934,8 +952,8 @@ namespace AccountModelsLib
 
             }
         }
-        
-        
+
+
         string[] GetAllTables(SqlConnection connection)
         {
             List<string> result = new List<string>();
@@ -944,7 +962,7 @@ namespace AccountModelsLib
             {
                 connection.Open();
             }
-         SqlDataReader reader = cmd.ExecuteReader();
+            SqlDataReader reader = cmd.ExecuteReader();
 
             while (reader.Read())
                 result.Add(reader["name"].ToString());
@@ -980,6 +998,9 @@ namespace AccountModelsLib
             tb.Add("SysConfigMenus");
             tb.Add("SysConfigMenusPERMATIONS");
             tb.Add("DataDictionaryProcessesLists");
+            tb.Add("DataDictionaryProcessesNo");
+
+
 
             //tb.Add("unit");
             tb.Add("USER_DETAILES");
@@ -1036,62 +1057,98 @@ namespace AccountModelsLib
                 }
 
             }
+            opp.insert_me(mysql);
+            mysql = @"
 
-            mysql = mysql + @"
+update Banks set Primary_balance=0,Last_Balance=0  ";
+            opp.insert_me(mysql);
+            mysql = @"
 
-update Banks set Primary_balance=0,Last_Balance=0  
-            
-INSERT INTO Customer_Supplier_Group
+            INSERT INTO Customer_Supplier_Group
                          (GroupName, GroupType, User_Id, Branch_Id, Edit_User_Id, ProcessNo)
-VALUES        (N'مجموعة العملاء الأولى', 2, 1, 1, 1, 0)
-
+VALUES        (N'مجموعة العملاء الأولى', 2, 1, 1, 1, 0) ";
+            opp.insert_me(mysql);
+            mysql = @" 
 INSERT INTO Customer_Supplier_Group
                          (GroupName, GroupType, User_Id, Branch_Id, Edit_User_Id, ProcessNo)
 VALUES        (N'مجموعة الموردين الأولى', 5, 1, 1, 1, 0)
-
+";
+            opp.insert_me(mysql);
+            mysql = @" 
  INSERT INTO Price_Type_List
                          (Price_Name, IS_Active, Price_Name_Master, Price_Type_List_Master_Id, Plus_Minus, Added_Value, IS_Rate, User_Id, Branch_Id, Edit_User_Id, ProcessNo)
 VALUES        (N'نوع السعر الاساسى', 1, N'إختيار السعر', - 1, N'-', 0, 0, 1, 1, 1, 0)
-
+";
+            opp.insert_me(mysql);
+            mysql = @" 
 INSERT INTO Banks
-                         (Bank_Name, Primary_balance, Last_Balance, SubAccount_Id, Is_Bank, Currency_Id, Default_Bank, Supplier_Bank,  Branch_Id, Account_Type_Value, User_Id, Branch_Id, Active, ProcessNo)
-VALUES        (N'الخزينة الرئيسية', 0, 0, 0, 0, 1, 1, 0, 1, 6, 1, 1, 1, 0)
+                         (Bank_Name, Primary_balance, Last_Balance, SubAccount_Id, Is_Bank, Currency_Id, Default_Bank, Supplier_Bank, Account_Type_Value, User_Id, Branch_Id, Active, ProcessNo)
+VALUES        (N'الخزينة الرئيسية', 0, 0, 0, 0, 1, 1, 0, 6, 1, 1, 1, 0)
+";
+            opp.insert_me(mysql);
+            UpdateDataTables(ref   opp);
+            /*
+                mysql = @" 
 
-
- SET IDENTITY_INSERT [dbo].[Customer] ON 
+  SET IDENTITY_INSERT [dbo].[Customer] ON  
+                 
 INSERT [dbo].[Customer] ([Id], [Name], [Active], [Balance], [Balance_Actual], [Code], [Address], [Tel], [Tel2], [Mobile], [E_Mail], [Fax], [Web_Site], [Customer_Type], [SubAccount_Id], [IsSalesMan], [SalesMan_Id], [Date_Balance_First], [Balance_First], [Location_Id], [Price_Type_List_ID], [Tax_No], [Balance_Air], [Balance_Road], [Account_Code], [Currency_Id], [Static_Flage], [General_Customer_Flage], [Group_Id], [Ref_Cust_Supplier_Id],[LookUp_PersonCompany_TypeId]) VALUES (CAST(1 AS Numeric(10, 0)), N'عملاء متنوعون', 1, CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), N'1', N'-', N'', N'', N'', N'', N'', N'', 1, CAST(3211 AS Numeric(18, 0)), 0, NULL, CAST(N'2019-07-21 00:00:00.000' AS DateTime), CAST(0.00 AS Decimal(18, 2)), NULL, CAST(0 AS Numeric(18, 0)), N'', CAST(1.00 AS Decimal(18, 2)), CAST(1.00 AS Decimal(18, 2)), 1, 1, 0, 1, 1, 0,1)
 INSERT [dbo].[Customer] ([Id], [Name], [Active], [Balance], [Balance_Actual], [Code], [Address], [Tel], [Tel2], [Mobile], [E_Mail], [Fax], [Web_Site], [Customer_Type], [SubAccount_Id], [IsSalesMan], [SalesMan_Id], [Date_Balance_First], [Balance_First], [Location_Id], [Price_Type_List_ID], [Tax_No], [Balance_Air], [Balance_Road], [Account_Code], [Currency_Id], [Static_Flage], [General_Customer_Flage], [Group_Id], [Ref_Cust_Supplier_Id],[LookUp_PersonCompany_TypeId]) VALUES (CAST(2 AS Numeric(10, 0)), N'عملاء دائمون', 1, CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), N'1', N'-', N'', N'', N'', N'', N'', N'', 1, CAST(3211 AS Numeric(18, 0)), 0, NULL, CAST(N'2019-07-21 00:00:00.000' AS DateTime), CAST(0.00 AS Decimal(18, 2)), NULL, CAST(0 AS Numeric(18, 0)), N'', CAST(1.00 AS Decimal(18, 2)), CAST(1.00 AS Decimal(18, 2)), 1, 1, 0, 0, 1, 0,1)
  SET IDENTITY_INSERT [dbo].[Customer] OFF 
-
+";
+             
+            opp.insert_me(mysql);
+            mysql = @" 
 SET IDENTITY_INSERT [dbo].[Item] ON 
 
 INSERT INTO Item
                          (id, code, Item_Name, S_id, Item_Category_ID, No3eboa_old, No3eboa, No3eboa_BigUnit, No3eboa_SmallUnit, Active_flage, Upon_Request, Unit_Id, StoreUsed_Type, AnotherName)
 VALUES        (CAST(1 AS Numeric(10, 0)), N'1', N'صنف 1', 1, 1, NULL, CAST(1.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), 1, CAST(0.00 AS Decimal(18, 2)), 9, 1, N'')
 SET IDENTITY_INSERT [dbo].[Item] OFF
+";
+            opp.insert_me(mysql);
+            mysql = @" 
+
+
 SET IDENTITY_INSERT [dbo].[Store] ON 
 
 INSERT [dbo].[Store] ([id], [Store_Name], [Store_location], [Emp_id], [Job_id], [StoreUsed_Type], [Branch_Id], [Employee_Name], [Store_Code], [IS_Default_Store], [IS_Sell_SecondUnit], [IS_ItemSecond_degree], [Active],[LookUp_StoreOrderTypesId]) VALUES (CAST(1 AS Numeric(18, 0)), N'المخزن الرئيسى', N'-', CAST(0 AS Numeric(18, 0)), 0, 1, 1, N'', N'0', 1, 0, 0, 1,4)
 SET IDENTITY_INSERT [dbo].[Store] OFF
 
+";
+            opp.insert_me(mysql);
+            mysql = @" 
+
+
 SET IDENTITY_INSERT [dbo].[Supplier] ON 
 INSERT [dbo].[Supplier] ([Id], [Name], [Code], [Address], [Tel], [Tel2], [Mobile], [E_Mail], [Fax], [Web_Site], [Balance], [Balance_Actual], [Supplier_Type], [Registration_No], [Active], [SubAccount_Id], [Date_Balance_First], [Balance_First], [Balance_Air], [Balance_Road], [Account_Code], [Currency_Id], [Tax_Registration_No], [Group_Id], [Ref_Cust_Supplier_Id]) VALUES (CAST(3212 AS Numeric(10, 0)), N'مورد 1', N'1', N'-', N'', N'', N'', N'', N'', N'', CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), 1, NULL, 1, CAST(3212 AS Numeric(18, 0)), CAST(N'2019-07-21 00:00:00.000' AS DateTime), 0, CAST(1.00 AS Decimal(18, 2)), CAST(1.00 AS Decimal(18, 2)), 1, 1, N'', 2, 0)
 SET IDENTITY_INSERT [dbo].[Supplier] OFF
+
+";
+            opp.insert_me(mysql);
+            mysql = @" 
 SET IDENTITY_INSERT [dbo].[Unit_item] ON 
 
 INSERT [dbo].[Unit_item] ([id], [Item_id], [Store_id], [Store_Type], [Code], [unit_id], [Full_qua], [D_Qua], [Item_No], [Reserved_Balance_Larg_Qnty], [Reserved_Balance_Small_Qnty], [Big_unit], [Small_unit], [P_price], [S_price], [Specification], [Upon_Request], [Currency], [active_flage], [TaxSales10_Value], [New2]) VALUES (CAST(1 AS Numeric(18, 0)), 1, CAST(1 AS Numeric(18, 0)), 4, N'1', 9, CAST(0 AS Numeric(18, 0)), CAST(0 AS Numeric(18, 0)), CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), 1, 12, CAST(0.00 AS Decimal(18, 2)), CAST(0.00 AS Decimal(18, 2)), NULL, 0, N'جنية مصرى', 1, NULL, 1)
 SET IDENTITY_INSERT [dbo].[Unit_item] OFF
-
+";
+            opp.insert_me(mysql);
+            mysql = @" 
 
 SET IDENTITY_INSERT [dbo].[Item_Category] ON 
 
 INSERT [dbo].[Item_Category] ([ID], [Category_Name], [Category_Type_Str], [Category_Type_Id], [Main_Item_Category_Id], [IS_Active], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(1 AS Numeric(18, 0)), N'فئة 1', N'مبيعات', 1, 1, 1, NULL, 0, 0, NULL, NULL, NULL, 0)
 SET IDENTITY_INSERT [dbo].[Item_Category] OFF
+";
+            opp.insert_me(mysql);
+            mysql = @" 
 SET IDENTITY_INSERT [dbo].[Item_Main_Category] ON 
 
 INSERT [dbo].[Item_Main_Category] ([ID], [Main_Category_Name], [Category_Type_Id], [Category_Type_Str], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(1 AS Numeric(18, 0)), N'الفئة الأولى ', 1, N'مبيعات', NULL, 0, 0, NULL, NULL, NULL, 0)
 SET IDENTITY_INSERT [dbo].[Item_Main_Category] OFF
-
+";
+            opp.insert_me(mysql);
+            mysql = @" 
 
 
 SET IDENTITY_INSERT [dbo].[unit] ON 
@@ -1112,84 +1169,103 @@ SET IDENTITY_INSERT [dbo].[unit] OFF
 
 ";
             opp.insert_me(mysql);
+            */
 
-
-            AlterDB_CLS.Set_Account_Type_Table();
-            // INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(1 AS Numeric(18, 0)), N'حقوق الملكيه', 15, 4, 3, 1, 0, 0, 0, NULL, NULL, 0, 0, NULL, NULL, NULL, 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(2 AS Numeric(18, 0)), N'حساب  موظف', 4, 4, 1, 1, 0, 0, 0, N'Employee', NULL, 0, 0, NULL, NULL, NULL, 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(3 AS Numeric(18, 0)), N'حساب  العملاء ', 2, 4, 1, 1, 0, 0, 2, N'Customer', NULL, 0, 0, NULL, NULL, NULL, 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(4 AS Numeric(18, 0)), N'حساب الفرع', 2, 4, 1, 0, 0, 0, 1, N'Customer', NULL, 0, 0, NULL, NULL, NULL, 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(5 AS Numeric(18, 0)), N'شركه السياحه', 2, 4, 1, 0, 0, 0, 3, N'Customer', NULL, 0, 0, NULL, NULL, NULL, 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(6 AS Numeric(18, 0)), N'حساب موردين', 5, 4, 2, 1, 0, 0, 0, N'Supplier', NULL, 0, 0, NULL, NULL, NULL, 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(7 AS Numeric(18, 0)), N'حسابات الصندوق ', 6, 4, 1, 1, 0, 0, 0, N'Banks', NULL, 0, 0, NULL, NULL, NULL, 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(8 AS Numeric(18, 0)), N'حساب البنك', 7, 4, 1, 1, 0, 0, 0, N'Banks', NULL, 0, 0, NULL, NULL, NULL, 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(9 AS Numeric(18, 0)), N'الأصول الثابته', 8, 4, 1, 1, 0, 0, 0, NULL, NULL, 0, 0, NULL, NULL, NULL, 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(10 AS Numeric(18, 0)), N'حسابات أخرى', 10, 4, 1, 1, 0, 0, 0, NULL, NULL, 0, 0, NULL, NULL, NULL, 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(11 AS Numeric(18, 0)), N'حساب مبيعات', 11, 3, 5, 1, 0, 0, 0, NULL, NULL, 0, 0, NULL, NULL, NULL, 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(12 AS Numeric(18, 0)), N'حساب مرتجع مبيعات', 12, 3, 5, 1, 0, 0, 0, NULL, NULL, 0, 0, NULL, NULL, NULL, 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(13 AS Numeric(18, 0)), N'حساب مشتريات', 13, 3, 4, 1, 0, 0, 0, NULL, NULL, 0, 0, NULL, NULL, NULL, 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(14 AS Numeric(18, 0)), N'حساب مرتجع مشتريات', 14, 3, 4, 1, 0, NULL, 0, NULL, NULL, 0, 0, NULL, NULL, NULL, 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(15 AS Numeric(18, 0)), N'مصروفات', 16, 3, 4, 1, NULL, NULL, 0, NULL, NULL, 0, 0, NULL, NULL, NULL, 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(16 AS Numeric(18, 0)), N'إيرادات', 17, 3, 5, 1, NULL, NULL, 0, NULL, NULL, 0, 0, NULL, NULL, NULL, 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(17 AS Numeric(18, 0)), N'حساب ارباح تجارية وصناعية', 18, 3, 1, 1, NULL, NULL, 0, NULL, CAST(N'2022-09-16 00:02:15.727' AS DateTime), 0, 0, CAST(N'2022-09-16 00:02:15.727' AS DateTime), CAST(N'2022-09-16 00:02:15.727' AS DateTime), CAST(N'2022-09-16 00:02:15.727' AS DateTime), 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(18 AS Numeric(18, 0)), N'حساب ضرايب المبيعات', 19, 3, 1, 1, NULL, NULL, 0, NULL, CAST(N'2022-09-16 00:03:06.237' AS DateTime), 0, 0, CAST(N'2022-09-16 00:03:06.237' AS DateTime), CAST(N'2022-09-16 00:03:06.237' AS DateTime), CAST(N'2022-09-16 00:03:06.237' AS DateTime), 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(19 AS Numeric(18, 0)), N'حساب الدمغه', 20, 3, 4, 1, NULL, NULL, 0, NULL, CAST(N'2022-09-16 00:03:23.170' AS DateTime), 0, 0, CAST(N'2022-09-16 00:03:23.170' AS DateTime), CAST(N'2022-09-16 00:03:23.170' AS DateTime), CAST(N'2022-09-16 00:03:23.170' AS DateTime), 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(20 AS Numeric(18, 0)), N'حساب الخصم المسموح بة', 21, 3, 4, 1, NULL, NULL, 0, NULL, CAST(N'2022-09-16 00:03:36.703' AS DateTime), 0, 0, CAST(N'2022-09-16 00:03:36.703' AS DateTime), CAST(N'2022-09-16 00:03:36.703' AS DateTime), CAST(N'2022-09-16 00:03:36.703' AS DateTime), 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(21 AS Numeric(18, 0)), N'حساب مصروفات التحميل مشتريات', 22, 3, 4, 1, NULL, NULL, 0, NULL, CAST(N'2022-09-16 00:03:49.020' AS DateTime), 0, 0, CAST(N'2022-09-16 00:03:49.020' AS DateTime), CAST(N'2022-09-16 00:03:49.020' AS DateTime), CAST(N'2022-09-16 00:03:49.020' AS DateTime), 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(22 AS Numeric(18, 0)), N'حساب مصروفات أخرى مبيعات', 25, 3, 4, 1, NULL, NULL, 0, NULL, CAST(N'2022-09-16 00:04:01.737' AS DateTime), 0, 0, CAST(N'2022-09-16 00:04:01.737' AS DateTime), CAST(N'2022-09-16 00:04:01.737' AS DateTime), CAST(N'2022-09-16 00:04:01.737' AS DateTime), 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(23 AS Numeric(18, 0)), N'حساب التسوية المالية للعملاء والموردين', 26, 4, 1, 1, NULL, NULL, 0, NULL, CAST(N'2022-09-18 22:46:55.537' AS DateTime), 0, 0, CAST(N'2022-09-18 22:46:55.537' AS DateTime), CAST(N'2022-09-18 22:46:55.537' AS DateTime), CAST(N'2022-09-18 22:46:55.537' AS DateTime), 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(24 AS Numeric(18, 0)), N'خصم مكتسب', 27, 3, 5, 1, NULL, NULL, 0, NULL, CAST(N'2022-10-31 23:11:54.130' AS DateTime), 0, 0, CAST(N'2022-10-31 23:11:54.130' AS DateTime), CAST(N'2022-10-31 23:11:54.130' AS DateTime), CAST(N'2022-10-31 23:11:54.130' AS DateTime), 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(25 AS Numeric(18, 0)), N'حساب التسوية المالية للعملاء  لخدمات المبانى', 28, 3, 5, 1, 0, NULL, 0, NULL, CAST(N'2022-11-09 19:33:14.453' AS DateTime), 0, 0, CAST(N'2022-11-09 19:33:14.453' AS DateTime), CAST(N'2022-11-09 19:33:14.453' AS DateTime), CAST(N'2022-11-09 19:33:14.453' AS DateTime), 0)
-            //INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (CAST(26 AS Numeric(18, 0)), N'حساب فرق العملة', 29, 3, 5, 1, NULL, NULL, 0, NULL, CAST(N'2022-11-09 19:46:22.430' AS DateTime), 0, 0, CAST(N'2022-11-09 19:46:22.430' AS DateTime), CAST(N'2022-11-09 19:46:22.430' AS DateTime), CAST(N'2022-11-09 19:46:22.430' AS DateTime), 0)
-
+            AlterDB_CLS.Set_Account_Type_Table(ref opp);
+           
         }
-        /*
-         TRUNCATE TABLE Account_Entry_List
-TRUNCATE TABLE Account_Entry_List
+        
+        void UpdateDataTables(ref operations opp)
+        { 
+            // 1. Parent Categories
+            AppendTableInsert("[dbo].[Item_Main_Category]", @"
+INSERT INTO [dbo].[Item_Main_Category] 
+    ([ID], [Main_Category_Name], [Category_Type_Id], [Category_Type_Str], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) 
+VALUES 
+    (1, N'الفئة الأولى', 1, N'مبيعات', NULL, 0, 0, NULL, NULL, NULL, 0);
+");
 
+            AppendTableInsert("[dbo].[Item_Category]", @"
+INSERT INTO [dbo].[Item_Category] 
+    ([ID], [Category_Name], [Category_Type_Str], [Category_Type_Id], [Main_Item_Category_Id], [IS_Active], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) 
+VALUES 
+    (1, N'فئة 1', N'مبيعات', 1, 1, 1, NULL, 0, 0, NULL, NULL, NULL, 0);
+");
 
+            // 2. Units of Measure
+            AppendTableInsert("[dbo].[unit]", @"
+INSERT INTO [dbo].[unit] ([id], [u_name], [B_Unit], [S_unit], [B_Unit_Value], [S_unit_Value], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES 
+    (1,  N'وزن',            N'كيلو',     N'جرام',  1, 1000,  NULL, 0, 0, NULL, NULL, NULL, 0),
+    (9,  N'الدست',          N'الدستة',   N'قطعة',  1, 12,    NULL, 0, 0, NULL, NULL, NULL, 0),
+    (17, N'العدد',          N'قطعة',     N'--',    1, 1,     NULL, 0, 0, NULL, NULL, NULL, 0),
+    (27, N'بوكس',           N'كرتونة',   N'دستة',  1, 10,    NULL, 0, 0, NULL, NULL, NULL, 0),
+    (28, N'المتر',          N'متر',      N'سم',    1, 100,   NULL, 0, 0, NULL, NULL, NULL, 0),
+    (29, N'علبة',           N'علبة',     N'بكرة',  1, 12,    NULL, 0, 0, NULL, NULL, NULL, 0),
+    (30, N'جوبير هرمية',    N'يارده',    N'سم',    1, 91,    NULL, 0, 0, NULL, NULL, NULL, 0),
+    (31, N'كرتونة',         N'كرتونه',   N'علبة',  1, 10,    NULL, 0, 0, NULL, NULL, NULL, 0),
+    (32, N'الوزن بالطن',    N'الطن',     N'الكيلو',1, 1000,  NULL, 0, 0, NULL, NULL, NULL, 0),
+    (33, N'المتر المربع',   N'²م',       N'²سم',   1, 10000, NULL, 0, 0, NULL, NULL, NULL, 0),
+    (34, N'المتر المربع (1)',N'متر مربع',N'-',     1, 1,     NULL, 0, 0, NULL, NULL, NULL, 0);
+");
 
-TRUNCATE TABLE Invoices_Details
-TRUNCATE TABLE Invoices_Details_Reverse
-TRUNCATE TABLE Invoices_List
-TRUNCATE TABLE Invoices_List_Reverse
-TRUNCATE TABLE Bills_Details
-TRUNCATE TABLE Bills_Details_Reverse
-TRUNCATE TABLE Bills_List
+            // 3. Stores
+            AppendTableInsert("[dbo].[Store]", @"
+INSERT INTO [dbo].[Store] 
+    ([id], [Store_Name], [Store_location], [Emp_id], [Job_id], [StoreUsed_Type], [Branch_Id], [Employee_Name], [Store_Code], [IS_Default_Store], [IS_Sell_SecondUnit], [IS_ItemSecond_degree], [Active], [LookUp_StoreOrderTypesId]) 
+VALUES 
+    (1, N'المخزن الرئيسى', N'-', 0, 0, 1, 1, N'', N'0', 1, 0, 0, 1, 4);
+");
 
-TRUNCATE TABLE Bills_List_Reverse
-TRUNCATE TABLE Customers_Accounts
-TRUNCATE TABLE Suppliers_Accounts
+            // 4. Items (Depends on Category & Unit)
+            AppendTableInsert("[dbo].[Item]", @"
+INSERT INTO [dbo].[Item] 
+    ([id], [code], [Item_Name], [S_id], [Item_Category_ID], [No3eboa_old], [No3eboa], [No3eboa_BigUnit], [No3eboa_SmallUnit], [Active_flage], [Upon_Request], [Unit_Id], [StoreUsed_Type], [AnotherName]) 
+VALUES 
+    (1, N'1', N'صنف 1', 1, 1, NULL, 1.00, 0.00, 0.00, 1, 0.00, 9, 1, N'');
+");
 
-TRUNCATE TABLE  Order_Purshing
-TRUNCATE TABLE Detailes_Purshing
-TRUNCATE TABLE Detailes_Purshing_Import_Export
+            // 5. Unit Items (Depends on Item, Store, and Unit)
+            AppendTableInsert("[dbo].[Unit_item]", @"
+INSERT INTO [dbo].[Unit_item] 
+    ([id], [Item_id], [Store_id], [Store_Type], [Code], [unit_id], [Full_qua], [D_Qua], [Item_No], [Reserved_Balance_Larg_Qnty], [Reserved_Balance_Small_Qnty], [Big_unit], [Small_unit], [P_price], [S_price], [Specification], [Upon_Request], [Currency], [active_flage], [TaxSales10_Value], [New2]) 
+VALUES 
+    (1, 1, 1, 4, N'1', 9, 0, 0, 0.00, 0.00, 0.00, 1, 12, 0.00, 0.00, NULL, 0, N'جنية مصرى', 1, NULL, 1);
+");
 
-TRUNCATE TABLE Work_In_Details
-TRUNCATE TABLE Work_In_Details_Balance
-TRUNCATE TABLE Work_In_Details_Received
+            // 6. Customers
+            AppendTableInsert("[dbo].[Customer]", @"
+INSERT INTO [dbo].[Customer] 
+    ([Id], [Name], [Active], [Balance], [Balance_Actual], [Code], [Address], [Tel], [Tel2], [Mobile], [E_Mail], [Fax], [Web_Site], [Customer_Type], [SubAccount_Id], [IsSalesMan], [SalesMan_Id], [Date_Balance_First], [Balance_First], [Location_Id], [Price_Type_List_ID], [Tax_No], [Balance_Air], [Balance_Road], [Account_Code], [Currency_Id], [Static_Flage], [General_Customer_Flage], [Group_Id], [Ref_Cust_Supplier_Id], [LookUp_PersonCompany_TypeId]) 
+VALUES 
+    (1, N'عملاء متنوعون', 1, 0.00, 0.00, N'1', N'-', N'', N'', N'', N'', N'', N'', 1, 3211, 0, NULL, '2019-07-21', 0.00, NULL, 0, N'', 1.00, 1.00, 1, 1, 0, 1, 1, 0, 1),
+    (2, N'عملاء دائمون',  1, 0.00, 0.00, N'2', N'-', N'', N'', N'', N'', N'', N'', 1, 3211, 0, NULL, '2019-07-21', 0.00, NULL, 0, N'', 1.00, 1.00, 1, 1, 0, 0, 1, 0, 1);
+");
 
-TRUNCATE TABLE  Account_Type
-truncate table Draws_List
+            // 7. Suppliers
+            AppendTableInsert("[dbo].[Supplier]", @"
+INSERT INTO [dbo].[Supplier] 
+    ([Id], [Name], [Code], [Address], [Tel], [Tel2], [Mobile], [E_Mail], [Fax], [Web_Site], [Balance], [Balance_Actual], [Supplier_Type], [Registration_No], [Active], [SubAccount_Id], [Date_Balance_First], [Balance_First], [Balance_Air], [Balance_Road], [Account_Code], [Currency_Id], [Tax_Registration_No], [Group_Id], [Ref_Cust_Supplier_Id]) 
+VALUES 
+    (3212, N'مورد 1', N'1', N'-', N'', N'', N'', N'', N'', N'', 0.00, 0.00, 1, NULL, 1, 3212, '2019-07-21', 0.00, 1.00, 1.00, 1, 1, N'', 2, 0);
+");
+            opp.insert_me(sb.ToString());
+        }
+        StringBuilder sb = new StringBuilder();
+        string  AppendTableInsert(string tableName, string insertSql)
+        {
+            bool useIdentity = (Common.Use_Auto_Identity_Column == 1);
+           
+            if (useIdentity)
+                sb.AppendLine($"SET IDENTITY_INSERT {tableName} ON;");
 
-TRUNCATE TABLE Order_Money
-TRUNCATE TABLE Money_Transaction_Box
+            sb.AppendLine(insertSql.Trim());
 
-TRUNCATE TABLE customer
-TRUNCATE TABLE supplier
+            if (useIdentity)
+                sb.AppendLine($"SET IDENTITY_INSERT {tableName} OFF;");
 
-TRUNCATE TABLE Work_Out_Details
+            sb.AppendLine();
 
-TRUNCATE TABLE Work_Out_Details_Balance
-TRUNCATE TABLE Work_Out_Details_Received
-
-TRUNCATE TABLE Store
-TRUNCATE TABLE Item
-TRUNCATE TABLE Unit_Item
-
-TRUNCATE TABLE Unit 
-TRUNCATE TABLE   Item_Main_Category
-TRUNCATE TABLE  Item_Category
-         */
+            return sb.ToString();
+        }
     }
 }

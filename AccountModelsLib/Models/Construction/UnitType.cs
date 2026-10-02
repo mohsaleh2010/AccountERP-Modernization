@@ -43,7 +43,7 @@ namespace AccountModelsLib.Models
         }
         public void ReadData(DataTable dt, int index)
         {
-            Id = int.Parse(dt.Rows[index]["Id"].ToString());
+            Id = long.Parse(dt.Rows[index]["Id"].ToString());
            
             Name = dt.Rows[index]["Name"].ToString();
 

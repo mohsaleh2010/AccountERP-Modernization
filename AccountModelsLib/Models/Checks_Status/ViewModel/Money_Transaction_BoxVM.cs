@@ -23,7 +23,7 @@ namespace AccountModelsLib.Models
         public decimal Cach_Value { get; set; } = 0;
         public DateTime Order_Date { get; set; } = DateTime.Now;
         public string Man_Name { get; set; } = "";
-        public int Currency_Id { get; set; } = 0;
+        public long    Currency_Id { get; set; } = 0;
         public long Customer_ID_Supplier { get; set; } = 0;
         public int Reverse_Order { get; set; } = 0;
         public long Entry_No { get; set; } = 0;

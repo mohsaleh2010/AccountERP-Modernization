@@ -305,7 +305,7 @@ namespace AccountModelsLib
                     }
                 invL.Notes = invL.Notes + " "+ Notes;
                 //}
-                ca.Set_Customer_Balance_Invoice(ref Excp, ref opp, (int)invL.Customer_Id, invL.Customer_Id_RelatedToAccount ?? 0, invL.Id,  invL.Net_Total ?? 0, invL.Notes);
+                ca.Set_Customer_Balance_Invoice(ref Excp, ref opp, (long)invL.Customer_Id, invL.Customer_Id_RelatedToAccount ?? 0, invL.Id,  invL.Net_Total ?? 0, invL.Notes);
 
                 if (Excp == 1)
                 {

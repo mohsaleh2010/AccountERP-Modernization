@@ -92,7 +92,7 @@ namespace AccountModelsLib.Models
 
                 if (itm == null)
                 {
-                    itm = opp.db.Item.Where(i => i.id == inv.Item_Id).Include(i => i.Store).FirstOrDefault();
+                    itm = opp.db.Item.Where(i => i.Id == inv.Item_Id).Include(i => i.Store).FirstOrDefault();
 
                 }
                 invDVM.Is_InvoiceKta3y = invL.Is_InvoiceKta3y;

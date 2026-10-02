@@ -41,12 +41,12 @@ FROM            Submain_Account INNER JOIN
             dt = opp.return_DataTable(mysql);
             return dt;
         }
-        public void UpdateFirstBalance(ref int Excp, ref string Msg, int Entry_Currency_Id, int Branch_Id, DateTime Financial_dtFrom, DateTime Financial_dtTo, int Year_Financial_Period_Id_ToUpdate, int Currency_Count)
+        public void UpdateFirstBalance(ref int Excp, ref string Msg, long Entry_Currency_ID, long Branch_Id, DateTime Financial_dtFrom, DateTime Financial_dtTo, long Year_Financial_Period_Id_ToUpdate, int Currency_Count)
         {
 
 
 
-            //int Entry_Currency_Id = 0;
+            //long Entry_Currency_Id = 0;
             operations opp = new operations();
             Mezan_MorgaaCLS mm = new Mezan_MorgaaCLS();
 
@@ -66,7 +66,7 @@ FROM            Submain_Account INNER JOIN
 
 
 
-                int Year_Financial_Period_Id_Prev = 0;
+                long Year_Financial_Period_Id_Prev = 0;
                 DataTable dtPrev = mm.Get_Year_Financial_Period_IdPrev(ref opp, Financial_dtFrom, ref Year_Financial_Period_Id_Prev);
 
                 if (Year_Financial_Period_Id_Prev == 0)
@@ -84,9 +84,9 @@ FROM            Submain_Account INNER JOIN
                 }
                 string mysql = "";
                 mysql = "Delete from Account_Entry_Master_Balance Where Year_Financial_Period_Id=" + Year_Financial_Period_Id_ToUpdate + " And  Branch_Id=" + Branch_Id + "";
-                if (Entry_Currency_Id != -1)
+                if (Entry_Currency_ID != -1)
                 {
-                    mysql = mysql + "AND Equivalent_Account_Currency_Id=" + Entry_Currency_Id + "";
+                    mysql = mysql + "AND Equivalent_Account_Currency_Id=" + Entry_Currency_ID + "";
                 }
                 opp.insert_me(mysql);
 
@@ -100,7 +100,7 @@ FROM            Submain_Account INNER JOIN
                 //    Currency_Count = 1;
                 //}
                 bool AllCurrency = false;
-                if (Entry_Currency_Id == -1)
+                if (Entry_Currency_ID == -1)
                 {
                     AllCurrency = true;
                 }
@@ -108,10 +108,10 @@ FROM            Submain_Account INNER JOIN
                 {
                     if (AllCurrency == true)
                     {
-                        Entry_Currency_Id = i;
+                        Entry_Currency_ID = i;
                     }
                     DataTable dt7 = new DataTable();
-                    mm.SetTemp_Mezan_Morgaa_ByPeiodNew(ref opp, false, Branch_Id, Financial_dtFrom, Financial_dtTo, 0, Entry_Currency_Id, Year_Financial_Period_Id_Prev, true, false, Financial_dtFrom);
+                    mm.SetTemp_Mezan_Morgaa_ByPeiodNew(ref opp, false, Branch_Id, Financial_dtFrom, Financial_dtTo, 0, Entry_Currency_ID, Year_Financial_Period_Id_Prev, true, false, Financial_dtFrom);
 
                     mysql = @"INSERT INTO Account_Entry_Master_Balance(Submain_Account_ID, SubAccount_Name, First_Balance_Madin, First_Balance_Da2n, First_Balance, Year_Financial_Period_Id, Branch_Id, Equivalent_Account_Currency_Id, Account_Currency_Id)
 
@@ -148,12 +148,12 @@ WHERE        (Submain_Account.Account_Follows = 1) OR
             }
         }
 
-        public void UpdateFirstBalanceCostCenter(ref int Excp, ref string Msg, int Entry_Currency_Id, int Branch_Id, DateTime Financial_dtFrom, DateTime Financial_dtTo, int Year_Financial_Period_Id_ToUpdate, int Currency_Count)
+        public void UpdateFirstBalanceCostCenter(ref int Excp, ref string Msg, long Entry_Currency_Id, long Branch_Id, DateTime Financial_dtFrom, DateTime Financial_dtTo, long Year_Financial_Period_Id_ToUpdate, int Currency_Count)
         {
 
 
 
-            //int Entry_Currency_Id = 0;
+            //long Entry_Currency_Id = 0;
             operations opp = new operations();
             Mezan_MorgaaCLS mm = new Mezan_MorgaaCLS();
 
@@ -173,7 +173,7 @@ WHERE        (Submain_Account.Account_Follows = 1) OR
 
 
 
-                int Year_Financial_Period_Id_Prev = 0;
+                long Year_Financial_Period_Id_Prev = 0;
                 DataTable dtPrev = mm.Get_Year_Financial_Period_IdPrev(ref opp, Financial_dtFrom, ref Year_Financial_Period_Id_Prev);
 
                 if (Year_Financial_Period_Id_Prev == 0)
@@ -339,7 +339,7 @@ WHERE        (Submain_Account.Account_Follows = 1) OR
 
         }
 
-        public void Get_FirstBalance_Period(bool Is_Equivalent, bool Is_EquivalentFactor, int Year_Financial_Period_Id, int Branch_Id, long Submain_Account_ID, ref decimal First_Balance_Madin, ref decimal First_Balance_Da2n)
+        public void Get_FirstBalance_Period(bool Is_Equivalent, bool Is_EquivalentFactor, long Year_Financial_Period_Id, long Branch_Id, long Submain_Account_ID, ref decimal First_Balance_Madin, ref decimal First_Balance_Da2n)
         {
             //  Equivalent_First_Balance_Madin,Equivalent_First_Balance_Da2n
             string mysql = "";
@@ -421,7 +421,7 @@ FROM            Account_Entry_Master_Balance INNER JOIN
 
 
         }
-        public DataTable Get_Mezan_Morgaa_ByPeiod(int Branch_Id, DateTime dtFom, DateTime dtTo, long Submain_Account_ID, int Account_Currency_Id, int Year_Financial_Period_Id)
+        public DataTable Get_Mezan_Morgaa_ByPeiod(long Branch_Id, DateTime dtFom, DateTime dtTo, long Submain_Account_ID, long Account_Currency_Id, long Year_Financial_Period_Id)
         {
             string mysql = "";
             operations opp = new operations();
@@ -658,7 +658,7 @@ FROM            Account_Entry_Master_Balance_MezanTemp INNER JOIN
             return mysql;
         }
 
-        public string Get_Mezan_Morgaa_ByPeiodNewCostCenterUpdate(ref operations opp, bool IS_Excute_All, int Branch_Id, DateTime dtFom, DateTime dtTo, long CostCenter_Id, int Entry_Currency_Id, int Year_Financial_Period_Id, DateTime Financial_Period_dtFom)
+        public string Get_Mezan_Morgaa_ByPeiodNewCostCenterUpdate(ref operations opp, bool IS_Excute_All, long Branch_Id, DateTime dtFom, DateTime dtTo, long CostCenter_Id, long Entry_Currency_Id, long Year_Financial_Period_Id, DateTime Financial_Period_dtFom)
         {
             //bool ShowBalanceZero,
             string mysql = "";
@@ -766,7 +766,7 @@ FROM            Account_Entry_Master_Balance_CostCenterTemp INNER JOIN
             return mysql;
         }
 
-        public void Get_Mezan_Morgaa_ByPeiodNewNewPrev(bool ShowBalanceZero, int Branch_Id, DateTime dtFom, DateTime dtTo, long Submain_Account_ID, int Entry_Currency_Id, int Year_Financial_Period_Id)
+        public void Get_Mezan_Morgaa_ByPeiodNewNewPrev(bool ShowBalanceZero, long Branch_Id, DateTime dtFom, DateTime dtTo, long Submain_Account_ID, long Entry_Currency_Id, long Year_Financial_Period_Id)
         {
             string mysql = "";
             operations opp = new operations();
@@ -835,7 +835,7 @@ SUM(Account_Entry_Details.Equivalent_Export_Value) AS Final_Export_Value
             opp.insert_me(mysql);
 
         }
-        public void Get_Mezan_Morgaa_ByPeiodNewNew_(bool ShowBalanceZero, int Branch_Id, DateTime dtFom, DateTime dtTo, long Submain_Account_ID, int Entry_Currency_Id, int Year_Financial_Period_Id)
+        public void Get_Mezan_Morgaa_ByPeiodNewNew_(bool ShowBalanceZero, long Branch_Id, DateTime dtFom, DateTime dtTo, long Submain_Account_ID, long Entry_Currency_Id, long Year_Financial_Period_Id)
         {
             string mysql = "";
             operations opp = new operations();
@@ -1080,7 +1080,7 @@ FROM            Account_Entry_Master_Balance INNER JOIN
                 opp.db.SaveChanges();
             }
 
-            //for (int Equivalent_Account_Currency_Id = 0; Equivalent_Account_Currency_Id < Common.Currency_Count; Equivalent_Account_Currency_Id++)
+            //for (long Equivalent_Account_Currency_Id = 0; Equivalent_Account_Currency_Id < Common.Currency_Count; Equivalent_Account_Currency_Id++)
             //{
             //    decimal Factor = cc.GetFactors(Common.Entry_Currency_Id, Equivalent_Account_Currency_Id);
             //    Factor = Common.RoundMe(Factor);
@@ -1205,7 +1205,7 @@ FROM            Account_Entry_Master_Balance INNER JOIN
                 opp.db.SaveChanges();
             }
 
-            //for (int Equivalent_Account_Currency_Id = 0; Equivalent_Account_Currency_Id < Common.Currency_Count; Equivalent_Account_Currency_Id++)
+            //for (long Equivalent_Account_Currency_Id = 0; Equivalent_Account_Currency_Id < Common.Currency_Count; Equivalent_Account_Currency_Id++)
             //{
             //    decimal Factor = cc.GetFactors(Common.Entry_Currency_Id, Equivalent_Account_Currency_Id);
             //    Factor = Common.RoundMe(Factor);
@@ -1218,7 +1218,7 @@ FROM            Account_Entry_Master_Balance INNER JOIN
 
         }
 
-        void Set_NewAccountInFirstBalanceZeroCostCenter(ref operations opp, int Branch_ID, int Year_Financial_Period_Id)
+        void Set_NewAccountInFirstBalanceZeroCostCenter(ref operations opp, long Branch_Id, long Year_Financial_Period_Id)
         {
             //
             string mysql = " truncate Table  Account_Entry_Master_BalanceFirstAccount_Temp ";
@@ -1256,14 +1256,14 @@ WHERE        (Cost_Center_Tree.Id NOT IN
             // 2. معالجة البيانات حسب العملات المتعددة في الـ Memory
             //for (int equivalentCurrencyId = 0; equivalentCurrencyId < Common.Currency_Count; equivalentCurrencyId++)
             //{
-            foreach (int Equivalent_Account_Currency_Id in activeCurrencyValues)
+            foreach (long Equivalent_Account_Currency_Id in activeCurrencyValues)
             {
                 //for (int i = 0; i < Common.Currency_Count; i++)
                 //{
-            //    for (int Equivalent_Account_Currency_Id = 0; Equivalent_Account_Currency_Id < Common.Currency_Count; Equivalent_Account_Currency_Id++)
-            //{
+                //    for (long Equivalent_Account_Currency_Id = 0; Equivalent_Account_Currency_Id < Common.Currency_Count; Equivalent_Account_Currency_Id++)
+                //{
                 mysql = @" INSERT INTO Account_Entry_Master_Balance_CostCenter (Cost_Center_Id,Cost_Center_Name,Submain_Account_ID, SubAccount_Name, Account_Currency_Id, Year_Financial_Period_Id, Branch_Id, Equivalent_Account_Currency_Id)";
-                mysql = mysql + @"SELECT DISTINCT  Cost_Center_Id,Cost_Center_Name,Submain_Account_ID, SubAccount_Name, Account_Currency_Id ," + Year_Financial_Period_Id + " AS  Year_Financial_Period_Id  ," + Branch_ID + " AS Branch_ID," + Equivalent_Account_Currency_Id + "  AS Equivalent_Account_Currency_Id";
+                mysql = mysql + @"SELECT DISTINCT  Cost_Center_Id,Cost_Center_Name,Submain_Account_ID, SubAccount_Name, Account_Currency_Id ," + Year_Financial_Period_Id + " AS  Year_Financial_Period_Id  ," + Branch_Id + " AS Branch_ID," + Equivalent_Account_Currency_Id + "  AS Equivalent_Account_Currency_Id";
                 mysql = mysql + @" FROM            Account_Entry_Master_BalanceFirstAccount_Temp ";
 
                 opp.insert_me(mysql);
@@ -1271,7 +1271,7 @@ WHERE        (Cost_Center_Tree.Id NOT IN
             }
 
         }
-        void Set_NewAccountInFirstBalanceZero(int Branch_ID, int Year_Financial_Period_Id)
+        void Set_NewAccountInFirstBalanceZero(long Branch_Id, long Year_Financial_Period_Id)
         {
             operations opp = new operations();
             string mysql = " ";
@@ -1285,7 +1285,7 @@ WHERE        (Cost_Center_Tree.Id NOT IN
                          (SubAccount_Id NOT IN
                              (SELECT        Submain_Account_ID
                                 FROM            Account_Entry_Master_Balance
-                                WHERE        (Year_Financial_Period_Id = " + Year_Financial_Period_Id + ") AND (Branch_Id = " + Branch_ID + "))) AND (Branch_ID = " + Branch_ID + ") OR  (Branch_ID = - 1)";
+                                WHERE        (Year_Financial_Period_Id = " + Year_Financial_Period_Id + ") AND (Branch_Id = " + Branch_Id + "))) AND (Branch_ID = " + Branch_Id + ") OR  (Branch_ID = - 1)";
 
 
             DataTable dt = opp.return_DataTable(mysql);
@@ -1296,13 +1296,13 @@ WHERE        (Cost_Center_Tree.Id NOT IN
                 long Submain_Account_ID = long.Parse(dt.Rows[x]["SubAccount_Id"].ToString());
 
                 string SubAccount_Name = dt.Rows[x]["SubAccount_Name"].ToString();
-                int Account_Currency_Id = int.Parse(dt.Rows[x]["Currency_Id"].ToString()); ;
+                long Account_Currency_Id = long.Parse(dt.Rows[x]["Currency_Id"].ToString()); ;
 
-                for (int Equivalent_Account_Currency_Id = 0; Equivalent_Account_Currency_Id < 5; Equivalent_Account_Currency_Id++)
+                for (long Equivalent_Account_Currency_Id = 0; Equivalent_Account_Currency_Id < 5; Equivalent_Account_Currency_Id++)
                 {
 
                     mysql = mysql + @" INSERT INTO Account_Entry_Master_Balance (Submain_Account_ID, SubAccount_Name, Account_Currency_Id, Year_Financial_Period_Id, Branch_Id, Equivalent_Account_Currency_Id)";
-                    mysql = mysql + @"  Values (" + Submain_Account_ID + ", '" + SubAccount_Name + "'," + Account_Currency_Id + "," + Year_Financial_Period_Id + "," + Branch_ID + "," + Equivalent_Account_Currency_Id + ") ";
+                    mysql = mysql + @"  Values (" + Submain_Account_ID + ", '" + SubAccount_Name + "'," + Account_Currency_Id + "," + Year_Financial_Period_Id + "," + Branch_Id + "," + Equivalent_Account_Currency_Id + ") ";
                 }
             }
             if (dt.Rows.Count > 0)
@@ -1310,7 +1310,7 @@ WHERE        (Cost_Center_Tree.Id NOT IN
                 opp.insert_me(mysql);
             }
         }
-        public DataTable Get_Mezan_Morgaa_ByPeiod(bool ShowBalanceZero, bool AnyDatePeriod, int Year_Financial_Period_Id, int Branch_Id, DateTime dtFom, DateTime dtTo, DateTime Financial_Period_dtFom, int Account_Currency_Id)
+        public DataTable Get_Mezan_Morgaa_ByPeiod(bool ShowBalanceZero, bool AnyDatePeriod, long Year_Financial_Period_Id, long Branch_Id, DateTime dtFom, DateTime dtTo, DateTime Financial_Period_dtFom, long Account_Currency_Id)
         {
             bool Is_Equivalent = true;
             bool Is_EquivalentFactor = false;
@@ -1430,7 +1430,7 @@ WHERE        (Cost_Center_Tree.Id NOT IN
             dt = dv.ToTable();
             return dt;
         }
-        public void Get_Mezan_Morgaa_ByPeiodNewBackup2702205(bool IS_Set_NewAccountInFirstBalanceZero, bool ShowBalanceZero, bool AnyDatePeriod, int Year_Financial_Period_Id, int Branch_Id, DateTime dtFom, DateTime dtTo, DateTime Financial_Period_dtFom, int Account_Currency_Id)
+        public void Get_Mezan_Morgaa_ByPeiodNewBackup2702205(bool IS_Set_NewAccountInFirstBalanceZero, bool ShowBalanceZero, bool AnyDatePeriod, long Year_Financial_Period_Id, long Branch_Id, DateTime dtFom, DateTime dtTo, DateTime Financial_Period_dtFom, long Account_Currency_Id)
         {
             //bool Is_Equivalent = true;
             //bool Is_EquivalentFactor = false;
@@ -1620,34 +1620,7 @@ WHERE        (Cost_Center_Tree.Id NOT IN
 
 
         }
-
-
-
-        //public DataTable Get_Mezan_Morgaa_ByPeiodNew_(bool IS_Set_NewAccountInFirstBalanceZero, bool ShowBalanceZero, bool AnyDatePeriod, int Year_Financial_Period_Id, int Branch_Id, DateTime dtFom, DateTime dtTo, DateTime Financial_Period_dtFom, int Account_Currency_Id)
-        //{
-        //    bool Is_To_Show_Prev=false;
-        //      operations opp=new operations();
-        //   //SetOptionGet_Mezan_Morgaa_ByPeiodNew(ref opp,   Is_To_Show_Prev,  IS_Set_NewAccountInFirstBalanceZero,    AnyDatePeriod,   Year_Financial_Period_Id,   Branch_Id,   dtFom,   dtTo,   Financial_Period_dtFom );
-
-        //    long Submain_Account_ID = 0;
-
-        //    ////حساب اجمالى حركات الحسابات عن فترة
-        //    //DataTable dt = Get_Mezan_Morgaa_ByPeiodNew(Is_To_Show_Prev, ShowBalanceZero, Branch_Id, dtFom, dtTo, Submain_Account_ID, Account_Currency_Id, Year_Financial_Period_Id);
-
-        //  DataTable dt = Get_Mezan_Morgaa_ByPeiodNew(  Is_To_Show_Prev,   ShowBalanceZero,   Branch_Id,   dtFom,   dtTo,   Submain_Account_ID,   Entry_Currency_Id,   Year_Financial_Period_Id,   IS_Set_NewAccountInFirstBalanceZero,   AnyDatePeriod,   Financial_Period_dtFom);
-        //    DataView dv = dt.DefaultView;
-
-        //    dv.Sort = "MainCode ASC";
-
-        //    dt = dv.ToTable();
-
-        //    return dt;
-
-
-
-
-        //}
-
+         
         public DataTable ShowFirstBalance_Mezan_Morgaa_ByFirstPeiod(ref int Excp, ref string Msg, bool Is_To_Show_Prev, int Show_AccountWithBalance, long Branch_Id, long Submain_Account_ID, long Entry_Currency_Id, long Year_Financial_Period_Id, bool IS_Set_NewAccountInFirstBalanceZero, bool AnyDatePeriod, DateTime Financial_Period_dtFom)
         {
             FirstBalance_CLS firstBalance_CLS = new FirstBalance_CLS();
@@ -2082,7 +2055,7 @@ where  Final_Transaction_Madin<0  ";
         /// <param name="IS_Set_NewAccountInFirstBalanceZero"></param>
         /// <param name="AnyDatePeriod"></param>
         /// <param name="Financial_Period_dtFom"></param>
-        public void SetTemp_Mezan_Morgaa_ByPeiodNew_CostCenter(ref operations opp, bool Is_To_Show_Prev, int Branch_Id, DateTime dtFom, DateTime dtTo, long CostCenter_Id, int Entry_Currency_Id, int Year_Financial_Period_Id, bool IS_Set_NewAccountInFirstBalanceZero, bool AnyDatePeriod, DateTime Financial_Period_dtFom)
+        public void SetTemp_Mezan_Morgaa_ByPeiodNew_CostCenter(ref operations opp, bool Is_To_Show_Prev, long Branch_Id, DateTime dtFom, DateTime dtTo, long CostCenter_Id, long Entry_Currency_Id, long Year_Financial_Period_Id, bool IS_Set_NewAccountInFirstBalanceZero, bool AnyDatePeriod, DateTime Financial_Period_dtFom)
         {
             ////////////CCCCCCCC
             //bool ShowBalanceZero,
@@ -2325,7 +2298,7 @@ where  Final_Transaction_Madin<0  ";
         }
         ///
         ///
-        public void SetOptionGet_Mezan_Morgaa_ByPeiodNewCostCenter(ref operations opp, bool Is_To_Show_Prev, bool IS_Set_NewAccountInFirstBalanceZero, bool AnyDatePeriod, int Year_Financial_Period_Id, int Branch_Id, DateTime dtFom, DateTime Financial_Period_dtFom)
+        public void SetOptionGet_Mezan_Morgaa_ByPeiodNewCostCenter(ref operations opp, bool Is_To_Show_Prev, bool IS_Set_NewAccountInFirstBalanceZero, bool AnyDatePeriod, long Year_Financial_Period_Id, long Branch_Id, DateTime dtFom, DateTime Financial_Period_dtFom)
         {
 
 
@@ -2347,7 +2320,7 @@ where  Final_Transaction_Madin<0  ";
 
             }
         }
-        public DataTable Get_Mezan_Morgaa_ByPeiodNewNew(bool IS_Set_NewAccountInFirstBalanceZero, bool ShowBalanceZero, bool AnyDatePeriod, int Year_Financial_Period_Id, int Branch_Id, DateTime dtFom, DateTime dtTo, DateTime Financial_Period_dtFom, int Account_Currency_Id)
+        public DataTable Get_Mezan_Morgaa_ByPeiodNewNew(bool IS_Set_NewAccountInFirstBalanceZero, bool ShowBalanceZero, bool AnyDatePeriod, long Year_Financial_Period_Id, long Branch_Id, DateTime dtFom, DateTime dtTo, DateTime Financial_Period_dtFom, long Account_Currency_Id)
         {
             operations opp = new operations();
             string mysql = "truncate table Account_Entry_Master_Balance_MezanTemp";
@@ -2424,21 +2397,21 @@ WHERE        (Final_Last_Balance_Madin = 0) AND (Final_Last_Balance_Da2n = 0)";
 
 
         }
-        public int Get_Year_Financial_Period_Id_Next(ref operations opp, DateTime dateto)
+        public long Get_Year_Financial_Period_Id_Next(ref operations opp, DateTime dateto)
         {
             Financial_PeriodCLS ff = new Financial_PeriodCLS();
             return ff.Get_Year_Financial_Period_Id_Next(ref opp, dateto);
 
         }
 
-        public DataTable Get_Year_Financial_Period_IdPrev(ref operations opp, DateTime dateFrom, ref int Year_Financial_Period_Id_Prev)
+        public DataTable Get_Year_Financial_Period_IdPrev(ref operations opp, DateTime dateFrom, ref long Year_Financial_Period_Id_Prev)
         {
             Financial_PeriodCLS ff = new Financial_PeriodCLS();
             return ff.Get_Year_Financial_Period_IdPrev(ref opp, dateFrom, ref Year_Financial_Period_Id_Prev);
 
 
         }
-        public DataTable Get_Mezan_Morgaa_ByPeiod_(bool AnyDatePeriod, int Year_Financial_Period_Id, int Branch_Id, DateTime dtFom, DateTime dtTo, DateTime Financial_Period_dtFom, int Account_Currency_Id)
+        public DataTable Get_Mezan_Morgaa_ByPeiod_(bool AnyDatePeriod, long Year_Financial_Period_Id, long Branch_Id, DateTime dtFom, DateTime dtTo, DateTime Financial_Period_dtFom, long Account_Currency_Id)
         {
             bool Is_Equivalent = true;
             bool Is_EquivalentFactor = false;

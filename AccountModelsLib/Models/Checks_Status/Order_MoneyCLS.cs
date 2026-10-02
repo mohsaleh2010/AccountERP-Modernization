@@ -72,7 +72,7 @@ namespace AccountModelsLib.Models
         }
 
         private int _Currency_Id = 1;
-        public int Currency_Id
+        public long Currency_Id
         {
             get { return _Currency_Id; }
             set { _Currency_Id = value; }
@@ -137,21 +137,21 @@ namespace AccountModelsLib.Models
          
         
         private int _User_Id;
-        public int User_Id
+        public long User_Id
         {
             get { return _User_Id; }
             set { _User_Id = value; }
         }
 
         private int _Branch_Id;
-        public int Branch_Id
+        public long Branch_Id
         {
             get { return _Branch_Id; }
             set { _Branch_Id = value; }
         }
 
         private int _Year_Financial_Period_Id = 0;
-        public int Year_Financial_Period_Id
+        public long Year_Financial_Period_Id
         {
             get { return _Year_Financial_Period_Id; }
             set { _Year_Financial_Period_Id = value; }
@@ -214,7 +214,7 @@ namespace AccountModelsLib.Models
         }
 
         private int _Entry_Currency_ID = 1;
-        public int Entry_Currency_ID
+        public long Entry_Currency_ID
         {
             get { return _Entry_Currency_ID; }
             set { _Entry_Currency_ID = value; }
@@ -263,7 +263,7 @@ namespace AccountModelsLib.Models
         }
 
         private int _Edit_User_Id = 0;
-        public int Edit_User_Id
+        public long Edit_User_Id
         {
             get { return _Edit_User_Id; }
             set { _Edit_User_Id = value; }
@@ -540,14 +540,14 @@ WHERE         (Submain_Account.Id =  " + SubAccount_Id + ")  ";
             }
         }
 
-        public long Insert_Order_Money(ref int Excp, ref string Msg, ref operations opp, long Order_No, DateTime Order_Date, int Transaction_type, decimal Total_Value, int Currency_Id, int Bank_Type, long Bank_ID, string Man_Name, int Is_Balances_Set, int Day_Registration_flage, long DayReg_List_Id, int Order_mony_id_Transform, long Invoice_Id, int Ticket_Supplier_Id, string Tafkeet_Value, string Order_Notes, int Sandouk_Cost_Center_Tree_Id, decimal Factor, int Entry_Currency_ID, string Entry_Currency_Name, int Invoice_Type, int IS_Posted_Flage, long CarsWorkOrdersId, int IsMoreTheOneBoxShow)
+        public long Insert_Order_Money(ref int Excp, ref string Msg, ref operations opp, long Order_No, DateTime Order_Date, int Transaction_type, decimal Total_Value, long Currency_Id, int Bank_Type, long Bank_ID, string Man_Name, int Is_Balances_Set, int Day_Registration_flage, long DayReg_List_Id, int Order_mony_id_Transform, long Invoice_Id, long  Ticket_Supplier_Id, string Tafkeet_Value, string Order_Notes, long Sandouk_Cost_Center_Tree_Id, decimal Factor, long    Entry_Currency_ID, string Entry_Currency_Name, int Invoice_Type, int IS_Posted_Flage, long CarsWorkOrdersId, int IsMoreTheOneBoxShow)
         {
 
             try
             {
 
 
-                int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);
+                long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);
 
                 om.IsMoreTheOneBoxShow = IsMoreTheOneBoxShow;
                 om.Order_No = Order_No;

@@ -54,7 +54,7 @@ namespace AccountModelsLib.Models
 
         
         public int? IsSalesMan { get; set; }
-        public int? SalesMan_Id { get; set; }
+        public long? SalesMan_Id { get; set; }
         public DateTime? Date_Balance_First { get; set; }
         public decimal? Balance_First { get; set; }
         public int? Location_Id { get; set; }
@@ -62,8 +62,8 @@ namespace AccountModelsLib.Models
         public string  Tax_No { get; set; }
         public decimal? Balance_Air { get; set; }
         public decimal? Balance_Road { get; set; }
-        public string  Account_Code { get; set; }
-        public int? Currency_Id { get; set; }
+        public string?  Account_Code { get; set; }
+        public long? Currency_Id { get; set; }
         public int? Static_Flage { get; set; }
         public int? General_Customer_Flage { get; set; }
        
@@ -71,18 +71,18 @@ namespace AccountModelsLib.Models
         public long? Ref_Cust_Supplier_Id { get; set; }
         public string  VisaNo { get; set; }
         public string  VisaPassword { get; set; }
-        public string  CustomerNotes { get; set; }
+        public string?  CustomerNotes { get; set; }
        
        
         public DateTime? OperationDate { get; set; }
-        public int? User_Id { get; set; }
-        public int? Branch_Id { get; set; }
+        public long? User_Id { get; set; }
+        public long? Branch_Id { get; set; }
         public long? Tax_BranchesId { get; set; }
         
         public DateTime? Insert_ServerDateTime { get; set; }
         public DateTime? Update_ServerDateTime { get; set; }
         public DateTime? EditOperationDate { get; set; }
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
         public string  ContactPerson { get; set; }
         public long? ProcessNo { get; set; }
 
@@ -100,16 +100,16 @@ namespace AccountModelsLib.Models
         public long? Govern_ListId { get; set; }
         public long? Gov_City_ListId { get; set; }
 
-        public string Gov_Country_ListName { get; set; }
-        public string Govern_Area_ListName { get; set; }
-        public string Govern_ListName { get; set; }
-        public string Gov_City_ListName { get; set; }
-        public string Street { get; set; }
-        public string BuildingNumber { get; set; }
-        public string floor { get; set; }
-        public string room { get; set; }
-        public string landmark { get; set; }
-        public string additionalInformation { get; set; }
+        public string? Gov_Country_ListName { get; set; }
+        public string? Govern_Area_ListName { get; set; }
+        public string? Govern_ListName { get; set; }
+        public string? Gov_City_ListName { get; set; }
+        public string? Street { get; set; }
+        public string? BuildingNumber { get; set; }
+        public string? floor { get; set; }
+        public string? room { get; set; }
+        public string? landmark { get; set; }
+        public string? additionalInformation { get; set; }
 
          
 

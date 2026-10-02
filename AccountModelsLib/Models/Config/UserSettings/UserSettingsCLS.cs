@@ -13,6 +13,17 @@ namespace AccountModelsLib
     {
         public const string ShowBreadcrumb = "ShowBreadcrumb";
         public const string ShowTabs = "ShowTabs";
+
+        // 🟢 يقابل UserPreferencesService.DateFormat: نمط عرض التواريخ فى شاشات Blazor الجديدة/المُعدَّلة
+        // (راجع المعيار الموثَّق فى MODERNIZATION_NOTES.md) - القيمة نص جاهز لـ DateTime.ToString(...)
+        // (مثال "dd/MM/yyyy")، الافتراضى عند غياب القيمة هو نفس الافتراضى.
+        public const string DateFormat = "DateFormat";
+
+        // 🟢 يقابل UserPreferencesService.Language: كود الثقافة الحالي (مثل "ar-EG") محفوظاً لحساب المستخدم
+        // نفسه فى قاعدة البيانات - وليس فقط كوكي المتصفح (راجع LanguageSwitcher.razor/LanguageService.cs)
+        // حتى تُستعاد لغة المستخدم تلقائياً عند تسجيل الدخول من أي جهاز/متصفح، بما فى ذلك الديسك توب/الموبايل
+        // (MAUI) التى لا يوجد لديها أصلاً أي آلية حفظ كوكي.
+        public const string Language = "Language";
     }
 
     // 🟢 نفس نمط SysConfigMenusPERMATIONSCLS المجاور (SysConfigMenusCLS.cs): كلاس بسيط بلا حقن تبعيات

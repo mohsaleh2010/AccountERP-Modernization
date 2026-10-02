@@ -17,7 +17,7 @@ namespace AccountModelsLib
         }
 
 
-        public void Update_Price(int id, int customer_id, int item_id, decimal Price_value)
+        public void Update_Price(long id, long customer_id, long item_id, decimal Price_value)
         {
             string mysql = "UPDATE Capital_Money SET customer_id = '" + customer_id + "', item_id = " + item_id + ", Price_value= " + Price_value + " WHERE(Id = " + id + ")";
             opp.update_me(mysql);
@@ -28,7 +28,7 @@ namespace AccountModelsLib
             All_prices = opp.return_dataset(mysql);
             return All_prices;
         }
-        public void add_NewPrice(int customer_id,int item_id, decimal Price_value)
+         public void add_NewPrice(long customer_id,long item_id, decimal Price_value)
         {
             string sql;
             sql = "INSERT INTO Special_Price_list(customer_id, Item_id,Value)";
@@ -38,7 +38,7 @@ namespace AccountModelsLib
         }
          
 
-        public void insert_pulled_capital(ref int Status,string DATE, int Capital_id, decimal vlaue, int Bank_id, string notes)
+        public void insert_pulled_capital(ref int Status,string DATE, int Capital_id, decimal vlaue, long Bank_id, string notes)
         {
             ArrayList arr = new ArrayList();
             string mysql = "INSERT INTO capital_pulled(DATE,Capital_id, Value, Banke_id, Notes)";

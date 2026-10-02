@@ -88,10 +88,10 @@ namespace AccountModelsLib
         public long Order_MoneyId = 0;
 
 
-        public int User_Id = 0;
-        public int Branch_Id = 0;
+        public long   User_Id = 0;
+        public long Branch_Id = 0;
         public int Invoice_Type_Id = 0;
-        public int Salesman_Id = 0;
+        public long Salesman_Id = 0;
        
         public int Is_InvoiceKta3y = 0;
         public int Is_Tax_Per_Item = 0;
@@ -111,7 +111,7 @@ namespace AccountModelsLib
 
         public int Make_Order = 0;
         public string Currency = "";
-        public int Currency_id = 0;
+        public long    Currency_Id = 0;
         public int Invoice_Type = 0;
         public decimal Supplier_BalanceSet = 0;
         public string Notes = "";
@@ -281,7 +281,7 @@ namespace AccountModelsLib
 
             //OperationDate = DateTime.Parse(dt_Invoices_List.Rows[0]["OperationDate"].ToString());
             ////AnotherPayment = decimal.Parse(dt_Invoices_List.Rows[0]["AnotherPayment"].ToString());
-            //Salesman_Id = int.Parse(dt_Invoices_List.Rows[0]["Salesman_Id"].ToString());
+            //Salesman_Id = long.Parse(dt_Invoices_List.Rows[0]["Salesman_Id"].ToString());
 
             //IS_Make_Sarf_Item_BalanceFromInvoice = int.Parse(dt_Invoices_List.Rows[0]["IS_Make_Sarf_Item_BalanceFromInvoice"].ToString());
             //Is_InvoiceKta3y = int.Parse(dt_Invoices_List.Rows[0]["Is_InvoiceKta3y"].ToString());

@@ -64,7 +64,7 @@ namespace AccountModelsLib.Models
         public List<dynamic> GetItems()
         {
             return opp.db.Item
-                .Select(i => new { Value = i.id, Text = i.Item_Name })
+                .Select(i => new { Value = i.Id, Text = i.Item_Name })
                 .ToList<dynamic>();
         }
 

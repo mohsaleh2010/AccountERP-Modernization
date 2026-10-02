@@ -211,7 +211,7 @@ namespace AccountModelsLib.Models
             try
             {
                 ItemCLS itemCLS = new ItemCLS(ref opp);
-                if (item.id == 0)
+                if (item.Id == 0)
                 {
                     Unit_item um = new Unit_item();
                     SetItemServiceData(ref item, ref um);
@@ -221,7 +221,7 @@ namespace AccountModelsLib.Models
                 }
                 else
                 {
-                    Unit_item um = opp.db.Unit_item. Where(x => x.Item_Id == item.id && x.Store_id == item.S_id).FirstOrDefault();
+                    Unit_item um = opp.db.Unit_item. Where(x => x.Item_Id == item.Id && x.Store_id == item.S_id).FirstOrDefault();
                     EditItemServiceData(ref item, ref   um);
                     itemCLS.EditService (ref Excp, ref Msg, item , um);
                 }
@@ -251,7 +251,7 @@ namespace AccountModelsLib.Models
                 .Where(x => x.Is_ItemOrService==2)
                 .Select(x => new ServiceViewModel
                 {
-                    Id = x.id,
+                    Id = x.Id,
                     Name = x.Item_Name,
                     S_Price = x.S_Price??0,
                      ServiceDurationInMinutes = x.ServiceDurationInMinutes ?? 0,

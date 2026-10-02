@@ -119,7 +119,7 @@ namespace AccountModelsLib.Models
                     TaxReverseInvoices_LineItems LineItems = new TaxReverseInvoices_LineItems();
 
                     //ItemCodeTaxAccepted itmAcc = opp.db.ItemCodeTaxAccepted.Where(i => i.Item_Id == item.Item_Id).FirstOrDefault();
-                    Items itm = opp.db.Item.Where(i => i.id == item.Item_Id).FirstOrDefault();
+                    Items itm = opp.db.Item.Where(i => i.Id == item.Item_Id).FirstOrDefault();
                     LineItems.TaxInvoices_ListId = TaxReverseInvoices_ListId;
                     //LineItems.ItemCodeTaxAcceptedId = itmAcc.Id;
 

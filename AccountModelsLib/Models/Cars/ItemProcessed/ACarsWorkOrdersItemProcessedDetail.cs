@@ -66,12 +66,12 @@ namespace AccountModelsLib.Models
         public int? Is_AddToInvoice { get; set; }
         public int? Item_DeletedFlage { get; set; }
         public int? Item_ProcessedFlage { get; set; }
-        public int? User_Id { get; set; }
-        public int? Branch_Id { get; set; }
+        public long? User_Id { get; set; }
+        public long? Branch_Id { get; set; }
         public DateTime? Insert_ServerDateTime { get; set; }
         public DateTime? Update_ServerDateTime { get; set; }
         public DateTime? EditOperationDate { get; set; }
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
         public long ProcessNo { get; set; }
         public DateTime? OperationDate { get; set; }
         public long? Item_Category_Id { get; set; }

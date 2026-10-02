@@ -36,7 +36,7 @@ namespace AccountModelsLib.Models
 
 
         //public string Account_Code { get; set; }
-        //public int? Currency_Id { get; set; }
+        //public long? Currency_Id { get; set; }
         //public int? Static_Flage { get; set; }
         //public int? General_Customer_Flage { get; set; }
         //public string Govern_ListName { get; set; }
@@ -49,12 +49,12 @@ namespace AccountModelsLib.Models
 
 
         //public DateTime? OperationDate { get; set; }
-        //public int? User_Id { get; set; }
-        //public int? Branch_Id { get; set; }
+        //public long? User_Id { get; set; }
+        //public long? Branch_Id { get; set; }
         //public DateTime? Insert_ServerDateTime { get; set; }
         //public DateTime? Update_ServerDateTime { get; set; }
         //public DateTime? EditOperationDate { get; set; }
-        //public int? Edit_User_Id { get; set; }
+        //public long? Edit_User_Id { get; set; }
         //public string ContactPerson { get; set; }
         //public long? ProcessNo { get; set; }
 

@@ -169,7 +169,7 @@ namespace AccountModelsLib.Models
             //cwd.CarsWorkOrdersId  = dp.    ;
             //cwd.Order_PurshingId = dp.    ;
 
-            detailes_Purshing.Item_Id = itm.id;
+            detailes_Purshing.Item_Id = itm.Id;
             detailes_Purshing.Unit_item_Table_Id = 0;
             detailes_Purshing.Item_Name = itm.ItemName_OnInvoice;
             //detailes_Purshing.Item_Name = carsWorkOrdersRequestedDetail.Specification;

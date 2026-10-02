@@ -14,7 +14,7 @@ namespace AccountModelsLib
         DataSet ds = new DataSet();
         operations opp = new operations();
         //updateed in 25 / 1/ 07
-        public void insertinto(int Currency_id, DateTime dt, decimal total, decimal commisition, decimal nuTaxSales, decimal nuATS05, decimal taxsal, decimal dtsos, decimal nettotal, int custid, long invoiceid, string notes, int Invoice_Type, decimal DAMGHAT)
+        public void insertinto(long Currency_Id, DateTime dt, decimal total, decimal commisition, decimal nuTaxSales, decimal nuATS05, decimal taxsal, decimal dtsos, decimal nettotal, long custid, long invoiceid, string notes, int Invoice_Type, decimal DAMGHAT)
         {
             int Excp =0;
             long ProcessNo = Common.Make_AccountsProcessNo(ref Excp, ref opp, "Invoices_List_Reverse");
@@ -24,7 +24,7 @@ namespace AccountModelsLib
              
             string dt_ = operations.dateFormat(dt);
             string mysql = " insert into Invoices_List(ProcessNo,Currency_id,Invoice_Date,total,commission,TaxSales10_Value,ATS05_Value,TaxSales10,ATS05,net_total,Customer_Id,Invoice_Id,Notes,Invoice_Type,DAMGHAT) ";
-            mysql = mysql + " values (" + ProcessNo + "," + Currency_id + ",'" + operations.dateFormat(dt) + "'," + nettotal + "," + commisition + "," + taxsal + "," + dtsos + "," + nuTaxSales + "," + nuATS05 + "," + total + "," + custid + "," + invoiceid + ",'" + notes + "'," + Invoice_Type + "," + DAMGHAT + ")";
+            mysql = mysql + " values (" + ProcessNo + "," + Currency_Id + ",'" + operations.dateFormat(dt) + "'," + nettotal + "," + commisition + "," + taxsal + "," + dtsos + "," + nuTaxSales + "," + nuATS05 + "," + total + "," + custid + "," + invoiceid + ",'" + notes + "'," + Invoice_Type + "," + DAMGHAT + ")";
             long InvoiceListTableId = opp.Insert_me_Return_Last_Identify(mysql, ref Excp);
 
             CustomersAccountCLS ca = new CustomersAccountCLS();
@@ -32,14 +32,14 @@ namespace AccountModelsLib
 
 
         }
-        public void updateinvoice(ref int Excp, decimal Invoice_Net_Total_Old, int Currency_id, DateTime dt, decimal total, decimal commisition, decimal taxsal, decimal dtsos, decimal nettotal, int custid, int invoiceid, string notes, int Customer_id)
+        public void updateinvoice(ref int Excp, decimal Invoice_Net_Total_Old, long Currency_Id, DateTime dt, decimal total, decimal commisition, decimal taxsal, decimal dtsos, decimal nettotal, long custid, long invoiceid, string notes, long Customer_id)
         {
             try
             {
                 ArrayList arr = new ArrayList();
                 string mysql = "";
 
-                mysql = "update Invoices_List set Currency_id= " + Currency_id + ",Invoice_Date='" + operations.dateFormat(dt) + "',total=" + total + " ,commission=" + commisition + " ,TaxSales10_Value=" + taxsal + ",ATS05_Value=" + dtsos + " ,net_total=" + nettotal + ",Customer_Id=" + custid + ",Notes='" + notes + "' where id=" + invoiceid;
+                mysql = "update Invoices_List set Currency_id= " + Currency_Id + ",Invoice_Date='" + operations.dateFormat(dt) + "',total=" + total + " ,commission=" + commisition + " ,TaxSales10_Value=" + taxsal + ",ATS05_Value=" + dtsos + " ,net_total=" + nettotal + ",Customer_Id=" + custid + ",Notes='" + notes + "' where id=" + invoiceid;
                 arr.Add(mysql);
 
                 decimal Invoice_NetTotal_Diff = Invoice_Net_Total_Old - nettotal;

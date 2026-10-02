@@ -241,7 +241,7 @@ namespace AccountModelsLib.Models
                 Items itmSearch = imcls.GetItemByItemCode(ItemCode);
                 if (itmSearch != null)
                 {
-                    long Item_Id = itmSearch.id;
+                    long Item_Id = itmSearch.Id;
                     itmAccepted.Item_Id = Item_Id;
 
                     opp.db.Entry(itmAccepted).State = EntityState.Modified;
@@ -261,7 +261,7 @@ namespace AccountModelsLib.Models
                 }
                 if (Excp == 0)
                 {
-                    long Item_Id = item.id;
+                    long Item_Id = item.Id;
                     itmAccepted.Item_Id = Item_Id;
                     itmAccepted.Is_SendToERP = 1;
 

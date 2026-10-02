@@ -300,7 +300,7 @@ namespace AccountModelsLib
                 //////    Excp = 0;
 
                 //////    int Transaction_Type = 1;
-                //////    int Box_Id = mt.GetStaticBank_ID();// int.Parse(ot.banks_List1.cmbBankType.SelectedValue.ToString());
+                //////    long Box_Id = mt.GetStaticBank_ID();// int.Parse(ot.banks_List1.cmbBankType.SelectedValue.ToString());
 
                 //////    decimal Box_Balance = 0;
                 //////    string Order_No = mt.Make_New_Order_No(ref Excp, Transaction_Type).ToString();
@@ -338,7 +338,7 @@ namespace AccountModelsLib
                 //////    Excp = 0;
 
                 //////    int Transaction_Type = 1;
-                //////    int Box_Id = int.Parse(ot.banks_List1.cmbBankType.SelectedValue.ToString());
+                //////    long Box_Id = int.Parse(ot.banks_List1.cmbBankType.SelectedValue.ToString());
 
                 //////    decimal Box_Balance = 0;
                 //////    string Order_No = mt.Make_New_Order_No(ref Excp, Transaction_Type).ToString();
@@ -377,7 +377,7 @@ namespace AccountModelsLib
                 if (Common.IsSetCustomers_AccountsForInvoice == 1)
                 {
                     CustomersAccountCLS ca = new CustomersAccountCLS();
-                    ca.Set_Customer_Balance_Invoice(ref Excp, ref opp, (int)invL_O.invL.Customer_Id, invL_O.invL.Id, invL_O.invL.Net_Total ?? 0, invL_O.invL.Notes);
+                    ca.Set_Customer_Balance_Invoice(ref Excp, ref opp, (long)invL_O.invL.Customer_Id, invL_O.invL.Id, invL_O.invL.Net_Total ?? 0, invL_O.invL.Notes);
 
                     //«‰‘«¡ «·ﬁÌœ
                     Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
@@ -397,7 +397,7 @@ namespace AccountModelsLib
                 {
                     if (Common.MakeOrderMoneyFromInvoiceAutomaticWithoutForm == 1)
                     {
-                        int Box_Id = invL_O.invL.BanksId??0;
+                        long Box_Id = invL_O.invL.BanksId??0;
                         
 
                         //, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId
@@ -422,7 +422,7 @@ namespace AccountModelsLib
                 {
                     if (Common.MakeOrderMoneyFromInvoiceAutomaticWithoutForm == 1)
                     {
-                        int Box_Id = 0;
+                        long Box_Id = 0;
                         Money_Transaction_BoxOrderReportCLS mo = new Money_Transaction_BoxOrderReportCLS();
 
                         //, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId
@@ -642,7 +642,7 @@ namespace AccountModelsLib
             //PaidValueFromMarket, RestValue
 
             long Invoice_List_Table_Id = invL_O.invL.Id;
-            // DateTime Invoice_Date, decimal InvoiveTotal, decimal NetInvoiceTotal, decimal Commision, decimal CommissionValue, string PolicaNo, string TroodContainerNo, int Make_Order, decimal Invoice_Net_Total_Old, decimal Invoice_Total_Old, decimal Invoice_Total_PriceWithoutTax_Old, decimal ATS05, decimal TaxSales10, decimal CustomerAccountAfter, int Currency_Id, string Notes, decimal AnotherPayment, long Salesman_Id, int IS_Make_Sarf_Item_BalanceFromInvoice, int Is_InvoiceKta3y
+            // DateTime Invoice_Date, decimal InvoiveTotal, decimal NetInvoiceTotal, decimal Commision, decimal CommissionValue, string PolicaNo, string TroodContainerNo, int Make_Order, decimal Invoice_Net_Total_Old, decimal Invoice_Total_Old, decimal Invoice_Total_PriceWithoutTax_Old, decimal ATS05, decimal TaxSales10, decimal CustomerAccountAfter, long Currency_Id, string Notes, decimal AnotherPayment, long Salesman_Id, int IS_Make_Sarf_Item_BalanceFromInvoice, int Is_InvoiceKta3y
 
             InvoiceDataSetCLS ids = new InvoiceDataSetCLS();
             DataSet New_Items_ds_Add = new DataSet();
@@ -735,6 +735,9 @@ namespace AccountModelsLib
 
                             mysql = " UPDATE Unit_item SET Full_qua =Full_qua - " + Larg_Qnty + ", D_Qua =D_Qua - " + Small_Qnty + ", Item_No =Item_No - " + Qnty_Another + " WHERE (id = " + invD_O.invDlst[x].Unit_Item_Table_Id + ") ";
                             opp.insert_me(mysql);
+                            // «·ﬂ„Ì… «·„Ã«‰Ì… ··”ÿ— «·ÃœÌœ  ıŒ’„ ﬂ„« ›Ì «·≈‰‘«¡ «·√Ê· ÊÌı—Ã⁄Â« ›—⁄ «·Õ–›
+                            mysql = " UPDATE Unit_item SET Full_qua =Full_qua - " + (invD_O.invDlst[x].LargItemsQnty_Free ?? 0) + ", D_Qua =D_Qua - " + (invD_O.invDlst[x].SmallItemsQnty_Free ?? 0) + ", Item_No =Item_No - " + (invD_O.invDlst[x].Item_No_Free ?? 0) + " WHERE (id = " + invD_O.invDlst[x].Unit_Item_Table_Id + ") ";
+                            opp.insert_me(mysql);
                             // Common.SetBalanceWithExpireDate_Tash3ela(ref opp, 2, Item_Id, Unit_Item_Table_Id, Item_Expire_Date, Tash3ela, Larg_Qnty, Small_Qnty, Qnty_Another, LargItemsQnty_Free, SmallItemsQnty_Free, Item_No_Free);
                             //CommonAccounts.SetBalanceWithExpireDate_Tash3ela_Invoice(ref opp, 2, invd.Unit_Item_ExpireDate_Id, invd.Invoices_Details_Id, (long)invd.Item_Id, (long)invd.Unit_Item_Table_Id, invd.Item_Expire_Date, invd.Tash3ela, Larg_Qnty, Small_Qnty, Qnty_Another, invd.LargItemsQnty_Free, invd.SmallItemsQnty_Free, invd.Item_No_Free, OLD_Larg_Qnty, OLD_Small_Qnty, OLD_Item_No);
                             Larg_Qnty = Larg_Qnty * -1;
@@ -761,6 +764,8 @@ namespace AccountModelsLib
                     }
                     else if (invD_O.invDlst[x].Item_ProcessedFlage.ToString() == "-1")
                     {
+                        //  ’›Ì— «·ﬁÌ„ «·ﬁœÌ„…: «·„ €Ì—«  „⁄—Û¯›… Œ«—Ã «·Õ·ﬁ… ›·«   ”—» ﬁÌ„… ”ÿ— ”«»ﬁ ≈·Ï Â–« «·”ÿ—
+                        OLD_Larg_Qnty = 0; OLD_Small_Qnty = 0; OLD_Item_No = 0;
                         string mysql_Old = "Select * from Invoices_Details Where Id=" + invD_O.invDlst[x].Id + "";
                         DataSet dsN = opp.return_dataset(mysql_Old);
                         if (dsN.Tables[0].Rows.Count > 0)
@@ -822,6 +827,10 @@ namespace AccountModelsLib
 
                             //«·»Ê‰’
                             mysql = " UPDATE Unit_item SET Full_qua =Full_qua - " + invD_O.invDlst[x].LargItemsQnty_Free + ", D_Qua =D_Qua - " + invD_O.invDlst[x].SmallItemsQnty_Free + ", Item_No =Item_No - " + invD_O.invDlst[x].Item_No_Free + " WHERE (id = " + invD_O.invDlst[x].Unit_Item_Table_Id + ") ";
+                            opp.insert_me(mysql);
+
+                            // ≈—Ã«⁄ «·ﬂ„Ì… «·ﬁœÌ„… (Ê›ÌÂ« „Ã«‰ÌÂ«: OLD_* = «·ﬂ„Ì… + «·„Ã«‰Ï) Õ Ï Ìıÿ—Õ «·›—ﬁ ›ﬁÿ° Ê≈·« ‰ﬁ’ «·—’Ìœ „— Ì‰
+                            mysql = " UPDATE Unit_item SET Full_qua =Full_qua + " + OLD_Larg_Qnty + ", D_Qua =D_Qua + " + OLD_Small_Qnty + ", Item_No =Item_No + " + OLD_Item_No + " WHERE (id = " + invD_O.invDlst[x].Unit_Item_Table_Id + ") ";
                             opp.insert_me(mysql);
 
                             // Common.SetBalanceWithExpireDate_Tash3ela(ref opp, 2, Item_Id, Unit_Item_Table_Id, Item_Expire_Date, Tash3ela, Larg_Qnty, Small_Qnty, Qnty_Another, LargItemsQnty_Free, SmallItemsQnty_Free, Item_No_Free);
@@ -993,7 +1002,7 @@ namespace AccountModelsLib
                     bool MakeOrderOk = false;
                     if (New_Items_ds_Add.Tables[0].Rows.Count > 0)
                     {
-                        oo.Make_Order_From_EditInvoive_Details(ref Excp, ref mysql_Arr, ref opp, ref arr_Order_Purshing_Id_Automatic, ref MakeOrderOk, New_Items_ds_Add.Tables[0], Invoice_List_Table_Id, (int)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „»Ì⁄« ");
+                        oo.Make_Order_From_EditInvoive_Details(ref Excp, ref mysql_Arr, ref opp, ref arr_Order_Purshing_Id_Automatic, ref MakeOrderOk, New_Items_ds_Add.Tables[0], Invoice_List_Table_Id, (long)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „»Ì⁄« ");
                         if (Excp > 0)
                         {
                             opp.Rollback();
@@ -1011,7 +1020,7 @@ namespace AccountModelsLib
                     //////////////////„— Ã⁄ ’—›
                     if (New_Items_ds_Minus.Tables[0].Rows.Count > 0)
                     {
-                        oo.Make_Order_From_Edit_Invoices_Details_Reverse(ref Excp, ref opp, ref mysql_Arr, New_Items_ds_Minus.Tables[0], Invoice_List_Table_Id, (int)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „»Ì⁄« ");
+                        oo.Make_Order_From_Edit_Invoices_Details_Reverse(ref Excp, ref opp, ref mysql_Arr, New_Items_ds_Minus.Tables[0], Invoice_List_Table_Id, (long)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „»Ì⁄« ");
                         if (Excp > 0)
                         {
                             opp.Rollback();
@@ -1078,7 +1087,7 @@ namespace AccountModelsLib
 
                     CustomersAccountCLS ca = new CustomersAccountCLS();
                     ca.ProcessNo = invL_O.invL.ProcessNo ?? 0;
-                    ca.Updatet_Customer_BalanceWithEditInvoice(ref Excp, ref opp, invL_O.invL.Invoice_Date.Value, (int)invL_O.invL.Customer_Id, Invoice_List_Table_Id, invL_O.invL.Net_Total ?? 0, Invoice_NetTotal_Diff, invL_O.invL.Notes);
+                    ca.Updatet_Customer_BalanceWithEditInvoice(ref Excp, ref opp, invL_O.invL.Invoice_Date.Value, (long)invL_O.invL.Customer_Id, Invoice_List_Table_Id, invL_O.invL.Net_Total ?? 0, Invoice_NetTotal_Diff, invL_O.invL.Notes);
 
 
                     //«‰‘«¡ «·ﬁÌœ
@@ -1095,7 +1104,7 @@ namespace AccountModelsLib
 
                             decimal PaidValueFromMarket = invL_O.invL.Net_Total ?? 0;
                             decimal RestValue = 0;
-                            int Box_Id = 0;
+                            long Box_Id = 0;
                             Money_Transaction_BoxOrderReportCLS mo = new Money_Transaction_BoxOrderReportCLS();
                             //, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId
 
@@ -1180,7 +1189,7 @@ namespace AccountModelsLib
             try
             {
                 long Invoice_List_Table_Id = invL_O.invL.Id;
-            // DateTime Invoice_Date, decimal InvoiveTotal, decimal NetInvoiceTotal, decimal Commision, decimal CommissionValue, string PolicaNo, string TroodContainerNo, int Make_Order, decimal Invoice_Net_Total_Old, decimal Invoice_Total_Old, decimal Invoice_Total_PriceWithoutTax_Old, decimal ATS05, decimal TaxSales10, decimal CustomerAccountAfter, int Currency_Id, string Notes, decimal AnotherPayment, long Salesman_Id, int IS_Make_Sarf_Item_BalanceFromInvoice, int Is_InvoiceKta3y
+            // DateTime Invoice_Date, decimal InvoiveTotal, decimal NetInvoiceTotal, decimal Commision, decimal CommissionValue, string PolicaNo, string TroodContainerNo, int Make_Order, decimal Invoice_Net_Total_Old, decimal Invoice_Total_Old, decimal Invoice_Total_PriceWithoutTax_Old, decimal ATS05, decimal TaxSales10, decimal CustomerAccountAfter, long Currency_Id, string Notes, decimal AnotherPayment, long Salesman_Id, int IS_Make_Sarf_Item_BalanceFromInvoice, int Is_InvoiceKta3y
 
             InvoiceDataSetCLS ids = new InvoiceDataSetCLS();
             DataSet New_Items_ds_Add = new DataSet();
@@ -1265,7 +1274,7 @@ namespace AccountModelsLib
                     bool MakeOrderOk = false;
                     if (New_Items_ds_Add.Tables[0].Rows.Count > 0)
                     {
-                        oo.Make_Order_From_EditInvoive_Details(ref Excp, ref mysql_Arr, ref opp, ref arr_Order_Purshing_Id_Automatic, ref MakeOrderOk, New_Items_ds_Add.Tables[0], Invoice_List_Table_Id, (int)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „»Ì⁄« ");
+                        oo.Make_Order_From_EditInvoive_Details(ref Excp, ref mysql_Arr, ref opp, ref arr_Order_Purshing_Id_Automatic, ref MakeOrderOk, New_Items_ds_Add.Tables[0], Invoice_List_Table_Id, (long)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „»Ì⁄« ");
                         if (Excp > 0)
                         {
                             opp.Rollback();
@@ -1283,7 +1292,7 @@ namespace AccountModelsLib
                     //////////////////„— Ã⁄ ’—›
                     if (New_Items_ds_Minus.Tables[0].Rows.Count > 0)
                     {
-                        oo.Make_Order_From_Edit_Invoices_Details_Reverse(ref Excp, ref opp, ref mysql_Arr, New_Items_ds_Minus.Tables[0], Invoice_List_Table_Id, (int)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „»Ì⁄« ");
+                        oo.Make_Order_From_Edit_Invoices_Details_Reverse(ref Excp, ref opp, ref mysql_Arr, New_Items_ds_Minus.Tables[0], Invoice_List_Table_Id, (long)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „»Ì⁄« ");
                         if (Excp > 0)
                         {
                             opp.Rollback();
@@ -1309,7 +1318,7 @@ namespace AccountModelsLib
 
                     CustomersAccountCLS ca = new CustomersAccountCLS();
                     ca.ProcessNo = invL_O.invL.ProcessNo ?? 0;
-                    ca.Updatet_Customer_BalanceWithEditInvoice(ref Excp, ref opp, invL_O.invL.Invoice_Date.Value, (int)invL_O.invL.Customer_Id, Invoice_List_Table_Id, invL_O.invL.Net_Total ?? 0, Invoice_NetTotal_Diff, invL_O.invL.Notes);
+                    ca.Updatet_Customer_BalanceWithEditInvoice(ref Excp, ref opp, invL_O.invL.Invoice_Date.Value, (long)invL_O.invL.Customer_Id, Invoice_List_Table_Id, invL_O.invL.Net_Total ?? 0, Invoice_NetTotal_Diff, invL_O.invL.Notes);
 
 
                     //«‰‘«¡ «·ﬁÌœ
@@ -1326,7 +1335,7 @@ namespace AccountModelsLib
 
                             decimal PaidValueFromMarket = invL_O.invL.Net_Total ?? 0;
                             decimal RestValue = 0;
-                            int Box_Id = 0;
+                            long Box_Id = 0;
                             Money_Transaction_BoxOrderReportCLS mo = new Money_Transaction_BoxOrderReportCLS();
                             //, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId
 
@@ -1498,7 +1507,7 @@ namespace AccountModelsLib
                 invL.Notes = invL.Notes + " " + Notes;
                 //}
                 //ca.Set_Customer_Balance_Invoice(ref Excp, ref opp, (int)invL.Customer_Id, invL.Id, invL.Net_Total ?? 0, invL.Notes);
-                ca.Set_Customer_BalanceInvoiceReverse(ref Excp, ref opp, (int)invL.Customer_Id, invL.Id, invL.Net_Total ?? 0, invL.Notes);
+                ca.Set_Customer_BalanceInvoiceReverse(ref Excp, ref opp, (long)invL.Customer_Id, invL.Id, invL.Net_Total ?? 0, invL.Notes);
                 
                 if (Excp == 1)
                 {

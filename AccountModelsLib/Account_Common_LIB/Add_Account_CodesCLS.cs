@@ -15,7 +15,7 @@ namespace AccountModelsLib
 
         }
 
-        public void AddNewAccount(ref int Excp, ref string Msg, Submain_AccountCLS sa, ref long Submain_Account_Id, ref int Account_Branch_Id, ref string New__Submain_Account_No, bool IS_Have_Child_Account)
+        public void AddNewAccount(ref int Excp, ref string Msg, Submain_AccountCLS sa, ref long Submain_Account_Id, ref long Account_Branch_Id, ref string New__Submain_Account_No, bool IS_Have_Child_Account)
         {
 
             Excp = 0;

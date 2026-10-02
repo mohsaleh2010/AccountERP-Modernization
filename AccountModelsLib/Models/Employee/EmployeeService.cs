@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
- 
+
 
 namespace AccountModelsLib.Services
 {
@@ -27,10 +27,10 @@ namespace AccountModelsLib.Services
         /// </summary>
         public async Task<List<Employee>> GetActiveEmployeesAsync()
         {
-             
+
             try
             {
-                List<Employee>  empList = await _opp.db.Employees
+                List<Employee> empList = await _opp.db.Employees
                                         .AsNoTracking()
                                         .Include(e => e.jobsList)
                                         .Where(e => e.active == 1 || e.active == null)
@@ -42,7 +42,7 @@ namespace AccountModelsLib.Services
             {
                 return new List<Employee>();
             }
-             
+
         }
 
         /// <summary>
@@ -120,37 +120,86 @@ namespace AccountModelsLib.Services
             }
             catch (Exception ee)
             {
-                 
+
+            }
+        }
+        public void AddNewEmployee(ref int Excp, ref string Msg, ref operations opp, Employee emp, bool IsUse_SubAccount_Id_Select)
+        {
+            opp.BeginTransaction();
+            //operations opp = new operations(2);
+
+
+            try
+            {
+                Excp = 0;
+                Msg = "";
+                string Account_Code = "";
+                Sub_Account acc = new Sub_Account();
+                int Account_Type_Value = Common.Employee_Account_Type;
+                long Currency_Id = 1;
+                long Account_Branch_Id = Common.Branch_Id;
+                long New_Submain_Account_Id = -1;
+                //if(cs.General_Customer_Flage==1)
+                //{
+                //    acc.sa.get_TreeToPrint
+                //}
+                //acc.cuCls.cs = cs;
+                acc.Add_AccountSupplierCustomerOther(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, ref Account_Code, Account_Type_Value, emp.name, Account_Branch_Id, Common.Entry_Currency_Id);
+
+                //cs.Id = acc.New_Account_Id;
+                //cs.SubAccount_Id = New_Submain_Account_Id;
+                if (Excp == 0)
+                {
+                    opp.Commit();
+                }
+                else
+                {
+                    opp.Rollback();
+
+                }
+            }
+            catch (Exception ee)
+            {
+                opp.Rollback();
+                Excp = 1;
+                Msg = ee.Message;
             }
         }
         public async Task SaveRangeAsync(List<Employee> employees)
         {
             try
             {
+                int Excp = 0;
+                string Msg = "";
+                bool IsUse_SubAccount_Id_Select = false;
                 // إنشاء سياق جديد ونظيف خصيصاً لعملية الحفظ ينتهي فور الخروج من الـ using
-                using (var opp = new operations()) // أو new operations().db حسب طريقة تعريف كائن الـ DbContext لديك
+                operations opp = new operations(); // أو new operations().db حسب طريقة تعريف كائن الـ DbContext لديك
+
+                foreach (var item in employees)
                 {
-                    foreach (var item in employees)
+                    item.active = 1;
+
+                    if (item.Id == 0)
                     {
-                        item.active = 1;
+                        // 1. إضافة الموظف الجديد
+                        item.Id = CallSnowflakeIdGenerate.GenerateNewId();
+                        //opp.db.Employees.Add(item);
 
-                        if (item.Id == 0)
-                        {
-                            // 1. إضافة الموظف الجديد
-                            item.Id = CallSnowflakeIdGenerate.GenerateNewId();
-                            opp.db.Employees.Add(item);
-                        }
-                        else
-                        {
-                            // 2. تحديث الموظف فقط وتغيير حالته إلى Modified
-                            // استخدام Entry يعلم EF Core بتحديث جدول الموظف فقط دون مساس الكائنات المرتبطة (مثل jobsList)
-                            opp.db.Entry(item).State = EntityState.Modified;
-                        }
+                        AddNewEmployee(ref Excp, ref Msg, ref opp, item, IsUse_SubAccount_Id_Select);
+
                     }
-
-                    // حفظ جميع التغييرات دفعة واحدة
-                    await opp.db.SaveChangesAsync();
+                    else
+                    {
+                        // 2. تحديث الموظف فقط وتغيير حالته إلى Modified
+                        // استخدام Entry يعلم EF Core بتحديث جدول الموظف فقط دون مساس الكائنات المرتبطة (مثل jobsList)
+                        opp.db.Entry(item).State = EntityState.Modified;
+                        await opp.db.SaveChangesAsync();
+                    }
                 }
+
+                // حفظ جميع التغييرات دفعة واحدة
+
+
             }
             catch (Exception ee)
             {

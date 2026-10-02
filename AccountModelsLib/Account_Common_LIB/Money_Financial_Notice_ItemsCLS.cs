@@ -69,7 +69,7 @@ namespace AccountModelsLib
             DataTable dt = opp.return_DataTable(mysql);
             return dt;
         }
-        public void Add_New_Financial_Notice(ref int Excp, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, int Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_, decimal Balance_Before   , long Compete_SubAccount_Id, decimal Item_Price, decimal Item_Qnty, long Item_Id,long Unit_Item_Id,long Store_Id, string Item_Name)
+        public void Add_New_Financial_Notice(ref int Excp, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, long Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_, decimal Balance_Before   , long Compete_SubAccount_Id, decimal Item_Price, decimal Item_Qnty, long Item_Id,long Unit_Item_Id,long Store_Id, string Item_Name)
         {
             operations opp = new operations(1);
             Add_New_Financial_Notice(ref Excp, ref opp, OrderNo, OrderDate, Transaction_Type, Transaction_TypeStr, Order_Value, Order_Value_Str, Currency_Id, Notes, Customer_Id, Supplier_Id, Account_Id, Account_Type, SubAccount_Id, Account_Selection_, Balance_Before, Compete_SubAccount_Id, Item_Price, Item_Qnty, Item_Id, Unit_Item_Id, Store_Id ,Item_Name);
@@ -82,7 +82,7 @@ namespace AccountModelsLib
                 opp.Rollback();
             }
         }
-        void Add_New_Financial_Notice(ref int Excp, ref operations opp, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, int Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_,decimal  Balance_Before, long Compete_SubAccount_Id, decimal Item_Price, decimal Item_Qnty, long Item_Id, long Unit_Item_Id,long Store_Id, string Item_Name)
+        void Add_New_Financial_Notice(ref int Excp, ref operations opp, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, long Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_,decimal  Balance_Before, long Compete_SubAccount_Id, decimal Item_Price, decimal Item_Qnty, long Item_Id, long Unit_Item_Id,long Store_Id, string Item_Name)
         {
 
             //Item_Price,Item_Qnty,Item_Id,Item_Name
@@ -255,7 +255,7 @@ namespace AccountModelsLib
             }
 
         }
-        public void Add_New_Financial_Notice_(ref int Excp, ref long Money_Financial_Notice_Items_Id, DataTable dtItems, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, int Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_, decimal Balance_Before  , long Compete_SubAccount_Id)
+        public void Add_New_Financial_Notice_(ref int Excp, ref long Money_Financial_Notice_Items_Id, DataTable dtItems, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, long Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_, decimal Balance_Before  , long Compete_SubAccount_Id)
         {
             operations opp = new operations(1);
             Add_New_Financial_Notice_(ref Excp, ref Money_Financial_Notice_Items_Id, ref opp, dtItems, OrderNo, OrderDate, Transaction_Type, Transaction_TypeStr, Order_Value, Order_Value_Str, Currency_Id, Notes, Customer_Id, Supplier_Id, Account_Id, Account_Type, SubAccount_Id, Account_Selection_, Balance_Before, Compete_SubAccount_Id);
@@ -269,7 +269,7 @@ namespace AccountModelsLib
             }
         }
 
-        void Add_New_Financial_Notice_(ref int Excp, ref long Money_Financial_Notice_Items_Id, ref operations opp, DataTable dtItems, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, int Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_, decimal Balance_Before  , long Compete_SubAccount_Id)
+        void Add_New_Financial_Notice_(ref int Excp, ref long Money_Financial_Notice_Items_Id, ref operations opp, DataTable dtItems, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, long Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_, decimal Balance_Before  , long Compete_SubAccount_Id)
         {
 
             //Item_Price,Item_Qnty,Item_Id,Item_Name
@@ -831,7 +831,7 @@ namespace AccountModelsLib
             }
         }
 */
-        public void Edit_Financial_Notice(ref int Excp, DataTable dtOld, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, int Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_, decimal Balance_Before  , long Compete_SubAccount_Id, decimal Item_Price, decimal Item_Qnty, long Item_Id, string Item_Name)
+        public void Edit_Financial_Notice(ref int Excp, DataTable dtOld, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, long Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_, decimal Balance_Before  , long Compete_SubAccount_Id, decimal Item_Price, decimal Item_Qnty, long Item_Id, string Item_Name)
         {
             operations opp = new operations(1);
             Delete_Financial_Notice(ref Excp, dtOld, ref opp);
@@ -852,7 +852,7 @@ namespace AccountModelsLib
 
         }
 
-        public void Edit_Financial_Notice_(ref int Excp, ref long Money_Financial_Notice_Items_Id, DataTable dtOld, DataTable dtItems, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, int Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_, decimal Balance_Before  , long Compete_SubAccount_Id)
+        public void Edit_Financial_Notice_(ref int Excp, ref long Money_Financial_Notice_Items_Id, DataTable dtOld, DataTable dtItems, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, long Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_, decimal Balance_Before  , long Compete_SubAccount_Id)
         {
             operations opp = new operations(1);
             Delete_Financial_Notice_(ref Excp, ref opp, dtOld);

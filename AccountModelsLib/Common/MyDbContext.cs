@@ -4,9 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking; // 👈 إضافة هامة للتعرف على EntityEntry
 using System;
 using System.Collections.Generic;
- 
 using System.Data.Common;
- 
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -17,10 +15,8 @@ namespace AccountModelsLib
     public class My_DbContext : DbContext
     {
         private readonly DataDictionaryDbSyncLogsEFCls _syncLogsHelper = new DataDictionaryDbSyncLogsEFCls();
-        
+         
         public static string ConnStr { get; set; } = "";
-   
-
         // 1. المشيد الافتراضي بدون برامترات
         public My_DbContext()
         {
@@ -117,7 +113,7 @@ namespace AccountModelsLib
         }
 
         // حفظ التغييرات بشكل غير متزامن
-        
+
         /*
         public My_DbContext() : base(ConnStr)
         {
@@ -153,6 +149,8 @@ namespace AccountModelsLib
             return await SaveChangesAsync(CancellationToken.None);
         }
         */
+
+        /*
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             try
@@ -202,8 +200,7 @@ namespace AccountModelsLib
                     int result = base.SaveChanges();
                     _syncLogsHelper.CreateSyncLogs(pendingEntries, this);
                     base.SaveChanges();
-                    //GenerateSyncLogs();
-                    //base.SaveChanges();
+                    
                     return result;
                 }
                 else
@@ -223,6 +220,103 @@ namespace AccountModelsLib
                 GetEntityWhenError();
                 AccountModelsLib.operations.DataDictionaryLogerException(ee);
                 //return 0;
+                throw;
+            }
+        }
+
+        */
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            // صمام الأمان العام: إذا كانت المزامنة معطلة، احفظ مباشرة دون تتبع
+            if (Common.Is_Save_DataDictionaryDbSyncLogs != 1)
+            {
+                return await base.SaveChangesAsync(cancellationToken);
+            }
+
+            try
+            {
+                if (Common.Use_Auto_Identity_Column == 1)
+                {
+                    // 1. قراءة التغيرات قبل الحفظ (لأن الـ Identity لم يُولد بعد)
+                    var pendingEntries = _syncLogsHelper.GetPendingEntries(this);
+
+                    // 2. الحفظ الأول لتوليد أرقام الـ Identity الفعلية من قاعدة البيانات
+                    int result = await base.SaveChangesAsync(cancellationToken);
+
+                    // 3. إنشاء أو دمج سجلات المزامنة باستخدام الطريقة الذكية الموحدة
+                    _syncLogsHelper.CreateSyncLogs(pendingEntries, this);
+
+                    // 4. الحفظ الثاني لحفظ سجلات المزامنة
+                    await base.SaveChangesAsync(cancellationToken);
+
+                    return result;
+                }
+                else
+                {
+                    // 1. توليد وإسناد الـ Snowflake ID لكل الكائنات الجديدة في الـ Memory
+                    _syncLogsHelper.AssignSnowflakeIdsToNewEntities(this);
+
+                    // 2. قراءة التغيرات بعد توفر الـ IDs في الذاكرة
+                    var pendingEntries = _syncLogsHelper.GetPendingEntries(this);
+
+                    // 3. إنشاء أو دمج سجلات المزامنة باستخدام الطريقة الذكية الموحدة
+                    _syncLogsHelper.CreateSyncLogs(pendingEntries, this);
+
+                    // 4. حفظ البيانات وسجلات المزامنة معاً دفعة واحدة (Transaction واحدة)
+                    return await base.SaveChangesAsync(cancellationToken);
+                }
+            }
+            catch (Exception ee)
+            {
+                AccountModelsLib.operations.DataDictionaryLogerException(ee);
+                throw;
+            }
+        }
+        public override int SaveChanges()
+        {
+            // صمام الأمان العام: إذا كانت المزامنة معطلة، احفظ مباشرة دون تتبع
+            //if (Common.Is_Save_DataDictionaryDbSyncLogs != 1)
+            //{
+            //    return base.SaveChanges();
+            //}
+
+            try
+            {
+                if (Common.Use_Auto_Identity_Column == 1)
+                {
+                    // 1. قراءة التغيرات قبل الحفظ (لأن الـ Identity لم يُولد بعد)
+                    var pendingEntries = _syncLogsHelper.GetPendingEntries(this);
+
+                    // 2. الحفظ الأول لتوليد أرقام الـ Identity الفعلية من قاعدة البيانات
+                    int result = base.SaveChanges();
+
+                    // 3. إنشاء أو دمج سجلات المزامنة باستخدام الطريقة الذكية الموحدة
+                    _syncLogsHelper.CreateSyncLogs(pendingEntries, this);
+
+                    // 4. الحفظ الثاني لحفظ سجلات المزامنة
+                    base.SaveChanges();
+
+                    return result;
+                }
+                else
+                {
+                    // 1. توليد وإسناد الـ Snowflake ID لكل الكائنات الجديدة في الـ Memory
+                    _syncLogsHelper.AssignSnowflakeIdsToNewEntities(this);
+
+                    // 2. قراءة التغيرات بعد توفر الـ IDs في الذاكرة
+                    var pendingEntries = _syncLogsHelper.GetPendingEntries(this);
+
+                    // 3. إنشاء أو دمج سجلات المزامنة باستخدام الطريقة الذكية الموحدة
+                    _syncLogsHelper.CreateSyncLogs(pendingEntries, this);
+
+                    // 4. حفظ البيانات وسجلات المزامنة معاً دفعة واحدة (Transaction واحدة)
+                    return base.SaveChanges();
+                }
+            }
+            catch (Exception ee)
+            {
+                AccountModelsLib.operations.DataDictionaryLogerException(ee);
                 throw;
             }
         }
@@ -476,6 +570,11 @@ namespace AccountModelsLib
         public DbSet<Bills_Details> Bills_Details { get; set; }
         public DbSet<Bills_Details_Reverse> Bills_Details_Reverse { get; set; }
         public DbSet<Bills_List_Reverse> Bills_List_Reverse { get; set; }
+        public DbSet<RequestsDetail> RequestsDetails { get; set; }
+        public DbSet<CustomerOrder> CustomerOrders { get; set; }
+        public DbSet<CustomerOrderLine> CustomerOrderLines { get; set; }
+        public DbSet<CustomerOrderDeposit> CustomerOrderDeposits { get; set; }
+        public DbSet<CustomerOrderFulfillment> CustomerOrderFulfillments { get; set; }
 
         public DbSet<Gov_Country_List> Gov_Country_List { get; set; }
         public DbSet<Govern_Area_List> Govern_Area_List { get; set; }
@@ -500,6 +599,8 @@ namespace AccountModelsLib
         public DbSet<Machin_list> Machin_list { get; set; }
         public DbSet<ShipmentCompany> ShipmentCompany { get; set; }
         public DbSet<Customer_Supplier_Group> Customer_Supplier_Groups { get; set; }
+        public DbSet<Item_BarCodeSetting> Item_BarCodeSetting { get; set; }
+        public DbSet<Item_BarCodeSettingDefault> Item_BarCodeSettingDefault { get; set; }
 
 
         public DbSet<Order_Purshing> Order_Purshings { get; set; }
@@ -562,7 +663,8 @@ namespace AccountModelsLib
         public DbSet<CarsWorkOrdersItemReversedProcessedDetail> CarsWorkOrdersItemReversedProcessedDetails { get; set; }
         public DbSet<WorkOrderList> WorkOrderList  { get; set; }
         public DbSet<WorkOrderDetail> WorkOrderDetail  { get; set; }
-       
+        
+        public DbSet<SysConfig> SysConfig { get; set; }
         public DbSet<SysConfigMenus> SysConfigMenus { get; set; }
         //public DbSet<SysConfigs> SysConfigs { get; set; }
         public DbSet<SysConfigMenusPERMATIONS> SysConfigMenuPermission { get; set; }

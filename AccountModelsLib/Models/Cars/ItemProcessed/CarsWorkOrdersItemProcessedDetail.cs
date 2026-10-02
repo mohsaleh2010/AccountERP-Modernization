@@ -35,13 +35,13 @@ namespace AccountModelsLib.Models
         public long? CarsWorkOrdersDeliverItemBalancesId { get; set; }
         public long? CarsWorkOrdersDeliverDetailsId { get; set; }
         public decimal? Qnty { get; set; }
-        public string Invoice_Item_Name { get; set; }
-        public string Item_Name { get; set; }
+        public string? Invoice_Item_Name { get; set; }
+        public string? Item_Name { get; set; }
         public long? Store_Id { get; set; }
         public long? Unit_Id { get; set; }
-        public string UnitStr { get; set; }
-        public string ItemCode { get; set; }
-        public string Specification { get; set; }
+        public string? UnitStr { get; set; }
+        public string? ItemCode { get; set; }
+        public string? Specification { get; set; }
         public decimal? Larg_Qnty { get; set; }
         public decimal? Small_Qnty { get; set; }
         public decimal? Item_No { get; set; }
@@ -70,9 +70,9 @@ namespace AccountModelsLib.Models
         public decimal? Unit_CommissionRate { get; set; }
         public decimal? Net_Total_Item_Commission { get; set; }
         public decimal? ItemCommissionTotal { get; set; }
-        public string QntyStr { get; set; }
-        public string QntyStrColumn { get; set; }
-        public string Item_Notes { get; set; }
+        public string? QntyStr { get; set; }
+        public string? QntyStrColumn { get; set; }
+        public string? Item_Notes { get; set; }
        
 
         public long? StoreId { get; set; }
@@ -81,16 +81,16 @@ namespace AccountModelsLib.Models
         public int? Is_AddToInvoice { get; set; }
         public int? Item_DeletedFlage { get; set; }
         public int? Item_ProcessedFlage { get; set; }
-        public int? User_Id { get; set; }
-        public int? Branch_Id { get; set; }
+        public long? User_Id { get; set; }
+        public long? Branch_Id { get; set; }
         public DateTime? Insert_ServerDateTime { get; set; }
         public DateTime? Update_ServerDateTime { get; set; }
         public DateTime? EditOperationDate { get; set; }
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
         public long ProcessNo { get; set; }
         public DateTime? OperationDate { get; set; }
         public long? Item_Category_Id { get; set; }
-        public string Item_Category_Name { get; set; }
+        public string? Item_Category_Name { get; set; }
         public int? IsMasna3iatKhamat { get; set; }
 
 

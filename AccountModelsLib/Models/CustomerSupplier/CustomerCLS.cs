@@ -117,64 +117,16 @@ namespace AccountModelsLib.Models
                 }
 
                 opp.db.SaveChanges();
-                //    if (Common.Use_AutoNumeric_Customer_Id__With_Submain_Account_Id == 0)
-                //{
-                //    mysql = "INSERT INTO Customer(Id,General_Customer_Flage,Tax_No, code,Name, Address, Tel, Tel2, Mobile, E_Mail, Fax, Web_Site, Balance,Balance_Actual,SubAccount_Id,Customer_Type,Price_Type_List_ID,Group_Id,VisaNo,VisaPassword,Currency_Id,Account_Code,Active,ContactPerson,Ref_Cust_Supplier_Id)";
-                //    mysql += " VALUES(" + cs.SubAccount_Id + "," + cs.General_Customer_Flage + ",'" + cs.Tax_No + "','" + cs.Code + "','" + cs.Name + "','" + cs.Address + "','" + cs.Tel + "','" + cs.Tel2 + "','" + cs.Mobile + "','" + cs.E_Mail + "','" + cs.Fax + "','" + cs.Web_Site + "'," + cs.Balance + "," + cs.Balance + "    ," + cs.SubAccount_Id + "," + Common.Customer_Type + "," + cs.Price_Type_List_ID + "," + cs.Group_Id + ",'" + cs.VisaNo + "','" + cs.VisaPassword + "'," + cs.Currency_Id + ",'" + cs.Account_Code + "'," + cs.Active + ",'" + cs.ContactPerson + "'," + cs.Ref_Cust_Supplier_Id + " )";
-
-                //    opp.insert_me(mysql);
-                //    cs.Id = (long)cs.SubAccount_Id;
-
-                //    //opp.db.Customer.Add(cs);
-                //    //opp.db.SaveChanges();
-                //}
-                //else
-                //{
-                //    mysql = "INSERT INTO Customer(General_Customer_Flage,Tax_No, code,Name, Address, Tel, Tel2, Mobile, E_Mail, Fax, Web_Site, Balance,Balance_Actual,SubAccount_Id,Customer_Type,Price_Type_List_ID,Group_Id,VisaNo,VisaPassword,Currency_Id,Account_Code,Active,ContactPerson,Ref_Cust_Supplier_Id)";
-                //    mysql += " VALUES(" + cs.General_Customer_Flage + ",'" + cs.Tax_No + "','" + cs.Code + "','" + cs.Name + "','" + cs.Address + "','" + cs.Tel + "','" + cs.Tel2 + "','" + cs.Mobile + "','" + cs.E_Mail + "','" + cs.Fax + "','" + cs.Web_Site + "'," + cs.Balance + "," + cs.Balance + "    ," + cs.SubAccount_Id + "," + Common.Customer_Type + "," + cs.Price_Type_List_ID + "," + cs.Group_Id + ",'" + cs.VisaNo + "','" + cs.VisaPassword + "'," + cs.Currency_Id + ",'" + cs.Account_Code + "' ," + cs.Active + ",'" + cs.ContactPerson + "'," + cs.Ref_Cust_Supplier_Id + ")";
-                //    cs.Id = opp.Insert_me_Return_Last_Identify(mysql, ref Excp);
-
-                //    //opp.db.Customer.Add(cs);
-                //    //opp.db.SaveChanges();
-
-                //}
-
-
-                //update another values
-
-
-                //mysql = " Update Customer Set  CompanyName= '" + cs.CompanyName + "'  ";
-                //mysql = mysql + " , CompanyContactName= '" + cs.CompanyContactName + "'  ";
-                //mysql = mysql + " , CompanyContactData= '" + cs.CompanyContactData + "'  ";
-                //mysql = mysql + " , NationalId= '" + cs.NationalId + "'  ";
-                //mysql = mysql + " , PassportNo= '" + cs.PassportNo + "'  ";
-                //mysql = mysql + " , PostalNo= '" + cs.PostalNo + "'  ";
-                //mysql = mysql + " , Commercial_Register= '" + cs.Commercial_Register + "'  ";
-                //mysql = mysql + " , RegistrationDate= '" + operations.dateFormat(cs.RegistrationDate) + "'  ";
-                //mysql = mysql + " , Gov_Country_ListId=  " + cs.Gov_Country_ListId + "  ";
-                //mysql = mysql + " , Govern_Area_ListId=  " + cs.Govern_Area_ListId + "  ";
-                //mysql = mysql + " , Govern_ListId=  " + cs.Govern_ListId + "  ";
-                //mysql = mysql + " , Gov_City_ListId=  " + cs.Gov_City_ListId + "  ";
-                //mysql = mysql + " Where Id=" + cs.Id + "";
-                //opp.insert_me(mysql);
-
-
-
-
-                //// رصيد اول المدة
-                //mysql = " INSERT INTO Customers_Accounts (Customer_Id, Reference_Id,Reference_Type_Table_Id, Export,Import, Balance, Transaction_Type, Transaction_Date,Reference_Type) ";
-                //mysql += " VALUES(" +  Id + ",0," +  Id + ",0,0," +  Balance + ",2,'" + operations.dateFormat(dtDate.Value) + "',-7)";
-                //opp.insert_me(mysql);
 
 
 
                 FirstBalance_CLS ff = new FirstBalance_CLS();
-                int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(DateTime.Now);
+                long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(DateTime.Now);
                 ff.IsCheckLastLevel = true;
                 ff.Account_Customer_Type_ID = cs.Id;
                 ff.Account_Customer_Type_Value = Common.Customer_Account_Type;
 
-                ff.Save_FirstBalance(ref Excp, ref Msg,ref opp, (long)cs.SubAccount_Id, cs.Name, Year_Financial_Period_Id, Common.Branch_Id, (int)cs.Currency_Id, 0, 1, 1);
+                ff.Save_FirstBalance(ref Excp, ref Msg, ref opp, (long)cs.SubAccount_Id, cs.Name, Year_Financial_Period_Id, Common.Branch_Id, (int)cs.Currency_Id, 0, 1, 1);
 
 
             }
@@ -183,64 +135,64 @@ namespace AccountModelsLib.Models
                 UpdateCustomer(ref Excp, ref Msg, ref opp);
             }
         }
-        public long  InsertCustomer(ref int Excp, ref string Msg, ref operations opp,Submain_Account sa_)
+        public long InsertCustomer(ref int Excp, ref string Msg, ref operations opp, Submain_Account sa_)
         {
-            
-                if (sa_.Id > 0)
+
+            if (sa_.Id > 0)
+            {
+                //فى حالة الكود اتوماتيك والعميل ليس من متنوعون
+                if (cs.General_Customer_Flage == 0 & (Common.Use_AutoNumeric_Customer_Id__With_Submain_Account_Id == 0 | Common.Use_Auto_Identity_Column == 0))
                 {
-                    //فى حالة الكود اتوماتيك والعميل ليس من متنوعون
-                    if (cs.General_Customer_Flage == 0 & (Common.Use_AutoNumeric_Customer_Id__With_Submain_Account_Id == 0 | Common.Use_Auto_Identity_Column == 0))
-                    {
-                        cs.Id = sa_.Id;
-                    }
+                    cs.Id = sa_.Id;
                 }
-                int C = 0;
-                if (cs.Id > 0)
-                {
-                    string mysql = "";
-                    mysql = "Select Id From Customer Where Id=" + cs.Id;
-                    DataTable dt = opp.return_DataTable(mysql);
-                    C = dt.Rows.Count;
-                }
-                if (C == 0)
-                {
-                    //cs.Name = sa_.SubAccount_Name;
-                    cs.Currency_Id = sa_.Currency_Id;
-                    cs.Account_Code = sa_.SubAccount_NO;
-                    cs.SubAccount_Id = sa_.Id;
-                    cs.Customer_Type = Common.Customer_Type;
-                    cs.Active = 1;
-                    //cs.Ref_Cust_Supplier_Id = 0;
+            }
+            int C = 0;
+            if (cs.Id > 0)
+            {
+                string mysql = "";
+                mysql = "Select Id From Customer Where Id=" + cs.Id;
+                DataTable dt = opp.return_DataTable(mysql);
+                C = dt.Rows.Count;
+            }
+            if (C == 0)
+            {
+                //cs.Name = sa_.SubAccount_Name;
+                cs.Currency_Id = sa_.Currency_Id;
+                cs.Account_Code = sa_.SubAccount_NO;
+                cs.SubAccount_Id = sa_.Id;
+                cs.Customer_Type = Common.Customer_Type;
+                cs.Active = 1;
+                //cs.Ref_Cust_Supplier_Id = 0;
 
 
-                    opp.db.Customer.Add(cs);
-                    opp.db.SaveChanges();
-                    //if (cs.Id > 0)
-                    //{
-                    //    string mysql = "";
-                    //    mysql = "Select Id From Customer Where Id=" + cs.Id;
-                    //    DataTable dt = opp.return_DataTable(mysql);
-                    //    C = dt.Rows.Count;
-                    //}
-                    Save_FirstBalance(ref Excp, ref Msg, ref opp, cs);
+                opp.db.Customer.Add(cs);
+                opp.db.SaveChanges();
+                //if (cs.Id > 0)
+                //{
+                //    string mysql = "";
+                //    mysql = "Select Id From Customer Where Id=" + cs.Id;
+                //    DataTable dt = opp.return_DataTable(mysql);
+                //    C = dt.Rows.Count;
+                //}
+                Save_FirstBalance(ref Excp, ref Msg, ref opp, cs);
 
-                    return cs.Id;
+                return cs.Id;
 
 
-                }
-                else
-                {
-                    UpdateCustomer(ref Excp, ref Msg, ref opp);
+            }
+            else
+            {
+                UpdateCustomer(ref Excp, ref Msg, ref opp);
 
-                    return cs.Id;
-                }
-             
+                return cs.Id;
+            }
+
         }
 
-        void Save_FirstBalance(ref int Excp, ref string  Msg, ref operations  opp,Customer cs )
+        void Save_FirstBalance(ref int Excp, ref string Msg, ref operations opp, Customer cs)
         {
             FirstBalance_CLS ff = new FirstBalance_CLS();
-            int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(DateTime.Now);
+            long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(DateTime.Now);
             ff.IsCheckLastLevel = true;
             ff.Account_Customer_Type_ID = cs.Id;
             ff.Account_Customer_Type_Value = Common.Customer_Account_Type;
@@ -248,7 +200,7 @@ namespace AccountModelsLib.Models
             ff.Save_FirstBalance(ref Excp, ref Msg, ref opp, cs.SubAccount_Id, cs.Name, Year_Financial_Period_Id, Common.Branch_Id, (int)cs.Currency_Id, 0, 1, 1);
 
         }
-        public void UpdateCustomer(ref int Excp, ref string Msg, ref operations opp, Submain_Account  sa)
+        public void UpdateCustomer(ref int Excp, ref string Msg, ref operations opp, Submain_Account sa)
         {
             //Customer cs = new Customer();
             Get_CustomerBySubAccount_Id(ref opp, sa.Id);
@@ -285,9 +237,9 @@ namespace AccountModelsLib.Models
         }
         public long UpdateCustomerOnly(ref int Excp, ref string Msg, ref operations opp)
         {
-             
-            opp.db.Entry(cs).State = EntityState.Modified;
-            opp.db.SaveChanges();
+            EditCustomer(ref opp, cs);
+            //opp.db.Entry(cs).State = EntityState.Modified;
+            //opp.db.SaveChanges();
             return cs.Id;
         }
 
@@ -312,9 +264,10 @@ namespace AccountModelsLib.Models
             //mysql = mysql + " , Govern_Area_ListId=  " + cs.Govern_Area_ListId + "  ";
             //mysql = mysql + " , Govern_ListId=  " + cs.Govern_ListId + "  ";
             //mysql = mysql + " , Gov_City_ListId=  " + cs.Gov_City_ListId + "  ";
+            EditCustomer(ref opp, cs);
 
-            opp.db.Entry(cs).State = EntityState.Modified;
-            opp.db.SaveChanges();
+            //opp.db.Entry(cs).State = EntityState.Modified;
+            //opp.db.SaveChanges();
             //CompanyName
             //CompanyContactName
             //CompanyContactData
@@ -342,8 +295,11 @@ namespace AccountModelsLib.Models
             sa.UpdateSubmain_SubAccount_Name(ref Excp, ref Msg, ref opp, cs.Name, Account_Customer_Type_ID, Account_Customer_Type_Value, ref SubAccount_Id);
 
             cs.SubAccount_Id = SubAccount_Id;
-            opp.db.Entry(cs).State = EntityState.Modified;
-            opp.db.SaveChanges();
+
+            EditCustomer(ref opp, cs);
+
+            //opp.db.Entry(cs).State = EntityState.Modified;
+            //opp.db.SaveChanges();
 
             //mysql = "UPDATE Customer SET  SubAccount_Id=" + SubAccount_Id + "";
             //mysql += " where Id=" + cs.Id;
@@ -351,24 +307,24 @@ namespace AccountModelsLib.Models
 
 
         }
-        public void UpdateCustomer(ref int Excp, ref string Msg, Customer cu,long New_Submain_Account_Id, bool IsUse_SubAccount_Id_Select)
+        public void UpdateCustomer(ref int Excp, ref string Msg, Customer cu, long New_Submain_Account_Id, bool IsUse_SubAccount_Id_Select)
         {
             //operations opp = new operations(1);
             opp.BeginTransaction(2);
             try
             {
-                 
-                  acc = new Sub_Account();
+
+                acc = new Sub_Account();
                 int Account_Type_Value = Common.Customer_Account_Type;
-               
-                int Account_Branch_Id = cu.Branch_Id ?? 1;// Common.Branch_Id;
+
+                long Account_Branch_Id = cu.Branch_Id ?? 1;// Common.Branch_Id;
                 string Account_Code = "";
 
                 acc.IsUse_SubAccount_Id_Select = IsUse_SubAccount_Id_Select;
 
                 if (IsUse_SubAccount_Id_Select == false)
                 {
-                    New_Submain_Account_Id = cu.SubAccount_Id  ;
+                    New_Submain_Account_Id = cu.SubAccount_Id;
 
                 }
 
@@ -395,55 +351,20 @@ namespace AccountModelsLib.Models
                 Msg = ee.Message;
             }
         }
-        
-        
-        public void UpdateCustomerEF(ref int Excp, ref string Msg)
-        {
-            opp.db.Entry(cs).State = EntityState.Modified;
-            opp.db.SaveChanges();
-
-            string mysql = "";
-            //mysql = "UPDATE Customer SET General_Customer_Flage=" + cs.General_Customer_Flage + ",Tax_No='" + cs.Tax_No + "', code='" + cs.Code + "',Name='" + cs.Name + "', Address='" + cs.Address + "', Tel='" + cs.Tel + "'";
-            //mysql = mysql + "   , Tel2= '" + cs.Tel2 + "', Mobile= '" + cs.Mobile + "', E_Mail= '" + cs.E_Mail + "', Fax= '" + cs.Fax + "' ";
-            //mysql = mysql + "  , Web_Site='" + cs.Web_Site + "', Balance=" + cs.Balance + ",Balance_Actual=" + cs.Balance + ",SubAccount_Id=" + cs.SubAccount_Id + ",Customer_Type=" + Common.Customer_Type + ",Price_Type_List_ID=" + cs.Price_Type_List_ID + "";
-            //mysql = mysql + " ,Ref_Cust_Supplier_Id=" + cs.Ref_Cust_Supplier_Id + " ,Group_Id=" + cs.Group_Id + ",VisaNo='" + cs.VisaNo + "',VisaPassword ='" + cs.VisaPassword + "',ContactPerson='" + cs.ContactPerson + "'";
-
-            //mysql = mysql + " , CompanyName= '" + cs.CompanyName + "'  ";
-            //mysql = mysql + " , CompanyContactName= '" + cs.CompanyContactName + "'  ";
-            //mysql = mysql + " , CompanyContactData= '" + cs.CompanyContactData + "'  ";
-            //mysql = mysql + " , NationalId= '" + cs.NationalId + "'  ";
-            //mysql = mysql + " , PassportNo= '" + cs.PassportNo + "'  ";
-            //mysql = mysql + " , PostalNo= '" + cs.PostalNo + "'  ";
-            //mysql = mysql + " , Commercial_Register= '" + cs.Commercial_Register + "'  ";
-            //mysql = mysql + " , RegistrationDate= '" + operations.dateFormat(cs.RegistrationDate) + "'  ";
-            //mysql = mysql + " , Gov_Country_ListId=  " + cs.Gov_Country_ListId + "  ";
-            //mysql = mysql + " , Govern_Area_ListId=  " + cs.Govern_Area_ListId + "  ";
-            //mysql = mysql + " , Govern_ListId=  " + cs.Govern_ListId + "  ";
-            //mysql = mysql + " , Gov_City_ListId=  " + cs.Gov_City_ListId + "  ";
-
-            //mysql += " where Id=" + cs.Id;
-            //opp.insert_me(mysql);
-
-            long Account_Customer_Type_ID = cs.Id;
-            int Account_Customer_Type_Value = Common.Customer_Account_Type;
-            long SubAccount_Id = cs.SubAccount_Id;
-
-            Sub_Account sa = new Sub_Account();
-            sa.UpdateSubmain_SubAccount_Name(ref Excp, ref Msg, ref opp, cs.Name, Account_Customer_Type_ID, Account_Customer_Type_Value, ref SubAccount_Id);
 
 
-            mysql = "UPDATE Customer SET  SubAccount_Id=" + SubAccount_Id + "";
-            mysql += " where Id=" + cs.Id;
-            opp.insert_me(mysql);
 
-
-        }
         public void EditCustomer(ref operations opp)
         {
-            opp.db.Entry(cs).State = EntityState.Modified;
+            EditCustomer(ref opp, cs);
+            //opp.db.Entry(cs).State = EntityState.Modified;
+            //opp.db.SaveChanges();
+        }
+        public void EditCustomer(ref operations opp, Customer customer)
+        {
+
+            opp.db.Entry(customer).State = EntityState.Modified;
             opp.db.SaveChanges();
-
-
         }
 
         public Customer GetCustomer(long Id)
@@ -661,6 +582,16 @@ namespace AccountModelsLib.Models
             ls = GetCustomerViewModelList(query);
 
             return ls;
+        }
+
+        // 🟢 عملاء لهم مورد مرتبط فعلاً (Customer_SupplierInfo الأصلية، فلترها الافتراضى بدون rdAllCustomer) -
+        // تُستخدَم لتعبئة قائمة الاختيار فى شاشة "بيانات حساب عميل-مورد-مختلط".
+        public List<CustomerViewModel> GetMixedCustomerSupplierList(ref operations opp)
+        {
+            IQueryable<Customer> query = opp.db.Customer.AsNoTracking()
+                .Where(i => i.Active == 1 && i.Ref_Cust_Supplier_Id != null && i.Ref_Cust_Supplier_Id != 0)
+                .OrderBy(i => i.Name);
+            return GetCustomerViewModelList(query);
         }
 
         public DataTable GetCustomersOnlyListWithSubMainAccount(ref operations opp, string NameSearch, int Active, int General_Customer_Flage)
@@ -997,16 +928,16 @@ namespace AccountModelsLib.Models
 
             return dt;
         }
-        public DataTable GetCustomerToPrint(  int Active ,int  Customer_Type ,int General_Customer_Flage )
+        public DataTable GetCustomerToPrint(int Active, int Customer_Type, int General_Customer_Flage)
         {
             operations opp = new operations();
 
             string mysql = @" SELECT        Customer.Id, Customer.Name, Customer.Balance, Customer.Balance_Actual, Customer.Code, Customer.Address, Customer.Tel, Customer.Tel2, Customer.Mobile, Customer.E_Mail, Customer.Fax, Customer.Web_Site,                          Customer.SubAccount_Id, Customer.IsSalesMan, Customer.SalesMan_Id, Customer.Date_Balance_First, Customer.Balance_First, Customer.Location_Id, Customer.Price_Type_List_ID, Customer.Currency_Id,                          Customer.Balance_Air, Customer.Balance_Road, Customer.Tax_No, Customer.Active, Customer.Customer_Type, Price_Type_List.Price_Name, Customer.General_Customer_Flage, Customer.Account_Code  FROM            Customer LEFT OUTER JOIN                           Price_Type_List ON Customer.Price_Type_List_ID = Price_Type_List.ID ";
-                mysql=mysql + $" WHERE        (Customer.Active =  {Active}) AND (Customer.Customer_Type ={Customer_Type})  ";
+            mysql = mysql + $" WHERE        (Customer.Active =  {Active}) AND (Customer.Customer_Type ={Customer_Type})  ";
 
-            if (General_Customer_Flage  > -1)
+            if (General_Customer_Flage > -1)
             {
-                mysql = mysql + " AND General_Customer_Flage=" + General_Customer_Flage  + "";
+                mysql = mysql + " AND General_Customer_Flage=" + General_Customer_Flage + "";
             }
             mysql = mysql + " ORDER BY Customer.Name ";
             DataTable dt = opp.return_DataTable(mysql);
@@ -1092,7 +1023,7 @@ namespace AccountModelsLib.Models
                 cs.Balance_Actual = decimal.Parse(dt.Rows[index]["Balance_Actual"].ToString());
 
                 cs.SubAccount_Id = long.Parse(dt.Rows[index]["SubAccount_Id"].ToString());
-                cs.Currency_Id = int.Parse(dt.Rows[index]["Currency_Id"].ToString());
+                cs.Currency_Id = long.Parse(dt.Rows[index]["Currency_Id"].ToString());
                 cs.Account_Code = dt.Rows[index]["Account_Code"].ToString();
 
                 try
@@ -1259,11 +1190,11 @@ namespace AccountModelsLib.Models
             }
 
         }
-        public void AddNewCustomer(ref int Excp, ref string Msg,ref operations opp, Customer  cs,bool IsUse_SubAccount_Id_Select)
+        public void AddNewCustomer(ref int Excp, ref string Msg, ref operations opp, Customer cs, bool IsUse_SubAccount_Id_Select)
         {
-             opp.BeginTransaction( );
-             //operations opp = new operations(2);
-             
+            opp.BeginTransaction();
+            //operations opp = new operations(2);
+
 
             try
             {
@@ -1272,15 +1203,15 @@ namespace AccountModelsLib.Models
                 string Account_Code = "";
                 acc = new Sub_Account();
                 int Account_Type_Value = Common.Customer_Account_Type;
-                int Currency_Id = 1;
-                int Account_Branch_Id = Common.Branch_Id;
+                long Currency_Id = 1;
+                long Account_Branch_Id = Common.Branch_Id;
                 long New_Submain_Account_Id = -1;
                 //if(cs.General_Customer_Flage==1)
                 //{
                 //    acc.sa.get_TreeToPrint
                 //}
                 acc.cuCls.cs = cs;
-                acc.Add_AccountSupplierCustomerOther(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, ref Account_Code, Account_Type_Value, cs.Name, Account_Branch_Id, (int)cs.Currency_Id);
+                acc.Add_AccountSupplierCustomerOther(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, ref Account_Code, Account_Type_Value, cs.Name, Account_Branch_Id, cs.Currency_Id ?? 1);
 
                 //cs.Id = acc.New_Account_Id;
                 //cs.SubAccount_Id = New_Submain_Account_Id;
@@ -1329,8 +1260,8 @@ namespace AccountModelsLib.Models
             string Account_Code = "";
             acc = new Sub_Account();
             int Account_Type_Value = Common.Customer_Account_Type;
-            int Currency_Id = 1;
-            int Account_Branch_Id = Common.Branch_Id;
+            long Currency_Id = 1;
+            long Account_Branch_Id = Common.Branch_Id;
             long New_Submain_Account_Id = -1;
             acc.cuCls = cs;
             acc.Add_AccountSupplierCustomerOther(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, ref Account_Code, Account_Type_Value, cs.cs.Name, Account_Branch_Id, (int)cs.cs.Currency_Id);
@@ -1346,22 +1277,22 @@ namespace AccountModelsLib.Models
             string Account_Code = "";
             acc = new Sub_Account();
             int Account_Type_Value = Common.Customer_Account_Type;
-            int Currency_Id = 1;
-            int Account_Branch_Id = Common.Branch_Id;
+            long Currency_Id = 1;
+            long Account_Branch_Id = Common.Branch_Id;
             long New_Submain_Account_Id = -1;
             //if(cs.General_Customer_Flage==1)
             //{
             //    acc.sa.get_TreeToPrint
             //}
-             acc.cuCls.cs = cs;
+            acc.cuCls.cs = cs;
             acc.Add_AccountSupplierCustomerOther(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, ref Account_Code, Account_Type_Value, cs.Name, Account_Branch_Id, (int)cs.Currency_Id);
 
             //cs.Id = acc.New_Account_Id;
             //cs.SubAccount_Id = New_Submain_Account_Id;
 
         }
-        
-        public void AddNewCustomerSubAccount(ref int Excp, ref string Msg, Customer  cs)
+
+        public void AddNewCustomerSubAccount(ref int Excp, ref string Msg, Customer cs)
         {
             operations opp = new operations(2);
             try
@@ -1381,7 +1312,7 @@ namespace AccountModelsLib.Models
                 Msg = ee.Message;
             }
         }
-        public void AddNewCustomerSubAccount(ref int Excp, ref string Msg, ref operations opp, Customer  cs)
+        public void AddNewCustomerSubAccount(ref int Excp, ref string Msg, ref operations opp, Customer cs)
         {
             long New_Submain_Account_Id = -1;
             if (cs.General_Customer_Flage == 0)
@@ -1391,8 +1322,8 @@ namespace AccountModelsLib.Models
                 string Account_Code = "";
                 acc = new Sub_Account();
                 int Account_Type_Value = Common.Customer_Account_Type;
-                int Currency_Id = cs.Currency_Id ?? 1;
-                int Account_Branch_Id = Common.Branch_Id;
+                long Currency_Id = cs.Currency_Id ?? 1;
+                long Account_Branch_Id = Common.Branch_Id;
 
                 acc.cuCls.cs = cs;
 
@@ -1403,8 +1334,10 @@ namespace AccountModelsLib.Models
                 Customer cs2 = opp.db.Customer.Where(c => c.Id == cs.Id).FirstOrDefault();
                 cs2.SubAccount_Id = New_Submain_Account_Id;
 
-                opp.db.Entry(cs2).State = EntityState.Modified;
-                opp.db.SaveChanges();
+                EditCustomer(ref opp, cs2);
+
+                //opp.db.Entry(cs2).State = EntityState.Modified;
+                //opp.db.SaveChanges();
             }
             else
             {
@@ -1412,13 +1345,16 @@ namespace AccountModelsLib.Models
                 int Account_Type_ValueGeneralCustomer = 1;
                 long Main_Account_Id = 0;
                 int Cost_Center_Tree_ID = 0;
-                int Account_Branch_Id = Common.Branch_Id;
+                long Account_Branch_Id = Common.Branch_Id;
                 Common.Get_Account_Type_Code(ref opp, Account_Type_Value, Account_Type_ValueGeneralCustomer, ref Main_Account_Id, ref Cost_Center_Tree_ID, Account_Branch_Id);
 
                 Customer cs2 = opp.db.Customer.Where(c => c.Id == cs.Id).FirstOrDefault();
                 cs2.SubAccount_Id = Main_Account_Id;
-                opp.db.Entry(cs2).State = EntityState.Modified;
-                opp.db.SaveChanges();
+
+                EditCustomer(ref opp, cs2);
+
+                //opp.db.Entry(cs2).State = EntityState.Modified;
+                //opp.db.SaveChanges();
             }
 
         }
@@ -1427,8 +1363,8 @@ namespace AccountModelsLib.Models
 
 
         }
-       
-        
+
+
         public DataTable GetCustomerBalance(long Customer_Id)
         {
             int General_Customer_Flage = -1;
@@ -1679,7 +1615,7 @@ FROM Customer INNER JOIN Customers_Accounts ON Customer.Id = Customers_Accounts.
             return mysql;
         }
 
-       
+
     }
 
 }

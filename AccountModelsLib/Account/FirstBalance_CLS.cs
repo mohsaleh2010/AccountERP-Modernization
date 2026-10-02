@@ -40,79 +40,7 @@ WHERE        (Submain_Account_ID = " + Submain_Account_ID + ") AND (Year_Financi
         public int Account_Customer_Type_Value = 0;
         public long Account_Customer_Type_ID = 0;
 
-        public void Save_FirstBalance(ref int Excp, ref string Msg,ref operations opp, long Submain_Account_ID, string SubAccount_Name, long  Year_Financial_Period_Id, long  Branch_Id, long Account_Currency_Id, decimal First_Balance, int Transform_Type, decimal EquivalentValue)
-        {
-             
-            string mysql = "";
-            try
-            {
-                ///التأكد من عدم وجود رصيد سابق للحساب لتلك الفترة الماليه
-                mysql = @"SELECT        Account_Entry_Master_Balance.* FROM            Account_Entry_Master_Balance ";
-                 //mysql=mysql+ " WHERE        (Submain_Account_ID = " + Submain_Account_ID + ") AND (Year_Financial_Period_Id = " + Year_Financial_Period_Id + ") AND (Branch_Id = " + Branch_Id + ")  AND (Account_Currency_Id = "  + Account_Currency_Id + " ) AND (Equivalent_Account_Currency_Id = " +Common.Entry_Currency_Id + ")";
-                 mysql=mysql+ " WHERE        (Submain_Account_ID = " + Submain_Account_ID + ") AND (Year_Financial_Period_Id = " + Year_Financial_Period_Id + ") AND (Branch_Id = " + Branch_Id + ")   AND (Equivalent_Account_Currency_Id = " + Account_Currency_Id + ")";
-
-                
-                DataTable dt_Master_Balance = opp.return_DataTable(mysql);
-
-                if (dt_Master_Balance.Rows.Count == 0)
-                {
-                    if (IsCheckLastLevel == false)
-                    {
-                        Submain_AccountCLS submain_AccountCLS = new Submain_AccountCLS();
-                        DataTable dtt2 = submain_AccountCLS.GetMainSubmain_Account(ref opp, Submain_Account_ID);
-
-
-                        if (dtt2.Rows.Count > 0)
-                        {
-                            Excp = 1;
-                            Msg = "يجب وضع الرصيد للحسابات الفرعيه لهذا  الحساب الرئيسى ";
-                            //opp.Rollback();
-                            return;
-                        }
-                    }
-                    Make_New_FirstBalance(ref opp, ref Msg, Submain_Account_ID, SubAccount_Name, Year_Financial_Period_Id, Branch_Id, Account_Currency_Id, First_Balance, Transform_Type, EquivalentValue);
-                }
-                else
-                {
-                    decimal New_First_Balance = First_Balance;
-                    //Make_Update_FirstBalance(ref   opp, dt_Master_Balance, Submain_Account_ID, Year_Financial_Period_Id, Branch_Id, Account_Currency_Id, Transform_Type, New_First_Balance, EquivalentValue);
-                    Make_Update_FirstBalance_New(ref opp, dt_Master_Balance, Submain_Account_ID, Year_Financial_Period_Id, Branch_Id, Account_Currency_Id, Transform_Type, New_First_Balance, EquivalentValue);
-                    //Make_Update_EquivalentValueFirstBalance(ref   opp, Submain_Account_ID, Year_Financial_Period_Id, Branch_Id, Currency_Id, Transform_Type, New_First_Balance, EquivalentValue);
-                }
-                UpdateEquivalentFirstValue(ref opp, Submain_Account_ID, Year_Financial_Period_Id, Branch_Id);
-                SetCustomer_SupplierAccountFirstBalance(ref opp, Submain_Account_ID, First_Balance, Transform_Type, Year_Financial_Period_Id, "");
-                 
-                // 👈 ضف هذا الاستدعاء هنا ليتم ضبط التوازن فوراً بعد كل إضافة/تعديل
-                BalanceOpeningBalanceEquity(ref opp, Year_Financial_Period_Id, Branch_Id, Account_Currency_Id );
-                Msg = "تم تعديل رصيد أول المده";
-                Excp = 0;
-            }
-            catch (Exception ee)
-            {
-
-                Msg = "خطأ فى تعديل رصيد أول المده";
-                Msg = Msg + "\r\n" + ee.Message;
-                Excp = 1;
-            }
-        }
-        public void Save_FirstBalance(ref int Excp, ref string Msg, long Submain_Account_ID, string SubAccount_Name, long  Year_Financial_Period_Id, long  Branch_Id, long Account_Currency_Id, decimal First_Balance, int Transform_Type, decimal EquivalentValue)
-        {
-            operations opp = new operations(1);
-            
-                Save_FirstBalance(ref Excp, ref Msg, ref opp, Submain_Account_ID, SubAccount_Name, Year_Financial_Period_Id, Branch_Id, Account_Currency_Id, First_Balance, Transform_Type, EquivalentValue);
-                if (Excp == 0)
-                {
-                    opp.Commit();
-                }
-                else
-                {
-                    opp.Rollback();
-                }
-
-            
-            
-        }
-        public void BalanceOpeningBalanceEquity(ref operations opp, long financialPeriodId, long branchId, long currencyId )
+         public void BalanceOpeningBalanceEquity(ref operations opp, long financialPeriodId, long branchId, long currencyId )
         {
             long equityAccountId = 0;
             long Account_Currency_Id= 0;
@@ -267,7 +195,7 @@ WHERE        (Submain_Account_ID = " + Submain_Account_ID + ") AND (Year_Financi
 
 
         }
-        public void Save_FirstBalanceForCheck(ref int Excp, ref string Msg, long Submain_Account_ID, string SubAccount_Name, long  Year_Financial_Period_Id, long  Branch_Id, int Account_Currency_Id, decimal First_Balance, int Transform_Type, decimal EquivalentValue)
+        public void Save_FirstBalanceForCheck(ref int Excp, ref string Msg, long Submain_Account_ID, string SubAccount_Name, long  Year_Financial_Period_Id, long  Branch_Id, long Account_Currency_Id, decimal First_Balance, int Transform_Type, decimal EquivalentValue)
         {
             operations opp = new operations(1);
 
@@ -286,7 +214,7 @@ WHERE        (Submain_Account_ID = " + Submain_Account_ID + ") AND (Year_Financi
                 Excp = 1;
             }
         }
-        public void Save_FirstBalanceForCheck(ref int Excp, ref string Msg, ref operations opp, long Submain_Account_ID, string SubAccount_Name, long  Year_Financial_Period_Id, long  Branch_Id, int Account_Currency_Id, decimal First_Balance, int Transform_Type, decimal EquivalentValue)
+        public void Save_FirstBalanceForCheck(ref int Excp, ref string Msg, ref operations opp, long Submain_Account_ID, string SubAccount_Name, long  Year_Financial_Period_Id, long  Branch_Id, long Account_Currency_Id, decimal First_Balance, int Transform_Type, decimal EquivalentValue)
         {
 
             string mysql = "";
@@ -322,6 +250,87 @@ WHERE        (Submain_Account_ID = " + Submain_Account_ID + ") AND (Year_Financi
             }
             // UpdateEquivalentFirstValue(ref opp, Submain_Account_ID, Year_Financial_Period_Id, Branch_Id);
             // SetCustomer_SupplierAccountFirstBalance(ref opp, Submain_Account_ID, First_Balance, Transform_Type, Year_Financial_Period_Id, "");
+
+        }
+        public void Save_FirstBalance(ref int Excp, ref string Msg, ref operations opp, long Submain_Account_ID, string SubAccount_Name, long Year_Financial_Period_Id, long Branch_Id, long Account_Currency_Id, decimal First_Balance, int Transform_Type, decimal EquivalentValue)
+        {
+            
+            string mysql = "";
+            try
+            {
+                ///التأكد من عدم وجود رصيد سابق للحساب لتلك الفترة الماليه
+                mysql = @"SELECT        Account_Entry_Master_Balance.* FROM            Account_Entry_Master_Balance ";
+                //mysql=mysql+ " WHERE        (Submain_Account_ID = " + Submain_Account_ID + ") AND (Year_Financial_Period_Id = " + Year_Financial_Period_Id + ") AND (Branch_Id = " + Branch_Id + ")  AND (Account_Currency_Id = "  + Account_Currency_Id + " ) AND (Equivalent_Account_Currency_Id = " +Common.Entry_Currency_Id + ")";
+                mysql = mysql + " WHERE        (Submain_Account_ID = " + Submain_Account_ID + ") AND (Year_Financial_Period_Id = " + Year_Financial_Period_Id + ") AND (Branch_Id = " + Branch_Id + ")   AND (Equivalent_Account_Currency_Id = " + Account_Currency_Id + ")";
+
+
+                DataTable dt_Master_Balance = opp.return_DataTable(mysql);
+
+                if (dt_Master_Balance.Rows.Count == 0)
+                {
+                    if (IsCheckLastLevel == false)
+                    {
+                        Submain_AccountCLS submain_AccountCLS = new Submain_AccountCLS();
+                        DataTable dtt2 = submain_AccountCLS.GetMainSubmain_Account(ref opp, Submain_Account_ID);
+
+
+                        if (dtt2.Rows.Count > 0)
+                        {
+                            Excp = 1;
+                            Msg = "يجب وضع الرصيد للحسابات الفرعيه لهذا  الحساب الرئيسى ";
+                            //opp.Rollback();
+                            return;
+                        }
+                    }
+                    Make_New_FirstBalance(ref opp, ref Msg, Submain_Account_ID, SubAccount_Name, Year_Financial_Period_Id, Branch_Id, Account_Currency_Id, First_Balance, Transform_Type, EquivalentValue);
+                }
+                else
+                {
+                    decimal New_First_Balance = First_Balance;
+                    //Make_Update_FirstBalance(ref   opp, dt_Master_Balance, Submain_Account_ID, Year_Financial_Period_Id, Branch_Id, Account_Currency_Id, Transform_Type, New_First_Balance, EquivalentValue);
+                    Make_Update_FirstBalance_New(ref opp, dt_Master_Balance, Submain_Account_ID, Year_Financial_Period_Id, Branch_Id, Account_Currency_Id, Transform_Type, New_First_Balance, EquivalentValue);
+                    //Make_Update_EquivalentValueFirstBalance(ref   opp, Submain_Account_ID, Year_Financial_Period_Id, Branch_Id, Currency_Id, Transform_Type, New_First_Balance, EquivalentValue);
+                }
+                UpdateEquivalentFirstValue(ref opp, Submain_Account_ID, Year_Financial_Period_Id, Branch_Id);
+                SetCustomer_SupplierAccountFirstBalance(ref opp, Submain_Account_ID, First_Balance, Transform_Type, Year_Financial_Period_Id, "");
+
+                // 👈 ضف هذا الاستدعاء هنا ليتم ضبط التوازن فوراً بعد كل إضافة/تعديل
+                BalanceOpeningBalanceEquity(ref opp, Year_Financial_Period_Id, Branch_Id, Account_Currency_Id);
+                // 🟢 إصلاح (بموافقة المستخدم، خطة الفواتير §22): UpdateEquivalentFirstValue أعلاه تحدِّث صف
+                // التجميع (Equivalent_Account_Currency_Id=0) لكل حساب عادى تلقائياً، لكن حساب الرصيد
+                // الافتتاحى (64) نفسه لم يكن يُوزَن إلا لعملة المستخدَم الفعلية (Account_Currency_Id) - فيبقى
+                // صف تجميعه (عملة=0) بلا قيمة موازنة، فيخرج ميزان "كل العملات" عن الاتزان بمقدار الفرق نفسه
+                // رغم اتزان ميزان كل عملة بمفردها. يُكرَّر نفس الاستدعاء لعملة=0 لموازنة صف التجميع بنفس الطريقة.
+                if (Account_Currency_Id != 0)
+                {
+                    BalanceOpeningBalanceEquity(ref opp, Year_Financial_Period_Id, Branch_Id, 0);
+                }
+                Msg = "تم تعديل رصيد أول المده";
+                Excp = 0;
+            }
+            catch (Exception ee)
+            {
+
+                Msg = "خطأ فى تعديل رصيد أول المده";
+                Msg = Msg + "\r\n" + ee.Message;
+                Excp = 1;
+            }
+        }
+        public void Save_FirstBalance(ref int Excp, ref string Msg, long Submain_Account_ID, string SubAccount_Name, long Year_Financial_Period_Id, long Branch_Id, long Account_Currency_Id, decimal First_Balance, int Transform_Type, decimal EquivalentValue)
+        {
+            operations opp = new operations(1);
+
+            Save_FirstBalance(ref Excp, ref Msg, ref opp, Submain_Account_ID, SubAccount_Name, Year_Financial_Period_Id, Branch_Id, Account_Currency_Id, First_Balance, Transform_Type, EquivalentValue);
+            if (Excp == 0)
+            {
+                opp.Commit();
+            }
+            else
+            {
+                opp.Rollback();
+            }
+
+
 
         }
 
@@ -449,7 +458,7 @@ WHERE        (Submain_Account_ID = " + Submain_Account_ID + ") AND (Year_Financi
             Submain_AccountCLS submain_AccountCLS = new Submain_AccountCLS();
             Submain_Account sb = submain_AccountCLS.Get_Submain_Account(ref opp, Submain_Account_ID);
             long Equivalent_Account_Currency_Id = Account_Currency_Id;
-            int Account_Currency_Id_ = sb.Currency_Id ?? 1;
+            long Account_Currency_Id_ = sb.Currency_Id ?? 1;
             mysql = "INSERT INTO Account_Entry_Master_Balance(SubAccount_Name,Submain_Account_ID, Year_Financial_Period_Id, Branch_Id, Account_Currency_Id, First_Balance, First_Balance_Madin, First_Balance_Da2n,Madin_Value,Da2n_Value,Balance,Balance_Madin,Balance_Da2n,IS_Madin_Da2n";
             mysql = mysql + ", Equivalent_Account_Currency_Id, Equivalent_First_Balance_Madin, Equivalent_First_Balance_Da2n, Equivalent_Madin_Value, Equivalent_Da2n_Value,  Equivalent_Balance_Madin, Equivalent_Balance_Da2n,Factor,Equivalent_First_Balance) ";
             mysql = mysql + " VALUES  ('" + SubAccount_Name + "'," + Submain_Account_ID + "," + Year_Financial_Period_Id + "," + Branch_Id + "," + Account_Currency_Id + "," + First_Balance__ + "," + First_Balance_Madin + "," + First_Balance_Da2n + ",0,0," + First_Balance__ + ", " + First_Balance_Madin + "," + First_Balance_Da2n + "," + Transform_Type + "";
@@ -1058,9 +1067,9 @@ FROM            Submain_Account INNER JOIN
             string Msg = "";
             long Submain_Account_ID = sb.sb.Id;//
             string SubAccount_Name = sb.sb.SubAccount_Name;
-            int Currency_Id = Common.Entry_Currency_Id;// int.Parse(currency_List_21.cmbCurrencyName.SelectedValue.ToString());
+            long    Currency_Id = Common.Entry_Currency_Id;// int.Parse(currency_List_21.cmbCurrencyName.SelectedValue.ToString());
 
-            long  Branch_Id = Common.Branch_Id;// int.Parse(branch_List1.cmbBranch.SelectedValue.ToString());
+            long  Branch_Id = Common.Branch_Id;// long.Parse(branch_List1.cmbBranch.SelectedValue.ToString());
             decimal Factor = 1;// txtEquivalentValue.Value;
             decimal First_Balance = Balance;
             decimal First_Balance_Equivalent = Balance;

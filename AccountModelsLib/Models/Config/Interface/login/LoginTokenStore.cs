@@ -12,10 +12,10 @@ namespace AccountModelsLib.Models
     // دخول موقّع حقيقي عبر مسار /Auth/Persist (نفس أسلوب /Culture/SetCulture الموجود مسبقاً لكوكي اللغة).
     public class LoginTokenStore
     {
-        private readonly ConcurrentDictionary<string, (int UserId, DateTime Expiry)> _tokens = new();
+        private readonly ConcurrentDictionary<string, (long UserId, DateTime Expiry)> _tokens = new();
         private static readonly TimeSpan TokenLifetime = TimeSpan.FromSeconds(30);
 
-        public string IssueToken(int userId)
+        public string IssueToken(long userId)
         {
             var token = Guid.NewGuid().ToString("N");
             _tokens[token] = (userId, DateTime.UtcNow.Add(TokenLifetime));
@@ -23,7 +23,7 @@ namespace AccountModelsLib.Models
         }
 
         // 🟢 استبدال لمرة واحدة فقط: الرمز يُحذف فور محاولة استبداله سواء نجحت أو فشلت، فلا يمكن إعادة استخدامه
-        public bool TryRedeem(string token, out int userId)
+        public bool TryRedeem(string token, out long userId)
         {
             userId = 0;
             if (string.IsNullOrEmpty(token)) return false;

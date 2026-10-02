@@ -27,8 +27,8 @@ namespace AccountModelsLib.ViewModelPrint
         public string SubAccount_Name { get; set; }
         public long Year_Financial_Period_Id { get; set; }
         public long Branch_Id { get; set; }
-        public int Account_Currency_Id { get; set; }
-        public int Equivalent_Account_Currency_Id { get; set; }
+        public long Account_Currency_Id { get; set; }
+        public long Equivalent_Account_Currency_Id { get; set; }
 
         // Numeric & Balance Fields (Mezan)
         public decimal First_Balance { get; set; }

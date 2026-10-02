@@ -46,7 +46,7 @@ namespace AccountModelsLib
             //
         }
          
-        public void Make_Bills_List_Reverse_Update_SupplierAccount_POS(ref int Excp,ref string Msg, DataSet Invoice_ds, long Invoice_No, DateTime Invoice_Date, long Supplier_Id, int Currency_id, decimal Net_Total, decimal Commission, int Invoice_Type, string PolicaNo, string TroodContainerNo, string Notes, decimal LoadPayment, decimal TotalSecond, decimal ATS05, decimal ATS05_Value, decimal TaxSales10, decimal TaxSales10_Value, decimal Damaghat, int Load_Payment_OnTax, ArrayList mArrMake_Order)
+        public void Make_Bills_List_Reverse_Update_SupplierAccount_POS(ref int Excp,ref string Msg, DataSet Invoice_ds, long Invoice_No, DateTime Invoice_Date, long Supplier_Id, long Currency_Id, decimal Net_Total, decimal Commission, int Invoice_Type, string PolicaNo, string TroodContainerNo, string Notes, decimal LoadPayment, decimal TotalSecond, decimal ATS05, decimal ATS05_Value, decimal TaxSales10, decimal TaxSales10_Value, decimal Damaghat, int Load_Payment_OnTax, ArrayList mArrMake_Order)
         {
             long New_Invoice_Id = 0;
             //checked item_report to SendKeys to store
@@ -82,14 +82,14 @@ namespace AccountModelsLib
 
             InvoicesClss inv = new InvoicesClss();
 
-            Make_New_Bill_List_Id(ref Excp, ref New_Invoice_Id, Invoice_No, Supplier_Id, Invoice_Date, Invoice_Type, TotalSecond, Commission, 0, TaxSales10, ATS05, TaxSales10_Value, ATS05_Value, Net_Total, "", Currency_id, 1, Notes, PolicaNo, TroodContainerNo, LoadPayment, TotalSecond, Damaghat, Load_Payment_OnTax, 0, 0, 0, "");
+            Make_New_Bill_List_Id(ref Excp, ref New_Invoice_Id, Invoice_No, Supplier_Id, Invoice_Date, Invoice_Type, TotalSecond, Commission, 0, TaxSales10, ATS05, TaxSales10_Value, ATS05_Value, Net_Total, "", Currency_Id, 1, Notes, PolicaNo, TroodContainerNo, LoadPayment, TotalSecond, Damaghat, Load_Payment_OnTax, 0, 0, 0, "");
 
-            // Make_New_Bills_List_Reverse_Id(ref Excp, ref  New_Invoice_Id, Invoice_No, Supplier_Id, Invoice_Date, Invoice_Type, TotalSecond, Commission, TaxSales10, ATS05, TaxSales10_Value, ATS05_Value, Net_Total, "", Currency_id, 1, Notes, PolicaNo, TroodContainerNo, LoadPayment, TotalSecond, Damaghat, Load_Payment_OnTax);
+            // Make_New_Bills_List_Reverse_Id(ref Excp, ref  New_Invoice_Id, Invoice_No, Supplier_Id, Invoice_Date, Invoice_Type, TotalSecond, Commission, TaxSales10, ATS05, TaxSales10_Value, ATS05_Value, Net_Total, "", Currency_Id, 1, Notes, PolicaNo, TroodContainerNo, LoadPayment, TotalSecond, Damaghat, Load_Payment_OnTax);
             ///////////// add invoice Items and update request qnty
 
             ArrayList arr = new ArrayList();
             long Invoice_Id = New_Invoice_Id;
-            int Item_Id;
+            long Item_Id;
             decimal Larg_Qnty;
             decimal Small_Qnty;
             string Qnty_Another;
@@ -100,8 +100,8 @@ namespace AccountModelsLib
             decimal ATS05_;
             decimal TaxSales10_;
             int Unit_Used_for_Price;
-            int unit_id;
-            int Unit_Item_Table_Id;
+            long unit_id;
+            long Unit_Item_Table_Id=0;
             string code;
             string Notes_;
             int Balance_Checked;
@@ -119,7 +119,7 @@ namespace AccountModelsLib
                 TaxSales10_Value = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["TaxSales10_Value"].ToString());
                 ATS05_Value = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["ATS05_Value"].ToString());
 
-                Item_Id = int.Parse(Invoice_ds.Tables[0].Rows[x]["Item_id"].ToString());
+                Item_Id = long.Parse(Invoice_ds.Tables[0].Rows[x]["Item_id"].ToString());
                 Larg_Qnty = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["Larg_Qnty"].ToString());
                 Small_Qnty = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["Small_Qnty"].ToString());
                 Qnty_Another = Invoice_ds.Tables[0].Rows[x]["Qnty_Another"].ToString();
@@ -130,8 +130,8 @@ namespace AccountModelsLib
                 ATS05_ = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["ATS05"].ToString());
                 TaxSales10_ = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["TaxSales"].ToString());
                 Unit_Used_for_Price = 0;
-                unit_id = int.Parse(Invoice_ds.Tables[0].Rows[x]["unit_id"].ToString());
-                Unit_Item_Table_Id = int.Parse(Invoice_ds.Tables[0].Rows[x]["Unit_Item_Table_Id"].ToString());
+                unit_id = long.Parse(Invoice_ds.Tables[0].Rows[x]["unit_id"].ToString());
+                Unit_Item_Table_Id = long.Parse(Invoice_ds.Tables[0].Rows[x]["Unit_Item_Table_Id"].ToString());
                 code = Invoice_ds.Tables[0].Rows[x]["Code"].ToString();
                 Notes_ = "";
                 Balance_Checked = 1;
@@ -146,7 +146,7 @@ namespace AccountModelsLib
                 string QntyStr = Invoice_ds.Tables[0].Rows[x]["QntyStr"].ToString();
                 string QntyStrColumn = Invoice_ds.Tables[0].Rows[x]["QntyStrColumn"].ToString();
                 decimal Item_TaxSales10_Value = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["Item_TaxSales10_Value"].ToString());
-                int Store_Id = int.Parse(Invoice_ds.Tables[0].Rows[x]["Store_Id"].ToString());
+                long Store_Id = long.Parse(Invoice_ds.Tables[0].Rows[x]["Store_Id"].ToString());
 
 
 
@@ -208,7 +208,7 @@ namespace AccountModelsLib
 
         }
          
-        public void Make_Bill_Update_SupplierAccount_POS(ref int Excp,ref string Msg, DataSet Invoice_ds, long Invoice_No, DateTime Invoice_Date, int Supplier_Id, int Currency_id, decimal Net_Total, decimal Commission, decimal CommissionValue, int Invoice_Type, string PolicaNo, string TroodContainerNo, string Notes, decimal LoadPayment, decimal TotalSecond, decimal ATS05, decimal ATS05_Value, decimal TaxSales10, decimal TaxSales10_Value, decimal Damaghat, int Load_Payment_OnTax, decimal SupplierAccountBefor, decimal SupplierAccountAfter, long SubAccount_Id, string SubAccount_Name, int IS_Make_Sarf_Item_BalanceFromInvoice, int Is_InvoiceKta3y, ArrayList mArrMake_Order)
+        public void Make_Bill_Update_SupplierAccount_POS(ref int Excp,ref string Msg, DataSet Invoice_ds, long Invoice_No, DateTime Invoice_Date, long Supplier_Id, long Currency_Id, decimal Net_Total, decimal Commission, decimal CommissionValue, int Invoice_Type, string PolicaNo, string TroodContainerNo, string Notes, decimal LoadPayment, decimal TotalSecond, decimal ATS05, decimal ATS05_Value, decimal TaxSales10, decimal TaxSales10_Value, decimal Damaghat, int Load_Payment_OnTax, decimal SupplierAccountBefor, decimal SupplierAccountAfter, long SubAccount_Id, string SubAccount_Name, int IS_Make_Sarf_Item_BalanceFromInvoice, int Is_InvoiceKta3y, ArrayList mArrMake_Order)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations(1);
             try
@@ -251,7 +251,7 @@ namespace AccountModelsLib
                 //Total = Common.RoundMe(Total);
                 InvoicesClss inv = new InvoicesClss();
 
-                Make_New_Bill_List_Id(ref Excp, ref opp, ref New_Bills_List_Id, Invoice_No, Supplier_Id, Invoice_Date, Invoice_Type, TotalSecond, Commission, CommissionValue, TaxSales10, ATS05, TaxSales10_Value, ATS05_Value, Net_Total, "", Currency_id, 1, Notes, PolicaNo, TroodContainerNo, LoadPayment, TotalSecond, Damaghat, Load_Payment_OnTax, SupplierAccountBefor, SupplierAccountAfter, SubAccount_Id, SubAccount_Name, IS_Make_Sarf_Item_BalanceFromInvoice, Is_InvoiceKta3y);
+                Make_New_Bill_List_Id(ref Excp, ref opp, ref New_Bills_List_Id, Invoice_No, Supplier_Id, Invoice_Date, Invoice_Type, TotalSecond, Commission, CommissionValue, TaxSales10, ATS05, TaxSales10_Value, ATS05_Value, Net_Total, "", Currency_Id, 1, Notes, PolicaNo, TroodContainerNo, LoadPayment, TotalSecond, Damaghat, Load_Payment_OnTax, SupplierAccountBefor, SupplierAccountAfter, SubAccount_Id, SubAccount_Name, IS_Make_Sarf_Item_BalanceFromInvoice, Is_InvoiceKta3y);
 
 
 
@@ -283,7 +283,7 @@ namespace AccountModelsLib
 
 
                 long Invoice_Id = New_Bills_List_Id;
-                int Item_Id;
+                long Item_Id;
                 decimal Larg_Qnty;
                 decimal Small_Qnty;
                 string Qnty_Another;
@@ -294,12 +294,12 @@ namespace AccountModelsLib
                 decimal ATS05_;
                 decimal TaxSales10_;
                 int Unit_Used_for_Price;
-                int unit_id;
+                long unit_id;
                 long Unit_Item_Table_Id;
                 string code;
                 string Notes_;
                 int Balance_Checked;
-                int Store_Id = 0;
+                long Store_Id = 0;
 
                 ///// Requests_Details
                 decimal Export_Qnty_Larg;
@@ -341,8 +341,8 @@ namespace AccountModelsLib
 
                     TaxSales10_Value = 0;
                     ATS05_Value = 0;
-                    Store_Id = int.Parse(Invoice_ds.Tables[0].Rows[x]["Store_Id"].ToString());
-                    Item_Id = int.Parse(Invoice_ds.Tables[0].Rows[x]["Item_id"].ToString());
+                    Store_Id = long.Parse(Invoice_ds.Tables[0].Rows[x]["Store_Id"].ToString());
+                    Item_Id = long.Parse(Invoice_ds.Tables[0].Rows[x]["Item_id"].ToString());
                     Larg_Qnty = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["Larg_Qnty"].ToString());
                     Small_Qnty = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["Small_Qnty"].ToString());
                     Qnty_Another = Invoice_ds.Tables[0].Rows[x]["Qnty_Another"].ToString();
@@ -353,7 +353,7 @@ namespace AccountModelsLib
                     ATS05_ = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["ATS05"].ToString());
                     TaxSales10_ = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["TaxSales10"].ToString());
                     Unit_Used_for_Price = 0;
-                    unit_id = int.Parse(Invoice_ds.Tables[0].Rows[x]["unit_id"].ToString());
+                    unit_id = long.Parse(Invoice_ds.Tables[0].Rows[x]["unit_id"].ToString());
                     Unit_Item_Table_Id = long.Parse(Invoice_ds.Tables[0].Rows[x]["Unit_Item_Table_Id"].ToString());
                     code = Invoice_ds.Tables[0].Rows[x]["Code"].ToString();
                     Notes_ = "";
@@ -588,11 +588,11 @@ namespace AccountModelsLib
 
         }
          
-        public void Make_New_Bill_List_Id(ref int Excp, ref AccountModelsLib.operations opp, ref long ID, long Invoice_Id, long Supplier_Id, DateTime Invoice_Date, int Invoice_Type, decimal Total, decimal commission, decimal CommissionValue, decimal TaxSales10, decimal ATS05, decimal TaxSales10_Value, decimal ATS05_Value, decimal Net_Total, string Currency, int Currency_id, int Customer_BalanceSet, string Notes, string PolicaNo, string TroodContainerNo, decimal LoadPayment, decimal TotalSecond, decimal Damaghat, int Load_Payment_OnTax, decimal SupplierAccountBefor, decimal SupplierAccountAfter, long SubAccount_Id, string SubAccount_Name, int IS_Make_Sarf_Item_BalanceFromInvoice = 0, int Is_InvoiceKta3y = 0)
+        public void Make_New_Bill_List_Id(ref int Excp, ref AccountModelsLib.operations opp, ref long ID, long Invoice_Id, long Supplier_Id, DateTime Invoice_Date, int Invoice_Type, decimal Total, decimal commission, decimal CommissionValue, decimal TaxSales10, decimal ATS05, decimal TaxSales10_Value, decimal ATS05_Value, decimal Net_Total, string Currency, long Currency_Id, int Customer_BalanceSet, string Notes, string PolicaNo, string TroodContainerNo, decimal LoadPayment, decimal TotalSecond, decimal Damaghat, int Load_Payment_OnTax, decimal SupplierAccountBefor, decimal SupplierAccountAfter, long SubAccount_Id, string SubAccount_Name, int IS_Make_Sarf_Item_BalanceFromInvoice = 0, int Is_InvoiceKta3y = 0)
         {
 
             string mysql = " INSERT INTO Bills_List (Invoice_Id, Supplier_Id, Invoice_Date, Total, commission,CommissionValue, TaxSales10, ATS05,TaxSales10_Value,ATS05_Value , Net_Total , Currency,Currency_id,Invoice_Type,Supplier_BalanceSet,Notes,PolicaNo, TroodContainerNo,Load_Payment,Second_Total,Damaghat,Load_Payment_OnTax,SupplierAccountBefor, SupplierAccountAfter,User_Id,Branch_Id,    SubAccount_Id,   SubAccount_Name,    IS_Make_Sarf_Item_BalanceFromInvoice,   Is_InvoiceKta3y,OperationDate) ";
-            mysql = mysql + " VALUES (" + Invoice_Id + "," + Supplier_Id + ",'" + AccountModelsLib.operations.dateFormat(Invoice_Date) + "'," + Total + "," + commission + "," + CommissionValue + "," + TaxSales10 + "," + ATS05 + "," + TaxSales10_Value + "," + ATS05_Value + "," + Net_Total + ",'" + Currency + "'," + Currency_id + "," + Invoice_Type + "," + Customer_BalanceSet + ",'" + Notes + "','" + PolicaNo + "',  '" + TroodContainerNo + "'," + LoadPayment + "," + TotalSecond + "," + Damaghat + "," + Load_Payment_OnTax + "," + SupplierAccountBefor + "," + SupplierAccountAfter + "," + Common.User_Id + "," + Common.Branch_Id + "," + SubAccount_Id + ",'" + SubAccount_Name + "', " + IS_Make_Sarf_Item_BalanceFromInvoice + "," + Is_InvoiceKta3y + "," + AccountModelsLib.operations.Get_DateTimeToInsert(DateTime.Now) + ")";
+            mysql = mysql + " VALUES (" + Invoice_Id + "," + Supplier_Id + ",'" + AccountModelsLib.operations.dateFormat(Invoice_Date) + "'," + Total + "," + commission + "," + CommissionValue + "," + TaxSales10 + "," + ATS05 + "," + TaxSales10_Value + "," + ATS05_Value + "," + Net_Total + ",'" + Currency + "'," + Currency_Id + "," + Invoice_Type + "," + Customer_BalanceSet + ",'" + Notes + "','" + PolicaNo + "',  '" + TroodContainerNo + "'," + LoadPayment + "," + TotalSecond + "," + Damaghat + "," + Load_Payment_OnTax + "," + SupplierAccountBefor + "," + SupplierAccountAfter + "," + Common.User_Id + "," + Common.Branch_Id + "," + SubAccount_Id + ",'" + SubAccount_Name + "', " + IS_Make_Sarf_Item_BalanceFromInvoice + "," + Is_InvoiceKta3y + "," + AccountModelsLib.operations.Get_DateTimeToInsert(DateTime.Now) + ")";
 
             ID = opp.Insert_me_Return_Last_Identify(mysql, ref Excp);
 
@@ -600,10 +600,10 @@ namespace AccountModelsLib
         }
 
 
-        public void Make_New_Bill_List_Id(ref int Excp, ref long ID, long Invoice_Id, long Supplier_Id, DateTime Invoice_Date, int Invoice_Type, decimal Total, decimal commission, decimal CommissionValue, decimal TaxSales10, decimal ATS05, decimal TaxSales10_Value, decimal ATS05_Value, decimal Net_Total, string Currency, int Currency_id, int Customer_BalanceSet, string Notes, string PolicaNo, string TroodContainerNo, decimal LoadPayment, decimal TotalSecond, decimal Damaghat, int Load_Payment_OnTax, decimal SupplierAccountBefor, decimal SupplierAccountAfter, long SubAccount_Id, string SubAccount_Name)
+        public void Make_New_Bill_List_Id(ref int Excp, ref long ID, long Invoice_Id, long Supplier_Id, DateTime Invoice_Date, int Invoice_Type, decimal Total, decimal commission, decimal CommissionValue, decimal TaxSales10, decimal ATS05, decimal TaxSales10_Value, decimal ATS05_Value, decimal Net_Total, string Currency, long Currency_Id, int Customer_BalanceSet, string Notes, string PolicaNo, string TroodContainerNo, decimal LoadPayment, decimal TotalSecond, decimal Damaghat, int Load_Payment_OnTax, decimal SupplierAccountBefor, decimal SupplierAccountAfter, long SubAccount_Id, string SubAccount_Name)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
-            Make_New_Bill_List_Id(ref Excp, ref opp, ref ID, Invoice_Id, Supplier_Id, Invoice_Date, Invoice_Type, Total, commission, CommissionValue, TaxSales10, ATS05, TaxSales10_Value, ATS05_Value, Net_Total, Currency, Currency_id, Customer_BalanceSet, Notes, PolicaNo, TroodContainerNo, LoadPayment, TotalSecond, Damaghat, Load_Payment_OnTax, SupplierAccountBefor, SupplierAccountAfter, SubAccount_Id, SubAccount_Name);
+            Make_New_Bill_List_Id(ref Excp, ref opp, ref ID, Invoice_Id, Supplier_Id, Invoice_Date, Invoice_Type, Total, commission, CommissionValue, TaxSales10, ATS05, TaxSales10_Value, ATS05_Value, Net_Total, Currency, Currency_Id, Customer_BalanceSet, Notes, PolicaNo, TroodContainerNo, LoadPayment, TotalSecond, Damaghat, Load_Payment_OnTax, SupplierAccountBefor, SupplierAccountAfter, SubAccount_Id, SubAccount_Name);
 
         }
          
@@ -718,8 +718,7 @@ FROM            Bills_List_Reverse INNER JOIN
         }
 
 
-         
-        public DataSet Get_Suppliers_Invoices(ref int Excp, decimal nuInvoiceNo, int Supplier_Id, bool _DateFrom, DateTime DateFrom, bool _DateTo, DateTime DateTo, bool NewInvoice, int Invoice_Type_, int Is_Invoice_Agile, bool OrderBySupplier)
+        public DataSet Get_Suppliers_Invoices(ref int Excp, decimal nuInvoiceNo, long Supplier_Id, bool _DateFrom, DateTime DateFrom, bool _DateTo, DateTime DateTo, bool NewInvoice, int Invoice_Type_, int Is_Invoice_Agile, bool OrderBySupplier)
         {
             DataSet ds = null;
             try
@@ -783,14 +782,80 @@ FROM            Bills_List_Reverse INNER JOIN
             }
 
         }
-        public DataSet Get_Suppliers_Bills_List_Reverse(ref int Excp, decimal nuInvoiceNo, int Supplier_Id, bool _DateFrom, DateTime DateFrom, bool _DateTo, DateTime DateTo, bool NewInvoice, int Invoice_Type_)
+
+        public DataSet Get_Suppliers_InvoicesList(ref int Excp, decimal nuInvoiceNo, long Supplier_Id, bool _DateFrom, DateTime DateFrom, bool _DateTo, DateTime DateTo, bool NewInvoice, int Invoice_Type_, int Is_Invoice_Agile, bool OrderBySupplier)
+        {
+            DataSet ds = null;
+            try
+            {
+
+                string mysql = " SELECT DISTINCT  Bills_List.*, Supplier.Id AS Supplier_Id , Supplier.Name,  Supplier.Address, Supplier.Tel, Supplier.Tel2, Supplier.Mobile, Supplier.E_Mail, Supplier.Fax, Supplier.Web_Site, Supplier.Balance,  Supplier.Supplier_Type, Supplier.Active, Supplier.SubAccount_Id ";
+                //mysql = mysql + " ,  ISNULL ((SELECT SUM(Export_Value) - SUM(Import_Value) AS Expr1  FROM Money_Transaction_Box WHERE (DataDictionaryProcessesListsId = 2) AND (Reference_Type_Table_Id = Bills_List.ID)), 0) AS TransactionValue ";
+
+                mysql = mysql + " FROM Supplier INNER JOIN Bills_List ON Supplier.Id = Bills_List.Supplier_Id ";
+                mysql = mysql + " WHERE ( Bills_List.Invoice_Type = " + Invoice_Type_ + ") ";
+                if (_DateFrom)
+                {
+                    mysql = mysql + " AND (CONVERT(DATE, Bills_List.Invoice_Date)  >= '" + AccountModelsLib.operations.dateFormat(DateFrom.Date) + "') ";
+
+                    //mysql = mysql + " AND  ( Bills_List.Invoice_Date >='" + AccountModelsLib.operations.dateFormat(DateFrom) + "')   ";
+                }
+                if (_DateTo)
+                {
+                    mysql = mysql + " AND (CONVERT(DATE, Bills_List.Invoice_Date)  <= '" + AccountModelsLib.operations.dateFormat(DateTo.Date) + "') ";
+                    //mysql = mysql + "  AND ( Bills_List.Invoice_Date <='" + AccountModelsLib.operations.dateFormat(DateTo) + "') ";
+                }
+                if (Supplier_Id > 0)
+                {
+                    mysql = mysql + "  AND (Supplier.Id = " + Supplier_Id + ")";
+                }
+                if (NewInvoice)
+                {
+                    mysql = mysql + "  AND ( Bills_List.Supplier_BalanceSet =0) ";
+                }
+                else
+                {
+                    mysql = mysql + "  AND ( Bills_List.Supplier_BalanceSet = 1) ";
+                }
+                if (nuInvoiceNo > 0)
+                {
+                    mysql = mysql + "  AND (Bills_List.Invoice_Id=" + nuInvoiceNo + ") ";
+                }
+                if (Is_Invoice_Agile > -1)
+                {
+                    mysql = mysql + "  AND (Bills_List.Is_Invoice_Agile=" + Is_Invoice_Agile + ") ";
+                }
+
+                if (OrderBySupplier == true)
+                {
+                    mysql = mysql + " ORDER BY Bills_List.Supplier_Id ";
+                }
+                else
+                {
+                    mysql = mysql + "  Order By Bills_List.Invoice_Date ";
+                }
+                AccountModelsLib.operations opp = new AccountModelsLib.operations();
+                ds = opp.return_dataset(ref Excp, mysql, "Bills_List");
+                opp = null;
+                Excp = 0;
+                return ds;
+            }
+            catch (Exception e)
+            {
+                Excp = 1;
+                throw (e);
+            }
+
+        }
+        public DataSet Get_Suppliers_Bills_List_Reverse(ref int Excp, decimal nuInvoiceNo, long Supplier_Id, bool _DateFrom, DateTime DateFrom, bool _DateTo, DateTime DateTo, bool NewInvoice, int Invoice_Type_)
         {
             DataSet ds = null;
             try
             {
 
                 string mysql = " SELECT DISTINCT Bills_List_Reverse.*, Supplier.Id AS Supplier_Id , Supplier.Name,  Supplier.Address, Supplier.Tel, Supplier.Tel2, Supplier.Mobile, Supplier.E_Mail, Supplier.Fax, Supplier.Web_Site, Supplier.Balance,  Supplier.Supplier_Type, Supplier.Active, Supplier.SubAccount_Id FROM Supplier INNER JOIN Bills_List_Reverse ON Supplier.Id = Bills_List_Reverse.Supplier_Id ";
-                mysql = mysql + " WHERE ( Bills_List_Reverse.Invoice_Type = " + Invoice_Type_ + ") ";
+                //mysql = mysql + " WHERE ( Bills_List_Reverse.Invoice_Type = " + Invoice_Type_ + ") ";
+                mysql = mysql + " WHERE ( Bills_List_Reverse.Id > 0 ) ";
                  
 
                 if (_DateFrom == true)

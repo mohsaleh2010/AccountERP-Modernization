@@ -39,7 +39,7 @@ namespace AccountModelsLib
         decimal Equivalent_Balance_Madin = 0;
         decimal Equivalent_Balance_Da2n = 0;
 
-        public void Make_Post_WithNewTar7eel(ref int Excp, ref string Msg, int Submain_Account_ID, int Journal_Code, int Branch_Id, DateTime dtFrom, DateTime dtTo)
+        public void Make_Post_WithNewTar7eel(ref int Excp, ref string Msg, int Submain_Account_ID, long Journal_Code, long Branch_Id, DateTime dtFrom, DateTime dtTo)
         {
             ////ترحيل الصندوق
             //int IS_Tar7eel_Sandouk_Automatic
@@ -110,7 +110,7 @@ FROM         Account_Entry_List INNER JOIN
             }
         }
 
-        public void Make_Post_WithChangeFirstBalance(ref string Msg, ref AccountModelsLib.operations opp, long Submain_Account_ID, int Journal_Code, int Branch_Id, DateTime dtFrom, DateTime dtTo)
+        public void Make_Post_WithChangeFirstBalance(ref string Msg, ref AccountModelsLib.operations opp, long Submain_Account_ID, long Journal_Code, long Branch_Id, DateTime dtFrom, DateTime dtTo)
         {
             DataTable dt = new DataTable();
 
@@ -163,7 +163,7 @@ FROM         Account_Entry_List INNER JOIN
             }
 
         }
-        public void Make_Post(ref string Msg, DataTable dt, ref AccountModelsLib.operations opp, long Submain_Account_ID, int Journal_Code, int Branch_Id, DateTime dtFrom, DateTime dtTo)
+        public void Make_Post(ref string Msg, DataTable dt, ref AccountModelsLib.operations opp, long Submain_Account_ID, long Journal_Code, long Branch_Id, DateTime dtFrom, DateTime dtTo)
         {
 
 
@@ -173,17 +173,16 @@ FROM         Account_Entry_List INNER JOIN
                 ////////////////////ترصيد الحساب فى جدول ارصدة الاستاذ  
 
                 long Account_Entry_Details_Id = long.Parse(dt.Rows[x]["Account_Entry_Details_Id"].ToString());
-                //int Year_Financial_Period_Id = int.Parse(dt.Rows[x]["Year_Financial_Period_Id"].ToString());
-
+                
                 DateTime dt_Entry = DateTime.Parse(dt.Rows[x]["Entry_Date"].ToString());
-                int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(dt_Entry);
+                long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(dt_Entry);
                 Submain_Account_ID = long.Parse(dt.Rows[x]["Submain_Account_ID"].ToString());
 
-                int Branch_Id_Entry = int.Parse(dt.Rows[x]["Branch_Id_Entry"].ToString());
-                //int Currency_Id = int.Parse(dt.Rows[x]["Currency_Id"].ToString());
+                long   Branch_Id_Entry = long.Parse(dt.Rows[x]["Branch_Id_Entry"].ToString());
+                //long    Currency_Id = long.Parse(dt.Rows[x]["Currency_Id"].ToString());
 
-                int Account_Currency_ID = int.Parse(dt.Rows[x]["Account_Currency_ID"].ToString());
-                int Entry_Currency_ID = int.Parse(dt.Rows[x]["Entry_Currency_ID"].ToString());
+                long Account_Currency_ID = long.Parse(dt.Rows[x]["Account_Currency_ID"].ToString());
+                long Entry_Currency_ID = long.Parse(dt.Rows[x]["Entry_Currency_ID"].ToString());
 
                 decimal Import_Value = decimal.Parse(dt.Rows[x]["Import_Value"].ToString());
                 decimal Export_Value = decimal.Parse(dt.Rows[x]["Export_Value"].ToString());
@@ -217,7 +216,7 @@ FROM         Account_Entry_List INNER JOIN
 
 
 
-        public void Cancel_Post(ref AccountModelsLib.operations opp, int Year_Financial_Period_Id, int Branch_Id)
+        public void Cancel_Post(ref AccountModelsLib.operations opp, long Year_Financial_Period_Id, long Branch_Id)
         {
             string mysql = "";
             ///////////////تاريخ اول المده
@@ -282,7 +281,7 @@ FROM         Account_Entry_List INNER JOIN
 
 
 
-        public void Make_Entry_For_AccountsSandouk_(ref int Excp, ref string Msg, int IS_Tar7eel_Sandouk_Automatic, int Branch_Id, DateTime dtFrom, DateTime dtTo, int Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id, long Entry_No)
+        public void Make_Entry_For_AccountsSandouk_(ref int Excp, ref string Msg, int IS_Tar7eel_Sandouk_Automatic, long Branch_Id, DateTime dtFrom, DateTime dtTo, long    Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id, long Entry_No)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations(1);
             Make_Entry_For_AccountsSandouk(ref Excp, ref Msg, ref opp, IS_Tar7eel_Sandouk_Automatic, Branch_Id, dtFrom, dtTo, Entry_Currency_ID, Entry_Currency_Name, Factor, Order_Money_Id, Entry_No);
@@ -303,8 +302,8 @@ FROM         Account_Entry_List INNER JOIN
             string mysql = @" SELECT     * from Order_Money Where Id=" + Order_Money_Id;
             DataTable dt = opp.return_DataTable(mysql);
             int IS_Tar7eel_Sandouk_Automatic = 1;
-            int Branch_Id = Common.Branch_Id;
-            int Entry_Currency_ID = 0;
+            long Branch_Id = Common.Branch_Id;
+            long Entry_Currency_ID = 0;
             string Entry_Currency_Name = "";
             decimal Factor = 0;
             DateTime Order_Date = new DateTime();
@@ -313,7 +312,7 @@ FROM         Account_Entry_List INNER JOIN
             if (dt.Rows.Count > 0)
             {
                 Order_Date = DateTime.Parse(dt.Rows[0]["Order_Date"].ToString());
-                Entry_Currency_ID = int.Parse(dt.Rows[0]["Entry_Currency_ID"].ToString());
+                Entry_Currency_ID = long.Parse(dt.Rows[0]["Entry_Currency_ID"].ToString());
                 Entry_Currency_Name = dt.Rows[0]["Entry_Currency_Name"].ToString();
                 Factor = decimal.Parse(dt.Rows[0]["Factor"].ToString());
 
@@ -323,11 +322,11 @@ FROM         Account_Entry_List INNER JOIN
             Make_Entry_For_AccountsSandouk(ref Excp, ref Msg, ref opp, IS_Tar7eel_Sandouk_Automatic, Branch_Id, Order_Date, Order_Date, Entry_Currency_ID, Entry_Currency_Name, Factor, Order_Money_Id, Entry_No);
         }
 
-        public void Make_Entry_For_AccountsSandouk(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, int Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id, long Entry_No)
+        public void Make_Entry_For_AccountsSandouk(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id, long Entry_No)
         {
 
             int IS_Tar7eel_Sandouk_Automatic = 1;
-            int Branch_Id = Common.Branch_Id;
+            long Branch_Id = Common.Branch_Id;
             DateTime DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             DateTime DateTo = new DateTime(DateTime.Now.Year, 12, 31);
 
@@ -339,7 +338,7 @@ FROM         Account_Entry_List INNER JOIN
 
 
         }
-        public void Make_Entry_For_AccountsSandouk(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, int IS_Tar7eel_Sandouk_Automatic, int Branch_Id, DateTime dtFrom, DateTime dtTo, int Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id, long Entry_No)
+        public void Make_Entry_For_AccountsSandouk(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, int IS_Tar7eel_Sandouk_Automatic, long Branch_Id, DateTime dtFrom, DateTime dtTo, long    Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id, long Entry_No)
         {
             try
             {
@@ -347,13 +346,13 @@ FROM         Account_Entry_List INNER JOIN
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
                 decimal Equivalent_Value = 0;
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
                 AccountEntry_CLS aa = new AccountEntry_CLS();
                 DataTable dt_Entry_Details = new DataTable();
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long User_ID_Login = Common.User_Id;
+                long Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
                 string mysql = @" SELECT        0 AS CostCenter_Id, 'لا يوجد' AS Cost_Center_Name, Order_Money.Id, Order_Money.Order_No, Order_Money.Order_Date, Order_Money.Transaction_type, 
                          Order_Money.Total_Value, Order_Money.Currency_Id, Order_Money.Bank_Type, Order_Money.Bank_ID, Order_Money.Man_Name, Order_Money.Is_Balances_Set, 
@@ -361,16 +360,16 @@ FROM         Account_Entry_List INNER JOIN
                          Order_Money.Branch_Id, Order_Money.Year_Financial_Period_Id, Order_Money.Ticket_Supplier_Id, Order_Money.Order_Tafkeet_Value, Order_Money.Order_Notes as Notes, 
                          Order_Money.Tafkeet_Value, Order_Money.Sandouk_Cost_Center_Tree_Id, Order_Money.IS_Posted_Flage, Submain_Account.Id, 
                          Submain_Account.Main_Account_Id, Submain_Account.SubAccount_NO, Submain_Account.Code, Submain_Account.FirstSubCode, Submain_Account.lastPartIncrease, 
-                         Submain_Account.SubAccount_Name, Submain_Account.IS_Last_Level, Submain_Account.Head_Main_Account, Submain_Account.Submain_Account_Balance, 
+                         Submain_Account.SubAccount_Name, Submain_Account.IS_Last_Level, Submain_Account.Head_Main_Account, 
                          Submain_Account.Currency_Id AS Expr1,   Submain_Account.CanDelete, Submain_Account.Account_Follows, 
-                         Submain_Account.destruction_date, Submain_Account.destruction, Submain_Account.Account_Nature_Type, Submain_Account.Accept_Cost_Center_Flage, 
+                         Submain_Account.Account_Nature_Type, Submain_Account.Accept_Cost_Center_Flage, 
                          Submain_Account.Cost_Center_Tree_ID, Submain_Account.Account_Level, Submain_Account.Account_Code, Submain_Account.Company_ID_For_GL, 
                          Submain_Account.Company_Name_For_GL, Submain_Account.Account_Customer_Type_Value, Submain_Account.Account_Customer_Type_ID, 
                          Submain_Account.Transform_Type,  Submain_Account.Branch_ID AS Expr6, 
                          Submain_Account.ConnectWith_Gl_Flage, Banks.id AS Expr2, Banks.Bank_Name, Banks.Primary_balance, Banks.Last_Balance, Banks.Account_No, 
                          Banks.SubAccount_Id AS Expr3, Banks.Is_Bank, Banks.Currency_Id AS Expr4, Banks.firstBalanceDate, Banks.Supplier_Bank, Banks.Default_Bank, 
                          Banks.Account_Code AS Expr5, Banks.Static_Flage, Order_Money.Sandouk_Cost_Center_Tree_Id AS Cost_Center_Id, 
-                         Submain_Account.Currency_Id AS Account_Currency_ID, Order_Money.Factor, Order_Money.Entry_Currency_ID
+                         Submain_Account.Currency_Id AS Account_Currency_ID, Order_Money.Factor, Order_Money.Entry_Currency_ID, Submain_Account.Id AS SubAccount_Id
 FROM            dbo.Submain_Account INNER JOIN
                          dbo.Banks ON dbo.Submain_Account.Id = dbo.Banks.SubAccount_Id INNER JOIN
                          dbo.Order_Money ON dbo.Banks.id = dbo.Order_Money.Bank_ID
@@ -388,7 +387,7 @@ FROM            dbo.Submain_Account INNER JOIN
                 DataTable dt_Order_Money = opp.return_DataTable(mysql);
                 int Transaction_Type_For_Sandouk = 0;
                 int Transaction_Type_ForAccount = 0;
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
 
                 dt_Entry_Details = new DataTable();
@@ -400,8 +399,8 @@ FROM            dbo.Submain_Account INNER JOIN
                     if (IS_Tar7eel_Sandouk_Automatic == 1)
                     {
                         Transaction_Type_For_Sandouk = int.Parse(dt_Order_Money.Rows[x]["Transaction_type"].ToString());
-                        Branch_Id_Entry = int.Parse(dt_Order_Money.Rows[x]["Branch_Id"].ToString());
-                        Entry_Currency_ID = int.Parse(dt_Order_Money.Rows[x]["Currency_ID"].ToString());
+                        Branch_Id_Entry = long.Parse(dt_Order_Money.Rows[x]["Branch_Id"].ToString());
+                        Entry_Currency_ID = long.Parse(dt_Order_Money.Rows[x]["Currency_ID"].ToString());
                         dtprocess_Date = DateTime.Parse(dt_Order_Money.Rows[x]["Order_Date"].ToString());
                         EntryValue = decimal.Parse(dt_Order_Money.Rows[x]["Total_Value"].ToString());
                         Entry_Total = double.Parse(dt_Order_Money.Rows[x]["Total_Value"].ToString());
@@ -425,8 +424,8 @@ FROM            dbo.Submain_Account INNER JOIN
 
                         mysql = @" SELECT        Submain_Account.Id, Submain_Account.Main_Account_Id, Submain_Account.SubAccount_NO, Submain_Account.Code, Submain_Account.FirstSubCode, 
                          Submain_Account.lastPartIncrease, Submain_Account.SubAccount_Name, Submain_Account.IS_Last_Level, Submain_Account.Head_Main_Account, 
-                         Submain_Account.Submain_Account_Balance, Submain_Account.Currency_Id, Submain_Account.CanDelete, Submain_Account.Account_Follows, 
-                         Submain_Account.destruction_date, Submain_Account.destruction, Submain_Account.Account_Nature_Type, Submain_Account.Accept_Cost_Center_Flage, 
+                         Submain_Account.Currency_Id, Submain_Account.CanDelete, Submain_Account.Account_Follows, 
+                         Submain_Account.Account_Nature_Type, Submain_Account.Accept_Cost_Center_Flage, 
                          Submain_Account.Account_Level, Submain_Account.Account_Code, Submain_Account.Company_ID_For_GL, Submain_Account.Company_Name_For_GL, 
                          Submain_Account.Account_Customer_Type_Value, Submain_Account.Account_Customer_Type_ID, Submain_Account.Transform_Type, 
                            Submain_Account.Branch_ID, Submain_Account.ConnectWith_Gl_Flage, 
@@ -441,7 +440,7 @@ FROM            dbo.Submain_Account INNER JOIN
                          Money_Transaction_Box.Rest_Value, Money_Transaction_Box.Account_Name, Money_Transaction_Box.Account_Code AS Expr5, 
                          Money_Transaction_Box.Account_Type, Money_Transaction_Box.Currency_Id AS Expr6, Submain_Account.Cost_Center_Tree_ID AS Cost_Center_ID, 
                          Order_Money.Order_No, Money_Transaction_Box.Account_Cost_Center_Tree_Id AS CostCenter_Id, Money_Transaction_Box.Cost_Center, 
-                         Cost_Center_Tree.Name AS Cost_Center_Name, Money_Transaction_Box.Notes, Money_Transaction_Box.Factor, Money_Transaction_Box.Entry_Currency_ID
+                         Cost_Center_Tree.Name AS Cost_Center_Name, Money_Transaction_Box.Notes, Money_Transaction_Box.Factor, Money_Transaction_Box.Entry_Currency_ID, Submain_Account.Id AS SubAccount_Id
 FROM            Money_Transaction_Box INNER JOIN
                          Submain_Account ON Money_Transaction_Box.SubAccount_Id = Submain_Account.Id INNER JOIN
                          Order_Money ON Money_Transaction_Box.Order_Mony_Id = Order_Money.Id LEFT OUTER JOIN
@@ -467,7 +466,7 @@ FROM            Money_Transaction_Box INNER JOIN
                                 Equivalent_Value = 1 / Equivalent_Value;
                             }
                             catch { }
-                            int Account_Currency_ID = int.Parse(dt_Order_Money.Rows[x]["Currency_ID"].ToString());
+                            long Account_Currency_ID = long.Parse(dt_Order_Money.Rows[x]["Currency_ID"].ToString());
                             ////إضافة الحساب الاخر
                             Add_Row_Account_Details_FromAdd(ref aa, ref dt_Entry_Details, ref dt_Money_Transaction_Box, y, Transaction_Type_ForAccount, Account_Currency_ID, Branch_Id_Entry, EntryValue, Equivalent_Value);
                         }
@@ -479,7 +478,7 @@ FROM            Money_Transaction_Box INNER JOIN
                         {
                             Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code, Account_Entry_List_ID);
                         }
-                        int Journal_Code = Common2.Get_Journal_Code_ForSandouk(Transaction_Type_For_Sandouk);
+                        long Journal_Code = Common2.Get_Journal_Code_ForSandouk(Transaction_Type_For_Sandouk);
                         int IS_Make_AutomaticFromTar7eel = 1;
                         aa.Reference_Type = Common.Sandouk_Account_Type;
                         aa.Reference_Type_Table_Id = Order_Money_Id;
@@ -488,6 +487,34 @@ FROM            Money_Transaction_Box INNER JOIN
                         {
                             Excp = 1;
                             aa.Make_AccountEntry(ref Excp, ref Msg, ref Account_Entry_List_ID, ref opp, User_ID_Login, User_Id_Login_Name, Branch_ID_Login, Entry_No, dtprocess_Date, Journal_Code, Entry_Currency_ID, Entry_Notes, Transaction_Type_ForAccount, dt_Entry_Details, Entry_Total, Branch_Id_Entry, IS_Make_AutomaticFromTar7eel, Order_No, Entry_Currency_ID, Entry_Currency_Name, Factor, Order_Money_Id);
+
+                            // 🟢 بقرار المستخدم (خطة الفواتير §25.1، 2026-09-29): سطر الطرف (عميل/مورد/حساب آخر)
+                            // فى قيد سند القبض/الصرف يجب أن يشير Reference_Type_Table_Id إلى حركته الخاصة
+                            // (Money_Transaction_Box.Id) لا إلى رأس الإذن (Order_Money.Id) كباقى السطور. محرك
+                            // القيود المشترك (AccountEntry_CLS.Make_AccountEntry) يكتب قيمة Reference_Type_Table_Id
+                            // واحدة لكل سطور القيد دفعة واحدة (لا يوجد مفهوم "قيمة لكل سطر" فيه) فلا نعدّله؛
+                            // بدلاً من ذلك نصحّح سطور الأطراف فقط بتحديث لاحق مباشر بعد إنشاء القيد، مقصور على
+                            // هذه الدالة (خاصة بسندات الصندوق/النقدية) دون المساس بمحرك القيود العام أو بدوال
+                            // القيود الأخرى (الفواتير/المشتريات). سطر الصندوق نفسه يبقى بمرجع الرأس Order_Money.Id
+                            // لعدم وجود صف Money_Transaction_Box خاص به فى هذا المخطط (تحقَّق من بيانات حقيقية:
+                            // كل صفوف Money_Transaction_Box لإذن ما تمثّل جانب "الطرف الآخر" فقط).
+                            if (Excp == 0 && Account_Entry_List_ID > 0)
+                            {
+                                for (int y2 = 0; y2 < dt_Money_Transaction_Box.Rows.Count; y2++)
+                                {
+                                    long partySubAccountId = long.Parse(dt_Money_Transaction_Box.Rows[y2]["SubAccount_Id"].ToString());
+                                    // 🟢 "Id1" لا "Id": الاستعلام أعلاه (بناء dt_Money_Transaction_Box) يختار كلاً من
+                                    // Submain_Account.Id (بلا Alias) و Money_Transaction_Box.Id (بلا Alias أيضاً) معاً - ADO.NET
+                                    // يعيد تسمية العمود الثانى تلقائياً إلى "Id1" لتفادى تعارض الاسم، فيصبح "Id" فعلياً هو
+                                    // Submain_Account.Id (المطابق لقيمة SubAccount_Id نفسها) و"Id1" هو Money_Transaction_Box.Id
+                                    // الحقيقى المطلوب هنا. تحقَّقتُ من هذا حياً: قبل هذا الإصلاح كانت القيمة المحفوظة تساوي
+                                    // SubAccount_Id خطأً بدل معرّف صف Money_Transaction_Box.
+                                    long partyBoxRowId = long.Parse(dt_Money_Transaction_Box.Rows[y2]["Id1"].ToString());
+                                    string mysqlFixRef = "UPDATE Account_Entry_Details SET Reference_Type_Table_Id = " + partyBoxRowId +
+                                        " WHERE Account_Entry_List_ID = " + Account_Entry_List_ID + " AND Submain_Account_ID = " + partySubAccountId;
+                                    opp.insert_me(mysqlFixRef);
+                                }
+                            }
                         }
 
                     }
@@ -510,11 +537,11 @@ FROM            Money_Transaction_Box INNER JOIN
             }
 
         }
-        public void Make_Entry_For_AccountsSandoukMulti(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, int Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id, long Entry_No)
+        public void Make_Entry_For_AccountsSandoukMulti(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long    Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id, long Entry_No)
         {
             long tt = Account_Entry_List_ID;
             int IS_Tar7eel_Sandouk_Automatic = 1;
-            int Branch_Id = Common.Branch_Id;
+            long Branch_Id = Common.Branch_Id;
             DateTime DateFrom = new DateTime(DateTime.Now.Year, 1, 1);
             DateTime DateTo = new DateTime(DateTime.Now.Year, 12, 31);
 
@@ -526,7 +553,7 @@ FROM            Money_Transaction_Box INNER JOIN
 
 
         }
-        public void Make_Entry_For_AccountsSandoukMulti(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, int IS_Tar7eel_Sandouk_Automatic, int Branch_Id, DateTime dtFrom, DateTime dtTo, int Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id, long Entry_No)
+        public void Make_Entry_For_AccountsSandoukMulti(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, int IS_Tar7eel_Sandouk_Automatic, long Branch_Id, DateTime dtFrom, DateTime dtTo, long    Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id, long Entry_No)
         {
             try
             {
@@ -546,20 +573,20 @@ FROM            Money_Transaction_Box INNER JOIN
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
                 decimal Equivalent_Value = 0;
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long User_ID_Login = Common.User_Id;
+                long Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
                 string mysql = @" SELECT        0 AS CostCenter_Id, 'لا يوجد' AS Cost_Center_Name, Order_Money.Id, Order_Money.Order_No, Order_Money.Order_Date, Order_Money.Transaction_type, Order_Money.Total_Value, Order_Money.Currency_Id, 
                          Order_Money.Bank_Type, Order_Money.Bank_ID, Order_Money.Man_Name, Order_Money.Is_Balances_Set, Order_Money.Day_Registration_flage, Order_Money.DayReg_List_Id, Order_Money.Order_mony_id_transform, 
                          Order_Money.Invoice_Id, Order_Money.User_Id, Order_Money.Branch_Id, Order_Money.Year_Financial_Period_Id, Order_Money.Ticket_Supplier_Id, Order_Money.Order_Tafkeet_Value, 
-                         Order_Money.Tafkeet_Value, Order_Money.Sandouk_Cost_Center_Tree_Id, Order_Money.IS_Posted_Flage, Submain_Account.Id, Submain_Account.Main_Account_Id, Submain_Account.SubAccount_NO, 
+                         Order_Money.Tafkeet_Value, Order_Money.Sandouk_Cost_Center_Tree_Id, Order_Money.IS_Posted_Flage, Submain_Account.Id,Submain_Account.Id AS SubAccount_Id, Submain_Account.Main_Account_Id, Submain_Account.SubAccount_NO, 
                          Submain_Account.Code, Submain_Account.FirstSubCode, Submain_Account.lastPartIncrease, Submain_Account.SubAccount_Name, Submain_Account.IS_Last_Level, Submain_Account.Head_Main_Account, 
-                         Submain_Account.Submain_Account_Balance, Submain_Account.Currency_Id AS Expr1, Submain_Account.CanDelete, Submain_Account.Account_Follows, Submain_Account.destruction_date, Submain_Account.destruction, 
+                         Submain_Account.Currency_Id AS Expr1, Submain_Account.CanDelete, Submain_Account.Account_Follows, 
                          Submain_Account.Account_Nature_Type, Submain_Account.Accept_Cost_Center_Flage, Submain_Account.Cost_Center_Tree_ID, Submain_Account.Account_Level, Submain_Account.Account_Code, 
                          Submain_Account.Company_ID_For_GL, Submain_Account.Company_Name_For_GL, Submain_Account.Account_Customer_Type_Value, Submain_Account.Account_Customer_Type_ID, Submain_Account.Transform_Type, 
                            Submain_Account.Branch_ID AS Expr6, Submain_Account.ConnectWith_Gl_Flage, Banks.id AS Expr2, Banks.Bank_Name, Banks.Primary_balance, Banks.Last_Balance, 
@@ -585,7 +612,7 @@ FROM            dbo.Submain_Account INNER JOIN
                 DataTable dt_Order_Money = opp.return_DataTable(mysql);
                 int Transaction_Type_For_Sandouk = 0;
                 int Transaction_Type_ForAccount = 0;
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 string Order_No = "";
                 dt_Entry_Details = new DataTable();
@@ -598,8 +625,8 @@ FROM            dbo.Submain_Account INNER JOIN
                     {
                         long Money_Transaction_BoxId = long.Parse(dt_Order_Money.Rows[x]["Money_Transaction_BoxId"].ToString());
                         Transaction_Type_For_Sandouk = int.Parse(dt_Order_Money.Rows[x]["Transaction_type"].ToString());
-                        Branch_Id_Entry = int.Parse(dt_Order_Money.Rows[x]["Branch_Id"].ToString());
-                        Entry_Currency_ID = int.Parse(dt_Order_Money.Rows[x]["Currency_ID"].ToString());
+                        Branch_Id_Entry = long.Parse(dt_Order_Money.Rows[x]["Branch_Id"].ToString());
+                        Entry_Currency_ID = long.Parse(dt_Order_Money.Rows[x]["Currency_ID"].ToString());
                         dtprocess_Date = DateTime.Parse(dt_Order_Money.Rows[x]["Order_Date"].ToString());
                         EntryValue = decimal.Parse(dt_Order_Money.Rows[x]["Transaction_Value"].ToString());
                         Entry_Total = double.Parse(dt_Order_Money.Rows[x]["Transaction_Value"].ToString());
@@ -623,10 +650,10 @@ FROM            dbo.Submain_Account INNER JOIN
                             journal_Code = 3;
                         }
 
-                        mysql = @" SELECT        Submain_Account.Id, Submain_Account.Main_Account_Id, Submain_Account.SubAccount_NO, Submain_Account.Code, Submain_Account.FirstSubCode, 
+                        mysql = @" SELECT        Submain_Account.Id, Submain_Account.Id As SubAccount_Id,Submain_Account.Main_Account_Id, Submain_Account.SubAccount_NO, Submain_Account.Code, Submain_Account.FirstSubCode, 
                          Submain_Account.lastPartIncrease, Submain_Account.SubAccount_Name, Submain_Account.IS_Last_Level, Submain_Account.Head_Main_Account, 
-                         Submain_Account.Submain_Account_Balance, Submain_Account.Currency_Id, Submain_Account.CanDelete, Submain_Account.Account_Follows, 
-                         Submain_Account.destruction_date, Submain_Account.destruction, Submain_Account.Account_Nature_Type, Submain_Account.Accept_Cost_Center_Flage, 
+                         Submain_Account.Currency_Id, Submain_Account.CanDelete, Submain_Account.Account_Follows, 
+                         Submain_Account.Account_Nature_Type, Submain_Account.Accept_Cost_Center_Flage, 
                          Submain_Account.Account_Level, Submain_Account.Account_Code, Submain_Account.Company_ID_For_GL, Submain_Account.Company_Name_For_GL, 
                          Submain_Account.Account_Customer_Type_Value, Submain_Account.Account_Customer_Type_ID, Submain_Account.Transform_Type, 
                           Submain_Account.Branch_ID, Submain_Account.ConnectWith_Gl_Flage, 
@@ -669,7 +696,7 @@ FROM            Money_Transaction_Box INNER JOIN
                                 Equivalent_Value = 1 / Equivalent_Value;
                             }
                             catch { }
-                            int Account_Currency_ID = int.Parse(dt_Order_Money.Rows[x]["Currency_ID"].ToString());
+                            long Account_Currency_ID = long.Parse(dt_Order_Money.Rows[x]["Currency_ID"].ToString());
                             ////إضافة الحساب الاخر
                             Add_Row_Account_Details_FromAdd(ref aa, ref dt_Entry_Details, ref dt_Money_Transaction_Box, y, Transaction_Type_ForAccount, Account_Currency_ID, Branch_Id_Entry, EntryValue, Equivalent_Value);
                         }
@@ -688,14 +715,14 @@ FROM            Money_Transaction_Box INNER JOIN
                     {
                         Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code, Account_Entry_List_Id_);
                     }
-                    int Journal_Code = Common2.Get_Journal_Code_ForSandouk(Transaction_Type_For_Sandouk);
+                    long Journal_Code = Common2.Get_Journal_Code_ForSandouk(Transaction_Type_For_Sandouk);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     aa.Reference_Type = Common.Sandouk_Account_Type;
                     aa.Reference_Type_Table_Id = Order_Money_Id;
 
 
                     Excp = 1;
-                    aa.Make_AccountEntry(ref Excp, ref Msg, ref Account_Entry_List_Id_, ref opp, User_ID_Login, User_Id_Login_Name, Branch_ID_Login, Entry_No, dtprocess_Date, Journal_Code, Entry_Currency_ID, Entry_Notes, Transaction_Type_ForAccount, dt_Entry_Details, Entry_Total, Branch_Id_Entry, IS_Make_AutomaticFromTar7eel, Order_No, Entry_Currency_ID, Entry_Currency_Name, Factor, Order_Money_Id);
+                    aa.Make_AccountEntry(ref Excp, ref Msg, ref Account_Entry_List_Id_, ref opp, User_ID_Login, User_Id_Login_Name, Branch_ID_Login, Entry_No, dtprocess_Date,  Journal_Code, Entry_Currency_ID, Entry_Notes, Transaction_Type_ForAccount, dt_Entry_Details, Entry_Total, Branch_Id_Entry, IS_Make_AutomaticFromTar7eel, Order_No, Entry_Currency_ID, Entry_Currency_Name, Factor, Order_Money_Id);
                 }
                 if (Excp == 0)
                 {
@@ -719,7 +746,7 @@ FROM            Money_Transaction_Box INNER JOIN
             }
 
         }
-        public void Add_Row_Account_Details_FromAdd(ref AccountEntry_CLS aa, ref DataTable dt_Entry_Details, ref DataTable dt, int x, int Transaction_Type, int Entry_Currency_ID, int Branch_Id_Entry, decimal EntryValue, decimal Equivalent_Value)
+        public void Add_Row_Account_Details_FromAdd(ref AccountEntry_CLS aa, ref DataTable dt_Entry_Details, ref DataTable dt, int x, int Transaction_Type, long Entry_Currency_ID, long Branch_Id_Entry, decimal EntryValue, decimal Equivalent_Value)
         {
             //try
             //{
@@ -757,7 +784,7 @@ FROM            Money_Transaction_Box INNER JOIN
             string SubAccount_Name = dt.Rows[x]["SubAccount_Name"].ToString();
             string MainAccount_Name = dt.Rows[x]["SubAccount_Name"].ToString();
             string Account_Code = dt.Rows[x]["Code"].ToString();
-            int Account_Currency_ID = int.Parse(dt.Rows[x]["Account_Currency_ID"].ToString());
+            long Account_Currency_ID = long.Parse(dt.Rows[x]["Account_Currency_ID"].ToString());
             decimal Factor = 1;
 
             try
@@ -787,7 +814,7 @@ FROM            Money_Transaction_Box INNER JOIN
             //}
             //catch { }
             string Notes_Details = dt.Rows[x]["Notes"].ToString();
-            //int Branch_Id_Entry = int.Parse(dt.Rows[x]["Account_Cost_Center_Tree_Id"].ToString());
+            //long   Branch_Id_Entry = long.Parse(dt.Rows[x]["Account_Cost_Center_Tree_Id"].ToString());
             aa.AddRow_WhenBuild(ref Excp, ref dt_Entry_Details, Id_Test, Account_Code, Account_Type, MainAccount_Id, MainAccount_Name, Submain_Account_ID, SubAccount_Name, MadinDa2n, EntryValue, Notes_Details, Equivalent_Value, Account_Currency_ID, Entry_Currency_ID, CostCenter_Id, CostCenter_Name, Branch_Id_Entry, Factor);
 
             if (Excp == 1)
@@ -801,7 +828,7 @@ FROM            Money_Transaction_Box INNER JOIN
            
             //}
         }
-        public void Add_Row_Account_Details_FromAdd(ref AccountEntry_CLS aa, ref DataTable dt_Entry_Details, int Transaction_Type, int Entry_Currency_ID, int Branch_Id_Entry, decimal EntryValue, long Submain_Account_ID, long Id_Test, long CostCenter_Id, string CostCenter_Name, int Account_Type, long MainAccount_Id, string SubAccount_Name, string MainAccount_Name, string Account_Code, int Account_Currency_ID, decimal Factor, string Notes_Details)
+        public void Add_Row_Account_Details_FromAdd(ref AccountEntry_CLS aa, ref DataTable dt_Entry_Details, int Transaction_Type, long    Entry_Currency_ID, long Branch_Id_Entry, decimal EntryValue, long Submain_Account_ID, long Id_Test, long CostCenter_Id, string CostCenter_Name, int Account_Type, long MainAccount_Id, string SubAccount_Name, string MainAccount_Name, string Account_Code, long Account_Currency_Id, decimal Factor, string Notes_Details)
         {
             //try
             //{
@@ -818,7 +845,7 @@ FROM            Money_Transaction_Box INNER JOIN
 
 
 
-            aa.AddRow_WhenBuild(ref Excp, ref dt_Entry_Details, Id_Test, Account_Code, Account_Type, MainAccount_Id, MainAccount_Name, Submain_Account_ID, SubAccount_Name, Transaction_Type, EntryValue, Notes_Details, Factor, Account_Currency_ID, Entry_Currency_ID, CostCenter_Id, CostCenter_Name, Branch_Id_Entry, Factor);
+            aa.AddRow_WhenBuild(ref Excp, ref dt_Entry_Details, Id_Test, Account_Code, Account_Type, MainAccount_Id, MainAccount_Name, Submain_Account_ID, SubAccount_Name, Transaction_Type, EntryValue, Notes_Details, Factor, Account_Currency_Id, Entry_Currency_ID, CostCenter_Id, CostCenter_Name, Branch_Id_Entry, Factor);
 
             if (Excp == 1)
             { return; }
@@ -921,7 +948,7 @@ FROM            Money_Transaction_Box INNER JOIN
             opp.insert_me(mysql);
         }
 
-        long Search_Account_In_Master(ref AccountModelsLib.operations opp, int Year_Financial_Period_Id, long Submain_Account_ID, string SubAccount_Name, int Branch_Id, int Account_Currency_ID)
+        long Search_Account_In_Master(ref AccountModelsLib.operations opp, long Year_Financial_Period_Id, long Submain_Account_ID, string SubAccount_Name, long Branch_Id, long Account_Currency_ID)
         {
             //decimal Equivalent_Madin_Value, ref decimal Equivalent_Da2n_Value, ref decimal Equivalent_Balance_Madin, ref decimal Equivalent_Balance_Da2n
             /////////////يجب الا يتكرر وضع الحساب فى الجدول لكل من

@@ -39,7 +39,7 @@ namespace AccountModelsLib
             int IsInvoiceTaxInfo = Common.PermissionToShowTaxInvoiceOrNotORAll();
 
             int Excp = 0;
-            string mysql = " SELECT SUM(commission / 100 * Total) AS commission, SUM(Net_Total) AS Net_Total FROM Invoices_List ";
+            string mysql = " SELECT SUM(Total_Item_CommissionValue / 100 * Total) AS commission, SUM(Net_Total) AS Net_Total FROM Invoices_List ";
             mysql = mysql + " Where  (Invoice_Date >= '" + operations.dateFormat(DateFrom) + "') AND  (Invoice_Date <= '" + operations.dateFormat(DateTo) + "') ";
             if (IsInvoiceTaxInfo > -1)
             {
@@ -85,7 +85,7 @@ namespace AccountModelsLib
         public void GetReverseSalesTotal()
         {
             int Excp = 0;
-            string mysql = " SELECT SUM(commission / 100 * Total) AS commission, SUM(Net_Total) AS Net_Total FROM Invoices_List_Reverse ";
+            string mysql = " SELECT SUM(Total_Item_CommissionValue / 100 * Total) AS commission, SUM(Net_Total) AS Net_Total FROM Invoices_List_Reverse ";
             mysql = mysql + " Where  (Invoice_Date >= '" + operations.dateFormat(DateFrom) + "') AND  (Invoice_Date <= '" + operations.dateFormat(DateTo) + "') ";
 
             DataSet ds = Get_Data(ref Excp, mysql);
@@ -102,7 +102,7 @@ namespace AccountModelsLib
         public void GetPurchaseTotal()
         {
             int Excp = 0;
-            string mysql = " SELECT SUM(commission / 100 * Total) AS commission, SUM(Net_Total) AS Net_Total,SUM(Load_Payment) AS Load_Payment FROM Bills_List ";
+            string mysql = " SELECT SUM(Total_Item_CommissionValue / 100 * Total) AS commission, SUM(Net_Total) AS Net_Total,SUM(Load_Payment) AS Load_Payment FROM Bills_List ";
             mysql = mysql + " Where  (Invoice_Date >= '" + operations.dateFormat(DateFrom) + "') AND  (Invoice_Date <= '" + operations.dateFormat(DateTo) + "') ";
 
             DataSet ds = Get_Data(ref Excp, mysql);
@@ -110,9 +110,16 @@ namespace AccountModelsLib
             if (ds.Tables[0].Rows.Count > 0 & ds.Tables[0].Rows[0]["Net_Total"].ToString() != "")
             {
                 PurchaseTotal = decimal.Parse(ds.Tables[0].Rows[0]["Net_Total"].ToString());
-                WinCommission = decimal.Parse(ds.Tables[0].Rows[0]["commission"].ToString());
+                
                 PurchaseMoneySpent = decimal.Parse(ds.Tables[0].Rows[0]["Load_Payment"].ToString());
-
+                try
+                {
+                    WinCommission = decimal.Parse(ds.Tables[0].Rows[0]["commission"].ToString());
+                }
+                catch (Exception ee)
+                {
+                    WinCommission = 0;
+                }
                 PurchaseTotal = Common.RoundMe(PurchaseTotal);
                 WinCommission = Common.RoundMe(WinCommission);
                 PurchaseMoneySpent = Common.RoundMe(PurchaseMoneySpent);
@@ -123,7 +130,7 @@ namespace AccountModelsLib
         public void GetReversePurchaseTotal()
         {
             int Excp = 0;
-            string mysql = " SELECT SUM(commission / 100 * Total) AS commission, SUM(Net_Total) AS Net_Total FROM Bills_List_Reverse ";
+            string mysql = " SELECT SUM(Total_Item_CommissionValue / 100 * Total) AS commission, SUM(Net_Total) AS Net_Total FROM Bills_List_Reverse ";
             mysql = mysql + " Where  (Invoice_Date >= '" + operations.dateFormat(DateFrom) + "') AND  (Invoice_Date <= '" + operations.dateFormat(DateTo) + "') ";
 
             DataSet ds = Get_Data(ref Excp, mysql);
@@ -139,7 +146,7 @@ namespace AccountModelsLib
 
         }
 
-        public DataTable GetSalesTotal(long Item_Id, int Item_Category_ID, bool _dtFrom, DateTime dtFrom, bool _dtTo, DateTime dtTo)
+        public DataTable GetSalesTotal(long Item_Id, long Item_Category_ID, bool _dtFrom, DateTime dtFrom, bool _dtTo, DateTime dtTo)
         {
             operations opp = new operations();
             string mysql = @" SELECT  0.0 AS LostValue,       '' AS Serial_, '' AS QntyStrColumn, unit.B_Unit, unit.S_unit, unit.S_unit_Value, Item.Item_Name, ISNULL(SUM(Invoices_Details.Qnty_value), 0) AS Qnty_value_Sell, ISNULL(SUM(Bills_Details.Qnty_value), 0) 
@@ -186,7 +193,7 @@ FROM            Invoices_List INNER JOIN
             DataTable dt = opp.return_DataTableWithBuilder(mysql);
             return dt;
         }
-        public DataTable GetPurchaseTotal(long Item_Id, int Item_Category_ID, bool _dtFrom, DateTime dtFrom, bool _dtTo, DateTime dtTo)
+        public DataTable GetPurchaseTotal(long Item_Id, long Item_Category_ID, bool _dtFrom, DateTime dtFrom, bool _dtTo, DateTime dtTo)
         {
             operations opp = new operations();
             string mysql = @" SELECT        '' AS Serial_, '' AS QntyStrColumn, unit.B_Unit, unit.S_unit, unit.S_unit_Value, Item.Item_Name, ISNULL(SUM(Bills_Details.Qnty_value), 0) AS Qnty_value, SUM(Bills_Details.Larg_Qnty) AS Larg_Qnty, 

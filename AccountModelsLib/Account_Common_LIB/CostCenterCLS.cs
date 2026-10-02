@@ -108,7 +108,7 @@ Order By Cost_Center_Tree.Id
             }
         }
 
-        public bool Check_CostName_Found(ref int Excp, ref AccountModelsLib.operations opp, int CostCenter_Id, ref string CostCenter_Name)
+        public bool Check_CostName_Found(ref int Excp, ref AccountModelsLib.operations opp, long CostCenter_Id, ref string CostCenter_Name)
         {
             DataTable dt;
             try
@@ -141,7 +141,7 @@ Order By Cost_Center_Tree.Id
             }
         }
 
-        public void Add_NewCostCenter(ref int Excp, ref string Msg,ref operations opp, long Parent_Id, string Name, long Code, string Code_Str, int Cost_Type, string Notes, int Currency_Id, string Currency_Str, int Head_Main_Cost, long lastPartIncrease, int Cost_Level, string FirstSubCode)
+        public void Add_NewCostCenter(ref int Excp, ref string Msg,ref operations opp, long Parent_Id, string Name, long Code, string Code_Str, int Cost_Type, string Notes, long Currency_Id, string Currency_Str, int Head_Main_Cost, long lastPartIncrease, int Cost_Level, string FirstSubCode)
         {
             string mysql = "";
             if (Common.Use_AutoNumeric_Submain_Account_Id == 0 | Common.Use_Auto_Identity_Column == 0)
@@ -170,7 +170,7 @@ Order By Cost_Center_Tree.Id
                 Msg = ee.Message;
             }
         }
-        public void Add_NewCostCenter(ref int Excp, ref string Msg, long Parent_Id, string Name, long Code, string Code_Str, int Cost_Type, string Notes, int Currency_Id, string Currency_Str, int Head_Main_Cost, long lastPartIncrease, int Cost_Level, string FirstSubCode)
+        public void Add_NewCostCenter(ref int Excp, ref string Msg, long Parent_Id, string Name, long Code, string Code_Str, int Cost_Type, string Notes, long Currency_Id, string Currency_Str, int Head_Main_Cost, long lastPartIncrease, int Cost_Level, string FirstSubCode)
         {
            
             AccountModelsLib.operations opp = new AccountModelsLib.operations();

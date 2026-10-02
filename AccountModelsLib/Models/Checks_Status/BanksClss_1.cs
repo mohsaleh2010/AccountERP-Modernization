@@ -25,7 +25,7 @@ namespace AccountModelsLib.Models
         public int Account_Type_Value { get; set; }
         public int Account_Branches_ID { get; set; }
         public int Is_Bank { get; set; }
-        public int Currency_Id { get; set; }
+        public long    Currency_Id { get; set; }
         public DateTime FirstBalanceDate { get; set; }
         public long SubAccount_Id { get; set; }
         public int Supplier_Bank { get; set; }

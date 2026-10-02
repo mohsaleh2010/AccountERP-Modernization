@@ -87,7 +87,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
 
             dt_Details = opp.return_DataTable(mysql);
         }
-        public void AddRow_WhenBuild(ref int Excp, ref DataTable dt_Details, long Id_Test, string Account_Code, int Account_Type, long MainAccount_Id, string MainAccount_Name, long Submain_Account_ID, string SubAccount_Name, int MadinDa2n, decimal Entry_Value, string Notes_Details, decimal Equivalent_Currency_Value, int Account_Currency_ID, int Entry_Currency_ID, long CostCenter_Id, string CostCenter_Name, int Branch_Id_Entry, decimal Factor)
+        public void AddRow_WhenBuild(ref int Excp, ref DataTable dt_Details, long Id_Test, string Account_Code, int Account_Type, long MainAccount_Id, string MainAccount_Name, long Submain_Account_ID, string SubAccount_Name, int MadinDa2n, decimal Entry_Value, string Notes_Details, decimal Equivalent_Currency_Value, long Account_Currency_Id, long    Entry_Currency_ID, long CostCenter_Id, string CostCenter_Name, long Branch_Id_Entry, decimal Factor)
         {
 
             try
@@ -115,7 +115,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
                 dr["SubAccount_Name"] = SubAccount_Name;
                 dr["MainAccount_Name"] = MainAccount_Name;
 
-                dr["Account_Currency_ID"] = Account_Currency_ID;
+                dr["Account_Currency_ID"] = Account_Currency_Id;
                 dr["Entry_Currency_ID"] = Entry_Currency_ID;
                 dr["Factor"] = Factor;
                 dr["CostCenter_Id"] = CostCenter_Id;
@@ -250,7 +250,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
             }
         }
 
-        public void AddRow_WhenBuild(ref int Excp, ref DataTable dt_Details, long Id_Test, string Account_Code, int Account_Type, long MainAccount_Id, string MainAccount_Name, long Submain_Account_ID, string SubAccount_Name, int MadinDa2n, decimal Entry_Value, string Notes_Details, decimal Equivalent_Currency_Value, int Account_Currency_ID, int Entry_Currency_ID, long CostCenter_Id, string CostCenter_Name, int Branch_Id_Entry, decimal Factor, long CarsWorkOrdersId, long CarsId, long WorkOrderNumber, string CarNumber)
+        public void AddRow_WhenBuild(ref int Excp, ref DataTable dt_Details, long Id_Test, string Account_Code, int Account_Type, long MainAccount_Id, string MainAccount_Name, long Submain_Account_ID, string SubAccount_Name, int MadinDa2n, decimal Entry_Value, string Notes_Details, decimal Equivalent_Currency_Value, long Account_Currency_Id, long    Entry_Currency_ID, long CostCenter_Id, string CostCenter_Name, long Branch_Id_Entry, decimal Factor, long CarsWorkOrdersId, long CarsId, long WorkOrderNumber, string CarNumber)
         {
             
 
@@ -279,7 +279,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
                 dr["SubAccount_Name"] = SubAccount_Name;
                 dr["MainAccount_Name"] = MainAccount_Name;
 
-                dr["Account_Currency_ID"] = Account_Currency_ID;
+                dr["Account_Currency_ID"] = Account_Currency_Id;
                 dr["Entry_Currency_ID"] = Entry_Currency_ID;
                 dr["Factor"] = Factor;
                 dr["CostCenter_Id"] = CostCenter_Id;
@@ -412,7 +412,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
                 Excp = 1;
             }
         }
-        public void EditRow_WhenBuild(ref int Excp,ref string Msg, ref DataTable dt_Details, int RowIndex, ref ArrayList arr_IdDelet, long Id_Test, string Account_Code, int Account_Type, long MainAccount_Id, string MainAccount_Name, long Submain_Account_ID, string SubAccount_Name, int MadinDa2n, decimal Entry_Value, string Notes_Details, decimal Equivalent_Currency_Value, int Account_Currency_ID, int Entry_Currency_ID, int CostCenter_Id, string CostCenter_Name, int Branch_Id_Entry)
+        public void EditRow_WhenBuild(ref int Excp,ref string Msg, ref DataTable dt_Details, int RowIndex, ref ArrayList arr_IdDelet, long Id_Test, string Account_Code, int Account_Type, long MainAccount_Id, string MainAccount_Name, long Submain_Account_ID, string SubAccount_Name, int MadinDa2n, decimal Entry_Value, string Notes_Details, decimal Equivalent_Currency_Value, long Account_Currency_Id, long    Entry_Currency_ID, long CostCenter_Id, string CostCenter_Name, long Branch_Id_Entry)
         {
             try
             {
@@ -431,7 +431,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
                 dr["SubAccount_Name"] = SubAccount_Name;
                 dr["MainAccount_Name"] = MainAccount_Name;
 
-                dr["Account_Currency_ID"] = Account_Currency_ID;
+                dr["Account_Currency_ID"] = Account_Currency_Id;
                 dr["Entry_Currency_ID"] = Entry_Currency_ID;
                 dr["CostCenter_Id"] = CostCenter_Id;
                 dr["CostCenter_Name"] = CostCenter_Name;
@@ -687,11 +687,11 @@ WHERE        (Account_Entry_List.Id = - 1)";
                 Excp = 1;
             }
         }
-        public static bool CheckNewEntry_No(DateTime dt_Entry, int journal_Code, long Entry_No, ref long Account_Entry_List_Id)
+        public static bool CheckNewEntry_No(DateTime dt_Entry, long journal_Code, long Entry_No, ref long Account_Entry_List_Id)
         {
             Account_Entry_List_Id = 0;
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
-            int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(dt_Entry);
+            long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(dt_Entry);
 
             bool FoundEntry_No = false;
 
@@ -720,7 +720,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
             return NewEntry_No(ref opp, dt_Entry, journal_Code, 0);
 
         }
-        public static long NewEntry_No(ref AccountModelsLib.operations opp, DateTime dt_Entry, int journal_Code, long Account_Entry_List_ID)
+        public static long NewEntry_No(ref AccountModelsLib.operations opp, DateTime dt_Entry, long journal_Code, long Account_Entry_List_ID)
         {
             long Entry_No = 1;
             if (Account_Entry_List_ID > 0)
@@ -733,7 +733,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
             if (Entry_No == 1)
             {
 
-                int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(dt_Entry);
+                long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(dt_Entry);
 
                 try
                 {
@@ -758,9 +758,9 @@ WHERE        (Account_Entry_List.Id = - 1)";
             }
             return Entry_No;
         }
-        public void Make_AccountEntry(ref int Excp, ref string Msg, ref long Account_Entry_List_ID, ref AccountModelsLib.operations opp, int User_ID_Login, string User_Id_Login_Name, int Branch_ID_Login, long Entry_No, DateTime Entry_Date, int journal_Code, int Currency_ID, string Entry_Notes, int Transform_Type, DataTable dt_Details, double Entry_Total, int Branch_Id_Entry, int IS_Make_AutomaticFromTar7eel, string Doc_No, int Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id)
+        public void Make_AccountEntry(ref int Excp, ref string Msg, ref long Account_Entry_List_ID, ref AccountModelsLib.operations opp, long User_ID_Login, string User_Id_Login_Name, long Branch_ID_Login, long Entry_No, DateTime Entry_Date, long journal_Code, long Currency_Id, string Entry_Notes, int Transform_Type, DataTable dt_Details, double Entry_Total, long Branch_Id_Entry, int IS_Make_AutomaticFromTar7eel, string Doc_No, long    Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id)
         {
-            Make_AccountEntry_(ref Excp, ref Msg, ref Account_Entry_List_ID, false, ref opp, User_ID_Login, User_Id_Login_Name, Branch_ID_Login, Entry_No, Entry_Date, journal_Code, Currency_ID, Entry_Notes, Transform_Type, dt_Details, Entry_Total, Branch_Id_Entry, IS_Make_AutomaticFromTar7eel, Doc_No, Entry_Currency_ID, Entry_Currency_Name, Factor, Order_Money_Id);
+            Make_AccountEntry_(ref Excp, ref Msg, ref Account_Entry_List_ID, false, ref opp, User_ID_Login, User_Id_Login_Name, Branch_ID_Login, Entry_No, Entry_Date, journal_Code, Currency_Id, Entry_Notes, Transform_Type, dt_Details, Entry_Total, Branch_Id_Entry, IS_Make_AutomaticFromTar7eel, Doc_No, Entry_Currency_ID, Entry_Currency_Name, Factor, Order_Money_Id);
 
         }
         void SetCustomerSupplierAccount(ref int Excp, ref AccountModelsLib.operations opp, DataTable dt_Details, long Account_Entry_List_ID)
@@ -861,14 +861,14 @@ WHERE        (Account_Entry_List.Id = - 1)";
         }
 
 
-        public void Make_AccountEntry(ref int Excp, ref string Msg, ref long Account_Entry_List_ID, int User_ID_Login, string User_Id_Login_Name, int Branch_ID_Login, long Entry_No, DateTime Entry_Date, int journal_Code, int Currency_ID, string Entry_Notes, int Transform_Type, DataTable dt_Details, double Entry_Total, int Branch_Id_Entry, int IS_Make_AutomaticFromTar7eel, string Doc_No, int Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id)
+        public void Make_AccountEntry(ref int Excp, ref string Msg, ref long Account_Entry_List_ID, long User_ID_Login, string User_Id_Login_Name, long Branch_ID_Login, long Entry_No, DateTime Entry_Date, long journal_Code, long Currency_Id, string Entry_Notes, int Transform_Type, DataTable dt_Details, double Entry_Total, long Branch_Id_Entry, int IS_Make_AutomaticFromTar7eel, string Doc_No, long    Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations(1);
             try
             {
                 Account_Entry_List_ID = 0;
                 bool Effect_Blance_Direct = false;
-                Make_AccountEntry_(ref Excp, ref Msg, ref Account_Entry_List_ID, Effect_Blance_Direct, ref opp, User_ID_Login, User_Id_Login_Name, Branch_ID_Login, Entry_No, Entry_Date, journal_Code, Currency_ID, Entry_Notes, Transform_Type, dt_Details, Entry_Total, Branch_Id_Entry, IS_Make_AutomaticFromTar7eel, Doc_No, Entry_Currency_ID, Entry_Currency_Name, Factor, Order_Money_Id);
+                Make_AccountEntry_(ref Excp, ref Msg, ref Account_Entry_List_ID, Effect_Blance_Direct, ref opp, User_ID_Login, User_Id_Login_Name, Branch_ID_Login, Entry_No, Entry_Date, journal_Code, Currency_Id, Entry_Notes, Transform_Type, dt_Details, Entry_Total, Branch_Id_Entry, IS_Make_AutomaticFromTar7eel, Doc_No, Entry_Currency_ID, Entry_Currency_Name, Factor, Order_Money_Id);
                 if (Excp == 0)
                 {
                     SetCustomerSupplierAccount(ref Excp, ref opp, dt_Details, Account_Entry_List_ID);
@@ -892,14 +892,14 @@ WHERE        (Account_Entry_List.Id = - 1)";
                 return;
             }
         }
-        public void Make_AccountEntry_Editable(ref int Excp, ref string Msg, long Account_Entry_List_ID, ArrayList arr_IdDelet, int User_ID_Login, string User_Id_Login_Name, int Branch_ID_Login, long Entry_No, DateTime Entry_Date, int journal_Code, int Currency_ID, string Entry_Notes, int Transform_Type, DataTable dt_Details, double Entry_Total, int Branch_Id_Entry, int IS_Make_AutomaticFromTar7eel, string Doc_No, int Entry_Currency_ID, string Entry_Currency_Name, decimal Factor)
+        public void Make_AccountEntry_Editable(ref int Excp, ref string Msg, long Account_Entry_List_ID, ArrayList arr_IdDelet, long User_ID_Login, string User_Id_Login_Name, long Branch_ID_Login, long Entry_No, DateTime Entry_Date, long journal_Code, long Currency_Id, string Entry_Notes, int Transform_Type, DataTable dt_Details, double Entry_Total, long Branch_Id_Entry, int IS_Make_AutomaticFromTar7eel, string Doc_No, long    Entry_Currency_ID, string Entry_Currency_Name, decimal Factor)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations(1);
             try
             {
                 //Entry_Currency_ID,Entry_Currency_Name,Factor
                 bool Effect_Blance_Direct = false;
-                Make_AccountEntry_Edit(ref Excp, ref Msg, Account_Entry_List_ID, arr_IdDelet, Effect_Blance_Direct, ref opp, User_ID_Login, User_Id_Login_Name, Branch_ID_Login, Entry_No, Entry_Date, journal_Code, Currency_ID, Entry_Notes, Transform_Type, dt_Details, Entry_Total, Branch_Id_Entry, IS_Make_AutomaticFromTar7eel, Doc_No, Entry_Currency_ID, Entry_Currency_Name, Factor);
+                Make_AccountEntry_Edit(ref Excp, ref Msg, Account_Entry_List_ID, arr_IdDelet, Effect_Blance_Direct, ref opp, User_ID_Login, User_Id_Login_Name, Branch_ID_Login, Entry_No, Entry_Date, journal_Code, Currency_Id, Entry_Notes, Transform_Type, dt_Details, Entry_Total, Branch_Id_Entry, IS_Make_AutomaticFromTar7eel, Doc_No, Entry_Currency_ID, Entry_Currency_Name, Factor);
 
 
 
@@ -1094,13 +1094,13 @@ WHERE        (Account_Entry_List.Id = - 1)";
 
         public DateTime Transaction_DateFrom = new DateTime(1990, 1, 1);
         public DateTime Transaction_DateTo = new DateTime(1990, 1, 1);
-        void Make_AccountEntry_(ref int Excp, ref string Msg, ref long Account_Entry_List_ID, bool Effect_Balance, ref AccountModelsLib.operations opp, int User_ID_Login, string User_Id_Login_Name, int Branch_ID_Login, long Entry_No, DateTime Entry_Date, int journal_Code, int Currency_ID, string Entry_Notes, int Transform_Type, DataTable dt_Details, double Entry_Total, int Branch_Id_Entry, int IS_Make_AutomaticFromTar7eel, string Doc_No, int Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id)
+        void Make_AccountEntry_(ref int Excp, ref string Msg, ref long Account_Entry_List_ID, bool Effect_Balance, ref AccountModelsLib.operations opp, long User_ID_Login, string User_Id_Login_Name, long Branch_ID_Login, long Entry_No, DateTime Entry_Date, long journal_Code, long Currency_Id, string Entry_Notes, int Transform_Type, DataTable dt_Details, double Entry_Total, long Branch_Id_Entry, int IS_Make_AutomaticFromTar7eel, string Doc_No, long    Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id)
         {
            
             Delete_EntryFromAutomatic(ref opp, ref Excp, ref Msg, Reference_Type_Table_Id, Reference_Type, IsNotDeletePrevEntry, Account_Entry_List_ID);
 
             string mysql = "";
-            int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Entry_Date);
+            long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Entry_Date);
             string Journal_Name = Common2.Journal_CodeName(ref opp, journal_Code);
             Account_Entry_List acl=  new Account_Entry_List();
             long ProcessNo = DataDictionaryProcessesNoCLS.GetProcessesNo(ref Excp, ref Msg, ref opp, acl);
@@ -1115,7 +1115,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
                 opp.cmd.Parameters.AddWithValue("@Entry_Currency_Name", Entry_Currency_Name);
 
                 opp.cmd.Parameters.AddWithValue("@Factor", Factor);
-                opp.cmd.Parameters.AddWithValue("@Currency_ID", Currency_ID);
+                opp.cmd.Parameters.AddWithValue("@Currency_ID", Currency_Id);
                 opp.cmd.Parameters.AddWithValue("@Entry_No", Entry_No);
                 opp.cmd.Parameters.AddWithValue("@Entry_Date", Entry_Date);
                 opp.cmd.Parameters.AddWithValue("@journal_Code", journal_Code);
@@ -1168,7 +1168,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
                     //long.TryParse(dt_Details.Rows[x]["Account_Employee_Type_ID"].ToString(),out Account_Employee_Type_ID);
 
                     long Account_Customer_Type_Value = int.Parse(dt_Details.Rows[x]["Account_Customer_Type_Value"].ToString());
-                    //int Currency_Id = int.Parse(dt_Details.Rows[x]["Currency_Id"].ToString());
+                    //long    Currency_Id = long.Parse(dt_Details.Rows[x]["Currency_Id"].ToString());
                     Factor = 1;//
                     try
                     {
@@ -1184,8 +1184,8 @@ WHERE        (Account_Entry_List.Id = - 1)";
                     decimal Equivalent_Import_Value = decimal.Parse(dt_Details.Rows[x]["Equivalent_Import_Value"].ToString());
                     decimal Equivalent_Export_Value = decimal.Parse(dt_Details.Rows[x]["Equivalent_Export_Value"].ToString());
                     decimal Equivalent_Transaction_Value = decimal.Parse(dt_Details.Rows[x]["Equivalent_Transaction_Value"].ToString());
-                    int Account_Currency_ID = int.Parse(dt_Details.Rows[x]["Account_Currency_ID"].ToString());
-                    Entry_Currency_ID = int.Parse(dt_Details.Rows[x]["Entry_Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_Details.Rows[x]["Account_Currency_ID"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_Details.Rows[x]["Entry_Currency_ID"].ToString());
 
 
                     string Notes_Details = dt_Details.Rows[x]["Notes_Details"].ToString();
@@ -1439,11 +1439,11 @@ WHERE        (Account_Entry_List.Id = - 1)";
 
 
         }
-        void Make_AccountEntry_Edit(ref int Excp, ref string Msg, long Account_Entry_List_ID, ArrayList arr_IdDelet, bool Effect_Balance, ref AccountModelsLib.operations opp, int User_ID_LoginUpdate, string User_Id_Login_Name, int Branch_ID_Login, long Entry_No, DateTime Entry_Date, int journal_Code, int Currency_ID, string Entry_Notes, int Transform_Type, DataTable dt_Details, double Entry_Total, int Branch_Id_Entry, int IS_Make_AutomaticFromTar7eel, string Doc_No, int Entry_Currency_ID, string Entry_Currency_Name, decimal Factor)
+        void Make_AccountEntry_Edit(ref int Excp, ref string Msg, long Account_Entry_List_ID, ArrayList arr_IdDelet, bool Effect_Balance, ref AccountModelsLib.operations opp, long User_ID_LoginUpdate, string User_Id_Login_Name, long Branch_ID_Login, long Entry_No, DateTime Entry_Date, long journal_Code, long Currency_Id, string Entry_Notes, int Transform_Type, DataTable dt_Details, double Entry_Total, long Branch_Id_Entry, int IS_Make_AutomaticFromTar7eel, string Doc_No, long    Entry_Currency_ID, string Entry_Currency_Name, decimal Factor)
         {
             DateTime ActionDate = DateTime.Now;
             string mysql = "";
-            int Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Entry_Date);
+            long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Entry_Date);
             string Journal_Name = Common2.Journal_CodeName(ref opp, journal_Code);
             try
             {
@@ -1457,7 +1457,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
 
                 opp.cmd.Parameters.AddWithValue("@Factor", Factor);
 
-                opp.cmd.Parameters.AddWithValue("@Currency_ID", Currency_ID);
+                opp.cmd.Parameters.AddWithValue("@Currency_ID", Currency_Id);
                 opp.cmd.Parameters.AddWithValue("@Entry_No", Entry_No);
                 opp.cmd.Parameters.AddWithValue("@ActionDate", ActionDate);
                 opp.cmd.Parameters.AddWithValue("@Entry_Date", Entry_Date);
@@ -1532,7 +1532,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
                     long Account_Customer_Type_ID = long.Parse(dt_Details.Rows[x]["Account_Customer_Type_ID"].ToString());
                     long Account_Employee_Type_ID = 0;// long.Parse(dt_Details.Rows[x]["Account_Employee_Type_ID"].ToString());
                     long Account_Customer_Type_Value = long.Parse(dt_Details.Rows[x]["Account_Customer_Type_Value"].ToString());
-                    //int Currency_Id = int.Parse(dt_Details.Rows[x]["Currency_Id"].ToString());
+                    //long    Currency_Id = long.Parse(dt_Details.Rows[x]["Currency_Id"].ToString());
 
 
 
@@ -1544,8 +1544,8 @@ WHERE        (Account_Entry_List.Id = - 1)";
                     decimal Equivalent_Import_Value = decimal.Parse(dt_Details.Rows[x]["Equivalent_Import_Value"].ToString());
                     decimal Equivalent_Export_Value = decimal.Parse(dt_Details.Rows[x]["Equivalent_Export_Value"].ToString());
                     decimal Equivalent_Transaction_Value = decimal.Parse(dt_Details.Rows[x]["Equivalent_Transaction_Value"].ToString());
-                    int Account_Currency_ID = int.Parse(dt_Details.Rows[x]["Account_Currency_ID"].ToString());
-                    //int Entry_Currency_ID = int.Parse(dt_Details.Rows[x]["Entry_Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_Details.Rows[x]["Account_Currency_ID"].ToString());
+                    //long Entry_Currency_ID = long.Parse(dt_Details.Rows[x]["Entry_Currency_ID"].ToString());
 
 
                     string Notes_Details = dt_Details.Rows[x]["Notes_Details"].ToString();
@@ -1738,7 +1738,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
 
         }
         //مدين
-        public void Make_Transaction_Madin(ref int Excp, ref AccountModelsLib.operations opp, long Account_Entry_List_ID, int Transform_Type, int Transaction_Type, decimal Cach_Value, DateTime Order_Date, string Order_Hijri_Date, int Currency_Id, long Customer_Type, long Account_Customer_ID, long User_Details_ID, int User_ID_login, int Branch_ID_login, string Notes)
+        public void Make_Transaction_Madin(ref int Excp, ref AccountModelsLib.operations opp, long Account_Entry_List_ID, int Transform_Type, int Transaction_Type, decimal Cach_Value, DateTime Order_Date, string Order_Hijri_Date, long Currency_Id, long Customer_Type, long Account_Customer_ID, long User_Details_ID, long User_ID_Login, long Branch_ID_Login, string Notes)
         {
 
 
@@ -1884,7 +1884,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
 
         }
         //دائن
-        public void Make_Transaction_Da2n(ref int Excp, ref AccountModelsLib.operations opp, long Account_Entry_List_ID, int Transform_Type, int Transaction_Type, decimal Cach_Value, DateTime Order_Date, string Order_Hijri_Date, int Currency_Id, long Customer_Type, long Account_Customer_ID, long User_Details_ID, int User_ID_login, int Branch_ID_login, string Notes)
+        public void Make_Transaction_Da2n(ref int Excp, ref AccountModelsLib.operations opp, long Account_Entry_List_ID, int Transform_Type, int Transaction_Type, decimal Cach_Value, DateTime Order_Date, string Order_Hijri_Date, long Currency_Id, long Customer_Type, long Account_Customer_ID, long User_Details_ID, long User_ID_Login, long Branch_ID_Login, string Notes)
         {
 
 
@@ -2059,7 +2059,7 @@ FROM            Account_Entry_Details INNER JOIN
 
             return dt;
         }
-        public DataTable Get_Account_Entry_List(int Branch_Id, long Submain_Account_ID, int Journal_Code, int Account_Currency_ID, int CostCenter_Id, bool IsdtFrom, DateTime dtFrom, bool IsdtTo, DateTime dtTo, bool ISdtEnterFrom, DateTime dtEnterFrom, bool ISdtEnterTo, DateTime dtEnterTo, long Entry_NoFrom, long Entry_NoTo, int Notes_Details_Search_Flage, string Notes_Details, bool Is_EquivalentEntryValue, int EntryValueBetweenFlage, int MadinD2nAll, decimal EntryValueFrom, decimal EntryValueTo, int User_ID_Login)
+        public DataTable Get_Account_Entry_List(long Branch_Id, long Submain_Account_ID, long Journal_Code, long Account_Currency_Id, long CostCenter_Id, bool IsdtFrom, DateTime dtFrom, bool IsdtTo, DateTime dtTo, bool ISdtEnterFrom, DateTime dtEnterFrom, bool ISdtEnterTo, DateTime dtEnterTo, long Entry_NoFrom, long Entry_NoTo, int Notes_Details_Search_Flage, string Notes_Details, bool Is_EquivalentEntryValue, int EntryValueBetweenFlage, int MadinD2nAll, decimal EntryValueFrom, decimal EntryValueTo, long User_ID_Login)
         {
             string mysql = @" SELECT DISTINCT 
                          Account_Entry_List.Id, Account_Entry_List.journal_Code, Account_Entry_List.Entry_Date, Account_Entry_List.Entry_No, Account_Entry_List.Currency_ID, Account_Entry_List.Rate, Account_Entry_List.Entry_Notes, 
@@ -2112,9 +2112,9 @@ FROM            Account_Entry_List INNER JOIN
             {
                 mysql = mysql + " AND (Account_Entry_Details.Submain_Account_ID = " + Submain_Account_ID + ") ";
             }
-            if (Account_Currency_ID > 0)
+            if (Account_Currency_Id > 0)
             {
-                mysql = mysql + " AND (Account_Entry_List.Entry_Currency_ID = " + Account_Currency_ID + ") ";
+                mysql = mysql + " AND (Account_Entry_List.Entry_Currency_ID = " + Account_Currency_Id + ") ";
             }
             if (CostCenter_Id > 0)
             {
@@ -2310,7 +2310,7 @@ FROM            Account_Entry_List INNER JOIN
             return mysql;
 
         }
-        //        public DataTable Get_Account_Entry_List(DateTime dtFrom, DateTime dtTo, int Journal_Code, int Branch_Id)
+        //        public DataTable Get_Account_Entry_List(DateTime dtFrom, DateTime dtTo, long Journal_Code, long Branch_Id)
         //        {
         //            string mysql = @" SELECT     Account_Entry_List.*, Currency.Currency_Name, Currency.Currency_Name_EN, Journal_Codes.Journal_Name
         //FROM         Account_Entry_List INNER JOIN
@@ -2334,7 +2334,7 @@ FROM            Account_Entry_List INNER JOIN
         //        }
 
 
-        public DataTable Get_MasterAccount_Entry_List(DateTime dtFrom, DateTime dtTo, int Journal_Code, int Branch_Id, int Entry_Currency_Id, int Account_Type_Value, long SubAccount_Id, bool IscbShowAccountListWithTransaction)
+        public DataTable Get_MasterAccount_Entry_List(DateTime dtFrom, DateTime dtTo, long Journal_Code, long Branch_Id, long    Entry_Currency_Id, int Account_Type_Value, long SubAccount_Id, bool IscbShowAccountListWithTransaction)
         {
             DataTable dt = new DataTable();
             ///////
@@ -2352,7 +2352,7 @@ FROM            Account_Entry_List INNER JOIN
 
             return dt;
         }
-        DataTable Get_MasterAccount_Entry_ListWithTransaction(DateTime dtFrom, DateTime dtTo, int Journal_Code, int Branch_Id, int Entry_Currency_Id, int Account_Type_Value, long SubAccount_Id)
+        DataTable Get_MasterAccount_Entry_ListWithTransaction(DateTime dtFrom, DateTime dtTo, long Journal_Code, long Branch_Id, long    Entry_Currency_Id, int Account_Type_Value, long SubAccount_Id)
         {
             ///////
             string mysql = @"";
@@ -2400,7 +2400,7 @@ FROM            Account_Entry_List INNER JOIN
 
             return dt;
         }
-        DataTable Get_MasterAll_Account_List(int Branch_Id, int Entry_Currency_Id, int Account_Type_Value, long SubAccount_Id)
+        DataTable Get_MasterAll_Account_List(long Branch_Id, long    Entry_Currency_ID, int Account_Type_Value, long SubAccount_Id)
         {
             string mysql = @"";
 
@@ -2442,7 +2442,7 @@ WHERE        (SubAccount_Id NOT IN
             return dt;
         }
 
-        public DataTable Get_MasterAccount_CostCenter_Lis(DateTime dtFrom, DateTime dtTo, int Journal_Code, int Branch_Id, int Currency_Id, int Account_Type_Value, long SubAccount_Id)
+        public DataTable Get_MasterAccount_CostCenter_Lis(DateTime dtFrom, DateTime dtTo, long Journal_Code, long Branch_Id, long Currency_Id, int Account_Type_Value, long SubAccount_Id)
         {
             string mysql = @" SELECT DISTINCT Cost_Center_Tree.Name, Account_Entry_Details.CostCenter_Id, Cost_Center_Tree.Code_Str
 FROM            Account_Entry_List INNER JOIN
@@ -2477,7 +2477,7 @@ FROM            Account_Entry_List INNER JOIN
 
             return dt;
         }
-        public DataTable Get_MasterAccount_Entry_Details(DateTime dtFrom, DateTime dtTo, int Journal_Code, int Branch_Id, long Submain_Account_ID)
+        public DataTable Get_MasterAccount_Entry_Details(DateTime dtFrom, DateTime dtTo, long Journal_Code, long Branch_Id, long Submain_Account_ID)
         {
             string mysql = @" SELECT        Account_Entry_List.Currency_ID AS Expr1, Account_Entry_List.Entry_No, Account_Entry_List.Entry_Date, Account_Entry_List.journal_Code, 
                          Account_Entry_List.Entry_Notes, Account_Entry_List.Branch_Id_Entry, Account_Entry_List.User_ID_Login, Account_Entry_List.Branch_ID_Login, 
@@ -2620,7 +2620,7 @@ FROM            Account_Entry_Master_Balance
 
         }
 
-        public void Get_FirstBalance_PeriodNew(int Year_Financial_Period_Id, int Branch_Id, long Submain_Account_ID, ref decimal First_Balance_Madin, ref decimal First_Balance_Da2n, int Entry_Currency_Id)
+        public void Get_FirstBalance_PeriodNew(long Year_Financial_Period_Id, long Branch_Id, long Submain_Account_ID, ref decimal First_Balance_Madin, ref decimal First_Balance_Da2n, long Entry_Currency_ID)
         {
             //  Equivalent_First_Balance_Madin,Equivalent_First_Balance_Da2n
             string mysql = "";
@@ -2628,7 +2628,7 @@ FROM            Account_Entry_Master_Balance
 FROM            Account_Entry_Master_Balance
 ";
             mysql = mysql + " WHERE        (Account_Entry_Master_Balance.Year_Financial_Period_Id = " + Year_Financial_Period_Id + ") ";
-            mysql = mysql + " AND (Account_Entry_Master_Balance.Equivalent_Account_Currency_Id = " + Entry_Currency_Id + ") ";
+            mysql = mysql + " AND (Account_Entry_Master_Balance.Equivalent_Account_Currency_Id = " + Entry_Currency_ID + ") ";
             if (Branch_Id > 0)
             {
                 mysql = mysql + " AND (Account_Entry_Master_Balance.Branch_Id = " + Branch_Id + ") ";
@@ -2664,7 +2664,7 @@ FROM            Account_Entry_Master_Balance
 
         }
 
-        public void Get_FirstBalance_PeriodNewCostCenter(int Year_Financial_Period_Id, int Branch_Id, long Cost_Center_Id, long Submain_Account_ID, ref decimal First_Balance_Madin, ref decimal First_Balance_Da2n, int Entry_Currency_Id)
+        public void Get_FirstBalance_PeriodNewCostCenter(long Year_Financial_Period_Id, long Branch_Id, long Cost_Center_Id, long Submain_Account_ID, ref decimal First_Balance_Madin, ref decimal First_Balance_Da2n, long Entry_Currency_ID)
         {
             //  Equivalent_First_Balance_Madin,Equivalent_First_Balance_Da2n
             string mysql = "";
@@ -2673,7 +2673,7 @@ FROM            Account_Entry_Master_Balance
 FROM            Account_Entry_Master_Balance_CostCenter
 ";
             mysql = mysql + " WHERE        ( Year_Financial_Period_Id = " + Year_Financial_Period_Id + ") ";
-            mysql = mysql + " AND ( Equivalent_Account_Currency_Id = " + Entry_Currency_Id + ") ";
+            mysql = mysql + " AND ( Equivalent_Account_Currency_Id = " + Entry_Currency_ID + ") ";
             if (Branch_Id > 0)
             {
                 mysql = mysql + " AND ( Branch_Id = " + Branch_Id + ") ";
@@ -2724,7 +2724,7 @@ FROM            Account_Entry_Master_Balance_CostCenter
         }
         //public DataTable Get_TransactionEntry()
         //{ }
-        public DataTable Get_MasterAccount_Entry_Details_TarseedNew(int Year_Financial_Period_Id, DateTime Financial_Period_dtFom, DateTime dtFrom, DateTime dtTo, int Journal_Code, int Branch_Id, int Entry_Currency_ID, long Submain_Account_ID)
+        public DataTable Get_MasterAccount_Entry_Details_TarseedNew(long Year_Financial_Period_Id, DateTime Financial_Period_dtFom, DateTime dtFrom, DateTime dtTo, long Journal_Code, long Branch_Id, long    Entry_Currency_ID, long Submain_Account_ID)
         {
           
 
@@ -2890,7 +2890,7 @@ FROM            Account_Entry_Master_Balance_CostCenter
             return dt;
         }
 
-        public DataTable Get_MasterAccount_Entry_Details_Tarseed(int Year_Financial_Period_Id, DateTime Financial_Period_dtFom, DateTime dtFrom, DateTime dtTo, int Journal_Code, int Branch_Id, long Submain_Account_ID)
+        public DataTable Get_MasterAccount_Entry_Details_Tarseed(long Year_Financial_Period_Id, DateTime Financial_Period_dtFom, DateTime dtFrom, DateTime dtTo, long Journal_Code, long Branch_Id, long Submain_Account_ID)
         {
             string mysql = @" SELECT        '' AS Serial_, Account_Entry_List.Currency_ID AS Account_Entry_Currency_ID, Account_Entry_List.Entry_No, Account_Entry_List.Entry_Date, 
                          Account_Entry_List.journal_Code, Account_Entry_List.Entry_Notes, Account_Entry_List.Branch_Id_Entry, Account_Entry_List.User_ID_Login, 
@@ -3201,7 +3201,7 @@ FROM            Account_Entry_List INNER JOIN
 
             return dt;
         }
-        public DataTable Get_MasterAccount_Entry_Details_Tarseed_NoPeriod(DateTime dtFrom, DateTime dtTo, int Entry_Currency_ID, int Journal_Code, int Branch_Id, long Submain_Account_ID, bool IS_AddLastBalance)
+        public DataTable Get_MasterAccount_Entry_Details_Tarseed_NoPeriod(DateTime dtFrom, DateTime dtTo, long    Entry_Currency_ID, long Journal_Code, long Branch_Id, long Submain_Account_ID, bool IS_AddLastBalance)
         {
             string mysql = @" SELECT        '' AS Serial_, Account_Entry_List.Currency_ID AS Account_Entry_Currency_ID, Account_Entry_List.Entry_No, Account_Entry_List.Entry_Date, 
                          Account_Entry_List.journal_Code, Account_Entry_List.Entry_Notes, Account_Entry_List.Branch_Id_Entry, Account_Entry_List.User_ID_Login, 
@@ -3472,7 +3472,7 @@ FROM            Account_Entry_List INNER JOIN
 
             return dt;
         }
-        public DataTable Get_MasterAccount_Entry_Details_Tarseed_NoPeriodNewBackup(DateTime dtFrom, DateTime dtTo, int Entry_Currency_ID, int Journal_Code, int Branch_Id, long Submain_Account_ID, bool IS_AddLastBalance)
+        public DataTable Get_MasterAccount_Entry_Details_Tarseed_NoPeriodNewBackup(DateTime dtFrom, DateTime dtTo, long    Entry_Currency_ID, long Journal_Code, long Branch_Id, long Submain_Account_ID, bool IS_AddLastBalance)
         {
             string mysql = @" SELECT        '' AS Serial_, Account_Entry_List.Entry_Currency_ID AS Account_Entry_Currency_ID, Account_Entry_List.Entry_No, Account_Entry_List.Entry_Date, 
                          Account_Entry_List.journal_Code, Account_Entry_List.Entry_Notes, Account_Entry_List.Branch_Id_Entry, Account_Entry_List.User_ID_Login, 
@@ -3703,7 +3703,7 @@ FROM            Account_Entry_List INNER JOIN
 
             return dt;
         }
-        public DataTable Get_MasterAccount_Entry_Details_Data(ref AccountModelsLib.operations opp, DateTime dtFrom, DateTime dtTo, int Entry_Currency_ID, int Journal_Code, int Branch_Id, long Submain_Account_ID)
+        public DataTable Get_MasterAccount_Entry_Details_Data(ref AccountModelsLib.operations opp, DateTime dtFrom, DateTime dtTo, long    Entry_Currency_ID, long Journal_Code, long Branch_Id, long Submain_Account_ID)
         {
             string mysql = @" SELECT        '' AS Serial_, Account_Entry_List.Entry_Currency_ID AS Account_Entry_Currency_ID, Account_Entry_List.Entry_No, Account_Entry_List.Entry_Date, 
                          Account_Entry_List.journal_Code, Account_Entry_List.Entry_Notes, Account_Entry_List.Branch_Id_Entry, Account_Entry_List.User_ID_Login, 
@@ -3783,7 +3783,7 @@ FROM            Account_Entry_List INNER JOIN
         }
 
 
-        public DataTable Get_MasterAccount_Entry_Details_Tarseed_NoPeriodNew(DateTime dtFrom, DateTime dtTo, int Entry_Currency_ID, int Journal_Code, int Branch_Id, long Submain_Account_ID, bool IS_AddLastBalance)
+        public DataTable Get_MasterAccount_Entry_Details_Tarseed_NoPeriodNew(DateTime dtFrom, DateTime dtTo, long    Entry_Currency_ID, long Journal_Code, long Branch_Id, long Submain_Account_ID, bool IS_AddLastBalance)
         {
 
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
@@ -3948,7 +3948,7 @@ FROM            Account_Entry_List INNER JOIN
 
             return dt;
         }
-        public DataTable Get_MasterCostCenter_Details_Tarseed(int Year_Financial_Period_Id, DateTime Financial_Period_dtFom, DateTime dtFrom, DateTime dtTo, int Journal_Code, int Branch_Id, long CostCenter_Id)
+        public DataTable Get_MasterCostCenter_Details_Tarseed(long Year_Financial_Period_Id, DateTime Financial_Period_dtFom, DateTime dtFrom, DateTime dtTo, long Journal_Code, long Branch_Id, long CostCenter_Id)
         {
             string mysql = @" SELECT        '' AS Serial_, Account_Entry_List.Currency_ID AS Account_Entry_Currency_ID, Account_Entry_List.Entry_No, Account_Entry_List.Entry_Date, 
                          Account_Entry_List.journal_Code, Account_Entry_List.Entry_Notes, Account_Entry_List.Branch_Id_Entry, Account_Entry_List.User_ID_Login, 
@@ -4213,7 +4213,7 @@ FROM            Account_Entry_List INNER JOIN
 
             return dt;
         }
-        public DataTable Get_MasterCostCenter_Details_TarseedNew(DateTime dtFrom, DateTime dtTo, int Journal_Code, int Branch_Id, long CostCenter_Id, int Entry_Currency_ID)
+        public DataTable Get_MasterCostCenter_Details_TarseedNew(DateTime dtFrom, DateTime dtTo, long Journal_Code, long Branch_Id, long CostCenter_Id, long Entry_Currency_ID)
         {
             string mysql = @" SELECT        '' AS Serial_, Account_Entry_List.Currency_ID AS Account_Entry_Currency_ID, Account_Entry_List.Entry_No, Account_Entry_List.Entry_Date, 
                          Account_Entry_List.journal_Code, Account_Entry_List.Entry_Notes, Account_Entry_List.Branch_Id_Entry, Account_Entry_List.User_ID_Login, 
@@ -4447,7 +4447,7 @@ Account_Entry_Details.Balance_Export_Value,
             return dt;
         }
 
-        public DataTable Get_MasterCostCenter_Details_TarseedNewNew(int Year_Financial_Period_Id, DateTime Financial_Period_dtFom, DateTime dtFrom, DateTime dtTo, int Journal_Code, int Branch_Id, long CostCenter_Id, int Entry_Currency_ID, long Submain_Account_ID)
+        public DataTable Get_MasterCostCenter_Details_TarseedNewNew(long Year_Financial_Period_Id, DateTime Financial_Period_dtFom, DateTime dtFrom, DateTime dtTo, long Journal_Code, long Branch_Id, long CostCenter_Id, long    Entry_Currency_ID, long Submain_Account_ID)
         {
             string mysql = @" SELECT        '' AS Serial_, Account_Entry_List.Currency_ID AS Account_Entry_Currency_ID, Account_Entry_List.Entry_No, Account_Entry_List.Entry_Date, 
                          Account_Entry_List.journal_Code, Account_Entry_List.Entry_Notes, Account_Entry_List.Branch_Id_Entry, Account_Entry_List.User_ID_Login, 
@@ -4687,7 +4687,7 @@ Account_Entry_Details.Balance_Export_Value,
             return dt;
         }
 
-        void Get_FirstBalanceForCostCenter(DateTime dtFrom, int Journal_Code, int Branch_Id, long CostCenter_Id, ref decimal Equivalent_First_Balance_Madin, ref decimal Equivalent_First_Balance_Da2n)
+        void Get_FirstBalanceForCostCenter(DateTime dtFrom, long Journal_Code, long Branch_Id, long CostCenter_Id, ref decimal Equivalent_First_Balance_Madin, ref decimal Equivalent_First_Balance_Da2n)
         {
             Equivalent_First_Balance_Madin = 0;
             Equivalent_First_Balance_Da2n = 0;
@@ -4728,7 +4728,7 @@ FROM            Account_Entry_List INNER JOIN
                 catch { }
             }
         }
-        public DataTable Get_FirstBalanceForCostCenterNew(int Branch_Id, DateTime dtFromNew, long CostCenter_Id, int Journal_Code, int Entry_Currency_ID)
+        public DataTable Get_FirstBalanceForCostCenterNew(long Branch_Id, DateTime dtFromNew, long CostCenter_Id, long Journal_Code, long Entry_Currency_ID)
         {
             string mysql = "";
             mysql = @" SELECT         0 AS Final_Fist_Balance_Madin, 0 AS Final_Fist_Balance_Da2n, 0 AS Final_Last_Balance_Madin, 0 AS Final_Last_Balance_Da2n,";
@@ -4780,7 +4780,7 @@ FROM            Account_Entry_Details INNER JOIN
 
         }
 
-        public DataTable ComputeFromPeriodStartToSearch(int Branch_Id, DateTime dtFom, DateTime dtTo, long Submain_Account_ID, int Journal_Code, int Entry_Currency_ID)
+        public DataTable ComputeFromPeriodStartToSearch(long Branch_Id, DateTime dtFom, DateTime dtTo, long Submain_Account_ID, long Journal_Code, long Entry_Currency_ID)
         {
             string mysql = "";
             mysql = @" SELECT        Account_Entry_Details.Submain_Account_ID, Account_Entry_Details.Account_Name, SUM(Account_Entry_Details.Import_Value) AS Import_Value, 
@@ -4821,7 +4821,7 @@ FROM            Account_Entry_Details INNER JOIN
 
         }
 
-        public DataTable ComputeFromPeriodStartToSearchNew(int Branch_Id, DateTime dtFom, DateTime dtTo, long Submain_Account_ID, int Journal_Code, int Entry_Currency_ID)
+        public DataTable ComputeFromPeriodStartToSearchNew(long Branch_Id, DateTime dtFom, DateTime dtTo, long Submain_Account_ID, long Journal_Code, long Entry_Currency_ID)
         {
             string mysql = "";
             mysql = @" SELECT        Account_Entry_Details.Submain_Account_ID, Account_Entry_Details.Account_Name,Submain_Account.SubAccount_NO, Submain_Account.Code, Submain_Account.Account_Code,";
@@ -4874,7 +4874,7 @@ FROM            Account_Entry_Details INNER JOIN
             return dt;
 
         }
-        public DataTable ComputeFromPeriodStartToSearchNew_CostCenter(int Branch_Id, DateTime dtFrom, DateTime dtTo, long CostCenter_Id, int Journal_Code, int Entry_Currency_ID, long Submain_Account_ID)
+        public DataTable ComputeFromPeriodStartToSearchNew_CostCenter(long Branch_Id, DateTime dtFrom, DateTime dtTo, long CostCenter_Id, long Journal_Code, long    Entry_Currency_ID, long Submain_Account_ID)
         {
             string mysql = "";
             mysql = @" SELECT        Account_Entry_Details.CostCenter_Id ,";
@@ -4930,7 +4930,7 @@ FROM            Account_Entry_Details INNER JOIN
 
         }
 
-        public DataTable Compute_CostCenter_FromPeriodStartToSearch(int Branch_Id, DateTime dtFrom, DateTime dtTo, long CostCenter_Id, int Entry_Currency_ID)
+        public DataTable Compute_CostCenter_FromPeriodStartToSearch(long Branch_Id, DateTime dtFrom, DateTime dtTo, long CostCenter_Id, long Entry_Currency_ID)
         {
             string mysql = "";
             mysql = @" SELECT        Account_Entry_Details.Submain_Account_ID, Account_Entry_Details.Account_Name, SUM(Account_Entry_Details.Import_Value) AS Import_Value, 

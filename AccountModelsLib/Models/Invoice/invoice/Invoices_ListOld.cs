@@ -47,8 +47,8 @@ namespace AccountModelsLib.Models
         public Nullable<long> DayReg_List_Id { get; set; }
         public decimal? CustomerAccountBefor { get; set; }
         public decimal? CustomerAccountAfter { get; set; }
-        public Nullable<int> User_Id { get; set; }
-        public Nullable<int> Branch_Id { get; set; }
+        public Nullable<long> User_Id { get; set; }
+        public Nullable<long> Branch_Id { get; set; }
         public decimal? Total_Item_CommissionValue { get; set; }
         public decimal? Total_CommissionValue { get; set; }
         public Nullable<long> SubAccount_Id { get; set; }
@@ -87,7 +87,7 @@ namespace AccountModelsLib.Models
         public Nullable<System.DateTime> Insert_ServerDateTime { get; set; }
         public Nullable<System.DateTime> Update_ServerDateTime { get; set; }
         public Nullable<System.DateTime> EditOperationDate { get; set; }
-        public Nullable<int> Edit_User_Id { get; set; }
+        public Nullable<long> Edit_User_Id { get; set; }
         public Nullable<long> ProcessNo { get; set; }
         public Nullable<long> Order_MoneyId { get; set; }
         public Nullable<int> BanksId { get; set; }

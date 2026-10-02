@@ -20,7 +20,6 @@
 		<InvariantGlobalization>true</InvariantGlobalization>
 		<OutputType>Library</OutputType>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<!-- 🟢 تفعيل رموز الـ Debugging للأندرويد بشكل صريح لحل المشكلة -->
     <DebugSymbols>true</DebugSymbols>
@@ -30,6 +29,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="AlterDB_CLS\AlterMenu_Config_Firest.cs" />
 	  <Compile Remove="Models\Tax\BusinessCLS\API\Signer.cs" />
 	  <Compile Remove="Models\Tax\BusinessCLS\API\SignFromToken.cs" />
 	  <Compile Remove="XmlDataSet\ConnConfigInfoXML.cs" />
@@ -85,6 +85,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Folder Include="AlterMenu_Config\" />
 		<Folder Include="Models\BeautyCenter\enum\" />
 		<Folder Include="Models\DBContext\" />
 		<Folder Include="Models\Invoice\NewFolder2\" />

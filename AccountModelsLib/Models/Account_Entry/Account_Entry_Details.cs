@@ -53,12 +53,12 @@ namespace AccountModelsLib.Models
         public string Currency_Primary_Name { get; set; }
         public string Currency_Secondary_Name { get; set; }
         public Nullable<System.DateTime> OperationDate { get; set; }
-        public Nullable<int> User_Id { get; set; }
-        public Nullable<int> Branch_Id { get; set; }
+        public Nullable<long> User_Id { get; set; }
+        public Nullable<long> Branch_Id { get; set; }
         public Nullable<System.DateTime> Insert_ServerDateTime { get; set; }
         public Nullable<System.DateTime> Update_ServerDateTime { get; set; }
         public Nullable<System.DateTime> EditOperationDate { get; set; }
-        public Nullable<int> Edit_User_Id { get; set; }
+        public Nullable<long> Edit_User_Id { get; set; }
         
         public long? ProcessNo { get; set; }
         public long? CarsWorkOrdersId { get; set; }

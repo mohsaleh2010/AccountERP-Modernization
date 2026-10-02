@@ -52,7 +52,7 @@ namespace AccountModelsLib.Models
         public decimal? TaxSales10_Value { get;   set; }
         public decimal? Equivalent_Net_Total_Price { get;   set; }
 
-        public int? Currency_id { get;   set; }
+        public long? Currency_id { get;   set; }
         public long ? User_Id { get; set; }
         public long ? Branch_Id { get; set; }
 

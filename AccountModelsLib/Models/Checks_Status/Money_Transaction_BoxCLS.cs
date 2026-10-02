@@ -37,10 +37,10 @@ namespace AccountModelsLib.Models
 
             foreach (var item in mbLst)
             {
-                if(item.Bank_Name.Trim()=="")
+                if (item.Bank_Name.Trim() == "")
                 {
-                    Bank bnk = opp.db.Banks.AsNoTracking().Where(i=>i.Id==item.Bank_Id).FirstOrDefault();
-                    if(bnk!=null)
+                    Bank bnk = opp.db.Banks.AsNoTracking().Where(i => i.Id == item.Bank_Id).FirstOrDefault();
+                    if (bnk != null)
                     {
                         item.Bank_Name = bnk.Bank_Name;
                     }
@@ -54,10 +54,10 @@ namespace AccountModelsLib.Models
         //{
         //    //mt.InsertMoney_Transaction_Box(ref Excp, ref Msg, ref opp);
         //}
-        public long InsertMoney_Transaction_Box(ref int Excp, ref string Msg, ref operations opp, long Order_Mony_Id, long Order_No, string Bank_Name,DateTime Transaction_Date, int Transaction_Type, decimal Import_Value, decimal Export_Value, decimal Transaction_Value, string Transaction_Value_, decimal Equivalent_Value, long Bank_Id, decimal Bank_Balance, long Supplier_Id, long Customer_Id, long SubAccount_Id, string Notes, decimal Balance_Before, decimal Balance_After, string Balance_BeforStr, string Balance_AfterStr, long BankAccount_Id, int DestructionSales, int Order_mony_id_transform, long Account_Cost_Center_Tree_Id, string Tafkeet_Value, decimal TotalValueWillPaid, decimal Rest_Value, string Account_Name, string Account_Code, int Account_Type, string Cost_Center, int Currency_Id, decimal Purchase_Ticket_Value, decimal Commission_Value, decimal Factor, int Entry_Currency_ID, string CostCenter_Name, long Invoice_Id, int Invoice_TypeId, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
+        public long InsertMoney_Transaction_Box(ref int Excp, ref string Msg, ref operations opp, long Order_Mony_Id, long Order_No, string Bank_Name, DateTime Transaction_Date, int Transaction_Type, decimal Import_Value, decimal Export_Value, decimal Transaction_Value, string Transaction_Value_, decimal Equivalent_Value, long Bank_Id, decimal Bank_Balance, long Supplier_Id, long Customer_Id, long SubAccount_Id, string Notes, decimal Balance_Before, decimal Balance_After, string Balance_BeforStr, string Balance_AfterStr, long BankAccount_Id, int DestructionSales, int Order_mony_id_transform, long Account_Cost_Center_Tree_Id, string Tafkeet_Value, decimal TotalValueWillPaid, decimal Rest_Value, string Account_Name, string Account_Code, int Account_Type, string Cost_Center, long Currency_Id, decimal Purchase_Ticket_Value, decimal Commission_Value, decimal Factor, long Entry_Currency_ID, string CostCenter_Name, long Invoice_Id, int Invoice_TypeId, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId)
         {
-            
-         
+
+
             Money_Transaction_Box mt = new Money_Transaction_Box();
 
 
@@ -169,7 +169,18 @@ namespace AccountModelsLib.Models
                     {
                         mt.Id = Id__;
                         //mt.Serial = B_Id__;
-                        DataDictionaryProcessesNoCLS.GetProcessesNo(ref Excp, ref   Msg, ref   opp,mt);
+                        DataDictionaryProcessesNoCLS.GetProcessesNo(ref Excp, ref Msg, ref opp, mt);
+                        //mt.Bank_Balance = 0;
+
+                        mt.Bank_Balance = Math.Round(mt.Bank_Balance ?? 0m, 2);
+                        string t = "9999999999999999.99";
+                        decimal.TryParse(t, out decimal tt);
+
+                        if (mt.Bank_Balance > 100000140056098)
+                        {
+                            mt.Bank_Balance = 0;
+
+                        }
                         opp.db.Money_Transaction_Box.Add(mt);
                         opp.db.SaveChanges();
                     }
@@ -214,7 +225,7 @@ namespace AccountModelsLib.Models
                             opp.db.SaveChanges();
                         }
                     }
- 
+
                     Excp = 0;// opp.Excp;
                 }
 
@@ -309,7 +320,7 @@ namespace AccountModelsLib.Models
                 {
                     decimal Import_Value = 0;
                     decimal Export_Value = 0;
-                    if (mt.Transaction_Type==1)
+                    if (mt.Transaction_Type == 1)
                     {
                         Import_Value = mt.Transaction_Value.Value;
                         Export_Value = 0;
@@ -325,7 +336,7 @@ namespace AccountModelsLib.Models
                         Invoices_ListId = mtv.Invoices_ListId,
                         Bills_ListId = mtv.Invoices_ListId,
                         Invoice_TypeId = mtv.Invoice_TypeId,
-                        
+
                         Transaction_Date = mt.Transaction_Date.Value,
                         Money_Transaction_BoxId = mt.Id,
                         Transaction_Value = mt.Transaction_Value.Value,
@@ -362,7 +373,7 @@ namespace AccountModelsLib.Models
             {
 
                 var mtbinvoice = opp.db.Money_Transaction_BoxForInvoices.Where(i => i.Money_Transaction_BoxId == mt.Id).ToList();
-                if(mtbinvoice!=null & mtbinvoice.Count()>0)
+                if (mtbinvoice != null & mtbinvoice.Count() > 0)
                 {
                     opp.db.Money_Transaction_BoxForInvoices.RemoveRange(mtbinvoice);
                     opp.db.SaveChanges();
@@ -384,7 +395,7 @@ namespace AccountModelsLib.Models
                         }
                         else
                         {
-                           opp.db.Money_Transaction_BoxForInvoices.Add(item);   
+                            opp.db.Money_Transaction_BoxForInvoices.Add(item);
                         }
                     }
 
@@ -395,8 +406,8 @@ namespace AccountModelsLib.Models
             catch (Exception ee)
             {
                 Excp = 1;
-                Msg=ee.Message;
-              
+                Msg = ee.Message;
+
             }
         }
         public void DeleteMoney_Transaction_BoxForInvoice(ref int Excp, ref string Msg, Money_Transaction_Box mt)
@@ -410,7 +421,7 @@ namespace AccountModelsLib.Models
                     opp.db.Money_Transaction_BoxForInvoices.RemoveRange(mtbinvoice);
                     opp.db.SaveChanges();
                 }
-                
+
                 Excp = 0;
             }
             catch (Exception ee)
@@ -480,6 +491,6 @@ namespace AccountModelsLib.Models
 
         }
 
-       
+
     }
 }

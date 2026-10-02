@@ -56,7 +56,7 @@ namespace AccountModelsLib
             }
         }
 
-        public void Add_New_Financial_Notice(ref int Excp, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, int Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_, decimal Balance_Before, long Compete_SubAccount_Id)
+        public void Add_New_Financial_Notice(ref int Excp, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, long Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_, decimal Balance_Before, long Compete_SubAccount_Id)
         {
             operations opp = new operations(1);
             Add_New_Financial_Notice(ref Excp, ref opp, OrderNo, OrderDate, Transaction_Type, Transaction_TypeStr, Order_Value, Order_Value_Str, Currency_Id, Notes, Customer_Id, Supplier_Id, Account_Id, Account_Type, SubAccount_Id, Account_Selection_, Balance_Before, Compete_SubAccount_Id);
@@ -70,7 +70,7 @@ namespace AccountModelsLib
             }
         }
 
-        void Add_New_Financial_Notice(ref int Excp, ref operations opp, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, int Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_, decimal Balance_Before, long Compete_SubAccount_Id)
+        void Add_New_Financial_Notice(ref int Excp, ref operations opp, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, long Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_, decimal Balance_Before, long Compete_SubAccount_Id)
         {
 
 
@@ -241,7 +241,7 @@ namespace AccountModelsLib
         private static long InsertWithManualId(operations opp, string sql)
         {
             long generatedId = 0;
-            sql = MySqlParser.SmartEnsureIdInInsertCommandNew(sql, ref generatedId, isAutoIncrement: false);
+            sql = MySqlParser.SmartEnsureIdInInsertCommandNew(opp.db, sql, ref generatedId, isAutoIncrement: false);
             opp.insert_me(sql);
             return generatedId;
         }
@@ -487,7 +487,7 @@ namespace AccountModelsLib
             }
         }
         */
-        public void Edit_Financial_Notice(ref int Excp, DataTable dtOld, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, int Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_, decimal Balance_Before  , long Compete_SubAccount_Id)
+        public void Edit_Financial_Notice(ref int Excp, DataTable dtOld, long OrderNo, DateTime OrderDate, int Transaction_Type, string Transaction_TypeStr, decimal Order_Value, string Order_Value_Str, long Currency_Id, string Notes, long Customer_Id, long Supplier_Id, long Account_Id, int Account_Type, long SubAccount_Id, int Account_Selection_, decimal Balance_Before  , long Compete_SubAccount_Id)
         {
             operations opp = new operations(1);
             Delete_Financial_Notice(ref Excp, dtOld, ref opp);

@@ -77,21 +77,21 @@ FROM            Invoices_List INNER JOIN
             try
             {
 
-                int Entry_Currency_ID = 0;
+                long Entry_Currency_ID = 0;
                 //long Account_Entry_List_ID = 0;
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
 
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long User_ID_Login = Common.User_Id;
+                long Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
                 int Transaction_Type = 0;
 
-                int Branch_Id_Entry = 0;
+                long Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 DataTable dt_ProcessName = new DataTable();
                 int journal_Code = 0;
@@ -107,8 +107,8 @@ FROM            Invoices_List INNER JOIN
 
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
-                    Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
-                    Invoices_List_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
+                    Invoices_List_Id = long.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                     string SubAccount_Name = dt_ProcessName.Rows[x]["SubAccount_Name"].ToString();
                     string Invoices_No = dt_ProcessName.Rows[0]["Invoice_Id"].ToString();
 
@@ -120,7 +120,7 @@ FROM            Invoices_List INNER JOIN
                     /////حساب العميل
 
                     Transaction_Type = 1;// int.Parse(dt_ProcessName.Rows[x]["Transaction_type"].ToString());
-                    Branch_Id_Entry = int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
 
                     dtprocess_Date = DateTime.Parse(dt_ProcessName.Rows[x]["Invoice_Date"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["Net_Total"].ToString());
@@ -130,7 +130,7 @@ FROM            Invoices_List INNER JOIN
 
                     //Factor = decimal.Parse(dt_ProcessName.Rows[x]["Factor"].ToString());
 
-                    int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
 
 
                     ///Notes    ملاحظات حساب العمل او المورد
@@ -256,7 +256,7 @@ FROM            Invoices_List INNER JOIN
 
 
                     ///////////////انشاء راس القيد
-                    int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                    long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code, Account_Entry_List_ID);
                     int Transform_Type = Common.Transform_Type;
@@ -287,7 +287,7 @@ FROM            Invoices_List INNER JOIN
         public string SubAccount_Name_RelatedFrom { get; set; }
 
 
-        void Set_Invoice_RelatedAccount(ref AccountEntry_CLS aa, ref DataTable dt_Entry_Details, ref AccountModelsLib.operations opp, int AccountType, int Transaction_Type, int Entry_Currency_ID, decimal EntryValue, int Branch_Id_Entry, decimal Factor, string Entry_Notes)
+        void Set_Invoice_RelatedAccount(ref AccountEntry_CLS aa, ref DataTable dt_Entry_Details, ref AccountModelsLib.operations opp, int AccountType, int Transaction_Type, long    Entry_Currency_ID, decimal EntryValue, long  Branch_Id_Entry, decimal Factor, string Entry_Notes)
         {
 
             if (EntryValue < 0 | EntryValue == 0)
@@ -371,7 +371,7 @@ FROM            Invoices_List INNER JOIN
             return SubAccount_Id;
 
         }
-        void Set_Invoice_RelatedAccount(ref AccountEntry_CLS aa, ref DataTable dt_Entry_Details, ref AccountModelsLib.operations opp, long SubAccount_Id, int Transaction_Type, int Entry_Currency_ID, decimal EntryValue, int Branch_Id_Entry, decimal Factor, string Entry_Notes)
+        void Set_Invoice_RelatedAccount(ref AccountEntry_CLS aa, ref DataTable dt_Entry_Details, ref AccountModelsLib.operations opp, long SubAccount_Id, int Transaction_Type, long    Entry_Currency_ID, decimal EntryValue, long  Branch_Id_Entry, decimal Factor, string Entry_Notes)
         {
 
             if (EntryValue < 0 | EntryValue == 0)
@@ -395,7 +395,7 @@ FROM            Invoices_List INNER JOIN
             Set_Entry_RelatedAccount(ref aa, ref dt_Entry_Details, dt, ref opp, Transaction_Type, Entry_Currency_ID, EntryValue, Branch_Id_Entry, Factor, Entry_Notes);
 
         }
-        void Set_Entry_RelatedAccount(ref AccountEntry_CLS aa, ref DataTable dt_Entry_Details, DataTable dtSubmain_Account, ref AccountModelsLib.operations opp, int Transaction_Type, int Entry_Currency_ID, decimal EntryValue, int Branch_Id_Entry, decimal Factor, string Entry_Notes)
+        void Set_Entry_RelatedAccount(ref AccountEntry_CLS aa, ref DataTable dt_Entry_Details, DataTable dtSubmain_Account, ref AccountModelsLib.operations opp, int Transaction_Type, long    Entry_Currency_ID, decimal EntryValue, long  Branch_Id_Entry, decimal Factor, string Entry_Notes)
         {
             int x = 0;
 
@@ -410,7 +410,7 @@ FROM            Invoices_List INNER JOIN
             string SubAccount_Name = dtSubmain_Account.Rows[x]["SubAccount_Name"].ToString();
             string MainAccount_Name = dtSubmain_Account.Rows[x]["SubAccount_Name"].ToString();
             string Account_Code = dtSubmain_Account.Rows[x]["Code"].ToString();
-            int Account_Currency_ID = int.Parse(dtSubmain_Account.Rows[x]["Currency_Id"].ToString());
+            long Account_Currency_ID = long.Parse(dtSubmain_Account.Rows[x]["Currency_Id"].ToString());
 
             string Notes_Details = Entry_Notes;// "فاتورة مبيعات";
             SubAccount_Id_RelatedTo = Submain_Account_ID;
@@ -426,7 +426,7 @@ FROM            Invoices_List INNER JOIN
             aa.AddRow_WhenBuild(ref Excp, ref dt_Entry_Details, Id_Test, Account_Code, Account_Type, MainAccount_Id, MainAccount_Name, Submain_Account_ID, SubAccount_Name, Transaction_Type, EntryValue, Notes_Details, Factor, Account_Currency_ID, Entry_Currency_ID, CostCenter_Id, CostCenter_Name, Branch_Id_Entry, Factor);
 
         }
-        void Set_Invoice_RelatedAccountBySubAccount_Id(ref AccountEntry_CLS aa, ref DataTable dt_Entry_Details, ref AccountModelsLib.operations opp, long SubAccount_Id, int Transaction_Type, int Entry_Currency_ID, decimal EntryValue, int Branch_Id_Entry, decimal Factor, string Entry_Notes)
+        void Set_Invoice_RelatedAccountBySubAccount_Id(ref AccountEntry_CLS aa, ref DataTable dt_Entry_Details, ref AccountModelsLib.operations opp, long SubAccount_Id, int Transaction_Type, long    Entry_Currency_ID, decimal EntryValue, long  Branch_Id_Entry, decimal Factor, string Entry_Notes)
         {
             if (EntryValue < 0 | EntryValue == 0)
             { return; }
@@ -452,7 +452,7 @@ FROM            Invoices_List INNER JOIN
             string SubAccount_Name = dt.Rows[x]["SubAccount_Name"].ToString();
             string MainAccount_Name = dt.Rows[x]["SubAccount_Name"].ToString();
             string Account_Code = dt.Rows[x]["Code"].ToString();
-            int Account_Currency_ID = int.Parse(dt.Rows[x]["Currency_Id"].ToString());
+            long Account_Currency_ID = long.Parse(dt.Rows[x]["Currency_Id"].ToString());
 
             string Notes_Details = Entry_Notes;// "فاتورة مبيعات";
 
@@ -466,8 +466,8 @@ FROM            Invoices_List INNER JOIN
         string GetSQLForCustomer(string Notes, long SubAccount_Id)
         {
             string mysql = @" SELECT    '" + Notes + "' AS Notes, ";
-            mysql = mysql + @"  1 AS Factor, 0 AS Id_Test, 0 AS CostCenter_Id, 'لا يوجد' AS Cost_Center_Name, Main_Account_Id, SubAccount_NO, code, FirstSubCode, lastPartIncrease, Is_Last_Level, Head_Main_Account, Submain_Account_Balance, 
-                         CanDelete, Account_Follows, destruction_date, destruction, Account_Nature_Type, Accept_Cost_Center_Flage, Cost_Center_Tree_ID, Account_Level, Account_Code, Company_ID_For_GL, Company_Name_For_GL, 
+            mysql = mysql + @"  1 AS Factor, 0 AS Id_Test, 0 AS CostCenter_Id, 'لا يوجد' AS Cost_Center_Name, Main_Account_Id, SubAccount_NO, code, FirstSubCode, lastPartIncrease, Is_Last_Level, Head_Main_Account, 
+                         CanDelete, Account_Follows, Account_Nature_Type, Accept_Cost_Center_Flage, Cost_Center_Tree_ID, Account_Level, Account_Code, Company_ID_For_GL, Company_Name_For_GL, 
                          Account_Customer_Type_Value, Account_Customer_Type_ID, Transform_Type,  Branch_ID, ConnectWith_Gl_Flage, Currency_Id AS Account_Currency_ID, Currency_Id, SubAccount_Name, 
                          SubAccount_Id FROM Submain_Account ";
 
@@ -497,7 +497,7 @@ FROM            Invoices_List INNER JOIN
             mysql = mysql + " WHERE (Invoices_List_Reverse.Branch_Id = " + Common.Branch_Id + ")  ";
             if (IS_Posted_Flage == 0 | IS_Posted_Flage == 1)
             {
-                mysql = mysql + "   AND  Invoices_List_Reverse.IS_Posted_Flage =" + IS_Posted_Flage;
+                mysql = mysql + "   AND  ISNULL(Invoices_List_Reverse.IS_Posted_Flage, 0) =" + IS_Posted_Flage;
             }
             if (Invoices_List_Id > 0)
             {
@@ -531,21 +531,21 @@ FROM            Invoices_List INNER JOIN
             try
             {
 
-                int Entry_Currency_ID = 0;
+                long Entry_Currency_ID = 0;
                 //long Account_Entry_List_ID = 0;
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
 
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long  User_ID_Login = Common.User_Id;
+                long  Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
                 int Transaction_Type = 0;
 
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 DataTable dt_ProcessName = new DataTable();
                 int journal_Code = 0;
@@ -561,8 +561,8 @@ FROM            Invoices_List INNER JOIN
 
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
-                    Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
-                    Invoices_List_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
+                    Invoices_List_Id = long.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                     string SubAccount_Name = dt_ProcessName.Rows[x]["SubAccount_Name"].ToString();
                     string Invoices_No = dt_ProcessName.Rows[0]["Invoice_Id"].ToString();
 
@@ -574,7 +574,7 @@ FROM            Invoices_List INNER JOIN
                     /////حساب العميل
 
                     Transaction_Type = 2;
-                    Branch_Id_Entry = int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
 
                     dtprocess_Date = DateTime.Parse(dt_ProcessName.Rows[x]["Invoice_Date"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["Net_Total"].ToString());
@@ -584,7 +584,7 @@ FROM            Invoices_List INNER JOIN
 
                     //Factor = decimal.Parse(dt_ProcessName.Rows[x]["Factor"].ToString());
 
-                    int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
 
 
                     ///Notes    ملاحظات حساب العمل او المورد
@@ -646,7 +646,7 @@ FROM            Invoices_List INNER JOIN
 
 
                     ///////////////انشاء راس القيد
-                    int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                    long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code, Account_Entry_List_ID);
                     int Transform_Type = Common.Transform_Type;
@@ -675,7 +675,7 @@ FROM            Invoices_List INNER JOIN
         }
 
 
-        public void Make_EntryForHospitalsServices(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long BillNo, ArrayList arr_BillDetail, int Entry_Currency_ID, int IS_Posted_Flage)
+        public void Make_EntryForHospitalsServices(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long BillNo, ArrayList arr_BillDetail, long    Entry_Currency_ID, int IS_Posted_Flage)
         {
             for (int y = 0; y < arr_BillDetail.Count; y++)
             {
@@ -687,17 +687,17 @@ FROM            Invoices_List INNER JOIN
                     decimal EntryValue = 0;
                     double Entry_Total = 0;
                     string Invoice_Id = "0";
-                    //int Entry_Currency_ID = 0;
+                    //long Entry_Currency_ID = 0;
                     decimal Transaction_Value = 0;
                     string Entry_Notes = "";
                     AccountEntry_CLS aa = new AccountEntry_CLS();
                     DataTable dt_Entry_Details = new DataTable();
-                    int User_ID_Login = Common.User_Id;
-                    int Branch_ID_Login = Common.Branch_Id;
+                    long  User_ID_Login = Common.User_Id;
+                    long  Branch_ID_Login = Common.Branch_Id;
                     string User_Id_Login_Name = Common.User_Name;
                     int Transaction_Type = 0;
 
-                    int Branch_Id_Entry = 0;
+                    long   Branch_Id_Entry = 0;
                     DateTime dtprocess_Date = new DateTime();
                     DataTable dt_ProcessName = new DataTable();
                     int journal_Code = 0;
@@ -706,8 +706,8 @@ FROM            Invoices_List INNER JOIN
                     aa.Get_Empty_dt_Details(ref opp, ref dt_Entry_Details);
                     /////قائمة الخدمات
                     string mysql = @" SELECT        1 AS Factor, 0 AS Id_Test, 0 AS CostCenter_Id, 'لا يوجد' AS Cost_Center_Name, Submain_Account.Main_Account_Id, Submain_Account.SubAccount_NO, Submain_Account.code, Submain_Account.FirstSubCode, 
-                         Submain_Account.lastPartIncrease, Submain_Account.Is_Last_Level, Submain_Account.Head_Main_Account, Submain_Account.Submain_Account_Balance, Submain_Account.CanDelete, Submain_Account.Account_Follows, 
-                         Submain_Account.destruction_date, Submain_Account.destruction, Submain_Account.Account_Nature_Type, Submain_Account.Accept_Cost_Center_Flage, Submain_Account.Cost_Center_Tree_ID, 
+                         Submain_Account.lastPartIncrease, Submain_Account.Is_Last_Level, Submain_Account.Head_Main_Account, Submain_Account.CanDelete, Submain_Account.Account_Follows, 
+                         Submain_Account.Account_Nature_Type, Submain_Account.Accept_Cost_Center_Flage, Submain_Account.Cost_Center_Tree_ID, 
                          Submain_Account.Account_Level, Submain_Account.Account_Code, Submain_Account.Company_ID_For_GL, Submain_Account.Company_Name_For_GL, Submain_Account.Account_Customer_Type_Value, 
                          Submain_Account.Account_Customer_Type_ID, Submain_Account.Transform_Type,   Submain_Account.Branch_ID, Submain_Account.ConnectWith_Gl_Flage, tblIPBillDetail.Id, 
                          tblIPBillDetail.BillID, tblIPBillDetail.Total, tblIPBill.BillNo, Submain_Account.Currency_Id AS Account_Currency_ID, Submain_Account.Currency_Id, Submain_Account.SubAccount_Name, tblIPBill.BillingDate, 
@@ -734,7 +734,7 @@ FROM            Submain_Account INNER JOIN
                         Invoice_Id = dt_ProcessName.Rows[x]["Id"].ToString();
 
                         Branch_Id_Entry = 1;// int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
-                        Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_Id"].ToString());
+                        Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_Id"].ToString());
                         dtprocess_Date = DateTime.Parse(dt_ProcessName.Rows[x]["BillingDate"].ToString());
                         EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["Total"].ToString());
                         EntryValue = Common.RoundMe(EntryValue);
@@ -744,11 +744,11 @@ FROM            Submain_Account INNER JOIN
                         decimal Factor = cc.GetFactors(ref opp, Common.Entry_Currency_Id, Entry_Currency_ID);
                         Factor = Common.RoundMe(Factor);
                         string Entry_Currency_Name = cc.Get_CurrencyName(ref opp, Entry_Currency_ID);
-                        Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_Id"].ToString());
+                        Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_Id"].ToString());
                         BillDetail_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                         string SubAccount_Name = dt_ProcessName.Rows[x]["SubAccount_Name"].ToString();
                         string Invoices_No = dt_ProcessName.Rows[0]["Id"].ToString();
-                        int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                        long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
                         string Notes = " قيمة     " + SubAccount_Name + "  بتاريخ " + dtprocess_Date.ToString("yyyy/MM/dd");
                         Entry_Notes = Notes + " " + dt_ProcessName.Rows[x]["Notes"].ToString();
 
@@ -771,7 +771,7 @@ FROM            Submain_Account INNER JOIN
 
 
                         ///////////////انشاء راس القيد
-                        int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                        long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                         int IS_Make_AutomaticFromTar7eel = 1;
                         long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code, Account_Entry_List_ID);
                         int Transform_Type = Common.Transform_Type;
@@ -799,7 +799,7 @@ FROM            Submain_Account INNER JOIN
         }
 
         /*
-        public void Make_EntryForHospitalsServices_(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, int IS_Tar7eel_Sandouk_Automatic, int Branch_Id, DateTime dtFrom, DateTime dtTo, int Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id, long Entry_No)
+        public void Make_EntryForHospitalsServices_(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, int IS_Tar7eel_Sandouk_Automatic, long Branch_Id, DateTime dtFrom, DateTime dtTo, long    Entry_Currency_ID, string Entry_Currency_Name, decimal Factor, long Order_Money_Id, long Entry_No)
         {
             try
             {
@@ -807,13 +807,13 @@ FROM            Submain_Account INNER JOIN
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
                 decimal Equivalent_Value = 0;
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
                 AccountEntry_CLS aa = new AccountEntry_CLS();
                 DataTable dt_Entry_Details = new DataTable();
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long  User_ID_Login = Common.User_Id;
+                long  Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
                 string mysql = @" SELECT        0 AS CostCenter_Id, 'لا يوجد' AS Cost_Center_Name, Order_Money.Id, Order_Money.Order_No, Order_Money.Order_Date, Order_Money.Transaction_type, 
                          Order_Money.Total_Value, Order_Money.Currency_Id, Order_Money.Bank_Type, Order_Money.Bank_ID, Order_Money.Man_Name, Order_Money.Is_Balances_Set, 
@@ -821,9 +821,9 @@ FROM            Submain_Account INNER JOIN
                          Order_Money.Branch_Id, Order_Money.Year_Financial_Period_Id, Order_Money.Ticket_Supplier_Id, Order_Money.Order_Tafkeet_Value, Order_Money.Order_Notes as Notes, 
                          Order_Money.Tafkeet_Value, Order_Money.Sandouk_Cost_Center_Tree_Id, Order_Money.IS_Posted_Flage, Submain_Account.Id, 
                          Submain_Account.Main_Account_Id, Submain_Account.SubAccount_NO, Submain_Account.Code, Submain_Account.FirstSubCode, Submain_Account.lastPartIncrease, 
-                         Submain_Account.SubAccount_Name, Submain_Account.IS_Last_Level, Submain_Account.Head_Main_Account, Submain_Account.Submain_Account_Balance, 
+                         Submain_Account.SubAccount_Name, Submain_Account.IS_Last_Level, Submain_Account.Head_Main_Account, 
                          Submain_Account.Currency_Id AS Expr1,   Submain_Account.CanDelete, Submain_Account.Account_Follows, 
-                         Submain_Account.destruction_date, Submain_Account.destruction, Submain_Account.Account_Nature_Type, Submain_Account.Accept_Cost_Center_Flage, 
+                         Submain_Account.Account_Nature_Type, Submain_Account.Accept_Cost_Center_Flage, 
                          Submain_Account.Cost_Center_Tree_ID, Submain_Account.Account_Level, Submain_Account.Account_Code, Submain_Account.Company_ID_For_GL, 
                          Submain_Account.Company_Name_For_GL, Submain_Account.Account_Customer_Type_Value, Submain_Account.Account_Customer_Type_ID, 
                          Submain_Account.Transform_Type,   Submain_Account.Branch_ID AS Expr6, 
@@ -848,7 +848,7 @@ FROM            Submain_Account INNER JOIN
                 DataTable dt_Order_Money = opp.return_DataTable(mysql);
                 int Transaction_Type_For_Sandouk = 0;
                 int Transaction_Type_ForAccount = 0;
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
 
                 dt_Entry_Details = new DataTable();
@@ -860,8 +860,8 @@ FROM            Submain_Account INNER JOIN
                     if (IS_Tar7eel_Sandouk_Automatic == 1)
                     {
                         Transaction_Type_For_Sandouk = int.Parse(dt_Order_Money.Rows[x]["Transaction_type"].ToString());
-                        Branch_Id_Entry = int.Parse(dt_Order_Money.Rows[x]["Branch_Id"].ToString());
-                        Entry_Currency_ID = int.Parse(dt_Order_Money.Rows[x]["Currency_ID"].ToString());
+                        Branch_Id_Entry = long.Parse(dt_Order_Money.Rows[x]["Branch_Id"].ToString());
+                        Entry_Currency_ID = long.Parse(dt_Order_Money.Rows[x]["Currency_ID"].ToString());
                         dtprocess_Date = DateTime.Parse(dt_Order_Money.Rows[x]["Order_Date"].ToString());
                         EntryValue = decimal.Parse(dt_Order_Money.Rows[x]["Total_Value"].ToString());
                         Entry_Total = double.Parse(dt_Order_Money.Rows[x]["Total_Value"].ToString());
@@ -885,8 +885,8 @@ FROM            Submain_Account INNER JOIN
 
                         mysql = @" SELECT        Submain_Account.Id, Submain_Account.Main_Account_Id, Submain_Account.SubAccount_NO, Submain_Account.Code, Submain_Account.FirstSubCode, 
                          Submain_Account.lastPartIncrease, Submain_Account.SubAccount_Name, Submain_Account.IS_Last_Level, Submain_Account.Head_Main_Account, 
-                         Submain_Account.Submain_Account_Balance, Submain_Account.Currency_Id, Submain_Account.CanDelete, Submain_Account.Account_Follows, 
-                         Submain_Account.destruction_date, Submain_Account.destruction, Submain_Account.Account_Nature_Type, Submain_Account.Accept_Cost_Center_Flage, 
+                         Submain_Account.Currency_Id, Submain_Account.CanDelete, Submain_Account.Account_Follows, 
+                         Submain_Account.Account_Nature_Type, Submain_Account.Accept_Cost_Center_Flage, 
                          Submain_Account.Account_Level, Submain_Account.Account_Code, Submain_Account.Company_ID_For_GL, Submain_Account.Company_Name_For_GL, 
                          Submain_Account.Account_Customer_Type_Value, Submain_Account.Account_Customer_Type_ID, Submain_Account.Transform_Type, 
                           Submain_Account.Branch_ID, Submain_Account.ConnectWith_Gl_Flage, 
@@ -927,7 +927,7 @@ FROM            Money_Transaction_Box INNER JOIN
                                 Equivalent_Value = 1 / Equivalent_Value;
                             }
                             catch { }
-                            int Account_Currency_ID = int.Parse(dt_Order_Money.Rows[x]["Currency_ID"].ToString());
+                            long Account_Currency_ID = long.Parse(dt_Order_Money.Rows[x]["Currency_ID"].ToString());
                             ////إضافة الحساب الاخر
                             Add_Row_Account_Details_FromAdd(ref aa, ref dt_Entry_Details, ref dt_Money_Transaction_Box, y, Transaction_Type_ForAccount, Account_Currency_ID, Branch_Id_Entry, EntryValue, Equivalent_Value);
                         }
@@ -939,7 +939,7 @@ FROM            Money_Transaction_Box INNER JOIN
                         {
                             Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code);
                         }
-                        int Journal_Code = Journal_CodesList.Get_Journal_Code_ForSandouk(Transaction_Type_For_Sandouk);
+                        long Journal_Code = Journal_CodesList.Get_Journal_Code_ForSandouk(Transaction_Type_For_Sandouk);
                         int IS_Make_AutomaticFromTar7eel = 1;
 
                         aa.Make_AccountEntry(ref Excp, ref Msg, ref Account_Entry_List_ID, ref opp, User_ID_Login, User_Id_Login_Name, Branch_ID_Login, Entry_No, dtprocess_Date, Journal_Code, Entry_Currency_ID, Entry_Notes, Transaction_Type_ForAccount, dt_Entry_Details, Entry_Total, Branch_Id_Entry, IS_Make_AutomaticFromTar7eel, Order_No, Entry_Currency_ID, Entry_Currency_Name, Factor, Order_Money_Id);
@@ -982,7 +982,7 @@ FROM            Money_Transaction_Box INNER JOIN
             mysql = mysql + " WHERE (Bills_List.Branch_Id = " + Common.Branch_Id + ")  ";
             if (IS_Posted_Flage == 0 | IS_Posted_Flage == 1)
             {
-                mysql = mysql + "   AND  Bills_List.IS_Posted_Flage =" + IS_Posted_Flage;
+                mysql = mysql + "   AND  ISNULL(Bills_List.IS_Posted_Flage, 0) =" + IS_Posted_Flage;
             }
             if (Bills_List_Id > 0)
             {
@@ -1016,21 +1016,21 @@ FROM            Money_Transaction_Box INNER JOIN
             try
             {
 
-                int Entry_Currency_ID = 0;
+                long Entry_Currency_ID = 0;
                 //long Account_Entry_List_ID = 0;
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
 
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long  User_ID_Login = Common.User_Id;
+                long  Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
                 int Transaction_Type = 0;
 
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 DataTable dt_ProcessName = new DataTable();
                 int journal_Code = 0;
@@ -1044,8 +1044,8 @@ FROM            Money_Transaction_Box INNER JOIN
 
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
-                    Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
-                    Bills_List_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
+                    Bills_List_Id = long.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                     string SubAccount_Name = dt_ProcessName.Rows[x]["SubAccount_Name"].ToString();
                     string Invoices_No = dt_ProcessName.Rows[0]["Invoice_Id"].ToString();
 
@@ -1057,7 +1057,7 @@ FROM            Money_Transaction_Box INNER JOIN
                     /////حساب المورد
 
                     Transaction_Type = 2;// int.Parse(dt_ProcessName.Rows[x]["Transaction_type"].ToString());
-                    Branch_Id_Entry = int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
 
                     dtprocess_Date = DateTime.Parse(dt_ProcessName.Rows[x]["Invoice_Date"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["Net_Total"].ToString());
@@ -1067,7 +1067,7 @@ FROM            Money_Transaction_Box INNER JOIN
 
                     //Factor = decimal.Parse(dt_ProcessName.Rows[x]["Factor"].ToString());
 
-                    int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
 
                     ///Notes    ملاحظات حساب العمل او المورد
                     string CustomerNotesAccount = Common.GetValuesAfterSetArabic(Invoices_No) + " فاتورة مشتريات رقم ";
@@ -1134,7 +1134,7 @@ FROM            Money_Transaction_Box INNER JOIN
 
 
                     ///////////////انشاء راس القيد
-                    int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                    long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code, Account_Entry_List_ID);
                     int Transform_Type = Common.Transform_Type;
@@ -1165,7 +1165,7 @@ FROM            Money_Transaction_Box INNER JOIN
             mysql = mysql + " WHERE (Bills_List_Reverse.Branch_Id = " + Common.Branch_Id + ")  ";
             if (IS_Posted_Flage == 0 | IS_Posted_Flage == 1)
             {
-                mysql = mysql + "   AND  Bills_List_Reverse.IS_Posted_Flage =" + IS_Posted_Flage;
+                mysql = mysql + "   AND  ISNULL(Bills_List_Reverse.IS_Posted_Flage, 0) =" + IS_Posted_Flage;
             }
             if (Bills_List_Id > 0)
             {
@@ -1197,21 +1197,21 @@ FROM            Money_Transaction_Box INNER JOIN
             try
             {
 
-                int Entry_Currency_ID = 0;
+                long Entry_Currency_ID = 0;
                 //long Account_Entry_List_ID = 0;
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
 
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long  User_ID_Login = Common.User_Id;
+                long  Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
                 int Transaction_Type = 0;
 
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 DataTable dt_ProcessName = new DataTable();
                 int journal_Code = 0;
@@ -1230,8 +1230,8 @@ FROM            Money_Transaction_Box INNER JOIN
 
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
-                    Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
-                    Bills_List_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
+                    Bills_List_Id = long.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                     string SubAccount_Name = dt_ProcessName.Rows[x]["SubAccount_Name"].ToString();
                     string Invoices_No = dt_ProcessName.Rows[0]["Invoice_Id"].ToString();
 
@@ -1243,7 +1243,7 @@ FROM            Money_Transaction_Box INNER JOIN
                     /////حساب المورد
 
                     Transaction_Type = 1;// int.Parse(dt_ProcessName.Rows[x]["Transaction_type"].ToString());
-                    Branch_Id_Entry = int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
 
                     dtprocess_Date = DateTime.Parse(dt_ProcessName.Rows[x]["Invoice_Date"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["Net_Total"].ToString());
@@ -1253,7 +1253,7 @@ FROM            Money_Transaction_Box INNER JOIN
 
                     //Factor = decimal.Parse(dt_ProcessName.Rows[x]["Factor"].ToString());
 
-                    int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
 
                     ///Notes    ملاحظات حساب العمل او المورد
                     string CustomerNotesAccount = Common.GetValuesAfterSetArabic(Invoices_No) + " فاتورة مرتجع مشتريات رقم ";
@@ -1313,7 +1313,7 @@ FROM            Money_Transaction_Box INNER JOIN
 
 
                     ///////////////انشاء راس القيد
-                    int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                    long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code, Account_Entry_List_ID);
                     int Transform_Type = Common.Transform_Type;
@@ -1347,21 +1347,21 @@ FROM            Money_Transaction_Box INNER JOIN
             try
             {
 
-                int Entry_Currency_ID = 0;
+                long Entry_Currency_ID = 0;
                 //long Account_Entry_List_ID = 0;
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
 
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long  User_ID_Login = Common.User_Id;
+                long  Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
                 int Transaction_TypeForAccount_Taswea = 0;
                 int Transaction_TypeCustomerSupplier = 0;
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 DataTable dt_ProcessName = new DataTable();
                 int journal_Code = 0;
@@ -1407,7 +1407,7 @@ FROM            Submain_Account INNER JOIN
 
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
-                    Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
                     Money_Financial_Notice_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                     string SubAccount_Name = dt_ProcessName.Rows[x]["SubAccount_Name"].ToString();
                     string Invoices_No = dt_ProcessName.Rows[0]["OrderNo"].ToString();
@@ -1417,7 +1417,7 @@ FROM            Submain_Account INNER JOIN
                     Factor = Common.RoundMe(Factor);
                     string Entry_Currency_Name = cc.Get_CurrencyName(ref opp, Entry_Currency_ID);
 
-                    Branch_Id_Entry = int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
 
                     dtprocess_Date = DateTime.Parse(dt_ProcessName.Rows[x]["OrderDate"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["Order_Value"].ToString());
@@ -1427,7 +1427,7 @@ FROM            Submain_Account INNER JOIN
 
                     //Factor = decimal.Parse(dt_ProcessName.Rows[x]["Factor"].ToString());
 
-                    int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
 
 
                     ///Notes    ملاحظات حساب العمل او المورد
@@ -1466,7 +1466,7 @@ FROM            Submain_Account INNER JOIN
 
 
                     ///////////////انشاء راس القيد
-                    int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                    long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code, Account_Entry_List_ID);
                     int Transform_Type = Common.Transform_Type;
@@ -1501,21 +1501,21 @@ FROM            Submain_Account INNER JOIN
             try
             {
 
-                int Entry_Currency_ID = 0;
+                long Entry_Currency_ID = 0;
                 //long Account_Entry_List_ID = 0;
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
 
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long  User_ID_Login = Common.User_Id;
+                long  Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
                 int Transaction_TypeForAccount_Taswea = 0;
                 int Transaction_TypeCustomerSupplier = 0;
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 DataTable dt_ProcessName = new DataTable();
                 int journal_Code = 0;
@@ -1552,7 +1552,7 @@ FROM            Submain_Account INNER JOIN
 
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
-                    Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
                     Reference_Type_Table_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                     string SubAccount_Name = dt_ProcessName.Rows[x]["SubAccount_Name"].ToString();
                     string Invoices_No = dt_ProcessName.Rows[0]["ExaminationNumber"].ToString();
@@ -1562,7 +1562,7 @@ FROM            Submain_Account INNER JOIN
                     Factor = Common.RoundMe(Factor);
                     string Entry_Currency_Name = cc.Get_CurrencyName(ref opp, Entry_Currency_ID);
 
-                    Branch_Id_Entry = int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
 
                     dtprocess_Date = DateTime.Parse(dt_ProcessName.Rows[x]["ExaminationDate"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["CarsExaminationValue"].ToString());
@@ -1572,7 +1572,7 @@ FROM            Submain_Account INNER JOIN
 
                     //Factor = decimal.Parse(dt_ProcessName.Rows[x]["Factor"].ToString());
 
-                    int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
 
 
                     ///Notes    ملاحظات حساب العمل او المورد
@@ -1608,7 +1608,7 @@ FROM            Submain_Account INNER JOIN
                      
 
                     ///////////////انشاء راس القيد
-                    int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                    long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code, Account_Entry_List_ID);
                     int Transform_Type = Common.Transform_Type;
@@ -1643,20 +1643,20 @@ FROM            Submain_Account INNER JOIN
             try
             {
 
-                int Entry_Currency_ID = 0;
+                long Entry_Currency_ID = 0;
                 //long Account_Entry_List_ID = 0;
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
 
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long  User_ID_Login = Common.User_Id;
+                long  Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
 
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 DataTable dt_ProcessName = new DataTable();
                 int journal_Code = 0;
@@ -1695,7 +1695,7 @@ FROM            Submain_Account INNER JOIN
 
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
-                    Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
                     ConsCustomerDebitList = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                     string SubAccount_Name = dt_ProcessName.Rows[x]["SubAccount_Name"].ToString();
                     string Invoices_No = dt_ProcessName.Rows[0]["ProcessNo"].ToString();
@@ -1705,7 +1705,7 @@ FROM            Submain_Account INNER JOIN
                     Factor = Common.RoundMe(Factor);
                     string Entry_Currency_Name = cc.Get_CurrencyName(ref opp, Entry_Currency_ID);
 
-                    Branch_Id_Entry = int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
 
                     dtprocess_Date = DateTime.Parse(dt_ProcessName.Rows[x]["DebitDate"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["ListDebitTotal"].ToString());
@@ -1715,7 +1715,7 @@ FROM            Submain_Account INNER JOIN
 
                     //Factor = decimal.Parse(dt_ProcessName.Rows[x]["Factor"].ToString());
 
-                    int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
 
 
                     ///Notes    ملاحظات حساب العمل او المورد
@@ -1755,7 +1755,7 @@ FROM            Submain_Account INNER JOIN
 
 
                     ///////////////انشاء راس القيد
-                    int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                    long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code, Account_Entry_List_ID);
                     int Transform_Type = Common.Transform_Type;
@@ -1792,21 +1792,21 @@ FROM            Submain_Account INNER JOIN
             try
             {
 
-                int Entry_Currency_ID = 0;
+                long Entry_Currency_ID = 0;
 
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
 
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long  User_ID_Login = Common.User_Id;
+                long  Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
 
                 int Transaction_TypeAccount = 0;
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 DataTable dt_ProcessName = new DataTable();
                 int journal_Code = 0;
@@ -1846,7 +1846,7 @@ FROM            Order_Money_Check INNER JOIN
                 long SubAccount_Id = 0;
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
-                    Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
                     Checks_Memory_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                     //SubAccount_Id = long.Parse(dt_ProcessName.Rows[0]["SubAccount_Id"].ToString());
                     //SubAccount_Name = dt_ProcessName.Rows[x]["SubAccount_Name"].ToString();
@@ -1859,7 +1859,7 @@ FROM            Order_Money_Check INNER JOIN
                     Factor = Common.RoundMe(Factor);
                     string Entry_Currency_Name = cc.Get_CurrencyName(ref opp, Entry_Currency_ID);
 
-                    Branch_Id_Entry = int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
 
                     dtprocess_Date = DateTime.Parse(dt_ProcessName.Rows[x]["Order_Date"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["Check_Value"].ToString());
@@ -1869,7 +1869,7 @@ FROM            Order_Money_Check INNER JOIN
 
                     //Factor = decimal.Parse(dt_ProcessName.Rows[x]["Factor"].ToString());
 
-                    int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
 
 
                     ///Notes    ملاحظات حساب العمل او المورد
@@ -1934,7 +1934,7 @@ FROM            Order_Money_Check INNER JOIN
 
 
                     ///////////////انشاء راس القيد
-                    int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                    long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code);
                     int Transform_Type = Common.Transform_Type;
@@ -1970,21 +1970,21 @@ FROM            Order_Money_Check INNER JOIN
             try
             {
                 return;
-                int Entry_Currency_ID = 0;
+                long Entry_Currency_ID = 0;
 
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
 
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long  User_ID_Login = Common.User_Id;
+                long  Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
 
                 int Transaction_TypeAccount = 0;
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 DataTable dt_ProcessName = new DataTable();
                 int journal_Code = 0;
@@ -2024,7 +2024,7 @@ FROM            Order_Money_Check INNER JOIN
                 long SubAccount_Id = 0;
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
-                    Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
                     Checks_Memory_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                     //SubAccount_Id = long.Parse(dt_ProcessName.Rows[0]["SubAccount_Id"].ToString());
                     //SubAccount_Name = dt_ProcessName.Rows[x]["SubAccount_Name"].ToString();
@@ -2037,7 +2037,7 @@ FROM            Order_Money_Check INNER JOIN
                     Factor = Common.RoundMe(Factor);
                     string Entry_Currency_Name = cc.Get_CurrencyName(ref opp, Entry_Currency_ID);
 
-                    Branch_Id_Entry = int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
 
                     dtprocess_Date = DateTime.Parse(dt_ProcessName.Rows[x]["Order_Date"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["Check_Value"].ToString());
@@ -2047,7 +2047,7 @@ FROM            Order_Money_Check INNER JOIN
 
                     //Factor = decimal.Parse(dt_ProcessName.Rows[x]["Factor"].ToString());
 
-                    int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
 
 
                     ///Notes    ملاحظات حساب العمل او المورد
@@ -2118,7 +2118,7 @@ FROM            Order_Money_Check INNER JOIN
 
 
                     ///////////////انشاء راس القيد
-                    int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                    long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code, Account_Entry_List_ID);
                     int Transform_Type = Common.Transform_Type;
@@ -2156,21 +2156,21 @@ FROM            Order_Money_Check INNER JOIN
             try
             {
 
-                int Entry_Currency_ID = 0;
+                long Entry_Currency_ID = 0;
 
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
 
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long  User_ID_Login = Common.User_Id;
+                long  Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
 
                 int Transaction_TypeAccount = 0;
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 DataTable dt_ProcessName = new DataTable();
                 int journal_Code = 0;
@@ -2209,7 +2209,7 @@ FROM            Order_Money_Check INNER JOIN
                 long SubAccount_Id = 0;
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
-                    Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
                     Checks_Memory_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                     SubAccount_Id = long.Parse(dt_ProcessName.Rows[0]["SubAccount_Id"].ToString());
                     SubAccount_Name = dt_ProcessName.Rows[x]["SubAccount_Name"].ToString();
@@ -2220,7 +2220,7 @@ FROM            Order_Money_Check INNER JOIN
                     Factor = Common.RoundMe(Factor);
                     string Entry_Currency_Name = cc.Get_CurrencyName(ref opp, Entry_Currency_ID);
 
-                    Branch_Id_Entry = int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
 
                     dtprocess_Date = DateTime.Parse(dt_ProcessName.Rows[x]["Order_Date"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["Check_Value"].ToString());
@@ -2230,7 +2230,7 @@ FROM            Order_Money_Check INNER JOIN
 
                     //Factor = decimal.Parse(dt_ProcessName.Rows[x]["Factor"].ToString());
 
-                    int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
 
 
                     ///Notes    ملاحظات حساب العمل او المورد
@@ -2295,7 +2295,7 @@ FROM            Order_Money_Check INNER JOIN
 
 
                     ///////////////انشاء راس القيد
-                    int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                    long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code);
                     int Transform_Type = Common.Transform_Type;
@@ -2336,21 +2336,21 @@ FROM            Order_Money_Check INNER JOIN
             try
             {
 
-                int Entry_Currency_ID = 0;
+                long Entry_Currency_ID = 0;
                 //long Account_Entry_List_ID = 0;
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
 
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long  User_ID_Login = Common.User_Id;
+                long  Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
 
 
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 DataTable dt_ProcessName = new DataTable();
                 int journal_Code = 0;
@@ -2378,7 +2378,7 @@ FROM            Order_Money_Check INNER JOIN
                 long SubAccount_Id = 0;
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
-                    Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
                     Checks_Memory_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                     //SubAccount_Id = long.Parse(dt_ProcessName.Rows[0]["SubAccount_Id"].ToString());
                     //SubAccount_Name = dt_ProcessName.Rows[x]["SubAccount_Name"].ToString();
@@ -2389,7 +2389,7 @@ FROM            Order_Money_Check INNER JOIN
                     Factor = Common.RoundMe(Factor);
                     string Entry_Currency_Name = cc.Get_CurrencyName(ref opp, Entry_Currency_ID);
 
-                    Branch_Id_Entry = int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
 
                     dtprocess_Date = EntryDate;// DateTime.Parse(dt_ProcessName.Rows[x]["Order_Date"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["Check_Value"].ToString());
@@ -2399,7 +2399,7 @@ FROM            Order_Money_Check INNER JOIN
 
                     //Factor = decimal.Parse(dt_ProcessName.Rows[x]["Factor"].ToString());
 
-                    int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
 
 
                     ///Notes    ملاحظات حساب العمل او المورد
@@ -2433,7 +2433,7 @@ FROM            Order_Money_Check INNER JOIN
 
 
                     ///////////////انشاء راس القيد
-                    int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                    long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code, Account_Entry_List_ID);
                     int Transform_Type = Common.Transform_Type;
@@ -2477,21 +2477,21 @@ FROM            Order_Money_Check INNER JOIN
             try
             {
 
-                int Entry_Currency_ID = 0;
+                long Entry_Currency_ID = 0;
                 //long Account_Entry_List_ID = 0;
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
 
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long  User_ID_Login = Common.User_Id;
+                long  Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
 
 
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 DataTable dt_ProcessName = new DataTable();
                 int journal_Code = 0;
@@ -2519,7 +2519,7 @@ FROM            Order_Money_Check INNER JOIN
                 long SubAccount_Id = 0;
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
-                    Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
                     Checks_Memory_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                     SubAccount_Id = long.Parse(dt_ProcessName.Rows[0]["SubAccount_Id"].ToString());
                     SubAccount_Name = dt_ProcessName.Rows[x]["SubAccount_Name"].ToString();
@@ -2530,7 +2530,7 @@ FROM            Order_Money_Check INNER JOIN
                     Factor = Common.RoundMe(Factor);
                     string Entry_Currency_Name = cc.Get_CurrencyName(ref opp, Entry_Currency_ID);
 
-                    Branch_Id_Entry = int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
 
                     dtprocess_Date = EntryDate;// DateTime.Parse(dt_ProcessName.Rows[x]["Order_Date"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["Check_Value"].ToString());
@@ -2540,7 +2540,7 @@ FROM            Order_Money_Check INNER JOIN
 
                     //Factor = decimal.Parse(dt_ProcessName.Rows[x]["Factor"].ToString());
 
-                    int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
 
 
                     ///Notes    ملاحظات حساب العمل او المورد
@@ -2572,7 +2572,7 @@ FROM            Order_Money_Check INNER JOIN
 
 
                     ///////////////انشاء راس القيد
-                    int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                    long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code, Account_Entry_List_ID);
                     int Transform_Type = Common.Transform_Type;
@@ -2651,21 +2651,21 @@ FROM            Order_Money_Check INNER JOIN
             try
             {
 
-                int Entry_Currency_ID = 0;
+                long Entry_Currency_ID = 0;
                 //long Account_Entry_List_ID = 0;
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
 
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long  User_ID_Login = Common.User_Id;
+                long  Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
 
 
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 DataTable dt_ProcessName = new DataTable();
                 int journal_Code = 0;
@@ -2693,7 +2693,7 @@ FROM            Order_Money_Check INNER JOIN
                 //long SubAccount_Id = 0;
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
-                    Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
                     Checks_Memory_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                     //SubAccount_Id = long.Parse(dt_ProcessName.Rows[0]["SubAccount_Id"].ToString());
                     string SubAccount_Name = dt_ProcessName.Rows[x]["SubAccount_Name"].ToString();
@@ -2704,7 +2704,7 @@ FROM            Order_Money_Check INNER JOIN
                     Factor = Common.RoundMe(Factor);
                     string Entry_Currency_Name = cc.Get_CurrencyName(ref opp, Entry_Currency_ID);
 
-                    Branch_Id_Entry = int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
 
                     dtprocess_Date = EntryDate;// DateTime.Parse(dt_ProcessName.Rows[x]["Order_Date"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["Check_Value"].ToString());
@@ -2714,7 +2714,7 @@ FROM            Order_Money_Check INNER JOIN
 
                     //Factor = decimal.Parse(dt_ProcessName.Rows[x]["Factor"].ToString());
 
-                    int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
 
 
                     ///Notes    ملاحظات حساب العمل او المورد
@@ -2749,7 +2749,7 @@ FROM            Order_Money_Check INNER JOIN
 
 
                     ///////////////انشاء راس القيد
-                    int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                    long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code, Account_Entry_List_ID);
                     int Transform_Type = Common.Transform_Type;
@@ -2815,21 +2815,21 @@ FROM            Order_Money_Check INNER JOIN
             try
             {
 
-                int Entry_Currency_ID = 0;
+                long Entry_Currency_ID = 0;
                 //long Account_Entry_List_ID = 0;
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
 
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long  User_ID_Login = Common.User_Id;
+                long  Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
 
 
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 DataTable dt_ProcessName = new DataTable();
                 int journal_Code = 0;
@@ -2857,7 +2857,7 @@ FROM            Order_Money_Check INNER JOIN
                 //long SubAccount_Id = 0;
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
-                    Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
                     Checks_Memory_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                     //SubAccount_Id = long.Parse(dt_ProcessName.Rows[0]["SubAccount_Id"].ToString());
                     string SubAccount_Name = dt_ProcessName.Rows[x]["SubAccount_Name"].ToString();
@@ -2868,7 +2868,7 @@ FROM            Order_Money_Check INNER JOIN
                     Factor = Common.RoundMe(Factor);
                     string Entry_Currency_Name = cc.Get_CurrencyName(ref opp, Entry_Currency_ID);
 
-                    Branch_Id_Entry = int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
 
                     dtprocess_Date = EntryDate;// DateTime.Parse(dt_ProcessName.Rows[x]["Order_Date"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["Check_Value"].ToString());
@@ -2878,7 +2878,7 @@ FROM            Order_Money_Check INNER JOIN
 
                     //Factor = decimal.Parse(dt_ProcessName.Rows[x]["Factor"].ToString());
 
-                    int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
 
 
                     ///Notes    ملاحظات حساب العمل او المورد
@@ -2914,7 +2914,7 @@ FROM            Order_Money_Check INNER JOIN
 
 
                     ///////////////انشاء راس القيد
-                    int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                    long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code, Account_Entry_List_ID);
                     int Transform_Type = Common.Transform_Type;
@@ -2963,21 +2963,21 @@ FROM            Order_Money_Check INNER JOIN
             try
             {
 
-                int Entry_Currency_ID = 0;
+                long Entry_Currency_ID = 0;
                 long Account_Entry_List_ID = 0;
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
 
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long  User_ID_Login = Common.User_Id;
+                long  Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
 
 
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 DataTable dt_ProcessName = new DataTable();
                 int journal_Code = 0;
@@ -3005,7 +3005,7 @@ FROM            Order_Money_Check INNER JOIN
                 //long SubAccount_Id_RelatedFrom = 0;
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
-                    Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
                     Checks_Memory_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                     //SubAccount_Id_RelatedFrom = long.Parse(dt_ProcessName.Rows[0]["SubAccount_Id_RelatedFrom"].ToString());
                     //SubAccount_Name_RelatedFrom = dt_ProcessName.Rows[x]["SubAccount_Name_RelatedFrom"].ToString();
@@ -3018,7 +3018,7 @@ FROM            Order_Money_Check INNER JOIN
                     Factor = Common.RoundMe(Factor);
                     string Entry_Currency_Name = cc.Get_CurrencyName(ref opp, Entry_Currency_ID);
 
-                    Branch_Id_Entry = int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
 
                     dtprocess_Date = EntryDate;// DateTime.Parse(dt_ProcessName.Rows[x]["Order_Date"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["Check_Value"].ToString());
@@ -3028,7 +3028,7 @@ FROM            Order_Money_Check INNER JOIN
 
                     //Factor = decimal.Parse(dt_ProcessName.Rows[x]["Factor"].ToString());
 
-                    int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
 
 
                     ///Notes    ملاحظات حساب العمل او المورد
@@ -3066,7 +3066,7 @@ FROM            Order_Money_Check INNER JOIN
 
 
                     ///////////////انشاء راس القيد
-                    int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                    long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code);
                     int Transform_Type = Common.Transform_Type;
@@ -3112,21 +3112,21 @@ FROM            Order_Money_Check INNER JOIN
             try
             {
 
-                int Entry_Currency_ID = 0;
+                long Entry_Currency_ID = 0;
                 long Account_Entry_List_ID = 0;
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
 
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long  User_ID_Login = Common.User_Id;
+                long  Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
 
 
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 DataTable dt_ProcessName = new DataTable();
                 int journal_Code = 0;
@@ -3154,7 +3154,7 @@ FROM            Order_Money_Check INNER JOIN
                 //long SubAccount_Id_RelatedFrom = 0;
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
-                    Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
                     Checks_Memory_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                     //SubAccount_Id_RelatedFrom = long.Parse(dt_ProcessName.Rows[0]["SubAccount_Id_RelatedFrom"].ToString());
                     //SubAccount_Name_RelatedFrom = dt_ProcessName.Rows[x]["SubAccount_Name_RelatedFrom"].ToString();
@@ -3167,7 +3167,7 @@ FROM            Order_Money_Check INNER JOIN
                     Factor = Common.RoundMe(Factor);
                     string Entry_Currency_Name = cc.Get_CurrencyName(ref opp, Entry_Currency_ID);
 
-                    Branch_Id_Entry = int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
 
                     dtprocess_Date = EntryDate;// DateTime.Parse(dt_ProcessName.Rows[x]["Order_Date"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["Check_Value"].ToString());
@@ -3177,7 +3177,7 @@ FROM            Order_Money_Check INNER JOIN
 
                     //Factor = decimal.Parse(dt_ProcessName.Rows[x]["Factor"].ToString());
 
-                    int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
 
 
                     ///Notes    ملاحظات حساب العمل او المورد
@@ -3215,7 +3215,7 @@ FROM            Order_Money_Check INNER JOIN
 
 
                     ///////////////انشاء راس القيد
-                    int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                    long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code);
                     int Transform_Type = Common.Transform_Type;
@@ -3258,21 +3258,21 @@ FROM            Order_Money_Check INNER JOIN
             try
             {
 
-                int Entry_Currency_ID = 0;
+                long Entry_Currency_ID = 0;
                 //long Account_Entry_List_ID = 0;
                 decimal EntryValue = 0;
                 double Entry_Total = 0;
 
-                //int Entry_Currency_ID = 0;
+                //long Entry_Currency_ID = 0;
                 decimal Transaction_Value = 0;
                 string Entry_Notes = "";
 
-                int User_ID_Login = Common.User_Id;
-                int Branch_ID_Login = Common.Branch_Id;
+                long  User_ID_Login = Common.User_Id;
+                long  Branch_ID_Login = Common.Branch_Id;
                 string User_Id_Login_Name = Common.User_Name;
 
                 int Transaction_TypeAccount = 0;
-                int Branch_Id_Entry = 0;
+                long   Branch_Id_Entry = 0;
                 DateTime dtprocess_Date = new DateTime();
                 DataTable dt_ProcessName = new DataTable();
                 int journal_Code = 0;
@@ -3301,7 +3301,7 @@ FROM            Suppliers_Destruction INNER JOIN
 
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
-                    Entry_Currency_ID = int.Parse(dt_ProcessName.Rows[0]["Currency_Id"].ToString());
+                    Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_Id"].ToString());
                     //Suppliers_Destruction_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
                     string SubAccount_Name = dt_ProcessName.Rows[x]["SubAccount_Name"].ToString();
 
@@ -3311,7 +3311,7 @@ FROM            Suppliers_Destruction INNER JOIN
                     Factor = Common.RoundMe(Factor);
                     string Entry_Currency_Name = cc.Get_CurrencyName(ref opp, Entry_Currency_ID);
 
-                    Branch_Id_Entry = int.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
 
                     dtprocess_Date = DateTime.Parse(dt_ProcessName.Rows[x]["dt_date"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["total"].ToString());
@@ -3321,7 +3321,7 @@ FROM            Suppliers_Destruction INNER JOIN
 
                     //Factor = decimal.Parse(dt_ProcessName.Rows[x]["Factor"].ToString());
 
-                    int Account_Currency_ID = int.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
+                    long Account_Currency_ID = long.Parse(dt_ProcessName.Rows[x]["Currency_ID"].ToString());
 
 
                     ///Notes    ملاحظات حساب العمل او المورد
@@ -3350,7 +3350,7 @@ FROM            Suppliers_Destruction INNER JOIN
 
 
                     ///////////////انشاء راس القيد
-                    int Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
+                    long Journal_Code = 1;// Journal_CodesList.Get_Journal_Code_ForSandouk(1);
                     int IS_Make_AutomaticFromTar7eel = 1;
                     long Entry_No = AccountEntry_CLS.NewEntry_No(ref opp, dtprocess_Date, journal_Code, Account_Entry_List_ID);
                     int Transform_Type = Common.Transform_Type;

@@ -94,12 +94,12 @@ namespace AccountModelsLib.Models
         int? Is_AddToInvoice { get; set; }
         int? Item_DeletedFlage { get; set; }
         int? Item_ProcessedFlage { get; set; }
-        int? User_Id { get; set; }
-        int? Branch_Id { get; set; }
+        long? User_Id { get; set; }
+        long? Branch_Id { get; set; }
         DateTime? Insert_ServerDateTime { get; set; }
         DateTime? Update_ServerDateTime { get; set; }
         DateTime? EditOperationDate { get; set; }
-        int? Edit_User_Id { get; set; }
+        long? Edit_User_Id { get; set; }
         long ProcessNo { get; set; }
         DateTime? OperationDate { get; set; }
         long? Item_Category_Id { get; set; }

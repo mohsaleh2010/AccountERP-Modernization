@@ -205,7 +205,7 @@ namespace AccountModelsLib.Models
 
             //    sb.Account_Customer_Type_ID = 0;
             //}
-            //sb.Currency_Id = int.Parse(dt.Rows[index]["Currency_Id"].ToString());
+            //sb.Currency_Id = long.Parse(dt.Rows[index]["Currency_Id"].ToString());
             //sb.Main_Account_Id = long.Parse(dt.Rows[index]["Main_Account_Id"].ToString());
             //sb.lastPartIncrease = long.Parse(dt.Rows[index]["lastPartIncrease"].ToString());
             //sb.Account_Level = int.Parse(dt.Rows[index]["Account_Level"].ToString());
@@ -472,7 +472,7 @@ namespace AccountModelsLib.Models
                             ";
             return mysql;
         }
-        public DataTable Get_FixedAsset_Account(ref AccountModelsLib.operations opp, ref int Excp, int Branch_Id)
+        public DataTable Get_FixedAsset_Account(ref AccountModelsLib.operations opp, ref int Excp, long Branch_Id)
         {
 
 
@@ -550,7 +550,7 @@ FROM            Submain_Account LEFT OUTER JOIN
             dt = opp.return_DataTable(mysql);
             return dt;
         }
-        public string Get_Submain_Account_Name(int Account_Id, ref decimal Submain_Account_Balance)
+        public string Get_Submain_Account_Name(long Account_Id, ref decimal Submain_Account_Balance)
         {
             string mysql = @" SELECT DISTINCT 
                          Main_Account.SubAccount_Name + '  /  ' + Submain_Account.SubAccount_Name AS Name, 
@@ -630,12 +630,12 @@ FROM            Submain_Account LEFT OUTER JOIN
 
             string mysql = "";
             int Account_Nature_Type = 1;
-            int Currency_Id = 1;
+            long    Currency_Id = 1;
             int Account_Follows = 1;
             int Account_Customer_Type_Value = 0;
             int IS_SubAccount_AccountType = 1;
             int IS_SubAccount_FollowingAccount = 1;
-            int Branch_ID = Common.Branch_Id;
+            long Branch_Id = Common.Branch_Id;
             ////بيانات الحساب الرئيسى لتوضع فى الفرعيات
 
             mysql = " SELECT   Submain_Account.* FROM Submain_Account ";
@@ -657,7 +657,7 @@ FROM            Submain_Account LEFT OUTER JOIN
             }
             try
             {
-                Currency_Id = int.Parse(dt_Main.Rows[0]["Currency_Id"].ToString());
+                Currency_Id = long.Parse(dt_Main.Rows[0]["Currency_Id"].ToString());
             }
             catch { }
             try
@@ -682,7 +682,7 @@ FROM            Submain_Account LEFT OUTER JOIN
             catch { }
             try
             {
-                Branch_ID = int.Parse(dt_Main.Rows[0]["Branch_ID"].ToString());
+                Branch_Id = long.Parse(dt_Main.Rows[0]["Branch_ID"].ToString());
             }
             catch { }
 
@@ -727,7 +727,7 @@ FROM            Submain_Account LEFT OUTER JOIN
                     //mysql = mysql + " WHERE   ( Id = " + sb.Id + ")";
                     mysql = mysql + "   Accept_Cost_Center_Flage = 0, Account_Nature_Type = " +  Account_Nature_Type + ",   Currency_Id = " + Currency_Id + ", CanDelete = 1, Account_Follows = " + Account_Follows + ", ";
                     mysql = mysql + "      Cost_Center_Tree_ID = 0,  IS_SubAccount_AccountType = " + IS_SubAccount_AccountType + ", IS_SubAccount_FollowingAccount = " + IS_SubAccount_FollowingAccount + ", Transform_Type = 1, ";
-                    mysql = mysql + "  Branch_ID = " + Branch_ID + " ";
+                    mysql = mysql + "  Branch_ID = " + Branch_Id + " ";
                     mysql = mysql + " WHERE   ( Id = " + SubAccount_Id  + ")";
                     //Account_Customer_Type_Value = " +  Account_Customer_Type_Value + ",
                     opp.insert_me(mysql);

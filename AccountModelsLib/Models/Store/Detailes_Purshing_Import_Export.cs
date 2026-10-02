@@ -48,14 +48,12 @@ namespace AccountModelsLib.Models
 
         public string Notes_Item { get; set; }
         public DateTime? OperationDate { get; set; }
-        public int? User_Id { get; set; }
-       
-       
-        public int? Branch_Id { get; set; }
+        public long? User_Id { get; set; } 
+        public long? Branch_Id { get; set; }
         public DateTime? Insert_ServerDateTime { get; set; }
         public DateTime? Update_ServerDateTime { get; set; }
         public DateTime? EditOperationDate { get; set; }
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
         public long? ProcessNo { get; set; }
         public long? CarsWorkOrdersId { get; set; }
         

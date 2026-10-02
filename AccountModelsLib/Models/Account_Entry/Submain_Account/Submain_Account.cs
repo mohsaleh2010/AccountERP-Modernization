@@ -40,7 +40,10 @@ namespace AccountModelsLib.Models
         /// المعرف الخاص بنوع العميل/المورد المرتبط بالكيان
         /// </summary>
         public long? Account_Customer_Type_ID { get; set; } = 0;
-
+        /// <summary>
+        /// القيمة الخاصة بتصنيف الحساب ضمن حسابات العملاء العموميين
+        /// </summary>
+        public int? Account_Type_ValueGeneralCustomer { get; set; } = 0;
         /// <summary>
         /// مستوى الحساب داخل الشجرة المحاسبية (Level 1, Level 2, ...)
         /// </summary>
@@ -74,7 +77,7 @@ namespace AccountModelsLib.Models
         /// <summary>
         /// الرقم التعريفي للعملة المربوطة بالحساب
         /// </summary>
-        public int? Currency_Id { get; set; }
+        public long? Currency_Id { get; set; }
 
         /// <summary>
         /// علم يحدد إمكانية حذف الحساب (1 = قابل للحذف، 0 = غير قابل للحذف)
@@ -194,10 +197,7 @@ namespace AccountModelsLib.Models
         /// </summary>
         public int? Transform_Type { get; set; }
 
-        /// <summary>
-        /// القيمة الخاصة بتصنيف الحساب ضمن حسابات العملاء العموميين
-        /// </summary>
-        public int? Account_Type_ValueGeneralCustomer { get; set; } = 0;
+        
     }
 
     /*
@@ -219,7 +219,7 @@ namespace AccountModelsLib.Models
         public string SubAccount_NO { get; set; } = "";
         public string? Account_Code { get; set; }
         public int Head_Main_Account { get; set; }
-        public int Currency_Id { get; set; }
+        public long    Currency_Id { get; set; }
         public int CanDelete { get; set; }
         public int Account_Follows { get; set; }
         public int CashFlowType { get; set; }

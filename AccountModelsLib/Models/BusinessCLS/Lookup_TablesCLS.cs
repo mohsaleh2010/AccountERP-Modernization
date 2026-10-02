@@ -15,12 +15,12 @@ namespace AccountModelsLib.Models
 
         }
         public Lookup_Table  _Table = new   Lookup_Table  ();
-        public DataTable Get_Lookup_Table(int Lookup_OrderDeliveryTypesId, int Id = 0)
+        public DataTable Get_Lookup_Table(int Lookup_OrderDeliveryTypesId, long Id = 0)
         {
             operations opp = new operations();
             return Get_TagerKontra(ref opp, Lookup_OrderDeliveryTypesId, Id);
         }
-        public DataTable Get_TagerKontra(ref operations opp,int Lookup_OrderDeliveryTypesId, int Id = 0)
+        public DataTable Get_TagerKontra(ref operations opp,int Lookup_OrderDeliveryTypesId, long Id = 0)
         {
             string mysql =  "";
            

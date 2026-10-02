@@ -50,12 +50,12 @@ namespace AccountModelsLib
            }
        }
         
-       public void Make_Order_Purchas(ref int Excp, DateTime Order_Date, DataSet Items_Ds,ArrayList SelectedItemsIndex, long Invoice_Id, long Order_Purshing_No, int Store_Id)
+       public void Make_Order_Purchas(ref int Excp, DateTime Order_Date, DataSet Items_Ds,ArrayList SelectedItemsIndex, long Invoice_Id, long Order_Purshing_No, long Store_Id)
        {
            try
            {
                long Item_id ;
-               int unit_id ;
+               long unit_id ;
                decimal qua ;
                decimal Part_qua ;
                string mysql = "";
@@ -70,13 +70,13 @@ namespace AccountModelsLib
 
                for (int x = 0; x < Items_Ds.Tables[0].Rows.Count; x++)
                {
-                   if (int.Parse(Items_Ds.Tables[0].Rows[x]["Store_id"].ToString()) == Store_Id)
+                   if (long.Parse(Items_Ds.Tables[0].Rows[x]["Store_id"].ToString()) == Store_Id)
                    {
                        foreach (int Sindex in SelectedItemsIndex)
                            if (Sindex == x)
                            {
                                Item_id = long.Parse(Items_Ds.Tables[0].Rows[x]["Item_id"].ToString());
-                               unit_id = int.Parse(Items_Ds.Tables[0].Rows[x]["unit_id"].ToString());
+                               unit_id = long.Parse(Items_Ds.Tables[0].Rows[x]["unit_id"].ToString());
                                qua = decimal.Parse(Items_Ds.Tables[0].Rows[x]["Larg_Qnty"].ToString());
                                Part_qua = decimal.Parse(Items_Ds.Tables[0].Rows[x]["Small_Qnty"].ToString());
                                Invoice_List_Id = long.Parse(Items_Ds.Tables[0].Rows[x]["Invoices_Details_Id"].ToString());

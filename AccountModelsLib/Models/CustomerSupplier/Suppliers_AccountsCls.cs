@@ -30,7 +30,7 @@ namespace AccountModelsLib
 
             DataTable dt = new DataTable();
 
-            string mysql = " SELECT  * FROM Suppliers_Accounts WHERE (Supplier_Id = " + Supplier_Id + ")  And Reference_Type = -7 OR  Reference_Type = -8";
+            string mysql = " SELECT  * FROM Suppliers_Accounts WHERE (Supplier_Id = " + Supplier_Id + ")  And (Reference_Type = -7 OR  Reference_Type = -8) ";
             operations opp = new operations();
             dt = opp.return_DataTable(mysql);
             return dt;
@@ -105,7 +105,7 @@ namespace AccountModelsLib
             }
         }
 
-        public DataSet Get_Suppliers_AccountComputeBalance_(int Supplier_Id, bool _GetDateFrom, DateTime GetDateFrom, bool _GetDateTo, DateTime GetDateTo, bool DESC)
+        public DataSet Get_Suppliers_AccountComputeBalance_(long Supplier_Id, bool _GetDateFrom, DateTime GetDateFrom, bool _GetDateTo, DateTime GetDateTo, bool DESC)
         {
             DateTime dtBefor = GetDateFrom;
 
@@ -818,7 +818,7 @@ namespace AccountModelsLib
                 return G_DS;
             }
         }
-        public void Add_Invoice_Total_To_Account(ref int Excp, long Invoice_id, int Supplier_Id, decimal Invoice_Net_Total, decimal Invoice_Total)
+        public void Add_Invoice_Total_To_Account(ref int Excp, long Invoice_id, long Supplier_Id, decimal Invoice_Net_Total, decimal Invoice_Total)
         {
             /*try
 			{	
@@ -1034,7 +1034,7 @@ namespace AccountModelsLib
             }
         }
 
-        public void Set_SuppliersAccount_Balance(ref int Excp, int Supplier_Id, long Invoice_No, decimal Net_Total, string Notes)
+        public void Set_SuppliersAccount_Balance(ref int Excp, long Supplier_Id, long Invoice_No, decimal Net_Total, string Notes)
         {
 
             try
@@ -1899,6 +1899,7 @@ namespace AccountModelsLib
                 Export = BalanceSaved;
 
             }
+             
 
 
             else

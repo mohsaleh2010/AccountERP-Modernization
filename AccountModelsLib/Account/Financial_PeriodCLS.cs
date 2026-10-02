@@ -25,9 +25,9 @@ namespace AccountModelsLib
 
         }
 
-        public static int Get_Year_Financial_Period_Id_(DateTime dt_Operation)
+        public static long Get_Year_Financial_Period_Id_(DateTime dt_Operation)
         {
-            int Year_Financial_Period_Id = 0;
+            long Year_Financial_Period_Id = 0;
             string mysql = @"  Select * from Financial_Period   ";
             mysql = mysql + " Where ( DateFrom <= " + operations.Get_DateToInsert(dt_Operation) + ") AND ( DateTo >= " + operations.Get_DateToInsert(dt_Operation) + ")";
             mysql = mysql + " ORDER BY DateFrom ASC ";
@@ -37,7 +37,7 @@ namespace AccountModelsLib
             {
                 if (dt.Rows.Count > 0)
                 {
-                    Year_Financial_Period_Id = int.Parse(dt.Rows[0]["Id"].ToString());
+                    Year_Financial_Period_Id = long.Parse(dt.Rows[0]["Id"].ToString());
                 }
                 else
                 {
@@ -49,9 +49,9 @@ namespace AccountModelsLib
             catch { }
             return Year_Financial_Period_Id;
         }
-        public static int Get_Year_Financial_Period_Id(DateTime dt_Operation, ref DateTime dt_OperationFrom)
+        public static long Get_Year_Financial_Period_Id(DateTime dt_Operation, ref DateTime dt_OperationFrom)
         {
-            int Year_Financial_Period_Id = 0;
+            long Year_Financial_Period_Id = 0;
             string mysql = @"  Select * from Financial_Period   ";
             mysql = mysql + " Where ( DateFrom <= " + operations.Get_DateToInsert(dt_Operation) + ") AND ( DateTo >= " + operations.Get_DateToInsert(dt_Operation) + ")";
             mysql = mysql + " ORDER BY DateFrom ASC ";
@@ -61,7 +61,7 @@ namespace AccountModelsLib
             {
                 if (dt.Rows.Count > 0)
                 {
-                    Year_Financial_Period_Id = int.Parse(dt.Rows[0]["Id"].ToString());
+                    Year_Financial_Period_Id = long.Parse(dt.Rows[0]["Id"].ToString());
                     dt_OperationFrom = DateTime.Parse(dt.Rows[0]["DateFrom"].ToString());
                 }
                 else
@@ -73,9 +73,9 @@ namespace AccountModelsLib
             catch { }
             return Year_Financial_Period_Id;
         }
-        public static int Get_Year_Financial_Period_Id(DateTime dt_Operation)
+        public static long Get_Year_Financial_Period_Id(DateTime dt_Operation)
         {
-            int Year_Financial_Period_Id = 0;
+            long Year_Financial_Period_Id = 0;
             string mysql = @"  Select * from Financial_Period   ";
             mysql = mysql + " Where ( DateFrom <= " + operations.Get_DateToInsert(dt_Operation) + ") AND ( DateTo >= " + operations.Get_DateToInsert(dt_Operation) + ")";
             mysql = mysql + " ORDER BY DateFrom ASC ";
@@ -85,7 +85,7 @@ namespace AccountModelsLib
             {
                 if (dt.Rows.Count > 0)
                 {
-                    Year_Financial_Period_Id = int.Parse(dt.Rows[0]["Id"].ToString());
+                    Year_Financial_Period_Id = long.Parse(dt.Rows[0]["Id"].ToString());
                 }
                 else
                 {
@@ -95,7 +95,7 @@ namespace AccountModelsLib
                     DateTime dt_To = new DateTime(Year, 12, 31);
                     int Excp = 0;
                     long ID = ff.Make_Period(ref Excp, dt_From, dt_To, 0);
-                    Year_Financial_Period_Id = (int)ID;
+                    Year_Financial_Period_Id =  ID;
 
                 }
             }
@@ -132,9 +132,9 @@ namespace AccountModelsLib
             return dt;
         }
 
-        public static int Get_Year_Financial_Period_Id(ref operations opp, DateTime dt_Operation)
+        public static long Get_Year_Financial_Period_Id(ref operations opp, DateTime dt_Operation)
         {
-            int Year_Financial_Period_Id = 0;
+            long Year_Financial_Period_Id = 0;
             string mysql = @"  Select * from Financial_Period   ";
             mysql = mysql + " Where ( DateFrom <= " + operations.Get_DateToInsert(dt_Operation) + ") AND ( DateTo >= " + operations.Get_DateToInsert(dt_Operation) + ")";
             mysql = mysql + " ORDER BY DateFrom ASC ";
@@ -144,7 +144,7 @@ namespace AccountModelsLib
             {
                 if (dt.Rows.Count > 0)
                 {
-                    Year_Financial_Period_Id = int.Parse(dt.Rows[0]["Id"].ToString());
+                    Year_Financial_Period_Id = long.Parse(dt.Rows[0]["Id"].ToString());
                 }
                 else
                 {
@@ -154,14 +154,14 @@ namespace AccountModelsLib
                     DateTime dt_To = new DateTime(Year, 12, 31);
                     int Excp = 0;
                     long ID = ff.Make_Period(ref Excp, dt_From, dt_To, 1);
-                    Year_Financial_Period_Id = (int)ID;
+                    Year_Financial_Period_Id = (long)ID;
 
                 }
             }
             catch { }
             return Year_Financial_Period_Id;
         }
-        public void Active_Period(ref int Excp,ref string Msg, int Financial_Period_ID, int Active)
+        public void Active_Period(ref int Excp,ref string Msg, long Financial_Period_ID, int Active)
         {
             operations opp = new operations(1);
             try
@@ -279,7 +279,7 @@ namespace AccountModelsLib
             return mysql;
         }
 
-        public DataTable Get_Year_Financial_Period_IdPrev(ref operations opp, DateTime dateFrom, ref int Year_Financial_Period_Id_Prev)
+        public DataTable Get_Year_Financial_Period_IdPrev(ref operations opp, DateTime dateFrom, ref long Year_Financial_Period_Id_Prev)
         {
             
 
@@ -291,20 +291,20 @@ namespace AccountModelsLib
             DataTable dt = opp.return_DataTable(mysql);
             if (dt.Rows.Count > 0)
             {
-                Year_Financial_Period_Id_Prev = int.Parse(dt.Rows[0]["Id"].ToString());
+                Year_Financial_Period_Id_Prev = long.Parse(dt.Rows[0]["Id"].ToString());
 
             }
             return dt;
         }
-        public int Get_Year_Financial_Period_Id_Next(ref operations opp, DateTime dateto)
+        public long Get_Year_Financial_Period_Id_Next(ref operations opp, DateTime dateto)
         {
-            int Year_Financial_Period_Id_New = 0;
+            long Year_Financial_Period_Id_New = 0;
             dateto = dateto.AddDays(1);
             string mysql = "Select * from Financial_Period Where DateFrom= " + operations.Get_DateToInsert(dateto.Date) + " "; ;
             DataTable dt = opp.return_DataTable(mysql);
             if (dt.Rows.Count > 0)
             {
-                Year_Financial_Period_Id_New = int.Parse(dt.Rows[0]["Id"].ToString());
+                Year_Financial_Period_Id_New = long.Parse(dt.Rows[0]["Id"].ToString());
 
             }
             return Year_Financial_Period_Id_New;

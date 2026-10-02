@@ -36,7 +36,7 @@ namespace AccountModelsLib.Models
         public decimal? Balance_Air { get; set; }
         public decimal? Balance_Road { get; set; }
         public string Account_Code { get; set; }
-        public int? Currency_Id { get; set; }
+        public long? Currency_Id { get; set; }
         public string Tax_Registration_No { get; set; }
         public int? Customer_Type { get; set; }
         public long? Group_Id { get; set; }
@@ -47,12 +47,12 @@ namespace AccountModelsLib.Models
         public string Govern_Name { get; set; }
         public string Commercial_Register { get; set; }
         public DateTime? OperationDate { get; set; }
-        public int? User_Id { get; set; }
-        public int? Branch_Id { get; set; }
+        public long? User_Id { get; set; }
+        public long? Branch_Id { get; set; }
         public DateTime? Insert_ServerDateTime { get; set; }
         public DateTime? Update_ServerDateTime { get; set; }
         public DateTime? EditOperationDate { get; set; }
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
         public long? ProcessNo { get; set; }
         public string CompanyName { get; set; }
         public string CompanyContactName { get; set; }

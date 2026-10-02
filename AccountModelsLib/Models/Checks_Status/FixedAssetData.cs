@@ -43,15 +43,15 @@ namespace AccountModelsLib.Models
 		public decimal Price_scrap_Value { get; set; }
 		public decimal Last_Modified_Value { get; set; }
 		public decimal Default_Age { get; set; }
-		public int Branch_Id { get; set; }
+		public long Branch_Id { get; set; }
 		public decimal SubAccount_Id { get; set; }
 		public string Account_Code { get; set; }
 		public DateTime? OperationDate { get; set; }
-		public int User_Id { get; set; }
+		public long User_Id { get; set; }
 		public DateTime? Insert_ServerDateTime { get; set; }
 		public DateTime? Update_ServerDateTime { get; set; }
 		public DateTime? EditOperationDate { get; set; }
-		public int Edit_User_Id { get; set; }
+		public long Edit_User_Id { get; set; }
 		public int Active { get; set; }
 	}
     */
@@ -77,7 +77,7 @@ namespace AccountModelsLib.Models
          
         public string? Account_Ehlak_Status_Str { get; set; }
 
-        public int? Emp_Id { get; set; }
+        public long? Emp_Id { get; set; }
 
         public DateTime? Emp_Receive_Date { get; set; }
 
@@ -101,7 +101,7 @@ namespace AccountModelsLib.Models
          
         public string? Factory_warranty_Details { get; set; }
 
-        public int? Account_Ehlak_Type { get; set; }
+        public long? Account_Ehlak_Type { get; set; }
 
          
         public string? Account_Ehlak_Type_Str { get; set; }
@@ -138,7 +138,7 @@ namespace AccountModelsLib.Models
 
         public DateTime? OperationDate { get; set; }
 
-        public int? User_Id { get; set; }
+        public long? User_Id { get; set; }
 
         public DateTime? Insert_ServerDateTime { get; set; }
 
@@ -146,7 +146,7 @@ namespace AccountModelsLib.Models
 
         public DateTime? EditOperationDate { get; set; }
 
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
 
         public int? Active { get; set; }
 

@@ -11,7 +11,7 @@ namespace AccountModelsLib
         // by programmer hossam shaaban shaaban  eissa 
         // in 26 1 2007
 
-        public void ConVersionQuntity_ADD_ToItem(float InTon_new, float inKilo_new, float InTon_Old, float inKilo_Old, out float OutTon_, out float OutKilo_, int Unit_Id)
+        public void ConVersionQuntity_ADD_ToItem(float InTon_new, float inKilo_new, float InTon_Old, float inKilo_Old, out float OutTon_, out float OutKilo_, long Unit_Id)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
             DataSet Unit_ds = new DataSet();
@@ -31,7 +31,7 @@ namespace AccountModelsLib
 
         }
 
-        public void ConVersionQuntity_Push_FromItem(float InBig_new, float inSmall_new, float InBig_Old, float inSmall_Old, out float Remain_big, out float Remain_inSmall, int Unit_Id)
+        public void ConVersionQuntity_Push_FromItem(float InBig_new, float inSmall_new, float InBig_Old, float inSmall_Old, out float Remain_big, out float Remain_inSmall, long Unit_Id)
         {
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
             DataSet Unit_ds = new DataSet();

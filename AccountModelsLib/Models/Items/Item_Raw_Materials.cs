@@ -29,12 +29,12 @@ namespace AccountModelsLib.Models
         public bool? Default_Img_Flage { get; set; }
         public int? Item_Type { get; set; }
         public DateTime? OperationDate { get; set; }
-        public int? User_Id { get; set; }
-        public int? Branch_Id { get; set; }
+        public long? User_Id { get; set; }
+        public long? Branch_Id { get; set; }
         public DateTime? Insert_ServerDateTime { get; set; }
         public DateTime? Update_ServerDateTime { get; set; }
         public DateTime? EditOperationDate { get; set; }
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
         public long? ProcessNo { get; set; }
     }
  
@@ -73,12 +73,12 @@ namespace AccountModelsLib.Models
         public decimal? TMP_Hadafat_Prod { get; set; }
         public decimal? TMP_Nazalat_Prod { get; set; }
         public DateTime? OperationDate { get; set; }
-        public int? User_Id { get; set; }
-        public int? Branch_Id { get; set; }
+        public long? User_Id { get; set; }
+        public long? Branch_Id { get; set; }
         public DateTime? Insert_ServerDateTime { get; set; }
         public DateTime? Update_ServerDateTime { get; set; }
         public DateTime? EditOperationDate { get; set; }
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
         public long? ProcessNo { get; set; }
     }
 
@@ -100,12 +100,12 @@ namespace AccountModelsLib.Models
         public decimal? S_unit_Value { get; set; }
         public int? Default_Store_Id { get; set; }
         public DateTime? OperationDate { get; set; }
-        public int? User_Id { get; set; }
-        public int? Branch_Id { get; set; }
+        public long? User_Id { get; set; }
+        public long? Branch_Id { get; set; }
         public DateTime? Insert_ServerDateTime { get; set; }
         public DateTime? Update_ServerDateTime { get; set; }
         public DateTime? EditOperationDate { get; set; }
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
         public long? ProcessNo { get; set; }
     }
 
@@ -141,12 +141,12 @@ namespace AccountModelsLib.Models
         public string? SubStore_Name { get; set; }
         public string? Notes_Item { get; set; }
         public DateTime? OperationDate { get; set; }
-        public int? User_Id { get; set; }
-        public int? Branch_Id { get; set; }
+        public long? User_Id { get; set; }
+        public long? Branch_Id { get; set; }
         public DateTime? Insert_ServerDateTime { get; set; }
         public DateTime? Update_ServerDateTime { get; set; }
         public DateTime? EditOperationDate { get; set; }
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
         public long? ProcessNo { get; set; }
     }
 
@@ -166,12 +166,12 @@ namespace AccountModelsLib.Models
         public int? Order_Estlam_Sarf_Flage { get; set; }
         public string? Notes_Item { get; set; }
         public DateTime? OperationDate { get; set; }
-        public int? User_Id { get; set; }
-        public int? Branch_Id { get; set; }
+        public long? User_Id { get; set; }
+        public long? Branch_Id { get; set; }
         public DateTime? Insert_ServerDateTime { get; set; }
         public DateTime? Update_ServerDateTime { get; set; }
         public DateTime? EditOperationDate { get; set; }
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
         public long? ProcessNo { get; set; }
     }
 
@@ -184,12 +184,12 @@ namespace AccountModelsLib.Models
         public string? Notes_List { get; set; }
         public DateTime? Process_Date { get; set; }
         public DateTime? OperationDate { get; set; }
-        public int? User_Id { get; set; }
-        public int? Branch_Id { get; set; }
+        public long? User_Id { get; set; }
+        public long? Branch_Id { get; set; }
         public DateTime? Insert_ServerDateTime { get; set; }
         public DateTime? Update_ServerDateTime { get; set; }
         public DateTime? EditOperationDate { get; set; }
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
         public long? ProcessNo { get; set; }
     }
 
@@ -253,12 +253,12 @@ namespace AccountModelsLib.Models
         public decimal? SubQntyBalance { get; set; }
         public decimal? CheckBalanceAllows { get; set; }
         public DateTime? OperationDate { get; set; }
-        public int? User_Id { get; set; }
-        public int? Branch_Id { get; set; }
+        public long? User_Id { get; set; }
+        public long? Branch_Id { get; set; }
         public DateTime? Insert_ServerDateTime { get; set; }
         public DateTime? Update_ServerDateTime { get; set; }
         public DateTime? EditOperationDate { get; set; }
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
         public long? ProcessNo { get; set; }
     }
 }

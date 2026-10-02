@@ -21,7 +21,7 @@ namespace AccountModelsLib.Models
 
         public DateTime? OperationDate { get; set; }
 
-        public int? User_Id { get; set; }
+        public long? User_Id { get; set; }
 
        
 
@@ -31,7 +31,7 @@ namespace AccountModelsLib.Models
 
         public DateTime? EditOperationDate { get; set; }
 
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
 
         public long? ProcessNo { get; set; }
     }

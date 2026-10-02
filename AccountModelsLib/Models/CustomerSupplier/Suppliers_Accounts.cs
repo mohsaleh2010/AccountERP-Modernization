@@ -11,58 +11,109 @@ namespace AccountModelsLib.Models
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
 
-    public partial class Suppliers_Accounts
+
+    [Table("Suppliers_Accounts")]
+    public class Suppliers_Accounts
     {
-        public long Id { get; set; }
-        public Nullable<long> Supplier_Id { get; set; }
-        public Nullable<decimal> Import { get; set; }
-        public Nullable<decimal> Export { get; set; }
-        public Nullable<decimal> Balance { get; set; }
-        public Nullable<decimal> Balance_Actual { get; set; }
-        public Nullable<int> Transaction_Type { get; set; }
-        public Nullable<System.DateTime> Transaction_Date { get; set; }
-        public Nullable<long> Reference_Id { get; set; }
-        public Nullable<int> Reference_Type { get; set; }
-        public Nullable<long> Reference_Type_Table_Id { get; set; }
-        public Nullable<int> Payment_Type { get; set; }
-        public string Notes { get; set; }
+        [Key]
+      
+        public long ID { get; set; }
+
+        public long? Supplier_Id { get; set; }
+
+
+        public decimal? Import { get; set; }
+
+
+        public decimal? Export { get; set; }
+
+
+        public decimal? Balance { get; set; } 
+        public decimal? Balance_Actual { get; set; }
+
+        public int? Transaction_Type { get; set; }
+
+        public DateTime? Transaction_Date { get; set; }
+
+        public long? Reference_Id { get; set; }
+
+        public int? Reference_Type { get; set; }
+
+        public long? Reference_Type_Table_Id { get; set; }
+
+        public int? Payment_Type { get; set; }
+
+     
+        public string? Notes { get; set; }
+
         public int Day_Registration_flage { get; set; }
-        public Nullable<long> DayReg_List_Id { get; set; }
-        public Nullable<int> Flage_View { get; set; }
-        public Nullable<decimal> BalanceImport { get; set; }
-        public Nullable<decimal> BalanceExport { get; set; }
-        public Nullable<decimal> BalanceDiff { get; set; }
-        public string Reference_Type_View { get; set; }
-        public string Item_Name { get; set; }
-        public string Qnty { get; set; }
-        public string Item_No { get; set; }
-        public string Item_Size { get; set; }
-        public string Qnty_Size { get; set; }
-        public string Qnty_value { get; set; }
-        public string Height_Width_Item { get; set; }
-        public Nullable<System.DateTime> OperationDate { get; set; }
-        public Nullable<int> User_Id { get; set; }
-        public Nullable<int> Branch_Id { get; set; }
-        public Nullable<System.DateTime> Insert_ServerDateTime { get; set; }
-        public Nullable<System.DateTime> Update_ServerDateTime { get; set; }
-        public Nullable<System.DateTime> EditOperationDate { get; set; }
-        public Nullable<int> Edit_User_Id { get; set; }
-        public Nullable<decimal> Larg_Unit_Price { get; set; }
-        public Nullable<long> Item_Id { get; set; }
-        public string Larg_Qnty { get; set; }
-        public string Small_Qnty { get; set; }
+
+        public long? DayReg_List_Id { get; set; }
+
+        public int? Flage_View { get; set; }
 
 
+        public decimal? BalanceImport { get; set; }
+
+
+        public decimal? BalanceExport { get; set; }
+
+
+        public decimal? BalanceDiff { get; set; }
+
+
+        public string? Reference_Type_View { get; set; }
+
+
+        public string? Item_Name { get; set; } 
+        public string? Qnty { get; set; } 
+        public string? Item_No { get; set; } 
+        public string? Item_Size { get; set; } 
+        public string? Qnty_Size { get; set; } 
+        public string? Qnty_value { get; set; } 
+        public string? Height_Width_Item { get; set; } 
+        public DateTime? OperationDate { get; set; } 
+        public long? User_Id { get; set; } 
+        public long? Branch_Id { get; set; } 
+        public DateTime? Insert_ServerDateTime { get; set; }
+
+        public DateTime? Update_ServerDateTime { get; set; }
+
+        public DateTime? EditOperationDate { get; set; }
+
+        public long? Edit_User_Id { get; set; }
+
+
+        public decimal? Larg_Unit_Price { get; set; }
+
+        public long? Item_Id { get; set; }
+
+
+        public string? Larg_Qnty { get; set; }
+
+
+        public string? Small_Qnty { get; set; }
+
+        public long? Reference_Type_TableDetails_Id { get; set; }
+
+        public long? ProcessNo { get; set; }
+
+
+        public string? TaxInternalId { get; set; }
+
+
+        public string? SupplierName { get; set; }
+
+        public long? WorkOrderNumber { get; set; }
 
         public long? CarsWorkOrdersId { get; set; }
-        public long? WorkOrderNumber { get; set; }
-        public string SupplierName { get; set; }
 
-        public string TaxInternalId { get; set; }
-         
+        public long? CarsId { get; set; }
 
 
+        public string? CarNumber { get; set; }
     }
 }

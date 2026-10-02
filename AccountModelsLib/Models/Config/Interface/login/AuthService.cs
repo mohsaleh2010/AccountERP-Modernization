@@ -65,7 +65,7 @@ namespace AccountModelsLib.Models
             // Common.User_Id مباشرة (وليس عبر باراميتر)؛ ضبطها بعد الاستعلام كان يجعل الاستعلام
             // ينفَّذ بقيمة User_Id قديمة/صفرية، فتعود قائمة القوائم فارغة دائماً ويظهر السايد بار بلا عناصر.
             Common.Is_User_Admin = user.AdminFlage ?? 0;
-            Common.User_Id = (int)user.USER_ID;
+            Common.User_Id = (long)user.USER_ID;
             Common.User_Name = user.USER_NAME;
             Common.FullUserName = user.Name;
             Common.Branch_Id = user.Branch_Id ?? 1;
@@ -184,7 +184,7 @@ namespace AccountModelsLib.Models
         //        {
         //            mylogin.flage_Valid = 1;
         //            Common.Is_User_Admin = int.Parse(set.Tables[0].Rows[0]["AdminFlage"].ToString());
-        //            mylogin.User_Id = int.Parse(set.Tables[0].Rows[0]["USER_ID"].ToString());
+        //            mylogin.User_Id = long.Parse(set.Tables[0].Rows[0]["USER_ID"].ToString());
         //            Common.User_Id = mylogin.User_Id;
         //            mylogin.username = set.Tables[0].Rows[0]["USER_NAME"].ToString();
         //            Common.User_Name = mylogin.username;

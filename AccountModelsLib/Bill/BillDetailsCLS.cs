@@ -15,15 +15,15 @@ namespace AccountModelsLib
 
         public long Bills_List_Id = 0;
         public long Bills_Details_Id = 0;
-        public int Item_Id;
-        public int Unit_Item_Table_Id;
-        public int Unit_Id;
+        public long Item_Id;
+        public long Unit_Item_Table_Id;
+        public long Unit_Id;
         public long Unit_Item_ExpireDate_Id;
 
         
 
 
-        public int Store_Id;
+        public long Store_Id;
         public string Invoice_Item_Name = "";
         public decimal Larg_Qnty;
         public decimal Small_Qnty;

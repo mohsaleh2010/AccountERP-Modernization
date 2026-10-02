@@ -29,7 +29,7 @@ namespace AccountModelsLib
             }
             return D;
         }
-        public DataSet GetMoney_SpentDetails(ref int Excp, bool AllCustomer, int Customer_ID, bool AllDates, DateTime DateFrom, DateTime DateTo, bool Totals)
+        public DataSet GetMoney_SpentDetails(ref int Excp, bool AllCustomer, long Customer_ID, bool AllDates, DateTime DateFrom, DateTime DateTo, bool Totals)
         {
             string mysql = "";
 
@@ -50,7 +50,7 @@ namespace AccountModelsLib
             return Get_Data(ref Excp, mysql);
 
         }
-        public DataSet GetCheck_SpentDetails(ref int Excp, bool AllCustomer, int Customer_ID, bool AllDates, DateTime DateFrom, DateTime DateTo, bool Totals)
+        public DataSet GetCheck_SpentDetails(ref int Excp, bool AllCustomer, long Customer_ID, bool AllDates, DateTime DateFrom, DateTime DateTo, bool Totals)
         {
             string mysql = "";               
 
@@ -69,7 +69,7 @@ namespace AccountModelsLib
             return Get_Data(ref Excp, mysql);
 
         }
-        public DataSet GetTotalMoney_SpentDetails(ref int Excp, bool AllCustomer, int Customer_ID, bool AllDates, DateTime DateFrom, DateTime DateTo, bool Totals)
+        public DataSet GetTotalMoney_SpentDetails(ref int Excp, bool AllCustomer, long Customer_ID, bool AllDates, DateTime DateFrom, DateTime DateTo, bool Totals)
         {
 
             string mysql = "";
@@ -92,7 +92,7 @@ namespace AccountModelsLib
 
         }
 
-        public DataSet GetTotalCheck_SpentDetails(ref int Excp, bool AllCustomer, int Customer_ID, bool AllDates, DateTime DateFrom, DateTime DateTo, bool Totals)
+        public DataSet GetTotalCheck_SpentDetails(ref int Excp, bool AllCustomer, long Customer_ID, bool AllDates, DateTime DateFrom, DateTime DateTo, bool Totals)
         {
 
             string mysql = "";

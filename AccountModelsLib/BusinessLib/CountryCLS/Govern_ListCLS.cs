@@ -168,14 +168,21 @@ namespace AccountModelsLib
 
         }
 
+        /// <summary>محافظة بمعرّفها بلا تتبع (لتعديلها ثم تمريرها لـAdd_Govern_List) - إضافة لواجهة Razor.</summary>
+        public Govern_List GetGovern_ListNoTracking(long Id)
+        {
+            return new AccountModelsLib.operations().db.Govern_List.AsNoTracking().Where(i => i.Id == Id).FirstOrDefault();
+        }
+
         public void Delete(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long Id)
         {
             try
             {
 
 
-                var cityL = opp.db.Gov_City_List.Where(i => i.Govern_ListId == Id);
-                if (cityL != null)
+                // 🟢 إصلاح خلل الأصل (بموافقة المستخدم): كان الفحص `IQueryable != null` (دائماً true) فيمنع حذف أى محافظة؛ صار Any().
+                bool hasCities = opp.db.Gov_City_List.Any(i => i.Govern_ListId == Id);
+                if (hasCities)
                 {
                     Excp = 1;
                     Msg = "لا يمكن حذف المحافظة تم تسجيل مدن بها";

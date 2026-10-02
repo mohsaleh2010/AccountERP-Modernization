@@ -12,26 +12,26 @@ namespace AccountModelsLib.Models
        
         public long Id { get; set; }
         public long CustomerId { get; set; }
-        public string  ChassisNumber { get; set; }
-        public string  CarNumber { get; set; }
-        public string  CarType { get; set; }
-        public string  Model { get; set; }
-        public string  EngineNumber { get; set; }
-        public string  FuelType { get; set; }
-        public string Capacity { get; set; }
-        public string Year { get; set; }
-        public string  TransmissionType { get; set; }
+        public string?  ChassisNumber { get; set; }
+        public string?  CarNumber { get; set; }
+        public string?  CarType { get; set; }
+        public string?  Model { get; set; }
+        public string?  EngineNumber { get; set; }
+        public string?  FuelType { get; set; }
+        public string? Capacity { get; set; }
+        public string? Year { get; set; }
+        public string?  TransmissionType { get; set; }
         public long?   Lookup_TransmissionTypeId { get; set; }
-        public string  ColorCode { get; set; }
-        public string  CarColor { get; set; }
-        public string DriverTel { get; set; }
-        public string DriverName { get; set; }
-        public string CarAddress { get; set; }
+        public string?  ColorCode { get; set; }
+        public string?  CarColor { get; set; }
+        public string? DriverTel { get; set; }
+        public string? DriverName { get; set; }
+        public string? CarAddress { get; set; }
         
         public DateTime? WarrantyStartDate { get; set; }
         public DateTime? WarrantyEndDate { get; set; }
-        public string InsuranceCompany { get; set; }
-        public string  Notes { get; set; }
+        public string? InsuranceCompany { get; set; }
+        public string?  Notes { get; set; }
         public long? Lookup_CarShapeId { get; set; }
          
         public long? Lookup_CarTypeId { get; set; }

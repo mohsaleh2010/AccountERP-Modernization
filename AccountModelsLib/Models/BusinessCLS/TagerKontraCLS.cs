@@ -20,7 +20,7 @@ namespace AccountModelsLib.Models
             operations opp = new operations();
             return Get_TagerKontra(ref opp);
         }
-        public DataTable Get_TagerKontra(ref operations opp, int Id = 0)
+        public DataTable Get_TagerKontra(ref operations opp, long Id = 0)
         {
             string mysql = " Select * from LookUp_TagerKontra  ";
             if (Id > 0)
@@ -32,7 +32,7 @@ namespace AccountModelsLib.Models
             return dt;
         }
 
-        public void GetTagerKontraById(ref operations opp, int Id)
+        public void GetTagerKontraById(ref operations opp, long Id)
         {
             //if (Id > 0)
             //{
@@ -46,7 +46,7 @@ namespace AccountModelsLib.Models
         }
         public void ReadData(DataTable dt, int index)
         {
-            ModelTagerKontra.Id = int.Parse(dt.Rows[index]["Id"].ToString());
+            ModelTagerKontra.Id = long.Parse(dt.Rows[index]["Id"].ToString());
 
             ModelTagerKontra.Name = dt.Rows[index]["Name"].ToString();
 

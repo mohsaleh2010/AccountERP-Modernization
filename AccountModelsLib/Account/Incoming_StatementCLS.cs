@@ -16,20 +16,20 @@ namespace AccountModelsLib
         public Incoming_StatementCLS()
         {
         }
-        public decimal Get_ProfitFrom_Incoming_Statement(int Branch_Id, int Year_Financial_Period_Id, int Show_AccountWithBalance, int Entry_Currency_Id)
+        public decimal Get_ProfitFrom_Incoming_Statement(long Branch_Id, long Year_Financial_Period_Id, int Show_AccountWithBalance, long Entry_Currency_Id)
         {
             DataTable dt = new DataTable();
             decimal Profit_value = Get_Incoming_Statement(ref dt, Branch_Id, Year_Financial_Period_Id, Show_AccountWithBalance, Entry_Currency_Id);
             return Profit_value;
         }
-        public decimal Get_Incoming_Statement(ref DataTable dt,int Branch_Id, int Year_Financial_Period_Id, int Show_AccountWithBalance, int Entry_Currency_Id)
+        public decimal Get_Incoming_Statement(ref DataTable dt,long Branch_Id, long Year_Financial_Period_Id, int Show_AccountWithBalance, long Entry_Currency_Id)
         {
             DataTable dtPrint = new DataTable();
             return Get_Incoming_Statement(ref dt,ref   dtPrint, Branch_Id, Year_Financial_Period_Id, Show_AccountWithBalance, Entry_Currency_Id);
 
 
         }
-        public decimal Get_Incoming_Statement(ref DataTable dt,ref DataTable dtPrint, int Branch_Id, int Year_Financial_Period_Id, int Show_AccountWithBalance, int Entry_Currency_Id)
+        public decimal Get_Incoming_Statement(ref DataTable dt,ref DataTable dtPrint, long Branch_Id, long Year_Financial_Period_Id, int Show_AccountWithBalance, long Entry_Currency_Id)
         {
             string mysql = "";
 
@@ -150,7 +150,7 @@ namespace AccountModelsLib
             return Final_Profit;
         }
 
-        public decimal Get_Incoming_StatementBackup(ref DataTable dt, int Branch_Id, int Year_Financial_Period_Id)
+        public decimal Get_Incoming_StatementBackup(ref DataTable dt, long Branch_Id, long Year_Financial_Period_Id)
         {
             string mysql = "";
             mysql = @"SELECT        Account_Entry_Master_Balance.Submain_Account_ID, Account_Entry_Master_Balance.SubAccount_Name, Account_Entry_Master_Balance.Account_Currency_Id, 
@@ -251,7 +251,7 @@ WHERE       ( (Submain_Account.Head_Main_Account = 4) OR (Submain_Account.Head_M
 
             return Final_Profit;
         }
-        public void Get_Final_Accounts(ref DataTable dt, int Accounts_Follow, int Branch_Id, int Year_Financial_Period_Id, int Entry_Currency_Id, int Show_AccountWithBalance)
+        public void Get_Final_Accounts(ref DataTable dt, int Accounts_Follow, long Branch_Id, long Year_Financial_Period_Id, long    Entry_Currency_Id, int Show_AccountWithBalance)
         {
             string mysql = "";
 
@@ -298,7 +298,7 @@ WHERE       ( (Submain_Account.Head_Main_Account = 4) OR (Submain_Account.Head_M
 
         }
 
-        public void Get_Final_AccountsBackup(ref DataTable dt, int Accounts_Follow, int Branch_Id, int Year_Financial_Period_Id)
+        public void Get_Final_AccountsBackup(ref DataTable dt, int Accounts_Follow, long Branch_Id, long Year_Financial_Period_Id)
         {
             string mysql = "";
             mysql = @"SELECT  Account_Entry_Master_Balance.Submain_Account_ID, Account_Entry_Master_Balance.SubAccount_Name, Account_Entry_Master_Balance.Account_Currency_Id, 
@@ -588,13 +588,13 @@ WHERE       ( (Submain_Account.Head_Main_Account = 4) OR (Submain_Account.Head_M
 
 
         }
-        public void Get_Final_AccountsTash3heel(ref DataTable dt_Tash3heel, int Accounts_Follow, ref decimal Mora7l_Madin, ref decimal Mora7l_Da7n, int Branch_Id, int Year_Financial_Period_Id, int Entry_Currency_Id, int Show_AccountWithBalance)
+        public void Get_Final_AccountsTash3heel(ref DataTable dt_Tash3heel, int Accounts_Follow, ref decimal Mora7l_Madin, ref decimal Mora7l_Da7n, long Branch_Id, long Year_Financial_Period_Id, long    Entry_Currency_Id, int Show_AccountWithBalance)
         {
             Get_Final_Accounts(ref dt_Tash3heel, Accounts_Follow, Branch_Id, Year_Financial_Period_Id, Entry_Currency_Id, Show_AccountWithBalance);
             Compute_Mora7l_Tash3heelValues(ref dt_Tash3heel, Accounts_Follow, ref Mora7l_Madin, ref Mora7l_Da7n);
             //SetTotal(ref   dt_Tash3heel);
         }
-        public void Get_Final_AccountsMotagra(ref DataTable dt_Motagra, int Accounts_Follow, ref decimal Mora7l_Madin, ref decimal Mora7l_Da7n, int Branch_Id, int Year_Financial_Period_Id, int Entry_Currency_Id, int Show_AccountWithBalance)
+        public void Get_Final_AccountsMotagra(ref DataTable dt_Motagra, int Accounts_Follow, ref decimal Mora7l_Madin, ref decimal Mora7l_Da7n, long Branch_Id, long Year_Financial_Period_Id, long    Entry_Currency_Id, int Show_AccountWithBalance)
         {
             ////Tash3heel
             decimal Mora7l_Madin_FromTash3heel = 0;
@@ -609,7 +609,7 @@ WHERE       ( (Submain_Account.Head_Main_Account = 4) OR (Submain_Account.Head_M
             Compute_Mora7l_MotagraValues(ref dt_Motagra, Accounts_Follow, ref Mora7l_Madin, ref Mora7l_Da7n, Mora7l_Madin_FromTash3heel, Mora7l_Da7n_FromTash3heel);
 
         }
-        public void Get_Final_AccountsArba7(ref DataTable dt_Tash3heel, ref DataTable dt_Motagra, ref DataTable dt_Arba7, ref decimal Mora7l_Madin, ref decimal Mora7l_Da7n, int Branch_Id, int Year_Financial_Period_Id, int Entry_Currency_Id, int Show_AccountWithBalance)
+        public void Get_Final_AccountsArba7(ref DataTable dt_Tash3heel, ref DataTable dt_Motagra, ref DataTable dt_Arba7, ref decimal Mora7l_Madin, ref decimal Mora7l_Da7n, long Branch_Id, long Year_Financial_Period_Id, long    Entry_Currency_Id, int Show_AccountWithBalance)
         {
             //
             ////Tash3heel

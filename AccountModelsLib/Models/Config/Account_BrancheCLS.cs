@@ -77,7 +77,7 @@ namespace AccountModelsLib.Models
             return dt_Branch;
 
         }
-        public DataTable Get_DataUSER_DETAILES_Branches_Permission(bool Add_All, int USER_DETAILES_Id)
+        public DataTable Get_DataUSER_DETAILES_Branches_Permission(bool Add_All, long USER_DETAILES_Id)
         {
             string mysql = "";
 
@@ -88,11 +88,11 @@ FROM         Account_Branches INNER JOIN
 
             if (Common.Is_User_Admin == 1)
             {
-                mysql = " Select * from Account_Branches   ORDER BY Branch_Name   ";
+                mysql = " Select * from Account_Branches      ";
 
             }
 
-            
+            mysql= mysql + " ORDER BY Account_Branches.Id   ";  
             dt_Branch = Get_Data_(mysql, Add_All);
              
             return dt_Branch;
@@ -115,7 +115,7 @@ FROM         Account_Branches INNER JOIN
 
 
         }
-        public DataTable  Get_Data(int Branch_Id)
+        public DataTable  Get_Data(long Branch_Id)
         {
             string mysql = "";
 
@@ -148,7 +148,7 @@ FROM         Account_Branches INNER JOIN
 
 
         }
-        public static DataTable Get_USER_DETAILES_Branches_Permission(int USER_DETAILES_Id)
+        public static DataTable Get_USER_DETAILES_Branches_Permission(long USER_DETAILES_Id)
         {
             string mysql = "";
 

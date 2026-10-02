@@ -10,8 +10,8 @@ using System.Threading;
 using System.Threading.Tasks;
 //using AccountModelsLib.Models.Items;
 //using AccountModelsLib.DBModels;
- 
- 
+
+
 using System.Xml.Linq;
 
 namespace AccountModelsLib.Models
@@ -51,7 +51,7 @@ namespace AccountModelsLib.Models
                 //um = opp.db.Unit_item.Where(i => i.id == Unit_Item_Id).FirstOrDefault();
 
                 im = new Items();
-                im = opp.db.Item.Where(i => i.id == Item_Id).FirstOrDefault();
+                im = opp.db.Item.Where(i => i.Id == Item_Id).FirstOrDefault();
 
                 im.S_Price = umVM.S_price;
                 im.S_price_LargeUnit = umVM.S_price_LargeUnit;
@@ -85,7 +85,7 @@ namespace AccountModelsLib.Models
 
 
                 im = new Items();
-                im = opp.db.Item.Where(i => i.id == Item_Id).FirstOrDefault();
+                im = opp.db.Item.Where(i => i.Id == Item_Id).FirstOrDefault();
 
                 //im.S_Price = invD.S_price_LargeUnit;
                 //im.S_price_LargeUnit = invD.S_price_LargeUnit;
@@ -160,7 +160,7 @@ namespace AccountModelsLib.Models
 
             try
             {
-                if (Common.UseAutomaticItemCode == 1 | im.code=="0")
+                if (Common.UseAutomaticItemCode == 1 | im.code == "0")
                 {
                     im.code = GetNewItemCode(ref opp).ToString();
                     long InternalCode = 0;
@@ -174,7 +174,7 @@ namespace AccountModelsLib.Models
                 um.active_flage = 1;
                 opp.db.Item.Add(im);
                 opp.db.SaveChanges();
-                um.Item_Id = im.id;
+                um.Item_Id = im.Id;
                 opp.db.Unit_item.Add(um);
                 opp.db.SaveChanges();
 
@@ -182,7 +182,7 @@ namespace AccountModelsLib.Models
                 {
                     if (itcCls.itemCodeTaxNotUploaded != null)
                     {
-                        itcCls.itemCodeTaxNotUploaded.Item_Id = im.id;
+                        itcCls.itemCodeTaxNotUploaded.Item_Id = im.Id;
                         itcCls.AddItemCodeTaxNotUploaded(ref opp);
                     }
                 }
@@ -219,25 +219,52 @@ namespace AccountModelsLib.Models
 
         public long GetNewItemCode(ref operations opp)
         {
-
             long InternalCode = 0;
-            Items itm = opp.db.Item.OrderByDescending(i => i.id).Take(1).FirstOrDefault();
-            if (itm == null)
+            Items itm = opp.db.Item.OrderByDescending(i => i.Id).Take(1).FirstOrDefault();
+            if (Common.Use_Auto_Identity_Column == 1)
             {
-                InternalCode = 1;
-            }
-            else
-            {
-                if (itm.id == null)
+                
+                
+                if (itm == null)
                 {
-                    InternalCode = 1;
+                    InternalCode = 1000;
                 }
                 else
                 {
-                    InternalCode = itm.id + 1;
+                    if (itm.Id == null)
+                    {
+                        InternalCode = 1000;
+                    }
+                    else
+                    {
+                        InternalCode = itm.Id + 1;
+                    }
                 }
             }
-
+            else
+            {
+                if (itm == null)
+                {
+                    InternalCode = 1000;
+                }
+                else
+                {
+                    if (itm.Id == null)
+                    {
+                        InternalCode = 1000;
+                    }
+                    else
+                    {
+                        long Code = 0;
+                        long.TryParse(itm.code, out Code);
+                        if (Code == 0)
+                        {
+                            Code = 1000;
+                        }
+                        InternalCode = Code + 1;
+                    }
+                }
+            }
             return InternalCode;
         }
         void UpdateItemCode(ref operations opp, Items im, Unit_item um)
@@ -245,13 +272,27 @@ namespace AccountModelsLib.Models
             string mysql = "";
             if (Common.UseAutomaticItemCode == 1 | im.code == "0")
             {
-                mysql = " Update  Item Set   Code= "+im.id;
-                mysql = mysql + " where Id=" + im.id + " ";
+                long Code = 0;
+                if (Common.Use_Auto_Identity_Column == 1)
+                {
+                    Code = im.Id;
+                }
+                else
+                {
+                    long.TryParse(im.code, out Code);
+                    if (Code == 0)
+                    {
+                        Code = GetNewItemCode(ref opp);
+                    }
+                }
+
+                mysql = " Update  Item Set   Code= " + Code;
+                mysql = mysql + " where Id=" + Code + " ";
 
                 opp.insert_me(mysql);
 
-                mysql = " Update Unit_Item Set  Code= " + im.id;
-                mysql = mysql + " where  Item_id=" + im.id;
+                mysql = " Update Unit_Item Set  Code= " + Code;
+                mysql = mysql + " where  Item_id=" + Code;
                 opp.insert_me(mysql);
 
                 //mysql = mysql + " where Id=" + im.id + " ";
@@ -290,7 +331,7 @@ namespace AccountModelsLib.Models
                 opp.insert_me(mysql);
 
                 mysql = " Update  Item Set   Code= ' " + Code + "'";
-                mysql = mysql + " where Id=" + im.id + " ";
+                mysql = mysql + " where Id=" + im.Id + " ";
                 opp.insert_me(mysql);
             }
 
@@ -342,10 +383,10 @@ namespace AccountModelsLib.Models
 
             for (int x = 0; x < dt.Rows.Count; x++)
             {
-                int Store_id_All = int.Parse(dt.Rows[x]["Id"].ToString());
+                long Store_id_All = int.Parse(dt.Rows[x]["Id"].ToString());
 
                 mysql = "INSERT INTO Unit_item (S_price_LargeUnit,S_price_SmallUnit  ,P_price_LargeUnit  , P_price_SmallUnit  , Unit_Used_For_S_price_Default,Unit_Used_For_P_price_Default,Is_ItemWithoutBalance,Item_id, Store_id, Store_Type, Code, unit_id, Full_qua, D_Qua, Item_No, Reserved_Balance_Larg_Qnty, Reserved_Balance_Small_Qnty, Big_unit,Small_unit, P_price, S_price, Upon_Request,TaxSales10_Value)";
-                mysql = mysql + "VALUES(" + um.S_price_LargeUnit + "," + um.S_price_SmallUnit + " ," + um.P_price_LargeUnit + " , " + um.P_price_SmallUnit + " ," + um.Unit_Used_For_S_price_Default + ", " + um.Unit_Used_For_P_price_Default + "," + um.Is_ItemWithoutBalance + "," + im.id + ", " + Store_id_All + ",4,'" + um.Code + "', " + um.unit_id + ", 0,0,0,0, 0, " + um.Big_unit + "," + um.Small_unit + "," + um.P_price + "," + um.S_price + ",0," + um.TaxSales10_Value + ")";
+                mysql = mysql + "VALUES(" + um.S_price_LargeUnit + "," + um.S_price_SmallUnit + " ," + um.P_price_LargeUnit + " , " + um.P_price_SmallUnit + " ," + um.Unit_Used_For_S_price_Default + ", " + um.Unit_Used_For_P_price_Default + "," + um.Is_ItemWithoutBalance + "," + im.Id + ", " + Store_id_All + ",4,'" + um.Code + "', " + um.unit_id + ", 0,0,0,0, 0, " + um.Big_unit + "," + um.Small_unit + "," + um.P_price + "," + um.S_price + ",0," + um.TaxSales10_Value + ")";
                 long Unit_Item_Table_Id = opp.Insert_me_Return_Last_Identify(mysql);
 
                 SetItem_First_Period_Balance(ref opp, im, um, Unit_Item_Table_Id);
@@ -375,7 +416,7 @@ namespace AccountModelsLib.Models
                 um.id = 0;
 
                 im = umList[0].Item;
-                im.id = 0;
+                im.Id = 0;
                 im.IsMasna3iatKhamat = 1;
 
                 im.Item_Name = Common.ItemNameForMasna3iatKhamat;
@@ -388,7 +429,7 @@ namespace AccountModelsLib.Models
             opp.db.Item.Add(im);
             opp.db.SaveChanges();
 
-            um.Item_Id = im.id;
+            um.Item_Id = im.Id;
 
             opp.db.Unit_item.Add(um);
             opp.db.SaveChanges();
@@ -401,7 +442,7 @@ namespace AccountModelsLib.Models
             um.P_priceAvgCost = um.P_priceAvgCost ?? 0;
             DateTime? Balance_Date = im.OperationDate;
             string mysql = "INSERT INTO Item_First_Period_Balance(Item_Id, Unit_Item_Id, Larg_Qnty, Small_Qnty, Item_No, Balance_Date,Active ,  P_priceAvgCost, S_priceAvgCost, P_price, S_price) ";
-            mysql = mysql + " VALUES(" + im.id + ", " + um.id + " , " + um.Full_qua + ", " + um.D_Qua + ", " + um.Item_No + ",'" + operations.dateFormat(Balance_Date) + "',1, " + um.P_priceAvgCost + ", " + um.S_priceAvgCost + ", " + um.P_price + ", " + um.S_price + ")";
+            mysql = mysql + " VALUES(" + im.Id + ", " + um.id + " , " + um.Full_qua + ", " + um.D_Qua + ", " + um.Item_No + ",'" + operations.dateFormat(Balance_Date) + "',1, " + um.P_priceAvgCost + ", " + um.S_priceAvgCost + ", " + um.P_price + ", " + um.S_price + ")";
             opp.insert_me(mysql);
         }
 
@@ -424,14 +465,14 @@ namespace AccountModelsLib.Models
 
             DateTime Balance_Date = DateTime.Now.Date;
             string mysql = "INSERT INTO Item_First_Period_Balance(Item_Id, Unit_Item_Id, Larg_Qnty, Small_Qnty, Item_No, Balance_Date,Active ) ";
-            mysql = mysql + " VALUES(" + im.id + ", " + Unit_Item_Table_Id + " ,  0,0,0,'" + operations.dateFormat(Balance_Date) + "',1)";
+            mysql = mysql + " VALUES(" + im.Id + ", " + Unit_Item_Table_Id + " ,  0,0,0,'" + operations.dateFormat(Balance_Date) + "',1)";
             opp.insert_me(mysql);
         }
         void EditItemPrice(ref operations opp, ref Unit_item um)
         {
             string mysql = $@" Update Unit_Item Set P_price ={um.P_price} , 
-            P_price_LargeUnit ={um.P_price_LargeUnit??0} ,
-            P_price_SmallUnit ={um.P_price_SmallUnit??0} ,
+            P_price_LargeUnit ={um.P_price_LargeUnit ?? 0} ,
+            P_price_SmallUnit ={um.P_price_SmallUnit ?? 0} ,
             P_price_Item_No ={um.P_price_Item_No ?? 0} ,
             S_price ={um.S_price ?? 0} ,
             S_price_LargeUnit ={um.S_price_LargeUnit ?? 0} ,
@@ -442,12 +483,12 @@ namespace AccountModelsLib.Models
             opp.insert_me(mysql);
 
         }
-        public void Edit_Item(ref int Excp, ref string Msg,   operations opp, Items im, Unit_item um)
+        public void Edit_Item(ref int Excp, ref string Msg, operations opp, Items im, Unit_item um)
         {
 
             Edit_Item(ref Excp, ref Msg, ref opp, im, um);
-        }     
-        
+        }
+
         public void Edit_Item(ref int Excp, ref string Msg, ref operations opp, Items im, Unit_item um)
         {
             //صلاحية تعديل بيانات الصنف  
@@ -482,14 +523,14 @@ namespace AccountModelsLib.Models
 
                 if (itcCls.itemCodeTaxNotUploaded != null)
                 {
-                    itcCls.itemCodeTaxNotUploaded.Item_Id = im.id;
+                    itcCls.itemCodeTaxNotUploaded.Item_Id = im.Id;
                     itcCls.EditItemCodeTaxNotUploaded(ref opp);
                 }
 
                 EditItemPrice(ref opp, ref um);
                 opp.Commit();
                 Excp = 0;
-                
+
             }
             catch (Exception ee)
             {
@@ -504,7 +545,7 @@ namespace AccountModelsLib.Models
             try
             {
 
-                mysql = " Update item set No3eboa=" + im.No3eboa + ",Item_Category_ID=" + im.Item_Category_ID + ",  code='" + im.code + "',item_name='" + im.Item_Name + "', s_id=" + im.S_id + " , unit_Id=" + im.Unit_Id + ",UnitStr='" + im.UnitStr + "' where id=" + im.id;
+                mysql = " Update item set No3eboa=" + im.No3eboa + ",Item_Category_ID=" + im.Item_Category_ID + ",  code='" + im.code + "',item_name='" + im.Item_Name + "', s_id=" + im.S_id + " , unit_Id=" + im.Unit_Id + ",UnitStr='" + im.UnitStr + "' where id=" + im.Id;
                 opp.insert_me(mysql);
 
                 mysql = " Update Unit_Item Set  Upon_Request=" + um.Upon_Request + " ,Full_qua=" + um.Full_qua + ",D_Qua=" + um.D_Qua + ",Item_No=" + um.Item_No + " ,TaxSales10_Value=" + um.TaxSales10_Value + "";
@@ -525,10 +566,10 @@ namespace AccountModelsLib.Models
         }
         public void Edit_Item(ref int Excp, ref string Msg, Items im, Unit_item um)
         {
-             operations opp = new operations();
-            Edit_Item(ref Excp, ref Msg,ref opp, im, um);
+            operations opp = new operations();
+            Edit_Item(ref Excp, ref Msg, ref opp, im, um);
             opp = null;
-            
+
         }
 
         public void Edit_Item(ref int Excp, ref string Msg)
@@ -1143,14 +1184,14 @@ namespace AccountModelsLib.Models
                 //My_DbContext.ConnStr = opp.str_sql_conn;
                 //My_DbContext db = new My_DbContext();
 
-                im = opp.db.Item.Where(p => p.code == Code | p.BarCode2==Code | p.BarCode3 == Code | p.BarCode4 == Code | p.BarCode5 == Code ).FirstOrDefault();
+                im = opp.db.Item.Where(p => p.code == Code | p.BarCode2 == Code | p.BarCode3 == Code | p.BarCode4 == Code | p.BarCode5 == Code).FirstOrDefault();
                 if (im != null)
                 {
-                    umExList = opp.db.Unit_Item_ExpireDates.Where(s => s.Item_Id == im.id & (s.Larg_Balance > 0 | s.Small_Balance > 0)).OrderBy(o => o.Item_Expire_Date).ToList();
+                    umExList = opp.db.Unit_Item_ExpireDates.Where(s => s.Item_Id == im.Id & (s.Larg_Balance > 0 | s.Small_Balance > 0)).OrderBy(o => o.Item_Expire_Date).ToList();
                 }
                 if (im != null)
                 {
-                    long Id = im.id;
+                    long Id = im.Id;
 
                     um = opp.db.Unit_item.Where(s => s.Item_Id == Id).Include(i => i.Item).FirstOrDefault();
                     itmList.Add(im);
@@ -1183,14 +1224,14 @@ namespace AccountModelsLib.Models
                 im = new Items();
                 un = new unit();
 
-                long Id = im.id;
+                long Id = im.Id;
 
                 um = opp.db.Unit_item.Where(s => s.id == Unit_Item_Table_Id).Include(i => i.Item).FirstOrDefault();
 
                 if (um != null)
                 {
                     im = um.Item;
-                    umExList = opp.db.Unit_Item_ExpireDates.Where(s => s.Item_Id == im.id).OrderBy(o => o.Item_Expire_Date).ToList();
+                    umExList = opp.db.Unit_Item_ExpireDates.Where(s => s.Item_Id == im.Id).OrderBy(o => o.Item_Expire_Date).ToList();
 
                     itmList.Add(im);
                     if (um != null)
@@ -1289,7 +1330,7 @@ namespace AccountModelsLib.Models
                 um = opp.db.Unit_item.AsNoTracking().Where(s => s.id == Unit_item_Table_Id).FirstOrDefault();
                 if (um != null)
                 {
-                    im = opp.db.Item.AsNoTracking().Where(p => p.id == um.Item_Id).FirstOrDefault();
+                    im = opp.db.Item.AsNoTracking().Where(p => p.Id == um.Item_Id).FirstOrDefault();
                 }
                 if (um != null)
                 {
@@ -1334,7 +1375,7 @@ namespace AccountModelsLib.Models
                 um = opp.db.Unit_item.Where(s => s.id == Unit_item_Table_Id).FirstOrDefault();
                 if (um != null)
                 {
-                    im = opp.db.Item.Where(p => p.id == um.Item_Id).FirstOrDefault();
+                    im = opp.db.Item.Where(p => p.Id == um.Item_Id).FirstOrDefault();
                 }
                 if (um != null)
                 {
@@ -1556,7 +1597,7 @@ namespace AccountModelsLib.Models
             try
             {
                 Excp = 0;
-                im_ = opp.db.Item.Where(i => i.id == Item_Id).Include(s => s.Store).Include(u => u.unit).FirstOrDefault();
+                im_ = opp.db.Item.Where(i => i.Id == Item_Id).Include(s => s.Store).Include(u => u.unit).FirstOrDefault();
 
                 Excp = 0;
             }
@@ -1573,7 +1614,7 @@ namespace AccountModelsLib.Models
         {
             //Items im_ = new Items();
 
-            var im_ = opp.db.Item.Where(i => i.id == Item_Id).Include(s => s.Store).Include(u => u.unit).FirstOrDefault();
+            var im_ = opp.db.Item.Where(i => i.Id == Item_Id).Include(s => s.Store).Include(u => u.unit).FirstOrDefault();
 
             return im_;
         }
@@ -1584,7 +1625,7 @@ namespace AccountModelsLib.Models
             try
             {
 
-                im = opp.db.Item.Where(i => i.id == Item_Id).AsNoTracking().FirstOrDefault();
+                im = opp.db.Item.Where(i => i.Id == Item_Id).AsNoTracking().FirstOrDefault();
                 if (im != null)
                 {
                     Unit_item um = opp.db.Unit_item.AsNoTracking().Where(i => i.Item_Id == Item_Id & i.Store_id == im.S_id).FirstOrDefault();
@@ -1611,7 +1652,7 @@ namespace AccountModelsLib.Models
             try
             {
                 Excp = 0;
-                Items im_ = opp.db.Item.AsNoTracking().Where(i => i.id == Item_Id).FirstOrDefault();
+                Items im_ = opp.db.Item.AsNoTracking().Where(i => i.Id == Item_Id).FirstOrDefault();
                 if (im_ != null)
                 {
                     Is_NotShowOnInvoice = im_.Is_NotShowOnInvoice ?? 0;
@@ -1633,7 +1674,7 @@ namespace AccountModelsLib.Models
 
 
 
-            im_ = opp.db.Item.AsNoTracking().Where(i => i.id == Item_Id).FirstOrDefault();
+            im_ = opp.db.Item.AsNoTracking().Where(i => i.Id == Item_Id).FirstOrDefault();
 
 
 
@@ -1658,7 +1699,7 @@ namespace AccountModelsLib.Models
 
                 im = new Items();
                 long Item_Id = um.Item_Id ?? 0;
-                im = opp.db.Item.Where(i => i.id == Item_Id).FirstOrDefault();
+                im = opp.db.Item.Where(i => i.Id == Item_Id).FirstOrDefault();
 
 
             }
@@ -1673,14 +1714,14 @@ namespace AccountModelsLib.Models
         {
             try
             {
-                if(Unit_Item_Id==0)
+                if (Unit_Item_Id == 0)
                 {
                     return;
                 }
                 um = new Unit_item();
 
                 um = opp.db.Unit_item.AsNoTracking().Where(i => i.id == Unit_Item_Id).Include(u => u.unit).Include(s => s.Store).FirstOrDefault();
-                if(um!=null)
+                if (um != null)
                 {
                     um.Full_qua = um.Full_qua ?? 0;
                     um.D_Qua = um.D_Qua ?? 0;
@@ -1688,7 +1729,7 @@ namespace AccountModelsLib.Models
                 }
                 im = new Items();
                 long Item_Id = um.Item_Id ?? 0;
-                im = opp.db.Item.AsNoTracking().Where(i => i.id == Item_Id).Include(u => u.unit).FirstOrDefault();
+                im = opp.db.Item.AsNoTracking().Where(i => i.Id == Item_Id).Include(u => u.unit).FirstOrDefault();
 
 
             }
@@ -1709,7 +1750,7 @@ namespace AccountModelsLib.Models
 
                 List<Unit_item> umList = new List<Unit_item>();
 
-                umList = opp.db.Unit_item.Where(i => i.Item_Id == im.id).ToList();
+                umList = opp.db.Unit_item.Where(i => i.Item_Id == im.Id).ToList();
 
                 foreach (Unit_item um in umList)
                 {
@@ -1776,7 +1817,7 @@ namespace AccountModelsLib.Models
             {
                 Serial = 0,
                 Id = 0,
-                Item_Id = itm.id,
+                Item_Id = itm.Id,
                 Unit_Item_Id = 0,
                 qua = 0,
                 Part_Qua = 0,
@@ -1826,7 +1867,7 @@ namespace AccountModelsLib.Models
             {
                 Serial = 0,
                 Id = 0,
-                Item_Id = itm.id,
+                Item_Id = itm.Id,
                 Unit_Item_Id = 0,
                 qua = 0,
                 Part_Qua = 0,
@@ -1884,7 +1925,7 @@ namespace AccountModelsLib.Models
                 {
                     Serial = 0,
                     Id = 0,
-                    Item_Id = itm.id,
+                    Item_Id = itm.Id,
                     Unit_Item_Id = 0,
                     qua = 0,
                     Part_Qua = 0,
@@ -1943,7 +1984,7 @@ namespace AccountModelsLib.Models
 
                 itmOrder_VM.Serial = 0;
                 itmOrder_VM.Id = 0;
-                itmOrder_VM.Item_Id = itm.id;
+                itmOrder_VM.Item_Id = itm.Id;
 
                 itmOrder_VM.Unit_Item_Id = 0;
 
@@ -2105,7 +2146,7 @@ namespace AccountModelsLib.Models
 
                 ///////////// get  item row data
                 im = new Items();
-                im = opp.db.Item.Where(i => i.id == Item_Id).Include(s => s.Store).Include(u => u.unit).FirstOrDefault();
+                im = opp.db.Item.Where(i => i.Id == Item_Id).Include(s => s.Store).Include(u => u.unit).FirstOrDefault();
 
                 itmList.Add(im);
                 ///////////// get unit_item row data
@@ -2137,7 +2178,7 @@ namespace AccountModelsLib.Models
                 um = new Unit_item();
                 umList = new List<Unit_item>();
 
-                im = opp.db.Item.Where(i => i.id == dp.Item_Id).Include(s => s.Store).Include(u => u.unit).FirstOrDefault();
+                im = opp.db.Item.Where(i => i.Id == dp.Item_Id).Include(s => s.Store).Include(u => u.unit).FirstOrDefault();
 
                 itmList.Add(im);
                 Set_ItemsViewModel();
@@ -2612,7 +2653,7 @@ namespace AccountModelsLib.Models
                     if (um != null)
                     {
 
-                        im = opp.db.Item.Where(p => p.id == um.Item_Id).FirstOrDefault();
+                        im = opp.db.Item.Where(p => p.Id == um.Item_Id).FirstOrDefault();
                         if (im != null)
                         {
                             opp.db.Unit_item.Remove(um);
@@ -2884,7 +2925,7 @@ namespace AccountModelsLib.Models
 
         }
 
-        public DataTable GetAllItemsImage_ByCategory_ID(int Item_Category_ID)
+        public DataTable GetAllItemsImage_ByCategory_ID(long Item_Category_ID)
         {
             operations opp = new operations();
             string mysql = @" SELECT        Item_ImagesStore.ImageId, Item_ImagesStore.Description, Item_ImagesStore.OriginalPath, Item_ImagesStore.ImageData, Item_ImagesStore.Default_Img_Flage, Item_ImagesStore.Item_Type, Item.Item_Name, 
@@ -2905,7 +2946,7 @@ FROM            Item INNER JOIN
 
         }
 
-        public DataTable GetDataByMainCategory_StoreType(int Active_flage, int StoreUsed_Type, int Item_Category_Id)
+        public DataTable GetDataByMainCategory_StoreType(int Active_flage, int StoreUsed_Type, long Item_Category_Id)
         {
             DataTable dt = new DataTable();
             try
@@ -2949,7 +2990,7 @@ FROM            Item INNER JOIN
             return dt;
         }
 
-        public DataTable GetDataByCategory_StoreType(int Active_flage, int StoreUsed_Type, int Item_Category_ID)
+        public DataTable GetDataByCategory_StoreType(int Active_flage, int StoreUsed_Type, long Item_Category_ID)
         {
             DataTable dt = new DataTable();
             try
@@ -2994,7 +3035,7 @@ FROM            Item INNER JOIN
             catch { }
         }
 
-        public void AddUnitItem(ref int excp, ref string msg, int Store_Id_From, int Store_Id_To, DataSet ds_item)
+        public void AddUnitItem(ref int excp, ref string msg, long Store_Id_From, long Store_Id_To, DataSet ds_item)
         {
 
             string mysql = "";
@@ -3007,7 +3048,7 @@ FROM            Item INNER JOIN
                 for (int x = 0; x < ds_item.Tables[0].Rows.Count; x++)
                 {
 
-                    int Item_Id = int.Parse(ds_item.Tables[0].Rows[x]["Item_Id"].ToString());
+                    long Item_Id = long.Parse(ds_item.Tables[0].Rows[x]["Item_Id"].ToString());
 
                     mysql = "SELECT  Unit_item.* FROM Unit_item WHERE (Store_id = " + Store_Id_To + ") AND (Item_Id=" + Item_Id + ") AND(active_flage = 1)";
                     DataTable dt_2 = opp.return_DataTable(mysql);
@@ -3020,7 +3061,7 @@ FROM            Item INNER JOIN
 
                     string Code = dt.Rows[x]["Code"].ToString();
 
-                    int unit_id = int.Parse(dt.Rows[x]["unit_id"].ToString());
+                    long unit_id = long.Parse(dt.Rows[x]["unit_id"].ToString());
                     decimal Big_unit = decimal.Parse(dt.Rows[x]["Big_unit"].ToString());
                     decimal Small_unit = decimal.Parse(dt.Rows[x]["Small_unit"].ToString());
 
@@ -3052,7 +3093,7 @@ FROM            Item INNER JOIN
 
             }
         }
-        public static void Add_ALLItemFromTo_Store(int Store_Id_To)
+        public static void Add_ALLItemFromTo_Store(long Store_Id_To)
         {
             string mysql = "";
             operations opp = new operations(1);
@@ -3095,7 +3136,7 @@ FROM            Item INNER JOIN
             string mysql = "";
 
             //checked costAvg If value =0
-            Items itm = opp.db.Item.AsNoTracking().Where(i => i.id == uitm.Item_Id).FirstOrDefault();
+            Items itm = opp.db.Item.AsNoTracking().Where(i => i.Id == uitm.Item_Id).FirstOrDefault();
             if (itm != null)
             {
                 itm.P_priceAvgCost = itm.P_priceAvgCost ?? 0;
@@ -3284,7 +3325,7 @@ WHERE        (Unit_item.P_priceAvgCost = 0 OR
             um.active_flage = 1;
             opp.db.Item.Add(item);
             opp.db.SaveChanges();
-            um.Item_Id = item.id;
+            um.Item_Id = item.Id;
             opp.db.Unit_item.Add(um);
             opp.db.SaveChanges();
 
@@ -3292,7 +3333,7 @@ WHERE        (Unit_item.P_priceAvgCost = 0 OR
             {
                 if (itcCls.itemCodeTaxNotUploaded != null)
                 {
-                    itcCls.itemCodeTaxNotUploaded.Item_Id = item.id;
+                    itcCls.itemCodeTaxNotUploaded.Item_Id = item.Id;
                     itcCls.AddItemCodeTaxNotUploaded(ref opp);
                 }
             }
@@ -3370,7 +3411,7 @@ WHERE        (Unit_item.P_priceAvgCost = 0 OR
             if (Is_ItemOrService > 0)
                 q = q.Where(i => i.Is_ItemOrService == Is_ItemOrService & i.Active_flage == 1);
 
-            return q.Select(i => new DisplayItemService { Id = i.id, Item_Name = i.Item_Name, Is_ItemOrService = i.Is_ItemOrService ?? 0 })
+            return q.Select(i => new DisplayItemService { Id = i.Id, Item_Name = i.Item_Name, Is_ItemOrService = i.Is_ItemOrService ?? 0 })
                     .AsEnumerable()
                     .Select(x => (x.Id, x.Item_Name + (x.Is_ItemOrService == 1 ? " (منتج)" : " (خدمة)")))
                     .ToList();
@@ -3384,7 +3425,7 @@ WHERE        (Unit_item.P_priceAvgCost = 0 OR
             if (Is_ItemOrService > 0)
                 q = q.Where(i => i.Is_ItemOrService == Is_ItemOrService & i.Active_flage == 1);
 
-            return q.Select(i => new DisplayItemService { Id = i.id, Item_Name = i.Item_Name, Is_ItemOrService = i.Is_ItemOrService ?? 0 })
+            return q.Select(i => new DisplayItemService { Id = i.Id, Item_Name = i.Item_Name, Is_ItemOrService = i.Is_ItemOrService ?? 0 })
                     .AsEnumerable()
                     .ToList();
         }

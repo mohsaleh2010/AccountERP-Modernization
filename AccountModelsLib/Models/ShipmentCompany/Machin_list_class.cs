@@ -88,7 +88,7 @@ namespace AccountModelsLib
             machineds = opp.return_dataset(mysql);
             return machineds;
         }
-        public void Add_Nazallat_of_Day(DateTime date, decimal number_of_nazlla, int mashineID, decimal nazlla_price, decimal total, int Supplier_ID)
+        public void Add_Nazallat_of_Day(DateTime date, decimal number_of_nazlla, int mashineID, decimal nazlla_price, decimal total, long Supplier_ID)
         {
             int Excp = 0;
             string mysql = "INSERT INTO Total_of_Nazlla(date, number_of_nazlla, mashineID, nazlla_price, total,Supplier_ID)";
@@ -100,7 +100,7 @@ namespace AccountModelsLib
 
         }
 
-        public void Delete_Nazallat_of_Day(ref int Excp, long Nazlla_Id, int Supplier_ID, decimal total)
+        public void Delete_Nazallat_of_Day(ref int Excp, long Nazlla_Id, long Supplier_ID, decimal total)
         {
 
 
@@ -116,7 +116,7 @@ namespace AccountModelsLib
 
         }
 
-        public DataSet Get_Nazalat(DateTime date_from, DateTime date_To, int Machine_Id, int Supplier_Id)
+        public DataSet Get_Nazalat(DateTime date_from, DateTime date_To, long Machine_Id, long Supplier_Id)
         {
             string mysql = @" SELECT Machin_list.Id , Machin_list.Machin_Name , Machin_list.price_of_nazlla , Total_of_Nazlla.ID AS Nazlla_ID, Total_of_Nazlla.date,Total_of_Nazlla.number_of_nazlla, Total_of_Nazlla.mashineID, Total_of_Nazlla.total, Total_of_Nazlla.nazlla_price,Total_of_Nazlla.Supplier_ID 
              FROM Machin_list INNER JOIN Total_of_Nazlla ON Machin_list.Id = Total_of_Nazlla.mashineID  ";

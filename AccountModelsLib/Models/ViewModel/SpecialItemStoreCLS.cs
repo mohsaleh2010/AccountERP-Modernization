@@ -27,7 +27,7 @@ namespace AccountModelsLib.Models
         public string B_Unit { get; set; }
         public string S_unit { get; set; }
 
-        public int? Machine_Id { get; set; }
+        public long? Machine_Id { get; set; }
         public string Item_Name { get; set; }
         public string Notes_Item { get; set; }
         public string Notes_From { get; set; }

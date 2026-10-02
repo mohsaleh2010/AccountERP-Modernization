@@ -174,7 +174,7 @@ FROM            Account_Type_Main_Account_Id INNER JOIN
             }
             else
             {
-                int Id = int.Parse(dt.Rows[0]["Id"].ToString());
+                long Id = long.Parse(dt.Rows[0]["Id"].ToString());
 
                 Edit_Account_Type_Main_Account(ref Excp, ref Msg,ref opp ,Id, Account_Type_Value, Account_Type_Name, Main_Account_Id, Account_Name, Account_Branch_Id);
             }
@@ -225,7 +225,7 @@ FROM            Account_Type_Main_Account_Id INNER JOIN
             opp.insert_me(mysql);
         }
 
-        public void Edit_Account_Type_Main_Account(ref int Excp,  ref string Msg, ref operations opp, int Id, int Account_Type_Value,string Account_Type_Name, long Main_Account_Id,string Account_Name, long Account_Branch_Id)
+        public void Edit_Account_Type_Main_Account(ref int Excp,  ref string Msg, ref operations opp, long Id, int Account_Type_Value,string Account_Type_Name, long Main_Account_Id,string Account_Name, long Account_Branch_Id)
         {
             string mysql = "";
            

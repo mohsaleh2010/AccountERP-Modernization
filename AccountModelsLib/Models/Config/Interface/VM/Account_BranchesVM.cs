@@ -25,7 +25,7 @@ namespace AccountModelsLib.Models
         public long? Code { get; set; }
 
      
-        public int? Currency_Id { get; set; }
+        public long? Currency_Id { get; set; }
 
    
         public string Currency_Name { get; set; }
@@ -33,10 +33,10 @@ namespace AccountModelsLib.Models
         
 
      
-        public int? User_Id { get; set; }
+        public long? User_Id { get; set; }
 
  
-        public int? Branch_Id { get; set; }
+        public long? Branch_Id { get; set; }
 
   
         

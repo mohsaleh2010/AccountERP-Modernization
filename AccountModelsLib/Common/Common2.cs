@@ -9,7 +9,7 @@ namespace AccountModelsLib
 {
     public  class Common2
     {
-        public static string Journal_CodeName(ref AccountModelsLib.operations opp, int Code)
+        public static string Journal_CodeName(ref AccountModelsLib.operations opp, long Code)
         {
             string Journal_Name = "";
             string mysql = "";
@@ -22,12 +22,12 @@ namespace AccountModelsLib
             }
             return Journal_Name;
         }
-        public static int Get_Journal_Code_ForSandouk(int Transaction_Type)
+        public static long Get_Journal_Code_ForSandouk(int Transaction_Type)
         {
             string mysql = "";
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
-            int Journal_Code_ID = 0;
-            int Journal_Code_Type = 0;
+            long Journal_Code_ID = 0;
+            long Journal_Code_Type = 0;
             if (Transaction_Type == 1)
             {
                 if (Common.Journal_Code_ForSandouk_Estlam != -1)
@@ -54,7 +54,7 @@ namespace AccountModelsLib
             DataTable dt = opp.return_DataTable(mysql);
             if (dt.Rows.Count > 0)
             {
-                Journal_Code_ID = int.Parse(dt.Rows[0]["ID"].ToString());
+                Journal_Code_ID = long.Parse(dt.Rows[0]["ID"].ToString());
             }
             return Journal_Code_ID;
         }

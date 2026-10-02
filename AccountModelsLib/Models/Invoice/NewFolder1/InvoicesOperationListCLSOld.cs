@@ -48,10 +48,10 @@ namespace AccountModelsLib.Models
 
         public long Invoices_List_Id = 0;
         public long Account_Entry_List_ID = 0;
-        public int User_Id = 0;
-        public int Branch_Id = 0;
+        public long   User_Id = 0;
+        public long Branch_Id = 0;
         public int Invoice_Type_Id = 0;
-        public int Salesman_Id = 0;
+        public long Salesman_Id = 0;
         public int IS_Make_Sarf_Item_BalanceFromInvoice = 0;
         public int Is_InvoiceKta3y = 0;
         public int Is_Tax_Per_Item = 0;
@@ -72,7 +72,7 @@ namespace AccountModelsLib.Models
 
         public int Make_Order = 0;
         public string Currency = "";
-        public int Currency_id = 0;
+        public long    Currency_Id = 0;
         public int Invoice_Type = 0;
         public decimal Customer_BalanceSet = 0;
         public string Notes = "";
@@ -156,7 +156,7 @@ namespace AccountModelsLib.Models
             ATS05_Value = decimal.Parse(dt_Invoices_List.Rows[0]["ATS05_Value"].ToString());
 
             Currency = dt_Invoices_List.Rows[0]["Currency"].ToString();
-            Currency_id = int.Parse(dt_Invoices_List.Rows[0]["Currency_id"].ToString());
+            Currency_Id = long.Parse(dt_Invoices_List.Rows[0]["Currency_id"].ToString());
             Invoice_Type = int.Parse(dt_Invoices_List.Rows[0]["Invoice_Type"].ToString());
 
             Customer_BalanceSet = decimal.Parse(dt_Invoices_List.Rows[0]["Customer_BalanceSet"].ToString());
@@ -183,7 +183,7 @@ namespace AccountModelsLib.Models
                  
             }
             AnotherPayment = decimal.Parse(dt_Invoices_List.Rows[0]["AnotherPayment"].ToString());
-            Salesman_Id = int.Parse(dt_Invoices_List.Rows[0]["Salesman_Id"].ToString());
+            Salesman_Id = long.Parse(dt_Invoices_List.Rows[0]["Salesman_Id"].ToString());
 
             IS_Make_Sarf_Item_BalanceFromInvoice = int.Parse(dt_Invoices_List.Rows[0]["IS_Make_Sarf_Item_BalanceFromInvoice"].ToString());
             Is_InvoiceKta3y = int.Parse(dt_Invoices_List.Rows[0]["Is_InvoiceKta3y"].ToString());

@@ -55,7 +55,7 @@ namespace AccountModelsLib.Models
         public DateTime? Insert_ServerDateTime { get; set; }
         public DateTime? Update_ServerDateTime { get; set; }
         public DateTime? EditOperationDate { get; set; }
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
 
         // Navigation
         public ICollection<WorkOrderDetail> WorkOrderDetails { get; set; }

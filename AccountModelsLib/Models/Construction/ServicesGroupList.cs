@@ -115,7 +115,7 @@ FROM            ConsServicesGroups INNER JOIN
         }
         public void ReadData(DataTable dt, int index)
         {
-            Id = int.Parse(dt.Rows[index]["Id"].ToString());
+            Id = long.Parse(dt.Rows[index]["Id"].ToString());
             ProjectId = int.Parse(dt.Rows[index]["ProjectId"].ToString());
             Name = dt.Rows[index]["Name"].ToString();
 
@@ -142,7 +142,7 @@ FROM            ConsServicesGroupList INNER JOIN
             string mysql = @"INSERT INTO ConsServicesGroupList (ProjectId ,Name ) ";
             mysql = mysql + " VALUES ( " + ProjectId + " ,  N'" + Name + "')";
 
-            Id = (int)opp.Insert_me_Return_Last_Identify(mysql);
+            Id = (long)opp.Insert_me_Return_Last_Identify(mysql);
 
         }
         public void InsertServicesGroupAll(ref operations opp)

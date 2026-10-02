@@ -23,11 +23,11 @@ namespace AccountModelsLib.Models
         public Nullable<decimal> Added_Value { get; set; }
         public Nullable<int> IS_Rate { get; set; }
         public Nullable<System.DateTime> OperationDate { get; set; }
-        public Nullable<int> User_Id { get; set; }
-        public Nullable<int> Branch_Id { get; set; }
+        public Nullable<long> User_Id { get; set; }
+        public Nullable<long> Branch_Id { get; set; }
         public Nullable<System.DateTime> Insert_ServerDateTime { get; set; }
         public Nullable<System.DateTime> Update_ServerDateTime { get; set; }
         public Nullable<System.DateTime> EditOperationDate { get; set; }
-        public Nullable<int> Edit_User_Id { get; set; }
+        public Nullable<long> Edit_User_Id { get; set; }
     }
 }

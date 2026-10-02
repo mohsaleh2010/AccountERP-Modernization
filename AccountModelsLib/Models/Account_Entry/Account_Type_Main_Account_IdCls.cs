@@ -39,8 +39,8 @@ namespace AccountModelsLib.Models
             atmi.Id = long.Parse(dt.Rows[index]["Id"].ToString());
             atmi.Account_Type_Value = int.Parse(dt.Rows[index]["ProjectId"].ToString());
             atmi.Main_Account_Id = int.Parse(dt.Rows[index]["ServiceId"].ToString());
-            atmi.User_Id = int.Parse(dt.Rows[index]["User_Id"].ToString());
-            atmi.Account_Branch_Id = int.Parse(dt.Rows[index]["Account_Branch_Id"].ToString());
+            atmi.User_Id = long.Parse(dt.Rows[index]["User_Id"].ToString());
+            atmi.Account_Branch_Id = long.Parse(dt.Rows[index]["Account_Branch_Id"].ToString());
 
         }
         public DataTable GetProjectServicesFull(ref AccountModelsLib.operations opp, long ProjectId, long ServiceId)

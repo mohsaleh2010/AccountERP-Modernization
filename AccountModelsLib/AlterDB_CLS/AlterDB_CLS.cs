@@ -1,17 +1,20 @@
 ﻿namespace AccountModelsLib
 {
     using AccountModelsLib.Models;
-  
-  
+    using Microsoft.EntityFrameworkCore.Metadata.Internal;
+
+
     //using AccountModelsLib.DBModels;
 
     using System;
+    using System.Collections;
     using System.ComponentModel;
     using System.ComponentModel.DataAnnotations;
     using System.Data;
     using System.Drawing;
+    using System.Net.NetworkInformation;
     using System.Reflection.Metadata;
-    using System.Security.Cryptography.X509Certificates;
+ 
     using System.Threading;
     using System.Xml.Linq;
 
@@ -19,7 +22,7 @@
 
     public class AlterDB_CLS
     {
-        static string IDENTITY = " IDENTITY(1,1) ";
+        public static string IDENTITY = " IDENTITY(1,1) ";
         static int xmiliseconds = 100;
         static bool IsColumnAltered = false;
         public static void AlterDBOld(int d)
@@ -35,9 +38,9 @@
         static void AlterDBThisYear(ref operations opp, int d)
         {
 
+            CreateTable(ref opp);
 
-
-
+            ChangeTypeToLongUserId(ref opp);
             Create_Lookup_OrderDeliveryTypes(ref opp);
             SetDataDictionaryProcessesNo(ref opp);
             Update(ref opp, "Customer", "Customer_Type", "1", " (Customer_Type IS NULL)");
@@ -45,7 +48,7 @@
             ChangeType(ref opp, "numeric", d);
             ChangeType(ref opp, "float", d);
             //ChangeType(ref opp, "decimal(18, 2)");
-            AlterColumnAddKey(ref   opp, "SysConfigMenus", "Id");
+            AlterColumnAddKey(ref opp, "SysConfigMenus", "Id");
 
             AlterColumn(ref opp, "Employee", "jobsListId", "bigint");
             AlterColumn(ref opp, "Employee", "Edit_User_Id", "bigint");
@@ -73,16 +76,50 @@
             AlterBD_(ref opp, "Machin_list", "Speed", "decimal(18, " + d + ")", "0", "0");
             AlterBD_(ref opp, "Machin_list", "Machine_Width", "int", "0", "0");
 
+            
+            AlterBD_(ref opp, "DataDictionaryDbSyncLogs", "RecordIdStr", "nvarchar(MAX)");
+            AlterBD_(ref opp, "DataDictionaryDbSyncLogs", "IsStatus", "int", "0", "0");
+            AlterBD_(ref opp, "DataDictionaryDbSyncLogs", "User_Id", "bigint", "0", "0");
+            AlterBD_(ref opp, "DataDictionaryDbSyncLogs", "Is_EF_Or_Adonet", "int", "0", "0");
 
-             
+           
 
-        AlterColumn(ref opp, "Invoices_Details", "Bills_Details_Id", "bigint");
+            AlterBD_(ref opp, "Cars", "Active", "int", "0", "0");
+            AlterBD_(ref opp, "Cars", "IsChangeOwner", "int", "0", "0");
+            AlterBD_(ref opp, "Cars", "Lookup_CarTypeId", "bigint", "0", "0");
+            AlterBD_(ref opp, "Cars", "Lookup_CarTypeModelId", "bigint", "0", "0");
+            AlterBD_(ref opp, "Cars", "Lookup_TransmissionTypeId", "bigint", "0", "0");
+            AlterBD_(ref opp, "Cars", "NewId", "bigint", "0", "0");
+            AlterBD_(ref opp, "Cars", "OldId", "bigint", "0", "0");
+            AlterBD_(ref opp, "Cars", "CarAddress", "nvarchar(500)");
+            AlterBD_(ref opp, "Cars", "DriverName", "nvarchar(500)");
+            AlterBD_(ref opp, "Cars", "DriverTel", "nvarchar(500)");
+            AlterBD_(ref opp, "Cars", "DriverTel", "nvarchar(500)");
+            AlterColumn(ref opp, "Cars", "Active", "int","1","1");
+            AlterColumn(ref opp, "Cars", "IsChangeOwner", "int", "0","0");
+
+            //Microsoft.Data.SqlClient.SqlException: 'Invalid column name 'Active'.
+//Invalid column name 'CarAddress'.
+//Invalid column name 'DriverName'.
+//Invalid column name 'DriverTel'.
+//Invalid column name 'IsChangeOwner'.
+
+
+
+            AlterColumn(ref opp, "Invoices_Details", "Bills_Details_Id", "bigint");
             AlterColumn(ref opp, "Invoices_Details_Reverse", "Bills_Details_Id", "bigint");
-
-
 
             AlterBD_(ref opp, "Invoices_Details", "Store_Name", "nvarchar(500)");
             AlterBD_(ref opp, "Invoices_Details_Reverse", "Store_Name", "nvarchar(500)");
+
+
+            AlterBD_(ref opp, "SysConfigMenus", "RazorPath", "nvarchar(500)");
+            AlterBD_(ref opp, "SysConfigMenus", "RazorPathTemp", "nvarchar(500)");
+            AlterBD_(ref opp, "SysConfigMenus", "Description_En", "nvarchar(500)");
+            AlterBD_(ref opp, "SysConfigMenus", "Description_Fr", "nvarchar(500)");
+            AlterBD_(ref opp, "SysConfigMenus", "Description_DE", "nvarchar(500)");
+            AlterBD_(ref opp, "SysConfigMenus", "UserSells", "nvarchar(500)");
+            AlterBD_(ref opp, "SysConfigMenus", "IsShowToUser", "int", "0", "0");
 
 
             AlterBD_(ref opp, "USER_DETAILES_Branches_Permission", "Branch_Id", "bigint", "0", "0");
@@ -936,7 +973,7 @@
             AlterBD_(ref opp, "Detailes_Purshing", "StoreId", "bigint", "0", "0");
 
             AlterBD_(ref opp, "Detailes_Purshing", "Unit_Id", "bigint", "0", "0");
-            AlterBD__(ref opp, "Detailes_Purshing", "UnitStr", "nvarchar(500)", @" UPDATE       Detailes_Purshing
+            AlterBD__(ref opp, "Detailes_Purshing", "UnitStr", "nvarchar(500)", @$" UPDATE       Detailes_Purshing
 SET                UnitStr = unit.B_Unit
 FROM            Detailes_Purshing INNER JOIN
                          Unit_item ON Detailes_Purshing.Unit_item_Table_Id = Unit_item.id INNER JOIN
@@ -974,7 +1011,7 @@ WHERE        (Detailes_Purshing.UnitStr IS NULL) ");
             AlterBD_(ref opp, "Order_Purshing", "IS_EstlamRawMaterial", "int", "0", "0");
             AlterBD_(ref opp, "Order_Purshing", "WorkOrderNumber", "nvarchar(500)");
             AlterBD_(ref opp, "Order_Purshing", "Invoice_No", "nvarchar(500)");
-            AlterBD__(ref opp, "Invoices_Details", "UnitStr", "nvarchar(500)", @" UPDATE       Invoices_Details
+            AlterBD__(ref opp, "Invoices_Details", "UnitStr", "nvarchar(500)", @$" UPDATE       Invoices_Details
 SET                UnitStr = unit.B_Unit
 FROM            Invoices_Details INNER JOIN
                          Item ON Invoices_Details.Item_Id = Item.id INNER JOIN
@@ -1313,7 +1350,7 @@ FROM            Bills_Details_Reverse INNER JOIN
 
             AlterBD_(ref opp, "Account_Entry_Details", "DataDictionaryProcessesListsId", "bigint");
             AlterBD_(ref opp, "Account_Entry_Details", "Reference_Type_Table_Id", "bigint");
-            AlterBD_(ref opp, "Account_Entry_Details", "MainAccount_Id", "bigint", "0", "0", "UPDATE       Account_Entry_Details\r\nSET                MainAccount_Id = Submain_Account.Main_Account_Id\r\nFROM            Account_Entry_Details INNER JOIN\r\n                         Submain_Account ON Account_Entry_Details.Submain_Account_ID = Submain_Account.Id");
+            AlterBD_(ref opp, "Account_Entry_Details", "MainAccount_Id", "bigint", "0", "0", "UPDATE       Account_Entry_Details SET                MainAccount_Id = Submain_Account.Main_Account_Id FROM            Account_Entry_Details INNER JOIN                          Submain_Account ON Account_Entry_Details.Submain_Account_ID = Submain_Account.Id");
 
 
 
@@ -1451,6 +1488,24 @@ FROM            Bills_Details_Reverse INNER JOIN
             AlterColumn(ref opp, "Customer", "room", "nvarchar(200)");
             AlterColumn(ref opp, "Customer", "landmark", "nvarchar(200)");
             AlterColumn(ref opp, "Customer", "additionalInformation", "nvarchar(200)");
+            AlterColumn(ref opp, "Customer", "Id", "bigint");
+            AlterColumn(ref opp, "Customer", "SubAccount_Id", "bigint");
+            AlterColumn(ref opp, "Customer", "Price_Type_List_ID", "bigint");
+            AlterColumn(ref opp, "Customer", "gov_Country_ListId", "bigint");
+            AlterColumn(ref opp, "Customer", "Govern_Area_ListId", "bigint");
+            AlterColumn(ref opp, "Customer", "govern_ListId", "bigint");
+            AlterColumn(ref opp, "Customer", "Gov_City_ListId", "bigint");
+            AlterColumn(ref opp, "Customer", "Ref_Cust_Supplier_Id", "bigint");
+
+            AlterColumn(ref opp, "Customer", "Tax_BranchesId", "bigint");
+            AlterColumn(ref opp, "Customer", "Location_Id", "bigint");
+            
+
+            AlterColumn(ref opp, "Customer", "Balance", "decimal(18, " + d + ")");
+            AlterColumn(ref opp, "Customer", "Balance_Actual", "decimal(18, " + d + ")");
+            AlterColumn(ref opp, "Customer", "Balance_First", "decimal(18, " + d + ")");
+            AlterColumn(ref opp, "Customer", "Balance_Actual", "decimal(18, " + d + ")");
+
             AlterColumn(ref opp, "Invoices_Details", "Bills_Details_Id", "bigint");
 
 
@@ -1564,7 +1619,45 @@ FROM            Bills_Details_Reverse INNER JOIN
             AlterColumn(ref opp, "Invoices_List_Reverse", "Net_Total", "decimal(18, " + d + ")");
             AlterColumn(ref opp, "Invoices_List_Reverse", "commissionValue", "decimal(18, " + d + ")");
             ///////////////////
+            ///
 
+            AlterColumn(ref opp, "Invoices_List", "User_Id", "bigint");
+            AlterColumn(ref opp, "Invoices_List", "Branch_Id", "bigint");
+            AlterColumn(ref opp, "Invoices_List", "Salesman_Id", "bigint");
+            AlterColumn(ref opp, "Invoices_List", "Edit_User_Id", "bigint");
+            AlterColumn(ref opp, "Invoices_List", "BanksId", "bigint");
+            AlterColumn(ref opp, "Invoices_List", "Emp_Id", "bigint");
+            AlterColumn(ref opp, "Invoices_List", "License_Id", "bigint");
+            AlterColumn(ref opp, "Invoices_List", "Currency_id", "bigint");
+
+            AlterColumn(ref opp, "Invoices_List_Reverse", "User_Id", "bigint");
+            AlterColumn(ref opp, "Invoices_List_Reverse", "Branch_Id", "bigint");
+            AlterColumn(ref opp, "Invoices_List_Reverse", "Salesman_Id", "bigint");
+            AlterColumn(ref opp, "Invoices_List_Reverse", "Edit_User_Id", "bigint");
+            AlterColumn(ref opp, "Invoices_List_Reverse", "BanksId", "bigint");
+            AlterColumn(ref opp, "Invoices_List_Reverse", "Emp_Id", "bigint");
+            AlterColumn(ref opp, "Invoices_List_Reverse", "License_Id", "bigint");
+            AlterColumn(ref opp, "Invoices_List_Reverse", "Currency_id", "bigint");
+
+
+            AlterColumn(ref opp, "Bills_List", "User_Id", "bigint");
+            AlterColumn(ref opp, "Bills_List", "Branch_Id", "bigint");
+            AlterColumn(ref opp, "Bills_List", "Salesman_Id", "bigint");
+            AlterColumn(ref opp, "Bills_List", "Edit_User_Id", "bigint");
+            AlterColumn(ref opp, "Bills_List", "BanksId", "bigint");
+            AlterColumn(ref opp, "Bills_List", "Emp_Id", "bigint");
+            AlterColumn(ref opp, "Bills_List", "License_Id", "bigint");
+            AlterColumn(ref opp, "Bills_List", "Currency_id", "bigint");
+
+
+            AlterColumn(ref opp, "Bills_List_Reverse", "User_Id", "bigint");
+            AlterColumn(ref opp, "Bills_List_Reverse", "Branch_Id", "bigint");
+            AlterColumn(ref opp, "Bills_List_Reverse", "Salesman_Id", "bigint");
+            AlterColumn(ref opp, "Bills_List_Reverse", "Edit_User_Id", "bigint");
+            AlterColumn(ref opp, "Bills_List_Reverse", "BanksId", "bigint");
+            AlterColumn(ref opp, "Bills_List_Reverse", "Emp_Id", "bigint");
+            AlterColumn(ref opp, "Bills_List_Reverse", "License_Id", "bigint");
+            AlterColumn(ref opp, "Bills_List_Reverse", "Currency_id", "bigint");
 
 
 
@@ -1573,6 +1666,13 @@ FROM            Bills_Details_Reverse INNER JOIN
             AlterColumn(ref opp, "Store", "Edit_User_Id", "bigint");
             AlterColumn(ref opp, "Store", "Job_id", "bigint");
             AlterColumn(ref opp, "Store", "LookUp_StoreOrderTypesId", "bigint");
+
+
+
+            AlterColumn(ref opp, "Banks_Balance", "User_Id", "bigint");
+            AlterColumn(ref opp, "Banks_Balance", "Branch_Id", "bigint");
+            AlterColumn(ref opp, "Banks_Balance", "Bank_Id", "bigint");
+            AlterColumn(ref opp, "Banks_Balance", "Edit_User_Id", "bigint");
 
 
             AlterColumn(ref opp, "Invoices_Details", "Id", "bigint");
@@ -1615,13 +1715,8 @@ FROM            Bills_Details_Reverse INNER JOIN
             AlterColumn(ref opp, "Invoices_Details_Reverse", "commissionValue", "decimal(18, " + d + ")");
 
 
-            AlterColumn(ref opp, "Customer", "gov_Country_ListId", "bigint");
-            AlterColumn(ref opp, "Customer", "Govern_Area_ListId", "bigint");
-            AlterColumn(ref opp, "Customer", "govern_ListId", "bigint");
-            AlterColumn(ref opp, "Customer", "Gov_City_ListId", "bigint");
-            AlterColumn(ref opp, "Customer", "Ref_Cust_Supplier_Id", "bigint");
-            AlterColumn(ref opp, "Supplier", "Ref_Cust_Supplier_Id", "bigint");
-            AlterColumn(ref opp, "Customer", "Tax_BranchesId", "bigint");
+       
+                 AlterColumn(ref opp, "Supplier", "Ref_Cust_Supplier_Id", "bigint");
             AlterColumn(ref opp, "Supplier", "Tax_BranchesId", "bigint");
             AlterColumn(ref opp, "Account_BranchesimagesLogo", "Id", "bigint");
             AlterColumn(ref opp, "ConsService", "Id", "bigint");
@@ -1667,10 +1762,7 @@ FROM            Bills_Details_Reverse INNER JOIN
             AlterColumn(ref opp, "Supplier", "Id", "bigint");
             AlterColumn(ref opp, "Supplier", "SubAccount_Id", "bigint");
 
-            AlterColumn(ref opp, "Customer", "Id", "bigint");
-            AlterColumn(ref opp, "Customer", "SubAccount_Id", "bigint");
-            AlterColumn(ref opp, "Customer", "Price_Type_List_ID", "bigint");
-
+           
 
 
             AlterColumn(ref opp, "Customers_Accounts", "Id", "bigint");
@@ -1784,7 +1876,7 @@ FROM            Bills_Details_Reverse INNER JOIN
 
 
 
-            CreateTable(ref opp);
+            
         }
 
         static void SetDataDictionaryProcessesNo(ref operations opp)
@@ -1803,6 +1895,7 @@ FROM            Bills_Details_Reverse INNER JOIN
                 long ProcessNo = Common.Make_AccountsProcessNo(ref Excp, ref opp);
 
                 str = @"INSERT INTO DataDictionaryProcessesNo(ProcessNo, TableName) VALUES (" + ProcessNo + ",'')";
+                str = ExecuteInsertWithIdentityCheck("DataDictionaryProcessesNo", str);
                 opp.insert_me(str);
             }
             catch
@@ -1827,7 +1920,7 @@ FROM            Bills_Details_Reverse INNER JOIN
 
             CreateTable(ref opp);
 
-            SetKeys(ref   opp);
+            SetKeys(ref opp);
             try
             {
                 str = "  alter table SysConfigMenusPERMATIONS add primary key(Id) ";
@@ -1904,7 +1997,10 @@ FROM            Bills_Details_Reverse INNER JOIN
             try
             {
 
-                str = @$"  CREATE TABLE [dbo].[jobslist](\r\n\t[id] [bigint] {IDENTITY} NOT NULL,\r\n\t[jobname] [nvarchar](50) NULL,\r\n\t[OperationDate] [datetime] NULL DEFAULT (getdate()),\r\n\t[User_Id] [int] NULL DEFAULT ((0)),\r\n\t[Branch_Id] [int] NULL DEFAULT ((0)),\r\n\t[Insert_ServerDateTime] [datetime] NULL DEFAULT (getdate()),\r\n\t[Update_ServerDateTime] [datetime] NULL DEFAULT (getdate()),\r\n\t[EditOperationDate] [datetime] NULL DEFAULT (getdate()),\r\n\t[Edit_User_Id] [int] NULL DEFAULT ((0)),\r\n\t[ProcessNo] [bigint] NULL DEFAULT ((0))\r\n) ";
+                str = @$"  CREATE TABLE [dbo].[jobslist]( [id] [bigint] {IDENTITY} NOT NULL, 
+[jobname] [nvarchar](50) NULL, [OperationDate] [datetime] NULL DEFAULT (getdate()), 
+[User_Id] [bigint] NULL DEFAULT ((0
+[Branch_Id] [bigint] NULL DEFAULT ((0)), [Insert_ServerDateTime] [datetime] NULL DEFAULT (getdate()), [Update_ServerDateTime] [datetime] NULL DEFAULT (getdate()), [EditOperationDate] [datetime] NULL DEFAULT (getdate()), [Edit_User_Id] [bigint] NULL DEFAULT ((0)), [ProcessNo] [bigint] NULL DEFAULT ((0)) ) ";
                 opp.insert_me(str);
             }
             catch
@@ -1912,7 +2008,7 @@ FROM            Bills_Details_Reverse INNER JOIN
             }
             try
             {
-                str = @$" CREATE TABLE [dbo].[Takset_List](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Customer_Id] [bigint] NULL,\r\n\t[Invoice_List_Id] [bigint] NULL,\r\n\t[Invoices_Details_Id] [bigint] NULL,\r\n\t[Total_Money] [decimal](18, 2) NULL,\r\n\t[First_PaymentMoney] [decimal](18, 2) NULL,\r\n\t[DateOfFirst_PaymentMoney] [datetime] NULL,\r\n\t[DateOfFirst_Takset] [datetime] NULL,\r\n\t[Statements_No] [nvarchar](50) NULL,\r\n\t[Notebooks_No] [nvarchar](50) NULL,\r\n\t[Guarantor_Name] [nvarchar](50) NULL,\r\n\t[Guarantor_Id] [nvarchar](50) NULL,\r\n\t[DateDay_Payment] [int] NULL,\r\n\t[Notes] [nvarchar](500) NULL,\r\n\t[Takset_Number] [int] NULL,\r\n\t[kest_Value_needed] [decimal](18, 2) NULL,\r\n\t[Increased_Values] [decimal](18, 2) NULL,\r\n\t[Total_Takset_Value] [decimal](18, 2) NULL,\r\n\t[DateOfProcess] [datetime] NULL\r\n)";
+                str = @$" CREATE TABLE [dbo].[Takset_List]( [Id] [bigint] {IDENTITY} NOT NULL, [Customer_Id] [bigint] NULL, [Invoice_List_Id] [bigint] NULL, [Invoices_Details_Id] [bigint] NULL, [Total_Money] [decimal](18, 2) NULL, [First_PaymentMoney] [decimal](18, 2) NULL, [DateOfFirst_PaymentMoney] [datetime] NULL, [DateOfFirst_Takset] [datetime] NULL, [Statements_No] [nvarchar](50) NULL, [Notebooks_No] [nvarchar](50) NULL, [Guarantor_Name] [nvarchar](50) NULL, [Guarantor_Id] [nvarchar](50) NULL, [DateDay_Payment] [int] NULL, [Notes] [nvarchar](500) NULL, [Takset_Number] [int] NULL, [kest_Value_needed] [decimal](18, 2) NULL, [Increased_Values] [decimal](18, 2) NULL, [Total_Takset_Value] [decimal](18, 2) NULL, [DateOfProcess] [datetime] NULL )";
                 opp.insert_me(str);
             }
             catch
@@ -1920,7 +2016,7 @@ FROM            Bills_Details_Reverse INNER JOIN
             }
             try
             {
-                str = @$" CREATE TABLE [dbo].[Takset_Details](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Takset_List_Id] [bigint] NULL,\r\n\t[DateOfDue] [datetime] NULL,\r\n\t[kest_Value_needed] [decimal](18, 2) NULL,\r\n\t[Payed_Value] [decimal](18, 2) NULL,\r\n\t[Rest_Value] [decimal](18, 2) NULL,\r\n\t[DateOfPayment] [datetime] NULL,\r\n\t[Increased_Values] [decimal](18, 2) NULL,\r\n\t[Payment_Type] [int] NULL,\r\n\t[Payment_TypeStr] [nvarchar](50) NULL,\r\n\t[Notes] [nvarchar](500) NULL,\r\n\t[Order_Mony_Id] [bigint] NULL      DEFAULT ((0)),\r\n\t[Payed_ValueSaved] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[Rest_ValueSaved] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[Increased_ValuesSaved] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[Total_Value_Payed] [decimal](18, 2) NULL,\r\n\t[OrderNo] [nvarchar](50) NULL\r\n)  ";
+                str = @$" CREATE TABLE [dbo].[Takset_Details]( [Id] [bigint] {IDENTITY} NOT NULL, [Takset_List_Id] [bigint] NULL, [DateOfDue] [datetime] NULL, [kest_Value_needed] [decimal](18, 2) NULL, [Payed_Value] [decimal](18, 2) NULL, [Rest_Value] [decimal](18, 2) NULL, [DateOfPayment] [datetime] NULL, [Increased_Values] [decimal](18, 2) NULL, [Payment_Type] [int] NULL, [Payment_TypeStr] [nvarchar](50) NULL, [Notes] [nvarchar](500) NULL, [Order_Mony_Id] [bigint] NULL      DEFAULT ((0)), [Payed_ValueSaved] [decimal](18, 2) NULL      DEFAULT ((0)), [Rest_ValueSaved] [decimal](18, 2) NULL      DEFAULT ((0)), [Increased_ValuesSaved] [decimal](18, 2) NULL      DEFAULT ((0)), [Total_Value_Payed] [decimal](18, 2) NULL, [OrderNo] [nvarchar](50) NULL )  ";
                 opp.insert_me(str);
             }
             catch
@@ -1928,7 +2024,7 @@ FROM            Bills_Details_Reverse INNER JOIN
             }
             try
             {
-                str = @$" CREATE TABLE [dbo].[Work_In_Details_Received](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[WorkDate] [datetime] NULL,\r\n\t[Work_In_Details_Id] [bigint] NOT NULL,\r\n\t[Process_No] [bigint] NULL DEFAULT ((0)),\r\n\t[Draw_Id] [bigint] NULL,\r\n\t[Draw_Name] [nvarchar](50) NULL,\r\n\t[Received_Qnty_Larg] [float] NULL,\r\n\t[Received_Qnty_Small] [float] NULL,\r\n\t[Received_Item_NO] [float] NULL,\r\n\t[Price] [float] NULL,\r\n\t[Total_Price] [float] NULL,\r\n\t[Price_Selected_Index] [int] NULL,\r\n\t[Customer_Id] [bigint] NULL,\r\n\t[Unit_Item_Table_Id] [bigint] NULL,\r\n\t[CustomerAccountBefor] [float] NULL,\r\n\t[CustomerAccountAfter] [float] NULL,\r\n\t[Item_Id] [int] NULL DEFAULT ((0))\r\n) ";
+                str = @$" CREATE TABLE [dbo].[Work_In_Details_Received]( [Id] [bigint] {IDENTITY} NOT NULL, [WorkDate] [datetime] NULL, [Work_In_Details_Id] [bigint] NOT NULL, [Process_No] [bigint] NULL DEFAULT ((0)), [Draw_Id] [bigint] NULL, [Draw_Name] [nvarchar](50) NULL, [Received_Qnty_Larg] [float] NULL, [Received_Qnty_Small] [float] NULL, [Received_Item_NO] [float] NULL, [Price] [float] NULL, [Total_Price] [float] NULL, [Price_Selected_Index] [int] NULL, [Customer_Id] [bigint] NULL, [Unit_Item_Table_Id] [bigint] NULL, [CustomerAccountBefor] [float] NULL, [CustomerAccountAfter] [float] NULL, [Item_Id] [int] NULL DEFAULT ((0)) ) ";
                 opp.insert_me(str);
             }
             catch
@@ -1936,7 +2032,7 @@ FROM            Bills_Details_Reverse INNER JOIN
             }
             try
             {
-                str = @$" CREATE TABLE [dbo].[Work_In_Details_Balance](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Unit_Item_Table_Id] [bigint] NULL,\r\n\t[Balance_Qnty_Larg] [float] NULL,\r\n\t[Balance_Qnty_Small] [float] NULL,\r\n\t[Balance_Item_NO] [float] NULL,\r\n\t[Customer_Id] [bigint] NULL,\r\n\t[Item_Id] [int] NULL DEFAULT ((0))\r\n)  ";
+                str = @$" CREATE TABLE [dbo].[Work_In_Details_Balance]( [Id] [bigint] {IDENTITY} NOT NULL, [Unit_Item_Table_Id] [bigint] NULL, [Balance_Qnty_Larg] [float] NULL, [Balance_Qnty_Small] [float] NULL, [Balance_Item_NO] [float] NULL, [Customer_Id] [bigint] NULL, [Item_Id] [int] NULL DEFAULT ((0)) )  ";
                 opp.insert_me(str);
             }
             catch
@@ -1944,7 +2040,7 @@ FROM            Bills_Details_Reverse INNER JOIN
             }
             try
             {
-                str = @$" CREATE TABLE [dbo].[Work_In_Details](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Customer_Id] [int] NULL DEFAULT ((0)),\r\n\t[Request_Date] [datetime] NULL,\r\n\t[Unit_Item_Table_Id] [bigint] NULL DEFAULT ((0)),\r\n\t[Request_Qnty_Larg] [float] NULL DEFAULT ((0)),\r\n\t[Request_Qnty_Small] [float] NULL DEFAULT ((0)),\r\n\t[Request_Item_NO] [float] NULL DEFAULT ((0)),\r\n\t[Export_Qnty_Larg] [float] NULL DEFAULT ((0)),\r\n\t[Export_Qnty_Small] [float] NULL DEFAULT ((0)),\r\n\t[Export_Item_No] [float] NULL DEFAULT ((0)),\r\n\t[Item_Exported_Finish] [int] NULL DEFAULT ((0)),\r\n\t[Notes] [nvarchar](500) NULL,\r\n\t[Item_Id] [int] NULL DEFAULT ((0))\r\n) ";
+                str = @$" CREATE TABLE [dbo].[Work_In_Details]( [Id] [bigint] {IDENTITY} NOT NULL, [Customer_Id] [int] NULL DEFAULT ((0)), [Request_Date] [datetime] NULL, [Unit_Item_Table_Id] [bigint] NULL DEFAULT ((0)), [Request_Qnty_Larg] [float] NULL DEFAULT ((0)), [Request_Qnty_Small] [float] NULL DEFAULT ((0)), [Request_Item_NO] [float] NULL DEFAULT ((0)), [Export_Qnty_Larg] [float] NULL DEFAULT ((0)), [Export_Qnty_Small] [float] NULL DEFAULT ((0)), [Export_Item_No] [float] NULL DEFAULT ((0)), [Item_Exported_Finish] [int] NULL DEFAULT ((0)), [Notes] [nvarchar](500) NULL, [Item_Id] [int] NULL DEFAULT ((0)) ) ";
                 opp.insert_me(str);
             }
             catch
@@ -1952,7 +2048,7 @@ FROM            Bills_Details_Reverse INNER JOIN
             }
             try
             {
-                str = @$" CREATE TABLE [dbo].[Customers_Destruction](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Customer_id] [bigint] NULL,\r\n\t[Customer_name] [nvarchar](100) NULL,\r\n\t[small_quantity] [decimal](18, 2) NULL,\r\n\t[large_quantity] [decimal](18, 2) NULL,\r\n\t[price] [decimal](18, 2) NULL,\r\n\t[total] [decimal](18, 2) NULL,\r\n\t[dt_date] [datetime] NULL,\r\n\t[Account_ID] [int] NULL,\r\n\t[Unit_Item_Table_Id] [int] NULL,\r\n\t[Notes] [nvarchar](100) NULL\r\n) ";
+                str = @$" CREATE TABLE [dbo].[Customers_Destruction]( [Id] [bigint] {IDENTITY} NOT NULL, [Customer_id] [bigint] NULL, [Customer_name] [nvarchar](100) NULL, [small_quantity] [decimal](18, 2) NULL, [large_quantity] [decimal](18, 2) NULL, [price] [decimal](18, 2) NULL, [total] [decimal](18, 2) NULL, [dt_date] [datetime] NULL, [Account_ID] [int] NULL, [Unit_Item_Table_Id] [int] NULL, [Notes] [nvarchar](100) NULL ) ";
                 opp.insert_me(str);
             }
             catch
@@ -1960,7 +2056,7 @@ FROM            Bills_Details_Reverse INNER JOIN
             }
             try
             {
-                str = @$" CREATE TABLE [dbo].[ItemRawEntagEstlamTemp](\r\n\t[Item_Name] [nvarchar](200) NULL,\r\n\t[S_Id] [decimal](18, 2) NULL,\r\n\t[Id] [decimal](18, 2) NULL,\r\n\t[MainItem_Id] [decimal](18, 2) NULL,\r\n\t[SubItem_Id] [decimal](18, 2) NULL,\r\n\t[Full_qua] [decimal](18, 2) NULL,\r\n\t[D_Qua] [decimal](18, 2) NULL,\r\n\t[Quantity] [decimal](18, 2) NULL,\r\n\t[MainItem_Name] [nvarchar](200) NULL,\r\n\t[SubItem_Name] [nvarchar](200) NULL,\r\n\t[Big_unit] [nvarchar](200) NULL,\r\n\t[Small_unit] [nvarchar](200) NULL,\r\n\t[Unit_Id] [decimal](18, 2) NULL,\r\n\t[S_unit_Value] [decimal](18, 2) NULL,\r\n\t[Default_Store_Id] [decimal](18, 2) NULL,\r\n\t[Larg_Qnty] [decimal](18, 2) NULL,\r\n\t[Small_Qnty] [decimal](18, 2) NULL,\r\n\t[Qnty] [decimal](18, 2) NULL,\r\n\t[Entry_Larg_Qnty] [nvarchar](200) NULL,\r\n\t[Entry_Small_Qnty] [nvarchar](200) NULL,\r\n\t[Entry_Qnty] [decimal](18, 2) NULL,\r\n\t[Item_Index] [nvarchar](200) NULL,\r\n\t[Store_Name] [nvarchar](200) NULL,\r\n\t[SubFull_qua] [decimal](18, 2) NULL,\r\n\t[SubD_Qua] [decimal](18, 2) NULL,\r\n\t[SubItem_No] [decimal](18, 2) NULL,\r\n\t[SubQntyBalance] [decimal](18, 2) NULL,\r\n\t[CheckBalanceAllows] [decimal](18, 2) NULL\r\n) ";
+                str = @$" CREATE TABLE [dbo].[ItemRawEntagEstlamTemp]( [Item_Name] [nvarchar](200) NULL, [S_Id] [decimal](18, 2) NULL, [Id] [decimal](18, 2) NULL, [MainItem_Id] [decimal](18, 2) NULL, [SubItem_Id] [decimal](18, 2) NULL, [Full_qua] [decimal](18, 2) NULL, [D_Qua] [decimal](18, 2) NULL, [Quantity] [decimal](18, 2) NULL, [MainItem_Name] [nvarchar](200) NULL, [SubItem_Name] [nvarchar](200) NULL, [Big_unit] [nvarchar](200) NULL, [Small_unit] [nvarchar](200) NULL, [Unit_Id] [decimal](18, 2) NULL, [S_unit_Value] [decimal](18, 2) NULL, [Default_Store_Id] [decimal](18, 2) NULL, [Larg_Qnty] [decimal](18, 2) NULL, [Small_Qnty] [decimal](18, 2) NULL, [Qnty] [decimal](18, 2) NULL, [Entry_Larg_Qnty] [nvarchar](200) NULL, [Entry_Small_Qnty] [nvarchar](200) NULL, [Entry_Qnty] [decimal](18, 2) NULL, [Item_Index] [nvarchar](200) NULL, [Store_Name] [nvarchar](200) NULL, [SubFull_qua] [decimal](18, 2) NULL, [SubD_Qua] [decimal](18, 2) NULL, [SubItem_No] [decimal](18, 2) NULL, [SubQntyBalance] [decimal](18, 2) NULL, [CheckBalanceAllows] [decimal](18, 2) NULL ) ";
                 opp.insert_me(str);
             }
             catch
@@ -1968,7 +2064,7 @@ FROM            Bills_Details_Reverse INNER JOIN
             }
             try
             {
-                str = @$" CREATE TABLE [dbo].[ClinicUsed](\r\n\t[Name] [nvarchar](255) NULL,\r\n\t[Is_Active] [int] NULL      DEFAULT ((1)),\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n CONSTRAINT [PK_ClinicUsed_1] PRIMARY KEY CLUSTERED \r\n(\r\n\t[Id] ASC\r\n)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]\r\n)  ";
+                str = @$" CREATE TABLE [dbo].[ClinicUsed]( [Name] [nvarchar](255) NULL, [Is_Active] [int] NULL      DEFAULT ((1)), [Id] [bigint] {IDENTITY} NOT NULL,  CONSTRAINT [PK_ClinicUsed_1] PRIMARY KEY CLUSTERED  ( [Id] ASC )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY] )  ";
                 opp.insert_me(str);
             }
             catch (Exception)
@@ -1976,7 +2072,7 @@ FROM            Bills_Details_Reverse INNER JOIN
             }
             try
             {
-                str = @$" CREATE TABLE [dbo].[Tours_Program_Omra_Heg_List](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Is_Omra_Heg] [int] NULL      DEFAULT ((0)),\r\n\t[Prog_Name] [nvarchar](100) NULL,\r\n\t[Travel_By] [nvarchar](100) NULL,\r\n\t[Ticket_Price] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[Tashera_Price] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[Sakn_Makka] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[Sakn_Madina] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[Transport_Eg] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[Transport_Sa] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[Eshraf_Price] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[OtherCost] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[Prog_Total] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[Days_Makka] [int] NULL      DEFAULT ((0)),\r\n\t[Days_Madina] [int] NULL      DEFAULT ((0)),\r\n\t[Arrival_Port] [nvarchar](100) NULL      DEFAULT ((0)),\r\n\t[Travel_Port] [nvarchar](100) NULL      DEFAULT ((0)),\r\n\t[Is_Active] [int] NULL      DEFAULT ((0)),\r\n\t[Sell_Price] [decimal](18, 2) NULL\r\n)  ";
+                str = @$" CREATE TABLE [dbo].[Tours_Program_Omra_Heg_List]( [Id] [bigint] {IDENTITY} NOT NULL, [Is_Omra_Heg] [int] NULL      DEFAULT ((0)), [Prog_Name] [nvarchar](100) NULL, [Travel_By] [nvarchar](100) NULL, [Ticket_Price] [decimal](18, 2) NULL      DEFAULT ((0)), [Tashera_Price] [decimal](18, 2) NULL      DEFAULT ((0)), [Sakn_Makka] [decimal](18, 2) NULL      DEFAULT ((0)), [Sakn_Madina] [decimal](18, 2) NULL      DEFAULT ((0)), [Transport_Eg] [decimal](18, 2) NULL      DEFAULT ((0)), [Transport_Sa] [decimal](18, 2) NULL      DEFAULT ((0)), [Eshraf_Price] [decimal](18, 2) NULL      DEFAULT ((0)), [OtherCost] [decimal](18, 2) NULL      DEFAULT ((0)), [Prog_Total] [decimal](18, 2) NULL      DEFAULT ((0)), [Days_Makka] [int] NULL      DEFAULT ((0)), [Days_Madina] [int] NULL      DEFAULT ((0)), [Arrival_Port] [nvarchar](100) NULL      DEFAULT ((0)), [Travel_Port] [nvarchar](100) NULL      DEFAULT ((0)), [Is_Active] [int] NULL      DEFAULT ((0)), [Sell_Price] [decimal](18, 2) NULL )  ";
                 opp.insert_me(str);
             }
             catch
@@ -1984,7 +2080,7 @@ FROM            Bills_Details_Reverse INNER JOIN
             }
             try
             {
-                str = @$" CREATE TABLE [dbo].[Tours_Omra](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Is_Omra_Heg] [int] NULL      DEFAULT ((0)),\r\n\t[Tours_Program_Omra_Heg_List_Id] [int] NULL,\r\n\t[Passenger_Name] [nvarchar](100) NULL,\r\n\t[Mandop_Name] [nvarchar](100) NULL,\r\n\t[DateOfReserved] [datetime] NULL,\r\n\t[DateOfTravel] [datetime] NULL,\r\n\t[DateOfReturn] [datetime] NULL,\r\n\t[PurchasePrice] [decimal](18, 2) NULL,\r\n\t[TicketPrice] [decimal](18, 2) NULL,\r\n\t[Commission] [decimal](18, 2) NULL,\r\n\t[Supplier_Id] [bigint] NULL,\r\n\t[Customer_Id] [bigint] NULL,\r\n\t[IsTicket_Reverse] [int] NULL      DEFAULT ((0)),\r\n\t[DateOfReverse] [datetime] NULL,\r\n\t[PriceReverse_ToSupplier] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[PriceReverse_FromCustomer] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[ReverseDiffCustomer] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[ReverseDiffSupplier] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[FinalReverseDiff] [decimal](18, 2) NULL      DEFAULT ((0))\r\n)  \r\n ";
+                str = @$" CREATE TABLE [dbo].[Tours_Omra]( [Id] [bigint] {IDENTITY} NOT NULL, [Is_Omra_Heg] [int] NULL      DEFAULT ((0)), [Tours_Program_Omra_Heg_List_Id] [int] NULL, [Passenger_Name] [nvarchar](100) NULL, [Mandop_Name] [nvarchar](100) NULL, [DateOfReserved] [datetime] NULL, [DateOfTravel] [datetime] NULL, [DateOfReturn] [datetime] NULL, [PurchasePrice] [decimal](18, 2) NULL, [TicketPrice] [decimal](18, 2) NULL, [Commission] [decimal](18, 2) NULL, [Supplier_Id] [bigint] NULL, [Customer_Id] [bigint] NULL, [IsTicket_Reverse] [int] NULL      DEFAULT ((0)), [DateOfReverse] [datetime] NULL, [PriceReverse_ToSupplier] [decimal](18, 2) NULL      DEFAULT ((0)), [PriceReverse_FromCustomer] [decimal](18, 2) NULL      DEFAULT ((0)), [ReverseDiffCustomer] [decimal](18, 2) NULL      DEFAULT ((0)), [ReverseDiffSupplier] [decimal](18, 2) NULL      DEFAULT ((0)), [FinalReverseDiff] [decimal](18, 2) NULL      DEFAULT ((0)) )    ";
                 opp.insert_me(str);
             }
             catch
@@ -1992,7 +2088,7 @@ FROM            Bills_Details_Reverse INNER JOIN
             }
             try
             {
-                str = @$"CREATE TABLE [dbo].[Tours_Ticketing_Land](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[DirectionTotal] [nvarchar](100) NULL,\r\n\t[Emp_Booking] [nvarchar](100) NULL,\r\n\t[Passenger_Name] [nvarchar](100) NULL,\r\n\t[DateOfReserved] [datetime] NULL,\r\n\t[DateOfTravel] [datetime] NULL,\r\n\t[PurchasePrice_Eg] [decimal](18, 2) NULL,\r\n\t[PurchasePrice_Sea] [decimal](18, 2) NULL,\r\n\t[PurchasePrice_Sa] [decimal](18, 2) NULL,\r\n\t[PurchasePrice_Masar] [decimal](18, 2) NULL,\r\n\t[TicketCostOther] [decimal](18, 2) NULL,\r\n\t[PurchasePrice_Total] [decimal](18, 2) NULL,\r\n\t[TicketPrice_Eg] [decimal](18, 2) NULL,\r\n\t[TicketPrice_Sea] [decimal](18, 2) NULL,\r\n\t[TicketPrice_Sa] [decimal](18, 2) NULL,\r\n\t[TicketPriceTotal] [decimal](18, 2) NULL,\r\n\t[Commission] [decimal](18, 2) NULL,\r\n\t[Supplier_Id_Eg] [bigint] NULL,\r\n\t[Supplier_Id_Sea] [bigint] NULL,\r\n\t[Supplier_Id_Sa] [bigint] NULL,\r\n\t[Customer_Id] [bigint] NULL,\r\n\t[IsTicket_Reverse] [int] NULL,\r\n\t[DateOfReverse] [datetime] NULL,\r\n\t[PriceReverse_ToSupplier] [decimal](18, 2) NULL,\r\n\t[PriceReverse_FromCustomer] [decimal](18, 2) NULL,\r\n\t[ReverseDiffCustomer] [decimal](18, 2) NULL,\r\n\t[ReverseDiffSupplier] [decimal](18, 2) NULL,\r\n\t[FinalReverseDiff] [decimal](18, 2) NULL,\r\n\t[Transport_Eg] [nvarchar](100) NULL,\r\n\t[Transport_Sea] [nvarchar](100) NULL,\r\n\t[Transport_Sa] [nvarchar](100) NULL\r\n)   ";
+                str = @$"CREATE TABLE [dbo].[Tours_Ticketing_Land]( [Id] [bigint] {IDENTITY} NOT NULL, [DirectionTotal] [nvarchar](100) NULL, [Emp_Booking] [nvarchar](100) NULL, [Passenger_Name] [nvarchar](100) NULL, [DateOfReserved] [datetime] NULL, [DateOfTravel] [datetime] NULL, [PurchasePrice_Eg] [decimal](18, 2) NULL, [PurchasePrice_Sea] [decimal](18, 2) NULL, [PurchasePrice_Sa] [decimal](18, 2) NULL, [PurchasePrice_Masar] [decimal](18, 2) NULL, [TicketCostOther] [decimal](18, 2) NULL, [PurchasePrice_Total] [decimal](18, 2) NULL, [TicketPrice_Eg] [decimal](18, 2) NULL, [TicketPrice_Sea] [decimal](18, 2) NULL, [TicketPrice_Sa] [decimal](18, 2) NULL, [TicketPriceTotal] [decimal](18, 2) NULL, [Commission] [decimal](18, 2) NULL, [Supplier_Id_Eg] [bigint] NULL, [Supplier_Id_Sea] [bigint] NULL, [Supplier_Id_Sa] [bigint] NULL, [Customer_Id] [bigint] NULL, [IsTicket_Reverse] [int] NULL, [DateOfReverse] [datetime] NULL, [PriceReverse_ToSupplier] [decimal](18, 2) NULL, [PriceReverse_FromCustomer] [decimal](18, 2) NULL, [ReverseDiffCustomer] [decimal](18, 2) NULL, [ReverseDiffSupplier] [decimal](18, 2) NULL, [FinalReverseDiff] [decimal](18, 2) NULL, [Transport_Eg] [nvarchar](100) NULL, [Transport_Sea] [nvarchar](100) NULL, [Transport_Sa] [nvarchar](100) NULL )   ";
                 opp.insert_me(str);
             }
             catch
@@ -2047,7 +2143,7 @@ FROM            Bills_Details_Reverse INNER JOIN
             }
             try
             {
-                str = @$" CREATE TABLE [dbo].[Tours_Tasherat](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Passenger_Name] [nvarchar](100) NULL,\r\n\t[Tasherat_Type] [nvarchar](100) NULL,\r\n\t[DateOfEstlamPassport] [datetime] NULL,\r\n\t[DateOfTaslem] [datetime] NULL,\r\n\t[PurchasePrice] [decimal](18, 2) NULL,\r\n\t[TicketPrice] [decimal](18, 2) NULL,\r\n\t[Commission] [decimal](18, 2) NULL,\r\n\t[Supplier_Id] [bigint] NULL,\r\n\t[Customer_Id] [bigint] NULL,\r\n\t[Order_Money_Id] [bigint] NULL,\r\n\t[IsTicket_Reverse] [int] NULL      DEFAULT ((0)),\r\n\t[DateOfReverse] [datetime] NULL,\r\n\t[PriceReverse_ToSupplier] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[PriceReverse_FromCustomer] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[ReverseDiffCustomer] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[ReverseDiffSupplier] [decimal](18, 2) NULL      DEFAULT ((0)),\r\n\t[FinalReverseDiff] [decimal](18, 2) NULL      DEFAULT ((0))\r\n)  ";
+                str = @$" CREATE TABLE [dbo].[Tours_Tasherat]( [Id] [bigint] {IDENTITY} NOT NULL, [Passenger_Name] [nvarchar](100) NULL, [Tasherat_Type] [nvarchar](100) NULL, [DateOfEstlamPassport] [datetime] NULL, [DateOfTaslem] [datetime] NULL, [PurchasePrice] [decimal](18, 2) NULL, [TicketPrice] [decimal](18, 2) NULL, [Commission] [decimal](18, 2) NULL, [Supplier_Id] [bigint] NULL, [Customer_Id] [bigint] NULL, [Order_Money_Id] [bigint] NULL, [IsTicket_Reverse] [int] NULL      DEFAULT ((0)), [DateOfReverse] [datetime] NULL, [PriceReverse_ToSupplier] [decimal](18, 2) NULL      DEFAULT ((0)), [PriceReverse_FromCustomer] [decimal](18, 2) NULL      DEFAULT ((0)), [ReverseDiffCustomer] [decimal](18, 2) NULL      DEFAULT ((0)), [ReverseDiffSupplier] [decimal](18, 2) NULL      DEFAULT ((0)), [FinalReverseDiff] [decimal](18, 2) NULL      DEFAULT ((0)) )  ";
                 opp.insert_me(str);
             }
             catch
@@ -2055,7 +2151,7 @@ FROM            Bills_Details_Reverse INNER JOIN
             }
             try
             {
-                str = @$" \r\nCREATE TABLE [dbo].[Tours_Hotels](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Passenger_Name] [nvarchar](100) NULL,\r\n\t[DateOfReserved] [datetime] NULL,\r\n\t[Hotel_Name] [nvarchar](100) NULL,\r\n\t[City] [nvarchar](100) NULL,\r\n\t[Country] [nvarchar](100) NULL,\r\n\t[DateOfEntry] [datetime] NULL,\r\n\t[DateOfLeave] [datetime] NULL,\r\n\t[PurchasePrice] [decimal](18, 2) NULL,\r\n\t[TicketPrice] [decimal](18, 2) NULL,\r\n\t[Commission] [decimal](18, 2) NULL,\r\n\t[Supplier_Id] [bigint] NULL,\r\n\t[Customer_Id] [bigint] NULL,\r\n\t[IsTicket_Reverse] [int] NULL DEFAULT ((0)),\r\n\t[DateOfReverse] [datetime] NULL,\r\n\t[PriceReverse_ToSupplier] [decimal](18, 2) NULL DEFAULT ((0)),\r\n\t[PriceReverse_FromCustomer] [decimal](18, 2) NULL DEFAULT ((0)),\r\n\t[ReverseDiffCustomer] [decimal](18, 2) NULL DEFAULT ((0)),\r\n\t[ReverseDiffSupplier] [decimal](18, 2) NULL DEFAULT ((0)),\r\n\t[FinalReverseDiff] [decimal](18, 2) NULL DEFAULT ((0))\r\n)  \r\n ";
+                str = @$"  CREATE TABLE [dbo].[Tours_Hotels]( [Id] [bigint] {IDENTITY} NOT NULL, [Passenger_Name] [nvarchar](100) NULL, [DateOfReserved] [datetime] NULL, [Hotel_Name] [nvarchar](100) NULL, [City] [nvarchar](100) NULL, [Country] [nvarchar](100) NULL, [DateOfEntry] [datetime] NULL, [DateOfLeave] [datetime] NULL, [PurchasePrice] [decimal](18, 2) NULL, [TicketPrice] [decimal](18, 2) NULL, [Commission] [decimal](18, 2) NULL, [Supplier_Id] [bigint] NULL, [Customer_Id] [bigint] NULL, [IsTicket_Reverse] [int] NULL DEFAULT ((0)), [DateOfReverse] [datetime] NULL, [PriceReverse_ToSupplier] [decimal](18, 2) NULL DEFAULT ((0)), [PriceReverse_FromCustomer] [decimal](18, 2) NULL DEFAULT ((0)), [ReverseDiffCustomer] [decimal](18, 2) NULL DEFAULT ((0)), [ReverseDiffSupplier] [decimal](18, 2) NULL DEFAULT ((0)), [FinalReverseDiff] [decimal](18, 2) NULL DEFAULT ((0)) )    ";
                 opp.insert_me(str);
             }
             catch
@@ -2063,7 +2159,7 @@ FROM            Bills_Details_Reverse INNER JOIN
             }
             try
             {
-                str = " CREATE TABLE [dbo].[Item_Image_BarCode](\r\n\t[Item_Id] [bigint] NULL,\r\n\t[ImageBarCode] [image] NULL\r\n)";
+                str = " CREATE TABLE [dbo].[Item_Image_BarCode]( [Item_Id] [bigint] NULL, [ImageBarCode] [image] NULL )";
                 opp.insert_me(str);
             }
             catch
@@ -2071,7 +2167,7 @@ FROM            Bills_Details_Reverse INNER JOIN
             }
             try
             {
-                str = @$"  \r\nCREATE TABLE [dbo].[Item_BarCodeSetting](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Item_Id] [nvarchar](50) NULL,\r\n\t[FontHeader] [nvarchar](50) NULL,\r\n\t[FontFooter] [nvarchar](50) NULL,\r\n\t[Medium] [nvarchar](50) NULL,\r\n\t[Center] [nvarchar](50) NULL,\r\n\t[Width] [nvarchar](50) NULL,\r\n\t[Height] [nvarchar](50) NULL,\r\n\t[BarCodeHeight] [nvarchar](50) NULL,\r\n\t[Space_X_Item] [nvarchar](50) NULL,\r\n\t[Space_Y_Item] [nvarchar](50) NULL,\r\n\t[TopMargin] [nvarchar](50) NULL,\r\n\t[LeftMargin] [nvarchar](50) NULL,\r\n\t[paperWidth] [nvarchar](50) NULL,\r\n\t[paperHeight] [nvarchar](50) NULL,\r\n\t[SetPaperSize] [nvarchar](50) NULL,\r\n\t[PaperTopMargin] [nvarchar](50) NULL,\r\n\t[PaperLeftMargin] [nvarchar](50) NULL,\r\n\t[PaperRightMargin] [nvarchar](50) NULL,\r\n\t[PaperBottomMargin] [nvarchar](50) NULL,\r\n\t[OperationDate] [datetime] NULL,\r\n\t[User_Id] [int] NULL,\r\n\t[Branch_Id] [int] NULL,\r\n\t[Insert_ServerDateTime] [datetime] NULL,\r\n\t[Update_ServerDateTime] [datetime] NULL,\r\n\t[EditOperationDate] [datetime] NULL,\r\n\t[Edit_User_Id] [int] NULL,\r\n\t[ProcessNo] [bigint] NULL,\r\n\t[TextUnderCode] [nvarchar](500) NULL\r\n)";
+                str = @$"   CREATE TABLE [dbo].[Item_BarCodeSetting]( [Id] [bigint] {IDENTITY} NOT NULL, [Item_Id] [nvarchar](50) NULL, [FontHeader] [nvarchar](50) NULL, [FontFooter] [nvarchar](50) NULL, [Medium] [nvarchar](50) NULL, [Center] [nvarchar](50) NULL, [Width] [nvarchar](50) NULL, [Height] [nvarchar](50) NULL, [BarCodeHeight] [nvarchar](50) NULL, [Space_X_Item] [nvarchar](50) NULL, [Space_Y_Item] [nvarchar](50) NULL, [TopMargin] [nvarchar](50) NULL, [LeftMargin] [nvarchar](50) NULL, [paperWidth] [nvarchar](50) NULL, [paperHeight] [nvarchar](50) NULL, [SetPaperSize] [nvarchar](50) NULL, [PaperTopMargin] [nvarchar](50) NULL, [PaperLeftMargin] [nvarchar](50) NULL, [PaperRightMargin] [nvarchar](50) NULL, [PaperBottomMargin] [nvarchar](50) NULL, [OperationDate] [datetime] NULL, [User_Id] [bigint] NULL, [Branch_Id] [bigint] NULL, [Insert_ServerDateTime] [datetime] NULL, [Update_ServerDateTime] [datetime] NULL, [EditOperationDate] [datetime] NULL, [Edit_User_Id] [bigint] NULL, [ProcessNo] [bigint] NULL, [TextUnderCode] [nvarchar](500) NULL )";
                 opp.insert_me(str);
             }
             catch
@@ -2128,7 +2224,8 @@ FROM            Bills_Details_Reverse INNER JOIN
 
             try
             {
-                string mysql = @"   drop  TABLE [dbo].[LookUp_CheckStatus]
+                string mysql = @$"   drop  TABLE [dbo].[LookUp_CheckStatus]
+
    ";
                 opp.insert_me(mysql);
 
@@ -2141,7 +2238,7 @@ FROM            Bills_Details_Reverse INNER JOIN
 
             try
             {
-                string mysql = @"   
+                string mysql = @$"   
   CREATE TABLE [dbo].[LookUp_CheckStatus](
 	[Id] [bigint] NOT NULL  primary key,
 	[StatusName] [nvarchar](50) NULL,
@@ -2150,12 +2247,12 @@ FROM            Bills_Details_Reverse INNER JOIN
 	[OrderBy] [int] NULL      DEFAULT ((1)),
 	[IsProcessUsedToChange] [int] NULL      DEFAULT ((0)),
 	[OperationDate] [datetime] NULL      DEFAULT (getdate()),
-	[User_Id] [int] NULL      DEFAULT ((0)),
-	[Branch_Id] [int] NULL      DEFAULT ((0)),
+	[User_Id] [bigint] NULL      DEFAULT ((0)),
+	[Branch_Id] [bigint] NULL      DEFAULT ((0)),
 	[Insert_ServerDateTime] [datetime] NULL      DEFAULT (getdate()),
 	[Update_ServerDateTime] [datetime] NULL      DEFAULT (getdate()),
 	[EditOperationDate] [datetime] NULL      DEFAULT (getdate()),
-	[Edit_User_Id] [int] NULL      DEFAULT ((0)),
+	[Edit_User_Id] [bigint] NULL      DEFAULT ((0)),
 	[SubAccount_Id] [bigint] NULL      DEFAULT ((0)),
 	[ProcessNo] [bigint] NULL      DEFAULT ((0)),
 	[Active] [int] NULL      DEFAULT ((1))
@@ -2169,7 +2266,7 @@ FROM            Bills_Details_Reverse INNER JOIN
             try
             {
 
-                string mysql = @" 
+                string mysql = @$" 
  
  
    INSERT [dbo].[LookUp_CheckStatus] ([Id], [StatusName], [S_Value], [Status], [OrderBy], [IsProcessUsedToChange], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [SubAccount_Id], [ProcessNo], [Active]) VALUES (1, N'كل الشيكات', 0, 0, 0, 0, NULL, 0, 0, NULL, NULL, NULL, 0, 0, -1, 1)
@@ -2221,12 +2318,12 @@ INSERT [dbo].[LookUp_CheckStatus] ([Id], [StatusName], [S_Value], [Status], [Ord
 	[Balance_Date] [datetime] NULL,
 	[Active] [int] NULL,
 	[OperationDate] [datetime] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL,
+	[Edit_User_Id] [bigint] NULL,
 	[ProcessNo] [bigint] NULL,
 	[P_priceAvgCost] [decimal](18, 2) NULL,
 	[S_priceAvgCost] [decimal](18, 2) NULL,
@@ -2235,14 +2332,14 @@ INSERT [dbo].[LookUp_CheckStatus] ([Id], [StatusName], [S_Value], [Status], [Ord
 ) ";
                 opp.insert_me(mysql);
 
-                mysql = @" INSERT INTO Item_First_Period_Balance
+                mysql = @$" INSERT INTO Item_First_Period_Balance
                          (Item_Id, Unit_Item_Id, Larg_Qnty, Small_Qnty, Item_No, Balance_Date)
 SELECT        Unit_item.Item_id, Detailes_Purshing.Unit_item_Table_Id, Detailes_Purshing.qua, Detailes_Purshing.Part_qua, Detailes_Purshing.Item_No, Order_Purshing.Order_date
 FROM            Order_Purshing INNER JOIN
                          Detailes_Purshing ON Order_Purshing.Id = Detailes_Purshing.OrderTable_id INNER JOIN
                          Unit_item ON Detailes_Purshing.Unit_item_Table_Id = Unit_item.id
 WHERE        (Order_Purshing.Order_Purshing_No = - 1)  ";
-
+                str = ExecuteInsertWithIdentityCheck("Item_First_Period_Balance", str);
                 opp.insert_me(mysql);
 
 
@@ -2255,7 +2352,7 @@ WHERE        (Order_Purshing.Order_Purshing_No = - 1)  ";
             //    {
             //        if (DateTime.Now.Date < time)
             //        {
-            //            opp.insert_me("DELETE FROM Item\r\nWHERE        (Active_flage = 1) AND (id NOT IN\r\n                             (SELECT        Item_id\r\n                                FROM            Unit_item)) ");
+            //            opp.insert_me("DELETE FROM Item WHERE        (Active_flage = 1) AND (id NOT IN                              (SELECT        Item_id                                 FROM            Unit_item)) ");
             //            opp.insert_me(" Delete from  Bills_List where id= 143 Or id=161 ");
             //            str = " Delete from  Bills_Details where Invoice_Id = 143 Or Invoice_Id =161 ";
             //            opp.insert_me(str);
@@ -2268,150 +2365,10 @@ WHERE        (Order_Purshing.Order_Purshing_No = - 1)  ";
             //    {
             //    }
             //}
-            try
-            {
-                try
-                {
-                    str = "   drop table   Customers_Accounts_Mokhtalat";
-                    opp.insert_me(str);
-                }
-                catch (Exception)
-                {
-                }
-                str = @$"  
- 
-CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
-	[ID] [bigint] {IDENTITY}(1,1) NOT NULL,
-	[Serial] [int] NULL,
-	[Customers_AccountsId] [bigint] NULL,
-	[ProcessNo] [bigint] NULL,
-	[Customer_Id] [bigint] NULL,
-	[Import] [decimal](18, 2) NULL,
-	[Export] [decimal](18, 2) NULL,
-	[Balance] [decimal](18, 2) NULL,
-	[Balance_Actual] [decimal](18, 2) NULL,
-	[Transaction_Type] [int] NULL,
-	[Transaction_Date] [datetime] NULL,
-	[Reference_Id] [bigint] NULL,
-	[Reference_Type] [int] NULL,
-	[Reference_Type_Table_Id] [bigint] NULL,
-	[Reference_Type_TableDetails_Id] [bigint] NULL,
-	[Payment_Type] [int] NULL,
-	[Notes] [nvarchar](4000) NULL,
-	[Day_Registration_flage] [int] NOT NULL,
-	[DayReg_List_Id] [bigint] NULL,
-	[Flage_View] [int] NULL,
-	[BalanceImport] [nvarchar](100) NULL,
-	[BalanceExport] [nvarchar](100) NULL,
-	[Reference_Type_View] [nvarchar](100) NULL,
-	[Item_Name] [nvarchar](100) NULL,
-	[Item_Id] [bigint] NULL,
-	[Larg_Qnty] [nvarchar](100) NULL,
-	[Small_Qnty] [nvarchar](100) NULL,
-	[Item_No] [nvarchar](100) NULL,
-	[Item_Size] [nvarchar](100) NULL,
-	[Qnty_Size] [nvarchar](100) NULL,
-	[Qnty_value] [nvarchar](100) NULL,
-	[Height_Width_Item] [nvarchar](100) NULL,
-	[Larg_Unit_Price] [decimal](18, 2) NULL,
-	[Insert_ServerDateTime] [datetime] NULL,
-	[BalanceDiff] [decimal](18, 2) NULL,
-	[WorkOrderNumber] [bigint] NULL,
-	[CustomerName] [nvarchar](500) NULL,
-	[CarsWorkOrdersId] [bigint] NULL,
-	[TaxInternalId] [nvarchar](500) NULL,
-	[CarsId] [bigint] NULL,
-	[CarNumber] [nvarchar](500) NULL
-) 
-";
-                opp.insert_me(str);
-            }
-            catch (Exception)
-            {
-            }
+           
 
-            try
-            {
-                //opp.insert_me(" Update Suppliers_Accounts Set Reference_Type= -7 Where Reference_Type=-8 ");
-                //opp.insert_me(" Update Suppliers_Accounts Set Reference_Type= 3 Where Reference_Type=27 ");
-                //opp.insert_me(" Update Suppliers_Accounts Set Reference_Type= 4 Where Reference_Type=28 ");
-                //opp.insert_me(" Update Suppliers_Accounts Set Reference_Type=5 Where Reference_Type=-35 ");
-                //opp.insert_me(" Update Suppliers_Accounts Set Reference_Type= 6 Where Reference_Type=36 ");
-                //opp.insert_me(" Update Customers_Accounts Set Reference_Type= 3 Where Reference_Type=27 ");
-                //opp.insert_me(" Update Customers_Accounts Set Reference_Type= 4 Where Reference_Type=28 ");
-                //opp.insert_me(" Update Customers_Accounts Set Reference_Type=5 Where Reference_Type=-35 ");
-                //opp.insert_me(" Update Customers_Accounts Set Reference_Type= 6 Where Reference_Type=36 ");
-                //opp.insert_me(" Delete From  Suppliers_Accounts  Where Reference_Type=13 Or Reference_Type=31 Or  Reference_Type=21  Or   Reference_Type=32  Or   Reference_Type=22 Or    Reference_Type=37  Or    Reference_Type=38  ");
-                //str = " Delete From  Customers_Accounts  Where Reference_Type=13 Or Reference_Type=31 Or  Reference_Type=21  Or   Reference_Type=32  Or   Reference_Type=22 Or    Reference_Type=37  Or    Reference_Type=38  ";
-                //opp.insert_me(str);
-            }
-            catch
-            {
-            }
-            try
-            {
-                str = @$" CREATE TABLE [dbo].[Money_Financial_Notice_Items_Details](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Money_Financial_Notice_Items_Id] [bigint] NULL,\r\n\t[Item_Name] [nvarchar](500) NULL,\r\n\t[Item_Id] [bigint] NULL,\r\n\t[Item_QntyLarge] [decimal](18, 2) NULL,\r\n\t[Item_QntySmall] [nchar](10) NULL,\r\n\t[Item_Price] [decimal](18, 2) NULL,\r\n\t[Item_ToTal] [decimal](18, 2) NULL,\r\n\t[Unit_Item_Id] [bigint] NULL,\r\n\t[Store_Id] [bigint] NULL\r\n\t)";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
-            try
-            {
-                str = @$" CREATE TABLE [dbo].[Customer_Supplier_Group](\r\n\t[ID] [bigint] {IDENTITY}   NOT NULL,\r\n\t[GroupName] [nvarchar](500) NULL,\r\n\t[GroupType] [int] NULL,\r\n CONSTRAINT [PK_Customer_Supplier_Group] PRIMARY KEY CLUSTERED \r\n(\r\n\t[ID] ASC\r\n)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]\r\n) ON [PRIMARY] ";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
-            try
-            {
-                str = @$"CREATE TABLE [dbo].[Money_Financial_Notice_Items](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[OrderNo] [bigint] NULL,\r\n\t[OrderDate] [datetime] NULL,\r\n\t[Transaction_Type] [int] NULL,\r\n\t[Transaction_TypeStr] [nvarchar](50) NULL,\r\n\t[Order_Value] [decimal](18, 2) NULL,\r\n\t\t[Item_Qnty] [decimal](18, 2) NULL,\r\n\t\t\t[Item_Price] [decimal](18, 2) NULL,\r\n\t\t\t\t\t[Item_Id] [bigint] NULL,\r\n[Item_Name] [nvarchar](500) NULL,\r\n\t[Order_Value_Str] [nvarchar](500) NULL,\r\n\t[Account_Type] [int] NULL,\r\n\t[Account_Id] [bigint] NULL,\r\n\t[SubAccount_Id] [bigint] NULL,\r\n\t[Currency_Id] [int] NULL,\r\n\t[Notes] [nvarchar](500) NULL,\r\n\t[Compete_SubAccount_Id] [bigint] NULL,\r\n\t[Account_Selection] [int] NULL,\r\n\t[Customer_Id] [bigint] NULL,\r\n\t[Supplier_Id] [bigint] NULL\r\n) ";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
-            try
-            {
-                str = @$"CREATE TABLE [dbo].[Money_Financial_Notice](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[OrderNo] [bigint] NULL,\r\n\t[OrderDate] [datetime] NULL,\r\n\t[Transaction_Type] [int] NULL,\r\n\t[Transaction_TypeStr] [nvarchar](50) NULL,\r\n\t[Order_Value] [decimal](18, 2) NULL,\r\n\t[Order_Value_Str] [nvarchar](500) NULL,\r\n\t[Account_Type] [int] NULL,\r\n\t[Account_Id] [bigint] NULL,\r\n\t[SubAccount_Id] [bigint] NULL,\r\n\t[Currency_Id] [int] NULL,\r\n\t[Notes] [nvarchar](500) NULL,\r\n\t[Compete_SubAccount_Id] [bigint] NULL,\r\n\t[Account_Selection] [int] NULL,\r\n\t[Customer_Id] [bigint] NULL,\r\n\t[Supplier_Id] [bigint] NULL\r\n) ";
-                opp.insert_me(str);
-            }
-            catch (Exception)
-            {
-            }
-            try
-            {
-                str = @$"CREATE TABLE [dbo].[Item_Raw_MaterialsFor_Entage](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[MainOrderTable_id] [bigint] NULL,\r\n\t[SubOrderTable_id] [bigint] NULL,\r\n\t[Process_Date] [datetime] NULL,\r\n\t[MainItem_Id] [bigint] NULL,\r\n\t[SubItem_Id] [bigint] NULL,\r\n\t[MainItem_Name] [nvarchar](200) NULL,\r\n\t[SubItem_Name] [nvarchar](200) NULL,\r\n\t[SubUnit_item_id] [bigint] NULL,\r\n\t[MainUnit_item_id] [bigint] NULL,\r\n\t[Big_unit] [nvarchar](50) NULL,\r\n\t[Small_unit] [nvarchar](50) NULL,\r\n\t[Unit_Id] [bigint] NULL,\r\n\t[S_unit_Value] [decimal](18, 2) NULL,\r\n\t[Raw_Full_qua] [decimal](18, 2) NULL,\r\n\t[Raw_D_Qua] [decimal](18, 2) NULL,\r\n\t[Raw_Quantity] [decimal](18, 2) NULL,\r\n\t[Larg_Qnty] [decimal](18, 2) NULL,\r\n\t[Small_Qnty] [decimal](18, 2) NULL,\r\n\t[Qnty] [decimal](18, 2) NULL,\r\n\t[Main_Larg_Qnty] [decimal](18, 2) NULL,\r\n\t[Main_Small_Qnty] [decimal](18, 2) NULL,\r\n\t[Main_Qnty] [decimal](18, 2) NULL,\r\n\t[MainStore_Id] [bigint] NULL,\r\n\t[SubStore_Id] [bigint] NULL,\r\n\t[SubStore_Name] [nvarchar](50) NULL\r\n)  ";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
-            try
-            {
-                str = @$"CREATE TABLE [dbo].[Item_Raw_MaterialsFor_Entage_List](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Process_No] [bigint] NULL,\r\n\t[Notes_List] [nvarchar](500) NULL,\r\n\t[Process_Date] [datetime] NULL\r\n)  ";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
-            try
-            {
-                str = @$"CREATE TABLE [dbo].[Item_Raw_MaterialsFor_Entage_Details](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Item_Raw_MaterialsFor_Entage_List_Id] [bigint] NULL,\r\n\t[Unit_Item_Id] [bigint] NULL,\r\n\t[Item_Id] [bigint] NULL,\r\n\t[Store_Id] [bigint] NULL,\r\n\t[Larg_Qnty] [decimal](18, 2) NULL,\r\n\t[Small_Qnty] [decimal](18, 2) NULL,\r\n\t[Order_Purshing_Id] [bigint] NULL,\r\n\t[Detailes_Purshing_Id] [bigint] NULL,\r\n\t[Order_Estlam_Sarf_Flage] [int] NULL\r\n)   ";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
-            try
-            {
-                str = @$"CREATE TABLE [dbo].[Item_Raw_Materials](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[MainItem_Id] [bigint] NULL,\r\n\t[SubItem_Id] [bigint] NULL,\r\n\t[Full_qua] [decimal](18, 2) NULL,\r\n\t[D_Qua] [decimal](18, 2) NULL,\r\n\t[Quantity] [decimal](18, 2) NULL,\r\n\t[MainItem_Name] [nvarchar](200) NULL,\r\n\t[SubItem_Name] [nvarchar](200) NULL,\r\n\t[Big_unit] [nvarchar](50) NULL,\r\n\t[Small_unit] [nvarchar](50) NULL,\r\n\t[Unit_Id] [bigint] NULL,\r\n\t[S_unit_Value] [decimal](18, 2) NULL,\r\n\t[Default_Store_Id] [int] NULL\r\n)";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
+
+
 
             AlterBD_(ref opp, "Invoices_Details", "Item_DeletedFlage", "int", "0", "0");
             AlterBD_(ref opp, "Invoices_Details_Reverse", "Item_DeletedFlage", "int", "0", "0");
@@ -2834,10 +2791,8 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             AlterColumn(ref opp, "Checks_Memory", "Bank_Balance", "decimal(18, " + d + ")");
             AlterColumn(ref opp, "Checks_Memory", "Balance_Before", "decimal(18, " + d + ")");
             AlterColumn(ref opp, "Checks_Memory", "Balance_After", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Customer", "Balance", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Customer", "Balance_Actual", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Customer", "Balance_First", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Customer", "Balance_Actual", "decimal(18, " + d + ")");
+
+            
 
             AlterColumn(ref opp, "Employee", "jobsListId", "bigint");
             AlterColumn(ref opp, "Employee", "Edit_User_Id", "bigint");
@@ -3172,61 +3127,6 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             AlterBD_(ref opp, "Bills_Details_Reverse", "QntyStrColumn", "nvarchar(500)");
 
 
-
-
-            try
-            {
-                if (Common.CompanyTitle == Common.CompanyTitle_Client05)
-                {
-                    opp.insert_me("DELETE FROM Order_Money\r\nFROM            Money_Transaction_Box INNER JOIN\r\n                         Order_Money ON Money_Transaction_Box.Order_Mony_Id = Order_Money.Id\r\nWHERE        (Money_Transaction_Box.SubAccount_Id = 18) OR\r\n                         (Money_Transaction_Box.SubAccount_Id = 21) OR\r\n                         (Money_Transaction_Box.SubAccount_Id = 31) OR\r\n                         (Money_Transaction_Box.SubAccount_Id = 32) OR\r\n                         (Money_Transaction_Box.SubAccount_Id = 33) OR\r\n                         (Money_Transaction_Box.SubAccount_Id = 34) OR\r\n                         (Money_Transaction_Box.SubAccount_Id = 35) ");
-                    opp.insert_me(" DELETE FROM Money_Transaction_Box\r\nWHERE        (SubAccount_Id = 18) OR\r\n                         (SubAccount_Id = 21) OR\r\n                         (SubAccount_Id = 31) OR\r\n                         (SubAccount_Id = 32) OR\r\n                         (SubAccount_Id = 33) OR\r\n                         (SubAccount_Id = 34) OR\r\n                         (SubAccount_Id = 35)");
-                    str = " UPDATE       Submain_Account\r\nSET                Accept_Cost_Center_Flage = 0";
-                    opp.insert_me(str);
-                }
-            }
-            catch
-            {
-            }
-            AlterBD_(ref opp, "Textile_Production_Rate", "Main_Item_Category_Id_Lehaf_Wabara", "int", "1", "1");
-            try
-            {
-                str = @$"CREATE TABLE [dbo].[Textile_Production_Rate_Atlat](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Textile_Production_Rate_Id] [bigint] NULL,\r\n\t[Atalat_Id] [bigint] NULL,\r\n\t[Atalat_Name] [nvarchar](50) NULL,\r\n\t[Hour_No] [decimal](18, 2) NULL,\r\n\t[Atla_Value] [decimal](18, 2) NULL,\r\n\t[Hour_Price_Value] [decimal](18, 2) NULL\r\n) ";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
-            try
-            {
-                str = @$"CREATE TABLE [dbo].[Textile_Production_Rate_ItemDetails](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Textile_Production_Rate_Id] [bigint] NULL,\r\n\t[Item_PriceUnit_List_Id] [bigint] NULL,\r\n\t[Item_Name] [nvarchar](50) NULL,\r\n\t[Nazalat_Prod] [decimal](18, 2) NULL,\r\n\t[Hadafat_Prod] [decimal](18, 2) NULL,\r\n\t[Hadafat_Prod_Net] [decimal](18, 2) NULL,\r\n\t[Dasta_No_In_Wardia] [decimal](18, 2) NULL,\r\n\t[Item_No_In_Wardia] [decimal](18, 2) NULL,\r\n\t[Hadafat_Matluba] [decimal](18, 2) NULL,\r\n\t[Nazalat_Matluba] [decimal](18, 2) NULL,\r\n\t[Hadafat_Zeiada] [decimal](18, 2) NULL,\r\n\t[Nazalat_Zeiada] [decimal](18, 2) NULL\r\n) ";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
-            try
-            {
-                str = "UPDATE       Supplier\r\nSET                SubAccount_Id = Submain_Account.Id\r\nFROM            Submain_Account INNER JOIN\r\n                         Supplier ON Submain_Account.Id = Supplier.SubAccount_Id ";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
-            try
-            {
-                str = "          UPDATE       Customer\r\nSET                SubAccount_Id = Submain_Account.Id\r\nFROM            Submain_Account INNER JOIN\r\n                         Customer ON Submain_Account.Id = Customer.SubAccount_Id ";
-            }
-            catch
-            {
-            }
-            try
-            {
-                str = @$"CREATE TABLE [dbo].[Price_Purhase_Type_List](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Price_Name] [nvarchar](100) NULL,\r\n\t[IS_Active] [int] NULL      DEFAULT ((1)),\r\n\t[Price_Type_List_Master_Id] [int] NULL      DEFAULT ((0))\r\n) ";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
             AlterBD_(ref opp, "Item", "No3eboa", "int", "0");
             AlterBD_(ref opp, "Item", "No3eboa_BigUnit", "int", "0");
             AlterBD_(ref opp, "Item", "No3eboa_SmallUnit", "int", "0");
@@ -3251,12 +3151,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             AlterBD_(ref opp, "Tours_Tasherat", "Emp_Booking_Id", "Int", "0", "0");
             AlterBD_(ref opp, "Tours_Ticketing_Air", "Emp_Booking_Id", "Int", "0", "0");
             AlterBD_(ref opp, "Tours_Ticketing_Land", "Emp_Booking_Id", "Int", "0", "0");
-            try
-            {
-            }
-            catch
-            {
-            }
+
 
             AlterBD_(ref opp, "Checks_Memory", "IsAllowEdit", "Int", "1", "0");
             AlterBD_(ref opp, "Checks_Memory", "IsAllowDelete", "Int", "1", "0");
@@ -3384,39 +3279,6 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
 
 
 
-            try
-            {
-                str = @$" CREATE TABLE  [Currency_Factor](\r\n\t[ID] [bigint] {IDENTITY} NOT NULL,\r\n\t[Currency_Primary_Name] [nvarchar](50) NULL,\r\n\t[Currency_Primary_ISOne] [int] NULL DEFAULT ((1)),\r\n\t[Currency_ID_Primary] [int] NULL,\r\n\t[Factor] [decimal](18, 3) NULL,\r\n\t[Currency_ID_Secondary] [int] NULL,\r\n\t[Currency_Secondary_Name] [nvarchar](50) NULL,\r\n\t[IS_TheSameCurrencies] [int] NULL      DEFAULT ((0)),\r\n \r\n)  \r\nINSERT  [Currency_Factor] (  [Currency_Primary_Name], [Currency_Primary_ISOne], [Currency_ID_Primary], [Factor], [Currency_ID_Secondary], [Currency_Secondary_Name], [IS_TheSameCurrencies]) VALUES (  N'دولار أمريكى', 1, 2, CAST(18.000 AS Decimal(18, 3)), 1, N'جنية مصرى', 0)\r\nINSERT  [Currency_Factor] ( [Currency_Primary_Name], [Currency_Primary_ISOne], [Currency_ID_Primary], [Factor], [Currency_ID_Secondary], [Currency_Secondary_Name], [IS_TheSameCurrencies]) VALUES (  N'دولار أمريكى', 1, 2, CAST(1.000 AS Decimal(18, 3)), 2, N'دولار أمريكى', 1)\r\nINSERT  [Currency_Factor] (  [Currency_Primary_Name], [Currency_Primary_ISOne], [Currency_ID_Primary], [Factor], [Currency_ID_Secondary], [Currency_Secondary_Name], [IS_TheSameCurrencies]) VALUES (  N'جنية مصرى', 1, 1, CAST(1.000 AS Decimal(18, 3)), 1, N'جنية مصرى', 1)\r\nINSERT  [Currency_Factor] (  [Currency_Primary_Name], [Currency_Primary_ISOne], [Currency_ID_Primary], [Factor], [Currency_ID_Secondary], [Currency_Secondary_Name], [IS_TheSameCurrencies]) VALUES (  N'ريال سعودى', 1, 4, CAST(4.750 AS Decimal(18, 3)), 1, N'جنية مصرى', 0)\r\nINSERT  [Currency_Factor] (  [Currency_Primary_Name], [Currency_Primary_ISOne], [Currency_ID_Primary], [Factor], [Currency_ID_Secondary], [Currency_Secondary_Name], [IS_TheSameCurrencies]) VALUES (  N'ريال سعودى', 1, 4, CAST(1.000 AS Decimal(18, 3)), 4, N'ريال سعودى', 1)\r\nINSERT  [Currency_Factor] (  [Currency_Primary_Name], [Currency_Primary_ISOne], [Currency_ID_Primary], [Factor], [Currency_ID_Secondary], [Currency_Secondary_Name], [IS_TheSameCurrencies]) VALUES (  N'يورو', 1, 3, CAST(20.500 AS Decimal(18, 3)), 1, N'جنية مصرى', 0)\r\nINSERT  [Currency_Factor] (  [Currency_Primary_Name], [Currency_Primary_ISOne], [Currency_ID_Primary], [Factor], [Currency_ID_Secondary], [Currency_Secondary_Name], [IS_TheSameCurrencies]) VALUES (  N'يورو', 1, 3, CAST(1.000 AS Decimal(18, 3)), 3, N'يورو', 1)\r\n \r\n";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
-            try
-            {
-                str = " UPDATE       Account_Entry_Details\r\nSET                Account_Name = Submain_Account.SubAccount_Name\r\nFROM            Account_Entry_Details INNER JOIN\r\n                         Submain_Account ON Account_Entry_Details.Submain_Account_ID = Submain_Account.Id ";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
-            try
-            {
-                AlterBD_(ref opp, "Account_Entry_List", "Journal_Name", "nvarchar(300)");
-                str = " UPDATE       Account_Entry_List\r\nSET                Journal_Name = Journal_Codes.Journal_Name\r\nFROM            Account_Entry_List INNER JOIN\r\n                         Journal_Codes ON Account_Entry_List.journal_Code = Journal_Codes.Code ";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
-            try
-            {
-                str = "UPDATE       Account_Branches\r\nSET                Branch_Name = N'نيوسكاى -فرع  طلعت حرب'\r\nWHERE        (Id = 301) AND (Branch_Name = N'نيوسكاى -فرع  طلعت جرب')";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
 
 
             AlterBD_(ref opp, "Customers_Accounts", "Larg_Unit_Price", "decimal(18, " + d + ")", "0", "0");
@@ -3527,7 +3389,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             AlterBD_(ref opp, "Order_Working_Textile", "Total_Weight", "decimal(18, " + d + ")", "0");
             try
             {
-                str = "       CREATE TABLE  [Account_Entry_Master_TransactionTemp](\r\n\t[Last_Balance_Zero] [bigint] NULL,\r\n\t[Submain_Account_ID] [bigint] NULL,\r\n\t[Account_Name] [nvarchar](100) NULL,\r\n\t[Final_Fist_Balance_Madin] [decimal](18, 3) NULL DEFAULT ((0)),\r\n\t[Final_Fist_Balance_Da2n] [decimal](18, 3) NULL DEFAULT ((0)),\r\n\t[Final_Last_Balance_Madin] [decimal](18, 3) NULL DEFAULT ((0)),\r\n\t[Final_Last_Balance_Da2n] [decimal](18, 3) NULL DEFAULT ((0)),\r\n\t[Final_Transaction_Madin] [decimal](18, 3) NULL DEFAULT ((0)),\r\n\t[Final_Transaction_Da2n] [decimal](18, 3) NULL DEFAULT ((0)),\r\n\t[SubAccount_NO] [nvarchar](100) NULL,\r\n\t[Code] [nvarchar](100) NULL,\r\n\t[Account_Code] [nvarchar](100) NULL,\r\n\t[MainAccount_Name] [nvarchar](100) NULL,\r\n\t[MainAccount_NO] [nvarchar](100) NULL,\r\n\t[Main_Account_Id] [bigint] NULL,\r\n\t[MainCode] nvarchar(100) NULL,\r\n\t[Equivalent_First_Balance_Madin] [decimal](18, 3) NULL DEFAULT ((0)),\r\n\t[Equivalent_First_Balance_Da2n] [decimal](18, 3) NULL DEFAULT ((0)),\r\n\t[First_Balance_Madin] [decimal](18, 3) NULL DEFAULT ((0)),\r\n\t[First_Balance_Da2n] [decimal](18, 3) NULL DEFAULT ((0)),\r\n\t[Equivalent_Account_Currency_Id] [int] NULL DEFAULT ((0)),\r\n\t[Final_Import_Value] [decimal](18, 3) NULL DEFAULT ((0)),\r\n\t[Final_Export_Value] [decimal](18, 3) NULL DEFAULT ((0)),\r\n\t[Prev_Import_Value] [decimal](18, 3) NULL      DEFAULT ((0)),\r\n\t[Prev_Export_Value] [decimal](18, 3) NULL      DEFAULT ((0))\r\n) ";
+                str = "  CREATE TABLE [dbo].[Item_Category]( [ID] [bigint] {IDENTITY} NOT NULL, [Category_Name] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL, [Category_Type_Str] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL, [Category_Type_Id] [int] NULL, [Main_Item_Category_Id] [int] NULL, [IS_Active] [int] NULL DEFAULT ((1)) )   ";
                 opp.insert_me(str);
             }
             catch
@@ -3535,7 +3397,166 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = @$" CREATE TABLE  [Account_Entry_Master_BalanceFirstAccount_Temp](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Submain_Account_ID] [bigint] NULL,\r\n\t[SubAccount_Name] [nvarchar](500) NULL,\r\n\t[Account_Currency_Id] [bigint] NULL\r\n)  ";
+                str = "CREATE TABLE [dbo].[Textile_Item_Dept_Balance]( [ID] [int] {IDENTITY} NOT NULL, [Item_Id] [int] NULL, [Dept_Id] [int] NULL, [Dept_Name] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL, [Qnty] [decimal](18, 2) NULL, [Weight] [decimal](18, 2) NULL ) ";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+            try
+            {
+                str = "CREATE TABLE [dbo].[Textile_Process_Transaction]( [Id] [bigint] {IDENTITY} NOT NULL, [Item_Id] [bigint] NULL, [Import_Qnty] [decimal](18, 2) NULL, [Import_Weight] [decimal](18, 2) NULL, [Export_Qnty] [decimal](18, 2) NULL, [Export_Weight] [decimal](18, 2) NULL, [Qnty_Transaction] [decimal](18, 2) NULL, [Weight_Transaction] [decimal](18, 2) NULL, [Qnty_Balance] [decimal](18, 2) NULL, [Weight_Balance] [decimal](18, 2) NULL, [Processed_Flage] [int] NULL      DEFAULT ((0)), [From_Dept_Id] [int] NULL, [To_Dept_Id] [int] NULL, [Transaction_Date] [datetime] NULL, [Textile_Process_Transaction_Id] [bigint] NULL, [Processed_Flage_Date] [datetime] NULL, [Textile_Item_Dept_Balance_Id] [int] NULL, [Textile_Production_Rate_Id] [bigint] NULL )  ";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+            try
+            {
+                str = @$" CREATE TABLE [dbo].[Money_Financial_Notice_Items_Details]( [Id] [bigint] {IDENTITY} NOT NULL, [Money_Financial_Notice_Items_Id] [bigint] NULL, [Item_Name] [nvarchar](500) NULL, [Item_Id] [bigint] NULL, [Item_QntyLarge] [decimal](18, 2) NULL, [Item_QntySmall] [nchar](10) NULL, [Item_Price] [decimal](18, 2) NULL, [Item_ToTal] [decimal](18, 2) NULL, [Unit_Item_Id] [bigint] NULL, [Store_Id] [bigint] NULL )";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+            try
+            {
+                str = @$" CREATE TABLE [dbo].[Customer_Supplier_Group]( [ID] [bigint] {IDENTITY}   NOT NULL, [GroupName] [nvarchar](500) NULL, [GroupType] [int] NULL,  CONSTRAINT [PK_Customer_Supplier_Group] PRIMARY KEY CLUSTERED  ( [ID] ASC )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY] ) ON [PRIMARY] ";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+            try
+            {
+                str = @$"CREATE TABLE [dbo].[Money_Financial_Notice_Items]( [Id] [bigint] {IDENTITY} NOT NULL, [OrderNo] [bigint] NULL, [OrderDate] [datetime] NULL, [Transaction_Type] [int] NULL, [Transaction_TypeStr] [nvarchar](50) NULL, [Order_Value] [decimal](18, 2) NULL, \t[Item_Qnty] [decimal](18, 2) NULL, \t\t[Item_Price] [decimal](18, 2) NULL, \t\t\t\t[Item_Id] [bigint] NULL, [Item_Name] [nvarchar](500) NULL, [Order_Value_Str] [nvarchar](500) NULL, [Account_Type] [int] NULL, [Account_Id] [bigint] NULL, [SubAccount_Id] [bigint] NULL, [Currency_Id] [int] NULL, [Notes] [nvarchar](500) NULL, [Compete_SubAccount_Id] [bigint] NULL, [Account_Selection] [int] NULL, [Customer_Id] [bigint] NULL, [Supplier_Id] [bigint] NULL ) ";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+            try
+            {
+                str = @$"CREATE TABLE [dbo].[Money_Financial_Notice]( [Id] [bigint] {IDENTITY} NOT NULL, [OrderNo] [bigint] NULL, [OrderDate] [datetime] NULL, [Transaction_Type] [int] NULL, [Transaction_TypeStr] [nvarchar](50) NULL, [Order_Value] [decimal](18, 2) NULL, [Order_Value_Str] [nvarchar](500) NULL, [Account_Type] [int] NULL, [Account_Id] [bigint] NULL, [SubAccount_Id] [bigint] NULL, [Currency_Id] [int] NULL, [Notes] [nvarchar](500) NULL, [Compete_SubAccount_Id] [bigint] NULL, [Account_Selection] [int] NULL, [Customer_Id] [bigint] NULL, [Supplier_Id] [bigint] NULL ) ";
+                opp.insert_me(str);
+            }
+            catch (Exception)
+            {
+            }
+            try
+            {
+                str = @$"CREATE TABLE [dbo].[Item_Raw_MaterialsFor_Entage]( [Id] [bigint] {IDENTITY} NOT NULL, [MainOrderTable_id] [bigint] NULL, [SubOrderTable_id] [bigint] NULL, [Process_Date] [datetime] NULL, [MainItem_Id] [bigint] NULL, [SubItem_Id] [bigint] NULL, [MainItem_Name] [nvarchar](200) NULL, [SubItem_Name] [nvarchar](200) NULL, [SubUnit_item_id] [bigint] NULL, [MainUnit_item_id] [bigint] NULL, [Big_unit] [nvarchar](50) NULL, [Small_unit] [nvarchar](50) NULL, [Unit_Id] [bigint] NULL, [S_unit_Value] [decimal](18, 2) NULL, [Raw_Full_qua] [decimal](18, 2) NULL, [Raw_D_Qua] [decimal](18, 2) NULL, [Raw_Quantity] [decimal](18, 2) NULL, [Larg_Qnty] [decimal](18, 2) NULL, [Small_Qnty] [decimal](18, 2) NULL, [Qnty] [decimal](18, 2) NULL, [Main_Larg_Qnty] [decimal](18, 2) NULL, [Main_Small_Qnty] [decimal](18, 2) NULL, [Main_Qnty] [decimal](18, 2) NULL, [MainStore_Id] [bigint] NULL, [SubStore_Id] [bigint] NULL, [SubStore_Name] [nvarchar](50) NULL )  ";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+            try
+            {
+                str = @$"CREATE TABLE [dbo].[Item_Raw_MaterialsFor_Entage_List]( [Id] [bigint] {IDENTITY} NOT NULL, [Process_No] [bigint] NULL, [Notes_List] [nvarchar](500) NULL, [Process_Date] [datetime] NULL )  ";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+            try
+            {
+                str = @$"CREATE TABLE [dbo].[Item_Raw_MaterialsFor_Entage_Details]( [Id] [bigint] {IDENTITY} NOT NULL, [Item_Raw_MaterialsFor_Entage_List_Id] [bigint] NULL, [Unit_Item_Id] [bigint] NULL, [Item_Id] [bigint] NULL, [Store_Id] [bigint] NULL, [Larg_Qnty] [decimal](18, 2) NULL, [Small_Qnty] [decimal](18, 2) NULL, [Order_Purshing_Id] [bigint] NULL, [Detailes_Purshing_Id] [bigint] NULL, [Order_Estlam_Sarf_Flage] [int] NULL )   ";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+            try
+            {
+                str = @$"CREATE TABLE [dbo].[Item_Raw_Materials]( [Id] [bigint] {IDENTITY} NOT NULL, [MainItem_Id] [bigint] NULL, [SubItem_Id] [bigint] NULL, [Full_qua] [decimal](18, 2) NULL, [D_Qua] [decimal](18, 2) NULL, [Quantity] [decimal](18, 2) NULL, [MainItem_Name] [nvarchar](200) NULL, [SubItem_Name] [nvarchar](200) NULL, [Big_unit] [nvarchar](50) NULL, [Small_unit] [nvarchar](50) NULL, [Unit_Id] [bigint] NULL, [S_unit_Value] [decimal](18, 2) NULL, [Default_Store_Id] [int] NULL )";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+
+
+            AlterBD_(ref opp, "Textile_Production_Rate", "Main_Item_Category_Id_Lehaf_Wabara", "int", "1", "1");
+
+            try
+            {
+                str = "UPDATE       Supplier SET SubAccount_Id = Submain_Account.Id FROM            Submain_Account INNER JOIN                          Supplier ON Submain_Account.Id = Supplier.SubAccount_Id ";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+            try
+            {
+                str = " UPDATE       Customer SET SubAccount_Id = Submain_Account.Id FROM            Submain_Account INNER JOIN                          Customer ON Submain_Account.Id = Customer.SubAccount_Id ";
+            }
+            catch
+            {
+            }
+            try
+            {
+                str = @$"CREATE TABLE [dbo].[Price_Purhase_Type_List]( [Id] [bigint] {IDENTITY} NOT NULL, [Price_Name] [nvarchar](100) NULL, [IS_Active] [int] NULL      DEFAULT ((1)), [Price_Type_List_Master_Id] [int] NULL      DEFAULT ((0)) ) ";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+            try
+            {
+                str = @$"CREATE TABLE [dbo].[Textile_Production_Rate_Atlat]( [Id] [bigint] {IDENTITY} NOT NULL, [Textile_Production_Rate_Id] [bigint] NULL, [Atalat_Id] [bigint] NULL, [Atalat_Name] [nvarchar](50) NULL, [Hour_No] [decimal](18, 2) NULL, [Atla_Value] [decimal](18, 2) NULL, [Hour_Price_Value] [decimal](18, 2) NULL ) ";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+            try
+            {
+                str = @$"CREATE TABLE [dbo].[Textile_Production_Rate_ItemDetails]( [Id] [bigint] {IDENTITY} NOT NULL, [Textile_Production_Rate_Id] [bigint] NULL, [Item_PriceUnit_List_Id] [bigint] NULL, [Item_Name] [nvarchar](50) NULL, [Nazalat_Prod] [decimal](18, 2) NULL, [Hadafat_Prod] [decimal](18, 2) NULL, [Hadafat_Prod_Net] [decimal](18, 2) NULL, [Dasta_No_In_Wardia] [decimal](18, 2) NULL, [Item_No_In_Wardia] [decimal](18, 2) NULL, [Hadafat_Matluba] [decimal](18, 2) NULL, [Nazalat_Matluba] [decimal](18, 2) NULL, [Hadafat_Zeiada] [decimal](18, 2) NULL, [Nazalat_Zeiada] [decimal](18, 2) NULL ) ";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+
+            try
+            {
+                str = " UPDATE       Account_Entry_Details SET                Account_Name = Submain_Account.SubAccount_Name FROM            Account_Entry_Details INNER JOIN                          Submain_Account ON Account_Entry_Details.Submain_Account_ID = Submain_Account.Id ";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+            try
+            {
+                AlterBD_(ref opp, "Account_Entry_List", "Journal_Name", "nvarchar(300)");
+                str = " UPDATE       Account_Entry_List SET                Journal_Name = Journal_Codes.Journal_Name FROM            Account_Entry_List INNER JOIN                          Journal_Codes ON Account_Entry_List.journal_Code = Journal_Codes.Code ";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+            try
+            {
+                str = "UPDATE       Account_Branches SET                Branch_Name = N'نيوسكاى -فرع  طلعت حرب' WHERE        (Id = 301) AND (Branch_Name = N'نيوسكاى -فرع  طلعت جرب')";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+
+
+            try
+            {
+                str = "       CREATE TABLE  [Account_Entry_Master_TransactionTemp]( [Last_Balance_Zero] [bigint] NULL, [Submain_Account_ID] [bigint] NULL, [Account_Name] [nvarchar](100) NULL, [Final_Fist_Balance_Madin] [decimal](18, 3) NULL DEFAULT ((0)), [Final_Fist_Balance_Da2n] [decimal](18, 3) NULL DEFAULT ((0)), [Final_Last_Balance_Madin] [decimal](18, 3) NULL DEFAULT ((0)), [Final_Last_Balance_Da2n] [decimal](18, 3) NULL DEFAULT ((0)), [Final_Transaction_Madin] [decimal](18, 3) NULL DEFAULT ((0)), [Final_Transaction_Da2n] [decimal](18, 3) NULL DEFAULT ((0)), [SubAccount_NO] [nvarchar](100) NULL, [Code] [nvarchar](100) NULL, [Account_Code] [nvarchar](100) NULL, [MainAccount_Name] [nvarchar](100) NULL, [MainAccount_NO] [nvarchar](100) NULL, [Main_Account_Id] [bigint] NULL, [MainCode] nvarchar(100) NULL, [Equivalent_First_Balance_Madin] [decimal](18, 3) NULL DEFAULT ((0)), [Equivalent_First_Balance_Da2n] [decimal](18, 3) NULL DEFAULT ((0)), [First_Balance_Madin] [decimal](18, 3) NULL DEFAULT ((0)), [First_Balance_Da2n] [decimal](18, 3) NULL DEFAULT ((0)), [Equivalent_Account_Currency_Id] [int] NULL DEFAULT ((0)), [Final_Import_Value] [decimal](18, 3) NULL DEFAULT ((0)), [Final_Export_Value] [decimal](18, 3) NULL DEFAULT ((0)), [Prev_Import_Value] [decimal](18, 3) NULL      DEFAULT ((0)), [Prev_Export_Value] [decimal](18, 3) NULL      DEFAULT ((0)) ) ";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+            try
+            {
+                str = @$" CREATE TABLE  [Account_Entry_Master_BalanceFirstAccount_Temp]( [Id] [bigint] {IDENTITY} NOT NULL, [Submain_Account_ID] [bigint] NULL, [SubAccount_Name] [nvarchar](500) NULL, [Account_Currency_Id] [bigint] NULL )  ";
                 opp.insert_me(str);
             }
             catch
@@ -3598,7 +3619,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = @$"  CREATE TABLE [dbo].[Banks_Balance](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Bank_Id] [int] NULL,\r\n\t[Balance_Date] [datetime] NULL,\r\n\t[First_Balance] [decimal](18, 2) NULL,\r\n\t[Last_Balance] [decimal](18, 2) NULL\r\n)  ";
+                str = @$"  CREATE TABLE [dbo].[Banks_Balance]( [Id] [bigint] {IDENTITY} NOT NULL, [Bank_Id] [int] NULL, [Balance_Date] [datetime] NULL, [First_Balance] [decimal](18, 2) NULL, [Last_Balance] [decimal](18, 2) NULL )  ";
                 opp.insert_me(str);
             }
             catch
@@ -3606,7 +3627,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = @$" CREATE TABLE [dbo].[Production_Atalat](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL ,\r\n\t[Atalat_Name] [nvarchar](100) NULL,\r\n\t[Hour_Price_Value] [decimal](18, 2) NULL,\r\n\t[Types] [int] NULL ,\r\nPRIMARY KEY ( Id)\r\n  )  ";
+                str = @$" CREATE TABLE [dbo].[Production_Atalat]( [Id] [bigint] {IDENTITY} NOT NULL , [Atalat_Name] [nvarchar](100) NULL, [Hour_Price_Value] [decimal](18, 2) NULL, [Types] [int] NULL , PRIMARY KEY ( Id)   )  ";
                 opp.insert_me(str);
             }
             catch
@@ -3614,7 +3635,8 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = @$"CREATE TABLE [dbo].[Account_Branches](\r\n\t[Id] [bigint] NULL,\r\n\t[Branch_Name] [nvarchar](50) NULL,\r\n\t[Address] [nvarchar](50) NULL,\r\n\t[Code] [nvarchar](50) NULL\r\n) ";
+                str = @$"CREATE TABLE [dbo].[Account_Branches]( [Id] [bigint] NULL,
+[Branch_Name] [nvarchar](50) NULL, [Address] [nvarchar](50) NULL, [Code] [nvarchar](50) NULL ) ";
                 opp.insert_me(str);
             }
             catch
@@ -3622,7 +3644,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = @$"CREATE TABLE  [Order_Working_Textile_Details](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Order_Working_Textile_Id] [bigint] NULL,\r\n\t[Nazalat_Count] [int] NULL,\r\n\t[Color_Name] [nvarchar](50) NULL,\r\n\t[Items_TypesColor_Name_Id] [int] NULL,\r\n\t[Weight] [decimal](18, 2) NULL,\r\nPRIMARY KEY ( Id)\r\n)";
+                str = @$"CREATE TABLE  [Order_Working_Textile_Details]( [Id] [bigint] {IDENTITY} NOT NULL, [Order_Working_Textile_Id] [bigint] NULL, [Nazalat_Count] [int] NULL, [Color_Name] [nvarchar](50) NULL, [Items_TypesColor_Name_Id] [int] NULL, [Weight] [decimal](18, 2) NULL, PRIMARY KEY ( Id) )";
                 opp.insert_me(str);
             }
             catch
@@ -3635,12 +3657,12 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
 
     [Color_Name] [nvarchar](50) NULL,
 	[OperationDate] [datetime] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL,
+	[Edit_User_Id] [bigint] NULL,
 	[ProcessNo] [bigint] NULL )   ";
                 opp.insert_me(str);
             }
@@ -3649,7 +3671,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = " CREATE TABLE  [Items_Types_Name](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[ItemsType_Name] [nvarchar](50) NULL,\r\nPRIMARY KEY ( Id)\r\n)";
+                str = " CREATE TABLE  [Items_Types_Name]( [Id] [bigint] {IDENTITY} NOT NULL, [ItemsType_Name] [nvarchar](50) NULL, PRIMARY KEY ( Id) )";
                 opp.insert_me(str);
             }
             catch
@@ -3657,7 +3679,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = " CREATE TABLE  [Items_Bodies_Name](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[ItemBody_Name] [nvarchar](50) NULL,\r\nPRIMARY KEY ( Id)\r\n)";
+                str = " CREATE TABLE  [Items_Bodies_Name]( [Id] [bigint] {IDENTITY} NOT NULL, [ItemBody_Name] [nvarchar](50) NULL, PRIMARY KEY ( Id) )";
                 opp.insert_me(str);
             }
             catch
@@ -3717,14 +3739,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             AlterBD_(ref opp, "Checks_Memory", "SubAccount_Id_RelatedToBefor", "bigint", "0");
 
 
-            try
-            {
-                str = "  CREATE TABLE [dbo].[Item_Category](\r\n\t[ID] [bigint] {IDENTITY} NOT NULL,\r\n\t[Category_Name] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL,\r\n\t[Category_Type_Str] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL,\r\n\t[Category_Type_Id] [int] NULL,\r\n\t[Main_Item_Category_Id] [int] NULL,\r\n\t[IS_Active] [int] NULL DEFAULT ((1))\r\n)   ";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
+
             try
             {
                 str = " Alter Table Order_Money  Add  Tafkeet_Value nvarchar(100)    ";
@@ -3735,7 +3750,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = " Alter Table Order_Money  Add  Year_Financial_Period_Id int  Default(1) ";
+                str = " Alter Table Order_Money  Add  Year_Financial_Period_Id bigint  Default(1) ";
                 opp.insert_me(str);
             }
             catch
@@ -3784,8 +3799,8 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                opp.insert_me(" Alter Table Item  Add  Unit_Id int  Default(0) ");
-                str = "UPDATE    Item\r\nSET              Unit_Id = Unit_item.unit_id\r\nFROM         Item INNER JOIN\r\n                      Unit_item ON Item.id = Unit_item.Item_id";
+                opp.insert_me(" Alter Table Item  Add  Unit_Id bigint  Default(0) ");
+                str = "UPDATE    Item SET              Unit_Id = Unit_item.unit_id FROM         Item INNER JOIN                       Unit_item ON Item.id = Unit_item.Item_id";
                 opp.insert_me(str);
             }
             catch
@@ -3907,22 +3922,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             catch
             {
             }
-            try
-            {
-                str = "CREATE TABLE [dbo].[Textile_Item_Dept_Balance](\r\n\t[ID] [int] {IDENTITY} NOT NULL,\r\n\t[Item_Id] [int] NULL,\r\n\t[Dept_Id] [int] NULL,\r\n\t[Dept_Name] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL,\r\n\t[Qnty] [decimal](18, 2) NULL,\r\n\t[Weight] [decimal](18, 2) NULL\r\n) ";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
-            try
-            {
-                str = "CREATE TABLE [dbo].[Textile_Process_Transaction](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Item_Id] [bigint] NULL,\r\n\t[Import_Qnty] [decimal](18, 2) NULL,\r\n\t[Import_Weight] [decimal](18, 2) NULL,\r\n\t[Export_Qnty] [decimal](18, 2) NULL,\r\n\t[Export_Weight] [decimal](18, 2) NULL,\r\n\t[Qnty_Transaction] [decimal](18, 2) NULL,\r\n\t[Weight_Transaction] [decimal](18, 2) NULL,\r\n\t[Qnty_Balance] [decimal](18, 2) NULL,\r\n\t[Weight_Balance] [decimal](18, 2) NULL,\r\n\t[Processed_Flage] [int] NULL      DEFAULT ((0)),\r\n\t[From_Dept_Id] [int] NULL,\r\n\t[To_Dept_Id] [int] NULL,\r\n\t[Transaction_Date] [datetime] NULL,\r\n\t[Textile_Process_Transaction_Id] [bigint] NULL,\r\n\t[Processed_Flage_Date] [datetime] NULL,\r\n\t[Textile_Item_Dept_Balance_Id] [int] NULL,\r\n\t[Textile_Production_Rate_Id] [bigint] NULL\r\n)  ";
-                opp.insert_me(str);
-            }
-            catch
-            {
-            }
+
             try
             {
                 str = " Alter Table Textile_Production_Rate Add  Item_Actuall_Weight_Total  decimal(18, 3) ";
@@ -4014,7 +4014,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = "  \r\nAlter Table Store  Add IS_Sell_SecondUnit int  default(0)\r\n\r\n\r\n";
+                str = "   Alter Table Store  Add IS_Sell_SecondUnit int  default(0)   ";
                 opp.insert_me(str);
             }
             catch
@@ -4022,7 +4022,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = " Alter Table Store  Add Store_Code nvarchar(50)\r\n Alter Table Store  Add IS_Default_Store int  default(0)\r\nAlter Table Store  Add IS_Sell_SecondUnit int  default(0)\r\n\r\n\r\n";
+                str = " Alter Table Store  Add Store_Code nvarchar(50)  Alter Table Store  Add IS_Default_Store int  default(0) Alter Table Store  Add IS_Sell_SecondUnit int  default(0)   ";
                 opp.insert_me(str);
             }
             catch
@@ -4030,7 +4030,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = "Alter Table Bills_Details  Add Order_Purshing_Id_Automatic numeric(18, 0)  default(0) \r\nAlter Table Bills_Details_Reverse  Add Order_Purshing_Id_Automatic numeric(18, 0)  default(0) \r\nAlter Table Invoices_Details  Add Order_Purshing_Id_Automatic numeric(18, 0)  default(0) \r\nAlter Table Invoices_Details_Reverse  Add Order_Purshing_Id_Automatic numeric(18, 0)  default(0)  \r\n";
+                str = "Alter Table Bills_Details  Add Order_Purshing_Id_Automatic numeric(18, 0)  default(0)  Alter Table Bills_Details_Reverse  Add Order_Purshing_Id_Automatic numeric(18, 0)  default(0)  Alter Table Invoices_Details  Add Order_Purshing_Id_Automatic numeric(18, 0)  default(0)  Alter Table Invoices_Details_Reverse  Add Order_Purshing_Id_Automatic numeric(18, 0)  default(0)   ";
                 opp.insert_me(str);
             }
             catch
@@ -4038,7 +4038,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = "Alter Table Bills_Details  Add Store_Id int  default(0) \r\nAlter Table Bills_Details_Reverse  Add Store_Id int  default(0) \r\nAlter Table Invoices_Details  Add Store_Id int  default(0) \r\nAlter Table Invoices_Details_Reverse  Add Store_Id int  default(0)  \r\n";
+                str = "Alter Table Bills_Details  Add Store_Id int  default(0)  Alter Table Bills_Details_Reverse  Add Store_Id int  default(0)  Alter Table Invoices_Details  Add Store_Id int  default(0)  Alter Table Invoices_Details_Reverse  Add Store_Id int  default(0)   ";
                 opp.insert_me(str);
             }
             catch
@@ -4064,9 +4064,11 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                opp.insert_me("          CREATE TABLE [dbo].[Item_Main_Category](\r\n\t[ID] [bigint] {IDENTITY} NOT NULL,\r\n\t[Main_Category_Name] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL,\r\n\t[Category_Type_Id] [int] NULL,\r\n\t[Category_Type_Str] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL\r\n  \r\n) ");
+                opp.insert_me(@$" CREATE TABLE [dbo].[Item_Main_Category]( [ID] [bigint] {IDENTITY} NOT NULL, [Main_Category_Name] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL, [Category_Type_Id] [int] NULL, [Category_Type_Str] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL    ) ");
                 opp.insert_me("Insert into Item_Main_Category(Main_Category_Name,Category_Type_Id,Category_Type_Str) Values('وبرة',1,'مبيعات')");
                 str = "Insert into Item_Main_Category(Main_Category_Name,Category_Type_Id,Category_Type_Str) Values('كوفرتة',1,'مبيعات')";
+
+                str = ExecuteInsertWithIdentityCheck("Item_Main_Category", str);
                 opp.insert_me(str);
             }
             catch (Exception)
@@ -4179,7 +4181,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = "CREATE TABLE [dbo].[Cost_Center_Tree](\r\n\t[ID] [bigint] NULL,\r\n\t[Code] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL,\r\n\t[Name] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL,\r\n\t[Cost_Type] [int] NULL\r\n) ";
+                str = "CREATE TABLE [dbo].[Cost_Center_Tree]( [ID] [bigint] NULL, [Code] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL, [Name] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL, [Cost_Type] [int] NULL ) ";
                 opp.insert_me(str);
             }
             catch
@@ -4187,7 +4189,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = "CREATE TABLE [dbo].[Journal_Codes](\r\n\t[ID] [bigint] {IDENTITY} NOT NULL,\r\n\t[Journal_Name] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL,\r\n\t[Code] [bigint] NULL )  ";
+                str = "CREATE TABLE [dbo].[Journal_Codes]( [ID] [bigint] {IDENTITY} NOT NULL, [Journal_Name] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL, [Code] [bigint] NULL )  ";
                 opp.insert_me(str);
             }
             catch
@@ -4195,7 +4197,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = "CREATE TABLE [dbo].[Account_Entry_List](\r\n\t[ID] [bigint] {IDENTITY} NOT NULL,\r\n\t[Currency_ID] [bigint] NULL,\r\n\t[Entry_No] [bigint] NULL,\r\n\t[Entry_Date] [datetime] NULL,\r\n\t[journal_Code] [bigint] NULL,\r\n\t[Entry_Notes] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL,\r\n\t[User_ID_Login] [bigint] NULL,\r\n\t[Branch_ID_Login] [bigint] NULL,\r\n\t[Entry_Total] [decimal](18, 0) NULL,\r\n\t[Transform_Type] [int] NULL,\r\nYear_Financial_Period_Id int NULL,\r\n\t[Transfer_To_Gl_Flage] [int] NULL DEFAULT ((0)) )  ";
+                str = "CREATE TABLE [dbo].[Account_Entry_List]( [ID] [bigint] {IDENTITY} NOT NULL, [Currency_ID] [bigint] NULL, [Entry_No] [bigint] NULL, [Entry_Date] [datetime] NULL, [journal_Code] [bigint] NULL, [Entry_Notes] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL, [User_ID_Login] [bigint] NULL, [Branch_ID_Login] [bigint] NULL, [Entry_Total] [decimal](18, 0) NULL, [Transform_Type] [int] NULL, Year_Financial_Period_Id int NULL, [Transfer_To_Gl_Flage] [int] NULL DEFAULT ((0)) )  ";
                 opp.insert_me(str);
             }
             catch
@@ -4203,7 +4205,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = "CREATE TABLE [dbo].[Account_Entry_Details](\r\n\t[ID] [bigint] {IDENTITY} NOT NULL,\r\n\t[Account_Entry_List_ID] [bigint] NULL,\r\n\t[Submain_Account_ID] [bigint] NULL,\r\n\t[SubAccount_NO] [bigint] NULL,\r\n\t[Import_Value] [decimal](18, 0) NULL,\r\n\t[Export_Value] [decimal](18, 0) NULL,\r\n\t[Transaction_Value] [decimal](18, 0) NULL,\r\n\t[Notes_Details] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL,\r\n\t[Equivalent_Currency_Value] [decimal](18, 0) NULL,\r\n\t[Transaction_Type] [int] NULL,\r\n\t[Account_Code] [bigint] NULL,\r\n\t[Account_Customer_Type_Value] [int] NULL,\r\n\t[Account_Customer_Type_ID] [int] NULL,  [Transaction_DateFrom] [datetime] NULL,\r\n\t[Transaction_DateTo] [datetime] NULL,\r\n\t[Equivalent_Import_Value] [decimal](18, 0) NULL DEFAULT ((0)),\r\n\t[Equivalent_Export_Value] [decimal](18, 0) NULL DEFAULT ((0)),\r\n\t[Equivalent_Transaction_Value] [decimal](18, 0) NULL DEFAULT ((0)),\r\n\t[Currency_ID_Primary] [int] NULL DEFAULT ((0)),\r\n\t[Currency_ID_Secondary] [int] NULL DEFAULT ((0)),\r\n\t[CostCenter_Id] [int] NULL DEFAULT ((0)),\r\n\t[CostCenter_Name] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL \r\n    \r\n )  ";
+                str = @$" CREATE TABLE [dbo].[Account_Entry_Details]( [ID] [bigint] {IDENTITY} NOT NULL, [Account_Entry_List_ID] [bigint] NULL, [Submain_Account_ID] [bigint] NULL, [SubAccount_NO] [bigint] NULL, [Import_Value] [decimal](18, 0) NULL, [Export_Value] [decimal](18, 0) NULL, [Transaction_Value] [decimal](18, 0) NULL, [Notes_Details] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL, [Equivalent_Currency_Value] [decimal](18, 0) NULL, [Transaction_Type] [int] NULL, [Account_Code] [bigint] NULL, [Account_Customer_Type_Value] [int] NULL, [Account_Customer_Type_ID] [int] NULL,  [Transaction_DateFrom] [datetime] NULL, [Transaction_DateTo] [datetime] NULL, [Equivalent_Import_Value] [decimal](18, 0) NULL DEFAULT ((0)), [Equivalent_Export_Value] [decimal](18, 0) NULL DEFAULT ((0)), [Equivalent_Transaction_Value] [decimal](18, 0) NULL DEFAULT ((0)), [Currency_ID_Primary] [bigint] NULL DEFAULT ((0)), [Currency_ID_Secondary] [bigint] NULL DEFAULT ((0)), [CostCenter_Id] [int] NULL DEFAULT ((0)), [CostCenter_Name] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL        )  ";
                 opp.insert_me(str);
             }
             catch
@@ -4211,7 +4213,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             //try
             //{
-            //    str = "CREATE TABLE [dbo].[Account_Type](\r\n\t[ID] [bigint] {IDENTITY} NOT NULL,\r\n\t[Name] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL,\r\n\t[Value] [int] NULL,[Active] [int] NULL\r\n) ON [PRIMARY]";
+            //    str = "CREATE TABLE [dbo].[Account_Type]( [ID] [bigint] {IDENTITY} NOT NULL, [Name] [nvarchar](50) COLLATE Arabic_CI_AI_KS_WS NULL, [Value] [int] NULL,[Active] [int] NULL ) ON [PRIMARY]";
             //    opp.insert_me(str);
             //}
             //catch
@@ -4219,7 +4221,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             //}
             try
             {
-                str = "CREATE TABLE [dbo].[Unit_Item_Balance_Date_Details](\r\n\t[ID] [bigint] {IDENTITY} NOT NULL,\r\n\t[Unit_Item_Balance_Date_List_Id] [bigint] NULL,\r\n\t[Balance_Date] [datetime] NULL,\r\n\t[Item_Id] [bigint] NULL,\r\n\t[Unit_Item_Id] [bigint] NULL,\r\n\t[Large_Balance] [decimal](18, 2) NULL,\r\n\t[Small_Balance] [decimal](18, 2) NULL,\r\n\t[Item_No] [decimal](18, 2) NULL\r\n)";
+                str = @$" CREATE TABLE [dbo].[Unit_Item_Balance_Date_Details]( [ID] [bigint] {IDENTITY} NOT NULL, [Unit_Item_Balance_Date_List_Id] [bigint] NULL, [Balance_Date] [datetime] NULL, [Item_Id] [bigint] NULL, [Unit_Item_Id] [bigint] NULL, [Large_Balance] [decimal](18, 2) NULL, [Small_Balance] [decimal](18, 2) NULL, [Item_No] [decimal](18, 2) NULL )";
                 opp.insert_me(str);
             }
             catch
@@ -4227,16 +4229,16 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                opp.insert_me("alter table Invoices_List add User_Id int default(0) ");
-                opp.insert_me("alter table Invoices_List add Branch_Id int default(0) ");
-                opp.insert_me("alter table Invoices_List_Reverse add User_Id int default(0) ");
-                opp.insert_me("alter table Invoices_List_Reverse add Branch_Id int default(0) ");
-                opp.insert_me("alter table Bills_List add User_Id int default(0) ");
-                opp.insert_me("alter table Bills_List add Branch_Id int default(0) ");
-                opp.insert_me("alter table Bills_List_Reverse add User_Id int default(0) ");
-                opp.insert_me("alter table Bills_List_Reverse add Branch_Id int default(0) ");
-                opp.insert_me("alter table Order_Money add User_Id int default(0) ");
-                str = "alter table Order_Money add Branch_Id int default(0) ";
+                opp.insert_me("alter table Invoices_List add User_Id bigint default(0) ");
+                opp.insert_me("alter table Invoices_List add Branch_Id bigint default(0) ");
+                opp.insert_me("alter table Invoices_List_Reverse add User_Id bigint default(0) ");
+                opp.insert_me("alter table Invoices_List_Reverse add Branch_Id bigint default(0) ");
+                opp.insert_me("alter table Bills_List add User_Id bigint default(0) ");
+                opp.insert_me("alter table Bills_List add Branch_Id bigint default(0) ");
+                opp.insert_me("alter table Bills_List_Reverse add User_Id bigint default(0) ");
+                opp.insert_me("alter table Bills_List_Reverse add Branch_Id bigint default(0) ");
+                opp.insert_me("alter table Order_Money add User_Id bigint default(0) ");
+                str = "alter table Order_Money add Branch_Id bigint default(0) ";
                 opp.insert_me(str);
             }
             catch
@@ -4284,7 +4286,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = "CREATE TABLE [dbo].[Detailes_Purshing_Import_Export](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\nDetailes_Purshing_Id [bigint] NOT NULL,\r\n\t[OrderTable_id] [bigint] NOT NULL,\r\n\t[Unit_item_Table_Id] [bigint] NULL,\r\n\t[qua] [bigint] NOT NULL,\r\n\t[Part_qua] [int] NOT NULL,\r\n\t[Item_No] [float] NULL,\r\n\t[Balance_Larg_Qnty] [float] NULL,\r\n\t[Balance_Small_Qnty] [float] NULL,\r\n\t[Balance_Item_No] [float] NULL,\r\n\t[Notes_From_To] [nvarchar](50) NULL,\r\n\t[Notes] [nvarchar](500) NULL,\r\n\t[Machine_Id] [int] NULL DEFAULT ((0)),\r\n\t[Transaction_Type] [int] NULL\r\n)";
+                str = @$"CREATE TABLE [dbo].[Detailes_Purshing_Import_Export]( [Id] [bigint] {IDENTITY} NOT NULL, Detailes_Purshing_Id [bigint] NOT NULL, [OrderTable_id] [bigint] NOT NULL, [Unit_item_Table_Id] [bigint] NULL, [qua] [bigint] NOT NULL, [Part_qua] [int] NOT NULL, [Item_No] [float] NULL, [Balance_Larg_Qnty] [float] NULL, [Balance_Small_Qnty] [float] NULL, [Balance_Item_No] [float] NULL, [Notes_From_To] [nvarchar](50) NULL, [Notes] [nvarchar](500) NULL, [Machine_Id] [int] NULL DEFAULT ((0)), [Transaction_Type] [int] NULL )";
                 opp.insert_me(str);
             }
             catch
@@ -4359,7 +4361,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                str = "CREATE TABLE [dbo].[Item_Images](\r\n\t                    [ID] [int] {IDENTITY} NOT NULL,\r\n\t                    [Item_Id] [int] NULL,\r\n\t                    [Picture] [image] NULL,\r\n\t                    [Description] [nvarchar](100) NULL\r\n                    ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]";
+                str = @$"CREATE TABLE [dbo].[Item_Images]( [ID] [int] {IDENTITY} NOT NULL,                     [Item_Id] [int] NULL,                     [Picture] [image] NULL,                     [Description] [nvarchar](100) NULL                     ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]";
                 opp.insert_me(str);
             }
             catch
@@ -4381,7 +4383,7 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
                 opp.insert_me("Alter Table Submain_Account add Account_Nature_Type int default(1)");
                 opp.insert_me("Alter Table Submain_Account add Accept_Cost_Center_Flage  int default(0)");
                 opp.insert_me("Alter Table Submain_Account add Cost_Center_Tree_ID int default(0)");
-                str = "CREATE TABLE [dbo].[Cost_Center_Tree](\r\n\t[ID] [bigint] NULL,\r\n\t[Code] [nvarchar](50) NULL,\r\n\t[Name] [nvarchar](50) NULL,\r\n\t[Cost_Type] [int] NULL\r\n) ON [PRIMARY]";
+                str = @$"CREATE TABLE [dbo].[Cost_Center_Tree]( [ID] [bigint] {IDENTITY} NOT NULL, [Code] [nvarchar](50) NULL, [Name] [nvarchar](50) NULL, [Cost_Type] [int] NULL ) ON [PRIMARY]";
                 opp.insert_me(str);
             }
             catch
@@ -4405,8 +4407,8 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                //opp.insert_me("CREATE TABLE [dbo].[OrderTypes](\r\n\t[ID] [bigint] {IDENTITY} NOT NULL,\r\n\t[Order_Name] [nvarchar](100) NULL,\r\n\t[OrderTypes_Value] [int] NULL,\r\n\t[BtnRecive_Text] [nvarchar](50) NULL,\r\n\t[Order_Estlam_Sarf] [int] NULL\r\n) ON [PRIMARY]");
-                str = "UPDATE Order_Purshing\r\nSET                Order_Type = - 1\r\nWHERE        (type_From = - 1) AND (Id_From = - 1) AND (Type_To = - 1) AND (Id_To = - 1)";
+                //opp.insert_me("CREATE TABLE [dbo].[OrderTypes]( [ID] [bigint] {IDENTITY} NOT NULL, [Order_Name] [nvarchar](100) NULL, [OrderTypes_Value] [int] NULL, [BtnRecive_Text] [nvarchar](50) NULL, [Order_Estlam_Sarf] [int] NULL ) ON [PRIMARY]");
+                str = "UPDATE Order_Purshing SET                Order_Type = - 1 WHERE        (type_From = - 1) AND (Id_From = - 1) AND (Type_To = - 1) AND (Id_To = - 1)";
                 opp.insert_me(str);
             }
             catch
@@ -4414,8 +4416,8 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
             }
             try
             {
-                //opp.insert_me("CREATE TABLE [dbo].[OrderTypes_Label](\r\n\t[TypesID] [int] NULL,\r\n\t[LabelFrom] [nvarchar](50) NULL,\r\n\t[LabelTo] [nvarchar](50) NULL,\r\n\t[Label_Name] [nvarchar](50) NULL\r\n) ON [PRIMARY]");
-                opp.insert_me("UPDATE Order_Purshing\r\nSET                Order_Type = - 1\r\nWHERE        (type_From = - 1) AND (Id_From = - 1) AND (Type_To = - 1) AND (Id_To = - 1)");
+                //opp.insert_me("CREATE TABLE [dbo].[OrderTypes_Label]( [TypesID] [int] NULL, [LabelFrom] [nvarchar](50) NULL, [LabelTo] [nvarchar](50) NULL, [Label_Name] [nvarchar](50) NULL ) ON [PRIMARY]");
+                opp.insert_me("UPDATE Order_Purshing SET                Order_Type = - 1 WHERE        (type_From = - 1) AND (Id_From = - 1) AND (Type_To = - 1) AND (Id_To = - 1)");
             }
             catch
             {
@@ -4449,12 +4451,12 @@ CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
 
             try
             {
-                str = @" UPDATE       Bills_Details
+                str = @$" UPDATE       Bills_Details
 SET                Item_ProcessedFlage = 100, Item_DeletedFlage = 100 ";
 
-                str = str + " UPDATE       Invoices_Details\r\nSET                Item_ProcessedFlage = 100, Item_DeletedFlage = 100  ";
-                str = str + "  UPDATE        Bills_Details_Reverse\r\nSET                Item_ProcessedFlage = 100, Item_DeletedFlage = 100  ";
-                str = str + "  UPDATE           Invoices_Details_Reverse\r\nSET                Item_ProcessedFlage = 100, Item_DeletedFlage = 100  ";
+                str = str + " UPDATE       Invoices_Details SET                Item_ProcessedFlage = 100, Item_DeletedFlage = 100  ";
+                str = str + "  UPDATE        Bills_Details_Reverse SET                Item_ProcessedFlage = 100, Item_DeletedFlage = 100  ";
+                str = str + "  UPDATE           Invoices_Details_Reverse SET                Item_ProcessedFlage = 100, Item_DeletedFlage = 100  ";
                 str = str + "  ";
                 opp.insert_me(str);
             }
@@ -4470,7 +4472,7 @@ SET                Item_ProcessedFlage = 100, Item_DeletedFlage = 100 ";
 
             try
             {
-                str = @" ";
+                str = @$" ";
                 opp.insert_me(str);
             }
             catch
@@ -4481,7 +4483,7 @@ SET                Item_ProcessedFlage = 100, Item_DeletedFlage = 100 ";
 
             try
             {
-                str = @" UPDATE Unit_item
+                str = @$" UPDATE Unit_item
 SET TaxSales10_Value = 0
 WHERE(TaxSales10_Value IS NULL) ";
                 opp.insert_me(str);
@@ -4491,7 +4493,7 @@ WHERE(TaxSales10_Value IS NULL) ";
             }
             try
             {
-                str = @" UPDATE       LookUp_CheckStatus
+                str = @$" UPDATE       LookUp_CheckStatus
 SET                IsProcessUsedToChange=1 
 WHERE       ID=8  ";
                 opp.insert_me(str);
@@ -4501,7 +4503,7 @@ WHERE       ID=8  ";
             }
             try
             {
-                str = @" UPDATE       Checks_Memory
+                str = @$" UPDATE       Checks_Memory
 SET                Receipt=1 
 WHERE       Receipt=0  ";
                 opp.insert_me(str);
@@ -4512,7 +4514,7 @@ WHERE       Receipt=0  ";
 
             try
             {
-                str = @"  CREATE TABLE [dbo].[ShipmentCompany](
+                str = @$"  CREATE TABLE [dbo].[ShipmentCompany](
 	[Id] [bigint] {IDENTITY}  primary key,
 	[Name] [nvarchar](500) NULL
 	)";
@@ -4561,6 +4563,47 @@ FROM INFORMATION_SCHEMA.COLUMNS Where DATA_TYPE='" + DATA_TYPE + "'";
                 }
             }
         }
+        public static void ChangeTypeToLongUserId(ref operations opp)
+        {
+            string mysql = @$" SELECT 
+    TABLE_CATALOG,
+    TABLE_SCHEMA,
+    TABLE_NAME, 
+    COLUMN_NAME, 
+    DATA_TYPE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE DATA_TYPE ='int' and  COLUMN_NAME IN (
+    'Currency_Id',
+    'User_Id',
+    'Branch_Id',
+    'Edit_User_Id',
+    'Entry_Currency_ID',
+    'Year_Financial_Period_Id',
+    'User_ID_Login',
+    'Branch_ID_Login',
+    'User_ID_LoginUpdate',
+    'Machine_Id',
+    'Account_Currency_ID',
+    'SalesMan_Id'
+) ";
+              
+            DataTable dt = opp.return_DataTable(mysql);
+
+            for (int i = 0; i < dt.Rows.Count; i++)
+            {
+                string TABLE_NAME = dt.Rows[i]["TABLE_NAME"].ToString();
+                string COLUMN_NAME = dt.Rows[i]["COLUMN_NAME"].ToString();
+                string DATA_TYPE = dt.Rows[i]["DATA_TYPE"].ToString();
+
+                if (DATA_TYPE == "int")
+                {
+                    AlterColumn(ref opp, TABLE_NAME, COLUMN_NAME, "bigint");
+                }
+
+            }
+
+
+        }
 
         static void SetKeys(ref operations opp)
         {
@@ -4568,10 +4611,10 @@ FROM INFORMATION_SCHEMA.COLUMNS Where DATA_TYPE='" + DATA_TYPE + "'";
 
             try
             {
-                str = @"  ";
+                str = @$"  ";
                 opp.insert_me(str);
 
-                //str = @"  ";
+                //str = @$"  ";
                 //opp.insert_me(str);
             }
             catch
@@ -4579,7 +4622,7 @@ FROM INFORMATION_SCHEMA.COLUMNS Where DATA_TYPE='" + DATA_TYPE + "'";
             }
             try
             {
-                str = @"  
+                str = @$"  
 ALTER TABLE [dbo].[SysConfig] 
 ALTER COLUMN [Id] [bigint] NOT NULL;
 
@@ -4587,14 +4630,14 @@ ALTER COLUMN [Id] [bigint] NOT NULL;
 ADD CONSTRAINT [PK_SysConfig_Id] PRIMARY KEY CLUSTERED ([Id] ASC); ";
                 opp.insert_me(str);
 
-                
+
             }
             catch
             {
             }
             try
             {
-                str = @"  
+                str = @$"  
 ALTER TABLE [dbo].[SysConfigMenus] 
 ALTER COLUMN [Id] [bigint] NOT NULL;
 
@@ -4608,78 +4651,177 @@ ADD CONSTRAINT [PK_SysConfigMenus_Id] PRIMARY KEY CLUSTERED ([Id] ASC); ";
             {
             }
         }
+        public static  string ExecuteInsertWithIdentityCheck(string tableName, string insertCommand)
+        {
+            string sql = Common.Use_Auto_Identity_Column == 1
+                ? $"SET IDENTITY_INSERT {tableName} ON; {insertCommand} SET IDENTITY_INSERT {tableName} OFF;"
+                : insertCommand;
+            return sql;
+           // opp.insert_me(sql);
+        }
         static void CreateTable(ref operations opp)
         {
             string str = "";
 
             try
             {
-                str = @"  ";
+                str = @$"  ";
                 opp.insert_me(str);
 
-                //str = @"  ";
+                //str = @$"  ";
                 //opp.insert_me(str);
             }
             catch
             {
             }
+
             try
             {
-                str = @" drop TABLE [dbo].[Currency]
+                try
+                {
+                    str = "   ";
+                    opp.insert_me(str);
+                }
+                catch (Exception)
+                {
+                }
+
+                // الجدول Customers_Accounts_Mokhtalat IDENTITY(1,1)
+                str = @$"  drop table   Customers_Accounts_Mokhtalat
+
+CREATE TABLE [dbo].[Customers_Accounts_Mokhtalat](
+	[Id] [bigint] IDENTITY(1,1) NOT  NULL,
+	[Customers_AccountsId] [bigint] NULL,
+	[ProcessNo] [bigint] NULL,
+	[Customer_Id] [bigint] NULL,
+	[Import] [decimal](18, 2) NULL,
+	[Export] [decimal](18, 2) NULL,
+	[Balance] [decimal](18, 2) NULL,
+	[Balance_Actual] [decimal](18, 2) NULL,
+	[Transaction_Type] [int] NULL,
+	[Transaction_Date] [datetime] NULL,
+	[Reference_Id] [bigint] NULL,
+	[Reference_Type] [int] NULL,
+	[Reference_Type_Table_Id] [bigint] NULL,
+	[Reference_Type_TableDetails_Id] [bigint] NULL,
+	[Payment_Type] [int] NULL,
+	[Notes] [nvarchar](4000) NULL,
+	[Day_Registration_flage] [int] NOT NULL,
+	[DayReg_List_Id] [bigint] NULL,
+	[Flage_View] [int] NULL,
+	[BalanceImport] [nvarchar](100) NULL,
+	[BalanceExport] [nvarchar](100) NULL,
+	[Reference_Type_View] [nvarchar](100) NULL,
+	[Item_Name] [nvarchar](100) NULL,
+	[Item_Id] [bigint] NULL,
+	[Larg_Qnty] [nvarchar](100) NULL,
+	[Small_Qnty] [nvarchar](100) NULL,
+	[Item_No] [nvarchar](100) NULL,
+	[Item_Size] [nvarchar](100) NULL,
+	[Qnty_Size] [nvarchar](100) NULL,
+	[Qnty_value] [nvarchar](100) NULL,
+	[Height_Width_Item] [nvarchar](100) NULL,
+	[Larg_Unit_Price] [decimal](18, 2) NULL,
+	[Insert_ServerDateTime] [datetime] NULL,
+	[BalanceDiff] [decimal](18, 2) NULL,
+	[WorkOrderNumber] [bigint] NULL,
+	[CustomerName] [nvarchar](500) NULL,
+	[CarsWorkOrdersId] [bigint] NULL,
+	[TaxInternalId] [nvarchar](500) NULL,
+	[CarsId] [bigint] NULL,
+	[CarNumber] [nvarchar](500) NULL,
+	[Customer_Id_RelatedToAccount] [bigint] NULL
+)  
+ ";
+
+                opp.insert_me(str);
+            }
+            catch (Exception)
+            {
+            }
+
+            try
+            {
+                str = @$" drop TABLE [dbo].[Currency]
 CREATE TABLE [dbo].[Currency](
-	[ID] [bigint] NOT NULL,
+	[ID] [bigint] {IDENTITY} NOT NULL,
 	[Currency_Name] [nvarchar](50) NULL,
 	[Currency_Name_EN] [nvarchar](50) NULL,
 	[Value] [int] NOT NULL,
 	[Active] [int] NOT NULL,
 	[IS_GL_Currency_Flage] [int] NULL,
 	[OperationDate] [datetime] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL,
+	[Edit_User_Id] [bigint] NULL,
 	[ProcessNo] [bigint] NULL,
 	[code] [nvarchar](500) NULL,
 	[rate] [decimal](18, 2) NULL,
 	[Desc_en] [nvarchar](500) NULL,
-	[Desc_ar] [nvarchar](500) NULL 
-	) ";
+	[Desc_ar] [nvarchar](500) NULL,
+	[Tax_BranchesId] [bigint] NULL
+) ";
                 opp.insert_me(str);
 
-                str = @" -- إدراج بيانات العملات الافتراضية اعتماداً على enum Currencies
+                str = @$" 
 INSERT INTO [dbo].[Currency] 
 (
     [ID], [Currency_Name], [Currency_Name_EN], [Value], [Active], 
     [IS_GL_Currency_Flage], [OperationDate], [User_Id], [Branch_Id], 
     [Insert_ServerDateTime], [Update_ServerDateTime], [ProcessNo], 
-    [code], [rate], [Desc_en], [Desc_ar]
+    [code], [rate], [Desc_en], [Desc_ar], [Tax_BranchesId]
 )
 VALUES
--- 1. Egypt = 1 (العملة المحلية الافتراضية)
-(1, N'جنيه مصري', N'Egyptian Pound', 1, 1, 1, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'EGP', 1.00, N'Egyptian Pound', N'الجنيه المصري'),
+-- 1. العملة المحلية (الجنيه المصري)
+(1, N'جنيه مصري', N'Egyptian Pound', 1, 1, 1, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'EGP', 1.00, N'Egyptian Pound', N'الجنيه المصري', 0),
 
--- 2. USA = 2
-(2, N'دولار أمريكي', N'US Dollar', 2, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'USD', 48.50, N'US Dollar', N'الدولار الأمريكي'),
+-- 2. الدولار الأمريكي
+(2, N'دولار أمريكي', N'US Dollar', 2, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'USD', 48.50, N'US Dollar', N'الدولار الأمريكي', 0),
 
--- 3. EURP = 3
-(3, N'يورو', N'Euro', 3, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'EUR', 52.30, N'Euro', N'اليورو الأوروبي'),
+-- 3. اليورو الأوروبي
+(3, N'يورو', N'Euro', 3, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'EUR', 52.30, N'Euro', N'اليورو الأوروبي', 0),
 
--- 4. SaudiArabia = 4
-(4, N'ريال سعودي', N'Saudi Riyal', 4, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'SAR', 12.90, N'Saudi Riyal', N'الريال السعودي'),
+-- 4. الريال السعودي
+(4, N'ريال سعودي', N'Saudi Riyal', 4, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'SAR', 12.90, N'Saudi Riyal', N'الريال السعودي', 0),
 
--- 5. UAE = 5
-(5, N'درهم إماراتي', N'UAE Dirham', 5, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'AED', 13.20, N'UAE Dirham', N'الدرهم الإماراتي'),
+-- 5. الدرهم الإماراتي
+(5, N'درهم إماراتي', N'UAE Dirham', 5, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'AED', 13.20, N'UAE Dirham', N'الدرهم الإماراتي', 0),
 
--- 6. Syria = 6
-(6, N'ليرة سورية', N'Syrian Pound', 6, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'SYP', 0.0037, N'Syrian Pound', N'الليرة السورية'),
+-- 6. الدينار الكويتي
+(6, N'دينار كويتي', N'Kuwaiti Dinar', 6, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'KWD', 158.00, N'Kuwaiti Dinar', N'الدينار الكويتي', 0),
 
--- 7. Tunisia = 7
-(7, N'دينار تونسي', N'Tunisian Dinar', 7, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'TND', 15.60, N'Tunisian Dinar', N'الدينار التونسي'),
+-- 7. الريال القطري
+(7, N'ريال قطري', N'Qatari Riyal', 7, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'QAR', 13.30, N'Qatari Riyal', N'الريال القطري', 0),
 
--- 8. Gold = 8
---(8, N'جرام ذهب', N'Gold Gram', 8, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'XAU', 3500.00, N'Gold Gram', N'جرام الذهب عيار 24'); ";
+-- 8. الجنيه الإسترليني
+(8, N'جنيه إسترليني', N'British Pound', 8, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'GBP', 63.80, N'British Pound', N'الجنيه الإسترليني', 0),
+
+-- 9. الدينار الأردني
+(9, N'دينار أردني', N'Jordanian Dinar', 9, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'JOD', 68.40, N'Jordanian Dinar', N'الدينار الأردني', 0),
+
+-- 10. الدينار البحريني
+(10, N'دينار بحريني', N'Bahraini Dinar', 10, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'BHD', 128.70, N'Bahraini Dinar', N'الدينار البحريني', 0),
+
+-- 11. الريال العماني
+(11, N'ريال عماني', N'Omani Rial', 11, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'OMR', 126.00, N'Omani Rial', N'الريال العماني', 0),
+
+-- 12. الدينار الليبي
+(12, N'دينار ليبي', N'Libyan Dinar', 12, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'LYD', 10.10, N'Libyan Dinar', N'الدينار الليبي', 0),
+
+-- 13. الدينار التونسي
+(13, N'دينار تونسي', N'Tunisian Dinar', 13, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'TND', 15.60, N'Tunisian Dinar', N'الدينار التونسي', 0),
+
+-- 14. الدرهم المغربي
+(14, N'درهم مغربي', N'Moroccan Dirham', 14, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'MAD', 4.90, N'Moroccan Dirham', N'الدرهم المغربي', 0),
+
+-- 15. جرام الذهب (عيار 24)
+(15, N'جرام ذهب', N'Gold Gram', 15, 1, 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), 0, N'XAU', 3500.00, N'Gold Gram 24K', N'جرام الذهب عيار 24', 0);
+  ";
+
+                str = ExecuteInsertWithIdentityCheck("Currency", str);
                 opp.insert_me(str);
             }
             catch
@@ -4687,7 +4829,64 @@ VALUES
             }
             try
             {
-                str = " CREATE TABLE [USER_DETAILES_Branches_Permission](\r\n\t[ID] [int] {IDENTITY} NOT NULL,\r\n\t[USER_DETAILES_Id] [int] NULL,\r\n\t[Branch_Id] [int] NULL\r\n)";
+                str = @$" drop TABLE [dbo].[Currency_Factor]
+CREATE TABLE [dbo].[Currency_Factor](
+	[ID] [bigint] {IDENTITY} NOT NULL,
+	[Currency_Primary_Name] [nvarchar](50) NULL,
+	[Currency_Primary_ISOne] [int] NULL,
+	[Currency_ID_Primary] [bigint] NULL,
+	[Factor] [decimal](18, 3) NULL,
+	[Currency_ID_Secondary] [bigint] NULL,
+	[Currency_Secondary_Name] [nvarchar](50) NULL,
+	[IS_TheSameCurrencies] [int] NULL,
+	[OperationDate] [datetime] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
+	[Insert_ServerDateTime] [datetime] NULL,
+	[Update_ServerDateTime] [datetime] NULL,
+	[EditOperationDate] [datetime] NULL,
+	[Edit_User_Id] [bigint] NULL,
+	[ProcessNo] [bigint] NULL 
+ 
+) ";
+                opp.insert_me(str);
+
+
+                str = @$"  
+ 
+
+INSERT INTO [dbo].[Currency_Factor] 
+(
+    [ID], [Currency_Primary_Name], [Currency_Primary_ISOne], [Currency_ID_Primary], 
+    [Factor], [Currency_ID_Secondary], [Currency_Secondary_Name], [IS_TheSameCurrencies], 
+    [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], 
+    [EditOperationDate], [Edit_User_Id], [ProcessNo]
+)
+VALUES
+-- =================== 1. الجنيه المصري (ID = 1) ===================
+-- جنيه إلى جنيه
+(1, N'جنيه مصري', 1, 1, 1.0000, 1, N'جنيه مصري', 1, GETDATE(), 0, 1, GETDATE(), GETDATE(), NULL, 0, 0),
+
+-- =================== 2. الدولار الأمريكي (ID = 2) ===================
+-- دولار إلى جنيه
+(2, N'دولار أمريكي', 1, 2, 48.5000, 1, N'جنيه مصري', 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), NULL, 0, 0),
+-- دولار إلى دولار
+(3, N'دولار أمريكي', 1, 2, 1.0000, 2, N'دولار أمريكي', 1, GETDATE(), 0, 1, GETDATE(), GETDATE(), NULL, 0, 0),
+
+-- =================== 3. اليورو الأوروبي (ID = 3) ===================
+-- يورو إلى جنيه
+(4, N'يورو', 1, 3, 52.3000, 1, N'جنيه مصري', 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), NULL, 0, 0),
+-- يورو إلى يورو
+(5, N'يورو', 1, 3, 1.0000, 3, N'يورو', 1, GETDATE(), 0, 1, GETDATE(), GETDATE(), NULL, 0, 0),
+
+-- =================== 4. الريال السعودي (ID = 4) ===================
+-- ريال إلى جنيه
+(6, N'ريال سعودي', 1, 4, 12.9000, 1, N'جنيه مصري', 0, GETDATE(), 0, 1, GETDATE(), GETDATE(), NULL, 0, 0),
+-- ريال إلى ريال
+(7, N'ريال سعودي', 1, 4, 1.0000, 4, N'ريال سعودي', 1, GETDATE(), 0, 1, GETDATE(), GETDATE(), NULL, 0, 0);
+ 
+                      ";
+                str = ExecuteInsertWithIdentityCheck("Currency_Factor", str);
                 opp.insert_me(str);
             }
             catch
@@ -4695,7 +4894,7 @@ VALUES
             }
             try
             {
-                str = "  CREATE TABLE  [Account_Type_Main_Account_Id](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Account_Type_Value] [int] NULL,Account_Type_Name [nvarchar(100)],\r\n\t[Account_Branch_Id] [int] NULL,\r\n\t[Main_Account_Id] [bigint] NULL )";
+                str = @$" CREATE TABLE [USER_DETAILES_Branches_Permission]( [ID] [int] {IDENTITY} NOT NULL, [USER_DETAILES_Id] [int] NULL, [Branch_Id] [bigint] NULL )";
                 opp.insert_me(str);
             }
             catch
@@ -4703,7 +4902,15 @@ VALUES
             }
             try
             {
-                str = @" CREATE TABLE [dbo].[Tax_Branches](
+                str = @$"  CREATE TABLE  [Account_Type_Main_Account_Id]( [Id] [bigint] {IDENTITY} NOT NULL, [Account_Type_Value] [int] NULL,Account_Type_Name [nvarchar(100)], [Account_Branch_Id] [bigint] NULL, [Main_Account_Id] [bigint] NULL )";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+            try
+            {
+                str = @$" CREATE TABLE [dbo].[Tax_Branches](
 	[Id] [bigint] {IDENTITY} NOT NULL,
 	[Account_BranchesId] [bigint] NULL,
 	[Code] [nvarchar](500) NULL,
@@ -4745,7 +4952,7 @@ VALUES
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY] ";
                 opp.insert_me(str);
 
-                //str = @"  ";
+                //str = @$"  ";
                 //opp.insert_me(str);
             }
             catch
@@ -4753,7 +4960,7 @@ VALUES
             }
             try
             {
-                str = @"
+                str = @$"
             IF OBJECT_ID(N'dbo.DataDictionaryDbSyncLogs', 'U') IS NULL
             BEGIN
                 CREATE TABLE dbo.DataDictionaryDbSyncLogs (
@@ -4762,14 +4969,17 @@ VALUES
                     RecordId BIGINT NOT NULL,
                     ActionType VARCHAR(10) NOT NULL,
                     ActionType2 VARCHAR(10)   NULL,
-                    Status VARCHAR(10) NOT NULL CONSTRAINT DF_DataDictionaryDbSyncLogs_Status DEFAULT 'Pending',
-                    CreatedAt DATETIME NOT NULL CONSTRAINT DF_DataDictionaryDbSyncLogs_CreatedAt DEFAULT GETDATE(),
+                    Status VARCHAR(10) NOT NULL  DEFAULT 'Pending',
+                    CreatedAt DATETIME NOT NULL  DEFAULT GETDATE(),
                     ProcessedAt DATETIME NULL,
-                    RetryCount INT NOT NULL CONSTRAINT DF_DataDictionaryDbSyncLogs_RetryCount DEFAULT 0,
+                    RetryCount INT NOT NULL  DEFAULT 0,
                     LastError NVARCHAR(MAX) NULL,
                     payload  NVARCHAR(MAX) NULL,
                     mysqlCmd NVARCHAR(MAX) NULL,
-                    Branch_Id BIGINT NOT NULL Default(0)
+                    Branch_Id BIGINT NOT NULL Default(0),
+                    User_Id  BIGINT NOT NULL Default(0),
+                     RecordIdStr NVARCHAR(MAX) NULL,
+                    IsStatus  INT NOT NULL 
                 );
 
                 CREATE NONCLUSTERED INDEX IX_DataDictionaryDbSyncLogs_Status_Id 
@@ -4778,7 +4988,7 @@ VALUES
             END";
                 opp.insert_me(str);
 
-                //str = @"  ";
+                //str = @$"  ";
                 //opp.insert_me(str);
             }
             catch
@@ -4786,16 +4996,16 @@ VALUES
             }
             try
             {
-                str = @"   
+                str = @$"   
 
  
 CREATE TABLE [dbo].[Lookup_CarEntryTaskeen](
-	[Id] [bigint] {IDENTITY} NOT NULL  primary key,
+	[Id] [bigint]  {IDENTITY}  NOT NULL  primary key,
 	[Name] [nvarchar](500) NULL ) 
 	 
 
 CREATE TABLE [dbo].[Lookup_CarShape](
-	[Id] [bigint] NOT NULL  primary key,
+	[Id] [bigint] {IDENTITY} NOT NULL  primary key,
 	[Name] [nvarchar](50) NULL )  
 
  
@@ -4828,7 +5038,7 @@ CREATE TABLE [dbo].[Lookup_CashPaymentMethod](
 	) ";
                 opp.insert_me(str);
 
-                //str = @"  ";
+                //str = @$"  ";
                 //opp.insert_me(str);
             }
             catch
@@ -4836,9 +5046,9 @@ CREATE TABLE [dbo].[Lookup_CashPaymentMethod](
             }
             try
             {
-                str = @"  CREATE TABLE [dbo].[SysPrinterSettings] (
+                str = @$"  CREATE TABLE [dbo].[SysPrinterSettings] (
     
-    [Id] INT NOT NULL, 
+    [Id] INT {IDENTITY} NOT NULL, 
     
     [InvoicePrinterName] NVARCHAR(250) NOT NULL DEFAULT 'POS 80',
     [KitchenPrinterName] NVARCHAR(250) NOT NULL DEFAULT 'POS 80',
@@ -4857,8 +5067,8 @@ CREATE TABLE [dbo].[Lookup_CashPaymentMethod](
     [FontHeader] NVARCHAR(MAX) NULL DEFAULT ' ' 
 ) ";
                 opp.insert_me(str);
-
-                //str = @"  ";
+               
+                //str = @$"  ";
                 //opp.insert_me(str);
             }
             catch
@@ -4866,7 +5076,7 @@ CREATE TABLE [dbo].[Lookup_CashPaymentMethod](
             }
             try
             {
-                str = @"  
+                str = @$"  
 CREATE TABLE [dbo].[CarsWorkOrders](
 	[Id] [bigint] {IDENTITY} NOT NULL,
 	[StoreId] [bigint] NULL,
@@ -4893,8 +5103,8 @@ CREATE TABLE [dbo].[CarsWorkOrders](
 	[IsWorkOrderClosed] [int] NULL,
 	[WorkOrderClosedDate] [datetime] NULL,
 	[ReceptionManId] [bigint] NULL,
-	[Branch_Id] [int] NULL,
-	[User_Id] [int] NULL,
+	[Branch_Id] [bigint] NULL,
+	[User_Id] [bigint] NULL,
 	[Lookup_CarTypeModeLId] [bigint] NULL,
 	[Lookup_CarTypeId] [bigint] NULL,
 	[Last_Invoice_ListId] [bigint] NULL,
@@ -4922,7 +5132,7 @@ CREATE TABLE [dbo].[CarsWorkOrders](
  ";
                 opp.insert_me(str);
 
-                //str = @"  ";
+                //str = @$"  ";
                 //opp.insert_me(str);
             }
             catch
@@ -4931,7 +5141,7 @@ CREATE TABLE [dbo].[CarsWorkOrders](
 
             try
             {
-                str = @"  
+                str = @$"  
 
 CREATE TABLE [dbo].[Tax_Branches](
 	[Id] [bigint] {IDENTITY} NOT NULL,
@@ -5207,7 +5417,7 @@ CREATE TABLE [dbo].[TaxReverseInvoices_TaxesTotal](
  ";
                 opp.insert_me(str);
 
-                //str = @"  ";
+                //str = @$"  ";
                 //opp.insert_me(str);
             }
             catch
@@ -5215,7 +5425,7 @@ CREATE TABLE [dbo].[TaxReverseInvoices_TaxesTotal](
             }
             try
             {
-                str = @"  
+                str = @$"  
 
 CREATE TABLE [dbo].[Invoices_DetailsTemp](
 	[Id] [bigint] {IDENTITY} NOT   NULL,
@@ -5284,12 +5494,12 @@ CREATE TABLE [dbo].[Invoices_DetailsTemp](
 	[QntyStr] [nvarchar](500) NULL,
 	[QntyStrColumn] [nvarchar](500) NULL,
 	[OperationDate] [datetime] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL,
+	[Edit_User_Id] [bigint] NULL,
 	[ProcessNo] [bigint] NULL,
 	[Item_DeletedFlage] [int] NULL,
 	[Item_ProcessedFlage] [int] NULL,
@@ -5326,7 +5536,7 @@ CREATE TABLE [dbo].[Invoices_DetailsTemp](
  ";
                 opp.insert_me(str);
 
-                //str = @"  ";
+                //str = @$"  ";
                 //opp.insert_me(str);
             }
             catch
@@ -5334,7 +5544,7 @@ CREATE TABLE [dbo].[Invoices_DetailsTemp](
             }
             try
             {
-                str = @" CREATE TABLE [dbo].[Invoices_ListTemp](
+                str = @$" CREATE TABLE [dbo].[Invoices_ListTemp](
 	[ID] [bigint] {IDENTITY}   NOT NULL,
 	[Invoice_Id] [bigint] NULL,
 	[Customer_Id] [bigint] NULL,
@@ -5347,7 +5557,7 @@ CREATE TABLE [dbo].[Invoices_DetailsTemp](
 	[ATS05_Value] [decimal](18, 2) NULL,
 	[Net_Total] [decimal](18, 2) NULL,
 	[Currency] [nvarchar](50) NULL,
-	[Currency_id] [int] NULL,
+	[Currency_id] [bigint] NULL,
 	[Notes] [nvarchar](max) NULL,
 	[Invoice_Type] [int] NULL,
 	[Editable] [int] NULL,
@@ -5364,8 +5574,8 @@ CREATE TABLE [dbo].[Invoices_DetailsTemp](
 	[DayReg_List_Id] [bigint] NULL,
 	[CustomerAccountBefor] [decimal](18, 2) NULL,
 	[CustomerAccountAfter] [decimal](18, 2) NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Total_Item_CommissionValue] [decimal](18, 2) NULL,
 	[Total_CommissionValue] [decimal](18, 2) NULL,
 	[SubAccount_Id] [bigint] NULL,
@@ -5378,7 +5588,7 @@ CREATE TABLE [dbo].[Invoices_DetailsTemp](
 	[IS_Posted_Flage] [int] NULL,
 	[Account_Entry_List_ID] [bigint] NULL,
 	[IsCommission_Value] [int] NULL,
-	[Salesman_Id] [int] NULL,
+	[Salesman_Id] [bigint] NULL,
 	[AnotherPayment] [decimal](18, 2) NULL,
 	[Is_Buy_From_Bills_Items_Balance] [int] NULL,
 	[OperationDate] [datetime] NULL,
@@ -5400,10 +5610,10 @@ CREATE TABLE [dbo].[Invoices_DetailsTemp](
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL,
+	[Edit_User_Id] [bigint] NULL,
 	[ProcessNo] [bigint] NULL,
 	[Order_MoneyId] [bigint] NULL,
-	[BanksId] [int] NULL,
+	[BanksId] [bigint] NULL,
 	[BanksNamePaymentMethod] [nvarchar](100) NULL,
 	[PaidValue] [decimal](18, 2) NULL,
 	[RestValue] [decimal](18, 2) NULL,
@@ -5528,7 +5738,7 @@ CREATE TABLE [dbo].[Invoices_DetailsTemp](
 )   ";
                 opp.insert_me(str);
 
-                //str = @"  ";
+                //str = @$"  ";
                 //opp.insert_me(str);
             }
             catch
@@ -5536,7 +5746,7 @@ CREATE TABLE [dbo].[Invoices_DetailsTemp](
             }
             try
             {
-                str = @" CREATE TABLE [dbo].[WorkOrderList](
+                str = @$" CREATE TABLE [dbo].[WorkOrderList](
 	[Id] [bigint] {IDENTITY} NOT NULL,
 	[WorkOrder_No] [bigint] NOT NULL,
 	[WorkOrderDate] [datetime2](7) NULL,
@@ -5557,10 +5767,10 @@ CREATE TABLE [dbo].[Invoices_DetailsTemp](
 	[Insert_ServerDateTime] [datetime2](7) NULL,
 	[Update_ServerDateTime] [datetime2](7) NULL,
 	[EditOperationDate] [datetime2](7) NULL,
-	[Edit_User_Id] [int] NULL )  ";
+	[Edit_User_Id] [bigint] NULL )  ";
                 opp.insert_me(str);
 
-                //str = @"  ";
+                //str = @$"  ";
                 //opp.insert_me(str);
             }
             catch
@@ -5568,7 +5778,7 @@ CREATE TABLE [dbo].[Invoices_DetailsTemp](
             }
             try
             {
-                str = @" CREATE TABLE [dbo].[WorkOrderDetail](
+                str = @$" CREATE TABLE [dbo].[WorkOrderDetail](
 	[Id] [bigint] {IDENTITY} NOT NULL,
 	[WorkOrderListId] [bigint] NOT NULL,
 	[Item_Id] [bigint] NOT NULL,
@@ -5587,7 +5797,7 @@ CREATE TABLE [dbo].[Invoices_DetailsTemp](
 )   ";
                 opp.insert_me(str);
 
-                //str = @"  ";
+                //str = @$"  ";
                 //opp.insert_me(str);
             }
             catch
@@ -5595,17 +5805,17 @@ CREATE TABLE [dbo].[Invoices_DetailsTemp](
             }
             try
             {
-                str = @" CREATE TABLE [dbo].[Lookup_Tables] (
-    [Id]            BIGINT        IDENTITY (0, 1) NOT NULL, -- يبدأ من الصفر
-    [Name] NVARCHAR (50) NOT NULL,                -- اسم الطاولة بالعربية (مثل: طاولة 1، صالون عائلات)
-    [Name_En] NVARCHAR (50) NOT NULL,                -- اسم الطاولة بالإنجليزية
+                str = @$" CREATE TABLE [dbo].[Lookup_Tables] (
+    [Id]            BIGINT        {IDENTITY} NOT NULL, -- يبدأ من الصفر
+    [Name] NVARCHAR (500) NOT NULL,                -- اسم الطاولة بالعربية (مثل: طاولة 1، صالون عائلات)
+    [Name_En] NVARCHAR (500) NOT NULL,                -- اسم الطاولة بالإنجليزية
     [Is_Active]     BIT           DEFAULT ((1)) NOT NULL   -- حالة الطاولة (1 = متاحة للعمل، 0 = مغلقة للصيانة أو ملغاة)
     
     
 ); ";
                 opp.insert_me(str);
 
-                str = @" SET IDENTITY_INSERT [dbo].[Lookup_Tables] ON;
+                str = @$"  
 INSERT INTO [dbo].[Lookup_Tables] ([Id], [Name], [Name_En], [Is_Active]) 
 VALUES 
 (0, N'غير محدد', N'Undefined', 1),
@@ -5617,7 +5827,10 @@ VALUES
 (6, N'صالون عائلات 2', N'Family Salon 2', 1),
 (7, N'صالون عائلات 3', N'Family Salon 3', 1),
 (8, N'صالون عائلات 4', N'Family Salon 4', 1);
-SET IDENTITY_INSERT [dbo].[Lookup_Tables] OFF; ";
+  ";
+
+                str = ExecuteInsertWithIdentityCheck("Lookup_Tables", str);
+
                 opp.insert_me(str);
             }
             catch
@@ -5625,8 +5838,8 @@ SET IDENTITY_INSERT [dbo].[Lookup_Tables] OFF; ";
             }
             try
             {
-                str = @" CREATE TABLE [dbo].[Lookup_DiscountTypes] (
-    [Id]                   BIGINT        IDENTITY (0, 1) NOT NULL, -- يبدأ من الصفر لتوحيد المعايير
+                str = @$" CREATE TABLE [dbo].[Lookup_DiscountTypes] (
+    [Id] BIGINT {IDENTITY} NOT NULL, -- يبدأ من الصفر لتوحيد المعايير
     [Name] NVARCHAR (50) NOT NULL,                -- اسم الخصم بالعربية (مثل: خصم موظفين، ضيافة)
     [Name_En] NVARCHAR (50) NOT NULL                 -- اسم الخصم بالإنجليزية
     
@@ -5634,14 +5847,16 @@ SET IDENTITY_INSERT [dbo].[Lookup_Tables] OFF; ";
 ); ";
                 opp.insert_me(str);
 
-                str = @" SET IDENTITY_INSERT [dbo].[Lookup_DiscountTypes] ON;
+                str = @$"  
 INSERT INTO [dbo].[Lookup_DiscountTypes] ([Id], [Name], [Name_En]) 
 VALUES 
 (0, N'بدون خصم', N'No Discount'),
 (1, N'خصم موظفين', N'Staff Discount'),
 (2, N'ضيافة / مدير', N'Hospitality'),
 (3, N'عروض لفترة محدودة', N'Promotion');
-SET IDENTITY_INSERT [dbo].[Lookup_DiscountTypes] OFF; ";
+  ";
+
+                str = ExecuteInsertWithIdentityCheck("Lookup_DiscountTypes", str);
                 opp.insert_me(str);
             }
             catch
@@ -5650,8 +5865,8 @@ SET IDENTITY_INSERT [dbo].[Lookup_DiscountTypes] OFF; ";
 
             try
             {
-                str = @" CREATE TABLE [dbo].[Lookup_Shifts] (
-    [Id]            bigint           IDENTITY (0, 1) NOT NULL, -- يبدأ من صفر
+                str = @$" CREATE TABLE [dbo].[Lookup_Shifts] (
+    [Id]            bigint           {IDENTITY} NOT NULL, -- يبدأ من صفر
     [Name] NVARCHAR (500) NOT NULL,
     [Name_En] NVARCHAR (500) NOT NULL,
     [Start_Time]    TIME (7)      NOT NULL, 
@@ -5661,14 +5876,16 @@ SET IDENTITY_INSERT [dbo].[Lookup_DiscountTypes] OFF; ";
 ";
                 opp.insert_me(str);
 
-                str = @" 
-SET IDENTITY_INSERT [dbo].[Lookup_Shifts] ON;
+                str = @$" 
+ 
 INSERT INTO [dbo].[Lookup_Shifts] ([Id], [Name], [Name_En], [Start_Time], [End_Time]) VALUES 
 (0, N'غير محدد', N'Undefined', '00:00:00', '00:00:00'), -- الوردية الافتراضية صفريّة الوقت
 (1, N'الوردية الصباحية', N'Morning Shift', '08:00:00', '16:00:00'),
 (2, N'الوردية المسائية', N'Evening Shift', '16:00:00', '00:00:00'),
 (3, N'وردية السهر / الإضافي', N'Night Shift', '00:00:00', '08:00:00');
-SET IDENTITY_INSERT [dbo].[Lookup_Shifts] OFF;  ";
+  ";
+
+                str = ExecuteInsertWithIdentityCheck("Lookup_Shifts", str);
                 opp.insert_me(str);
             }
             catch
@@ -5676,8 +5893,8 @@ SET IDENTITY_INSERT [dbo].[Lookup_Shifts] OFF;  ";
             }
             try
             {
-                str = @" CREATE TABLE [dbo].[Lookup_InvoiceKitchenStatus] (
-    [Id]             bigint           IDENTITY (0, 1) NOT NULL,
+                str = @$" CREATE TABLE [dbo].[Lookup_InvoiceKitchenStatus] (
+    [Id]             bigint           {IDENTITY} NOT NULL,
     [Name] NVARCHAR (500) NOT NULL,
     [Name_En] NVARCHAR (500) NOT NULL 
      
@@ -5685,18 +5902,20 @@ SET IDENTITY_INSERT [dbo].[Lookup_Shifts] OFF;  ";
  ";
                 opp.insert_me(str);
 
-                str = @" 
+                str = @$" 
 
 -- زرع الحالات المتسلسلة للدورة الموحدة
-SET IDENTITY_INSERT [dbo].[Lookup_InvoiceKitchenStatus] ON;
+ 
 INSERT INTO [dbo].[Lookup_InvoiceKitchenStatus] ([Id], [Name], [Name_En]) VALUES 
 (0, N'غير محدد', N'Undefined'),
 (1, N'قيد التحضير في المطبخ', N'Preparing in Kitchen'), -- كاشير حفظ، والمطبخ شغال
 (2, N'جاهز للتسليم / مع الطيار', N'Ready / Out for Delivery'), -- المطبخ انتهى وسلمها للطيار
 (3, N'مدفوعة ومكتملة', N'Paid & Settled'),        -- الطيار رجع وسدد، أو صالة اندفعت
 (4, N'مرتجعة / ملغاة', N'Canceled');               -- تم إلغاء الطلب
-SET IDENTITY_INSERT [dbo].[Lookup_InvoiceKitchenStatus] OFF;
+ 
    ";
+
+                str = ExecuteInsertWithIdentityCheck("Lookup_InvoiceKitchenStatus", str);
                 opp.insert_me(str);
             }
             catch
@@ -5708,7 +5927,7 @@ SET IDENTITY_INSERT [dbo].[Lookup_InvoiceKitchenStatus] OFF;
 
             try
             {
-                str = @" CREATE TABLE [dbo].[Money_Transaction_BoxForInvoices](
+                str = @$" CREATE TABLE [dbo].[Money_Transaction_BoxForInvoices](
 	[Id] [bigint] {IDENTITY} NOT NULL,
 	[Money_Transaction_BoxId] [bigint] NULL,
 	[Order_Mony_Id] [bigint] NULL,
@@ -5735,7 +5954,7 @@ SET IDENTITY_INSERT [dbo].[Lookup_InvoiceKitchenStatus] OFF;
             }
             try
             {
-                str = @" 
+                str = @$" 
   
   
 CREATE TABLE Appointments (
@@ -5810,7 +6029,7 @@ ContributionValue  DECIMAL(5,2) default(0),
             }
             try
             {
-                str = @" CREATE TABLE [dbo].[Account_BranchesimagesLogo](
+                str = @$" CREATE TABLE [dbo].[Account_BranchesimagesLogo](
 	[Id] [bigint] NULL,
 	[ImageLogoPath] [nvarchar](500) NULL,
 	[ImageData] [image] NULL
@@ -5822,7 +6041,7 @@ ContributionValue  DECIMAL(5,2) default(0),
             }
             try
             {
-                str = @" CREATE TABLE [dbo].[CarsExaminations](
+                str = @$" CREATE TABLE [dbo].[CarsExaminations](
 	[Id] [bigint] {IDENTITY} NOT NULL,
 	[Paint_Report] [nvarchar](max) NULL,
 	[Mechanics_Report] [nvarchar](max) NULL,
@@ -5846,7 +6065,7 @@ ContributionValue  DECIMAL(5,2) default(0),
             }
             try
             {
-                str = @" CREATE TABLE [dbo].[ItemsForCars](
+                str = @$" CREATE TABLE [dbo].[ItemsForCars](
 	[Id] [bigint] {IDENTITY} NOT NULL primary key,
 	[Item_Id] [bigint] NULL,
 	[Lookup_CarTypeId] [bigint] NULL,
@@ -5860,7 +6079,7 @@ ContributionValue  DECIMAL(5,2) default(0),
             }
             try
             {
-                str = @"  CREATE TABLE [dbo].[Unit_itemEmployeeBalance](
+                str = @$"  CREATE TABLE [dbo].[Unit_itemEmployeeBalance](
 	[id] [bigint] {IDENTITY} NOT NULL,
 	[Item_id] [bigint] NULL,
 	[EmployeeId] [bigint] NULL,
@@ -5883,12 +6102,12 @@ ContributionValue  DECIMAL(5,2) default(0),
 	[TaxSales_Value] [decimal](18, 2) NULL,
 	[New2] [int] NULL,
 	[OperationDate] [datetime] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL,
+	[Edit_User_Id] [bigint] NULL,
 	[ProcessNo] [bigint] NULL,
 	[TaxSales10_Value] [decimal](18, 2) NULL,
 	[S_price_LargeUnit] [decimal](18, 2) NULL,
@@ -5908,7 +6127,7 @@ ContributionValue  DECIMAL(5,2) default(0),
             }
             try
             {
-                str = @" 
+                str = @$" 
 CREATE TABLE [dbo].[ItemCodeTaxAccepted](
 	[Id] [bigint] {IDENTITY} primary key NOT NULL,
 	[Tax_BranchesId] [bigint] NULL,
@@ -5976,7 +6195,7 @@ CREATE TABLE [dbo].[ItemCodeTaxNotUploaded](
             }
             try
             {
-                str = @"  CREATE TABLE [dbo].[Lookup_CarEntryTaskeen](
+                str = @$"  CREATE TABLE [dbo].[Lookup_CarEntryTaskeen](
 	[Id] [bigint] {IDENTITY} primary key  NOT NULL,
 	[Name] [nvarchar](50) NULL,
   )   ";
@@ -5987,13 +6206,15 @@ CREATE TABLE [dbo].[ItemCodeTaxNotUploaded](
             }
             try
             {
-                str = @"  CREATE TABLE [dbo].[Lookup_IsInsuranceCompanyStaus](
+                str = @$"  CREATE TABLE [dbo].[Lookup_IsInsuranceCompanyStaus](
 	[Id] [bigint]   primary key  NOT NULL,
 	[Name] [nvarchar](50) NULL,
   )   ";
 
                 str = str + " insert into [dbo].[Lookup_IsInsuranceCompanyStaus](Id,Name) values (1,'صيانة')";
                 str = str + "insert into [dbo].[Lookup_IsInsuranceCompanyStaus](Id,Name) values (2,'شركات تأمين')";
+
+                str = ExecuteInsertWithIdentityCheck("Lookup_IsInsuranceCompanyStaus", str);
                 opp.insert_me(str);
             }
             catch
@@ -6002,7 +6223,7 @@ CREATE TABLE [dbo].[ItemCodeTaxNotUploaded](
 
             try
             {
-                str = @" CREATE TABLE [dbo].[LookUp_CarStatusLocation](
+                str = @$" CREATE TABLE [dbo].[LookUp_CarStatusLocation](
 	[Id] [bigint] {IDENTITY} NOT NULL primary key,
 	[Name] [nvarchar](100) NULL 
 )   ";
@@ -6015,7 +6236,7 @@ CREATE TABLE [dbo].[ItemCodeTaxNotUploaded](
 
             try
             {
-                str = @" CREATE TABLE [dbo].[Lookup_CashPaymentMethod](
+                str = @$" CREATE TABLE [dbo].[Lookup_CashPaymentMethod](
 	[Id] [bigint] {IDENTITY} primary key  NOT NULL,
 	[Name] [nvarchar](500) NULL,
   )  
@@ -6027,7 +6248,7 @@ CREATE TABLE [dbo].[ItemCodeTaxNotUploaded](
             }
             try
             {
-                str = @" 
+                str = @$" 
 CREATE TABLE [dbo].[DataDictionaryLogerExceptions](
 	[Id] [bigint] {IDENTITY} NOT NULL,
 	[Exception] [nvarchar](max) NULL,
@@ -6045,7 +6266,7 @@ CREATE TABLE [dbo].[DataDictionaryLogerExceptions](
             }
             try
             {
-                str = @"  
+                str = @$"  
 
 CREATE TABLE [dbo].[Account_BranchesTaxInfo](
 	[Id] [bigint] {IDENTITY} NOT NULL primary key,
@@ -6094,7 +6315,7 @@ CREATE TABLE [dbo].[Account_BranchesTaxInfo](
             }
             try
             {
-                str = @"  
+                str = @$"  
 CREATE TABLE [dbo].[LookUp_CodeTaxType](
 	[Id] [bigint] primary key NOT NULL,
 	[Name] [nvarchar](50) NULL,
@@ -6134,17 +6355,17 @@ CREATE TABLE [dbo].LookUp_NonTaxableType(
             }
             try
             {
-                str = @" CREATE TABLE [dbo]. Items_Group(
+                str = @$" CREATE TABLE [dbo]. Items_Group(
  
 	[Id] [bigint] {IDENTITY} primary key NOT NULL,
 	[ ItemsGroup_Name] [nvarchar](100) NULL,
 	[OperationDate] [datetime] NULL      DEFAULT (getdate()),
-	[User_Id] [int] NULL      DEFAULT ((0)),
-	[Branch_Id] [int] NULL      DEFAULT ((0)),
+	[User_Id] [bigint] NULL      DEFAULT ((0)),
+	[Branch_Id] [bigint] NULL      DEFAULT ((0)),
 	[Insert_ServerDateTime] [datetime] NULL      DEFAULT (getdate()),
 	[Update_ServerDateTime] [datetime] NULL      DEFAULT (getdate()),
 	[EditOperationDate] [datetime] NULL      DEFAULT (getdate()),
-	[Edit_User_Id] [int] NULL      DEFAULT ((0)),
+	[Edit_User_Id] [bigint] NULL      DEFAULT ((0)),
 	[ProcessNo] [bigint] NULL      DEFAULT ((0)),
 	[IsActive] [int] NULL DEFAULT ((1))
 )  ";
@@ -6155,7 +6376,7 @@ CREATE TABLE [dbo].LookUp_NonTaxableType(
             }
             try
             {
-                str = @"  CREATE TABLE[dbo].Items_Nature(
+                str = @$"  CREATE TABLE[dbo].Items_Nature(
 
     [Id][bigint] IDENTITY(1, 1) primary key NOT NULL,
     [ItemsNature_Name][nvarchar](100) NULL,
@@ -6179,18 +6400,18 @@ CREATE TABLE [dbo].LookUp_NonTaxableType(
 
             try
             {
-                str = @"  CREATE TABLE [dbo].[Gov_City_List](
+                str = @$"  CREATE TABLE [dbo].[Gov_City_List](
 	[Id] [bigint] {IDENTITY} primary key NOT NULL,
 	[NameAr] [nvarchar](100) NULL,
 	[NameEn] [nvarchar](100) NULL,
 	[Code] [nvarchar](100) NULL,
 	[OperationDate] [datetime] NULL      DEFAULT (getdate()),
-	[User_Id] [int] NULL      DEFAULT ((0)),
-	[Branch_Id] [int] NULL      DEFAULT ((0)),
+	[User_Id] [bigint] NULL      DEFAULT ((0)),
+	[Branch_Id] [bigint] NULL      DEFAULT ((0)),
 	[Insert_ServerDateTime] [datetime] NULL      DEFAULT (getdate()),
 	[Update_ServerDateTime] [datetime] NULL      DEFAULT (getdate()),
 	[EditOperationDate] [datetime] NULL      DEFAULT (getdate()),
-	[Edit_User_Id] [int] NULL      DEFAULT ((0)),
+	[Edit_User_Id] [bigint] NULL      DEFAULT ((0)),
 	[ProcessNo] [bigint] NULL      DEFAULT ((0)),
 	[Gov_Country_ListId] [bigint] NULL      DEFAULT ((0)),
 	[Govern_Area_ListId] [bigint] NULL      DEFAULT ((0)),
@@ -6205,7 +6426,7 @@ CREATE TABLE [dbo].LookUp_NonTaxableType(
             }
             try
             {
-                str = @"   
+                str = @$"   
 
 CREATE TABLE [dbo].[Gov_City_List](
 	[Id] [bigint] {IDENTITY} primary key NOT NULL,
@@ -6213,12 +6434,12 @@ CREATE TABLE [dbo].[Gov_City_List](
 	[NameEn] [nvarchar](100) NULL,
 	[Code] [nvarchar](100) NULL,
 	[OperationDate] [datetime] NULL DEFAULT (getdate()) ,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL DEFAULT (getdate()) ,
 	[Update_ServerDateTime] [datetime] NULL DEFAULT (getdate()) ,
 	[EditOperationDate] [datetime] NULL DEFAULT (getdate()) ,
-	[Edit_User_Id] [int] NULL,
+	[Edit_User_Id] [bigint] NULL,
 	[ProcessNo] [bigint] NULL,
 	[Gov_Country_ListId] [bigint] NULL,
 	[Govern_Area_ListId] [bigint] NULL,
@@ -6235,7 +6456,7 @@ CREATE TABLE [dbo].[Gov_City_List](
 
             try
             {
-                str = @"   
+                str = @$"   
  
  
 
@@ -6245,12 +6466,12 @@ CREATE TABLE [dbo].[Gov_Country_List](
 	[NameEn] [nvarchar](100) NULL,
 	[Code] [nvarchar](100) NULL,
 	[OperationDate] [datetime] NULL DEFAULT (getdate()) ,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL DEFAULT (getdate()) ,
 	[Update_ServerDateTime] [datetime] NULL DEFAULT (getdate()) ,
 	[EditOperationDate] [datetime] NULL DEFAULT (getdate()) ,
-	[Edit_User_Id] [int] NULL,
+	[Edit_User_Id] [bigint] NULL,
 	[ProcessNo] [bigint] NULL 
 ) 
  
@@ -6266,18 +6487,18 @@ CREATE TABLE [dbo].[Gov_Country_List](
 
             try
             {
-                str = @"   
+                str = @$"   
  
 CREATE TABLE [dbo].[Govern_Area_List](
 	[Id] [bigint] {IDENTITY}  primary key NOT NULL,
 	[Area_Name] [nvarchar](100) NULL,
 	[OperationDate] [datetime] NULL DEFAULT (getdate()) ,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL DEFAULT (getdate()) ,
 	[Update_ServerDateTime] [datetime] NULL DEFAULT (getdate()) ,
 	[EditOperationDate] [datetime] NULL DEFAULT (getdate()) ,
-	[Edit_User_Id] [int] NULL,
+	[Edit_User_Id] [bigint] NULL,
 	[ProcessNo] [bigint] NULL,
 	[Gov_Country_ListId] [bigint] NULL 
 ) 
@@ -6291,19 +6512,19 @@ CREATE TABLE [dbo].[Govern_Area_List](
             }
             try
             {
-                str = @"   
+                str = @$"   
  
 CREATE TABLE [dbo].[Govern_List](
 	[Id] [bigint] {IDENTITY}  primary key NOT NULL,
 	[Gov_Name] [nvarchar](100) NULL,
 	[Code] [nvarchar](100) NULL,
 	[OperationDate] [datetime] NULL DEFAULT (getdate()) ,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL DEFAULT (getdate()) ,
 	[Update_ServerDateTime] [datetime] NULL DEFAULT (getdate()) ,
 	[EditOperationDate] [datetime] NULL DEFAULT (getdate()) ,
-	[Edit_User_Id] [int] NULL,
+	[Edit_User_Id] [bigint] NULL,
 	[ProcessNo] [bigint] NULL,
 	[Gov_Country_ListId] [bigint] NULL,
 	[Govern_Area_ListId] [bigint] NULL 
@@ -6318,7 +6539,7 @@ CREATE TABLE [dbo].[Govern_List](
 
             try
             {
-                str = @"  
+                str = @$"  
 CREATE TABLE [dbo].[Cars](
 	[Id] [bigint] {IDENTITY} PRIMARY KEY NOT NULL,
 	[CustomerId] [bigint] NULL,
@@ -6349,7 +6570,7 @@ CREATE TABLE [dbo].[Cars](
             }
             try
             {
-                str = @" CREATE TABLE [dbo].[Checks_MemoryMainDataList](
+                str = @$" CREATE TABLE [dbo].[Checks_MemoryMainDataList](
 	[Id] [bigint] {IDENTITY} NOT NULL primary key,
 	[Check_No] [nvarchar](50) NULL,
 	[Day_Date] [datetime] NULL,
@@ -6407,9 +6628,9 @@ CREATE TABLE [dbo].[Cars](
             Set_Account_Type_Table(ref opp);
             try
             {
-                str = @"  
+                str = @$"  
 CREATE TABLE [dbo].[Work_In_Details](
-	[Id] [bigint] IDENTITY(50000000,1) NOT NULL,
+	[Id] [bigint] {IDENTITY} NOT NULL,
 	[Customer_Id] [int] NULL,
 	[Request_Date] [datetime] NULL,
 	[Unit_Item_Table_Id] [bigint] NULL,
@@ -6423,12 +6644,12 @@ CREATE TABLE [dbo].[Work_In_Details](
 	[Notes] [nvarchar](500) NULL,
 	[Item_Id] [int] NULL,
 	[OperationDate] [datetime] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL
+	[Edit_User_Id] [bigint] NULL
 )  ";
                 opp.insert_me(str);
             }
@@ -6437,9 +6658,9 @@ CREATE TABLE [dbo].[Work_In_Details](
             }
             try
             {
-                str = @"
+                str = @$"
 CREATE TABLE [dbo].[Work_In_Details_Balance](
-	[Id] [bigint] IDENTITY(50000000,1) NOT NULL,
+	[Id] [bigint]  {IDENTITY} NOT NULL,
 	[Unit_Item_Table_Id] [bigint] NULL,
 	[Balance_Qnty_Larg] [float] NULL,
 	[Balance_Qnty_Small] [float] NULL,
@@ -6447,12 +6668,12 @@ CREATE TABLE [dbo].[Work_In_Details_Balance](
 	[Customer_Id] [bigint] NULL,
 	[Item_Id] [int] NULL,
 	[OperationDate] [datetime] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL
+	[Edit_User_Id] [bigint] NULL
 )   ";
                 opp.insert_me(str);
             }
@@ -6462,10 +6683,10 @@ CREATE TABLE [dbo].[Work_In_Details_Balance](
 
             try
             {
-                str = @"
-
+                str = @$"
+   
 CREATE TABLE [dbo].[Work_In_Details_Received](
-	[Id] [bigint] IDENTITY(50000000,1) NOT NULL,
+	[Id] [bigint] {IDENTITY} NOT NULL,
 	[WorkDate] [datetime] NULL,
 	[Work_In_Details_Id] [bigint] NOT NULL,
 	[Process_No] [bigint] NULL,
@@ -6483,12 +6704,12 @@ CREATE TABLE [dbo].[Work_In_Details_Received](
 	[CustomerAccountAfter] [float] NULL,
 	[Item_Id] [int] NULL,
 	[OperationDate] [datetime] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL
+	[Edit_User_Id] [bigint] NULL
 )   ";
                 opp.insert_me(str);
             }
@@ -6498,10 +6719,10 @@ CREATE TABLE [dbo].[Work_In_Details_Received](
 
             try
             {
-                str = @"
+                str = @$"
 
 CREATE TABLE [dbo].[Work_Out_Details](
-	[Id] [bigint] IDENTITY(50000000,1) NOT NULL,
+	[Id] [bigint] {IDENTITY} NOT NULL,
 	[Supplier_Id] [int] NULL,
 	[Request_Date] [datetime] NULL,
 	[Unit_Item_Table_Id] [bigint] NULL,
@@ -6515,12 +6736,12 @@ CREATE TABLE [dbo].[Work_Out_Details](
 	[Notes] [nvarchar](500) NULL,
 	[Item_Id] [int] NULL,
 	[OperationDate] [datetime] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL
+	[Edit_User_Id] [bigint] NULL
 )   ";
                 opp.insert_me(str);
             }
@@ -6530,7 +6751,7 @@ CREATE TABLE [dbo].[Work_Out_Details](
 
             try
             {
-                str = @"  CREATE TABLE [dbo].[LookUp_TagerKontra](
+                str = @$"  CREATE TABLE [dbo].[LookUp_TagerKontra](
 	[Id] [bigint] {IDENTITY}   primary key,
 	[Name] [nvarchar](100) NULL )
  
@@ -6547,9 +6768,9 @@ CREATE TABLE [dbo].[Work_Out_Details](
 
             try
             {
-                str = @"
+                str = @$"
 CREATE TABLE [dbo].[Work_Out_Details_Balance](
-	[Id] [bigint] IDENTITY(50000000,1) NOT NULL,
+	[Id] [bigint] {IDENTITY} NOT NULL,
 	[Unit_Item_Table_Id] [bigint] NULL,
 	[Balance_Qnty_Larg] [float] NULL,
 	[Balance_Qnty_Small] [float] NULL,
@@ -6557,12 +6778,12 @@ CREATE TABLE [dbo].[Work_Out_Details_Balance](
 	[Supplier_Id] [bigint] NULL,
 	[Item_Id] [int] NULL,
 	[OperationDate] [datetime] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL
+	[Edit_User_Id] [bigint] NULL
 )    ";
                 opp.insert_me(str);
             }
@@ -6572,13 +6793,10 @@ CREATE TABLE [dbo].[Work_Out_Details_Balance](
 
             try
             {
-                str = @"
-
+                str = @$"
  
-
-
 CREATE TABLE [dbo].[Work_Out_Details_Received](
-	[Id] [bigint] IDENTITY(50000000,1) NOT NULL,
+	[Id] [bigint] {IDENTITY} NOT NULL,
 	[WorkDate] [datetime] NULL,
 	[Work_Out_Details_Id] [bigint] NOT NULL,
 	[Process_No] [bigint] NULL,
@@ -6596,12 +6814,12 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
 	[CustomerAccountAfter] [float] NULL,
 	[Item_Id] [int] NULL,
 	[OperationDate] [datetime] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL
+	[Edit_User_Id] [bigint] NULL
 )    ";
                 opp.insert_me(str);
             }
@@ -6610,7 +6828,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             }
             try
             {
-                str = " CREATE TABLE [dbo].[Unit_Item_ExpireDate](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Item_id] [bigint] NULL,\r\n\t[Unit_Item_Table_Id] [bigint] NULL,\r\n\t[Tash3ela] [nvarchar](50) NULL,\r\n\t[Item_Expire_Date] [datetime] NULL,\r\n\t[Larg_Balance] [decimal](18, 2) NULL,\r\n\t[Small_Balance] [decimal](18, 2) NULL,\r\n\t[Item_No] [decimal](18, 2) NULL\r\n)";
+                str = @$" CREATE TABLE [dbo].[Unit_Item_ExpireDate]( [Id] [bigint] {IDENTITY} NOT NULL, [Item_id] [bigint] NULL, [Unit_Item_Table_Id] [bigint] NULL, [Tash3ela] [nvarchar](50) NULL, [Item_Expire_Date] [datetime] NULL, [Larg_Balance] [decimal](18, 2) NULL, [Small_Balance] [decimal](18, 2) NULL, [Item_No] [decimal](18, 2) NULL )";
                 opp.insert_me(str);
             }
             catch
@@ -6619,7 +6837,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             //Set_TaxInfo(ref opp);
             try
             {
-                str = " \r\nCREATE TABLE [dbo].[Account_Entry_Master_Balance](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Submain_Account_ID] [bigint] NULL      DEFAULT ((0)),\r\n\t[SubAccount_Name] [nvarchar](100) NULL,\r\n\t[Year_Financial_Period_Id] [int] NULL      DEFAULT ((0)),\r\n\t[Branch_Id] [int] NULL,\r\n\t[Account_Currency_Id] [int] NULL      DEFAULT ((0)),\r\n\t[Equivalent_Account_Currency_Id] [int] NULL,\r\n\t[First_Balance] [decimal](18, 3) NULL      DEFAULT ((0)),\r\n\t[Equivalent_First_Balance] [decimal](18, 3) NULL      DEFAULT ((0)),\r\n\t[First_Balance_Madin] [decimal](18, 3) NULL      DEFAULT ((0)),\r\n\t[First_Balance_Da2n] [decimal](18, 3) NULL      DEFAULT ((0)),\r\n\t[Madin_Value] [decimal](18, 3) NULL      DEFAULT ((0)),\r\n\t[Da2n_Value] [decimal](18, 3) NULL      DEFAULT ((0)),\r\n\t[Balance] [decimal](18, 3) NULL      DEFAULT ((0)),\r\n\t[Balance_Madin] [decimal](18, 3) NULL      DEFAULT ((0)),\r\n\t[Balance_Da2n] [decimal](18, 3) NULL      DEFAULT ((0)),\r\n\t[Equivalent_First_Balance_Madin] [decimal](18, 3) NULL      DEFAULT ((0)),\r\n\t[Equivalent_First_Balance_Da2n] [decimal](18, 3) NULL      DEFAULT ((0)),\r\n\t[Equivalent_Madin_Value] [decimal](18, 3) NULL      DEFAULT ((0)),\r\n\t[Equivalent_Da2n_Value] [decimal](18, 3) NULL      DEFAULT ((0)),\r\n\t[Equivalent_Balance_Madin] [decimal](18, 3) NULL      DEFAULT ((0)),\r\n\t[Equivalent_Balance_Da2n] [decimal](18, 3) NULL      DEFAULT ((0)),\r\n\t[IS_Madin_Da2n] [int] NULL      DEFAULT ((0)),\r\n\t[Cost_Center_Tree_ID] [int] NULL      DEFAULT ((0))\r\n)  ";
+                str = @$"  CREATE TABLE [dbo].[Account_Entry_Master_Balance]( [Id] [bigint] {IDENTITY} NOT NULL, [Submain_Account_ID] [bigint] NULL      DEFAULT ((0)), [SubAccount_Name] [nvarchar](100) NULL, [Year_Financial_Period_Id] [int] NULL      DEFAULT ((0)), [Branch_Id] [bigint] NULL, [Account_Currency_Id] [int] NULL      DEFAULT ((0)), [Equivalent_Account_Currency_Id] [int] NULL, [First_Balance] [decimal](18, 3) NULL      DEFAULT ((0)), [Equivalent_First_Balance] [decimal](18, 3) NULL      DEFAULT ((0)), [First_Balance_Madin] [decimal](18, 3) NULL      DEFAULT ((0)), [First_Balance_Da2n] [decimal](18, 3) NULL      DEFAULT ((0)), [Madin_Value] [decimal](18, 3) NULL      DEFAULT ((0)), [Da2n_Value] [decimal](18, 3) NULL      DEFAULT ((0)), [Balance] [decimal](18, 3) NULL      DEFAULT ((0)), [Balance_Madin] [decimal](18, 3) NULL      DEFAULT ((0)), [Balance_Da2n] [decimal](18, 3) NULL      DEFAULT ((0)), [Equivalent_First_Balance_Madin] [decimal](18, 3) NULL      DEFAULT ((0)), [Equivalent_First_Balance_Da2n] [decimal](18, 3) NULL      DEFAULT ((0)), [Equivalent_Madin_Value] [decimal](18, 3) NULL      DEFAULT ((0)), [Equivalent_Da2n_Value] [decimal](18, 3) NULL      DEFAULT ((0)), [Equivalent_Balance_Madin] [decimal](18, 3) NULL      DEFAULT ((0)), [Equivalent_Balance_Da2n] [decimal](18, 3) NULL      DEFAULT ((0)), [IS_Madin_Da2n] [int] NULL      DEFAULT ((0)), [Cost_Center_Tree_ID] [int] NULL      DEFAULT ((0)) )  ";
                 opp.insert_me(str);
             }
             catch
@@ -6629,7 +6847,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
 
             try
             {
-                str = " CREATE TABLE [dbo].[DataDictionary](\r\n\t[ID] [bigint] {IDENTITY} NOT NULL,\r\n\t[SQLText] [nvarchar](max) NULL,\r\n\t[Read_Flage] [bigint] NULL,\r\n\t[Insert_ServerDateTime] [datetime] NULL      DEFAULT (getdate()),\r\n\t[User_Id] [int] NULL\r\n)  ";
+                str = @$" CREATE TABLE [dbo].[DataDictionary]( [ID] [bigint] {IDENTITY} NOT NULL, [SQLText] [nvarchar](max) NULL, [Read_Flage] [bigint] NULL, [Insert_ServerDateTime] [datetime] NULL      DEFAULT (getdate()), [User_Id] [bigint] NULL )  ";
                 opp.insert_me(str);
             }
             catch
@@ -6637,7 +6855,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             }
             try
             {
-                str = " CREATE TABLE [dbo].[ReportSellPurchaseItems](\r\n\t[Id] [bigint] {IDENTITY} NOT NULL,\r\n\t[Item_Id] [bigint] NULL,\r\n\t[Unit_Item_Table_Id] [bigint] NULL,\r\n\t[Invoices_List_Id] [bigint] NULL,\r\n\t[Invoice_Date] [datetime] NULL,\r\n\t[Item_Name] [nvarchar](500) NULL,\r\n\t[Larg_Qnty] [decimal](18, 2) NULL,\r\n\t[Small_Qnty] [decimal](18, 2) NULL,\r\n\t[Qnty_Another] [decimal](18, 2) NULL,\r\n\t[Customer_Id] [bigint] NULL,\r\n\t[Customer_Name] [nvarchar](500) NULL,\r\n\t[actual_S_price] [decimal](18, 2) NULL,\r\n\t[Total_SellPrice] [decimal](18, 2) NULL,\r\n\t[actual_P_price] [decimal](18, 2) NULL,\r\n\t[Total_PurhasePrice] [decimal](18, 2) NULL,\r\n\t[Diff_Total] [decimal](18, 2) NULL,\r\n\t[Invoice_Type] [int] NULL\r\n) ";
+                str = @$" CREATE TABLE [dbo].[ReportSellPurchaseItems]( [Id] [bigint] {IDENTITY} NOT NULL, [Item_Id] [bigint] NULL, [Unit_Item_Table_Id] [bigint] NULL, [Invoices_List_Id] [bigint] NULL, [Invoice_Date] [datetime] NULL, [Item_Name] [nvarchar](500) NULL, [Larg_Qnty] [decimal](18, 2) NULL, [Small_Qnty] [decimal](18, 2) NULL, [Qnty_Another] [decimal](18, 2) NULL, [Customer_Id] [bigint] NULL, [Customer_Name] [nvarchar](500) NULL, [actual_S_price] [decimal](18, 2) NULL, [Total_SellPrice] [decimal](18, 2) NULL, [actual_P_price] [decimal](18, 2) NULL, [Total_PurhasePrice] [decimal](18, 2) NULL, [Diff_Total] [decimal](18, 2) NULL, [Invoice_Type] [int] NULL ) ";
                 opp.insert_me(str);
             }
             catch
@@ -6649,7 +6867,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             string mysql = "";
             try
             {
-                mysql = @" Alter Table " + TableName + "  Add  " + ColumnName + " " + DataType + " Default(" + Default + ")  NULL  ";
+                mysql = @$" Alter Table " + TableName + "  Add  " + ColumnName + " " + DataType + " Default(" + Default + ")  NULL  ";
                 int c = opp.insert_me(mysql);
 
                 try
@@ -6669,7 +6887,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             string mysql = "";
             try
             {
-                mysql = @" Alter Table " + TableName + "  Add  " + ColumnName + " " + DataType + "   ";
+                mysql = @$" Alter Table " + TableName + "  Add  " + ColumnName + " " + DataType + "   ";
                 int c = opp.insert_me(mysql);
 
                 try
@@ -6699,10 +6917,11 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
         }
         static void AlterBD_(ref operations opp, string TableName, string ColumnName, string DataType, string Default, string UpdateValue, bool dropUpdateValue)
         {
+            
             string mysql = "";
             try
             {
-                mysql = @" Alter Table " + TableName + "  Add  " + ColumnName + " " + DataType + " Default(" + Default + ")    ";
+                mysql = @$" Alter Table " + TableName + "  Add  " + ColumnName + " " + DataType + " Default(" + Default + ")    ";
                 int c = opp.insert_me(mysql);
 
                 mysql = @"Update " + TableName + "  Set  " + ColumnName + " = " + UpdateValue + "";
@@ -6711,7 +6930,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
                 try
                 {
 
-                    mysql = @" Alter Table " + TableName + "  drop column  " + UpdateValue + "  ";
+                    mysql = @$" Alter Table " + TableName + "  drop column  " + UpdateValue + "  ";
                     opp.insert_me(mysql);
                 }
                 catch (Exception ee) { }
@@ -6723,7 +6942,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             string mysql = "";
             try
             {
-                mysql = @" Alter Table " + TableName + "  DROP COLUMN   " + ColumnName + "   ";
+                mysql = @$" Alter Table " + TableName + "  DROP COLUMN   " + ColumnName + "   ";
                 opp.insert_me(mysql);
             }
             catch { }
@@ -6735,7 +6954,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             {
 
                 mysql = @"DROP TABLE IF EXISTS dbo." + TableName + "     ";
-                //mysql = @" drop Table " + TableName + "     ";
+                //mysql = @$" drop Table " + TableName + "     ";
                 opp.insert_me(mysql);
             }
             catch { }
@@ -6745,14 +6964,14 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             string mysql = "";
             try
             {
-                mysql = @" Alter Table " + TableName + "  DROP COLUMN   " + ColumnNameOldToDrop + "   ";
+                mysql = @$" Alter Table " + TableName + "  DROP COLUMN   " + ColumnNameOldToDrop + "   ";
                 opp.insert_me(mysql);
             }
             catch { }
 
             try
             {
-                mysql = @" Alter Table " + TableName + "  Add  " + ColumnNameOldToDrop + " " + DataType + " Default(" + Default + ")    ";
+                mysql = @$" Alter Table " + TableName + "  Add  " + ColumnNameOldToDrop + " " + DataType + " Default(" + Default + ")    ";
                 opp.insert_me(mysql);
 
                 mysql = @"Update " + TableName + "  Set  " + ColumnNameOldToDrop + " = " + UpdateValue + "";
@@ -6767,7 +6986,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
 
             try
             {
-                mysql = @" Alter Table " + TableName + "  Add  " + ColumnNameNew + " " + DataType + " Default(" + Default + ")    ";
+                mysql = @$" Alter Table " + TableName + "  Add  " + ColumnNameNew + " " + DataType + " Default(" + Default + ")    ";
                 opp.insert_me(mysql);
 
                 mysql = @"Update " + TableName + "  Set  " + ColumnNameNew + " = " + UpdateValue + "";
@@ -6776,7 +6995,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             catch { }
             try
             {
-                mysql = @" Alter Table " + TableName + "  DROP COLUMN   " + ColumnNameOldToDrop + "   ";
+                mysql = @$" Alter Table " + TableName + "  DROP COLUMN   " + ColumnNameOldToDrop + "   ";
                 opp.insert_me(mysql);
             }
             catch { }
@@ -6787,7 +7006,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             string mysql = "";
             try
             {
-                mysql = @" Alter Table " + TableName + "  Add  " + ColumnName + " " + DataType + " Default(" + Default + ")    ";
+                mysql = @$" Alter Table " + TableName + "  Add  " + ColumnName + " " + DataType + " Default(" + Default + ")    ";
                 opp.insert_me(mysql);
 
                 mysql = @"Update " + TableName + "  Set  " + ColumnName + " = " + UpdateValue + "";
@@ -6806,7 +7025,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             string mysql = "";
             try
             {
-                mysql = @" Alter Table " + TableName + "  Add  " + ColumnName + " " + DataType + " Default(" + Default + ")    ";
+                mysql = @$" Alter Table " + TableName + "  Add  " + ColumnName + " " + DataType + " Default(" + Default + ")    ";
                 opp.insert_me(mysql);
             }
             catch { }
@@ -6816,7 +7035,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             string mysql = "";
             try
             {
-                mysql = @" Alter Table " + TableName + "  Add  " + ColumnName + " " + DataType + "   ";
+                mysql = @$" Alter Table " + TableName + "  Add  " + ColumnName + " " + DataType + "   ";
                 opp.insert_me(mysql);
                 Thread.Sleep(xmiliseconds);
             }
@@ -6981,7 +7200,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             try
             {
 
-                mysql = @" Alter Table " + TableName + "    ADD PRIMARY KEY(" + ColumnName + ")  ";
+                mysql = @$" Alter Table " + TableName + "    ADD PRIMARY KEY(" + ColumnName + ")  ";
                 opp.insert_me(mysql);
             }
             catch (Exception)
@@ -6993,10 +7212,47 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
         }
         public static void AlterColumnAddPrimaryKey(ref operations opp, string TableName, string ColumnNameOld, string ColumnNameNew)
         {
+
+            try
+            {
+                // استخدام $ مع وضع أسماء المتغيرات مباشرة بين الأقواس المعقوفة
+                string formattedScript = $@"    
+-- 1. حذف الـ Primary Key القديم تلقائياً
+DECLARE @ConstraintName NVARCHAR(200);
+SELECT @ConstraintName = CONSTRAINT_NAME
+FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+WHERE TABLE_NAME = '{TableName}' AND CONSTRAINT_TYPE = 'PRIMARY KEY';
+
+IF @ConstraintName IS NOT NULL
+BEGIN
+    DECLARE @Sql NVARCHAR(MAX) = 'ALTER TABLE [dbo].[{TableName}] DROP CONSTRAINT ' + QUOTENAME(@ConstraintName);
+    EXEC sp_executesql @Sql;
+END;
+
+-- 2. إعادة تسمية العمود
+EXEC sp_rename '[dbo].[{TableName}].[{ColumnNameOld}]', '{ColumnNameNew}', 'COLUMN';
+
+-- 3. جعل العمود الجديد NOT NULL
+ALTER TABLE [dbo].[{TableName}] 
+ALTER COLUMN [{ColumnNameNew}] BIGINT NOT NULL; 
+
+-- 4. إنشاء الـ Primary Key الجديد
+ALTER TABLE [dbo].[{TableName}] 
+ADD CONSTRAINT [PK_{TableName}_{ColumnNameNew}] PRIMARY KEY CLUSTERED ([{ColumnNameNew}]);
+";
+
+                opp.insert_me(formattedScript);
+            }
+            catch (Exception ex)
+            {
+                // تسجيل الخطأ لمعرفة سبب الفشل في SQL
+                AccountModelsLib.operations.DataDictionaryLogerException(ex);
+                throw;
+            }/*
             string mysql = "";
             try
             {
-                mysql = @"    
+                mysql = @$"    
                 
     -- 1. حذف الـ Primary Key القديم تلقائياً
     DECLARE @ConstraintName NVARCHAR(200);
@@ -7042,18 +7298,18 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             {
 
             }
-
+            */
 
         }
-        public static void AlterColumnAddKey(ref operations opp, string TableName, string ColumnName )
+        public static void AlterColumnAddKey(ref operations opp, string TableName, string ColumnName)
         {
             IsColumnAltered = false;
             string mysql = "";
             try
             {
-  
 
-                mysql = @" Alter Table " + TableName + "  ADD CONSTRAINT  PK_" + TableName + "  PRIMARY KEY(" + ColumnName + ")   ";
+
+                mysql = @$" Alter Table " + TableName + "  ADD CONSTRAINT  PK_" + TableName + "  PRIMARY KEY(" + ColumnName + ")   ";
                 opp.insert_me(mysql);
                 IsColumnAltered = true;
                 Thread.Sleep(xmiliseconds);
@@ -7061,7 +7317,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             catch (Exception ee)
             {
                 Thread.Sleep(xmiliseconds);
-                 
+
 
 
             }
@@ -7074,7 +7330,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             try
             {
 
-                mysql = @" Alter Table " + TableName + "  alter column  " + ColumnName + " " + DataType + "   ";
+                mysql = @$" Alter Table " + TableName + "  alter column  " + ColumnName + " " + DataType + "   ";
                 opp.insert_me(mysql);
                 IsColumnAltered = true;
                 Thread.Sleep(xmiliseconds);
@@ -7087,10 +7343,10 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
                 string[] words = ee.Message.Split('\'');
                 try
                 {
-                    mysql = @" Alter Table " + TableName + "  Drop CONSTRAINT  " + words[1] + "   ";
+                    mysql = @$" Alter Table " + TableName + "  Drop CONSTRAINT  " + words[1] + "   ";
                     opp.insert_me(mysql);
 
-                    mysql = @" Alter Table " + TableName + "  Drop CONSTRAINT DF_" + TableName + "_" + ColumnName + "   ";
+                    mysql = @$" Alter Table " + TableName + "  Drop CONSTRAINT DF_" + TableName + "_" + ColumnName + "   ";
                     opp.insert_me(mysql);
 
                     AlterColumn(ref opp, TableName, ColumnName, DataType);
@@ -7109,7 +7365,9 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             {
                 mysql = mysql.Replace("'", " ");
                 Errmessage = Errmessage.Replace("'", " ");
-                mysql = @"  Insert Into ALogError(mysql,message) values(N'" + mysql + "',N'" + Errmessage + "') ";
+                mysql = @$"  Insert Into ALogError(mysql,message) values(N'" + mysql + "',N'" + Errmessage + "') ";
+                mysql = ExecuteInsertWithIdentityCheck("ALogError", mysql);
+
                 opp.insert_me(mysql);
             }
             catch (Exception ee)
@@ -7121,7 +7379,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
         {
             try
             {
-                string mysql = @"  Truncate Table ALogError  ";
+                string mysql = @$"  Truncate Table ALogError  ";
                 opp.insert_me(mysql);
             }
             catch (Exception ee)
@@ -7139,7 +7397,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             //string str = "";
             //try
             //{
-            //    string str = @" ";
+            //    string str = @$" ";
             //    opp.insert_me(str);
 
             //}
@@ -7149,7 +7407,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
 
             try
             {
-                string str = @" drop TABLE [dbo].[OrderTypes_Label]";
+                string str = @$" drop TABLE [dbo].[OrderTypes_Label]";
                 opp.insert_me(str);
 
             }
@@ -7161,7 +7419,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
             {
 
 
-                string str = @"    
+                string str = @$"    
 CREATE TABLE [dbo].[OrderTypes_Label](
 	[TypesID] [bigint] NOT NULL,
 	[LabelFrom] [nvarchar](50) NULL,
@@ -7202,7 +7460,7 @@ INSERT [dbo].[OrderTypes_Label] ([TypesID], [LabelFrom], [LabelTo], [Label_Name]
 
             try
             {
-                string str = @" drop TABLE [dbo].[LookUp_StoreOrderTypes] ";
+                string str = @$" drop TABLE [dbo].[LookUp_StoreOrderTypes] ";
                 opp.insert_me(str);
 
             }
@@ -7212,7 +7470,7 @@ INSERT [dbo].[OrderTypes_Label] ([TypesID], [LabelFrom], [LabelTo], [Label_Name]
 
             try
             {
-                string str = @" 
+                string str = @$" 
 
 
 CREATE TABLE [dbo].[LookUp_StoreOrderTypes](
@@ -7250,7 +7508,7 @@ INSERT [dbo].[LookUp_StoreOrderTypes] ([Id], [Name], [Type], [IsHaveSelectedId],
 
             try
             {
-                string str = @"  drop TABLE [dbo].[DataDictionaryProcessesLists] ";
+                string str = @$"  drop TABLE [dbo].[DataDictionaryProcessesLists] ";
                 opp.insert_me(str);
 
             }
@@ -7261,7 +7519,7 @@ INSERT [dbo].[LookUp_StoreOrderTypes] ([Id], [Name], [Type], [IsHaveSelectedId],
             try
             {
 
-                string str = @"  
+                string str = @$"  
 
 CREATE TABLE [dbo].[DataDictionaryProcessesLists](
 	[Id] [bigint] NOT NULL primary key,
@@ -7360,7 +7618,7 @@ INSERT [dbo].[DataDictionaryProcessesLists] ([Id], [ProcessName], [OrderTypes_Va
             {
 
                 string str = @"";
-                str = @"  
+                str = @$"  
  CREATE TABLE [dbo].[DataDictionaryLogerProcesses](
 	[Id] [bigint] {IDENTITY} primary key NOT NULL,
 	[ProcessId] [bigint] NULL,
@@ -7390,7 +7648,7 @@ INSERT [dbo].[DataDictionaryProcessesLists] ([Id], [ProcessName], [OrderTypes_Va
             {
 
                 string str = @"";
-                str = @" drop  TABLE [dbo].[Account_Type] 
+                str = @$" drop  TABLE [dbo].[Account_Type] 
 CREATE TABLE [dbo].[Account_Type](
     [ID][bigint] NOT NULL,
 
@@ -7404,13 +7662,13 @@ CREATE TABLE [dbo].[Account_Type](
 	[Customer_Type] [int] NULL DEFAULT((0)),
 	[Table_Name] [nvarchar](50) NULL,
 	[OperationDate] [datetime] NULL DEFAULT(getdate()),
-	[User_Id] [int] NULL DEFAULT((0)),
-	[Branch_Id] [int] NULL DEFAULT((0)),
+	[User_Id] [bigint] NULL DEFAULT((0)),
+	[Branch_Id] [bigint] NULL DEFAULT((0)),
 [ProcessNo] [bigint] NULL DEFAULT((0)),
 	[Insert_ServerDateTime] [datetime] NULL DEFAULT(getdate()),
 	[Update_ServerDateTime] [datetime] NULL DEFAULT(getdate()),
 	[EditOperationDate] [datetime] NULL DEFAULT(getdate()),
-	[Edit_User_Id] [int] NULL DEFAULT((0))
+	[Edit_User_Id] [bigint] NULL DEFAULT((0))
 )  ";
                 opp.insert_me(str);
             }
@@ -7421,7 +7679,7 @@ CREATE TABLE [dbo].[Account_Type](
             ///Account_Type
             try
             {
-                string str = @"   
+                string str = @$"   
 
 INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(1 AS Numeric(18, 0)), N'حقوق الملكيه', 15, 4, 3, 1, 0, 0, 0, NULL, NULL, 0, 0, NULL, NULL, NULL, 0, 0)
 INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(2 AS Numeric(18, 0)), N'حساب  موظف', 4, 4, 1, 1, 0, 0, 0, N'Employee', NULL, 0, 0, NULL, NULL, NULL, 0, 0)
@@ -7481,7 +7739,7 @@ INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Mai
 
             try
             {
-                string str = @" drop TABLE [dbo].[OrderTypes]";
+                string str = @$" drop TABLE [dbo].[OrderTypes]";
                 opp.insert_me(str);
 
             }
@@ -7494,7 +7752,7 @@ INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Mai
                 try
                 {
 
-                    string str = @"  
+                    string str = @$"  
     //drop TABLE [dbo].[OrderTypes]
     CREATE TABLE [dbo].[OrderTypes](
         [ID] [bigint] NOT NULL,
@@ -7504,12 +7762,12 @@ INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Mai
         [Order_Estlam_Sarf] [int] NULL,
         [Case_Name] [nvarchar](50) NULL,
         [OperationDate] [datetime] NULL,
-        [User_Id] [int] NULL,
-        [Branch_Id] [int] NULL,
+        [User_Id] [bigint] NULL,
+        [Branch_Id] [bigint] NULL,
         [Insert_ServerDateTime] [datetime] NULL,
         [Update_ServerDateTime] [datetime] NULL,
         [EditOperationDate] [datetime] NULL,
-        [Edit_User_Id] [int] NULL,
+        [Edit_User_Id] [bigint] NULL,
         [ProcessNo] [bigint] NULL 
 
     ) 
@@ -7553,7 +7811,7 @@ INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Mai
 
             try
             {
-                string str = @"  
+                string str = @$"  
 
 CREATE TABLE [dbo].[CarEstimationsValuesDetails](
 	[Id] [bigint]  {IDENTITY} primary key  NOT NULL,
@@ -7595,12 +7853,12 @@ CREATE TABLE [dbo].[CarEstimationsValuesDetails](
 	[Item_Notes] [nvarchar](500) NULL,
 	[Order_PurshingId] [bigint] NULL,
 	[StoreId] [bigint] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL,
+	[Edit_User_Id] [bigint] NULL,
 	[ProcessNo] [bigint] NULL,
 	[OperationDate] [datetime] NULL,
 	[Store_Id] [bigint] NULL,
@@ -7794,8 +8052,8 @@ CREATE TABLE [dbo].[CarsWorkOrders](
 	[IsWorkOrderClosed] [int] NULL,
 	[WorkOrderClosedDate] [datetime] NULL,
 	[ReceptionManId] [bigint] NULL,
-	[Branch_Id] [int] NULL,
-	[User_Id] [int] NULL,
+	[Branch_Id] [bigint] NULL,
+	[User_Id] [bigint] NULL,
 	[Lookup_CarTypeModeLId] [bigint] NULL,
 	[Lookup_CarTypeId] [bigint] NULL,
 	[Last_Invoice_ListId] [bigint] NULL,
@@ -7866,12 +8124,12 @@ CREATE TABLE [dbo].[CarsWorkOrdersDeliverDetails](
 	[Is_AddToInvoice] [int] NULL,
 	[Item_DeletedFlage] [int] NULL,
 	[Item_ProcessedFlage] [int] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL,
+	[Edit_User_Id] [bigint] NULL,
 	[ProcessNo] [bigint] NULL,
 	[OperationDate] [datetime] NULL,
 	[Store_Id] [bigint] NULL,
@@ -7956,12 +8214,12 @@ CREATE TABLE [dbo].[CarsWorkOrdersItemProcessedDetails](
 	[Item_Notes] [nvarchar](500) NULL,
 	[Order_PurshingId] [bigint] NULL,
 	[StoreId] [bigint] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL,
+	[Edit_User_Id] [bigint] NULL,
 	[ProcessNo] [bigint] NULL,
 	[OperationDate] [datetime] NULL,
 	[Store_Id] [bigint] NULL,
@@ -8044,12 +8302,12 @@ CREATE TABLE [dbo].[CarsWorkOrdersItemReversedProcessedDetails](
 	[Item_Notes] [nvarchar](500) NULL,
 	[Order_PurshingId] [bigint] NULL,
 	[StoreId] [bigint] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL,
+	[Edit_User_Id] [bigint] NULL,
 	[ProcessNo] [bigint] NULL,
 	[OperationDate] [datetime] NULL,
 	[Store_Id] [bigint] NULL,
@@ -8119,12 +8377,12 @@ CREATE TABLE [dbo].[CarsWorkOrdersRequestedDetails](
 	[Is_AddToInvoice] [int] NULL,
 	[Item_DeletedFlage] [int] NULL,
 	[Item_ProcessedFlage] [int] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL,
+	[Edit_User_Id] [bigint] NULL,
 	[ProcessNo] [bigint] NULL,
 	[OperationDate] [datetime] NULL,
 	[Is_ItemDeliver] [bit] NULL,
@@ -8225,7 +8483,7 @@ CREATE TABLE [dbo].[CarsWorkOrdersRequestedDetails](
 
                 try
                 {
-                    str = " CREATE TABLE [dbo].[AccountTaxInfo](\r\n\t[Id] bigint {IDENTITY} primary key NOT NULL,\r\n\t[TaxName_Ar] [nvarchar](500) NULL,\r\n\t[TaxName_En] [nvarchar](500) NULL,\r\n\t[TaxRate] [decimal](18, 2) NULL,\r\n\t[MainCode] [nvarchar](500) NULL,\r\n\t[SubCode] [nvarchar](500) NULL \r\n ,MinAllowedValueToComputeTax [decimal] null )   ";
+                    str = " CREATE TABLE [dbo].[AccountTaxInfo]( [Id] bigint {IDENTITY} primary key NOT NULL, [TaxName_Ar] [nvarchar](500) NULL, [TaxName_En] [nvarchar](500) NULL, [TaxRate] [decimal](18, 2) NULL, [MainCode] [nvarchar](500) NULL, [SubCode] [nvarchar](500) NULL   ,MinAllowedValueToComputeTax [decimal] null )   ";
                     opp.insert_me(str);
 
 
@@ -8296,9 +8554,9 @@ CREATE TABLE [dbo].[CarsWorkOrdersRequestedDetails](
         {
             try
             {
-                string str = @"  
+                string str = @$"  
 CREATE TABLE [dbo].[Lookup_OrderDeliveryTypes] (
-    [Id]                   bigint             IDENTITY (0, 1) NOT NULL PRIMARY KEY ,
+    [Id] bigint {IDENTITY} NOT NULL PRIMARY KEY ,
     [Name]    NVARCHAR (500)   NOT NULL,
     [Name_En]    NVARCHAR (500)   NOT NULL,
     [Default_Service_Rate] DECIMAL (18, 2)   DEFAULT ((0.00)) NOT NULL, -- نسبة الخدمة مئوية للصالة
@@ -8310,10 +8568,10 @@ CREATE TABLE [dbo].[Lookup_OrderDeliveryTypes] (
                 opp.insert_me(str);
 
 
-                str = @"   
+                str = @$"   
 
  
-SET IDENTITY_INSERT [dbo].[Lookup_OrderDeliveryTypes] ON;
+ 
 
 INSERT INTO [dbo].[Lookup_OrderDeliveryTypes] ([Id], [Name], [Name_En], [Default_Service_Rate], [Default_Delivery_Fee]) 
 VALUES 
@@ -8322,8 +8580,9 @@ VALUES
 (2, N'سفري', N'Takeaway', 0.00, 0.00),  -- سفري بدون رسوم إضافية
 (3, N'توصيل', N'Delivery', 0.00, 15.00); -- توصيل مع 15 كقيمة شحن افتراضية
 
-SET IDENTITY_INSERT [dbo].[Lookup_OrderDeliveryTypes] OFF;
+ 
  ";
+                str = ExecuteInsertWithIdentityCheck("Lookup_OrderDeliveryTypes", str);
                 opp.insert_me(str);
             }
             catch
@@ -8384,7 +8643,7 @@ SET IDENTITY_INSERT [dbo].[Lookup_OrderDeliveryTypes] OFF;
 
 
             mysql = " UPDATE       SysConfigMenus SET IsShowToUser =0 WHERE (Parent_Id = 0) AND (Id = 321) ";
-                mysql = mysql + "  UPDATE       SysConfigMenusPERMATIONS SET                IsShowToUser = 0 FROM            SysConfigMenusPERMATIONS INNER JOIN  SysConfigMenus ON SysConfigMenusPERMATIONS.Menu_ID = SysConfigMenus.Id WHERE        (SysConfigMenusPERMATIONS.Parent_Id = 321) ";
+            mysql = mysql + "  UPDATE       SysConfigMenusPERMATIONS SET                IsShowToUser = 0 FROM            SysConfigMenusPERMATIONS INNER JOIN  SysConfigMenus ON SysConfigMenusPERMATIONS.Menu_ID = SysConfigMenus.Id WHERE        (SysConfigMenusPERMATIONS.Parent_Id = 321) ";
             AlterBD_(ref opp, "SysConfigMenusPERMATIONS", "IsShowToUser", "int", "1", "1", mysql);
         }
 
@@ -8397,12 +8656,12 @@ CREATE TABLE [dbo].[Items_Bodies_Name](
 	[Id] [bigint] {IDENTITY} NOT NULL PRIMARY KEY,
 	[ItemBody_Name] [nvarchar](50) NULL,
 	[OperationDate] [datetime] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL,
+	[Edit_User_Id] [bigint] NULL,
 	[ProcessNo] [bigint] NULL 
 
 	)
@@ -8417,12 +8676,12 @@ CREATE TABLE [dbo].[Items_Color_Name](
 	[Id] [bigint] {IDENTITY} NOT NULL PRIMARY KEY,
 	[Color_Name] [nvarchar](50) NULL,
 	[OperationDate] [datetime] NULL,
-	[User_Id] [int] NULL,
-	[Branch_Id] [int] NULL,
+	[User_Id] [bigint] NULL,
+	[Branch_Id] [bigint] NULL,
 	[Insert_ServerDateTime] [datetime] NULL,
 	[Update_ServerDateTime] [datetime] NULL,
 	[EditOperationDate] [datetime] NULL,
-	[Edit_User_Id] [int] NULL,
+	[Edit_User_Id] [bigint] NULL,
 	[ProcessNo] [bigint] NULL 
   )
  ";
@@ -8436,12 +8695,12 @@ CREATE TABLE [dbo].[Items_Types_Name](
 	[Id] [bigint] {IDENTITY} NOT NULL PRIMARY KEY,
 	[ItemsType_Name] [nvarchar](50) NULL,
 	[OperationDate] [datetime] NULL DEFAULT (getdate()),
-	[User_Id] [int] NULL DEFAULT ((0)),
-	[Branch_Id] [int] NULL DEFAULT ((0)),
+	[User_Id] [bigint] NULL DEFAULT ((0)),
+	[Branch_Id] [bigint] NULL DEFAULT ((0)),
 	[Insert_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
 	[Update_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
 	[EditOperationDate] [datetime] NULL DEFAULT (getdate()),
-	[Edit_User_Id] [int] NULL DEFAULT ((0)),
+	[Edit_User_Id] [bigint] NULL DEFAULT ((0)),
 	[ProcessNo] [bigint] NULL DEFAULT ((0)) 
  )  
 
@@ -8456,12 +8715,12 @@ CREATE TABLE [dbo].[Items_TypesColor_Name](
 	[Id] [bigint] {IDENTITY} NOT NULL PRIMARY KEY,
 	[Type_Name] [nvarchar](50) NULL,
 	[OperationDate] [datetime] NULL DEFAULT (getdate()),
-	[User_Id] [int] NULL DEFAULT ((0)),
-	[Branch_Id] [int] NULL DEFAULT ((0)),
+	[User_Id] [bigint] NULL DEFAULT ((0)),
+	[Branch_Id] [bigint] NULL DEFAULT ((0)),
 	[Insert_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
 	[Update_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
 	[EditOperationDate] [datetime] NULL DEFAULT (getdate()),
-	[Edit_User_Id] [int] NULL DEFAULT ((0)),
+	[Edit_User_Id] [bigint] NULL DEFAULT ((0)),
 	[ProcessNo] [bigint] NULL DEFAULT ((0)))
 
  ";
@@ -8475,12 +8734,12 @@ CREATE TABLE [dbo].[Items_TypesDegreeFarz_Name](
 	[Id] [bigint] {IDENTITY} NOT NULL PRIMARY KEY,
 	[Type_Name] [nvarchar](50) NULL,
 	[OperationDate] [datetime] NULL DEFAULT (getdate()),
-	[User_Id] [int] NULL DEFAULT ((0)),
-	[Branch_Id] [int] NULL DEFAULT ((0)),
+	[User_Id] [bigint] NULL DEFAULT ((0)),
+	[Branch_Id] [bigint] NULL DEFAULT ((0)),
 	[Insert_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
 	[Update_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
 	[EditOperationDate] [datetime] NULL DEFAULT (getdate()),
-	[Edit_User_Id] [int] NULL DEFAULT ((0)),
+	[Edit_User_Id] [bigint] NULL DEFAULT ((0)),
 	[ProcessNo] [bigint] NULL DEFAULT ((0))
 	)
 
@@ -8495,12 +8754,12 @@ CREATE TABLE [dbo].[Items_TypesDescription_Name](
 	[Id] [bigint] {IDENTITY} NOT NULL PRIMARY KEY,
 	[Type_Name] [nvarchar](50) NULL,
 	[OperationDate] [datetime] NULL DEFAULT (getdate()),
-	[User_Id] [int] NULL DEFAULT ((0)),
-	[Branch_Id] [int] NULL DEFAULT ((0)),
+	[User_Id] [bigint] NULL DEFAULT ((0)),
+	[Branch_Id] [bigint] NULL DEFAULT ((0)),
 	[Insert_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
 	[Update_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
 	[EditOperationDate] [datetime] NULL DEFAULT (getdate()),
-	[Edit_User_Id] [int] NULL DEFAULT ((0)),
+	[Edit_User_Id] [bigint] NULL DEFAULT ((0)),
 	[ProcessNo] [bigint] NULL DEFAULT ((0)) 
 	)
 ";
@@ -8515,12 +8774,12 @@ CREATE TABLE [dbo].[Items_TypesDescriptionNameOther](
 	[Id] [bigint] {IDENTITY} NOT NULL PRIMARY KEY,
 	[Type_Name] [nvarchar](50) NULL,
 	[OperationDate] [datetime] NULL DEFAULT (getdate()),
-	[User_Id] [int] NULL DEFAULT ((0)),
-	[Branch_Id] [int] NULL DEFAULT ((0)),
+	[User_Id] [bigint] NULL DEFAULT ((0)),
+	[Branch_Id] [bigint] NULL DEFAULT ((0)),
 	[Insert_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
 	[Update_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
 	[EditOperationDate] [datetime] NULL DEFAULT (getdate()),
-	[Edit_User_Id] [int] NULL DEFAULT ((0)),
+	[Edit_User_Id] [bigint] NULL DEFAULT ((0)),
 	[ProcessNo] [bigint] NULL DEFAULT ((0))
 	)
 
@@ -8535,12 +8794,12 @@ CREATE TABLE [dbo].[Items_TypesFactory_Name](
 	[Id] [bigint] {IDENTITY} NOT NULL PRIMARY KEY,
 	[Type_Name] [nvarchar](50) NULL,
 	[OperationDate] [datetime] NULL DEFAULT (getdate()),
-	[User_Id] [int] NULL DEFAULT ((0)),
-	[Branch_Id] [int] NULL DEFAULT ((0)),
+	[User_Id] [bigint] NULL DEFAULT ((0)),
+	[Branch_Id] [bigint] NULL DEFAULT ((0)),
 	[Insert_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
 	[Update_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
 	[EditOperationDate] [datetime] NULL DEFAULT (getdate()),
-	[Edit_User_Id] [int] NULL DEFAULT ((0)),
+	[Edit_User_Id] [bigint] NULL DEFAULT ((0)),
 	[ProcessNo] [bigint] NULL DEFAULT ((0)) 
 	)
 
@@ -8555,12 +8814,12 @@ CREATE TABLE [dbo].[Items_TypesSize_Name](
 	[Id] [bigint] {IDENTITY} NOT NULL PRIMARY KEY,
 	[Type_Name] [nvarchar](50) NULL,
 	[OperationDate] [datetime] NULL DEFAULT (getdate()),
-	[User_Id] [int] NULL DEFAULT ((0)),
-	[Branch_Id] [int] NULL DEFAULT ((0)),
+	[User_Id] [bigint] NULL DEFAULT ((0)),
+	[Branch_Id] [bigint] NULL DEFAULT ((0)),
 	[Insert_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
 	[Update_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
 	[EditOperationDate] [datetime] NULL DEFAULT (getdate()),
-	[Edit_User_Id] [int] NULL DEFAULT ((0)),
+	[Edit_User_Id] [bigint] NULL DEFAULT ((0)),
 	[ProcessNo] [bigint] NULL DEFAULT ((0)) 
 
 	)

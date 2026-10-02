@@ -28,9 +28,9 @@ namespace AccountModelsLib.Models
 
             public DateTime? OperationDate { get; set; } = DateTime.Now;
 
-            public int? User_Id { get; set; } = 0;
+            public long? User_Id { get; set; } = 0;
 
-            public int? Branch_Id { get; set; } = 1;
+            public long? Branch_Id { get; set; } = 1;
 
             public DateTime? Insert_ServerDateTime { get; set; } = DateTime.Now;
 
@@ -38,7 +38,7 @@ namespace AccountModelsLib.Models
 
             public DateTime? EditOperationDate { get; set; }
 
-            public int? Edit_User_Id { get; set; } = 0;
+            public long? Edit_User_Id { get; set; } = 0;
 
             public long? ProcessNo { get; set; } = 0;
 

@@ -14,6 +14,7 @@ namespace AccountModelsLib.Models
     using System.ComponentModel.DataAnnotations.Schema;
     public partial class Account_Entry_List
     {
+        
         public long Id { get; set; }
         public int journal_Code { get; set; }
         public System.DateTime Entry_Date { get; set; }
@@ -35,7 +36,7 @@ namespace AccountModelsLib.Models
         public Nullable<short> HDay { get; set; }
         public Nullable<short> HMonth { get; set; }
         public Nullable<int> HYear { get; set; }
-        public Nullable<long> User_ID_Login { get; set; }
+
         public Nullable<long> Package_Code { get; set; }
         public Nullable<long> RefID { get; set; }
         public Nullable<bool> IsProfitLossClose { get; set; }
@@ -45,37 +46,38 @@ namespace AccountModelsLib.Models
         public Nullable<long> IsUpdated { get; set; }
         public string Doc_No { get; set; }
         public string User_Id_Login_Name { get; set; }
-        public Nullable<int> Branch_ID_Login { get; set; }
+        public Nullable<long> User_ID_Login { get; set; }
+        public Nullable<long> Branch_ID_Login { get; set; }
         public Nullable<decimal> Entry_Total { get; set; }
         public Nullable<int> Transform_Type { get; set; }
         public Nullable<int> IS_Transfer_To_Gl_Flage { get; set; }
         public string IS_Transfer_To_Gl_Flage_Str { get; set; }
         public Nullable<System.DateTime> Transfer_To_Gl_DateTime { get; set; }
-        public Nullable<int> Year_Financial_Period_Id { get; set; }
+        public Nullable<long> Year_Financial_Period_Id { get; set; }
         public Nullable<int> IS_FirstBalance { get; set; }
         public Nullable<int> Status_Code { get; set; }
         public string Entry_Currency_Name { get; set; }
-        public Nullable<int> Entry_Currency_ID { get; set; }
+        public Nullable<long> Entry_Currency_ID { get; set; }
         public Nullable<decimal> Factor { get; set; }
         public Nullable<long> Order_Money_Id { get; set; }
-        public Nullable<int> User_ID_LoginUpdate { get; set; }
+        public Nullable<long> User_ID_LoginUpdate { get; set; }
         public string Journal_Name { get; set; }
         public Nullable<int> Reference_Type { get; set; }
         public Nullable<long> Reference_Type_Table_Id { get; set; }
         public Nullable<System.DateTime> OperationDate { get; set; }
-        public Nullable<int> User_Id { get; set; }
-        public Nullable<int> Branch_Id { get; set; }
+        public Nullable<long> User_Id { get; set; }
+        public Nullable<long> Branch_Id { get; set; }
         public Nullable<System.DateTime> Insert_ServerDateTime { get; set; }
         public Nullable<System.DateTime> Update_ServerDateTime { get; set; }
         public Nullable<System.DateTime> EditOperationDate { get; set; }
-        public Nullable<int> Edit_User_Id { get; set; }
-        
+        public Nullable<long> Edit_User_Id { get; set; }
+
         public long? ProcessNo { get; set; }
         public long? CarsWorkOrdersId { get; set; }
         public long? CarsId { get; set; }
         public long? WorkOrderNumber { get; set; }
         public string CarNumber { get; set; }
-         
+
 
     }
 }

@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using System.Threading.Tasks;
 namespace AccountModelsLib
@@ -282,10 +283,10 @@ namespace AccountModelsLib
                 this.conn.Close();
                 db = new My_DbContext(this.conn, true);
             }
-            catch (Exception)
+            catch (Exception ee)
             {
 
-                if (this.IsTestConn == 0)
+                if (this.IsTestConn == 1)
                 {
                     ConectionStaus = false;
 
@@ -634,7 +635,7 @@ namespace AccountModelsLib
                     conn.Open();
                 }
                 long Identity = 0;
-                mysql_insert = SetUpInsertCmd(mysql_insert, ref Identity);
+                mysql_insert = SetUpInsertCmd(   mysql_insert, ref Identity);
                 cmd.CommandText = mysql_insert.Trim();
                 ada.InsertCommand = cmd;
                 ada.InsertCommand.ExecuteNonQuery();
@@ -767,13 +768,22 @@ namespace AccountModelsLib
 
 
 
-        string SetUpInsertCmd(string InsertCmd, ref long Identity)
+        string SetUpInsertCmd_(ref operations opp, string InsertCmd, ref long Identity)
         {
             if (Common.Use_Auto_Identity_Column == 0)
             {
                 //long Id = CallSnowflakeIdGenerate.GenerateNewId();
-                InsertCmd = MySqlParser.SmartEnsureIdInInsertCommandNew(InsertCmd, ref Identity, isAutoIncrement: false);
+                InsertCmd = MySqlParser.SmartEnsureIdInInsertCommandNew(db, InsertCmd, ref Identity, isAutoIncrement: false);
                 //string mysql=cmdd.GetFullGeneratedQuery();
+            }
+            return InsertCmd;
+        }
+        string SetUpInsertCmd(  string InsertCmd, ref long Identity)
+        {
+            if (Common.Use_Auto_Identity_Column == 0)
+            {
+                // استبدال الاستدعاء المباشر باستدعاء Router Method الشاملة للحالات الثلاث
+                 InsertCmd = MySqlParser.RouteAndProcessCommand(ref db, InsertCmd, ref Identity, isAutoIncrement: false);
             }
             return InsertCmd;
         }

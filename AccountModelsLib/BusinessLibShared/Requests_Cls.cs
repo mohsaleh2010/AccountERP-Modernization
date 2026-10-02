@@ -29,10 +29,11 @@ namespace AccountModelsLib
         }
         public int CommissionISValue = 1;
         
-        public void Add_Request(ref int Excp,ref string Msg, DateTime Request_Date, int Customer_Id, int Unit_Item_Table_Id, decimal Request_Qnty_Larg, decimal Request_Qnty_Small, decimal Request_Item_NO, long Money_Transaction_Box_Id)
+        public void Add_Request(ref int Excp,ref string Msg, DateTime Request_Date, long Customer_Id, long Unit_Item_Table_Id, decimal Request_Qnty_Larg, decimal Request_Qnty_Small, decimal Request_Item_NO, long Money_Transaction_Box_Id)
         {
             try
             {
+                 
                 string mysql = " INSERT INTO Requests_Details (Customer_Id, Request_Date, Unit_Item_Table_Id, Request_Qnty_Larg, Request_Qnty_Small, Request_Item_NO,Money_Transaction_Box_Id) ";
 
                 mysql = mysql + " VALUES (" + Customer_Id + ",'" + operations.dateFormat(Request_Date) + "'," + Unit_Item_Table_Id + "," + Request_Qnty_Larg + "," + Request_Qnty_Small + "," + Request_Item_NO + "," + Money_Transaction_Box_Id + ") ";
@@ -49,7 +50,7 @@ namespace AccountModelsLib
                 throw (e);
             }
         }
-        public DataSet Get_Order_Money_Value(DateTime Order_Date, int Customer_Id)
+        public DataSet Get_Order_Money_Value(DateTime Order_Date, long  Customer_Id)
         {
             int Excp = 0;
             string mysql = "SELECT Money_Transaction_Box.Import_Value, Money_Transaction_Box.Export_Value, Order_Money.Order_No, Order_Money.Order_Date,  Money_Transaction_Box.Transaction_Value, Money_Transaction_Box.Order_Mony_Id, Money_Transaction_Box.Id AS Money_Transaction_Box_Id ";
@@ -64,7 +65,7 @@ namespace AccountModelsLib
 
         }
 
-        public DataSet Get_Request_ListWith_Order_Money_Value(int Customer_Id, DateTime dtFrom, DateTime dtTo)
+        public DataSet Get_Request_ListWith_Order_Money_Value(long Customer_Id, DateTime dtFrom, DateTime dtTo)
         {
             
             string mysql = " SELECT Money_Transaction_Box.Id AS Money_Transaction_Box_Id,Money_Transaction_Box.Import_Value, Money_Transaction_Box.Export_Value, Money_Transaction_Box.Transaction_Value, Requests_Details.Request_Date, Money_Transaction_Box.Order_Mony_Id, Requests_Details.Customer_Id ";
@@ -79,7 +80,7 @@ namespace AccountModelsLib
             return Get_Requests_Items_Data(ref Excp, ref Msg, mysql);
 
         }
-        public DataSet Get_Sum_All_Requests_Items_Balance(ref int Excp, int Customer_Id)
+        public DataSet Get_Sum_All_Requests_Items_Balance(ref int Excp, long  Customer_Id)
         {
             string mysql;
             mysql = "  SELECT SUM(Requests_Details.Request_Qnty_Larg) AS Request_Qnty_Larg, SUM(Requests_Details.Request_Qnty_Small) AS Request_Qnty_Small,  SUM(Requests_Details.Request_Item_NO) AS Request_Item_NO, SUM(Requests_Details.Export_Qnty_Larg) AS Export_Qnty_Larg,  SUM(Requests_Details.Export_Qnty_Small) AS Export_Qnty_Small, SUM(Requests_Details.Export_Item_No) AS Export_Item_No,  Requests_Details.Unit_Item_Table_Id, Item.Item_Name , unit.u_name, unit.B_Unit, unit.S_unit, unit.B_Unit_Value, unit.S_unit_Value";
@@ -93,7 +94,7 @@ namespace AccountModelsLib
 
         }
 
-        public DataSet Get_All_Requests_Items_Balance(ref int Excp, int Customer_Id, long Order_Money_Transaction_Box_Id, int Item_Exported_Finish)
+        public DataSet Get_All_Requests_Items_Balance(ref int Excp, long Customer_Id, long Order_Money_Transaction_Box_Id, int Item_Exported_Finish)
         {
             string mysql;
             mysql = " SELECT Requests_Details.Id, Requests_Details.Customer_Id, Requests_Details.Request_Date, Requests_Details.Unit_Item_Table_Id,  Requests_Details.Request_Qnty_Larg, Requests_Details.Request_Item_NO, Requests_Details.Request_Qnty_Small,  Requests_Details.Export_Qnty_Larg, Requests_Details.Export_Qnty_Small, Requests_Details.Export_Item_No, Item.Item_Name,  Customer.Name AS Customer_Name, Unit_item.S_price , Unit_item.Item_id, Unit_item.Code, Unit_item.unit_id , unit.u_name, unit.B_Unit,  unit.S_unit , unit.B_Unit_Value, unit.S_unit_Value ";
@@ -113,7 +114,7 @@ namespace AccountModelsLib
             return Get_Requests_Items_Data(ref Excp, ref Msg, mysql);
         }
 
-        public DataSet Get_Requests_Items(ref int Excp, DateTime dateDay, int Customer_Id)
+        public DataSet Get_Requests_Items(ref int Excp, DateTime dateDay, long  Customer_Id)
         {
             string mysql;
             mysql = " SELECT DISTINCT  Requests_Details.Id, Requests_Details.Customer_Id, Requests_Details.Request_Date, Requests_Details.Unit_Item_Table_Id,  Requests_Details.Request_Qnty_Larg, Requests_Details.Request_Item_NO, Requests_Details.Request_Qnty_Small,  Requests_Details.Export_Qnty_Larg, Requests_Details.Export_Qnty_Small, Requests_Details.Export_Item_No, Item.Item_Name,  Customer.Name AS Customer_Name, unit.S_unit, unit.B_Unit ";
@@ -537,7 +538,7 @@ FROM            Item INNER JOIN
                 }
 
                 CustomersAccountCLS ca = new CustomersAccountCLS();
-                ca.Set_Customer_BalanceInvoiceReverse(ref Excp, ref opp, (int)invL_O.invL.Customer_Id, invL_O.invL.Id, invL_O.invL.Net_Total ?? 0, invL_O.invL.Notes);
+                ca.Set_Customer_BalanceInvoiceReverse(ref Excp, ref opp, (long)invL_O.invL.Customer_Id, invL_O.invL.Id, invL_O.invL.Net_Total ?? 0, invL_O.invL.Notes);
                 //  ca.Set_Customer_Balance_Invoice(ref Excp, ref opp, (int)invL.Customer_Id, invL.Invoices_List_Id, invL.Net_Total_Price, invL.Notes);
 
                   Msg = "";
@@ -551,7 +552,7 @@ FROM            Item INNER JOIN
                 {
                     if (Common.MakeOrderMoneyFromInvoiceAutomaticWithoutForm == 1)
                     {
-                        int Box_Id = invL_O.invL.BanksId ?? 0;
+                        long Box_Id = invL_O.invL.BanksId ?? 0;
 
 
                         //, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId
@@ -576,7 +577,7 @@ FROM            Item INNER JOIN
                 {
                     if (Common.MakeOrderMoneyFromInvoiceAutomaticWithoutForm == 1)
                     {
-                        int Box_Id = 0;
+                        long Box_Id = 0;
                         Money_Transaction_BoxOrderReportCLS mo = new Money_Transaction_BoxOrderReportCLS();
 
                         //, long CarsWorkOrdersId, long Reference_Type_Table_Id, long DataDictionaryProcessesListsId
@@ -1000,7 +1001,7 @@ FROM            Item INNER JOIN
                     bool MakeOrderOk = false;
                     if (New_Items_ds_Add.Tables[0].Rows.Count > 0)
                     {
-                        oo.Make_Order_From_Edit_Invoices_Details_Reverse(ref Excp, ref opp, ref mysql_Arr, New_Items_ds_Add.Tables[0], Invoice_List_Table_Id, (int)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „— Ã⁄ „»Ì⁄« ");
+                        oo.Make_Order_From_Edit_Invoices_Details_Reverse(ref Excp, ref opp, ref mysql_Arr, New_Items_ds_Add.Tables[0], Invoice_List_Table_Id, (long)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „— Ã⁄ „»Ì⁄« ");
 
 
                         if (Excp > 0)
@@ -1020,7 +1021,7 @@ FROM            Item INNER JOIN
                     if (New_Items_ds_Minus.Tables[0].Rows.Count > 0)
                     {
 
-                        oo.Make_Order_From_EditInvoive_Details(ref Excp, ref mysql_Arr, ref opp, ref arr_Order_Purshing_Id_Automatic, ref MakeOrderOk, New_Items_ds_Minus.Tables[0], Invoice_List_Table_Id, (int)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „— Ã⁄ „»Ì⁄« ");
+                        oo.Make_Order_From_EditInvoive_Details(ref Excp, ref mysql_Arr, ref opp, ref arr_Order_Purshing_Id_Automatic, ref MakeOrderOk, New_Items_ds_Minus.Tables[0], Invoice_List_Table_Id, (long)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „— Ã⁄ „»Ì⁄« ");
 
                         if (Excp > 0)
                         {
@@ -1061,7 +1062,7 @@ FROM            Item INNER JOIN
                 CustomersAccountCLS ca = new CustomersAccountCLS();
                 ca.ProcessNo = invL_O.invL.ProcessNo ?? 0;
                 //ca.Updatet_Customer_BalanceWithEditInvoiceReverse(ref Excp, ref opp, invL.Invoice_Date, (int)invL.Customer_Id, Invoice_List_Table_Id, invL.Net_Total_Price, Invoice_NetTotal_Diff, invL.Notes);
-                ca.Set_Customer_BalanceInvoiceReverse(ref Excp, ref opp, (int)invL_O.invL.Customer_Id, invL_O.Invoices_List_Id, invL_O.invL.Net_Total ?? 0, invL_O.invL.Notes);
+                ca.Set_Customer_BalanceInvoiceReverse(ref Excp, ref opp, (long)invL_O.invL.Customer_Id, invL_O.Invoices_List_Id, invL_O.invL.Net_Total ?? 0, invL_O.invL.Notes);
                 //«‰‘«¡ «·ﬁÌœ
                 Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
                 aa.IsNotDeletePrevEntry = false;
@@ -1108,7 +1109,7 @@ FROM            Item INNER JOIN
 
 
       
-        public void Make_Invoice_Reverse_Update_CustomerAccount_POS(ref int Excp, long Box_Id, DataSet Invoice_ds, long Invoice_No, DateTime Invoice_Date, int Customer_Id, int Currency_id, decimal Net_Total, int IsCommission_Value, decimal Commission, decimal CommissionValue, int Invoice_Type, string PolicaNo, string TroodContainerNo, string Notes, int Make_Order, decimal TaxSale10, decimal ATS05, decimal CustomerAccountBefor, decimal CustomerAccountAfter, ArrayList mArrMake_Order)
+        public void Make_Invoice_Reverse_Update_CustomerAccount_POS(ref int Excp, long Box_Id, DataSet Invoice_ds, long Invoice_No, DateTime Invoice_Date, long Customer_Id, long Currency_Id, decimal Net_Total, int IsCommission_Value, decimal Commission, decimal CommissionValue, int Invoice_Type, string PolicaNo, string TroodContainerNo, string Notes, int Make_Order, decimal TaxSale10, decimal ATS05, decimal CustomerAccountBefor, decimal CustomerAccountAfter, ArrayList mArrMake_Order)
         {
             operations opp = new operations(1);
             try
@@ -1155,7 +1156,7 @@ FROM            Item INNER JOIN
 
                 InvoicesClss inv = new InvoicesClss();
 
-                inv.Make_New_Invoice_Reverse_Id_POS(ref Excp, ref opp, ref New_Invoice_Id, Invoice_No, Customer_Id, Invoice_Date, Invoice_Type, (decimal)Total, IsCommission_Value, Commission, CommissionValue, decimal.Parse(TaxSale10.ToString()), decimal.Parse(ATS05.ToString()), (decimal)TaxSales10_Value, (decimal)ATS05_Value, Net_Total, "", Currency_id, 1, Notes, PolicaNo, TroodContainerNo, CustomerAccountBefor, CustomerAccountAfter);
+                inv.Make_New_Invoice_Reverse_Id_POS(ref Excp, ref opp, ref New_Invoice_Id, Invoice_No, Customer_Id, Invoice_Date, Invoice_Type, (decimal)Total, IsCommission_Value, Commission, CommissionValue, decimal.Parse(TaxSale10.ToString()), decimal.Parse(ATS05.ToString()), (decimal)TaxSales10_Value, (decimal)ATS05_Value, Net_Total, "", Currency_Id, 1, Notes, PolicaNo, TroodContainerNo, CustomerAccountBefor, CustomerAccountAfter);
 
 
 
@@ -1176,8 +1177,8 @@ FROM            Item INNER JOIN
 
                 long Invoice_Id = New_Invoice_Id;
                 string Invoice_Item_Name = "";
-                int Item_Id;
-                int Store_Id = 0;
+                long Item_Id;
+                long Store_Id = 0;
                 decimal Larg_Qnty;
                 decimal Small_Qnty;
                 string Qnty_Another;
@@ -1188,8 +1189,8 @@ FROM            Item INNER JOIN
                 decimal ATS05_;
                 decimal TaxSales10_;
                 int Unit_Used_for_Price;
-                int unit_id;
-                int Unit_Item_Table_Id;
+                long unit_id;
+                long Unit_Item_Table_Id = 0;  
                 string code;
                 string Notes_;
                 int Balance_Checked;
@@ -1235,8 +1236,8 @@ FROM            Item INNER JOIN
                     Specification = Invoice_ds.Tables[0].Rows[x]["Specification"].ToString();
 
                     string NameSpecification = Invoice_ds.Tables[0].Rows[x]["Item_Name"].ToString() + "  " + Invoice_ds.Tables[0].Rows[x]["Specification"].ToString();
-                    Item_Id = int.Parse(Invoice_ds.Tables[0].Rows[x]["Item_id"].ToString());
-                    Store_Id = int.Parse(Invoice_ds.Tables[0].Rows[x]["Store_Id"].ToString());
+                    Item_Id = long.Parse(Invoice_ds.Tables[0].Rows[x]["Item_id"].ToString());
+                    Store_Id = long.Parse(Invoice_ds.Tables[0].Rows[x]["Store_Id"].ToString());
 
                     Larg_Qnty = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["Larg_Qnty"].ToString());
                     Small_Qnty = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["Small_Qnty"].ToString());
@@ -1248,8 +1249,8 @@ FROM            Item INNER JOIN
                     ATS05_ = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["ATS05"].ToString());
                     TaxSales10_ = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["TaxSales10"].ToString());
                     Unit_Used_for_Price = 0;
-                    unit_id = int.Parse(Invoice_ds.Tables[0].Rows[x]["unit_id"].ToString());
-                    Unit_Item_Table_Id = int.Parse(Invoice_ds.Tables[0].Rows[x]["Unit_Item_Table_Id"].ToString());
+                    unit_id = long.Parse(Invoice_ds.Tables[0].Rows[x]["unit_id"].ToString());
+                    Unit_Item_Table_Id = long.Parse(Invoice_ds.Tables[0].Rows[x]["Unit_Item_Table_Id"].ToString());
                     code = Invoice_ds.Tables[0].Rows[x]["Code"].ToString();
                     int Is_Item_CommissionValue = int.Parse(Invoice_ds.Tables[0].Rows[x]["Is_Item_CommissionValue"].ToString());
                     decimal Item_CommissionValue = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["Item_CommissionValue"].ToString());
@@ -1268,7 +1269,7 @@ FROM            Item INNER JOIN
                     string QntyStr = Invoice_ds.Tables[0].Rows[x]["QntyStr"].ToString();
                     string QntyStrColumn = Invoice_ds.Tables[0].Rows[x]["QntyStrColumn"].ToString();
                     decimal Item_TaxSales10_Value = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["Item_TaxSales10_Value"].ToString());
-                    //int Store_Id = int.Parse(Invoice_ds.Tables[0].Rows[x]["Store_Id"].ToString());
+                    //long Store_Id = long.Parse(Invoice_ds.Tables[0].Rows[x]["Store_Id"].ToString());
 
 
                     mysql = " INSERT INTO Invoices_Details_Reverse (Store_Id,Invoice_Item_Name,NameSpecification,Invoice_Id, Item_Id, Larg_Qnty, Small_Qnty,Qnty_Another, Larg_Unit_Price, Small_Unit_Price, Qnty_value,Total, ATS05, TaxSales10,TaxSales10_Value,ATS05_Value,Unit_Used_for_Price,unit_id,Unit_Item_Table_Id,code, Notes,Balance_Checked,Specification,Make_Order, Is_Item_CommissionValue,Item_CommissionValue,Unit_CommissionValue,Item_Net_Total_Price, Item_Total_WithoutTax, QntyStr,     QntyStrColumn,    Item_TaxSales10_Value) ";
@@ -1357,7 +1358,7 @@ FROM            Item INNER JOIN
 
                         long Entry_No = 0;
                         long Money_Transaction_Box_ID = 0;
-                        mt.Make_Transaction_BanksBox_FromInvoices(ref Excp, ref Msg, ref opp, ref Order_Mony_Id2, ref Money_Transaction_Box_ID, Transaction_Type, Order_No, Box_Id, Box_Balance, Cach_Value, Order_Date, Man_Name, Currency_id, Customer_Id, Reverse_Order, Entry_No, CarsWorkOrdersId, Reference_Type_Table_Id, DataDictionaryProcessesListsId);
+                        mt.Make_Transaction_BanksBox_FromInvoices(ref Excp, ref Msg, ref opp, ref Order_Mony_Id2, ref Money_Transaction_Box_ID, Transaction_Type, Order_No, Box_Id, Box_Balance, Cach_Value, Order_Date, Man_Name, Currency_Id, Customer_Id, Reverse_Order, Entry_No, CarsWorkOrdersId, Reference_Type_Table_Id, DataDictionaryProcessesListsId);
                         ////print Order
                         //Order_Receipt_Cash oo = new Order_Receipt_Cash();
                         //DataSet dsOrderMoney = oo.Get_Order_Cash(ref Excp, Order_Mony_Id2);
@@ -1405,7 +1406,7 @@ FROM            Item INNER JOIN
             }
 
         }
-        public void Make_Invoice_Update_CustomerAccount_POS(ref int Excp, DataSet Invoice_ds, ref string Msg, int Box_Id, long Invoice_No, DateTime Invoice_Date, int Customer_Id, int Currency_id, decimal Total, int IsCommission_Value, decimal Commission, decimal CommissionValue, int Invoice_Type, string PolicaNo, string TroodContainerNo, string Notes, int Make_Order, decimal TaxSale10, decimal ATS05, decimal CustomerAccountBefor, decimal CustomerAccountAfter, long SubAccount_Id, string SubAccount_Name, ArrayList mArrMake_Order)
+        public void Make_Invoice_Update_CustomerAccount_POS(ref int Excp, DataSet Invoice_ds, ref string Msg, long Box_Id, long Invoice_No, DateTime Invoice_Date, long Customer_Id, long Currency_Id, decimal Total, int IsCommission_Value, decimal Commission, decimal CommissionValue, int Invoice_Type, string PolicaNo, string TroodContainerNo, string Notes, int Make_Order, decimal TaxSale10, decimal ATS05, decimal CustomerAccountBefor, decimal CustomerAccountAfter, long SubAccount_Id, string SubAccount_Name, ArrayList mArrMake_Order)
         {
             operations opp = new operations(1);
             decimal Net_Total = Total - Commission;
@@ -1461,13 +1462,13 @@ FROM            Item INNER JOIN
 
                 InvoicesClss inv = new InvoicesClss();
 
-                inv.Make_New_Invoice_Id_POS(ref Excp, ref opp, ref New_Invoice_Id, Invoice_No, Customer_Id, Invoice_Date, Invoice_Type, (decimal)Total, IsCommission_Value, Commission, CommissionValue, decimal.Parse(TaxSale10.ToString()), decimal.Parse(ATS05.ToString()), (decimal)TaxSales10_Value, (decimal)ATS05_Value, Net_Total, "", Currency_id, 1, Notes, PolicaNo, TroodContainerNo, CustomerAccountBefor, CustomerAccountAfter, SubAccount_Id, SubAccount_Name);
+                inv.Make_New_Invoice_Id_POS(ref Excp, ref opp, ref New_Invoice_Id, Invoice_No, Customer_Id, Invoice_Date, Invoice_Type, (decimal)Total, IsCommission_Value, Commission, CommissionValue, decimal.Parse(TaxSale10.ToString()), decimal.Parse(ATS05.ToString()), (decimal)TaxSales10_Value, (decimal)ATS05_Value, Net_Total, "", Currency_Id, 1, Notes, PolicaNo, TroodContainerNo, CustomerAccountBefor, CustomerAccountAfter, SubAccount_Id, SubAccount_Name);
 
                 ///////////// add invoice Items and update request qnty
 
                 ArrayList arr = new ArrayList();
                 long Invoice_Id = New_Invoice_Id;
-                int Item_Id;
+                long Item_Id;
                 decimal Larg_Qnty;
                 decimal Small_Qnty;
                 string Qnty_Another;
@@ -1478,8 +1479,8 @@ FROM            Item INNER JOIN
                 decimal ATS05_;
                 decimal TaxSales10_;
                 int Unit_Used_for_Price;
-                int unit_id;
-                int Unit_Item_Table_Id;
+                long unit_id;
+                long Unit_Item_Table_Id=0;
                 string code;
                 string Notes_;
                 int Balance_Checked;
@@ -1515,7 +1516,7 @@ FROM            Item INNER JOIN
                         ATS05_Value = 0;
                     }
                     Invoice_Item_Name = Invoice_ds.Tables[0].Rows[x]["Item_Name"].ToString();
-                    Item_Id = int.Parse(Invoice_ds.Tables[0].Rows[x]["Item_id"].ToString());
+                    Item_Id = long.Parse(Invoice_ds.Tables[0].Rows[x]["Item_id"].ToString());
                     Specification = Invoice_ds.Tables[0].Rows[x]["Specification"].ToString();
                     Larg_Qnty = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["Larg_Qnty"].ToString());
                     Small_Qnty = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["Small_Qnty"].ToString());
@@ -1528,8 +1529,8 @@ FROM            Item INNER JOIN
                     TaxSales10_Value = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["TaxSales10_Value"].ToString());
                     TaxSales10_ = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["TaxSales10"].ToString());
                     Unit_Used_for_Price = 0;
-                    unit_id = int.Parse(Invoice_ds.Tables[0].Rows[x]["unit_id"].ToString());
-                    Unit_Item_Table_Id = int.Parse(Invoice_ds.Tables[0].Rows[x]["Unit_Item_Table_Id"].ToString());
+                    unit_id = long.Parse(Invoice_ds.Tables[0].Rows[x]["unit_id"].ToString());
+                    Unit_Item_Table_Id = long.Parse(Invoice_ds.Tables[0].Rows[x]["Unit_Item_Table_Id"].ToString());
                     code = Invoice_ds.Tables[0].Rows[x]["Code"].ToString();
                     Notes_ = "";
                     Balance_Checked = 1;
@@ -1565,7 +1566,7 @@ FROM            Item INNER JOIN
                     string QntyStr = Invoice_ds.Tables[0].Rows[x]["QntyStr"].ToString();
                     string QntyStrColumn = Invoice_ds.Tables[0].Rows[x]["QntyStrColumn"].ToString();
                     decimal Item_TaxSales10_Value = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["Item_TaxSales10_Value"].ToString());
-                    int Store_Id = int.Parse(Invoice_ds.Tables[0].Rows[x]["Store_Id"].ToString());
+                    long Store_Id = long.Parse(Invoice_ds.Tables[0].Rows[x]["Store_Id"].ToString());
 
                     mysql = " INSERT INTO Invoices_Details (Invoice_Item_Name,Invoice_Id, Item_Id, Larg_Qnty, Small_Qnty,Qnty_Another, Larg_Unit_Price, Small_Unit_Price, Qnty_value,Total, ATS05, TaxSales10,TaxSales10_Value,ATS05_Value,Unit_Used_for_Price,unit_id,Unit_Item_Table_Id,code, Notes,Balance_Checked,Specification,Make_Order,NameSpecification,  Item_Net_Total_Price, Item_Total_WithoutTax, QntyStr,     QntyStrColumn,    Item_TaxSales10_Value,Store_Id) ";
                     mysql = mysql + " VALUES (N'" + Invoice_Item_Name + "'," + Invoice_Id + "," + Item_Id + "," + Larg_Qnty + "," + Small_Qnty + ",'" + Qnty_Another + "'," + Larg_Unit_Price + "," + Small_Unit_Price + "," + Qnty_value + "," + Total_Value + "," + ATS05_ + "," + TaxSales10_ + "," + TaxSales10_Value + "," + ATS05_Value + "," + Unit_Used_for_Price + "," + unit_id + "," + Unit_Item_Table_Id + ",'" + code + "','" + Notes_ + "'," + Balance_Checked + ",'" + Specification + "'," + Make_Order + ", '" + NameSpecification + "', " + Item_Net_Total_Price + "," + Item_Total_WithoutTax + ", '" + QntyStr + "',  '" + QntyStrColumn + "',    " + Item_TaxSales10_Value + "," + Store_Id + ") ";
@@ -1645,7 +1646,7 @@ FROM            Item INNER JOIN
         }
 
        
-        public void Edit_Invoice_Update_CustomerAccount_POS(ref int Excp,ref string Msg, long Box_Id, DataSet dss, long Invoice_List_Table_Id, DateTime Invoice_Date, decimal InvoiveTotal, decimal NetInvoiceTotal, decimal Commision, decimal CommissionValue, string PolicaNo, string TroodContainerNo, int Make_Order, decimal Invoice_Net_Total_Old, decimal Invoice_Total_Old, decimal ATS05, decimal TaxSales10, decimal CustomerAccountAfter, int Currency_Id, string Notes, long SubAccount_Id, string SubAccount_Name)
+        public void Edit_Invoice_Update_CustomerAccount_POS(ref int Excp,ref string Msg, long Box_Id, DataSet dss, long Invoice_List_Table_Id, DateTime Invoice_Date, decimal InvoiveTotal, decimal NetInvoiceTotal, decimal Commision, decimal CommissionValue, string PolicaNo, string TroodContainerNo, int Make_Order, decimal Invoice_Net_Total_Old, decimal Invoice_Total_Old, decimal ATS05, decimal TaxSales10, decimal CustomerAccountAfter, long Currency_Id, string Notes, long SubAccount_Id, string SubAccount_Name)
 
         {
             InvoiceDataSetCLS ids = new InvoiceDataSetCLS();
@@ -1692,8 +1693,8 @@ FROM            Item INNER JOIN
                 decimal Unit_Used_for_Price;
                 string Specification;
 
-                int Item_Id;
-                int unit_id;
+                long Item_Id;
+                long unit_id;
                 long Unit_Item_Table_Id;
                 string code;
                 decimal Small_Unit_Price;
@@ -1701,7 +1702,7 @@ FROM            Item INNER JOIN
                 decimal TaxSales10_ValueTotal = 0;
                 decimal ATS05_ValueTotal = 0;
                 bool DeleteInvoice = false;
-                int Store_Id = 0;
+                long Store_Id = 0;
 
                 decimal ATS05_ = 0;
                 decimal TaxSales10_ = 0;
@@ -1729,7 +1730,7 @@ FROM            Item INNER JOIN
                     //{
                     //    int bb = 0;
                     //}
-                    Store_Id = int.Parse(dss.Tables[0].Rows[x]["Store_Id"].ToString());
+                    Store_Id = long.Parse(dss.Tables[0].Rows[x]["Store_Id"].ToString());
                     Larg_Qnty = decimal.Parse(dss.Tables[0].Rows[x]["Larg_Qnty"].ToString());
                     Small_Qnty = decimal.Parse(dss.Tables[0].Rows[x]["Small_Qnty"].ToString());
                     try
@@ -1762,8 +1763,8 @@ FROM            Item INNER JOIN
                     //   TaxSales10_ValueTotal = TaxSales10_ValueTotal + TaxSales10_Value;
                     // ATS05_ValueTotal = ATS05_ValueTotal + ATS05_Value;
 
-                    Item_Id = int.Parse(dss.Tables[0].Rows[x]["Item_id"].ToString());
-                    unit_id = int.Parse(dss.Tables[0].Rows[x]["unit_id"].ToString());
+                    Item_Id = long.Parse(dss.Tables[0].Rows[x]["Item_id"].ToString());
+                    unit_id = long.Parse(dss.Tables[0].Rows[x]["unit_id"].ToString());
                     Unit_Item_Table_Id = long.Parse(dss.Tables[0].Rows[x]["Unit_Item_Table_Id"].ToString());
                     code = dss.Tables[0].Rows[x]["Code"].ToString();
                     Small_Unit_Price = 0;// decimal.Parse(dss.Tables[0].Rows[x]["S_unit_Value"].ToString());
@@ -2404,7 +2405,7 @@ FROM            Invoices_List INNER JOIN
                    }
                    Order_Details_AutomaticCls oo = new Order_Details_AutomaticCls();
                    bool MakeOrderOk = false;
-                   oo.Make_Order_From_Invoive_Details(ref Excp, ref opp, ref arr_Order_Purshing_Id_Automatic, ref MakeOrderOk, Invoice_ds.Tables[0], New_Invoice_Id, (int)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „»Ì⁄« ");
+                   oo.Make_Order_From_Invoive_Details(ref Excp, ref opp, ref arr_Order_Purshing_Id_Automatic, ref MakeOrderOk, Invoice_ds.Tables[0], New_Invoice_Id, (long)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „»Ì⁄« ");
                    if (MakeOrderOk)
                    {
                        Msg = Msg + "\n";
@@ -2423,7 +2424,7 @@ FROM            Invoices_List INNER JOIN
                //////    Excp = 0;
 
                //////    int Transaction_Type = 1;
-               //////    int Box_Id = mt.GetStaticBank_ID();// int.Parse(ot.banks_List1.cmbBankType.SelectedValue.ToString());
+               //////    long Box_Id = mt.GetStaticBank_ID();// int.Parse(ot.banks_List1.cmbBankType.SelectedValue.ToString());
 
                //////    decimal Box_Balance = 0;
                //////    string Order_No = mt.Make_New_Order_No(ref Excp, Transaction_Type).ToString();
@@ -2461,7 +2462,7 @@ FROM            Invoices_List INNER JOIN
                //////    Excp = 0;
 
                //////    int Transaction_Type = 1;
-               //////    int Box_Id = int.Parse(ot.banks_List1.cmbBankType.SelectedValue.ToString());
+               //////    long Box_Id = int.Parse(ot.banks_List1.cmbBankType.SelectedValue.ToString());
 
                //////    decimal Box_Balance = 0;
                //////    string Order_No = mt.Make_New_Order_No(ref Excp, Transaction_Type).ToString();
@@ -2500,7 +2501,7 @@ FROM            Invoices_List INNER JOIN
                if (Common.IsSetCustomers_AccountsForInvoice == 1)
                {
                    CustomersAccountCLS ca = new CustomersAccountCLS();
-                   ca.Set_Customer_Balance_Invoice(ref Excp, ref opp, (int)invL_O.invL.Customer_Id, invL_O.Invoices_List_Id, invL_O.invL.Net_Total ?? 0, invL_O.invL.Notes);
+                   ca.Set_Customer_Balance_Invoice(ref Excp, ref opp, (long)invL_O.invL.Customer_Id, invL_O.Invoices_List_Id, invL_O.invL.Net_Total ?? 0, invL_O.invL.Notes);
 
                    //«‰‘«¡ «·ﬁÌœ
                    Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
@@ -2520,7 +2521,7 @@ FROM            Invoices_List INNER JOIN
                {
                    if (Common.MakeOrderMoneyFromInvoiceAutomaticWithoutForm == 1)
                    {
-                       int Box_Id = 0;
+                       long Box_Id = 0;
                        MakeMoney_TransactionFromInvoice(ref Excp, ref Msg, ref opp, invL_O.invL.Invoice_Date.Value, invL_O.invL.Invoice_Id ?? 0, invL_O.Invoices_List_Id, Box_Id, invL_O.invL.Currency_id ?? 0, invL_O.invL.Customer_Id ?? 0);
                    }
                }
@@ -2833,7 +2834,7 @@ FROM            Invoices_List INNER JOIN
                     bool MakeOrderOk = false;
                     if (New_Items_ds_Add.Tables[0].Rows.Count > 0)
                     {
-                        oo.Make_Order_From_Edit_Invoices_Details_Reverse(ref Excp, ref opp, ref mysql_Arr, New_Items_ds_Add.Tables[0], Invoice_List_Table_Id, (int)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „— Ã⁄ „»Ì⁄« ");
+                        oo.Make_Order_From_Edit_Invoices_Details_Reverse(ref Excp, ref opp, ref mysql_Arr, New_Items_ds_Add.Tables[0], Invoice_List_Table_Id, (long)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „— Ã⁄ „»Ì⁄« ");
 
 
                         if (Excp > 0)
@@ -2853,7 +2854,7 @@ FROM            Invoices_List INNER JOIN
                     if (New_Items_ds_Minus.Tables[0].Rows.Count > 0)
                     {
 
-                        oo.Make_Order_From_EditInvoive_Details(ref Excp, ref mysql_Arr, ref opp, ref arr_Order_Purshing_Id_Automatic, ref MakeOrderOk, New_Items_ds_Minus.Tables[0], Invoice_List_Table_Id, (int)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „— Ã⁄ „»Ì⁄« ");
+                        oo.Make_Order_From_EditInvoive_Details(ref Excp, ref mysql_Arr, ref opp, ref arr_Order_Purshing_Id_Automatic, ref MakeOrderOk, New_Items_ds_Minus.Tables[0], Invoice_List_Table_Id, (long)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „— Ã⁄ „»Ì⁄« ");
 
                         if (Excp > 0)
                         {
@@ -2897,7 +2898,7 @@ FROM            Invoices_List INNER JOIN
                 CustomersAccountCLS ca = new CustomersAccountCLS();
                 ca.ProcessNo = invL_O.invL.ProcessNo ?? 0;
                 //ca.Updatet_Customer_BalanceWithEditInvoiceReverse(ref Excp, ref opp, invL.Invoice_Date, (int)invL.Customer_Id, Invoice_List_Table_Id, invL.Net_Total_Price, Invoice_NetTotal_Diff, invL.Notes);
-                ca.Set_Customer_BalanceInvoiceReverse(ref Excp, ref opp, (int)invL_O.invL.Customer_Id, invL_O.Invoices_List_Id, invL_O.invL.Net_Total ?? 0, invL_O.invL.Notes);
+                ca.Set_Customer_BalanceInvoiceReverse(ref Excp, ref opp, (long)invL_O.invL.Customer_Id, invL_O.Invoices_List_Id, invL_O.invL.Net_Total ?? 0, invL_O.invL.Notes);
                 //«‰‘«¡ «·ﬁÌœ
                 Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
                 aa.IsNotDeletePrevEntry = false;
@@ -3356,7 +3357,7 @@ FROM            Invoices_List INNER JOIN
                     bool MakeOrderOk = false;
                     if (New_Items_ds_Add.Tables[0].Rows.Count > 0)
                     {
-                        oo.Make_Order_From_Edit_Invoices_Details_Reverse(ref Excp, ref opp, ref mysql_Arr, New_Items_ds_Add.Tables[0], Invoice_List_Table_Id, (int)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „— Ã⁄ „»Ì⁄« ");
+                        oo.Make_Order_From_Edit_Invoices_Details_Reverse(ref Excp, ref opp, ref mysql_Arr, New_Items_ds_Add.Tables[0], Invoice_List_Table_Id, (long)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „— Ã⁄ „»Ì⁄« ");
 
 
                         if (Excp > 0)
@@ -3376,7 +3377,7 @@ FROM            Invoices_List INNER JOIN
                     if (New_Items_ds_Minus.Tables[0].Rows.Count > 0)
                     {
 
-                        oo.Make_Order_From_EditInvoive_Details(ref Excp, ref mysql_Arr, ref opp, ref arr_Order_Purshing_Id_Automatic, ref MakeOrderOk, New_Items_ds_Minus.Tables[0], Invoice_List_Table_Id, (int)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „— Ã⁄ „»Ì⁄« ");
+                        oo.Make_Order_From_EditInvoive_Details(ref Excp, ref mysql_Arr, ref opp, ref arr_Order_Purshing_Id_Automatic, ref MakeOrderOk, New_Items_ds_Minus.Tables[0], Invoice_List_Table_Id, (long)invL_O.invL.Customer_Id, invL_O.invL.Invoice_Date.Value, "›« Ê—… „— Ã⁄ „»Ì⁄« ");
 
                         if (Excp > 0)
                         {
@@ -3423,7 +3424,7 @@ FROM            Invoices_List INNER JOIN
                 CustomersAccountCLS ca = new CustomersAccountCLS();
                 ca.ProcessNo = invL_O.invL.ProcessNo ?? 0;
                 //ca.Updatet_Customer_BalanceWithEditInvoiceReverse(ref Excp, ref opp, invL.Invoice_Date, (int)invL.Customer_Id, Invoice_List_Table_Id, invL.Net_Total_Price, Invoice_NetTotal_Diff, invL.Notes);
-                ca.Set_Customer_BalanceInvoiceReverse(ref Excp, ref opp, (int)invL_O.invL.Customer_Id, invL_O.Invoices_List_Id, invL_O.invL.Net_Total ?? 0, invL_O.invL.Notes);
+                ca.Set_Customer_BalanceInvoiceReverse(ref Excp, ref opp, (long)invL_O.invL.Customer_Id, invL_O.Invoices_List_Id, invL_O.invL.Net_Total ?? 0, invL_O.invL.Notes);
                 //«‰‘«¡ «·ﬁÌœ
                 Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
                 aa.IsNotDeletePrevEntry = false;
@@ -3486,7 +3487,7 @@ FROM            Invoices_List INNER JOIN
           }
           */
 
-        //void MakeMoney_TransactionFromInvoice(ref int Excp, ref string Msg, ref operations opp, DateTime Invoice_Date, long Invoice_No, long Invoice_Id, int Box_Id, int Currency_id, long Customer_Id)
+        //void MakeMoney_TransactionFromInvoice(ref int Excp, ref string Msg, ref operations opp, DateTime Invoice_Date, long Invoice_No, long Invoice_Id, int Box_Id, long Currency_Id, long Customer_Id)
         //{
 
         //    ////make order Money

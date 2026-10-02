@@ -149,20 +149,51 @@ namespace AccountModelsLib
 
         }
 
+        /// <summary>حفظ منطقة لواجهة Razor: التعديل عبر Add_Govern_Area؛ الإضافة تراعى كون Id عمود IDENTITY (راجع GeoIdentityInsertHelper).</summary>
+        public void SaveArea(ref int Excp, ref string Msg, Govern_Area_List ga)
+        {
+            if (ga.Id > 0) { Add_Govern_Area(ref Excp, ref Msg, ga); return; }
+            try
+            {
+                var o = new AccountModelsLib.operations();
+                if (GeoIdentityInsertHelper.IsIdentityId(o, "Govern_Area_List"))
+                {
+                    GeoIdentityInsertHelper.Insert(o,
+                        "INSERT INTO Govern_Area_List (Gov_Country_ListId, Area_Name, ProcessNo, Insert_ServerDateTime) VALUES (@c, @n, 0, GETDATE())",
+                        ("@c", ga.Gov_Country_ListId), ("@n", ga.Area_Name));
+                    Excp = 0;
+                    return;
+                }
+                Add_Govern_Area(ref Excp, ref Msg, ga);
+            }
+            catch (Exception ee)
+            {
+                Excp = 1;
+                Msg = ee.InnerException != null ? ee.InnerException.Message : ee.Message;
+            }
+        }
+
+        /// <summary>منطقة بمعرّفها بلا تتبع (لتعديلها ثم تمريرها لـAdd_Govern_Area) - إضافة لواجهة Razor.</summary>
+        public Govern_Area_List GetGovern_AreaNoTracking(long Id)
+        {
+            return new AccountModelsLib.operations().db.Govern_Area_List.AsNoTracking().Where(i => i.Id == Id).FirstOrDefault();
+        }
+
         public void Delete_ProjectUnites(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long Id)
         {
             try
             {
-                var gl = opp.db.Govern_List.Where(i => i.Govern_Area_ListId == Id);
-                if (gl != null)
+                // 🟢 إصلاح خلل الأصل (بموافقة المستخدم): كان الفحص `IQueryable != null` (دائماً true) فيمنع حذف أى منطقة؛ صار Any().
+                bool hasGovs = opp.db.Govern_List.Any(i => i.Govern_Area_ListId == Id);
+                if (hasGovs)
                 {
                     Excp = 1;
                     Msg = "لا يمكن حذف المنطقة تم تسجيل محافظات بها";
                     return;
                 }
 
-                var cityL = opp.db.Gov_City_List.Where(i => i.Govern_Area_ListId == Id);
-                if (cityL != null)
+                bool hasCities = opp.db.Gov_City_List.Any(i => i.Govern_Area_ListId == Id);
+                if (hasCities)
                 {
                     Excp = 1;
                     Msg = "لا يمكن حذف المنطقة تم تسجيل مدن بها";

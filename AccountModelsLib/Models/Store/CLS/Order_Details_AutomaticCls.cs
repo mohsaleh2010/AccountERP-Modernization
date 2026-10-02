@@ -18,7 +18,7 @@ namespace AccountModelsLib.Models
 
 
 
-        public void Make_Order_From_Invoive_Details(ref int Excp, ref operations opp, ref ArrayList arr_Order_Purshing_Id_Automatic, ref bool MakeOrderOk, DataTable dt_Invoice, long Invoice_Id, int Customer_Id, DateTime Invoice_Date, string Notes)
+        public void Make_Order_From_Invoive_Details(ref int Excp, ref operations opp, ref ArrayList arr_Order_Purshing_Id_Automatic, ref bool MakeOrderOk, DataTable dt_Invoice, long Invoice_Id, long Customer_Id, DateTime Invoice_Date, string Notes)
         {
             OrderChoiceCLS oc = new OrderChoiceCLS();
             arr_Order_Purshing_Id_Automatic = new ArrayList();
@@ -59,7 +59,7 @@ namespace AccountModelsLib.Models
 
             for (int y = 0; y < dt_Store_Id.Rows.Count; y++)
             {
-                int Store_Id = int.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
+                long Store_Id = long.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
                 or.Id_From = Store_Id;
 
                 //string Expression = "Store_Id=" + Store_Id.ToString();
@@ -72,8 +72,8 @@ namespace AccountModelsLib.Models
                 foreach (DataRow dr in dr_)
                 {
 
-                    int Unit_Item_Table_Id = int.Parse(dr["Unit_Item_Table_Id"].ToString());
-                    int Item_id = int.Parse(dr["Item_id"].ToString());
+                    long Unit_Item_Table_Id = long.Parse(dr["Unit_Item_Table_Id"].ToString());
+                    long Item_id = long.Parse(dr["Item_id"].ToString());
 
                     //Larg_Qnty = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["Larg_Qnty"].ToString());
                     //Small_Qnty = decimal.Parse(Invoice_ds.Tables[0].Rows[x]["Small_Qnty"].ToString());
@@ -131,7 +131,7 @@ namespace AccountModelsLib.Models
 
 
         }
-        public void Make_Order_From_EditInvoive_Details(ref int Excp, ref ArrayList mysql_Arr, ref operations opp, ref ArrayList arr_Order_Purshing_Id_Automatic, ref bool MakeOrderOk, DataTable dt_Invoice, long Invoice_Id, int Customer_Id, DateTime Invoice_Date, string Notes)
+        public void Make_Order_From_EditInvoive_Details(ref int Excp, ref ArrayList mysql_Arr, ref operations opp, ref ArrayList arr_Order_Purshing_Id_Automatic, ref bool MakeOrderOk, DataTable dt_Invoice, long Invoice_Id, long Customer_Id, DateTime Invoice_Date, string Notes)
         {
             OrderChoiceCLS oc = new OrderChoiceCLS();
             arr_Order_Purshing_Id_Automatic = new ArrayList();
@@ -172,7 +172,7 @@ namespace AccountModelsLib.Models
 
             for (int y = 0; y < dt_Store_Id.Rows.Count; y++)
             {
-                int Store_Id = int.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
+                long Store_Id = long.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
                 or.Id_From = Store_Id;
 
                 //string Expression = "Store_Id=" + Store_Id.ToString();
@@ -185,8 +185,8 @@ namespace AccountModelsLib.Models
                 foreach (DataRow dr in dr_)
                 {
 
-                    int Unit_Item_Table_Id = int.Parse(dr["Unit_Item_Table_Id"].ToString());
-                    int Item_id = int.Parse(dr["Item_id"].ToString());
+                    long Unit_Item_Table_Id = long.Parse(dr["Unit_Item_Table_Id"].ToString());
+                    long Item_id = long.Parse(dr["Item_id"].ToString());
                     decimal Larg_Qnty = decimal.Parse(dr["Will_Export_Qnty"].ToString());
                     decimal Small_Qnty = decimal.Parse(dr["Will_Export_QntySmall"].ToString());
                     decimal ItemNO = 0;
@@ -231,7 +231,7 @@ namespace AccountModelsLib.Models
 
         }
 
-        public void Make_Order_From_Edit_Invoices_Details_Reverse(ref int Excp, ref operations opp, ref ArrayList mysql_Arr, DataTable dt_Invoice, long Invoice_Id, int Customer_Id, DateTime Invoice_Date, string Notes)
+        public void Make_Order_From_Edit_Invoices_Details_Reverse(ref int Excp, ref operations opp, ref ArrayList mysql_Arr, DataTable dt_Invoice, long Invoice_Id, long Customer_Id, DateTime Invoice_Date, string Notes)
         {
 
             OrderChoiceCLS oc = new OrderChoiceCLS();
@@ -268,7 +268,7 @@ namespace AccountModelsLib.Models
 
             for (int y = 0; y < dt_Store_Id.Rows.Count; y++)
             {
-                int Store_Id = int.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
+                long Store_Id = long.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
                 or.Id_To = Store_Id;
 
                 string Expression = "Store_Id=" + Store_Id.ToString();
@@ -278,8 +278,8 @@ namespace AccountModelsLib.Models
                 foreach (DataRow dr in dr_)
                 {
                     or.Make_New_Order_FromInvoice(ref Excp, ref opp, ref OrderTable_id);
-                    int Unit_Item_Table_Id = int.Parse(dr["Unit_Item_Table_Id"].ToString());
-                    int Item_id = int.Parse(dr["Item_id"].ToString());
+                    long Unit_Item_Table_Id = long.Parse(dr["Unit_Item_Table_Id"].ToString());
+                    long Item_id = long.Parse(dr["Item_id"].ToString());
                     decimal Larg_Qnty = decimal.Parse(dr["Larg_Qnty"].ToString());
                     decimal Small_Qnty = decimal.Parse(dr["Small_Qnty"].ToString());
                     decimal ItemNO = 0;
@@ -366,7 +366,7 @@ namespace AccountModelsLib.Models
 
             for (int y = 0; y < dt_Store_Id.Rows.Count; y++)
             {
-                int Store_Id = int.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
+                long Store_Id = long.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
                 or.Id_From = Store_Id;
 
                 //string Expression = "Store_Id=" + Store_Id.ToString();
@@ -379,8 +379,8 @@ namespace AccountModelsLib.Models
                 foreach (DataRow dr in dr_)
                 {
 
-                    int Unit_Item_Table_Id = int.Parse(dr["Unit_Item_Table_Id"].ToString());
-                    int Item_id = int.Parse(dr["Item_id"].ToString());
+                    long Unit_Item_Table_Id = long.Parse(dr["Unit_Item_Table_Id"].ToString());
+                    long Item_id = long.Parse(dr["Item_id"].ToString());
                     decimal Larg_Qnty = decimal.Parse(dr["Will_Export_Qnty"].ToString());
                     decimal Small_Qnty = decimal.Parse(dr["Will_Export_QntySmall"].ToString());
                     decimal ItemNO = 0;
@@ -438,7 +438,7 @@ namespace AccountModelsLib.Models
             or.Type_From = 4;
             or.Id_From = 0;
             or.Type_To = 1;
-            or.Id_To = (int)Customer_Id;
+            or.Id_To = (long)Customer_Id;
             or.InvoiceTable_ID = Invoice_Id;
             string Order_Estlam_Sarf_Flage = "2"; // 1 mean estlam  ---2 mean sarf
             or.Order_Purshing_No = oc.GetNewOrderNo(or.Order_Type);
@@ -460,7 +460,7 @@ namespace AccountModelsLib.Models
 
             for (int y = 0; y < dt_Store_Id.Rows.Count; y++)
             {
-                int Store_Id = int.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
+                long Store_Id = long.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
                 or.Id_To = Store_Id;
 
                 string Expression = "Store_Id=" + Store_Id.ToString();
@@ -470,8 +470,8 @@ namespace AccountModelsLib.Models
                 foreach (DataRow dr in dr_)
                 {
                     or.Make_New_Order_FromInvoice(ref Excp, ref opp, ref OrderTable_id);
-                    int Unit_Item_Table_Id = int.Parse(dr["Unit_Item_Table_Id"].ToString());
-                    int Item_id = int.Parse(dr["Item_id"].ToString());
+                    long Unit_Item_Table_Id = long.Parse(dr["Unit_Item_Table_Id"].ToString());
+                    long Item_id = long.Parse(dr["Item_id"].ToString());
                     decimal Larg_Qnty = decimal.Parse(dr["Will_Export_Qnty"].ToString());
                     decimal Small_Qnty = decimal.Parse(dr["Will_Export_QntySmall"].ToString());
                     decimal ItemNO = 0;
@@ -512,7 +512,7 @@ namespace AccountModelsLib.Models
 
 
         }
-        public void Make_Order_From_Invoices_Details_Reverse(ref int Excp, ref operations opp, DataTable dt_Invoice, long Invoice_Id, int Customer_Id, DateTime Invoice_Date, string Notes)
+        public void Make_Order_From_Invoices_Details_Reverse(ref int Excp, ref operations opp, DataTable dt_Invoice, long Invoice_Id, long Customer_Id, DateTime Invoice_Date, string Notes)
         {
             OrderChoiceCLS oc = new OrderChoiceCLS();
 
@@ -549,7 +549,7 @@ namespace AccountModelsLib.Models
 
             for (int y = 0; y < dt_Store_Id.Rows.Count; y++)
             {
-                int Store_Id = int.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
+                long Store_Id = long.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
                 or.Id_To = Store_Id;
 
                 string Expression = "Store_Id=" + Store_Id.ToString();
@@ -559,8 +559,8 @@ namespace AccountModelsLib.Models
                 foreach (DataRow dr in dr_)
                 {
                     or.Make_New_Order_FromInvoice(ref Excp, ref opp, ref OrderTable_id);
-                    int Unit_Item_Table_Id = int.Parse(dr["Unit_Item_Table_Id"].ToString());
-                    int Item_id = int.Parse(dr["Item_id"].ToString());
+                    long Unit_Item_Table_Id = long.Parse(dr["Unit_Item_Table_Id"].ToString());
+                    long Item_id = long.Parse(dr["Item_id"].ToString());
                     decimal Larg_Qnty = decimal.Parse(dr["Will_Export_Qnty"].ToString());
                     decimal Small_Qnty = decimal.Parse(dr["Will_Export_QntySmall"].ToString());
                     decimal ItemNO = 0;
@@ -611,7 +611,7 @@ namespace AccountModelsLib.Models
             or.Order_Type = 4;
 
             or.Type_From = 1;
-            or.Id_From = (int)Customer_Id;
+            or.Id_From = (long)Customer_Id;
 
             or.Type_To = 4;
             or.Id_To = 0;
@@ -636,7 +636,7 @@ namespace AccountModelsLib.Models
 
             for (int y = 0; y < dt_Store_Id.Rows.Count; y++)
             {
-                int Store_Id = int.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
+                long Store_Id = long.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
                 or.Id_To = Store_Id;
 
                 string Expression = "Store_Id=" + Store_Id.ToString();
@@ -646,8 +646,8 @@ namespace AccountModelsLib.Models
                 foreach (DataRow dr in dr_)
                 {
                     or.Make_New_Order_FromInvoice(ref Excp, ref opp, ref OrderTable_id);
-                    int Unit_Item_Table_Id = int.Parse(dr["Unit_Item_Table_Id"].ToString());
-                    int Item_id = int.Parse(dr["Item_id"].ToString());
+                    long Unit_Item_Table_Id = long.Parse(dr["Unit_Item_Table_Id"].ToString());
+                    long Item_id = long.Parse(dr["Item_id"].ToString());
                     decimal Larg_Qnty = decimal.Parse(dr["Will_Export_Qnty"].ToString());
                     decimal Small_Qnty = decimal.Parse(dr["Will_Export_QntySmall"].ToString());
                     decimal ItemNO = 0;
@@ -696,7 +696,7 @@ namespace AccountModelsLib.Models
             or.Order_Type = 4;
 
             or.Type_From = 1;
-            or.Id_From = (int)Customer_Id;
+            or.Id_From = (long)Customer_Id;
 
             or.Type_To = 4;
             or.Id_To = 0;
@@ -721,7 +721,7 @@ namespace AccountModelsLib.Models
 
             for (int y = 0; y < dt_Store_Id.Rows.Count; y++)
             {
-                int Store_Id = int.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
+                long Store_Id = long.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
                 or.Id_To = Store_Id;
 
                 string Expression = "Store_Id=" + Store_Id.ToString();
@@ -731,7 +731,7 @@ namespace AccountModelsLib.Models
                 foreach (IBills_Details dr in _invDlst)
                 {
                     or.Make_New_Order_FromInvoice(ref Excp, ref opp, ref OrderTable_id);
-                    int Unit_Item_Table_Id = int.Parse(dr.Unit_Item_Table_Id.ToString());
+                    long Unit_Item_Table_Id = long.Parse(dr.Unit_Item_Table_Id.ToString());
                     int Item_id = int.Parse(dr.Item_Id.ToString());
                     decimal Larg_Qnty = decimal.Parse(dr.Larg_Qnty.ToString());
                     decimal Small_Qnty = decimal.Parse(dr.Small_Qnty.ToString());
@@ -784,7 +784,7 @@ namespace AccountModelsLib.Models
             or.Id_From = 0;
 
             or.Type_To = 1;
-            or.Id_To = (int)Customer_Id;
+            or.Id_To = (long)Customer_Id;
 
             long FromStoreId = or.Id_From;
             long ToStoreId = or.Id_To;
@@ -811,7 +811,7 @@ namespace AccountModelsLib.Models
 
             for (int y = 0; y < dt_Store_Id.Rows.Count; y++)
             {
-                int Store_Id = int.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
+                long Store_Id = long.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
                 or.Id_From = Store_Id;
 
                 string Expression = "Store_Id=" + Store_Id.ToString();
@@ -821,8 +821,8 @@ namespace AccountModelsLib.Models
                 foreach (DataRow dr in dr_)
                 {
                     or.Make_New_Order_FromInvoice(ref Excp, ref opp, ref OrderTable_id);
-                    int Unit_Item_Table_Id = int.Parse(dr["Unit_Item_Table_Id"].ToString());
-                    int Item_id = int.Parse(dr["Item_id"].ToString());
+                    long Unit_Item_Table_Id = long.Parse(dr["Unit_Item_Table_Id"].ToString());
+                    long Item_id = long.Parse(dr["Item_id"].ToString());
                     decimal Larg_Qnty = decimal.Parse(dr["Will_Export_Qnty"].ToString());
                     decimal Small_Qnty = decimal.Parse(dr["Will_Export_QntySmall"].ToString());
                     decimal ItemNO = 0;
@@ -875,7 +875,7 @@ namespace AccountModelsLib.Models
             or.Id_From = 0;
 
             or.Type_To = 1;
-            or.Id_To = (int)Customer_Id;
+            or.Id_To = (long)Customer_Id;
 
             long FromStoreId = or.Id_From;
             long ToStoreId = or.Id_To;
@@ -906,7 +906,7 @@ namespace AccountModelsLib.Models
 
             for (int y = 0; y < dt_Store_Id.Rows.Count; y++)
             {
-                int Store_Id = int.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
+                long Store_Id = long.Parse(dt_Store_Id.Rows[y]["Id"].ToString());
                 or.Id_From = Store_Id;
 
                 //string Expression = "Store_Id=" + Store_Id.ToString();
@@ -955,7 +955,7 @@ namespace AccountModelsLib.Models
 
         }
 
-        public void Make_Order_From_Estlam_Production(ref int Excp, ref operations opp, int Item_id, int Store_Id, DateTime Invoice_Date, decimal Larg_Qnty, decimal Small_Qnty, string Notes = "")
+        public void Make_Order_From_Estlam_Production(ref int Excp, ref operations opp, long Item_id, long Store_Id, DateTime Invoice_Date, decimal Larg_Qnty, decimal Small_Qnty, string Notes = "")
         {
             OrderChoiceCLS oc = new OrderChoiceCLS();
 
@@ -992,7 +992,7 @@ namespace AccountModelsLib.Models
             ////////////////////////Get_Balance
             string mysql = "Select * from Unit_item where Item_Id=" + Item_id + " And Store_Id=" + Store_Id;
             DataTable dt = opp.return_DataTable(mysql);
-            int Unit_Item_Table_Id = int.Parse(dt.Rows[0]["Id"].ToString());
+            long Unit_Item_Table_Id = long.Parse(dt.Rows[0]["Id"].ToString());
             decimal Balance_Now_Larg_Qnty = decimal.Parse(dt.Rows[0]["Full_qua"].ToString());
             decimal Balance_Now_Small_Qnty = decimal.Parse(dt.Rows[0]["D_Qua"].ToString());
             decimal Balance_Now_Item_No = 0;

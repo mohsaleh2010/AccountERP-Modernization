@@ -1508,8 +1508,20 @@ namespace AccountModelsLib.Models
         }
         List<CarsWorkOrdersViewModel> GetCarsWorkOrdersViewModel(IQueryable<CarsWorkOrder> query, int Is_SarfFromStore = -1)
         {
-            List<CarsWorkOrder> CarsWorkOrderList = query.ToList();
-            return GetCarsWorkOrdersViewModel(CarsWorkOrderList, Is_SarfFromStore);
+            string sql = query.ToQueryString();
+            
+            try
+            {
+                List<CarsWorkOrder> CarsWorkOrderList = query.ToList();
+                return GetCarsWorkOrdersViewModel(CarsWorkOrderList, Is_SarfFromStore);
+            }
+            catch (System.Data.SqlTypes.SqlNullValueException ee)
+            {
+
+                throw;
+            }
+            
+            
         }
         List<CarsWorkOrdersViewModel> GetCarsWorkOrdersViewModel(List<CarsWorkOrder> query, int Is_SarfFromStore = -1)
         {

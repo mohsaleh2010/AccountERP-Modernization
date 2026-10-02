@@ -199,6 +199,7 @@ namespace AccountModelsLib
                 emp.name = sb.SubAccount_Name;
                 emp.SubAccount_Id = sb.Id;
                 emp.Account_Code = sb.Account_Code;
+                emp.active = 1; // 🟢 (بموافقة المستخدم) عمود Employee.active NOT NULL؛ الموظف الجديد فعّال (كان يُرسَل NULL فيفشل إدراج المندوب/الموظف)
                 if (Common.Use_AutoNumeric_Employee_Id_With_Submain_Account_Id == 0 | Common.Use_Auto_Identity_Column == 0)
                 {
                     emp.Id = sb.Id;

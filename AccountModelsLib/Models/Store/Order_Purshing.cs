@@ -26,8 +26,8 @@ namespace AccountModelsLib.Models
         public long Cust_Supplier_id { get; set; }
         public int? endd { get; set; }
         public int? end_order { get; set; }
-        public int? Branch_ID { get; set; }
-        public int? User_ID { get; set; }
+        public long? Branch_ID { get; set; }
+        public long? User_ID { get; set; }
         public int? Is_Converted { get; set; }
         public long MainOrderTable_id { get; set; }
         public int? IsActiveMainOrder_Purshing { get; set; }
@@ -39,7 +39,7 @@ namespace AccountModelsLib.Models
         public DateTime? Insert_ServerDateTime { get; set; }
         public DateTime? Update_ServerDateTime { get; set; }
         public DateTime? EditOperationDate { get; set; }
-        public int? Edit_User_Id { get; set; }
+        public long? Edit_User_Id { get; set; }
         public long? ProcessNo { get; set; }
         public long? CarsWorkOrdersId { get; set; }
         public string WorkOrderNumber { get; set; }

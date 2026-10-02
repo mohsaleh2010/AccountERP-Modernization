@@ -17,7 +17,7 @@ namespace AccountModelsLib.Models
         public long Id { get; set; }
         public Nullable<long> Invoice_Id { get; set; }
         public Nullable<long> Supplier_Id { get; set; }
-        public Nullable<int> License_Id { get; set; }
+        public Nullable<long> License_Id { get; set; }
         public Nullable<System.DateTime> Invoice_Date { get; set; }
         public Nullable<System.DateTime> InvoiceDueDate { get; set; }
 
@@ -36,7 +36,7 @@ namespace AccountModelsLib.Models
         
         public string TafkeetNet_Total { get; set; }   // 
         public string Currency { get; set; }
-        public Nullable<int> Currency_id { get; set; }
+        public Nullable<long> Currency_id { get; set; }
         public string Notes { get; set; }
         public Nullable<int> Invoice_Type { get; set; }
         public Nullable<int> Editable { get; set; }
@@ -56,8 +56,8 @@ namespace AccountModelsLib.Models
         public Nullable<decimal> CustomerAccountAfter { get; set; }
         //public Nullable<decimal> SupplierAccountbefor { get; set; }
         //public Nullable<decimal> SupplierAccountafter { get; set; }
-        public Nullable<int> User_Id { get; set; }
-        public Nullable<int> Branch_Id { get; set; }
+        public Nullable<long> User_Id { get; set; }
+        public Nullable<long> Branch_Id { get; set; }
         public Nullable<decimal> Total_Item_CommissionValue { get; set; }
         public Nullable<decimal> Total_CommissionValue { get; set; }
         public Nullable<long> SubAccount_Id { get; set; }
@@ -70,7 +70,7 @@ namespace AccountModelsLib.Models
         public Nullable<int> IS_Posted_Flage { get; set; }
         public Nullable<long> Account_Entry_List_ID { get; set; }
         public Nullable<int> IsCommission_Value { get; set; }
-        public Nullable<int> Salesman_Id { get; set; }
+        public Nullable<long> Salesman_Id { get; set; }
         public Nullable<int> Is_Buy_From_Bills_Items_Balance { get; set; }
         public Nullable<System.DateTime> OperationDate { get; set; }
         public Nullable<int> IS_Make_Sarf_Item_BalanceFromInvoice { get; set; }
@@ -102,10 +102,10 @@ namespace AccountModelsLib.Models
         public Nullable<System.DateTime> Insert_ServerDateTime { get; set; }
         public Nullable<System.DateTime> Update_ServerDateTime { get; set; }
         public Nullable<System.DateTime> EditOperationDate { get; set; }
-        public Nullable<int> Edit_User_Id { get; set; }
+        public Nullable<long> Edit_User_Id { get; set; }
         public Nullable<long> ProcessNo { get; set; }
         public Nullable<long> Order_MoneyId { get; set; }
-        public Nullable<int> BanksId { get; set; }
+        public Nullable<long> BanksId { get; set; }
         public string BanksNamePaymentMethod { get; set; }
         public Nullable<decimal> PaidValue { get; set; }
         public Nullable<decimal> RestValue { get; set; }

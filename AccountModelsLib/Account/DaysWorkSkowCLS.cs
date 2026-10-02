@@ -24,7 +24,7 @@ namespace AccountModelsLib
             dtFrom = dtFrom_;
             dtTo = dtTo_;
         }
-        public int User_Id = 0;
+        public long   User_Id = 0;
         public DataSet GetExport_Items()
         {
 
@@ -262,8 +262,8 @@ FROM            Total_of_Nazlla INNER JOIN
                          Money_Transaction_Box.Bank_Balance, Money_Transaction_Box.Supplier_Id, Money_Transaction_Box.Customer_Id, Money_Transaction_Box.Account_Id, Money_Transaction_Box.Notes, 
                          Money_Transaction_Box.Balance_Before, Money_Transaction_Box.Balance_After, Money_Transaction_Box.DestructionSales, Money_Transaction_Box.BankAccount_Id, Money_Transaction_Box.Order_mony_id_transform, 
                          Order_Money.Man_Name, Order_Money.Invoice_Id, Submain_Account.Head_Main_Account
- FROM            Money_Transaction_Box INNER JOIN
-                         Order_Money ON Money_Transaction_Box.Order_Mony_Id = Order_Money.Id INNER JOIN
+FROM            Money_Transaction_Box INNER JOIN
+                         Order_Money ON Money_Transaction_Box.Order_Mony_Id = Order_Money.Id LEFT OUTER JOIN
                          Submain_Account ON Money_Transaction_Box.SubAccount_Id = Submain_Account.Id ";
 
 
@@ -608,7 +608,7 @@ FROM            Checks_Memory INNER JOIN
             string msg = "";
             int Excp = 0;
             DataTable dt = new DataTable();
-            int bank_Id = 1;
+            long bank_Id = 1;
 
             DateTime DateFrom = dtFrom;
             DateTime DateTo = dtTo;
@@ -620,7 +620,7 @@ FROM            Checks_Memory INNER JOIN
             {
                     Money_Transaction_BoxOrderReportCLS mt = new Money_Transaction_BoxOrderReportCLS();
 
-                bank_Id = int.Parse(dtt.Rows[x]["Id"].ToString());
+                bank_Id = long.Parse(dtt.Rows[x]["Id"].ToString());
                 mt.Get_Money_Box_Transaction_PeriodTotalPerDay(ref Excp, ref msg, ref dt, bank_Id, DateFrom, DateTo);
 
                 //T_FirstBalance_All = T_FirstBalance_All + mt.T_FirstBalance_All;

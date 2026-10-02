@@ -720,7 +720,7 @@ FROM            Item INNER JOIN
                             //string Notes_To = dt_NewOrder.Rows[index]["Notes_To"].ToString();
                             //string Notes = dt_NewOrder.Rows[index]["Notes"].ToString();
 
-                            //Machine_Id = int.Parse(dt_NewOrder.Rows[index]["Machine_Id"].ToString());  
+                            //Machine_Id = long.Parse(dt_NewOrder.Rows[index]["Machine_Id"].ToString());  
                             long Detailes_Purshing_Id_ = item.Id;// long.Parse(dt_NewOrder.Rows[index]["Detailes_Purshing_Id"].ToString());
 
                             long Related_Detailes_Purshing_Id = 0;
@@ -764,7 +764,7 @@ FROM            Item INNER JOIN
                             string Notes_To = dt_NewOrder.Rows[index]["Notes_To"].ToString();
                             string Notes = dt_NewOrder.Rows[index]["Notes"].ToString();
 
-                            Machine_Id = int.Parse(dt_NewOrder.Rows[index]["Machine_Id"].ToString()); ;
+                            Machine_Id = long.Parse(dt_NewOrder.Rows[index]["Machine_Id"].ToString()); ;
                             long Detailes_Purshing_Id_ = long.Parse(dt_NewOrder.Rows[index]["Detailes_Purshing_Id"].ToString());
 
                             long Related_Detailes_Purshing_Id = 0;
@@ -1221,7 +1221,7 @@ FROM            Item INNER JOIN
                     string SubItem_Name = dt_RawMaterials.Rows[x]["SubItem_Name"].ToString();
                     string Big_unit = dt_RawMaterials.Rows[x]["Big_unit"].ToString();
                     string Small_unit = dt_RawMaterials.Rows[x]["Small_unit"].ToString();
-                    int Unit_Id = int.Parse(dt_RawMaterials.Rows[x]["Unit_Id"].ToString());
+                    long Unit_Id = long.Parse(dt_RawMaterials.Rows[x]["Unit_Id"].ToString());
                     decimal S_unit_Value = decimal.Parse(dt_RawMaterials.Rows[x]["S_unit_Value"].ToString());
 
                     decimal Larg_Qnty = decimal.Parse(dt_RawMaterials.Rows[x]["Larg_Qnty"].ToString());
@@ -1982,7 +1982,7 @@ FROM            Item INNER JOIN
         }
         long InsertToDetailes_Purshing(ref operations opp, Detailes_Purshing dp, decimal S_Unit_Value, Order_Purshing op)
         {
-            //, int Order_Type, long OrderTable_id, long Unit_Item_Table_Id, decimal Larg_Qnty, decimal Small_Qnty, decimal ItemNO, decimal Balance_Id_From_Larg_Qnty, decimal Balance_Id_From_Small_Qnty, decimal Balance_Id_From_Item_No, decimal Balance_Id_To_Larg_Qnty, decimal Balance_Id_To_Small_Qnty, decimal Balance_Id_To_Item_No, decimal To_Store_Unit_Item_Table_Id, string Notes_From, string Notes_To, string Notes, int Machine_Id, decimal Qua_Befor, decimal Part_qua_Befor, decimal Item_No_Befor, decimal Qua_After, decimal Part_qua_After, decimal Item_No_After, decimal S_Unit_Value, long Related_Detailes_Purshing_Id, string Notes_Item, long FromStoreId, long ToStoreId
+            //, int Order_Type, long OrderTable_id, long Unit_Item_Table_Id, decimal Larg_Qnty, decimal Small_Qnty, decimal ItemNO, decimal Balance_Id_From_Larg_Qnty, decimal Balance_Id_From_Small_Qnty, decimal Balance_Id_From_Item_No, decimal Balance_Id_To_Larg_Qnty, decimal Balance_Id_To_Small_Qnty, decimal Balance_Id_To_Item_No, decimal To_Store_Unit_Item_Table_Id, string Notes_From, string Notes_To, string Notes, long Machine_Id, decimal Qua_Befor, decimal Part_qua_Befor, decimal Item_No_Befor, decimal Qua_After, decimal Part_qua_After, decimal Item_No_After, decimal S_Unit_Value, long Related_Detailes_Purshing_Id, string Notes_Item, long FromStoreId, long ToStoreId
 
             decimal qua_Import = 0;
             decimal Part_Qua_Import = 0;
@@ -3233,7 +3233,7 @@ FROM            Unit_item INNER JOIN
                             string Notes_To = dt.Rows[0]["Notes_To"].ToString();
                             Notes = " تم تعديل القيمة المنصرفه من الصنف";
 
-                            int Machine_Id = int.Parse(dt.Rows[0]["Machine_Id"].ToString());
+                            long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                             mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
                             mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + order_Purshing.Id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ",0,0,0,0, " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",1,'" + operations.dateFormat(DateTime.Now.Date) + "',," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                             opp.insert_me(mysql);
@@ -3299,7 +3299,7 @@ FROM            Unit_item INNER JOIN
                             string Notes_To = dt.Rows[0]["Notes_To"].ToString();
 
                             Notes = " تم تعديل القيمة الوارة من الصنف";
-                            int Machine_Id = int.Parse(dt.Rows[0]["Machine_Id"].ToString());
+                            long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                             mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,user_Id,OperationDate)";
                             mysql = mysql + " VALUES(" + Related_Detailes_Purshing_Id + "," + MainOrderTable_id + "," + To_Store_Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",0,0,0,0,'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",2,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                             opp.insert_me(mysql);
@@ -3382,7 +3382,7 @@ FROM            Unit_item INNER JOIN
                             string Notes_To = dt.Rows[0]["Notes_To"].ToString();
                             Notes = " تم تعديل القيمة المنصرفه من الصنف";
 
-                            int Machine_Id = int.Parse(dt.Rows[0]["Machine_Id"].ToString());
+                            long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                             mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
                             mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + order_Purshing.Id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ",0,0,0,0, " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",2,'" + operations.dateFormat(DateTime.Now.Date) + "',," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                             opp.insert_me(mysql);
@@ -3448,7 +3448,7 @@ FROM            Unit_item INNER JOIN
                             string Notes_To = dt.Rows[0]["Notes_To"].ToString();
 
                             Notes = " تم تعديل القيمة المنصرفه من الصنف";
-                            int Machine_Id = int.Parse(dt.Rows[0]["Machine_Id"].ToString());
+                            long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                             mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
                             mysql = mysql + " VALUES(" + Related_Detailes_Purshing_Id + "," + MainOrderTable_id + "," + To_Store_Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",0,0,0,0,'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",1,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                             opp.insert_me(mysql);
@@ -3537,7 +3537,7 @@ FROM            Unit_item INNER JOIN
                         string Notes_To = dt.Rows[0]["Notes_To"].ToString();
                         Notes = " تم تعديل القيمة المنصرفه من الصنف";
 
-                        int Machine_Id = int.Parse(dt.Rows[0]["Machine_Id"].ToString());
+                        long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                         mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
                         mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + order_Purshing.Id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ",0,0,0,0, " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",2,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                         opp.insert_me(mysql);
@@ -3589,7 +3589,7 @@ FROM            Unit_item INNER JOIN
                         string Notes_To = dt.Rows[0]["Notes_To"].ToString();
                         Notes = " تم تعديل القيمة المنصرفه من الصنف";
 
-                        int Machine_Id = int.Parse(dt.Rows[0]["Machine_Id"].ToString());
+                        long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                         mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
                         mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + order_Purshing.Id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",0,0,0,0,'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",1,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                         opp.insert_me(mysql);
@@ -3984,7 +3984,7 @@ FROM            Unit_item INNER JOIN
                             string Notes_To = dt.Rows[0]["Notes_To"].ToString();
                             Notes = " تم تعديل القيمة المنصرفه من الصنف";
 
-                            int Machine_Id = int.Parse(dt.Rows[0]["Machine_Id"].ToString());
+                            long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                             mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
                             mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + Order_Purshing.Id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ",0,0,0,0, " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",1,'" + operations.dateFormat(DateTime.Now.Date) + "',," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                             opp.insert_me(mysql);
@@ -4050,7 +4050,7 @@ FROM            Unit_item INNER JOIN
                             string Notes_To = dt.Rows[0]["Notes_To"].ToString();
 
                             Notes = " تم تعديل القيمة الوارة من الصنف";
-                            int Machine_Id = int.Parse(dt.Rows[0]["Machine_Id"].ToString());
+                            long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                             mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,user_Id,OperationDate)";
                             mysql = mysql + " VALUES(" + Related_Detailes_Purshing_Id + "," + MainOrderTable_id + "," + To_Store_Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",0,0,0,0,'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",2,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                             opp.insert_me(mysql);
@@ -4146,7 +4146,7 @@ FROM            Unit_item INNER JOIN
                             string Notes_To = dt.Rows[0]["Notes_To"].ToString();
                             Notes = " تم تعديل القيمة المنصرفه من الصنف";
 
-                            int Machine_Id = int.Parse(dt.Rows[0]["Machine_Id"].ToString());
+                            long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                             mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
                             mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + Order_Purshing.Id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ",0,0,0,0, " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",2,'" + operations.dateFormat(DateTime.Now.Date) + "',," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                             opp.insert_me(mysql);
@@ -4212,7 +4212,7 @@ FROM            Unit_item INNER JOIN
                             string Notes_To = dt.Rows[0]["Notes_To"].ToString();
 
                             Notes = " تم تعديل القيمة المنصرفه من الصنف";
-                            int Machine_Id = int.Parse(dt.Rows[0]["Machine_Id"].ToString());
+                            long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                             mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
                             mysql = mysql + " VALUES(" + Related_Detailes_Purshing_Id + "," + MainOrderTable_id + "," + To_Store_Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",0,0,0,0,'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",1,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                             opp.insert_me(mysql);

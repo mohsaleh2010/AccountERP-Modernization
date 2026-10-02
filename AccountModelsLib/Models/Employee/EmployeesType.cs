@@ -230,7 +230,7 @@ namespace AccountModelsLib
             return Emp;
 
         }
-        public static string GetEmployeesMetwatName(int Id)
+        public static string GetEmployeesMetwatName(long Id)
         {
             ArrayList arr=EmployeesMetwat();
             
@@ -256,7 +256,7 @@ namespace AccountModelsLib
 
 
         ///////////////////
-        public static string EmployeesSalaryTypesName(int Id)
+        public static string EmployeesSalaryTypesName(long Id)
         {
             ArrayList arr = new ArrayList();
             if (Common.InstituteName == Common.ClientCompanyTitle)
@@ -288,7 +288,7 @@ namespace AccountModelsLib
         }
 
         ///////////////
-        public static string EmployeesSalaryTypes_General_Name(int Id)
+        public static string EmployeesSalaryTypes_General_Name(long Id)
         {
             ArrayList arr = EmployeesSalaryTypes_General();
 

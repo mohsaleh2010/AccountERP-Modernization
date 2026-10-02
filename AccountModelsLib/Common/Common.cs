@@ -25,7 +25,7 @@ namespace AccountModelsLib
     /// <summary>
     /// Summary description for Common.
     /// </summary>
-    public class Common
+    public partial class Common
     {
         public static int IsInDesignAndDevelopmentTime { get; set; } = 1;
         //public static string DesignedBy = "Designed By:Egy Linux,+201557668366,mohsaleh2010@yahoo.com";
@@ -48,8 +48,8 @@ namespace AccountModelsLib
         public static int Language_ID = 0;//arabic language
         public static string DataBaseType = "SqlServer";
         public static int Is_User_Admin = 1;
-        public static int User_Id = 1;
-        public static int Branch_Id = 1;
+        public static long User_Id = 1;
+        public static long Branch_Id = 1;
         public static int Tax_BranchesId = 1;
         public static string User_Name = "Admin";
         public static string FullUserName = "Admin";
@@ -207,6 +207,9 @@ namespace AccountModelsLib
         public static int Is_Save_DataDictionaryLogerException = 0; // Save The DML To DataDictionary table 0 not save, 1 save
         
         public static int Is_Save_DataDictionaryDbSyncLogs = 0; // Save The DML To DataDictionary table 0 not save, 1 save
+        public static string mainServerConnectionString { get; set; } = "  ";
+
+        
         public static int Is_ShowPrintDialog = 0;
         public static int Is_ShowPrintDialog_POS = 0;
         public static string Backgroundimage_Name = " ";
@@ -231,18 +234,18 @@ namespace AccountModelsLib
         public static int Is_ShowItemSpecificationinItemDataList = 0;
         public static int Is_SearchItemBy_BarCode = 0;
         public static int Show_SearchItemBy_BarCode_On_Invoice = 0;
-        public static int Store_Id_UsedBefore = -1;
+        public static long Store_Id_UsedBefore = -1;
         public static int Store_Index_UsedBefore = -1;
         public static string TextToShowUnderCodeWhenPrintBarCode = "صيدلية د/ عاء حسنى";
         public static int IsSalesMan = 0;  // IsSalesMan =0 is customer , IsSalesMan=1 if sales man
         public static int Customer_Type = 1;
-        public static int Customer_Id_ForInvoiceNakdy { get; set; } = -1;  // اختيار العميل للفاتورة النقدى
+        public static long Customer_Id_ForInvoiceNakdy { get; set; } = -1;  // اختيار العميل للفاتورة النقدى
         public static int RemoveCustomer_Id_ForInvoiceNakdy = -1;  // حذف العميل للفاتورة النقدى
 
 
-        public static int Customer_Id_ForInvoiceNakdyThenDisableCombo = -1;  // اختيار العميل افتراضى لا يمكن التغير
-        public static int Customer_Id_DefaultSelect = -1;  // اختيار العميل افتراضى
-        public static int Supplier_Id_DefaultSelect = -1;  // اختيار المورد افتراضى
+        public static long Customer_Id_ForInvoiceNakdyThenDisableCombo = -1;  // اختيار العميل افتراضى لا يمكن التغير
+        public static long Customer_Id_DefaultSelect = -1;  // اختيار العميل افتراضى
+        public static long Supplier_Id_DefaultSelect = -1;  // اختيار المورد افتراضى
         public static int Sandouk_Id_DefaultSelect = -1;   //اختيار الصندوق افتراضى
         public static int Currency_Id_DefaultSelect = -1;  // اختيار العملة افتراضى 
         public static int IsDisableEditEntryWhenCreateAutomatic = 1; // عدم تعديل القيد لو تم انشاءة اليا
@@ -293,7 +296,7 @@ namespace AccountModelsLib
         public static string Employee_Tables_IS_USER_DETAILES_Or_Employee = "Employee";//إستخدام جداول الموظفينUSER_DETAILES_==0 _Employee==1
 
         public static int Transform_Type = 1;
-        public static int Year_Financial_Period_Id = 1;  //رقم السنة المالية
+        public static long Year_Financial_Period_Id { get; set; } = 1;  //رقم السنة المالية
         public static DateTime Year_Financial_Period_DateFrom;  //رقم السنة المالية
         public static DateTime Year_Financial_Period_DateTo;  //رقم السنة المالية
 
@@ -621,13 +624,16 @@ namespace AccountModelsLib
 
         public static string Store_Text_Label = "المـخـزن";
         public static int Is_CheckSandokBalnce_Sarf = 1; // التأكد من رصيد الخزنه عند صرف النقدية
+
+        public static int Use_Auto_Identity_Column = 1;
         public static int Use_AutoNumeric_Customer_Id__With_Submain_Account_Id = 0; // استخدام رقم اوتوماتيك للعميل او يستخدم رقم حسابة ك رقمه         ;
         public static int Use_AutoNumeric_Supplier_Id_With_Submain_Account_Id = 0; // استخدام رقم اوتوماتيك للعميل او يستخدم رقم حسابة ك رقمه
         public static int Use_AutoNumeric_Bank_Id_With_Submain_Account_Id = 1;
+        
+       
         public static int Use_AutoNumeric_Submain_Account_Id { get; set; } = 0;
-        public static int Use_Auto_Identity_Column = 1;
-      
         public static int Use_AutoNumeric_Employee_Id_With_Submain_Account_Id = 0;
+
         public static int ShowCustomerVisaData = 0;//عرض بيانات الفيزا للعميل
         public static int ShowCustomerImage = 0;//عرض زرار صورة العميل
         public static int Show_CustomerAccount_AfterBeforInInvoice = 0;   //طباعة رصيد العميل قبل وبعد المبيعات فى الفاتورة
@@ -714,7 +720,7 @@ namespace AccountModelsLib
         /// <summary>
         /// /////////////////////////////////// ثوابت الحسابات
         /// </summary>
-        public static int Entry_Currency_Id = 1;
+        public static long Entry_Currency_Id = 1;
         public static string Currency_Name = "جنيه مصرى";
         public static int Supplier_Account_Type = 5;  //حساب موردين
         public static int Employee_Account_Type = 4;  //حساب موظفين
@@ -767,11 +773,11 @@ namespace AccountModelsLib
         public static int Account_Type_ForCOGS = 61;                    // حساب تكلفة البضاعة المباعة (COGS)
         public static int Account_Type_ForInventoryAdjustment = 62;     // حساب تسويات وتسفية العجز والزيادة بالمخزون
         public static int Account_Type_ForPurchasePriceVariance = 63;   // حساب فروق أسعار الشراء (PPV)
-        public static int Account_Type_ForOpeningBalanceEquity = 64; //(أو حساب حقوق الملكية الافتتاحي) حساب الأرصدة الافتتاحية (Opening Balance Equity)
+        public static int Account_Type_ForOpeningBalanceEquity { get; set; } = 64; //(أو حساب حقوق الملكية الافتتاحي) حساب الأرصدة الافتتاحية (Opening Balance Equity)
 
-        public static int Journal_Code_ForSandouk_Sarf = 3;
-        public static int Journal_Code_ForSandouk_Estlam = 2;
-        public static int Journal_Code_ForSandouk = 2;
+        public static long Journal_Code_ForSandouk_Sarf = 3;
+        public static long Journal_Code_ForSandouk_Estlam = 2;
+        public static long Journal_Code_ForSandouk = 2;
         public static int job_list_Id_SalesMan = 100;
         public static int job_list_Id_DeliveryMan = 101;
         public static int job_list_Id_WaiterMan = 102;
@@ -1341,7 +1347,7 @@ namespace AccountModelsLib
 
 
         }
-        public static bool IsHavePermission(int User_ID, int Permission_ID, int PROJECT_ID, int Branch_Id)
+        public static bool IsHavePermission(long User_ID, int Permission_ID, int PROJECT_ID, long Branch_Id)
         {
 
 
@@ -1391,7 +1397,11 @@ namespace AccountModelsLib
             //bool IsHavePermission = Common.IsHavePermission(Common.User_Id, 822, 9, Common.Branch_Id);
 
         }
-        public static bool IsHavePermissionSysMenu(int User_ID, int Menu_ID, int PROJECT_ID, int Force_Admin = 1)
+        public static bool IsHavePermissionSysMenu(long User_ID, int Menu_ID, int PROJECT_ID,long Branch_Id, int Force_Admin = 1)
+        {
+            return IsHavePermissionSysMenu(  User_ID,   Menu_ID,   PROJECT_ID,   Force_Admin  );
+        }
+        public static bool IsHavePermissionSysMenu(long User_ID, int Menu_ID, int PROJECT_ID, int Force_Admin = 1)
         {
             //Check IF Ticket ID from My branch by User ID in this branch
             //UserPermissionDataSetTableAdapters.User_PermissionTableAdapter us = new BusinessLIB.UserPermissionDataSetTableAdapters.User_PermissionTableAdapter();
@@ -1417,7 +1427,7 @@ namespace AccountModelsLib
                 return true;
             }
         }
-        public static string GetPermissionValue(int User_ID, int Menu_ID, int PROJECT_ID)
+        public static string GetPermissionValue(long User_ID, int Menu_ID, int PROJECT_ID)
         {
             //Check IF Ticket ID from My branch by User ID in this branch
             //UserPermissionDataSetTableAdapters.User_PermissionTableAdapter us = new BusinessLIB.UserPermissionDataSetTableAdapters.User_PermissionTableAdapter();
@@ -1506,7 +1516,7 @@ namespace AccountModelsLib
             return Category_Name;
         }
 
-        public static long GETAutoNumber(ref AccountModelsLib.operations opp, string Table_Name, string ColumnNameID, int Branch_Id)
+        public static long GETAutoNumber(ref AccountModelsLib.operations opp, string Table_Name, string ColumnNameID, long Branch_Id)
         {
             long Submain_Account_Id = 1;
             string mysql = " Select Max(" + ColumnNameID + ")  AS SubAccount_Id from " + Table_Name + "";
@@ -1857,7 +1867,7 @@ namespace AccountModelsLib
             catch (Exception ee) { Msg = ee.Message; }
         }
 
-        public static string GetUserName(int USER_ID, int Branch_Id)
+        public static string GetUserName(long USER_ID, long Branch_Id)
         {
             string mysql = " Select * from USER_DETAILES where USER_ID=" + USER_ID + "";
             if (Branch_Id > 0)
@@ -3801,7 +3811,9 @@ namespace AccountModelsLib
             DataTable dt;
             string New_Id_ = "";
             string mysql = "";
-            if (Common.Branch_Id >= 0)
+            // بلا بادئة الفرع (Use_Auto_Identity_Column != 1) يجب أن يكون المعرّف فريداً على مستوى الجدول كله، لا داخل الفرع فقط،
+            // وإلا تكرر مع سطور فرع آخر وضاع الربط بالمعرّف (قيد «كل الخزن» وحذف الأذونات) — بند 32 فى razor-vs-desktop-fixes-backlog.
+            if (Common.Branch_Id >= 0 && Common.Use_Auto_Identity_Column == 1)
             {
                 mysql = " SELECT MAX(" + Column_AutoNumeric + ") AS New_Id FROM " + Table_Name + " GROUP BY Branch_Id HAVING Branch_Id=" + Common.Branch_Id;
             }
@@ -3832,7 +3844,14 @@ namespace AccountModelsLib
             }
 
             Excp = 0;
-            New_Id_ = Common.Branch_Id.ToString() + AutoNumericValue.ToString();
+            if (Common.Use_Auto_Identity_Column == 1)
+            {
+                New_Id_ = Common.Branch_Id.ToString() + AutoNumericValue.ToString();
+            }
+            else
+            {
+                New_Id_ =   AutoNumericValue.ToString();
+            }
             Serial = long.Parse(New_Id_.ToString());
 
         }
@@ -4603,6 +4622,1706 @@ namespace AccountModelsLib
             }
             else if (KeysData == "Is_Show_Quantity_Lenghts_For_ItemsOnInvoice")
             {
+                Is_Show_Quantity_Lenghts_For_ItemsOnInvoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Is_ShowTotalsItems_in_Invoice")
+            {
+                Is_ShowTotalsItems_in_Invoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_ShowTotalsItems_in_Bill")
+            {
+                Is_ShowTotalsItems_in_Bill = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_InvoiceAnotherPayment")
+            {
+                Show_InvoiceAnotherPayment = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "VisiblecolumnBalanceAfterInOderMoney")
+            {
+                VisiblecolumnBalanceAfterInOderMoney = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Project_Market")
+            {
+                Project_Market = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Make_Login")
+            {
+                Make_Login = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Make_Login_Auto")
+            {
+                Make_Login_Auto = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Store_Id_UsedBefore")
+            {
+                Store_Id_UsedBefore = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Store_Index_UsedBefore")
+            {
+                Store_Index_UsedBefore = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_ToIndicDigitsArabic")
+            {
+                Is_ToIndicDigitsArabic = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_SaveUserNameLogin")
+            {
+                Is_SaveUserNameLogin = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_SaveUserPasswordLogin")
+            {
+                Is_SaveUserPasswordLogin = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IsSalesMan")
+            {
+                IsSalesMan = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Customer_Type")
+            {
+                Customer_Type = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Make_Store_Order_Sarf_Estlam_Automatic_From_Invoice")
+            {
+                Make_Store_Order_Sarf_Estlam_Automatic_From_Invoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Make_Store_Order_Sarf_Estlam_Automatic_From_Invoice_Enabled")
+            {
+                Make_Store_Order_Sarf_Estlam_Automatic_From_Invoice_Enabled = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "ItemCategory_Type")
+            {
+                ItemCategory_Type = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "ItemDeleteOrMakeNotActiveInDataBase")
+            {
+                ItemDeleteOrMakeNotActiveInDataBase = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "MakeOrderMoneyFromInvoice")
+            {
+                MakeOrderMoneyFromInvoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "MakeOrderMoneyFromInvoiceAutomaticWithoutForm")
+            {
+                MakeOrderMoneyFromInvoiceAutomaticWithoutForm = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "MakeOrderMoneyFromInvoice_Reverse_AutomaticWithoutForm")
+            {
+                MakeOrderMoneyFromInvoice_Reverse_AutomaticWithoutForm = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+            else if (KeysData == "MakeOrderMoneyFromBill_AutomaticWithoutForm")
+            {
+                MakeOrderMoneyFromBill_AutomaticWithoutForm = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "MakeOrderMoneyFromBills_Reverse_AutomaticWithoutForm")
+            {
+                MakeOrderMoneyFromBills_Reverse_AutomaticWithoutForm = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Customer_Title")
+            {
+                Customer_Title = row["Value"].ToString();
+            }
+            else if (KeysData == "Supplier_Title")
+            {
+                Supplier_Title = row["Value"].ToString();
+            }
+            else if (KeysData == "Show_BtnOrderSarfStoreFromInvoice")
+            {
+                Show_BtnOrderSarfStoreFromInvoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Enabel_cbIs_TaxPer_Item_OnInvoiceMonitor")
+            {
+                Enabel_cbIs_TaxPer_Item_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Use_cbIs_TaxPer_Item_OnInvoiceMonitor")
+            {
+                Use_cbIs_TaxPer_Item_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            //else if (KeysData == "Is_Tax_Per_Item")
+            //{
+            //    Is_Tax_Per_Item = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            //}
+            else if (KeysData == "ShowSalesMan")
+            {
+                ShowSalesMan = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Make_Store_Order_Sarf_Estlam_Automatic")
+            {
+                Make_Store_Order_Sarf_Estlam_Automatic = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Used_Item_NoAS_3ebowaInReport_Balance")
+            {
+                Used_Item_NoAS_3ebowaInReport_Balance = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Used_Item_NoAS_3ebowaInReport_Balance_InBill")
+            {
+                Used_Item_NoAS_3ebowaInReport_Balance_InBill = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Compute_QntyFrom_ItemNo")
+            {
+                Compute_QntyFrom_ItemNo = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "VisibleCompute_QntyFrom_ItemNo_CheckBox")
+            {
+                VisibleCompute_QntyFrom_ItemNo_CheckBox = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "DesignedBy")
+            {
+                DesignedBy = row["Value"].ToString();
+            }
+            else if (KeysData == "Compute_QntyFrom_Only_ItemNo")
+            {
+                Compute_QntyFrom_Only_ItemNo = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Compute_QntyFrom_Only_ItemNoIsOne")
+            {
+                Compute_QntyFrom_Only_ItemNoIsOne = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "VisibleSpecification_QntyFrom_ItemNo")
+            {
+                VisibleSpecification_QntyFrom_ItemNo = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Compute_ItemBalance_With_Fraction")
+            {
+                Compute_ItemBalance_With_Fraction = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Takseet_Invoice")
+            {
+                Is_Takseet_Invoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Compute_QntyFrom_ItemNo_CheckBox")
+            {
+                Compute_QntyFrom_ItemNo_CheckBox = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Update_DeleteSupplier")
+            {
+                Update_DeleteSupplier = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_ShowUnitBeside_Qnty")
+            {
+                Is_ShowUnitBeside_Qnty = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Employee_Tables_IS_USER_DETAILES_Or_Employee")
+            {
+                Employee_Tables_IS_USER_DETAILES_Or_Employee = row["Value"].ToString();
+            }
+            else if (KeysData == "Transform_Type")
+            {
+                Transform_Type = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Year_Financial_Period_Id")
+            {
+                Year_Financial_Period_Id = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Compute_3eboaFrom_EznSarf_Estlam")
+            {
+                Compute_3eboaFrom_EznSarf_Estlam = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Dived_ByStore_Type_In_Invoice_Type")
+            {
+                Dived_ByStore_Type_In_Invoice_Type = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Use_Default_Store_In_Invoice_Bill")
+            {
+                Use_Default_Store_In_Invoice_Bill = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IsReadPreviousAudience_priceOnBill")
+            {
+                IsReadPreviousAudience_priceOnBill = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Can_ChangePrice_On_invoice")
+            {
+                Can_ChangePrice_On_invoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IS_Use_Price_Type_List")
+            {
+                IS_Use_Price_Type_List = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Invoice_Qnty_Needed")
+            {
+                Is_Invoice_Qnty_Needed = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Invoice_ItemNo_Needed")
+            {
+                Is_Invoice_ItemNo_Needed = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Invoice_Price_Needed")
+            {
+                Is_Invoice_Price_Needed = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Update_Price_On_Bill")
+            {
+                Is_Update_Price_On_Bill = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Update_Price_On_invoice")
+            {
+                Is_Update_Price_On_invoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IsOpenItemDataToAddNew")
+            {
+                IsOpenItemDataToAddNew = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+            else if (KeysData == "Can_Chang_Automatic_SarfFromInvoice_ByItems")
+            {
+                Can_Chang_Automatic_SarfFromInvoice_ByItems = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Separate_Items_Sell_PurchaseByStoreType")
+            {
+                Separate_Items_Sell_PurchaseByStoreType = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IsUsePriceWithStoreOrder")
+            {
+                IsUsePriceWithStoreOrder = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+
+            else if (KeysData == "Add_AccountEntryByTree")
+            {
+                Add_AccountEntryByTree = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if ((KeysData == "dtExpire"))
+            {
+                try
+                {
+                    dtExpire = DateTime.Parse(row["Value"].ToString());
+                }
+                catch (Exception ee)
+                {
+
+                }
+            }
+            if (KeysData == "PointOfSale")
+            {
+                PointOfSale = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            if (KeysData == "Is_InvoiceNoBy_Branch_Id")
+            {
+                Is_InvoiceNoBy_Branch_Id = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            if (KeysData == "Is_InvoiceNoBy_FinancialYear")
+            {
+                Is_InvoiceNoBy_FinancialYear = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            if (KeysData == "Is_InvoiceNoBy_Invoice_Type")
+            {
+                Is_InvoiceNoBy_Invoice_Type = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Show_Qnty_With_Unit")
+            {
+                Show_Qnty_With_Unit = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "ColumnQnty_width")
+            {
+                ColumnQnty_width = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "ColumnItemsName_width")
+            {
+                ColumnItemsName_width = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "ColumnStoreName_width")
+            {
+                ColumnStoreName_width = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "ColumnSmallBalalance_Width_ItemData_OnInvoiceMonitor")
+            {
+                ColumnSmallBalalance_Width_ItemData_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "ColumnBalance_Width_ItemData_OnInvoiceMonitor")
+            {
+                ColumnBalance_Width_ItemData_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "ColumnItemName_Width_ItemData_OnInvoiceMonitor")
+            {
+                ColumnItemName_Width_ItemData_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+            else if (KeysData == "ColumnQnty_width_Bill")
+            {
+                ColumnQnty_width_Bill = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "ColumnItemsName_width_Bill")
+            {
+                ColumnItemsName_width_Bill = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "ColumnStoreName_width_Bill")
+            {
+                ColumnStoreName_width_Bill = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "ColumnEmpty_width_Bill")
+            {
+                ColumnEmpty_width_Bill = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "ColumnSmall_QntyStr_width_Invoice")
+            {
+                ColumnSmall_QntyStr_width_Invoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "ColumnSmall_QntyStr_width_Bill")
+            {
+                ColumnSmall_QntyStr_width_Bill = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Customer_Notes_OnInvoiceMonitor")
+            {
+                Show_Customer_Notes_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Supplier_Notes_OnInvoiceMonitor")
+            {
+                Show_Supplier_Notes_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_EmployeeSeller_OnInvoiceMonitor")
+            {
+                Show_EmployeeSeller_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Shipment_DataInvoiceMonitor")
+            {
+                Show_Shipment_DataInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Shipment_DataInvoiceOnPrint")
+            {
+                Show_Shipment_DataInvoiceOnPrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+            else if (KeysData == "ColumnSmall_QntyStr_Name_Invoice")
+            {
+                ColumnSmall_QntyStr_Name_Invoice = row["Value"].ToString();
+            }
+            else if (KeysData == "ColumnSmall_QntyStr_Name_Bill")
+            {
+                ColumnSmall_QntyStr_Name_Bill = row["Value"].ToString();
+            }
+            else if (KeysData == "ColumnQnty_Name_Invoice")
+            {
+                ColumnQnty_Name_Invoice = row["Value"].ToString();
+            }
+            else if (KeysData == "ColumnQnty_Name_Bill")
+            {
+                ColumnQnty_Name_Bill = row["Value"].ToString();
+            }
+
+            else if (KeysData == "ColumnLarg_Qnty_Name_Invoice")
+            {
+                ColumnLarg_Qnty_Name_Invoice = row["Value"].ToString();
+            }
+            else if (KeysData == "columnSmall_Qnty_Name_Invoice")
+            {
+                columnSmall_Qnty_Name_Invoice = row["Value"].ToString();
+            }
+
+            else if (KeysData == "ColumnLarg_Qnty_Width_Invoice")
+            {
+                ColumnLarg_Qnty_Width_Invoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "columnSmall_Qnty_Width_Invoice")
+            {
+                columnSmall_Qnty_Width_Invoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+
+            else if (KeysData == "UseAutomaticItemCode")
+            {
+                UseAutomaticItemCode = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_ShowItemSpecificationinItemDataList")
+            {
+                Is_ShowItemSpecificationinItemDataList = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+            else if (KeysData == "Is_Print_CompanyName")
+            {
+                Is_Print_CompanyName = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Print_Branch_Name")
+            {
+                Is_Print_Branch_Name = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_ShowPrintDialog")
+            {
+                Is_ShowPrintDialog = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_ShowPrintDialog_POS")
+            {
+                Is_ShowPrintDialog_POS = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Save_DataDictionary")
+            {
+                Is_Save_DataDictionary = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Save_DataDictionaryDbSyncLogs")
+            {
+                Is_Save_DataDictionaryDbSyncLogs = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "mainServerConnectionString")
+            {
+                mainServerConnectionString =  row["Value"]?.ToString()??"" ;
+            }
+            
+            else if (KeysData == "Is_Save_DataDictionaryLogerException")
+            {
+                Is_Save_DataDictionaryLogerException = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Is_SearchItemBy_BarCode")
+            {
+                Is_SearchItemBy_BarCode = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_SearchItemBy_BarCode_On_Invoice")
+            {
+                Show_SearchItemBy_BarCode_On_Invoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "TextToShowUnderCodeWhenPrintBarCode")
+            {
+                TextToShowUnderCodeWhenPrintBarCode = row["Value"].ToString();
+
+            }
+
+            else if (KeysData == "Is_SaveOnDB_When_AddItemDirectly_On_invoice")
+            {
+                Is_SaveOnDB_When_AddItemDirectly_On_invoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_SaveOnDB_When_AddItemDirectly_On_Bill")
+            {
+                Is_SaveOnDB_When_AddItemDirectly_On_Bill = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_AddNotes_On_Invoice")
+            {
+                Show_AddNotes_On_Invoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_AddNotes_On_Bill")
+            {
+                Show_AddNotes_On_Bill = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Load_Payment_OnBillPrint")
+            {
+                Show_Load_Payment_OnBillPrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_TaxSale_Value_OnBillPrint")
+            {
+                Show_TaxSale_Value_OnBillPrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_ItemSecondTotalPrice_OnBillPrint")
+            {
+                Show_ItemSecondTotalPrice_OnBillPrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Damaghat_OnBillPrint")
+            {
+                Show_Damaghat_OnBillPrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Commision_OnBillPrint")
+            {
+                Show_Commision_OnBillPrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_ATS05_Value_OnBillPrint")
+            {
+                Show_ATS05_Value_OnBillPrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_SupplierAccount_AfterBeforInBillPrint")
+            {
+                Show_SupplierAccount_AfterBeforInBillPrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Show_NotesInBillPrint")
+            {
+                Show_NotesInBillPrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Total_List3Mola_OnBillPrint")
+            {
+                Show_Total_List3Mola_OnBillPrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            //"عمولة البيع";
+            else if (KeysData == "RenewalDateForTaxPortalCloud")
+            {
+                RenewalDateForTaxPortalCloud = row["Value"].ToString();
+                RenewalDateForTaxPortalCloud = RenewalDateForTaxPortalCloud.Trim();
+            }
+            else if (KeysData == "IsItemSellPriceContainTaxValue")
+            {
+                IsItemSellPriceContainTaxValue = ParseInt(row["Value"]?.ToString(), fallback: -1);
+
+            }
+
+            else if (KeysData == "IsBtnAddItemsDirectTocarWorkOrder")
+            {
+                IsBtnAddItemsDirectTocarWorkOrder = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "storePriceType_CostPriceOrLastPrice")
+            {
+                storePriceType_CostPriceOrLastPrice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IsEnableStore_CostPriceOrLastPrice")
+            {
+                IsEnableStore_CostPriceOrLastPrice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "IsCheckRenewalForTaxPortalCloud")
+            {
+                IsCheckRenewalForTaxPortalCloud = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IsNeedToRenewalForTaxPortalCloud")
+            {
+                IsNeedToRenewalForTaxPortalCloud = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "TaxinternalID_Prevx")
+            {
+                TaxinternalID_Prevx = row["Value"].ToString();
+                TaxinternalID_Prevx = TaxinternalID_Prevx.Trim();
+            }
+            else if (KeysData == "TaxinternalID_StartFromNumber")
+            {
+                TaxinternalID_StartFromNumber = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "TaxinternalID_StartFromNumber_AS_InvoiceList")
+            {
+                TaxinternalID_StartFromNumber_AS_InvoiceList = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IsItemSellPriceContainTaxValue")
+            {
+                IsItemSellPriceContainTaxValue = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+            else if (KeysData == "ItemNameForMasna3iatKhamat")
+            {
+                ItemNameForMasna3iatKhamat = row["Value"].ToString();
+            }
+
+            else if (KeysData == "VersionRun_On_OnePC_Using_HardwareInfo")
+            {
+                VersionRun_On_OnePC_Using_HardwareInfo = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "HardWareInfo_Serial")
+            {
+                HardWareInfo_Serial = row["Value"].ToString();
+            }
+            else if (KeysData == "IS_Used_SandoukSystem")
+            {
+                IS_Used_SandoukSystem = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IS_Used_SandoukWithPermission")
+            {
+                IS_Used_SandoukWithPermission = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Ehlak_Kest_Sabt")
+            {
+                Ehlak_Kest_Sabt = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Ehlak_Kest_Motanakes")
+            {
+                Ehlak_Kest_Motanakes = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Account_Seperator_Char")
+            {
+                Account_Seperator_Char = char.Parse(row["Value"].ToString());
+            }
+            else if (KeysData == "Currency_Count")
+            {
+                Currency_Count = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Project_GeneralAccounts")
+            {
+                Project_GeneralAccounts = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Sunisoft_IrisSkin_SerialNumber")
+            {
+                Sunisoft_IrisSkin_SerialNumber = row["Value"].ToString();
+            }
+            else if (KeysData == "Balance_BeginingPeriod")
+            {
+                Balance_BeginingPeriod = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Flage_AccountDetails_View")
+            {
+                Flage_AccountDetails_View = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Language_ID")
+            {
+                Language_ID = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "DataBaseType")
+            {
+                DataBaseType = row["Value"].ToString();
+            }
+            else if (KeysData == "IS_Make_Automatic_Queeod")
+            {
+                IS_Make_Automatic_Queeod = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Customer_Id_DefaultSelect")
+            {
+                Customer_Id_DefaultSelect = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Customer_Id_ForInvoiceNakdy")
+            {
+                Customer_Id_ForInvoiceNakdy = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Customer_Id_ForInvoiceNakdyThenDisableCombo")
+            {
+                Customer_Id_ForInvoiceNakdyThenDisableCombo = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "RemoveCustomer_Id_ForInvoiceNakdy")
+            {
+                RemoveCustomer_Id_ForInvoiceNakdy = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "IsDisableEditEntryWhenCreateAutomatic")
+            {
+                IsDisableEditEntryWhenCreateAutomatic = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Supplier_Id_DefaultSelect")
+            {
+                Supplier_Id_DefaultSelect = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Currency_Id_DefaultSelect")
+            {
+                Currency_Id_DefaultSelect = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Sandouk_Id_DefaultSelect")
+            {
+                Sandouk_Id_DefaultSelect = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Is_Set_Customer_Balance_With_Items")
+            {
+                Is_Set_Customer_Balance_With_Items = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Set_Supplier_Balance_With_Items")
+            {
+                Is_Set_Supplier_Balance_With_Items = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Set_Customer_Balance_With_Sum_Items")
+            {
+                Is_Set_Customer_Balance_With_Sum_Items = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Set_Supplier_Balance_With_Sum_Items")
+            {
+                Is_Set_Supplier_Balance_With_Sum_Items = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Make_Sarf_Item_BalanceFromInvoice")
+            {
+                Make_Sarf_Item_BalanceFromInvoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Make_Store_Order_Sarf_Estlam_Ta7weel_Automatic_Between_Stores")
+            {
+                Make_Store_Order_Sarf_Estlam_Ta7weel_Automatic_Between_Stores = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Year_Financial_Period_DateFrom")
+            {
+                Year_Financial_Period_DateFrom = DateTime.Parse(row["Value"].ToString());
+            }
+            else if (KeysData == "Year_Financial_Period_DateTo")
+            {
+                Year_Financial_Period_DateTo = DateTime.Parse(row["Value"].ToString());
+            }
+            else if (KeysData == "Image_Item_TypeFor_Items")
+            {
+                Image_Item_TypeFor_Items = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Image_Item_TypeFor_CheckMoney")
+            {
+                Image_Item_TypeFor_CheckMoney = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Image_Item_TypeFor_Entry")
+            {
+                Image_Item_TypeFor_Entry = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "DueDateNearestDayes")
+            {
+                DueDateNearestDayes = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "IS_Make_AutomaticFromTar7eel_For_Invoice")
+            {
+                IS_Make_AutomaticFromTar7eel_For_Invoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IS_Make_AutomaticFromTar7eel_For_InvoiceReverse")
+            {
+                IS_Make_AutomaticFromTar7eel_For_InvoiceReverse = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IS_Make_AutomaticFromTar7eel_For_Bill")
+            {
+                IS_Make_AutomaticFromTar7eel_For_Bill = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IS_Make_AutomaticFromTar7eel_For_BillReverse")
+            {
+                IS_Make_AutomaticFromTar7eel_For_BillReverse = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "POS_Is_StartInvoiceWith_All_MainCategoy")
+            {
+                POS_Is_StartInvoiceWith_All_MainCategoy = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "SelectFirstPriceListOnInvoice")
+            {
+                SelectFirstPriceListOnInvoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "UseInvoiceTypeKta3am_Khas")
+            {
+                UseInvoiceTypeKta3am_Khas = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "UseInvoiceNoByDay_POS")
+            {
+                UseInvoiceNoByDay_POS = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "UseInvoice_POS")
+            {
+                UseInvoice_POS = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IsVisibleServerDataBackup")
+            {
+                IsVisibleServerDataBackup = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "SQLDataSource")
+            {
+                SQLDataSource = row["Value"].ToString();
+            }
+            else if (KeysData == "SQLUserName")
+            {
+                SQLUserName = row["Value"].ToString();
+            }
+            else if (KeysData == "SQLUserPassword")
+            {
+                SQLUserPassword = row["Value"].ToString();
+            }
+            else if (KeysData == "SQLDataBaseName")
+            {
+                SQLDataBaseName = row["Value"].ToString();
+            }
+            else if (KeysData == "SQl_ServerExpress")
+            {
+                SQl_ServerExpress = row["Value"].ToString();
+            }
+            else if (KeysData == "Is_PrintCompanyNameOnInvoice")
+            {
+                Is_PrintCompanyNameOnInvoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IsShowTotalTransactionInSearchPeriod")
+            {
+                IsShowTotalTransactionInSearchPeriod = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IsShowTotalTransaction")
+            {
+                IsShowTotalTransaction = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "NotesBalanceLabelMankol")
+            {
+                NotesBalanceLabelMankol = row["Value"].ToString();
+            }
+
+            else if (KeysData == "Save_Backup_Path")
+            {
+                Save_Backup_Path = row["Value"].ToString();
+            }
+            else if (KeysData == "Tager_Kontra_Name")
+            {
+                Tager_Kontra_Name = row["Value"].ToString();
+            }
+            else if (KeysData == "Statement_Name")
+            {
+                Statement_Name = row["Value"].ToString();
+            }
+            else if (KeysData == "Rasamat_Title")
+            {
+                Rasamat_Title = row["Value"].ToString();
+            }
+
+
+            else if (KeysData == "Invoice_Title")
+            {
+                Invoice_Title = row["Value"].ToString();
+            }
+            else if (KeysData == "Invoice_MainTitle_Invoice")
+            {
+                Invoice_MainTitle_Invoice = row["Value"].ToString();
+            }
+            else if (KeysData == "Invoice_MainTitle_Bill")
+            {
+                Invoice_MainTitle_Bill = row["Value"].ToString();
+            }
+            else if (KeysData == "Invoice_MainTitle_Invoice_Reverse")
+            {
+                Invoice_MainTitle_Invoice_Reverse = row["Value"].ToString();
+            }
+            else if (KeysData == "Invoice_MainTitle_Bill_Reverse")
+            {
+                Invoice_MainTitle_Bill_Reverse = row["Value"].ToString();
+            }
+            else if (KeysData == "Invoice_Title_Date")
+            {
+                Invoice_Title_Date = row["Value"].ToString();
+            }
+            else if (KeysData == "PrinterNameForReportsA4")
+            {
+                PrinterNameForReportsA4 = row["Value"].ToString();
+            }
+            else if (KeysData == "PrinterNameForPOSInvoice")
+            {
+                PrinterNameForPOSInvoice = row["Value"].ToString();
+            }
+            else if (KeysData == "PrinterNameForKitchenPrinter")
+            {
+                PrinterNameForKitchenPrinter = row["Value"].ToString();
+            }
+            else if (KeysData == "PrinterNameForBarCodePrinter")
+            {
+                PrinterNameForBarCodePrinter = row["Value"].ToString();
+            }
+
+
+
+            else if (KeysData == "IsSentToPrinterNameForKitchenPrinter")
+            {
+                IsSentToPrinterNameForKitchenPrinter = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Is_PrintCompanyNameOnBill")
+            {
+                Is_PrintCompanyNameOnBill = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "SQl_ServerWindows_Authentication")
+            {
+                SQl_ServerWindows_Authentication = row["Value"].ToString();
+            }
+            else if (KeysData == "SQl_Server_SQl_Authentication")
+            {
+                SQl_Server_SQl_Authentication = row["Value"].ToString();
+            }
+            else if (KeysData == "SQl_NativeClientSQl_Server2005")
+            {
+                SQl_NativeClientSQl_Server2005 = row["Value"].ToString();
+            }
+            else if (KeysData == "SQl_ServerExpressWithDataDirectory")
+            {
+                SQl_ServerExpressWithDataDirectory = row["Value"].ToString();
+            }
+            else if (KeysData == "SQl_LocalDB")
+            {
+                SQl_LocalDB = row["Value"].ToString();
+            }
+            else if (KeysData == "POSInvoivePrinterCopiesNumber")
+            {
+                POSInvoivePrinterCopiesNumber = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Use_AutoNumeric_Customer_Id__With_Submain_Account_Id")
+            {
+                Use_AutoNumeric_Customer_Id__With_Submain_Account_Id = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_CheckSandokBalnce_Sarf")
+            {
+                Is_CheckSandokBalnce_Sarf = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Use_AutoNumeric_Supplier_Id_With_Submain_Account_Id")
+            {
+                Use_AutoNumeric_Supplier_Id_With_Submain_Account_Id = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Use_AutoNumeric_Bank_Id_With_Submain_Account_Id")
+            {
+                Use_AutoNumeric_Bank_Id_With_Submain_Account_Id = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Use_AutoNumeric_Employee_Id_With_Submain_Account_Id")
+            {
+                Use_AutoNumeric_Employee_Id_With_Submain_Account_Id = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Use_AutoNumeric_Submain_Account_Id")
+            {
+                Use_AutoNumeric_Submain_Account_Id = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "UseMoreImageForItem")
+            {
+                UseMoreImageForItem = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_CustomerAccount_AfterBeforInInvoice")
+            {
+                Show_CustomerAccount_AfterBeforInInvoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_CustomerAccount_Befor_OnlyInInvoice")
+            {
+                Show_CustomerAccount_Befor_OnlyInInvoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_CustomerAccount_After_OnlyInInvoice")
+            {
+                Show_CustomerAccount_After_OnlyInInvoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_SupplierAccount_AfterBeforInInvoice")
+            {
+                Show_SupplierAccount_AfterBeforInInvoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_CustomerAccount_FinalyNowInInvoicePrint")
+            {
+                Show_CustomerAccount_FinalyNowInInvoicePrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+            else if (KeysData == "Show_NotesInInvoicePrint")
+            {
+                Show_NotesInInvoicePrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_SpecificationInBillPrint")
+            {
+                Show_SpecificationInBillPrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_SpecificationInInvoicePrint")
+            {
+                Show_SpecificationInInvoicePrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "ShowCustomerImage")
+            {
+                ShowCustomerImage = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "ShowCustomerVisaData")
+            {
+                ShowCustomerVisaData = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Unit_As_decimal")
+            {
+                Is_Unit_As_decimal = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "is_pharmacy")
+            {
+                is_pharmacy = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IsSetCustomers_AccountsForInvoice")
+            {
+                IsSetCustomers_AccountsForInvoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IsSetSuppliers_AccountsForBills")
+            {
+                IsSetSuppliers_AccountsForBills = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+
+            else if (KeysData == "is_CarsMaintainceSystem")
+            {
+                is_CarsMaintainceSystem = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "StartupForm_Name")
+            {
+                StartupForm_Name = row["Value"].ToString();
+            }
+            else if (KeysData == "FromWhereTableNameGet_TaxInvoiceNo")
+            {
+                FromWhereTableNameGet_TaxInvoiceNo = row["Value"].ToString();
+            }
+            else if (KeysData == "User_Agent_ToSendToTaxPortal")
+            {
+                User_Agent_ToSendToTaxPortal = row["Value"].ToString();
+            }
+
+            else if (KeysData == "DecimalPlaces")
+            {
+                DecimalPlaces = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "DecimalPlaces_NoFractionIfZero")
+            {
+                DecimalPlaces_NoFractionIfZero = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "decimalValueRoundOrTruncate")
+            {
+                decimalValueRoundOrTruncate = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+            else if (KeysData == "Divid_ItemCatygoryByType_Id")
+            {
+                Divid_ItemCatygoryByType_Id = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Set_ItemBalanceZeroWhenNegative")
+            {
+                Set_ItemBalanceZeroWhenNegative = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Check_Expiration_validation")
+            {
+                Is_Check_Expiration_validation = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            if (KeysData == "FormHeighDiff")
+            {
+                FormHeighDiff = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Using_FormHeighDiff")
+            {
+                Using_FormHeighDiff = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Use_Auto_Identity_Column")
+            {
+                Use_Auto_Identity_Column = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Added_Alf_Hadfa_Value")
+            {
+                Added_Alf_Hadfa_Value = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Discount_Alf_Hadfa_Value")
+            {
+                Discount_Alf_Hadfa_Value = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Entry_Currency_Id")
+            {
+                Entry_Currency_Id = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Currency_Name")
+            {
+                Currency_Name = row["Value"].ToString();
+            }
+            else if (KeysData == "bubbleBar_Visibility")
+            {
+                bubbleBar_Visibility = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "EditItemBalanceFromReport")
+            {
+                EditItemBalanceFromReport = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Project_TypeStr")
+            {
+                Project_TypeStr = row["Value"].ToString();
+            }
+            else if (KeysData == "Store_Text_Label")
+            {
+                Store_Text_Label = row["Value"].ToString();
+            }
+
+
+            else if (KeysData == "CompanyName_Tel1")
+            {
+                CompanyName_Tel1 = row["Value"].ToString();
+                if (CompanyName_Tel1.Trim() == "")
+                {
+                    CompanyName_Tel1 = " ";
+                }
+            }
+            else if (KeysData == "CompanyName_Tel2")
+            {
+                CompanyName_Tel2 = row["Value"].ToString();
+                if (CompanyName_Tel2.Trim() == "")
+                {
+                    CompanyName_Tel2 = " ";
+                }
+            }
+            else if (KeysData.Trim() == "CompanyTitle")
+            {
+                CompanyTitle = row["Value"].ToString();
+                if (CompanyTitle.Trim() == "")
+                {
+                    CompanyTitle = " ";
+                }
+            }
+
+            else if (KeysData == "Company_Tax_No")
+            {
+                Company_Tax_No = row["Value"].ToString();
+                if (Company_Tax_No.Trim() == "")
+                {
+                    Company_Tax_No = " ";
+                }
+            }
+            else if (KeysData == "Company_Commercial_Register")
+            {
+                Company_Commercial_Register = row["Value"].ToString();
+                if (Company_Commercial_Register.Trim() == "")
+                {
+                    Company_Commercial_Register = " ";
+                }
+            }
+            else if (KeysData == "Company_Memberance_Register")
+            {
+                Company_Memberance_Register = row["Value"].ToString();
+                if (Company_Memberance_Register.Trim() == "")
+                {
+                    Company_Memberance_Register = " ";
+                }
+            }
+            else if (KeysData == "Company_Address1")
+            {
+                Company_Address1 = row["Value"].ToString();
+                if (Company_Address1.Trim() == "")
+                {
+                    Company_Address1 = " ";
+                }
+            }
+            else if (KeysData == "Company_Address2")
+            {
+                Company_Address2 = row["Value"].ToString();
+                if (Company_Address2.Trim() == "")
+                {
+                    Company_Address2 = " ";
+                }
+            }
+            else if (KeysData == "Company_Fax")
+            {
+                Company_Fax = row["Value"].ToString();
+                if (Company_Fax.Trim() == "")
+                {
+                    Company_Fax = " ";
+                }
+            }
+            else if (KeysData == "Company_PostOffice")
+            {
+                Company_PostOffice = row["Value"].ToString();
+                if (Company_PostOffice.Trim() == "")
+                {
+                    Company_PostOffice = " ";
+                }
+            }
+            else if (KeysData == "Company_footerAddressData")
+            {
+                Company_footerAddressData = row["Value"].ToString();
+                if (Company_footerAddressData.Trim() == "")
+                {
+                    Company_footerAddressData = " ";
+                }
+            }
+            else if (KeysData == "Company_Tax_Invoice_URL_1")
+            {
+                Company_Tax_Invoice_URL_1 = row["Value"].ToString();
+            }
+            else if (KeysData == "Company_Tax_Invoice_URL_2")
+            {
+                Company_Tax_Invoice_URL_2 = row["Value"].ToString();
+            }
+            else if (KeysData == "Company_Tax_Invoice_URL_UserName")
+            {
+                Company_Tax_Invoice_URL_UserName = row["Value"].ToString();
+            }
+            else if (KeysData == "Company_Tax_Invoice_URL_Password")
+            {
+                Company_Tax_Invoice_URL_Password = row["Value"].ToString();
+            }
+            else if (KeysData == "InvoiceNo_System")
+            {
+                InvoiceNo_System = row["Value"].ToString();
+            }
+            else if (KeysData == "Backgroundimage_Name")
+            {
+                Backgroundimage_Name = row["Value"].ToString();
+            }
+            else if (KeysData == "Is_Ecrypted")
+            {
+                Is_Ecrypted_Config = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Ecrypted_Config")
+            {
+                Is_Ecrypted_Config = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Ecrypted_Menu")
+            {
+                Is_Ecrypted_Menu = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_ATS05_Value_OnInvoicePrint")
+            {
+                Show_ATS05_Value_OnInvoicePrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_TaxSale_Value_OnInvoicePrint")
+            {
+                Show_TaxSale_Value_OnInvoicePrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Commision_Value_OnInvoicePrint")
+            {
+                Show_Commision_Value_OnInvoicePrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_NetInvoiceTotal_OnInvoicePrint")
+            {
+                Show_NetInvoiceTotal_OnInvoicePrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_TotalQnty_OnInvoicePrint")
+            {
+                Show_TotalQnty_OnInvoicePrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_TotalAfterTax_OnInvoicePrint")
+            {
+                Show_TotalAfterTax_OnInvoicePrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_InvoicePaymentValuesOnInvoicePrint")
+            {
+                Show_InvoicePaymentValuesOnInvoicePrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_InvoicePaymentValues_StillsOnInvoicePrint")
+            {
+                Show_InvoicePaymentValues_StillsOnInvoicePrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_TotalBeforTax_OnInvoicePrint")
+            {
+                Show_TotalBeforTax_OnInvoicePrint = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Prices_Value_OnOrderPurchaseMonitor")
+            {
+                Show_Prices_Value_OnOrderPurchaseMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Taxes_Value_OnOrderPurchaseMonitor")
+            {
+                Show_Taxes_Value_OnOrderPurchaseMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IsShowCarWorkOrderDataOnFormStore")
+            {
+                IsShowCarWorkOrderDataOnFormStore = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+            else if (KeysData == "Is_ActiveOrNot_Show_ColumnInvoiceMonitor")
+            {
+                Is_ActiveOrNot_Show_ColumnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Item_ATS05_OnInvoiceMonitor")
+            {
+                Show_Item_ATS05_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_StatementNo_Value_OnInvoiceMonitor")
+            {
+                Show_StatementNo_Value_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_StoreName_OnInvoiceMonitor")
+            {
+                Show_StoreName_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+            else if (KeysData == "Show_OperstionNo_Value_OnInvoiceMonitor")
+            {
+                Show_OperstionNo_Value_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Merchant_Name_OnInvoiceMonitor")
+            {
+                Show_Merchant_Name_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Tash3ela_OnInvoiceMonitor")
+            {
+                Show_Tash3ela_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_ItemsQnty_Free_OnInvoiceMonitor")
+            {
+                Show_ItemsQnty_Free_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Item_No_Free_OnInvoiceMonitor")
+            {
+                Show_Item_No_Free_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Show_Qnty_Value_OnInvoiceMonitor")
+            {
+                Show_Qnty_Value_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_columnTotalNoTax_OnInvoiceMonitor")
+            {
+                Show_columnTotalNoTax_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Alternate_Commission_OnInvoiceMonitor")
+            {
+                Show_Alternate_Commission_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Show_StoreName_On_Bill_Monitor")
+            {
+                Show_StoreName_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Show_Qnty_Value_On_Bill_Monitor")
+            {
+                Show_Qnty_Value_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_columnTotalNoTax_On_Bill_Monitor")
+            {
+                Show_columnTotalNoTax_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Alternate_Commission_On_Bill_Monitor")
+            {
+                Show_Alternate_Commission_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Is_PriceByTenns_On_Bill_Monitor")
+            {
+                Is_PriceByTenns_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Item_Expire_Date_OnInvoiceMonitor")
+            {
+                Show_Item_Expire_Date_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Item_Expire_Date_WithBalance")
+            {
+                Is_Item_Expire_Date_WithBalance = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Tash3ela_WithBalance")
+            {
+                Is_Tash3ela_WithBalance = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Is_Bills_DetailsId_WithUnit_Item_ExpireDate")
+            {
+                Is_Bills_DetailsId_WithUnit_Item_ExpireDate = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_P_Price_WithUnit_Item_ExpireDate")
+            {
+                Is_P_Price_WithUnit_Item_ExpireDate = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "ColumnItemsName_Invoice")
+            {
+                ColumnItemsName_Invoice = row["Value"].ToString();
+            }
+            else if (KeysData == "Show_Commision_Value_OnInvoiceMonitor")
+            {
+                Show_Commision_Value_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_3Mola_Value_OnInvoiceMonitor")
+            {
+                Show_3Mola_Value_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IsCompute_3Mola_Value_OnInvoiceMonitor")
+            {
+                IsCompute_3Mola_Value_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Div_100Or_1_Rate")
+            {
+                Is_Div_100Or_1_Rate = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "_3Mola_Value")
+            {
+                _3Mola_Value = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IsAddAllItemInAllStores")
+            {
+                IsAddAllItemInAllStores = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "IsAddAllItemForAllCars")
+            {
+                IsAddAllItemForAllCars = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Show_NetInvoiceTotal_OnInvoiceMonitor")
+            {
+                Show_NetInvoiceTotal_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_ItemNo_OnInvoiceMonitor")
+            {
+                Show_ItemNo_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Enabled_ItemNo_OnItemData")
+            {
+                Enabled_ItemNo_OnItemData = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+            else if (KeysData == "Is_ActiveOrNot_Show_Column_Bill_Monitor")
+            {
+                Is_ActiveOrNot_Show_Column_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Commision_Value_On_Bill_Monitor")
+            {
+                Show_Commision_Value_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_ItemNo_On_Bill_Monitor")
+            {
+                Show_ItemNo_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Item_TaxSale_On_Bill_Monitor")
+            {
+                Show_Item_TaxSale_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Item_ATS05_On_Bill_Monitor")
+            {
+                Show_Item_ATS05_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Is_Tax_Per_Item_Bill_")
+            {
+                Is_Tax_Per_Item_Bill_ = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_StatementNo_Value_On_Bill_Monitor")
+            {
+                Show_StatementNo_Value_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_OperstionNo_Value_On_Bill_Monitor")
+            {
+                Show_OperstionNo_Value_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Merchant_Name_On_Bill_Monitor")
+            {
+                Show_Merchant_Name_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Qnty_With_Unit_Bill_Show_Qnty_With_Unit")
+            {
+                Show_Qnty_With_Unit_Bill_Show_Qnty_With_Unit = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Item_Expire_Date_On_Bill_Monitor")
+            {
+                Show_Item_Expire_Date_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Tash3ela_On_Bill_Monitor")
+            {
+                Show_Tash3ela_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_ItemsQnty_Free_On_Bill_Monitor")
+            {
+                Show_ItemsQnty_Free_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Item_No_Free_On_Bill_Monitor")
+            {
+                Show_Item_No_Free_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Audience_price_On_Bill_Monitor")
+            {
+                Show_Audience_price_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "ColumnItemsName__Bill_")
+            {
+                ColumnItemsName__Bill_ = row["Value"].ToString();
+            }
+            else if (KeysData == "ColumnUnitPriceName_Bill")
+            {
+                ColumnUnitPriceName_Bill = row["Value"].ToString();
+            }
+            else if (KeysData == "Static_NotesInInvoicePrint")
+            {
+                Static_NotesInInvoicePrint = row["Value"].ToString();
+            }
+            else if (KeysData == "Static_NotesInInvoicePrintNotShowCustomerAccount")
+            {
+                Static_NotesInInvoicePrintNotShowCustomerAccount = row["Value"].ToString();
+            }
+            else if (KeysData == "CharToSeparateQntyLeft")
+            {
+                CharToSeparateQntyLeft = row["Value"].ToString();
+            }
+            else if (KeysData == "CharToSeparateQntyRight")
+            {
+                CharToSeparateQntyRight = row["Value"].ToString();
+            }
+            else if (KeysData == "Show_Bank_Name")
+            {
+                Show_Bank_Name = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "PrintInvoice_Size")
+            {
+                PrintInvoice_Size = row["Value"].ToString();
+            }
+            else if (KeysData == "PrintBill_Size")
+            {
+                PrintBill_Size = row["Value"].ToString();
+            }
+
+            else if (KeysData == "CommissionTextOnInvoice")
+            {
+                CommissionTextOnInvoice = row["Value"].ToString();
+            }
+
+            else if (KeysData == "OrderDetailsPrint")
+            {
+                OrderDetailsPrint = row["Value"].ToString();
+            }
+
+            else if (KeysData == "OrderMoneyPrint")
+            {
+                OrderMoneyPrint = row["Value"].ToString();
+            }
+            else if (KeysData == "ItemNoVisibility")
+            {
+                ItemNoVisibility = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Demo_Verion")
+            {
+                Demo_Verion = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Demo_VerionInvoiceMaxCount")
+            {
+                Demo_VerionInvoiceMaxCount = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Enable_ItemNoOnInvoice")
+            {
+                Enable_ItemNoOnInvoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "DefaultEntryLanguah")
+            {
+                DefaultEntryLanguah = row["Value"].ToString();
+            }
+            else if (KeysData == "IS_Make_Sarf_Item_BalanceFromInvoice")
+            {
+                IS_Make_Sarf_Item_BalanceFromInvoice = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Show_ItemCommissionTotal_OnInvoiceMonitor")
+            {
+                Show_ItemCommissionTotal_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+
+            else if (KeysData == "Show_Unit_CommissionValue_OnInvoiceMonitor")
+            {
+                Show_Unit_CommissionValue_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Show_Item_CommissionValue_OnInvoiceMonitor")
+            {
+                Show_Item_CommissionValue_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Show_Item_CommissionRate_OnInvoiceMonitor")
+            {
+                Show_Item_CommissionRate_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Show_Alternate_Item_CommissionRate_OnInvoiceMonitor")
+            {
+                Show_Alternate_Item_CommissionRate_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Alternate_Unit_CommissionValue_OnInvoiceMonitor")
+            {
+                Show_Alternate_Unit_CommissionValue_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Show_Alternate_Item_CommissionValue_OnInvoiceMonitor")
+            {
+                Show_Alternate_Item_CommissionValue_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Show_Alternate_ItemCommissionTotal_OnInvoiceMonitor")
+            {
+                Show_Alternate_ItemCommissionTotal_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+
+
+
+            else if (KeysData == "Show_ItemsCode_On_Bill_Monitor")
+            {
+                Show_ItemsCode_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+            else if (KeysData == "Show_ItemsCode_OnInvoiceMonitor")
+            {
+                Show_ItemsCode_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+
+            else if (KeysData == "Show_Alternate_Item_CommissionRate_On_Bill_Monitor")
+            {
+                Show_Alternate_Item_CommissionRate_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+            else if (KeysData == "Show_Alternate_Unit_CommissionValue_On_Bill_Monitor")
+            {
+                Show_Alternate_Unit_CommissionValue_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Show_Alternate_Item_CommissionValue_On_Bill_Monitor")
+            {
+                Show_Alternate_Item_CommissionValue_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+
+
+            else if (KeysData == "Show_Alternate_ItemCommissionTotal_On_Bill_Monitor")
+            {
+                Show_Alternate_ItemCommissionTotal_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+            else if (KeysData == "Show_ItemCommissionTotal_On_Bill_Monitor")
+            {
+                Show_ItemCommissionTotal_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+            else if (KeysData == "Show_Unit_CommissionValue_On_Bill_Monitor")
+            {
+                Show_Unit_CommissionValue_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+
+
+            else if (KeysData == "Show_Item_CommissionValue_On_Bill_Monitor")
+            {
+                Show_Item_CommissionValue_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+
+            else if (KeysData == "Show_Item_CommissionRate_On_Bill_Monitor")
+            {
+                Show_Item_CommissionRate_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Show_Item_TaxSale10_Rate_On_Bill_Monitor")
+            {
+                Show_Item_TaxSale10_Rate_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Item_TaxSale10_Value_On_Bill_Monitor")
+            {
+                Show_Item_TaxSale10_Value_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Item_ATS05_Rate_On_Bill_Monitor")
+            {
+                Show_Item_ATS05_Rate_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Item_ATS05_Value_On_Bill_Monitor")
+            {
+                Show_Item_ATS05_Value_On_Bill_Monitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Show_Item_TaxSale10_Rate_OnInvoiceMonitor")
+            {
+                Show_Item_TaxSale10_Rate_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Item_TaxSale10_Value_OnInvoiceMonitor")
+            {
+                Show_Item_TaxSale10_Value_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Show_Item_TaxSale10_OnInvoiceMonitor")
+            {
+                Show_Item_TaxSale10_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "Show_Item_ATS05_Rate_OnInvoiceMonitor")
+            {
+                Show_Item_ATS05_Rate_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+            else if (KeysData == "Show_Item_ATS05_Value_OnInvoiceMonitor")
+            {
+                Show_Item_ATS05_Value_OnInvoiceMonitor = ParseInt(row["Value"]?.ToString(), fallback: -1);
+            }
+
+            else if (KeysData == "UseSarfEstlamFromFromReservation")
+            {
+                try
+                {
+                    UseSarfEstlamFromFromReservation = ParseInt(row["Value"]?.ToString(), fallback: -1);
+                }
+                catch
+                {
+                }
+            }
+
+        }
+        public static void SearchSystemParametersDBINT(string KeysData, int index)
+        {
+
+            DataRow row = dtConfig.Rows[index];
+            if (KeysData == "IN")
+            {
+                InstituteName = row["Value"].ToString();
+            }
+            if (KeysData == "IN_EN")
+            {
+                InstituteNameEN = row["Value"].ToString();
+            }
+            else if (KeysData == "Is_Show_Quantity_Lenghts_For_ItemsOnInvoice")
+            {
                 Is_Show_Quantity_Lenghts_For_ItemsOnInvoice = int.Parse(row["Value"].ToString());
             }
 
@@ -4636,7 +6355,7 @@ namespace AccountModelsLib
             }
             else if (KeysData == "Store_Id_UsedBefore")
             {
-                Store_Id_UsedBefore = int.Parse(row["Value"].ToString());
+                Store_Id_UsedBefore = long.Parse(row["Value"].ToString());
             }
             else if (KeysData == "Store_Index_UsedBefore")
             {
@@ -4796,7 +6515,7 @@ namespace AccountModelsLib
             }
             else if (KeysData == "Year_Financial_Period_Id")
             {
-                Year_Financial_Period_Id = int.Parse(row["Value"].ToString());
+                Year_Financial_Period_Id = long.Parse(row["Value"].ToString());
             }
             else if (KeysData == "Compute_3eboaFrom_EznSarf_Estlam")
             {
@@ -5645,7 +7364,7 @@ namespace AccountModelsLib
             }
             else if (KeysData == "Entry_Currency_Id")
             {
-                Entry_Currency_Id = int.Parse(row["Value"].ToString());
+                Entry_Currency_Id = long.Parse(row["Value"].ToString());
             }
             else if (KeysData == "Currency_Name")
             {
@@ -6944,7 +8663,7 @@ namespace AccountModelsLib
         {
             
             int Force_Admin = 0;
-            //return  Common.IsHavePermissionSysMenu(Common.User_Id, 957, Common.Project_ID, Common.Branch_Id,0);
+          
             return Common.IsHavePermissionSysMenu(
                                                     User_ID: Common.User_Id,
                                                     Menu_ID: 957,
