@@ -155,7 +155,7 @@ namespace TafkeetProj
             }
         }
 
-        public CurrencyInfo(int Currency_Id)
+        public CurrencyInfo(long Currency_Id)
         {
             switch (Currency_Id)
             {

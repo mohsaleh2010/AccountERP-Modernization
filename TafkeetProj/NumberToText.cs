@@ -12,7 +12,7 @@ namespace TafkeetProj
        public   NumberToText()
        {
        }
-       public static string  GetText(decimal Number,int Currency_Id)
+       public static string  GetText(decimal Number,long Currency_Id)
        {
             Number = Math.Round(Number, 3);
            string STR = "";
