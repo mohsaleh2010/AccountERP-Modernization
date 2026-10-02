@@ -6,16 +6,21 @@
 
 ---
 
-## 0) الأولوية القصوى: شجرة العمل غير مُلتَزَمة (uncommitted)
+## 0) شجرة العمل — ثُبِّتت فى commits (2026-10-02)
 
-`git status` يُظهر **883 ملف معدَّل + 103 ملف جديد** بلا أى commit، وآخر commit فعلى هو `9f699be`. هذا الحجم يطابق فى الغالب تنفيذ خطة §2 (تدقيق أعمدة التعديل) عبر عشرات كلاسات `AccountModelsLib`، بالإضافة لعمل الشاشات الجارى (`menu-main-data-razor-plan.md` نفسه معدَّل بـ213 سطر جديد غير محفوظة).
+تم تثبيت ~890 ملفاً فى 13 commit موضوعياً فوق `9f699be` (الوثائق، `AccountModelsLib` + نقل `AlterMenu_Config`، `Razors/`، حذف `Accounts.sln`، ثم كل مشروع WinForms). بُنيت `AccountsERPSystemNet10` و`Alter_DataBase` و`AccountERP.Web` بنجاح (0 أخطاء). لم يُدفع شىء لأى remote.
 
-**⚠️ خطر فقد عمل حقيقى طال استمراره بلا حفظ.** أول ما تفعله أى session جديدة تفتح هذا الملف: نبّه المستخدم لهذا البند وناقش معه تثبيت (commit) ما استقرّ منه، أو على الأقل مراجعته دفعة دفعة، **قبل** البدء فى عمل جديد فوق هذه الشجرة.
+**ما زال بلا commit عمداً (قرار المستخدم):**
+- `HMIS/GHospital Care` (28 ملفاً معدَّلاً) — يحتاج مراجعة منفصلة، ليس ضمن الأعمال المعروفة.
+- إعدادات `.claude` المحلية: `settings.local.json`، سكربتات `vs-*-hook.ps1`، `.claude/agents`، `.claude/skills`، `.claude/docs/tools`.
+
+**بنود جديدة:**
+- `AccountsEInvoicesLIB` يفشل فى restore بخطأ `NU1605` (تعارض `RestSharp` 114 مقابل 106.15 و`WebView.WindowsForms` 10.0.80 مقابل 10.0.71). مشروع طرفى، يبدو سابقاً لهذه التعديلات (لم يُتحقَّق على HEAD).
+- رسائل commits مشاريع WinForms كُتبت حسب المشروع بوصف "audit columns retrofit" دون مراجعة كل diff؛ قد يحوى `Accounts` (4879 سطراً محذوفاً) و`Store_LIB` تغييرات أخرى.
 
 ```bash
-git status --short | grep -c "^ M"   # عدد الملفات المعدَّلة
-git status --short | grep -c "^??"   # عدد الملفات الجديدة
-git log --oneline -5                  # آخر الـ commits الفعلية
+git status --short | grep -c "^ M"   # المتبقى = HMIS + إعدادات .claude
+git log --oneline -14
 ```
 
 ---
