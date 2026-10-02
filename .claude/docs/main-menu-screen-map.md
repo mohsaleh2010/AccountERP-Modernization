@@ -104,12 +104,7 @@ below rather than guessed at.
 - **إعدادات طباعة البار كود** — `Name=menuItemPrintBarCodeSetting`, `Click=menuItemPrintBarCodeSetting_Click` → `Store_LIB.PrintItemsBarCodeSettingFor_User`
 - **رسمات التشغيل الخارجى** — `Name=menuDrawList`, `Click=menuDrawList_Click` → `Accounts.Work_Out.Draws_ListFRM2`
 
-### أرصدة  أول المدة  <sub>`menuItemFirstBalance`</sub>
-
-- **شيكات صادرة أول المدة** — `Name=menuItemCheck_BeginBalanceExport`, `Click=menuItemCheck_BeginBalance_Click` → `Order_Receipt_ChecksFrm`, `FirstBalance_Checks_List`
-- **شيكات واردة  أول المدة** — `Name=menuItemCheck_BeginBalanceImport`, `Click=menuItemCheck_BeginBalanceImport_Click` → `Order_Receipt_ChecksFrm`, `FirstBalance_Checks_List`
-- **أرصدة أول المدة** — `Name=menuItemNewKoudFirstMezania`, `Click=menuItem35_Click` → `Complex_DayRegistrationFrmSP`, `FirstBalanceMezan_FirstTime`, `FirstBalance_Financial_Period_FRM`
-- **قيود إفتتاحية سابقة** — `Name=menuItemOldKewd`, `Click=menuItemOldKewd_Click` → `Accounts.DayRegistration.Special_Accounts.Complex_DayRegistration.EditComplex_DayRegistrationFrmSP`
+> **تحديث (2026-09-29) — نقل قام به المستخدم مباشرة فى الـ Designer:** قسم "أرصدة أول المدة" كاملًا (`menuItemFirstBalance` وأولاده الثلاثة: شيكات صادرة/واردة أول المدة، أرصدة أول المدة) نُقل من هنا إلى قائمة **الحسابات** (`menuMainAccount`) — انظر أدناه. البند الرابع الذى كان هنا (`menuItemOldKewd` / "قيود إفتتاحية سابقة") **لم يُنقل بل حُذف من القائمة نهائيًا**: لا يوجد له حقل `ToolStripMenuItem` فى `MainFrm_AccountUpdate.Designer.cs` بعد الآن ولا استدعاء له فى أى `DropDownItems.AddRange`؛ الدالة `menuItemOldKewd_Click` ما زالت موجودة فى `MainFrm_AccountUpdate.cs` لكنها أصبحت كود ميت (orphaned handler) لا يستدعيه أى عنصر قائمة حاليًا.
 
 - **أنواع الكونترا** — `Name=ToolStripMenuItemtagerKontraName`, `Click=ToolStripMenuItemtagerKontraName_Click` → `TagerKontraCLSListFrm`, `FirstBalance_Financial_Period_FRM`
 - **الدول** — `Name=ToolStripMenuItemCountry`, `Click=ToolStripMenuItemCountry_Click` → `CountryLisFrm`
@@ -142,9 +137,19 @@ below rather than guessed at.
 - **الإهلاك** — `Name=menuItemDestruction`, `Click=menuItemDestruction_Click` → `Assets_EhlakFrm`
 
 - **الفترات الماليه** — `Name=ToolStripMenuItem_FinancialPeriod`, `Click=ToolStripMenuItem_FinancialPeriod_Click` → `Financial_PeriodFrm`
+
+### أرصدة  أول المدة  <sub>`menuItemFirstBalance`</sub> — **نُقلت إلى هنا من "بيانات أساسية" بتاريخ 2026-09-29**
+
+- **شيكات صادرة أول المدة** — `Name=menuItemCheck_BeginBalanceExport`, `Click=menuItemCheck_BeginBalance_Click` → `Order_Receipt_ChecksFrm`, `FirstBalance_Checks_List`
+- **شيكات واردة  أول المدة** — `Name=menuItemCheck_BeginBalanceImport`, `Click=menuItemCheck_BeginBalanceImport_Click` → `Order_Receipt_ChecksFrm`, `FirstBalance_Checks_List`
+- **أرصدة أول المدة** — `Name=menuItemNewKoudFirstMezania`, `Click=menuItem35_Click` → `Complex_DayRegistrationFrmSP`, `FirstBalanceMezan_FirstTime`, `FirstBalance_Financial_Period_FRM`
+
+⚠️ **ملحوظة:** كامل هذا الفرع (`menuItemFirstBalance`) حاليًا `Visible = false` فى الـ Designer — أى أنه مخفى فعليًا عن كل المستخدمين فى القائمة الحالية، وليس فقط مكانه تغيّر. تحقق من هذا قبل افتراض أن المستخدمين يمكنهم الوصول إليه.
+
+⚠️ **حُذف بالكامل (كان هنا سابقًا فى نفس الموضع):** عنصر مكرر بنفس الغرض تقريبًا باسم `ToolStripMenuItemFinancial_Period_FirstBalance` ("أرصدة أول المده" → `Mezan_Morgaa_ByPeriod`, `FirstBalanceMezan_FirstTime`, `FirstBalance_Financial_Period_FRM`) كان موجودًا هنا مباشرة. لا يوجد له حقل فى الـ Designer ولا دالة `_Click` فى الكود بعد الآن — حُذف بالكامل (حقلًا ومعالجًا)، وليس فقط أُخفى. يبدو أن المستخدم وحَّد الوصول على `menuItemNewKoudFirstMezania` وحده بدل وجود مدخلين متكررين لنفس الشاشات تقريبًا.
+
 - **العمـــــلات** — `Name=toolStripMenuItemCurrencyListFrm`, `Click=toolStripMenuItemCurrencyListFrm_Click` → `CurrencyListFrm`, `CurrencyListFrmNew`
 - **سعر العمله** — `Name=ToolStripMenuItemCurrency_Factors`, `Click=ToolStripMenuItemCurrency_Factors_Click` → `Account_Common_LIB.Currency_Factors`
-- **أرصدة أول المده** — `Name=ToolStripMenuItemFinancial_Period_FirstBalance`, `Click=ToolStripMenuItemFinancial_Period_FirstBalance_Click` → `Mezan_Morgaa_ByPeriod`, `FirstBalanceMezan_FirstTime`, `FirstBalance_Financial_Period_FRM`
 - **قائمة اليوميات** — `Name=ToolStripMenuItem_JournalsDays`, `Click=ToolStripMenuItem_JournalsDays_Click` → `Journal_DaysListFrm`
 - **مراكز تكلفة الحسابات** — `Name=ToolStripMenuItemCostCenterForAccounts`, `Click=ToolStripMenuItemCostCenterForAccounts_Click` → `CostCenterForAccounts_FRM`
 - **مراكز التكلفة** — `Name=ToolStripMenuItemCostTree`, `Click=ToolStripMenuItemCostTree_Click` → `Account_Common_LIB.Cost_CenterTree.Cost_Center_TreeFrm`

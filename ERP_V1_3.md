@@ -12036,3 +12036,13 @@ Date         → 2026-08-11
 - بيانات الإنتاج الفعلية
 
 قبل إصدار حكم نهائي.
+
+---
+## إضافة 2026-09-24: جداول طلبيات العملاء الحديثة (Customer Orders)
+
+جداول جديدة بلا علاقة بـ `Requests_Details` القديم. المعرّفات `bigint` بلا IDENTITY (يولّدها التطبيق عبر `Common.GETAutoNumber`). التفاصيل والسكربت فى `.claude/docs/customer-orders-razor-plan.md` و`.claude/docs/customer-orders-schema.sql`.
+
+- `Customer_Orders` (رأس الطلبية): `Id`, `Order_No`, `Order_Date`, `Expected_Delivery_Date`, `Customer_Id`, `Store_Id`, `Currency_Id`, `Sales_Person_Id`, `Status` (0 مسودة، 1 مؤكدة، 2 منفذة جزئياً، 3 منفذة، 4 ملغاة، 5 مغلقة), `Gross_Total`, `Discount_Total`, `Tax_Total`, `Net_Total`, `Notes`, `Cancel_Reason`, `Cancelled_By`, `Cancelled_Date` + أعمدة التدقيق المعتادة.
+- `Customer_Order_Lines` (السطور): `Id`, `Order_Id` (FK → `Customer_Orders.Id`), `Line_No`, `Unit_Item_Table_Id`, `Qty_Larg`, `Qty_Small`, `Unit_Price`, `Discount_Percent`, `Discount_Value`, `Tax_Value`, `Line_Total`, `Fulfilled_Qty_Larg/Small`, `Cancelled_Qty_Larg/Small`, `Line_Status`, `Notes` + التدقيق.
+- `Customer_Order_Deposits` (العربون): `Id`, `Order_Id` (FK), `Money_Transaction_Box_Id`, `Amount`, `Consumed_Amount`, `Deposit_Date`, `Notes` + التدقيق.
+- `Customer_Order_Fulfillments` (التنفيذ): `Id`, `Order_Line_Id` (FK → `Customer_Order_Lines.Id`), `Invoices_List_Id`, `Invoices_Details_Id`, `Qty_Larg`, `Qty_Small`, `Fulfill_Date` + التدقيق.
