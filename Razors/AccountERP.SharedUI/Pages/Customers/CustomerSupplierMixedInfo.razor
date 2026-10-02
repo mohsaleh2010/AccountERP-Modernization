@@ -1,0 +1,538 @@
+@* 🟢 شاشة "بيانات حساب عميل-مورد-مختلط" - النسخة Blazor من Connection4It.Customer_SupplierInfo (WinForms،
+   فى connectionit\SupplierAndCustomer\Customer_SupplierInfo.cs، تُفتح من MainFrm_AccountUpdate عبر
+   menuItemSupplierCustomer_Click). بخلاف الحصر الأول لهذه الشاشة، الفحص الفعلى للكود بيّن أنها ليست شاشة
+   "ربط" بسيطة (تلك هى "ضبط الحسابات المختلطة"/MixedAccountBalanceList.razor الموجودة بالفعل) بل شاشة
+   **إنشاء** عميل ومورد **معاً** بنفس البيانات المشتركة، مرتبطين تلقائياً بحساب واحد فى شجرة الحسابات
+   (Customer.Ref_Cust_Supplier_Id ⇄ Supplier.Ref_Cust_Supplier_Id فى الاتجاهين).
+
+   قرارات النطاق (بموافقة المستخدم صراحة، راجع menu-main-data-razor-plan.md):
+   - الإضافة تُنشئ الاثنين معاً عبر CustomerCLS.AddNewCustomerSupplier (دالة جاهزة فى المحرك، تُستخدَم كما هى
+     دون أى منطق أعمال جديد) - تماماً كما تفعل الشاشة الأصلية (AddNewCustomerSupplier/BtnAdd_Click).
+   - التعديل يُحدِّث نفس الحقول المشتركة على السجلين معاً عبر CustomerCLS.UpdateCustomer +
+     SupplierCLS.UpdateSupplier (نفس الدالتين المُستخدَمتين فعلاً فى CustomerInfo.razor/SupplierInfo.razor) -
+     **الربط نفسه (Ref_Cust_Supplier_Id) يبقى ثابتاً** ولا تُوجَد واجهة لإعادة ربط العميل بمورد آخر (قدرة
+     نادرة/خطرة فى الأصل، خارج نطاق هذه الدفعة بقرار صريح).
+   - الحذف عبر CustomerCLS.DeleteCustomer + SupplierCLS.DeleteSupplier (بدلاً من تعطيل/حذف SQL خام مباشر
+     كما فى BtnDelete_Click الأصلى) لأن الدالتين الجاهزتين تتضمنان فحص "لا يمكن الحذف لوجود عمليات" الموجود
+     فعلاً فيهما، أكثر أماناً من إعادة تنفيذه هنا.
+   - **مُستبعَد بنفس قرار CustomerInfo.razor/SupplierInfo.razor تحديداً**: حقل "الرصيد الحالى" (الأصل يُلزم
+     بإدخاله يدوياً ويكتبه مباشرة فى العمود المخزَّن Customer.Balance/Supplier.Balance بلا قيد محاسبى - نفس
+     ما استبعدناه فى الشاشتين الشقيقتين)، وحقل "رصيد أول المدة" (جزء من خطة توحيد أرصدة أول المدة المنفصلة،
+     راجع .claude/docs/opening-balances-master-plan.md)، وحقلا الفيزا (نادرا الاستخدام).
+   - القائمة الرئيسية تعرض فقط العملاء المرتبطين فعلاً بمورد (Ref_Cust_Supplier_Id <> 0) - نفس الفلتر
+     الافتراضى لـ fill_cbCustomers() الأصلية (بدون خيار "كل العملاء" rdAllCustomer، خارج نطاق هذه الشاشة). *@
+
+@page "/customers/mixed-info"
+
+@using System.Globalization
+@using System.Data
+@using AccountERP.SharedUI.Services
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("MixedInfoTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("MixedInfoTitle")</MudText>
+            <MudButton Variant="Variant.Filled" Color="@(isAddingNew ? Color.Default : Color.Primary)"
+                       StartIcon="@(isAddingNew ? Icons.Material.Filled.Close : Icons.Material.Filled.Add)"
+                       OnClick="ToggleNew" Disabled="@isSaving">
+                @(isAddingNew ? Tr("Cancel") : Tr("NewMixedButton"))
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudAutocomplete T="CustomerViewModel" Label="@Tr("SelectMixedLabel")" Placeholder="@Tr("SelectMixedPlaceholder")"
+                          Value="selectedCustomer" ValueChanged="OnCustomerSelectedAsync"
+                          SearchFunc="SearchCustomersAsync" ToStringFunc="@(c => c?.Name)"
+                          Disabled="@(isAddingNew || isLoadingList)" Clearable="true" ResetValueOnEmptyText="true"
+                          Variant="Variant.Outlined" FullWidth="true" Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search" />
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@errorMessage</MudAlert>
+    }
+
+    @if (isAddingNew || selectedCustomer != null)
+    {
+        @if (!isAddingNew && linkedSupplier != null)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-4">
+                @Tr("LinkedSupplierInfo", linkedSupplier.Name, linkedSupplier.Code)
+            </MudAlert>
+        }
+        <MudPaper Class="pa-4" Elevation="1">
+            <MudGrid Spacing="2">
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="model.Code" Label="@Tr("CustomerCode")" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="long?" @bind-Value="model.Group_Id" Label="@Tr("CustomerGroupLabel")"
+                               Variant="Variant.Outlined" Required="true">
+                        @foreach (var g in groups)
+                        {
+                            <MudSelectItem T="long?" Value="@((long?)g.Id)">@g.GroupName</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="model.Name" Label="@Tr("CustomerName")" Variant="Variant.Outlined" Required="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="model.Address" Label="@Tr("Address")" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="model.Tel" Label="@Tr("Tel")" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="model.Tel2" Label="@Tr("Tel2")" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="model.Mobile" Label="@Tr("Mobile")" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="model.Fax" Label="@Tr("Fax")" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="model.E_Mail" Label="@Tr("Email")" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="model.Web_Site" Label="@Tr("Website")" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="model.Tax_No" Label="@Tr("TaxRegistrationNo")" Variant="Variant.Outlined" />
+                </MudItem>
+            </MudGrid>
+
+            <MudStack Row="true" Justify="@(LangService.IsRtl ? Justify.FlexStart : Justify.FlexEnd)" Spacing="2" Class="mt-4">
+                @if (isAddingNew)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAddAsync" Disabled="@isSaving">
+                        @if (isSaving)
+                        {
+                            <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+                        }
+                        @Tr("AddMixed")
+                    </MudButton>
+                }
+                else
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEditAsync" Disabled="@(isSaving || !IsDirty)">
+                        @if (isSaving)
+                        {
+                            <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+                        }
+                        @Tr("Save")
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                               OnClick="DeleteMixedAsync" Disabled="@isSaving">
+                        @Tr("Delete")
+                    </MudButton>
+                }
+            </MudStack>
+        </MudPaper>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("NoMixedSelected")</MudAlert>
+    }
+</MudContainer>
+
+@code {
+    private record GroupRow(long Id, string GroupName);
+
+    private List<CustomerViewModel> allCustomers = new();
+    private List<GroupRow> groups = new();
+
+    private CustomerViewModel? selectedCustomer;
+    private Customer model = new();
+    private Supplier? linkedSupplier;
+
+    private string _baseline = string.Empty;
+    private string CurrentFingerprint() => FormFingerprint.Of(model);
+    private bool IsDirty => CurrentFingerprint() != _baseline;
+
+    private bool isAddingNew;
+    private bool isSaving;
+    private bool isLoadingList = true;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadStaticLookupsAsync();
+        await LoadCustomersAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    private async Task LoadStaticLookupsAsync()
+    {
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            operations? gopp = null;
+            var groupsDt = new GroupsCLS().Get_Customer_Supplier_Group(ref gopp!, Common.Customer_Account_Type);
+            groups = groupsDt.Rows.Cast<DataRow>()
+                .Select(r => new GroupRow(Convert.ToInt64(r["ID"]), r["GroupName"]?.ToString() ?? string.Empty))
+                .ToList();
+        });
+    }
+
+    // 🟢 عملاء لهم مورد مرتبط فعلاً فقط (نفس فلتر fill_cbCustomers الافتراضى فى الأصل) - عبر
+    // CustomerCLS.GetMixedCustomerSupplierList المُضافة صراحة لهذه الشاشة.
+    private async Task LoadCustomersAsync()
+    {
+        isLoadingList = true;
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var opp = new operations();
+            allCustomers = new CustomerCLS().GetMixedCustomerSupplierList(ref opp);
+        });
+        isLoadingList = false;
+    }
+
+    private Task<IEnumerable<CustomerViewModel>> SearchCustomersAsync(string value, System.Threading.CancellationToken token)
+    {
+        IEnumerable<CustomerViewModel> result = string.IsNullOrWhiteSpace(value)
+            ? allCustomers.Take(30)
+            : allCustomers.Where(c => !string.IsNullOrEmpty(c.Name) && c.Name.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(30);
+        return Task.FromResult(result);
+    }
+
+    private async Task OnCustomerSelectedAsync(CustomerViewModel? cu)
+    {
+        selectedCustomer = cu;
+        errorMessage = string.Empty;
+        if (cu == null)
+        {
+            model = new Customer();
+            linkedSupplier = null;
+            return;
+        }
+        await LoadCustomerDetailAsync(cu.Id);
+    }
+
+    private async Task LoadCustomerDetailAsync(long id)
+    {
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var opp = new operations();
+            var cls = new CustomerCLS();
+            cls.GetCustomerByIdAsNoTracking(ref opp, id);
+            model = cls.cs ?? new Customer();
+
+            linkedSupplier = null;
+            if (model.Ref_Cust_Supplier_Id is > 0)
+            {
+                var spOpp = new operations();
+                var spCls = new SupplierCLS();
+                spCls.Get_SupplierById(ref spOpp, model.Ref_Cust_Supplier_Id.Value);
+                linkedSupplier = spCls.sp;
+            }
+        });
+
+        _baseline = CurrentFingerprint();
+    }
+
+    private void ToggleNew()
+    {
+        errorMessage = string.Empty;
+        if (isAddingNew)
+        {
+            isAddingNew = false;
+            if (selectedCustomer != null)
+            {
+                _ = LoadCustomerDetailAsync(selectedCustomer.Id);
+            }
+            else
+            {
+                model = new Customer();
+            }
+        }
+        else
+        {
+            isAddingNew = true;
+            selectedCustomer = null;
+            linkedSupplier = null;
+            model = new Customer { Active = 1 };
+        }
+    }
+
+    // 🟢 فحص تكرار الاسم على جانبَى العميل والمورد معاً (كلاهما سيحملان نفس الاسم) - بنفس قاعدة
+    // CustomerInfo.razor/SupplierInfo.razor (يعمل دائماً عند الإضافة والتعديل).
+    private async Task<bool> ValidateAsync(bool isNew)
+    {
+        errorMessage = string.Empty;
+        if (string.IsNullOrWhiteSpace(model.Name))
+        {
+            errorMessage = Tr("CustomerNameRequired");
+            return false;
+        }
+        if (model.Name.Contains('\''))
+        {
+            errorMessage = Tr("CustomerNameNoQuote");
+            return false;
+        }
+        if (model.Group_Id is null or 0)
+        {
+            errorMessage = Tr("CustomerGroupRequired");
+            return false;
+        }
+
+        bool duplicate = false;
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var opp1 = new operations();
+            duplicate = new CustomerCLS().IsFoundName(ref opp1, model.Name, isNew ? 0 : model.Id);
+            if (!duplicate)
+            {
+                var opp2 = new operations();
+                var supplierId = isNew ? 0 : (linkedSupplier?.Id ?? 0);
+                duplicate = new SupplierCLS().IsFoundName(ref opp2, model.Name, supplierId);
+            }
+        });
+        if (duplicate)
+        {
+            errorMessage = Tr("CustomerNameAlreadyUsed");
+            return false;
+        }
+
+        return true;
+    }
+
+    // 🟢 يقابل BtnAdd_Click/AddNewCustomer() فى الأصل: نفس الاستدعاء بالضبط CustomerCLS.AddNewCustomerSupplier
+    // (يُنشئ العميل والمورد معاً مرتبطَين بحساب واحد فى الشجرة).
+    private async Task SaveAddAsync()
+    {
+        if (!await ValidateAsync(isNew: true))
+        {
+            return;
+        }
+
+        isSaving = true;
+        int excp = 0;
+        string msg = string.Empty;
+        try
+        {
+            model.Currency_Id = Common.Entry_Currency_Id;
+            model.Active = 1;
+            model.IsSalesMan = 0;
+
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var cs = new CustomerCLS { cs = model };
+                var sp = new SupplierCLS();
+                sp.sp.Currency_Id = model.Currency_Id;
+                sp.sp.Code = model.Code;
+                sp.sp.Name = model.Name;
+                sp.sp.Address = model.Address;
+                sp.sp.Tel = model.Tel;
+                sp.sp.Tel2 = model.Tel2;
+                sp.sp.Mobile = model.Mobile;
+                sp.sp.Fax = model.Fax;
+                sp.sp.E_Mail = model.E_Mail;
+                sp.sp.Web_Site = model.Web_Site;
+                cs.AddNewCustomerSupplier(ref excp, ref msg, cs, sp);
+            });
+
+            if (excp == 0)
+            {
+                Snackbar.Add(Tr("MixedAdded"), Severity.Success);
+                isAddingNew = false;
+                selectedCustomer = null;
+                model = new Customer();
+                await LoadCustomersAsync();
+            }
+            else
+            {
+                errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // 🟢 يقابل BtnEdit_Click/EditCustomer()+EditSupplier() فى الأصل، لكن عبر CustomerCLS.UpdateCustomer +
+    // SupplierCLS.UpdateSupplier الجاهزتين بدل SQL خام مباشر - الربط (Ref_Cust_Supplier_Id) يبقى كما هو.
+    private async Task SaveEditAsync()
+    {
+        if (selectedCustomer == null)
+        {
+            errorMessage = Tr("NoMixedSelected");
+            return;
+        }
+        if (!await ValidateAsync(isNew: false))
+        {
+            return;
+        }
+
+        isSaving = true;
+        int excp = 0;
+        string msg = string.Empty;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new CustomerCLS().UpdateCustomer(ref excp, ref msg, model, 0, false);
+            });
+
+            if (excp != 0)
+            {
+                errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+                return;
+            }
+
+            if (linkedSupplier != null)
+            {
+                linkedSupplier.Code = model.Code;
+                linkedSupplier.Name = model.Name;
+                linkedSupplier.Address = model.Address;
+                linkedSupplier.Tel = model.Tel;
+                linkedSupplier.Tel2 = model.Tel2;
+                linkedSupplier.Mobile = model.Mobile;
+                linkedSupplier.Fax = model.Fax;
+                linkedSupplier.E_Mail = model.E_Mail;
+                linkedSupplier.Web_Site = model.Web_Site;
+                linkedSupplier.Tax_Registration_No = model.Tax_No;
+
+                int excpSp = 0;
+                string msgSp = string.Empty;
+                var supplierToSave = linkedSupplier;
+                await Task.Run(() =>
+                {
+                    AccountCultureGuard.EnsureInvariant();
+                    new SupplierCLS().UpdateSupplier(ref excpSp, ref msgSp, supplierToSave, 0, false);
+                });
+                if (excpSp != 0)
+                {
+                    errorMessage = string.IsNullOrEmpty(msgSp) ? Tr("SystemError", "") : msgSp;
+                    return;
+                }
+            }
+
+            Snackbar.Add(Tr("MixedUpdated"), Severity.Success);
+            await LoadCustomersAsync();
+            await LoadCustomerDetailAsync(model.Id);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // 🟢 يقابل BtnDelete_Click فى الأصل، لكن عبر CustomerCLS.DeleteCustomer + SupplierCLS.DeleteSupplier
+    // الجاهزتين (تتضمنان فحص "لا يمكن الحذف لوجود عمليات") بدل تعطيل/حذف SQL خام مباشر.
+    private async Task DeleteMixedAsync()
+    {
+        if (selectedCustomer == null)
+        {
+            return;
+        }
+
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            Tr("DeleteMixedTitle"),
+            Tr("DeleteMixedConfirm", model.Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        isSaving = true;
+        int excp = 0;
+        string msg = string.Empty;
+        var supplierId = linkedSupplier?.Id ?? 0;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var opp = new operations();
+                new CustomerCLS().DeleteCustomer(ref opp, ref excp, ref msg, model.Id);
+            });
+
+            if (excp != 0)
+            {
+                errorMessage = string.IsNullOrEmpty(msg) ? Tr("MixedCannotDelete") : msg;
+                return;
+            }
+
+            if (supplierId > 0)
+            {
+                int excpSp = 0;
+                string msgSp = string.Empty;
+                await Task.Run(() =>
+                {
+                    AccountCultureGuard.EnsureInvariant();
+                    var oppSp = new operations();
+                    new SupplierCLS().DeleteSupplier(ref oppSp, ref excpSp, ref msgSp, supplierId);
+                });
+                if (excpSp != 0)
+                {
+                    errorMessage = string.IsNullOrEmpty(msgSp) ? Tr("MixedCannotDelete") : msgSp;
+                    return;
+                }
+            }
+
+            Snackbar.Add(Tr("MixedDeleted"), Severity.Success);
+            selectedCustomer = null;
+            linkedSupplier = null;
+            model = new Customer();
+            await LoadCustomersAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

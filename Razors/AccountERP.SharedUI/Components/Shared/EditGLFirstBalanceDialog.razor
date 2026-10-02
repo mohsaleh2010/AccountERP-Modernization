@@ -24,7 +24,7 @@
 @using AccountERP.SharedUI.Services
 @inject LanguageService LangService
 
-<MudDialog @bind-Visible="Visible"
+<MudDialog Visible="Visible" VisibleChanged="OnMudDialogVisibleChangedAsync"
            Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
     <TitleContent>@Tr("EditGLFirstBalanceTitle")</TitleContent>
     <DialogContent>
@@ -35,10 +35,10 @@
             <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_errorMessage</MudAlert>
         }
 
-        <MudSelect T="int" Value="_currencyId" ValueChanged="OnCurrencyChangedAsync" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined" Class="mb-3">
+        <MudSelect T="long" Value="_currencyId" ValueChanged="OnCurrencyChangedAsync" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined" Class="mb-3" AutoFocus="true">
             @foreach (var c in _currencies)
             {
-                <MudSelectItem T="int" Value="@c.Value">@c.Name</MudSelectItem>
+                <MudSelectItem T="long" Value="@c.Value">@c.Name</MudSelectItem>
             }
         </MudSelect>
 
@@ -79,7 +79,7 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="CloseAsync">@Tr("Cancel")</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@_isSaving">
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@(_isSaving || !IsDirty)">
             @if (_isSaving)
             {
                 <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
@@ -103,7 +103,7 @@
 
     private long _lastLoadedId = -1;
     private List<CurrencyOption> _currencies = new();
-    private int _currencyId;
+    private long _currencyId;
     private long? _accountCustomerTypeId;
     private int _accountCustomerTypeValue;
     private decimal _factor = 1;
@@ -112,6 +112,10 @@
     private int _transformType = 1;
     private List<ExistingRow> _existingRows = new();
     private bool _isSaving;
+    // قاعدة الحفظ: «حفظ» يُفعَّل بعد تغيير الرصيد/الطبيعة/المعامل فقط؛ البصمة تُؤخذ عند تحميل رصيد العملة المختارة.
+    private string _baseline = string.Empty;
+    private string CurrentFingerprint() => FormFingerprint.Of(_currencyId, _factor, _balance, _transformType);
+    private bool IsDirty => CurrentFingerprint() != _baseline;
     private string? _errorMessage;
 
     protected override async Task OnParametersSetAsync()
@@ -164,7 +168,7 @@
     }
 
     // 🟢 يقابل CmbCurrencyName_SelectedIndexChanged -> ShowFirstBalance الأصليتين بالضبط.
-    private async Task OnCurrencyChangedAsync(int value)
+    private async Task OnCurrencyChangedAsync(long value)
     {
         _currencyId = value;
         await ApplyCurrencySelectionAsync();
@@ -216,6 +220,7 @@
                 _transformType = 2;
             }
         }
+        _baseline = CurrentFingerprint();
         StateHasChanged();
     }
 
@@ -289,5 +294,13 @@
         {
             CultureInfo.CurrentUICulture = previousCulture;
         }
+    }
+
+    // إغلاق MudDialog لنفسه (زر ×، Esc، النقر خارج الحوار) لا يُبلغ الصفحة الأم عبر @bind-Visible على المعامل نفسه، فتبقى Visible=true
+    // ولا يُفتح الحوار ثانية؛ نُمرِّر التغيير للأب صراحةً.
+    private async Task OnMudDialogVisibleChangedAsync(bool visible)
+    {
+        Visible = visible;
+        await VisibleChanged.InvokeAsync(visible);
     }
 }

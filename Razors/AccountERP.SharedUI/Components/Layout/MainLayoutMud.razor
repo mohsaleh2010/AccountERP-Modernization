@@ -34,6 +34,30 @@
     .mud-main-content .mud-table-row.mud-selected-item:hover {
         background-color: rgba(var(--mud-palette-primary-rgb), 0.26) !important;
     }
+
+    /* 🟢 تنسيق موحَّد لكل جداول MudTable (بطلب المستخدم، معمَّم من جدول أصناف الفاتورة): هيدر بلون الثيم الأساسى مع خط أكبر وعريض،
+       خط أكبر لخلايا الجسم، وتظليل خفيف بالتناوب. الصف المحدد يغلب التظليل لأن قاعدته أعلاه بـ!important. */
+    .mud-main-content .mud-table-root .mud-table-head .mud-table-cell {
+        background-color: var(--mud-palette-primary);
+        color: var(--mud-palette-primary-text);
+        font-size: 1rem;
+        font-weight: 700;
+        border-bottom: 1px solid var(--mud-palette-primary-darken);
+    }
+
+    .mud-main-content .mud-table-root .mud-table-head .mud-table-sort-label,
+    .mud-main-content .mud-table-root .mud-table-head .mud-table-sort-label .mud-icon-root,
+    .mud-main-content .mud-table-root .mud-table-head .mud-checkbox .mud-icon-root {
+        color: inherit;
+    }
+
+    .mud-main-content .mud-table-root .mud-table-body .mud-table-cell {
+        font-size: 1rem;
+    }
+
+    .mud-main-content .mud-table-root .mud-table-body .mud-table-row:nth-of-type(even) {
+        background-color: color-mix(in srgb, var(--mud-palette-primary) 4%, var(--mud-palette-surface));
+    }
 </style>
 
 @* 1. مزود الثيمات (فاتح/داكن) - يبقى خارج مزود الـ RTL (لا علاقة له باتجاه النص) *@
@@ -191,7 +215,8 @@
                 }
                 else
                 {
-                    @Body
+                    @* 🟢 @key: نسخة صفحة جديدة لكل مفتاح شاشة (راجع UpdateWorkspaceForCurrentRoute) *@
+                    <div @key="_bodyKey">@Body</div>
                 }
             </MudContainer>
         </MudMainContent>
@@ -229,6 +254,7 @@
     private static readonly string[] NonTabbedPaths = { "login", "about", "change-password", "notfound", "error", "loading" };
 
     private bool _showTabWorkspace;
+    private string _bodyKey = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -262,10 +288,25 @@
         if (MenuState.IsAuthenticated)
         {
             Prefs.Load();
+            ApplyLoadedLanguagePreference();
         }
 
         EnforceAuthGuard();
         UpdateWorkspaceForCurrentRoute();
+    }
+
+    // 🟢 يطبِّق لغة المستخدم المحفوظة لحسابه فى قاعدة البيانات (USER_DETAILES_Setting، عبر
+    // UserPreferencesService.Language) بعد كل Prefs.Load() ناجح - يُستدعى من هنا (أول تحميل لهذه الدائرة)
+    // ومن OnAuthChanged أدناه (دخول فعلي لاحق أثناء حياة نفس الدائرة). لو لم يُغيِّر المستخدم لغته يدوياً من
+    // قبل (Prefs.Language لا يزال null) لا نغيّر شيئاً - يبقى الافتراضى الحالى (كوكي الويب، أو العربية
+    // افتراضياً على الديسك توب/الموبايل) كما هو، حتى لا نستبدل اختياراً صريحاً بلا داعٍ.
+    private void ApplyLoadedLanguagePreference()
+    {
+        if (!string.IsNullOrWhiteSpace(Prefs.Language) &&
+            !string.Equals(Prefs.Language, LangService.CurrentLanguage, StringComparison.OrdinalIgnoreCase))
+        {
+            LangService.SetCulture(Prefs.Language);
+        }
     }
 
     // 🟢 يقرر لكل تنقّل: هل المسار الحالي شاشة حقيقية قابلة للتبويب (@page فعلي وليس من NonTabbedPaths)؟
@@ -273,6 +314,26 @@
     // MenuLocalization.FindMenuForRoute) قبل الرندرة، حتى يجد TabHost التبويب جاهزاً فوراً.
     private void UpdateWorkspaceForCurrentRoute()
     {
+        var relativeWithQuery = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        var relativePath = relativeWithQuery.Split('?')[0].Trim('/');
+
+        // 🟢 عناصر قائمة تشترك فى شاشة واحدة وتختلف بـ query (sales-invoice?agile=1 / ?kta3y=1 ...) يجب أن يكون لكل منها
+        // نسخة مكوّنها الخاصة (وتبويبها): مفتاح الشاشة = المسار + query عنصر القائمة المطابق. بدون ذلك يُعيد Blazor استخدام نفس
+        // نسخة الصفحة عند التنقّل بين مسارين لنفس المكوّن، فتبقى الشاشة على وضع أول ما فُتحت (نقدى بدل آجل مثلاً) لأن التهيئة
+        // تجرى مرة واحدة فقط. المسارات بلا query تبقى مفتاحها المسار وحده.
+        MenuViewModel? menu = null;
+        var screenKey = "/" + relativePath;
+        if (relativePath.Length > 0)
+        {
+            menu = MenuState.UserAllowedMenus.FindMenuForRoute(relativeWithQuery);
+            var menuRoute = menu?.GetEffectiveRoute();
+            if (!string.IsNullOrWhiteSpace(menuRoute) && menuRoute.Contains('?'))
+            {
+                screenKey += "?" + menuRoute.Split('?', 2)[1];
+            }
+        }
+        _bodyKey = screenKey;
+
         // ⚙️ المستخدم ألغى نظام التبويبات من إعداداته (راجع UserSettingsMenu.razor) - كل شاشة تُعرض بـ
         // @Body مباشرة كأنها لم تُبنَ فى نظام تبويبات إطلاقاً (شاشة واحدة، بلا شريط تبويبات). أي تبويبات
         // كانت مفتوحة بالفعل قبل الإلغاء تُفرَّغ من OnPrefsChanged فور تبديل المفتاح، لا هنا.
@@ -281,8 +342,6 @@
             _showTabWorkspace = false;
             return;
         }
-
-        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).Split('?')[0].Trim('/');
 
         if (NonTabbedPaths.Contains(relativePath, StringComparer.OrdinalIgnoreCase))
         {
@@ -309,7 +368,6 @@
         }
         else
         {
-            var menu = MenuState.UserAllowedMenus.FindMenuForRoute(relativePath);
             title = menu?.GetLocalizedDescription(LangService.CurrentLanguage);
             if (string.IsNullOrWhiteSpace(title))
             {
@@ -318,7 +376,7 @@
             icon = MenuIcons.GetLeafIcon(menu?.Description);
         }
 
-        TabWorkspace.OpenOrActivate("/" + relativePath, pageType, routeValues, title, icon);
+        TabWorkspace.OpenOrActivate(screenKey, pageType, routeValues, title, icon);
     }
 
     private async Task TryRestoreSessionFromCookieAsync()
@@ -425,6 +483,7 @@
         if (MenuState.IsAuthenticated)
         {
             Prefs.Load();
+            ApplyLoadedLanguagePreference();
         }
         else
         {

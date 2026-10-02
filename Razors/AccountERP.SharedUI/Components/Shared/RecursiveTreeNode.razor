@@ -1,0 +1,84 @@
+@* 🟢 عقدة شجرة عنقودية مستقلة لل_cost centers - تُستخدم داخل AssignCostCentersDialog لعرض كل عقدة
+   (أب أو ابن) مع checkbox مستقل و زر توسيع/طي.
+   الآباء: checkbox تفاعلي — فحصه يحدد كل أبنائه تلقائياً (cascade) ويظهر checked فقط إذا جميع الأبناء
+   محددين؛ الأب لا يُضاف للحساب أبداً. الأبناء: checkbox مستقل بالكامل عبر _selectedIds hash set خارجي. *@
+@using AccountERP.SharedUI.ViewModels
+
+<div style="padding-inline-start: @(Depth * 20)px;">
+    <div class="assign-node @(IsAlreadyAssigned(Node.Id) ? "is-already-assigned" : "")"
+         @onclick="() => { if (Node.HasChildren) OnToggle.InvokeAsync(Node.Id); }">
+        <div class="assign-node-toggle">
+            @if (Node.HasChildren)
+            {
+                <MudIcon Icon="@(IsExpanded ? Icons.Material.Filled.KeyboardArrowDown : Icons.Material.Filled.KeyboardArrowRight)"
+                         Size="Size.Small" />
+            }
+        </div>
+        <div class="assign-node-check" @onclick:stopPropagation="true">
+            @if (Node.HasChildren)
+            {
+                @* 🟢 الأب: checkbox تفاعلي يحدد كل أبنائه عند الفحص (cascade) ويظهر checked فقط إذا جميع
+                   الأبناء محددين. الأب نفسه لا يُحفظ للحساب أبداً — الحفظ يرسل الأوراق فقط.
+                   (الأب المُخصَّص مسبقاً يبقى مُعطَّلاً فلا يمكن إلغاؤه.) *@
+                <MudCheckBox T="bool"
+                             Value="@GetParentState()"
+                             ValueChanged="@(v => OnCheckboxChanged.InvokeAsync((Node.Id, v)))"
+                             Dense="true"
+                             Disabled="@(IsAlreadyAssigned(Node.Id))" />
+            }
+            else
+            {
+                @* 🟢 الأبناء الأوراق: checkbox مستقل بالكامل مع cascade. *@
+                <MudCheckBox T="bool"
+                             Value="@IsSelected(Node.Id)"
+                             ValueChanged="@(v => OnCheckboxChanged.InvokeAsync((Node.Id, v)))"
+                             Disabled="@(IsAlreadyAssigned(Node.Id))"
+                             Dense="true" />
+            }
+        </div>
+        <div class="assign-node-icon">
+            <MudIcon Icon="@(Node.HasChildren ? Icons.Material.Filled.Folder : Icons.Material.Filled.Description)"
+                     Size="Size.Small" />
+        </div>
+        <MudText Typo="Typo.body2" Class="assign-node-label">
+            @($"{Node.Code_Str}  {Node.Name}")
+        </MudText>
+    </div>
+    @if (Node.HasChildren && IsExpanded)
+    {
+        <div class="assign-tree-guides">
+            @foreach (var child in Node.Children)
+            {
+                <RecursiveTreeNode Node="child"
+                                   SelectedIds="SelectedIds"
+                                   AlreadyAssignedIds="AlreadyAssignedIds"
+                                   ExpandedNodes="ExpandedNodes"
+                                   OnToggle="OnToggle"
+                                   OnCheckboxChanged="OnCheckboxChanged"
+                                   Depth="@(Depth + 1)" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public CostCenterNodeViewModel Node { get; set; } = default!;
+    [Parameter] public HashSet<long> SelectedIds { get; set; } = new();
+    [Parameter] public HashSet<long> AlreadyAssignedIds { get; set; } = new();
+    [Parameter] public HashSet<long> ExpandedNodes { get; set; } = new();
+    [Parameter] public EventCallback<long> OnToggle { get; set; }
+    [Parameter] public EventCallback<(long Id, bool Value)> OnCheckboxChanged { get; set; }
+    [Parameter] public int Depth { get; set; }
+
+    private bool IsExpanded => ExpandedNodes.Contains(Node.Id);
+    private bool IsSelected(long id) => SelectedIds.Contains(id);
+    private bool IsAlreadyAssigned(long id) => AlreadyAssignedIds.Contains(id);
+
+    /// <summary> حالة الأب: true فقط إذا جميع الأبناء المباشرين مُحدَّدين (وعددهم > 0). </summary>
+    private bool GetParentState()
+    {
+        if (!Node.HasChildren) return IsSelected(Node.Id);
+        // 🟢 الأب يظهر checked فقط إذا جميع الأبناء المباشرين مُحدَّدين.
+        return Node.Children.Count > 0 && Node.Children.All(c => SelectedIds.Contains(c.Id));
+    }
+}

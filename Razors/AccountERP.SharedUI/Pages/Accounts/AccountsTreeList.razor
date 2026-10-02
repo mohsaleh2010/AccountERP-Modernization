@@ -83,10 +83,10 @@
                         </MudItem>
 
                         <MudItem xs="12" sm="6">
-                            <MudSelect T="int" Value="_selected.Currency_Id ?? 0" ValueChanged="@((int v) => { _selected.Currency_Id = v; })" Label="@Tr("CurrencyLabel")">
+                            <MudSelect T="long" Value="_selected.Currency_Id ?? 0" ValueChanged="@((long v) => { _selected.Currency_Id = v; })" Label="@Tr("CurrencyLabel")">
                                 @foreach (var c in _currencies)
                                 {
-                                    <MudSelectItem T="int" Value="@c.Id">@c.Name</MudSelectItem>
+                                    <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
                                 }
                             </MudSelect>
                         </MudItem>
@@ -198,7 +198,7 @@
 @code {
     private List<(long Id, string Name)> _branches = new();
     private List<(long Id, string Name, int Value, int HeadMainAccount)> _accountTypes = new();
-    private List<(int Id, string Name)> _currencies = new();
+    private List<(long Id, string Name)> _currencies = new();
 
     private long _branchId;
     private AccountTreePicker? _treePicker;
@@ -229,7 +229,7 @@
         await Task.Run(() =>
         {
             AccountCultureGuard.EnsureInvariant();
-            var branchDt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, (int)Common.User_Id);
+            var branchDt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, Common.User_Id);
             var branches = new List<(long, string)>();
             foreach (DataRow r in branchDt.Rows)
             {
@@ -251,10 +251,10 @@
             _accountTypes = types;
 
             var currencyDt = new CurrencyFactorsCLS_().GetCurrencyList();
-            var currencies = new List<(int, string)>();
+            var currencies = new List<(long, string)>();
             foreach (DataRow r in currencyDt.Rows)
             {
-                currencies.Add((Convert.ToInt32(r["ID"]), r["Currency_Name"]?.ToString() ?? ""));
+                currencies.Add((Convert.ToInt64(r["ID"]), r["Currency_Name"]?.ToString() ?? ""));
             }
             _currencies = currencies;
         });

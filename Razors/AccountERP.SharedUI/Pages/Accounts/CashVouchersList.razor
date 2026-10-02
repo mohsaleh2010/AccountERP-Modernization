@@ -1,0 +1,170 @@
+@* 🟢 يقابل أربع قوائم أذونات النقدية فى الديسك توب بصفحة واحدة بمعامل mode:
+     mode=all       ← بحث أذونات النقديه (Cash_Money_List، menuItemSearchOrders)
+     mode=customers ← مدفوعات نقدية من العملاء (Cash_Money_ListFromCustomers، menuItemCustomerMoney)
+     mode=suppliers ← مدفوعات نقدية إلى الموردين (Cash_Money_ListToSuppliers، menuItemMonyToSuppliers)
+     mode=accounts  ← حركة النقديه للحسابات (Cash_Money_ListFromAccounts، ToolStripMenuItem_Cash_Money_ListFromAccounts)
+   الاستعلام واحد للقراءة (CashVouchersService.SearchVouchers) بنفس شروط استعلامات Order_Receipt_Cash (Order_No ≠ 0/-1، الصندوق، الفترة، النوع، الطرف).
+   الصف يفتح الإذن (/accounts/cash/voucher?id=) فى تبويب. الطباعة/التصدير مؤجَّلة لمرحلة التقارير. *@
+@page "/accounts/cash/vouchers"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Title</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@Title</MudText>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="3"><MudDatePicker T="DateTime?" @bind-Date="_from" Label="@Tr("DateFromLabel")" Variant="Variant.Outlined" /></MudItem>
+            <MudItem xs="12" sm="6" md="3"><MudDatePicker T="DateTime?" @bind-Date="_to" Label="@Tr("DateToLabel")" Variant="Variant.Outlined" /></MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="long" @bind-Value="_boxId" Label="@Tr("CVBoxLabel")" Variant="Variant.Outlined">
+                    <MudSelectItem T="long" Value="0L">@Tr("CVAllBoxes")</MudSelectItem>
+                    @foreach (var b in _boxes) { <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem> }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="int" @bind-Value="_type" Label="@Tr("CVTypeLabel")" Variant="Variant.Outlined">
+                    <MudSelectItem T="int" Value="0">@Tr("CVAllTypes")</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">@Tr("CVTypeReceipt")</MudSelectItem>
+                    <MudSelectItem T="int" Value="2">@Tr("CVTypePayment")</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="9">
+                <MudTextField T="string" @bind-Value="_party" Label="@Tr("CVPartySearch")" Variant="Variant.Outlined" Clearable="true"
+                              OnKeyDown="@(e => e.Key == "Enter" ? LoadAsync() : Task.CompletedTask)" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" FullWidth="true" OnClick="LoadAsync" Disabled="_isLoading">@Tr("SearchButton")</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_errorMessage</MudAlert>
+    }
+
+    <MudTable Items="@_rows" T="Row" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" Loading="@_isLoading"
+              RowClassFunc="@((Row r, int i) => r.OrderId == _selected ? "mud-selected-item" : string.Empty)"
+              OnRowClick="@((TableRowClickEventArgs<Row> e) => Open(e.Item))">
+        <HeaderContent>
+            <MudTh>#</MudTh>
+            <MudTh>@Tr("DateColumn")</MudTh>
+            <MudTh>@Tr("CVTypeLabel")</MudTh>
+            <MudTh>@Tr("CVBoxLabel")</MudTh>
+            <MudTh>@Tr("CVPartyColumn")</MudTh>
+            <MudTh>@Tr("CVReceivedFrom")</MudTh>
+            <MudTh Style="text-align:end">@Tr("CVAmountLabel")</MudTh>
+            <MudTh>@Tr("CurrencyLabel")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="#"><b>@context.No</b></MudTd>
+            <MudTd DataLabel="@Tr("DateColumn")">@context.Date.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture)</MudTd>
+            <MudTd DataLabel="@Tr("CVTypeLabel")"><MudChip T="string" Size="Size.Small" Color="@(context.Type == 1 ? Color.Success : Color.Warning)" Variant="Variant.Filled">@(context.Type == 1 ? Tr("CVTypeReceipt") : Tr("CVTypePayment"))</MudChip></MudTd>
+            <MudTd DataLabel="@Tr("CVBoxLabel")">@context.Box</MudTd>
+            <MudTd DataLabel="@Tr("CVPartyColumn")">@context.Party</MudTd>
+            <MudTd DataLabel="@Tr("CVReceivedFrom")">@context.Man</MudTd>
+            <MudTd DataLabel="@Tr("CVAmountLabel")" Style="text-align:end"><b>@context.Amount.ToString("N2")</b></MudTd>
+            <MudTd DataLabel="@Tr("CurrencyLabel")">@context.Currency</MudTd>
+        </RowTemplate>
+        <NoRecordsContent><MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText></NoRecordsContent>
+    </MudTable>
+
+    <MudPaper Class="pa-3 mt-3" Elevation="0" Outlined="true">
+        <MudStack Row="true" Spacing="6" Wrap="Wrap.Wrap">
+            <span>@Tr("CVRowsCount"): <b>@_rows.Count</b></span>
+            <span class="mud-success-text">@Tr("CVTypeReceipt"): <b>@_rows.Where(r => r.Type == 1).Sum(r => r.Amount).ToString("N2")</b></span>
+            <span class="mud-warning-text">@Tr("CVTypePayment"): <b>@_rows.Where(r => r.Type == 2).Sum(r => r.Amount).ToString("N2")</b></span>
+        </MudStack>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private record Row(long OrderId, long No, DateTime Date, int Type, string Box, string Party, string Man, decimal Amount, string Currency);
+    private record BoxOption(long Id, string Name);
+
+    [SupplyParameterFromQuery(Name = "mode")] public string? ModeQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "type")] public int? TypeQuery { get; set; }
+
+    private readonly CashVouchersService _svc = new();
+    private List<Row> _rows = new();
+    private List<BoxOption> _boxes = new();
+    private DateTime? _from = DateTime.Now.Date.AddMonths(-1);
+    private DateTime? _to = DateTime.Now.Date;
+    private long _boxId;
+    private int _type;
+    private string? _party;
+    private long _selected;
+    private bool _isLoading;
+    private string? _errorMessage;
+    private string _mode = "all";
+
+    private string Title => _mode switch
+    {
+        "customers" => Tr("CVListCustomers"),
+        "suppliers" => Tr("CVListSuppliers"),
+        "accounts" => Tr("CVListAccounts"),
+        _ => Tr("CVListAll")
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _mode = ModeQuery is "customers" or "suppliers" or "accounts" ? ModeQuery : "all";
+        _type = TypeQuery is 1 or 2 ? TypeQuery.Value : 0;
+        try
+        {
+            var dt = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetAllBoxes(); });
+            _boxes = dt.Rows.Cast<DataRow>().Select(r => new BoxOption(Convert.ToInt64(r["Id"]), r["Bank_Name"]?.ToString() ?? "")).ToList();
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task LoadAsync()
+    {
+        _errorMessage = null;
+        _isLoading = true;
+        StateHasChanged();
+        var mode = _mode; var type = _type; var from = _from; var to = _to; var box = _boxId; var party = _party ?? "";
+        try
+        {
+            var dt = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.SearchVouchers(mode, type, from, to, box, party); });
+            _rows = dt.Rows.Cast<DataRow>().Select(r => new Row(Convert.ToInt64(r["Order_Id"]), r["Order_No"] == DBNull.Value ? 0 : Convert.ToInt64(r["Order_No"]),
+                Convert.ToDateTime(r["Order_Date"]), Convert.ToInt32(r["Transaction_type"]), r["Bank_Name"]?.ToString() ?? "", r["Party_Name"]?.ToString()?.Trim() ?? r["Account_Name"]?.ToString() ?? "",
+                r["Man_Name"]?.ToString() ?? "", Convert.ToDecimal(r["Line_Value"]), r["Currency_Name"]?.ToString() ?? "")).ToList();
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+        finally { _isLoading = false; }
+    }
+
+    private void Open(Row row)
+    {
+        _selected = row.OrderId;
+        Nav.NavigateTo($"/accounts/cash/voucher?id={row.OrderId}");
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

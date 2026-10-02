@@ -1,0 +1,13 @@
+<Project>
+  <!-- يفصل ناتج بناء مشاريع Razors عن المجلد المشترك Accounts\bin\Debug الذى يفرضه Directory.Build.props
+       الجذرى على باقى الحل. بدون هذا الفصل: سيرفر التطوير (dotnet run) يحمّل AccountModelsLib.dll مباشرة
+       من نفس الملف المشترك الذى يحاول بناء تطبيق الويندوز (WinForms) الكتابة فوقه أثناء الـ Debug/Build،
+       فيفشل بخطأ قفل الملف (MSB3027/MSB3021) طالما سيرفر التطوير شغّال. بترك OutputPath بلا قيمة هنا، تعود
+       مشاريع Razors لمسارها الافتراضي الخاص بها (bin\Debug\netX\ لكل مشروع) - AccountModelsLib.dll يُنسَخ
+       إليها كنسخة خاصة بها عند البناء كالمعتاد فى مراجع المشاريع (project reference)، فيحمّلها السيرفر من
+       هناك بدل الملف المشترك، ويبقى ملف Accounts\bin\Debug\AccountModelsLib.dll حرّاً لبناء الويندوز فى
+       نفس الوقت. -->
+  <PropertyGroup>
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+</Project>

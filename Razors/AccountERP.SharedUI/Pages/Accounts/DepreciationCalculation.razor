@@ -49,10 +49,10 @@
                     <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
                 }
             </MudSelect>
-            <MudSelect T="int?" Value="_periodId" ValueChanged="OnPeriodChanged" Label="@Tr("FinancialPeriodLabel")" Style="min-width:260px;" Dense="true">
+            <MudSelect T="long?" Value="_periodId" ValueChanged="OnPeriodChanged" Label="@Tr("FinancialPeriodLabel")" Style="min-width:260px;" Dense="true">
                 @foreach (var p in _periods)
                 {
-                    <MudSelectItem T="int?" Value="@((int?)p.Id)">@p.DateFrom.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) - @p.DateTo.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)</MudSelectItem>
+                    <MudSelectItem T="long?" Value="@((long?)p.Id)">@p.DateFrom.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) - @p.DateTo.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)</MudSelectItem>
                 }
             </MudSelect>
             <MudTextField T="string" Value="@_dateFrom?.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)" Label="@Tr("DateFromLabel")" ReadOnly="true" Style="min-width:140px;" />
@@ -164,8 +164,8 @@
     private readonly Assets_EhlakCLS _cls = new();
     private List<(long Id, string Name)> _branches = new();
     private long _branchId;
-    private List<(int Id, DateTime DateFrom, DateTime DateTo, bool IsActive)> _periods = new();
-    private int? _periodId;
+    private List<(long Id, DateTime DateFrom, DateTime DateTo, bool IsActive)> _periods = new();
+    private long? _periodId;
     private DateTime? _dateFrom;
     private DateTime? _dateTo;
 
@@ -197,7 +197,7 @@
         await Task.Run(() =>
         {
             AccountCultureGuard.EnsureInvariant();
-            var branchDt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, (int)Common.User_Id);
+            var branchDt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, Common.User_Id);
             var branches = new List<(long, string)>();
             foreach (DataRow r in branchDt.Rows)
             {
@@ -206,10 +206,10 @@
             _branches = branches;
 
             var periodDt = new Financial_PeriodCLS().Get_Financial_Period();
-            var periods = new List<(int, DateTime, DateTime, bool)>();
+            var periods = new List<(long, DateTime, DateTime, bool)>();
             foreach (DataRow r in periodDt.Rows)
             {
-                periods.Add((Convert.ToInt32(r["Id"]), Convert.ToDateTime(r["DateFrom"]), Convert.ToDateTime(r["DateTo"]), Convert.ToInt32(r["IS_Active"]) == 1));
+                periods.Add((Convert.ToInt64(r["Id"]), Convert.ToDateTime(r["DateFrom"]), Convert.ToDateTime(r["DateTo"]), Convert.ToInt32(r["IS_Active"]) == 1));
             }
             _periods = periods;
         });
@@ -236,7 +236,7 @@
         await SearchAsync();
     }
 
-    private async Task OnPeriodChanged(int? value)
+    private async Task OnPeriodChanged(long? value)
     {
         _periodId = value;
         var period = _periods.FirstOrDefault(p => p.Id == value);
@@ -262,7 +262,7 @@
         _isLoading = true;
         _errorMessage = null;
         _warningMessage = null;
-        var branchId = (int)_branchId;
+        var branchId = _branchId;
         var dateFrom = _dateFrom.Value;
         var dateTo = _dateTo.Value;
         try
@@ -323,7 +323,7 @@
         _isBusy = true;
         _errorMessage = null;
         _warningMessage = null;
-        var branchId = (int)_branchId;
+        var branchId = _branchId;
         var periodId = _periodId.Value;
         var dateFrom = _dateFrom.Value;
         var dateTo = _dateTo.Value;

@@ -1,0 +1,400 @@
+@* 🟢 يقابل Account_Common_LIB.Money_Transaction.Cash_Money.OrderMoney_Transaction(type[,reverse]) — أربعة عناصر قائمة «إذونات النقدية» بصفحة واحدة:
+     type=1 reverse=0: إذن إستلام نقدية من عميل (menuItemCustomer_Money)
+     type=2 reverse=0: إذن صرف نقدية لمورد (menuItemSuplierMoney)
+     type=1 reverse=1: إذن إستلام نقدية (مرتجع) من مورد (menuItemSuplierMoneyReverse)
+     type=2 reverse=1: إذن صرف نقدية (مرتجع) لعميل (menuItemCustomerMoneyReverse)
+   الحفظ كله عبر CashVouchersService الذى يستدعى Money_Transaction_BoxOrderReportCLS.Make_Transaction_BanksBox_FromInvoices كما هى (رأس الإذن + سطر الصندوق
+   + حركة العميل/المورد + رصيد الصندوق اليومى + القيد اليومى) داخل معاملة واحدة، بلا أى تعديل على المحرك.
+   الإضافة: فى إذن الاستلام من عميل يمكن ربط الإذن بطلبية عميل كعربون (Customer_Order_Deposits) — بقرار المستخدم أن العربون يُبنى مع شاشات النقدية.
+   المؤجَّل: الطباعة (OrderMoneyPrint RDLC). لا يُبنى هنا: فاتورة/أمر شغل مرتبط (Invoice_Id/CarsWorkOrdersId) المستعمل من شاشات الفواتير فقط. *@
+@page "/accounts/cash/voucher-party"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Title</PageTitle>
+
+<InvoiceStyles />
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-head inv-card">
+        <h1 class="inv-title">@Title</h1>
+        <div class="inv-badges">
+            <span class="inv-chip primary"><MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />@(_orderNo > 0 ? _orderNo.ToString() : "")</span>
+            <span class="inv-chip @(_savedOrderId > 0 ? "success" : "warn")">@(_savedOrderId > 0 ? Tr("InvoiceStatusSaved") : Tr("InvoiceStatusNew"))</span>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_isSaving" OnClick="NewVoucherAsync">@Tr("DstNewButton")</MudButton>
+        </div>
+    </div>
+
+    <div class="inv-card">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" />@Tr("CVVoucherData")</h2>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="4">
+                <MudSelect T="long" Value="_boxId" ValueChanged="OnBoxChangedAsync" Label="@Tr("CVBoxLabel")" Variant="Variant.Outlined" Disabled="@(_savedOrderId > 0)">
+                    @foreach (var b in _boxes)
+                    {
+                        <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" md="2">
+                <MudTextField T="string" Value="@_boxBalance.ToString("N2")" Label="@Tr("CVBoxBalanceLabel")" Variant="Variant.Outlined" ReadOnly="true" />
+            </MudItem>
+            <MudItem xs="6" md="2">
+                <MudTextField T="string" Value="@(_orderNo > 0 ? _orderNo.ToString() : "")" Label="@Tr("CVOrderNoLabel")" Variant="Variant.Outlined" ReadOnly="true" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudDatePicker T="DateTime?" Date="_date" DateChanged="OnDateChangedAsync" Label="@Tr("DateColumn")" Variant="Variant.Outlined" Disabled="@(_savedOrderId > 0)" />
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudAutocomplete T="PartyOption" Value="_party" ValueChanged="OnPartyPickedAsync" SearchFunc="SearchPartiesAsync" ToStringFunc="@(p => p?.Name ?? "")"
+                                 Label="@(IsCustomerParty ? Tr("CustomerLabel") : Tr("SupplierLabel"))" Variant="Variant.Outlined" CoerceText="false" ResetValueOnEmptyText="true"
+                                 MaxItems="50" Required="true" Disabled="@(_savedOrderId > 0 || HasDoc)" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string" @bind-Value="_manName" Label="@(_type == 1 ? Tr("CVReceivedFrom") : Tr("CVPaidTo"))" Variant="Variant.Outlined" Disabled="@(_savedOrderId > 0)" />
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <MudNumericField T="decimal" Value="_amount" ValueChanged="@(v => { _amount = v; })" Label="@Tr("CVAmountLabel")" Variant="Variant.Outlined" Immediate="true"
+                                 HideSpinButtons="true" Format="0.##" Disabled="@(_savedOrderId > 0)" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudTextField T="string" Value="@_currencyName" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined" ReadOnly="true" />
+            </MudItem>
+            @if (_factor != 1)
+            {
+                <MudItem xs="12" sm="6" md="3">
+                    <MudNumericField T="decimal" @bind-Value="_factor" Label="@Tr("CVFactorLabel")" Variant="Variant.Outlined" HideSpinButtons="true" Format="0.####" Disabled="@(_savedOrderId > 0)" />
+                </MudItem>
+            }
+            <MudItem xs="12">
+                <MudTextField T="string" Value="@(_amount > 0 ? _tafkeet : "")" Label="@Tr("CVTafkeetLabel")" Variant="Variant.Outlined" ReadOnly="true" />
+            </MudItem>
+        </MudGrid>
+
+        @if (_party is not null)
+        {
+            <div class="inv-cust">
+                <span class="inv-avatar">@(string.IsNullOrWhiteSpace(_party.Name) ? "?" : _party.Name.Trim()[0].ToString())</span>
+                <div class="who"><b>@_party.Name</b><small>@(IsCustomerParty ? Tr("CustomerLabel") : Tr("SupplierLabel"))</small></div>
+                <span class="inv-chip">@Tr("CVBalanceBefore"): @_partyBalance.ToString("N2")</span>
+                @if (_amount > 0)
+                {
+                    <span class="inv-chip primary">@Tr("CVBalanceAfter"): @BalanceAfter.ToString("N2")</span>
+                }
+            </div>
+        }
+    </div>
+
+    @if (HasDoc)
+    {
+        <div class="inv-card">
+            <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ReceiptLong" />@Tr("CVDocTitle")</h2>
+            <MudStack Row="true" Spacing="6" Wrap="Wrap.Wrap">
+                <span>@DocTypeName: <b>@_docNo</b></span>
+                <span>@Tr("NetTotalColumn"): <b>@_docNet.ToString("N2")</b></span>
+                <span class="mud-success-text">@Tr("COPaidColumn"): <b>@_docPaid.ToString("N2")</b></span>
+                <span class="mud-warning-text">@Tr("CVDocRest"): <b>@Math.Max(0, _docNet - _docPaid).ToString("N2")</b></span>
+            </MudStack>
+        </div>
+    }
+
+    @if (CanLinkOrder && !HasDoc)
+    {
+        <div class="inv-card">
+            <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Assignment" />@Tr("CVLinkOrderTitle")</h2>
+            @if (_orders.Count == 0)
+            {
+                <MudText Class="mud-text-secondary">@Tr("CVNoOpenOrders")</MudText>
+            }
+            else
+            {
+                <MudSelect T="long" @bind-Value="_linkOrderId" Label="@Tr("CVLinkOrderLabel")" Variant="Variant.Outlined" Clearable="true" Disabled="@(_savedOrderId > 0)">
+                    <MudSelectItem T="long" Value="0L">@Tr("CVNoLink")</MudSelectItem>
+                    @foreach (var o in _orders)
+                    {
+                        <MudSelectItem T="long" Value="@o.Id">@($"{o.No} · {o.Date:yyyy/MM/dd} · {Tr("NetTotalColumn")} {o.Net:N2} · {Tr("COPaidColumn")} {o.Deposits:N2}")</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_errorMessage</MudAlert>
+    }
+
+    <div class="inv-dock" role="region">
+        <div class="inv-dock-cells">
+            <div class="cell"><span class="lbl">@Tr("CVAmountLabel")</span><b>@_amount.ToString("N2")</b></div>
+        </div>
+        <div class="inv-dock-actions">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle" Disabled="@(!CanSave)" OnClick="SaveAsync">@Tr("CVSaveButton")</MudButton>
+        </div>
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private record PartyOption(long Id, string Name);
+    private record BoxOption(long Id, string Name, long CurrencyId, string CurrencyName);
+    private record OrderOption(long Id, long No, DateTime Date, decimal Net, decimal Deposits);
+
+    // type: 1 استلام، 2 صرف. reverse: 1 = الطرف المقابل (مورد فى الاستلام، عميل فى الصرف).
+    [SupplyParameterFromQuery(Name = "type")] public int? TypeQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "reverse")] public int? ReverseQuery { get; set; }
+    // من شاشة الطلبية: عميل وطلبية مسبقة الاختيار لاستلام عربون.
+    [SupplyParameterFromQuery(Name = "customer")] public long? CustomerQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "order")] public long? OrderQuery { get; set; }
+    // من شاشات الفواتير/المرتجعات: مستند مسبق الاختيار للسداد (dtype: 1 فاتورة مبيعات، 7 مرتجع مبيعات، 2 فاتورة مشتريات، 8 مرتجع مشتريات).
+    [SupplyParameterFromQuery(Name = "doc")] public long? DocQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "dtype")] public int? DocTypeQuery { get; set; }
+
+    private readonly CashVouchersService _svc = new();
+    private readonly CustomerCLS _customerCls = new();
+    private readonly SupplierCLS _supplierCls = new();
+    private readonly CustomerOrdersService _orders_svc = new();
+
+    private int _type = 1;
+    private int _reverse;
+    private List<BoxOption> _boxes = new();
+    private List<OrderOption> _orders = new();
+    private PartyOption? _party;
+    private long _boxId;
+    private long _boxCurrencyId;
+    private string _currencyName = "";
+    private decimal _boxBalance;
+    private decimal _factor = 1;
+    private long _orderNo;
+    private DateTime? _date = DateTime.Now.Date;
+    private string? _manName;
+    private decimal _amount;
+    private decimal _partyBalance;
+    private long _linkOrderId;
+    private long _savedOrderId;
+    private int _docType;
+    private long _docId, _docNo;
+    private decimal _docNet, _docPaid;
+    private bool HasDoc => _docId > 0;
+    private bool _isSaving;
+    private string? _errorMessage;
+
+    private bool IsCustomerParty => (_type == 1 && _reverse == 0) || (_type == 2 && _reverse == 1);
+    private bool CanLinkOrder => _type == 1 && _reverse == 0 && _party is not null;
+    private string DocTypeName => _docType switch { 1 => Tr("CVDocSales"), 7 => Tr("CVDocSalesReturn"), 2 => Tr("CVDocPurchase"), _ => Tr("CVDocPurchaseReturn") };
+    private bool CanSave => !_isSaving && _savedOrderId == 0 && _boxId > 0 && _party is not null && _amount > 0;
+    private string _tafkeet => _svc.Tafkeet(_amount, _boxCurrencyId);
+
+    // معاينة الرصيد بعد الإذن: العميل: الاستلام يخفض ما عليه والصرف يزيده؛ المورد: الصرف يخفض ما له والاستلام يزيده (المحرك هو الذى يسجّل الحركة الفعلية).
+    private decimal BalanceAfter => IsCustomerParty ? (_type == 1 ? _partyBalance - _amount : _partyBalance + _amount)
+                                                    : (_type == 2 ? _partyBalance - _amount : _partyBalance + _amount);
+
+    private string Title => (_type, _reverse) switch
+    {
+        (1, 0) => Tr("CVTitleCustomerReceipt"),
+        (2, 0) => Tr("CVTitleSupplierPayment"),
+        (1, 1) => Tr("CVTitleSupplierReceiptReturn"),
+        _ => Tr("CVTitleCustomerPaymentReturn")
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _type = TypeQuery == 2 ? 2 : 1;
+        _reverse = ReverseQuery == 1 ? 1 : 0;
+        if (DocQuery is > 0 && DocTypeQuery is 1 or 2 or 7 or 8)
+        {
+            (_type, _reverse) = CashVouchersService.DocDirection(DocTypeQuery!.Value);
+            _docType = DocTypeQuery.Value;
+            _docId = DocQuery.Value;
+        }
+        try
+        {
+            var dt = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetBoxes(AccountModelsLib.Common.User_Id, AccountModelsLib.Common.Branch_Id); });
+            _boxes = dt.Rows.Cast<DataRow>().Select(r => new BoxOption(Convert.ToInt64(r["Id"]), r["Bank_Name"]?.ToString() ?? "",
+                r["Currency_Id"] == DBNull.Value ? 1 : Convert.ToInt64(r["Currency_Id"]), r["Currency_Name"]?.ToString() ?? "")).ToList();
+            var def = dt.Rows.Cast<DataRow>().FirstOrDefault(r => r["Default_Bank"] != DBNull.Value && Convert.ToInt32(r["Default_Bank"]) == 1);
+            var firstId = def != null ? Convert.ToInt64(def["Id"]) : _boxes.FirstOrDefault()?.Id ?? 0;
+            if (firstId > 0) await OnBoxChangedAsync(firstId);
+
+            if (HasDoc)
+            {
+                var docType = _docType; var docId = _docId;
+                var doc = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetDocForPayment(docType, docId); });
+                if (!doc.Found) { _errorMessage = Tr("CVDocNotFound"); _docId = 0; }
+                else
+                {
+                    _docNo = doc.DocNo; _docNet = doc.Net; _docPaid = doc.Paid;
+                    await OnPartyPickedAsync(new PartyOption(doc.PartyId, doc.PartyName));
+                    _amount = doc.Remaining;
+                }
+            }
+            else if (CustomerQuery is > 0 && _type == 1 && _reverse == 0)
+            {
+                var name = await Task.Run(() => new operations().return_DataTable("SELECT Name FROM Customer WHERE Id = " + CustomerQuery.Value));
+                if (name.Rows.Count > 0)
+                {
+                    await OnPartyPickedAsync(new PartyOption(CustomerQuery.Value, name.Rows[0][0]?.ToString()?.Trim() ?? ""));
+                    if (OrderQuery is > 0) _linkOrderId = OrderQuery.Value;
+                }
+            }
+        }
+        catch (Exception ex) { _errorMessage = ErrText(ex); }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task OnBoxChangedAsync(long id)
+    {
+        _boxId = id;
+        var box = _boxes.FirstOrDefault(b => b.Id == id);
+        _boxCurrencyId = box?.CurrencyId ?? 1;
+        _currencyName = box?.CurrencyName ?? "";
+        var date = (_date ?? DateTime.Now).Date;
+        var t = _type;
+        var (balance, factor, no) = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return (_svc.BoxBalance(id), _svc.GetFactor(_boxCurrencyId), _svc.NextOrderNo(t, date, id));
+        });
+        _boxBalance = balance; _factor = factor; _orderNo = no;
+    }
+
+    private async Task OnDateChangedAsync(DateTime? date)
+    {
+        _date = date;
+        if (_boxId > 0 && _savedOrderId == 0)
+        {
+            var d = (date ?? DateTime.Now).Date; var box = _boxId; var t = _type;
+            _orderNo = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.NextOrderNo(t, d, box); });
+        }
+    }
+
+    private async Task<IEnumerable<PartyOption>> SearchPartiesAsync(string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return IsCustomerParty ? _customerCls.Get_CustomerSupplierListForStatement(0, 0, -1, -1) : _supplierCls.Get_SupplierListForStatement(0, 0, 0, true);
+        }, ct);
+        var list = new List<PartyOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["Name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+                list.Add(new PartyOption(Convert.ToInt64(r["Id"]), name));
+        }
+        return list.Take(50);
+    }
+
+    private async Task OnPartyPickedAsync(PartyOption? party)
+    {
+        _party = party;
+        _linkOrderId = 0;
+        _orders = new();
+        _partyBalance = 0;
+        if (party is null) return;
+        if (string.IsNullOrWhiteSpace(_manName)) _manName = party.Name;
+        var customer = IsCustomerParty;
+        var id = party.Id;
+        var (balance, orders) = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            decimal bal = 0;
+            try
+            {
+                var dt = customer ? _customerCls.GetCustomerBalance(id) : _supplierCls.GetSupplier_DataBalance(id);
+                if (dt.Rows.Count > 0) decimal.TryParse(dt.Rows[0]["Balance"]?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out bal);
+            }
+            catch { }
+            var ords = new List<OrderOption>();
+            if (customer && _type == 1 && _reverse == 0)
+            {
+                foreach (DataRow r in _orders_svc.GetOrdersForDeposit(id).Rows)
+                    ords.Add(new OrderOption(Convert.ToInt64(r["Id"]), r["Order_No"] == DBNull.Value ? 0 : Convert.ToInt64(r["Order_No"]), Convert.ToDateTime(r["Order_Date"]),
+                        Convert.ToDecimal(r["Net_Total"]), Convert.ToDecimal(r["Deposits"])));
+            }
+            return (AccountModelsLib.Common.RoundMe(bal), ords);
+        });
+        _partyBalance = balance;
+        _orders = orders;
+        if (OrderQuery is > 0 && _orders.Any(o => o.Id == OrderQuery.Value)) _linkOrderId = OrderQuery.Value;
+    }
+
+    private async Task NewVoucherAsync()
+    {
+        _savedOrderId = 0; _party = null; _amount = 0; _manName = null; _errorMessage = null; _linkOrderId = 0; _orders = new(); _partyBalance = 0;
+        _date = DateTime.Now.Date;
+        if (_boxId > 0) await OnBoxChangedAsync(_boxId);
+    }
+
+    private async Task SaveAsync()
+    {
+        _errorMessage = null;
+        if (_party is null || _boxId <= 0 || _amount <= 0) return;
+        // نفس شرط الأصل: الصرف لا يتجاوز رصيد الصندوق إلا لو IsBoxBalanceAllowSarfAny=1 (رسالة واضحة بدل نص المحرك الإنجليزى).
+        if (_type == 2 && AccountModelsLib.Common.IsBoxBalanceAllowSarfAny == 0 && _amount > _boxBalance)
+        {
+            _errorMessage = Tr("CVBoxBalanceInsufficient", _boxBalance.ToString("N2"), _amount.ToString("N2"));
+            return;
+        }
+        _isSaving = true;
+        var type = _type; var reverse = _reverse; var box = _boxId; var date = (_date ?? DateTime.Now).Date; var no = _orderNo;
+        var man = (_manName ?? "").Trim(); var amount = _amount; var partyId = _party.Id; var factor = _factor; var link = _linkOrderId;
+        var isCustomerReceipt = CanLinkOrder && !HasDoc; var docType = _docType; var docId = _docId;
+        try
+        {
+            var (orderId, lineId, savedNo) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var saved = _svc.SavePartyVoucher(type, reverse, box, date, no, man, amount, partyId, factor, docType, docId);
+                if (isCustomerReceipt && link > 0)
+                    _orders_svc.AddDeposit(link, saved.OrderId, saved.BoxLineId, partyId, amount, date, man);
+                return saved;
+            });
+            _savedOrderId = orderId;
+            _orderNo = savedNo;
+            Snackbar.Add(Tr("CVSavedMsg", savedNo), Severity.Success);
+            _boxBalance = await Task.Run(() => _svc.BoxBalance(box));
+            if (HasDoc)
+            {
+                var d = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetDocForPayment(docType, docId); });
+                _docPaid = d.Paid;
+            }
+        }
+        catch (Exception ex) { _errorMessage = ErrText(ex); }
+        finally { _isSaving = false; }
+    }
+
+    // رسالة الرفض بسبب رصيد الصندوق تُعرض بالعربية بدل نص المحرك الإنجليزى.
+    private string ErrText(Exception ex) => ex.Message.StartsWith("Box balance does not allow", StringComparison.OrdinalIgnoreCase)
+        ? Tr("CVBoxBalanceInsufficientShort") : Tr("SystemError", ex.Message);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

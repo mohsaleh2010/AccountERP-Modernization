@@ -60,15 +60,16 @@
 
     <MudPaper Class="pa-4 mb-4" Elevation="1">
         <MudGrid Spacing="2" AlignItems="AlignItems.Center">
-            <MudItem xs="12" sm="4">
+            <MudItem xs="12" sm="3">
                 <MudCheckBox T="bool" @bind-Value="activeOnly" Label="@Tr("ActiveOnly")" Color="Color.Primary" />
+            </MudItem>
+            <MudItem xs="12" sm="3">
+                <MudTextField @bind-Value="nameSearch" Label="@Tr("SearchByName")" Variant="Variant.Outlined"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true"
+                              OnKeyDown="OnSearchKeyDown" />
             </MudItem>
             @if (!IsSupplier)
             {
-                <MudItem xs="12" sm="4">
-                    <MudTextField @bind-Value="nameSearch" Label="@Tr("SearchByName")" Variant="Variant.Outlined"
-                                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" />
-                </MudItem>
                 <MudItem xs="12" sm="4">
                     <MudRadioGroup T="int" @bind-Value="generalCustomerFlag">
                         <MudRadio T="int" Value="-1" Color="Color.Primary">@Tr("AllCustomers")</MudRadio>
@@ -77,8 +78,8 @@
                     </MudRadioGroup>
                 </MudItem>
             }
-            <MudItem xs="12" sm="4">
-                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadRowsAsync">
+            <MudItem xs="12" sm="2">
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadRowsAsync" FullWidth="true">
                     @Tr("ShowButton")
                 </MudButton>
             </MudItem>
@@ -179,6 +180,12 @@
         });
     }
 
+    private async Task OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || isLoading) return;
+        await LoadRowsAsync();
+    }
+
     // 🟢 يقابل GetCustomersOnlyList/Get_SupplierVMByActive فى BtnShow_Click الأصلي بالضبط - نفس دوال
     // CustomerCLS/SupplierCLS المستخدَمة أيضاً فى CustomerInfo.razor/SupplierInfo.razor.
     private async Task LoadRowsAsync()
@@ -198,6 +205,12 @@
                 if (isSupplier)
                 {
                     var list = new SupplierCLS().Get_SupplierVMByActive(ref opp, active);
+                    // 🟢 SupplierCLS ليس لديها بحث بالاسم من جانب السيرفر (بخلاف GetCustomersOnlyList) - فلترة
+                    // هنا فى الصفحة بلا تعديل الكلاس المشترك، بنفس نتيجة البحث الظاهرة للمستخدم.
+                    if (!string.IsNullOrWhiteSpace(search))
+                    {
+                        list = list.Where(s => s.Name?.Contains(search, StringComparison.OrdinalIgnoreCase) == true).ToList();
+                    }
                     rows = list.Select(s => new Row(s.Id, s.Name, s.Address, s.Commercial_Register, s.Tax_Registration_No)).ToList();
                 }
                 else

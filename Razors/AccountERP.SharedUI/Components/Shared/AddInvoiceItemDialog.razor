@@ -1,0 +1,762 @@
+@* 🟢 يقابل Accounts.ItemData (شاشة إضافة/تعديل صنف فاتورة المبيعات القياسية) - النسخة الأولى (v1) تغطى المسار
+   العام (Common.is_pharmacy=0)، وليس بعد متغيّر الصيدلية ItemDataPh (اختيار دفعة/تاريخ صلاحية - مرحلة لاحقة).
+
+   يقابل بالضبط: Store_LIB.Stores_Items (اختيار مخزن+صنف مع الرصيد، بدون أى حالة static - كل الحالة هنا محلية
+   بالمكوّن) + ItemData.Get_Selected_Item_Data (تعبئة بيانات الصنف عند الاختيار) + ItemData.ComputePrice
+   (InvoiceLineCalculator.ComputeLine) + ItemData.Validation + ItemData.MakeEditNow/BtnAdd_Click (الإضافة مع
+   إبقاء الشاشة مفتوحة لإضافة أكثر من صنف) وBtnOk_Click (حفظ وإغلاق، يُستخدَم فى وضع التعديل).
+
+   نمط الحوار هنا (@bind-Visible + VisibleChanged) يطابق كل حوارات المشروع الأخرى (AddAccountDialog،
+   AddFixedAssetCategoryDialog...) - وليس IDialogService.ShowAsync (غير مُستخدَم فى أى شاشة أخرى بهذا المشروع). *@
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudDialog Visible="Visible" VisibleChanged="OnMudDialogVisibleChangedAsync" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true })">
+    <TitleContent>@(_isEditMode ? Tr("EditItemTitle") : Tr("AddItemTitle"))</TitleContent>
+    <DialogContent>
+        <MudStack Spacing="2" Style="min-width: 520px;">
+            <MudGrid Spacing="2">
+                @* 🟢 نوع السعر (يقابل UserControl price_Type_List1 فى ItemData الأصلية): يظهر فقط عند تفعيل الإعداد IS_Use_Price_Type_List=1.
+                   لو للعميل نوع سعر (Customer.Price_Type_List_ID) يُحدَّد ويُقفَل عليه؛ وإلا تُعرض الأنواع الفعالة ويبقى اختيار الصنف مقفلاً
+                   حتى يُختار نوع (أو يُختار الأول تلقائياً عند SelectFirstPriceListOnInvoice=1). السعر يُقرأ من Price_Type_Sell_Values. *@
+                @if (_usePriceTypes)
+                {
+                    <MudItem xs="12">
+                        @if (PriceTypeId != 0)
+                        {
+                            @* نوع سعر العميل (Customer.Price_Type_List_ID) ثابت: يُعرض باسمه للقراءة فقط كما فى الأصل (القائمة تحوى نوع العميل وحده). *@
+                            <MudTextField T="string" Value="@CurrentPriceTypeName" ReadOnly="true" Label="@Tr("PriceTypeLabel")" Variant="Variant.Outlined"
+                                          Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Lock" />
+                        }
+                        else
+                        {
+                            <MudSelect T="long" Value="_priceTypeId" ValueChanged="OnPriceTypeChangedAsync" Label="@Tr("PriceTypeLabel")"
+                                       Placeholder="@Tr("PriceTypeLabel")" Variant="Variant.Outlined" Disabled="_isEditMode" Required="true">
+                                @foreach (var t in _priceTypes)
+                                {
+                                    <MudSelectItem T="long" Value="@t.Id">@t.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        }
+                    </MudItem>
+                }
+                @* 🟢 بطلب المستخدم صراحة: لو للفرع مخزن واحد فقط، اختياره تلقائياً وإخفاء قائمة الاختيار (لا فائدة عملية
+                   منها فى هذه الحالة) - البحث عن الصنف يعتمد وقتها مباشرة على رقم هذا المخزن الوحيد. *@
+                @if (_stores.Count > 1)
+                {
+                    <MudItem xs="12" sm="6">
+                        <MudSelect T="long" Value="_storeId" Label="@Tr("StoreLabel")" Variant="Variant.Outlined"
+                                   Disabled="_isEditMode" ValueChanged="OnStoreChangedAsync">
+                            @foreach (var s in _stores)
+                            {
+                                <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                }
+                <MudItem xs="12" sm="@(_stores.Count > 1 ? 6 : 12)">
+                    @if (_searchByCode)
+                    {
+                        <MudTextField T="string" @bind-Value="_codeSearchText" Label="@Tr("SearchByCodeLabel")" Variant="Variant.Outlined"
+                                      Disabled="_isEditMode || _storeId == 0 || !ItemsEnabled" Immediate="true"
+                                      OnKeyDown="OnCodeSearchKeyDownAsync" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                                      OnAdornmentClick="@(() => SearchByCodeAsync(_codeSearchText))" />
+                    }
+                    else
+                    {
+                        <MudAutocomplete T="ItemOption" Value="_selectedItem" SearchFunc="SearchItemsAsync"
+                                          ToStringFunc="@(o => o?.Name ?? "")" Label="@Tr("ItemLabel")" Variant="Variant.Outlined"
+                                          ValueChanged="OnItemPickedAsync" ResetValueOnEmptyText="true" Disabled="_isEditMode || _storeId == 0 || !ItemsEnabled" />
+                    }
+                </MudItem>
+            </MudGrid>
+
+            @* 🟢 يقابل ItemData.cbSearchByCode (بحث بالاسم/بالكود) + خيار جديد لإظهار/إخفاء الأصناف بدون رصيد بطلب المستخدم صراحة *@
+            <MudStack Row="true" Spacing="4">
+                <MudCheckBox T="bool" Value="_searchByCode" ValueChanged="OnSearchByCodeChangedAsync" Label="@Tr("SearchByCodeToggleLabel")" Disabled="_isEditMode" Dense="true" />
+                <MudCheckBox T="bool" Value="_showItemsWithoutBalance" ValueChanged="OnShowWithoutBalanceChangedAsync" Label="@Tr("ShowItemsWithoutBalanceLabel")" Disabled="_isEditMode" Dense="true" />
+            </MudStack>
+
+            @if (_selectedItem is not null)
+            {
+                <MudGrid Spacing="2">
+                    <MudItem xs="6" sm="@(_isWithoutBalance ? 4 : 3)">
+                        <MudTextField T="string" Value="@_line.code" ReadOnly="true" Label="@Tr("ItemCodeLabel")" Variant="Variant.Outlined" />
+                    </MudItem>
+                    @* 🟢 حقلا الرصيد يظهران فقط للأصناف المخزنية العادية؛ يُخفَيان تلقائياً للأصناف/الخدمات التى
+                       عليها Item.Is_ItemWithoutBalance = 1 (خدمة لا رصيد لها) - بقرار المستخدم صراحة. *@
+                    @if (!_isWithoutBalance)
+                    {
+                        <MudItem xs="6" sm="3">
+                            <MudTextField T="string" Value="@($"{_line.Available_Larg_Balance:0.##} {_largUnit}")" ReadOnly="true" Label="@Tr("LargBalanceLabel")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="6" sm="3">
+                            <MudTextField T="string" Value="@($"{_line.Available_Small_Balance:0.##} {_smallUnit}")" ReadOnly="true" Label="@Tr("SmallBalanceLabel")" Variant="Variant.Outlined" />
+                        </MudItem>
+                    }
+                    <MudItem xs="6" sm="@(_isWithoutBalance ? 4 : 3)">
+                        <MudNumericField T="decimal" Value="_priceUnit" Label="@Tr("UnitPriceLabel")" Variant="Variant.Outlined"
+                                          ValueChanged="OnPriceChanged" Format="0.00" />
+                    </MudItem>
+
+                    <MudItem xs="6" sm="4">
+                        <MudNumericField T="decimal" @ref="_largQntyField" Value="_largQnty" Label="@($"{Tr("QuantityLabel")} ({_largUnit})")"
+                                          Variant="Variant.Outlined" ValueChanged="OnLargQntyChanged" Format="0.##"
+                                          Immediate="true" OnKeyDown="OnQtyKeyDownAsync" />
+                    </MudItem>
+                    @if (_unitSmallValue > 1)
+                    {
+                        <MudItem xs="6" sm="4">
+                            <MudNumericField T="decimal" Value="_smallQnty" Label="@($"{Tr("QuantityLabel")} ({_smallUnit})")"
+                                              Variant="Variant.Outlined" ValueChanged="OnSmallQntyChanged" Format="0.##"
+                                              Immediate="true" OnKeyDown="OnQtyKeyDownAsync" />
+                        </MudItem>
+                    }
+                    <MudItem xs="6" sm="4">
+                        <MudTextField T="string" Value="@_line.Item_Net_Total_Price?.ToString("0.00")" ReadOnly="true" Label="@Tr("LineTotalLabel")" Variant="Variant.Outlined" />
+                    </MudItem>
+                </MudGrid>
+
+                @* 🟢 بيانات الصنف الإضافية: تقابل حقول ItemData الأصلية التى تُخفى بإعدادات Show_*_OnInvoiceMonitor (SetConfigDataonMonitor)؛
+                   تظهر هنا فقط لصفحة فاتورة المبيعات (ShowExtraFields) وبنفس الإعدادات (InvoiceColumnSettings)، وكل تغيير يعيد حساب السطر. *@
+                @if (ShowExtraFields && InvoiceColumnSettings.AnyDialogField)
+                {
+                    <MudDivider />
+                    <MudText Typo="Typo.subtitle2" Color="Color.Primary">@Tr("ItemExtrasTitle")</MudText>
+                    <MudGrid Spacing="2">
+                        @if (InvoiceColumnSettings.ItemNo && InvoiceColumnSettings.ItemNoEditable)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudNumericField T="decimal?" Value="_line.Qnty_Another" ValueChanged="@((decimal? v) => SetExtra(() => _line.Qnty_Another = v ?? 0))"
+                                             Label="@Tr("ItemNoLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" />
+                        </MudItem>
+                        }
+                        @if (InvoiceColumnSettings.ItemCommissionRate)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudNumericField T="decimal?" Value="_line.Item_CommissionRate" ValueChanged="@((decimal? v) => SetExtra(() => _line.Item_CommissionRate = v ?? 0))"
+                                             Label="@Tr("ItemCommissionRateLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" />
+                        </MudItem>
+                        }
+                        @if (InvoiceColumnSettings.ItemCommissionValue)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudNumericField T="decimal?" Value="_line.Item_CommissionValue" ValueChanged="@((decimal? v) => SetExtra(() => _line.Item_CommissionValue = v ?? 0))"
+                                             Label="@Tr("ItemCommissionValueLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" />
+                        </MudItem>
+                        }
+                        @if (InvoiceColumnSettings.UnitCommissionValue)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudNumericField T="decimal?" Value="_line.Unit_CommissionValue" ValueChanged="@((decimal? v) => SetExtra(() => _line.Unit_CommissionValue = v ?? 0))"
+                                             Label="@Tr("UnitCommissionLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" />
+                        </MudItem>
+                        }
+                        @if (InvoiceColumnSettings.ItemCommissionTotal)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudTextField T="string" Value="@((_line.ItemCommissionTotal ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("ItemCommissionTotalLabel")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        }
+                        @if (InvoiceColumnSettings.TaxSalesRate)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudNumericField T="decimal?" Value="_line.Item_TaxSales10" ValueChanged="@((decimal? v) => SetExtra(() => _line.Item_TaxSales10 = v ?? 0))"
+                                             Label="@Tr("ItemTaxRateLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" Disabled="!IsTaxPerItem" />
+                        </MudItem>
+                        }
+                        @if (InvoiceColumnSettings.TaxSalesValue)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudTextField T="string" Value="@((_line.Item_TaxSales10_Value ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("ItemTaxValueLabel")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        }
+                        @if (InvoiceColumnSettings.ATS05Rate)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudNumericField T="decimal?" Value="_line.Item_ATS05" ValueChanged="@((decimal? v) => SetExtra(() => _line.Item_ATS05 = v ?? 0))"
+                                             Label="@Tr("ItemATS05RateLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" Disabled="!IsTaxPerItem" />
+                        </MudItem>
+                        }
+                        @if (InvoiceColumnSettings.ATS05Value)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudTextField T="string" Value="@((_line.Item_ATS05_Value ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("ItemATS05ValueLabel")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        }
+                        @if (InvoiceColumnSettings.ThreeMola)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudTextField T="string" Value="@((_line.Total3Mola ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("Total3MolaLabel")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        }
+                        @if (InvoiceColumnSettings.StatementNo)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudTextField T="string" @bind-Value="_line.StatementNo" Label="@InvoiceColumnSettings.StatementLabel(Tr("StatementNoLabel"))" Variant="Variant.Outlined" />
+                        </MudItem>
+                        }
+                        @if (InvoiceColumnSettings.OperationNo)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudTextField T="string" @bind-Value="_line.OperationNo" Label="@Tr("OperationNoLabel")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        }
+                        @if (InvoiceColumnSettings.MerchantName)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudTextField T="string" @bind-Value="_line.Merchant_Name" Label="@InvoiceColumnSettings.MerchantLabel(Tr("MerchantNameLabel"))" Variant="Variant.Outlined" />
+                        </MudItem>
+                        }
+                        @if (InvoiceColumnSettings.Tash3ela)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudTextField T="string" @bind-Value="_line.Tash3ela" Label="@Tr("BatchLabel")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        }
+                        @if (InvoiceColumnSettings.FreeQuantity)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudNumericField T="decimal?" Value="_line.LargItemsQnty_Free" ValueChanged="@((decimal? v) => SetExtra(() => _line.LargItemsQnty_Free = v ?? 0))"
+                                             Label="@($"{Tr("FreeQuantityLabel")} ({_largUnit})")" Variant="Variant.Outlined" Format="0.##" Immediate="true" />
+                        </MudItem>
+                            @if (_unitSmallValue > 1)
+                            {
+                        <MudItem xs="6" sm="4">
+                            <MudNumericField T="decimal?" Value="_line.SmallItemsQnty_Free" ValueChanged="@((decimal? v) => SetExtra(() => _line.SmallItemsQnty_Free = v ?? 0))"
+                                             Label="@($"{Tr("FreeQuantityLabel")} ({_smallUnit})")" Variant="Variant.Outlined" Format="0.##" Immediate="true" />
+                        </MudItem>
+                            }
+                        }
+                        @if (InvoiceColumnSettings.FreeItemNo)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudNumericField T="decimal?" Value="_line.Item_No_Free" ValueChanged="@((decimal? v) => SetExtra(() => _line.Item_No_Free = v ?? 0))"
+                                             Label="@Tr("FreeItemNoLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" />
+                        </MudItem>
+                        }
+                        @if (InvoiceColumnSettings.ExpireDate)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudDatePicker T="DateTime?" Date="_line.Item_Expire_Date" DateChanged="@((DateTime? d) => SetExtra(() => _line.Item_Expire_Date = d ?? DateTime.Now.Date))"
+                                           Label="@Tr("ExpireDateLabel")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        }
+                        @if (InvoiceColumnSettings.TotalNoTax)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudTextField T="string" Value="@((_line.Item_Total_WithoutTax ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("TotalNoTaxLabel")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        }
+                        @if (InvoiceColumnSettings.QntyValue)
+                        {
+                        <MudItem xs="6" sm="4">
+                            <MudTextField T="string" Value="@((_line.Qnty_value ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("QntyValueLabel")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        }
+                    </MudGrid>
+                }
+
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error" Dense="true">@_errorMessage</MudAlert>
+                }
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseAsync">@Tr("Cancel")</MudButton>
+        @* 🟢 زر واحد مناسب للعملية (بطلب المستخدم): إضافة صنف جديد = «إضافة» (يُضيف الصنف ويُبقى الحوار مفتوحاً لإضافة التالى)،
+           وتعديل صنف موجود = «حفظ التعديل» (يحفظ ويغلق). *@
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_selectedItem is null"
+                   OnClick="@(() => _isEditMode ? SaveAndCloseAsync() : AddAndKeepOpenAsync())">@Tr(_isEditMode ? "ItemDlgSaveEditButton" : "ItemDlgAddButton")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private record StoreOption(long Id, string Name);
+    private record ItemOption(long UnitItemTableId, long ItemId, string Name, string Code, decimal LargBalance, decimal SmallBalance,
+        decimal LargUnitValue, string LargUnit, string SmallUnit, decimal SalePrice, long StoreId, string StoreName, bool IsWithoutBalance);
+
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public IInvoices_Details? ExistingLine { get; set; }
+    [Parameter] public decimal TaxSalesRate { get; set; }
+    [Parameter] public decimal ATS05Rate { get; set; }
+    [Parameter] public bool IsTaxPerItem { get; set; }
+    // نوع سعر عميل الفاتورة (Customer.Price_Type_List_ID؛ 0 = بلا نوع فيختاره المستخدم) - يقابل ItemData.Price_Type_List_ID.
+    [Parameter] public long PriceTypeId { get; set; }
+    [Parameter] public EventCallback<IInvoices_Details> OnItemAdded { get; set; }
+    // يُفعَّل من صفحة فاتورة المبيعات فقط (شاشة الكاشير تستعمل هذا الحوار نفسه بلا حقول إضافية).
+    [Parameter] public bool ShowExtraFields { get; set; }
+    // 🟢 الحالة الابتدائية لخانة «إظهار الأصناف بدون رصيد». الفواتير: false (السلوك الحالى). طلبية العميل: true لأن العميل
+    // يطلب أصنافاً قد لا تكون متوفرة الآن؛ يبقى المستخدم قادراً على إلغاء الخانة.
+    [Parameter] public bool ShowItemsWithoutBalanceByDefault { get; set; }
+
+    protected override void OnInitialized() => _showItemsWithoutBalance = ShowItemsWithoutBalanceByDefault;
+
+    // 🟢 بحث بالكود/الباركود من الصفحة: عند فتح الحوار بكود يُحدَّد الصنف تلقائياً وتُوضع البؤرة على حقل الكمية.
+    // InitialCodeToken يزيد مع كل قراءة (ليُعالَج نفس الكود مرتين متتاليتين)، وOnCodeNotFound يُبلّغ الصفحة إن لم يوجد الكود.
+    [Parameter] public string? InitialCode { get; set; }
+    [Parameter] public int InitialCodeToken { get; set; }
+    [Parameter] public EventCallback<string> OnCodeNotFound { get; set; }
+
+    private int _handledInitialCodeToken;
+    private bool _openedByBarcode;
+    private bool _focusQtyNext;
+    private MudNumericField<decimal>? _largQntyField;
+
+    private readonly AccountModelsLib.operations _opp = new();
+    private List<StoreOption> _stores = new();
+    private long _storeId;
+    private ItemOption? _selectedItem;
+    private IInvoices_Details _line = new IInvoices_Details();
+    private decimal _largQnty;
+    private decimal _smallQnty;
+    private decimal _priceUnit;
+    private decimal _unitSmallValue = 1;
+    private string _largUnit = "";
+    private string _smallUnit = "";
+    private string _errorMessage = "";
+    private bool _isEditMode;
+    private long? _lastLoadedExistingLineId;
+    private bool _searchByCode;
+    private string _codeSearchText = "";
+    private bool _showItemsWithoutBalance;
+    private bool _isWithoutBalance;
+
+    // أنواع الأسعار: الإعداد نظامى للمنشأة (لا يتغير بين المستخدمين)، والقائمة تُحمَّل عند أول فتح ولكل نوع عميل مختلف.
+    private record PriceTypeOption(long Id, string Name);
+    private bool _usePriceTypes => AccountModelsLib.Common.IS_Use_Price_Type_List == 1;
+    private List<PriceTypeOption> _priceTypes = new();
+    private long _priceTypeId;
+    private long _priceTypesLoadedFor = -1;
+    private bool ItemsEnabled => !_usePriceTypes || _priceTypeId != 0;
+    private string CurrentPriceTypeName => _priceTypes.FirstOrDefault(t => t.Id == _priceTypeId)?.Name ?? "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Visible) return;
+        if (_stores.Count == 0) await LoadStoresAsync();
+        if (_usePriceTypes && _priceTypesLoadedFor != PriceTypeId) await LoadPriceTypesAsync();
+
+        _isEditMode = ExistingLine is not null;
+        if (_isEditMode && _lastLoadedExistingLineId != ExistingLine!.Id)
+        {
+            _lastLoadedExistingLineId = ExistingLine.Id;
+            // 🟢 نعدّل نسخة وليس السطر الأصلى: الصفحة تحتاج قيم السطر القديمة كما حُفظت (تُستخدم لإرجاع رصيده عند التعديل).
+            _line = (IInvoices_Details)ExistingLine.Clone();
+            _storeId = _line.Store_Id ?? 0;
+            _largQnty = _line.Larg_Qnty ?? 0;
+            _smallQnty = _line.Small_Qnty ?? 0;
+            _priceUnit = _line.PriceUnit ?? _line.Larg_Unit_Price ?? 0;
+            _largUnit = _line.UnitStr ?? "";
+            _smallUnit = _line.UnitSmallStr ?? "";
+            _isWithoutBalance = await LoadIsWithoutBalanceAsync(_line.Item_Id ?? 0);
+            _selectedItem = new ItemOption(_line.Unit_Item_Table_Id ?? 0, _line.Item_Id ?? 0, _line.Invoice_Item_Name ?? "",
+                _line.code ?? "", _line.Available_Larg_Balance ?? 0, _line.Available_Small_Balance ?? 0, 1, _largUnit, _smallUnit,
+                _priceUnit, _line.Store_Id ?? 0, _line.Store_Name ?? "", _isWithoutBalance);
+        }
+        else if (!_isEditMode)
+        {
+            _lastLoadedExistingLineId = null;
+            if (!string.IsNullOrWhiteSpace(InitialCode) && _handledInitialCodeToken != InitialCodeToken)
+            {
+                _handledInitialCodeToken = InitialCodeToken;
+                _openedByBarcode = true;
+                ResetForNextItem();
+                if (!ItemsEnabled)
+                {
+                    // لا يمكن تسعير الصنف قبل اختيار نوع السعر: نُبقى الكود فى حقل البحث بالكود ليُبحث بعد اختيار النوع.
+                    _searchByCode = true;
+                    _codeSearchText = InitialCode;
+                    Snackbar.Add(Tr("SelectPriceTypeFirst"), Severity.Warning);
+                    return;
+                }
+                var found = await SearchByCodeAsync(InitialCode);
+                if (!found)
+                {
+                    await OnCodeNotFound.InvokeAsync(InitialCode);
+                    await CloseAsync();
+                }
+                else
+                {
+                    _focusQtyNext = true;
+                }
+            }
+            else if (string.IsNullOrWhiteSpace(InitialCode))
+            {
+                _openedByBarcode = false;
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focusQtyNext && _largQntyField is not null)
+        {
+            _focusQtyNext = false;
+            // MudDialog يعيد البؤرة لنفسه بعد ظهوره، فنؤخر التركيز قليلاً ونعيده مرة ثانية ثم نحدد النص ليستبدله إدخال الكمية
+            for (var attempt = 0; attempt < 2; attempt++)
+            {
+                try
+                {
+                    await Task.Delay(attempt == 0 ? 250 : 200);
+                    if (_largQntyField is null) break;
+                    await _largQntyField.FocusAsync();
+                    await _largQntyField.SelectAsync();
+                }
+                catch { /* التركيز تحسين راحة فقط */ }
+            }
+        }
+    }
+
+    // Enter على حقل الكمية: مع الباركود يُضاف الصنف ويُغلق الحوار (لتعود البؤرة لحقل الباركود)، وفى الوضع العادى يُضاف ويبقى الحوار مفتوحاً.
+    private Task OnQtyKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || _selectedItem is null) return Task.CompletedTask;
+        // مع الباركود أو التعديل: حفظ وإغلاق (لتعود البؤرة لحقل الباركود)؛ الإضافة العادية: يبقى الحوار مفتوحاً للصنف التالى.
+        return _openedByBarcode || _isEditMode ? SaveAndCloseAsync() : AddAndKeepOpenAsync();
+    }
+
+    // يقابل price_Type_List1.Get_Price_Type_ListBy_Id (لنوع العميل) / Get_Price_Type_List (الأنواع الفعالة IS_Active=1).
+    private async Task LoadPriceTypesAsync()
+    {
+        var customerType = PriceTypeId;
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return customerType != 0
+                ? _opp.return_DataTable("SELECT ID, Price_Name FROM Price_Type_List WHERE ID = " + customerType)
+                : _opp.return_DataTable("SELECT ID, Price_Name FROM Price_Type_List WHERE IS_Active = 1 ORDER BY ID");
+        });
+        _priceTypes = dt.Rows.Cast<DataRow>()
+            .Select(r => new PriceTypeOption(Convert.ToInt64(r["ID"]), r["Price_Name"]?.ToString()?.Trim() ?? ""))
+            .ToList();
+        _priceTypesLoadedFor = customerType;
+
+        if (customerType != 0)
+        {
+            _priceTypeId = customerType;
+        }
+        else
+        {
+            _priceTypeId = 0;
+            // SelectFirstPriceListOnInvoice=1: يُختار أول نوع تلقائياً (نفس سلوك الأصل).
+            if (AccountModelsLib.Common.SelectFirstPriceListOnInvoice == 1 && _priceTypes.Count > 0) _priceTypeId = _priceTypes[0].Id;
+        }
+    }
+
+    private async Task OnPriceTypeChangedAsync(long value)
+    {
+        _priceTypeId = value;
+        if (_selectedItem is not null) await ApplyPriceTypePriceAsync();
+    }
+
+    // يقابل الكتلة IS_Use_Price_Type_List==1 فى ItemData.Get_Selected_Item_Data: سعر الوحدة وعمولتها من Price_Type_Sell_Values
+    // للصنف ونوع السعر. لو لا يوجد سعر لهذا النوع: الأصل يضع رقماً غير سعر (S_unit_Value)، فنستخدم هنا سعر الصنف الأساسى مع تنبيه.
+    private async Task ApplyPriceTypePriceAsync()
+    {
+        if (!_usePriceTypes || _selectedItem is null || _priceTypeId == 0) return;
+        var itemId = _selectedItem.ItemId;
+        var typeId = _priceTypeId;
+        var found = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var dt = _opp.return_DataTable("SELECT TOP 1 PriceUnit, CommisionValue FROM Price_Type_Sell_Values WHERE Item_ID = " + itemId + " AND Price_Type_List_ID = " + typeId);
+            if (dt.Rows.Count == 0) return ((decimal, decimal)?)null;
+            var price = dt.Rows[0]["PriceUnit"] == DBNull.Value ? 0 : Convert.ToDecimal(dt.Rows[0]["PriceUnit"], CultureInfo.InvariantCulture);
+            var commission = dt.Rows[0]["CommisionValue"] == DBNull.Value ? 0 : Convert.ToDecimal(dt.Rows[0]["CommisionValue"], CultureInfo.InvariantCulture);
+            return ((decimal, decimal)?)(price, commission);
+        });
+
+        if (found is { } f)
+        {
+            _priceUnit = f.Item1;
+            _line.Unit_CommissionValue = f.Item2;
+        }
+        else
+        {
+            _priceUnit = _selectedItem.SalePrice;
+            _line.Unit_CommissionValue = 0;
+            Snackbar.Add(Tr("PriceTypeNoPriceWarning"), Severity.Warning);
+        }
+        Recompute();
+    }
+
+    private async Task LoadStoresAsync()
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _opp.return_DataTable("SELECT Id, Store_Name FROM Store WHERE Active = 1 AND IS_Virtual_OuterStore = 0 ORDER BY IS_Default_Store DESC, Store_Name");
+        });
+        _stores = dt.Rows.Cast<DataRow>()
+            .Select(r => new StoreOption(Convert.ToInt64(r["Id"]), r["Store_Name"]?.ToString() ?? ""))
+            .ToList();
+        if (_storeId == 0 && _stores.Count > 0) _storeId = _stores[0].Id;
+    }
+
+    // 🟢 يقابل Item.Is_ItemWithoutBalance (خدمة/صنف لا رصيد له) - يُستخدَم فقط عند فتح الحوار فى وضع تعديل سطر
+    // موجود مسبقاً، حيث لا يتوفر العلم مباشرة ضمن بيانات السطر نفسه.
+    private async Task<bool> LoadIsWithoutBalanceAsync(long itemId)
+    {
+        if (itemId == 0) return false;
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _opp.return_DataTable("SELECT Is_ItemWithoutBalance FROM Item WHERE id = " + itemId);
+        });
+        if (dt.Rows.Count == 0 || dt.Rows[0]["Is_ItemWithoutBalance"] == DBNull.Value) return false;
+        return Convert.ToInt32(dt.Rows[0]["Is_ItemWithoutBalance"]) == 1;
+    }
+
+    private Task OnSearchByCodeChangedAsync(bool value)
+    {
+        _searchByCode = value;
+        _selectedItem = null;
+        _codeSearchText = "";
+        return Task.CompletedTask;
+    }
+
+    private Task OnShowWithoutBalanceChangedAsync(bool value)
+    {
+        _showItemsWithoutBalance = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnCodeSearchKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") return SearchByCodeAsync(_codeSearchText);
+        return Task.CompletedTask;
+    }
+
+    // 🟢 يقابل Store_LIB.Stores_Items.Get_Item_By_Code بالضبط (بحث بالكود الدقيق، بلا تحديد مخزن فى الأصل)
+    private async Task<bool> SearchByCodeAsync(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code)) return false;
+
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var sql = @"SELECT TOP 1 Unit_item.Id, Unit_item.Item_id, Item.Item_Name, Item.code, Unit_item.Full_qua, Unit_item.D_Qua,
+                               unit.B_Unit, unit.S_unit, unit.S_unit_Value, Unit_item.S_price, Unit_item.Store_id, Store.Store_Name,
+                               Item.Is_ItemWithoutBalance
+                        FROM Unit_item
+                        INNER JOIN unit ON Unit_item.unit_id = unit.id
+                        INNER JOIN Item ON Unit_item.Item_id = Item.id
+                        INNER JOIN Store ON Unit_item.Store_id = Store.id
+                        WHERE Unit_item.Code = N'" + code.Replace("'", "''") + "'";
+            return _opp.return_DataTable(sql);
+        });
+
+        if (dt.Rows.Count == 0)
+        {
+            _errorMessage = Tr("ItemCodeNotFoundError");
+            return false;
+        }
+
+        var r = dt.Rows[0];
+        var option = new ItemOption(
+            Convert.ToInt64(r["Id"]), Convert.ToInt64(r["Item_id"]), r["Item_Name"]?.ToString() ?? "",
+            r["code"]?.ToString() ?? "", Convert.ToDecimal(r["Full_qua"]), Convert.ToDecimal(r["D_Qua"]),
+            Convert.ToDecimal(r["S_unit_Value"] == DBNull.Value ? 1 : r["S_unit_Value"]), r["B_Unit"]?.ToString() ?? "",
+            r["S_unit"]?.ToString() ?? "", Convert.ToDecimal(r["S_price"]), Convert.ToInt64(r["Store_id"]), r["Store_Name"]?.ToString() ?? "",
+            r["Is_ItemWithoutBalance"] != DBNull.Value && Convert.ToInt32(r["Is_ItemWithoutBalance"]) == 1);
+        _storeId = option.StoreId;
+        await OnItemPickedAsync(option);
+        return true;
+    }
+
+    private Task OnStoreChangedAsync(long value)
+    {
+        _storeId = value;
+        _selectedItem = null;
+        return Task.CompletedTask;
+    }
+
+    private async Task<IEnumerable<ItemOption>> SearchItemsAsync(string search, CancellationToken ct)
+    {
+        if (_storeId == 0) return Enumerable.Empty<ItemOption>();
+
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var sql = @"SELECT TOP 50 Unit_item.Id, Unit_item.Item_id, Item.Item_Name, Item.code, Unit_item.Full_qua, Unit_item.D_Qua,
+                               unit.B_Unit, unit.S_unit, unit.S_unit_Value, Unit_item.S_price, Unit_item.Store_id, Store.Store_Name,
+                               Item.Is_ItemWithoutBalance
+                        FROM Unit_item
+                        INNER JOIN unit ON Unit_item.unit_id = unit.id
+                        INNER JOIN Item ON Unit_item.Item_id = Item.id
+                        INNER JOIN Store ON Unit_item.Store_id = Store.id
+                        WHERE Unit_item.Store_id = " + _storeId + @" AND Item.Active_flage = 1";
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                sql += " AND Item.Item_Name LIKE '%" + search.Replace("'", "''") + "%'";
+            }
+            if (!_showItemsWithoutBalance)
+            {
+                // 🟢 خيار جديد بطلب المستخدم صراحة (لا يقابل شرطاً موجوداً فى ItemData الأصلية): إخفاء الأصناف
+                // التى ليس لها رصيد متاح افتراضياً، مع إمكانية إظهارها عبر خانة "إظهار الأصناف بدون رصيد".
+                sql += " AND (Unit_item.Full_qua > 0 OR Unit_item.D_Qua > 0)";
+            }
+            sql += " ORDER BY Item.Item_Name";
+            return _opp.return_DataTable(sql);
+        }, ct);
+
+        return dt.Rows.Cast<DataRow>().Select(r => new ItemOption(
+            Convert.ToInt64(r["Id"]), Convert.ToInt64(r["Item_id"]), r["Item_Name"]?.ToString() ?? "",
+            r["code"]?.ToString() ?? "", Convert.ToDecimal(r["Full_qua"]), Convert.ToDecimal(r["D_Qua"]),
+            Convert.ToDecimal(r["S_unit_Value"] == DBNull.Value ? 1 : r["S_unit_Value"]), r["B_Unit"]?.ToString() ?? "",
+            r["S_unit"]?.ToString() ?? "", Convert.ToDecimal(r["S_price"]), Convert.ToInt64(r["Store_id"]), r["Store_Name"]?.ToString() ?? "",
+            r["Is_ItemWithoutBalance"] != DBNull.Value && Convert.ToInt32(r["Is_ItemWithoutBalance"]) == 1));
+    }
+
+    private Task OnItemPickedAsync(ItemOption? option)
+    {
+        _selectedItem = option;
+        if (option is null) return Task.CompletedTask;
+
+        _isWithoutBalance = option.IsWithoutBalance;
+        _line = new IInvoices_Details
+        {
+            Item_Id = option.ItemId,
+            Unit_Item_Table_Id = option.UnitItemTableId,
+            Invoice_Item_Name = option.Name,
+            code = option.Code,
+            Store_Id = option.StoreId,
+            Store_Name = option.StoreName,
+            Available_Larg_Balance = option.LargBalance,
+            Available_Small_Balance = option.SmallBalance,
+            UnitStr = option.LargUnit,
+            UnitSmallStr = option.SmallUnit,
+            Unit_Used_for_Price = 1,
+            // 🟢 يقابل ItemData.SetRowData: هذه القيم الثلاث تُضبط صراحةً بصفر فى الأصل، ومحرك الحفظ يدمجها نصاً داخل
+            // SQL (WHERE id = ...) فلو بقيت null يفشل الاستعلام بخطأ صياغة (اكتُشف حياً عند اختبار الحفظ).
+            Make_Order = 0,
+            Unit_Item_ExpireDate_Id = 0,
+            Bills_Details_Id = 0,
+            // 🟢 يقابل ItemData (سطر 1002/1079): تاريخ الصلاحية الافتراضى = اليوم والتشغيلة نص فارغ. محرك الحفظ
+            // (InvoiceUpdateExpireQnty.GetInvoiceUpdateExpireQnty) يستدعى Item_Expire_Date.Value مباشرة فيسقط لو null.
+            Item_Expire_Date = DateTime.Now.Date,
+            Tash3ela = "",
+            StatementNo = "",
+            OperationNo = "",
+            Merchant_Name = "",
+            Item_TaxSales10 = IsTaxPerItem ? TaxSalesRate : 0,
+            Item_ATS05 = IsTaxPerItem ? ATS05Rate : 0,
+        };
+        _largUnit = option.LargUnit;
+        _smallUnit = option.SmallUnit;
+        _unitSmallValue = option.LargUnitValue == 0 ? 1 : option.LargUnitValue;
+        _priceUnit = option.SalePrice;
+        _largQnty = 0;
+        _smallQnty = 0;
+        Recompute();
+        return ApplyPriceTypePriceAsync();
+    }
+
+    // تعديل حقل إضافى ثم إعادة حساب السطر (عمولة/ضريبة/عمولة العدد...).
+    private void SetExtra(Action assign) { assign(); Recompute(); }
+
+    private void OnPriceChanged(decimal value) { _priceUnit = value; Recompute(); }
+    private void OnLargQntyChanged(decimal value) { _largQnty = value; Recompute(); }
+    private void OnSmallQntyChanged(decimal value) { _smallQnty = value; Recompute(); }
+
+    private void Recompute()
+    {
+        _line.Larg_Qnty = _largQnty;
+        _line.Small_Qnty = _smallQnty;
+        _line.PriceUnit = _priceUnit;
+        _line.Larg_Unit_Price = _priceUnit;
+        InvoiceLineCalculator.ComputeLine(_line, _unitSmallValue);
+    }
+
+    // 🟢 يقابل ItemData.Validation: سعر صفر يُقبل بعد تأكيد المستخدم «هل تريد إدخال الصنف بدون سعر؟» إلا لو الإعداد
+    // Is_Invoice_Price_Needed=1 فيُرفض السعر الصفرى؛ ثم الكمية أو العدد لا يكونان صفراً معاً. (السعر السالب يُرفض دائماً هنا.)
+    private async Task<bool> ValidateAsync()
+    {
+        _errorMessage = "";
+        if (_priceUnit < 0 || (AccountModelsLib.Common.Is_Invoice_Price_Needed == 1 && _priceUnit <= 0))
+        {
+            _errorMessage = Tr("PriceRequiredError");
+            return false;
+        }
+        if (_priceUnit == 0)
+        {
+            var confirmed = await DialogService.ShowMessageBoxAsync(Tr("ZeroPriceConfirmTitle"), Tr("ZeroPriceConfirm"),
+                yesText: Tr("ZeroPriceConfirmYes"), cancelText: Tr("Cancel"));
+            if (confirmed != true) return false;
+        }
+        if (_largQnty == 0 && _smallQnty == 0)
+        {
+            _errorMessage = Tr("QuantityRequiredError");
+            return false;
+        }
+        return true;
+    }
+
+    // 🟢 يقابل ItemData.BtnAdd_Click بالضبط: يُضيف الصنف فوراً للفاتورة (عبر الأب) ثم يُفرَّغ النموذج
+    // ليبقى الحوار مفتوحاً لإضافة صنف آخر بسرعة - بدون إغلاق.
+    private async Task AddAndKeepOpenAsync()
+    {
+        if (!await ValidateAsync()) return;
+        await OnItemAdded.InvokeAsync((IInvoices_Details)_line.Clone());
+        Snackbar.Add(Tr("ItemAddedMessage"), Severity.Success);
+        ResetForNextItem();
+    }
+
+    // 🟢 يقابل ItemData.BtnOk_Click: إضافة/تعديل الصنف الحالى ثم إغلاق الحوار (يُستخدَم غالباً فى وضع التعديل).
+    private async Task SaveAndCloseAsync()
+    {
+        if (!await ValidateAsync()) return;
+        await OnItemAdded.InvokeAsync((IInvoices_Details)_line.Clone());
+        await CloseAsync();
+    }
+
+    private void ResetForNextItem()
+    {
+        _selectedItem = null;
+        _line = new IInvoices_Details();
+        _largQnty = 0;
+        _smallQnty = 0;
+        _priceUnit = 0;
+        _errorMessage = "";
+        _isWithoutBalance = false;
+    }
+
+    // 🟢 إغلاق MudDialog لنفسه (زر ×، Esc، النقر خارج الحوار) لا يُبلغ الصفحة الأم عبر @bind-Visible، فتبقى الصفحة على Visible=true
+    // ولا يفتح زر "إضافة صنف" الحوار ثانيةً (القيمة لم تتغير). نمرِّر التغيير للأم صراحةً.
+    private async Task OnMudDialogVisibleChangedAsync(bool visible)
+    {
+        Visible = visible;
+        await VisibleChanged.InvokeAsync(visible);
+    }
+
+    private async Task CloseAsync()
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    private string Tr(string key)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

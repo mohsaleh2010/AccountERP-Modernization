@@ -48,27 +48,50 @@ namespace AccountERP.SharedUI.Services
         {
             if (menus == null) return null;
 
-            var normalizedPath = "/" + (relativePath ?? string.Empty).Split('?')[0].Trim('/');
+            var pathParts = (relativePath ?? string.Empty).Split('?', 2);
+            var normalizedPath = "/" + pathParts[0].Trim('/');
+            var currentQuery = ParseQuery(pathParts.Length > 1 ? pathParts[1] : string.Empty);
             MenuViewModel? best = null;
-            var bestLength = -1;
+            var bestScore = -1;
 
             foreach (var menu in menus)
             {
                 var route = menu?.GetEffectiveRoute();
                 if (string.IsNullOrWhiteSpace(route) || !route.StartsWith("/")) continue;
 
-                var normalizedRoute = "/" + route.Trim('/');
+                // 🟢 RazorPath قد يحمل query string (sales-invoice?agile=1) لتمييز عناصر قائمة تشترك فى شاشة واحدة:
+                // المسار يُطابَق بدونه، ولا يُقبَل العنصر إلا إذا كانت كل أزواج query الخاصة به موجودة بنفس القيم فى العنوان الحالى،
+                // وعند التعدد يفوز الأطول مساراً ثم الأكثر تطابقاً فى query (الأكثر تحديداً).
+                var routeParts = route.Split('?', 2);
+                var normalizedRoute = "/" + routeParts[0].Trim('/');
                 var isMatch = normalizedPath.Equals(normalizedRoute, StringComparison.OrdinalIgnoreCase)
                     || normalizedPath.StartsWith(normalizedRoute + "/", StringComparison.OrdinalIgnoreCase);
+                if (!isMatch) continue;
 
-                if (isMatch && normalizedRoute.Length > bestLength)
+                var routeQuery = ParseQuery(routeParts.Length > 1 ? routeParts[1] : string.Empty);
+                if (routeQuery.Any(p => !currentQuery.TryGetValue(p.Key, out var v) || !string.Equals(v, p.Value, StringComparison.OrdinalIgnoreCase)))
+                    continue;
+
+                var score = normalizedRoute.Length * 100 + routeQuery.Count;
+                if (score > bestScore)
                 {
                     best = menu;
-                    bestLength = normalizedRoute.Length;
+                    bestScore = score;
                 }
             }
 
             return best;
+        }
+
+        private static Dictionary<string, string> ParseQuery(string query)
+        {
+            var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var pair in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var kv = pair.Split('=', 2);
+                result[Uri.UnescapeDataString(kv[0])] = kv.Length > 1 ? Uri.UnescapeDataString(kv[1]) : string.Empty;
+            }
+            return result;
         }
 
         // 🟢 يبني سلسلة الأجداد من الجذر حتى leaf نفسه (leaf هو آخر عنصر) بالمشي عبر ParentId - تُستخدَم

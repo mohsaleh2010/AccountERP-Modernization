@@ -1,0 +1,138 @@
+@* 🟢 دفعة جـ من خطة .claude/docs/journal-entries-list-razor-plan.md (§6.1/§7): استُخرجت لوحة تفاصيل القيد من
+   JournalEntriesList.razor إلى مكوّن مستقل قابل لإعادة الاستخدام - أي شاشة أخرى (فاتورة، سند، إذن صرف...) يمكنها
+   لاحقاً وضع <JournalEntryDetailsPanel EntryId="..."/> مباشرة لعرض سطور قيد محاسبى معيّن، بلا تكرار منطق الاستعلام
+   (Get_Entry_Account) أو التنسيق (خط عريض للمدين). المكوّن ذاتى التحميل: يكفى تمرير EntryId، ويعيد التحميل تلقائياً
+   كلما تغيّرت قيمته (نفس نمط AccountTreePicker's OnParametersSetAsync). *@
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+
+<MudPaper Class="pa-4" Elevation="1">
+    <MudText Typo="Typo.subtitle1" Class="fw-bold mb-3">@Tr("JEDetailsTitle")</MudText>
+
+    @if (EntryId == 0)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("JESelectEntryHint")</MudAlert>
+    }
+    else
+    {
+        <MudTable Items="@_detailRows" T="EntryDetailRow" Hover="true" Bordered="true" Dense="true" Loading="@_isLoading">
+            <HeaderContent>
+                <MudTh>@Tr("JELineNoCol")</MudTh>
+                <MudTh>@Tr("JEAccountNoCol")</MudTh>
+                <MudTh>@Tr("JEAccountNameCol")</MudTh>
+                <MudTh Style="text-align:end">@Tr("JEDebitCol")</MudTh>
+                <MudTh Style="text-align:end">@Tr("JECreditCol")</MudTh>
+                <MudTh Style="text-align:end">@Tr("JEEquivalentCol")</MudTh>
+                <MudTh>@Tr("JECostCenterCol")</MudTh>
+                <MudTh>@Tr("JELineNotesCol")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("JELineNoCol")">@context.LineNo</MudTd>
+                <MudTd DataLabel="@Tr("JEAccountNoCol")">@context.AccountNo</MudTd>
+                <MudTd DataLabel="@Tr("JEAccountNameCol")">@context.AccountName</MudTd>
+                <MudTd DataLabel="@Tr("JEDebitCol")" Style="@DebitStyle(context.Debit)">@context.Debit.ToString("N2")</MudTd>
+                <MudTd DataLabel="@Tr("JECreditCol")" Style="@DebitStyle(context.Debit, forCredit: true)">@context.Credit.ToString("N2")</MudTd>
+                <MudTd DataLabel="@Tr("JEEquivalentCol")" Style="@DebitStyle(context.Debit)">@context.EquivalentValue.ToString("N2")</MudTd>
+                <MudTd DataLabel="@Tr("JECostCenterCol")">@context.CostCenterName</MudTd>
+                <MudTd DataLabel="@Tr("JELineNotesCol")">@context.Notes</MudTd>
+            </RowTemplate>
+            <NoRecordsContent><MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText></NoRecordsContent>
+        </MudTable>
+        <MudStack Row="true" Spacing="6" Class="mt-3" Wrap="Wrap.Wrap">
+            <span>@Tr("JETotalDebit"): <b class="mud-success-text">@_detailRows.Sum(r => r.Debit).ToString("N2")</b></span>
+            <span>@Tr("JETotalCredit"): <b class="mud-warning-text">@_detailRows.Sum(r => r.Credit).ToString("N2")</b></span>
+        </MudStack>
+    }
+</MudPaper>
+
+@code {
+    private record EntryDetailRow(long Id, int LineNo, decimal Debit, decimal Credit, decimal EquivalentValue,
+        string AccountNo, string AccountName, string CostCenterName, string Notes);
+
+    [Parameter] public long EntryId { get; set; }
+
+    private long _loadedForEntryId = -1;
+    private List<EntryDetailRow> _detailRows = new();
+    private bool _isLoading;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (EntryId != _loadedForEntryId)
+        {
+            _loadedForEntryId = EntryId;
+            if (EntryId == 0)
+            {
+                _detailRows = new();
+                return;
+            }
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            var entryId = EntryId;
+            var rows = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var ac = new AccountEntry_CLS();
+                var dt = ac.Get_Entry_Account(entryId);
+                return MapDetailRows(dt);
+            });
+            _detailRows = rows;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private static List<EntryDetailRow> MapDetailRows(DataTable dt)
+    {
+        var list = new List<EntryDetailRow>();
+        foreach (DataRow r in dt.Rows)
+        {
+            list.Add(new EntryDetailRow(
+                Id: r["Account_Entry_Details_Id"] is DBNull ? 0 : Convert.ToInt64(r["Account_Entry_Details_Id"]),
+                LineNo: r["Line_No"] is DBNull ? 0 : Convert.ToInt32(r["Line_No"]),
+                Debit: r["Import_Value"] is DBNull ? 0 : Convert.ToDecimal(r["Import_Value"]),
+                Credit: r["Export_Value"] is DBNull ? 0 : Convert.ToDecimal(r["Export_Value"]),
+                EquivalentValue: r["Equivalent_Transaction_Value"] is DBNull ? 0 : Convert.ToDecimal(r["Equivalent_Transaction_Value"]),
+                AccountNo: r["SubAccount_NO"] is DBNull ? "" : r["SubAccount_NO"].ToString() ?? "",
+                AccountName: r["SubAccount_Name"] is DBNull ? "" : r["SubAccount_Name"].ToString() ?? "",
+                CostCenterName: r["CostCenter_Name"] is DBNull ? "" : r["CostCenter_Name"].ToString() ?? "",
+                Notes: r["Notes_Details"] is DBNull ? "" : r["Notes_Details"].ToString() ?? ""));
+        }
+        return list;
+    }
+
+    // 🟢 نفس تنسيق الديسك توب (Format_dg_Result فى Review_Account_Entry.cs): سطر مدين (Debit>0) يظهر بخط
+    // عريض + لون مختلف عن سطر الدائن - اللون تعزيز فقط، الرقم نفسه فى عمود مُسمَّى "مدين"/"دائن" يحمل المعنى.
+    private string DebitStyle(decimal debit, bool forCredit = false)
+    {
+        var isDebitLine = debit > 0;
+        if (forCredit) isDebitLine = !isDebitLine;
+        var weight = isDebitLine ? "700" : "400";
+        return $"text-align:end; font-variant-numeric: tabular-nums; font-weight:{weight};";
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

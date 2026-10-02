@@ -18,20 +18,53 @@
     @* 🟢 زر "+" فى بداية شريط التبويبات مدمج فى MudDynamicTabs نفسه (لا يمكن إخفاؤه من مكوّن "تبويبات
        ديناميكية" بتصميمه) - رُبط بفتح الرئيسية (اختيار شاشة جديدة) بدل تركه بلا وظيفة، بنفس منطق زر "+"
        لفتح تبويب جديد فى متصفحات الويب. *@
-    <MudDynamicTabs Rounded="true" Border="true" ApplyEffectsToContainer="true" Elevation="1"
-                    KeepPanelsAlive="true" RightToLeft="@LangService.IsRtl"
-                    PanelClass="pa-3 pa-md-4" Class="tab-workspace mb-3"
-                    ActivePanelIndex="@_activeIndex" ActivePanelIndexChanged="OnActivePanelIndexChanged"
-                    CloseTab="OnCloseTab" AddTab="@(() => NavigationManager.NavigateTo("/"))"
-                    AddIconToolTip="@Tr("OpenNewTabTooltip")">
-        @foreach (var tab in TabWorkspace.Tabs)
+    <div class="tab-workspace-wrap">
+        @* 🟢 زر "إغلاق كل التبويبات" (بطلب المستخدم صراحة) - يوضع بجوار زر "+" (فتح شاشة جديدة) المدمج فى
+           MudDynamicTabs مباشرة، لأن هذا المكوّن لا يعرض شريحة (Slot) لإضافة أزرار داخل شريطه فعلياً؛ الحل
+           هو تموضع مطلق (بنفس فكرة الزر الطائر فى AccountTreePicker.razor) لكن بإحداثيات مقيسة على الموضع
+           الفعلى لزر "+" نفسه (راجع CSS أدناه) بدل التراكب فوقه كما كان فى محاولة أولى سابقة. يظهر فقط مع
+           تبويبين فأكثر (لا فائدة منه مع صفر أو تبويب واحد) ويختفى تلقائياً غير ذلك.
+        *@
+        @if (TabWorkspace.Tabs.Count > 1)
         {
-            <MudTabPanel @key="tab.Key" Text="@tab.Title" Icon="@tab.Icon" ID="@tab.Key" ShowCloseIcon="true">
-                <DynamicComponent Type="@tab.PageType" Parameters="@tab.Parameters" />
-            </MudTabPanel>
+            <MudTooltip Text="@Tr("CloseAllTabsTooltip")">
+                <MudIconButton Icon="@Icons.Material.Filled.CloseFullscreen" Color="Color.Default" Variant="Variant.Filled"
+                               Size="Size.Small" Class="tab-workspace-closeall-fab" OnClick="CloseAllTabs" />
+            </MudTooltip>
         }
-    </MudDynamicTabs>
+        <MudDynamicTabs Rounded="true" Border="true" ApplyEffectsToContainer="true" Elevation="1"
+                        KeepPanelsAlive="true" RightToLeft="@LangService.IsRtl"
+                        PanelClass="pa-3 pa-md-4" Class="tab-workspace mb-3"
+                        ActivePanelIndex="@_activeIndex" ActivePanelIndexChanged="OnActivePanelIndexChanged"
+                        CloseTab="OnCloseTab" AddTab="@(() => NavigationManager.NavigateTo("/"))"
+                        AddIconToolTip="@Tr("OpenNewTabTooltip")">
+            @foreach (var tab in TabWorkspace.Tabs)
+            {
+                <MudTabPanel @key="tab.Key" Text="@tab.Title" Icon="@tab.Icon" ID="@tab.Key" ShowCloseIcon="true">
+                    <DynamicComponent Type="@tab.PageType" Parameters="@tab.Parameters" />
+                </MudTabPanel>
+            }
+        </MudDynamicTabs>
+    </div>
 }
+
+<style>
+    .tab-workspace-wrap {
+        position: relative;
+    }
+
+    /* 🟢 الموضع مقاس فعلياً على زر "+" (Add tab) المدمج فى MudDynamicTabs (48×48px، ملتصق بالحافة الفعلية
+       اليسرى لحاوية شريط التبويبات بصرف النظر عن اتجاه RTL - راجع تعليق التوضيح أعلى الاستخدام): يوضع هذا
+       الزر بجواره مباشرة (يمين نفس الصف، فجوة 8px، ومحاذاة رأسياً لمنتصفه) بدل التراكب فوقه كما كان سابقاً.
+       physical top/left مقصودة هنا عمداً (وليست inset-inline-*) لأن موضع الزر المرجعى نفسه فعلى/غير منطقى. */
+    .tab-workspace-closeall-fab {
+        position: absolute;
+        top: 29px;
+        left: 56px;
+        z-index: 2;
+        box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    }
+</style>
 
 @code {
     private int _activeIndex;
@@ -76,6 +109,12 @@
 
         var nextKey = TabWorkspace.Close(key);
         NavigationManager.NavigateTo(nextKey ?? "/");
+    }
+
+    private void CloseAllTabs()
+    {
+        TabWorkspace.CloseAll();
+        NavigationManager.NavigateTo("/");
     }
 
     public void Dispose()

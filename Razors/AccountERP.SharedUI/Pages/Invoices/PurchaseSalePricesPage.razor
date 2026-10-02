@@ -1,0 +1,340 @@
+@* 🟢 يقابل Accounts.BillsList_Edit_SPriceFrm (قائمة 926 «أسعار البيع للمشتريات»): بحث فواتير المشتريات (رقم/مورد/تاريخين، Invoice_Type=0 كما ينادى الأصل)
+   ثم أسطر الفاتورة المختارة مع سعر البيع القابل للتعديل. الحفظ حرفياً عبر AccountModelsLib.BillsCLS.UpdatePriceOne (سطر) / UpdatePriceAll (الكل، معاملة واحدة):
+   يحفظ سعر البيع على سطر الفاتورة ثم Item.S_Price/S_price_LargeUnit ثم Update Unit_Item لكل وحدات الصنف (سلوك الأصل بلا تعديل). عند تعديل الخانة
+   يُنسخ السعر إلى S_price_LargeUnit كما يفعل CellEndEdit فى الأصل. لا كود قاعدة بيانات هنا. *@
+@page "/accounts/invoices/purchase-sale-prices"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@_title</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@_title</MudText>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="3">
+                <MudNumericField T="long?" @bind-Value="_invoiceNo" Label="@Tr("InvoiceNoLabel")" Variant="Variant.Outlined" HideSpinButtons="true"
+                                 Immediate="true" OnKeyDown="OnInvoiceNoKeyDownAsync" Format="0" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudAutocomplete T="SupplierOption" @bind-Value="_supplier" SearchFunc="SearchSuppliersAsync" ToStringFunc="@(c => c?.Name ?? "")"
+                                 Label="@Tr("SupplierLabel")" Placeholder="@Tr("AllSuppliers")" Variant="Variant.Outlined"
+                                 Clearable="true" CoerceText="false" ResetValueOnEmptyText="true" MaxItems="50" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudCheckBox T="bool" @bind-Value="_useFrom" Dense="true" Size="Size.Small" />
+                    <MudDatePicker T="DateTime?" @bind-Date="_dateFrom" Label="@Tr("DateFromLabel")" Variant="Variant.Outlined" Disabled="@(!_useFrom)" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudCheckBox T="bool" @bind-Value="_useTo" Dense="true" Size="Size.Small" />
+                    <MudDatePicker T="DateTime?" @bind-Date="_dateTo" Label="@Tr("DateToLabel")" Variant="Variant.Outlined" Disabled="@(!_useTo)" />
+                </MudStack>
+            </MudItem>
+        </MudGrid>
+
+        <MudStack Row="true" Spacing="2" Class="mt-3">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="@(() => SearchAsync(false))" Disabled="@_isLoading">
+                @Tr("SearchButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudGrid Spacing="3">
+        <MudItem xs="12" md="5">
+            @* لا <MudTr> فى RowTemplate والصف المحدد يظهر بوضوح (اتفاقيات MudTable المعتمدة) *@
+            <MudTable Items="@_invoices" T="InvoiceRow" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" Loading="@_isLoading"
+                      RowClassFunc="@((InvoiceRow row, int index) => row.Id == _selectedId ? "mud-selected-item" : string.Empty)"
+                      OnRowClick="@((TableRowClickEventArgs<InvoiceRow> e) => SelectInvoiceAsync(e.Item.Id))">
+                <HeaderContent>
+                    <MudTh>@Tr("SerialColumn")</MudTh>
+                    <MudTh>@Tr("SupplierLabel")</MudTh>
+                    <MudTh>@Tr("InvoiceNoLabel")</MudTh>
+                    <MudTh>@Tr("DateColumn")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("NetTotalColumn")</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("SerialColumn")">@context.Serial</MudTd>
+                    <MudTd DataLabel="@Tr("SupplierLabel")">@context.Supplier</MudTd>
+                    <MudTd DataLabel="@Tr("InvoiceNoLabel")">@context.InvoiceNo</MudTd>
+                    <MudTd DataLabel="@Tr("DateColumn")">@FormatDate(context.Date)</MudTd>
+                    <MudTd DataLabel="@Tr("NetTotalColumn")" Style="text-align:end;font-weight:600;font-variant-numeric:tabular-nums">@context.Net.ToString("N2")</MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@(_searched ? Tr("NoRecordsFound") : Tr("PressSearchHint"))</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudItem>
+
+        <MudItem xs="12" md="7">
+            <MudPaper Class="pa-3" Elevation="1">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
+                    <MudText Typo="Typo.h6">@Tr("InvoiceItemsHeader")</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.SaveAs"
+                               OnClick="SaveAllAsync" Disabled="@(_lines.Count == 0 || _isSaving)">
+                        @Tr("SaveAllPricesButton")
+                    </MudButton>
+                </MudStack>
+
+                <MudTable Items="@_lines" T="LineRow" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="0" Loading="@_isLoadingLines">
+                    <HeaderContent>
+                        <MudTh>@Tr("ItemNameColumn")</MudTh>
+                        <MudTh>@Tr("QuantityColumn")</MudTh>
+                        <MudTh Style="text-align:end">@Tr("PurchasePriceColumn")</MudTh>
+                        <MudTh Style="width:160px">@Tr("SalePriceColumn")</MudTh>
+                        <MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="@Tr("ItemNameColumn")">@context.ItemName</MudTd>
+                        <MudTd DataLabel="@Tr("QuantityColumn")">@context.QntyStr</MudTd>
+                        <MudTd DataLabel="@Tr("PurchasePriceColumn")" Style="text-align:end;font-variant-numeric:tabular-nums">@context.PurchasePrice.ToString("N2")</MudTd>
+                        <MudTd DataLabel="@Tr("SalePriceColumn")">
+                            <MudNumericField T="decimal?" @bind-Value="context.SalePrice" Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true"
+                                             Immediate="true" Format="0.00" />
+                        </MudTd>
+                        <MudTd>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save"
+                                       OnClick="@(() => SaveOneAsync(context))" Disabled="@_isSaving">
+                                @Tr("Save")
+                            </MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("SelectInvoiceForPricesHint")</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private record SupplierOption(long Id, string Name);
+    private record InvoiceRow(long Id, int Serial, string Supplier, long InvoiceNo, DateTime? Date, decimal Net);
+
+    // سطر عرض يلفّ سجل Bills_Details المحمّل: تعديل السعر يكتب S_price وينسخه إلى S_price_LargeUnit (CellEndEdit فى الأصل).
+    private sealed class LineRow
+    {
+        public Bills_Details Entity { get; }
+        public LineRow(Bills_Details entity) => Entity = entity;
+        public string ItemName => Entity.Invoice_Item_Name ?? "";
+        public string QntyStr => !string.IsNullOrWhiteSpace(Entity.QntyStr) ? Entity.QntyStr
+            : string.Join(" / ", new[] { Entity.Larg_Qnty, Entity.Small_Qnty }.Where(q => (q ?? 0) != 0).Select(q => q!.Value.ToString("0.##", CultureInfo.InvariantCulture)));
+        public decimal PurchasePrice => Entity.Larg_Unit_Price ?? 0;
+        public decimal? SalePrice
+        {
+            get => Entity.S_price;
+            set
+            {
+                Entity.S_price = value;
+                Entity.S_price_LargeUnit = value;
+            }
+        }
+    }
+
+    private readonly SupplierCLS _supplierCls = new();
+
+    private string _title = "";
+
+    private long? _invoiceNo;
+    private SupplierOption? _supplier;
+    private bool _useFrom = true;
+    private bool _useTo = true;
+    private DateTime? _dateFrom = DateTime.Now.Date;
+    private DateTime? _dateTo = DateTime.Now.Date;
+
+    private List<InvoiceRow> _invoices = new();
+    private List<LineRow> _lines = new();
+    private long? _selectedId;
+    private bool _isLoading;
+    private bool _isLoadingLines;
+    private bool _isSaving;
+    private bool _searched;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _title = Tr("PurchSPriceTitle");
+    }
+
+    private void OnLanguageChangedHandler()
+    {
+        _title = Tr("PurchSPriceTitle");
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task<IEnumerable<SupplierOption>> SearchSuppliersAsync(string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _supplierCls.Get_SupplierListForStatement(0, 0, 0, true);
+        }, ct);
+        var list = new List<SupplierOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["Name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+                list.Add(new SupplierOption(Convert.ToInt64(r["Id"]), name));
+        }
+        return list.Take(50);
+    }
+
+    // رقم فاتورة > 0 + Enter = بحث بالرقم وحده (بلا مورد ولا تواريخ).
+    private async Task OnInvoiceNoKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter") return;
+        await Task.Delay(150);
+        if ((_invoiceNo ?? 0) > 0) await SearchAsync(true);
+    }
+
+    private async Task SearchAsync(bool byNumberOnly)
+    {
+        _errorMessage = null;
+        _isLoading = true;
+        _selectedId = null;
+        _lines = new List<LineRow>();
+        StateHasChanged();
+
+        var invoiceNo = _invoiceNo ?? 0;
+        var supplierId = byNumberOnly ? 0 : _supplier?.Id ?? 0;
+        var useFrom = !byNumberOnly && _useFrom;
+        var useTo = !byNumberOnly && _useTo;
+        var from = _dateFrom ?? DateTime.Now.Date;
+        var to = _dateTo ?? DateTime.Now.Date;
+
+        try
+        {
+            var ds = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var excp = 0;
+                return new BillsClss(0).Get_Suppliers_Invoices(ref excp, invoiceNo, supplierId, useFrom, from, useTo, to, false, 0, -1, false);
+            });
+
+            var rows = new List<InvoiceRow>();
+            var serial = 0;
+            foreach (DataRow r in ds.Tables[0].Rows)
+            {
+                serial++;
+                rows.Add(new InvoiceRow(
+                    Convert.ToInt64(r["Id"]), serial, r["Name"]?.ToString()?.Trim() ?? "",
+                    r["Invoice_Id"] == DBNull.Value ? 0 : Convert.ToInt64(r["Invoice_Id"]), Dt(r, "Invoice_Date"), Dec(r, "Net_Total")));
+            }
+
+            _invoices = rows;
+            _searched = true;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task SelectInvoiceAsync(long id)
+    {
+        _selectedId = id;
+        _errorMessage = null;
+        _isLoadingLines = true;
+        StateHasChanged();
+        try
+        {
+            var details = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return new BillsCLS().GetBills_Details(id);
+            });
+            _lines = details.Select(d => new LineRow(d)).ToList();
+        }
+        catch (Exception ex)
+        {
+            _lines = new List<LineRow>();
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoadingLines = false;
+        }
+    }
+
+    private async Task SaveOneAsync(LineRow line) => await SaveAsync(new List<Bills_Details> { line.Entity }, one: true);
+
+    private async Task SaveAllAsync() => await SaveAsync(_lines.Select(l => l.Entity).ToList(), one: false);
+
+    private async Task SaveAsync(List<Bills_Details> entities, bool one)
+    {
+        _isSaving = true;
+        _errorMessage = null;
+        StateHasChanged();
+        try
+        {
+            var (excp, msg) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var e = 0;
+                var m = "";
+                var cls = new BillsCLS();
+                if (one) cls.UpdatePriceOne(ref e, ref m, entities[0]);
+                else cls.UpdatePriceAll(ref e, ref m, entities);
+                return (e, m);
+            });
+
+            if (excp == 0) Snackbar.Add(Tr("PricesSavedMessage"), Severity.Success);
+            else _errorMessage = Tr("PricesSaveFailedMessage", msg ?? "");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private static decimal Dec(DataRow r, string column) =>
+        r.Table.Columns.Contains(column) && r[column] != DBNull.Value ? Convert.ToDecimal(r[column], CultureInfo.InvariantCulture) : 0;
+
+    private static DateTime? Dt(DataRow r, string column) =>
+        r.Table.Columns.Contains(column) && r[column] != DBNull.Value ? Convert.ToDateTime(r[column]) : null;
+
+    private static string FormatDate(DateTime? d) => d?.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture) ?? "";
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

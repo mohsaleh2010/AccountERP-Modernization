@@ -1,0 +1,391 @@
+@* 🟢 يقابل Account_Common_LIB.Money_Transaction.Cash_MoneyNew.New_OrderMoney_SarfNew(type) — «إذن إستلام/صرف نقديه» العام متعدد الأسطر (قائمتا
+   ToolStripMenuItemEstlamMoney / ToolStripMenuItemSarfMoney). خزينة واحدة وعدة حسابات (عميل/مورد/أى حساب فى الأستاذ) بمركز تكلفة لكل سطر.
+   الإصدار عبر CashVouchersService.SaveMultiVoucher = تسلسل SaveNewOrderFinally الأصلى بالضبط: Make_Transaction_BanksBox_NewSarf ثم Set_BankBalanceDay
+   ثم Make_Entry_For_AccountsSandouk داخل معاملة واحدة (بلا أى تعديل على المحرك). المعاملة id=<رقم الإذن>: عرض إذن قائم للقراءة + حذفه (صلاحية القائمة 316 كالأصل).
+   الفروق عن الأصل: (1) حذف الإذن يُمنع لو تكرر معرّف أحد أسطره فى Money_Transaction_Box (عيب قديم: الحذف الأصلى بالمعرّف وحده قد يصيب إذناً آخر — بند 32 فى backlog)،
+   (2) التعديل = حذف الإذن وإعادة إصداره بنفس الرقم فى معاملة واحدة (EditMultiVoucher) بدل Edit_Transaction_BanksBox_NewSarf، ويُمنع لو الإذن مرتبط بعربون/مستند. المؤجَّل: الطباعة، إذن العملة (SarfCurrencyNew) — صفحة مستقلة. *@
+@page "/accounts/cash/voucher"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Title</PageTitle>
+
+<InvoiceStyles />
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-head inv-card">
+        <h1 class="inv-title">@Title</h1>
+        <div class="inv-badges">
+            <span class="inv-chip primary"><MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />@(_orderNo > 0 ? _orderNo.ToString() : "")</span>
+            <span class="inv-chip @(_savedOrderId > 0 ? "success" : "warn")">@(_savedOrderId > 0 ? Tr("InvoiceStatusSaved") : Tr("InvoiceStatusNew"))</span>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_isBusy" OnClick="NewVoucherAsync">@Tr("DstNewButton")</MudButton>
+        </div>
+    </div>
+
+    <div class="inv-card">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" />@Tr("CVVoucherData")</h2>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="4">
+                <MudSelect T="long" Value="_boxId" ValueChanged="OnBoxChangedAsync" Label="@Tr("CVBoxLabel")" Variant="Variant.Outlined" Disabled="@(_readOnly || _editing)">
+                    @foreach (var b in _boxes)
+                    {
+                        <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" md="2"><MudTextField T="string" Value="@_boxBalance.ToString("N2")" Label="@Tr("CVBoxBalanceLabel")" Variant="Variant.Outlined" ReadOnly="true" /></MudItem>
+            <MudItem xs="6" md="2"><MudTextField T="string" Value="@(_orderNo > 0 ? _orderNo.ToString() : "")" Label="@Tr("CVOrderNoLabel")" Variant="Variant.Outlined" ReadOnly="true" /></MudItem>
+            <MudItem xs="12" md="4"><MudDatePicker T="DateTime?" Date="_date" DateChanged="OnDateChangedAsync" Label="@Tr("DateColumn")" Variant="Variant.Outlined" Disabled="@(_readOnly || _editing)" /></MudItem>
+            <MudItem xs="12" md="6"><MudTextField T="string" @bind-Value="_manName" Label="@(_type == 1 ? Tr("CVReceivedFrom") : Tr("CVPaidTo"))" Variant="Variant.Outlined" Disabled="@_readOnly" /></MudItem>
+            <MudItem xs="12" md="6"><MudTextField T="string" @bind-Value="_orderNotes" Label="@Tr("CVMainNotes")" Variant="Variant.Outlined" Disabled="@_readOnly" /></MudItem>
+            <MudItem xs="12" sm="6" md="3"><MudTextField T="string" Value="@(_box?.CurrencyName ?? "")" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined" ReadOnly="true" /></MudItem>
+            @if (_factor != 1)
+            {
+                <MudItem xs="12" sm="6" md="3">
+                    <MudNumericField T="decimal" @bind-Value="_factor" Label="@Tr("CVFactorLabel")" Variant="Variant.Outlined" HideSpinButtons="true" Format="0.####" Disabled="@_readOnly" />
+                </MudItem>
+            }
+        </MudGrid>
+    </div>
+
+    @if (!_readOnly)
+    {
+        <div class="inv-card">
+            <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.AddCircle" />@Tr("CVLinesTitle")</h2>
+            <AccountSelector @key="_selectorKey" AccountSelection="_selection" AccountSelectionChanged="OnSelectionChanged"
+                             CustomerId="_customerId" CustomerIdChanged="@(v => _customerId = v)"
+                             SupplierId="_supplierId" SupplierIdChanged="@(v => _supplierId = v)"
+                             SubAccountId="_subId" SubAccountIdChanged="OnSubAccountChangedAsync"
+                             SubAccountName="_subName" SubAccountNameChanged="@(v => _subName = v)"
+                             AccountTypeValue="_accountType" AccountTypeValueChanged="@(v => _accountType = v)"
+                             Balance="_balanceBefore" BalanceChanged="@(v => _balanceBefore = v)"
+                             BranchId="AccountModelsLib.Common.Branch_Id" />
+            <MudGrid Spacing="3" Class="mt-1">
+                <MudItem xs="12" md="4">
+                    <MudSelect T="long" @bind-Value="_costCenterId" Label="@Tr("CVCostCenter")" Variant="Variant.Outlined" Disabled="@(_subId == 0)">
+                        @foreach (var c in _costCenters)
+                        {
+                            <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudNumericField T="decimal" @bind-Value="_lineAmount" Label="@Tr("CVAmountLabel")" Variant="Variant.Outlined" Immediate="true" HideSpinButtons="true" Format="0.##" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="5">
+                    <MudTextField T="string" @bind-Value="_lineNotes" Label="@Tr("CVLineNotes")" Variant="Variant.Outlined" />
+                </MudItem>
+            </MudGrid>
+            @if (!string.IsNullOrEmpty(_lineError))
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2">@_lineError</MudAlert>
+            }
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Class="mt-3" OnClick="AddLine">@Tr("CVAddLine")</MudButton>
+        </div>
+    }
+
+    <div class="inv-card">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("CVAccountsTitle")<span class="inv-count">@_rows.Count</span></h2>
+        <MudTable Items="@_rows" T="LineRow" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="0">
+            <HeaderContent>
+                <MudTh>#</MudTh>
+                <MudTh>@Tr("AccountLabel")</MudTh>
+                <MudTh>@Tr("CVCostCenter")</MudTh>
+                <MudTh>@Tr("CVLineNotes")</MudTh>
+                <MudTh Style="text-align:end">@Tr("CVAmountLabel")</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="#">@(_rows.IndexOf(context) + 1)</MudTd>
+                <MudTd DataLabel="@Tr("AccountLabel")"><b>@context.Name</b><br /><small class="mud-text-secondary">@context.Code</small></MudTd>
+                <MudTd DataLabel="@Tr("CVCostCenter")">@context.CostCenterName</MudTd>
+                <MudTd DataLabel="@Tr("CVLineNotes")">@context.Notes</MudTd>
+                <MudTd DataLabel="@Tr("CVAmountLabel")" Style="text-align:end"><b>@context.Amount.ToString("N2")</b></MudTd>
+                <MudTd Style="white-space:nowrap">
+                    @if (!_readOnly)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Medium" Color="Color.Error" OnClick="@(() => _rows.Remove(context))" aria-label="@Tr("DeleteItemLabel")" />
+                    }
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent><MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("CVNoLines")</MudText></NoRecordsContent>
+        </MudTable>
+        @if (_total > 0)
+        {
+            <MudTextField T="string" Value="@_tafkeet" Label="@Tr("CVTafkeetLabel")" Variant="Variant.Outlined" ReadOnly="true" Class="mt-3" />
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_errorMessage</MudAlert>
+    }
+
+    <div class="inv-dock" role="region">
+        <div class="inv-dock-cells">
+            <div class="cell"><span class="lbl">@Tr("CVLinesCount")</span><b>@_rows.Count</b></div>
+            <div class="cell net"><span class="lbl">@Tr("CVTotalLabel")</span><b>@_total.ToString("N2")</b></div>
+        </div>
+        <div class="inv-dock-actions">
+            @if (_readOnly && _savedOrderId > 0 && _canEditDelete && !_linked)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" Disabled="_isBusy" OnClick="StartEdit">@Tr("CVEditButton")</MudButton>
+            }
+            @if (_editing)
+            {
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Close" Disabled="_isBusy" OnClick="CancelEditAsync">@Tr("CVCancelEdit")</MudButton>
+            }
+            @if (_readOnly && _savedOrderId > 0 && _canEditDelete)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Disabled="_isBusy" OnClick="DeleteAsync">@Tr("CVDeleteVoucher")</MudButton>
+            }
+            @if (!_readOnly)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle" Disabled="@(!CanSave)" OnClick="SaveAsync">@Tr("CVSaveButton")</MudButton>
+            }
+        </div>
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private record BoxOption(long Id, string Name, long CurrencyId, string CurrencyName);
+    private record CostCenterOption(long Id, string Name);
+    private record LineRow(long SubAccountId, int AccountType, string Name, string Code, long CurrencyId, decimal Amount, long CostCenterId, string CostCenterName, string Notes, decimal BalBefore, decimal BalAfter);
+
+    [SupplyParameterFromQuery(Name = "type")] public int? TypeQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "id")] public long? IdQuery { get; set; }
+
+    private readonly CashVouchersService _svc = new();
+    private int _type = 1;
+    private List<BoxOption> _boxes = new();
+    private List<LineRow> _rows = new();
+    private List<CostCenterOption> _costCenters = new();
+    private long _boxId, _savedOrderId, _orderNo;
+    private BoxOption? _box;
+    private decimal _boxBalance, _factor = 1;
+    private DateTime? _date = DateTime.Now.Date;
+    private string? _manName, _orderNotes, _lineNotes, _lineError, _errorMessage;
+    private bool _isBusy, _readOnly, _canEditDelete, _editing, _linked;
+
+    // اختيار الحساب للسطر الجديد
+    private int _selection = 2;
+    private long _customerId, _supplierId, _subId, _costCenterId;
+    private string _subName = "";
+    private int _accountType;
+    private decimal _balanceBefore, _lineAmount;
+    private string _lineAccountCode = "";
+    private long _lineAccountCurrency = 1;
+    private int _selectorKey;
+
+    private decimal _total => _rows.Sum(r => r.Amount);
+    private string _tafkeet => _svc.Tafkeet(_total, _box?.CurrencyId ?? 1);
+    private bool CanSave => !_isBusy && !_readOnly && _boxId > 0 && _rows.Count > 0 && !string.IsNullOrWhiteSpace(_manName) && !string.IsNullOrWhiteSpace(_orderNotes);
+    private string Title => _type == 1 ? Tr("CVMultiTitleReceipt") : Tr("CVMultiTitlePayment");
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _type = TypeQuery == 2 ? 2 : 1;
+        try
+        {
+            _canEditDelete = AccountModelsLib.Common.IsHavePermissionSysMenu(AccountModelsLib.Common.User_Id, 316, 2, -1);
+            var dt = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetBoxes(AccountModelsLib.Common.User_Id, AccountModelsLib.Common.Branch_Id); });
+            _boxes = dt.Rows.Cast<DataRow>().Select(r => new BoxOption(Convert.ToInt64(r["Id"]), r["Bank_Name"]?.ToString() ?? "",
+                r["Currency_Id"] == DBNull.Value ? 1 : Convert.ToInt64(r["Currency_Id"]), r["Currency_Name"]?.ToString() ?? "")).ToList();
+            var def = dt.Rows.Cast<DataRow>().FirstOrDefault(r => r["Default_Bank"] != DBNull.Value && Convert.ToInt32(r["Default_Bank"]) == 1);
+            var firstId = def != null ? Convert.ToInt64(def["Id"]) : _boxes.FirstOrDefault()?.Id ?? 0;
+            if (IdQuery is > 0) await LoadVoucherAsync(IdQuery.Value);
+            else if (firstId > 0) await OnBoxChangedAsync(firstId);
+        }
+        catch (Exception ex) { _errorMessage = ErrText(ex); }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task OnBoxChangedAsync(long id)
+    {
+        _boxId = id;
+        _box = _boxes.FirstOrDefault(b => b.Id == id);
+        var date = (_date ?? DateTime.Now).Date; var t = _type; var cur = _box?.CurrencyId ?? 1;
+        var (balance, factor, no) = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return (_svc.BoxBalance(id), _svc.GetFactor(cur), _readOnly ? _orderNo : _svc.NextOrderNo(t, date, id));
+        });
+        _boxBalance = balance; _factor = factor; if (!_readOnly) _orderNo = no;
+    }
+
+    private async Task OnDateChangedAsync(DateTime? date)
+    {
+        _date = date;
+        if (_boxId > 0 && !_readOnly)
+        {
+            var d = (date ?? DateTime.Now).Date; var box = _boxId; var t = _type;
+            _orderNo = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.NextOrderNo(t, d, box); });
+        }
+    }
+
+    private void OnSelectionChanged(int value) { _selection = value; _subId = 0; _subName = ""; _customerId = 0; _supplierId = 0; _costCenters = new(); _costCenterId = 0; }
+
+    // عند تحديد الحساب (عميل/مورد/حساب آخر) نحمّل كوده وعملته ومراكز تكلفته.
+    private async Task OnSubAccountChangedAsync(long id)
+    {
+        _subId = id;
+        _costCenters = new(); _costCenterId = 0; _lineError = null;
+        if (id == 0) return;
+        var none = Tr("CVNoCostCenter");
+        var (info, ccs) = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var inf = _svc.AccountInfo(id);
+            var dt = _svc.GetCostCenters(id, inf.AcceptCostCenter, none);
+            return (inf, dt.Rows.Cast<DataRow>().Select(r => new CostCenterOption(Convert.ToInt64(r["Id"]), r["Name"]?.ToString() ?? "")).ToList());
+        });
+        _lineAccountCode = info.Code; _lineAccountCurrency = info.CurrencyId;
+        _costCenters = ccs;
+        _costCenterId = ccs.FirstOrDefault()?.Id ?? 0;
+    }
+
+    private void AddLine()
+    {
+        _lineError = null;
+        if (_boxId == 0) { _lineError = Tr("CVBoxLabel"); return; }
+        if (string.IsNullOrWhiteSpace(_manName)) { _lineError = Tr("CVNeedManName"); return; }
+        if (_subId == 0) { _lineError = Tr("CVSelectAccount"); return; }
+        if (_lineAmount <= 0) { _lineError = Tr("STInvoiceValueRequired"); return; }
+        var cc = _costCenters.FirstOrDefault(c => c.Id == _costCenterId);
+        if (cc is null) { _lineError = Tr("CVCostCenterRequired"); return; }
+
+        // معاينة الرصيد بعد: العميل: الاستلام يخفض ما عليه؛ المورد: الصرف يخفض ما له (المحرك هو الذى يسجّل الحركة الفعلية).
+        decimal after = _balanceBefore;
+        if (_accountType == AccountModelsLib.Common.Customer_Account_Type) after = _type == 1 ? _balanceBefore - _lineAmount : _balanceBefore + _lineAmount;
+        else if (_accountType == AccountModelsLib.Common.Supplier_Account_Type) after = _type == 2 ? _balanceBefore - _lineAmount : _balanceBefore + _lineAmount;
+
+        _rows.Add(new LineRow(_subId, _accountType, _subName, _lineAccountCode, _lineAccountCurrency, _lineAmount, cc.Id, cc.Name, _lineNotes ?? "", _balanceBefore, after));
+        _lineAmount = 0; _lineNotes = null; _subId = 0; _subName = ""; _customerId = 0; _supplierId = 0; _costCenters = new(); _costCenterId = 0; _balanceBefore = 0;
+        _selectorKey++;
+    }
+
+    private async Task NewVoucherAsync()
+    {
+        _readOnly = false; _editing = false; _linked = false; _savedOrderId = 0; _rows = new(); _manName = null; _orderNotes = null; _errorMessage = null; _lineError = null;
+        _date = DateTime.Now.Date; _selectorKey++;
+        if (_boxId > 0) await OnBoxChangedAsync(_boxId);
+        if (IdQuery is > 0) Nav.NavigateTo($"/accounts/cash/voucher?type={_type}");
+    }
+
+    private async Task LoadVoucherAsync(long id)
+    {
+        var (head, lines) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetVoucher(id); });
+        if (head is null) { _errorMessage = Tr("CVVoucherNotFound"); return; }
+        _readOnly = true;
+        _savedOrderId = id;
+        _type = Convert.ToInt32(head["Transaction_type"]);
+        _boxId = Convert.ToInt64(head["Bank_ID"]);
+        _box = _boxes.FirstOrDefault(b => b.Id == _boxId);
+        _orderNo = head["Order_No"] == DBNull.Value ? 0 : Convert.ToInt64(head["Order_No"]);
+        _date = Convert.ToDateTime(head["Order_Date"]);
+        _manName = head["Man_Name"]?.ToString();
+        _orderNotes = head["Order_Notes"]?.ToString();
+        _rows = lines.Rows.Cast<DataRow>().Select(r => new LineRow(r["SubAccount_Id"] == DBNull.Value ? 0 : Convert.ToInt64(r["SubAccount_Id"]), r["Account_Type"] == DBNull.Value ? 0 : Convert.ToInt32(r["Account_Type"]),
+            r["Account_Name"]?.ToString() ?? "", r["Account_Code"]?.ToString() ?? "", r["Currency_Id"] == DBNull.Value ? 1 : Convert.ToInt64(r["Currency_Id"]), Convert.ToDecimal(r["Transaction_Value"]),
+            r["Account_Cost_Center_Tree_Id"] == DBNull.Value ? 0 : Convert.ToInt64(r["Account_Cost_Center_Tree_Id"]), r["CostCenter_Name"]?.ToString() ?? r["Cost_Center"]?.ToString() ?? "",
+            r["Notes"]?.ToString() ?? "", r["Balance_Before"] == DBNull.Value ? 0 : Convert.ToDecimal(r["Balance_Before"]), r["Balance_After"] == DBNull.Value ? 0 : Convert.ToDecimal(r["Balance_After"]))).ToList();
+        _factor = head["Factor"] == DBNull.Value || Convert.ToDecimal(head["Factor"]) <= 0 ? 1 : Convert.ToDecimal(head["Factor"]);
+        _linked = await Task.Run(() => !_svc.IsMultiEngineVoucher(id) || _svc.IsVoucherLinked(id));
+        _boxBalance = await Task.Run(() => _svc.BoxBalance(_boxId));
+    }
+
+    private void StartEdit()
+    {
+        if (!_canEditDelete || _linked) return;
+        _errorMessage = null; _lineError = null;
+        _readOnly = false; _editing = true;
+    }
+
+    private async Task CancelEditAsync()
+    {
+        _editing = false; _readOnly = true; _errorMessage = null;
+        await LoadVoucherAsync(_savedOrderId);
+    }
+
+    private async Task SaveAsync()
+    {
+        _errorMessage = null;
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("CVSaveButton"), Tr("CVConfirmIssue"), yesText: Tr("CVSaveButton"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _isBusy = true;
+        var type = _type; var box = _box!; var date = (_date ?? DateTime.Now).Date; var no = _orderNo; var man = _manName!.Trim(); var notes = _orderNotes!.Trim(); var factor = _factor;
+        var rows = _rows.ToList(); var editId = _editing ? _savedOrderId : 0;
+        try
+        {
+            var (orderId, savedNo, _) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var dt = _svc.NewLinesTable();
+                foreach (var r in rows)
+                    _svc.AddLine(dt, type, r.SubAccountId, r.AccountType, r.Name, r.Code, r.CurrencyId, r.Amount, r.CostCenterId, r.CostCenterName, factor, r.Notes, r.BalBefore, r.BalAfter);
+                return editId > 0
+                    ? _svc.EditMultiVoucher(editId, type, box.Id, box.Name, box.CurrencyId, box.CurrencyName, date, no, man, notes, factor, dt)
+                    : _svc.SaveMultiVoucher(type, box.Id, box.Name, box.CurrencyId, box.CurrencyName, date, no, man, notes, factor, dt);
+            });
+            _savedOrderId = orderId; _orderNo = savedNo; _readOnly = true; _editing = false;
+            Snackbar.Add(Tr("CVSavedMsg", savedNo), Severity.Success);
+            _boxBalance = await Task.Run(() => _svc.BoxBalance(box.Id));
+        }
+        catch (Exception ex) { _errorMessage = ErrText(ex); }
+        finally { _isBusy = false; }
+    }
+
+    private async Task DeleteAsync()
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("CVDeleteVoucher"), Tr("CVDeleteConfirm"), yesText: Tr("CVDeleteVoucher"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _isBusy = true;
+        var id = _savedOrderId;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.DeleteVoucher(id); });
+            Snackbar.Add(Tr("CVDeleted"), Severity.Success);
+            await NewVoucherAsync();
+        }
+        catch (Exception ex) { _errorMessage = ErrText(ex); }
+        finally { _isBusy = false; }
+    }
+
+    // رسالة الرفض بسبب رصيد الصندوق تُعرض بالعربية بدل نص المحرك الإنجليزى.
+    private string ErrText(Exception ex) => ex.Message.StartsWith("Box balance does not allow", StringComparison.OrdinalIgnoreCase)
+        ? Tr("CVBoxBalanceInsufficientShort")
+        : ex.Message.StartsWith("Voucher is linked", StringComparison.OrdinalIgnoreCase) ? Tr("CVEditLinkedBlocked")
+        : ex.Message.StartsWith("Deposit already applied", StringComparison.OrdinalIgnoreCase) ? Tr("CVDeleteDepositApplied")
+        : ex.Message.StartsWith("Voucher was not issued", StringComparison.OrdinalIgnoreCase) ? Tr("CVEditNotSupported")
+        : ex.Message.StartsWith("Line ids are not unique", StringComparison.OrdinalIgnoreCase) ? Tr("CVLineIdsAmbiguous") : Tr("SystemError", ex.Message);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

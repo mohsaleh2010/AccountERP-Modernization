@@ -1,0 +1,285 @@
+@* 🟢 شاشة "ترتيب القوائم": لا يوجد عمود ترتيب فى SysConfigMenus/SysConfigMenusPERMATIONS أصلاً قبل هذه
+   الدفعة (أُضيف عمود Sort_Order لكل منهما - راجع MenuRepository.ApplyMenuOrder/MenuOrderCLS فى
+   SysConfigMenusCLS.cs)؛ القوائم كانت تظهر بترتيب عشوائى تقريباً (ترتيب الصفوف فى القاعدة) بلا أى آلية
+   لتغييره، وبأيقونات عامة موحَّدة (راجع إصلاح Home.razor/MenuIcons.cs فى نفس الدفعة). هذه الشاشة تتيح
+   تبويبين: "الترتيب الافتراضى" (للأدمن فقط - Common.Is_User_Admin - يراه كل مستخدم لم يخصّص ترتيبه
+   الشخصى) و"ترتيبى الشخصى" (لأى مستخدم - يتغلَّب على الافتراضى له هو تحديداً). كلاهما بنفس واجهة التعديل:
+   سحب وإفلات HTML5 عادى + أزرار "لأعلى/لأسفل" لكل صف (بطلب المستخدم صراحةً: الاثنتان معاً). التنقّل بين
+   المستويات (مستوى فرعى داخل آخر) بنفس أسلوب Breadcrumb الموجود أصلاً فى Home.razor لإعادة استخدام نفس
+   العُرف بدل اختراع تنقّل مختلف لشاشة أخرى تتعامل مع نفس شجرة القوائم. *@
+@page "/settings/menu-order"
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@inject MenuStateService MenuState
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("MenuOrderPageTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("MenuOrderPageTitle")</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mt-1">@Tr("MenuOrderPageSubtitle")</MudText>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        @if (IsAdmin)
+        {
+            <MudTabs ActivePanelIndex="_activeTab" ActivePanelIndexChanged="OnTabChanged" Color="Color.Primary" Rounded="true" Class="mb-3" PanelClass="pt-3">
+                <MudTabPanel Text="@Tr("MenuOrderTabDefault")" />
+                <MudTabPanel Text="@Tr("MenuOrderTabPersonal")" />
+            </MudTabs>
+        }
+
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+            @(IsPersonalTab ? Tr("MenuOrderPersonalHint") : Tr("MenuOrderDefaultHint"))
+        </MudAlert>
+
+        @if (_path.Count > 0)
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
+                <MudLink Underline="Underline.Hover" OnClick="@(() => NavigateToBreadcrumb(-1))" Style="cursor:pointer;">
+                    @Tr("MenuOrderRootLevel")
+                </MudLink>
+                @for (var i = 0; i < _path.Count; i++)
+                {
+                    var idx = i;
+                    <MudIcon Icon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)" Size="Size.Small" Class="mud-text-secondary" />
+                    <MudLink Underline="Underline.Hover" OnClick="@(() => NavigateToBreadcrumb(idx))" Style="cursor:pointer;">
+                        @_path[idx].GetLocalizedDescription(LangService.CurrentLanguage)
+                    </MudLink>
+                }
+            </MudStack>
+        }
+
+        @if (_workingList.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("MenuOrderEmptyLevel")</MudAlert>
+        }
+        else
+        {
+            <div class="menu-order-list">
+                @for (var i = 0; i < _workingList.Count; i++)
+                {
+                    var idx = i;
+                    var item = _workingList[idx];
+                    var hasChildren = MenuState.UserAllowedMenus.Any(c => c.ParentId == item.Menu_ID);
+                    <div class="menu-order-row @(_dragOverIndex == idx ? "drag-over" : "")" draggable="true"
+                         @ondragstart="@(() => _dragIndex = idx)"
+                         @ondragover:preventDefault="true"
+                         @ondragenter="@(() => _dragOverIndex = idx)"
+                         @ondrop="@(() => OnDrop(idx))">
+                        <MudIcon Icon="@Icons.Material.Filled.DragIndicator" Class="mud-text-secondary" Style="cursor:grab;" />
+                        <MudIcon Icon="@GetRowIcon(item, hasChildren)" Color="Color.Primary" />
+                        <MudText Typo="Typo.body1" Class="flex-grow-1">@item.GetLocalizedDescription(LangService.CurrentLanguage)</MudText>
+                        @if (hasChildren)
+                        {
+                            <MudTooltip Text="@Tr("MenuOrderOpenLevel")">
+                                <MudIconButton Icon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)"
+                                               Size="Size.Small" OnClick="@(() => DrillInto(item))" />
+                            </MudTooltip>
+                        }
+                        <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" Disabled="@(idx == 0)" OnClick="@(() => MoveUp(idx))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" Disabled="@(idx == _workingList.Count - 1)" OnClick="@(() => MoveDown(idx))" />
+                    </div>
+                }
+            </div>
+        }
+
+        <MudStack Row="true" Justify="Justify.SpaceBetween" Class="mt-4">
+            <MudButton Variant="Variant.Text" Color="Color.Default" Disabled="@(!IsPersonalTab)" OnClick="ResetPersonalOrderAsync">
+                @Tr("MenuOrderResetButton")
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
+                       Disabled="@(_workingList.Count == 0 || _isBusy)" OnClick="SaveAsync">
+                @Tr("MenuOrderSaveButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+</MudContainer>
+
+<style>
+    .menu-order-list { display: flex; flex-direction: column; gap: 4px; }
+
+    .menu-order-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 8px;
+        background: var(--mud-palette-surface);
+    }
+
+    .menu-order-row.drag-over {
+        border-color: var(--mud-palette-primary);
+        background: color-mix(in srgb, var(--mud-palette-primary) 8%, var(--mud-palette-surface));
+    }
+</style>
+
+@code {
+    private int _activeTab = 0;
+    private bool IsAdmin => Common.Is_User_Admin == 1;
+    private bool IsPersonalTab => !IsAdmin || _activeTab == 1;
+
+    private List<MenuViewModel> _path = new();
+    private long CurrentParentId => _path.Count > 0 ? _path[^1].Menu_ID : 0;
+
+    private List<MenuViewModel> _workingList = new();
+    private int _dragIndex = -1;
+    private int _dragOverIndex = -1;
+    private bool _isBusy;
+
+    // 🟢 مشروع 2 بالضبط مثل AuthService.RestoreSessionAsync/LoginAsync (راجع AuthService.cs) - لا يوجد
+    // حقل مركزى لمشروع المستخدم الحالى غير هذا الثابت المكرَّر فى كل نقطة دخول، فنطابقه هنا حتى نُعيد جلب
+    // نفس القوائم بالضبط بعد الحفظ.
+    private const int ProjectId = 2;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnMenuChangedHandler;
+        MenuState.OnAuthChanged += OnMenuChangedHandler;
+        RebuildWorkingList();
+    }
+
+    private void OnMenuChangedHandler()
+    {
+        InvokeAsync(() =>
+        {
+            RebuildWorkingList();
+            StateHasChanged();
+        });
+    }
+
+    protected override void OnParametersSet() => RebuildWorkingList();
+
+    private void RebuildWorkingList()
+    {
+        var siblings = MenuState.UserAllowedMenus.Where(m => m != null && m.ParentId == CurrentParentId);
+        // 🟢 تبويب "الافتراضى" يُرتَّب حسب DefaultSortOrder (ترتيب الأدمن) بصرف النظر عن أى تخصيص شخصى
+        // لهذا المستخدم بالذات؛ تبويب "الشخصى" يُرتَّب حسب SortRank المحسوب فعلياً (المدموج) - راجع
+        // MenuRepository.ApplyMenuOrder.
+        _workingList = IsPersonalTab
+            ? siblings.OrderBy(m => m.SortRank).ToList()
+            : siblings.OrderBy(m => m.DefaultSortOrder ?? int.MaxValue).ThenBy(m => m.Menu_ID).ToList();
+    }
+
+    private void OnTabChanged(int newIndex)
+    {
+        _activeTab = newIndex;
+        RebuildWorkingList();
+    }
+
+    private void DrillInto(MenuViewModel menu)
+    {
+        _path.Add(menu);
+        RebuildWorkingList();
+    }
+
+    private void NavigateToBreadcrumb(int index)
+    {
+        _path = index < 0 ? new List<MenuViewModel>() : _path.Take(index + 1).ToList();
+        RebuildWorkingList();
+    }
+
+    private void MoveUp(int index)
+    {
+        if (index <= 0) return;
+        (_workingList[index - 1], _workingList[index]) = (_workingList[index], _workingList[index - 1]);
+    }
+
+    private void MoveDown(int index)
+    {
+        if (index >= _workingList.Count - 1) return;
+        (_workingList[index + 1], _workingList[index]) = (_workingList[index], _workingList[index + 1]);
+    }
+
+    private void OnDrop(int targetIndex)
+    {
+        _dragOverIndex = -1;
+        if (_dragIndex < 0 || _dragIndex == targetIndex || _dragIndex >= _workingList.Count) return;
+
+        var item = _workingList[_dragIndex];
+        _workingList.RemoveAt(_dragIndex);
+        _workingList.Insert(targetIndex, item);
+        _dragIndex = -1;
+    }
+
+    private async Task SaveAsync()
+    {
+        _isBusy = true;
+        try
+        {
+            var orderedIds = _workingList.Select(m => m.Menu_ID).ToList();
+            if (IsPersonalTab)
+            {
+                new MenuOrderCLS().SaveUserOrder(Common.User_Id, orderedIds);
+            }
+            else
+            {
+                new MenuOrderCLS().SaveAdminDefaultOrder(orderedIds);
+            }
+
+            await RefreshMenusAsync();
+            Snackbar.Add(Tr("MenuOrderSavedMessage"), MudBlazor.Severity.Success);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task ResetPersonalOrderAsync()
+    {
+        _isBusy = true;
+        try
+        {
+            var idsAtThisLevel = MenuState.UserAllowedMenus.Where(m => m.ParentId == CurrentParentId).Select(m => m.Menu_ID);
+            new MenuOrderCLS().ResetUserOrderForLevel(Common.User_Id, idsAtThisLevel);
+            await RefreshMenusAsync();
+            Snackbar.Add(Tr("MenuOrderSavedMessage"), MudBlazor.Severity.Success);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private Task RefreshMenusAsync()
+    {
+        var freshMenus = new MenuRepository().GetUserAllowedMenus(ProjectId, Common.User_Id);
+        MenuState.UserAllowedMenus = freshMenus;
+        MenuState.RefreshMenuOrder();
+        RebuildWorkingList();
+        return Task.CompletedTask;
+    }
+
+    private string GetRowIcon(MenuViewModel item, bool hasChildren)
+    {
+        if (!hasChildren) return MenuIcons.GetLeafIcon(item.Description);
+        return item.ParentId == 0 ? MenuIcons.GetModuleIcon(item.Description) : MenuIcons.GetGroupIcon(item.Description);
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnMenuChangedHandler;
+        MenuState.OnAuthChanged -= OnMenuChangedHandler;
+    }
+}

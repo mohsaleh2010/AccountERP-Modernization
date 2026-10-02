@@ -1,0 +1,653 @@
+@* 🟢 مكوّن مشترك للشاشات الثلاث - النسخة Blazor من Account_Common_LIB.BanksFrm (بيانات حساب البنوك، SysConfigMenus 387) وMoneyBanksFrm
+   (بيانات الصندوق - الخزينة، 388) وBanks.SandoukBranch (صندوق الفروع، 385) + حوارات NewBank/NewSandouk/BanksFirstBalance/DetectAccount_Branches_FRM.
+   القراءة عبر AccountModelsLib.Models.BanksGridCLS (جديدة)، والكتابة عبر BanksClss القائمة بلا تعديل:
+     إضافة → Add_Banks (تُنشئ حساباً فرعياً جديداً أو تربط بحساب موجود)، حذف → Delete_Banks (يُرفَض لو عليه سندات)،
+     رصيد أول المدة → Edit_BanksFirst_Balance (بنفس التحقق: الرصيد الحالى لا يصير سالباً)، افتراضى الفواتير → SetDefaultBankForInvoice،
+     فرع الصندوق/الافتراضى → SetUpdateSandouk.
+   زر «تعديل» فى BanksFrm الأصلية فارغ التنفيذ فلم يُنقَل. الطباعة غير منقولة (لا تقارير طباعة فى Razor بعد). *@
+
+@using System.Data
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Title</MudText>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                @if (Kind == BankKind.Bank)
+                {
+                    <MudCheckBox T="bool" Value="_showAll" ValueChanged="OnShowAllChanged" Label="@Tr("BkShowAll")" Color="Color.Primary" Dense="true" />
+                }
+                @if (Kind != BankKind.BranchBox)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNewDialog">
+                        @Tr(Kind == BankKind.Bank ? "BkNewBank" : "BkNewCash")
+                    </MudButton>
+                }
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudTable T="BankGridRow" Items="@_rows" Hover="true" Bordered="true" Loading="@_isLoading" Elevation="1" Breakpoint="Breakpoint.None"
+              FixedHeader="true" Height="calc(100vh - 300px)">
+        <HeaderContent>
+            <MudTh>#</MudTh>
+            @if (Kind != BankKind.BranchBox)
+            {
+                <MudTh>@Tr("BkAccountCode")</MudTh>
+            }
+            <MudTh>@Tr(Kind == BankKind.Bank ? "BkNameBank" : "BkNameCash")</MudTh>
+            @if (Kind == BankKind.Bank)
+            {
+                <MudTh>@Tr("BkAccountNo")</MudTh>
+            }
+            <MudTh>@Tr("BranchLabel")</MudTh>
+            @if (Kind != BankKind.Bank)
+            {
+                <MudTh>@Tr("BkDefault")</MudTh>
+            }
+            @if (Kind != BankKind.BranchBox)
+            {
+                <MudTh Style="text-align:end;">@Tr("BkFirstBalance")</MudTh>
+                <MudTh Style="text-align:end;">@Tr("BkCurrentBalance")</MudTh>
+            }
+            <MudTh Style="width:170px;"></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@(_rows.IndexOf(context) + 1)</MudTd>
+            @if (Kind != BankKind.BranchBox)
+            {
+                <MudTd>@context.Account_Code</MudTd>
+            }
+            <MudTd>@context.Bank_Name</MudTd>
+            @if (Kind == BankKind.Bank)
+            {
+                <MudTd>@context.Account_No</MudTd>
+            }
+            <MudTd>@context.Branch_Name</MudTd>
+            @if (Kind != BankKind.Bank)
+            {
+                <MudTd>@(context.Default_Bank == 1 ? Tr("BkDefaultForInvoices") : "")</MudTd>
+            }
+            @if (Kind != BankKind.BranchBox)
+            {
+                <MudTd Style="text-align:end;">@context.Primary_Balance.ToString("N2", CultureInfo.InvariantCulture)</MudTd>
+                <MudTd Style="text-align:end;">@context.Last_Balance.ToString("N2", CultureInfo.InvariantCulture)</MudTd>
+            }
+            <MudTd>
+                @if (Kind == BankKind.BranchBox)
+                {
+                    <MudTooltip Text="@Tr("BkBranchDialogTitle")">
+                        <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Small" OnClick="@(() => OpenBranchDialog(context))" />
+                    </MudTooltip>
+                }
+                else
+                {
+                    <MudTooltip Text="@Tr("BkEditFirstBalance")">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => OpenBalanceDialog(context))" />
+                    </MudTooltip>
+                    @if (Kind == BankKind.Cash)
+                    {
+                        <MudTooltip Text="@Tr("BkSetDefault")">
+                            <MudIconButton Icon="@(context.Default_Bank == 1 ? Icons.Material.Filled.Star : Icons.Material.Outlined.StarBorder)" Size="Size.Small"
+                                           Color="Color.Warning" OnClick="@(() => SetDefaultAsync(context))" />
+                        </MudTooltip>
+                    }
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteAsync(context))" />
+                }
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+@* ---------------- حوار بنك/صندوق جديد (NewBank / NewSandouk) ---------------- *@
+<MudDialog Visible="_newOpen" VisibleChanged="OnNewVisibleChanged"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr(Kind == BankKind.Bank ? "BkNewBank" : "BkNewCash")</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_newError))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_newError</MudAlert>
+        }
+        <MudStack Spacing="3">
+            <MudSelect T="long" @bind-Value="_nBranch" Label="@Tr("BranchLabel")" Variant="Variant.Outlined" Required="true" AutoFocus="true">
+                <MudSelectItem T="long" Value="0L">@Tr("GeoChoose")</MudSelectItem>
+                @foreach (var b in _branches)
+                {
+                    <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField T="string" @bind-Value="_nName" Label="@Tr(Kind == BankKind.Bank ? "BkNameBank" : "BkNameCash")" Variant="Variant.Outlined" Immediate="true"
+                          @ref="_nameField" OnKeyDown="OnNameKeyDown" />
+            <MudSelect T="long" @bind-Value="_nCurrency" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined" Required="true">
+                @foreach (var c in _currencies)
+                {
+                    <MudSelectItem T="long" Value="@c.Value">@c.Name</MudSelectItem>
+                }
+            </MudSelect>
+            @if (Kind == BankKind.Cash)
+            {
+                <MudNumericField T="decimal" @bind-Value="_nBalance" Label="@Tr("BkOpeningBalance")" Variant="Variant.Outlined" Min="0" Format="N2" />
+                <MudDatePicker @bind-Date="_nDate" Label="@Tr("BkOpeningDate")" Variant="Variant.Outlined" />
+            }
+            @if (Kind == BankKind.Bank)
+            {
+                <MudCheckBox T="bool" @bind-Value="_nSupplierBank" Label="@Tr("BkSupplierBank")" Color="Color.Primary" Dense="true" />
+            }
+            <MudRadioGroup T="bool" @bind-Value="_nUseExisting">
+                <MudRadio T="bool" Value="false" Color="Color.Primary">@Tr("BkAccountNew")</MudRadio>
+                <MudRadio T="bool" Value="true" Color="Color.Primary">@Tr("BkAccountExisting")</MudRadio>
+            </MudRadioGroup>
+            @if (_nUseExisting)
+            {
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudTextField T="string" Value="@(_pickedNode?.SubAccount_Name ?? Tr("BkNoAccount"))" ReadOnly="true" Label="@Tr("AccountLabel")" Variant="Variant.Outlined" FullWidth="true" />
+                    <MudButton Variant="Variant.Outlined" OnClick="@(() => _pickerOpen = true)">@Tr("BkPickAccount")</MudButton>
+                </MudStack>
+            }
+            <MudCheckBox T="bool" @bind-Value="_addMultiple" Label="@Tr("MultipleAddLabel")" Color="Color.Primary" Dense="true" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _newOpen = false)">@Tr("Close")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveNewAsync" Disabled="@_isSaving">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* منتقى الحساب الموجود (Account_ListSearchKey الأصلى) *@
+<MudDialog @bind-Visible="_pickerOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true })">
+    <TitleContent>@Tr("AccountLabel")</TitleContent>
+    <DialogContent>
+        <div style="height:45vh;">
+            <AccountTreePicker BranchId="_nBranch" SelectedValue="_pickedNode" SelectedValueChanged="OnAccountPicked" Height="45vh" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _pickerOpen = false)">@Tr("Close")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* ---------------- حوار تعديل رصيد أول المدة (BanksFirstBalance) ---------------- *@
+<MudDialog Visible="_balanceOpen" VisibleChanged="OnBalanceVisibleChanged"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr("BkEditFirstBalance")</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_balanceError))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_balanceError</MudAlert>
+        }
+        <MudStack Spacing="3">
+            <MudTextField T="string" Value="@(_balanceRow?.Bank_Name ?? "")" ReadOnly="true" Label="@Tr(Kind == BankKind.Bank ? "BkNameBank" : "BkNameCash")" Variant="Variant.Outlined" />
+            <MudNumericField T="decimal" @bind-Value="_bValue" Label="@Tr("BkFirstBalance")" Variant="Variant.Outlined" Format="N2" AutoFocus="true" />
+            <MudDatePicker @bind-Date="_bDate" Label="@Tr("BkOpeningDate")" Variant="Variant.Outlined" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _balanceOpen = false)">@Tr("Close")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveBalanceAsync" Disabled="@(_isSaving || !BalanceDirty)">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* ---------------- حوار فرع الصندوق والافتراضى (DetectAccount_Branches_FRM) ---------------- *@
+<MudDialog Visible="_branchOpen" VisibleChanged="OnBranchVisibleChanged"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr("BkBranchDialogTitle")</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_branchError))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_branchError</MudAlert>
+        }
+        <MudStack Spacing="3">
+            <MudTextField T="string" Value="@(_branchRow?.Bank_Name ?? "")" ReadOnly="true" Label="@Tr("BkNameCash")" Variant="Variant.Outlined" />
+            <MudSelect T="long" @bind-Value="_brBranch" Label="@Tr("BranchLabel")" Variant="Variant.Outlined" Required="true" AutoFocus="true">
+                <MudSelectItem T="long" Value="0L">@Tr("GeoChoose")</MudSelectItem>
+                @foreach (var b in _branches)
+                {
+                    <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudCheckBox T="bool" @bind-Value="_brDefault" Label="@Tr("BkDefaultForInvoices")" Color="Color.Primary" Dense="true" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _branchOpen = false)">@Tr("Close")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveBranchAsync" Disabled="@(_isSaving || !BranchDirty)">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    public enum BankKind { Bank = 0, Cash = 1, BranchBox = 2 }
+
+    [Parameter] public BankKind Kind { get; set; }
+
+    private record BranchOpt(long Id, string Name);
+    private record CurrencyOpt(long Value, string Name);
+
+    private List<BankGridRow> _rows = new();
+    private List<BranchOpt> _branches = new();
+    private List<CurrencyOpt> _currencies = new();
+    private bool _isLoading = true;
+    private bool _isSaving;
+    private bool _showAll;
+    private string _errorMessage = string.Empty;
+
+    // بنك/صندوق جديد
+    private bool _newOpen;
+    private string _newError = string.Empty;
+    private long _nBranch, _nCurrency;
+    private string _nName = string.Empty;
+    private decimal _nBalance;
+    private DateTime? _nDate = new DateTime(DateTime.Now.Year, 1, 1);
+    private bool _nSupplierBank, _nUseExisting;
+    private bool _pickerOpen;
+    private AccountTreeNodeViewModel? _pickedNode;
+    private bool _addMultiple, _multipleAdded;
+    private MudTextField<string>? _nameField;
+
+    // رصيد أول المدة
+    private bool _balanceOpen;
+    private string _balanceError = string.Empty;
+    private BankGridRow? _balanceRow;
+    private decimal _bValue;
+    private DateTime? _bDate;
+    private decimal _bValue0;
+    private DateTime? _bDate0;
+    private bool BalanceDirty => _bValue != _bValue0 || _bDate?.Date != _bDate0?.Date;
+
+    // فرع الصندوق
+    private bool _branchOpen;
+    private string _branchError = string.Empty;
+    private BankGridRow? _branchRow;
+    private long _brBranch, _brBranch0;
+    private bool _brDefault, _brDefault0;
+    private bool BranchDirty => _brBranch != _brBranch0 || _brDefault != _brDefault0;
+
+    private int AccountTypeValue => Kind == BankKind.Bank ? Common.Bank_Account_Type : Common.Sandouk_Account_Type;
+    private string Title => Tr(Kind switch { BankKind.Bank => "BanksTitle", BankKind.Cash => "CashBoxesTitle", _ => "BranchBoxesTitle" });
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadLookupsAsync();
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private async Task LoadLookupsAsync()
+    {
+        try
+        {
+            var branches = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var dt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, Common.User_Id);
+                return dt.Rows.Cast<DataRow>().Select(r => new BranchOpt(Convert.ToInt64(r["Id"]), r["Branch_Name"]?.ToString() ?? "")).ToList();
+            });
+            _branches = branches;
+            if (Kind != BankKind.BranchBox)
+            {
+                // نفس مصدر قائمة العملات فى EditGLFirstBalanceDialog (CurrencyFactorsCLS_.GetCurrencyList)؛ لا نستخدم CurrencyCLS.GetAllCurrenciesAsync لأن
+                // موديل Currency يتوقع أعمدة bigint (User_Id/Branch_Id/Edit_User_Id) بينما جدول Currency فى قاعدة التطوير أعمدته int فتفشل قراءته بـInvalidCast.
+                _currencies = await Task.Run(() =>
+                {
+                    AccountCultureGuard.EnsureInvariant();
+                    return new CurrencyFactorsCLS_().GetCurrencyList().Rows.Cast<DataRow>()
+                        .Select(r => new CurrencyOpt(Convert.ToInt64(r["Value"]), r["Currency_Name"]?.ToString() ?? "")).ToList();
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        _errorMessage = string.Empty;
+        try
+        {
+            var kind = Kind;
+            var showAll = _showAll;
+            var accountType = AccountTypeValue;
+            _rows = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var cls = new BanksGridCLS();
+                return kind == BankKind.BranchBox ? cls.GetCashBoxesWithBranch() : cls.GetBanksGrid(accountType, showAll);
+            });
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OnShowAllChanged(bool v)
+    {
+        _showAll = v;
+        await LoadAsync();
+    }
+
+    // ---------------- إضافة ----------------
+
+    private void OpenNewDialog()
+    {
+        _nBranch = _branches.FirstOrDefault(b => b.Id == Common.Branch_Id)?.Id ?? (_branches.Count == 1 ? _branches[0].Id : 0);
+        _nCurrency = _currencies.Count > 0 ? _currencies[0].Value : 0;
+        _nName = string.Empty;
+        _nBalance = 0;
+        _nDate = new DateTime(DateTime.Now.Year, 1, 1);
+        _nSupplierBank = false;
+        _nUseExisting = false;
+        _pickedNode = null;
+        _newError = string.Empty;
+        _newOpen = true;
+    }
+
+    private void OnNewVisibleChanged(bool visible) => _newOpen = visible;
+
+    private void OnAccountPicked(AccountTreeNodeViewModel? node)
+    {
+        _pickedNode = node;
+        if (node != null) _pickerOpen = false;
+    }
+
+    // Enter فى حقل الاسم = زر «حفظ» (بعد 150ms ليصل آخر حرف مكتوب للخادم)؛ Esc يغلق الحوار.
+    private async Task OnNameKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || _isSaving || !_newOpen) return;
+        await Task.Delay(150);
+        await SaveNewAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_multipleAdded && _nameField is not null)
+        {
+            _multipleAdded = false;
+            await _nameField.FocusAsync();
+        }
+    }
+
+    // يقابل NewBank.btnAdd_Click / NewSandouk.btnAdd_Click.
+    private async Task SaveNewAsync()
+    {
+        if (_nBranch == 0) { _newError = Tr("BkSelectBranch"); return; }
+        if (string.IsNullOrWhiteSpace(_nName)) { _newError = Tr(Kind == BankKind.Bank ? "BkNameBankRequired" : "BkNameCashRequired"); return; }
+        if (_nCurrency == 0) { _newError = Tr("BkSelectCurrency"); return; }
+        if (_nUseExisting && (_pickedNode is null || _pickedNode.Id == 0)) { _newError = Tr("BkSelectAccount"); return; }
+
+        _isSaving = true;
+        _newError = string.Empty;
+        try
+        {
+            var kind = Kind;
+            var branch = _branches.First(b => b.Id == _nBranch);
+            var ba = new Bank
+            {
+                Account_Type_Value = AccountTypeValue,
+                Branch_Id = _nBranch,
+                Branch_Name = branch.Name,
+                Bank_Name = _nName.Trim(),
+                Primary_balance = kind == BankKind.Cash ? _nBalance : 0,
+                Is_Bank = kind == BankKind.Bank ? 1 : 0,
+                Currency_Id = _nCurrency,
+                firstBalanceDate = kind == BankKind.Cash ? (_nDate ?? DateTime.Now.Date) : DateTime.Now.Date,
+                Supplier_Bank = kind == BankKind.Bank && _nSupplierBank ? 1 : 0,
+                SubAccount_Id = _nUseExisting ? (_pickedNode?.Id ?? 0) : 0,
+                Account_No = _nUseExisting ? (_pickedNode?.SubAccount_NO ?? "") : "",
+                Active = 1,
+                Default_Bank = 0,
+            };
+            var useExisting = _nUseExisting;
+            int excp = 0;
+            string msg = string.Empty;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new BanksClss().Add_Banks(ref excp, ref msg, ba, useExisting);
+            });
+            if (excp != 0) { _newError = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg; return; }
+
+            if (_addMultiple)
+            {
+                _nName = string.Empty;
+                _nBalance = 0;
+                _pickedNode = null;
+                _multipleAdded = true;
+            }
+            else
+            {
+                _newOpen = false;
+            }
+            await LoadAsync();
+            Snackbar.Add(Tr("BkAdded"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _newError = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    // ---------------- حذف ----------------
+
+    // يقابل toolStripButtonDelete_Click: BanksClss.Delete_Banks (Excp=10 = عليه سندات).
+    private async Task DeleteAsync(BankGridRow row)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(Tr("BkDeleteTitle"), Tr("BkDeleteConfirm", row.Bank_Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+        if (confirmed != true) return;
+
+        _errorMessage = string.Empty;
+        try
+        {
+            int excp = 0;
+            string msg = string.Empty;
+            var id = row.Id;
+            var sub = row.SubAccount_Id;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new BanksClss().Delete_Banks(ref excp, ref msg, id, sub);
+            });
+            if (excp == 10) { _errorMessage = Tr("BkDeleteUsed"); return; }
+            if (excp != 0) { _errorMessage = Tr("BkDeleteFailed"); return; }
+            await LoadAsync();
+            Snackbar.Add(Tr("BkDeleted"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    // ---------------- الافتراضى للفواتير (المخازن النقدية) ----------------
+
+    private async Task SetDefaultAsync(BankGridRow row)
+    {
+        _errorMessage = string.Empty;
+        try
+        {
+            int excp = 0;
+            var id = row.Id;
+            var currency = row.Currency_Id;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new BanksClss().SetDefaultBankForInvoice(ref excp, id, currency);
+            });
+            await LoadAsync();
+            Snackbar.Add(Tr("BkDefaultSet"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    // ---------------- رصيد أول المدة ----------------
+
+    private void OpenBalanceDialog(BankGridRow row)
+    {
+        _balanceRow = row;
+        _bValue = row.Primary_Balance;
+        _bDate = row.FirstBalanceDate ?? DateTime.Now.Date;
+        _bValue0 = _bValue;
+        _bDate0 = _bDate;
+        _balanceError = string.Empty;
+        _balanceOpen = true;
+    }
+
+    private void OnBalanceVisibleChanged(bool visible) => _balanceOpen = visible;
+
+    // يقابل BanksFirstBalance.btnAdd_Click: الفرق = الجديد - القديم، والرصيد الحالى لا يصير سالباً، ثم BanksClss.Edit_BanksFirst_Balance بنفس معاملاتها.
+    private async Task SaveBalanceAsync()
+    {
+        if (_balanceRow is null) return;
+        var row = _balanceRow;
+        var diff = _bValue - row.Primary_Balance;
+        var newLast = row.Last_Balance + diff;
+        if (diff == 0 && _bDate?.Date == row.FirstBalanceDate?.Date) { _balanceOpen = false; return; }
+        if (newLast < 0) { _balanceError = Tr("BkBalanceNegative"); return; }
+
+        _isSaving = true;
+        _balanceError = string.Empty;
+        try
+        {
+            int excp = 0;
+            string msg = string.Empty;
+            var newFirst = _bValue;
+            var date = _bDate ?? DateTime.Now.Date;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new BanksClss().Edit_BanksFirst_Balance(ref excp, ref msg, row.Id, 0, "", newLast, newFirst, diff, date, row.Financial_Period_Begining_Balance_Id, row.Is_Bank);
+            });
+            if (excp != 0) { _balanceError = Tr("BkBalanceFailed"); return; }
+            _balanceOpen = false;
+            await LoadAsync();
+            Snackbar.Add(Tr("BkBalanceSaved"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _balanceError = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    // ---------------- فرع الصندوق والافتراضى ----------------
+
+    private void OpenBranchDialog(BankGridRow row)
+    {
+        _branchRow = row;
+        _brBranch = row.Branch_Id;
+        _brDefault = row.Default_Bank == 1;
+        _brBranch0 = _brBranch;
+        _brDefault0 = _brDefault;
+        _branchError = string.Empty;
+        _branchOpen = true;
+    }
+
+    private void OnBranchVisibleChanged(bool visible) => _branchOpen = visible;
+
+    // يقابل SandoukBranch.BtnSetDefaultBanks_Click: BanksClss.SetUpdateSandouk(Bank_Id, Default, Branch_Id).
+    private async Task SaveBranchAsync()
+    {
+        if (_branchRow is null) return;
+        if (_brBranch == 0) { _branchError = Tr("BkSelectBranch"); return; }
+
+        _isSaving = true;
+        _branchError = string.Empty;
+        try
+        {
+            int excp = 0;
+            var id = _branchRow.Id;
+            var branch = _brBranch;
+            var d = _brDefault ? 1 : 0;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new BanksClss().SetUpdateSandouk(ref excp, id, d, branch);
+            });
+            _branchOpen = false;
+            await LoadAsync();
+            Snackbar.Add(Tr("BkBranchSaved"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _branchError = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

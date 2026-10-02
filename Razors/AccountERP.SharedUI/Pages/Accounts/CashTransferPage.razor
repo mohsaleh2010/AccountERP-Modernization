@@ -1,0 +1,191 @@
+@* 🟢 يقابل Account_Common_LIB.Money_Transaction.Cash_Money.Money_Between_BoxTar7eelFrm — «تحويل نقديه من صندوق إلى أخر» (toolStripMenuItemMoneyBetweenBanks).
+   الحفظ عبر CashVouchersService.SaveTransfer = Money_Transaction_BoxOrderReportCLS.MakeOrderBetweenTwo_Sandouk كما هى: إذن صرف من الصندوق المصدر وإذن استلام فى
+   الصندوق الوجهة (بعامل تحويل عند اختلاف العملتين) وقيد يومى، داخل معاملة واحدة. الفحوص كالأصل: صندوقان مختلفان، قيمة > 0، بيان مطلوب، والرصيد يكفى (تفحصه الدالة).
+   المؤجَّل: الطباعة (OrderMoneyPrint). *@
+@page "/accounts/cash/transfer"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("CTTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-head inv-card">
+        <h1 class="inv-title">@Tr("CTTitle")</h1>
+        <div class="inv-badges">
+            <span class="inv-chip @(_saved ? "success" : "warn")">@(_saved ? Tr("InvoiceStatusSaved") : Tr("InvoiceStatusNew"))</span>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_isSaving" OnClick="NewTransfer">@Tr("DstNewButton")</MudButton>
+        </div>
+    </div>
+
+    <div class="inv-card">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.SwapHoriz" />@Tr("CTData")</h2>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="5">
+                <MudSelect T="long" Value="_fromId" ValueChanged="@(v => OnFromChangedAsync(v))" Label="@Tr("CTFromBox")" Variant="Variant.Outlined" Disabled="_saved">
+                    @foreach (var b in _fromBoxes) { <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem> }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" md="2"><MudTextField T="string" Value="@_fromBalance.ToString("N2")" Label="@Tr("CVBoxBalanceLabel")" Variant="Variant.Outlined" ReadOnly="true" /></MudItem>
+            <MudItem xs="6" md="2"><MudTextField T="string" Value="@_fromCurrency" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined" ReadOnly="true" /></MudItem>
+            <MudItem xs="12" md="3"><MudDatePicker T="DateTime?" @bind-Date="_date" Label="@Tr("DateColumn")" Variant="Variant.Outlined" Disabled="_saved" /></MudItem>
+
+            <MudItem xs="12" md="5">
+                <MudSelect T="long" Value="_toId" ValueChanged="@(v => OnToChangedAsync(v))" Label="@Tr("CTToBox")" Variant="Variant.Outlined" Disabled="_saved">
+                    @foreach (var b in _toBoxes.Where(x => x.Id != _fromId)) { <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem> }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" md="2"><MudTextField T="string" Value="@_toBalance.ToString("N2")" Label="@Tr("CVBoxBalanceLabel")" Variant="Variant.Outlined" ReadOnly="true" /></MudItem>
+            <MudItem xs="6" md="2"><MudTextField T="string" Value="@_toCurrency" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined" ReadOnly="true" /></MudItem>
+            @if (_factor != 1)
+            {
+                <MudItem xs="12" md="3"><MudNumericField T="decimal" @bind-Value="_factor" Label="@Tr("CVFactorLabel")" Variant="Variant.Outlined" HideSpinButtons="true" Format="0.####" Disabled="_saved" /></MudItem>
+            }
+
+            <MudItem xs="12" sm="6" md="4">
+                <MudNumericField T="decimal" @bind-Value="_amount" Label="@Tr("CVAmountLabel")" Variant="Variant.Outlined" Immediate="true" HideSpinButtons="true" Format="0.##" Disabled="_saved" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudTextField T="string" Value="@AmountTo" Label="@Tr("CTAmountTo")" Variant="Variant.Outlined" ReadOnly="true" />
+            </MudItem>
+            <MudItem xs="12" md="4"><MudTextField T="string" @bind-Value="_manName" Label="@Tr("CVPaidTo")" Variant="Variant.Outlined" Disabled="_saved" /></MudItem>
+            <MudItem xs="12"><MudTextField T="string" @bind-Value="_notes" Label="@Tr("CVMainNotes")" Variant="Variant.Outlined" Disabled="_saved" /></MudItem>
+        </MudGrid>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_errorMessage</MudAlert>
+    }
+    @if (_saved)
+    {
+        <MudAlert Severity="Severity.Success" Dense="true" Class="mb-3">@Tr("CTSavedDetail", _noFrom, _noTo)</MudAlert>
+    }
+
+    <div class="inv-dock" role="region">
+        <div class="inv-dock-cells"><div class="cell net"><span class="lbl">@Tr("CVAmountLabel")</span><b>@_amount.ToString("N2")</b></div></div>
+        <div class="inv-dock-actions">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle" Disabled="@(!CanSave)" OnClick="SaveAsync">@Tr("CTSaveButton")</MudButton>
+        </div>
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private record BoxOption(long Id, string Name, long CurrencyId, string CurrencyName);
+
+    private readonly CashVouchersService _svc = new();
+    private List<BoxOption> _fromBoxes = new(), _toBoxes = new();
+    private long _fromId, _toId;
+    private decimal _fromBalance, _toBalance, _factor = 1, _amount;
+    private string _fromCurrency = "", _toCurrency = "";
+    private DateTime? _date = DateTime.Now.Date;
+    private string? _manName, _notes, _errorMessage;
+    private bool _isSaving, _saved;
+    private long _noFrom, _noTo;
+
+    private string AmountTo => (_amount * _factor).ToString("N2");
+
+    private bool CanSave => !_isSaving && !_saved && _fromId > 0 && _toId > 0 && _fromId != _toId && _amount > 0 && !string.IsNullOrWhiteSpace(_notes);
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            var (from, all) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return (_svc.GetBoxes(AccountModelsLib.Common.User_Id, AccountModelsLib.Common.Branch_Id), _svc.GetAllBoxes());
+            });
+            BoxOption Map(DataRow r) => new(Convert.ToInt64(r["Id"]), r["Bank_Name"]?.ToString() ?? "", r["Currency_Id"] == DBNull.Value ? 1 : Convert.ToInt64(r["Currency_Id"]), r["Currency_Name"]?.ToString() ?? "");
+            _fromBoxes = from.Rows.Cast<DataRow>().Select(Map).ToList();
+            _toBoxes = all.Rows.Cast<DataRow>().Select(Map).ToList();
+            if (_fromBoxes.Count > 0) await OnFromChangedAsync(_fromBoxes[0].Id);
+            var other = _toBoxes.FirstOrDefault(b => b.Id != _fromId);
+            if (other != null) await OnToChangedAsync(other.Id);
+        }
+        catch (Exception ex) { _errorMessage = ErrText(ex); }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task OnFromChangedAsync(long id)
+    {
+        _fromId = id;
+        var b = _fromBoxes.FirstOrDefault(x => x.Id == id);
+        _fromCurrency = b?.CurrencyName ?? "";
+        _fromBalance = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.BoxBalance(id); });
+        if (_toId == id) _toId = 0;
+        await RecomputeFactorAsync();
+    }
+
+    private async Task OnToChangedAsync(long id)
+    {
+        _toId = id;
+        var b = _toBoxes.FirstOrDefault(x => x.Id == id);
+        _toCurrency = b?.CurrencyName ?? "";
+        _toBalance = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.BoxBalance(id); });
+        await RecomputeFactorAsync();
+    }
+
+    private async Task RecomputeFactorAsync()
+    {
+        var f = _fromBoxes.FirstOrDefault(x => x.Id == _fromId); var t = _toBoxes.FirstOrDefault(x => x.Id == _toId);
+        if (f is null || t is null) { _factor = 1; return; }
+        _factor = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetPairFactor(f.CurrencyId, t.CurrencyId); });
+    }
+
+    private void NewTransfer() { _saved = false; _amount = 0; _notes = null; _manName = null; _errorMessage = null; _date = DateTime.Now.Date; }
+
+    private async Task SaveAsync()
+    {
+        _errorMessage = null;
+        var f = _fromBoxes.First(x => x.Id == _fromId); var t = _toBoxes.First(x => x.Id == _toId);
+        if (_amount > _fromBalance) { _errorMessage = Tr("CVInsufficientBox"); return; }
+        _isSaving = true;
+        var date = (_date ?? DateTime.Now).Date; var amount = _amount; var factor = _factor; var man = _manName ?? ""; var notes = _notes!.Trim();
+        try
+        {
+            var (_, noFrom, noTo) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return _svc.SaveTransfer(f.Id, f.Name, f.CurrencyId, t.Id, t.Name, t.CurrencyId, date, amount, factor, man, notes);
+            });
+            _noFrom = noFrom; _noTo = noTo; _saved = true;
+            Snackbar.Add(Tr("CTSavedDetail", noFrom, noTo), Severity.Success);
+            _fromBalance = await Task.Run(() => _svc.BoxBalance(f.Id));
+            _toBalance = await Task.Run(() => _svc.BoxBalance(t.Id));
+        }
+        catch (Exception ex) { _errorMessage = ErrText(ex); }
+        finally { _isSaving = false; }
+    }
+
+    // رسالة الرفض بسبب رصيد الصندوق تُعرض بالعربية بدل نص المحرك الإنجليزى.
+    private string ErrText(Exception ex) => ex.Message.StartsWith("Box balance does not allow", StringComparison.OrdinalIgnoreCase)
+        ? Tr("CVBoxBalanceInsufficientShort") : Tr("SystemError", ex.Message);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

@@ -135,7 +135,7 @@
         StateHasChanged();
         try
         {
-            var branchId = (int)BranchId;
+            var branchId = BranchId;
             var roots = await Task.Run(() =>
             {
                 AccountCultureGuard.EnsureInvariant();

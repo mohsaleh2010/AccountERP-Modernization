@@ -1,0 +1,311 @@
+@page "/main-data/kontra-types"
+
+@* 🟢 النسخة Blazor من Accounts.TagerKontraCLSListFrm (WinForms، فى Accounts\Requests\TagerKontra) - عنصر القائمة
+   «أنواع الكونتر / اسم التاجر» (SysConfigMenus 809). الشاشة الأصلية: جدول من عمودين (Id مخفى + الاسم) يُعدَّل الاسم فيه
+   مباشرة، وزر «جديد» يفتح حوار إضافة (AddTagerKontra)، وزر حذف. كل العمليات عبر AccountModelsLib.Models.TagerKontraCLS
+   (نفس الكلاس بلا أى تعديل): Get_TagerKontra / InsertUnitType / UpdateUnitType / DeleteTagerKontra. عنوان الشاشة من
+   إعداد النظام Tager_Kontra_Name (كما فى الأصل). الـCLS تبنى SQL بضم النصوص، لذا يُرفَض الاسم الذى يحوى apostrophe هنا
+   (كما فى بيانات العملاء/الموردين) بدل تعديل الكلاس المشترك. *@
+
+@using System.Data
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@PageHeading</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@PageHeading</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddDialog">
+                @Tr("NewButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudTable Items="@_rows" Hover="true" Bordered="true" Loading="@_isLoading" Elevation="1" Breakpoint="Breakpoint.None">
+        <HeaderContent>
+            <MudTh>@Tr("NameColumn")</MudTh>
+            <MudTh Style="width:140px;"></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            @if (_editingId == context.Id)
+            {
+                <MudTd>
+                    <MudTextField T="string" @bind-Value="_editingName" Immediate="true" AutoFocus="true" />
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Check" Color="Color.Success" Size="Size.Small"
+                                   OnClick="@(() => SaveEditAsync(context))"
+                                   Disabled="@(_isSavingEdit || string.Equals(_editingName?.Trim(), context.Name, StringComparison.Ordinal))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="CancelEdit" />
+                </MudTd>
+            }
+            else
+            {
+                <MudTd>@context.Name</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => StartEdit(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteAsync(context))" />
+                </MudTd>
+            }
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<MudDialog @bind-Visible="_addDialogOpen"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@PageHeading</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_addError))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_addError</MudAlert>
+        }
+        <MudTextField T="string" @bind-Value="_newName" Label="@Tr("NameColumn")" Variant="Variant.Outlined"
+                      FullWidth="true" AutoFocus="true" Immediate="true" @ref="_nameField" OnKeyDown="OnNameKeyDown" />
+        <MudCheckBox T="bool" @bind-Value="_addMultiple" Label="@Tr("MultipleAddLabel")" Color="Color.Primary" Class="mt-2" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _addDialogOpen = false)">@Tr("Close")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ConfirmAddAsync" Disabled="@_isSavingAdd">
+            @if (_isSavingAdd)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private record KontraRow(long Id, string Name);
+
+    private List<KontraRow> _rows = new();
+    private bool _isLoading = true;
+    private string _errorMessage = string.Empty;
+
+    private long? _editingId;
+    private string _editingName = string.Empty;
+    private bool _isSavingEdit;
+
+    private bool _addDialogOpen;
+    private string _newName = string.Empty;
+    private string _addError = string.Empty;
+    private bool _isSavingAdd;
+
+    // عنوان الشاشة من الإعداد النظامى Tager_Kontra_Name (يتغير بحسب المنشأة: «كونترا»/«التاجر»…).
+    private string PageHeading => string.IsNullOrWhiteSpace(AccountModelsLib.Common.Tager_Kontra_Name) ? Tr("KontraTypesTitle") : AccountModelsLib.Common.Tager_Kontra_Name;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        _errorMessage = string.Empty;
+        try
+        {
+            var dt = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return new TagerKontraCLS().Get_TagerKontra();
+            });
+            _rows = dt.Rows.Cast<DataRow>()
+                .Select(r => new KontraRow(Convert.ToInt64(r["Id"]), r["Name"]?.ToString() ?? ""))
+                .OrderBy(r => r.Name, StringComparer.CurrentCulture)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private string? ValidateName(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return Tr("KontraNameRequired");
+        if (name.Contains('\'')) return Tr("NameNoApostrophe");
+        return null;
+    }
+
+    private void OpenAddDialog()
+    {
+        _newName = string.Empty;
+        _addError = string.Empty;
+        _addDialogOpen = true;
+    }
+
+    // يقابل AddTagerKontra.Btn_Add_Click: TagerKontraCLS.InsertUnitType.
+    // إضافة متعددة (بطلب المستخدم): عند تفعيلها يبقى الحوار مفتوحاً بعد كل إضافة ويُفرَّغ الاسم ويعود التركيز له؛ Esc يغلق الحوار؛ Enter يضيف.
+    private bool _addMultiple;
+    private bool _multipleAdded;
+    private MudTextField<string>? _nameField;
+
+    private async Task OnNameKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || _isSavingAdd) return;
+        await Task.Delay(150); // يترك آخر حرف مكتوب (Immediate) يصل للخادم قبل الحفظ
+        await ConfirmAddAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_multipleAdded && _nameField is not null)
+        {
+            _multipleAdded = false;
+            await _nameField.FocusAsync();
+        }
+    }
+
+    private async Task ConfirmAddAsync()
+    {
+        var error = ValidateName(_newName);
+        if (error != null) { _addError = error; return; }
+
+        _isSavingAdd = true;
+        _addError = string.Empty;
+        try
+        {
+            var name = _newName.Trim();
+            int excp = 0;
+            string msg = string.Empty;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var cls = new TagerKontraCLS();
+                cls.ModelTagerKontra.Name = name;
+                cls.InsertUnitType(ref excp, ref msg);
+            });
+            if (excp != 0) { _addError = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg; return; }
+
+            if (_addMultiple) { _newName = string.Empty; _multipleAdded = true; } else { _addDialogOpen = false; }
+            await LoadAsync();
+            Snackbar.Add(Tr("KontraAdded"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _addError = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSavingAdd = false;
+        }
+    }
+
+    private void StartEdit(KontraRow row)
+    {
+        _editingId = row.Id;
+        _editingName = row.Name;
+        _errorMessage = string.Empty;
+    }
+
+    private void CancelEdit()
+    {
+        _editingId = null;
+        _editingName = string.Empty;
+    }
+
+    // يقابل addUpadateButton_Click: تعديل الاسم عبر TagerKontraCLS.UpdateUnitType (الأصل يحدِّث الجدول كله بـSqlDataAdapter؛ هنا الصف المعدَّل وحده).
+    private async Task SaveEditAsync(KontraRow row)
+    {
+        var error = ValidateName(_editingName);
+        if (error != null) { _errorMessage = error; return; }
+
+        _isSavingEdit = true;
+        _errorMessage = string.Empty;
+        try
+        {
+            var name = _editingName.Trim();
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var opp = new operations();
+                var cls = new TagerKontraCLS();
+                cls.ModelTagerKontra.Id = row.Id;
+                cls.ModelTagerKontra.Name = name;
+                cls.UpdateUnitType(ref opp);
+            });
+            _editingId = null;
+            await LoadAsync();
+            Snackbar.Add(Tr("KontraSaved"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSavingEdit = false;
+        }
+    }
+
+    // يقابل deleteButton_Click: تأكيد ثم TagerKontraCLS.DeleteTagerKontra.
+    private async Task DeleteAsync(KontraRow row)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(Tr("KontraDeleteTitle"), Tr("KontraDeleteConfirm", row.Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+        if (confirmed != true) return;
+
+        _errorMessage = string.Empty;
+        try
+        {
+            int excp = 0;
+            string msg = string.Empty;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new TagerKontraCLS().DeleteTagerKontra(ref excp, ref msg, row.Id.ToString(CultureInfo.InvariantCulture));
+            });
+            if (excp != 0) { _errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg; return; }
+            await LoadAsync();
+            Snackbar.Add(Tr("KontraDeleted"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

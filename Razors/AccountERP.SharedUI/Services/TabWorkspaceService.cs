@@ -11,6 +11,9 @@ namespace AccountERP.SharedUI.Services
     {
         public string Key { get; init; } = string.Empty; // المسار الكامل المُطبَّع، مثال: "/customers/info/5"
         public string Title { get; set; } = string.Empty;
+        // 🟢 عنوان تضبطه الصفحة نفسها بعد تحميل بياناتها (مثل "فاتورة مبيعات رقم 1539")؛ له الأولوية على عنوان القائمة/الرابط
+        // ويبقى عند إعادة تفعيل التبويب (OpenOrActivate لا يستبدله).
+        public string? CustomTitle { get; set; }
         public string Icon { get; set; } = string.Empty;
         public Type PageType { get; init; } = null!;
         public Dictionary<string, object> Parameters { get; init; } = new();
@@ -38,7 +41,7 @@ namespace AccountERP.SharedUI.Services
             if (existing != null)
             {
                 // 🟢 تحديث العنوان/الأيقونة عند كل تفعيل (وليس فقط أول فتح): يلتقط تبديل لغة الواجهة لاحقاً
-                existing.Title = title;
+                existing.Title = existing.CustomTitle ?? title;
                 existing.Icon = icon;
                 ActiveKey = key;
                 OnChanged?.Invoke();
@@ -64,6 +67,16 @@ namespace AccountERP.SharedUI.Services
             ActiveKey = key;
             OnChanged?.Invoke();
             return tab;
+        }
+
+        // 🟢 تضبطه الصفحة (بعد تحميل الفاتورة مثلاً) ليظهر رقم الفاتورة الفعلى فى عنوان التبويب بدل معرّف السجل.
+        public void SetCustomTitle(string key, string title)
+        {
+            var tab = Tabs.FirstOrDefault(t => t.Key.Equals(key, StringComparison.OrdinalIgnoreCase));
+            if (tab == null) return;
+            tab.CustomTitle = title;
+            tab.Title = title;
+            OnChanged?.Invoke();
         }
 
         public void Activate(string key)

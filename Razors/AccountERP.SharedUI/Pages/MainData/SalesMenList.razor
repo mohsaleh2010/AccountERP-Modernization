@@ -1,0 +1,296 @@
+@page "/main-data/sales-reps"
+
+@* 🟢 النسخة Blazor من Connection4It.SalesMan_Info (WinForms) - عنصر القائمة «بيانات مندوبين المبيعات» (SysConfigMenus 376). الأصل: قائمة منسدلة بالمناديب
+   + حقول (الكود، الاسم، العنوان، التليفونان، الموبايل، الفاكس، البريد) + أزرار جديد/إضافة/تعديل/حذف. هنا جدول + حوار إضافة/تعديل واحد. المندوب موظف بوظيفة
+   Common.job_list_Id_SalesMan. كود الأعمال فى AccountModelsLib.Models.SalesMenCLS (جديد) مع إصلاح تكرار سجل الموظف عند الإضافة وخطأ SubAccount_Id والحذف الصلب بالأصل. *@
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("SalesMenTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("SalesMenTitle")</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddDialog">@Tr("NewButton")</MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudTable T="SalesManRow" Items="@_rows" Hover="true" Bordered="true" Loading="@_isLoading" Elevation="1" Breakpoint="Breakpoint.None">
+        <HeaderContent>
+            <MudTh>@Tr("CodeColumn")</MudTh>
+            <MudTh>@Tr("SmName")</MudTh>
+            <MudTh>@Tr("SmMobile")</MudTh>
+            <MudTh>@Tr("SmTel")</MudTh>
+            <MudTh>@Tr("SmAddress")</MudTh>
+            <MudTh>@Tr("SmEmail")</MudTh>
+            <MudTh Style="width:120px;"></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Code</MudTd>
+            <MudTd>@context.Name</MudTd>
+            <MudTd>@context.Mobile</MudTd>
+            <MudTd>@context.Tel</MudTd>
+            <MudTd>@context.Address</MudTd>
+            <MudTd>@context.E_Mail</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => OpenEditDialog(context))" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteAsync(context))" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<MudDialog Visible="_dlgOpen" VisibleChanged="OnDlgVisibleChanged"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr(_editId == 0 ? "SmAddTitle" : "SmEditTitle")</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_dlgError))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_dlgError</MudAlert>
+        }
+        @* عمودان (بطلب المستخدم) كى لا يحتاج الحوار لتمرير رأسى *@
+        <MudGrid Spacing="2">
+            <MudItem xs="12" sm="6"><MudTextField T="string" @bind-Value="_fCode" Label="@Tr("CodeColumn")" Variant="Variant.Outlined" Immediate="true" AutoFocus="true" /></MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="string" @bind-Value="_fName" Label="@Tr("SmName")" Variant="Variant.Outlined" Immediate="true"
+                              @ref="_nameField" OnKeyDown="OnNameKeyDown" />
+            </MudItem>
+            <MudItem xs="12" sm="6"><MudTextField T="string" @bind-Value="_fTel" Label="@Tr("SmTel")" Variant="Variant.Outlined" Immediate="true" /></MudItem>
+            <MudItem xs="12" sm="6"><MudTextField T="string" @bind-Value="_fTel2" Label="@Tr("SmTel2")" Variant="Variant.Outlined" Immediate="true" /></MudItem>
+            <MudItem xs="12" sm="6"><MudTextField T="string" @bind-Value="_fMobile" Label="@Tr("SmMobile")" Variant="Variant.Outlined" Immediate="true" /></MudItem>
+            <MudItem xs="12" sm="6"><MudTextField T="string" @bind-Value="_fFax" Label="@Tr("SmFax")" Variant="Variant.Outlined" Immediate="true" /></MudItem>
+            <MudItem xs="12" sm="6"><MudTextField T="string" @bind-Value="_fEmail" Label="@Tr("SmEmail")" Variant="Variant.Outlined" Immediate="true" /></MudItem>
+            <MudItem xs="12" sm="6"><MudTextField T="string" @bind-Value="_fAddress" Label="@Tr("SmAddress")" Variant="Variant.Outlined" Immediate="true" /></MudItem>
+            @if (_editId == 0)
+            {
+                <MudItem xs="12"><MudCheckBox T="bool" @bind-Value="_addMultiple" Label="@Tr("MultipleAddLabel")" Color="Color.Primary" Dense="true" /></MudItem>
+            }
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _dlgOpen = false)">@Tr("Close")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@(_isSaving || (_editId != 0 && !IsDirty))">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<SalesManRow> _rows = new();
+    private bool _isLoading = true;
+    private bool _isSaving;
+    private string _errorMessage = string.Empty;
+
+    private bool _dlgOpen;
+    private long _editId;
+    private long _editSubAccountId;
+    private string _dlgError = string.Empty;
+    private string _fCode = "", _fName = "", _fAddress = "", _fTel = "", _fTel2 = "", _fMobile = "", _fFax = "", _fEmail = "";
+    private string _baseline = string.Empty;
+    private bool _addMultiple, _multipleAdded;
+    private MudTextField<string>? _nameField;
+
+    private string CurrentFingerprint() => FormFingerprint.Of(_fCode?.Trim(), _fName?.Trim(), _fAddress?.Trim(), _fTel?.Trim(), _fTel2?.Trim(), _fMobile?.Trim(), _fFax?.Trim(), _fEmail?.Trim());
+    private bool IsDirty => CurrentFingerprint() != _baseline;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        _errorMessage = string.Empty;
+        try
+        {
+            _rows = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return new SalesMenCLS().GetSalesMen();
+            });
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void ClearFields()
+    {
+        _fCode = _fName = _fAddress = _fTel = _fTel2 = _fMobile = _fFax = _fEmail = string.Empty;
+    }
+
+    private void OpenAddDialog()
+    {
+        _editId = 0;
+        _editSubAccountId = 0;
+        ClearFields();
+        _dlgError = string.Empty;
+        _baseline = CurrentFingerprint();
+        _dlgOpen = true;
+    }
+
+    private void OpenEditDialog(SalesManRow row)
+    {
+        _editId = row.Id;
+        _editSubAccountId = row.SubAccount_Id;
+        _fCode = row.Code; _fName = row.Name; _fAddress = row.Address; _fTel = row.Tel; _fTel2 = row.Tel2;
+        _fMobile = row.Mobile; _fFax = row.Fax; _fEmail = row.E_Mail;
+        _dlgError = string.Empty;
+        _baseline = CurrentFingerprint();
+        _dlgOpen = true;
+    }
+
+    private void OnDlgVisibleChanged(bool visible) => _dlgOpen = visible;
+
+    // Enter فى حقل الاسم = زر «حفظ» (بعد 150ms ليصل آخر حرف مكتوب للخادم)؛ Esc يغلق الحوار.
+    private async Task OnNameKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || _isSaving || !_dlgOpen || (_editId != 0 && !IsDirty)) return;
+        await Task.Delay(150);
+        await SaveAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_multipleAdded && _nameField is not null)
+        {
+            _multipleAdded = false;
+            await _nameField.FocusAsync();
+        }
+    }
+
+    // يقابل BtnAdd/BtnEdit: الاسم مطلوب ولا يحوى علامة ' (يُضَم فى SQL داخل إنشاء الحساب).
+    private string? Validate()
+    {
+        if (string.IsNullOrWhiteSpace(_fName)) return Tr("SmNameRequired");
+        if (_fName.Contains('\'')) return Tr("NameNoApostrophe");
+        return null;
+    }
+
+    private async Task SaveAsync()
+    {
+        var error = Validate();
+        if (error != null) { _dlgError = error; return; }
+
+        _isSaving = true;
+        _dlgError = string.Empty;
+        try
+        {
+            var row = new SalesManRow
+            {
+                Id = _editId, Code = _fCode.Trim(), Name = _fName.Trim(), Address = _fAddress.Trim(), Tel = _fTel.Trim(),
+                Tel2 = _fTel2.Trim(), Mobile = _fMobile.Trim(), Fax = _fFax.Trim(), E_Mail = _fEmail.Trim(),
+            };
+            var id = _editId;
+            int excp = 0;
+            string msg = string.Empty;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var cls = new SalesMenCLS();
+                if (id == 0) cls.AddSalesMan(ref excp, ref msg, row);
+                else cls.UpdateSalesMan(ref excp, ref msg, row);
+            });
+            if (excp == 3) { _dlgError = Tr("SmNameDuplicate"); return; }
+            if (excp != 0) { _dlgError = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg; return; }
+
+            if (id == 0 && _addMultiple)
+            {
+                ClearFields();
+                _baseline = CurrentFingerprint();
+                _multipleAdded = true;
+            }
+            else
+            {
+                _dlgOpen = false;
+            }
+            await LoadAsync();
+            Snackbar.Add(Tr(id == 0 ? "SmAdded" : "SmSaved"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _dlgError = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeleteAsync(SalesManRow row)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(Tr("GeoDeleteTitle"), Tr("SmDeleteConfirm", row.Name), yesText: Tr("Yes"), cancelText: Tr("No"));
+        if (confirmed != true) return;
+
+        _errorMessage = string.Empty;
+        try
+        {
+            int excp = 0;
+            string msg = string.Empty;
+            var id = row.Id;
+            var sub = row.SubAccount_Id;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new SalesMenCLS().DeleteSalesMan(ref excp, ref msg, id, sub);
+            });
+            if (excp == 10) { _errorMessage = string.IsNullOrWhiteSpace(msg) ? Tr("SmDeleteBlocked") : msg; return; }
+            if (excp != 0) { _errorMessage = Tr("StoreDeleteFailed"); return; }
+            await LoadAsync();
+            Snackbar.Add(Tr("SmDeleted"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

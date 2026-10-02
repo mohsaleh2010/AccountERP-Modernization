@@ -1,0 +1,406 @@
+@page "/main-data/stores"
+
+@* 🟢 النسخة Blazor من Store_LIB.Store_ListFrm (WinForms، فى Store_LIB\Copy of Store) - عنصر القائمة «قائمة المخازن» (SysConfigMenus 389).
+   الشاشة الأصلية: قائمة منسدلة بمخازن الفرع الحالى + حقول (نوع المخزن، النوع الرئيسى، الكود، الاسم، المكان، أمين المخزن) + خمسة أعلام + أزرار
+   (مخزن جديد/إضافة/تعديل/حذف/تفريغ). هنا جدول بمخازن الفرع الحالى + حوار إضافة/تعديل واحد بزر «حفظ» + حذف + تفريغ الأصناف.
+   كود الأعمال فى AccountModelsLib.Models.StoresGridCLS (جديد) فوق StoreCLS/Sub_Account القائمتين. أُصلح فيه بموافقة المستخدم: نوع حساب المخزن عند
+   الإضافة/الحذف (الأصل يفشل فى حسابه)، والتعديل لا يمسح SubAccount_Id، و«تفريغ» لا يحذف المخزن نفسه، ومنع تكرار الاسم فى نفس الفرع.
+   أمين المخزن نص حر (Emp_id=Job_id=0 دائماً فى الأصل). *@
+
+@using System.Data
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("StoresTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("StoresTitle")</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddDialog">
+                @Tr("StoreNewButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudTable T="StoreRow" Items="@_rows" Hover="true" Bordered="true" Loading="@_isLoading" Elevation="1" Breakpoint="Breakpoint.None"
+              FixedHeader="true" Height="calc(100vh - 300px)">
+        <HeaderContent>
+            <MudTh>@Tr("CodeColumn")</MudTh>
+            <MudTh>@Tr("StoreNameLabel")</MudTh>
+            <MudTh>@Tr("StoreLocationLabel")</MudTh>
+            <MudTh>@Tr("StoreKeeperLabel")</MudTh>
+            <MudTh>@Tr("StoreUsedTypeLabel")</MudTh>
+            <MudTh>@Tr("StoreMainTypeLabel")</MudTh>
+            <MudTh>@Tr("BkDefault")</MudTh>
+            <MudTh Style="width:170px;"></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Store_Code</MudTd>
+            <MudTd>@context.Store_Name</MudTd>
+            <MudTd>@context.Store_location</MudTd>
+            <MudTd>@context.Employee_Name</MudTd>
+            <MudTd>@(_storeTypes.FirstOrDefault(t => t.Value == context.StoreUsed_Type)?.Text ?? "")</MudTd>
+            <MudTd>@context.MainTypeName</MudTd>
+            <MudTd>@(context.IS_Default_Store == 1 ? Tr("StoreDefaultChip") : "")</MudTd>
+            <MudTd>
+                <MudTooltip Text="@Tr("DrawEditButton")"><MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => OpenEditDialog(context))" /></MudTooltip>
+                @if (_canEmptyStore)
+                {
+                    <MudTooltip Text="@Tr("StoreEmptyButton")"><MudIconButton Icon="@Icons.Material.Filled.CleaningServices" Color="Color.Warning" Size="Size.Small" OnClick="@(() => EmptyAsync(context))" /></MudTooltip>
+                }
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteAsync(context))" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<MudDialog Visible="_dlgOpen" VisibleChanged="OnDlgVisibleChanged"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr(_editId == 0 ? "StoreAddTitle" : "StoreEditTitle")</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_dlgError))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_dlgError</MudAlert>
+        }
+        @* عمودان (بطلب المستخدم) كى لا يحتاج الحوار لتمرير رأسى *@
+        <MudGrid Spacing="2">
+            <MudItem xs="12" sm="6">
+                <MudSelect T="int" @bind-Value="_fType" Label="@Tr("StoreUsedTypeLabel")" Variant="Variant.Outlined" Required="true" AutoFocus="true">
+                    <MudSelectItem T="int" Value="0">@Tr("GeoChoose")</MudSelectItem>
+                    @foreach (var t in _storeTypes)
+                    {
+                        <MudSelectItem T="int" Value="@((int)t.Value)">@t.Text</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect T="long" @bind-Value="_fMainType" Label="@Tr("StoreMainTypeLabel")" Variant="Variant.Outlined" Required="true">
+                    <MudSelectItem T="long" Value="0L">@Tr("GeoChoose")</MudSelectItem>
+                    @foreach (var t in _mainTypes)
+                    {
+                        <MudSelectItem T="long" Value="@t.Value">@t.Text</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6"><MudTextField T="string" @bind-Value="_fCode" Label="@Tr("CodeColumn")" Variant="Variant.Outlined" Immediate="true" /></MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="string" @bind-Value="_fName" Label="@Tr("StoreNameLabel")" Variant="Variant.Outlined" Immediate="true"
+                              @ref="_nameField" OnKeyDown="OnNameKeyDown" />
+            </MudItem>
+            <MudItem xs="12" sm="6"><MudTextField T="string" @bind-Value="_fLocation" Label="@Tr("StoreLocationLabel")" Variant="Variant.Outlined" Immediate="true" /></MudItem>
+            <MudItem xs="12" sm="6"><MudTextField T="string" @bind-Value="_fKeeper" Label="@Tr("StoreKeeperLabel")" Variant="Variant.Outlined" Immediate="true" /></MudItem>
+            <MudItem xs="12" sm="6">
+                <MudCheckBox T="bool" @bind-Value="_fDefault" Label="@Tr("StoreFlagDefault")" Color="Color.Primary" Dense="true" />
+                <MudCheckBox T="bool" @bind-Value="_fSecondUnit" Label="@Tr("StoreFlagSecondUnit")" Color="Color.Primary" Dense="true" />
+                <MudCheckBox T="bool" @bind-Value="_fSecondDegree" Label="@Tr("StoreFlagSecondDegree")" Color="Color.Primary" Dense="true" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudCheckBox T="bool" @bind-Value="_fVirtualOuter" Label="@Tr("StoreFlagVirtualOuter")" Color="Color.Primary" Dense="true" />
+                <MudCheckBox T="bool" @bind-Value="_fServicesVirtual" Label="@Tr("StoreFlagServicesVirtual")" Color="Color.Primary" Dense="true" />
+                @if (_editId == 0)
+                {
+                    <MudCheckBox T="bool" @bind-Value="_addMultiple" Label="@Tr("MultipleAddLabel")" Color="Color.Primary" Dense="true" />
+                }
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _dlgOpen = false)">@Tr("Close")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@(_isSaving || (_editId != 0 && !IsDirty))">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<StoreRow> _rows = new();
+    private List<StoreLookupItem> _storeTypes = new();
+    private List<StoreLookupItem> _mainTypes = new();
+    private bool _isLoading = true;
+    private bool _isSaving;
+    private string _errorMessage = string.Empty;
+    // 🟢 صلاحية جديدة (Menu_ID=984، لا وجود لها قبل هذا الإصلاح - الزر كان دائماً مخفياً فى الويندوز فورمز
+    // Visible=false ولم يكن له صلاحية مخصصة إطلاقاً؛ 984 أول رقم غير مستخدَم بعد أعلى صف موجود فعلياً 983
+    // فى SysConfigMenusPERMATIONS بهذه القاعدة، تحقَّق منه مباشرة بالاستعلام قبل الاستخدام).
+    private bool _canEmptyStore;
+
+    private bool _dlgOpen;
+    private long _editId;
+    private string _dlgError = string.Empty;
+    private int _fType;
+    private long _fMainType;
+    private string _fCode = string.Empty, _fName = string.Empty, _fLocation = string.Empty, _fKeeper = string.Empty;
+    private bool _fDefault, _fSecondUnit, _fSecondDegree, _fVirtualOuter, _fServicesVirtual;
+    private string _baseline = string.Empty;
+    private bool _addMultiple, _multipleAdded;
+    private MudTextField<string>? _nameField;
+
+    private string CurrentFingerprint() => FormFingerprint.Of(_fType, _fMainType, _fCode?.Trim(), _fName?.Trim(), _fLocation?.Trim(), _fKeeper?.Trim(),
+        _fDefault, _fSecondUnit, _fSecondDegree, _fVirtualOuter, _fServicesVirtual);
+    private bool IsDirty => CurrentFingerprint() != _baseline;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _canEmptyStore = Common.IsHavePermissionSysMenu(Common.User_Id, 984, 2, -1);
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        _errorMessage = string.Empty;
+        try
+        {
+            var branch = Common.Branch_Id;
+            var data = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var cls = new StoresGridCLS();
+                return (cls.GetStores(branch), cls.GetStoreTypes(), cls.GetMainTypes());
+            });
+            _rows = data.Item1;
+            _storeTypes = data.Item2;
+            _mainTypes = data.Item3;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OpenAddDialog()
+    {
+        _editId = 0;
+        _fType = 0;
+        _fMainType = _mainTypes.FirstOrDefault(t => t.Value == 4)?.Value ?? 0;
+        _fCode = string.Empty;
+        _fName = string.Empty;
+        _fLocation = string.Empty;
+        _fKeeper = string.Empty;
+        _fDefault = _fSecondUnit = _fSecondDegree = _fVirtualOuter = _fServicesVirtual = false;
+        _dlgError = string.Empty;
+        _baseline = CurrentFingerprint();
+        _dlgOpen = true;
+    }
+
+    private void OpenEditDialog(StoreRow row)
+    {
+        _editId = row.Id;
+        _fType = row.StoreUsed_Type;
+        _fMainType = row.LookUp_StoreOrderTypesId;
+        _fCode = row.Store_Code;
+        _fName = row.Store_Name;
+        _fLocation = row.Store_location;
+        _fKeeper = row.Employee_Name;
+        _fDefault = row.IS_Default_Store == 1;
+        _fSecondUnit = row.IS_Sell_SecondUnit == 1;
+        _fSecondDegree = row.IS_ItemSecond_degree == 1;
+        _fVirtualOuter = row.IS_Virtual_OuterStore == 1;
+        _fServicesVirtual = row.IS_ServicesVirtual_Item_NoBalance == 1;
+        _dlgError = string.Empty;
+        _baseline = CurrentFingerprint();
+        _dlgOpen = true;
+    }
+
+    private void OnDlgVisibleChanged(bool visible) => _dlgOpen = visible;
+
+    // Enter فى حقل الاسم = زر «حفظ» (بعد 150ms ليصل آخر حرف مكتوب للخادم)؛ Esc يغلق الحوار.
+    private async Task OnNameKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || _isSaving || !_dlgOpen || (_editId != 0 && !IsDirty)) return;
+        await Task.Delay(150);
+        await SaveAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_multipleAdded && _nameField is not null)
+        {
+            _multipleAdded = false;
+            await _nameField.FocusAsync();
+        }
+    }
+
+    // يقابل ValidateData(): نوع المخزن والاسم والمكان والنوع الرئيسى مطلوبة.
+    private string? Validate()
+    {
+        if (_fType == 0) return Tr("StoreSelectType");
+        if (string.IsNullOrWhiteSpace(_fName)) return Tr("StoreNameRequired");
+        if (string.IsNullOrWhiteSpace(_fLocation)) return Tr("StoreLocationRequired");
+        if (_fMainType == 0) return Tr("StoreSelectMainType");
+        return null;
+    }
+
+    // يقابل ReadFrmData().
+    private Store BuildStore() => new Store
+    {
+        Store_Code = (_fCode ?? "").Trim(),
+        Store_Name = _fName.Trim(),
+        Employee_Name = (_fKeeper ?? "").Trim(),
+        Store_location = _fLocation.Trim(),
+        StoreUsed_Type = _fType,
+        Emp_id = 0,
+        Job_id = 0,
+        IS_Default_Store = _fDefault ? 1 : 0,
+        IS_Sell_SecondUnit = _fSecondUnit ? 1 : 0,
+        IS_ItemSecond_degree = _fSecondDegree ? 1 : 0,
+        IS_Virtual_OuterStore = _fVirtualOuter ? 1 : 0,
+        IS_ServicesVirtual_Item_NoBalance = _fServicesVirtual ? 1 : 0,
+        Active = 1,
+        OperationDate = DateTime.Now,
+        Insert_ServerDateTime = DateTime.Now,
+        LookUp_StoreOrderTypesId = _fMainType,
+        Branch_Id = Common.Branch_Id,
+        User_Id = Common.User_Id,
+    };
+
+    private async Task SaveAsync()
+    {
+        var error = Validate();
+        if (error != null) { _dlgError = error; return; }
+
+        _isSaving = true;
+        _dlgError = string.Empty;
+        try
+        {
+            var store = BuildStore();
+            var id = _editId;
+            int excp = 0;
+            string msg = string.Empty;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var cls = new StoresGridCLS();
+                if (id == 0) cls.AddStore(ref excp, ref msg, store);
+                else cls.UpdateStore(ref excp, ref msg, store, id);
+            });
+            if (excp == 3) { _dlgError = Tr("StoreNameDuplicate"); return; }
+            if (excp != 0) { _dlgError = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg; return; }
+
+            if (id == 0 && _addMultiple)
+            {
+                _fName = string.Empty;
+                _fCode = string.Empty;
+                _baseline = CurrentFingerprint();
+                _multipleAdded = true;
+            }
+            else
+            {
+                _dlgOpen = false;
+            }
+            await LoadAsync();
+            Snackbar.Add(Tr(id == 0 ? "StoreAdded" : "StoreSaved"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _dlgError = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    // يقابل BtnDelete_Click: تأكيد ثم StoresGridCLS.DeleteStore (Excp=10 ← لا يمكن الحذف لوجود أصناف/حركات).
+    private async Task DeleteAsync(StoreRow row)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(Tr("GeoDeleteTitle"), Tr("StoreDeleteConfirm", row.Store_Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+        if (confirmed != true) return;
+
+        _errorMessage = string.Empty;
+        try
+        {
+            int excp = 0;
+            string msg = string.Empty;
+            var id = row.Id;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new StoresGridCLS().DeleteStore(ref excp, ref msg, id);
+            });
+            if (excp == 10) { _errorMessage = string.IsNullOrWhiteSpace(msg) ? Tr("StoreDeleteBlocked") : msg; return; }
+            if (excp != 0) { _errorMessage = Tr("StoreDeleteFailed"); return; }
+            await LoadAsync();
+            Snackbar.Add(Tr("StoreDeleted"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    // يقابل btnempty_Click: تأكيد صريح ثم تفريغ الأصناف فقط (لا يُحذف المخزن).
+    private async Task EmptyAsync(StoreRow row)
+    {
+        if (!_canEmptyStore) { Snackbar.Add(Tr("StoreEmptyNoPermission"), Severity.Warning); return; }
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(Tr("StoreEmptyButton"), Tr("StoreEmptyConfirm", row.Store_Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+        if (confirmed != true) return;
+
+        _errorMessage = string.Empty;
+        try
+        {
+            int excp = 0;
+            string msg = string.Empty;
+            var id = row.Id;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new StoresGridCLS().EmptyStoreItems(ref excp, ref msg, id);
+            });
+            if (excp != 0) { _errorMessage = string.IsNullOrEmpty(msg) ? Tr("StoreDeleteFailed") : msg; return; }
+            Snackbar.Add(Tr("StoreEmptied"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

@@ -13,19 +13,28 @@
 @using AccountERP.SharedUI.ViewModels
 @inject LanguageService LangService
 
-<MudDialog @bind-Visible="Visible"
+<MudDialog Visible="Visible" VisibleChanged="OnMudDialogVisibleChangedAsync"
            Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
-    <TitleContent>@Tr("AddCostCenterTitle")</TitleContent>
+    <TitleContent>@(IsRoot ? Tr("AddRootCostCenterTitle") : Tr("AddCostCenterTitle"))</TitleContent>
     <DialogContent>
-        @if (ParentNode == null)
+        @if (ParentNode == null && !IsRoot)
         {
             <MudAlert Severity="Severity.Warning">@Tr("SelectParentCostCenterFirst")</MudAlert>
         }
         else
         {
-            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
-                @Tr("ParentCostCenterLabel"): <strong>@ParentNode.Code_Str &nbsp; @ParentNode.Name</strong>
-            </MudText>
+            @if (!IsRoot && ParentNode != null)
+            {
+                <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                    @Tr("ParentCostCenterLabel"): <strong>@ParentNode.Code_Str &nbsp; @ParentNode.Name</strong>
+                </MudText>
+            }
+            else if (IsRoot)
+            {
+                <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+                    @Tr("RootCostCenterLevelLabel")
+                </MudText>
+            }
 
             @if (!string.IsNullOrEmpty(_errorMessage))
             {
@@ -37,7 +46,8 @@
                     <MudTextField T="string" @bind-Value="_name" Label="@Tr("CostCenterNameLabel")" Required="true" AutoFocus="true" />
                 </MudItem>
                 <MudItem xs="12" sm="5">
-                    <MudTextField T="string" Value="_codeStr" ReadOnly="true" Label="@Tr("CostCenterCodeLabel")" />
+                    <MudTextField T="string" @bind-Value="_codeStr" Label="@Tr("CostCenterCodeLabel")" Required="true"
+                                  HelperText="@(IsRoot ? Tr("CostCenterCodeEditableHint") : null)" />
                 </MudItem>
 
                 <MudItem xs="12" sm="6">
@@ -57,7 +67,7 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="CloseAsync">@Tr("Cancel")</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@(_isSaving || ParentNode == null)">
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@(_isSaving || (!IsRoot && ParentNode == null))">
             @if (_isSaving)
             {
                 <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
@@ -71,6 +81,7 @@
     [Parameter] public bool Visible { get; set; }
     [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
     [Parameter] public CostCenterNodeViewModel? ParentNode { get; set; }
+    [Parameter] public bool IsRoot { get; set; }
     [Parameter] public EventCallback<long> OnCostCenterAdded { get; set; }
 
     private string _name = "";
@@ -86,9 +97,10 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Visible && ParentNode != null && ParentNode.Id != _lastLoadedParentId)
+        var effectiveParentId = IsRoot ? -99L : (ParentNode?.Id ?? 0);
+        if (Visible && effectiveParentId != _lastLoadedParentId)
         {
-            _lastLoadedParentId = ParentNode.Id;
+            _lastLoadedParentId = effectiveParentId;
             await LoadDefaultsAsync();
         }
         else if (!Visible)
@@ -104,7 +116,18 @@
         _notes = "";
         _firstSubCode = AccountLookups.FirstSubCodeDefault;
 
-        var parentId = ParentNode!.Id;
+        var parentId = IsRoot ? 0L : ParentNode!.Id;
+
+        if (IsRoot)
+        {
+            _codeStr = "1";
+            _code = 1;
+            _lastPartIncrease = 1;
+            _costLevel = 1;
+            StateHasChanged();
+            return;
+        }
+
         int excp = 0;
         string msg = "";
         long lastPart = 0;
@@ -125,15 +148,26 @@
 
     private async Task SaveAsync()
     {
-        if (ParentNode == null) return;
+        if (!IsRoot && ParentNode == null) return;
         if (string.IsNullOrWhiteSpace(_name)) { _errorMessage = Tr("CostCenterNameRequired"); return; }
         if (string.IsNullOrWhiteSpace(_codeStr)) { _errorMessage = Tr("CostCenterCodeGenerationFailed"); return; }
+
+        if (IsRoot)
+        {
+            if (!long.TryParse(_codeStr, out _code))
+            {
+                _errorMessage = Tr("CostCenterCodeGenerationFailed");
+                return;
+            }
+        }
+        // For child centers, _code is already set by MakeAutomatic_CostCenterCode
+        // (e.g. _codeStr = "1-2" but _code = the numeric parent*1000+child value)
 
         _isSaving = true;
         _errorMessage = null;
         int excp = 0;
         string msg = "";
-        var parentId = ParentNode.Id;
+        var parentId = IsRoot ? 0L : ParentNode!.Id;
         try
         {
             await Task.Run(() =>
@@ -184,5 +218,13 @@
         {
             CultureInfo.CurrentUICulture = previousCulture;
         }
+    }
+
+    // إغلاق MudDialog لنفسه (زر ×، Esc، النقر خارج الحوار) لا يُبلغ الصفحة الأم عبر @bind-Visible على المعامل نفسه، فتبقى Visible=true
+    // ولا يُفتح الحوار ثانية؛ نُمرِّر التغيير للأب صراحةً.
+    private async Task OnMudDialogVisibleChangedAsync(bool visible)
+    {
+        Visible = visible;
+        await VisibleChanged.InvokeAsync(visible);
     }
 }

@@ -1,0 +1,308 @@
+@* 🟢 يقابل Accounts.Invoices_ListFrm (عرض فواتير المبيعات، menuInvoices / menuInvoicesGov) وAccounts.Invoices_Reverse_List
+   (عرض فواتير مرتجع المبيعات، menuInvoicesReverse) - كلاهما نفس الفورم بفارق مصدر البيانات، فصفحة واحدة بالباراميتر ?return=1.
+   كل الاستعلام يمر حرفياً عبر AccountModelsLib.InvoicesClss.Get_Customers_InvoicesList (مبيعات) / Get_Customers_Invoices_Reverse
+   (مرتجع) بنفس معاملات الأصل: رقم الفاتورة، العميل، من/إلى تاريخ (كلٌّ بمربع تفعيل)، بلا فلتر ضريبة ولا نوع عميل (-1).
+   أعمدة الجدول كما فى الأصل: م، العميل، رقم الفاتورة، التاريخ، الإجمالى، العمولة، ضريبة القيمة المضافة، ضريبة الخصم والإضافة،
+   الدمغة، الصافى، الملاحظات، المستخدم، تاريخ الإدخال؛ وصف الإجمالى (مجموع الصافى) بدل صف الإجمالى المُقحَم فى الجدول الأصلى.
+   فتح الفاتورة (نقر مزدوج/زر "عرض الفاتورة" فى الأصل → EditFRM_Invoices / EditFRM_Invoices_Reverse) = صفحة الفاتورة الحالية بمعرّفها.
+
+   مقصود كما فى الأصل: ?type=1 (ق.ع) يُمرَّر لـ InvoicesClss(type) لكنه لا يُغيّر نتيجة الاستعلام (شرط Invoice_Type معلَّق فى الأصل)،
+   كتابة رقم الفاتورة ثم Enter = بحث بالرقم وحده بلا عميل ولا تواريخ (سلوك NuInvoiceNo_TextChanged الأصلى).
+   لا يوجد الطباعة/التصدير فى الأصل. *@
+@page "/accounts/invoices/list"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@_title</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@_title</MudText>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="3">
+                <MudNumericField T="long?" @bind-Value="_invoiceNo" Label="@Tr("InvoiceNoLabel")" Variant="Variant.Outlined" HideSpinButtons="true"
+                                 Immediate="true" OnKeyDown="OnInvoiceNoKeyDownAsync" Format="0" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudAutocomplete T="CustomerOption" @bind-Value="_customer" SearchFunc="SearchCustomersAsync" ToStringFunc="@(c => c?.Name ?? "")"
+                                 Label="@Tr("CustomerLabel")" Placeholder="@Tr("AllCustomers")" Variant="Variant.Outlined"
+                                 Clearable="true" CoerceText="false" ResetValueOnEmptyText="true" MaxItems="50" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudCheckBox T="bool" @bind-Value="_useFrom" Dense="true" Size="Size.Small" />
+                    <MudDatePicker T="DateTime?" @bind-Date="_dateFrom" Label="@Tr("DateFromLabel")" Variant="Variant.Outlined" Disabled="@(!_useFrom)" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudCheckBox T="bool" @bind-Value="_useTo" Dense="true" Size="Size.Small" />
+                    <MudDatePicker T="DateTime?" @bind-Date="_dateTo" Label="@Tr("DateToLabel")" Variant="Variant.Outlined" Disabled="@(!_useTo)" />
+                </MudStack>
+            </MudItem>
+        </MudGrid>
+
+        <MudStack Row="true" Spacing="2" Class="mt-3">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="@(() => SearchAsync(false))" Disabled="@_isLoading">
+                @Tr("SearchButton")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.OpenInNew"
+                       OnClick="OpenSelected" Disabled="@(_selectedId == null)">
+                @Tr("ShowInvoiceButton")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="NewInvoice">
+                @Tr("NewInvoiceButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudGrid Class="mb-4">
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("InvoicesCountLabel")</MudText>
+                <MudText Typo="Typo.h6">@_rows.Count</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true" Style="background-color:var(--mud-palette-info-lighten);">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("NetTotalSumLabel")</MudText>
+                <MudText Typo="Typo.h6">@_netSum.ToString("N2")</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudTable Items="@_rows" T="InvoiceRow" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" Loading="@_isLoading"
+              RowClassFunc="@((InvoiceRow row, int index) => row.Id == _selectedId ? "mud-selected-item" : string.Empty)"
+              OnRowClick="@((TableRowClickEventArgs<InvoiceRow> e) => _selectedId = e.Item.Id)">
+        <HeaderContent>
+            <MudTh>@Tr("SerialColumn")</MudTh>
+            <MudTh>@Tr("CustomerLabel")</MudTh>
+            <MudTh>@Tr("InvoiceNoLabel")</MudTh>
+            <MudTh>@Tr("DateColumn")</MudTh>
+            <MudTh Style="text-align:end">@Tr("TotalColumn")</MudTh>
+            <MudTh Style="text-align:end">@Tr("CommissionColumn")</MudTh>
+            <MudTh Style="text-align:end">@Tr("TaxSalesColumn")</MudTh>
+            <MudTh Style="text-align:end">@Tr("ATS05Column")</MudTh>
+            <MudTh Style="text-align:end">@Tr("StampDutyColumn")</MudTh>
+            <MudTh Style="text-align:end">@Tr("NetTotalColumn")</MudTh>
+            <MudTh>@Tr("NotesColumn")</MudTh>
+            <MudTh>@Tr("UserColumn")</MudTh>
+            <MudTh>@Tr("EntryDateColumn")</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("SerialColumn")">@context.Serial</MudTd>
+            <MudTd DataLabel="@Tr("CustomerLabel")">@context.Customer</MudTd>
+            <MudTd DataLabel="@Tr("InvoiceNoLabel")">@context.InvoiceNo</MudTd>
+            <MudTd DataLabel="@Tr("DateColumn")">@FormatDate(context.Date)</MudTd>
+            <MudTd DataLabel="@Tr("TotalColumn")" Style="text-align:end;font-variant-numeric:tabular-nums">@context.Total.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("CommissionColumn")" Style="text-align:end;font-variant-numeric:tabular-nums">@context.Commission.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("TaxSalesColumn")" Style="text-align:end;font-variant-numeric:tabular-nums">@context.TaxSales.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("ATS05Column")" Style="text-align:end;font-variant-numeric:tabular-nums">@context.Ats05.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("StampDutyColumn")" Style="text-align:end;font-variant-numeric:tabular-nums">@context.StampDuty.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("NetTotalColumn")" Style="text-align:end;font-weight:600;font-variant-numeric:tabular-nums">@context.Net.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("NotesColumn")">@context.Notes</MudTd>
+            <MudTd DataLabel="@Tr("UserColumn")">@context.User</MudTd>
+            <MudTd DataLabel="@Tr("EntryDateColumn")">@FormatDateTime(context.Inserted)</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small" Color="Color.Primary"
+                               OnClick="@(() => Open(context.Id))" title="@Tr("ShowInvoiceButton")" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@(_searched ? Tr("NoRecordsFound") : Tr("PressSearchHint"))</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private record CustomerOption(long Id, string Name);
+    private record InvoiceRow(long Id, int Serial, string Customer, long InvoiceNo, DateTime? Date, decimal Total, decimal Commission,
+                              decimal TaxSales, decimal Ats05, decimal StampDuty, decimal Net, string Notes, string User, DateTime? Inserted);
+
+    [SupplyParameterFromQuery(Name = "return")] public int? ReturnQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "type")] public int? TypeQuery { get; set; }
+
+    private readonly CustomerCLS _customerCls = new();
+
+    private bool _isReturn;
+    private string _title = "";
+
+    private long? _invoiceNo;
+    private CustomerOption? _customer;
+    private bool _useFrom = true;
+    private bool _useTo = true;
+    private DateTime? _dateFrom = DateTime.Now.Date;
+    private DateTime? _dateTo = DateTime.Now.Date;
+
+    private List<InvoiceRow> _rows = new();
+    private decimal _netSum;
+    private long? _selectedId;
+    private bool _isLoading;
+    private bool _searched;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _isReturn = ReturnQuery == 1;
+        _title = Tr(_isReturn ? "ReturnInvoicesListTitle" : "InvoicesListTitle");
+    }
+
+    private void OnLanguageChangedHandler()
+    {
+        _title = Tr(_isReturn ? "ReturnInvoicesListTitle" : "InvoicesListTitle");
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    // 🟢 نفس مصدر قائمة العملاء المستخدَم فى صفحة الفاتورة (كل العملاء، تصفية بالاسم محلياً).
+    private async Task<IEnumerable<CustomerOption>> SearchCustomersAsync(string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _customerCls.Get_CustomerSupplierListForStatement(0, 0, -1, -1);
+        }, ct);
+        var list = new List<CustomerOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["Name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add(new CustomerOption(Convert.ToInt64(r["Id"]), name));
+            }
+        }
+        return list.Take(50);
+    }
+
+    // يقابل NuInvoiceNo_TextChanged: رقم فاتورة > 0 يبحث بالرقم وحده (بلا عميل ولا تواريخ).
+    private async Task OnInvoiceNoKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter") return;
+        // قيمة الحقل (Immediate) قد تصل بعد حدث Enter مباشرة عند الكتابة السريعة/الملصق الضوئى؛ مهلة قصيرة تضمن قراءة الرقم كاملاً.
+        await Task.Delay(150);
+        if ((_invoiceNo ?? 0) > 0)
+        {
+            await SearchAsync(true);
+        }
+    }
+
+    // يقابل btnSearch_Click / Get_SearchResult الأصليتين.
+    private async Task SearchAsync(bool byNumberOnly)
+    {
+        _errorMessage = null;
+        _isLoading = true;
+        _selectedId = null;
+        StateHasChanged();
+
+        var invoiceNo = _invoiceNo ?? 0;
+        var customerId = byNumberOnly ? 0 : _customer?.Id ?? 0;
+        var useFrom = !byNumberOnly && _useFrom;
+        var useTo = !byNumberOnly && _useTo;
+        var from = _dateFrom ?? DateTime.Now.Date;
+        var to = _dateTo ?? DateTime.Now.Date;
+        var isReturn = _isReturn;
+        var invoiceType = TypeQuery ?? 0;
+
+        try
+        {
+            var dt = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var excp = 0;
+                var cls = new InvoicesClss(invoiceType);
+                return isReturn
+                    ? cls.Get_Customers_Invoices_Reverse(ref excp, invoiceNo, customerId, useFrom, from, useTo, to, false)
+                    : cls.Get_Customers_InvoicesList(ref excp, 0, invoiceNo, customerId, useFrom, from, useTo, to, false, -1, -1);
+            });
+
+            var rows = new List<InvoiceRow>();
+            var serial = 0;
+            decimal netSum = 0;
+            foreach (DataRow r in dt.Rows)
+            {
+                serial++;
+                var net = Dec(r, "Net_Total");
+                netSum += net;
+                rows.Add(new InvoiceRow(
+                    Convert.ToInt64(r["Id"]), serial, r["Name"]?.ToString()?.Trim() ?? "",
+                    r["Invoice_Id"] == DBNull.Value ? 0 : Convert.ToInt64(r["Invoice_Id"]), Dt(r, "Invoice_Date"),
+                    Dec(r, "Total"), Dec(r, "commission"), Dec(r, "TaxSales10_Value"), Dec(r, "ATS05_Value"), Dec(r, "DAMGHAT"), net,
+                    r["Notes"]?.ToString() ?? "", r["USER_NAME"]?.ToString() ?? "", Dt(r, "Insert_ServerDateTime")));
+            }
+
+            _rows = rows;
+            _netSum = Common.RoundMe(netSum);
+            _searched = true;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private static decimal Dec(DataRow r, string column) =>
+        r.Table.Columns.Contains(column) && r[column] != DBNull.Value ? Convert.ToDecimal(r[column], CultureInfo.InvariantCulture) : 0;
+
+    private static DateTime? Dt(DataRow r, string column) =>
+        r.Table.Columns.Contains(column) && r[column] != DBNull.Value ? Convert.ToDateTime(r[column]) : null;
+
+    private static string FormatDate(DateTime? d) => d?.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture) ?? "";
+    private static string FormatDateTime(DateTime? d) => d?.ToString("yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture) ?? "";
+
+    private void OpenSelected()
+    {
+        if (_selectedId != null) Open(_selectedId.Value);
+    }
+
+    // زر «فاتورة جديدة»: نفس رابط عنصر القائمة المقابل (مرتجع / ق.ع / عادى).
+    private void NewInvoice()
+    {
+        var path = _isReturn ? "/accounts/invoices/sales-return" : "/accounts/invoices/sales-invoice";
+        Nav.NavigateTo(TypeQuery is 1 ? path + "?type=1" : path);
+    }
+
+    // يقابل ShowSelectedInvoice: EditFRM_Invoices(Id) / EditFRM_Invoices_Reverse(Id) = صفحة الفاتورة بمعرّف السجل.
+    private void Open(long id)
+    {
+        Nav.NavigateTo($"/accounts/invoices/{(_isReturn ? "sales-return" : "sales-invoice")}/{id}");
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

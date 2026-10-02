@@ -18,7 +18,7 @@ namespace AccountERP.SharedUI.ViewModels
         public long? Code { get; set; }
         public string Code_Str { get; set; } = "";
         public string Notes { get; set; } = "";
-        public int Currency_Id { get; set; }
+        public long    Currency_Id { get; set; }
         public string Currency_Str { get; set; } = "";
         public int Head_Main_Cost { get; set; }
         public long lastPartIncrease { get; set; }

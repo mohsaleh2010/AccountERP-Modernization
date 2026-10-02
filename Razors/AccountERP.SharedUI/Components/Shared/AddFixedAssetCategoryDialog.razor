@@ -15,7 +15,7 @@
 @using AccountERP.SharedUI.ViewModels
 @inject LanguageService LangService
 
-<MudDialog @bind-Visible="Visible"
+<MudDialog Visible="Visible" VisibleChanged="OnMudDialogVisibleChangedAsync"
            Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
     <TitleContent>@Tr("AddFixedAssetCategoryTitle")</TitleContent>
     <DialogContent>
@@ -186,7 +186,7 @@
                 sa.sb.Is_MasrofatAffect = 0;
 
                 long submainAccountId = -1;
-                int branchIdInt = (int)branchId;
+                long branchIdInt =  branchId;
                 string newNo = sa.sb.SubAccount_NO;
                 bool isHaveChildAccount = true;
 
@@ -232,5 +232,13 @@
         {
             CultureInfo.CurrentUICulture = previousCulture;
         }
+    }
+
+    // إغلاق MudDialog لنفسه (زر ×، Esc، النقر خارج الحوار) لا يُبلغ الصفحة الأم عبر @bind-Visible على المعامل نفسه، فتبقى Visible=true
+    // ولا يُفتح الحوار ثانية؛ نُمرِّر التغيير للأب صراحةً.
+    private async Task OnMudDialogVisibleChangedAsync(bool visible)
+    {
+        Visible = visible;
+        await VisibleChanged.InvokeAsync(visible);
     }
 }

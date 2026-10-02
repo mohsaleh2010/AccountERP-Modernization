@@ -1,0 +1,401 @@
+@* 🟢 يقابل Accounts.InvoicesFrm.invoices.InvoicesTotal (فاتورة مبيعات إجمالى: قوائم 567/568/810) و InvoicesReverseTotal (فاتورة مرتجع مبيعات
+   إجمالى: 570) — شاشة واحدة بدل ثلاث/أربع (بتوجيه المستخدم): «فاتورة مبيعات إجمالى» + اختيار «فاتورة ضريبية أم لا»، وبالمثل المرتجع (المسار الثانى).
+   فاتورة بلا أصناف: قيمة إجمالية + ضريبة مبيعات + ضريبة خصم/إضافة + عمولة/خصم + دمغات ⇒ الصافى، وتؤثر على رصيد العميل وحركته فقط (لا مخزون ولا قيود).
+   الحفظ/التعديل/الحذف عبر الدوال القديمة كما هى (InvoicesTotalCls / InvoicesTotalReverseCls) من خلال SalesTotalInvoicesService الذى يضيف علم الفاتورة الضريبية
+   (IsInvoiceTaxInfo) ويحدّث DAMGHAT والنسب التى لا تحدّثها دالة التعديل القديمة. Invoice_Type لا يُستعمل كعلم ضريبة (رقم سلسلة الترقيم 0 فقط).
+   الفروق عن الأصل: (1) قائمة الفواتير الإجمالية فقط (بلا أصناف) بدل قائمة كل الفواتير، (2) العميل مقفل عند التعديل (الدالة القديمة تطبّق فرق الرصيد على
+   العميل الجديد فقط)، (3) رقم العميل long (الأصل يقطعه فى بعض المسارات)، (4) حذف بحوار تأكيد. *@
+@page "/accounts/invoices/sales-total"
+@page "/accounts/invoices/sales-return-total"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Title</PageTitle>
+
+<InvoiceStyles />
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-head inv-card">
+        <h1 class="inv-title">@Title</h1>
+        <div class="inv-badges">
+            <span class="inv-chip primary"><MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />@(_invoiceNo > 0 ? _invoiceNo.ToString() : Tr("InvoiceStatusNew"))</span>
+            <span class="inv-chip @(_id > 0 ? "success" : "warn")">@(_id > 0 ? Tr("InvoiceStatusSaved") : Tr("InvoiceStatusNew"))</span>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_isBusy" OnClick="NewInvoiceAsync">@Tr("NewInvoiceButton")</MudButton>
+        </div>
+    </div>
+
+    <div class="inv-card">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Description" />@Tr("InvoiceDataTitle")</h2>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="5">
+                <MudAutocomplete T="LookupOption" Value="_customer" ValueChanged="@(c => _customer = c)" SearchFunc="SearchCustomersAsync"
+                                 ToStringFunc="@(c => c?.Name ?? "")" Label="@Tr("CustomerLabel")" Variant="Variant.Outlined" CoerceText="false"
+                                 ResetValueOnEmptyText="true" MaxItems="50" Required="true" Disabled="@(_id > 0)" />
+            </MudItem>
+            <MudItem xs="12" sm="4" md="2">
+                <MudSelect T="long" @bind-Value="_currencyId" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined">
+                    @foreach (var c in _currencies)
+                    {
+                        <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="4" md="3">
+                <MudDatePicker T="DateTime?" @bind-Date="_date" Label="@Tr("InvoiceDateLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="4" md="2">
+                <MudTextField T="string" Value="@(_invoiceNo > 0 ? _invoiceNo.ToString() : "")" Label="@Tr("STInvoiceNoLabel")" Variant="Variant.Outlined" ReadOnly="true" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" @bind-Value="_notes" Label="@Tr("NotesLabel")" Variant="Variant.Outlined" Lines="2" AutoGrow="true" />
+            </MudItem>
+        </MudGrid>
+    </div>
+
+    <div class="inv-card">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Calculate" />@Tr("STAmountsTitle")</h2>
+        <MudCheckBox T="bool" Value="_isTax" ValueChanged="OnTaxChanged" Label="@Tr("TaxInvoiceLabel")" Dense="true" />
+        <MudGrid Spacing="3" Class="mt-1">
+            <MudItem xs="12" sm="6" md="3">
+                <MudNumericField T="decimal" Value="_invoiceValue" ValueChanged="@(v => { _invoiceValue = v; Recompute(); })" Label="@Tr("STInvoiceValueLabel")"
+                                 Variant="Variant.Outlined" Immediate="true" HideSpinButtons="true" Format="0.##" />
+            </MudItem>
+            @if (_isTax)
+            {
+                <MudItem xs="6" sm="3" md="2">
+                    <MudNumericField T="decimal" Value="_taxRate" ValueChanged="@(v => { _taxRate = v; Recompute(); })" Label="@($"{Tr("TaxSalesColumn")} %")"
+                                     Variant="Variant.Outlined" Immediate="true" HideSpinButtons="true" Format="0.##" />
+                </MudItem>
+                <MudItem xs="6" sm="3" md="2">
+                    <MudNumericField T="decimal" Value="_ats05Rate" ValueChanged="@(v => { _ats05Rate = v; Recompute(); })" Label="@($"{Tr("ATS05Column")} %")"
+                                     Variant="Variant.Outlined" Immediate="true" HideSpinButtons="true" Format="0.##" />
+                </MudItem>
+            }
+            <MudItem xs="6" sm="3" md="2">
+                <MudNumericField T="decimal" Value="_commissionPercent" ValueChanged="@(v => { _commissionPercent = v; Recompute(); })" Label="@Tr("InvoiceDiscountRateLabel")"
+                                 Variant="Variant.Outlined" Immediate="true" HideSpinButtons="true" Format="0.##" />
+            </MudItem>
+            <MudItem xs="6" sm="3" md="2">
+                <MudNumericField T="decimal" Value="_commissionValue" ValueChanged="OnCommissionValueChanged" Label="@Tr("InvoiceDiscountValueLabel")"
+                                 Variant="Variant.Outlined" Immediate="true" HideSpinButtons="true" Format="0.##" />
+            </MudItem>
+            <MudItem xs="6" sm="3" md="2">
+                <MudNumericField T="decimal" Value="_damghat" ValueChanged="@(v => { _damghat = v; Recompute(); })" Label="@Tr("STStampsLabel")"
+                                 Variant="Variant.Outlined" Immediate="true" HideSpinButtons="true" Format="0.##" />
+            </MudItem>
+        </MudGrid>
+
+        <div class="inv-sum" style="margin-top:16px">
+            <div class="inv-sum-row"><span>@Tr("STInvoiceValueLabel")</span><b>@_invoiceValue.ToString("N2")</b></div>
+            @if (_isTax)
+            {
+                <div class="inv-sum-row"><span>@Tr("TaxSalesValueLabel")</span><b>@_taxValue.ToString("N2")</b></div>
+                <div class="inv-sum-row"><span>@Tr("ATS05ValueLabel")</span><b>@_ats05Value.ToString("N2")</b></div>
+            }
+            @if (_commissionValue != 0)
+            {
+                <div class="inv-sum-row"><span>@Tr("TotalDiscountLabel")</span><b>@_commissionValue.ToString("N2")</b></div>
+            }
+            @if (_damghat != 0)
+            {
+                <div class="inv-sum-row"><span>@Tr("STStampsLabel")</span><b>@_damghat.ToString("N2")</b></div>
+            }
+            <div class="inv-sum-net"><span class="lbl">@Tr("NetTotalLabel")</span><span class="amount">@_netTotal.ToString("N2")</span></div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">@_errorMessage</MudAlert>
+        }
+
+        <MudStack Row="true" Spacing="2" Class="mt-3">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_isBusy || _customer is null || _invoiceValue == 0)"
+                       OnClick="SaveAsync">@Tr("SaveButton")</MudButton>
+            @if (_id > 0)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Disabled="_isBusy" OnClick="DeleteAsync">@Tr("DstDeleteButton")</MudButton>
+            }
+        </MudStack>
+    </div>
+
+    <div class="inv-card">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("STRegisteredTitle")</h2>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="3"><MudDatePicker T="DateTime?" @bind-Date="_from" Label="@Tr("DateFromLabel")" Variant="Variant.Outlined" /></MudItem>
+            <MudItem xs="12" sm="6" md="3"><MudDatePicker T="DateTime?" @bind-Date="_to" Label="@Tr("DateToLabel")" Variant="Variant.Outlined" /></MudItem>
+            <MudItem xs="12" sm="6" md="3"><MudTextField T="string" @bind-Value="_filterCustomer" Label="@Tr("CustomerLabel")" Variant="Variant.Outlined" Clearable="true" /></MudItem>
+            <MudItem xs="12" sm="6" md="3"><MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Search" OnClick="LoadListAsync">@Tr("SearchButton")</MudButton></MudItem>
+        </MudGrid>
+        <MudTable Items="@_rows" T="Row" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="0" Class="mt-3"
+                  RowClassFunc="@((Row r, int i) => r.Id == _id ? "mud-selected-item" : string.Empty)"
+                  OnRowClick="@((TableRowClickEventArgs<Row> e) => LoadOneAsync(e.Item.Id))">
+            <HeaderContent>
+                <MudTh>#</MudTh>
+                <MudTh>@Tr("DateColumn")</MudTh>
+                <MudTh>@Tr("CustomerLabel")</MudTh>
+                <MudTh>@Tr("TaxInvoiceLabel")</MudTh>
+                <MudTh Style="text-align:end">@Tr("NetTotalColumn")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="#"><b>@context.No</b></MudTd>
+                <MudTd DataLabel="@Tr("DateColumn")">@context.Date.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture)</MudTd>
+                <MudTd DataLabel="@Tr("CustomerLabel")">@context.Customer</MudTd>
+                <MudTd DataLabel="@Tr("TaxInvoiceLabel")">@(context.IsTax ? "✓" : "")</MudTd>
+                <MudTd DataLabel="@Tr("NetTotalColumn")" Style="text-align:end">@context.Net.ToString("N2")</MudTd>
+            </RowTemplate>
+            <NoRecordsContent><MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText></NoRecordsContent>
+        </MudTable>
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private record LookupOption(long Id, string Name);
+    private record Row(long Id, long No, DateTime Date, string Customer, bool IsTax, decimal Net);
+
+    // ?tax=1 (قوائم «ق.ع» القديمة): تبدأ الفاتورة الجديدة كفاتورة ضريبية بالنسب الافتراضية.
+    [SupplyParameterFromQuery(Name = "tax")] public int? TaxQuery { get; set; }
+
+    private bool _isReturn;
+    private SalesTotalInvoicesService _svc = new(false);
+    private readonly CustomerCLS _customerCls = new();
+    private List<LookupOption> _currencies = new();
+    private List<Row> _rows = new();
+    private LookupOption? _customer;
+    private long _currencyId;
+    private DateTime? _date = DateTime.Now.Date;
+    private DateTime? _from = DateTime.Now.Date.AddMonths(-3);
+    private DateTime? _to = DateTime.Now.Date;
+    private string? _filterCustomer;
+    private string? _notes;
+    private long _id;
+    // 🟢 صلاحيات الفاتورة المحفوظة (جدول صلاحيات القوائم): 322 تعديل الفاتورة، 932 حذف فاتورة مبيعات (تشمل مرتجعها) — كباقى شاشات الفواتير.
+    private bool _canEditInvoice = true, _canDeleteInvoice;
+    private long _invoiceNo;
+    private decimal _oldNet;
+    private bool _isTax;
+    private decimal _defaultTaxRate;
+    private decimal _defaultAts05Rate;
+    private decimal _taxRate, _ats05Rate, _invoiceValue, _commissionPercent, _commissionValue, _damghat, _taxValue, _ats05Value, _netTotal;
+    private bool _isBusy;
+    private string? _errorMessage;
+
+    private string Title => _isReturn ? Tr("STTitleReturn") : Tr("STTitleSales");
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _canEditInvoice = Common.IsHavePermissionSysMenu(Common.User_Id, 322, 2, -1);
+        _canDeleteInvoice = Common.IsHavePermissionSysMenu(Common.User_Id, 932, 2, -1);
+        _isReturn = Nav.Uri.Contains("sales-return-total", StringComparison.OrdinalIgnoreCase);
+        _svc = new SalesTotalInvoicesService(_isReturn);
+
+        try
+        {
+            var dt = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return new CurrencyFactorsCLS_().GetCurrencyList(); });
+            _currencies = dt.Rows.Cast<DataRow>().Select(r => new LookupOption(Convert.ToInt64(r["ID"]), r["Currency_Name"]?.ToString() ?? "")).ToList();
+            if (_currencies.Count > 0) _currencyId = _currencies[0].Id;
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+
+        await Task.Run(() =>
+        {
+            try
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var opp = new operations();
+                var tax = new TaxListCLS();
+                var t1 = tax.Get_TaxInfoRatio(ref opp, "T1", "");
+                _defaultTaxRate = (t1?.TaxRate ?? 0) * 100;
+                var w002 = tax.Get_TaxInfoRatioList(ref opp).FirstOrDefault(x => x.MainCode == "T4" && x.SubCode == "W002");
+                _defaultAts05Rate = (w002?.TaxRate ?? 0) * 100;
+            }
+            catch { /* النسب الافتراضية اختيارية؛ يُدخلها المستخدم */ }
+        });
+
+        try
+        {
+            await NewInvoiceAsync();
+            await LoadListAsync();
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task<IEnumerable<LookupOption>> SearchCustomersAsync(string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _customerCls.Get_CustomerSupplierListForStatement(0, 0, -1, -1); }, ct);
+        var list = new List<LookupOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["Name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+                list.Add(new LookupOption(Convert.ToInt64(r["Id"]), name));
+        }
+        return list.Take(50);
+    }
+
+    // يقابل ComputeTotals فى الأصل: الضريبة تُحسب على قيمة الفاتورة، والعمولة على (القيمة + ضريبة المبيعات − ضريبة الخصم)، والصافى = القيمة + الضريبة − الخصم − العمولة + الدمغات.
+    private void Recompute()
+    {
+        _taxValue = _isTax ? Common.RoundMe(_invoiceValue * _taxRate / 100) : 0;
+        _ats05Value = _isTax ? Common.RoundMe(_invoiceValue * _ats05Rate / 100) : 0;
+        var beforeCommission = _invoiceValue + _taxValue - _ats05Value;
+        _commissionValue = Common.RoundMe(beforeCommission * _commissionPercent / 100);
+        _netTotal = Common.RoundMe(_invoiceValue + _taxValue - _ats05Value - _commissionValue + _damghat);
+    }
+
+    // يقابل nuCommissionValue_ValueChanged: قيمة العمولة تحدد النسبة.
+    private void OnCommissionValueChanged(decimal value)
+    {
+        var before = _invoiceValue + _taxValue - _ats05Value;
+        _commissionPercent = before == 0 ? 0 : value * 100 / before;
+        Recompute();
+    }
+
+    private void OnTaxChanged(bool value)
+    {
+        _isTax = value;
+        _taxRate = value ? _defaultTaxRate : 0;
+        _ats05Rate = value ? _defaultAts05Rate : 0;
+        Recompute();
+    }
+
+    private async Task NewInvoiceAsync()
+    {
+        _id = 0; _oldNet = 0; _customer = null; _notes = null; _errorMessage = null;
+        _date = DateTime.Now.Date;
+        _invoiceValue = 0; _commissionPercent = 0; _commissionValue = 0; _damghat = 0;
+        OnTaxChanged(TaxQuery == 1);
+        _invoiceNo = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.NextInvoiceNo(); });
+    }
+
+    private async Task LoadListAsync()
+    {
+        try
+        {
+            var from = (_from ?? DateTime.Now.Date.AddMonths(-3)).Date;
+            var to = (_to ?? DateTime.Now.Date).Date;
+            var text = _filterCustomer ?? "";
+            var dt = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.List(from, to, text); });
+            _rows = dt.Rows.Cast<DataRow>().Select(r => new Row(Convert.ToInt64(r["Id"]), r["Invoice_Id"] == DBNull.Value ? 0 : Convert.ToInt64(r["Invoice_Id"]),
+                Convert.ToDateTime(r["Invoice_Date"]), r["Customer_Name"]?.ToString()?.Trim() ?? "", Convert.ToInt32(r["IsInvoiceTaxInfo"]) == 1, Convert.ToDecimal(r["Net_Total"]))).ToList();
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+    }
+
+    private async Task LoadOneAsync(long id)
+    {
+        _errorMessage = null;
+        try
+        {
+            var data = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var r = _svc.GetOne(id);
+                if (r is null) return ((DataRow, string)?)null;
+                var name = new operations().return_DataTable("SELECT Name FROM Customer WHERE Id = " + Convert.ToInt64(r["Customer_Id"]));
+                return (r, name.Rows.Count > 0 ? name.Rows[0][0]?.ToString()?.Trim() ?? "" : "");
+            });
+            if (data is null) return;
+            var (row, customerName) = data.Value;
+            decimal D(string c) => row[c] == DBNull.Value ? 0 : Convert.ToDecimal(row[c]);
+            _id = id;
+            _invoiceNo = row["Invoice_Id"] == DBNull.Value ? 0 : Convert.ToInt64(row["Invoice_Id"]);
+            _customer = new LookupOption(Convert.ToInt64(row["Customer_Id"]), customerName);
+            _currencyId = row["Currency_id"] == DBNull.Value ? _currencyId : Convert.ToInt64(row["Currency_id"]);
+            _date = Convert.ToDateTime(row["Invoice_Date"]);
+            _notes = row["Notes"]?.ToString();
+            _isTax = row["IsInvoiceTaxInfo"] != DBNull.Value && Convert.ToInt32(row["IsInvoiceTaxInfo"]) == 1;
+            _taxRate = D("TaxSales10"); _ats05Rate = D("ATS05");
+            _invoiceValue = D("Total"); _commissionPercent = D("commission"); _damghat = D("DAMGHAT");
+            _oldNet = D("Net_Total");
+            Recompute();
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+    }
+
+    private async Task SaveAsync()
+    {
+        _errorMessage = null;
+        if (_customer is null) { _errorMessage = Tr("OrdNotesSelectCustomerHint"); return; }
+        if (_invoiceValue == 0) { _errorMessage = Tr("STInvoiceValueRequired"); return; }
+        if (_id > 0 && !_canEditInvoice) { _errorMessage = Tr("InvNoEditPermission"); return; }
+        Recompute();
+        _isBusy = true;
+        var customerId = _customer.Id;
+        var wasNew = _id == 0;
+        try
+        {
+            var savedNo = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                if (wasNew)
+                {
+                    if (_svc.InvoiceNoExists(_invoiceNo)) _invoiceNo = _svc.NextInvoiceNo();
+                    _id = _svc.Insert(_currencyId, (_date ?? DateTime.Now).Date, _invoiceValue, _netTotal, _commissionPercent, _taxRate, _ats05Rate, _taxValue, _ats05Value,
+                                      customerId, _invoiceNo, _notes ?? "", _damghat, _isTax);
+                }
+                else
+                {
+                    _svc.Update(_id, _oldNet, _currencyId, (_date ?? DateTime.Now).Date, _invoiceValue, _netTotal, _commissionPercent, _taxRate, _ats05Rate, _taxValue, _ats05Value,
+                                customerId, _notes ?? "", _damghat, _isTax);
+                }
+                return _invoiceNo;
+            });
+            _oldNet = _netTotal;
+            Snackbar.Add(Tr("STSavedMsg", savedNo), Severity.Success);
+            await LoadListAsync();
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+        finally { _isBusy = false; }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (_id == 0 || _customer is null) return;
+        if (!_canEditInvoice) { Snackbar.Add(Tr("InvNoEditPermission"), Severity.Warning); return; }
+        if (!_canDeleteInvoice) { Snackbar.Add(Tr("InvNoDeletePermission"), Severity.Warning); return; }
+        var confirmed = await DialogService.ShowMessageBoxAsync(Tr("DstDeleteButton"), Tr("DstDeleteConfirm"), yesText: Tr("DstDeleteButton"), cancelText: Tr("Cancel"));
+        if (confirmed != true) return;
+        _isBusy = true;
+        var id = _id; var net = _oldNet; var no = _invoiceNo; var cust = _customer.Id;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.Delete(id, net, no, cust); });
+            Snackbar.Add(Tr("STDeletedMsg"), Severity.Success);
+            await NewInvoiceAsync();
+            await LoadListAsync();
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+        finally { _isBusy = false; }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

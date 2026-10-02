@@ -1,0 +1,451 @@
+@* 🟢 يقابل شاشتين أصليتين بنفس الفكرة (قائمة فواتير + مدفوعات الفاتورة المحددة)، صفحة واحدة بالباراميتر ?mode:
+     - (بدون mode) Accounts.InvoicesFrm.invoices.Invoices_List_Payment_  (menuItem "عرض مدفوعات الفواتير"): الاستعلام
+       InvoicesClss.Get_Customers_Invoices (المدفوع = صافى Money_Transaction_Box لكل فاتورة، المتبقى = الصافى - المدفوع) بفلاتر رقم الفاتورة/
+       العميل/التواريخ/نوع الفاتورة (الكل-آجل-نقدى)/حالة السداد (الكل-مسددة-غير مسددة)/البائع؛ ومدفوعات الفاتورة المحددة عبر
+       Money_Transaction_BoxOrderReportCLS.GetMoney_Box_TransactionInvoices.
+     - ?mode=distribution  Accounts.Requests.ReceiptDistribution.Invoices_List_ReceiptDistributionReport ("أرصدة الفواتير - مدفوعات وتوزيع
+       نقدية" و"متابعة فواتير المبيعات المستحقة" - العنصران فى القائمة يفتحان نفس الفورم بلا أى معامل): وضع البحث فقط (IsOnlySearch=true)
+       عبر InvoicesClss.Get_Customers_InvoicesForDistributeMoney (المدفوع من جدول التوزيع Money_Transaction_BoxForInvoices)، ومدفوعات الفاتورة
+       عبر GetMoney_Box_TransactionForInvoicesDistribut. عمود تاريخ الاستحقاق يظهر فقط لمن لديه صلاحية القائمة 957
+       (Common.IsShowInvoices_List_WithDueDate) - يُقرأ هنا من قوائم المستخدم الحالى بدل Common.User_Id الثابت (متعدد المستخدمين).
+       ?view=due لا يغيّر السلوك (عنصر قائمة ثانٍ لنفس الفورم) بل عنوان الصفحة فقط.
+
+   مؤجَّل عمداً (يحتاج شاشات أذون النقدية التى لم تُحوَّل بعد، وهى تكتب بيانات مالية): زر "استلام نقدية" (MakeOrderMoneyNowMulti →
+   OrderMoney_TransactionMany)، فتح إذن النقدية بالنقر المزدوج على سطر المدفوعات (New_OrderMoney_SarfNew)، اختيار الإذن وحفظ/حذف
+   التوزيع (Cash_Money_ListFromCustomersToSelect + SaveUpdateMoney_Transaction_BoxForInvoice)، الطباعة (RDLC). فلاتر "تاريخ الاستحقاق"
+   و"نوع العميل" فى الأصل لا تؤثر على الاستعلام أصلاً (أو تؤثر على قائمة العملاء فقط) فلم تُنقل. *@
+@page "/accounts/invoices/payments"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject NavigationManager Nav
+@inject MenuStateService MenuState
+@implements IDisposable
+
+<PageTitle>@_title</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@_title</MudText>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="3">
+                <MudNumericField T="long?" @bind-Value="_invoiceNo" Label="@Tr("InvoiceNoLabel")" Variant="Variant.Outlined" HideSpinButtons="true"
+                                 Immediate="true" OnKeyDown="OnInvoiceNoKeyDownAsync" Format="0" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudAutocomplete T="LookupOption" @bind-Value="_customer" SearchFunc="SearchCustomersAsync" ToStringFunc="@(c => c?.Name ?? "")"
+                                 Label="@Tr("CustomerLabel")" Placeholder="@Tr("AllCustomers")" Variant="Variant.Outlined"
+                                 Clearable="true" CoerceText="false" ResetValueOnEmptyText="true" MaxItems="50" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudCheckBox T="bool" @bind-Value="_useFrom" Dense="true" Size="Size.Small" />
+                    <MudDatePicker T="DateTime?" @bind-Date="_dateFrom" Label="@Tr("DateFromLabel")" Variant="Variant.Outlined" Disabled="@(!_useFrom)" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudCheckBox T="bool" @bind-Value="_useTo" Dense="true" Size="Size.Small" />
+                    <MudDatePicker T="DateTime?" @bind-Date="_dateTo" Label="@Tr("DateToLabel")" Variant="Variant.Outlined" Disabled="@(!_useTo)" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="int" @bind-Value="_invoiceKind" Label="@Tr("PmtInvoiceKindLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    <MudSelectItem T="int" Value="-1">@Tr("PmtAllOption")</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">@Tr("PmtCreditOption")</MudSelectItem>
+                    <MudSelectItem T="int" Value="0">@Tr("PmtCashOption")</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="int" @bind-Value="_paidStatus" Label="@Tr("PmtStatusLabel")" Variant="Variant.Outlined" FullWidth="true">
+                    <MudSelectItem T="int" Value="-1">@Tr("PmtAllOption")</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">@Tr("PmtPaidOption")</MudSelectItem>
+                    <MudSelectItem T="int" Value="0">@Tr("PmtUnpaidOption")</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            @if (!_isDistribution)
+            {
+                <MudItem xs="12" sm="6" md="3">
+                    <MudAutocomplete T="LookupOption" @bind-Value="_seller" SearchFunc="SearchSellersAsync" ToStringFunc="@(c => c?.Name ?? "")"
+                                     Label="@Tr("PmtSellerLabel")" Variant="Variant.Outlined" Clearable="true" CoerceText="false"
+                                     ResetValueOnEmptyText="true" MaxItems="50" />
+                </MudItem>
+            }
+        </MudGrid>
+
+        <MudStack Row="true" Spacing="2" Class="mt-3">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="@(() => SearchAsync(false))" Disabled="@_isLoading">
+                @Tr("SearchButton")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.OpenInNew"
+                       OnClick="OpenSelected" Disabled="@(_selectedId == null)">
+                @Tr("ShowInvoiceButton")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => Nav.NavigateTo("/accounts/invoices/sales-invoice"))">
+                @Tr("NewInvoiceButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudGrid Class="mb-4">
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("InvoicesCountLabel")</MudText>
+                <MudText Typo="Typo.h6">@_rows.Count</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("NetTotalSumLabel")</MudText>
+                <MudText Typo="Typo.h6">@_netSum.ToString("N2")</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("PmtPaidSumLabel")</MudText>
+                <MudText Typo="Typo.h6">@_paidSum.ToString("N2")</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true" Style="background-color:var(--mud-palette-info-lighten);">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("PmtRemainingSumLabel")</MudText>
+                <MudText Typo="Typo.h6">@_remainingSum.ToString("N2")</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudTable Items="@_rows" T="InvoiceRow" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" Loading="@_isLoading"
+              RowClassFunc="@((InvoiceRow row, int index) => row.Id == _selectedId ? "mud-selected-item" : string.Empty)"
+              OnRowClick="@((TableRowClickEventArgs<InvoiceRow> e) => SelectInvoiceAsync(e.Item))">
+        <HeaderContent>
+            <MudTh>@Tr("SerialColumn")</MudTh>
+            <MudTh>@Tr("CustomerLabel")</MudTh>
+            <MudTh>@Tr("InvoiceNoLabel")</MudTh>
+            <MudTh>@Tr("DateColumn")</MudTh>
+            @if (_showDueDate)
+            {
+                <MudTh>@Tr("PmtDueDateColumn")</MudTh>
+            }
+            <MudTh Style="text-align:end">@Tr("NetTotalColumn")</MudTh>
+            <MudTh Style="text-align:end">@Tr("PmtPaidColumn")</MudTh>
+            <MudTh Style="text-align:end">@Tr("PmtRemainingColumn")</MudTh>
+            <MudTh>@Tr("NotesColumn")</MudTh>
+            <MudTh>@Tr("UserColumn")</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("SerialColumn")">@context.Serial</MudTd>
+            <MudTd DataLabel="@Tr("CustomerLabel")">@context.Customer</MudTd>
+            <MudTd DataLabel="@Tr("InvoiceNoLabel")">@context.InvoiceNo</MudTd>
+            <MudTd DataLabel="@Tr("DateColumn")">@FormatDate(context.Date)</MudTd>
+            @if (_showDueDate)
+            {
+                <MudTd DataLabel="@Tr("PmtDueDateColumn")">@FormatDate(context.DueDate)</MudTd>
+            }
+            <MudTd DataLabel="@Tr("NetTotalColumn")" Style="text-align:end;font-weight:600;font-variant-numeric:tabular-nums">@context.Net.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("PmtPaidColumn")" Style="text-align:end;font-variant-numeric:tabular-nums">@context.Paid.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("PmtRemainingColumn")" Style="@($"text-align:end;font-variant-numeric:tabular-nums;{(context.Remaining > 0 ? "color:var(--mud-palette-error);font-weight:600;" : "")}")">@context.Remaining.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("NotesColumn")">@context.Notes</MudTd>
+            <MudTd DataLabel="@Tr("UserColumn")">@context.User</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small" Color="Color.Primary"
+                               OnClick="@(() => Open(context.Id))" title="@Tr("ShowInvoiceButton")" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@(_searched ? Tr("NoRecordsFound") : Tr("PressSearchHint"))</MudText>
+        </NoRecordsContent>
+    </MudTable>
+
+    @if (_selectedId != null)
+    {
+        <MudText Typo="Typo.h6" Class="mt-6 mb-2 font-weight-bold">@Tr("PmtPaymentsOfInvoiceTitle")</MudText>
+        <MudTable Items="@_payments" T="PaymentRow" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" Loading="@_isPaymentsLoading">
+            <HeaderContent>
+                <MudTh>@Tr("SerialColumn")</MudTh>
+                <MudTh>@Tr("PmtReceiptNoColumn")</MudTh>
+                <MudTh>@Tr("DateColumn")</MudTh>
+                <MudTh>@Tr("PmtBankColumn")</MudTh>
+                <MudTh>@Tr("NameColumn")</MudTh>
+                <MudTh Style="text-align:end">@Tr("PmtImportColumn")</MudTh>
+                <MudTh Style="text-align:end">@Tr("PmtExportColumn")</MudTh>
+                <MudTh>@Tr("NotesColumn")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("SerialColumn")">@context.Serial</MudTd>
+                <MudTd DataLabel="@Tr("PmtReceiptNoColumn")">@context.OrderNo</MudTd>
+                <MudTd DataLabel="@Tr("DateColumn")">@FormatDate(context.Date)</MudTd>
+                <MudTd DataLabel="@Tr("PmtBankColumn")">@context.Bank</MudTd>
+                <MudTd DataLabel="@Tr("NameColumn")">@context.Name</MudTd>
+                <MudTd DataLabel="@Tr("PmtImportColumn")" Style="text-align:end;font-variant-numeric:tabular-nums">@context.Import.ToString("N2")</MudTd>
+                <MudTd DataLabel="@Tr("PmtExportColumn")" Style="text-align:end;font-variant-numeric:tabular-nums">@context.Export.ToString("N2")</MudTd>
+                <MudTd DataLabel="@Tr("NotesColumn")">@context.Notes</MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Align="Align.Center" Class="py-3 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    }
+</MudContainer>
+
+@code {
+    private record LookupOption(long Id, string Name);
+    private record InvoiceRow(long Id, int Serial, string Customer, long InvoiceNo, DateTime? Date, DateTime? DueDate, decimal Net, decimal Paid,
+                              decimal Remaining, string Notes, string User);
+    private record PaymentRow(int Serial, string OrderNo, DateTime? Date, string Bank, string Name, decimal Import, decimal Export, string Notes);
+
+    [SupplyParameterFromQuery(Name = "mode")] public string? ModeQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "view")] public string? ViewQuery { get; set; }
+
+    private readonly CustomerCLS _customerCls = new();
+
+    private bool _isDistribution;
+    private bool _showDueDate;
+    private string _title = "";
+
+    private long? _invoiceNo;
+    private LookupOption? _customer;
+    private LookupOption? _seller;
+    private bool _useFrom = true;
+    private bool _useTo = true;
+    private DateTime? _dateFrom = DateTime.Now.Date;
+    private DateTime? _dateTo = DateTime.Now.Date;
+    private int _invoiceKind = -1;
+    private int _paidStatus = -1;
+
+    private List<InvoiceRow> _rows = new();
+    private List<PaymentRow> _payments = new();
+    private decimal _netSum;
+    private decimal _paidSum;
+    private decimal _remainingSum;
+    private long? _selectedId;
+    private bool _isLoading;
+    private bool _isPaymentsLoading;
+    private bool _searched;
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _isDistribution = string.Equals(ModeQuery, "distribution", StringComparison.OrdinalIgnoreCase);
+        // 🟢 يقابل AccountCommonDataLIB.Common.IsShowInvoices_List_WithDueDate() (صلاحية القائمة 957) لكن من قوائم المستخدم الحالى.
+        _showDueDate = _isDistribution && MenuState.UserAllowedMenus.Any(m => m.Menu_ID == 957);
+        _title = ComputeTitle();
+    }
+
+    private string ComputeTitle() =>
+        !_isDistribution ? Tr("PmtPaymentsTitle")
+        : string.Equals(ViewQuery, "due", StringComparison.OrdinalIgnoreCase) ? Tr("PmtDueInvoicesTitle")
+        : Tr("PmtDistributionTitle");
+
+    private void OnLanguageChangedHandler()
+    {
+        _title = ComputeTitle();
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    private async Task<IEnumerable<LookupOption>> SearchCustomersAsync(string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _customerCls.Get_CustomerSupplierListForStatement(0, 0, -1, -1);
+        }, ct);
+        var list = new List<LookupOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["Name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add(new LookupOption(Convert.ToInt64(r["Id"]), name));
+            }
+        }
+        return list.Take(50);
+    }
+
+    // 🟢 يقابل employeeSellerUSR1 (TesttxtBox على جدول Employee/عمود Name): Emp_Id = Employee.id.
+    private async Task<IEnumerable<LookupOption>> SearchSellersAsync(string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return new operations().return_DataTable("SELECT id, name FROM Employee ORDER BY name");
+        }, ct);
+        var list = new List<LookupOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add(new LookupOption(Convert.ToInt64(r["id"]), name));
+            }
+        }
+        return list.Take(50);
+    }
+
+    // يقابل NuInvoiceNo_TextChanged: رقم فاتورة > 0 يبحث بالرقم وحده (بلا عميل ولا تواريخ).
+    private async Task OnInvoiceNoKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter") return;
+        // قيمة الحقل (Immediate) قد تصل بعد حدث Enter مباشرة عند الكتابة السريعة/الملصق الضوئى؛ مهلة قصيرة تضمن قراءة الرقم كاملاً.
+        await Task.Delay(150);
+        if ((_invoiceNo ?? 0) > 0)
+        {
+            await SearchAsync(true);
+        }
+    }
+
+    private async Task SearchAsync(bool byNumberOnly)
+    {
+        _errorMessage = null;
+        _isLoading = true;
+        _selectedId = null;
+        _payments = new();
+        StateHasChanged();
+
+        var invoiceNo = _invoiceNo ?? 0;
+        var customerId = byNumberOnly ? 0 : _customer?.Id ?? 0;
+        var useFrom = !byNumberOnly && _useFrom;
+        var useTo = !byNumberOnly && _useTo;
+        var from = _dateFrom ?? DateTime.Now.Date;
+        var to = _dateTo ?? DateTime.Now.Date;
+        var kind = _invoiceKind;
+        var paid = _paidStatus;
+        var sellerId = _seller?.Id ?? 0;
+        var isDistribution = _isDistribution;
+
+        try
+        {
+            var dt = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var excp = 0;
+                var cls = new InvoicesClss { Is_Invoice_Agile = kind, Is_Net_Total_Paid = paid, Emp_Id = sellerId };
+                return isDistribution
+                    ? cls.Get_Customers_InvoicesForDistributeMoney(ref excp, 0, invoiceNo, customerId, useFrom, from, useTo, to, 0, false, -1, true)
+                    : cls.Get_Customers_Invoices(ref excp, 0, invoiceNo, customerId, useFrom, from, useTo, to, false, -1, -1);
+            });
+
+            var rows = new List<InvoiceRow>();
+            var serial = 0;
+            decimal netSum = 0, paidSum = 0, remainingSum = 0;
+            foreach (DataRow r in dt.Rows)
+            {
+                serial++;
+                var net = Dec(r, "Net_Total");
+                var paidValue = Dec(r, "PaymentValue");
+                var remaining = Dec(r, "StillValues");
+                netSum += net; paidSum += paidValue; remainingSum += remaining;
+                rows.Add(new InvoiceRow(
+                    Convert.ToInt64(r["Id"]), serial, r["Name"]?.ToString()?.Trim() ?? "",
+                    r["Invoice_Id"] == DBNull.Value ? 0 : Convert.ToInt64(r["Invoice_Id"]), Dt(r, "Invoice_Date"), Dt(r, "InvoiceDueDate"),
+                    net, paidValue, remaining, r["Notes"]?.ToString() ?? "", r["USER_NAME"]?.ToString() ?? ""));
+            }
+
+            _rows = rows;
+            _netSum = Common.RoundMe(netSum);
+            _paidSum = Common.RoundMe(paidSum);
+            _remainingSum = Common.RoundMe(remainingSum);
+            _searched = true;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    // يقابل Dg_List_CellClick → ShowMoneyTransaction: مدفوعات الفاتورة المحددة.
+    private async Task SelectInvoiceAsync(InvoiceRow row)
+    {
+        _selectedId = row.Id;
+        _isPaymentsLoading = true;
+        _payments = new();
+        StateHasChanged();
+
+        var invoiceId = row.Id;
+        var isDistribution = _isDistribution;
+        try
+        {
+            var dt = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var cls = new Money_Transaction_BoxOrderReportCLS();
+                return isDistribution
+                    ? cls.GetMoney_Box_TransactionForInvoicesDistribut(Common.Invoice_Type_Id, invoiceId)
+                    : cls.GetMoney_Box_TransactionInvoices(Common.Invoice_Type_Id, invoiceId);
+            });
+
+            var list = new List<PaymentRow>();
+            var serial = 0;
+            foreach (DataRow r in dt.Rows)
+            {
+                // الأصل يُلحق صف إجمالى بلا رقم إذن؛ نتخطاه لأن الإجمالى يظهر فى بطاقات الصفحة.
+                if (!dt.Columns.Contains("Order_No") || r["Order_No"] == DBNull.Value) continue;
+                serial++;
+                list.Add(new PaymentRow(serial, r["Order_No"].ToString() ?? "", Dt(r, "Order_Date"), r["Bank_Name"]?.ToString() ?? "",
+                    r["Man_Name"]?.ToString() ?? "", Dec(r, "Import_Value"), Dec(r, "Export_Value"), r["Order_Notes"]?.ToString() ?? ""));
+            }
+            _payments = list;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isPaymentsLoading = false;
+        }
+    }
+
+    private static decimal Dec(DataRow r, string column) =>
+        r.Table.Columns.Contains(column) && r[column] != DBNull.Value ? Convert.ToDecimal(r[column], CultureInfo.InvariantCulture) : 0;
+
+    private static DateTime? Dt(DataRow r, string column) =>
+        r.Table.Columns.Contains(column) && r[column] != DBNull.Value ? Convert.ToDateTime(r[column]) : null;
+
+    private static string FormatDate(DateTime? d) => d?.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture) ?? "";
+
+    private void OpenSelected()
+    {
+        if (_selectedId != null) Open(_selectedId.Value);
+    }
+
+    // يقابل ShowSelectedInvoice: EditFRM_Invoices(Invoice_ListId) = صفحة الفاتورة بمعرّف السجل.
+    private void Open(long id) => Nav.NavigateTo($"/accounts/invoices/sales-invoice/{id}");
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

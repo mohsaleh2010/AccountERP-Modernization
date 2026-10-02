@@ -1,0 +1,497 @@
+@* 🟢 يقابل Accounts.ItemDataBill (شاشة إضافة/تعديل صنف فاتورة المشتريات) - مكوّن جديد مستقل عن AddInvoiceItemDialog (قرار المستخدم:
+   صفحة مشتريات مستقلة بمكوّنات جديدة). الاختلافات الفعلية عن المبيعات: السعر = سعر الشراء (Unit_item.P_price_LargeUnit/P_Price) لا سعر البيع،
+   لا أنواع أسعار، كل أصناف المخزن تظهر (الشراء يجوز لصنف رصيده صفر)، وسعر الجمهور (Audience_price) = سعر بيع الصنف لأن
+   Bills_ModelsClss.UpdatePurchasePrice تتخطى تحديث سعر الشراء لو كان سعر بيع الصنف أكبر منه، وتاريخ الصلاحية/التشغيلة يظهران فقط للصيدلية
+   (Common.is_pharmacy=1) مع افتراضى اليوم لأن محرك الحفظ يقرأ Item_Expire_Date.Value مباشرة. كل الحالة محلية بالمكوّن (بلا static). *@
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+
+<MudDialog Visible="Visible" VisibleChanged="OnMudDialogVisibleChangedAsync" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true })">
+    <TitleContent>@(_isEditMode ? Tr("EditItemTitle") : Tr("AddItemTitle"))</TitleContent>
+    <DialogContent>
+        <MudStack Spacing="2">
+            <MudGrid Spacing="2">
+                @if (_stores.Count > 1)
+                {
+                    <MudItem xs="12" sm="6">
+                        <MudSelect T="long" Value="_storeId" Label="@Tr("StoreLabel")" Variant="Variant.Outlined"
+                                   Disabled="_isEditMode" ValueChanged="OnStoreChangedAsync">
+                            @foreach (var s in _stores)
+                            {
+                                <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                }
+                <MudItem xs="12" sm="@(_stores.Count > 1 ? 6 : 12)">
+                    @if (_searchByCode)
+                    {
+                        <MudTextField T="string" @bind-Value="_codeSearchText" Label="@Tr("SearchByCodeLabel")" Variant="Variant.Outlined"
+                                      Disabled="_isEditMode || _storeId == 0" Immediate="true" AutoFocus="true"
+                                      OnKeyDown="OnCodeSearchKeyDownAsync" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                                      OnAdornmentClick="@(() => SearchByCodeAsync(_codeSearchText))" />
+                    }
+                    else
+                    {
+                        <MudAutocomplete T="ItemOption" Value="_selectedItem" SearchFunc="SearchItemsAsync"
+                                         ToStringFunc="@(o => o?.Name ?? "")" Label="@Tr("ItemLabel")" Variant="Variant.Outlined" AutoFocus="@(!_isEditMode)"
+                                         ValueChanged="OnItemPickedAsync" ResetValueOnEmptyText="true" Disabled="_isEditMode || _storeId == 0" />
+                    }
+                </MudItem>
+            </MudGrid>
+
+            <MudCheckBox T="bool" Value="_searchByCode" ValueChanged="OnSearchByCodeChangedAsync" Label="@Tr("SearchByCodeToggleLabel")" Disabled="_isEditMode" Dense="true" />
+
+            @if (_selectedItem is not null)
+            {
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" sm="6">
+                        <MudTextField T="string" Value="@_line.code" ReadOnly="true" Label="@Tr("ItemCodeLabel")" Variant="Variant.Outlined" />
+                    </MudItem>
+                    @if (!_isWithoutBalance)
+                    {
+                        <MudItem xs="12" sm="6">
+                            <MudTextField T="string" Value="@($"{_line.Available_Larg_Balance:0.##} {_largUnit} / {_line.Available_Small_Balance:0.##} {_smallUnit}")" ReadOnly="true"
+                                          Label="@Tr("LargBalanceLabel")" Variant="Variant.Outlined" />
+                        </MudItem>
+                    }
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField T="decimal" Value="_priceUnit" Label="@Tr("PurchasePriceLabel")" Variant="Variant.Outlined"
+                                         ValueChanged="OnPriceChanged" Format="0.00" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField T="decimal" @ref="_largQntyField" Value="_largQnty" Label="@($"{Tr("QuantityLabel")} ({_largUnit})")"
+                                         Variant="Variant.Outlined" ValueChanged="OnLargQntyChanged" Format="0.##"
+                                         Immediate="true" OnKeyDown="OnQtyKeyDownAsync" />
+                    </MudItem>
+                    @if (_unitSmallValue > 1)
+                    {
+                        <MudItem xs="12" sm="6">
+                            <MudNumericField T="decimal" Value="_smallQnty" Label="@($"{Tr("QuantityLabel")} ({_smallUnit})")"
+                                             Variant="Variant.Outlined" ValueChanged="OnSmallQntyChanged" Format="0.##"
+                                             Immediate="true" OnKeyDown="OnQtyKeyDownAsync" />
+                        </MudItem>
+                    }
+                    @if (_isPharmacy)
+                    {
+                        <MudItem xs="12" sm="6">
+                            <MudDatePicker T="DateTime?" Date="_expireDate" DateChanged="OnExpireChanged" Label="@Tr("ExpiryDateLabel")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField T="string" Value="_batch" ValueChanged="OnBatchChanged" Label="@Tr("BatchNoLabel")" Variant="Variant.Outlined" />
+                        </MudItem>
+                    }
+                    @if (_showItemCommission)
+                    {
+                        @* الأصل (ItemDataBill): حقول عمولة الصنف تُعطَّل إذا كان Is_ActiveOrNot_Show_Column_Bill_Monitor=1 مع Show_Commision_Value_On_Bill_Monitor=0 *@
+                        <MudItem xs="12" sm="6">
+                            <MudNumericField T="decimal" @bind-Value="ItemCommissionRate" Label="@Tr("ItemCommissionRateLabel")" Variant="Variant.Outlined"
+                                             Format="0.##" Immediate="true" HideSpinButtons="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudNumericField T="decimal" @bind-Value="ItemCommissionValue" Label="@Tr("ItemCommissionColumn")" Variant="Variant.Outlined"
+                                             Format="0.##" Immediate="true" HideSpinButtons="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudNumericField T="decimal" @bind-Value="UnitCommissionValue" Label="@Tr("UnitCommissionColumn")" Variant="Variant.Outlined"
+                                             Format="0.##" Immediate="true" HideSpinButtons="true" />
+                        </MudItem>
+                    }
+                    <MudItem xs="12" sm="6">
+                        <MudTextField T="string" Value="@_line.Item_Net_Total_Price?.ToString("0.00")" ReadOnly="true" Label="@Tr("LineTotalLabel")" Variant="Variant.Outlined" />
+                    </MudItem>
+                </MudGrid>
+
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error" Dense="true">@_errorMessage</MudAlert>
+                }
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseAsync">@Tr("Close")</MudButton>
+        @* زر واحد مناسب للعملية: إضافة = يُضيف ويُبقى الحوار مفتوحاً للصنف التالى، تعديل = يحفظ ويغلق. *@
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_selectedItem is null"
+                   OnClick="@(() => _isEditMode ? SaveAndCloseAsync() : AddAndKeepOpenAsync())">@Tr(_isEditMode ? "ItemDlgSaveEditButton" : "ItemDlgAddButton")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private record StoreOption(long Id, string Name);
+    private record ItemOption(long UnitItemTableId, long ItemId, string Name, string Code, decimal LargBalance, decimal SmallBalance,
+        decimal LargUnitValue, string LargUnit, string SmallUnit, decimal PurchasePrice, decimal SalePrice, long StoreId, string StoreName, bool IsWithoutBalance);
+
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public IBills_Details? ExistingLine { get; set; }
+    [Parameter] public decimal TaxSalesRate { get; set; }
+    [Parameter] public decimal ATS05Rate { get; set; }
+    [Parameter] public bool IsTaxPerItem { get; set; }
+    [Parameter] public EventCallback<IBills_Details> OnItemAdded { get; set; }
+
+    // بحث بالكود/الباركود من الصفحة: عند فتح الحوار بكود يُحدَّد الصنف وتُوضع البؤرة على الكمية.
+    [Parameter] public string? InitialCode { get; set; }
+    [Parameter] public int InitialCodeToken { get; set; }
+    [Parameter] public EventCallback<string> OnCodeNotFound { get; set; }
+
+    private int _handledInitialCodeToken;
+    private bool _openedByBarcode;
+    private bool _focusQtyNext;
+    private MudNumericField<decimal>? _largQntyField;
+
+    private readonly AccountModelsLib.operations _opp = new();
+    private List<StoreOption> _stores = new();
+    private long _storeId;
+    private ItemOption? _selectedItem;
+    private IBills_Details _line = new IBills_Details();
+    private decimal _largQnty;
+    private decimal _smallQnty;
+    private decimal _priceUnit;
+    private decimal _unitSmallValue = 1;
+    private string _largUnit = "";
+    private string _smallUnit = "";
+    private string _errorMessage = "";
+    private bool _isEditMode;
+    private long? _lastLoadedExistingLineId;
+    private bool _searchByCode;
+    private string _codeSearchText = "";
+    private bool _isWithoutBalance;
+    private DateTime? _expireDate = DateTime.Now.Date;
+    private string _batch = "";
+    private bool _isPharmacy => AccountModelsLib.Common.is_pharmacy == 1;
+
+    private const string ItemSelect = @"SELECT TOP 50 Unit_item.Id, Unit_item.Item_id, Item.Item_Name, Item.code, Unit_item.Full_qua, Unit_item.D_Qua,
+                               unit.B_Unit, unit.S_unit, unit.S_unit_Value, ISNULL(Unit_item.P_price_LargeUnit, 0) AS P_large, ISNULL(Unit_item.P_Price, 0) AS P_price,
+                               ISNULL(Unit_item.S_price, 0) AS S_price, Unit_item.Store_id, Store.Store_Name, Item.Is_ItemWithoutBalance
+                        FROM Unit_item
+                        INNER JOIN unit ON Unit_item.unit_id = unit.id
+                        INNER JOIN Item ON Unit_item.Item_id = Item.id
+                        INNER JOIN Store ON Unit_item.Store_id = Store.id ";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Visible) return;
+        if (_stores.Count == 0) await LoadStoresAsync();
+
+        _isEditMode = ExistingLine is not null;
+        if (_isEditMode && _lastLoadedExistingLineId != ExistingLine!.Id)
+        {
+            _lastLoadedExistingLineId = ExistingLine.Id;
+            // نعدّل نسخة وليس السطر الأصلى: الصفحة تحتاج القيم القديمة كما حُفظت.
+            _line = (IBills_Details)ExistingLine.Clone();
+            _storeId = _line.Store_Id ?? 0;
+            _largQnty = _line.Larg_Qnty ?? 0;
+            _smallQnty = _line.Small_Qnty ?? 0;
+            _priceUnit = _line.PriceUnit ?? _line.Larg_Unit_Price ?? 0;
+            _largUnit = _line.UnitStr ?? "";
+            _smallUnit = _line.UnitSmallStr ?? "";
+            _expireDate = _line.Item_Expire_Date ?? DateTime.Now.Date;
+            _batch = _line.Tash3ela ?? "";
+            _isWithoutBalance = await LoadIsWithoutBalanceAsync(_line.Item_Id ?? 0);
+            _unitSmallValue = await LoadUnitSmallValueAsync(_line.Unit_Item_Table_Id ?? 0);
+            _selectedItem = new ItemOption(_line.Unit_Item_Table_Id ?? 0, _line.Item_Id ?? 0, _line.Invoice_Item_Name ?? "",
+                _line.code ?? "", _line.Available_Larg_Balance ?? 0, _line.Available_Small_Balance ?? 0, _unitSmallValue, _largUnit, _smallUnit,
+                _priceUnit, _line.Audience_price ?? 0, _line.Store_Id ?? 0, _line.Store_Name ?? "", _isWithoutBalance);
+        }
+        else if (!_isEditMode)
+        {
+            _lastLoadedExistingLineId = null;
+            if (!string.IsNullOrWhiteSpace(InitialCode) && _handledInitialCodeToken != InitialCodeToken)
+            {
+                _handledInitialCodeToken = InitialCodeToken;
+                _openedByBarcode = true;
+                ResetForNextItem();
+                var found = await SearchByCodeAsync(InitialCode);
+                if (!found)
+                {
+                    await OnCodeNotFound.InvokeAsync(InitialCode);
+                    await CloseAsync();
+                }
+                else
+                {
+                    _focusQtyNext = true;
+                }
+            }
+            else if (string.IsNullOrWhiteSpace(InitialCode))
+            {
+                _openedByBarcode = false;
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focusQtyNext && _largQntyField is not null)
+        {
+            _focusQtyNext = false;
+            // MudDialog يعيد البؤرة لنفسه بعد ظهوره، فنؤخر التركيز ونعيده مرة ثانية ثم نحدد النص ليستبدله إدخال الكمية.
+            for (var attempt = 0; attempt < 2; attempt++)
+            {
+                try
+                {
+                    await Task.Delay(attempt == 0 ? 250 : 200);
+                    if (_largQntyField is null) break;
+                    await _largQntyField.FocusAsync();
+                    await _largQntyField.SelectAsync();
+                }
+                catch { /* التركيز تحسين راحة فقط */ }
+            }
+        }
+    }
+
+    // Enter على حقل الكمية: مع الباركود/التعديل حفظ وإغلاق، وفى الإضافة العادية يبقى الحوار مفتوحاً للصنف التالى.
+    private Task OnQtyKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || _selectedItem is null) return Task.CompletedTask;
+        return _openedByBarcode || _isEditMode ? SaveAndCloseAsync() : AddAndKeepOpenAsync();
+    }
+
+    private async Task LoadStoresAsync()
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _opp.return_DataTable("SELECT Id, Store_Name FROM Store WHERE Active = 1 AND IS_Virtual_OuterStore = 0 ORDER BY IS_Default_Store DESC, Store_Name");
+        });
+        _stores = dt.Rows.Cast<DataRow>()
+            .Select(r => new StoreOption(Convert.ToInt64(r["Id"]), r["Store_Name"]?.ToString() ?? ""))
+            .ToList();
+        if (_storeId == 0 && _stores.Count > 0) _storeId = _stores[0].Id;
+    }
+
+    private async Task<bool> LoadIsWithoutBalanceAsync(long itemId)
+    {
+        if (itemId == 0) return false;
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _opp.return_DataTable("SELECT Is_ItemWithoutBalance FROM Item WHERE id = " + itemId);
+        });
+        return dt.Rows.Count > 0 && dt.Rows[0]["Is_ItemWithoutBalance"] != DBNull.Value && Convert.ToInt32(dt.Rows[0]["Is_ItemWithoutBalance"]) == 1;
+    }
+
+    // قيمة الوحدة الصغرى (عدد الصغرى فى الكبرى) للسطر المحفوظ عند فتحه للتعديل.
+    private async Task<decimal> LoadUnitSmallValueAsync(long unitItemId)
+    {
+        if (unitItemId == 0) return 1;
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _opp.return_DataTable("SELECT unit.S_unit_Value FROM Unit_item INNER JOIN unit ON Unit_item.unit_id = unit.id WHERE Unit_item.Id = " + unitItemId);
+        });
+        if (dt.Rows.Count == 0 || dt.Rows[0][0] == DBNull.Value) return 1;
+        var v = Convert.ToDecimal(dt.Rows[0][0], CultureInfo.InvariantCulture);
+        return v == 0 ? 1 : v;
+    }
+
+    private Task OnSearchByCodeChangedAsync(bool value)
+    {
+        _searchByCode = value;
+        _selectedItem = null;
+        _codeSearchText = "";
+        return Task.CompletedTask;
+    }
+
+    private Task OnCodeSearchKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") return SearchByCodeAsync(_codeSearchText);
+        return Task.CompletedTask;
+    }
+
+    private static ItemOption ToOption(DataRow r)
+    {
+        decimal Dec(string c) => r[c] == DBNull.Value ? 0 : Convert.ToDecimal(r[c], CultureInfo.InvariantCulture);
+        var purchase = Dec("P_large") > 0 ? Dec("P_large") : Dec("P_price");
+        return new ItemOption(
+            Convert.ToInt64(r["Id"]), Convert.ToInt64(r["Item_id"]), r["Item_Name"]?.ToString() ?? "",
+            r["code"]?.ToString() ?? "", Dec("Full_qua"), Dec("D_Qua"),
+            r["S_unit_Value"] == DBNull.Value ? 1 : Dec("S_unit_Value"), r["B_Unit"]?.ToString() ?? "",
+            r["S_unit"]?.ToString() ?? "", purchase, Dec("S_price"), Convert.ToInt64(r["Store_id"]), r["Store_Name"]?.ToString() ?? "",
+            r["Is_ItemWithoutBalance"] != DBNull.Value && Convert.ToInt32(r["Is_ItemWithoutBalance"]) == 1);
+    }
+
+    // بحث بالكود الدقيق (يقابل Stores_Items.Get_Item_By_Code).
+    private async Task<bool> SearchByCodeAsync(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code)) return false;
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _opp.return_DataTable(ItemSelect.Replace("TOP 50", "TOP 1") + " WHERE Unit_item.Code = N'" + code.Replace("'", "''") + "'");
+        });
+        if (dt.Rows.Count == 0)
+        {
+            _errorMessage = Tr("ItemCodeNotFoundError");
+            return false;
+        }
+        var option = ToOption(dt.Rows[0]);
+        _storeId = option.StoreId;
+        await OnItemPickedAsync(option);
+        return true;
+    }
+
+    private Task OnStoreChangedAsync(long value)
+    {
+        _storeId = value;
+        _selectedItem = null;
+        return Task.CompletedTask;
+    }
+
+    private async Task<IEnumerable<ItemOption>> SearchItemsAsync(string search, CancellationToken ct)
+    {
+        if (_storeId == 0) return Enumerable.Empty<ItemOption>();
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var sql = ItemSelect + " WHERE Unit_item.Store_id = " + _storeId + " AND Item.Active_flage = 1";
+            if (!string.IsNullOrWhiteSpace(search))
+                sql += " AND Item.Item_Name LIKE N'%" + search.Replace("'", "''") + "%'";
+            return _opp.return_DataTable(sql + " ORDER BY Item.Item_Name");
+        }, ct);
+        return dt.Rows.Cast<DataRow>().Select(ToOption).ToList();
+    }
+
+    private Task OnItemPickedAsync(ItemOption? option)
+    {
+        _selectedItem = option;
+        if (option is null) return Task.CompletedTask;
+
+        _isWithoutBalance = option.IsWithoutBalance;
+        _line = new IBills_Details
+        {
+            Item_Id = option.ItemId,
+            Unit_Item_Table_Id = option.UnitItemTableId,
+            Invoice_Item_Name = option.Name,
+            code = option.Code,
+            Store_Id = option.StoreId,
+            Store_Name = option.StoreName,
+            Available_Larg_Balance = option.LargBalance,
+            Available_Small_Balance = option.SmallBalance,
+            UnitStr = option.LargUnit,
+            UnitSmallStr = option.SmallUnit,
+            Unit_Used_for_Price = 1,
+            // القيم التى يدمجها المحرك نصاً داخل SQL يجب ألا تبقى null (نفس درس فاتورة المبيعات).
+            Make_Order = 0,
+            Unit_Item_ExpireDate_Id = 0,
+            // UpdatePurchasePrice تتخطى تحديث سعر الشراء لو كان سعر بيع الصنف أكبر من Audience_price.
+            Audience_price = option.SalePrice,
+            Item_TaxSales10 = IsTaxPerItem ? TaxSalesRate : 0,
+            Item_ATS05 = IsTaxPerItem ? ATS05Rate : 0,
+        };
+        _expireDate = DateTime.Now.Date;
+        _batch = "";
+        ApplyExpireToLine();
+        _largUnit = option.LargUnit;
+        _smallUnit = option.SmallUnit;
+        _unitSmallValue = option.LargUnitValue == 0 ? 1 : option.LargUnitValue;
+        _priceUnit = option.PurchasePrice;
+        _largQnty = 0;
+        _smallQnty = 0;
+        Recompute();
+        return Task.CompletedTask;
+    }
+
+    private void ApplyExpireToLine()
+    {
+        _line.Item_Expire_Date = _expireDate ?? DateTime.Now.Date;
+        _line.Tash3ela = _batch ?? "";
+    }
+
+    private void OnExpireChanged(DateTime? value) { _expireDate = value; ApplyExpireToLine(); }
+    private void OnBatchChanged(string value) { _batch = value; ApplyExpireToLine(); }
+    private static bool _showItemCommission =>
+        !(AccountModelsLib.Common.Is_ActiveOrNot_Show_Column_Bill_Monitor == 1 && AccountModelsLib.Common.Show_Commision_Value_On_Bill_Monitor == 0);
+    private decimal ItemCommissionRate { get => _line.Item_CommissionRate ?? 0; set { _line.Item_CommissionRate = value; Recompute(); } }
+    private decimal ItemCommissionValue { get => _line.Item_CommissionValue ?? 0; set { _line.Item_CommissionValue = value; Recompute(); } }
+    private decimal UnitCommissionValue { get => _line.Unit_CommissionValue ?? 0; set { _line.Unit_CommissionValue = value; Recompute(); } }
+    private void OnPriceChanged(decimal value) { _priceUnit = value; Recompute(); }
+    private void OnLargQntyChanged(decimal value) { _largQnty = value; Recompute(); }
+    private void OnSmallQntyChanged(decimal value) { _smallQnty = value; Recompute(); }
+
+    private void Recompute()
+    {
+        _line.Larg_Qnty = _largQnty;
+        _line.Small_Qnty = _smallQnty;
+        _line.PriceUnit = _priceUnit;
+        _line.Larg_Unit_Price = _priceUnit;
+        BillLineCalculator.ComputeLine(_line, _unitSmallValue);
+    }
+
+    private bool Validate()
+    {
+        _errorMessage = "";
+        if (_priceUnit <= 0)
+        {
+            _errorMessage = Tr("PriceRequiredError");
+            return false;
+        }
+        if (_largQnty == 0 && _smallQnty == 0)
+        {
+            _errorMessage = Tr("QuantityRequiredError");
+            return false;
+        }
+        return true;
+    }
+
+    private async Task AddAndKeepOpenAsync()
+    {
+        if (!Validate()) return;
+        ApplyExpireToLine();
+        await OnItemAdded.InvokeAsync((IBills_Details)_line.Clone());
+        Snackbar.Add(Tr("ItemAddedMessage"), Severity.Success);
+        ResetForNextItem();
+    }
+
+    private async Task SaveAndCloseAsync()
+    {
+        if (!Validate()) return;
+        ApplyExpireToLine();
+        await OnItemAdded.InvokeAsync((IBills_Details)_line.Clone());
+        await CloseAsync();
+    }
+
+    private void ResetForNextItem()
+    {
+        _selectedItem = null;
+        _line = new IBills_Details();
+        _largQnty = 0;
+        _smallQnty = 0;
+        _priceUnit = 0;
+        _errorMessage = "";
+        _isWithoutBalance = false;
+    }
+
+    // إغلاق MudDialog لنفسه (×، Esc، النقر خارجه) لا يُبلغ الأب عبر Visible؛ نمرِّر التغيير صراحةً.
+    private async Task OnMudDialogVisibleChangedAsync(bool visible)
+    {
+        Visible = visible;
+        await VisibleChanged.InvokeAsync(visible);
+    }
+
+    private async Task CloseAsync()
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    private string Tr(string key)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

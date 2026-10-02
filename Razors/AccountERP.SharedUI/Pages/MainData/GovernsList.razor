@@ -1,0 +1,22 @@
+@page "/main-data/governs"
+
+@* 🟢 عنصر القائمة «GovernsList» (SysConfigMenus 838) - صفحة رفيعة تعرض المكوّن المشترك GeoLevelList بمستوى Governorate. *@
+
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+
+<PageTitle>@Title</PageTitle>
+
+<GeoLevelList Level="GeoLevelList.GeoLevel.Governorate" />
+
+@code {
+    private string Title
+    {
+        get
+        {
+            var previous = System.Globalization.CultureInfo.CurrentUICulture;
+            try { System.Globalization.CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang["GeoGovernsTitle"]; }
+            finally { System.Globalization.CultureInfo.CurrentUICulture = previous; }
+        }
+    }
+}

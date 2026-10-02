@@ -134,40 +134,9 @@
     // 🟢 لا يوجد عمود أيقونة في SysConfigMenus/SysConfigMenusPERMATIONS، فنحدد أيقونة مناسبة لكل وحدة
     // بمطابقة كلمات مفتاحية شائعة (عربي/إنجليزي) في اسم القائمة نفسه - بنفس روح السايد بار فى القالب
     // المرجعي (templatecrm) حيث لكل قسم أيقونة خاصة به، مع أيقونة افتراضية عامة لأي قائمة غير معروفة.
-    private static readonly (string[] Keywords, string Icon)[] ModuleIconMap = new (string[], string)[]
-    {
-        (new[] { "حساب", "قيود", "استاذ", "ميزان", "account", "ledger", "journal", "trial" }, Icons.Material.Filled.AccountBalance),
-        (new[] { "مخزن", "صنف", "اصناف", "مخزون", "store", "inventory", "item", "warehouse" }, Icons.Material.Filled.Inventory2),
-        (new[] { "مبيع", "فاتورة بيع", "sale", "sales" }, Icons.Material.Filled.PointOfSale),
-        (new[] { "مشتري", "شراء", "purchase", "buying" }, Icons.Material.Filled.ShoppingCart),
-        (new[] { "عميل", "عملاء", "customer", "client" }, Icons.Material.Filled.People),
-        (new[] { "مورد", "موردين", "supplier", "vendor" }, Icons.Material.Filled.Store),
-        (new[] { "تقرير", "report" }, Icons.Material.Filled.Assessment),
-        (new[] { "ضريب", "فاتورة الكترونية", "tax", "einvoice", "e-invoice" }, Icons.Material.Filled.Receipt),
-        (new[] { "بنك", "شيك", "خزينة", "صندوق", "bank", "check", "cash", "treasury" }, Icons.Material.Filled.AccountBalanceWallet),
-        (new[] { "سيار", "صيانة", "ورشة", "car", "workshop", "maintenance" }, Icons.Material.Filled.CarRepair),
-        (new[] { "حجز", "سياح", "فندق", "طيران", "reservation", "tourism", "hotel", "flight" }, Icons.Material.Filled.FlightTakeoff),
-        (new[] { "موارد بشرية", "موظف", "حضور", "انصراف", "hr", "employee", "attendance" }, Icons.Material.Filled.Badge),
-        (new[] { "انتاج", "تصنيع", "نسيج", "production", "manufacturing" }, Icons.Material.Filled.PrecisionManufacturing),
-        (new[] { "مقاول", "عقار", "مشروع", "construction", "real estate", "project" }, Icons.Material.Filled.Apartment),
-        (new[] { "اعداد", "صلاحي", "مستخدم", "setting", "permission", "user", "admin" }, Icons.Material.Filled.Settings),
-        (new[] { "باركود", "bar code", "barcode" }, Icons.Material.Filled.QrCode2),
-    };
-
-    private static string GetModuleIcon(string? description)
-    {
-        if (string.IsNullOrWhiteSpace(description)) return Icons.Material.Filled.Apps;
-
-        foreach (var (keywords, icon) in ModuleIconMap)
-        {
-            if (keywords.Any(k => description.Contains(k, StringComparison.OrdinalIgnoreCase)))
-            {
-                return icon;
-            }
-        }
-
-        return Icons.Material.Filled.Apps;
-    }
+    // 🟢 نُقل الخريطة الفعلية لـ MenuIcons.cs (Services) لتُستخدَم أيضاً من بطاقات الشاشة الرئيسية
+    // (Home.razor) بدل تكرارها نسخة ثالثة - نفس الأيقونة الآن لأي وحدة رئيسية سواء بالقائمة الجانبية أو كبطاقة.
+    private static string GetModuleIcon(string? description) => MenuIcons.GetModuleIcon(description);
 
     public void Dispose()
     {

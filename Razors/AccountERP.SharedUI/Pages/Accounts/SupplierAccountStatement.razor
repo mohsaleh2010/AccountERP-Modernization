@@ -361,7 +361,7 @@
                 if (withPeriod)
                 {
                     var financialPeriodDtFrom = dtFromValue;
-                    int yearFinancialPeriodId = Financial_PeriodCLS.Get_Year_Financial_Period_Id(dtFromValue, ref financialPeriodDtFrom);
+                    long yearFinancialPeriodId = Financial_PeriodCLS.Get_Year_Financial_Period_Id(dtFromValue, ref financialPeriodDtFrom);
                     if (yearFinancialPeriodId == 0)
                     {
                         return (DataTable?)null;

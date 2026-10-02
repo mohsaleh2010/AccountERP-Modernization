@@ -1,0 +1,22 @@
+@page "/main-data/areas"
+
+@* 🟢 عنصر القائمة «AreasList» (SysConfigMenus 837) - صفحة رفيعة تعرض المكوّن المشترك GeoLevelList بمستوى Area. *@
+
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+
+<PageTitle>@Title</PageTitle>
+
+<GeoLevelList Level="GeoLevelList.GeoLevel.Area" />
+
+@code {
+    private string Title
+    {
+        get
+        {
+            var previous = System.Globalization.CultureInfo.CurrentUICulture;
+            try { System.Globalization.CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang["GeoAreasTitle"]; }
+            finally { System.Globalization.CultureInfo.CurrentUICulture = previous; }
+        }
+    }
+}

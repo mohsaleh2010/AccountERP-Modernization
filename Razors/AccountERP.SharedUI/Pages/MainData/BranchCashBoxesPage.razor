@@ -1,0 +1,22 @@
+@page "/main-data/branch-cash-boxes"
+
+@* 🟢 عنصر القائمة (SysConfigMenus 385) - صفحة رفيعة تعرض المكوّن المشترك BankBoxList بنوع BranchBox. *@
+
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+
+<PageTitle>@Title</PageTitle>
+
+<BankBoxList Kind="BankBoxList.BankKind.BranchBox" />
+
+@code {
+    private string Title
+    {
+        get
+        {
+            var previous = System.Globalization.CultureInfo.CurrentUICulture;
+            try { System.Globalization.CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang["BranchBoxesTitle"]; }
+            finally { System.Globalization.CultureInfo.CurrentUICulture = previous; }
+        }
+    }
+}

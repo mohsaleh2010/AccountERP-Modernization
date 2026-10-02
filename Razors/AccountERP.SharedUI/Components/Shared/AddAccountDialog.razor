@@ -14,7 +14,7 @@
 @using AccountERP.SharedUI.ViewModels
 @inject LanguageService LangService
 
-<MudDialog @bind-Visible="Visible"
+<MudDialog Visible="Visible" VisibleChanged="OnMudDialogVisibleChangedAsync"
            Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true, BackdropClick = false })">
     <TitleContent>@Tr("AddAccountTitle")</TitleContent>
     <DialogContent>
@@ -42,10 +42,10 @@
                 </MudItem>
 
                 <MudItem xs="12" sm="6">
-                    <MudSelect T="int" Value="_currencyId ?? 0" ValueChanged="@((int v) => { _currencyId = v; })" Label="@Tr("CurrencyLabel")">
+                    <MudSelect T="long" Value="_currencyId ?? 0" ValueChanged="@((long v) => { _currencyId = v; })" Label="@Tr("CurrencyLabel")">
                         @foreach (var c in _currencies)
                         {
-                            <MudSelectItem T="int" Value="@c.Id">@c.Name</MudSelectItem>
+                            <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
                         }
                     </MudSelect>
                 </MudItem>
@@ -119,6 +119,9 @@
                 <MudItem xs="12" sm="6">
                     <MudSwitch T="bool" @bind-Value="_masrofatAffect" Color="Color.Primary" Label="@Tr("MasrofatAffectLabel")" />
                 </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSwitch T="bool" @bind-Value="_branchSpecific" Color="Color.Primary" Label="@Tr("AccountBranchSpecificLabel")" />
+                </MudItem>
             </MudGrid>
         }
     </DialogContent>
@@ -142,7 +145,7 @@
     [Parameter] public EventCallback<long> OnAccountAdded { get; set; }
 
     private List<(long Id, string Name, int Value, int HeadMainAccount)> _accountTypes = new();
-    private List<(int Id, string Name)> _currencies = new();
+    private List<(long Id, string Name)> _currencies = new();
 
     private string _accountName = "";
     private string _accountCode = "";
@@ -152,13 +155,17 @@
     private int _accountFollows = int.Parse(AccountLookups.AccountFollowsDefault);
     private int _cashFlowType = int.Parse(AccountLookups.CashFlowTypeDefault);
     private string _firstSubCode = AccountLookups.FirstSubCodeDefault;
-    private int? _currencyId;
+    private long? _currencyId;
     private bool _acceptEntry = true;
     private bool _accountTypeChangeForChildren;
     private bool _accountFollowChangeForChildren;
     private bool _hasSubAccounts = true;
     private bool _masrofatAffect = true;
     private bool _isGeneralCustomer;
+    // 🟢 بطلب المستخدم صراحة (2026-09-27، راجع accounts-tree-multibranch-plan.md): الحساب الجديد يكون مشتركاً لكل
+    // الفروع افتراضياً (Branch_Id=-1، نفس ما يتوقعه استعلام الشجرة Get_SubMain_Account)، ولا يُربَط بالفرع المعروض
+    // حالياً إلا إذا اختار المستخدم صراحةً أنه حساب خاص بهذا الفرع فقط (كصندوق/مركز تكلفة الفرع نفسه).
+    private bool _branchSpecific;
     private bool _accountFollowsLocked;
     private bool _accountTypeLocked;
     private int _accountLevel;
@@ -204,6 +211,7 @@
         _hasSubAccounts = true;
         _masrofatAffect = true;
         _isGeneralCustomer = false;
+        _branchSpecific = false;
         // 🟢 يقفل السهمين تماماً كما يفعل BtnAddNewAccounts_Click فى الأصل: عندما يحدد الأب أن أبناءه يجب أن
         // يتبعوا نفس نوع الحساب/نفس التوجيه المحاسبى، لا يُسمح للمستخدم بمخالفة ذلك عند إضافة ابن جديد.
         _accountFollowsLocked = parent.IS_SubAccount_FollowingAccount == 1;
@@ -248,10 +256,10 @@
             _accountTypes = types;
 
             var currencyDt = new CurrencyFactorsCLS_().GetCurrencyList();
-            var currencies = new List<(int, string)>();
+            var currencies = new List<(long, string)>();
             foreach (DataRow r in currencyDt.Rows)
             {
-                currencies.Add((Convert.ToInt32(r["ID"]), r["Currency_Name"]?.ToString() ?? ""));
+                currencies.Add((Convert.ToInt64(r["ID"]), r["Currency_Name"]?.ToString() ?? ""));
             }
             _currencies = currencies;
         });
@@ -305,12 +313,15 @@
                 sa.sb.Account_Customer_Type_Value = _accountTypeLocked ? parent.Account_Customer_Type_Value : _accountTypeValue;
                 sa.sb.IS_SubAccount_AccountType = _accountTypeChangeForChildren ? 1 : 0;
                 sa.sb.IS_SubAccount_FollowingAccount = _accountFollowChangeForChildren ? 1 : 0;
-                sa.sb.Branch_Id = BranchId;
+                // 🟢 مشترك لكل الفروع افتراضياً (Branch_Id=-1) ما لم يُحدَّد صراحةً أنه حساب خاص بهذا الفرع - راجع
+                // التعليق أعلى تعريف _branchSpecific وaccounts-tree-multibranch-plan.md.
+                long effectiveBranchId = _branchSpecific ? BranchId : -1;
+                sa.sb.Branch_Id = effectiveBranchId;
                 sa.sb.Is_MasrofatAffect = _masrofatAffect ? 1 : 0;
                 sa.sb.Account_Type_ValueGeneralCustomer = _isGeneralCustomer ? 1 : 0;
 
                 long submainAccountId = -1;
-                int branchIdInt = (int)BranchId;
+                long branchIdInt = effectiveBranchId;
                 string newNo = sa.sb.SubAccount_NO;
 
                 // 🟢 معكوس عمداً: cbHaveChildAccount فى النموذج الأصلي مفعّل افتراضياً ("هذا حساب سيحتوي حسابات
@@ -362,5 +373,13 @@
         {
             CultureInfo.CurrentUICulture = previousCulture;
         }
+    }
+
+    // إغلاق MudDialog لنفسه (زر ×، Esc، النقر خارج الحوار) لا يُبلغ الصفحة الأم عبر @bind-Visible على المعامل نفسه، فتبقى Visible=true
+    // ولا يُفتح الحوار ثانية؛ نُمرِّر التغيير للأب صراحةً.
+    private async Task OnMudDialogVisibleChangedAsync(bool visible)
+    {
+        Visible = visible;
+        await VisibleChanged.InvokeAsync(visible);
     }
 }

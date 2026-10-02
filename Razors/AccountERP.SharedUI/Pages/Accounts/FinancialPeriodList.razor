@@ -14,7 +14,20 @@
       فعلياً من المستخدم - لم يُنقَل هنا لنفس السبب (لا يوجد سلوك حي يجب الحفاظ عليه).
    رسائل الكلاس المُعادة (Active_Period/Delete_Period) نصوص عربية جاهزة مبنية داخل منطق العمل نفسه
    (AccountModelsLib) ولا تُترجَم هنا - تُعرَض كما هى تماماً كالأصل (MessageBox.Show(Msg)) حفاظاً على
-   عدم إعادة اشتقاق نص منطق العمل. *@
+   عدم إعادة اشتقاق نص منطق العمل.
+
+   🟢 تعديلات لاحقة (بطلب مباشر من صاحب المشروع):
+   1) أزرار التنشيط/الحذف أصبحت لكل صف على حدة (MudIconButton داخل MudTd خاص) بدل تحديد صف ثم الضغط على
+      زرين أسفل الجدول - نفس فحوصَى العمل بالضبط (الحذف لآخر فترة فقط وغير المُرحَّلة، التنشيط لغير المُرحَّل
+      وغير النشط بالفعل) أصبحا يُعطِّلان الزر مباشرة بدل إظهار رسالة خطأ بعد الضغط. مفهوم "الصف المُحدَّد"
+      (SelectRow/_selectedId/mud-selected-item) أُزيل بالكامل لأنه لم يعد يخدم أي غرض بعد هذا التغيير.
+   2) خيار "تقسيم إلى فترات شهرية" عند الإضافة: يستدعي Financial_PeriodCLS.Make_Period نفسها (بلا أي تعديل
+      عليها ولا على أي كلاس فى AccountModelsLib) فى حلقة تسلسلية، شهراً فى كل مرة - آمن لأن Make_Period
+      مكتفية ذاتياً بالكامل فى كل استدعاء (تفحص "هل توجد فترة نشطة؟" وتولِّد معرِّفها الخاص من قاعدة البيانات
+      كل مرة من جديد).
+   3) تنسيق التاريخ يُقرأ الآن من UserPreferencesService.DateFormat (تفضيل محفوظ لكل مستخدم، افتراضيه
+      dd/MM/yyyy) بدل نص "yyyy/MM/dd" ثابت - أول شاشة تُطبِّق معيار تنسيق التاريخ الجديد الموثَّق فى
+      MODERNIZATION_NOTES.md. *@
 
 @page "/accounts/financial-periods"
 
@@ -23,6 +36,7 @@
 @using AccountModelsLib
 @using AccountERP.SharedUI.Services
 @inject LanguageService LangService
+@inject UserPreferencesService Prefs
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @implements IDisposable
@@ -50,47 +64,51 @@
                 @Tr("AddPeriodButton")
             </MudButton>
         </MudStack>
+        <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Class="mt-2">
+            <MudCheckBox T="bool" @bind-Value="_splitMonthly" Color="Color.Primary" Dense="true"
+                         Label="@Tr("SplitIntoMonthlyPeriods")" Disabled="@_isBusy" />
+        </MudStack>
+        @if (_splitMonthly)
+        {
+            <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="margin-inline-start:52px;">@Tr("SplitIntoMonthlyPeriodsHint")</MudText>
+        }
     </MudPaper>
 
     <MudPaper Class="pa-4 mb-4" Elevation="1">
-        <MudTable Items="@_periods" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Elevation="0"
-                  T="PeriodRow" RowClassFunc="@RowClassFunc"
-                  OnRowClick="@((TableRowClickEventArgs<PeriodRow> e) => SelectRow(e.Item))">
+        <MudTable Items="@_periods" Hover="true" Striped="true" Bordered="true" Loading="@_isLoading" Elevation="0">
             <HeaderContent>
                 <MudTh>@Tr("PeriodSerialColumn")</MudTh>
                 <MudTh>@Tr("PeriodDateFromColumn")</MudTh>
                 <MudTh>@Tr("PeriodDateToColumn")</MudTh>
                 <MudTh>@Tr("PeriodNotesColumn")</MudTh>
+                <MudTh Style="width:110px;">@Tr("PeriodActionsColumn")</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="@Tr("PeriodSerialColumn")" Style="@RowStyle(context)">@context.Serial</MudTd>
                 <MudTd DataLabel="@Tr("PeriodDateFromColumn")" Style="@RowStyle(context)">@FormatDateFrom(context)</MudTd>
                 <MudTd DataLabel="@Tr("PeriodDateToColumn")" Style="@RowStyle(context)">@FormatDateTo(context)</MudTd>
                 <MudTd DataLabel="@Tr("PeriodNotesColumn")" Style="@RowStyle(context)">@NotesFor(context)</MudTd>
+                <MudTd DataLabel="@Tr("PeriodActionsColumn")">
+                    <MudTooltip Text="@Tr("ActivatePeriodButton")">
+                        <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small"
+                                       aria-label="@Tr("ActivatePeriodButton")"
+                                       OnClick="@(() => ActivateAsync(context))"
+                                       Disabled="@(context.IsActive || context.IsFinishedPosted || _isBusy)" />
+                    </MudTooltip>
+                    <MudTooltip Text="@Tr("DeletePeriodButton")">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                                       aria-label="@Tr("DeletePeriodButton")"
+                                       OnClick="@(() => DeleteAsync(context))"
+                                       Disabled="@(!IsLastPeriod(context) || context.IsFinishedPosted || _isBusy)" />
+                    </MudTooltip>
+                </MudTd>
             </RowTemplate>
             <NoRecordsContent>
                 <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoPeriodsYet")</MudText>
             </NoRecordsContent>
         </MudTable>
-
-        <MudStack Row="true" Spacing="2" Class="mt-4">
-            <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle"
-                       OnClick="ActivateAsync" Disabled="@(_selectedId == null || _isBusy)">
-                @Tr("ActivatePeriodButton")
-            </MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
-                       OnClick="DeleteAsync" Disabled="@_isBusy">
-                @Tr("DeletePeriodButton")
-            </MudButton>
-        </MudStack>
     </MudPaper>
 </MudContainer>
-
-<style>
-    .financial-period-row-selected {
-        background-color: var(--mud-palette-action-selected) !important;
-    }
-</style>
 
 @code {
     private record PeriodRow(long Id, DateTime DateFrom, DateTime DateTo, bool IsActive, bool IsFirstPeriod, bool IsFinishedPosted, int Serial);
@@ -100,15 +118,18 @@
     private bool _isLoading = true;
     private bool _isBusy;
     private string? _errorMessage;
-    private long? _selectedId;
 
     private DateTime? _newDateFrom;
     private DateTime? _newDateTo;
     private bool _dateFromLocked;
+    private bool _splitMonthly;
 
     protected override void OnInitialized()
     {
         LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        // 🟢 لتحديث تنسيق التاريخ المعروض فوراً لو غيَّر المستخدم تفضيله من لوحة "إعدادات الحساب"
+        // (UserSettingsMenu.razor) أثناء وجوده فى هذه الشاشة، بدون حاجة لإعادة تحميلها.
+        Prefs.OnChanged += OnLanguageChangedHandler;
     }
 
     private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
@@ -153,7 +174,6 @@
             });
             _periods = rows;
             SetDateSelectionDefaults();
-            _selectedId = null;
         }
         finally
         {
@@ -181,9 +201,9 @@
         }
     }
 
-    private string FormatDateFrom(PeriodRow row) => row.IsFirstPeriod ? "----" : row.DateFrom.ToString("yyyy/MM/dd");
+    private string FormatDateFrom(PeriodRow row) => row.IsFirstPeriod ? "----" : row.DateFrom.ToString(Prefs.DateFormat);
 
-    private string FormatDateTo(PeriodRow row) => row.DateTo.ToString("yyyy/MM/dd");
+    private string FormatDateTo(PeriodRow row) => row.DateTo.ToString(Prefs.DateFormat);
 
     private string NotesFor(PeriodRow row)
     {
@@ -193,22 +213,21 @@
         return string.Join("  ", parts);
     }
 
-    private void SelectRow(PeriodRow row)
-    {
-        _selectedId = _selectedId == row.Id ? null : row.Id;
-    }
-
-    // 🐛 كانت تُعيد كلاساً مخصَّصاً ("financial-period-row-selected") غير مُعرَّف بأى ملف CSS إطلاقاً فى المشروع
-    // (لا Scoped ولا عام) - فالنقر على صف لم يكن يُظهِر أى تمييز بصرى رغم أن SelectRow/_selectedId كانا يعملان
-    // بشكل صحيح داخلياً. الإصلاح: استخدام كلاس MudBlazor المدمج mud-selected-item (له تنسيق حقيقى جاهز من
-    // المكتبة نفسها) بنفس النمط المُتَّبَع بالفعل فى OpeningBalanceList.razor لهذا الغرض بالضبط.
-    private string RowClassFunc(PeriodRow row, int index) => row.Id == _selectedId ? "mud-selected-item" : "";
-
     private string RowStyle(PeriodRow row) => row.IsActive ? "color:var(--mud-palette-error);" : "";
+
+    // 🟢 يقابل فحص "index != _periods.Count - 1" السابق فى DeleteAsync، الآن مُستخدَم أيضاً لتعطيل زر الحذف
+    // مباشرة لكل صف ليس آخر فترة زمنياً فى القائمة (بدل السماح بالضغط ثم إظهار رسالة خطأ بعدها).
+    private bool IsLastPeriod(PeriodRow row) => _periods.Count > 0 && row.Id == _periods[^1].Id;
 
     // 🟢 يقابل BtnMakeEhlak_Click بالضبط - نفس فحصَى (من > إلى) و(تداخل مع آخر فترة) قبل استدعاء
     // Make_Period بنفس الباراميترات (FirstPeriod=0 دائماً - الأصل لا يتيح إنشاء "فترة أولى" من هذه
     // الشاشة عملياً رغم وجود الباراميتر فى الكلاس نفسه).
+    //
+    // 🟢 خيار "تقسيم إلى فترات شهرية" (_splitMonthly): نفس فحصَى التحقق أعلاه يُطبَّقان على المدى الكلى
+    // (من "من" الأصلى إلى "إلى" الأصلى) قبل التقسيم - فقط بداية المدى الكلى تُمنَع من تداخل آخر فترة موجودة،
+    // كما هو مطلوب. بعد التحقق، تُستدعى Financial_PeriodCLS.Make_Period نفسها (بلا أى تعديل عليها) فى حلقة
+    // تسلسلية شهراً فى كل مرة - آمنة لأنها مكتفية ذاتياً بالكامل فى كل استدعاء (تفحص "هل توجد فترة نشطة؟"
+    // من قاعدة البيانات وتولِّد معرِّفها الخاص من جديد فى كل مرة عبر Common.GetTable_Id_NoBranch).
     private async Task AddPeriodAsync()
     {
         _errorMessage = null;
@@ -232,14 +251,46 @@
         {
             var from = _newDateFrom.Value;
             var to = _newDateTo.Value;
+            var splitMonthly = _splitMonthly;
+            int periodsCreated = 0;
+            int failures = 0;
+
             await Task.Run(() =>
             {
                 AccountCultureGuard.EnsureInvariant();
-                int excp = 0;
-                _cls.Make_Period(ref excp, from, to, 0);
+
+                if (!splitMonthly)
+                {
+                    int excp = 0;
+                    _cls.Make_Period(ref excp, from, to, 0);
+                    if (excp == 0) periodsCreated++; else failures++;
+                    return;
+                }
+
+                var currentFrom = from;
+                while (currentFrom <= to)
+                {
+                    var monthEnd = new DateTime(currentFrom.Year, currentFrom.Month, DateTime.DaysInMonth(currentFrom.Year, currentFrom.Month));
+                    var currentTo = monthEnd < to ? monthEnd : to;
+
+                    int excp = 0;
+                    _cls.Make_Period(ref excp, currentFrom, currentTo, 0);
+                    if (excp == 0) periodsCreated++; else failures++;
+
+                    currentFrom = currentTo.AddDays(1);
+                }
             });
+
             await LoadAsync();
-            Snackbar.Add(Tr("PeriodAdded"), Severity.Success);
+
+            if (failures > 0)
+            {
+                _errorMessage = Tr("SomePeriodsFailedToAdd");
+            }
+            if (periodsCreated > 0)
+            {
+                Snackbar.Add(splitMonthly ? Tr("PeriodsSplitAdded", periodsCreated) : Tr("PeriodAdded"), Severity.Success);
+            }
         }
         finally
         {
@@ -249,10 +300,11 @@
 
     // 🟢 يقابل BtnActive_Click بالضبط: تأكيد ثم Active_Period(Active:0) ثم عرض الرسالة المُعادة من
     // الكلاس كما هى (تُلغي كل الفترات الأخرى تلقائياً - منطق داخل الكلاس نفسه، وتُرفَض لو الفترة مُرحَّلة).
-    private async Task ActivateAsync()
+    // 🟢 أصبحت تأخذ الصف مباشرة (بدل قراءة _selectedId) - تُستدعى الآن من زر كل صف بعينه مباشرة، وليس من
+    // زر عام أسفل الجدول بعد تحديد صف. فحص "مُرحَّلة/نشطة بالفعل" أصبح أيضاً يُعطِّل الزر نفسه مسبقاً
+    // (Disabled فى RowTemplate) بدل الاعتماد فقط على رفض الكلاس له لاحقاً.
+    private async Task ActivateAsync(PeriodRow row)
     {
-        if (_selectedId == null) return;
-
         var confirmed = await DialogService.ShowMessageBoxAsync(
             Tr("FinancialPeriodConfirmTitle"),
             Tr("ConfirmActivatePeriodMessage"),
@@ -262,7 +314,7 @@
         _isBusy = true;
         try
         {
-            var id = (int)_selectedId.Value;
+            var id = row.Id;
             string msg = "";
             await Task.Run(() =>
             {
@@ -282,10 +334,12 @@
         }
     }
 
-    // 🟢 يقابل btnDelete_Click بالضبط بنفس ترتيب الفحوصات (تأكيد أولاً كالأصل، ثم وجود اختيار، ثم
-    // "آخر فترة فقط"، ثم فحص الترحيل) قبل استدعاء Delete_Period التى تحتوي فحصها الخاص أيضاً (قيود
-    // مسجَّلة داخل نطاق الفترة).
-    private async Task DeleteAsync()
+    // 🟢 يقابل btnDelete_Click بالضبط بنفس ترتيب الفحوصات (تأكيد أولاً كالأصل، ثم "آخر فترة فقط"، ثم فحص
+    // الترحيل) قبل استدعاء Delete_Period التى تحتوي فحصها الخاص أيضاً (قيود مسجَّلة داخل نطاق الفترة).
+    // 🟢 أصبحت تأخذ الصف مباشرة (بدل قراءة _selectedId بعد تحديد صف) - نفس ملاحظة ActivateAsync أعلاه؛
+    // فحصَى "آخر فترة"/"مُرحَّلة" أصبحا أيضاً يُعطِّلان الزر نفسه مسبقاً (راجع IsLastPeriod أعلاه)، لكن
+    // يبقيان هنا أيضاً كخط دفاع ثانٍ (نفس مبدأ Delete_Period التى تكرر فحصها الخاص داخلياً).
+    private async Task DeleteAsync(PeriodRow row)
     {
         var confirmed = await DialogService.ShowMessageBoxAsync(
             Tr("FinancialPeriodConfirmTitle"),
@@ -294,20 +348,11 @@
         if (confirmed != true) return;
 
         _errorMessage = null;
-        if (_selectedId == null)
-        {
-            _errorMessage = Tr("SelectPeriodToDelete");
-            return;
-        }
-
-        var index = _periods.FindIndex(p => p.Id == _selectedId.Value);
-        if (index != _periods.Count - 1)
+        if (!IsLastPeriod(row))
         {
             _errorMessage = Tr("OnlyLastPeriodDeletable");
             return;
         }
-
-        var row = _periods[index];
         if (row.IsFinishedPosted)
         {
             _errorMessage = Tr("ClosedPeriodCannotDelete");
@@ -356,5 +401,6 @@
     public void Dispose()
     {
         LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+        Prefs.OnChanged -= OnLanguageChangedHandler;
     }
 }

@@ -92,20 +92,20 @@
             else
             {
                 <MudItem xs="12" sm="6">
-                    <MudSelect T="int" @bind-Value="_primaryCurrencyId" Label="@Tr("CurrencyPrimaryLabel")"
+                    <MudSelect T="long" @bind-Value="_primaryCurrencyId" Label="@Tr("CurrencyPrimaryLabel")"
                                Variant="Variant.Outlined" FullWidth="true">
                         @foreach (var c in _currencyOptions)
                         {
-                            <MudSelectItem T="int" Value="@c.Value">@c.Name</MudSelectItem>
+                            <MudSelectItem T="long" Value="@c.Value">@c.Name</MudSelectItem>
                         }
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="12" sm="6">
-                    <MudSelect T="int" @bind-Value="_secondaryCurrencyId" Label="@Tr("CurrencySecondaryLabel")"
+                    <MudSelect T="long" @bind-Value="_secondaryCurrencyId" Label="@Tr("CurrencySecondaryLabel")"
                                Variant="Variant.Outlined" FullWidth="true">
                         @foreach (var c in _currencyOptions)
                         {
-                            <MudSelectItem T="int" Value="@c.Value">@c.Name</MudSelectItem>
+                            <MudSelectItem T="long" Value="@c.Value">@c.Name</MudSelectItem>
                         }
                     </MudSelect>
                 </MudItem>
@@ -129,8 +129,8 @@
 </MudDialog>
 
 @code {
-    private record CurrencyFactorRow(long Id, string Currency_Primary_Name, decimal Factor, string Currency_Secondary_Name, int Currency_ID_Primary, int Currency_ID_Secondary);
-    private record CurrencyOption(string Name, int Value);
+    private record CurrencyFactorRow(long Id, string Currency_Primary_Name, decimal Factor, string Currency_Secondary_Name, long Currency_ID_Primary, long Currency_ID_Secondary);
+    private record CurrencyOption(string Name, long Value);
 
     private readonly CurrencyFactorsCLS _cls = new();
     private List<CurrencyFactorRow> _factors = new();
@@ -143,8 +143,8 @@
     private bool _isEditing;
     private string? _dialogErrorMessage;
     private long _editId;
-    private int _primaryCurrencyId;
-    private int _secondaryCurrencyId;
+    private long _primaryCurrencyId;
+    private long _secondaryCurrencyId;
     private string _primaryCurrencyName = string.Empty;
     private string _secondaryCurrencyName = string.Empty;
     private decimal _factorValue;
@@ -180,8 +180,8 @@
                         r["Currency_Primary_Name"]?.ToString() ?? "",
                         Convert.ToDecimal(r["Factor"]),
                         r["Currency_Secondary_Name"]?.ToString() ?? "",
-                        Convert.ToInt32(r["Currency_ID_Primary"]),
-                        Convert.ToInt32(r["Currency_ID_Secondary"])));
+                        Convert.ToInt64(r["Currency_ID_Primary"]),
+                        Convert.ToInt64(r["Currency_ID_Secondary"])));
                 }
 
                 var currencyDt = _cls.GetCurrencyList();
@@ -190,7 +190,7 @@
                 {
                     currencyList.Add(new CurrencyOption(
                         r["Currency_Name"]?.ToString() ?? "",
-                        Convert.ToInt32(r["Value"])));
+                        Convert.ToInt64(r["Value"])));
                 }
 
                 return (factorList, currencyList);

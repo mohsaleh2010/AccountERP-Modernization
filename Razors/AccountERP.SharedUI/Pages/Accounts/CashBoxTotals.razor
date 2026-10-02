@@ -1,0 +1,136 @@
+@* 🟢 يقابل Money_Transaction_BoxTotalDay — «تقرير إجمالى يوميات الخزينة عن فترة» (menuMoney_TransactionTotal): لكل صندوق (أو كل الصناديق)
+   رصيد أول + استلام + صرف + رصيد نهائى، تفصيلى يوماً بيوم أو إجمالى الفترة. الحساب من Get_Money_Box_Transaction_PeriodTotalPerDay (عبر
+   CashVouchersService.BoxTotalsPerDay بلا تعديل عليها؛ عيب الأصل فى آخر الشهر يُتفادى بالنداء يوماً بيوم). الطباعة مؤجَّلة. *@
+@page "/accounts/cash/box-totals"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Tr("CBTitleTotals")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@Tr("CBTitleTotals")</MudText>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="3">
+                <MudSelect T="long" @bind-Value="_boxId" Label="@Tr("CVBoxLabel")" Variant="Variant.Outlined">
+                    <MudSelectItem T="long" Value="0L">@Tr("CVAllBoxes")</MudSelectItem>
+                    @foreach (var b in _boxes) { <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem> }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3"><MudDatePicker T="DateTime?" @bind-Date="_from" Label="@Tr("DateFromLabel")" Variant="Variant.Outlined" /></MudItem>
+            <MudItem xs="12" sm="6" md="3"><MudDatePicker T="DateTime?" @bind-Date="_to" Label="@Tr("DateToLabel")" Variant="Variant.Outlined" /></MudItem>
+            <MudItem xs="12" md="3">
+                <MudRadioGroup T="bool" @bind-Value="_totalOnly" Row="true">
+                    <MudRadio T="bool" Value="false" Color="Color.Primary">@Tr("CBDetailed")</MudRadio>
+                    <MudRadio T="bool" Value="true" Color="Color.Primary">@Tr("CBTotalOnly")</MudRadio>
+                </MudRadioGroup>
+            </MudItem>
+            <MudItem xs="12">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" OnClick="LoadAsync" Disabled="_isLoading">@Tr("SearchButton")</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_message))
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">@_message</MudAlert>
+    }
+
+    <MudTable Items="@_rows" T="Row" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" Loading="@_isLoading">
+        <HeaderContent>
+            <MudTh>@Tr("DateColumn")</MudTh>
+            <MudTh>@Tr("CVBoxLabel")</MudTh>
+            <MudTh Style="text-align:end">@Tr("CBFirstBalance")</MudTh>
+            <MudTh Style="text-align:end">@Tr("CVTypeReceipt")</MudTh>
+            <MudTh Style="text-align:end">@Tr("CVTypePayment")</MudTh>
+            <MudTh Style="text-align:end">@Tr("CBFinalBalance")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("DateColumn")">@context.Date</MudTd>
+            <MudTd DataLabel="@Tr("CVBoxLabel")">@context.Box</MudTd>
+            <MudTd Style="text-align:end">@context.First.ToString("N2")</MudTd>
+            <MudTd Style="text-align:end" Class="mud-success-text">@context.Import.ToString("N2")</MudTd>
+            <MudTd Style="text-align:end" Class="mud-warning-text">@context.Export.ToString("N2")</MudTd>
+            <MudTd Style="text-align:end"><b>@context.Final.ToString("N2")</b></MudTd>
+        </RowTemplate>
+        <NoRecordsContent><MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText></NoRecordsContent>
+    </MudTable>
+
+    @if (_rows.Count > 0)
+    {
+        <MudPaper Class="pa-3 mt-3" Elevation="0" Outlined="true">
+            <MudStack Row="true" Spacing="6" Wrap="Wrap.Wrap">
+                <span class="mud-success-text">@Tr("CVTypeReceipt"): <b>@_rows.Sum(r => r.Import).ToString("N2")</b></span>
+                <span class="mud-warning-text">@Tr("CVTypePayment"): <b>@_rows.Sum(r => r.Export).ToString("N2")</b></span>
+            </MudStack>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    private record Row(string Date, string Box, decimal First, decimal Import, decimal Export, decimal Final);
+    private record BoxOption(long Id, string Name);
+
+    private readonly CashVouchersService _svc = new();
+    private List<BoxOption> _boxes = new();
+    private List<Row> _rows = new();
+    private long _boxId;
+    private DateTime? _from = DateTime.Now.Date.AddDays(-6);
+    private DateTime? _to = DateTime.Now.Date;
+    private bool _totalOnly, _isLoading;
+    private string? _message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            var dt = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetBoxes(AccountModelsLib.Common.User_Id); });
+            _boxes = dt.Rows.Cast<DataRow>().Select(r => new BoxOption(Convert.ToInt64(r["Id"]), r["Bank_Name"]?.ToString() ?? "")).ToList();
+        }
+        catch (Exception ex) { _message = Tr("SystemError", ex.Message); }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private static decimal D(DataRow r, string c) => decimal.TryParse(r[c]?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v) ? v : 0;
+
+    private async Task LoadAsync()
+    {
+        _message = null; _rows = new();
+        var from = (_from ?? DateTime.Now).Date; var to = (_to ?? from).Date;
+        if (from > to) { _message = Tr("CBBadRange"); return; }
+        _isLoading = true;
+        StateHasChanged();
+        var ids = (_boxId == 0 ? _boxes.Select(b => b.Id) : new[] { _boxId }).ToList();
+        var totalOnly = _totalOnly;
+        try
+        {
+            var dt = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.BoxTotalsPerDay(ids, from, to, totalOnly); });
+            _rows = dt.Rows.Cast<DataRow>().Select(r => new Row(r["DayDate"]?.ToString() ?? "", r["Bank_Name"]?.ToString() ?? "", D(r, "FirstBalance"), D(r, "Import_Value_Total"),
+                D(r, "Export_Value_Total"), D(r, "FinalBalance"))).ToList();
+        }
+        catch (Exception ex) { _message = Tr("SystemError", ex.Message); }
+        finally { _isLoading = false; }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

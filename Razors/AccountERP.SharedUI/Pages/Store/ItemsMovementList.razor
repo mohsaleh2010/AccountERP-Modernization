@@ -38,20 +38,20 @@
 
         <MudGrid>
             <MudItem xs="12" sm="6" md="3">
-                <MudSelect T="int" Value="_selectedStoreId" ValueChanged="OnStoreChangedAsync" Label="@Tr("StoreLabel")"
+                <MudSelect T="long" Value="_selectedStoreId" ValueChanged="OnStoreChangedAsync" Label="@Tr("StoreLabel")"
                            Variant="Variant.Outlined" FullWidth="true">
                     @foreach (var s in _stores)
                     {
-                        <MudSelectItem T="int" Value="@s.Id">@s.Name</MudSelectItem>
+                        <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem>
                     }
                 </MudSelect>
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MudSelect T="int" @bind-Value="_selectedCategoryId" Label="@Tr("ItemCategoryLabel")"
+                <MudSelect T="long" @bind-Value="_selectedCategoryId" Label="@Tr("ItemCategoryLabel")"
                            Variant="Variant.Outlined" FullWidth="true">
                     @foreach (var c in _categories)
                     {
-                        <MudSelectItem T="int" Value="@c.Id">@c.Name</MudSelectItem>
+                        <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
                     }
                 </MudSelect>
             </MudItem>
@@ -198,8 +198,8 @@
 
     private bool IsDaily => string.Equals(Mode, "daily", StringComparison.OrdinalIgnoreCase);
 
-    private record StoreOption(int Id, string Name, int UsedType);
-    private record CategoryOption(int Id, string Name);
+    private record StoreOption(long Id, string Name, int UsedType);
+    private record CategoryOption(long Id, string Name);
     private record PeriodRow(int Serial, DateTime Date, string DocNo, string Description, decimal BalanceItemNo, string BalanceQtyText, string ItemNoExportText, string QtyExportText, string ItemName, string CategoryName, string OrderTypeName, bool IsFromRow);
     private record DailyRow(int Serial, string DocNo, string Description, string ItemNoExportText, string QtyText, string ItemName);
 
@@ -207,8 +207,8 @@
 
     private List<StoreOption> _stores = new();
     private List<CategoryOption> _categories = new();
-    private int _selectedStoreId;
-    private int _selectedCategoryId = -1;
+    private long _selectedStoreId;
+    private long _selectedCategoryId = -1;
     private bool _sortByCategory = true;
     private DateTime _dailyDate = DateTime.Today;
     private bool _dateFromEnabled;
@@ -286,7 +286,7 @@
         _selectedCategoryId = -1;
     }
 
-    private async Task OnStoreChangedAsync(int storeId)
+    private async Task OnStoreChangedAsync(long storeId)
     {
         _selectedStoreId = storeId;
         await LoadCategoriesAsync();
@@ -313,8 +313,8 @@
         try
         {
             int sortBy = _sortByCategory ? 1 : 2;
-            int storeId = _selectedStoreId;
-            int categoryId = _selectedCategoryId;
+            int storeId = (int)_selectedStoreId;
+            int categoryId = (int)_selectedCategoryId;
             int excp = 0;
             string msg = "";
             DataTable? dt = null;

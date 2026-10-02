@@ -157,7 +157,7 @@ else
             long subAccountId = 0;
             string subAccountNo = "", subAccountName = "";
             int accountType = 0;
-            new Order_Receipt_Checks().Get_Customer_Supplier_SubAccount_No(ref excp, 1, (int)customerId, ref subAccountId, ref subAccountNo, ref subAccountName, ref accountType);
+            new Order_Receipt_Checks().Get_Customer_Supplier_SubAccount_No(ref excp, 1, customerId, ref subAccountId, ref subAccountNo, ref subAccountName, ref accountType);
             return (bal, option?.Name ?? "", subAccountId, subAccountNo, subAccountName, accountType);
         });
 
@@ -191,7 +191,7 @@ else
             long subAccountId = 0;
             string subAccountNo = "", subAccountName = "";
             int accountType = 0;
-            new Order_Receipt_Checks().Get_Customer_Supplier_SubAccount_No(ref excp, 2, (int)supplierId, ref subAccountId, ref subAccountNo, ref subAccountName, ref accountType);
+            new Order_Receipt_Checks().Get_Customer_Supplier_SubAccount_No(ref excp, 2, supplierId, ref subAccountId, ref subAccountNo, ref subAccountName, ref accountType);
             return (bal, option?.Name ?? "", subAccountId, subAccountNo, subAccountName, accountType);
         });
 

@@ -34,14 +34,17 @@
         </MudStack>
     </MudPaper>
 
-    <MudPaper Class="pa-4 mb-4" Elevation="1">
-        <MudAutocomplete T="SupplierViewModel" Label="@Tr("SelectSupplierLabel")" Placeholder="@Tr("SelectSupplierPlaceholder")"
-                          Value="selectedSupplier" ValueChanged="OnSupplierSelectedAsync"
-                          SearchFunc="SearchSuppliersAsync" ToStringFunc="@(s => s?.Name)"
-                          Disabled="@(isAddingNew || isLoadingList)" Clearable="true" ResetValueOnEmptyText="true"
-                          Variant="Variant.Outlined" FullWidth="true" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search" />
-    </MudPaper>
+    @if (!isAddingNew)
+    {
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudAutocomplete T="SupplierViewModel" Label="@Tr("SelectSupplierLabel")" Placeholder="@Tr("SelectSupplierPlaceholder")"
+                              Value="selectedSupplier" ValueChanged="OnSupplierSelectedAsync"
+                              SearchFunc="SearchSuppliersAsync" ToStringFunc="@(s => s?.Name)"
+                              Disabled="@isLoadingList" Clearable="true" ResetValueOnEmptyText="true"
+                              Variant="Variant.Outlined" FullWidth="true" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" />
+        </MudPaper>
+    }
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
@@ -197,7 +200,7 @@
             }
             else
             {
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEditAsync" Disabled="@isSaving">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEditAsync" Disabled="@(isSaving || !IsDirty)">
                     @if (isSaving)
                     {
                         <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
@@ -237,6 +240,10 @@
     private SupplierViewModel? selectedSupplier;
     private Supplier model = new();
     private DateTime? registrationDate = DateTime.Now.Date;
+    // قاعدة الحفظ: زر «حفظ» (تعديل مورد) يُفعَّل عند وجود تغيير فقط؛ البصمة تُؤخذ عند تحميل/حفظ السجل.
+    private string _baseline = string.Empty;
+    private string CurrentFingerprint() => FormFingerprint.Of(model, registrationDate);
+    private bool IsDirty => CurrentFingerprint() != _baseline;
 
     private long? selectedCountryId;
     private long? selectedAreaId;
@@ -273,6 +280,7 @@
     {
         await Task.Run(() =>
         {
+            AccountCultureGuard.EnsureInvariant();
             operations? gopp = null;
             var groupsDt = new GroupsCLS().Get_Customer_Supplier_Group(ref gopp!, Common.Supplier_Account_Type);
             groups = groupsDt.Rows.Cast<DataRow>()
@@ -308,6 +316,7 @@
         isLoadingList = true;
         await Task.Run(() =>
         {
+            AccountCultureGuard.EnsureInvariant();
             var opp = new operations();
             allSuppliers = new SupplierCLS().Get_SupplierVMByActive(ref opp, 1);
         });
@@ -340,6 +349,7 @@
     {
         await Task.Run(() =>
         {
+            AccountCultureGuard.EnsureInvariant();
             var opp = new operations();
             var cls = new SupplierCLS();
             cls.Get_SupplierById(ref opp, id);
@@ -352,12 +362,14 @@
         selectedGovernId = model.Govern_ListId > 0 ? model.Govern_ListId : null;
 
         await ReloadCascadeListsAsync();
+        _baseline = CurrentFingerprint();
     }
 
     private async Task ReloadCascadeListsAsync()
     {
         await Task.Run(() =>
         {
+            AccountCultureGuard.EnsureInvariant();
             var opp = new operations();
             areas = selectedCountryId is > 0
                 ? new Govern_AreaCLS().Get_Govern_Area(ref opp, selectedCountryId.Value)
@@ -461,6 +473,7 @@
         bool duplicate = false;
         await Task.Run(() =>
         {
+            AccountCultureGuard.EnsureInvariant();
             var opp = new operations();
             duplicate = new SupplierCLS().IsFoundName(ref opp, model.Name, isNew ? 0 : model.Id);
         });
@@ -495,6 +508,7 @@
 
             await Task.Run(() =>
             {
+                AccountCultureGuard.EnsureInvariant();
                 new SupplierCLS().AddNewSupplier(ref excp, ref msg, model, false);
             });
 
@@ -545,6 +559,7 @@
 
             await Task.Run(() =>
             {
+                AccountCultureGuard.EnsureInvariant();
                 new SupplierCLS().UpdateSupplier(ref excp, ref msg, model, 0, false);
             });
 
@@ -595,6 +610,7 @@
         {
             await Task.Run(() =>
             {
+                AccountCultureGuard.EnsureInvariant();
                 var opp = new operations();
                 new SupplierCLS().DeleteSupplier(ref opp, ref excp, ref msg, model.Id);
             });

@@ -1,0 +1,227 @@
+@page "/main-data/external-draws"
+
+@* 🟢 النسخة Blazor من Accounts.Work_Out.Draws_ListFRM2 (WinForms) - عنصر القائمة «رسمات التشغيل الخارجى»
+   (SysConfigMenus 392). الشاشة الأصلية: جدول (الكود، الاسم، السعر) + نموذج جانبى (الاسم والسعر) بأزرار جديد/إضافة-تعديل/حذف،
+   عبر AccountModelsLib.Services.DrawsServiceCls (نفس الخدمة بلا تعديل): GetAllAsync / AddAsync / UpdateAsync / DeleteAsync.
+   العنوان «{Rasamat_Title} - قائمة أسعار الرسمات» كما فى الأصل. زر الطباعة (Draws_ListPrint، تقرير RDLC) لم يُنقَل:
+   لا توجد تقارير طباعة فى واجهة Razor بعد (مؤجَّلة بقرار المستخدم). *@
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountModelsLib.Services
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@PageHeading</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@PageHeading</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="NewDraw" Disabled="@_isSaving">
+                @Tr("NewButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudGrid Spacing="3">
+        <MudItem xs="12" md="5">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudStack Spacing="3">
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">@(_selectedId == 0 ? Tr("DrawNewHeading") : Tr("DrawEditHeading"))</MudText>
+                    <MudTextField T="string" @bind-Value="_name" Label="@Tr("DrawNameColumn")" Variant="Variant.Outlined" Immediate="true" Disabled="@_isSaving" />
+                    <MudNumericField T="decimal" @bind-Value="_price" Label="@Tr("PriceColumn")" Variant="Variant.Outlined" Min="0" Format="N2" Disabled="@_isSaving" />
+                    <MudStack Row="true" Spacing="2">
+                        <MudButton Variant="Variant.Filled" Color="@(_selectedId == 0 ? Color.Success : Color.Warning)" OnClick="SaveAsync"
+                                   Disabled="@(_isSaving || !CanSave)">
+                            @if (_isSaving)
+                            {
+                                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+                            }
+                            @(_selectedId == 0 ? Tr("DrawAddButton") : Tr("DrawEditButton"))
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="DeleteAsync"
+                                   Disabled="@(_isSaving || _selectedId == 0)">
+                            @Tr("Delete")
+                        </MudButton>
+                    </MudStack>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="7">
+            <MudTable T="Draws_List" Items="@_draws" Hover="true" Bordered="true" Loading="@_isLoading" Elevation="1" Breakpoint="Breakpoint.None"
+                      OnRowClick="OnRowClick" RowClassFunc="RowClass">
+                <HeaderContent>
+                    <MudTh>@Tr("CodeColumn")</MudTh>
+                    <MudTh>@Tr("DrawNameColumn")</MudTh>
+                    <MudTh Style="text-align:end;">@Tr("PriceColumn")</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Id</MudTd>
+                    <MudTd>@context.Draw_Name</MudTd>
+                    <MudTd Style="text-align:end;">@context.Price.ToString("N2", CultureInfo.InvariantCulture)</MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private List<Draws_List> _draws = new();
+    private bool _isLoading = true;
+    private bool _isSaving;
+    private string _errorMessage = string.Empty;
+
+    private long _selectedId;
+    private string _name = string.Empty;
+    private decimal _price;
+    // قاعدة الحفظ: فى وضع التعديل يُفعَّل الزر بعد تغيير الاسم/السعر فقط؛ وفى الإضافة عند إدخال اسم.
+    private string _baseline = string.Empty;
+
+    private string PageHeading => $"{AccountModelsLib.Common.Rasamat_Title} - {Tr("DrawsListSuffix")}";
+    private string CurrentFingerprint() => FormFingerprint.Of(_name?.Trim(), _price);
+    private bool CanSave => !string.IsNullOrWhiteSpace(_name) && (_selectedId == 0 || CurrentFingerprint() != _baseline);
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            AccountCultureGuard.EnsureInvariant();
+            _draws = await new DrawsServiceCls().GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+        NewDraw();
+    }
+
+    // يقابل btnNew_Click/ResetFormState.
+    private void NewDraw()
+    {
+        _selectedId = 0;
+        _name = string.Empty;
+        _price = 0;
+        _baseline = CurrentFingerprint();
+    }
+
+    private string RowClass(Draws_List row, int index) => row.Id == _selectedId ? "mud-selected-item" : string.Empty;
+
+    // يقابل dgvItems_SelectionChanged: تحميل الصف المحدد فى النموذج.
+    private void OnRowClick(TableRowClickEventArgs<Draws_List> args)
+    {
+        var row = args.Item;
+        if (row is null) return;
+        _errorMessage = string.Empty;
+        _selectedId = row.Id;
+        _name = row.Draw_Name;
+        _price = row.Price;
+        _baseline = CurrentFingerprint();
+    }
+
+    // يقابل btnSave_Click: الاسم مطلوب والسعر >= 0؛ إضافة لو لا تحديد وإلا تعديل.
+    private async Task SaveAsync()
+    {
+        _errorMessage = string.Empty;
+        if (string.IsNullOrWhiteSpace(_name)) { _errorMessage = Tr("DrawNameRequired"); return; }
+        if (_price < 0) { _errorMessage = Tr("DrawPriceInvalid"); return; }
+
+        _isSaving = true;
+        try
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var service = new DrawsServiceCls();
+            if (_selectedId == 0)
+            {
+                await service.AddAsync(_name.Trim(), _price);
+                Snackbar.Add(Tr("DrawAdded"), Severity.Success);
+            }
+            else
+            {
+                await service.UpdateAsync(_selectedId, _name.Trim(), _price);
+                Snackbar.Add(Tr("DrawSaved"), Severity.Success);
+            }
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (_selectedId == 0) return;
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(Tr("DrawDeleteTitle"), Tr("DrawDeleteConfirm", _name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+        if (confirmed != true) return;
+
+        _isSaving = true;
+        _errorMessage = string.Empty;
+        try
+        {
+            AccountCultureGuard.EnsureInvariant();
+            await new DrawsServiceCls().DeleteAsync(_selectedId);
+            Snackbar.Add(Tr("DrawDeleted"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

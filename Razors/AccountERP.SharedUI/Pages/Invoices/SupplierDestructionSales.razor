@@ -1,0 +1,394 @@
+@* 🟢 يقابل Accounts.DestructionSales.Suppliers_DestructionFrm (menuItemDestructionSales "مبيعات دشت لمورد"): تسجيل مبيعات الدشت
+   (الهالك) على حساب مورد - كمية × سعر = إجمالى، بتاريخ وملاحظات. كل الحفظ/التعديل/الحذف يمر حرفياً عبر AccountModelsLib.sup_quantity
+   (Save_Suppliers_Destruction / Edit_Suppliers_Destruction / delete_sub) - نفس المعاملة الأصلية: صف suppliers_Destruction + حركة حساب المورد
+   (Set_Supplier_Balance_Make_Destruction) + قيد اليومية (Make_EntryFor_Suppliers_Destruction) بتراجع كامل عند أى فشل. قائمة السجلات بنفس
+   استعلام الأصل (المورد + من/إلى تاريخ، مرتّبة بالتاريخ) وإجمالى الكمية/القيمة.
+   فروق شكلية فقط: النقر على صف يحمّله للتعديل (الأصل: نقر مزدوج)، والحذف بحوار تأكيد. الطباعة (ListView.Print) خارج النطاق كباقى الشاشات. *@
+@page "/accounts/sales/supplier-destruction"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("DstTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@Tr("DstTitle")</MudText>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="4">
+                <MudAutocomplete T="SupplierOption" Value="_supplier" ValueChanged="OnSupplierChangedAsync" SearchFunc="SearchSuppliersAsync"
+                                 ToStringFunc="@(s => s?.Name ?? "")" Label="@Tr("DstSupplierLabel")" Variant="Variant.Outlined"
+                                 CoerceText="false" ResetValueOnEmptyText="true" MaxItems="60" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker T="DateTime?" @bind-Date="_filterFrom" Label="@Tr("DateFromLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker T="DateTime?" @bind-Date="_filterTo" Label="@Tr("DateToLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="2" Class="d-flex align-center">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" FullWidth="true"
+                           OnClick="LoadRowsAsync" Disabled="@_isLoading">@Tr("SearchButton")</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h6" Class="mb-3">@(_editingId == null ? Tr("DstNewRecordTitle") : Tr("DstEditRecordTitle"))</MudText>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker T="DateTime?" @bind-Date="_date" Label="@Tr("DateColumn")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudNumericField T="decimal?" Value="_quantity" ValueChanged="@(v => { _quantity = v; Recompute(); })" Label="@Tr("DstQuantityLabel")"
+                                 Variant="Variant.Outlined" Immediate="true" HideSpinButtons="true" Format="0.###" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudNumericField T="decimal?" Value="_price" ValueChanged="@(v => { _price = v; Recompute(); })" Label="@Tr("DstPriceLabel")"
+                                 Variant="Variant.Outlined" Immediate="true" HideSpinButtons="true" Format="0.###" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudNumericField T="decimal" Value="_total" Label="@Tr("TotalColumn")" Variant="Variant.Outlined" ReadOnly="true"
+                                 HideSpinButtons="true" Format="N2" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" @bind-Value="_notes" Label="@Tr("NotesColumn")" Variant="Variant.Outlined" Lines="2" />
+            </MudItem>
+        </MudGrid>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">@_errorMessage</MudAlert>
+        }
+
+        <MudStack Row="true" Spacing="2" Class="mt-3">
+            @if (_editingId == null)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="AddAsync" Disabled="@_isSaving">@Tr("DstAddButton")</MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
+                           OnClick="EditAsync" Disabled="@_isSaving">@Tr("DstSaveEditButton")</MudButton>
+            }
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Clear"
+                       OnClick="NewRecord" Disabled="@_isSaving">@Tr("DstNewButton")</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                       OnClick="DeleteAsync" Disabled="@(_editingId == null || _isSaving)">@Tr("DstDeleteButton")</MudButton>
+        </MudStack>
+    </MudPaper>
+
+    <MudGrid Class="mb-4">
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("DstTotalQuantityLabel")</MudText>
+                <MudText Typo="Typo.h6">@_totalQuantity.ToString("N2")</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true" Style="background-color:var(--mud-palette-info-lighten);">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("DstTotalValueLabel")</MudText>
+                <MudText Typo="Typo.h6">@_totalValue.ToString("N2")</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudTable Items="@_rows" T="DestructionRow" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" Loading="@_isLoading"
+              RowClassFunc="@((DestructionRow row, int index) => row.Id == _editingId ? "mud-selected-item" : string.Empty)"
+              OnRowClick="@((TableRowClickEventArgs<DestructionRow> e) => LoadForEdit(e.Item))">
+        <HeaderContent>
+            <MudTh>@Tr("DateColumn")</MudTh>
+            <MudTh Style="text-align:end">@Tr("DstQuantityLabel")</MudTh>
+            <MudTh Style="text-align:end">@Tr("DstPriceLabel")</MudTh>
+            <MudTh Style="text-align:end">@Tr("TotalColumn")</MudTh>
+            <MudTh>@Tr("NotesColumn")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("DateColumn")">@context.Date.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture)</MudTd>
+            <MudTd DataLabel="@Tr("DstQuantityLabel")" Style="text-align:end;font-variant-numeric:tabular-nums">@context.Quantity.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("DstPriceLabel")" Style="text-align:end;font-variant-numeric:tabular-nums">@context.Price.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("TotalColumn")" Style="text-align:end;font-weight:600;font-variant-numeric:tabular-nums">@context.Total.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("NotesColumn")">@context.Notes</MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@(_supplier == null ? Tr("DstSelectSupplierHint") : Tr("NoRecordsFound"))</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private record SupplierOption(long Id, string Name, long SubAccountId);
+    private record DestructionRow(long Id, DateTime Date, decimal Quantity, decimal Price, decimal Total, string Notes);
+
+    private SupplierOption? _supplier;
+    private DateTime? _filterFrom = DateTime.Now.Date;
+    private DateTime? _filterTo = DateTime.Now.Date;
+
+    private long? _editingId;
+    private DateTime? _date = DateTime.Now.Date;
+    private decimal? _quantity;
+    private decimal? _price;
+    private decimal _total;
+    private string _notes = "";
+
+    private List<DestructionRow> _rows = new();
+    private decimal _totalQuantity;
+    private decimal _totalValue;
+    private bool _isLoading;
+    private bool _isSaving;
+    private string? _errorMessage;
+
+    protected override void OnInitialized() => LangService.OnLanguageChanged += OnLanguageChangedHandler;
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    // 🟢 يقابل supplier_List1.Supplier_Data(): الموردون النشطون مع SubAccount_Id (يلزم لحفظ السجل).
+    private async Task<IEnumerable<SupplierOption>> SearchSuppliersAsync(string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return new operations().return_DataTable("SELECT Id, Name, SubAccount_Id FROM Supplier WHERE Active = 1 ORDER BY Name");
+        }, ct);
+        var list = new List<SupplierOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["Name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add(new SupplierOption(Convert.ToInt64(r["Id"]), name, r["SubAccount_Id"] == DBNull.Value ? 0 : Convert.ToInt64(r["SubAccount_Id"])));
+            }
+        }
+        return list.Take(60);
+    }
+
+    // يقابل cmbSupplierName_SelectedIndexChanged: اختيار المورد يعيد تحميل قائمته.
+    private async Task OnSupplierChangedAsync(SupplierOption? supplier)
+    {
+        _supplier = supplier;
+        NewRecord();
+        await LoadRowsAsync();
+    }
+
+    // يقابل Fill_plist_suppliers_qu بنفس الاستعلام: مورد + من/إلى تاريخ مرتّبة بالتاريخ.
+    private async Task LoadRowsAsync()
+    {
+        _errorMessage = null;
+        if (_supplier == null)
+        {
+            _rows = new();
+            _totalQuantity = _totalValue = 0;
+            return;
+        }
+
+        _isLoading = true;
+        StateHasChanged();
+        var supplierId = _supplier.Id;
+        var from = (_filterFrom ?? DateTime.Now.Date).Date;
+        var to = (_filterTo ?? DateTime.Now.Date).Date;
+        try
+        {
+            var dt = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var sql = "SELECT * FROM suppliers_Destruction where supplier_id=" + supplierId +
+                          " and dt_date >= '" + operations.dateFormat(from) + "' and dt_date <= '" + operations.dateFormat(to) + "' Order By dt_date";
+                return new operations().return_DataTable(sql);
+            });
+
+            var rows = new List<DestructionRow>();
+            decimal totalQty = 0, totalValue = 0;
+            foreach (DataRow r in dt.Rows)
+            {
+                var qty = Convert.ToDecimal(r["quantity"], CultureInfo.InvariantCulture);
+                var total = Convert.ToDecimal(r["total"], CultureInfo.InvariantCulture);
+                totalQty += qty;
+                totalValue += total;
+                rows.Add(new DestructionRow(Convert.ToInt64(r["id"]), Convert.ToDateTime(r["dt_date"]), qty,
+                    Convert.ToDecimal(r["price"], CultureInfo.InvariantCulture), total, r["Notes"]?.ToString() ?? ""));
+            }
+            _rows = rows;
+            _totalQuantity = totalQty;
+            _totalValue = totalValue;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    // يقابل computetotal: الإجمالى = RoundMe(الكمية × السعر).
+    private void Recompute()
+    {
+        _total = Common.RoundMe((_quantity ?? 0) * (_price ?? 0));
+    }
+
+    private void NewRecord()
+    {
+        _editingId = null;
+        _quantity = null;
+        _price = null;
+        _notes = "";
+        _date = DateTime.Now.Date;
+        _total = 0;
+        _errorMessage = null;
+    }
+
+    // يقابل lv_suppliers_MouseDoubleClick: تحميل السجل للتعديل.
+    private void LoadForEdit(DestructionRow row)
+    {
+        _editingId = row.Id;
+        _quantity = row.Quantity;
+        _price = row.Price;
+        _total = row.Total;
+        _notes = row.Notes;
+        _date = row.Date;
+        _errorMessage = null;
+    }
+
+    private bool Validate()
+    {
+        _errorMessage = null;
+        if (_supplier == null) { _errorMessage = Tr("DstSelectSupplierHint"); return false; }
+        if (_price == null) { _errorMessage = Tr("DstPriceRequired"); return false; }
+        if (_quantity == null) { _errorMessage = Tr("DstQuantityRequired"); return false; }
+        return true;
+    }
+
+    private async Task AddAsync()
+    {
+        if (!Validate()) return;
+        _isSaving = true;
+        var supplier = _supplier!;
+        var qty = _quantity!.Value;
+        var price = _price!.Value;
+        var total = _total;
+        var date = _date ?? DateTime.Now.Date;
+        var notes = _notes ?? "";
+        try
+        {
+            var (excp, msg) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var excp = 0;
+                var msg = "";
+                new sup_quantity().Save_Suppliers_Destruction(ref excp, ref msg, qty, price, total, date, supplier.Id, supplier.SubAccountId, notes);
+                return (excp, msg);
+            });
+            Snackbar.Add(msg, excp == 0 ? Severity.Success : Severity.Error);
+            if (excp == 0)
+            {
+                NewRecord();
+                await LoadRowsAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task EditAsync()
+    {
+        if (!Validate() || _editingId == null) return;
+        _isSaving = true;
+        var id = _editingId.Value;
+        var supplier = _supplier!;
+        var qty = _quantity!.Value;
+        var price = _price!.Value;
+        var total = _total;
+        var date = _date ?? DateTime.Now.Date;
+        var notes = _notes ?? "";
+        try
+        {
+            var (excp, msg) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var excp = 0;
+                var msg = "";
+                new sup_quantity().Edit_Suppliers_Destruction(ref excp, ref msg, id, qty, price, total, date, supplier.Id, notes);
+                return (excp, msg);
+            });
+            Snackbar.Add(msg, excp == 0 ? Severity.Success : Severity.Error);
+            await LoadRowsAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (_editingId == null || _supplier == null) return;
+        var confirmed = await DialogService.ShowMessageBoxAsync(Tr("DstDeleteButton"), Tr("DstDeleteConfirm"),
+            yesText: Tr("DstDeleteButton"), cancelText: Tr("Cancel"));
+        if (confirmed != true) return;
+
+        _isSaving = true;
+        var id = _editingId.Value;
+        var row = _rows.FirstOrDefault(r => r.Id == _editingId);
+        var total = row?.Total ?? _total;
+        var supplierId = _supplier.Id;
+        try
+        {
+            var (excp, msg) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var excp = 0;
+                var msg = "";
+                new sup_quantity().delete_sub(ref excp, ref msg, id, total, supplierId);
+                return (excp, msg);
+            });
+            Snackbar.Add(msg, excp == 0 ? Severity.Success : Severity.Error);
+            NewRecord();
+            await LoadRowsAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

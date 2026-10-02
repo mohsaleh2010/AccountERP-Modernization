@@ -1,0 +1,22 @@
+@page "/main-data/countries"
+
+@* 🟢 عنصر القائمة «CountriesList» (SysConfigMenus 836) - صفحة رفيعة تعرض المكوّن المشترك GeoLevelList بمستوى Country. *@
+
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+
+<PageTitle>@Title</PageTitle>
+
+<GeoLevelList Level="GeoLevelList.GeoLevel.Country" />
+
+@code {
+    private string Title
+    {
+        get
+        {
+            var previous = System.Globalization.CultureInfo.CurrentUICulture;
+            try { System.Globalization.CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang["GeoCountriesTitle"]; }
+            finally { System.Globalization.CultureInfo.CurrentUICulture = previous; }
+        }
+    }
+}

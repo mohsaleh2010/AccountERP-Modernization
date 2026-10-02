@@ -1,0 +1,274 @@
+@* 🟢 يقابل Accounts.Receve_Talabia (menuItemTalabia "تسجيل الطلبيات"): ملاحظات/طلبيات نصية لكل عميل (وصف + تاريخ) فى جدول
+   Customer_Receive. كل القراءة/الكتابة عبر AccountModelsLib.Receive_TalabiaCLS كما هى (Get_Talabia / save / delete): عرض سجلات عميل فى فترة،
+   إضافة سجل بوصف وتاريخ، حذف السجل المحدد.
+
+   ما تغيّر عن الأصل ولماذا:
+   - الأصل يدمج الوصف فى SQL بلا تهريب (فاصلة عليا تكسر الحفظ)؛ نُهرِّب ' → '' هنا قبل تمريره للـCLS (بلا تعديل عليها).
+   - الـCLS كانت تأخذ رقم العميل ورقم السجل int بينما العمودان bigint (سجلات جديدة/4 عملاء أرقامهم أكبر من int)؛ وُسِّعت save/delete إلى long
+     بموافقة المستخدم فلا حاجة لأى قطع هنا.
+   - تواريخ الفترة الافتراضية آخر 12 شهراً (الأصل: تاريخ مصمِّم ثابت 2017). الطباعة (ListView.Print) خارج النطاق. *@
+@page "/accounts/sales/customer-order-notes"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("OrdNotesTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@Tr("OrdNotesTitle")</MudText>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="4">
+                <MudAutocomplete T="LookupOption" Value="_customer" ValueChanged="OnCustomerChangedAsync" SearchFunc="SearchCustomersAsync"
+                                 ToStringFunc="@(c => c?.Name ?? "")" Label="@Tr("CustomerLabel")" Variant="Variant.Outlined"
+                                 CoerceText="false" ResetValueOnEmptyText="true" MaxItems="50" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker T="DateTime?" @bind-Date="_filterFrom" Label="@Tr("DateFromLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker T="DateTime?" @bind-Date="_filterTo" Label="@Tr("DateToLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="2" Class="d-flex align-center">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" FullWidth="true"
+                           OnClick="LoadRowsAsync" Disabled="@_isLoading">@Tr("SearchButton")</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h6" Class="mb-3">@Tr("OrdNotesNewTitle")</MudText>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="4" md="3">
+                <MudDatePicker T="DateTime?" @bind-Date="_date" Label="@Tr("DateColumn")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="8" md="9">
+                <MudTextField T="string" @bind-Value="_description" Label="@Tr("OrdNotesDescriptionLabel")" Variant="Variant.Outlined" Lines="2" />
+            </MudItem>
+        </MudGrid>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">@_errorMessage</MudAlert>
+        }
+
+        <MudStack Row="true" Spacing="2" Class="mt-3">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
+                       OnClick="SaveAsync" Disabled="@_isSaving">@Tr("OrdNotesSaveButton")</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Clear"
+                       OnClick="NewNote" Disabled="@_isSaving">@Tr("DstNewButton")</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                       OnClick="DeleteAsync" Disabled="@(_selectedId == null || _isSaving)">@Tr("DstDeleteButton")</MudButton>
+        </MudStack>
+    </MudPaper>
+
+    <MudTable Items="@_rows" T="NoteRow" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" Loading="@_isLoading"
+              RowClassFunc="@((NoteRow row, int index) => row.Id == _selectedId ? "mud-selected-item" : string.Empty)"
+              OnRowClick="@((TableRowClickEventArgs<NoteRow> e) => _selectedId = e.Item.Id)">
+        <HeaderContent>
+            <MudTh>@Tr("DateColumn")</MudTh>
+            <MudTh>@Tr("OrdNotesDescriptionLabel")</MudTh>
+            <MudTh>@Tr("CustomerLabel")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("DateColumn")">@context.Date.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture)</MudTd>
+            <MudTd DataLabel="@Tr("OrdNotesDescriptionLabel")">@context.Description</MudTd>
+            <MudTd DataLabel="@Tr("CustomerLabel")">@context.Customer</MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@(_customer == null ? Tr("OrdNotesSelectCustomerHint") : Tr("NoRecordsFound"))</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private record LookupOption(long Id, string Name);
+    private record NoteRow(long Id, DateTime Date, string Description, string Customer);
+
+    private readonly CustomerCLS _customerCls = new();
+
+    private LookupOption? _customer;
+    private DateTime? _filterFrom = DateTime.Now.Date.AddYears(-1);
+    private DateTime? _filterTo = DateTime.Now.Date;
+    private DateTime? _date = DateTime.Now.Date;
+    private string _description = "";
+
+    private List<NoteRow> _rows = new();
+    private long? _selectedId;
+    private bool _isLoading;
+    private bool _isSaving;
+    private string? _errorMessage;
+
+    protected override void OnInitialized() => LangService.OnLanguageChanged += OnLanguageChangedHandler;
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task<IEnumerable<LookupOption>> SearchCustomersAsync(string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _customerCls.Get_CustomerSupplierListForStatement(0, 0, -1, -1);
+        }, ct);
+        var list = new List<LookupOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["Name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add(new LookupOption(Convert.ToInt64(r["Id"]), name));
+            }
+        }
+        return list.Take(50);
+    }
+
+    // يقابل cmbCustomerName_SelectedIndexChanged → fill_plv_customers.
+    private async Task OnCustomerChangedAsync(LookupOption? customer)
+    {
+        _customer = customer;
+        await LoadRowsAsync();
+    }
+
+    private async Task LoadRowsAsync()
+    {
+        _errorMessage = null;
+        _selectedId = null;
+        if (_customer == null)
+        {
+            _rows = new();
+            return;
+        }
+
+        _isLoading = true;
+        StateHasChanged();
+        var customerId = _customer.Id;
+        var from = (_filterFrom ?? DateTime.Now.Date).Date;
+        var to = (_filterTo ?? DateTime.Now.Date).Date.AddDays(1).AddSeconds(-1);
+        try
+        {
+            var ds = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return new Receive_TalabiaCLS().Get_Talabia(customerId, from, to);
+            });
+
+            var rows = new List<NoteRow>();
+            foreach (DataRow r in ds.Tables[0].Rows)
+            {
+                rows.Add(new NoteRow(Convert.ToInt64(r["id"]), Convert.ToDateTime(r["dt_date"]), r["descreption"]?.ToString() ?? "", r["name"]?.ToString() ?? ""));
+            }
+            _rows = rows;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    // «جديد»: تفريغ الوصف والتاريخ وإلغاء تحديد السجل للبدء بملاحظة جديدة.
+    private void NewNote()
+    {
+        _description = "";
+        _date = DateTime.Now.Date;
+        _selectedId = null;
+        _errorMessage = null;
+    }
+
+    // يقابل Btn_Save_Click.
+    private async Task SaveAsync()
+    {
+        _errorMessage = null;
+        if (_customer == null) { _errorMessage = Tr("OrdNotesSelectCustomerHint"); return; }
+
+        _isSaving = true;
+        var customerId = _customer.Id;
+        var description = (_description ?? "").Replace("'", "''");
+        var date = _date ?? DateTime.Now.Date;
+        try
+        {
+            var (excp, msg) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var excp = 0;
+                var msg = "";
+                new Receive_TalabiaCLS().save(ref excp, ref msg, customerId, description, operations.dateFormat(date));
+                return (excp, msg);
+            });
+            Snackbar.Add(msg, excp == 0 ? Severity.Success : Severity.Error);
+            _description = "";
+            _date = DateTime.Now.Date;
+            await LoadRowsAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    // يقابل Btn_Delete_Click (مع حوار تأكيد).
+    private async Task DeleteAsync()
+    {
+        if (_selectedId == null) return;
+
+        var confirmed = await DialogService.ShowMessageBoxAsync(Tr("DstDeleteButton"), Tr("DstDeleteConfirm"),
+            yesText: Tr("DstDeleteButton"), cancelText: Tr("Cancel"));
+        if (confirmed != true) return;
+
+        _isSaving = true;
+        var id = _selectedId.Value;
+        try
+        {
+            var (excp, msg) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var excp = 0;
+                var msg = "";
+                new Receive_TalabiaCLS().delete(ref excp, ref msg, id);
+                return (excp, msg);
+            });
+            Snackbar.Add(msg, excp == 0 ? Severity.Success : Severity.Error);
+            await LoadRowsAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

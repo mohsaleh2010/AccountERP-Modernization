@@ -1,0 +1,380 @@
+@* 🟢 يقابل Accounts.PurchaseReports(3) (قائمة 903 «بيان المشتريات»): عرض بيانات فقط بلا طباعة/معاينة/إعدادات طباعة (قرار المستخدم).
+   الاستعلامان حرفياً عبر AccountModelsLib.BusinessLibShared.Store.PurchaseItemsReportCLS (نسخة قراءة من Store_LIB.SalesReportsCLS(3).GetPurchaseDetails / GetPurchaseSumDetails):
+   المورد (0 = الكل)، فئة الصنف (الكل = -1) ثم الصنف (الكل = 0)، رقم الفاتورة، من/إلى تاريخ (كلٌّ بمربع تفعيل)، نقدى/آجل (يظهران بصلاحية القائمة 902 فقط كالأصل)،
+   ومربع «بيان بإجمالى المشتريات» الذى يحوّل النتيجة إلى إجماليات لكل (صنف، مورد) بالفترة مع حد أدنى للإجمالى (الأصل يطبّق التاريخين دائماً فى هذا الوضع).
+   فتح الفاتورة = صفحة الفاتورة بمعرّف السجل. الاختلاف الوحيد عن الأصل: عمود رقم الفاتورة يعرض رقمها الفعلى Bills_List.Invoice_Id لا معرّف السجل الداخلى. *@
+@page "/accounts/invoices/purchase-items-report"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountModelsLib.BusinessLibShared.Store
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@_title</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@_title</MudText>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="3">
+                <MudAutocomplete T="SupplierOption" @bind-Value="_supplier" SearchFunc="SearchSuppliersAsync" ToStringFunc="@(c => c?.Name ?? "")"
+                                 Label="@Tr("SupplierLabel")" Placeholder="@Tr("AllSuppliers")" Variant="Variant.Outlined"
+                                 Clearable="true" CoerceText="false" ResetValueOnEmptyText="true" MaxItems="50" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="long" Value="_categoryId" ValueChanged="OnCategoryChangedAsync" Label="@Tr("ItemCategoryLabel")" Variant="Variant.Outlined">
+                    <MudSelectItem T="long" Value="-1L">@Tr("AllCategoriesOption")</MudSelectItem>
+                    @foreach (var c in _categories)
+                    {
+                        <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudAutocomplete T="ItemOption" @bind-Value="_item" SearchFunc="SearchItems" ToStringFunc="@(i => i?.Name ?? "")"
+                                 Label="@Tr("ItemLabel")" Placeholder="@Tr("AllItemsOption")" Variant="Variant.Outlined"
+                                 Clearable="true" CoerceText="false" ResetValueOnEmptyText="true" MaxItems="50" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudNumericField T="long?" @bind-Value="_invoiceNo" Label="@Tr("InvoiceNoLabel")" Variant="Variant.Outlined" HideSpinButtons="true"
+                                 Immediate="true" Format="0" Disabled="@_totalsMode" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudCheckBox T="bool" @bind-Value="_useFrom" Dense="true" Size="Size.Small" Disabled="@_totalsMode" />
+                    <MudDatePicker T="DateTime?" @bind-Date="_dateFrom" Label="@Tr("DateFromLabel")" Variant="Variant.Outlined" Disabled="@(!_useFrom && !_totalsMode)" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudCheckBox T="bool" @bind-Value="_useTo" Dense="true" Size="Size.Small" Disabled="@_totalsMode" />
+                    <MudDatePicker T="DateTime?" @bind-Date="_dateTo" Label="@Tr("DateToLabel")" Variant="Variant.Outlined" Disabled="@(!_useTo && !_totalsMode)" />
+                </MudStack>
+            </MudItem>
+            @if (_canFilterKind)
+            {
+                <MudItem xs="12" sm="6" md="3">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudCheckBox T="bool" @bind-Value="_cash" Label="@Tr("CashOnlyLabel")" Dense="true" />
+                        <MudCheckBox T="bool" @bind-Value="_credit" Label="@Tr("CreditOnlyLabel")" Dense="true" />
+                    </MudStack>
+                </MudItem>
+            }
+            <MudItem xs="12" sm="6" md="3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudCheckBox T="bool" @bind-Value="_totalsMode" Label="@Tr("TotalsModeLabel")" Dense="true" />
+                    @if (_totalsMode)
+                    {
+                        <MudNumericField T="decimal" @bind-Value="_minTotal" Label="@Tr("MinTotalValueLabel")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                         HideSpinButtons="true" Immediate="true" Format="0.##" />
+                    }
+                </MudStack>
+            </MudItem>
+        </MudGrid>
+
+        <MudStack Row="true" Spacing="2" Class="mt-3">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="SearchAsync" Disabled="@_isLoading">
+                @Tr("SearchButton")
+            </MudButton>
+            @if (!_totalsShown)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.OpenInNew"
+                           OnClick="OpenSelected" Disabled="@(_selectedListId == null)">
+                    @Tr("ShowInvoiceButton")
+                </MudButton>
+            }
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudGrid Class="mb-4">
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("RecordsCountLabel")</MudText>
+                <MudText Typo="Typo.h6">@_rows.Count</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-3 text-center" Elevation="0" Outlined="true" Style="background-color:var(--mud-palette-info-lighten);">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("RowsTotalValueLabel")</MudText>
+                <MudText Typo="Typo.h6">@_valueSum.ToString("N2")</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    @* لا <MudTr> فى RowTemplate والصف المحدد يظهر بوضوح (اتفاقيات MudTable المعتمدة) *@
+    <MudTable Items="@_rows" T="ReportRow" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" Loading="@_isLoading"
+              RowClassFunc="@((ReportRow row, int index) => !_totalsShown && row.Serial == _selectedSerial ? "mud-selected-item" : string.Empty)"
+              OnRowClick="@((TableRowClickEventArgs<ReportRow> e) => SelectRow(e.Item))">
+        <HeaderContent>
+            <MudTh>@Tr("SerialColumn")</MudTh>
+            <MudTh>@Tr("SupplierLabel")</MudTh>
+            @if (!_totalsShown)
+            {
+                <MudTh>@Tr("InvoiceNoLabel")</MudTh>
+                <MudTh>@Tr("DateColumn")</MudTh>
+                <MudTh>@Tr("InvoiceKindColumn")</MudTh>
+            }
+            <MudTh>@Tr("ItemNameColumn")</MudTh>
+            <MudTh>@Tr("QuantityColumn")</MudTh>
+            @if (!_totalsShown)
+            {
+                <MudTh Style="text-align:end">@Tr("UnitPriceColumn")</MudTh>
+            }
+            <MudTh Style="text-align:end">@Tr("TotalColumn")</MudTh>
+            <MudTh Style="text-align:end">@Tr("ItemCommissionColumn")</MudTh>
+            <MudTh Style="text-align:end">@Tr("UnitCommissionColumn")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("SerialColumn")">@context.Serial</MudTd>
+            <MudTd DataLabel="@Tr("SupplierLabel")">@context.Supplier</MudTd>
+            @if (!_totalsShown)
+            {
+                <MudTd DataLabel="@Tr("InvoiceNoLabel")">@context.InvoiceNo</MudTd>
+                <MudTd DataLabel="@Tr("DateColumn")">@FormatDate(context.Date)</MudTd>
+                <MudTd DataLabel="@Tr("InvoiceKindColumn")">@(context.IsAgile ? Tr("DS_InvoiceCredit") : Tr("DS_InvoiceCash"))</MudTd>
+            }
+            <MudTd DataLabel="@Tr("ItemNameColumn")">@context.Item</MudTd>
+            <MudTd DataLabel="@Tr("QuantityColumn")">@context.Qty</MudTd>
+            @if (!_totalsShown)
+            {
+                <MudTd DataLabel="@Tr("UnitPriceColumn")" Style="text-align:end;font-variant-numeric:tabular-nums">@context.UnitPrice.ToString("N2")</MudTd>
+            }
+            <MudTd DataLabel="@Tr("TotalColumn")" Style="text-align:end;font-weight:600;font-variant-numeric:tabular-nums">@context.Value.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("ItemCommissionColumn")" Style="text-align:end;font-variant-numeric:tabular-nums">@context.ItemCommission.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("UnitCommissionColumn")" Style="text-align:end;font-variant-numeric:tabular-nums">@context.UnitCommission.ToString("N2")</MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@(_searched ? Tr("NoRecordsFound") : Tr("PressSearchHint"))</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private record SupplierOption(long Id, string Name);
+    private record CategoryOption(long Id, string Name);
+    private record ItemOption(long Id, string Name);
+    private record ReportRow(int Serial, long ListId, string Supplier, long InvoiceNo, DateTime? Date, bool IsAgile, string Item, string Qty,
+                             decimal UnitPrice, decimal Value, decimal ItemCommission, decimal UnitCommission);
+
+    private readonly SupplierCLS _supplierCls = new();
+    private readonly PurchaseItemsReportCLS _reportCls = new();
+
+    private string _title = "";
+
+    private SupplierOption? _supplier;
+    private List<CategoryOption> _categories = new();
+    private long _categoryId = -1;
+    private List<ItemOption> _items = new();
+    private ItemOption? _item;
+    private long? _invoiceNo;
+    private bool _useFrom = true;
+    private bool _useTo = true;
+    private DateTime? _dateFrom = DateTime.Now.Date;
+    private DateTime? _dateTo = DateTime.Now.Date;
+    private bool _canFilterKind;
+    private bool _cash;
+    private bool _credit;
+    private bool _totalsMode;
+    private decimal _minTotal;
+
+    private List<ReportRow> _rows = new();
+    private decimal _valueSum;
+    private bool _totalsShown;
+    private int? _selectedSerial;
+    private long? _selectedListId;
+    private bool _isLoading;
+    private bool _searched;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _title = Tr("PurchItemsReportTitle");
+
+        try
+        {
+            var (categories, canFilter) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var dt = new ItemsCardsCLS().Get_Item_Categories(1, true);
+                var list = new List<CategoryOption>();
+                foreach (DataRow r in dt.Rows)
+                    list.Add(new CategoryOption(Convert.ToInt64(r["ID"]), r["Category_Name"]?.ToString()?.Trim() ?? ""));
+                return (list, Common.IsHavePermissionSysMenu(Common.User_Id, 902, 2, -1));
+            });
+            _categories = categories;
+            _canFilterKind = canFilter;
+            await LoadItemsAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    private void OnLanguageChangedHandler()
+    {
+        _title = Tr("PurchItemsReportTitle");
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task LoadItemsAsync()
+    {
+        var categoryId = _categoryId;
+        _items = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var dt = _reportCls.GetItems(categoryId);
+            var list = new List<ItemOption>();
+            foreach (DataRow r in dt.Rows)
+                list.Add(new ItemOption(Convert.ToInt64(r["Id"]), r["Item_Name"]?.ToString()?.Trim() ?? ""));
+            return list;
+        });
+        _item = null;
+    }
+
+    private async Task OnCategoryChangedAsync(long categoryId)
+    {
+        _categoryId = categoryId;
+        try { await LoadItemsAsync(); }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+    }
+
+    private Task<IEnumerable<ItemOption>> SearchItems(string search, CancellationToken ct)
+    {
+        IEnumerable<ItemOption> found = string.IsNullOrWhiteSpace(search)
+            ? _items
+            : _items.Where(i => i.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(found.Take(50));
+    }
+
+    private async Task<IEnumerable<SupplierOption>> SearchSuppliersAsync(string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _supplierCls.Get_SupplierListForStatement(0, 0, 0, true);
+        }, ct);
+        var list = new List<SupplierOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["Name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+                list.Add(new SupplierOption(Convert.ToInt64(r["Id"]), name));
+        }
+        return list.Take(50);
+    }
+
+    private async Task SearchAsync()
+    {
+        _errorMessage = null;
+        _isLoading = true;
+        _selectedSerial = null;
+        _selectedListId = null;
+        StateHasChanged();
+
+        var supplierId = _supplier?.Id ?? 0;
+        var itemId = _item?.Id ?? 0;
+        var invoiceNo = _invoiceNo ?? 0;
+        var totals = _totalsMode;
+        var from = _dateFrom ?? DateTime.Now.Date;
+        var to = _dateTo ?? DateTime.Now.Date;
+        var useFrom = _useFrom;
+        var useTo = _useTo;
+        var minTotal = _minTotal;
+        // نقدى/آجل: كلاهما أو لا شىء = الكل (-1)، وإلا 0 نقدى / 1 آجل (كما فى الأصل).
+        var agile = (_cash == _credit) ? -1 : _cash ? 0 : 1;
+
+        try
+        {
+            var rows = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var dt = totals
+                    ? _reportCls.GetSums(supplierId, from, to, itemId, minTotal, agile)
+                    : _reportCls.GetDetails(supplierId, useFrom, from, useTo, to, itemId, invoiceNo, agile);
+
+                var list = new List<ReportRow>();
+                var serial = 0;
+                foreach (DataRow r in dt.Rows)
+                {
+                    serial++;
+                    var qty = Common.GetQntyString(Str(r, "Larg_Qnty"), Str(r, "B_Unit"), Str(r, "Small_Qnty"), Str(r, "S_unit"));
+                    list.Add(new ReportRow(
+                        serial, totals ? 0 : Lng(r, "Invoice_Id"), Str(r, "Name").Trim(), totals ? 0 : Lng(r, "Invoice_Id_No"), totals ? null : Dt(r, "Invoice_Date"),
+                        !totals && Dec(r, "Is_Invoice_Agile") == 1, Str(r, "Item_Name"), qty,
+                        totals ? 0 : Dec(r, "Larg_Unit_Price"), Dec(r, "Qnty_value"), Dec(r, "Item_CommissionValue"), Dec(r, "Unit_CommissionValue")));
+                }
+                return list;
+            });
+
+            _rows = rows;
+            _valueSum = Common.RoundMe(rows.Sum(r => r.Value));
+            _totalsShown = totals;
+            _searched = true;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private static string Str(DataRow r, string column) =>
+        r.Table.Columns.Contains(column) && r[column] != DBNull.Value ? Convert.ToString(r[column], CultureInfo.InvariantCulture) ?? "" : "";
+
+    private static decimal Dec(DataRow r, string column) =>
+        r.Table.Columns.Contains(column) && r[column] != DBNull.Value ? Convert.ToDecimal(r[column], CultureInfo.InvariantCulture) : 0;
+
+    private static long Lng(DataRow r, string column) =>
+        r.Table.Columns.Contains(column) && r[column] != DBNull.Value ? Convert.ToInt64(r[column], CultureInfo.InvariantCulture) : 0;
+
+    private static DateTime? Dt(DataRow r, string column) =>
+        r.Table.Columns.Contains(column) && r[column] != DBNull.Value ? Convert.ToDateTime(r[column]) : null;
+
+    private static string FormatDate(DateTime? d) => d?.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture) ?? "";
+
+    private void SelectRow(ReportRow row)
+    {
+        if (_totalsShown) return;
+        _selectedSerial = row.Serial;
+        _selectedListId = row.ListId;
+    }
+
+    private void OpenSelected()
+    {
+        if (_selectedListId is > 0) Nav.NavigateTo($"/accounts/invoices/purchase-invoice/{_selectedListId}");
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

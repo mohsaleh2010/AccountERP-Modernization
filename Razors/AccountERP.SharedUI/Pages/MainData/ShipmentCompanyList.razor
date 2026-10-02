@@ -77,10 +77,11 @@
             <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@addErrorMessage</MudAlert>
         }
         <MudTextField T="string" @bind-Value="newName" Label="@Tr("NameColumn")" Variant="Variant.Outlined"
-                      FullWidth="true" AutoFocus="true" Immediate="true" />
+                      FullWidth="true" AutoFocus="true" Immediate="true" @ref="_nameField" OnKeyDown="OnNameKeyDown" />
+        <MudCheckBox T="bool" @bind-Value="_addMultiple" Label="@Tr("MultipleAddLabel")" Color="Color.Primary" Class="mt-2" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => addDialogOpen = false)">@Tr("Cancel")</MudButton>
+        <MudButton OnClick="@(() => addDialogOpen = false)">@Tr("Close")</MudButton>
         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ConfirmAdd" Disabled="@isSavingAdd">
             @if (isSavingAdd)
             {
@@ -154,6 +155,27 @@
         addDialogOpen = true;
     }
 
+    // إضافة متعددة (بطلب المستخدم): عند تفعيلها يبقى الحوار مفتوحاً بعد كل إضافة ويُفرَّغ الاسم ويعود التركيز له؛ Esc يغلق الحوار؛ Enter يضيف.
+    private bool _addMultiple;
+    private bool _multipleAdded;
+    private MudTextField<string>? _nameField;
+
+    private async Task OnNameKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || isSavingAdd) return;
+        await Task.Delay(150); // يترك آخر حرف مكتوب (Immediate) يصل للخادم قبل الحفظ
+        await ConfirmAdd();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_multipleAdded && _nameField is not null)
+        {
+            _multipleAdded = false;
+            await _nameField.FocusAsync();
+        }
+    }
+
     private async Task ConfirmAdd()
     {
         if (string.IsNullOrWhiteSpace(newName))
@@ -170,7 +192,7 @@
             var service = new AccountModelsLib.Services.ShipmentCompanyEFCLS();
             await service.SaveAsync(new ShipmentCompany { Id = 0, Name = newName });
 
-            addDialogOpen = false;
+            if (_addMultiple) { newName = string.Empty; _multipleAdded = true; } else { addDialogOpen = false; }
             await LoadCompanies();
             Snackbar.Add(Tr("ShipmentCompanyAdded"), Severity.Success);
         }

@@ -1,0 +1,454 @@
+@* 🟢 "إعدادات طباعة الباركود" - النسخة Blazor من Store_LIB.PrintItemsBarCodeSettingFor_User (WinForms،
+   Store_LIB\ItemsList_Store_\BarCode\)، الشاشة الحقيقية المربوطة فعلياً بالقائمة (menuItemPrintBarCodeSetting).
+   راجع .claude/docs/barcode-print-settings-razor-plan.md للتحليل الكامل وقرارات النطاق بموافقة المستخدم
+   (2026-09-29): توليد صورة الباركود عبر ZXing.Net (Code 39، بدل إعادة كتابة الخوارزمية يدوياً)، والطباعة عبر
+   المتصفح مباشرة (window.print()) بدل حوار طباعة GDI+. الوحدات هنا كلها بالمليمتر (تصميم مكافئ وليس مطابقاً
+   حرفياً للوحدات المختلطة بكسل/مم فى الأصل - راجع قسم "المخاطر" فى ملف الخطة). حساب الشبكة (عدد الملصقات/
+   الأعمدة) أُعيد بناؤه بمنطق واضح (الكمية = عدد الملصقات فعلياً، الصفوف = تقريب لأعلى(الكمية/الأعمدة)) بدل
+   حسابات الأصل التى تبدو بها مضاعفة زائدة غير مقصودة (حلقة "for (col=0; col<=ColumnNumber; col++)" تستخدم
+   <= فتنتج عمود إضافى دائماً) - موثَّق كقرار تصميم مقصود لا كخطأ نقل. *@
+
+@page "/main-data/barcode-print-settings"
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using ZXing
+@inject LanguageService LangService
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("BarcodeSettingsTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4 no-print" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("BarcodeSettingsTitle")</MudText>
+            <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.RestartAlt" OnClick="LoadDefaultStaticAsync">@Tr("BarcodeLoadStaticDefault")</MudButton>
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.CloudDownload" OnClick="LoadSavedDefaultAsync">@Tr("BarcodeLoadSavedDefault")</MudButton>
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Save" OnClick="() => SaveAsync(asDefault: true)" Disabled="@isSaving">@Tr("BarcodeSaveAsDefault")</MudButton>
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.CloudDownload" OnClick="() => LoadSavedCurrentAsync(true)">@Tr("BarcodeLoadSaved")</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="() => SaveAsync(asDefault: false)" Disabled="@isSaving">@Tr("BarcodeSaveSettings")</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Print" OnClick="PrintAsync">@Tr("PrintButton")</MudButton>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+
+    <MudGrid Spacing="3">
+        <MudItem xs="12" md="5" Class="no-print">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudStack Spacing="3">
+                    <MudAutocomplete T="Items" Label="@Tr("BarcodeSearchItemLabel")" Value="selectedItem" ValueChanged="OnItemSelectedAsync"
+                                      SearchFunc="SearchItemsAsync" ToStringFunc="@(i => i == null ? null : $"{i.code} - {i.Item_Name}")"
+                                      Clearable="true" ResetValueOnEmptyText="true" Variant="Variant.Outlined" FullWidth="true"
+                                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+
+                    <MudTextField @bind-Value="model.Code" @bind-Value:after="OnFieldChanged" Label="@Tr("BarcodeCodeLabel")" Variant="Variant.Outlined" Immediate="true" />
+                    <MudTextField @bind-Value="model.HeaderText" @bind-Value:after="OnFieldChanged" Label="@Tr("BarcodeHeaderTextLabel")" Variant="Variant.Outlined" Immediate="true" />
+                    <MudTextField @bind-Value="model.TextUnderCode" @bind-Value:after="OnFieldChanged" Label="@Tr("BarcodeTextUnderLabel")" Variant="Variant.Outlined" Immediate="true" />
+
+                    <MudStack Row="true" Spacing="2">
+                        <MudSelect T="string" @bind-Value="model.Align" Label="@Tr("BarcodeAlignLabel")" Variant="Variant.Outlined" Dense="true">
+                            <MudSelectItem Value="@("Left")">@Tr("AlignLeft")</MudSelectItem>
+                            <MudSelectItem Value="@("Center")">@Tr("AlignCenter")</MudSelectItem>
+                            <MudSelectItem Value="@("Right")">@Tr("AlignRight")</MudSelectItem>
+                        </MudSelect>
+                        <MudSelect T="string" @bind-Value="model.Weight" @bind-Value:after="OnFieldChanged" Label="@Tr("BarcodeWeightLabel")" Variant="Variant.Outlined" Dense="true">
+                            <MudSelectItem Value="@("Small")">@Tr("WeightSmall")</MudSelectItem>
+                            <MudSelectItem Value="@("Medium")">@Tr("WeightMedium")</MudSelectItem>
+                            <MudSelectItem Value="@("Large")">@Tr("WeightLarge")</MudSelectItem>
+                        </MudSelect>
+                    </MudStack>
+
+                    <MudDivider />
+                    <MudText Typo="Typo.subtitle2">@Tr("BarcodeLabelSizeSection")</MudText>
+                    <MudStack Row="true" Spacing="2">
+                        <MudNumericField @bind-Value="model.LabelWidthMm" Label="@Tr("BarcodeLabelWidthMm")" Variant="Variant.Outlined" Min="5" />
+                        <MudNumericField @bind-Value="model.LabelHeightMm" Label="@Tr("BarcodeLabelHeightMm")" Variant="Variant.Outlined" Min="5" />
+                        <MudNumericField @bind-Value="model.BarcodeHeightMm" @bind-Value:after="OnFieldChanged" Label="@Tr("BarcodeBarHeightMm")" Variant="Variant.Outlined" Min="2" />
+                    </MudStack>
+                    <MudStack Row="true" Spacing="2">
+                        <MudNumericField @bind-Value="model.SpaceXMm" Label="@Tr("BarcodeSpaceXMm")" Variant="Variant.Outlined" Min="5" />
+                        <MudNumericField @bind-Value="model.SpaceYMm" Label="@Tr("BarcodeSpaceYMm")" Variant="Variant.Outlined" Min="5" />
+                        <MudNumericField @bind-Value="model.LeftMarginMm" Label="@Tr("BarcodeLeftMarginMm")" Variant="Variant.Outlined" Min="0" />
+                        <MudNumericField @bind-Value="model.TopMarginMm" Label="@Tr("BarcodeTopMarginMm")" Variant="Variant.Outlined" Min="0" />
+                    </MudStack>
+
+                    <MudDivider />
+                    <MudText Typo="Typo.subtitle2">@Tr("BarcodePrintQuantitySection")</MudText>
+                    <MudStack Row="true" Spacing="2">
+                        <MudNumericField @bind-Value="model.ColumnsCount" Label="@Tr("BarcodeColumnsCount")" Variant="Variant.Outlined" Min="1" Max="20" />
+                        <MudNumericField @bind-Value="model.QuantityRequired" Label="@Tr("BarcodeQuantityRequired")" Variant="Variant.Outlined" Min="1" Max="500" />
+                    </MudStack>
+
+                    <MudDivider />
+                    <MudCheckBox T="bool" @bind-Value="model.UseCustomPaperSize" Label="@Tr("BarcodeUseCustomPaperSize")" />
+                    @if (model.UseCustomPaperSize)
+                    {
+                        <MudStack Row="true" Spacing="2">
+                            <MudNumericField @bind-Value="model.PaperWidthMm" Label="@Tr("BarcodePaperWidthMm")" Variant="Variant.Outlined" Min="10" />
+                            <MudNumericField @bind-Value="model.PaperHeightMm" Label="@Tr("BarcodePaperHeightMm")" Variant="Variant.Outlined" Min="10" />
+                        </MudStack>
+                        <MudStack Row="true" Spacing="2">
+                            <MudNumericField @bind-Value="model.PaperLeftMarginMm" Label="@Tr("BarcodePaperLeftMargin")" Variant="Variant.Outlined" Min="0" />
+                            <MudNumericField @bind-Value="model.PaperTopMarginMm" Label="@Tr("BarcodePaperTopMargin")" Variant="Variant.Outlined" Min="0" />
+                            <MudNumericField @bind-Value="model.PaperRightMarginMm" Label="@Tr("BarcodePaperRightMargin")" Variant="Variant.Outlined" Min="0" />
+                            <MudNumericField @bind-Value="model.PaperBottomMarginMm" Label="@Tr("BarcodePaperBottomMargin")" Variant="Variant.Outlined" Min="0" />
+                        </MudStack>
+                    }
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="7">
+            <MudPaper Class="pa-4 no-print mb-3" Elevation="1">
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">@Tr("BarcodePreviewLabel")</MudText>
+            </MudPaper>
+            <div class="print-area">
+                <div class="barcode-page" style="@PageStyle">
+                    @for (var i = 0; i < TotalLabels; i++)
+                    {
+                        <div class="barcode-label" style="@LabelStyle">
+                            @if (model.Align == "Center")
+                            {
+                                <div class="bc-header bc-center">@model.HeaderText</div>
+                            }
+                            else if (model.Align == "Left")
+                            {
+                                <div class="bc-header bc-left">@model.HeaderText</div>
+                            }
+                            else
+                            {
+                                <div class="bc-header bc-right">@model.HeaderText</div>
+                            }
+                            @if (!string.IsNullOrEmpty(barcodeDataUri))
+                            {
+                                <img src="@barcodeDataUri" class="bc-image" alt="barcode" />
+                            }
+                            <div class="bc-footer">@model.Code</div>
+                            @if (!string.IsNullOrWhiteSpace(model.TextUnderCode))
+                            {
+                                <div class="bc-under">@model.TextUnderCode</div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+<style>
+    .barcode-label { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; border: 1px dashed #bbb; box-sizing: border-box; overflow: hidden; background: #fff; }
+    .bc-header { font-size: 11px; font-weight: 600; width: 100%; }
+    .bc-footer { font-size: 10px; width: 100%; text-align: center; }
+    .bc-under { font-size: 9px; width: 100%; text-align: center; color: #333; }
+    .bc-left { text-align: left; }
+    .bc-right { text-align: right; }
+    .bc-center { text-align: center; }
+    .bc-image { max-width: 100%; }
+    .barcode-page { display: flex; flex-wrap: wrap; }
+
+    @@media print {
+        body * { visibility: hidden; }
+        .print-area, .print-area * { visibility: visible; }
+        .print-area { position: absolute; inset-inline-start: 0; top: 0; }
+        .no-print { display: none !important; }
+        .barcode-label { border: none; }
+    }
+</style>
+
+@code {
+    private class SettingsModel
+    {
+        public long? ItemId { get; set; }
+        public string Code { get; set; } = "1AA66831";
+        public string HeaderText { get; set; } = "";
+        public string TextUnderCode { get; set; } = "";
+        public string Align { get; set; } = "Center";
+        public string Weight { get; set; } = "Small";
+        public float LabelWidthMm { get; set; } = 45f;
+        public float LabelHeightMm { get; set; } = 28f;
+        public float BarcodeHeightMm { get; set; } = 12f;
+        public float SpaceXMm { get; set; } = 50f;
+        public float SpaceYMm { get; set; } = 30f;
+        public float LeftMarginMm { get; set; } = 2f;
+        public float TopMarginMm { get; set; } = 2f;
+        public int ColumnsCount { get; set; } = 3;
+        public int QuantityRequired { get; set; } = 6;
+        public bool UseCustomPaperSize { get; set; } = false;
+        public float PaperWidthMm { get; set; } = 210f;
+        public float PaperHeightMm { get; set; } = 297f;
+        public float PaperLeftMarginMm { get; set; } = 5f;
+        public float PaperTopMarginMm { get; set; } = 5f;
+        public float PaperRightMarginMm { get; set; } = 5f;
+        public float PaperBottomMarginMm { get; set; } = 5f;
+    }
+
+    private SettingsModel model = new();
+    private Items? selectedItem;
+    private List<Items> allItems = new();
+    private string barcodeDataUri = string.Empty;
+    private bool isSaving;
+
+    private int TotalLabels => Math.Max(1, Math.Min(model.QuantityRequired, 300));
+
+    private string PageStyle => $"gap:{model.SpaceYMm - model.LabelHeightMm}mm {model.SpaceXMm - model.LabelWidthMm}mm; width:{model.ColumnsCount * model.SpaceXMm}mm;";
+
+    private string LabelStyle => $"width:{model.LabelWidthMm}mm; height:{model.LabelHeightMm}mm; padding-inline-start:{model.LeftMarginMm}mm; padding-top:{model.TopMarginMm}mm;";
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var opp = new operations();
+            allItems = new ItemCLS().GetAllOnlyItems(ref opp, "", 0);
+        });
+        await LoadSavedCurrentAsync(showMessage: false);
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+
+    private Task<IEnumerable<Items>> SearchItemsAsync(string value, System.Threading.CancellationToken token)
+    {
+        IEnumerable<Items> result = string.IsNullOrWhiteSpace(value)
+            ? allItems.Take(30)
+            : allItems.Where(i => (!string.IsNullOrEmpty(i.Item_Name) && i.Item_Name.Contains(value, StringComparison.OrdinalIgnoreCase))
+                                   || (!string.IsNullOrEmpty(i.code) && i.code.Contains(value, StringComparison.OrdinalIgnoreCase))).Take(30);
+        return Task.FromResult(result);
+    }
+
+    private Task OnItemSelectedAsync(Items? item)
+    {
+        selectedItem = item;
+        if (item != null)
+        {
+            model.ItemId = item.Id;
+            model.Code = item.code ?? "";
+            model.HeaderText = item.Item_Name ?? "";
+        }
+        GenerateBarcode();
+        return Task.CompletedTask;
+    }
+
+    private void OnFieldChanged() => GenerateBarcode();
+
+    private int WeightToPixelWidth() => model.Weight switch
+    {
+        "Large" => 520,
+        "Medium" => 420,
+        _ => 320,
+    };
+
+    private void GenerateBarcode()
+    {
+        try
+        {
+            var heightPx = (int)(model.BarcodeHeightMm * 8);
+            barcodeDataUri = BarcodeImageService.GeneratePngDataUri(model.Code, BarcodeFormat.CODE_39, WeightToPixelWidth(), Math.Max(heightPx, 20));
+        }
+        catch
+        {
+            barcodeDataUri = string.Empty;
+        }
+        StateHasChanged();
+    }
+
+    private async Task PrintAsync() => await JS.InvokeVoidAsync("window.print");
+
+    private void ApplyFrom(Item_BarCodeSetting row)
+    {
+        model.HeaderText = row.FontHeader is null ? model.HeaderText : model.HeaderText; // FontHeader = وصف الخط لا نص الهيدر، يبقى كما هو
+        model.Align = row.Center switch { "Left" => "Left", "Right" => "Right", _ => "Center" };
+        model.Weight = row.Medium switch { "Large" => "Large", "Medium" => "Medium", _ => "Small" };
+        model.LabelWidthMm = ParseF(row.Width, model.LabelWidthMm);
+        model.LabelHeightMm = ParseF(row.Height, model.LabelHeightMm);
+        model.BarcodeHeightMm = ParseF(row.BarCodeHeight, model.BarcodeHeightMm);
+        model.SpaceXMm = ParseF(row.Space_X_Item, model.SpaceXMm);
+        model.SpaceYMm = ParseF(row.Space_Y_Item, model.SpaceYMm);
+        model.TopMarginMm = ParseF(row.TopMargin, model.TopMarginMm);
+        model.LeftMarginMm = ParseF(row.LeftMargin, model.LeftMarginMm);
+        model.UseCustomPaperSize = row.SetPaperSize == "True";
+        model.PaperWidthMm = ParseF(row.paperWidth, model.PaperWidthMm);
+        model.PaperHeightMm = ParseF(row.paperHeight, model.PaperHeightMm);
+        model.PaperLeftMarginMm = ParseF(row.PaperLeftMargin, model.PaperLeftMarginMm);
+        model.PaperTopMarginMm = ParseF(row.PaperTopMargin, model.PaperTopMarginMm);
+        model.PaperRightMarginMm = ParseF(row.PaperRightMargin, model.PaperRightMarginMm);
+        model.PaperBottomMarginMm = ParseF(row.PaperBottomMargin, model.PaperBottomMarginMm);
+        model.TextUnderCode = row.TextUnderCode ?? model.TextUnderCode;
+    }
+
+    private void ApplyFrom(Item_BarCodeSettingDefault row)
+    {
+        model.Align = row.Center switch { "Left" => "Left", "Right" => "Right", _ => "Center" };
+        model.Weight = row.Medium switch { "Large" => "Large", "Medium" => "Medium", _ => "Small" };
+        model.LabelWidthMm = ParseF(row.Width, model.LabelWidthMm);
+        model.LabelHeightMm = ParseF(row.Height, model.LabelHeightMm);
+        model.BarcodeHeightMm = ParseF(row.BarCodeHeight, model.BarcodeHeightMm);
+        model.SpaceXMm = ParseF(row.Space_X_Item, model.SpaceXMm);
+        model.SpaceYMm = ParseF(row.Space_Y_Item, model.SpaceYMm);
+        model.TopMarginMm = ParseF(row.TopMargin, model.TopMarginMm);
+        model.LeftMarginMm = ParseF(row.LeftMargin, model.LeftMarginMm);
+        model.UseCustomPaperSize = row.SetPaperSize == "True";
+        model.PaperWidthMm = ParseF(row.paperWidth, model.PaperWidthMm);
+        model.PaperHeightMm = ParseF(row.paperHeight, model.PaperHeightMm);
+        model.PaperLeftMarginMm = ParseF(row.PaperLeftMargin, model.PaperLeftMarginMm);
+        model.PaperTopMarginMm = ParseF(row.PaperTopMargin, model.PaperTopMarginMm);
+        model.PaperRightMarginMm = ParseF(row.PaperRightMargin, model.PaperRightMarginMm);
+        model.PaperBottomMarginMm = ParseF(row.PaperBottomMargin, model.PaperBottomMarginMm);
+        model.TextUnderCode = row.TextUnderCode ?? model.TextUnderCode;
+    }
+
+    private static float ParseF(string? s, float fallback) => float.TryParse(s, out var v) ? v : fallback;
+
+    private async Task LoadDefaultStaticAsync()
+    {
+        model = new SettingsModel();
+        GenerateBarcode();
+        Snackbar.Add(Tr("BarcodeDefaultsLoaded"), Severity.Info);
+        await Task.CompletedTask;
+    }
+
+    private async Task LoadSavedCurrentAsync(bool showMessage = true)
+    {
+        Item_BarCodeSetting? row = null;
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var opp = new operations();
+            row = new BarCodeSettingCLS().GetCurrent(ref opp);
+        });
+        if (row != null)
+        {
+            ApplyFrom(row);
+            if (showMessage) Snackbar.Add(Tr("BarcodeSavedLoaded"), Severity.Success);
+        }
+        else if (showMessage)
+        {
+            Snackbar.Add(Tr("BarcodeNoSavedSettings"), Severity.Info);
+        }
+        GenerateBarcode();
+    }
+
+    private async Task LoadSavedDefaultAsync()
+    {
+        Item_BarCodeSettingDefault? row = null;
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var opp = new operations();
+            row = new BarCodeSettingCLS().GetDefault(ref opp);
+        });
+        if (row != null)
+        {
+            ApplyFrom(row);
+            Snackbar.Add(Tr("BarcodeSavedLoaded"), Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add(Tr("BarcodeNoSavedSettings"), Severity.Info);
+        }
+        GenerateBarcode();
+    }
+
+    private async Task SaveAsync(bool asDefault)
+    {
+        isSaving = true;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var opp = new operations();
+                var cls = new BarCodeSettingCLS();
+                if (asDefault)
+                {
+                    var row = new Item_BarCodeSettingDefault
+                    {
+                        FontHeader = "Tahoma/10/Regular",
+                        FontFooter = "Tahoma/8/Regular",
+                        Medium = model.Weight,
+                        Center = model.Align,
+                        Width = model.LabelWidthMm.ToString(CultureInfo.InvariantCulture),
+                        Height = model.LabelHeightMm.ToString(CultureInfo.InvariantCulture),
+                        BarCodeHeight = model.BarcodeHeightMm.ToString(CultureInfo.InvariantCulture),
+                        Space_X_Item = model.SpaceXMm.ToString(CultureInfo.InvariantCulture),
+                        Space_Y_Item = model.SpaceYMm.ToString(CultureInfo.InvariantCulture),
+                        TopMargin = model.TopMarginMm.ToString(CultureInfo.InvariantCulture),
+                        LeftMargin = model.LeftMarginMm.ToString(CultureInfo.InvariantCulture),
+                        paperWidth = model.PaperWidthMm.ToString(CultureInfo.InvariantCulture),
+                        paperHeight = model.PaperHeightMm.ToString(CultureInfo.InvariantCulture),
+                        SetPaperSize = model.UseCustomPaperSize ? "True" : "False",
+                        PaperTopMargin = model.PaperTopMarginMm.ToString(CultureInfo.InvariantCulture),
+                        PaperLeftMargin = model.PaperLeftMarginMm.ToString(CultureInfo.InvariantCulture),
+                        PaperRightMargin = model.PaperRightMarginMm.ToString(CultureInfo.InvariantCulture),
+                        PaperBottomMargin = model.PaperBottomMarginMm.ToString(CultureInfo.InvariantCulture),
+                        TextUnderCode = model.TextUnderCode,
+                    };
+                    cls.SaveDefault(ref opp, row);
+                }
+                else
+                {
+                    var row = new Item_BarCodeSetting
+                    {
+                        FontHeader = "Tahoma/10/Regular",
+                        FontFooter = "Tahoma/8/Regular",
+                        Medium = model.Weight,
+                        Center = model.Align,
+                        Width = model.LabelWidthMm.ToString(CultureInfo.InvariantCulture),
+                        Height = model.LabelHeightMm.ToString(CultureInfo.InvariantCulture),
+                        BarCodeHeight = model.BarcodeHeightMm.ToString(CultureInfo.InvariantCulture),
+                        Space_X_Item = model.SpaceXMm.ToString(CultureInfo.InvariantCulture),
+                        Space_Y_Item = model.SpaceYMm.ToString(CultureInfo.InvariantCulture),
+                        TopMargin = model.TopMarginMm.ToString(CultureInfo.InvariantCulture),
+                        LeftMargin = model.LeftMarginMm.ToString(CultureInfo.InvariantCulture),
+                        paperWidth = model.PaperWidthMm.ToString(CultureInfo.InvariantCulture),
+                        paperHeight = model.PaperHeightMm.ToString(CultureInfo.InvariantCulture),
+                        SetPaperSize = model.UseCustomPaperSize ? "True" : "False",
+                        PaperTopMargin = model.PaperTopMarginMm.ToString(CultureInfo.InvariantCulture),
+                        PaperLeftMargin = model.PaperLeftMarginMm.ToString(CultureInfo.InvariantCulture),
+                        PaperRightMargin = model.PaperRightMarginMm.ToString(CultureInfo.InvariantCulture),
+                        PaperBottomMargin = model.PaperBottomMarginMm.ToString(CultureInfo.InvariantCulture),
+                        TextUnderCode = model.TextUnderCode,
+                        IsPrintPrice = "False",
+                    };
+                    cls.SaveCurrent(ref opp, row);
+                }
+            });
+            Snackbar.Add(Tr("BarcodeSettingsSaved"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(Tr("SystemError", ex.Message), Severity.Error);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

@@ -27,10 +27,16 @@
     <MudPaper Class="pa-4 mb-4" Elevation="1" Style="flex: 0 0 auto;">
         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
             <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("CostCentersTitle")</MudText>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-                       OnClick="OpenAddDialog" Disabled="@(_selected == null || _isBusy)">
-                @Tr("AddCostCenterButton")
-            </MudButton>
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.AccountTree"
+                           OnClick="OpenAddRootDialog" Disabled="@_isBusy">
+                    @Tr("AddRootCostCenterButton")
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddDialog" Disabled="@(_selected == null || _isBusy)">
+                    @Tr("AddCostCenterButton")
+                </MudButton>
+            </MudStack>
         </MudStack>
     </MudPaper>
 
@@ -94,11 +100,13 @@
 </MudContainer>
 
 <AddCostCenterDialog @bind-Visible="_addDialogOpen" ParentNode="_selected" OnCostCenterAdded="OnCostCenterAddedAsync" />
+<AddCostCenterDialog @bind-Visible="_addRootDialogOpen" ParentNode="_selected" IsRoot="true" OnCostCenterAdded="OnRootCostCenterAddedAsync" />
 
 @code {
     private CostCenterTreePicker? _treePicker;
     private CostCenterNodeViewModel? _selected;
     private bool _addDialogOpen;
+    private bool _addRootDialogOpen;
     private bool _isBusy;
     private string? _errorMessage;
 
@@ -121,6 +129,11 @@
         _addDialogOpen = true;
     }
 
+    private void OpenAddRootDialog()
+    {
+        _addRootDialogOpen = true;
+    }
+
     private async Task OnCostCenterAddedAsync(long newCode)
     {
         Snackbar.Add(Tr("CostCenterAdded"), Severity.Success);
@@ -132,6 +145,16 @@
             {
                 await _treePicker.SelectAndRevealAsync(reselectId.Value);
             }
+        }
+    }
+
+    private async Task OnRootCostCenterAddedAsync(long newCode)
+    {
+        Snackbar.Add(Tr("RootCostCenterAdded"), Severity.Success);
+        if (_treePicker != null)
+        {
+            await _treePicker.ReloadAsync();
+            await _treePicker.SelectAndRevealAsync(newCode);
         }
     }
 

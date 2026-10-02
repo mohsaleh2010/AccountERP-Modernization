@@ -1,0 +1,211 @@
+@* 🟢 تقارير طلبيات العملاء (نظام الطلبيات الحديث): تبويبان.
+   1) الأصناف المفتوحة: لكل صنف-مخزن المتبقى توريده من الطلبيات المؤكدة/المنفَّذة جزئياً + عدد الطلبيات + الرصيد + العجز (المتبقى − الرصيد).
+   2) الطلبيات المتأخرة: المؤكدة/المنفَّذة جزئياً التى تجاوزت تاريخ التسليم المتوقع، مع عدد أيام التأخير. الصف يفتح الطلبية فى تبويب.
+   الطباعة وتصدير PDF/Excel/Word مؤجَّلة لمرحلة التقارير (قرار المستخدم). *@
+@page "/accounts/sales/customer-orders-report"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("COReportTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-3">@Tr("COReportTitle")</MudText>
+
+        <MudTabs Elevation="0" Rounded="true" ActivePanelIndexChanged="OnTabChanged">
+            <MudTabPanel Text="@Tr("COReportOpenItems")" Icon="@Icons.Material.Filled.Inventory2">
+                <MudGrid Spacing="3" Class="mt-2">
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudTextField T="string" @bind-Value="_itemText" Label="@Tr("ItemNameColumn")" Variant="Variant.Outlined" Clearable="true"
+                                      OnKeyDown="@(e => e.Key == "Enter" ? LoadOpenItemsAsync() : Task.CompletedTask)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudTextField T="string" @bind-Value="_customerText" Label="@Tr("CustomerLabel")" Variant="Variant.Outlined" Clearable="true"
+                                      OnKeyDown="@(e => e.Key == "Enter" ? LoadOpenItemsAsync() : Task.CompletedTask)" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" FullWidth="true"
+                                   OnClick="LoadOpenItemsAsync" Disabled="@_isLoading">@Tr("SearchButton")</MudButton>
+                    </MudItem>
+                </MudGrid>
+
+                <MudTable Items="@_items" T="ItemRow" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" Loading="@_isLoading" Class="mt-3"
+                          RowClassFunc="@((ItemRow row, int index) => row.UnitItemId == _selectedItem ? "mud-selected-item" : string.Empty)"
+                          OnRowClick="@((TableRowClickEventArgs<ItemRow> e) => _selectedItem = e.Item.UnitItemId)">
+                    <HeaderContent>
+                        <MudTh>@Tr("ItemNameColumn")</MudTh>
+                        <MudTh>@Tr("COStoreColumn")</MudTh>
+                        <MudTh Style="text-align:end">@Tr("COOrdersCountColumn")</MudTh>
+                        <MudTh Style="text-align:end">@Tr("CORemainingColumn")</MudTh>
+                        <MudTh Style="text-align:end">@Tr("COBalanceLabel")</MudTh>
+                        <MudTh Style="text-align:end">@Tr("COShortageColumn")</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="@Tr("ItemNameColumn")"><b>@context.Item</b></MudTd>
+                        <MudTd DataLabel="@Tr("COStoreColumn")">@context.Store</MudTd>
+                        <MudTd DataLabel="@Tr("COOrdersCountColumn")" Style="text-align:end">@context.Orders</MudTd>
+                        <MudTd DataLabel="@Tr("CORemainingColumn")" Style="text-align:end">@Qty(context.RemL, context.RemS, context)</MudTd>
+                        <MudTd DataLabel="@Tr("COBalanceLabel")" Style="text-align:end">@Qty(context.BalL, context.BalS, context)</MudTd>
+                        <MudTd DataLabel="@Tr("COShortageColumn")" Style="text-align:end">
+                            @if (context.ShortL > 0 || context.ShortS > 0)
+                            {
+                                <b class="mud-error-text">@Qty(Math.Max(context.ShortL, 0), Math.Max(context.ShortS, 0), context)</b>
+                            }
+                            else
+                            {
+                                <span class="mud-success-text">—</span>
+                            }
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudTabPanel>
+
+            <MudTabPanel Text="@Tr("COReportOverdue")" Icon="@Icons.Material.Filled.EventBusy">
+                <MudTable Items="@_overdue" T="OverdueRow" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" Loading="@_isLoading" Class="mt-3"
+                          RowClassFunc="@((OverdueRow row, int index) => row.Id == _selectedOrder ? "mud-selected-item" : string.Empty)"
+                          OnRowClick="@((TableRowClickEventArgs<OverdueRow> e) => { _selectedOrder = e.Item.Id; Nav.NavigateTo($"/accounts/sales/customer-order/{e.Item.Id}"); })">
+                    <HeaderContent>
+                        <MudTh>#</MudTh>
+                        <MudTh>@Tr("CustomerLabel")</MudTh>
+                        <MudTh>@Tr("COExpectedDateLabel")</MudTh>
+                        <MudTh Style="text-align:end">@Tr("CODaysLateColumn")</MudTh>
+                        <MudTh>@Tr("COStatusFilter")</MudTh>
+                        <MudTh Style="text-align:end">@Tr("NetTotalColumn")</MudTh>
+                        <MudTh>@Tr("COFulfilledColumn")</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="#"><b>@context.No</b></MudTd>
+                        <MudTd DataLabel="@Tr("CustomerLabel")">@context.Customer</MudTd>
+                        <MudTd DataLabel="@Tr("COExpectedDateLabel")">@context.Expected.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture)</MudTd>
+                        <MudTd DataLabel="@Tr("CODaysLateColumn")" Style="text-align:end"><b class="mud-error-text">@context.DaysLate</b></MudTd>
+                        <MudTd DataLabel="@Tr("COStatusFilter")">@(context.Status == (int)CustomerOrderStatus.PartiallyFulfilled ? Tr("COStatusPartial") : Tr("COStatusConfirmed"))</MudTd>
+                        <MudTd DataLabel="@Tr("NetTotalColumn")" Style="text-align:end">@context.Net.ToString("N2")</MudTd>
+                        <MudTd DataLabel="@Tr("COFulfilledColumn")" Style="min-width:120px">
+                            <MudProgressLinear Value="@context.Progress" Color="Color.Success" Size="Size.Medium" />
+                            <small>@context.QtyFulfilled.ToString("0.##") / @context.QtyTotal.ToString("0.##")</small>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudTabPanel>
+        </MudTabs>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">@_errorMessage</MudAlert>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private record ItemRow(long UnitItemId, string Item, string BigUnit, string SmallUnit, string Store, int Orders, decimal RemL, decimal RemS, decimal BalL, decimal BalS)
+    {
+        public decimal ShortL => RemL - BalL;
+        public decimal ShortS => RemS - BalS;
+    }
+    private record OverdueRow(long Id, long No, string Customer, DateTime Expected, int Status, decimal Net, decimal QtyTotal, decimal QtyFulfilled)
+    {
+        public int DaysLate => (int)(DateTime.Now.Date - Expected.Date).TotalDays;
+        public double Progress => QtyTotal <= 0 ? 0 : (double)Math.Min(100m, QtyFulfilled * 100m / QtyTotal);
+    }
+
+    private readonly CustomerOrdersService _service = new();
+    private List<ItemRow> _items = new();
+    private List<OverdueRow> _overdue = new();
+    private string? _itemText;
+    private string? _customerText;
+    private long? _selectedItem;
+    private long? _selectedOrder;
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadOpenItemsAsync();
+        await LoadOverdueAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    // إعادة تحميل التبويب المفتوح عند التبديل ليعكس آخر البيانات.
+    private async Task OnTabChanged(int index)
+    {
+        if (index == 0) await LoadOpenItemsAsync(); else await LoadOverdueAsync();
+    }
+
+    private async Task LoadOpenItemsAsync()
+    {
+        _errorMessage = null;
+        _isLoading = true;
+        StateHasChanged();
+        var item = _itemText ?? "";
+        var customer = _customerText ?? "";
+        try
+        {
+            var dt = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _service.OpenItemsReport(item, customer, 0); });
+            _items = dt.Rows.Cast<DataRow>().Select(r => new ItemRow(
+                Convert.ToInt64(r["Unit_Item_Id"]), r["Item_Name"]?.ToString()?.Trim() ?? "", r["B_Unit"]?.ToString() ?? "", r["S_unit"]?.ToString() ?? "",
+                r["Store_Name"]?.ToString() ?? "", Convert.ToInt32(r["Orders_Count"]),
+                Convert.ToDecimal(r["Rem_Larg"]), Convert.ToDecimal(r["Rem_Small"]), Convert.ToDecimal(r["Bal_Larg"]), Convert.ToDecimal(r["Bal_Small"]))).ToList();
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+        finally { _isLoading = false; }
+    }
+
+    private async Task LoadOverdueAsync()
+    {
+        _errorMessage = null;
+        _isLoading = true;
+        StateHasChanged();
+        try
+        {
+            var dt = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return _service.ListOrders(new DateTime(2000, 1, 1), DateTime.Now.Date.AddYears(1), 0, -1, false, true, "");
+            });
+            _overdue = dt.Rows.Cast<DataRow>()
+                .Where(r => r["Expected_Delivery_Date"] != DBNull.Value)
+                .Select(r => new OverdueRow(Convert.ToInt64(r["Id"]), r["Order_No"] == DBNull.Value ? 0 : Convert.ToInt64(r["Order_No"]),
+                    r["Customer_Name"]?.ToString()?.Trim() ?? "", Convert.ToDateTime(r["Expected_Delivery_Date"]), Convert.ToInt32(r["Status"]),
+                    Convert.ToDecimal(r["Net_Total"]), Convert.ToDecimal(r["Qty_Total"]), Convert.ToDecimal(r["Qty_Fulfilled"])))
+                .OrderByDescending(x => x.DaysLate).ToList();
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+        finally { _isLoading = false; }
+    }
+
+    private static string Qty(decimal larg, decimal small, ItemRow row)
+    {
+        var l = $"{larg:0.##} {row.BigUnit}";
+        return small != 0 ? $"{l} + {small:0.##} {row.SmallUnit}" : l;
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

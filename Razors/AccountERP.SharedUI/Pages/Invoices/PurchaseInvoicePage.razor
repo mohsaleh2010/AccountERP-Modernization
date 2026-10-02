@@ -1,0 +1,936 @@
+@* 🟢 يقابل Accounts.InvoicesFrm.Bills.Make_Bill_Templat (Make_Bill: فاتورة مشتريات نقدى/آجل/ق.ع/حفظ الأصناف مباشرة، وتعديلها)
+   و Make_Bill_Reverse / Bills_List_Reverse (مرتجع المشتريات) عبر مساريْن ومعاملات بدل صفحات منفصلة (قرار المستخدم: صفحة مشتريات
+   مستقلة بمكوّنات جديدة - AddBillItemDialog وBillLineCalculator - لا تعتمد على صفحة المبيعات).
+
+   الحفظ بمحرك AccountModelsLib.Bills_ModelsClss كما هو (Make_Bill_Update_SupplierAccount / Make_Bills_List_Reverse_Update_SupplierAccount
+   / Edit_Bill_Update_Supplier_Account / Edit_Bill_List_reverse_Update_Supplier_Account) بعد إصلاحات التدقيق المعتمدة (م0). عقد التعديل
+   (مثبت بالمسبار): سطر جديد Item_ProcessedFlage=0 (وItem_DeletedFlage=0 للمرتجع)، سطر محذوف يُنقل لـ invDlst_Deleted بعلم 1، وتعديل سطر محفوظ =
+   حذف القديم + إضافة الجديد (لأن مسار "المعدَّل" -1 يطرح الكمية الجديدة كاملة من الرصيد بدل الفرق - خطأ فى المحرك قرر المستخدم عدم لمسه).
+   مؤجَّل: أعمدة شرطية إضافية (عمولة/حمولة/دمغة/بوليصة)، ضريبة الرأس (الضريبة هنا لكل صنف فقط)، الطباعة والباركود RDLC. *@
+@page "/accounts/invoices/purchase-invoice/{Id:long?}"
+@page "/accounts/invoices/purchase-return/{Id:long?}"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Nav
+@inject TabWorkspaceService TabWorkspace
+
+<PageTitle>@_pageTitle</PageTitle>
+
+<InvoiceStyles />
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-head inv-card">
+        <h1 class="inv-title">@_pageTitle</h1>
+        <div class="inv-badges">
+            <span class="inv-chip primary"><MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />@_invoiceNoDisplay</span>
+            <span class="inv-chip">@(_isAgile ? Tr("DS_InvoiceCredit") : Tr("DS_InvoiceCash"))</span>
+            <span class="inv-chip @(_isSaved || IsExistingInvoice ? "success" : "warn")">
+                @(_isSaved || IsExistingInvoice ? Tr("InvoiceStatusSaved") : Tr("InvoiceStatusNew"))
+            </span>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_isSaving" OnClick="NewInvoiceAsync">@Tr("NewInvoiceButton")</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Close" OnClick="@(() => Nav.NavigateTo("/"))">@Tr("Cancel")</MudButton>
+        </div>
+    </div>
+
+    <MudGrid Spacing="3">
+        <MudItem xs="12">
+
+            <div class="inv-card">
+                <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Description" />@Tr("InvoiceDataTitle")</h2>
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" md="6">
+                        <MudAutocomplete T="PartyOption" Value="_selectedSupplier" SearchFunc="SearchSuppliersAsync"
+                                         ToStringFunc="@(o => o?.Name ?? "")" Label="@Tr("SupplierLabel")" Variant="Variant.Outlined" AutoFocus="@(!IsExistingInvoice)"
+                                         ValueChanged="OnSupplierPickedAsync" ResetValueOnEmptyText="true" Disabled="_isSaved || IsExistingInvoice" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudSelect T="long" @bind-Value="_currencyId" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined" Disabled="_isSaved">
+                            @foreach (var c in _currencies)
+                            {
+                                <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudDatePicker T="DateTime?" @bind-Date="_invoiceDate" Label="@Tr("InvoiceDateLabel")" Variant="Variant.Outlined" Disabled="_isSaved" />
+                    </MudItem>
+                </MudGrid>
+
+                <div class="inv-tax">
+                    @* نقدى/آجل (rdInvoiceNakdy / rdInvoiceAgile): النقدى يُنشئ سند صرف للمورد تلقائياً بحسب إعداد النظام، والآجل حركة مورد واحدة. *@
+                    <MudRadioGroup T="bool" Value="_isAgile" ValueChanged="OnAgileChanged">
+                        <MudRadio T="bool" Value="false" Disabled="_isSaved || IsExistingInvoice" Size="Size.Small">@Tr("DS_InvoiceCash")</MudRadio>
+                        <MudRadio T="bool" Value="true" Disabled="_isSaved || IsExistingInvoice" Size="Size.Small">@Tr("DS_InvoiceCredit")</MudRadio>
+                    </MudRadioGroup>
+                    <MudCheckBox T="bool" Value="_isTaxInvoice" ValueChanged="OnTaxInvoiceChanged" Label="@Tr("TaxInvoiceLabel")" Disabled="_isSaved" Dense="true" Size="Size.Small" />
+                    @if (_isTaxInvoice)
+                    {
+                        <MudNumericField T="decimal" Value="_defaultTaxSales" ValueChanged="@(v => { _defaultTaxSales = v; ApplyTaxSettings(); })"
+                                         Label="@($"{Tr("TaxSalesColumn")} %")" Variant="Variant.Outlined" Format="0.##" Margin="Margin.Dense" Disabled="_isSaved" Style="max-width:120px" />
+                        <MudNumericField T="decimal" Value="_defaultATS05" ValueChanged="@(v => { _defaultATS05 = v; ApplyTaxSettings(); })"
+                                         Label="@($"{Tr("ATS05Column")} %")" Variant="Variant.Outlined" Format="0.##" Margin="Margin.Dense" Disabled="_isSaved" Style="max-width:120px" />
+                    }
+                </div>
+
+                @if (_selectedSupplier is not null)
+                {
+                    <div class="inv-cust">
+                        <span class="inv-avatar">@(string.IsNullOrWhiteSpace(_selectedSupplier.Name) ? "?" : _selectedSupplier.Name.Trim()[0].ToString())</span>
+                        <div class="who"><b>@_selectedSupplier.Name</b><small>@Tr("BalanceBeforeLabel")</small></div>
+                        <span class="inv-chip @(_supplierBalanceBefore >= 0 ? "success" : "warn")">@(_supplierBalanceBefore >= 0 ? Tr("NatureCreditLabel") : Tr("NatureDebitLabel")): @Common.RoundMe(Math.Abs(_supplierBalanceBefore)).ToString("N2")</span>
+                        <span class="inv-chip">@Tr("BalanceAfterLabel"): @Common.RoundMe(BalanceAfter).ToString("N2")</span>
+                    </div>
+                }
+            </div>
+
+            <div class="inv-card">
+                <div class="inv-card-head">
+                    <h2 class="inv-card-title">
+                        <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" />@Tr("ItemsHeader")
+                        @if (_lines.Count > 0)
+                        {
+                            <span class="inv-count">@_lines.Count</span>
+                        }
+                    </h2>
+                    <MudTextField T="string" @ref="_barcodeField" @bind-Value="_barcodeText" Class="inv-barcode" Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" Immediate="true" Label="@Tr("BarcodeSearchLabel")"
+                                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.QrCodeScanner"
+                                  Disabled="_selectedSupplier is null || _isSaved" OnKeyDown="OnBarcodeKeyDownAsync" />
+                    @if (_lines.Count > 0)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="OpenAddItemDialog" Disabled="_selectedSupplier is null || _isSaved">
+                            @Tr("AddItemButton")
+                        </MudButton>
+                    }
+                </div>
+
+                @if (_lines.Count == 0)
+                {
+                    <div class="inv-empty2">
+                        <span class="ico"><MudIcon Icon="@Icons.Material.Outlined.ReceiptLong" /></span>
+                        <div style="font-size:1.05rem;font-weight:600;color:var(--mud-palette-text-primary)">@Tr("NoItemsMessage")</div>
+                        <div style="font-size:.9375rem">@Tr("AddFirstItemHint")</div>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Class="mt-1"
+                                   OnClick="OpenAddItemDialog" Disabled="_selectedSupplier is null || _isSaved">
+                            @Tr("AddItemButton")
+                        </MudButton>
+                    </div>
+                }
+                else
+                {
+                    <div class="inv-lines" style="--cols:@LinesGridCols;--minw:@LinesMinWidth">
+                        <div class="inv-lines-head" role="row">
+                            <span>#</span>
+                            <span>@Tr("ItemNameColumn")</span>
+                            <span class="n hide-sm">@Tr("QuantityColumn")</span>
+                            <span class="n hide-sm">@Tr("PurchasePriceLabel")</span>
+                            <span class="n">@Tr("NetTotalColumn")</span>
+                            <span></span>
+                        </div>
+
+                        @{ var idx = 0; }
+                        @foreach (var line in _lines)
+                        {
+                            idx++;
+                            var sub = string.Join(" · ", new[] { line.code, line.Store_Name }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                            <div class="inv-line" role="row" @key="line">
+                                <span class="inv-idx">@idx</span>
+                                <div class="inv-item">
+                                    <b>@line.Invoice_Item_Name</b>
+                                    @if (!string.IsNullOrEmpty(sub))
+                                    {
+                                        <small>@sub</small>
+                                    }
+                                    <small class="inv-formula">@FormatQnty(line) × @((line.PriceUnit ?? 0).ToString("N2"))</small>
+                                </div>
+                                <div class="n hide-sm"><span class="inv-qty">@FormatQnty(line)</span></div>
+                                <div class="n hide-sm">@((line.PriceUnit ?? 0).ToString("N2"))</div>
+                                <div class="n inv-netcell">
+                                    <span class="inv-net">@((line.Item_Net_Total_Price ?? 0).ToString("N2"))</span>
+                                    @if (_isTaxInvoice)
+                                    {
+                                        <small class="inv-taxline">
+                                            @Tr("TaxSalesColumn") @((line.Item_TaxSales10_Value ?? 0).ToString("N2"))
+                                            @if ((line.Item_ATS05_Value ?? 0) != 0)
+                                            {
+                                                <span> · @Tr("ATS05Column") @((line.Item_ATS05_Value ?? 0).ToString("N2"))</span>
+                                            }
+                                        </small>
+                                    }
+                                </div>
+                                <div class="inv-acts">
+                                    <MudIconButton Icon="@Icons.Material.Filled.EditNote" Size="Size.Medium" Disabled="_isSaved" OnClick="@(() => OpenEditItemDialog(line))" aria-label="@Tr("EditItemLabel")" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Medium" Color="Color.Error" Disabled="_isSaved" OnClick="@(() => DeleteLine(line))" aria-label="@Tr("DeleteItemLabel")" />
+                                </div>
+                            </div>
+                        }
+
+                        <div class="inv-lines-foot">
+                            <span class="stat">@Tr("LinesCountLabel"): <b>@_lines.Count</b></span>
+                            <span class="stat">@Tr("LinesQtyLabel"): <b>@_lines.Sum(l => l.Larg_Qnty ?? 0).ToString("0.##")</b></span>
+                            <span class="stat">@Tr("NetTotalColumn"): <b>@_lines.Sum(l => l.Item_Net_Total_Price ?? 0).ToString("N2")</b></span>
+                        </div>
+                    </div>
+                }
+
+                @* الأصل (Make_Bill_Templat): رقم البوليصة/الحاوية نصوص، والحمولة والدمغات تُضافان لصافى الفاتورة، وعمولة الفاتورة (نسبة + قيمة) تُخصم منه وتُعطَّل مع الفاتورة الضريبية (ضريبة لكل صنف) *@
+                @* مغلق افتراضياً (استخدامه قليل ويزحم الصفحة): زر عريض يفتحه/يخفيه، ويعرض عدد الحقول المعبّأة وهو مغلق. *@
+                <div class="inv-extra @(_extraOpen ? "open" : "")">
+                    <button type="button" class="inv-extra-toggle" aria-expanded="@(_extraOpen ? "true" : "false")" @onclick="@(() => _extraOpen = !_extraOpen)">
+                        <span class="ico"><MudIcon Icon="@Icons.Material.Filled.Inventory" /></span>
+                        <span class="ttl">@Tr("PurchExtraDataHeader")</span>
+                        @if (ExtraFilledCount > 0)
+                        {
+                            <span class="inv-chip primary">@ExtraFilledCount</span>
+                        }
+                        <span class="hint">@(_extraOpen ? Tr("ExtraDataHide") : Tr("ExtraDataShow"))</span>
+                        <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Class="chev" />
+                    </button>
+                    @if (_extraOpen)
+                    {
+                    <div class="inv-extra-body">
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudTextField T="string" @bind-Value="_header.PolicaNo" Label="@Tr("PolicyNoLabel")" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="_isSaved" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudTextField T="string" @bind-Value="_header.TroodContainerNo" Label="@Tr("ContainerNoLabel")" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="_isSaved" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudNumericField T="decimal" @bind-Value="LoadPayment" Label="@Tr("LoadPaymentLabel")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                             Format="0.##" Immediate="true" HideSpinButtons="true" Disabled="_isSaved" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudNumericField T="decimal" @bind-Value="Damaghat" Label="@Tr("DamaghatLabel")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                             Format="0.##" Immediate="true" HideSpinButtons="true" Disabled="_isSaved" />
+                        </MudItem>
+                        @if (!_isTaxInvoice)
+                        {
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudNumericField T="decimal" @bind-Value="ListCommissionRate" Label="@Tr("ListCommissionRateLabel")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                 Format="0.##" Immediate="true" HideSpinButtons="true" Disabled="_isSaved" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudNumericField T="decimal" @bind-Value="ListCommissionValue" Label="@Tr("ListCommissionValueLabel")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                 Format="0.##" Immediate="true" HideSpinButtons="true" Disabled="_isSaved" />
+                            </MudItem>
+                        }
+                    </MudGrid>
+                    </div>
+                    }
+                </div>
+
+                <div class="inv-notes">
+                    <MudTextField T="string" @bind-Value="_notes" Immediate="true" Label="@Tr("NotesLabel")" Variant="Variant.Outlined" Disabled="_isSaved" Lines="2" AutoGrow="true" />
+                </div>
+            </div>
+        </MudItem>
+    </MudGrid>
+
+    @* شريط الملخص الثابت أسفل الجدول ومعه زر الحفظ (الإجراء الأساسى الوحيد) *@
+    <div class="inv-dock" role="region" aria-label="@Tr("InvoiceSummaryTitle")">
+        <div class="inv-dock-cells">
+            <div class="cell"><span class="lbl">@Tr("LinesCountLabel")</span><b>@_lines.Count</b></div>
+            <div class="cell"><span class="lbl">@Tr("TotalLabel")</span><b>@((_header.Total ?? 0).ToString("N2"))</b></div>
+            @if (_isTaxInvoice)
+            {
+                <div class="cell"><span class="lbl">@Tr("TaxSalesValueLabel")</span><b>@((_header.TaxSales10_Value ?? 0).ToString("N2"))</b></div>
+                @if ((_header.ATS05_Value ?? 0) != 0)
+                {
+                    <div class="cell"><span class="lbl">@Tr("ATS05ValueLabel")</span><b>@((_header.ATS05_Value ?? 0).ToString("N2"))</b></div>
+                }
+            }
+            @if ((_header.Net_Total_CommissionValue ?? 0) != 0)
+            {
+                <div class="cell"><span class="lbl">@Tr("CommissionTotalLabel")</span><b>@((_header.Net_Total_CommissionValue ?? 0).ToString("N2"))</b></div>
+            }
+            @if ((_header.Load_Payment ?? 0) != 0)
+            {
+                <div class="cell"><span class="lbl">@Tr("LoadPaymentLabel")</span><b>@((_header.Load_Payment ?? 0).ToString("N2"))</b></div>
+            }
+            @if ((_header.Damaghat ?? 0) != 0)
+            {
+                <div class="cell"><span class="lbl">@Tr("DamaghatLabel")</span><b>@((_header.Damaghat ?? 0).ToString("N2"))</b></div>
+            }
+            <div class="cell net"><span class="lbl">@Tr("NetTotalLabel")</span><b>@((_header.Net_Total ?? 0).ToString("N2"))</b></div>
+        </div>
+        <div class="inv-dock-actions">
+            @if (IsExistingInvoice)
+            {
+                @* إذن نقدية مرتبط بهذه الفاتورة (استلام/صرف حسب النوع) — المفتاح نوع العملية + رقم الفاتورة كما فى الأصل *@
+                <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Payments"
+                           OnClick="@(() => Nav.NavigateTo($"/accounts/cash/voucher-party?doc={Id}&dtype={(_isReverse ? 8 : 2)}"))">@Tr("InvCashVoucherButton")</MudButton>
+            }
+            @if (IsExistingInvoice)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever"
+                           Disabled="_isSaving" OnClick="DeleteInvoiceAsync">@Tr("InvDeleteButton")</MudButton>
+            }
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
+                       Disabled="@(!CanSave)" OnClick="SaveInvoiceAsync">
+                @Tr("SaveButton")
+            </MudButton>
+        </div>
+    </div>
+
+    <AddBillItemDialog Visible="_itemDialogOpen" VisibleChanged="OnItemDialogVisibleChangedAsync" ExistingLine="_editingLine"
+                       TaxSalesRate="_defaultTaxSales" ATS05Rate="_defaultATS05" IsTaxPerItem="_isTaxInvoice"
+                       InitialCode="@_dialogInitialCode" InitialCodeToken="_barcodeToken" OnCodeNotFound="OnBarcodeNotFoundAsync"
+                       OnItemAdded="OnItemDialogSaved" />
+
+</div>
+</MudContainer>
+
+@code {
+    // بيانات إضافية مغلقة افتراضياً؛ العدّاد يبيّن كم حقلاً معبّأاً حتى لا يفوت المستخدم قيمة داخل الجزء المغلق.
+    private bool _extraOpen;
+    private int ExtraFilledCount => (string.IsNullOrWhiteSpace(_header.PolicaNo) ? 0 : 1) + (string.IsNullOrWhiteSpace(_header.TroodContainerNo) ? 0 : 1) + (LoadPayment != 0 ? 1 : 0) + (Damaghat != 0 ? 1 : 0) + (ListCommissionRate != 0 ? 1 : 0) + (ListCommissionValue != 0 ? 1 : 0);
+
+    private record PartyOption(long Id, string Name);
+    private record CurrencyOption(long Id, string Name);
+
+    [Parameter] public long? Id { get; set; }
+    [SupplyParameterFromQuery(Name = "agile")] public int? AgileQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "saveDirectly")] public int? SaveDirectlyQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "type")] public int? TypeQuery { get; set; }
+
+    private readonly SupplierCLS _supplierCls = new();
+    private bool _isReverse;
+    private BillOperationListCLS_New _invL_O = new(0);
+    private BillOperationCLS_New _invD_O = new(0);
+    private IBills_List _header => _invL_O.invL;
+    private List<IBills_Details> _lines => _invD_O.invDlst.Where(l => (l.Item_DeletedFlage ?? 0) != 1).ToList();
+
+    private PartyOption? _selectedSupplier;
+    private List<CurrencyOption> _currencies = new();
+    private long _currencyId;
+    private string _invoiceNoDisplay = "";
+    private DateTime? _invoiceDate = DateTime.Now;
+    private string _notes = "";
+    private string _pageTitle = "";
+    private bool _isSaved;
+    private bool _isSaving;
+    private bool _isAgile;
+    private bool _isSaveDirectly;
+    private string _baseline = "";
+    private decimal _supplierBalanceBefore;
+    private bool _isTaxInvoice;
+    private decimal _defaultTaxSales;
+    private decimal _defaultATS05;
+    private bool IsExistingInvoice => Id.HasValue && Id.Value > 0;
+    // 🟢 صلاحيات الفاتورة المحفوظة (جدول صلاحيات القوائم): 322 تعديل الفاتورة (إضافة/تعديل/حذف صنف)، 982 حذف فاتورة مشتريات (وتشمل المرتجع).
+    private bool _canEditItems = true;
+    private bool _canDeleteInvoice;
+    private bool _deletingInvoice;
+    private void LoadInvoicePermissions()
+    {
+        _canEditItems = Common.IsHavePermissionSysMenu(Common.User_Id, 322, 2, -1);
+        _canDeleteInvoice = Common.IsHavePermissionSysMenu(Common.User_Id, 982, 2, -1);
+    }
+    private bool GuardEditItems()
+    {
+        if (IsExistingInvoice && !_canEditItems)
+        {
+            Snackbar.Add(Tr("InvNoEditPermission"), Severity.Warning);
+            return false;
+        }
+        return true;
+    }
+
+    // حذف فاتورة محفوظة كاملة: كل الأسطر تُعلَّم محذوفة ثم تُحفظ بمحرك التعديل نفسه فيُرجَع رصيد الأصناف وحركة المورد والقيد. الصلاحية 322 ثم 982.
+    private async Task DeleteInvoiceAsync()
+    {
+        if (!IsExistingInvoice || _isSaving) return;
+        if (!_canEditItems) { Snackbar.Add(Tr("InvNoEditPermission"), Severity.Warning); return; }
+        if (!_canDeleteInvoice) { Snackbar.Add(Tr("InvNoDeletePermission"), Severity.Warning); return; }
+        var linkedVouchers = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return new CashVouchersService().CountLinkedCashVouchers(_isReverse ? 8 : 2, Id!.Value, _header.Is_Invoice_Agile != 1); });
+        if (linkedVouchers > 0) { Snackbar.Add(Tr("InvDeleteHasVouchers"), Severity.Warning); return; }
+        var confirmed = await DialogService.ShowMessageBoxAsync(Tr("InvDeleteButton"), Tr("InvDeleteConfirm"),
+            yesText: Tr("InvDeleteButton"), cancelText: Tr("Cancel"));
+        if (confirmed != true) return;
+        for (var i = _invD_O.invDlst.Count - 1; i >= 0; i--)
+        {
+            var item = _invD_O.invDlst[i];
+            item.Item_DeletedFlage = 1;
+            item.Item_ProcessedFlage = 1;
+            _invD_O.invDlst_Deleted.Add(item);
+            _invD_O.invDlst.RemoveAt(i);
+        }
+        RecomputeTotals();
+        _deletingInvoice = true;
+        _isSaving = true;
+        StateHasChanged();
+        try { await SaveInvoiceCoreAsync(); }
+        finally { _isSaving = false; _deletingInvoice = false; }
+    }
+
+    private bool _itemDialogOpen;
+    private IBills_Details? _editingLine;
+    private MudTextField<string>? _barcodeField;
+    private string _barcodeText = "";
+    private string _dialogInitialCode = "";
+    private int _barcodeToken;
+
+    // رصيد المورد بعد الفاتورة: الشراء يزيد ما علينا للمورد، والمرتجع ينقصه (يقابل تعليق Make_Bill_Templat سطر 1506).
+    private decimal BalanceAfter => _isReverse ? _supplierBalanceBefore - (_header.Net_Total ?? 0) : _supplierBalanceBefore + (_header.Net_Total ?? 0);
+
+    // حقول الرأس الإضافية: التعديل يُعيد حساب الإجماليات فوراً (الأصل: ReadInvoiceListData + ComputeCommission + ComputeTotals).
+    private decimal LoadPayment { get => _header.Load_Payment ?? 0; set { _header.Load_Payment = value; BillLineCalculator.ComputeHeaderTotals(_header, _invD_O.invDlst); } }
+    private decimal Damaghat { get => _header.Damaghat ?? 0; set { _header.Damaghat = value; BillLineCalculator.ComputeHeaderTotals(_header, _invD_O.invDlst); } }
+    private decimal ListCommissionRate { get => _header.List_CommissionRate ?? 0; set { _header.List_CommissionRate = value; BillLineCalculator.ComputeHeaderTotals(_header, _invD_O.invDlst); } }
+    private decimal ListCommissionValue { get => _header.List_CommissionValue ?? 0; set { _header.List_CommissionValue = value; BillLineCalculator.ComputeHeaderTotals(_header, _invD_O.invDlst); } }
+
+    private string LinesGridCols => "44px minmax(230px,1fr) 150px 120px 156px 96px";
+    private string LinesMinWidth => "760px";
+
+    // زر الحفظ: معطَّل أثناء الحفظ، وبعده حتى يتغير شىء عن آخر حالة محفوظة/محمَّلة. الفاتورة الجديدة يكفى لها صنف واحد.
+    private bool CanSave => !_isSaving && !_isSaved && _lines.Count > 0 && (!IsExistingInvoice || Fingerprint() != _baseline);
+
+    private string Fingerprint()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.Append(_selectedSupplier?.Id).Append('|').Append(_currencyId).Append('|').Append(_invoiceDate?.Date.Ticks).Append('|').Append(_notes)
+          .Append('|').Append(_isTaxInvoice).Append('|').Append(_defaultTaxSales).Append('|').Append(_defaultATS05)
+          .Append('|').Append(_header.PolicaNo).Append('|').Append(_header.TroodContainerNo).Append('|').Append(_header.Load_Payment).Append('|').Append(_header.Damaghat)
+          .Append('|').Append(_header.List_CommissionRate).Append('|').Append(_header.List_CommissionValue);
+        foreach (var l in _invD_O.invDlst)
+        {
+            sb.Append('#').Append(l.Id).Append(',').Append(l.Item_DeletedFlage).Append(',').Append(l.Unit_Item_Table_Id).Append(',')
+              .Append(l.Larg_Qnty).Append(',').Append(l.Small_Qnty).Append(',').Append(l.PriceUnit).Append(',').Append(l.Store_Id);
+        }
+        sb.Append("D").Append(_invD_O.invDlst_Deleted.Count);
+        return sb.ToString();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoadInvoicePermissions();
+        _isAgile = AgileQuery == 1;
+        _isSaveDirectly = SaveDirectlyQuery == 1;
+        _isReverse = Nav.Uri.Contains("/purchase-return", StringComparison.OrdinalIgnoreCase);
+        _invL_O = new BillOperationListCLS_New(_isReverse ? 1 : 0);
+        _invD_O = new BillOperationCLS_New(_isReverse ? 1 : 0);
+
+        await LoadCurrenciesAsync();
+        await LoadTaxDefaultsAsync();
+
+        if (IsExistingInvoice)
+        {
+            await LoadExistingInvoiceAsync(Id!.Value);
+            _baseline = Fingerprint();
+        }
+        else
+        {
+            await InitializeNewInvoiceAsync();
+        }
+
+        if (IsExistingInvoice && _header.Invoice_Id.HasValue)
+        {
+            var tabKey = "/" + Nav.ToBaseRelativePath(Nav.Uri).Split('?')[0].Trim('/');
+            TabWorkspace.SetCustomTitle(tabKey, string.Format(CultureInfo.InvariantCulture, _isReverse ? Tr("PurchTabReturn") : Tr("PurchTabInvoice"), _header.Invoice_Id.Value));
+        }
+        UpdateTitle();
+    }
+
+    private void UpdateTitle()
+    {
+        var isQaa = Convert.ToInt32(_header.Invoice_Type) == 1;
+        _pageTitle = _isReverse
+            ? (isQaa ? Tr("PurchTitleReturnQaa") : Tr("PurchTitleReturn"))
+            : isQaa ? Tr("PurchTitleQaa")
+            : _isSaveDirectly ? Tr("PurchTitleSaveDirectly")
+            : _isAgile ? Tr("PurchTitleAgile")
+            : Tr("PurchTitleCash");
+    }
+
+    private async Task LoadCurrenciesAsync()
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return new CurrencyFactorsCLS_().GetCurrencyList();
+        });
+        _currencies = dt.Rows.Cast<DataRow>()
+            .Select(r => new CurrencyOption(Convert.ToInt64(r["ID"]), r["Currency_Name"]?.ToString() ?? ""))
+            .ToList();
+        if (_currencies.Count > 0) _currencyId = _currencies[0].Id;
+    }
+
+    // نسب الضريبة الافتراضية (تقابل SetTaxDataOnForm): ضريبة القيمة المضافة T1 وضريبة الخصم والإضافة T4/W002 (×100).
+    private async Task LoadTaxDefaultsAsync()
+    {
+        await Task.Run(() =>
+        {
+            try
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var opp = new AccountModelsLib.operations();
+                var tax = new TaxListCLS();
+                _defaultTaxSales = (tax.Get_TaxInfoRatio(ref opp, "T1", "")?.TaxRate ?? 0) * 100;
+                _defaultATS05 = (tax.Get_TaxInfoRatioList(ref opp).FirstOrDefault(x => x.MainCode == "T4" && x.SubCode == "W002")?.TaxRate ?? 0) * 100;
+            }
+            catch { _defaultTaxSales = 0; _defaultATS05 = 0; }
+        });
+    }
+
+    private async Task InitializeNewInvoiceAsync()
+    {
+        // Invoice_Type رقم سلسلة الترقيم فقط (0 عادى، 1 ق.ع)؛ ليس علم ضريبة (قاعدة المستخدم).
+        var invoiceType = TypeQuery ?? 0;
+        _header.Invoice_Type = invoiceType;
+        _header.Is_InvoiceKta3y = 0;
+        _header.IS_Make_Sarf_Item_BalanceFromInvoice = 1;
+        _header.Supplier_BalanceSet = 1;
+        ApplyTaxSettings();
+
+        var no = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var b = new Bills_ModelsClss();
+            return _isReverse ? b.Make_New_Invoice_No_Reverse(invoiceType) : b.Make_New_Invoice_No(invoiceType);
+        });
+        _header.Invoice_Id = no;
+        _invoiceNoDisplay = no.ToString();
+    }
+
+    private async Task LoadExistingInvoiceAsync(long billTableId)
+    {
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            if (_isReverse)
+            {
+                _invL_O.Get_Bills_List_Reverse(billTableId);
+                _invD_O.GeDetails_ReverseToEdit(billTableId);
+            }
+            else
+            {
+                _invL_O.Get_Bills_List(billTableId);
+                _invD_O.GeBills_DetailsToEdit(billTableId);
+            }
+        });
+
+        // 100 = "محفوظ بلا تغيير": المحرك لا يعالج إلا الأسطر التى نعدّلها صراحةً (نفس درس المبيعات).
+        foreach (var l in _invD_O.invDlst)
+        {
+            l.Item_ProcessedFlage = 100;
+            l.Item_DeletedFlage = 100;
+        }
+        _invoiceNoDisplay = _header.Invoice_Id?.ToString() ?? "";
+        _invoiceDate = _header.Invoice_Date;
+        _notes = _header.Notes ?? "";
+        _currencyId = _header.Currency_id ?? _currencyId;
+        _isAgile = _header.Is_Invoice_Agile == 1;
+        _isTaxInvoice = _header.IsInvoiceTaxInfo == 1;
+        // نسب الضريبة تُخزَّن على الأسطر لا على الرأس (نسب الرأس صفر)، فتُستعاد من أول سطر بضريبة ليعرضها الحقلان ولا تُصفَّر عند التعديل.
+        var taxedLine = _invD_O.invDlst.FirstOrDefault(l => (l.Item_TaxSales10 ?? 0) != 0 || (l.Item_ATS05 ?? 0) != 0);
+        if (_isTaxInvoice && taxedLine != null)
+        {
+            _defaultTaxSales = taxedLine.Item_TaxSales10 ?? 0;
+            _defaultATS05 = taxedLine.Item_ATS05 ?? 0;
+        }
+        if (_header.Supplier_Id is > 0)
+        {
+            var name = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var dt = new AccountModelsLib.operations().return_DataTable("SELECT Name FROM Supplier WHERE Id = " + _header.Supplier_Id);
+                return dt.Rows.Count > 0 ? dt.Rows[0][0]?.ToString()?.Trim() ?? "" : "";
+            });
+            _selectedSupplier = new PartyOption(_header.Supplier_Id.Value, string.IsNullOrEmpty(name) ? _header.SubAccount_Name ?? "" : name);
+        }
+        _supplierBalanceBefore = _header.CustomerAccountBefor ?? 0;
+    }
+
+    private async Task<IEnumerable<PartyOption>> SearchSuppliersAsync(string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _supplierCls.Get_SupplierListForStatement(0, 0, 0, true);
+        }, ct);
+        var list = new List<PartyOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["Name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+                list.Add(new PartyOption(Convert.ToInt64(r["Id"]), name));
+        }
+        return list.Take(50);
+    }
+
+    // يقابل GetSupplierAccountBefor: رصيد المورد قبل الفاتورة من SupplierCLS.GetSupplier_DataBalance (محسوب من حركاته).
+    private async Task OnSupplierPickedAsync(PartyOption? option)
+    {
+        _selectedSupplier = option;
+        if (option is null) return;
+        _supplierBalanceBefore = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            try
+            {
+                var dt = _supplierCls.GetSupplier_DataBalance(option.Id);
+                return dt.Rows.Count > 0 && decimal.TryParse(dt.Rows[0]["Balance"]?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var b)
+                    ? Common.RoundMe(b) : 0m;
+            }
+            catch { return 0m; }
+        });
+    }
+
+    private void OnAgileChanged(bool value)
+    {
+        _isAgile = value;
+        UpdateTitle();
+    }
+
+    private static string FormatQnty(IBills_Details line)
+    {
+        var largTxt = line.Larg_Qnty is > 0 ? $"{line.Larg_Qnty:0.##} {line.UnitStr}" : "";
+        var smallTxt = line.Small_Qnty is > 0 ? $"{line.Small_Qnty:0.##} {line.UnitSmallStr}" : "";
+        return string.Join(" ", new[] { largTxt, smallTxt }.Where(s => !string.IsNullOrEmpty(s)));
+    }
+
+    // ===== الأصناف =====
+    private void OpenAddItemDialog()
+    {
+        if (!GuardEditItems()) return;
+        _editingLine = null;
+        _dialogInitialCode = "";
+        _itemDialogOpen = true;
+    }
+
+    private void OpenEditItemDialog(IBills_Details line)
+    {
+        if (!GuardEditItems()) return;
+        _editingLine = line;
+        _itemDialogOpen = true;
+    }
+
+    private Task OnBarcodeKeyDownAsync(KeyboardEventArgs e)
+    {
+        var code = (_barcodeText ?? "").Trim();
+        if (e.Key != "Enter" || code.Length == 0 || _selectedSupplier is null || _isSaved) return Task.CompletedTask;
+        if (!GuardEditItems()) return Task.CompletedTask;
+        _editingLine = null;
+        _dialogInitialCode = code;
+        _barcodeToken++;
+        _barcodeText = "";
+        _itemDialogOpen = true;
+        return Task.CompletedTask;
+    }
+
+    private async Task OnItemDialogVisibleChangedAsync(bool visible)
+    {
+        _itemDialogOpen = visible;
+        if (!visible)
+        {
+            _dialogInitialCode = "";
+            try { if (_barcodeField is not null) await _barcodeField.FocusAsync(); }
+            catch { /* التركيز تحسين راحة فقط */ }
+        }
+    }
+
+    private Task OnBarcodeNotFoundAsync(string code)
+    {
+        Snackbar.Add($"{Tr("ItemCodeNotFoundError")}: {code}", Severity.Warning);
+        return Task.CompletedTask;
+    }
+
+    // إضافة سطر جديد = علما المعالجة 0؛ تعديل سطر محفوظ = حذف القديم (يُرجع المحرك رصيده) + سطر جديد (يضيف رصيده).
+    private void OnItemDialogSaved(IBills_Details line)
+    {
+        if (_editingLine is null)
+        {
+            line.Item_DeletedFlage = 0;
+            line.Item_ProcessedFlage = 0;
+            _invD_O.invDlst.Add(line);
+        }
+        else
+        {
+            var index = _invD_O.invDlst.IndexOf(_editingLine);
+            if (index >= 0)
+            {
+                if (_editingLine.Id > 0)
+                {
+                    _editingLine.Item_DeletedFlage = 1;
+                    _editingLine.Item_ProcessedFlage = 1;
+                    _invD_O.invDlst_Deleted.Add(_editingLine);
+                }
+                line.Id = 0;
+                line.Item_DeletedFlage = 0;
+                line.Item_ProcessedFlage = 0;
+                _invD_O.invDlst[index] = line;
+            }
+            _editingLine = line;
+        }
+        RecomputeTotals();
+    }
+
+    private void DeleteLine(IBills_Details line)
+    {
+        if (!GuardEditItems()) return;
+        if (line.Id > 0)
+        {
+            line.Item_DeletedFlage = 1;
+            line.Item_ProcessedFlage = 1;
+            _invD_O.invDlst_Deleted.Add(line);
+        }
+        _invD_O.invDlst.Remove(line);
+        RecomputeTotals();
+    }
+
+    private void RecomputeTotals()
+    {
+        BillLineCalculator.ComputeHeaderTotals(_header, _invD_O.invDlst);
+        StateHasChanged();
+    }
+
+    private void OnTaxInvoiceChanged(bool value)
+    {
+        _isTaxInvoice = value;
+        ApplyTaxSettings();
+    }
+
+    // الفاتورة الضريبية = ضريبة لكل صنف (Is_Tax_Per_Item=1) ونسب الرأس صفر؛ بدونها كل النسب صفر. تُعاد حسابات الأسطر الموجودة.
+    private void ApplyTaxSettings()
+    {
+        _header.IsInvoiceTaxInfo = _isTaxInvoice ? 1 : 0;
+        _header.Is_Tax_Per_Item = _isTaxInvoice ? 1 : 0;
+        _header.TaxSales10 = 0;
+        _header.ATS05 = 0;
+
+        foreach (var line in _invD_O.invDlst.Where(l => (l.Item_DeletedFlage ?? 0) != 1).ToList())
+        {
+            var target = line;
+            if (line.Id > 0)
+            {
+                // سطر محفوظ تغيّرت ضريبته فقط: حذف القديم + نسخة جديدة (نفس عقد التعديل).
+                var index = _invD_O.invDlst.IndexOf(line);
+                var old = line.Clone();
+                old.Item_DeletedFlage = 1;
+                old.Item_ProcessedFlage = 1;
+                _invD_O.invDlst_Deleted.Add(old);
+                target = line.Clone();
+                target.Id = 0;
+                target.Item_DeletedFlage = 0;
+                target.Item_ProcessedFlage = 0;
+                _invD_O.invDlst[index] = target;
+            }
+            BillLineCalculator.ApplyItemTax(target, _isTaxInvoice ? _defaultTaxSales : 0, _isTaxInvoice ? _defaultATS05 : 0);
+        }
+        RecomputeTotals();
+    }
+
+    // ===== فاتورة جديدة =====
+    private string NewInvoiceUrl()
+    {
+        var path = _isReverse ? "/accounts/invoices/purchase-return" : "/accounts/invoices/purchase-invoice";
+        var query = new List<string>();
+        if (_isAgile) query.Add("agile=1");
+        var type = Convert.ToInt32(_header.Invoice_Type);
+        if (type != 0) query.Add("type=" + type);
+        if (_isSaveDirectly) query.Add("saveDirectly=1");
+        return query.Count > 0 ? path + "?" + string.Join("&", query) : path;
+    }
+
+    private bool HasUnsavedWork() =>
+        !_isSaved && (IsExistingInvoice
+            ? Fingerprint() != _baseline
+            : _lines.Count > 0 || _selectedSupplier is not null || !string.IsNullOrWhiteSpace(_notes));
+
+    private async Task NewInvoiceAsync()
+    {
+        if (_isSaving) return;
+        if (HasUnsavedWork())
+        {
+            var confirmed = await DialogService.ShowMessageBoxAsync(Tr("NewInvoiceButton"), Tr("DiscardChangesConfirm"),
+                yesText: Tr("NewInvoiceButton"), cancelText: Tr("Cancel"));
+            if (confirmed != true) return;
+        }
+        if (IsExistingInvoice)
+        {
+            Nav.NavigateTo(NewInvoiceUrl());
+            return;
+        }
+        _selectedSupplier = null;
+        _supplierBalanceBefore = 0;
+        _notes = "";
+        _invoiceDate = DateTime.Now;
+        _isSaved = false;
+        _editingLine = null;
+        _barcodeText = "";
+        _dialogInitialCode = "";
+        _isTaxInvoice = false;
+        _invL_O = new BillOperationListCLS_New(_isReverse ? 1 : 0);
+        _invD_O = new BillOperationCLS_New(_isReverse ? 1 : 0);
+        await InitializeNewInvoiceAsync();
+        UpdateTitle();
+    }
+
+    private void CloseStaleNewInvoiceTab(string relativeWithQuery)
+    {
+        var parts = relativeWithQuery.Split('?', 2);
+        var key = "/" + parts[0].Trim('/');
+        TabWorkspace.Close(key);
+        if (parts.Length > 1 && parts[1].Length > 0) TabWorkspace.Close(key + "?" + parts[1]);
+    }
+
+    // ===== الحفظ =====
+    private async Task SaveInvoiceAsync()
+    {
+        if (_isSaving) return;
+        _isSaving = true;
+        StateHasChanged();
+        try { await SaveInvoiceCoreAsync(); }
+        finally { _isSaving = false; }
+    }
+
+    private async Task ReloadSavedInvoiceAsync()
+    {
+        _invL_O = new BillOperationListCLS_New(_isReverse ? 1 : 0);
+        _invD_O = new BillOperationCLS_New(_isReverse ? 1 : 0);
+        _editingLine = null;
+        await LoadExistingInvoiceAsync(Id!.Value);
+        _baseline = Fingerprint();
+    }
+
+    private async Task SaveInvoiceCoreAsync()
+    {
+        if (_selectedSupplier is null)
+        {
+            Snackbar.Add(Tr("SupplierRequiredError"), Severity.Warning);
+            return;
+        }
+
+        var supplierId = _selectedSupplier.Id;
+        _header.Supplier_Id = supplierId;
+        // يقابل Make_Bill_Templat سطر 1064: الحساب الفرعى للمورد يُحفظ على الرأس (يبنى عليه قيد الفاتورة).
+        _header.SubAccount_Id = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var dt = new AccountModelsLib.operations().return_DataTable("SELECT SubAccount_Id FROM Supplier WHERE Id = " + supplierId);
+            return dt.Rows.Count > 0 && long.TryParse(dt.Rows[0][0]?.ToString(), out var sub) ? sub : 0L;
+        });
+        _header.SubAccount_Name = _selectedSupplier.Name;
+        _header.Currency_id = _currencyId;
+        _header.Currency = _currencies.FirstOrDefault(c => c.Id == _currencyId)?.Name ?? "";
+        _header.Invoice_Date = _invoiceDate ?? DateTime.Now;
+        _header.Notes = _notes;
+        _header.Is_Invoice_Agile = _isAgile ? 1 : 0;
+        _header.Is_Invoice_AgileStr = _isAgile ? Tr("DS_InvoiceCredit") : Tr("DS_InvoiceCash");
+        _header.IsInvoiceTaxInfo = _isTaxInvoice ? 1 : 0;
+        _header.Is_Tax_Per_Item = _isTaxInvoice ? 1 : 0;
+        _header.User_Id = Common.User_Id;
+        _header.Branch_Id = Common.Branch_Id;
+        if (!IsExistingInvoice)
+        {
+            _header.Invoice_DateTime = DateTime.Now;
+            _header.Insert_ServerDateTime = DateTime.Now;
+            _header.InvoiceDueDate = DateTime.Now;
+            if (string.IsNullOrEmpty(_header.PolicaNo)) _header.PolicaNo = "0";
+            if (string.IsNullOrEmpty(_header.TroodContainerNo)) _header.TroodContainerNo = "0";
+            _header.Supplier_Notes ??= "";
+            _header.Salesman_Id ??= 0;
+            _header.Emp_Name ??= "";
+            // الأصل يحفظ IS_Posted_Flage=0 (غير مُرحَّل)؛ وقراءات المحرك (Get_EntryFor_Bills: سطور الضريبة/العمولة فى حركة المورد، والترحيل لاحقاً) تشترط = 0 فتتخطى NULL.
+            _header.IS_Posted_Flage ??= 0;
+            // الأصل: مربع «الحمولة على الضريبة» مُعلَّم افتراضياً ما لم يكن Show_Item_TaxSale_On_Bill_Monitor=1.
+            _header.Is_Load_Payment_OnTax ??= Common.Show_Item_TaxSale_On_Bill_Monitor == 1 ? 0 : 1;
+        }
+        _header.CustomerAccountBefor = _supplierBalanceBefore;
+        _header.CustomerAccountAfter = BalanceAfter;
+        foreach (var l in _invD_O.invDlst) BillLineCalculator.ZeroNullNumerics(l);
+        BillLineCalculator.ZeroNullNumerics(_header);
+
+        var excp = 0;
+        var msg = "";
+        // المحرك القديم قد يبتلع استثناءات داخلياً؛ نلتقط آخر استثناء SQL/EF أثناء الاستدعاء (من جهة Razor فقط) لعرض السبب الحقيقى.
+        string? swallowed = null;
+        EventHandler<System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs> handler = (_, e) =>
+        {
+            var name = e.Exception.GetType().Name;
+            if (name.Contains("Sql") || name.Contains("DbUpdate") || name.Contains("Invalid") || name.Contains("Null"))
+                swallowed = e.Exception.Message;
+        };
+        try
+        {
+            AppDomain.CurrentDomain.FirstChanceException += handler;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var engine = new BillsClss();
+                if (_isReverse)
+                {
+                    if (IsExistingInvoice) engine.Edit_Bill_List_reverse_Update_Supplier_Account(ref excp, ref msg, _invD_O, _invL_O);
+                    else engine.Make_Bills_List_Reverse_Update_SupplierAccount(ref excp, ref msg, _invD_O, _invL_O);
+                }
+                else
+                {
+                    if (IsExistingInvoice) engine.Edit_Bill_Update_Supplier_Account(ref excp, ref msg, _invD_O, _invL_O);
+                    else engine.Make_Bill_Update_SupplierAccount(ref excp, ref msg, _invD_O, _invL_O);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+            return;
+        }
+        finally
+        {
+            AppDomain.CurrentDomain.FirstChanceException -= handler;
+        }
+
+        if (excp == 0)
+        {
+            if (_deletingInvoice)
+            {
+                Snackbar.Add(Tr("InvDeletedMessage"), Severity.Success);
+                Nav.NavigateTo(_isReverse ? "/accounts/invoices/purchases-list?return=1" : "/accounts/invoices/purchases-list");
+                return;
+            }
+            Snackbar.Add(Tr("InvoiceSavedMessage"), Severity.Success);
+            if (IsExistingInvoice)
+            {
+                await ReloadSavedInvoiceAsync();
+            }
+            else
+            {
+                _isSaved = true;
+                var oldRelative = Nav.ToBaseRelativePath(Nav.Uri);
+                Nav.NavigateTo($"/accounts/invoices/{(_isReverse ? "purchase-return" : "purchase-invoice")}/{_header.Id}", replace: true);
+                CloseStaleNewInvoiceTab(oldRelative);
+            }
+        }
+        else
+        {
+            var detail = string.IsNullOrEmpty(msg) ? swallowed : msg;
+            Snackbar.Add(string.IsNullOrEmpty(detail) ? Tr("InvoiceSaveError") : $"{Tr("InvoiceSaveError")}: {detail}", Severity.Error);
+        }
+    }
+
+    private string Tr(string key)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

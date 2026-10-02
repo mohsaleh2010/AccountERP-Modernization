@@ -1,0 +1,529 @@
+@* 🟢 يقابل شاشتين فى Accounts.Batches.Sales (بموافقة المستخدم على تحويلهما لـ Razor، وتُشاركان هنا نفس المكوّن لأن محرك
+   الحفظ والخدمة واحدان):
+     - المسار daily-customer-sales  = Accounts.FrmDailyCustomerSales (البيع اليومى للعميل - عدة أصناف ثم "حفظ الكل" فاتورة واحدة)
+     - المسار daily-item-sale       = Accounts.FrmDailyCustomerSalesSingle (بيع صنف منفرد - كل إضافة تُنشئ فاتورتها فوراً)
+   الحفظ عبر نفس Accounts... InvoicesFromBatch.SetInvoice (المحرك المعتمد لهاتين الشاشتين ولمركز التجميل) وإضافة البيع عبر
+   DailyItemSalesService.TryAddSale - بدون أى تعديل فى كود المحرك أو سطح المكتب. لا توجد حقول static فى الأصل ولا هنا.
+
+   v1 يشمل: العميل/التاريخ/نقدى-آجل، مصدر الصنف (باتش وارد أو قائمة الأصناف)، كمية كجم/عدد/سعر، جدول مبيعات العميل فى اليوم
+   (بفلتر مفوتر/غير مفوتر وخانات اختيار)، عمولة الفاتورة والمدفوع واستخدام المبلغ الزائد، حساب الإجمالى كما فى
+   ComputeInvoiceTotals/ComputeTotals الأصلية، والحفظ. مُؤجَّل: الطباعة، سداد النقدية BtnOrderMoney، حذف/إلغاء الفاتورة،
+   تعديل صف فى الجدول (EditRow)، وشاشة FrmBatchLookup الكاملة (هنا بحث نصى مبسّط فى الباتشات النشطة). *@
+
+@page "/accounts/sales/daily-customer-sales"
+@page "/accounts/sales/daily-item-sale"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using Microsoft.EntityFrameworkCore
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<PageTitle>@_pageTitle</PageTitle>
+
+<InvoiceStyles />
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4 inv-page" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    @if (!_featureAvailable)
+    {
+        <MudAlert Severity="Severity.Warning" Class="mb-4">@Tr("DS_FeatureMissing")</MudAlert>
+    }
+
+    <MudPaper Class="inv-card mb-4" Elevation="0">
+        <h1 class="inv-title" style="margin-bottom:16px">@_pageTitle</h1>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="4">
+                <MudAutocomplete T="CustomerOption" Value="_customer" SearchFunc="SearchCustomersAsync"
+                                  ToStringFunc="@(o => o?.Name ?? "")" Label="@Tr("CustomerLabel")" Variant="Variant.Outlined"
+                                  ValueChanged="OnCustomerPickedAsync" ResetValueOnEmptyText="true" Disabled="_invoiceId > 0" Required="true" />
+            </MudItem>
+            <MudItem xs="6" sm="3" md="2">
+                <MudDatePicker T="DateTime?" Date="_saleDate" DateChanged="OnDateChangedAsync" Label="@Tr("InvoiceDateLabel")"
+                               Variant="Variant.Outlined" Disabled="_invoiceId > 0" />
+            </MudItem>
+            <MudItem xs="6" sm="3" md="3">
+                <MudRadioGroup T="int" @bind-Value="_isAgile" Disabled="_invoiceId > 0">
+                    <MudRadio T="int" Value="0" Color="Color.Primary">@Tr("DS_InvoiceCash")</MudRadio>
+                    <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("DS_InvoiceCredit")</MudRadio>
+                </MudRadioGroup>
+            </MudItem>
+            @if (!_single)
+            {
+                <MudItem xs="12" md="3">
+                    <MudStack Row="true" Spacing="2">
+                        <MudCheckBox T="bool" @bind-Value="_showNotInvoiced" Label="@Tr("DS_ShowNotInvoicedLabel")" Dense="true" />
+                        <MudCheckBox T="bool" @bind-Value="_showInvoiced" Label="@Tr("DS_ShowInvoicedLabel")" Dense="true" />
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="SearchAsync" Disabled="_customer is null">@Tr("DS_SearchButton")</MudButton>
+                    </MudStack>
+                </MudItem>
+            }
+        </MudGrid>
+
+        @if (!string.IsNullOrEmpty(_balanceLabel))
+        {
+            <MudAlert Severity="Severity.Info" Dense="true" Class="mt-2">@_balanceLabel</MudAlert>
+        }
+    </MudPaper>
+
+    <MudPaper Class="inv-card mb-4" Elevation="0">
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="4" md="2">
+                <MudSelect T="int" Value="_sourceType" ValueChanged="OnSourceChanged" Label="@Tr("DS_ItemSourceLabel")" Variant="Variant.Outlined" Disabled="_single && _invoiceId > 0">
+                    <MudSelectItem T="int" Value="0">@Tr("DS_SourceBatch")</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">@Tr("DS_SourceItemList")</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="8" md="4">
+                <MudAutocomplete T="SourceOption" Value="_source" SearchFunc="SearchSourcesAsync"
+                                  ToStringFunc="@(o => o?.Name ?? "")" Label="@Tr("DS_BatchOrItemLabel")" Variant="Variant.Outlined"
+                                  ValueChanged="@(o => _source = o)" ResetValueOnEmptyText="true" Disabled="_single && _invoiceId > 0" />
+            </MudItem>
+            <MudItem xs="4" md="2">
+                <MudNumericField T="decimal" @bind-Value="_qtyKg" Label="@Tr("DS_QtyKgLabel")" Variant="Variant.Outlined" Format="0.##" Min="0" />
+            </MudItem>
+            <MudItem xs="4" md="1">
+                <MudNumericField T="decimal" @bind-Value="_qtyCount" Label="@Tr("DS_QtyCountLabel")" Variant="Variant.Outlined" Format="0.##" Min="0" />
+            </MudItem>
+            <MudItem xs="4" md="2">
+                <MudNumericField T="decimal" @bind-Value="_unitPrice" Label="@Tr("UnitPriceLabel")" Variant="Variant.Outlined" Format="0.00" Min="0" />
+            </MudItem>
+            <MudItem xs="12" md="1">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" OnClick="AddSaleAsync"
+                           Disabled="_customer is null || (_single && _invoiceId > 0)">@Tr("DS_AddSaleButton")</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (!_single)
+    {
+        <MudPaper Class="inv-card mb-4" Elevation="0">
+            <MudTable Items="@_sales" Hover="true" Elevation="0" Class="inv-table">
+                <HeaderContent>
+                    <MudTh>@Tr("DS_SelectColumn")</MudTh>
+                    <MudTh>@Tr("DS_DateColumn")</MudTh>
+                    <MudTh>@Tr("ItemNameColumn")</MudTh>
+                    <MudTh>@Tr("DS_KgColumn")</MudTh>
+                    <MudTh>@Tr("DS_QtyCountLabel")</MudTh>
+                    <MudTh>@Tr("UnitPriceColumn")</MudTh>
+                    <MudTh>@Tr("DS_ValueColumn")</MudTh>
+                    <MudTh>@Tr("DS_StatusColumn")</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("DS_SelectColumn")">
+                        <MudCheckBox T="bool" Value="@(context.isSelect ?? false)" ValueChanged="@(v => OnRowSelectChanged(context, v))"
+                                     Disabled="@(context.IsProcessedAsInvoice == 1)" Dense="true" />
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("DS_DateColumn")">@context.SalesDate?.ToString("yyyy/MM/dd")</MudTd>
+                    <MudTd DataLabel="@Tr("ItemNameColumn")">@(context.ItemName_OnInvoice ?? context.Item_Name ?? context.ItemNameSource)</MudTd>
+                    <MudTd DataLabel="@Tr("DS_KgColumn")">@context.Larg_Balance?.ToString("0.##")</MudTd>
+                    <MudTd DataLabel="@Tr("DS_QtyCountLabel")">@context.Item_No?.ToString("0.##")</MudTd>
+                    <MudTd DataLabel="@Tr("UnitPriceColumn")">@context.P_Price?.ToString("0.00")</MudTd>
+                    <MudTd DataLabel="@Tr("DS_ValueColumn")">@context.QntyValue?.ToString("0.00")</MudTd>
+                    <MudTd DataLabel="@Tr("DS_StatusColumn")">@(context.IsProcessedAsInvoice == 1 ? Tr("DS_StatusInvoiced") : Tr("DS_StatusNotInvoiced"))</MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("DS_NoSalesMessage")</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudPaper>
+    }
+
+    <MudPaper Class="inv-card mb-4" Elevation="0">
+        <MudGrid Spacing="3">
+            @if (_isAgile == 1)
+            {
+                <MudItem xs="6" sm="3">
+                    <MudNumericField T="decimal" @bind-Value="_paymentValue" Label="@Tr("DS_PaymentValueLabel")" Variant="Variant.Outlined" Format="0.00" Min="0" Disabled="_invoiceId > 0" />
+                </MudItem>
+            }
+            <MudItem xs="6" sm="3">
+                <MudNumericField T="decimal" @bind-Value="_commission" Label="@Tr("DS_ListCommissionLabel")" Variant="Variant.Outlined" Format="0.00" Min="0" Disabled="_invoiceId > 0" />
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudTextField T="string" Value="@Totals.Total.ToString("0.00")" ReadOnly="true" Label="@Tr("TotalLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudTextField T="string" Value="@Totals.Net.ToString("0.00")" ReadOnly="true" Label="@Tr("DS_NetTotalLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudCheckBox T="bool" @bind-Value="_useExtraAmount" Label="@Tr("DS_UseExtraAmountLabel")" Dense="true" Disabled="_invoiceId > 0" />
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2">
+        <MudButton Variant="Variant.Outlined" OnClick="NewAsync">@Tr("DS_NewButton")</MudButton>
+        @if (!_single)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_invoiceId > 0 || !SelectedForInvoice.Any()" OnClick="SaveAllAsync">
+                @Tr("SaveButton")
+            </MudButton>
+        }
+    </MudStack>
+
+</MudContainer>
+
+@code {
+    private record CustomerOption(long Id, string Name);
+    private record SourceOption(long Id, string Name);
+
+    private ItemCLS _itemCls = new();
+    private DailyItemSalesService _service = default!;
+    private readonly CustomerCLS _customerCls = new();
+
+    private bool _single;
+    private string _pageTitle = "";
+    private CustomerOption? _customer;
+    private DateTime? _saleDate = DateTime.Today;
+    private int _isAgile;
+    private bool _showNotInvoiced = true;
+    private bool _showInvoiced;
+    private string _balanceLabel = "";
+    private decimal _customerBalance;
+
+    private int _sourceType;
+    private SourceOption? _source;
+    private decimal _qtyKg;
+    private decimal _qtyCount;
+    private decimal _unitPrice;
+
+    private decimal _paymentValue;
+    private decimal _commission;
+    private bool _useExtraAmount;
+
+    private List<Unit_Item_SalesDate> _sales = new();
+    private long _invoiceId;
+    private long _salesCustomerListId;
+
+    private IEnumerable<Unit_Item_SalesDate> SelectedForInvoice =>
+        _sales.Where(s => (s.isSelect ?? false) && (s.IsProcessedAsInvoice ?? 0) == 0);
+
+    // 🟢 يقابل ComputeInvoiceTotals/ComputeCommission/ComputeTotals الأصلية: الإجمالى = مجموع قيم الأصناف المختارة،
+    // الصافى = الإجمالى − عمولة الفاتورة (ثم تقريب موجب، ولا يقل عن صفر). الضريبة/الشحن/الدفعة الأخرى صفر فى هذه الشاشة.
+    private (decimal Total, decimal Net) Totals
+    {
+        get
+        {
+            var total = SelectedForInvoice.Sum(s => s.QntyValue ?? 0);
+            var net = Common.RoundMePositive(total - _commission);
+            return (total, net < 0 ? 0 : net);
+        }
+    }
+
+    // 🟢 جداول البيع بالباتش (Unit_Item_SalesDate وقوائمها) ليست ضمن المخطط الأساسى الموثَّق فى ERP_V1_3.md؛ ميزة تُنشر
+    // لعملاء بعينهم. لو لم تكن موجودة فى قاعدة البيانات الحالية نعرض تنبيهاً واضحاً ونُعطّل الإجراءات بدل خطأ SQL خام.
+    private bool _featureAvailable = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _single = Nav.Uri.Contains("daily-item-sale", StringComparison.OrdinalIgnoreCase);
+        _service = new DailyItemSalesService(ref _itemCls.opp);
+        _pageTitle = _single ? Tr("DS_TitleSingle") : Tr("DS_TitleDaily");
+        try
+        {
+            _featureAvailable = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var dt = _itemCls.opp.return_DataTable(
+                    "SELECT COUNT(*) FROM sys.tables WHERE name IN ('Unit_Item_SalesDate','Unit_Item_Sales_CustomerList','Unit_Item_Sales_ItemList')");
+                return dt.Rows.Count > 0 && Convert.ToInt32(dt.Rows[0][0]) == 3;
+            });
+        }
+        catch
+        {
+            _featureAvailable = true;
+        }
+    }
+
+    private async Task<IEnumerable<CustomerOption>> SearchCustomersAsync(string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _customerCls.Get_CustomerSupplierListForStatement(0, 0, -1, -1);
+        }, ct);
+        var list = new List<CustomerOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["Name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add(new CustomerOption(Convert.ToInt64(r["Id"]), name));
+            }
+        }
+        return list.Take(50);
+    }
+
+    // 🟢 يقابل GetCustomerAccountBefor: رصيد العميل الحالى قبل الفاتورة.
+    private async Task OnCustomerPickedAsync(CustomerOption? option)
+    {
+        _customer = option;
+        _sales = new();
+        if (option is null) { _balanceLabel = ""; return; }
+
+        _customerBalance = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var balDt = _customerCls.GetCustomerBalance(option.Id);
+            decimal bal = 0;
+            if (balDt.Rows.Count > 0) decimal.TryParse(balDt.Rows[0]["Balance"]?.ToString(), out bal);
+            return Common.RoundMe(bal);
+        });
+        var natureKey = _customerBalance < 0 ? "NatureCreditLabel" : "NatureDebitLabel";
+        _balanceLabel = $"{option.Name} — {Tr(natureKey)}: {Common.RoundMe(Math.Abs(_customerBalance)):N2}";
+
+        if (!_single) await SearchAsync();
+    }
+
+    private async Task OnDateChangedAsync(DateTime? date)
+    {
+        _saleDate = date;
+        _sales = new();
+        if (!_single && _customer is not null) await SearchAsync();
+    }
+
+    private void OnSourceChanged(int value)
+    {
+        _sourceType = value;
+        _source = null;
+    }
+
+    // 🟢 يقابل Refill_Dg_From_DB: مبيعات العميل فى تاريخ الشاشة، بفلتر مفوتر/غير مفوتر (كلاهما أو لا شىء = الكل).
+    private async Task SearchAsync()
+    {
+        if (_customer is null) { Snackbar.Add(Tr("CustomerRequiredError"), Severity.Warning); return; }
+        var filter = (_showNotInvoiced == _showInvoiced) ? -1 : (_showNotInvoiced ? 0 : 1);
+        var day = (_saleDate ?? DateTime.Today).Date;
+        _sales = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _service.GetUnit_Item_CustomerSalesDate(filter, true, day, true, day, _customer.Id);
+        });
+    }
+
+    private void OnRowSelectChanged(Unit_Item_SalesDate row, bool value) => row.isSelect = value;
+
+    private async Task<IEnumerable<SourceOption>> SearchSourcesAsync(string search, CancellationToken ct)
+    {
+        return await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var term = search?.Trim() ?? "";
+            if (_sourceType == 0)
+            {
+                // باتشات نشطة (يقابل FrmBatchLookup بتصفية نصية مبسّطة بدل نموذج الفلاتر الكامل).
+                var vms = new Unit_Item_ExpireDateCls().GetUnit_Item_ExpireDateVm(0, 1, true, DateTime.Today.AddYears(-10), true, DateTime.Today.AddDays(1));
+                return vms
+                    .Where(v => string.IsNullOrEmpty(term) || (v.ShowFullName ?? "").Contains(term, StringComparison.OrdinalIgnoreCase))
+                    .Take(50)
+                    .Select(v => new SourceOption(v.Id, $"{v.ShowFullName} ({v.Larg_Balance:0.##})"))
+                    .ToList();
+            }
+            return _itemCls.opp.db.Item.AsNoTracking()
+                .Where(i => term == "" || i.Item_Name.Contains(term))
+                .OrderBy(i => i.Item_Name)
+                .Take(50)
+                .Select(i => new SourceOption(i.Id, i.Item_Name))
+                .ToList();
+        }, ct);
+    }
+
+    // 🟢 يقابل SetSalesItem الأصلية بالضبط (نفس الحقول ونفس مصدرى الباتش/قائمة الأصناف).
+    private Unit_Item_SalesDate BuildSale()
+    {
+        var sale = new Unit_Item_SalesDate();
+        long itemId, unitItemTableId, batchGroupListId = 0, supplierId = 0;
+        string itemName, itemNameOnInvoice;
+        if (_sourceType == 0)
+        {
+            var batch = _service.GetBatchesById(_source!.Id);
+            itemId = batch.Item_Id ?? 0;
+            itemName = batch.Item?.Item_Name ?? "";
+            itemNameOnInvoice = batch.Item?.ItemName_OnInvoice ?? "";
+            unitItemTableId = batch.Unit_Item_Table_Id ?? 0;
+            batchGroupListId = batch.Unit_Item_BatchGroupListId ?? 0;
+            supplierId = batch.Supplier_Id ?? 0;
+        }
+        else
+        {
+            itemId = _source!.Id;
+            unitItemTableId = _itemCls.GetUnit_itemIdForDefaultStore(_source.Id);
+            itemName = _itemCls.im.Item_Name;
+            itemNameOnInvoice = _itemCls.im.ItemName_OnInvoice;
+        }
+
+        sale.Customer_Id = _customer!.Id;
+        sale.Larg_Balance = _qtyKg;
+        sale.Item_No = _qtyCount;
+        sale.P_Price = _unitPrice;
+        sale.QntyValue = _unitPrice * _qtyKg;
+        sale.SalesDate = _saleDate ?? DateTime.Today;
+        sale.Supplier_Id = supplierId;
+        sale.Item_Id = itemId;
+        sale.Unit_Item_Table_Id = unitItemTableId;
+        sale.Unit_Item_BatchGroupListId = batchGroupListId;
+        sale.Unit_Item_ExpireDateId = 0;
+        sale.Branch_Id = Common.Branch_Id;
+        sale.User_Id = Common.User_Id;
+        sale.ItemSourceId = _source!.Id;
+        sale.ItemSourceType = _sourceType;
+        sale.ItemNameSource = _source.Name;
+        sale.Item_Name = itemName;
+        sale.ItemName_OnInvoice = itemNameOnInvoice;
+        sale.Unit_Item_Sales_ItemListId = 0;
+        sale.Unit_Item_Sales_CustomerListId = 0;
+        return sale;
+    }
+
+    // 🟢 يقابل ValidateEntry + btnAddToGrid_Click_1.
+    private async Task AddSaleAsync()
+    {
+        if (_customer is null) { Snackbar.Add(Tr("CustomerRequiredError"), Severity.Warning); return; }
+        if (_source is null) { Snackbar.Add(Tr("DS_ItemRequiredError"), Severity.Warning); return; }
+        if (_qtyKg < 0 || _qtyCount < 0) { Snackbar.Add(Tr("DS_QtyInvalidError"), Severity.Warning); return; }
+        if (_unitPrice <= 0) { Snackbar.Add(Tr("PriceRequiredError"), Severity.Warning); return; }
+
+        try
+        {
+            var (ok, sale) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var s = BuildSale();
+                var success = _service.TryAddSale(ref _salesCustomerListId, _sourceType, _source.Id, s);
+                return (success, s);
+            });
+            if (!ok) { Snackbar.Add(Tr("DS_InsufficientBalanceError"), Severity.Warning); return; }
+
+            sale.isSelect = true;
+            _sales.Add(sale);
+            _source = null;
+            _qtyKg = 0; _qtyCount = 0; _unitPrice = 0;
+
+            // 🟢 يقابل CreateInvoice(sale) فى شاشة بيع الصنف المنفرد: كل إضافة تُنشئ فاتورتها فوراً.
+            if (_single) await SaveInvoiceAsync(new List<Unit_Item_SalesDate> { sale });
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private Task SaveAllAsync() => SaveInvoiceAsync(SelectedForInvoice.ToList());
+
+    // 🟢 يقابل ReadInvoiceListData + SaveNewInvoice (والمنفرد: CreateInvoice): رأس بسيط يكمله MapSalesToInvoiceHeader
+    // داخل InvoicesFromBatch.SetInvoice، ثم SetInvoice نفسه (المحرك القياسى للفاتورة).
+    private async Task SaveInvoiceAsync(List<Unit_Item_SalesDate> toInvoice)
+    {
+        if (toInvoice.Count == 0) { Snackbar.Add(Tr("DS_SelectSalesError"), Severity.Warning); return; }
+
+        var total = toInvoice.Sum(s => s.QntyValue ?? 0);
+        var commission = _single ? 0 : _commission;
+        var net = Common.RoundMePositive(total - commission);
+        if (net < 0) net = 0;
+
+        var header = new IInvoices_List
+        {
+            Is_Invoice_Agile = _isAgile,
+            Invoice_Date = _saleDate ?? DateTime.Today,
+            Customer_Id = _customer!.Id,
+            IsUseExtraAmountToPayDebt = _single ? false : _useExtraAmount,
+            OverPaidAmount = 0,
+            PaymentValueFor_Is_Invoice_Agile = _single ? 0 : _paymentValue,
+            commissionValue = commission,
+            IsCommission_Value = 1,
+            List_CommissionValue = commission,
+            List_Final_CommissionValue = commission,
+            Net_Total_CommissionValue = commission,
+            Qnty_Value = total,
+            Total = total,
+            Item_Net_Total = total,
+            Total_PriceWithoutTax = total - commission,
+            Total_ListPriceWithoutTax = total - commission,
+            Net_Total = net,
+            NetInvoiceTotal = net,
+            Equivalent_Net_Total_Price = net,
+            Equivalent_Net_Total_CommissionValue = commission,
+            CustomerAccountBefor = _customerBalance,
+            CustomerAccountAfter = _customerBalance + net,
+        };
+        try { header.TafkeetNet_Total = TafkeetProj.NumberToText.GetText(net, 1); } catch { }
+        InvoiceLineCalculator.ZeroNullNumerics(header);
+
+        var excp = 0;
+        var msg = "";
+        long invoiceId = 0;
+        string? swallowed = null;
+        EventHandler<System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs> handler = (_, e) =>
+        {
+            var name = e.Exception.GetType().Name;
+            if (name.Contains("Sql") || name.Contains("DbUpdate") || name.Contains("Invalid") || name.Contains("Null"))
+            {
+                swallowed = e.Exception.Message;
+                var frames = string.Join(" <- ", Environment.StackTrace.Split('\n').Skip(3).Take(8).Select(s => s.Trim()));
+                Console.Error.WriteLine($"[DailySales.Save] {e.Exception.GetType().FullName}: {e.Exception.Message} @ {frames}");
+            }
+        };
+        try
+        {
+            AppDomain.CurrentDomain.FirstChanceException += handler;
+            invoiceId = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return new InvoicesFromBatch().SetInvoice(ref excp, ref msg, 0, toInvoice, header, _itemCls.opp);
+            });
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+            return;
+        }
+        finally
+        {
+            AppDomain.CurrentDomain.FirstChanceException -= handler;
+        }
+
+        if (excp == 0)
+        {
+            _invoiceId = invoiceId;
+            Snackbar.Add(Tr("DS_InvoiceCreated"), Severity.Success);
+            if (!_single) await SearchAsync();
+        }
+        else
+        {
+            var detail = string.IsNullOrEmpty(msg) ? swallowed : msg;
+            Snackbar.Add(string.IsNullOrEmpty(detail) ? Tr("InvoiceSaveError") : $"{Tr("InvoiceSaveError")}: {detail}", Severity.Error);
+        }
+    }
+
+    // 🟢 يقابل BtnNew_Click/New: تفريغ الحالة لبدء فاتورة جديدة (الحالة كلها محلية للمكوّن - لا static).
+    private Task NewAsync()
+    {
+        _invoiceId = 0;
+        _sales = new();
+        _source = null;
+        _qtyKg = 0; _qtyCount = 0; _unitPrice = 0;
+        _paymentValue = 0; _commission = 0; _useExtraAmount = false;
+        return Task.CompletedTask;
+    }
+
+    private string Tr(string key)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

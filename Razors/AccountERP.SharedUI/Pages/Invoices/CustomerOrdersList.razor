@@ -1,0 +1,279 @@
+@* 🟢 قائمة متابعة طلبيات العملاء (نظام الطلبيات الحديث): تحلّ محل «عرض الطلبيات» (Request_To_Market، القائمة 560) و«بحث الطلبيات ذات
+   المبالغ المدفوعة» (Request_With_Money، القائمة 561) بمعاملة ?paid=1 (فلتر «ذات مبالغ مدفوعة» مفعَّل مسبقاً).
+   الإجراءات: فتح/تعديل الطلبية، تأكيد المسودة، إلغاء بسبب (لا حذف فعلى). التنفيذ (السحب فى فاتورة) والعربون فى مراحلهما. *@
+@page "/accounts/sales/customer-orders"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("COListTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <div class="d-flex align-center justify-space-between mb-4">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("COListTitle")</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => Nav.NavigateTo("/accounts/sales/customer-order"))">@Tr("COTitle")</MudButton>
+        </div>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker T="DateTime?" @bind-Date="_from" Label="@Tr("DateFromLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker T="DateTime?" @bind-Date="_to" Label="@Tr("DateToLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudTextField T="string" @bind-Value="_customerText" Label="@Tr("CustomerLabel")" Variant="Variant.Outlined" Clearable="true"
+                              OnKeyDown="@(e => e.Key == "Enter" ? LoadAsync() : Task.CompletedTask)" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="int" @bind-Value="_status" Label="@Tr("COStatusFilter")" Variant="Variant.Outlined">
+                    <MudSelectItem T="int" Value="-1">@Tr("COAllStatuses")</MudSelectItem>
+                    @foreach (var s in Enum.GetValues<CustomerOrderStatus>())
+                    {
+                        <MudSelectItem T="int" Value="@((int)s)">@StatusText((int)s)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="9" Class="d-flex align-center" Style="gap:24px">
+                <MudCheckBox T="bool" @bind-Value="_paidOnly" Label="@Tr("COPaidOnly")" Dense="true" />
+                <MudCheckBox T="bool" @bind-Value="_overdueOnly" Label="@Tr("COOverdueOnly")" Dense="true" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" FullWidth="true"
+                           OnClick="LoadAsync" Disabled="@_isLoading">@Tr("SearchButton")</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_errorMessage</MudAlert>
+    }
+
+    @if (_cancelTarget is not null)
+    {
+        <MudPaper Class="pa-4 mb-4" Elevation="2">
+            <MudText Typo="Typo.h6" Class="mb-2">@Tr("COCancelOrderButton") #@_cancelTarget.Order_No</MudText>
+            <MudTextField T="string" @bind-Value="_cancelReason" Label="@Tr("COCancelReasonLabel")" Variant="Variant.Outlined" Lines="2" Immediate="true" />
+            <MudStack Row="true" Spacing="2" Class="mt-3">
+                <MudButton Variant="Variant.Filled" Color="Color.Error" Disabled="@(string.IsNullOrWhiteSpace(_cancelReason) || _isBusy)" OnClick="ConfirmCancelAsync">@Tr("COCancelConfirm")</MudButton>
+                <MudButton Variant="Variant.Outlined" OnClick="@(() => _cancelTarget = null)">@Tr("Cancel")</MudButton>
+            </MudStack>
+        </MudPaper>
+    }
+
+    <MudTable Items="@_rows" T="OrderRow" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" Loading="@_isLoading"
+              RowClassFunc="@((OrderRow row, int index) => row.Id == _selectedId ? "mud-selected-item" : string.Empty)"
+              OnRowClick="@((TableRowClickEventArgs<OrderRow> e) => _selectedId = e.Item.Id)">
+        <HeaderContent>
+            <MudTh>#</MudTh>
+            <MudTh>@Tr("DateColumn")</MudTh>
+            <MudTh>@Tr("CustomerLabel")</MudTh>
+            <MudTh>@Tr("COExpectedDateLabel")</MudTh>
+            <MudTh>@Tr("COStatusFilter")</MudTh>
+            <MudTh Style="text-align:end">@Tr("NetTotalColumn")</MudTh>
+            <MudTh Style="text-align:end">@Tr("COPaidColumn")</MudTh>
+            <MudTh>@Tr("COFulfilledColumn")</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="#">@context.Order_No</MudTd>
+            <MudTd DataLabel="@Tr("DateColumn")">@context.Date.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture)</MudTd>
+            <MudTd DataLabel="@Tr("CustomerLabel")">@context.Customer</MudTd>
+            <MudTd DataLabel="@Tr("COExpectedDateLabel")">
+                @(context.Expected?.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture) ?? "")
+                @if (context.IsOverdue)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Outlined">@Tr("COOverdueOnly")</MudChip>
+                }
+            </MudTd>
+            <MudTd DataLabel="@Tr("COStatusFilter")">
+                <MudChip T="string" Size="Size.Small" Color="@StatusColor(context.Status)" Variant="Variant.Filled">@StatusText(context.Status)</MudChip>
+            </MudTd>
+            <MudTd DataLabel="@Tr("NetTotalColumn")" Style="text-align:end">@context.Net.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("COPaidColumn")" Style="text-align:end">@context.Deposits.ToString("N2")</MudTd>
+            <MudTd DataLabel="@Tr("COFulfilledColumn")" Style="min-width:120px">
+                <MudProgressLinear Value="@context.Progress" Color="Color.Success" Size="Size.Medium" />
+                <small>@context.QtyFulfilled.ToString("0.##") / @context.QtyTotal.ToString("0.##")</small>
+            </MudTd>
+            <MudTd Style="white-space:nowrap">
+                <MudIconButton Icon="@Icons.Material.Filled.EditNote" Size="Size.Medium" OnClick="@(() => Nav.NavigateTo($"/accounts/sales/customer-order/{context.Id}"))" aria-label="@Tr("COOpenButton")" />
+                @if (context.Status == (int)CustomerOrderStatus.Confirmed || context.Status == (int)CustomerOrderStatus.PartiallyFulfilled)
+                {
+                    @* يفتح الطلبية على لوحة التنفيذ (الكميات المتبقية + نوع الفاتورة) ومنها تُفتح فاتورة المبيعات معبّأة. *@
+                    <MudIconButton Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Medium" Color="Color.Primary"
+                                   OnClick="@(() => Nav.NavigateTo($"/accounts/sales/customer-order/{context.Id}"))" aria-label="@Tr("COConvertButton")" title="@Tr("COConvertButton")" />
+                }
+                @if (context.Status == (int)CustomerOrderStatus.Draft)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Medium" Color="Color.Success" Disabled="_isBusy" OnClick="@(() => ConfirmAsync(context))" aria-label="@Tr("COConfirmButton")" />
+                }
+                @if (context.Status == (int)CustomerOrderStatus.Draft || context.Status == (int)CustomerOrderStatus.Confirmed)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Cancel" Size="Size.Medium" Color="Color.Error" Disabled="_isBusy" OnClick="@(() => StartCancel(context))" aria-label="@Tr("COCancelOrderButton")" />
+                }
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private record OrderRow(long Id, long Order_No, DateTime Date, DateTime? Expected, string Customer, int Status, decimal Net, decimal Deposits,
+                            decimal QtyTotal, decimal QtyFulfilled)
+    {
+        public bool IsOverdue => Expected.HasValue && Expected.Value.Date < DateTime.Now.Date
+            && (Status == (int)CustomerOrderStatus.Confirmed || Status == (int)CustomerOrderStatus.PartiallyFulfilled);
+        public double Progress => QtyTotal <= 0 ? 0 : (double)Math.Min(100m, QtyFulfilled * 100m / QtyTotal);
+    }
+
+    [SupplyParameterFromQuery(Name = "paid")] public int? PaidQuery { get; set; }
+
+    private readonly CustomerOrdersService _service = new();
+    private List<OrderRow> _rows = new();
+    private DateTime? _from = DateTime.Now.Date.AddMonths(-3);
+    private DateTime? _to = DateTime.Now.Date.AddMonths(1);
+    private string? _customerText;
+    private int _status = -1;
+    private bool _paidOnly;
+    private bool _overdueOnly;
+    private long? _selectedId;
+    private bool _isLoading;
+    private bool _isBusy;
+    private string? _errorMessage;
+    private OrderRow? _cancelTarget;
+    private string? _cancelReason;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _paidOnly = PaidQuery == 1;
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task LoadAsync()
+    {
+        _errorMessage = null;
+        _isLoading = true;
+        StateHasChanged();
+        var from = (_from ?? DateTime.Now.Date.AddMonths(-3)).Date;
+        var to = (_to ?? DateTime.Now.Date.AddMonths(1)).Date;
+        var status = _status;
+        var paid = _paidOnly;
+        var overdue = _overdueOnly;
+        var text = _customerText ?? "";
+        try
+        {
+            var dt = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return _service.ListOrders(from, to, 0, status, paid, overdue, text);
+            });
+            _rows = dt.Rows.Cast<DataRow>().Select(r => new OrderRow(
+                Convert.ToInt64(r["Id"]),
+                r["Order_No"] == DBNull.Value ? 0 : Convert.ToInt64(r["Order_No"]),
+                Convert.ToDateTime(r["Order_Date"]),
+                r["Expected_Delivery_Date"] == DBNull.Value ? null : Convert.ToDateTime(r["Expected_Delivery_Date"]),
+                r["Customer_Name"]?.ToString()?.Trim() ?? "",
+                r["Status"] == DBNull.Value ? 0 : Convert.ToInt32(r["Status"]),
+                Convert.ToDecimal(r["Net_Total"]),
+                Convert.ToDecimal(r["Deposits"]),
+                Convert.ToDecimal(r["Qty_Total"]),
+                Convert.ToDecimal(r["Qty_Fulfilled"]))).ToList();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ConfirmAsync(OrderRow row)
+    {
+        _isBusy = true;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _service.Confirm(row.Id); });
+            Snackbar.Add(Tr("COConfirmedMsg", row.Order_No), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+        finally { _isBusy = false; }
+    }
+
+    // 🟢 صلاحية إلغاء الطلبية (983) فى جدول صلاحيات القوائم؛ المدير يمر دائماً.
+    private bool _canCancelOrder = true;
+    private void StartCancel(OrderRow row)
+    {
+        _canCancelOrder = Common.IsHavePermissionSysMenu(Common.User_Id, 983, 2, -1);
+        if (!_canCancelOrder) { Snackbar.Add(Tr("CONoCancelPermission"), Severity.Warning); return; }
+        _cancelTarget = row; _cancelReason = "";
+    }
+
+    private async Task ConfirmCancelAsync()
+    {
+        if (_cancelTarget is null) return;
+        var target = _cancelTarget;
+        var reason = _cancelReason ?? "";
+        _isBusy = true;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _service.Cancel(target.Id, reason); });
+            Snackbar.Add(Tr("COCancelledMsg", target.Order_No), Severity.Success);
+            _cancelTarget = null;
+            await LoadAsync();
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+        finally { _isBusy = false; }
+    }
+
+    private Color StatusColor(int s) => (CustomerOrderStatus)s switch
+    {
+        CustomerOrderStatus.Confirmed => Color.Primary,
+        CustomerOrderStatus.PartiallyFulfilled => Color.Warning,
+        CustomerOrderStatus.Fulfilled => Color.Success,
+        CustomerOrderStatus.Cancelled => Color.Error,
+        _ => Color.Default
+    };
+
+    private string StatusText(int s) => (CustomerOrderStatus)s switch
+    {
+        CustomerOrderStatus.Confirmed => Tr("COStatusConfirmed"),
+        CustomerOrderStatus.PartiallyFulfilled => Tr("COStatusPartial"),
+        CustomerOrderStatus.Fulfilled => Tr("COStatusFulfilled"),
+        CustomerOrderStatus.Cancelled => Tr("COStatusCancelled"),
+        CustomerOrderStatus.Closed => Tr("COStatusClosed"),
+        _ => Tr("COStatusDraft")
+    };
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

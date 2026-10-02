@@ -4,19 +4,22 @@
    (CostCenterCLS.Add_NewCostCenterForAccounts overload الخاص بـ ArrayList يتجاهل المُكرَّر بصمت)، فاستُخدِم
    هذا الـoverload دائماً هنا حتى لعنصر واحد بدل تكرار شاشتين لغرض واحد.
 
-   قائمة "مراكز التكلفة الأوراق فقط" (Connection4It.Cost_Center_Tree.Get_Data الأصلية تفلتر بنفس الشرط
-   بالضبط: WHERE ID NOT IN (SELECT Parent_Id FROM Cost_Center_Tree)) تُحسَب هنا محلياً فى الـBlazor من نفس
-   شجرة CostCenterCLS.Get_CostCenter() المُحمَّلة أصلاً (عقدة !HasChildren = ورقة) - بدون أي استعلام SQL
-   جديد فى AccountModelsLib، فقط إعادة استخدام نفس البيانات بنفس المنطق. *@
-
+   النسخة المُحدَّثة: بدل القائمة المسطحة لمراكز التكلفة الأوراق فقط، تستخدم شجرة كاملة
+   (Roots + children) مع بحث MudAutocomplete. الاختيار مُدار بأنفسنا عبر MudCheckBox مستقل لكل عقدة
+   (أب أو ابن) — لا نعتمد على MudTreeView لأنه يفرض سلوك cascade لا يمكن إيقافه. اختيار أب يحدد
+   كل أبنائه تلقائياً، لكن الحفظ يرسل الأوراق فقط (الآباء لا تُحفظ للحساب). المراكز المُخصَّصة
+   مسبقاً للحساب تظهر مُختارة ومُعطَّلة فلا يمكن إلغاء اختيارها أو إعادة ربطها.
+   الحفظ يرسل فقط الأوراق الجديدة المُختارة (وليس المُخصَّصة). *@
+@using System.Data
 @using System.Globalization
+@using System.Linq
 @using AccountModelsLib
 @using AccountERP.SharedUI.Services
 @using AccountERP.SharedUI.ViewModels
 @inject LanguageService LangService
 
-<MudDialog @bind-Visible="Visible"
-           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+<MudDialog Visible="Visible" VisibleChanged="OnMudDialogVisibleChangedAsync"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true, BackdropClick = false })">
     <TitleContent>@Tr("AssignCostCentersTitle")</TitleContent>
     <DialogContent>
         @if (!string.IsNullOrEmpty(_errorMessage))
@@ -28,34 +31,127 @@
         {
             <MudProgressLinear Indeterminate="true" Class="mb-2" />
         }
-        else if (_leafCostCenters.Count == 0)
+        else if (_roots.Count == 0)
         {
             <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("NoCostCentersYet")</MudAlert>
         }
         else
         {
-            <MudList T="long" Dense="true">
-                @foreach (var cc in _leafCostCenters)
-                {
-                    <MudListItem T="long">
-                        <MudCheckBox T="bool" Value="@_selectedIds.Contains(cc.Id)" ValueChanged="@((bool v) => OnCheckChanged(cc.Id, v))"
-                                     Label="@($"{cc.Code_Str}  {cc.Name}")" Color="Color.Primary" Dense="true" />
-                    </MudListItem>
-                }
-            </MudList>
+            <div class="assign-tree-root">
+                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-2">
+                    <MudTooltip Text="@Tr("ExpandAllAccounts")">
+                        <MudIconButton Icon="@Icons.Material.Filled.UnfoldMore" Size="Size.Small" OnClick="ExpandAll" />
+                    </MudTooltip>
+                    <MudTooltip Text="@Tr("CollapseAllAccounts")">
+                        <MudIconButton Icon="@Icons.Material.Filled.UnfoldLess" Size="Size.Small" OnClick="CollapseAll" />
+                    </MudTooltip>
+                    <MudAutocomplete T="CostCenterNodeViewModel" Value="null" ValueChanged="OnSearchResultSelected"
+                                     SearchFunc="SearchCostCentersAsync"
+                                     ToStringFunc="@(a => a == null ? null : $"{a.Code_Str}  {a.Name}")"
+                                     Label="@Tr("SearchCostCenterLabel")"
+                                     Placeholder="@Tr("SearchCostCenterPlaceholder")"
+                                     Variant="Variant.Outlined" Dense="true" Clearable="true"
+                                     ResetValueOnEmptyText="true"
+                                     Adornment="Adornment.Start"
+                                     AdornmentIcon="@Icons.Material.Filled.Search"
+                                     Style="flex:1; min-width:200px;" />
+                </MudStack>
+
+                <div class="assign-tree-scroll" style="max-height:60vh; overflow-y:auto;">
+                    @* نرسم الشجرة يدوياً بدل MudTreeView لأن后者 يفرض سلوك Cascade_parent→children لا يمكن إيقافه
+                       حتى مع SelectionMode=None. نستخدم div/ul بسيطة مع CSS للtí.indentation ومعرفة
+                       recycled مهماً ل Rozhark الحالة المُوسَّعة. *@
+                    @foreach (var root in _roots)
+                    {
+                        <RecursiveTreeNode Node="root"
+                                           SelectedIds="_selectedIds"
+                                           AlreadyAssignedIds="_alreadyAssignedIds"
+                                           ExpandedNodes="_expandedNodes"
+                                           OnToggle="OnNodeToggled"
+                                           OnCheckboxChanged="OnCheckboxChanged"
+                                           Depth="0" />
+                    }
+                </div>
+            </div>
         }
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="CloseAsync">@Tr("Cancel")</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@(_isSaving || _selectedIds.Count == 0)">
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync"
+                   Disabled="@(_isSaving || (NewSelectionCount == 0 && !HasSelectedParentWithoutChildren()))">
             @if (_isSaving)
             {
                 <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
             }
-            @Tr("Save")
+            @Tr("Save") @(NewSelectionCount > 0 ? $"({NewSelectionCount})" : "")
         </MudButton>
     </DialogActions>
 </MudDialog>
+
+<style>
+    .assign-tree-root {
+        position: relative;
+    }
+
+    .assign-tree-scroll {
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 4px;
+        padding: 4px;
+    }
+
+    .assign-node {
+        display: flex;
+        align-items: center;
+        padding: 2px 4px;
+        border-radius: 4px;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .assign-node:hover {
+        background: var(--mud-palette-surface-hover);
+    }
+
+    .assign-node.is-already-assigned {
+        opacity: 0.7;
+    }
+
+    .assign-node-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+
+    .assign-node-check {
+        display: inline-flex;
+        align-items: center;
+        margin-inline-end: 4px;
+        flex-shrink: 0;
+    }
+
+    .assign-node-icon {
+        display: inline-flex;
+        align-items: center;
+        margin-inline-end: 4px;
+        flex-shrink: 0;
+        opacity: .75;
+    }
+
+    .assign-node-label {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .assign-tree-guides {
+        border-inline-start: 1px dashed var(--mud-palette-lines-default);
+        margin-inline-start: 12px;
+        padding-inline-start: 0;
+    }
+</style>
 
 @code {
     [Parameter] public bool Visible { get; set; }
@@ -63,52 +159,71 @@
     [Parameter] public long SubmainAccountId { get; set; }
     [Parameter] public EventCallback OnAssigned { get; set; }
 
-    private List<CostCenterNodeViewModel> _leafCostCenters = new();
+    private List<CostCenterNodeViewModel> _roots = new();
+    private Dictionary<long, CostCenterNodeViewModel> _nodeById = new();
+    private HashSet<long> _alreadyAssignedIds = new();
     private HashSet<long> _selectedIds = new();
+    private HashSet<long> _expandedNodes = new();
     private bool _isLoading;
     private bool _isSaving;
     private string? _errorMessage;
-    private bool _loadedOnce;
+    private long _lastLoadedAccountId = -1;
+
+    private int NewSelectionCount => CountSelectableLeaves();
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Visible && !_loadedOnce)
+        if (Visible && SubmainAccountId != 0 && SubmainAccountId != _lastLoadedAccountId)
         {
-            _loadedOnce = true;
-            await LoadLeafCostCentersAsync();
+            _lastLoadedAccountId = SubmainAccountId;
+            await LoadCostCentersAsync();
         }
         else if (!Visible)
         {
-            _loadedOnce = false;
+            _lastLoadedAccountId = -1;
             _selectedIds.Clear();
+            _expandedNodes.Clear();
             _errorMessage = null;
         }
     }
 
-    private async Task LoadLeafCostCentersAsync()
+    private async Task LoadCostCentersAsync()
     {
         _isLoading = true;
+        _errorMessage = null;
+        _selectedIds.Clear();
+        _expandedNodes.Clear();
         try
         {
-            var leaves = await Task.Run(() =>
+            var accountId = SubmainAccountId;
+            var (roots, nodeById, assignedIds) = await Task.Run(() =>
             {
                 AccountCultureGuard.EnsureInvariant();
                 var dt = new CostCenterCLS().Get_CostCenter();
-                var roots = CostCenterNodeViewModel.BuildTree(dt);
-                var flat = new List<CostCenterNodeViewModel>();
-                void Walk(List<CostCenterNodeViewModel> nodes)
+                var treeRoots = CostCenterNodeViewModel.BuildTree(dt);
+                var byId = FlattenById(treeRoots);
+
+                var assignedDt = new CostCenterCLS().Get_CostAssignForCost(accountId);
+                var ids = new HashSet<long>();
+                foreach (DataRow r in assignedDt.Rows)
                 {
-                    foreach (var n in nodes)
-                    {
-                        if (!n.HasChildren) flat.Add(n);
-                        Walk(n.Children);
-                    }
+                    if (r["Id"] != DBNull.Value && long.TryParse(r["Id"].ToString(), out var cid))
+                        ids.Add(cid);
                 }
-                Walk(roots);
-                flat.Sort((a, b) => string.Compare(a.Code_Str, b.Code_Str, StringComparison.OrdinalIgnoreCase));
-                return flat;
+
+                return (treeRoots, byId, ids);
             });
-            _leafCostCenters = leaves;
+
+            _roots = roots;
+            _nodeById = nodeById;
+            _alreadyAssignedIds = assignedIds;
+
+            // 🟢 المراكز المُخصَّصة مسبقاً تظهر مُختارة ومُعطَّلة (لا يمكن إلغاء اختيارها عند الحفظ).
+            _selectedIds.UnionWith(_alreadyAssignedIds);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
         }
         finally
         {
@@ -116,23 +231,162 @@
         }
     }
 
-    private void OnCheckChanged(long id, bool value)
+    private bool IsAlreadyAssigned(long id) => _alreadyAssignedIds.Contains(id);
+    private bool IsSelected(long id) => _selectedIds.Contains(id);
+
+    private void OnNodeToggled(long id)
     {
-        if (value) _selectedIds.Add(id);
-        else _selectedIds.Remove(id);
+        if (_expandedNodes.Contains(id))
+            _expandedNodes.Remove(id);
+        else
+            _expandedNodes.Add(id);
     }
 
-    // 🟢 يقابل BtnSaveFirstBalance_Click (إضافة واحدة) وBtnMultiSelect_Click (إضافة متعددة) معاً فى الأصل:
-    // نفس الاستدعاء بالضبط CostCenterCLS.Add_NewCostCenterForAccounts overload الـArrayList، حتى لعنصر واحد.
+    private void OnCheckboxChanged((long Id, bool Value) args)
+    {
+        if (!_nodeById.TryGetValue(args.Id, out var node)) return;
+
+        if (args.Value)
+        {
+            _selectedIds.Add(args.Id);
+            // 🟢 اختيار أب = تحديد جميع الأبناء تلقائياً (Children).
+            if (node.HasChildren) SelectAllDescendants(node);
+        }
+        else
+        {
+            // 🟢 لا يمكن إلغاء تحديد أب مُخصَّص مسبقاً.
+            if (IsAlreadyAssigned(args.Id)) return;
+            _selectedIds.Remove(args.Id);
+            // 🟢 إلغاء تحديد أب = إلغاء تحديد جميع الأبناء غير المُخصَّصين.
+            if (node.HasChildren) DeselectAllDescendants(node);
+        }
+    }
+
+    /// <summary>تحديد جميع الأبناء (recursive) — لا يلمس المُخصَّصين مسبقاً.</summary>
+    private void SelectAllDescendants(CostCenterNodeViewModel node)
+    {
+        foreach (var child in node.Children)
+        {
+            _selectedIds.Add(child.Id);
+            if (child.HasChildren) SelectAllDescendants(child);
+        }
+    }
+
+    /// <summary>إلغاء تحديد جميع الأبناء (recursive) — لا يلمس المُخصَّصين مسبقاً.</summary>
+    private void DeselectAllDescendants(CostCenterNodeViewModel node)
+    {
+        foreach (var child in node.Children)
+        {
+            if (!IsAlreadyAssigned(child.Id)) _selectedIds.Remove(child.Id);
+            if (child.HasChildren) DeselectAllDescendants(child);
+        }
+    }
+
+    /// <summary>عدد الأبناء الأوراق المُحدَّدة (والتي ستُحفظ فعلياً) — لا تشمل الآباء.</summary>
+    private int CountSelectableLeaves()
+    {
+        int count = 0;
+        void Walk(List<CostCenterNodeViewModel> nodes)
+        {
+            foreach (var n in nodes)
+            {
+                if (!n.HasChildren && _selectedIds.Contains(n.Id) && !_alreadyAssignedIds.Contains(n.Id))
+                    count++;
+                else if (n.HasChildren)
+                    Walk(n.Children);
+            }
+        }
+        Walk(_roots);
+        return count;
+    }
+
+    /// <summary>هل يوجد أب مُحدَّد (غير مُخصَّص مسبقاً) بلا أي ابن مُحدَّد؟
+    ///    يُبقي زر الحفظ مفعَّلاً حتى تظهر رسالة "يجب اختيار ابن" عند المحاولة.</summary>
+    private bool HasSelectedParentWithoutChildren()
+    {
+        bool Walk(List<CostCenterNodeViewModel> nodes)
+        {
+            foreach (var n in nodes)
+            {
+                if (n.HasChildren)
+                {
+                    if (_selectedIds.Contains(n.Id) && !IsAlreadyAssigned(n.Id) &&
+                        n.Children.All(c => !_selectedIds.Contains(c.Id)))
+                        return true;
+                    if (Walk(n.Children)) return true;
+                }
+            }
+            return false;
+        }
+        return Walk(_roots);
+    }
+
+    // ────── Search ──────
+
+    private Task<IEnumerable<CostCenterNodeViewModel>> SearchCostCentersAsync(string value, CancellationToken token)
+    {
+        IEnumerable<CostCenterNodeViewModel> result = string.IsNullOrWhiteSpace(value)
+            ? Enumerable.Empty<CostCenterNodeViewModel>()
+            : _nodeById.Values.Where(a =>
+                (!string.IsNullOrEmpty(a.Name) && a.Name.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrEmpty(a.Code_Str) && a.Code_Str.Contains(value, StringComparison.OrdinalIgnoreCase)))
+                .Take(30);
+        return Task.FromResult(result);
+    }
+
+    private async Task OnSearchResultSelected(CostCenterNodeViewModel? node)
+    {
+        if (node == null) return;
+        ExpandAncestors(node);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // ────── Expand/Collapse ──────
+
+    private void ExpandAncestors(CostCenterNodeViewModel node)
+    {
+        CostCenterNodeViewModel? current = node;
+        while (current != null)
+        {
+            _expandedNodes.Add(current.Id);
+            current = current.Parent_Id != 0 && _nodeById.TryGetValue(current.Parent_Id, out var parent)
+                ? parent
+                : null;
+        }
+    }
+
+    private void ExpandAll()
+    {
+        foreach (var kv in _nodeById)
+            _expandedNodes.Add(kv.Key);
+    }
+
+    private void CollapseAll() => _expandedNodes.Clear();
+
+    // ────── Save ──────
+
+    // 🟢 يقابل BtnSaveFirstBalance_Click (إضافة واحدة) وBtnMultiSelect_Click (إضافة متعددة) معاً فى الأصل.
+    // 🟢 يحفظ الأبناء الأوراق فقط — الآباء لا تُضاف أبداً للحساب.
     private async Task SaveAsync()
     {
-        if (_selectedIds.Count == 0) return;
+        // 🟢 التحقق: لا يمكن حفظ أب بدون أبناء مُحدَّدين.
+        foreach (var root in _roots)
+        {
+            if (!ValidateParentsHaveChildren(root)) return;
+        }
+
+        // 🟢 جمع الأبناء الأوراق فقط (لا آباء).
+        var newLeafIds = new List<long>();
+        CollectSelectedLeaves(_roots, newLeafIds);
+        newLeafIds = newLeafIds.Where(id => !_alreadyAssignedIds.Contains(id)).ToList();
+
+        if (newLeafIds.Count == 0) return;
 
         _isSaving = true;
         _errorMessage = null;
         int excp = 0;
         string msg = "";
-        var ids = new System.Collections.ArrayList(_selectedIds.Cast<object>().ToArray());
+        var ids = new System.Collections.ArrayList(newLeafIds.Cast<object>().ToArray());
         var accountId = SubmainAccountId;
         try
         {
@@ -162,6 +416,39 @@
         }
     }
 
+    // ────── Helpers ──────
+
+    /// <summary>تحقق تكراري: هل لكل أب مُحدَّد ابن واحد على الأقل مُحدَّد؟</summary>
+    private bool ValidateParentsHaveChildren(CostCenterNodeViewModel node)
+    {
+        if (node.HasChildren)
+        {
+            // 🟢 إذا كان الأب مُحدَّداً (وليس مُخصَّصاً مسبقاً) ولكن لا يوجد أي ابن مُحدَّد → خطأ.
+            if (_selectedIds.Contains(node.Id) && !IsAlreadyAssigned(node.Id) && !node.Children.Any(c => _selectedIds.Contains(c.Id)))
+            {
+                _errorMessage = Tr("MustSelectChildrenError");
+                return false;
+            }
+            foreach (var child in node.Children)
+            {
+                if (!ValidateParentsHaveChildren(child)) return false;
+            }
+        }
+        return true;
+    }
+
+    /// <summary>جمع الأبناء الأوراق المُحدَّدين فقط (لا الآباء).</summary>
+    private void CollectSelectedLeaves(List<CostCenterNodeViewModel> nodes, List<long> result)
+    {
+        foreach (var n in nodes)
+        {
+            if (!n.HasChildren && _selectedIds.Contains(n.Id))
+                result.Add(n.Id);
+            else if (n.HasChildren)
+                CollectSelectedLeaves(n.Children, result);
+        }
+    }
+
     private async Task CloseAsync()
     {
         Visible = false;
@@ -180,5 +467,30 @@
         {
             CultureInfo.CurrentUICulture = previousCulture;
         }
+    }
+
+    // ────── Tree data builders ──────
+
+    private static Dictionary<long, CostCenterNodeViewModel> FlattenById(List<CostCenterNodeViewModel> roots)
+    {
+        var dict = new Dictionary<long, CostCenterNodeViewModel>();
+        void Walk(List<CostCenterNodeViewModel> nodes)
+        {
+            foreach (var n in nodes)
+            {
+                dict[n.Id] = n;
+                Walk(n.Children);
+            }
+        }
+        Walk(roots);
+        return dict;
+    }
+
+    // إغلاق MudDialog لنفسه (زر ×، Esc، النقر خارج الحوار) لا يُبلغ الصفحة الأم عبر @bind-Visible على المعامل نفسه، فتبقى Visible=true
+    // ولا يُفتح الحوار ثانية؛ نُمرِّر التغيير للأب صراحةً.
+    private async Task OnMudDialogVisibleChangedAsync(bool visible)
+    {
+        Visible = visible;
+        await VisibleChanged.InvokeAsync(visible);
     }
 }

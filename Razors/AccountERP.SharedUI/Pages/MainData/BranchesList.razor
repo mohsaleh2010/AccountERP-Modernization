@@ -1,0 +1,359 @@
+@page "/main-data/branches"
+
+@* 🟢 النسخة Blazor من General_Ledger.BranchesListFrm (WinForms، فى General_Ledger\New folder) - عنصر القائمة «فروع الشركه» (SysConfigMenus 384).
+   الشاشة الأصلية: جدول (الكود، الفرع، عملة الفرع) يُعدَّل مباشرة ويُحفظ بـDataAdapter + زر «جديد» يفتح حوار Add_Branch (الكود، الاسم، العملة) + زر حذف.
+   كود الأعمال فى AccountModelsLib.Models.AccountBranchesCLS (جديد، بطلب المستخدم) بنفس منطق BranchesListCLS الأصلية: الإضافة تفحص تكرار الكود وتُنشئ الفرع
+   (Id = الكود) وحساباً فرعياً ومركز تكلفة فى معاملة واحدة، والحذف يُمنع لو للفرع قيود. عملة الفرع تُحدَّد عند الإضافة فقط (كما فى الأصل، العمود للعرض). *@
+
+@using System.Data
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("BranchesTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("BranchesTitle")</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddDialog">
+                @Tr("NewButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudTable T="BranchRow" Items="@_rows" Hover="true" Bordered="true" Loading="@_isLoading" Elevation="1" Breakpoint="Breakpoint.None">
+        <HeaderContent>
+            <MudTh>@Tr("CodeColumn")</MudTh>
+            <MudTh>@Tr("BranchLabel")</MudTh>
+            <MudTh>@Tr("Address")</MudTh>
+            <MudTh>@Tr("BranchCurrencyColumn")</MudTh>
+            <MudTh Style="width:140px;"></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            @if (_editingId == context.Id)
+            {
+                <MudTd>
+                    <MudNumericField T="long" @bind-Value="_editingCode" Min="1" Immediate="true" />
+                </MudTd>
+                <MudTd>
+                    <MudTextField T="string" @bind-Value="_editingName" Immediate="true" AutoFocus="true" />
+                </MudTd>
+                <MudTd>
+                    <MudTextField T="string" @bind-Value="_editingAddress" Immediate="true" />
+                </MudTd>
+                <MudTd>@context.Currency_Name</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Check" Color="Color.Success" Size="Size.Small" OnClick="@(() => SaveEditAsync(context))"
+                                   Disabled="@(_isSavingEdit || (_editingCode == context.Code && string.Equals(_editingName?.Trim(), context.Branch_Name, StringComparison.Ordinal) && string.Equals(_editingAddress?.Trim(), context.Address, StringComparison.Ordinal)))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="CancelEdit" />
+                </MudTd>
+            }
+            else
+            {
+                <MudTd>@context.Code</MudTd>
+                <MudTd>@context.Branch_Name</MudTd>
+                <MudTd>@context.Address</MudTd>
+                <MudTd>@context.Currency_Name</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => StartEdit(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteAsync(context))" />
+                </MudTd>
+            }
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<MudDialog Visible="_addOpen" VisibleChanged="OnAddVisibleChanged"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr("BranchAddTitle")</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_addError))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_addError</MudAlert>
+        }
+        <MudStack Spacing="3">
+            <MudNumericField T="long" @bind-Value="_newCode" Label="@Tr("CodeColumn")" Variant="Variant.Outlined" Min="1" Immediate="true" AutoFocus="true" />
+            <MudTextField T="string" @bind-Value="_newName" Label="@Tr("BranchLabel")" Variant="Variant.Outlined" Immediate="true"
+                          @ref="_nameField" OnKeyDown="OnNameKeyDown" />
+            <MudTextField T="string" @bind-Value="_newAddress" Label="@Tr("Address")" Variant="Variant.Outlined" Immediate="true" />
+            <MudSelect T="long" @bind-Value="_newCurrency" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined" Required="true">
+                @foreach (var c in _currencies)
+                {
+                    <MudSelectItem T="long" Value="@c.Value">@c.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudCheckBox T="bool" @bind-Value="_addMultiple" Label="@Tr("MultipleAddLabel")" Color="Color.Primary" Dense="true" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _addOpen = false)">@Tr("Close")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ConfirmAddAsync" Disabled="@_isSavingAdd">
+            @if (_isSavingAdd)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private record CurrencyOpt(long Value, string Name);
+
+    private List<BranchRow> _rows = new();
+    private List<CurrencyOpt> _currencies = new();
+    private bool _isLoading = true;
+    private string _errorMessage = string.Empty;
+
+    private long? _editingId;
+    private long _editingCode;
+    private string _editingName = string.Empty;
+    private string _editingAddress = string.Empty;
+    private bool _isSavingEdit;
+
+    private bool _addOpen;
+    private long _newCode;
+    private string _newName = string.Empty;
+    private string _newAddress = string.Empty;
+    private long _newCurrency;
+    private string _addError = string.Empty;
+    private bool _isSavingAdd;
+    private bool _addMultiple, _multipleAdded;
+    private MudTextField<string>? _nameField;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            // نفس مصدر قائمة العملات فى حوار الأرصدة الافتتاحية؛ CurrencyCLS.GetAllCurrenciesAsync معطَّلة حالياً بسبب اختلاف أنواع أعمدة جدول Currency فى قاعدة التطوير.
+            _currencies = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return new CurrencyFactorsCLS_().GetCurrencyList().Rows.Cast<DataRow>()
+                    .Select(r => new CurrencyOpt(Convert.ToInt64(r["Value"]), r["Currency_Name"]?.ToString() ?? "")).ToList();
+            });
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _rows = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return new AccountBranchesCLS().GetBranches();
+            });
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OpenAddDialog()
+    {
+        _newCode = (_rows.Count == 0 ? 0 : _rows.Max(r => r.Code)) + 1;
+        _newName = string.Empty;
+        _newAddress = string.Empty;
+        _newCurrency = _currencies.Count > 0 ? _currencies[0].Value : 0;
+        _addError = string.Empty;
+        _addOpen = true;
+    }
+
+    private void OnAddVisibleChanged(bool visible) => _addOpen = visible;
+
+    // Enter فى حقل الاسم = زر «حفظ» (بعد 150ms ليصل آخر حرف مكتوب للخادم)؛ Esc يغلق الحوار.
+    private async Task OnNameKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || _isSavingAdd || !_addOpen) return;
+        await Task.Delay(150);
+        await ConfirmAddAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_multipleAdded && _nameField is not null)
+        {
+            _multipleAdded = false;
+            await _nameField.FocusAsync();
+        }
+    }
+
+    // يقابل Add_Branch.Btn_Add_Click: الكود (رقم > 0) والاسم مطلوبان ثم AccountBranchesCLS.AddBranch.
+    private async Task ConfirmAddAsync()
+    {
+        if (_newCode <= 0) { _addError = Tr("BranchCodeRequired"); return; }
+        if (string.IsNullOrWhiteSpace(_newName)) { _addError = Tr("BranchNameRequired"); return; }
+        if (_newCurrency == 0) { _addError = Tr("BkSelectCurrency"); return; }
+
+        _isSavingAdd = true;
+        _addError = string.Empty;
+        try
+        {
+            var code = _newCode;
+            var name = _newName.Trim();
+            var address = _newAddress.Trim();
+            var currency = _newCurrency;
+            var currencyName = _currencies.FirstOrDefault(c => c.Value == currency)?.Name ?? "";
+            int excp = 0;
+            string msg = string.Empty;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new AccountBranchesCLS().AddBranch(ref excp, ref msg, code, name, address, currency, currencyName);
+            });
+            if (excp == 1) { _addError = Tr("BranchCodeUsed"); return; }
+            if (excp != 0) { _addError = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg; return; }
+
+            await LoadAsync();
+            if (_addMultiple)
+            {
+                _newCode = _rows.Max(r => r.Code) + 1;
+                _newName = string.Empty;
+                _newAddress = string.Empty;
+                _multipleAdded = true;
+            }
+            else
+            {
+                _addOpen = false;
+            }
+            Snackbar.Add(Tr("BranchAdded"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _addError = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSavingAdd = false;
+        }
+    }
+
+    private void StartEdit(BranchRow row)
+    {
+        _editingId = row.Id;
+        _editingCode = row.Code;
+        _editingName = row.Branch_Name;
+        _editingAddress = row.Address;
+        _errorMessage = string.Empty;
+    }
+
+    private void CancelEdit()
+    {
+        _editingId = null;
+        _editingName = string.Empty;
+    }
+
+    private async Task SaveEditAsync(BranchRow row)
+    {
+        if (_editingCode <= 0) { _errorMessage = Tr("BranchCodeRequired"); return; }
+        if (string.IsNullOrWhiteSpace(_editingName)) { _errorMessage = Tr("BranchNameRequired"); return; }
+
+        _isSavingEdit = true;
+        _errorMessage = string.Empty;
+        try
+        {
+            int excp = 0;
+            string msg = string.Empty;
+            var id = row.Id;
+            var code = _editingCode;
+            var name = _editingName.Trim();
+            var address = _editingAddress.Trim();
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new AccountBranchesCLS().UpdateBranch(ref excp, ref msg, id, name, address, code);
+            });
+            if (excp == 1) { _errorMessage = Tr("BranchCodeUsed"); return; }
+            if (excp != 0) { _errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg; return; }
+            _editingId = null;
+            await LoadAsync();
+            Snackbar.Add(Tr("GeoSaved"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSavingEdit = false;
+        }
+    }
+
+    // يقابل deleteButton_Click: تأكيد ثم AccountBranchesCLS.DeleteBranch (يُمنع لو للفرع قيود).
+    private async Task DeleteAsync(BranchRow row)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(Tr("GeoDeleteTitle"), Tr("GeoDeleteConfirm", row.Branch_Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+        if (confirmed != true) return;
+
+        _errorMessage = string.Empty;
+        try
+        {
+            int excp = 0;
+            string msg = string.Empty;
+            var id = row.Id;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new AccountBranchesCLS().DeleteBranch(ref excp, ref msg, id);
+            });
+            if (excp == 1) { _errorMessage = Tr("BranchDeleteUsed"); return; }
+            if (excp != 0) { _errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg; return; }
+            await LoadAsync();
+            Snackbar.Add(Tr("GeoDeleted"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

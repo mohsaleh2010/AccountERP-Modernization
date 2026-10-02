@@ -1,0 +1,202 @@
+@* 🟢 يقابل تقارير «حركة الخزينة» الخمسة فى قائمة حركة الخزينة والبنوك بصفحة واحدة:
+     interval=0: يوم واحد  |  interval=1: عن فترة   — (Money_Transaction_BoxFrm(false/true) وMoney_Transaction_BoxPeriod(false/true))
+     layout=days: «يومية حركة الصندوق» (DaysMoney_Transaction_Box): جدول للاستلام وجدول للصرف بدل كشف واحد.
+   الحساب كله من المحرك (Money_Transaction_BoxOrderReportCLS.Get_Money_Box_Transaction_Period / Money_Box_Transaction / Compute_Box_BalanceBeforDataDay)
+   عبر CashVouchersService.BoxStatement/BoxDays بلا تعديل عليه. الصف يفتح الإذن. الطباعة والتصدير مؤجَّلان لمرحلة التقارير. *@
+@page "/accounts/cash/box-statement"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Title</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@Title</MudText>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="4">
+                <MudSelect T="long" @bind-Value="_boxId" Label="@Tr("CVBoxLabel")" Variant="Variant.Outlined">
+                    @foreach (var b in _boxes) { <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem> }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3"><MudDatePicker T="DateTime?" @bind-Date="_from" Label="@(_interval ? Tr("DateFromLabel") : Tr("DateColumn"))" Variant="Variant.Outlined" /></MudItem>
+            @if (_interval)
+            {
+                <MudItem xs="12" sm="6" md="3"><MudDatePicker T="DateTime?" @bind-Date="_to" Label="@Tr("DateToLabel")" Variant="Variant.Outlined" /></MudItem>
+            }
+            <MudItem xs="12" md="2">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" FullWidth="true" OnClick="LoadAsync" Disabled="_isLoading">@Tr("SearchButton")</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_message))
+    {
+        <MudAlert Severity="@_messageSeverity" Dense="true" Class="mb-3">@_message</MudAlert>
+    }
+
+    @if (_loaded)
+    {
+        <MudPaper Class="pa-3 mb-3" Elevation="0" Outlined="true">
+            <MudStack Row="true" Spacing="6" Wrap="Wrap.Wrap">
+                <span>@Tr("CBFirstBalance"): <b>@_first.ToString("N2")</b></span>
+                <span class="mud-success-text">@Tr("CVTypeReceipt"): <b>@_importTotal.ToString("N2")</b></span>
+                <span class="mud-warning-text">@Tr("CVTypePayment"): <b>@_exportTotal.ToString("N2")</b></span>
+                <span>@Tr("CBFinalBalance"): <b>@_final.ToString("N2")</b></span>
+            </MudStack>
+        </MudPaper>
+    }
+
+    @if (_layoutDays)
+    {
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-1 mud-success-text">@Tr("CVTypeReceipt")</MudText>
+                <MudTable Items="@_receipts" T="Row" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" OnRowClick="@((TableRowClickEventArgs<Row> e) => Open(e.Item))">
+                    <HeaderContent><MudTh>#</MudTh><MudTh>@Tr("AccountLabel")</MudTh><MudTh Style="text-align:end">@Tr("CVAmountLabel")</MudTh></HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.No</MudTd><MudTd>@context.Account</MudTd><MudTd Style="text-align:end">@context.Import.ToString("N2")</MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent><MudText Align="Align.Center" Class="py-3 mud-text-secondary">@Tr("NoRecordsFound")</MudText></NoRecordsContent>
+                </MudTable>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-1 mud-warning-text">@Tr("CVTypePayment")</MudText>
+                <MudTable Items="@_payments" T="Row" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" OnRowClick="@((TableRowClickEventArgs<Row> e) => Open(e.Item))">
+                    <HeaderContent><MudTh>#</MudTh><MudTh>@Tr("AccountLabel")</MudTh><MudTh Style="text-align:end">@Tr("CVAmountLabel")</MudTh></HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.No</MudTd><MudTd>@context.Account</MudTd><MudTd Style="text-align:end">@context.Export.ToString("N2")</MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent><MudText Align="Align.Center" Class="py-3 mud-text-secondary">@Tr("NoRecordsFound")</MudText></NoRecordsContent>
+                </MudTable>
+            </MudItem>
+        </MudGrid>
+    }
+    else
+    {
+        <MudTable Items="@_rows" T="Row" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" Loading="@_isLoading"
+                  OnRowClick="@((TableRowClickEventArgs<Row> e) => Open(e.Item))">
+            <HeaderContent>
+                <MudTh>@Tr("DateColumn")</MudTh>
+                <MudTh>#</MudTh>
+                <MudTh>@Tr("AccountLabel")</MudTh>
+                <MudTh Style="text-align:end">@Tr("CVTypeReceipt")</MudTh>
+                <MudTh Style="text-align:end">@Tr("CVTypePayment")</MudTh>
+                <MudTh Style="text-align:end">@Tr("CBRunningBalance")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("DateColumn")">@context.Date.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture)</MudTd>
+                <MudTd DataLabel="#">@context.No</MudTd>
+                <MudTd DataLabel="@Tr("AccountLabel")">@context.Account</MudTd>
+                <MudTd DataLabel="@Tr("CVTypeReceipt")" Style="text-align:end">@(context.Import == 0 ? "" : context.Import.ToString("N2"))</MudTd>
+                <MudTd DataLabel="@Tr("CVTypePayment")" Style="text-align:end">@(context.Export == 0 ? "" : context.Export.ToString("N2"))</MudTd>
+                <MudTd DataLabel="@Tr("CBRunningBalance")" Style="text-align:end"><b>@context.Balance.ToString("N2")</b></MudTd>
+            </RowTemplate>
+            <NoRecordsContent><MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText></NoRecordsContent>
+        </MudTable>
+    }
+</MudContainer>
+
+@code {
+    private record Row(long OrderId, DateTime Date, long No, string Account, decimal Import, decimal Export, decimal Balance);
+    private record BoxOption(long Id, string Name);
+
+    [SupplyParameterFromQuery(Name = "interval")] public int? IntervalQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "layout")] public string? LayoutQuery { get; set; }
+
+    private readonly CashVouchersService _svc = new();
+    private List<BoxOption> _boxes = new();
+    private List<Row> _rows = new(), _receipts = new(), _payments = new();
+    private long _boxId;
+    private DateTime? _from = DateTime.Now.Date;
+    private DateTime? _to = DateTime.Now.Date;
+    private decimal _first, _importTotal, _exportTotal, _final;
+    private bool _interval, _layoutDays, _isLoading, _loaded;
+    private string? _message;
+    private Severity _messageSeverity = Severity.Info;
+
+    private string Title => _layoutDays ? Tr("CBTitleDays") : _interval ? Tr("CBTitlePeriod") : Tr("CBTitleDay");
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _interval = IntervalQuery == 1;
+        _layoutDays = LayoutQuery == "days";
+        try
+        {
+            var dt = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetBoxes(AccountModelsLib.Common.User_Id); });
+            _boxes = dt.Rows.Cast<DataRow>().Select(r => new BoxOption(Convert.ToInt64(r["Id"]), r["Bank_Name"]?.ToString() ?? "")).ToList();
+            _boxId = _boxes.FirstOrDefault()?.Id ?? 0;
+        }
+        catch (Exception ex) { _message = Tr("SystemError", ex.Message); _messageSeverity = Severity.Error; }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private static Row ToRow(DataRow r) => new(
+        r.Table.Columns.Contains("Order_Mony_Id") && r["Order_Mony_Id"] != DBNull.Value ? Convert.ToInt64(r["Order_Mony_Id"]) : 0,
+        r["Transaction_Date"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(r["Transaction_Date"]),
+        r["Order_No"] == DBNull.Value ? 0 : Convert.ToInt64(r["Order_No"]),
+        r["SubAccount_Name"]?.ToString() ?? "",
+        r["Import_Value"] == DBNull.Value ? 0 : Convert.ToDecimal(r["Import_Value"]),
+        r["Export_Value"] == DBNull.Value ? 0 : Convert.ToDecimal(r["Export_Value"]),
+        r["Bank_Balance"] == DBNull.Value ? 0 : Convert.ToDecimal(r["Bank_Balance"]));
+
+    private async Task LoadAsync()
+    {
+        _message = null; _loaded = false; _rows = new(); _receipts = new(); _payments = new();
+        if (_boxId == 0) return;
+        _isLoading = true;
+        StateHasChanged();
+        var box = _boxId; var interval = _interval; var from = (_from ?? DateTime.Now).Date; var to = (_interval ? (_to ?? from) : from).Date;
+        if (interval && from > to) { _message = Tr("CBBadRange"); _messageSeverity = Severity.Warning; _isLoading = false; return; }
+        try
+        {
+            if (_layoutDays)
+            {
+                var (imp, exp, first, final) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.BoxDays(box, interval, from, to); });
+                _receipts = imp.Rows.Cast<DataRow>().Select(ToRow).ToList();
+                _payments = exp.Rows.Cast<DataRow>().Select(ToRow).ToList();
+                _first = first; _final = final;
+                _importTotal = _receipts.Sum(r => r.Import); _exportTotal = _payments.Sum(r => r.Export);
+                _loaded = true;
+                if (_receipts.Count == 0 && _payments.Count == 0) { _message = Tr("CBNoData"); _messageSeverity = Severity.Info; }
+            }
+            else
+            {
+                var res = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.BoxStatement(box, interval, from, to); });
+                if (!string.IsNullOrEmpty(res.Message)) { _message = Tr("CBNoData"); _messageSeverity = Severity.Info; return; }
+                _rows = res.Rows.Rows.Cast<DataRow>().Select(ToRow).ToList();
+                _first = res.FirstBalance; _importTotal = res.ImportTotal; _exportTotal = res.ExportTotal; _final = res.FinalBalance;
+                _loaded = true;
+            }
+        }
+        catch (Exception ex) { _message = Tr("SystemError", ex.Message); _messageSeverity = Severity.Error; }
+        finally { _isLoading = false; }
+    }
+
+    private void Open(Row row)
+    {
+        if (row.OrderId > 0) Nav.NavigateTo($"/accounts/cash/voucher?id={row.OrderId}");
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

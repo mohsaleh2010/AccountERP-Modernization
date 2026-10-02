@@ -1,0 +1,242 @@
+@page "/main-data/sales-rep-customers"
+
+@* 🟢 النسخة Blazor من Accounts.SalesManProcess.CustomerSalesMan (WinForms) - عنصر القائمة «عملاء مندوبى المبيعات» (SysConfigMenus 377).
+   الأصل: قائمة المناديب + قائمة عملاء المندوب المحدد + وضع «تعيين عميل جديد» يختار من العملاء بلا مندوب ثم «إضافة»، وزر لإلغاء ربط العميل المحدد.
+   هنا: جدول المناديب (اختيار بالنقر) وبجانبه عملاؤه مع إضافة عميل من العملاء بلا مندوب وإلغاء الربط. كود الأعمال فى AccountModelsLib.Models.SalesMenCLS
+   (دوال long لأن الدوال الأصلية تأخذ رقم المندوب int) على عمود Customer.SalesMan_Id بعد تحويله إلى bigint. *@
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("SalesRepCustomersTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("SalesRepCustomersTitle")</MudText>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudGrid Spacing="3">
+        <MudItem xs="12" md="5">
+            <MudTable T="SalesManRow" Items="@_salesMen" Hover="true" Bordered="true" Loading="@_isLoading" Elevation="1" Breakpoint="Breakpoint.None"
+                      OnRowClick="OnSalesManClick" RowClassFunc="SalesManRowClass">
+                <HeaderContent>
+                    <MudTh>#</MudTh>
+                    <MudTh>@Tr("SmName")</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@(_salesMen.IndexOf(context) + 1)</MudTd>
+                    <MudTd>@context.Name</MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudItem>
+
+        <MudItem xs="12" md="7">
+            <MudPaper Class="pa-3 mb-3" Elevation="1">
+                @if (_selected is null)
+                {
+                    <MudText Class="mud-text-secondary">@Tr("SrcSelectSalesMan")</MudText>
+                }
+                else
+                {
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
+                        <MudAutocomplete T="SalesManCustomerRow" Value="_pickedCustomer" ValueChanged="@(c => _pickedCustomer = c)"
+                                         SearchFunc="SearchFreeCustomers" ToStringFunc="@(c => c?.Name ?? "")" Label="@Tr("SrcAddCustomerLabel")"
+                                         Variant="Variant.Outlined" Dense="true" ResetValueOnEmptyText="true" CoerceText="false" Style="min-width:280px; flex:1;" />
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="AddCustomerAsync"
+                                   Disabled="@(_pickedCustomer is null || _isSaving)">@Tr("SrcAddButton")</MudButton>
+                    </MudStack>
+                }
+            </MudPaper>
+
+            <MudTable T="SalesManCustomerRow" Items="@_customers" Hover="true" Bordered="true" Elevation="1" Breakpoint="Breakpoint.None">
+                <HeaderContent>
+                    <MudTh>#</MudTh>
+                    <MudTh>@Tr("SrcCustomerName")</MudTh>
+                    <MudTh Style="width:90px;"></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@(_customers.IndexOf(context) + 1)</MudTd>
+                    <MudTd>@context.Name</MudTd>
+                    <MudTd>
+                        <MudTooltip Text="@Tr("SrcUnlink")">
+                            <MudIconButton Icon="@Icons.Material.Filled.LinkOff" Color="Color.Error" Size="Size.Small" OnClick="@(() => UnlinkAsync(context))" Disabled="@_isSaving" />
+                        </MudTooltip>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private List<SalesManRow> _salesMen = new();
+    private List<SalesManCustomerRow> _customers = new();
+    private List<SalesManCustomerRow> _freeCustomers = new();
+    private SalesManRow? _selected;
+    private SalesManCustomerRow? _pickedCustomer;
+    private bool _isLoading = true;
+    private bool _isSaving;
+    private string _errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            _salesMen = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return new SalesMenCLS().GetSalesMen();
+            });
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private string SalesManRowClass(SalesManRow row, int index) => _selected?.Id == row.Id ? "mud-selected-item" : string.Empty;
+
+    private async Task OnSalesManClick(TableRowClickEventArgs<SalesManRow> args)
+    {
+        if (args.Item is null) return;
+        _selected = args.Item;
+        _pickedCustomer = null;
+        await ReloadCustomersAsync();
+    }
+
+    private async Task ReloadCustomersAsync()
+    {
+        if (_selected is null) return;
+        _errorMessage = string.Empty;
+        try
+        {
+            var id = _selected.Id;
+            var data = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var cls = new SalesMenCLS();
+                return (cls.GetCustomersOf(id), cls.GetCustomersWithoutSalesMan());
+            });
+            _customers = data.Item1;
+            _freeCustomers = data.Item2;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    private Task<IEnumerable<SalesManCustomerRow>> SearchFreeCustomers(string? value, CancellationToken token)
+    {
+        IEnumerable<SalesManCustomerRow> result = string.IsNullOrWhiteSpace(value)
+            ? _freeCustomers.Take(40)
+            : _freeCustomers.Where(c => c.Name.Contains(value, StringComparison.CurrentCultureIgnoreCase)).Take(40);
+        return Task.FromResult(result);
+    }
+
+    // يقابل BtnAdd_Click: تحديد العميل أولاً ثم Set_Customer_SalesMan.
+    private async Task AddCustomerAsync()
+    {
+        if (_selected is null || _pickedCustomer is null) return;
+        _isSaving = true;
+        try
+        {
+            int excp = 0;
+            string msg = string.Empty;
+            var salesManId = _selected.Id;
+            var customerId = _pickedCustomer.Id;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new SalesMenCLS().SetCustomerSalesMan(ref excp, ref msg, salesManId, customerId);
+            });
+            if (excp != 0) { _errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg; return; }
+            _pickedCustomer = null;
+            await ReloadCustomersAsync();
+            Snackbar.Add(Tr("SrcLinked"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    // يقابل BtnDelete_Click: تأكيد ثم NotSet_Customer_SalesMan.
+    private async Task UnlinkAsync(SalesManCustomerRow row)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(Tr("SrcUnlink"), Tr("SrcUnlinkConfirm", row.Name), yesText: Tr("Yes"), cancelText: Tr("No"));
+        if (confirmed != true) return;
+
+        _isSaving = true;
+        try
+        {
+            int excp = 0;
+            string msg = string.Empty;
+            var customerId = row.Id;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new SalesMenCLS().UnsetCustomerSalesMan(ref excp, ref msg, customerId);
+            });
+            if (excp != 0) { _errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg; return; }
+            await ReloadCustomersAsync();
+            Snackbar.Add(Tr("SrcUnlinked"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

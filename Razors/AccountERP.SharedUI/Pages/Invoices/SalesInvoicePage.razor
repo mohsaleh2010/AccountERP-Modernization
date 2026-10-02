@@ -1,0 +1,1543 @@
+@* 🟢 يقابل Accounts.Requests.Make_Invoices + Accounts.Requests.EditFRM_Invoices + قاعدتهما المشتركة
+   NewFrmInvoive (شاشة الفاتورة القياسية) - نسخة أولى (v1) توحّد الشاشات التالية بمعاملات بدل صفحات منفصلة
+   (بموافقة صريحة من المستخدم):
+     - فاتورة جديدة نقدى (Make_Invoices, Agile=0)
+     - فاتورة جديدة آجل (Make_Invoices, Agile=1)
+     - فاتورة جديدة - حفظ الأصناف مباشرة (Make_Invoices, SaveDirectly=1)
+     - فاتورة جديدة قطاعى (Make_Invoices, Kta3y=1)
+     - عرض/تعديل فاتورة مبيعات (EditFRM_Invoices)
+
+   يشمل v1: بيانات رأس الفاتورة الأساسية (عميل/عملة/تاريخ/ملاحظات)، جدول الأصناف بالأعمدة الأكثر استخداماً
+   فقط (الاسم/الكمية/السعر/الإجمالى/الضريبة/الصافى)، إضافة/تعديل/حذف صنف عبر AddInvoiceItemDialog، حساب
+   إجماليات الفاتورة (InvoiceLineCalculator)، والحفظ عبر نفس محرك الحفظ الأصلى بدون أى تعديل فيه
+   (Requests_ModelCls.Make_Invoice_Update_CustomerAccount / Edit_Invoice_Update_CustomerAccount).
+
+   مُؤجَّل لمرحلة لاحقة (موثَّق فى خطة التحويل): باقى الأعمدة الشرطية الثلاثين تقريباً المتحكَّم فيها بأعلام
+   AccountCommonDataLIB.Common.Show_*_OnInvoiceMonitor، المندوب (ShowSalesMan)، القسط (Takseet)، استلام
+   النقدية المباشر من الشاشة، البحث بالباركود، ومتغيّر الصيدلية (ItemDataPh + اختيار دفعة الصلاحية).
+
+   إصلاح معمارى مقصود عن الأصل (موثَّق فى خطة التحويل وبموافقة المستخدم): كل الحالة هنا محلية بالصفحة/المكوّن؛
+   لا يوجد أى مكافئ لحقول static bool BtnOk / static DataView dv_Request التى فى أصل Make_Invoices - هذه
+   كانت لتمرير حالة بين الفورم والحوار، وتُستبدَل هنا بـ EventCallback/متغيرات محلية عادية. *@
+
+@* 🟢 المرحلة ٢ (الصفحة ب - فاتورة المرتجع الموحّدة، بموافقة المستخدم على التوحيد): نفس هذا المكوّن يخدم أيضاً
+   Accounts.Requests.Make_Invoices_Reverse + EditFRM_Invoices_Reverse عبر المسار الثانى sales-return (الوضع
+   _isReverse). الفروق الفعلية عن البيع (موثّقة من الأصل): رقم فاتورة مرتجع مستقل (Make_New_Invoice_ReverseNo)،
+   InvoicesOperationListCLS/CLS(1) (Invoices_List_Reverse)، محرك حفظ/تعديل مستقل (Requests_Cls.Make_Invoice_Reverse_
+   Update_CustomerAccount / Edit_InvoiceReverse_Update_CustomerAccount)، تحميل عبر Get_Invoices_List_Reverse +
+   GetInvoiceDetails_Reverse، ورصيد العميل بعد = قبل − الصافى (عكس البيع). ?type=1 = فاتورة "عام" ضريبية (ATS05=0.05،
+   TaxSales10=10، كما فى Check_InvoiceType الأصلية) و0 = "خاص" بلا ضرائب. *@
+@page "/accounts/invoices/sales-invoice/{Id:long?}"
+@page "/accounts/invoices/sales-return/{Id:long?}"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Nav
+@inject TabWorkspaceService TabWorkspace
+@inject MenuStateService MenuState
+
+<PageTitle>@_pageTitle</PageTitle>
+
+<InvoiceStyles />
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    @* ===== رأس الصفحة: العنوان + شارات (الرقم / نقدى-آجل / الحالة) ===== *@
+    @* العنوان والشارات داخل مستطيل بخلفية بيضاء مثل بطاقة «بيانات الفاتورة» (بطلب المستخدم) *@
+    <div class="inv-head inv-card">
+        <h1 class="inv-title">@_pageTitle</h1>
+        <div class="inv-badges">
+            <span class="inv-chip primary"><MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />@_invoiceNoDisplay</span>
+            <span class="inv-chip">@(_header.Is_Invoice_Agile == 1 ? Tr("DS_InvoiceCredit") : Tr("DS_InvoiceCash"))</span>
+            <span class="inv-chip @(_isSaved || (Id.HasValue && Id.Value > 0) ? "success" : "warn")">
+                @(_isSaved || (Id.HasValue && Id.Value > 0) ? Tr("InvoiceStatusSaved") : Tr("InvoiceStatusNew"))
+            </span>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_isSaving" OnClick="NewInvoiceAsync">@Tr("NewInvoiceButton")</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Close" OnClick="@(() => Nav.NavigateTo("/"))">@Tr("Cancel")</MudButton>
+        </div>
+    </div>
+
+    @if (_fromOrderId > 0)
+    {
+        <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.Assignment">
+            @string.Format(CultureInfo.InvariantCulture, Tr("COInvoiceFromOrder"), _fromOrderNo)
+        </MudAlert>
+    }
+
+    <MudGrid Spacing="3">
+
+        @* ===== العمود الرئيسى: بيانات الفاتورة ثم الأصناف ===== *@
+        <MudItem xs="12" lg="@(_showSummary ? 8 : 12)">
+
+            <div class="inv-card">
+                <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Description" />@Tr("InvoiceDataTitle")</h2>
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" md="6">
+                        <MudAutocomplete T="CustomerOption" Value="_selectedCustomer" SearchFunc="SearchCustomersAsync"
+                                          ToStringFunc="@(o => o?.Name ?? "")" Label="@Tr("CustomerLabel")" Variant="Variant.Outlined"
+                                          ValueChanged="OnCustomerPickedAsync" ResetValueOnEmptyText="true" Disabled="_isSaved || _customerLocked" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudSelect T="long" @bind-Value="_currencyId" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined" Disabled="_isSaved">
+                            @foreach (var c in _currencies)
+                            {
+                                <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudDatePicker T="DateTime?" @bind-Date="_invoiceDate" Label="@Tr("InvoiceDateLabel")" Variant="Variant.Outlined" Disabled="_isSaved" />
+                    </MudItem>
+                </MudGrid>
+
+                @* 🟢 يقابل cbAccountTaxInfo (IsInvoiceTaxInfo) و cbIs_TaxPer_Item (Is_Tax_Per_Item) - قاعدة المستخدم: الأولى تحدد أن الفاتورة
+                   ضريبية، والثانية طريقة الحساب (1 على كل صنف، 0 على إجمالى الفاتورة). عند الحساب لكل صنف لا تتكرر الضريبة على الإجمالى. *@
+                <div class="inv-tax">
+                    <MudCheckBox T="bool" Value="_isTaxInvoice" ValueChanged="OnTaxInvoiceChanged" Label="@Tr("TaxInvoiceLabel")" Disabled="_isSaved"
+                                 Dense="true" Size="Size.Small" />
+                    <MudCheckBox T="bool" Value="_isTaxPerItem" ValueChanged="OnTaxPerItemChanged" Label="@Tr("TaxPerItemLabel")"
+                                 Disabled="_isSaved || !_isTaxInvoice || _taxPerItemForced" Dense="true" Size="Size.Small" />
+                    @if (_isTaxInvoice)
+                    {
+                        @* نسبتا الضريبة قابلتان للتعديل كما فى nuTaxSalesList_Rate/nuATS05List_Rate؛ تُطبَّقان على الإجمالى أو على كل صنف حسب Is_Tax_Per_Item. *@
+                        <MudNumericField T="decimal" Value="_defaultTaxSales" ValueChanged="@(v => { _defaultTaxSales = v; ApplyTaxSettings(); })"
+                                         Label="@($"{Tr("TaxSalesColumn")} %")" Variant="Variant.Outlined" Format="0.##" Margin="Margin.Dense" Disabled="_isSaved" Style="max-width:120px" />
+                        <MudNumericField T="decimal" Value="_defaultATS05" ValueChanged="@(v => { _defaultATS05 = v; ApplyTaxSettings(); })"
+                                         Label="@($"{Tr("ATS05Column")} %")" Variant="Variant.Outlined" Format="0.##" Margin="Margin.Dense" Disabled="_isSaved" Style="max-width:120px" />
+                    }
+                </div>
+
+                @if (_selectedCustomer is not null)
+                {
+                    <div class="inv-cust">
+                        <span class="inv-avatar">@(string.IsNullOrWhiteSpace(_selectedCustomer.Name) ? "?" : _selectedCustomer.Name.Trim()[0].ToString())</span>
+                        <div class="who"><b>@_selectedCustomer.Name</b><small>@Tr("BalanceBeforeLabel")</small></div>
+                        @if (AccountModelsLib.Common.IS_Use_Price_Type_List == 1 && !string.IsNullOrEmpty(_customerPriceTypeName))
+                        {
+                            <span class="inv-chip">@Tr("PriceTypeLabel"): @_customerPriceTypeName</span>
+                        }
+                        <span class="inv-chip @(_customerAccountBefore < 0 ? "success" : "warn")">@(_customerAccountBefore < 0 ? Tr("NatureCreditLabel") : Tr("NatureDebitLabel")): @Common.RoundMe(Math.Abs(_customerAccountBefore)).ToString("N2")</span>
+                    </div>
+                }
+            </div>
+
+            <div class="inv-card">
+                <div class="inv-card-head">
+                    <h2 class="inv-card-title">
+                        <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" />@Tr("ItemsHeader")
+                        @if (_lines.Count > 0)
+                        {
+                            <span class="inv-count">@_lines.Count</span>
+                        }
+                    </h2>
+                    @* بحث بالكود/الباركود: قارئ الباركود يكتب الكود ثم Enter، فيُفتح حوار الصنف والصنف محدد ليُدخَل العدد ويُضاف للفاتورة. *@
+                    @* يقابل Common.Show_SearchItemBy_BarCode_On_Invoice: يُخفى حقل الباركود لو الإعداد 0 (كما فى الأصل). *@
+                    @if (Common.Show_SearchItemBy_BarCode_On_Invoice == 1)
+                    {
+                        <MudTextField T="string" @ref="_barcodeField" @bind-Value="_barcodeText" Class="inv-barcode" Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" Immediate="true" Label="@Tr("BarcodeSearchLabel")"
+                                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.QrCodeScanner"
+                                      Disabled="_selectedCustomer is null || _isSaved" OnKeyDown="OnBarcodeKeyDownAsync" />
+                    }
+                    @if (_lines.Count > 0)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="OpenAddItemDialog" Disabled="_selectedCustomer is null || _isSaved">
+                            @Tr("AddItemButton")
+                        </MudButton>
+                    }
+                </div>
+
+                @if (_lines.Count == 0)
+                {
+                    <div class="inv-empty2">
+                        <span class="ico"><MudIcon Icon="@Icons.Material.Outlined.ReceiptLong" /></span>
+                        <div style="font-size:1.05rem;font-weight:600;color:var(--mud-palette-text-primary)">@Tr("NoItemsMessage")</div>
+                        <div style="font-size:.9375rem">@Tr("AddFirstItemHint")</div>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Class="mt-1"
+                                   OnClick="OpenAddItemDialog" Disabled="_selectedCustomer is null || _isSaved">
+                            @Tr("AddItemButton")
+                        </MudButton>
+                    </div>
+                }
+                else
+                {
+                    <div class="inv-lines" style="--cols:@LinesGridCols;--minw:@LinesMinWidth">
+                        <div class="inv-lines-head" role="row">
+                            <span>#</span>
+                            <span>@Tr("ItemNameColumn")</span>
+                            <span class="n hide-sm">@Tr("QuantityColumn")</span>
+                            <span class="n hide-sm">@Tr("UnitPriceColumn")</span>
+                            <span class="n">@Tr("NetTotalColumn")</span>
+                            <span></span>
+                        </div>
+
+                        @{ var idx = 0; }
+                        @foreach (var line in _lines)
+                        {
+                            idx++;
+                            var sub = string.Join(" · ", new[] { line.code, line.Store_Name }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                            <div class="inv-line" role="row" @key="line">
+                                <span class="inv-idx">@idx</span>
+                                <div class="inv-item">
+                                    <b>@line.Invoice_Item_Name</b>
+                                    @if (!string.IsNullOrEmpty(sub))
+                                    {
+                                        <small>@sub</small>
+                                    }
+                                    <small class="inv-formula">@FormatQnty(line) × @((line.PriceUnit ?? 0).ToString("N2"))</small>
+                                    @* 🟢 أعمدة الأصل المخفية بـWidth=0 وتظهر بإعدادات Show_*_OnInvoiceMonitor (InvoiceColumnSettings): كل عمود مفعَّل له قيمة يظهر شارة تحت الصنف *@
+                                    @{ var chips = ExtraChips(line).ToList(); }
+                                    @if (chips.Count > 0)
+                                    {
+                                        <div class="inv-extras">
+                                            @foreach (var c in chips)
+                                            {
+                                                <span class="inv-xchip"><i>@c.Label</i> @c.Value</span>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                                <div class="n hide-sm"><span class="inv-qty">@FormatQnty(line)</span></div>
+                                <div class="n hide-sm">@((line.PriceUnit ?? 0).ToString("N2"))</div>
+                                <div class="n inv-netcell">
+                                    <span class="inv-net">@((line.Item_Net_Total_Price ?? 0).ToString("N2"))</span>
+                                    @if (_showTaxSalesColumn)
+                                    {
+                                        @* الضريبة لكل صنف: تفصيلها سطر صغير تحت الصافى بدل أعمدة إضافية (لا تمرير أفقى) *@
+                                        <small class="inv-taxline">
+                                            @Tr("TaxSalesColumn") @((line.Item_TaxSales10_Value ?? 0).ToString("N2"))
+                                            @if ((line.Item_ATS05_Value ?? 0) != 0)
+                                            {
+                                                <span> · @Tr("ATS05Column") @((line.Item_ATS05_Value ?? 0).ToString("N2"))</span>
+                                            }
+                                        </small>
+                                    }
+                                </div>
+                                <div class="inv-acts">
+                                    <MudIconButton Icon="@Icons.Material.Filled.EditNote" Size="Size.Medium" Disabled="_isSaved" OnClick="@(() => OpenEditItemDialog(line))" aria-label="@Tr("EditItemLabel")" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Medium" Color="Color.Error" Disabled="_isSaved" OnClick="@(() => DeleteLine(line))" aria-label="@Tr("DeleteItemLabel")" />
+                                </div>
+                            </div>
+                        }
+
+                        <div class="inv-lines-foot">
+                            <span class="stat">@Tr("LinesCountLabel"): <b>@_lines.Count</b></span>
+                            <span class="stat">@Tr("LinesQtyLabel"): <b>@_lines.Sum(l => l.Larg_Qnty ?? 0).ToString("0.##")</b></span>
+                            <span class="stat">@Tr("NetTotalColumn"): <b>@_lines.Sum(l => l.Item_Net_Total_Price ?? 0).ToString("N2")</b></span>
+                        </div>
+                    </div>
+                }
+
+                @* 🟢 يقابل مجموعة إجمالى الفاتورة وبيانات الرأس فى NewFrmInvoive: رقم البوليصة وعدد الطرود ومصروفات أخرى والخصم (نسبة + قيمة، يُعطَّل مع الضريبة لكل صنف)
+                   وتاريخ الاستحقاق (صلاحية 957)، وقيمة الشحن والبائع وملاحظات العميل تظهر فقط بإعدادات الشركة كالأصل (Show_Shipment_DataInvoiceMonitor
+                   وShow_EmployeeSeller_OnInvoiceMonitor وShow_Customer_Notes_OnInvoiceMonitor). *@
+                @* مغلق افتراضياً (استخدامه قليل ويزحم الصفحة): زر عريض يفتحه/يخفيه، ويعرض عدد الحقول المعبّأة وهو مغلق. *@
+                <div class="inv-extra @(_extraOpen ? "open" : "")">
+                    <button type="button" class="inv-extra-toggle" aria-expanded="@(_extraOpen ? "true" : "false")" @onclick="@(() => _extraOpen = !_extraOpen)">
+                        <span class="ico"><MudIcon Icon="@Icons.Material.Filled.Inventory" /></span>
+                        <span class="ttl">@Tr("PurchExtraDataHeader")</span>
+                        @if (ExtraFilledCount > 0)
+                        {
+                            <span class="inv-chip primary">@ExtraFilledCount</span>
+                        }
+                        <span class="hint">@(_extraOpen ? Tr("ExtraDataHide") : Tr("ExtraDataShow"))</span>
+                        <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Class="chev" />
+                    </button>
+                    @if (_extraOpen)
+                    {
+                    <div class="inv-extra-body">
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudTextField T="string" @bind-Value="_header.PolicaNo" Label="@Tr("PolicyNoLabel")" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="_isSaved" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudTextField T="string" @bind-Value="_header.troodContainerNo" Label="@Tr("ParcelsCountLabel")" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="_isSaved" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudNumericField T="decimal" @bind-Value="OtherExpenses" Label="@Tr("OtherExpensesLabel")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                             Format="0.##" Immediate="true" HideSpinButtons="true" Disabled="_isSaved" />
+                        </MudItem>
+                        @if (!(_isTaxInvoice && _isTaxPerItem))
+                        {
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudNumericField T="decimal" @bind-Value="DiscountRate" Label="@Tr("InvoiceDiscountRateLabel")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                 Format="0.##" Immediate="true" HideSpinButtons="true" Disabled="_isSaved" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudNumericField T="decimal" @bind-Value="DiscountValue" Label="@Tr("InvoiceDiscountValueLabel")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                 Format="0.##" Immediate="true" HideSpinButtons="true" Disabled="_isSaved" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudNumericField T="decimal" Value="@(_header.Net_Total_CommissionValue ?? 0)" Label="@Tr("TotalDiscountLabel")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                 Format="0.##" HideSpinButtons="true" ReadOnly="true" />
+                            </MudItem>
+                        }
+                        @if (_showDueDate)
+                        {
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudDatePicker T="DateTime?" @bind-Date="_dueDate" Label="@Tr("PmtDueDateColumn")" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="_isSaved" />
+                            </MudItem>
+                        }
+                        @if (Common.Show_Shipment_DataInvoiceMonitor == 1)
+                        {
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudNumericField T="decimal" @bind-Value="ShipmentValue" Label="@Tr("ShipmentValueLabel")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                 Format="0.##" Immediate="true" HideSpinButtons="true" Disabled="_isSaved" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudAutocomplete T="SellerOption" Value="_shipmentCompany" ValueChanged="OnShipmentCompanyPicked" SearchFunc="SearchShipmentCompaniesAsync" ToStringFunc="@(s => s?.Name ?? "")"
+                                                 Label="@Tr("ShipmentCompanyLabel")" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" CoerceText="false"
+                                                 ResetValueOnEmptyText="true" MaxItems="50" Disabled="_isSaved" />
+                            </MudItem>
+                        }
+                        @if (Common.ShowSalesMan == 1)
+                        {
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudAutocomplete T="SellerOption" Value="_salesman" ValueChanged="OnSalesmanPicked" SearchFunc="SearchSalesmenAsync" ToStringFunc="@(s => s?.Name ?? "")"
+                                                 Label="@Tr("SalesmanLabel")" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" CoerceText="false"
+                                                 ResetValueOnEmptyText="true" MaxItems="50" Required="true" Disabled="_isSaved" />
+                            </MudItem>
+                        }
+                        @if (Common.Show_EmployeeSeller_OnInvoiceMonitor == 1)
+                        {
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudAutocomplete T="SellerOption" Value="_seller" ValueChanged="OnSellerPicked" SearchFunc="SearchSellersAsync" ToStringFunc="@(s => s?.Name ?? "")"
+                                                 Label="@Tr("PmtSellerLabel")" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" CoerceText="false"
+                                                 ResetValueOnEmptyText="true" MaxItems="50" Disabled="_isSaved" />
+                            </MudItem>
+                        }
+                        @if (Common.Show_Customer_Notes_OnInvoiceMonitor == 1)
+                        {
+                            <MudItem xs="12" sm="6" md="6">
+                                <MudTextField T="string" @bind-Value="_header.Customer_Notes" Label="@Tr("CustomerNotesLabel")" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="_isSaved" />
+                            </MudItem>
+                        }
+                    </MudGrid>
+                    </div>
+                    }
+                </div>
+
+                @* ملاحظات الفاتورة: أسفل جدول الأصناف بطلب المستخدم *@
+                @if (Common.Show_AddNotes_On_Invoice == 1)
+                {
+                    @* يقابل Common.Show_AddNotes_On_Invoice: تُخفى ملاحظات الفاتورة لو الإعداد 0 (كما فى الأصل). *@
+                    <div class="inv-notes">
+                        <MudTextField T="string" @bind-Value="_notes" Immediate="true" Label="@Tr("NotesLabel")" Variant="Variant.Outlined" Disabled="_isSaved" Lines="2" AutoGrow="true" />
+                    </div>
+                }
+            </div>
+        </MudItem>
+
+        @* ===== الملخص التفصيلى: مخفى عند تحميل الفاتورة، يُظهره/يُخفيه المستخدم بزر "الملخص التفصيلى" ===== *@
+        @if (_showSummary)
+        {
+            <MudItem xs="12" lg="4" Class="inv-sum-col">
+                <div class="inv-card inv-sum">
+                    <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Calculate" />@Tr("InvoiceSummaryTitle")</h2>
+
+                    <div class="inv-sum-row"><span>@Tr("TotalLabel")</span><b>@((_header.Total ?? 0).ToString("N2"))</b></div>
+                    <div class="inv-sum-row"><span>@Tr("TotalWithoutTaxLabel")</span><b>@((_header.Total_PriceWithoutTax ?? 0).ToString("N2"))</b></div>
+                    @if (_isTaxInvoice)
+                    {
+                        <div class="inv-sum-row"><span>@Tr("TaxSalesValueLabel")</span><b>@((_header.TaxSales10_Value ?? 0).ToString("N2"))</b></div>
+                        <div class="inv-sum-row"><span>@Tr("ATS05ValueLabel")</span><b>@((_header.ATS05_Value ?? 0).ToString("N2"))</b></div>
+                    }
+                    @if (_selectedCustomer is not null)
+                    {
+                        <div class="inv-sum-row"><span>@Tr("BalanceBeforeLabel")</span><b>@_customerAccountBefore.ToString("N2")</b></div>
+                        <div class="inv-sum-row"><span>@Tr("BalanceAfterLabel")</span><b>@((_isReverse ? _customerAccountBefore - (_header.Net_Total ?? 0) : _customerAccountBefore + (_header.Net_Total ?? 0)).ToString("N2"))</b></div>
+                    }
+                    <div class="inv-sum-net">
+                        <span class="lbl">@Tr("NetTotalLabel")</span>
+                        <span class="amount">@((_header.Net_Total ?? 0).ToString("N2"))</span>
+                    </div>
+                </div>
+            </MudItem>
+        }
+    </MudGrid>
+
+    @* ===== شريط الملخص الثابت أسفل جدول الفاتورة: يبقى ظاهراً أثناء التمرير، ومعه زر الحفظ (الإجراء الأساسى الوحيد) ===== *@
+    <div class="inv-dock" role="region" aria-label="@Tr("InvoiceSummaryTitle")">
+        <div class="inv-dock-cells">
+            <div class="cell"><span class="lbl">@Tr("LinesCountLabel")</span><b>@_lines.Count</b></div>
+            <div class="cell"><span class="lbl">@Tr("TotalLabel")</span><b>@((_header.Total ?? 0).ToString("N2"))</b></div>
+            @if (_isTaxInvoice)
+            {
+                <div class="cell"><span class="lbl">@Tr("TaxSalesValueLabel")</span><b>@((_header.TaxSales10_Value ?? 0).ToString("N2"))</b></div>
+                @if ((_header.ATS05_Value ?? 0) != 0)
+                {
+                    <div class="cell"><span class="lbl">@Tr("ATS05ValueLabel")</span><b>@((_header.ATS05_Value ?? 0).ToString("N2"))</b></div>
+                }
+            }
+            @if ((_header.Net_Total_CommissionValue ?? 0) != 0)
+            {
+                <div class="cell"><span class="lbl">@Tr("TotalDiscountLabel")</span><b>@((_header.Net_Total_CommissionValue ?? 0).ToString("N2"))</b></div>
+            }
+            @if ((_header.AnotherPayment ?? 0) != 0)
+            {
+                <div class="cell"><span class="lbl">@Tr("OtherExpensesLabel")</span><b>@((_header.AnotherPayment ?? 0).ToString("N2"))</b></div>
+            }
+            @if ((_header.Shipment_Value ?? 0) != 0)
+            {
+                <div class="cell"><span class="lbl">@Tr("ShipmentValueLabel")</span><b>@((_header.Shipment_Value ?? 0).ToString("N2"))</b></div>
+            }
+            <div class="cell net"><span class="lbl">@Tr("NetTotalLabel")</span><b>@((_header.Net_Total ?? 0).ToString("N2"))</b></div>
+        </div>
+        <div class="inv-dock-actions">
+            <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@(_showSummary ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                       OnClick="@(() => _showSummary = !_showSummary)">
+                @(_showSummary ? Tr("SummaryDetailsHide") : Tr("SummaryDetailsShow"))
+            </MudButton>
+            @if (IsExistingInvoice)
+            {
+                @* إذن نقدية مرتبط بهذه الفاتورة (استلام/صرف حسب النوع) — المفتاح نوع العملية + رقم الفاتورة كما فى الأصل *@
+                <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Payments"
+                           OnClick="@(() => Nav.NavigateTo($"/accounts/cash/voucher-party?doc={Id}&dtype={(_isReverse ? 7 : 1)}"))">@Tr("InvCashVoucherButton")</MudButton>
+            }
+            @if (IsExistingInvoice)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever"
+                           Disabled="_isSaving" OnClick="DeleteInvoiceAsync">@Tr("InvDeleteButton")</MudButton>
+            }
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
+                       Disabled="@(!CanSave)" OnClick="SaveInvoiceAsync">
+                @Tr("SaveButton")
+            </MudButton>
+        </div>
+    </div>
+
+    @* الضريبة تُمرَّر للصنف فقط عند الحساب لكل صنف (Is_Tax_Per_Item=1 والفاتورة ضريبية)؛ نسب الرأس عندها صفر. *@
+    <AddInvoiceItemDialog ShowExtraFields="true" Visible="_itemDialogOpen" PriceTypeId="_customerPriceTypeId" VisibleChanged="OnItemDialogVisibleChangedAsync" ExistingLine="_editingLine"
+                          TaxSalesRate="_defaultTaxSales" ATS05Rate="_defaultATS05"
+                          InitialCode="@_dialogInitialCode" InitialCodeToken="_barcodeToken" OnCodeNotFound="OnBarcodeNotFoundAsync"
+                          IsTaxPerItem="_isTaxInvoice && _isTaxPerItem" OnItemAdded="OnItemDialogSaved" />
+
+</div>
+</MudContainer>
+
+@code {
+    private record CustomerOption(long Id, string Name);
+    private record CurrencyOption(long Id, string Name);
+    private record SellerOption(long Id, string Name);
+
+    [Parameter] public long? Id { get; set; }
+    [SupplyParameterFromQuery(Name = "agile")] public int? AgileQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "kta3y")] public int? Kta3yQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "saveDirectly")] public int? SaveDirectlyQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "type")] public int? TypeQuery { get; set; }
+    // 🟢 تحويل طلبية عميل إلى فاتورة (نظام الطلبيات الحديث): fromOrder = معرّف الطلبية، alloc = "سطر:كبرى:صغرى;..." (الكميات المختارة).
+    [SupplyParameterFromQuery(Name = "fromOrder")] public long? FromOrderQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "alloc")] public string? AllocQuery { get; set; }
+    private long _fromOrderId;
+    private long _fromOrderNo;
+    private List<CustomerOrdersService.Allocation> _orderAllocations = new();
+
+    private readonly CustomerCLS _customerCls = new();
+    private bool _isReverse;
+    private InvoicesOperationListCLS _invL_O = new(0);
+    private InvoicesOperationCLS _invD_O = new(0);
+    private IInvoices_List _header => _invL_O.invL;
+    private List<IInvoices_Details> _lines => _invD_O.invDlst.Where(l => (l.Item_DeletedFlage ?? 0) != 1).ToList();
+
+    private CustomerOption? _selectedCustomer;
+    private List<CurrencyOption> _currencies = new();
+    private long _currencyId;
+    private string _invoiceNoDisplay = "";
+    private DateTime? _invoiceDate = DateTime.Now;
+    private string _notes = "";
+    // 🟢 حقول الرأس المالية (يقابل NewFrmInvoive): تاريخ الاستحقاق (صلاحية 957) والبائع (Emp_Id/Emp_Name).
+    private DateTime? _dueDate = DateTime.Now;
+    private bool _showDueDate;
+    private SellerOption? _seller;
+    private SellerOption? _salesman;
+    private SellerOption? _shipmentCompany;
+    private readonly AccountModelsLib.BusinessLibShared.Store.InvoiceHeaderLookupsCLS _lookups = new();
+    private decimal OtherExpenses { get => _header.AnotherPayment ?? 0; set { _header.AnotherPayment = value; RecomputeTotals(); } }
+    private decimal DiscountRate { get => _header.List_CommissionRate ?? 0; set { _header.List_CommissionRate = value; RecomputeTotals(); } }
+    private decimal DiscountValue { get => _header.List_CommissionValue ?? 0; set { _header.List_CommissionValue = value; RecomputeTotals(); } }
+    private decimal ShipmentValue { get => _header.Shipment_Value ?? 0; set { _header.Shipment_Value = value; RecomputeTotals(); } }
+    private string _balanceLabel = "";
+    private string _pageTitle = "";
+    private bool _isSaved;
+    // 🟢 زر الحفظ: يُعطَّل أثناء الحفظ (منع الضغط المتكرر الذى يضاعف الطلبات على الخادم)، وبعد الحفظ يبقى معطَّلاً حتى يتغير أى شىء
+    // فى بيانات الفاتورة عن آخر حالة محفوظة/محمَّلة (بصمة الحالة أدناه)، فيُفعَّل ويُحفَظ التعديل بالضغط عليه. الفاتورة الجديدة غير المحفوظة
+    // يكفى لتفعيله وجود صنف واحد على الأقل.
+    private bool _isSaving;
+    private string _baseline = "";
+    private bool IsExistingInvoice => Id.HasValue && Id.Value > 0;
+    // 🟢 صلاحيات الفاتورة المحفوظة (نفس جدول صلاحيات القوائم SysConfigMenusPERMATIONS كما فى الأصل): 322 تعديل الفاتورة (إضافة/تعديل/حذف صنف)،
+    // 932 حذف فاتورة مبيعات (وتشمل المرتجع). الأصل يفحص 322 فى BtnAddItem/BtnDeleteItem/Make_ItemEdit ويرفض برسالة.
+    private bool _canEditItems = true;
+    private bool _canDeleteInvoice;
+    private bool _deletingInvoice;
+    private void LoadInvoicePermissions()
+    {
+        _canEditItems = Common.IsHavePermissionSysMenu(Common.User_Id, 322, 2, -1);
+        _canDeleteInvoice = Common.IsHavePermissionSysMenu(Common.User_Id, 932, 2, -1);
+    }
+    private bool GuardEditItems()
+    {
+        if (IsExistingInvoice && !_canEditItems)
+        {
+            Snackbar.Add(Tr("InvNoEditPermission"), Severity.Warning);
+            return false;
+        }
+        return true;
+    }
+
+    // حذف فاتورة محفوظة كاملة: كما فى EditFRM_Invoices_Reverse.DeleteAllItems — كل الأسطر تُعلَّم محذوفة ثم تُحفظ بمحرك التعديل نفسه
+    // فيُرجَع رصيد الأصناف وحركة العميل والقيد. الصلاحية 322 ثم 932.
+    private async Task DeleteInvoiceAsync()
+    {
+        if (!IsExistingInvoice || _isSaving) return;
+        if (!_canEditItems) { Snackbar.Add(Tr("InvNoEditPermission"), Severity.Warning); return; }
+        if (!_canDeleteInvoice) { Snackbar.Add(Tr("InvNoDeletePermission"), Severity.Warning); return; }
+        var linkedVouchers = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return new CashVouchersService().CountLinkedCashVouchers(_isReverse ? 7 : 1, Id!.Value, _header.Is_Invoice_Agile != 1); });
+        if (linkedVouchers > 0) { Snackbar.Add(Tr("InvDeleteHasVouchers"), Severity.Warning); return; }
+        var confirmed = await DialogService.ShowMessageBoxAsync(Tr("InvDeleteButton"), Tr("InvDeleteConfirm"),
+            yesText: Tr("InvDeleteButton"), cancelText: Tr("Cancel"));
+        if (confirmed != true) return;
+        for (var i = _invD_O.invDlst.Count - 1; i >= 0; i--)
+        {
+            var item = _invD_O.invDlst[i];
+            item.Item_DeletedFlage = 1;
+            item.Item_ProcessedFlage = 1;
+            _invD_O.invDlst_Deleted.Add(item);
+            _invD_O.invDlst.RemoveAt(i);
+        }
+        RecomputeTotals();
+        _deletingInvoice = true;
+        _isSaving = true;
+        StateHasChanged();
+        try { await SaveInvoiceCoreAsync(); }
+        finally { _isSaving = false; _deletingInvoice = false; }
+    }
+    private bool CanSave => !_isSaving && !_isSaved && _lines.Count > 0 && (!IsExistingInvoice || Fingerprint() != _baseline);
+
+    // بصمة نصية لكل ما يمكن للمستخدم تعديله فى الفاتورة (العميل، العملة، التاريخ، الملاحظات، الضريبة، والأصناف بكمياتها وأسعارها وحذفها).
+    private string Fingerprint()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.Append(_selectedCustomer?.Id).Append('|').Append(_currencyId).Append('|').Append(_invoiceDate?.Date.Ticks).Append('|').Append(_notes)
+          .Append('|').Append(_isTaxInvoice).Append(_isTaxPerItem).Append('|').Append(_defaultTaxSales).Append('|').Append(_defaultATS05)
+          .Append('|').Append(_header.PolicaNo).Append('|').Append(_header.troodContainerNo).Append('|').Append(_header.AnotherPayment).Append('|').Append(_header.List_CommissionRate)
+          .Append('|').Append(_header.List_CommissionValue).Append('|').Append(_header.Shipment_Value).Append('|').Append(_dueDate?.Date.Ticks).Append('|').Append(_seller?.Id)
+          .Append('|').Append(_header.Customer_Notes).Append('|').Append(_salesman?.Id).Append('|').Append(_shipmentCompany?.Id);
+        foreach (var l in _invD_O.invDlst)
+        {
+            sb.Append('#').Append(l.Id).Append(',').Append(l.Item_DeletedFlage).Append(',').Append(l.Unit_Item_Table_Id).Append(',')
+              .Append(l.Larg_Qnty).Append(',').Append(l.Small_Qnty).Append(',').Append(l.PriceUnit).Append(',').Append(l.Store_Id);
+        }
+        sb.Append("D").Append(_invD_O.invDlst_Deleted.Count);
+        return sb.ToString();
+    }
+    private bool _isAgile;
+    private bool _isKta3y;
+    private bool _isSaveDirectly;
+    private decimal _customerAccountBefore;
+    // 🟢 نوع سعر العميل (Customer.Price_Type_List_ID) - يقابل invL_O.Price_Type_List_ID فى NewFrmInvoive.SelectCustomer؛ يُمرَّر لحوار الأصناف
+    // ليُحدَّد نوع السعر فيه (لا يُخزَّن على الفاتورة نفسها: لا عمود له فى Invoices_List).
+    private long _customerPriceTypeId;
+    private string _customerPriceTypeName = "";
+
+    // 🟢 يقابل NewFrmInvoive.SetConfigOnMonitor (نسخة v1 مبسَّطة: عمودان شرطيان فقط من أصل ~30، الباقى فى خطة لاحقة)
+    // أعمدة الضريبة لكل صنف تظهر فقط عند الفاتورة الضريبية بحساب لكل صنف (Is_Tax_Per_Item=1).
+    private bool _showTaxSalesColumn => _isTaxInvoice && _isTaxPerItem;
+
+    // أعمدة قائمة الأسطر (نفس القالب للرأس والأسطر والتذييل): # | الصنف | الكمية | السعر | الإجمالى | [ضريبتان] | الصافى | إجراءات
+    private string LinesGridCols => "44px minmax(230px,1fr) 150px 120px 156px 96px";
+    private string LinesMinWidth => "760px";
+    private bool _showATS05Column => _isTaxInvoice && _isTaxPerItem;
+
+    // 🟢 قواعد الضريبة (من المستخدم): IsInvoiceTaxInfo=1 فاتورة ضريبية؛ Is_Tax_Per_Item=1 ضريبة على كل صنف، 0 على إجمالى الفاتورة.
+    // Invoice_Type ليس علم ضريبة (قديم ويجرى التخلص منه) ولا يُستخدم هنا إلا كرقم سلسلة ترقيم.
+    private bool _isTaxInvoice;
+    private bool _isTaxPerItem;
+    // الملخص التفصيلى مخفى عند تحميل الفاتورة ويُظهره المستخدم عند الطلب؛ ملخص الإجماليات الثابت أسفل الأصناف يبقى ظاهراً دائماً.
+
+    // بيانات إضافية مغلقة افتراضياً؛ العدّاد يبيّن كم حقلاً معبّأاً حتى لا يفوت المستخدم قيمة داخل الجزء المغلق.
+    private bool _extraOpen;
+    private int ExtraFilledCount => (string.IsNullOrWhiteSpace(_header.PolicaNo) ? 0 : 1) + (string.IsNullOrWhiteSpace(_header.troodContainerNo) ? 0 : 1) + (OtherExpenses != 0 ? 1 : 0) + (DiscountRate != 0 ? 1 : 0) + (DiscountValue != 0 ? 1 : 0) + (ShipmentValue != 0 ? 1 : 0);
+    private bool _showSummary;
+    private bool _taxPerItemForced;
+    private decimal _defaultTaxSales;
+    private decimal _defaultATS05;
+
+    private bool _itemDialogOpen;
+    private IInvoices_Details? _editingLine;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoadInvoicePermissions();
+        _isAgile = AgileQuery == 1;
+        _isKta3y = Kta3yQuery == 1;
+        _isSaveDirectly = SaveDirectlyQuery == 1;
+        // 🟢 يقابل Common.IsShowInvoices_List_WithDueDate (صلاحية القائمة 957) من قوائم المستخدم الحالى.
+        _showDueDate = MenuState.UserAllowedMenus.Any(m => m.Menu_ID == 957);
+        _isReverse = Nav.Uri.Contains("/sales-return", StringComparison.OrdinalIgnoreCase);
+        // 🟢 يقابل new InvoicesOperationListCLS(1)/InvoicesOperationCLS(1) فى Make_Invoices_Reverse (Invoices_List_Reverse).
+        _invL_O = new InvoicesOperationListCLS(_isReverse ? 1 : 0);
+        _invD_O = new InvoicesOperationCLS(_isReverse ? 1 : 0);
+
+        await LoadCurrenciesAsync();
+        await LoadTaxDefaultsAsync();
+
+        if (Id.HasValue && Id.Value > 0)
+        {
+            await LoadExistingInvoiceAsync(Id.Value);
+            _baseline = Fingerprint();
+        }
+        else
+        {
+            await InitializeNewInvoiceAsync();
+            if (FromOrderQuery is > 0) await LoadFromOrderAsync(FromOrderQuery.Value, AllocQuery ?? "");
+        }
+
+        // 🟢 عنوان التبويب لفاتورة موجودة = "فاتورة مبيعات رقم {رقم الفاتورة}" (Invoice_Id) وليس معرّف السجل Id الذى فى الرابط.
+        // مفتاح التبويب = مسار الصفحة وقت إنشائها بلا الـ query (نفس ما يبنيه MainLayoutMud.UpdateWorkspaceForCurrentRoute).
+        if (Id.HasValue && Id.Value > 0 && _header.Invoice_Id.HasValue)
+        {
+            var tabKey = "/" + Nav.ToBaseRelativePath(Nav.Uri).Split('?')[0].Trim('/');
+            var format = _isReverse ? Tr("InvoiceTabReturn") : Tr("InvoiceTabSales");
+            TabWorkspace.SetCustomTitle(tabKey, string.Format(CultureInfo.InvariantCulture, format, _header.Invoice_Id.Value));
+        }
+
+        var isQaa = Convert.ToInt32(_header.Invoice_Type) == 1;
+        _pageTitle = _isReverse
+            ? (_header.Is_InvoiceKta3y == 1 ? Tr("InvoiceTitleReturnKta3y") : isQaa ? Tr("InvoiceTitleReturnCash") : Tr("InvoiceTitleReturn"))
+            : isQaa ? Tr("InvoiceTitleQaa")
+            : _isSaveDirectly ? Tr("InvoiceTitleSaveDirectly")
+            : _header.Is_InvoiceKta3y == 1 ? Tr("InvoiceTitleKta3y")
+            : _header.Is_Invoice_Agile == 1 ? Tr("InvoiceTitleAgile")
+            : Tr("InvoiceTitleCash");
+
+        // 🟢 يقابل NewFrmInvoive.GetInvoiceName: العنوان المخصص من إعدادات الشركة (Invoice_MainTitle_Invoice / _Reverse) إن لم يكن فارغاً،
+        // ويُلحق به «- حفظ الأصناف -» فى وضع حفظ الأصناف.
+        var customTitle = (_isReverse ? Common.Invoice_MainTitle_Invoice_Reverse : Common.Invoice_MainTitle_Invoice)?.Trim();
+        if (!string.IsNullOrEmpty(customTitle))
+        {
+            _pageTitle = _isSaveDirectly ? $"{customTitle}  {Tr("SaveItemsModeSuffix")}" : customTitle;
+        }
+    }
+
+    private async Task LoadCurrenciesAsync()
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return new CurrencyFactorsCLS_().GetCurrencyList();
+        });
+        _currencies = dt.Rows.Cast<DataRow>()
+            .Select(r => new CurrencyOption(Convert.ToInt64(r["ID"]), r["Currency_Name"]?.ToString() ?? ""))
+            .ToList();
+        if (_currencies.Count > 0) _currencyId = _currencies[0].Id;
+    }
+
+    private async Task InitializeNewInvoiceAsync()
+    {
+        // 🟢 Invoice_Type علم قديم يجرى التخلص منه (بتوجيه المستخدم): لا يُعامَل كنوع ضريبى/غير ضريبى، ويبقى فقط رقم سلسلة
+        // الترقيم الذى تتطلبه Make_New_Invoice_No/ReverseNo (الافتراضى 0). نقدى/آجل = Is_Invoice_Agile؛ الضريبة = IsInvoiceTaxInfo.
+        var invoiceType = TypeQuery ?? 0;
+        _header.Invoice_Type = invoiceType;
+        _header.Is_Invoice_Agile = _isAgile ? 1 : 0;
+        _header.Is_InvoiceKta3y = _isKta3y ? 1 : 0;
+        _header.IS_Make_Sarf_Item_BalanceFromInvoice = _isKta3y ? 0 : 1;
+        ApplyTaxSettings();
+
+        var invoiceNo = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var inv = new InvoicesClss();
+            return _isReverse ? inv.Make_New_Invoice_ReverseNo(invoiceType) : inv.Make_New_Invoice_No(invoiceType);
+        });
+        _header.Invoice_Id = invoiceNo;
+        _invoiceNoDisplay = invoiceNo.ToString();
+        await ApplyDefaultCustomerAsync();
+    }
+
+    // 🟢 يقابل NewFrmInvoive.SetConfigOnMonitor: عميل الفاتورة النقدية التلقائى (Customer_Id_ForInvoiceNakdy، ويُقفل الاختيار إذا
+    // Customer_Id_ForInvoiceNakdyThenDisableCombo > 0) ثم العميل الافتراضى (Customer_Id_DefaultSelect) الذى يغلب عليه. القيمتان -1 = معطَّل.
+    private bool _customerLocked;
+
+    private async Task ApplyDefaultCustomerAsync()
+    {
+        _customerLocked = false;
+        long customerId = 0;
+        if (_header.Is_Invoice_Agile == 0 && Common.Customer_Id_ForInvoiceNakdy > 0)
+        {
+            customerId = Common.Customer_Id_ForInvoiceNakdy;
+            _customerLocked = Common.Customer_Id_ForInvoiceNakdyThenDisableCombo > 0;
+        }
+        if (Common.Customer_Id_DefaultSelect > 0) customerId = Common.Customer_Id_DefaultSelect;
+        if (customerId <= 0) return;
+
+        var name = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var dt = _customerCls.Get_CustomerSupplierListForStatement(0, 0, -1, -1);
+            return dt.Rows.Cast<DataRow>().Where(r => Convert.ToInt64(r["Id"]) == customerId)
+                .Select(r => r["Name"]?.ToString()?.Trim() ?? "").FirstOrDefault();
+        });
+        if (name is null) { _customerLocked = false; return; }
+        await OnCustomerPickedAsync(new CustomerOption(customerId, name), skipCashCustomerConfirm: true);
+    }
+
+    private async Task LoadExistingInvoiceAsync(long invoiceListTableId)
+    {
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            if (_isReverse)
+            {
+                // يقابل EditFRM_Invoices_Reverse سطر 265-266.
+                _invL_O.Get_Invoices_List_Reverse(invoiceListTableId);
+                _invD_O.GetInvoiceDetails_Reverse(invoiceListTableId);
+            }
+            else
+            {
+                _invL_O.Get_Invoices_List(invoiceListTableId);
+                _invD_O.GetInvoiceDetailsToEdit(invoiceListTableId);
+            }
+        });
+
+        // 🟢 أعلام أسطر المعالجة: أسطر المرتجع تُخزَّن فى القاعدة بعلم 0 (بينما البيع 100)، والمحرك يعتبر 0 = "سطر جديد" فيعيد
+        // إدراج كل سطر غير معدَّل ويعيد ترحيل رصيده عند إضافة/حذف سطر (اكتشفه اختبار السيناريوهات R-POST-05/06). نُطبِّعها
+        // هنا: 100 = "محفوظ بلا تغيير"، فلا يعالج المحرك إلا الأسطر التى نعدّلها صراحةً.
+        foreach (var l in _invD_O.invDlst)
+        {
+            l.Item_ProcessedFlage = 100;
+            l.Item_DeletedFlage = 100;
+        }
+        _invoiceNoDisplay = _header.Invoice_Id?.ToString() ?? "";
+        _invoiceDate = _header.Invoice_Date;
+        _notes = _header.Notes ?? "";
+        _dueDate = _header.InvoiceDueDate ?? _invoiceDate;
+        _seller = (_header.Emp_Id ?? 0) > 0 ? new SellerOption(_header.Emp_Id!.Value, _header.Emp_Name ?? "") : null;
+        _shipmentCompany = (_header.ShipmentCompany_Id ?? 0) > 0 ? new SellerOption(_header.ShipmentCompany_Id!.Value, _header.ShipmentCompany_Name ?? "") : null;
+        _salesman = null;
+        if ((_header.Salesman_Id ?? 0) > 0)
+        {
+            // اسم المندوب لا يُخزَّن على الفاتورة؛ يُقرأ من قائمة المناديب (كل الموظفين لو لم يعد فعّالاً).
+            var salesmanId = _header.Salesman_Id!.Value;
+            var name = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var dt = _lookups.GetSellers();
+                return dt.Rows.Cast<DataRow>().Where(r => Convert.ToInt64(r["Id"]) == salesmanId).Select(r => r["Name"]?.ToString()?.Trim() ?? "").FirstOrDefault() ?? "";
+            });
+            _salesman = new SellerOption(salesmanId, name);
+        }
+        _currencyId = _header.Currency_id ?? _currencyId;
+        if (_header.Customer_Id is > 0)
+        {
+            _selectedCustomer = new CustomerOption(_header.Customer_Id.Value, _header.CustomerName ?? _header.SubAccount_Name ?? "");
+            await LoadCustomerPriceTypeAsync(_header.Customer_Id.Value);
+        }
+        _customerAccountBefore = _header.CustomerAccountBefor ?? 0;
+        // نقرأ علمى الضريبة المحفوظين كما هما (لا نعيد تطبيق النسب الافتراضية على فاتورة موجودة).
+        _isTaxInvoice = _header.IsInvoiceTaxInfo == 1;
+        _isTaxPerItem = _taxPerItemForced || _header.Is_Tax_Per_Item == 1;
+        UpdateBalanceLabel();
+    }
+
+    private async Task<IEnumerable<CustomerOption>> SearchCustomersAsync(string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _customerCls.Get_CustomerSupplierListForStatement(0, 0, -1, -1);
+        }, ct);
+        var list = new List<CustomerOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["Name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add(new CustomerOption(Convert.ToInt64(r["Id"]), name));
+            }
+        }
+        return list.Take(50);
+    }
+
+    // 🟢 يقابل NewFrmInvoive.SelectCustomer + GetCustomerAccountBefor بالضبط.
+    // نوع سعر العميل واسمه من Customer.Price_Type_List_ID (يقابل NewFrmInvoive.SelectCustomer)؛ يُعرض فى بطاقة العميل ويُمرَّر لحوار الأصناف.
+    private async Task LoadCustomerPriceTypeAsync(long customerId)
+    {
+        var result = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var dt = new AccountModelsLib.operations().return_DataTable(
+                "SELECT ISNULL(c.Price_Type_List_ID, 0) AS TypeId, ISNULL(t.Price_Name, N'') AS TypeName FROM Customer c " +
+                "LEFT JOIN Price_Type_List t ON t.ID = c.Price_Type_List_ID WHERE c.Id = " + customerId);
+            return dt.Rows.Count > 0
+                ? (Convert.ToInt64(dt.Rows[0]["TypeId"]), dt.Rows[0]["TypeName"]?.ToString()?.Trim() ?? "")
+                : (0L, "");
+        });
+        _customerPriceTypeId = result.Item1;
+        _customerPriceTypeName = result.Item2;
+    }
+
+    private Task OnCustomerPickedAsync(CustomerOption? option) => OnCustomerPickedAsync(option, skipCashCustomerConfirm: false);
+
+    private async Task OnCustomerPickedAsync(CustomerOption? option, bool skipCashCustomerConfirm)
+    {
+        // 🟢 يقابل NewFrmInvoive.SelectCustomer: فاتورة آجلة جديدة لعميل الفاتورة النقدية تحتاج تأكيداً، والرفض يمسح الاختيار.
+        if (option is not null && !skipCashCustomerConfirm && !IsExistingInvoice && _header.Is_Invoice_Agile == 1
+            && Common.Customer_Id_ForInvoiceNakdy > 0 && option.Id == Common.Customer_Id_ForInvoiceNakdy)
+        {
+            var confirmed = await DialogService.ShowMessageBoxAsync(Tr("CashCustomerCreditConfirmTitle"), Tr("CashCustomerCreditConfirm"),
+                yesText: Tr("Yes"), cancelText: Tr("Cancel"));
+            if (confirmed != true)
+            {
+                _selectedCustomer = null;
+                _customerPriceTypeId = 0;
+                _customerPriceTypeName = "";
+                _balanceLabel = "";
+                return;
+            }
+        }
+        _selectedCustomer = option;
+        if (option is null) { _customerPriceTypeId = 0; _customerPriceTypeName = ""; }
+        else await LoadCustomerPriceTypeAsync(option.Id);
+        if (option is null) return;
+
+        var balance = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var balDt = _customerCls.GetCustomerBalance(option.Id);
+            decimal bal = 0;
+            if (balDt.Rows.Count > 0) decimal.TryParse(balDt.Rows[0]["Balance"]?.ToString(), out bal);
+            return Common.RoundMe(bal);
+        });
+
+        _customerAccountBefore = balance;
+        UpdateBalanceLabel();
+    }
+
+    private void UpdateBalanceLabel()
+    {
+        if (_selectedCustomer is null) { _balanceLabel = ""; return; }
+        var rounded = Common.RoundMe(Math.Abs(_customerAccountBefore));
+        var natureKey = _customerAccountBefore < 0 ? "NatureCreditLabel" : "NatureDebitLabel";
+        _balanceLabel = $"{_selectedCustomer.Name} — {Tr(natureKey)}: {rounded:N2}";
+    }
+
+    // شارات الأعمدة الإضافية لسطر الفاتورة: لكل عمود مفعَّل بإعداداته (InvoiceColumnSettings) وقيمته غير صفرية/فارغة.
+    private IEnumerable<(string Label, string Value)> ExtraChips(IInvoices_Details l)
+    {
+        static string N(decimal? v) => (v ?? 0).ToString("0.##");
+        var list = new List<(string, string)>();
+        void Add(bool on, string key, string value, bool show) { if (on && show) list.Add((Tr(key), value)); }
+        void AddDec(bool on, string key, decimal? v) => Add(on, key, N(v), (v ?? 0) != 0);
+        void AddTxt(bool on, string label, string? v) { if (on && !string.IsNullOrWhiteSpace(v)) list.Add((label, v!)); }
+
+        AddDec(InvoiceColumnSettings.ItemNo, "ItemNoLabel", l.Qnty_Another);
+        AddDec(InvoiceColumnSettings.ThreeMola, "Total3MolaLabel", l.Total3Mola);
+        AddDec(InvoiceColumnSettings.ItemCommissionRate, "ItemCommissionRateLabel", l.Item_CommissionRate);
+        AddDec(InvoiceColumnSettings.ItemCommissionValue, "ItemCommissionValueLabel", l.Item_CommissionValue);
+        AddDec(InvoiceColumnSettings.UnitCommissionValue, "UnitCommissionLabel", l.Unit_CommissionValue);
+        AddDec(InvoiceColumnSettings.ItemCommissionTotal, "ItemCommissionTotalLabel", l.ItemCommissionTotal);
+        AddDec(InvoiceColumnSettings.AlternateItemCommissionRate, "AltItemCommissionRateLabel", l.Alternate_Item_CommissionRate);
+        AddDec(InvoiceColumnSettings.AlternateItemCommissionValue, "AltItemCommissionValueLabel", l.Alternate_Item_CommissionValue);
+        AddDec(InvoiceColumnSettings.AlternateUnitCommissionValue, "AltUnitCommissionLabel", l.Alternate_Unit_CommissionValue);
+        AddDec(InvoiceColumnSettings.AlternateItemCommissionTotal, "AltItemCommissionTotalLabel", l.Alternate_ItemCommissionTotal);
+        AddDec(InvoiceColumnSettings.NetItemCommission, "NetItemCommissionLabel", l.Net_Total_Item_Commission);
+        AddDec(InvoiceColumnSettings.TaxSalesRate, "ItemTaxRateLabel", l.Item_TaxSales10);
+        AddDec(InvoiceColumnSettings.TaxSalesValue, "ItemTaxValueLabel", l.Item_TaxSales10_Value);
+        AddDec(InvoiceColumnSettings.ATS05Rate, "ItemATS05RateLabel", l.Item_ATS05);
+        AddDec(InvoiceColumnSettings.ATS05Value, "ItemATS05ValueLabel", l.Item_ATS05_Value);
+        AddTxt(InvoiceColumnSettings.StatementNo, InvoiceColumnSettings.StatementLabel(Tr("StatementNoLabel")), l.StatementNo);
+        AddTxt(InvoiceColumnSettings.OperationNo, Tr("OperationNoLabel"), l.OperationNo);
+        AddTxt(InvoiceColumnSettings.MerchantName, InvoiceColumnSettings.MerchantLabel(Tr("MerchantNameLabel")), l.Merchant_Name);
+        AddTxt(InvoiceColumnSettings.Tash3ela, Tr("BatchLabel"), l.Tash3ela);
+        AddDec(InvoiceColumnSettings.FreeQuantity, "FreeQuantityLabel", l.LargItemsQnty_Free);
+        AddDec(InvoiceColumnSettings.FreeQuantity, "FreeSmallQuantityLabel", l.SmallItemsQnty_Free);
+        AddDec(InvoiceColumnSettings.FreeItemNo, "FreeItemNoLabel", l.Item_No_Free);
+        if (InvoiceColumnSettings.ExpireDate && l.Item_Expire_Date is { } d && d.Year > 1900) list.Add((Tr("ExpireDateLabel"), d.ToString("yyyy/MM/dd")));
+        AddDec(InvoiceColumnSettings.TotalNoTax, "TotalNoTaxLabel", l.Item_Total_WithoutTax);
+        AddDec(InvoiceColumnSettings.QntyValue, "QntyValueLabel", l.Qnty_value);
+        return list;
+    }
+
+    private static string FormatQnty(IInvoices_Details line)
+    {
+        var largTxt = line.Larg_Qnty is > 0 ? $"{line.Larg_Qnty:0.##} {line.UnitStr}" : "";
+        var smallTxt = line.Small_Qnty is > 0 ? $"{line.Small_Qnty:0.##} {line.UnitSmallStr}" : "";
+        return string.Join(" ", new[] { largTxt, smallTxt }.Where(s => !string.IsNullOrEmpty(s)));
+    }
+
+    private void OpenAddItemDialog()
+    {
+        if (!GuardEditItems()) return;
+        _editingLine = null;
+        _dialogInitialCode = "";
+        _itemDialogOpen = true;
+    }
+
+    // حقل البحث بالكود/الباركود: عند Enter (نهاية قراءة الباركود) يُفتح حوار الصنف بالصنف المحدد وتُوضع البؤرة على الكمية.
+    private MudTextField<string>? _barcodeField;
+    private string _barcodeText = "";
+    private string _dialogInitialCode = "";
+    private int _barcodeToken;
+
+    private Task OnBarcodeKeyDownAsync(KeyboardEventArgs e)
+    {
+        var code = (_barcodeText ?? "").Trim();
+        if (e.Key != "Enter" || code.Length == 0 || _selectedCustomer is null || _isSaved) return Task.CompletedTask;
+        if (!GuardEditItems()) return Task.CompletedTask;
+
+        _editingLine = null;
+        _dialogInitialCode = code;
+        _barcodeToken++;
+        _barcodeText = "";
+        _itemDialogOpen = true;
+        return Task.CompletedTask;
+    }
+
+    private async Task OnItemDialogVisibleChangedAsync(bool visible)
+    {
+        _itemDialogOpen = visible;
+        if (!visible)
+        {
+            _dialogInitialCode = "";
+            await FocusBarcodeAsync();
+        }
+    }
+
+    private Task OnBarcodeNotFoundAsync(string code)
+    {
+        Snackbar.Add($"{Tr("ItemCodeNotFoundError")}: {code}", Severity.Warning);
+        return Task.CompletedTask;
+    }
+
+    // بعد إغلاق الحوار تعود البؤرة لحقل الباركود لقراءة الصنف التالى مباشرة.
+    private async Task FocusBarcodeAsync()
+    {
+        try { if (_barcodeField is not null) await _barcodeField.FocusAsync(); }
+        catch { /* التركيز تحسين راحة فقط، فلا يوقف الشاشة عند فشله */ }
+    }
+
+    private void OpenEditItemDialog(IInvoices_Details line)
+    {
+        if (!GuardEditItems()) return;
+        _editingLine = line;
+        _itemDialogOpen = true;
+    }
+
+    // 🟢 يقابل ItemData.fillListView (استدعاء الأب لإضافة/تحديث السطر) - يميّز بين إضافة سطر جديد وتعديل سطر
+    // موجود بالفعل عبر _editingLine (مضبوطة فى OpenEditItemDialog قبل فتح الحوار).
+    private async Task OnItemDialogSaved(IInvoices_Details line)
+    {
+        if (_editingLine is null)
+        {
+            line.Item_DeletedFlage = 0;
+            line.Item_ProcessedFlage = 0;
+            _invD_O.invDlst.Add(line);
+        }
+        else
+        {
+            var index = _invD_O.invDlst.IndexOf(_editingLine);
+            if (index >= 0)
+            {
+                if (_editingLine.Id > 0)
+                {
+                    // 🟢 اختبار الرصيد (Unit_Item.Full_Qua) كشف أن مسار "السطر المعدَّل" (Item_ProcessedFlage=-1) فى محرك التعديل
+                    // القديم يطرح الكمية الجديدة كاملة من الرصيد دون إرجاع القديمة (القديمة تُستخدم فقط لجدول الصلاحية)، فتنقص
+                    // مرتين (سلوك المحرك نفسه فى الديسك توب ولا يجوز لمسه). الحل من جهة Razor: تعديل سطر محفوظ = حذف القديم
+                    // (المحرك يُرجع رصيده) + إضافة الجديد كسطر جديد (يطرح رصيده)، فيصح الرصيد فى الحالتين.
+                    _editingLine.Item_DeletedFlage = 1;
+                    _editingLine.Item_ProcessedFlage = 1;
+                    _invD_O.invDlst_Deleted.Add(_editingLine);
+                }
+                line.Id = 0;
+                line.Item_DeletedFlage = 0;
+                line.Item_ProcessedFlage = 0;
+                _invD_O.invDlst[index] = line;
+            }
+            _editingLine = line;
+        }
+        RecomputeTotals();
+        await AutoSaveIfDirectAsync();
+    }
+
+    private async Task DeleteLine(IInvoices_Details line)
+    {
+        if (!GuardEditItems()) return;
+        if (line.Id > 0)
+        {
+            line.Item_DeletedFlage = 1;
+            line.Item_ProcessedFlage = 1;
+            _invD_O.invDlst_Deleted.Add(line);
+            _invD_O.invDlst.Remove(line);   // كما فى الأصل (EditFRM_Invoices_Reverse سطر 819-820): يُنقل لقائمة المحذوفات.
+        }
+        else
+        {
+            _invD_O.invDlst.Remove(line);
+        }
+        RecomputeTotals();
+        await AutoSaveIfDirectAsync();
+    }
+
+    // 🟢 وضع «فاتورة جديدة - حفظ الأصناف» (Is_SaveOnDB_When_AddItemDirectly_On_invoice=1): يقابل Save_Add_Edit_Item الذى يُستدعى بعد كل إضافة/تعديل/حذف
+    // صنف (AddNew_Item / EditNow / BtnDeleteItem_Click): تُحفَظ الفاتورة فوراً (إنشاء أول مرة ثم تعديل) فتتحرك الأرصدة لحظياً. لا يحدث شىء
+    // بلا عميل (الأصل يمنع إضافة صنف بلا عميل)، ولا رسالة نجاح لكل صنف (الأصل صامت).
+    private bool _quietSave;
+
+    private async Task AutoSaveIfDirectAsync()
+    {
+        if (!_isSaveDirectly || _selectedCustomer is null || _isSaving || _isSaved) return;
+        if (!IsExistingInvoice && _lines.Count == 0) return;
+        _quietSave = true;
+        try { await SaveInvoiceAsync(); }
+        finally { _quietSave = false; }
+    }
+
+    private void RecomputeTotals()
+    {
+        // يقابل SetCommissionOnScreen: مع الضريبة لكل صنف يُصفَّر الخصم على مستوى الفاتورة ويُعطَّل.
+        if (_isTaxInvoice && _isTaxPerItem)
+        {
+            _header.List_CommissionRate = 0;
+            _header.List_CommissionValue = 0;
+        }
+        InvoiceLineCalculator.ComputeHeaderTotals(_header, _invD_O.invDlst, _isTaxInvoice && _isTaxPerItem);
+        StateHasChanged();
+    }
+
+    // 🟢 قوائم اختيار رأس الفاتورة عبر InvoiceHeaderLookupsCLS (AccountModelsLib): البائع (employeeSellerUSR1 → Emp_Id/Emp_Name)،
+    // مندوب المبيعات (SalesMan_List → Salesman_Id، إلزامى عند ShowSalesMan=1)، وشركة الشحن (ShipmentCoUSR → ShipmentCompany_Id/Name).
+    private async Task<IEnumerable<SellerOption>> SearchLookupAsync(Func<DataTable> read, string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return read();
+        }, ct);
+        var list = new List<SellerOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["Name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+                list.Add(new SellerOption(Convert.ToInt64(r["Id"]), name));
+        }
+        return list.Take(50);
+    }
+
+    private Task<IEnumerable<SellerOption>> SearchSellersAsync(string search, CancellationToken ct) => SearchLookupAsync(_lookups.GetSellers, search, ct);
+    private Task<IEnumerable<SellerOption>> SearchSalesmenAsync(string search, CancellationToken ct) => SearchLookupAsync(_lookups.GetSalesmen, search, ct);
+    private Task<IEnumerable<SellerOption>> SearchShipmentCompaniesAsync(string search, CancellationToken ct) => SearchLookupAsync(_lookups.GetShipmentCompanies, search, ct);
+
+    private void OnSellerPicked(SellerOption? seller)
+    {
+        _seller = seller;
+        _header.Emp_Id = seller?.Id ?? 0;
+        _header.Emp_Name = seller?.Name ?? "";
+    }
+
+    private void OnSalesmanPicked(SellerOption? salesman)
+    {
+        _salesman = salesman;
+        _header.Salesman_Id = salesman?.Id ?? 0;
+    }
+
+    private void OnShipmentCompanyPicked(SellerOption? company)
+    {
+        _shipmentCompany = company;
+        _header.ShipmentCompany_Id = company?.Id ?? 0;
+        _header.ShipmentCompany_Name = company?.Name ?? "";
+    }
+
+    // 🟢 يقابل SetTaxDataOnForm: النسب الافتراضية من AccountTaxInfo: ضريبة المبيعات T1، وضريبة الخصم والإضافة T4/W002 (×100).
+    private async Task LoadTaxDefaultsAsync()
+    {
+        await Task.Run(() =>
+        {
+            try
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var opp = new AccountModelsLib.operations();
+                var tax = new TaxListCLS();
+                var t1 = tax.Get_TaxInfoRatio(ref opp, "T1", "");
+                _defaultTaxSales = (t1?.TaxRate ?? 0) * 100;
+                var w002 = tax.Get_TaxInfoRatioList(ref opp).FirstOrDefault(x => x.MainCode == "T4" && x.SubCode == "W002");
+                _defaultATS05 = (w002?.TaxRate ?? 0) * 100;
+            }
+            catch
+            {
+                _defaultTaxSales = 0;
+                _defaultATS05 = 0;
+            }
+        });
+        // يقابل SetConfigOnMonitor: لو أُظهر عمود ضريبة الصنف فى الإعدادات تكون الضريبة لكل صنف إلزامياً ولا يُسمح بتغييرها.
+        if (Common.Show_Item_TaxSale10_OnInvoiceMonitor == 1 || Common.Show_Item_ATS05_OnInvoiceMonitor == 1)
+        {
+            _isTaxPerItem = true;
+            _taxPerItemForced = true;
+        }
+    }
+
+    private void OnTaxInvoiceChanged(bool value)
+    {
+        _isTaxInvoice = value;
+        ApplyTaxSettings();
+    }
+
+    private void OnTaxPerItemChanged(bool value)
+    {
+        _isTaxPerItem = value;
+        ApplyTaxSettings();
+    }
+
+    // 🟢 يطبّق قاعدة المستخدم: بلا فاتورة ضريبية = كل النسب صفر؛ لكل صنف = النسب على الأسطر فقط ونسب الرأس صفر (فلا تتكرر
+    // الضريبة على الإجمالى)؛ على الإجمالى = نسب الرأس فقط وأسطر بلا ضريبة. ثم تُعاد الإجماليات.
+    private void ApplyTaxSettings()
+    {
+        var perItem = _isTaxInvoice && _isTaxPerItem;
+        _header.IsInvoiceTaxInfo = _isTaxInvoice ? 1 : 0;
+        _header.Is_Tax_Per_Item = _isTaxPerItem ? 1 : 0;
+        _header.TaxSales10 = _isTaxInvoice && !perItem ? _defaultTaxSales : 0;
+        _header.ATS05 = _isTaxInvoice && !perItem ? _defaultATS05 : 0;
+
+        foreach (var line in _invD_O.invDlst.Where(l => (l.Item_DeletedFlage ?? 0) != 1).ToList())
+        {
+            var target = line;
+            if (line.Id > 0)
+            {
+                // 🟢 سطر محفوظ تغيّرت ضريبته فقط (كميته ثابتة): علم التعديل -1 فى محرك الحفظ يطرح الكمية كاملة من الرصيد مرة ثانية
+                // (اكتشفه محرك اختبار السيناريوهات)، لذا نستبدله بحذف القديم (يُرجع رصيده) + إضافة نسخة جديدة (تطرح رصيدها).
+                var index = _invD_O.invDlst.IndexOf(line);
+                var old = (IInvoices_Details)line.Clone();
+                old.Item_DeletedFlage = 1;
+                old.Item_ProcessedFlage = 1;
+                _invD_O.invDlst_Deleted.Add(old);
+                target = (IInvoices_Details)line.Clone();
+                target.Id = 0;
+                target.Item_DeletedFlage = 0;
+                target.Item_ProcessedFlage = 0;
+                _invD_O.invDlst[index] = target;
+            }
+            InvoiceLineCalculator.ApplyItemTax(target, perItem ? _defaultTaxSales : 0, perItem ? _defaultATS05 : 0);
+        }
+        RecomputeTotals();
+    }
+
+    // 🟢 زر «فاتورة جديدة» (بطلب المستخدم): يفتح فاتورة نظيفة من نفس النوع. صفحة فاتورة جديدة (بلا رقم) تُصفَّر فى مكانها؛ صفحة فاتورة
+    // محفوظة (/{Id}) تنتقل لرابط الفاتورة الجديدة من نفس النوع (آجل/قطاعى/سلسلة الترقيم/مرتجع). لو توجد تغييرات غير محفوظة يُطلب التأكيد أولاً.
+    private string NewInvoiceUrl()
+    {
+        var path = _isReverse ? "/accounts/invoices/sales-return" : "/accounts/invoices/sales-invoice";
+        var query = new List<string>();
+        if (_header.Is_Invoice_Agile == 1) query.Add("agile=1");
+        if (_header.Is_InvoiceKta3y == 1) query.Add("kta3y=1");
+        var type = Convert.ToInt32(_header.Invoice_Type);
+        if (type != 0) query.Add("type=" + type);
+        if (_isSaveDirectly) query.Add("saveDirectly=1");
+        return query.Count > 0 ? path + "?" + string.Join("&", query) : path;
+    }
+
+    private bool HasUnsavedWork() =>
+        !_isSaved && (IsExistingInvoice
+            ? Fingerprint() != _baseline
+            : _lines.Count > 0 || _selectedCustomer is not null || !string.IsNullOrWhiteSpace(_notes));
+
+    private async Task NewInvoiceAsync()
+    {
+        if (_isSaving) return;
+        if (HasUnsavedWork())
+        {
+            var confirmed = await DialogService.ShowMessageBoxAsync(Tr("NewInvoiceButton"), Tr("DiscardChangesConfirm"),
+                yesText: Tr("NewInvoiceButton"), cancelText: Tr("Cancel"));
+            if (confirmed != true) return;
+        }
+
+        if (IsExistingInvoice)
+        {
+            Nav.NavigateTo(NewInvoiceUrl());
+            return;
+        }
+        await ResetToNewInvoiceAsync();
+    }
+
+    private async Task ResetToNewInvoiceAsync()
+    {
+        _selectedCustomer = null;
+        _customerPriceTypeId = 0;
+        _customerPriceTypeName = "";
+        _customerAccountBefore = 0;
+        _balanceLabel = "";
+        _notes = "";
+        _invoiceDate = DateTime.Now;
+        _dueDate = DateTime.Now;
+        _seller = null;
+        _salesman = null;
+        _shipmentCompany = null;
+        _isSaved = false;
+        _editingLine = null;
+        _barcodeText = "";
+        _dialogInitialCode = "";
+        _isTaxInvoice = false;
+        _isTaxPerItem = _taxPerItemForced;
+        _invL_O = new InvoicesOperationListCLS(_isReverse ? 1 : 0);
+        _invD_O = new InvoicesOperationCLS(_isReverse ? 1 : 0);
+        await InitializeNewInvoiceAsync();
+    }
+
+    // بعد حفظ فاتورة جديدة تنتقل الصفحة لرابط رقمها (تبويب جديد)، فيبقى تبويب «فاتورة جديدة» القديم بحالة محفوظة/مقفلة ويُعاد تنشيطه بالخطأ
+    // عند فتح فاتورة جديدة ثانية؛ نغلقه هنا (مفتاح التبويب = المسار + query عنصر القائمة).
+    private void CloseStaleNewInvoiceTab(string relativeWithQuery)
+    {
+        var parts = relativeWithQuery.Split('?', 2);
+        var key = "/" + parts[0].Trim('/');
+        TabWorkspace.Close(key);
+        if (parts.Length > 1 && parts[1].Length > 0) TabWorkspace.Close(key + "?" + parts[1]);
+    }
+
+    // 🟢 غلاف الحفظ: يمنع التكرار قبل أى await (المعالجات تعمل بالتتابع فالنقرة الثانية تجد _isSaving=true وتخرج فوراً).
+    private async Task SaveInvoiceAsync()
+    {
+        if (_isSaving) return;
+        _isSaving = true;
+        StateHasChanged();
+        try
+        {
+            await SaveInvoiceCoreAsync();
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    // بعد حفظ تعديل فاتورة موجودة: إعادة تحميلها من القاعدة (أسطر بأرقامها الجديدة وأعلام المعالجة) وتجديد البصمة، فيبقى الزر معطَّلاً
+    // حتى التعديل التالى. الفاتورة الجديدة تنتقل لرابط رقمها كما كان (نسخة صفحة جديدة بحالة محفوظة).
+    private async Task ReloadSavedInvoiceAsync()
+    {
+        _invL_O = new InvoicesOperationListCLS(_isReverse ? 1 : 0);
+        _invD_O = new InvoicesOperationCLS(_isReverse ? 1 : 0);
+        _editingLine = null;
+        await LoadExistingInvoiceAsync(Id!.Value);
+        _baseline = Fingerprint();
+    }
+
+    private async Task SaveInvoiceCoreAsync()
+    {
+        if (_selectedCustomer is null)
+        {
+            Snackbar.Add(Tr("CustomerRequiredError"), Severity.Warning);
+            return;
+        }
+        // يقابل Make_Invoices.Validation: مع تفعيل ShowSalesMan اختيار المندوب إلزامى.
+        if (Common.ShowSalesMan == 1 && _salesman is null)
+        {
+            Snackbar.Add(Tr("SalesmanRequiredError"), Severity.Warning);
+            return;
+        }
+
+        _header.Customer_Id = _selectedCustomer.Id;
+        _header.CustomerName = _selectedCustomer.Name;
+        _header.SubAccount_Name = _selectedCustomer.Name;
+        // 🟢 يقابل NewFrmInvoive سطر 2856: الحساب الفرعى للعميل يُحفظ على رأس الفاتورة. استعلام قيد الفاتورة
+        // (Get_EntryForInvoices) يربط Invoices_List.SubAccount_Id بـ Submain_Account، فبدونه لا يُنشأ قيد أبداً
+        // حتى مع تفعيل IS_Make_AutomaticFromTar7eel_For_Invoice (اكتُشف فى المرحلة 1 من خطة الفواتير).
+        var customerIdForAccount = _selectedCustomer.Id;
+        _header.SubAccount_Id = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var dtSub = new AccountModelsLib.operations().return_DataTable("select SubAccount_Id from Customer where Id=" + customerIdForAccount);
+            return dtSub.Rows.Count > 0 && long.TryParse(dtSub.Rows[0][0]?.ToString(), out var subId) ? subId : 0L;
+        });
+        _header.Currency_id = _currencyId;
+        _header.Currency = _currencies.FirstOrDefault(c => c.Id == _currencyId)?.Name ?? "";
+        _header.Invoice_Date = _invoiceDate ?? DateTime.Now;
+        _header.Invoice_DateTime = DateTime.Now;
+        _header.Notes = _notes;
+        _header.User_Id = Common.User_Id;
+        _header.Branch_Id = Common.Branch_Id;
+        // يقابل Get_MakeInvoiceListData: تاريخ الإدخال يُكتب صراحةً (عمود القاعدة له افتراضى getdate() لكن EF يرسل NULL فيبقى فارغاً).
+        if (!(Id.HasValue && Id.Value > 0))
+        {
+            _header.Insert_ServerDateTime = DateTime.Now;
+            // قيم الويندوز الافتراضية لحقول الرأس غير المبنية بعد فى Razor (NewFrmInvoive سطور 1800 و1835 و2284: بوليصة/حاوية "0"،
+            // تاريخ الاستحقاق = الآن، والباقى صفر/فارغ) كى تُحفظ الفاتورة بنفس القيم بدل NULL.
+            _header.InvoiceDueDate = DateTime.Now;
+            if (string.IsNullOrEmpty(_header.PolicaNo)) _header.PolicaNo = "0";
+            if (string.IsNullOrEmpty(_header.troodContainerNo)) _header.troodContainerNo = "0";
+            _header.Customer_Notes ??= "";
+            _header.Emp_Name ??= "";
+            _header.ShipmentCompany_Name ??= "";
+            _header.Emp_Id ??= 0;
+            _header.ShipmentCompany_Id ??= 0;
+            _header.Shipment_Value ??= 0;
+            _header.AnotherPayment ??= 0;
+            _header.Salesman_Id ??= 0;
+        }
+        // تاريخ الاستحقاق: يُحفظ من الحقل عند إتاحته للمستخدم (صلاحية 957)، وإلا يبقى الافتراضى/المحفوظ.
+        if (_showDueDate && _dueDate.HasValue) _header.InvoiceDueDate = _dueDate;
+        _header.CustomerAccountBefor = _customerAccountBefore;
+        // 🟢 يقابل NewFrmInvoive سطر 3381: المرتجع يُنقص رصيد العميل والبيع يزيده.
+        _header.CustomerAccountAfter = _isReverse
+            ? _customerAccountBefore - (_header.Net_Total ?? 0)
+            : _customerAccountBefore + (_header.Net_Total ?? 0);
+        // 🟢 يقابل Get_MakeInvoiceListData(Common.Invoice_Type_Id | Common.InvoiceReverse_Type_Id).
+        _invL_O.Invoice_Type_Id = _isReverse ? Common.InvoiceReverse_Type_Id : Common.Invoice_Type_Id;
+        // يقابل Get_MakeInvoiceListData: علما الضريبة يُحفظان صراحةً (IsInvoiceTaxInfo + Is_Tax_Per_Item).
+        _header.IsInvoiceTaxInfo = _isTaxInvoice ? 1 : 0;
+        _header.Is_Tax_Per_Item = _isTaxPerItem ? 1 : 0;
+        // الأصل يحفظ IS_Posted_Flage=0 (غير مُرحَّل) وقراءات الترحيل تشترط = 0؛ كانت الصفحة تحفظها NULL فتُفلت الفاتورة من الترحيل (نفس عيب المشتريات).
+        _header.IS_Posted_Flage ??= 0;
+        InvoiceLineCalculator.ZeroNullNumerics(_header);
+
+        var excp = 0;
+        var msg = "";
+        // 🟢 محرك الحفظ الأصلى يبتلع الاستثناءات داخلياً (Insert_Invoices_List تحتفظ بالرسالة فى متغير محلى وتُسقطها)
+        // فيعود excp=1 برسالة فارغة. نلتقط هنا آخر استثناء SQL/EF أثناء الاستدعاء فقط (من جهة Razor، بدون لمس
+        // كود المحرك) لعرض السبب الحقيقى للمستخدم بدل رسالة عامة.
+        string? swallowed = null;
+        EventHandler<System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs> handler = (_, e) =>
+        {
+            var name = e.Exception.GetType().Name;
+            if (name.Contains("Sql") || name.Contains("DbUpdate") || name.Contains("Invalid") || name.Contains("Null"))
+            {
+                swallowed = e.Exception.Message;
+                var frames = string.Join(" <- ", Environment.StackTrace.Split('\n').Skip(3).Take(8).Select(s => s.Trim()));
+                Console.Error.WriteLine($"[SalesInvoice.Save] {e.Exception.GetType().FullName}: {e.Exception.Message} @ {frames}");
+            }
+        };
+        try
+        {
+            AppDomain.CurrentDomain.FirstChanceException += handler;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                if (_isReverse)
+                {
+                    // محرك المرتجع المستقل (Requests_Cls) - يقابل EditFRM_Invoices_Reverse سطر 586/603.
+                    var rr = new Requests_Cls();
+                    if (Id.HasValue && Id.Value > 0)
+                    {
+                        rr.Edit_InvoiceReverse_Update_CustomerAccount(ref excp, ref msg, _invL_O, _invD_O);
+                    }
+                    else
+                    {
+                        rr.Make_Invoice_Reverse_Update_CustomerAccount(ref excp, _invL_O, _invD_O);
+                    }
+                    return;
+                }
+                var rc = new Requests_ModelCls();
+                if (Id.HasValue && Id.Value > 0)
+                {
+                    rc.Edit_Invoice_Update_CustomerAccount(ref excp, _invL_O, _invD_O);
+                }
+                else
+                {
+                    rc.Make_Invoice_Update_CustomerAccount(ref excp, ref msg, _invL_O, _invD_O);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            // 🟢 يقابل أسلوب معالجة الأخطاء المعتمد فى المشروع (try/catch + عرض رسالة للمستخدم) - بدون هذه
+            // الكتلة، أى استثناء غير متوقع من محرك الحفظ القديم كان يُسقط دائرة Blazor Server بالكامل (اكتُشف
+            // حياً: قطع اتصال WebSocket بعد الضغط على "حفظ الفاتورة" مباشرة قبل إضافة هذه المعالجة).
+            Snackbar.Add(ex.Message, Severity.Error);
+            return;
+        }
+        finally
+        {
+            AppDomain.CurrentDomain.FirstChanceException -= handler;
+        }
+
+        if (excp == 0)
+        {
+            if (_deletingInvoice)
+            {
+                Snackbar.Add(Tr("InvDeletedMessage"), Severity.Success);
+                Nav.NavigateTo(_isReverse ? "/accounts/invoices/list?return=1" : "/accounts/invoices/list");
+                return;
+            }
+            if (!_quietSave) Snackbar.Add(Tr("InvoiceSavedMessage"), Severity.Success);
+            await LinkOrderAfterSaveAsync();
+            if (IsExistingInvoice)
+            {
+                await ReloadSavedInvoiceAsync();
+            }
+            else
+            {
+                _isSaved = true;
+                var oldRelative = Nav.ToBaseRelativePath(Nav.Uri);
+                var savedUrl = $"/accounts/invoices/{(_isReverse ? "sales-return" : "sales-invoice")}/{_header.Id}";
+                // وضع «حفظ الأصناف» يستمر بعد إنشاء الفاتورة: يبقى المعامل فى رابط الفاتورة المحفوظة فيُكمَل الحفظ عند كل تعديل تالٍ.
+                if (_isSaveDirectly) savedUrl += "?saveDirectly=1";
+                Nav.NavigateTo(savedUrl, replace: true);
+                CloseStaleNewInvoiceTab(oldRelative);
+            }
+        }
+        else
+        {
+            var detail = string.IsNullOrEmpty(msg) ? swallowed : msg;
+            Snackbar.Add(string.IsNullOrEmpty(detail) ? Tr("InvoiceSaveError") : $"{Tr("InvoiceSaveError")}: {detail}", Severity.Error);
+        }
+    }
+
+    // ===================== تحويل طلبية عميل إلى هذه الفاتورة =====================
+
+    // يعبّئ فاتورة جديدة من طلبية مؤكدة: العميل (مقفل) + سطر لكل كمية مختارة بسعر الطلبية (قابل للتعديل) وبنفس قيم السطر الافتراضية
+    // التى يضبطها حوار الصنف (AddInvoiceItemDialog.OnItemPickedAsync) حتى يقبلها محرك الحفظ القديم.
+    private async Task LoadFromOrderAsync(long orderId, string alloc)
+    {
+        try
+        {
+            var service = new CustomerOrdersService();
+            var loaded = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); service.SyncOrder(orderId); return service.GetOrder(orderId); });
+            if (loaded is null) { Snackbar.Add(Tr("COOrderNotFound"), Severity.Error); return; }
+            var (order, orderLines) = loaded.Value;
+            if (!CustomerOrdersService.CanFulfill(order)) { Snackbar.Add(Tr("COConvertNotOpen"), Severity.Warning); return; }
+
+            var requested = new Dictionary<long, (decimal L, decimal S)>();
+            foreach (var part in alloc.Split(';', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var p = part.Split(':');
+                if (p.Length == 3 && long.TryParse(p[0], out var lid)
+                    && decimal.TryParse(p[1], NumberStyles.Number, CultureInfo.InvariantCulture, out var l)
+                    && decimal.TryParse(p[2], NumberStyles.Number, CultureInfo.InvariantCulture, out var sm))
+                    requested[lid] = (l, sm);
+            }
+
+            _fromOrderId = orderId;
+            _fromOrderNo = order.Order_No ?? 0;
+            var customerId = order.Customer_Id ?? 0;
+            var customerName = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var dt = new AccountModelsLib.operations().return_DataTable("SELECT Name FROM Customer WHERE Id = " + customerId);
+                return dt.Rows.Count > 0 ? dt.Rows[0][0]?.ToString()?.Trim() ?? "" : "";
+            });
+            await OnCustomerPickedAsync(new CustomerOption(customerId, customerName), skipCashCustomerConfirm: true);
+            _customerLocked = true;
+            if (order.Currency_Id is > 0) _currencyId = order.Currency_Id.Value;
+            if (!string.IsNullOrWhiteSpace(order.Notes) && string.IsNullOrWhiteSpace(_notes)) _notes = order.Notes!;
+
+            var picked = new List<(CustomerOrderLine Line, decimal L, decimal S)>();
+            foreach (var ol in orderLines)
+            {
+                var remL = CustomerOrdersService.RemainingLarg(ol);
+                var remS = CustomerOrdersService.RemainingSmall(ol);
+                var q = requested.Count == 0 ? (L: remL, S: remS) : requested.TryGetValue(ol.Id, out var rq) ? rq : (L: 0m, S: 0m);
+                var takeL = Math.Min(q.L, remL);
+                var takeS = Math.Min(q.S, remS);
+                if (takeL > 0 || takeS > 0) picked.Add((ol, takeL, takeS));
+            }
+            if (picked.Count == 0) { Snackbar.Add(Tr("COConvertNothing"), Severity.Warning); return; }
+
+            var ids = string.Join(",", picked.Select(x => x.Line.Unit_Item_Table_Id ?? 0).Distinct());
+            var items = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return new AccountModelsLib.operations().return_DataTable(
+                    "SELECT Unit_item.Id, Unit_item.Item_id, Item.Item_Name, Item.code, Unit_item.Full_qua, Unit_item.D_Qua, " +
+                    "unit.B_Unit, unit.S_unit, unit.S_unit_Value, Unit_item.Store_id, Store.Store_Name " +
+                    "FROM Unit_item INNER JOIN unit ON Unit_item.unit_id = unit.id INNER JOIN Item ON Unit_item.Item_id = Item.id " +
+                    "INNER JOIN Store ON Unit_item.Store_id = Store.id WHERE Unit_item.Id IN (" + ids + ")");
+            });
+            var perItemTax = _isTaxInvoice && _isTaxPerItem;
+            foreach (var x in picked)
+            {
+                var r = items.Rows.Cast<DataRow>().FirstOrDefault(row => Convert.ToInt64(row["Id"]) == (x.Line.Unit_Item_Table_Id ?? 0));
+                if (r is null) continue;
+                var unitSmallValue = r["S_unit_Value"] == DBNull.Value ? 1m : Convert.ToDecimal(r["S_unit_Value"]);
+                if (unitSmallValue == 0) unitSmallValue = 1;
+                var price = x.Line.Unit_Price ?? 0;
+                var line = new IInvoices_Details
+                {
+                    Item_Id = Convert.ToInt64(r["Item_id"]),
+                    Unit_Item_Table_Id = x.Line.Unit_Item_Table_Id,
+                    Invoice_Item_Name = r["Item_Name"]?.ToString() ?? "",
+                    code = r["code"]?.ToString() ?? "",
+                    Store_Id = Convert.ToInt64(r["Store_id"]),
+                    Store_Name = r["Store_Name"]?.ToString() ?? "",
+                    Available_Larg_Balance = Convert.ToDecimal(r["Full_qua"]),
+                    Available_Small_Balance = Convert.ToDecimal(r["D_Qua"]),
+                    UnitStr = r["B_Unit"]?.ToString() ?? "",
+                    UnitSmallStr = r["S_unit"]?.ToString() ?? "",
+                    Unit_Used_for_Price = 1,
+                    Make_Order = 0,
+                    Unit_Item_ExpireDate_Id = 0,
+                    Bills_Details_Id = 0,
+                    Item_Expire_Date = DateTime.Now.Date,
+                    Tash3ela = "",
+                    StatementNo = "",
+                    OperationNo = "",
+                    Merchant_Name = "",
+                    Item_TaxSales10 = perItemTax ? _defaultTaxSales : 0,
+                    Item_ATS05 = perItemTax ? _defaultATS05 : 0,
+                    Larg_Qnty = x.L,
+                    Small_Qnty = x.S,
+                    PriceUnit = price,
+                    Larg_Unit_Price = price,
+                    Item_DeletedFlage = 0,
+                    Item_ProcessedFlage = 0
+                };
+                InvoiceLineCalculator.ComputeLine(line, unitSmallValue);
+                _invD_O.invDlst.Add(line);
+                _orderAllocations.Add(new CustomerOrdersService.Allocation(x.Line.Id, x.L, x.S));
+            }
+            RecomputeTotals();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    // بعد نجاح حفظ الفاتورة: فاتورة جديدة من طلبية → تسجيل الربط؛ فاتورة موجودة → مطابقة روابطها مع كمياتها الجديدة (يُرجع المحذوف للطلبية).
+    private async Task LinkOrderAfterSaveAsync()
+    {
+        if (_isReverse) return;
+        try
+        {
+            var invoiceId = _header.Id;
+            if (invoiceId <= 0) return;
+            var service = new CustomerOrdersService();
+            if (!IsExistingInvoice && _fromOrderId > 0 && _orderAllocations.Count > 0)
+            {
+                var orderId = _fromOrderId;
+                var allocations = _orderAllocations.ToList();
+                await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); service.RecordFulfillments(orderId, invoiceId, allocations); });
+                Snackbar.Add(string.Format(CultureInfo.InvariantCulture, Tr("COInvoiceLinked"), _fromOrderNo), Severity.Info);
+                _orderAllocations.Clear();
+            }
+            else if (IsExistingInvoice)
+            {
+                await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); service.SyncInvoice(invoiceId); });
+            }
+        }
+        catch (Exception ex)
+        {
+            // الفاتورة نفسها حُفظت؛ فشل الربط فقط، فيُعرض بوضوح ولا يُسقط الشاشة.
+            Snackbar.Add($"{Tr("COInvoiceLinkError")}: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private string Tr(string key)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

@@ -7,6 +7,8 @@
 @inject NavigationManager NavigationManager
 @inject AppSettings Settings
 @inject IJSRuntime JSRuntime
+@inject AccountModelsLib.MenuStateService MenuState
+@inject AccountERP.SharedUI.Services.UserPreferencesService Prefs
 @implements IDisposable
 
 <MudTooltip Text="@Tr("ChangeLanguage")">
@@ -79,8 +81,21 @@
         if (Settings.IsWeb)
         {
             // 🌐 حفظ الكوكي فى الخلفية فقط (بدون Navigation) حتى تُقرأ الثقافة الصحيحة عند أي تحميل كامل
-            // لاحق للصفحة (فتح تبويب جديد، تحديث المتصفح F5) - لا تؤثر على الدائرة الحالية إطلاقاً.
+            // لاحق للصفحة (فتح تبويب جديد، تحديث المتصفح F5) - لا تؤثر على الدائرة الحالية إطلاقاً. يبقى
+            // هذا الكوكي مفيداً حتى بعد إضافة الحفظ فى قاعدة البيانات أدناه: هو الافتراضى الوحيد المتاح
+            // *قبل* تسجيل الدخول (شاشة /login نفسها تستخدم هذا المكوّن)، ولحظة أول رسم لأي دائرة جديدة
+            // قبل أن يكتمل Prefs.Load() من القاعدة.
             await JSRuntime.InvokeVoidAsync("accountErpInterop.persistCultureCookie", cultureCode);
+        }
+
+        // 🟢 المصدر الحقيقي بعد تسجيل الدخول: يُحفَظ لحساب المستخدم نفسه فى USER_DETAILES_Setting (نفس نمط
+        // ShowBreadcrumb/ShowTabs - راجع UserPreferencesService.SetLanguage) بدل الاعتماد على كوكي هذا
+        // المتصفح/الجهاز فقط - بطلب المستخدم صراحة أن تظهر لغته عند إغلاق النظام وفتحه من جديد على أي جهاز،
+        // بما فى ذلك الديسك توب/الموبايل (MAUI) التى لا تملك آلية كوكي إطلاقاً. لا نحفظ هنا قبل تسجيل الدخول
+        // (شاشة /login) لأنه لا يوجد بعد حساب مستخدم معروف يُحفَظ له التفضيل.
+        if (MenuState.IsAuthenticated)
+        {
+            Prefs.SetLanguage(cultureCode);
         }
     }
 }

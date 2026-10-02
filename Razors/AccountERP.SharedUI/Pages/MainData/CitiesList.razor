@@ -1,0 +1,22 @@
+@page "/main-data/cities"
+
+@* 🟢 عنصر القائمة «CitiesList» (SysConfigMenus 839) - صفحة رفيعة تعرض المكوّن المشترك GeoLevelList بمستوى City. *@
+
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+
+<PageTitle>@Title</PageTitle>
+
+<GeoLevelList Level="GeoLevelList.GeoLevel.City" />
+
+@code {
+    private string Title
+    {
+        get
+        {
+            var previous = System.Globalization.CultureInfo.CurrentUICulture;
+            try { System.Globalization.CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang["GeoCitiesTitle"]; }
+            finally { System.Globalization.CultureInfo.CurrentUICulture = previous; }
+        }
+    }
+}

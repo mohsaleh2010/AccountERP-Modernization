@@ -1,0 +1,234 @@
+@* 🟢 يقابل Accounts.BeautyCenter.FrmInvoiceCreate (فاتورة مركز التجميل من حجز): تُعرَض خدمات/منتجات الحجز بخانة اختيار
+   لما يُراد تفويته، ونقدى/آجل، والحفظ عبر نفس InvoiceBeautyCLS.SaveInvoiceAndLinkServices (الذى يبنى الفاتورة بـ
+   MapInvoices ثم يستدعى المحرك القياسى Requests_ModelCls.Make_Invoice_Update_CustomerAccount ويربط AppointmentServices
+   بالفاتورة) - بدون أى تعديل فى كود المحرك أو سطح المكتب. لا حقول static (الأصل بلا static).
+
+   ملاحظة عن الأصل: زر الحفظ فى شاشة الويندوز الحالية (btnSaveInvoice_Click_1) يفحص قائمة selectedDetails المُنشأة فارغة
+   دائماً فيعرض التنبيه ويعود قبل استدعاء المحرك، أى أن الحفظ معطَّل فعلياً هناك (ومدخل القائمة الرئيسية يفتحها بـ
+   appointmentId=1 مكتوباً يدوياً)؛ هذه الصفحة تنفّذ القصد الواضح للأصل (اختيار الخدمات ثم استدعاء المحرك) وتستبعد
+   الخدمات المفوترة سابقاً كى لا تُفوتَر مرتين (الأصل يخلط "مُحدَّد" و"مفوتر" فى نفس الحقل IsProcessedAsInvoice). *@
+
+@page "/accounts/beauty/invoice-create/{AppointmentId:long}"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using Microsoft.EntityFrameworkCore
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<PageTitle>@Tr("BC_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4 inv-page" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="inv-card mb-4" Elevation="0">
+        <h1 class="inv-title" style="margin-bottom:16px">@Tr("BC_Title")</h1>
+
+        @if (!string.IsNullOrEmpty(_loadError))
+        {
+            <MudAlert Severity="Severity.Error">@_loadError</MudAlert>
+        }
+        else if (_notFound)
+        {
+            <MudAlert Severity="Severity.Error">@Tr("BC_NotFound")</MudAlert>
+        }
+        else if (_appointment is not null)
+        {
+            <MudStack Row="true" Spacing="4" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+                <MudText>@Tr("BC_AppointmentInfo") #@_appointment.Id</MudText>
+                <MudText>@Tr("CustomerLabel"): @_appointment.Customer?.Name</MudText>
+                <MudText>@_appointment.AppointmentDate?.ToString("yyyy/MM/dd HH:mm")</MudText>
+                <MudRadioGroup T="int" @bind-Value="_isAgile" Disabled="_savedInvoiceId > 0">
+                    <MudRadio T="int" Value="0" Color="Color.Primary">@Tr("DS_InvoiceCash")</MudRadio>
+                    <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("DS_InvoiceCredit")</MudRadio>
+                </MudRadioGroup>
+            </MudStack>
+        }
+    </MudPaper>
+
+    @if (_appointment is not null)
+    {
+        <MudPaper Class="inv-card mb-4" Elevation="0">
+            <MudTable Items="@_rows" Hover="true" Elevation="0" Class="inv-table">
+                <HeaderContent>
+                    <MudTh>@Tr("DS_SelectColumn")</MudTh>
+                    <MudTh>@Tr("BC_ServiceColumn")</MudTh>
+                    <MudTh>@Tr("UnitPriceColumn")</MudTh>
+                    <MudTh>@Tr("QuantityColumn")</MudTh>
+                    <MudTh>@Tr("DS_ValueColumn")</MudTh>
+                    <MudTh>@Tr("BC_DurationColumn")</MudTh>
+                    <MudTh>@Tr("BC_EmployeesColumn")</MudTh>
+                    <MudTh>@Tr("BC_InvoicedColumn")</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("DS_SelectColumn")">
+                        <MudCheckBox T="bool" Value="context.Selected" ValueChanged="@(v => context.Selected = v)"
+                                     Disabled="@(context.Invoiced || _savedInvoiceId > 0)" Dense="true" />
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("BC_ServiceColumn")">@context.Service.ServiceItem_Name</MudTd>
+                    <MudTd DataLabel="@Tr("UnitPriceColumn")">@context.Service.S_Price?.ToString("0.00")</MudTd>
+                    <MudTd DataLabel="@Tr("QuantityColumn")">@context.Service.Qnty?.ToString("0.##")</MudTd>
+                    <MudTd DataLabel="@Tr("DS_ValueColumn")">@context.LineTotal.ToString("0.00")</MudTd>
+                    <MudTd DataLabel="@Tr("BC_DurationColumn")">@context.Service.DurationMinutes</MudTd>
+                    <MudTd DataLabel="@Tr("BC_EmployeesColumn")">@context.Service.EmployeeNames</MudTd>
+                    <MudTd DataLabel="@Tr("BC_InvoicedColumn")">@(context.Invoiced ? Tr("DS_StatusInvoiced") : Tr("DS_StatusNotInvoiced"))</MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoItemsMessage")</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudPaper>
+
+        <MudPaper Class="inv-card mb-4" Elevation="0">
+            <MudGrid Spacing="3">
+                <MudItem xs="6" sm="3">
+                    <MudTextField T="string" Value="@SelectedTotal.ToString("0.00")" ReadOnly="true" Label="@Tr("TotalLabel")" Variant="Variant.Outlined" />
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2">
+            @if (_savedInvoiceId > 0)
+            {
+                <MudButton Variant="Variant.Outlined" Href="@($"/accounts/invoices/sales-invoice/{_savedInvoiceId}")">@Tr("BC_OpenInvoice")</MudButton>
+            }
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_savedInvoiceId > 0 || !_rows.Any(r => r.Selected && !r.Invoiced)"
+                       OnClick="SaveAsync">@Tr("SaveButton")</MudButton>
+        </MudStack>
+    }
+
+</MudContainer>
+
+@code {
+    private sealed class ServiceRow
+    {
+        public AppointmentService Service { get; init; } = default!;
+        public bool Selected { get; set; }
+        // 🟢 "مفوتر" = ارتبطت بفاتورة فعلاً (الأصل يستخدم IsProcessedAsInvoice للأمرين معاً؛ هنا نفصلهما).
+        public bool Invoiced => Service.IsProcessedAsInvoice == 1 || (Service.Invoices_List_Id ?? 0) > 0;
+        public decimal LineTotal => (Service.S_Price ?? 0) * (Service.Qnty ?? 1);
+    }
+
+    [Parameter] public long AppointmentId { get; set; }
+    [SupplyParameterFromQuery(Name = "serviceId")] public long? ServiceIdQuery { get; set; }
+
+    private readonly AccountModelsLib.operations _opp = new();
+    private Appointment? _appointment;
+    private List<ServiceRow> _rows = new();
+    private bool _notFound;
+    private string? _loadError;
+    private int _isAgile = 1;
+    private long _savedInvoiceId;
+
+    private decimal SelectedTotal => _rows.Where(r => r.Selected && !r.Invoiced).Sum(r => r.LineTotal);
+
+    protected override async Task OnInitializedAsync()
+    {
+        // 🟢 يقابل LoadInvoiceData: جلب الحجز مع خدماته والعميل، وفلترة خدمة واحدة لو مُرِّر serviceId.
+        try
+        {
+            _appointment = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return _opp.db.Appointments.AsNoTracking()
+                    .Include(a => a.appointmentService)
+                    .Include(a => a.Customer)
+                    .FirstOrDefault(a => a.Id == AppointmentId);
+            });
+        }
+        catch (Exception ex)
+        {
+            // 🟢 مثلاً اختلاف مخطط قاعدة البيانات عن نموذج EF (عمود ناقص فى AppointmentServices) - نعرضه بدل صفحة 500.
+            _loadError = ex.Message;
+            return;
+        }
+
+        if (_appointment is null) { _notFound = true; return; }
+
+        var services = _appointment.appointmentService.Where(s => s.AppointmentId == _appointment.Id);
+        if (ServiceIdQuery.HasValue) services = services.Where(s => s.Id == ServiceIdQuery.Value);
+        _rows = services.Select(s => new ServiceRow { Service = s, Selected = false }).ToList();
+        foreach (var r in _rows.Where(r => !r.Invoiced)) r.Selected = true;
+    }
+
+    private async Task SaveAsync()
+    {
+        var chosen = _rows.Where(r => r.Selected && !r.Invoiced).ToList();
+        if (chosen.Count == 0) { Snackbar.Add(Tr("BC_SelectServicesError"), Severity.Warning); return; }
+
+        // 🟢 يقابل UpdateRowLineTotal + تعليم المختار IsProcessedAsInvoice=1 (المحرك يتجاهل ما قيمته 0).
+        foreach (var r in chosen)
+        {
+            r.Service.QntyValue = r.LineTotal;
+            r.Service.IsProcessedAsInvoice = 1;
+        }
+        var toInvoice = chosen.Select(r => r.Service).ToList();
+
+        var excp = 0;
+        var msg = "";
+        long invoiceId = 0;
+        string? swallowed = null;
+        EventHandler<System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs> handler = (_, e) =>
+        {
+            var name = e.Exception.GetType().Name;
+            if (name.Contains("Sql") || name.Contains("DbUpdate") || name.Contains("Invalid") || name.Contains("Null"))
+            {
+                swallowed = e.Exception.Message;
+                var frames = string.Join(" <- ", Environment.StackTrace.Split((char)10).Skip(3).Take(8).Select(s => s.Trim()));
+                Console.Error.WriteLine($"[BeautyInvoice.Save] {e.Exception.GetType().FullName}: {e.Exception.Message} @ {frames}");
+            }
+        };
+        try
+        {
+            AppDomain.CurrentDomain.FirstChanceException += handler;
+            invoiceId = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var cls = new InvoiceBeautyCLS();
+                return cls.SaveInvoiceAndLinkServices(ref excp, ref msg, _isAgile, _appointment!, toInvoice, _opp);
+            });
+        }
+        catch (Exception ex)
+        {
+            foreach (var r in chosen) r.Service.IsProcessedAsInvoice = 0;
+            Snackbar.Add(ex.Message, Severity.Error);
+            return;
+        }
+        finally
+        {
+            AppDomain.CurrentDomain.FirstChanceException -= handler;
+        }
+
+        if (excp == 0)
+        {
+            _savedInvoiceId = invoiceId;
+            foreach (var r in chosen) r.Service.Invoices_List_Id = invoiceId;
+            Snackbar.Add(Tr("BC_Saved"), Severity.Success);
+        }
+        else
+        {
+            foreach (var r in chosen) r.Service.IsProcessedAsInvoice = 0;
+            var detail = string.IsNullOrEmpty(msg) ? swallowed : msg;
+            Snackbar.Add(string.IsNullOrEmpty(detail) ? Tr("InvoiceSaveError") : $"{Tr("InvoiceSaveError")}: {detail}", Severity.Error);
+        }
+    }
+
+    private string Tr(string key)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

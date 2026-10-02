@@ -22,7 +22,7 @@
 @using AccountERP.SharedUI.Services
 @inject LanguageService LangService
 
-<MudDialog @bind-Visible="Visible"
+<MudDialog Visible="Visible" VisibleChanged="OnMudDialogVisibleChangedAsync"
            Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
     <TitleContent>@Tr("FirstBalanceTitle")</TitleContent>
     <DialogContent>
@@ -47,7 +47,7 @@
                 <MudTextField T="string" Value="@_openingPeriodToDate.ToString("dd/MM/yyyy")" ReadOnly="true" Label="@Tr("DateToLabel")" />
             </MudStack>
 
-            <MudNumericField T="decimal" @bind-Value="_balance" Label="@Tr("BalanceColumn")" Min="0" Format="N2" Class="mb-3" />
+            <MudNumericField T="decimal" @bind-Value="_balance" Label="@Tr("BalanceColumn")" Min="0" Format="N2" Class="mb-3" AutoFocus="true" />
 
             <MudRadioGroup T="int" @bind-Value="_transformType" Class="mb-3">
                 <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("NatureDebitLabel")</MudRadio>
@@ -59,7 +59,7 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="CloseAsync">@Tr("Cancel")</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@(_isSaving || !_hasOpeningPeriod)">
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@(_isSaving || !_hasOpeningPeriod || !IsDirty)">
             @if (_isSaving)
             {
                 <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
@@ -87,6 +87,10 @@
     private int _transformType = 1;
     private string _notes = "";
     private bool _isSaving;
+    // قاعدة الحفظ: «حفظ» يُفعَّل بعد تغيير الرصيد/الطبيعة/الملاحظات فقط؛ البصمة تُؤخذ عند التحميل.
+    private string _baseline = string.Empty;
+    private string CurrentFingerprint() => FormFingerprint.Of(_balance, _transformType, _notes);
+    private bool IsDirty => CurrentFingerprint() != _baseline;
     private string? _errorMessage;
 
     protected override async Task OnParametersSetAsync()
@@ -154,6 +158,7 @@
             _balance = Math.Abs(balance);
         }
 
+        _baseline = CurrentFingerprint();
         StateHasChanged();
     }
 
@@ -218,5 +223,13 @@
         {
             CultureInfo.CurrentUICulture = previousCulture;
         }
+    }
+
+    // إغلاق MudDialog لنفسه (زر ×، Esc، النقر خارج الحوار) لا يُبلغ الصفحة الأم عبر @bind-Visible على المعامل نفسه، فتبقى Visible=true
+    // ولا يُفتح الحوار ثانية؛ نُمرِّر التغيير للأب صراحةً.
+    private async Task OnMudDialogVisibleChangedAsync(bool visible)
+    {
+        Visible = visible;
+        await VisibleChanged.InvokeAsync(visible);
     }
 }

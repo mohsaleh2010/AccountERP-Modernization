@@ -13,9 +13,21 @@ namespace AccountERP.SharedUI.Services
     {
         private readonly UserSettingsCLS _cls = new();
 
+        // 🟢 نفس نمط dd/MM/yyyy الآن هو المعيار القياسى لعرض التواريخ فى شاشات Blazor الجديدة/المُعدَّلة
+        // (راجع "📐 معيار قياسى - تنسيق التواريخ" فى MODERNIZATION_NOTES.md) - كل شاشة تحتاج تنسيق تاريخ
+        // تقرأه من هنا بدل نص تنسيق ثابت مكتوب مباشرة فى كودها.
+        private const string DefaultDateFormat = "dd/MM/yyyy";
+
         public bool IsLoaded { get; private set; }
         public bool ShowBreadcrumb { get; private set; } = true;
         public bool ShowTabs { get; private set; } = true;
+        public string DateFormat { get; private set; } = DefaultDateFormat;
+
+        // 🟢 null = لا يوجد تفضيل محفوظ بعد لهذا المستخدم (أول دخول، أو لم يُغيِّر اللغة يدوياً من قبل) -
+        // القارئ (MainLayoutMud.OnAuthChanged/OnInitializedAsync) لا يستدعى LanguageService.SetCulture إلا
+        // لو كانت هذه القيمة غير فارغة، فيبقى الافتراضى الحالى (كوكي الويب أو افتراضى اللغة العربية على
+        // الديسك توب/الموبايل) سارياً بدون أى تغيير غير مقصود.
+        public string? Language { get; private set; }
 
         public event Action? OnChanged;
 
@@ -26,12 +38,20 @@ namespace AccountERP.SharedUI.Services
                 var settings = _cls.GetUserSettings(Common.User_Id);
                 ShowBreadcrumb = !settings.TryGetValue(UserSettingKeys.ShowBreadcrumb, out var showBreadcrumb) || showBreadcrumb != "false";
                 ShowTabs = !settings.TryGetValue(UserSettingKeys.ShowTabs, out var showTabs) || showTabs != "false";
+                DateFormat = settings.TryGetValue(UserSettingKeys.DateFormat, out var dateFormat) && !string.IsNullOrWhiteSpace(dateFormat)
+                    ? dateFormat
+                    : DefaultDateFormat;
+                Language = settings.TryGetValue(UserSettingKeys.Language, out var language) && !string.IsNullOrWhiteSpace(language)
+                    ? language
+                    : null;
             }
             catch
             {
                 // غير حرج: تبقى القيم الافتراضية (الإظهار مفعّل للجميع) سارية لهذه الجلسة حتى لو تعذّرت القراءة
                 ShowBreadcrumb = true;
                 ShowTabs = true;
+                DateFormat = DefaultDateFormat;
+                Language = null;
             }
 
             IsLoaded = true;
@@ -45,6 +65,8 @@ namespace AccountERP.SharedUI.Services
             IsLoaded = false;
             ShowBreadcrumb = true;
             ShowTabs = true;
+            DateFormat = DefaultDateFormat;
+            Language = null;
             OnChanged?.Invoke();
         }
 
@@ -64,11 +86,32 @@ namespace AccountERP.SharedUI.Services
             OnChanged?.Invoke();
         }
 
-        private void TrySave(string key, bool value)
+        public void SetDateFormat(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value) || DateFormat == value) return;
+            DateFormat = value;
+            TrySave(UserSettingKeys.DateFormat, value);
+            OnChanged?.Invoke();
+        }
+
+        // 🟢 تُستدعى من LanguageSwitcher.ChangeLanguage عند تبديل اللغة يدوياً (فقط لو كان المستخدم مسجِّلاً
+        // دخوله بالفعل - راجع الفحص هناك) - راجع MainLayoutMud.razor لتطبيق القيمة المحفوظة تلقائياً عند
+        // نجاح الدخول لاحقاً على أى جهاز/متصفح آخر.
+        public void SetLanguage(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value) || string.Equals(Language, value, StringComparison.OrdinalIgnoreCase)) return;
+            Language = value;
+            TrySave(UserSettingKeys.Language, value);
+            OnChanged?.Invoke();
+        }
+
+        private void TrySave(string key, bool value) => TrySave(key, value ? "true" : "false");
+
+        private void TrySave(string key, string value)
         {
             try
             {
-                _cls.SaveUserSetting(Common.User_Id, key, value ? "true" : "false");
+                _cls.SaveUserSetting(Common.User_Id, key, value);
             }
             catch
             {

@@ -17,7 +17,7 @@ namespace AccountERP.SharedUI.ViewModels
         public long Main_Account_Id { get; set; }
         public string SubAccount_NO { get; set; } = "";
         public string SubAccount_Name { get; set; } = "";
-        public int Branch_Id { get; set; }
+        public long Branch_Id { get; set; }
         public int Account_Follows { get; set; }
 
         public List<FixedAssetNodeViewModel> Children { get; } = new();

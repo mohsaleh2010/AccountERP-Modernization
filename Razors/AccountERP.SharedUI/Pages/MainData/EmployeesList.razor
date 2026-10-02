@@ -1,0 +1,266 @@
+@page "/main-data/employees"
+
+@* 🟢 النسخة Blazor من Connection4It.EmployeeLisFrm (WinForms، فى connectionit\EmployeeList) - عنصر القائمة
+   «بيانات الموظفين / البائعين» (SysConfigMenus 824). الشاشة الأصلية جدول بعمود اسم واحد (Id مخفى) يُعدَّل مباشرة
+   ويُحفظ بزر واحد ثم زر حذف، عبر AccountModelsLib.Services.EmployeeService (نفس الخدمة بلا تعديل):
+   GetActiveEmployeesAsync / SaveRangeAsync / DeleteEmployeeAsync. الحذف منطقى (active=0) أو فعلى بحسب الإعداد
+   Common.Update_DeleteSupplier (يُطبَّق داخل الخدمة). الموظف المُعدَّل يُرسَل بكل حقوله كما جُلبت (الأصل يفعل مثله)
+   فلا تُمسَح أى حقول غير معروضة؛ ويُفرَّغ فقط مرجع التنقل jobsList قبل الحفظ كى لا يُتتبَّع كيان الوظيفة معه. *@
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountModelsLib.Services
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("EmployeesTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("EmployeesTitle")</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddDialog">
+                @Tr("NewButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudTable Items="@_employees" Hover="true" Bordered="true" Loading="@_isLoading" Elevation="1" Breakpoint="Breakpoint.None">
+        <HeaderContent>
+            <MudTh>@Tr("EmployeeNameColumn")</MudTh>
+            <MudTh Style="width:140px;"></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            @if (_editingId == context.Id)
+            {
+                <MudTd>
+                    <MudTextField T="string" @bind-Value="_editingName" Immediate="true" AutoFocus="true" />
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Check" Color="Color.Success" Size="Size.Small"
+                                   OnClick="@(() => SaveEditAsync(context))"
+                                   Disabled="@(_isSavingEdit || string.Equals(_editingName?.Trim(), context.name, StringComparison.Ordinal))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="CancelEdit" />
+                </MudTd>
+            }
+            else
+            {
+                <MudTd>@context.name</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => StartEdit(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteAsync(context))" />
+                </MudTd>
+            }
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<MudDialog @bind-Visible="_addDialogOpen"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr("EmployeeAddTitle")</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_addError))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_addError</MudAlert>
+        }
+        <MudTextField T="string" @bind-Value="_newName" Label="@Tr("EmployeeNameColumn")" Variant="Variant.Outlined"
+                      FullWidth="true" AutoFocus="true" Immediate="true" @ref="_nameField" OnKeyDown="OnNameKeyDown" />
+        <MudCheckBox T="bool" @bind-Value="_addMultiple" Label="@Tr("MultipleAddLabel")" Color="Color.Primary" Class="mt-2" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _addDialogOpen = false)">@Tr("Close")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ConfirmAddAsync" Disabled="@_isSavingAdd">
+            @if (_isSavingAdd)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<Employee> _employees = new();
+    private bool _isLoading = true;
+    private string _errorMessage = string.Empty;
+
+    private long? _editingId;
+    private string _editingName = string.Empty;
+    private bool _isSavingEdit;
+
+    private bool _addDialogOpen;
+    private string _newName = string.Empty;
+    private string _addError = string.Empty;
+    private bool _isSavingAdd;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        _errorMessage = string.Empty;
+        try
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var list = await new EmployeeService().GetActiveEmployeesAsync();
+            _employees = list.OrderBy(e => e.name, StringComparer.CurrentCulture).ToList();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OpenAddDialog()
+    {
+        _newName = string.Empty;
+        _addError = string.Empty;
+        _addDialogOpen = true;
+    }
+
+    // إضافة متعددة (بطلب المستخدم): عند تفعيلها يبقى الحوار مفتوحاً بعد كل إضافة ويُفرَّغ الاسم ويعود التركيز له؛ Esc يغلق الحوار؛ Enter يضيف.
+    private bool _addMultiple;
+    private bool _multipleAdded;
+    private MudTextField<string>? _nameField;
+
+    private async Task OnNameKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || _isSavingAdd) return;
+        await Task.Delay(150); // يترك آخر حرف مكتوب (Immediate) يصل للخادم قبل الحفظ
+        await ConfirmAddAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_multipleAdded && _nameField is not null)
+        {
+            _multipleAdded = false;
+            await _nameField.FocusAsync();
+        }
+    }
+
+    private async Task ConfirmAddAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newName)) { _addError = Tr("EmployeeNameRequired"); return; }
+
+        _isSavingAdd = true;
+        _addError = string.Empty;
+        try
+        {
+            AccountCultureGuard.EnsureInvariant();
+            await new EmployeeService().SaveRangeAsync(new List<Employee> { new Employee { Id = 0, name = _newName.Trim() } });
+            if (_addMultiple) { _newName = string.Empty; _multipleAdded = true; } else { _addDialogOpen = false; }
+            await LoadAsync();
+            Snackbar.Add(Tr("EmployeeAdded"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _addError = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSavingAdd = false;
+        }
+    }
+
+    private void StartEdit(Employee emp)
+    {
+        _editingId = emp.Id;
+        _editingName = emp.name ?? string.Empty;
+        _errorMessage = string.Empty;
+    }
+
+    private void CancelEdit()
+    {
+        _editingId = null;
+        _editingName = string.Empty;
+    }
+
+    private async Task SaveEditAsync(Employee emp)
+    {
+        if (string.IsNullOrWhiteSpace(_editingName)) { _errorMessage = Tr("EmployeeNameRequired"); return; }
+
+        _isSavingEdit = true;
+        _errorMessage = string.Empty;
+        try
+        {
+            AccountCultureGuard.EnsureInvariant();
+            emp.name = _editingName.Trim();
+            emp.jobsList = null; // مرجع التنقل فقط (jobsListId يبقى كما هو) كى لا يُتتبَّع كيان الوظيفة مع الحفظ
+            await new EmployeeService().SaveRangeAsync(new List<Employee> { emp });
+            _editingId = null;
+            await LoadAsync();
+            Snackbar.Add(Tr("EmployeeSaved"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSavingEdit = false;
+        }
+    }
+
+    private async Task DeleteAsync(Employee emp)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(Tr("EmployeeDeleteTitle"), Tr("EmployeeDeleteConfirm", emp.name ?? ""),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+        if (confirmed != true) return;
+
+        _errorMessage = string.Empty;
+        try
+        {
+            AccountCultureGuard.EnsureInvariant();
+            await new EmployeeService().DeleteEmployeeAsync(emp.Id, emp.SubAccount_Id ?? 0);
+            await LoadAsync();
+            Snackbar.Add(Tr("EmployeeDeleted"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

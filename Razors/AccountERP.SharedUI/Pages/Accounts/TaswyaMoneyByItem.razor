@@ -123,7 +123,7 @@
         </MudTable>
 
         <MudStack Row="true" Spacing="2" Class="mt-4">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync" Disabled="@(_isSaving || _isDisabled)">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync" Disabled="@(_isSaving || _isDisabled || (Id != 0 && !IsDirty))">
                 @if (_isSaving)
                 {
                     <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
@@ -135,6 +135,11 @@
                 <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="DeleteAsync" Disabled="@(_isSaving || _isDisabled)">
                     @Tr("DeleteNoticeButton")
                 </MudButton>
+            }
+            @if (Id != 0)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_isSaving"
+                           OnClick="@(() => Nav.NavigateTo("/accounts/financial-notice/by-item/0"))">@Tr("NewButton")</MudButton>
             }
             <MudButton Variant="Variant.Text" OnClick="@(() => Nav.NavigateTo("/accounts/financial-notice/by-item-review"))">
                 @Tr("Close")
@@ -176,6 +181,10 @@
     private bool _canDelete;
     private bool _isDisabled;
     private bool _isSaving;
+    // قاعدة الحفظ: عند تعديل إشعار موجود يُفعَّل «حفظ» بعد أى تغيير فقط.
+    private string _baseline = string.Empty;
+    private string CurrentFingerprint() => FormFingerprint.Of(_orderDate, _transactionType, _currencyValue, _notes, _customerId, _supplierId, _accountSelection, _subAccountId, _items);
+    private bool IsDirty => CurrentFingerprint() != _baseline;
     private string? _errorMessage;
 
     protected override void OnInitialized()
@@ -249,6 +258,7 @@
         }
         _items = items;
         RecomputeValue();
+        _baseline = CurrentFingerprint();
     }
 
     private void OpenAddItemDialog()

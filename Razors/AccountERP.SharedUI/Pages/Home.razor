@@ -76,7 +76,7 @@ else
                 <MudCard Outlined="true" Class="h-100 module-quick-card" @onclick="@(() => OpenModule(menu))">
                     <MudCardContent Class="d-flex align-items-center justify-content-between" Style="gap:12px;">
                         <div class="d-flex align-items-center" style="gap:12px; min-width:0;">
-                            <MudIcon Icon="@(hasChildren ? Icons.Material.Filled.Folder : Icons.Material.Filled.Apps)" Color="Color.Primary" />
+                            <MudIcon Icon="@GetCardIcon(menu, hasChildren)" Color="Color.Primary" />
                             <MudText Typo="Typo.body1" Class="fw-medium text-truncate">@menu.GetLocalizedDescription(LangService.CurrentLanguage)</MudText>
                         </div>
                         @if (hasChildren)
@@ -158,6 +158,16 @@ else
     }
 
     private long CurrentParentId => _path.Count > 0 ? _path[^1].Menu_ID : 0;
+
+    // 🟢 نفس أيقونات القائمة الجانبية بالضبط (MenuIcons.cs) بدل أيقونة Folder/Apps العامة الموحَّدة لكل
+    // البطاقات سابقاً: وحدة رئيسية (المستوى الأعلى) بنمط Filled، مجموعة فرعية لها أبناء بنمط Outlined،
+    // وشاشة نهائية بأيقونة تُطابق طبيعتها (قائمة/إضافة/تقرير...) - يجعل بطاقات الشاشة الرئيسية مميزة بصرياً
+    // بدل تشابهها جميعاً بأيقونة واحدة عامة.
+    private string GetCardIcon(MenuViewModel menu, bool hasChildren)
+    {
+        if (!hasChildren) return MenuIcons.GetLeafIcon(menu.Description);
+        return menu.ParentId == 0 ? MenuIcons.GetModuleIcon(menu.Description) : MenuIcons.GetGroupIcon(menu.Description);
+    }
 
     // 🟢 نفس منطق الاختيار/التنقّل المستخدم فى NavMenuMud لأعلى مستوى من القوائم (SelectMainMenu + حماية
     // KnownRoutes) حتى لا تتفرّع هذه البطاقات إلى سلوك تنقّل مختلف عن السايد بار نفسه. بطاقة لها أبناء

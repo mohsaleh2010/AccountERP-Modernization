@@ -1,0 +1,157 @@
+@* 🟢 "طباعة كشف بيانات الموردين" - النسخة Blazor من Reporting_System.SuppliersRPT.SuppliersDataListPrintFrm
+   (RDLC). نفس فكرة CustomerDataPrintReport.razor بالضبط (استثناء صريح، طباعة متصفح مباشرة، بلا رصيد) -
+   راجع تعليقات ذلك الملف للتفاصيل الكاملة. *@
+
+@page "/suppliers/print-report"
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@inject LanguageService LangService
+@inject IJSRuntime JS
+@implements IDisposable
+
+<PageTitle>@Tr("SupplierPrintReportTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4 no-print" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("SupplierPrintReportTitle")</MudText>
+            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                <MudTextField T="string" Value="_search" ValueChanged="OnSearchChanged" Label="@Tr("SearchByNameLabel")"
+                              Variant="Variant.Outlined" Immediate="true" Clearable="true" Style="min-width:240px;" />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Print" OnClick="PrintAsync">
+                    @Tr("PrintButton")
+                </MudButton>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+
+    <div class="print-area">
+        <div class="print-header">
+            <h2>@Tr("SupplierPrintReportTitle")</h2>
+            <div class="print-meta">@Tr("PrintDateLabel"): @DateTime.Now.ToString("yyyy/MM/dd HH:mm") — @Tr("PrintCountLabel"): @_filtered.Count</div>
+        </div>
+
+        @if (_isLoading)
+        {
+            <MudProgressLinear Indeterminate="true" Class="no-print" />
+        }
+        else if (_filtered.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="no-print">@Tr("NoRecordsFound")</MudAlert>
+        }
+        else
+        {
+            <table class="print-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>@Tr("SupplierCode")</th>
+                        <th>@Tr("SupplierName")</th>
+                        <th>@Tr("SupplierGroupLabel")</th>
+                        <th>@Tr("Address")</th>
+                        <th>@Tr("Tel")</th>
+                        <th>@Tr("Mobile")</th>
+                        <th>@Tr("TaxRegistrationNo")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ int i = 0; }
+                    @foreach (var s in _filtered)
+                    {
+                        i++;
+                        <tr>
+                            <td class="num">@i</td>
+                            <td>@s.Code</td>
+                            <td>@s.Name</td>
+                            <td>@s.GroupName</td>
+                            <td>@s.Address</td>
+                            <td>@s.Tel</td>
+                            <td>@s.Mobile</td>
+                            <td>@s.Tax_Registration_No</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</MudContainer>
+
+<style>
+    .print-header { display: none; }
+    .print-table { width: 100%; border-collapse: collapse; }
+    .print-table th, .print-table td { border: 1px solid var(--mud-palette-lines-default); padding: 8px 10px; font-size: .9rem; text-align: start; }
+    .print-table th { background: var(--mud-palette-background-gray); font-weight: 700; }
+    .print-table td.num, .print-table th:first-child { text-align: center; width: 40px; }
+
+    @@media print {
+        body * { visibility: hidden; }
+        .print-area, .print-area * { visibility: visible; }
+        .print-area { position: absolute; inset-inline-start: 0; top: 0; width: 100%; }
+        .print-header { display: block; margin-bottom: 12px; }
+        .print-header h2 { margin: 0 0 4px; }
+        .print-meta { font-size: .85rem; color: #555; }
+        .no-print { display: none !important; }
+        .print-table th { background: #eee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+</style>
+
+@code {
+    private List<SupplierViewModel> _all = new();
+    private List<SupplierViewModel> _filtered = new();
+    private bool _isLoading = true;
+    private string _search = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var opp = new operations();
+            _all = new SupplierCLS().Get_SupplierVMByActive(ref opp, 1);
+        });
+        _filtered = _all;
+        _isLoading = false;
+    }
+
+    private void OnSearchChanged(string value)
+    {
+        _search = value;
+        _filtered = string.IsNullOrWhiteSpace(_search)
+            ? _all
+            : _all.Where(s => !string.IsNullOrEmpty(s.Name) && s.Name.Contains(_search, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    private async Task PrintAsync() => await JS.InvokeVoidAsync("window.print");
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

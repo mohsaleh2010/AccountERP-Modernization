@@ -41,14 +41,17 @@
         </MudStack>
     </MudPaper>
 
-    <MudPaper Class="pa-4 mb-4" Elevation="1">
-        <MudAutocomplete T="CustomerViewModel" Label="@Tr("SelectCustomerLabel")" Placeholder="@Tr("SelectCustomerPlaceholder")"
-                          Value="selectedCustomer" ValueChanged="OnCustomerSelectedAsync"
-                          SearchFunc="SearchCustomersAsync" ToStringFunc="@(c => c?.Name)"
-                          Disabled="@(isAddingNew || isLoadingList)" Clearable="true" ResetValueOnEmptyText="true"
-                          Variant="Variant.Outlined" FullWidth="true" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search" />
-    </MudPaper>
+    @if (!isAddingNew)
+    {
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudAutocomplete T="CustomerViewModel" Label="@Tr("SelectCustomerLabel")" Placeholder="@Tr("SelectCustomerPlaceholder")"
+                              Value="selectedCustomer" ValueChanged="OnCustomerSelectedAsync"
+                              SearchFunc="SearchCustomersAsync" ToStringFunc="@(c => c?.Name)"
+                              Disabled="@isLoadingList" Clearable="true" ResetValueOnEmptyText="true"
+                              Variant="Variant.Outlined" FullWidth="true" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" />
+        </MudPaper>
+    }
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
@@ -214,7 +217,7 @@
             }
             else
             {
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEditAsync" Disabled="@isSaving">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEditAsync" Disabled="@(isSaving || !IsDirty)">
                     @if (isSaving)
                     {
                         <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
@@ -238,6 +241,9 @@
     // 🟢 يقبل CustomerId اختيارياً فى الرابط (/customers/info/{id}) ليُفتَح مباشرة على عميل بعينه - يقابل
     // new Customer_Info(Customer_Id_) فى الأصل (نفس المسار الذى تفتح به CustomerDataListFRM شاشة التعديل).
     [Parameter] public long? CustomerId { get; set; }
+    // 🟢 ?general=1 = "بيانات عملاء متنوعون" (menuItemGeneral_Customer_Flage): الأصل يفتح Customer_Info بـ General_Customer_Flage=1 فتُعرض قائمة
+    // المتنوعين فقط (GetCustomer(ref opp, 1))، وبدونه -1 (كل الأنواع). العميل الجديد يبدأ هنا بنوع "متنوع" أيضاً.
+    [SupplyParameterFromQuery(Name = "general")] public int? GeneralQuery { get; set; }
 
     private record GroupRow(long Id, string GroupName);
     private record PersonCompanyTypeRow(long Value, string Text);
@@ -261,6 +267,10 @@
     private long? selectedGovernId;
 
     private bool isAddingNew;
+    // قاعدة الحفظ: زر «حفظ» (تعديل عميل) يُفعَّل عند وجود تغيير فقط؛ البصمة تُؤخذ عند تحميل/حفظ السجل.
+    private string _baseline = string.Empty;
+    private string CurrentFingerprint() => FormFingerprint.Of(model, registrationDate, generalCustomerFlag, isInsuranceCompany);
+    private bool IsDirty => CurrentFingerprint() != _baseline;
     private bool isSaving;
     private bool isLoadingList = true;
     private string errorMessage = string.Empty;
@@ -289,6 +299,7 @@
     {
         await Task.Run(() =>
         {
+            AccountCultureGuard.EnsureInvariant();
             operations? gopp = null;
             var groupsDt = new GroupsCLS().Get_Customer_Supplier_Group(ref gopp!, Common.Customer_Account_Type);
             groups = groupsDt.Rows.Cast<DataRow>()
@@ -320,8 +331,9 @@
         isLoadingList = true;
         await Task.Run(() =>
         {
+            AccountCultureGuard.EnsureInvariant();
             var opp = new operations();
-            allCustomers = new CustomerCLS().GetCustomersOnlyList(ref opp, string.Empty, 1, -1);
+            allCustomers = new CustomerCLS().GetCustomersOnlyList(ref opp, string.Empty, 1, GeneralQuery == 1 ? 1 : -1);
         });
         isLoadingList = false;
     }
@@ -352,6 +364,7 @@
     {
         await Task.Run(() =>
         {
+            AccountCultureGuard.EnsureInvariant();
             var opp = new operations();
             var cls = new CustomerCLS();
             cls.GetCustomerByIdAsNoTracking(ref opp, id);
@@ -366,12 +379,14 @@
         selectedGovernId = model.Govern_ListId > 0 ? model.Govern_ListId : null;
 
         await ReloadCascadeListsAsync();
+        _baseline = CurrentFingerprint();
     }
 
     private async Task ReloadCascadeListsAsync()
     {
         await Task.Run(() =>
         {
+            AccountCultureGuard.EnsureInvariant();
             var opp = new operations();
             areas = selectedCountryId is > 0
                 ? new Govern_AreaCLS().Get_Govern_Area(ref opp, selectedCountryId.Value)
@@ -441,7 +456,7 @@
             selectedCustomer = null;
             model = new Customer { RegistrationDate = DateTime.Now.Date, Active = 1, LookUp_PersonCompany_TypeId = 1 };
             registrationDate = DateTime.Now.Date;
-            generalCustomerFlag = 0;
+            generalCustomerFlag = GeneralQuery == 1 ? 1 : 0;
             isInsuranceCompany = false;
             selectedCountryId = null;
             selectedAreaId = null;
@@ -478,6 +493,7 @@
         bool duplicate = false;
         await Task.Run(() =>
         {
+            AccountCultureGuard.EnsureInvariant();
             var opp = new operations();
             duplicate = new CustomerCLS().IsFoundName(ref opp, model.Name, isNew ? 0 : model.Id);
         });
@@ -514,6 +530,7 @@
 
             await Task.Run(() =>
             {
+                AccountCultureGuard.EnsureInvariant();
                 var opp = new operations();
                 new CustomerCLS().AddNewCustomer(ref excp, ref msg, ref opp, model, false);
             });
@@ -565,6 +582,7 @@
 
             await Task.Run(() =>
             {
+                AccountCultureGuard.EnsureInvariant();
                 new CustomerCLS().UpdateCustomer(ref excp, ref msg, model, 0, false);
             });
 
@@ -614,6 +632,7 @@
         {
             await Task.Run(() =>
             {
+                AccountCultureGuard.EnsureInvariant();
                 var opp = new operations();
                 new CustomerCLS().DeleteCustomer(ref opp, ref excp, ref msg, model.Id);
             });

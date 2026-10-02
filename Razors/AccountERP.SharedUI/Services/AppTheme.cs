@@ -45,10 +45,28 @@ namespace AccountERP.SharedUI.Services
             // خطوط تدعم العربية بشكل مريح للعين وأنظمة الـ ERP، موحّدة عبر كل الشاشات
             var arabicFonts = new[] { "Segoe UI", "Tahoma", "Arial", "sans-serif" };
             theme.Typography.Body1.FontFamily = arabicFonts;
-            theme.Typography.Body1.FontSize = ".925rem";
+            // 🟢 أحجام مريحة للعين (تصميم احترافى موحّد): النص الأساسى 16px والثانوى 15px بدل 14.8/14، وسطر أعلى قليلاً،
+            // وتسميات/تعليقات لا تقل عن 13px، وأزرار 15px بوزن متوسط - يُطبَّق تلقائياً على كل شاشات التطبيق.
+            theme.Typography.Body1.FontFamily = arabicFonts;
+            theme.Typography.Body1.FontSize = "1rem";
+            theme.Typography.Body1.LineHeight = "1.6";
             theme.Typography.Body2.FontFamily = arabicFonts;
-            theme.Typography.Body2.FontSize = ".875rem";
+            theme.Typography.Body2.FontSize = ".9375rem";
+            theme.Typography.Body2.LineHeight = "1.55";
+            theme.Typography.Caption.FontFamily = arabicFonts;
+            theme.Typography.Caption.FontSize = ".8125rem";
+            theme.Typography.Subtitle1.FontFamily = arabicFonts;
+            theme.Typography.Subtitle1.FontSize = "1.0625rem";
+            theme.Typography.Subtitle2.FontFamily = arabicFonts;
+            theme.Typography.Subtitle2.FontSize = ".9375rem";
+            theme.Typography.H5.FontFamily = arabicFonts;
+            theme.Typography.H5.FontSize = "1.5rem";
+            theme.Typography.H6.FontFamily = arabicFonts;
+            theme.Typography.H6.FontSize = "1.2rem";
             theme.Typography.Button.FontFamily = arabicFonts;
+            theme.Typography.Button.FontSize = ".9375rem";
+            theme.Typography.Button.FontWeight = "600";
+            theme.LayoutProperties.DefaultBorderRadius = "10px";
 
             return theme;
         }

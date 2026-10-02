@@ -1,0 +1,22 @@
+@page "/main-data/banks"
+
+@* 🟢 عنصر القائمة (SysConfigMenus 387) - صفحة رفيعة تعرض المكوّن المشترك BankBoxList بنوع Bank. *@
+
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+
+<PageTitle>@Title</PageTitle>
+
+<BankBoxList Kind="BankBoxList.BankKind.Bank" />
+
+@code {
+    private string Title
+    {
+        get
+        {
+            var previous = System.Globalization.CultureInfo.CurrentUICulture;
+            try { System.Globalization.CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang["BanksTitle"]; }
+            finally { System.Globalization.CultureInfo.CurrentUICulture = previous; }
+        }
+    }
+}

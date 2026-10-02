@@ -1,0 +1,446 @@
+@* 🟢 يقابل Accounts.Accountss.POS_InvoiceTestEF (فاتورة نقطة البيع) - نسخة أولى v1 للمسار الأساسى فقط: اختيار قسم ← أصناف
+   بضغطة واحدة (كل ضغطة تزيد الكمية) ← نوع الطلب (صالة/سفرى/توصيل) مع الخدمة والضريبة ورسوم التوصيل ← نقدى/آجل ← حفظ.
+   الإجماليات تُحسب بنفس InvoiceValuesCLS.POS_GetTotalItemPrices/POS_InvoiceComputeTotalServicesValues الأصليتين،
+   والحفظ عبر المحرك القياسى Requests_ModelCls.Make_Invoice_Update_CustomerAccount / Edit_Invoice_Update_CustomerAccount
+   (الأصل رُحِّل إليه فعلاً؛ نداء POS القديم معطّل) - بدون أى تعديل فى كود المحرك أو سطح المكتب. لا حقول static.
+
+   مُؤجَّل (بعضه جداوله غير موجودة أصلاً فى قاعدة الاختبار): الطاولات والنادل/مندوب التوصيل، حالة المطبخ والفاتورة المؤقتة
+   (Invoices_ListTemp)، الطباعة (فاتورة/مطبخ/شيك)، البحث بكود الصنف/الباركود، صور الأصناف، وفواتير المشتريات/المرتجع
+   (Invoice_OR_Bill/Invoice_Reverse) فى نفس الشاشة الأصلية. *@
+
+@page "/accounts/pos/invoice/{Id:long?}"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<PageTitle>@Tr("POS_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4 inv-page" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+    <MudGrid Spacing="3">
+
+        @* ===== يمين: الأقسام والأصناف ===== *@
+        <MudItem xs="12" md="7">
+            <MudPaper Class="inv-card mb-3" Elevation="0">
+                <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Category" />@Tr("POS_Categories")</h2>
+                <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1">
+                    @foreach (var c in _categories)
+                    {
+                        <MudChip T="string" Color="@(c.Id == _categoryId ? Color.Primary : Color.Default)"
+                                 Variant="@(c.Id == _categoryId ? Variant.Filled : Variant.Outlined)"
+                                 OnClick="@(() => SelectCategoryAsync(c.Id))">@c.Name</MudChip>
+                    }
+                </MudStack>
+            </MudPaper>
+            <MudPaper Class="inv-card" Elevation="0" Style="min-height: 320px;">
+                <MudGrid Spacing="2">
+                    @foreach (var it in _items)
+                    {
+                        <MudItem xs="6" sm="4" md="3">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Disabled="_isSaved"
+                                       Style="height: 72px; white-space: normal;" OnClick="@(() => AddItem(it))">
+                                <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                                    <MudText Typo="Typo.body2">@it.Name</MudText>
+                                    <MudText Typo="Typo.caption">@it.Price.ToString("0.00")</MudText>
+                                </MudStack>
+                            </MudButton>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudPaper>
+        </MudItem>
+
+        @* ===== يسار: الطلب الحالى ===== *@
+        <MudItem xs="12" md="5">
+            <MudPaper Class="inv-card mb-3" Elevation="0">
+                <div class="inv-card-head"><h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.PointOfSale" />@Tr("POS_Title")</h2><span class="inv-chip primary">@_invoiceNoDisplay</span></div>
+                <MudAutocomplete T="CustomerOption" Value="_customer" SearchFunc="SearchCustomersAsync"
+                                  ToStringFunc="@(o => o?.Name ?? "")" Label="@Tr("CustomerLabel")" Variant="Variant.Outlined"
+                                  ValueChanged="@(o => _customer = o)" ResetValueOnEmptyText="true" Disabled="_isSaved" Required="true" Class="mb-2" />
+                <MudRadioGroup T="int" Value="_orderType" ValueChanged="OnOrderTypeChanged" Disabled="_isSaved">
+                    <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("POS_DineIn")</MudRadio>
+                    <MudRadio T="int" Value="2" Color="Color.Primary">@Tr("POS_TakeAway")</MudRadio>
+                    <MudRadio T="int" Value="3" Color="Color.Primary">@Tr("POS_Delivery")</MudRadio>
+                </MudRadioGroup>
+            </MudPaper>
+
+            <MudPaper Class="inv-card mb-3" Elevation="0">
+                <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ReceiptLong" />@Tr("POS_OrderItemsHeader")</h2>
+                <MudTable Items="@_lines" Elevation="0" Hover="true" Class="inv-table">
+                    <HeaderContent>
+                        <MudTh>@Tr("ItemNameColumn")</MudTh>
+                        <MudTh>@Tr("QuantityColumn")</MudTh>
+                        <MudTh>@Tr("TotalColumn")</MudTh>
+                        <MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Invoice_Item_Name</MudTd>
+                        <MudTd>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0">
+                                <MudIconButton Icon="@Icons.Material.Filled.Remove" Size="Size.Small" Disabled="_isSaved" OnClick="@(() => ChangeQty(context, -1))" />
+                                <MudText>@context.Larg_Qnty?.ToString("0.##")</MudText>
+                                <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" Disabled="_isSaved" OnClick="@(() => ChangeQty(context, 1))" />
+                            </MudStack>
+                        </MudTd>
+                        <MudTd>@context.Item_Net_Total_Price?.ToString("0.00")</MudTd>
+                        <MudTd><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Disabled="_isSaved" OnClick="@(() => RemoveLine(context))" /></MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Align="Align.Center" Class="py-3 mud-text-secondary">@Tr("POS_EmptyOrder")</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudPaper>
+
+            <MudPaper Class="inv-card mb-3" Elevation="0">
+                <MudGrid Spacing="2">
+                    <MudItem xs="4"><MudNumericField T="decimal" Value="_serviceRate" ValueChanged="@(v => { _serviceRate = v; Recompute(); })" Label="@Tr("POS_ServiceRate")" Variant="Variant.Outlined" Format="0.##" Disabled="_isSaved || _orderType != 1" /></MudItem>
+                    <MudItem xs="4"><MudNumericField T="decimal" Value="_taxRate" ValueChanged="@(v => { _taxRate = v; Recompute(); })" Label="@Tr("POS_TaxRate")" Variant="Variant.Outlined" Format="0.##" Disabled="_isSaved" /></MudItem>
+                    <MudItem xs="4"><MudNumericField T="decimal" Value="_deliveryFee" ValueChanged="@(v => { _deliveryFee = v; Recompute(); })" Label="@Tr("POS_DeliveryFee")" Variant="Variant.Outlined" Format="0.00" Disabled="_isSaved || _orderType != 3" /></MudItem>
+                    <MudItem xs="4"><MudTextField T="string" Value="@(_header.Qnty_Value?.ToString("0.00"))" ReadOnly="true" Label="@Tr("TotalLabel")" Variant="Variant.Outlined" /></MudItem>
+                    <MudItem xs="4"><MudTextField T="string" Value="@(_header.Service_Amount?.ToString("0.00"))" ReadOnly="true" Label="@Tr("POS_ServiceAmount")" Variant="Variant.Outlined" /></MudItem>
+                    <MudItem xs="4"><MudTextField T="string" Value="@(_header.TaxSales10_Value?.ToString("0.00"))" ReadOnly="true" Label="@Tr("POS_TaxAmount")" Variant="Variant.Outlined" /></MudItem>
+                    <MudItem xs="12"><MudTextField T="string" Value="@(_header.NetInvoiceTotal?.ToString("0.00"))" ReadOnly="true" Label="@Tr("POS_NetTotal")" Variant="Variant.Filled" Class="font-weight-bold" /></MudItem>
+                </MudGrid>
+                <MudDivider Class="my-3" />
+                <MudRadioGroup T="int" @bind-Value="_isAgile" Disabled="_isSaved">
+                    <MudRadio T="int" Value="0" Color="Color.Primary">@Tr("DS_InvoiceCash")</MudRadio>
+                    <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("DS_InvoiceCredit")</MudRadio>
+                </MudRadioGroup>
+                @if (_isAgile == 0)
+                {
+                    <MudGrid Spacing="2" Class="mt-1">
+                        <MudItem xs="6"><MudNumericField T="decimal" @bind-Value="_paid" Label="@Tr("POS_PaidLabel")" Variant="Variant.Outlined" Format="0.00" Disabled="_isSaved" /></MudItem>
+                        <MudItem xs="6"><MudTextField T="string" Value="@Math.Max(0, _paid - (_header.NetInvoiceTotal ?? 0)).ToString("0.00")" ReadOnly="true" Label="@Tr("POS_ChangeLabel")" Variant="Variant.Outlined" /></MudItem>
+                    </MudGrid>
+                }
+            </MudPaper>
+
+            <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2">
+                <MudButton Variant="Variant.Outlined" OnClick="NewOrderAsync">@Tr("POS_NewOrder")</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isSaved || _lines.Count == 0" OnClick="SaveAsync">@Tr("SaveButton")</MudButton>
+            </MudStack>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private record CustomerOption(long Id, string Name);
+    private record CategoryOption(long Id, string Name);
+    private record PosItem(long UnitItemId, long ItemId, string Name, string Code, long StoreId, decimal Price, decimal SmallUnitValue, string BigUnit, string SmallUnit);
+
+    [Parameter] public long? Id { get; set; }
+
+    private readonly CustomerCLS _customerCls = new();
+    private InvoicesOperationListCLS _invL_O = new(0);
+    private InvoicesOperationCLS _invD_O = new(0);
+    private IInvoices_List _header => _invL_O.invL;
+    private List<IInvoices_Details> _lines => _invD_O.invDlst.Where(l => (l.Item_DeletedFlage ?? 0) != 1).ToList();
+
+    private List<CategoryOption> _categories = new();
+    private List<PosItem> _items = new();
+    private long _categoryId;
+    private CustomerOption? _customer;
+    private int _orderType = 1;
+    private int _isAgile;
+    private decimal _serviceRate, _taxRate, _deliveryFee, _paid;
+    private string _invoiceNoDisplay = "";
+    private bool _isSaved;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var opp = new AccountModelsLib.operations();
+            var dt = opp.return_DataTable("SELECT ID, Category_Name FROM Item_Category ORDER BY Category_Name");
+            _categories = dt.Rows.Cast<DataRow>().Select(r => new CategoryOption(Convert.ToInt64(r["ID"]), r["Category_Name"]?.ToString() ?? "")).ToList();
+            // 🟢 يقابل GetTaxes: نسبة الضريبة الافتراضية من AccountTaxInfo (T1) × 100.
+            try
+            {
+                var info = new TaxListCLS().Get_TaxInfoRatio(ref opp, "T1", "");
+                _taxRate = (info?.TaxRate ?? 0) * 100;
+            }
+            catch { _taxRate = 0; }
+        });
+
+        if (Id.HasValue && Id.Value > 0) await LoadExistingAsync(Id.Value);
+        else await InitializeNewAsync();
+    }
+
+    private async Task InitializeNewAsync()
+    {
+        _isSaved = false;
+        _invL_O = new InvoicesOperationListCLS(0);
+        _invD_O = new InvoicesOperationCLS(0);
+        _header.IS_Make_Sarf_Item_BalanceFromInvoice = 1;
+        _paid = 0;
+        var invoiceNo = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return new InvoicesClss().Make_New_Invoice_No_POS(Common.Invoice_Type_Id, DateTime.Now);
+        });
+        _header.Invoice_Id = invoiceNo;
+        _invoiceNoDisplay = invoiceNo.ToString();
+        Recompute();
+    }
+
+    private async Task LoadExistingAsync(long invoiceListTableId)
+    {
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            _invL_O.Get_Invoices_List(invoiceListTableId);
+            _invD_O.GetInvoiceDetailsToEdit(invoiceListTableId);
+        });
+        _invoiceNoDisplay = _header.Invoice_Id?.ToString() ?? "";
+        _orderType = (int)(_header.Lookup_OrderDeliveryTypesId ?? 1);
+        if (_orderType is < 1 or > 3) _orderType = 1;
+        _serviceRate = _header.Service_Rate ?? 0;
+        _taxRate = _header.TaxSales10 ?? _taxRate;
+        _deliveryFee = _header.Delivery_Fee ?? 0;
+        _isAgile = _header.Is_Invoice_Agile ?? 0;
+        if (_header.Customer_Id is > 0) _customer = new CustomerOption(_header.Customer_Id.Value, _header.CustomerName ?? _header.SubAccount_Name ?? "");
+    }
+
+    private async Task<IEnumerable<CustomerOption>> SearchCustomersAsync(string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _customerCls.Get_CustomerSupplierListForStatement(0, 0, -1, -1);
+        }, ct);
+        var list = new List<CustomerOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["Name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+                list.Add(new CustomerOption(Convert.ToInt64(r["Id"]), name));
+        }
+        return list.Take(50);
+    }
+
+    private async Task SelectCategoryAsync(long categoryId)
+    {
+        _categoryId = categoryId;
+        _items = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            // 🟢 نفس POS_InvoiceCLS.GetItemsList_ByCategory_ID المستخدمة فى الأصل.
+            var dt = new POS_InvoiceCLS().GetItemsList_ByCategory_ID(categoryId);
+            return dt.Rows.Cast<DataRow>().Select(r => new PosItem(
+                Convert.ToInt64(r["Id"]), Convert.ToInt64(r["Item_id"]), r["Item_Name"]?.ToString() ?? "", r["Code"]?.ToString() ?? "",
+                Convert.ToInt64(r["Store_id"]), r["S_price"] == DBNull.Value ? 0 : Convert.ToDecimal(r["S_price"]),
+                r["S_unit_Value"] == DBNull.Value ? 1 : Convert.ToDecimal(r["S_unit_Value"]),
+                r["B_Unit"]?.ToString() ?? "", r["S_unit"]?.ToString() ?? "")).ToList();
+        });
+    }
+
+    // 🟢 يقابل Add_Item/AddNewItem: الضغط على صنف موجود يزيد كميته (UpdateInvoiceQnty)، وإلا يُضاف سطر جديد بكمية 1.
+    private void AddItem(PosItem it)
+    {
+        var existing = _invD_O.invDlst.FirstOrDefault(l => (l.Item_DeletedFlage ?? 0) != 1 && l.Unit_Item_Table_Id == it.UnitItemId);
+        if (existing is not null) { ChangeQty(existing, 1); return; }
+
+        var line = new IInvoices_Details
+        {
+            Item_Id = it.ItemId,
+            Unit_Item_Table_Id = it.UnitItemId,
+            Invoice_Item_Name = it.Name,
+            code = it.Code,
+            Store_Id = it.StoreId,
+            UnitStr = it.BigUnit,
+            UnitSmallStr = it.SmallUnit,
+            Larg_Qnty = 1,
+            Small_Qnty = 0,
+            PriceUnit = it.Price,
+            Larg_Unit_Price = it.Price,
+            Unit_Used_for_Price = 1,
+            Item_DeletedFlage = 0,
+            Item_ProcessedFlage = 0,
+            // نفس افتراضات ItemData.SetRowData المطلوبة من محرك الحفظ (راجع ملاحظات 2026-09-19 فى MODERNIZATION_NOTES).
+            Make_Order = 0,
+            Unit_Item_ExpireDate_Id = 0,
+            Bills_Details_Id = 0,
+            Item_Expire_Date = DateTime.Now.Date,
+            Tash3ela = "",
+        };
+        InvoiceLineCalculator.ComputeLine(line, it.SmallUnitValue);
+        _invD_O.invDlst.Add(line);
+        Recompute();
+    }
+
+    private void ChangeQty(IInvoices_Details line, int delta)
+    {
+        var newQty = (line.Larg_Qnty ?? 0) + delta;
+        if (newQty <= 0) { RemoveLine(line); return; }
+        line.Larg_Qnty = newQty;
+        if (line.Id > 0) line.Item_ProcessedFlage = -1;
+        InvoiceLineCalculator.ComputeLine(line, 1);
+        Recompute();
+    }
+
+    private void RemoveLine(IInvoices_Details line)
+    {
+        if (line.Id > 0)
+        {
+            line.Item_DeletedFlage = 1;
+            line.Item_ProcessedFlage = 1;
+            _invD_O.invDlst_Deleted.Add(line);
+        }
+        else
+        {
+            _invD_O.invDlst.Remove(line);
+        }
+        Recompute();
+    }
+
+    // 🟢 يقابل Calculate_Invoice_Totals: الصالة = خدمة بلا توصيل، التوصيل = رسوم توصيل بلا خدمة، السفرى = لا خدمة ولا توصيل.
+    private void OnOrderTypeChanged(int value)
+    {
+        _orderType = value;
+        if (value != 1) _serviceRate = 0;
+        if (value != 3) _deliveryFee = 0;
+        Recompute();
+    }
+
+    // 🟢 يقابل GetTotalItemPrices + GetServicesAndCommissionValues (نفس فئتى الحساب الأصليتين).
+    private void Recompute()
+    {
+        var invoiceValues = new InvoiceValuesCLS();
+        invoiceValues.POS_GetTotalItemPrices(ref _invL_O, ref _invD_O);
+        _header.IsDeliveryFeeAddedToInvoiceTotal = _orderType == 3 ? 1 : 0;
+        _header.IsDeliveryFeeAddedToInvoiceTotalAfterTax = 0;
+        _header.TaxSales10 = _taxRate;
+        _header.Service_Rate = _serviceRate;
+        _header.Delivery_Fee = _deliveryFee;
+        _header.Net_Total_CommissionValue = 0;
+        invoiceValues.POS_InvoiceComputeTotalServicesValues(_taxRate > 0, false, ref _invL_O);
+        StateHasChanged();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_customer is null) { Snackbar.Add(Tr("CustomerRequiredError"), Severity.Warning); return; }
+
+        // 🟢 يقابل ReadInvoiceListData + Get_MakeInvoiceListData (نقطة البيع).
+        _header.Insert_ServerDateTime = DateTime.Now;
+        _header.Update_ServerDateTime = DateTime.Now;
+        _header.EditOperationDate = DateTime.Now;
+        _header.Invoice_Date = DateTime.Now.Date;
+        _header.Invoice_DateTime = DateTime.Now;
+        _header.InvoiceDueDate = DateTime.Now;
+        _header.Customer_Id = _customer.Id;
+        _header.CustomerName = _customer.Name;
+        _header.SubAccount_Name = _customer.Name;
+        _header.Lookup_OrderDeliveryTypesId = _orderType;
+        _header.Lookup_InvoiceKitchenStatusId = 0;
+        _header.Lookup_ShiftsId = 0;
+        _header.Lookup_DiscountTypesId = 0;
+        _header.List_CommissionRate = 0;
+        _header.List_CommissionValue = 0;
+        _header.Emp_Id = 0; _header.Emp_Name = "";
+        _header.WaiterManId = 0; _header.DeliveryMan_DriverId = 0; _header.TableId = 0;
+        _header.Is_Printed = 0; _header.InvoiceStatus = 0; _header.InvoiceStatus_Reason = "";
+        _header.User_Id = Common.User_Id;
+        _header.Branch_Id = Common.Branch_Id;
+        _invL_O.Invoice_Type_Id = Common.Invoice_Type_Id;
+        _header.Invoice_Type = Common.Invoice_Type_Id;
+        _header.Is_Invoice_Agile = _isAgile;
+        _header.Salesman_Id = 0;
+        _header.ShipmentCompany_Id = 0; _header.ShipmentCompany_Name = ""; _header.Shipment_Value = 0;
+        _header.Currency_id = Common.Entry_Currency_Id;
+        _header.Currency = Common.Entry_Currency_Id.ToString();
+        _header.PolicaNo = ""; _header.troodContainerNo = ""; _header.Notes = ""; _header.Customer_Notes = "";
+        _invL_O.Make_Order = 0;
+        _header.CustomerAccountBefor = 0; _header.CustomerAccountAfter = 0; _header.AnotherPayment = 0;
+        _header.Is_InvoiceKta3y = 0; _header.Is_Tax_Per_Item = 0;
+        _header.IsMaintainceInvoice = (int)InvoiceMaintainenceType.pos;
+        if (_isAgile == 0)
+        {
+            _header.PaidValueFromCashNakdy = _paid;
+            _header.RestValueFromCashNakdia = Math.Max(0, _paid - (_header.NetInvoiceTotal ?? 0));
+            _header.PaidValue = _header.NetInvoiceTotal ?? 0;
+            _header.RestValue = 0;
+            _header.PaymentValueFor_Is_Invoice_Agile = 0;
+        }
+        // الأصل يحفظ IS_Posted_Flage=0 (غير مُرحَّل) وقراءات الترحيل تشترط = 0؛ كانت الصفحة تحفظها NULL فتُفلت الفاتورة من الترحيل (نفس عيب المشتريات).
+        _header.IS_Posted_Flage ??= 0;
+        InvoiceLineCalculator.ZeroNullNumerics(_header);
+
+        var excp = 0;
+        var msg = "";
+        string? swallowed = null;
+        EventHandler<System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs> handler = (_, e) =>
+        {
+            var name = e.Exception.GetType().Name;
+            if (name.Contains("Sql") || name.Contains("DbUpdate") || name.Contains("Invalid") || name.Contains("Null"))
+            {
+                swallowed = e.Exception.Message;
+                var frames = string.Join(" <- ", Environment.StackTrace.Split((char)10).Skip(3).Take(8).Select(s => s.Trim()));
+                Console.Error.WriteLine($"[PosInvoice.Save] {e.Exception.GetType().FullName}: {e.Exception.Message} @ {frames}");
+            }
+        };
+        try
+        {
+            AppDomain.CurrentDomain.FirstChanceException += handler;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var rc = new Requests_Cls { Make_Invoice_Agile = _isAgile };
+                if (Id.HasValue && Id.Value > 0) rc.Edit_Invoice_Update_CustomerAccount(ref excp, _invL_O, _invD_O);
+                else rc.Make_Invoice_Update_CustomerAccount(ref excp, ref msg, _invL_O, _invD_O);
+            });
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+            return;
+        }
+        finally
+        {
+            AppDomain.CurrentDomain.FirstChanceException -= handler;
+        }
+
+        if (excp == 0)
+        {
+            _isSaved = true;
+            Snackbar.Add(Tr("InvoiceSavedMessage"), Severity.Success);
+            if (!(Id.HasValue && Id.Value > 0)) Nav.NavigateTo($"/accounts/pos/invoice/{_header.Id}", replace: true);
+        }
+        else
+        {
+            var detail = string.IsNullOrEmpty(msg) ? swallowed : msg;
+            Snackbar.Add(string.IsNullOrEmpty(detail) ? Tr("InvoiceSaveError") : $"{Tr("InvoiceSaveError")}: {detail}", Severity.Error);
+        }
+    }
+
+    private async Task NewOrderAsync()
+    {
+        if (Id.HasValue && Id.Value > 0) { Nav.NavigateTo("/accounts/pos/invoice"); return; }
+        _customer = null;
+        _orderType = 1; _isAgile = 0; _serviceRate = 0; _deliveryFee = 0;
+        await InitializeNewAsync();
+    }
+
+    private string Tr(string key)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

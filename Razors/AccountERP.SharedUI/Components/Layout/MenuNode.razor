@@ -96,49 +96,12 @@ else
         }
     }
 
-    // 🟢 أيقونة كل وحدة رئيسية/فرعية تحتوي على شاشات (Group) - نفس منطق NavMenuMud لكن بنمط Outlined
-    // لتمييزها بصرياً عن الوحدات الرئيسية (Filled) دون أن تبدو متطابقة فى كل مستوى.
-    private static readonly (string[] Keywords, string Icon)[] GroupIconMap = new (string[], string)[]
-    {
-        (new[] { "حساب", "قيود", "استاذ", "ميزان", "account", "ledger", "journal", "trial" }, Icons.Material.Outlined.AccountBalance),
-        (new[] { "مخزن", "صنف", "اصناف", "مخزون", "store", "inventory", "item", "warehouse" }, Icons.Material.Outlined.Inventory2),
-        (new[] { "مبيع", "فاتورة بيع", "sale", "sales" }, Icons.Material.Outlined.PointOfSale),
-        (new[] { "مشتري", "شراء", "purchase", "buying" }, Icons.Material.Outlined.ShoppingCart),
-        (new[] { "عميل", "عملاء", "customer", "client" }, Icons.Material.Outlined.People),
-        (new[] { "مورد", "موردين", "supplier", "vendor" }, Icons.Material.Outlined.Store),
-        (new[] { "تقرير", "report" }, Icons.Material.Outlined.Assessment),
-        (new[] { "ضريب", "فاتورة الكترونية", "tax", "einvoice", "e-invoice" }, Icons.Material.Outlined.Receipt),
-        (new[] { "بنك", "شيك", "خزينة", "صندوق", "bank", "check", "cash", "treasury" }, Icons.Material.Outlined.AccountBalanceWallet),
-        (new[] { "سيار", "صيانة", "ورشة", "car", "workshop", "maintenance" }, Icons.Material.Outlined.CarRepair),
-        (new[] { "حجز", "سياح", "فندق", "طيران", "reservation", "tourism", "hotel", "flight" }, Icons.Material.Outlined.FlightTakeoff),
-        (new[] { "موارد بشرية", "موظف", "حضور", "انصراف", "hr", "employee", "attendance" }, Icons.Material.Outlined.Badge),
-        (new[] { "انتاج", "تصنيع", "نسيج", "production", "manufacturing" }, Icons.Material.Outlined.PrecisionManufacturing),
-        (new[] { "مقاول", "عقار", "مشروع", "construction", "real estate", "project" }, Icons.Material.Outlined.Apartment),
-        (new[] { "اعداد", "صلاحي", "مستخدم", "setting", "permission", "user", "admin" }, Icons.Material.Outlined.Settings),
-        (new[] { "باركود", "bar code", "barcode" }, Icons.Material.Outlined.QrCode2),
-    };
-
-    // 🟢 أيقونة كل شاشة نهائية (ورقة/Leaf) - مطابقة بكلمات مفتاحية أدق لطبيعة الشاشة نفسها (قائمة/إضافة/
-    // تقرير/طباعة...) بدلاً من سهم ChevronRight الثابت الذى كان يظهر لكل الشاشات بلا تمييز ويوحي خطأً
-    // بإمكانية توسيع الرابط رغم أنه نهائي (لا يحتوي أبناء).
-    // 🟢 نُقلت لـ MenuIcons.cs (Services) لتُستخدَم أيضاً من شريط التبويبات (TabHost.razor) بدل تكرارها هنا
-    // كنسخة خاصة - نفس الأيقونة الآن لأي شاشة سواء بالقائمة الجانبية أو كتبويب مفتوح.
-    private static string GetGroupIcon(string? description) => MatchIcon(description, GroupIconMap, Icons.Material.Outlined.FolderOpen);
+    // 🟢 أيقونة كل وحدة رئيسية/فرعية تحتوي على شاشات (Group) بنمط Outlined لتمييزها بصرياً عن الوحدات
+    // الرئيسية (Filled)، وأيقونة كل شاشة نهائية (Leaf) بمطابقة أدق لطبيعة الشاشة نفسها (قائمة/إضافة/تقرير/
+    // طباعة...) - كلتاهما فى MenuIcons.cs (Services) لتُستخدَما أيضاً من بطاقات الشاشة الرئيسية
+    // (Home.razor) وشريط التبويبات (TabHost.razor) بدل تكرارهما نسخة خاصة هنا - نفس الأيقونة لأى شاشة
+    // سواء ظهرت بالقائمة الجانبية أو كبطاقة أو كتبويب مفتوح.
+    private static string GetGroupIcon(string? description) => MenuIcons.GetGroupIcon(description);
 
     private static string GetLeafIcon(string? description) => MenuIcons.GetLeafIcon(description);
-
-    private static string MatchIcon(string? description, (string[] Keywords, string Icon)[] map, string fallback)
-    {
-        if (string.IsNullOrWhiteSpace(description)) return fallback;
-
-        foreach (var (keywords, icon) in map)
-        {
-            if (keywords.Any(k => description.Contains(k, StringComparison.OrdinalIgnoreCase)))
-            {
-                return icon;
-            }
-        }
-
-        return fallback;
-    }
 }

@@ -229,4 +229,23 @@ app.MapPost("/Theme/Set", (bool isDark, string? primaryColor, HttpContext httpCo
     return Results.Ok();
 });
 
+// 🛠️ 8. (للتطوير فقط) إعادة تحميل إعدادات SysConfig فى الخادم الحى بعد تغييرها مباشرة فى قاعدة البيانات، بدل إغلاق الخادم وإعادة الدخول.
+// يقابل عنصر قائمة الويندوز "إعادة تحميل الإعدادات" (StripMenuItemReloadSetting → Common.SetSystemParametersDB) عبر نفس تجميع
+// SystemSettingsLoader.LoadTenantSettings؛ لا يستدعى Common.SetSystemParameters() الخاصة بالويندوز لأنها تقرأ ملف ConnInfo.xml وتُعيد ضبط سلسلة الاتصال.
+// مقيَّد بوضع Development وبعناوين الجهاز المحلى فقط. مثال: curl -X POST http://localhost:5256/Dev/ReloadSettings
+if (app.Environment.IsDevelopment())
+{
+    app.MapPost("/Dev/ReloadSettings", (HttpContext httpContext) =>
+    {
+        var remote = httpContext.Connection.RemoteIpAddress;
+        if (remote == null || !System.Net.IPAddress.IsLoopback(remote))
+        {
+            return Results.StatusCode(StatusCodes.Status403Forbidden);
+        }
+
+        AccountModelsLib.SystemSettingsLoader.LoadTenantSettings();
+        return Results.Ok("settings reloaded");
+    });
+}
+
 app.Run();

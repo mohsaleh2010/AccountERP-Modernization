@@ -6,6 +6,7 @@
 @using AccountERP.SharedUI.Services
 @inject UserPreferencesService Prefs
 @inject LanguageService LangService
+@inject NavigationManager NavigationManager
 @implements IDisposable
 
 <div class="themes-menu-overlay @(Open ? "open" : "")" @onclick="@(() => SetOpenAsync(false))"></div>
@@ -32,6 +33,33 @@
                        Color="Color.Primary" Label="@Tr("ShowTabsSetting")" />
             <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="margin-inline-start:52px;">@Tr("ShowTabsSettingHint")</MudText>
         </MudStack>
+
+        <MudDivider Class="my-3" />
+
+        @* 🟢 معيار عرض التواريخ الجديد (راجع MODERNIZATION_NOTES.md) - dd/MM/yyyy هو الافتراضى، محفوظ لحساب
+           المستخدم بنفس آلية ShowBreadcrumb/ShowTabs أعلاه تماماً. الشاشات الجديدة/المُعدَّلة تقرأ Prefs.DateFormat
+           بدل نص تنسيق ثابت - راجع FinancialPeriodList.razor كمثال مرجعى أول. *@
+        <MudStack Spacing="1" Class="mb-2">
+            <MudText Typo="Typo.body2">@Tr("DateFormatSetting")</MudText>
+            <MudSelect T="string" Value="@Prefs.DateFormat" ValueChanged="@((string v) => Prefs.SetDateFormat(v))"
+                       Variant="Variant.Outlined" Margin="Margin.Dense" AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem T="string" Value="@("dd/MM/yyyy")">dd/MM/yyyy</MudSelectItem>
+                <MudSelectItem T="string" Value="@("yyyy/MM/dd")">yyyy/MM/dd</MudSelectItem>
+                <MudSelectItem T="string" Value="@("MM/dd/yyyy")">MM/dd/yyyy</MudSelectItem>
+            </MudSelect>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("DateFormatSettingHint")</MudText>
+        </MudStack>
+
+        <MudDivider Class="my-3" />
+
+        @* 🟢 يفتح شاشة إعادة ترتيب القوائم (بطاقات الشاشة الرئيسية + القائمة الجانبية) - راجع
+           MenuOrderSettings.razor. أُغلقت اللوحة أولاً (SetOpenAsync(false)) قبل التنقّل حتى لا تبقى مفتوحة
+           فوق الصفحة الجديدة. *@
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true"
+                   StartIcon="@Icons.Material.Filled.Reorder"
+                   OnClick="@(() => { SetOpenAsync(false); NavigationManager.NavigateTo("/settings/menu-order"); })">
+            @Tr("MenuOrderMenuItem")
+        </MudButton>
 
         <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-4">
             @Tr("UserSettingsSavedHint")

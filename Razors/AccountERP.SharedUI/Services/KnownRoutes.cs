@@ -53,7 +53,24 @@ namespace AccountERP.SharedUI.Services
                 // غير حرج: لو فشل الفحص لأي سبب، تبقى القائمة فارغة فيُعامل كل رابط كـ"قيد الإنشاء" بأمان
             }
 
-            return set.Select(SplitSegments).ToArray();
+            // 🟢 باراميتر المسار الاختيارى الأخير ("{Id:long?}" كما فى صفحة الفاتورة sales-invoice/{Id:long?}) يجعل المسار
+            // بدونه شاشة حقيقية أيضاً؛ بدون هذا كان "/accounts/invoices/sales-invoice" (ثلاثة أجزاء) لا يطابق القالب (أربعة أجزاء)
+            // فيبقى عنصر القائمة "قيد الإنشاء" رغم أن الصفحة موجودة. نضيف لكل قالب نسخاً بلا الأجزاء الاختيارية الأخيرة.
+            var result = new List<string[]>();
+            foreach (var template in set)
+            {
+                var segments = SplitSegments(template);
+                result.Add(segments);
+                var length = segments.Length;
+                while (length > 0 && segments[length - 1].StartsWith("{", StringComparison.Ordinal)
+                       && segments[length - 1].EndsWith("?}", StringComparison.Ordinal))
+                {
+                    length--;
+                    result.Add(segments.Take(length).ToArray());
+                }
+            }
+
+            return result.ToArray();
         }
 
         private static string[] SplitSegments(string route) =>
@@ -73,7 +90,9 @@ namespace AccountERP.SharedUI.Services
                 return false;
             }
 
-            var actualSegments = SplitSegments(keysData);
+            // 🟢 RazorPath قد يحمل query string يميّز عناصر قائمة تشترك فى نفس الشاشة (مثل sales-invoice?agile=1 /
+            // ?kta3y=1 - كل أنواع فاتورة المبيعات صفحة واحدة بمعاملات)، والمطابقة هنا على المسار فقط.
+            var actualSegments = SplitSegments(keysData.Split('?')[0]);
 
             foreach (var templateSegments in _routeSegments.Value)
             {

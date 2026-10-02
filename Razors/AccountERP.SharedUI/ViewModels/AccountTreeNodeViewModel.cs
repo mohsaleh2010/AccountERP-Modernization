@@ -17,7 +17,7 @@ namespace AccountERP.SharedUI.ViewModels
         public string SubAccount_NO { get; set; } = "";
         public int Head_Main_Account { get; set; }
         public int Account_Nature_Type { get; set; }
-        public int? Currency_Id { get; set; }
+        public long? Currency_Id { get; set; }
         public string Notes { get; set; } = "";
         public int Account_Follows { get; set; }
         public int CashFlowType { get; set; }

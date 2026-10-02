@@ -1,0 +1,695 @@
+@* 🟢 شاشة جديدة (لا مقابل مباشر لها فى الديسك توب): «طلبية عميل» بنظام الطلبيات الحديث (رأس + سطور) على جداول
+   Customer_Orders / Customer_Order_Lines بدل Requests_Details القديم (Accounts.Requests.Add_Requests).
+   خطة الطلبيات: .claude/docs/customer-orders-razor-plan.md. هذه المرحلة: إضافة/تعديل طلبية كمسودة أو مؤكدة.
+   المؤجَّل لمراحله: العربون، السحب فى فاتورة المبيعات، الإلغاء بسبب، قائمة المتابعة، عرض الحجز/المتاح.
+   اختيار الصنف يعيد استعمال AddInvoiceItemDialog نفسه (نفس الأسعار والأرصدة والوحدات). التعديل ممنوع بعد التنفيذ الجزئى/الإلغاء. *@
+@page "/accounts/sales/customer-order/{Id:long?}"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@inject TabWorkspaceService TabWorkspace
+@implements IDisposable
+
+<PageTitle>@PageHeading</PageTitle>
+
+<InvoiceStyles />
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-head inv-card">
+        <h1 class="inv-title">@PageHeading</h1>
+        <div class="inv-badges">
+            <span class="inv-chip primary"><MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />@(_orderNo > 0 ? _orderNo.ToString() : Tr("InvoiceStatusNew"))</span>
+            <span class="inv-chip @(_status == CustomerOrderStatus.Confirmed ? "success" : "warn")">@StatusText(_status)</span>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_isSaving" OnClick="NewOrder">@Tr("DstNewButton")</MudButton>
+        </div>
+    </div>
+
+    @if (_locked)
+    {
+        <MudAlert Severity="Severity.Info" Class="mb-3">@Tr("COLockedMessage")</MudAlert>
+    }
+
+    <div class="inv-card">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Description" />@Tr("COHeaderTitle")</h2>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="6">
+                <MudAutocomplete T="LookupOption" Value="_customer" ValueChanged="@(c => _customer = c)" SearchFunc="SearchCustomersAsync"
+                                 ToStringFunc="@(c => c?.Name ?? "")" Label="@Tr("CustomerLabel")" Variant="Variant.Outlined"
+                                 CoerceText="false" ResetValueOnEmptyText="true" MaxItems="50" Required="true" Disabled="_locked" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="long" @bind-Value="_currencyId" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined" Disabled="_locked">
+                    @foreach (var c in _currencies)
+                    {
+                        <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker T="DateTime?" @bind-Date="_orderDate" Label="@Tr("DateColumn")" Variant="Variant.Outlined" Disabled="_locked" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker T="DateTime?" @bind-Date="_expectedDate" Label="@Tr("COExpectedDateLabel")" Variant="Variant.Outlined" Disabled="_locked" />
+            </MudItem>
+            <MudItem xs="12" md="9">
+                <MudTextField T="string" @bind-Value="_notes" Label="@Tr("NotesLabel")" Variant="Variant.Outlined" Lines="2" AutoGrow="true" Disabled="_locked" />
+            </MudItem>
+        </MudGrid>
+    </div>
+
+    <div class="inv-card">
+        <div class="inv-card-head">
+            <h2 class="inv-card-title">
+                <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" />@Tr("COItemsHeader")
+                @if (_lines.Count > 0)
+                {
+                    <span class="inv-count">@_lines.Count</span>
+                }
+            </h2>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenAddItemDialog" Disabled="_customer is null || _locked">@Tr("AddItemButton")</MudButton>
+        </div>
+
+        <MudTable Items="@_lines" T="IInvoices_Details" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="0">
+            <HeaderContent>
+                <MudTh>#</MudTh>
+                <MudTh>@Tr("ItemNameColumn")</MudTh>
+                <MudTh Style="text-align:end">@Tr("QuantityColumn")</MudTh>
+                <MudTh>@Tr("COAvailabilityColumn")</MudTh>
+                <MudTh Style="text-align:end">@Tr("UnitPriceColumn")</MudTh>
+                <MudTh Style="text-align:end">@Tr("NetTotalColumn")</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="#">@(_lines.IndexOf(context) + 1)</MudTd>
+                <MudTd DataLabel="@Tr("ItemNameColumn")">
+                    <b>@context.Invoice_Item_Name</b>
+                    @if (!string.IsNullOrWhiteSpace(context.Store_Name))
+                    {
+                        <br /><small class="mud-text-secondary">@context.Store_Name</small>
+                    }
+                </MudTd>
+                <MudTd DataLabel="@Tr("QuantityColumn")" Style="text-align:end">@FormatQnty(context)</MudTd>
+                <MudTd DataLabel="@Tr("COAvailabilityColumn")">
+                    @if (context.Unit_Item_Table_Id is long uid && _avail.TryGetValue(uid, out var av))
+                    {
+                        var shortL = (context.Larg_Qnty ?? 0) > av.AvailL;
+                        var shortS = (context.Small_Qnty ?? 0) > av.AvailS;
+                        <div>
+                            <b class="@(shortL || shortS ? "mud-error-text" : "mud-success-text")">@Tr("COAvailableLabel") @AvailText(av.AvailL, av.AvailS, context)</b>
+                            <br /><small class="mud-text-secondary">@Tr("COBalanceLabel") @AvailText(av.BalL, av.BalS, context) · @Tr("COReservedLabel") @AvailText(av.ResL, av.ResS, context)</small>
+                            @if (shortL || shortS)
+                            {
+                                <br /><small class="mud-error-text">@Tr("COShortageWarning")</small>
+                            }
+                        </div>
+                    }
+                </MudTd>
+                <MudTd DataLabel="@Tr("UnitPriceColumn")" Style="text-align:end">@((context.PriceUnit ?? 0).ToString("N2"))</MudTd>
+                <MudTd DataLabel="@Tr("NetTotalColumn")" Style="text-align:end"><b>@((context.Item_Net_Total_Price ?? 0).ToString("N2"))</b></MudTd>
+                <MudTd Style="white-space:nowrap">
+                    <MudIconButton Icon="@Icons.Material.Filled.EditNote" Size="Size.Medium" Disabled="_locked" OnClick="@(() => OpenEditItemDialog(context))" aria-label="@Tr("EditItemLabel")" />
+                    <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Medium" Color="Color.Error" Disabled="_locked" OnClick="@(() => DeleteLine(context))" aria-label="@Tr("DeleteItemLabel")" />
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoItemsMessage")</MudText>
+            </NoRecordsContent>
+        </MudTable>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">@_errorMessage</MudAlert>
+        }
+    </div>
+
+    @* ===== التنفيذ: المطلوب / المنفَّذ / المتبقى لكل صنف + تحويل إلى فاتورة (كلياً أو جزئياً) + إغلاق المتبقى ===== *@
+    @if (_orderId > 0 && _status != CustomerOrderStatus.Draft && _orderLines.Count > 0)
+    {
+        <div class="inv-card">
+            <div class="inv-card-head">
+                <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.LocalShipping" />@Tr("COFulfillTitle")</h2>
+                @if (_canFulfill)
+                {
+                    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                        <MudSelect T="int" @bind-Value="_invoiceAgile" Label="@Tr("COInvoiceKind")" Variant="Variant.Outlined" Margin="Margin.Dense" Style="min-width:140px">
+                            <MudSelectItem T="int" Value="1">@Tr("DS_InvoiceCredit")</MudSelectItem>
+                            <MudSelectItem T="int" Value="0">@Tr("DS_InvoiceCash")</MudSelectItem>
+                        </MudSelect>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ReceiptLong"
+                                   Disabled="@(!HasAllocation)" OnClick="ConvertToInvoice">@Tr("COConvertButton")</MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.DoNotDisturbOn"
+                                   OnClick="@(() => { _showCloseRemaining = true; _closeReason = ""; })">@Tr("COCloseRemainingButton")</MudButton>
+                    </MudStack>
+                }
+            </div>
+
+            @if (_showCloseRemaining)
+            {
+                <MudPaper Class="pa-3 mb-3" Outlined="true">
+                    <MudTextField T="string" @bind-Value="_closeReason" Label="@Tr("COCloseRemainingReason")" Variant="Variant.Outlined" Lines="2" Immediate="true" />
+                    <MudStack Row="true" Spacing="2" Class="mt-2">
+                        <MudButton Variant="Variant.Filled" Color="Color.Warning" Disabled="@(string.IsNullOrWhiteSpace(_closeReason) || _isSaving)" OnClick="CloseRemainingAsync">@Tr("COCloseRemainingConfirm")</MudButton>
+                        <MudButton Variant="Variant.Outlined" OnClick="@(() => _showCloseRemaining = false)">@Tr("Cancel")</MudButton>
+                    </MudStack>
+                </MudPaper>
+            }
+
+            <MudSimpleTable Dense="true" Bordered="true" Striped="true" Style="overflow-x:auto">
+                <thead>
+                    <tr>
+                        <th>@Tr("ItemNameColumn")</th>
+                        <th style="text-align:end">@Tr("CORequiredColumn")</th>
+                        <th style="text-align:end">@Tr("COFulfilledQtyColumn")</th>
+                        <th style="text-align:end">@Tr("COClosedQtyColumn")</th>
+                        <th style="text-align:end">@Tr("CORemainingColumn")</th>
+                        @if (_canFulfill)
+                        {
+                            <th style="min-width:210px">@Tr("COThisInvoiceColumn")</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (var i = 0; i < _orderLines.Count; i++)
+                    {
+                        var ol = _orderLines[i];
+                        var disp = i < _lines.Count ? _lines[i] : null;
+                        var remL = CustomerOrdersService.RemainingLarg(ol);
+                        var remS = CustomerOrdersService.RemainingSmall(ol);
+                        var alloc = _alloc.TryGetValue(ol.Id, out var a) ? a : new AllocInput();
+                        <tr>
+                            <td><b>@(disp?.Invoice_Item_Name)</b></td>
+                            <td style="text-align:end">@Qty(ol.Qty_Larg, ol.Qty_Small, disp)</td>
+                            <td style="text-align:end">@Qty(ol.Fulfilled_Qty_Larg, ol.Fulfilled_Qty_Small, disp)</td>
+                            <td style="text-align:end">@Qty(ol.Cancelled_Qty_Larg, ol.Cancelled_Qty_Small, disp)</td>
+                            <td style="text-align:end"><b class="@(remL > 0 || remS > 0 ? "mud-warning-text" : "mud-success-text")">@Qty(remL, remS, disp)</b></td>
+                            @if (_canFulfill)
+                            {
+                                <td>
+                                    @if (remL > 0 || remS > 0)
+                                    {
+                                        <MudStack Row="true" Spacing="1">
+                                            <MudNumericField T="decimal" @bind-Value="alloc.Larg" Max="remL" Min="0" Label="@(disp?.UnitStr)" Variant="Variant.Outlined"
+                                                             Margin="Margin.Dense" HideSpinButtons="true" Format="0.##" Immediate="true" Style="max-width:100px" />
+                                            @if (remS > 0)
+                                            {
+                                                <MudNumericField T="decimal" @bind-Value="alloc.Small" Max="remS" Min="0" Label="@(disp?.UnitSmallStr)" Variant="Variant.Outlined"
+                                                                 Margin="Margin.Dense" HideSpinButtons="true" Format="0.##" Immediate="true" Style="max-width:100px" />
+                                            }
+                                        </MudStack>
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+
+            @if (_orderInvoices.Count > 0)
+            {
+                <MudText Typo="Typo.subtitle1" Class="mt-4 mb-1 font-weight-bold">@Tr("COInvoicesTitle")</MudText>
+                <MudSimpleTable Dense="true" Bordered="true" Striped="true" Style="overflow-x:auto">
+                    <thead>
+                        <tr>
+                            <th>@Tr("COInvoiceNo")</th>
+                            <th>@Tr("DateColumn")</th>
+                            <th style="text-align:end">@Tr("NetTotalColumn")</th>
+                            <th style="text-align:end">@Tr("CODepositApplied")</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var inv in _orderInvoices)
+                        {
+                            <tr>
+                                <td><b>@inv.InvoiceNo</b></td>
+                                <td>@inv.Date.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture)</td>
+                                <td style="text-align:end">@inv.Net.ToString("N2")</td>
+                                <td style="text-align:end">@AppliedFor(inv.InvoiceListId).ToString("N2")</td>
+                                <td style="text-align:end">
+                                    @if (_depositRemaining > 0 && AppliedFor(inv.InvoiceListId) < inv.Net)
+                                    {
+                                        <MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Success" StartIcon="@Icons.Material.Filled.Payments" Class="me-1"
+                                                   Disabled="_isApplying" OnClick="@(() => ApplyDepositAsync(inv))">@Tr("CODepositApply")</MudButton>
+                                    }
+                                    @* يفتح الفاتورة فى تبويب جديد (كل مسار له تبويبه فى نظام التبويبات) *@
+                                    <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew"
+                                               OnClick="@(() => OpenInvoiceTab(inv))">@Tr("COInvoiceData")</MudButton>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            }
+        </div>
+    }
+
+    @* ===== العربون: الإذونات النقدية المرتبطة بالطلبية (تُنشأ من إذن استلام النقدية بمحركه الأصلى) ===== *@
+    @if (_orderId > 0 && _customer is not null && _status != CustomerOrderStatus.Cancelled)
+    {
+        <div class="inv-card">
+            <div class="inv-card-head">
+                <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Payments" />@Tr("CODepositsTitle")</h2>
+                @if (_status != CustomerOrderStatus.Closed)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="@(() => Nav.NavigateTo($"/accounts/cash/voucher-party?type=1&customer={_customer.Id}&order={_orderId}"))">@Tr("CODepositAdd")</MudButton>
+                }
+            </div>
+            @if (_deposits.Count == 0)
+            {
+                <MudText Class="mud-text-secondary">@Tr("CONoDeposits")</MudText>
+            }
+            else
+            {
+                <MudSimpleTable Dense="true" Bordered="true" Striped="true">
+                    <thead><tr><th>@Tr("CVOrderNoLabel")</th><th>@Tr("DateColumn")</th><th style="text-align:end">@Tr("CVAmountLabel")</th><th style="text-align:end">@Tr("COConsumedColumn")</th></tr></thead>
+                    <tbody>
+                        @foreach (var d in _deposits)
+                        {
+                            <tr><td>@(d.VoucherNo > 0 ? d.VoucherNo.ToString() : "")</td><td>@d.Date.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture)</td><td style="text-align:end">@d.Amount.ToString("N2")</td><td style="text-align:end">@d.Consumed.ToString("N2")</td></tr>
+                        }
+                        <tr><td colspan="2"><b>@Tr("NetTotalColumn")</b></td><td style="text-align:end"><b>@_deposits.Sum(x => x.Amount).ToString("N2")</b></td><td style="text-align:end"><b>@_deposits.Sum(x => x.Consumed).ToString("N2")</b></td></tr>
+                    </tbody>
+                </MudSimpleTable>
+            }
+        </div>
+    }
+
+    <div class="inv-dock" role="region">
+        <div class="inv-dock-cells">
+            <div class="cell"><span class="lbl">@Tr("LinesCountLabel")</span><b>@_lines.Count</b></div>
+            <div class="cell net"><span class="lbl">@Tr("NetTotalColumn")</span><b>@NetTotal.ToString("N2")</b></div>
+        </div>
+        <div class="inv-dock-actions">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
+                       Disabled="@(!CanSave)" OnClick="@(() => SaveAsync(false))">@Tr("COSaveDraft")</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle"
+                       Disabled="@(!CanSave)" OnClick="@(() => SaveAsync(true))">@Tr("COSaveConfirm")</MudButton>
+        </div>
+    </div>
+
+    <AddInvoiceItemDialog ShowExtraFields="false" ShowItemsWithoutBalanceByDefault="true" Visible="_itemDialogOpen" PriceTypeId="_customerPriceTypeId"
+                          VisibleChanged="@(v => _itemDialogOpen = v)" ExistingLine="_editingLine" OnItemAdded="OnItemDialogSaved" />
+</div>
+</MudContainer>
+
+@code {
+    [Parameter] public long? Id { get; set; }
+
+    private record LookupOption(long Id, string Name);
+
+    private readonly CustomerCLS _customerCls = new();
+    private readonly CustomerOrdersService _service = new();
+
+    private List<LookupOption> _currencies = new();
+    private List<IInvoices_Details> _lines = new();
+    private LookupOption? _customer;
+    private long _currencyId;
+    private long _customerPriceTypeId;
+    private DateTime? _orderDate = DateTime.Now.Date;
+    private DateTime? _expectedDate;
+    private string? _notes;
+    private long _orderId;
+    private long _orderNo;
+    private CustomerOrderStatus _status = CustomerOrderStatus.Draft;
+    private bool _locked;
+    private bool _isSaving;
+    private string? _errorMessage;
+    private bool _itemDialogOpen;
+    private IInvoices_Details? _editingLine;
+    private long _tempLineId;
+    private long _loadedId = -1;
+
+    // ===== التنفيذ =====
+    private sealed class AllocInput { public decimal Larg { get; set; } public decimal Small { get; set; } }
+    private record OrderInvoice(long InvoiceListId, long InvoiceNo, DateTime Date, decimal Net);
+    private record DepositRow(long VoucherNo, DateTime Date, decimal Amount, decimal Consumed);
+    private List<DepositRow> _deposits = new();
+    private decimal _depositRemaining;
+    private Dictionary<long, decimal> _applied = new();
+    private bool _isApplying;
+    private decimal AppliedFor(long invoiceListId) => _applied.TryGetValue(invoiceListId, out var v) ? v : 0;
+
+    private async Task ApplyDepositAsync(OrderInvoice inv)
+    {
+        _isApplying = true;
+        try
+        {
+            var orderId = _orderId;
+            var applied = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _service.ApplyDepositsToInvoice(orderId, inv.InvoiceListId); });
+            Snackbar.Add(Tr("CODepositAppliedMsg", applied.ToString("N2"), inv.InvoiceNo), Severity.Success);
+            await LoadOrderAsync(orderId);
+        }
+        catch (Exception ex) { Snackbar.Add(Tr("SystemError", ex.Message), Severity.Error); }
+        finally { _isApplying = false; }
+    }
+    private List<CustomerOrderLine> _orderLines = new();
+    private Dictionary<long, AllocInput> _alloc = new();
+    private List<OrderInvoice> _orderInvoices = new();
+    private bool _canFulfill;
+    private int _invoiceAgile = 1;
+    private bool _showCloseRemaining;
+    private string? _closeReason;
+    private bool HasAllocation => _alloc.Values.Any(a => a.Larg > 0 || a.Small > 0);
+
+    // «إضافة طلبية» عند إنشاء طلبية جديدة، و«بيانات الطلبية» عند عرض/إعادة فتح طلبية محفوظة (الشاشة والتبويب).
+    private string PageHeading => _orderId > 0 ? Tr("COTitleView") : Tr("COTitleAdd");
+
+    // ===== المتاح والمحجوز (للعرض فقط): المتاح = الرصيد − المحجوز من الطلبيات المؤكدة الأخرى =====
+    private sealed record AvailRow(decimal BalL, decimal BalS, decimal ResL, decimal ResS)
+    {
+        public decimal AvailL => BalL - ResL;
+        public decimal AvailS => BalS - ResS;
+    }
+    private Dictionary<long, AvailRow> _avail = new();
+
+    private async Task RefreshAvailabilityAsync()
+    {
+        var ids = _lines.Select(l => l.Unit_Item_Table_Id ?? 0).Where(i => i > 0).Distinct().ToList();
+        var exclude = _orderId;
+        try
+        {
+            var dt = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _service.GetAvailability(ids, exclude); });
+            _avail = dt.Rows.Cast<DataRow>().ToDictionary(
+                r => Convert.ToInt64(r["Unit_Item_Id"]),
+                r => new AvailRow(Convert.ToDecimal(r["Bal_Larg"]), Convert.ToDecimal(r["Bal_Small"]), Convert.ToDecimal(r["Res_Larg"]), Convert.ToDecimal(r["Res_Small"])));
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    private static string AvailText(decimal larg, decimal small, IInvoices_Details line)
+    {
+        var l = $"{larg:0.##} {line.UnitStr}";
+        return small != 0 ? $"{l} + {small:0.##} {line.UnitSmallStr}" : l;
+    }
+
+    private decimal NetTotal => _lines.Sum(l => l.Item_Net_Total_Price ?? 0);
+    private bool CanSave => !_isSaving && !_locked && _customer is not null && _lines.Count > 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return new CurrencyFactorsCLS_().GetCurrencyList();
+        });
+        _currencies = dt.Rows.Cast<DataRow>()
+            .Select(r => new LookupOption(Convert.ToInt64(r["ID"]), r["Currency_Name"]?.ToString() ?? "")).ToList();
+        if (_currencies.Count > 0) _currencyId = _currencies[0].Id;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var wanted = Id ?? 0;
+        if (wanted == _loadedId) return;
+        _loadedId = wanted;
+        if (wanted > 0) await LoadOrderAsync(wanted);
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task<IEnumerable<LookupOption>> SearchCustomersAsync(string search, CancellationToken ct)
+    {
+        var dt = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _customerCls.Get_CustomerSupplierListForStatement(0, 0, -1, -1);
+        }, ct);
+        var list = new List<LookupOption>();
+        foreach (DataRow r in dt.Rows)
+        {
+            var name = r["Name"]?.ToString()?.Trim() ?? "";
+            if (string.IsNullOrEmpty(search) || name.Contains(search, StringComparison.OrdinalIgnoreCase))
+                list.Add(new LookupOption(Convert.ToInt64(r["Id"]), name));
+        }
+        return list.Take(50);
+    }
+
+    private async Task LoadOrderAsync(long id)
+    {
+        _errorMessage = null;
+        try
+        {
+            var loaded = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                // يلتقط حذف/تعديل الفواتير المرتبطة (من أى شاشة) قبل العرض فتعود الكميات للمتبقى.
+                _service.SyncOrder(id);
+                var got = _service.GetOrder(id);
+                if (got is null) return ((CustomerOrder, List<CustomerOrderLine>)?)null;
+                return got;
+            });
+            if (loaded is null) { _errorMessage = Tr("COOrderNotFound"); return; }
+            var (order, lines) = loaded.Value;
+            var hasFulfillments = await Task.Run(() => _service.HasFulfillments(id));
+
+            _orderId = order.Id;
+            _orderNo = order.Order_No ?? 0;
+            _status = (CustomerOrderStatus)(order.Status ?? 0);
+            _orderDate = order.Order_Date;
+            _expectedDate = order.Expected_Delivery_Date;
+            _notes = order.Notes;
+            _currencyId = order.Currency_Id ?? _currencyId;
+            _locked = !CustomerOrdersService.IsEditable(order, hasFulfillments);
+
+            var customerName = await Task.Run(() => LookupName("Customer", order.Customer_Id ?? 0, "Name"));
+            _customer = new LookupOption(order.Customer_Id ?? 0, customerName);
+            _lines = await Task.Run(() => ToInvoiceLines(lines, order.Store_Id ?? 0));
+            _orderLines = lines;
+            _canFulfill = CustomerOrdersService.CanFulfill(order);
+            _alloc = lines.ToDictionary(l => l.Id, l => new AllocInput
+            {
+                Larg = CustomerOrdersService.RemainingLarg(l),
+                Small = CustomerOrdersService.RemainingSmall(l)
+            });
+            var inv = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _service.GetOrderInvoices(id); });
+            _orderInvoices = inv.Rows.Cast<DataRow>()
+                .Where(r => r["Invoice_No"] != DBNull.Value)
+                .Select(r => new OrderInvoice(Convert.ToInt64(r["Invoices_List_Id"]), Convert.ToInt64(r["Invoice_No"]), Convert.ToDateTime(r["Invoice_Date"]), Convert.ToDecimal(r["Net_Total"])))
+                .DistinctBy(x => x.InvoiceListId).ToList();
+
+            // عنوان التبويب لطلبية محفوظة = «بيانات الطلبية رقم {رقم الطلبية}» بدل اسم قائمة «إضافة طلبية» (مفتاح التبويب = المسار بلا query).
+            var tabKey = "/" + Nav.ToBaseRelativePath(Nav.Uri).Split('?')[0].Trim('/');
+            TabWorkspace.SetCustomTitle(tabKey, Tr("COTabView", _orderNo));
+            await RefreshAvailabilityAsync();
+            var dep = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _service.GetDeposits(id); });
+            _deposits = dep.Rows.Cast<DataRow>().Select(r => new DepositRow(r["Order_No"] == DBNull.Value ? 0 : Convert.ToInt64(r["Order_No"]),
+                r["Deposit_Date"] == DBNull.Value ? DateTime.Now : Convert.ToDateTime(r["Deposit_Date"]), Convert.ToDecimal(r["Amount"]), Convert.ToDecimal(r["Consumed_Amount"]))).ToList();
+            var bal = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _service.GetDepositBalance(id); });
+            _depositRemaining = bal.Remaining;
+            _applied = bal.PerInvoice.Rows.Cast<DataRow>().ToDictionary(r => Convert.ToInt64(r["Invoices_List_Id"]), r => Convert.ToDecimal(r["Applied"]));
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    // كل القيم أرقام long من قاعدة البيانات نفسها (لا مدخلات نصية).
+    private static string LookupName(string table, long id, string column)
+    {
+        var dt = new operations().return_DataTable($"SELECT {column} FROM {table} WHERE Id = {id}");
+        return dt.Rows.Count > 0 ? dt.Rows[0][0]?.ToString()?.Trim() ?? "" : "";
+    }
+
+    private List<IInvoices_Details> ToInvoiceLines(List<CustomerOrderLine> lines, long storeId)
+    {
+        var result = new List<IInvoices_Details>();
+        if (lines.Count == 0) return result;
+        var ids = string.Join(",", lines.Select(l => l.Unit_Item_Table_Id ?? 0).Distinct());
+        var dt = new operations().return_DataTable(
+            "SELECT Unit_item.id AS UnitItemId, Unit_item.Item_id, Unit_item.Code, Item.Item_Name, unit.B_Unit, unit.S_unit " +
+            "FROM Unit_item INNER JOIN Item ON Unit_item.Item_id = Item.id LEFT JOIN unit ON Unit_item.unit_id = unit.id WHERE Unit_item.id IN (" + ids + ")");
+        foreach (var l in lines)
+        {
+            var row = dt.Rows.Cast<DataRow>().FirstOrDefault(r => Convert.ToInt64(r["UnitItemId"]) == (l.Unit_Item_Table_Id ?? 0));
+            result.Add(new IInvoices_Details
+            {
+                Id = --_tempLineId,
+                Unit_Item_Table_Id = l.Unit_Item_Table_Id,
+                Item_Id = row is null ? 0 : Convert.ToInt64(row["Item_id"]),
+                code = row?["Code"]?.ToString() ?? "",
+                Invoice_Item_Name = row?["Item_Name"]?.ToString() ?? "",
+                UnitStr = row?["B_Unit"]?.ToString() ?? "",
+                UnitSmallStr = row?["S_unit"]?.ToString() ?? "",
+                Larg_Qnty = l.Qty_Larg,
+                Small_Qnty = l.Qty_Small,
+                PriceUnit = l.Unit_Price,
+                Item_TaxSales10_Value = l.Tax_Value,
+                Item_Net_Total_Price = l.Line_Total,
+                Store_Id = storeId
+            });
+        }
+        return result;
+    }
+
+    private void NewOrder()
+    {
+        _orderId = 0; _orderNo = 0; _status = CustomerOrderStatus.Draft; _locked = false;
+        _customer = null; _lines = new(); _notes = null;
+        _orderDate = DateTime.Now.Date; _expectedDate = null; _errorMessage = null;
+        _loadedId = 0;
+        Nav.NavigateTo("/accounts/sales/customer-order");
+    }
+
+    private void OpenInvoiceTab(OrderInvoice inv) => Nav.NavigateTo($"/accounts/invoices/sales-invoice/{inv.InvoiceListId}");
+
+    private void OpenAddItemDialog() { _editingLine = null; _itemDialogOpen = true; }
+    private void OpenEditItemDialog(IInvoices_Details line) { _editingLine = line; _itemDialogOpen = true; }
+    private async Task DeleteLine(IInvoices_Details line) { _lines.Remove(line); await RefreshAvailabilityAsync(); }
+
+    private Task OnItemDialogSaved(IInvoices_Details line)
+    {
+        line.Id = _editingLine?.Id ?? --_tempLineId;
+        if (_editingLine is null)
+        {
+            _lines.Add(line);
+        }
+        else
+        {
+            var index = _lines.IndexOf(_editingLine);
+            if (index >= 0) _lines[index] = line;
+            _editingLine = line;
+        }
+        return RefreshAvailabilityAsync();
+    }
+
+    private async Task SaveAsync(bool confirm)
+    {
+        _errorMessage = null;
+        if (_customer is null) { _errorMessage = Tr("OrdNotesSelectCustomerHint"); return; }
+        if (_lines.Count == 0) { _errorMessage = Tr("NoItemsMessage"); return; }
+
+        _isSaving = true;
+        var header = new CustomerOrder
+        {
+            Id = _orderId,
+            Customer_Id = _customer.Id,
+            Currency_Id = _currencyId,
+            Order_Date = _orderDate,
+            Expected_Delivery_Date = _expectedDate,
+            Notes = _notes,
+            Store_Id = _lines.Select(l => l.Store_Id).FirstOrDefault(s => s is > 0)
+        };
+        var lines = _lines.Select(l => new CustomerOrderLine
+        {
+            Unit_Item_Table_Id = l.Unit_Item_Table_Id,
+            Qty_Larg = l.Larg_Qnty,
+            Qty_Small = l.Small_Qnty,
+            Unit_Price = l.PriceUnit,
+            Tax_Value = l.Item_TaxSales10_Value,
+            Line_Total = l.Item_Net_Total_Price
+        }).ToList();
+
+        try
+        {
+            var (id, no) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return _service.SaveOrder(header, lines, confirm);
+            });
+            _orderId = id;
+            _orderNo = no;
+            _status = confirm ? CustomerOrderStatus.Confirmed : CustomerOrderStatus.Draft;
+            _loadedId = id;
+            Snackbar.Add(Tr("COSaved", no), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private static string FormatQnty(IInvoices_Details line)
+    {
+        var largTxt = line.Larg_Qnty is > 0 ? $"{line.Larg_Qnty:0.##} {line.UnitStr}" : "";
+        var smallTxt = line.Small_Qnty is > 0 ? $"{line.Small_Qnty:0.##} {line.UnitSmallStr}" : "";
+        return string.Join(" ", new[] { largTxt, smallTxt }.Where(s => !string.IsNullOrEmpty(s)));
+    }
+
+    private static string Qty(decimal? larg, decimal? small, IInvoices_Details? d)
+    {
+        var l = larg ?? 0;
+        var s = small ?? 0;
+        if (l == 0 && s == 0) return "0";
+        var parts = new List<string>();
+        if (l != 0) parts.Add($"{l:0.##} {d?.UnitStr}");
+        if (s != 0) parts.Add($"{s:0.##} {d?.UnitSmallStr}");
+        return string.Join(" + ", parts);
+    }
+
+    // «تحويل إلى فاتورة»: تفتح فاتورة المبيعات الحالية معبّأة بالكميات المختارة (لا يُسجَّل الربط إلا بعد نجاح حفظ الفاتورة).
+    private void ConvertToInvoice()
+    {
+        var alloc = string.Join(";", _orderLines
+            .Where(l => _alloc.TryGetValue(l.Id, out var a) && (a.Larg > 0 || a.Small > 0))
+            .Select(l =>
+            {
+                var a = _alloc[l.Id];
+                var larg = Math.Min(a.Larg, CustomerOrdersService.RemainingLarg(l));
+                var small = Math.Min(a.Small, CustomerOrdersService.RemainingSmall(l));
+                return string.Create(CultureInfo.InvariantCulture, $"{l.Id}:{larg}:{small}");
+            }));
+        if (string.IsNullOrEmpty(alloc)) { Snackbar.Add(Tr("COConvertNothing"), Severity.Warning); return; }
+        Nav.NavigateTo($"/accounts/invoices/sales-invoice?agile={_invoiceAgile}&fromOrder={_orderId}&alloc={Uri.EscapeDataString(alloc)}");
+    }
+
+    private async Task CloseRemainingAsync()
+    {
+        _isSaving = true;
+        var id = _orderId;
+        var reason = _closeReason ?? "";
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _service.CloseRemaining(id, reason); });
+            Snackbar.Add(Tr("COClosedRemainingMsg"), Severity.Success);
+            _showCloseRemaining = false;
+            await LoadOrderAsync(id);
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+        finally { _isSaving = false; }
+    }
+
+    private string StatusText(CustomerOrderStatus s) => s switch
+    {
+        CustomerOrderStatus.Confirmed => Tr("COStatusConfirmed"),
+        CustomerOrderStatus.PartiallyFulfilled => Tr("COStatusPartial"),
+        CustomerOrderStatus.Fulfilled => Tr("COStatusFulfilled"),
+        CustomerOrderStatus.Cancelled => Tr("COStatusCancelled"),
+        CustomerOrderStatus.Closed => Tr("COStatusClosed"),
+        _ => Tr("COStatusDraft")
+    };
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

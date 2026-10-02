@@ -1,0 +1,524 @@
+@* 🟢 مكوّن مشترك لشاشات الهرم الجغرافى الأربع (الدول / المناطق / المحافظات / المدن) - النسخة Blazor من
+   connectionit\Government\{Country\CountryLisFrm, Govern_Area\Govern_AreaListFrm, Govern_List\Govern_ListFrm, Gov_City_List\Gov_City_ListFrm}
+   وحوارات الإضافة المقابلة (AddGovern_Area / AddGovern_List / AddGov_City_List). الهرم: دولة ← منطقة ← محافظة ← مدينة.
+   كل عملية تمر عبر نفس كلاسات AccountModelsLib: CountryCLS / Govern_AreaCLS / Govern_ListCLS / Gov_City_ListCLS (الحذف بعد إصلاح خللى الأصل الموثَّقين
+   فى الخطة بموافقة المستخدم). الدول: الأصل جدول قابل للتحرير مباشرة (الاسم بالعربية والإنجليزية) عبر DataAdapter؛ هنا حوار إضافة/تعديل موحَّد
+   يكتب بـEF على نفس الجدول. حوار واحد للإضافة والتعديل بزر واحد («حفظ»)، ويُعطَّل «حفظ» فى التعديل حتى يحدث تغيير. *@
+
+@using System.Data
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@inject LanguageService LangService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@LevelTitle</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddDialog">
+                @Tr("NewButton")
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    <MudPaper Class="pa-3 mb-4" Elevation="1">
+        <MudGrid Spacing="2">
+            @* 🟢 بحث نصى واحد يطابق كل الأعمدة الظاهرة فى الجدول (الاسم + أسماء الدولة/المنطقة/المحافظة الأصل) دفعة
+               واحدة - يغطى كل الطلبات الأربعة (بحث للدول، للدول والمناطق، للمحافظات أو الدول أو المناطق، ولكل عمود
+               فى المدن) بعنصر واحد بدل مربع بحث منفصل لكل عمود. متاح لكل المستويات الأربعة بما فيها الدول. *@
+            <MudItem xs="12" sm="@(Level == GeoLevel.Country ? 12 : 4)">
+                <MudTextField T="string" @bind-Value="_searchText" Immediate="true"
+                              Label="@Tr("GeoSearchLabel")" Variant="Variant.Outlined" Dense="true"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true" />
+            </MudItem>
+            @if (Level != GeoLevel.Country)
+            {
+                <MudItem xs="12" sm="4">
+                    <MudAutocomplete T="CountryOpt" Value="@_countries.FirstOrDefault(c => c.Id == _filterCountry)" SearchFunc="SearchCountriesAuto"
+                                      ToStringFunc="@(c => c?.NameAr ?? "")" ValueChanged="@(c => OnFilterCountryChanged(c?.Id ?? 0))"
+                                      Label="@Tr("GeoCountryColumn")" Variant="Variant.Outlined" Dense="true" Clearable="true" ResetValueOnEmptyText="true" />
+                </MudItem>
+            }
+            @if (Level >= GeoLevel.Governorate)
+            {
+                <MudItem xs="12" sm="4">
+                    <MudAutocomplete T="Govern_AreaViewModel" Value="@_areas.FirstOrDefault(a => a.Id == _filterArea)" SearchFunc="SearchFilterAreasAuto"
+                                      ToStringFunc="@(a => a?.AreaName ?? "")" ValueChanged="@(a => OnFilterAreaChanged(a?.Id ?? 0))"
+                                      Label="@Tr("GeoAreaColumn")" Variant="Variant.Outlined" Dense="true" Clearable="true" ResetValueOnEmptyText="true" />
+                </MudItem>
+            }
+            @if (Level == GeoLevel.City)
+            {
+                <MudItem xs="12" sm="4">
+                    <MudAutocomplete T="Govern_ListViewModel" Value="@_govs.FirstOrDefault(g => g.Id == _filterGov)" SearchFunc="SearchFilterGovsAuto"
+                                      ToStringFunc="@(g => g?.GovName ?? "")" ValueChanged="@(g => OnFilterGovChanged(g?.Id ?? 0))"
+                                      Label="@Tr("GeoGovernColumn")" Variant="Variant.Outlined" Dense="true" Clearable="true" ResetValueOnEmptyText="true" />
+                </MudItem>
+            }
+        </MudGrid>
+    </MudPaper>
+
+    <MudTable T="GeoRow" Items="@FilteredRows" Hover="true" Bordered="true" Loading="@_isLoading" Elevation="1" Breakpoint="Breakpoint.None"
+              FixedHeader="true" Height="calc(100vh - 340px)">
+        <HeaderContent>
+            @if (Level != GeoLevel.Country)
+            {
+                <MudTh>@Tr("GeoCountryColumn")</MudTh>
+            }
+            @if (Level >= GeoLevel.Governorate)
+            {
+                <MudTh>@Tr("GeoAreaColumn")</MudTh>
+            }
+            @if (Level == GeoLevel.City)
+            {
+                <MudTh>@Tr("GeoGovernColumn")</MudTh>
+            }
+            <MudTh>@LevelName</MudTh>
+            @if (Level == GeoLevel.Country)
+            {
+                <MudTh>@Tr("GeoNameEnColumn")</MudTh>
+            }
+            <MudTh Style="width:120px;"></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            @if (Level != GeoLevel.Country)
+            {
+                <MudTd>@context.CountryName</MudTd>
+            }
+            @if (Level >= GeoLevel.Governorate)
+            {
+                <MudTd>@context.AreaName</MudTd>
+            }
+            @if (Level == GeoLevel.City)
+            {
+                <MudTd>@context.GovName</MudTd>
+            }
+            <MudTd>@context.Name</MudTd>
+            @if (Level == GeoLevel.Country)
+            {
+                <MudTd>@context.NameEn</MudTd>
+            }
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => OpenEditDialog(context))" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteAsync(context))" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<MudDialog Visible="_dialogOpen" VisibleChanged="OnDialogVisibleChanged"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr(_editId == 0 ? "GeoAddPrefix" : "GeoEditPrefix") @LevelSingular</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_dialogError))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_dialogError</MudAlert>
+        }
+        <MudStack Spacing="3">
+            @if (Level != GeoLevel.Country)
+            {
+                <MudAutocomplete T="CountryOpt" Value="@_countries.FirstOrDefault(c => c.Id == _dCountry)" SearchFunc="SearchCountriesAuto"
+                                  ToStringFunc="@(c => c?.NameAr ?? "")" ValueChanged="@(c => OnDialogCountryChanged(c?.Id ?? 0))"
+                                  Label="@Tr("GeoCountryColumn")" Variant="Variant.Outlined" Required="true" AutoFocus="true" ResetValueOnEmptyText="true" />
+            }
+            @if (Level >= GeoLevel.Governorate)
+            {
+                <MudAutocomplete T="Govern_AreaViewModel" Value="@_areas.FirstOrDefault(a => a.Id == _dArea)" SearchFunc="SearchDialogAreasAuto"
+                                  ToStringFunc="@(a => a?.AreaName ?? "")" ValueChanged="@(a => OnDialogAreaChanged(a?.Id ?? 0))"
+                                  Label="@Tr("GeoAreaColumn")" Variant="Variant.Outlined" Required="true" ResetValueOnEmptyText="true" />
+            }
+            @if (Level == GeoLevel.City)
+            {
+                <MudAutocomplete T="Govern_ListViewModel" Value="@_govs.FirstOrDefault(g => g.Id == _dGov)" SearchFunc="SearchDialogGovsAuto"
+                                  ToStringFunc="@(g => g?.GovName ?? "")" ValueChanged="@(g => _dGov = g?.Id ?? 0)"
+                                  Label="@Tr("GeoGovernColumn")" Variant="Variant.Outlined" Required="true" ResetValueOnEmptyText="true" />
+            }
+            <MudTextField T="string" @bind-Value="_dName" Label="@(Level == GeoLevel.Country ? Tr("GeoNameArColumn") : LevelName)" Variant="Variant.Outlined" Immediate="true" AutoFocus="@(Level == GeoLevel.Country)"
+                          @ref="_nameField" OnKeyDown="OnNameKeyDown" />
+            @if (Level == GeoLevel.Country)
+            {
+                <MudTextField T="string" @bind-Value="_dNameEn" Label="@Tr("GeoNameEnColumn")" Variant="Variant.Outlined" Immediate="true" />
+            }
+            @if (_editId == 0)
+            {
+                <MudCheckBox T="bool" @bind-Value="_addMultiple" Label="@Tr("MultipleAddLabel")" Color="Color.Primary" />
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog">@Tr("Close")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@(_isSaving || (_editId != 0 && !IsDirty))">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    public enum GeoLevel { Country = 0, Area = 1, Governorate = 2, City = 3 }
+
+    [Parameter] public GeoLevel Level { get; set; }
+
+    private record CountryOpt(long Id, string NameAr, string NameEn);
+    private record GeoRow(long Id, string Name, string NameEn, long CountryId, string CountryName, long AreaId, string AreaName, long GovId, string GovName);
+
+    private List<CountryOpt> _countries = new();
+    private List<Govern_AreaViewModel> _areas = new();
+    private List<Govern_ListViewModel> _govs = new();
+    private List<City_ListViewModel> _cities = new();
+
+    private bool _isLoading = true;
+    private bool _isSaving;
+    private string _errorMessage = string.Empty;
+
+    private long _filterCountry, _filterArea, _filterGov;
+    private string _searchText = string.Empty;
+
+    private bool _dialogOpen;
+    private long _editId;
+    private long _dCountry, _dArea, _dGov;
+    private string _dName = string.Empty, _dNameEn = string.Empty;
+    private string _dialogError = string.Empty;
+    private string _baseline = string.Empty;
+    private bool _addMultiple;
+    private bool _multipleAdded;
+    private MudTextField<string>? _nameField;
+
+    // Enter فى حقل الاسم = زر «حفظ» (بعد 150ms ليصل آخر حرف مكتوب للخادم)؛ Esc يغلق الحوار من MudDialog نفسه.
+    private async Task OnNameKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || _isSaving || !_dialogOpen || (_editId != 0 && !IsDirty)) return;
+        await Task.Delay(150);
+        await SaveAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_multipleAdded && _nameField is not null)
+        {
+            _multipleAdded = false;
+            await _nameField.FocusAsync();
+        }
+    }
+
+    private string LevelTitle => Tr(Level switch { GeoLevel.Country => "GeoCountriesTitle", GeoLevel.Area => "GeoAreasTitle", GeoLevel.Governorate => "GeoGovernsTitle", _ => "GeoCitiesTitle" });
+    private string LevelName => Tr(Level switch { GeoLevel.Country => "GeoCountryColumn", GeoLevel.Area => "GeoAreaColumn", GeoLevel.Governorate => "GeoGovernColumn", _ => "GeoCityColumn" });
+    private string LevelSingular => LevelName;
+
+    private string CurrentFingerprint() => FormFingerprint.Of(_dCountry, _dArea, _dGov, _dName?.Trim(), _dNameEn?.Trim());
+    private bool IsDirty => CurrentFingerprint() != _baseline;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private IEnumerable<Govern_AreaViewModel> AreasOf(long countryId) => _areas.Where(a => countryId == 0 || a.CountryId == countryId);
+    private IEnumerable<Govern_ListViewModel> GovsOf(long countryId, long areaId) =>
+        _govs.Where(g => (countryId == 0 || g.CountryId == countryId) && (areaId == 0 || g.AreaId == areaId));
+
+    private IEnumerable<GeoRow> FilteredRows => ApplySearch(Level switch
+    {
+        GeoLevel.Country => _countries.Select(c => new GeoRow(c.Id, c.NameAr, c.NameEn, c.Id, c.NameAr, 0, "", 0, "")),
+        GeoLevel.Area => _areas.Where(a => _filterCountry == 0 || a.CountryId == _filterCountry)
+            .Select(a => new GeoRow(a.Id, a.AreaName, "", a.CountryId, a.CountryName, a.Id, a.AreaName, 0, "")),
+        GeoLevel.Governorate => _govs.Where(g => (_filterCountry == 0 || g.CountryId == _filterCountry) && (_filterArea == 0 || g.AreaId == _filterArea))
+            .Select(g => new GeoRow(g.Id, g.GovName, "", g.CountryId, g.CountryName, g.AreaId, g.AreaName, g.Id, g.GovName)),
+        _ => _cities.Where(c => (_filterCountry == 0 || c.CountryId == _filterCountry) && (_filterArea == 0 || c.AreaId == _filterArea) && (_filterGov == 0 || c.GovId == _filterGov))
+            .Select(c => new GeoRow(c.Id, c.CityName, "", c.CountryId ?? 0, c.CountryName, c.AreaId, c.AreaName, c.GovId, c.GovName)),
+    });
+
+    // 🟢 مطابقة نص البحث مع كل عمود نصى ظاهر فى الصف (الاسم نفسه + أسماء الدولة/المنطقة/المحافظة الأصل إن
+    // وُجدت لهذا المستوى) - "بحث لكل عمود" بعنصر واحد بدل عمود بحث منفصل لكل عمود جدول.
+    private IEnumerable<GeoRow> ApplySearch(IEnumerable<GeoRow> rows)
+    {
+        if (string.IsNullOrWhiteSpace(_searchText)) return rows;
+        var q = _searchText.Trim();
+        return rows.Where(r =>
+            (r.Name?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (r.NameEn?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (r.CountryName?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (r.AreaName?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (r.GovName?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false));
+    }
+
+    private void OnFilterCountryChanged(long v) { _filterCountry = v; _filterArea = 0; _filterGov = 0; }
+    private void OnFilterAreaChanged(long v) { _filterArea = v; _filterGov = 0; }
+    private void OnFilterGovChanged(long v) { _filterGov = v; }
+
+    // 🟢 دوال البحث المشتركة لمكوّنات MudAutocomplete (شريط الفلاتر وحوار الإضافة/التعديل معاً) - كل دالة
+    // تُطابق النص المكتوب مع اسم العنصر (أو تُعيد القائمة كاملة إن كان النص فارغاً)، بنفس نمط MudAutocomplete
+    // المُستخدَم أصلاً فى AccountSelector.razor لاختيار العميل/المورد.
+    private Task<IEnumerable<CountryOpt>> SearchCountriesAuto(string value, CancellationToken ct)
+    {
+        IEnumerable<CountryOpt> q = string.IsNullOrWhiteSpace(value) ? _countries : _countries.Where(c => c.NameAr.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(q);
+    }
+
+    private Task<IEnumerable<Govern_AreaViewModel>> SearchFilterAreasAuto(string value, CancellationToken ct)
+    {
+        var list = AreasOf(_filterCountry);
+        IEnumerable<Govern_AreaViewModel> q = string.IsNullOrWhiteSpace(value) ? list : list.Where(a => a.AreaName.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(q);
+    }
+
+    private Task<IEnumerable<Govern_AreaViewModel>> SearchDialogAreasAuto(string value, CancellationToken ct)
+    {
+        var list = AreasOf(_dCountry);
+        IEnumerable<Govern_AreaViewModel> q = string.IsNullOrWhiteSpace(value) ? list : list.Where(a => a.AreaName.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(q);
+    }
+
+    private Task<IEnumerable<Govern_ListViewModel>> SearchFilterGovsAuto(string value, CancellationToken ct)
+    {
+        var list = GovsOf(_filterCountry, _filterArea);
+        IEnumerable<Govern_ListViewModel> q = string.IsNullOrWhiteSpace(value) ? list : list.Where(g => g.GovName.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(q);
+    }
+
+    private Task<IEnumerable<Govern_ListViewModel>> SearchDialogGovsAuto(string value, CancellationToken ct)
+    {
+        var list = GovsOf(_dCountry, _dArea);
+        IEnumerable<Govern_ListViewModel> q = string.IsNullOrWhiteSpace(value) ? list : list.Where(g => g.GovName.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(q);
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        _errorMessage = string.Empty;
+        try
+        {
+            var level = Level;
+            var data = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var opp = new operations();
+                var countries = new CountryCLS().GetCountriesList()
+                    .Select(c => new CountryOpt(c.Id, c.NameAr ?? "", c.NameEn ?? ""))
+                    .OrderBy(c => c.NameAr, StringComparer.CurrentCulture).ToList();
+                var areas = level >= GeoLevel.Area ? new Govern_AreaCLS().Get_Govern_Area(ref opp) : new List<Govern_AreaViewModel>();
+                var govs = level >= GeoLevel.Governorate ? new Govern_ListCLS().Get_Govern_List(ref opp) : new List<Govern_ListViewModel>();
+                var cities = level == GeoLevel.City ? new Gov_City_ListCLS().Get_City_List(ref opp) : new List<City_ListViewModel>();
+                return (countries, areas, govs, cities);
+            });
+            _countries = data.countries;
+            _areas = data.areas;
+            _govs = data.govs;
+            _cities = data.cities;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    // ---------------- الحوار ----------------
+
+    private void OpenAddDialog()
+    {
+        _editId = 0;
+        _dCountry = _filterCountry;
+        _dArea = Level >= GeoLevel.Governorate ? _filterArea : 0;
+        _dGov = Level == GeoLevel.City ? _filterGov : 0;
+        if (_dCountry == 0 && _countries.Count == 1) _dCountry = _countries[0].Id;
+        _dName = string.Empty;
+        _dNameEn = string.Empty;
+        _dialogError = string.Empty;
+        _baseline = CurrentFingerprint();
+        _dialogOpen = true;
+    }
+
+    private void OpenEditDialog(GeoRow row)
+    {
+        _editId = row.Id;
+        _dCountry = Level == GeoLevel.Country ? 0 : row.CountryId;
+        _dArea = Level >= GeoLevel.Governorate ? row.AreaId : 0;
+        _dGov = Level == GeoLevel.City ? row.GovId : 0;
+        _dName = row.Name;
+        _dNameEn = row.NameEn;
+        _dialogError = string.Empty;
+        _baseline = CurrentFingerprint();
+        _dialogOpen = true;
+    }
+
+    private void CloseDialog() => _dialogOpen = false;
+
+    private void OnDialogVisibleChanged(bool visible) => _dialogOpen = visible;
+
+    private void OnDialogCountryChanged(long v) { _dCountry = v; _dArea = 0; _dGov = 0; }
+    private void OnDialogAreaChanged(long v) { _dArea = v; _dGov = 0; }
+
+    private string? Validate()
+    {
+        if (Level != GeoLevel.Country && _dCountry == 0) return Tr("GeoSelectCountry");
+        if (Level >= GeoLevel.Governorate && _dArea == 0) return Tr("GeoSelectArea");
+        if (Level == GeoLevel.City && _dGov == 0) return Tr("GeoSelectGovern");
+        if (string.IsNullOrWhiteSpace(_dName)) return Tr("GeoNameRequired");
+        return null;
+    }
+
+    private async Task SaveAsync()
+    {
+        var error = Validate();
+        if (error != null) { _dialogError = error; return; }
+
+        _isSaving = true;
+        _dialogError = string.Empty;
+        try
+        {
+            var level = Level;
+            var id = _editId;
+            var name = _dName.Trim();
+            var nameEn = (_dNameEn ?? string.Empty).Trim();
+            var countryId = _dCountry;
+            var areaId = _dArea;
+            var govId = _dGov;
+            int excp = 0;
+            string msg = string.Empty;
+
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                switch (level)
+                {
+                    case GeoLevel.Country:
+                        new CountryCLS().SaveCountry(ref excp, ref msg, new Gov_Country_List { Id = id, NameAr = name, NameEn = nameEn });
+                        break;
+
+                    case GeoLevel.Area:
+                        {
+                            var a = id == 0 ? new Govern_Area_List() : new Govern_AreaCLS().GetGovern_AreaNoTracking(id);
+                            a.Area_Name = name;
+                            a.Gov_Country_ListId = countryId;
+                            new Govern_AreaCLS().SaveArea(ref excp, ref msg, a);
+                            break;
+                        }
+
+                    case GeoLevel.Governorate:
+                        {
+                            var g = id == 0 ? new Govern_List() : new Govern_ListCLS().GetGovern_ListNoTracking(id);
+                            g.Gov_Name = name;
+                            g.Gov_Country_ListId = countryId;
+                            g.Govern_Area_ListId = areaId;
+                            new Govern_ListCLS().Add_Govern_List(ref excp, ref msg, g);
+                            break;
+                        }
+
+                    default:
+                        {
+                            var ct = id == 0 ? new Gov_City_List() : new Gov_City_ListCLS().GetGov_City_ListNoTracking(id);
+                            ct.NameAr = name;
+                            ct.Gov_Country_ListId = countryId;
+                            ct.Govern_Area_ListId = areaId;
+                            ct.Govern_ListId = govId;
+                            new Gov_City_ListCLS().SaveCity(ref excp, ref msg, ct);
+                            break;
+                        }
+                }
+            });
+
+            if (excp != 0) { _dialogError = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg; return; }
+
+            if (id == 0 && _addMultiple)
+            {
+                // إضافة متعددة: يبقى الحوار مفتوحاً بنفس الدولة/المنطقة/المحافظة المختارة وتُفرَّغ الأسماء ويعود التركيز لحقل الاسم.
+                _dName = string.Empty;
+                _dNameEn = string.Empty;
+                _baseline = CurrentFingerprint();
+                _multipleAdded = true;
+            }
+            else
+            {
+                _dialogOpen = false;
+            }
+            await LoadAsync();
+            Snackbar.Add(Tr("GeoSaved"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _dialogError = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeleteAsync(GeoRow row)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(Tr("GeoDeleteTitle"), Tr("GeoDeleteConfirm", row.Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+        if (confirmed != true) return;
+
+        _errorMessage = string.Empty;
+        try
+        {
+            var level = Level;
+            var id = row.Id;
+            int excp = 0;
+            string msg = string.Empty;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var opp = new operations();
+                switch (level)
+                {
+                    case GeoLevel.Country: new CountryCLS().Delete(ref excp, ref msg, id); break;
+                    case GeoLevel.Area: new Govern_AreaCLS().Delete_ProjectUnites(ref excp, ref msg, ref opp, id); break;
+                    case GeoLevel.Governorate: new Govern_ListCLS().Delete(ref excp, ref msg, ref opp, id); break;
+                    default: new Gov_City_ListCLS().Delete(ref excp, ref msg, ref opp, id); break;
+                }
+            });
+            if (excp != 0) { _errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg; return; }
+            await LoadAsync();
+            Snackbar.Add(Tr("GeoDeleted"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

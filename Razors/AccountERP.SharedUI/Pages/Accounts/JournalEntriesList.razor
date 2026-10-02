@@ -1,0 +1,520 @@
+@* 🟢 دفعات أ+ب+جـ من خطة .claude/docs/journal-entries-list-razor-plan.md: النسخة Blazor من
+   General_Ledger.Review_Account_Entry ("مراجعة القيود"). دفعة أ: الفلاتر الأساسية (تاريخ من/إلى، الحساب، نطاق
+   رقم القيد) + الجدول الرئيسى. دفعة ب: لوحة الفلاتر المتقدمة القابلة للطى (فرع/يومية/عملة/مركز التكلفة عبر
+   CostCenterTreePicker/مستخدم/تاريخ إدخال/بيان السطر/مقارنة القيمة). دفعة جـ: لوحة التفاصيل استُخرجت لمكوّن
+   مستقل (JournalEntryDetailsPanel.razor، قابل لإعادة الاستخدام من شاشات أخرى)، ودعم فتح الشاشة من شاشة أخرى
+   مع تقييد النتائج بمستند مصدر واحد عبر Query String (?referenceType=&referenceTypeTableId=). الاستعلامان
+   (القائمة الرئيسية وسطور القيد) من AccountEntry_CLS المشتركة مباشرة بلا أى تعديل فيها - راجع §2 من الخطة.
+   معاينة فقط (بلا فتح القيد كاملاً) بقرار المستخدم - مؤجَّل لخطة منفصلة (دفعة د). *@
+@page "/accounts/journal-entries"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Tr("JournalEntriesTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+    @if (ReferenceTypeTableId.HasValue && ReferenceTypeTableId.Value > 0)
+    {
+        <MudAlert Severity="Severity.Info" Class="mb-4" Variant="Variant.Filled">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                <span>@Tr("JEReferenceFilterActive")</span>
+                <MudLink Href="/accounts/journal-entries" Color="Color.Inherit" Underline="Underline.Always">@Tr("JEClearReferenceFilter")</MudLink>
+            </MudStack>
+        </MudAlert>
+    }
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold mb-4">@Tr("JournalEntriesTitle")</MudText>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker T="DateTime?" @bind-Date="_dateFrom" Label="@Tr("DateFromLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker T="DateTime?" @bind-Date="_dateTo" Label="@Tr("DateToLabel")" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudNumericField T="long?" @bind-Value="_entryNoFrom" Label="@Tr("JEEntryNoFromLabel")" Variant="Variant.Outlined" Min="0" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudNumericField T="long?" @bind-Value="_entryNoTo" Label="@Tr("JEEntryNoToLabel")" Variant="Variant.Outlined" Min="0" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudTextField T="string" Value="@_accountName" ReadOnly="true" Label="@Tr("JEAccountLabel")" Variant="Variant.Outlined" FullWidth="true" />
+                    <MudButton Variant="Variant.Outlined" OnClick="@(() => _pickerOpen = true)">...</MudButton>
+                    @if (_accountId != 0)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Clear" Size="Size.Small" OnClick="ClearAccount" />
+                    }
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" FullWidth="true" OnClick="SearchAsync" Disabled="_isLoading">
+                    @Tr("SearchButton")
+                </MudButton>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
+                           EndIcon="@(_advancedExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                           OnClick="@(() => _advancedExpanded = !_advancedExpanded)">
+                    @(AdvancedFilterCount > 0 ? Tr("JEAdvancedFiltersCount", AdvancedFilterCount) : Tr("JEAdvancedFiltersLabel"))
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+
+        <MudCollapse Expanded="_advancedExpanded">
+            <MudDivider Class="my-3" />
+            <MudGrid Spacing="3">
+                <MudItem xs="12" sm="6" md="3">
+                    <MudSelect T="long" @bind-Value="_branchId" Label="@Tr("BranchLabel")" Variant="Variant.Outlined" FullWidth="true">
+                        <MudSelectItem T="long" Value="0">@Tr("JEAllOption")</MudSelectItem>
+                        @foreach (var b in _branches)
+                        {
+                            <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudSelect T="long" @bind-Value="_journalCode" Label="@Tr("JEJournalCodeLabel")" Variant="Variant.Outlined" FullWidth="true">
+                        <MudSelectItem T="long" Value="0">@Tr("JEAllOption")</MudSelectItem>
+                        @foreach (var j in _journals)
+                        {
+                            <MudSelectItem T="long" Value="@j.Code">@j.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudSelect T="long" @bind-Value="_currencyId" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined" FullWidth="true">
+                        <MudSelectItem T="long" Value="0">@Tr("JEAllOption")</MudSelectItem>
+                        @foreach (var c in _currencies)
+                        {
+                            <MudSelectItem T="long" Value="@c.Value">@c.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudSelect T="long" @bind-Value="_userId" Label="@Tr("JEUserLabel")" Variant="Variant.Outlined" FullWidth="true">
+                        <MudSelectItem T="long" Value="0">@Tr("JEAllOption")</MudSelectItem>
+                        @foreach (var u in _users)
+                        {
+                            <MudSelectItem T="long" Value="@u.Id">@u.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudTextField T="string" Value="@_costCenterName" ReadOnly="true" Label="@Tr("JECostCenterLabel")" Variant="Variant.Outlined" FullWidth="true" />
+                        <MudButton Variant="Variant.Outlined" OnClick="@(() => _costCenterPickerOpen = true)">...</MudButton>
+                        @if (_costCenterId != 0)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Clear" Size="Size.Small" OnClick="ClearCostCenter" />
+                        }
+                    </MudStack>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudDatePicker T="DateTime?" @bind-Date="_enterDateFrom" Label="@Tr("JEEnterDateFromLabel")" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudDatePicker T="DateTime?" @bind-Date="_enterDateTo" Label="@Tr("JEEnterDateToLabel")" Variant="Variant.Outlined" />
+                </MudItem>
+
+                <MudItem xs="12" md="8">
+                    <MudTextField T="string" @bind-Value="_notesSearch" Label="@Tr("JENotesSearchLabel")" Variant="Variant.Outlined" FullWidth="true" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudSelect T="int" @bind-Value="_notesMatchMode" Label="@Tr("JENotesSearchLabel")" Variant="Variant.Outlined" FullWidth="true">
+                        <MudSelectItem T="int" Value="1">@Tr("JENotesMatchStartsWith")</MudSelectItem>
+                        <MudSelectItem T="int" Value="2">@Tr("JENotesMatchContains")</MudSelectItem>
+                        <MudSelectItem T="int" Value="3">@Tr("JENotesMatchEndsWith")</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudText Typo="Typo.subtitle2" Class="mb-1">@Tr("JEValueCompareLabel")</MudText>
+                    <MudPaper Class="pa-3" Elevation="0" Outlined="true">
+                        <MudGrid Spacing="2" AlignItems="AlignItems.Center">
+                            <MudItem xs="12" sm="4" md="3">
+                                <MudSelect T="int" @bind-Value="_valueOperator" Variant="Variant.Outlined" FullWidth="true">
+                                    <MudSelectItem T="int" Value="0">@Tr("JEOperatorNone")</MudSelectItem>
+                                    <MudSelectItem T="int" Value="1">@Tr("JEOperatorEqual")</MudSelectItem>
+                                    <MudSelectItem T="int" Value="2">@Tr("JEOperatorGreater")</MudSelectItem>
+                                    <MudSelectItem T="int" Value="3">@Tr("JEOperatorGreaterOrEqual")</MudSelectItem>
+                                    <MudSelectItem T="int" Value="4">@Tr("JEOperatorLess")</MudSelectItem>
+                                    <MudSelectItem T="int" Value="5">@Tr("JEOperatorLessOrEqual")</MudSelectItem>
+                                    <MudSelectItem T="int" Value="6">@Tr("JEOperatorNotEqual")</MudSelectItem>
+                                    <MudSelectItem T="int" Value="7">@Tr("JEOperatorBetween")</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" sm="4" md="3">
+                                <MudSelect T="int" @bind-Value="_valueSide" Variant="Variant.Outlined" FullWidth="true" Disabled="_valueOperator == 0">
+                                    <MudSelectItem T="int" Value="1">@Tr("JEValueSideDebit")</MudSelectItem>
+                                    <MudSelectItem T="int" Value="2">@Tr("JEValueSideCredit")</MudSelectItem>
+                                    <MudSelectItem T="int" Value="3">@Tr("JEValueSideBoth")</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="6" sm="2" md="2">
+                                <MudNumericField T="decimal?" @bind-Value="_valueFrom" Label="@Tr("JEValueFromLabel")" Variant="Variant.Outlined" FullWidth="true" Disabled="_valueOperator == 0" />
+                            </MudItem>
+                            @if (_valueOperator == 7)
+                            {
+                                <MudItem xs="6" sm="2" md="2">
+                                    <MudNumericField T="decimal?" @bind-Value="_valueTo" Label="@Tr("JEValueToLabel")" Variant="Variant.Outlined" FullWidth="true" />
+                                </MudItem>
+                            }
+                            <MudItem xs="12" sm="12" md="2">
+                                <MudCheckBox T="bool" @bind-Value="_valueIsEquivalent" Label="@Tr("JEEquivalentValueLabel")" Disabled="_valueOperator == 0" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudCollapse>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_errorMessage</MudAlert>
+    }
+
+    <MudTable Items="@_rows" T="EntryRow" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" Loading="@_isLoading"
+              Breakpoint="Breakpoint.Sm" FixedHeader="true" Height="45vh"
+              RowClassFunc="@((EntryRow r, int i) => r.Id == _selectedEntryId ? "mud-selected-item" : string.Empty)"
+              OnRowClick="@((TableRowClickEventArgs<EntryRow> e) => SelectEntry(e.Item))">
+        <HeaderContent>
+            <MudTh>@Tr("JEEntryNoCol")</MudTh>
+            <MudTh>@Tr("JEEntryDateCol")</MudTh>
+            <MudTh>@Tr("JEDocNoCol")</MudTh>
+            <MudTh>@Tr("JEJournalNameCol")</MudTh>
+            <MudTh>@Tr("JEEntryNotesCol")</MudTh>
+            <MudTh Style="text-align:end">@Tr("JEEntryTotalCol")</MudTh>
+            <MudTh>@Tr("CurrencyLabel")</MudTh>
+            <MudTh>@Tr("JEStatusCol")</MudTh>
+            <MudTh>@Tr("JEAddedByCol")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("JEEntryNoCol")"><b>@context.EntryNo</b></MudTd>
+            <MudTd DataLabel="@Tr("JEEntryDateCol")">@context.EntryDate.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture)</MudTd>
+            <MudTd DataLabel="@Tr("JEDocNoCol")">@context.DocNo</MudTd>
+            <MudTd DataLabel="@Tr("JEJournalNameCol")">@context.JournalName</MudTd>
+            <MudTd DataLabel="@Tr("JEEntryNotesCol")">@context.Notes</MudTd>
+            <MudTd DataLabel="@Tr("JEEntryTotalCol")" Style="text-align:end; font-variant-numeric: tabular-nums;"><b>@context.Total.ToString("N2")</b></MudTd>
+            <MudTd DataLabel="@Tr("CurrencyLabel")">@context.CurrencyName</MudTd>
+            <MudTd DataLabel="@Tr("JEStatusCol")">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default">@context.PostStatus</MudChip>
+            </MudTd>
+            <MudTd DataLabel="@Tr("JEAddedByCol")">@context.AddedBy</MudTd>
+        </RowTemplate>
+        <NoRecordsContent><MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText></NoRecordsContent>
+    </MudTable>
+
+    <MudPaper Class="pa-3 mt-2 mb-4" Elevation="0" Outlined="true">
+        <span>@Tr("JEResultsCount"): <b>@_rows.Count</b></span>
+    </MudPaper>
+
+    <JournalEntryDetailsPanel EntryId="_selectedEntryId" />
+</MudContainer>
+
+<MudDialog @bind-Visible="_pickerOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true })">
+    <TitleContent>@Tr("JEAccountLabel")</TitleContent>
+    <DialogContent>
+        <div style="height:45vh;">
+            <AccountTreePicker BranchId="AccountModelsLib.Common.Branch_Id" SelectedValue="_pickedNode" SelectedValueChanged="OnAccountPicked" Height="45vh" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _pickerOpen = false)">@Tr("Cancel")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-Visible="_costCenterPickerOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true })">
+    <TitleContent>@Tr("JECostCenterLabel")</TitleContent>
+    <DialogContent>
+        <div style="height:45vh;">
+            <CostCenterTreePicker SelectedValue="_pickedCostCenterNode" SelectedValueChanged="OnCostCenterPicked" Height="45vh" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _costCenterPickerOpen = false)">@Tr("Cancel")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private record EntryRow(long Id, string DocNo, long EntryNo, DateTime EntryDate, string JournalName, string Notes,
+        decimal Total, string CurrencyName, string PostStatus, DateTime? ProcessDate, string AddedBy, string UpdatedBy);
+
+    private record BranchOption(long Id, string Name);
+    private record JournalOption(long Code, string Name);
+    private record CurrencyOption(long Value, string Name);
+    private record UserOption(long Id, string Name);
+
+    private DateTime? _dateFrom = new DateTime(DateTime.Now.Year, 1, 1);
+    private DateTime? _dateTo = DateTime.Now.Date;
+    private long? _entryNoFrom;
+    private long? _entryNoTo;
+    private long _accountId;
+    private string _accountName = string.Empty;
+    private bool _pickerOpen;
+    private AccountTreeNodeViewModel? _pickedNode;
+
+    // 🟢 دفعة ب: الفلاتر المتقدمة (§12 من الخطة) - كلها اختيارية، تُهمَل فى الاستعلام عند قيمتها الافتراضية
+    // (0/فارغ/null)، بنفس منطق AccountEntry_CLS.Get_Account_Entry_List نفسه (كل بُعد مستقل يُضاف بـAND فقط
+    // إن كانت قيمته > 0 أو غير فارغة).
+    private bool _advancedExpanded;
+    private long _branchId;
+    private long _journalCode;
+    private long _currencyId;
+    private long _userId;
+    private long _costCenterId;
+    private string _costCenterName = string.Empty;
+    private bool _costCenterPickerOpen;
+    private CostCenterNodeViewModel? _pickedCostCenterNode;
+    private DateTime? _enterDateFrom;
+    private DateTime? _enterDateTo;
+    private string _notesSearch = string.Empty;
+    private int _notesMatchMode = 2;
+    private int _valueOperator;
+    private int _valueSide = 1;
+    private decimal? _valueFrom;
+    private decimal? _valueTo;
+    private bool _valueIsEquivalent;
+
+    private List<BranchOption> _branches = new();
+    private List<JournalOption> _journals = new();
+    private List<CurrencyOption> _currencies = new();
+    private List<UserOption> _users = new();
+
+    private int AdvancedFilterCount =>
+        (_branchId != 0 ? 1 : 0) + (_journalCode != 0 ? 1 : 0) + (_currencyId != 0 ? 1 : 0) + (_userId != 0 ? 1 : 0) +
+        (_costCenterId != 0 ? 1 : 0) + (_enterDateFrom.HasValue ? 1 : 0) + (_enterDateTo.HasValue ? 1 : 0) +
+        (!string.IsNullOrWhiteSpace(_notesSearch) ? 1 : 0) + (_valueOperator != 0 ? 1 : 0);
+
+    private List<EntryRow> _rows = new();
+    private long _selectedEntryId;
+    private bool _isLoading;
+    private string _errorMessage = string.Empty;
+
+    // 🟢 دفعة جـ (§7/§12): دعم فتح هذه الشاشة من شاشة أخرى مع تقييد النتائج بمستند مصدر واحد بالذات، عبر نفس
+    // العمودين المُستخدَمين فعلاً فى AccountEntry_CLS.Get_Account_Entry_List (Reference_Type/Reference_Type_Table_Id
+    // كخاصيتين على الكلاس نفسه، لا Parameters فى توقيع الدالة - راجع §2 من الخطة). مثال رابط: "/accounts/journal-
+    // entries?referenceType=6&referenceTypeTableId=1111111111111522889" (نفس نمط "?openMenu=" فى Home.razor).
+    [SupplyParameterFromQuery(Name = "referenceType")]
+    public int? ReferenceType { get; set; }
+
+    [SupplyParameterFromQuery(Name = "referenceTypeTableId")]
+    public long? ReferenceTypeTableId { get; set; }
+
+    // 🟢 -1 يعنى "لم تُعالَج قيمة الرابط بعد" (يختلف عمداً عن 0 الافتراضية لمعامل الاستعلام الغائب) - بهذا يُنفَّذ
+    // البحث التلقائى/تفريغ النتائج مرة واحدة بالضبط عند كل تغيّر فعلى لقيمة referenceTypeTableId فى الرابط، سواء
+    // عند أول تحميل الشاشة أو عند التنقّل اللاحق (مثال: زر "إلغاء التقييد" الذى يزيل الباراميتر من الرابط بلا
+    // إعادة تحميل كاملة للصفحة - OnInitializedAsync وحدها لا تُستدعى فى تلك الحالة، فيبقى الجدول يعرض بيانات
+    // قديمة مقيَّدة لو اعتمدنا عليها فقط، لذا المنطق هنا فى OnParametersSetAsync بدلاً منها).
+    private long _lastAppliedReferenceTypeTableId = -1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadLookupsAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var currentReferenceTypeTableId = ReferenceTypeTableId ?? 0;
+        if (currentReferenceTypeTableId == _lastAppliedReferenceTypeTableId) return;
+
+        _lastAppliedReferenceTypeTableId = currentReferenceTypeTableId;
+        if (currentReferenceTypeTableId > 0)
+        {
+            await SearchAsync();
+        }
+        else
+        {
+            _rows = new();
+            _selectedEntryId = 0;
+        }
+    }
+
+    private async Task LoadLookupsAsync()
+    {
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+
+            var branchDt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, AccountModelsLib.Common.User_Id);
+            var branches = new List<BranchOption>();
+            foreach (DataRow r in branchDt.Rows)
+            {
+                branches.Add(new BranchOption(Convert.ToInt64(r["Id"]), r["Branch_Name"]?.ToString() ?? ""));
+            }
+            _branches = branches;
+
+            var opp = new AccountModelsLib.operations();
+            var journalDt = new AccountModelsLib.BusinessLibShared.GeneralLedger.Journal_DaysListCLS().Gey_Journal_Codes(ref opp);
+            var journals = new List<JournalOption>();
+            foreach (DataRow r in journalDt.Rows)
+            {
+                journals.Add(new JournalOption(Convert.ToInt64(r["Code"]), r["Journal_Name"]?.ToString() ?? ""));
+            }
+            _journals = journals;
+
+            var currencyDt = new CurrencyFactorsCLS_().GetCurrencyList();
+            var currencies = new List<CurrencyOption>();
+            foreach (DataRow r in currencyDt.Rows)
+            {
+                currencies.Add(new CurrencyOption(Convert.ToInt64(r["Value"]), r["Currency_Name"]?.ToString() ?? ""));
+            }
+            _currencies = currencies;
+
+            var usersDt = new AccountModelsLib.operations().return_DataTable("SELECT USER_ID, Name FROM USER_DETAILES ORDER BY Name");
+            var users = new List<UserOption>();
+            foreach (DataRow r in usersDt.Rows)
+            {
+                users.Add(new UserOption(Convert.ToInt64(r["USER_ID"]), r["Name"]?.ToString() ?? ""));
+            }
+            _users = users;
+        });
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private void OnAccountPicked(AccountTreeNodeViewModel? node)
+    {
+        _pickerOpen = false;
+        if (node == null) return;
+        _accountId = node.Id;
+        _accountName = node.SubAccount_Name;
+    }
+
+    private void ClearAccount()
+    {
+        _accountId = 0;
+        _accountName = string.Empty;
+        _pickedNode = null;
+    }
+
+    private void OnCostCenterPicked(CostCenterNodeViewModel? node)
+    {
+        _costCenterPickerOpen = false;
+        if (node == null) return;
+        _costCenterId = node.Id;
+        _costCenterName = node.Name;
+    }
+
+    private void ClearCostCenter()
+    {
+        _costCenterId = 0;
+        _costCenterName = string.Empty;
+        _pickedCostCenterNode = null;
+    }
+
+    private async Task SearchAsync()
+    {
+        _isLoading = true;
+        _errorMessage = string.Empty;
+        _selectedEntryId = 0;
+        try
+        {
+            var dateFrom = _dateFrom;
+            var dateTo = _dateTo;
+            var entryNoFrom = _entryNoFrom ?? 0;
+            var entryNoTo = _entryNoTo ?? 0;
+            var accountId = _accountId;
+            var branchId = _branchId;
+            var journalCode = _journalCode;
+            var currencyId = _currencyId;
+            var costCenterId = _costCenterId;
+            var userId = _userId;
+            var enterDateFrom = _enterDateFrom;
+            var enterDateTo = _enterDateTo;
+            // 🟢 إصلاح أمان (§2/§4 القرار #3 من الخطة): الديسك توب يُدرج Notes_Details خاماً داخل LIKE بلا إفلات،
+            // ما يكسر الاستعلام (وليس فقط ثغرة محتملة) عند وجود علامة اقتباس واحدة فى النص. لا تعديل فى
+            // AccountEntry_CLS نفسها - فقط القيمة المُمرَّرة إليها من هنا.
+            var notesSearch = _notesSearch.Trim().Replace("'", "''");
+            var notesMatchMode = _notesMatchMode;
+            var valueOperator = _valueOperator;
+            var valueSide = _valueSide;
+            var valueFrom = _valueFrom ?? 0;
+            var valueTo = _valueTo ?? 0;
+            var valueIsEquivalent = _valueIsEquivalent;
+            var referenceType = ReferenceType ?? 0;
+            var referenceTypeTableId = ReferenceTypeTableId ?? 0;
+
+            var rows = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var ac = new AccountEntry_CLS { Reference_Type = referenceType, Reference_Type_Table_Id = referenceTypeTableId };
+                var dt = ac.Get_Account_Entry_List(
+                    Branch_Id: branchId, Submain_Account_ID: accountId, Journal_Code: journalCode, Account_Currency_Id: currencyId, CostCenter_Id: costCenterId,
+                    IsdtFrom: dateFrom.HasValue, dtFrom: dateFrom ?? DateTime.Now, IsdtTo: dateTo.HasValue, dtTo: dateTo ?? DateTime.Now,
+                    ISdtEnterFrom: enterDateFrom.HasValue, dtEnterFrom: enterDateFrom ?? DateTime.Now, ISdtEnterTo: enterDateTo.HasValue, dtEnterTo: enterDateTo ?? DateTime.Now,
+                    Entry_NoFrom: entryNoFrom, Entry_NoTo: entryNoTo,
+                    Notes_Details_Search_Flage: notesMatchMode, Notes_Details: notesSearch,
+                    Is_EquivalentEntryValue: valueIsEquivalent, EntryValueBetweenFlage: valueOperator, MadinD2nAll: valueSide, EntryValueFrom: valueFrom, EntryValueTo: valueTo,
+                    User_ID_Login: userId);
+                return MapEntryRows(dt);
+            });
+            _rows = rows;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private static List<EntryRow> MapEntryRows(DataTable dt)
+    {
+        var list = new List<EntryRow>();
+        foreach (DataRow r in dt.Rows)
+        {
+            list.Add(new EntryRow(
+                Id: Convert.ToInt64(r["Id"]),
+                DocNo: r["Doc_No"] is DBNull ? "" : r["Doc_No"].ToString() ?? "",
+                EntryNo: r["Entry_No"] is DBNull ? 0 : Convert.ToInt64(r["Entry_No"]),
+                EntryDate: Convert.ToDateTime(r["Entry_Date"]),
+                JournalName: r["Journal_Name"] is DBNull ? "" : r["Journal_Name"].ToString() ?? "",
+                Notes: r["Entry_Notes"] is DBNull ? "" : r["Entry_Notes"].ToString() ?? "",
+                Total: r["Entry_Total"] is DBNull ? 0 : Convert.ToDecimal(r["Entry_Total"]),
+                CurrencyName: r["Currency_Name"] is DBNull ? "" : r["Currency_Name"].ToString() ?? "",
+                PostStatus: r["IS_Transfer_To_Gl_Flage_Str"] is DBNull ? "" : r["IS_Transfer_To_Gl_Flage_Str"].ToString() ?? "",
+                ProcessDate: r["Process_Date"] is DBNull ? null : Convert.ToDateTime(r["Process_Date"]),
+                AddedBy: r["User_Name_Add"] is DBNull ? "" : r["User_Name_Add"].ToString() ?? "",
+                UpdatedBy: r["User_Name_Update"] is DBNull ? "" : r["User_Name_Update"].ToString() ?? ""));
+        }
+        return list;
+    }
+
+    private void SelectEntry(EntryRow row)
+    {
+        _selectedEntryId = row.Id;
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}

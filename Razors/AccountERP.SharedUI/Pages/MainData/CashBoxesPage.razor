@@ -1,0 +1,22 @@
+@page "/main-data/cash-boxes"
+
+@* 🟢 عنصر القائمة (SysConfigMenus 388) - صفحة رفيعة تعرض المكوّن المشترك BankBoxList بنوع Cash. *@
+
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+
+<PageTitle>@Title</PageTitle>
+
+<BankBoxList Kind="BankBoxList.BankKind.Cash" />
+
+@code {
+    private string Title
+    {
+        get
+        {
+            var previous = System.Globalization.CultureInfo.CurrentUICulture;
+            try { System.Globalization.CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang["CashBoxesTitle"]; }
+            finally { System.Globalization.CultureInfo.CurrentUICulture = previous; }
+        }
+    }
+}

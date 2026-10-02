@@ -117,10 +117,10 @@
                                     </MudSelect>
                                 </MudItem>
                                 <MudItem xs="12" sm="6">
-                                    <MudSelect T="int?" Value="_empId" ValueChanged="@((int? v) => _empId = v)" Label="@Tr("ResponsibleEmployeeLabel")">
+                                    <MudSelect T="long?" Value="_empId" ValueChanged="@((long? v) => _empId = v)" Label="@Tr("ResponsibleEmployeeLabel")">
                                         @foreach (var e in _employees)
                                         {
-                                            <MudSelectItem T="int?" Value="@e.Id">@e.Name</MudSelectItem>
+                                            <MudSelectItem T="long?" Value="@e.Id">@e.Name</MudSelectItem>
                                         }
                                     </MudSelect>
                                 </MudItem>
@@ -156,10 +156,10 @@
                         <MudTabPanel Text="@Tr("DepreciationTab")">
                             <MudGrid Spacing="3">
                                 <MudItem xs="12" sm="6">
-                                    <MudSelect T="int?" Value="_ehlakType" ValueChanged="@((int? v) => _ehlakType = v)" Label="@Tr("DepreciationTypeLabel")">
+                                    <MudSelect T="long?" Value="_ehlakType" ValueChanged="@((long? v) => _ehlakType = v)" Label="@Tr("DepreciationTypeLabel")">
                                         @foreach (var t in _depreciationTypes)
                                         {
-                                            <MudSelectItem T="int?" Value="@t.Id">@t.Name</MudSelectItem>
+                                            <MudSelectItem T="long?" Value="@t.Id">@t.Name</MudSelectItem>
                                         }
                                     </MudSelect>
                                 </MudItem>
@@ -285,8 +285,8 @@
 
     private readonly FixedAssetCLS _cls = new();
     private long _fixedAssetDataId;
-    private List<(int Id, string Name)> _employees = new();
-    private List<(int Id, string Name)> _depreciationTypes = new();
+    private List<(long Id, string Name)> _employees = new();
+    private List<(long Id, string Name)> _depreciationTypes = new();
 
     // 🟢 حقول لوحة التفاصيل (24 حقلاً) - تقابل بالضبط حقول FixedAssetsUSCTRL/FixedAssetData.
     private string _code = "";
@@ -294,7 +294,7 @@
     private string _nameEn = "";
     private DateTime? _purchaseDate;
     private int _ehlakStatus = 1;
-    private int? _empId;
+    private long? _empId;
     private DateTime? _empReceiveDate;
     private string _model = "";
     private string _industryFactory = "";
@@ -303,7 +303,7 @@
     private DateTime? _warrantyFinalDate;
     private string _supplierName = "";
     private string _warrantyDetails = "";
-    private int? _ehlakType;
+    private long? _ehlakType;
     private decimal _mainValue;
     private decimal _accumulatedDepreciation;
     private decimal _rateOfDepreciation;
@@ -350,7 +350,7 @@
         await Task.Run(() =>
         {
             AccountCultureGuard.EnsureInvariant();
-            var branchDt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, (int)Common.User_Id);
+            var branchDt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, Common.User_Id);
             var branches = new List<(long, string)>();
             foreach (DataRow r in branchDt.Rows)
             {
@@ -359,10 +359,10 @@
             _branches = branches;
 
             var depDt = _cls.Get_DepreciationTypes();
-            var types = new List<(int, string)>();
+            var types = new List<(long, string)>();
             foreach (DataRow r in depDt.Rows)
             {
-                types.Add((Convert.ToInt32(r["Id"]), r["Name"]?.ToString() ?? ""));
+                types.Add((Convert.ToInt64(r["Id"]), r["Name"]?.ToString() ?? ""));
             }
             _depreciationTypes = types;
         });
@@ -375,10 +375,10 @@
             AccountCultureGuard.EnsureInvariant();
             return _cls.Get_EmployeesList(branchId);
         });
-        var list = new List<(int, string)> { (0, Tr("Unspecified")) };
+        var list = new List<(long, string)> { (0, Tr("Unspecified")) };
         foreach (DataRow r in dt.Rows)
         {
-            list.Add((Convert.ToInt32(r["Id"]), r["name"]?.ToString() ?? ""));
+            list.Add((Convert.ToInt64(r["Id"]), r["name"]?.ToString() ?? ""));
         }
         _employees = list;
     }

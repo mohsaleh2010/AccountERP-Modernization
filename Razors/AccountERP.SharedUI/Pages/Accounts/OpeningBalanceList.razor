@@ -278,7 +278,7 @@
         {
             AccountCultureGuard.EnsureInvariant();
 
-            var branchDt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, (int)Common.User_Id);
+            var branchDt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, Common.User_Id);
             var branches = new List<BranchOption>();
             foreach (DataRow r in branchDt.Rows)
             {
