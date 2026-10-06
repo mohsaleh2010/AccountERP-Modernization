@@ -114,3 +114,9 @@
 - **نُفِّذ (بُنى 0 أخطاء؛ لم يُختبر حياً):** `Journal_DaysListCLS.Update_Journal_Name` (`Journal_Codes`)، `SalesMenCLS.SetCustomerSalesMan`/`UnsetCustomerSalesMan` (`Customer`).
 - **➖ لا ينطبق/مستثنى:** `TagerKontraCLS` (الجدول بلا العمودين)، `Money_Financial_Notice(_Items)CLS.Edit_Financial_Notice` (عكس وإعادة إضافة + تحديثات أرصدة تلقائية)، `DailyItemSalesService` (تحديث تلقائى)، `CountryCLS.UpdateDataTable` (DataAdapter عام)، `CustomersAccountCLS` (أرصدة تلقائية).
 - **مؤجَّل:** `AccountEntry_CLS.Make_AccountEntry_Edit` (محرك القيود المركزى؛ يسجّل `User_ID_LoginUpdate` أصلاً والجدول يملك العمودين — قرار مستقل)، `Money_Transaction_BoxOrderReportCLS` (فحص منفصل)، `InvoicesOperationCLS` و`SalesTotalInvoicesService` (الموديل لا يعرف العمودين).
+
+### 2026-10-06 — بنود 1.2 و1.3 (إصلاحا الديسكتوب، بموافقتك)
+- **1.2 نُفِّذ:** `Account_Common_LIB/Fixed_Assets/FixedAssetsUSCTRL.cs` ~304: `Update_NewFixedAsset` (تحذف صف `FixedAssetData`) ← `Update_FixedAssetData_Full` (UPDATE كامل للأعمدة الـ24 + مزامنة اسم الحساب + أعمدة التعديل). الدالة القديمة بقيت فى `FixedAssetCLS` بلا استدعاء.
+- **1.3 نُفِّذ:** `Account_Common_LIB/Fixed_Assets/New folder/Assets_EhlakFrm_.cs` ~133: `Get_AssetsEhlakForPeriod` ← `Get_AssetsEhlakForPeriod_Full` (يُضيف `JOIN FixedAssetData` الناقص). الشاشة حيّة (تُفتح من `MainFrm_AccountUpdate` سطر ~5531، والمجلد `New folder` غير مستبعد من `.csproj`).
+- بُنى `Account_Common_LIB` (net10.0-windows) 0 أخطاء. **لم يُختبر حياً** (يحتاج تشغيل الديسكتوب: تعديل أصل ثابت ثم التحقق أن صف `FixedAssetData` باقٍ بالقيم الجديدة؛ وفتح حساب الإهلاك بفرع محدَّد).
+- **نسخ مكررة لم تُمَس (خارج `AccountsNew`/`Accounts.sln`):** `AccountsNew/AccountMainFrm/MainFrm_AccountUpdate.cs` و`Advanced_Account/MainFrm_AccountUpdate.cs` تستخدمان `Assets_EhlakFrm_` نفسها من `Account_Common_LIB`، فيستفيدان من الإصلاح تلقائياً.
