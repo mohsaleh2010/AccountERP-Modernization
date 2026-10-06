@@ -103,3 +103,9 @@
 - **مستثنى بقرارك:** تحديثات الأرصدة/الأسعار التلقائية من حفظ الفواتير (`UpdateItemPriceFromInvoice`، `UpdateItemBalance`، سطرا ~356/~473 القديمان، `UpdatePurchasePrice`). **مؤجَّل لدفعة مستقلة:** `InvoicesOperationCLS` (الموديل لا يعرف العمودين).
 - **اكتشافان جانبيان (لم يُعدَّلا):** (1) `StoreCLS` (سطر ~394) يضبط `Edit_User_Id = 1` ثابتاً بدل `Common.User_Id` — خلل فى كلاس عُدّ «مطبَّقاً». (2) تفعيل/إلغاء تفعيل الصنف فى `ItemCLS` (~2276-2277 و~2374 و~2525 و~2592) يكتب `User_Id`/`OperationDate` (حقلا الإنشاء) عند التعديل بدل أعمدة التعديل، وتبديل `Active_flage` عبر EF (~2328) بلا أعمدة تعديل.
 - **المتبقى لإغلاق الدفعة:** اختبار حى: تعديل سعر بيع من «أسعار البيع للمشتريات» (يتحقق `Bills_Details` و`Item` و`Unit_Item`) — يحتاج تشغيل السيرفر.
+
+### 2026-10-06 — تدقيق أعمدة التعديل، دفعة 2 (بموافقتك)
+- **نُفِّذ (بُنى `AccountModelsLib` 0 أخطاء؛ لم يُختبر حياً):** `FixedAssetCLS.Update_FixedAssetData_Full` (معاملان جديدان `@Edit_User_Id`/`@EditOperationDate`) و`DeleteFixedAsset`/`MakeDeleteFixedAssetData` (تعطيل `active=0`)، `CostCenterCLS.Edit_CostCenter`، `GroupsCLS.Update_Group`، `Assets_EhlakCLS.Update_Ehlak_Asset`. التعديل بايتياً لحفظ ترميز `Assets_EhlakCLS` (غير UTF-8).
+- **➖ لا ينطبق:** `CashPaymentMethodCLS.UpdateDataTable` (`Lookup_CashPaymentMethod` بلا العمودين)، `Add_Account_CodesCLS.EditAccount` (`Submain_Account` بلا العمودين).
+- **لم يُمسّ عمداً:** `FixedAssetCLS.Update_NewFixedAsset` و`UpdateFixedAsset(ref opp)` (يحذفان الصف) — إصلاحهما هو بند 1.2.
+- **المتبقى من الطبقة ب:** `Money_Financial_NoticeCLS`/`_ItemsCLS`، `AccountEntry_CLS`، `TagerKontraCLS`، `Journal_DaysListCLS`، `DailyItemSalesService`، `CountryCLS`، `SalesTotalInvoicesService`، `CustomersAccountCLS`، `SalesMenCLS`، `Money_Transaction_BoxOrderReportCLS`، `InvoicesOperationCLS` (دفعة مستقلة).

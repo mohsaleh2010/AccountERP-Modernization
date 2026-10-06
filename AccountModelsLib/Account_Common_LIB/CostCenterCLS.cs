@@ -183,7 +183,7 @@ Order By Cost_Center_Tree.Id
         {
             long Code = 0;
             string mysql = " ";
-            mysql = " Update Cost_Center_Tree Set Name='" + Name + "', Code=" + Code + ", Code_Str='" + Code_Str + "',Notes='" + Notes + "'   ";
+            mysql = " Update Cost_Center_Tree Set Name='" + Name + "', Code=" + Code + ", Code_Str='" + Code_Str + "',Notes='" + Notes + "', Edit_User_Id=" + Common.User_Id + ", EditOperationDate='" + AccountModelsLib.operations.dateFormat(DateTime.Now) + "'   ";
             mysql = mysql + " Where Id=" + Id;
             try
             {

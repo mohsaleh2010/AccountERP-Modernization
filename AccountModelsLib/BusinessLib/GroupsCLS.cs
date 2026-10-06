@@ -92,7 +92,7 @@ namespace AccountModelsLib
                     return;
                 }
 
-                string mysql = "Update Customer_Supplier_Group Set GroupName='" + GroupName + "' Where ID=" + Id;
+                string mysql = "Update Customer_Supplier_Group Set GroupName='" + GroupName + "', Edit_User_Id=" + Common.User_Id + ", EditOperationDate='" + AccountModelsLib.operations.dateFormat(DateTime.Now) + "' Where ID=" + Id;
                 opp.update_me(mysql);
                 Excp = 0;
             }

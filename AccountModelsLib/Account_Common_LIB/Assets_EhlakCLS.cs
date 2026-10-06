@@ -404,7 +404,7 @@ FROM            Submain_Account INNER JOIN
                 Asset_Value_Befor_Period_Ehalk = Common.RoundMe(Asset_Value_Befor_Period_Ehalk);
 
 
-                string mysql = " Update SubMainAssets_Ehlak Set  Period_Ehalk= " + Period_Ehalk + ",Total_Eklak=" + Total_Eklak + ",Asset_Value_Now=" + Asset_Value_Now + " where Id=" + SubMainAssets_Ehlak_ID;
+                string mysql = " Update SubMainAssets_Ehlak Set  Period_Ehalk= " + Period_Ehalk + ",Total_Eklak=" + Total_Eklak + ",Asset_Value_Now=" + Asset_Value_Now + ", Edit_User_Id=" + Common.User_Id + ", EditOperationDate='" + AccountModelsLib.operations.dateFormat(DateTime.Now) + "' where Id=" + SubMainAssets_Ehlak_ID;
                 AccountModelsLib.operations opp = new AccountModelsLib.operations();
                 opp.update_me(mysql);
             }

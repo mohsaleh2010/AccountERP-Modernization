@@ -399,7 +399,7 @@ WHERE        ( SubAccount_Id =  " + SubAccount_Id + ")  ";
             operations opp = new operations(1);
             try
             {
-                string mysql = @"Update FixedAssetData Set Code=@Code , Name_Ar=@Name_Ar , Name_En=@Name_En , Purchase_Date=@Purchase_Date , Account_Ehlak_Status=@Account_Ehlak_Status , Account_Ehlak_Status_Str=@Account_Ehlak_Status_Str , Emp_Id=@Emp_Id , Emp_Receive_Date=@Emp_Receive_Date , Model=@Model , Industry_Factory=@Industry_Factory , Fixed_Serial_No=@Fixed_Serial_No , Location=@Location , Factory_warrantyFinal_Date=@Factory_warrantyFinal_Date , Supplier_Name=@Supplier_Name , Factory_warranty_Details=@Factory_warranty_Details , Account_Ehlak_Type=@Account_Ehlak_Type , Account_Ehlak_Type_Str=@Account_Ehlak_Type_Str , Main_Value=@Main_Value , Accumulated_Depreciation_Value=@Accumulated_Depreciation_Value , Rate_of_depreciation=@Rate_of_depreciation , Book_value=@Book_value , beginning_service_Date=@beginning_service_Date , Price_scrap_Value=@Price_scrap_Value , Last_Modified_Value=@Last_Modified_Value , Default_Age=@Default_Age
+                string mysql = @"Update FixedAssetData Set Code=@Code , Name_Ar=@Name_Ar , Name_En=@Name_En , Purchase_Date=@Purchase_Date , Account_Ehlak_Status=@Account_Ehlak_Status , Account_Ehlak_Status_Str=@Account_Ehlak_Status_Str , Emp_Id=@Emp_Id , Emp_Receive_Date=@Emp_Receive_Date , Model=@Model , Industry_Factory=@Industry_Factory , Fixed_Serial_No=@Fixed_Serial_No , Location=@Location , Factory_warrantyFinal_Date=@Factory_warrantyFinal_Date , Supplier_Name=@Supplier_Name , Factory_warranty_Details=@Factory_warranty_Details , Account_Ehlak_Type=@Account_Ehlak_Type , Account_Ehlak_Type_Str=@Account_Ehlak_Type_Str , Main_Value=@Main_Value , Accumulated_Depreciation_Value=@Accumulated_Depreciation_Value , Rate_of_depreciation=@Rate_of_depreciation , Book_value=@Book_value , beginning_service_Date=@beginning_service_Date , Price_scrap_Value=@Price_scrap_Value , Last_Modified_Value=@Last_Modified_Value , Default_Age=@Default_Age , Edit_User_Id=@Edit_User_Id , EditOperationDate=@EditOperationDate
 Where Id=@Id";
 
                 opp.cmd.Parameters.Add(new SqlParameter("@Id", fxd.Id));
@@ -428,6 +428,8 @@ Where Id=@Id";
                 opp.cmd.Parameters.Add(new SqlParameter("@Price_scrap_Value", (object)fxd.Price_scrap_Value ?? DBNull.Value));
                 opp.cmd.Parameters.Add(new SqlParameter("@Last_Modified_Value", (object)fxd.Last_Modified_Value ?? DBNull.Value));
                 opp.cmd.Parameters.Add(new SqlParameter("@Default_Age", (object)fxd.Default_Age ?? DBNull.Value));
+                opp.cmd.Parameters.Add(new SqlParameter("@Edit_User_Id", Common.User_Id));
+                opp.cmd.Parameters.Add(new SqlParameter("@EditOperationDate", DateTime.Now));
 
                 opp.insert_me(mysql);
                 opp.cmd.Parameters.Clear();
@@ -630,7 +632,7 @@ Where Id=@Id";
             string mysql = "";
             if (Common.Update_DeleteSupplier == 0)
             {
-                mysql = "Update FixedAssetData set active=0 Where Id= " + Id;
+                mysql = "Update FixedAssetData set active=0, Edit_User_Id=" + Common.User_Id + ", EditOperationDate='" + operations.dateFormat(DateTime.Now) + "' Where Id= " + Id;
                 opp.insert_me(mysql);
 
             }
@@ -646,8 +648,8 @@ Where Id=@Id";
             string mysql = "";
             if (Common.Update_DeleteSupplier == 0)
             {
-                mysql = "Update FixedAssetData set active=0 Where Id= " + Id;
-                mysql = mysql + "Update FixedAssetData set active=0 Where SubAccount_Id= " + SubAccount_Id;
+                mysql = "Update FixedAssetData set active=0, Edit_User_Id=" + Common.User_Id + ", EditOperationDate='" + operations.dateFormat(DateTime.Now) + "' Where Id= " + Id;
+                mysql = mysql + "Update FixedAssetData set active=0, Edit_User_Id=" + Common.User_Id + ", EditOperationDate='" + operations.dateFormat(DateTime.Now) + "' Where SubAccount_Id= " + SubAccount_Id;
             }
             if (Common.Update_DeleteSupplier == 1)
             {
