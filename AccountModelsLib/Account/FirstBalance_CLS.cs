@@ -89,7 +89,8 @@ WHERE        (Submain_Account_ID = " + Submain_Account_ID + ") AND (Year_Financi
                 // إجمالي المدين أكبر -> الفارق يوضع دائن لتعادلا
                 firstBalanceDa2n = diff;
                 eqFirstBalanceDa2n = eqDiff;
-                
+                finalFirstBalance = diff * -1; // الدائن بإشارة سالبة كبقية الحسابات (كان يبقى صفراً فلا يتزن مجموع First_Balance)
+
                 transformType = 2;
             }
             else if (diff < 0)
