@@ -55,7 +55,7 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
             operations opp = new operations();
             try
             {
-                string mysql = "Update Journal_Codes Set Journal_Name='" + Journal_Name + "' Where Code=" + Code + "";
+                string mysql = "Update Journal_Codes Set Journal_Name='" + Journal_Name + "', Edit_User_Id=" + Common.User_Id + ", EditOperationDate='" + operations.dateFormat(DateTime.Now) + "' Where Code=" + Code + "";
                 opp.insert_me(mysql);
                 Excp = 0;
             }

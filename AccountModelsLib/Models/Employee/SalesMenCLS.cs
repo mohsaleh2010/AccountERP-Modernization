@@ -178,7 +178,7 @@ namespace AccountModelsLib.Models
         {
             try
             {
-                new operations().update_me(" update Customer Set SalesMan_Id=" + salesManId + " where ID=" + customerId);
+                new operations().update_me(" update Customer Set SalesMan_Id=" + salesManId + ", Edit_User_Id=" + Common.User_Id + ", EditOperationDate='" + operations.dateFormat(DateTime.Now) + "' where ID=" + customerId);
                 Excp = 0;
             }
             catch (Exception ee)
@@ -193,7 +193,7 @@ namespace AccountModelsLib.Models
         {
             try
             {
-                new operations().update_me(" update Customer Set SalesMan_Id=-1 where ID=" + customerId);
+                new operations().update_me(" update Customer Set SalesMan_Id=-1" + ", Edit_User_Id=" + Common.User_Id + ", EditOperationDate='" + operations.dateFormat(DateTime.Now) + "' where ID=" + customerId);
                 Excp = 0;
             }
             catch (Exception ee)

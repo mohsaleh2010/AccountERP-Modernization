@@ -109,3 +109,8 @@
 - **➖ لا ينطبق:** `CashPaymentMethodCLS.UpdateDataTable` (`Lookup_CashPaymentMethod` بلا العمودين)، `Add_Account_CodesCLS.EditAccount` (`Submain_Account` بلا العمودين).
 - **لم يُمسّ عمداً:** `FixedAssetCLS.Update_NewFixedAsset` و`UpdateFixedAsset(ref opp)` (يحذفان الصف) — إصلاحهما هو بند 1.2.
 - **المتبقى من الطبقة ب:** `Money_Financial_NoticeCLS`/`_ItemsCLS`، `AccountEntry_CLS`، `TagerKontraCLS`، `Journal_DaysListCLS`، `DailyItemSalesService`، `CountryCLS`، `SalesTotalInvoicesService`، `CustomersAccountCLS`، `SalesMenCLS`، `Money_Transaction_BoxOrderReportCLS`، `InvoicesOperationCLS` (دفعة مستقلة).
+
+### 2026-10-06 — تدقيق أعمدة التعديل، دفعة 3 (بقرارك: الدالتان الآمنتان فقط)
+- **نُفِّذ (بُنى 0 أخطاء؛ لم يُختبر حياً):** `Journal_DaysListCLS.Update_Journal_Name` (`Journal_Codes`)، `SalesMenCLS.SetCustomerSalesMan`/`UnsetCustomerSalesMan` (`Customer`).
+- **➖ لا ينطبق/مستثنى:** `TagerKontraCLS` (الجدول بلا العمودين)، `Money_Financial_Notice(_Items)CLS.Edit_Financial_Notice` (عكس وإعادة إضافة + تحديثات أرصدة تلقائية)، `DailyItemSalesService` (تحديث تلقائى)، `CountryCLS.UpdateDataTable` (DataAdapter عام)، `CustomersAccountCLS` (أرصدة تلقائية).
+- **مؤجَّل:** `AccountEntry_CLS.Make_AccountEntry_Edit` (محرك القيود المركزى؛ يسجّل `User_ID_LoginUpdate` أصلاً والجدول يملك العمودين — قرار مستقل)، `Money_Transaction_BoxOrderReportCLS` (فحص منفصل)، `InvoicesOperationCLS` و`SalesTotalInvoicesService` (الموديل لا يعرف العمودين).
