@@ -387,7 +387,7 @@ WHERE         (Submain_Account.Id =  " + SubAccount_Id + ")  ";
                     //opp.cmd.Parameters.AddWithValue("@Serial", B_Id__);
 
                     SetParameters(ref opp);
-                    _Id = B_Id__;
+                    _Id = Id__;
                     opp.insert_me(mysql);
                 }
                 else
