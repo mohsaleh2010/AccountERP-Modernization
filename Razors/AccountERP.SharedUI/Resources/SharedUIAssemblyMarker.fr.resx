@@ -2411,4 +2411,15 @@
   <data name="BarcodeSlotsWord" xml:space="preserve"><value>barcodes</value></data>
   <data name="BarcodeStickersWord" xml:space="preserve"><value>stickers</value></data>
   <data name="BarcodeCodeRequired" xml:space="preserve"><value>Enter the barcode code first</value></data>
+  <data name="FBChkTitleIn" xml:space="preserve"><value>Chèques entrants du solde d'ouverture</value></data>
+  <data name="FBChkTitleOut" xml:space="preserve"><value>Chèques sortants du solde d'ouverture</value></data>
+  <data name="FBChkColAccount" xml:space="preserve"><value>Compte lié</value></data>
+  <data name="FBChkColStatus" xml:space="preserve"><value>Statut du chèque</value></data>
+  <data name="FBChkColSpent" xml:space="preserve"><value>Date de dépense</value></data>
+  <data name="FBChkColDue" xml:space="preserve"><value>Date d'échéance</value></data>
+  <data name="FBChkColBank" xml:space="preserve"><value>Banque</value></data>
+  <data name="FBChkColValue" xml:space="preserve"><value>Valeur du chèque</value></data>
+  <data name="FBChkColNo" xml:space="preserve"><value>N° de chèque</value></data>
+  <data name="FBChkColOwner" xml:space="preserve"><value>Compte</value></data>
+  <data name="FBChkTotal" xml:space="preserve"><value>Total des chèques</value></data>
 </root>

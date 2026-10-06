@@ -2409,4 +2409,15 @@
   <data name="BarcodeSlotsWord" xml:space="preserve"><value>باركود</value></data>
   <data name="BarcodeStickersWord" xml:space="preserve"><value>استيكر</value></data>
   <data name="BarcodeCodeRequired" xml:space="preserve"><value>أدخل كود الباركود أولاً</value></data>
+  <data name="FBChkTitleIn" xml:space="preserve"><value>شيكات واردة أول المدة</value></data>
+  <data name="FBChkTitleOut" xml:space="preserve"><value>شيكات صادرة أول المدة</value></data>
+  <data name="FBChkColAccount" xml:space="preserve"><value>الحساب المرتبط</value></data>
+  <data name="FBChkColStatus" xml:space="preserve"><value>حالة الشيك</value></data>
+  <data name="FBChkColSpent" xml:space="preserve"><value>تاريخ الصرف</value></data>
+  <data name="FBChkColDue" xml:space="preserve"><value>تاريخ الاستحقاق</value></data>
+  <data name="FBChkColBank" xml:space="preserve"><value>البنك</value></data>
+  <data name="FBChkColValue" xml:space="preserve"><value>قيمة الشيك</value></data>
+  <data name="FBChkColNo" xml:space="preserve"><value>رقم الشيك</value></data>
+  <data name="FBChkColOwner" xml:space="preserve"><value>الحساب</value></data>
+  <data name="FBChkTotal" xml:space="preserve"><value>إجمالى الشيكات</value></data>
 </root>

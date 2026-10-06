@@ -2409,4 +2409,15 @@
   <data name="BarcodeSlotsWord" xml:space="preserve"><value>barcodes</value></data>
   <data name="BarcodeStickersWord" xml:space="preserve"><value>stickers</value></data>
   <data name="BarcodeCodeRequired" xml:space="preserve"><value>Enter the barcode code first</value></data>
+  <data name="FBChkTitleIn" xml:space="preserve"><value>Opening balance checks (incoming)</value></data>
+  <data name="FBChkTitleOut" xml:space="preserve"><value>Opening balance checks (outgoing)</value></data>
+  <data name="FBChkColAccount" xml:space="preserve"><value>Related account</value></data>
+  <data name="FBChkColStatus" xml:space="preserve"><value>Check status</value></data>
+  <data name="FBChkColSpent" xml:space="preserve"><value>Spent date</value></data>
+  <data name="FBChkColDue" xml:space="preserve"><value>Due date</value></data>
+  <data name="FBChkColBank" xml:space="preserve"><value>Bank</value></data>
+  <data name="FBChkColValue" xml:space="preserve"><value>Check value</value></data>
+  <data name="FBChkColNo" xml:space="preserve"><value>Check no.</value></data>
+  <data name="FBChkColOwner" xml:space="preserve"><value>Account</value></data>
+  <data name="FBChkTotal" xml:space="preserve"><value>Total checks</value></data>
 </root>

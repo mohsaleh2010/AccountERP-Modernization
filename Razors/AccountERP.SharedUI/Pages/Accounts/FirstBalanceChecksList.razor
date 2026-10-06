@@ -1,0 +1,125 @@
+@* 🟢 يقابل FirstBalance_Checks_List (menuItemCheck_BeginBalance / menuItemCheck_BeginBalanceImport): قائمة شيكات أول المدة. الاستعلام حرفياً
+   Order_Receipt_ChecksNewNew.Get_Check_1(Transaction_Type, Balance_BeginingPeriod=1). type=1 واردة (menuItemCheck_BeginBalanceImport)،
+   type=2 صادرة (menuItemCheck_BeginBalance). عرض فقط فى هذه الدفعة؛ إضافة/تعديل/حذف الشيك لدفعة لاحقة. *@
+@page "/accounts/first-balance-checks"
+
+@using System.Data
+@using System.Globalization
+@using AccountCheckMoney
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Title</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Title</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync" Disabled="_isLoading">@Tr("SearchButton")</MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_message))
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">@_message</MudAlert>
+    }
+
+    <MudTable Items="@_rows" T="Row" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" Loading="@_isLoading">
+        <HeaderContent>
+            <MudTh>#</MudTh>
+            <MudTh>@Tr("FBChkColAccount")</MudTh>
+            <MudTh>@Tr("FBChkColStatus")</MudTh>
+            <MudTh>@Tr("FBChkColSpent")</MudTh>
+            <MudTh>@Tr("FBChkColDue")</MudTh>
+            <MudTh>@Tr("FBChkColBank")</MudTh>
+            <MudTh Style="text-align:end">@Tr("FBChkColValue")</MudTh>
+            <MudTh>@Tr("FBChkColNo")</MudTh>
+            <MudTh>@Tr("FBChkColOwner")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Serial</MudTd>
+            <MudTd DataLabel="@Tr("FBChkColAccount")">@context.RelatedAccount</MudTd>
+            <MudTd DataLabel="@Tr("FBChkColStatus")">@context.Status</MudTd>
+            <MudTd DataLabel="@Tr("FBChkColSpent")">@context.Spent</MudTd>
+            <MudTd DataLabel="@Tr("FBChkColDue")">@context.Due</MudTd>
+            <MudTd DataLabel="@Tr("FBChkColBank")">@context.Bank</MudTd>
+            <MudTd Style="text-align:end"><b>@context.Value.ToString("N2")</b></MudTd>
+            <MudTd DataLabel="@Tr("FBChkColNo")">@context.CheckNo</MudTd>
+            <MudTd DataLabel="@Tr("FBChkColOwner")">@context.Account</MudTd>
+        </RowTemplate>
+        <NoRecordsContent><MudText Align="Align.Center" Class="py-4 mud-text-secondary">@Tr("NoRecordsFound")</MudText></NoRecordsContent>
+    </MudTable>
+
+    @if (_rows.Count > 0)
+    {
+        <MudPaper Class="pa-3 mt-3" Elevation="0" Outlined="true">
+            <span>@Tr("FBChkTotal"): <b>@_rows.Sum(r => r.Value).ToString("N2")</b> (@_rows.Count)</span>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    private record Row(int Serial, string RelatedAccount, string Status, string Spent, string Due, string Bank, decimal Value, string CheckNo, string Account);
+
+    /// <summary>1 = واردة، 2 = صادرة (نفس معامل FirstBalance_Checks_List).</summary>
+    [SupplyParameterFromQuery(Name = "type")] public int? TypeQuery { get; set; }
+
+    private int TransactionType => TypeQuery == 2 ? 2 : 1;
+    private string Title => Tr(TransactionType == 2 ? "FBChkTitleOut" : "FBChkTitleIn");
+
+    private List<Row> _rows = new();
+    private bool _isLoading;
+    private string? _message;
+    private int _loadedType = -1;
+
+    protected override void OnInitialized() => LangService.OnLanguageChanged += OnLanguageChangedHandler;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loadedType != TransactionType) await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private static string Date(object? v) => DateTime.TryParse(v?.ToString(), CultureInfo.InvariantCulture, DateTimeStyles.None, out var d) ? d.ToString("yyyy/MM/dd") : "";
+    private static decimal D(object? v) => decimal.TryParse(v?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var d) ? d : 0;
+
+    private async Task LoadAsync()
+    {
+        _message = null; _rows = new();
+        _isLoading = true;
+        var type = TransactionType;
+        _loadedType = type;
+        StateHasChanged();
+        try
+        {
+            var dt = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                int excp = 0;
+                return new Order_Receipt_ChecksNewNew().Get_Check_1(ref excp, type, 1);
+            });
+            int serial = 0;
+            _rows = dt.Rows.Cast<DataRow>().Select(r => new Row(++serial, r["SubAccount_Name_RelatedTo"]?.ToString() ?? "", r["StatusName"]?.ToString() ?? "",
+                Date(r["Spent_Date"]), Date(r["Due_Date"]), r["Bank_Name"]?.ToString() ?? "", D(r["Check_Value"]), r["Check_No"]?.ToString() ?? "", r["SubAccount_Name"]?.ToString() ?? "")).ToList();
+        }
+        catch (Exception ex) { _message = Tr("SystemError", ex.Message); }
+        finally { _isLoading = false; }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}
