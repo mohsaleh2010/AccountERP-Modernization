@@ -199,6 +199,14 @@ namespace AccountCheckMoney
             operations opp = new operations(1);
             try
             {
+                string lockReason = OpeningCheckLockReason(ref opp, chm.Id);
+                if (lockReason != "")
+                {
+                    Msg = lockReason;
+                    Excp = 1;
+                    opp.Rollback();
+                    return;
+                }
                 // شيك أول المدة: اعكس أثره القديم على الرصيد قبل أى تعديل (القيم القديمة تُقرأ من القاعدة)
                 bool isOpening = ReverseFirstBalanceFromDb(ref Excp, ref Msg, ref opp, chm.Id);
                 DateTime ProcessDate = (DateTime)chm.Day_Date;
@@ -215,6 +223,13 @@ namespace AccountCheckMoney
                 {
                     chm.Edit_User_Id = Common.User_Id;
                     chm.EditOperationDate = DateTime.Now.Date;
+
+                    // شيك أول المدة: اتجاه القيمة (وارد/صادر) يتبع القيمة الجديدة كما فى الإضافة، وإلا بقى Import/Export بالقيمة القديمة
+                    if (isOpening)
+                    {
+                        if (chm.Transaction_Type == 1) { chm.Import_Value = chm.Check_Value; chm.Export_Value = 0; }
+                        else { chm.Export_Value = chm.Check_Value; chm.Import_Value = 0; }
+                    }
 
                     // فورم التعديل لا يملأ chmlist (Checks_MemoryMainDataList) وUpdateChecks_MemoryMainDataList يدمج قيمه نصياً فى SQL،
                     // فتفشل الجملة (Incorrect syntax) عند القيم الفارغة؛ نملؤه هنا من بيانات الشيك نفسه ومعرّف قائمته من القاعدة.
@@ -307,9 +322,30 @@ namespace AccountCheckMoney
             try
             {
 
+                string lockReason = OpeningCheckLockReason(ref opp, Checks_MemoryId);
+                if (lockReason != "")
+                {
+                    Msg = lockReason;
+                    Excp = 1;
+                    opp.Rollback();
+                    return;
+                }
                 // شيك أول المدة: اعكس أثره على الرصيد قبل حذفه
                 ReverseFirstBalanceFromDb(ref Excp, ref Msg, ref opp, Checks_MemoryId);
+                if (Excp != 0)
+                {
+                    opp.Rollback();
+                    return;
+                }
+                // معرّف قائمة بيانات الشيك الرئيسية: تُحذف مع الشيك إن لم يشاركه فيها شيك آخر (كانت تبقى يتيمة)
+                long mainListId = 0;
+                DataTable dtMain = opp.return_DataTable(" SELECT Checks_MemoryMainDataListId FROM Checks_Memory WHERE Id=" + Checks_MemoryId);
+                if (dtMain.Rows.Count > 0 && dtMain.Rows[0][0] != DBNull.Value) mainListId = Convert.ToInt64(dtMain.Rows[0][0]);
                 cc.DeleteChecks_Memory(ref Excp, ref Msg, ref opp, Checks_MemoryId);
+                if (mainListId > 0)
+                {
+                    opp.insert_me(" DELETE FROM Checks_MemoryMainDataList WHERE Id=" + mainListId + " AND NOT EXISTS (SELECT 1 FROM Checks_Memory WHERE Checks_MemoryMainDataListId=" + mainListId + ")");
+                }
 
                 or.DeleteOrder_Money_Check(ref Excp, ref Msg, ref opp, (long)chm.Order_Mony_Id);
 
@@ -346,6 +382,23 @@ namespace AccountCheckMoney
                 opp.Rollback();
 
             }
+        }
+        /// <summary>
+        /// شيك أول المدة لا يُعدَّل ولا يُحذف إن تغيّرت حالته بعد إضافته (تحصيل/تظهير/ارتجاع...) لأن رصيده الافتتاحى لم يعد وحده؛
+        /// يرجع نص السبب أو "" إن كان مسموحاً (أو لم يكن شيك أول مدة).
+        /// </summary>
+        string OpeningCheckLockReason(ref operations opp, long Checks_MemoryId)
+        {
+            DataTable dt = opp.return_DataTable(" SELECT Balance_BeginingPeriod, Receipt, IsAllowEdit, IsAllowDelete FROM Checks_Memory WHERE Id=" + Checks_MemoryId);
+            if (dt.Rows.Count == 0) return "";
+            DataRow r = dt.Rows[0];
+            if (r["Balance_BeginingPeriod"] == DBNull.Value || Convert.ToDecimal(r["Balance_BeginingPeriod"], System.Globalization.CultureInfo.InvariantCulture) != 1) return "";
+            int receipt = r["Receipt"] == DBNull.Value ? 0 : Convert.ToInt32(Convert.ToDecimal(r["Receipt"], System.Globalization.CultureInfo.InvariantCulture));
+            bool allowEdit = r["IsAllowEdit"] == DBNull.Value || Convert.ToInt32(Convert.ToDecimal(r["IsAllowEdit"], System.Globalization.CultureInfo.InvariantCulture)) != 0;
+            bool allowDelete = r["IsAllowDelete"] == DBNull.Value || Convert.ToInt32(Convert.ToDecimal(r["IsAllowDelete"], System.Globalization.CultureInfo.InvariantCulture)) != 0;
+            if (!allowEdit || !allowDelete || (receipt != 1 && receipt != 32))
+                return "لا يمكن تعديل أو حذف شيك أول المدة بعد تغيّر حالته (تحصيل أو تظهير أو ارتجاع)";
+            return "";
         }
         /// <summary>
         /// شيك أول المدة (Balance_BeginingPeriod=1) يترك أثره فى Account_Entry_Master_Balance عند إضافته؛ هذه الدالة تعكس هذا الأثر

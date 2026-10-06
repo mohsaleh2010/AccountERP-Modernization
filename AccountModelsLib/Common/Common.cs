@@ -4480,7 +4480,7 @@ namespace AccountModelsLib
             try
             {
                 string V = dt.Rows[index]["" + Column.ToString() + ""].ToString();
-                decimal.TryParse(V, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal result);
+                decimal.TryParse(V, NumberStyles.Any, CultureInfo.InvariantCulture, out Value);
                // Value = decimal.Parse(dt.Rows[index]["" + Column.ToString() + ""].ToString());
             }
             catch (Exception ee)
