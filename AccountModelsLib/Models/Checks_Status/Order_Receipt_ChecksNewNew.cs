@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Connection4It;
 using AccountModelsLib; using AccountModelsLib.Models;
 using AccountModelsLib;
 namespace AccountCheckMoney
@@ -15,6 +14,9 @@ namespace AccountCheckMoney
         {
 
         }
+        // نوع حساب شجرة الحسابات المختار (كان يُقرأ من AccountTreeViewUSCTRL الثابتة؛ صار يُمرَّر من المستدعى لأن الكلاس انتقل لمكتبة بلا واجهات).
+        public long Tree_Account_Customer_Type_ID = 0;
+        public int Tree_Account_Customer_Type_Value = 0;
         public long Account_Customer_Type_ID_From = 0;
         public int Account_Customer_Type_Value_From = 0;
 
@@ -403,8 +405,8 @@ namespace AccountCheckMoney
             decimal First_Balance_Equivalent = (decimal)chm.Check_Value * Factor;
 
             FirstBalance_CLS ff = new FirstBalance_CLS();
-            ff.Account_Customer_Type_ID = AccountTreeViewUSCTRL.Account_Customer_Type_ID;
-            ff.Account_Customer_Type_Value = AccountTreeViewUSCTRL.Account_Customer_Type_Value;
+            ff.Account_Customer_Type_ID = Tree_Account_Customer_Type_ID;
+            ff.Account_Customer_Type_Value = Tree_Account_Customer_Type_Value;
 
 
             ff.Save_FirstBalanceForCheck(ref Excp, ref Msg, ref opp, Submain_Account_ID, SubAccount_Name, Year_Financial_Period_Id, Branch_Id, Currency_Id, First_Balance, (int)chm.Transaction_Type, First_Balance_Equivalent);
