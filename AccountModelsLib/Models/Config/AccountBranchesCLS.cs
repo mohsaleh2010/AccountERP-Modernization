@@ -87,6 +87,7 @@ namespace AccountModelsLib.Models
                 int excpCost = 0;
                 string msgCost = "";
                 new CostCenterCLS().Add_NewCostCenter(ref excpCost, ref msgCost, ref opp, 0, Branch_Name, 0, Code.ToString(), 0, "", Currency_Id, "", 0, 0, 1, "1");
+                if (excpCost != 0) throw new Exception(msgCost);
 
                 opp.Commit();
                 Excp = 0;
