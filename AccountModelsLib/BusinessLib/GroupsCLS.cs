@@ -74,6 +74,7 @@ namespace AccountModelsLib
             catch (Exception exceptionObj)
             {
                 Msg = exceptionObj.Message.ToString();
+                Excp = 1;
             }
 
         }
