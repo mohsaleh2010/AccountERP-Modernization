@@ -120,3 +120,17 @@
 - **1.3 نُفِّذ:** `Account_Common_LIB/Fixed_Assets/New folder/Assets_EhlakFrm_.cs` ~133: `Get_AssetsEhlakForPeriod` ← `Get_AssetsEhlakForPeriod_Full` (يُضيف `JOIN FixedAssetData` الناقص). الشاشة حيّة (تُفتح من `MainFrm_AccountUpdate` سطر ~5531، والمجلد `New folder` غير مستبعد من `.csproj`).
 - بُنى `Account_Common_LIB` (net10.0-windows) 0 أخطاء. **لم يُختبر حياً** (يحتاج تشغيل الديسكتوب: تعديل أصل ثابت ثم التحقق أن صف `FixedAssetData` باقٍ بالقيم الجديدة؛ وفتح حساب الإهلاك بفرع محدَّد).
 - **نسخ مكررة لم تُمَس (خارج `AccountsNew`/`Accounts.sln`):** `AccountsNew/AccountMainFrm/MainFrm_AccountUpdate.cs` و`Advanced_Account/MainFrm_AccountUpdate.cs` تستخدمان `Assets_EhlakFrm_` نفسها من `Account_Common_LIB`، فيستفيدان من الإصلاح تلقائياً.
+
+### 2026-10-06 — بند 1.6: تتبع مسار رصيد البنك والصندوق (قراءة فقط، لا تعديل كود)
+**الصندوق (`Is_Bank=0`) — `Money_Transaction_BoxOrderReportCLS.Compute_Box_BalanceBeforDataDay`:**
+- الرصيد = `Banks.Primary_balance` + مجموع `Import_Value` − مجموع `Export_Value` من `Money_Transaction_Box` (كل التواريخ عند `ISAllDates=true`).
+- **يُقيَّد عند الصفر:** `if (First_BalanceAfterDay < 0) → 0` — أى رصيد سالب (سحب زائد) يظهر صفراً ولا يُرى العجز.
+- **لا يقرأ `Financial_Period_Begining_Balance` إطلاقاً:** رصيد أول المدة المخزَّن لفترة تالية لا يدخل هذا الحساب، فالرصيد يعتمد فقط على `Primary_balance` (أول تعامل) — مسارا أول المدة (أ) و(ب) غير موحَّدين فعلاً.
+**البنك (`Is_Bank=1`) — `BanksGridCLS.ApplyBankComputedBalance` (Razor):**
+- يُحسب من ميزان المراجعة بالفترة (`Mezan_MorgaaCLS.Get_Mezan_Morgaa_ByPeiodNew`): `Final_Last_Balance_Madin − Final_Last_Balance_Da2n` للحساب `SubAccount_Id` (أول المدة + الحركات من القيود). **أى أن للبنك حساباً فعلياً وقيوداً** — وهذا يخالف وصف الخطة القديم أن البنوك منقطعة عن الشجرة (يصح على الصناديق وحدها).
+- تحذير موثَّق بالكود: استدعاؤه يعيد بناء جداول مؤقتة مشتركة (`Account_Entry_Master_Balance_MezanTemp`/`TransactionTemp`) غير معزولة بالجلسة → خطر تضارب مستخدمَين متزامنين (موجود فى شاشة الميزان الأصلية أيضاً).
+**بقايا `Banks.Last_Balance` (ما زالت تُكتب):** `Edit_Banks_Balance` (سطر 366)، `Edit_BanksFirst_Balance` (أسطر ~569 و~606: `Last_Balance = Last_Balance + diff`)، و`Money_Transaction_Box.Bank_Balance` يُخزَّن من `Last_Balance` (backlog #34). الشاشات الحية لا تقرأه للعرض، لكنه يلوّث عمود الحركة.
+**ما يتبقى لقرارك قبل تنفيذ المرحلة 1:**
+1. هل يبقى الصندوق على `Primary_balance + حركات` (مع إزالة قصّ الصفر)، أم ينتقل لنفس محرك الميزان كالبنك (توحيد حقيقى مع `Account_Entry_Master_Balance`)؟
+2. هل يُزال القصّ عند الصفر (يُظهر العجز) أم هو سلوك مقصود؟
+3. إزالة كتابات `Last_Balance` الثلاث بعد التأكد أن لا شاشة حية تقرأه.
