@@ -67,7 +67,7 @@ namespace AccountModelsLib.Models
                 if (Common.Use_Auto_Identity_Column == 0)
                 {
 
-                    Id_ = Common.GetTable_Id(ref opp, "Checks_MemoryMainDataList", "Id");
+                    Id_ = CallSnowflakeIdGenerate.GenerateNewId();
                     mysql = @" INSERT INTO[dbo].[Checks_MemoryMainDataList](Id ,[Check_No],[Day_Date],[Due_Date],[Bank_id],[Check_Value],[Check_Value_],[Due_Check],[Exchanger_Name],[First_Drawer_Name],[Last_Drawer_Name],[Bank_Name],[Check_Notes])";
                     mysql = mysql + @" VALUES (" + Id_ + ", '" + chm.Check_No + "','" + AccountModelsLib.operations.dateFormat(chm.Day_Date) + "','" + AccountModelsLib.operations.dateFormat(chm.Due_Date) + "' ," + chm.Bank_id + ", " + chm.Check_Value + ",'" + chm.Check_Value_ + "'    , '" + chm.Due_Check + "', '" + chm.Exchanger_Name + "','" + chm.First_Drawer_Name + "' ,'" + chm.Last_Drawer_Name + "'   ,'" + chm.Bank_Name + "'  ,'" + chm.Check_Notes + "' ) ";
 
