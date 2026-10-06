@@ -29,7 +29,29 @@ namespace AccountModelsLib
                 sql += "AND SysConfigBanksPERMATIONS.USER_DETAILES_Id = " + userId + " ";
             if (branchId > 0)
                 sql += "AND (Banks.Branch_Id = " + branchId + " OR Banks.Branch_Id = -1) ";
-            return new operations().return_DataTable(sql);
+            return AddBranchLabel(new operations().return_DataTable(sql));
+        }
+
+        /// <summary>
+        /// يضيف عمود Bank_Display: اسم الصندوق، ومعه « — اسم الفرع» فقط حين تضم القائمة صناديق من أكثر من فرع (يمنع التباس تكرار الاسم بين الفروع).
+        /// للعرض فقط؛ الحفظ يستمر باسم الصندوق الأصلى Bank_Name (branch-cash-boxes-plan.md بند 4).
+        /// </summary>
+        private static DataTable AddBranchLabel(DataTable dt)
+        {
+            if (!dt.Columns.Contains("Bank_Display")) dt.Columns.Add("Bank_Display", typeof(string));
+            var branchIds = dt.Rows.Cast<DataRow>().Where(r => r["Branch_Id"] != DBNull.Value).Select(r => Convert.ToInt64(r["Branch_Id"])).Where(id => id > 0).Distinct().ToList();
+            var names = new System.Collections.Generic.Dictionary<long, string>();
+            if (branchIds.Count > 1)
+                foreach (DataRow b in new operations().return_DataTable("SELECT Id, Branch_Name FROM Account_Branches").Rows)
+                    names[Convert.ToInt64(b["Id"])] = b["Branch_Name"]?.ToString() ?? "";
+            foreach (DataRow r in dt.Rows)
+            {
+                string name = r["Bank_Name"]?.ToString() ?? "";
+                if (branchIds.Count > 1 && r["Branch_Id"] != DBNull.Value && names.TryGetValue(Convert.ToInt64(r["Branch_Id"]), out var bn) && bn.Length > 0)
+                    name += " — " + bn;
+                r["Bank_Display"] = name;
+            }
+            return dt;
         }
 
         /// <summary>رقم الإذن التالى (لكل نوع وفترة مالية) — Make_New_Order_No الأصلية.</summary>
@@ -330,7 +352,7 @@ namespace AccountModelsLib
         /// <summary>كل الصناديق بلا فلترة صلاحيات (وجهة التحويل) — Get_Sandouk_TOTransfeer الأصلية.</summary>
         public DataTable GetAllBoxes()
         {
-            return new operations().return_DataTable("SELECT Currency.Currency_Name, Currency.Currency_Name_EN, Banks.* FROM Banks INNER JOIN Currency ON Banks.currency_Id = Currency.Value WHERE Is_Bank = 0");
+            return AddBranchLabel(new operations().return_DataTable("SELECT Currency.Currency_Name, Currency.Currency_Name_EN, Banks.* FROM Banks INNER JOIN Currency ON Banks.currency_Id = Currency.Value WHERE Is_Bank = 0"));
         }
 
         /// <summary>

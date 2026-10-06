@@ -91,7 +91,7 @@
         try
         {
             var dt = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetBoxes(AccountModelsLib.Common.User_Id); });
-            _boxes = dt.Rows.Cast<DataRow>().Select(r => new BoxOption(Convert.ToInt64(r["Id"]), r["Bank_Name"]?.ToString() ?? "")).ToList();
+            _boxes = dt.Rows.Cast<DataRow>().Select(r => new BoxOption(Convert.ToInt64(r["Id"]), r["Bank_Display"]?.ToString() ?? r["Bank_Name"]?.ToString() ?? "")).ToList();
         }
         catch (Exception ex) { _message = Tr("SystemError", ex.Message); }
     }

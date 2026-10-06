@@ -122,7 +122,7 @@
         try
         {
             var dt = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetAllBoxes(); });
-            _boxes = dt.Rows.Cast<DataRow>().Select(r => new BoxOption(Convert.ToInt64(r["Id"]), r["Bank_Name"]?.ToString() ?? "")).ToList();
+            _boxes = dt.Rows.Cast<DataRow>().Select(r => new BoxOption(Convert.ToInt64(r["Id"]), r["Bank_Display"]?.ToString() ?? r["Bank_Name"]?.ToString() ?? "")).ToList();
         }
         catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
         await LoadAsync();

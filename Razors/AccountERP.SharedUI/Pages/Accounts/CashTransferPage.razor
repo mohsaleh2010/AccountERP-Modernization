@@ -32,7 +32,7 @@
         <MudGrid Spacing="3">
             <MudItem xs="12" md="5">
                 <MudSelect T="long" Value="_fromId" ValueChanged="@(v => OnFromChangedAsync(v))" Label="@Tr("CTFromBox")" Variant="Variant.Outlined" Disabled="_saved">
-                    @foreach (var b in _fromBoxes) { <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem> }
+                    @foreach (var b in _fromBoxes) { <MudSelectItem T="long" Value="@b.Id">@b.Label</MudSelectItem> }
                 </MudSelect>
             </MudItem>
             <MudItem xs="6" md="2"><MudTextField T="string" Value="@_fromBalance.ToString("N2")" Label="@Tr("CVBoxBalanceLabel")" Variant="Variant.Outlined" ReadOnly="true" /></MudItem>
@@ -41,7 +41,7 @@
 
             <MudItem xs="12" md="5">
                 <MudSelect T="long" Value="_toId" ValueChanged="@(v => OnToChangedAsync(v))" Label="@Tr("CTToBox")" Variant="Variant.Outlined" Disabled="_saved">
-                    @foreach (var b in _toBoxes.Where(x => x.Id != _fromId)) { <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem> }
+                    @foreach (var b in _toBoxes.Where(x => x.Id != _fromId)) { <MudSelectItem T="long" Value="@b.Id">@b.Label</MudSelectItem> }
                 </MudSelect>
             </MudItem>
             <MudItem xs="6" md="2"><MudTextField T="string" Value="@_toBalance.ToString("N2")" Label="@Tr("CVBoxBalanceLabel")" Variant="Variant.Outlined" ReadOnly="true" /></MudItem>
@@ -81,7 +81,7 @@
 </MudContainer>
 
 @code {
-    private record BoxOption(long Id, string Name, long CurrencyId, string CurrencyName);
+    private record BoxOption(long Id, string Name, long CurrencyId, string CurrencyName, string Label);
 
     private readonly CashVouchersService _svc = new();
     private List<BoxOption> _fromBoxes = new(), _toBoxes = new();
@@ -107,7 +107,7 @@
                 AccountCultureGuard.EnsureInvariant();
                 return (_svc.GetBoxes(AccountModelsLib.Common.User_Id, AccountModelsLib.Common.Branch_Id), _svc.GetAllBoxes());
             });
-            BoxOption Map(DataRow r) => new(Convert.ToInt64(r["Id"]), r["Bank_Name"]?.ToString() ?? "", r["Currency_Id"] == DBNull.Value ? 1 : Convert.ToInt64(r["Currency_Id"]), r["Currency_Name"]?.ToString() ?? "");
+            BoxOption Map(DataRow r) => new(Convert.ToInt64(r["Id"]), r["Bank_Name"]?.ToString() ?? "", r["Currency_Id"] == DBNull.Value ? 1 : Convert.ToInt64(r["Currency_Id"]), r["Currency_Name"]?.ToString() ?? "", r["Bank_Display"]?.ToString() ?? r["Bank_Name"]?.ToString() ?? "");
             _fromBoxes = from.Rows.Cast<DataRow>().Select(Map).ToList();
             _toBoxes = all.Rows.Cast<DataRow>().Select(Map).ToList();
             if (_fromBoxes.Count > 0) await OnFromChangedAsync(_fromBoxes[0].Id);
