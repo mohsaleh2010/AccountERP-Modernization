@@ -199,6 +199,8 @@ namespace AccountCheckMoney
             operations opp = new operations(1);
             try
             {
+                // شيك أول المدة: اعكس أثره القديم على الرصيد قبل أى تعديل (القيم القديمة تُقرأ من القاعدة)
+                bool isOpening = ReverseFirstBalanceFromDb(ref Excp, ref Msg, ref opp, chm.Id);
                 DateTime ProcessDate = (DateTime)chm.Day_Date;
                 or.Bank_Type = 1;
                 or.Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id((DateTime)or.Order_Date);
@@ -217,7 +219,13 @@ namespace AccountCheckMoney
                     cc.UpdateChecks_Memory(ref Excp, ref Msg, ref opp, chm, chmlist);
                 }
 
-                if (IsAllowEdit == 1)
+                // ثم طبّق القيمة الجديدة بنفس مسار الإضافة (شيك أول المدة بلا حركات أطراف ولا قيد)
+                if (isOpening && Excp == 0)
+                {
+                    BtnSaveFirstBalance_Click(ref Excp, ref Msg, ref opp);
+                }
+
+                if (IsAllowEdit == 1 && !isOpening)
                 {
                     if (Excp == 0)
                     {
@@ -279,6 +287,8 @@ namespace AccountCheckMoney
             try
             {
 
+                // شيك أول المدة: اعكس أثره على الرصيد قبل حذفه
+                ReverseFirstBalanceFromDb(ref Excp, ref Msg, ref opp, Checks_MemoryId);
                 cc.DeleteChecks_Memory(ref Excp, ref Msg, ref opp, Checks_MemoryId);
 
                 or.DeleteOrder_Money_Check(ref Excp, ref Msg, ref opp, (long)chm.Order_Mony_Id);
@@ -316,6 +326,35 @@ namespace AccountCheckMoney
                 opp.Rollback();
 
             }
+        }
+        /// <summary>
+        /// شيك أول المدة (Balance_BeginingPeriod=1) يترك أثره فى Account_Entry_Master_Balance عند إضافته؛ هذه الدالة تعكس هذا الأثر
+        /// (تضيف القيمة القديمة سالبة بنفس نوع الحركة والمعامل والفترة والفرع) قبل تعديل الشيك أو حذفه، فلا يبقى الرصيد على قيمة قديمة.
+        /// تقرأ القيم القديمة من القاعدة (لأن كائن الشيك فى الذاكرة يحمل القيم الجديدة وقت التعديل). لا تفعل شيئاً لغير شيك أول المدة.
+        /// ترجع true إن كان الشيك شيك أول مدة.
+        /// </summary>
+        bool ReverseFirstBalanceFromDb(ref int Excp, ref string Msg, ref operations opp, long Checks_MemoryId)
+        {
+            DataTable dt = opp.return_DataTable(" SELECT c.Check_Value, c.SubAccount_Id_RelatedTo, c.SubAccount_Name_RelatedTo, c.Currency_Id, c.Transaction_Type, c.Factor, c.Balance_BeginingPeriod, c.Day_Date, c.Branch_Id AS Check_Branch_Id, o.Order_Date, o.Branch_Id AS Order_Branch_Id " +
+                " FROM Checks_Memory c LEFT OUTER JOIN Order_Money_Check o ON c.Order_Mony_Id = o.Id WHERE c.Id=" + Checks_MemoryId);
+            if (dt.Rows.Count == 0) return false;
+            DataRow r = dt.Rows[0];
+            if (r["Balance_BeginingPeriod"] == DBNull.Value || Convert.ToDecimal(r["Balance_BeginingPeriod"], System.Globalization.CultureInfo.InvariantCulture) != 1) return false;
+
+            long relatedId = r["SubAccount_Id_RelatedTo"] == DBNull.Value ? 0 : Convert.ToInt64(r["SubAccount_Id_RelatedTo"]);
+            decimal value = r["Check_Value"] == DBNull.Value ? 0 : Convert.ToDecimal(r["Check_Value"], System.Globalization.CultureInfo.InvariantCulture);
+            if (relatedId == 0 || value == 0) return true;
+
+            long currencyId = r["Currency_Id"] == DBNull.Value ? Common.Entry_Currency_Id : Convert.ToInt64(r["Currency_Id"]);
+            int transType = r["Transaction_Type"] == DBNull.Value ? 1 : Convert.ToInt32(Convert.ToDecimal(r["Transaction_Type"], System.Globalization.CultureInfo.InvariantCulture));
+            decimal factor = r["Factor"] == DBNull.Value ? 0 : Convert.ToDecimal(r["Factor"], System.Globalization.CultureInfo.InvariantCulture);
+            if (factor <= 0) factor = currencyId == Common.Entry_Currency_Id ? 1 : Common.RoundMe(new CurrencyFactorsCLS().GetFactors(Common.Entry_Currency_Id, currencyId));
+            DateTime periodDate = r["Order_Date"] != DBNull.Value ? Convert.ToDateTime(r["Order_Date"]) : (r["Day_Date"] != DBNull.Value ? Convert.ToDateTime(r["Day_Date"]) : DateTime.Now.Date);
+            long branchId = r["Order_Branch_Id"] != DBNull.Value ? Convert.ToInt64(r["Order_Branch_Id"]) : (r["Check_Branch_Id"] != DBNull.Value ? Convert.ToInt64(r["Check_Branch_Id"]) : Common.Branch_Id);
+            long yearPeriodId = Financial_PeriodCLS.Get_Year_Financial_Period_Id(periodDate);
+
+            new FirstBalance_CLS().Save_FirstBalanceForCheck(ref Excp, ref Msg, ref opp, relatedId, r["SubAccount_Name_RelatedTo"]?.ToString() ?? "", yearPeriodId, branchId, currencyId, -value, transType, factor);
+            return true;
         }
         public void Add_New_CheckFirstBalance(ref int Excp, ref string Msg)
         {
@@ -397,19 +436,18 @@ namespace AccountCheckMoney
             long Branch_Id = or.Branch_Id;
 
             CurrencyFactorsCLS cf = new CurrencyFactorsCLS();
-            decimal Factor = cf.GetFactors(Common.Entry_Currency_Id, Currency_Id);
-            Factor = Common.RoundMe(Factor);
+            // المعامل المخزَّن على الشيك (يطابق ما يُعكَس عند التعديل/الحذف)، وإلا معامل العملة الحالى.
+            decimal Factor = (chm.Factor ?? 0) > 0 ? (decimal)chm.Factor : (Currency_Id == Common.Entry_Currency_Id ? 1 : Common.RoundMe(cf.GetFactors(Common.Entry_Currency_Id, Currency_Id)));
 
 
             decimal First_Balance = (decimal)chm.Check_Value;
-            decimal First_Balance_Equivalent = (decimal)chm.Check_Value * Factor;
 
             FirstBalance_CLS ff = new FirstBalance_CLS();
             ff.Account_Customer_Type_ID = Tree_Account_Customer_Type_ID;
             ff.Account_Customer_Type_Value = Tree_Account_Customer_Type_Value;
 
 
-            ff.Save_FirstBalanceForCheck(ref Excp, ref Msg, ref opp, Submain_Account_ID, SubAccount_Name, Year_Financial_Period_Id, Branch_Id, Currency_Id, First_Balance, (int)chm.Transaction_Type, First_Balance_Equivalent);
+            ff.Save_FirstBalanceForCheck(ref Excp, ref Msg, ref opp, Submain_Account_ID, SubAccount_Name, Year_Financial_Period_Id, Branch_Id, Currency_Id, First_Balance, (int)chm.Transaction_Type, Factor);
 
 
         }

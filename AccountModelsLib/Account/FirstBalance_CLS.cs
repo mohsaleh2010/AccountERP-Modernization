@@ -248,7 +248,13 @@ WHERE        (Submain_Account_ID = " + Submain_Account_ID + ") AND (Year_Financi
                 Make_Update_FirstBalance_NewForCheck(ref opp, dt_Master_Balance, Submain_Account_ID, Year_Financial_Period_Id, Branch_Id, Account_Currency_Id, Transform_Type, New_First_Balance, EquivalentValue);
                 //Make_Update_EquivalentValueFirstBalance(ref   opp, Submain_Account_ID, Year_Financial_Period_Id, Branch_Id, Currency_Id, Transform_Type, New_First_Balance, EquivalentValue);
             }
-            // UpdateEquivalentFirstValue(ref opp, Submain_Account_ID, Year_Financial_Period_Id, Branch_Id);
+            // شيك أول المدة: حدِّث صف التجميع (عملة=0) ووازن حساب الرصيد الافتتاحى (64) كما فى Save_FirstBalance، وإلا يختل اتزان الفترة
+            UpdateEquivalentFirstValue(ref opp, Submain_Account_ID, Year_Financial_Period_Id, Branch_Id);
+            BalanceOpeningBalanceEquity(ref opp, Year_Financial_Period_Id, Branch_Id, Account_Currency_Id);
+            if (Account_Currency_Id != 0)
+            {
+                BalanceOpeningBalanceEquity(ref opp, Year_Financial_Period_Id, Branch_Id, 0);
+            }
             // SetCustomer_SupplierAccountFirstBalance(ref opp, Submain_Account_ID, First_Balance, Transform_Type, Year_Financial_Period_Id, "");
 
         }
@@ -860,7 +866,8 @@ FROM            Account_Entry_List INNER JOIN
             mysql = mysql + ", Equivalent_First_Balance_Madin=Equivalent_First_Balance_Madin + " + Equivalent_First_Balance_Madin;
 
             mysql = mysql + " , Equivalent_First_Balance_Da2n= Equivalent_First_Balance_Da2n + " + Equivalent_First_Balance_Da2n;
-            mysql = mysql + " , Equivalent_First_Balance=" + Equivalent_First_Balance;
+            // الأصل كان يكتب هنا قيمة الزيادة وحدها فيمسح المكافئ التراكمى؛ الصحيح صافى (مدين − دائن) بعد الزيادة كما يحسبه UpdateEquivalentFirstValue
+            mysql = mysql + " , Equivalent_First_Balance=ABS((Equivalent_First_Balance_Madin + " + Equivalent_First_Balance_Madin + ") - (Equivalent_First_Balance_Da2n + " + Equivalent_First_Balance_Da2n + "))";
 
             mysql = mysql + " ,  Equivalent_Balance_Madin=0";
             mysql = mysql + " , Equivalent_Balance_Da2n =0";
