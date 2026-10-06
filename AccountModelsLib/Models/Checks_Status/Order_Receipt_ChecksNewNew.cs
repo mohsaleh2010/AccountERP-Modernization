@@ -216,6 +216,26 @@ namespace AccountCheckMoney
                     chm.Edit_User_Id = Common.User_Id;
                     chm.EditOperationDate = DateTime.Now.Date;
 
+                    // فورم التعديل لا يملأ chmlist (Checks_MemoryMainDataList) وUpdateChecks_MemoryMainDataList يدمج قيمه نصياً فى SQL،
+                    // فتفشل الجملة (Incorrect syntax) عند القيم الفارغة؛ نملؤه هنا من بيانات الشيك نفسه ومعرّف قائمته من القاعدة.
+                    if (chmlist.Id == 0)
+                    {
+                        DataTable dtList = opp.return_DataTable(" SELECT Checks_MemoryMainDataListId FROM Checks_Memory WHERE Id=" + chm.Id);
+                        if (dtList.Rows.Count > 0 && dtList.Rows[0][0] != DBNull.Value) chmlist.Id = Convert.ToInt64(dtList.Rows[0][0]);
+                    }
+                    chmlist.Check_No = chm.Check_No ?? "";
+                    chmlist.Day_Date = chm.Day_Date;
+                    chmlist.Due_Date = chm.Due_Date;
+                    chmlist.Bank_id = chm.Bank_id ?? 0;
+                    chmlist.Check_Value = chm.Check_Value ?? 0;
+                    chmlist.Check_Value_ = chm.Check_Value_ ?? "";
+                    chmlist.Due_Check = chm.Due_Check ?? "";
+                    chmlist.Exchanger_Name = chm.Exchanger_Name ?? "";
+                    chmlist.First_Drawer_Name = chm.First_Drawer_Name ?? "";
+                    chmlist.Last_Drawer_Name = chm.Last_Drawer_Name ?? "";
+                    chmlist.Bank_Name = chm.Bank_Name ?? "";
+                    chmlist.Check_Notes = chm.Check_Notes ?? "";
+
                     cc.UpdateChecks_Memory(ref Excp, ref Msg, ref opp, chm, chmlist);
                 }
 
