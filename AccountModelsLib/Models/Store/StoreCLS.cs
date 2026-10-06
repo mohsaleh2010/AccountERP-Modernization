@@ -391,7 +391,7 @@ AND (
             st.Insert_ServerDateTime = DateTime.Now;
             st.Update_ServerDateTime = DateTime.Now;
             st.EditOperationDate = DateTime.Now;
-            st.Edit_User_Id = 1;
+            st.Edit_User_Id = Common.User_Id;
 
             st.ProcessNo = 0;
 

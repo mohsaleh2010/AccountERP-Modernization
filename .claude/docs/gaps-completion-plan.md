@@ -94,3 +94,12 @@
 ## 4) سجل التنفيذ
 
 *(يُحدَّث هنا بعد كل بند.)*
+
+### 2026-10-02 — تدقيق أعمدة التعديل، دفعة 1 (بقرارك: تعديلات المستخدم المباشرة فقط) — ثُبِّتت فى commit، وأُصلح أيضاً `StoreCLS` (`Edit_User_Id = Common.User_Id` بدل 1)
+- **نُفِّذ (بُنى `AccountModelsLib` 0 أخطاء، لم يُختبر حياً بعد، لم يُثبَّت فى commit):**
+  - `BillsCLS.UpdatePrice` (يخدم `UpdatePriceOne/All` وشاشة «أسعار البيع للمشتريات»): `Edit_User_Id = Common.User_Id` و`EditOperationDate = DateTime.Now` على `Bills_Details`.
+  - `ItemCLS`: `UpdateS_Price` (الصنف + UPDATE الخام لـ`Unit_Item`)، `Edit_Item` (النسخة بـ`ref opp` والنسخة القديمة الثانية) على `Items` و`Unit_item`، و`EditItemPrice` (UPDATE الخام)، `EditService`، `UpdateItemAndUnitItemPrices`.
+- **➖ لا ينطبق:** `Submain_AccountCLS` (الجدول بلا العمودين حسب `ERP_V1_3.md`)، `CashVouchersService.EditMultiVoucher` (حذف وإعادة إصدار؛ ينشئ صفاً جديداً بـ`User_Id`).
+- **مستثنى بقرارك:** تحديثات الأرصدة/الأسعار التلقائية من حفظ الفواتير (`UpdateItemPriceFromInvoice`، `UpdateItemBalance`، سطرا ~356/~473 القديمان، `UpdatePurchasePrice`). **مؤجَّل لدفعة مستقلة:** `InvoicesOperationCLS` (الموديل لا يعرف العمودين).
+- **اكتشافان جانبيان (لم يُعدَّلا):** (1) `StoreCLS` (سطر ~394) يضبط `Edit_User_Id = 1` ثابتاً بدل `Common.User_Id` — خلل فى كلاس عُدّ «مطبَّقاً». (2) تفعيل/إلغاء تفعيل الصنف فى `ItemCLS` (~2276-2277 و~2374 و~2525 و~2592) يكتب `User_Id`/`OperationDate` (حقلا الإنشاء) عند التعديل بدل أعمدة التعديل، وتبديل `Active_flage` عبر EF (~2328) بلا أعمدة تعديل.
+- **المتبقى لإغلاق الدفعة:** اختبار حى: تعديل سعر بيع من «أسعار البيع للمشتريات» (يتحقق `Bills_Details` و`Item` و`Unit_Item`) — يحتاج تشغيل السيرفر.

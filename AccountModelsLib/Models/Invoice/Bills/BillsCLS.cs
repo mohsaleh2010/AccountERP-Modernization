@@ -29,6 +29,8 @@ namespace AccountModelsLib.Models
 
         void UpdatePrice(ref int excp, ref string msg, Bills_Details umVM)
         {
+            umVM.Edit_User_Id = Common.User_Id;
+            umVM.EditOperationDate = DateTime.Now;
             opp.db.Entry(umVM).State = EntityState.Modified;
             opp.db.SaveChanges();
 

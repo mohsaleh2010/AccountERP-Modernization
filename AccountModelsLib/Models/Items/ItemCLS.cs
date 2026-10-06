@@ -55,6 +55,8 @@ namespace AccountModelsLib.Models
 
                 im.S_Price = umVM.S_price;
                 im.S_price_LargeUnit = umVM.S_price_LargeUnit;
+                im.Edit_User_Id = Common.User_Id;
+                im.EditOperationDate = DateTime.Now;
                 //um.S_price = umVM.S_price;
                 //um.S_price_LargeUnit = umVM.S_price_LargeUnit;
 
@@ -62,7 +64,7 @@ namespace AccountModelsLib.Models
                 opp.db.SaveChanges();
 
 
-                string mysql = "Update Unit_Item Set S_price_LargeUnit=" + umVM.S_price_LargeUnit + ", S_price=" + umVM.S_price + " Where Item_Id=" + Item_Id;
+                string mysql = "Update Unit_Item Set S_price_LargeUnit=" + umVM.S_price_LargeUnit + ", S_price=" + umVM.S_price + ", Edit_User_Id=" + Common.User_Id + ", EditOperationDate='" + operations.dateFormat(DateTime.Now) + "' Where Item_Id=" + Item_Id;
                 opp.insert_me(mysql);
                 //opp.db.Entry(um).State = EntityState.Modified;
                 //opp.db.SaveChanges();
@@ -477,7 +479,9 @@ namespace AccountModelsLib.Models
             S_price ={um.S_price ?? 0} ,
             S_price_LargeUnit ={um.S_price_LargeUnit ?? 0} ,
             S_price_SmallUnit ={um.S_price_SmallUnit ?? 0} ,
-            S_price_Item_No ={um.S_price_Item_No ?? 0} ";
+            S_price_Item_No ={um.S_price_Item_No ?? 0} ,
+            Edit_User_Id ={Common.User_Id} ,
+            EditOperationDate ='{operations.dateFormat(DateTime.Now)}' ";
 
             mysql = mysql + $" Where Item_Id={um.Item_Id}";
             opp.insert_me(mysql);
@@ -509,7 +513,10 @@ namespace AccountModelsLib.Models
             try
             {
 
-
+                im.Edit_User_Id = Common.User_Id;
+                im.EditOperationDate = DateTime.Now;
+                um.Edit_User_Id = Common.User_Id;
+                um.EditOperationDate = DateTime.Now;
 
                 opp.db.Entry(im).State = EntityState.Modified;
                 opp.db.Entry(um).State = EntityState.Modified;
@@ -591,7 +598,10 @@ namespace AccountModelsLib.Models
             try
             {
 
-
+                im.Edit_User_Id = Common.User_Id;
+                im.EditOperationDate = DateTime.Now;
+                um.Edit_User_Id = Common.User_Id;
+                um.EditOperationDate = DateTime.Now;
 
                 opp.db.Entry(im).State = EntityState.Modified;
                 opp.db.Entry(um).State = EntityState.Modified;
@@ -1743,6 +1753,8 @@ namespace AccountModelsLib.Models
         {
             try
             {
+                im.Edit_User_Id = Common.User_Id;
+                im.EditOperationDate = DateTime.Now;
                 opp.db.Entry(im).State = EntityState.Modified;
                 opp.db.SaveChanges();
                 //opp.db.Entry(um_).State = EntityState.Modified;
@@ -1770,6 +1782,8 @@ namespace AccountModelsLib.Models
 
                     um.Unit_Used_For_S_price_Default = um_.Unit_Used_For_S_price_Default;
                     um.Unit_Used_For_P_price_Default = um_.Unit_Used_For_P_price_Default;
+                    um.Edit_User_Id = Common.User_Id;
+                    um.EditOperationDate = DateTime.Now;
 
 
 
@@ -3343,6 +3357,10 @@ WHERE        (Unit_item.P_priceAvgCost = 0 OR
 
         public void EditService(ref int excp, ref string msg, Items item, Unit_item um)
         {
+            item.Edit_User_Id = Common.User_Id;
+            item.EditOperationDate = DateTime.Now;
+            um.Edit_User_Id = Common.User_Id;
+            um.EditOperationDate = DateTime.Now;
             opp.db.Entry(item).State = EntityState.Modified;
             opp.db.SaveChanges();
 
