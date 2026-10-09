@@ -103,6 +103,21 @@ WHERE OrderTable_id = {originalOrderId} AND Engine_Posted = 1 AND Reversal_Of_Id
             if (rows.Count == 0)
                 throw new InvalidOperationException("لا توجد حركات مرحَّلة بالمحرك لهذا المستند (المستندات القديمة تُصحَّح بإذن تسوية).");
 
+            var result = ReverseRows(rows, reversalDoc, reason);
+
+            long userId = Common.User_Id;
+            DateTime now = DateTime.Now;
+            opp.db.Database.ExecuteSqlInterpolated($@"UPDATE Order_Purshing SET Doc_Status = {(int)DocStatus.Reversed}, Reversed_By_Id = {reversalDoc.OrderId}, Reverse_Reason = {reason} WHERE Id = {originalOrderId}");
+            opp.db.Database.ExecuteSqlInterpolated($@"UPDATE Order_Purshing SET Doc_Status = {(int)DocStatus.Posted}, Reversal_Of_Id = {originalOrderId}, Reverse_Reason = {reason}, Posted_Date = {now}, Posted_By = {userId} WHERE Id = {reversalDoc.OrderId}");
+            return result;
+        }
+
+        /// <summary>
+        /// يعكس صفوف دفتر محددة (مرحَّلة بالمحرك) بصفوف عكسية مرتبطة بها، داخل معاملة المستدعى. يستعمله عكس المستند وتصحيح رصيد أول المدة.
+        /// الوارد الأصلى يُعكس بإخراج نفس الكمية بنفس تكلفته ويُخرج أثره من المتوسط؛ والمنصرف الأصلى يُعكس بإدخال نفس الكمية بتكلفته الأصلية.
+        /// </summary>
+        public List<PostedLine> ReverseRows(IEnumerable<DpieRow> rows, MovementDocument reversalDoc, string reason)
+        {
             var result = new List<PostedLine>();
             foreach (var r in rows)
             {
@@ -122,19 +137,18 @@ WHERE OrderTable_id = {originalOrderId} AND Engine_Posted = 1 AND Reversal_Of_Id
                 var posted = PostLine(reversalDoc, line, reversalOfDpieId: r.Id);
                 if (posted != null) result.Add(posted);
             }
-
-            long userId = Common.User_Id;
-            DateTime now = DateTime.Now;
-            opp.db.Database.ExecuteSqlInterpolated($@"UPDATE Order_Purshing SET Doc_Status = {(int)DocStatus.Reversed}, Reversed_By_Id = {reversalDoc.OrderId}, Reverse_Reason = {reason} WHERE Id = {originalOrderId}");
-            opp.db.Database.ExecuteSqlInterpolated($@"UPDATE Order_Purshing SET Doc_Status = {(int)DocStatus.Posted}, Reversal_Of_Id = {originalOrderId}, Reverse_Reason = {reason}, Posted_Date = {now}, Posted_By = {userId} WHERE Id = {reversalDoc.OrderId}");
             return result;
         }
 
         // ============================== الرصيد المحسوب ==============================
 
+        /// <summary>رمز عملية «رصيد أول المدة» فى DPIE.ProcessNameId (خطة 02). صفه مؤرخ ببداية الفترة.</summary>
+        public const int OpeningBalanceProcessId = 900;
+
         /// <summary>
-        /// الرصيد المحسوب من الدفتر بالوحدة الصغرى حتى تاريخ (شاملاً). صفوف المحرك تُقرأ من Qty_Small، والصفوف القديمة من qua/Part_qua وإشارة Transaction_Type.
-        /// رصيد أول المدة بالفترة يُضاف عند اكتمال خطة 02؛ حتى ذلك الحين يبدأ الحساب من صفر (أى أن الصفوف القديمة غير المسجلة فى الدفتر تظهر فرقاً فى المطابقة).
+        /// الرصيد المحسوب من الدفتر بالوحدة الصغرى حتى تاريخ (شاملاً) = آخر رصيد أول مدة مرحَّل بالمحرك فى فترة تبدأ قبل التاريخ
+        /// + كل الحركات من بداية تلك الفترة. بلا رصيد أول مدة: كل الحركات من البداية. صفوف المحرك تُقرأ من Qty_Small،
+        /// والصفوف القديمة من qua/Part_qua وإشارة Transaction_Type. (أول المدة المعكوس ثم المعاد ترحيله بنفس التاريخ يُجمع صافياً.)
         /// </summary>
         public decimal GetComputedBalanceSmall(long unitItemId, DateTime? asOf = null)
         {
@@ -142,12 +156,19 @@ WHERE OrderTable_id = {originalOrderId} AND Engine_Posted = 1 AND Reversal_Of_Id
             DateTime until = (asOf ?? DateTime.MaxValue.AddDays(-1)).Date.AddDays(1);
             decimal total = opp.db.Database.SqlQuery<decimal>($@"
 SELECT ISNULL(SUM(CASE
-         WHEN Engine_Posted = 1 THEN ISNULL(Qty_Small, 0)
-         WHEN Transaction_Type = 1 THEN  (ISNULL(qua, 0) * {factor} + ISNULL(Part_qua, 0))
-         WHEN Transaction_Type = 2 THEN -(ISNULL(qua, 0) * {factor} + ISNULL(Part_qua, 0))
+         WHEN x.Engine_Posted = 1 THEN ISNULL(x.Qty_Small, 0)
+         WHEN x.Transaction_Type = 1 THEN  (ISNULL(x.qua, 0) * {factor} + ISNULL(x.Part_qua, 0))
+         WHEN x.Transaction_Type = 2 THEN -(ISNULL(x.qua, 0) * {factor} + ISNULL(x.Part_qua, 0))
          ELSE 0 END), 0) AS Value
-FROM Detailes_Purshing_Import_Export
-WHERE Unit_item_Table_Id = {unitItemId} AND (Process_Date IS NULL OR Process_Date < {until})").AsEnumerable().FirstOrDefault();
+FROM Detailes_Purshing_Import_Export x
+CROSS APPLY (SELECT MAX(d.Process_Date) AS OpeningFrom
+             FROM Detailes_Purshing_Import_Export d
+             WHERE d.Unit_item_Table_Id = {unitItemId} AND d.ProcessNameId = {OpeningBalanceProcessId} AND d.Engine_Posted = 1
+               AND d.Reversal_Of_Id IS NULL AND d.Process_Date < {until}
+               AND NOT EXISTS (SELECT 1 FROM Detailes_Purshing_Import_Export r WHERE r.Reversal_Of_Id = d.Id)) o
+WHERE x.Unit_item_Table_Id = {unitItemId}
+  AND (x.Process_Date IS NULL OR x.Process_Date < {until})
+  AND (o.OpeningFrom IS NULL OR x.Process_Date >= o.OpeningFrom)").AsEnumerable().FirstOrDefault();
             return total;
         }
 
