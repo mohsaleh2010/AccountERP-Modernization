@@ -606,6 +606,7 @@ namespace AccountModelsLib
         public DbSet<Order_Purshing> Order_Purshings { get; set; }
         public DbSet<Detailes_Purshing> Detailes_Purshings { get; set; }
         public DbSet<Detailes_Purshing_Import_Export> Detailes_Purshing_Import_Exports { get; set; }
+        public DbSet<Item_Branch_Cost> Item_Branch_Costs { get; set; }
 
 
         public DbSet<Lookup_CarType> Lookup_CarType { get; set; }
