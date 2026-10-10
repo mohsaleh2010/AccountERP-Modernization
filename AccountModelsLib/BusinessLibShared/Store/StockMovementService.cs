@@ -172,6 +172,62 @@ WHERE x.Unit_item_Table_Id = {unitItemId}
             return total;
         }
 
+        /// <summary>عملية «تصحيح الدفتر بالمطابقة» فى DPIE.ProcessNameId.</summary>
+        public const int LedgerCorrectionProcessId = 901;
+
+        /// <summary>
+        /// مطابقة (خطة 01 §2.4): يعتمد الرصيد المخزَّن ويكتب فى الدفتر صف تصحيح بالفرق (المخزَّن − المحسوب) بتاريخ اليوم،
+        /// بلا أى تغيير فى Unit_item ولا فى متوسط الفرع — لأن الفرق سببه حركات قديمة كتبت الرصيد بلا دفتر، والرصيد نفسه صحيح.
+        /// (الفرق الفعلى فى الجرد يُصحَّح بإذن تسوية 1007/1008 الذى يحرك الرصيد والدفتر معاً.) يرجع معرّف صف التصحيح أو 0 لو لا فرق.
+        /// </summary>
+        public long PostLedgerCorrection(long unitItemId, string reason)
+        {
+            if (string.IsNullOrWhiteSpace(reason)) throw new InvalidOperationException("سبب التصحيح مطلوب.");
+            var um = opp.db.Unit_item
+                .FromSqlInterpolated($"SELECT * FROM Unit_item WITH (UPDLOCK, ROWLOCK) WHERE id = {unitItemId}")
+                .AsNoTracking().FirstOrDefault() ?? throw new InvalidOperationException("سطر المخزون غير موجود.");
+            decimal factor = NormalizeFactor(um.Small_unit);
+            decimal stored = (um.Full_qua ?? 0) * factor + (um.D_Qua ?? 0);
+            decimal diff = stored - GetComputedBalanceSmall(unitItemId);
+            if (diff == 0) return 0;
+
+            long branchId = opp.db.Stores.AsNoTracking().Where(s => s.Id == um.Store_id).Select(s => s.Branch_Id).FirstOrDefault() ?? Common.Branch_Id;
+            decimal avg = opp.db.Item_Branch_Costs.AsNoTracking().Where(c => c.Item_Id == um.Item_Id && c.Branch_Id == branchId).Select(c => (decimal?)c.Avg_Cost).FirstOrDefault()
+                          ?? (um.P_priceAvgCost ?? 0) / factor;
+            decimal abs = Math.Abs(diff), large = Math.Floor(abs / factor);
+            DateTime now = DateTime.Now;
+            var dpie = new Detailes_Purshing_Import_Export
+            {
+                Id = CallSnowflakeIdGenerate.GenerateNewId(),
+                OrderTable_id = 0,
+                Unit_item_Table_Id = um.id,
+                qua = large,
+                Part_qua = abs - large * factor,
+                Balance_Larg_Qnty = um.Full_qua,
+                Balance_Small_Qnty = um.D_Qua,
+                Balance_Item_No = um.Item_No,
+                Transaction_Type = diff > 0 ? 1 : 2,
+                Process_Date = now,
+                ProcessNameId = LedgerCorrectionProcessId,
+                StoreId = um.Store_id,
+                Notes = "تصحيح الدفتر بالمطابقة: " + reason.Trim(),
+                Quantity = abs / factor,
+                Quantity_Balance = stored / factor,
+                PriceUnit = Math.Round(avg * factor, 2),
+                P_priceAvgCost = Math.Round(avg * factor, 2),
+                Branch_Id = branchId,
+                User_Id = Common.User_Id,
+                OperationDate = now.Date,
+                Insert_ServerDateTime = now,
+            };
+            opp.db.Detailes_Purshing_Import_Exports.Add(dpie);
+            opp.db.SaveChanges();
+            opp.db.Entry(dpie).State = EntityState.Detached;
+            opp.db.Database.ExecuteSqlInterpolated($@"UPDATE Detailes_Purshing_Import_Export SET Unit_Cost = {Dec(avg)}, Qty_Small = {Dec(diff, 4)},
+    Total_Value = {Dec(Math.Round(avg * abs, 2), 2)}, Avg_Cost_Before = {Dec(avg)}, Avg_Cost_After = {Dec(avg)}, Engine_Posted = 1 WHERE Id = {dpie.Id}");
+            return dpie.Id;
+        }
+
         /// <summary>الرصيد المخزَّن فى Unit_item بالوحدة الصغرى.</summary>
         public decimal GetStoredBalanceSmall(long unitItemId)
         {

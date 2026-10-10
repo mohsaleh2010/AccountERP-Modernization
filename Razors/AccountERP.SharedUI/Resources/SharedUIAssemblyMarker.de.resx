@@ -2578,4 +2578,25 @@
   <data name="SBResults" xml:space="preserve"><value>Bestände</value></data>
   <data name="SBUnitPrice" xml:space="preserve"><value>Preis je große Einheit</value></data>
   <data name="SBEmpty" xml:space="preserve"><value>Keine passenden Bestände</value></data>
+  <data name="SRTitle" xml:space="preserve"><value>Bestandsabgleich</value></data>
+  <data name="SRSub" xml:space="preserve"><value>Gespeicherter gegen aus dem Lagerbuch berechneten Bestand je Artikel und Lager</value></data>
+  <data name="SRAcceptTitle" xml:space="preserve"><value>Gespeicherten Bestand übernehmen</value></data>
+  <data name="SRAcceptHint" xml:space="preserve"><value>Wenn der Bestand stimmt und die Differenz aus Altbuchungen ohne Lagerbuch stammt: Korrekturzeile im Lagerbuch, Bestand und Durchschnitt bleiben.</value></data>
+  <data name="SRAdjustTitle" xml:space="preserve"><value>Tatsächliche Inventurdifferenz</value></data>
+  <data name="SRAdjustHint" xml:space="preserve"><value>Wenn die Zählung abweicht: Korrekturbeleg erstellen, der Bestand und Lagerbuch bewegt.</value></data>
+  <data name="SROnlyDiff" xml:space="preserve"><value>Nur Differenzen</value></data>
+  <data name="SRLines" xml:space="preserve"><value>Zeilen</value></data>
+  <data name="SRDiffLines" xml:space="preserve"><value>Zeilen mit Differenz</value></data>
+  <data name="SRResults" xml:space="preserve"><value>Abgleichsergebnis</value></data>
+  <data name="SRStored" xml:space="preserve"><value>Gespeicherter Bestand</value></data>
+  <data name="SRComputed" xml:space="preserve"><value>Aus Lagerbuch berechnet</value></data>
+  <data name="SRDiff" xml:space="preserve"><value>Differenz</value></data>
+  <data name="SRLastMove" xml:space="preserve"><value>Letzte Bewegung</value></data>
+  <data name="SRNoDiffs" xml:space="preserve"><value>Keine Differenzen — Bestände stimmen mit dem Lagerbuch überein</value></data>
+  <data name="SRAcceptButton" xml:space="preserve"><value>Gespeicherten Bestand übernehmen ({0})</value></data>
+  <data name="SRReason" xml:space="preserve"><value>Grund (z. B. Altbuchungen ohne Lagerbuch)</value></data>
+  <data name="SRReasonRequired" xml:space="preserve"><value>Grund eingeben</value></data>
+  <data name="SRConfirm" xml:space="preserve"><value>Bestätigen</value></data>
+  <data name="SRConfirmText" xml:space="preserve"><value>Für {0} Zeile(n) wird eine Lagerbuchkorrektur gebucht, ohne den Bestand zu ändern. Fortfahren?</value></data>
+  <data name="SRDone" xml:space="preserve"><value>Lagerbuch für {0} Zeile(n) korrigiert</value></data>
 </root>

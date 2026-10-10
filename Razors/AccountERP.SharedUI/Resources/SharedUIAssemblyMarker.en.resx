@@ -2576,4 +2576,25 @@
   <data name="SBResults" xml:space="preserve"><value>Balances</value></data>
   <data name="SBUnitPrice" xml:space="preserve"><value>Large unit price</value></data>
   <data name="SBEmpty" xml:space="preserve"><value>No matching balances</value></data>
+  <data name="SRTitle" xml:space="preserve"><value>Stock balance reconciliation</value></data>
+  <data name="SRSub" xml:space="preserve"><value>Stored balance versus the balance computed from the stock ledger for each item in each store</value></data>
+  <data name="SRAcceptTitle" xml:space="preserve"><value>Accept the stored balance</value></data>
+  <data name="SRAcceptHint" xml:space="preserve"><value>When the balance is right and the gap comes from legacy movements without ledger rows: a ledger correction is posted; the balance and average cost do not change.</value></data>
+  <data name="SRAdjustTitle" xml:space="preserve"><value>Actual count difference</value></data>
+  <data name="SRAdjustHint" xml:space="preserve"><value>When the physical count differs from the balance: issue an adjustment order, which moves both balance and ledger.</value></data>
+  <data name="SROnlyDiff" xml:space="preserve"><value>Differences only</value></data>
+  <data name="SRLines" xml:space="preserve"><value>Lines</value></data>
+  <data name="SRDiffLines" xml:space="preserve"><value>Lines with a difference</value></data>
+  <data name="SRResults" xml:space="preserve"><value>Reconciliation result</value></data>
+  <data name="SRStored" xml:space="preserve"><value>Stored balance</value></data>
+  <data name="SRComputed" xml:space="preserve"><value>Computed from ledger</value></data>
+  <data name="SRDiff" xml:space="preserve"><value>Difference</value></data>
+  <data name="SRLastMove" xml:space="preserve"><value>Last movement</value></data>
+  <data name="SRNoDiffs" xml:space="preserve"><value>No differences — balances match the ledger</value></data>
+  <data name="SRAcceptButton" xml:space="preserve"><value>Accept stored balance ({0})</value></data>
+  <data name="SRReason" xml:space="preserve"><value>Reason (e.g. legacy movements without ledger)</value></data>
+  <data name="SRReasonRequired" xml:space="preserve"><value>Enter the reason</value></data>
+  <data name="SRConfirm" xml:space="preserve"><value>Confirm</value></data>
+  <data name="SRConfirmText" xml:space="preserve"><value>A ledger correction will be posted for {0} line(s) without changing the balance. Continue?</value></data>
+  <data name="SRDone" xml:space="preserve"><value>Ledger corrected for {0} line(s)</value></data>
 </root>

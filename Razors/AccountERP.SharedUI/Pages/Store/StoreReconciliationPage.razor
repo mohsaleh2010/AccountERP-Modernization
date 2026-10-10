@@ -1,0 +1,269 @@
+@* 🟢 خطة 01 — المرحلة 3: مطابقة أرصدة الأصناف. لكل سطر مخزون: المخزَّن (Unit_item) مقابل المحسوب من الدفتر (DPIE) والفرق وآخر حركة.
+   الإصلاحان (قرار حسب الأنظمة الحديثة — خطة 01 §2.4):
+   1) «اعتماد الرصيد المخزَّن»: الفرق سببه حركات قديمة كتبت الرصيد بلا دفتر → صف تصحيح فى الدفتر بالفرق بسبب، بلا تغيير للرصيد ولا المتوسط.
+   2) فرق فعلى فى الجرد → «إذن تسوية» بالزيادة/النقص (يحرك الرصيد والدفتر معاً) من صفحة الإذن.
+   التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@page "/store/reconciliation"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.StoreBalancesService
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@implements IDisposable
+
+<PageTitle>@Tr("SRTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .sr-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .sr-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-warning) 16%, transparent); color: var(--mud-palette-warning-darken, var(--mud-palette-warning)); }
+    .sr-head .ico .mud-icon-root { font-size: 2rem; }
+    .sr-head .titles { flex: 1 1 260px; min-width: 0; }
+    .sr-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .sr-gap { margin-top: 16px; }
+    .sr-filters { display: grid; grid-template-columns: minmax(150px, .8fr) minmax(200px, 1.2fr) minmax(180px, 1fr) minmax(220px, 1.4fr); gap: 12px; align-items: start; }
+    .sr-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .sr-tile { padding: 14px 18px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); }
+    .sr-tile .k { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .sr-tile .v { margin-top: 4px; font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--mud-palette-text-primary); }
+    .sr-tile.warn .v { color: var(--mud-palette-warning-darken, var(--mud-palette-warning)); }
+    .sr-tile.ok .v { color: var(--mud-palette-success); }
+    .sr-how { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .sr-how > div { display: flex; gap: 10px; padding: 12px 14px; border-radius: 10px; border: 1px dashed var(--mud-palette-lines-default); }
+    .sr-how b { display: block; }
+    .sr-how span { font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .sr-name { font-weight: 600; color: var(--mud-palette-text-primary); }
+    .sr-code { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .sr-num { font-variant-numeric: tabular-nums; }
+    .sr-pos { color: var(--mud-palette-success); font-weight: 700; }
+    .sr-neg { color: var(--mud-palette-error); font-weight: 700; }
+    .sr-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-top: 12px; }
+    .sr-bar .info { font-size: .875rem; color: var(--mud-palette-text-secondary); font-variant-numeric: tabular-nums; }
+    .sr-bar .btns { display: flex; flex-wrap: wrap; gap: 8px; }
+    .sr-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .sr-empty .mud-icon-root { color: var(--mud-palette-success); }
+    @@media (max-width: 1099px) { .sr-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sr-how { grid-template-columns: minmax(0, 1fr); } }
+    @@media (max-width: 599px) { .sr-filters, .sr-tiles { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-card sr-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Rule" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("SRTitle")</h1>
+            <div class="sub">@Tr("SRSub")</div>
+        </div>
+    </div>
+
+    <div class="inv-card sr-gap">
+        <div class="sr-how">
+            <div>
+                <MudIcon Icon="@Icons.Material.Filled.FactCheck" Color="Color.Primary" />
+                <div><b>@Tr("SRAcceptTitle")</b><span>@Tr("SRAcceptHint")</span></div>
+            </div>
+            <div>
+                <MudIcon Icon="@Icons.Material.Filled.Inventory" Color="Color.Warning" />
+                <div><b>@Tr("SRAdjustTitle")</b><span>@Tr("SRAdjustHint")</span>
+                    <div class="mt-1">
+                        <MudLink Href="/store/order/1007">@Tr("SOParty_7")</MudLink> · <MudLink Href="/store/order/1008">@Tr("SOParty_8")</MudLink>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="inv-card sr-gap" role="search">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.FilterList" />@Tr("SOFiltersTitle")</h2>
+        <div class="sr-filters">
+            <MudSelect T="int" Value="_storeType" ValueChanged="OnStoreTypeAsync" Label="@Tr("SOPartyType")" Variant="Variant.Outlined" ToStringFunc="@(v => Tr("SOParty_" + v))">
+                <MudSelectItem T="int" Value="4">@Tr("SOParty_4")</MudSelectItem>
+                <MudSelectItem T="int" Value="20">@Tr("SOParty_20")</MudSelectItem>
+            </MudSelect>
+            <MudSelect T="long" Value="_storeId" ValueChanged="OnStoreAsync" Label="@Tr("SOParty_" + _storeType)" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _stores.FirstOrDefault(s => s.Id == v)?.Name ?? "")">
+                <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                @foreach (var s in _stores)
+                {
+                    <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="long" Value="_categoryId" ValueChanged="OnCategoryAsync" Label="@Tr("SBCategory")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _categories.FirstOrDefault(c => c.Id == v)?.Name ?? "")">
+                <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                @foreach (var c in _categories)
+                {
+                    <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField T="string" Value="_text" ValueChanged="OnTextAsync" Label="@Tr("SOItemSearch")" Variant="Variant.Outlined"
+                          Immediate="true" DebounceInterval="400" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+        </div>
+        <MudSwitch T="bool" Value="_onlyDiff" ValueChanged="OnOnlyDiffAsync" Color="Color.Primary" Label="@Tr("SROnlyDiff")" Class="mt-2" />
+    </div>
+
+    <div class="sr-tiles sr-gap">
+        <div class="sr-tile"><div class="k">@Tr("SRLines")</div><div class="v">@_total</div></div>
+        <div class="sr-tile @(_diffRows > 0 ? "warn" : "ok")"><div class="k">@Tr("SRDiffLines")</div><div class="v">@_diffRows</div></div>
+    </div>
+
+    <div class="inv-card sr-gap">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("SRResults")<span class="inv-count">@_total</span></h2>
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" role="alert">@_error</MudAlert>
+        }
+        <MudTable Items="@_rows" T="ReconRow" Hover="true" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Loading="_loading"
+                  LoadingProgressColor="Color.Primary" MultiSelection="true" @bind-SelectedItems="_selected" SelectOnRowClick="true">
+            <HeaderContent>
+                <MudTh>@Tr("SOParty_" + _storeType)</MudTh>
+                <MudTh>@Tr("SOItem")</MudTh>
+                <MudTh Style="text-align:end">@Tr("SRStored")</MudTh>
+                <MudTh Style="text-align:end">@Tr("SRComputed")</MudTh>
+                <MudTh Style="text-align:end">@Tr("SRDiff")</MudTh>
+                <MudTh>@Tr("SRLastMove")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("SOParty_" + _storeType)">@context.Store_Name</MudTd>
+                <MudTd DataLabel="@Tr("SOItem")"><div class="sr-name">@context.Item_Name</div><div class="sr-code">@CodeText(context.Code)</div></MudTd>
+                <MudTd DataLabel="@Tr("SRStored")" Style="text-align:end"><span class="sr-num">@SmallToText(context.Stored_Small, context.Factor, context.B_Unit, context.S_Unit)</span></MudTd>
+                <MudTd DataLabel="@Tr("SRComputed")" Style="text-align:end"><span class="sr-num @(context.Computed_Small < 0 ? "sr-neg" : "")">@SmallToText(context.Computed_Small, context.Factor, context.B_Unit, context.S_Unit)</span></MudTd>
+                <MudTd DataLabel="@Tr("SRDiff")" Style="text-align:end">
+                    <span class="sr-num @(context.Diff_Small > 0 ? "sr-pos" : context.Diff_Small < 0 ? "sr-neg" : "")">@(context.Diff_Small > 0 ? "+" : "")@SmallToText(context.Diff_Small, context.Factor, context.B_Unit, context.S_Unit)</span>
+                </MudTd>
+                <MudTd DataLabel="@Tr("SRLastMove")"><span class="sr-num">@(context.Last_Movement?.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture) ?? "—")</span></MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="sr-empty">
+                    <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Large" />
+                    <b>@Tr("SRNoDiffs")</b>
+                </div>
+            </NoRecordsContent>
+        </MudTable>
+        <div class="sr-bar">
+            <span class="info" aria-live="polite">@(_total > 0 ? Tr("SOPageInfo", _skip + 1, Math.Min(_skip + PageSize, _total), _total) : "")</span>
+            <div class="btns">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FactCheck"
+                           Disabled="@(_busy || !_selected.Any(r => r.Diff_Small != 0))" OnClick="AcceptAsync">@Tr("SRAcceptButton", _selected.Count(r => r.Diff_Small != 0))</MudButton>
+                <MudButton Variant="Variant.Outlined" StartIcon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)"
+                           Disabled="@(_skip == 0 || _loading)" OnClick="@(() => PageAsync(-1))">@Tr("SOPrev")</MudButton>
+                <MudButton Variant="Variant.Outlined" EndIcon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)"
+                           Disabled="@(_skip + PageSize >= _total || _loading)" OnClick="@(() => PageAsync(1))">@Tr("SONext")</MudButton>
+            </div>
+        </div>
+        @if (_showReason)
+        {
+            <div class="sr-gap" style="display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;">
+                <MudTextField T="string" @bind-Value="_reason" Label="@Tr("SRReason")" Variant="Variant.Outlined" Lines="2" Style="flex:1 1 320px" />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_busy" OnClick="ConfirmAcceptAsync">@Tr("SRConfirm")</MudButton>
+                <MudButton Variant="Variant.Outlined" Disabled="_busy" OnClick="@(() => _showReason = false)">@Tr("Cancel")</MudButton>
+            </div>
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private const int PageSize = 50;
+    private readonly StoreBalancesService _svc = new();
+    private List<Option> _stores = new(), _categories = new();
+    private List<ReconRow> _rows = new();
+    private HashSet<ReconRow> _selected = new();
+    private int _storeType = 4, _skip, _total, _diffRows;
+    private long _storeId, _categoryId;
+    private string? _text, _error, _reason;
+    private bool _onlyDiff = true, _loading = true, _busy, _showReason;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            (_stores, _categories) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_svc.GetStores(4), _svc.GetCategories()); });
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task OnStoreTypeAsync(int t)
+    {
+        _storeType = t; _storeId = 0; _skip = 0;
+        _stores = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetStores(t); });
+        await LoadAsync();
+    }
+    private async Task OnStoreAsync(long id) { _storeId = id; _skip = 0; await LoadAsync(); }
+    private async Task OnCategoryAsync(long id) { _categoryId = id; _skip = 0; await LoadAsync(); }
+    private async Task OnTextAsync(string? t) { _text = t; _skip = 0; await LoadAsync(); }
+    private async Task OnOnlyDiffAsync(bool v) { _onlyDiff = v; _skip = 0; await LoadAsync(); }
+    private async Task PageAsync(int dir) { _skip = Math.Max(0, _skip + dir * PageSize); await LoadAsync(); }
+
+    private async Task LoadAsync()
+    {
+        _loading = true; _error = null; _selected = new();
+        var f = new ReconFilter { StoreType = _storeType, StoreId = _storeId, CategoryId = _categoryId, Text = _text, OnlyDifferences = _onlyDiff, Skip = _skip, Take = PageSize };
+        try
+        {
+            _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetReconciliation(f); });
+            _total = _rows.FirstOrDefault()?.Total_Rows ?? 0;
+            _diffRows = _rows.FirstOrDefault()?.Diff_Rows ?? 0;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); _rows = new(); _total = 0; }
+        finally { _loading = false; }
+    }
+
+    private void AcceptAsync() { _reason = null; _showReason = true; _error = null; }
+
+    private async Task ConfirmAcceptAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_reason)) { _error = Tr("SRReasonRequired"); return; }
+        var ids = _selected.Where(r => r.Diff_Small != 0).Select(r => r.Unit_Item_Id).ToList();
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("SRAcceptTitle"), Tr("SRConfirmText", ids.Count), yesText: Tr("SRConfirm"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null;
+        var reason = _reason.Trim();
+        try
+        {
+            int n = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.AcceptStoredBalances(ids, reason); });
+            _showReason = false;
+            Snackbar.Add(Tr("SRDone", n), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _busy = false; }
+    }
+
+    private static string Qty(decimal v) => v.ToString("0.##", CultureInfo.InvariantCulture);
+    private static string CodeText(string code) => string.IsNullOrWhiteSpace(code) || code.Trim() == "0" ? "" : code;
+    private static string SmallToText(decimal small, decimal factor, string bUnit, string sUnit)
+    {
+        if (factor <= 0) factor = 1;
+        decimal abs = Math.Abs(small), large = Math.Floor(abs / factor), rest = abs - large * factor;
+        string t = rest != 0 ? $"{Qty(large)} {bUnit} + {Qty(rest)} {sUnit}" : $"{Qty(large)} {bUnit}";
+        return small < 0 ? "-" + t : t;
+    }
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

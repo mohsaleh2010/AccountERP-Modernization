@@ -130,6 +130,8 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("menuItemBalanceSupplierPrice", "/store/balances?price=2"), ("menuItemItemBalanceSellBuyPriceTotal", "/store/balances?price=2"),
             ("menuItemBalanceSellPrice", "/store/balances?price=3"),
             ("aToolStripMenuItem", "/store/balances?asof=1"), ("menuItemItemsListBeforBalance", "/store/balances?asof=1"),
+            // مطابقة الأرصدة (خطة 01 م3) بدل التعديل المباشر للأرصدة: الفرق يُعتمد بتصحيح الدفتر أو يُسوّى بإذن تسوية.
+            ("menuItemEditStoreBalance", "/store/reconciliation"), ("menuItemItemBalanceOnlyEdit", "/store/reconciliation"),
             // قائمة وبحث الأذون (المرحلة 4) بدل Order_detailes لكل نوع، وقائمة كل الأذون.
             // ملاحظة: القائمة القديمة تفتح «مرتجع صرف قطع الغيار» (879) على 1022 وعنصر «صرف إلى موظف» (881) بلا شاشة؛ هنا كلٌّ لنوعه الصحيح.
             ("menuItemOrdersList", "/store/orders"),

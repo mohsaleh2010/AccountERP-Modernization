@@ -2576,4 +2576,25 @@
   <data name="SBResults" xml:space="preserve"><value>الأرصدة</value></data>
   <data name="SBUnitPrice" xml:space="preserve"><value>سعر الوحدة الكبرى</value></data>
   <data name="SBEmpty" xml:space="preserve"><value>لا توجد أرصدة مطابقة</value></data>
+  <data name="SRTitle" xml:space="preserve"><value>مطابقة أرصدة الأصناف</value></data>
+  <data name="SRSub" xml:space="preserve"><value>الرصيد المخزَّن مقابل المحسوب من دفتر الحركة لكل صنف فى كل مخزن</value></data>
+  <data name="SRAcceptTitle" xml:space="preserve"><value>اعتماد الرصيد المخزَّن</value></data>
+  <data name="SRAcceptHint" xml:space="preserve"><value>حين يكون الرصيد صحيحاً والفرق من حركات قديمة بلا دفتر: يُكتب فى الدفتر تصحيح بالفرق ولا يتغير الرصيد ولا متوسط التكلفة.</value></data>
+  <data name="SRAdjustTitle" xml:space="preserve"><value>فرق فعلى فى الجرد</value></data>
+  <data name="SRAdjustHint" xml:space="preserve"><value>حين يختلف الجرد الفعلى عن الرصيد: أصدر إذن تسوية يحرك الرصيد والدفتر معاً.</value></data>
+  <data name="SROnlyDiff" xml:space="preserve"><value>الفروق فقط</value></data>
+  <data name="SRLines" xml:space="preserve"><value>عدد الأسطر</value></data>
+  <data name="SRDiffLines" xml:space="preserve"><value>أسطر بها فرق</value></data>
+  <data name="SRResults" xml:space="preserve"><value>نتيجة المطابقة</value></data>
+  <data name="SRStored" xml:space="preserve"><value>الرصيد المخزَّن</value></data>
+  <data name="SRComputed" xml:space="preserve"><value>المحسوب من الدفتر</value></data>
+  <data name="SRDiff" xml:space="preserve"><value>الفرق</value></data>
+  <data name="SRLastMove" xml:space="preserve"><value>آخر حركة</value></data>
+  <data name="SRNoDiffs" xml:space="preserve"><value>لا فروق — الأرصدة مطابقة للدفتر</value></data>
+  <data name="SRAcceptButton" xml:space="preserve"><value>اعتماد الرصيد المخزَّن ({0})</value></data>
+  <data name="SRReason" xml:space="preserve"><value>سبب الاعتماد (مثلاً: حركات قديمة بلا دفتر)</value></data>
+  <data name="SRReasonRequired" xml:space="preserve"><value>اكتب سبب الاعتماد</value></data>
+  <data name="SRConfirm" xml:space="preserve"><value>تأكيد الاعتماد</value></data>
+  <data name="SRConfirmText" xml:space="preserve"><value>سيُكتب تصحيح فى الدفتر لـ {0} سطر بالفرق، بلا تغيير للرصيد. متابعة؟</value></data>
+  <data name="SRDone" xml:space="preserve"><value>صُحّح الدفتر لـ {0} سطر</value></data>
 </root>

@@ -132,6 +132,111 @@ ORDER BY v.Store_Name, v.Item_Name
 OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY").ToList());
         }
 
+        // ============================== مطابقة الأرصدة (خطة 01 — المرحلة 3) ==============================
+
+        public class ReconFilter
+        {
+            public int StoreType { get; set; } = 4;
+            public long StoreId { get; set; }
+            public long CategoryId { get; set; }
+            public string Text { get; set; }
+            public bool OnlyDifferences { get; set; } = true;
+            public int Skip { get; set; }
+            public int Take { get; set; } = 50;
+        }
+
+        public class ReconRow
+        {
+            public long Unit_Item_Id { get; set; }
+            public string Store_Name { get; set; }
+            public string Item_Name { get; set; }
+            public string Code { get; set; }
+            public string B_Unit { get; set; }
+            public string S_Unit { get; set; }
+            public decimal Factor { get; set; }
+            public decimal Stored_Small { get; set; }
+            public decimal Computed_Small { get; set; }
+            public decimal Diff_Small { get; set; }
+            public DateTime? Last_Movement { get; set; }
+            public int Total_Rows { get; set; }
+            public int Diff_Rows { get; set; }
+        }
+
+        /// <summary>
+        /// لكل سطر مخزون: الرصيد المخزَّن (Unit_item) مقابل المحسوب من الدفتر (آخر أول مدة + الحركات)، والفرق وآخر حركة.
+        /// Diff_Rows = عدد الأسطر ذات الفرق فى كل النتيجة (لا الصفحة فقط).
+        /// </summary>
+        public List<ReconRow> GetReconciliation(ReconFilter f)
+        {
+            string text = (f.Text ?? "").Trim();
+            string like = "%" + text + "%";
+            DateTime until = DateTime.Today.AddDays(1);
+            int onlyDiff = f.OnlyDifferences ? 1 : 0;
+            int skip = Math.Max(0, f.Skip), take = Math.Clamp(f.Take, 1, 500);
+            int opening = StockMovementService.OpeningBalanceProcessId;
+            return Run(opp => opp.db.Database.SqlQuery<ReconRow>($@"
+WITH l AS (
+    SELECT u.id AS Unit_Item_Id, s.Store_Name, ISNULL(i.Item_Name, N'') AS Item_Name, ISNULL(ISNULL(u.Code, i.code), N'') AS Code,
+           ISNULL(un.B_Unit, N'') AS B_Unit, ISNULL(un.S_unit, N'') AS S_Unit,
+           CAST(CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END AS decimal(18,6)) AS Factor,
+           CAST(ISNULL(u.Full_qua, 0) * CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END + ISNULL(u.D_Qua, 0) AS decimal(18,4)) AS Stored_Small,
+           CAST(ISNULL(comp.Bal, 0) AS decimal(18,4)) AS Computed_Small,
+           comp.LastDate AS Last_Movement
+    FROM Unit_item u
+    INNER JOIN Store s ON s.Id = u.Store_id
+    INNER JOIN Item i ON i.id = u.Item_id
+    LEFT JOIN unit un ON un.id = u.unit_id
+    OUTER APPLY (
+        SELECT SUM(CASE WHEN x.Engine_Posted = 1 THEN ISNULL(x.Qty_Small, 0)
+                        WHEN x.Transaction_Type = 1 THEN  (ISNULL(x.qua, 0) * k.F + ISNULL(x.Part_qua, 0))
+                        WHEN x.Transaction_Type = 2 THEN -(ISNULL(x.qua, 0) * k.F + ISNULL(x.Part_qua, 0))
+                        ELSE 0 END) AS Bal,
+               MAX(x.Process_Date) AS LastDate
+        FROM Detailes_Purshing_Import_Export x
+        CROSS APPLY (SELECT CAST(CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END AS decimal(18,6)) AS F) k
+        OUTER APPLY (SELECT MAX(d.Process_Date) AS OpeningFrom FROM Detailes_Purshing_Import_Export d
+                     WHERE d.Unit_item_Table_Id = u.id AND d.ProcessNameId = {opening} AND d.Engine_Posted = 1 AND d.Reversal_Of_Id IS NULL
+                       AND d.Process_Date < {until}
+                       AND NOT EXISTS (SELECT 1 FROM Detailes_Purshing_Import_Export r WHERE r.Reversal_Of_Id = d.Id)) o
+        WHERE x.Unit_item_Table_Id = u.id
+          AND (x.Process_Date IS NULL OR x.Process_Date < {until})
+          AND (o.OpeningFrom IS NULL OR x.Process_Date >= o.OpeningFrom)) comp
+    WHERE ISNULL(u.Store_Type, 4) = {f.StoreType}
+      AND ISNULL(s.LookUp_StoreOrderTypesId, 4) = {f.StoreType}
+      AND ({f.StoreId} = 0 OR u.Store_id = {f.StoreId})
+      AND ({f.CategoryId} = 0 OR i.Item_Category_ID = {f.CategoryId})
+      AND ISNULL(u.active_flage, 1) = 1 AND ISNULL(i.Is_ItemWithoutBalance, 0) = 0
+      AND ({text} = N'' OR i.Item_Name LIKE {like} OR u.Code = {text} OR i.code = {text})
+), v AS (
+    SELECT l.*, CAST(l.Stored_Small - l.Computed_Small AS decimal(18,4)) AS Diff_Small FROM l
+)
+SELECT v.*, COUNT(*) OVER () AS Total_Rows, SUM(CASE WHEN v.Diff_Small <> 0 THEN 1 ELSE 0 END) OVER () AS Diff_Rows
+FROM v
+WHERE {onlyDiff} = 0 OR v.Diff_Small <> 0
+ORDER BY ABS(v.Diff_Small) DESC, v.Store_Name, v.Item_Name
+OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY").ToList());
+        }
+
+        /// <summary>يعتمد الرصيد المخزَّن للأسطر المختارة بصف تصحيح فى الدفتر لكل سطر (معاملة واحدة). يرجع عدد الأسطر المصحَّحة.</summary>
+        public int AcceptStoredBalances(IReadOnlyCollection<long> unitItemIds, string reason)
+        {
+            if (unitItemIds == null || unitItemIds.Count == 0) return 0;
+            var opp = _newOpp();
+            opp.BeginTransaction();
+            try
+            {
+                var engine = new StockMovementService(opp);
+                int n = unitItemIds.Count(id => engine.PostLedgerCorrection(id, reason) > 0);
+                opp.Commit();
+                return n;
+            }
+            catch
+            {
+                opp.Rollback();
+                throw;
+            }
+        }
+
         private T Run<T>(Func<operations, T> f) => f(_newOpp());
     }
 }
