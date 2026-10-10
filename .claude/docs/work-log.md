@@ -57,3 +57,5 @@
 | 07:47 | بناء BarCodeQR_GeneratorLIB (بـ Neodynamic الحقيقية) | ⏳ بدأ | — |
 | 07:47 | بناء BarCodeQR_GeneratorLIB | Build succeeded. 0 Error(s) (تحذيرات Neodynamic: 0) | — |
 | 07:47 | ✅ الحل يُبنى بالكامل على هذا الجهاز | AccountModelsLib، Store_LIB، Reporting_System، Accounts، BarCodeQR_GeneratorLIB، AccountsERPSystem، AccountsERPSystemNet10 — كلها 0 أخطاء | الخطوة التالية: commit (بانتظار الموافقة) |
+| 23:00 | commit | ✅ 424b8ff (فلتر المسودات + الحماية + ترقية القواعد، 25 ملفاً) و465fe7c (إصلاح csproj ×2) | git revert <hash> |
+| 23:19 | القسم كجهة رصيد فى StoreOrderService (م-03-9) + قرارا م-03-10/11 فى الخطة | ✅ اختبار 12/12 داخل معاملة ملغاة، بلا commit | git checkout -- AccountModelsLib/BusinessLibShared/Store/StoreOrderService.cs |

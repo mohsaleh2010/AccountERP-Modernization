@@ -202,13 +202,14 @@ FROM Store_Order_Type_Settings WHERE Order_Type = {orderType}").AsEnumerable().F
                     throw new NotSupportedException("التحويل بتأكيد الاستلام يُبنى فى خطة 03 المرحلة 3.");
 
                 long destStoreId = settings.StoreIsFrom ? header.Id_To : header.Id_From;
+                int destType = (settings.StoreIsFrom ? header.Type_To : header.type_From) ?? PartyStore;
                 for (int i = 0; i < lines.Count; i++)
                 {
                     var dp = lines[i];
                     var src = stockLines[i];
                     var outLine = engine.Post(doc, new[] { new MovementLine(src.id, -1, dp.qua ?? 0, dp.Part_qua ?? 0, dp.Item_No ?? 0, DetailId: dp.Id, Notes: dp.Notes) });
                     if (outLine.Count == 0) continue;   // خدمة / بلا رصيد
-                    var dest = FindOrCreateDestLine(src, destStoreId);
+                    var dest = FindOrCreateDestLine(src, destStoreId, destType);
                     decimal destFactor = (dest.Small_unit ?? 0) <= 0 ? 1 : dest.Small_unit.Value;
                     decimal srcFactor = (src.Small_unit ?? 0) <= 0 ? 1 : src.Small_unit.Value;
                     // نفس الكمية بالوحدة الصغرى وبتكلفة المنصرف؛ يحدّث متوسط فرع المستلم (لا يتغير لو نفس الفرع).
@@ -306,21 +307,14 @@ FROM Store_Order_Type_Settings WHERE Order_Type = {orderType}").AsEnumerable().F
 
             int storeParty = s.StoreIsFrom ? input.TypeFrom : input.TypeTo;
             long storeId = s.StoreIsFrom ? input.IdFrom : input.IdTo;
-            if (storeParty != PartyStore)
-                throw new NotSupportedException("رصيد الأقسام (جهة قسم) لم يُنقل للمحرك بعد؛ اختر مخزناً.");
-            var store = opp.db.Stores.AsNoTracking().FirstOrDefault(x => x.Id == storeId);
-            if (store == null) throw new InvalidOperationException("المخزن غير موجود.");
-            if (store.Active == 0) throw new InvalidOperationException($"المخزن «{store.Store_Name}» غير نشط.");
+            CheckBalanceParty(storeParty, storeId, "المخزن");
 
             int otherParty = s.StoreIsFrom ? input.TypeTo : input.TypeFrom;
             long otherId = s.StoreIsFrom ? input.IdTo : input.IdFrom;
             if (s.Is_Transfer)
             {
-                if (otherParty != PartyStore) throw new NotSupportedException("التحويل لقسم يُبنى مع رصيد الأقسام؛ اختر مخزناً.");
                 if (otherId == storeId) throw new InvalidOperationException("لا يكون التحويل لنفس المخزن.");
-                var other = opp.db.Stores.AsNoTracking().FirstOrDefault(x => x.Id == otherId);
-                if (other == null) throw new InvalidOperationException("المخزن المحوَّل إليه غير موجود.");
-                if (other.Active == 0) throw new InvalidOperationException($"المخزن «{other.Store_Name}» غير نشط.");
+                CheckBalanceParty(otherParty, otherId, "المخزن المحوَّل إليه");
             }
 
             if (input.Lines == null || input.Lines.Count == 0) throw new InvalidOperationException("الإذن بلا أصناف.");
@@ -330,12 +324,27 @@ FROM Store_Order_Type_Settings WHERE Order_Type = {orderType}").AsEnumerable().F
             foreach (var l in input.Lines)
             {
                 if (!ums.TryGetValue(l.UnitItemId, out var um)) throw new InvalidOperationException("سطر مخزون غير موجود.");
-                if (um.Store_id != storeId) throw new InvalidOperationException($"الصنف {um.Code} ليس من المخزن المختار.");
+                if (um.Store_id != storeId || (um.Store_Type ?? PartyStore) != storeParty) throw new InvalidOperationException($"الصنف {um.Code} ليس من المخزن المختار.");
                 if (l.QtyLarge < 0 || l.QtySmall < 0 || l.QtyLarge + l.QtySmall <= 0) throw new InvalidOperationException($"كمية غير صحيحة للصنف {um.Code}.");
                 if (s.IsManualPrice && (l.UnitCostLarge == null || l.UnitCostLarge < 0)) throw new InvalidOperationException($"سعر الوحدة مطلوب للصنف {um.Code}.");
                 result.Add(um);
             }
             return result;
+        }
+
+        /// <summary>
+        /// جهة رصيد = مخزن (4) أو قسم (20، قرار م-03-9). القسم صف فى Store بـ LookUp_StoreOrderTypesId = 20
+        /// وأرصدته أسطر Unit_item بـ Store_Type = 20، كما فى الشاشة القديمة (FillcbOrderStorCLS / Check_ItemFoundOnStore).
+        /// </summary>
+        private void CheckBalanceParty(int partyType, long id, string label)
+        {
+            if (partyType != PartyStore && partyType != PartyDepartment)
+                throw new InvalidOperationException($"جهة «{label}» يجب أن تكون مخزناً أو قسماً.");
+            var store = opp.db.Stores.AsNoTracking().FirstOrDefault(x => x.Id == id);
+            string kind = partyType == PartyDepartment ? "القسم" : "المخزن";
+            if (store == null || (store.LookUp_StoreOrderTypesId ?? PartyStore) != partyType)
+                throw new InvalidOperationException($"{kind} غير موجود.");
+            if (store.Active == 0) throw new InvalidOperationException($"{kind} «{store.Store_Name}» غير نشط.");
         }
 
         // ============================== مساعدات ==============================
@@ -368,9 +377,10 @@ FROM Store_Order_Type_Settings WHERE Order_Type = {orderType}").AsEnumerable().F
         }
 
         /// <summary>سطر الصنف فى المخزن المستلم؛ يُنشأ برصيد صفر لو غير موجود (كـ Check_ItemFoundOnStore القديمة).</summary>
-        private Unit_item FindOrCreateDestLine(Unit_item src, long destStoreId)
+        private Unit_item FindOrCreateDestLine(Unit_item src, long destStoreId, int destType)
         {
-            var dest = opp.db.Unit_item.AsNoTracking().FirstOrDefault(u => u.Item_Id == src.Item_Id && u.Store_id == destStoreId);
+            var dest = opp.db.Unit_item.AsNoTracking().FirstOrDefault(u => u.Item_Id == src.Item_Id && u.Store_id == destStoreId
+                && (u.Store_Type ?? PartyStore) == destType);
             if (dest != null) return dest;
 
             long? branchId = opp.db.Stores.AsNoTracking().Where(x => x.Id == destStoreId).Select(x => x.Branch_Id).FirstOrDefault();
@@ -378,7 +388,7 @@ FROM Store_Order_Type_Settings WHERE Order_Type = {orderType}").AsEnumerable().F
             dest = new Unit_item
             {
                 id = CallSnowflakeIdGenerate.GenerateNewId(),
-                Item_Id = src.Item_Id, Store_id = destStoreId, Store_Type = PartyStore, Branch_Id = branchId,
+                Item_Id = src.Item_Id, Store_id = destStoreId, Store_Type = destType, Branch_Id = branchId,
                 Code = src.Code, unit_id = src.unit_id, Big_unit = src.Big_unit, Small_unit = src.Small_unit,
                 Full_qua = 0, D_Qua = 0, Item_No = 0, Reserved_Balance_Larg_Qnty = 0, Reserved_Balance_Small_Qnty = 0,
                 P_price = src.P_price, S_price = src.S_price, P_priceAvgCost = 0, Specification = src.Specification,
