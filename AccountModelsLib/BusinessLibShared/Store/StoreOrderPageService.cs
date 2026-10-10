@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using AccountModelsLib.Models;
 using Microsoft.EntityFrameworkCore;
 using static AccountModelsLib.StoreOrderService;
@@ -13,6 +14,11 @@ namespace AccountModelsLib
     /// </summary>
     public class StoreOrderPageService
     {
+        private readonly Func<operations> _newOpp;
+
+        /// <summary>newOpp: مصدر الاتصال (افتراضياً operations() بإعداد البرنامج)؛ يُمرَّر اتصال آخر للاختبار فقط.</summary>
+        public StoreOrderPageService(Func<operations> newOpp = null) => _newOpp = newOpp ?? (() => new operations());
+
         /// <summary>جهة اختيار (مخزن، قسم، عميل، مورد، موظف، ماكينة).</summary>
         public class PartyOption
         {
@@ -52,6 +58,56 @@ namespace AccountModelsLib
             public long? Reversed_By_Id { get; set; }
             public long? Reversal_Of_No { get; set; }
             public long? Reversed_By_No { get; set; }
+            /// <summary>هل للإذن حركات من المحرك؟ الأذون القديمة (قبل المحرك) لا تُعكس من الصفحة الجديدة.</summary>
+            public bool Engine_Posted { get; set; }
+        }
+
+        /// <summary>فلتر قائمة الأذون. OrderType = 0 لكل الأنواع، Status = -1 لكل الحالات.</summary>
+        public class OrderSearchFilter
+        {
+            public int OrderType { get; set; }
+            public DateTime? From { get; set; }
+            public DateTime? To { get; set; }
+            public int Status { get; set; } = -1;
+            public string Text { get; set; }
+            public int Skip { get; set; }
+            public int Take { get; set; } = 50;
+        }
+
+        /// <summary>صف فى قائمة الأذون.</summary>
+        public class OrderListRow
+        {
+            public long Id { get; set; }
+            public int Order_Type { get; set; }
+            public long Order_No { get; set; }
+            public DateTime Order_Date { get; set; }
+            public int Type_From { get; set; }
+            public string From_Name { get; set; }
+            public int Type_To { get; set; }
+            public string To_Name { get; set; }
+            public int Doc_Status { get; set; }
+            public long? Reversal_Of_Id { get; set; }
+            public int Lines_Count { get; set; }
+            public decimal? Total_Value { get; set; }
+            public string Notes { get; set; }
+            public int Total_Rows { get; set; }
+        }
+
+        public class StatusCount
+        {
+            public int Doc_Status { get; set; }
+            public int Cnt { get; set; }
+        }
+
+        /// <summary>أنواع الأذون المفعّلة (للفلتر).</summary>
+        public List<OrderTypeOption> GetOrderTypes() => Run(opp => opp.db.Database.SqlQuery<OrderTypeOption>($@"
+SELECT Order_Type, Name_Ar, Direction FROM Store_Order_Type_Settings WHERE Is_Active = 1 ORDER BY Order_Type").ToList());
+
+        public class OrderTypeOption
+        {
+            public int Order_Type { get; set; }
+            public string Name_Ar { get; set; }
+            public int Direction { get; set; }
         }
 
         public class OrderLineView
@@ -151,27 +207,29 @@ ORDER BY i.Item_Name").ToList());
             return Run(opp =>
             {
                 var h = opp.db.Database.SqlQuery<OrderHeaderView>($@"
-SELECT p.Id, ISNULL(p.Order_Type, 0) AS Order_Type, CAST(ISNULL(p.Order_Purshing_No, 0) AS bigint) AS Order_No,
+SELECT p.Id, CASE WHEN p.Order_Type BETWEEN 1 AND 23 THEN p.Order_Type + 1000 ELSE ISNULL(p.Order_Type, 0) END AS Order_Type, CAST(ISNULL(p.Order_Purshing_No, 0) AS bigint) AS Order_No,
        ISNULL(p.Order_date, GETDATE()) AS Order_Date, ISNULL(p.type_From, 0) AS Type_From, ISNULL(p.Id_From, 0) AS Id_From,
        ISNULL(p.Type_To, 0) AS Type_To, ISNULL(p.Id_To, 0) AS Id_To, p.NotesAll AS Notes, ISNULL(p.Doc_Status, 1) AS Doc_Status,
        p.Reversal_Of_Id, p.Reversed_By_Id,
        (SELECT CAST(o.Order_Purshing_No AS bigint) FROM Order_Purshing o WHERE o.Id = p.Reversal_Of_Id) AS Reversal_Of_No,
-       (SELECT CAST(o.Order_Purshing_No AS bigint) FROM Order_Purshing o WHERE o.Id = p.Reversed_By_Id) AS Reversed_By_No
+       (SELECT CAST(o.Order_Purshing_No AS bigint) FROM Order_Purshing o WHERE o.Id = p.Reversed_By_Id) AS Reversed_By_No,
+       CAST(CASE WHEN EXISTS (SELECT 1 FROM Detailes_Purshing_Import_Export e WHERE e.OrderTable_id = p.Id AND e.Engine_Posted = 1)
+                 THEN 1 ELSE 0 END AS bit) AS Engine_Posted
 FROM Order_Purshing p WHERE p.Id = {orderId}").AsEnumerable().FirstOrDefault();
                 if (h == null) return (null, new List<OrderLineView>());
 
                 // الإذن العكسى بلا أسطر: تُعرض أسطر الأصل للمرجع.
                 long linesOf = h.Reversal_Of_Id ?? h.Id;
                 var lines = opp.db.Database.SqlQuery<OrderLineView>($@"
-SELECT d.Unit_item_Table_Id AS Unit_Item_Id, i.Item_Name, ISNULL(u.Code, i.code) AS Code,
+SELECT d.Unit_item_Table_Id AS Unit_Item_Id, ISNULL(i.Item_Name, N'') AS Item_Name, ISNULL(ISNULL(u.Code, i.code), N'') AS Code,
        ISNULL(un.B_Unit, '') AS B_Unit, ISNULL(un.S_unit, '') AS S_Unit,
        CAST(CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END AS decimal(18,6)) AS Factor,
        CAST(ISNULL(d.qua, 0) AS decimal(18,4)) AS Qty_Large, CAST(ISNULL(d.Part_qua, 0) AS decimal(18,4)) AS Qty_Small,
        CAST(d.PriceUnit AS decimal(18,6)) AS Unit_Cost_Large, d.Notes,
        CAST(ISNULL(u.Full_qua, 0) * CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END + ISNULL(u.D_Qua, 0) AS decimal(18,4)) AS Balance_Small
 FROM Detailes_Purshing d
-INNER JOIN Unit_item u ON u.id = d.Unit_item_Table_Id
-INNER JOIN Item i ON i.id = u.Item_id
+LEFT JOIN Unit_item u ON u.id = d.Unit_item_Table_Id   -- أذون قديمة قد يكون سطر مخزونها محذوفاً: يظهر السطر بلا اسم
+LEFT JOIN Item i ON i.id = ISNULL(u.Item_id, NULLIF(d.Item_Id, 0))
 LEFT JOIN unit un ON un.id = u.unit_id
 WHERE d.OrderTable_id = {linesOf}
 ORDER BY d.Id").ToList();
@@ -179,13 +237,85 @@ ORDER BY d.Id").ToList();
             });
         }
 
+        // ============================== قائمة الأذون (المرحلة 4) ==============================
+
+        /// <summary>
+        /// بحث الأذون (بديل Order_detailes): فلتر بالنوع والفترة والحالة ونص (رقم الإذن بالضبط أو اسم الجهة أو الملاحظات)، مرتَّب بالأحدث،
+        /// مع ترقيم صفحات. اسم الجهة حسب نوعها (مخزن/قسم، مورد، عميل، موظف، ماكينة)؛ القيمة من دفتر المحرك فقط
+        /// (|الكمية الصغرى| × تكلفة الوحدة الصغرى، والتحويل نصفها لأن له صفّى صرف واستلام).
+        /// </summary>
+        public List<OrderListRow> SearchOrders(OrderSearchFilter f)
+        {
+            var (cte, args) = BaseQuery(f);
+            int skip = Math.Max(0, f.Skip), take = Math.Clamp(f.Take, 1, 500);
+            var all = args.Concat(new object[] { f.Status, skip, take }).ToArray();
+            int a = args.Length;
+            string sql = cte + $@"
+SELECT q.Id, q.Order_Type, q.Order_No, q.Order_Date, q.Type_From, q.From_Name, q.Type_To, q.To_Name, q.Doc_Status, q.Reversal_Of_Id, q.Notes,
+       (SELECT COUNT(*) FROM Detailes_Purshing d WHERE d.OrderTable_id = ISNULL(q.Reversal_Of_Id, q.Id)) AS Lines_Count,
+       (SELECT CAST(SUM(ABS(ISNULL(e.Qty_Small, 0)) * ISNULL(e.Unit_Cost, 0)) / CASE WHEN q.Order_Type IN (1001, 1006, 1016, 1017) THEN 2 ELSE 1 END AS decimal(18,2))
+        FROM Detailes_Purshing_Import_Export e WHERE e.OrderTable_id = q.Id AND e.Engine_Posted = 1) AS Total_Value,
+       COUNT(*) OVER () AS Total_Rows
+FROM q
+WHERE ({{{a}}} = -1 OR q.Doc_Status = {{{a}}})
+ORDER BY q.Order_Date DESC, q.Id DESC
+OFFSET {{{a + 1}}} ROWS FETCH NEXT {{{a + 2}}} ROWS ONLY";
+            return Run(opp => opp.db.Database.SqlQuery<OrderListRow>(FormattableStringFactory.Create(sql, all)).ToList());
+        }
+
+        /// <summary>عدد الأذون لكل حالة بنفس فلتر القائمة عدا الحالة (لشرائح الحالة).</summary>
+        public List<StatusCount> CountByStatus(OrderSearchFilter f)
+        {
+            var (cte, args) = BaseQuery(f);
+            string sql = cte + "\nSELECT q.Doc_Status, COUNT(*) AS Cnt FROM q GROUP BY q.Doc_Status";
+            return Run(opp => opp.db.Database.SqlQuery<StatusCount>(FormattableStringFactory.Create(sql, args)).ToList());
+        }
+
+        /// <summary>
+        /// تعريف الأذون المطابقة للفلتر (عدا الحالة) كـ CTE باسم q، والقيم كمعاملات مرقّمة {0}..{n} لا نصاً داخل SQL.
+        /// الأذون القديمة جداً بأرقام الأنواع القصيرة 1..23 (Load_Combo1) تُعرض كنوعها الحالى 1001..1023.
+        /// مشترك بين القائمة وعدّاد الحالات فيتطابقان دائماً.
+        /// </summary>
+        private static (string Sql, object[] Args) BaseQuery(OrderSearchFilter f)
+        {
+            string text = (f.Text ?? "").Trim();
+            long no = long.TryParse(text, out var n) ? n : -1;
+            DateTime from = (f.From ?? new DateTime(1900, 1, 1)).Date;
+            DateTime to = (f.To ?? new DateTime(2999, 1, 1)).Date.AddDays(1);
+            var args = new object[] { f.OrderType, from, to, text, no, "%" + text + "%" };
+            const string sql = @"
+WITH q AS (
+    SELECT p.Id, CASE WHEN p.Order_Type BETWEEN 1 AND 23 THEN p.Order_Type + 1000 ELSE ISNULL(p.Order_Type, 0) END AS Order_Type, CAST(ISNULL(p.Order_Purshing_No, 0) AS bigint) AS Order_No,
+           ISNULL(p.Order_date, p.Insert_ServerDateTime) AS Order_Date,
+           ISNULL(p.type_From, 0) AS Type_From, fn.Name AS From_Name, ISNULL(p.Type_To, 0) AS Type_To, tn.Name AS To_Name,
+           ISNULL(p.Doc_Status, 1) AS Doc_Status, p.Reversal_Of_Id, p.NotesAll AS Notes
+    FROM Order_Purshing p
+    OUTER APPLY (SELECT CASE WHEN p.type_From IN (4, 20) THEN (SELECT Store_Name FROM Store WHERE Id = p.Id_From)
+                             WHEN p.type_From = 1 THEN (SELECT Name FROM Supplier WHERE Id = p.Id_From)
+                             WHEN p.type_From = 2 THEN (SELECT Name FROM Customer WHERE Id = p.Id_From)
+                             WHEN p.type_From = 40 THEN (SELECT name FROM Employee WHERE id = p.Id_From)
+                             WHEN p.type_From = 23 THEN (SELECT Machin_Name FROM Machin_list WHERE Id = p.Id_From) END AS Name) fn
+    OUTER APPLY (SELECT CASE WHEN p.Type_To IN (4, 20) THEN (SELECT Store_Name FROM Store WHERE Id = p.Id_To)
+                             WHEN p.Type_To = 1 THEN (SELECT Name FROM Supplier WHERE Id = p.Id_To)
+                             WHEN p.Type_To = 2 THEN (SELECT Name FROM Customer WHERE Id = p.Id_To)
+                             WHEN p.Type_To = 40 THEN (SELECT name FROM Employee WHERE id = p.Id_To)
+                             WHEN p.Type_To = 23 THEN (SELECT Machin_Name FROM Machin_list WHERE Id = p.Id_To) END AS Name) tn
+    WHERE ISNULL(p.Order_Purshing_No, 0) <> -1
+      AND (p.Order_Type BETWEEN 1001 AND 1023 OR p.Order_Type BETWEEN 1 AND 23)
+      AND ({0} = 0 OR CASE WHEN p.Order_Type BETWEEN 1 AND 23 THEN p.Order_Type + 1000 ELSE ISNULL(p.Order_Type, 0) END = {0})
+      AND ISNULL(p.Order_date, p.Insert_ServerDateTime) >= {1} AND ISNULL(p.Order_date, p.Insert_ServerDateTime) < {2}
+      AND ({3} = N'' OR p.Order_Purshing_No = {4} OR fn.Name LIKE {5} OR tn.Name LIKE {5} OR p.NotesAll LIKE {5})
+)";
+            return (sql, args);
+        }
+
         // ============================== مساعدات ==============================
 
-        private static T Run<T>(Func<operations, T> f) => f(new operations());
+        private T Run<T>(Func<operations, T> f) => f(_newOpp());
 
-        private static T RunTx<T>(Func<operations, T> f)
+        private T RunTx<T>(Func<operations, T> f)
         {
-            var opp = new operations();
+            var opp = _newOpp();
             opp.BeginTransaction();
             try
             {

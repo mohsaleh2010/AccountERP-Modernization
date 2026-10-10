@@ -60,34 +60,44 @@ WHERE Order_Type IN (1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1012,1013
         }
 
         /// <summary>
-        /// خطة 03 المرحلة 2 (م-03-11): يربط عناصر قائمة «أذونات الصرف والاستلام» للأنواع البسيطة بصفحة Razor
-        /// /store/order/{type} عبر SysConfigMenus.RazorPath (مشفَّر كالباقى). يملأ الفارغ فقط فلا يغيّر ربطاً عدّله العميل،
+        /// خطة 03 المرحلتان 2 و4 (م-03-11): يربط عناصر قائمة «أذونات الصرف والاستلام» للأنواع البسيطة بصفحة Razor
+        /// /store/order/{type}، وعناصر «تقارير الأذونات» بقائمة الأذون /store/orders?type=، عبر SysConfigMenus.RazorPath (مشفَّر كالباقى). يملأ الفارغ فقط فلا يغيّر ربطاً عدّله العميل،
         /// والمطابقة باسم عنصر القائمة (KeysData بعد فك التشفير) لا بالمعرّف. شاشات الويندوز لا تقرأ RazorPath فلا تتأثر.
         /// التحويلات (1001/1006/1016/1017) غير مربوطة حتى المرحلة 3.
         /// </summary>
-        private static readonly (string Key, int Type)[] StoreOrderMenus =
+        private static readonly (string Key, string Path)[] StoreOrderMenus =
         {
-            ("menuItemOrderSarfCustomer", 1002), ("menuItemOrderSarfMortagahCustomer", 1003),
-            ("menuItemOrderEstlamSupplier", 1004), ("menuItemOrderEstlamMortaga3Supplier", 1005),
-            ("menuItemOrderTasweaZeada", 1007), ("menuItemOrderTasweaNakis", 1008),
-            ("menuItemOrderTasweaEntag", 1009), ("menuItemOrderSarfToEntag", 1010),
-            ("menuItemOrderSarfToKeta3", 1012), ("menuItemOrderSarfToHalek", 1013),
-            ("menuItemOrderEstlamFromOuterStore", 1014), ("menuItemOrderEstlamFromOuterStore2", 1014),
-            ("menuItemOrderSarfFromOuterStore2", 1015),
-            ("menuItemOrderSarfWarsha", 1018), ("menuItemOrderEstlamFromWarsha", 1019),
-            ("menuItemOrderSarfEmployee", 1020), ("menuItemOrderEstlamFromEmployee", 1021),
-            ("menuItemOrderSarfMachine", 1022), ("menuItemOrderEstlamFromMachine", 1023),
+            // شاشة الإذن لكل نوع بسيط (المرحلة 2)
+            ("menuItemOrderSarfCustomer", "/store/order/1002"), ("menuItemOrderSarfMortagahCustomer", "/store/order/1003"),
+            ("menuItemOrderEstlamSupplier", "/store/order/1004"), ("menuItemOrderEstlamMortaga3Supplier", "/store/order/1005"),
+            ("menuItemOrderTasweaZeada", "/store/order/1007"), ("menuItemOrderTasweaNakis", "/store/order/1008"),
+            ("menuItemOrderTasweaEntag", "/store/order/1009"), ("menuItemOrderSarfToEntag", "/store/order/1010"),
+            ("menuItemOrderSarfToKeta3", "/store/order/1012"), ("menuItemOrderSarfToHalek", "/store/order/1013"),
+            ("menuItemOrderEstlamFromOuterStore", "/store/order/1014"), ("menuItemOrderEstlamFromOuterStore2", "/store/order/1014"),
+            ("menuItemOrderSarfFromOuterStore2", "/store/order/1015"),
+            ("menuItemOrderSarfWarsha", "/store/order/1018"), ("menuItemOrderEstlamFromWarsha", "/store/order/1019"),
+            ("menuItemOrderSarfEmployee", "/store/order/1020"), ("menuItemOrderEstlamFromEmployee", "/store/order/1021"),
+            ("menuItemOrderSarfMachine", "/store/order/1022"), ("menuItemOrderEstlamFromMachine", "/store/order/1023"),
+            // قائمة وبحث الأذون (المرحلة 4) بدل Order_detailes لكل نوع، وقائمة كل الأذون.
+            // ملاحظة: القائمة القديمة تفتح «مرتجع صرف قطع الغيار» (879) على 1022 وعنصر «صرف إلى موظف» (881) بلا شاشة؛ هنا كلٌّ لنوعه الصحيح.
+            ("menuItemOrdersList", "/store/orders"),
+            ("menuItem99", "/store/orders?type=1001"), ("menuItem101", "/store/orders?type=1004"), ("menuItem102", "/store/orders?type=1005"),
+            ("menuItem118", "/store/orders?type=1002"), ("menuItem104", "/store/orders?type=1003"), ("menuItem122", "/store/orders?type=1007"),
+            ("menuItem123", "/store/orders?type=1008"), ("menuItem124", "/store/orders?type=1009"), ("menuItem125", "/store/orders?type=1010"),
+            ("menuItem126", "/store/orders?type=1012"),
+            ("SarfMachineToolStripMenuItem", "/store/orders?type=1022"), ("EstlamMachineToolStripMenuItem", "/store/orders?type=1023"),
+            ("EstlamFromEmployeeToolStripMenuItem", "/store/orders?type=1021"), ("SarfToFromEmployeeToolStripMenuItem", "/store/orders?type=1020"),
         };
 
         private static void LinkStoreOrderMenus(operations opp)
         {
-            var map = StoreOrderMenus.ToDictionary(m => m.Key, m => m.Type, StringComparer.OrdinalIgnoreCase);
+            var map = StoreOrderMenus.ToDictionary(m => m.Key, m => m.Path, StringComparer.OrdinalIgnoreCase);
             var rows = opp.db.Database.SqlQueryRaw<MenuKeyRow>(
                 "SELECT Id, KeysData FROM SysConfigMenus WHERE ISNULL(RazorPath, N'') = N'' AND KeysData IS NOT NULL").ToList();
             foreach (var r in rows)
             {
-                if (!map.TryGetValue(Common.DecryptMe(r.KeysData).Trim(), out int type)) continue;
-                string path = Common.EncryptMe("/store/order/" + type);
+                if (!map.TryGetValue(Common.DecryptMe(r.KeysData).Trim(), out string target)) continue;
+                string path = Common.EncryptMe(target);
                 opp.db.Database.ExecuteSqlInterpolated(
                     $"UPDATE SysConfigMenus SET RazorPath = {path} WHERE Id = {r.Id} AND ISNULL(RazorPath, N'') = N''");
             }

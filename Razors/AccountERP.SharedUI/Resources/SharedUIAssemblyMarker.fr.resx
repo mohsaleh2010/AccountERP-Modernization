@@ -2498,4 +2498,35 @@
   <data name="SOPartyType" xml:space="preserve"><value>Type</value></data>
   <data name="SONoPartyList" xml:space="preserve"><value>{0} — aucune sélection requise</value></data>
   <data name="SOBalanceAfter" xml:space="preserve"><value>Stock après</value></data>
+  <data name="SOListTitle" xml:space="preserve"><value>Bons de magasin</value></data>
+  <data name="SOListSub" xml:space="preserve"><value>Rechercher et suivre les bons d'entrée et de sortie</value></data>
+  <data name="SONewOrder" xml:space="preserve"><value>Nouveau bon</value></data>
+  <data name="SOInbound" xml:space="preserve"><value>Entrée</value></data>
+  <data name="SOOutbound" xml:space="preserve"><value>Sortie</value></data>
+  <data name="SOFiltersTitle" xml:space="preserve"><value>Recherche et filtres</value></data>
+  <data name="SOAllTypes" xml:space="preserve"><value>Tous les types</value></data>
+  <data name="SOFromDate" xml:space="preserve"><value>Du</value></data>
+  <data name="SOToDate" xml:space="preserve"><value>Au</value></data>
+  <data name="SOSearchText" xml:space="preserve"><value>N° du bon, tiers ou remarques</value></data>
+  <data name="SOPeriodLabel" xml:space="preserve"><value>Période</value></data>
+  <data name="SOStatusLabel" xml:space="preserve"><value>Statut</value></data>
+  <data name="SOPresetToday" xml:space="preserve"><value>Aujourd'hui</value></data>
+  <data name="SOPreset30" xml:space="preserve"><value>30 derniers jours</value></data>
+  <data name="SOPresetMonth" xml:space="preserve"><value>Ce mois</value></data>
+  <data name="SOPresetYear" xml:space="preserve"><value>Cette année</value></data>
+  <data name="SOPresetAll" xml:space="preserve"><value>Toutes les périodes</value></data>
+  <data name="SOAllStatuses" xml:space="preserve"><value>Tous</value></data>
+  <data name="SOResultsTitle" xml:space="preserve"><value>Bons</value></data>
+  <data name="SOColNo" xml:space="preserve"><value>N° du bon</value></data>
+  <data name="SOColType" xml:space="preserve"><value>Type de bon</value></data>
+  <data name="SOColParties" xml:space="preserve"><value>De → Vers</value></data>
+  <data name="SOColLines" xml:space="preserve"><value>Articles</value></data>
+  <data name="SONoOrdersFound" xml:space="preserve"><value>Aucun bon correspondant</value></data>
+  <data name="SONoOrdersHint" xml:space="preserve"><value>Modifiez les filtres ou élargissez la période</value></data>
+  <data name="SOPageInfo" xml:space="preserve"><value>{0}–{1} sur {2}</value></data>
+  <data name="SOPrev" xml:space="preserve"><value>Précédent</value></data>
+  <data name="SONext" xml:space="preserve"><value>Suivant</value></data>
+  <data name="SOReversalChip" xml:space="preserve"><value>Extourne</value></data>
+  <data name="SOLegacyOrder" xml:space="preserve"><value>Ancien bon — consultation</value></data>
+  <data name="SODeletedItem" xml:space="preserve"><value>Article supprimé (ligne de stock {0})</value></data>
 </root>

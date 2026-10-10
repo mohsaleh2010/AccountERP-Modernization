@@ -2496,4 +2496,35 @@
   <data name="SOPartyType" xml:space="preserve"><value>Party type</value></data>
   <data name="SONoPartyList" xml:space="preserve"><value>{0} — no selection needed</value></data>
   <data name="SOBalanceAfter" xml:space="preserve"><value>Balance after</value></data>
+  <data name="SOListTitle" xml:space="preserve"><value>Store orders</value></data>
+  <data name="SOListSub" xml:space="preserve"><value>Search and follow up receipt and issue orders</value></data>
+  <data name="SONewOrder" xml:space="preserve"><value>New order</value></data>
+  <data name="SOInbound" xml:space="preserve"><value>Inbound</value></data>
+  <data name="SOOutbound" xml:space="preserve"><value>Outbound</value></data>
+  <data name="SOFiltersTitle" xml:space="preserve"><value>Search and filter</value></data>
+  <data name="SOAllTypes" xml:space="preserve"><value>All types</value></data>
+  <data name="SOFromDate" xml:space="preserve"><value>From date</value></data>
+  <data name="SOToDate" xml:space="preserve"><value>To date</value></data>
+  <data name="SOSearchText" xml:space="preserve"><value>Order no., party or notes</value></data>
+  <data name="SOPeriodLabel" xml:space="preserve"><value>Period</value></data>
+  <data name="SOStatusLabel" xml:space="preserve"><value>Status</value></data>
+  <data name="SOPresetToday" xml:space="preserve"><value>Today</value></data>
+  <data name="SOPreset30" xml:space="preserve"><value>Last 30 days</value></data>
+  <data name="SOPresetMonth" xml:space="preserve"><value>This month</value></data>
+  <data name="SOPresetYear" xml:space="preserve"><value>This year</value></data>
+  <data name="SOPresetAll" xml:space="preserve"><value>All periods</value></data>
+  <data name="SOAllStatuses" xml:space="preserve"><value>All</value></data>
+  <data name="SOResultsTitle" xml:space="preserve"><value>Orders</value></data>
+  <data name="SOColNo" xml:space="preserve"><value>Order no.</value></data>
+  <data name="SOColType" xml:space="preserve"><value>Order type</value></data>
+  <data name="SOColParties" xml:space="preserve"><value>From → To</value></data>
+  <data name="SOColLines" xml:space="preserve"><value>Items</value></data>
+  <data name="SONoOrdersFound" xml:space="preserve"><value>No matching orders</value></data>
+  <data name="SONoOrdersHint" xml:space="preserve"><value>Change the filters or widen the period</value></data>
+  <data name="SOPageInfo" xml:space="preserve"><value>{0}–{1} of {2}</value></data>
+  <data name="SOPrev" xml:space="preserve"><value>Previous</value></data>
+  <data name="SONext" xml:space="preserve"><value>Next</value></data>
+  <data name="SOReversalChip" xml:space="preserve"><value>Reversal</value></data>
+  <data name="SOLegacyOrder" xml:space="preserve"><value>Legacy order — view only</value></data>
+  <data name="SODeletedItem" xml:space="preserve"><value>Deleted item (stock line {0})</value></data>
 </root>

@@ -2498,4 +2498,35 @@
   <data name="SOPartyType" xml:space="preserve"><value>Art</value></data>
   <data name="SONoPartyList" xml:space="preserve"><value>{0} — keine Auswahl nötig</value></data>
   <data name="SOBalanceAfter" xml:space="preserve"><value>Bestand danach</value></data>
+  <data name="SOListTitle" xml:space="preserve"><value>Lagerbelege</value></data>
+  <data name="SOListSub" xml:space="preserve"><value>Zugangs- und Abgangsbelege suchen und verfolgen</value></data>
+  <data name="SONewOrder" xml:space="preserve"><value>Neuer Beleg</value></data>
+  <data name="SOInbound" xml:space="preserve"><value>Zugang</value></data>
+  <data name="SOOutbound" xml:space="preserve"><value>Abgang</value></data>
+  <data name="SOFiltersTitle" xml:space="preserve"><value>Suchen und filtern</value></data>
+  <data name="SOAllTypes" xml:space="preserve"><value>Alle Arten</value></data>
+  <data name="SOFromDate" xml:space="preserve"><value>Von Datum</value></data>
+  <data name="SOToDate" xml:space="preserve"><value>Bis Datum</value></data>
+  <data name="SOSearchText" xml:space="preserve"><value>Belegnr., Partei oder Notizen</value></data>
+  <data name="SOPeriodLabel" xml:space="preserve"><value>Zeitraum</value></data>
+  <data name="SOStatusLabel" xml:space="preserve"><value>Status</value></data>
+  <data name="SOPresetToday" xml:space="preserve"><value>Heute</value></data>
+  <data name="SOPreset30" xml:space="preserve"><value>Letzte 30 Tage</value></data>
+  <data name="SOPresetMonth" xml:space="preserve"><value>Dieser Monat</value></data>
+  <data name="SOPresetYear" xml:space="preserve"><value>Dieses Jahr</value></data>
+  <data name="SOPresetAll" xml:space="preserve"><value>Alle Zeiträume</value></data>
+  <data name="SOAllStatuses" xml:space="preserve"><value>Alle</value></data>
+  <data name="SOResultsTitle" xml:space="preserve"><value>Belege</value></data>
+  <data name="SOColNo" xml:space="preserve"><value>Belegnr.</value></data>
+  <data name="SOColType" xml:space="preserve"><value>Belegart</value></data>
+  <data name="SOColParties" xml:space="preserve"><value>Von → An</value></data>
+  <data name="SOColLines" xml:space="preserve"><value>Artikel</value></data>
+  <data name="SONoOrdersFound" xml:space="preserve"><value>Keine passenden Belege</value></data>
+  <data name="SONoOrdersHint" xml:space="preserve"><value>Filter ändern oder Zeitraum erweitern</value></data>
+  <data name="SOPageInfo" xml:space="preserve"><value>{0}–{1} von {2}</value></data>
+  <data name="SOPrev" xml:space="preserve"><value>Zurück</value></data>
+  <data name="SONext" xml:space="preserve"><value>Weiter</value></data>
+  <data name="SOReversalChip" xml:space="preserve"><value>Storno</value></data>
+  <data name="SOLegacyOrder" xml:space="preserve"><value>Alter Beleg — nur Ansicht</value></data>
+  <data name="SODeletedItem" xml:space="preserve"><value>Gelöschter Artikel (Lagerzeile {0})</value></data>
 </root>

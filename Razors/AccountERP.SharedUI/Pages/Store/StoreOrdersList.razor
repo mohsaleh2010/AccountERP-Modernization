@@ -1,0 +1,320 @@
+@* 🟢 خطة 03 — المرحلة 4: قائمة وبحث أذون المخزن (بديل Store_LIB.Report.Order_detailes لـ 14 عنصر «بحث/تقارير أذونات»).
+   فلتر بالنوع والفترة (اختيارات سريعة) والحالة (شرائح بعددها) ونص (رقم الإذن أو الجهة أو الملاحظات)، مع ترقيم صفحات من الخادم.
+   الصف يفتح الإذن فى صفحة الإذن (/store/order/{type}?id=). الأذون القديمة بالأرقام القصيرة 1..23 تظهر كنوعها 1001..1023.
+   القيمة من دفتر المحرك فقط؛ الأذون القديمة بلا قيمة. التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@page "/store/orders"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.StoreOrderPageService
+@inject LanguageService LangService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("SOListTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .sol-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .sol-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                     background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .sol-head .ico .mud-icon-root { font-size: 2rem; }
+    .sol-head .titles { flex: 1 1 260px; min-width: 0; }
+    .sol-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .sol-gap { margin-top: 16px; }
+
+    .sol-filters { display: grid; grid-template-columns: minmax(200px, 1.2fr) repeat(2, minmax(150px, .8fr)) minmax(220px, 1.6fr); gap: 12px; align-items: start; }
+    .sol-presets, .sol-status { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .sol-preset { min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface);
+                  color: var(--mud-palette-text-primary); font: inherit; font-size: .875rem; cursor: pointer; transition: background .15s, border-color .15s; }
+    .sol-preset:hover { border-color: var(--mud-palette-primary); }
+    .sol-preset:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .sol-preset[aria-pressed="true"] { background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent); border-color: var(--mud-palette-primary);
+                                       color: var(--mud-palette-primary); font-weight: 600; }
+    .sol-preset .n { display: inline-block; min-width: 22px; margin-inline-start: 6px; padding: 0 6px; border-radius: 999px; font-size: .75rem; font-weight: 700;
+                     background: var(--mud-palette-background-gray); color: var(--mud-palette-text-secondary); font-variant-numeric: tabular-nums; }
+    .sol-preset[aria-pressed="true"] .n { background: var(--mud-palette-primary); color: var(--mud-palette-primary-text); }
+
+    .sol-no { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--mud-palette-primary); }
+    .sol-date { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .sol-type { display: inline-flex; align-items: center; gap: 8px; }
+    .sol-dot { flex: none; width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; }
+    .sol-dot .mud-icon-root { font-size: 1.1rem; }
+    .sol-dot.in { background: color-mix(in srgb, var(--mud-palette-success) 15%, transparent); color: var(--mud-palette-success); }
+    .sol-dot.out { background: color-mix(in srgb, var(--mud-palette-warning) 18%, transparent); color: var(--mud-palette-warning-darken, var(--mud-palette-warning)); }
+    .sol-dot.tr { background: color-mix(in srgb, var(--mud-palette-info) 15%, transparent); color: var(--mud-palette-info); }
+    .sol-parties { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .sol-parties .p { display: flex; flex-direction: column; min-width: 0; }
+    .sol-parties .k { font-size: .75rem; color: var(--mud-palette-text-secondary); }
+    .sol-parties .v { font-weight: 600; color: var(--mud-palette-text-primary); overflow-wrap: anywhere; }
+    .sol-parties .arr { color: var(--mud-palette-text-secondary); }
+    .sol-num { font-variant-numeric: tabular-nums; }
+    .sol-table .mud-table-row { cursor: pointer; }
+    .sol-table .mud-table-row:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: -2px; }
+
+    .sol-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-top: 12px; }
+    .sol-pager .info { font-size: .875rem; color: var(--mud-palette-text-secondary); font-variant-numeric: tabular-nums; }
+    .sol-pager .btns { display: flex; align-items: center; gap: 8px; }
+    .sol-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .sol-empty .mud-icon-root { opacity: .5; }
+    .sol-empty b { color: var(--mud-palette-text-primary); }
+
+    @@media (max-width: 1099px) { .sol-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sol-filters .f-text { grid-column: 1 / -1; } }
+    @@media (max-width: 599px) { .sol-filters { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-card sol-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Inventory" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("SOListTitle")</h1>
+            <div class="sub">@Tr("SOListSub")</div>
+        </div>
+        <MudMenu Label="@Tr("SONewOrder")" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                 EndIcon="@Icons.Material.Filled.KeyboardArrowDown" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+            <MudMenuItem Disabled="true"><b>@Tr("SOInbound")</b></MudMenuItem>
+            @foreach (var t in _types.Where(t => t.Direction == 1))
+            {
+                <MudMenuItem Icon="@Icons.Material.Filled.MoveToInbox" IconColor="Color.Success" Href="@($"/store/order/{t.Order_Type}")">@t.Name_Ar</MudMenuItem>
+            }
+            <MudDivider />
+            <MudMenuItem Disabled="true"><b>@Tr("SOOutbound")</b></MudMenuItem>
+            @foreach (var t in _types.Where(t => t.Direction == 2))
+            {
+                <MudMenuItem Icon="@Icons.Material.Filled.Outbox" IconColor="Color.Warning" Href="@($"/store/order/{t.Order_Type}")">@t.Name_Ar</MudMenuItem>
+            }
+        </MudMenu>
+    </div>
+
+    <div class="inv-card sol-gap" role="search">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.FilterList" />@Tr("SOFiltersTitle")</h2>
+        <div class="sol-filters">
+            <MudSelect T="int" Value="_type" ValueChanged="OnTypeChangedAsync" Label="@Tr("SOColType")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("SOAllTypes") : TypeName(v))">
+                <MudSelectItem T="int" Value="0">@Tr("SOAllTypes")</MudSelectItem>
+                @foreach (var t in _types)
+                {
+                    <MudSelectItem T="int" Value="@t.Order_Type">@t.Name_Ar</MudSelectItem>
+                }
+            </MudSelect>
+            <MudDatePicker T="DateTime?" Date="_from" DateChanged="@(d => OnDateChangedAsync(d, _to))" Label="@Tr("SOFromDate")" Variant="Variant.Outlined" Clearable="true" />
+            <MudDatePicker T="DateTime?" Date="_to" DateChanged="@(d => OnDateChangedAsync(_from, d))" Label="@Tr("SOToDate")" Variant="Variant.Outlined" Clearable="true" />
+            <div class="f-text">
+                <MudTextField T="string" Value="_text" ValueChanged="OnTextChangedAsync" Label="@Tr("SOSearchText")" Variant="Variant.Outlined"
+                              Immediate="true" DebounceInterval="400" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+            </div>
+        </div>
+        <div class="sol-presets" role="group" aria-label="@Tr("SOPeriodLabel")">
+            @foreach (var p in Presets)
+            {
+                <button type="button" class="sol-preset" aria-pressed="@(_preset == p.Key ? "true" : "false")" @onclick="@(() => ApplyPresetAsync(p.Key))">@Tr(p.Label)</button>
+            }
+        </div>
+        <div class="sol-status" role="group" aria-label="@Tr("SOStatusLabel")">
+            @foreach (var s in StatusChips)
+            {
+                <button type="button" class="sol-preset" aria-pressed="@(_status == s.Status ? "true" : "false")" @onclick="@(() => OnStatusAsync(s.Status))">
+                    @Tr(s.Label)<span class="n">@CountFor(s.Status)</span>
+                </button>
+            }
+        </div>
+    </div>
+
+    <div class="inv-card sol-gap">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("SOResultsTitle")<span class="inv-count">@_total</span></h2>
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" role="alert">@_error</MudAlert>
+        }
+        <MudTable Items="@_rows" T="OrderListRow" Hover="true" Elevation="0" Class="inv-table sol-table" Breakpoint="Breakpoint.Sm"
+                  Loading="_loading" LoadingProgressColor="Color.Primary" OnRowClick="@(e => Open(e.Item))">
+            <HeaderContent>
+                <MudTh>@Tr("SOColNo")</MudTh>
+                <MudTh>@Tr("SOOrderDate")</MudTh>
+                <MudTh>@Tr("SOColType")</MudTh>
+                <MudTh>@Tr("SOColParties")</MudTh>
+                <MudTh Style="text-align:end">@Tr("SOColLines")</MudTh>
+                <MudTh Style="text-align:end">@Tr("SOLineValue")</MudTh>
+                <MudTh>@Tr("SOStatusLabel")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("SOColNo")">
+                    <a class="sol-no" href="@OrderHref(context)" @onclick:stopPropagation="true">@context.Order_No</a>
+                </MudTd>
+                <MudTd DataLabel="@Tr("SOOrderDate")"><span class="sol-date">@context.Order_Date.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture)</span></MudTd>
+                <MudTd DataLabel="@Tr("SOColType")">
+                    <span class="sol-type">
+                        <span class="sol-dot @DirClass(context.Order_Type)" aria-hidden="true"><MudIcon Icon="@DirIcon(context.Order_Type)" /></span>
+                        <span>@TypeName(context.Order_Type)</span>
+                    </span>
+                </MudTd>
+                <MudTd DataLabel="@Tr("SOColParties")">
+                    <span class="sol-parties">
+                        <span class="p"><span class="k">@Tr("SOFrom")</span><span class="v">@PartyText(context.Type_From, context.From_Name)</span></span>
+                        <MudIcon Class="arr" Size="Size.Small" Icon="@(LangService.IsRtl ? Icons.Material.Filled.ArrowBack : Icons.Material.Filled.ArrowForward)" aria-hidden="true" />
+                        <span class="p"><span class="k">@Tr("SOTo")</span><span class="v">@PartyText(context.Type_To, context.To_Name)</span></span>
+                    </span>
+                </MudTd>
+                <MudTd DataLabel="@Tr("SOColLines")" Style="text-align:end"><span class="sol-num">@context.Lines_Count</span></MudTd>
+                <MudTd DataLabel="@Tr("SOLineValue")" Style="text-align:end">
+                    <span class="sol-num">@(context.Total_Value is decimal v ? v.ToString("N2", CultureInfo.InvariantCulture) : "—")</span>
+                </MudTd>
+                <MudTd DataLabel="@Tr("SOStatusLabel")">
+                    <MudChip T="string" Size="Size.Small" Color="@StatusColor(context.Doc_Status)" Variant="Variant.Filled" Icon="@StatusIcon(context.Doc_Status)">@StatusText(context.Doc_Status, context.Reversal_Of_Id)</MudChip>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="sol-empty">
+                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" />
+                    <b>@Tr("SONoOrdersFound")</b>
+                    <span>@Tr("SONoOrdersHint")</span>
+                    @if (_preset != "all")
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-2" OnClick="@(() => ApplyPresetAsync("all"))">@Tr("SOPresetAll")</MudButton>
+                    }
+                </div>
+            </NoRecordsContent>
+        </MudTable>
+        @if (_total > 0)
+        {
+            <div class="sol-pager">
+                <span class="info" aria-live="polite">@Tr("SOPageInfo", _skip + 1, Math.Min(_skip + PageSize, _total), _total)</span>
+                <div class="btns">
+                    <MudButton Variant="Variant.Outlined" StartIcon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)"
+                               Disabled="@(_skip == 0 || _loading)" OnClick="@(() => PageAsync(-1))">@Tr("SOPrev")</MudButton>
+                    <MudButton Variant="Variant.Outlined" EndIcon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)"
+                               Disabled="@(_skip + PageSize >= _total || _loading)" OnClick="@(() => PageAsync(1))">@Tr("SONext")</MudButton>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private const int PageSize = 25;
+    private record Preset(string Key, string Label);
+    private record StatusChip(int Status, string Label);
+
+    private static readonly Preset[] Presets =
+    {
+        new("today", "SOPresetToday"), new("30", "SOPreset30"), new("month", "SOPresetMonth"), new("year", "SOPresetYear"), new("all", "SOPresetAll"),
+    };
+    private static readonly StatusChip[] StatusChips =
+    {
+        new(-1, "SOAllStatuses"), new(0, "SOStatusDraft"), new(1, "SOStatusPosted"), new(2, "SOStatusReversed"), new(3, "SOStatusCancelled"),
+    };
+
+    [SupplyParameterFromQuery(Name = "type")] public int? TypeQuery { get; set; }
+
+    private readonly StoreOrderPageService _svc = new();
+    private List<OrderTypeOption> _types = new();
+    private List<OrderListRow> _rows = new();
+    private List<StatusCount> _counts = new();
+    private int _type, _status = -1, _skip, _total;
+    private DateTime? _from, _to;
+    private string? _text, _error;
+    private string _preset = "30";
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _type = TypeQuery is >= 1001 and <= 1023 ? TypeQuery.Value : 0;
+        SetPreset("30");
+        try
+        {
+            _types = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetOrderTypes(); });
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    // ============================== الفلاتر ==============================
+
+    private void SetPreset(string key)
+    {
+        _preset = key;
+        var today = DateTime.Today;
+        (_from, _to) = key switch
+        {
+            "today" => (today, today),
+            "month" => (new DateTime(today.Year, today.Month, 1), today),
+            "year" => (new DateTime(today.Year, 1, 1), today),
+            "all" => ((DateTime?)null, (DateTime?)null),
+            _ => (today.AddDays(-29), today),
+        };
+    }
+
+    private async Task ApplyPresetAsync(string key) { SetPreset(key); _skip = 0; await LoadAsync(); }
+    private async Task OnTypeChangedAsync(int t) { _type = t; _skip = 0; await LoadAsync(); }
+    private async Task OnStatusAsync(int s) { _status = s; _skip = 0; await LoadAsync(); }
+    private async Task OnTextChangedAsync(string? t) { _text = t; _skip = 0; await LoadAsync(); }
+    private async Task OnDateChangedAsync(DateTime? from, DateTime? to) { _from = from; _to = to; _preset = ""; _skip = 0; await LoadAsync(); }
+    private async Task PageAsync(int dir) { _skip = Math.Max(0, _skip + dir * PageSize); await LoadAsync(); }
+
+    private OrderSearchFilter Filter() => new() { OrderType = _type, From = _from, To = _to, Status = _status, Text = _text, Skip = _skip, Take = PageSize };
+
+    private async Task LoadAsync()
+    {
+        _loading = true; _error = null;
+        var f = Filter();
+        try
+        {
+            var (rows, counts) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_svc.SearchOrders(f), _svc.CountByStatus(f)); });
+            _rows = rows; _counts = counts;
+            _total = rows.FirstOrDefault()?.Total_Rows ?? 0;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); _rows = new(); _total = 0; }
+        finally { _loading = false; }
+    }
+
+    private int CountFor(int status) => status == -1 ? _counts.Sum(c => c.Cnt) : _counts.FirstOrDefault(c => c.Doc_Status == status)?.Cnt ?? 0;
+
+    // ============================== العرض ==============================
+
+    private string OrderHref(OrderListRow r) => $"/store/order/{r.Order_Type}?id={r.Id}";
+    private void Open(OrderListRow r) => Nav.NavigateTo(OrderHref(r));
+
+    private int Direction(int type) => _types.FirstOrDefault(t => t.Order_Type == type)?.Direction ?? 2;
+    private string TypeName(int type) => _types.FirstOrDefault(t => t.Order_Type == type)?.Name_Ar ?? type.ToString(CultureInfo.InvariantCulture);
+    private string DirClass(int type) => Direction(type) switch { 1 => "in", 3 => "tr", _ => "out" };
+    private string DirIcon(int type) => Direction(type) switch { 1 => Icons.Material.Filled.MoveToInbox, 3 => Icons.Material.Filled.SyncAlt, _ => Icons.Material.Filled.Outbox };
+
+    /// <summary>اسم الجهة، أو اسم نوعها للجهات بلا قائمة (هالك، تسوية، إنتاج...).</summary>
+    private string PartyText(int type, string? name) => !string.IsNullOrWhiteSpace(name) ? name! : type == 0 ? "—" : Tr("SOParty_" + type);
+
+    private static Color StatusColor(int s) => s switch { 1 => Color.Success, 0 => Color.Warning, 2 => Color.Error, 3 => Color.Dark, _ => Color.Default };
+    private static string StatusIcon(int s) => s switch
+    {
+        1 => Icons.Material.Filled.CheckCircle, 0 => Icons.Material.Filled.EditNote, 2 => Icons.Material.Filled.Undo, _ => Icons.Material.Filled.Block
+    };
+    private string StatusText(int s, long? reversalOf) => reversalOf != null ? Tr("SOReversalChip") : s switch
+    {
+        0 => Tr("SOStatusDraft"), 1 => Tr("SOStatusPosted"), 2 => Tr("SOStatusReversed"), _ => Tr("SOStatusCancelled")
+    };
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

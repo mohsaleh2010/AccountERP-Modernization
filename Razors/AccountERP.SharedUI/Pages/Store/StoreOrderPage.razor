@@ -141,6 +141,11 @@
             {
                 <MudChip T="string" Variant="Variant.Outlined" Color="Color.Error" Icon="@Icons.Material.Filled.Undo">@Tr("SOReversedBy", byNo)</MudChip>
             }
+            @if (_header is { Engine_Posted: false, Doc_Status: 1 })
+            {
+                <MudChip T="string" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.History">@Tr("SOLegacyOrder")</MudChip>
+            }
+            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.List" Href="@($"/store/orders?type={OrderType}")">@Tr("SOListTitle")</MudButton>
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_isBusy" OnClick="NewOrderAsync">@Tr("DstNewButton")</MudButton>
         </div>
     </div>
@@ -256,7 +261,7 @@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="#"><span class="so-idx">@(_lines.IndexOf(context) + 1)</span></MudTd>
-                    <MudTd DataLabel="@Tr("SOItem")"><div class="so-item-name">@context.Name</div><div class="so-item-code">@CodeText(context.Code)</div></MudTd>
+                    <MudTd DataLabel="@Tr("SOItem")"><div class="so-item-name">@(string.IsNullOrWhiteSpace(context.Name) ? Tr("SODeletedItem", context.UnitItemId) : context.Name)</div><div class="so-item-code">@CodeText(context.Code)</div></MudTd>
                     <MudTd DataLabel="@Tr("SOQtyLarge")" Style="text-align:end"><span class="so-q">@Qty(context.QtyLarge)</span> <span class="so-u">@context.BUnit</span></MudTd>
                     <MudTd DataLabel="@Tr("SOQtySmall")" Style="text-align:end">
                         @if (context.QtySmall > 0)
@@ -332,7 +337,8 @@
             {
                 <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Block" Disabled="_isBusy" OnClick="CancelDraftAsync">@Tr("SOCancelDraft")</MudButton>
             }
-            @if (_status == (int)StockMovementService.DocStatus.Posted && _header?.Reversal_Of_Id == null)
+            @* العكس للأذون المرحَّلة بالمحرك فقط؛ الإذن القديم (قبل المحرك) يُعرض للقراءة *@
+            @if (_status == (int)StockMovementService.DocStatus.Posted && _header?.Reversal_Of_Id == null && _header?.Engine_Posted == true)
             {
                 <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Undo" Disabled="_isBusy" OnClick="@(() => OpenReverse(false))">@Tr("SOReverse")</MudButton>
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" Disabled="_isBusy" OnClick="@(() => OpenReverse(true))">@Tr("SOReverseAndCopy")</MudButton>

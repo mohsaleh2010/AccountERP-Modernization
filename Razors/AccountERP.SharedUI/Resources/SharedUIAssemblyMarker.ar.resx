@@ -2496,4 +2496,35 @@
   <data name="SOPartyType" xml:space="preserve"><value>نوع الجهة</value></data>
   <data name="SONoPartyList" xml:space="preserve"><value>{0} — لا يحتاج اختياراً</value></data>
   <data name="SOBalanceAfter" xml:space="preserve"><value>الرصيد بعد</value></data>
+  <data name="SOListTitle" xml:space="preserve"><value>أذون المخزن</value></data>
+  <data name="SOListSub" xml:space="preserve"><value>بحث ومتابعة أذون الصرف والاستلام</value></data>
+  <data name="SONewOrder" xml:space="preserve"><value>إذن جديد</value></data>
+  <data name="SOInbound" xml:space="preserve"><value>وارد</value></data>
+  <data name="SOOutbound" xml:space="preserve"><value>منصرف</value></data>
+  <data name="SOFiltersTitle" xml:space="preserve"><value>البحث والتصفية</value></data>
+  <data name="SOAllTypes" xml:space="preserve"><value>كل الأنواع</value></data>
+  <data name="SOFromDate" xml:space="preserve"><value>من تاريخ</value></data>
+  <data name="SOToDate" xml:space="preserve"><value>إلى تاريخ</value></data>
+  <data name="SOSearchText" xml:space="preserve"><value>رقم الإذن أو الجهة أو الملاحظات</value></data>
+  <data name="SOPeriodLabel" xml:space="preserve"><value>الفترة</value></data>
+  <data name="SOStatusLabel" xml:space="preserve"><value>الحالة</value></data>
+  <data name="SOPresetToday" xml:space="preserve"><value>اليوم</value></data>
+  <data name="SOPreset30" xml:space="preserve"><value>آخر 30 يوماً</value></data>
+  <data name="SOPresetMonth" xml:space="preserve"><value>هذا الشهر</value></data>
+  <data name="SOPresetYear" xml:space="preserve"><value>هذا العام</value></data>
+  <data name="SOPresetAll" xml:space="preserve"><value>كل الفترات</value></data>
+  <data name="SOAllStatuses" xml:space="preserve"><value>الكل</value></data>
+  <data name="SOResultsTitle" xml:space="preserve"><value>الأذون</value></data>
+  <data name="SOColNo" xml:space="preserve"><value>رقم الإذن</value></data>
+  <data name="SOColType" xml:space="preserve"><value>نوع الإذن</value></data>
+  <data name="SOColParties" xml:space="preserve"><value>من ← إلى</value></data>
+  <data name="SOColLines" xml:space="preserve"><value>الأصناف</value></data>
+  <data name="SONoOrdersFound" xml:space="preserve"><value>لا توجد أذون مطابقة</value></data>
+  <data name="SONoOrdersHint" xml:space="preserve"><value>غيّر التصفية أو وسّع الفترة</value></data>
+  <data name="SOPageInfo" xml:space="preserve"><value>{0}–{1} من {2}</value></data>
+  <data name="SOPrev" xml:space="preserve"><value>السابق</value></data>
+  <data name="SONext" xml:space="preserve"><value>التالى</value></data>
+  <data name="SOReversalChip" xml:space="preserve"><value>إذن عكسى</value></data>
+  <data name="SOLegacyOrder" xml:space="preserve"><value>إذن قديم — للعرض فقط</value></data>
+  <data name="SODeletedItem" xml:space="preserve"><value>صنف محذوف (سطر مخزون {0})</value></data>
 </root>
