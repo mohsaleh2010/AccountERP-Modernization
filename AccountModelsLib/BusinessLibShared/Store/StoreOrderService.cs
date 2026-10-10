@@ -421,10 +421,28 @@ SELECT ISNULL(MAX(Order_Purshing_No), 0) AS Value FROM Order_Purshing WITH (UPDL
             return st[0] ?? 1;
         }
 
+        /// <summary>
+        /// سجل العمليات بنفس أعمدة DataDictionaryLogerProcessCLS.AddNew لكن بأمر SQL مُمرَّر بالمعاملات: لو كان Id عموداً تلقائياً (Identity)
+        /// يُدرج بلا Id، وإلا بمعرّف Snowflake. الطريقة القديمة (Add + SaveChanges) تفشل حين Use_Auto_Identity_Column = 0 على قاعدة Id فيها تلقائى،
+        /// وتبتلع الخطأ لكن الصف الفاشل يبقى فى ChangeTracker فيُفشل SaveChanges التالى فى نفس المعاملة (ترحيل بعد حفظ المسودة).
+        /// </summary>
         private void Log(long subProcessId, Order_Purshing header, string notes)
         {
-            var o = opp;
-            new DataDictionaryLogerProcessCLS(ref o).AddNew(subProcessId, header, notes);
+            long processId = header.Order_Type ?? 0;
+            string subName = subProcessId switch { 1 => "إضافة", 2 => "تعديل", 3 => "حذف", _ => "" };
+            long newId = CallSnowflakeIdGenerate.GenerateNewId();
+            opp.db.Database.ExecuteSqlInterpolated($@"
+DECLARE @pn nvarchar(500) = ISNULL((SELECT TOP 1 ProcessName FROM DataDictionaryProcessesLists WHERE Id = {processId}), N'');
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('DataDictionaryLogerProcesses') AND name = 'Id')
+    INSERT INTO DataDictionaryLogerProcesses (ProcessId, ProcessName, SubProcessId, SubProcessName, ProcessDocNo, ProcessTableId,
+        User_Id, UserName, Branch_Id, ProcessDateTime, ProcessNotes, Item_Name, Qnty)
+    VALUES ({processId}, @pn, {subProcessId}, {subName}, {header.Order_Purshing_No}, {header.Id},
+        {Common.User_Id}, {Common.User_Name ?? ""}, {Common.Branch_Id}, {DateTime.Now}, {notes ?? ""}, N'', N'');
+ELSE
+    INSERT INTO DataDictionaryLogerProcesses (Id, ProcessId, ProcessName, SubProcessId, SubProcessName, ProcessDocNo, ProcessTableId,
+        User_Id, UserName, Branch_Id, ProcessDateTime, ProcessNotes, Item_Name, Qnty)
+    VALUES ({newId}, {processId}, @pn, {subProcessId}, {subName}, {header.Order_Purshing_No}, {header.Id},
+        {Common.User_Id}, {Common.User_Name ?? ""}, {Common.Branch_Id}, {DateTime.Now}, {notes ?? ""}, N'', N'');");
         }
     }
 }

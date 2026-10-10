@@ -2420,4 +2420,80 @@
   <data name="FBChkColNo" xml:space="preserve"><value>Check no.</value></data>
   <data name="FBChkColOwner" xml:space="preserve"><value>Account</value></data>
   <data name="FBChkTotal" xml:space="preserve"><value>Total checks</value></data>
+  <data name="SOTitleFallback" xml:space="preserve"><value>Store order</value></data>
+  <data name="SOOrderData" xml:space="preserve"><value>Order details</value></data>
+  <data name="SOOrderNo" xml:space="preserve"><value>Order no.</value></data>
+  <data name="SOFromType" xml:space="preserve"><value>From (party type)</value></data>
+  <data name="SOToType" xml:space="preserve"><value>To (party type)</value></data>
+  <data name="SOFrom" xml:space="preserve"><value>From</value></data>
+  <data name="SOTo" xml:space="preserve"><value>To</value></data>
+  <data name="SONotes" xml:space="preserve"><value>Notes</value></data>
+  <data name="SOLinesTitle" xml:space="preserve"><value>Items</value></data>
+  <data name="SOAddLineTitle" xml:space="preserve"><value>Add item</value></data>
+  <data name="SOItemSearch" xml:space="preserve"><value>Search by name or code</value></data>
+  <data name="SOOnlyWithBalance" xml:space="preserve"><value>Only items with balance</value></data>
+  <data name="SOItem" xml:space="preserve"><value>Item</value></data>
+  <data name="SOQtyLarge" xml:space="preserve"><value>Large unit qty</value></data>
+  <data name="SOQtySmall" xml:space="preserve"><value>Small unit qty</value></data>
+  <data name="SOUnitCost" xml:space="preserve"><value>Large unit cost</value></data>
+  <data name="SOLineValue" xml:space="preserve"><value>Value</value></data>
+  <data name="SOLineNotes" xml:space="preserve"><value>Line note</value></data>
+  <data name="SOAddLine" xml:space="preserve"><value>Add</value></data>
+  <data name="SOBalance" xml:space="preserve"><value>Balance</value></data>
+  <data name="SOAvgCost" xml:space="preserve"><value>Average cost</value></data>
+  <data name="SONoLines" xml:space="preserve"><value>No items added yet</value></data>
+  <data name="SOLinesCount" xml:space="preserve"><value>Items</value></data>
+  <data name="SOTotalValue" xml:space="preserve"><value>Total value</value></data>
+  <data name="SOSaveDraft" xml:space="preserve"><value>Save draft</value></data>
+  <data name="SOPost" xml:space="preserve"><value>Post</value></data>
+  <data name="SOPostConfirm" xml:space="preserve"><value>Posting moves the stock balance permanently and the order cannot be edited afterwards (it is corrected by a reversal). Continue?</value></data>
+  <data name="SOCancelDraft" xml:space="preserve"><value>Cancel draft</value></data>
+  <data name="SOCancelDraftConfirm" xml:space="preserve"><value>Cancel this draft? Stock is not affected.</value></data>
+  <data name="SOReverse" xml:space="preserve"><value>Reverse order</value></data>
+  <data name="SOReverseAndCopy" xml:space="preserve"><value>Reverse and copy to edit</value></data>
+  <data name="SOReverseReason" xml:space="preserve"><value>Reversal reason</value></data>
+  <data name="SOReverseConfirm" xml:space="preserve"><value>Confirm reversal</value></data>
+  <data name="SOReasonRequired" xml:space="preserve"><value>Enter the reversal reason</value></data>
+  <data name="SOStatusNew" xml:space="preserve"><value>New</value></data>
+  <data name="SOStatusDraft" xml:space="preserve"><value>Draft</value></data>
+  <data name="SOStatusPosted" xml:space="preserve"><value>Posted</value></data>
+  <data name="SOStatusReversed" xml:space="preserve"><value>Reversed</value></data>
+  <data name="SOStatusCancelled" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="SOReversalOf" xml:space="preserve"><value>Reversal of order {0}</value></data>
+  <data name="SOReversedBy" xml:space="preserve"><value>Reversed by order {0}</value></data>
+  <data name="SODraftSaved" xml:space="preserve"><value>Draft {0} saved</value></data>
+  <data name="SOPosted" xml:space="preserve"><value>Order {0} posted</value></data>
+  <data name="SOReversed" xml:space="preserve"><value>Order reversed; reversal no. {0}</value></data>
+  <data name="SOCancelled" xml:space="preserve"><value>Draft cancelled</value></data>
+  <data name="SOCopyCreated" xml:space="preserve"><value>Order reversed and a new draft created for editing</value></data>
+  <data name="SOTransferLater" xml:space="preserve"><value>Transfers between stores and departments come in phase 3 (two-step transfer); use the current screen until then.</value></data>
+  <data name="SOOrderNotFound" xml:space="preserve"><value>Order not found</value></data>
+  <data name="SOSelectStore" xml:space="preserve"><value>Select the store first</value></data>
+  <data name="SOSelectItem" xml:space="preserve"><value>Select an item</value></data>
+  <data name="SOQtyRequired" xml:space="preserve"><value>Enter a quantity above zero</value></data>
+  <data name="SOCostRequired" xml:space="preserve"><value>Unit cost is required for this order type</value></data>
+  <data name="SOItemAlreadyAdded" xml:space="preserve"><value>Item already added; remove it and add it with the right quantity</value></data>
+  <data name="SOParty_1" xml:space="preserve"><value>Supplier</value></data>
+  <data name="SOParty_2" xml:space="preserve"><value>Customer</value></data>
+  <data name="SOParty_3" xml:space="preserve"><value>Scrap</value></data>
+  <data name="SOParty_4" xml:space="preserve"><value>Store</value></data>
+  <data name="SOParty_7" xml:space="preserve"><value>Adjustment (increase)</value></data>
+  <data name="SOParty_8" xml:space="preserve"><value>Adjustment (decrease)</value></data>
+  <data name="SOParty_9" xml:space="preserve"><value>Production</value></data>
+  <data name="SOParty_10" xml:space="preserve"><value>Production / processing</value></data>
+  <data name="SOParty_12" xml:space="preserve"><value>Spare parts</value></data>
+  <data name="SOParty_18" xml:space="preserve"><value>Workshop</value></data>
+  <data name="SOParty_19" xml:space="preserve"><value>Workshop</value></data>
+  <data name="SOParty_20" xml:space="preserve"><value>Department</value></data>
+  <data name="SOParty_23" xml:space="preserve"><value>Machine / line</value></data>
+  <data name="SOParty_40" xml:space="preserve"><value>Employee</value></data>
+  <data name="SONoAfterSave" xml:space="preserve"><value>Assigned on save</value></data>
+  <data name="SOOrderDate" xml:space="preserve"><value>Order date</value></data>
+  <data name="SODirIn" xml:space="preserve"><value>Inbound order — increases stock</value></data>
+  <data name="SODirOut" xml:space="preserve"><value>Outbound order — decreases stock</value></data>
+  <data name="SODirTransfer" xml:space="preserve"><value>Transfer between stores</value></data>
+  <data name="SOStockSide" xml:space="preserve"><value>Stock side</value></data>
+  <data name="SOPartyType" xml:space="preserve"><value>Party type</value></data>
+  <data name="SONoPartyList" xml:space="preserve"><value>{0} — no selection needed</value></data>
+  <data name="SOBalanceAfter" xml:space="preserve"><value>Balance after</value></data>
 </root>

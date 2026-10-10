@@ -2422,4 +2422,80 @@
   <data name="FBChkColNo" xml:space="preserve"><value>Scheck-Nr.</value></data>
   <data name="FBChkColOwner" xml:space="preserve"><value>Konto</value></data>
   <data name="FBChkTotal" xml:space="preserve"><value>Schecks gesamt</value></data>
+  <data name="SOTitleFallback" xml:space="preserve"><value>Lagerbeleg</value></data>
+  <data name="SOOrderData" xml:space="preserve"><value>Belegdaten</value></data>
+  <data name="SOOrderNo" xml:space="preserve"><value>Belegnr.</value></data>
+  <data name="SOFromType" xml:space="preserve"><value>Von (Art)</value></data>
+  <data name="SOToType" xml:space="preserve"><value>An (Art)</value></data>
+  <data name="SOFrom" xml:space="preserve"><value>Von</value></data>
+  <data name="SOTo" xml:space="preserve"><value>An</value></data>
+  <data name="SONotes" xml:space="preserve"><value>Bemerkungen</value></data>
+  <data name="SOLinesTitle" xml:space="preserve"><value>Artikel</value></data>
+  <data name="SOAddLineTitle" xml:space="preserve"><value>Artikel hinzufügen</value></data>
+  <data name="SOItemSearch" xml:space="preserve"><value>Nach Name oder Code suchen</value></data>
+  <data name="SOOnlyWithBalance" xml:space="preserve"><value>Nur Artikel mit Bestand</value></data>
+  <data name="SOItem" xml:space="preserve"><value>Artikel</value></data>
+  <data name="SOQtyLarge" xml:space="preserve"><value>Menge (große Einheit)</value></data>
+  <data name="SOQtySmall" xml:space="preserve"><value>Menge (kleine Einheit)</value></data>
+  <data name="SOUnitCost" xml:space="preserve"><value>Preis je große Einheit</value></data>
+  <data name="SOLineValue" xml:space="preserve"><value>Wert</value></data>
+  <data name="SOLineNotes" xml:space="preserve"><value>Zeilennotiz</value></data>
+  <data name="SOAddLine" xml:space="preserve"><value>Hinzufügen</value></data>
+  <data name="SOBalance" xml:space="preserve"><value>Bestand</value></data>
+  <data name="SOAvgCost" xml:space="preserve"><value>Durchschnittskosten</value></data>
+  <data name="SONoLines" xml:space="preserve"><value>Noch keine Artikel</value></data>
+  <data name="SOLinesCount" xml:space="preserve"><value>Artikel</value></data>
+  <data name="SOTotalValue" xml:space="preserve"><value>Gesamtwert</value></data>
+  <data name="SOSaveDraft" xml:space="preserve"><value>Entwurf speichern</value></data>
+  <data name="SOPost" xml:space="preserve"><value>Buchen</value></data>
+  <data name="SOPostConfirm" xml:space="preserve"><value>Das Buchen ändert den Bestand endgültig; der Beleg kann danach nicht bearbeitet werden (Korrektur per Storno). Fortfahren?</value></data>
+  <data name="SOCancelDraft" xml:space="preserve"><value>Entwurf verwerfen</value></data>
+  <data name="SOCancelDraftConfirm" xml:space="preserve"><value>Entwurf verwerfen? Der Bestand ist nicht betroffen.</value></data>
+  <data name="SOReverse" xml:space="preserve"><value>Beleg stornieren</value></data>
+  <data name="SOReverseAndCopy" xml:space="preserve"><value>Stornieren und zum Bearbeiten kopieren</value></data>
+  <data name="SOReverseReason" xml:space="preserve"><value>Stornogrund</value></data>
+  <data name="SOReverseConfirm" xml:space="preserve"><value>Storno bestätigen</value></data>
+  <data name="SOReasonRequired" xml:space="preserve"><value>Stornogrund eingeben</value></data>
+  <data name="SOStatusNew" xml:space="preserve"><value>Neu</value></data>
+  <data name="SOStatusDraft" xml:space="preserve"><value>Entwurf</value></data>
+  <data name="SOStatusPosted" xml:space="preserve"><value>Gebucht</value></data>
+  <data name="SOStatusReversed" xml:space="preserve"><value>Storniert</value></data>
+  <data name="SOStatusCancelled" xml:space="preserve"><value>Verworfen</value></data>
+  <data name="SOReversalOf" xml:space="preserve"><value>Storno zu Beleg {0}</value></data>
+  <data name="SOReversedBy" xml:space="preserve"><value>Storniert durch Beleg {0}</value></data>
+  <data name="SODraftSaved" xml:space="preserve"><value>Entwurf {0} gespeichert</value></data>
+  <data name="SOPosted" xml:space="preserve"><value>Beleg {0} gebucht</value></data>
+  <data name="SOReversed" xml:space="preserve"><value>Beleg storniert; Storno-Nr. {0}</value></data>
+  <data name="SOCancelled" xml:space="preserve"><value>Entwurf verworfen</value></data>
+  <data name="SOCopyCreated" xml:space="preserve"><value>Beleg storniert und neuer Entwurf erstellt</value></data>
+  <data name="SOTransferLater" xml:space="preserve"><value>Umlagerungen zwischen Lagern und Abteilungen folgen in Phase 3; bis dahin die bisherige Maske verwenden.</value></data>
+  <data name="SOOrderNotFound" xml:space="preserve"><value>Beleg nicht gefunden</value></data>
+  <data name="SOSelectStore" xml:space="preserve"><value>Zuerst Lager wählen</value></data>
+  <data name="SOSelectItem" xml:space="preserve"><value>Artikel wählen</value></data>
+  <data name="SOQtyRequired" xml:space="preserve"><value>Menge größer als null eingeben</value></data>
+  <data name="SOCostRequired" xml:space="preserve"><value>Einzelpreis ist für diese Belegart erforderlich</value></data>
+  <data name="SOItemAlreadyAdded" xml:space="preserve"><value>Artikel bereits hinzugefügt; entfernen und mit richtiger Menge neu hinzufügen</value></data>
+  <data name="SOParty_1" xml:space="preserve"><value>Lieferant</value></data>
+  <data name="SOParty_2" xml:space="preserve"><value>Kunde</value></data>
+  <data name="SOParty_3" xml:space="preserve"><value>Ausschuss</value></data>
+  <data name="SOParty_4" xml:space="preserve"><value>Lager</value></data>
+  <data name="SOParty_7" xml:space="preserve"><value>Korrektur (Zugang)</value></data>
+  <data name="SOParty_8" xml:space="preserve"><value>Korrektur (Abgang)</value></data>
+  <data name="SOParty_9" xml:space="preserve"><value>Produktion</value></data>
+  <data name="SOParty_10" xml:space="preserve"><value>Produktion / Verarbeitung</value></data>
+  <data name="SOParty_12" xml:space="preserve"><value>Ersatzteile</value></data>
+  <data name="SOParty_18" xml:space="preserve"><value>Werkstatt</value></data>
+  <data name="SOParty_19" xml:space="preserve"><value>Werkstatt</value></data>
+  <data name="SOParty_20" xml:space="preserve"><value>Abteilung</value></data>
+  <data name="SOParty_23" xml:space="preserve"><value>Maschine / Linie</value></data>
+  <data name="SOParty_40" xml:space="preserve"><value>Mitarbeiter</value></data>
+  <data name="SONoAfterSave" xml:space="preserve"><value>Wird beim Speichern vergeben</value></data>
+  <data name="SOOrderDate" xml:space="preserve"><value>Belegdatum</value></data>
+  <data name="SODirIn" xml:space="preserve"><value>Zugangsbeleg — erhöht den Bestand</value></data>
+  <data name="SODirOut" xml:space="preserve"><value>Abgangsbeleg — verringert den Bestand</value></data>
+  <data name="SODirTransfer" xml:space="preserve"><value>Umlagerung zwischen Lagern</value></data>
+  <data name="SOStockSide" xml:space="preserve"><value>Lagerseite</value></data>
+  <data name="SOPartyType" xml:space="preserve"><value>Art</value></data>
+  <data name="SONoPartyList" xml:space="preserve"><value>{0} — keine Auswahl nötig</value></data>
+  <data name="SOBalanceAfter" xml:space="preserve"><value>Bestand danach</value></data>
 </root>

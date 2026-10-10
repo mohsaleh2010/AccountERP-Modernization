@@ -2422,4 +2422,80 @@
   <data name="FBChkColNo" xml:space="preserve"><value>N° de chèque</value></data>
   <data name="FBChkColOwner" xml:space="preserve"><value>Compte</value></data>
   <data name="FBChkTotal" xml:space="preserve"><value>Total des chèques</value></data>
+  <data name="SOTitleFallback" xml:space="preserve"><value>Bon de magasin</value></data>
+  <data name="SOOrderData" xml:space="preserve"><value>Détails du bon</value></data>
+  <data name="SOOrderNo" xml:space="preserve"><value>N° du bon</value></data>
+  <data name="SOFromType" xml:space="preserve"><value>De (type)</value></data>
+  <data name="SOToType" xml:space="preserve"><value>Vers (type)</value></data>
+  <data name="SOFrom" xml:space="preserve"><value>De</value></data>
+  <data name="SOTo" xml:space="preserve"><value>Vers</value></data>
+  <data name="SONotes" xml:space="preserve"><value>Remarques</value></data>
+  <data name="SOLinesTitle" xml:space="preserve"><value>Articles</value></data>
+  <data name="SOAddLineTitle" xml:space="preserve"><value>Ajouter un article</value></data>
+  <data name="SOItemSearch" xml:space="preserve"><value>Rechercher par nom ou code</value></data>
+  <data name="SOOnlyWithBalance" xml:space="preserve"><value>Articles avec stock uniquement</value></data>
+  <data name="SOItem" xml:space="preserve"><value>Article</value></data>
+  <data name="SOQtyLarge" xml:space="preserve"><value>Qté (grande unité)</value></data>
+  <data name="SOQtySmall" xml:space="preserve"><value>Qté (petite unité)</value></data>
+  <data name="SOUnitCost" xml:space="preserve"><value>Coût grande unité</value></data>
+  <data name="SOLineValue" xml:space="preserve"><value>Valeur</value></data>
+  <data name="SOLineNotes" xml:space="preserve"><value>Note de ligne</value></data>
+  <data name="SOAddLine" xml:space="preserve"><value>Ajouter</value></data>
+  <data name="SOBalance" xml:space="preserve"><value>Stock</value></data>
+  <data name="SOAvgCost" xml:space="preserve"><value>Coût moyen</value></data>
+  <data name="SONoLines" xml:space="preserve"><value>Aucun article ajouté</value></data>
+  <data name="SOLinesCount" xml:space="preserve"><value>Articles</value></data>
+  <data name="SOTotalValue" xml:space="preserve"><value>Valeur totale</value></data>
+  <data name="SOSaveDraft" xml:space="preserve"><value>Enregistrer le brouillon</value></data>
+  <data name="SOPost" xml:space="preserve"><value>Valider</value></data>
+  <data name="SOPostConfirm" xml:space="preserve"><value>La validation modifie le stock définitivement ; le bon ne peut plus être modifié (correction par extourne). Continuer ?</value></data>
+  <data name="SOCancelDraft" xml:space="preserve"><value>Annuler le brouillon</value></data>
+  <data name="SOCancelDraftConfirm" xml:space="preserve"><value>Annuler ce brouillon ? Le stock n'est pas affecté.</value></data>
+  <data name="SOReverse" xml:space="preserve"><value>Extourner le bon</value></data>
+  <data name="SOReverseAndCopy" xml:space="preserve"><value>Extourner et copier pour modifier</value></data>
+  <data name="SOReverseReason" xml:space="preserve"><value>Motif de l'extourne</value></data>
+  <data name="SOReverseConfirm" xml:space="preserve"><value>Confirmer l'extourne</value></data>
+  <data name="SOReasonRequired" xml:space="preserve"><value>Saisissez le motif</value></data>
+  <data name="SOStatusNew" xml:space="preserve"><value>Nouveau</value></data>
+  <data name="SOStatusDraft" xml:space="preserve"><value>Brouillon</value></data>
+  <data name="SOStatusPosted" xml:space="preserve"><value>Validé</value></data>
+  <data name="SOStatusReversed" xml:space="preserve"><value>Extourné</value></data>
+  <data name="SOStatusCancelled" xml:space="preserve"><value>Annulé</value></data>
+  <data name="SOReversalOf" xml:space="preserve"><value>Extourne du bon {0}</value></data>
+  <data name="SOReversedBy" xml:space="preserve"><value>Extourné par le bon {0}</value></data>
+  <data name="SODraftSaved" xml:space="preserve"><value>Brouillon {0} enregistré</value></data>
+  <data name="SOPosted" xml:space="preserve"><value>Bon {0} validé</value></data>
+  <data name="SOReversed" xml:space="preserve"><value>Bon extourné ; extourne n° {0}</value></data>
+  <data name="SOCancelled" xml:space="preserve"><value>Brouillon annulé</value></data>
+  <data name="SOCopyCreated" xml:space="preserve"><value>Bon extourné et nouveau brouillon créé</value></data>
+  <data name="SOTransferLater" xml:space="preserve"><value>Les transferts entre magasins et services arrivent en phase 3 ; utilisez l'écran actuel d'ici là.</value></data>
+  <data name="SOOrderNotFound" xml:space="preserve"><value>Bon introuvable</value></data>
+  <data name="SOSelectStore" xml:space="preserve"><value>Choisissez d'abord le magasin</value></data>
+  <data name="SOSelectItem" xml:space="preserve"><value>Choisissez un article</value></data>
+  <data name="SOQtyRequired" xml:space="preserve"><value>Saisissez une quantité supérieure à zéro</value></data>
+  <data name="SOCostRequired" xml:space="preserve"><value>Le coût unitaire est requis pour ce type</value></data>
+  <data name="SOItemAlreadyAdded" xml:space="preserve"><value>Article déjà ajouté ; supprimez-le et rajoutez-le avec la bonne quantité</value></data>
+  <data name="SOParty_1" xml:space="preserve"><value>Fournisseur</value></data>
+  <data name="SOParty_2" xml:space="preserve"><value>Client</value></data>
+  <data name="SOParty_3" xml:space="preserve"><value>Rebut</value></data>
+  <data name="SOParty_4" xml:space="preserve"><value>Magasin</value></data>
+  <data name="SOParty_7" xml:space="preserve"><value>Ajustement (plus)</value></data>
+  <data name="SOParty_8" xml:space="preserve"><value>Ajustement (moins)</value></data>
+  <data name="SOParty_9" xml:space="preserve"><value>Production</value></data>
+  <data name="SOParty_10" xml:space="preserve"><value>Production / traitement</value></data>
+  <data name="SOParty_12" xml:space="preserve"><value>Pièces de rechange</value></data>
+  <data name="SOParty_18" xml:space="preserve"><value>Atelier</value></data>
+  <data name="SOParty_19" xml:space="preserve"><value>Atelier</value></data>
+  <data name="SOParty_20" xml:space="preserve"><value>Service</value></data>
+  <data name="SOParty_23" xml:space="preserve"><value>Machine / ligne</value></data>
+  <data name="SOParty_40" xml:space="preserve"><value>Employé</value></data>
+  <data name="SONoAfterSave" xml:space="preserve"><value>Attribué à l'enregistrement</value></data>
+  <data name="SOOrderDate" xml:space="preserve"><value>Date du bon</value></data>
+  <data name="SODirIn" xml:space="preserve"><value>Bon d'entrée — augmente le stock</value></data>
+  <data name="SODirOut" xml:space="preserve"><value>Bon de sortie — diminue le stock</value></data>
+  <data name="SODirTransfer" xml:space="preserve"><value>Transfert entre magasins</value></data>
+  <data name="SOStockSide" xml:space="preserve"><value>Côté stock</value></data>
+  <data name="SOPartyType" xml:space="preserve"><value>Type</value></data>
+  <data name="SONoPartyList" xml:space="preserve"><value>{0} — aucune sélection requise</value></data>
+  <data name="SOBalanceAfter" xml:space="preserve"><value>Stock après</value></data>
 </root>

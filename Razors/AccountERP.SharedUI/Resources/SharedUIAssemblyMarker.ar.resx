@@ -2420,4 +2420,80 @@
   <data name="FBChkColNo" xml:space="preserve"><value>رقم الشيك</value></data>
   <data name="FBChkColOwner" xml:space="preserve"><value>الحساب</value></data>
   <data name="FBChkTotal" xml:space="preserve"><value>إجمالى الشيكات</value></data>
+  <data name="SOTitleFallback" xml:space="preserve"><value>إذن مخزن</value></data>
+  <data name="SOOrderData" xml:space="preserve"><value>بيانات الإذن</value></data>
+  <data name="SOOrderNo" xml:space="preserve"><value>رقم الإذن</value></data>
+  <data name="SOFromType" xml:space="preserve"><value>من (نوع الجهة)</value></data>
+  <data name="SOToType" xml:space="preserve"><value>إلى (نوع الجهة)</value></data>
+  <data name="SOFrom" xml:space="preserve"><value>من</value></data>
+  <data name="SOTo" xml:space="preserve"><value>إلى</value></data>
+  <data name="SONotes" xml:space="preserve"><value>ملاحظات</value></data>
+  <data name="SOLinesTitle" xml:space="preserve"><value>الأصناف</value></data>
+  <data name="SOAddLineTitle" xml:space="preserve"><value>إضافة صنف</value></data>
+  <data name="SOItemSearch" xml:space="preserve"><value>ابحث بالاسم أو الكود</value></data>
+  <data name="SOOnlyWithBalance" xml:space="preserve"><value>الأصناف التى لها رصيد فقط</value></data>
+  <data name="SOItem" xml:space="preserve"><value>الصنف</value></data>
+  <data name="SOQtyLarge" xml:space="preserve"><value>الكمية الكبرى</value></data>
+  <data name="SOQtySmall" xml:space="preserve"><value>الكمية الصغرى</value></data>
+  <data name="SOUnitCost" xml:space="preserve"><value>سعر الوحدة الكبرى</value></data>
+  <data name="SOLineValue" xml:space="preserve"><value>القيمة</value></data>
+  <data name="SOLineNotes" xml:space="preserve"><value>ملاحظة السطر</value></data>
+  <data name="SOAddLine" xml:space="preserve"><value>إضافة</value></data>
+  <data name="SOBalance" xml:space="preserve"><value>الرصيد</value></data>
+  <data name="SOAvgCost" xml:space="preserve"><value>متوسط التكلفة</value></data>
+  <data name="SONoLines" xml:space="preserve"><value>لم تُضف أصناف بعد</value></data>
+  <data name="SOLinesCount" xml:space="preserve"><value>عدد الأصناف</value></data>
+  <data name="SOTotalValue" xml:space="preserve"><value>إجمالى القيمة</value></data>
+  <data name="SOSaveDraft" xml:space="preserve"><value>حفظ مسودة</value></data>
+  <data name="SOPost" xml:space="preserve"><value>ترحيل</value></data>
+  <data name="SOPostConfirm" xml:space="preserve"><value>الترحيل يحرك رصيد المخزن نهائياً ولا يُعدَّل الإذن بعده (يُصحَّح بإذن عكسى). متابعة؟</value></data>
+  <data name="SOCancelDraft" xml:space="preserve"><value>إلغاء المسودة</value></data>
+  <data name="SOCancelDraftConfirm" xml:space="preserve"><value>إلغاء المسودة؟ لا أثر على الرصيد.</value></data>
+  <data name="SOReverse" xml:space="preserve"><value>عكس الإذن</value></data>
+  <data name="SOReverseAndCopy" xml:space="preserve"><value>عكس ونسخ للتعديل</value></data>
+  <data name="SOReverseReason" xml:space="preserve"><value>سبب العكس</value></data>
+  <data name="SOReverseConfirm" xml:space="preserve"><value>تأكيد العكس</value></data>
+  <data name="SOReasonRequired" xml:space="preserve"><value>اكتب سبب العكس</value></data>
+  <data name="SOStatusNew" xml:space="preserve"><value>جديد</value></data>
+  <data name="SOStatusDraft" xml:space="preserve"><value>مسودة</value></data>
+  <data name="SOStatusPosted" xml:space="preserve"><value>مرحَّل</value></data>
+  <data name="SOStatusReversed" xml:space="preserve"><value>معكوس</value></data>
+  <data name="SOStatusCancelled" xml:space="preserve"><value>ملغاة</value></data>
+  <data name="SOReversalOf" xml:space="preserve"><value>عكس للإذن رقم {0}</value></data>
+  <data name="SOReversedBy" xml:space="preserve"><value>عُكس بالإذن رقم {0}</value></data>
+  <data name="SODraftSaved" xml:space="preserve"><value>حُفظت المسودة رقم {0}</value></data>
+  <data name="SOPosted" xml:space="preserve"><value>رُحِّل الإذن رقم {0}</value></data>
+  <data name="SOReversed" xml:space="preserve"><value>عُكس الإذن؛ رقم الإذن العكسى {0}</value></data>
+  <data name="SOCancelled" xml:space="preserve"><value>أُلغيت المسودة</value></data>
+  <data name="SOCopyCreated" xml:space="preserve"><value>عُكس الإذن وأُنشئت مسودة جديدة للتعديل</value></data>
+  <data name="SOTransferLater" xml:space="preserve"><value>التحويل بين المخازن والأقسام يُبنى فى المرحلة 3 (التحويل بخطوتين)؛ استعمل الشاشة الحالية حتى ذلك الحين.</value></data>
+  <data name="SOOrderNotFound" xml:space="preserve"><value>الإذن غير موجود</value></data>
+  <data name="SOSelectStore" xml:space="preserve"><value>اختر المخزن أولاً</value></data>
+  <data name="SOSelectItem" xml:space="preserve"><value>اختر صنفاً</value></data>
+  <data name="SOQtyRequired" xml:space="preserve"><value>أدخل كمية أكبر من صفر</value></data>
+  <data name="SOCostRequired" xml:space="preserve"><value>سعر الوحدة مطلوب لهذا النوع</value></data>
+  <data name="SOItemAlreadyAdded" xml:space="preserve"><value>الصنف مضاف بالفعل؛ احذفه وأضفه بالكمية الصحيحة</value></data>
+  <data name="SOParty_1" xml:space="preserve"><value>مورد</value></data>
+  <data name="SOParty_2" xml:space="preserve"><value>عميل</value></data>
+  <data name="SOParty_3" xml:space="preserve"><value>هالك</value></data>
+  <data name="SOParty_4" xml:space="preserve"><value>مخزن</value></data>
+  <data name="SOParty_7" xml:space="preserve"><value>تسوية بالزيادة</value></data>
+  <data name="SOParty_8" xml:space="preserve"><value>تسوية بالنقص</value></data>
+  <data name="SOParty_9" xml:space="preserve"><value>الإنتاج</value></data>
+  <data name="SOParty_10" xml:space="preserve"><value>الإنتاج / التشغيل</value></data>
+  <data name="SOParty_12" xml:space="preserve"><value>قطع الغيار</value></data>
+  <data name="SOParty_18" xml:space="preserve"><value>الورشة</value></data>
+  <data name="SOParty_19" xml:space="preserve"><value>الورشة</value></data>
+  <data name="SOParty_20" xml:space="preserve"><value>قسم</value></data>
+  <data name="SOParty_23" xml:space="preserve"><value>ماكينة / خط إنتاج</value></data>
+  <data name="SOParty_40" xml:space="preserve"><value>موظف</value></data>
+  <data name="SONoAfterSave" xml:space="preserve"><value>يُحدَّد عند الحفظ</value></data>
+  <data name="SOOrderDate" xml:space="preserve"><value>تاريخ الإذن</value></data>
+  <data name="SODirIn" xml:space="preserve"><value>إذن وارد — يزيد رصيد المخزن</value></data>
+  <data name="SODirOut" xml:space="preserve"><value>إذن منصرف — يخفض رصيد المخزن</value></data>
+  <data name="SODirTransfer" xml:space="preserve"><value>تحويل بين مخزنين</value></data>
+  <data name="SOStockSide" xml:space="preserve"><value>جهة المخزون</value></data>
+  <data name="SOPartyType" xml:space="preserve"><value>نوع الجهة</value></data>
+  <data name="SONoPartyList" xml:space="preserve"><value>{0} — لا يحتاج اختياراً</value></data>
+  <data name="SOBalanceAfter" xml:space="preserve"><value>الرصيد بعد</value></data>
 </root>

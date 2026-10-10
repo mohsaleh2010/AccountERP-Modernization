@@ -1,0 +1,679 @@
+@* 🟢 خطة 03 — المرحلة 2: صفحة إذن المخزن العامة. تقابل Store_LIB.OrdersNew.NewLast.Order_DetailsWorkNewFrm(type) لأنواع الوارد/المنصرف البسيطة
+   (عميل، مورد، تسويات، هالك، إنتاج/تشغيل، قطع غيار، ورشة، موظف، ماكينة، مخزن خارجى). قواعد كل نوع (الأطراف، جهة المخزن، مصدر السعر)
+   من Store_Order_Type_Settings، والحفظ والترحيل عبر StoreOrderPageService ← StoreOrderService ← محرك المخزون.
+   الفرق المقصود عن الشاشة القديمة (م-03-3): مسودة ← ترحيل ← تصحيح بإذن عكسى؛ لا تعديل ولا حذف لإذن مرحَّل.
+   الجهة «قسم» مخزن فرعى برصيد (م-03-9). التحويل بين المخازن/الأقسام (1001/1006/1016/1017) فى المرحلة 3. *@
+@page "/store/order/{OrderType:int}"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.StoreOrderService
+@using static AccountModelsLib.StoreOrderPageService
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Title</PageTitle>
+
+<InvoiceStyles />
+
+@* تصميم شاشات الاستلام والصرف (بطلب المستخدم): رأس بأيقونة الاتجاه، صف أول = رقم الإذن وتاريخه، صف ثانٍ = لوحتا «من» و«إلى» متجاورتان
+   بسهم الاتجاه بينهما، ولوحة جهة المخزون مميَّزة. الألوان من متغيرات MudBlazor فتعمل فى الوضعين الفاتح والداكن. *@
+<style>
+    .so-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .so-head .so-ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; }
+    .so-head .so-ico .mud-icon-root { font-size: 2rem; }
+    .so-ico.in { background: color-mix(in srgb, var(--mud-palette-success) 15%, transparent); color: var(--mud-palette-success); }
+    .so-ico.out { background: color-mix(in srgb, var(--mud-palette-warning) 18%, transparent); color: var(--mud-palette-warning-darken, var(--mud-palette-warning)); }
+    .so-ico.tr { background: color-mix(in srgb, var(--mud-palette-info) 15%, transparent); color: var(--mud-palette-info); }
+    .so-head .so-titles { flex: 1 1 260px; min-width: 0; }
+    .so-head .so-sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .so-head .so-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+    .so-section-gap { margin-top: 16px; }
+    .so-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .so-no { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 10px 16px; min-height: 56px; border-radius: 10px;
+             border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-background-gray); }
+    .so-no .lbl { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .so-no b { font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--mud-palette-text-primary); line-height: 1.2; }
+    .so-no b.pending { font-size: 1rem; font-weight: 500; color: var(--mud-palette-text-secondary); }
+
+    .so-parties { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: stretch; gap: 12px; }
+    .so-party { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 12px;
+                border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); }
+    .so-party.stock { border: 2px solid color-mix(in srgb, var(--mud-palette-primary) 55%, transparent);
+                      background: color-mix(in srgb, var(--mud-palette-primary) 4%, var(--mud-palette-surface)); }
+    .so-party-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .so-party-head .name { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1rem; color: var(--mud-palette-text-primary); }
+    .so-party-head .name .mud-icon-root { color: var(--mud-palette-primary); }
+    .so-tag { padding: 2px 10px; border-radius: 999px; font-size: .75rem; font-weight: 600; white-space: nowrap;
+              background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .so-fixed { display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 0 14px; border-radius: 8px;
+                border: 1px dashed var(--mud-palette-lines-default); color: var(--mud-palette-text-secondary); font-size: .9375rem; }
+    .so-arrow { display: grid; place-items: center; }
+    .so-arrow span { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+                     background: var(--mud-palette-primary); color: var(--mud-palette-primary-text); box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+    /* سطر إدخال الصنف: كل الحقول وزر الإضافة فى صف واحد */
+    .so-entry { display: grid; grid-template-columns: minmax(0, 3fr) repeat(2, minmax(120px, 1fr)) minmax(120px, auto); gap: 12px; align-items: start; }
+    .so-entry.priced { grid-template-columns: minmax(0, 3fr) repeat(3, minmax(120px, 1fr)) minmax(120px, auto); }
+    .so-entry .f-btn { padding-top: 6px; }
+    .so-entry .f-btn .mud-button-root { min-height: 48px; }
+    .so-entry-2 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 12px; }
+    .so-entry-2 > .mud-input-control { flex: 1 1 320px; }
+    .so-opt { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }
+    .so-opt .nm { display: flex; flex-direction: column; min-width: 0; }
+    .so-opt .cd { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .so-opt .bal { flex: none; padding: 2px 10px; border-radius: 999px; font-size: .8125rem; font-weight: 600; font-variant-numeric: tabular-nums;
+                   background: color-mix(in srgb, var(--mud-palette-success) 14%, transparent); color: var(--mud-palette-success-darken, var(--mud-palette-success)); }
+    .so-opt .bal.zero { background: var(--mud-palette-background-gray); color: var(--mud-palette-text-secondary); }
+
+    /* شريط بيانات الصنف المختار */
+    .so-picked { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding: 10px 12px; border-radius: 10px;
+                 background: var(--mud-palette-background-gray); border: 1px solid var(--mud-palette-lines-default); }
+    .so-stat { display: inline-flex; align-items: baseline; gap: 8px; padding: 4px 12px; border-radius: 8px; background: var(--mud-palette-surface);
+               border: 1px solid var(--mud-palette-lines-default); }
+    .so-stat .k { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .so-stat .v { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--mud-palette-text-primary); }
+    .so-stat.good { border-color: color-mix(in srgb, var(--mud-palette-success) 50%, transparent); }
+    .so-stat.good .v { color: var(--mud-palette-success-darken, var(--mud-palette-success)); }
+    .so-stat.bad { border-color: var(--mud-palette-error); }
+    .so-stat.bad .v { color: var(--mud-palette-error); }
+
+    /* جدول الأصناف */
+    .so-idx { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; font-size: .8125rem; font-weight: 700;
+              background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent); color: var(--mud-palette-primary); }
+    .so-item-name { font-weight: 600; color: var(--mud-palette-text-primary); }
+    .so-item-code { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .so-q { font-variant-numeric: tabular-nums; font-weight: 600; }
+    .so-u { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .so-after { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--mud-palette-text-primary); }
+    .so-after.bad { color: var(--mud-palette-error); }
+    .so-notes { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--mud-palette-lines-default); }
+    .so-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; color: var(--mud-palette-text-secondary); }
+    .so-empty .mud-icon-root { opacity: .5; }
+
+    @@media (max-width: 1199px) {
+        .so-entry, .so-entry.priced { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .so-entry .f-item { grid-column: 1 / -1; }
+        .so-entry .f-btn { grid-column: 1 / -1; padding-top: 0; }
+    }
+
+    @@media (max-width: 899px) {
+        .so-parties { grid-template-columns: minmax(0, 1fr); }
+        .so-arrow span { transform: rotate(-90deg); }
+    }
+    @@media (max-width: 599px) { .so-meta { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    @if (_settings is null && string.IsNullOrEmpty(_errorMessage))
+    {
+        @* حتى يُقرأ إعداد النوع: هيكل تحميل بدل عنوان واتجاه افتراضيين مضلِّلين *@
+        <div class="inv-card so-head" aria-busy="true">
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="56px" Height="56px" Style="border-radius:16px" />
+            <div class="so-titles">
+                <MudSkeleton Width="240px" Height="36px" />
+                <MudSkeleton Width="180px" />
+            </div>
+        </div>
+    }
+    else
+    {
+    <div class="inv-card so-head">
+        <div class="so-ico @DirClass" aria-hidden="true"><MudIcon Icon="@DirIcon" /></div>
+        <div class="so-titles">
+            <h1 class="inv-title">@Title</h1>
+            <div class="so-sub">@DirText</div>
+        </div>
+        <div class="so-actions">
+            <MudChip T="string" Color="@StatusColor" Variant="Variant.Filled" Icon="@StatusIcon" Size="Size.Medium">@StatusText</MudChip>
+            @if (_header?.Reversal_Of_No is long ofNo)
+            {
+                <MudChip T="string" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Undo">@Tr("SOReversalOf", ofNo)</MudChip>
+            }
+            @if (_header?.Reversed_By_No is long byNo)
+            {
+                <MudChip T="string" Variant="Variant.Outlined" Color="Color.Error" Icon="@Icons.Material.Filled.Undo">@Tr("SOReversedBy", byNo)</MudChip>
+            }
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_isBusy" OnClick="NewOrderAsync">@Tr("DstNewButton")</MudButton>
+        </div>
+    </div>
+    }
+
+    @if (_settings is not null && _settings.Is_Transfer)
+    {
+        <MudAlert Severity="Severity.Info" Class="so-section-gap">@Tr("SOTransferLater")</MudAlert>
+    }
+
+    @if (_settings is not null)
+    {
+        <div class="inv-card so-section-gap">
+            <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Inventory2" />@Tr("SOOrderData")</h2>
+
+            @* الصف الأول: رقم الإذن وتاريخه *@
+            <div class="so-meta">
+                <div class="so-no" aria-live="polite">
+                    <span class="lbl">@Tr("SOOrderNo")</span>
+                    @if (_orderNo > 0)
+                    {
+                        <b>@_orderNo</b>
+                    }
+                    else
+                    {
+                        <b class="pending">@Tr("SONoAfterSave")</b>
+                    }
+                </div>
+                <MudDatePicker T="DateTime?" @bind-Date="_date" Label="@Tr("SOOrderDate")" Variant="Variant.Outlined" Disabled="@ReadOnly" />
+            </div>
+
+            @* الصف الثانى: من ← إلى *@
+            <div class="so-parties so-section-gap">
+                @PartyPanel(true)
+                <div class="so-arrow" aria-hidden="true"><span><MudIcon Icon="@(LangService.IsRtl ? Icons.Material.Filled.ArrowBack : Icons.Material.Filled.ArrowForward)" /></span></div>
+                @PartyPanel(false)
+            </div>
+        </div>
+
+        @if (!ReadOnly)
+        {
+            <div class="inv-card so-section-gap">
+                <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.AddCircle" />@Tr("SOAddLineTitle")</h2>
+                @* سطر إدخال واحد: الصنف ثم الكميات (والسعر للنوع اليدوى) ثم زر الإضافة *@
+                <div class="so-entry @(_settings.IsManualPrice ? "priced" : "")">
+                    <div class="f-item">
+                        <MudAutocomplete T="StockLineOption" @key="_pickerKey" Value="_picked" ValueChanged="OnPicked" SearchFunc="SearchAsync"
+                                         ToStringFunc="@(o => o == null ? "" : $"{o.Item_Name} — {o.Code}")" Label="@Tr("SOItemSearch")"
+                                         Variant="Variant.Outlined" DebounceInterval="350" ResetValueOnEmptyText="true" Disabled="@(StoreId <= 0)"
+                                         AdornmentIcon="@Icons.Material.Filled.Search" MaxItems="50" HelperText="@(StoreId <= 0 ? Tr("SOSelectStore") : null)">
+                            <ItemTemplate Context="o">
+                                <div class="so-opt">
+                                    <div class="nm"><b>@o.Item_Name</b><span class="cd">@CodeText(o.Code)</span></div>
+                                    <span class="bal @(o.Full_qua <= 0 && o.D_Qua <= 0 ? "zero" : "")">@BalanceText(o.Full_qua, o.D_Qua, o.B_Unit, o.S_Unit)</span>
+                                </div>
+                            </ItemTemplate>
+                        </MudAutocomplete>
+                    </div>
+                    <div class="f-num"><MudNumericField T="decimal" @bind-Value="_qtyLarge" Label="@Tr("SOQtyLarge")" Variant="Variant.Outlined" HideSpinButtons="true" Min="0"
+                                                        Adornment="Adornment.End" AdornmentText="@(_picked?.B_Unit ?? "")" /></div>
+                    <div class="f-num"><MudNumericField T="decimal" @bind-Value="_qtySmall" Label="@Tr("SOQtySmall")" Variant="Variant.Outlined" HideSpinButtons="true" Min="0"
+                                                        Adornment="Adornment.End" AdornmentText="@(_picked?.S_Unit ?? "")" Disabled="@(_picked != null && _picked.Factor <= 1)" /></div>
+                    @if (_settings.IsManualPrice)
+                    {
+                        <div class="f-num"><MudNumericField T="decimal?" @bind-Value="_unitCost" Label="@Tr("SOUnitCost")" Variant="Variant.Outlined" HideSpinButtons="true" Min="0" Format="0.####" /></div>
+                    }
+                    <div class="f-btn">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="AddLine" FullWidth="true" Disabled="@(_picked is null)">@Tr("SOAddLine")</MudButton>
+                    </div>
+                </div>
+                <div class="so-entry-2">
+                    <MudTextField T="string" @bind-Value="_lineNotes" Label="@Tr("SOLineNotes")" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    <MudCheckBox T="bool" @bind-Value="_onlyWithBalance" Label="@Tr("SOOnlyWithBalance")" Dense="true" Color="Color.Primary" />
+                </div>
+                @if (_picked != null)
+                {
+                    var afterSmall = PickedBalanceSmall + Sign * (_qtyLarge * _picked.Factor + _qtySmall);
+                    <div class="so-picked" aria-live="polite">
+                        <span class="so-stat"><span class="k">@Tr("SOBalance")</span><span class="v">@BalanceText(_picked.Full_qua, _picked.D_Qua, _picked.B_Unit, _picked.S_Unit)</span></span>
+                        <span class="so-stat"><span class="k">@Tr("SOAvgCost")</span><span class="v">@Money(_picked.Avg_Cost_Large)</span></span>
+                        @if (_qtyLarge + _qtySmall > 0)
+                        {
+                            <span class="so-stat @(afterSmall < 0 ? "bad" : "good")"><span class="k">@Tr("SOBalanceAfter")</span><span class="v">@SmallToText(afterSmall, _picked.Factor, _picked.B_Unit, _picked.S_Unit)</span></span>
+                        }
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(_lineError))
+                {
+                    <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-3" role="alert">@_lineError</MudAlert>
+                }
+            </div>
+        }
+
+        <div class="inv-card so-section-gap">
+            <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("SOLinesTitle")<span class="inv-count">@_lines.Count</span></h2>
+            <MudTable Items="@_lines" T="LineRow" Hover="true" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm">
+                <HeaderContent>
+                    <MudTh Style="width:56px">#</MudTh>
+                    <MudTh>@Tr("SOItem")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("SOQtyLarge")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("SOQtySmall")</MudTh>
+                    @if (_settings.IsManualPrice)
+                    {
+                        <MudTh Style="text-align:end">@Tr("SOUnitCost")</MudTh>
+                        <MudTh Style="text-align:end">@Tr("SOLineValue")</MudTh>
+                    }
+                    @if (!ReadOnly)
+                    {
+                        <MudTh Style="text-align:end">@Tr("SOBalanceAfter")</MudTh>
+                    }
+                    <MudTh>@Tr("SOLineNotes")</MudTh>
+                    <MudTh Style="width:56px"></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="#"><span class="so-idx">@(_lines.IndexOf(context) + 1)</span></MudTd>
+                    <MudTd DataLabel="@Tr("SOItem")"><div class="so-item-name">@context.Name</div><div class="so-item-code">@CodeText(context.Code)</div></MudTd>
+                    <MudTd DataLabel="@Tr("SOQtyLarge")" Style="text-align:end"><span class="so-q">@Qty(context.QtyLarge)</span> <span class="so-u">@context.BUnit</span></MudTd>
+                    <MudTd DataLabel="@Tr("SOQtySmall")" Style="text-align:end">
+                        @if (context.QtySmall > 0)
+                        {
+                            <span class="so-q">@Qty(context.QtySmall)</span> <span class="so-u">@context.SUnit</span>
+                        }
+                        else
+                        {
+                            <span class="so-u">—</span>
+                        }
+                    </MudTd>
+                    @if (_settings.IsManualPrice)
+                    {
+                        <MudTd DataLabel="@Tr("SOUnitCost")" Style="text-align:end"><span class="so-q">@(context.Cost is decimal c ? Money(c) : "")</span></MudTd>
+                        <MudTd DataLabel="@Tr("SOLineValue")" Style="text-align:end"><b class="so-q">@Money(context.Value)</b></MudTd>
+                    }
+                    @if (!ReadOnly)
+                    {
+                        var after = context.BalanceSmall + Sign * (context.QtyLarge * context.Factor + context.QtySmall);
+                        <MudTd DataLabel="@Tr("SOBalanceAfter")" Style="text-align:end"><span class="so-after @(after < 0 ? "bad" : "")">@SmallToText(after, context.Factor, context.BUnit, context.SUnit)</span></MudTd>
+                    }
+                    <MudTd DataLabel="@Tr("SOLineNotes")"><span class="so-u">@context.Notes</span></MudTd>
+                    <MudTd>
+                        @if (!ReadOnly)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Medium" Color="Color.Error" OnClick="@(() => _lines.Remove(context))" aria-label="@Tr("DeleteItemLabel")" />
+                        }
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <div class="so-empty">
+                        <MudIcon Icon="@Icons.Material.Filled.Inventory" Size="Size.Large" />
+                        <div>@Tr("SONoLines")</div>
+                    </div>
+                </NoRecordsContent>
+            </MudTable>
+
+            @* ملاحظات الإذن أسفل جدول الأصناف (طلب المستخدم) *@
+            <div class="so-notes">
+                <MudTextField T="string" @bind-Value="_notes" Label="@Tr("SONotes")" Variant="Variant.Outlined" Disabled="@ReadOnly"
+                              Lines="2" AutoGrow="true" MaxLines="6" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Notes" />
+            </div>
+        </div>
+
+        @if (_showReverse)
+        {
+            <div class="inv-card so-section-gap">
+                <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Undo" />@(_reverseAndCopy ? Tr("SOReverseAndCopy") : Tr("SOReverse"))</h2>
+                <MudTextField T="string" @bind-Value="_reverseReason" Label="@Tr("SOReverseReason")" Variant="Variant.Outlined" Lines="2" />
+                <div class="mt-3" style="display:flex; gap:8px;">
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Undo" Disabled="_isBusy" OnClick="ReverseAsync">@Tr("SOReverseConfirm")</MudButton>
+                    <MudButton Variant="Variant.Outlined" Disabled="_isBusy" OnClick="@(() => _showReverse = false)">@Tr("Cancel")</MudButton>
+                </div>
+            </div>
+        }
+    }
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="so-section-gap" role="alert">@_errorMessage</MudAlert>
+    }
+
+    <div class="inv-dock so-section-gap @(_settings is null ? "d-none" : "")" role="region">
+        <div class="inv-dock-cells">
+            <div class="cell"><span class="lbl">@Tr("SOLinesCount")</span><b>@_lines.Count</b></div>
+            @if (_settings?.IsManualPrice == true)
+            {
+                <div class="cell net"><span class="lbl">@Tr("SOTotalValue")</span><b>@Money(_lines.Sum(l => l.Value))</b></div>
+            }
+        </div>
+        <div class="inv-dock-actions">
+            @if (_status == (int)StockMovementService.DocStatus.Draft && _orderId > 0)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Block" Disabled="_isBusy" OnClick="CancelDraftAsync">@Tr("SOCancelDraft")</MudButton>
+            }
+            @if (_status == (int)StockMovementService.DocStatus.Posted && _header?.Reversal_Of_Id == null)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Undo" Disabled="_isBusy" OnClick="@(() => OpenReverse(false))">@Tr("SOReverse")</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" Disabled="_isBusy" OnClick="@(() => OpenReverse(true))">@Tr("SOReverseAndCopy")</MudButton>
+            }
+            @if (!ReadOnly)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(!CanSave)" OnClick="SaveDraftAsync">@Tr("SOSaveDraft")</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle" Disabled="@(!CanSave)" OnClick="PostAsync">@Tr("SOPost")</MudButton>
+            }
+        </div>
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    /// <summary>BalanceSmall: رصيد السطر الحالى بالوحدة الصغرى (لمعاينة «الرصيد بعد» قبل الترحيل).</summary>
+    private record LineRow(long UnitItemId, string Name, string Code, string BUnit, string SUnit, decimal Factor, decimal QtyLarge, decimal QtySmall, decimal? Cost, string Notes, decimal BalanceSmall)
+    {
+        public decimal Value => (Cost ?? 0) * (QtyLarge + QtySmall / (Factor <= 0 ? 1 : Factor));
+    }
+
+    [Parameter] public int OrderType { get; set; }
+    [SupplyParameterFromQuery(Name = "id")] public long? IdQuery { get; set; }
+
+    private readonly StoreOrderPageService _svc = new();
+    private OrderTypeSettings? _settings;
+    private OrderHeaderView? _header;
+    private List<LineRow> _lines = new();
+    private List<PartyOption> _fromList = new(), _toList = new();
+    private int _typeFrom, _typeTo, _status = -1;
+    private long _idFrom, _idTo, _orderId, _orderNo;
+    private DateTime? _date = DateTime.Today;
+    private string? _notes, _lineNotes, _lineError, _errorMessage, _reverseReason;
+    private bool _isBusy, _onlyWithBalance = true, _showReverse, _reverseAndCopy;
+
+    // سطر جديد
+    private StockLineOption? _picked;
+    private decimal _qtyLarge, _qtySmall;
+    private decimal? _unitCost;
+    private int _pickerKey;
+
+    /// <summary>القراءة فقط لكل حالة غير «جديد/مسودة»، ولأنواع التحويل (المرحلة 3).</summary>
+    private bool ReadOnly => _settings is null || _settings.Is_Transfer || (_status != -1 && _status != (int)StockMovementService.DocStatus.Draft);
+    private int StoreType => _settings?.StoreIsFrom == true ? _typeFrom : _typeTo;
+    private long StoreId => _settings?.StoreIsFrom == true ? _idFrom : _idTo;
+    private bool CanSave => !_isBusy && !ReadOnly && _lines.Count > 0 && StoreId > 0
+                            && (!PartyHasList(_typeFrom) || _idFrom > 0) && (!PartyHasList(_typeTo) || _idTo > 0);
+    private string Title => string.IsNullOrWhiteSpace(_settings?.Name_Ar) ? Tr("SOTitleFallback") : _settings!.Name_Ar;
+
+    // اتجاه الإذن للرأس: وارد (1) / منصرف (2) / تحويل (3)
+    private string DirClass => _settings?.Direction switch { 1 => "in", 3 => "tr", _ => "out" };
+    private string DirIcon => _settings?.Direction switch { 1 => Icons.Material.Filled.MoveToInbox, 3 => Icons.Material.Filled.SyncAlt, _ => Icons.Material.Filled.Outbox };
+    private string DirText => _settings?.Direction switch { 1 => Tr("SODirIn"), 3 => Tr("SODirTransfer"), _ => Tr("SODirOut") };
+
+    /// <summary>لوحة جهة «من» أو «إلى»: نوع الجهة ثم الجهة نفسها (أو نص ثابت للجهات بلا قائمة). لوحة جهة المخزون مميَّزة.</summary>
+    private RenderFragment PartyPanel(bool isFrom) => __builder =>
+    {
+        var s = _settings!;
+        int[] types = isFrom ? s.FromParties : s.ToParties;
+        int type = isFrom ? _typeFrom : _typeTo;
+        long id = isFrom ? _idFrom : _idTo;
+        var list = isFrom ? _fromList : _toList;
+        bool isStockSide = isFrom == s.StoreIsFrom;
+        bool locked = ReadOnly || (isStockSide && _lines.Count > 0);
+        <section class="so-party @(isStockSide ? "stock" : "")" aria-label="@(isFrom ? Tr("SOFrom") : Tr("SOTo"))">
+            <div class="so-party-head">
+                <span class="name"><MudIcon Icon="@(isFrom ? Icons.Material.Filled.Logout : Icons.Material.Filled.Login)" Size="Size.Small" />@(isFrom ? Tr("SOFrom") : Tr("SOTo"))</span>
+                @if (isStockSide)
+                {
+                    <span class="so-tag">@Tr("SOStockSide")</span>
+                }
+            </div>
+            <MudSelect T="int" Value="type" ValueChanged="@(v => isFrom ? OnTypeFromChangedAsync(v) : OnTypeToChangedAsync(v))"
+                       Label="@Tr("SOPartyType")" Variant="Variant.Outlined" Disabled="@(locked || types.Length < 2)">
+                @foreach (var p in types)
+                {
+                    <MudSelectItem T="int" Value="@p">@PartyName(p)</MudSelectItem>
+                }
+            </MudSelect>
+            @if (PartyHasList(type))
+            {
+                <MudSelect T="long" Value="id" ValueChanged="@(v => isFrom ? OnIdFromChangedAsync(v) : OnIdToChangedAsync(v))"
+                           Label="@PartyName(type)" Variant="Variant.Outlined" Disabled="@locked" Required="true">
+                    @foreach (var o in list)
+                    {
+                        <MudSelectItem T="long" Value="@o.Id">@o.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            else
+            {
+                <div class="so-fixed"><MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />@Tr("SONoPartyList", PartyName(type))</div>
+            }
+        </section>
+    };
+
+    private string StatusText => _status switch
+    {
+        0 => Tr("SOStatusDraft"), 1 => Tr("SOStatusPosted"), 2 => Tr("SOStatusReversed"), 3 => Tr("SOStatusCancelled"), _ => Tr("SOStatusNew")
+    };
+    private Color StatusColor => _status switch { 1 => Color.Success, 0 => Color.Warning, 2 => Color.Error, 3 => Color.Dark, _ => Color.Info };
+    private string StatusIcon => _status switch
+    {
+        1 => Icons.Material.Filled.CheckCircle, 0 => Icons.Material.Filled.EditNote, 2 => Icons.Material.Filled.Undo,
+        3 => Icons.Material.Filled.Block, _ => Icons.Material.Filled.FiberNew
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            var type = OrderType;
+            _settings = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetSettings(type); });
+            _onlyWithBalance = _settings.Direction != 1;   // الوارد يضيف لأصناف قد يكون رصيدها صفراً
+            if (IdQuery is > 0) await LoadOrderAsync(IdQuery.Value);
+            else await ResetPartiesAsync();
+        }
+        catch (Exception ex) { _errorMessage = ErrText(ex); }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private string PartyName(int p) => Tr("SOParty_" + p);
+
+    private static string BalanceText(decimal large, decimal small, string bUnit, string sUnit) =>
+        small != 0 ? $"{Qty(large)} {bUnit} + {Qty(small)} {sUnit}" : $"{Qty(large)} {bUnit}";
+
+    // الأرقام بصيغة ثابتة (نقطة عشرية) مهما كانت ثقافة الخيط، كباقى أرقام الصفحة.
+    private static string Money(decimal v) => v.ToString("N2", CultureInfo.InvariantCulture);
+    private static string Qty(decimal v) => v.ToString("0.##", CultureInfo.InvariantCulture);
+    private static string CodeText(string code) => string.IsNullOrWhiteSpace(code) || code.Trim() == "0" ? "" : code;
+
+    /// <summary>كمية بالوحدة الصغرى ← نص بالوحدتين (السالب بعلامة).</summary>
+    private static string SmallToText(decimal small, decimal factor, string bUnit, string sUnit)
+    {
+        if (factor <= 0) factor = 1;
+        decimal abs = Math.Abs(small);
+        decimal large = Math.Floor(abs / factor);
+        string t = BalanceText(large, abs - large * factor, bUnit, sUnit);
+        return small < 0 ? "-" + t : t;
+    }
+
+    /// <summary>اتجاه أثر الإذن على جهة المخزون: +1 وارد، −1 منصرف.</summary>
+    private int Sign => _settings?.Direction == 1 ? 1 : -1;
+    private decimal PickedBalanceSmall => _picked == null ? 0 : _picked.Full_qua * _picked.Factor + _picked.D_Qua;
+
+    // ============================== الجهات ==============================
+
+    private async Task ResetPartiesAsync()
+    {
+        if (_settings is null) return;
+        _typeFrom = _settings.FromParties.Contains(_settings.Default_From_Party) ? _settings.Default_From_Party : _settings.FromParties.FirstOrDefault();
+        _typeTo = _settings.ToParties.Contains(_settings.Default_To_Party) ? _settings.Default_To_Party : _settings.ToParties.FirstOrDefault();
+        _fromList = await LoadPartiesAsync(_typeFrom, _settings.Is_Virtual_Outer_From);
+        _toList = await LoadPartiesAsync(_typeTo, _settings.Is_Virtual_Outer_To);
+        _idFrom = _fromList.FirstOrDefault()?.Id ?? 0;
+        _idTo = _toList.FirstOrDefault()?.Id ?? 0;
+    }
+
+    private Task<List<PartyOption>> LoadPartiesAsync(int type, bool outer) =>
+        PartyHasList(type) ? Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetParties(type, outer); }) : Task.FromResult(new List<PartyOption>());
+
+    private async Task OnTypeFromChangedAsync(int t)
+    {
+        _typeFrom = t;
+        _fromList = await LoadPartiesAsync(t, _settings!.Is_Virtual_Outer_From);
+        _idFrom = _fromList.FirstOrDefault()?.Id ?? 0;
+        ClearPicker();
+    }
+
+    private async Task OnTypeToChangedAsync(int t)
+    {
+        _typeTo = t;
+        _toList = await LoadPartiesAsync(t, _settings!.Is_Virtual_Outer_To);
+        _idTo = _toList.FirstOrDefault()?.Id ?? 0;
+        ClearPicker();
+    }
+
+    private Task OnIdFromChangedAsync(long id) { _idFrom = id; ClearPicker(); return Task.CompletedTask; }
+    private Task OnIdToChangedAsync(long id) { _idTo = id; ClearPicker(); return Task.CompletedTask; }
+
+    // ============================== الأصناف ==============================
+
+    private async Task<IEnumerable<StockLineOption>> SearchAsync(string text, CancellationToken ct)
+    {
+        int st = StoreType; long sid = StoreId; bool only = _onlyWithBalance;
+        if (sid <= 0) return Enumerable.Empty<StockLineOption>();
+        return await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.SearchLines(st, sid, text, only); }, ct);
+    }
+
+    private void OnPicked(StockLineOption? o)
+    {
+        _picked = o; _lineError = null;
+        _unitCost = _settings?.IsManualPrice == true && o != null && o.Avg_Cost_Large > 0 ? o.Avg_Cost_Large : null;
+    }
+
+    private void ClearPicker() { _picked = null; _qtyLarge = 0; _qtySmall = 0; _unitCost = null; _lineNotes = null; _pickerKey++; }
+
+    private void AddLine()
+    {
+        _lineError = null;
+        if (StoreId <= 0) { _lineError = Tr("SOSelectStore"); return; }
+        if (_picked is null) { _lineError = Tr("SOSelectItem"); return; }
+        if (_qtyLarge < 0 || _qtySmall < 0 || _qtyLarge + _qtySmall <= 0) { _lineError = Tr("SOQtyRequired"); return; }
+        if (_settings!.IsManualPrice && (_unitCost is null || _unitCost < 0)) { _lineError = Tr("SOCostRequired"); return; }
+        if (_lines.Any(l => l.UnitItemId == _picked.Id)) { _lineError = Tr("SOItemAlreadyAdded"); return; }
+        _lines.Add(new LineRow(_picked.Id, _picked.Item_Name, _picked.Code, _picked.B_Unit, _picked.S_Unit, _picked.Factor, _qtyLarge, _qtySmall,
+            _settings.IsManualPrice ? _unitCost : null, _lineNotes ?? "", PickedBalanceSmall));
+        ClearPicker();
+    }
+
+    // ============================== الحفظ والترحيل ==============================
+
+    private OrderInput BuildInput() => new OrderInput(OrderType, (_date ?? DateTime.Today).Date, _typeFrom, PartyHasList(_typeFrom) ? _idFrom : 0,
+        _typeTo, PartyHasList(_typeTo) ? _idTo : 0,
+        _lines.Select(l => new OrderLineInput(l.UnitItemId, l.QtyLarge, l.QtySmall, 0, l.Cost, l.Notes)).ToList(), _notes);
+
+    private async Task SaveDraftAsync()
+    {
+        _errorMessage = null; _isBusy = true;
+        var input = BuildInput(); var draftId = _orderId;
+        try
+        {
+            var id = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.SaveDraft(input, draftId); });
+            await LoadOrderAsync(id);
+            Snackbar.Add(Tr("SODraftSaved", _orderNo), Severity.Success);
+            Nav.NavigateTo($"/store/order/{OrderType}?id={id}", replace: true);
+        }
+        catch (Exception ex) { _errorMessage = ErrText(ex); }
+        finally { _isBusy = false; }
+    }
+
+    private async Task PostAsync()
+    {
+        _errorMessage = null;
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("SOPost"), Tr("SOPostConfirm"), yesText: Tr("SOPost"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _isBusy = true;
+        var input = BuildInput(); var draftId = _orderId;
+        try
+        {
+            var id = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.SaveAndPost(input, draftId, null); });
+            await LoadOrderAsync(id);
+            Snackbar.Add(Tr("SOPosted", _orderNo), Severity.Success);
+            Nav.NavigateTo($"/store/order/{OrderType}?id={id}", replace: true);
+        }
+        catch (Exception ex) { _errorMessage = ErrText(ex); }
+        finally { _isBusy = false; }
+    }
+
+    private async Task CancelDraftAsync()
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("SOCancelDraft"), Tr("SOCancelDraftConfirm"), yesText: Tr("SOCancelDraft"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _isBusy = true; _errorMessage = null;
+        var id = _orderId;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.CancelDraft(id); });
+            await LoadOrderAsync(id);
+            Snackbar.Add(Tr("SOCancelled"), Severity.Success);
+        }
+        catch (Exception ex) { _errorMessage = ErrText(ex); }
+        finally { _isBusy = false; }
+    }
+
+    private void OpenReverse(bool andCopy) { _reverseAndCopy = andCopy; _reverseReason = null; _showReverse = true; _errorMessage = null; }
+
+    private async Task ReverseAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_reverseReason)) { _errorMessage = Tr("SOReasonRequired"); return; }
+        _isBusy = true; _errorMessage = null;
+        var id = _orderId; var reason = _reverseReason.Trim(); var copy = _reverseAndCopy;
+        try
+        {
+            var newId = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return copy ? _svc.ReverseAndCopy(id, reason) : _svc.Reverse(id, reason); });
+            _showReverse = false;
+            if (copy)
+            {
+                Snackbar.Add(Tr("SOCopyCreated"), Severity.Success);
+                await LoadOrderAsync(newId);
+                Nav.NavigateTo($"/store/order/{OrderType}?id={newId}", replace: true);
+            }
+            else
+            {
+                await LoadOrderAsync(id);
+                Snackbar.Add(Tr("SOReversed", _header?.Reversed_By_No ?? 0), Severity.Success);
+            }
+        }
+        catch (Exception ex) { _errorMessage = ErrText(ex); }
+        finally { _isBusy = false; }
+    }
+
+    // ============================== القراءة ==============================
+
+    private async Task LoadOrderAsync(long id)
+    {
+        var (h, lines) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetOrder(id); });
+        if (h is null || h.Order_Type != OrderType) { _errorMessage = Tr("SOOrderNotFound"); return; }
+        _header = h;
+        _orderId = h.Id; _orderNo = h.Order_No; _status = h.Doc_Status;
+        _date = h.Order_Date.Date; _notes = h.Notes;
+        _typeFrom = h.Type_From; _typeTo = h.Type_To; _idFrom = h.Id_From; _idTo = h.Id_To;
+        _fromList = await LoadPartiesAsync(_typeFrom, _settings!.Is_Virtual_Outer_From);
+        _toList = await LoadPartiesAsync(_typeTo, _settings.Is_Virtual_Outer_To);
+        _lines = lines.Select(l => new LineRow(l.Unit_Item_Id, l.Item_Name, l.Code, l.B_Unit, l.S_Unit, l.Factor, l.Qty_Large, l.Qty_Small,
+            _settings.IsManualPrice ? l.Unit_Cost_Large : null, l.Notes ?? "", l.Balance_Small)).ToList();
+        ClearPicker();
+    }
+
+    private async Task NewOrderAsync()
+    {
+        _header = null; _orderId = 0; _orderNo = 0; _status = -1; _lines = new(); _notes = null; _errorMessage = null; _showReverse = false;
+        _date = DateTime.Today;
+        ClearPicker();
+        await ResetPartiesAsync();
+        if (IdQuery is > 0) Nav.NavigateTo($"/store/order/{OrderType}", replace: true);
+    }
+
+    // رسائل الخدمة عربية أصلاً (InvalidOperationException/NotSupportedException)؛ غيرها خطأ نظام برسالة أعمق استثناء (سبب خطأ قاعدة البيانات).
+    private string ErrText(Exception ex)
+    {
+        if (ex is InvalidOperationException or NotSupportedException) return ex.Message;
+        var inner = ex;
+        while (inner.InnerException != null) inner = inner.InnerException;
+        return Tr("SystemError", inner.Message);
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}
