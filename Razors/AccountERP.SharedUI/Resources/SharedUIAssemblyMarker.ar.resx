@@ -2527,4 +2527,8 @@
   <data name="SOReversalChip" xml:space="preserve"><value>إذن عكسى</value></data>
   <data name="SOLegacyOrder" xml:space="preserve"><value>إذن قديم — للعرض فقط</value></data>
   <data name="SODeletedItem" xml:space="preserve"><value>صنف محذوف (سطر مخزون {0})</value></data>
+  <data name="SOSignStorekeeper" xml:space="preserve"><value>أمين المخزن</value></data>
+  <data name="SOSignReceiver" xml:space="preserve"><value>المستلم</value></data>
+  <data name="SOSignApprover" xml:space="preserve"><value>الاعتماد</value></data>
+  <data name="SOPrintedAt" xml:space="preserve"><value>طُبع فى {0} — بواسطة {1}</value></data>
 </root>

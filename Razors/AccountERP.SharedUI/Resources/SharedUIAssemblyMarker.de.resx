@@ -2529,4 +2529,8 @@
   <data name="SOReversalChip" xml:space="preserve"><value>Storno</value></data>
   <data name="SOLegacyOrder" xml:space="preserve"><value>Alter Beleg — nur Ansicht</value></data>
   <data name="SODeletedItem" xml:space="preserve"><value>Gelöschter Artikel (Lagerzeile {0})</value></data>
+  <data name="SOSignStorekeeper" xml:space="preserve"><value>Lagerverwalter</value></data>
+  <data name="SOSignReceiver" xml:space="preserve"><value>Empfänger</value></data>
+  <data name="SOSignApprover" xml:space="preserve"><value>Genehmigt von</value></data>
+  <data name="SOPrintedAt" xml:space="preserve"><value>Gedruckt am {0} von {1}</value></data>
 </root>

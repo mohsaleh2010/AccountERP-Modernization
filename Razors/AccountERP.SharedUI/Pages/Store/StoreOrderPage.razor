@@ -15,6 +15,7 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 @implements IDisposable
 
 <PageTitle>@Title</PageTitle>
@@ -107,6 +108,37 @@
         .so-arrow span { transform: rotate(-90deg); }
     }
     @@media (max-width: 599px) { .so-meta { grid-template-columns: minmax(0, 1fr); } }
+
+    /* مستند الطباعة: مخفى على الشاشة؛ وقت الطباعة يظهر وحده بألوان سوداء على أبيض */
+    .so-print { display: none; }
+    @@media print {
+        @@page { size: A4; margin: 14mm 12mm; }
+        body * { visibility: hidden; }
+        .so-print, .so-print * { visibility: visible; }
+        .so-print { display: block; position: absolute; inset-inline-start: 0; top: 0; width: 100%; color: #000; background: #fff;
+                    font-size: 11pt; line-height: 1.5; }
+        .so-print .pw { position: fixed; top: 40%; left: 0; right: 0; text-align: center; font-size: 72pt; font-weight: 700;
+                        color: rgba(0,0,0,.08); transform: rotate(-20deg); }
+        .so-print .ph { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding-bottom: 8px; border-bottom: 2px solid #000; }
+        .so-print .co { font-size: 15pt; font-weight: 700; }
+        .so-print .dt { font-size: 13pt; margin-top: 2px; }
+        .so-print .pm { border-collapse: collapse; font-size: 10pt; }
+        .so-print .pm th, .so-print .pm td { padding: 2px 8px; border: 1px solid #000; text-align: start; }
+        .so-print .pm th { background: #eee; font-weight: 600; }
+        .so-print .pp { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0; }
+        .so-print .pp > div { border: 1px solid #000; padding: 6px 10px; display: flex; flex-direction: column; }
+        .so-print .pp span { font-size: 9pt; }
+        .so-print .pl { width: 100%; border-collapse: collapse; }
+        .so-print .pl th, .so-print .pl td { border: 1px solid #000; padding: 4px 6px; text-align: start; font-variant-numeric: tabular-nums; }
+        .so-print .pl thead th { background: #eee; }
+        .so-print .pl tfoot td { font-weight: 700; background: #f5f5f5; }
+        .so-print .pl small { color: #444; }
+        .so-print .pl tr { page-break-inside: avoid; }
+        .so-print .pn { margin-top: 10px; }
+        .so-print .ps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 40px; text-align: center; }
+        .so-print .ps > div { border-top: 1px solid #000; padding-top: 6px; }
+        .so-print .pf { margin-top: 24px; font-size: 8pt; color: #444; }
+    }
 </style>
 
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
@@ -333,6 +365,10 @@
             }
         </div>
         <div class="inv-dock-actions">
+            @if (_orderId > 0 && _settings is not null)
+            {
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Print" Disabled="_isBusy" OnClick="PrintAsync">@Tr("PrintButton")</MudButton>
+            }
             @if (_status == (int)StockMovementService.DocStatus.Draft && _orderId > 0)
             {
                 <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Block" Disabled="_isBusy" OnClick="CancelDraftAsync">@Tr("SOCancelDraft")</MudButton>
@@ -351,6 +387,80 @@
         </div>
     </div>
 </div>
+
+@* مستند الإذن للطباعة (طباعة المتصفح، و«حفظ كـ PDF» من مربعها) — مخفى على الشاشة، وكل ما عداه مخفى وقت الطباعة *@
+@if (_settings is not null && _orderId > 0)
+{
+    <div class="so-print print-area" dir="@(LangService.IsRtl ? "rtl" : "ltr")">
+        @if (_status == 0)
+        {
+            <div class="pw" aria-hidden="true">@Tr("SOStatusDraft")</div>
+        }
+        <header class="ph">
+            <div>
+                <div class="co">@AccountModelsLib.Common.CompanyTitle</div>
+                <div class="dt">@Title</div>
+            </div>
+            <table class="pm">
+                <tr><th>@Tr("SOOrderNo")</th><td>@_orderNo</td></tr>
+                <tr><th>@Tr("SOOrderDate")</th><td>@((_date ?? DateTime.Today).ToString("yyyy/MM/dd", CultureInfo.InvariantCulture))</td></tr>
+                <tr><th>@Tr("SOStatusLabel")</th><td>@StatusText</td></tr>
+            </table>
+        </header>
+        <div class="pp">
+            <div><span>@Tr("SOFrom")</span><b>@PrintParty(true)</b></div>
+            <div><span>@Tr("SOTo")</span><b>@PrintParty(false)</b></div>
+        </div>
+        <table class="pl">
+            <thead>
+                <tr>
+                    <th>#</th><th>@Tr("SOItem")</th><th>@Tr("SOQtyLarge")</th><th>@Tr("SOQtySmall")</th>
+                    @if (_settings.IsManualPrice)
+                    {
+                        <th>@Tr("SOUnitCost")</th><th>@Tr("SOLineValue")</th>
+                    }
+                    <th>@Tr("SOLineNotes")</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < _lines.Count; i++)
+                {
+                    var l = _lines[i];
+                    <tr>
+                        <td>@(i + 1)</td>
+                        <td>@(string.IsNullOrWhiteSpace(l.Name) ? Tr("SODeletedItem", l.UnitItemId) : l.Name) <small>@CodeText(l.Code)</small></td>
+                        <td>@Qty(l.QtyLarge) @l.BUnit</td>
+                        <td>@(l.QtySmall > 0 ? $"{Qty(l.QtySmall)} {l.SUnit}" : "")</td>
+                        @if (_settings.IsManualPrice)
+                        {
+                            <td>@(l.Cost is decimal c ? Money(c) : "")</td><td>@Money(l.Value)</td>
+                        }
+                        <td>@l.Notes</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2">@Tr("SOLinesCount"): @_lines.Count</td>
+                    <td>@Qty(_lines.Sum(x => x.QtyLarge))</td><td>@Qty(_lines.Sum(x => x.QtySmall))</td>
+                    @if (_settings.IsManualPrice)
+                    {
+                        <td></td><td>@Money(_lines.Sum(x => x.Value))</td>
+                    }
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+        @if (!string.IsNullOrWhiteSpace(_notes))
+        {
+            <div class="pn"><span>@Tr("SONotes"):</span> @_notes</div>
+        }
+        <div class="ps">
+            <div>@Tr("SOSignStorekeeper")</div><div>@Tr("SOSignReceiver")</div><div>@Tr("SOSignApprover")</div>
+        </div>
+        <footer class="pf">@Tr("SOPrintedAt", DateTime.Now.ToString("yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture), AccountModelsLib.Common.User_Name)</footer>
+    </div>
+}
 </MudContainer>
 
 @code {
@@ -481,6 +591,18 @@
         decimal large = Math.Floor(abs / factor);
         string t = BalanceText(large, abs - large * factor, bUnit, sUnit);
         return small < 0 ? "-" + t : t;
+    }
+
+    private async Task PrintAsync() => await JS.InvokeVoidAsync("window.print");
+
+    /// <summary>اسم الجهة للطباعة: الاسم من قائمتها، أو اسم نوعها للجهات بلا قائمة.</summary>
+    private string PrintParty(bool isFrom)
+    {
+        int type = isFrom ? _typeFrom : _typeTo;
+        long id = isFrom ? _idFrom : _idTo;
+        var list = isFrom ? _fromList : _toList;
+        string name = PartyHasList(type) ? list.FirstOrDefault(o => o.Id == id)?.Name ?? "" : "";
+        return string.IsNullOrWhiteSpace(name) ? PartyName(type) : $"{PartyName(type)}: {name}";
     }
 
     /// <summary>اتجاه أثر الإذن على جهة المخزون: +1 وارد، −1 منصرف.</summary>

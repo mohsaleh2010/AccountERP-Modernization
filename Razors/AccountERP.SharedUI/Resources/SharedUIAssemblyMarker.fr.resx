@@ -2529,4 +2529,8 @@
   <data name="SOReversalChip" xml:space="preserve"><value>Extourne</value></data>
   <data name="SOLegacyOrder" xml:space="preserve"><value>Ancien bon — consultation</value></data>
   <data name="SODeletedItem" xml:space="preserve"><value>Article supprimé (ligne de stock {0})</value></data>
+  <data name="SOSignStorekeeper" xml:space="preserve"><value>Magasinier</value></data>
+  <data name="SOSignReceiver" xml:space="preserve"><value>Réceptionnaire</value></data>
+  <data name="SOSignApprover" xml:space="preserve"><value>Approuvé par</value></data>
+  <data name="SOPrintedAt" xml:space="preserve"><value>Imprimé le {0} par {1}</value></data>
 </root>

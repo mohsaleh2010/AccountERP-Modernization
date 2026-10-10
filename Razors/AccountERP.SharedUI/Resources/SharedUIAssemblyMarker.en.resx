@@ -2527,4 +2527,8 @@
   <data name="SOReversalChip" xml:space="preserve"><value>Reversal</value></data>
   <data name="SOLegacyOrder" xml:space="preserve"><value>Legacy order — view only</value></data>
   <data name="SODeletedItem" xml:space="preserve"><value>Deleted item (stock line {0})</value></data>
+  <data name="SOSignStorekeeper" xml:space="preserve"><value>Storekeeper</value></data>
+  <data name="SOSignReceiver" xml:space="preserve"><value>Received by</value></data>
+  <data name="SOSignApprover" xml:space="preserve"><value>Approved by</value></data>
+  <data name="SOPrintedAt" xml:space="preserve"><value>Printed {0} by {1}</value></data>
 </root>
