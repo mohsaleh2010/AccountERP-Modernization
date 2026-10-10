@@ -1,5 +1,5 @@
 -- ============================================================================
--- Plan 01 / Phase 1 — Stock movement engine schema. DRAFT FOR REVIEW - NOT YET APPLIED.
+-- Plan 01 / Phase 1 — Stock movement engine schema. APPLIED to ClientNew 2026-10-09; shipped to client DBs by AccountModelsLib/AlterDB_CLS/StockEngineSchemaCLS.cs.
 -- Target: ClientNew (decision 2026-10-08). Idempotent: every change runs only if missing.
 -- No existing column is renamed or dropped; existing rows keep their behavior.
 -- Ids are NOT identity: the app generates them (CallSnowflakeIdGenerate), like the other new tables.

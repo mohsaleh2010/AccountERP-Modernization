@@ -1,0 +1,59 @@
+# سجل العمل التشغيلى (Work log)
+
+> يُحدَّث **قبل** كل خطوة طويلة/خطرة (ماذا، الملفات، طريقة التراجع) و**بعدها** (النتيجة) — لأن الكهرباء تنقطع ويُطفأ الجهاز.
+> الإضافة فى آخر الملف فقط. التفاصيل الكاملة فى ملفات الخطط (inventory-0x).
+> عند الاستئناف بعد انقطاع: اقرأ آخر سطر هنا، ثم `git status`، ثم الملفات المذكورة فى آخر خطوة.
+
+## 2026-10-09
+
+| الوقت | الخطوة | الحالة | التراجع / ملاحظات |
+|---|---|---|---|
+| — | خطة 01 م1: سكربت المحرك على ClientNew + StockMovementService | ✅ commit bd222b8 | rollback فى ذيل stock-engine-phase1-schema.sql |
+| — | خطة 02 م1-3: تنظيف أول المدة (بلا حذف الأيتام) + ItemOpeningBalanceService | ✅ commit 8fc0476 | نسخة Item_First_Period_Balance_Backup_20261009 |
+| — | خطة 03 م1: جدول Store_Order_Type_Settings (22 نوعاً) على ClientNew + StoreOrderService | ✅ commit 1d7db66 | `DROP TABLE dbo.Store_Order_Type_Settings` |
+| — | فلتر المسودات على 16 ملفاً (قراءات قديمة) | ✅ على القرص، **بلا commit** | نسخ قبل التعديل فى `%TEMP%\filterbak\`؛ أو `git checkout -- <file>` |
+| — | حماية الشاشات القديمة: StoreOrderLegacyGuard.cs + 7 دوال + FirstBalanceCLS | ✅ على القرص، بلا commit | حذف الملف الجديد + `git checkout` للملفات |
+| — | ترقية قواعد العملاء: StockEngineSchemaCLS.cs + استدعاء فى AlterDB(d) وProgram.cs للنسختين | ✅ على القرص، بلا commit؛ مختبر على قاعدة مؤقتة EngineUpgradeTest (حُذفت) | حذف الملف + `git checkout` لـ AlterDB_CLS.cs وProgram.cs ×2 |
+| — | إصلاح AccountCommonDataLIB.csproj: ConnectCLS المحلى بدل رابط `SIT_Projects 2.0`، وBouncyCastle 1.9.0 + Pkcs11Interop 5.1.2 كحزم NuGet | ✅ على القرص، بلا commit | `git checkout -- AccountCommonDataLIB/AccountCommonDataLIB.csproj` |
+| — | بناء Store_LIB (يشمل AccountCommonDataLIB/Connection4It) | ✅ 0 أخطاء | — |
+| — | بناء Reporting_System + AccountsERPSystem + AccountsERPSystemNet10 | ⛔ انقطع (انطفاء الجهاز) — يُعاد | المخرجات فى `%TEMP%\wfbuild_*` فقط، لا أثر على المشروع |
+
+### حالة git الآن
+- commits اليوم: bd222b8، 8fc0476، 1d7db66.
+- **غير مُسلَّم (بانتظار بناء VS حسب قرارك):** فلتر المسودات + الحماية + الترقية + إصلاح csproj (القائمة فى inventory-03 §7).
+- ملفات جلسة أخرى لا تُلمس: InvoicesReverseTotal.cs، InvoicesTotal*.cs، CashVouchersService.cs، Money_Transaction_BoxOrderReportCLS.cs، HMIS/*.
+
+### الخطوة التالية
+- إعادة بناء Reporting_System ثم AccountsERPSystem ثم AccountsERPSystemNet10 (كل واحد خطوة مستقلة مسجلة هنا).
+
+### الخطوات (تُضاف تلقائياً)
+| الوقت | الخطوة | الحالة | التراجع / ملاحظات |
+|---|---|---|---|
+| 07:15 | بناء Reporting_System | ⏳ بدأ | مخرجات %TEMP%\wfbuild_Reporting_System |
+| 07:15 | بناء Reporting_System | Buildsucceeded.  0 Error(s) | — |
+| 07:15 | بناء AccountsERPSystem | ⏳ بدأ | مخرجات %TEMP%\wfbuild_AccountsERPSystem |
+| 07:22 | بناء AccountsERPSystem | ⛔ انقطع 07:16 (انطفاء) | يُعاد |
+| 07:22 | بناء AccountsERPSystem (إعادة) | ⏳ بدأ | سجل %TEMP%\b_AccountsERPSystem.log |
+| 07:24 | بناء AccountsERPSystem (إعادة) | Build FAILED. 26 Error(s) | — |
+| 07:25 | بناء AccountsERPSystem | سبب الفشل: Accounts.csproj يشير لـ DevComponents.DotNetBar2.dll فى مجلد SIT_Projects 2.0 غير الموجود (ليس من تعديلاتنا) | فحص كل المشاريع |
+| 07:25 | فحص المراجع الخارجية | داخل الحل: Accounts→DevComponents.DotNetBar2 14.1.0.37، BarCodeQR_GeneratorLIB→Neodynamic.SDK.Barcode 6.0.2018.508 (نسخ محلية موجودة فى bin) | بانتظار قرار المستخدم |
+| 07:29 | قرار: إيقاف البناء هنا | المستخدم يبنى فى Visual Studio على الجهاز الآخر؛ لا تغيير لـ Accounts.csproj ولا BarCodeQR_GeneratorLIB.csproj | — |
+| 07:29 | الحالة النهائية للجلسة | مبنى هنا: AccountModelsLib، Store_LIB (+AccountCommonDataLIB، Connection4It)، Reporting_System — 0 أخطاء. لم يُبنَ: Accounts والنسختان (مراجع SIT_Projects 2.0). بلا commit حتى بناء VS | الخطوة التالية: بناء الحل فى VS ثم commit للملفات المذكورة فى inventory-03 §7 |
+| 07:32 | فحص المطابقة (قراءة فقط) | ClientNew: 1398 سطر مخزون، 2 برصيد، 5 فقط مخزَّن≠الدفتر، 0 سالب | المطابقة ليست عائقاً هنا؛ قد تختلف عند العملاء |
+| 07:36 | طلب: استئناف بناء الديسك توب باستكمال الملفات من E:\MohSaleh\MyWorkAll\SIT_Projects.Net\files | ⏳ فحص المجلد | — |
+| 07:36 | نسخ DevComponents.DotNetBar2.dll (7.3.0.1 من مجلد files) إلى المسار الذى يتوقعه Accounts.csproj داخل E:\MohSaleh\MyWorkAll\SIT_Projects 2.0 (خارج المستودع) ثم بناء Accounts | ⏳ | التراجع: حذف مجلد E:\MohSaleh\MyWorkAll\SIT_Projects 2.0 (أُنشئ الآن) |
+| 07:39 | بناء Accounts (DotNetBar 7.3.0.1) | Build succeeded. 0 Error(s) | سجل %TEMP%\b_Accounts.log |
+| 07:40 | بناء AccountsERPSystem | ⏳ بدأ | سجل %TEMP%\b_AccountsERPSystem.log |
+| 07:42 | بناء AccountsERPSystem | Build succeeded. 0 Error(s) | — |
+| 07:42 | بناء AccountsERPSystemNet10 | ⏳ بدأ | سجل %TEMP%\b_AccountsERPSystemNet10.log |
+| 07:45 | بناء AccountsERPSystemNet10 | Build FAILED. 1 Error(s) | — |
+| 07:45 | بناء AccountsERPSystem / Net10 | AccountsERPSystem ✅ 0 أخطاء؛ Net10 ⛔ 1: AccountERP.SharedUI.csproj سطر 19 يربط app.css من ..\..\..\Backup\Razors\… غير الموجود | فحص البديل المحلى |
+| 07:45 | تعديل Razors/AccountERP.SharedUI/AccountERP.SharedUI.csproj سطر 19: رابط app.css إلى ..\AccountERP.MobileDesktop\wwwroot\app.css (نفس الملف داخل المستودع) | ⏳ | التراجع: git checkout -- Razors/AccountERP.SharedUI/AccountERP.SharedUI.csproj |
+| 07:45 | تعديل رابط app.css | ✅ تم ( 1 file changed, 1 insertion(+), 1 deletion(-)) | — |
+| 07:45 | بناء AccountsERPSystemNet10 (إعادة) | ⏳ بدأ | سجل %TEMP%\b_AccountsERPSystemNet10.log |
+| 07:46 | نسخ Neodynamic.SDK.Barcode.dll من مجلد files إلى E:\MohSaleh\MyWorkAll\SIT_Projects 2.0\packages (المسار الذى يتوقعه BarCodeQR_GeneratorLIB.csproj) | ⏳ | التراجع: حذف الملف/مجلد SIT_Projects 2.0 |
+| 07:46 | نسخ Neodynamic | ✅ | — |
+| 07:47 | بناء AccountsERPSystemNet10 (إعادة) | Build succeeded. 0 Error(s) | — |
+| 07:47 | بناء BarCodeQR_GeneratorLIB (بـ Neodynamic الحقيقية) | ⏳ بدأ | — |
+| 07:47 | بناء BarCodeQR_GeneratorLIB | Build succeeded. 0 Error(s) (تحذيرات Neodynamic: 0) | — |
+| 07:47 | ✅ الحل يُبنى بالكامل على هذا الجهاز | AccountModelsLib، Store_LIB، Reporting_System، Accounts، BarCodeQR_GeneratorLIB، AccountsERPSystem، AccountsERPSystemNet10 — كلها 0 أخطاء | الخطوة التالية: commit (بانتظار الموافقة) |

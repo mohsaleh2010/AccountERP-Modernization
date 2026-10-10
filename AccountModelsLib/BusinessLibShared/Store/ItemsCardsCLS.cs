@@ -33,7 +33,7 @@ FROM            Item INNER JOIN
                          Store ON Unit_item.Store_id = Store.id INNER JOIN
                          DataDictionaryProcessesLists ON Order_Purshing.Order_Type = DataDictionaryProcessesLists.Id
 ";
-            mysql = mysql + " WHERE Order_Purshing.Is_Converted  = 0 ";
+            mysql = mysql + " WHERE ISNULL(Order_Purshing.Doc_Status, 1) = 1 AND Order_Purshing.Is_Converted  = 0 ";
             if (Store_Id > 0)
             {
                 mysql = mysql + " AND ((Order_Purshing.Id_From =" + Store_Id + ") OR  (Order_Purshing.Id_To =" + Store_Id + "))  ";

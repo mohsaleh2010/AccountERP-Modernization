@@ -1126,6 +1126,7 @@ FROM            Item INNER JOIN
 
         public void Delete_Order_Details(ref int Excp, long OrderDetailes_Table_id, long Unit_Item_Table_Id, long To_Store_Unit_Item_Table_Id, decimal Larg_Qnty, decimal Small_Qnty, decimal ItemNO, decimal S_unit_Value, long Item_id)
         {
+            if (StoreOrderLegacyGuard.IsLockedByDetail(null, OrderDetailes_Table_id)) { Excp = 1; return; }
             string mysql = "";
             operations opp = new operations();
             DataSet dss;
@@ -1256,6 +1257,7 @@ FROM            Item INNER JOIN
         }
         public void Delete_Order_DetailsFromEdit(ref int Excp, ref operations opp, DataTable dt_NewOrder, int index)
         {
+            if (StoreOrderLegacyGuard.IsLockedByDetail(opp, long.Parse(dt_NewOrder.Rows[index]["Detailes_Purshing_Id"].ToString()))) { Excp = 1; return; }
             long Order_Purshing_Id = long.Parse(dt_NewOrder.Rows[index]["OrderTable_id"].ToString());
             long Detailes_Purshing_Id = long.Parse(dt_NewOrder.Rows[index]["Detailes_Purshing_Id"].ToString());
             long Unit_Item_Table_Id = long.Parse(dt_NewOrder.Rows[index]["Unit_item_Table_Id"].ToString());
@@ -1502,6 +1504,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
         }
         public void Edit_Order_DetailsFromEdit(ref int Excp, ref operations opp, DataTable dt_NewOrder, int index, decimal New_Larg_Qnty, decimal New_Small_Qnty, decimal New_ItemNO)
         {
+            if (StoreOrderLegacyGuard.IsLockedByDetail(opp, long.Parse(dt_NewOrder.Rows[index]["Detailes_Purshing_Id"].ToString()))) { Excp = 1; return; }
             long Detailes_Purshing_Import_Export_Id = 0;
             long Detailes_Purshing_Id = long.Parse(dt_NewOrder.Rows[index]["Detailes_Purshing_Id"].ToString());
             long Unit_Item_Table_Id = long.Parse(dt_NewOrder.Rows[index]["Unit_item_Table_Id"].ToString());
@@ -2024,6 +2027,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
         }
         public void Edit_OrderFromOK(ref int Excp, ref string Msg, ArrayList ArrDeleted_Id, DataTable dt_NewOrder, DataTable dt_RawMaterials, DataTable dt_SubItem, Order_DetailsCls od, ref long OrderTable_id, DateTime dt_Order, string Order_Estlam_Sarf_Flage, ref bool MakeOrderTable_id, int OrderType, bool IS_EstlamRawMaterial)
         {
+            if (StoreOrderLegacyGuard.IsLocked(null, OrderTable_id)) { Excp = 1; Msg = StoreOrderLegacyGuard.LockedMessage; return; }
             //if (OrderType != 3 & OrderType != 4 & OrderType != 7)              /// ·Ì”  „— Ã⁄ ’—› √Ê  «” ·«„
             //{
             Excp = 0;

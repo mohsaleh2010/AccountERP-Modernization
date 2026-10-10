@@ -531,6 +531,7 @@ FROM            Item INNER JOIN
 
         public void Edit_OrderFromOK(ref int Excp, ref string Msg, List<Detailes_Purshing> dp_NewList, List<Detailes_Purshing> dp_DeletingList, DataTable dt_RawMaterials, DataTable dt_SubItem, int Order_Estlam_Sarf_Flage, bool IS_EstlamRawMaterial)
         {
+            if (StoreOrderLegacyGuard.IsLocked(opp, order_Purshing.Id)) { Excp = 1; Msg = StoreOrderLegacyGuard.LockedMessage; return; }
 
             //if (OrderType != 3 & OrderType != 4 & OrderType != 7)              /// ليست مرتجع صرف أو  استلام
             //{
@@ -3632,6 +3633,7 @@ FROM            Unit_item INNER JOIN
         }
         public void Edit_Order_DetailsFromEdit(ref int Excp, ref operations opp, Detailes_Purshing dpEdit)
         {
+            if (StoreOrderLegacyGuard.IsLockedByDetail(opp, dpEdit.Id)) { Excp = 1; return; }
             decimal New_Larg_Qnty = dpEdit.qua.Value;
             decimal New_Small_Qnty = dpEdit.Part_qua.Value;
             decimal New_ItemNO = dpEdit.Item_No.Value;
@@ -4476,6 +4478,7 @@ FROM            Unit_item INNER JOIN
 
         public void Delete_Order_DetailsFromEdit(ref int Excp, ref operations opp, Detailes_Purshing dp)
         {
+            if (StoreOrderLegacyGuard.IsLockedByDetail(opp, dp.Id)) { Excp = 1; return; }
             long Order_Purshing_Id = dp.OrderTable_id;// long.Parse(dt_NewOrder.Rows[index]["OrderTable_id"].ToString());
             long Detailes_Purshing_Id = dp.Id;// long.Parse(dt_NewOrder.Rows[index]["Detailes_Purshing_Id"].ToString());
             long Unit_Item_Table_Id = dp.Unit_item_Table_Id;// long.Parse(dt_NewOrder.Rows[index]["Unit_item_Table_Id"].ToString());
