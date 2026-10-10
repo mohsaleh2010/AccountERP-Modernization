@@ -2599,4 +2599,20 @@
   <data name="SRConfirm" xml:space="preserve"><value>Confirmer</value></data>
   <data name="SRConfirmText" xml:space="preserve"><value>Une correction sera écrite au registre pour {0} ligne(s) sans changer le stock. Continuer ?</value></data>
   <data name="SRDone" xml:space="preserve"><value>Registre corrigé pour {0} ligne(s)</value></data>
+  <data name="SCTitle" xml:space="preserve"><value>Fiche article</value></data>
+  <data name="SCSub" xml:space="preserve"><value>Mouvements d'un article dans un magasin ou service depuis le registre, avec solde courant</value></data>
+  <data name="SCQtyValue" xml:space="preserve"><value>Quantité et valeur</value></data>
+  <data name="SCOpening" xml:space="preserve"><value>Solde d'ouverture</value></data>
+  <data name="SCTotalIn" xml:space="preserve"><value>Total entrées</value></data>
+  <data name="SCTotalOut" xml:space="preserve"><value>Total sorties</value></data>
+  <data name="SCClosing" xml:space="preserve"><value>Solde de clôture</value></data>
+  <data name="SCMismatch" xml:space="preserve"><value>Le solde de clôture du registre diffère du stock enregistré ({0}).</value></data>
+  <data name="SCMoves" xml:space="preserve"><value>Mouvements</value></data>
+  <data name="SCDoc" xml:space="preserve"><value>Document</value></data>
+  <data name="SCIn" xml:space="preserve"><value>Entrée</value></data>
+  <data name="SCOut" xml:space="preserve"><value>Sortie</value></data>
+  <data name="SCUnitCost" xml:space="preserve"><value>Coût grande unité</value></data>
+  <data name="SCNoMoves" xml:space="preserve"><value>Aucun mouvement sur cette période</value></data>
+  <data name="SCPick" xml:space="preserve"><value>Choisissez le magasin puis l'article</value></data>
+  <data name="SCMovement" xml:space="preserve"><value>Mouvement</value></data>
 </root>

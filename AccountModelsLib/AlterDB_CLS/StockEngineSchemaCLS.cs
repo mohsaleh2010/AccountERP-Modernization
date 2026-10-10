@@ -132,6 +132,9 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("aToolStripMenuItem", "/store/balances?asof=1"), ("menuItemItemsListBeforBalance", "/store/balances?asof=1"),
             // مطابقة الأرصدة (خطة 01 م3) بدل التعديل المباشر للأرصدة: الفرق يُعتمد بتصحيح الدفتر أو يُسوّى بإذن تسوية.
             ("menuItemEditStoreBalance", "/store/reconciliation"), ("menuItemItemBalanceOnlyEdit", "/store/reconciliation"),
+            // كارت الصنف الموحَّد (خطة 01 م4) على دفتر الحركة.
+            ("menuItemCardsStore", "/store/item-card"), ("ToolStripMenuItem_Transaction_Details", "/store/item-card"),
+            ("ToolStripMenuItem_Transaction_DetailsWithCost", "/store/item-card?value=1"), ("menuItemCardsDept", "/store/item-card?type=20"),
             // قائمة وبحث الأذون (المرحلة 4) بدل Order_detailes لكل نوع، وقائمة كل الأذون.
             // ملاحظة: القائمة القديمة تفتح «مرتجع صرف قطع الغيار» (879) على 1022 وعنصر «صرف إلى موظف» (881) بلا شاشة؛ هنا كلٌّ لنوعه الصحيح.
             ("menuItemOrdersList", "/store/orders"),

@@ -2599,4 +2599,20 @@
   <data name="SRConfirm" xml:space="preserve"><value>Bestätigen</value></data>
   <data name="SRConfirmText" xml:space="preserve"><value>Für {0} Zeile(n) wird eine Lagerbuchkorrektur gebucht, ohne den Bestand zu ändern. Fortfahren?</value></data>
   <data name="SRDone" xml:space="preserve"><value>Lagerbuch für {0} Zeile(n) korrigiert</value></data>
+  <data name="SCTitle" xml:space="preserve"><value>Artikelkarte</value></data>
+  <data name="SCSub" xml:space="preserve"><value>Bewegungen eines Artikels in einem Lager oder einer Abteilung aus dem Lagerbuch, mit laufendem Bestand</value></data>
+  <data name="SCQtyValue" xml:space="preserve"><value>Menge und Wert</value></data>
+  <data name="SCOpening" xml:space="preserve"><value>Anfangsbestand</value></data>
+  <data name="SCTotalIn" xml:space="preserve"><value>Zugänge gesamt</value></data>
+  <data name="SCTotalOut" xml:space="preserve"><value>Abgänge gesamt</value></data>
+  <data name="SCClosing" xml:space="preserve"><value>Endbestand</value></data>
+  <data name="SCMismatch" xml:space="preserve"><value>Der Endbestand laut Lagerbuch weicht vom gespeicherten Bestand ({0}) ab.</value></data>
+  <data name="SCMoves" xml:space="preserve"><value>Bewegungen</value></data>
+  <data name="SCDoc" xml:space="preserve"><value>Beleg</value></data>
+  <data name="SCIn" xml:space="preserve"><value>Zugang</value></data>
+  <data name="SCOut" xml:space="preserve"><value>Abgang</value></data>
+  <data name="SCUnitCost" xml:space="preserve"><value>Kosten je große Einheit</value></data>
+  <data name="SCNoMoves" xml:space="preserve"><value>Keine Bewegungen in diesem Zeitraum</value></data>
+  <data name="SCPick" xml:space="preserve"><value>Lager und dann Artikel wählen</value></data>
+  <data name="SCMovement" xml:space="preserve"><value>Bewegung</value></data>
 </root>

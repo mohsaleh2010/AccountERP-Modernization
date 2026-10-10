@@ -2597,4 +2597,20 @@
   <data name="SRConfirm" xml:space="preserve"><value>Confirm</value></data>
   <data name="SRConfirmText" xml:space="preserve"><value>A ledger correction will be posted for {0} line(s) without changing the balance. Continue?</value></data>
   <data name="SRDone" xml:space="preserve"><value>Ledger corrected for {0} line(s)</value></data>
+  <data name="SCTitle" xml:space="preserve"><value>Item card</value></data>
+  <data name="SCSub" xml:space="preserve"><value>An item's movements in a store or department from the stock ledger, with running balance</value></data>
+  <data name="SCQtyValue" xml:space="preserve"><value>Quantity and value</value></data>
+  <data name="SCOpening" xml:space="preserve"><value>Opening balance</value></data>
+  <data name="SCTotalIn" xml:space="preserve"><value>Total in</value></data>
+  <data name="SCTotalOut" xml:space="preserve"><value>Total out</value></data>
+  <data name="SCClosing" xml:space="preserve"><value>Closing balance</value></data>
+  <data name="SCMismatch" xml:space="preserve"><value>The closing balance from the ledger differs from the stored balance ({0}).</value></data>
+  <data name="SCMoves" xml:space="preserve"><value>Movements</value></data>
+  <data name="SCDoc" xml:space="preserve"><value>Document</value></data>
+  <data name="SCIn" xml:space="preserve"><value>In</value></data>
+  <data name="SCOut" xml:space="preserve"><value>Out</value></data>
+  <data name="SCUnitCost" xml:space="preserve"><value>Large unit cost</value></data>
+  <data name="SCNoMoves" xml:space="preserve"><value>No movements in this period</value></data>
+  <data name="SCPick" xml:space="preserve"><value>Choose the store then the item to show the card</value></data>
+  <data name="SCMovement" xml:space="preserve"><value>Movement</value></data>
 </root>
