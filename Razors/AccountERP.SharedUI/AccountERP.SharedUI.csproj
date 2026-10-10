@@ -16,7 +16,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Include="..\..\..\Backup\Razors\AccountERP.MobileDesktop\wwwroot\app.css" Link="wwwroot\app.css" />
+		<Content Include="..\AccountERP.MobileDesktop\wwwroot\app.css" Link="wwwroot\app.css" />
 	</ItemGroup>
 
 	<!-- نقلنا الـ SupportedPlatform إلى ItemGroup مستقل وصحيح برمجياً ليفهمه الـ MSBuild -->
