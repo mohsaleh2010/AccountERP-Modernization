@@ -2705,4 +2705,66 @@
   <data name="IC_Default" xml:space="preserve"><value>Catégorie par défaut</value></data>
   <data name="IC_AllCats" xml:space="preserve"><value>Toutes les catégories</value></data>
   <data name="IC_UsedNoDelete" xml:space="preserve"><value>Utilisée — désactivez-la plutôt</value></data>
+  <data name="IT_ListTitle" xml:space="preserve"><value>Articles</value></data>
+  <data name="IT_ListSub" xml:space="preserve"><value>Recherchez par nom, code ou code-barres ; cliquez pour ouvrir</value></data>
+  <data name="IT_NewItem" xml:space="preserve"><value>Nouvel article</value></data>
+  <data name="IT_NewService" xml:space="preserve"><value>Nouveau service</value></data>
+  <data name="IT_NewSub" xml:space="preserve"><value>Saisissez puis enregistrez ; solde d'ouverture facultatif</value></data>
+  <data name="IT_Search" xml:space="preserve"><value>Rechercher (nom / code / code-barres)</value></data>
+  <data name="IT_Status" xml:space="preserve"><value>Statut</value></data>
+  <data name="IT_ActiveOnly" xml:space="preserve"><value>Actifs</value></data>
+  <data name="IT_InactiveOnly" xml:space="preserve"><value>Inactifs</value></data>
+  <data name="IT_AllStatus" xml:space="preserve"><value>Tous</value></data>
+  <data name="IT_Inactive" xml:space="preserve"><value>Inactif</value></data>
+  <data name="IT_KindAll" xml:space="preserve"><value>Tous</value></data>
+  <data name="IT_TopNote" xml:space="preserve"><value>({0} premiers résultats — affinez)</value></data>
+  <data name="IT_Code" xml:space="preserve"><value>Code</value></data>
+  <data name="IT_Name" xml:space="preserve"><value>Nom de l'article</value></data>
+  <data name="IT_Unit" xml:space="preserve"><value>Unité</value></data>
+  <data name="IT_SalePrice" xml:space="preserve"><value>Prix de vente</value></data>
+  <data name="IT_PurchasePrice" xml:space="preserve"><value>Prix d'achat</value></data>
+  <data name="IT_Balance" xml:space="preserve"><value>Solde</value></data>
+  <data name="IT_NoBalance" xml:space="preserve"><value>Sans stock</value></data>
+  <data name="IT_NoItems" xml:space="preserve"><value>Aucun article correspondant</value></data>
+  <data name="IT_BackToList" xml:space="preserve"><value>Liste des articles</value></data>
+  <data name="IT_SaveNew" xml:space="preserve"><value>Enregistrer et nouveau</value></data>
+  <data name="IT_Basic" xml:space="preserve"><value>Données de base</value></data>
+  <data name="IT_AutoCode" xml:space="preserve"><value>Automatique</value></data>
+  <data name="IT_AutoCodeHelp" xml:space="preserve"><value>Généré à l'enregistrement</value></data>
+  <data name="IT_NameOnInvoice" xml:space="preserve"><value>Nom sur facture</value></data>
+  <data name="IT_NameOnInvoiceHelp" xml:space="preserve"><value>Vide = nom de l'article</value></data>
+  <data name="IT_OtherName" xml:space="preserve"><value>Autre nom</value></data>
+  <data name="IT_Barcode2" xml:space="preserve"><value>Code-barres supplémentaire</value></data>
+  <data name="IT_Barcode3" xml:space="preserve"><value>Code-barres supplémentaire 2</value></data>
+  <data name="IT_NoBalanceLabel" xml:space="preserve"><value>Sans stock (aucun mouvement)</value></data>
+  <data name="IT_Description" xml:space="preserve"><value>Description / notes</value></data>
+  <data name="IT_UnitPrices" xml:space="preserve"><value>Unité et prix</value></data>
+  <data name="IT_UnitLocked" xml:space="preserve"><value>Verrouillée : stock ou mouvements existants</value></data>
+  <data name="IT_Reorder" xml:space="preserve"><value>Seuil de réapprovisionnement</value></data>
+  <data name="IT_ReorderHelp" xml:space="preserve"><value>Affiché dans le rapport des manquants</value></data>
+  <data name="IT_Prices" xml:space="preserve"><value>Prix</value></data>
+  <data name="IT_PerLarge" xml:space="preserve"><value>Par {0}</value></data>
+  <data name="IT_PerSmall" xml:space="preserve"><value>Par {0}</value></data>
+  <data name="IT_DefaultUnit" xml:space="preserve"><value>Unité par défaut</value></data>
+  <data name="IT_ForSale" xml:space="preserve"><value>Pour la vente</value></data>
+  <data name="IT_ForPurchase" xml:space="preserve"><value>Pour l'achat</value></data>
+  <data name="IT_SmallPriceHelp" xml:space="preserve"><value>Prix petite unité suggéré = grand prix ÷ facteur (modifiable)</value></data>
+  <data name="IT_StoresBalance" xml:space="preserve"><value>Magasins et stock</value></data>
+  <data name="IT_MainStore" xml:space="preserve"><value>Magasin</value></data>
+  <data name="IT_AllStoresNote" xml:space="preserve"><value>Sera aussi ajouté à tous les magasins à zéro (paramètre)</value></data>
+  <data name="IT_Opening" xml:space="preserve"><value>Solde d'ouverture (facultatif)</value></data>
+  <data name="IT_QtyIn" xml:space="preserve"><value>Quantité en {0}</value></data>
+  <data name="IT_CostPer" xml:space="preserve"><value>Coût par {0}</value></data>
+  <data name="IT_NoPeriod" xml:space="preserve"><value>Aucune période ouverte aujourd'hui ; solde d'ouverture impossible</value></data>
+  <data name="IT_OpeningNote" xml:space="preserve"><value>Comptabilisé comme solde d'ouverture de {0} ; non modifiable ici ensuite</value></data>
+  <data name="IT_OpeningValue" xml:space="preserve"><value>Valeur {0}</value></data>
+  <data name="IT_Store" xml:space="preserve"><value>Magasin</value></data>
+  <data name="IT_AvgCost" xml:space="preserve"><value>Coût moyen</value></data>
+  <data name="IT_Movements" xml:space="preserve"><value>Mouvements</value></data>
+  <data name="IT_ItemCard" xml:space="preserve"><value>Fiche article</value></data>
+  <data name="IT_BalanceReadOnly" xml:space="preserve"><value>Solde en lecture seule ; il change via bons, factures et ouverture</value></data>
+  <data name="IT_AddToStore" xml:space="preserve"><value>Ajouter à un autre magasin</value></data>
+  <data name="IT_AddStoreButton" xml:space="preserve"><value>Ajouter à zéro</value></data>
+  <data name="IT_Added" xml:space="preserve"><value>Article ajouté</value></data>
+  <data name="IT_StoreAdded" xml:space="preserve"><value>Article ajouté au magasin</value></data>
 </root>

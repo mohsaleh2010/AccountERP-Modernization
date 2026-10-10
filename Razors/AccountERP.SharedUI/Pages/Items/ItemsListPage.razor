@@ -1,0 +1,176 @@
+@* 🟢 خطة 04 — المرحلة 2: قائمة الأصناف الموحَّدة (بديل ItemsListGridFrm/ItemsListViewFrm/قائمة الخدمات). بحث بالاسم/الكود/الباركود،
+   تصفية بالفئة والنوع (أصناف/خدمات) والحالة، والرصيد الإجمالى بالوحدتين للعرض فقط. الصف يفتح شاشة الصنف. التصميم حسب ui-ux-pro-max. *@
+@page "/items"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.ItemEditorService
+@inject LanguageService LangService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("IT_ListTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .it-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .it-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .it-head .ico .mud-icon-root { font-size: 2rem; }
+    .it-head .titles { flex: 1 1 260px; }
+    .it-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .it-head .mud-button-root { min-height: 44px; }
+    .it-gap { margin-top: 16px; }
+    .it-filters { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1fr); gap: 12px 16px; align-items: start; }
+    .it-kinds { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .it-chip { min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface);
+               color: var(--mud-palette-text-primary); font: inherit; font-size: .875rem; cursor: pointer; transition: background .15s, border-color .15s; }
+    .it-chip:hover { border-color: var(--mud-palette-primary); }
+    .it-chip:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .it-chip[aria-pressed="true"] { background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent); border-color: var(--mud-palette-primary);
+                                    color: var(--mud-palette-primary); font-weight: 600; }
+    .it-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .it-code { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--mud-palette-text-secondary); }
+    .it-row { cursor: pointer; }
+    .it-muted { color: var(--mud-palette-text-secondary); font-size: .8rem; }
+    .it-neg { color: var(--mud-palette-error); }
+    .it-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .it-empty .mud-icon-root { opacity: .5; }
+    @@media (max-width: 899px) { .it-filters { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card it-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Inventory2" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("IT_ListTitle")</h1>
+            <div class="sub">@Tr("IT_ListSub")</div>
+        </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="@($"/items/new{(_f.Kind == 2 ? "?kind=services" : "")}")">@Tr(_f.Kind == 2 ? "IT_NewService" : "IT_NewItem")</MudButton>
+    </div>
+
+    <div class="inv-card it-gap">
+        <div class="it-filters">
+            <MudTextField T="string" Value="_f.Text" ValueChanged="OnTextAsync" Label="@Tr("IT_Search")" Variant="Variant.Outlined" Immediate="true" DebounceInterval="300"
+                          Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" AutoFocus="true" />
+            <MudSelect T="long" Value="_f.Category_Id" ValueChanged="OnCategoryAsync" Label="@Tr("IC_CatName")" Variant="Variant.Outlined"
+                       ToStringFunc="@(id => id == 0 ? Tr("IC_AllCats") : _lk?.Categories.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
+                <MudSelectItem T="long" Value="0L">@Tr("IC_AllCats")</MudSelectItem>
+                @foreach (var c in _lk?.Categories ?? new()) { <MudSelectItem T="long" Value="c.Id">@c.Name</MudSelectItem> }
+            </MudSelect>
+            <MudSelect T="int" Value="_f.Active" ValueChanged="OnActiveAsync" Label="@Tr("IT_Status")" Variant="Variant.Outlined">
+                <MudSelectItem T="int" Value="1">@Tr("IT_ActiveOnly")</MudSelectItem>
+                <MudSelectItem T="int" Value="0">@Tr("IT_InactiveOnly")</MudSelectItem>
+                <MudSelectItem T="int" Value="-1">@Tr("IT_AllStatus")</MudSelectItem>
+            </MudSelect>
+        </div>
+        <div class="it-kinds" role="group" aria-label="@Tr("IC_Kind")">
+            @foreach (var (k, key) in new[] { (0, "IT_KindAll"), (1, "IC_Items"), (2, "IC_Services") })
+            {
+                <button type="button" class="it-chip" aria-pressed="@(_f.Kind == k ? "true" : "false")" @onclick="@(() => OnKindAsync(k))">@Tr(key)</button>
+            }
+        </div>
+    </div>
+
+    <div class="inv-card it-gap">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("IT_ListTitle")<span class="inv-count">@_rows.Count</span>
+            @if (_rows.Count >= _f.Top) { <span class="it-muted" style="margin-inline-start:8px">@Tr("IT_TopNote", _f.Top)</span> }
+        </h2>
+        <MudTable Items="@_rows" T="ListRow" Hover="true" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Loading="_loading" LoadingProgressColor="Color.Primary"
+                  OnRowClick="@((TableRowClickEventArgs<ListRow> e) => Nav.NavigateTo($"/items/{e.Item!.Id}"))" RowClass="it-row">
+            <HeaderContent>
+                <MudTh>@Tr("IT_Code")</MudTh>
+                <MudTh>@Tr("IT_Name")</MudTh>
+                <MudTh>@Tr("IC_CatName")</MudTh>
+                <MudTh>@Tr("IT_Unit")</MudTh>
+                <MudTh Style="text-align:end">@Tr("IT_SalePrice")</MudTh>
+                <MudTh Style="text-align:end">@Tr("IT_PurchasePrice")</MudTh>
+                <MudTh Style="text-align:end">@Tr("IT_Balance")</MudTh>
+                <MudTh>@Tr("IT_Status")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("IT_Code")"><span class="it-code">@context.Code</span></MudTd>
+                <MudTd DataLabel="@Tr("IT_Name")">
+                    <a href="@($"/items/{context.Id}")" @onclick:stopPropagation="true" style="color:inherit;font-weight:600;text-decoration:none">@context.Name</a>
+                    @if (context.Item_Or_Service == 2 || context.Without_Balance) { <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" Class="ms-1">@Tr(context.Item_Or_Service == 2 ? "IC_Services" : "IT_NoBalance")</MudChip> }
+                </MudTd>
+                <MudTd DataLabel="@Tr("IC_CatName")">@context.Category</MudTd>
+                <MudTd DataLabel="@Tr("IT_Unit")">@context.Unit @if (context.Factor != 1) { <span class="it-muted">× @Num(context.Factor)</span> }</MudTd>
+                <MudTd DataLabel="@Tr("IT_SalePrice")" Style="text-align:end"><span class="it-num">@Money(context.Sale_Price)</span></MudTd>
+                <MudTd DataLabel="@Tr("IT_PurchasePrice")" Style="text-align:end"><span class="it-num">@Money(context.Purchase_Price)</span></MudTd>
+                <MudTd DataLabel="@Tr("IT_Balance")" Style="text-align:end">
+                    @if (context.Without_Balance || context.Item_Or_Service == 2) { <span class="it-muted">—</span> }
+                    else { <span class="it-num @(context.Balance_Small < 0 ? "it-neg" : "")">@BalanceText(context.Balance_Small, context.Factor)</span> }
+                </MudTd>
+                <MudTd DataLabel="@Tr("IT_Status")">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="@(context.Is_Active ? Color.Success : Color.Default)">@Tr(context.Is_Active ? "ILActive" : "IT_Inactive")</MudChip>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="it-empty"><MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" /><span>@Tr("IT_NoItems")</span></div>
+            </NoRecordsContent>
+        </MudTable>
+        @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-3" role="alert">@_error</MudAlert> }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromQuery(Name = "kind")] public string? KindQuery { get; set; }
+
+    private readonly ItemEditorService _svc = new();
+    private Lookups? _lk;
+    private List<ListRow> _rows = new();
+    private readonly ListFilter _f = new();
+    private string? _error;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _f.Kind = KindQuery == "services" ? 2 : KindQuery == "items" ? 1 : 0;
+        try { _lk = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetLookups(); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        var f = new ListFilter { Text = _f.Text, Category_Id = _f.Category_Id, Kind = _f.Kind, Active = _f.Active, Top = _f.Top };
+        try { _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.List(f); }); _error = null; }
+        catch (Exception ex) { _error = Inner(ex); _rows = new(); }
+        finally { _loading = false; }
+    }
+
+    private async Task OnTextAsync(string? s) { _f.Text = s; await LoadAsync(); }
+    private async Task OnCategoryAsync(long c) { _f.Category_Id = c; await LoadAsync(); }
+    private async Task OnActiveAsync(int a) { _f.Active = a; await LoadAsync(); }
+    private async Task OnKindAsync(int k) { _f.Kind = k; await LoadAsync(); }
+
+    /// <summary>الرصيد بالوحدة الصغرى معروض بالوحدتين: «5 + 2».</summary>
+    private static string BalanceText(decimal small, decimal factor)
+    {
+        if (factor <= 1) return Num(small);
+        decimal large = Math.Truncate(small / factor), rest = small - large * factor;
+        return rest == 0 ? Num(large) : $"{Num(large)} + {Num(rest)}";
+    }
+
+    private static string Num(decimal v) => v.ToString("#,0.####", CultureInfo.InvariantCulture);
+    private static string Money(decimal v) => v.ToString("#,0.00", CultureInfo.InvariantCulture);
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

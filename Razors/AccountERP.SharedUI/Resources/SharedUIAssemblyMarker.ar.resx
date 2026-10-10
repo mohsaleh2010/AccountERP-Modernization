@@ -2703,4 +2703,66 @@
   <data name="IC_Default" xml:space="preserve"><value>الفئة الافتراضية لهذا النوع</value></data>
   <data name="IC_AllCats" xml:space="preserve"><value>كل الفئات</value></data>
   <data name="IC_UsedNoDelete" xml:space="preserve"><value>مستعملة فى أصناف — يمكن إيقافها</value></data>
+  <data name="IT_ListTitle" xml:space="preserve"><value>الأصناف</value></data>
+  <data name="IT_ListSub" xml:space="preserve"><value>ابحث بالاسم أو الكود أو الباركود، واضغط الصنف لفتحه</value></data>
+  <data name="IT_NewItem" xml:space="preserve"><value>صنف جديد</value></data>
+  <data name="IT_NewService" xml:space="preserve"><value>خدمة جديدة</value></data>
+  <data name="IT_NewSub" xml:space="preserve"><value>أدخل البيانات ثم احفظ؛ الرصيد الابتدائى اختيارى</value></data>
+  <data name="IT_Search" xml:space="preserve"><value>بحث (اسم / كود / باركود)</value></data>
+  <data name="IT_Status" xml:space="preserve"><value>الحالة</value></data>
+  <data name="IT_ActiveOnly" xml:space="preserve"><value>النشطة</value></data>
+  <data name="IT_InactiveOnly" xml:space="preserve"><value>الموقوفة</value></data>
+  <data name="IT_AllStatus" xml:space="preserve"><value>الكل</value></data>
+  <data name="IT_Inactive" xml:space="preserve"><value>موقوف</value></data>
+  <data name="IT_KindAll" xml:space="preserve"><value>الكل</value></data>
+  <data name="IT_TopNote" xml:space="preserve"><value>(أول {0} نتيجة — ضيّق البحث)</value></data>
+  <data name="IT_Code" xml:space="preserve"><value>الكود</value></data>
+  <data name="IT_Name" xml:space="preserve"><value>اسم الصنف</value></data>
+  <data name="IT_Unit" xml:space="preserve"><value>الوحدة</value></data>
+  <data name="IT_SalePrice" xml:space="preserve"><value>سعر البيع</value></data>
+  <data name="IT_PurchasePrice" xml:space="preserve"><value>سعر الشراء</value></data>
+  <data name="IT_Balance" xml:space="preserve"><value>الرصيد</value></data>
+  <data name="IT_NoBalance" xml:space="preserve"><value>بلا رصيد</value></data>
+  <data name="IT_NoItems" xml:space="preserve"><value>لا أصناف مطابقة</value></data>
+  <data name="IT_BackToList" xml:space="preserve"><value>قائمة الأصناف</value></data>
+  <data name="IT_SaveNew" xml:space="preserve"><value>حفظ وجديد</value></data>
+  <data name="IT_Basic" xml:space="preserve"><value>البيانات الأساسية</value></data>
+  <data name="IT_AutoCode" xml:space="preserve"><value>تلقائى</value></data>
+  <data name="IT_AutoCodeHelp" xml:space="preserve"><value>يُولَّد عند الحفظ</value></data>
+  <data name="IT_NameOnInvoice" xml:space="preserve"><value>الاسم على الفاتورة</value></data>
+  <data name="IT_NameOnInvoiceHelp" xml:space="preserve"><value>فارغ = اسم الصنف</value></data>
+  <data name="IT_OtherName" xml:space="preserve"><value>اسم آخر</value></data>
+  <data name="IT_Barcode2" xml:space="preserve"><value>باركود إضافى</value></data>
+  <data name="IT_Barcode3" xml:space="preserve"><value>باركود إضافى 2</value></data>
+  <data name="IT_NoBalanceLabel" xml:space="preserve"><value>بلا رصيد (لا حركة مخزن)</value></data>
+  <data name="IT_Description" xml:space="preserve"><value>وصف / ملاحظات</value></data>
+  <data name="IT_UnitPrices" xml:space="preserve"><value>الوحدة والأسعار</value></data>
+  <data name="IT_UnitLocked" xml:space="preserve"><value>مقفولة: للصنف رصيد أو حركات</value></data>
+  <data name="IT_Reorder" xml:space="preserve"><value>حد الطلب</value></data>
+  <data name="IT_ReorderHelp" xml:space="preserve"><value>يظهر فى تقرير النواقص</value></data>
+  <data name="IT_Prices" xml:space="preserve"><value>الأسعار</value></data>
+  <data name="IT_PerLarge" xml:space="preserve"><value>لكل {0}</value></data>
+  <data name="IT_PerSmall" xml:space="preserve"><value>لكل {0}</value></data>
+  <data name="IT_DefaultUnit" xml:space="preserve"><value>الوحدة الافتراضية</value></data>
+  <data name="IT_ForSale" xml:space="preserve"><value>للبيع</value></data>
+  <data name="IT_ForPurchase" xml:space="preserve"><value>للشراء</value></data>
+  <data name="IT_SmallPriceHelp" xml:space="preserve"><value>سعر الصغرى يُقترح تلقائياً = سعر الكبرى ÷ عدد الصغرى، ويمكن تعديله</value></data>
+  <data name="IT_StoresBalance" xml:space="preserve"><value>المخازن والرصيد</value></data>
+  <data name="IT_MainStore" xml:space="preserve"><value>المخزن</value></data>
+  <data name="IT_AllStoresNote" xml:space="preserve"><value>سيُضاف أيضاً لكل المخازن برصيد صفر (إعداد النظام)</value></data>
+  <data name="IT_Opening" xml:space="preserve"><value>الرصيد الابتدائى (اختيارى)</value></data>
+  <data name="IT_QtyIn" xml:space="preserve"><value>الكمية بـ{0}</value></data>
+  <data name="IT_CostPer" xml:space="preserve"><value>التكلفة لكل {0}</value></data>
+  <data name="IT_NoPeriod" xml:space="preserve"><value>لا توجد فترة مالية مفتوحة للتاريخ الحالى؛ لا يمكن إدخال رصيد ابتدائى</value></data>
+  <data name="IT_OpeningNote" xml:space="preserve"><value>يُرحَّل كرصيد أول المدة للفترة {0}، ولا يتغير بعد ذلك من هذه الشاشة</value></data>
+  <data name="IT_OpeningValue" xml:space="preserve"><value>القيمة {0}</value></data>
+  <data name="IT_Store" xml:space="preserve"><value>المخزن</value></data>
+  <data name="IT_AvgCost" xml:space="preserve"><value>متوسط التكلفة</value></data>
+  <data name="IT_Movements" xml:space="preserve"><value>الحركات</value></data>
+  <data name="IT_ItemCard" xml:space="preserve"><value>كارت الصنف</value></data>
+  <data name="IT_BalanceReadOnly" xml:space="preserve"><value>الرصيد للعرض فقط؛ يتغير بالأذون والفواتير وأول المدة</value></data>
+  <data name="IT_AddToStore" xml:space="preserve"><value>إضافة لمخزن آخر</value></data>
+  <data name="IT_AddStoreButton" xml:space="preserve"><value>إضافة برصيد صفر</value></data>
+  <data name="IT_Added" xml:space="preserve"><value>أُضيف الصنف</value></data>
+  <data name="IT_StoreAdded" xml:space="preserve"><value>أُضيف الصنف للمخزن</value></data>
 </root>

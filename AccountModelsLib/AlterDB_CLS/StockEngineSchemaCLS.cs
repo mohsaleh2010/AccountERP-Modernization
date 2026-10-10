@@ -157,6 +157,8 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("ToolStripMenuItemItems_Groups", "/items/lookups/groups"),
             // خطة 04 م1: الوحدات والفئات (مفتاح 494 فيه حرف تشكيل عربى U+064D كما هو مخزَّن)
             ("menuUnits", "/items/units"), ("menuItemItemMainCategory", "/items/categories"), ("menuItemItem\u064dSubCategory", "/items/categories"),
+            // خطة 04 م2: قائمة الأصناف وشاشة الصنف الموحَّدة
+            ("menuItemItemsListGrid", "/items"), ("menuItemItemsListView", "/items"), ("menuItemItemsListNoPrice", "/items/new"), ("menuItemItemsListNoBalance", "/items?kind=services"),
             // قائمة وبحث الأذون (المرحلة 4) بدل Order_detailes لكل نوع، وقائمة كل الأذون.
             // ملاحظة: القائمة القديمة تفتح «مرتجع صرف قطع الغيار» (879) على 1022 وعنصر «صرف إلى موظف» (881) بلا شاشة؛ هنا كلٌّ لنوعه الصحيح.
             ("menuItemOrdersList", "/store/orders"),

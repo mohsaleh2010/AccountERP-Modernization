@@ -2703,4 +2703,66 @@
   <data name="IC_Default" xml:space="preserve"><value>Default category for this kind</value></data>
   <data name="IC_AllCats" xml:space="preserve"><value>All categories</value></data>
   <data name="IC_UsedNoDelete" xml:space="preserve"><value>Used by items — deactivate instead</value></data>
+  <data name="IT_ListTitle" xml:space="preserve"><value>Items</value></data>
+  <data name="IT_ListSub" xml:space="preserve"><value>Search by name, code or barcode; click an item to open it</value></data>
+  <data name="IT_NewItem" xml:space="preserve"><value>New item</value></data>
+  <data name="IT_NewService" xml:space="preserve"><value>New service</value></data>
+  <data name="IT_NewSub" xml:space="preserve"><value>Fill in the data and save; the opening balance is optional</value></data>
+  <data name="IT_Search" xml:space="preserve"><value>Search (name / code / barcode)</value></data>
+  <data name="IT_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="IT_ActiveOnly" xml:space="preserve"><value>Active</value></data>
+  <data name="IT_InactiveOnly" xml:space="preserve"><value>Inactive</value></data>
+  <data name="IT_AllStatus" xml:space="preserve"><value>All</value></data>
+  <data name="IT_Inactive" xml:space="preserve"><value>Inactive</value></data>
+  <data name="IT_KindAll" xml:space="preserve"><value>All</value></data>
+  <data name="IT_TopNote" xml:space="preserve"><value>(first {0} results — narrow the search)</value></data>
+  <data name="IT_Code" xml:space="preserve"><value>Code</value></data>
+  <data name="IT_Name" xml:space="preserve"><value>Item name</value></data>
+  <data name="IT_Unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="IT_SalePrice" xml:space="preserve"><value>Sale price</value></data>
+  <data name="IT_PurchasePrice" xml:space="preserve"><value>Purchase price</value></data>
+  <data name="IT_Balance" xml:space="preserve"><value>Balance</value></data>
+  <data name="IT_NoBalance" xml:space="preserve"><value>No stock</value></data>
+  <data name="IT_NoItems" xml:space="preserve"><value>No matching items</value></data>
+  <data name="IT_BackToList" xml:space="preserve"><value>Items list</value></data>
+  <data name="IT_SaveNew" xml:space="preserve"><value>Save &amp; new</value></data>
+  <data name="IT_Basic" xml:space="preserve"><value>Basic data</value></data>
+  <data name="IT_AutoCode" xml:space="preserve"><value>Automatic</value></data>
+  <data name="IT_AutoCodeHelp" xml:space="preserve"><value>Generated on save</value></data>
+  <data name="IT_NameOnInvoice" xml:space="preserve"><value>Name on invoice</value></data>
+  <data name="IT_NameOnInvoiceHelp" xml:space="preserve"><value>Empty = item name</value></data>
+  <data name="IT_OtherName" xml:space="preserve"><value>Other name</value></data>
+  <data name="IT_Barcode2" xml:space="preserve"><value>Extra barcode</value></data>
+  <data name="IT_Barcode3" xml:space="preserve"><value>Extra barcode 2</value></data>
+  <data name="IT_NoBalanceLabel" xml:space="preserve"><value>No stock (no store movement)</value></data>
+  <data name="IT_Description" xml:space="preserve"><value>Description / notes</value></data>
+  <data name="IT_UnitPrices" xml:space="preserve"><value>Unit and prices</value></data>
+  <data name="IT_UnitLocked" xml:space="preserve"><value>Locked: item has stock or movements</value></data>
+  <data name="IT_Reorder" xml:space="preserve"><value>Reorder level</value></data>
+  <data name="IT_ReorderHelp" xml:space="preserve"><value>Shown in the shortages report</value></data>
+  <data name="IT_Prices" xml:space="preserve"><value>Prices</value></data>
+  <data name="IT_PerLarge" xml:space="preserve"><value>Per {0}</value></data>
+  <data name="IT_PerSmall" xml:space="preserve"><value>Per {0}</value></data>
+  <data name="IT_DefaultUnit" xml:space="preserve"><value>Default unit</value></data>
+  <data name="IT_ForSale" xml:space="preserve"><value>For sales</value></data>
+  <data name="IT_ForPurchase" xml:space="preserve"><value>For purchases</value></data>
+  <data name="IT_SmallPriceHelp" xml:space="preserve"><value>Small-unit price is suggested as large price ÷ factor and can be changed</value></data>
+  <data name="IT_StoresBalance" xml:space="preserve"><value>Stores and stock</value></data>
+  <data name="IT_MainStore" xml:space="preserve"><value>Store</value></data>
+  <data name="IT_AllStoresNote" xml:space="preserve"><value>Will also be added to all stores with zero stock (system setting)</value></data>
+  <data name="IT_Opening" xml:space="preserve"><value>Opening balance (optional)</value></data>
+  <data name="IT_QtyIn" xml:space="preserve"><value>Quantity in {0}</value></data>
+  <data name="IT_CostPer" xml:space="preserve"><value>Cost per {0}</value></data>
+  <data name="IT_NoPeriod" xml:space="preserve"><value>No open financial period for today; an opening balance cannot be entered</value></data>
+  <data name="IT_OpeningNote" xml:space="preserve"><value>Posted as the opening balance of period {0}; it cannot be changed from this screen afterwards</value></data>
+  <data name="IT_OpeningValue" xml:space="preserve"><value>Value {0}</value></data>
+  <data name="IT_Store" xml:space="preserve"><value>Store</value></data>
+  <data name="IT_AvgCost" xml:space="preserve"><value>Average cost</value></data>
+  <data name="IT_Movements" xml:space="preserve"><value>Movements</value></data>
+  <data name="IT_ItemCard" xml:space="preserve"><value>Item card</value></data>
+  <data name="IT_BalanceReadOnly" xml:space="preserve"><value>Balance is read-only; it changes through orders, invoices and opening balances</value></data>
+  <data name="IT_AddToStore" xml:space="preserve"><value>Add to another store</value></data>
+  <data name="IT_AddStoreButton" xml:space="preserve"><value>Add with zero stock</value></data>
+  <data name="IT_Added" xml:space="preserve"><value>Item added</value></data>
+  <data name="IT_StoreAdded" xml:space="preserve"><value>Item added to the store</value></data>
 </root>
