@@ -1,0 +1,610 @@
+@* 🟢 خطة 04 — المرحلة 5: أسعار الأصناف (بدل Price_Type_ListFRM / Prices_List_Edit_Values / Edit_Prices_List_Values / SearchItemPrices_List_Values /
+   Customer_Price / Price_Type_List_PurchasFRM / Supplier_Price). أربعة أقسام: قوائم الأسعار (الأنواع كشجرة + أسعار الأصناف فى القائمة المختارة)،
+   التعديل الجماعى (معاينة قبل التنفيذ)، أسعار العملاء، أسعار الموردين (مع أنواع سعر الشراء).
+   القواعد فى PriceListService: المشتقة تُعاد حسابها كالقديم، التقريب لقرشين، الصلاحية 917. التصميم حسب ui-ux-pro-max ونظام inv-*. *@
+@page "/items/prices"
+@page "/items/prices/{Tab}"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.PriceListService
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("PR_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .pr-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .pr-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .pr-head .ico .mud-icon-root { font-size: 2rem; }
+    .pr-head .titles { flex: 1 1 260px; min-width: 0; }
+    .pr-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .pr-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .pr-tab { min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface);
+              color: var(--mud-palette-text-primary); font: inherit; font-size: .9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .pr-tab:hover { border-color: var(--mud-palette-primary); }
+    .pr-tab:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .pr-tab[aria-current="page"] { background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent); border-color: var(--mud-palette-primary);
+                                   color: var(--mud-palette-primary); font-weight: 600; }
+    .pr-gap { margin-top: 16px; }
+    .pr-split { display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); gap: 16px; align-items: start; }
+    .pr-types { display: grid; gap: 4px; margin-top: 8px; }
+    .pr-type { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; border: 1px solid transparent; cursor: pointer; min-height: 44px;
+               background: none; font: inherit; color: inherit; text-align: start; width: 100%; }
+    .pr-type:hover { background: color-mix(in srgb, var(--mud-palette-primary) 6%, transparent); }
+    .pr-type:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 1px; }
+    .pr-type[aria-pressed="true"] { border-color: var(--mud-palette-primary); background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent); }
+    .pr-type .nm { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    .pr-type .rule { font-size: .75rem; color: var(--mud-palette-text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; direction: ltr; }
+    .pr-type .tree { color: var(--mud-palette-text-secondary); font-size: .8rem; }
+    .pr-type.off .nm { opacity: .55; text-decoration: line-through; }
+    .pr-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; margin-top: 12px; align-items: start; }
+    .pr-form .full { grid-column: 1 / -1; }
+    .pr-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .pr-acts .mud-button-root { min-height: 44px; }
+    .pr-filters { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1.2fr) auto; gap: 12px; align-items: center; }
+    .pr-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .pr-code { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--mud-palette-text-secondary); }
+    .pr-muted { color: var(--mud-palette-text-secondary); font-size: .8rem; }
+    .pr-up { color: var(--mud-palette-success); } .pr-down { color: var(--mud-palette-error); }
+    .pr-price .mud-input-control { max-width: 160px; margin-inline-start: auto; }
+    .pr-note { font-size: .85rem; color: var(--mud-palette-text-secondary); margin-top: 8px; }
+    .pr-bulk { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 16px; align-items: start; }
+    .pr-bulk .full { grid-column: 1 / -1; }
+    .pr-sum { display: flex; flex-wrap: wrap; gap: 8px 24px; padding: 12px 16px; border-radius: 10px; background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent); }
+    .pr-sum b { font-variant-numeric: tabular-nums; }
+    .pr-party { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+    .pr-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    @@media (max-width: 1099px) { .pr-split { grid-template-columns: minmax(0, 1fr); } .pr-bulk { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                                  .pr-party { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 649px) { .pr-filters, .pr-form, .pr-bulk, .pr-party { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card">
+        <div class="pr-head">
+            <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.PriceChange" /></div>
+            <div class="titles">
+                <h1 class="inv-title">@Tr("PR_Title")</h1>
+                <div class="sub">@Tr("PR_Sub")</div>
+            </div>
+        </div>
+        <nav class="pr-tabs" aria-label="@Tr("PR_Title")">
+            @foreach (var (k, key, icon) in Tabs)
+            {
+                <button type="button" class="pr-tab" aria-current="@(_tab == k ? "page" : null)" @onclick="@(() => Nav.NavigateTo($"/items/prices/{k}"))">
+                    <MudIcon Icon="@icon" Size="Size.Small" />@Tr(key)
+                </button>
+            }
+        </nav>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Class="pr-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    @if (_tab == "lists")
+    {
+    <div class="pr-split pr-gap">
+        @* ===== أنواع الأسعار ===== *@
+        <section class="inv-card" aria-labelledby="pr-types-h">
+            <h2 class="inv-card-title" id="pr-types-h"><MudIcon Icon="@Icons.Material.Filled.AccountTree" />@Tr("PR_Types")<span class="inv-count">@_types.Count</span></h2>
+            <div class="pr-types" role="list">
+                @foreach (var (t, depth) in TypeTree())
+                {
+                    <button type="button" role="listitem" class="pr-type @(t.Is_Active ? "" : "off")" aria-pressed="@(_typeId == t.Id ? "true" : "false")"
+                            style="@($"padding-inline-start:{10 + depth * 18}px")" @onclick="@(() => SelectTypeAsync(t.Id))">
+                        @if (depth > 0) { <span class="tree" aria-hidden="true">↳</span> }
+                        <span class="nm">@t.Name</span>
+                        @if (t.Master_Id != 0) { <span class="rule">@RuleText(t)</span> }
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Title="@Tr("PR_PricedItems")">@t.Priced_Items</MudChip>
+                    </button>
+                }
+            </div>
+
+            <h3 class="inv-card-title pr-gap" style="font-size:1rem">
+                <MudIcon Icon="@(_edit.Id == 0 ? Icons.Material.Filled.AddCircle : Icons.Material.Filled.Edit)" Size="Size.Small" />
+                @(_edit.Id == 0 ? Tr("PR_NewType") : Tr("PR_EditType", _edit.Name ?? ""))
+            </h3>
+            <div class="pr-form">
+                <MudTextField T="string" @bind-Value="_edit.Name" Label="@Tr("PR_TypeName")" Variant="Variant.Outlined" MaxLength="200" Class="full" Required="true" />
+                <MudSelect T="long" @bind-Value="_edit.Master_Id" Label="@Tr("PR_Master")" Variant="Variant.Outlined" Class="full"
+                           ToStringFunc="@(id => id == 0 ? Tr("PR_Independent") : _types.FirstOrDefault(x => x.Id == id)?.Name ?? string.Empty)">
+                    <MudSelectItem T="long" Value="0L">@Tr("PR_Independent")</MudSelectItem>
+                    @foreach (var t in _types.Where(x => x.Id != _edit.Id)) { <MudSelectItem T="long" Value="t.Id">@t.Name</MudSelectItem> }
+                </MudSelect>
+                @if (_edit.Master_Id != 0)
+                {
+                    <MudSelect T="bool" @bind-Value="_edit.Is_Plus" Label="@Tr("PR_Direction")" Variant="Variant.Outlined">
+                        <MudSelectItem T="bool" Value="true">@Tr("PR_Plus")</MudSelectItem>
+                        <MudSelectItem T="bool" Value="false">@Tr("PR_Minus")</MudSelectItem>
+                    </MudSelect>
+                    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center">
+                        <MudNumericField T="decimal" @bind-Value="_edit.Added_Value" Label="@Tr("PR_Value")" Variant="Variant.Outlined" Min="0" Format="0.####" />
+                        <MudToggleGroup T="bool" @bind-Value="_edit.Is_Rate" Color="Color.Primary" Size="Size.Small" Outlined="true" aria-label="@Tr("PR_Value")">
+                            <MudToggleItem Value="true" Text="%" />
+                            <MudToggleItem Value="false" Text="@Tr("PR_Amount")" />
+                        </MudToggleGroup>
+                    </div>
+                    <div class="pr-note full">@Tr("PR_RuleHelp", RuleText(_edit))</div>
+                }
+                <MudSwitch T="bool" @bind-Value="_edit.Is_Active" Color="Color.Primary" Label="@Tr("ILActive")" Class="full" />
+            </div>
+            <div class="pr-acts">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="_busy" OnClick="SaveTypeAsync">@Tr("Save")</MudButton>
+                @if (_edit.Id != 0)
+                {
+                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Close" OnClick="NewType">@Tr("Cancel")</MudButton>
+                    @if (_edit.Master_Id != 0) { <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Calculate" Disabled="_busy" OnClick="RecomputeAsync">@Tr("PR_Recompute")</MudButton> }
+                    <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Disabled="_busy" OnClick="DeleteTypeAsync">@Tr("PR_Delete")</MudButton>
+                }
+            </div>
+            @if (_edit.Id != 0 && _edit.Master_Id != 0) { <div class="pr-note">@Tr("PR_RuleChangeNote")</div> }
+        </section>
+
+        @* ===== أسعار الأصناف فى القائمة ===== *@
+        <section class="inv-card" aria-labelledby="pr-prices-h">
+            <h2 class="inv-card-title" id="pr-prices-h"><MudIcon Icon="@Icons.Material.Filled.Sell" />@(SelectedType?.Name ?? Tr("PR_PickType"))<span class="inv-count">@_prices.Count</span></h2>
+            @if (SelectedType is { } st)
+            {
+                <div class="pr-filters">
+                    <MudTextField T="string" Value="_pf.Text" ValueChanged="@(async (string? v) => { _pf.Text = v; await LoadPricesAsync(); })" Label="@Tr("IT_Search")"
+                                  Variant="Variant.Outlined" Immediate="true" DebounceInterval="300" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+                    <MudSelect T="long" Value="_pf.Category_Id" ValueChanged="@(async (long v) => { _pf.Category_Id = v; await LoadPricesAsync(); })" Label="@Tr("IC_CatName")" Variant="Variant.Outlined"
+                               ToStringFunc="@(id => id == 0 ? Tr("IC_AllCats") : _lk?.Categories.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
+                        <MudSelectItem T="long" Value="0L">@Tr("IC_AllCats")</MudSelectItem>
+                        @foreach (var c in _lk?.Categories ?? new()) { <MudSelectItem T="long" Value="c.Id">@c.Name</MudSelectItem> }
+                    </MudSelect>
+                    <MudSelect T="long" Value="_pf.Group_Id" ValueChanged="@(async (long v) => { _pf.Group_Id = v; await LoadPricesAsync(); })" Label="@Tr("IL_groups")" Variant="Variant.Outlined"
+                               ToStringFunc="@(id => id == 0 ? Tr("IT_KindAll") : _lk?.Groups.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
+                        <MudSelectItem T="long" Value="0L">@Tr("IT_KindAll")</MudSelectItem>
+                        @foreach (var c in _lk?.Groups ?? new()) { <MudSelectItem T="long" Value="c.Id">@c.Name</MudSelectItem> }
+                    </MudSelect>
+                    <MudSwitch T="bool" Value="_pf.Priced_Only" ValueChanged="@(async (bool v) => { _pf.Priced_Only = v; await LoadPricesAsync(); })" Color="Color.Primary" Label="@Tr("PR_PricedOnly")" />
+                </div>
+                @if (st.Master_Id != 0) { <div class="pr-note"><MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Style="vertical-align:middle" /> @Tr("PR_DerivedNote", st.Master_Name ?? "", RuleText(st))</div> }
+                <MudTable Items="@_prices" T="ItemPrice" Hover="true" Elevation="0" Class="inv-table pr-gap" Breakpoint="Breakpoint.Sm" Dense="true" Loading="_loadingPrices" LoadingProgressColor="Color.Primary">
+                    <HeaderContent>
+                        <MudTh>@Tr("IT_Code")</MudTh>
+                        <MudTh>@Tr("IT_Name")</MudTh>
+                        <MudTh>@Tr("IT_Unit")</MudTh>
+                        <MudTh Style="text-align:end">@Tr("PR_ItemSale")</MudTh>
+                        <MudTh Style="text-align:end">@Tr("PR_ListPrice")</MudTh>
+                        <MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="@Tr("IT_Code")"><span class="pr-code">@context.Code</span></MudTd>
+                        <MudTd DataLabel="@Tr("IT_Name")">@context.Name<div class="pr-muted">@context.Category</div></MudTd>
+                        <MudTd DataLabel="@Tr("IT_Unit")">@context.Unit</MudTd>
+                        <MudTd DataLabel="@Tr("PR_ItemSale")" Style="text-align:end"><span class="pr-num">@Money(context.Sale_Price)</span></MudTd>
+                        <MudTd DataLabel="@Tr("PR_ListPrice")" Class="pr-price">
+                            <MudNumericField T="decimal?" Value="context.Price" ValueChanged="@((decimal? v) => SetPriceAsync(context, v))" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                             Min="0" Format="0.####" Placeholder="—" HideSpinButtons="true" aria-label="@($"{Tr("PR_ListPrice")} {context.Name}")" Disabled="_busy" />
+                        </MudTd>
+                        <MudTd Style="white-space:nowrap">
+                            @if (context.Price != null)
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.Backspace" Size="Size.Small" aria-label="@Tr("PR_RemovePrice")" Title="@Tr("PR_RemovePrice")" Disabled="_busy"
+                                               OnClick="@(() => SetPriceAsync(context, null))" />
+                            }
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent><div class="pr-empty"><MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" /><span>@Tr("IT_NoItems")</span></div></NoRecordsContent>
+                </MudTable>
+                <div class="pr-note">@Tr("PR_EditNote")</div>
+            }
+            else
+            {
+                <div class="pr-empty"><MudIcon Icon="@Icons.Material.Filled.TouchApp" Size="Size.Large" /><span>@Tr("PR_PickTypeHelp")</span></div>
+            }
+        </section>
+    </div>
+    }
+    else if (_tab == "bulk")
+    {
+    <section class="inv-card pr-gap" aria-labelledby="pr-bulk-h">
+        <h2 class="inv-card-title" id="pr-bulk-h"><MudIcon Icon="@Icons.Material.Filled.Tune" />@Tr("PR_Bulk")</h2>
+        <div class="pr-bulk">
+            <MudSelect T="BulkTarget" Value="_bulk.Target" ValueChanged="@((BulkTarget v) => { _bulk.Target = v; _preview = null; })" Label="@Tr("PR_Target")" Variant="Variant.Outlined">
+                <MudSelectItem T="BulkTarget" Value="BulkTarget.Sale">@Tr("IT_SalePrice")</MudSelectItem>
+                <MudSelectItem T="BulkTarget" Value="BulkTarget.Purchase">@Tr("IT_PurchasePrice")</MudSelectItem>
+                <MudSelectItem T="BulkTarget" Value="BulkTarget.PriceType">@Tr("PR_PriceList")</MudSelectItem>
+            </MudSelect>
+            @if (_bulk.Target == BulkTarget.PriceType)
+            {
+                <MudSelect T="long" Value="_bulk.Price_Type_Id" ValueChanged="@((long v) => { _bulk.Price_Type_Id = v; _preview = null; })" Label="@Tr("PR_PriceList")" Variant="Variant.Outlined" Required="true"
+                           ToStringFunc="@(id => _types.FirstOrDefault(x => x.Id == id)?.Name ?? string.Empty)">
+                    @foreach (var t in _types.Where(x => x.Is_Active)) { <MudSelectItem T="long" Value="t.Id">@t.Name</MudSelectItem> }
+                </MudSelect>
+            }
+            <MudSelect T="long" Value="_bulk.Category_Id" ValueChanged="@((long v) => { _bulk.Category_Id = v; _preview = null; })" Label="@Tr("IC_CatName")" Variant="Variant.Outlined"
+                       ToStringFunc="@(id => id == 0 ? Tr("IC_AllCats") : _lk?.Categories.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
+                <MudSelectItem T="long" Value="0L">@Tr("IC_AllCats")</MudSelectItem>
+                @foreach (var c in _lk?.Categories ?? new()) { <MudSelectItem T="long" Value="c.Id">@c.Name</MudSelectItem> }
+            </MudSelect>
+            <MudSelect T="long" Value="_bulk.Group_Id" ValueChanged="@((long v) => { _bulk.Group_Id = v; _preview = null; })" Label="@Tr("IL_groups")" Variant="Variant.Outlined"
+                       ToStringFunc="@(id => id == 0 ? Tr("IT_KindAll") : _lk?.Groups.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
+                <MudSelectItem T="long" Value="0L">@Tr("IT_KindAll")</MudSelectItem>
+                @foreach (var c in _lk?.Groups ?? new()) { <MudSelectItem T="long" Value="c.Id">@c.Name</MudSelectItem> }
+            </MudSelect>
+            <MudTextField T="string" Value="_bulk.Text" ValueChanged="@((string? v) => { _bulk.Text = v; _preview = null; })" Label="@Tr("PR_NameFilter")" Variant="Variant.Outlined" Clearable="true" />
+            <MudSelect T="bool" Value="_bulk.Is_Plus" ValueChanged="@((bool v) => { _bulk.Is_Plus = v; _preview = null; })" Label="@Tr("PR_Direction")" Variant="Variant.Outlined">
+                <MudSelectItem T="bool" Value="true">@Tr("PR_Plus")</MudSelectItem>
+                <MudSelectItem T="bool" Value="false">@Tr("PR_Minus")</MudSelectItem>
+            </MudSelect>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center">
+                <MudNumericField T="decimal" Value="_bulk.Value" ValueChanged="@((decimal v) => { _bulk.Value = v; _preview = null; })" Label="@Tr("PR_Value")" Variant="Variant.Outlined" Min="0" Format="0.####" />
+                <MudToggleGroup T="bool" Value="_bulk.Is_Rate" ValueChanged="@((bool v) => { _bulk.Is_Rate = v; _preview = null; })" Color="Color.Primary" Size="Size.Small" Outlined="true" aria-label="@Tr("PR_Value")">
+                    <MudToggleItem Value="true" Text="%" />
+                    <MudToggleItem Value="false" Text="@Tr("PR_Amount")" />
+                </MudToggleGroup>
+            </div>
+            <MudSelect T="decimal" Value="_bulk.Rounding" ValueChanged="@((decimal v) => { _bulk.Rounding = v; _preview = null; })" Label="@Tr("PR_Rounding")" Variant="Variant.Outlined">
+                @foreach (var r in Roundings) { <MudSelectItem T="decimal" Value="r">@Num(r)</MudSelectItem> }
+            </MudSelect>
+        </div>
+        <div class="pr-acts">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Preview" Disabled="_busy" OnClick="PreviewAsync">@Tr("PR_Preview")</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.DoneAll" Disabled="@(_busy || _preview == null || ChangedCount == 0)" OnClick="ApplyBulkAsync">@Tr("PR_Apply", ChangedCount)</MudButton>
+        </div>
+        @if (_bulk.Target == BulkTarget.PriceType) { <div class="pr-note">@Tr("PR_BulkListNote")</div> }
+        @if (_preview != null)
+        {
+            <div class="pr-sum pr-gap" aria-live="polite">
+                <span>@Tr("PR_PreviewItems") <b>@_preview.Count</b></span>
+                <span>@Tr("PR_PreviewChanged") <b>@ChangedCount</b></span>
+                @if (_preview.Any(x => x.New_Price < 0)) { <span class="pr-down">@Tr("PR_NegativeWarn")</span> }
+            </div>
+            <MudTable Items="@_preview.Take(300)" T="BulkRow" Elevation="0" Class="inv-table pr-gap" Breakpoint="Breakpoint.Sm" Dense="true">
+                <HeaderContent>
+                    <MudTh>@Tr("IT_Code")</MudTh><MudTh>@Tr("IT_Name")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("PR_Old")</MudTh><MudTh Style="text-align:end">@Tr("PR_New")</MudTh><MudTh Style="text-align:end">@Tr("PR_Diff")</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("IT_Code")"><span class="pr-code">@context.Code</span></MudTd>
+                    <MudTd DataLabel="@Tr("IT_Name")">@context.Name</MudTd>
+                    <MudTd DataLabel="@Tr("PR_Old")" Style="text-align:end"><span class="pr-num">@Money(context.Old_Price)</span></MudTd>
+                    <MudTd DataLabel="@Tr("PR_New")" Style="text-align:end"><b class="pr-num">@Money(context.New_Price)</b></MudTd>
+                    <MudTd DataLabel="@Tr("PR_Diff")" Style="text-align:end"><span class="pr-num @(context.New_Price >= context.Old_Price ? "pr-up" : "pr-down")">@Signed(context.New_Price - context.Old_Price)</span></MudTd>
+                </RowTemplate>
+                <NoRecordsContent><div class="pr-empty"><MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" /><span>@Tr("IT_NoItems")</span></div></NoRecordsContent>
+            </MudTable>
+            @if (_preview.Count > 300) { <div class="pr-note">@Tr("PR_PreviewTop", _preview.Count)</div> }
+        }
+    </section>
+    }
+    else
+    {
+    bool sup = _tab == "suppliers";
+    <section class="inv-card pr-gap" aria-labelledby="pr-party-h">
+        <h2 class="inv-card-title" id="pr-party-h"><MudIcon Icon="@(sup ? Icons.Material.Filled.LocalShipping : Icons.Material.Filled.PersonPin)" />@Tr(sup ? "PR_SupplierPrices" : "PR_CustomerPrices")<span class="inv-count">@_party.Count</span></h2>
+        <div class="pr-party">
+            <MudAutocomplete T="Option" Value="_partySel" ValueChanged="@(async (Option? o) => { _partySel = o; await LoadPartyAsync(); })" SearchFunc="@SearchPartyAsync"
+                             ToStringFunc="@(o => o?.Name ?? string.Empty)" Label="@Tr(sup ? "PR_Supplier" : "PR_Customer")" Variant="Variant.Outlined" Clearable="true"
+                             DebounceInterval="300" ResetValueOnEmptyText="true" />
+            <MudAutocomplete T="Option" @bind-Value="_itemSel" SearchFunc="@SearchItemAsync" ToStringFunc="@(o => o?.Name ?? string.Empty)" Label="@Tr("IT_Name")"
+                             Variant="Variant.Outlined" Clearable="true" DebounceInterval="300" ResetValueOnEmptyText="true" />
+            <MudNumericField T="decimal" @bind-Value="_partyPrice" Label="@Tr("PR_SpecialPrice")" Variant="Variant.Outlined" Min="0" Format="0.####" />
+            @if (sup)
+            {
+                <MudSelect T="long" @bind-Value="_purchaseType" Label="@Tr("PR_PurchaseType")" Variant="Variant.Outlined"
+                           ToStringFunc="@(id => id == 0 ? Tr("IT_TaxCodeNone") : _purchaseTypes.FirstOrDefault(x => x.Id == id)?.Name ?? string.Empty)">
+                    <MudSelectItem T="long" Value="0L">@Tr("IT_TaxCodeNone")</MudSelectItem>
+                    @foreach (var t in _purchaseTypes) { <MudSelectItem T="long" Value="t.Id">@t.Name</MudSelectItem> }
+                </MudSelect>
+            }
+            else { <span></span> }
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Style="min-height:44px"
+                       Disabled="@(_busy || _partySel == null || _itemSel == null)" OnClick="SavePartyAsync">@Tr("Save")</MudButton>
+        </div>
+        @if (sup)
+        {
+            <div class="pr-acts">
+                <MudTextField T="string" @bind-Value="_newPurchaseType" Label="@Tr("PR_NewPurchaseType")" Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width:320px" />
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" Disabled="@(_busy || string.IsNullOrWhiteSpace(_newPurchaseType))" OnClick="AddPurchaseTypeAsync">@Tr("PR_AddPurchaseType")</MudButton>
+            </div>
+        }
+        else { <div class="pr-note"><MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Style="vertical-align:middle" /> @Tr("PR_CustomerNote")</div> }
+        <div class="pr-filters pr-gap" style="grid-template-columns:minmax(0,1fr)">
+            <MudTextField T="string" Value="_partyText" ValueChanged="@(async (string? v) => { _partyText = v; await LoadPartyAsync(); })" Label="@Tr("PR_SearchParty")" Variant="Variant.Outlined"
+                          Immediate="true" DebounceInterval="300" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+        </div>
+        <MudTable Items="@_party" T="PartyPrice" Hover="true" Elevation="0" Class="inv-table pr-gap" Breakpoint="Breakpoint.Sm" Dense="true">
+            <HeaderContent>
+                <MudTh>@Tr(sup ? "PR_Supplier" : "PR_Customer")</MudTh><MudTh>@Tr("IT_Name")</MudTh><MudTh>@Tr("IT_Unit")</MudTh>
+                @if (sup) { <MudTh>@Tr("PR_PurchaseType")</MudTh> }
+                <MudTh Style="text-align:end">@Tr(sup ? "PR_ItemPurchase" : "PR_ItemSale")</MudTh><MudTh Style="text-align:end">@Tr("PR_SpecialPrice")</MudTh><MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr(sup ? "PR_Supplier" : "PR_Customer")">@context.Party_Name</MudTd>
+                <MudTd DataLabel="@Tr("IT_Name")"><span class="pr-code">@context.Item_Code</span> @context.Item_Name</MudTd>
+                <MudTd DataLabel="@Tr("IT_Unit")">@context.Unit</MudTd>
+                @if (sup) { <MudTd DataLabel="@Tr("PR_PurchaseType")">@(string.IsNullOrEmpty(context.Purchase_Type_Name) ? "—" : context.Purchase_Type_Name)</MudTd> }
+                <MudTd DataLabel="@Tr(sup ? "PR_ItemPurchase" : "PR_ItemSale")" Style="text-align:end"><span class="pr-num pr-muted">@Money(context.Item_Price)</span></MudTd>
+                <MudTd DataLabel="@Tr("PR_SpecialPrice")" Style="text-align:end"><b class="pr-num">@Money(context.Price)</b></MudTd>
+                <MudTd Style="white-space:nowrap">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" aria-label="@Tr("PR_EditBtn")" OnClick="@(() => EditParty(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@Tr("PR_Delete")" Disabled="_busy" OnClick="@(() => DeletePartyAsync(context))" />
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent><div class="pr-empty"><MudIcon Icon="@Icons.Material.Filled.Sell" Size="Size.Large" /><span>@Tr("PR_NoPartyPrices")</span></div></NoRecordsContent>
+        </MudTable>
+    </section>
+    }
+</div>
+</MudContainer>
+
+@code {
+    [Parameter] public string? Tab { get; set; }
+
+    private static readonly (string, string, string)[] Tabs =
+    {
+        ("lists", "PR_TabLists", Icons.Material.Filled.AccountTree), ("bulk", "PR_TabBulk", Icons.Material.Filled.Tune),
+        ("customers", "PR_TabCustomers", Icons.Material.Filled.PersonPin), ("suppliers", "PR_TabSuppliers", Icons.Material.Filled.LocalShipping),
+    };
+
+    private readonly PriceListService _svc = new();
+    private readonly ItemEditorService _items = new();
+    private ItemEditorService.Lookups? _lk;
+    private List<PriceType> _types = new();
+    private PriceType _edit = new();
+    private long _typeId;
+    private List<ItemPrice> _prices = new();
+    private readonly PriceFilter _pf = new() { Top = 300 };
+    private BulkRequest _bulk = new();
+    private List<BulkRow>? _preview;
+    private List<PartyPrice> _party = new();
+    private Option? _partySel, _itemSel;
+    private decimal _partyPrice;
+    private long _purchaseType;
+    private string? _partyText, _newPurchaseType;
+    private List<Option> _purchaseTypes = new();
+    private string _tab = "lists";
+    private bool _busy, _loadingPrices;
+    private string? _error;
+
+    private PriceType? SelectedType => _types.FirstOrDefault(x => x.Id == _typeId);
+    private int ChangedCount => _preview?.Count(x => x.New_Price != x.Old_Price) ?? 0;
+
+    protected override void OnInitialized() => LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        string t = (Tab ?? "lists").ToLowerInvariant();
+        _tab = Tabs.Any(x => x.Item1 == t) ? t : "lists";
+        _error = null;
+        try
+        {
+            _lk ??= await Bg(() => _items.GetLookups());
+            await LoadTypesAsync();
+            if (_tab is "customers" or "suppliers")
+            {
+                _partySel = null; _itemSel = null; _partyPrice = 0; _purchaseType = 0; _partyText = null;
+                if (_tab == "suppliers") _purchaseTypes = await Bg(() => _svc.ListPurchaseTypes());
+                await LoadPartyAsync();
+            }
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private Task<T> Bg<T>(Func<T> f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return f(); });
+
+    // ---------- القوائم ----------
+    private async Task LoadTypesAsync() => _types = await Bg(() => _svc.ListTypes());
+
+    /// <summary>الأنواع مرتبة كشجرة (الأم ثم مشتقاتها) مع عمقها.</summary>
+    private IEnumerable<(PriceType, int)> TypeTree()
+    {
+        var seen = new HashSet<long>();
+        IEnumerable<(PriceType, int)> Walk(long parent, int depth)
+        {
+            foreach (var t in _types.Where(x => x.Master_Id == parent && !seen.Contains(x.Id)).OrderBy(x => x.Id))
+            {
+                seen.Add(t.Id);
+                yield return (t, depth);
+                foreach (var c in Walk(t.Id, depth + 1)) yield return c;
+            }
+        }
+        foreach (var x in Walk(0, 0)) yield return x;
+        foreach (var t in _types.Where(x => !seen.Contains(x.Id))) yield return (t, 0);   // أم مفقودة
+    }
+
+    private string RuleText(PriceType t) => t.Master_Id == 0 ? "" : $"{(t.Is_Plus ? "+" : "−")}{Num(t.Added_Value)}{(t.Is_Rate ? "%" : "")}";
+
+    private async Task SelectTypeAsync(long id)
+    {
+        _typeId = id;
+        var t = SelectedType!;
+        _edit = new PriceType { Id = t.Id, Name = t.Name, Master_Id = t.Master_Id, Is_Plus = t.Is_Plus, Added_Value = t.Added_Value, Is_Rate = t.Is_Rate, Is_Active = t.Is_Active };
+        await LoadPricesAsync();
+    }
+
+    private void NewType() { _edit = new PriceType { Master_Id = _typeId }; _error = null; }
+
+    private async Task LoadPricesAsync()
+    {
+        if (_typeId == 0) return;
+        _loadingPrices = true;
+        long id = _typeId;
+        var f = new PriceFilter { Text = _pf.Text, Category_Id = _pf.Category_Id, Group_Id = _pf.Group_Id, Priced_Only = _pf.Priced_Only, Top = _pf.Top };
+        try { _prices = await Bg(() => _svc.ListPrices(id, f)); }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loadingPrices = false; }
+    }
+
+    private async Task SaveTypeAsync()
+    {
+        _busy = true; _error = null;
+        var t = _edit; bool isNew = t.Id == 0;
+        try
+        {
+            long id = await Bg(() => _svc.SaveType(t));
+            Snackbar.Add(Tr(isNew ? "PR_TypeAdded" : "IU_Saved"), Severity.Success);
+            await LoadTypesAsync();
+            await SelectTypeAsync(id);
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task DeleteTypeAsync()
+    {
+        _busy = true; _error = null;
+        long id = _edit.Id;
+        try
+        {
+            await Bg(() => { _svc.DeleteType(id); return 0; });
+            Snackbar.Add(Tr("PR_TypeDeleted"), Severity.Success);
+            _typeId = 0; _prices = new(); NewType();
+            await LoadTypesAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task RecomputeAsync()
+    {
+        _busy = true; _error = null;
+        long id = _edit.Id;
+        try
+        {
+            int n = await Bg(() => _svc.RecomputeType(id));
+            Snackbar.Add(Tr("PR_Recomputed", n), Severity.Success);
+            await LoadTypesAsync(); await LoadPricesAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task SetPriceAsync(ItemPrice row, decimal? v)
+    {
+        if (v == row.Price) return;
+        _busy = true; _error = null;
+        long type = _typeId, item = row.Item_Id;
+        int children = _types.Count(x => x.Master_Id == type);
+        try
+        {
+            await Bg(() => { _svc.SetPrice(type, item, v); return 0; });
+            row.Price = v;
+            Snackbar.Add(children > 0 ? Tr("PR_SavedCascade", row.Name) : Tr("PR_SavedOne", row.Name), Severity.Success);
+            await LoadTypesAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    // ---------- الجماعى ----------
+    private async Task PreviewAsync()
+    {
+        _busy = true; _error = null;
+        var r = CopyBulk();
+        try { _preview = await Bg(() => _svc.BulkPreview(r)); }
+        catch (Exception ex) { _error = Inner(ex); _preview = null; }
+        finally { _busy = false; }
+    }
+
+    private async Task ApplyBulkAsync()
+    {
+        _busy = true; _error = null;
+        var r = CopyBulk();
+        try
+        {
+            int n = await Bg(() => _svc.BulkApply(r));
+            Snackbar.Add(Tr("PR_Applied", n), Severity.Success);
+            _preview = null;
+            await LoadTypesAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private BulkRequest CopyBulk() => new()
+    {
+        Target = _bulk.Target, Price_Type_Id = _bulk.Price_Type_Id, Category_Id = _bulk.Category_Id, Group_Id = _bulk.Group_Id, Text = _bulk.Text,
+        Is_Rate = _bulk.Is_Rate, Is_Plus = _bulk.Is_Plus, Value = _bulk.Value, Rounding = _bulk.Rounding,
+    };
+
+    // ---------- العملاء والموردون ----------
+    private bool IsSup => _tab == "suppliers";
+
+    private Task<IEnumerable<Option>> SearchPartyAsync(string? text, CancellationToken ct) { bool s = IsSup; return Bg(() => (IEnumerable<Option>)_svc.SearchParties(s, text)); }
+    private Task<IEnumerable<Option>> SearchItemAsync(string? text, CancellationToken ct) => Bg(() => (IEnumerable<Option>)_svc.SearchItems(text));
+
+    private async Task LoadPartyAsync()
+    {
+        bool s = IsSup; long pid = _partySel?.Id ?? 0; string? t = _partyText;
+        try { _party = await Bg(() => s ? _svc.ListSupplierPrices(pid, t) : _svc.ListCustomerPrices(pid, t)); }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private void EditParty(PartyPrice p)
+    {
+        _partySel = new Option { Id = p.Party_Id, Name = p.Party_Name };
+        _itemSel = new Option { Id = p.Item_Id, Name = $"{p.Item_Code} - {p.Item_Name}" };
+        _partyPrice = p.Price; _purchaseType = p.Purchase_Type_Id;
+    }
+
+    private async Task SavePartyAsync()
+    {
+        _busy = true; _error = null;
+        bool s = IsSup; long pid = _partySel!.Id, iid = _itemSel!.Id, pt = _purchaseType; decimal price = _partyPrice;
+        try
+        {
+            await Bg(() => s ? _svc.SaveSupplierPrice(pid, iid, price, pt) : _svc.SaveCustomerPrice(pid, iid, price));
+            Snackbar.Add(Tr("IU_Saved"), Severity.Success);
+            _itemSel = null; _partyPrice = 0;
+            await LoadPartyAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task DeletePartyAsync(PartyPrice p)
+    {
+        _busy = true; _error = null;
+        bool s = IsSup; long id = p.Id;
+        try
+        {
+            await Bg(() => { if (s) _svc.DeleteSupplierPrice(id); else _svc.DeleteCustomerPrice(id); return 0; });
+            Snackbar.Add(Tr("PR_PriceDeleted"), Severity.Success);
+            await LoadPartyAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task AddPurchaseTypeAsync()
+    {
+        _busy = true; _error = null;
+        string n = _newPurchaseType ?? "";
+        try
+        {
+            long id = await Bg(() => _svc.AddPurchaseType(n));
+            _purchaseTypes = await Bg(() => _svc.ListPurchaseTypes());
+            _purchaseType = id; _newPurchaseType = null;
+            Snackbar.Add(Tr("PR_TypeAdded"), Severity.Success);
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private static string Num(decimal v) => v.ToString("#,0.####", CultureInfo.InvariantCulture);
+    private static string Money(decimal v) => v.ToString("#,0.00", CultureInfo.InvariantCulture);
+    private static string Signed(decimal v) => (v > 0 ? "+" : "") + v.ToString("#,0.00", CultureInfo.InvariantCulture);
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

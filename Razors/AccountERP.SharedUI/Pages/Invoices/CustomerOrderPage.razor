@@ -298,7 +298,7 @@
         </div>
     </div>
 
-    <AddInvoiceItemDialog ShowExtraFields="false" ShowItemsWithoutBalanceByDefault="true" Visible="_itemDialogOpen" PriceTypeId="_customerPriceTypeId"
+    <AddInvoiceItemDialog ShowExtraFields="false" ShowItemsWithoutBalanceByDefault="true" Visible="_itemDialogOpen" PriceTypeId="_customerPriceTypeId" CustomerId="@(_customer?.Id ?? 0)"
                           VisibleChanged="@(v => _itemDialogOpen = v)" ExistingLine="_editingLine" OnItemAdded="OnItemDialogSaved" />
 </div>
 </MudContainer>

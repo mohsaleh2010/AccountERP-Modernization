@@ -293,6 +293,8 @@
     [Parameter] public bool IsTaxPerItem { get; set; }
     // نوع سعر عميل الفاتورة (Customer.Price_Type_List_ID؛ 0 = بلا نوع فيختاره المستخدم) - يقابل ItemData.Price_Type_List_ID.
     [Parameter] public long PriceTypeId { get; set; }
+    // 🟢 خطة 04 م5: عميل الفاتورة لسعره الخاص (Customer_Price) — يغلب نوع السعر وسعر الصنف (قرار المستخدم 2026-10-10). 0 = بلا عميل.
+    [Parameter] public long CustomerId { get; set; }
     [Parameter] public EventCallback<IInvoices_Details> OnItemAdded { get; set; }
     // يُفعَّل من صفحة فاتورة المبيعات فقط (شاشة الكاشير تستعمل هذا الحوار نفسه بلا حقول إضافية).
     [Parameter] public bool ShowExtraFields { get; set; }
@@ -457,7 +459,27 @@
     private async Task OnPriceTypeChangedAsync(long value)
     {
         _priceTypeId = value;
-        if (_selectedItem is not null) await ApplyPriceTypePriceAsync();
+        if (_selectedItem is not null) await ApplyPricesAsync();
+    }
+
+    /// <summary>الأولوية: سعر العميل الخاص ← نوع سعره ← سعر الصنف (المضبوط عند اختيار الصنف).</summary>
+    private async Task ApplyPricesAsync()
+    {
+        await ApplyPriceTypePriceAsync();
+        await ApplyCustomerPriceAsync();
+    }
+
+    private async Task ApplyCustomerPriceAsync()
+    {
+        if (CustomerId == 0 || _selectedItem is null) return;
+        long customer = CustomerId, item = _selectedItem.ItemId, store = _line.Store_Id ?? 0;
+        decimal? price = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return new AccountModelsLib.PriceListService().GetCustomerPrice(customer, item, store); });
+        if (price is decimal p)
+        {
+            _priceUnit = p;
+            Snackbar.Add(Tr("PR_CustPriceApplied"), Severity.Info);
+            Recompute();
+        }
     }
 
     // يقابل الكتلة IS_Use_Price_Type_List==1 فى ItemData.Get_Selected_Item_Data: سعر الوحدة وعمولتها من Price_Type_Sell_Values
@@ -660,7 +682,7 @@
         _largQnty = 0;
         _smallQnty = 0;
         Recompute();
-        return ApplyPriceTypePriceAsync();
+        return ApplyPricesAsync();
     }
 
     // تعديل حقل إضافى ثم إعادة حساب السطر (عمولة/ضريبة/عمولة العدد...).

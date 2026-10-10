@@ -25,6 +25,7 @@ SELECT CASE WHEN OBJECT_ID(N'dbo.Item_Branch_Cost', N'U') IS NOT NULL
              AND COL_LENGTH(N'dbo.Order_Purshing', N'Transfer_Status') IS NOT NULL
              AND COL_LENGTH(N'dbo.Detailes_Purshing', N'Source_Detail_Id') IS NOT NULL
              AND COL_LENGTH(N'dbo.Item_Category', N'Item_Profile') IS NOT NULL
+             AND NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.Price_Type_Sell_Values') AND name = N'PriceUnit' AND system_type_id <> 106)
              AND EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Item_Branch_Cost_Item_Branch')
              AND EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_DPIE_UnitItem_Date')
              AND EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Item_First_Period_Balance_Period_Line')
@@ -59,6 +60,7 @@ WHERE Order_Type IN (1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1012,1013
                 Step(opp, StoreOrderTypeSettings);
                 Step(opp, TransferReceipts);
                 Step(opp, ItemProfiles);
+                Step(opp, PriceUnitDecimal);
             }
             // مستقلة عن فحص المخطط: القواعد المرقّاة سابقاً تحتاج الربط أيضاً، وتقرأ فقط العناصر غير المربوطة.
             Step(opp, LinkStoreOrderMenus);
@@ -167,6 +169,10 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             // خطة 04 م4: ملفات السيارات والسيراميك (عنصر الزجاج menuItemItemsListSpecGlass بلا صف فى SysConfigMenus)
             ("menuItemItemsListSpecCars", "/items/p/cars"), ("ToolStripMenuItemItemsForCars", "/items/p/cars"),
             ("menuItemItemsListSpecSeramek", "/items/p/ceramics"),
+            // خطة 04 م5: الأسعار (طباعة الأسعار menuItemItemPrices لم تُبنَ بعد)
+            ("menuPrice_Type_List", "/items/prices/lists"), ("menuPriceCategory", "/items/prices/lists"), ("menuItemSearchItemPrices_List_Values", "/items/prices/lists"),
+            ("menuItemEditPrices", "/items/prices/bulk"), ("MenuCustomer_PriceCLS", "/items/prices/customers"),
+            ("menuItemPricePurchaseType", "/items/prices/suppliers"), ("menuItemPurchaedItemPrice", "/items/prices/suppliers"),
             // قائمة وبحث الأذون (المرحلة 4) بدل Order_detailes لكل نوع، وقائمة كل الأذون.
             // ملاحظة: القائمة القديمة تفتح «مرتجع صرف قطع الغيار» (879) على 1022 وعنصر «صرف إلى موظف» (881) بلا شاشة؛ هنا كلٌّ لنوعه الصحيح.
             ("menuItemOrdersList", "/store/orders"),
@@ -329,6 +335,15 @@ CREATE UNIQUE NONCLUSTERED INDEX [UX_Item_First_Period_Balance_Period_Line]
         {
             Run(opp, @"
 IF COL_LENGTH(N'dbo.Item_Category', N'Item_Profile') IS NULL ALTER TABLE [dbo].[Item_Category] ADD [Item_Profile] [nvarchar](30) NULL;");
+        }
+
+        // ---------------- خطة 04 م5: سعر قائمة الأسعار عشرى (كان bigint فلا يقبل الكسور) — قرار المستخدم 2026-10-10 ----------------
+        // يوسّع النوع فقط (القيم الصحيحة القائمة تبقى كما هى)، ولا فهارس أو قيود على العمود.
+        private static void PriceUnitDecimal(operations opp)
+        {
+            Run(opp, @"
+IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.Price_Type_Sell_Values') AND name = N'PriceUnit' AND system_type_id <> 106)
+    ALTER TABLE [dbo].[Price_Type_Sell_Values] ALTER COLUMN [PriceUnit] [decimal](18, 4) NULL;");
         }
 
         // ---------------- خطة 03: إعداد أنواع الأذون ----------------

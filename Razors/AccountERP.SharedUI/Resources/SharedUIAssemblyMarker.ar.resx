@@ -2843,4 +2843,70 @@
   <data name="IC_ProfileCeramics" xml:space="preserve"><value>سيراميك / مواصفات</value></data>
   <data name="IC_ProfileGlass" xml:space="preserve"><value>زجاج / بالمقاس</value></data>
   <data name="IL_car-types" xml:space="preserve"><value>أنواع السيارات</value></data>
+  <data name="PR_Title" xml:space="preserve"><value>أسعار الأصناف</value></data>
+  <data name="PR_Sub" xml:space="preserve"><value>قوائم الأسعار ومشتقاتها، التعديل الجماعى، وأسعار العملاء والموردين الخاصة</value></data>
+  <data name="PR_TabLists" xml:space="preserve"><value>قوائم الأسعار</value></data>
+  <data name="PR_TabBulk" xml:space="preserve"><value>التعديل الجماعى</value></data>
+  <data name="PR_TabCustomers" xml:space="preserve"><value>أسعار العملاء</value></data>
+  <data name="PR_TabSuppliers" xml:space="preserve"><value>أسعار الموردين</value></data>
+  <data name="PR_Types" xml:space="preserve"><value>أنواع الأسعار</value></data>
+  <data name="PR_PricedItems" xml:space="preserve"><value>عدد الأصناف المسعَّرة</value></data>
+  <data name="PR_NewType" xml:space="preserve"><value>نوع سعر جديد</value></data>
+  <data name="PR_EditType" xml:space="preserve"><value>تعديل: {0}</value></data>
+  <data name="PR_TypeName" xml:space="preserve"><value>اسم نوع السعر</value></data>
+  <data name="PR_Master" xml:space="preserve"><value>مشتق من</value></data>
+  <data name="PR_Independent" xml:space="preserve"><value>قائمة أساسية (يُدخل سعرها يدوياً)</value></data>
+  <data name="PR_Direction" xml:space="preserve"><value>الاتجاه</value></data>
+  <data name="PR_Plus" xml:space="preserve"><value>زيادة</value></data>
+  <data name="PR_Minus" xml:space="preserve"><value>نقص</value></data>
+  <data name="PR_Value" xml:space="preserve"><value>القيمة</value></data>
+  <data name="PR_Amount" xml:space="preserve"><value>مبلغ</value></data>
+  <data name="PR_RuleHelp" xml:space="preserve"><value>السعر = سعر القائمة الأم {0}، مقرَّباً لقرشين</value></data>
+  <data name="PR_RuleChangeNote" xml:space="preserve"><value>حفظ تغيير القاعدة يعيد حساب أسعار هذه القائمة وما يتفرع منها لكل الأصناف.</value></data>
+  <data name="PR_Recompute" xml:space="preserve"><value>إعادة الحساب</value></data>
+  <data name="PR_Recomputed" xml:space="preserve"><value>أُعيد حساب {0} سعر</value></data>
+  <data name="PR_Delete" xml:space="preserve"><value>حذف</value></data>
+  <data name="PR_EditBtn" xml:space="preserve"><value>تعديل</value></data>
+  <data name="PR_TypeAdded" xml:space="preserve"><value>أُضيف النوع</value></data>
+  <data name="PR_TypeDeleted" xml:space="preserve"><value>حُذف النوع</value></data>
+  <data name="PR_PickType" xml:space="preserve"><value>اختر قائمة أسعار</value></data>
+  <data name="PR_PickTypeHelp" xml:space="preserve"><value>اختر نوع سعر من القائمة لعرض أسعار الأصناف فيه وتعديلها</value></data>
+  <data name="PR_PricedOnly" xml:space="preserve"><value>المسعَّرة فقط</value></data>
+  <data name="PR_DerivedNote" xml:space="preserve"><value>قائمة مشتقة من «{0}» ({1}): يُعاد حسابها عند تغيير سعر الأم، فيُستبدل التعديل اليدوى هنا حينها.</value></data>
+  <data name="PR_ItemSale" xml:space="preserve"><value>سعر بيع الصنف</value></data>
+  <data name="PR_ItemPurchase" xml:space="preserve"><value>سعر شراء الصنف</value></data>
+  <data name="PR_ListPrice" xml:space="preserve"><value>سعر القائمة</value></data>
+  <data name="PR_RemovePrice" xml:space="preserve"><value>إزالة السعر من القائمة</value></data>
+  <data name="PR_EditNote" xml:space="preserve"><value>اكتب السعر واضغط Enter أو انتقل للحقل التالى ليُحفظ؛ السعر لوحدة الصنف الكبرى، ويُعاد حساب القوائم المشتقة.</value></data>
+  <data name="PR_SavedOne" xml:space="preserve"><value>حُفظ سعر {0}</value></data>
+  <data name="PR_SavedCascade" xml:space="preserve"><value>حُفظ سعر {0} وأُعيد حساب القوائم المشتقة</value></data>
+  <data name="PR_Bulk" xml:space="preserve"><value>تعديل الأسعار جماعياً</value></data>
+  <data name="PR_Target" xml:space="preserve"><value>السعر المطلوب تعديله</value></data>
+  <data name="PR_PriceList" xml:space="preserve"><value>قائمة أسعار</value></data>
+  <data name="PR_NameFilter" xml:space="preserve"><value>يحتوى الاسم على (اختيارى)</value></data>
+  <data name="PR_Rounding" xml:space="preserve"><value>التقريب لأقرب</value></data>
+  <data name="PR_Preview" xml:space="preserve"><value>معاينة</value></data>
+  <data name="PR_Apply" xml:space="preserve"><value>تطبيق على {0} صنف</value></data>
+  <data name="PR_Applied" xml:space="preserve"><value>عُدِّلت أسعار {0} صنف</value></data>
+  <data name="PR_BulkListNote" xml:space="preserve"><value>تعديل قائمة يشمل الأصناف المسعَّرة فيها فقط، ويعيد حساب القوائم المشتقة منها.</value></data>
+  <data name="PR_PreviewItems" xml:space="preserve"><value>أصناف مطابقة:</value></data>
+  <data name="PR_PreviewChanged" xml:space="preserve"><value>سيتغير سعرها:</value></data>
+  <data name="PR_NegativeWarn" xml:space="preserve"><value>بعض الأسعار ستصبح سالبة — قلّل النقص</value></data>
+  <data name="PR_Old" xml:space="preserve"><value>الحالى</value></data>
+  <data name="PR_New" xml:space="preserve"><value>الجديد</value></data>
+  <data name="PR_Diff" xml:space="preserve"><value>الفرق</value></data>
+  <data name="PR_PreviewTop" xml:space="preserve"><value>تُعرض أول 300 من {0}؛ التطبيق يشمل الكل.</value></data>
+  <data name="PR_CustomerPrices" xml:space="preserve"><value>أسعار خاصة للعملاء</value></data>
+  <data name="PR_SupplierPrices" xml:space="preserve"><value>أسعار الموردين</value></data>
+  <data name="PR_Customer" xml:space="preserve"><value>العميل</value></data>
+  <data name="PR_Supplier" xml:space="preserve"><value>المورد</value></data>
+  <data name="PR_SpecialPrice" xml:space="preserve"><value>السعر الخاص</value></data>
+  <data name="PR_PurchaseType" xml:space="preserve"><value>نوع سعر الشراء</value></data>
+  <data name="PR_NewPurchaseType" xml:space="preserve"><value>نوع سعر شراء جديد</value></data>
+  <data name="PR_AddPurchaseType" xml:space="preserve"><value>إضافة النوع</value></data>
+  <data name="PR_CustomerNote" xml:space="preserve"><value>فى فاتورة المبيعات يُستعمل سعر العميل الخاص أولاً، ثم قائمة أسعاره، ثم سعر الصنف.</value></data>
+  <data name="PR_SearchParty" xml:space="preserve"><value>بحث بالاسم أو الصنف</value></data>
+  <data name="PR_NoPartyPrices" xml:space="preserve"><value>لا أسعار خاصة بعد — اختر الطرف والصنف والسعر ثم احفظ</value></data>
+  <data name="PR_PriceDeleted" xml:space="preserve"><value>حُذف السعر</value></data>
+  <data name="PR_CustPriceApplied" xml:space="preserve"><value>طُبِّق سعر العميل الخاص</value></data>
 </root>

@@ -2845,4 +2845,70 @@
   <data name="IC_ProfileCeramics" xml:space="preserve"><value>Céramique / spécifications</value></data>
   <data name="IC_ProfileGlass" xml:space="preserve"><value>Verre / sur mesure</value></data>
   <data name="IL_car-types" xml:space="preserve"><value>Marques de véhicules</value></data>
+  <data name="PR_Title" xml:space="preserve"><value>Prix des articles</value></data>
+  <data name="PR_Sub" xml:space="preserve"><value>Listes de prix, modification en masse, prix clients et fournisseurs</value></data>
+  <data name="PR_TabLists" xml:space="preserve"><value>Listes de prix</value></data>
+  <data name="PR_TabBulk" xml:space="preserve"><value>Modification en masse</value></data>
+  <data name="PR_TabCustomers" xml:space="preserve"><value>Prix clients</value></data>
+  <data name="PR_TabSuppliers" xml:space="preserve"><value>Prix fournisseurs</value></data>
+  <data name="PR_Types" xml:space="preserve"><value>Types de prix</value></data>
+  <data name="PR_PricedItems" xml:space="preserve"><value>Articles tarifés</value></data>
+  <data name="PR_NewType" xml:space="preserve"><value>Nouveau type de prix</value></data>
+  <data name="PR_EditType" xml:space="preserve"><value>Modifier : {0}</value></data>
+  <data name="PR_TypeName" xml:space="preserve"><value>Nom du type</value></data>
+  <data name="PR_Master" xml:space="preserve"><value>Dérivé de</value></data>
+  <data name="PR_Independent" xml:space="preserve"><value>Liste de base (prix saisis)</value></data>
+  <data name="PR_Direction" xml:space="preserve"><value>Sens</value></data>
+  <data name="PR_Plus" xml:space="preserve"><value>Hausse</value></data>
+  <data name="PR_Minus" xml:space="preserve"><value>Baisse</value></data>
+  <data name="PR_Value" xml:space="preserve"><value>Valeur</value></data>
+  <data name="PR_Amount" xml:space="preserve"><value>Montant</value></data>
+  <data name="PR_RuleHelp" xml:space="preserve"><value>Prix = prix de la liste mère {0}, arrondi à 0,01</value></data>
+  <data name="PR_RuleChangeNote" xml:space="preserve"><value>Modifier la règle recalcule cette liste et ses dérivées.</value></data>
+  <data name="PR_Recompute" xml:space="preserve"><value>Recalculer</value></data>
+  <data name="PR_Recomputed" xml:space="preserve"><value>{0} prix recalculés</value></data>
+  <data name="PR_Delete" xml:space="preserve"><value>Supprimer</value></data>
+  <data name="PR_EditBtn" xml:space="preserve"><value>Modifier</value></data>
+  <data name="PR_TypeAdded" xml:space="preserve"><value>Type ajouté</value></data>
+  <data name="PR_TypeDeleted" xml:space="preserve"><value>Type supprimé</value></data>
+  <data name="PR_PickType" xml:space="preserve"><value>Choisissez une liste</value></data>
+  <data name="PR_PickTypeHelp" xml:space="preserve"><value>Choisissez un type pour voir et modifier ses prix</value></data>
+  <data name="PR_PricedOnly" xml:space="preserve"><value>Tarifés seulement</value></data>
+  <data name="PR_DerivedNote" xml:space="preserve"><value>Dérivée de « {0} » ({1}) : recalculée quand le prix parent change.</value></data>
+  <data name="PR_ItemSale" xml:space="preserve"><value>Prix de vente</value></data>
+  <data name="PR_ItemPurchase" xml:space="preserve"><value>Prix d’achat</value></data>
+  <data name="PR_ListPrice" xml:space="preserve"><value>Prix de liste</value></data>
+  <data name="PR_RemovePrice" xml:space="preserve"><value>Retirer le prix</value></data>
+  <data name="PR_EditNote" xml:space="preserve"><value>Saisissez le prix puis Entrée ; prix par grande unité, listes dérivées recalculées.</value></data>
+  <data name="PR_SavedOne" xml:space="preserve"><value>Prix de {0} enregistré</value></data>
+  <data name="PR_SavedCascade" xml:space="preserve"><value>{0} enregistré, listes dérivées recalculées</value></data>
+  <data name="PR_Bulk" xml:space="preserve"><value>Modifier les prix en masse</value></data>
+  <data name="PR_Target" xml:space="preserve"><value>Prix à modifier</value></data>
+  <data name="PR_PriceList" xml:space="preserve"><value>Liste de prix</value></data>
+  <data name="PR_NameFilter" xml:space="preserve"><value>Le nom contient (facultatif)</value></data>
+  <data name="PR_Rounding" xml:space="preserve"><value>Arrondir à</value></data>
+  <data name="PR_Preview" xml:space="preserve"><value>Aperçu</value></data>
+  <data name="PR_Apply" xml:space="preserve"><value>Appliquer à {0} articles</value></data>
+  <data name="PR_Applied" xml:space="preserve"><value>{0} prix modifiés</value></data>
+  <data name="PR_BulkListNote" xml:space="preserve"><value>Ne touche que les articles tarifés et recalcule les dérivées.</value></data>
+  <data name="PR_PreviewItems" xml:space="preserve"><value>Articles :</value></data>
+  <data name="PR_PreviewChanged" xml:space="preserve"><value>Modifiés :</value></data>
+  <data name="PR_NegativeWarn" xml:space="preserve"><value>Certains prix deviendraient négatifs</value></data>
+  <data name="PR_Old" xml:space="preserve"><value>Actuel</value></data>
+  <data name="PR_New" xml:space="preserve"><value>Nouveau</value></data>
+  <data name="PR_Diff" xml:space="preserve"><value>Écart</value></data>
+  <data name="PR_PreviewTop" xml:space="preserve"><value>300 premiers sur {0} ; l’application couvre tout.</value></data>
+  <data name="PR_CustomerPrices" xml:space="preserve"><value>Prix spéciaux clients</value></data>
+  <data name="PR_SupplierPrices" xml:space="preserve"><value>Prix fournisseurs</value></data>
+  <data name="PR_Customer" xml:space="preserve"><value>Client</value></data>
+  <data name="PR_Supplier" xml:space="preserve"><value>Fournisseur</value></data>
+  <data name="PR_SpecialPrice" xml:space="preserve"><value>Prix spécial</value></data>
+  <data name="PR_PurchaseType" xml:space="preserve"><value>Type de prix d’achat</value></data>
+  <data name="PR_NewPurchaseType" xml:space="preserve"><value>Nouveau type d’achat</value></data>
+  <data name="PR_AddPurchaseType" xml:space="preserve"><value>Ajouter le type</value></data>
+  <data name="PR_CustomerNote" xml:space="preserve"><value>Sur facture : prix spécial du client, puis sa liste, puis le prix de l’article.</value></data>
+  <data name="PR_SearchParty" xml:space="preserve"><value>Rechercher par nom ou article</value></data>
+  <data name="PR_NoPartyPrices" xml:space="preserve"><value>Aucun prix spécial pour l’instant</value></data>
+  <data name="PR_PriceDeleted" xml:space="preserve"><value>Prix supprimé</value></data>
+  <data name="PR_CustPriceApplied" xml:space="preserve"><value>Prix spécial client appliqué</value></data>
 </root>

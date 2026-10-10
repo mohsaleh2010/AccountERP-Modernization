@@ -416,7 +416,7 @@
     </div>
 
     @* الضريبة تُمرَّر للصنف فقط عند الحساب لكل صنف (Is_Tax_Per_Item=1 والفاتورة ضريبية)؛ نسب الرأس عندها صفر. *@
-    <AddInvoiceItemDialog ShowExtraFields="true" Visible="_itemDialogOpen" PriceTypeId="_customerPriceTypeId" VisibleChanged="OnItemDialogVisibleChangedAsync" ExistingLine="_editingLine"
+    <AddInvoiceItemDialog ShowExtraFields="true" Visible="_itemDialogOpen" PriceTypeId="_customerPriceTypeId" CustomerId="@(_selectedCustomer?.Id ?? 0)" VisibleChanged="OnItemDialogVisibleChangedAsync" ExistingLine="_editingLine"
                           TaxSalesRate="_defaultTaxSales" ATS05Rate="_defaultATS05"
                           InitialCode="@_dialogInitialCode" InitialCodeToken="_barcodeToken" OnCodeNotFound="OnBarcodeNotFoundAsync"
                           IsTaxPerItem="_isTaxInvoice && _isTaxPerItem" OnItemAdded="OnItemDialogSaved" />
