@@ -122,6 +122,8 @@ FROM unit WHERE id = {u.Id}").AsEnumerable().FirstOrDefault() ?? throw new Inval
             public bool Is_Default { get; set; }
             public bool Is_Active { get; set; }
             public int Used_Count { get; set; }
+            /// <summary>ملف النشاط (Item_Category.Item_Profile): فارغ = عام، أو قيمة من ItemEditorService.CategoryProfiles.</summary>
+            public string Profile { get; set; }
         }
 
         public List<MainCategoryRow> ListMainCategories() =>
@@ -139,7 +141,7 @@ FROM Item_Main_Category m ORDER BY m.Category_Type_Id, m.Main_Category_Name").To
 SELECT c.ID AS Id, ISNULL(c.Category_Name, N'') AS Name, CAST(ISNULL(c.Main_Item_Category_Id, 0) AS bigint) AS Main_Id, ISNULL(m.Main_Category_Name, N'') AS Main_Name,
        ISNULL(c.Category_Type_Id, 0) AS Type_Id, ISNULL(c.Is_ItemOrService, 0) AS Item_Or_Service,
        CAST(CASE WHEN c.Is_Default = 1 THEN 1 ELSE 0 END AS bit) AS Is_Default, CAST(CASE WHEN ISNULL(c.IS_Active, 1) = 1 THEN 1 ELSE 0 END AS bit) AS Is_Active,
-       (SELECT COUNT(*) FROM Item i WHERE i.Item_Category_ID = c.ID) AS Used_Count
+       (SELECT COUNT(*) FROM Item i WHERE i.Item_Category_ID = c.ID) AS Used_Count, ISNULL(c.Item_Profile, N'') AS Profile
 FROM Item_Category c LEFT JOIN Item_Main_Category m ON m.ID = c.Main_Item_Category_Id
 WHERE ({mainId} = 0 OR c.Main_Item_Category_Id = {mainId}) AND ({t} = N'' OR c.Category_Name LIKE {"%" + t + "%"})
 ORDER BY m.Main_Category_Name, c.Category_Name").ToList());
@@ -187,6 +189,8 @@ VALUES ({id}, {name}, {type}, {CategoryTypes[type]}, {now.Date}, {Common.User_Id
             if (c.Item_Or_Service is < 0 or > 2) throw new InvalidOperationException("نوع الفئة (أصناف/خدمات) غير صحيح.");
             if (c.Is_Default && c.Item_Or_Service == 0) throw new InvalidOperationException("الفئة الافتراضية يجب أن تكون للأصناف أو للخدمات.");
             if (c.Is_Default && !c.Is_Active) throw new InvalidOperationException("الفئة الافتراضية لا تكون موقوفة.");
+            string profile = string.IsNullOrWhiteSpace(c.Profile) ? null : c.Profile.Trim().ToLowerInvariant();
+            if (profile != null && !ItemEditorService.CategoryProfiles.Contains(profile)) throw new InvalidOperationException("ملف النشاط غير صحيح.");
             return RunTx(opp =>
             {
                 int main = opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM Item_Main_Category WHERE ID = {c.Main_Id}").AsEnumerable().First();
@@ -203,14 +207,14 @@ AND NOT EXISTS (SELECT 1 FROM Item_Category o WHERE o.ID = {c.Id} AND LTRIM(RTRI
                 {
                     long? id = IsIdentity(opp, "Item_Category", "ID") ? null : CallSnowflakeIdGenerate.GenerateNewId();
                     if (id == null)
-                        return opp.db.Database.SqlQuery<long>($@"INSERT INTO Item_Category (Category_Name, Category_Type_Id, Category_Type_Str, Main_Item_Category_Id, IS_Active, Is_ItemOrService, Is_Default, OperationDate, User_Id, Branch_Id, Insert_ServerDateTime)
-OUTPUT CAST(INSERTED.ID AS bigint) AS Value VALUES ({name}, {type}, {CategoryTypes[type]}, {mainId}, {(c.Is_Active ? 1 : 0)}, {c.Item_Or_Service}, {(c.Is_Default ? 1 : 0)}, {now.Date}, {Common.User_Id}, {Common.Branch_Id}, {now})").AsEnumerable().First();
-                    opp.db.Database.ExecuteSql($@"INSERT INTO Item_Category (ID, Category_Name, Category_Type_Id, Category_Type_Str, Main_Item_Category_Id, IS_Active, Is_ItemOrService, Is_Default, OperationDate, User_Id, Branch_Id, Insert_ServerDateTime)
-VALUES ({id.Value}, {name}, {type}, {CategoryTypes[type]}, {mainId}, {(c.Is_Active ? 1 : 0)}, {c.Item_Or_Service}, {(c.Is_Default ? 1 : 0)}, {now.Date}, {Common.User_Id}, {Common.Branch_Id}, {now})");
+                        return opp.db.Database.SqlQuery<long>($@"INSERT INTO Item_Category (Category_Name, Category_Type_Id, Category_Type_Str, Main_Item_Category_Id, IS_Active, Is_ItemOrService, Is_Default, Item_Profile, OperationDate, User_Id, Branch_Id, Insert_ServerDateTime)
+OUTPUT CAST(INSERTED.ID AS bigint) AS Value VALUES ({name}, {type}, {CategoryTypes[type]}, {mainId}, {(c.Is_Active ? 1 : 0)}, {c.Item_Or_Service}, {(c.Is_Default ? 1 : 0)}, {profile}, {now.Date}, {Common.User_Id}, {Common.Branch_Id}, {now})").AsEnumerable().First();
+                    opp.db.Database.ExecuteSql($@"INSERT INTO Item_Category (ID, Category_Name, Category_Type_Id, Category_Type_Str, Main_Item_Category_Id, IS_Active, Is_ItemOrService, Is_Default, Item_Profile, OperationDate, User_Id, Branch_Id, Insert_ServerDateTime)
+VALUES ({id.Value}, {name}, {type}, {CategoryTypes[type]}, {mainId}, {(c.Is_Active ? 1 : 0)}, {c.Item_Or_Service}, {(c.Is_Default ? 1 : 0)}, {profile}, {now.Date}, {Common.User_Id}, {Common.Branch_Id}, {now})");
                     return id.Value;
                 }
                 opp.db.Database.ExecuteSql($@"UPDATE Item_Category SET Category_Name = {name}, Category_Type_Id = {type}, Category_Type_Str = {CategoryTypes[type]}, Main_Item_Category_Id = {mainId},
-       IS_Active = {(c.Is_Active ? 1 : 0)}, Is_ItemOrService = {c.Item_Or_Service}, Is_Default = {(c.Is_Default ? 1 : 0)},
+       IS_Active = {(c.Is_Active ? 1 : 0)}, Is_ItemOrService = {c.Item_Or_Service}, Is_Default = {(c.Is_Default ? 1 : 0)}, Item_Profile = {profile},
        Update_ServerDateTime = {now}, EditOperationDate = {now}, Edit_User_Id = {Common.User_Id} WHERE ID = {c.Id}");
                 return c.Id;
             });

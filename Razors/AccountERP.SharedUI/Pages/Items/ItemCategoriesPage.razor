@@ -109,6 +109,11 @@
                     <MudSelect T="int" @bind-Value="_cat.Type_Id" Label="@Tr("IC_Nature")" Variant="Variant.Outlined">
                         @for (int i = 0; i < ItemUnitCategoryService.CategoryTypes.Length; i++) { var k = i; <MudSelectItem T="int" Value="k">@TypeName(k)</MudSelectItem> }
                     </MudSelect>
+                    <MudSelect T="string" @bind-Value="_cat.Profile" Label="@Tr("IC_Profile")" Variant="Variant.Outlined" HelperText="@Tr("IC_ProfileHelp")"
+                               Disabled="@(_cat.Item_Or_Service == 2)" ToStringFunc="@(v => Tr(v == "pharmacy" ? "IC_ProfilePharmacy" : "IC_ProfileGeneral"))">
+                        <MudSelectItem T="string" Value="@("")">@Tr("IC_ProfileGeneral")</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("pharmacy")">@Tr("IC_ProfilePharmacy")</MudSelectItem>
+                    </MudSelect>
                     <div class="switches">
                         <MudRadioGroup T="int" @bind-Value="_cat.Item_Or_Service" aria-label="@Tr("IC_Kind")">
                             <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("IC_Items")</MudRadio>
@@ -148,7 +153,9 @@
                         </MudTd>
                         @if (_selMain == 0) { <MudTd DataLabel="@Tr("IC_Main")">@context.Main_Name</MudTd> }
                         <MudTd DataLabel="@Tr("IC_Nature")">@TypeName(context.Type_Id)</MudTd>
-                        <MudTd DataLabel="@Tr("IC_Kind")">@KindName(context.Item_Or_Service)</MudTd>
+                        <MudTd DataLabel="@Tr("IC_Kind")">@KindName(context.Item_Or_Service)
+                            @if (context.Profile == "pharmacy") { <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary" Icon="@Icons.Material.Filled.Medication" Class="ms-1">@Tr("IC_ProfilePharmacy")</MudChip> }
+                        </MudTd>
                         <MudTd DataLabel="@Tr("ILUsed")" Style="text-align:end">
                             <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="@(context.Used_Count > 0 ? Color.Primary : Color.Default)">@context.Used_Count</MudChip>
                         </MudTd>
@@ -177,7 +184,7 @@
     private List<MainCategoryRow> _mains = new();
     private List<CategoryRow> _cats = new();
     private MainCategoryRow _main = new();
-    private CategoryRow _cat = new() { Is_Active = true, Item_Or_Service = 1, Type_Id = 1 };
+    private CategoryRow _cat = new() { Is_Active = true, Item_Or_Service = 1, Type_Id = 1, Profile = "" };
     private long _selMain;
     private string? _search, _error;
     private bool _loading = true, _busy;
@@ -219,11 +226,11 @@
 
     private async Task OnSearchAsync(string? s) { _search = s; await LoadCatsAsync(); }
 
-    private void NewCat() { _cat = new() { Is_Active = true, Item_Or_Service = 1, Type_Id = 1, Main_Id = _selMain }; _error = null; }
+    private void NewCat() { _cat = new() { Is_Active = true, Item_Or_Service = 1, Type_Id = 1, Main_Id = _selMain, Profile = "" }; _error = null; }
 
     private void EditCat(CategoryRow c)
     {
-        _cat = new CategoryRow { Id = c.Id, Name = c.Name, Main_Id = c.Main_Id, Type_Id = c.Type_Id, Item_Or_Service = c.Item_Or_Service, Is_Default = c.Is_Default, Is_Active = c.Is_Active };
+        _cat = new CategoryRow { Id = c.Id, Name = c.Name, Main_Id = c.Main_Id, Type_Id = c.Type_Id, Item_Or_Service = c.Item_Or_Service, Is_Default = c.Is_Default, Is_Active = c.Is_Active, Profile = c.Profile ?? "" };
         _error = null;
     }
 

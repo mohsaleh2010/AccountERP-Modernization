@@ -2765,4 +2765,53 @@
   <data name="IT_AddStoreButton" xml:space="preserve"><value>Add with zero stock</value></data>
   <data name="IT_Added" xml:space="preserve"><value>Item added</value></data>
   <data name="IT_StoreAdded" xml:space="preserve"><value>Item added to the store</value></data>
+  <data name="IT_ListPharmacy" xml:space="preserve"><value>Items - medicines</value></data>
+  <data name="IT_ListPharmacyRetail" xml:space="preserve"><value>Medicines sold by retail part</value></data>
+  <data name="IT_ListServices" xml:space="preserve"><value>Services</value></data>
+  <data name="IT_PhListSub" xml:space="preserve"><value>Search by name, scientific name, code or barcode</value></data>
+  <data name="IT_NewMedicine" xml:space="preserve"><value>New medicine</value></data>
+  <data name="IT_RetailPrice" xml:space="preserve"><value>Retail part price</value></data>
+  <data name="IT_Pharmacy" xml:space="preserve"><value>Medicine data</value></data>
+  <data name="IT_ScientificName" xml:space="preserve"><value>Scientific name (active ingredient)</value></data>
+  <data name="IT_Pharmacology" xml:space="preserve"><value>Pharmacological class</value></data>
+  <data name="IT_Mark" xml:space="preserve"><value>Manufacturer / brand</value></data>
+  <data name="IT_Licensing" xml:space="preserve"><value>Registration / licence no.</value></data>
+  <data name="IT_StorageTemp" xml:space="preserve"><value>Storage temperature (°C)</value></data>
+  <data name="IT_Location" xml:space="preserve"><value>Item location</value></data>
+  <data name="IT_BlockNo" xml:space="preserve"><value>Cabinet no.</value></data>
+  <data name="IT_ShelfNo" xml:space="preserve"><value>Shelf no.</value></data>
+  <data name="IT_OrderOnShelf" xml:space="preserve"><value>Position on shelf</value></data>
+  <data name="IT_PrintBarcode" xml:space="preserve"><value>Print barcode</value></data>
+  <data name="IT_StopBuying" xml:space="preserve"><value>Purchasing stopped</value></data>
+  <data name="IT_RetailSale" xml:space="preserve"><value>Sold by retail part (strip)</value></data>
+  <data name="IT_RetailParts" xml:space="preserve"><value>1 {0} = {1} retail parts</value></data>
+  <data name="IT_RetailHelp" xml:space="preserve"><value>Suggested {0} = sale price ÷ parts</value></data>
+  <data name="IT_RetailNoParts" xml:space="preserve"><value>The item unit has no retail parts; set them in the units screen first</value></data>
+  <data name="IT_EInvoice" xml:space="preserve"><value>E-invoice</value></data>
+  <data name="IT_TaxCodeType" xml:space="preserve"><value>Item code type</value></data>
+  <data name="IT_TaxCodeNone" xml:space="preserve"><value>None</value></data>
+  <data name="IT_TaxItemCode" xml:space="preserve"><value>Item code on the tax portal</value></data>
+  <data name="IT_TaxItemCodeHelp" xml:space="preserve"><value>EGS: EG-RIN-internal code; GS1: 8 to 14 digits</value></data>
+  <data name="IT_TaxUnitCode" xml:space="preserve"><value>Unit code on the portal</value></data>
+  <data name="IT_TaxUnitHelp" xml:space="preserve"><value>e.g. EA, BOX, KGM, LTR (empty keeps the current one)</value></data>
+  <data name="IT_Country" xml:space="preserve"><value>Country of origin</value></data>
+  <data name="IT_CountryHelp" xml:space="preserve"><value>Two-letter code, e.g. EG</value></data>
+  <data name="IT_TaxUploaded" xml:space="preserve"><value>Uploaded to portal</value></data>
+  <data name="IT_TaxNotUploaded" xml:space="preserve"><value>Not uploaded</value></data>
+  <data name="IT_EInvoiceNote" xml:space="preserve"><value>Sent with the item line of the e-invoice; tax rates are set on the invoice itself</value></data>
+  <data name="IT_Batches" xml:space="preserve"><value>Batches and expiry</value></data>
+  <data name="IT_Batch" xml:space="preserve"><value>Batch</value></data>
+  <data name="IT_Expiry" xml:space="preserve"><value>Expiry date</value></data>
+  <data name="IT_Qty" xml:space="preserve"><value>Quantity</value></data>
+  <data name="IT_Expired" xml:space="preserve"><value>Expired</value></data>
+  <data name="IT_NearExpiry" xml:space="preserve"><value>Expiring soon</value></data>
+  <data name="IT_ValidExpiry" xml:space="preserve"><value>Valid</value></data>
+  <data name="IT_NoExpiry" xml:space="preserve"><value>No date</value></data>
+  <data name="IT_NoBatches" xml:space="preserve"><value>No batches with stock for this item.</value></data>
+  <data name="IT_ExpiryOff" xml:space="preserve"><value>(expiry tracking is off in system settings)</value></data>
+  <data name="IT_BatchesNote" xml:space="preserve"><value>Batches are recorded on purchase and receipt and shown here read-only; 'expiring soon' = within 90 days</value></data>
+  <data name="IC_Profile" xml:space="preserve"><value>Activity profile</value></data>
+  <data name="IC_ProfileGeneral" xml:space="preserve"><value>General</value></data>
+  <data name="IC_ProfilePharmacy" xml:space="preserve"><value>Medicines</value></data>
+  <data name="IC_ProfileHelp" xml:space="preserve"><value>Sets which sections the item screen shows for this category</value></data>
 </root>

@@ -24,6 +24,7 @@ SELECT CASE WHEN OBJECT_ID(N'dbo.Item_Branch_Cost', N'U') IS NOT NULL
              AND COL_LENGTH(N'dbo.Item_First_Period_Balance', N'Source') IS NOT NULL
              AND COL_LENGTH(N'dbo.Order_Purshing', N'Transfer_Status') IS NOT NULL
              AND COL_LENGTH(N'dbo.Detailes_Purshing', N'Source_Detail_Id') IS NOT NULL
+             AND COL_LENGTH(N'dbo.Item_Category', N'Item_Profile') IS NOT NULL
              AND EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Item_Branch_Cost_Item_Branch')
              AND EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_DPIE_UnitItem_Date')
              AND EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Item_First_Period_Balance_Period_Line')
@@ -57,6 +58,7 @@ WHERE Order_Type IN (1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1012,1013
                 Step(opp, ItemOpeningBalance);
                 Step(opp, StoreOrderTypeSettings);
                 Step(opp, TransferReceipts);
+                Step(opp, ItemProfiles);
             }
             // مستقلة عن فحص المخطط: القواعد المرقّاة سابقاً تحتاج الربط أيضاً، وتقرأ فقط العناصر غير المربوطة.
             Step(opp, LinkStoreOrderMenus);
@@ -159,6 +161,9 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("menuUnits", "/items/units"), ("menuItemItemMainCategory", "/items/categories"), ("menuItemItem\u064dSubCategory", "/items/categories"),
             // خطة 04 م2: قائمة الأصناف وشاشة الصنف الموحَّدة
             ("menuItemItemsListGrid", "/items"), ("menuItemItemsListView", "/items"), ("menuItemItemsListNoPrice", "/items/new"), ("menuItemItemsListNoBalance", "/items?kind=services"),
+            // خطة 04 م3: ملف الأدوية (القائمة، الإضافة، أصناف التجزئة)
+            ("menuItemItemsListSpecAdwia", "/items/p/pharmacy"), ("toolStripMenuItemMitems_List_PH_R", "/items/p/pharmacy/new"),
+            ("toolStripMenuItemItemsListAdwiaRetail", "/items/p/pharmacy-retail"),
             // قائمة وبحث الأذون (المرحلة 4) بدل Order_detailes لكل نوع، وقائمة كل الأذون.
             // ملاحظة: القائمة القديمة تفتح «مرتجع صرف قطع الغيار» (879) على 1022 وعنصر «صرف إلى موظف» (881) بلا شاشة؛ هنا كلٌّ لنوعه الصحيح.
             ("menuItemOrdersList", "/store/orders"),
@@ -314,6 +319,13 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Item_First_Period_Bal
 CREATE UNIQUE NONCLUSTERED INDEX [UX_Item_First_Period_Balance_Period_Line]
     ON [dbo].[Item_First_Period_Balance]([Year_Financial_Period_Id] ASC, [Unit_Item_Id] ASC)
     WHERE [Year_Financial_Period_Id] IS NOT NULL;");
+        }
+
+        // ---------------- خطة 04: ملف نشاط الفئة (عام/أدوية/...) يحدد أقسام شاشة الصنف ----------------
+        private static void ItemProfiles(operations opp)
+        {
+            Run(opp, @"
+IF COL_LENGTH(N'dbo.Item_Category', N'Item_Profile') IS NULL ALTER TABLE [dbo].[Item_Category] ADD [Item_Profile] [nvarchar](30) NULL;");
         }
 
         // ---------------- خطة 03: إعداد أنواع الأذون ----------------

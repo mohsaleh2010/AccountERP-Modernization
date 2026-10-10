@@ -1,8 +1,12 @@
 @* 🟢 خطة 04 — المرحلة 2: شاشة الصنف الموحَّدة (ملفا «عام» و«خدمات»): البيانات الأساسية، الوحدة والأسعار، المخازن والرصيد.
    الإضافة: رصيد ابتدائى اختيارى يُرحَّل كأول مدة عبر المحرك. التعديل لا يغيّر الرصيد أبداً، والوحدة مقفولة لصنف له رصيد أو حركات.
-   الصلاحيات 916/917 فى الخدمة. التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+   الصلاحيات 916/917 فى الخدمة. التصميم حسب ui-ux-pro-max ونظام inv-* المشترك.
+   المرحلة 3: ملف النشاط من فئة الصنف (الشاشة الموحَّدة) أو ثابت من المسار /items/p/{Profile}؛ قسم الدواء (ملف أدوية)،
+   قسم الفاتورة الإلكترونية (كل الملفات)، والتشغيلات والصلاحية للعرض فقط. *@
 @page "/items/new"
 @page "/items/{Id:long}"
+@page "/items/p/{Profile}/new"
+@page "/items/p/{Profile}/{Id:long}"
 
 @using System.Globalization
 @using AccountModelsLib
@@ -14,7 +18,7 @@
 @inject NavigationManager Nav
 @implements IDisposable
 
-<PageTitle>@(_isNew ? Tr(_f.Item_Or_Service == 2 ? "IT_NewService" : "IT_NewItem") : _f.Name)</PageTitle>
+<PageTitle>@(_isNew ? Tr(NewTitleKey) : _f.Name)</PageTitle>
 
 <InvoiceStyles />
 
@@ -42,6 +46,10 @@
     .ie-addstore { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 12px; }
     .ie-addstore .mud-input-control { flex: 0 1 320px; }
     .ie-addstore .mud-button-root { min-height: 44px; }
+    .ie-sub { font-size: 1rem; margin-top: 16px; }
+    .ie-retail { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 16px; align-items: center; margin-top: 8px; }
+    .ie-warn { color: var(--mud-palette-warning-darken, var(--mud-palette-warning)); }
+    @@media (max-width: 649px) { .ie-retail { grid-template-columns: minmax(0, 1fr); } }
     @@media (max-width: 1099px) { .ie-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @@media (max-width: 649px) { .ie-grid { grid-template-columns: minmax(0, 1fr); } .ie-grid .span2 { grid-column: auto; }
                                  .ie-prices { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .ie-prices .h0, .ie-prices .lbl { grid-column: 1 / -1; } }
@@ -56,9 +64,9 @@
     else
     {
     <div class="inv-card ie-head">
-        <div class="ico" aria-hidden="true"><MudIcon Icon="@(_f.Item_Or_Service == 2 ? Icons.Material.Filled.MiscellaneousServices : Icons.Material.Filled.Inventory2)" /></div>
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@(_f.Item_Or_Service == 2 ? Icons.Material.Filled.MiscellaneousServices : Pharm ? Icons.Material.Filled.Medication : Icons.Material.Filled.Inventory2)" /></div>
         <div class="titles">
-            <h1 class="inv-title">@(_isNew ? Tr(_f.Item_Or_Service == 2 ? "IT_NewService" : "IT_NewItem") : _f.Name)</h1>
+            <h1 class="inv-title">@(_isNew ? Tr(NewTitleKey) : _f.Name)</h1>
             <div class="sub">
                 @if (!_isNew)
                 {
@@ -66,10 +74,11 @@
                     <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="@(_f.Is_Active ? Color.Success : Color.Default)">@Tr(_f.Is_Active ? "ILActive" : "IT_Inactive")</MudChip>
                 }
                 else { <span>@Tr("IT_NewSub")</span> }
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Icon="@(Pharm ? Icons.Material.Filled.Medication : Icons.Material.Filled.Category)">@Tr("IC_Profile"): @Tr(ProfileKey(EffectiveProfile))</MudChip>
             </div>
         </div>
         <div class="acts">
-            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.List" Href="@($"/items{(_f.Item_Or_Service == 2 ? "?kind=services" : "")}")">@Tr("IT_BackToList")</MudButton>
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.List" Href="@ListHref">@Tr("IT_BackToList")</MudButton>
             @if (_isNew) { <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddTask" Disabled="_busy" OnClick="@(() => SaveAsync(true))">@Tr("IT_SaveNew")</MudButton> }
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="_busy" OnClick="@(() => SaveAsync(false))">@Tr("Save")</MudButton>
         </div>
@@ -156,6 +165,68 @@
         @if (Factor > 1) { <div class="ie-note">@Tr("IT_SmallPriceHelp")</div> }
     </section>
 
+    @* ===== بيانات الدواء (ملف أدوية) ===== *@
+    @if (Pharm)
+    {
+    <section class="inv-card ie-gap" aria-labelledby="ie-pharm">
+        <h2 class="inv-card-title" id="ie-pharm"><MudIcon Icon="@Icons.Material.Filled.Medication" />@Tr("IT_Pharmacy")</h2>
+        <div class="ie-grid">
+            <MudTextField T="string" @bind-Value="_f.Scientific_Name" Label="@Tr("IT_ScientificName")" Variant="Variant.Outlined" MaxLength="500" Class="span2" />
+            <MudTextField T="string" @bind-Value="_f.Pharmacology" Label="@Tr("IT_Pharmacology")" Variant="Variant.Outlined" MaxLength="500" />
+            <MudTextField T="string" @bind-Value="_f.Mark" Label="@Tr("IT_Mark")" Variant="Variant.Outlined" MaxLength="500" />
+            <MudTextField T="string" @bind-Value="_f.Licensing" Label="@Tr("IT_Licensing")" Variant="Variant.Outlined" MaxLength="500" />
+            <MudNumericField T="decimal?" @bind-Value="_f.Storage_Temp" Label="@Tr("IT_StorageTemp")" Variant="Variant.Outlined" Min="-80" Max="80" Clearable="true"
+                             Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Thermostat" />
+        </div>
+        <h3 class="inv-card-title ie-sub"><MudIcon Icon="@Icons.Material.Filled.ViewModule" Size="Size.Small" />@Tr("IT_Location")</h3>
+        <div class="ie-grid">
+            <MudNumericField T="int" @bind-Value="_f.Block_No" Label="@Tr("IT_BlockNo")" Variant="Variant.Outlined" Min="0" />
+            <MudNumericField T="int" @bind-Value="_f.Shelf_No" Label="@Tr("IT_ShelfNo")" Variant="Variant.Outlined" Min="0" />
+            <MudNumericField T="int" @bind-Value="_f.Order_On_Shelf" Label="@Tr("IT_OrderOnShelf")" Variant="Variant.Outlined" Min="0" />
+        </div>
+        <div class="ie-row">
+            <MudSwitch T="bool" @bind-Value="_f.Is_Print_Barcode" Color="Color.Primary" Label="@Tr("IT_PrintBarcode")" />
+            <MudSwitch T="bool" @bind-Value="_f.Is_Stop_Buying" Color="Color.Warning" Label="@Tr("IT_StopBuying")" />
+            <MudSwitch T="bool" Value="_f.Is_Retail" ValueChanged="OnRetailChanged" Color="Color.Primary" Label="@Tr("IT_RetailSale")" />
+        </div>
+        @if (_f.Is_Retail)
+        {
+            <div class="ie-retail">
+                <MudNumericField T="decimal" @bind-Value="_f.Retail_Price" Label="@Tr("IT_RetailPrice")" Variant="Variant.Outlined" Min="0" Format="0.####"
+                                 HelperText="@(RetailParts > 1 ? Tr("IT_RetailHelp", Money(SuggestedRetail)) : null)" Style="max-width:260px" />
+                @if (RetailParts > 1)
+                {
+                    <div class="ie-conv" aria-live="polite"><MudIcon Icon="@Icons.Material.Filled.ContentCut" Size="Size.Small" Style="vertical-align:middle" /> @Tr("IT_RetailParts", Unit?.Big_Unit ?? "", RetailParts)</div>
+                }
+                else
+                {
+                    <div class="ie-note ie-warn" role="alert"><MudIcon Icon="@Icons.Material.Filled.WarningAmber" Size="Size.Small" Style="vertical-align:middle" /> @Tr("IT_RetailNoParts")</div>
+                }
+            </div>
+        }
+    </section>
+    }
+
+    @* ===== الفاتورة الإلكترونية ===== *@
+    <section class="inv-card ie-gap" aria-labelledby="ie-einv">
+        <h2 class="inv-card-title" id="ie-einv"><MudIcon Icon="@Icons.Material.Filled.ReceiptLong" />@Tr("IT_EInvoice")
+            @if (!_isNew) { <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="@(_taxUploaded ? Color.Success : Color.Default)" Class="ms-2">@Tr(_taxUploaded ? "IT_TaxUploaded" : "IT_TaxNotUploaded")</MudChip> }
+        </h2>
+        <div class="ie-grid">
+            <MudSelect T="string" @bind-Value="_f.Tax_Code_Type" Label="@Tr("IT_TaxCodeType")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => string.IsNullOrEmpty(v) ? Tr("IT_TaxCodeNone") : v)">
+                <MudSelectItem T="string" Value="@("")">@Tr("IT_TaxCodeNone")</MudSelectItem>
+                <MudSelectItem T="string" Value="@("EGS")">EGS</MudSelectItem>
+                <MudSelectItem T="string" Value="@("GS1")">GS1</MudSelectItem>
+            </MudSelect>
+            <MudTextField T="string" @bind-Value="_f.Tax_Item_Code" Label="@Tr("IT_TaxItemCode")" Variant="Variant.Outlined" MaxLength="100" Class="span2"
+                          HelperText="@Tr("IT_TaxItemCodeHelp")" Disabled="@string.IsNullOrEmpty(_f.Tax_Code_Type)" Style="direction:ltr" />
+            <MudTextField T="string" @bind-Value="_f.Tax_Unit_Code" Label="@Tr("IT_TaxUnitCode")" Variant="Variant.Outlined" MaxLength="10" HelperText="@Tr("IT_TaxUnitHelp")" Style="direction:ltr" />
+            <MudTextField T="string" @bind-Value="_f.Country_Of_Origin" Label="@Tr("IT_Country")" Variant="Variant.Outlined" MaxLength="2" HelperText="@Tr("IT_CountryHelp")" Style="direction:ltr" />
+        </div>
+        <div class="ie-note"><MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Style="vertical-align:middle" /> @Tr("IT_EInvoiceNote")</div>
+    </section>
+
     @* ===== المخازن والرصيد ===== *@
     <section class="inv-card ie-gap" aria-labelledby="ie-stock">
         <h2 class="inv-card-title" id="ie-stock"><MudIcon Icon="@Icons.Material.Filled.Warehouse" />@Tr("IT_StoresBalance")</h2>
@@ -207,6 +278,37 @@
                 </RowTemplate>
             </MudTable>
             <div class="ie-note"><MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" Style="vertical-align:middle" /> @Tr("IT_BalanceReadOnly")</div>
+            @if (Pharm || _batches.Count > 0)
+            {
+                <h3 class="inv-card-title ie-sub"><MudIcon Icon="@Icons.Material.Filled.EventBusy" Size="Size.Small" />@Tr("IT_Batches")<span class="inv-count">@_batches.Count</span></h3>
+                @if (_batches.Count == 0)
+                {
+                    <div class="ie-note">@Tr("IT_NoBatches") @if (!_lk!.Expiry_Tracked) { <span>@Tr("IT_ExpiryOff")</span> }</div>
+                }
+                else
+                {
+                    <MudTable Items="@_batches" T="BatchRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true">
+                        <HeaderContent>
+                            <MudTh>@Tr("IT_Store")</MudTh>
+                            <MudTh>@Tr("IT_Batch")</MudTh>
+                            <MudTh>@Tr("IT_Expiry")</MudTh>
+                            <MudTh Style="text-align:end">@Tr("IT_Qty")</MudTh>
+                            <MudTh>@Tr("IT_Status")</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="@Tr("IT_Store")">@context.Store_Name</MudTd>
+                            <MudTd DataLabel="@Tr("IT_Batch")"><span class="ie-num">@(string.IsNullOrEmpty(context.Batch) ? "—" : context.Batch)</span></MudTd>
+                            <MudTd DataLabel="@Tr("IT_Expiry")"><span class="ie-num">@(context.Expire_Date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "—")</span></MudTd>
+                            <MudTd DataLabel="@Tr("IT_Qty")" Style="text-align:end"><span class="ie-num">@Num(context.Qty_Large) @Unit?.Big_Unit @if (context.Qty_Small != 0) { <text> + @Num(context.Qty_Small) @Unit?.Small_Unit</text> }</span></MudTd>
+                            <MudTd DataLabel="@Tr("IT_Status")">
+                                @{ var (key, color) = ExpiryState(context.Expire_Date); }
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="color">@Tr(key)</MudChip>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+                <div class="ie-note">@Tr("IT_BatchesNote")</div>
+            }
             @if (AvailableStores.Count > 0)
             {
                 <div class="ie-addstore">
@@ -226,12 +328,15 @@
 @code {
     [Parameter] public long? Id { get; set; }
     [SupplyParameterFromQuery(Name = "kind")] public string? KindQuery { get; set; }
+    [Parameter] public string? Profile { get; set; }
 
     private readonly ItemEditorService _svc = new();
     private Lookups? _lk;
     private ItemForm _f = new();
     private List<StoreLine> _stores = new();
-    private bool _isNew = true, _locked, _loading = true, _busy;
+    private List<BatchRow> _batches = new();
+    private bool _isNew = true, _locked, _loading = true, _busy, _taxUploaded;
+    private string _routeProfile = "";
     private long _addStoreId;
     private string? _error;
 
@@ -240,6 +345,25 @@
     private decimal OpeningValue => (_f.Opening_Large + (Factor > 0 ? _f.Opening_Small / Factor : 0)) * _f.Opening_Cost_Large;
     private List<Option> AvailableStores => _lk?.Stores.Where(s => _stores.All(x => x.Store_Id != s.Id)).ToList() ?? new();
 
+    /// <summary>الملف الفعلى: الثابت من المسار، وإلا من فئة الصنف المختارة (يتغير فوراً مع تغيير الفئة).</summary>
+    private string EffectiveProfile => _routeProfile.Length > 0 && _f.Item_Or_Service != 2 ? _routeProfile
+        : ResolveProfile(_lk?.Categories.FirstOrDefault(c => c.Id == _f.Category_Id)?.Profile, _f.Item_Or_Service);
+    private bool Pharm => IsPharmacy(EffectiveProfile);
+    private string NewTitleKey => _f.Item_Or_Service == 2 ? "IT_NewService" : Pharm ? "IT_NewMedicine" : "IT_NewItem";
+    private int RetailParts => Unit?.Retail_Parts ?? 1;
+    private decimal SuggestedRetail => RetailParts > 1 ? Math.Round(_f.Sale_Price_Large / RetailParts, 4) : 0;
+    private string Prefix => _routeProfile.Length > 0 ? $"/items/p/{_routeProfile}" : "/items";
+    private string ListHref => _routeProfile.Length > 0 ? Prefix : $"/items{(_f.Item_Or_Service == 2 ? "?kind=services" : "")}";
+
+    private static string ProfileKey(string p) => p switch { "pharmacy" or "pharmacy-retail" => "IC_ProfilePharmacy", "services" => "IC_Services", _ => "IC_ProfileGeneral" };
+
+    private static (string, Color) ExpiryState(DateTime? d)
+    {
+        if (d == null) return ("IT_NoExpiry", Color.Default);
+        double days = (d.Value.Date - DateTime.Today).TotalDays;
+        return days < 0 ? ("IT_Expired", Color.Error) : days <= 90 ? ("IT_NearExpiry", Color.Warning) : ("IT_ValidExpiry", Color.Success);
+    }
+
     protected override void OnInitialized() => LangService.OnLanguageChanged += OnLanguageChangedHandler;
     private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
     public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
@@ -247,15 +371,17 @@
     protected override async Task OnParametersSetAsync()
     {
         _loading = true; _error = null;
+        string rp = (Profile ?? "").Trim().ToLowerInvariant();
+        _routeProfile = RouteProfiles.Contains(rp) ? rp : "";
         try
         {
             _lk ??= await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetLookups(); });
             if (Id is long id and > 0)
             {
                 var d = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Get(id); });
-                _f = d.Form; _stores = d.Stores; _locked = d.Unit_Locked; _isNew = false;
+                _f = d.Form; _stores = d.Stores; _batches = d.Batches; _taxUploaded = d.Tax_Uploaded; _locked = d.Unit_Locked; _isNew = false;
             }
-            else NewForm(KindQuery == "services" ? 2 : 1);
+            else NewForm(_routeProfile == "services" || KindQuery == "services" ? 2 : 1);
         }
         catch (Exception ex) { _error = Inner(ex); }
         finally { _loading = false; }
@@ -263,14 +389,23 @@
 
     private void NewForm(int kind)
     {
-        _isNew = true; _locked = false; _stores = new();
+        _isNew = true; _locked = false; _stores = new(); _batches = new(); _taxUploaded = false;
         _f = new ItemForm
         {
             Item_Or_Service = kind, Without_Balance = kind == 2,
             Unit_Id = _lk!.Units.FirstOrDefault(u => u.Is_Default)?.Id ?? _lk.Units.FirstOrDefault()?.Id ?? 0,
             Category_Id = kind == 2 && _lk.Default_Category_Service != 0 ? _lk.Default_Category_Service : _lk.Default_Category_Item,
             Store_Id = _lk.Default_Store_Id,
+            Is_Retail = _routeProfile == "pharmacy-retail",
         };
+        // ملف أدوية ثابت: الفئة الافتراضية الأولى ذات ملف أدوية إن وُجدت
+        if (IsPharmacy(_routeProfile) && _lk.Categories.FirstOrDefault(c => c.Profile == "pharmacy") is { } pc) _f.Category_Id = pc.Id;
+    }
+
+    private void OnRetailChanged(bool v)
+    {
+        _f.Is_Retail = v;
+        if (v && _f.Retail_Price == 0) _f.Retail_Price = SuggestedRetail;
     }
 
     private void OnKindChanged(int k)
@@ -309,11 +444,11 @@
             long id = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Save(f); });
             Snackbar.Add(isNew ? Tr("IT_Added") : Tr("IU_Saved"), Severity.Success);
             if (isNew && andNew) { NewForm(f.Item_Or_Service); }
-            else if (isNew) Nav.NavigateTo($"/items/{id}");
+            else if (isNew) Nav.NavigateTo($"{Prefix}/{id}");
             else
             {
                 var d = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Get(id); });
-                _f = d.Form; _stores = d.Stores; _locked = d.Unit_Locked;
+                _f = d.Form; _stores = d.Stores; _batches = d.Batches; _taxUploaded = d.Tax_Uploaded; _locked = d.Unit_Locked;
             }
         }
         catch (Exception ex) { _error = Inner(ex); }

@@ -2765,4 +2765,53 @@
   <data name="IT_AddStoreButton" xml:space="preserve"><value>إضافة برصيد صفر</value></data>
   <data name="IT_Added" xml:space="preserve"><value>أُضيف الصنف</value></data>
   <data name="IT_StoreAdded" xml:space="preserve"><value>أُضيف الصنف للمخزن</value></data>
+  <data name="IT_ListPharmacy" xml:space="preserve"><value>قائمة الأصناف - أدوية</value></data>
+  <data name="IT_ListPharmacyRetail" xml:space="preserve"><value>أدوية تباع بالتجزئة</value></data>
+  <data name="IT_ListServices" xml:space="preserve"><value>قائمة الخدمات</value></data>
+  <data name="IT_PhListSub" xml:space="preserve"><value>ابحث بالاسم أو الاسم العلمى أو الكود أو الباركود</value></data>
+  <data name="IT_NewMedicine" xml:space="preserve"><value>دواء جديد</value></data>
+  <data name="IT_RetailPrice" xml:space="preserve"><value>سعر التجزئة</value></data>
+  <data name="IT_Pharmacy" xml:space="preserve"><value>بيانات الدواء</value></data>
+  <data name="IT_ScientificName" xml:space="preserve"><value>الاسم العلمى (المادة الفعالة)</value></data>
+  <data name="IT_Pharmacology" xml:space="preserve"><value>التصنيف الدوائى</value></data>
+  <data name="IT_Mark" xml:space="preserve"><value>الشركة المنتجة / العلامة</value></data>
+  <data name="IT_Licensing" xml:space="preserve"><value>رقم التسجيل / الترخيص</value></data>
+  <data name="IT_StorageTemp" xml:space="preserve"><value>درجة حرارة التخزين (°م)</value></data>
+  <data name="IT_Location" xml:space="preserve"><value>مكان الصنف</value></data>
+  <data name="IT_BlockNo" xml:space="preserve"><value>رقم الدولاب</value></data>
+  <data name="IT_ShelfNo" xml:space="preserve"><value>رقم الرف</value></data>
+  <data name="IT_OrderOnShelf" xml:space="preserve"><value>الترتيب على الرف</value></data>
+  <data name="IT_PrintBarcode" xml:space="preserve"><value>يُطبع له باركود</value></data>
+  <data name="IT_StopBuying" xml:space="preserve"><value>موقوف الشراء</value></data>
+  <data name="IT_RetailSale" xml:space="preserve"><value>يباع بالتجزئة (الشريط)</value></data>
+  <data name="IT_RetailParts" xml:space="preserve"><value>1 {0} = {1} جزء تجزئة</value></data>
+  <data name="IT_RetailHelp" xml:space="preserve"><value>المقترح {0} = سعر البيع ÷ عدد الأجزاء</value></data>
+  <data name="IT_RetailNoParts" xml:space="preserve"><value>وحدة الصنف بلا أجزاء تجزئة؛ حدّد عدد الأجزاء من شاشة الوحدات أولاً</value></data>
+  <data name="IT_EInvoice" xml:space="preserve"><value>الفاتورة الإلكترونية</value></data>
+  <data name="IT_TaxCodeType" xml:space="preserve"><value>نوع كود الصنف</value></data>
+  <data name="IT_TaxCodeNone" xml:space="preserve"><value>بدون</value></data>
+  <data name="IT_TaxItemCode" xml:space="preserve"><value>كود الصنف فى البوابة</value></data>
+  <data name="IT_TaxItemCodeHelp" xml:space="preserve"><value>EGS: EG-رقم التسجيل-الكود الداخلى، GS1: من 8 إلى 14 رقماً</value></data>
+  <data name="IT_TaxUnitCode" xml:space="preserve"><value>كود الوحدة فى البوابة</value></data>
+  <data name="IT_TaxUnitHelp" xml:space="preserve"><value>مثل EA، BOX، KGM، LTR (فارغ = يبقى الحالى)</value></data>
+  <data name="IT_Country" xml:space="preserve"><value>بلد المنشأ</value></data>
+  <data name="IT_CountryHelp" xml:space="preserve"><value>كود من حرفين مثل EG</value></data>
+  <data name="IT_TaxUploaded" xml:space="preserve"><value>مرفوع للبوابة</value></data>
+  <data name="IT_TaxNotUploaded" xml:space="preserve"><value>غير مرفوع للبوابة</value></data>
+  <data name="IT_EInvoiceNote" xml:space="preserve"><value>تُرسل هذه البيانات مع سطر الصنف فى الفاتورة الإلكترونية؛ نسب الضريبة تُحدَّد فى الفاتورة نفسها</value></data>
+  <data name="IT_Batches" xml:space="preserve"><value>التشغيلات والصلاحية</value></data>
+  <data name="IT_Batch" xml:space="preserve"><value>التشغيلة</value></data>
+  <data name="IT_Expiry" xml:space="preserve"><value>تاريخ الصلاحية</value></data>
+  <data name="IT_Qty" xml:space="preserve"><value>الكمية</value></data>
+  <data name="IT_Expired" xml:space="preserve"><value>منتهى الصلاحية</value></data>
+  <data name="IT_NearExpiry" xml:space="preserve"><value>قريب الانتهاء</value></data>
+  <data name="IT_ValidExpiry" xml:space="preserve"><value>سارى</value></data>
+  <data name="IT_NoExpiry" xml:space="preserve"><value>بدون تاريخ</value></data>
+  <data name="IT_NoBatches" xml:space="preserve"><value>لا توجد تشغيلات برصيد لهذا الصنف.</value></data>
+  <data name="IT_ExpiryOff" xml:space="preserve"><value>(تتبع الصلاحية غير مفعَّل فى إعدادات النظام)</value></data>
+  <data name="IT_BatchesNote" xml:space="preserve"><value>التشغيلات تُسجَّل مع الشراء والاستلام وتظهر هنا للعرض فقط؛ «قريب الانتهاء» = خلال 90 يوماً</value></data>
+  <data name="IC_Profile" xml:space="preserve"><value>ملف النشاط</value></data>
+  <data name="IC_ProfileGeneral" xml:space="preserve"><value>عام</value></data>
+  <data name="IC_ProfilePharmacy" xml:space="preserve"><value>أدوية</value></data>
+  <data name="IC_ProfileHelp" xml:space="preserve"><value>يحدد أقسام شاشة الصنف لأصناف هذه الفئة</value></data>
 </root>

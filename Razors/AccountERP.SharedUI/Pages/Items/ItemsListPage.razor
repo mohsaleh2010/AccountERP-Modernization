@@ -1,6 +1,8 @@
 @* 🟢 خطة 04 — المرحلة 2: قائمة الأصناف الموحَّدة (بديل ItemsListGridFrm/ItemsListViewFrm/قائمة الخدمات). بحث بالاسم/الكود/الباركود،
-   تصفية بالفئة والنوع (أصناف/خدمات) والحالة، والرصيد الإجمالى بالوحدتين للعرض فقط. الصف يفتح شاشة الصنف. التصميم حسب ui-ux-pro-max. *@
+   تصفية بالفئة والنوع (أصناف/خدمات) والحالة، والرصيد الإجمالى بالوحدتين للعرض فقط. الصف يفتح شاشة الصنف. التصميم حسب ui-ux-pro-max.
+   المرحلة 3: /items/p/{Profile} قائمة بملف ثابت (general، services، pharmacy، pharmacy-retail) بأعمدته، والصف يفتح الصنف بنفس الملف. *@
 @page "/items"
+@page "/items/p/{Profile}"
 
 @using System.Globalization
 @using AccountModelsLib
@@ -11,7 +13,7 @@
 @inject NavigationManager Nav
 @implements IDisposable
 
-<PageTitle>@Tr("IT_ListTitle")</PageTitle>
+<PageTitle>@Tr(TitleKey)</PageTitle>
 
 <InvoiceStyles />
 
@@ -45,12 +47,12 @@
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
 <div class="inv-page">
     <div class="inv-card it-head">
-        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Inventory2" /></div>
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@(_pharm ? Icons.Material.Filled.Medication : Icons.Material.Filled.Inventory2)" /></div>
         <div class="titles">
-            <h1 class="inv-title">@Tr("IT_ListTitle")</h1>
-            <div class="sub">@Tr("IT_ListSub")</div>
+            <h1 class="inv-title">@Tr(TitleKey)</h1>
+            <div class="sub">@Tr(_pharm ? "IT_PhListSub" : "IT_ListSub")</div>
         </div>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="@($"/items/new{(_f.Kind == 2 ? "?kind=services" : "")}")">@Tr(_f.Kind == 2 ? "IT_NewService" : "IT_NewItem")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="@NewHref">@Tr(_f.Kind == 2 ? "IT_NewService" : _pharm ? "IT_NewMedicine" : "IT_NewItem")</MudButton>
     </div>
 
     <div class="inv-card it-gap">
@@ -68,20 +70,23 @@
                 <MudSelectItem T="int" Value="-1">@Tr("IT_AllStatus")</MudSelectItem>
             </MudSelect>
         </div>
+        @if (!_fixedKind)
+        {
         <div class="it-kinds" role="group" aria-label="@Tr("IC_Kind")">
             @foreach (var (k, key) in new[] { (0, "IT_KindAll"), (1, "IC_Items"), (2, "IC_Services") })
             {
                 <button type="button" class="it-chip" aria-pressed="@(_f.Kind == k ? "true" : "false")" @onclick="@(() => OnKindAsync(k))">@Tr(key)</button>
             }
         </div>
+        }
     </div>
 
     <div class="inv-card it-gap">
-        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("IT_ListTitle")<span class="inv-count">@_rows.Count</span>
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr(TitleKey)<span class="inv-count">@_rows.Count</span>
             @if (_rows.Count >= _f.Top) { <span class="it-muted" style="margin-inline-start:8px">@Tr("IT_TopNote", _f.Top)</span> }
         </h2>
         <MudTable Items="@_rows" T="ListRow" Hover="true" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Loading="_loading" LoadingProgressColor="Color.Primary"
-                  OnRowClick="@((TableRowClickEventArgs<ListRow> e) => Nav.NavigateTo($"/items/{e.Item!.Id}"))" RowClass="it-row">
+                  OnRowClick="@((TableRowClickEventArgs<ListRow> e) => Nav.NavigateTo(ItemHref(e.Item!.Id)))" RowClass="it-row">
             <HeaderContent>
                 <MudTh>@Tr("IT_Code")</MudTh>
                 <MudTh>@Tr("IT_Name")</MudTh>
@@ -89,19 +94,25 @@
                 <MudTh>@Tr("IT_Unit")</MudTh>
                 <MudTh Style="text-align:end">@Tr("IT_SalePrice")</MudTh>
                 <MudTh Style="text-align:end">@Tr("IT_PurchasePrice")</MudTh>
+                @if (_pharm) { <MudTh Style="text-align:end">@Tr("IT_RetailPrice")</MudTh> }
                 <MudTh Style="text-align:end">@Tr("IT_Balance")</MudTh>
                 <MudTh>@Tr("IT_Status")</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="@Tr("IT_Code")"><span class="it-code">@context.Code</span></MudTd>
                 <MudTd DataLabel="@Tr("IT_Name")">
-                    <a href="@($"/items/{context.Id}")" @onclick:stopPropagation="true" style="color:inherit;font-weight:600;text-decoration:none">@context.Name</a>
+                    <a href="@ItemHref(context.Id)" @onclick:stopPropagation="true" style="color:inherit;font-weight:600;text-decoration:none">@context.Name</a>
                     @if (context.Item_Or_Service == 2 || context.Without_Balance) { <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" Class="ms-1">@Tr(context.Item_Or_Service == 2 ? "IC_Services" : "IT_NoBalance")</MudChip> }
+                    @if (_pharm && !string.IsNullOrEmpty(context.Scientific_Name)) { <div class="it-muted">@context.Scientific_Name</div> }
                 </MudTd>
                 <MudTd DataLabel="@Tr("IC_CatName")">@context.Category</MudTd>
                 <MudTd DataLabel="@Tr("IT_Unit")">@context.Unit @if (context.Factor != 1) { <span class="it-muted">× @Num(context.Factor)</span> }</MudTd>
                 <MudTd DataLabel="@Tr("IT_SalePrice")" Style="text-align:end"><span class="it-num">@Money(context.Sale_Price)</span></MudTd>
                 <MudTd DataLabel="@Tr("IT_PurchasePrice")" Style="text-align:end"><span class="it-num">@Money(context.Purchase_Price)</span></MudTd>
+                @if (_pharm)
+                {
+                    <MudTd DataLabel="@Tr("IT_RetailPrice")" Style="text-align:end">@if (context.Is_Retail) { <span class="it-num">@Money(context.Retail_Price)</span> } else { <span class="it-muted">—</span> }</MudTd>
+                }
                 <MudTd DataLabel="@Tr("IT_Balance")" Style="text-align:end">
                     @if (context.Without_Balance || context.Item_Or_Service == 2) { <span class="it-muted">—</span> }
                     else { <span class="it-num @(context.Balance_Small < 0 ? "it-neg" : "")">@BalanceText(context.Balance_Small, context.Factor)</span> }
@@ -121,19 +132,33 @@
 
 @code {
     [SupplyParameterFromQuery(Name = "kind")] public string? KindQuery { get; set; }
+    [Parameter] public string? Profile { get; set; }
 
     private readonly ItemEditorService _svc = new();
     private Lookups? _lk;
     private List<ListRow> _rows = new();
     private readonly ListFilter _f = new();
     private string? _error;
-    private bool _loading = true;
+    private bool _loading = true, _pharm, _fixedKind;
+    private string _profile = "";
 
-    protected override async Task OnInitializedAsync()
+    private string TitleKey => _profile switch { "pharmacy" => "IT_ListPharmacy", "pharmacy-retail" => "IT_ListPharmacyRetail", "services" => "IT_ListServices", _ => "IT_ListTitle" };
+    private string ProfilePrefix => _profile.Length > 0 ? $"/items/p/{_profile}" : "/items";
+    private string ItemHref(long id) => $"{ProfilePrefix}/{id}";
+    private string NewHref => _profile.Length > 0 ? $"{ProfilePrefix}/new" : $"/items/new{(_f.Kind == 2 ? "?kind=services" : "")}";
+
+    protected override void OnInitialized() => LangService.OnLanguageChanged += OnLanguageChangedHandler;
+
+    protected override async Task OnParametersSetAsync()
     {
-        LangService.OnLanguageChanged += OnLanguageChangedHandler;
-        _f.Kind = KindQuery == "services" ? 2 : KindQuery == "items" ? 1 : 0;
-        try { _lk = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetLookups(); }); }
+        string p = (Profile ?? "").Trim().ToLowerInvariant();
+        _profile = ItemEditorService.RouteProfiles.Contains(p) ? p : "";
+        _pharm = ItemEditorService.IsPharmacy(_profile);
+        _fixedKind = _profile is "services" || _pharm;
+        _f.Profile = _profile;
+        _f.Kind = _profile == "services" ? 2 : _pharm ? 1 : KindQuery == "services" ? 2 : KindQuery == "items" ? 1 : 0;
+        _f.Category_Id = 0;
+        try { _lk ??= await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetLookups(); }); }
         catch (Exception ex) { _error = Inner(ex); }
         await LoadAsync();
     }
@@ -144,7 +169,7 @@
     private async Task LoadAsync()
     {
         _loading = true;
-        var f = new ListFilter { Text = _f.Text, Category_Id = _f.Category_Id, Kind = _f.Kind, Active = _f.Active, Top = _f.Top };
+        var f = new ListFilter { Text = _f.Text, Category_Id = _f.Category_Id, Kind = _f.Kind, Active = _f.Active, Top = _f.Top, Profile = _f.Profile };
         try { _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.List(f); }); _error = null; }
         catch (Exception ex) { _error = Inner(ex); _rows = new(); }
         finally { _loading = false; }
