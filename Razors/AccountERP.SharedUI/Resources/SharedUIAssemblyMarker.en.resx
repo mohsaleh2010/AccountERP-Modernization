@@ -2814,4 +2814,33 @@
   <data name="IC_ProfileGeneral" xml:space="preserve"><value>General</value></data>
   <data name="IC_ProfilePharmacy" xml:space="preserve"><value>Medicines</value></data>
   <data name="IC_ProfileHelp" xml:space="preserve"><value>Sets which sections the item screen shows for this category</value></data>
+  <data name="IT_Specs" xml:space="preserve"><value>Specifications</value></data>
+  <data name="IT_CarPart" xml:space="preserve"><value>Spare part data</value></data>
+  <data name="IT_FactoryCode" xml:space="preserve"><value>Part number (OEM code)</value></data>
+  <data name="IT_CarType" xml:space="preserve"><value>Car make</value></data>
+  <data name="IT_NoCarTypes" xml:space="preserve"><value>No car makes yet</value></data>
+  <data name="IT_HideOnInvoice" xml:space="preserve"><value>Hidden on printed invoice</value></data>
+  <data name="IT_SpecType" xml:space="preserve"><value>Type</value></data>
+  <data name="IT_SpecFactory" xml:space="preserve"><value>Factory</value></data>
+  <data name="IT_SpecSize" xml:space="preserve"><value>Size</value></data>
+  <data name="IT_SpecColor" xml:space="preserve"><value>Color</value></data>
+  <data name="IT_SpecDegree" xml:space="preserve"><value>Grade</value></data>
+  <data name="IT_SpecDesc" xml:space="preserve"><value>Description</value></data>
+  <data name="IT_SpecOther" xml:space="preserve"><value>Other description</value></data>
+  <data name="IT_Dimensions" xml:space="preserve"><value>Dimensions</value></data>
+  <data name="IT_Width" xml:space="preserve"><value>Width</value></data>
+  <data name="IT_Height" xml:space="preserve"><value>Length</value></data>
+  <data name="IT_Thickness" xml:space="preserve"><value>Thickness</value></data>
+  <data name="IT_ThicknessUnit" xml:space="preserve"><value>Unit</value></data>
+  <data name="IT_SuggestName" xml:space="preserve"><value>Use as item name</value></data>
+  <data name="IT_SpecsHelp" xml:space="preserve"><value>Values are managed in the reference lists.</value></data>
+  <data name="IT_ManageLists" xml:space="preserve"><value>Manage lists</value></data>
+  <data name="IT_ListCars" xml:space="preserve"><value>Car spare parts</value></data>
+  <data name="IT_ListCeramics" xml:space="preserve"><value>Items with specifications</value></data>
+  <data name="IT_ListGlass" xml:space="preserve"><value>Sized items (glass)</value></data>
+  <data name="IT_NewCarPart" xml:space="preserve"><value>New spare part</value></data>
+  <data name="IC_ProfileCars" xml:space="preserve"><value>Car spare parts</value></data>
+  <data name="IC_ProfileCeramics" xml:space="preserve"><value>Ceramics / specifications</value></data>
+  <data name="IC_ProfileGlass" xml:space="preserve"><value>Glass / sized</value></data>
+  <data name="IL_car-types" xml:space="preserve"><value>Car makes</value></data>
 </root>

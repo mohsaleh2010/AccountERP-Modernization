@@ -47,12 +47,12 @@
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
 <div class="inv-page">
     <div class="inv-card it-head">
-        <div class="ico" aria-hidden="true"><MudIcon Icon="@(_pharm ? Icons.Material.Filled.Medication : Icons.Material.Filled.Inventory2)" /></div>
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@(_pharm ? Icons.Material.Filled.Medication : _profile == "cars" ? Icons.Material.Filled.CarRepair : _profile == "glass" ? Icons.Material.Filled.Window : _profile == "ceramics" ? Icons.Material.Filled.GridOn : Icons.Material.Filled.Inventory2)" /></div>
         <div class="titles">
             <h1 class="inv-title">@Tr(TitleKey)</h1>
             <div class="sub">@Tr(_pharm ? "IT_PhListSub" : "IT_ListSub")</div>
         </div>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="@NewHref">@Tr(_f.Kind == 2 ? "IT_NewService" : _pharm ? "IT_NewMedicine" : "IT_NewItem")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="@NewHref">@Tr(_f.Kind == 2 ? "IT_NewService" : _pharm ? "IT_NewMedicine" : _profile == "cars" ? "IT_NewCarPart" : "IT_NewItem")</MudButton>
     </div>
 
     <div class="inv-card it-gap">
@@ -91,6 +91,7 @@
                 <MudTh>@Tr("IT_Code")</MudTh>
                 <MudTh>@Tr("IT_Name")</MudTh>
                 <MudTh>@Tr("IC_CatName")</MudTh>
+                @if (_specs) { <MudTh>@Tr(_profile == "cars" ? "IT_FactoryCode" : "IT_Specs")</MudTh> }
                 <MudTh>@Tr("IT_Unit")</MudTh>
                 <MudTh Style="text-align:end">@Tr("IT_SalePrice")</MudTh>
                 <MudTh Style="text-align:end">@Tr("IT_PurchasePrice")</MudTh>
@@ -106,6 +107,7 @@
                     @if (_pharm && !string.IsNullOrEmpty(context.Scientific_Name)) { <div class="it-muted">@context.Scientific_Name</div> }
                 </MudTd>
                 <MudTd DataLabel="@Tr("IC_CatName")">@context.Category</MudTd>
+                @if (_specs) { <MudTd DataLabel="@Tr("IT_Specs")"><span class="it-muted">@context.Spec_Text</span></MudTd> }
                 <MudTd DataLabel="@Tr("IT_Unit")">@context.Unit @if (context.Factor != 1) { <span class="it-muted">× @Num(context.Factor)</span> }</MudTd>
                 <MudTd DataLabel="@Tr("IT_SalePrice")" Style="text-align:end"><span class="it-num">@Money(context.Sale_Price)</span></MudTd>
                 <MudTd DataLabel="@Tr("IT_PurchasePrice")" Style="text-align:end"><span class="it-num">@Money(context.Purchase_Price)</span></MudTd>
@@ -142,7 +144,9 @@
     private bool _loading = true, _pharm, _fixedKind;
     private string _profile = "";
 
-    private string TitleKey => _profile switch { "pharmacy" => "IT_ListPharmacy", "pharmacy-retail" => "IT_ListPharmacyRetail", "services" => "IT_ListServices", _ => "IT_ListTitle" };
+    private string TitleKey => _profile switch { "pharmacy" => "IT_ListPharmacy", "pharmacy-retail" => "IT_ListPharmacyRetail", "services" => "IT_ListServices",
+        "cars" => "IT_ListCars", "ceramics" => "IT_ListCeramics", "glass" => "IT_ListGlass", _ => "IT_ListTitle" };
+    private bool _specs;
     private string ProfilePrefix => _profile.Length > 0 ? $"/items/p/{_profile}" : "/items";
     private string ItemHref(long id) => $"{ProfilePrefix}/{id}";
     private string NewHref => _profile.Length > 0 ? $"{ProfilePrefix}/new" : $"/items/new{(_f.Kind == 2 ? "?kind=services" : "")}";
@@ -154,9 +158,10 @@
         string p = (Profile ?? "").Trim().ToLowerInvariant();
         _profile = ItemEditorService.RouteProfiles.Contains(p) ? p : "";
         _pharm = ItemEditorService.IsPharmacy(_profile);
-        _fixedKind = _profile is "services" || _pharm;
+        _specs = _profile is "cars" or "ceramics" or "glass";
+        _fixedKind = _profile is "services" || _pharm || _specs;
         _f.Profile = _profile;
-        _f.Kind = _profile == "services" ? 2 : _pharm ? 1 : KindQuery == "services" ? 2 : KindQuery == "items" ? 1 : 0;
+        _f.Kind = _profile == "services" ? 2 : _pharm || _specs ? 1 : KindQuery == "services" ? 2 : KindQuery == "items" ? 1 : 0;
         _f.Category_Id = 0;
         try { _lk ??= await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetLookups(); }); }
         catch (Exception ex) { _error = Inner(ex); }

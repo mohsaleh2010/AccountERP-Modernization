@@ -2,7 +2,8 @@
    الإضافة: رصيد ابتدائى اختيارى يُرحَّل كأول مدة عبر المحرك. التعديل لا يغيّر الرصيد أبداً، والوحدة مقفولة لصنف له رصيد أو حركات.
    الصلاحيات 916/917 فى الخدمة. التصميم حسب ui-ux-pro-max ونظام inv-* المشترك.
    المرحلة 3: ملف النشاط من فئة الصنف (الشاشة الموحَّدة) أو ثابت من المسار /items/p/{Profile}؛ قسم الدواء (ملف أدوية)،
-   قسم الفاتورة الإلكترونية (كل الملفات)، والتشغيلات والصلاحية للعرض فقط. *@
+   قسم الفاتورة الإلكترونية (كل الملفات)، والتشغيلات والصلاحية للعرض فقط.
+   المرحلة 4: قسم المواصفات لملفات قطع غيار السيارات والسيراميك والزجاج (القيم من القوائم المرجعية، والاسم المقترح للزجاج). *@
 @page "/items/new"
 @page "/items/{Id:long}"
 @page "/items/p/{Profile}/new"
@@ -207,6 +208,73 @@
     </section>
     }
 
+    @* ===== المواصفات (سيارات / سيراميك / زجاج) ===== *@
+    @if (Specs)
+    {
+    <section class="inv-card ie-gap" aria-labelledby="ie-specs">
+        <h2 class="inv-card-title" id="ie-specs"><MudIcon Icon="@SpecIcon" />@Tr(EffectiveProfile == "cars" ? "IT_CarPart" : "IT_Specs")</h2>
+        <div class="ie-grid">
+            @if (EffectiveProfile == "cars")
+            {
+                <MudTextField T="string" @bind-Value="_f.Factory_Code" Label="@Tr("IT_FactoryCode")" Variant="Variant.Outlined" MaxLength="100" Style="direction:ltr"
+                              Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Tag" />
+                <MudSelect T="long" @bind-Value="_f.Car_Type_Id" Label="@Tr("IT_CarType")" Variant="Variant.Outlined" Clearable="true"
+                           HelperText="@(_lk!.Car_Types.Count == 0 ? Tr("IT_NoCarTypes") : null)"
+                           ToStringFunc="@(id => id == 0 ? string.Empty : _lk!.Car_Types.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
+                    @foreach (var c in _lk!.Car_Types) { <MudSelectItem T="long" Value="c.Id">@c.Name</MudSelectItem> }
+                </MudSelect>
+                @SpecSelect("descriptions", "IT_SpecDesc", _f.Description_Id, v => _f.Description_Id = v)
+                @SpecSelect("other-names", "IT_SpecOther", _f.Other_Description_Id, v => _f.Other_Description_Id = v)
+                @SpecSelect("sizes", "IT_SpecSize", _f.Size_Id, v => _f.Size_Id = v)
+                @SpecSelect("colors", "IT_SpecColor", _f.Color_Id, v => _f.Color_Id = v)
+                @SpecSelect("degrees", "IT_SpecDegree", _f.Degree_Id, v => _f.Degree_Id = v)
+            }
+            else if (EffectiveProfile == "ceramics")
+            {
+                @SpecSelect("types", "IT_SpecType", _f.Type_Id, v => _f.Type_Id = v)
+                @SpecSelect("factories", "IT_SpecFactory", _f.Factory_Id, v => _f.Factory_Id = v)
+                @SpecSelect("sizes", "IT_SpecSize", _f.Size_Id, v => _f.Size_Id = v)
+                @SpecSelect("colors", "IT_SpecColor", _f.Color_Id, v => _f.Color_Id = v)
+                @SpecSelect("degrees", "IT_SpecDegree", _f.Degree_Id, v => _f.Degree_Id = v)
+                @SpecSelect("descriptions", "IT_SpecDesc", _f.Description_Id, v => _f.Description_Id = v)
+                @SpecSelect("other-names", "IT_SpecOther", _f.Other_Description_Id, v => _f.Other_Description_Id = v)
+            }
+            else
+            {
+                @SpecSelect("types", "IT_SpecType", _f.Type_Id, v => _f.Type_Id = v)
+            }
+        </div>
+        @if (EffectiveProfile != "cars")
+        {
+            <h3 class="inv-card-title ie-sub"><MudIcon Icon="@Icons.Material.Filled.Straighten" Size="Size.Small" />@Tr("IT_Dimensions")</h3>
+            <div class="ie-grid">
+                <MudNumericField T="decimal" @bind-Value="_f.Width" Label="@Tr("IT_Width")" Variant="Variant.Outlined" Min="0" Format="0.####" />
+                <MudNumericField T="decimal" @bind-Value="_f.Height" Label="@Tr("IT_Height")" Variant="Variant.Outlined" Min="0" Format="0.####" />
+                <div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:8px">
+                    <MudNumericField T="decimal" @bind-Value="_f.Thickness" Label="@Tr("IT_Thickness")" Variant="Variant.Outlined" Min="0" Format="0.####" />
+                    <MudTextField T="string" @bind-Value="_f.Thickness_Unit" Label="@Tr("IT_ThicknessUnit")" Variant="Variant.Outlined" MaxLength="20" />
+                </div>
+            </div>
+            @if (EffectiveProfile == "glass" && !string.IsNullOrWhiteSpace(GlassName))
+            {
+                <div class="ie-addstore">
+                    <span class="ie-conv"><MudIcon Icon="@Icons.Material.Filled.AutoFixHigh" Size="Size.Small" Style="vertical-align:middle" /> @GlassName</span>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.DriveFileRenameOutline"
+                               Disabled="@string.IsNullOrWhiteSpace(GlassName)" OnClick="@(() => _f.Name = GlassName)">@Tr("IT_SuggestName")</MudButton>
+                </div>
+            }
+        }
+        @if (EffectiveProfile == "cars")
+        {
+            <div class="ie-row"><MudSwitch T="bool" @bind-Value="_f.Hide_On_Invoice" Color="Color.Primary" Label="@Tr("IT_HideOnInvoice")" /></div>
+        }
+        <div class="ie-note">
+            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Style="vertical-align:middle" /> @Tr("IT_SpecsHelp")
+            <MudLink Href="@(EffectiveProfile == "cars" && _lk!.Car_Types.Count == 0 ? "/items/lookups/car-types" : "/items/lookups/types")" Class="ms-1">@Tr("IT_ManageLists")</MudLink>
+        </div>
+    </section>
+    }
+
     @* ===== الفاتورة الإلكترونية ===== *@
     <section class="inv-card ie-gap" aria-labelledby="ie-einv">
         <h2 class="inv-card-title" id="ie-einv"><MudIcon Icon="@Icons.Material.Filled.ReceiptLong" />@Tr("IT_EInvoice")
@@ -349,13 +417,25 @@
     private string EffectiveProfile => _routeProfile.Length > 0 && _f.Item_Or_Service != 2 ? _routeProfile
         : ResolveProfile(_lk?.Categories.FirstOrDefault(c => c.Id == _f.Category_Id)?.Profile, _f.Item_Or_Service);
     private bool Pharm => IsPharmacy(EffectiveProfile);
-    private string NewTitleKey => _f.Item_Or_Service == 2 ? "IT_NewService" : Pharm ? "IT_NewMedicine" : "IT_NewItem";
+    private bool Specs => EffectiveProfile is "cars" or "ceramics" or "glass";
+    private string SpecIcon => EffectiveProfile switch { "cars" => Icons.Material.Filled.CarRepair, "glass" => Icons.Material.Filled.Window, _ => Icons.Material.Filled.GridOn };
+    private string GlassName => SuggestGlassName(_f.Thickness, _f.Thickness_Unit, SpecName("types", _f.Type_Id), _f.Width, _f.Height);
+    private string SpecName(string kind, long id) => id == 0 ? "" : _lk?.Specs.GetValueOrDefault(kind)?.FirstOrDefault(o => o.Id == id)?.Name ?? "";
+
+    /// <summary>قائمة مواصفة من جدول مرجعى (فارغ = بدون).</summary>
+    private RenderFragment SpecSelect(string kind, string labelKey, long value, Action<long> set) =>
+        @<MudSelect T="long" Value="value" ValueChanged="@((long v) => set(v))" Label="@Tr(labelKey)" Variant="Variant.Outlined" Clearable="true"
+                    ToStringFunc="@(id => SpecName(kind, id))">
+            @foreach (var o in _lk!.Specs.GetValueOrDefault(kind) ?? new()) { <MudSelectItem T="long" Value="o.Id">@o.Name</MudSelectItem> }
+        </MudSelect>;
+    private string NewTitleKey => _f.Item_Or_Service == 2 ? "IT_NewService" : Pharm ? "IT_NewMedicine" : EffectiveProfile == "cars" ? "IT_NewCarPart" : "IT_NewItem";
     private int RetailParts => Unit?.Retail_Parts ?? 1;
     private decimal SuggestedRetail => RetailParts > 1 ? Math.Round(_f.Sale_Price_Large / RetailParts, 4) : 0;
     private string Prefix => _routeProfile.Length > 0 ? $"/items/p/{_routeProfile}" : "/items";
     private string ListHref => _routeProfile.Length > 0 ? Prefix : $"/items{(_f.Item_Or_Service == 2 ? "?kind=services" : "")}";
 
-    private static string ProfileKey(string p) => p switch { "pharmacy" or "pharmacy-retail" => "IC_ProfilePharmacy", "services" => "IC_Services", _ => "IC_ProfileGeneral" };
+    private static string ProfileKey(string p) => p switch { "pharmacy" or "pharmacy-retail" => "IC_ProfilePharmacy", "services" => "IC_Services",
+        "cars" => "IC_ProfileCars", "ceramics" => "IC_ProfileCeramics", "glass" => "IC_ProfileGlass", _ => "IC_ProfileGeneral" };
 
     private static (string, Color) ExpiryState(DateTime? d)
     {
@@ -399,7 +479,9 @@
             Is_Retail = _routeProfile == "pharmacy-retail",
         };
         // ملف أدوية ثابت: الفئة الافتراضية الأولى ذات ملف أدوية إن وُجدت
-        if (IsPharmacy(_routeProfile) && _lk.Categories.FirstOrDefault(c => c.Profile == "pharmacy") is { } pc) _f.Category_Id = pc.Id;
+        string catProfile = IsPharmacy(_routeProfile) ? "pharmacy" : _routeProfile;
+        if (catProfile is "pharmacy" or "cars" or "ceramics" or "glass" && _lk.Categories.FirstOrDefault(c => c.Profile == catProfile) is { } pc) _f.Category_Id = pc.Id;
+        if (_routeProfile == "glass") _f.Thickness_Unit = "مم";
     }
 
     private void OnRetailChanged(bool v)

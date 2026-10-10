@@ -34,6 +34,7 @@ namespace AccountModelsLib
             new("degrees",      "Items_TypesDegreeFarz_Name",      "Id", "Type_Name",        null,       false, true,  "Items_TypesDegreeFarz_NameId",       "Items_TypesDegreeFarz_Name"),
             new("natures",      "Items_Nature",                    "Id", "ItemsNature_Name", "IsActive", true,  true,  "Items_NaturesId",                    null),
             new("groups",       "Items_Group",                     "Id", "Name",             null,       true,  false, "Items_GroupsId",                     null),
+            new("car-types",    "Lookup_CarType",                  "Id", "Name",             null,       true,  false, "Lookup_CarTypeId",                   null),
         };
 
         public static LookupDef Get(string kind) =>
@@ -64,7 +65,7 @@ FROM [{d.Table}] l WHERE ({{0}} = N'' OR l.[{d.NameCol}] LIKE {{1}}) ORDER BY l.
         {
             var d = Get(kind);
             string n = Clean(name);
-            return Run(opp =>
+            return RunTx(opp =>
             {
                 EnsureUnique(opp, d, n, 0);
                 DateTime now = DateTime.Now;
@@ -75,7 +76,9 @@ FROM [{d.Table}] l WHERE ({{0}} = N'' OR l.[{d.NameCol}] LIKE {{1}}) ORDER BY l.
                     string sql = $"INSERT INTO [{d.Table}] ({cols}{(d.ActiveCol != null ? $", [{d.ActiveCol}]" : "")}) OUTPUT CAST(INSERTED.[{d.IdCol}] AS bigint) AS Value VALUES ({vals}{(d.ActiveCol != null ? ", 1" : "")})";
                     return opp.db.Database.SqlQuery<long>(FormattableStringFactory.Create(sql, n, now.Date, Common.User_Id, Common.Branch_Id, now)).AsEnumerable().First();
                 }
-                long id = CallSnowflakeIdGenerate.GenerateNewId();
+                // MAX + 1 لا Snowflake: أعمدة الربط فى Item من نوع int (Items_Types_Name_Id ...)، فالمعرّف الكبير لا يمكن ربطه بصنف.
+                long id = opp.db.Database.SqlQuery<long>(FormattableStringFactory.Create(
+                    $"SELECT CAST(ISNULL(MAX([{d.IdCol}]), 0) + 1 AS bigint) AS Value FROM [{d.Table}] WITH (UPDLOCK, HOLDLOCK)")).AsEnumerable().First();
                 string sql2 = $@"INSERT INTO [{d.Table}] ([{d.IdCol}], [{d.NameCol}]{(d.Audit ? ", OperationDate, User_Id, Branch_Id, Insert_ServerDateTime" : "")}{(d.ActiveCol != null ? $", [{d.ActiveCol}]" : "")})
 VALUES ({{0}}, {{1}}{(d.Audit ? ", {2}, {3}, {4}, {5}" : "")}{(d.ActiveCol != null ? ", 1" : "")})";
                 opp.db.Database.ExecuteSql(FormattableStringFactory.Create(sql2, id, n, now.Date, Common.User_Id, Common.Branch_Id, now));

@@ -164,6 +164,9 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             // خطة 04 م3: ملف الأدوية (القائمة، الإضافة، أصناف التجزئة)
             ("menuItemItemsListSpecAdwia", "/items/p/pharmacy"), ("toolStripMenuItemMitems_List_PH_R", "/items/p/pharmacy/new"),
             ("toolStripMenuItemItemsListAdwiaRetail", "/items/p/pharmacy-retail"),
+            // خطة 04 م4: ملفات السيارات والسيراميك (عنصر الزجاج menuItemItemsListSpecGlass بلا صف فى SysConfigMenus)
+            ("menuItemItemsListSpecCars", "/items/p/cars"), ("ToolStripMenuItemItemsForCars", "/items/p/cars"),
+            ("menuItemItemsListSpecSeramek", "/items/p/ceramics"),
             // قائمة وبحث الأذون (المرحلة 4) بدل Order_detailes لكل نوع، وقائمة كل الأذون.
             // ملاحظة: القائمة القديمة تفتح «مرتجع صرف قطع الغيار» (879) على 1022 وعنصر «صرف إلى موظف» (881) بلا شاشة؛ هنا كلٌّ لنوعه الصحيح.
             ("menuItemOrdersList", "/store/orders"),

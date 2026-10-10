@@ -17,15 +17,22 @@ namespace AccountModelsLib
     /// - الصلاحيات 916 (إضافة) و917 (تعديل) كما فى ItemCLS.
     /// المرحلة 3: ملف النشاط من الفئة (Item_Category.Item_Profile) أو ثابت من المسار؛ قسم الأدوية (الاسم العلمى، التخزين، الرف، البيع بالتجزئة)
     /// وقسم الفاتورة الإلكترونية (نوع وكود الصنف فى البوابة، كود الوحدة، بلد المنشأ) وعرض التشغيلات والصلاحيات (Unit_Item_ExpireDate) للقراءة فقط.
+    /// المرحلة 4: ملفات قطع غيار السيارات (رقم القطعة، نوع السيارة، المواصفات) والسيراميك (النوع/المصنع/المقاس/اللون/الفرز/الأبعاد)
+    /// والزجاج (النوع والسُمك والعرض والطول، مع الاسم المركّب كالقديم). الأسماء المنسوخة فى Item تُملأ من الجداول المرجعية عند الحفظ.
     /// </summary>
     public class ItemEditorService
     {
         public const int PermissionAdd = 916, PermissionEdit = 917;
 
         /// <summary>قيم Item_Category.Item_Profile المسموحة (فارغ = عام). الخدمات تُعرف من Is_ItemOrService لا من الملف.</summary>
-        public static readonly string[] CategoryProfiles = { "general", "pharmacy" };
+        public static readonly string[] CategoryProfiles = { "general", "pharmacy", "cars", "ceramics", "glass" };
         /// <summary>ملفات المسار /items/p/{profile}.</summary>
-        public static readonly string[] RouteProfiles = { "general", "services", "pharmacy", "pharmacy-retail" };
+        public static readonly string[] RouteProfiles = { "general", "services", "pharmacy", "pharmacy-retail", "cars", "ceramics", "glass" };
+        /// <summary>ملفات تُصفّى قوائمها بملف الفئة (أو كل الأصناف إن لم تُحدَّد فئة بهذا الملف بعد).</summary>
+        private static readonly string[] CategoryFilteredProfiles = { "pharmacy", "cars", "ceramics", "glass" };
+
+        /// <summary>جداول المواصفات المرجعية (نفس تعريفات ItemLookupService) وأعمدة الاسم المنسوخ فى Item.</summary>
+        public static readonly string[] SpecKinds = { "types", "factories", "sizes", "colors", "degrees", "descriptions", "other-names" };
 
         /// <summary>ملف النشاط الفعلى للصنف: الخدمة «services»، وإلا ملف الفئة أو «general».</summary>
         public static string ResolveProfile(string categoryProfile, int itemOrService) =>
@@ -95,6 +102,22 @@ namespace AccountModelsLib
             public string Tax_Item_Code { get; set; }
             public string Tax_Unit_Code { get; set; }
             public string Country_Of_Origin { get; set; }
+            // المواصفات (سيراميك/زجاج/سيارات)
+            public long Type_Id { get; set; }
+            public long Factory_Id { get; set; }
+            public long Size_Id { get; set; }
+            public long Color_Id { get; set; }
+            public long Degree_Id { get; set; }
+            public long Description_Id { get; set; }
+            public long Other_Description_Id { get; set; }
+            public decimal Width { get; set; }
+            public decimal Height { get; set; }
+            public decimal Thickness { get; set; }
+            public string Thickness_Unit { get; set; }
+            // قطع غيار السيارات
+            public string Factory_Code { get; set; }
+            public long Car_Type_Id { get; set; }
+            public bool Hide_On_Invoice { get; set; }
         }
 
         public class BatchRow
@@ -168,6 +191,9 @@ namespace AccountModelsLib
             public string Period_Name { get; set; }
             /// <summary>النظام يتتبع الصلاحية/التشغيلة (Is_Item_Expire_Date_WithBalance أو إظهارها فى الفاتورة).</summary>
             public bool Expiry_Tracked { get; set; }
+            /// <summary>قيم المواصفات لكل نوع فى SpecKinds.</summary>
+            public Dictionary<string, List<Option>> Specs { get; set; } = new();
+            public List<Option> Car_Types { get; set; } = new();
         }
 
         public class ListRow
@@ -187,6 +213,8 @@ namespace AccountModelsLib
             public string Scientific_Name { get; set; }
             public bool Is_Retail { get; set; }
             public decimal Retail_Price { get; set; }
+            /// <summary>ملخص المواصفات حسب ملف القائمة (رقم القطعة ونوع السيارة، أو المقاس/اللون/الفرز، أو السُمك والأبعاد).</summary>
+            public string Spec_Text { get; set; }
         }
 
         public class ListFilter
@@ -224,6 +252,14 @@ WHERE Active = 1 AND ISNULL(IS_ItemSecond_degree, 0) = 0 ORDER BY IS_Default_Sto
             l.Default_Category_Item = opp.db.Database.SqlQuery<long>($"SELECT TOP 1 ID AS Value FROM Item_Category WHERE Is_Default = 1 AND Is_ItemOrService = 1 AND ISNULL(IS_Active, 1) = 1").AsEnumerable().FirstOrDefault();
             l.Default_Category_Service = opp.db.Database.SqlQuery<long>($"SELECT TOP 1 ID AS Value FROM Item_Category WHERE Is_Default = 1 AND Is_ItemOrService = 2 AND ISNULL(IS_Active, 1) = 1").AsEnumerable().FirstOrDefault();
             l.Period_Name = GetCurrentPeriod(opp)?.Label;
+            foreach (string k in SpecKinds)
+            {
+                var d = ItemLookupService.Get(k);
+                l.Specs[k] = opp.db.Database.SqlQuery<Option>(System.Runtime.CompilerServices.FormattableStringFactory.Create(
+                    $"SELECT CAST([{d.IdCol}] AS bigint) AS Id, ISNULL([{d.NameCol}], N'') AS Name FROM [{d.Table}] WHERE ISNULL([{d.NameCol}], N'') <> N''"
+                    + (d.ActiveCol != null ? $" AND ISNULL([{d.ActiveCol}], 1) = 1" : "") + $" ORDER BY [{d.NameCol}]")).ToList();
+            }
+            l.Car_Types = opp.db.Database.SqlQuery<Option>($"SELECT Id, ISNULL(Name, N'') AS Name FROM Lookup_CarType ORDER BY Name").ToList();
             return l;
         });
 
@@ -241,14 +277,22 @@ SELECT TOP ({top}) i.id AS Id, ISNULL(i.code, N'') AS Code, ISNULL(i.Item_Name, 
        ISNULL(i.Is_ItemOrService, 1) AS Item_Or_Service, CAST(CASE WHEN i.Is_ItemWithoutBalance = 1 THEN 1 ELSE 0 END AS bit) AS Without_Balance,
        CAST(CASE WHEN ISNULL(i.Active_flage, 1) = -1 OR i.Active_flage = 0 THEN 0 ELSE 1 END AS bit) AS Is_Active,
        ISNULL(i.ScientificName, N'') AS Scientific_Name, CAST(CASE WHEN i.IsRetailItem = 1 THEN 1 ELSE 0 END AS bit) AS Is_Retail,
-       CAST(ISNULL(i.RetailPrice, 0) AS decimal(18,4)) AS Retail_Price
+       CAST(ISNULL(i.RetailPrice, 0) AS decimal(18,4)) AS Retail_Price,
+       CASE {prof}
+         WHEN N'cars' THEN LTRIM(ISNULL(i.FactoryCode, N'') + ISNULL(N' · ' + ct.Name, N''))
+         WHEN N'ceramics' THEN LTRIM(ISNULL(NULLIF(i.Items_TypesSize_Name, N''), N'') + ISNULL(N' · ' + NULLIF(i.Items_TypesColor_Name, N''), N'') + ISNULL(N' · ' + NULLIF(i.Items_TypesDegreeFarz_Name, N''), N''))
+         WHEN N'glass' THEN LTRIM(ISNULL(i.Items_Name_Somk_Str, N'') + N' ' + ISNULL(i.Height_Width_Str, N''))
+         ELSE N'' END AS Spec_Text
 FROM Item i
+LEFT JOIN Lookup_CarType ct ON ct.Id = i.Lookup_CarTypeId
 LEFT JOIN Item_Category c ON c.ID = i.Item_Category_ID
 LEFT JOIN unit u ON u.id = i.Unit_Id
 WHERE ({t} = N'' OR i.Item_Name LIKE {like} OR i.code = {t} OR i.AnotherName LIKE {like} OR i.BarCode2 = {t} OR i.BarCode3 = {t}
-       OR i.ScientificName LIKE {like} OR EXISTS (SELECT 1 FROM Unit_item b WHERE b.Item_id = i.id AND b.Code = {t}))
+       OR i.ScientificName LIKE {like} OR i.FactoryCode = {t} OR EXISTS (SELECT 1 FROM Unit_item b WHERE b.Item_id = i.id AND b.Code = {t}))
   AND ({f.Category_Id} = 0 OR i.Item_Category_ID = {f.Category_Id})
-  AND ({prof} NOT IN (N'pharmacy', N'pharmacy-retail') OR ({prof} = N'pharmacy' AND (c.Item_Profile = N'pharmacy' OR NOT EXISTS (SELECT 1 FROM Item_Category pc WHERE pc.Item_Profile = N'pharmacy'))) OR ({prof} = N'pharmacy-retail' AND i.IsRetailItem = 1))
+  AND ({prof} NOT IN (N'pharmacy', N'pharmacy-retail', N'cars', N'ceramics', N'glass')
+       OR ({prof} = N'pharmacy-retail' AND i.IsRetailItem = 1)
+       OR ({prof} IN (N'pharmacy', N'cars', N'ceramics', N'glass') AND (c.Item_Profile = {prof} OR NOT EXISTS (SELECT 1 FROM Item_Category pc WHERE pc.Item_Profile = {prof}))))
   AND ({f.Kind} = 0 OR ({f.Kind} = 2 AND (i.Is_ItemOrService = 2 OR i.Is_ItemWithoutBalance = 1)) OR ({f.Kind} = 1 AND ISNULL(i.Is_ItemOrService, 1) <> 2 AND ISNULL(i.Is_ItemWithoutBalance, 0) = 0))
   AND ({f.Active} = -1 OR ({f.Active} = 1 AND ISNULL(i.Active_flage, 1) NOT IN (0, -1)) OR ({f.Active} = 0 AND i.Active_flage IN (0, -1)))
 ORDER BY i.Item_Name").ToList());
@@ -273,6 +317,11 @@ ORDER BY i.Item_Name").ToList());
                     Storage_Temp = i.StorageTempratureDegree, Block_No = i.BlockNo ?? 0, Shelf_No = i.shelfNo ?? 0, Order_On_Shelf = i.OrderOnshelfNo ?? 0,
                     Is_Print_Barcode = i.IsPrintBarCode != 0, Is_Stop_Buying = i.IsStopBuying == 1, Is_Retail = i.IsRetailItem == 1, Retail_Price = i.RetailPrice ?? 0,
                     Tax_Code_Type = i.ItemCodeType, Tax_Item_Code = i.ItemCode, Tax_Unit_Code = i.UnitCodeTax, Country_Of_Origin = i.CountryOfOrigin,
+                    Type_Id = i.Items_Types_Name_Id ?? 0, Factory_Id = i.Items_TypesFactory_NameId ?? 0, Size_Id = i.Items_TypesSize_NameId ?? 0,
+                    Color_Id = i.Items_TypesColor_NameId ?? 0, Degree_Id = i.Items_TypesDegreeFarz_NameId ?? 0,
+                    Description_Id = i.Items_TypesDescription_NameId ?? 0, Other_Description_Id = i.Items_TypesDescriptionNameOtherId ?? 0,
+                    Width = i.Width_ ?? 0, Height = i.Height_ ?? 0, Thickness = i.Somk ?? 0, Thickness_Unit = i.Somk_Unit,
+                    Factory_Code = i.FactoryCode, Car_Type_Id = i.Lookup_CarTypeId ?? 0, Hide_On_Invoice = i.Is_NotShowOnInvoice == 1,
                 },
                 Tax_Uploaded = i.Is_UploadToTaxPortal == 1,
             };
@@ -356,7 +405,55 @@ WHERE ui.Item_id = {itemId} ORDER BY s.Store_Name").ToList();
                 throw new InvalidOperationException("كود الوحدة فى البوابة حروف وأرقام إنجليزية حتى 10 خانات (مثل EA، BOX، KGM).");
             if (f.Country_Of_Origin != null && (f.Country_Of_Origin.Length != 2 || !f.Country_Of_Origin.All(char.IsAsciiLetter)))
                 throw new InvalidOperationException("بلد المنشأ كود من حرفين (مثل EG).");
+
+            // المواصفات وقطع الغيار
+            if (f.Width < 0 || f.Height < 0 || f.Thickness < 0) throw new InvalidOperationException("الأبعاد لا تقبل قيماً سالبة.");
+            f.Thickness_Unit = string.IsNullOrWhiteSpace(f.Thickness_Unit) ? null : f.Thickness_Unit.Trim();
+            if (f.Thickness_Unit?.Length > 20) throw new InvalidOperationException("وحدة السُمك طويلة جداً.");
+            f.Factory_Code = string.IsNullOrWhiteSpace(f.Factory_Code) ? null : f.Factory_Code.Trim();
+            if (f.Factory_Code?.Length > 100) throw new InvalidOperationException("رقم القطعة طويل جداً.");
         }
+
+        /// <summary>
+        /// يكتب معرّفات المواصفات ونسخ أسمائها فى Item (الشاشات القديمة والتقارير تقرأ الاسم المنسوخ)، ونوع السيارة،
+        /// والاسمين المركّبين للزجاج/السيراميك كالقديم: Height_Width_Str = «العرض/الطول»، Items_Name_Somk_Str = «السُمك+الوحدة النوع».
+        /// </summary>
+        private static void ApplySpecs(operations opp, Items im, ItemForm f)
+        {
+            string Name(string kind, long id)
+            {
+                if (id == 0) return null;
+                var d = ItemLookupService.Get(kind);
+                return opp.db.Database.SqlQuery<string>(System.Runtime.CompilerServices.FormattableStringFactory.Create(
+                    $"SELECT ISNULL([{d.NameCol}], N'') AS Value FROM [{d.Table}] WHERE [{d.IdCol}] = {{0}}", id)).AsEnumerable().FirstOrDefault()
+                    ?? throw new InvalidOperationException("قيمة مواصفة غير موجودة؛ أعد تحميل الصفحة.");
+            }
+            static int Id(long v) => checked((int)v);
+            string type = Name("types", f.Type_Id);
+            im.Items_Types_Name_Id = Id(f.Type_Id); im.Items_Types_Name = type;
+            im.Items_TypesFactory_NameId = Id(f.Factory_Id); im.Items_TypesFactory_Name = Name("factories", f.Factory_Id);
+            im.Items_TypesSize_NameId = Id(f.Size_Id); im.Items_TypesSize_Name = Name("sizes", f.Size_Id);
+            im.Items_TypesColor_NameId = Id(f.Color_Id); im.Items_TypesColor_Name = Name("colors", f.Color_Id);
+            im.Items_TypesDegreeFarz_NameId = Id(f.Degree_Id); im.Items_TypesDegreeFarz_Name = Name("degrees", f.Degree_Id);
+            im.Items_TypesDescription_NameId = Id(f.Description_Id); im.Items_TypesDescription_Name = Name("descriptions", f.Description_Id);
+            im.Items_TypesDescriptionNameOtherId = Id(f.Other_Description_Id); im.Items_TypesDescriptionNameOther = Name("other-names", f.Other_Description_Id);
+            if (f.Car_Type_Id != 0 && opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM Lookup_CarType WHERE Id = {f.Car_Type_Id}").AsEnumerable().First() == 0)
+                throw new InvalidOperationException("نوع السيارة غير موجود.");
+            im.Lookup_CarTypeId = f.Car_Type_Id;
+            im.FactoryCode = f.Factory_Code;
+            im.Is_NotShowOnInvoice = f.Hide_On_Invoice ? 1 : 0;
+            im.Width_ = f.Width; im.Height_ = f.Height; im.Somk = f.Thickness; im.Somk_Unit = f.Thickness_Unit;
+            bool dims = f.Width > 0 || f.Height > 0 || f.Thickness > 0;
+            im.Height_Width_Str = dims ? $"{Num(f.Width)}/{Num(f.Height)}" : null;
+            im.Items_Name_Somk_Str = dims ? $"{Num(f.Thickness)}{f.Thickness_Unit} {type}".Trim() : null;
+        }
+
+        /// <summary>الاسم المقترح للزجاج كالقديم: «السُمك+الوحدة النوع العرض/الطول».</summary>
+        public static string SuggestGlassName(decimal thickness, string unit, string type, decimal width, decimal height) =>
+            thickness <= 0 && width <= 0 && height <= 0 && string.IsNullOrWhiteSpace(type) ? "" :
+            $"{(thickness > 0 ? Num(thickness) : "")}{unit} {type} {(width > 0 ? Num(width) : "")}/{(height > 0 ? Num(height) : "")}".Trim();
+
+        private static string Num(decimal v) => v == 0 ? "" : v.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture);
 
         /// <summary>البيع بالتجزئة يحتاج وحدة بأجزاء تجزئة أكثر من 1؛ سعر التجزئة المقترح = سعر الكبرى ÷ الأجزاء.</summary>
         private static void CheckRetail(ItemForm f, UnitOption unit)
@@ -388,6 +485,7 @@ WHERE TRY_CAST(code AS bigint) >= 1000").AsEnumerable().First().ToString();
             DateTime now = DateTime.Now;
             var im = new Items();
             Apply(im, f, unit);
+            ApplySpecs(opp, im, f);
             im.code = code;
             im.InternalCode = long.TryParse(code, out var ic) ? ic : 0;
             im.S_id = f.Store_Id;
@@ -443,6 +541,7 @@ WHERE TRY_CAST(code AS bigint) >= 1000").AsEnumerable().First().ToString();
             EnsureUniqueBarcodes(opp, f, f.Id);
 
             Apply(im, f, unit);
+            ApplySpecs(opp, im, f);
             im.code = code;
             if (long.TryParse(code, out var ic)) im.InternalCode = ic;
             im.Edit_User_Id = Common.User_Id;

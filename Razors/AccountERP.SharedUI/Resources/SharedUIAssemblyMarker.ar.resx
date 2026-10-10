@@ -2814,4 +2814,33 @@
   <data name="IC_ProfileGeneral" xml:space="preserve"><value>عام</value></data>
   <data name="IC_ProfilePharmacy" xml:space="preserve"><value>أدوية</value></data>
   <data name="IC_ProfileHelp" xml:space="preserve"><value>يحدد أقسام شاشة الصنف لأصناف هذه الفئة</value></data>
+  <data name="IT_Specs" xml:space="preserve"><value>المواصفات</value></data>
+  <data name="IT_CarPart" xml:space="preserve"><value>بيانات قطعة الغيار</value></data>
+  <data name="IT_FactoryCode" xml:space="preserve"><value>رقم القطعة (كود المصنع)</value></data>
+  <data name="IT_CarType" xml:space="preserve"><value>نوع السيارة</value></data>
+  <data name="IT_NoCarTypes" xml:space="preserve"><value>لا توجد أنواع سيارات بعد</value></data>
+  <data name="IT_HideOnInvoice" xml:space="preserve"><value>لا يظهر فى طباعة الفاتورة</value></data>
+  <data name="IT_SpecType" xml:space="preserve"><value>النوع</value></data>
+  <data name="IT_SpecFactory" xml:space="preserve"><value>المصنع</value></data>
+  <data name="IT_SpecSize" xml:space="preserve"><value>المقاس</value></data>
+  <data name="IT_SpecColor" xml:space="preserve"><value>اللون</value></data>
+  <data name="IT_SpecDegree" xml:space="preserve"><value>الفرز / الدرجة</value></data>
+  <data name="IT_SpecDesc" xml:space="preserve"><value>الوصف</value></data>
+  <data name="IT_SpecOther" xml:space="preserve"><value>وصف آخر</value></data>
+  <data name="IT_Dimensions" xml:space="preserve"><value>الأبعاد</value></data>
+  <data name="IT_Width" xml:space="preserve"><value>العرض</value></data>
+  <data name="IT_Height" xml:space="preserve"><value>الطول</value></data>
+  <data name="IT_Thickness" xml:space="preserve"><value>السُمك</value></data>
+  <data name="IT_ThicknessUnit" xml:space="preserve"><value>الوحدة</value></data>
+  <data name="IT_SuggestName" xml:space="preserve"><value>استخدمه كاسم للصنف</value></data>
+  <data name="IT_SpecsHelp" xml:space="preserve"><value>القيم تُضاف وتُعدَّل من القوائم المرجعية.</value></data>
+  <data name="IT_ManageLists" xml:space="preserve"><value>إدارة القوائم</value></data>
+  <data name="IT_ListCars" xml:space="preserve"><value>قطع غيار السيارات</value></data>
+  <data name="IT_ListCeramics" xml:space="preserve"><value>الأصناف ومواصفاتها</value></data>
+  <data name="IT_ListGlass" xml:space="preserve"><value>أصناف بالمقاس (زجاج)</value></data>
+  <data name="IT_NewCarPart" xml:space="preserve"><value>قطعة غيار جديدة</value></data>
+  <data name="IC_ProfileCars" xml:space="preserve"><value>قطع غيار سيارات</value></data>
+  <data name="IC_ProfileCeramics" xml:space="preserve"><value>سيراميك / مواصفات</value></data>
+  <data name="IC_ProfileGlass" xml:space="preserve"><value>زجاج / بالمقاس</value></data>
+  <data name="IL_car-types" xml:space="preserve"><value>أنواع السيارات</value></data>
 </root>

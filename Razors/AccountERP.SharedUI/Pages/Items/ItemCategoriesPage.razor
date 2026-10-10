@@ -110,9 +110,9 @@
                         @for (int i = 0; i < ItemUnitCategoryService.CategoryTypes.Length; i++) { var k = i; <MudSelectItem T="int" Value="k">@TypeName(k)</MudSelectItem> }
                     </MudSelect>
                     <MudSelect T="string" @bind-Value="_cat.Profile" Label="@Tr("IC_Profile")" Variant="Variant.Outlined" HelperText="@Tr("IC_ProfileHelp")"
-                               Disabled="@(_cat.Item_Or_Service == 2)" ToStringFunc="@(v => Tr(v == "pharmacy" ? "IC_ProfilePharmacy" : "IC_ProfileGeneral"))">
+                               Disabled="@(_cat.Item_Or_Service == 2)" ToStringFunc="@(v => Tr(ProfileKey(v)))">
                         <MudSelectItem T="string" Value="@("")">@Tr("IC_ProfileGeneral")</MudSelectItem>
-                        <MudSelectItem T="string" Value="@("pharmacy")">@Tr("IC_ProfilePharmacy")</MudSelectItem>
+                        @foreach (var pr in new[] { "pharmacy", "cars", "ceramics", "glass" }) { <MudSelectItem T="string" Value="@pr">@Tr(ProfileKey(pr))</MudSelectItem> }
                     </MudSelect>
                     <div class="switches">
                         <MudRadioGroup T="int" @bind-Value="_cat.Item_Or_Service" aria-label="@Tr("IC_Kind")">
@@ -154,7 +154,7 @@
                         @if (_selMain == 0) { <MudTd DataLabel="@Tr("IC_Main")">@context.Main_Name</MudTd> }
                         <MudTd DataLabel="@Tr("IC_Nature")">@TypeName(context.Type_Id)</MudTd>
                         <MudTd DataLabel="@Tr("IC_Kind")">@KindName(context.Item_Or_Service)
-                            @if (context.Profile == "pharmacy") { <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary" Icon="@Icons.Material.Filled.Medication" Class="ms-1">@Tr("IC_ProfilePharmacy")</MudChip> }
+                            @if (!string.IsNullOrEmpty(context.Profile)) { <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary" Class="ms-1">@Tr(ProfileKey(context.Profile))</MudChip> }
                         </MudTd>
                         <MudTd DataLabel="@Tr("ILUsed")" Style="text-align:end">
                             <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="@(context.Used_Count > 0 ? Color.Primary : Color.Default)">@context.Used_Count</MudChip>
@@ -225,6 +225,8 @@
     }
 
     private async Task OnSearchAsync(string? s) { _search = s; await LoadCatsAsync(); }
+
+    private static string ProfileKey(string? p) => p switch { "pharmacy" => "IC_ProfilePharmacy", "cars" => "IC_ProfileCars", "ceramics" => "IC_ProfileCeramics", "glass" => "IC_ProfileGlass", _ => "IC_ProfileGeneral" };
 
     private void NewCat() { _cat = new() { Is_Active = true, Item_Or_Service = 1, Type_Id = 1, Main_Id = _selMain, Profile = "" }; _error = null; }
 
