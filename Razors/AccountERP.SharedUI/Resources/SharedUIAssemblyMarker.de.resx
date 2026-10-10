@@ -2629,4 +2629,12 @@
   <data name="SNEstimate" xml:space="preserve"><value>Geschätzte Kosten</value></data>
   <data name="SNEmpty" xml:space="preserve"><value>Keine Artikel unter Meldebestand</value></data>
   <data name="SNEmptyHint" xml:space="preserve"><value>Der Meldebestand wird je Artikel in den Artikeldaten gepflegt</value></data>
+  <data name="SKTitle" xml:space="preserve"><value>Lagerartikel mit Nullbestand kopieren</value></data>
+  <data name="SKSub" xml:space="preserve"><value>Legt im Ziel die Artikel der Quelle an, die dort fehlen — mit Nullbestand, ohne Bewegung</value></data>
+  <data name="SKSource" xml:space="preserve"><value>Quelle</value></data>
+  <data name="SKDest" xml:space="preserve"><value>Ziel</value></data>
+  <data name="SKPreview" xml:space="preserve"><value>Hinzuzufügende Artikel:</value></data>
+  <data name="SKCopy" xml:space="preserve"><value>Artikel kopieren</value></data>
+  <data name="SKConfirm" xml:space="preserve"><value>{0} Zeile(n) mit Nullbestand werden im Ziel angelegt. Fortfahren?</value></data>
+  <data name="SKDone" xml:space="preserve"><value>{0} Artikel hinzugefügt</value></data>
 </root>

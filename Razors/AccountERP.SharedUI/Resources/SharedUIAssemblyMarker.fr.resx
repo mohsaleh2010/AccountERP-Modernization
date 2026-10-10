@@ -2629,4 +2629,12 @@
   <data name="SNEstimate" xml:space="preserve"><value>Coût estimé</value></data>
   <data name="SNEmpty" xml:space="preserve"><value>Aucun article sous le seuil</value></data>
   <data name="SNEmptyHint" xml:space="preserve"><value>Le seuil se règle par article dans la fiche article</value></data>
+  <data name="SKTitle" xml:space="preserve"><value>Copier les articles d'un magasin à solde nul</value></data>
+  <data name="SKSub" xml:space="preserve"><value>Crée dans la cible les articles de la source absents, à solde nul et sans mouvement</value></data>
+  <data name="SKSource" xml:space="preserve"><value>Source</value></data>
+  <data name="SKDest" xml:space="preserve"><value>Cible</value></data>
+  <data name="SKPreview" xml:space="preserve"><value>Articles à ajouter :</value></data>
+  <data name="SKCopy" xml:space="preserve"><value>Copier les articles</value></data>
+  <data name="SKConfirm" xml:space="preserve"><value>{0} ligne(s) à solde nul seront créées. Continuer ?</value></data>
+  <data name="SKDone" xml:space="preserve"><value>{0} article(s) ajouté(s)</value></data>
 </root>

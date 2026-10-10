@@ -2627,4 +2627,12 @@
   <data name="SNEstimate" xml:space="preserve"><value>Estimated cost</value></data>
   <data name="SNEmpty" xml:space="preserve"><value>No items below their reorder level</value></data>
   <data name="SNEmptyHint" xml:space="preserve"><value>The reorder level is set per item in the item data</value></data>
+  <data name="SKTitle" xml:space="preserve"><value>Copy store items with zero balance</value></data>
+  <data name="SKSub" xml:space="preserve"><value>Creates in the target the items that exist in the source but not in the target, with zero balance and no stock movement</value></data>
+  <data name="SKSource" xml:space="preserve"><value>Source</value></data>
+  <data name="SKDest" xml:space="preserve"><value>Target</value></data>
+  <data name="SKPreview" xml:space="preserve"><value>Items to add:</value></data>
+  <data name="SKCopy" xml:space="preserve"><value>Copy items</value></data>
+  <data name="SKConfirm" xml:space="preserve"><value>{0} zero-balance line(s) will be created in the target. Continue?</value></data>
+  <data name="SKDone" xml:space="preserve"><value>{0} item(s) added</value></data>
 </root>

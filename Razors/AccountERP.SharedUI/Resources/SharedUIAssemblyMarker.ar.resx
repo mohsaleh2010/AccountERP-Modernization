@@ -2627,4 +2627,12 @@
   <data name="SNEstimate" xml:space="preserve"><value>التكلفة التقديرية</value></data>
   <data name="SNEmpty" xml:space="preserve"><value>لا أصناف تحت حد الطلب</value></data>
   <data name="SNEmptyHint" xml:space="preserve"><value>يُضبط حد الطلب لكل صنف فى بيانات الصنف</value></data>
+  <data name="SKTitle" xml:space="preserve"><value>نسخ أصناف مخزن لآخر برصيد صفر</value></data>
+  <data name="SKSub" xml:space="preserve"><value>ينشئ فى المستلم الأصناف الموجودة فى المصدر وغير الموجودة فيه، برصيد صفر وبلا حركة مخزون</value></data>
+  <data name="SKSource" xml:space="preserve"><value>المصدر</value></data>
+  <data name="SKDest" xml:space="preserve"><value>المستلم</value></data>
+  <data name="SKPreview" xml:space="preserve"><value>أصناف ستُضاف:</value></data>
+  <data name="SKCopy" xml:space="preserve"><value>نسخ الأصناف</value></data>
+  <data name="SKConfirm" xml:space="preserve"><value>سيُنشأ {0} سطر برصيد صفر فى المستلم. متابعة؟</value></data>
+  <data name="SKDone" xml:space="preserve"><value>أُضيف {0} صنف</value></data>
 </root>

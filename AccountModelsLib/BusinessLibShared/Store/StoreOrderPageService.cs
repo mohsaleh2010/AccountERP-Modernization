@@ -256,6 +256,13 @@ ORDER BY d.Id").ToList();
         public long ReceiveTransfer(long shipmentId, DateTime date, IReadOnlyList<ReceiptLineInput> lines, string notes) =>
             RunTx(opp => new StoreOrderService(opp).ReceiveTransfer(shipmentId, date, lines, notes));
 
+        /// <summary>عدد الأصناف التى ستُنسخ (معاينة بلا تغيير).</summary>
+        public int PreviewCopyItems(int srcType, long srcId, int destType, long destId, long categoryId) =>
+            Run(opp => new StoreOrderService(opp).CopyItemsToStore(srcType, srcId, destType, destId, categoryId, previewOnly: true));
+
+        public int CopyItems(int srcType, long srcId, int destType, long destId, long categoryId) =>
+            RunTx(opp => new StoreOrderService(opp).CopyItemsToStore(srcType, srcId, destType, destId, categoryId));
+
         public void CloseTransferShortage(long shipmentId, string reason) =>
             RunTx(opp => { new StoreOrderService(opp).CloseTransferShortage(shipmentId, reason); return 0; });
 

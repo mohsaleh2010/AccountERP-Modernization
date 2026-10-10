@@ -1,0 +1,158 @@
+@* 🟢 خطة 03: «تحويل أصناف مخزن لآخر برصيد صفر» (بديل Add_ALLItemFromTo_Store_): ينشئ فى المخزن/القسم المستلم سطراً برصيد صفر
+   لكل صنف نشط فى المصدر غير موجود فيه، بلا حركة مخزون، مع معاينة العدد قبل التنفيذ. التصميم حسب ui-ux-pro-max. *@
+@page "/store/copy-items"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@implements IDisposable
+
+<PageTitle>@Tr("SKTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .sk-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .sk-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .sk-head .ico .mud-icon-root { font-size: 2rem; }
+    .sk-head .titles { flex: 1 1 260px; }
+    .sk-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .sk-gap { margin-top: 16px; }
+    .sk-pair { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: stretch; }
+    .sk-side { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); }
+    .sk-side .t { font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .sk-arrow { display: grid; place-items: center; }
+    .sk-arrow span { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--mud-palette-primary); color: var(--mud-palette-primary-text); }
+    .sk-result { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; padding: 14px 18px; border-radius: 12px;
+                 background: var(--mud-palette-background-gray); }
+    .sk-result b { font-size: 1.4rem; font-variant-numeric: tabular-nums; color: var(--mud-palette-primary); }
+    @@media (max-width: 899px) { .sk-pair { grid-template-columns: minmax(0, 1fr); } .sk-arrow span { transform: rotate(-90deg); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card sk-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.ContentCopy" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("SKTitle")</h1>
+            <div class="sub">@Tr("SKSub")</div>
+        </div>
+    </div>
+
+    <div class="inv-card sk-gap">
+        <div class="sk-pair">
+            <section class="sk-side" aria-label="@Tr("SKSource")">
+                <div class="t"><MudIcon Icon="@Icons.Material.Filled.Logout" Color="Color.Primary" Size="Size.Small" />@Tr("SKSource")</div>
+                <MudSelect T="int" Value="_srcType" ValueChanged="@(v => OnTypeAsync(true, v))" Label="@Tr("SOPartyType")" Variant="Variant.Outlined" ToStringFunc="@(v => Tr("SOParty_" + v))">
+                    <MudSelectItem T="int" Value="4">@Tr("SOParty_4")</MudSelectItem>
+                    <MudSelectItem T="int" Value="20">@Tr("SOParty_20")</MudSelectItem>
+                </MudSelect>
+                <MudSelect T="long" Value="_srcId" ValueChanged="@(v => OnStoreAsync(true, v))" Label="@Tr("SOParty_" + _srcType)" Variant="Variant.Outlined"
+                           ToStringFunc="@(v => _srcStores.FirstOrDefault(s => s.Id == v)?.Name ?? "")">
+                    @foreach (var s in _srcStores) { <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem> }
+                </MudSelect>
+            </section>
+            <div class="sk-arrow" aria-hidden="true"><span><MudIcon Icon="@(LangService.IsRtl ? Icons.Material.Filled.ArrowBack : Icons.Material.Filled.ArrowForward)" /></span></div>
+            <section class="sk-side" aria-label="@Tr("SKDest")">
+                <div class="t"><MudIcon Icon="@Icons.Material.Filled.Login" Color="Color.Primary" Size="Size.Small" />@Tr("SKDest")</div>
+                <MudSelect T="int" Value="_destType" ValueChanged="@(v => OnTypeAsync(false, v))" Label="@Tr("SOPartyType")" Variant="Variant.Outlined" ToStringFunc="@(v => Tr("SOParty_" + v))">
+                    <MudSelectItem T="int" Value="4">@Tr("SOParty_4")</MudSelectItem>
+                    <MudSelectItem T="int" Value="20">@Tr("SOParty_20")</MudSelectItem>
+                </MudSelect>
+                <MudSelect T="long" Value="_destId" ValueChanged="@(v => OnStoreAsync(false, v))" Label="@Tr("SOParty_" + _destType)" Variant="Variant.Outlined"
+                           ToStringFunc="@(v => _destStores.FirstOrDefault(s => s.Id == v)?.Name ?? "")">
+                    @foreach (var s in _destStores) { <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem> }
+                </MudSelect>
+            </section>
+        </div>
+        <MudSelect T="long" Value="_categoryId" ValueChanged="OnCategoryAsync" Label="@Tr("SBCategory")" Variant="Variant.Outlined" Class="sk-gap"
+                   ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _categories.FirstOrDefault(c => c.Id == v)?.Name ?? "")">
+            <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+            @foreach (var c in _categories) { <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem> }
+        </MudSelect>
+
+        <div class="sk-result" aria-live="polite">
+            <div>@Tr("SKPreview") <b>@(_preview?.ToString(CultureInfo.InvariantCulture) ?? "—")</b></div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" Disabled="@(_busy || _preview is null or 0)" OnClick="CopyAsync">@Tr("SKCopy")</MudButton>
+        </div>
+        @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Dense="true" Class="sk-gap" role="alert">@_error</MudAlert> }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private readonly StoreOrderPageService _svc = new();
+    private readonly StoreBalancesService _bal = new();
+    private List<StoreBalancesService.Option> _srcStores = new(), _destStores = new(), _categories = new();
+    private int _srcType = 4, _destType = 4;
+    private long _srcId, _destId, _categoryId;
+    private int? _preview;
+    private bool _busy;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            (_srcStores, _categories) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_bal.GetStores(4), _bal.GetCategories()); });
+            _destStores = _srcStores;
+            _srcId = _srcStores.FirstOrDefault()?.Id ?? 0;
+            _destId = _destStores.FirstOrDefault(s => s.Id != _srcId)?.Id ?? 0;
+            await PreviewAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task OnTypeAsync(bool src, int t)
+    {
+        var list = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _bal.GetStores(t); });
+        if (src) { _srcType = t; _srcStores = list; _srcId = list.FirstOrDefault()?.Id ?? 0; }
+        else { _destType = t; _destStores = list; _destId = list.FirstOrDefault()?.Id ?? 0; }
+        await PreviewAsync();
+    }
+    private async Task OnStoreAsync(bool src, long id) { if (src) _srcId = id; else _destId = id; await PreviewAsync(); }
+    private async Task OnCategoryAsync(long id) { _categoryId = id; await PreviewAsync(); }
+
+    private async Task PreviewAsync()
+    {
+        _error = null; _preview = null;
+        if (_srcId <= 0 || _destId <= 0) return;
+        int st = _srcType, dt = _destType; long s = _srcId, d = _destId, c = _categoryId;
+        try { _preview = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.PreviewCopyItems(st, s, dt, d, c); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private async Task CopyAsync()
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("SKTitle"), Tr("SKConfirm", _preview ?? 0), yesText: Tr("SKCopy"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null;
+        int st = _srcType, dt = _destType; long s = _srcId, d = _destId, c = _categoryId;
+        try
+        {
+            int n = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.CopyItems(st, s, dt, d, c); });
+            Snackbar.Add(Tr("SKDone", n), Severity.Success);
+            await PreviewAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

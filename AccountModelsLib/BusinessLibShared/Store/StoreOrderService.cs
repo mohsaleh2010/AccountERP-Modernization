@@ -584,6 +584,31 @@ FROM Order_Purshing WHERE Id = {orderId}").AsEnumerable().First();
         }
 
         /// <summary>سطر الصنف فى المخزن المستلم؛ يُنشأ برصيد صفر لو غير موجود (كـ Check_ItemFoundOnStore القديمة).</summary>
+        /// <summary>
+        /// «تحويل أصناف مخزن لآخر برصيد صفر» (بديل Add_ALLItemFromTo_Store_): ينشئ فى المخزن/القسم المستلم سطراً برصيد صفر لكل صنف نشط
+        /// فى المصدر غير موجود فيه (بنفس الوحدات والأسعار)، بلا أى حركة مخزون. categoryId = 0 لكل التصنيفات. يرجع عدد الأسطر المنشأة.
+        /// </summary>
+        public int CopyItemsToStore(int srcType, long srcStoreId, int destType, long destStoreId, long categoryId = 0, bool previewOnly = false)
+        {
+            if (srcStoreId == destStoreId && srcType == destType) throw new InvalidOperationException("المصدر والمستلم نفس المخزن.");
+            CheckBalanceParty(srcType, srcStoreId, "المخزن المصدر");
+            CheckBalanceParty(destType, destStoreId, "المخزن المستلم");
+            var missing = opp.db.Database.SqlQuery<long>($@"
+SELECT u.id AS Value FROM Unit_item u INNER JOIN Item i ON i.id = u.Item_id
+WHERE u.Store_id = {srcStoreId} AND ISNULL(u.Store_Type, 4) = {srcType}
+  AND ISNULL(i.Active_flage, 1) = 1 AND ISNULL(u.active_flage, 1) = 1
+  AND ({categoryId} = 0 OR i.Item_Category_ID = {categoryId})
+  AND NOT EXISTS (SELECT 1 FROM Unit_item d WHERE d.Item_id = u.Item_id AND d.Store_id = {destStoreId} AND ISNULL(d.Store_Type, 4) = {destType})").ToList();
+            if (previewOnly) return missing.Count;
+            foreach (var chunk in missing.Chunk(500))
+            {
+                var ids = chunk.ToList();
+                foreach (var src in opp.db.Unit_item.AsNoTracking().Where(u => ids.Contains(u.id)).ToList())
+                    FindOrCreateDestLine(src, destStoreId, destType);
+            }
+            return missing.Count;
+        }
+
         private Unit_item FindOrCreateDestLine(Unit_item src, long destStoreId, int destType)
         {
             var dest = opp.db.Unit_item.AsNoTracking().FirstOrDefault(u => u.Item_Id == src.Item_Id && u.Store_id == destStoreId

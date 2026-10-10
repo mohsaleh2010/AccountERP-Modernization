@@ -148,6 +148,7 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             // الاحتياجات (حد الطلب).
             ("menuItem86", "/store/needs"), ("menuItem87", "/store/needs"), ("menuItem88", "/store/needs"), ("menuItem89", "/store/needs"),
             ("toolStripMenuItemUponRequest", "/store/needs"), ("ToolStripMenuItemInvoiceUponRequest", "/store/needs"),
+            ("menuItemAddItemsToStore", "/store/copy-items"),
             // قائمة وبحث الأذون (المرحلة 4) بدل Order_detailes لكل نوع، وقائمة كل الأذون.
             // ملاحظة: القائمة القديمة تفتح «مرتجع صرف قطع الغيار» (879) على 1022 وعنصر «صرف إلى موظف» (881) بلا شاشة؛ هنا كلٌّ لنوعه الصحيح.
             ("menuItemOrdersList", "/store/orders"),
