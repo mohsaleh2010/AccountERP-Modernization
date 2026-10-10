@@ -174,8 +174,9 @@ FROM Store_Order_Type_Settings WHERE Order_Type = {orderType}").AsEnumerable().F
         // ============================== الترحيل ==============================
 
         /// <summary>
-        /// يرحّل مسودة: يعيد التحقق ثم يحرّك المخزون عبر المحرك. التحويل يحتاج transferMode؛ المرحلة 1 تنفذ «مباشر» فقط
-        /// (التحويل بتأكيد الاستلام وأذون 1016/1017 فى خطة 03 المرحلة 3).
+        /// يرحّل مسودة: يعيد التحقق ثم يحرّك المخزون عبر المحرك. التحويل (1001/1006) يحتاج transferMode
+        /// (تحددها الصفحة من StoreTransferPolicy): «مباشر» يحرك المخزنين معاً، و«بتأكيد استلام» يصرف من المرسل فقط
+        /// ويجعل الشحنة «فى الطريق» (Transfer_Status = 1) حتى تُستلم بـ ReceiveTransfer.
         /// </summary>
         public List<PostedLine> Post(long orderId, TransferMode? transferMode = null)
         {
@@ -195,11 +196,28 @@ FROM Store_Order_Type_Settings WHERE Order_Type = {orderType}").AsEnumerable().F
             if (settings.Is_Transfer)
             {
                 if (settings.Order_Type == (int)StoreOrderType.EstlamFromStore_16 || settings.Order_Type == (int)StoreOrderType.SarfToStore_17)
-                    throw new NotSupportedException("أذون الإستلام/الصرف بين المخازن (1016/1017) جزء من التحويل بتأكيد الاستلام — خطة 03 المرحلة 3.");
+                    throw new NotSupportedException("إذن الاستلام من المخزن (1016) يُنشأ من «استلام التحويل» على الشحنة، ولا يُصدر يدوياً.");
                 if (transferMode == null)
                     throw new InvalidOperationException("حدد طريقة التحويل (مباشر أو بتأكيد استلام).");
                 if (transferMode == TransferMode.WithReceiptConfirmation)
-                    throw new NotSupportedException("التحويل بتأكيد الاستلام يُبنى فى خطة 03 المرحلة 3.");
+                {
+                    // الخطوة الأولى: صرف من المرسل فقط؛ البضاعة «فى الطريق» بتكلفة الصرف المسجلة فى DPIE حتى الاستلام.
+                    for (int i = 0; i < lines.Count; i++)
+                    {
+                        var dp = lines[i];
+                        var src = stockLines[i];
+                        var outLine = engine.Post(doc, new[] { new MovementLine(src.id, -1, dp.qua ?? 0, dp.Part_qua ?? 0, dp.Item_No ?? 0, DetailId: dp.Id, Notes: dp.Notes) });
+                        if (outLine.Count == 0) continue;
+                        SetBalances(dp, outLine[0], (src.Small_unit ?? 0) <= 0 ? 1 : src.Small_unit.Value);
+                        result.AddRange(outLine);
+                    }
+                    opp.db.Database.ExecuteSqlInterpolated($"UPDATE Order_Purshing SET Transfer_Status = {(int)TransferStatus.InTransit} WHERE Id = {orderId}");
+                    opp.db.Database.ExecuteSqlInterpolated($@"UPDATE Order_Purshing SET Doc_Status = {(int)DocStatus.Posted},
+    Posted_Date = ISNULL(Posted_Date, {DateTime.Now}), Posted_By = ISNULL(Posted_By, {Common.User_Id}) WHERE Id = {orderId}");
+                    opp.db.SaveChanges();
+                    Log(1, header, "ترحيل شحنة تحويل (فى الطريق)");
+                    return result;
+                }
 
                 long destStoreId = settings.StoreIsFrom ? header.Id_To : header.Id_From;
                 int destType = (settings.StoreIsFrom ? header.Type_To : header.type_From) ?? PartyStore;
@@ -257,6 +275,10 @@ FROM Store_Order_Type_Settings WHERE Order_Type = {orderType}").AsEnumerable().F
             if (string.IsNullOrWhiteSpace(reason)) throw new InvalidOperationException("سبب العكس مطلوب.");
             var orig = opp.db.Order_Purshings.AsNoTracking().First(o => o.Id == orderId);
             DateTime now = DateTime.Now;
+            var link = GetTransferLink(orderId);
+            // شحنة لها استلام قائم: يُعكس الاستلام أولاً (لا يُعكس مستند بُنى عليه مستند آخر — م-03-3).
+            if (link.Status != null && ActiveReceiptsCount(orderId) > 0)
+                throw new InvalidOperationException("لهذه الشحنة أذون استلام قائمة؛ اعكس أذون الاستلام أولاً.");
 
             var rev = new Order_Purshing
             {
@@ -282,8 +304,193 @@ FROM Store_Order_Type_Settings WHERE Order_Type = {orderType}").AsEnumerable().F
                 TypeFrom: orig.type_From ?? 0, IdFrom: orig.Id_From, TypeTo: orig.Type_To ?? 0, IdTo: orig.Id_To);
             engine.Reverse(orderId, doc, reason);   // يتحقق أن الأصل مرحَّل، ويضع الحالتين والربط
 
+            // عكس إذن استلام تحويل: الشحنة تعود «فى الطريق» بما لم يُستلم (ويُلغى إغلاق العجز إن كان).
+            if (link.SourceOrderId is long shipmentId) RefreshTransferStatus(shipmentId, reopen: true);
+
             Log(3, orig, "عكس إذن: " + reason);
             return rev.Id;
+        }
+
+        // ============================== التحويل بخطوتين (خطة 03 المرحلة 3) ==============================
+
+        /// <summary>حالة الشحنة فى Order_Purshing.Transfer_Status (NULL = ليست شحنة بخطوتين).</summary>
+        public enum TransferStatus { InTransit = 1, PartiallyReceived = 2, Closed = 3 }
+
+        /// <summary>سطر استلام: سطر الشحنة والكمية المستلمة بوحدتى صنف المرسل.</summary>
+        public record ReceiptLineInput(long ShipmentDetailId, decimal QtyLarge, decimal QtySmall, string Notes = null);
+
+        /// <summary>تقدم سطر الشحنة بالوحدة الصغرى: المشحون (من الدفتر) والمستلم (أذون استلام قائمة) وتكلفة الوحدة الصغرى.</summary>
+        public class TransferLineProgress
+        {
+            public long Detail_Id { get; set; }
+            public long Unit_Item_Id { get; set; }
+            public decimal Factor { get; set; }
+            public decimal Shipped_Small { get; set; }
+            public decimal Received_Small { get; set; }
+            public decimal Unit_Cost_Small { get; set; }
+            public decimal Remaining_Small => Math.Max(0, Shipped_Small - Received_Small);
+        }
+
+        public List<TransferLineProgress> GetTransferProgress(long shipmentId) => opp.db.Database.SqlQuery<TransferLineProgress>($@"
+SELECT d.Id AS Detail_Id, d.Unit_item_Table_Id AS Unit_Item_Id,
+       CAST(CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END AS decimal(18,6)) AS Factor,
+       CAST(ISNULL((SELECT SUM(ABS(e.Qty_Small)) FROM Detailes_Purshing_Import_Export e
+                    WHERE e.OrderTable_id = d.OrderTable_id AND e.Detailes_Purshing_Id = d.Id AND e.Engine_Posted = 1 AND e.Qty_Small < 0), 0) AS decimal(18,4)) AS Shipped_Small,
+       CAST(ISNULL((SELECT SUM(ISNULL(rd.qua, 0) * CASE WHEN ISNULL(ru.Small_unit, 0) <= 0 THEN 1 ELSE ru.Small_unit END + ISNULL(rd.Part_qua, 0))
+                    FROM Order_Purshing r
+                    INNER JOIN Detailes_Purshing rd ON rd.OrderTable_id = r.Id AND rd.Source_Detail_Id = d.Id
+                    LEFT JOIN Unit_item ru ON ru.id = rd.Unit_item_Table_Id
+                    WHERE r.Source_Order_Id = d.OrderTable_id AND ISNULL(r.Doc_Status, 1) = 1), 0) AS decimal(18,4)) AS Received_Small,
+       CAST(ISNULL((SELECT TOP 1 e.Unit_Cost FROM Detailes_Purshing_Import_Export e
+                    WHERE e.OrderTable_id = d.OrderTable_id AND e.Detailes_Purshing_Id = d.Id AND e.Engine_Posted = 1 AND e.Qty_Small < 0), 0) AS decimal(18,6)) AS Unit_Cost_Small
+FROM Detailes_Purshing d
+LEFT JOIN Unit_item u ON u.id = d.Unit_item_Table_Id
+WHERE d.OrderTable_id = {shipmentId}
+ORDER BY d.Id").ToList();
+
+        /// <summary>
+        /// الخطوة الثانية: استلام الشحنة كلياً أو جزئياً بإذن «استلام من المخزن» (1016) مرحَّل ومرتبط بالشحنة وأسطرها.
+        /// الكمية لا تتجاوز الباقى؛ الوارد بتكلفة الصرف المسجلة ويحدّث متوسط فرع المستلم (لا يتغير داخل نفس الفرع).
+        /// سطر المستلم يُنشأ برصيد صفر لو غير موجود. يرجع معرّف إذن الاستلام.
+        /// </summary>
+        public long ReceiveTransfer(long shipmentId, DateTime date, IReadOnlyList<ReceiptLineInput> lines, string notes = null)
+        {
+            var ship = opp.db.Order_Purshings.AsNoTracking().First(o => o.Id == shipmentId);
+            var link = GetTransferLink(shipmentId);
+            if (GetStatus(shipmentId) != (int)DocStatus.Posted || link.Status is not ((int)TransferStatus.InTransit or (int)TransferStatus.PartiallyReceived))
+                throw new InvalidOperationException("هذا الإذن ليس شحنة تحويل بانتظار الاستلام.");
+            if (lines == null || lines.All(l => l.QtyLarge + l.QtySmall <= 0))
+                throw new InvalidOperationException("أدخل كمية مستلمة لصنف واحد على الأقل.");
+
+            var settings = GetSettings(ship.Order_Type ?? 0);
+            long destId = settings.StoreIsFrom ? ship.Id_To : ship.Id_From;
+            int destType = (settings.StoreIsFrom ? ship.Type_To : ship.type_From) ?? PartyStore;
+            int srcType = (settings.StoreIsFrom ? ship.type_From : ship.Type_To) ?? PartyStore;
+            long srcId = settings.StoreIsFrom ? ship.Id_From : ship.Id_To;
+            CheckBalanceParty(destType, destId, "المخزن المستلم");
+
+            var progress = GetTransferProgress(shipmentId).ToDictionary(p => p.Detail_Id);
+            var srcIds = progress.Values.Select(p => p.Unit_Item_Id).ToList();
+            var srcLines = opp.db.Unit_item.AsNoTracking().Where(u => srcIds.Contains(u.id)).ToDictionary(u => u.id);
+            DateTime now = DateTime.Now;
+            const int receiptType = (int)StoreOrderType.EstlamFromStore_16;
+
+            var receipt = new Order_Purshing
+            {
+                Id = CallSnowflakeIdGenerate.GenerateNewId(),
+                Order_Type = receiptType,
+                Order_Purshing_No = NextOrderNo(receiptType),
+                Order_date = date.Date,
+                Transaction_Type = 1,
+                type_From = srcType, Id_From = srcId,
+                Type_To = destType, Id_To = destId,
+                IsActiveMainOrder_Purshing = 1,
+                NotesAll = string.IsNullOrWhiteSpace(notes) ? $"استلام التحويل رقم {ship.Order_Purshing_No}" : notes,
+                Branch_ID = Common.Branch_Id,
+                User_ID = Common.User_Id,
+                OperationDate = now.Date,
+                Insert_ServerDateTime = now,
+            };
+            opp.db.Order_Purshings.Add(receipt);
+            opp.db.SaveChanges();
+            opp.db.Database.ExecuteSqlInterpolated($"UPDATE Order_Purshing SET Source_Order_Id = {shipmentId}, Doc_Status = {(int)DocStatus.Draft} WHERE Id = {receipt.Id}");
+
+            var doc = new MovementDocument(receipt.Id, receiptType, date.Date, TypeFrom: srcType, IdFrom: srcId, TypeTo: destType, IdTo: destId);
+            foreach (var l in lines.Where(l => l.QtyLarge + l.QtySmall > 0))
+            {
+                if (l.QtyLarge < 0 || l.QtySmall < 0) throw new InvalidOperationException("كمية غير صحيحة.");
+                if (!progress.TryGetValue(l.ShipmentDetailId, out var p) || !srcLines.TryGetValue(p.Unit_Item_Id, out var src))
+                    throw new InvalidOperationException("سطر غير موجود فى الشحنة.");
+                decimal qtySmall = l.QtyLarge * p.Factor + l.QtySmall;
+                if (qtySmall > p.Remaining_Small)
+                    throw new InvalidOperationException($"الكمية المستلمة للصنف {src.Code} أكبر من الباقى فى الطريق.");
+
+                var dest = FindOrCreateDestLine(src, destId, destType);
+                decimal destFactor = (dest.Small_unit ?? 0) <= 0 ? 1 : dest.Small_unit.Value;
+                decimal destLarge = Math.Floor(qtySmall / destFactor), destSmall = qtySmall - destLarge * destFactor;
+                var dp = new Detailes_Purshing
+                {
+                    Id = CallSnowflakeIdGenerate.GenerateNewId(),
+                    OrderTable_id = receipt.Id,
+                    Item_Id = dest.Item_Id ?? 0,
+                    Unit_item_Table_Id = dest.id,
+                    StoreId = dest.Store_id,
+                    Code = dest.Code,
+                    Unit_Id = dest.unit_id,
+                    qua = destLarge,
+                    Part_qua = destSmall,
+                    Item_No = 0,
+                    type_From = srcType, Id_From = srcId, Type_To = destType, Id_To = destId,
+                    Transaction_Type = 1,
+                    ProcessNameId = receiptType,
+                    PriceUnit = p.Unit_Cost_Small * destFactor,
+                    Notes = l.Notes,
+                    OperationDate = now.Date,
+                    User_Id = Common.User_Id,
+                    Branch_Id = Common.Branch_Id,
+                    Insert_ServerDateTime = now,
+                };
+                opp.db.Detailes_Purshings.Add(dp);
+                opp.db.SaveChanges();
+                opp.db.Database.ExecuteSqlInterpolated($"UPDATE Detailes_Purshing SET Source_Detail_Id = {l.ShipmentDetailId} WHERE Id = {dp.Id}");
+
+                var posted = engine.Post(doc, new[] { new MovementLine(dest.id, +1, destLarge, destSmall, 0,
+                    UnitCostLarge: p.Unit_Cost_Small * destFactor, UpdatesAvgCost: true, DetailId: dp.Id, Notes: l.Notes) });
+                if (posted.Count > 0) SetBalances(dp, posted[0], destFactor);
+            }
+            opp.db.SaveChanges();
+            opp.db.Database.ExecuteSqlInterpolated($@"UPDATE Order_Purshing SET Doc_Status = {(int)DocStatus.Posted},
+    Posted_Date = ISNULL(Posted_Date, {DateTime.Now}), Posted_By = ISNULL(Posted_By, {Common.User_Id}) WHERE Id = {receipt.Id}");
+
+            RefreshTransferStatus(shipmentId, reopen: false);
+            Log(1, receipt, $"استلام التحويل رقم {ship.Order_Purshing_No}");
+            return receipt.Id;
+        }
+
+        /// <summary>
+        /// يغلق شحنة لم تُستلم بالكامل بعجز (فقد/تلف فى الطريق) بسبب: الباقى لا يُستلم بعدها. الكمية خُصمت من المرسل عند الشحن،
+        /// فلا حركة مخزون هنا؛ السبب يُحفظ على الشحنة ويُسجَّل فى سجل العمليات.
+        /// </summary>
+        public void CloseTransferShortage(long shipmentId, string reason)
+        {
+            if (string.IsNullOrWhiteSpace(reason)) throw new InvalidOperationException("سبب إغلاق العجز مطلوب.");
+            var link = GetTransferLink(shipmentId);
+            if (link.Status is not ((int)TransferStatus.InTransit or (int)TransferStatus.PartiallyReceived))
+                throw new InvalidOperationException("لا يُغلق إلا شحنة بانتظار الاستلام.");
+            opp.db.Database.ExecuteSqlInterpolated($@"UPDATE Order_Purshing SET Transfer_Status = {(int)TransferStatus.Closed},
+    Transfer_Close_Reason = {reason.Trim()} WHERE Id = {shipmentId}");
+            var ship = opp.db.Order_Purshings.AsNoTracking().First(o => o.Id == shipmentId);
+            Log(2, ship, "إغلاق شحنة بعجز: " + reason.Trim());
+        }
+
+        /// <summary>يعيد حساب حالة الشحنة من المستلم القائم؛ reopen يلغى إغلاق العجز (بعد عكس إذن استلام).</summary>
+        private void RefreshTransferStatus(long shipmentId, bool reopen)
+        {
+            var link = GetTransferLink(shipmentId);
+            if (link.Status == null) return;
+            if (link.Status == (int)TransferStatus.Closed && !reopen) return;
+            var prog = GetTransferProgress(shipmentId);
+            decimal shipped = prog.Sum(p => p.Shipped_Small), received = prog.Sum(p => p.Received_Small);
+            bool complete = received >= shipped;
+            int status = complete ? (int)TransferStatus.Closed : received <= 0 ? (int)TransferStatus.InTransit : (int)TransferStatus.PartiallyReceived;
+            // اكتمال الاستلام لا يترك سبب عجز؛ وإعادة الفتح بعد عكس استلام تلغى الإغلاق السابق.
+            string reason = complete || reopen ? null : link.CloseReason;
+            opp.db.Database.ExecuteSqlInterpolated($"UPDATE Order_Purshing SET Transfer_Status = {status}, Transfer_Close_Reason = {reason} WHERE Id = {shipmentId}");
+        }
+
+        private int ActiveReceiptsCount(long shipmentId) => opp.db.Database.SqlQuery<int>($@"
+SELECT COUNT(*) AS Value FROM Order_Purshing WHERE Source_Order_Id = {shipmentId} AND ISNULL(Doc_Status, 1) = 1").AsEnumerable().First();
+
+        /// <summary>حالة الشحنة وربط إذن الاستلام بشحنته (أعمدة غير موجودة فى الموديل القديم فتُقرأ بـ SQL).</summary>
+        public TransferLink GetTransferLink(long orderId) => opp.db.Database.SqlQuery<TransferLink>($@"
+SELECT Transfer_Status AS Status, Source_Order_Id AS SourceOrderId, Transfer_Close_Reason AS CloseReason
+FROM Order_Purshing WHERE Id = {orderId}").AsEnumerable().First();
+
+        public class TransferLink
+        {
+            public int? Status { get; set; }
+            public long? SourceOrderId { get; set; }
+            public string CloseReason { get; set; }
         }
 
         /// <summary>عكس + مسودة جديدة بنفس البيانات (بتاريخ اليوم) للتصحيح؛ يرجع رقم المسودة.</summary>

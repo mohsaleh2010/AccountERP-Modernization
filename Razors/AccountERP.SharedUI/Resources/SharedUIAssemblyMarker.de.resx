@@ -2533,4 +2533,29 @@
   <data name="SOSignReceiver" xml:space="preserve"><value>Empfänger</value></data>
   <data name="SOSignApprover" xml:space="preserve"><value>Genehmigt von</value></data>
   <data name="SOPrintedAt" xml:space="preserve"><value>Gedruckt am {0} von {1}</value></data>
+  <data name="SOReceiptAuto" xml:space="preserve"><value>Ein Lagereingang entsteht automatisch beim Empfang einer Umlagerung; er wird nicht manuell erstellt.</value></data>
+  <data name="SOTransferTwoStep" xml:space="preserve"><value>Zweistufige Umlagerung: Versand, dann Empfangsbestätigung</value></data>
+  <data name="SOTransferTwoStepHint" xml:space="preserve"><value>Das Buchen bucht nur beim Sender ab; die Menge ist unterwegs, bis der Empfänger bestätigt.</value></data>
+  <data name="SOTransferDirectMode" xml:space="preserve"><value>Direkte Umlagerung</value></data>
+  <data name="SOTransferDirectHint" xml:space="preserve"><value>Das Buchen bewegt den Bestand sofort vom Sender zum Empfänger.</value></data>
+  <data name="SOTransferDirectSwitch" xml:space="preserve"><value>Direkt ohne Empfangsbestätigung</value></data>
+  <data name="SOTransferReceiveTitle" xml:space="preserve"><value>Umlagerung empfangen</value></data>
+  <data name="SOShipped" xml:space="preserve"><value>Versandt</value></data>
+  <data name="SOReceived" xml:space="preserve"><value>Empfangen</value></data>
+  <data name="SORemaining" xml:space="preserve"><value>Noch unterwegs</value></data>
+  <data name="SOReceiveNow" xml:space="preserve"><value>Jetzt empfangene Menge</value></data>
+  <data name="SOReceiveButton" xml:space="preserve"><value>Empfang bestätigen</value></data>
+  <data name="SOReceiveConfirm" xml:space="preserve"><value>Die Menge wird dem Empfangslager zum Versandwert zugebucht und ein verknüpfter Eingang erstellt. Fortfahren?</value></data>
+  <data name="SOReceivedMsg" xml:space="preserve"><value>Empfangen und Eingang erstellt</value></data>
+  <data name="SOCloseShortage" xml:space="preserve"><value>Rest als Fehlmenge schließen</value></data>
+  <data name="SOCloseReason" xml:space="preserve"><value>Grund (Verlust/Beschädigung unterwegs...)</value></data>
+  <data name="SOCloseShortageConfirm" xml:space="preserve"><value>Schließen bestätigen</value></data>
+  <data name="SOCloseReasonRequired" xml:space="preserve"><value>Grund eingeben</value></data>
+  <data name="SOTransferInTransit" xml:space="preserve"><value>Unterwegs</value></data>
+  <data name="SOTransferPartial" xml:space="preserve"><value>Teilweise empfangen</value></data>
+  <data name="SOTransferDone" xml:space="preserve"><value>Vollständig empfangen</value></data>
+  <data name="SOTransferClosedShort" xml:space="preserve"><value>Mit Fehlmenge geschlossen</value></data>
+  <data name="SOReceiptOf" xml:space="preserve"><value>Eingang zu Umlagerung {0}</value></data>
+  <data name="SOPendingTransfers" xml:space="preserve"><value>Warten auf Empfang</value></data>
+  <data name="SOShortageReason" xml:space="preserve"><value>Fehlmenge: {0}</value></data>
 </root>

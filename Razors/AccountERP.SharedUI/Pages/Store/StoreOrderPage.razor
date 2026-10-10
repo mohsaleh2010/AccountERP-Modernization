@@ -93,6 +93,13 @@
     .so-u { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
     .so-after { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--mud-palette-text-primary); }
     .so-after.bad { color: var(--mud-palette-error); }
+    .so-transfer-mode { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+    .so-transfer-mode .txt { display: flex; flex-direction: column; flex: 1 1 260px; }
+    .so-transfer-mode .txt span { font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .so-recv { display: flex; gap: 8px; min-width: 220px; }
+    .so-recv-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .so-close { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; margin-top: 12px; }
+    .so-close > .mud-input-control { flex: 1 1 320px; }
     .so-notes { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--mud-palette-lines-default); }
     .so-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; color: var(--mud-palette-text-secondary); }
     .so-empty .mud-icon-root { opacity: .5; }
@@ -173,6 +180,15 @@
             {
                 <MudChip T="string" Variant="Variant.Outlined" Color="Color.Error" Icon="@Icons.Material.Filled.Undo">@Tr("SOReversedBy", byNo)</MudChip>
             }
+            @if (!string.IsNullOrWhiteSpace(_header?.Transfer_Close_Reason))
+            {
+                <MudChip T="string" Variant="Variant.Outlined" Color="Color.Warning" Icon="@Icons.Material.Filled.ReportProblem">@Tr("SOShortageReason", _header.Transfer_Close_Reason)</MudChip>
+            }
+            @if (_header?.Source_Order_No is long srcNo)
+            {
+                <MudChip T="string" Variant="Variant.Outlined" Color="Color.Info" Icon="@Icons.Material.Filled.LocalShipping"
+                         Href="@($"/store/order/{_header.Source_Order_Type}?id={_header.Source_Order_Id}")">@Tr("SOReceiptOf", srcNo)</MudChip>
+            }
             @if (_header is { Engine_Posted: false, Doc_Status: 1 })
             {
                 <MudChip T="string" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.History">@Tr("SOLegacyOrder")</MudChip>
@@ -183,9 +199,23 @@
     </div>
     }
 
-    @if (_settings is not null && _settings.Is_Transfer)
+    @if (_settings is not null && IsReceiptType)
     {
-        <MudAlert Severity="Severity.Info" Class="so-section-gap">@Tr("SOTransferLater")</MudAlert>
+        <MudAlert Severity="Severity.Info" Class="so-section-gap">@Tr("SOReceiptAuto")</MudAlert>
+    }
+    else if (_settings is not null && _settings.Is_Transfer && !ReadOnly && _transferUi is not null)
+    {
+        <div class="inv-card so-section-gap so-transfer-mode">
+            <MudIcon Icon="@(DirectTransfer ? Icons.Material.Filled.SyncAlt : Icons.Material.Filled.LocalShipping)" Color="Color.Info" />
+            <div class="txt">
+                <b>@(DirectTransfer ? Tr("SOTransferDirectMode") : Tr("SOTransferTwoStep"))</b>
+                <span>@(DirectTransfer ? Tr("SOTransferDirectHint") : Tr("SOTransferTwoStepHint"))</span>
+            </div>
+            @if (_transferUi.ShowDirectChoice)
+            {
+                <MudSwitch T="bool" @bind-Value="_directRequested" Color="Color.Primary" Label="@Tr("SOTransferDirectSwitch")" />
+            }
+        </div>
     }
 
     @if (_settings is not null)
@@ -338,6 +368,57 @@
             </div>
         </div>
 
+        @if (CanReceive)
+        {
+            <div class="inv-card so-section-gap">
+                <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.MoveToInbox" />@Tr("SOTransferReceiveTitle")</h2>
+                <MudTable Items="@_transferLines" T="TransferLineView" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true">
+                    <HeaderContent>
+                        <MudTh>@Tr("SOItem")</MudTh>
+                        <MudTh Style="text-align:end">@Tr("SOShipped")</MudTh>
+                        <MudTh Style="text-align:end">@Tr("SOReceived")</MudTh>
+                        <MudTh Style="text-align:end">@Tr("SORemaining")</MudTh>
+                        <MudTh>@Tr("SOReceiveNow")</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="@Tr("SOItem")"><div class="so-item-name">@(string.IsNullOrWhiteSpace(context.Item_Name) ? "—" : context.Item_Name)</div><div class="so-item-code">@CodeText(context.Code)</div></MudTd>
+                        <MudTd DataLabel="@Tr("SOShipped")" Style="text-align:end"><span class="so-q">@SmallToText(context.Shipped_Small, context.Factor, context.B_Unit, context.S_Unit)</span></MudTd>
+                        <MudTd DataLabel="@Tr("SOReceived")" Style="text-align:end"><span class="so-q">@SmallToText(context.Received_Small, context.Factor, context.B_Unit, context.S_Unit)</span></MudTd>
+                        <MudTd DataLabel="@Tr("SORemaining")" Style="text-align:end"><b class="so-q">@SmallToText(context.Remaining_Small, context.Factor, context.B_Unit, context.S_Unit)</b></MudTd>
+                        <MudTd DataLabel="@Tr("SOReceiveNow")">
+                            @if (context.Remaining_Small > 0)
+                            {
+                                <div class="so-recv">
+                                    <MudNumericField T="decimal" Value="@RecvLarge(context.Detail_Id)" ValueChanged="@(v => SetRecv(context.Detail_Id, v, null))" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                     HideSpinButtons="true" Min="0" Adornment="Adornment.End" AdornmentText="@context.B_Unit" aria-label="@Tr("SOQtyLarge")" />
+                                    @if (context.Factor > 1)
+                                    {
+                                        <MudNumericField T="decimal" Value="@RecvSmall(context.Detail_Id)" ValueChanged="@(v => SetRecv(context.Detail_Id, null, v))" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                         HideSpinButtons="true" Min="0" Adornment="Adornment.End" AdornmentText="@context.S_Unit" aria-label="@Tr("SOQtySmall")" />
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text" Icon="@Icons.Material.Filled.Check">@Tr("SOTransferDone")</MudChip>
+                            }
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+                <div class="so-recv-actions">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.MoveToInbox" Disabled="@(_isBusy || !_recv.Values.Any(v => v.L + v.S > 0))" OnClick="ReceiveAsync">@Tr("SOReceiveButton")</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.ReportProblem" Disabled="_isBusy" OnClick="@(() => _showClose = !_showClose)">@Tr("SOCloseShortage")</MudButton>
+                </div>
+                @if (_showClose)
+                {
+                    <div class="so-close">
+                        <MudTextField T="string" @bind-Value="_closeReason" Label="@Tr("SOCloseReason")" Variant="Variant.Outlined" Lines="2" />
+                        <MudButton Variant="Variant.Filled" Color="Color.Error" Disabled="_isBusy" OnClick="CloseShortageAsync">@Tr("SOCloseShortageConfirm")</MudButton>
+                    </div>
+                }
+            </div>
+        }
+
         @if (_showReverse)
         {
             <div class="inv-card so-section-gap">
@@ -374,7 +455,9 @@
                 <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Block" Disabled="_isBusy" OnClick="CancelDraftAsync">@Tr("SOCancelDraft")</MudButton>
             }
             @* العكس للأذون المرحَّلة بالمحرك فقط؛ الإذن القديم (قبل المحرك) يُعرض للقراءة *@
-            @if (_status == (int)StockMovementService.DocStatus.Posted && _header?.Reversal_Of_Id == null && _header?.Engine_Posted == true)
+            @* الشحنة التى استُلم منها أو أُغلقت لا تُعكس من هنا (تُعكس أذون الاستلام أولاً) *@
+            @if (_status == (int)StockMovementService.DocStatus.Posted && _header?.Reversal_Of_Id == null && _header?.Engine_Posted == true
+                 && _header.Transfer_Status is null or 1)
             {
                 <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Undo" Disabled="_isBusy" OnClick="@(() => OpenReverse(false))">@Tr("SOReverse")</MudButton>
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" Disabled="_isBusy" OnClick="@(() => OpenReverse(true))">@Tr("SOReverseAndCopy")</MudButton>
@@ -472,6 +555,9 @@
 
     [Parameter] public int OrderType { get; set; }
     [SupplyParameterFromQuery(Name = "id")] public long? IdQuery { get; set; }
+    /// <summary>نوع جهة «من»/«إلى» المبدئى من القائمة (مثلاً «إذن صرف لقسم» = 1001 مع to=20).</summary>
+    [SupplyParameterFromQuery(Name = "from")] public int? FromQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "to")] public int? ToQuery { get; set; }
 
     private readonly StoreOrderPageService _svc = new();
     private OrderTypeSettings? _settings;
@@ -484,6 +570,13 @@
     private string? _notes, _lineNotes, _lineError, _errorMessage, _reverseReason;
     private bool _isBusy, _onlyWithBalance = true, _showReverse, _reverseAndCopy;
 
+    // التحويل
+    private TransferUi? _transferUi;
+    private bool _directRequested, _showClose;
+    private string? _closeReason;
+    private List<TransferLineView> _transferLines = new();
+    private readonly Dictionary<long, (decimal L, decimal S)> _recv = new();
+
     // سطر جديد
     private StockLineOption? _picked;
     private decimal _qtyLarge, _qtySmall;
@@ -491,7 +584,11 @@
     private int _pickerKey;
 
     /// <summary>القراءة فقط لكل حالة غير «جديد/مسودة»، ولأنواع التحويل (المرحلة 3).</summary>
-    private bool ReadOnly => _settings is null || _settings.Is_Transfer || (_status != -1 && _status != (int)StockMovementService.DocStatus.Draft);
+    private bool ReadOnly => _settings is null || IsReceiptType || (_status != -1 && _status != (int)StockMovementService.DocStatus.Draft);
+    /// <summary>1016/1017: إذن الاستلام يُنشأ من «استلام التحويل» على الشحنة، فلا يُصدر يدوياً.</summary>
+    private bool IsReceiptType => OrderType is 1016 or 1017;
+    private bool DirectTransfer => _transferUi is not null && (_transferUi.Mode == StoreTransferPolicy.Mode.Direct || (_transferUi.ShowDirectChoice && _directRequested));
+    private bool CanReceive => _status == 1 && _header?.Transfer_Status is 1 or 2 && _header.Reversed_By_Id == null && _transferLines.Count > 0;
     private int StoreType => _settings?.StoreIsFrom == true ? _typeFrom : _typeTo;
     private long StoreId => _settings?.StoreIsFrom == true ? _idFrom : _idTo;
     private bool CanSave => !_isBusy && !ReadOnly && _lines.Count > 0 && StoreId > 0
@@ -545,15 +642,27 @@
         </section>
     };
 
-    private string StatusText => _status switch
+    /// <summary>حالة الشحنة تغلب «مرحَّل» فى الرأس: فى الطريق / استُلم جزئياً / مكتمل / مغلق بعجز.</summary>
+    private int? ShipState => _status == 1 ? _header?.Transfer_Status : null;
+    private string StatusText => ShipState switch
     {
-        0 => Tr("SOStatusDraft"), 1 => Tr("SOStatusPosted"), 2 => Tr("SOStatusReversed"), 3 => Tr("SOStatusCancelled"), _ => Tr("SOStatusNew")
+        1 => Tr("SOTransferInTransit"), 2 => Tr("SOTransferPartial"),
+        3 => string.IsNullOrEmpty(_header?.Transfer_Close_Reason) ? Tr("SOTransferDone") : Tr("SOTransferClosedShort"),
+        _ => _status switch { 0 => Tr("SOStatusDraft"), 1 => Tr("SOStatusPosted"), 2 => Tr("SOStatusReversed"), 3 => Tr("SOStatusCancelled"), _ => Tr("SOStatusNew") }
     };
-    private Color StatusColor => _status switch { 1 => Color.Success, 0 => Color.Warning, 2 => Color.Error, 3 => Color.Dark, _ => Color.Info };
-    private string StatusIcon => _status switch
+    private Color StatusColor => ShipState switch
     {
-        1 => Icons.Material.Filled.CheckCircle, 0 => Icons.Material.Filled.EditNote, 2 => Icons.Material.Filled.Undo,
-        3 => Icons.Material.Filled.Block, _ => Icons.Material.Filled.FiberNew
+        1 or 2 => Color.Info, 3 => string.IsNullOrEmpty(_header?.Transfer_Close_Reason) ? Color.Success : Color.Warning,
+        _ => _status switch { 1 => Color.Success, 0 => Color.Warning, 2 => Color.Error, 3 => Color.Dark, _ => Color.Info }
+    };
+    private string StatusIcon => ShipState switch
+    {
+        1 or 2 => Icons.Material.Filled.LocalShipping, 3 => string.IsNullOrEmpty(_header?.Transfer_Close_Reason) ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.ReportProblem,
+        _ => _status switch
+        {
+            1 => Icons.Material.Filled.CheckCircle, 0 => Icons.Material.Filled.EditNote, 2 => Icons.Material.Filled.Undo,
+            3 => Icons.Material.Filled.Block, _ => Icons.Material.Filled.FiberNew
+        }
     };
 
     protected override async Task OnInitializedAsync()
@@ -564,6 +673,8 @@
             var type = OrderType;
             _settings = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetSettings(type); });
             _onlyWithBalance = _settings.Direction != 1;   // الوارد يضيف لأصناف قد يكون رصيدها صفراً
+            if (_settings.Is_Transfer && !IsReceiptType)
+                _transferUi = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetTransferUi(); });
             if (IdQuery is > 0) await LoadOrderAsync(IdQuery.Value);
             else await ResetPartiesAsync();
         }
@@ -614,12 +725,15 @@
     private async Task ResetPartiesAsync()
     {
         if (_settings is null) return;
-        _typeFrom = _settings.FromParties.Contains(_settings.Default_From_Party) ? _settings.Default_From_Party : _settings.FromParties.FirstOrDefault();
-        _typeTo = _settings.ToParties.Contains(_settings.Default_To_Party) ? _settings.Default_To_Party : _settings.ToParties.FirstOrDefault();
+        _typeFrom = FromQuery is int fq && _settings.FromParties.Contains(fq) ? fq
+            : _settings.FromParties.Contains(_settings.Default_From_Party) ? _settings.Default_From_Party : _settings.FromParties.FirstOrDefault();
+        _typeTo = ToQuery is int tq && _settings.ToParties.Contains(tq) ? tq
+            : _settings.ToParties.Contains(_settings.Default_To_Party) ? _settings.Default_To_Party : _settings.ToParties.FirstOrDefault();
         _fromList = await LoadPartiesAsync(_typeFrom, _settings.Is_Virtual_Outer_From);
         _toList = await LoadPartiesAsync(_typeTo, _settings.Is_Virtual_Outer_To);
         _idFrom = _fromList.FirstOrDefault()?.Id ?? 0;
-        _idTo = _toList.FirstOrDefault()?.Id ?? 0;
+        // التحويل لا يكون لنفس المخزن: المستلم الافتراضى أول مخزن مختلف عن المرسل.
+        _idTo = (_settings.Is_Transfer && _typeFrom == _typeTo ? _toList.FirstOrDefault(o => o.Id != _idFrom) : null)?.Id ?? _toList.FirstOrDefault()?.Id ?? 0;
     }
 
     private Task<List<PartyOption>> LoadPartiesAsync(int type, bool outer) =>
@@ -704,7 +818,7 @@
         var input = BuildInput(); var draftId = _orderId;
         try
         {
-            var id = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.SaveAndPost(input, draftId, null); });
+            var id = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.SaveAndPost(input, draftId, _directRequested); });
             await LoadOrderAsync(id);
             Snackbar.Add(Tr("SOPosted", _orderNo), Severity.Success);
             Nav.NavigateTo($"/store/order/{OrderType}?id={id}", replace: true);
@@ -771,6 +885,65 @@
         _lines = lines.Select(l => new LineRow(l.Unit_Item_Id, l.Item_Name, l.Code, l.B_Unit, l.S_Unit, l.Factor, l.Qty_Large, l.Qty_Small,
             _settings.IsManualPrice ? l.Unit_Cost_Large : null, l.Notes ?? "", l.Balance_Small)).ToList();
         ClearPicker();
+        await LoadTransferLinesAsync();
+    }
+
+    // ============================== استلام التحويل ==============================
+
+    /// <summary>أسطر الشحنة بانتظار الاستلام، وكمية الاستلام الافتراضية = الباقى (مقسَّماً على الوحدتين).</summary>
+    private async Task LoadTransferLinesAsync()
+    {
+        _transferLines = new(); _recv.Clear(); _showClose = false; _closeReason = null;
+        if (_status != 1 || _header?.Transfer_Status is not (1 or 2)) return;
+        var id = _orderId;
+        _transferLines = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetTransferLines(id); });
+        foreach (var l in _transferLines.Where(l => l.Remaining_Small > 0))
+        {
+            decimal f = l.Factor <= 0 ? 1 : l.Factor, large = Math.Floor(l.Remaining_Small / f);
+            _recv[l.Detail_Id] = (large, l.Remaining_Small - large * f);
+        }
+    }
+
+    private decimal RecvLarge(long detailId) => _recv.TryGetValue(detailId, out var v) ? v.L : 0;
+    private decimal RecvSmall(long detailId) => _recv.TryGetValue(detailId, out var v) ? v.S : 0;
+    private void SetRecv(long detailId, decimal? large, decimal? small)
+    {
+        var cur = _recv.TryGetValue(detailId, out var v) ? v : (0m, 0m);
+        _recv[detailId] = (Math.Max(0, large ?? cur.Item1), Math.Max(0, small ?? cur.Item2));
+    }
+
+    private async Task ReceiveAsync()
+    {
+        _errorMessage = null;
+        var lines = _recv.Where(r => r.Value.L + r.Value.S > 0).Select(r => new ReceiptLineInput(r.Key, r.Value.L, r.Value.S)).ToList();
+        if (lines.Count == 0) return;
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("SOReceiveButton"), Tr("SOReceiveConfirm"), yesText: Tr("SOReceiveButton"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _isBusy = true;
+        var id = _orderId;
+        try
+        {
+            var receiptId = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.ReceiveTransfer(id, DateTime.Today, lines, null); });
+            await LoadOrderAsync(id);
+            Snackbar.Add(Tr("SOReceivedMsg"), Severity.Success);
+        }
+        catch (Exception ex) { _errorMessage = ErrText(ex); }
+        finally { _isBusy = false; }
+    }
+
+    private async Task CloseShortageAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_closeReason)) { _errorMessage = Tr("SOCloseReasonRequired"); return; }
+        _isBusy = true; _errorMessage = null;
+        var id = _orderId; var reason = _closeReason.Trim();
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.CloseTransferShortage(id, reason); });
+            await LoadOrderAsync(id);
+            Snackbar.Add(Tr("SOTransferClosedShort"), Severity.Success);
+        }
+        catch (Exception ex) { _errorMessage = ErrText(ex); }
+        finally { _isBusy = false; }
     }
 
     private async Task NewOrderAsync()

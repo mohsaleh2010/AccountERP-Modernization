@@ -22,6 +22,8 @@ SELECT CASE WHEN OBJECT_ID(N'dbo.Item_Branch_Cost', N'U') IS NOT NULL
              AND COL_LENGTH(N'dbo.Order_Purshing', N'Posted_By') IS NOT NULL
              AND COL_LENGTH(N'dbo.Detailes_Purshing_Import_Export', N'Engine_Posted') IS NOT NULL
              AND COL_LENGTH(N'dbo.Item_First_Period_Balance', N'Source') IS NOT NULL
+             AND COL_LENGTH(N'dbo.Order_Purshing', N'Transfer_Status') IS NOT NULL
+             AND COL_LENGTH(N'dbo.Detailes_Purshing', N'Source_Detail_Id') IS NOT NULL
              AND EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Item_Branch_Cost_Item_Branch')
              AND EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_DPIE_UnitItem_Date')
              AND EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Item_First_Period_Balance_Period_Line')
@@ -54,9 +56,47 @@ WHERE Order_Type IN (1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1012,1013
                 Step(opp, StockLedger);
                 Step(opp, ItemOpeningBalance);
                 Step(opp, StoreOrderTypeSettings);
+                Step(opp, TransferReceipts);
             }
             // مستقلة عن فحص المخطط: القواعد المرقّاة سابقاً تحتاج الربط أيضاً، وتقرأ فقط العناصر غير المربوطة.
             Step(opp, LinkStoreOrderMenus);
+            Step(opp, TransferSettings);
+        }
+
+        /// <summary>
+        /// خطة 01 المرحلة 7 (§2.7): إعداد «طريقة التحويل بين المخازن» (Store_Transfer_Mode) والصلاحية المتقدمة
+        /// «تحويل مباشر بين المخازن بدون تأكيد استلام» تحت 321. يُنشآن مرة واحدة فقط (لا يغيّران قيمة عدّلها العميل).
+        /// قيمة الإعداد الأولى = الإعداد القديم (1 مباشر ← 1، 0 ← 0 بتأكيد) فلا يتغير سلوك أى عميل؛ النصوص مشفَّرة كباقى الجدولين.
+        /// </summary>
+        private static void TransferSettings(operations opp)
+        {
+            var cfg = opp.db.Database.SqlQueryRaw<StoreTransferPolicy.KeyValueRow>("SELECT Id, KeysData, Value FROM SysConfig WHERE KeysData IS NOT NULL").ToList();
+            string Key(StoreTransferPolicy.KeyValueRow r) => Common.DecryptMe(r.KeysData).Trim();
+            if (!cfg.Any(r => Key(r) == StoreTransferPolicy.ModeKey))
+            {
+                var legacy = cfg.FirstOrDefault(r => Key(r) == StoreTransferPolicy.LegacyKey);
+                string value = legacy != null && Common.DecryptMe(legacy.Value ?? "").Trim() == "1" ? "1" : "0";
+                long id = cfg.Any(r => r.Id == 405) ? cfg.Max(r => r.Id) + 1 : 405;
+                string desc = "طريقة التحويل بين المخازن: 0 بتأكيد استلام، 1 مباشر، 2 حسب صلاحية المستخدم";
+                string E(string s) => Common.EncryptMe(s);
+                opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfig (Id, KeysData, DefaultValue, Value, DefaultDescription, Description, Client_B, Client_A, POS, Market, Factory, AlFawzan, Tourism)
+VALUES ({id}, {E(StoreTransferPolicy.ModeKey)}, {E("0")}, {E(value)}, {E(desc)}, {E(desc)}, {E("0")}, {E("0")}, {E("0")}, {E("0")}, {E("0")}, {E("0")}, {E("0")})");
+            }
+
+            var menus = opp.db.Database.SqlQueryRaw<StoreTransferPolicy.KeyValueRow>("SELECT Id, KeysData, Value FROM SysConfigMenus").ToList();
+            if (!menus.Any(m => m.KeysData != null && Common.DecryptMe(m.KeysData).Trim() == StoreTransferPolicy.DirectPermissionKey))
+            {
+                long id = menus.Any(m => m.Id == 984) ? menus.Max(m => m.Id) + 1 : 984;
+                string desc = "تحويل مباشر بين المخازن بدون تأكيد استلام";
+                string E(string s) => Common.EncryptMe(s);
+                opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenus (Id, Parent_Id, KeysData, Description, PROJECT_ID, Value, DefaultValue, DefaultDescription,
+                            POS, Market, Factory, Tourism, AlFawzan, Client_A, Client_B, UserSells, IsShowToUser)
+VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {E("1")}, {E("1")}, {E(desc)},
+        {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, 1)");
+            }
+            StoreTransferPolicy.Invalidate();
         }
 
         /// <summary>
@@ -78,6 +118,12 @@ WHERE Order_Type IN (1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1012,1013
             ("menuItemOrderSarfWarsha", "/store/order/1018"), ("menuItemOrderEstlamFromWarsha", "/store/order/1019"),
             ("menuItemOrderSarfEmployee", "/store/order/1020"), ("menuItemOrderEstlamFromEmployee", "/store/order/1021"),
             ("menuItemOrderSarfMachine", "/store/order/1022"), ("menuItemOrderEstlamFromMachine", "/store/order/1023"),
+            // التحويل (المرحلة 3): الشحنة 1001/1006، و«إذن إستلام من المخزن» يفتح الشحنات بانتظار الاستلام (الاستلام يتم من الشحنة).
+            // «إذن صرف إلى المخزن» (851، النوع 1017) يبقى بلا ربط: الشحنة 1001 تغطيه.
+            ("menuItemOrderSarf", "/store/order/1001"), ("menuItemOrderMortaga3Sarf", "/store/order/1006"),
+            ("menuItemOrderEstlamFromStore", "/store/orders?pending=1"),
+            // القسم مخزن فرعى برصيد (م-03-9): الصرف لقسم = تحويل لقسم، والاستلام من قسم = مرتجع تحويل من القسم (كانا بلا شاشة فى القديم).
+            ("menuItemOrderSarfDepartment", "/store/order/1001?to=20"), ("menuItemOrderEstlamFromDepartment", "/store/order/1006?from=20"),
             // قائمة وبحث الأذون (المرحلة 4) بدل Order_detailes لكل نوع، وقائمة كل الأذون.
             // ملاحظة: القائمة القديمة تفتح «مرتجع صرف قطع الغيار» (879) على 1022 وعنصر «صرف إلى موظف» (881) بلا شاشة؛ هنا كلٌّ لنوعه الصحيح.
             ("menuItemOrdersList", "/store/orders"),
@@ -169,6 +215,22 @@ IF COL_LENGTH(N'dbo.Order_Purshing', N'Posted_By') IS NULL ALTER TABLE [dbo].[Or
             // الأذون القديمة = مرحَّلة؛ مرة واحدة فقط عند إضافة العمود (الدفعة منفصلة لأن العمود جديد).
             if (addingStatus)
                 Run(opp, "UPDATE [dbo].[Order_Purshing] SET [Doc_Status] = 1 WHERE [Doc_Status] IS NULL;");
+        }
+
+        /// <summary>
+        /// خطة 03 المرحلة 3: التحويل بخطوتين — حالة الشحنة (1 فى الطريق، 2 استُلم جزئياً، 3 مكتمل/مغلق)، سبب إغلاق العجز،
+        /// وربط إذن الاستلام (1016) وأسطره بالشحنة (1001/1006) وأسطرها. أعمدة جديدة فقط تقبل NULL، فلا يتأثر أى إذن قائم.
+        /// </summary>
+        private static void TransferReceipts(operations opp)
+        {
+            Run(opp, @"
+IF COL_LENGTH(N'dbo.Order_Purshing', N'Transfer_Status') IS NULL ALTER TABLE [dbo].[Order_Purshing] ADD [Transfer_Status] [int] NULL;
+IF COL_LENGTH(N'dbo.Order_Purshing', N'Source_Order_Id') IS NULL ALTER TABLE [dbo].[Order_Purshing] ADD [Source_Order_Id] [bigint] NULL;
+IF COL_LENGTH(N'dbo.Order_Purshing', N'Transfer_Close_Reason') IS NULL ALTER TABLE [dbo].[Order_Purshing] ADD [Transfer_Close_Reason] [nvarchar](500) NULL;
+IF COL_LENGTH(N'dbo.Detailes_Purshing', N'Source_Detail_Id') IS NULL ALTER TABLE [dbo].[Detailes_Purshing] ADD [Source_Detail_Id] [bigint] NULL;");
+            Run(opp, @"
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Order_Purshing_Source_Order')
+    CREATE INDEX [IX_Order_Purshing_Source_Order] ON [dbo].[Order_Purshing] ([Source_Order_Id]) WHERE [Source_Order_Id] IS NOT NULL;");
         }
 
         // ---------------- خطة 01: دفتر الحركة DPIE ----------------

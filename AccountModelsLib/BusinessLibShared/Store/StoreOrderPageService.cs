@@ -60,7 +60,31 @@ namespace AccountModelsLib
             public long? Reversed_By_No { get; set; }
             /// <summary>هل للإذن حركات من المحرك؟ الأذون القديمة (قبل المحرك) لا تُعكس من الصفحة الجديدة.</summary>
             public bool Engine_Posted { get; set; }
+            /// <summary>التحويل بخطوتين: حالة الشحنة (1 فى الطريق، 2 جزئى، 3 مكتمل/مغلق) وسبب إغلاق العجز.</summary>
+            public int? Transfer_Status { get; set; }
+            public string Transfer_Close_Reason { get; set; }
+            /// <summary>إذن الاستلام (1016): الشحنة التى استلمها.</summary>
+            public long? Source_Order_Id { get; set; }
+            public long? Source_Order_No { get; set; }
+            public int? Source_Order_Type { get; set; }
         }
+
+        /// <summary>سطر شحنة مع المشحون والمستلم والباقى (بالوحدة الصغرى) لبطاقة الاستلام.</summary>
+        public class TransferLineView
+        {
+            public long Detail_Id { get; set; }
+            public string Item_Name { get; set; }
+            public string Code { get; set; }
+            public string B_Unit { get; set; }
+            public string S_Unit { get; set; }
+            public decimal Factor { get; set; }
+            public decimal Shipped_Small { get; set; }
+            public decimal Received_Small { get; set; }
+            public decimal Remaining_Small { get; set; }
+        }
+
+        /// <summary>ما تعرضه الصفحة عن طريقة التحويل للمستخدم الحالى.</summary>
+        public record TransferUi(StoreTransferPolicy.Mode Mode, bool ShowDirectChoice);
 
         /// <summary>فلتر قائمة الأذون. OrderType = 0 لكل الأنواع، Status = -1 لكل الحالات.</summary>
         public class OrderSearchFilter
@@ -72,6 +96,8 @@ namespace AccountModelsLib
             public string Text { get; set; }
             public int Skip { get; set; }
             public int Take { get; set; } = 50;
+            /// <summary>شحنات التحويل بانتظار الاستلام فقط (فى الطريق أو مستلمة جزئياً).</summary>
+            public bool PendingTransfers { get; set; }
         }
 
         /// <summary>صف فى قائمة الأذون.</summary>
@@ -90,6 +116,8 @@ namespace AccountModelsLib
             public int Lines_Count { get; set; }
             public decimal? Total_Value { get; set; }
             public string Notes { get; set; }
+            public int? Transfer_Status { get; set; }
+            public bool Has_Shortage { get; set; }
             public int Total_Rows { get; set; }
         }
 
@@ -182,17 +210,54 @@ ORDER BY i.Item_Name").ToList());
 
         public long SaveDraft(OrderInput input, long draftId) => RunTx(opp => new StoreOrderService(opp).SaveDraft(input, draftId));
 
-        /// <summary>حفظ ثم ترحيل فى معاملة واحدة: لو فشل الترحيل لا تبقى المسودة معدَّلة.</summary>
-        public long SaveAndPost(OrderInput input, long draftId, TransferMode? mode)
+        /// <summary>
+        /// حفظ ثم ترحيل فى معاملة واحدة: لو فشل الترحيل لا تبقى المسودة معدَّلة. طريقة التحويل (1001/1006) تحددها
+        /// StoreTransferPolicy لا الصفحة؛ directRequested يُعتبر فقط مع الإعداد 2 ولمن يملك الصلاحية.
+        /// </summary>
+        public long SaveAndPost(OrderInput input, long draftId, bool directRequested = false)
         {
             return RunTx(opp =>
             {
                 var svc = new StoreOrderService(opp);
                 long id = svc.SaveDraft(input, draftId);
+                var mode = svc.GetSettings(input.OrderType).Is_Transfer
+                    ? StoreTransferPolicy.Effective(opp, Common.User_Id, directRequested)
+                    : (TransferMode?)null;
                 svc.Post(id, mode);
                 return id;
             });
         }
+
+        public TransferUi GetTransferUi() => Run(opp => new TransferUi(StoreTransferPolicy.GetMode(opp), StoreTransferPolicy.ShowDirectChoice(opp, Common.User_Id)));
+
+        /// <summary>أسطر الشحنة مع المشحون والمستلم والباقى.</summary>
+        public List<TransferLineView> GetTransferLines(long shipmentId) => Run(opp =>
+        {
+            var prog = new StoreOrderService(opp).GetTransferProgress(shipmentId).ToDictionary(p => p.Detail_Id);
+            var names = opp.db.Database.SqlQuery<TransferLineView>($@"
+SELECT d.Id AS Detail_Id, ISNULL(i.Item_Name, N'') AS Item_Name, ISNULL(ISNULL(u.Code, i.code), N'') AS Code,
+       ISNULL(un.B_Unit, '') AS B_Unit, ISNULL(un.S_unit, '') AS S_Unit,
+       CAST(CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END AS decimal(18,6)) AS Factor,
+       CAST(0 AS decimal(18,4)) AS Shipped_Small, CAST(0 AS decimal(18,4)) AS Received_Small, CAST(0 AS decimal(18,4)) AS Remaining_Small
+FROM Detailes_Purshing d
+LEFT JOIN Unit_item u ON u.id = d.Unit_item_Table_Id
+LEFT JOIN Item i ON i.id = ISNULL(u.Item_id, NULLIF(d.Item_Id, 0))
+LEFT JOIN unit un ON un.id = u.unit_id
+WHERE d.OrderTable_id = {shipmentId}
+ORDER BY d.Id").ToList();
+            foreach (var n in names)
+                if (prog.TryGetValue(n.Detail_Id, out var p))
+                {
+                    n.Shipped_Small = p.Shipped_Small; n.Received_Small = p.Received_Small; n.Remaining_Small = p.Remaining_Small;
+                }
+            return names;
+        });
+
+        public long ReceiveTransfer(long shipmentId, DateTime date, IReadOnlyList<ReceiptLineInput> lines, string notes) =>
+            RunTx(opp => new StoreOrderService(opp).ReceiveTransfer(shipmentId, date, lines, notes));
+
+        public void CloseTransferShortage(long shipmentId, string reason) =>
+            RunTx(opp => { new StoreOrderService(opp).CloseTransferShortage(shipmentId, reason); return 0; });
 
         public void CancelDraft(long orderId) => RunTx(opp => { new StoreOrderService(opp).CancelDraft(orderId); return 0; });
 
@@ -214,7 +279,10 @@ SELECT p.Id, CASE WHEN p.Order_Type BETWEEN 1 AND 23 THEN p.Order_Type + 1000 EL
        (SELECT CAST(o.Order_Purshing_No AS bigint) FROM Order_Purshing o WHERE o.Id = p.Reversal_Of_Id) AS Reversal_Of_No,
        (SELECT CAST(o.Order_Purshing_No AS bigint) FROM Order_Purshing o WHERE o.Id = p.Reversed_By_Id) AS Reversed_By_No,
        CAST(CASE WHEN EXISTS (SELECT 1 FROM Detailes_Purshing_Import_Export e WHERE e.OrderTable_id = p.Id AND e.Engine_Posted = 1)
-                 THEN 1 ELSE 0 END AS bit) AS Engine_Posted
+                 THEN 1 ELSE 0 END AS bit) AS Engine_Posted,
+       p.Transfer_Status, p.Transfer_Close_Reason, p.Source_Order_Id,
+       (SELECT CAST(o.Order_Purshing_No AS bigint) FROM Order_Purshing o WHERE o.Id = p.Source_Order_Id) AS Source_Order_No,
+       (SELECT o.Order_Type FROM Order_Purshing o WHERE o.Id = p.Source_Order_Id) AS Source_Order_Type
 FROM Order_Purshing p WHERE p.Id = {orderId}").AsEnumerable().FirstOrDefault();
                 if (h == null) return (null, new List<OrderLineView>());
 
@@ -251,7 +319,7 @@ ORDER BY d.Id").ToList();
             var all = args.Concat(new object[] { f.Status, skip, take }).ToArray();
             int a = args.Length;
             string sql = cte + $@"
-SELECT q.Id, q.Order_Type, q.Order_No, q.Order_Date, q.Type_From, q.From_Name, q.Type_To, q.To_Name, q.Doc_Status, q.Reversal_Of_Id, q.Notes,
+SELECT q.Id, q.Order_Type, q.Order_No, q.Order_Date, q.Type_From, q.From_Name, q.Type_To, q.To_Name, q.Doc_Status, q.Reversal_Of_Id, q.Notes, q.Transfer_Status, q.Has_Shortage,
        (SELECT COUNT(*) FROM Detailes_Purshing d WHERE d.OrderTable_id = ISNULL(q.Reversal_Of_Id, q.Id)) AS Lines_Count,
        (SELECT CAST(SUM(ABS(ISNULL(e.Qty_Small, 0)) * ISNULL(e.Unit_Cost, 0)) / CASE WHEN q.Order_Type IN (1001, 1006, 1016, 1017) THEN 2 ELSE 1 END AS decimal(18,2))
         FROM Detailes_Purshing_Import_Export e WHERE e.OrderTable_id = q.Id AND e.Engine_Posted = 1) AS Total_Value,
@@ -282,13 +350,14 @@ OFFSET {{{a + 1}}} ROWS FETCH NEXT {{{a + 2}}} ROWS ONLY";
             long no = long.TryParse(text, out var n) ? n : -1;
             DateTime from = (f.From ?? new DateTime(1900, 1, 1)).Date;
             DateTime to = (f.To ?? new DateTime(2999, 1, 1)).Date.AddDays(1);
-            var args = new object[] { f.OrderType, from, to, text, no, "%" + text + "%" };
+            var args = new object[] { f.OrderType, from, to, text, no, "%" + text + "%", f.PendingTransfers ? 1 : 0 };
             const string sql = @"
 WITH q AS (
     SELECT p.Id, CASE WHEN p.Order_Type BETWEEN 1 AND 23 THEN p.Order_Type + 1000 ELSE ISNULL(p.Order_Type, 0) END AS Order_Type, CAST(ISNULL(p.Order_Purshing_No, 0) AS bigint) AS Order_No,
            ISNULL(p.Order_date, p.Insert_ServerDateTime) AS Order_Date,
            ISNULL(p.type_From, 0) AS Type_From, fn.Name AS From_Name, ISNULL(p.Type_To, 0) AS Type_To, tn.Name AS To_Name,
-           ISNULL(p.Doc_Status, 1) AS Doc_Status, p.Reversal_Of_Id, p.NotesAll AS Notes
+           ISNULL(p.Doc_Status, 1) AS Doc_Status, p.Reversal_Of_Id, p.NotesAll AS Notes, p.Transfer_Status,
+           CAST(CASE WHEN p.Transfer_Close_Reason IS NOT NULL THEN 1 ELSE 0 END AS bit) AS Has_Shortage
     FROM Order_Purshing p
     OUTER APPLY (SELECT CASE WHEN p.type_From IN (4, 20) THEN (SELECT Store_Name FROM Store WHERE Id = p.Id_From)
                              WHEN p.type_From = 1 THEN (SELECT Name FROM Supplier WHERE Id = p.Id_From)
@@ -305,6 +374,7 @@ WITH q AS (
       AND ({0} = 0 OR CASE WHEN p.Order_Type BETWEEN 1 AND 23 THEN p.Order_Type + 1000 ELSE ISNULL(p.Order_Type, 0) END = {0})
       AND ISNULL(p.Order_date, p.Insert_ServerDateTime) >= {1} AND ISNULL(p.Order_date, p.Insert_ServerDateTime) < {2}
       AND ({3} = N'' OR p.Order_Purshing_No = {4} OR fn.Name LIKE {5} OR tn.Name LIKE {5} OR p.NotesAll LIKE {5})
+      AND ({6} = 0 OR (p.Transfer_Status IN (1, 2) AND ISNULL(p.Doc_Status, 1) = 1))
 )";
             return (sql, args);
         }

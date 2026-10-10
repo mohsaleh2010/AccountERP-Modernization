@@ -301,6 +301,12 @@ WHERE x.Unit_item_Table_Id = {unitItemId}
 FROM Unit_item u INNER JOIN Store s ON s.id = u.Store_id
 WHERE u.Item_id = {item.Id} AND s.Branch_Id = {branchId}");
             }
+            else
+            {
+                // المتوسط لم يتغير لكن السطر نفسه قد يكون جديداً (سطر مستلم تحويل يُنشأ برصيد صفر وتكلفة صفر): يأخذ متوسط فرعه.
+                opp.db.Database.ExecuteSqlInterpolated($@"UPDATE Unit_item SET P_priceAvgCost = ROUND({Dec(avgAfter)} * CASE WHEN ISNULL(Small_unit, 0) <= 0 THEN 1 ELSE Small_unit END, 2)
+WHERE id = {um.id} AND ISNULL(P_priceAvgCost, 0) <> ROUND({Dec(avgAfter)} * CASE WHEN ISNULL(Small_unit, 0) <= 0 THEN 1 ELSE Small_unit END, 2)");
+            }
 
             return new PostedLine(dpie.Id, um.id, signed, unitCostSmall, avgBefore, avgAfter, balanceAfter);
         }

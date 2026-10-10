@@ -2533,4 +2533,29 @@
   <data name="SOSignReceiver" xml:space="preserve"><value>Réceptionnaire</value></data>
   <data name="SOSignApprover" xml:space="preserve"><value>Approuvé par</value></data>
   <data name="SOPrintedAt" xml:space="preserve"><value>Imprimé le {0} par {1}</value></data>
+  <data name="SOReceiptAuto" xml:space="preserve"><value>Une réception de magasin est créée automatiquement à la réception d'un transfert ; elle n'est pas saisie manuellement.</value></data>
+  <data name="SOTransferTwoStep" xml:space="preserve"><value>Transfert en deux étapes : expédition puis confirmation</value></data>
+  <data name="SOTransferTwoStepHint" xml:space="preserve"><value>La validation débite uniquement l'expéditeur ; la quantité reste en transit jusqu'à confirmation.</value></data>
+  <data name="SOTransferDirectMode" xml:space="preserve"><value>Transfert direct</value></data>
+  <data name="SOTransferDirectHint" xml:space="preserve"><value>La validation déplace le stock de l'expéditeur au destinataire immédiatement.</value></data>
+  <data name="SOTransferDirectSwitch" xml:space="preserve"><value>Direct sans confirmation de réception</value></data>
+  <data name="SOTransferReceiveTitle" xml:space="preserve"><value>Réception du transfert</value></data>
+  <data name="SOShipped" xml:space="preserve"><value>Expédié</value></data>
+  <data name="SOReceived" xml:space="preserve"><value>Reçu</value></data>
+  <data name="SORemaining" xml:space="preserve"><value>Reste en transit</value></data>
+  <data name="SOReceiveNow" xml:space="preserve"><value>Quantité reçue maintenant</value></data>
+  <data name="SOReceiveButton" xml:space="preserve"><value>Confirmer la réception</value></data>
+  <data name="SOReceiveConfirm" xml:space="preserve"><value>La quantité est ajoutée au magasin destinataire au coût d'expédition et une réception liée est créée. Continuer ?</value></data>
+  <data name="SOReceivedMsg" xml:space="preserve"><value>Reçu et réception créée</value></data>
+  <data name="SOCloseShortage" xml:space="preserve"><value>Clôturer le reste en manquant</value></data>
+  <data name="SOCloseReason" xml:space="preserve"><value>Motif (perte/casse en transit...)</value></data>
+  <data name="SOCloseShortageConfirm" xml:space="preserve"><value>Confirmer la clôture</value></data>
+  <data name="SOCloseReasonRequired" xml:space="preserve"><value>Saisissez le motif</value></data>
+  <data name="SOTransferInTransit" xml:space="preserve"><value>En transit</value></data>
+  <data name="SOTransferPartial" xml:space="preserve"><value>Reçu partiellement</value></data>
+  <data name="SOTransferDone" xml:space="preserve"><value>Reçu en totalité</value></data>
+  <data name="SOTransferClosedShort" xml:space="preserve"><value>Clôturé avec manquant</value></data>
+  <data name="SOReceiptOf" xml:space="preserve"><value>Réception du transfert {0}</value></data>
+  <data name="SOPendingTransfers" xml:space="preserve"><value>En attente de réception</value></data>
+  <data name="SOShortageReason" xml:space="preserve"><value>Manquant : {0}</value></data>
 </root>

@@ -2531,4 +2531,29 @@
   <data name="SOSignReceiver" xml:space="preserve"><value>Received by</value></data>
   <data name="SOSignApprover" xml:space="preserve"><value>Approved by</value></data>
   <data name="SOPrintedAt" xml:space="preserve"><value>Printed {0} by {1}</value></data>
+  <data name="SOReceiptAuto" xml:space="preserve"><value>A store receipt is created automatically when a transfer shipment is received; it is not issued manually.</value></data>
+  <data name="SOTransferTwoStep" xml:space="preserve"><value>Two-step transfer: ship, then confirm receipt</value></data>
+  <data name="SOTransferTwoStepHint" xml:space="preserve"><value>Posting deducts from the sender only; the quantity stays in transit until the receiver confirms it.</value></data>
+  <data name="SOTransferDirectMode" xml:space="preserve"><value>Direct transfer</value></data>
+  <data name="SOTransferDirectHint" xml:space="preserve"><value>Posting moves the stock out of the sender and into the receiver at once.</value></data>
+  <data name="SOTransferDirectSwitch" xml:space="preserve"><value>Direct transfer without receipt confirmation</value></data>
+  <data name="SOTransferReceiveTitle" xml:space="preserve"><value>Receive transfer</value></data>
+  <data name="SOShipped" xml:space="preserve"><value>Shipped</value></data>
+  <data name="SOReceived" xml:space="preserve"><value>Received</value></data>
+  <data name="SORemaining" xml:space="preserve"><value>Remaining in transit</value></data>
+  <data name="SOReceiveNow" xml:space="preserve"><value>Quantity received now</value></data>
+  <data name="SOReceiveButton" xml:space="preserve"><value>Confirm receipt</value></data>
+  <data name="SOReceiveConfirm" xml:space="preserve"><value>The received quantity is added to the receiving store at the shipping cost and a linked receipt is created. Continue?</value></data>
+  <data name="SOReceivedMsg" xml:space="preserve"><value>Received and receipt created</value></data>
+  <data name="SOCloseShortage" xml:space="preserve"><value>Close remainder as shortage</value></data>
+  <data name="SOCloseReason" xml:space="preserve"><value>Shortage reason (lost/damaged in transit...)</value></data>
+  <data name="SOCloseShortageConfirm" xml:space="preserve"><value>Confirm closing</value></data>
+  <data name="SOCloseReasonRequired" xml:space="preserve"><value>Enter the shortage reason</value></data>
+  <data name="SOTransferInTransit" xml:space="preserve"><value>In transit</value></data>
+  <data name="SOTransferPartial" xml:space="preserve"><value>Partially received</value></data>
+  <data name="SOTransferDone" xml:space="preserve"><value>Fully received</value></data>
+  <data name="SOTransferClosedShort" xml:space="preserve"><value>Closed with shortage</value></data>
+  <data name="SOReceiptOf" xml:space="preserve"><value>Receipt of transfer {0}</value></data>
+  <data name="SOPendingTransfers" xml:space="preserve"><value>Awaiting receipt</value></data>
+  <data name="SOShortageReason" xml:space="preserve"><value>Shortage: {0}</value></data>
 </root>

@@ -118,10 +118,13 @@
         <div class="sol-status" role="group" aria-label="@Tr("SOStatusLabel")">
             @foreach (var s in StatusChips)
             {
-                <button type="button" class="sol-preset" aria-pressed="@(_status == s.Status ? "true" : "false")" @onclick="@(() => OnStatusAsync(s.Status))">
+                <button type="button" class="sol-preset" aria-pressed="@(!_pending && _status == s.Status ? "true" : "false")" @onclick="@(() => OnStatusAsync(s.Status))">
                     @Tr(s.Label)<span class="n">@CountFor(s.Status)</span>
                 </button>
             }
+            <button type="button" class="sol-preset" aria-pressed="@(_pending ? "true" : "false")" @onclick="TogglePendingAsync">
+                <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Size="Size.Small" Style="vertical-align:middle" /> @Tr("SOPendingTransfers")
+            </button>
         </div>
     </div>
 
@@ -165,7 +168,15 @@
                     <span class="sol-num">@(context.Total_Value is decimal v ? v.ToString("N2", CultureInfo.InvariantCulture) : "—")</span>
                 </MudTd>
                 <MudTd DataLabel="@Tr("SOStatusLabel")">
-                    <MudChip T="string" Size="Size.Small" Color="@StatusColor(context.Doc_Status)" Variant="Variant.Filled" Icon="@StatusIcon(context.Doc_Status)">@StatusText(context.Doc_Status, context.Reversal_Of_Id)</MudChip>
+                    @if (context.Doc_Status == 1 && context.Transfer_Status is int ts)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="@(ts == 3 ? (context.Has_Shortage ? Color.Warning : Color.Success) : Color.Info)" Variant="Variant.Filled"
+                                 Icon="@(ts == 3 ? (context.Has_Shortage ? Icons.Material.Filled.ReportProblem : Icons.Material.Filled.CheckCircle) : Icons.Material.Filled.LocalShipping)">@(ts == 3 && context.Has_Shortage ? Tr("SOTransferClosedShort") : TransferText(ts))</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="@StatusColor(context.Doc_Status)" Variant="Variant.Filled" Icon="@StatusIcon(context.Doc_Status)">@StatusText(context.Doc_Status, context.Reversal_Of_Id)</MudChip>
+                    }
                 </MudTd>
             </RowTemplate>
             <NoRecordsContent>
@@ -211,6 +222,8 @@
     };
 
     [SupplyParameterFromQuery(Name = "type")] public int? TypeQuery { get; set; }
+    /// <summary>pending=1: شحنات التحويل بانتظار الاستلام (عنصر قائمة «إذن إستلام من المخزن»).</summary>
+    [SupplyParameterFromQuery(Name = "pending")] public int? PendingQuery { get; set; }
 
     private readonly StoreOrderPageService _svc = new();
     private List<OrderTypeOption> _types = new();
@@ -220,13 +233,14 @@
     private DateTime? _from, _to;
     private string? _text, _error;
     private string _preset = "30";
-    private bool _loading = true;
+    private bool _loading = true, _pending;
 
     protected override async Task OnInitializedAsync()
     {
         LangService.OnLanguageChanged += OnLanguageChangedHandler;
         _type = TypeQuery is >= 1001 and <= 1023 ? TypeQuery.Value : 0;
-        SetPreset("30");
+        _pending = PendingQuery == 1;
+        SetPreset(_pending ? "all" : "30");   // الشحنة المعلَّقة قد تكون أقدم من الفترة الافتراضية
         try
         {
             _types = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetOrderTypes(); });
@@ -256,12 +270,14 @@
 
     private async Task ApplyPresetAsync(string key) { SetPreset(key); _skip = 0; await LoadAsync(); }
     private async Task OnTypeChangedAsync(int t) { _type = t; _skip = 0; await LoadAsync(); }
-    private async Task OnStatusAsync(int s) { _status = s; _skip = 0; await LoadAsync(); }
+    private async Task OnStatusAsync(int s) { _status = s; _pending = false; _skip = 0; await LoadAsync(); }
+    private async Task TogglePendingAsync() { _pending = !_pending; _status = -1; if (_pending) SetPreset("all"); _skip = 0; await LoadAsync(); }
     private async Task OnTextChangedAsync(string? t) { _text = t; _skip = 0; await LoadAsync(); }
     private async Task OnDateChangedAsync(DateTime? from, DateTime? to) { _from = from; _to = to; _preset = ""; _skip = 0; await LoadAsync(); }
     private async Task PageAsync(int dir) { _skip = Math.Max(0, _skip + dir * PageSize); await LoadAsync(); }
 
-    private OrderSearchFilter Filter() => new() { OrderType = _type, From = _from, To = _to, Status = _status, Text = _text, Skip = _skip, Take = PageSize };
+    private OrderSearchFilter Filter() => new() { OrderType = _type, From = _from, To = _to, Status = _status, Text = _text, Skip = _skip, Take = PageSize, PendingTransfers = _pending };
+    private string TransferText(int ts) => ts switch { 1 => Tr("SOTransferInTransit"), 2 => Tr("SOTransferPartial"), _ => Tr("SOTransferDone") };
 
     private async Task LoadAsync()
     {

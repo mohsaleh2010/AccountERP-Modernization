@@ -2531,4 +2531,29 @@
   <data name="SOSignReceiver" xml:space="preserve"><value>المستلم</value></data>
   <data name="SOSignApprover" xml:space="preserve"><value>الاعتماد</value></data>
   <data name="SOPrintedAt" xml:space="preserve"><value>طُبع فى {0} — بواسطة {1}</value></data>
+  <data name="SOReceiptAuto" xml:space="preserve"><value>إذن الاستلام من المخزن يُنشأ تلقائياً عند «استلام التحويل» على شحنة التحويل، ولا يُصدر يدوياً.</value></data>
+  <data name="SOTransferTwoStep" xml:space="preserve"><value>تحويل بخطوتين: شحن ثم تأكيد استلام</value></data>
+  <data name="SOTransferTwoStepHint" xml:space="preserve"><value>الترحيل يخصم من المرسل فقط، والكمية «فى الطريق» حتى يؤكد المستلم استلامها.</value></data>
+  <data name="SOTransferDirectMode" xml:space="preserve"><value>تحويل مباشر</value></data>
+  <data name="SOTransferDirectHint" xml:space="preserve"><value>الترحيل يخصم من المرسل ويضيف للمستلم فى نفس اللحظة.</value></data>
+  <data name="SOTransferDirectSwitch" xml:space="preserve"><value>تحويل مباشر بدون تأكيد استلام</value></data>
+  <data name="SOTransferReceiveTitle" xml:space="preserve"><value>استلام التحويل</value></data>
+  <data name="SOShipped" xml:space="preserve"><value>المشحون</value></data>
+  <data name="SOReceived" xml:space="preserve"><value>المستلم</value></data>
+  <data name="SORemaining" xml:space="preserve"><value>الباقى فى الطريق</value></data>
+  <data name="SOReceiveNow" xml:space="preserve"><value>الكمية المستلمة الآن</value></data>
+  <data name="SOReceiveButton" xml:space="preserve"><value>تأكيد الاستلام</value></data>
+  <data name="SOReceiveConfirm" xml:space="preserve"><value>يُضاف المستلم لرصيد المخزن المستلم بتكلفة الشحن، ويُنشأ إذن استلام مرتبط بالشحنة. متابعة؟</value></data>
+  <data name="SOReceivedMsg" xml:space="preserve"><value>تم الاستلام وإنشاء إذن الاستلام</value></data>
+  <data name="SOCloseShortage" xml:space="preserve"><value>إغلاق الباقى كعجز</value></data>
+  <data name="SOCloseReason" xml:space="preserve"><value>سبب العجز (فقد/تلف فى الطريق...)</value></data>
+  <data name="SOCloseShortageConfirm" xml:space="preserve"><value>تأكيد الإغلاق</value></data>
+  <data name="SOCloseReasonRequired" xml:space="preserve"><value>اكتب سبب العجز</value></data>
+  <data name="SOTransferInTransit" xml:space="preserve"><value>فى الطريق</value></data>
+  <data name="SOTransferPartial" xml:space="preserve"><value>استُلم جزئياً</value></data>
+  <data name="SOTransferDone" xml:space="preserve"><value>استُلم بالكامل</value></data>
+  <data name="SOTransferClosedShort" xml:space="preserve"><value>أُغلق بعجز</value></data>
+  <data name="SOReceiptOf" xml:space="preserve"><value>استلام للتحويل رقم {0}</value></data>
+  <data name="SOPendingTransfers" xml:space="preserve"><value>بانتظار الاستلام</value></data>
+  <data name="SOShortageReason" xml:space="preserve"><value>سبب العجز: {0}</value></data>
 </root>
