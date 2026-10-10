@@ -2635,4 +2635,29 @@
   <data name="SKCopy" xml:space="preserve"><value>Copy items</value></data>
   <data name="SKConfirm" xml:space="preserve"><value>{0} zero-balance line(s) will be created in the target. Continue?</value></data>
   <data name="SKDone" xml:space="preserve"><value>{0} item(s) added</value></data>
+  <data name="IL_types" xml:space="preserve"><value>Item types</value></data>
+  <data name="IL_bodies" xml:space="preserve"><value>Item forms</value></data>
+  <data name="IL_colors" xml:space="preserve"><value>Item colors</value></data>
+  <data name="IL_descriptions" xml:space="preserve"><value>Item descriptions</value></data>
+  <data name="IL_other-names" xml:space="preserve"><value>Other item names</value></data>
+  <data name="IL_factories" xml:space="preserve"><value>Manufacturers</value></data>
+  <data name="IL_sizes" xml:space="preserve"><value>Item sizes</value></data>
+  <data name="IL_degrees" xml:space="preserve"><value>Item grades</value></data>
+  <data name="IL_natures" xml:space="preserve"><value>Item natures</value></data>
+  <data name="IL_groups" xml:space="preserve"><value>Item groups</value></data>
+  <data name="ILSub" xml:space="preserve"><value>Reference lists that item data is chosen from</value></data>
+  <data name="ILLists" xml:space="preserve"><value>Lists</value></data>
+  <data name="ILAdd" xml:space="preserve"><value>Add a value</value></data>
+  <data name="ILAddButton" xml:space="preserve"><value>Add</value></data>
+  <data name="ILSearch" xml:space="preserve"><value>Search</value></data>
+  <data name="ILUsed" xml:space="preserve"><value>Used by items</value></data>
+  <data name="ILActive" xml:space="preserve"><value>Active</value></data>
+  <data name="ILRename" xml:space="preserve"><value>Rename</value></data>
+  <data name="ILUsedNoDelete" xml:space="preserve"><value>Used by items — cannot be deleted</value></data>
+  <data name="ILEmpty" xml:space="preserve"><value>No values yet</value></data>
+  <data name="ILAdded" xml:space="preserve"><value>Value added</value></data>
+  <data name="ILRenamed" xml:space="preserve"><value>Renamed</value></data>
+  <data name="ILRenamedUsed" xml:space="preserve"><value>Renamed and updated on {0} item(s)</value></data>
+  <data name="ILDeleteConfirm" xml:space="preserve"><value>Delete “{0}” permanently?</value></data>
+  <data name="ILDeleted" xml:space="preserve"><value>Value deleted</value></data>
 </root>

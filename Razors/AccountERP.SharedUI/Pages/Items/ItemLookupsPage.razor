@@ -1,0 +1,226 @@
+@* 🟢 خطة 04 — المرحلة 1: القوائم المرجعية للأصناف فى صفحة واحدة (أنواع، هيئات، ألوان، وصف، أسماء أخرى، مصانع، مقاسات، فرز،
+   طبيعة، مجموعات) بدل شاشة ويندوز لكل جدول. إضافة، تعديل الاسم فى مكانه (ويُحدَّث فى الأصناف)، إيقاف/تشغيل، حذف غير المستعمل فقط،
+   وعدد الأصناف المستعملة لكل قيمة. التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@page "/items/lookups"
+@page "/items/lookups/{Kind}"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.ItemLookupService
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("IL_" + _kind)</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .il-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .il-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .il-head .ico .mud-icon-root { font-size: 2rem; }
+    .il-head .titles { flex: 1 1 260px; }
+    .il-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .il-gap { margin-top: 16px; }
+    .il-kinds { display: flex; flex-wrap: wrap; gap: 8px; }
+    .il-chip { min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface);
+               color: var(--mud-palette-text-primary); font: inherit; font-size: .875rem; cursor: pointer; transition: background .15s, border-color .15s; }
+    .il-chip:hover { border-color: var(--mud-palette-primary); }
+    .il-chip:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .il-chip[aria-current="page"] { background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent); border-color: var(--mud-palette-primary);
+                                    color: var(--mud-palette-primary); font-weight: 600; }
+    .il-add { display: grid; grid-template-columns: minmax(0, 2fr) auto minmax(0, 1.4fr); gap: 12px; align-items: start; }
+    .il-add .mud-button-root { min-height: 56px; }
+    .il-used { font-variant-numeric: tabular-nums; }
+    .il-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .il-empty .mud-icon-root { opacity: .5; }
+    @@media (max-width: 899px) { .il-add { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card il-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Category" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("IL_" + _kind)</h1>
+            <div class="sub">@Tr("ILSub")</div>
+        </div>
+    </div>
+
+    <nav class="inv-card il-gap" aria-label="@Tr("ILLists")">
+        <div class="il-kinds">
+            @foreach (var d in Lookups)
+            {
+                <button type="button" class="il-chip" aria-current="@(d.Kind == _kind ? "page" : null)" @onclick="@(() => GoAsync(d.Kind))">@Tr("IL_" + d.Kind)</button>
+            }
+        </div>
+    </nav>
+
+    <div class="inv-card il-gap">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.AddCircle" />@Tr("ILAdd")</h2>
+        <div class="il-add">
+            <MudTextField T="string" @bind-Value="_newName" Label="@Tr("NameColumn")" Variant="Variant.Outlined" Immediate="true" OnKeyDown="OnAddKeyAsync" MaxLength="200" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="@(_busy || string.IsNullOrWhiteSpace(_newName))" OnClick="AddAsync">@Tr("ILAddButton")</MudButton>
+            <MudTextField T="string" Value="_search" ValueChanged="OnSearchAsync" Label="@Tr("ILSearch")" Variant="Variant.Outlined" Immediate="true" DebounceInterval="300"
+                          Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+        </div>
+        @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-3" role="alert">@_error</MudAlert> }
+    </div>
+
+    <div class="inv-card il-gap">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("IL_" + _kind)<span class="inv-count">@_rows.Count</span></h2>
+        <MudTable Items="@_rows" T="LookupRow" Hover="true" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Loading="_loading" LoadingProgressColor="Color.Primary">
+            <HeaderContent>
+                <MudTh>@Tr("NameColumn")</MudTh>
+                <MudTh Style="text-align:end">@Tr("ILUsed")</MudTh>
+                @if (_def.ActiveCol != null) { <MudTh>@Tr("ILActive")</MudTh> }
+                <MudTh Style="width:120px"></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("NameColumn")">
+                    @if (_editId == context.Id)
+                    {
+                        <MudTextField T="string" @bind-Value="_editName" Immediate="true" AutoFocus="true" Margin="Margin.Dense" Variant="Variant.Outlined" MaxLength="200" />
+                    }
+                    else
+                    {
+                        <span style="@(context.Is_Active ? "" : "opacity:.55")">@context.Name</span>
+                    }
+                </MudTd>
+                <MudTd DataLabel="@Tr("ILUsed")" Style="text-align:end">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="@(context.Used_Count > 0 ? Color.Primary : Color.Default)"><span class="il-used">@context.Used_Count</span></MudChip>
+                </MudTd>
+                @if (_def.ActiveCol != null)
+                {
+                    <MudTd DataLabel="@Tr("ILActive")">
+                        <MudSwitch T="bool" Value="context.Is_Active" ValueChanged="@(v => SetActiveAsync(context, v))" Color="Color.Primary" aria-label="@Tr("ILActive")" />
+                    </MudTd>
+                }
+                <MudTd Style="white-space:nowrap">
+                    @if (_editId == context.Id)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Check" Color="Color.Success" aria-label="@Tr("Save")" Disabled="_busy" OnClick="@(() => SaveEditAsync(context))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Close" aria-label="@Tr("Cancel")" OnClick="@(() => _editId = 0)" />
+                    }
+                    else
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="@Tr("ILRename")" OnClick="@(() => { _editId = context.Id; _editName = context.Name; })" />
+                        <MudTooltip Text="@(context.Used_Count > 0 ? Tr("ILUsedNoDelete") : Tr("DeleteItemLabel"))">
+                            <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Color="Color.Error" aria-label="@Tr("DeleteItemLabel")" Disabled="@(_busy || context.Used_Count > 0)" OnClick="@(() => DeleteAsync(context))" />
+                        </MudTooltip>
+                    }
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="il-empty"><MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" /><span>@Tr("ILEmpty")</span></div>
+            </NoRecordsContent>
+        </MudTable>
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    [Parameter] public string? Kind { get; set; }
+
+    private readonly ItemLookupService _svc = new();
+    private string _kind = "types";
+    private LookupDef _def = ItemLookupService.Lookups[0];
+    private List<LookupRow> _rows = new();
+    private string? _newName, _search, _error, _editName;
+    private long _editId;
+    private bool _loading = true, _busy;
+
+    protected override void OnInitialized() => LangService.OnLanguageChanged += OnLanguageChangedHandler;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var k = Lookups.FirstOrDefault(l => string.Equals(l.Kind, Kind, StringComparison.OrdinalIgnoreCase))?.Kind ?? "types";
+        if (k != _kind || _rows.Count == 0) { _kind = k; _def = ItemLookupService.Get(k); _editId = 0; _error = null; await LoadAsync(); }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private Task GoAsync(string kind) { Nav.NavigateTo($"/items/lookups/{kind}"); return Task.CompletedTask; }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        string k = _kind, s = _search ?? "";
+        try { _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.List(k, s); }); }
+        catch (Exception ex) { _error = Inner(ex); _rows = new(); }
+        finally { _loading = false; }
+    }
+
+    private async Task OnSearchAsync(string? s) { _search = s; await LoadAsync(); }
+    private async Task OnAddKeyAsync(KeyboardEventArgs e) { if (e.Key == "Enter") await AddAsync(); }
+
+    private async Task AddAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newName)) return;
+        _busy = true; _error = null;
+        string k = _kind, n = _newName;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Add(k, n); });
+            Snackbar.Add(Tr("ILAdded"), Severity.Success);
+            _newName = null;
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task SaveEditAsync(LookupRow row)
+    {
+        if (string.IsNullOrWhiteSpace(_editName) || _editName.Trim() == row.Name) { _editId = 0; return; }
+        _busy = true; _error = null;
+        string k = _kind, n = _editName; long id = row.Id;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.Rename(k, id, n); });
+            Snackbar.Add(row.Used_Count > 0 ? Tr("ILRenamedUsed", row.Used_Count) : Tr("ILRenamed"), Severity.Success);
+            _editId = 0;
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task SetActiveAsync(LookupRow row, bool v)
+    {
+        string k = _kind; long id = row.Id;
+        try { await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.SetActive(k, id, v); }); row.Is_Active = v; }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private async Task DeleteAsync(LookupRow row)
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("DeleteItemLabel"), Tr("ILDeleteConfirm", row.Name), yesText: Tr("DeleteItemLabel"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null;
+        string k = _kind; long id = row.Id;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.Delete(k, id); });
+            Snackbar.Add(Tr("ILDeleted"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

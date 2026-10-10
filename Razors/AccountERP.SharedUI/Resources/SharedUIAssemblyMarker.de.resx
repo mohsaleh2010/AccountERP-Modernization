@@ -2637,4 +2637,29 @@
   <data name="SKCopy" xml:space="preserve"><value>Artikel kopieren</value></data>
   <data name="SKConfirm" xml:space="preserve"><value>{0} Zeile(n) mit Nullbestand werden im Ziel angelegt. Fortfahren?</value></data>
   <data name="SKDone" xml:space="preserve"><value>{0} Artikel hinzugefügt</value></data>
+  <data name="IL_types" xml:space="preserve"><value>Artikeltypen</value></data>
+  <data name="IL_bodies" xml:space="preserve"><value>Artikelformen</value></data>
+  <data name="IL_colors" xml:space="preserve"><value>Artikelfarben</value></data>
+  <data name="IL_descriptions" xml:space="preserve"><value>Artikelbeschreibungen</value></data>
+  <data name="IL_other-names" xml:space="preserve"><value>Weitere Artikelnamen</value></data>
+  <data name="IL_factories" xml:space="preserve"><value>Hersteller</value></data>
+  <data name="IL_sizes" xml:space="preserve"><value>Artikelgrößen</value></data>
+  <data name="IL_degrees" xml:space="preserve"><value>Artikelgüten</value></data>
+  <data name="IL_natures" xml:space="preserve"><value>Artikelarten</value></data>
+  <data name="IL_groups" xml:space="preserve"><value>Artikelgruppen</value></data>
+  <data name="ILSub" xml:space="preserve"><value>Referenzlisten für Artikeldaten</value></data>
+  <data name="ILLists" xml:space="preserve"><value>Listen</value></data>
+  <data name="ILAdd" xml:space="preserve"><value>Wert hinzufügen</value></data>
+  <data name="ILAddButton" xml:space="preserve"><value>Hinzufügen</value></data>
+  <data name="ILSearch" xml:space="preserve"><value>Suchen</value></data>
+  <data name="ILUsed" xml:space="preserve"><value>Von Artikeln verwendet</value></data>
+  <data name="ILActive" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="ILRename" xml:space="preserve"><value>Umbenennen</value></data>
+  <data name="ILUsedNoDelete" xml:space="preserve"><value>Von Artikeln verwendet — nicht löschbar</value></data>
+  <data name="ILEmpty" xml:space="preserve"><value>Noch keine Werte</value></data>
+  <data name="ILAdded" xml:space="preserve"><value>Wert hinzugefügt</value></data>
+  <data name="ILRenamed" xml:space="preserve"><value>Umbenannt</value></data>
+  <data name="ILRenamedUsed" xml:space="preserve"><value>Umbenannt und in {0} Artikel(n) aktualisiert</value></data>
+  <data name="ILDeleteConfirm" xml:space="preserve"><value>„{0}“ endgültig löschen?</value></data>
+  <data name="ILDeleted" xml:space="preserve"><value>Wert gelöscht</value></data>
 </root>

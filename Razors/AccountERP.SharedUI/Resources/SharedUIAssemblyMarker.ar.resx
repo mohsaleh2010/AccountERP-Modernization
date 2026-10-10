@@ -2635,4 +2635,29 @@
   <data name="SKCopy" xml:space="preserve"><value>نسخ الأصناف</value></data>
   <data name="SKConfirm" xml:space="preserve"><value>سيُنشأ {0} سطر برصيد صفر فى المستلم. متابعة؟</value></data>
   <data name="SKDone" xml:space="preserve"><value>أُضيف {0} صنف</value></data>
+  <data name="IL_types" xml:space="preserve"><value>أنواع الصنف</value></data>
+  <data name="IL_bodies" xml:space="preserve"><value>هيئات الصنف</value></data>
+  <data name="IL_colors" xml:space="preserve"><value>ألوان الصنف</value></data>
+  <data name="IL_descriptions" xml:space="preserve"><value>وصف الصنف</value></data>
+  <data name="IL_other-names" xml:space="preserve"><value>أسماء الصنف الأخرى</value></data>
+  <data name="IL_factories" xml:space="preserve"><value>مصانع الصنف</value></data>
+  <data name="IL_sizes" xml:space="preserve"><value>مقاسات الصنف</value></data>
+  <data name="IL_degrees" xml:space="preserve"><value>فرز / درجات الصنف</value></data>
+  <data name="IL_natures" xml:space="preserve"><value>طبيعة الصنف</value></data>
+  <data name="IL_groups" xml:space="preserve"><value>مجموعات الصنف</value></data>
+  <data name="ILSub" xml:space="preserve"><value>القوائم المرجعية التى تُختار منها بيانات الأصناف</value></data>
+  <data name="ILLists" xml:space="preserve"><value>القوائم</value></data>
+  <data name="ILAdd" xml:space="preserve"><value>إضافة قيمة</value></data>
+  <data name="ILAddButton" xml:space="preserve"><value>إضافة</value></data>
+  <data name="ILSearch" xml:space="preserve"><value>بحث</value></data>
+  <data name="ILUsed" xml:space="preserve"><value>مستعملة فى الأصناف</value></data>
+  <data name="ILActive" xml:space="preserve"><value>نشط</value></data>
+  <data name="ILRename" xml:space="preserve"><value>تعديل الاسم</value></data>
+  <data name="ILUsedNoDelete" xml:space="preserve"><value>مستعملة فى أصناف — لا تُحذف</value></data>
+  <data name="ILEmpty" xml:space="preserve"><value>لا قيم بعد</value></data>
+  <data name="ILAdded" xml:space="preserve"><value>أُضيفت القيمة</value></data>
+  <data name="ILRenamed" xml:space="preserve"><value>عُدّل الاسم</value></data>
+  <data name="ILRenamedUsed" xml:space="preserve"><value>عُدّل الاسم وحُدّث فى {0} صنف</value></data>
+  <data name="ILDeleteConfirm" xml:space="preserve"><value>حذف «{0}» نهائياً؟</value></data>
+  <data name="ILDeleted" xml:space="preserve"><value>حُذفت القيمة</value></data>
 </root>

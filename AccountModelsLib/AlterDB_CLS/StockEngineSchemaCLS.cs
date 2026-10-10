@@ -149,6 +149,12 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("menuItem86", "/store/needs"), ("menuItem87", "/store/needs"), ("menuItem88", "/store/needs"), ("menuItem89", "/store/needs"),
             ("toolStripMenuItemUponRequest", "/store/needs"), ("ToolStripMenuItemInvoiceUponRequest", "/store/needs"),
             ("menuItemAddItemsToStore", "/store/copy-items"),
+            // خطة 04 م1: القوائم المرجعية للأصناف فى صفحة واحدة.
+            ("menuItemItem_Types", "/items/lookups/types"), ("menuItemBodies_Item", "/items/lookups/bodies"), ("menuItem9Item_Color", "/items/lookups/colors"),
+            ("ToolStripMenuitemsTypesDescription", "/items/lookups/descriptions"), ("ToolStripMenuItems_TypesDescriptionNameOther", "/items/lookups/other-names"),
+            ("ToolStripMenuItems_TypesFactory_Name", "/items/lookups/factories"), ("ToolStripMenuItems_TypesSize_Name", "/items/lookups/sizes"),
+            ("ToolStripMenuItems_TypesDegreeFarz_Name", "/items/lookups/degrees"), ("ToolStripMenuItemItems_Nature", "/items/lookups/natures"),
+            ("ToolStripMenuItemItems_Groups", "/items/lookups/groups"),
             // قائمة وبحث الأذون (المرحلة 4) بدل Order_detailes لكل نوع، وقائمة كل الأذون.
             // ملاحظة: القائمة القديمة تفتح «مرتجع صرف قطع الغيار» (879) على 1022 وعنصر «صرف إلى موظف» (881) بلا شاشة؛ هنا كلٌّ لنوعه الصحيح.
             ("menuItemOrdersList", "/store/orders"),
