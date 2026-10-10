@@ -2662,4 +2662,47 @@
   <data name="ILRenamedUsed" xml:space="preserve"><value>Renommée et mise à jour sur {0} article(s)</value></data>
   <data name="ILDeleteConfirm" xml:space="preserve"><value>Supprimer « {0} » définitivement ?</value></data>
   <data name="ILDeleted" xml:space="preserve"><value>Valeur supprimée</value></data>
+  <data name="IU_Title" xml:space="preserve"><value>Unités d'article</value></data>
+  <data name="IU_Sub" xml:space="preserve"><value>Grande et petite unité et leur conversion</value></data>
+  <data name="IU_New" xml:space="preserve"><value>Nouvelle unité</value></data>
+  <data name="IU_Edit" xml:space="preserve"><value>Modifier : {0}</value></data>
+  <data name="IU_EditAria" xml:space="preserve"><value>Modifier {0}</value></data>
+  <data name="IU_Name" xml:space="preserve"><value>Nom de l'unité</value></data>
+  <data name="IU_NameHelp" xml:space="preserve"><value>ex. Carton × 24</value></data>
+  <data name="IU_Big" xml:space="preserve"><value>Grande unité</value></data>
+  <data name="IU_Small" xml:space="preserve"><value>Petite unité</value></data>
+  <data name="IU_Factor" xml:space="preserve"><value>Petites par grande</value></data>
+  <data name="IU_FactorHelp" xml:space="preserve"><value>Sert à convertir quantités et soldes</value></data>
+  <data name="IU_FactorLocked" xml:space="preserve"><value>Verrouillé : utilisée par {0} ligne(s)</value></data>
+  <data name="IU_Retail" xml:space="preserve"><value>Parts de détail</value></data>
+  <data name="IU_RetailHelp" xml:space="preserve"><value>Vente fractionnée (ex. médicaments) ; 1 = aucune</value></data>
+  <data name="IU_Code" xml:space="preserve"><value>Code</value></data>
+  <data name="IU_Default" xml:space="preserve"><value>Unité par défaut des nouveaux articles</value></data>
+  <data name="IU_DefaultChip" xml:space="preserve"><value>Par défaut</value></data>
+  <data name="IU_Preview" xml:space="preserve"><value>1 {0} = {1} {2}</value></data>
+  <data name="IU_Conversion" xml:space="preserve"><value>Conversion</value></data>
+  <data name="IU_RetailShort" xml:space="preserve"><value>Fractionnée en {0} parts</value></data>
+  <data name="IU_Saved" xml:space="preserve"><value>Modifications enregistrées</value></data>
+  <data name="IC_Title" xml:space="preserve"><value>Catégories d'article</value></data>
+  <data name="IC_Sub" xml:space="preserve"><value>Types principaux et leurs catégories ; choisissez un type</value></data>
+  <data name="IC_Mains" xml:space="preserve"><value>Types principaux</value></data>
+  <data name="IC_NewMain" xml:space="preserve"><value>Nouveau type principal</value></data>
+  <data name="IC_EditMain" xml:space="preserve"><value>Modifier le type</value></data>
+  <data name="IC_AllMains" xml:space="preserve"><value>Tous les types</value></data>
+  <data name="IC_ItemsCount" xml:space="preserve"><value>{0} article(s)</value></data>
+  <data name="IC_Nature" xml:space="preserve"><value>Nature</value></data>
+  <data name="IC_T0" xml:space="preserve"><value>Non précisé</value></data>
+  <data name="IC_T1" xml:space="preserve"><value>Ventes</value></data>
+  <data name="IC_T2" xml:space="preserve"><value>Achats</value></data>
+  <data name="IC_T3" xml:space="preserve"><value>En-cours de fabrication</value></data>
+  <data name="IC_NewCat" xml:space="preserve"><value>Nouvelle catégorie</value></data>
+  <data name="IC_CatName" xml:space="preserve"><value>Nom de la catégorie</value></data>
+  <data name="IC_Main" xml:space="preserve"><value>Type principal</value></data>
+  <data name="IC_Kind" xml:space="preserve"><value>Utilisée pour</value></data>
+  <data name="IC_Items" xml:space="preserve"><value>Articles / produits</value></data>
+  <data name="IC_Services" xml:space="preserve"><value>Services</value></data>
+  <data name="IC_Unspecified" xml:space="preserve"><value>Non précisé</value></data>
+  <data name="IC_Default" xml:space="preserve"><value>Catégorie par défaut</value></data>
+  <data name="IC_AllCats" xml:space="preserve"><value>Toutes les catégories</value></data>
+  <data name="IC_UsedNoDelete" xml:space="preserve"><value>Utilisée — désactivez-la plutôt</value></data>
 </root>

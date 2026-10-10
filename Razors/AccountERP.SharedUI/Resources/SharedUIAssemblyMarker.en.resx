@@ -2660,4 +2660,47 @@
   <data name="ILRenamedUsed" xml:space="preserve"><value>Renamed and updated on {0} item(s)</value></data>
   <data name="ILDeleteConfirm" xml:space="preserve"><value>Delete “{0}” permanently?</value></data>
   <data name="ILDeleted" xml:space="preserve"><value>Value deleted</value></data>
+  <data name="IU_Title" xml:space="preserve"><value>Item units</value></data>
+  <data name="IU_Sub" xml:space="preserve"><value>Large and small units and the conversion between them</value></data>
+  <data name="IU_New" xml:space="preserve"><value>New unit</value></data>
+  <data name="IU_Edit" xml:space="preserve"><value>Edit: {0}</value></data>
+  <data name="IU_EditAria" xml:space="preserve"><value>Edit {0}</value></data>
+  <data name="IU_Name" xml:space="preserve"><value>Unit name</value></data>
+  <data name="IU_NameHelp" xml:space="preserve"><value>e.g. Carton × 24</value></data>
+  <data name="IU_Big" xml:space="preserve"><value>Large unit</value></data>
+  <data name="IU_Small" xml:space="preserve"><value>Small unit</value></data>
+  <data name="IU_Factor" xml:space="preserve"><value>Small units per large</value></data>
+  <data name="IU_FactorHelp" xml:space="preserve"><value>Used to convert quantities and balances</value></data>
+  <data name="IU_FactorLocked" xml:space="preserve"><value>Locked: unit used by {0} item line(s)</value></data>
+  <data name="IU_Retail" xml:space="preserve"><value>Retail parts</value></data>
+  <data name="IU_RetailHelp" xml:space="preserve"><value>For split selling (e.g. medicines); 1 = none</value></data>
+  <data name="IU_Code" xml:space="preserve"><value>Code</value></data>
+  <data name="IU_Default" xml:space="preserve"><value>Default unit for new items</value></data>
+  <data name="IU_DefaultChip" xml:space="preserve"><value>Default</value></data>
+  <data name="IU_Preview" xml:space="preserve"><value>1 {0} = {1} {2}</value></data>
+  <data name="IU_Conversion" xml:space="preserve"><value>Conversion</value></data>
+  <data name="IU_RetailShort" xml:space="preserve"><value>Split into {0} parts</value></data>
+  <data name="IU_Saved" xml:space="preserve"><value>Changes saved</value></data>
+  <data name="IC_Title" xml:space="preserve"><value>Item categories</value></data>
+  <data name="IC_Sub" xml:space="preserve"><value>Main types and their categories; pick a type to filter</value></data>
+  <data name="IC_Mains" xml:space="preserve"><value>Main types</value></data>
+  <data name="IC_NewMain" xml:space="preserve"><value>New main type</value></data>
+  <data name="IC_EditMain" xml:space="preserve"><value>Edit type</value></data>
+  <data name="IC_AllMains" xml:space="preserve"><value>All types</value></data>
+  <data name="IC_ItemsCount" xml:space="preserve"><value>{0} item(s)</value></data>
+  <data name="IC_Nature" xml:space="preserve"><value>Category nature</value></data>
+  <data name="IC_T0" xml:space="preserve"><value>Unspecified</value></data>
+  <data name="IC_T1" xml:space="preserve"><value>Sales</value></data>
+  <data name="IC_T2" xml:space="preserve"><value>Purchases</value></data>
+  <data name="IC_T3" xml:space="preserve"><value>Work in progress</value></data>
+  <data name="IC_NewCat" xml:space="preserve"><value>New category</value></data>
+  <data name="IC_CatName" xml:space="preserve"><value>Category name</value></data>
+  <data name="IC_Main" xml:space="preserve"><value>Main type</value></data>
+  <data name="IC_Kind" xml:space="preserve"><value>Used for</value></data>
+  <data name="IC_Items" xml:space="preserve"><value>Items / products</value></data>
+  <data name="IC_Services" xml:space="preserve"><value>Services</value></data>
+  <data name="IC_Unspecified" xml:space="preserve"><value>Unspecified</value></data>
+  <data name="IC_Default" xml:space="preserve"><value>Default category for this kind</value></data>
+  <data name="IC_AllCats" xml:space="preserve"><value>All categories</value></data>
+  <data name="IC_UsedNoDelete" xml:space="preserve"><value>Used by items — deactivate instead</value></data>
 </root>

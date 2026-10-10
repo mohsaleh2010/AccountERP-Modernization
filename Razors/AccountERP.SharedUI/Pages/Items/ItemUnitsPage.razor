@@ -1,0 +1,201 @@
+@* 🟢 خطة 04 — المرحلة 1: وحدات الأصناف (بدل UnitListFrm). إضافة/تعديل فى بطاقة واحدة، وحدة افتراضية واحدة، معامل التحويل مقفول
+   للوحدة المستعملة (لأنه يغيّر الأرصدة)، تعديل اسم الكبرى يحدّث الأصناف لا المستندات، والحذف لغير المستعمل فقط. التصميم حسب ui-ux-pro-max. *@
+@page "/items/units"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.ItemUnitCategoryService
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@implements IDisposable
+
+<PageTitle>@Tr("IU_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .iu-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .iu-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .iu-head .ico .mud-icon-root { font-size: 2rem; }
+    .iu-head .titles { flex: 1 1 260px; }
+    .iu-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .iu-gap { margin-top: 16px; }
+    .iu-form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 16px; align-items: start; }
+    .iu-form .wide { grid-column: span 2; }
+    .iu-preview { margin-top: 12px; padding: 10px 14px; border-radius: 10px; font-size: .9rem;
+                  background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent); color: var(--mud-palette-text-primary); }
+    .iu-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .iu-actions .mud-button-root { min-height: 44px; }
+    .iu-num { font-variant-numeric: tabular-nums; }
+    .iu-conv { color: var(--mud-palette-text-secondary); font-size: .85rem; }
+    .iu-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .iu-empty .mud-icon-root { opacity: .5; }
+    .iu-editing { outline: 2px solid var(--mud-palette-primary); outline-offset: -2px; }
+    @@media (max-width: 1099px) { .iu-form { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 599px) { .iu-form { grid-template-columns: minmax(0, 1fr); } .iu-form .wide { grid-column: auto; } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card iu-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Straighten" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("IU_Title")</h1>
+            <div class="sub">@Tr("IU_Sub")</div>
+        </div>
+    </div>
+
+    <div class="inv-card iu-gap @(_form.Id != 0 ? "iu-editing" : "")">
+        <h2 class="inv-card-title">
+            <MudIcon Icon="@(_form.Id == 0 ? Icons.Material.Filled.AddCircle : Icons.Material.Filled.Edit)" />
+            @(_form.Id == 0 ? Tr("IU_New") : Tr("IU_Edit", _form.Name ?? ""))
+        </h2>
+        <div class="iu-form">
+            <MudTextField T="string" @bind-Value="_form.Name" Label="@Tr("IU_Name")" Variant="Variant.Outlined" Required="true" MaxLength="200" HelperText="@Tr("IU_NameHelp")" />
+            <MudTextField T="string" @bind-Value="_form.Big_Unit" Label="@Tr("IU_Big")" Variant="Variant.Outlined" Required="true" MaxLength="200" Immediate="true" />
+            <MudTextField T="string" @bind-Value="_form.Small_Unit" Label="@Tr("IU_Small")" Variant="Variant.Outlined" Required="true" MaxLength="200" Immediate="true" />
+            <MudNumericField T="decimal" @bind-Value="_form.Factor" Label="@Tr("IU_Factor")" Variant="Variant.Outlined" Min="0.0001m" Immediate="true"
+                             Disabled="@(_form.Id != 0 && _formUsed > 0)" HelperText="@(_form.Id != 0 && _formUsed > 0 ? Tr("IU_FactorLocked", _formUsed) : Tr("IU_FactorHelp"))" />
+            <MudNumericField T="int" @bind-Value="_form.Retail_Parts" Label="@Tr("IU_Retail")" Variant="Variant.Outlined" Min="1" HelperText="@Tr("IU_RetailHelp")" />
+            <MudTextField T="string" @bind-Value="_form.Code" Label="@Tr("IU_Code")" Variant="Variant.Outlined" MaxLength="50" />
+            <div class="wide" style="display:flex;align-items:center;min-height:56px">
+                <MudSwitch T="bool" @bind-Value="_form.Is_Default" Color="Color.Primary" Label="@Tr("IU_Default")" />
+            </div>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(_form.Big_Unit) && !string.IsNullOrWhiteSpace(_form.Small_Unit) && _form.Factor > 0)
+        {
+            <div class="iu-preview" aria-live="polite"><MudIcon Icon="@Icons.Material.Filled.SwapHoriz" Size="Size.Small" Style="vertical-align:middle" /> @Tr("IU_Preview", _form.Big_Unit, Num(_form.Factor), _form.Small_Unit)</div>
+        }
+        @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-3" role="alert">@_error</MudAlert> }
+        <div class="iu-actions">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="_busy" OnClick="SaveAsync">@Tr("Save")</MudButton>
+            @if (_form.Id != 0) { <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Close" OnClick="NewForm">@Tr("Cancel")</MudButton> }
+        </div>
+    </div>
+
+    <div class="inv-card iu-gap">
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+            <h2 class="inv-card-title" style="margin:0"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("IU_Title")<span class="inv-count">@_rows.Count</span></h2>
+            <div style="flex:0 1 320px"><MudTextField T="string" Value="_search" ValueChanged="OnSearchAsync" Label="@Tr("ILSearch")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                          Immediate="true" DebounceInterval="300" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" /></div>
+        </div>
+        <MudTable Items="@_rows" T="UnitRow" Hover="true" Elevation="0" Class="inv-table mt-3" Breakpoint="Breakpoint.Sm" Loading="_loading" LoadingProgressColor="Color.Primary">
+            <HeaderContent>
+                <MudTh>@Tr("IU_Name")</MudTh>
+                <MudTh>@Tr("IU_Conversion")</MudTh>
+                <MudTh>@Tr("IU_Code")</MudTh>
+                <MudTh Style="text-align:end">@Tr("ILUsed")</MudTh>
+                <MudTh Style="width:120px"></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("IU_Name")">
+                    <strong>@context.Name</strong>
+                    @if (context.Is_Default) { <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" Class="ms-2">@Tr("IU_DefaultChip")</MudChip> }
+                </MudTd>
+                <MudTd DataLabel="@Tr("IU_Conversion")">
+                    <span class="iu-num">1 @context.Big_Unit = @Num(context.Factor) @context.Small_Unit</span>
+                    @if (context.Retail_Parts > 1) { <div class="iu-conv">@Tr("IU_RetailShort", context.Retail_Parts)</div> }
+                </MudTd>
+                <MudTd DataLabel="@Tr("IU_Code")">@context.Code</MudTd>
+                <MudTd DataLabel="@Tr("ILUsed")" Style="text-align:end">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="@(context.Used_Count > 0 ? Color.Primary : Color.Default)"><span class="iu-num">@context.Used_Count</span></MudChip>
+                </MudTd>
+                <MudTd Style="white-space:nowrap">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="@Tr("IU_EditAria", context.Name)" OnClick="@(() => Edit(context))" />
+                    <MudTooltip Text="@(context.Used_Count > 0 ? Tr("ILUsedNoDelete") : Tr("DeleteItemLabel"))">
+                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Color="Color.Error" aria-label="@Tr("DeleteItemLabel")" Disabled="@(_busy || context.Used_Count > 0)" OnClick="@(() => DeleteAsync(context))" />
+                    </MudTooltip>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="iu-empty"><MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" /><span>@Tr("ILEmpty")</span></div>
+            </NoRecordsContent>
+        </MudTable>
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private readonly ItemUnitCategoryService _svc = new();
+    private List<UnitRow> _rows = new();
+    private UnitRow _form = NewRow();
+    private int _formUsed;
+    private string? _search, _error;
+    private bool _loading = true, _busy;
+
+    private static UnitRow NewRow() => new() { Factor = 1, Retail_Parts = 1 };
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        string s = _search ?? "";
+        try { _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.ListUnits(s); }); }
+        catch (Exception ex) { _error = Inner(ex); _rows = new(); }
+        finally { _loading = false; }
+    }
+
+    private async Task OnSearchAsync(string? s) { _search = s; await LoadAsync(); }
+
+    private void NewForm() { _form = NewRow(); _formUsed = 0; _error = null; }
+
+    private void Edit(UnitRow r)
+    {
+        _form = new UnitRow { Id = r.Id, Name = r.Name, Big_Unit = r.Big_Unit, Small_Unit = r.Small_Unit, Factor = r.Factor, Retail_Parts = r.Retail_Parts, Code = r.Code, Is_Default = r.Is_Default };
+        _formUsed = r.Used_Count; _error = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        _busy = true; _error = null;
+        var f = _form; bool isNew = f.Id == 0;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.SaveUnit(f); });
+            Snackbar.Add(isNew ? Tr("ILAdded") : Tr("IU_Saved"), Severity.Success);
+            NewForm();
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task DeleteAsync(UnitRow row)
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("DeleteItemLabel"), Tr("ILDeleteConfirm", row.Name), yesText: Tr("DeleteItemLabel"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null;
+        long id = row.Id;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.DeleteUnit(id); });
+            Snackbar.Add(Tr("ILDeleted"), Severity.Success);
+            if (_form.Id == id) NewForm();
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private static string Num(decimal v) => v.ToString("0.####", CultureInfo.InvariantCulture);
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

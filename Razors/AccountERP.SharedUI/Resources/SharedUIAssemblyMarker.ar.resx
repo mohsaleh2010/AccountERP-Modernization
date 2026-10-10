@@ -2660,4 +2660,47 @@
   <data name="ILRenamedUsed" xml:space="preserve"><value>عُدّل الاسم وحُدّث فى {0} صنف</value></data>
   <data name="ILDeleteConfirm" xml:space="preserve"><value>حذف «{0}» نهائياً؟</value></data>
   <data name="ILDeleted" xml:space="preserve"><value>حُذفت القيمة</value></data>
+  <data name="IU_Title" xml:space="preserve"><value>وحدات الأصناف</value></data>
+  <data name="IU_Sub" xml:space="preserve"><value>الوحدة الكبرى والصغرى ومعامل التحويل بينهما</value></data>
+  <data name="IU_New" xml:space="preserve"><value>وحدة جديدة</value></data>
+  <data name="IU_Edit" xml:space="preserve"><value>تعديل: {0}</value></data>
+  <data name="IU_EditAria" xml:space="preserve"><value>تعديل {0}</value></data>
+  <data name="IU_Name" xml:space="preserve"><value>اسم الوحدة</value></data>
+  <data name="IU_NameHelp" xml:space="preserve"><value>مثال: كرتونة × 24</value></data>
+  <data name="IU_Big" xml:space="preserve"><value>الوحدة الكبرى</value></data>
+  <data name="IU_Small" xml:space="preserve"><value>الوحدة الصغرى</value></data>
+  <data name="IU_Factor" xml:space="preserve"><value>عدد الصغرى فى الكبرى</value></data>
+  <data name="IU_FactorHelp" xml:space="preserve"><value>يُستخدم فى تحويل الكميات والأرصدة</value></data>
+  <data name="IU_FactorLocked" xml:space="preserve"><value>مقفول: الوحدة مستعملة فى {0} سطر صنف</value></data>
+  <data name="IU_Retail" xml:space="preserve"><value>أجزاء التجزئة</value></data>
+  <data name="IU_RetailHelp" xml:space="preserve"><value>للبيع بالتجزئة (الأدوية مثلاً)؛ 1 = بلا تجزئة</value></data>
+  <data name="IU_Code" xml:space="preserve"><value>الكود</value></data>
+  <data name="IU_Default" xml:space="preserve"><value>الوحدة الافتراضية للأصناف الجديدة</value></data>
+  <data name="IU_DefaultChip" xml:space="preserve"><value>افتراضى</value></data>
+  <data name="IU_Preview" xml:space="preserve"><value>1 {0} = {1} {2}</value></data>
+  <data name="IU_Conversion" xml:space="preserve"><value>التحويل</value></data>
+  <data name="IU_RetailShort" xml:space="preserve"><value>تجزئة إلى {0} أجزاء</value></data>
+  <data name="IU_Saved" xml:space="preserve"><value>حُفظت التعديلات</value></data>
+  <data name="IC_Title" xml:space="preserve"><value>فئات الأصناف</value></data>
+  <data name="IC_Sub" xml:space="preserve"><value>الأنواع الرئيسية وفئاتها؛ اختر نوعاً لعرض فئاته</value></data>
+  <data name="IC_Mains" xml:space="preserve"><value>الأنواع الرئيسية</value></data>
+  <data name="IC_NewMain" xml:space="preserve"><value>نوع رئيسى جديد</value></data>
+  <data name="IC_EditMain" xml:space="preserve"><value>تعديل النوع</value></data>
+  <data name="IC_AllMains" xml:space="preserve"><value>كل الأنواع</value></data>
+  <data name="IC_ItemsCount" xml:space="preserve"><value>{0} صنف</value></data>
+  <data name="IC_Nature" xml:space="preserve"><value>طبيعة الفئة</value></data>
+  <data name="IC_T0" xml:space="preserve"><value>غير محدد</value></data>
+  <data name="IC_T1" xml:space="preserve"><value>مبيعات</value></data>
+  <data name="IC_T2" xml:space="preserve"><value>مشتريات</value></data>
+  <data name="IC_T3" xml:space="preserve"><value>غير مكتمل التصنيع</value></data>
+  <data name="IC_NewCat" xml:space="preserve"><value>فئة جديدة</value></data>
+  <data name="IC_CatName" xml:space="preserve"><value>اسم الفئة</value></data>
+  <data name="IC_Main" xml:space="preserve"><value>النوع الرئيسى</value></data>
+  <data name="IC_Kind" xml:space="preserve"><value>تستخدم لـ</value></data>
+  <data name="IC_Items" xml:space="preserve"><value>أصناف / منتجات</value></data>
+  <data name="IC_Services" xml:space="preserve"><value>خدمات</value></data>
+  <data name="IC_Unspecified" xml:space="preserve"><value>غير محدد</value></data>
+  <data name="IC_Default" xml:space="preserve"><value>الفئة الافتراضية لهذا النوع</value></data>
+  <data name="IC_AllCats" xml:space="preserve"><value>كل الفئات</value></data>
+  <data name="IC_UsedNoDelete" xml:space="preserve"><value>مستعملة فى أصناف — يمكن إيقافها</value></data>
 </root>

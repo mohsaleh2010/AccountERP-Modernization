@@ -155,6 +155,8 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("ToolStripMenuItems_TypesFactory_Name", "/items/lookups/factories"), ("ToolStripMenuItems_TypesSize_Name", "/items/lookups/sizes"),
             ("ToolStripMenuItems_TypesDegreeFarz_Name", "/items/lookups/degrees"), ("ToolStripMenuItemItems_Nature", "/items/lookups/natures"),
             ("ToolStripMenuItemItems_Groups", "/items/lookups/groups"),
+            // خطة 04 م1: الوحدات والفئات (مفتاح 494 فيه حرف تشكيل عربى U+064D كما هو مخزَّن)
+            ("menuUnits", "/items/units"), ("menuItemItemMainCategory", "/items/categories"), ("menuItemItem\u064dSubCategory", "/items/categories"),
             // قائمة وبحث الأذون (المرحلة 4) بدل Order_detailes لكل نوع، وقائمة كل الأذون.
             // ملاحظة: القائمة القديمة تفتح «مرتجع صرف قطع الغيار» (879) على 1022 وعنصر «صرف إلى موظف» (881) بلا شاشة؛ هنا كلٌّ لنوعه الصحيح.
             ("menuItemOrdersList", "/store/orders"),

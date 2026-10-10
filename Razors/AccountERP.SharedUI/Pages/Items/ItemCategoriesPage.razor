@@ -1,0 +1,314 @@
+@* 🟢 خطة 04 — المرحلة 1: أنواع الفئات والفئات فى صفحة واحدة (بدل ItemMainCategoryFRM + ItemCategoryFRM وشاشتى الإضافة).
+   يسار: الأنواع الرئيسية (اختيار نوع يصفّى الفئات). يمين: نموذج الفئة + جدولها. فئة افتراضية واحدة لكل (أصناف/خدمات)،
+   الإيقاف لا يمس الأصناف، والحذف لغير المستعمل فقط. التصميم حسب ui-ux-pro-max. *@
+@page "/items/categories"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.ItemUnitCategoryService
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@implements IDisposable
+
+<PageTitle>@Tr("IC_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .ic-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .ic-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .ic-head .ico .mud-icon-root { font-size: 2rem; }
+    .ic-head .titles { flex: 1 1 260px; }
+    .ic-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .ic-grid { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(0, 2.2fr); gap: 16px; margin-top: 16px; align-items: start; }
+    .ic-mains { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; max-height: 70vh; overflow-y: auto; }
+    .ic-main { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 10px; border-radius: 10px; border: 1px solid transparent;
+               background: none; font: inherit; color: var(--mud-palette-text-primary); text-align: start; cursor: pointer; width: 100%; transition: background .15s; }
+    .ic-main:hover { background: var(--mud-palette-action-default-hover); }
+    .ic-main:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 1px; }
+    .ic-main[aria-pressed="true"] { background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent); border-color: var(--mud-palette-primary); }
+    .ic-main .nm { flex: 1; font-weight: 500; }
+    .ic-main .meta { font-size: .78rem; color: var(--mud-palette-text-secondary); }
+    .ic-main .cnt { font-variant-numeric: tabular-nums; min-width: 28px; text-align: center; border-radius: 999px; padding: 1px 8px; font-size: .78rem;
+                    background: var(--mud-palette-background-gray); }
+    .ic-mform { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 10px; }
+    .ic-mform .acts { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; }
+    .ic-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 16px; align-items: start; }
+    .ic-form .switches { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; }
+    .ic-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .ic-actions .mud-button-root, .ic-mform .mud-button-root { min-height: 44px; }
+    .ic-editing { outline: 2px solid var(--mud-palette-primary); outline-offset: -2px; }
+    .ic-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 32px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .ic-empty .mud-icon-root { opacity: .5; }
+    @@media (max-width: 1099px) { .ic-grid { grid-template-columns: minmax(0, 1fr); } .ic-mains { max-height: none; } }
+    @@media (max-width: 699px) { .ic-form, .ic-mform { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card ic-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.AccountTree" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("IC_Title")</h1>
+            <div class="sub">@Tr("IC_Sub")</div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-3" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    <div class="ic-grid">
+        @* ===== الأنواع الرئيسية ===== *@
+        <section class="inv-card @(_main.Id != 0 ? "ic-editing" : "")" aria-labelledby="ic-mains-title">
+            <h2 class="inv-card-title" id="ic-mains-title"><MudIcon Icon="@Icons.Material.Filled.FolderOpen" />@Tr("IC_Mains")<span class="inv-count">@_mains.Count</span></h2>
+            <div class="ic-mform">
+                <MudTextField T="string" @bind-Value="_main.Name" Label="@(_main.Id == 0 ? Tr("IC_NewMain") : Tr("IC_EditMain"))" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="200" />
+                <MudSelect T="int" @bind-Value="_main.Type_Id" Label="@Tr("IC_Nature")" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    @for (int i = 0; i < ItemUnitCategoryService.CategoryTypes.Length; i++) { var k = i; <MudSelectItem T="int" Value="k">@TypeName(k)</MudSelectItem> }
+                </MudSelect>
+                <div class="acts">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_busy || string.IsNullOrWhiteSpace(_main.Name))" OnClick="SaveMainAsync">@Tr("Save")</MudButton>
+                    @if (_main.Id != 0)
+                    {
+                        <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => _main = new())">@Tr("Cancel")</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.DeleteOutline" Disabled="@(_busy || _mains.FirstOrDefault(m => m.Id == _main.Id)?.Sub_Count > 0)" OnClick="DeleteMainAsync">@Tr("DeleteItemLabel")</MudButton>
+                    }
+                </div>
+            </div>
+            <div class="ic-mains" role="list">
+                <button type="button" class="ic-main" role="listitem" aria-pressed="@(_selMain == 0 ? "true" : "false")" @onclick="@(() => SelectMainAsync(0))">
+                    <MudIcon Icon="@Icons.Material.Filled.SelectAll" Size="Size.Small" /><span class="nm">@Tr("IC_AllMains")</span><span class="cnt">@_mains.Sum(m => m.Sub_Count)</span>
+                </button>
+                @foreach (var m in _mains)
+                {
+                    <div style="display:flex;align-items:center;gap:2px" role="listitem">
+                        <button type="button" class="ic-main" aria-pressed="@(_selMain == m.Id ? "true" : "false")" @onclick="@(() => SelectMainAsync(m.Id))">
+                            <span class="nm">@m.Name<div class="meta">@TypeName(m.Type_Id) · @Tr("IC_ItemsCount", m.Used_Count)</div></span><span class="cnt">@m.Sub_Count</span>
+                        </button>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" aria-label="@Tr("IU_EditAria", m.Name)" OnClick="@(() => _main = new MainCategoryRow { Id = m.Id, Name = m.Name, Type_Id = m.Type_Id })" />
+                    </div>
+                }
+            </div>
+        </section>
+
+        @* ===== الفئات ===== *@
+        <div>
+            <section class="inv-card @(_cat.Id != 0 ? "ic-editing" : "")">
+                <h2 class="inv-card-title">
+                    <MudIcon Icon="@(_cat.Id == 0 ? Icons.Material.Filled.AddCircle : Icons.Material.Filled.Edit)" />
+                    @(_cat.Id == 0 ? Tr("IC_NewCat") : Tr("IU_Edit", _cat.Name ?? ""))
+                </h2>
+                <div class="ic-form">
+                    <MudTextField T="string" @bind-Value="_cat.Name" Label="@Tr("IC_CatName")" Variant="Variant.Outlined" Required="true" MaxLength="200" />
+                    <MudSelect T="long" @bind-Value="_cat.Main_Id" Label="@Tr("IC_Main")" Variant="Variant.Outlined" Required="true" ToStringFunc="@(id => _mains.FirstOrDefault(m => m.Id == id)?.Name ?? string.Empty)">
+                        @foreach (var m in _mains) { <MudSelectItem T="long" Value="m.Id">@m.Name</MudSelectItem> }
+                    </MudSelect>
+                    <MudSelect T="int" @bind-Value="_cat.Type_Id" Label="@Tr("IC_Nature")" Variant="Variant.Outlined">
+                        @for (int i = 0; i < ItemUnitCategoryService.CategoryTypes.Length; i++) { var k = i; <MudSelectItem T="int" Value="k">@TypeName(k)</MudSelectItem> }
+                    </MudSelect>
+                    <div class="switches">
+                        <MudRadioGroup T="int" @bind-Value="_cat.Item_Or_Service" aria-label="@Tr("IC_Kind")">
+                            <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("IC_Items")</MudRadio>
+                            <MudRadio T="int" Value="2" Color="Color.Primary">@Tr("IC_Services")</MudRadio>
+                            <MudRadio T="int" Value="0" Color="Color.Primary">@Tr("IC_Unspecified")</MudRadio>
+                        </MudRadioGroup>
+                        <MudSwitch T="bool" @bind-Value="_cat.Is_Default" Color="Color.Primary" Label="@Tr("IC_Default")" Disabled="@(_cat.Item_Or_Service == 0)" />
+                        <MudSwitch T="bool" @bind-Value="_cat.Is_Active" Color="Color.Primary" Label="@Tr("ILActive")" />
+                    </div>
+                </div>
+                <div class="ic-actions">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="_busy" OnClick="SaveCatAsync">@Tr("Save")</MudButton>
+                    @if (_cat.Id != 0) { <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Close" OnClick="NewCat">@Tr("Cancel")</MudButton> }
+                </div>
+            </section>
+
+            <section class="inv-card" style="margin-top:16px">
+                <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+                    <h2 class="inv-card-title" style="margin:0"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@(_selMain == 0 ? Tr("IC_AllCats") : _mains.FirstOrDefault(m => m.Id == _selMain)?.Name)<span class="inv-count">@_cats.Count</span></h2>
+                    <div style="flex:0 1 300px"><MudTextField T="string" Value="_search" ValueChanged="OnSearchAsync" Label="@Tr("ILSearch")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                  Immediate="true" DebounceInterval="300" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" /></div>
+                </div>
+                <MudTable Items="@_cats" T="CategoryRow" Hover="true" Elevation="0" Class="inv-table mt-3" Breakpoint="Breakpoint.Sm" Loading="_loading" LoadingProgressColor="Color.Primary">
+                    <HeaderContent>
+                        <MudTh>@Tr("IC_CatName")</MudTh>
+                        @if (_selMain == 0) { <MudTh>@Tr("IC_Main")</MudTh> }
+                        <MudTh>@Tr("IC_Nature")</MudTh>
+                        <MudTh>@Tr("IC_Kind")</MudTh>
+                        <MudTh Style="text-align:end">@Tr("ILUsed")</MudTh>
+                        <MudTh>@Tr("ILActive")</MudTh>
+                        <MudTh Style="width:110px"></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="@Tr("IC_CatName")">
+                            <span style="@(context.Is_Active ? "" : "opacity:.55")">@context.Name</span>
+                            @if (context.Is_Default) { <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" Class="ms-2">@Tr("IU_DefaultChip")</MudChip> }
+                        </MudTd>
+                        @if (_selMain == 0) { <MudTd DataLabel="@Tr("IC_Main")">@context.Main_Name</MudTd> }
+                        <MudTd DataLabel="@Tr("IC_Nature")">@TypeName(context.Type_Id)</MudTd>
+                        <MudTd DataLabel="@Tr("IC_Kind")">@KindName(context.Item_Or_Service)</MudTd>
+                        <MudTd DataLabel="@Tr("ILUsed")" Style="text-align:end">
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="@(context.Used_Count > 0 ? Color.Primary : Color.Default)">@context.Used_Count</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="@Tr("ILActive")">
+                            <MudSwitch T="bool" Value="context.Is_Active" ValueChanged="@(v => SetActiveAsync(context, v))" Color="Color.Primary" aria-label="@Tr("ILActive")" />
+                        </MudTd>
+                        <MudTd Style="white-space:nowrap">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="@Tr("IU_EditAria", context.Name)" OnClick="@(() => EditCat(context))" />
+                            <MudTooltip Text="@(context.Used_Count > 0 ? Tr("IC_UsedNoDelete") : Tr("DeleteItemLabel"))">
+                                <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Color="Color.Error" aria-label="@Tr("DeleteItemLabel")" Disabled="@(_busy || context.Used_Count > 0)" OnClick="@(() => DeleteCatAsync(context))" />
+                            </MudTooltip>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="ic-empty"><MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" /><span>@Tr("ILEmpty")</span></div>
+                    </NoRecordsContent>
+                </MudTable>
+            </section>
+        </div>
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private readonly ItemUnitCategoryService _svc = new();
+    private List<MainCategoryRow> _mains = new();
+    private List<CategoryRow> _cats = new();
+    private MainCategoryRow _main = new();
+    private CategoryRow _cat = new() { Is_Active = true, Item_Or_Service = 1, Type_Id = 1 };
+    private long _selMain;
+    private string? _search, _error;
+    private bool _loading = true, _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadMainsAsync();
+        await LoadCatsAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private string TypeName(int t) => t switch { 1 => Tr("IC_T1"), 2 => Tr("IC_T2"), 3 => Tr("IC_T3"), _ => Tr("IC_T0") };
+    private string KindName(int k) => k switch { 1 => Tr("IC_Items"), 2 => Tr("IC_Services"), _ => Tr("IC_Unspecified") };
+
+    private async Task LoadMainsAsync()
+    {
+        try { _mains = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.ListMainCategories(); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private async Task LoadCatsAsync()
+    {
+        _loading = true;
+        long m = _selMain; string s = _search ?? "";
+        try { _cats = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.ListCategories(m, s); }); }
+        catch (Exception ex) { _error = Inner(ex); _cats = new(); }
+        finally { _loading = false; }
+    }
+
+    private async Task SelectMainAsync(long id)
+    {
+        _selMain = id;
+        if (_cat.Id == 0 && id != 0) _cat.Main_Id = id;
+        await LoadCatsAsync();
+    }
+
+    private async Task OnSearchAsync(string? s) { _search = s; await LoadCatsAsync(); }
+
+    private void NewCat() { _cat = new() { Is_Active = true, Item_Or_Service = 1, Type_Id = 1, Main_Id = _selMain }; _error = null; }
+
+    private void EditCat(CategoryRow c)
+    {
+        _cat = new CategoryRow { Id = c.Id, Name = c.Name, Main_Id = c.Main_Id, Type_Id = c.Type_Id, Item_Or_Service = c.Item_Or_Service, Is_Default = c.Is_Default, Is_Active = c.Is_Active };
+        _error = null;
+    }
+
+    private async Task SaveMainAsync()
+    {
+        _busy = true; _error = null;
+        var m = _main; bool isNew = m.Id == 0;
+        try
+        {
+            long id = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.SaveMainCategory(m); });
+            Snackbar.Add(isNew ? Tr("ILAdded") : Tr("IU_Saved"), Severity.Success);
+            _main = new();
+            await LoadMainsAsync();
+            if (isNew) await SelectMainAsync(id); else await LoadCatsAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task DeleteMainAsync()
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("DeleteItemLabel"), Tr("ILDeleteConfirm", _main.Name ?? ""), yesText: Tr("DeleteItemLabel"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null;
+        long id = _main.Id;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.DeleteMainCategory(id); });
+            Snackbar.Add(Tr("ILDeleted"), Severity.Success);
+            _main = new();
+            if (_selMain == id) _selMain = 0;
+            await LoadMainsAsync();
+            await LoadCatsAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task SaveCatAsync()
+    {
+        _busy = true; _error = null;
+        var c = _cat; bool isNew = c.Id == 0;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.SaveCategory(c); });
+            Snackbar.Add(isNew ? Tr("ILAdded") : Tr("IU_Saved"), Severity.Success);
+            NewCat();
+            await LoadMainsAsync();
+            await LoadCatsAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task SetActiveAsync(CategoryRow row, bool v)
+    {
+        long id = row.Id;
+        try { await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.SetCategoryActive(id, v); }); row.Is_Active = v; }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private async Task DeleteCatAsync(CategoryRow row)
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("DeleteItemLabel"), Tr("ILDeleteConfirm", row.Name), yesText: Tr("DeleteItemLabel"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null;
+        long id = row.Id;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.DeleteCategory(id); });
+            Snackbar.Add(Tr("ILDeleted"), Severity.Success);
+            if (_cat.Id == id) NewCat();
+            await LoadMainsAsync();
+            await LoadCatsAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}
