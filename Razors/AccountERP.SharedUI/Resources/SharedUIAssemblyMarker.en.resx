@@ -2556,4 +2556,24 @@
   <data name="SOReceiptOf" xml:space="preserve"><value>Receipt of transfer {0}</value></data>
   <data name="SOPendingTransfers" xml:space="preserve"><value>Awaiting receipt</value></data>
   <data name="SOShortageReason" xml:space="preserve"><value>Shortage: {0}</value></data>
+  <data name="SBTitle" xml:space="preserve"><value>Item balances</value></data>
+  <data name="SBSubCurrent" xml:space="preserve"><value>Current store and department balances with valuation</value></data>
+  <data name="SBSubAsOf" xml:space="preserve"><value>Balance at end of {0} (from the stock ledger)</value></data>
+  <data name="SBAll" xml:space="preserve"><value>All</value></data>
+  <data name="SBCategory" xml:space="preserve"><value>Category</value></data>
+  <data name="SBAsOf" xml:space="preserve"><value>As of</value></data>
+  <data name="SBAsOfHint" xml:space="preserve"><value>Empty = current balance</value></data>
+  <data name="SBAsOfNote" xml:space="preserve"><value>The as-of balance is computed from the stock ledger. Items moved by legacy screens without ledger rows may differ from the current balance; reconciliation shows the difference.</value></data>
+  <data name="SBPriceBasis" xml:space="preserve"><value>Valuation basis</value></data>
+  <data name="SBQtyOnly" xml:space="preserve"><value>Quantity only</value></data>
+  <data name="SBAvgCost" xml:space="preserve"><value>Average cost</value></data>
+  <data name="SBLastPurchase" xml:space="preserve"><value>Last purchase price</value></data>
+  <data name="SBSalePrice" xml:space="preserve"><value>Sale price</value></data>
+  <data name="SBIncludeZero" xml:space="preserve"><value>Show zero balances</value></data>
+  <data name="SBLines" xml:space="preserve"><value>Items</value></data>
+  <data name="SBTotalValue" xml:space="preserve"><value>Total value</value></data>
+  <data name="SBNegative" xml:space="preserve"><value>Negative balances</value></data>
+  <data name="SBResults" xml:space="preserve"><value>Balances</value></data>
+  <data name="SBUnitPrice" xml:space="preserve"><value>Large unit price</value></data>
+  <data name="SBEmpty" xml:space="preserve"><value>No matching balances</value></data>
 </root>

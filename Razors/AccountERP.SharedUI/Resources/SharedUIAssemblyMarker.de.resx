@@ -2558,4 +2558,24 @@
   <data name="SOReceiptOf" xml:space="preserve"><value>Eingang zu Umlagerung {0}</value></data>
   <data name="SOPendingTransfers" xml:space="preserve"><value>Warten auf Empfang</value></data>
   <data name="SOShortageReason" xml:space="preserve"><value>Fehlmenge: {0}</value></data>
+  <data name="SBTitle" xml:space="preserve"><value>Artikelbestände</value></data>
+  <data name="SBSubCurrent" xml:space="preserve"><value>Aktuelle Lager- und Abteilungsbestände mit Bewertung</value></data>
+  <data name="SBSubAsOf" xml:space="preserve"><value>Bestand am Ende von {0} (aus dem Lagerbuch)</value></data>
+  <data name="SBAll" xml:space="preserve"><value>Alle</value></data>
+  <data name="SBCategory" xml:space="preserve"><value>Kategorie</value></data>
+  <data name="SBAsOf" xml:space="preserve"><value>Stichtag</value></data>
+  <data name="SBAsOfHint" xml:space="preserve"><value>Leer = aktueller Bestand</value></data>
+  <data name="SBAsOfNote" xml:space="preserve"><value>Der Stichtagsbestand wird aus dem Lagerbuch berechnet. Von Altmasken ohne Buchungszeilen bewegte Artikel können abweichen; der Abgleich zeigt die Differenz.</value></data>
+  <data name="SBPriceBasis" xml:space="preserve"><value>Bewertungsbasis</value></data>
+  <data name="SBQtyOnly" xml:space="preserve"><value>Nur Menge</value></data>
+  <data name="SBAvgCost" xml:space="preserve"><value>Durchschnittskosten</value></data>
+  <data name="SBLastPurchase" xml:space="preserve"><value>Letzter Einkaufspreis</value></data>
+  <data name="SBSalePrice" xml:space="preserve"><value>Verkaufspreis</value></data>
+  <data name="SBIncludeZero" xml:space="preserve"><value>Nullbestände anzeigen</value></data>
+  <data name="SBLines" xml:space="preserve"><value>Artikel</value></data>
+  <data name="SBTotalValue" xml:space="preserve"><value>Gesamtwert</value></data>
+  <data name="SBNegative" xml:space="preserve"><value>Negative Bestände</value></data>
+  <data name="SBResults" xml:space="preserve"><value>Bestände</value></data>
+  <data name="SBUnitPrice" xml:space="preserve"><value>Preis je große Einheit</value></data>
+  <data name="SBEmpty" xml:space="preserve"><value>Keine passenden Bestände</value></data>
 </root>

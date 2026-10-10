@@ -2558,4 +2558,24 @@
   <data name="SOReceiptOf" xml:space="preserve"><value>Réception du transfert {0}</value></data>
   <data name="SOPendingTransfers" xml:space="preserve"><value>En attente de réception</value></data>
   <data name="SOShortageReason" xml:space="preserve"><value>Manquant : {0}</value></data>
+  <data name="SBTitle" xml:space="preserve"><value>Stocks des articles</value></data>
+  <data name="SBSubCurrent" xml:space="preserve"><value>Stocks actuels des magasins et services avec valorisation</value></data>
+  <data name="SBSubAsOf" xml:space="preserve"><value>Stock à la fin du {0} (du registre)</value></data>
+  <data name="SBAll" xml:space="preserve"><value>Tous</value></data>
+  <data name="SBCategory" xml:space="preserve"><value>Catégorie</value></data>
+  <data name="SBAsOf" xml:space="preserve"><value>Au</value></data>
+  <data name="SBAsOfHint" xml:space="preserve"><value>Vide = stock actuel</value></data>
+  <data name="SBAsOfNote" xml:space="preserve"><value>Le stock à date est calculé depuis le registre. Les articles mouvementés par les anciens écrans sans registre peuvent différer ; le rapprochement montre l'écart.</value></data>
+  <data name="SBPriceBasis" xml:space="preserve"><value>Base de valorisation</value></data>
+  <data name="SBQtyOnly" xml:space="preserve"><value>Quantité seule</value></data>
+  <data name="SBAvgCost" xml:space="preserve"><value>Coût moyen</value></data>
+  <data name="SBLastPurchase" xml:space="preserve"><value>Dernier prix d'achat</value></data>
+  <data name="SBSalePrice" xml:space="preserve"><value>Prix de vente</value></data>
+  <data name="SBIncludeZero" xml:space="preserve"><value>Afficher les stocks nuls</value></data>
+  <data name="SBLines" xml:space="preserve"><value>Articles</value></data>
+  <data name="SBTotalValue" xml:space="preserve"><value>Valeur totale</value></data>
+  <data name="SBNegative" xml:space="preserve"><value>Stocks négatifs</value></data>
+  <data name="SBResults" xml:space="preserve"><value>Stocks</value></data>
+  <data name="SBUnitPrice" xml:space="preserve"><value>Prix grande unité</value></data>
+  <data name="SBEmpty" xml:space="preserve"><value>Aucun stock correspondant</value></data>
 </root>

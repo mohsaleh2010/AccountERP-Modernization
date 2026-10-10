@@ -124,6 +124,12 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("menuItemOrderEstlamFromStore", "/store/orders?pending=1"),
             // القسم مخزن فرعى برصيد (م-03-9): الصرف لقسم = تحويل لقسم، والاستلام من قسم = مرتجع تحويل من القسم (كانا بلا شاشة فى القديم).
             ("menuItemOrderSarfDepartment", "/store/order/1001?to=20"), ("menuItemOrderEstlamFromDepartment", "/store/order/1006?from=20"),
+            // أرصدة الأصناف والتقييم (المرحلة 5): كمية، متوسط تكلفة (التقييم المعتمد)، سعر المورد/آخر شراء، سعر البيع، وبتاريخ سابق.
+            ("menuItemBalance", "/store/balances"), ("menuItemItemBalanceOnly", "/store/balances"),
+            ("menuItemItemBalance", "/store/balances?price=1"), ("menuItemItemBalanceWithCost", "/store/balances?price=1"),
+            ("menuItemBalanceSupplierPrice", "/store/balances?price=2"), ("menuItemItemBalanceSellBuyPriceTotal", "/store/balances?price=2"),
+            ("menuItemBalanceSellPrice", "/store/balances?price=3"),
+            ("aToolStripMenuItem", "/store/balances?asof=1"), ("menuItemItemsListBeforBalance", "/store/balances?asof=1"),
             // قائمة وبحث الأذون (المرحلة 4) بدل Order_detailes لكل نوع، وقائمة كل الأذون.
             // ملاحظة: القائمة القديمة تفتح «مرتجع صرف قطع الغيار» (879) على 1022 وعنصر «صرف إلى موظف» (881) بلا شاشة؛ هنا كلٌّ لنوعه الصحيح.
             ("menuItemOrdersList", "/store/orders"),

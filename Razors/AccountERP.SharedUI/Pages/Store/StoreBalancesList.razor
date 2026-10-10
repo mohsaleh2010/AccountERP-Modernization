@@ -1,0 +1,286 @@
+@* 🟢 خطة 03 — المرحلة 5: أرصدة الأصناف والتقييم (بديل balance وItemQntyFrm وItemPurchaseQntyFrm وBalanceWith_* وItem_Balance_Date).
+   مخزن أو قسم (القسم مخزن فرعى برصيد — م-03-9)، تصنيف، بحث، الرصيد الحالى أو «بتاريخ» (من دفتر الحركة)، وأساس التقييم
+   (كمية / متوسط تكلفة الفرع / آخر سعر شراء / سعر البيع)، مع ملخص (عدد الأسطر، إجمالى القيمة، الأسطر السالبة) وترقيم وطباعة.
+   الاستعلامات فى StoreBalancesService بمعاملات. التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@page "/store/balances"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.StoreBalancesService
+@inject LanguageService LangService
+@inject IJSRuntime JS
+@implements IDisposable
+
+<PageTitle>@Tr("SBTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .sb-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .sb-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .sb-head .ico .mud-icon-root { font-size: 2rem; }
+    .sb-head .titles { flex: 1 1 260px; min-width: 0; }
+    .sb-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .sb-gap { margin-top: 16px; }
+    .sb-filters { display: grid; grid-template-columns: minmax(150px, .8fr) minmax(200px, 1.2fr) minmax(180px, 1fr) minmax(160px, .8fr) minmax(220px, 1.4fr); gap: 12px; align-items: start; }
+    .sb-row2 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 12px; }
+    .sb-chip { min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface);
+               color: var(--mud-palette-text-primary); font: inherit; font-size: .875rem; cursor: pointer; transition: background .15s, border-color .15s; }
+    .sb-chip:hover { border-color: var(--mud-palette-primary); }
+    .sb-chip:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .sb-chip[aria-pressed="true"] { background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent); border-color: var(--mud-palette-primary);
+                                    color: var(--mud-palette-primary); font-weight: 600; }
+    .sb-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .sb-tile { padding: 14px 18px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); }
+    .sb-tile .k { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .sb-tile .v { margin-top: 4px; font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--mud-palette-text-primary); }
+    .sb-tile.bad .v { color: var(--mud-palette-error); }
+    .sb-tile.money .v { color: var(--mud-palette-primary); }
+    .sb-name { font-weight: 600; color: var(--mud-palette-text-primary); }
+    .sb-code { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .sb-num { font-variant-numeric: tabular-nums; }
+    .sb-neg { color: var(--mud-palette-error); font-weight: 700; }
+    .sb-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-top: 12px; }
+    .sb-pager .info { font-size: .875rem; color: var(--mud-palette-text-secondary); font-variant-numeric: tabular-nums; }
+    .sb-pager .btns { display: flex; gap: 8px; }
+    .sb-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .sb-empty .mud-icon-root { opacity: .5; }
+    @@media (max-width: 1199px) { .sb-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sb-filters .f-text { grid-column: 1 / -1; } }
+    @@media (max-width: 599px) { .sb-filters, .sb-tiles { grid-template-columns: minmax(0, 1fr); } }
+    @@media print {
+        body * { visibility: hidden; }
+        .sb-print, .sb-print * { visibility: visible; }
+        .sb-print { position: absolute; inset-inline-start: 0; top: 0; width: 100%; }
+        .sb-noprint { display: none !important; }
+    }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page sb-print">
+
+    <div class="inv-card sb-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Inventory2" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("SBTitle")</h1>
+            <div class="sub">@SubTitle</div>
+        </div>
+        <MudButton Class="sb-noprint" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Print" Disabled="_loading" OnClick="PrintAsync">@Tr("PrintButton")</MudButton>
+    </div>
+
+    <div class="inv-card sb-gap sb-noprint" role="search">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.FilterList" />@Tr("SOFiltersTitle")</h2>
+        <div class="sb-filters">
+            <MudSelect T="int" Value="_storeType" ValueChanged="OnStoreTypeAsync" Label="@Tr("SOPartyType")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => Tr("SOParty_" + v))">
+                <MudSelectItem T="int" Value="4">@Tr("SOParty_4")</MudSelectItem>
+                <MudSelectItem T="int" Value="20">@Tr("SOParty_20")</MudSelectItem>
+            </MudSelect>
+            <MudSelect T="long" Value="_storeId" ValueChanged="OnStoreAsync" Label="@Tr("SOParty_" + _storeType)" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _stores.FirstOrDefault(s => s.Id == v)?.Name ?? "")">
+                <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                @foreach (var s in _stores)
+                {
+                    <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="long" Value="_categoryId" ValueChanged="OnCategoryAsync" Label="@Tr("SBCategory")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _categories.FirstOrDefault(c => c.Id == v)?.Name ?? "")">
+                <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                @foreach (var c in _categories)
+                {
+                    <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudDatePicker T="DateTime?" Date="_asOf" DateChanged="OnAsOfAsync" Label="@Tr("SBAsOf")" Variant="Variant.Outlined" Clearable="true"
+                           HelperText="@(_asOf is null ? Tr("SBAsOfHint") : null)" />
+            <div class="f-text">
+                <MudTextField T="string" Value="_text" ValueChanged="OnTextAsync" Label="@Tr("SOItemSearch")" Variant="Variant.Outlined"
+                              Immediate="true" DebounceInterval="400" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+            </div>
+        </div>
+        <div class="sb-row2">
+            <div role="group" aria-label="@Tr("SBPriceBasis")" style="display:flex; flex-wrap:wrap; gap:8px;">
+                @foreach (var p in PriceOptions)
+                {
+                    <button type="button" class="sb-chip" aria-pressed="@(_price == p.Basis ? "true" : "false")" @onclick="@(() => OnPriceAsync(p.Basis))">@Tr(p.Label)</button>
+                }
+            </div>
+            <MudSwitch T="bool" Value="_includeZero" ValueChanged="OnIncludeZeroAsync" Color="Color.Primary" Label="@Tr("SBIncludeZero")" />
+        </div>
+        @if (_asOf is not null)
+        {
+            <MudAlert Severity="Severity.Info" Dense="true" Class="mt-3">@Tr("SBAsOfNote")</MudAlert>
+        }
+    </div>
+
+    <div class="sb-tiles sb-gap">
+        <div class="sb-tile"><div class="k">@Tr("SBLines")</div><div class="v">@_total</div></div>
+        <div class="sb-tile money"><div class="k">@Tr("SBTotalValue")</div><div class="v">@(_price == PriceBasis.QuantityOnly ? "—" : Money(_totalValue))</div></div>
+        <div class="sb-tile @(_negative > 0 ? "bad" : "")"><div class="k">@Tr("SBNegative")</div><div class="v">@_negative</div></div>
+    </div>
+
+    <div class="inv-card sb-gap">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("SBResults")<span class="inv-count">@_total</span></h2>
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" role="alert">@_error</MudAlert>
+        }
+        <MudTable Items="@_rows" T="BalanceRow" Hover="true" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Loading="_loading" LoadingProgressColor="Color.Primary">
+            <HeaderContent>
+                <MudTh>@Tr("SOParty_" + _storeType)</MudTh>
+                <MudTh>@Tr("SOItem")</MudTh>
+                <MudTh>@Tr("SBCategory")</MudTh>
+                <MudTh Style="text-align:end">@Tr("SOBalance")</MudTh>
+                @if (_price != PriceBasis.QuantityOnly)
+                {
+                    <MudTh Style="text-align:end">@Tr("SBUnitPrice")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("SOLineValue")</MudTh>
+                }
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("SOParty_" + _storeType)">@context.Store_Name</MudTd>
+                <MudTd DataLabel="@Tr("SOItem")"><div class="sb-name">@context.Item_Name</div><div class="sb-code">@CodeText(context.Code)</div></MudTd>
+                <MudTd DataLabel="@Tr("SBCategory")">@context.Category_Name</MudTd>
+                <MudTd DataLabel="@Tr("SOBalance")" Style="text-align:end">
+                    <span class="sb-num @(context.Balance_Small < 0 ? "sb-neg" : "")">@SmallToText(context.Balance_Small, context.Factor, context.B_Unit, context.S_Unit)</span>
+                </MudTd>
+                @if (_price != PriceBasis.QuantityOnly)
+                {
+                    <MudTd DataLabel="@Tr("SBUnitPrice")" Style="text-align:end"><span class="sb-num">@(context.Price_Large is decimal p ? Money(p) : "—")</span></MudTd>
+                    <MudTd DataLabel="@Tr("SOLineValue")" Style="text-align:end"><b class="sb-num">@(context.Value is decimal v ? Money(v) : "—")</b></MudTd>
+                }
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="sb-empty">
+                    <MudIcon Icon="@Icons.Material.Filled.Inventory" Size="Size.Large" />
+                    <b>@Tr("SBEmpty")</b>
+                    @if (!_includeZero)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-2" OnClick="@(() => OnIncludeZeroAsync(true))">@Tr("SBIncludeZero")</MudButton>
+                    }
+                </div>
+            </NoRecordsContent>
+        </MudTable>
+        @if (_total > 0)
+        {
+            <div class="sb-pager sb-noprint">
+                <span class="info" aria-live="polite">@Tr("SOPageInfo", _skip + 1, Math.Min(_skip + PageSize, _total), _total)</span>
+                <div class="btns">
+                    <MudButton Variant="Variant.Outlined" StartIcon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)"
+                               Disabled="@(_skip == 0 || _loading)" OnClick="@(() => PageAsync(-1))">@Tr("SOPrev")</MudButton>
+                    <MudButton Variant="Variant.Outlined" EndIcon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)"
+                               Disabled="@(_skip + PageSize >= _total || _loading)" OnClick="@(() => PageAsync(1))">@Tr("SONext")</MudButton>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private const int PageSize = 50;
+    private record PriceOption(PriceBasis Basis, string Label);
+    private static readonly PriceOption[] PriceOptions =
+    {
+        new(PriceBasis.QuantityOnly, "SBQtyOnly"), new(PriceBasis.AverageCost, "SBAvgCost"), new(PriceBasis.LastPurchase, "SBLastPurchase"), new(PriceBasis.SalePrice, "SBSalePrice"),
+    };
+
+    /// <summary>price=0..3 أساس التقييم، type=20 للأقسام، asof=1 يفتح بتاريخ اليوم (عناصر القائمة القديمة).</summary>
+    [SupplyParameterFromQuery(Name = "price")] public int? PriceQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "type")] public int? TypeQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "asof")] public int? AsOfQuery { get; set; }
+
+    private readonly StoreBalancesService _svc = new();
+    private List<Option> _stores = new(), _categories = new();
+    private List<BalanceRow> _rows = new();
+    private int _storeType = 4, _skip, _total, _negative;
+    private long _storeId, _categoryId;
+    private DateTime? _asOf;
+    private string? _text, _error;
+    private bool _includeZero, _loading = true;
+    private PriceBasis _price;
+    private decimal _totalValue;
+
+    private string SubTitle => _asOf is DateTime d ? Tr("SBSubAsOf", d.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture)) : Tr("SBSubCurrent");
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _storeType = TypeQuery == 20 ? 20 : 4;
+        _price = PriceQuery is >= 0 and <= 3 ? (PriceBasis)PriceQuery.Value : PriceBasis.QuantityOnly;
+        if (AsOfQuery == 1) _asOf = DateTime.Today;
+        try
+        {
+            var type = _storeType;
+            (_stores, _categories) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_svc.GetStores(type), _svc.GetCategories()); });
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task OnStoreTypeAsync(int t)
+    {
+        _storeType = t; _storeId = 0; _skip = 0;
+        _stores = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetStores(t); });
+        await LoadAsync();
+    }
+    private async Task OnStoreAsync(long id) { _storeId = id; _skip = 0; await LoadAsync(); }
+    private async Task OnCategoryAsync(long id) { _categoryId = id; _skip = 0; await LoadAsync(); }
+    private async Task OnAsOfAsync(DateTime? d) { _asOf = d; _skip = 0; await LoadAsync(); }
+    private async Task OnTextAsync(string? t) { _text = t; _skip = 0; await LoadAsync(); }
+    private async Task OnPriceAsync(PriceBasis p) { _price = p; _skip = 0; await LoadAsync(); }
+    private async Task OnIncludeZeroAsync(bool v) { _includeZero = v; _skip = 0; await LoadAsync(); }
+    private async Task PageAsync(int dir) { _skip = Math.Max(0, _skip + dir * PageSize); await LoadAsync(); }
+
+    private async Task LoadAsync()
+    {
+        _loading = true; _error = null;
+        var f = new BalanceFilter
+        {
+            StoreType = _storeType, StoreId = _storeId, CategoryId = _categoryId, Text = _text, AsOf = _asOf,
+            IncludeZero = _includeZero, Price = _price, Skip = _skip, Take = PageSize,
+        };
+        try
+        {
+            _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetBalances(f); });
+            var first = _rows.FirstOrDefault();
+            _total = first?.Total_Rows ?? 0; _totalValue = first?.Total_Value ?? 0; _negative = first?.Negative_Rows ?? 0;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); _rows = new(); _total = 0; }
+        finally { _loading = false; }
+    }
+
+    private async Task PrintAsync() => await JS.InvokeVoidAsync("window.print");
+
+    private static string Money(decimal v) => v.ToString("N2", CultureInfo.InvariantCulture);
+    private static string Qty(decimal v) => v.ToString("0.##", CultureInfo.InvariantCulture);
+    private static string CodeText(string code) => string.IsNullOrWhiteSpace(code) || code.Trim() == "0" ? "" : code;
+    private static string SmallToText(decimal small, decimal factor, string bUnit, string sUnit)
+    {
+        if (factor <= 0) factor = 1;
+        decimal abs = Math.Abs(small), large = Math.Floor(abs / factor), rest = abs - large * factor;
+        string t = rest != 0 ? $"{Qty(large)} {bUnit} + {Qty(rest)} {sUnit}" : $"{Qty(large)} {bUnit}";
+        return small < 0 ? "-" + t : t;
+    }
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

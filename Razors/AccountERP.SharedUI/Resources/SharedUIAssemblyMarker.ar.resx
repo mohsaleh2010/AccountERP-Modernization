@@ -2556,4 +2556,24 @@
   <data name="SOReceiptOf" xml:space="preserve"><value>استلام للتحويل رقم {0}</value></data>
   <data name="SOPendingTransfers" xml:space="preserve"><value>بانتظار الاستلام</value></data>
   <data name="SOShortageReason" xml:space="preserve"><value>سبب العجز: {0}</value></data>
+  <data name="SBTitle" xml:space="preserve"><value>أرصدة الأصناف</value></data>
+  <data name="SBSubCurrent" xml:space="preserve"><value>الرصيد الحالى للمخازن والأقسام مع التقييم</value></data>
+  <data name="SBSubAsOf" xml:space="preserve"><value>الرصيد فى نهاية يوم {0} (من دفتر الحركة)</value></data>
+  <data name="SBAll" xml:space="preserve"><value>الكل</value></data>
+  <data name="SBCategory" xml:space="preserve"><value>التصنيف</value></data>
+  <data name="SBAsOf" xml:space="preserve"><value>بتاريخ</value></data>
+  <data name="SBAsOfHint" xml:space="preserve"><value>فارغ = الرصيد الحالى</value></data>
+  <data name="SBAsOfNote" xml:space="preserve"><value>الرصيد بتاريخ محسوب من دفتر الحركة. الأصناف التى حرّكتها الشاشات القديمة بلا دفتر قد تختلف عن الرصيد الحالى؛ يظهر الفرق فى مطابقة الأرصدة.</value></data>
+  <data name="SBPriceBasis" xml:space="preserve"><value>أساس التقييم</value></data>
+  <data name="SBQtyOnly" xml:space="preserve"><value>كمية فقط</value></data>
+  <data name="SBAvgCost" xml:space="preserve"><value>متوسط التكلفة</value></data>
+  <data name="SBLastPurchase" xml:space="preserve"><value>آخر سعر شراء</value></data>
+  <data name="SBSalePrice" xml:space="preserve"><value>سعر البيع</value></data>
+  <data name="SBIncludeZero" xml:space="preserve"><value>إظهار الأصناف بلا رصيد</value></data>
+  <data name="SBLines" xml:space="preserve"><value>عدد الأصناف</value></data>
+  <data name="SBTotalValue" xml:space="preserve"><value>إجمالى القيمة</value></data>
+  <data name="SBNegative" xml:space="preserve"><value>أرصدة سالبة</value></data>
+  <data name="SBResults" xml:space="preserve"><value>الأرصدة</value></data>
+  <data name="SBUnitPrice" xml:space="preserve"><value>سعر الوحدة الكبرى</value></data>
+  <data name="SBEmpty" xml:space="preserve"><value>لا توجد أرصدة مطابقة</value></data>
 </root>
