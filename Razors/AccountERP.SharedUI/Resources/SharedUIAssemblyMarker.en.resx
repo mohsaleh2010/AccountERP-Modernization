@@ -2613,4 +2613,18 @@
   <data name="SCNoMoves" xml:space="preserve"><value>No movements in this period</value></data>
   <data name="SCPick" xml:space="preserve"><value>Choose the store then the item to show the card</value></data>
   <data name="SCMovement" xml:space="preserve"><value>Movement</value></data>
+  <data name="SMTitle" xml:space="preserve"><value>Store order movements report</value></data>
+  <data name="SMInValue" xml:space="preserve"><value>Value in</value></data>
+  <data name="SMOutValue" xml:space="preserve"><value>Value out</value></data>
+  <data name="SMResults" xml:space="preserve"><value>Items</value></data>
+  <data name="SMMoves" xml:space="preserve"><value>Movements</value></data>
+  <data name="SMEmpty" xml:space="preserve"><value>No matching movements in this period</value></data>
+  <data name="SNTitle" xml:space="preserve"><value>Reorder needs</value></data>
+  <data name="SNSub" xml:space="preserve"><value>Items at or below their reorder level, with the suggested quantity to restore it</value></data>
+  <data name="SNResults" xml:space="preserve"><value>Items to reorder</value></data>
+  <data name="SNReorder" xml:space="preserve"><value>Reorder level</value></data>
+  <data name="SNSuggested" xml:space="preserve"><value>Suggested quantity</value></data>
+  <data name="SNEstimate" xml:space="preserve"><value>Estimated cost</value></data>
+  <data name="SNEmpty" xml:space="preserve"><value>No items below their reorder level</value></data>
+  <data name="SNEmptyHint" xml:space="preserve"><value>The reorder level is set per item in the item data</value></data>
 </root>

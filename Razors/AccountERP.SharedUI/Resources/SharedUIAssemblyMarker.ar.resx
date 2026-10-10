@@ -2613,4 +2613,18 @@
   <data name="SCNoMoves" xml:space="preserve"><value>لا حركات فى هذه الفترة</value></data>
   <data name="SCPick" xml:space="preserve"><value>اختر المخزن ثم الصنف لعرض الكارت</value></data>
   <data name="SCMovement" xml:space="preserve"><value>حركة</value></data>
+  <data name="SMTitle" xml:space="preserve"><value>تقرير حركة الأذون</value></data>
+  <data name="SMInValue" xml:space="preserve"><value>قيمة الوارد</value></data>
+  <data name="SMOutValue" xml:space="preserve"><value>قيمة المنصرف</value></data>
+  <data name="SMResults" xml:space="preserve"><value>الأصناف</value></data>
+  <data name="SMMoves" xml:space="preserve"><value>عدد الحركات</value></data>
+  <data name="SMEmpty" xml:space="preserve"><value>لا حركات مطابقة فى هذه الفترة</value></data>
+  <data name="SNTitle" xml:space="preserve"><value>الاحتياجات (حد الطلب)</value></data>
+  <data name="SNSub" xml:space="preserve"><value>الأصناف التى وصل رصيدها إلى حد الطلب أو أقل، والكمية المقترحة لاستكماله</value></data>
+  <data name="SNResults" xml:space="preserve"><value>أصناف تحتاج طلباً</value></data>
+  <data name="SNReorder" xml:space="preserve"><value>حد الطلب</value></data>
+  <data name="SNSuggested" xml:space="preserve"><value>الكمية المقترحة</value></data>
+  <data name="SNEstimate" xml:space="preserve"><value>التكلفة التقديرية</value></data>
+  <data name="SNEmpty" xml:space="preserve"><value>لا أصناف تحت حد الطلب</value></data>
+  <data name="SNEmptyHint" xml:space="preserve"><value>يُضبط حد الطلب لكل صنف فى بيانات الصنف</value></data>
 </root>

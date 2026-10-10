@@ -2615,4 +2615,18 @@
   <data name="SCNoMoves" xml:space="preserve"><value>Aucun mouvement sur cette période</value></data>
   <data name="SCPick" xml:space="preserve"><value>Choisissez le magasin puis l'article</value></data>
   <data name="SCMovement" xml:space="preserve"><value>Mouvement</value></data>
+  <data name="SMTitle" xml:space="preserve"><value>Rapport des mouvements de magasin</value></data>
+  <data name="SMInValue" xml:space="preserve"><value>Valeur entrées</value></data>
+  <data name="SMOutValue" xml:space="preserve"><value>Valeur sorties</value></data>
+  <data name="SMResults" xml:space="preserve"><value>Articles</value></data>
+  <data name="SMMoves" xml:space="preserve"><value>Mouvements</value></data>
+  <data name="SMEmpty" xml:space="preserve"><value>Aucun mouvement correspondant sur cette période</value></data>
+  <data name="SNTitle" xml:space="preserve"><value>Besoins de réapprovisionnement</value></data>
+  <data name="SNSub" xml:space="preserve"><value>Articles au seuil de réapprovisionnement ou en dessous, avec la quantité suggérée</value></data>
+  <data name="SNResults" xml:space="preserve"><value>Articles à commander</value></data>
+  <data name="SNReorder" xml:space="preserve"><value>Seuil</value></data>
+  <data name="SNSuggested" xml:space="preserve"><value>Quantité suggérée</value></data>
+  <data name="SNEstimate" xml:space="preserve"><value>Coût estimé</value></data>
+  <data name="SNEmpty" xml:space="preserve"><value>Aucun article sous le seuil</value></data>
+  <data name="SNEmptyHint" xml:space="preserve"><value>Le seuil se règle par article dans la fiche article</value></data>
 </root>

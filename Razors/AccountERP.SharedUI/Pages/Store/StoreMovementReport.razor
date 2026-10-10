@@ -1,0 +1,208 @@
+@* 🟢 خطة 03 — المرحلة 6: تقارير الصرف والوارد — ملخص حركة أذون المخزن لكل صنف فى فترة (نوع الإذن، المخزن/القسم، بحث)،
+   بالكميات والقيمة (من لقطة تكلفة المحرك). عناصر التقارير القديمة تفتحها بنوعها (type=). التصميم حسب ui-ux-pro-max. *@
+@page "/store/reports/movements"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.StoreMovementReportService
+@inject LanguageService LangService
+@inject IJSRuntime JS
+@implements IDisposable
+
+<PageTitle>@Tr("SMTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .sm-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .sm-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-info) 15%, transparent); color: var(--mud-palette-info); }
+    .sm-head .ico .mud-icon-root { font-size: 2rem; }
+    .sm-head .titles { flex: 1 1 260px; min-width: 0; }
+    .sm-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .sm-gap { margin-top: 16px; }
+    .sm-filters { display: grid; grid-template-columns: minmax(220px, 1.4fr) minmax(140px, .7fr) minmax(180px, 1fr) repeat(2, minmax(150px, .8fr)) minmax(200px, 1.2fr); gap: 12px; align-items: start; }
+    .sm-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .sm-tile { padding: 14px 18px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); }
+    .sm-tile .k { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .sm-tile .v { margin-top: 4px; font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .sm-tile.in .v { color: var(--mud-palette-success); }
+    .sm-tile.out .v { color: var(--mud-palette-warning-darken, var(--mud-palette-warning)); }
+    .sm-name { font-weight: 600; } .sm-code { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .sm-num { font-variant-numeric: tabular-nums; }
+    .sm-in { color: var(--mud-palette-success); font-weight: 600; } .sm-out { color: var(--mud-palette-warning-darken, var(--mud-palette-warning)); font-weight: 600; }
+    .sm-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-top: 12px; }
+    .sm-pager .info { font-size: .875rem; color: var(--mud-palette-text-secondary); font-variant-numeric: tabular-nums; }
+    .sm-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 12px; color: var(--mud-palette-text-secondary); }
+    .sm-empty .mud-icon-root { opacity: .5; }
+    @@media (max-width: 1199px) { .sm-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sm-filters .f-type { grid-column: 1 / -1; } }
+    @@media (max-width: 599px) { .sm-filters, .sm-tiles { grid-template-columns: minmax(0, 1fr); } }
+    @@media print { body * { visibility: hidden; } .sm-print, .sm-print * { visibility: visible; } .sm-print { position: absolute; inset-inline-start: 0; top: 0; width: 100%; } .sm-noprint { display: none !important; } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page sm-print">
+    <div class="inv-card sm-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.QueryStats" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("SMTitle")</h1>
+            <div class="sub">@(_type == 0 ? Tr("SOAllTypes") : TypeName(_type)) — @((_from ?? DateTime.Today).ToString("yyyy/MM/dd", CultureInfo.InvariantCulture)) ← @((_to ?? DateTime.Today).ToString("yyyy/MM/dd", CultureInfo.InvariantCulture))</div>
+        </div>
+        <MudButton Class="sm-noprint" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Print" Disabled="_loading" OnClick="PrintAsync">@Tr("PrintButton")</MudButton>
+    </div>
+
+    <div class="inv-card sm-gap sm-noprint" role="search">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.FilterList" />@Tr("SOFiltersTitle")</h2>
+        <div class="sm-filters">
+            <div class="f-type">
+                <MudSelect T="int" Value="_type" ValueChanged="OnTypeAsync" Label="@Tr("SOColType")" Variant="Variant.Outlined" ToStringFunc="@(v => v == 0 ? Tr("SOAllTypes") : TypeName(v))">
+                    <MudSelectItem T="int" Value="0">@Tr("SOAllTypes")</MudSelectItem>
+                    @foreach (var t in _types)
+                    {
+                        <MudSelectItem T="int" Value="@t.Order_Type">@t.Name_Ar</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>
+            <MudSelect T="int" Value="_storeType" ValueChanged="OnStoreTypeAsync" Label="@Tr("SOPartyType")" Variant="Variant.Outlined" ToStringFunc="@(v => Tr("SOParty_" + v))">
+                <MudSelectItem T="int" Value="4">@Tr("SOParty_4")</MudSelectItem>
+                <MudSelectItem T="int" Value="20">@Tr("SOParty_20")</MudSelectItem>
+            </MudSelect>
+            <MudSelect T="long" Value="_storeId" ValueChanged="OnStoreAsync" Label="@Tr("SOParty_" + _storeType)" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _stores.FirstOrDefault(s => s.Id == v)?.Name ?? "")">
+                <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                @foreach (var s in _stores)
+                {
+                    <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudDatePicker T="DateTime?" Date="_from" DateChanged="@(d => OnDatesAsync(d, _to))" Label="@Tr("SOFromDate")" Variant="Variant.Outlined" />
+            <MudDatePicker T="DateTime?" Date="_to" DateChanged="@(d => OnDatesAsync(_from, d))" Label="@Tr("SOToDate")" Variant="Variant.Outlined" />
+            <MudTextField T="string" Value="_text" ValueChanged="OnTextAsync" Label="@Tr("SOItemSearch")" Variant="Variant.Outlined" Immediate="true" DebounceInterval="400"
+                          Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+        </div>
+    </div>
+
+    <div class="sm-tiles sm-gap">
+        <div class="sm-tile"><div class="k">@Tr("SBLines")</div><div class="v">@_total</div></div>
+        <div class="sm-tile in"><div class="k">@Tr("SMInValue")</div><div class="v">@Money(_inValue)</div></div>
+        <div class="sm-tile out"><div class="k">@Tr("SMOutValue")</div><div class="v">@Money(_outValue)</div></div>
+    </div>
+
+    <div class="inv-card sm-gap">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("SMResults")<span class="inv-count">@_total</span></h2>
+        @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" role="alert">@_error</MudAlert> }
+        <MudTable Items="@_rows" T="ReportRow" Hover="true" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Loading="_loading" LoadingProgressColor="Color.Primary">
+            <HeaderContent>
+                <MudTh>@Tr("SOItem")</MudTh>
+                <MudTh Style="text-align:end">@Tr("SCIn")</MudTh>
+                <MudTh Style="text-align:end">@Tr("SMInValue")</MudTh>
+                <MudTh Style="text-align:end">@Tr("SCOut")</MudTh>
+                <MudTh Style="text-align:end">@Tr("SMOutValue")</MudTh>
+                <MudTh Style="text-align:end">@Tr("SMMoves")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("SOItem")"><div class="sm-name">@context.Item_Name</div><div class="sm-code">@CodeText(context.Code)</div></MudTd>
+                <MudTd DataLabel="@Tr("SCIn")" Style="text-align:end">@if (context.In_Small > 0) { <span class="sm-num sm-in">@Bal(context.In_Small, context)</span> }</MudTd>
+                <MudTd DataLabel="@Tr("SMInValue")" Style="text-align:end"><span class="sm-num">@(context.In_Value is decimal a ? Money(a) : "—")</span></MudTd>
+                <MudTd DataLabel="@Tr("SCOut")" Style="text-align:end">@if (context.Out_Small > 0) { <span class="sm-num sm-out">@Bal(context.Out_Small, context)</span> }</MudTd>
+                <MudTd DataLabel="@Tr("SMOutValue")" Style="text-align:end"><span class="sm-num">@(context.Out_Value is decimal b ? Money(b) : "—")</span></MudTd>
+                <MudTd DataLabel="@Tr("SMMoves")" Style="text-align:end"><span class="sm-num">@context.Moves</span></MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="sm-empty"><MudIcon Icon="@Icons.Material.Filled.EventBusy" Size="Size.Large" /><span>@Tr("SMEmpty")</span></div>
+            </NoRecordsContent>
+        </MudTable>
+        @if (_total > 0)
+        {
+            <div class="sm-pager sm-noprint">
+                <span class="info">@Tr("SOPageInfo", _skip + 1, Math.Min(_skip + PageSize, _total), _total)</span>
+                <div style="display:flex; gap:8px;">
+                    <MudButton Variant="Variant.Outlined" Disabled="@(_skip == 0 || _loading)" OnClick="@(() => PageAsync(-1))">@Tr("SOPrev")</MudButton>
+                    <MudButton Variant="Variant.Outlined" Disabled="@(_skip + PageSize >= _total || _loading)" OnClick="@(() => PageAsync(1))">@Tr("SONext")</MudButton>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private const int PageSize = 50;
+    [SupplyParameterFromQuery(Name = "type")] public int? TypeQuery { get; set; }
+
+    private readonly StoreMovementReportService _svc = new();
+    private readonly StoreBalancesService _bal = new();
+    private readonly StoreOrderPageService _orders = new();
+    private List<StoreOrderPageService.OrderTypeOption> _types = new();
+    private List<StoreBalancesService.Option> _stores = new();
+    private List<ReportRow> _rows = new();
+    private int _type, _storeType = 4, _skip, _total;
+    private long _storeId;
+    private DateTime? _from = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1), _to = DateTime.Today;
+    private string? _text, _error;
+    private bool _loading = true;
+    private decimal _inValue, _outValue;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _type = TypeQuery is >= 1001 and <= 1023 ? TypeQuery.Value : 0;
+        try
+        {
+            (_types, _stores) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_orders.GetOrderTypes(), _bal.GetStores(4)); });
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task OnTypeAsync(int t) { _type = t; _skip = 0; await LoadAsync(); }
+    private async Task OnStoreTypeAsync(int t)
+    {
+        _storeType = t; _storeId = 0; _skip = 0;
+        _stores = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _bal.GetStores(t); });
+        await LoadAsync();
+    }
+    private async Task OnStoreAsync(long id) { _storeId = id; _skip = 0; await LoadAsync(); }
+    private async Task OnDatesAsync(DateTime? from, DateTime? to) { _from = from ?? _from; _to = to ?? _to; _skip = 0; await LoadAsync(); }
+    private async Task OnTextAsync(string? t) { _text = t; _skip = 0; await LoadAsync(); }
+    private async Task PageAsync(int dir) { _skip = Math.Max(0, _skip + dir * PageSize); await LoadAsync(); }
+
+    private async Task LoadAsync()
+    {
+        _loading = true; _error = null;
+        var f = new ReportFilter { OrderType = _type, StoreType = _storeType, StoreId = _storeId, From = (_from ?? DateTime.Today), To = (_to ?? DateTime.Today), Text = _text, Skip = _skip, Take = PageSize };
+        if (f.To < f.From) (f.From, f.To) = (f.To, f.From);
+        try
+        {
+            _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetSummary(f); });
+            var first = _rows.FirstOrDefault();
+            _total = first?.Total_Rows ?? 0; _inValue = first?.Total_In_Value ?? 0; _outValue = first?.Total_Out_Value ?? 0;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); _rows = new(); _total = 0; }
+        finally { _loading = false; }
+    }
+
+    private string TypeName(int type) => _types.FirstOrDefault(t => t.Order_Type == type)?.Name_Ar ?? type.ToString(CultureInfo.InvariantCulture);
+    private async Task PrintAsync() => await JS.InvokeVoidAsync("window.print");
+    private static string Money(decimal v) => v.ToString("N2", CultureInfo.InvariantCulture);
+    private static string Qty(decimal v) => v.ToString("0.##", CultureInfo.InvariantCulture);
+    private static string CodeText(string code) => string.IsNullOrWhiteSpace(code) || code.Trim() == "0" ? "" : code;
+    private static string Bal(decimal small, ReportRow r)
+    {
+        decimal f = r.Factor <= 0 ? 1 : r.Factor, large = Math.Floor(small / f), rest = small - large * f;
+        return rest != 0 ? $"{Qty(large)} {r.B_Unit} + {Qty(rest)} {r.S_Unit}" : $"{Qty(large)} {r.B_Unit}";
+    }
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

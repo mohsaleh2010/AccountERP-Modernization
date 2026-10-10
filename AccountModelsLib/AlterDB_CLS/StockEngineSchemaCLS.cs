@@ -135,6 +135,19 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             // كارت الصنف الموحَّد (خطة 01 م4) على دفتر الحركة.
             ("menuItemCardsStore", "/store/item-card"), ("ToolStripMenuItem_Transaction_Details", "/store/item-card"),
             ("ToolStripMenuItem_Transaction_DetailsWithCost", "/store/item-card?value=1"), ("menuItemCardsDept", "/store/item-card?type=20"),
+            // تقارير الصرف والوارد (خطة 03 م6): ملخص حركة الأذون لكل صنف، بنوع الإذن لكل تقرير قديم.
+            ("menuItem153", "/store/reports/movements"), ("ToolStripMenuItem_Sarf_FromStore", "/store/reports/movements"),
+            ("Item_Sarf_FromStoreDetailes_Purshing_Import", "/store/reports/movements"), ("Item_Sarf_FromStoreDetailes_Purshing_ExportWithValues", "/store/reports/movements"),
+            ("Item_Sarf_FromStoreDetailes_Purshing_ImportWithValues", "/store/reports/movements"),
+            ("ToolStripMenuItemItem_Sarf_FromToStoreDetailes_Purshing_Import_Export", "/store/reports/movements"),
+            ("menuItem79", "/store/reports/movements?type=1010"), ("menuItem81", "/store/reports/movements?type=1012"), ("menuItem80", "/store/reports/movements?type=1013"),
+            ("menuItemTasweatZeada", "/store/reports/movements?type=1007"), ("menuItemTasweatNakis", "/store/reports/movements?type=1008"),
+            ("menuItem76", "/store/reports/movements?type=1009"), ("menuItem77", "/store/reports/movements?type=1009"),
+            ("toolStripMenuItemSarfMachineReport", "/store/reports/movements?type=1022"), ("toolStripMenuItemDetailsSarfEstlamMachineReport", "/store/reports/movements?type=1022"),
+            ("toolStripMenuItemEstlamMachineReport", "/store/reports/movements?type=1023"), ("menuItemEstlamFromSupplier", "/store/reports/movements?type=1004"),
+            // الاحتياجات (حد الطلب).
+            ("menuItem86", "/store/needs"), ("menuItem87", "/store/needs"), ("menuItem88", "/store/needs"), ("menuItem89", "/store/needs"),
+            ("toolStripMenuItemUponRequest", "/store/needs"), ("ToolStripMenuItemInvoiceUponRequest", "/store/needs"),
             // قائمة وبحث الأذون (المرحلة 4) بدل Order_detailes لكل نوع، وقائمة كل الأذون.
             // ملاحظة: القائمة القديمة تفتح «مرتجع صرف قطع الغيار» (879) على 1022 وعنصر «صرف إلى موظف» (881) بلا شاشة؛ هنا كلٌّ لنوعه الصحيح.
             ("menuItemOrdersList", "/store/orders"),

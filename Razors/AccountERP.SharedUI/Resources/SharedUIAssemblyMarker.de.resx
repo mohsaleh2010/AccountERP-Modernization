@@ -2615,4 +2615,18 @@
   <data name="SCNoMoves" xml:space="preserve"><value>Keine Bewegungen in diesem Zeitraum</value></data>
   <data name="SCPick" xml:space="preserve"><value>Lager und dann Artikel wählen</value></data>
   <data name="SCMovement" xml:space="preserve"><value>Bewegung</value></data>
+  <data name="SMTitle" xml:space="preserve"><value>Bericht der Lagerbewegungen</value></data>
+  <data name="SMInValue" xml:space="preserve"><value>Zugangswert</value></data>
+  <data name="SMOutValue" xml:space="preserve"><value>Abgangswert</value></data>
+  <data name="SMResults" xml:space="preserve"><value>Artikel</value></data>
+  <data name="SMMoves" xml:space="preserve"><value>Bewegungen</value></data>
+  <data name="SMEmpty" xml:space="preserve"><value>Keine passenden Bewegungen in diesem Zeitraum</value></data>
+  <data name="SNTitle" xml:space="preserve"><value>Nachbestellbedarf</value></data>
+  <data name="SNSub" xml:space="preserve"><value>Artikel auf oder unter Meldebestand, mit Vorschlagsmenge</value></data>
+  <data name="SNResults" xml:space="preserve"><value>Nachzubestellende Artikel</value></data>
+  <data name="SNReorder" xml:space="preserve"><value>Meldebestand</value></data>
+  <data name="SNSuggested" xml:space="preserve"><value>Vorschlagsmenge</value></data>
+  <data name="SNEstimate" xml:space="preserve"><value>Geschätzte Kosten</value></data>
+  <data name="SNEmpty" xml:space="preserve"><value>Keine Artikel unter Meldebestand</value></data>
+  <data name="SNEmptyHint" xml:space="preserve"><value>Der Meldebestand wird je Artikel in den Artikeldaten gepflegt</value></data>
 </root>
