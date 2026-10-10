@@ -37,20 +37,67 @@ WHERE Order_Type IN (1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1012,1013
         {
             LastErrors.Clear();
             var opp = new operations();
+            bool upToDate;
             try
             {
-                if (IsUpToDate(opp)) return;
+                upToDate = IsUpToDate(opp);
             }
             catch (Exception ee)
             {
                 operations.DataDictionaryLogerException(ee);
                 return;
             }
-            Step(opp, StockEngine);
-            Step(opp, OrderDocCycle);
-            Step(opp, StockLedger);
-            Step(opp, ItemOpeningBalance);
-            Step(opp, StoreOrderTypeSettings);
+            if (!upToDate)
+            {
+                Step(opp, StockEngine);
+                Step(opp, OrderDocCycle);
+                Step(opp, StockLedger);
+                Step(opp, ItemOpeningBalance);
+                Step(opp, StoreOrderTypeSettings);
+            }
+            // مستقلة عن فحص المخطط: القواعد المرقّاة سابقاً تحتاج الربط أيضاً، وتقرأ فقط العناصر غير المربوطة.
+            Step(opp, LinkStoreOrderMenus);
+        }
+
+        /// <summary>
+        /// خطة 03 المرحلة 2 (م-03-11): يربط عناصر قائمة «أذونات الصرف والاستلام» للأنواع البسيطة بصفحة Razor
+        /// /store/order/{type} عبر SysConfigMenus.RazorPath (مشفَّر كالباقى). يملأ الفارغ فقط فلا يغيّر ربطاً عدّله العميل،
+        /// والمطابقة باسم عنصر القائمة (KeysData بعد فك التشفير) لا بالمعرّف. شاشات الويندوز لا تقرأ RazorPath فلا تتأثر.
+        /// التحويلات (1001/1006/1016/1017) غير مربوطة حتى المرحلة 3.
+        /// </summary>
+        private static readonly (string Key, int Type)[] StoreOrderMenus =
+        {
+            ("menuItemOrderSarfCustomer", 1002), ("menuItemOrderSarfMortagahCustomer", 1003),
+            ("menuItemOrderEstlamSupplier", 1004), ("menuItemOrderEstlamMortaga3Supplier", 1005),
+            ("menuItemOrderTasweaZeada", 1007), ("menuItemOrderTasweaNakis", 1008),
+            ("menuItemOrderTasweaEntag", 1009), ("menuItemOrderSarfToEntag", 1010),
+            ("menuItemOrderSarfToKeta3", 1012), ("menuItemOrderSarfToHalek", 1013),
+            ("menuItemOrderEstlamFromOuterStore", 1014), ("menuItemOrderEstlamFromOuterStore2", 1014),
+            ("menuItemOrderSarfFromOuterStore2", 1015),
+            ("menuItemOrderSarfWarsha", 1018), ("menuItemOrderEstlamFromWarsha", 1019),
+            ("menuItemOrderSarfEmployee", 1020), ("menuItemOrderEstlamFromEmployee", 1021),
+            ("menuItemOrderSarfMachine", 1022), ("menuItemOrderEstlamFromMachine", 1023),
+        };
+
+        private static void LinkStoreOrderMenus(operations opp)
+        {
+            var map = StoreOrderMenus.ToDictionary(m => m.Key, m => m.Type, StringComparer.OrdinalIgnoreCase);
+            var rows = opp.db.Database.SqlQueryRaw<MenuKeyRow>(
+                "SELECT Id, KeysData FROM SysConfigMenus WHERE ISNULL(RazorPath, N'') = N'' AND KeysData IS NOT NULL").ToList();
+            foreach (var r in rows)
+            {
+                if (!map.TryGetValue(Common.DecryptMe(r.KeysData).Trim(), out int type)) continue;
+                string path = Common.EncryptMe("/store/order/" + type);
+                opp.db.Database.ExecuteSqlInterpolated(
+                    $"UPDATE SysConfigMenus SET RazorPath = {path} WHERE Id = {r.Id} AND ISNULL(RazorPath, N'') = N''");
+            }
+        }
+
+        /// <summary>صف قراءة (Id + اسم العنصر المشفَّر) — عام لأن EF يملؤه من SQL خام.</summary>
+        public class MenuKeyRow
+        {
+            public long Id { get; set; }
+            public string KeysData { get; set; }
         }
 
         /// <summary>أخطاء آخر تشغيل (اسم الخطوة: الرسالة) لعرضها من «تحديث قاعدة البيانات».</summary>
