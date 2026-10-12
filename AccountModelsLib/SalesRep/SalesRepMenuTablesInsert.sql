@@ -12,14 +12,9 @@ VALUES
   (1003, 496, N'menuSalesRepCash',  N'جرد الخزينة (Shift Cash)', 2, N'1', GETDATE()),
   (1004, 496, N'menuSalesRepApprovals', N'طلبات الموافقة (Approvals)', 2, N'1', GETDATE());
 
--- 2) FORMS_DETAILES (form-level details linking to MainFrm_AccountUpdate menus)
--- FORM_ID / FORM_NAME / MENU_ID / MENU_ACTION / SHOW_IN_MENU / ORDER_NO / ...
-INSERT INTO FORMS_DETAILES (FORM_ID, FORM_NAME, MENU_ID, MENU_ACTION, SHOW_IN_MENU, ORDER_NO, Branch_Id, User_Id, OperationDate)
-VALUES
-  (1, N'Sales_Rep_Frm.SalesRepShiftFrm', 1001, N'menuSalesRepShift_Click', 1, 1, 1, 1, GETDATE()),
-  (2, N'Sales_Rep_Frm.SalesRepVisitsPlanFrm', 1002, N'menuSalesRepVisits_Click', 1, 2, 1, 1, GETDATE()),
-  (3, N'Sales_Rep_Frm.SalesRepShiftCashFrm', 1003, N'menuSalesRepCash_Click', 1, 3, 1, 1, GETDATE()),
-  (4, N'Sales_Rep_Frm.SalesRepApprovalsFrm', 1004, N'menuSalesRepApprovals_Click', 1, 4, 1, 1, GETDATE());
+-- FORMS_DETAILES (§8924 ERP_V1_3.md) = جدول وصف فقط — غير مستخدم مباشرة في MainFrm_AccountUpdate
+-- (الاستناد الفعلي على PERMATIONS/SysConfigMenusPERMATIONS للعرض والديناميكية)
+-- لم يتم إدخال صفوف هنا تجنباً للخلط — الصفوف الفعلية تأتي من قاعدة النظام الحالية
 
 -- 3) SysConfigMenusPERMATIONS (access rights per user/form/menu)
 INSERT INTO SysConfigMenusPERMATIONS (Id, Menu_ID, Parent_Id, USER_ID, PERMATION, PROJECT_ID, OperationDate)
