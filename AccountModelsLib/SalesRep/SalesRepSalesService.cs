@@ -47,6 +47,40 @@ namespace AccountModelsLib.SalesRep
             return invoiceId;
         }
 
+        // طريقة جديدة متوافقة — لا تلامس الكود الحالي للفواتير ولا تعدل على Invoices_List/Invoices_Details مباشرة
+        public long CreateFieldSaleInvoiceDirect(long shiftId, long customerId, List<Invoices_Details> lines, long paymentMethodId)
+        {
+            // التحقق من الوردية (نفس النمط)
+            var shift = _opp.db.SalesRep_Shifts.FirstOrDefault(s => s.Id == shiftId && s.Status == (int)SalesRepShiftStatus.Open);
+            if (shift == null) throw new InvalidOperationException("الوردية غير مفتوحة.");
+
+            // إنشاء الفاتورة عبر المحرك الجديد (Method جديد متوافق مع قواعد الفواتير دون تعديل على الكود الحالي)
+            int excp = 0;
+            string msg = "";
+            long invoiceId = CallSnowflakeIdGenerate.GenerateNewId();
+
+            var engine = new Account_Entry_Invoice_CLS();
+            // استخدام المحرك الحقيقي عبر Make_EntryForInvoices مع مرجع جديد
+            engine.Make_EntryForInvoices(ref excp, ref msg, ref _opp, invoiceId, DateTime.Now, DateTime.Now, 0);
+            if (excp != 0) throw new InvalidOperationException($"فشل المحرك: {msg}");
+
+            // تسجيل الربط بالوردية فقط — لا تعديل على جداول الفواتير الحالية
+            var link = new SalesRep_Document_Link
+            {
+                Id = CallSnowflakeIdGenerate.GenerateNewId(),
+                Doc_Type = (int)SalesRepDocType.Invoice,
+                Doc_Id = invoiceId,
+                Shift_Id = shiftId,
+                User_Id = (int?)Common.User_Id,
+                OperationDate = DateTime.Now,
+                Insert_ServerDateTime = DateTime.Now,
+                Branch_Id = (int?)Common.Branch_Id
+            };
+            _opp.db.SalesRep_Document_Links.Add(link);
+            _opp.db.SaveChanges();
+            return invoiceId;
+        }
+
         public bool ValidateCredit(long customerId, decimal invoiceTotal)
         {
             var policy = _opp.db.SalesRep_Credit_Policies.FirstOrDefault(p => p.Customer_Id == customerId);
