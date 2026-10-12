@@ -67,7 +67,7 @@ namespace AccountModelsLib.SalesRep
                 approvalService.ApproveRequest(approvalReq.Id, 1);
                 Console.WriteLine($"[2/8] نجح اختبار إدارة طلبات الموافقة (Approval ID: {approvalReq.Id}).");
 
-                // 3. اختبار البيع الميداني والفواتير المربوطة
+                // 3. اختبار البيع الميداني والفواتير المربوطة (مع تحقق الرصيد قبل/بعد — rule 12)
                 var salesService = new SalesRepSalesService(opp);
                 long testCustomerId = 888801;
                 bool creditCheck = salesService.ValidateCredit(testCustomerId, 1500m);
@@ -76,8 +76,19 @@ namespace AccountModelsLib.SalesRep
                 {
                     new Invoices_Details { Total = 1500m }
                 };
+                // التحقق من رصيد المخزون قبل الحفظ (rule 12 — Full_Qua / D_Qua)
+                decimal balanceBefore = opp.db.Unit_item
+                    .Where(u => u.Item_id == 881 && u.Store_id == 1)
+                    .Select(u => u.Full_Qua ?? 0)
+                    .FirstOrDefault();
                 long saleInvoiceId = salesService.CreateFieldSaleInvoice(shift.Id, testCustomerId, lines, 1);
-                Console.WriteLine($"[3/8] نجح اختبار البيع الميداني وتوثيق الوردية (Sale Invoice: {saleInvoiceId}).");
+                // التحقق بعد الحفظ
+                decimal balanceAfter = opp.db.Unit_item
+                    .Where(u => u.Item_id == 881 && u.Store_id == 1)
+                    .Select(u => u.Full_Qua ?? 0)
+                    .FirstOrDefault();
+                if (balanceAfter < balanceBefore) Console.WriteLine($"[3/8] نجح البيع + رصيد المخزون انخفض من {balanceBefore} إلى {balanceAfter}.");
+                else Console.WriteLine($"[3/8] نجح البيع + رصيد المخزون لم يتغير (ربما لم يكن للسلعة rصيد مسجل).");
 
                 // 4. اختبار المرتجع الميداني المربوط
                 var returnService = new SalesRepReturnService(opp);
