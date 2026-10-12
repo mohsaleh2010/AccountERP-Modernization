@@ -1,0 +1,23 @@
+@page "/salesrep/approvals"
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+<!-- SalesRep Approvals — طلبات الموافقة -->
+<h3>طلبات الموافقة — SalesRep Approvals</h3>
+
+<table>
+<thead><tr><th>النوع</th><th>المرجع</th><th>طالب</th><th>موافق</th><th>الحالة</th></tr></thead>
+<tbody>
+@foreach (var a in approvals)
+{
+<tr><td>@a.Type</td><td>@a.Ref_Document_Guid</td><td>@a.Requested_By</td><td>@a.Approver_Id</td><td>@a.Status</td></tr>
+}
+</tbody>
+</table>
+
+<button @onclick="ApproveSelected">اعتماد المحدد</button>
+
+@code {
+    List<dynamic> approvals = new();
+    void ApproveSelected() { /* SalesRepApprovalService.ApproveRequest(Id, User_Id) */ }
+}
