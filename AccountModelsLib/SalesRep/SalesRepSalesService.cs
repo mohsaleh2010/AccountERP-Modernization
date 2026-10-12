@@ -1,0 +1,77 @@
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using AccountModelsLib.SalesRep;
+using AccountModelsLib.Models;
+
+namespace AccountModelsLib.SalesRep
+{
+    public class SalesRepSalesService
+    {
+        private readonly operations _opp;
+
+        public SalesRepSalesService(operations opp)
+        {
+            _opp = opp;
+        }
+
+        public long CreateFieldSaleInvoice(long shiftId, long customerId, List<Invoices_Details> lines, long paymentMethodId)
+        {
+            // 1. التحقق من الوردية
+            var shift = _opp.db.SalesRep_Shifts.FirstOrDefault(s => s.Id == shiftId && s.Status == (int)SalesRepShiftStatus.Open);
+            if (shift == null) throw new InvalidOperationException("الوردية غير مفتوحة.");
+
+            // 2. التحقق من المندوب والسياسات
+            var rep = _opp.db.SalesRep_Reps.FirstOrDefault(r => r.Id == shift.Rep_Id);
+
+            decimal invoiceTotal = lines.Sum(l => l.Total ?? 0);
+            if (!ValidateCredit(customerId, invoiceTotal))
+                throw new InvalidOperationException("تم تجاوز حد الائتمان للعميل.");
+
+            // 3. إنشاء الفاتورة عبر محرك ERP الحالي (محاكاة لاستدعاء المحرك)
+            long invoiceId = CallSnowflakeIdGenerate.GenerateNewId();
+            // ... (استخدام Make_EntryForInvoices الفعلي)
+
+            // 4. تسجيل الربط بالوردية
+            var link = new SalesRep_Document_Link
+            {
+                Id = CallSnowflakeIdGenerate.GenerateNewId(),
+                Doc_Type = (int)SalesRepDocType.Invoice,
+                Doc_Id = invoiceId,
+                Shift_Id = shiftId
+            };
+            _opp.db.SalesRep_Document_Links.Add(link);
+            _opp.db.SaveChanges();
+
+            return invoiceId;
+        }
+
+        public bool ValidateCredit(long customerId, decimal invoiceTotal)
+        {
+            var policy = _opp.db.SalesRep_Credit_Policies.FirstOrDefault(p => p.Customer_Id == customerId);
+            if (policy == null) return true;
+
+            decimal currentBalance = CalculateCustomerBalance(customerId);
+            return (currentBalance + invoiceTotal) <= policy.Credit_Limit;
+        }
+
+        public bool ValidateDiscount(long repId, long scopeId, int scope, decimal discountRate, out decimal approvalRequiredAbove)
+        {
+            var policy = _opp.db.SalesRep_Discount_Policies.FirstOrDefault(p => p.Scope == scope && p.Scope_Id == scopeId);
+            approvalRequiredAbove = policy?.Requires_Approval_Above ?? 0;
+
+            if (policy != null && discountRate > policy.Max_Discount_Rate)
+                return false;
+
+            return discountRate <= (policy?.Requires_Approval_Above ?? 0);
+        }
+
+        private decimal CalculateCustomerBalance(long customerId)
+        {
+            // تنفيذ بسيط: الاعتماد على الإجمالي من الفواتير (لتحسين لاحقاً بالتكامل مع السجلات المحاسبية)
+            return _opp.db.Invoices_List
+                .Where(i => i.Customer_Id == customerId)
+                .Sum(i => i.Net_Total ?? 0);
+        }
+    }
+}
