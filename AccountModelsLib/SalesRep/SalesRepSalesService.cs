@@ -61,7 +61,8 @@ namespace AccountModelsLib.SalesRep
 
             var engine = new Account_Entry_Invoice_CLS();
             // استخدام المحرك الحقيقي عبر Make_EntryForInvoices مع مرجع جديد
-            engine.Make_EntryForInvoices(ref excp, ref msg, ref _opp, invoiceId, DateTime.Now, DateTime.Now, 0);
+            operations oppLocal = _opp; // نسخة محلية — لا ref على readonly
+            engine.Make_EntryForInvoices(ref excp, ref msg, ref oppLocal, invoiceId, DateTime.Now, DateTime.Now, 0);
             if (excp != 0) throw new InvalidOperationException($"فشل المحرك: {msg}");
 
             // تسجيل الربط بالوردية فقط — لا تعديل على جداول الفواتير الحالية

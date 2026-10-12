@@ -76,16 +76,16 @@ namespace AccountModelsLib.SalesRep
                 {
                     new Invoices_Details { Total = 1500m }
                 };
-                // التحقق من رصيد المخزون قبل الحفظ (rule 12 — Full_Qua / D_Qua)
+                // التحقق من رصيد المخزون قبل الحفظ (rule 12 — Full_qua / D_Qua)
                 decimal balanceBefore = opp.db.Unit_item
-                    .Where(u => u.Item_id == 881 && u.Store_id == 1)
-                    .Select(u => u.Full_Qua ?? 0)
+                    .Where(u => u.Item_Id == 881 && u.Store_id == 1)
+                    .Select(u => u.Full_qua ?? 0)
                     .FirstOrDefault();
                 long saleInvoiceId = salesService.CreateFieldSaleInvoice(shift.Id, testCustomerId, lines, 1);
                 // التحقق بعد الحفظ
                 decimal balanceAfter = opp.db.Unit_item
-                    .Where(u => u.Item_id == 881 && u.Store_id == 1)
-                    .Select(u => u.Full_Qua ?? 0)
+                    .Where(u => u.Item_Id == 881 && u.Store_id == 1)
+                    .Select(u => u.Full_qua ?? 0)
                     .FirstOrDefault();
                 if (balanceAfter < balanceBefore) Console.WriteLine($"[3/8] نجح البيع + رصيد المخزون انخفض من {balanceBefore} إلى {balanceAfter}.");
                 else Console.WriteLine($"[3/8] نجح البيع + رصيد المخزون لم يتغير (ربما لم يكن للسلعة rصيد مسجل).");
