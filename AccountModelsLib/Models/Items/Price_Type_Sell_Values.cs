@@ -15,10 +15,10 @@ namespace AccountModelsLib.Models
 
     public partial class Price_Type_Sell_Values
     {
-        public decimal ID { get; set; }
-        public Nullable<decimal> Item_ID { get; set; }
-        public Nullable<decimal> Store_ID { get; set; }
-        public Nullable<decimal> Price_Type_List_ID { get; set; }
+        public long ID { get; set; }
+        public Nullable<long> Item_ID { get; set; }
+        public Nullable<long> Store_ID { get; set; }
+        public Nullable<long> Price_Type_List_ID { get; set; }
         public Nullable<decimal> PriceUnit { get; set; }
         public Nullable<decimal> CommisionRat { get; set; }
         public Nullable<decimal> CommisionValue { get; set; }

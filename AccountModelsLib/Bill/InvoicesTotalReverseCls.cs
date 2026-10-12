@@ -58,14 +58,28 @@ namespace AccountModelsLib
             }
             catch { return false; }
         }
-        public void updateinvoice(ref int Excp, decimal Invoice_Net_Total_Old, long Currency_Id, DateTime dt, decimal total, decimal commisition, decimal taxsal, decimal dtsos, decimal nettotal, long custid, long invoiceid, string notes, long Customer_id)
+        public void updateinvoice(ref int Excp, decimal Invoice_Net_Total_Old, long Currency_Id, DateTime dt, decimal total, decimal commisition, decimal taxsal, decimal dtsos, decimal nettotal, long custid, long invoiceid, string notes, long Customer_id, decimal? TaxSales10 = null, decimal? ATS05 = null, decimal? DAMGHAT = null)
         {
             try
             {
                 ArrayList arr = new ArrayList();
                 string mysql = "";
 
-                mysql = "update Invoices_List_Reverse set Currency_id= " + Currency_Id + ",Invoice_Date='" + operations.dateFormat(dt) + "',total=" + total + " ,commission=" + commisition + " ,TaxSales10_Value=" + taxsal + ",ATS05_Value=" + dtsos + " ,net_total=" + nettotal + ",Customer_Id=" + custid + ",Notes='" + notes + "' where id=" + invoiceid;
+                // ·« Ìı”„Õ » €ÌÌ— «·⁄„Ì· ⁄‰œ «· ⁄œÌ·: ›—ﬁ «·—’Ìœ Ìıÿ»Û¯ﬁ ⁄·Ï ⁄„Ì· Ê«Õœ ›ﬁÿ
+                DataTable dtOld = opp.return_DataTable("SELECT Customer_Id FROM Invoices_List_Reverse WHERE id=" + invoiceid);
+                if (dtOld.Rows.Count == 0 || dtOld.Rows[0]["Customer_Id"].ToString() != custid.ToString() || Customer_id != custid)
+                {
+                    Excp = 1;
+                    return;
+                }
+
+                // TaxSales10/ATS05/DAMGHAT «Œ Ì«—Ì…:  ıÕ›Ÿ ›ﬁÿ ≈‰ „ı—ˆ¯—  («·œÌ”ﬂ  Ê» Ì„——Â«° Razor ÌÕ›ŸÂ« »‰›”Â)
+                string extraCols = "";
+                if (TaxSales10.HasValue) extraCols += ",TaxSales10=" + TaxSales10.Value;
+                if (ATS05.HasValue) extraCols += ",ATS05=" + ATS05.Value;
+                if (DAMGHAT.HasValue) extraCols += ",DAMGHAT=" + DAMGHAT.Value;
+
+                mysql = "update Invoices_List_Reverse set Currency_id= " + Currency_Id + ",Invoice_Date='" + operations.dateFormat(dt) + "',total=" + total + " ,commission=" + commisition + " ,TaxSales10_Value=" + taxsal + ",ATS05_Value=" + dtsos + " ,net_total=" + nettotal + ",Customer_Id=" + custid + ",Notes='" + notes + "'" + extraCols + " where id=" + invoiceid;
                 arr.Add(mysql);
 
                 decimal Invoice_NetTotal_Diff = Invoice_Net_Total_Old - nettotal;

@@ -28,9 +28,10 @@ namespace AccountModelsLib.SalesRep
             if (!ValidateCredit(customerId, invoiceTotal))
                 throw new InvalidOperationException("تم تجاوز حد الائتمان للعميل.");
 
-            // 3. إنشاء الفاتورة عبر محرك ERP الحالي (محاكاة لاستدعاء المحرك)
+            // 3. إنشاء الفاتورة عبر المحرك (Account_Entry_Invoice_CLS.Make_EntryForInvoices)
+            // يتم استدعاء المحرك الحقيقي من هنا عند الربط الكامل؛ حالياً يُعيد رقماً جديداً
+            // ويُسجل ربط الوثيقة بالوردية — نفس نمط RouteToInvoiceEngine فى OfflineSyncService
             long invoiceId = CallSnowflakeIdGenerate.GenerateNewId();
-            // ... (استخدام Make_EntryForInvoices الفعلي)
 
             // 4. تسجيل الربط بالوردية
             var link = new SalesRep_Document_Link

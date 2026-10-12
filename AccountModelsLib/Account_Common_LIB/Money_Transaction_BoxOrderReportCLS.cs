@@ -599,7 +599,7 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
                             T_FinalBalance = T_FinalBalance + FinalBalance;
 
 
-                            datefrom = new DateTime(datefrom.Year, datefrom.Month, datefrom.Day + 1);
+                            datefrom = datefrom.AddDays(1);
                         }
                         while (datefrom <= dateto);
                     }
@@ -3982,11 +3982,29 @@ FROM            Order_Money INNER JOIN
             }
 
         }
+        // إذن مرتبط بعربون طلبية عميل (Customer_Order_Deposits): لا يُحذف بمحرك الحذف مباشرة حتى لا يبقى العربون يتيماً
+        // (الحذف والتعديل بالحذف وإعادة الإصدار فى شاشات الديسك توب). CashVouchersService.DeleteVoucher يفك الربط أولاً ثم يحذف.
+        bool IsOrderMoneyLinkedToDeposit(ref operations opp, long Order_MoneyId, ref string Msg)
+        {
+            DataTable dtDep = opp.return_DataTable("SELECT COUNT(*) FROM Customer_Order_Deposits WHERE Order_Money_Id = " + Order_MoneyId);
+            if (dtDep != null && dtDep.Rows.Count > 0 && Convert.ToInt32(dtDep.Rows[0][0]) > 0)
+            {
+                Msg = "لا يمكن حذف أو تعديل إذن مرتبط بعربون طلبية عميل";
+                return true;
+            }
+            return false;
+        }
+
         public void Delete_Transaction_BanksBox_NewSarf(ref int Excp, ref string Msg, ref operations opp, ref long Order_Mony_Id2, DataTable dt_Order, int Transaction_Type, long Box_Id)
         {
 
             try
             {
+                if (IsOrderMoneyLinkedToDeposit(ref opp, Order_Mony_Id2, ref Msg))
+                {
+                    Excp = 1;
+                    return;
+                }
                 Delete_Order_Money(ref opp, Order_Mony_Id2);
 
 
@@ -4032,6 +4050,11 @@ FROM            Order_Money INNER JOIN
 
                 Excp = 0;
                 Msg = "";
+                if (IsOrderMoneyLinkedToDeposit(ref opp, Order_MoneyId, ref Msg))
+                {
+                    Excp = 1;
+                    return;
+                }
                 Order_Money omMain = opp.db.Order_Money.Where(i => i.Id == Order_MoneyId).FirstOrDefault();
                 if (omMain == null)
                 {

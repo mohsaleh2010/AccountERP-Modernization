@@ -1,5 +1,6 @@
 ﻿ 
 using AccountModelsLib.Models;
+using AccountModelsLib.SalesRep;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking; // 👈 إضافة هامة للتعرف على EntityEntry
 using System;
@@ -647,6 +648,27 @@ namespace AccountModelsLib
         public DbSet<AppointmentSession> AppointmentSessions { get; set; }
         public DbSet<AppointmentSessionEmployee> AppointmentSessionEmployees { get; set; }
         public DbSet<AppointmentPackage> AppointmentPackages { get; set; }
+
+        public DbSet<SalesRep_Rep> SalesRep_Reps { get; set; }
+        public DbSet<SalesRep_Device> SalesRep_Devices { get; set; }
+        public DbSet<SalesRep_Shift> SalesRep_Shifts { get; set; }
+        public DbSet<SalesRep_Shift_Stock> SalesRep_Shift_Stock { get; set; }
+        public DbSet<SalesRep_Shift_Cash> SalesRep_Shift_Cash { get; set; }
+        public DbSet<SalesRep_Document_Link> SalesRep_Document_Links { get; set; }
+        public DbSet<SalesRep_Visit> SalesRep_Visits { get; set; }
+        public DbSet<Lookup_SalesRep_NoSaleReason> Lookup_SalesRep_NoSaleReasons { get; set; }
+        public DbSet<Lookup_SalesRep_ReturnReason> Lookup_SalesRep_ReturnReasons { get; set; }
+        public DbSet<SalesRep_Approval> SalesRep_Approvals { get; set; }
+        public DbSet<SalesRep_Attachment> SalesRep_Attachments { get; set; }
+        public DbSet<SalesRep_Credit_Policy> SalesRep_Credit_Policies { get; set; }
+        public DbSet<SalesRep_Discount_Policy> SalesRep_Discount_Policies { get; set; }
+        public DbSet<SalesRep_Route> SalesRep_Routes { get; set; }
+        public DbSet<SalesRep_Route_Customer> SalesRep_Route_Customers { get; set; }
+        public DbSet<SalesRep_Sync_Inbox> SalesRep_Sync_Inboxes { get; set; }
+        public DbSet<SalesRep_Invoice_Return_Links> SalesRep_Invoice_Return_Links { get; set; }
+        public DbSet<SalesRep_Target> SalesRep_Targets { get; set; }
+        public DbSet<SalesRep_Commission_Plan> SalesRep_Commission_Plans { get; set; }
+        public DbSet<SalesRep_Commission_Plans_Tier> SalesRep_Commission_Plans_Tiers { get; set; }
         public DbSet<AppointmentPackageService> AppointmentPackageServices { get; set; }
         public DbSet<AppointmentCustomerPackage> AppointmentCustomerPackages { get; set; }
 
@@ -708,6 +730,7 @@ namespace AccountModelsLib
         public DbSet<Item_Raw_MaterialsFor_Entage_List> Item_Raw_MaterialsFor_Entage_List { get; set; }
         public DbSet<ItemCost> ItemCost { get; set; }
         public DbSet<ItemCostAVG> ItemCostAVG { get; set; }
+        public DbSet<Price_Type_Sell_Values> Price_Type_Sell_Values { get; set; }
         public DbSet<ItemRawEntagEstlamTemp> ItemRawEntagEstlamTemp { get; set; }
 
     }

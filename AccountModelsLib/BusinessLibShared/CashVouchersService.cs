@@ -329,14 +329,15 @@ namespace AccountModelsLib
             int excp = 0; string msg = ""; long entryNo = 0;
             try
             {
-                new Money_Transaction_BoxOrderReportCLS().Delete_Transaction_BanksBox_NewSarf_New(ref excp, ref msg, ref opp, orderId, ref entryNo);
-                if (excp != 0) throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg) ? "Delete failed" : msg);
+                // فك ربط العربون أولاً: محرك الحذف يرفض أى إذن ما زال مرتبطاً بعربون (حماية شاشات الديسك توب)
                 if (hasDeposit)
                 {
                     int dExcp = 0;
                     opp.delete_me("DELETE FROM Customer_Order_Deposits WHERE Order_Money_Id = " + orderId, ref dExcp);
                     if (dExcp != 0) throw new InvalidOperationException("Deposit link delete failed");
                 }
+                new Money_Transaction_BoxOrderReportCLS().Delete_Transaction_BanksBox_NewSarf_New(ref excp, ref msg, ref opp, orderId, ref entryNo);
+                if (excp != 0) throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg) ? "Delete failed" : msg);
                 opp.Commit();
                 return msg;
             }
