@@ -1,0 +1,271 @@
+@* 🟢 خطة المندوبين — المرحلة 1: «ملفات المندوبين الميدانيين». ملف لكل موظف بوظيفة المندوب يحدد مخزن السيارة ومخزن تالفها
+   وصندوق العهدة (تُنشأ تلقائياً بحساباتها أو يُختار موجود من فرعه) وسياسات البيع. الخدمة SalesRepProfileService. التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/reps"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("FSRTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .sr-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .sr-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .sr-head .ico .mud-icon-root { font-size: 2rem; }
+    .sr-head .titles { flex: 1 1 260px; }
+    .sr-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .sr-gap { margin-top: 16px; }
+    .sr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px 16px; }
+    .sr-sec { font-weight: 700; margin: 4px 0 8px; display: flex; align-items: center; gap: 8px; }
+    .sr-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .sr-links { display: flex; flex-direction: column; gap: 2px; font-size: .875rem; }
+    .sr-links .k { color: var(--mud-palette-text-secondary); }
+    .sr-acts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+    .sr-off { opacity: .6; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card sr-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.LocalShipping" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSRTitle")</h1>
+            <div class="sub">@Tr("FSRSub")</div>
+        </div>
+        @if (_form == null)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" Disabled="@(_candidates.Count == 0)" OnClick="NewAsync">@Tr("FSRNew")</MudButton>
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="sr-gap" role="alert">@_error</MudAlert> }
+
+    @if (_form != null)
+    {
+        <div class="inv-card sr-gap">
+            <h2 class="sr-sec"><MudIcon Icon="@Icons.Material.Filled.Badge" Color="Color.Primary" Size="Size.Small" />@(_form.Id == 0 ? Tr("FSRNew") : Tr("FSREdit"))</h2>
+            <div class="sr-grid">
+                @if (_form.Id == 0)
+                {
+                    <MudSelect T="long" @bind-Value="_form.Employee_Id" @bind-Value:after="OnEmployeeAsync" Label="@Tr("FSRRep")" Variant="Variant.Outlined" Required="true"
+                               ToStringFunc="@(v => _candidates.FirstOrDefault(c => c.Id == v)?.Name ?? "")">
+                        @foreach (var c in _candidates) { <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem> }
+                    </MudSelect>
+                }
+                else
+                {
+                    <MudTextField T="string" Value="@_editName" Label="@Tr("FSRRep")" Variant="Variant.Outlined" ReadOnly="true" />
+                }
+                <MudSelect T="int" @bind-Value="_form.Sales_Mode" Label="@Tr("FSRMode")" Variant="Variant.Outlined" ToStringFunc="@(v => Tr("FSRMode_" + v))">
+                    @foreach (var m in Enum.GetValues<SalesRepSalesMode>()) { <MudSelectItem T="int" Value="@((int)m)">@Tr("FSRMode_" + (int)m)</MudSelectItem> }
+                </MudSelect>
+                <MudSelect T="int" @bind-Value="_form.End_Of_Day_Stock_Policy" Label="@Tr("FSREod")" Variant="Variant.Outlined" ToStringFunc="@(v => Tr("FSREod_" + v))" HelperText="@Tr("FSREodHint")">
+                    <MudSelectItem T="int" Value="0">@Tr("FSREod_0")</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">@Tr("FSREod_1")</MudSelectItem>
+                </MudSelect>
+            </div>
+
+            <h2 class="sr-sec sr-gap"><MudIcon Icon="@Icons.Material.Filled.Warehouse" Color="Color.Primary" Size="Size.Small" />@Tr("FSRStores")</h2>
+            <div class="sr-hint">@Tr(_locked ? "FSRLinksLocked" : "FSRStoresHint")</div>
+            <div class="sr-grid sr-gap">
+                <MudSelect T="long" @bind-Value="_form.Van_Store_Id" Label="@Tr("FSRVan")" Variant="Variant.Outlined" Disabled="@_locked" ToStringFunc="@(v => StoreName(v))">
+                    @if (_form.Id == 0) { <MudSelectItem T="long" Value="0L">@Tr("FSRCreateNew")</MudSelectItem> }
+                    @foreach (var s in _stores) { <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem> }
+                </MudSelect>
+                <MudSelect T="long" @bind-Value="_form.Damaged_Store_Id" Label="@Tr("FSRDamaged")" Variant="Variant.Outlined" Disabled="@_locked" ToStringFunc="@(v => StoreName(v))">
+                    @if (_form.Id == 0) { <MudSelectItem T="long" Value="0L">@Tr("FSRCreateNew")</MudSelectItem> }
+                    @foreach (var s in _stores) { <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem> }
+                </MudSelect>
+                <MudSelect T="long" @bind-Value="_form.Cash_Box_Id" Label="@Tr("FSRBox")" Variant="Variant.Outlined" Disabled="@_locked" ToStringFunc="@(v => v == 0 ? Tr("FSRCreateNew") : _boxes.FirstOrDefault(b => b.Id == v)?.Name ?? "")">
+                    @if (_form.Id == 0) { <MudSelectItem T="long" Value="0L">@Tr("FSRCreateNew")</MudSelectItem> }
+                    @foreach (var b in _boxes) { <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem> }
+                </MudSelect>
+            </div>
+
+            <h2 class="sr-sec sr-gap"><MudIcon Icon="@Icons.Material.Filled.Policy" Color="Color.Primary" Size="Size.Small" />@Tr("FSRPolicies")</h2>
+            <div class="sr-grid">
+                <MudSelect T="long" @bind-Value="_priceList" Label="@Tr("FSRPriceList")" Variant="Variant.Outlined" ToStringFunc="@(v => v == 0 ? Tr("FSRNone") : _priceLists.FirstOrDefault(p => p.Id == v)?.Name ?? "")">
+                    <MudSelectItem T="long" Value="0L">@Tr("FSRNone")</MudSelectItem>
+                    @foreach (var p in _priceLists) { <MudSelectItem T="long" Value="@p.Id">@p.Name</MudSelectItem> }
+                </MudSelect>
+                <MudNumericField T="decimal?" @bind-Value="_form.Max_Discount_Rate" Label="@Tr("FSRMaxDiscount")" Variant="Variant.Outlined" Min="0" Max="100" Adornment="Adornment.End" AdornmentText="%" />
+                <MudNumericField T="decimal?" @bind-Value="_form.Max_Cash_On_Hand" Label="@Tr("FSRMaxCash")" Variant="Variant.Outlined" Min="0" HelperText="@Tr("FSRMaxCashHint")" />
+                <MudSelect T="long" @bind-Value="_supervisor" Label="@Tr("FSRSupervisor")" Variant="Variant.Outlined" ToStringFunc="@(v => v == 0 ? Tr("FSRNone") : _employees.FirstOrDefault(e => e.Id == v)?.Name ?? "")">
+                    <MudSelectItem T="long" Value="0L">@Tr("FSRNone")</MudSelectItem>
+                    @foreach (var e in _employees.Where(e => e.Id != _form.Employee_Id)) { <MudSelectItem T="long" Value="@e.Id">@e.Name</MudSelectItem> }
+                </MudSelect>
+            </div>
+            <div class="sr-grid sr-gap">
+                <MudSwitch T="bool" @bind-Value="_form.Allow_Credit_Sales" Color="Color.Primary" Label="@Tr("FSRAllowCredit")" />
+                <MudSwitch T="bool" @bind-Value="_form.Allow_Blind_Return" Color="Color.Primary" Label="@Tr("FSRAllowBlind")" />
+                <MudSwitch T="bool" @bind-Value="_form.Active" Color="Color.Primary" Label="@Tr("FSRActive")" />
+            </div>
+
+            <div class="sr-acts">
+                <MudButton Variant="Variant.Text" OnClick="Cancel" Disabled="@_busy">@Tr("Cancel")</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_busy || _form.Employee_Id == 0)" OnClick="SaveAsync">
+                    @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                    @Tr("FSRSave")
+                </MudButton>
+            </div>
+        </div>
+    }
+
+    <div class="inv-card sr-gap">
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("FSRLoading")" />
+        }
+        else if (_reps.Count == 0)
+        {
+            <div class="inv-empty" role="status">
+                <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Size="Size.Large" />
+                <div>@Tr(_candidates.Count == 0 ? "FSREmptyNoCandidates" : "FSREmpty")</div>
+            </div>
+        }
+        else
+        {
+            <MudTable Items="@_reps" T="SalesRepProfileService.RepRow" Hover="true" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm">
+                <HeaderContent>
+                    <MudTh>@Tr("FSRRep")</MudTh>
+                    <MudTh>@Tr("FSRBranch")</MudTh>
+                    <MudTh>@Tr("FSRMode")</MudTh>
+                    <MudTh>@Tr("FSRStores")</MudTh>
+                    <MudTh>@Tr("FSRStatus")</MudTh>
+                    <MudTh aria-label="@Tr("FSRActions")"></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("FSRRep")"><b class="@(context.Active ? "" : "sr-off")">@context.Employee_Name</b></MudTd>
+                    <MudTd DataLabel="@Tr("FSRBranch")">@context.Branch_Name</MudTd>
+                    <MudTd DataLabel="@Tr("FSRMode")">@Tr("FSRMode_" + context.Sales_Mode)</MudTd>
+                    <MudTd DataLabel="@Tr("FSRStores")">
+                        <div class="sr-links">
+                            <span><span class="k">@Tr("FSRVan"):</span> @context.Van_Store_Name</span>
+                            <span><span class="k">@Tr("FSRDamaged"):</span> @context.Damaged_Store_Name</span>
+                            <span><span class="k">@Tr("FSRBox"):</span> @context.Cash_Box_Name</span>
+                        </div>
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("FSRStatus")">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.Active ? Color.Success : Color.Default)" Icon="@(context.Active ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.PauseCircle)">@Tr(context.Active ? "FSRActive" : "FSRInactive")</MudChip>
+                    </MudTd>
+                    <MudTd>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.PointOfSale" Disabled="@(!context.Active)" OnClick="@(() => Nav.NavigateTo($"/salesrep/shift?rep={context.Id}"))">@Tr("FSRShift")</MudButton>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="@Tr("FSREdit")" Title="@Tr("FSREdit")" OnClick="@(() => EditAsync(context))" />
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private SalesRepProfileService _svc = new();
+    private List<SalesRepProfileService.RepRow> _reps = new();
+    private List<SalesRepProfileService.Option> _candidates = new(), _stores = new(), _boxes = new(), _priceLists = new(), _employees = new();
+    private SalesRepProfileService.ProfileInput? _form;
+    private long _priceList, _supervisor;
+    private string _editName = "";
+    private bool _locked, _loading = true, _busy;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task LoadAsync()
+    {
+        _loading = true; _error = null;
+        try
+        {
+            (_reps, _candidates, _priceLists, _employees) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return (_svc.GetReps(), _svc.GetCandidates(), _svc.GetPriceLists(), _svc.GetEmployees());
+            });
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private async Task NewAsync()
+    {
+        _form = new SalesRepProfileService.ProfileInput { Active = true, Employee_Id = _candidates.FirstOrDefault()?.Id ?? 0 };
+        _priceList = 0; _supervisor = 0; _locked = false;
+        await OnEmployeeAsync();
+    }
+
+    private async Task OnEmployeeAsync()
+    {
+        if (_form == null) return;
+        long branch = _candidates.FirstOrDefault(c => c.Id == _form.Employee_Id)?.Branch_Id ?? 0;
+        await LoadLinksAsync(branch, 0);
+        _form.Van_Store_Id = 0; _form.Damaged_Store_Id = 0; _form.Cash_Box_Id = 0;
+    }
+
+    private async Task LoadLinksAsync(long branch, long repId)
+    {
+        (_stores, _boxes) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_svc.GetFreeStores(branch, repId), _svc.GetFreeBoxes(branch, repId)); });
+    }
+
+    private async Task EditAsync(SalesRepProfileService.RepRow r)
+    {
+        _error = null;
+        _form = new SalesRepProfileService.ProfileInput
+        {
+            Id = r.Id, Employee_Id = r.Employee_Id, Van_Store_Id = r.Van_Store_Id, Damaged_Store_Id = r.Damaged_Store_Id, Cash_Box_Id = r.Cash_Box_Id,
+            Sales_Mode = r.Sales_Mode, Max_Discount_Rate = r.Max_Discount_Rate, Max_Cash_On_Hand = r.Max_Cash_On_Hand,
+            Allow_Credit_Sales = r.Allow_Credit_Sales, Allow_Blind_Return = r.Allow_Blind_Return, End_Of_Day_Stock_Policy = r.End_Of_Day_Stock_Policy, Active = r.Active,
+        };
+        _editName = r.Employee_Name;
+        _priceList = r.Price_Type_List_ID ?? 0;
+        _supervisor = r.Supervisor_Employee_Id ?? 0;
+        _locked = r.Has_Shifts;
+        await LoadLinksAsync(r.Branch_Id, r.Id);
+    }
+
+    private void Cancel() { _form = null; _error = null; }
+
+    private async Task SaveAsync()
+    {
+        if (_form == null) return;
+        _busy = true; _error = null;
+        _form.Price_Type_List_ID = _priceList == 0 ? null : _priceList;
+        _form.Supervisor_Employee_Id = _supervisor == 0 ? null : _supervisor;
+        var input = _form;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); if (input.Id == 0) _svc.Create(input); else _svc.Update(input); });
+            Snackbar.Add(Tr("FSRSaved"), Severity.Success);
+            _form = null;
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private string StoreName(long id) => id == 0 ? Tr("FSRCreateNew") : _stores.FirstOrDefault(s => s.Id == id)?.Name ?? "";
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

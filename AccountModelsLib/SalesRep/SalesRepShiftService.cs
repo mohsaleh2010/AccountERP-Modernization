@@ -168,6 +168,17 @@ GROUP BY u.Item_id").ToList();
             return current.Id;
         });
 
+        /// <summary>تأكيد استلام كل المتبقى من إذن التحميل (الحالة الشائعة)؛ الاستلام الجزئى عبر ConfirmLoad بالأسطر.</summary>
+        public long ConfirmLoadFull(long repId, long loadOrderId)
+        {
+            var progress = Read(opp => new StoreOrderService(opp).GetTransferProgress(loadOrderId));
+            var lines = progress.Where(p => p.Remaining_Small > 0)
+                .Select(p => new StoreOrderService.ReceiptLineInput(p.Detail_Id, Math.Floor(p.Remaining_Small / (p.Factor <= 0 ? 1 : p.Factor)), p.Remaining_Small % (p.Factor <= 0 ? 1 : p.Factor)))
+                .ToList();
+            if (lines.Count == 0) throw new InvalidOperationException("لا متبقى للاستلام فى هذا الإذن.");
+            return ConfirmLoad(repId, loadOrderId, lines);
+        }
+
         /// <summary>تفريغ (1001 عكسى: السيارة ← المخزن الرئيسى)، وأمين المخزن يؤكد الاستلام من صفحة الأذون.</summary>
         public long Unload(long shiftId, long destStoreId, IReadOnlyList<StoreOrderService.OrderLineInput> lines, bool directRequested = false) => Tx(opp =>
         {

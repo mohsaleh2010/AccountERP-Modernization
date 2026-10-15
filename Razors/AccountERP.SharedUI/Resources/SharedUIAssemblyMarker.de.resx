@@ -2911,4 +2911,114 @@
   <data name="PR_NoPartyPrices" xml:space="preserve"><value>Noch keine Sonderpreise</value></data>
   <data name="PR_PriceDeleted" xml:space="preserve"><value>Preis gelöscht</value></data>
   <data name="PR_CustPriceApplied" xml:space="preserve"><value>Kundensonderpreis angewendet</value></data>
+  <data name="FSRTitle" xml:space="preserve"><value>Außendienstmitarbeiter</value></data>
+  <data name="FSRSub" xml:space="preserve"><value>Jeder Mitarbeiter hat ein Fahrzeuglager, ein Schadenslager, eine Kasse und Verkaufsregeln</value></data>
+  <data name="FSRNew" xml:space="preserve"><value>Neues Profil</value></data>
+  <data name="FSREdit" xml:space="preserve"><value>Profil bearbeiten</value></data>
+  <data name="FSRRep" xml:space="preserve"><value>Mitarbeiter</value></data>
+  <data name="FSRMode" xml:space="preserve"><value>Verkaufsmodus</value></data>
+  <data name="FSRMode_0" xml:space="preserve"><value>Direktverkauf (Fahrzeug)</value></data>
+  <data name="FSRMode_1" xml:space="preserve"><value>Vorverkauf</value></data>
+  <data name="FSRMode_2" xml:space="preserve"><value>Gemischt</value></data>
+  <data name="FSRMode_3" xml:space="preserve"><value>Nur Lieferung</value></data>
+  <data name="FSREod" xml:space="preserve"><value>Bestand am Tagesende</value></data>
+  <data name="FSREod_0" xml:space="preserve"><value>Bleibt für den nächsten Tag</value></data>
+  <data name="FSREod_1" xml:space="preserve"><value>Ins Hauptlager entladen</value></data>
+  <data name="FSREodHint" xml:space="preserve"><value>Bei „entladen“ erfordert der Abschluss einen Entladeauftrag</value></data>
+  <data name="FSRStores" xml:space="preserve"><value>Lager und Kasse</value></data>
+  <data name="FSRStoresHint" xml:space="preserve"><value>„Neu anlegen“ erstellt Lager bzw. Kasse mit Konto, oder ein vorhandenes der Filiale wählen</value></data>
+  <data name="FSRLinksLocked" xml:space="preserve"><value>Nach der ersten Schicht nicht mehr änderbar</value></data>
+  <data name="FSRVan" xml:space="preserve"><value>Fahrzeuglager</value></data>
+  <data name="FSRDamaged" xml:space="preserve"><value>Schadenslager</value></data>
+  <data name="FSRBox" xml:space="preserve"><value>Kasse des Mitarbeiters</value></data>
+  <data name="FSRCreateNew" xml:space="preserve"><value>Neu anlegen</value></data>
+  <data name="FSRPolicies" xml:space="preserve"><value>Richtlinien</value></data>
+  <data name="FSRPriceList" xml:space="preserve"><value>Standardpreisliste</value></data>
+  <data name="FSRNone" xml:space="preserve"><value>Keine</value></data>
+  <data name="FSRMaxDiscount" xml:space="preserve"><value>Max. Rabatt</value></data>
+  <data name="FSRMaxCash" xml:space="preserve"><value>Max. Bargeld</value></data>
+  <data name="FSRMaxCashHint" xml:space="preserve"><value>Leer = unbegrenzt</value></data>
+  <data name="FSRSupervisor" xml:space="preserve"><value>Vorgesetzter</value></data>
+  <data name="FSRAllowCredit" xml:space="preserve"><value>Kreditverkauf erlaubt</value></data>
+  <data name="FSRAllowBlind" xml:space="preserve"><value>Retouren ohne Rechnung erlaubt</value></data>
+  <data name="FSRActive" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="FSRInactive" xml:space="preserve"><value>Inaktiv</value></data>
+  <data name="FSRSave" xml:space="preserve"><value>Speichern</value></data>
+  <data name="FSRSaved" xml:space="preserve"><value>Profil gespeichert</value></data>
+  <data name="FSRLoading" xml:space="preserve"><value>Wird geladen</value></data>
+  <data name="FSREmpty" xml:space="preserve"><value>Noch keine Profile — erstes anlegen</value></data>
+  <data name="FSREmptyNoCandidates" xml:space="preserve"><value>Kein Verkäufer ohne Profil. Zuerst Verkäufer anlegen</value></data>
+  <data name="FSRBranch" xml:space="preserve"><value>Filiale</value></data>
+  <data name="FSRStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="FSRActions" xml:space="preserve"><value>Aktionen</value></data>
+  <data name="FSRShift" xml:space="preserve"><value>Schicht</value></data>
+  <data name="FSSTitle" xml:space="preserve"><value>Schicht des Mitarbeiters</value></data>
+  <data name="FSSSub" xml:space="preserve"><value>Laden, Entladen und Schadensware per Lagerauftrag; Abschluss per Inventur</value></data>
+  <data name="FSSShift" xml:space="preserve"><value>Aktuelle Schicht</value></data>
+  <data name="FSSNoShift" xml:space="preserve"><value>Keine offene Schicht</value></data>
+  <data name="FSSStatus_1" xml:space="preserve"><value>Offen</value></data>
+  <data name="FSSStatus_2" xml:space="preserve"><value>Im Abschluss</value></data>
+  <data name="FSSStatus_3" xml:space="preserve"><value>Abgeschlossen</value></data>
+  <data name="FSSStatus_4" xml:space="preserve"><value>Wiedereröffnet</value></data>
+  <data name="FSSOpenedAt" xml:space="preserve"><value>Geöffnet um</value></data>
+  <data name="FSSClosedAt" xml:space="preserve"><value>Abgeschlossen um</value></data>
+  <data name="FSSVanLines" xml:space="preserve"><value>Artikel im Fahrzeug</value></data>
+  <data name="FSSLoad" xml:space="preserve"><value>Fahrzeug beladen</value></data>
+  <data name="FSSLoadMore" xml:space="preserve"><value>Nachladen</value></data>
+  <data name="FSSUnload" xml:space="preserve"><value>Entladen</value></data>
+  <data name="FSSDamaged" xml:space="preserve"><value>Schadensware abgeben</value></data>
+  <data name="FSSStartClosing" xml:space="preserve"><value>Abschluss beginnen</value></data>
+  <data name="FSSRecalc" xml:space="preserve"><value>Soll neu berechnen</value></data>
+  <data name="FSSOpenCustody" xml:space="preserve"><value>Mit Vortagesbestand öffnen</value></data>
+  <data name="FSSPending" xml:space="preserve"><value>Ladungen zur Bestätigung</value></data>
+  <data name="FSSPendingHint" xml:space="preserve"><value>Die Schicht öffnet bei Bestätigung. Teilempfang über den Auftrag</value></data>
+  <data name="FSSOrderNo" xml:space="preserve"><value>Auftrag {0}</value></data>
+  <data name="FSSConfirm" xml:space="preserve"><value>Empfang bestätigen</value></data>
+  <data name="FSSOpenOrder" xml:space="preserve"><value>Auftrag öffnen</value></data>
+  <data name="FSSFrom" xml:space="preserve"><value>Aus Lager</value></data>
+  <data name="FSSTo" xml:space="preserve"><value>In Lager</value></data>
+  <data name="FSSAddItem" xml:space="preserve"><value>Artikel hinzufügen</value></data>
+  <data name="FSSAvailable" xml:space="preserve"><value>Verfügbar</value></data>
+  <data name="FSSRemove" xml:space="preserve"><value>Zeile entfernen</value></data>
+  <data name="FSSNoLines" xml:space="preserve"><value>Zu ladende Artikel hinzufügen</value></data>
+  <data name="FSSNoVanStock" xml:space="preserve"><value>Das Fahrzeug ist leer</value></data>
+  <data name="FSSDirect" xml:space="preserve"><value>Direktumbuchung ohne Bestätigung</value></data>
+  <data name="FSSIssueLoad" xml:space="preserve"><value>Ladeauftrag ausstellen</value></data>
+  <data name="FSSIssueUnload" xml:space="preserve"><value>Entladeauftrag ausstellen</value></data>
+  <data name="FSSCentralDamaged" xml:space="preserve"><value>Zentrales Schadenslager</value></data>
+  <data name="FSSDamagedHint" xml:space="preserve"><value>Überträgt den gesamten Schadensbestand ({0} Artikel)</value></data>
+  <data name="FSSIssueDamaged" xml:space="preserve"><value>Umbuchung ausstellen</value></data>
+  <data name="FSSCount" xml:space="preserve"><value>Fahrzeuginventur</value></data>
+  <data name="FSSCountHint" xml:space="preserve"><value>Soll aus dem Lagerjournal. Differenzen erzeugen Korrekturentwürfe</value></data>
+  <data name="FSSItem" xml:space="preserve"><value>Artikel</value></data>
+  <data name="FSSCode" xml:space="preserve"><value>Code</value></data>
+  <data name="FSSBalance" xml:space="preserve"><value>Bestand</value></data>
+  <data name="FSSOpening" xml:space="preserve"><value>Anfang</value></data>
+  <data name="FSSLoaded" xml:space="preserve"><value>Geladen</value></data>
+  <data name="FSSUnloaded" xml:space="preserve"><value>Entladen</value></data>
+  <data name="FSSOther" xml:space="preserve"><value>Sonstige</value></data>
+  <data name="FSSExpected" xml:space="preserve"><value>Soll</value></data>
+  <data name="FSSCounted" xml:space="preserve"><value>Gezählt</value></data>
+  <data name="FSSDiff" xml:space="preserve"><value>Differenz</value></data>
+  <data name="FSSMatch" xml:space="preserve"><value>Stimmt</value></data>
+  <data name="FSSShort" xml:space="preserve"><value>Fehlmenge</value></data>
+  <data name="FSSOver" xml:space="preserve"><value>Überschuss</value></data>
+  <data name="FSSSaveCount" xml:space="preserve"><value>Inventur speichern</value></data>
+  <data name="FSSClose" xml:space="preserve"><value>Schicht abschließen</value></data>
+  <data name="FSSCloseConfirm" xml:space="preserve"><value>Abschluss: {0} Fehlmengen, {1} Überschüsse — Korrekturentwürfe werden erstellt. Fortfahren?</value></data>
+  <data name="FSSHistory" xml:space="preserve"><value>Letzte Schichten</value></data>
+  <data name="FSSNoHistory" xml:space="preserve"><value>Keine Schichten</value></data>
+  <data name="FSSDate" xml:space="preserve"><value>Datum</value></data>
+  <data name="FSSDiffValue" xml:space="preserve"><value>Differenzwert</value></data>
+  <data name="FSSNoReps" xml:space="preserve"><value>Kein aktiver Mitarbeiter</value></data>
+  <data name="FSSPickRep" xml:space="preserve"><value>Mitarbeiter wählen</value></data>
+  <data name="FSSLoadDone" xml:space="preserve"><value>Ladeauftrag ausgestellt</value></data>
+  <data name="FSSUnloadDone" xml:space="preserve"><value>Entladeauftrag ausgestellt</value></data>
+  <data name="FSSConfirmDone" xml:space="preserve"><value>Empfang bestätigt</value></data>
+  <data name="FSSOpened" xml:space="preserve"><value>Schicht geöffnet</value></data>
+  <data name="FSSDamagedDone" xml:space="preserve"><value>Schadensumbuchung ausgestellt</value></data>
+  <data name="FSSClosingStarted" xml:space="preserve"><value>Soll berechnet — Inventur erfassen</value></data>
+  <data name="FSSCountSaved" xml:space="preserve"><value>Inventur gespeichert</value></data>
+  <data name="FSSClosed" xml:space="preserve"><value>Schicht abgeschlossen</value></data>
+  <data name="FSSVanStock" xml:space="preserve"><value>Fahrzeugbestand</value></data>
 </root>

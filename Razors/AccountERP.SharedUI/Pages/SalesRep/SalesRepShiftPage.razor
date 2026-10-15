@@ -1,0 +1,500 @@
+@* 🟢 خطة المندوبين — المرحلة 2: «وردية المندوب». التحميل والتفريغ ونقل التالف أذون تحويل 1001 عادية عبر المحرك (مباشر أو بتأكيد
+   استلام حسب إعداد التحويل)، والوردية تُفتح عند تأكيد المندوب الاستلام، والإقفال يطابق رصيد السيارة المحسوب مع الجرد ويولّد أذون
+   تسوية مسودة. الخدمة SalesRepShiftService. التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/shift"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("FSSTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .ss-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .ss-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .ss-head .ico .mud-icon-root { font-size: 2rem; }
+    .ss-head .titles { flex: 1 1 260px; }
+    .ss-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .ss-gap { margin-top: 16px; }
+    .ss-sec { font-weight: 700; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; }
+    .ss-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+    .ss-kpi { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); }
+    .ss-kpi .k { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .ss-kpi .v { font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .ss-row { display: grid; grid-template-columns: minmax(0, 3fr) minmax(90px, 1fr) minmax(90px, 1fr) auto; gap: 8px; align-items: center; }
+    .ss-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .ss-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .ss-neg { color: var(--mud-palette-error); font-weight: 700; }
+    .ss-pos { color: var(--mud-palette-success); font-weight: 700; }
+    .ss-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    @@media (max-width: 699px) { .ss-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .ss-row > :first-child { grid-column: 1 / -1; } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card ss-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.PointOfSale" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSSTitle")</h1>
+            <div class="sub">@Tr("FSSSub")</div>
+        </div>
+        <MudSelect T="long" Value="_repId" ValueChanged="OnRepAsync" Label="@Tr("FSRRep")" Variant="Variant.Outlined" Style="min-width:240px"
+                   ToStringFunc="@(v => _reps.FirstOrDefault(r => r.Id == v)?.Employee_Name ?? "")">
+            @foreach (var r in _reps.Where(r => r.Active)) { <MudSelectItem T="long" Value="@r.Id">@r.Employee_Name</MudSelectItem> }
+        </MudSelect>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="ss-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    @if (_loading)
+    {
+        <div class="inv-card ss-gap"><MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("FSRLoading")" /></div>
+    }
+    else if (_rep == null)
+    {
+        <div class="inv-card ss-gap inv-empty" role="status">
+            <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Size="Size.Large" />
+            <div>@Tr(_reps.Count == 0 ? "FSSNoReps" : "FSSPickRep")</div>
+            @if (_reps.Count == 0) { <MudButton Variant="Variant.Outlined" Href="/salesrep/reps">@Tr("FSRTitle")</MudButton> }
+        </div>
+    }
+    else
+    {
+        @* ===== حالة الوردية ===== *@
+        <div class="inv-card ss-gap" aria-live="polite">
+            <h2 class="ss-sec">
+                <MudIcon Icon="@Icons.Material.Filled.EventAvailable" Color="Color.Primary" Size="Size.Small" />@Tr("FSSShift")
+                <MudChip T="string" Size="Size.Small" Color="@StatusColor" Icon="@StatusIcon">@Tr(_shift == null ? "FSSNoShift" : "FSSStatus_" + _shift.Status)</MudChip>
+            </h2>
+            <div class="ss-kpis">
+                <div class="ss-kpi"><div class="k">@Tr("FSRVan")</div><div class="v">@_rep.Van_Store_Name</div></div>
+                <div class="ss-kpi"><div class="k">@Tr("FSRBox")</div><div class="v">@_rep.Cash_Box_Name</div></div>
+                <div class="ss-kpi"><div class="k">@Tr("FSSOpenedAt")</div><div class="v ss-num">@(_shift?.Opened_At?.ToString("yyyy-MM-dd HH:mm") ?? "—")</div></div>
+                <div class="ss-kpi"><div class="k">@Tr("FSSVanLines")</div><div class="v ss-num">@_vanStock.Count</div></div>
+            </div>
+            <div class="ss-acts">
+                @if (_shift == null)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Upload" OnClick="@(() => _panel = Panel.Load)">@Tr("FSSLoad")</MudButton>
+                    @if (_vanStock.Count > 0)
+                    {
+                        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.PlayArrow" Disabled="@_busy" OnClick="OpenWithCustodyAsync">@Tr("FSSOpenCustody")</MudButton>
+                    }
+                }
+                else if (_shift.Status != (int)SalesRepShiftStatus.Closing)
+                {
+                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Upload" OnClick="@(() => _panel = Panel.Load)">@Tr("FSSLoadMore")</MudButton>
+                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Download" Disabled="@(_vanStock.Count == 0)" OnClick="StartUnload">@Tr("FSSUnload")</MudButton>
+                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.DeleteSweep" Disabled="@(_damagedStock.Count == 0)" OnClick="@(() => _panel = Panel.Damaged)">@Tr("FSSDamaged")</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Lock" Disabled="@_busy" OnClick="StartClosingAsync">@Tr("FSSStartClosing")</MudButton>
+                }
+                else
+                {
+                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Download" Disabled="@(_vanStock.Count == 0)" OnClick="StartUnload">@Tr("FSSUnload")</MudButton>
+                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.DeleteSweep" Disabled="@(_damagedStock.Count == 0)" OnClick="@(() => _panel = Panel.Damaged)">@Tr("FSSDamaged")</MudButton>
+                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" Disabled="@_busy" OnClick="StartClosingAsync">@Tr("FSSRecalc")</MudButton>
+                }
+            </div>
+        </div>
+
+        @* ===== تحميلات بانتظار تأكيد المندوب ===== *@
+        @if (_pending.Count > 0)
+        {
+            <div class="inv-card ss-gap">
+                <h2 class="ss-sec"><MudIcon Icon="@Icons.Material.Filled.LocalShipping" Color="Color.Warning" Size="Size.Small" />@Tr("FSSPending")</h2>
+                <div class="ss-hint">@Tr("FSSPendingHint")</div>
+                @foreach (var t in _pending)
+                {
+                    <div class="ss-acts" style="align-items:center">
+                        <span class="ss-num">@Tr("FSSOrderNo", t.Order_No) — @t.From_Name ← @t.To_Name (@t.Lines)</span>
+                        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.TaskAlt" Disabled="@_busy" OnClick="@(() => ConfirmAsync(t.Id))">@Tr("FSSConfirm")</MudButton>
+                        <MudButton Size="Size.Small" Variant="Variant.Text" Href="@($"/store/order/1001?id={t.Id}")">@Tr("FSSOpenOrder")</MudButton>
+                    </div>
+                }
+            </div>
+        }
+
+        @* ===== لوحة التحميل / التفريغ ===== *@
+        @if (_panel is Panel.Load or Panel.Unload)
+        {
+            bool load = _panel == Panel.Load;
+            <div class="inv-card ss-gap">
+                <h2 class="ss-sec"><MudIcon Icon="@(load ? Icons.Material.Filled.Upload : Icons.Material.Filled.Download)" Color="Color.Primary" Size="Size.Small" />@Tr(load ? "FSSLoad" : "FSSUnload")</h2>
+                <MudSelect T="long" @bind-Value="_mainStore" @bind-Value:after="OnMainStoreAsync" Label="@Tr(load ? "FSSFrom" : "FSSTo")" Variant="Variant.Outlined" Required="true"
+                           ToStringFunc="@(v => _mainStores.FirstOrDefault(s => s.Id == v)?.Name ?? "")">
+                    @foreach (var s in _mainStores) { <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem> }
+                </MudSelect>
+                @if (load)
+                {
+                    <MudAutocomplete T="StoreOrderPageService.StockLineOption" Label="@Tr("FSSAddItem")" Variant="Variant.Outlined" Class="ss-gap" Disabled="@(_mainStore == 0)"
+                                     SearchFunc="SearchAsync" ToStringFunc="@(o => o == null ? "" : $"{o.Item_Name} ({Fmt(o.Full_qua * o.Factor + o.D_Qua, o.Factor, o.B_Unit, o.S_Unit)})")"
+                                     ValueChanged="AddLine" ResetValueOnEmptyText="true" DebounceInterval="300" AdornmentIcon="@Icons.Material.Filled.Search" />
+                }
+                @if (_lines.Count == 0)
+                {
+                    <div class="inv-empty ss-gap" role="status">@Tr(load ? "FSSNoLines" : "FSSNoVanStock")</div>
+                }
+                @foreach (var l in _lines)
+                {
+                    <div class="ss-row ss-gap">
+                        <div><b>@l.Name</b><div class="ss-hint">@Tr("FSSAvailable"): <span class="ss-num">@Fmt(l.Available, l.Factor, l.BUnit, l.SUnit)</span></div></div>
+                        <MudNumericField T="decimal" @bind-Value="l.Large" Label="@l.BUnit" Variant="Variant.Outlined" Min="0" Margin="Margin.Dense" />
+                        <MudNumericField T="decimal" @bind-Value="l.Small" Label="@l.SUnit" Variant="Variant.Outlined" Min="0" Margin="Margin.Dense" Disabled="@(l.Factor <= 1)" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Close" aria-label="@Tr("FSSRemove")" Title="@Tr("FSSRemove")" OnClick="@(() => _lines.Remove(l))" />
+                    </div>
+                }
+                @if (_showDirect)
+                {
+                    <MudSwitch T="bool" @bind-Value="_direct" Color="Color.Primary" Label="@Tr("FSSDirect")" Class="ss-gap" />
+                }
+                <div class="ss-acts" style="justify-content:flex-end">
+                    <MudButton Variant="Variant.Text" OnClick="ClosePanel" Disabled="@_busy">@Tr("Cancel")</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(_busy || _mainStore == 0 || !_lines.Any(x => x.Large + x.Small > 0))" OnClick="SubmitTransferAsync">
+                        @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                        @Tr(load ? "FSSIssueLoad" : "FSSIssueUnload")
+                    </MudButton>
+                </div>
+            </div>
+        }
+
+        @* ===== نقل التالف ===== *@
+        @if (_panel == Panel.Damaged)
+        {
+            <div class="inv-card ss-gap">
+                <h2 class="ss-sec"><MudIcon Icon="@Icons.Material.Filled.DeleteSweep" Color="Color.Primary" Size="Size.Small" />@Tr("FSSDamaged")</h2>
+                <div class="ss-hint">@Tr("FSSDamagedHint", _damagedStock.Count)</div>
+                <MudSelect T="long" @bind-Value="_centralDamaged" Label="@Tr("FSSCentralDamaged")" Variant="Variant.Outlined" Class="ss-gap"
+                           ToStringFunc="@(v => _mainStores.FirstOrDefault(s => s.Id == v)?.Name ?? "")">
+                    @foreach (var s in _mainStores) { <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem> }
+                </MudSelect>
+                <div class="ss-acts" style="justify-content:flex-end">
+                    <MudButton Variant="Variant.Text" OnClick="ClosePanel" Disabled="@_busy">@Tr("Cancel")</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(_busy || _centralDamaged == 0)" OnClick="TransferDamagedAsync">@Tr("FSSIssueDamaged")</MudButton>
+                </div>
+            </div>
+        }
+
+        @* ===== جرد الإقفال ===== *@
+        @if (_shift?.Status == (int)SalesRepShiftStatus.Closing)
+        {
+            <div class="inv-card ss-gap">
+                <h2 class="ss-sec"><MudIcon Icon="@Icons.Material.Filled.FactCheck" Color="Color.Primary" Size="Size.Small" />@Tr("FSSCount")</h2>
+                <div class="ss-hint">@Tr("FSSCountHint")</div>
+                <MudTable Items="@_count" T="CountRow" Elevation="0" Class="inv-table ss-gap" Breakpoint="Breakpoint.Sm" Dense="true">
+                    <HeaderContent>
+                        <MudTh>@Tr("FSSItem")</MudTh>
+                        <MudTh>@Tr("FSSOpening")</MudTh>
+                        <MudTh>@Tr("FSSLoaded")</MudTh>
+                        <MudTh>@Tr("FSSUnloaded")</MudTh>
+                        <MudTh>@Tr("FSSOther")</MudTh>
+                        <MudTh>@Tr("FSSExpected")</MudTh>
+                        <MudTh>@Tr("FSSCounted")</MudTh>
+                        <MudTh>@Tr("FSSDiff")</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="@Tr("FSSItem")"><b>@context.Name</b></MudTd>
+                        <MudTd DataLabel="@Tr("FSSOpening")" Class="ss-num">@Fmt(context.Row.Opening, context.Factor, context.BUnit, context.SUnit)</MudTd>
+                        <MudTd DataLabel="@Tr("FSSLoaded")" Class="ss-num">@Fmt(context.Row.Loaded, context.Factor, context.BUnit, context.SUnit)</MudTd>
+                        <MudTd DataLabel="@Tr("FSSUnloaded")" Class="ss-num">@Fmt(context.Row.Unloaded, context.Factor, context.BUnit, context.SUnit)</MudTd>
+                        <MudTd DataLabel="@Tr("FSSOther")" Class="ss-num">@Fmt(context.Row.Other_Movement, context.Factor, context.BUnit, context.SUnit)</MudTd>
+                        <MudTd DataLabel="@Tr("FSSExpected")" Class="ss-num"><b>@Fmt(context.Row.Expected_Closing, context.Factor, context.BUnit, context.SUnit)</b></MudTd>
+                        <MudTd DataLabel="@Tr("FSSCounted")">
+                            <div style="display:flex;gap:6px;min-width:180px">
+                                <MudNumericField T="decimal?" @bind-Value="context.Large" Label="@context.BUnit" Variant="Variant.Outlined" Min="0" Margin="Margin.Dense" />
+                                @if (context.Factor > 1) { <MudNumericField T="decimal?" @bind-Value="context.Small" Label="@context.SUnit" Variant="Variant.Outlined" Min="0" Margin="Margin.Dense" /> }
+                            </div>
+                        </MudTd>
+                        <MudTd DataLabel="@Tr("FSSDiff")" Class="ss-num">
+                            @{ var d = context.DiffSmall; }
+                            @if (d == null) { <span>—</span> }
+                            else if (d == 0) { <span class="ss-pos"><MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" aria-hidden="true" /> @Tr("FSSMatch")</span> }
+                            else { <span class="@(d < 0 ? "ss-neg" : "ss-pos")">@(d < 0 ? Tr("FSSShort") : Tr("FSSOver")) @Fmt(Math.Abs(d.Value), context.Factor, context.BUnit, context.SUnit)</span> }
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+                @if (_count.Count == 0) { <div class="inv-empty" role="status">@Tr("FSSNoVanStock")</div> }
+                <div class="ss-acts" style="justify-content:flex-end">
+                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_busy || _count.Count == 0)" OnClick="SaveCountAsync">@Tr("FSSSaveCount")</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Lock" Disabled="@(_busy || _count.Any(c => c.DiffSmall == null))" OnClick="CloseShiftAsync">@Tr("FSSClose")</MudButton>
+                </div>
+            </div>
+        }
+
+        @* ===== رصيد السيارة ===== *@
+        <div class="inv-card ss-gap">
+            <h2 class="ss-sec"><MudIcon Icon="@Icons.Material.Filled.Inventory2" Color="Color.Primary" Size="Size.Small" />@Tr("FSSVanStock")</h2>
+            @if (_vanStock.Count == 0)
+            {
+                <div class="inv-empty" role="status">@Tr("FSSNoVanStock")</div>
+            }
+            else
+            {
+                <MudTable Items="@_vanStock" T="SalesRepShiftService.StockLine" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true">
+                    <HeaderContent><MudTh>@Tr("FSSItem")</MudTh><MudTh>@Tr("FSSCode")</MudTh><MudTh>@Tr("FSSBalance")</MudTh></HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="@Tr("FSSItem")">@context.Item_Name</MudTd>
+                        <MudTd DataLabel="@Tr("FSSCode")">@context.Code</MudTd>
+                        <MudTd DataLabel="@Tr("FSSBalance")" Class="ss-num">@Fmt(context.Balance_Small, context.Factor, context.B_Unit, context.S_Unit)</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </div>
+
+        @* ===== آخر الورديات ===== *@
+        <div class="inv-card ss-gap">
+            <h2 class="ss-sec"><MudIcon Icon="@Icons.Material.Filled.History" Color="Color.Primary" Size="Size.Small" />@Tr("FSSHistory")</h2>
+            @if (_history.Count == 0)
+            {
+                <div class="inv-empty" role="status">@Tr("FSSNoHistory")</div>
+            }
+            else
+            {
+                <MudTable Items="@_history" T="SalesRepShiftService.ShiftView" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true">
+                    <HeaderContent><MudTh>@Tr("FSSDate")</MudTh><MudTh>@Tr("FSSOpenedAt")</MudTh><MudTh>@Tr("FSSClosedAt")</MudTh><MudTh>@Tr("FSRStatus")</MudTh><MudTh>@Tr("FSSDiffValue")</MudTh></HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="@Tr("FSSDate")" Class="ss-num">@context.Shift_Date.ToString("yyyy-MM-dd")</MudTd>
+                        <MudTd DataLabel="@Tr("FSSOpenedAt")" Class="ss-num">@context.Opened_At?.ToString("HH:mm")</MudTd>
+                        <MudTd DataLabel="@Tr("FSSClosedAt")" Class="ss-num">@context.Closed_At?.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                        <MudTd DataLabel="@Tr("FSRStatus")">@Tr("FSSStatus_" + context.Status)</MudTd>
+                        <MudTd DataLabel="@Tr("FSSDiffValue")" Class="@("ss-num " + (context.Stock_Diff_Value < 0 ? "ss-neg" : ""))">@context.Stock_Diff_Value?.ToString("N2")</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </div>
+    }
+</div>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromQuery(Name = "rep")] public long? RepQuery { get; set; }
+
+    private enum Panel { None, Load, Unload, Damaged }
+
+    private class LineEdit
+    {
+        public long UnitItemId { get; set; }
+        public string Name { get; set; } = "";
+        public string BUnit { get; set; } = "";
+        public string SUnit { get; set; } = "";
+        public decimal Factor { get; set; } = 1;
+        public decimal Available { get; set; }
+        public decimal Large { get; set; }
+        public decimal Small { get; set; }
+    }
+
+    private class CountRow
+    {
+        public SalesRep_Shift_Stock Row { get; set; } = new();
+        public string Name { get; set; } = "";
+        public string BUnit { get; set; } = "";
+        public string SUnit { get; set; } = "";
+        public decimal Factor { get; set; } = 1;
+        public decimal? Large { get; set; }
+        public decimal? Small { get; set; }
+        public decimal? CountedSmall => Large == null && Small == null ? null : (Large ?? 0) * Factor + (Small ?? 0);
+        public decimal? DiffSmall => CountedSmall == null ? null : CountedSmall - Row.Expected_Closing;
+    }
+
+    private readonly SalesRepProfileService _profiles = new();
+    private readonly SalesRepShiftService _svc = new();
+    private readonly StoreOrderPageService _orders = new();
+    private List<SalesRepProfileService.RepRow> _reps = new();
+    private SalesRepProfileService.RepRow? _rep;
+    private SalesRepShiftService.ShiftView? _shift;
+    private List<SalesRepShiftService.StockLine> _vanStock = new(), _damagedStock = new();
+    private List<SalesRepShiftService.TransferView> _pending = new();
+    private List<SalesRepShiftService.ShiftView> _history = new();
+    private List<SalesRepProfileService.Option> _mainStores = new();
+    private List<LineEdit> _lines = new();
+    private List<CountRow> _count = new();
+    private long _repId, _mainStore, _centralDamaged;
+    private Panel _panel;
+    private bool _loading = true, _busy, _direct, _showDirect;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            (_reps, _showDirect) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_profiles.GetReps(), _orders.GetTransferUi().ShowDirectChoice); });
+            _repId = RepQuery is long q && _reps.Any(r => r.Id == q && r.Active) ? q : _reps.FirstOrDefault(r => r.Active)?.Id ?? 0;
+            await LoadRepAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task OnRepAsync(long id)
+    {
+        _repId = id; _panel = Panel.None; _lines.Clear();
+        Nav.NavigateTo($"/salesrep/shift?rep={id}", replace: true);
+        await LoadRepAsync();
+    }
+
+    private async Task LoadRepAsync()
+    {
+        _rep = _reps.FirstOrDefault(r => r.Id == _repId);
+        if (_rep == null) return;
+        var rep = _rep;
+        try
+        {
+            var data = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var shift = _svc.GetCurrentShift(rep.Id);
+                var transfers = _svc.GetTransfers(rep.Id);
+                return (shift, van: _svc.GetStock(rep.Van_Store_Id), damaged: _svc.GetStock(rep.Damaged_Store_Id),
+                        pending: transfers.Where(t => t.Id_To == rep.Van_Store_Id && t.Transfer_Status is 1 or 2).ToList(),
+                        history: _svc.GetShifts(rep.Id, 15),
+                        stores: _profiles.GetFreeStores(rep.Branch_Id, rep.Id).Where(s => s.Id != rep.Van_Store_Id && s.Id != rep.Damaged_Store_Id).ToList(),
+                        count: shift?.Status == (int)SalesRepShiftStatus.Closing ? _svc.GetShiftStock(shift.Id) : new List<SalesRep_Shift_Stock>());
+            });
+            _shift = data.shift; _vanStock = data.van; _damagedStock = data.damaged; _pending = data.pending; _history = data.history; _mainStores = data.stores;
+            BuildCount(data.count);
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private void BuildCount(List<SalesRep_Shift_Stock> rows)
+    {
+        var info = _vanStock.ToDictionary(s => s.Unit_Item_Id);
+        _count = rows.Select(r =>
+        {
+            info.TryGetValue(r.Unit_Item_Table_Id, out var s);
+            decimal f = s?.Factor is > 0 ? s.Factor : 1;
+            var c = new CountRow { Row = r, Name = s?.Item_Name ?? r.Unit_Item_Table_Id.ToString(), BUnit = s?.B_Unit ?? "", SUnit = s?.S_Unit ?? "", Factor = f };
+            if (r.Counted_Closing is decimal counted) { c.Large = Math.Floor(counted / f); c.Small = counted % f; }
+            return c;
+        }).OrderBy(c => c.Name).ToList();
+    }
+
+    private async Task<IEnumerable<StoreOrderPageService.StockLineOption>> SearchAsync(string text, CancellationToken ct)
+    {
+        if (_mainStore == 0) return Array.Empty<StoreOrderPageService.StockLineOption>();
+        long store = _mainStore;
+        return await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _orders.SearchLines(4, store, text ?? "", true); }, ct);
+    }
+
+    private void AddLine(StoreOrderPageService.StockLineOption? o)
+    {
+        if (o == null || _lines.Any(l => l.UnitItemId == o.Id)) return;
+        decimal f = o.Factor <= 0 ? 1 : o.Factor;
+        _lines.Add(new LineEdit { UnitItemId = o.Id, Name = o.Item_Name, BUnit = o.B_Unit, SUnit = o.S_Unit, Factor = f, Available = o.Full_qua * f + o.D_Qua, Large = 1 });
+    }
+
+    private Task OnMainStoreAsync()
+    {
+        if (_panel == Panel.Load) _lines.Clear();
+        return Task.CompletedTask;
+    }
+
+    private void StartUnload()
+    {
+        _panel = Panel.Unload;
+        _lines = _vanStock.Select(s => new LineEdit
+        {
+            UnitItemId = s.Unit_Item_Id, Name = s.Item_Name, BUnit = s.B_Unit, SUnit = s.S_Unit, Factor = s.Factor, Available = s.Balance_Small,
+            Large = Math.Floor(s.Balance_Small / s.Factor), Small = s.Balance_Small % s.Factor,
+        }).ToList();
+    }
+
+    private void ClosePanel() { _panel = Panel.None; _lines.Clear(); }
+
+    private async Task SubmitTransferAsync()
+    {
+        if (_rep == null) return;
+        var lines = _lines.Where(l => l.Large + l.Small > 0).Select(l => new StoreOrderService.OrderLineInput(l.UnitItemId, l.Large, l.Small)).ToList();
+        long repId = _rep.Id, store = _mainStore; bool direct = _direct, load = _panel == Panel.Load;
+        long? shiftId = _shift?.Id;
+        await RunAsync(() => load ? _svc.IssueLoad(repId, store, lines, direct) : _svc.Unload(shiftId!.Value, store, lines, direct), load ? "FSSLoadDone" : "FSSUnloadDone");
+    }
+
+    private async Task ConfirmAsync(long orderId)
+    {
+        long repId = _rep!.Id;
+        await RunAsync(() => _svc.ConfirmLoadFull(repId, orderId), "FSSConfirmDone");
+    }
+
+    private async Task OpenWithCustodyAsync()
+    {
+        long repId = _rep!.Id;
+        await RunAsync(() => _svc.OpenShift(repId, null), "FSSOpened");
+    }
+
+    private async Task TransferDamagedAsync()
+    {
+        long shiftId = _shift!.Id, store = _centralDamaged; bool direct = _direct;
+        await RunAsync(() => _svc.TransferDamaged(shiftId, store, direct), "FSSDamagedDone");
+    }
+
+    private async Task StartClosingAsync()
+    {
+        long shiftId = _shift!.Id;
+        await RunAsync(() => { _svc.StartClosing(shiftId); return 0; }, "FSSClosingStarted");
+    }
+
+    private async Task SaveCountAsync()
+    {
+        long shiftId = _shift!.Id;
+        var counts = _count.Where(c => c.CountedSmall != null).Select(c => new SalesRepShiftService.CountInput { Unit_Item_Id = c.Row.Unit_Item_Table_Id, Counted_Small = c.CountedSmall!.Value }).ToList();
+        await RunAsync(() => { _svc.RecordCount(shiftId, counts); return 0; }, "FSSCountSaved");
+    }
+
+    private async Task CloseShiftAsync()
+    {
+        int shortCount = _count.Count(c => c.DiffSmall < 0), overCount = _count.Count(c => c.DiffSmall > 0);
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("FSSClose"), Tr("FSSCloseConfirm", shortCount, overCount), yesText: Tr("FSSClose"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        long shiftId = _shift!.Id;
+        var counts = _count.Select(c => new SalesRepShiftService.CountInput { Unit_Item_Id = c.Row.Unit_Item_Table_Id, Counted_Small = c.CountedSmall!.Value }).ToList();
+        await RunAsync(() => { _svc.RecordCount(shiftId, counts); _svc.CloseShift(shiftId); return 0; }, "FSSClosed");
+    }
+
+    private async Task RunAsync<T>(Func<T> action, string doneKey)
+    {
+        _busy = true; _error = null;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); action(); });
+            Snackbar.Add(Tr(doneKey), Severity.Success);
+            _panel = Panel.None; _lines.Clear();
+            await LoadRepAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private Color StatusColor => _shift == null ? Color.Default : _shift.Status == (int)SalesRepShiftStatus.Closing ? Color.Warning : Color.Success;
+    private string StatusIcon => _shift == null ? Icons.Material.Filled.PauseCircle : _shift.Status == (int)SalesRepShiftStatus.Closing ? Icons.Material.Filled.HourglassTop : Icons.Material.Filled.CheckCircle;
+
+    /// <summary>كمية بالوحدة الصغرى ← «كبرى + صغرى» بأسماء الوحدات.</summary>
+    private static string Fmt(decimal small, decimal factor, string bUnit, string sUnit)
+    {
+        if (factor <= 1) return $"{small:0.##} {bUnit}".Trim();
+        decimal l = Math.Floor(Math.Abs(small) / factor) * Math.Sign(small), s = small - l * factor;
+        return s == 0 ? $"{l:0.##} {bUnit}".Trim() : l == 0 ? $"{s:0.##} {sUnit}".Trim() : $"{l:0.##} {bUnit} + {s:0.##} {sUnit}";
+    }
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

@@ -316,19 +316,68 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Document_Links_Shift] ON [dbo].[SalesRep_
         {
             LastErrors.Clear();
             var opp = new operations();
+            bool upToDate;
             try
             {
-                if (IsUpToDate(opp)) return;
+                upToDate = IsUpToDate(opp);
             }
             catch (Exception ee)
             {
                 operations.DataDictionaryLogerException(ee);
                 return;
             }
-            foreach (string t in ObsoleteTables)
-                Step(t, () => DropIfEmpty(opp, t));
-            foreach (var t in Tables)
-                Step(t.Table, () => CreateTable(opp, t.Table, t.Columns, t.Indexes));
+            if (!upToDate)
+            {
+                foreach (string t in ObsoleteTables)
+                    Step(t, () => DropIfEmpty(opp, t));
+                foreach (var t in Tables)
+                    Step(t.Table, () => CreateTable(opp, t.Table, t.Columns, t.Indexes));
+            }
+            // مستقلة عن فحص الجداول: القواعد المرقّاة سابقاً تحتاج عناصر القائمة أيضاً.
+            Step("SalesRepMenus", () => Menus(opp));
+        }
+
+        /// <summary>عناصر القائمة تحت «تعاملات المندوبين» (menuSalesManProcess): اسم العنصر، الوصف، صفحة Razor.</summary>
+        private static readonly (string Key, string Description, string Path)[] MenuItems =
+        {
+            ("menuSalesRepProfiles", "ملفات المندوبين الميدانيين", "/salesrep/reps"),
+            ("menuSalesRepShift", "وردية المندوب", "/salesrep/shift"),
+        };
+
+        /// <summary>
+        /// يضيف عنصرى القائمة لو غير موجودين (بالمطابقة مع اسم العنصر بعد فك التشفير، لا بالمعرّف)، وصلاحيتهما للمستخدمين
+        /// المديرين فقط (AdminFlage = 1، قرار المستخدم 2026-10-16) والباقون من شاشة الصلاحيات. لا يغيّر أى صف قائم.
+        /// </summary>
+        private static void Menus(operations opp)
+        {
+            var menus = opp.db.Database.SqlQueryRaw<StoreTransferPolicy.KeyValueRow>("SELECT Id, KeysData, Value FROM SysConfigMenus").ToList();
+            string Key(StoreTransferPolicy.KeyValueRow r) => r.KeysData == null ? "" : Common.DecryptMe(r.KeysData).Trim();
+            var parent = menus.FirstOrDefault(m => Key(m) == "menuSalesManProcess");
+            if (parent == null) return;   // قاعدة بلا قائمة المندوبين
+            string E(string s) => Common.EncryptMe(s);
+            var admins = opp.db.Database.SqlQueryRaw<long>("SELECT USER_ID AS Value FROM USER_DETAILES WHERE ISNULL(AdminFlage, 0) = 1").ToList();
+            foreach (var (key, desc, path) in MenuItems)
+            {
+                long id = menus.FirstOrDefault(m => Key(m) == key)?.Id ?? 0;
+                if (id == 0)
+                {
+                    id = menus.Max(m => m.Id) + 1;
+                    opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenus (Id, Parent_Id, KeysData, Description, PROJECT_ID, Value, DefaultValue, DefaultDescription,
+                            POS, Market, Factory, Tourism, AlFawzan, Client_A, Client_B, UserSells, IsShowToUser, RazorPath)
+VALUES ({id}, {parent.Id}, {E(key)}, {E(desc)}, 2, {E("1")}, {E("1")}, {E(desc)},
+        {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, 1, {E(path)})");
+                    menus.Add(new StoreTransferPolicy.KeyValueRow { Id = id, KeysData = E(key) });
+                }
+                foreach (long user in admins)
+                {
+                    int has = opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM SysConfigMenusPERMATIONS WHERE Menu_ID = {id} AND USER_ID = {user}").AsEnumerable().First();
+                    if (has > 0) continue;
+                    opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenusPERMATIONS (Id, Menu_ID, Parent_Id, USER_ID, PERMATION, PROJECT_ID, IsShowToUser)
+VALUES ({CallSnowflakeIdGenerate.GenerateNewId()}, {id}, {parent.Id}, {user}, {E("1")}, 2, 1)");
+                }
+            }
         }
 
         private static void CreateTable(operations opp, string table, string columns, string indexes)

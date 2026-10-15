@@ -2909,4 +2909,114 @@
   <data name="PR_NoPartyPrices" xml:space="preserve"><value>لا أسعار خاصة بعد — اختر الطرف والصنف والسعر ثم احفظ</value></data>
   <data name="PR_PriceDeleted" xml:space="preserve"><value>حُذف السعر</value></data>
   <data name="PR_CustPriceApplied" xml:space="preserve"><value>طُبِّق سعر العميل الخاص</value></data>
+  <data name="FSRTitle" xml:space="preserve"><value>ملفات المندوبين الميدانيين</value></data>
+  <data name="FSRSub" xml:space="preserve"><value>لكل مندوب مخزن سيارة ومخزن تالف وصندوق عهدة وسياسات بيع</value></data>
+  <data name="FSRNew" xml:space="preserve"><value>ملف مندوب جديد</value></data>
+  <data name="FSREdit" xml:space="preserve"><value>تعديل ملف المندوب</value></data>
+  <data name="FSRRep" xml:space="preserve"><value>المندوب</value></data>
+  <data name="FSRMode" xml:space="preserve"><value>نمط البيع</value></data>
+  <data name="FSRMode_0" xml:space="preserve"><value>بيع فورى (سيارة)</value></data>
+  <data name="FSRMode_1" xml:space="preserve"><value>طلبيات مسبقة</value></data>
+  <data name="FSRMode_2" xml:space="preserve"><value>مختلط</value></data>
+  <data name="FSRMode_3" xml:space="preserve"><value>تسليم فقط</value></data>
+  <data name="FSREod" xml:space="preserve"><value>المتبقى آخر اليوم</value></data>
+  <data name="FSREod_0" xml:space="preserve"><value>يبقى عهدة لليوم التالى</value></data>
+  <data name="FSREod_1" xml:space="preserve"><value>يُفرَّغ للمخزن الرئيسى</value></data>
+  <data name="FSREodHint" xml:space="preserve"><value>مع «يُفرَّغ» لا تُقفل الوردية قبل إذن التفريغ</value></data>
+  <data name="FSRStores" xml:space="preserve"><value>المخازن والصندوق</value></data>
+  <data name="FSRStoresHint" xml:space="preserve"><value>اختر «إنشاء جديد» لينشئ النظام المخزن أو الصندوق بحسابه فى الشجرة باسم المندوب، أو اختر موجوداً من فرعه</value></data>
+  <data name="FSRLinksLocked" xml:space="preserve"><value>لا تتغير المخازن والصندوق بعد أول وردية للمندوب</value></data>
+  <data name="FSRVan" xml:space="preserve"><value>مخزن السيارة</value></data>
+  <data name="FSRDamaged" xml:space="preserve"><value>مخزن التالف</value></data>
+  <data name="FSRBox" xml:space="preserve"><value>صندوق العهدة</value></data>
+  <data name="FSRCreateNew" xml:space="preserve"><value>إنشاء جديد</value></data>
+  <data name="FSRPolicies" xml:space="preserve"><value>السياسات</value></data>
+  <data name="FSRPriceList" xml:space="preserve"><value>قائمة الأسعار الافتراضية</value></data>
+  <data name="FSRNone" xml:space="preserve"><value>بدون</value></data>
+  <data name="FSRMaxDiscount" xml:space="preserve"><value>سقف الخصم</value></data>
+  <data name="FSRMaxCash" xml:space="preserve"><value>حد النقدية بالعهدة</value></data>
+  <data name="FSRMaxCashHint" xml:space="preserve"><value>فارغ = بلا حد</value></data>
+  <data name="FSRSupervisor" xml:space="preserve"><value>المشرف</value></data>
+  <data name="FSRAllowCredit" xml:space="preserve"><value>يسمح بالبيع الآجل</value></data>
+  <data name="FSRAllowBlind" xml:space="preserve"><value>يسمح بالمرتجع بلا فاتورة</value></data>
+  <data name="FSRActive" xml:space="preserve"><value>نشط</value></data>
+  <data name="FSRInactive" xml:space="preserve"><value>موقوف</value></data>
+  <data name="FSRSave" xml:space="preserve"><value>حفظ</value></data>
+  <data name="FSRSaved" xml:space="preserve"><value>حُفظ ملف المندوب</value></data>
+  <data name="FSRLoading" xml:space="preserve"><value>جارٍ التحميل</value></data>
+  <data name="FSREmpty" xml:space="preserve"><value>لا يوجد ملف مندوب بعد — أنشئ أول ملف</value></data>
+  <data name="FSREmptyNoCandidates" xml:space="preserve"><value>لا يوجد موظف بوظيفة «مندوب» بلا ملف. أضف المندوب من شاشة المندوبين أولاً</value></data>
+  <data name="FSRBranch" xml:space="preserve"><value>الفرع</value></data>
+  <data name="FSRStatus" xml:space="preserve"><value>الحالة</value></data>
+  <data name="FSRActions" xml:space="preserve"><value>إجراءات</value></data>
+  <data name="FSRShift" xml:space="preserve"><value>الوردية</value></data>
+  <data name="FSSTitle" xml:space="preserve"><value>وردية المندوب</value></data>
+  <data name="FSSSub" xml:space="preserve"><value>التحميل والتفريغ ونقل التالف بأذون المخازن العادية، والإقفال بجرد السيارة</value></data>
+  <data name="FSSShift" xml:space="preserve"><value>الوردية الحالية</value></data>
+  <data name="FSSNoShift" xml:space="preserve"><value>لا وردية مفتوحة</value></data>
+  <data name="FSSStatus_1" xml:space="preserve"><value>مفتوحة</value></data>
+  <data name="FSSStatus_2" xml:space="preserve"><value>قيد الإقفال</value></data>
+  <data name="FSSStatus_3" xml:space="preserve"><value>مقفلة</value></data>
+  <data name="FSSStatus_4" xml:space="preserve"><value>معاد فتحها</value></data>
+  <data name="FSSOpenedAt" xml:space="preserve"><value>وقت الفتح</value></data>
+  <data name="FSSClosedAt" xml:space="preserve"><value>وقت الإقفال</value></data>
+  <data name="FSSVanLines" xml:space="preserve"><value>أصناف بالسيارة</value></data>
+  <data name="FSSLoad" xml:space="preserve"><value>تحميل السيارة</value></data>
+  <data name="FSSLoadMore" xml:space="preserve"><value>تحميل إضافى</value></data>
+  <data name="FSSUnload" xml:space="preserve"><value>تفريغ</value></data>
+  <data name="FSSDamaged" xml:space="preserve"><value>نقل التالف للمركز</value></data>
+  <data name="FSSStartClosing" xml:space="preserve"><value>بدء الإقفال</value></data>
+  <data name="FSSRecalc" xml:space="preserve"><value>إعادة حساب المتوقع</value></data>
+  <data name="FSSOpenCustody" xml:space="preserve"><value>فتح وردية بعهدة الأمس</value></data>
+  <data name="FSSPending" xml:space="preserve"><value>تحميلات بانتظار تأكيد المندوب</value></data>
+  <data name="FSSPendingHint" xml:space="preserve"><value>تُفتح الوردية عند تأكيد الاستلام. للاستلام الجزئى افتح الإذن</value></data>
+  <data name="FSSOrderNo" xml:space="preserve"><value>إذن {0}</value></data>
+  <data name="FSSConfirm" xml:space="preserve"><value>تأكيد استلام الكل</value></data>
+  <data name="FSSOpenOrder" xml:space="preserve"><value>فتح الإذن</value></data>
+  <data name="FSSFrom" xml:space="preserve"><value>من المخزن</value></data>
+  <data name="FSSTo" xml:space="preserve"><value>إلى المخزن</value></data>
+  <data name="FSSAddItem" xml:space="preserve"><value>إضافة صنف (اسم أو كود)</value></data>
+  <data name="FSSAvailable" xml:space="preserve"><value>المتاح</value></data>
+  <data name="FSSRemove" xml:space="preserve"><value>حذف السطر</value></data>
+  <data name="FSSNoLines" xml:space="preserve"><value>أضف الأصناف المطلوب تحميلها</value></data>
+  <data name="FSSNoVanStock" xml:space="preserve"><value>السيارة فارغة</value></data>
+  <data name="FSSDirect" xml:space="preserve"><value>تحويل مباشر بدون تأكيد استلام</value></data>
+  <data name="FSSIssueLoad" xml:space="preserve"><value>إصدار إذن التحميل</value></data>
+  <data name="FSSIssueUnload" xml:space="preserve"><value>إصدار إذن التفريغ</value></data>
+  <data name="FSSCentralDamaged" xml:space="preserve"><value>المخزن المركزى للتالف</value></data>
+  <data name="FSSDamagedHint" xml:space="preserve"><value>ينقل كل رصيد مخزن تالف السيارة ({0} صنف) بإذن تحويل</value></data>
+  <data name="FSSIssueDamaged" xml:space="preserve"><value>إصدار إذن النقل</value></data>
+  <data name="FSSCount" xml:space="preserve"><value>جرد السيارة</value></data>
+  <data name="FSSCountHint" xml:space="preserve"><value>المتوقع محسوب من دفتر حركة المخزون. الفروق تُنشئ أذون تسوية مسودة يعتمدها المشرف</value></data>
+  <data name="FSSItem" xml:space="preserve"><value>الصنف</value></data>
+  <data name="FSSCode" xml:space="preserve"><value>الكود</value></data>
+  <data name="FSSBalance" xml:space="preserve"><value>الرصيد</value></data>
+  <data name="FSSOpening" xml:space="preserve"><value>الافتتاحى</value></data>
+  <data name="FSSLoaded" xml:space="preserve"><value>المحمَّل</value></data>
+  <data name="FSSUnloaded" xml:space="preserve"><value>المفرَّغ</value></data>
+  <data name="FSSOther" xml:space="preserve"><value>أخرى</value></data>
+  <data name="FSSExpected" xml:space="preserve"><value>المتوقع</value></data>
+  <data name="FSSCounted" xml:space="preserve"><value>المعدود</value></data>
+  <data name="FSSDiff" xml:space="preserve"><value>الفرق</value></data>
+  <data name="FSSMatch" xml:space="preserve"><value>مطابق</value></data>
+  <data name="FSSShort" xml:space="preserve"><value>عجز</value></data>
+  <data name="FSSOver" xml:space="preserve"><value>زيادة</value></data>
+  <data name="FSSSaveCount" xml:space="preserve"><value>حفظ الجرد</value></data>
+  <data name="FSSClose" xml:space="preserve"><value>إقفال الوردية</value></data>
+  <data name="FSSCloseConfirm" xml:space="preserve"><value>سيُقفل اليوم. أصناف بعجز: {0}، بزيادة: {1} — ستُنشأ لها أذون تسوية مسودة. متابعة؟</value></data>
+  <data name="FSSHistory" xml:space="preserve"><value>آخر الورديات</value></data>
+  <data name="FSSNoHistory" xml:space="preserve"><value>لا ورديات سابقة</value></data>
+  <data name="FSSDate" xml:space="preserve"><value>التاريخ</value></data>
+  <data name="FSSDiffValue" xml:space="preserve"><value>قيمة فرق الجرد</value></data>
+  <data name="FSSNoReps" xml:space="preserve"><value>لا يوجد مندوب ميدانى نشط</value></data>
+  <data name="FSSPickRep" xml:space="preserve"><value>اختر المندوب</value></data>
+  <data name="FSSLoadDone" xml:space="preserve"><value>صدر إذن التحميل</value></data>
+  <data name="FSSUnloadDone" xml:space="preserve"><value>صدر إذن التفريغ</value></data>
+  <data name="FSSConfirmDone" xml:space="preserve"><value>تم تأكيد الاستلام</value></data>
+  <data name="FSSOpened" xml:space="preserve"><value>فُتحت الوردية</value></data>
+  <data name="FSSDamagedDone" xml:space="preserve"><value>صدر إذن نقل التالف</value></data>
+  <data name="FSSClosingStarted" xml:space="preserve"><value>تم حساب المتوقع — سجّل الجرد</value></data>
+  <data name="FSSCountSaved" xml:space="preserve"><value>حُفظ الجرد</value></data>
+  <data name="FSSClosed" xml:space="preserve"><value>أُقفلت الوردية</value></data>
+  <data name="FSSVanStock" xml:space="preserve"><value>رصيد السيارة</value></data>
 </root>

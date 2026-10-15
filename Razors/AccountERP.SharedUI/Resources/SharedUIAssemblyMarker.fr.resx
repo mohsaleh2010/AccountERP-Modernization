@@ -2911,4 +2911,114 @@
   <data name="PR_NoPartyPrices" xml:space="preserve"><value>Aucun prix spécial pour l’instant</value></data>
   <data name="PR_PriceDeleted" xml:space="preserve"><value>Prix supprimé</value></data>
   <data name="PR_CustPriceApplied" xml:space="preserve"><value>Prix spécial client appliqué</value></data>
+  <data name="FSRTitle" xml:space="preserve"><value>Commerciaux terrain</value></data>
+  <data name="FSRSub" xml:space="preserve"><value>Chaque commercial a un dépôt véhicule, un dépôt avaries, une caisse et des règles de vente</value></data>
+  <data name="FSRNew" xml:space="preserve"><value>Nouveau commercial</value></data>
+  <data name="FSREdit" xml:space="preserve"><value>Modifier le commercial</value></data>
+  <data name="FSRRep" xml:space="preserve"><value>Commercial</value></data>
+  <data name="FSRMode" xml:space="preserve"><value>Mode de vente</value></data>
+  <data name="FSRMode_0" xml:space="preserve"><value>Vente directe (véhicule)</value></data>
+  <data name="FSRMode_1" xml:space="preserve"><value>Prise de commandes</value></data>
+  <data name="FSRMode_2" xml:space="preserve"><value>Mixte</value></data>
+  <data name="FSRMode_3" xml:space="preserve"><value>Livraison uniquement</value></data>
+  <data name="FSREod" xml:space="preserve"><value>Stock en fin de journée</value></data>
+  <data name="FSREod_0" xml:space="preserve"><value>Conservé pour le lendemain</value></data>
+  <data name="FSREod_1" xml:space="preserve"><value>Déchargé au dépôt principal</value></data>
+  <data name="FSREodHint" xml:space="preserve"><value>Avec « déchargé », la clôture exige un bon de déchargement</value></data>
+  <data name="FSRStores" xml:space="preserve"><value>Dépôts et caisse</value></data>
+  <data name="FSRStoresHint" xml:space="preserve"><value>Choisissez « Créer » pour créer le dépôt ou la caisse avec son compte, ou un existant de l'agence</value></data>
+  <data name="FSRLinksLocked" xml:space="preserve"><value>Dépôts et caisse non modifiables après la première tournée</value></data>
+  <data name="FSRVan" xml:space="preserve"><value>Dépôt véhicule</value></data>
+  <data name="FSRDamaged" xml:space="preserve"><value>Dépôt avaries</value></data>
+  <data name="FSRBox" xml:space="preserve"><value>Caisse du commercial</value></data>
+  <data name="FSRCreateNew" xml:space="preserve"><value>Créer</value></data>
+  <data name="FSRPolicies" xml:space="preserve"><value>Règles</value></data>
+  <data name="FSRPriceList" xml:space="preserve"><value>Liste de prix par défaut</value></data>
+  <data name="FSRNone" xml:space="preserve"><value>Aucun</value></data>
+  <data name="FSRMaxDiscount" xml:space="preserve"><value>Remise maximale</value></data>
+  <data name="FSRMaxCash" xml:space="preserve"><value>Plafond d'espèces</value></data>
+  <data name="FSRMaxCashHint" xml:space="preserve"><value>Vide = sans limite</value></data>
+  <data name="FSRSupervisor" xml:space="preserve"><value>Superviseur</value></data>
+  <data name="FSRAllowCredit" xml:space="preserve"><value>Ventes à crédit autorisées</value></data>
+  <data name="FSRAllowBlind" xml:space="preserve"><value>Retours sans facture autorisés</value></data>
+  <data name="FSRActive" xml:space="preserve"><value>Actif</value></data>
+  <data name="FSRInactive" xml:space="preserve"><value>Inactif</value></data>
+  <data name="FSRSave" xml:space="preserve"><value>Enregistrer</value></data>
+  <data name="FSRSaved" xml:space="preserve"><value>Commercial enregistré</value></data>
+  <data name="FSRLoading" xml:space="preserve"><value>Chargement</value></data>
+  <data name="FSREmpty" xml:space="preserve"><value>Aucun commercial — créez le premier</value></data>
+  <data name="FSREmptyNoCandidates" xml:space="preserve"><value>Aucun employé commercial sans fiche. Ajoutez-le d'abord</value></data>
+  <data name="FSRBranch" xml:space="preserve"><value>Agence</value></data>
+  <data name="FSRStatus" xml:space="preserve"><value>Statut</value></data>
+  <data name="FSRActions" xml:space="preserve"><value>Actions</value></data>
+  <data name="FSRShift" xml:space="preserve"><value>Tournée</value></data>
+  <data name="FSSTitle" xml:space="preserve"><value>Tournée du commercial</value></data>
+  <data name="FSSSub" xml:space="preserve"><value>Chargement, déchargement et avaries par bons de dépôt ; clôture par inventaire</value></data>
+  <data name="FSSShift" xml:space="preserve"><value>Tournée en cours</value></data>
+  <data name="FSSNoShift" xml:space="preserve"><value>Aucune tournée ouverte</value></data>
+  <data name="FSSStatus_1" xml:space="preserve"><value>Ouverte</value></data>
+  <data name="FSSStatus_2" xml:space="preserve"><value>En clôture</value></data>
+  <data name="FSSStatus_3" xml:space="preserve"><value>Clôturée</value></data>
+  <data name="FSSStatus_4" xml:space="preserve"><value>Rouverte</value></data>
+  <data name="FSSOpenedAt" xml:space="preserve"><value>Ouverte à</value></data>
+  <data name="FSSClosedAt" xml:space="preserve"><value>Clôturée à</value></data>
+  <data name="FSSVanLines" xml:space="preserve"><value>Articles au véhicule</value></data>
+  <data name="FSSLoad" xml:space="preserve"><value>Charger le véhicule</value></data>
+  <data name="FSSLoadMore" xml:space="preserve"><value>Chargement supplémentaire</value></data>
+  <data name="FSSUnload" xml:space="preserve"><value>Décharger</value></data>
+  <data name="FSSDamaged" xml:space="preserve"><value>Envoyer les avaries</value></data>
+  <data name="FSSStartClosing" xml:space="preserve"><value>Commencer la clôture</value></data>
+  <data name="FSSRecalc" xml:space="preserve"><value>Recalculer l'attendu</value></data>
+  <data name="FSSOpenCustody" xml:space="preserve"><value>Ouvrir avec le stock de la veille</value></data>
+  <data name="FSSPending" xml:space="preserve"><value>Chargements à confirmer</value></data>
+  <data name="FSSPendingHint" xml:space="preserve"><value>La tournée s'ouvre à la confirmation. Réception partielle : ouvrir le bon</value></data>
+  <data name="FSSOrderNo" xml:space="preserve"><value>Bon {0}</value></data>
+  <data name="FSSConfirm" xml:space="preserve"><value>Confirmer la réception</value></data>
+  <data name="FSSOpenOrder" xml:space="preserve"><value>Ouvrir le bon</value></data>
+  <data name="FSSFrom" xml:space="preserve"><value>Depuis le dépôt</value></data>
+  <data name="FSSTo" xml:space="preserve"><value>Vers le dépôt</value></data>
+  <data name="FSSAddItem" xml:space="preserve"><value>Ajouter un article</value></data>
+  <data name="FSSAvailable" xml:space="preserve"><value>Disponible</value></data>
+  <data name="FSSRemove" xml:space="preserve"><value>Retirer la ligne</value></data>
+  <data name="FSSNoLines" xml:space="preserve"><value>Ajoutez les articles à charger</value></data>
+  <data name="FSSNoVanStock" xml:space="preserve"><value>Le véhicule est vide</value></data>
+  <data name="FSSDirect" xml:space="preserve"><value>Transfert direct sans confirmation</value></data>
+  <data name="FSSIssueLoad" xml:space="preserve"><value>Émettre le bon de chargement</value></data>
+  <data name="FSSIssueUnload" xml:space="preserve"><value>Émettre le bon de déchargement</value></data>
+  <data name="FSSCentralDamaged" xml:space="preserve"><value>Dépôt central des avaries</value></data>
+  <data name="FSSDamagedHint" xml:space="preserve"><value>Transfère tout le stock d'avaries ({0} articles)</value></data>
+  <data name="FSSIssueDamaged" xml:space="preserve"><value>Émettre le transfert</value></data>
+  <data name="FSSCount" xml:space="preserve"><value>Inventaire du véhicule</value></data>
+  <data name="FSSCountHint" xml:space="preserve"><value>L'attendu vient du registre. Les écarts créent des bons d'ajustement en brouillon</value></data>
+  <data name="FSSItem" xml:space="preserve"><value>Article</value></data>
+  <data name="FSSCode" xml:space="preserve"><value>Code</value></data>
+  <data name="FSSBalance" xml:space="preserve"><value>Solde</value></data>
+  <data name="FSSOpening" xml:space="preserve"><value>Ouverture</value></data>
+  <data name="FSSLoaded" xml:space="preserve"><value>Chargé</value></data>
+  <data name="FSSUnloaded" xml:space="preserve"><value>Déchargé</value></data>
+  <data name="FSSOther" xml:space="preserve"><value>Autres</value></data>
+  <data name="FSSExpected" xml:space="preserve"><value>Attendu</value></data>
+  <data name="FSSCounted" xml:space="preserve"><value>Compté</value></data>
+  <data name="FSSDiff" xml:space="preserve"><value>Écart</value></data>
+  <data name="FSSMatch" xml:space="preserve"><value>Conforme</value></data>
+  <data name="FSSShort" xml:space="preserve"><value>Manque</value></data>
+  <data name="FSSOver" xml:space="preserve"><value>Excédent</value></data>
+  <data name="FSSSaveCount" xml:space="preserve"><value>Enregistrer l'inventaire</value></data>
+  <data name="FSSClose" xml:space="preserve"><value>Clôturer la tournée</value></data>
+  <data name="FSSCloseConfirm" xml:space="preserve"><value>Clôture : {0} en manque, {1} en excédent — des bons d'ajustement seront créés. Continuer ?</value></data>
+  <data name="FSSHistory" xml:space="preserve"><value>Tournées récentes</value></data>
+  <data name="FSSNoHistory" xml:space="preserve"><value>Aucune tournée</value></data>
+  <data name="FSSDate" xml:space="preserve"><value>Date</value></data>
+  <data name="FSSDiffValue" xml:space="preserve"><value>Valeur des écarts</value></data>
+  <data name="FSSNoReps" xml:space="preserve"><value>Aucun commercial actif</value></data>
+  <data name="FSSPickRep" xml:space="preserve"><value>Choisissez un commercial</value></data>
+  <data name="FSSLoadDone" xml:space="preserve"><value>Bon de chargement émis</value></data>
+  <data name="FSSUnloadDone" xml:space="preserve"><value>Bon de déchargement émis</value></data>
+  <data name="FSSConfirmDone" xml:space="preserve"><value>Réception confirmée</value></data>
+  <data name="FSSOpened" xml:space="preserve"><value>Tournée ouverte</value></data>
+  <data name="FSSDamagedDone" xml:space="preserve"><value>Transfert d'avaries émis</value></data>
+  <data name="FSSClosingStarted" xml:space="preserve"><value>Attendu calculé — saisissez l'inventaire</value></data>
+  <data name="FSSCountSaved" xml:space="preserve"><value>Inventaire enregistré</value></data>
+  <data name="FSSClosed" xml:space="preserve"><value>Tournée clôturée</value></data>
+  <data name="FSSVanStock" xml:space="preserve"><value>Stock du véhicule</value></data>
 </root>

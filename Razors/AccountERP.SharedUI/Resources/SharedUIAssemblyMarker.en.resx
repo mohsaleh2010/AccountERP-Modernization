@@ -2909,4 +2909,114 @@
   <data name="PR_NoPartyPrices" xml:space="preserve"><value>No special prices yet. Choose the party, item and price, then save</value></data>
   <data name="PR_PriceDeleted" xml:space="preserve"><value>Price deleted</value></data>
   <data name="PR_CustPriceApplied" xml:space="preserve"><value>Customer special price applied</value></data>
+  <data name="FSRTitle" xml:space="preserve"><value>Field sales reps</value></data>
+  <data name="FSRSub" xml:space="preserve"><value>Each rep has a van store, a damaged-goods store, a custody cash box and sales policies</value></data>
+  <data name="FSRNew" xml:space="preserve"><value>New rep profile</value></data>
+  <data name="FSREdit" xml:space="preserve"><value>Edit rep profile</value></data>
+  <data name="FSRRep" xml:space="preserve"><value>Sales rep</value></data>
+  <data name="FSRMode" xml:space="preserve"><value>Sales mode</value></data>
+  <data name="FSRMode_0" xml:space="preserve"><value>Van sales</value></data>
+  <data name="FSRMode_1" xml:space="preserve"><value>Pre-sales orders</value></data>
+  <data name="FSRMode_2" xml:space="preserve"><value>Mixed</value></data>
+  <data name="FSRMode_3" xml:space="preserve"><value>Delivery only</value></data>
+  <data name="FSREod" xml:space="preserve"><value>End-of-day stock</value></data>
+  <data name="FSREod_0" xml:space="preserve"><value>Kept as custody for the next day</value></data>
+  <data name="FSREod_1" xml:space="preserve"><value>Unloaded to the main store</value></data>
+  <data name="FSREodHint" xml:space="preserve"><value>With 'unload', the shift cannot close without an unload order</value></data>
+  <data name="FSRStores" xml:space="preserve"><value>Stores and cash box</value></data>
+  <data name="FSRStoresHint" xml:space="preserve"><value>Choose 'Create new' to create the store or box with its account under the rep's name, or pick an existing one from the rep's branch</value></data>
+  <data name="FSRLinksLocked" xml:space="preserve"><value>Stores and box cannot change after the rep's first shift</value></data>
+  <data name="FSRVan" xml:space="preserve"><value>Van store</value></data>
+  <data name="FSRDamaged" xml:space="preserve"><value>Damaged-goods store</value></data>
+  <data name="FSRBox" xml:space="preserve"><value>Custody cash box</value></data>
+  <data name="FSRCreateNew" xml:space="preserve"><value>Create new</value></data>
+  <data name="FSRPolicies" xml:space="preserve"><value>Policies</value></data>
+  <data name="FSRPriceList" xml:space="preserve"><value>Default price list</value></data>
+  <data name="FSRNone" xml:space="preserve"><value>None</value></data>
+  <data name="FSRMaxDiscount" xml:space="preserve"><value>Max discount</value></data>
+  <data name="FSRMaxCash" xml:space="preserve"><value>Max cash on hand</value></data>
+  <data name="FSRMaxCashHint" xml:space="preserve"><value>Empty = no limit</value></data>
+  <data name="FSRSupervisor" xml:space="preserve"><value>Supervisor</value></data>
+  <data name="FSRAllowCredit" xml:space="preserve"><value>Allow credit sales</value></data>
+  <data name="FSRAllowBlind" xml:space="preserve"><value>Allow returns without invoice</value></data>
+  <data name="FSRActive" xml:space="preserve"><value>Active</value></data>
+  <data name="FSRInactive" xml:space="preserve"><value>Inactive</value></data>
+  <data name="FSRSave" xml:space="preserve"><value>Save</value></data>
+  <data name="FSRSaved" xml:space="preserve"><value>Rep profile saved</value></data>
+  <data name="FSRLoading" xml:space="preserve"><value>Loading</value></data>
+  <data name="FSREmpty" xml:space="preserve"><value>No rep profiles yet — create the first one</value></data>
+  <data name="FSREmptyNoCandidates" xml:space="preserve"><value>No salesman employee without a profile. Add the salesman in the sales reps screen first</value></data>
+  <data name="FSRBranch" xml:space="preserve"><value>Branch</value></data>
+  <data name="FSRStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="FSRActions" xml:space="preserve"><value>Actions</value></data>
+  <data name="FSRShift" xml:space="preserve"><value>Shift</value></data>
+  <data name="FSSTitle" xml:space="preserve"><value>Rep shift</value></data>
+  <data name="FSSSub" xml:space="preserve"><value>Load, unload and damaged transfers as normal store orders; closing by van count</value></data>
+  <data name="FSSShift" xml:space="preserve"><value>Current shift</value></data>
+  <data name="FSSNoShift" xml:space="preserve"><value>No open shift</value></data>
+  <data name="FSSStatus_1" xml:space="preserve"><value>Open</value></data>
+  <data name="FSSStatus_2" xml:space="preserve"><value>Closing</value></data>
+  <data name="FSSStatus_3" xml:space="preserve"><value>Closed</value></data>
+  <data name="FSSStatus_4" xml:space="preserve"><value>Reopened</value></data>
+  <data name="FSSOpenedAt" xml:space="preserve"><value>Opened at</value></data>
+  <data name="FSSClosedAt" xml:space="preserve"><value>Closed at</value></data>
+  <data name="FSSVanLines" xml:space="preserve"><value>Items in van</value></data>
+  <data name="FSSLoad" xml:space="preserve"><value>Load van</value></data>
+  <data name="FSSLoadMore" xml:space="preserve"><value>Extra load</value></data>
+  <data name="FSSUnload" xml:space="preserve"><value>Unload</value></data>
+  <data name="FSSDamaged" xml:space="preserve"><value>Send damaged to center</value></data>
+  <data name="FSSStartClosing" xml:space="preserve"><value>Start closing</value></data>
+  <data name="FSSRecalc" xml:space="preserve"><value>Recalculate expected</value></data>
+  <data name="FSSOpenCustody" xml:space="preserve"><value>Open shift with yesterday's stock</value></data>
+  <data name="FSSPending" xml:space="preserve"><value>Loads awaiting rep confirmation</value></data>
+  <data name="FSSPendingHint" xml:space="preserve"><value>The shift opens on receipt confirmation. For a partial receipt open the order</value></data>
+  <data name="FSSOrderNo" xml:space="preserve"><value>Order {0}</value></data>
+  <data name="FSSConfirm" xml:space="preserve"><value>Confirm full receipt</value></data>
+  <data name="FSSOpenOrder" xml:space="preserve"><value>Open order</value></data>
+  <data name="FSSFrom" xml:space="preserve"><value>From store</value></data>
+  <data name="FSSTo" xml:space="preserve"><value>To store</value></data>
+  <data name="FSSAddItem" xml:space="preserve"><value>Add item (name or code)</value></data>
+  <data name="FSSAvailable" xml:space="preserve"><value>Available</value></data>
+  <data name="FSSRemove" xml:space="preserve"><value>Remove line</value></data>
+  <data name="FSSNoLines" xml:space="preserve"><value>Add the items to load</value></data>
+  <data name="FSSNoVanStock" xml:space="preserve"><value>The van is empty</value></data>
+  <data name="FSSDirect" xml:space="preserve"><value>Direct transfer without receipt confirmation</value></data>
+  <data name="FSSIssueLoad" xml:space="preserve"><value>Issue load order</value></data>
+  <data name="FSSIssueUnload" xml:space="preserve"><value>Issue unload order</value></data>
+  <data name="FSSCentralDamaged" xml:space="preserve"><value>Central damaged-goods store</value></data>
+  <data name="FSSDamagedHint" xml:space="preserve"><value>Transfers all damaged-store stock ({0} items) with a transfer order</value></data>
+  <data name="FSSIssueDamaged" xml:space="preserve"><value>Issue transfer</value></data>
+  <data name="FSSCount" xml:space="preserve"><value>Van count</value></data>
+  <data name="FSSCountHint" xml:space="preserve"><value>Expected comes from the stock ledger. Differences create draft adjustment orders for the supervisor</value></data>
+  <data name="FSSItem" xml:space="preserve"><value>Item</value></data>
+  <data name="FSSCode" xml:space="preserve"><value>Code</value></data>
+  <data name="FSSBalance" xml:space="preserve"><value>Balance</value></data>
+  <data name="FSSOpening" xml:space="preserve"><value>Opening</value></data>
+  <data name="FSSLoaded" xml:space="preserve"><value>Loaded</value></data>
+  <data name="FSSUnloaded" xml:space="preserve"><value>Unloaded</value></data>
+  <data name="FSSOther" xml:space="preserve"><value>Other</value></data>
+  <data name="FSSExpected" xml:space="preserve"><value>Expected</value></data>
+  <data name="FSSCounted" xml:space="preserve"><value>Counted</value></data>
+  <data name="FSSDiff" xml:space="preserve"><value>Difference</value></data>
+  <data name="FSSMatch" xml:space="preserve"><value>Matches</value></data>
+  <data name="FSSShort" xml:space="preserve"><value>Short</value></data>
+  <data name="FSSOver" xml:space="preserve"><value>Over</value></data>
+  <data name="FSSSaveCount" xml:space="preserve"><value>Save count</value></data>
+  <data name="FSSClose" xml:space="preserve"><value>Close shift</value></data>
+  <data name="FSSCloseConfirm" xml:space="preserve"><value>The day will close. Short items: {0}, over: {1} — draft adjustment orders will be created. Continue?</value></data>
+  <data name="FSSHistory" xml:space="preserve"><value>Recent shifts</value></data>
+  <data name="FSSNoHistory" xml:space="preserve"><value>No previous shifts</value></data>
+  <data name="FSSDate" xml:space="preserve"><value>Date</value></data>
+  <data name="FSSDiffValue" xml:space="preserve"><value>Count difference value</value></data>
+  <data name="FSSNoReps" xml:space="preserve"><value>No active field rep</value></data>
+  <data name="FSSPickRep" xml:space="preserve"><value>Choose a rep</value></data>
+  <data name="FSSLoadDone" xml:space="preserve"><value>Load order issued</value></data>
+  <data name="FSSUnloadDone" xml:space="preserve"><value>Unload order issued</value></data>
+  <data name="FSSConfirmDone" xml:space="preserve"><value>Receipt confirmed</value></data>
+  <data name="FSSOpened" xml:space="preserve"><value>Shift opened</value></data>
+  <data name="FSSDamagedDone" xml:space="preserve"><value>Damaged transfer issued</value></data>
+  <data name="FSSClosingStarted" xml:space="preserve"><value>Expected calculated — enter the count</value></data>
+  <data name="FSSCountSaved" xml:space="preserve"><value>Count saved</value></data>
+  <data name="FSSClosed" xml:space="preserve"><value>Shift closed</value></data>
+  <data name="FSSVanStock" xml:space="preserve"><value>Van stock</value></data>
 </root>
