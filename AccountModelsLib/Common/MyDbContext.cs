@@ -664,11 +664,15 @@ namespace AccountModelsLib
         public DbSet<SalesRep_Discount_Policy> SalesRep_Discount_Policies { get; set; }
         public DbSet<SalesRep_Route> SalesRep_Routes { get; set; }
         public DbSet<SalesRep_Route_Customer> SalesRep_Route_Customers { get; set; }
+        public DbSet<SalesRep_Customer_Geo> SalesRep_Customer_Geos { get; set; }
+        public DbSet<SalesRep_GPS_Track> SalesRep_GPS_Tracks { get; set; }
         public DbSet<SalesRep_Sync_Inbox> SalesRep_Sync_Inboxes { get; set; }
-        public DbSet<SalesRep_Invoice_Return_Links> SalesRep_Invoice_Return_Links { get; set; }
+        public DbSet<SalesRep_Invoice_Return_Link> SalesRep_Invoice_Return_Links { get; set; }
         public DbSet<SalesRep_Target> SalesRep_Targets { get; set; }
         public DbSet<SalesRep_Commission_Plan> SalesRep_Commission_Plans { get; set; }
-        public DbSet<SalesRep_Commission_Plans_Tier> SalesRep_Commission_Plans_Tiers { get; set; }
+        public DbSet<SalesRep_Commission_Plan_Tier> SalesRep_Commission_Plan_Tiers { get; set; }
+        public DbSet<SalesRep_Commission_Run> SalesRep_Commission_Runs { get; set; }
+        public DbSet<SalesRep_Commission_Run_Line> SalesRep_Commission_Run_Lines { get; set; }
         public DbSet<AppointmentPackageService> AppointmentPackageServices { get; set; }
         public DbSet<AppointmentCustomerPackage> AppointmentCustomerPackages { get; set; }
 

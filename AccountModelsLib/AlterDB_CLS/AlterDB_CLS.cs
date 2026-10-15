@@ -4529,6 +4529,7 @@ WHERE       Receipt=0  ";
             //AlterDBLastYear(ref opp);
             AlterDBThisYear(ref opp, d);
             StockEngineSchemaCLS.EnsureSchema();
+            SalesRepSchemaCLS.EnsureSchema();
         }
 
 
