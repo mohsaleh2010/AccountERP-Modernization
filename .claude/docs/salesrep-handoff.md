@@ -2,6 +2,12 @@
 
 > محادثة كاملة مُلخّصة لتقديمها للذكاء الاصطناعي لاحقاً.
 > تاريخ العمل: 2026-10-12 → 2026-10-15 · الفرع: `master` · الحل: `Accounts.sln` / `AccountsNet.sln`
+> **آخر تحديث: 2026-10-15** — الحالة: **كل المشاريع تبني 0 errors** (`38ca7f7`) · اختبارات 8/8 pass (rollback-protected)
+
+**🟢 مُنجز:** Schema (20 جدول) · 12 ملف service · 5 WinForms · 4 صفحات Razor · ربط القوائم + الأذونات · ربط المحركات (invoice/return/cash-voucher) · بناء كامل نظيف.
+**🟡 مفتوح:** تشغيل SQL الأذونات (DBA) + اختبارات runtime + إكمال الـ stubs (انظر §6.ب).
+
+**⚠️ الدرس المستفاد:** الجلسات السابقة بنت `AccountModelsLib` فقط — فمرّت عيوب Blocking (char literals، تكرار blocks، حقول غير مُنشأة) حتى `38ca7f7`. **أي تعديل مستقبلي: ابنِ `Accounts` + `AccountERP.SharedUI` + EXE shell، لا مكتبة واحدة.**
 
 ---
 
@@ -83,11 +89,13 @@
 - `fc7ae54` re-run verification marker
 - **`38ca7f7` إصلاح عيوب Blocking للبناء** (انظر §6.أ)
 
-## 5. نتائج الاختبار (SalesRepTestRunner — 8/8 ✅)
+## 5. نتائج الاختبار (SalesRepTestRunner — 8/8 ✅، آخر تشغيل 2026-10-13)
 
 داخل معاملة ملغاة (Rollback) على `ClientNew`:
 1. فتح الوردية ✅ 2. إدارة الموافقات ✅ 3. البيع الميداني + **فحص رصيد المخزون Full_qua/D_Qua قبل/بعد** ✅ 4. المرتجع ✅ 5. المزامنة ✅ 6. إقفال + عمولة ✅ 7. تسجيل جهاز ✅ 8. حزمة المزامنة ✅
 **التحقق:** `SalesRep_Reps/Devices/Shifts/Approvals = 0` للـ rep 999901 بعد Rollback — لا أثر على الإنتاج.
+
+**مُشغّل الاختبار:** `AccountModelsLib\SalesRep\ScratchSalesRepTests.cs` — `SalesRepTestRunner.TestConnStr` static اختياري (فارغ → `operations(2)` الافتراضي من XML config).
 
 ## 6. المتبقى (للعمل القادم)
 
@@ -113,17 +121,32 @@
 
 **النتيجة:** AccountModelsLib ✅ 0 errors · Accounts ✅ 0 errors · AccountERP.SharedUI ✅ 0 errors · AccountsERPSystemNet10 (EXE shell) ✅ 0 errors.
 
-### 6.ب — مازال مفتوحاً
+### 6.ب — مازال مفتوحاً (الحالة بتاريخ 2026-10-15)
+
+**أولاً — اختبارات/تشغيل (قبل التسليم للإنتاج):**
+
+| # | البند | النوع | الأولوية |
+|---|---|---|---|
+| 1 | تشغيل `SalesRepMenuTablesInsert.sql` (SysConfigMenusAr IDs 1001-1004 Parent 496 + SysConfigMenusPERMATIONS) — **القوائم الأربعة لن تظهر بدونه** | DBA | 🔴 عالي |
+| 2 | اختبار `SimpleItemPickerFrm` + `grdLines` مع بيانات `Unit_item` حقيقية (runtime) — افتح الشاشة من قائمة "تعاملات المندوبين" | Test | 🔴 عالي |
+| 3 | اختبار `LoadVan`/`UnloadVan` عبر `StoreOrderService.SaveDraft`+`Post` (`OrderType=1001`, `PartyStore=4`) | Test | 🔴 عالي |
+| 4 | اختبار صفحات Razor من المتصفح عبر `/salesrep/shift` `/visits` `/cash` `/approvals` | Test | 🟡 متوسط |
+
+**ثانياً — إكمال الكود:**
 
 | # | البند | النوع |
 |---|---|---|
-| 1 | تشغيل `SalesRepMenuTablesInsert.sql` (SysConfigMenusAr + SysConfigMenusPERMATIONS) | DBA |
-| 2 | ~~بناء كامل الحل~~ ✅ **تم** (Accounts + Razors + EXE shell — 0 errors) | ~~Build~~ |
-| 3 | اختبار `SimpleItemPickerFrm` + `grdLines` مع بيانات `Unit_item` حقيقية (runtime) | Test |
-| 4 | اختبار صفحات Razor من المتصفح عبر `/salesrep/*` | Test |
-| 5 | `RouteToCashVoucherEngine`/`RouteToCustomerOrderEngine` لا يزالان stub (جزئياً عبر CashVouchersService) | Code |
-| 6 | `SalesRepSalesService.CreateFieldSaleInvoice` (غير-Direct) ما زال يرجع Snowflake فقط — الـ Direct هو المسار الفعلي | Code |
+| 5 | `RouteToCashVoucherEngine`/`RouteToCustomerOrderEngine` لا يزالان stub (جزئياً عبر `CashVouchersService`) | Code |
+| 6 | `SalesRepSalesService.CreateFieldSaleInvoice` (غير-Direct) ما زال يرجع Snowflake فقط — الـ `CreateFieldSaleInvoiceDirect` هو المسار الفعلي | Code |
 | 7 | صفحات Razor الآن عرض-only (لا تربط بالـ services بعد) — ربط البيانات الحقيقي لاحقاً | Code |
+| 8 | `SalesRepVisitsPlanFrm`/`SalesRepShiftCashFrm`/`SalesRepApprovalsFrm` — شاشات قراءة-only + أزرار stub (لم تُربط بالـ services بعد) | Code |
+
+**ثالثاً — متفرقات:**
+
+| # | البند | النوع |
+|---|---|---|
+| 9 | `Accounts\Sales_Rep_Frm\SalesRepApprovalsFrm.resx` — ملف Visual Studio template فارغ (placeholder `Name1`/`Color1`/`Bitmap1`/`Icon1`) غير مُرجَع من `.cs` — يمكن حذفه | Cleanup |
+| 10 | أذونات `SysConfigMenusPERMATIONS` — التحقق أن `Allow` كافٍ لظهور العنصر للمستخدمين المعنيين (PERMATIONS الجدول الحقيقي للمستخدم) | Verify |
 
 ## 7. ملاحظات تقنية مهمة
 
@@ -133,6 +156,10 @@
 - **`operations` readonly:** لا يمكن تمرير `_opp` كـ `ref` — استخدم `operations oppLocal = _opp;`.
 - **أسماء المستندات:** `Make_EntryForInvoices(ref excp, ref msg, ref opp, invoiceId, dtFrom, dtTo, IS_Posted_Flage)` — التوقيع من `Account_Entry_Invoice_CLS.cs:61`.
 - **SSL:** كان يمنع التشغيل (`0x80090325`) — حل بـ `Encrypt=False` في TestConnStr.
+- **بناء المشاريع المطلوب للتحقق:** `dotnet build Accounts/Accounts.csproj` ثم `dotnet build Razors/AccountERP.SharedUI/AccountERP.SharedUI.csproj` ثم `dotnet build AccountsERPSystemNet10/AccountsERPSystemNet10.csproj`. الـ `Directory.Build.props` يوجّه كل المخرجات لـ `Accounts\bin\Debug\`.
+- **CA1416 warnings (76508!)** طبيعية في هذا الحل (WinForms APIs على net10.0-windows) — ليست أخطاء، تجاهلها.
+- **`SalesRepApprovalsFrm.resx`** في `Accounts\Sales_Rep_Frm\` — ملف template فارغ غير مُرجَع؛ يمكن حذفه.
+- **الأولوية في الاختبار (بعد DBA):** افتح الشاشة من القائمة → تأكد ظهور "تعاملات المندوبين" الفرعي → افتح وردية → اختبر picker + Load/Unload.
 
 ## 8. الالتزامات الأمنية
 
