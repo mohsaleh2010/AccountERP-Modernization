@@ -3095,4 +3095,5 @@
   <data name="FSAReject" xml:space="preserve"><value>Ablehnen</value></data>
   <data name="FSAApproved" xml:space="preserve"><value>Freigegeben</value></data>
   <data name="FSARejected" xml:space="preserve"><value>Anfrage abgelehnt</value></data>
+  <data name="FSSSold" xml:space="preserve"><value>Verkauft</value></data>
 </root>

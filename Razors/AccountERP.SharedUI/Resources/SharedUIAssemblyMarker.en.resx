@@ -3093,4 +3093,5 @@
   <data name="FSAReject" xml:space="preserve"><value>Reject</value></data>
   <data name="FSAApproved" xml:space="preserve"><value>Approved</value></data>
   <data name="FSARejected" xml:space="preserve"><value>Request rejected</value></data>
+  <data name="FSSSold" xml:space="preserve"><value>Sold</value></data>
 </root>
