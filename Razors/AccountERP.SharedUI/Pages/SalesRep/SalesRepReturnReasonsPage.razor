@@ -1,0 +1,166 @@
+@* 🟢 خطة المندوبين — المرحلة 4: «أسباب الإرجاع». إضافة وتعديل أسباب مرتجع المندوب (تالف ← مخزن التالف، يتطلب صورة، يتطلب التشغيلة).
+   لا حذف: السبب يُوقف فيختفى من شاشة المرتجع ويبقى على المرتجعات القديمة. التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/return-reasons"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("FSZTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .rz-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .rz-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .rz-head .ico .mud-icon-root { font-size: 2rem; }
+    .rz-head .titles { flex: 1 1 260px; }
+    .rz-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .rz-gap { margin-top: 16px; }
+    .rz-sec { font-weight: 700; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; }
+    .rz-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px 16px; align-items: center; }
+    .rz-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+    .rz-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .rz-num { font-variant-numeric: tabular-nums; }
+    .rz-off { opacity: .6; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card rz-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.FactCheck" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSZTitle")</h1>
+            <div class="sub">@Tr("FSZSub")</div>
+        </div>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.AssignmentReturn" Href="/salesrep/returns">@Tr("FSTReportTitle")</MudButton>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="rz-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    <div class="inv-card rz-gap">
+        <h2 class="rz-sec">
+            <MudIcon Icon="@(_edit.Id == 0 ? Icons.Material.Filled.Add : Icons.Material.Filled.Edit)" Color="Color.Primary" Size="Size.Small" />
+            @Tr(_edit.Id == 0 ? "FSZNew" : "FSZEdit")
+        </h2>
+        <div class="rz-form">
+            <MudTextField T="string" @bind-Value="_edit.Name" Label="@Tr("FSZName")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" MaxLength="200"
+                          Error="@(_tried && string.IsNullOrWhiteSpace(_edit.Name))" ErrorText="@Tr("FSZNameRequired")" />
+            <MudSwitch T="bool" @bind-Value="_edit.Is_Damaged" Color="Color.Error" Label="@Tr("FSZDamaged")" />
+            <MudSwitch T="bool" @bind-Value="_edit.Requires_Photo" Color="Color.Primary" Label="@Tr("FSZPhoto")" />
+            <MudSwitch T="bool" @bind-Value="_edit.Requires_Batch" Color="Color.Primary" Label="@Tr("FSZBatch")" />
+            <MudSwitch T="bool" @bind-Value="_edit.Active" Color="Color.Success" Label="@Tr("FSZActive")" />
+        </div>
+        <div class="rz-hint rz-gap">@Tr("FSZRulesHint")</div>
+        <div class="rz-acts">
+            @if (_edit.Id != 0) { <MudButton Variant="Variant.Text" OnClick="NewReason" Disabled="@_busy">@Tr("FSZCancel")</MudButton> }
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@_busy" OnClick="SaveAsync">
+                @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                @Tr("FSZSave")
+            </MudButton>
+        </div>
+    </div>
+
+    <div class="inv-card rz-gap" aria-live="polite">
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("FSRLoading")" />
+        }
+        else if (_rows.Count == 0)
+        {
+            <div class="inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" /><div>@Tr("FSZEmpty")</div></div>
+        }
+        else
+        {
+            <MudTable Items="@_rows" T="SalesRepReturnService.ReasonRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true" Hover="true"
+                      RowClassFunc="@((r, i) => r.Active ? "" : "rz-off")">
+                <HeaderContent>
+                    <MudTh>@Tr("FSZName")</MudTh><MudTh>@Tr("FSZRules")</MudTh><MudTh>@Tr("FSZUsed")</MudTh><MudTh>@Tr("FSZStatus")</MudTh><MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("FSZName")"><b>@context.Name</b></MudTd>
+                    <MudTd DataLabel="@Tr("FSZRules")">
+                        @if (context.Is_Damaged) { <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Outlined">@Tr("FSZDamagedShort")</MudChip> }
+                        @if (context.Requires_Photo) { <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.PhotoCamera">@Tr("FSZPhotoShort")</MudChip> }
+                        @if (context.Requires_Batch) { <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.QrCode2">@Tr("FSZBatchShort")</MudChip> }
+                        @if (!context.Is_Damaged && !context.Requires_Photo && !context.Requires_Batch) { <span class="rz-hint">@Tr("FSZGoodShort")</span> }
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("FSZUsed")" Class="rz-num">@context.Used_Count</MudTd>
+                    <MudTd DataLabel="@Tr("FSZStatus")">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.Active ? Color.Success : Color.Default)">@Tr(context.Active ? "FSZActive" : "FSZInactive")</MudChip>
+                    </MudTd>
+                    <MudTd>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => Edit(context))"
+                                   aria-label="@Tr("FSZEditOf", context.Name)">@Tr("FSZEditShort")</MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private readonly SalesRepReturnService _svc = new();
+    private List<SalesRepReturnService.ReasonRow> _rows = new();
+    private SalesRepReturnService.ReasonRow _edit = new() { Active = true };
+    private bool _loading = true, _busy, _tried;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        try { _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetAllReasons(); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private void NewReason() { _edit = new() { Active = true }; _tried = false; }
+
+    private void Edit(SalesRepReturnService.ReasonRow r)
+    {
+        _edit = new() { Id = r.Id, Name = r.Name, Is_Damaged = r.Is_Damaged, Requires_Photo = r.Requires_Photo, Requires_Batch = r.Requires_Batch, Active = r.Active };
+        _tried = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        _tried = true;
+        if (string.IsNullOrWhiteSpace(_edit.Name)) return;
+        _busy = true; _error = null;
+        var input = _edit;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.SaveReason(input); });
+            Snackbar.Add(Tr("FSZSaved"), Severity.Success);
+            NewReason();
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

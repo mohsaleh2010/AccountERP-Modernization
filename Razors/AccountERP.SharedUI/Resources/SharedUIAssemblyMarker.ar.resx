@@ -3174,4 +3174,42 @@
   <data name="FSTBlindCount" xml:space="preserve"><value>بلا فاتورة (عدد — قيمة)</value></data>
   <data name="FSTDamagedCount" xml:space="preserve"><value>بها تالف</value></data>
   <data name="FSTOriginal" xml:space="preserve"><value>الفاتورة الأصلية</value></data>
+  <data name="FSTScanLabel" xml:space="preserve"><value>امسح باركود الصنف أو التشغيلة</value></data>
+  <data name="FSTScanHint" xml:space="preserve"><value>كل مسحة تضيف وحدة صغرى للسطر وتثبّت التشغيلة</value></data>
+  <data name="FSTScanned" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="FSTScanNotInInvoice" xml:space="preserve"><value>الكود {0} ليس من أسطر هذه الفاتورة</value></data>
+  <data name="FSTScanNotOnVan" xml:space="preserve"><value>«{0}» ليس على السيارة</value></data>
+  <data name="FSTScanOtherBatch" xml:space="preserve"><value>السطر عليه تشغيلة أخرى؛ التشغيلة {0} تحتاج مرتجعاً منفصلاً</value></data>
+  <data name="FSTFree" xml:space="preserve"><value>المجانى</value></data>
+  <data name="FSTFreeAuto" xml:space="preserve"><value>يرجع معه المجانى بالنسبة</value></data>
+  <data name="FSTFreeHint" xml:space="preserve"><value>المجانى يرجع بنسبة المدفوع المرتجع، وبلا قيمة</value></data>
+  <data name="FSTBatch" xml:space="preserve"><value>التشغيلة</value></data>
+  <data name="FSTBatchRequired" xml:space="preserve"><value>السبب يتطلب التشغيلة: امسح باركود تشغيلة الصنف</value></data>
+  <data name="FSTItem" xml:space="preserve"><value>الصنف</value></data>
+  <data name="FSTQty" xml:space="preserve"><value>الكمية (صغرى)</value></data>
+  <data name="FSZTitle" xml:space="preserve"><value>أسباب إرجاع المندوبين</value></data>
+  <data name="FSZSub" xml:space="preserve"><value>الأسباب التى يختارها المندوب لكل صنف مرتجع وقواعدها</value></data>
+  <data name="FSZNew" xml:space="preserve"><value>سبب جديد</value></data>
+  <data name="FSZEdit" xml:space="preserve"><value>تعديل السبب</value></data>
+  <data name="FSZName" xml:space="preserve"><value>السبب</value></data>
+  <data name="FSZNameRequired" xml:space="preserve"><value>اسم السبب مطلوب</value></data>
+  <data name="FSZDamaged" xml:space="preserve"><value>تالف (يرجع لمخزن التالف)</value></data>
+  <data name="FSZPhoto" xml:space="preserve"><value>يتطلب صورة</value></data>
+  <data name="FSZBatch" xml:space="preserve"><value>يتطلب التشغيلة</value></data>
+  <data name="FSZActive" xml:space="preserve"><value>نشط</value></data>
+  <data name="FSZInactive" xml:space="preserve"><value>موقوف</value></data>
+  <data name="FSZRulesHint" xml:space="preserve"><value>لا حذف للأسباب: السبب الموقوف يختفى من شاشة المرتجع ويبقى على المرتجعات السابقة. «يتطلب التشغيلة» يُفرض على الأصناف التى لها تشغيلات مسجلة فقط.</value></data>
+  <data name="FSZCancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="FSZSave" xml:space="preserve"><value>حفظ السبب</value></data>
+  <data name="FSZSaved" xml:space="preserve"><value>تم حفظ السبب</value></data>
+  <data name="FSZEmpty" xml:space="preserve"><value>لا أسباب بعد</value></data>
+  <data name="FSZRules" xml:space="preserve"><value>القواعد</value></data>
+  <data name="FSZUsed" xml:space="preserve"><value>مرات الاستعمال</value></data>
+  <data name="FSZStatus" xml:space="preserve"><value>الحالة</value></data>
+  <data name="FSZDamagedShort" xml:space="preserve"><value>تالف</value></data>
+  <data name="FSZPhotoShort" xml:space="preserve"><value>صورة</value></data>
+  <data name="FSZBatchShort" xml:space="preserve"><value>تشغيلة</value></data>
+  <data name="FSZGoodShort" xml:space="preserve"><value>صالح، بلا شروط</value></data>
+  <data name="FSZEditShort" xml:space="preserve"><value>تعديل</value></data>
+  <data name="FSZEditOf" xml:space="preserve"><value>تعديل {0}</value></data>
 </root>

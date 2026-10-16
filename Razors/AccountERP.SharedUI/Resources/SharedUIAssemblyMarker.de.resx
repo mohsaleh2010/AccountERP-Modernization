@@ -3176,4 +3176,42 @@
   <data name="FSTBlindCount" xml:space="preserve"><value>Ohne Rechnung (Anzahl — Wert)</value></data>
   <data name="FSTDamagedCount" xml:space="preserve"><value>Mit beschädigten Artikeln</value></data>
   <data name="FSTOriginal" xml:space="preserve"><value>Originalrechnung</value></data>
+  <data name="FSTScanLabel" xml:space="preserve"><value>Artikel- oder Chargen-Barcode scannen</value></data>
+  <data name="FSTScanHint" xml:space="preserve"><value>Jeder Scan fügt eine Kleineinheit hinzu und erfasst die Charge</value></data>
+  <data name="FSTScanned" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="FSTScanNotInInvoice" xml:space="preserve"><value>Code {0} ist nicht auf dieser Rechnung</value></data>
+  <data name="FSTScanNotOnVan" xml:space="preserve"><value>„{0}“ ist nicht im Fahrzeug</value></data>
+  <data name="FSTScanOtherBatch" xml:space="preserve"><value>Die Zeile hat bereits eine andere Charge; Charge {0} braucht eine eigene Retoure</value></data>
+  <data name="FSTFree" xml:space="preserve"><value>Gratis</value></data>
+  <data name="FSTFreeAuto" xml:space="preserve"><value>Gratisware anteilig zurück</value></data>
+  <data name="FSTFreeHint" xml:space="preserve"><value>Gratisware wird anteilig zur bezahlten Menge ohne Wert zurückgenommen</value></data>
+  <data name="FSTBatch" xml:space="preserve"><value>Charge</value></data>
+  <data name="FSTBatchRequired" xml:space="preserve"><value>Dieser Grund erfordert die Charge: Chargen-Barcode scannen</value></data>
+  <data name="FSTItem" xml:space="preserve"><value>Artikel</value></data>
+  <data name="FSTQty" xml:space="preserve"><value>Menge (Kleineinheit)</value></data>
+  <data name="FSZTitle" xml:space="preserve"><value>Retourengründe</value></data>
+  <data name="FSZSub" xml:space="preserve"><value>Gründe für jede Retourenposition und ihre Regeln</value></data>
+  <data name="FSZNew" xml:space="preserve"><value>Neuer Grund</value></data>
+  <data name="FSZEdit" xml:space="preserve"><value>Grund bearbeiten</value></data>
+  <data name="FSZName" xml:space="preserve"><value>Grund</value></data>
+  <data name="FSZNameRequired" xml:space="preserve"><value>Name ist erforderlich</value></data>
+  <data name="FSZDamaged" xml:space="preserve"><value>Beschädigt (ins Schadenslager)</value></data>
+  <data name="FSZPhoto" xml:space="preserve"><value>Foto erforderlich</value></data>
+  <data name="FSZBatch" xml:space="preserve"><value>Charge erforderlich</value></data>
+  <data name="FSZActive" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="FSZInactive" xml:space="preserve"><value>Inaktiv</value></data>
+  <data name="FSZRulesHint" xml:space="preserve"><value>Gründe werden nie gelöscht: ein inaktiver Grund verschwindet aus der Retourenmaske und bleibt auf früheren Retouren. „Charge erforderlich“ gilt nur für Artikel mit Chargen.</value></data>
+  <data name="FSZCancel" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="FSZSave" xml:space="preserve"><value>Speichern</value></data>
+  <data name="FSZSaved" xml:space="preserve"><value>Grund gespeichert</value></data>
+  <data name="FSZEmpty" xml:space="preserve"><value>Noch keine Gründe</value></data>
+  <data name="FSZRules" xml:space="preserve"><value>Regeln</value></data>
+  <data name="FSZUsed" xml:space="preserve"><value>Verwendet</value></data>
+  <data name="FSZStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="FSZDamagedShort" xml:space="preserve"><value>Beschädigt</value></data>
+  <data name="FSZPhotoShort" xml:space="preserve"><value>Foto</value></data>
+  <data name="FSZBatchShort" xml:space="preserve"><value>Charge</value></data>
+  <data name="FSZGoodShort" xml:space="preserve"><value>Gut, ohne Bedingungen</value></data>
+  <data name="FSZEditShort" xml:space="preserve"><value>Bearbeiten</value></data>
+  <data name="FSZEditOf" xml:space="preserve"><value>{0} bearbeiten</value></data>
 </root>

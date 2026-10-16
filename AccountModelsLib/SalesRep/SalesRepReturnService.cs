@@ -34,6 +34,9 @@ namespace AccountModelsLib.SalesRep
             public bool Is_Damaged { get; set; }
             public bool Requires_Photo { get; set; }
             public bool Requires_Batch { get; set; }
+            public bool Active { get; set; } = true;
+            /// <summary>عدد أسطر المرتجع التى استعملت السبب (للعرض فى شاشة الأسباب).</summary>
+            public int Used_Count { get; set; }
         }
 
         /// <summary>فاتورة بيع للعميل يمكن الإرجاع منها.</summary>
@@ -64,6 +67,13 @@ namespace AccountModelsLib.SalesRep
             public decimal Returnable_Small => Math.Max(0, Sold_Small - Returned_Small);
             public decimal Net_Unit_Price { get; set; }
             public bool Has_Batch { get; set; }
+            /// <summary>المجانى المصروف مع السطر والمرتجع منه سابقاً (بالوحدة الصغرى): يُرجع بنسبة المدفوع تلقائياً.</summary>
+            public decimal Free_Small { get; set; }
+            public decimal Free_Returned_Small { get; set; }
+            public long? Batch_Id { get; set; }
+            public string Batch_Label { get; set; } = "";
+            /// <summary>الصنف له تشغيلات مسجلة (فالسبب الذى يتطلب التشغيلة يفرضها).</summary>
+            public bool Item_Has_Batches { get; set; }
         }
 
         public class OriginalView
@@ -91,6 +101,8 @@ namespace AccountModelsLib.SalesRep
             public decimal Qty_Small { get; set; }
             public long Reason_Id { get; set; }
             public int Condition { get; set; }
+            /// <summary>التشغيلة الممسوحة (Unit_Item_ExpireDate.Id)؛ فارغة = تشغيلة سطر الفاتورة إن وجدت.</summary>
+            public long? Batch_Id { get; set; }
             public byte[] Photo { get; set; }
             public string Photo_Content_Type { get; set; }
         }
@@ -111,9 +123,20 @@ namespace AccountModelsLib.SalesRep
         {
             public string Item_Name { get; set; } = "";
             public decimal Qty_Small { get; set; }
+            public decimal Free_Small { get; set; }
             public decimal Net_Unit_Price { get; set; }
             public decimal Value { get; set; }
             public int Condition { get; set; }
+        }
+
+        /// <summary>نتيجة مسح باركود (الصنف أو التشغيلة) فى شاشة المرتجع.</summary>
+        public class ScanResult
+        {
+            public long? Original_Detail_Id { get; set; }
+            public long? Unit_Item_Id { get; set; }
+            public long? Batch_Id { get; set; }
+            public string Batch_Label { get; set; } = "";
+            public string Item_Name { get; set; } = "";
         }
 
         public class ReturnCheck
@@ -176,6 +199,97 @@ ORDER BY l.Invoice_Date DESC, l.Id DESC").ToList();
 
         /// <summary>سعر الأمان للمرتجع بلا فاتورة للوحدة الصغرى (0 = لا سعر بيع تاريخى للصنف فلا يُقبل بلا فاتورة).</summary>
         public decimal GetBlindPrice(long repId, long unitItemId) => Read(opp => BlindPrice(opp, SalesRepSaleService.Context(opp, repId), unitItemId));
+
+        /// <summary>
+        /// مسح باركود فى شاشة المرتجع: باركود التشغيلة (Unit_Item_ExpireDate.Tash3ela أو BatchNo) أو باركود الصنف (Unit_item.Code).
+        /// المربوط: يرجع سطر الفاتورة الأصلية الذى بقى منه مسموح بإرجاعه (والتشغيلة لا تخالف تشغيلة السطر). بلا فاتورة: سطر الصنف
+        /// فى مخزن السيارة (أو أى سطر للصنف). الكود غير الموجود استثناء برسالة.
+        /// </summary>
+        public ScanResult Scan(long repId, long? originalInvoiceId, string code) => Read(opp =>
+        {
+            code = (code ?? "").Trim();
+            if (code.Length == 0) throw new InvalidOperationException("الكود فارغ.");
+            var ctx = SalesRepSaleService.Context(opp, repId);
+            var batches = opp.db.Database.SqlQuery<BatchRow>($@"
+SELECT e.Id, CAST(ISNULL(e.Item_Id, 0) AS bigint) AS Item_Id, ISNULL(NULLIF(e.Tash3ela, N''), ISNULL(CAST(e.BatchNo AS nvarchar(30)), N'')) AS Label
+FROM Unit_Item_ExpireDate e WHERE e.Tash3ela = {code} OR (e.BatchNo > 0 AND CAST(e.BatchNo AS nvarchar(30)) = {code})").ToList();
+            var items = opp.db.Database.SqlQuery<long>($"SELECT DISTINCT CAST(Item_id AS bigint) AS Value FROM Unit_item WHERE Code = {code}").ToList();
+
+            if (originalInvoiceId is > 0)
+            {
+                var lines = Original(opp, ctx, originalInvoiceId.Value).Lines.Where(x => x.Returnable_Small > 0).ToList();
+                if (batches.Count > 0)
+                {
+                    var exact = lines.FirstOrDefault(x => batches.Any(b => b.Id == x.Batch_Id));
+                    var open = exact ?? lines.FirstOrDefault(x => x.Batch_Id == null && batches.Any(b => b.Item_Id == x.Item_Id));
+                    if (open != null)
+                    {
+                        var b = exact != null ? batches.First(b => b.Id == exact.Batch_Id) : batches.First(b => b.Item_Id == open.Item_Id);
+                        return new ScanResult { Original_Detail_Id = open.Original_Detail_Id, Batch_Id = b.Id, Batch_Label = b.Label, Item_Name = open.Item_Name };
+                    }
+                    var other = lines.FirstOrDefault(x => batches.Any(b => b.Item_Id == x.Item_Id));
+                    if (other != null) throw new InvalidOperationException($"التشغيلة {code} غير تشغيلة «{other.Item_Name}» فى الفاتورة الأصلية ({other.Batch_Label}).");
+                }
+                var line = lines.FirstOrDefault(x => items.Contains(x.Item_Id));
+                if (line != null) return new ScanResult { Original_Detail_Id = line.Original_Detail_Id, Item_Name = line.Item_Name };
+                throw new InvalidOperationException($"الكود {code} ليس لصنف بقى منه مسموح بإرجاعه فى الفاتورة الأصلية.");
+            }
+
+            var batch = batches.FirstOrDefault();
+            if (batch == null && items.Count > 1) throw new InvalidOperationException($"الكود {code} مشترك بين {items.Count} صنفاً؛ اختر الصنف بالاسم.");
+            long itemId = batch?.Item_Id ?? (items.Count > 0 ? items[0] : 0);
+            if (itemId <= 0) throw new InvalidOperationException($"الكود {code} غير موجود.");
+            long van = ctx.Van_Store_Id;
+            var unit = opp.db.Database.SqlQuery<UnitPick>($@"
+SELECT TOP 1 u.id AS Id, ISNULL(i.Item_Name, N'') AS Item_Name FROM Unit_item u JOIN Item i ON i.id = u.Item_id
+WHERE u.Item_id = {itemId} ORDER BY CASE WHEN u.Store_id = {van} THEN 0 WHEN u.Code = {code} THEN 1 ELSE 2 END, u.id").AsEnumerable().FirstOrDefault()
+                ?? throw new InvalidOperationException($"الكود {code} غير موجود.");
+            return new ScanResult { Unit_Item_Id = unit.Id, Batch_Id = batch?.Id, Batch_Label = batch?.Label ?? "", Item_Name = unit.Item_Name };
+        });
+
+        public class BatchRow { public long Id { get; set; } public long Item_Id { get; set; } public string Label { get; set; } = ""; }
+        public class UnitPick { public long Id { get; set; } public string Item_Name { get; set; } = ""; }
+
+        // ============================== أسباب الإرجاع ==============================
+
+        /// <summary>كل أسباب الإرجاع (النشطة والموقوفة) لشاشة إدارة الأسباب، مع عدد مرات الاستعمال.</summary>
+        public List<ReasonRow> GetAllReasons() => Read(opp => opp.db.Database.SqlQuery<ReasonRow>($@"
+SELECT r.Id, r.Name, r.Is_Damaged, r.Requires_Photo, r.Requires_Batch, r.Active,
+       (SELECT COUNT(*) FROM SalesRep_Invoice_Return_Links k WHERE k.Reason_Id = r.Id) AS Used_Count
+FROM Lookup_SalesRep_ReturnReasons r ORDER BY CASE WHEN r.Active = 1 THEN 0 ELSE 1 END, r.Name").ToList());
+
+        /// <summary>
+        /// يضيف سبباً (Id = 0) أو يعدّله. لا حذف: السبب يُوقف (Active = false) فيختفى من شاشة المرتجع ويبقى على المرتجعات القديمة.
+        /// الاسم إلزامى وفريد. السبب التالف يرجع لمخزن التالف دائماً.
+        /// </summary>
+        public long SaveReason(ReasonRow input) => Tx(opp =>
+        {
+            string name = (input?.Name ?? "").Trim();
+            if (name.Length == 0) throw new InvalidOperationException("اسم السبب مطلوب.");
+            if (name.Length > 200) throw new InvalidOperationException("اسم السبب أطول من 200 حرف.");
+            if (opp.db.Lookup_SalesRep_ReturnReasons.Any(r => r.Name == name && r.Id != input.Id)) throw new InvalidOperationException($"السبب «{name}» موجود.");
+            Lookup_SalesRep_ReturnReason row;
+            if (input.Id > 0)
+            {
+                row = opp.db.Lookup_SalesRep_ReturnReasons.FirstOrDefault(r => r.Id == input.Id) ?? throw new InvalidOperationException("السبب غير موجود.");
+                if (row.Active && !input.Active && opp.db.Lookup_SalesRep_ReturnReasons.Count(r => r.Active) <= 1)
+                    throw new InvalidOperationException("لا يمكن إيقاف آخر سبب نشط؛ المرتجع يحتاج سبباً.");
+                row.StampEdit();
+            }
+            else
+            {
+                row = new Lookup_SalesRep_ReturnReason { Id = CallSnowflakeIdGenerate.GenerateNewId() };
+                row.StampInsert(Common.Branch_Id);
+                opp.db.Lookup_SalesRep_ReturnReasons.Add(row);
+            }
+            row.Name = name;
+            row.Is_Damaged = input.Is_Damaged;
+            row.Requires_Photo = input.Requires_Photo;
+            row.Requires_Batch = input.Requires_Batch;
+            row.Active = input.Active;
+            opp.db.SaveChanges();
+            return row.Id;
+        });
 
         /// <summary>تقرير مرتجعات المندوبين (و«المرتجعات بلا فاتورة» بـ blindOnly) فى الفترة.</summary>
         public List<ReturnRow> GetReturns(DateTime from, DateTime to, long? repId = null, bool blindOnly = false) => Read(opp =>
@@ -265,6 +379,9 @@ SELECT CAST(ISNULL(MAX(Invoice_Id), 0) + 1 AS bigint) AS Value FROM Invoices_Lis
             long returnId = h.Id;
             if (excp != 0 || returnId <= 0 || b.InvD.invDlst.Any(d => d.Id <= 0))
                 throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg) ? "تعذر حفظ المرتجع." : msg);
+            // المجانى المرتجع: المحرك أضافه لـ Unit_item بلا صف دفتر؛ صف الدفتر يجعله فى «المرتجع» ورصيد المخزن المحسوب.
+            foreach (var l in b.Lines.Where(l => l.Free_Small > 0))
+                SalesRepFreeLedger.Post(opp, l.Detail, returnId, h.Invoice_Id ?? 0, 1, Common.InvoiceReverse_Type_Id, input.Customer_Id, h.CustomerName ?? "", h.Invoice_Date, "مجانى مرتجع مبيعات");
 
             foreach (var l in b.Lines)
             {
@@ -324,6 +441,8 @@ SELECT CAST(ISNULL(MAX(Invoice_Id), 0) + 1 AS bigint) AS Value FROM Invoices_Lis
             public decimal Net_Unit_Price { get; set; }
             public string Name { get; set; } = "";
             public decimal Qty_Small { get; set; }
+            public decimal Free_Small { get; set; }
+            public decimal Factor { get; set; } = 1;
         }
 
         private class Built
@@ -401,11 +520,14 @@ SELECT CAST(ISNULL(MAX(Invoice_Id), 0) + 1 AS bigint) AS Value FROM Invoices_Lis
                     foreach (var name in ScaledMoney) Scale(d, od, name, sold, prev, qty, 2);
                     foreach (var name in ScaledQty) Scale(d, od, name, sold, prev, qty, 4);
                     headerDiscount += Part(origTotal > 0 ? origDiscount * (od.Qnty_value ?? 0) / origTotal : 0, sold, prev, qty, 2);
-                    PrepareLine(d, rl.Factor, qty, now);
+                    decimal free = FreeToReturn(rl, qty);
+                    decimal freeItemNo = Part(od.Item_No_Free ?? 0, sold, prev, qty, 4);
+                    long? batch = LineBatch(opp, l, rl.Item_Id, rl.Batch_Id, reasons[l.Reason_Id], rl.Item_Name, rl.Item_Has_Batches);
+                    PrepareLine(d, rl.Factor, qty, now, free, freeItemNo);
                     b.Lines.Add(new BuiltLine
                     {
-                        Input = l, Detail = d, Original_Detail_Id = od.Id, Source_Unit_Item_Id = od.Unit_Item_Table_Id ?? 0, Batch_Id = od.Unit_Item_ExpireDate_Id,
-                        Net_Unit_Price = rl.Net_Unit_Price, Name = rl.Item_Name, Qty_Small = qty,
+                        Input = l, Detail = d, Original_Detail_Id = od.Id, Source_Unit_Item_Id = od.Unit_Item_Table_Id ?? 0, Batch_Id = batch,
+                        Net_Unit_Price = rl.Net_Unit_Price, Name = rl.Item_Name, Qty_Small = qty, Free_Small = free, Factor = rl.Factor,
                     });
                     invD.invDlst.Add(d);
                 }
@@ -453,8 +575,10 @@ FROM Unit_item u JOIN Item i ON i.id = u.Item_id LEFT JOIN unit un ON un.id = u.
                         Item_Expire_Date = now.Date, Tash3ela = "", StatementNo = "", OperationNo = "", Merchant_Name = "", Specification = "", NameSpecification = "",
                         Item_Notes = "مرتجع بلا فاتورة بسعر الأمان", Notes = "",
                     };
-                    PrepareLine(d, src.Factor, qty, now);
-                    b.Lines.Add(new BuiltLine { Input = l, Detail = d, Source_Unit_Item_Id = src.Unit_Item_Id, Net_Unit_Price = price, Name = src.Item_Name, Qty_Small = qty });
+                    bool itemHasBatches = opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM Unit_Item_ExpireDate WHERE Item_Id = {src.Item_Id}").AsEnumerable().First() > 0;
+                    long? batch = LineBatch(opp, l, src.Item_Id, null, reasons[l.Reason_Id], src.Item_Name, itemHasBatches);
+                    PrepareLine(d, src.Factor, qty, now, 0, 0);
+                    b.Lines.Add(new BuiltLine { Input = l, Detail = d, Source_Unit_Item_Id = src.Unit_Item_Id, Net_Unit_Price = price, Name = src.Item_Name, Qty_Small = qty, Batch_Id = batch, Factor = src.Factor });
                     invD.invDlst.Add(d);
                 }
                 h.IsInvoiceTaxInfo = 0; h.Is_Tax_Per_Item = 0; h.TaxSales10 = 0; h.ATS05 = 0;
@@ -497,7 +621,7 @@ FROM Unit_item u JOIN Item i ON i.id = u.Item_id LEFT JOIN unit un ON un.id = u.
             b.Check.Is_Blind = blind;
             b.Check.Lines = b.Lines.Select(l => new PreviewLine
             {
-                Item_Name = l.Name, Qty_Small = l.Qty_Small, Net_Unit_Price = l.Net_Unit_Price, Condition = l.Input.Condition,
+                Item_Name = l.Name, Qty_Small = l.Qty_Small, Free_Small = l.Free_Small, Net_Unit_Price = l.Net_Unit_Price, Condition = l.Input.Condition,
                 Value = Math.Round(l.Detail.Item_Net_Total_Price ?? 0, 2),
             }).ToList();
             ApprovalStatus(opp, input.Doc_Guid, b.Check.Result);
@@ -511,6 +635,39 @@ FROM Unit_item u JOIN Item i ON i.id = u.Item_id LEFT JOIN unit un ON un.id = u.
             return Math.Round(full * (prev + qty) / sold, digits, MidpointRounding.AwayFromZero) - Math.Round(full * prev / sold, digits, MidpointRounding.AwayFromZero);
         }
 
+        /// <summary>
+        /// المجانى المرتجع مع qty من المدفوع: بنسبة المدفوع بتقريب تراكمى (لوحدة صغرى كاملة إن كان المجانى صحيحاً) مطروحاً منه
+        /// المرتجع فعلاً من المجانى، فمجموع المرتجعات عند إرجاع السطر كله = المجانى الأصلى بالضبط.
+        /// </summary>
+        internal static decimal FreeToReturn(ReturnableLine rl, decimal qty)
+        {
+            decimal full = rl.Free_Small, left = Math.Max(0, full - rl.Free_Returned_Small);
+            if (full <= 0 || rl.Sold_Small <= 0 || left <= 0) return 0;
+            if (rl.Returned_Small + qty >= rl.Sold_Small) return left;
+            int digits = full == Math.Floor(full) ? 0 : 4;
+            decimal target = Math.Round(full * (rl.Returned_Small + qty) / rl.Sold_Small, digits, MidpointRounding.AwayFromZero);
+            return Math.Clamp(target - rl.Free_Returned_Small, 0, left);
+        }
+
+        /// <summary>
+        /// تشغيلة السطر: الممسوحة (لنفس الصنف، ولا تخالف تشغيلة سطر الفاتورة) أو تشغيلة الفاتورة. السبب الذى يتطلب التشغيلة
+        /// يفرضها للصنف الذى له تشغيلات مسجلة.
+        /// </summary>
+        private static long? LineBatch(operations opp, ReturnLineInput l, long itemId, long? original, Lookup_SalesRep_ReturnReason reason, string itemName, bool itemHasBatches)
+        {
+            long? batch = original is > 0 ? original : null;
+            if (l.Batch_Id is > 0)
+            {
+                long? owner = opp.db.Database.SqlQuery<long?>($"SELECT CAST(Item_Id AS bigint) AS Value FROM Unit_Item_ExpireDate WHERE Id = {l.Batch_Id.Value}").AsEnumerable().FirstOrDefault();
+                if (owner != itemId) throw new InvalidOperationException($"التشغيلة الممسوحة ليست للصنف «{itemName}».");
+                if (batch != null && batch != l.Batch_Id) throw new InvalidOperationException($"التشغيلة الممسوحة للصنف «{itemName}» غير تشغيلة الفاتورة الأصلية.");
+                batch = l.Batch_Id;
+            }
+            if (reason.Requires_Batch && itemHasBatches && batch == null)
+                throw new InvalidOperationException($"السبب «{reason.Name}» يتطلب التشغيلة؛ امسح باركود تشغيلة «{itemName}».");
+            return batch;
+        }
+
         private static void Scale(IInvoices_Details target, Invoices_Details source, string name, decimal sold, decimal prev, decimal qty, int digits)
         {
             var p = typeof(IInvoices_Details).GetProperty(name);
@@ -518,15 +675,18 @@ FROM Unit_item u JOIN Item i ON i.id = u.Item_id LEFT JOIN unit un ON un.id = u.
             p.SetValue(target, Part(full, sold, prev, qty, digits));
         }
 
-        /// <summary>الكمية والقيم الثابتة لسطر المرتجع: بلا مجانى (المجانى لا يُرجع منفصلاً فى هذه المرحلة)، وأعمدة التدقيق للمستخدم الحالى.</summary>
-        private static void PrepareLine(IInvoices_Details d, decimal factor, decimal qtySmall, DateTime now)
+        /// <summary>الكمية والقيم الثابتة لسطر المرتجع: المدفوع والمجانى المرتجع معه (بلا قيمة)، وأعمدة التدقيق للمستخدم الحالى.</summary>
+        private static void PrepareLine(IInvoices_Details d, decimal factor, decimal qtySmall, DateTime now, decimal freeSmall, decimal freeItemNo)
         {
             d.Id = 0; d.Invoice_Id = 0;
             d.Larg_Qnty = Math.Floor(qtySmall / factor);
             d.Small_Qnty = qtySmall - d.Larg_Qnty * factor;
             d.TotalSmall_Qnty = qtySmall;
             d.Qnty = Math.Round(qtySmall / factor, 4);
-            d.LargItemsQnty_Free = 0; d.SmallItemsQnty_Free = 0; d.Item_No_Free = 0; d.Qnty_Free = 0;
+            d.LargItemsQnty_Free = Math.Floor(freeSmall / factor);
+            d.SmallItemsQnty_Free = freeSmall - d.LargItemsQnty_Free * factor;
+            d.Qnty_Free = Math.Round(freeSmall / factor, 4);
+            d.Item_No_Free = freeItemNo;
             d.Order_Purshing_Id_Automatic = null; d.CarsWorkOrdersItemProcessedDetailsId = null; d.AppointmentServicesId = null; d.InvoiceKitchenStatusId = null;
             d.Item_DeletedFlage = 0; d.Item_ProcessedFlage = 0; d.Make_Order = 0; d.Balance_Checked = 0;
             d.User_Id = Common.User_Id; d.Branch_Id = Common.Branch_Id; d.OperationDate = now.Date; d.Insert_ServerDateTime = now;
@@ -590,11 +750,21 @@ SELECT d.Id AS Original_Detail_Id, CAST(ISNULL(d.Unit_Item_Table_Id, 0) AS bigin
        CAST(ISNULL((SELECT SUM(k.Qty_Large) FROM SalesRep_Invoice_Return_Links k WHERE k.Original_Detail_Id = d.Id), 0) * f.Factor
             + ISNULL((SELECT SUM(k.Qty_Small) FROM SalesRep_Invoice_Return_Links k WHERE k.Original_Detail_Id = d.Id), 0) AS decimal(18,4)) AS Returned_Small,
        CAST(0 AS decimal(18,6)) AS Net_Unit_Price,
-       CAST(CASE WHEN ISNULL(d.Unit_Item_ExpireDate_Id, 0) > 0 THEN 1 ELSE 0 END AS bit) AS Has_Batch
+       CAST(CASE WHEN ISNULL(d.Unit_Item_ExpireDate_Id, 0) > 0 THEN 1 ELSE 0 END AS bit) AS Has_Batch,
+       CAST(ISNULL(d.LargItemsQnty_Free, 0) * f.Factor + ISNULL(d.SmallItemsQnty_Free, 0) AS decimal(18,4)) AS Free_Small,
+       CAST(ISNULL((SELECT SUM(ISNULL(r.LargItemsQnty_Free, 0)) FROM SalesRep_Invoice_Return_Links k JOIN Invoices_Details_Reverse r ON r.Id = k.Return_Detail_Id
+                    WHERE k.Original_Detail_Id = d.Id), 0) * f.Factor
+          + ISNULL((SELECT SUM(ISNULL(r.SmallItemsQnty_Free, 0))
+                    FROM SalesRep_Invoice_Return_Links k JOIN Invoices_Details_Reverse r ON r.Id = k.Return_Detail_Id
+                    WHERE k.Original_Detail_Id = d.Id), 0) AS decimal(18,4)) AS Free_Returned_Small,
+       NULLIF(CAST(ISNULL(d.Unit_Item_ExpireDate_Id, 0) AS bigint), 0) AS Batch_Id,
+       ISNULL(NULLIF(e.Tash3ela, N''), ISNULL(CAST(e.BatchNo AS nvarchar(30)), N'')) AS Batch_Label,
+       CAST(CASE WHEN EXISTS (SELECT 1 FROM Unit_Item_ExpireDate x WHERE x.Item_Id = d.Item_Id) THEN 1 ELSE 0 END AS bit) AS Item_Has_Batches
 FROM Invoices_Details d
 LEFT JOIN Unit_item u ON u.id = d.Unit_Item_Table_Id
 LEFT JOIN Item i ON i.id = d.Item_Id
 LEFT JOIN unit un ON un.id = u.unit_id
+LEFT JOIN Unit_Item_ExpireDate e ON e.Id = d.Unit_Item_ExpireDate_Id
 CROSS APPLY (SELECT CAST(CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END AS decimal(18,6)) AS Factor) f
 WHERE d.Invoice_Id = {invoiceId} AND ISNULL(d.Larg_Qnty, 0) * f.Factor + ISNULL(d.Small_Qnty, 0) > 0
 ORDER BY d.Id").ToList();

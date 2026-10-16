@@ -189,6 +189,9 @@ namespace AccountModelsLib.SalesRep
             new Requests_ModelCls().Make_Invoice_Update_CustomerAccountInTx(ref excp, ref msg, ref opp, invL_O, invD_O);
             long invoiceId = h.Id;
             if (excp != 0 || invoiceId <= 0) throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg) ? "تعذر حفظ الفاتورة." : msg);
+            // المجانى: المحرك خصمه من Unit_item بلا صف دفتر؛ صف الدفتر يجعل رصيد السيارة المحسوب و«المباع» يشملانه.
+            foreach (var d in invD_O.invDlst.Where(d => d.Id > 0))
+                SalesRepFreeLedger.Post(opp, d, invoiceId, h.Invoice_Id ?? 0, 2, Common.Invoice_Type_Id, h.Customer_Id ?? 0, h.CustomerName ?? "", h.Invoice_Date, "مجانى فاتورة مبيعات");
 
             Link(opp, ctx.Shift_Id.Value, SalesRepDocType.SaleInvoice, invoiceId, ctx.Branch_Id);
             // البيع النقدى يقبض فى صندوق العهدة: لو لم ينشئ المحرك إذن الفاتورة (MakeOrderMoneyFromInvoiceAutomaticWithoutForm = 0 حيث الديسكتوب

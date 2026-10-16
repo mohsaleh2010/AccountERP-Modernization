@@ -3174,4 +3174,42 @@
   <data name="FSTBlindCount" xml:space="preserve"><value>Without invoice (count — value)</value></data>
   <data name="FSTDamagedCount" xml:space="preserve"><value>With damaged items</value></data>
   <data name="FSTOriginal" xml:space="preserve"><value>Original invoice</value></data>
+  <data name="FSTScanLabel" xml:space="preserve"><value>Scan item or batch barcode</value></data>
+  <data name="FSTScanHint" xml:space="preserve"><value>Each scan adds one small unit and records the batch</value></data>
+  <data name="FSTScanned" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="FSTScanNotInInvoice" xml:space="preserve"><value>Code {0} is not on this invoice</value></data>
+  <data name="FSTScanNotOnVan" xml:space="preserve"><value>"{0}" is not on the van</value></data>
+  <data name="FSTScanOtherBatch" xml:space="preserve"><value>The line already has another batch; batch {0} needs a separate return</value></data>
+  <data name="FSTFree" xml:space="preserve"><value>Free</value></data>
+  <data name="FSTFreeAuto" xml:space="preserve"><value>Free goods return pro rata</value></data>
+  <data name="FSTFreeHint" xml:space="preserve"><value>Free goods return in proportion to the paid quantity, at no value</value></data>
+  <data name="FSTBatch" xml:space="preserve"><value>Batch</value></data>
+  <data name="FSTBatchRequired" xml:space="preserve"><value>This reason needs the batch: scan the item's batch barcode</value></data>
+  <data name="FSTItem" xml:space="preserve"><value>Item</value></data>
+  <data name="FSTQty" xml:space="preserve"><value>Qty (small unit)</value></data>
+  <data name="FSZTitle" xml:space="preserve"><value>Rep return reasons</value></data>
+  <data name="FSZSub" xml:space="preserve"><value>Reasons a rep picks for each returned item, and their rules</value></data>
+  <data name="FSZNew" xml:space="preserve"><value>New reason</value></data>
+  <data name="FSZEdit" xml:space="preserve"><value>Edit reason</value></data>
+  <data name="FSZName" xml:space="preserve"><value>Reason</value></data>
+  <data name="FSZNameRequired" xml:space="preserve"><value>Reason name is required</value></data>
+  <data name="FSZDamaged" xml:space="preserve"><value>Damaged (goes to the damaged store)</value></data>
+  <data name="FSZPhoto" xml:space="preserve"><value>Requires a photo</value></data>
+  <data name="FSZBatch" xml:space="preserve"><value>Requires the batch</value></data>
+  <data name="FSZActive" xml:space="preserve"><value>Active</value></data>
+  <data name="FSZInactive" xml:space="preserve"><value>Inactive</value></data>
+  <data name="FSZRulesHint" xml:space="preserve"><value>Reasons are never deleted: an inactive reason disappears from the return screen and stays on earlier returns. "Requires the batch" applies only to items that have batches.</value></data>
+  <data name="FSZCancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="FSZSave" xml:space="preserve"><value>Save reason</value></data>
+  <data name="FSZSaved" xml:space="preserve"><value>Reason saved</value></data>
+  <data name="FSZEmpty" xml:space="preserve"><value>No reasons yet</value></data>
+  <data name="FSZRules" xml:space="preserve"><value>Rules</value></data>
+  <data name="FSZUsed" xml:space="preserve"><value>Times used</value></data>
+  <data name="FSZStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="FSZDamagedShort" xml:space="preserve"><value>Damaged</value></data>
+  <data name="FSZPhotoShort" xml:space="preserve"><value>Photo</value></data>
+  <data name="FSZBatchShort" xml:space="preserve"><value>Batch</value></data>
+  <data name="FSZGoodShort" xml:space="preserve"><value>Good, no conditions</value></data>
+  <data name="FSZEditShort" xml:space="preserve"><value>Edit</value></data>
+  <data name="FSZEditOf" xml:space="preserve"><value>Edit {0}</value></data>
 </root>

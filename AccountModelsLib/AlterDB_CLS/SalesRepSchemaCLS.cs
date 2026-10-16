@@ -403,6 +403,7 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Approvals_Guid] ON [dbo].[SalesRep_Approv
             ("menuSalesRepShift", "وردية المندوب", "/salesrep/shift"),
             ("menuSalesRepApprovals", "موافقات المندوبين", "/salesrep/approvals"),
             ("menuSalesRepReturns", "مرتجعات المندوبين", "/salesrep/returns"),
+            ("menuSalesRepReturnReasons", "أسباب إرجاع المندوبين", "/salesrep/return-reasons"),
         };
 
         /// <summary>

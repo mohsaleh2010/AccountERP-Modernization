@@ -1,6 +1,7 @@
 @* 🟢 خطة المندوبين — المرحلة 4: «مرتجع المندوب». المرتجع المربوط بالفاتورة: اختيار العميل ← فاتورته ← الكمية من المسموح بإرجاعه
    مع السبب والحالة (صالح ← السيارة / تالف ← مخزن التالف) والصورة حسب السبب. المستند يُبنى ويُسعَّر على السيرفر من سطر الفاتورة الأصلية
-   (SalesRepReturnService) ويُحفظ بمحرك المرتجع الحالى. المرتجع بلا فاتورة بسعر الأمان لمن يسمح له ملفه. التصميم حسب ui-ux-pro-max. *@
+   (SalesRepReturnService) ويُحفظ بمحرك المرتجع الحالى. المرتجع بلا فاتورة بسعر الأمان لمن يسمح له ملفه. المجانى يرجع تلقائياً بنسبة
+   المدفوع، ومسح الباركود (الصنف أو التشغيلة) يضيف وحدة للسطر ويثبّت التشغيلة. التصميم حسب ui-ux-pro-max. *@
 @page "/salesrep/return"
 
 @using System.Globalization
@@ -9,6 +10,7 @@
 @using AccountERP.SharedUI.Services
 @using AccountERP.SharedUI.Components.Shared
 @using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
 @inject LanguageService LangService
 @inject ISnackbar Snackbar
 @inject NavigationManager Nav
@@ -41,6 +43,9 @@
     .rt-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
     .rt-total { font-size: 1.25rem; font-weight: 800; font-variant-numeric: tabular-nums; }
     .rt-pick { cursor: pointer; }
+    .rt-scan { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-top: 12px; }
+    .rt-scan .mud-input-control { flex: 1 1 260px; max-width: 420px; }
+    .rt-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
 </style>
 
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
@@ -165,6 +170,12 @@
                                          SearchFunc="SearchVanAsync" ToStringFunc="@(o => o == null ? "" : o.Item_Name)"
                                          ValueChanged="AddBlindAsync" ResetValueOnEmptyText="true" DebounceInterval="300" AdornmentIcon="@Icons.Material.Filled.Search" />
                     }
+                    <div class="rt-scan">
+                        <MudTextField T="string" @ref="_scanField" @bind-Value="_scanText" Label="@Tr("FSTScanLabel")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                      Immediate="true" OnKeyDown="OnScanKeyAsync" Disabled="@_busy" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.QrCodeScanner"
+                                      OnAdornmentClick="ScanAsync" AdornmentAriaLabel="@Tr("FSTScanLabel")" autocomplete="off" />
+                        <span class="rt-hint">@Tr("FSTScanHint")</span>
+                    </div>
                     @if (_lines.Count == 0)
                     {
                         <div class="inv-empty rt-gap" role="status">@Tr(_blind ? "FSTNoBlindLines" : "FSTNothingToReturn")</div>
@@ -184,6 +195,21 @@
                                             <span><b>@Tr("FSTReturnable"): <span class="rt-num">@Fmt(l.Returnable, l.Factor, l.BUnit, l.SUnit)</span></b></span>
                                         }
                                         <span>@Tr(_blind ? "FSTSafePrice" : "FSTNetPrice"): <span class="rt-num">@((l.UnitPrice * l.Factor).ToString("N2")) / @l.BUnit</span></span>
+                                        @if (l.Free > 0)
+                                        {
+                                            <span>@Tr("FSTFree"): <span class="rt-num">@Fmt(l.Free, l.Factor, l.BUnit, l.SUnit)</span>
+                                                @if (l.FreeReturned > 0) { <text> (@Tr("FSTReturnedBefore") <span class="rt-num">@Fmt(l.FreeReturned, l.Factor, l.BUnit, l.SUnit)</span>)</text> }</span>
+                                        }
+                                    </div>
+                                    <div class="rt-chips">
+                                        @if (!string.IsNullOrEmpty(l.BatchLabel))
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" Icon="@Icons.Material.Filled.QrCode2">@Tr("FSTBatch"): @l.BatchLabel</MudChip>
+                                        }
+                                        @if (l.Free > 0 && l.QtySmall > 0)
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary" Icon="@Icons.Material.Filled.CardGiftcard">@Tr("FSTFreeAuto")</MudChip>
+                                        }
                                     </div>
                                 </div>
                                 @if (_blind) { <MudIconButton Icon="@Icons.Material.Filled.Close" aria-label="@Tr("FSSRemove")" Title="@Tr("FSSRemove")" OnClick="@(() => RemoveLine(l))" /> }
@@ -219,6 +245,12 @@
                                     else if (reason.Requires_Photo) { <span class="rt-hint">@Tr("FSTPhotoRequired")</span> }
                                 </div>
                             }
+                            @if (NeedsBatch(l))
+                            {
+                                <div class="rt-hint" style="margin-top:6px;color:var(--mud-palette-error)" role="alert">
+                                    <MudIcon Icon="@Icons.Material.Filled.QrCodeScanner" Size="Size.Small" aria-hidden="true" /> @Tr("FSTBatchRequired")
+                                </div>
+                            }
                             <div class="rt-hint" style="margin-top:6px">@Tr(l.Condition == 1 ? "FSTToDamaged" : "FSTToVan", l.Condition == 1 ? _ctx.Damaged_Store_Name : _ctx.Van_Store_Name)</div>
                         </div>
                     }
@@ -243,6 +275,21 @@
                                 <div class="rt-kpi"><div class="k">@Tr("FSTLinesCount")</div><div class="v rt-num">@_check.Lines.Count</div></div>
                                 @if (_refundCash) { <div class="rt-kpi"><div class="k">@Tr("FSTCashAfter")</div><div class="v rt-num">@((_check.Cash_On_Hand - _check.Net_Total).ToString("N2"))</div></div> }
                             </div>
+                            <MudSimpleTable Dense="true" Elevation="0" Class="inv-table rt-gap" Bordered="false">
+                                <thead><tr><th>@Tr("FSTItem")</th><th>@Tr("FSTQty")</th><th>@Tr("FSTFree")</th><th>@Tr("FSVAmount")</th></tr></thead>
+                                <tbody>
+                                    @foreach (var pl in _check.Lines)
+                                    {
+                                        <tr>
+                                            <td>@pl.Item_Name</td>
+                                            <td class="rt-num">@pl.Qty_Small.ToString("0.##")</td>
+                                            <td class="rt-num">@(pl.Free_Small > 0 ? pl.Free_Small.ToString("0.##") : "—")</td>
+                                            <td class="rt-num">@pl.Value.ToString("N2")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                            @if (_check.Lines.Any(x => x.Free_Small > 0)) { <div class="rt-hint">@Tr("FSTFreeHint")</div> }
                             @foreach (var v in _check.Result.Violations)
                             {
                                 <MudAlert Severity="@(v.Covered ? Severity.Success : Severity.Warning)" Dense="true" Class="rt-gap">
@@ -298,6 +345,13 @@
         public string? PhotoType { get; set; }
         public string? PhotoName { get; set; }
         public bool IsBlind { get; set; }
+        public decimal Free { get; set; }
+        public decimal FreeReturned { get; set; }
+        public long? OriginalBatchId { get; set; }
+        public long? ScannedBatchId { get; set; }
+        public string BatchLabel { get; set; } = "";
+        public bool ItemHasBatches { get; set; }
+        public long ItemId { get; set; }
         public decimal QtySmall => Large * Factor + Small;
         public bool Over => !IsBlind && QtySmall > Returnable;
     }
@@ -320,9 +374,15 @@
     private long? _savedId;
     private bool _loading = true, _busy, _blind, _refundCash;
     private string? _notes, _approvalReason, _error;
+    private string _scanText = "";
+    private MudTextField<string>? _scanField;
 
     private bool CanSubmit => _customer != null && _lines.Any(l => l.QtySmall > 0) && _lines.All(l => !l.Over)
-                              && _lines.Where(l => l.QtySmall > 0).All(l => l.ReasonId > 0 && (_reasons.FirstOrDefault(r => r.Id == l.ReasonId)?.Requires_Photo != true || l.Photo != null));
+                              && _lines.Where(l => l.QtySmall > 0).All(l => l.ReasonId > 0 && (_reasons.FirstOrDefault(r => r.Id == l.ReasonId)?.Requires_Photo != true || l.Photo != null) && !NeedsBatch(l));
+
+    /// <summary>السبب يتطلب التشغيلة والصنف له تشغيلات ولا تشغيلة على السطر (من الفاتورة أو ممسوحة).</summary>
+    private bool NeedsBatch(LineEdit l) => l.QtySmall > 0 && l.ItemHasBatches && l.OriginalBatchId == null && l.ScannedBatchId == null
+                                           && _reasons.FirstOrDefault(r => r.Id == l.ReasonId)?.Requires_Batch == true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -411,6 +471,8 @@
             {
                 DetailId = x.Original_Detail_Id, Name = x.Item_Name, BUnit = x.B_Unit, SUnit = x.S_Unit, Factor = x.Factor <= 0 ? 1 : x.Factor,
                 Sold = x.Sold_Small, ReturnedBefore = x.Returned_Small, Returnable = x.Returnable_Small, UnitPrice = x.Net_Unit_Price,
+                Free = x.Free_Small, FreeReturned = x.Free_Returned_Small, OriginalBatchId = x.Batch_Id, BatchLabel = x.Batch_Label ?? "",
+                ItemHasBatches = x.Item_Has_Batches, ItemId = x.Item_Id,
             }).ToList();
         }
         catch (Exception ex) { _error = Inner(ex); }
@@ -435,6 +497,51 @@
             Invalidate();
         }
         catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private Task OnScanKeyAsync(KeyboardEventArgs e) => e.Key is "Enter" or "NumpadEnter" ? ScanAsync() : Task.CompletedTask;
+
+    /// <summary>
+    /// مسح باركود الصنف أو التشغيلة: المربوط يضيف وحدة صغرى لسطر الفاتورة (حتى المسموح بإرجاعه) ويثبّت التشغيلة الممسوحة؛
+    /// بلا فاتورة يضيف الصنف من السيارة أو يزيده وحدة. السيرفر يعيد التحقق من التشغيلة عند الفحص والحفظ.
+    /// </summary>
+    private async Task ScanAsync()
+    {
+        string code = (_scanText ?? "").Trim();
+        _scanText = "";
+        if (code.Length == 0 || _ctx == null) return;
+        long repId = _repId;
+        long? invoice = _blind ? null : _original?.Id;
+        try
+        {
+            var hit = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Scan(repId, invoice, code); });
+            LineEdit? line = hit.Original_Detail_Id is long d ? _lines.FirstOrDefault(l => l.DetailId == d) : _lines.FirstOrDefault(l => l.UnitItemId == hit.Unit_Item_Id);
+            if (line == null && _blind && hit.Unit_Item_Id is long u)
+            {
+                var opt = (await SearchVanAsync(hit.Item_Name, CancellationToken.None)).FirstOrDefault(o => o.Id == u);
+                if (opt == null) { Snackbar.Add(Tr("FSTScanNotOnVan", hit.Item_Name), Severity.Warning); return; }
+                await AddBlindAsync(opt);
+                line = _lines.FirstOrDefault(l => l.UnitItemId == u);
+                if (line == null) return;
+                line.Large = 0; line.Small = 0;
+            }
+            if (line == null) { Snackbar.Add(Tr("FSTScanNotInInvoice", code), Severity.Warning); return; }
+            if (hit.Batch_Id is long b)
+            {
+                if (line.ScannedBatchId is long prev && prev != b && line.QtySmall > 0) { Snackbar.Add(Tr("FSTScanOtherBatch", hit.Batch_Label), Severity.Warning); return; }
+                if (line.OriginalBatchId == null) { line.ScannedBatchId = b; line.BatchLabel = hit.Batch_Label; }
+            }
+            decimal next = line.QtySmall + 1;
+            if (!line.IsBlind && next > line.Returnable) { Snackbar.Add(Tr("FSTOver"), Severity.Warning); return; }
+            line.Large = Math.Floor(next / line.Factor); line.Small = next - line.Large * line.Factor;
+            Invalidate();
+            Snackbar.Add(Tr("FSTScanned", hit.Item_Name, Fmt(line.QtySmall, line.Factor, line.BUnit, line.SUnit)), Severity.Info);
+        }
+        catch (Exception ex) { Snackbar.Add(Inner(ex), Severity.Warning); }
+        finally
+        {
+            try { if (_scanField is not null) await _scanField.FocusAsync(); } catch { }
+        }
     }
 
     private void RemoveLine(LineEdit l) { _lines.Remove(l); Invalidate(); }
@@ -466,7 +573,7 @@
         Lines = _lines.Where(l => l.QtySmall > 0).Select(l => new SalesRepReturnService.ReturnLineInput
         {
             Original_Detail_Id = l.DetailId, Unit_Item_Id = l.IsBlind ? l.UnitItemId : null, Qty_Large = l.Large, Qty_Small = l.Small,
-            Reason_Id = l.ReasonId, Condition = l.Condition, Photo = l.Photo, Photo_Content_Type = l.PhotoType,
+            Reason_Id = l.ReasonId, Condition = l.Condition, Photo = l.Photo, Photo_Content_Type = l.PhotoType, Batch_Id = l.ScannedBatchId,
         }).ToList(),
     };
 
