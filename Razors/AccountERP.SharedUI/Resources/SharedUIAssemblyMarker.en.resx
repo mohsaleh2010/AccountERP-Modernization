@@ -3335,4 +3335,37 @@
   <data name="FSPSaved" xml:space="preserve"><value>Policy saved</value></data>
   <data name="FSPDeleted" xml:space="preserve"><value>Policy deleted</value></data>
   <data name="FSPSave" xml:space="preserve"><value>Save policy</value></data>
+  <data name="FSAType_7" xml:space="preserve"><value>Cheque due after the limit</value></data>
+  <data name="FSRAllowCheques" xml:space="preserve"><value>Collects cheques</value></data>
+  <data name="FSRMaxChequeDays" xml:space="preserve"><value>Max days until cheque due</value></data>
+  <data name="FSRMaxChequeDaysHint" xml:space="preserve"><value>Empty = no limit; beyond it needs supervisor approval</value></data>
+  <data name="FSQCollect" xml:space="preserve"><value>Collect cheque</value></data>
+  <data name="FSQHint" xml:space="preserve"><value>The cheque goes into the incoming cheques portfolio against the customer's account and stays with the rep until handed to the supervisor at shift close. Max days until due: {0}</value></data>
+  <data name="FSQNoLimit" xml:space="preserve"><value>no limit</value></data>
+  <data name="FSQBank" xml:space="preserve"><value>Drawee bank</value></data>
+  <data name="FSQNo" xml:space="preserve"><value>Cheque number</value></data>
+  <data name="FSQNoHint" xml:space="preserve"><value>Digits only</value></data>
+  <data name="FSQDue" xml:space="preserve"><value>Due date</value></data>
+  <data name="FSQDrawer" xml:space="preserve"><value>Drawer name</value></data>
+  <data name="FSQSave" xml:space="preserve"><value>Record cheque</value></data>
+  <data name="FSQSaved" xml:space="preserve"><value>Cheque recorded in the incoming portfolio</value></data>
+  <data name="FSQNeedsApproval" xml:space="preserve"><value>The cheque needs supervisor approval before recording</value></data>
+  <data name="FSQRequestApproval" xml:space="preserve"><value>Request approval</value></data>
+  <data name="FSQRefresh" xml:space="preserve"><value>Refresh status</value></data>
+  <data name="FSQRequested" xml:space="preserve"><value>Approval requested from the supervisor</value></data>
+  <data name="FSQStatus_0" xml:space="preserve"><value>Pending approval</value></data>
+  <data name="FSQStatus_1" xml:space="preserve"><value>Approved</value></data>
+  <data name="FSQStatus_2" xml:space="preserve"><value>Rejected</value></data>
+  <data name="FSQStatus_None" xml:space="preserve"><value>Not requested</value></data>
+  <data name="FSQChequeDoc" xml:space="preserve"><value>Cheque</value></data>
+  <data name="FSQCheques" xml:space="preserve"><value>Cheques</value></data>
+  <data name="FSQHandOverTitle" xml:space="preserve"><value>Cheque handover</value></data>
+  <data name="FSQHandOverHint" xml:space="preserve"><value>Tick each cheque you actually received from the rep; the shift cannot close while a cheque is not handed over.</value></data>
+  <data name="FSQHandedOver" xml:space="preserve"><value>Handover recorded</value></data>
+  <data name="FSQHandOverUndone" xml:space="preserve"><value>Handover undone</value></data>
+  <data name="FSQHandOverAll" xml:space="preserve"><value>Hand over all</value></data>
+  <data name="FSQHandedCount" xml:space="preserve"><value>{0} of {1} handed over</value></data>
+  <data name="FSQHandOverOf" xml:space="preserve"><value>Hand over cheque {0}</value></data>
+  <data name="FSQPending" xml:space="preserve"><value>With the rep</value></data>
+  <data name="FSQReceived" xml:space="preserve"><value>Handed over</value></data>
 </root>

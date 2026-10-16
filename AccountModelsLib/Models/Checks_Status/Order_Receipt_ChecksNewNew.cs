@@ -38,10 +38,13 @@ namespace AccountCheckMoney
 
         }
 
-        public void Add_New_Check(ref int Excp, ref string Msg, bool EstlanCheckSader, bool Transfer_Check, Checks_MemoryTasweaCLS cts)
+        /// <param name="external">معاملة المستدعى (مثل وردية المندوب): تُستعمل بلا Commit/Rollback هنا والمستدعى يثبّتها أو يلغيها.
+        /// بدونها (الشاشات القديمة) تُفتح معاملة خاصة وتُثبَّت كما كانت.</param>
+        public void Add_New_Check(ref int Excp, ref string Msg, bool EstlanCheckSader, bool Transfer_Check, Checks_MemoryTasweaCLS cts, operations external = null)
         {
             int Receipt = 0;
-            operations opp = new operations(1);
+            bool ownTx = external == null;
+            operations opp = external ?? new operations(1);
             DateTime ProcessDate = (DateTime)chm.Day_Date;
             try
             {
@@ -70,7 +73,8 @@ namespace AccountCheckMoney
                 //}
 
                 or.Bank_Type = 1;
-                or.Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id((DateTime)or.Order_Date);
+                or.Year_Financial_Period_Id = ownTx ? Financial_PeriodCLS.Get_Year_Financial_Period_Id((DateTime)or.Order_Date)
+                    : Financial_PeriodCLS.Get_Year_Financial_Period_Id(ref opp, (DateTime)or.Order_Date);
 
                 or.Total_Value = (decimal)chm.Check_Value;
                 or.Tafkeet_Value = chm.Check_Value_;
@@ -174,12 +178,12 @@ namespace AccountCheckMoney
                 }
                 if (Excp == 0)
                 {
-                    opp.Commit();
+                    if (ownTx) opp.Commit();
 
                 }
                 else
                 {
-                    opp.Rollback();
+                    if (ownTx) opp.Rollback();
 
                     Excp = 1;
                 }
@@ -187,7 +191,7 @@ namespace AccountCheckMoney
             }
             catch (Exception ee)
             {
-                opp.Rollback();
+                if (ownTx) opp.Rollback();
                 Msg = ee.Message;
                 Excp = 1;
             }

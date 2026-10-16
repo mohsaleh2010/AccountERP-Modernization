@@ -2844,7 +2844,8 @@ FROM            Order_Money_Check INNER JOIN
                          FROM Order_Money_Check INNER JOIN
                          Checks_Memory ON Order_Money_Check.Id = Checks_Memory.Order_Mony_Id INNER JOIN
                          Submain_Account ON Checks_Memory.SubAccount_Id_RelatedFrom = Submain_Account.Id ";
-                mysql = mysql + " WHERE (Submain_Account.Branch_Id = " + Common.Branch_Id + ")  ";
+                // حساب الحافظة قد يكون لكل الفروع (-1) كما فى شجرة الحسابات؛ بدون ذلك كان القيد يُتخطّى بصمت.
+                mysql = mysql + " WHERE ((Submain_Account.Branch_Id = " + Common.Branch_Id + ") OR (Submain_Account.Branch_Id = -1))  ";
 
                 if (Checks_Memory_Id > 0)
                 {
@@ -2858,7 +2859,7 @@ FROM            Order_Money_Check INNER JOIN
                 for (int x = 0; x < dt_ProcessName.Rows.Count; x++)
                 {
                     Entry_Currency_ID = long.Parse(dt_ProcessName.Rows[0]["Currency_ID"].ToString());
-                    Checks_Memory_Id = int.Parse(dt_ProcessName.Rows[0]["Id"].ToString());
+                    Checks_Memory_Id = long.Parse(dt_ProcessName.Rows[0]["Id"].ToString()); // معرّف Snowflake أكبر من int
                     //SubAccount_Id = long.Parse(dt_ProcessName.Rows[0]["SubAccount_Id"].ToString());
                     string SubAccount_Name = dt_ProcessName.Rows[x]["SubAccount_Name"].ToString();
                     string Check_No = dt_ProcessName.Rows[0]["Check_No"].ToString();
@@ -2869,6 +2870,7 @@ FROM            Order_Money_Check INNER JOIN
                     string Entry_Currency_Name = cc.Get_CurrencyName(ref opp, Entry_Currency_ID);
 
                     Branch_Id_Entry = long.Parse(dt_ProcessName.Rows[x]["Branch_Id"].ToString());
+                    if (Branch_Id_Entry <= 0) Branch_Id_Entry = Common.Branch_Id; // حساب لكل الفروع: القيد على الفرع الحالى
 
                     dtprocess_Date = EntryDate;// DateTime.Parse(dt_ProcessName.Rows[x]["Order_Date"].ToString());
                     EntryValue = decimal.Parse(dt_ProcessName.Rows[x]["Check_Value"].ToString());
@@ -2936,7 +2938,7 @@ FROM            Order_Money_Check INNER JOIN
             }
             catch (Exception ee)
             {
-
+                Msg = ee.Message;
                 Excp = 1;
             }
 

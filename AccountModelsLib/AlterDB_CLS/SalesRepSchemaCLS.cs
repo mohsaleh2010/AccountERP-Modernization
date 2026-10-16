@@ -396,6 +396,11 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
             ("SalesRep_Approvals", "Approved_Value", "[decimal](18, 4) NULL"),
             // المرحلة 4: نافذة الإرجاع لكل مندوب.
             ("SalesRep_Reps", "Return_Window_Days", "[int] NULL"),
+            // المرحلة 3: تحصيل الشيكات على الوردية وتسليمها عند الإقفال.
+            ("SalesRep_Reps", "Allow_Cheque_Collection", "[bit] NOT NULL DEFAULT ((0))"),
+            ("SalesRep_Reps", "Max_Cheque_Due_Days", "[int] NULL"),
+            ("SalesRep_Document_Links", "Handed_Over_At", "[datetime] NULL"),
+            ("SalesRep_Document_Links", "Handed_Over_User_Id", "[bigint] NULL"),
         };
 
         /// <summary>أسباب الإرجاع الافتراضية (§6.6-6) تُضاف فقط لو جدول الأسباب فارغ؛ تُعدَّل وتُضاف من القاعدة. لا يمس أى صف قائم.</summary>

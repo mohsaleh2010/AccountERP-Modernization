@@ -13,11 +13,11 @@ namespace AccountModelsLib.SalesRep
 
     public enum SalesRepShiftStatus { Open = 1, Closing = 2, Closed = 3, Reopened = 4 }
 
-    public enum SalesRepDocType { SaleInvoice = 1, SaleReturn = 2, CashVoucher = 3, StoreOrder = 4, CustomerOrder = 5, JournalEntry = 6 }
+    public enum SalesRepDocType { SaleInvoice = 1, SaleReturn = 2, CashVoucher = 3, StoreOrder = 4, CustomerOrder = 5, JournalEntry = 6, Cheque = 7 }
 
     public enum SalesRepVisitResult { Sale = 1, Delivery = 2, Order = 3, Collection = 4, Return = 5, NoSale = 6 }
 
-    public enum SalesRepApprovalType { Credit = 1, Discount = 2, BlindReturn = 3, OutsideGeofence = 4, OutsideReturnWindow = 5, ReopenShift = 6 }
+    public enum SalesRepApprovalType { Credit = 1, Discount = 2, BlindReturn = 3, OutsideGeofence = 4, OutsideReturnWindow = 5, ReopenShift = 6, ChequeDueDate = 7 }
 
     public enum SalesRepApprovalStatus { Pending = 0, Approved = 1, Rejected = 2 }
 
@@ -84,6 +84,10 @@ namespace AccountModelsLib.SalesRep
         public bool Allow_Blind_Return { get; set; }
         /// <summary>نافذة الإرجاع بالأيام من تاريخ الفاتورة (فارغ = 30)؛ خارجها يحتاج موافقة المشرف (§6.6-4).</summary>
         public int? Return_Window_Days { get; set; }
+        /// <summary>يحصّل شيكات من العملاء على ورديته (مغلق افتراضياً).</summary>
+        public bool Allow_Cheque_Collection { get; set; }
+        /// <summary>أقصى أيام بين التحصيل واستحقاق الشيك؛ ما بعده يحتاج موافقة المشرف (فارغ = بلا حد).</summary>
+        public int? Max_Cheque_Due_Days { get; set; }
         public int End_Of_Day_Stock_Policy { get; set; }
         public long? Cost_Center_Id { get; set; }
         public long? Commission_Plan_Id { get; set; }
@@ -226,6 +230,9 @@ namespace AccountModelsLib.SalesRep
         public long Shift_Id { get; set; }
         public long? Visit_Id { get; set; }
         public Guid? Doc_Guid { get; set; }
+        /// <summary>شيك المندوب: وقت تسليمه الفعلى للمشرف عند إقفال الوردية ومن سلّمه (فارغ = ما زال مع المندوب).</summary>
+        public DateTime? Handed_Over_At { get; set; }
+        public long? Handed_Over_User_Id { get; set; }
     }
 
     [Table("SalesRep_Visits")]

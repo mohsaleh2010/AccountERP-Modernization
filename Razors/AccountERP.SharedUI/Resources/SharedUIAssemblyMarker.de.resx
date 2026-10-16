@@ -3337,4 +3337,37 @@
   <data name="FSPSaved" xml:space="preserve"><value>Richtlinie gespeichert</value></data>
   <data name="FSPDeleted" xml:space="preserve"><value>Richtlinie gelöscht</value></data>
   <data name="FSPSave" xml:space="preserve"><value>Richtlinie speichern</value></data>
+  <data name="FSAType_7" xml:space="preserve"><value>Scheckfälligkeit über der Grenze</value></data>
+  <data name="FSRAllowCheques" xml:space="preserve"><value>Zieht Schecks ein</value></data>
+  <data name="FSRMaxChequeDays" xml:space="preserve"><value>Max. Tage bis Fälligkeit</value></data>
+  <data name="FSRMaxChequeDaysHint" xml:space="preserve"><value>Leer = ohne Grenze; darüber Freigabe nötig</value></data>
+  <data name="FSQCollect" xml:space="preserve"><value>Scheck einziehen</value></data>
+  <data name="FSQHint" xml:space="preserve"><value>Der Scheck geht in das Eingangsscheck-Portfolio auf das Kundenkonto und bleibt beim Außendienst bis zur Übergabe beim Schichtabschluss. Max. Tage bis Fälligkeit: {0}</value></data>
+  <data name="FSQNoLimit" xml:space="preserve"><value>ohne Grenze</value></data>
+  <data name="FSQBank" xml:space="preserve"><value>Bezogene Bank</value></data>
+  <data name="FSQNo" xml:space="preserve"><value>Schecknummer</value></data>
+  <data name="FSQNoHint" xml:space="preserve"><value>Nur Ziffern</value></data>
+  <data name="FSQDue" xml:space="preserve"><value>Fälligkeit</value></data>
+  <data name="FSQDrawer" xml:space="preserve"><value>Name des Ausstellers</value></data>
+  <data name="FSQSave" xml:space="preserve"><value>Scheck erfassen</value></data>
+  <data name="FSQSaved" xml:space="preserve"><value>Scheck im Portfolio erfasst</value></data>
+  <data name="FSQNeedsApproval" xml:space="preserve"><value>Der Scheck braucht eine Freigabe</value></data>
+  <data name="FSQRequestApproval" xml:space="preserve"><value>Freigabe anfordern</value></data>
+  <data name="FSQRefresh" xml:space="preserve"><value>Status aktualisieren</value></data>
+  <data name="FSQRequested" xml:space="preserve"><value>Freigabe angefordert</value></data>
+  <data name="FSQStatus_0" xml:space="preserve"><value>Ausstehend</value></data>
+  <data name="FSQStatus_1" xml:space="preserve"><value>Freigegeben</value></data>
+  <data name="FSQStatus_2" xml:space="preserve"><value>Abgelehnt</value></data>
+  <data name="FSQStatus_None" xml:space="preserve"><value>Nicht angefordert</value></data>
+  <data name="FSQChequeDoc" xml:space="preserve"><value>Scheck</value></data>
+  <data name="FSQCheques" xml:space="preserve"><value>Schecks</value></data>
+  <data name="FSQHandOverTitle" xml:space="preserve"><value>Scheckübergabe</value></data>
+  <data name="FSQHandOverHint" xml:space="preserve"><value>Jeden erhaltenen Scheck abhaken; die Schicht schließt nicht, solange ein Scheck fehlt.</value></data>
+  <data name="FSQHandedOver" xml:space="preserve"><value>Übergabe erfasst</value></data>
+  <data name="FSQHandOverUndone" xml:space="preserve"><value>Übergabe zurückgenommen</value></data>
+  <data name="FSQHandOverAll" xml:space="preserve"><value>Alle übergeben</value></data>
+  <data name="FSQHandedCount" xml:space="preserve"><value>{0} von {1} übergeben</value></data>
+  <data name="FSQHandOverOf" xml:space="preserve"><value>Scheck {0} übergeben</value></data>
+  <data name="FSQPending" xml:space="preserve"><value>Beim Außendienst</value></data>
+  <data name="FSQReceived" xml:space="preserve"><value>Übergeben</value></data>
 </root>

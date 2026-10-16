@@ -308,6 +308,9 @@ GROUP BY u.Item_id").ToList();
                 throw new InvalidOperationException("سياسة المندوب: تفريغ المتبقى آخر اليوم — أصدر إذن التفريغ قبل الإقفال.");
             if (InTransitFor(opp, rep.Van_Store_Id, toVan: true))
                 throw new InvalidOperationException("يوجد تحميل للسيارة بانتظار تأكيد المندوب.");
+            int chequesLeft = SalesRepChequeService.NotHandedOver(opp, shift.Id);
+            if (chequesLeft > 0)
+                throw new InvalidOperationException($"يوجد {chequesLeft} شيك محصَّل لم يُسلَّم بعد؛ أشّر تسليم الشيكات قبل الإقفال.");
 
             // إعادة الحساب لحظة الإقفال: أى حركة بعد بدء الإقفال تظهر فى المتوقع، والمعدود يبقى كما سُجِّل.
             var counted = opp.db.SalesRep_Shift_Stock.AsNoTracking().Where(s => s.Shift_Id == shiftId).ToDictionary(s => s.Unit_Item_Table_Id, s => s.Counted_Closing);

@@ -3337,4 +3337,37 @@
   <data name="FSPSaved" xml:space="preserve"><value>Politique enregistrée</value></data>
   <data name="FSPDeleted" xml:space="preserve"><value>Politique supprimée</value></data>
   <data name="FSPSave" xml:space="preserve"><value>Enregistrer la politique</value></data>
+  <data name="FSAType_7" xml:space="preserve"><value>Échéance du chèque au-delà de la limite</value></data>
+  <data name="FSRAllowCheques" xml:space="preserve"><value>Encaisse des chèques</value></data>
+  <data name="FSRMaxChequeDays" xml:space="preserve"><value>Jours max. avant échéance</value></data>
+  <data name="FSRMaxChequeDaysHint" xml:space="preserve"><value>Vide = sans limite ; au-delà, approbation requise</value></data>
+  <data name="FSQCollect" xml:space="preserve"><value>Encaisser un chèque</value></data>
+  <data name="FSQHint" xml:space="preserve"><value>Le chèque entre dans le portefeuille des chèques reçus au compte du client et reste chez le commercial jusqu'à sa remise au superviseur à la clôture. Jours max. avant échéance : {0}</value></data>
+  <data name="FSQNoLimit" xml:space="preserve"><value>sans limite</value></data>
+  <data name="FSQBank" xml:space="preserve"><value>Banque tirée</value></data>
+  <data name="FSQNo" xml:space="preserve"><value>Numéro du chèque</value></data>
+  <data name="FSQNoHint" xml:space="preserve"><value>Chiffres uniquement</value></data>
+  <data name="FSQDue" xml:space="preserve"><value>Échéance</value></data>
+  <data name="FSQDrawer" xml:space="preserve"><value>Nom du tireur</value></data>
+  <data name="FSQSave" xml:space="preserve"><value>Enregistrer le chèque</value></data>
+  <data name="FSQSaved" xml:space="preserve"><value>Chèque enregistré dans le portefeuille</value></data>
+  <data name="FSQNeedsApproval" xml:space="preserve"><value>Le chèque nécessite l'approbation du superviseur</value></data>
+  <data name="FSQRequestApproval" xml:space="preserve"><value>Demander l'approbation</value></data>
+  <data name="FSQRefresh" xml:space="preserve"><value>Actualiser</value></data>
+  <data name="FSQRequested" xml:space="preserve"><value>Approbation demandée</value></data>
+  <data name="FSQStatus_0" xml:space="preserve"><value>En attente</value></data>
+  <data name="FSQStatus_1" xml:space="preserve"><value>Approuvée</value></data>
+  <data name="FSQStatus_2" xml:space="preserve"><value>Refusée</value></data>
+  <data name="FSQStatus_None" xml:space="preserve"><value>Non demandée</value></data>
+  <data name="FSQChequeDoc" xml:space="preserve"><value>Chèque</value></data>
+  <data name="FSQCheques" xml:space="preserve"><value>Chèques</value></data>
+  <data name="FSQHandOverTitle" xml:space="preserve"><value>Remise des chèques</value></data>
+  <data name="FSQHandOverHint" xml:space="preserve"><value>Cochez chaque chèque reçu du commercial ; la clôture est bloquée tant qu'un chèque n'est pas remis.</value></data>
+  <data name="FSQHandedOver" xml:space="preserve"><value>Remise enregistrée</value></data>
+  <data name="FSQHandOverUndone" xml:space="preserve"><value>Remise annulée</value></data>
+  <data name="FSQHandOverAll" xml:space="preserve"><value>Tout remettre</value></data>
+  <data name="FSQHandedCount" xml:space="preserve"><value>{0} sur {1} remis</value></data>
+  <data name="FSQHandOverOf" xml:space="preserve"><value>Remettre le chèque {0}</value></data>
+  <data name="FSQPending" xml:space="preserve"><value>Chez le commercial</value></data>
+  <data name="FSQReceived" xml:space="preserve"><value>Remis</value></data>
 </root>

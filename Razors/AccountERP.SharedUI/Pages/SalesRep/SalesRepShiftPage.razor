@@ -99,6 +99,10 @@
                         <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.RequestQuote" Href="@($"/accounts/invoices/sales-invoice?rep={_rep.Id}&agile=1")">@Tr("FSVSellCredit")</MudButton>
                     }
                     <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Payments" OnClick="@(() => _panel = Panel.Collect)">@Tr("FSVCollect")</MudButton>
+                    @if (_rep.Allow_Cheque_Collection)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.AccountBalance" OnClick="OpenChequePanelAsync">@Tr("FSQCollect")</MudButton>
+                    }
                     <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.AssignmentReturn" Href="@($"/salesrep/return?rep={_rep.Id}")">@Tr("FSTButton")</MudButton>
                     <MudButton Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Filled.LocalShipping" Href="@($"/salesrep/orders?rep={_rep.Id}")">@Tr("FSOButton")</MudButton>
                     <MudButton Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Filled.AddShoppingCart" Href="@($"/accounts/sales/customer-order?rep={_rep.Id}")">@Tr("FSNNewOrder")</MudButton>
@@ -198,7 +202,61 @@
             </div>
         }
 
-        @* ===== مستندات الوردية: فواتير البيع وإذونات النقدية ===== *@
+        @* ===== تحصيل شيك: حافظة الشيكات الواردة بالمحرك الحالى، مربوط بالوردية ===== *@
+        @if (_panel == Panel.Cheque)
+        {
+            <div class="inv-card ss-gap">
+                <h2 class="ss-sec"><MudIcon Icon="@Icons.Material.Filled.AccountBalance" Color="Color.Primary" Size="Size.Small" />@Tr("FSQCollect")</h2>
+                <div class="ss-hint">@Tr("FSQHint", _rep?.Max_Cheque_Due_Days?.ToString() ?? Tr("FSQNoLimit"))</div>
+                <div class="ss-kpis ss-gap">
+                    <MudAutocomplete T="SalesRepProfileService.Option" @bind-Value="_chqCustomer" @bind-Value:after="ChequeChanged" SearchFunc="SearchCustomersAsync" ToStringFunc="@(o => o?.Name ?? "")"
+                                     Label="@Tr("FSVCustomer")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" ResetValueOnEmptyText="true" DebounceInterval="300" />
+                    <MudSelect T="long" @bind-Value="_chqBank" @bind-Value:after="ChequeChanged" Label="@Tr("FSQBank")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true"
+                               ToStringFunc="@(v => _banks.FirstOrDefault(b => b.Id == v)?.Name ?? "")">
+                        @foreach (var b in _banks) { <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem> }
+                    </MudSelect>
+                    <MudTextField T="string" @bind-Value="_chqNo" @bind-Value:after="ChequeChanged" Label="@Tr("FSQNo")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true"
+                                  InputMode="InputMode.numeric" Pattern="[0-9]*" MaxLength="30" HelperText="@Tr("FSQNoHint")" />
+                    <MudDatePicker T="DateTime?" @bind-Date="_chqDue" @bind-Date:after="ChequeChanged" Label="@Tr("FSQDue")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" />
+                    <MudNumericField T="decimal?" @bind-Value="_chqAmount" @bind-Value:after="ChequeChanged" Label="@Tr("FSVAmount")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Format="N2" Required="true" />
+                    <MudTextField T="string" @bind-Value="_chqDrawer" Label="@Tr("FSQDrawer")" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="200" />
+                    <MudTextField T="string" @bind-Value="_chqNotes" Label="@Tr("FSVNotes")" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="500" />
+                </div>
+                @if (_chqCheck != null)
+                {
+                    foreach (var w in _chqCheck.Warnings) { <MudAlert Severity="Severity.Info" Dense="true" Class="ss-gap">@w</MudAlert> }
+                    @if (_chqCheck.Violations.Count > 0)
+                    {
+                        <div class="ss-gap" role="status" aria-live="polite">
+                            <b>@Tr("FSQNeedsApproval")</b>
+                            @foreach (var v in _chqCheck.Violations)
+                            {
+                                <MudAlert Severity="@(v.Covered ? Severity.Success : v.Approval_Status == 2 ? Severity.Error : Severity.Warning)" Dense="true" Class="ss-gap">
+                                    @v.Message — @Tr(v.Approval_Status is int s ? "FSQStatus_" + s : "FSQStatus_None")
+                                </MudAlert>
+                            }
+                        </div>
+                    }
+                }
+                <div class="ss-acts" style="justify-content:flex-end">
+                    <MudButton Variant="Variant.Text" OnClick="ClosePanel" Disabled="@_busy">@Tr("Cancel")</MudButton>
+                    @if (_chqCheck?.Violations.Count > 0)
+                    {
+                        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" Disabled="@(_busy || !ChequeReady)" OnClick="@(() => CheckChequeAsync(false))">@Tr("FSQRefresh")</MudButton>
+                        @if (_chqCheck.Violations.Any(v => !v.Covered && v.Approval_Status != 0))
+                        {
+                            <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Send" Disabled="@(_busy || !ChequeReady)" OnClick="@(() => CheckChequeAsync(true))">@Tr("FSQRequestApproval")</MudButton>
+                        }
+                    }
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_busy || !ChequeReady || _chqCheck?.Ok == false)" OnClick="SaveChequeAsync">
+                        @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                        @Tr("FSQSave")
+                    </MudButton>
+                </div>
+            </div>
+        }
+
+        @* ===== مستندات الوردية: فواتير البيع وإذونات النقدية والشيكات ===== *@
         @if (_shift != null)
         {
             <div class="inv-card ss-gap">
@@ -214,11 +272,15 @@
                         <div class="ss-kpi"><div class="k">@Tr("FSVCreditSales")</div><div class="v ss-num">@_docs.Where(d => d.Doc_Type == 1 && d.Is_Credit == 1).Sum(d => d.Value).ToString("N2")</div></div>
                         <div class="ss-kpi"><div class="k">@Tr("FSTReturns")</div><div class="v ss-num">@_docs.Where(d => d.Doc_Type == 2).Sum(d => d.Value).ToString("N2")</div></div>
                         <div class="ss-kpi"><div class="k">@Tr("FSVVouchers")</div><div class="v ss-num">@_docs.Where(d => d.Doc_Type == 3).Sum(d => d.Value).ToString("N2")</div></div>
+                        @if (_cheques.Count > 0)
+                        {
+                            <div class="ss-kpi"><div class="k">@Tr("FSQCheques")</div><div class="v ss-num">@_cheques.Sum(c => c.Amount).ToString("N2")</div></div>
+                        }
                     </div>
                     <MudTable Items="@_docs" T="SalesRepSaleService.ShiftDoc" Elevation="0" Class="inv-table ss-gap" Breakpoint="Breakpoint.Sm" Dense="true">
                         <HeaderContent><MudTh>@Tr("FSVDocType")</MudTh><MudTh>@Tr("FSVDocNo")</MudTh><MudTh>@Tr("FSSDate")</MudTh><MudTh>@Tr("FSVParty")</MudTh><MudTh>@Tr("FSVAmount")</MudTh></HeaderContent>
                         <RowTemplate>
-                            <MudTd DataLabel="@Tr("FSVDocType")">@Tr(context.Doc_Type == 1 ? (context.Is_Credit == 1 ? "FSVCreditSale" : "FSVCashSale") : context.Doc_Type == 2 ? "FSTReturnDoc" : "FSVVoucher")</MudTd>
+                            <MudTd DataLabel="@Tr("FSVDocType")">@Tr(context.Doc_Type == 1 ? (context.Is_Credit == 1 ? "FSVCreditSale" : "FSVCashSale") : context.Doc_Type == 2 ? "FSTReturnDoc" : context.Doc_Type == 7 ? "FSQChequeDoc" : "FSVVoucher")</MudTd>
                             <MudTd DataLabel="@Tr("FSVDocNo")" Class="ss-num">
                                 @if (context.Doc_Type == 1) { <MudLink Href="@($"/accounts/invoices/sales-invoice/{context.Doc_Id}")">@context.Doc_No</MudLink> }
                                 else if (context.Doc_Type == 2) { <MudLink Href="@($"/accounts/invoices/sales-return/{context.Doc_Id}")">@context.Doc_No</MudLink> }
@@ -297,6 +359,33 @@
                 </MudTable>
                 @if (_count.Count == 0) { <div class="inv-empty" role="status">@Tr("FSSNoVanStock")</div> }
 
+                @* ===== تسليم الشيكات المحصّلة: الشيك غير المسلَّم يمنع الإقفال ===== *@
+                @if (_cheques.Count > 0)
+                {
+                    int handed = _cheques.Count(c => c.Handed_Over_At != null);
+                    <h3 class="ss-sec ss-gap"><MudIcon Icon="@Icons.Material.Filled.AccountBalance" Color="Color.Primary" Size="Size.Small" />@Tr("FSQHandOverTitle")</h3>
+                    <div class="ss-hint">@Tr("FSQHandOverHint")</div>
+                    <MudTable Items="@_cheques" T="SalesRepChequeService.ChequeRow" Elevation="0" Class="inv-table ss-gap" Breakpoint="Breakpoint.Sm" Dense="true">
+                        <HeaderContent><MudTh>@Tr("FSQReceived")</MudTh><MudTh>@Tr("FSQNo")</MudTh><MudTh>@Tr("FSQBank")</MudTh><MudTh>@Tr("FSQDue")</MudTh><MudTh>@Tr("FSVCustomer")</MudTh><MudTh>@Tr("FSVAmount")</MudTh></HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="@Tr("FSQReceived")">
+                                <MudCheckBox T="bool" Value="@(context.Handed_Over_At != null)" ValueChanged="@(v => HandOverAsync(new[] { context.Id }, v))" Disabled="@_busy"
+                                             Color="Color.Success" aria-label="@Tr("FSQHandOverOf", context.Check_No)" Label="@(context.Handed_Over_At != null ? Tr("FSQReceived") : Tr("FSQPending"))" />
+                            </MudTd>
+                            <MudTd DataLabel="@Tr("FSQNo")" Class="ss-num">@context.Check_No</MudTd>
+                            <MudTd DataLabel="@Tr("FSQBank")">@context.Bank_Name</MudTd>
+                            <MudTd DataLabel="@Tr("FSQDue")" Class="ss-num">@context.Due_Date?.ToString("yyyy-MM-dd")</MudTd>
+                            <MudTd DataLabel="@Tr("FSVCustomer")">@context.Customer_Name</MudTd>
+                            <MudTd DataLabel="@Tr("FSVAmount")" Class="ss-num">@context.Amount.ToString("N2")</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                    <div class="ss-acts" style="align-items:center">
+                        <span class="@(handed == _cheques.Count ? "ss-pos" : "ss-neg")" aria-live="polite">@Tr("FSQHandedCount", handed, _cheques.Count)</span>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.DoneAll" Disabled="@(_busy || handed == _cheques.Count)"
+                                   OnClick="@(() => HandOverAsync(_cheques.Where(c => c.Handed_Over_At == null).Select(c => c.Id).ToArray(), true))">@Tr("FSQHandOverAll")</MudButton>
+                    </div>
+                }
+
                 @* ===== النقدية: عدّ صندوق العهدة والتوريد ===== *@
                 <h3 class="ss-sec ss-gap"><MudIcon Icon="@Icons.Material.Filled.Payments" Color="Color.Primary" Size="Size.Small" />@Tr("FSSCash")</h3>
                 <div class="ss-hint">@Tr("FSSCashHint")</div>
@@ -334,7 +423,7 @@
 
                 <div class="ss-acts" style="justify-content:flex-end">
                     <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_busy || (_count.Count == 0 && _cashCounted == null))" OnClick="SaveCountAsync">@Tr("FSSSaveCount")</MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Lock" Disabled="@(_busy || _count.Any(c => c.DiffSmall == null) || _cashCounted == null || RemitError != null)" OnClick="CloseShiftAsync">@Tr("FSSClose")</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Lock" Disabled="@(_busy || _count.Any(c => c.DiffSmall == null) || _cashCounted == null || RemitError != null || _cheques.Any(c => c.Handed_Over_At == null))" OnClick="CloseShiftAsync">@Tr("FSSClose")</MudButton>
                 </div>
             </div>
         }
@@ -388,7 +477,7 @@
 @code {
     [SupplyParameterFromQuery(Name = "rep")] public long? RepQuery { get; set; }
 
-    private enum Panel { None, Load, Unload, Damaged, Collect }
+    private enum Panel { None, Load, Unload, Damaged, Collect, Cheque }
 
     private class LineEdit
     {
@@ -440,6 +529,79 @@
     private decimal? _collectAmount;
     private string? _collectNotes;
     private List<SalesRepProfileService.Option>? _customers;
+    private readonly SalesRepChequeService _chqSvc = new();
+    private List<SalesRepChequeService.BankOption> _banks = new();
+    private List<SalesRepChequeService.ChequeRow> _cheques = new();
+    private SalesRepProfileService.Option? _chqCustomer;
+    private long _chqBank;
+    private string? _chqNo, _chqDrawer, _chqNotes;
+    private DateTime? _chqDue = DateTime.Today;
+    private decimal? _chqAmount;
+    private Guid _chqGuid = Guid.NewGuid();
+    private SalesRepSaleService.CheckResult? _chqCheck;
+
+    private bool ChequeReady => _chqCustomer != null && _chqBank > 0 && !string.IsNullOrWhiteSpace(_chqNo) && _chqDue != null && _chqAmount > 0;
+
+    private SalesRepChequeService.ChequeInput ChequeInputOf() => new()
+    {
+        Doc_Guid = _chqGuid, Customer_Id = _chqCustomer!.Id, Check_No = _chqNo!.Trim(), Bank_Id = _chqBank, Due_Date = _chqDue!.Value.Date,
+        Amount = _chqAmount!.Value, Drawer_Name = _chqDrawer, Notes = _chqNotes,
+    };
+
+    /// <summary>أى تغيير فى بيانات الشيك يُسقط نتيجة الفحص السابقة (الموافقة تُربط بنفس المستند وتُفحص قيمتها من جديد).</summary>
+    private void ChequeChanged() => _chqCheck = null;
+
+    private async Task OpenChequePanelAsync()
+    {
+        _panel = Panel.Cheque; _chqGuid = Guid.NewGuid(); _chqCheck = null; _chqDue ??= DateTime.Today;
+        if (_banks.Count > 0) return;
+        try { _banks = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _chqSvc.GetBanks(); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private async Task CheckChequeAsync(bool request)
+    {
+        if (_rep == null || !ChequeReady) return;
+        long repId = _rep.Id;
+        var input = ChequeInputOf();
+        _busy = true; _error = null;
+        try
+        {
+            _chqCheck = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return request ? _chqSvc.RequestApprovals(repId, input) : _chqSvc.Check(repId, input); });
+            if (request) Snackbar.Add(Tr("FSQRequested"), Severity.Info);
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task SaveChequeAsync()
+    {
+        if (_rep == null || !ChequeReady) return;
+        long repId = _rep.Id;
+        var input = ChequeInputOf();
+        _busy = true; _error = null;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _chqSvc.Collect(repId, input); });
+            Snackbar.Add(Tr("FSQSaved"), Severity.Success);
+            _panel = Panel.None; _chqCustomer = null; _chqNo = _chqDrawer = _chqNotes = null; _chqAmount = null; _chqDue = DateTime.Today; _chqCheck = null;
+            await LoadRepAsync();
+        }
+        catch (SalesRepApprovalRequiredException)
+        {
+            try { _chqCheck = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _chqSvc.Check(repId, input); }); }
+            catch (Exception ex) { _error = Inner(ex); }
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task HandOverAsync(long[] ids, bool handed)
+    {
+        if (_shift == null || ids.Length == 0) return;
+        long shiftId = _shift.Id;
+        await RunAsync(() => _chqSvc.HandOver(shiftId, ids, handed), handed ? "FSQHandedOver" : "FSQHandOverUndone");
+    }
 
     private async Task<IEnumerable<SalesRepProfileService.Option>> SearchCustomersAsync(string text, CancellationToken ct)
     {
@@ -509,12 +671,14 @@
                         count: shift?.Status == (int)SalesRepShiftStatus.Closing ? _svc.GetShiftStock(shift.Id) : new List<SalesRep_Shift_Stock>(),
                         cash: shift?.Status == (int)SalesRepShiftStatus.Closing ? _svc.GetShiftCash(shift.Id) : null,
                         docs: shift == null ? new List<SalesRepSaleService.ShiftDoc>() : _saleSvc.GetShiftDocs(shift.Id),
+                        cheques: shift == null ? new List<SalesRepChequeService.ChequeRow>() : _chqSvc.GetShiftCheques(shift.Id),
                         boxes: MainBoxes(rep));
             });
             _shift = data.shift; _vanStock = data.van; _damagedStock = data.damaged; _pending = data.pending; _history = data.history; _mainStores = data.stores;
             BuildCount(data.count);
             _cash = data.cash; _cashCounted = data.cash?.Counted; _remitAmount = null; _chargeShortage = true;
             _docs = data.docs;
+            _cheques = data.cheques;
             _boxes = data.boxes;
             if (_remitBox != 0 && !_boxes.Any(b => b.Id == _remitBox)) _remitBox = 0;
             if (_remitBox == 0) _remitBox = _boxes.FirstOrDefault()?.Id ?? 0;

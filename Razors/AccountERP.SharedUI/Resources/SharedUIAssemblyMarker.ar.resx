@@ -3335,4 +3335,37 @@
   <data name="FSPSaved" xml:space="preserve"><value>حُفظت السياسة</value></data>
   <data name="FSPDeleted" xml:space="preserve"><value>حُذفت السياسة</value></data>
   <data name="FSPSave" xml:space="preserve"><value>حفظ السياسة</value></data>
+  <data name="FSAType_7" xml:space="preserve"><value>استحقاق شيك بعد الحد</value></data>
+  <data name="FSRAllowCheques" xml:space="preserve"><value>يحصّل شيكات</value></data>
+  <data name="FSRMaxChequeDays" xml:space="preserve"><value>أقصى أيام لاستحقاق الشيك</value></data>
+  <data name="FSRMaxChequeDaysHint" xml:space="preserve"><value>فارغ = بلا حد؛ ما بعده يحتاج موافقة المشرف</value></data>
+  <data name="FSQCollect" xml:space="preserve"><value>تحصيل شيك</value></data>
+  <data name="FSQHint" xml:space="preserve"><value>يُسجَّل الشيك فى حافظة الشيكات الواردة على حساب العميل، ويبقى مع المندوب حتى يسلّمه للمشرف عند إقفال الوردية. أقصى أيام للاستحقاق: {0}</value></data>
+  <data name="FSQNoLimit" xml:space="preserve"><value>بلا حد</value></data>
+  <data name="FSQBank" xml:space="preserve"><value>البنك المسحوب عليه</value></data>
+  <data name="FSQNo" xml:space="preserve"><value>رقم الشيك</value></data>
+  <data name="FSQNoHint" xml:space="preserve"><value>أرقام فقط</value></data>
+  <data name="FSQDue" xml:space="preserve"><value>تاريخ الاستحقاق</value></data>
+  <data name="FSQDrawer" xml:space="preserve"><value>اسم الساحب</value></data>
+  <data name="FSQSave" xml:space="preserve"><value>تسجيل الشيك</value></data>
+  <data name="FSQSaved" xml:space="preserve"><value>سُجِّل الشيك فى حافظة الشيكات الواردة</value></data>
+  <data name="FSQNeedsApproval" xml:space="preserve"><value>الشيك يحتاج موافقة المشرف قبل التسجيل</value></data>
+  <data name="FSQRequestApproval" xml:space="preserve"><value>طلب موافقة</value></data>
+  <data name="FSQRefresh" xml:space="preserve"><value>تحديث الحالة</value></data>
+  <data name="FSQRequested" xml:space="preserve"><value>أُرسل طلب الموافقة للمشرف</value></data>
+  <data name="FSQStatus_0" xml:space="preserve"><value>بانتظار الموافقة</value></data>
+  <data name="FSQStatus_1" xml:space="preserve"><value>معتمدة</value></data>
+  <data name="FSQStatus_2" xml:space="preserve"><value>مرفوضة</value></data>
+  <data name="FSQStatus_None" xml:space="preserve"><value>لم تُطلب</value></data>
+  <data name="FSQChequeDoc" xml:space="preserve"><value>شيك</value></data>
+  <data name="FSQCheques" xml:space="preserve"><value>الشيكات</value></data>
+  <data name="FSQHandOverTitle" xml:space="preserve"><value>تسليم الشيكات</value></data>
+  <data name="FSQHandOverHint" xml:space="preserve"><value>أشّر كل شيك استلمته فعلاً من المندوب؛ لا تُقفل الوردية وفيها شيك لم يُسلَّم.</value></data>
+  <data name="FSQHandedOver" xml:space="preserve"><value>تم تأشير التسليم</value></data>
+  <data name="FSQHandOverUndone" xml:space="preserve"><value>أُلغى تأشير التسليم</value></data>
+  <data name="FSQHandOverAll" xml:space="preserve"><value>تسليم الكل</value></data>
+  <data name="FSQHandedCount" xml:space="preserve"><value>{0} من {1} مسلَّم</value></data>
+  <data name="FSQHandOverOf" xml:space="preserve"><value>تسليم الشيك {0}</value></data>
+  <data name="FSQPending" xml:space="preserve"><value>مع المندوب</value></data>
+  <data name="FSQReceived" xml:space="preserve"><value>مُسلَّم</value></data>
 </root>

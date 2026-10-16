@@ -240,7 +240,7 @@ namespace AccountModelsLib.SalesRep
             return v.OrderId;
         });
 
-        /// <summary>فواتير الوردية ومرتجعاتها (بالسالب) وإذوناتها النقدية للعرض.</summary>
+        /// <summary>فواتير الوردية ومرتجعاتها (بالسالب) وإذوناتها النقدية وشيكاتها المحصّلة للعرض.</summary>
         /// التاريخ = وقت ربط المستند بالوردية (تاريخ إذن النقدية مخزَّن بلا وقت فكان يظهر 00:00)، وإلا تاريخ المستند.
         public List<ShiftDoc> GetShiftDocs(long shiftId) => Read(opp => opp.db.Database.SqlQuery<ShiftDoc>($@"
 SELECT l.Doc_Type, l.Doc_Id, CAST(ISNULL(i.Invoice_Id, 0) AS bigint) AS Doc_No, ISNULL(l.Insert_ServerDateTime, i.Invoice_Date) AS Doc_Date, ISNULL(c.Name, N'') AS Party,
@@ -257,6 +257,11 @@ SELECT l.Doc_Type, l.Doc_Id, CAST(ISNULL(o.Order_No, 0) AS bigint), ISNULL(l.Ins
        CAST(ISNULL(o.Total_Value, 0) AS decimal(18,2)) * CASE WHEN o.Transaction_type = 2 THEN -1 ELSE 1 END, 0
 FROM SalesRep_Document_Links l JOIN Order_Money o ON o.Id = l.Doc_Id
 WHERE l.Shift_Id = {shiftId} AND l.Doc_Type = {(int)SalesRepDocType.CashVoucher}
+UNION ALL
+SELECT l.Doc_Type, l.Doc_Id, CAST(ISNULL(o.Order_No, 0) AS bigint), l.Insert_ServerDateTime, ISNULL(c.Name, N''),
+       CAST(ISNULL(m.Check_Value, 0) AS decimal(18,2)), 0
+FROM SalesRep_Document_Links l JOIN Checks_Memory m ON m.Id = l.Doc_Id LEFT JOIN Order_Money_Check o ON o.Id = m.Order_Mony_Id LEFT JOIN Customer c ON c.Id = m.Customer_Id
+WHERE l.Shift_Id = {shiftId} AND l.Doc_Type = {(int)SalesRepDocType.Cheque}
 ORDER BY Doc_Date DESC").ToList());
 
         // ============================== الموافقات ==============================
@@ -550,7 +555,8 @@ WHERE l.Unit_Item_Table_Id = {unitItemId} AND o.Status IN ({(int)CustomerOrderSt
     public class SalesRepApprovalRequiredException : InvalidOperationException
     {
         public IReadOnlyList<SalesRepSaleService.Violation> Violations { get; }
-        public SalesRepApprovalRequiredException(IReadOnlyList<SalesRepSaleService.Violation> violations)
-            : base("البيع يحتاج موافقة المشرف: " + string.Join("؛ ", violations.Select(v => v.Message))) { Violations = violations; }
+        /// <param name="what">المستند المحتاج للموافقة فى الرسالة (البيع، الشيك...).</param>
+        public SalesRepApprovalRequiredException(IReadOnlyList<SalesRepSaleService.Violation> violations, string what = "البيع")
+            : base(what + " يحتاج موافقة المشرف: " + string.Join("؛ ", violations.Select(v => v.Message))) { Violations = violations; }
     }
 }
