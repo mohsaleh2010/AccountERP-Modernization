@@ -3212,4 +3212,75 @@
   <data name="FSZGoodShort" xml:space="preserve"><value>صالح، بلا شروط</value></data>
   <data name="FSZEditShort" xml:space="preserve"><value>تعديل</value></data>
   <data name="FSZEditOf" xml:space="preserve"><value>تعديل {0}</value></data>
+  <data name="FSOButton" xml:space="preserve"><value>الطلبيات</value></data>
+  <data name="FSOTitle" xml:space="preserve"><value>طلبيات المندوبين</value></data>
+  <data name="FSOSub" xml:space="preserve"><value>إسناد طلبيات العملاء للمندوب، حجزها على السيارة، اقتراح التحميل، والتسليم</value></data>
+  <data name="FSOAssignedCount" xml:space="preserve"><value>طلبيات مسندة</value></data>
+  <data name="FSORemainingValue" xml:space="preserve"><value>قيمة المتبقى</value></data>
+  <data name="FSODepositsLeft" xml:space="preserve"><value>عرابين متبقية</value></data>
+  <data name="FSOToLoad" xml:space="preserve"><value>أصناف تحتاج تحميل</value></data>
+  <data name="FSOMine" xml:space="preserve"><value>طلبيات المندوب</value></data>
+  <data name="FSONoMine" xml:space="preserve"><value>لا طلبيات مسندة للمندوب</value></data>
+  <data name="FSOOrderNo" xml:space="preserve"><value>رقم الطلبية</value></data>
+  <data name="FSOPlanned" xml:space="preserve"><value>تاريخ التسليم المخطط</value></data>
+  <data name="FSOPlannedHint" xml:space="preserve"><value>يُسجَّل مع الإسناد؛ فارغ = تاريخ التسليم المتوقع للطلبية</value></data>
+  <data name="FSODeposit" xml:space="preserve"><value>العربون المتبقى</value></data>
+  <data name="FSOPartial" xml:space="preserve"><value>سُلِّم جزء</value></data>
+  <data name="FSOLate" xml:space="preserve"><value>متأخرة</value></data>
+  <data name="FSOToday" xml:space="preserve"><value>اليوم</value></data>
+  <data name="FSODeliver" xml:space="preserve"><value>تسليم</value></data>
+  <data name="FSODeliverOf" xml:space="preserve"><value>تسليم الطلبية {0}</value></data>
+  <data name="FSOUnassign" xml:space="preserve"><value>إلغاء الإسناد</value></data>
+  <data name="FSOUnassignOf" xml:space="preserve"><value>إلغاء إسناد الطلبية {0}</value></data>
+  <data name="FSOUnassignConfirm" xml:space="preserve"><value>تأكيد الإلغاء</value></data>
+  <data name="FSOUnassigned" xml:space="preserve"><value>أُلغى إسناد الطلبية {0} وعادت لمخزنها</value></data>
+  <data name="FSOSuggestTitle" xml:space="preserve"><value>اقتراح التحميل</value></data>
+  <data name="FSOSuggestHint" xml:space="preserve"><value>المطلوب تحميله = المحجوز للطلبيات المسندة − رصيد السيارة، من مخزن الطلبية الأصلى</value></data>
+  <data name="FSONoReserved" xml:space="preserve"><value>لا محجوز على السيارة</value></data>
+  <data name="FSOReserved" xml:space="preserve"><value>المحجوز</value></data>
+  <data name="FSOOnVan" xml:space="preserve"><value>على السيارة</value></data>
+  <data name="FSOLoadQty" xml:space="preserve"><value>يُحمَّل</value></data>
+  <data name="FSOEnough" xml:space="preserve"><value>يكفى</value></data>
+  <data name="FSOFromStore" xml:space="preserve"><value>من مخزن</value></data>
+  <data name="FSOIssueLoad" xml:space="preserve"><value>إصدار إذن تحميل من {0} ({1} صنف)</value></data>
+  <data name="FSOLoadNote" xml:space="preserve"><value>تحميل طلبيات العملاء المسندة</value></data>
+  <data name="FSOLoadIssued" xml:space="preserve"><value>صدر إذن التحميل {0}</value></data>
+  <data name="FSOAvailable" xml:space="preserve"><value>طلبيات متاحة للإسناد</value></data>
+  <data name="FSOSearch" xml:space="preserve"><value>بحث بالعميل أو رقم الطلبية</value></data>
+  <data name="FSONoAvailable" xml:space="preserve"><value>لا طلبيات مؤكدة بلا تنفيذ</value></data>
+  <data name="FSOExpected" xml:space="preserve"><value>التسليم المتوقع</value></data>
+  <data name="FSOAssign" xml:space="preserve"><value>إسناد</value></data>
+  <data name="FSOAssignOf" xml:space="preserve"><value>إسناد الطلبية {0} للمندوب</value></data>
+  <data name="FSOAssigned" xml:space="preserve"><value>أُسندت الطلبية {0} وصار حجزها على السيارة</value></data>
+  <data name="FSDTitle" xml:space="preserve"><value>تسليم الطلبية</value></data>
+  <data name="FSDSub" xml:space="preserve"><value>تسليم من سيارة المندوب</value></data>
+  <data name="FSDNoOrder" xml:space="preserve"><value>حدد المندوب والطلبية</value></data>
+  <data name="FSDValueNow" xml:space="preserve"><value>قيمة التسليم (تقريبى)</value></data>
+  <data name="FSDLines" xml:space="preserve"><value>الأصناف</value></data>
+  <data name="FSDLinesHint" xml:space="preserve"><value>الكمية الافتراضية = المتبقى؛ أنقصها لما استلمه العميل فعلاً</value></data>
+  <data name="FSDRemaining" xml:space="preserve"><value>المتبقى</value></data>
+  <data name="FSDOverRemaining" xml:space="preserve"><value>أكبر من المتبقى</value></data>
+  <data name="FSDAll" xml:space="preserve"><value>الكل</value></data>
+  <data name="FSDNone" xml:space="preserve"><value>لا شىء</value></data>
+  <data name="FSDNotOnVan" xml:space="preserve"><value>الكمية أكبر من رصيد السيارة؛ حمّل أولاً</value></data>
+  <data name="FSDPartialTitle" xml:space="preserve"><value>المتبقى غير المسلَّم</value></data>
+  <data name="FSDRefuseTitle" xml:space="preserve"><value>رفض الطلبية</value></data>
+  <data name="FSDReason" xml:space="preserve"><value>السبب</value></data>
+  <data name="FSDReasonRequired" xml:space="preserve"><value>السبب مطلوب لأى متبقى</value></data>
+  <data name="FSDAction" xml:space="preserve"><value>مصير المتبقى</value></data>
+  <data name="FSDRetry" xml:space="preserve"><value>إعادة المحاولة (يبقى محجوزاً للعميل)</value></data>
+  <data name="FSDClose" xml:space="preserve"><value>إغلاق المتبقى (يعود متاحاً للبيع)</value></data>
+  <data name="FSDRetryHint" xml:space="preserve"><value>الطلبية تبقى مفتوحة ومسندة للمندوب بالمتبقى</value></data>
+  <data name="FSDCloseHint" xml:space="preserve"><value>المتبقى يُلغى بالسبب وتُغلق الطلبية، والكمية تعود متاحة على السيارة</value></data>
+  <data name="FSDCollectCash" xml:space="preserve"><value>تحصيل نقدى الآن</value></data>
+  <data name="FSDDepositHint" xml:space="preserve"><value>عربون {0} يُسوَّى تلقائياً على الفاتورة</value></data>
+  <data name="FSDInvoiceNet" xml:space="preserve"><value>صافى الفاتورة</value></data>
+  <data name="FSDDepositApplied" xml:space="preserve"><value>العربون المسوَّى</value></data>
+  <data name="FSDToCollect" xml:space="preserve"><value>يُحصَّل الآن</value></data>
+  <data name="FSDOnAccount" xml:space="preserve"><value>على الحساب</value></data>
+  <data name="FSDSave" xml:space="preserve"><value>تسليم وحفظ الفاتورة</value></data>
+  <data name="FSDSaveRefusal" xml:space="preserve"><value>تسجيل الرفض</value></data>
+  <data name="FSDSaved" xml:space="preserve"><value>تم التسليم وحفظ الفاتورة</value></data>
+  <data name="FSDRefusedSaved" xml:space="preserve"><value>سُجِّل الرفض</value></data>
+  <data name="FSDOpenInvoice" xml:space="preserve"><value>فتح الفاتورة</value></data>
 </root>

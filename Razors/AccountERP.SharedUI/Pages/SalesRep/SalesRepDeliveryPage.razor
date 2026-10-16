@@ -1,0 +1,286 @@
+@* 🟢 خطة المندوبين — المرحلة 5: «تسليم الطلبية» بزر واحد. الكمية الافتراضية = المتبقى ويمكن إنقاصها؛ الفاتورة تُبنى على السيرفر بسعر الطلبية
+   المتفق عليه، والعربون يُسوَّى تلقائياً، والباقى نقداً أو على الحساب؛ المتبقى غير المسلَّم بسبب إلزامى: إعادة المحاولة أو إغلاق المتبقى.
+   الحفظ والربط والتسوية فى معاملة واحدة (SalesRepOrderService.Deliver). التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/deliver"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("FSDTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .rd-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .rd-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-success) 16%, transparent); color: var(--mud-palette-success); }
+    .rd-head .ico .mud-icon-root { font-size: 2rem; }
+    .rd-head .titles { flex: 1 1 260px; }
+    .rd-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .rd-gap { margin-top: 16px; }
+    .rd-sec { font-weight: 700; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; }
+    .rd-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+    .rd-kpi { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); }
+    .rd-kpi .k { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .rd-kpi .v { font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .rd-line { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); margin-top: 12px; }
+    .rd-line.short { border-color: var(--mud-palette-warning); }
+    .rd-line .name { font-weight: 700; }
+    .rd-line .meta { font-size: .8125rem; color: var(--mud-palette-text-secondary); display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 2px; }
+    .rd-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-top: 10px; }
+    .rd-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+    .rd-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .rd-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .rd-total { font-size: 1.25rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card rd-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.LocalShipping" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSDTitle")@(_view != null ? " " + _view.Order_No : "")</h1>
+            <div class="sub">@(_view?.Customer_Name ?? Tr("FSDSub"))</div>
+        </div>
+        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" Href="@($"/salesrep/orders?rep={RepQuery}")">@Tr("FSOTitle")</MudButton>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="rd-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    @if (_loading)
+    {
+        <div class="inv-card rd-gap"><MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("FSRLoading")" /></div>
+    }
+    else if (_result is { } done)
+    {
+        <div class="inv-card rd-gap inv-empty" role="status" aria-live="polite">
+            <MudIcon Icon="@Icons.Material.Filled.TaskAlt" Color="Color.Success" Size="Size.Large" />
+            <div><b>@Tr(done.Invoice_Id == null ? "FSDRefusedSaved" : "FSDSaved")</b></div>
+            <div class="rd-acts" style="justify-content:center">
+                @if (done.Invoice_Id is long inv) { <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.ReceiptLong" Href="@($"/accounts/invoices/sales-invoice/{inv}")">@Tr("FSDOpenInvoice")</MudButton> }
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@($"/salesrep/orders?rep={RepQuery}")">@Tr("FSOTitle")</MudButton>
+                <MudButton Variant="Variant.Text" Href="@($"/salesrep/shift?rep={RepQuery}")">@Tr("FSTBackToShift")</MudButton>
+            </div>
+        </div>
+    }
+    else if (_view != null)
+    {
+        <div class="inv-card rd-gap">
+            <div class="rd-kpis">
+                <div class="rd-kpi"><div class="k">@Tr("FSOOrderNo")</div><div class="v rd-num">@_view.Order_No — @_view.Order_Date?.ToString("yyyy-MM-dd")</div></div>
+                <div class="rd-kpi"><div class="k">@Tr("FSVCustomer")</div><div class="v">@_view.Customer_Name</div></div>
+                <div class="rd-kpi"><div class="k">@Tr("FSODeposit")</div><div class="v rd-num">@_view.Deposit_Remaining.ToString("N2")</div></div>
+                <div class="rd-kpi"><div class="k">@Tr("FSDValueNow")</div><div class="v rd-num">@EstValue.ToString("N2")</div></div>
+            </div>
+        </div>
+
+        <div class="inv-card rd-gap">
+            <h2 class="rd-sec"><MudIcon Icon="@Icons.Material.Filled.Inventory2" Color="Color.Primary" Size="Size.Small" />@Tr("FSDLines")</h2>
+            <div class="rd-hint">@Tr("FSDLinesHint")</div>
+            @foreach (var l in _lines)
+            {
+                <div class="@("rd-line" + (l.Short ? " short" : ""))">
+                    <div class="name">@l.Src.Item_Name</div>
+                    <div class="meta">
+                        <span>@Tr("FSDRemaining"): <span class="rd-num">@Fmt(l.Src.Remaining_Qty_Small, l.Src.Factor, l.Src.B_Unit, l.Src.S_Unit)</span></span>
+                        <span>@Tr("FSOOnVan"): <span class="rd-num">@Fmt(l.Src.Van_Small, l.Src.Factor, l.Src.B_Unit, l.Src.S_Unit)</span></span>
+                        <span>@Tr("FSTNetPrice"): <span class="rd-num">@((l.Src.Net_Unit_Price * l.Src.Factor).ToString("N2")) / @l.Src.B_Unit</span></span>
+                    </div>
+                    <div class="rd-fields">
+                        <MudNumericField T="decimal" Value="l.Large" ValueChanged="@(v => SetQty(l, v, l.Small))" Label="@l.Src.B_Unit" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                         Min="0" Max="@l.Src.Remaining_Large" Error="@(l.Large > l.Src.Remaining_Large)" ErrorText="@Tr("FSDOverRemaining")" />
+                        @if (l.Src.Factor > 1 || l.Src.Remaining_Small > 0)
+                        {
+                            <MudNumericField T="decimal" Value="l.Small" ValueChanged="@(v => SetQty(l, l.Large, v))" Label="@l.Src.S_Unit" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                             Min="0" Max="@l.Src.Remaining_Small" Error="@(l.Small > l.Src.Remaining_Small)" ErrorText="@Tr("FSDOverRemaining")" />
+                        }
+                        <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@(() => SetQty(l, l.Src.Remaining_Large, l.Src.Remaining_Small))">@Tr("FSDAll")</MudButton>
+                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning" OnClick="@(() => SetQty(l, 0, 0))">@Tr("FSDNone")</MudButton>
+                    </div>
+                    @if (l.QtySmall > l.Src.Van_Small) { <div class="rd-hint" style="color:var(--mud-palette-error)" role="alert">@Tr("FSDNotOnVan")</div> }
+                </div>
+            }
+        </div>
+
+        @if (HasRemaining)
+        {
+            <div class="inv-card rd-gap">
+                <h2 class="rd-sec"><MudIcon Icon="@Icons.Material.Filled.ReportProblem" Color="Color.Warning" Size="Size.Small" />@Tr(AnyQty ? "FSDPartialTitle" : "FSDRefuseTitle")</h2>
+                <MudTextField T="string" @bind-Value="_reason" @bind-Value:after="Invalidate" Label="@Tr("FSDReason")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true"
+                              Error="@(_tried && string.IsNullOrWhiteSpace(_reason))" ErrorText="@Tr("FSDReasonRequired")" />
+                <MudRadioGroup T="int" @bind-Value="_action" @bind-Value:after="Invalidate" Class="rd-gap" aria-label="@Tr("FSDAction")">
+                    <MudRadio T="int" Value="0" Color="Color.Primary">@Tr("FSDRetry")</MudRadio>
+                    <MudRadio T="int" Value="1" Color="Color.Warning">@Tr("FSDClose")</MudRadio>
+                </MudRadioGroup>
+                <div class="rd-hint">@Tr(_action == 1 ? "FSDCloseHint" : "FSDRetryHint")</div>
+            </div>
+        }
+
+        <div class="inv-card rd-gap">
+            <h2 class="rd-sec"><MudIcon Icon="@Icons.Material.Filled.Payments" Color="Color.Primary" Size="Size.Small" />@Tr("FSTStepSettle")</h2>
+            @if (AnyQty)
+            {
+                <MudRadioGroup T="bool" @bind-Value="_collectCash" @bind-Value:after="Invalidate" aria-label="@Tr("FSTSettle")">
+                    <MudRadio T="bool" Value="true" Color="Color.Primary">@Tr("FSDCollectCash")</MudRadio>
+                    <MudRadio T="bool" Value="false" Color="Color.Primary">@Tr("FSTOnAccount")</MudRadio>
+                </MudRadioGroup>
+                @if (_view.Deposit_Remaining > 0) { <div class="rd-hint">@Tr("FSDDepositHint", _view.Deposit_Remaining.ToString("N2"))</div> }
+            }
+            <MudTextField T="string" @bind-Value="_notes" Label="@Tr("FSVNotes")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="rd-gap" />
+
+            @if (_check != null && AnyQty)
+            {
+                <div class="rd-kpis rd-gap" aria-live="polite">
+                    <div class="rd-kpi"><div class="k">@Tr("FSDInvoiceNet")</div><div class="v rd-total">@_check.Net_Total.ToString("N2")</div></div>
+                    <div class="rd-kpi"><div class="k">@Tr("FSDDepositApplied")</div><div class="v rd-num">@_check.Deposit_Applied.ToString("N2")</div></div>
+                    <div class="rd-kpi"><div class="k">@Tr(_collectCash ? "FSDToCollect" : "FSDOnAccount")</div><div class="v rd-total">@((_collectCash ? _check.To_Collect : _check.Net_Total - _check.Deposit_Applied).ToString("N2"))</div></div>
+                </div>
+                @foreach (var v in _check.Result.Violations)
+                {
+                    <MudAlert Severity="@(v.Covered ? Severity.Success : Severity.Warning)" Dense="true" Class="rd-gap">@v.Message — @Tr(v.Approval_Status is int s ? "FSVApproval_" + s : "FSVApprovalNone")</MudAlert>
+                }
+                @foreach (var w in _check.Result.Warnings) { <MudAlert Severity="Severity.Info" Dense="true" Class="rd-gap">@w</MudAlert> }
+                @if (_check.Result.Violations.Any(v => !v.Covered))
+                {
+                    <div class="rd-acts">
+                        <MudTextField T="string" @bind-Value="_approvalReason" Label="@Tr("FSVReason")" Variant="Variant.Outlined" Margin="Margin.Dense" Style="min-width:240px" />
+                        <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Gavel" Disabled="@_busy" OnClick="RequestApprovalAsync">@Tr("FSVRequestApproval")</MudButton>
+                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Refresh" Disabled="@_busy" OnClick="CheckAsync">@Tr("FSVRefreshStatus")</MudButton>
+                    </div>
+                }
+            }
+            <div class="rd-acts" style="justify-content:flex-end">
+                @if (AnyQty) { <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Calculate" Disabled="@(_busy || !Valid)" OnClick="CheckAsync">@Tr("FSTPreview")</MudButton> }
+                <MudButton Variant="Variant.Filled" Color="@(AnyQty ? Color.Primary : Color.Warning)" StartIcon="@(AnyQty ? Icons.Material.Filled.Save : Icons.Material.Filled.DoNotDisturbOn)"
+                           Disabled="@(_busy || !Valid || (AnyQty && (_check == null || !_check.Ok)))" OnClick="SaveAsync">
+                    @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                    @Tr(AnyQty ? "FSDSave" : "FSDSaveRefusal")
+                </MudButton>
+            </div>
+            @if (AnyQty && _check == null) { <div class="rd-hint" style="text-align:end">@Tr("FSTPreviewFirst")</div> }
+        </div>
+    }
+</div>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromQuery(Name = "rep")] public long? RepQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "order")] public long? OrderQuery { get; set; }
+
+    private class LineEdit
+    {
+        public SalesRepOrderService.DeliveryLine Src { get; set; } = new();
+        public decimal Large { get; set; }
+        public decimal Small { get; set; }
+        public decimal QtySmall => Large * Src.Factor + Small;
+        public bool Short => QtySmall < Src.Remaining_Qty_Small;
+    }
+
+    private readonly SalesRepOrderService _svc = new();
+    private SalesRepOrderService.DeliveryView? _view;
+    private SalesRepOrderService.DeliveryCheck? _check;
+    private SalesRepOrderService.DeliveryResult? _result;
+    private List<LineEdit> _lines = new();
+    private Guid _docGuid = Guid.NewGuid();
+    private bool _loading = true, _busy, _tried, _collectCash = true;
+    private int _action;
+    private string? _reason, _notes, _approvalReason, _error;
+
+    private bool AnyQty => _lines.Any(l => l.QtySmall > 0);
+    private bool HasRemaining => _lines.Any(l => l.Short);
+    private bool Valid => _lines.All(l => l.Large <= l.Src.Remaining_Large && l.Small <= l.Src.Remaining_Small) && (!HasRemaining || !string.IsNullOrWhiteSpace(_reason));
+    private decimal EstValue => _lines.Sum(l => Math.Round(l.QtySmall * l.Src.Net_Unit_Price, 2));
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        if (RepQuery is not > 0 || OrderQuery is not > 0) { _error = Tr("FSDNoOrder"); _loading = false; return; }
+        long rep = RepQuery.Value, order = OrderQuery.Value;
+        try
+        {
+            _view = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetDelivery(rep, order); });
+            _lines = _view.Lines.Select(x => new LineEdit { Src = x, Large = x.Remaining_Large, Small = x.Remaining_Small }).ToList();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private void SetQty(LineEdit l, decimal large, decimal small) { l.Large = Math.Max(0, large); l.Small = Math.Max(0, small); Invalidate(); }
+
+    private void Invalidate() => _check = null;
+
+    private SalesRepOrderService.DeliveryInput Input() => new()
+    {
+        Doc_Guid = _docGuid, Order_Id = _view?.Order_Id ?? 0, Collect_Cash = _collectCash, Notes = _notes,
+        Remaining_Action = HasRemaining ? _action : null, Reason = HasRemaining ? _reason : null,
+        Lines = _lines.Where(l => l.QtySmall > 0).Select(l => new SalesRepOrderService.DeliveryLineInput { Order_Line_Id = l.Src.Order_Line_Id, Qty_Large = l.Large, Qty_Small = l.Small }).ToList(),
+    };
+
+    private async Task CheckAsync()
+    {
+        _tried = true;
+        if (!Valid) return;
+        var input = Input(); long rep = RepQuery!.Value;
+        await RunAsync(() => _check = _svc.Check(rep, input));
+    }
+
+    private async Task RequestApprovalAsync()
+    {
+        var input = Input(); long rep = RepQuery!.Value; string? reason = _approvalReason;
+        await RunAsync(() => _check = _svc.RequestApprovals(rep, input, reason));
+        if (_error == null) Snackbar.Add(Tr("FSVApprovalRequested"), Severity.Info);
+    }
+
+    private async Task SaveAsync()
+    {
+        _tried = true;
+        if (!Valid) return;
+        var input = Input(); long rep = RepQuery!.Value;
+        SalesRepOrderService.DeliveryResult? r = null;
+        await RunAsync(() => r = _svc.Deliver(rep, input));
+        if (_error == null && r != null)
+        {
+            _result = r;
+            Snackbar.Add(Tr(r.Invoice_Id == null ? "FSDRefusedSaved" : "FSDSaved"), Severity.Success);
+        }
+    }
+
+    private async Task RunAsync(Action action)
+    {
+        _busy = true; _error = null;
+        try { await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); action(); }); }
+        catch (SalesRepApprovalRequiredException)
+        {
+            Snackbar.Add(Tr("FSTApprovalNeeded"), Severity.Warning);
+            var input = Input(); long rep = RepQuery!.Value;
+            try { _check = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Check(rep, input); }); } catch { }
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private static string Fmt(decimal small, decimal factor, string bUnit, string sUnit)
+    {
+        if (factor <= 1) return $"{small:0.##} {bUnit}".Trim();
+        decimal l = Math.Floor(Math.Abs(small) / factor) * Math.Sign(small), s = small - l * factor;
+        return s == 0 ? $"{l:0.##} {bUnit}".Trim() : l == 0 ? $"{s:0.##} {sUnit}".Trim() : $"{l:0.##} {bUnit} + {s:0.##} {sUnit}";
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

@@ -515,6 +515,8 @@ FROM            Item INNER JOIN
 
                         //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, invL.Invoices_List_Id, invd.Invoices_Details_Id, invL.Invoice_Type_Id, "›« Ê—… „— Ã⁄ „»Ì⁄« ", invd.Store_Name, invL.Customer_Name, invL.Customer_Name, invL.Invoice_No);
                         ii.Set_ItemTransactionFromInvoiceR(ref opp, invD_O.invDlst[x], invL_O, 0, Transaction_Type, Common.InvoiceReverse_Type_Id, "›« Ê—… „— Ã⁄ „»Ì⁄« ");
+                        // «·„Ã«‰Ï: ’› œ› — »‰›” „›« ÌÕ «·”ÿ— («·„Õ—ﬂ Õ—¯ﬂ Unit_item »«·„Ã«‰Ï Ê’› «·„œ›Ê⁄ ·« Ì‘„·Â) ó ··„” ‰œ«  «·ÃœÌœ… ›ﬁÿ.
+                        FreeQtyLedgerCLS.PostForInvoice(opp, invD_O.invDlst[x], invL_O, 1, Common.InvoiceReverse_Type_Id, "„Ã«‰Ï „— Ã⁄ „»Ì⁄« ");
 
                     }
                     if (Common.Project_Market == 1 & invL_O.invL.IS_Make_Sarf_Item_BalanceFromInvoice == 1)

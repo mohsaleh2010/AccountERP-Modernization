@@ -11,6 +11,14 @@ namespace AccountModelsLib
     /// </summary>
     public class CustomerOrdersService
     {
+        /// <summary>
+        /// اتصال خارجى اختيارى: عند تمريره تعمل الدوال (عدا SaveOrder) داخل معاملة المستدعى — مثل تسليم طلبية المندوب الذى يحفظ الفاتورة
+        /// وربط التنفيذ وتسوية العربون فى معاملة واحدة. بلا تمرير: اتصال جديد لكل دالة كما كان.
+        /// </summary>
+        private readonly operations _external;
+        public CustomerOrdersService(operations external = null) { _external = external; }
+        private operations Op() => _external ?? new operations();
+
         /// <summary>يمنع التعديل بعد التنفيذ الجزئى أو الإلغاء أو الإغلاق.</summary>
         public static bool IsEditable(CustomerOrder order, bool hasFulfillments)
         {
@@ -39,7 +47,7 @@ namespace AccountModelsLib
         /// </summary>
         public void RecordFulfillments(long orderId, long invoiceListId, List<Allocation> allocations)
         {
-            var opp = new operations();
+            var opp = Op();
             var db = opp.db;
             var order = db.CustomerOrders.First(o => o.Id == orderId);
             if (!CanFulfill(order)) throw new InvalidOperationException("Order is not open for fulfillment");
@@ -75,7 +83,7 @@ namespace AccountModelsLib
         /// </summary>
         public void SyncInvoice(long invoiceListId)
         {
-            var opp = new operations();
+            var opp = Op();
             var db = opp.db;
             var links = db.CustomerOrderFulfillments.Where(f => f.Invoices_List_Id == invoiceListId).OrderByDescending(f => f.Id).ToList();
             if (links.Count == 0) return;
@@ -120,7 +128,7 @@ namespace AccountModelsLib
         /// <summary>يطابق كل فواتير الطلبية ثم يعيد حساب المنفَّذ والحالة (يلتقط حذف/تعديل الفاتورة من أى شاشة، بما فيها الديسك توب).</summary>
         public void SyncOrder(long orderId)
         {
-            var db = new operations().db;
+            var db = Op().db;
             var lineIds = db.CustomerOrderLines.Where(l => l.Order_Id == orderId).Select(l => l.Id).ToList();
             var invoiceIds = db.CustomerOrderFulfillments.Where(f => lineIds.Contains(f.Order_Line_Id) && f.Invoices_List_Id != null)
                 .Select(f => f.Invoices_List_Id!.Value).Distinct().ToList();
@@ -131,7 +139,7 @@ namespace AccountModelsLib
         /// <summary>يعيد حساب المنفَّذ لكل سطر من جدول الروابط، ثم حالة السطر والطلبية (لا يغيّر الملغاة/المسودة).</summary>
         public void RecalculateOrder(long orderId)
         {
-            var db = new operations().db;
+            var db = Op().db;
             var order = db.CustomerOrders.First(o => o.Id == orderId);
             var lines = db.CustomerOrderLines.Where(l => l.Order_Id == orderId).ToList();
             var lineIds = lines.Select(l => l.Id).ToList();
@@ -173,7 +181,7 @@ namespace AccountModelsLib
         {
             if (string.IsNullOrWhiteSpace(reason)) throw new InvalidOperationException("Reason is required");
             SyncOrder(orderId);
-            var db = new operations().db;
+            var db = Op().db;
             var order = db.CustomerOrders.First(o => o.Id == orderId);
             if (!CanFulfill(order)) throw new InvalidOperationException("Order is not open");
             var now = DateTime.Now;
@@ -207,7 +215,7 @@ namespace AccountModelsLib
                 "INNER JOIN Customer_Orders o ON o.Id = l.Order_Id WHERE l.Unit_Item_Table_Id = u.id AND o.Status IN (" +
                 (int)CustomerOrderStatus.Confirmed + "," + (int)CustomerOrderStatus.PartiallyFulfilled + ") AND o.Id <> " + excludeOrderId +
                 " AND ISNULL(l.Line_Status,0) <> " + (int)CustomerOrderLineStatus.Cancelled + "),0)";
-            return new operations().return_DataTable(
+            return Op().return_DataTable(
                 "SELECT u.id AS Unit_Item_Id, ISNULL(u.Full_Qua,0) AS Bal_Larg, ISNULL(u.D_Qua,0) AS Bal_Small, " +
                 Res("Qty_Larg", "Fulfilled_Qty_Larg", "Cancelled_Qty_Larg") + " AS Res_Larg, " +
                 Res("Qty_Small", "Fulfilled_Qty_Small", "Cancelled_Qty_Small") + " AS Res_Small " +
@@ -216,7 +224,7 @@ namespace AccountModelsLib
 
         public System.Data.DataTable GetOrderInvoices(long orderId)
         {
-            return new operations().return_DataTable(
+            return Op().return_DataTable(
                 "SELECT f.Order_Line_Id, f.Invoices_List_Id, i.Invoice_Id AS Invoice_No, i.Invoice_Date, ISNULL(i.Net_Total,0) AS Net_Total, ISNULL(f.Qty_Larg,0) AS Qty_Larg, ISNULL(f.Qty_Small,0) AS Qty_Small " +
                 "FROM Customer_Order_Fulfillments f INNER JOIN Customer_Order_Lines l ON l.Id = f.Order_Line_Id " +
                 "LEFT JOIN Invoices_List i ON i.Id = f.Invoices_List_Id WHERE l.Order_Id = " + orderId + " ORDER BY i.Invoice_Date, i.Invoice_Id");
@@ -224,7 +232,7 @@ namespace AccountModelsLib
 
         public (CustomerOrder Order, List<CustomerOrderLine> Lines)? GetOrder(long id)
         {
-            var opp = new operations();
+            var opp = Op();
             var order = opp.db.CustomerOrders.FirstOrDefault(o => o.Id == id);
             if (order == null) return null;
             var lines = opp.db.CustomerOrderLines.Where(l => l.Order_Id == id).OrderBy(l => l.Line_No).ToList();
@@ -250,7 +258,7 @@ namespace AccountModelsLib
             if (!string.IsNullOrWhiteSpace(customerNameLike))
                 sql.Append("AND c.Name LIKE N'%" + customerNameLike.Trim().Replace("'", "''") + "%' ");
             sql.Append("ORDER BY o.Order_Date DESC, o.Order_No DESC");
-            return new operations().return_DataTable(sql.ToString());
+            return Op().return_DataTable(sql.ToString());
         }
 
         /// <summary>
@@ -275,7 +283,7 @@ namespace AccountModelsLib
             if (!string.IsNullOrWhiteSpace(itemLike)) sql.Append("AND i.Item_Name LIKE N'%" + itemLike.Trim().Replace("'", "''") + "%' ");
             if (!string.IsNullOrWhiteSpace(customerLike)) sql.Append("AND c.Name LIKE N'%" + customerLike.Trim().Replace("'", "''") + "%' ");
             sql.Append("GROUP BY u.id, i.Item_Name, un.B_Unit, un.S_unit, st.Store_Name ORDER BY i.Item_Name");
-            return new operations().return_DataTable(sql.ToString());
+            return Op().return_DataTable(sql.ToString());
         }
 
         /// <summary>
@@ -285,7 +293,7 @@ namespace AccountModelsLib
         public long AddDeposit(long orderId, long orderMoneyId, long moneyBoxLineId, long customerId, decimal amount, DateTime date, string notes)
         {
             if (amount <= 0) throw new InvalidOperationException("Amount must be greater than zero");
-            var opp = new operations();
+            var opp = Op();
             var order = opp.db.CustomerOrders.FirstOrDefault(o => o.Id == orderId) ?? throw new InvalidOperationException("Order not found");
             if (order.Customer_Id != customerId) throw new InvalidOperationException("Order belongs to another customer");
             var status = (CustomerOrderStatus)(order.Status ?? 0);
@@ -322,7 +330,7 @@ namespace AccountModelsLib
         /// </summary>
         public (decimal Remaining, System.Data.DataTable PerInvoice) GetDepositBalance(long orderId)
         {
-            var opp = new operations();
+            var opp = Op();
             var t = opp.return_DataTable("SELECT ISNULL(SUM(ISNULL(Amount,0) - ISNULL(Consumed_Amount,0)),0) AS R FROM Customer_Order_Deposits WHERE Order_Id = " + orderId);
             var per = opp.return_DataTable("SELECT Invoices_List_Id, SUM(Amount) AS Applied FROM Customer_Order_Deposit_Applications WHERE Order_Id = " + orderId + " GROUP BY Invoices_List_Id");
             return (Convert.ToDecimal(t.Rows[0][0]), per);
@@ -335,7 +343,7 @@ namespace AccountModelsLib
         /// </summary>
         public decimal ApplyDepositsToInvoice(long orderId, long invoiceListId, decimal? requested = null)
         {
-            var opp = new operations();
+            var opp = Op();
             var fulfilled = opp.return_DataTable("SELECT COUNT(*) FROM Customer_Order_Fulfillments f INNER JOIN Customer_Order_Lines l ON l.Id = f.Order_Line_Id WHERE l.Order_Id = " + orderId + " AND f.Invoices_List_Id = " + invoiceListId);
             if (Convert.ToInt32(fulfilled.Rows[0][0]) == 0) throw new InvalidOperationException("Invoice is not linked to this order");
             var inv = opp.return_DataTable("SELECT ISNULL(Net_Total,0) AS Net FROM Invoices_List WHERE Id = " + invoiceListId);
@@ -367,7 +375,7 @@ namespace AccountModelsLib
         /// <summary>يلغى تسوية العربون على فاتورة (عند حذفها/تصحيح الربط) فيعود العربون متاحاً.</summary>
         public void ReleaseInvoiceDeposits(long invoiceListId)
         {
-            var opp = new operations();
+            var opp = Op();
             var apps = opp.return_DataTable("SELECT Deposit_Id, SUM(Amount) AS A FROM Customer_Order_Deposit_Applications WHERE Invoices_List_Id = " + invoiceListId + " GROUP BY Deposit_Id");
             foreach (System.Data.DataRow r in apps.Rows)
                 opp.update_me("UPDATE Customer_Order_Deposits SET Consumed_Amount = CASE WHEN ISNULL(Consumed_Amount,0) - " + Convert.ToDecimal(r["A"]).ToString(System.Globalization.CultureInfo.InvariantCulture) +
@@ -378,7 +386,7 @@ namespace AccountModelsLib
         /// <summary>عربون الطلبية: المبلغ المدفوع والمستهلك (للعرض فى شاشة الطلبية).</summary>
         public System.Data.DataTable GetDeposits(long orderId)
         {
-            return new operations().return_DataTable(
+            return Op().return_DataTable(
                 "SELECT d.Id, d.Deposit_Date, ISNULL(d.Amount,0) AS Amount, ISNULL(d.Consumed_Amount,0) AS Consumed_Amount, d.Order_Money_Id, o.Order_No " +
                 "FROM Customer_Order_Deposits d LEFT JOIN Order_Money o ON o.Id = d.Order_Money_Id WHERE d.Order_Id = " + orderId + " ORDER BY d.Deposit_Date, d.Id");
         }
@@ -386,7 +394,7 @@ namespace AccountModelsLib
         /// <summary>طلبيات عميل قابلة لاستلام عربون (مؤكدة/جزئية/مسودة)، للقائمة المنسدلة فى إذن الاستلام.</summary>
         public System.Data.DataTable GetOrdersForDeposit(long customerId)
         {
-            return new operations().return_DataTable(
+            return Op().return_DataTable(
                 "SELECT o.Id, o.Order_No, o.Order_Date, ISNULL(o.Net_Total,0) AS Net_Total, " +
                 "ISNULL((SELECT SUM(d.Amount) FROM Customer_Order_Deposits d WHERE d.Order_Id = o.Id),0) AS Deposits " +
                 "FROM Customer_Orders o WHERE o.Customer_Id = " + customerId + " AND o.Status IN (" + (int)CustomerOrderStatus.Draft + "," + (int)CustomerOrderStatus.Confirmed + "," +
@@ -396,7 +404,7 @@ namespace AccountModelsLib
         /// <summary>تأكيد مسودة.</summary>
         public void Confirm(long orderId)
         {
-            var opp = new operations();
+            var opp = Op();
             var order = opp.db.CustomerOrders.First(o => o.Id == orderId);
             if ((CustomerOrderStatus)(order.Status ?? 0) != CustomerOrderStatus.Draft)
                 throw new InvalidOperationException("Only draft orders can be confirmed");
@@ -412,7 +420,8 @@ namespace AccountModelsLib
         {
             if (string.IsNullOrWhiteSpace(reason)) throw new InvalidOperationException("Cancel reason is required");
             if (HasFulfillments(orderId)) throw new InvalidOperationException("Order already has fulfillments");
-            var opp = new operations();
+            var opp = Op();
+            if (IsAssignedToRep(opp, orderId)) throw new InvalidOperationException("الطلبية مسندة لمندوب؛ ألغِ الإسناد من «طلبيات المندوبين» أولاً.");
             var order = opp.db.CustomerOrders.First(o => o.Id == orderId);
             var status = (CustomerOrderStatus)(order.Status ?? 0);
             if (status == CustomerOrderStatus.Cancelled || status == CustomerOrderStatus.Closed || status == CustomerOrderStatus.Fulfilled)
@@ -433,9 +442,14 @@ namespace AccountModelsLib
             opp.db.SaveChanges();
         }
 
+        /// <summary>الطلبية مسندة لمندوب يسلّمها (خطة المندوبين المرحلة 5): أسطرها على مخزن السيارة فلا تُعدَّل/تُلغى حتى يُلغى الإسناد.</summary>
+        public static bool IsAssignedToRep(operations opp, long orderId) => opp.return_DataTable(
+            "IF OBJECT_ID(N'dbo.SalesRep_Order_Assignments', N'U') IS NOT NULL SELECT COUNT(*) FROM SalesRep_Order_Assignments WHERE Status = 0 AND Order_Id = " + orderId +
+            " ELSE SELECT 0").Rows[0][0] is object v && Convert.ToInt32(v) > 0;
+
         public bool HasFulfillments(long orderId)
         {
-            var opp = new operations();
+            var opp = Op();
             var lineIds = opp.db.CustomerOrderLines.Where(l => l.Order_Id == orderId).Select(l => l.Id).ToList();
             return opp.db.CustomerOrderFulfillments.Any(f => lineIds.Contains(f.Order_Line_Id));
         }
@@ -481,6 +495,8 @@ namespace AccountModelsLib
                 order = db.CustomerOrders.First(o => o.Id == header.Id);
                 if (!IsEditable(order, HasFulfillments(order.Id)))
                     throw new InvalidOperationException("Order can no longer be edited");
+                if (IsAssignedToRep(opp, order.Id))
+                    throw new InvalidOperationException("الطلبية مسندة لمندوب (أسطرها على مخزن سيارته)؛ ألغِ الإسناد من «طلبيات المندوبين» قبل التعديل.");
                 order.Edit_User_Id = userId;
                 order.EditOperationDate = now;
                 db.CustomerOrderLines.RemoveRange(db.CustomerOrderLines.Where(l => l.Order_Id == order.Id));

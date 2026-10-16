@@ -305,6 +305,40 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Approvals_Guid] ON [dbo].[SalesRep_Approv
     [Rate] [decimal](9, 4) NULL,
     [Amount] [decimal](18, 4) NOT NULL DEFAULT ((0)),
     [Notes] [nvarchar](500) NULL,", ""),
+
+            // المرحلة 5 (ق11 + قرار المستخدم 2026-10-16): إسناد طلبية عميل لمندوب يسلّمها من سيارته. أسطر الطلبية تنتقل لأصناف
+            // مخزن السيارة فيصير الحجز عليها؛ الأصل محفوظ فى أسطر الإسناد لإلغائه قبل أى تنفيذ. Status: 0 مُسنَد، 1 مُسلَّم، 2 ملغى الإسناد، 3 أُغلق المتبقى.
+            ("SalesRep_Order_Assignments", @"
+    [Order_Id] [bigint] NOT NULL,
+    [Rep_Id] [bigint] NOT NULL,
+    [Planned_Date] [date] NULL,
+    [Status] [int] NOT NULL DEFAULT ((0)),
+    [Original_Store_Id] [bigint] NULL,
+    [Ended_At] [datetime] NULL,
+    [End_Reason] [nvarchar](500) NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Order] ON [dbo].[SalesRep_Order_Assignments]([Order_Id]);
+CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep_Order_Assignments]([Rep_Id], [Status]);"),
+
+            ("SalesRep_Order_Assignment_Lines", @"
+    [Assignment_Id] [bigint] NOT NULL,
+    [Order_Line_Id] [bigint] NOT NULL,
+    [Original_Unit_Item_Id] [bigint] NULL,
+    [Van_Unit_Item_Id] [bigint] NOT NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignment_Lines_A] ON [dbo].[SalesRep_Order_Assignment_Lines]([Assignment_Id]);"),
+
+            // محاولات التسليم عند الباب: مُسلَّم كاملاً/جزئياً/مرفوض، والسبب إلزامى لأى متبقى، والإجراء: 0 إعادة المحاولة (يبقى محجوزاً)، 1 إغلاق المتبقى.
+            ("SalesRep_Order_Deliveries", @"
+    [Assignment_Id] [bigint] NOT NULL,
+    [Order_Id] [bigint] NOT NULL,
+    [Shift_Id] [bigint] NULL,
+    [Invoice_Id] [bigint] NULL,
+    [Result] [int] NOT NULL DEFAULT ((0)),
+    [Remaining_Action] [int] NULL,
+    [Reason] [nvarchar](500) NULL,
+    [Deposit_Applied] [decimal](18, 4) NOT NULL DEFAULT ((0)),
+    [Cash_Collected] [decimal](18, 4) NOT NULL DEFAULT ((0)),
+    [Notes] [nvarchar](500) NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Deliveries_A] ON [dbo].[SalesRep_Order_Deliveries]([Assignment_Id]);"),
         };
 
         /// <summary>جداول النسخة السابقة غير المعتمدة التى ليس لها مقابل بنفس الاسم.</summary>
@@ -404,6 +438,7 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Approvals_Guid] ON [dbo].[SalesRep_Approv
             ("menuSalesRepApprovals", "موافقات المندوبين", "/salesrep/approvals"),
             ("menuSalesRepReturns", "مرتجعات المندوبين", "/salesrep/returns"),
             ("menuSalesRepReturnReasons", "أسباب إرجاع المندوبين", "/salesrep/return-reasons"),
+            ("menuSalesRepOrders", "طلبيات المندوبين", "/salesrep/orders"),
         };
 
         /// <summary>

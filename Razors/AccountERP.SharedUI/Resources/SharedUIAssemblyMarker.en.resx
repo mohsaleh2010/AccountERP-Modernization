@@ -3212,4 +3212,75 @@
   <data name="FSZGoodShort" xml:space="preserve"><value>Good, no conditions</value></data>
   <data name="FSZEditShort" xml:space="preserve"><value>Edit</value></data>
   <data name="FSZEditOf" xml:space="preserve"><value>Edit {0}</value></data>
+  <data name="FSOButton" xml:space="preserve"><value>Orders</value></data>
+  <data name="FSOTitle" xml:space="preserve"><value>Rep orders</value></data>
+  <data name="FSOSub" xml:space="preserve"><value>Assign customer orders to the rep, reserve them on the van, suggest the load, and deliver</value></data>
+  <data name="FSOAssignedCount" xml:space="preserve"><value>Assigned orders</value></data>
+  <data name="FSORemainingValue" xml:space="preserve"><value>Remaining value</value></data>
+  <data name="FSODepositsLeft" xml:space="preserve"><value>Deposits left</value></data>
+  <data name="FSOToLoad" xml:space="preserve"><value>Items to load</value></data>
+  <data name="FSOMine" xml:space="preserve"><value>Rep's orders</value></data>
+  <data name="FSONoMine" xml:space="preserve"><value>No orders assigned to the rep</value></data>
+  <data name="FSOOrderNo" xml:space="preserve"><value>Order no.</value></data>
+  <data name="FSOPlanned" xml:space="preserve"><value>Planned delivery</value></data>
+  <data name="FSOPlannedHint" xml:space="preserve"><value>Saved with the assignment; empty = the order's expected date</value></data>
+  <data name="FSODeposit" xml:space="preserve"><value>Deposit left</value></data>
+  <data name="FSOPartial" xml:space="preserve"><value>Partly delivered</value></data>
+  <data name="FSOLate" xml:space="preserve"><value>Late</value></data>
+  <data name="FSOToday" xml:space="preserve"><value>Today</value></data>
+  <data name="FSODeliver" xml:space="preserve"><value>Deliver</value></data>
+  <data name="FSODeliverOf" xml:space="preserve"><value>Deliver order {0}</value></data>
+  <data name="FSOUnassign" xml:space="preserve"><value>Unassign</value></data>
+  <data name="FSOUnassignOf" xml:space="preserve"><value>Unassign order {0}</value></data>
+  <data name="FSOUnassignConfirm" xml:space="preserve"><value>Confirm</value></data>
+  <data name="FSOUnassigned" xml:space="preserve"><value>Order {0} unassigned and back on its store</value></data>
+  <data name="FSOSuggestTitle" xml:space="preserve"><value>Load suggestion</value></data>
+  <data name="FSOSuggestHint" xml:space="preserve"><value>To load = reserved for assigned orders − van balance, from the order's original store</value></data>
+  <data name="FSONoReserved" xml:space="preserve"><value>Nothing reserved on the van</value></data>
+  <data name="FSOReserved" xml:space="preserve"><value>Reserved</value></data>
+  <data name="FSOOnVan" xml:space="preserve"><value>On the van</value></data>
+  <data name="FSOLoadQty" xml:space="preserve"><value>To load</value></data>
+  <data name="FSOEnough" xml:space="preserve"><value>Enough</value></data>
+  <data name="FSOFromStore" xml:space="preserve"><value>From store</value></data>
+  <data name="FSOIssueLoad" xml:space="preserve"><value>Issue a load from {0} ({1} items)</value></data>
+  <data name="FSOLoadNote" xml:space="preserve"><value>Loading assigned customer orders</value></data>
+  <data name="FSOLoadIssued" xml:space="preserve"><value>Load order {0} issued</value></data>
+  <data name="FSOAvailable" xml:space="preserve"><value>Orders available to assign</value></data>
+  <data name="FSOSearch" xml:space="preserve"><value>Search by customer or order no.</value></data>
+  <data name="FSONoAvailable" xml:space="preserve"><value>No confirmed, unfulfilled orders</value></data>
+  <data name="FSOExpected" xml:space="preserve"><value>Expected delivery</value></data>
+  <data name="FSOAssign" xml:space="preserve"><value>Assign</value></data>
+  <data name="FSOAssignOf" xml:space="preserve"><value>Assign order {0} to the rep</value></data>
+  <data name="FSOAssigned" xml:space="preserve"><value>Order {0} assigned; its stock is now reserved on the van</value></data>
+  <data name="FSDTitle" xml:space="preserve"><value>Deliver order</value></data>
+  <data name="FSDSub" xml:space="preserve"><value>Delivery from the rep's van</value></data>
+  <data name="FSDNoOrder" xml:space="preserve"><value>Pick the rep and the order</value></data>
+  <data name="FSDValueNow" xml:space="preserve"><value>Delivery value (approx.)</value></data>
+  <data name="FSDLines" xml:space="preserve"><value>Items</value></data>
+  <data name="FSDLinesHint" xml:space="preserve"><value>Default = remaining quantity; reduce it to what the customer actually took</value></data>
+  <data name="FSDRemaining" xml:space="preserve"><value>Remaining</value></data>
+  <data name="FSDOverRemaining" xml:space="preserve"><value>More than remaining</value></data>
+  <data name="FSDAll" xml:space="preserve"><value>All</value></data>
+  <data name="FSDNone" xml:space="preserve"><value>None</value></data>
+  <data name="FSDNotOnVan" xml:space="preserve"><value>More than the van holds; load first</value></data>
+  <data name="FSDPartialTitle" xml:space="preserve"><value>Undelivered remainder</value></data>
+  <data name="FSDRefuseTitle" xml:space="preserve"><value>Order refused</value></data>
+  <data name="FSDReason" xml:space="preserve"><value>Reason</value></data>
+  <data name="FSDReasonRequired" xml:space="preserve"><value>A reason is required for any remainder</value></data>
+  <data name="FSDAction" xml:space="preserve"><value>Remainder</value></data>
+  <data name="FSDRetry" xml:space="preserve"><value>Retry later (stays reserved)</value></data>
+  <data name="FSDClose" xml:space="preserve"><value>Close the remainder (back to sale)</value></data>
+  <data name="FSDRetryHint" xml:space="preserve"><value>The order stays open and assigned with the remainder</value></data>
+  <data name="FSDCloseHint" xml:space="preserve"><value>The remainder is cancelled with the reason and the order closes; the stock is free on the van</value></data>
+  <data name="FSDCollectCash" xml:space="preserve"><value>Collect cash now</value></data>
+  <data name="FSDDepositHint" xml:space="preserve"><value>Deposit {0} is applied to the invoice automatically</value></data>
+  <data name="FSDInvoiceNet" xml:space="preserve"><value>Invoice net</value></data>
+  <data name="FSDDepositApplied" xml:space="preserve"><value>Deposit applied</value></data>
+  <data name="FSDToCollect" xml:space="preserve"><value>To collect now</value></data>
+  <data name="FSDOnAccount" xml:space="preserve"><value>On account</value></data>
+  <data name="FSDSave" xml:space="preserve"><value>Deliver and save the invoice</value></data>
+  <data name="FSDSaveRefusal" xml:space="preserve"><value>Record the refusal</value></data>
+  <data name="FSDSaved" xml:space="preserve"><value>Delivered; invoice saved</value></data>
+  <data name="FSDRefusedSaved" xml:space="preserve"><value>Refusal recorded</value></data>
+  <data name="FSDOpenInvoice" xml:space="preserve"><value>Open invoice</value></data>
 </root>

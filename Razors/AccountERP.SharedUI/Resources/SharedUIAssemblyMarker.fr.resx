@@ -3214,4 +3214,75 @@
   <data name="FSZGoodShort" xml:space="preserve"><value>Bon, sans condition</value></data>
   <data name="FSZEditShort" xml:space="preserve"><value>Modifier</value></data>
   <data name="FSZEditOf" xml:space="preserve"><value>Modifier {0}</value></data>
+  <data name="FSOButton" xml:space="preserve"><value>Commandes</value></data>
+  <data name="FSOTitle" xml:space="preserve"><value>Commandes des commerciaux</value></data>
+  <data name="FSOSub" xml:space="preserve"><value>Affecter les commandes au commercial, les réserver dans le véhicule, suggérer le chargement et livrer</value></data>
+  <data name="FSOAssignedCount" xml:space="preserve"><value>Commandes affectées</value></data>
+  <data name="FSORemainingValue" xml:space="preserve"><value>Valeur restante</value></data>
+  <data name="FSODepositsLeft" xml:space="preserve"><value>Acomptes restants</value></data>
+  <data name="FSOToLoad" xml:space="preserve"><value>Articles à charger</value></data>
+  <data name="FSOMine" xml:space="preserve"><value>Commandes du commercial</value></data>
+  <data name="FSONoMine" xml:space="preserve"><value>Aucune commande affectée</value></data>
+  <data name="FSOOrderNo" xml:space="preserve"><value>N° commande</value></data>
+  <data name="FSOPlanned" xml:space="preserve"><value>Livraison prévue</value></data>
+  <data name="FSOPlannedHint" xml:space="preserve"><value>Enregistré avec l'affectation ; vide = date prévue de la commande</value></data>
+  <data name="FSODeposit" xml:space="preserve"><value>Acompte restant</value></data>
+  <data name="FSOPartial" xml:space="preserve"><value>Partiellement livrée</value></data>
+  <data name="FSOLate" xml:space="preserve"><value>En retard</value></data>
+  <data name="FSOToday" xml:space="preserve"><value>Aujourd'hui</value></data>
+  <data name="FSODeliver" xml:space="preserve"><value>Livrer</value></data>
+  <data name="FSODeliverOf" xml:space="preserve"><value>Livrer la commande {0}</value></data>
+  <data name="FSOUnassign" xml:space="preserve"><value>Désaffecter</value></data>
+  <data name="FSOUnassignOf" xml:space="preserve"><value>Désaffecter la commande {0}</value></data>
+  <data name="FSOUnassignConfirm" xml:space="preserve"><value>Confirmer</value></data>
+  <data name="FSOUnassigned" xml:space="preserve"><value>Commande {0} désaffectée et revenue à son dépôt</value></data>
+  <data name="FSOSuggestTitle" xml:space="preserve"><value>Suggestion de chargement</value></data>
+  <data name="FSOSuggestHint" xml:space="preserve"><value>À charger = réservé pour les commandes affectées − stock du véhicule, depuis le dépôt d'origine</value></data>
+  <data name="FSONoReserved" xml:space="preserve"><value>Rien de réservé dans le véhicule</value></data>
+  <data name="FSOReserved" xml:space="preserve"><value>Réservé</value></data>
+  <data name="FSOOnVan" xml:space="preserve"><value>Dans le véhicule</value></data>
+  <data name="FSOLoadQty" xml:space="preserve"><value>À charger</value></data>
+  <data name="FSOEnough" xml:space="preserve"><value>Suffisant</value></data>
+  <data name="FSOFromStore" xml:space="preserve"><value>Depuis le dépôt</value></data>
+  <data name="FSOIssueLoad" xml:space="preserve"><value>Émettre un chargement depuis {0} ({1} articles)</value></data>
+  <data name="FSOLoadNote" xml:space="preserve"><value>Chargement des commandes affectées</value></data>
+  <data name="FSOLoadIssued" xml:space="preserve"><value>Bon de chargement {0} émis</value></data>
+  <data name="FSOAvailable" xml:space="preserve"><value>Commandes à affecter</value></data>
+  <data name="FSOSearch" xml:space="preserve"><value>Rechercher par client ou n°</value></data>
+  <data name="FSONoAvailable" xml:space="preserve"><value>Aucune commande confirmée non livrée</value></data>
+  <data name="FSOExpected" xml:space="preserve"><value>Livraison attendue</value></data>
+  <data name="FSOAssign" xml:space="preserve"><value>Affecter</value></data>
+  <data name="FSOAssignOf" xml:space="preserve"><value>Affecter la commande {0}</value></data>
+  <data name="FSOAssigned" xml:space="preserve"><value>Commande {0} affectée ; réservée dans le véhicule</value></data>
+  <data name="FSDTitle" xml:space="preserve"><value>Livrer la commande</value></data>
+  <data name="FSDSub" xml:space="preserve"><value>Livraison depuis le véhicule</value></data>
+  <data name="FSDNoOrder" xml:space="preserve"><value>Choisissez le commercial et la commande</value></data>
+  <data name="FSDValueNow" xml:space="preserve"><value>Valeur livrée (approx.)</value></data>
+  <data name="FSDLines" xml:space="preserve"><value>Articles</value></data>
+  <data name="FSDLinesHint" xml:space="preserve"><value>Par défaut = reste ; réduisez à ce que le client a pris</value></data>
+  <data name="FSDRemaining" xml:space="preserve"><value>Reste</value></data>
+  <data name="FSDOverRemaining" xml:space="preserve"><value>Supérieur au reste</value></data>
+  <data name="FSDAll" xml:space="preserve"><value>Tout</value></data>
+  <data name="FSDNone" xml:space="preserve"><value>Rien</value></data>
+  <data name="FSDNotOnVan" xml:space="preserve"><value>Plus que le stock du véhicule ; chargez d'abord</value></data>
+  <data name="FSDPartialTitle" xml:space="preserve"><value>Reste non livré</value></data>
+  <data name="FSDRefuseTitle" xml:space="preserve"><value>Commande refusée</value></data>
+  <data name="FSDReason" xml:space="preserve"><value>Motif</value></data>
+  <data name="FSDReasonRequired" xml:space="preserve"><value>Motif requis pour tout reste</value></data>
+  <data name="FSDAction" xml:space="preserve"><value>Reste</value></data>
+  <data name="FSDRetry" xml:space="preserve"><value>Réessayer (reste réservé)</value></data>
+  <data name="FSDClose" xml:space="preserve"><value>Clôturer le reste (revient à la vente)</value></data>
+  <data name="FSDRetryHint" xml:space="preserve"><value>La commande reste ouverte et affectée</value></data>
+  <data name="FSDCloseHint" xml:space="preserve"><value>Le reste est annulé et la commande clôturée ; le stock est libéré</value></data>
+  <data name="FSDCollectCash" xml:space="preserve"><value>Encaisser maintenant</value></data>
+  <data name="FSDDepositHint" xml:space="preserve"><value>Acompte {0} imputé automatiquement</value></data>
+  <data name="FSDInvoiceNet" xml:space="preserve"><value>Net facture</value></data>
+  <data name="FSDDepositApplied" xml:space="preserve"><value>Acompte imputé</value></data>
+  <data name="FSDToCollect" xml:space="preserve"><value>À encaisser</value></data>
+  <data name="FSDOnAccount" xml:space="preserve"><value>En compte</value></data>
+  <data name="FSDSave" xml:space="preserve"><value>Livrer et enregistrer</value></data>
+  <data name="FSDSaveRefusal" xml:space="preserve"><value>Enregistrer le refus</value></data>
+  <data name="FSDSaved" xml:space="preserve"><value>Livré ; facture enregistrée</value></data>
+  <data name="FSDRefusedSaved" xml:space="preserve"><value>Refus enregistré</value></data>
+  <data name="FSDOpenInvoice" xml:space="preserve"><value>Ouvrir la facture</value></data>
 </root>

@@ -3,27 +3,28 @@ using System.Linq;
 using AccountModelsLib.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace AccountModelsLib.SalesRep
+namespace AccountModelsLib
 {
     /// <summary>
-    /// خطة المندوبين — المرحلة 4: صف دفتر للكمية المجانية.
+    /// صف دفتر للكمية المجانية فى فاتورة المبيعات ومرتجعها (قرار المستخدم 2026-10-16: للمستندات الجديدة فقط).
     /// محرك الفاتورة/المرتجع يحرّك Unit_item بالمجانى (LargItemsQnty_Free/SmallItemsQnty_Free) لكن صف الدفتر الذى يكتبه
-    /// (Set_ItemTransactionFromInvoice/R) يحمل الكمية المدفوعة فقط؛ فالرصيد المحسوب للسيارة يزيد عن الفعلى بالمجانى المباع
-    /// ويظهر عجزاً على المندوب عند الجرد. لمستندات المندوب فقط يُكتب صف دفتر جديد (Engine_Posted، Qty_Small بالإشارة) بنفس
-    /// مفاتيح سطر المستند (نوع المستند + رقمه + السطر) فيدخل فى «المباع/المرتجع» والرصيد المحسوب. قيمة المجانى = 0، والتكلفة للعلم.
-    /// لا يحرك Unit_item (المحرك حرّكه) ولا يمس أى صف قائم.
+    /// (Set_ItemTransactionFromInvoice/R) يحمل الكمية المدفوعة فقط؛ فالرصيد المحسوب من الدفتر يزيد عن الفعلى بالمجانى المباع
+    /// (وفى المندوبين يظهر عجزاً على المندوب عند الجرد). مسار المستند الجديد فى المحرك يكتب بعد صف المدفوع صفاً جديداً للمجانى
+    /// (Engine_Posted، Qty_Small بالإشارة) بنفس مفاتيح سطر المستند (نوع المستند + رقمه + السطر)، فيُحذف مع صفوف السطر عند تعديله
+    /// أو حذفه كما يفعل المحرك. قيمة المجانى = 0، والتكلفة للعلم. لا يحرك Unit_item (المحرك حرّكه) ولا يمس أى صف قائم.
+    /// مسارات التعديل القديمة لا تكتبه (تحريكها لـ Unit_item بالمجانى غير متسق)، فالمستند المعدَّل يعود دفتره بالمدفوع فقط.
     /// </summary>
-    internal static class SalesRepFreeLedger
+    public static class FreeQtyLedgerCLS
     {
         /// <summary>المجانى فى السطر بالوحدة الصغرى.</summary>
-        internal static decimal FreeSmall(IInvoices_Details d, decimal factor)
+        public static decimal FreeSmall(IInvoices_Details d, decimal factor)
             => (d.LargItemsQnty_Free ?? 0) * factor + (d.SmallItemsQnty_Free ?? 0);
 
         /// <summary>
         /// يكتب صف المجانى لسطر مستند محفوظ. transactionType: 1 وارد (مرتجع)، 2 صادر (بيع).
         /// invoiceTypeId: نوع المستند كما يكتبه المحرك (Common.Invoice_Type_Id أو Common.InvoiceReverse_Type_Id).
         /// </summary>
-        internal static long Post(operations opp, IInvoices_Details d, long docId, long docNo, int transactionType, int invoiceTypeId,
+        public static long Post(operations opp, IInvoices_Details d, long docId, long docNo, int transactionType, int invoiceTypeId,
             long partyId, string partyName, DateTime? date, string processName)
         {
             long unitItemId = d.Unit_Item_Table_Id ?? 0;
@@ -72,6 +73,13 @@ namespace AccountModelsLib.SalesRep
             opp.db.Database.ExecuteSqlInterpolated($@"UPDATE Detailes_Purshing_Import_Export SET Unit_Cost = {Math.Round(avg, 6)}, Qty_Small = {Math.Round(signed, 4)},
     Total_Value = {Math.Round(avg * free, 2)}, Avg_Cost_Before = {Math.Round(avg, 6)}, Avg_Cost_After = {Math.Round(avg, 6)}, Engine_Posted = 1 WHERE Id = {dpie.Id}");
             return dpie.Id;
+        }
+
+        /// <summary>صف المجانى لسطر فاتورة/مرتجع محفوظ من مسار المستند الجديد فى المحرك (Invoice_Id = invL.Id).</summary>
+        public static long PostForInvoice(operations opp, IInvoices_Details d, InvoicesOperationListCLS invL_O, int transactionType, int invoiceTypeId, string processName)
+        {
+            var h = invL_O.invL;
+            return Post(opp, d, h.Id, h.Invoice_Id ?? 0, transactionType, invoiceTypeId, h.Customer_Id ?? 0, h.CustomerName ?? "", h.Invoice_Date, processName);
         }
     }
 }

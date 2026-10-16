@@ -379,9 +379,7 @@ SELECT CAST(ISNULL(MAX(Invoice_Id), 0) + 1 AS bigint) AS Value FROM Invoices_Lis
             long returnId = h.Id;
             if (excp != 0 || returnId <= 0 || b.InvD.invDlst.Any(d => d.Id <= 0))
                 throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg) ? "تعذر حفظ المرتجع." : msg);
-            // المجانى المرتجع: المحرك أضافه لـ Unit_item بلا صف دفتر؛ صف الدفتر يجعله فى «المرتجع» ورصيد المخزن المحسوب.
-            foreach (var l in b.Lines.Where(l => l.Free_Small > 0))
-                SalesRepFreeLedger.Post(opp, l.Detail, returnId, h.Invoice_Id ?? 0, 1, Common.InvoiceReverse_Type_Id, input.Customer_Id, h.CustomerName ?? "", h.Invoice_Date, "مجانى مرتجع مبيعات");
+            // المجانى المرتجع: المحرك يضيفه لـ Unit_item ويكتب صف دفتره (FreeQtyLedgerCLS) فيدخل «المرتجع» ورصيد المخزن المحسوب.
 
             foreach (var l in b.Lines)
             {

@@ -60,6 +60,8 @@ namespace AccountModelsLib.SalesRep
             public bool Is_Credit { get; set; }
             public decimal Net_Total { get; set; }
             public List<SaleLine> Lines { get; set; } = new();
+            /// <summary>تسليم طلبية (المرحلة 5): السعر والخصم متفق عليهما فى الطلبية فلا يُفحص الخصم على سقوف المندوب.</summary>
+            public bool Order_Priced { get; set; }
         }
 
         /// <summary>مخالفة تحتاج موافقة: النوع، والقيمة المطلوبة، والحد المسموح، ورقم الموافقة إن طُلبت، وحالتها.</summary>
@@ -160,7 +162,11 @@ namespace AccountModelsLib.SalesRep
         /// حفظ فاتورة البيع الفورى: يفرض مخزن السيارة وصندوق العهدة والمندوب والفرع على المستند، يعيد الفحص داخل المعاملة،
         /// يحفظ بمحرك الفاتورة، ثم يربط الفاتورة وإذن نقديتها بالوردية ويعلّم الموافقات المستعملة. يرجع رقم الفاتورة (Invoices_List.Id).
         /// </summary>
-        public long SaveSale(long repId, Guid docGuid, InvoicesOperationListCLS invL_O, InvoicesOperationCLS invD_O) => Tx(opp =>
+        /// <param name="prepaid">عربون طلبية يُسوَّى على الفاتورة (المرحلة 5): الفاتورة آجلة والفحص على (الصافى − العربون).</param>
+        /// <param name="collectNow">مع العربون: الباقى يُحصَّل نقداً الآن (لا فحص ائتمان)، وإلا يبقى على الحساب.</param>
+        /// <param name="orderPriced">فاتورة تسليم طلبية بسعرها المتفق عليه: لا فحص للخصم.</param>
+        public long SaveSale(long repId, Guid docGuid, InvoicesOperationListCLS invL_O, InvoicesOperationCLS invD_O,
+            decimal prepaid = 0, bool collectNow = false, bool orderPriced = false) => Tx(opp =>
         {
             var ctx = Context(opp, repId);
             if (!ctx.CanSell) throw new InvalidOperationException("لا وردية مفتوحة للمندوب؛ البيع يتم داخل وردية مفتوحة فقط.");
@@ -179,7 +185,11 @@ namespace AccountModelsLib.SalesRep
                 d.Store_Name = ctx.Van_Store_Name;
             }
 
-            var input = new SaleInput { Doc_Guid = docGuid, Customer_Id = h.Customer_Id ?? 0, Is_Credit = credit, Net_Total = h.Net_Total ?? 0, Lines = LinesOf(opp, invL_O, invD_O) };
+            var input = new SaleInput
+            {
+                Doc_Guid = docGuid, Customer_Id = h.Customer_Id ?? 0, Is_Credit = credit && !(prepaid > 0 && collectNow),
+                Net_Total = Math.Max(0, (h.Net_Total ?? 0) - prepaid), Lines = LinesOf(opp, invL_O, invD_O), Order_Priced = orderPriced,
+            };
             var check = CheckCore(opp, ctx, input);
             if (!check.Ok)
                 throw new SalesRepApprovalRequiredException(check.Violations.Where(v => !v.Covered).ToList());
@@ -189,9 +199,6 @@ namespace AccountModelsLib.SalesRep
             new Requests_ModelCls().Make_Invoice_Update_CustomerAccountInTx(ref excp, ref msg, ref opp, invL_O, invD_O);
             long invoiceId = h.Id;
             if (excp != 0 || invoiceId <= 0) throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg) ? "تعذر حفظ الفاتورة." : msg);
-            // المجانى: المحرك خصمه من Unit_item بلا صف دفتر؛ صف الدفتر يجعل رصيد السيارة المحسوب و«المباع» يشملانه.
-            foreach (var d in invD_O.invDlst.Where(d => d.Id > 0))
-                SalesRepFreeLedger.Post(opp, d, invoiceId, h.Invoice_Id ?? 0, 2, Common.Invoice_Type_Id, h.Customer_Id ?? 0, h.CustomerName ?? "", h.Invoice_Date, "مجانى فاتورة مبيعات");
 
             Link(opp, ctx.Shift_Id.Value, SalesRepDocType.SaleInvoice, invoiceId, ctx.Branch_Id);
             // البيع النقدى يقبض فى صندوق العهدة: لو لم ينشئ المحرك إذن الفاتورة (MakeOrderMoneyFromInvoiceAutomaticWithoutForm = 0 حيث الديسكتوب
@@ -320,8 +327,12 @@ SELECT ISNULL((SELECT name FROM Employee WHERE Id = {rep.Employee_Id}), N'') AS 
             foreach (var g in input.Lines.GroupBy(l => l.Unit_Item_Id))
             {
                 if (!units.TryGetValue(g.Key, out var u) || u.Store_id != ctx.Van_Store_Id) throw new InvalidOperationException("صنف ليس من مخزن سيارة المندوب.");
-                decimal need = g.Sum(l => l.Qty_Small), have = engine.GetComputedBalanceSmall(g.Key);
-                if (need > have) throw new InvalidOperationException($"الكمية المطلوبة ({need:0.##}) أكبر من رصيد السيارة ({have:0.##}) لأحد الأصناف.");
+                // المتاح = رصيد السيارة − المحجوز لطلبيات عملاء آخرين مسندة للسيارة (§6.3؛ طلبيات نفس العميل لا تُخصم).
+                decimal need = g.Sum(l => l.Qty_Small), balance = engine.GetComputedBalanceSmall(g.Key), reserved = ReservedForOthers(opp, g.Key, input.Customer_Id);
+                if (need > balance - reserved)
+                    throw new InvalidOperationException(reserved > 0
+                        ? $"الكمية المطلوبة ({need:0.##}) أكبر من المتاح بالسيارة ({balance - reserved:0.##} = الرصيد {balance:0.##} − محجوز لطلبيات عملاء آخرين {reserved:0.##}) لأحد الأصناف."
+                        : $"الكمية المطلوبة ({need:0.##}) أكبر من رصيد السيارة ({balance:0.##}) لأحد الأصناف.");
             }
 
             // ---- الخصم: الحد = أقل سقف بين المندوب وسياسات (المندوب، شريحة العميل، الصنف، مجموعة الصنف) ----
@@ -330,7 +341,7 @@ SELECT ISNULL((SELECT name FROM Employee WHERE Id = {rep.Employee_Id}), N'') AS 
             var itemGroups = opp.db.Database.SqlQueryRaw<ItemGroupRow>(
                 "SELECT id AS Item_Id, CAST(ISNULL(Items_GroupsId, 0) AS bigint) AS Group_Id FROM Item WHERE id IN (" + string.Join(",", units.Values.Select(u => u.Item_Id ?? 0).Distinct().DefaultIfEmpty(0)) + ")")
                 .ToList().ToDictionary(r => r.Item_Id, r => r.Group_Id);
-            foreach (var l in input.Lines.Where(l => l.Discount_Rate > 0))
+            foreach (var l in input.Lines.Where(l => !input.Order_Priced && l.Discount_Rate > 0))
             {
                 long itemId = units[l.Unit_Item_Id].Item_Id ?? 0;
                 itemGroups.TryGetValue(itemId, out long itemGroup);
@@ -351,7 +362,7 @@ SELECT ISNULL((SELECT name FROM Employee WHERE Id = {rep.Employee_Id}), N'') AS 
                         Message = $"خصم {rate:0.##}% أعلى من المسموح {cap:0.##}%" });
             }
             // الحد المطلق (Max_Discount_Rate لسياسة لها حد موافقة): لا يُتجاوز حتى بموافقة.
-            foreach (var l in input.Lines.Where(l => l.Discount_Rate > 0))
+            foreach (var l in input.Lines.Where(l => !input.Order_Priced && l.Discount_Rate > 0))
             {
                 long itemId = units[l.Unit_Item_Id].Item_Id ?? 0;
                 itemGroups.TryGetValue(itemId, out long itemGroup);
@@ -462,6 +473,16 @@ FROM Invoices_List WHERE Customer_Id = {customerId} AND ISNULL(Is_Invoice_Agile,
 SELECT DISTINCT CAST(Order_Mony_Id AS bigint) AS Value FROM Money_Transaction_Box
 WHERE DataDictionaryProcessesListsId = {Common.Invoice_Type_Id} AND Reference_Type_Table_Id = {invoiceId} AND ISNULL(Order_Mony_Id, 0) > 0").ToList();
 
+        /// <summary>المحجوز (بالوحدة الصغرى) على سطر مخزن لطلبيات مؤكدة/منفَّذة جزئياً لعملاء غير customerId = المطلوب − المنفَّذ − الملغى.</summary>
+        internal static decimal ReservedForOthers(operations opp, long unitItemId, long customerId) => opp.db.Database.SqlQuery<decimal>($@"
+SELECT CAST(ISNULL(SUM(
+         (CASE WHEN ISNULL(l.Qty_Larg,0) - ISNULL(l.Fulfilled_Qty_Larg,0) - ISNULL(l.Cancelled_Qty_Larg,0) > 0 THEN ISNULL(l.Qty_Larg,0) - ISNULL(l.Fulfilled_Qty_Larg,0) - ISNULL(l.Cancelled_Qty_Larg,0) ELSE 0 END) * f.Factor
+       + (CASE WHEN ISNULL(l.Qty_Small,0) - ISNULL(l.Fulfilled_Qty_Small,0) - ISNULL(l.Cancelled_Qty_Small,0) > 0 THEN ISNULL(l.Qty_Small,0) - ISNULL(l.Fulfilled_Qty_Small,0) - ISNULL(l.Cancelled_Qty_Small,0) ELSE 0 END)), 0) AS decimal(18,4)) AS Value
+FROM Customer_Order_Lines l JOIN Customer_Orders o ON o.Id = l.Order_Id JOIN Unit_item u ON u.id = l.Unit_Item_Table_Id
+CROSS APPLY (SELECT CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END AS Factor) f
+WHERE l.Unit_Item_Table_Id = {unitItemId} AND o.Status IN ({(int)CustomerOrderStatus.Confirmed}, {(int)CustomerOrderStatus.PartiallyFulfilled})
+  AND ISNULL(l.Line_Status, 0) <> {(int)CustomerOrderLineStatus.Cancelled} AND ISNULL(o.Customer_Id, 0) <> {customerId}").AsEnumerable().First();
+
         internal static void Link(operations opp, long shiftId, SalesRepDocType type, long docId, long branchId)
         {
             if (opp.db.SalesRep_Document_Links.Any(l => l.Doc_Type == (int)type && l.Doc_Id == docId)) return;
@@ -471,7 +492,7 @@ WHERE DataDictionaryProcessesListsId = {Common.Invoice_Type_Id} AND Reference_Ty
             opp.db.SaveChanges();
         }
 
-        internal static string Trim(string s, int max) => s.Length <= max ? s : s.Substring(0, max);
+        internal static string Trim(string s, int max) => s == null || s.Length <= max ? s : s.Substring(0, max);
 
         /// <summary>
         /// شرط SQL يستبعد مخازن السيارات وتالفها من شاشات البيع العادية (تُباع فقط بوضع المندوب داخل ورديته). فارغ لو جدول المندوبين

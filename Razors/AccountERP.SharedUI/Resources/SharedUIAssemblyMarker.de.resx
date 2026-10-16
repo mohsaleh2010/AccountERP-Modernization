@@ -3214,4 +3214,75 @@
   <data name="FSZGoodShort" xml:space="preserve"><value>Gut, ohne Bedingungen</value></data>
   <data name="FSZEditShort" xml:space="preserve"><value>Bearbeiten</value></data>
   <data name="FSZEditOf" xml:space="preserve"><value>{0} bearbeiten</value></data>
+  <data name="FSOButton" xml:space="preserve"><value>Aufträge</value></data>
+  <data name="FSOTitle" xml:space="preserve"><value>Außendienst-Aufträge</value></data>
+  <data name="FSOSub" xml:space="preserve"><value>Kundenaufträge zuweisen, im Fahrzeug reservieren, Beladung vorschlagen und ausliefern</value></data>
+  <data name="FSOAssignedCount" xml:space="preserve"><value>Zugewiesene Aufträge</value></data>
+  <data name="FSORemainingValue" xml:space="preserve"><value>Restwert</value></data>
+  <data name="FSODepositsLeft" xml:space="preserve"><value>Offene Anzahlungen</value></data>
+  <data name="FSOToLoad" xml:space="preserve"><value>Zu ladende Artikel</value></data>
+  <data name="FSOMine" xml:space="preserve"><value>Aufträge des Außendienstes</value></data>
+  <data name="FSONoMine" xml:space="preserve"><value>Keine zugewiesenen Aufträge</value></data>
+  <data name="FSOOrderNo" xml:space="preserve"><value>Auftragsnr.</value></data>
+  <data name="FSOPlanned" xml:space="preserve"><value>Geplante Lieferung</value></data>
+  <data name="FSOPlannedHint" xml:space="preserve"><value>Mit der Zuweisung gespeichert; leer = erwartetes Lieferdatum</value></data>
+  <data name="FSODeposit" xml:space="preserve"><value>Offene Anzahlung</value></data>
+  <data name="FSOPartial" xml:space="preserve"><value>Teilgeliefert</value></data>
+  <data name="FSOLate" xml:space="preserve"><value>Verspätet</value></data>
+  <data name="FSOToday" xml:space="preserve"><value>Heute</value></data>
+  <data name="FSODeliver" xml:space="preserve"><value>Ausliefern</value></data>
+  <data name="FSODeliverOf" xml:space="preserve"><value>Auftrag {0} ausliefern</value></data>
+  <data name="FSOUnassign" xml:space="preserve"><value>Zuweisung aufheben</value></data>
+  <data name="FSOUnassignOf" xml:space="preserve"><value>Zuweisung von Auftrag {0} aufheben</value></data>
+  <data name="FSOUnassignConfirm" xml:space="preserve"><value>Bestätigen</value></data>
+  <data name="FSOUnassigned" xml:space="preserve"><value>Auftrag {0} aufgehoben und wieder im Lager</value></data>
+  <data name="FSOSuggestTitle" xml:space="preserve"><value>Beladungsvorschlag</value></data>
+  <data name="FSOSuggestHint" xml:space="preserve"><value>Zu laden = reserviert für zugewiesene Aufträge − Fahrzeugbestand, aus dem Ursprungslager</value></data>
+  <data name="FSONoReserved" xml:space="preserve"><value>Nichts im Fahrzeug reserviert</value></data>
+  <data name="FSOReserved" xml:space="preserve"><value>Reserviert</value></data>
+  <data name="FSOOnVan" xml:space="preserve"><value>Im Fahrzeug</value></data>
+  <data name="FSOLoadQty" xml:space="preserve"><value>Zu laden</value></data>
+  <data name="FSOEnough" xml:space="preserve"><value>Ausreichend</value></data>
+  <data name="FSOFromStore" xml:space="preserve"><value>Aus Lager</value></data>
+  <data name="FSOIssueLoad" xml:space="preserve"><value>Beladung aus {0} ausstellen ({1} Artikel)</value></data>
+  <data name="FSOLoadNote" xml:space="preserve"><value>Beladung zugewiesener Aufträge</value></data>
+  <data name="FSOLoadIssued" xml:space="preserve"><value>Ladeschein {0} ausgestellt</value></data>
+  <data name="FSOAvailable" xml:space="preserve"><value>Zuweisbare Aufträge</value></data>
+  <data name="FSOSearch" xml:space="preserve"><value>Suche nach Kunde oder Nr.</value></data>
+  <data name="FSONoAvailable" xml:space="preserve"><value>Keine bestätigten offenen Aufträge</value></data>
+  <data name="FSOExpected" xml:space="preserve"><value>Erwartete Lieferung</value></data>
+  <data name="FSOAssign" xml:space="preserve"><value>Zuweisen</value></data>
+  <data name="FSOAssignOf" xml:space="preserve"><value>Auftrag {0} zuweisen</value></data>
+  <data name="FSOAssigned" xml:space="preserve"><value>Auftrag {0} zugewiesen; im Fahrzeug reserviert</value></data>
+  <data name="FSDTitle" xml:space="preserve"><value>Auftrag ausliefern</value></data>
+  <data name="FSDSub" xml:space="preserve"><value>Lieferung aus dem Fahrzeug</value></data>
+  <data name="FSDNoOrder" xml:space="preserve"><value>Außendienst und Auftrag wählen</value></data>
+  <data name="FSDValueNow" xml:space="preserve"><value>Lieferwert (ca.)</value></data>
+  <data name="FSDLines" xml:space="preserve"><value>Artikel</value></data>
+  <data name="FSDLinesHint" xml:space="preserve"><value>Standard = Restmenge; auf die tatsächlich übernommene Menge reduzieren</value></data>
+  <data name="FSDRemaining" xml:space="preserve"><value>Rest</value></data>
+  <data name="FSDOverRemaining" xml:space="preserve"><value>Mehr als Rest</value></data>
+  <data name="FSDAll" xml:space="preserve"><value>Alles</value></data>
+  <data name="FSDNone" xml:space="preserve"><value>Nichts</value></data>
+  <data name="FSDNotOnVan" xml:space="preserve"><value>Mehr als im Fahrzeug; zuerst laden</value></data>
+  <data name="FSDPartialTitle" xml:space="preserve"><value>Nicht gelieferter Rest</value></data>
+  <data name="FSDRefuseTitle" xml:space="preserve"><value>Auftrag abgelehnt</value></data>
+  <data name="FSDReason" xml:space="preserve"><value>Grund</value></data>
+  <data name="FSDReasonRequired" xml:space="preserve"><value>Grund für jeden Rest erforderlich</value></data>
+  <data name="FSDAction" xml:space="preserve"><value>Rest</value></data>
+  <data name="FSDRetry" xml:space="preserve"><value>Später erneut (bleibt reserviert)</value></data>
+  <data name="FSDClose" xml:space="preserve"><value>Rest schließen (wieder verkaufbar)</value></data>
+  <data name="FSDRetryHint" xml:space="preserve"><value>Der Auftrag bleibt offen und zugewiesen</value></data>
+  <data name="FSDCloseHint" xml:space="preserve"><value>Der Rest wird storniert, der Auftrag geschlossen; Bestand frei</value></data>
+  <data name="FSDCollectCash" xml:space="preserve"><value>Jetzt kassieren</value></data>
+  <data name="FSDDepositHint" xml:space="preserve"><value>Anzahlung {0} wird automatisch verrechnet</value></data>
+  <data name="FSDInvoiceNet" xml:space="preserve"><value>Rechnung netto</value></data>
+  <data name="FSDDepositApplied" xml:space="preserve"><value>Verrechnete Anzahlung</value></data>
+  <data name="FSDToCollect" xml:space="preserve"><value>Jetzt zu kassieren</value></data>
+  <data name="FSDOnAccount" xml:space="preserve"><value>Auf Rechnung</value></data>
+  <data name="FSDSave" xml:space="preserve"><value>Ausliefern und speichern</value></data>
+  <data name="FSDSaveRefusal" xml:space="preserve"><value>Ablehnung erfassen</value></data>
+  <data name="FSDSaved" xml:space="preserve"><value>Geliefert; Rechnung gespeichert</value></data>
+  <data name="FSDRefusedSaved" xml:space="preserve"><value>Ablehnung erfasst</value></data>
+  <data name="FSDOpenInvoice" xml:space="preserve"><value>Rechnung öffnen</value></data>
 </root>

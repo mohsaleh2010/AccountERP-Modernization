@@ -100,6 +100,7 @@
                     }
                     <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Payments" OnClick="@(() => _panel = Panel.Collect)">@Tr("FSVCollect")</MudButton>
                     <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.AssignmentReturn" Href="@($"/salesrep/return?rep={_rep.Id}")">@Tr("FSTButton")</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Filled.LocalShipping" Href="@($"/salesrep/orders?rep={_rep.Id}")">@Tr("FSOButton")</MudButton>
                     <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Upload" OnClick="@(() => _panel = Panel.Load)">@Tr("FSSLoadMore")</MudButton>
                     <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Download" Disabled="@(_vanStock.Count == 0)" OnClick="StartUnload">@Tr("FSSUnload")</MudButton>
                     <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.DeleteSweep" Disabled="@(_damagedStock.Count == 0)" OnClick="@(() => _panel = Panel.Damaged)">@Tr("FSSDamaged")</MudButton>

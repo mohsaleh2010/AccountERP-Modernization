@@ -1,6 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using AccountModelsLib;
 using AccountModelsLib.Models;
 
+// نُقل من AccountERP.SharedUI إلى AccountModelsLib (2026-10-16) لتستعمله خدمات السيرفر (تسليم طلبيات المندوب)؛
+// الـ namespace بقى كما هو فلا تتغير صفحات Razor التى تستعمله.
 namespace AccountERP.SharedUI.Services
 {
     // 🟢 نقل حرفى لمنطق Accounts.ItemData.ComputePrice (حساب سطر صنف واحد فى الفاتورة) إلى خدمة C# خالصة

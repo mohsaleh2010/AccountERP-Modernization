@@ -267,6 +267,51 @@ namespace AccountModelsLib.SalesRep
         public bool Active { get; set; } = true;
     }
 
+    public enum SalesRepAssignmentStatus { Assigned = 0, Delivered = 1, Unassigned = 2, Closed = 3 }
+
+    public enum SalesRepDeliveryResult { Full = 0, Partial = 1, Refused = 2 }
+
+    public enum SalesRepRemainingAction { Retry = 0, Close = 1 }
+
+    [Table("SalesRep_Order_Assignments")]
+    public class SalesRep_Order_Assignment : SalesRepAuditEntity
+    {
+        [Key] public long Id { get; set; }
+        public long Order_Id { get; set; }
+        public long Rep_Id { get; set; }
+        public DateTime? Planned_Date { get; set; }
+        public int Status { get; set; }
+        public long? Original_Store_Id { get; set; }
+        public DateTime? Ended_At { get; set; }
+        public string End_Reason { get; set; }
+    }
+
+    [Table("SalesRep_Order_Assignment_Lines")]
+    public class SalesRep_Order_Assignment_Line : SalesRepAuditEntity
+    {
+        [Key] public long Id { get; set; }
+        public long Assignment_Id { get; set; }
+        public long Order_Line_Id { get; set; }
+        public long? Original_Unit_Item_Id { get; set; }
+        public long Van_Unit_Item_Id { get; set; }
+    }
+
+    [Table("SalesRep_Order_Deliveries")]
+    public class SalesRep_Order_Delivery : SalesRepAuditEntity
+    {
+        [Key] public long Id { get; set; }
+        public long Assignment_Id { get; set; }
+        public long Order_Id { get; set; }
+        public long? Shift_Id { get; set; }
+        public long? Invoice_Id { get; set; }
+        public int Result { get; set; }
+        public int? Remaining_Action { get; set; }
+        public string Reason { get; set; }
+        public decimal Deposit_Applied { get; set; }
+        public decimal Cash_Collected { get; set; }
+        public string Notes { get; set; }
+    }
+
     [Table("SalesRep_Invoice_Return_Links")]
     public class SalesRep_Invoice_Return_Link : SalesRepAuditEntity
     {

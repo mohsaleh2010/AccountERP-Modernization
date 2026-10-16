@@ -1,0 +1,314 @@
+@* 🟢 خطة المندوبين — المرحلة 5: «طلبيات المندوبين». طلبيات المندوب المسندة (تسليم/إلغاء الإسناد)، اقتراح التحميل (المحجوز − رصيد السيارة)
+   وإصدار إذن التحميل به، والطلبيات المؤكدة المتاحة للإسناد. الإسناد ينقل أسطر الطلبية لأصناف السيارة فيصير حجزها عليها (SalesRepOrderService).
+   التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/orders"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("FSOTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .ro-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .ro-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-info) 16%, transparent); color: var(--mud-palette-info); }
+    .ro-head .ico .mud-icon-root { font-size: 2rem; }
+    .ro-head .titles { flex: 1 1 260px; }
+    .ro-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .ro-gap { margin-top: 16px; }
+    .ro-sec { font-weight: 700; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; }
+    .ro-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+    .ro-kpi { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); }
+    .ro-kpi .k { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .ro-kpi .v { font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .ro-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .ro-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .ro-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .ro-tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: center; margin-bottom: 8px; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card ro-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.LocalShipping" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSOTitle")</h1>
+            <div class="sub">@Tr("FSOSub")</div>
+        </div>
+        <MudSelect T="long" Value="_repId" ValueChanged="OnRepAsync" Label="@Tr("FSRRep")" Variant="Variant.Outlined" Style="min-width:240px"
+                   ToStringFunc="@(v => _reps.FirstOrDefault(r => r.Id == v)?.Employee_Name ?? "")">
+            @foreach (var r in _reps.Where(r => r.Active)) { <MudSelectItem T="long" Value="@r.Id">@r.Employee_Name</MudSelectItem> }
+        </MudSelect>
+        @if (_repId > 0) { <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.PointOfSale" Href="@($"/salesrep/shift?rep={_repId}")">@Tr("FSTBackToShift")</MudButton> }
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="ro-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    @if (_loading)
+    {
+        <div class="inv-card ro-gap"><MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("FSRLoading")" /></div>
+    }
+    else if (_repId == 0)
+    {
+        <div class="inv-card ro-gap inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.LocalShipping" Size="Size.Large" /><div>@Tr(_reps.Count == 0 ? "FSSNoReps" : "FSSPickRep")</div></div>
+    }
+    else
+    {
+        <div class="inv-card ro-gap">
+            <div class="ro-kpis">
+                <div class="ro-kpi"><div class="k">@Tr("FSOAssignedCount")</div><div class="v">@_mine.Count</div></div>
+                <div class="ro-kpi"><div class="k">@Tr("FSORemainingValue")</div><div class="v">@_mine.Sum(o => o.Remaining_Value).ToString("N2")</div></div>
+                <div class="ro-kpi"><div class="k">@Tr("FSODepositsLeft")</div><div class="v">@_mine.Sum(o => o.Deposit_Remaining).ToString("N2")</div></div>
+                <div class="ro-kpi"><div class="k">@Tr("FSOToLoad")</div><div class="v">@_suggest.Count(s => s.Suggest_Small > 0)</div></div>
+            </div>
+        </div>
+
+        @* ===== طلبيات المندوب ===== *@
+        <div class="inv-card ro-gap" aria-live="polite">
+            <h2 class="ro-sec"><MudIcon Icon="@Icons.Material.Filled.Assignment" Color="Color.Primary" Size="Size.Small" />@Tr("FSOMine")</h2>
+            @if (_mine.Count == 0)
+            {
+                <div class="inv-empty" role="status">@Tr("FSONoMine")</div>
+            }
+            else
+            {
+                <MudTable Items="@_mine" T="SalesRepOrderService.OrderRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true" Hover="true">
+                    <HeaderContent>
+                        <MudTh>@Tr("FSOOrderNo")</MudTh><MudTh>@Tr("FSVCustomer")</MudTh><MudTh>@Tr("FSOPlanned")</MudTh><MudTh>@Tr("FSORemainingValue")</MudTh><MudTh>@Tr("FSODeposit")</MudTh><MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="@Tr("FSOOrderNo")" Class="ro-num"><b>@context.Order_No</b>
+                            @if (context.Status == 2) { <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">@Tr("FSOPartial")</MudChip> }</MudTd>
+                        <MudTd DataLabel="@Tr("FSVCustomer")">@context.Customer_Name</MudTd>
+                        <MudTd DataLabel="@Tr("FSOPlanned")" Class="ro-num">
+                            @context.Planned_Date?.ToString("yyyy-MM-dd")
+                            @if (context.Planned_Date is DateTime pd && pd.Date < DateTime.Today) { <MudChip T="string" Size="Size.Small" Color="Color.Warning" Icon="@Icons.Material.Filled.Schedule">@Tr("FSOLate")</MudChip> }
+                            else if (context.Planned_Date is DateTime td && td.Date == DateTime.Today) { <MudChip T="string" Size="Size.Small" Color="Color.Success">@Tr("FSOToday")</MudChip> }
+                        </MudTd>
+                        <MudTd DataLabel="@Tr("FSORemainingValue")" Class="ro-num">@context.Remaining_Value.ToString("N2")</MudTd>
+                        <MudTd DataLabel="@Tr("FSODeposit")" Class="ro-num">@(context.Deposit_Remaining > 0 ? context.Deposit_Remaining.ToString("N2") : "—")</MudTd>
+                        <MudTd>
+                            <div class="ro-acts">
+                                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.LocalShipping"
+                                           Href="@($"/salesrep/deliver?rep={_repId}&order={context.Id}")" aria-label="@Tr("FSODeliverOf", context.Order_No)">@Tr("FSODeliver")</MudButton>
+                                @if (context.Status == 1)
+                                {
+                                    <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.LinkOff" Disabled="@_busy"
+                                               OnClick="@(() => _unassign = context)" aria-label="@Tr("FSOUnassignOf", context.Order_No)">@Tr("FSOUnassign")</MudButton>
+                                }
+                            </div>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+                @if (_unassign is { } u)
+                {
+                    <div class="ro-acts ro-gap" role="group" aria-label="@Tr("FSOUnassignOf", u.Order_No)">
+                        <span><b>@Tr("FSOUnassignOf", u.Order_No)</b></span>
+                        <MudTextField T="string" @bind-Value="_unassignReason" Label="@Tr("FSVReason")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" Style="min-width:260px" />
+                        <MudButton Variant="Variant.Filled" Color="Color.Error" Disabled="@(_busy || string.IsNullOrWhiteSpace(_unassignReason))" OnClick="UnassignAsync">@Tr("FSOUnassignConfirm")</MudButton>
+                        <MudButton Variant="Variant.Text" OnClick="@(() => { _unassign = null; _unassignReason = null; })">@Tr("FSZCancel")</MudButton>
+                    </div>
+                }
+            }
+        </div>
+
+        @* ===== اقتراح التحميل ===== *@
+        <div class="inv-card ro-gap">
+            <h2 class="ro-sec"><MudIcon Icon="@Icons.Material.Filled.Upload" Color="Color.Primary" Size="Size.Small" />@Tr("FSOSuggestTitle")</h2>
+            <div class="ro-hint">@Tr("FSOSuggestHint")</div>
+            @if (_suggest.Count == 0)
+            {
+                <div class="inv-empty ro-gap" role="status">@Tr("FSONoReserved")</div>
+            }
+            else
+            {
+                <MudTable Items="@_suggest" T="SalesRepOrderService.LoadSuggestion" Elevation="0" Class="inv-table ro-gap" Breakpoint="Breakpoint.Sm" Dense="true">
+                    <HeaderContent><MudTh>@Tr("FSTItem")</MudTh><MudTh>@Tr("FSOReserved")</MudTh><MudTh>@Tr("FSOOnVan")</MudTh><MudTh>@Tr("FSOLoadQty")</MudTh><MudTh>@Tr("FSOFromStore")</MudTh></HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="@Tr("FSTItem")">@context.Item_Name</MudTd>
+                        <MudTd DataLabel="@Tr("FSOReserved")" Class="ro-num">@Fmt(context.Reserved_Small, context.Factor, context.B_Unit, context.S_Unit)</MudTd>
+                        <MudTd DataLabel="@Tr("FSOOnVan")" Class="ro-num">@Fmt(context.Van_Small, context.Factor, context.B_Unit, context.S_Unit)</MudTd>
+                        <MudTd DataLabel="@Tr("FSOLoadQty")" Class="ro-num">
+                            @if (context.Suggest_Small > 0) { <b style="color:var(--mud-palette-warning-darken)">@Fmt(context.Suggest_Small, context.Factor, context.B_Unit, context.S_Unit)</b> }
+                            else { <MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Success" Size="Size.Small" aria-label="@Tr("FSOEnough")" /> }
+                        </MudTd>
+                        <MudTd DataLabel="@Tr("FSOFromStore")">@context.Source_Store_Name</MudTd>
+                    </RowTemplate>
+                </MudTable>
+                @foreach (var g in _suggest.Where(s => s.Suggest_Small > 0 && s.Source_Store_Id > 0).GroupBy(s => (s.Source_Store_Id, s.Source_Store_Name)))
+                {
+                    <div class="ro-acts ro-gap">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Upload" Disabled="@_busy" OnClick="@(() => IssueLoadAsync(g.Key.Source_Store_Id))">
+                            @Tr("FSOIssueLoad", g.Key.Source_Store_Name, g.Count())
+                        </MudButton>
+                    </div>
+                }
+            }
+        </div>
+
+        @* ===== متاحة للإسناد ===== *@
+        <div class="inv-card ro-gap">
+            <h2 class="ro-sec"><MudIcon Icon="@Icons.Material.Filled.AddTask" Color="Color.Primary" Size="Size.Small" />@Tr("FSOAvailable")</h2>
+            <div class="ro-tools">
+                <MudTextField T="string" @bind-Value="_search" Label="@Tr("FSOSearch")" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="false"
+                              Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" OnAdornmentClick="LoadAvailableAsync" AdornmentAriaLabel="@Tr("FSOSearch")"
+                              OnKeyDown="@(e => e.Key == "Enter" ? LoadAvailableAsync() : Task.CompletedTask)" />
+                <MudDatePicker @bind-Date="_planned" Label="@Tr("FSOPlanned")" Variant="Variant.Outlined" Margin="Margin.Dense" DateFormat="yyyy-MM-dd" HelperText="@Tr("FSOPlannedHint")" />
+            </div>
+            @if (_available.Count == 0)
+            {
+                <div class="inv-empty" role="status">@Tr("FSONoAvailable")</div>
+            }
+            else
+            {
+                <MudTable Items="@_available" T="SalesRepOrderService.OrderRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true" Hover="true">
+                    <HeaderContent>
+                        <MudTh>@Tr("FSOOrderNo")</MudTh><MudTh>@Tr("FSVCustomer")</MudTh><MudTh>@Tr("FSOExpected")</MudTh><MudTh>@Tr("FSVAmount")</MudTh><MudTh>@Tr("FSODeposit")</MudTh><MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="@Tr("FSOOrderNo")" Class="ro-num"><b>@context.Order_No</b></MudTd>
+                        <MudTd DataLabel="@Tr("FSVCustomer")">@context.Customer_Name</MudTd>
+                        <MudTd DataLabel="@Tr("FSOExpected")" Class="ro-num">@((context.Expected_Delivery_Date ?? context.Order_Date)?.ToString("yyyy-MM-dd"))</MudTd>
+                        <MudTd DataLabel="@Tr("FSVAmount")" Class="ro-num">@context.Net_Total.ToString("N2")</MudTd>
+                        <MudTd DataLabel="@Tr("FSODeposit")" Class="ro-num">@(context.Deposit_Remaining > 0 ? context.Deposit_Remaining.ToString("N2") : "—")</MudTd>
+                        <MudTd>
+                            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AssignmentInd" Disabled="@_busy"
+                                       OnClick="@(() => AssignAsync(context))" aria-label="@Tr("FSOAssignOf", context.Order_No)">@Tr("FSOAssign")</MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </div>
+    }
+</div>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromQuery(Name = "rep")] public long? RepQuery { get; set; }
+
+    private readonly SalesRepProfileService _profiles = new();
+    private readonly SalesRepOrderService _svc = new();
+    private readonly SalesRepShiftService _shifts = new();
+    private List<SalesRepProfileService.RepRow> _reps = new();
+    private List<SalesRepOrderService.OrderRow> _mine = new(), _available = new();
+    private List<SalesRepOrderService.LoadSuggestion> _suggest = new();
+    private SalesRepOrderService.OrderRow? _unassign;
+    private long _repId;
+    private bool _loading = true, _busy;
+    private string? _search, _unassignReason, _error;
+    private DateTime? _planned = DateTime.Today;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            _reps = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _profiles.GetReps(); });
+            _repId = RepQuery is long q && _reps.Any(r => r.Id == q && r.Active) ? q : _reps.FirstOrDefault(r => r.Active)?.Id ?? 0;
+            await ReloadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private async Task OnRepAsync(long id)
+    {
+        _repId = id; _unassign = null;
+        Nav.NavigateTo($"/salesrep/orders?rep={id}", replace: true);
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        if (_repId == 0) return;
+        long rep = _repId; string? search = _search;
+        try
+        {
+            (_mine, _suggest, _available) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return (_svc.GetRepOrders(rep), _svc.GetLoadSuggestion(rep), _svc.GetAssignable(rep, search));
+            });
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private async Task LoadAvailableAsync()
+    {
+        long rep = _repId; string? search = _search;
+        try { _available = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetAssignable(rep, search); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private async Task AssignAsync(SalesRepOrderService.OrderRow o)
+    {
+        long rep = _repId, id = o.Id; DateTime? planned = _planned;
+        if (await RunAsync(() => _svc.Assign(rep, id, planned)))
+        {
+            Snackbar.Add(Tr("FSOAssigned", o.Order_No), Severity.Success);
+            await ReloadAsync();
+        }
+    }
+
+    private async Task UnassignAsync()
+    {
+        if (_unassign is not { } u) return;
+        long rep = _repId, id = u.Id; string reason = _unassignReason ?? "";
+        if (await RunAsync(() => _svc.Unassign(rep, id, reason)))
+        {
+            Snackbar.Add(Tr("FSOUnassigned", u.Order_No), Severity.Info);
+            _unassign = null; _unassignReason = null;
+            await ReloadAsync();
+        }
+    }
+
+    private async Task IssueLoadAsync(long storeId)
+    {
+        long rep = _repId;
+        var lines = _suggest.Where(s => s.Source_Store_Id == storeId && s.Suggest_Small > 0)
+            .Select(s => new StoreOrderService.OrderLineInput(s.Source_Unit_Item_Id, Math.Floor(s.Suggest_Small / (s.Factor <= 0 ? 1 : s.Factor)), s.Suggest_Small % (s.Factor <= 0 ? 1 : s.Factor)))
+            .ToList();
+        long orderId = 0;
+        if (await RunAsync(() => orderId = _shifts.IssueLoad(rep, storeId, lines, notes: Tr("FSOLoadNote"))))
+        {
+            Snackbar.Add(Tr("FSOLoadIssued", orderId), Severity.Success);
+            await ReloadAsync();
+        }
+    }
+
+    private async Task<bool> RunAsync(Action action)
+    {
+        _busy = true; _error = null;
+        try { await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); action(); }); return true; }
+        catch (Exception ex) { _error = Inner(ex); return false; }
+        finally { _busy = false; }
+    }
+
+    private static string Fmt(decimal small, decimal factor, string bUnit, string sUnit)
+    {
+        if (factor <= 1) return $"{small:0.##} {bUnit}".Trim();
+        decimal l = Math.Floor(Math.Abs(small) / factor) * Math.Sign(small), s = small - l * factor;
+        return s == 0 ? $"{l:0.##} {bUnit}".Trim() : l == 0 ? $"{s:0.##} {sUnit}".Trim() : $"{l:0.##} {bUnit} + {s:0.##} {sUnit}";
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}
