@@ -19,6 +19,20 @@ namespace AccountModelsLib
         public void Make_Invoice_Update_CustomerAccount(ref int Excp, ref string Msg, InvoicesOperationListCLS invL_O, InvoicesOperationCLS invD_O)
         {
             operations opp = new operations(1);
+            Make_Invoice_Update_CustomerAccount_(ref Excp, ref Msg, ref opp, true, invL_O, invD_O);
+        }
+
+        /// <summary>
+        /// Same save inside the caller's transaction: no Commit/Rollback here. Excp = 1 means the caller must roll back.
+        /// Used by the field sales rep van sale (SalesRepSaleService) so the invoice, the checks and the shift link are atomic.
+        /// </summary>
+        public void Make_Invoice_Update_CustomerAccountInTx(ref int Excp, ref string Msg, ref operations opp, InvoicesOperationListCLS invL_O, InvoicesOperationCLS invD_O)
+        {
+            Make_Invoice_Update_CustomerAccount_(ref Excp, ref Msg, ref opp, false, invL_O, invD_O);
+        }
+
+        private void Make_Invoice_Update_CustomerAccount_(ref int Excp, ref string Msg, ref operations opp, bool ownTx, InvoicesOperationListCLS invL_O, InvoicesOperationCLS invD_O)
+        {
              
             try
             {
@@ -106,7 +120,7 @@ namespace AccountModelsLib
                     opp.db.Entry((Invoices_List)invL_O.invL).State = EntityState.Detached;
                     New_Invoice_Id = 0;
                     invL_O.Invoices_List_Id = 0;
-                    opp.Rollback();
+                    if (ownTx) opp.Rollback();
                     return;
                 }
 
@@ -251,7 +265,7 @@ namespace AccountModelsLib
                     {
                         New_Invoice_Id = 0;
                         invL_O.Invoices_List_Id = 0;
-                        opp.Rollback();
+                        if (ownTx) opp.Rollback();
                         return;
                     }
 
@@ -526,18 +540,18 @@ namespace AccountModelsLib
                 {
                     New_Invoice_Id = 0;
                     invL_O.Invoices_List_Id = 0;
-                    opp.Rollback();
+                    if (ownTx) opp.Rollback();
                 }
                 else
                 {
-                    opp.Commit();
+                    if (ownTx) opp.Commit();
                     Excp = 0;
                 }
 
             }
             catch (Exception ee)
             {
-                opp.Rollback();
+                if (ownTx) opp.Rollback();
                 Excp = 1;
                 Msg=ee.Message;
             }

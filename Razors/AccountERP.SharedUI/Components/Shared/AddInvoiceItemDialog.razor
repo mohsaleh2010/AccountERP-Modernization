@@ -301,6 +301,9 @@
     // 🟢 الحالة الابتدائية لخانة «إظهار الأصناف بدون رصيد». الفواتير: false (السلوك الحالى). طلبية العميل: true لأن العميل
     // يطلب أصنافاً قد لا تكون متوفرة الآن؛ يبقى المستخدم قادراً على إلغاء الخانة.
     [Parameter] public bool ShowItemsWithoutBalanceByDefault { get; set; }
+    // 🟢 خطة المندوبين المرحلة 3: فاتورة المندوب تبيع من مخزن سيارته فقط (≠ 0 = المخزن الوحيد المتاح، والبحث بالكود فيه وحده؛ -1 = لا مخزن).
+    // بدونه تُستبعد مخازن السيارات وتالفها من القائمة والبحث (تُباع فقط بوضع المندوب داخل ورديته).
+    [Parameter] public long FixedStoreId { get; set; }
 
     protected override void OnInitialized() => _showItemsWithoutBalance = ShowItemsWithoutBalanceByDefault;
 
@@ -518,13 +521,18 @@
         var dt = await Task.Run(() =>
         {
             AccountCultureGuard.EnsureInvariant();
-            return _opp.return_DataTable("SELECT Id, Store_Name FROM Store WHERE Active = 1 AND IS_Virtual_OuterStore = 0 ORDER BY IS_Default_Store DESC, Store_Name");
+            return _opp.return_DataTable("SELECT Id, Store_Name FROM Store WHERE Active = 1 AND IS_Virtual_OuterStore = 0" + StoreScopeSql("Store.Id") + " ORDER BY IS_Default_Store DESC, Store_Name");
         });
         _stores = dt.Rows.Cast<DataRow>()
             .Select(r => new StoreOption(Convert.ToInt64(r["Id"]), r["Store_Name"]?.ToString() ?? ""))
             .ToList();
         if (_storeId == 0 && _stores.Count > 0) _storeId = _stores[0].Id;
     }
+
+    /// <summary>نطاق المخازن: مخزن السيارة وحده فى وضع المندوب، وإلا كل المخازن عدا مخازن السيارات وتالفها.</summary>
+    private string StoreScopeSql(string storeColumn) => FixedStoreId != 0
+        ? " AND " + storeColumn + " = " + FixedStoreId
+        : AccountModelsLib.SalesRep.SalesRepSaleService.ExcludeRepStoresSql(_opp, storeColumn);
 
     // 🟢 يقابل Item.Is_ItemWithoutBalance (خدمة/صنف لا رصيد له) - يُستخدَم فقط عند فتح الحوار فى وضع تعديل سطر
     // موجود مسبقاً، حيث لا يتوفر العلم مباشرة ضمن بيانات السطر نفسه.
@@ -575,7 +583,7 @@
                         INNER JOIN unit ON Unit_item.unit_id = unit.id
                         INNER JOIN Item ON Unit_item.Item_id = Item.id
                         INNER JOIN Store ON Unit_item.Store_id = Store.id
-                        WHERE Unit_item.Code = N'" + code.Replace("'", "''") + "'";
+                        WHERE Unit_item.Code = N'" + code.Replace("'", "''") + "'" + StoreScopeSql("Unit_item.Store_id");
             return _opp.return_DataTable(sql);
         });
 

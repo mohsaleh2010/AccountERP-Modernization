@@ -299,6 +299,15 @@ namespace AccountModelsLib.SalesRep
         public string Reason { get; set; }
         public string Decision_Notes { get; set; }
         public DateTime? Decided_At { get; set; }
+        public long? Rep_Id { get; set; }
+        public long? Shift_Id { get; set; }
+        public long? Customer_Id { get; set; }
+        /// <summary>القيمة التى طلبها المندوب (نسبة الخصم، أو رصيد العميل بعد الفاتورة، أو عمر الدين بالأيام).</summary>
+        public decimal? Requested_Value { get; set; }
+        /// <summary>الحد المسموح وقت الطلب.</summary>
+        public decimal? Allowed_Value { get; set; }
+        /// <summary>الحد الذى اعتمده المشرف (افتراضياً المطلوب)؛ الموافقة لا تغطى قيمة أعلى منه.</summary>
+        public decimal? Approved_Value { get; set; }
     }
 
     [Table("SalesRep_GPS_Track")]

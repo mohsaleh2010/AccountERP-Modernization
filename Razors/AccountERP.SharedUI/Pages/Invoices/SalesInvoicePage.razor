@@ -65,6 +65,61 @@
         </div>
     </div>
 
+    @* ===== وضع المندوب (خطة المندوبين المرحلة 3): مخزن السيارة وصندوق العهدة والمندوب مقفلة، والحفظ عبر SalesRepSaleService ===== *@
+    @if (IsRepMode)
+    {
+        <div class="inv-card mb-3" aria-live="polite">
+            @if (_repCtx is null)
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" role="alert">@(_repError ?? Tr("FSVNoRep"))</MudAlert>
+            }
+            else
+            {
+                <div class="inv-badges" style="flex-wrap:wrap;gap:8px">
+                    <span class="inv-chip primary"><MudIcon Icon="@Icons.Material.Filled.LocalShipping" Size="Size.Small" />@Tr("FSVRepMode"): @_repCtx.Rep_Name</span>
+                    <span class="inv-chip">@Tr("FSRVan"): @_repCtx.Van_Store_Name</span>
+                    <span class="inv-chip">@Tr("FSRBox"): @_repCtx.Cash_Box_Name (@_repCtx.Cash_On_Hand.ToString("N2"))</span>
+                    <span class="inv-chip @(_repCtx.CanSell ? "success" : "warn")">@Tr(_repCtx.Shift_Status is int st ? "FSSStatus_" + st : "FSSNoShift")</span>
+                    <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.PointOfSale" Href="@($"/salesrep/shift?rep={_repCtx.Rep_Id}")">@Tr("FSSTitle")</MudButton>
+                </div>
+                @if (!_repCtx.CanSell)
+                {
+                    <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2" role="alert">@Tr("FSVNoOpenShift")</MudAlert>
+                }
+                @foreach (var w in _repWarnings)
+                {
+                    <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2">@w</MudAlert>
+                }
+                @if (_repViolations.Count > 0)
+                {
+                    <h3 class="inv-card-title mt-3"><MudIcon Icon="@Icons.Material.Filled.Gavel" />@Tr("FSVApprovalsNeeded")</h3>
+                    @foreach (var v in _repViolations)
+                    {
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px">
+                            <MudIcon Icon="@(v.Covered ? Icons.Material.Filled.CheckCircle : v.Approval_Status == 2 ? Icons.Material.Filled.Cancel : Icons.Material.Filled.HourglassTop)"
+                                     Color="@(v.Covered ? Color.Success : v.Approval_Status == 2 ? Color.Error : Color.Warning)" Size="Size.Small" aria-hidden="true" />
+                            <span>@v.Message</span>
+                            <span class="inv-chip @(v.Covered ? "success" : "warn")">@Tr(v.Approval_Status is int s ? "FSVApproval_" + s : "FSVApprovalNone")</span>
+                        </div>
+                    }
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+                        <MudTextField T="string" @bind-Value="_repApprovalReason" Label="@Tr("FSVReason")" Variant="Variant.Outlined" Margin="Margin.Dense" Style="min-width:240px" />
+                        <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Send" Disabled="@(_repBusy || _repViolations.All(v => v.Covered || v.Approval_Status == 0))" OnClick="RequestRepApprovalsAsync">@Tr("FSVRequestApproval")</MudButton>
+                        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" Disabled="_repBusy" OnClick="CheckRepSaleAsync">@Tr("FSVRefreshStatus")</MudButton>
+                    </div>
+                }
+                else if (_lines.Count > 0 && !_isSaved)
+                {
+                    <div class="mt-2"><MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.FactCheck" Disabled="_repBusy" OnClick="CheckRepSaleAsync">@Tr("FSVCheck")</MudButton></div>
+                }
+            }
+        </div>
+    }
+    @if (_repLinkedShiftId is long linkedShift)
+    {
+        <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.LocalShipping">@Tr("FSVLinkedReadOnly")</MudAlert>
+    }
+
     @if (_fromOrderId > 0)
     {
         <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.Assignment">
@@ -304,7 +359,7 @@
                             <MudItem xs="12" sm="6" md="3">
                                 <MudAutocomplete T="SellerOption" Value="_salesman" ValueChanged="OnSalesmanPicked" SearchFunc="SearchSalesmenAsync" ToStringFunc="@(s => s?.Name ?? "")"
                                                  Label="@Tr("SalesmanLabel")" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" CoerceText="false"
-                                                 ResetValueOnEmptyText="true" MaxItems="50" Required="true" Disabled="_isSaved" />
+                                                 ResetValueOnEmptyText="true" MaxItems="50" Required="true" Disabled="@(_isSaved || IsRepMode)" />
                             </MudItem>
                         }
                         @if (Common.Show_EmployeeSeller_OnInvoiceMonitor == 1)
@@ -403,7 +458,7 @@
                 <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Payments"
                            OnClick="@(() => Nav.NavigateTo($"/accounts/cash/voucher-party?doc={Id}&dtype={(_isReverse ? 7 : 1)}"))">@Tr("InvCashVoucherButton")</MudButton>
             }
-            @if (IsExistingInvoice)
+            @if (IsExistingInvoice && _repLinkedShiftId is null)
             {
                 <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever"
                            Disabled="_isSaving" OnClick="DeleteInvoiceAsync">@Tr("InvDeleteButton")</MudButton>
@@ -417,6 +472,7 @@
 
     @* الضريبة تُمرَّر للصنف فقط عند الحساب لكل صنف (Is_Tax_Per_Item=1 والفاتورة ضريبية)؛ نسب الرأس عندها صفر. *@
     <AddInvoiceItemDialog ShowExtraFields="true" Visible="_itemDialogOpen" PriceTypeId="_customerPriceTypeId" CustomerId="@(_selectedCustomer?.Id ?? 0)" VisibleChanged="OnItemDialogVisibleChangedAsync" ExistingLine="_editingLine"
+                          FixedStoreId="@(IsRepMode ? _repCtx?.Van_Store_Id ?? -1 : 0)"
                           TaxSalesRate="_defaultTaxSales" ATS05Rate="_defaultATS05"
                           InitialCode="@_dialogInitialCode" InitialCodeToken="_barcodeToken" OnCodeNotFound="OnBarcodeNotFoundAsync"
                           IsTaxPerItem="_isTaxInvoice && _isTaxPerItem" OnItemAdded="OnItemDialogSaved" />
@@ -474,6 +530,81 @@
     private bool _isSaving;
     private string _baseline = "";
     private bool IsExistingInvoice => Id.HasValue && Id.Value > 0;
+
+    // ===================== وضع المندوب (خطة المندوبين المرحلة 3) =====================
+    [SupplyParameterFromQuery(Name = "rep")] public long? RepQuery { get; set; }
+    private bool IsRepMode => RepQuery is > 0 && !_isReverse && !IsExistingInvoice;
+    private AccountModelsLib.SalesRep.SalesRepSaleService.SaleContext? _repCtx;
+    private string? _repError;
+    private Guid _repDocGuid = Guid.NewGuid();
+    private List<AccountModelsLib.SalesRep.SalesRepSaleService.Violation> _repViolations = new();
+    private List<string> _repWarnings = new();
+    private string? _repApprovalReason;
+    private bool _repBusy;
+    // فاتورة محفوظة مربوطة بوردية مندوب: تُعرض للقراءة فقط (التصحيح بمرتجع، كما فى أنظمة المبيعات الميدانية).
+    private long? _repLinkedShiftId;
+
+    private async Task InitRepModeAsync()
+    {
+        if (IsExistingInvoice && !_isReverse)
+        {
+            var invoiceId = Id!.Value;
+            _repLinkedShiftId = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var dt = new AccountModelsLib.operations().return_DataTable(
+                    "IF OBJECT_ID(N'dbo.SalesRep_Document_Links', N'U') IS NOT NULL SELECT TOP 1 Shift_Id FROM SalesRep_Document_Links WHERE Doc_Type = 1 AND Doc_Id = " + invoiceId +
+                    " ELSE SELECT CAST(NULL AS bigint) AS Shift_Id WHERE 1 = 0");
+                return dt.Rows.Count > 0 && dt.Rows[0][0] != DBNull.Value ? (long?)Convert.ToInt64(dt.Rows[0][0]) : null;
+            });
+            if (_repLinkedShiftId != null) { _canEditItems = false; _canDeleteInvoice = false; }
+        }
+        if (!IsRepMode) return;
+        try
+        {
+            var repId = RepQuery!.Value;
+            _repCtx = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return new AccountModelsLib.SalesRep.SalesRepSaleService().GetContext(repId); });
+            _salesman = new SellerOption(_repCtx.Employee_Id, _repCtx.Rep_Name);
+            _header.Salesman_Id = _repCtx.Employee_Id;
+        }
+        catch (Exception ex) { _repCtx = null; _repError = ex.Message; }
+    }
+
+    private AccountModelsLib.SalesRep.SalesRepSaleService.SaleInput RepInput() => new()
+    {
+        Doc_Guid = _repDocGuid,
+        Customer_Id = _selectedCustomer?.Id ?? 0,
+        Is_Credit = _header.Is_Invoice_Agile == 1,
+        Net_Total = _header.Net_Total ?? 0,
+        Lines = AccountModelsLib.SalesRep.SalesRepSaleService.LinesOf(new AccountModelsLib.operations(), _invL_O, _invD_O),
+    };
+
+    private async Task CheckRepSaleAsync() => await RunRepAsync(false);
+    private async Task RequestRepApprovalsAsync() => await RunRepAsync(true);
+
+    private async Task RunRepAsync(bool request)
+    {
+        if (_repCtx is null || _selectedCustomer is null) return;
+        _repBusy = true;
+        try
+        {
+            var repId = _repCtx.Rep_Id;
+            var reason = _repApprovalReason;
+            var result = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var svc = new AccountModelsLib.SalesRep.SalesRepSaleService();
+                var input = RepInput();
+                return request ? svc.RequestApprovals(repId, input, reason) : svc.Check(repId, input);
+            });
+            _repViolations = result.Violations;
+            _repWarnings = result.Warnings;
+            if (request) Snackbar.Add(Tr("FSVApprovalRequested"), Severity.Info);
+            else if (result.Ok) Snackbar.Add(Tr("FSVCheckOk"), Severity.Success);
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        finally { _repBusy = false; }
+    }
     // 🟢 صلاحيات الفاتورة المحفوظة (نفس جدول صلاحيات القوائم SysConfigMenusPERMATIONS كما فى الأصل): 322 تعديل الفاتورة (إضافة/تعديل/حذف صنف)،
     // 932 حذف فاتورة مبيعات (وتشمل المرتجع). الأصل يفحص 322 فى BtnAddItem/BtnDeleteItem/Make_ItemEdit ويرفض برسالة.
     private bool _canEditItems = true;
@@ -521,7 +652,8 @@
         try { await SaveInvoiceCoreAsync(); }
         finally { _isSaving = false; _deletingInvoice = false; }
     }
-    private bool CanSave => !_isSaving && !_isSaved && _lines.Count > 0 && (!IsExistingInvoice || Fingerprint() != _baseline);
+    private bool CanSave => !_isSaving && !_isSaved && _lines.Count > 0 && (!IsExistingInvoice || Fingerprint() != _baseline)
+                            && _repLinkedShiftId is null && (RepQuery is not > 0 || _repCtx?.CanSell == true);
 
     // بصمة نصية لكل ما يمكن للمستخدم تعديله فى الفاتورة (العميل، العملة، التاريخ، الملاحظات، الضريبة، والأصناف بكمياتها وأسعارها وحذفها).
     private string Fingerprint()
@@ -601,6 +733,7 @@
             await InitializeNewInvoiceAsync();
             if (FromOrderQuery is > 0) await LoadFromOrderAsync(FromOrderQuery.Value, AllocQuery ?? "");
         }
+        await InitRepModeAsync();
 
         // 🟢 عنوان التبويب لفاتورة موجودة = "فاتورة مبيعات رقم {رقم الفاتورة}" (Invoice_Id) وليس معرّف السجل Id الذى فى الرابط.
         // مفتاح التبويب = مسار الصفحة وقت إنشائها بلا الـ query (نفس ما يبنيه MainLayoutMud.UpdateWorkspaceForCurrentRoute).
@@ -784,6 +917,17 @@
         });
         _customerPriceTypeId = result.Item1;
         _customerPriceTypeName = result.Item2;
+        // سلسلة السعر للمندوب (§6.3): قائمة العميل أولاً، وإلا قائمة المندوب الافتراضية.
+        if (IsRepMode && _customerPriceTypeId == 0 && _repCtx?.Price_Type_List_ID is long repList && repList > 0)
+        {
+            _customerPriceTypeId = repList;
+            _customerPriceTypeName = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var dt = new AccountModelsLib.operations().return_DataTable("SELECT ISNULL(Price_Name, N'') FROM Price_Type_List WHERE ID = " + repList);
+                return dt.Rows.Count > 0 ? dt.Rows[0][0]?.ToString()?.Trim() ?? "" : "";
+            });
+        }
     }
 
     private Task OnCustomerPickedAsync(CustomerOption? option) => OnCustomerPickedAsync(option, skipCashCustomerConfirm: false);
@@ -1136,6 +1280,7 @@
     {
         var path = _isReverse ? "/accounts/invoices/sales-return" : "/accounts/invoices/sales-invoice";
         var query = new List<string>();
+        if (RepQuery is > 0 && !_isReverse) query.Add("rep=" + RepQuery.Value);
         if (_header.Is_Invoice_Agile == 1) query.Add("agile=1");
         if (_header.Is_InvoiceKta3y == 1) query.Add("kta3y=1");
         var type = Convert.ToInt32(_header.Invoice_Type);
@@ -1188,7 +1333,11 @@
         _isTaxPerItem = _taxPerItemForced;
         _invL_O = new InvoicesOperationListCLS(_isReverse ? 1 : 0);
         _invD_O = new InvoicesOperationCLS(_isReverse ? 1 : 0);
+        _repDocGuid = Guid.NewGuid();
+        _repViolations = new();
+        _repWarnings = new();
         await InitializeNewInvoiceAsync();
+        await InitRepModeAsync();
     }
 
     // بعد حفظ فاتورة جديدة تنتقل الصفحة لرابط رقمها (تبويب جديد)، فيبقى تبويب «فاتورة جديدة» القديم بحالة محفوظة/مقفلة ويُعاد تنشيطه بالخطأ
@@ -1332,6 +1481,12 @@
                     }
                     return;
                 }
+                if (IsRepMode)
+                {
+                    // خطة المندوبين المرحلة 3: نفس محرك الحفظ داخل معاملة واحدة مع فحوص المندوب وربط الوردية.
+                    new AccountModelsLib.SalesRep.SalesRepSaleService().SaveSale(RepQuery!.Value, _repDocGuid, _invL_O, _invD_O);
+                    return;
+                }
                 var rc = new Requests_ModelCls();
                 if (Id.HasValue && Id.Value > 0)
                 {
@@ -1342,6 +1497,13 @@
                     rc.Make_Invoice_Update_CustomerAccount(ref excp, ref msg, _invL_O, _invD_O);
                 }
             });
+        }
+        catch (AccountModelsLib.SalesRep.SalesRepApprovalRequiredException ex)
+        {
+            // البيع يحتاج موافقة: تظهر المخالفات فى بطاقة المندوب مع زر طلب الموافقة.
+            _repViolations = ex.Violations.ToList();
+            Snackbar.Add(Tr("FSVApprovalsNeeded"), Severity.Warning);
+            return;
         }
         catch (Exception ex)
         {

@@ -90,10 +90,28 @@ namespace AccountModelsLib
             if (partyId <= 0) throw new InvalidOperationException("Party is required");
 
             var opp = new operations(1);
+            try
+            {
+                var r = SavePartyVoucherInTx(opp, transactionType, reverse, boxId, date, orderNo, manName, cashValue, partyId, factor, docType, docId);
+                opp.Commit();
+                return r;
+            }
+            catch
+            {
+                try { opp.Rollback(); } catch { }
+                throw;
+            }
+        }
+
+        /// <summary>نفس SavePartyVoucher داخل معاملة المستدعى (بلا Commit/Rollback) — تحصيل المندوب على صندوق العهدة مربوطاً بورديته.</summary>
+        public (long OrderId, long BoxLineId, long OrderNo) SavePartyVoucherInTx(operations opp, int transactionType, int reverse, long boxId, DateTime date, long orderNo, string manName, decimal cashValue,
+                                                                                 long partyId, decimal factor, int docType = 0, long docId = 0)
+        {
+            if (cashValue <= 0) throw new InvalidOperationException("Value must be greater than zero");
+            if (partyId <= 0) throw new InvalidOperationException("Party is required");
             var engine = new Money_Transaction_BoxOrderReportCLS();
             int excp = 0;
             string msg = "";
-            try
             {
                 if (transactionType == 2 && Common.IsBoxBalanceAllowSarfAny == 0)
                 {
@@ -144,13 +162,7 @@ namespace AccountModelsLib
                 engine.Make_Transaction_BanksBox_FromInvoices(ref excp, ref msg, ref opp, vm);
                 if (excp != 0 || vm.Order_Mony_Id <= 0)
                     throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg) ? "Voucher was not saved" : msg);
-                opp.Commit();
                 return (vm.Order_Mony_Id, vm.Money_Transaction_Box_ID, no);
-            }
-            catch
-            {
-                try { opp.Rollback(); } catch { }
-                throw;
             }
         }
 

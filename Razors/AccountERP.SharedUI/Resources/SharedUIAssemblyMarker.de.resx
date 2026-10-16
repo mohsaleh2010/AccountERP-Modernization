@@ -3037,4 +3037,62 @@
   <data name="FSSChargeShortage" xml:space="preserve"><value>Fehlmengenwert ({0}) dem Mitarbeiter belasten</value></data>
   <data name="FSSChargeShortageHint" xml:space="preserve"><value>Buchung: Soll Mitarbeiter / Haben „Sonstige Erträge“ zum Durchschnittspreis. Ausschalten, wenn als Aufwand behandelt</value></data>
   <data name="FSSCloseConfirmCash" xml:space="preserve"><value>Abschluss: {0} Fehlmengen, {1} Überschüsse (Entwürfe). Kassendifferenz: {2}, abgeführt: {3}, belastete Fehlmenge: {4}. Fortfahren?</value></data>
+  <data name="FSVNoRep" xml:space="preserve"><value>Außendienstprofil nicht gefunden oder inaktiv</value></data>
+  <data name="FSVRepMode" xml:space="preserve"><value>Außendienstverkauf</value></data>
+  <data name="FSVNoOpenShift" xml:space="preserve"><value>Keine offene Schicht — zuerst öffnen oder Beladung bestätigen. Kein Verkauf während des Abschlusses.</value></data>
+  <data name="FSVApprovalsNeeded" xml:space="preserve"><value>Diese Rechnung braucht die Freigabe des Vorgesetzten</value></data>
+  <data name="FSVApproval_0" xml:space="preserve"><value>Ausstehend</value></data>
+  <data name="FSVApproval_1" xml:space="preserve"><value>Freigegeben</value></data>
+  <data name="FSVApproval_2" xml:space="preserve"><value>Abgelehnt</value></data>
+  <data name="FSVApprovalNone" xml:space="preserve"><value>Nicht angefragt</value></data>
+  <data name="FSVReason" xml:space="preserve"><value>Begründung (optional)</value></data>
+  <data name="FSVRequestApproval" xml:space="preserve"><value>Freigabe anfordern</value></data>
+  <data name="FSVRefreshStatus" xml:space="preserve"><value>Aktualisieren</value></data>
+  <data name="FSVCheck" xml:space="preserve"><value>Limits prüfen</value></data>
+  <data name="FSVCheckOk" xml:space="preserve"><value>Rechnung innerhalb der Limits</value></data>
+  <data name="FSVApprovalRequested" xml:space="preserve"><value>Freigabeanfrage gesendet</value></data>
+  <data name="FSVLinkedReadOnly" xml:space="preserve"><value>Schichtrechnung: nur Ansicht; Korrektur per Retoure</value></data>
+  <data name="FSVSellCash" xml:space="preserve"><value>Barverkauf</value></data>
+  <data name="FSVSellCredit" xml:space="preserve"><value>Kreditverkauf</value></data>
+  <data name="FSVCollect" xml:space="preserve"><value>Zahlung einziehen</value></data>
+  <data name="FSVCollectHint" xml:space="preserve"><value>Bareinnahme vom Kunden in die Kasse, mit der Schicht verknüpft</value></data>
+  <data name="FSVCustomer" xml:space="preserve"><value>Kunde</value></data>
+  <data name="FSVAmount" xml:space="preserve"><value>Betrag</value></data>
+  <data name="FSVNotes" xml:space="preserve"><value>Notizen</value></data>
+  <data name="FSVCollectSave" xml:space="preserve"><value>Einnahme speichern</value></data>
+  <data name="FSVCollected" xml:space="preserve"><value>Einnahme gespeichert</value></data>
+  <data name="FSVShiftDocs" xml:space="preserve"><value>Schichtbelege</value></data>
+  <data name="FSVNoDocs" xml:space="preserve"><value>Noch keine Belege in dieser Schicht</value></data>
+  <data name="FSVCashSales" xml:space="preserve"><value>Barverkäufe</value></data>
+  <data name="FSVCreditSales" xml:space="preserve"><value>Kreditverkäufe</value></data>
+  <data name="FSVVouchers" xml:space="preserve"><value>Kassenbelege (netto)</value></data>
+  <data name="FSVDocType" xml:space="preserve"><value>Beleg</value></data>
+  <data name="FSVDocNo" xml:space="preserve"><value>Nr.</value></data>
+  <data name="FSVParty" xml:space="preserve"><value>Partei</value></data>
+  <data name="FSVCashSale" xml:space="preserve"><value>Barrechnung</value></data>
+  <data name="FSVCreditSale" xml:space="preserve"><value>Kreditrechnung</value></data>
+  <data name="FSVVoucher" xml:space="preserve"><value>Kassenbeleg</value></data>
+  <data name="FSATitle" xml:space="preserve"><value>Außendienst-Freigaben</value></data>
+  <data name="FSASub" xml:space="preserve"><value>Rabatt oder Kredit über den Limits; eine Freigabe gilt einmal, für dieselbe Rechnung bis zu ihrem Limit</value></data>
+  <data name="FSAPendingOnly" xml:space="preserve"><value>Nur ausstehende</value></data>
+  <data name="FSANoPending" xml:space="preserve"><value>Keine ausstehenden Anfragen</value></data>
+  <data name="FSANone" xml:space="preserve"><value>Keine Anfragen</value></data>
+  <data name="FSADate" xml:space="preserve"><value>Datum</value></data>
+  <data name="FSAType" xml:space="preserve"><value>Art</value></data>
+  <data name="FSAType_1" xml:space="preserve"><value>Kredit</value></data>
+  <data name="FSAType_2" xml:space="preserve"><value>Rabatt</value></data>
+  <data name="FSAType_3" xml:space="preserve"><value>Retoure ohne Rechnung</value></data>
+  <data name="FSAType_4" xml:space="preserve"><value>Außerhalb des Gebiets</value></data>
+  <data name="FSAType_5" xml:space="preserve"><value>Außerhalb der Rückgabefrist</value></data>
+  <data name="FSAType_6" xml:space="preserve"><value>Schicht wieder öffnen</value></data>
+  <data name="FSARequest" xml:space="preserve"><value>Anfrage</value></data>
+  <data name="FSARequested" xml:space="preserve"><value>Angefragt</value></data>
+  <data name="FSAAllowed" xml:space="preserve"><value>Erlaubt</value></data>
+  <data name="FSADecision" xml:space="preserve"><value>Entscheidung</value></data>
+  <data name="FSAUsed" xml:space="preserve"><value>Auf einer Rechnung verwendet</value></data>
+  <data name="FSANotes" xml:space="preserve"><value>Entscheidungsnotiz</value></data>
+  <data name="FSAApprove" xml:space="preserve"><value>Freigeben</value></data>
+  <data name="FSAReject" xml:space="preserve"><value>Ablehnen</value></data>
+  <data name="FSAApproved" xml:space="preserve"><value>Freigegeben</value></data>
+  <data name="FSARejected" xml:space="preserve"><value>Anfrage abgelehnt</value></data>
 </root>

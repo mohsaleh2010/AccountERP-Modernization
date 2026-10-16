@@ -93,6 +93,12 @@
                 }
                 else if (_shift.Status != (int)SalesRepShiftStatus.Closing)
                 {
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.PointOfSale" Href="@($"/accounts/invoices/sales-invoice?rep={_rep.Id}")">@Tr("FSVSellCash")</MudButton>
+                    @if (_rep.Allow_Credit_Sales)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.RequestQuote" Href="@($"/accounts/invoices/sales-invoice?rep={_rep.Id}&agile=1")">@Tr("FSVSellCredit")</MudButton>
+                    }
+                    <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Payments" OnClick="@(() => _panel = Panel.Collect)">@Tr("FSVCollect")</MudButton>
                     <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Upload" OnClick="@(() => _panel = Panel.Load)">@Tr("FSSLoadMore")</MudButton>
                     <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Download" Disabled="@(_vanStock.Count == 0)" OnClick="StartUnload">@Tr("FSSUnload")</MudButton>
                     <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.DeleteSweep" Disabled="@(_damagedStock.Count == 0)" OnClick="@(() => _panel = Panel.Damaged)">@Tr("FSSDamaged")</MudButton>
@@ -164,6 +170,61 @@
                         @Tr(load ? "FSSIssueLoad" : "FSSIssueUnload")
                     </MudButton>
                 </div>
+            </div>
+        }
+
+        @* ===== التحصيل من عميل على صندوق العهدة ===== *@
+        @if (_panel == Panel.Collect)
+        {
+            <div class="inv-card ss-gap">
+                <h2 class="ss-sec"><MudIcon Icon="@Icons.Material.Filled.Payments" Color="Color.Primary" Size="Size.Small" />@Tr("FSVCollect")</h2>
+                <div class="ss-hint">@Tr("FSVCollectHint")</div>
+                <div class="ss-kpis ss-gap">
+                    <MudAutocomplete T="SalesRepProfileService.Option" @bind-Value="_collectCustomer" SearchFunc="SearchCustomersAsync" ToStringFunc="@(o => o?.Name ?? "")"
+                                     Label="@Tr("FSVCustomer")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" ResetValueOnEmptyText="true" DebounceInterval="300" />
+                    <MudNumericField T="decimal?" @bind-Value="_collectAmount" Label="@Tr("FSVAmount")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Format="N2" Required="true" />
+                    <MudTextField T="string" @bind-Value="_collectNotes" Label="@Tr("FSVNotes")" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </div>
+                <div class="ss-acts" style="justify-content:flex-end">
+                    <MudButton Variant="Variant.Text" OnClick="ClosePanel" Disabled="@_busy">@Tr("Cancel")</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(_busy || _collectCustomer == null || !(_collectAmount > 0))" OnClick="CollectAsync">
+                        @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                        @Tr("FSVCollectSave")
+                    </MudButton>
+                </div>
+            </div>
+        }
+
+        @* ===== مستندات الوردية: فواتير البيع وإذونات النقدية ===== *@
+        @if (_shift != null)
+        {
+            <div class="inv-card ss-gap">
+                <h2 class="ss-sec"><MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Color="Color.Primary" Size="Size.Small" />@Tr("FSVShiftDocs")</h2>
+                @if (_docs.Count == 0)
+                {
+                    <div class="inv-empty" role="status">@Tr("FSVNoDocs")</div>
+                }
+                else
+                {
+                    <div class="ss-kpis">
+                        <div class="ss-kpi"><div class="k">@Tr("FSVCashSales")</div><div class="v ss-num">@_docs.Where(d => d.Doc_Type == 1 && d.Is_Credit == 0).Sum(d => d.Value).ToString("N2")</div></div>
+                        <div class="ss-kpi"><div class="k">@Tr("FSVCreditSales")</div><div class="v ss-num">@_docs.Where(d => d.Doc_Type == 1 && d.Is_Credit == 1).Sum(d => d.Value).ToString("N2")</div></div>
+                        <div class="ss-kpi"><div class="k">@Tr("FSVVouchers")</div><div class="v ss-num">@_docs.Where(d => d.Doc_Type == 3).Sum(d => d.Value).ToString("N2")</div></div>
+                    </div>
+                    <MudTable Items="@_docs" T="SalesRepSaleService.ShiftDoc" Elevation="0" Class="inv-table ss-gap" Breakpoint="Breakpoint.Sm" Dense="true">
+                        <HeaderContent><MudTh>@Tr("FSVDocType")</MudTh><MudTh>@Tr("FSVDocNo")</MudTh><MudTh>@Tr("FSSDate")</MudTh><MudTh>@Tr("FSVParty")</MudTh><MudTh>@Tr("FSVAmount")</MudTh></HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="@Tr("FSVDocType")">@Tr(context.Doc_Type == 1 ? (context.Is_Credit == 1 ? "FSVCreditSale" : "FSVCashSale") : "FSVVoucher")</MudTd>
+                            <MudTd DataLabel="@Tr("FSVDocNo")" Class="ss-num">
+                                @if (context.Doc_Type == 1) { <MudLink Href="@($"/accounts/invoices/sales-invoice/{context.Doc_Id}")">@context.Doc_No</MudLink> }
+                                else { @context.Doc_No }
+                            </MudTd>
+                            <MudTd DataLabel="@Tr("FSSDate")" Class="ss-num">@context.Doc_Date?.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                            <MudTd DataLabel="@Tr("FSVParty")">@context.Party</MudTd>
+                            <MudTd DataLabel="@Tr("FSVAmount")" Class="@("ss-num " + (context.Value < 0 ? "ss-neg" : ""))">@context.Value.ToString("N2")</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
             </div>
         }
 
@@ -315,7 +376,7 @@
 @code {
     [SupplyParameterFromQuery(Name = "rep")] public long? RepQuery { get; set; }
 
-    private enum Panel { None, Load, Unload, Damaged }
+    private enum Panel { None, Load, Unload, Damaged, Collect }
 
     private class LineEdit
     {
@@ -361,6 +422,33 @@
     private decimal? _cashCounted, _remitAmount;
     private List<SalesRepProfileService.Option> _boxes = new();
     private readonly CashVouchersService _cashSvc = new();
+    private readonly SalesRepSaleService _saleSvc = new();
+    private List<SalesRepSaleService.ShiftDoc> _docs = new();
+    private SalesRepProfileService.Option? _collectCustomer;
+    private decimal? _collectAmount;
+    private string? _collectNotes;
+    private List<SalesRepProfileService.Option>? _customers;
+
+    private async Task<IEnumerable<SalesRepProfileService.Option>> SearchCustomersAsync(string text, CancellationToken ct)
+    {
+        _customers ??= await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return new AccountModelsLib.Models.CustomerCLS().Get_CustomerSupplierListForStatement(0, 0, -1, -1).Rows.Cast<System.Data.DataRow>()
+                .Select(r => new SalesRepProfileService.Option { Id = Convert.ToInt64(r["Id"]), Name = r["Name"]?.ToString()?.Trim() ?? "" }).ToList();
+        }, ct);
+        return _customers.Where(c => string.IsNullOrWhiteSpace(text) || c.Name.Contains(text.Trim(), StringComparison.OrdinalIgnoreCase)).Take(50);
+    }
+
+    private async Task CollectAsync()
+    {
+        if (_rep == null || _collectCustomer == null || !(_collectAmount > 0)) return;
+        long repId = _rep.Id, customer = _collectCustomer.Id;
+        decimal amount = _collectAmount.Value;
+        string? notes = _collectNotes;
+        await RunAsync(() => _saleSvc.Collect(repId, customer, amount, notes), "FSVCollected");
+        if (_error == null) { _collectCustomer = null; _collectAmount = null; _collectNotes = null; }
+    }
 
     private decimal? CashDiff => _cashCounted == null || _cash == null ? null : Math.Round(_cashCounted.Value - _cash.Expected, 2);
     private string? RemitError => _remitBox != 0 && _cashCounted != null && (_remitAmount ?? _cashCounted) > _cashCounted ? Tr("FSSRemitTooMuch") : null;
@@ -408,11 +496,13 @@
                         stores: _profiles.GetFreeStores(rep.Branch_Id, rep.Id).Where(s => s.Id != rep.Van_Store_Id && s.Id != rep.Damaged_Store_Id).ToList(),
                         count: shift?.Status == (int)SalesRepShiftStatus.Closing ? _svc.GetShiftStock(shift.Id) : new List<SalesRep_Shift_Stock>(),
                         cash: shift?.Status == (int)SalesRepShiftStatus.Closing ? _svc.GetShiftCash(shift.Id) : null,
+                        docs: shift == null ? new List<SalesRepSaleService.ShiftDoc>() : _saleSvc.GetShiftDocs(shift.Id),
                         boxes: MainBoxes(rep));
             });
             _shift = data.shift; _vanStock = data.van; _damagedStock = data.damaged; _pending = data.pending; _history = data.history; _mainStores = data.stores;
             BuildCount(data.count);
             _cash = data.cash; _cashCounted = data.cash?.Counted; _remitAmount = null; _chargeShortage = true;
+            _docs = data.docs;
             _boxes = data.boxes;
             if (_remitBox != 0 && !_boxes.Any(b => b.Id == _remitBox)) _remitBox = 0;
             if (_remitBox == 0) _remitBox = _boxes.FirstOrDefault()?.Id ?? 0;

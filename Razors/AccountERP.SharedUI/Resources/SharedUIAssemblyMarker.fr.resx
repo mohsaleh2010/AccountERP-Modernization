@@ -3037,4 +3037,62 @@
   <data name="FSSChargeShortage" xml:space="preserve"><value>Imputer la valeur du manque ({0}) au commercial</value></data>
   <data name="FSSChargeShortageHint" xml:space="preserve"><value>Écriture : débit commercial / crédit « Autres produits » au coût moyen. Désactivez si le superviseur le passe en charge</value></data>
   <data name="FSSCloseConfirmCash" xml:space="preserve"><value>Clôture : {0} en manque, {1} en excédent (bons brouillons). Écart d'espèces : {2}, versé : {3}, manque imputé : {4}. Continuer ?</value></data>
+  <data name="FSVNoRep" xml:space="preserve"><value>Commercial introuvable ou inactif</value></data>
+  <data name="FSVRepMode" xml:space="preserve"><value>Vente commercial</value></data>
+  <data name="FSVNoOpenShift" xml:space="preserve"><value>Aucune tournée ouverte — ouvrez-la ou confirmez le chargement. Pas de vente pendant la clôture.</value></data>
+  <data name="FSVApprovalsNeeded" xml:space="preserve"><value>Cette facture nécessite l'accord du superviseur</value></data>
+  <data name="FSVApproval_0" xml:space="preserve"><value>En attente</value></data>
+  <data name="FSVApproval_1" xml:space="preserve"><value>Approuvée</value></data>
+  <data name="FSVApproval_2" xml:space="preserve"><value>Refusée</value></data>
+  <data name="FSVApprovalNone" xml:space="preserve"><value>Non demandée</value></data>
+  <data name="FSVReason" xml:space="preserve"><value>Motif (facultatif)</value></data>
+  <data name="FSVRequestApproval" xml:space="preserve"><value>Demander l'accord</value></data>
+  <data name="FSVRefreshStatus" xml:space="preserve"><value>Actualiser</value></data>
+  <data name="FSVCheck" xml:space="preserve"><value>Vérifier les limites</value></data>
+  <data name="FSVCheckOk" xml:space="preserve"><value>La facture respecte les limites</value></data>
+  <data name="FSVApprovalRequested" xml:space="preserve"><value>Demande envoyée au superviseur</value></data>
+  <data name="FSVLinkedReadOnly" xml:space="preserve"><value>Facture de tournée : lecture seule ; corrigez par un avoir</value></data>
+  <data name="FSVSellCash" xml:space="preserve"><value>Vente comptant</value></data>
+  <data name="FSVSellCredit" xml:space="preserve"><value>Vente à crédit</value></data>
+  <data name="FSVCollect" xml:space="preserve"><value>Encaisser</value></data>
+  <data name="FSVCollectHint" xml:space="preserve"><value>Reçu d'espèces du client dans la caisse du commercial, lié à la tournée</value></data>
+  <data name="FSVCustomer" xml:space="preserve"><value>Client</value></data>
+  <data name="FSVAmount" xml:space="preserve"><value>Montant</value></data>
+  <data name="FSVNotes" xml:space="preserve"><value>Notes</value></data>
+  <data name="FSVCollectSave" xml:space="preserve"><value>Enregistrer l'encaissement</value></data>
+  <data name="FSVCollected" xml:space="preserve"><value>Encaissement enregistré</value></data>
+  <data name="FSVShiftDocs" xml:space="preserve"><value>Documents de la tournée</value></data>
+  <data name="FSVNoDocs" xml:space="preserve"><value>Aucun document pour cette tournée</value></data>
+  <data name="FSVCashSales" xml:space="preserve"><value>Ventes comptant</value></data>
+  <data name="FSVCreditSales" xml:space="preserve"><value>Ventes à crédit</value></data>
+  <data name="FSVVouchers" xml:space="preserve"><value>Bons de caisse (net)</value></data>
+  <data name="FSVDocType" xml:space="preserve"><value>Document</value></data>
+  <data name="FSVDocNo" xml:space="preserve"><value>N°</value></data>
+  <data name="FSVParty" xml:space="preserve"><value>Tiers</value></data>
+  <data name="FSVCashSale" xml:space="preserve"><value>Facture comptant</value></data>
+  <data name="FSVCreditSale" xml:space="preserve"><value>Facture à crédit</value></data>
+  <data name="FSVVoucher" xml:space="preserve"><value>Bon de caisse</value></data>
+  <data name="FSATitle" xml:space="preserve"><value>Validations des commerciaux</value></data>
+  <data name="FSASub" xml:space="preserve"><value>Remises ou crédit au-delà des limites ; un accord sert une fois, pour la même facture et dans sa limite</value></data>
+  <data name="FSAPendingOnly" xml:space="preserve"><value>En attente uniquement</value></data>
+  <data name="FSANoPending" xml:space="preserve"><value>Aucune demande en attente</value></data>
+  <data name="FSANone" xml:space="preserve"><value>Aucune demande</value></data>
+  <data name="FSADate" xml:space="preserve"><value>Date</value></data>
+  <data name="FSAType" xml:space="preserve"><value>Type</value></data>
+  <data name="FSAType_1" xml:space="preserve"><value>Crédit</value></data>
+  <data name="FSAType_2" xml:space="preserve"><value>Remise</value></data>
+  <data name="FSAType_3" xml:space="preserve"><value>Retour sans facture</value></data>
+  <data name="FSAType_4" xml:space="preserve"><value>Hors zone</value></data>
+  <data name="FSAType_5" xml:space="preserve"><value>Hors délai de retour</value></data>
+  <data name="FSAType_6" xml:space="preserve"><value>Réouverture de tournée</value></data>
+  <data name="FSARequest" xml:space="preserve"><value>Demande</value></data>
+  <data name="FSARequested" xml:space="preserve"><value>Demandé</value></data>
+  <data name="FSAAllowed" xml:space="preserve"><value>Autorisé</value></data>
+  <data name="FSADecision" xml:space="preserve"><value>Décision</value></data>
+  <data name="FSAUsed" xml:space="preserve"><value>Utilisée sur une facture</value></data>
+  <data name="FSANotes" xml:space="preserve"><value>Note de décision</value></data>
+  <data name="FSAApprove" xml:space="preserve"><value>Approuver</value></data>
+  <data name="FSAReject" xml:space="preserve"><value>Refuser</value></data>
+  <data name="FSAApproved" xml:space="preserve"><value>Approuvée</value></data>
+  <data name="FSARejected" xml:space="preserve"><value>Demande refusée</value></data>
 </root>

@@ -1,0 +1,160 @@
+@* 🟢 خطة المندوبين — المرحلة 3: «موافقات المندوبين». المشرف يعتمد أو يرفض طلبات الخصم والائتمان التى أوقفت فاتورة المندوب؛
+   الموافقة تُستعمل مرة واحدة لنفس المستند وبحدها المعتمد، ولا يعتمد المستخدم طلباً قدّمه. الخدمة SalesRepSaleService. التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/approvals"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("FSATitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .sa-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .sa-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-warning) 16%, transparent); color: var(--mud-palette-warning); }
+    .sa-head .ico .mud-icon-root { font-size: 2rem; }
+    .sa-head .titles { flex: 1 1 260px; }
+    .sa-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .sa-gap { margin-top: 16px; }
+    .sa-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .sa-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .sa-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card sa-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Gavel" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSATitle")</h1>
+            <div class="sub">@Tr("FSASub")</div>
+        </div>
+        <MudSwitch T="bool" Value="_pendingOnly" ValueChanged="OnFilterAsync" Color="Color.Primary" Label="@Tr("FSAPendingOnly")" />
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" Disabled="@_busy" OnClick="LoadAsync">@Tr("FSVRefreshStatus")</MudButton>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="sa-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    <div class="inv-card sa-gap">
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("FSRLoading")" />
+        }
+        else if (_rows.Count == 0)
+        {
+            <div class="inv-empty" role="status">
+                <MudIcon Icon="@Icons.Material.Filled.TaskAlt" Size="Size.Large" />
+                <div>@Tr(_pendingOnly ? "FSANoPending" : "FSANone")</div>
+            </div>
+        }
+        else
+        {
+            <MudTable Items="@_rows" T="SalesRepSaleService.ApprovalRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Md" Dense="true">
+                <HeaderContent>
+                    <MudTh>@Tr("FSADate")</MudTh>
+                    <MudTh>@Tr("FSRRep")</MudTh>
+                    <MudTh>@Tr("FSVCustomer")</MudTh>
+                    <MudTh>@Tr("FSAType")</MudTh>
+                    <MudTh>@Tr("FSARequest")</MudTh>
+                    <MudTh>@Tr("FSRStatus")</MudTh>
+                    <MudTh>@Tr("FSADecision")</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("FSADate")" Class="sa-num">@context.Insert_ServerDateTime?.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                    <MudTd DataLabel="@Tr("FSRRep")">@context.Rep_Name</MudTd>
+                    <MudTd DataLabel="@Tr("FSVCustomer")">@context.Customer_Name</MudTd>
+                    <MudTd DataLabel="@Tr("FSAType")">@Tr("FSAType_" + context.Type)</MudTd>
+                    <MudTd DataLabel="@Tr("FSARequest")">
+                        <div>@context.Reason</div>
+                        <div class="sa-hint sa-num">@Tr("FSARequested"): @Fmt(context.Requested_Value) · @Tr("FSAAllowed"): @Fmt(context.Allowed_Value)</div>
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("FSRStatus")">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.Status == 1 ? Color.Success : context.Status == 2 ? Color.Error : Color.Warning)">@Tr("FSVApproval_" + context.Status)</MudChip>
+                        @if (context.Ref_Doc_Id != null) { <div class="sa-hint">@Tr("FSAUsed")</div> }
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("FSADecision")">
+                        @if (context.Status == 0)
+                        {
+                            <div class="sa-acts">
+                                <MudTextField T="string" Value="@Note(context.Id)" ValueChanged="@(v => _notes[context.Id] = v)" Label="@Tr("FSANotes")" Variant="Variant.Outlined" Margin="Margin.Dense" Style="min-width:160px" />
+                                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Check" Disabled="@_busy" OnClick="@(() => DecideAsync(context, true))">@Tr("FSAApprove")</MudButton>
+                                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Close" Disabled="@_busy" OnClick="@(() => DecideAsync(context, false))">@Tr("FSAReject")</MudButton>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="sa-num">@context.Decided_At?.ToString("yyyy-MM-dd HH:mm")</div>
+                            @if (!string.IsNullOrWhiteSpace(context.Decision_Notes)) { <div class="sa-hint">@context.Decision_Notes</div> }
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private readonly SalesRepSaleService _svc = new();
+    private List<SalesRepSaleService.ApprovalRow> _rows = new();
+    private readonly Dictionary<long, string?> _notes = new();
+    private bool _loading = true, _busy, _pendingOnly = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task OnFilterAsync(bool v) { _pendingOnly = v; await LoadAsync(); }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        try
+        {
+            bool pending = _pendingOnly;
+            _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetApprovals(pending); });
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private string? Note(long id) => _notes.TryGetValue(id, out var n) ? n : null;
+
+    private async Task DecideAsync(SalesRepSaleService.ApprovalRow row, bool approve)
+    {
+        _busy = true; _error = null;
+        try
+        {
+            long id = row.Id;
+            string? notes = Note(id);
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.Decide(id, approve, notes); });
+            Snackbar.Add(Tr(approve ? "FSAApproved" : "FSARejected"), approve ? Severity.Success : Severity.Info);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private static string Fmt(decimal? v) => v == null ? "—" : v.Value.ToString("N2");
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

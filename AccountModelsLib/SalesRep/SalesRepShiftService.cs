@@ -586,6 +586,27 @@ WHERE Engine_Posted = 1 AND OrderTable_id IN ({string.Join(",", o)}) AND Unit_it
 GROUP BY Unit_item_Table_Id").ToList().ToDictionary(r => r.Unit_Item_Id);
         }
 
+        /// <summary>
+        /// المباع من السيارة بفواتير الوردية المربوطة (بالوحدة الصغرى): صفوف الدفتر التى يكتبها محرك الفاتورة
+        /// (Set_ItemTransactionFromInvoice: Invoice_Type_Id = نوع فاتورة المبيعات، Invoice_Id = رقم الفاتورة، صرف).
+        /// </summary>
+        private static Dictionary<long, decimal> SoldBy(operations opp, long shiftId, IEnumerable<long> unitItemIds)
+        {
+            var u = unitItemIds.Distinct().ToList();
+            var invoices = opp.db.SalesRep_Document_Links.AsNoTracking()
+                .Where(l => l.Shift_Id == shiftId && l.Doc_Type == (int)SalesRepDocType.SaleInvoice).Select(l => l.Doc_Id).ToList();
+            if (u.Count == 0 || invoices.Count == 0) return new Dictionary<long, decimal>();
+            return opp.db.Database.SqlQueryRaw<MoveRow>($@"
+SELECT x.Unit_item_Table_Id AS Unit_Item_Id,
+       CAST(0 AS decimal(18,4)) AS In_Qty,
+       CAST(SUM(CASE WHEN x.Engine_Posted = 1 THEN -ISNULL(x.Qty_Small, 0)
+                     ELSE ISNULL(x.qua, 0) * CASE WHEN ISNULL(ui.Small_unit, 0) <= 0 THEN 1 ELSE ui.Small_unit END + ISNULL(x.Part_qua, 0) END) AS decimal(18,4)) AS Out_Qty
+FROM Detailes_Purshing_Import_Export x JOIN Unit_item ui ON ui.id = x.Unit_item_Table_Id
+WHERE x.Transaction_Type = 2 AND x.Invoice_Type_Id = {Common.Invoice_Type_Id} AND x.Invoice_Id IN ({string.Join(",", invoices)})
+  AND x.Unit_item_Table_Id IN ({string.Join(",", u)})
+GROUP BY x.Unit_item_Table_Id").ToList().ToDictionary(r => r.Unit_Item_Id, r => r.Out_Qty);
+        }
+
         private static List<long> ShiftOrders(operations opp, long shiftId) => opp.db.SalesRep_Document_Links.AsNoTracking()
             .Where(l => l.Shift_Id == shiftId && l.Doc_Type == (int)SalesRepDocType.StoreOrder).Select(l => l.Doc_Id).ToList();
 
@@ -600,6 +621,7 @@ GROUP BY Unit_item_Table_Id").ToList().ToDictionary(r => r.Unit_Item_Id);
             var lines = opp.db.Unit_item.AsNoTracking().Where(u => u.Store_id == rep.Van_Store_Id && (u.Store_Type ?? 4) == 4)
                 .Select(u => new { u.id, u.Item_Id }).ToList();
             var moves = MovesBy(opp, ShiftOrders(opp, shift.Id), lines.Select(l => l.id));
+            var sold = SoldBy(opp, shift.Id, lines.Select(l => l.id));
             var engine = new StockMovementService(opp);
             long branchId = rep.Branch_Id ?? Common.Branch_Id;
             var result = new List<SalesRep_Shift_Stock>();
@@ -618,6 +640,7 @@ GROUP BY Unit_item_Table_Id").ToList().ToDictionary(r => r.Unit_Item_Id);
                 else row.StampEdit();
                 row.Loaded = m?.In_Qty ?? 0;
                 row.Unloaded = m?.Out_Qty ?? 0;
+                row.Sold = sold.TryGetValue(l.id, out var s) ? s : 0;
                 row.Expected_Closing = expected;
                 row.Other_Movement = expected - row.Opening - row.Loaded + row.Unloaded + row.Sold + row.Delivered - row.Returned_Good;
                 row.Unit_Cost = opp.db.Item_Branch_Costs.AsNoTracking().Where(c => c.Item_Id == l.Item_Id && c.Branch_Id == branchId).Select(c => (decimal?)c.Avg_Cost).FirstOrDefault() ?? 0;

@@ -3035,4 +3035,62 @@
   <data name="FSSChargeShortage" xml:space="preserve"><value>تحميل قيمة عجز البضاعة ({0}) على حساب المندوب</value></data>
   <data name="FSSChargeShortageHint" xml:space="preserve"><value>قيد: مدين حساب المندوب / دائن «إيرادات أخرى» بمتوسط التكلفة. ألغِه لو قرر المشرف اعتباره مصروفاً</value></data>
   <data name="FSSCloseConfirmCash" xml:space="preserve"><value>سيُقفل اليوم. أصناف بعجز: {0}، بزيادة: {1} (أذون تسوية مسودة). فرق النقدية: {2}، المورَّد: {3}، عجز البضاعة على المندوب: {4}. متابعة؟</value></data>
+  <data name="FSVNoRep" xml:space="preserve"><value>ملف المندوب غير موجود أو موقوف</value></data>
+  <data name="FSVRepMode" xml:space="preserve"><value>بيع المندوب</value></data>
+  <data name="FSVNoOpenShift" xml:space="preserve"><value>لا وردية مفتوحة للمندوب — افتح الوردية أو أكّد استلام التحميل أولاً. البيع لا يتم والوردية قيد الإقفال.</value></data>
+  <data name="FSVApprovalsNeeded" xml:space="preserve"><value>تحتاج الفاتورة موافقة المشرف</value></data>
+  <data name="FSVApproval_0" xml:space="preserve"><value>بانتظار الموافقة</value></data>
+  <data name="FSVApproval_1" xml:space="preserve"><value>موافق عليها</value></data>
+  <data name="FSVApproval_2" xml:space="preserve"><value>مرفوضة</value></data>
+  <data name="FSVApprovalNone" xml:space="preserve"><value>لم تُطلب</value></data>
+  <data name="FSVReason" xml:space="preserve"><value>سبب الطلب (اختيارى)</value></data>
+  <data name="FSVRequestApproval" xml:space="preserve"><value>طلب الموافقة</value></data>
+  <data name="FSVRefreshStatus" xml:space="preserve"><value>تحديث</value></data>
+  <data name="FSVCheck" xml:space="preserve"><value>فحص الحدود</value></data>
+  <data name="FSVCheckOk" xml:space="preserve"><value>الفاتورة ضمن حدود المندوب</value></data>
+  <data name="FSVApprovalRequested" xml:space="preserve"><value>أُرسل طلب الموافقة للمشرف</value></data>
+  <data name="FSVLinkedReadOnly" xml:space="preserve"><value>فاتورة مندوب مربوطة بوردية: للعرض فقط، والتصحيح بمرتجع</value></data>
+  <data name="FSVSellCash" xml:space="preserve"><value>بيع نقدى</value></data>
+  <data name="FSVSellCredit" xml:space="preserve"><value>بيع آجل</value></data>
+  <data name="FSVCollect" xml:space="preserve"><value>تحصيل</value></data>
+  <data name="FSVCollectHint" xml:space="preserve"><value>إذن استلام نقدية من العميل على صندوق عهدة المندوب، مربوط بالوردية</value></data>
+  <data name="FSVCustomer" xml:space="preserve"><value>العميل</value></data>
+  <data name="FSVAmount" xml:space="preserve"><value>المبلغ</value></data>
+  <data name="FSVNotes" xml:space="preserve"><value>ملاحظات</value></data>
+  <data name="FSVCollectSave" xml:space="preserve"><value>حفظ التحصيل</value></data>
+  <data name="FSVCollected" xml:space="preserve"><value>سُجِّل التحصيل</value></data>
+  <data name="FSVShiftDocs" xml:space="preserve"><value>مستندات الوردية</value></data>
+  <data name="FSVNoDocs" xml:space="preserve"><value>لا فواتير ولا إذونات فى هذه الوردية بعد</value></data>
+  <data name="FSVCashSales" xml:space="preserve"><value>مبيعات نقدية</value></data>
+  <data name="FSVCreditSales" xml:space="preserve"><value>مبيعات آجلة</value></data>
+  <data name="FSVVouchers" xml:space="preserve"><value>صافى إذونات النقدية</value></data>
+  <data name="FSVDocType" xml:space="preserve"><value>المستند</value></data>
+  <data name="FSVDocNo" xml:space="preserve"><value>الرقم</value></data>
+  <data name="FSVParty" xml:space="preserve"><value>الطرف</value></data>
+  <data name="FSVCashSale" xml:space="preserve"><value>فاتورة نقدية</value></data>
+  <data name="FSVCreditSale" xml:space="preserve"><value>فاتورة آجلة</value></data>
+  <data name="FSVVoucher" xml:space="preserve"><value>إذن نقدية</value></data>
+  <data name="FSATitle" xml:space="preserve"><value>موافقات المندوبين</value></data>
+  <data name="FSASub" xml:space="preserve"><value>خصم أو ائتمان أعلى من حدود المندوب؛ الموافقة تُستعمل مرة واحدة لنفس الفاتورة وبحدها</value></data>
+  <data name="FSAPendingOnly" xml:space="preserve"><value>المعلّقة فقط</value></data>
+  <data name="FSANoPending" xml:space="preserve"><value>لا طلبات معلّقة</value></data>
+  <data name="FSANone" xml:space="preserve"><value>لا طلبات</value></data>
+  <data name="FSADate" xml:space="preserve"><value>التاريخ</value></data>
+  <data name="FSAType" xml:space="preserve"><value>النوع</value></data>
+  <data name="FSAType_1" xml:space="preserve"><value>ائتمان</value></data>
+  <data name="FSAType_2" xml:space="preserve"><value>خصم</value></data>
+  <data name="FSAType_3" xml:space="preserve"><value>مرتجع بلا فاتورة</value></data>
+  <data name="FSAType_4" xml:space="preserve"><value>خارج النطاق</value></data>
+  <data name="FSAType_5" xml:space="preserve"><value>خارج نافذة الإرجاع</value></data>
+  <data name="FSAType_6" xml:space="preserve"><value>إعادة فتح وردية</value></data>
+  <data name="FSARequest" xml:space="preserve"><value>الطلب</value></data>
+  <data name="FSARequested" xml:space="preserve"><value>المطلوب</value></data>
+  <data name="FSAAllowed" xml:space="preserve"><value>المسموح</value></data>
+  <data name="FSADecision" xml:space="preserve"><value>القرار</value></data>
+  <data name="FSAUsed" xml:space="preserve"><value>استُعملت فى فاتورة</value></data>
+  <data name="FSANotes" xml:space="preserve"><value>ملاحظة القرار</value></data>
+  <data name="FSAApprove" xml:space="preserve"><value>موافقة</value></data>
+  <data name="FSAReject" xml:space="preserve"><value>رفض</value></data>
+  <data name="FSAApproved" xml:space="preserve"><value>تمت الموافقة</value></data>
+  <data name="FSARejected" xml:space="preserve"><value>رُفض الطلب</value></data>
 </root>

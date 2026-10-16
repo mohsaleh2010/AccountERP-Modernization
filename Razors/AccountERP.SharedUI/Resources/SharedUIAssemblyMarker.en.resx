@@ -3035,4 +3035,62 @@
   <data name="FSSChargeShortage" xml:space="preserve"><value>Charge the stock shortage value ({0}) to the rep's account</value></data>
   <data name="FSSChargeShortageHint" xml:space="preserve"><value>Entry: debit the rep's account / credit 'Other income' at average cost. Turn off if the supervisor treats it as an expense</value></data>
   <data name="FSSCloseConfirmCash" xml:space="preserve"><value>The day will close. Short items: {0}, over: {1} (draft adjustment orders). Cash difference: {2}, handover: {3}, stock shortage charged to rep: {4}. Continue?</value></data>
+  <data name="FSVNoRep" xml:space="preserve"><value>Sales rep profile not found or inactive</value></data>
+  <data name="FSVRepMode" xml:space="preserve"><value>Rep sale</value></data>
+  <data name="FSVNoOpenShift" xml:space="preserve"><value>The rep has no open shift — open it or confirm the load first. No sales while the shift is closing.</value></data>
+  <data name="FSVApprovalsNeeded" xml:space="preserve"><value>This invoice needs supervisor approval</value></data>
+  <data name="FSVApproval_0" xml:space="preserve"><value>Pending</value></data>
+  <data name="FSVApproval_1" xml:space="preserve"><value>Approved</value></data>
+  <data name="FSVApproval_2" xml:space="preserve"><value>Rejected</value></data>
+  <data name="FSVApprovalNone" xml:space="preserve"><value>Not requested</value></data>
+  <data name="FSVReason" xml:space="preserve"><value>Reason (optional)</value></data>
+  <data name="FSVRequestApproval" xml:space="preserve"><value>Request approval</value></data>
+  <data name="FSVRefreshStatus" xml:space="preserve"><value>Refresh</value></data>
+  <data name="FSVCheck" xml:space="preserve"><value>Check limits</value></data>
+  <data name="FSVCheckOk" xml:space="preserve"><value>The invoice is within the rep's limits</value></data>
+  <data name="FSVApprovalRequested" xml:space="preserve"><value>Approval request sent to the supervisor</value></data>
+  <data name="FSVLinkedReadOnly" xml:space="preserve"><value>Rep invoice linked to a shift: view only; correct it with a return</value></data>
+  <data name="FSVSellCash" xml:space="preserve"><value>Cash sale</value></data>
+  <data name="FSVSellCredit" xml:space="preserve"><value>Credit sale</value></data>
+  <data name="FSVCollect" xml:space="preserve"><value>Collect payment</value></data>
+  <data name="FSVCollectHint" xml:space="preserve"><value>A cash receipt from the customer into the rep's custody box, linked to the shift</value></data>
+  <data name="FSVCustomer" xml:space="preserve"><value>Customer</value></data>
+  <data name="FSVAmount" xml:space="preserve"><value>Amount</value></data>
+  <data name="FSVNotes" xml:space="preserve"><value>Notes</value></data>
+  <data name="FSVCollectSave" xml:space="preserve"><value>Save collection</value></data>
+  <data name="FSVCollected" xml:space="preserve"><value>Collection saved</value></data>
+  <data name="FSVShiftDocs" xml:space="preserve"><value>Shift documents</value></data>
+  <data name="FSVNoDocs" xml:space="preserve"><value>No invoices or vouchers in this shift yet</value></data>
+  <data name="FSVCashSales" xml:space="preserve"><value>Cash sales</value></data>
+  <data name="FSVCreditSales" xml:space="preserve"><value>Credit sales</value></data>
+  <data name="FSVVouchers" xml:space="preserve"><value>Net cash vouchers</value></data>
+  <data name="FSVDocType" xml:space="preserve"><value>Document</value></data>
+  <data name="FSVDocNo" xml:space="preserve"><value>No.</value></data>
+  <data name="FSVParty" xml:space="preserve"><value>Party</value></data>
+  <data name="FSVCashSale" xml:space="preserve"><value>Cash invoice</value></data>
+  <data name="FSVCreditSale" xml:space="preserve"><value>Credit invoice</value></data>
+  <data name="FSVVoucher" xml:space="preserve"><value>Cash voucher</value></data>
+  <data name="FSATitle" xml:space="preserve"><value>Sales rep approvals</value></data>
+  <data name="FSASub" xml:space="preserve"><value>Discounts or credit above the rep's limits; an approval is used once, for the same invoice and up to its limit</value></data>
+  <data name="FSAPendingOnly" xml:space="preserve"><value>Pending only</value></data>
+  <data name="FSANoPending" xml:space="preserve"><value>No pending requests</value></data>
+  <data name="FSANone" xml:space="preserve"><value>No requests</value></data>
+  <data name="FSADate" xml:space="preserve"><value>Date</value></data>
+  <data name="FSAType" xml:space="preserve"><value>Type</value></data>
+  <data name="FSAType_1" xml:space="preserve"><value>Credit</value></data>
+  <data name="FSAType_2" xml:space="preserve"><value>Discount</value></data>
+  <data name="FSAType_3" xml:space="preserve"><value>Return without invoice</value></data>
+  <data name="FSAType_4" xml:space="preserve"><value>Outside geofence</value></data>
+  <data name="FSAType_5" xml:space="preserve"><value>Outside return window</value></data>
+  <data name="FSAType_6" xml:space="preserve"><value>Reopen shift</value></data>
+  <data name="FSARequest" xml:space="preserve"><value>Request</value></data>
+  <data name="FSARequested" xml:space="preserve"><value>Requested</value></data>
+  <data name="FSAAllowed" xml:space="preserve"><value>Allowed</value></data>
+  <data name="FSADecision" xml:space="preserve"><value>Decision</value></data>
+  <data name="FSAUsed" xml:space="preserve"><value>Used on an invoice</value></data>
+  <data name="FSANotes" xml:space="preserve"><value>Decision note</value></data>
+  <data name="FSAApprove" xml:space="preserve"><value>Approve</value></data>
+  <data name="FSAReject" xml:space="preserve"><value>Reject</value></data>
+  <data name="FSAApproved" xml:space="preserve"><value>Approved</value></data>
+  <data name="FSARejected" xml:space="preserve"><value>Request rejected</value></data>
 </root>

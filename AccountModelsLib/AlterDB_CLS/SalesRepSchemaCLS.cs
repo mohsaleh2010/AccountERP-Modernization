@@ -213,8 +213,15 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Document_Links_Shift] ON [dbo].[SalesRep_
     [Otp_Hash] [nvarchar](200) NULL,
     [Reason] [nvarchar](1000) NULL,
     [Decision_Notes] [nvarchar](1000) NULL,
-    [Decided_At] [datetime] NULL,",
-             @"CREATE NONCLUSTERED INDEX [IX_SalesRep_Approvals_Status] ON [dbo].[SalesRep_Approvals]([Status]);"),
+    [Decided_At] [datetime] NULL,
+    [Rep_Id] [bigint] NULL,
+    [Shift_Id] [bigint] NULL,
+    [Customer_Id] [bigint] NULL,
+    [Requested_Value] [decimal](18, 4) NULL,
+    [Allowed_Value] [decimal](18, 4) NULL,
+    [Approved_Value] [decimal](18, 4) NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_SalesRep_Approvals_Status] ON [dbo].[SalesRep_Approvals]([Status]);
+CREATE NONCLUSTERED INDEX [IX_SalesRep_Approvals_Guid] ON [dbo].[SalesRep_Approvals]([Ref_Document_Guid], [Type]);"),
 
             ("SalesRep_GPS_Track", @"
     [Rep_Id] [bigint] NOT NULL,
@@ -333,8 +340,33 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Document_Links_Shift] ON [dbo].[SalesRep_
                 foreach (var t in Tables)
                     Step(t.Table, () => CreateTable(opp, t.Table, t.Columns, t.Indexes));
             }
+            Step("SalesRepAddedColumns", () => AddedColumns(opp));
             // مستقلة عن فحص الجداول: القواعد المرقّاة سابقاً تحتاج عناصر القائمة أيضاً.
             Step("SalesRepMenus", () => Menus(opp));
+        }
+
+        /// <summary>
+        /// أعمدة أُضيفت لجداول المندوبين بعد إنشائها (جداول هذا الموديول فقط، لا جداول النظام القديمة): ALTER ADD لو ناقصة.
+        /// المرحلة 3: الموافقة تحمل المندوب والوردية والعميل والقيمة المطلوبة/المسموحة/المعتمدة لتُستعمل مرة لنفس المستند وبحدها.
+        /// </summary>
+        private static readonly (string Table, string Column, string Type)[] Added =
+        {
+            ("SalesRep_Approvals", "Rep_Id", "[bigint] NULL"),
+            ("SalesRep_Approvals", "Shift_Id", "[bigint] NULL"),
+            ("SalesRep_Approvals", "Customer_Id", "[bigint] NULL"),
+            ("SalesRep_Approvals", "Requested_Value", "[decimal](18, 4) NULL"),
+            ("SalesRep_Approvals", "Allowed_Value", "[decimal](18, 4) NULL"),
+            ("SalesRep_Approvals", "Approved_Value", "[decimal](18, 4) NULL"),
+        };
+
+        private static void AddedColumns(operations opp)
+        {
+            foreach (var (table, column, type) in Added)
+                if (TableExists(opp, table) && ColumnMissing(opp, table, column))
+                    opp.db.Database.ExecuteSqlRaw($"ALTER TABLE [dbo].[{table}] ADD [{column}] {type}");
+            if (TableExists(opp, "SalesRep_Approvals") && opp.db.Database.SqlQueryRaw<int>(
+                    "SELECT COUNT(*) AS Value FROM sys.indexes WHERE name = N'IX_SalesRep_Approvals_Guid' AND object_id = OBJECT_ID(N'dbo.SalesRep_Approvals')").AsEnumerable().First() == 0)
+                opp.db.Database.ExecuteSqlRaw("CREATE NONCLUSTERED INDEX [IX_SalesRep_Approvals_Guid] ON [dbo].[SalesRep_Approvals]([Ref_Document_Guid], [Type])");
         }
 
         /// <summary>عناصر القائمة تحت «تعاملات المندوبين» (menuSalesManProcess): اسم العنصر، الوصف، صفحة Razor.</summary>
@@ -342,6 +374,7 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Document_Links_Shift] ON [dbo].[SalesRep_
         {
             ("menuSalesRepProfiles", "ملفات المندوبين الميدانيين", "/salesrep/reps"),
             ("menuSalesRepShift", "وردية المندوب", "/salesrep/shift"),
+            ("menuSalesRepApprovals", "موافقات المندوبين", "/salesrep/approvals"),
         };
 
         /// <summary>
