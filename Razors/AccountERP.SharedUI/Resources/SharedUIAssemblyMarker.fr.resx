@@ -3299,4 +3299,42 @@
   <data name="FSNSaving" xml:space="preserve"><value>Enregistrement…</value></data>
   <data name="FSNSaved" xml:space="preserve"><value>Commande {0} enregistrée et affectée</value></data>
   <data name="FSNStoreChangedClearsLines" xml:space="preserve"><value>Dépôt changé : articles effacés, ajoutez-les depuis le nouveau dépôt</value></data>
+  <data name="FSPTitle" xml:space="preserve"><value>Politiques de crédit et de remise</value></data>
+  <data name="FSPSub" xml:space="preserve"><value>Limites contrôlées à la vente, la prise de commande et la livraison ; au-delà, approbation requise</value></data>
+  <data name="FSPApprovals" xml:space="preserve"><value>Approbations</value></data>
+  <data name="FSPCreditTab" xml:space="preserve"><value>Crédit</value></data>
+  <data name="FSPDiscountTab" xml:space="preserve"><value>Remise</value></data>
+  <data name="FSPNewCredit" xml:space="preserve"><value>Nouvelle politique de crédit</value></data>
+  <data name="FSPEditCredit" xml:space="preserve"><value>Modifier la politique de crédit</value></data>
+  <data name="FSPNewDiscount" xml:space="preserve"><value>Nouvelle politique de remise</value></data>
+  <data name="FSPEditDiscount" xml:space="preserve"><value>Modifier la politique de remise</value></data>
+  <data name="FSPAppliesTo" xml:space="preserve"><value>S'applique à</value></data>
+  <data name="FSPTarget" xml:space="preserve"><value>Nom</value></data>
+  <data name="FSPKind_0" xml:space="preserve"><value>Client</value></data>
+  <data name="FSPKind_1" xml:space="preserve"><value>Groupe de clients</value></data>
+  <data name="FSPScope_0" xml:space="preserve"><value>Commercial</value></data>
+  <data name="FSPScope_1" xml:space="preserve"><value>Groupe de clients</value></data>
+  <data name="FSPScope_2" xml:space="preserve"><value>Article</value></data>
+  <data name="FSPScope_3" xml:space="preserve"><value>Groupe d'articles</value></data>
+  <data name="FSPTargetRequired" xml:space="preserve"><value>Choisissez dans la liste</value></data>
+  <data name="FSPCreditLimit" xml:space="preserve"><value>Plafond de crédit</value></data>
+  <data name="FSPOverdueDays" xml:space="preserve"><value>Retard max (jours)</value></data>
+  <data name="FSPOverdueDaysHint" xml:space="preserve"><value>Vide = pas de contrôle</value></data>
+  <data name="FSPBlockOverdue" xml:space="preserve"><value>Retard soumis à approbation</value></data>
+  <data name="FSPBlocks" xml:space="preserve"><value>Approbation requise</value></data>
+  <data name="FSPWarnOnly" xml:space="preserve"><value>Non bloquant</value></data>
+  <data name="FSPCreditRules" xml:space="preserve"><value>La politique du client prime sur celle du groupe. Une vente à crédit qui dépasse le plafond, ou pour un client en retard, nécessite une approbation. Sans politique, pas de contrôle.</value></data>
+  <data name="FSPNoApproval" xml:space="preserve"><value>Sans approbation jusqu'à</value></data>
+  <data name="FSPNoApprovalHint" xml:space="preserve"><value>Jusqu'à ce taux, pas d'approbation</value></data>
+  <data name="FSPHardMax" xml:space="preserve"><value>Maximum absolu</value></data>
+  <data name="FSPHardMaxHint" xml:space="preserve"><value>Jamais approuvé au-delà ; vide = avec approbation</value></data>
+  <data name="FSPWithApproval" xml:space="preserve"><value>Avec approbation</value></data>
+  <data name="FSPDiscountRules" xml:space="preserve"><value>Le plus bas plafond s'applique (commercial, groupe client, article, groupe d'articles). Au-delà : approbation ; au-delà du maximum absolu : refus. Les prix convenus des commandes ne sont pas recontrôlés à la livraison.</value></data>
+  <data name="FSPNoCredit" xml:space="preserve"><value>Aucune politique de crédit</value></data>
+  <data name="FSPNoDiscount" xml:space="preserve"><value>Aucune politique de remise ; seul le plafond du commercial s'applique</value></data>
+  <data name="FSPConfirmDelete" xml:space="preserve"><value>Confirmer</value></data>
+  <data name="FSPDeleteOf" xml:space="preserve"><value>Supprimer la politique de {0}</value></data>
+  <data name="FSPSaved" xml:space="preserve"><value>Politique enregistrée</value></data>
+  <data name="FSPDeleted" xml:space="preserve"><value>Politique supprimée</value></data>
+  <data name="FSPSave" xml:space="preserve"><value>Enregistrer la politique</value></data>
 </root>

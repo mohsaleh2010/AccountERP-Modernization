@@ -1,0 +1,328 @@
+@* 🟢 خطة المندوبين — المرحلة 3: «سياسات الائتمان والخصم» التى يفحصها البيع الفورى وأخذ الطلبية والتسليم.
+   الائتمان لعميل أو لمجموعة عملاء (العميل يغلب)، والخصم لمندوب / مجموعة عملاء / صنف / مجموعة أصناف (يُطبَّق أقل حد منطبق).
+   السياسات إعداد لا مستندات: الحذف بتأكيد ويؤثر على الفحوص القادمة فقط. التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/policies"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("FSPTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .rp-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .rp-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .rp-head .ico .mud-icon-root { font-size: 2rem; }
+    .rp-head .titles { flex: 1 1 260px; }
+    .rp-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .rp-gap { margin-top: 16px; }
+    .rp-sec { font-weight: 700; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; }
+    .rp-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px 16px; align-items: start; }
+    .rp-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+    .rp-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); line-height: 1.5; }
+    .rp-num { font-variant-numeric: tabular-nums; }
+    .rp-confirm { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card rp-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Policy" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSPTitle")</h1>
+            <div class="sub">@Tr("FSPSub")</div>
+        </div>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Gavel" Href="/salesrep/approvals">@Tr("FSPApprovals")</MudButton>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="rp-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pt-2" Class="rp-gap">
+        @* ===================== الائتمان ===================== *@
+        <MudTabPanel Text="@Tr("FSPCreditTab")" Icon="@Icons.Material.Filled.CreditScore" BadgeData="@(_credit.Count > 0 ? _credit.Count : null)">
+            <div class="inv-card">
+                <h2 class="rp-sec">
+                    <MudIcon Icon="@(_c.Id == 0 ? Icons.Material.Filled.Add : Icons.Material.Filled.Edit)" Color="Color.Primary" Size="Size.Small" />
+                    @Tr(_c.Id == 0 ? "FSPNewCredit" : "FSPEditCredit")
+                </h2>
+                <div class="rp-form">
+                    <MudSelect T="int" Value="_cKind" ValueChanged="@(k => { _cKind = k; _cTarget = null; })" Label="@Tr("FSPAppliesTo")" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="@(_c.Id != 0)">
+                        <MudSelectItem T="int" Value="0">@Tr("FSPKind_0")</MudSelectItem>
+                        <MudSelectItem T="int" Value="1">@Tr("FSPKind_1")</MudSelectItem>
+                    </MudSelect>
+                    <MudAutocomplete T="SalesRepPolicyService.Target" @bind-Value="_cTarget" SearchFunc="@((s, ct) => SearchAsync((SalesRepPolicyService.TargetKind)_cKind, s, ct))"
+                                     ToStringFunc="@(t => t?.Name ?? "")" Label="@Tr("FSPKind_" + _cKind)" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true"
+                                     Error="@(_cTried && _cTarget is null)" ErrorText="@Tr("FSPTargetRequired")" Disabled="@(_c.Id != 0)" MaxItems="50" ResetValueOnEmptyText="true" />
+                    <MudNumericField T="decimal" @bind-Value="_c.Credit_Limit" Label="@Tr("FSPCreditLimit")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Format="N2" HideSpinButtons="true" />
+                    <MudNumericField T="int?" @bind-Value="_c.Max_Overdue_Days" Label="@Tr("FSPOverdueDays")" HelperText="@Tr("FSPOverdueDaysHint")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" HideSpinButtons="true" />
+                    <MudSwitch T="bool" @bind-Value="_c.Block_On_Overdue" Color="Color.Warning" Label="@Tr("FSPBlockOverdue")" Disabled="@(_c.Max_Overdue_Days is null)" />
+                </div>
+                <div class="rp-hint rp-gap">@Tr("FSPCreditRules")</div>
+                <div class="rp-acts">
+                    @if (_c.Id != 0) { <MudButton Variant="Variant.Text" OnClick="NewCredit" Disabled="@_busy">@Tr("FSZCancel")</MudButton> }
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@_busy" OnClick="SaveCreditAsync">
+                        @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                        @Tr("FSPSave")
+                    </MudButton>
+                </div>
+            </div>
+
+            <div class="inv-card rp-gap" aria-live="polite">
+                @if (_loading) { <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("FSRLoading")" /> }
+                else if (_credit.Count == 0) { <div class="inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" /><div>@Tr("FSPNoCredit")</div></div> }
+                else
+                {
+                    <MudTable Items="@_credit" T="SalesRepPolicyService.CreditRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true" Hover="true">
+                        <HeaderContent>
+                            <MudTh>@Tr("FSPAppliesTo")</MudTh><MudTh>@Tr("FSPTarget")</MudTh><MudTh Style="text-align:end">@Tr("FSPCreditLimit")</MudTh><MudTh>@Tr("FSPOverdueDays")</MudTh><MudTh></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="@Tr("FSPAppliesTo")"><MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@(context.IsGroup ? Color.Info : Color.Primary)">@Tr(context.IsGroup ? "FSPKind_1" : "FSPKind_0")</MudChip></MudTd>
+                            <MudTd DataLabel="@Tr("FSPTarget")"><b>@context.Target_Name</b></MudTd>
+                            <MudTd DataLabel="@Tr("FSPCreditLimit")" Class="rp-num" Style="text-align:end">@context.Credit_Limit.ToString("N2")</MudTd>
+                            <MudTd DataLabel="@Tr("FSPOverdueDays")">
+                                @if (context.Max_Overdue_Days is int d)
+                                {
+                                    <span class="rp-num">@d</span>
+                                    <MudChip T="string" Size="Size.Small" Color="@(context.Block_On_Overdue ? Color.Warning : Color.Default)">@Tr(context.Block_On_Overdue ? "FSPBlocks" : "FSPWarnOnly")</MudChip>
+                                }
+                                else { <span class="rp-hint">—</span> }
+                            </MudTd>
+                            <MudTd>
+                                @if (_delCredit == context.Id)
+                                {
+                                    <div class="rp-confirm">
+                                        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" Disabled="@_busy" OnClick="@(() => DeleteCreditAsync(context))">@Tr("FSPConfirmDelete")</MudButton>
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@(() => _delCredit = 0)">@Tr("FSZCancel")</MudButton>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => EditCredit(context))" aria-label="@Tr("FSZEditOf", context.Target_Name)">@Tr("FSZEditShort")</MudButton>
+                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.DeleteOutline" Color="Color.Error" OnClick="@(() => _delCredit = context.Id)" aria-label="@Tr("FSPDeleteOf", context.Target_Name)" />
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </div>
+        </MudTabPanel>
+
+        @* ===================== الخصم ===================== *@
+        <MudTabPanel Text="@Tr("FSPDiscountTab")" Icon="@Icons.Material.Filled.Percent" BadgeData="@(_discount.Count > 0 ? _discount.Count : null)">
+            <div class="inv-card">
+                <h2 class="rp-sec">
+                    <MudIcon Icon="@(_d.Id == 0 ? Icons.Material.Filled.Add : Icons.Material.Filled.Edit)" Color="Color.Primary" Size="Size.Small" />
+                    @Tr(_d.Id == 0 ? "FSPNewDiscount" : "FSPEditDiscount")
+                </h2>
+                <div class="rp-form">
+                    <MudSelect T="int" Value="_d.Scope" ValueChanged="@(s => { _d.Scope = s; _dTarget = null; })" Label="@Tr("FSPAppliesTo")" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="@(_d.Id != 0)">
+                        @foreach (var s in new[] { 0, 1, 2, 3 })
+                        {
+                            <MudSelectItem T="int" Value="@s">@Tr("FSPScope_" + s)</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudAutocomplete T="SalesRepPolicyService.Target" @bind-Value="_dTarget" SearchFunc="@((s, ct) => SearchAsync(KindOf(_d.Scope), s, ct))"
+                                     ToStringFunc="@(t => t?.Name ?? "")" Label="@Tr("FSPScope_" + _d.Scope)" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true"
+                                     Error="@(_dTried && _dTarget is null)" ErrorText="@Tr("FSPTargetRequired")" Disabled="@(_d.Id != 0)" MaxItems="50" ResetValueOnEmptyText="true" />
+                    <MudNumericField T="decimal" @bind-Value="_d.No_Approval_Rate" Label="@Tr("FSPNoApproval")" HelperText="@Tr("FSPNoApprovalHint")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                     Min="0" Max="100" Format="0.##" Adornment="Adornment.End" AdornmentText="%" HideSpinButtons="true" />
+                    <MudNumericField T="decimal?" @bind-Value="_d.Hard_Max_Rate" Label="@Tr("FSPHardMax")" HelperText="@Tr("FSPHardMaxHint")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                     Min="0" Max="100" Format="0.##" Adornment="Adornment.End" AdornmentText="%" HideSpinButtons="true" Clearable="true" />
+                </div>
+                <div class="rp-hint rp-gap">@Tr("FSPDiscountRules")</div>
+                <div class="rp-acts">
+                    @if (_d.Id != 0) { <MudButton Variant="Variant.Text" OnClick="NewDiscount" Disabled="@_busy">@Tr("FSZCancel")</MudButton> }
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@_busy" OnClick="SaveDiscountAsync">
+                        @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                        @Tr("FSPSave")
+                    </MudButton>
+                </div>
+            </div>
+
+            <div class="inv-card rp-gap" aria-live="polite">
+                @if (_loading) { <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("FSRLoading")" /> }
+                else if (_discount.Count == 0) { <div class="inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" /><div>@Tr("FSPNoDiscount")</div></div> }
+                else
+                {
+                    <MudTable Items="@_discount" T="SalesRepPolicyService.DiscountRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true" Hover="true">
+                        <HeaderContent>
+                            <MudTh>@Tr("FSPAppliesTo")</MudTh><MudTh>@Tr("FSPTarget")</MudTh><MudTh Style="text-align:end">@Tr("FSPNoApproval")</MudTh><MudTh Style="text-align:end">@Tr("FSPHardMax")</MudTh><MudTh></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="@Tr("FSPAppliesTo")"><MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">@Tr("FSPScope_" + context.Scope)</MudChip></MudTd>
+                            <MudTd DataLabel="@Tr("FSPTarget")"><b>@context.Target_Name</b></MudTd>
+                            <MudTd DataLabel="@Tr("FSPNoApproval")" Class="rp-num" Style="text-align:end">@context.No_Approval_Rate.ToString("0.##")%</MudTd>
+                            <MudTd DataLabel="@Tr("FSPHardMax")" Class="rp-num" Style="text-align:end">@(context.Hard_Max_Rate is decimal h ? h.ToString("0.##") + "%" : Tr("FSPWithApproval"))</MudTd>
+                            <MudTd>
+                                @if (_delDiscount == context.Id)
+                                {
+                                    <div class="rp-confirm">
+                                        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" Disabled="@_busy" OnClick="@(() => DeleteDiscountAsync(context))">@Tr("FSPConfirmDelete")</MudButton>
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@(() => _delDiscount = 0)">@Tr("FSZCancel")</MudButton>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => EditDiscount(context))" aria-label="@Tr("FSZEditOf", context.Target_Name)">@Tr("FSZEditShort")</MudButton>
+                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.DeleteOutline" Color="Color.Error" OnClick="@(() => _delDiscount = context.Id)" aria-label="@Tr("FSPDeleteOf", context.Target_Name)" />
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </div>
+        </MudTabPanel>
+    </MudTabs>
+</div>
+</MudContainer>
+
+@code {
+    private readonly SalesRepPolicyService _svc = new();
+    private List<SalesRepPolicyService.CreditRow> _credit = new();
+    private List<SalesRepPolicyService.DiscountRow> _discount = new();
+    private SalesRepPolicyService.CreditRow _c = new();
+    private SalesRepPolicyService.DiscountRow _d = new();
+    private SalesRepPolicyService.Target? _cTarget, _dTarget;
+    private int _cKind;
+    private long _delCredit, _delDiscount;
+    private bool _loading = true, _busy, _cTried, _dTried;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        try
+        {
+            (_credit, _discount) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_svc.GetCreditPolicies(), _svc.GetDiscountPolicies()); });
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    // نطاق الخصم (SalesRepDiscountScope: مندوب 0، مجموعة عملاء 1، صنف 2، مجموعة أصناف 3) ← نوع البحث.
+    private static SalesRepPolicyService.TargetKind KindOf(int scope) => scope switch
+    {
+        0 => SalesRepPolicyService.TargetKind.Rep,
+        1 => SalesRepPolicyService.TargetKind.CustomerGroup,
+        2 => SalesRepPolicyService.TargetKind.Item,
+        _ => SalesRepPolicyService.TargetKind.ItemGroup,
+    };
+
+    private Task<IEnumerable<SalesRepPolicyService.Target>> SearchAsync(SalesRepPolicyService.TargetKind kind, string search, CancellationToken ct) =>
+        Task.Run<IEnumerable<SalesRepPolicyService.Target>>(() => { AccountCultureGuard.EnsureInvariant(); return _svc.SearchTargets(kind, search); }, ct);
+
+    // ---------- الائتمان ----------
+    private void NewCredit() { _c = new(); _cTarget = null; _cKind = 0; _cTried = false; }
+
+    private void EditCredit(SalesRepPolicyService.CreditRow r)
+    {
+        _c = new() { Id = r.Id, Customer_Id = r.Customer_Id, Group_Id = r.Group_Id, Credit_Limit = r.Credit_Limit, Max_Overdue_Days = r.Max_Overdue_Days, Block_On_Overdue = r.Block_On_Overdue };
+        _cKind = r.IsGroup ? 1 : 0;
+        _cTarget = new() { Id = r.Customer_Id ?? r.Group_Id ?? 0, Name = r.Target_Name };
+        _cTried = false;
+    }
+
+    private async Task SaveCreditAsync()
+    {
+        _cTried = true;
+        if (_cTarget is null) return;
+        _c.Customer_Id = _cKind == 0 ? _cTarget.Id : null;
+        _c.Group_Id = _cKind == 1 ? _cTarget.Id : null;
+        _busy = true; _error = null;
+        var input = _c;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.SaveCredit(input); });
+            Snackbar.Add(Tr("FSPSaved"), Severity.Success);
+            NewCredit();
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task DeleteCreditAsync(SalesRepPolicyService.CreditRow r)
+    {
+        _busy = true; _error = null;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.DeleteCredit(r.Id); });
+            Snackbar.Add(Tr("FSPDeleted"), Severity.Info);
+            if (_c.Id == r.Id) NewCredit();
+            _delCredit = 0;
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    // ---------- الخصم ----------
+    private void NewDiscount() { _d = new(); _dTarget = null; _dTried = false; }
+
+    private void EditDiscount(SalesRepPolicyService.DiscountRow r)
+    {
+        _d = new() { Id = r.Id, Scope = r.Scope, Scope_Id = r.Scope_Id, No_Approval_Rate = r.No_Approval_Rate, Hard_Max_Rate = r.Hard_Max_Rate };
+        _dTarget = new() { Id = r.Scope_Id, Name = r.Target_Name };
+        _dTried = false;
+    }
+
+    private async Task SaveDiscountAsync()
+    {
+        _dTried = true;
+        if (_dTarget is null) return;
+        _d.Scope_Id = _dTarget.Id;
+        _busy = true; _error = null;
+        var input = _d;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.SaveDiscount(input); });
+            Snackbar.Add(Tr("FSPSaved"), Severity.Success);
+            NewDiscount();
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task DeleteDiscountAsync(SalesRepPolicyService.DiscountRow r)
+    {
+        _busy = true; _error = null;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.DeleteDiscount(r.Id); });
+            Snackbar.Add(Tr("FSPDeleted"), Severity.Info);
+            if (_d.Id == r.Id) NewDiscount();
+            _delDiscount = 0;
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

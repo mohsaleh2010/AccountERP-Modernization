@@ -439,6 +439,7 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
             ("menuSalesRepReturns", "مرتجعات المندوبين", "/salesrep/returns"),
             ("menuSalesRepReturnReasons", "أسباب إرجاع المندوبين", "/salesrep/return-reasons"),
             ("menuSalesRepOrders", "طلبيات المندوبين", "/salesrep/orders"),
+            ("menuSalesRepPolicies", "سياسات ائتمان وخصم المندوبين", "/salesrep/policies"),
         };
 
         /// <summary>

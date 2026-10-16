@@ -3297,4 +3297,42 @@
   <data name="FSNSaving" xml:space="preserve"><value>Saving…</value></data>
   <data name="FSNSaved" xml:space="preserve"><value>Order {0} saved and assigned to the rep</value></data>
   <data name="FSNStoreChangedClearsLines" xml:space="preserve"><value>Store changed, so the items were cleared; add them from the new store</value></data>
+  <data name="FSPTitle" xml:space="preserve"><value>Rep credit and discount policies</value></data>
+  <data name="FSPSub" xml:space="preserve"><value>Limits checked by van sales, order taking and delivery; anything above needs supervisor approval</value></data>
+  <data name="FSPApprovals" xml:space="preserve"><value>Rep approvals</value></data>
+  <data name="FSPCreditTab" xml:space="preserve"><value>Credit</value></data>
+  <data name="FSPDiscountTab" xml:space="preserve"><value>Discount</value></data>
+  <data name="FSPNewCredit" xml:space="preserve"><value>New credit policy</value></data>
+  <data name="FSPEditCredit" xml:space="preserve"><value>Edit credit policy</value></data>
+  <data name="FSPNewDiscount" xml:space="preserve"><value>New discount policy</value></data>
+  <data name="FSPEditDiscount" xml:space="preserve"><value>Edit discount policy</value></data>
+  <data name="FSPAppliesTo" xml:space="preserve"><value>Applies to</value></data>
+  <data name="FSPTarget" xml:space="preserve"><value>Name</value></data>
+  <data name="FSPKind_0" xml:space="preserve"><value>Customer</value></data>
+  <data name="FSPKind_1" xml:space="preserve"><value>Customer group</value></data>
+  <data name="FSPScope_0" xml:space="preserve"><value>Rep</value></data>
+  <data name="FSPScope_1" xml:space="preserve"><value>Customer group</value></data>
+  <data name="FSPScope_2" xml:space="preserve"><value>Item</value></data>
+  <data name="FSPScope_3" xml:space="preserve"><value>Item group</value></data>
+  <data name="FSPTargetRequired" xml:space="preserve"><value>Pick from the list</value></data>
+  <data name="FSPCreditLimit" xml:space="preserve"><value>Credit limit</value></data>
+  <data name="FSPOverdueDays" xml:space="preserve"><value>Max overdue days</value></data>
+  <data name="FSPOverdueDaysHint" xml:space="preserve"><value>Empty = no overdue check</value></data>
+  <data name="FSPBlockOverdue" xml:space="preserve"><value>Overdue needs approval</value></data>
+  <data name="FSPBlocks" xml:space="preserve"><value>Needs approval</value></data>
+  <data name="FSPWarnOnly" xml:space="preserve"><value>Not enforced</value></data>
+  <data name="FSPCreditRules" xml:space="preserve"><value>A customer's policy overrides their group's. A credit sale that takes the balance over the limit, or to a customer with debt older than the overdue days, needs supervisor approval. Customers without a policy have no limit check.</value></data>
+  <data name="FSPNoApproval" xml:space="preserve"><value>Without approval up to</value></data>
+  <data name="FSPNoApprovalHint" xml:space="preserve"><value>Discounts up to this need no approval</value></data>
+  <data name="FSPHardMax" xml:space="preserve"><value>Absolute maximum</value></data>
+  <data name="FSPHardMaxHint" xml:space="preserve"><value>Never approved above this; empty = with approval</value></data>
+  <data name="FSPWithApproval" xml:space="preserve"><value>With approval</value></data>
+  <data name="FSPDiscountRules" xml:space="preserve"><value>The lowest limit applies among the rep's own cap and every matching policy (rep, customer group, item, item group). Above it needs supervisor approval; above the absolute maximum is refused. Agreed order prices are not re-checked at delivery.</value></data>
+  <data name="FSPNoCredit" xml:space="preserve"><value>No credit policies; credit sales have no limit check</value></data>
+  <data name="FSPNoDiscount" xml:space="preserve"><value>No discount policies; only the rep's own cap applies</value></data>
+  <data name="FSPConfirmDelete" xml:space="preserve"><value>Confirm delete</value></data>
+  <data name="FSPDeleteOf" xml:space="preserve"><value>Delete policy of {0}</value></data>
+  <data name="FSPSaved" xml:space="preserve"><value>Policy saved</value></data>
+  <data name="FSPDeleted" xml:space="preserve"><value>Policy deleted</value></data>
+  <data name="FSPSave" xml:space="preserve"><value>Save policy</value></data>
 </root>

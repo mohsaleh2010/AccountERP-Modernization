@@ -3297,4 +3297,42 @@
   <data name="FSNSaving" xml:space="preserve"><value>جارٍ الحفظ…</value></data>
   <data name="FSNSaved" xml:space="preserve"><value>حُفظت الطلبية {0} وأُسندت للمندوب</value></data>
   <data name="FSNStoreChangedClearsLines" xml:space="preserve"><value>تغيّر المخزن فأُفرغت الأصناف؛ أضفها من المخزن الجديد</value></data>
+  <data name="FSPTitle" xml:space="preserve"><value>سياسات ائتمان وخصم المندوبين</value></data>
+  <data name="FSPSub" xml:space="preserve"><value>الحدود التى يفحصها البيع الفورى وأخذ الطلبية والتسليم؛ ما يتجاوزها يحتاج موافقة المشرف</value></data>
+  <data name="FSPApprovals" xml:space="preserve"><value>موافقات المندوبين</value></data>
+  <data name="FSPCreditTab" xml:space="preserve"><value>الائتمان</value></data>
+  <data name="FSPDiscountTab" xml:space="preserve"><value>الخصم</value></data>
+  <data name="FSPNewCredit" xml:space="preserve"><value>سياسة ائتمان جديدة</value></data>
+  <data name="FSPEditCredit" xml:space="preserve"><value>تعديل سياسة الائتمان</value></data>
+  <data name="FSPNewDiscount" xml:space="preserve"><value>سياسة خصم جديدة</value></data>
+  <data name="FSPEditDiscount" xml:space="preserve"><value>تعديل سياسة الخصم</value></data>
+  <data name="FSPAppliesTo" xml:space="preserve"><value>تنطبق على</value></data>
+  <data name="FSPTarget" xml:space="preserve"><value>الاسم</value></data>
+  <data name="FSPKind_0" xml:space="preserve"><value>عميل</value></data>
+  <data name="FSPKind_1" xml:space="preserve"><value>مجموعة عملاء</value></data>
+  <data name="FSPScope_0" xml:space="preserve"><value>مندوب</value></data>
+  <data name="FSPScope_1" xml:space="preserve"><value>مجموعة عملاء</value></data>
+  <data name="FSPScope_2" xml:space="preserve"><value>صنف</value></data>
+  <data name="FSPScope_3" xml:space="preserve"><value>مجموعة أصناف</value></data>
+  <data name="FSPTargetRequired" xml:space="preserve"><value>اختر من القائمة</value></data>
+  <data name="FSPCreditLimit" xml:space="preserve"><value>حد الائتمان</value></data>
+  <data name="FSPOverdueDays" xml:space="preserve"><value>أقصى أيام تأخر</value></data>
+  <data name="FSPOverdueDaysHint" xml:space="preserve"><value>فارغ = لا فحص للتأخر</value></data>
+  <data name="FSPBlockOverdue" xml:space="preserve"><value>التأخر يحتاج موافقة</value></data>
+  <data name="FSPBlocks" xml:space="preserve"><value>يحتاج موافقة</value></data>
+  <data name="FSPWarnOnly" xml:space="preserve"><value>لا يمنع</value></data>
+  <data name="FSPCreditRules" xml:space="preserve"><value>سياسة العميل تغلب سياسة مجموعته. البيع الآجل الذى يجعل رصيد العميل فوق الحد، أو لعميل عليه دين أقدم من أيام التأخر، يحتاج موافقة المشرف. عميل بلا سياسة لا يُفحص حده.</value></data>
+  <data name="FSPNoApproval" xml:space="preserve"><value>حد بلا موافقة</value></data>
+  <data name="FSPNoApprovalHint" xml:space="preserve"><value>الخصم حتى هذه النسبة لا يحتاج موافقة</value></data>
+  <data name="FSPHardMax" xml:space="preserve"><value>الحد الأقصى المطلق</value></data>
+  <data name="FSPHardMaxHint" xml:space="preserve"><value>لا يُعتمد فوقه حتى بموافقة؛ فارغ = بموافقة</value></data>
+  <data name="FSPWithApproval" xml:space="preserve"><value>بموافقة</value></data>
+  <data name="FSPDiscountRules" xml:space="preserve"><value>يُطبَّق أقل حد بين سقف المندوب فى ملفه وكل سياسة تنطبق (المندوب، مجموعة العميل، الصنف، مجموعة الصنف). الخصم فوقه يحتاج موافقة المشرف، وفوق الحد المطلق يُرفض. طلبيات العملاء المتفق على سعرها لا يُفحص خصمها عند التسليم.</value></data>
+  <data name="FSPNoCredit" xml:space="preserve"><value>لا سياسات ائتمان؛ البيع الآجل لا يُفحص حده</value></data>
+  <data name="FSPNoDiscount" xml:space="preserve"><value>لا سياسات خصم؛ يُطبَّق سقف المندوب فى ملفه فقط</value></data>
+  <data name="FSPConfirmDelete" xml:space="preserve"><value>تأكيد الحذف</value></data>
+  <data name="FSPDeleteOf" xml:space="preserve"><value>حذف سياسة {0}</value></data>
+  <data name="FSPSaved" xml:space="preserve"><value>حُفظت السياسة</value></data>
+  <data name="FSPDeleted" xml:space="preserve"><value>حُذفت السياسة</value></data>
+  <data name="FSPSave" xml:space="preserve"><value>حفظ السياسة</value></data>
 </root>
