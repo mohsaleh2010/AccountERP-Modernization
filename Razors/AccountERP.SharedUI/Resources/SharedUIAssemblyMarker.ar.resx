@@ -3283,4 +3283,18 @@
   <data name="FSDSaved" xml:space="preserve"><value>تم التسليم وحفظ الفاتورة</value></data>
   <data name="FSDRefusedSaved" xml:space="preserve"><value>سُجِّل الرفض</value></data>
   <data name="FSDOpenInvoice" xml:space="preserve"><value>فتح الفاتورة</value></data>
+  <data name="FSNNewOrder" xml:space="preserve"><value>طلبية جديدة</value></data>
+  <data name="FSNRepOrder" xml:space="preserve"><value>طلبية من المندوب</value></data>
+  <data name="FSNNoOpenShift" xml:space="preserve"><value>لا وردية مفتوحة للمندوب؛ أخذ الطلبية يتم داخل وردية مفتوحة فقط.</value></data>
+  <data name="FSNSourceStore" xml:space="preserve"><value>مخزن الطلبية</value></data>
+  <data name="FSNSourceStoreHint" xml:space="preserve"><value>يُحمَّل منه للسيارة قبل التسليم؛ الافتراضى آخر مخزن حُمِّل منه</value></data>
+  <data name="FSNDeposit" xml:space="preserve"><value>العربون</value></data>
+  <data name="FSNDepositHint" xml:space="preserve"><value>نقداً فى عهدة المندوب، ويُسوَّى تلقائياً عند التسليم (0 = بلا عربون)</value></data>
+  <data name="FSNLineDiscount" xml:space="preserve"><value>خصم {0}</value></data>
+  <data name="FSNCheck" xml:space="preserve"><value>فحص الطلبية</value></data>
+  <data name="FSNCheckOk" xml:space="preserve"><value>الطلبية مستوفية للحدود</value></data>
+  <data name="FSNSave" xml:space="preserve"><value>حفظ الطلبية وإسنادها للمندوب</value></data>
+  <data name="FSNSaving" xml:space="preserve"><value>جارٍ الحفظ…</value></data>
+  <data name="FSNSaved" xml:space="preserve"><value>حُفظت الطلبية {0} وأُسندت للمندوب</value></data>
+  <data name="FSNStoreChangedClearsLines" xml:space="preserve"><value>تغيّر المخزن فأُفرغت الأصناف؛ أضفها من المخزن الجديد</value></data>
 </root>

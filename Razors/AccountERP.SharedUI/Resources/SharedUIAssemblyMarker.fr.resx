@@ -3285,4 +3285,18 @@
   <data name="FSDSaved" xml:space="preserve"><value>Livré ; facture enregistrée</value></data>
   <data name="FSDRefusedSaved" xml:space="preserve"><value>Refus enregistré</value></data>
   <data name="FSDOpenInvoice" xml:space="preserve"><value>Ouvrir la facture</value></data>
+  <data name="FSNNewOrder" xml:space="preserve"><value>Nouvelle commande</value></data>
+  <data name="FSNRepOrder" xml:space="preserve"><value>Commande du commercial</value></data>
+  <data name="FSNNoOpenShift" xml:space="preserve"><value>Aucune tournée ouverte ; la prise de commande se fait dans une tournée ouverte.</value></data>
+  <data name="FSNSourceStore" xml:space="preserve"><value>Dépôt de la commande</value></data>
+  <data name="FSNSourceStoreHint" xml:space="preserve"><value>Chargé dans le véhicule avant livraison ; par défaut le dernier dépôt de chargement</value></data>
+  <data name="FSNDeposit" xml:space="preserve"><value>Acompte</value></data>
+  <data name="FSNDepositHint" xml:space="preserve"><value>En espèces dans la caisse du commercial, imputé à la livraison (0 = aucun)</value></data>
+  <data name="FSNLineDiscount" xml:space="preserve"><value>Remise {0}</value></data>
+  <data name="FSNCheck" xml:space="preserve"><value>Vérifier</value></data>
+  <data name="FSNCheckOk" xml:space="preserve"><value>La commande respecte les limites</value></data>
+  <data name="FSNSave" xml:space="preserve"><value>Enregistrer et affecter au commercial</value></data>
+  <data name="FSNSaving" xml:space="preserve"><value>Enregistrement…</value></data>
+  <data name="FSNSaved" xml:space="preserve"><value>Commande {0} enregistrée et affectée</value></data>
+  <data name="FSNStoreChangedClearsLines" xml:space="preserve"><value>Dépôt changé : articles effacés, ajoutez-les depuis le nouveau dépôt</value></data>
 </root>

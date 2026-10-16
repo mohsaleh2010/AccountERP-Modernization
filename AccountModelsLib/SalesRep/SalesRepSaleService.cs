@@ -62,6 +62,9 @@ namespace AccountModelsLib.SalesRep
             public List<SaleLine> Lines { get; set; } = new();
             /// <summary>تسليم طلبية (المرحلة 5): السعر والخصم متفق عليهما فى الطلبية فلا يُفحص الخصم على سقوف المندوب.</summary>
             public bool Order_Priced { get; set; }
+            /// <summary>أخذ طلبية (المرحلة 5): الأسطر من المخزن المصدر لا السيارة، ونقص الكمية تنبيه لا منع، والدفع يتحدد عند التسليم.</summary>
+            public bool Order_Taking { get; set; }
+            public long Source_Store_Id { get; set; }
         }
 
         /// <summary>مخالفة تحتاج موافقة: النوع، والقيمة المطلوبة، والحد المسموح، ورقم الموافقة إن طُلبت، وحالتها.</summary>
@@ -128,7 +131,7 @@ namespace AccountModelsLib.SalesRep
         public CheckResult Check(long repId, SaleInput input) => Read(opp => CheckCore(opp, Context(opp, repId), input));
 
         /// <summary>يطلب موافقة لكل مخالفة ليس لها طلب قائم لهذا المستند ولا موافقة تغطى قيمتها. يرجع الفحص بعد الطلب.</summary>
-        public CheckResult RequestApprovals(long repId, SaleInput input, string reason = null) => Tx(opp =>
+        public CheckResult RequestApprovals(long repId, SaleInput input, string reason = null, SalesRepDocType docType = SalesRepDocType.SaleInvoice) => Tx(opp =>
         {
             var ctx = Context(opp, repId);
             var result = CheckCore(opp, ctx, input);
@@ -139,7 +142,7 @@ namespace AccountModelsLib.SalesRep
                     Id = CallSnowflakeIdGenerate.GenerateNewId(),
                     Type = (int)v.Type,
                     Ref_Document_Guid = input.Doc_Guid,
-                    Ref_Doc_Type = (int)SalesRepDocType.SaleInvoice,
+                    Ref_Doc_Type = (int)docType,
                     Requested_By = Common.User_Id,
                     Status = (int)SalesRepApprovalStatus.Pending,
                     Reason = Trim((string.IsNullOrWhiteSpace(reason) ? "" : reason.Trim() + " — ") + v.Message, 1000),
@@ -319,12 +322,25 @@ SELECT ISNULL((SELECT name FROM Employee WHERE Id = {rep.Employee_Id}), N'') AS 
             if (input.Lines.Count == 0) throw new InvalidOperationException("الفاتورة بلا أصناف.");
             var result = new CheckResult();
 
-            // ---- المتاح على السيارة (منع قاطع): الرصيد المحسوب من دفتر المحرك ----
-            if (input.Lines.Any(l => l.Store_Id != ctx.Van_Store_Id)) throw new InvalidOperationException("كل أصناف فاتورة المندوب من مخزن سيارته فقط.");
             var engine = new StockMovementService(opp);
             var lineIds = input.Lines.Select(l => l.Unit_Item_Id).Distinct().ToList();
             var units = opp.db.Unit_item.AsNoTracking().Where(u => lineIds.Contains(u.id)).Select(u => new { u.id, u.Store_id, u.Item_Id }).ToList().ToDictionary(u => u.id);
-            foreach (var g in input.Lines.GroupBy(l => l.Unit_Item_Id))
+            if (input.Order_Taking)
+            {
+                // ---- أخذ طلبية: كل الأسطر من المخزن المصدر (ليس مخزنى المندوب)، والنقص تنبيه فقط (الطلبية تُحجز ويُحمَّل لها لاحقاً) ----
+                long src = input.Source_Store_Id;
+                if (src <= 0 || src == ctx.Van_Store_Id || src == ctx.Damaged_Store_Id) throw new InvalidOperationException("اختر مخزن الطلبية (غير مخزنى المندوب).");
+                if (input.Lines.Any(l => l.Store_Id != src) || units.Values.Any(u => u.Store_id != src) || units.Count != lineIds.Count)
+                    throw new InvalidOperationException("كل أصناف الطلبية من المخزن المختار فقط.");
+                foreach (var g in input.Lines.GroupBy(l => l.Unit_Item_Id))
+                {
+                    decimal need = g.Sum(l => l.Qty_Small), avail = engine.GetStoredBalanceSmall(g.Key) - ReservedForOthers(opp, g.Key, input.Customer_Id);
+                    if (need > avail) result.Warnings.Add($"الكمية المطلوبة ({need:0.##}) أكبر من المتاح بالمخزن ({Math.Max(0, avail):0.##}) لأحد الأصناف؛ ستُحجز ويُدبَّر الباقى قبل التسليم.");
+                }
+            }
+            // ---- المتاح على السيارة (منع قاطع): الرصيد المحسوب من دفتر المحرك ----
+            else if (input.Lines.Any(l => l.Store_Id != ctx.Van_Store_Id)) throw new InvalidOperationException("كل أصناف فاتورة المندوب من مخزن سيارته فقط.");
+            foreach (var g in input.Lines.Where(_ => !input.Order_Taking).GroupBy(l => l.Unit_Item_Id))
             {
                 if (!units.TryGetValue(g.Key, out var u) || u.Store_id != ctx.Van_Store_Id) throw new InvalidOperationException("صنف ليس من مخزن سيارة المندوب.");
                 // المتاح = رصيد السيارة − المحجوز لطلبيات عملاء آخرين مسندة للسيارة (§6.3؛ طلبيات نفس العميل لا تُخصم).
@@ -382,7 +398,8 @@ SELECT ISNULL((SELECT name FROM Employee WHERE Id = {rep.Employee_Id}), N'') AS 
             result.Credit_Limit = policy?.Credit_Limit;
             if (input.Is_Credit)
             {
-                if (!ctx.Allow_Credit_Sales)
+                // أخذ الطلبية: طريقة الدفع تتحدد عند التسليم (ويُفحص هناك)، فلا يُمنع مندوب البيع النقدى من أخذ طلبية بلا عربون كامل.
+                if (!ctx.Allow_Credit_Sales && !input.Order_Taking)
                     result.Violations.Add(new Violation { Type = SalesRepApprovalType.Credit, Requested = Math.Round(result.Customer_Balance + input.Net_Total, 2), Allowed = 0,
                         Message = "المندوب غير مسموح له بالبيع الآجل" });
                 else if (policy != null && result.Customer_Balance + input.Net_Total > policy.Credit_Limit)

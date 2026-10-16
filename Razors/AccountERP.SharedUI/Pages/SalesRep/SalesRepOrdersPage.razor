@@ -48,7 +48,11 @@
                    ToStringFunc="@(v => _reps.FirstOrDefault(r => r.Id == v)?.Employee_Name ?? "")">
             @foreach (var r in _reps.Where(r => r.Active)) { <MudSelectItem T="long" Value="@r.Id">@r.Employee_Name</MudSelectItem> }
         </MudSelect>
-        @if (_repId > 0) { <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.PointOfSale" Href="@($"/salesrep/shift?rep={_repId}")">@Tr("FSTBackToShift")</MudButton> }
+        @if (_repId > 0)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddShoppingCart" Href="@($"/accounts/sales/customer-order?rep={_repId}")">@Tr("FSNNewOrder")</MudButton>
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.PointOfSale" Href="@($"/salesrep/shift?rep={_repId}")">@Tr("FSTBackToShift")</MudButton>
+        }
     </div>
 
     @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="ro-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }

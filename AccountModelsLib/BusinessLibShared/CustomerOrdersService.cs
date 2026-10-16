@@ -463,14 +463,15 @@ namespace AccountModelsLib
             if (header.Customer_Id == null || header.Customer_Id <= 0) throw new InvalidOperationException("Customer is required");
             if (lines == null || lines.Count == 0) throw new InvalidOperationException("At least one line is required");
 
-            var opp = new operations();
+            // مع اتصال خارجى (أخذ طلبية المندوب): الحفظ داخل معاملته هو، فلا تُفتح معاملة ولا تُعتمد هنا.
+            var opp = _external ?? new operations();
             var db = opp.db;
             var now = DateTime.Now;
             var branchId = Common.Branch_Id;
             var userId = Common.User_Id;
             var isNew = header.Id == 0;
             // لا علاقة (navigation) معرّفة فى الموديل فلا يرتّب EF الإدراج تلقائياً: نحفظ الرأس أولاً ثم السطور، كلها داخل معاملة واحدة.
-            using var tx = db.Database.BeginTransaction();
+            using var tx = _external == null ? db.Database.BeginTransaction() : null;
 
             CustomerOrder order;
             if (isNew)
@@ -555,7 +556,7 @@ namespace AccountModelsLib
             order.Net_Total = lines.Sum(l => l.Line_Total ?? 0);
 
             db.SaveChanges();
-            tx.Commit();
+            tx?.Commit();
             return (order.Id, order.Order_No ?? 0);
         }
     }

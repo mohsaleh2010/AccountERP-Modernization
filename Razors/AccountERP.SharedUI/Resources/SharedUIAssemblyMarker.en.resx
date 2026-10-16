@@ -3283,4 +3283,18 @@
   <data name="FSDSaved" xml:space="preserve"><value>Delivered; invoice saved</value></data>
   <data name="FSDRefusedSaved" xml:space="preserve"><value>Refusal recorded</value></data>
   <data name="FSDOpenInvoice" xml:space="preserve"><value>Open invoice</value></data>
+  <data name="FSNNewOrder" xml:space="preserve"><value>New order</value></data>
+  <data name="FSNRepOrder" xml:space="preserve"><value>Order taken by rep</value></data>
+  <data name="FSNNoOpenShift" xml:space="preserve"><value>The rep has no open shift; orders are taken inside an open shift only.</value></data>
+  <data name="FSNSourceStore" xml:space="preserve"><value>Order store</value></data>
+  <data name="FSNSourceStoreHint" xml:space="preserve"><value>Loaded to the van before delivery; default is the last load's store</value></data>
+  <data name="FSNDeposit" xml:space="preserve"><value>Deposit</value></data>
+  <data name="FSNDepositHint" xml:space="preserve"><value>Cash into the rep's custody, applied automatically at delivery (0 = none)</value></data>
+  <data name="FSNLineDiscount" xml:space="preserve"><value>Discount {0}</value></data>
+  <data name="FSNCheck" xml:space="preserve"><value>Check order</value></data>
+  <data name="FSNCheckOk" xml:space="preserve"><value>The order is within the limits</value></data>
+  <data name="FSNSave" xml:space="preserve"><value>Save and assign to the rep</value></data>
+  <data name="FSNSaving" xml:space="preserve"><value>Saving…</value></data>
+  <data name="FSNSaved" xml:space="preserve"><value>Order {0} saved and assigned to the rep</value></data>
+  <data name="FSNStoreChangedClearsLines" xml:space="preserve"><value>Store changed, so the items were cleared; add them from the new store</value></data>
 </root>

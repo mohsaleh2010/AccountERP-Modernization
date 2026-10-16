@@ -3285,4 +3285,18 @@
   <data name="FSDSaved" xml:space="preserve"><value>Geliefert; Rechnung gespeichert</value></data>
   <data name="FSDRefusedSaved" xml:space="preserve"><value>Ablehnung erfasst</value></data>
   <data name="FSDOpenInvoice" xml:space="preserve"><value>Rechnung öffnen</value></data>
+  <data name="FSNNewOrder" xml:space="preserve"><value>Neuer Auftrag</value></data>
+  <data name="FSNRepOrder" xml:space="preserve"><value>Auftrag durch Außendienst</value></data>
+  <data name="FSNNoOpenShift" xml:space="preserve"><value>Keine offene Schicht; Aufträge nur in einer offenen Schicht.</value></data>
+  <data name="FSNSourceStore" xml:space="preserve"><value>Auftragslager</value></data>
+  <data name="FSNSourceStoreHint" xml:space="preserve"><value>Vor der Lieferung ins Fahrzeug geladen; Standard ist das letzte Ladelager</value></data>
+  <data name="FSNDeposit" xml:space="preserve"><value>Anzahlung</value></data>
+  <data name="FSNDepositHint" xml:space="preserve"><value>Bar in die Kasse des Außendienstes, bei Lieferung verrechnet (0 = keine)</value></data>
+  <data name="FSNLineDiscount" xml:space="preserve"><value>Rabatt {0}</value></data>
+  <data name="FSNCheck" xml:space="preserve"><value>Prüfen</value></data>
+  <data name="FSNCheckOk" xml:space="preserve"><value>Der Auftrag liegt innerhalb der Grenzen</value></data>
+  <data name="FSNSave" xml:space="preserve"><value>Speichern und zuweisen</value></data>
+  <data name="FSNSaving" xml:space="preserve"><value>Wird gespeichert…</value></data>
+  <data name="FSNSaved" xml:space="preserve"><value>Auftrag {0} gespeichert und zugewiesen</value></data>
+  <data name="FSNStoreChangedClearsLines" xml:space="preserve"><value>Lager geändert, Artikel entfernt; aus dem neuen Lager hinzufügen</value></data>
 </root>

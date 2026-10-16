@@ -38,11 +38,72 @@
         <MudAlert Severity="Severity.Info" Class="mb-3">@Tr("COLockedMessage")</MudAlert>
     }
 
+    @* ===== وضع المندوب (خطة المندوبين المرحلة 5): المندوب يأخذ الطلبية من مخزن يختاره، بفحوص البيع الفورى، وتُحفظ مؤكدة وتُسنَد له مع عربون اختيارى ===== *@
+    @if (IsRepMode)
+    {
+        <div class="inv-card" aria-live="polite">
+            @if (_repCtx is null)
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" role="alert">@(_repError ?? Tr("FSVNoRep"))</MudAlert>
+            }
+            else
+            {
+                <div class="inv-badges" style="flex-wrap:wrap;gap:8px">
+                    <span class="inv-chip primary"><MudIcon Icon="@Icons.Material.Filled.LocalShipping" Size="Size.Small" />@Tr("FSNRepOrder"): @_repCtx.Rep_Name</span>
+                    <span class="inv-chip">@Tr("FSRBox"): @_repCtx.Cash_Box_Name (@_repCtx.Cash_On_Hand.ToString("N2"))</span>
+                    <span class="inv-chip @(_repCtx.CanSell ? "success" : "warn")">@Tr(_repCtx.Shift_Status is int st ? "FSSStatus_" + st : "FSSNoShift")</span>
+                    <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.Assignment" Href="@($"/salesrep/orders?rep={_repCtx.Rep_Id}")">@Tr("FSOTitle")</MudButton>
+                </div>
+                @if (!_repCtx.CanSell)
+                {
+                    <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2" role="alert">@Tr("FSNNoOpenShift")</MudAlert>
+                }
+                <MudGrid Spacing="3" Class="mt-1">
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudSelect T="long" Value="_repStoreId" ValueChanged="OnRepStoreChanged" Label="@Tr("FSNSourceStore")" Variant="Variant.Outlined"
+                                   HelperText="@Tr("FSNSourceStoreHint")" Required="true">
+                            @foreach (var s in _repStores)
+                            {
+                                <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudNumericField T="decimal" @bind-Value="_repDeposit" Label="@Tr("FSNDeposit")" Variant="Variant.Outlined" Min="0" Format="N2" HideSpinButtons="true"
+                                         HelperText="@Tr("FSNDepositHint")" Immediate="true" />
+                    </MudItem>
+                </MudGrid>
+                @foreach (var w in _repWarnings)
+                {
+                    <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2">@w</MudAlert>
+                }
+                @if (_repViolations.Count > 0)
+                {
+                    <h3 class="inv-card-title mt-3"><MudIcon Icon="@Icons.Material.Filled.Gavel" />@Tr("FSVApprovalsNeeded")</h3>
+                    @foreach (var v in _repViolations)
+                    {
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px">
+                            <MudIcon Icon="@(v.Covered ? Icons.Material.Filled.CheckCircle : v.Approval_Status == 2 ? Icons.Material.Filled.Cancel : Icons.Material.Filled.HourglassTop)"
+                                     Color="@(v.Covered ? Color.Success : v.Approval_Status == 2 ? Color.Error : Color.Warning)" Size="Size.Small" aria-hidden="true" />
+                            <span>@v.Message</span>
+                            <span class="inv-chip @(v.Covered ? "success" : "warn")">@Tr(v.Approval_Status is int s ? "FSVApproval_" + s : "FSVApprovalNone")</span>
+                        </div>
+                    }
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+                        <MudTextField T="string" @bind-Value="_repApprovalReason" Label="@Tr("FSVReason")" Variant="Variant.Outlined" Margin="Margin.Dense" Style="min-width:240px" />
+                        <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Send" Disabled="@(_isSaving || _repViolations.All(v => v.Covered || v.Approval_Status == 0))" OnClick="@(() => RunRepCheckAsync(true))">@Tr("FSVRequestApproval")</MudButton>
+                        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" Disabled="_isSaving" OnClick="@(() => RunRepCheckAsync(false))">@Tr("FSVRefreshStatus")</MudButton>
+                    </div>
+                }
+            }
+        </div>
+    }
+
     <div class="inv-card">
         <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Description" />@Tr("COHeaderTitle")</h2>
         <MudGrid Spacing="3">
             <MudItem xs="12" md="6">
-                <MudAutocomplete T="LookupOption" Value="_customer" ValueChanged="@(c => _customer = c)" SearchFunc="SearchCustomersAsync"
+                <MudAutocomplete T="LookupOption" Value="_customer" ValueChanged="OnCustomerChanged" SearchFunc="SearchCustomersAsync"
                                  ToStringFunc="@(c => c?.Name ?? "")" Label="@Tr("CustomerLabel")" Variant="Variant.Outlined"
                                  CoerceText="false" ResetValueOnEmptyText="true" MaxItems="50" Required="true" Disabled="_locked" />
             </MudItem>
@@ -76,7 +137,7 @@
                 }
             </h2>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-                       OnClick="OpenAddItemDialog" Disabled="_customer is null || _locked">@Tr("AddItemButton")</MudButton>
+                       OnClick="OpenAddItemDialog" Disabled="@(_customer is null || _locked || (IsRepMode && _repStoreId <= 0))">@Tr("AddItemButton")</MudButton>
         </div>
 
         <MudTable Items="@_lines" T="IInvoices_Details" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="0">
@@ -115,7 +176,13 @@
                     }
                 </MudTd>
                 <MudTd DataLabel="@Tr("UnitPriceColumn")" Style="text-align:end">@((context.PriceUnit ?? 0).ToString("N2"))</MudTd>
-                <MudTd DataLabel="@Tr("NetTotalColumn")" Style="text-align:end"><b>@((context.Item_Net_Total_Price ?? 0).ToString("N2"))</b></MudTd>
+                <MudTd DataLabel="@Tr("NetTotalColumn")" Style="text-align:end">
+                    <b>@((context.Item_Net_Total_Price ?? 0).ToString("N2"))</b>
+                    @if ((context.Net_Total_Item_Commission ?? 0) > 0)
+                    {
+                        <br /><small class="mud-text-secondary">@Tr("FSNLineDiscount", (context.Net_Total_Item_Commission ?? 0).ToString("N2"))</small>
+                    }
+                </MudTd>
                 <MudTd Style="white-space:nowrap">
                     <MudIconButton Icon="@Icons.Material.Filled.EditNote" Size="Size.Medium" Disabled="_locked" OnClick="@(() => OpenEditItemDialog(context))" aria-label="@Tr("EditItemLabel")" />
                     <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Medium" Color="Color.Error" Disabled="_locked" OnClick="@(() => DeleteLine(context))" aria-label="@Tr("DeleteItemLabel")" />
@@ -291,14 +358,28 @@
             <div class="cell net"><span class="lbl">@Tr("NetTotalColumn")</span><b>@NetTotal.ToString("N2")</b></div>
         </div>
         <div class="inv-dock-actions">
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
-                       Disabled="@(!CanSave)" OnClick="@(() => SaveAsync(false))">@Tr("COSaveDraft")</MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle"
-                       Disabled="@(!CanSave)" OnClick="@(() => SaveAsync(true))">@Tr("COSaveConfirm")</MudButton>
+            @if (IsRepMode)
+            {
+                @if (_repDeposit > 0)
+                {
+                    <span class="inv-chip">@Tr("FSNDeposit"): @_repDeposit.ToString("N2")</span>
+                }
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FactCheck"
+                           Disabled="@(!CanSaveRep)" OnClick="@(() => RunRepCheckAsync(false))">@Tr("FSNCheck")</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle"
+                           Disabled="@(!CanSaveRep)" OnClick="SaveRepAsync">@(_isSaving ? Tr("FSNSaving") : Tr("FSNSave"))</MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
+                           Disabled="@(!CanSave)" OnClick="@(() => SaveAsync(false))">@Tr("COSaveDraft")</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle"
+                           Disabled="@(!CanSave)" OnClick="@(() => SaveAsync(true))">@Tr("COSaveConfirm")</MudButton>
+            }
         </div>
     </div>
 
-    <AddInvoiceItemDialog ShowExtraFields="false" ShowItemsWithoutBalanceByDefault="true" Visible="_itemDialogOpen" PriceTypeId="_customerPriceTypeId" CustomerId="@(_customer?.Id ?? 0)"
+    <AddInvoiceItemDialog ShowExtraFields="@IsRepMode" FixedStoreId="@(IsRepMode ? _repStoreId : 0)" ShowItemsWithoutBalanceByDefault="true" Visible="_itemDialogOpen" PriceTypeId="_customerPriceTypeId" CustomerId="@(_customer?.Id ?? 0)"
                           VisibleChanged="@(v => _itemDialogOpen = v)" ExistingLine="_editingLine" OnItemAdded="OnItemDialogSaved" />
 </div>
 </MudContainer>
@@ -329,6 +410,132 @@
     private IInvoices_Details? _editingLine;
     private long _tempLineId;
     private long _loadedId = -1;
+
+    // ===================== وضع المندوب (خطة المندوبين المرحلة 5: أخذ طلبية) =====================
+    [SupplyParameterFromQuery(Name = "rep")] public long? RepQuery { get; set; }
+    private bool IsRepMode => RepQuery is > 0 && (Id ?? 0) == 0 && _orderId == 0;
+    private AccountModelsLib.SalesRep.SalesRepSaleService.SaleContext? _repCtx;
+    private string? _repError;
+    private List<AccountModelsLib.SalesRep.SalesRepOrderService.StoreRow> _repStores = new();
+    private long _repStoreId;
+    private decimal _repDeposit;
+    private Guid _repDocGuid = Guid.NewGuid();
+    private List<AccountModelsLib.SalesRep.SalesRepSaleService.Violation> _repViolations = new();
+    private List<string> _repWarnings = new();
+    private string? _repApprovalReason;
+    private bool CanSaveRep => !_isSaving && _repCtx is { CanSell: true } && _customer is not null && _lines.Count > 0 && _repStoreId > 0;
+
+    private async Task InitRepModeAsync()
+    {
+        if (!IsRepMode) return;
+        try
+        {
+            var repId = RepQuery!.Value;
+            (_repCtx, _repStores, _repStoreId) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var svc = new AccountModelsLib.SalesRep.SalesRepOrderService();
+                return (new AccountModelsLib.SalesRep.SalesRepSaleService().GetContext(repId), svc.GetSourceStores(repId), svc.GetDefaultSourceStore(repId));
+            });
+            _expectedDate ??= DateTime.Today.AddDays(1);
+        }
+        catch (Exception ex) { _repCtx = null; _repError = ex.Message; }
+    }
+
+    private async Task OnCustomerChanged(LookupOption? c)
+    {
+        _customer = c;
+        _repViolations = new(); _repWarnings = new();
+        _customerPriceTypeId = 0;
+        if (c is null || !IsRepMode) return;
+        // نوع سعر العميل، وإلا قائمة أسعار المندوب (كما فى فاتورة المندوب).
+        var customerId = c.Id;
+        var typeId = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var dt = new operations().return_DataTable("SELECT ISNULL(Price_Type_List_ID, 0) FROM Customer WHERE Id = " + customerId);
+            return dt.Rows.Count > 0 ? Convert.ToInt64(dt.Rows[0][0]) : 0;
+        });
+        _customerPriceTypeId = typeId > 0 ? typeId : _repCtx?.Price_Type_List_ID ?? 0;
+    }
+
+    private void OnRepStoreChanged(long storeId)
+    {
+        if (storeId == _repStoreId) return;
+        // الأسطر مرتبطة بأصناف المخزن السابق: تغيير المخزن يبدأ الأصناف من جديد.
+        if (_lines.Count > 0) { _lines = new(); _avail = new(); Snackbar.Add(Tr("FSNStoreChangedClearsLines"), Severity.Info); }
+        _repStoreId = storeId;
+        _repViolations = new(); _repWarnings = new();
+    }
+
+    private AccountModelsLib.SalesRep.SalesRepOrderService.TakeOrderInput RepTakeInput() => new()
+    {
+        Doc_Guid = _repDocGuid,
+        Customer_Id = _customer?.Id ?? 0,
+        Source_Store_Id = _repStoreId,
+        Currency_Id = _currencyId > 0 ? _currencyId : null,
+        Expected_Delivery_Date = _expectedDate,
+        Notes = _notes,
+        Deposit = _repDeposit,
+        Lines = _lines.Select(l => new AccountModelsLib.SalesRep.SalesRepOrderService.TakeOrderLine
+        {
+            Unit_Item_Id = l.Unit_Item_Table_Id ?? 0,
+            Qty_Large = l.Larg_Qnty ?? 0,
+            Qty_Small = l.Small_Qnty ?? 0,
+            Unit_Price = l.PriceUnit ?? 0,
+            Gross = l.Qnty_value ?? l.Total ?? 0,
+            Discount_Value = l.Net_Total_Item_Commission ?? 0,
+            Tax_Value = l.Item_TaxSales10_Value ?? 0,
+            Line_Total = l.Item_Net_Total_Price ?? 0,
+        }).ToList(),
+    };
+
+    private async Task RunRepCheckAsync(bool request)
+    {
+        if (_repCtx is null || _customer is null || _lines.Count == 0) return;
+        _isSaving = true;
+        _errorMessage = null;
+        try
+        {
+            var repId = _repCtx.Rep_Id;
+            var input = RepTakeInput();
+            var reason = _repApprovalReason;
+            var result = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var svc = new AccountModelsLib.SalesRep.SalesRepOrderService();
+                return request ? svc.RequestTakeApprovals(repId, input, reason) : svc.CheckTake(repId, input);
+            });
+            _repViolations = result.Violations;
+            _repWarnings = result.Warnings;
+            if (request) Snackbar.Add(Tr("FSVApprovalRequested"), Severity.Info);
+            else if (result.Ok) Snackbar.Add(Tr("FSNCheckOk"), Severity.Success);
+        }
+        catch (Exception ex) { _errorMessage = ex.Message; }
+        finally { _isSaving = false; }
+    }
+
+    private async Task SaveRepAsync()
+    {
+        if (!CanSaveRep) return;
+        _isSaving = true;
+        _errorMessage = null;
+        try
+        {
+            var repId = _repCtx!.Rep_Id;
+            var input = RepTakeInput();
+            var r = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return new AccountModelsLib.SalesRep.SalesRepOrderService().TakeOrder(repId, input); });
+            Snackbar.Add(Tr("FSNSaved", r.Order_No), Severity.Success);
+            Nav.NavigateTo($"/salesrep/orders?rep={repId}");
+        }
+        catch (AccountModelsLib.SalesRep.SalesRepApprovalRequiredException ex)
+        {
+            _repViolations = ex.Violations.ToList();
+            _errorMessage = ex.Message;
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+        finally { _isSaving = false; }
+    }
 
     // ===== التنفيذ =====
     private sealed class AllocInput { public decimal Larg { get; set; } public decimal Small { get; set; } }
@@ -410,6 +617,7 @@
         _currencies = dt.Rows.Cast<DataRow>()
             .Select(r => new LookupOption(Convert.ToInt64(r["ID"]), r["Currency_Name"]?.ToString() ?? "")).ToList();
         if (_currencies.Count > 0) _currencyId = _currencies[0].Id;
+        await InitRepModeAsync();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -544,7 +752,9 @@
         _customer = null; _lines = new(); _notes = null;
         _orderDate = DateTime.Now.Date; _expectedDate = null; _errorMessage = null;
         _loadedId = 0;
-        Nav.NavigateTo("/accounts/sales/customer-order");
+        _repDeposit = 0; _repDocGuid = Guid.NewGuid(); _repViolations = new(); _repWarnings = new(); _repApprovalReason = null;
+        if (RepQuery is > 0) _expectedDate = DateTime.Today.AddDays(1);
+        Nav.NavigateTo("/accounts/sales/customer-order" + (RepQuery is > 0 ? $"?rep={RepQuery}" : ""));
     }
 
     private void OpenInvoiceTab(OrderInvoice inv) => Nav.NavigateTo($"/accounts/invoices/sales-invoice/{inv.InvoiceListId}");

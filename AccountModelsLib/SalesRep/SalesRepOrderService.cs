@@ -16,6 +16,8 @@ namespace AccountModelsLib.SalesRep
     /// - التسليم بزر واحد: الفاتورة تُبنى على السيرفر من أسطر الطلبية بسعرها المتفق عليه (الخصم والضريبة بنسبة السطر)، وتُحفظ بمسار
     ///   بيع المندوب (المتاح والائتمان والموافقات)، ثم ربط التنفيذ وتسوية العربون تلقائياً والتحصيل النقدى للباقى — كلها فى معاملة واحدة.
     /// - المتبقى (رفض كلى/جزئى): سبب إلزامى والمندوب يختار: إعادة المحاولة (يبقى محجوزاً) أو إغلاق المتبقى (يعود متاحاً للبيع الفورى).
+    /// - أخذ طلبية من المندوب: من مخزن يختاره (الافتراضى آخر مخزن حُمِّل منه)، بنفس فحوص البيع الفورى (الخصم وحد الائتمان بموافقة المشرف)،
+    ///   وتُحفظ مؤكدة وتُسنَد له فوراً، والعربون الاختيارى إذن استلام على صندوق العهدة مربوط بالطلبية والوردية — كلها فى معاملة واحدة.
     /// </summary>
     public class SalesRepOrderService
     {
@@ -289,6 +291,159 @@ GROUP BY al.Van_Unit_Item_Id").ToList();
             opp.db.SaveChanges();
             return 0;
         });
+
+        // ============================== أخذ طلبية من المندوب ==============================
+
+        /// <summary>سطر طلبية جديدة: الكمية والسعر (للوحدة الكبرى) والإجمالى قبل الخصم والخصم والضريبة والصافى كما حسبها حوار الصنف.</summary>
+        public class TakeOrderLine
+        {
+            public long Unit_Item_Id { get; set; }
+            public decimal Qty_Large { get; set; }
+            public decimal Qty_Small { get; set; }
+            public decimal Unit_Price { get; set; }
+            public decimal Gross { get; set; }
+            public decimal Discount_Value { get; set; }
+            public decimal Tax_Value { get; set; }
+            public decimal Line_Total { get; set; }
+            public string Notes { get; set; }
+        }
+
+        public class TakeOrderInput
+        {
+            public Guid Doc_Guid { get; set; }
+            public long Customer_Id { get; set; }
+            public long Source_Store_Id { get; set; }
+            public long? Currency_Id { get; set; }
+            public DateTime? Expected_Delivery_Date { get; set; }
+            public string Notes { get; set; }
+            /// <summary>عربون نقدى يُقبض الآن فى صندوق العهدة (0 = بلا عربون).</summary>
+            public decimal Deposit { get; set; }
+            public List<TakeOrderLine> Lines { get; set; } = new();
+            public decimal Net_Total => Math.Round(Lines.Sum(l => l.Line_Total), 2);
+        }
+
+        public class TakeOrderResult
+        {
+            public long Order_Id { get; set; }
+            public long Order_No { get; set; }
+            public long Assignment_Id { get; set; }
+            public long? Deposit_Voucher_Id { get; set; }
+        }
+
+        /// <summary>مخازن يأخذ منها المندوب طلبية: المخازن الفعلية النشطة عدا مخازن السيارات وتالفها، بنفس ترتيب حوار الصنف.</summary>
+        public List<StoreRow> GetSourceStores(long repId) => Read(opp =>
+        {
+            Rep(opp, repId);
+            return opp.db.Database.SqlQueryRaw<StoreRow>("SELECT CAST(Id AS bigint) AS Id, ISNULL(Store_Name, N'') AS Name FROM Store WHERE Active = 1 AND IS_Virtual_OuterStore = 0" +
+                SalesRepSaleService.ExcludeRepStoresSql(opp, "Store.Id") + " ORDER BY IS_Default_Store DESC, Store_Name").ToList();
+        });
+
+        /// <summary>المخزن الافتراضى لطلبية المندوب: مصدر آخر تحميل لسيارته، وإلا أول مخزن متاح.</summary>
+        public long GetDefaultSourceStore(long repId) => Read(opp =>
+        {
+            var rep = Rep(opp, repId);
+            var stores = new SalesRepOrderService(opp).GetSourceStores(repId).Select(s => s.Id).ToList();
+            long last = opp.db.Order_Purshings.AsNoTracking()
+                .Where(o => o.Order_Type == SalesRepShiftService.TransferType && o.Id_To == rep.Van_Store_Id)
+                .OrderByDescending(o => o.Id).Select(o => o.Id_From).FirstOrDefault();
+            return stores.Contains(last) ? last : stores.FirstOrDefault();
+        });
+
+        public SalesRepSaleService.CheckResult CheckTake(long repId, TakeOrderInput input) => Read(opp =>
+        {
+            Validate(input);
+            return new SalesRepSaleService(opp).Check(repId, TakeInputOf(opp, input));
+        });
+
+        public SalesRepSaleService.CheckResult RequestTakeApprovals(long repId, TakeOrderInput input, string reason = null) => Tx(opp =>
+        {
+            Validate(input);
+            return new SalesRepSaleService(opp).RequestApprovals(repId, TakeInputOf(opp, input), reason, SalesRepDocType.CustomerOrder);
+        });
+
+        /// <summary>
+        /// يحفظ طلبية المندوب مؤكدة على المخزن المختار، يسندها له (فينتقل حجزها لسيارته)، يربطها بالوردية، ويقبض العربون إن وُجد —
+        /// فى معاملة واحدة بعد إعادة الفحص (مخالفة بلا موافقة = SalesRepApprovalRequiredException).
+        /// </summary>
+        public TakeOrderResult TakeOrder(long repId, TakeOrderInput input) => Tx(opp =>
+        {
+            Validate(input);
+            var ctx = SalesRepSaleService.Context(opp, repId);
+            if (!ctx.CanSell) throw new InvalidOperationException("لا وردية مفتوحة للمندوب؛ أخذ الطلبية يتم داخل وردية مفتوحة فقط.");
+            var check = new SalesRepSaleService(opp).Check(repId, TakeInputOf(opp, input));
+            if (!check.Ok) throw new SalesRepApprovalRequiredException(check.Violations.Where(v => !v.Covered).ToList());
+
+            var header = new CustomerOrder
+            {
+                Customer_Id = input.Customer_Id, Currency_Id = input.Currency_Id, Order_Date = DateTime.Today, Expected_Delivery_Date = input.Expected_Delivery_Date?.Date,
+                Notes = SalesRepSaleService.Trim(input.Notes?.Trim(), 500), Store_Id = input.Source_Store_Id, Sales_Person_Id = ctx.Employee_Id,
+            };
+            var lines = input.Lines.Select(l => new CustomerOrderLine
+            {
+                Unit_Item_Table_Id = l.Unit_Item_Id, Qty_Larg = l.Qty_Large, Qty_Small = l.Qty_Small, Unit_Price = l.Unit_Price,
+                Discount_Value = Math.Round(l.Discount_Value, 2), Discount_Percent = l.Gross > 0 ? Math.Round(l.Discount_Value / l.Gross * 100, 2) : 0,
+                Tax_Value = Math.Round(l.Tax_Value, 2), Line_Total = Math.Round(l.Line_Total, 2), Notes = l.Notes,
+            }).ToList();
+            var orders = new CustomerOrdersService(opp);
+            var (orderId, orderNo) = orders.SaveOrder(header, lines, true);
+            long assignmentId = new SalesRepOrderService(opp).Assign(repId, orderId, input.Expected_Delivery_Date);
+            SalesRepSaleService.Link(opp, ctx.Shift_Id.Value, SalesRepDocType.CustomerOrder, orderId, ctx.Branch_Id);
+
+            long? voucherId = null;
+            decimal deposit = Math.Round(input.Deposit, 2);
+            if (deposit > 0)
+            {
+                var vouchers = new CashVouchersService();
+                long cur = opp.db.Database.SqlQuery<long>($"SELECT CAST(ISNULL(currency_Id, 1) AS bigint) AS Value FROM Banks WHERE Id = {ctx.Cash_Box_Id}").AsEnumerable().FirstOrDefault();
+                var v = vouchers.SavePartyVoucherInTx(opp, 1, 0, ctx.Cash_Box_Id, DateTime.Today, 0, $"عربون الطلبية {orderNo} — المندوب {ctx.Rep_Name}",
+                    deposit, input.Customer_Id, vouchers.GetFactor(cur));
+                orders.AddDeposit(orderId, v.OrderId, v.BoxLineId, input.Customer_Id, deposit, DateTime.Today, "عربون عند أخذ الطلبية — المندوب " + ctx.Rep_Name);
+                SalesRepSaleService.Link(opp, ctx.Shift_Id.Value, SalesRepDocType.CashVoucher, v.OrderId, ctx.Branch_Id);
+                voucherId = v.OrderId;
+            }
+
+            var used = opp.db.SalesRep_Approvals.Where(a => a.Ref_Document_Guid == input.Doc_Guid && a.Status == (int)SalesRepApprovalStatus.Approved && a.Ref_Doc_Id == null).ToList();
+            foreach (var a in used) { a.Ref_Doc_Id = orderId; a.Shift_Id ??= ctx.Shift_Id; a.StampEdit(); }
+            opp.db.SaveChanges();
+            return new TakeOrderResult { Order_Id = orderId, Order_No = orderNo, Assignment_Id = assignmentId, Deposit_Voucher_Id = voucherId };
+        });
+
+        private static void Validate(TakeOrderInput input)
+        {
+            if (input.Doc_Guid == Guid.Empty) throw new InvalidOperationException("معرّف المستند مطلوب.");
+            if (input.Customer_Id <= 0) throw new InvalidOperationException("اختر العميل.");
+            if (input.Lines == null || input.Lines.Count == 0) throw new InvalidOperationException("الطلبية بلا أصناف.");
+            if (input.Lines.Any(l => l.Unit_Item_Id <= 0 || l.Qty_Large < 0 || l.Qty_Small < 0 || l.Qty_Large + l.Qty_Small <= 0))
+                throw new InvalidOperationException("كمية سطر غير صحيحة.");
+            if (input.Lines.Any(l => l.Unit_Price < 0 || l.Discount_Value < 0 || l.Tax_Value < 0 || l.Line_Total < 0))
+                throw new InvalidOperationException("سعر أو خصم سطر غير صحيح.");
+            if (input.Deposit < 0) throw new InvalidOperationException("العربون لا يكون سالباً.");
+            if (Math.Round(input.Deposit, 2) > input.Net_Total) throw new InvalidOperationException("العربون أكبر من صافى الطلبية.");
+            if (input.Expected_Delivery_Date is DateTime d && d.Date < DateTime.Today) throw new InvalidOperationException("تاريخ التسليم المتوقع قبل اليوم.");
+        }
+
+        /// <summary>مدخل الفحص: الكمية بالصغرى، ونسبة الخصم = خصم السطر ÷ إجماليه، والآجل = الصافى − العربون.</summary>
+        private static SalesRepSaleService.SaleInput TakeInputOf(operations opp, TakeOrderInput input)
+        {
+            var ids = input.Lines.Select(l => l.Unit_Item_Id).Distinct().ToList();
+            var units = opp.db.Unit_item.AsNoTracking().Where(u => ids.Contains(u.id)).Select(u => new { u.id, u.Store_id, u.Small_unit }).ToList().ToDictionary(u => u.id);
+            decimal onAccount = Math.Max(0, input.Net_Total - Math.Round(input.Deposit, 2));
+            return new SalesRepSaleService.SaleInput
+            {
+                Doc_Guid = input.Doc_Guid, Customer_Id = input.Customer_Id, Order_Taking = true, Source_Store_Id = input.Source_Store_Id,
+                Is_Credit = onAccount > 0, Net_Total = onAccount,
+                Lines = input.Lines.Select(l =>
+                {
+                    units.TryGetValue(l.Unit_Item_Id, out var u);
+                    decimal f = (u?.Small_unit ?? 0) <= 0 ? 1 : u.Small_unit.Value;
+                    return new SalesRepSaleService.SaleLine
+                    {
+                        Unit_Item_Id = l.Unit_Item_Id, Store_Id = u?.Store_id ?? 0, Qty_Small = l.Qty_Large * f + l.Qty_Small,
+                        Discount_Rate = l.Gross > 0 ? Math.Round(l.Discount_Value / l.Gross * 100, 4) : 0,
+                    };
+                }).ToList(),
+            };
+        }
 
         // ============================== التسليم ==============================
 
