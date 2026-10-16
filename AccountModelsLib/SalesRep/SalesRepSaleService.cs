@@ -241,18 +241,19 @@ namespace AccountModelsLib.SalesRep
         });
 
         /// <summary>فواتير الوردية ومرتجعاتها (بالسالب) وإذوناتها النقدية للعرض.</summary>
+        /// التاريخ = وقت ربط المستند بالوردية (تاريخ إذن النقدية مخزَّن بلا وقت فكان يظهر 00:00)، وإلا تاريخ المستند.
         public List<ShiftDoc> GetShiftDocs(long shiftId) => Read(opp => opp.db.Database.SqlQuery<ShiftDoc>($@"
-SELECT l.Doc_Type, l.Doc_Id, CAST(ISNULL(i.Invoice_Id, 0) AS bigint) AS Doc_No, i.Invoice_Date AS Doc_Date, ISNULL(c.Name, N'') AS Party,
+SELECT l.Doc_Type, l.Doc_Id, CAST(ISNULL(i.Invoice_Id, 0) AS bigint) AS Doc_No, ISNULL(l.Insert_ServerDateTime, i.Invoice_Date) AS Doc_Date, ISNULL(c.Name, N'') AS Party,
        CAST(ISNULL(i.Net_Total, 0) AS decimal(18,2)) AS Value, ISNULL(i.Is_Invoice_Agile, 0) AS Is_Credit
 FROM SalesRep_Document_Links l JOIN Invoices_List i ON i.Id = l.Doc_Id LEFT JOIN Customer c ON c.Id = i.Customer_Id
 WHERE l.Shift_Id = {shiftId} AND l.Doc_Type = {(int)SalesRepDocType.SaleInvoice}
 UNION ALL
-SELECT l.Doc_Type, l.Doc_Id, CAST(ISNULL(r.Invoice_Id, 0) AS bigint), r.Invoice_Date, ISNULL(c.Name, N''),
+SELECT l.Doc_Type, l.Doc_Id, CAST(ISNULL(r.Invoice_Id, 0) AS bigint), ISNULL(l.Insert_ServerDateTime, r.Invoice_Date), ISNULL(c.Name, N''),
        -CAST(ISNULL(r.Net_Total, 0) AS decimal(18,2)), ISNULL(r.Is_Invoice_Agile, 0)
 FROM SalesRep_Document_Links l JOIN Invoices_List_Reverse r ON r.Id = l.Doc_Id LEFT JOIN Customer c ON c.Id = r.Customer_Id
 WHERE l.Shift_Id = {shiftId} AND l.Doc_Type = {(int)SalesRepDocType.SaleReturn}
 UNION ALL
-SELECT l.Doc_Type, l.Doc_Id, CAST(ISNULL(o.Order_No, 0) AS bigint), o.Order_Date, ISNULL(o.Man_Name, N''),
+SELECT l.Doc_Type, l.Doc_Id, CAST(ISNULL(o.Order_No, 0) AS bigint), ISNULL(l.Insert_ServerDateTime, o.Order_Date), ISNULL(o.Man_Name, N''),
        CAST(ISNULL(o.Total_Value, 0) AS decimal(18,2)) * CASE WHEN o.Transaction_type = 2 THEN -1 ELSE 1 END, 0
 FROM SalesRep_Document_Links l JOIN Order_Money o ON o.Id = l.Doc_Id
 WHERE l.Shift_Id = {shiftId} AND l.Doc_Type = {(int)SalesRepDocType.CashVoucher}

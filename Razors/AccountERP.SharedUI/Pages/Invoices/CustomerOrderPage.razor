@@ -740,6 +740,10 @@
                 PriceUnit = l.Unit_Price,
                 Item_TaxSales10_Value = l.Tax_Value,
                 Item_Net_Total_Price = l.Line_Total,
+                // خصم السطر المحفوظ يعود للسطر فلا يضيع عند إعادة الحفظ.
+                Net_Total_Item_Commission = l.Discount_Value,
+                ItemCommissionTotal = l.Discount_Value,
+                Qnty_value = (l.Line_Total ?? 0) + (l.Discount_Value ?? 0) - (l.Tax_Value ?? 0),
                 Store_Id = storeId
             });
         }
@@ -803,7 +807,10 @@
             Qty_Small = l.Small_Qnty,
             Unit_Price = l.PriceUnit,
             Tax_Value = l.Item_TaxSales10_Value,
-            Line_Total = l.Item_Net_Total_Price
+            Line_Total = l.Item_Net_Total_Price,
+            // خصم السطر (خصم قائمة الأسعار أو اليدوى) يُحفظ قيمةً ونسبةً من الإجمالى، فيُحسب إجمالى الطلبية قبل الخصم صحيحاً.
+            Discount_Value = l.Net_Total_Item_Commission ?? 0,
+            Discount_Percent = (l.Qnty_value ?? 0) > 0 ? Math.Round((l.Net_Total_Item_Commission ?? 0) / l.Qnty_value!.Value * 100, 2) : 0
         }).ToList();
 
         try
