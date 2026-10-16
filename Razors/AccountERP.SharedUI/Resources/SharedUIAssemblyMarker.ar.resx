@@ -3019,4 +3019,20 @@
   <data name="FSSCountSaved" xml:space="preserve"><value>حُفظ الجرد</value></data>
   <data name="FSSClosed" xml:space="preserve"><value>أُقفلت الوردية</value></data>
   <data name="FSSVanStock" xml:space="preserve"><value>رصيد السيارة</value></data>
+  <data name="FSSCash" xml:space="preserve"><value>نقدية صندوق العهدة</value></data>
+  <data name="FSSCashHint" xml:space="preserve"><value>المتوقع = رصيد صندوق العهدة الدفترى (كل تحصيلات الوردية). عُدّ النقدية الفعلية وأدخلها</value></data>
+  <data name="FSSCashExpected" xml:space="preserve"><value>النقدية المتوقعة</value></data>
+  <data name="FSSCashCounted" xml:space="preserve"><value>النقدية المعدودة</value></data>
+  <data name="FSSCashCountedHelp" xml:space="preserve"><value>المبلغ الفعلى فى يد المندوب</value></data>
+  <data name="FSSCashDiff" xml:space="preserve"><value>فرق النقدية</value></data>
+  <data name="FSSCashShortHint" xml:space="preserve"><value>العجز يُصرف من صندوق العهدة على حساب المندوب الشخصى عند الإقفال</value></data>
+  <data name="FSSCashOverHint" xml:space="preserve"><value>الزيادة تُقبض فى صندوق العهدة لحساب «إيرادات أخرى» عند الإقفال</value></data>
+  <data name="FSSRemitBox" xml:space="preserve"><value>توريد إلى الصندوق الرئيسى</value></data>
+  <data name="FSSKeepInCustody" xml:space="preserve"><value>لا توريد — تبقى فى العهدة</value></data>
+  <data name="FSSRemitAmount" xml:space="preserve"><value>المبلغ المورَّد</value></data>
+  <data name="FSSRemitAmountHelp" xml:space="preserve"><value>فارغ = كل النقدية المعدودة</value></data>
+  <data name="FSSRemitTooMuch" xml:space="preserve"><value>أكبر من النقدية المعدودة</value></data>
+  <data name="FSSChargeShortage" xml:space="preserve"><value>تحميل قيمة عجز البضاعة ({0}) على حساب المندوب</value></data>
+  <data name="FSSChargeShortageHint" xml:space="preserve"><value>قيد: مدين حساب المندوب / دائن «إيرادات أخرى» بمتوسط التكلفة. ألغِه لو قرر المشرف اعتباره مصروفاً</value></data>
+  <data name="FSSCloseConfirmCash" xml:space="preserve"><value>سيُقفل اليوم. أصناف بعجز: {0}، بزيادة: {1} (أذون تسوية مسودة). فرق النقدية: {2}، المورَّد: {3}، عجز البضاعة على المندوب: {4}. متابعة؟</value></data>
 </root>

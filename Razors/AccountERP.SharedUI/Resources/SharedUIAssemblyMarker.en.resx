@@ -3019,4 +3019,20 @@
   <data name="FSSCountSaved" xml:space="preserve"><value>Count saved</value></data>
   <data name="FSSClosed" xml:space="preserve"><value>Shift closed</value></data>
   <data name="FSSVanStock" xml:space="preserve"><value>Van stock</value></data>
+  <data name="FSSCash" xml:space="preserve"><value>Custody cash</value></data>
+  <data name="FSSCashHint" xml:space="preserve"><value>Expected = the custody box book balance (all shift collections). Count the actual cash and enter it</value></data>
+  <data name="FSSCashExpected" xml:space="preserve"><value>Expected cash</value></data>
+  <data name="FSSCashCounted" xml:space="preserve"><value>Counted cash</value></data>
+  <data name="FSSCashCountedHelp" xml:space="preserve"><value>Actual amount the rep hands over</value></data>
+  <data name="FSSCashDiff" xml:space="preserve"><value>Cash difference</value></data>
+  <data name="FSSCashShortHint" xml:space="preserve"><value>The shortage is paid out of the custody box to the rep's personal account at closing</value></data>
+  <data name="FSSCashOverHint" xml:space="preserve"><value>The surplus is received into the custody box from 'Other income' at closing</value></data>
+  <data name="FSSRemitBox" xml:space="preserve"><value>Hand over to main box</value></data>
+  <data name="FSSKeepInCustody" xml:space="preserve"><value>No handover — keep in custody</value></data>
+  <data name="FSSRemitAmount" xml:space="preserve"><value>Handover amount</value></data>
+  <data name="FSSRemitAmountHelp" xml:space="preserve"><value>Empty = all counted cash</value></data>
+  <data name="FSSRemitTooMuch" xml:space="preserve"><value>More than the counted cash</value></data>
+  <data name="FSSChargeShortage" xml:space="preserve"><value>Charge the stock shortage value ({0}) to the rep's account</value></data>
+  <data name="FSSChargeShortageHint" xml:space="preserve"><value>Entry: debit the rep's account / credit 'Other income' at average cost. Turn off if the supervisor treats it as an expense</value></data>
+  <data name="FSSCloseConfirmCash" xml:space="preserve"><value>The day will close. Short items: {0}, over: {1} (draft adjustment orders). Cash difference: {2}, handover: {3}, stock shortage charged to rep: {4}. Continue?</value></data>
 </root>

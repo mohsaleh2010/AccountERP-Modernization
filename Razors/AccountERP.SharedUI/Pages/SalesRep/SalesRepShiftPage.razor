@@ -223,9 +223,45 @@
                     </RowTemplate>
                 </MudTable>
                 @if (_count.Count == 0) { <div class="inv-empty" role="status">@Tr("FSSNoVanStock")</div> }
+
+                @* ===== النقدية: عدّ صندوق العهدة والتوريد ===== *@
+                <h3 class="ss-sec ss-gap"><MudIcon Icon="@Icons.Material.Filled.Payments" Color="Color.Primary" Size="Size.Small" />@Tr("FSSCash")</h3>
+                <div class="ss-hint">@Tr("FSSCashHint")</div>
+                <div class="ss-kpis ss-gap">
+                    <div class="ss-kpi"><div class="k">@Tr("FSSCashExpected")</div><div class="v ss-num">@((_cash?.Expected ?? 0).ToString("N2"))</div></div>
+                    <div class="ss-kpi">
+                        <MudNumericField T="decimal?" @bind-Value="_cashCounted" Label="@Tr("FSSCashCounted")" Variant="Variant.Outlined" Min="0" Margin="Margin.Dense" Format="N2"
+                                         HelperText="@Tr("FSSCashCountedHelp")" />
+                    </div>
+                    <div class="ss-kpi" aria-live="polite">
+                        <div class="k">@Tr("FSSCashDiff")</div>
+                        @if (CashDiff == null) { <div class="v">—</div> }
+                        else if (CashDiff == 0) { <div class="v ss-pos"><MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" aria-hidden="true" /> @Tr("FSSMatch")</div> }
+                        else { <div class="@("v ss-num " + (CashDiff < 0 ? "ss-neg" : "ss-pos"))">@(CashDiff < 0 ? Tr("FSSShort") : Tr("FSSOver")) @Math.Abs(CashDiff.Value).ToString("N2")</div> }
+                    </div>
+                </div>
+                @if (CashDiff is decimal cd && cd != 0)
+                {
+                    <div class="ss-hint ss-gap">@Tr(cd < 0 ? "FSSCashShortHint" : "FSSCashOverHint")</div>
+                }
+                <div class="ss-kpis ss-gap">
+                    <MudSelect T="long" @bind-Value="_remitBox" Label="@Tr("FSSRemitBox")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                               ToStringFunc="@(v => v == 0 ? Tr("FSSKeepInCustody") : _boxes.FirstOrDefault(b => b.Id == v)?.Name ?? "")">
+                        <MudSelectItem T="long" Value="0L">@Tr("FSSKeepInCustody")</MudSelectItem>
+                        @foreach (var b in _boxes) { <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem> }
+                    </MudSelect>
+                    <MudNumericField T="decimal?" @bind-Value="_remitAmount" Label="@Tr("FSSRemitAmount")" Variant="Variant.Outlined" Min="0" Margin="Margin.Dense" Format="N2"
+                                     Disabled="@(_remitBox == 0)" HelperText="@Tr("FSSRemitAmountHelp")" Error="@(RemitError != null)" ErrorText="@RemitError" />
+                </div>
+                @if (StockShortValue > 0)
+                {
+                    <MudSwitch T="bool" @bind-Value="_chargeShortage" Color="Color.Primary" Class="ss-gap" Label="@Tr("FSSChargeShortage", StockShortValue.ToString("N2"))" />
+                    <div class="ss-hint">@Tr("FSSChargeShortageHint")</div>
+                }
+
                 <div class="ss-acts" style="justify-content:flex-end">
-                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_busy || _count.Count == 0)" OnClick="SaveCountAsync">@Tr("FSSSaveCount")</MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Lock" Disabled="@(_busy || _count.Any(c => c.DiffSmall == null))" OnClick="CloseShiftAsync">@Tr("FSSClose")</MudButton>
+                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_busy || (_count.Count == 0 && _cashCounted == null))" OnClick="SaveCountAsync">@Tr("FSSSaveCount")</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Lock" Disabled="@(_busy || _count.Any(c => c.DiffSmall == null) || _cashCounted == null || RemitError != null)" OnClick="CloseShiftAsync">@Tr("FSSClose")</MudButton>
                 </div>
             </div>
         }
@@ -260,13 +296,14 @@
             else
             {
                 <MudTable Items="@_history" T="SalesRepShiftService.ShiftView" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true">
-                    <HeaderContent><MudTh>@Tr("FSSDate")</MudTh><MudTh>@Tr("FSSOpenedAt")</MudTh><MudTh>@Tr("FSSClosedAt")</MudTh><MudTh>@Tr("FSRStatus")</MudTh><MudTh>@Tr("FSSDiffValue")</MudTh></HeaderContent>
+                    <HeaderContent><MudTh>@Tr("FSSDate")</MudTh><MudTh>@Tr("FSSOpenedAt")</MudTh><MudTh>@Tr("FSSClosedAt")</MudTh><MudTh>@Tr("FSRStatus")</MudTh><MudTh>@Tr("FSSDiffValue")</MudTh><MudTh>@Tr("FSSCashDiff")</MudTh></HeaderContent>
                     <RowTemplate>
                         <MudTd DataLabel="@Tr("FSSDate")" Class="ss-num">@context.Shift_Date.ToString("yyyy-MM-dd")</MudTd>
                         <MudTd DataLabel="@Tr("FSSOpenedAt")" Class="ss-num">@context.Opened_At?.ToString("HH:mm")</MudTd>
                         <MudTd DataLabel="@Tr("FSSClosedAt")" Class="ss-num">@context.Closed_At?.ToString("yyyy-MM-dd HH:mm")</MudTd>
                         <MudTd DataLabel="@Tr("FSRStatus")">@Tr("FSSStatus_" + context.Status)</MudTd>
                         <MudTd DataLabel="@Tr("FSSDiffValue")" Class="@("ss-num " + (context.Stock_Diff_Value < 0 ? "ss-neg" : ""))">@context.Stock_Diff_Value?.ToString("N2")</MudTd>
+                        <MudTd DataLabel="@Tr("FSSCashDiff")" Class="@("ss-num " + (context.Cash_Diff < 0 ? "ss-neg" : ""))">@context.Cash_Diff?.ToString("N2")</MudTd>
                     </RowTemplate>
                 </MudTable>
             }
@@ -317,9 +354,17 @@
     private List<SalesRepProfileService.Option> _mainStores = new();
     private List<LineEdit> _lines = new();
     private List<CountRow> _count = new();
-    private long _repId, _mainStore, _centralDamaged;
+    private long _repId, _mainStore, _centralDamaged, _remitBox;
     private Panel _panel;
-    private bool _loading = true, _busy, _direct, _showDirect;
+    private bool _loading = true, _busy, _direct, _showDirect, _chargeShortage = true;
+    private SalesRep_Shift_Cash? _cash;
+    private decimal? _cashCounted, _remitAmount;
+    private List<SalesRepProfileService.Option> _boxes = new();
+    private readonly CashVouchersService _cashSvc = new();
+
+    private decimal? CashDiff => _cashCounted == null || _cash == null ? null : Math.Round(_cashCounted.Value - _cash.Expected, 2);
+    private string? RemitError => _remitBox != 0 && _cashCounted != null && (_remitAmount ?? _cashCounted) > _cashCounted ? Tr("FSSRemitTooMuch") : null;
+    private decimal StockShortValue => Math.Round(_count.Where(c => c.DiffSmall < 0).Sum(c => Math.Abs(c.DiffSmall!.Value) * (c.Row.Unit_Cost ?? 0)), 2);
     private string? _error;
 
     protected override async Task OnInitializedAsync()
@@ -361,12 +406,27 @@
                         pending: transfers.Where(t => t.Id_To == rep.Van_Store_Id && t.Transfer_Status is 1 or 2).ToList(),
                         history: _svc.GetShifts(rep.Id, 15),
                         stores: _profiles.GetFreeStores(rep.Branch_Id, rep.Id).Where(s => s.Id != rep.Van_Store_Id && s.Id != rep.Damaged_Store_Id).ToList(),
-                        count: shift?.Status == (int)SalesRepShiftStatus.Closing ? _svc.GetShiftStock(shift.Id) : new List<SalesRep_Shift_Stock>());
+                        count: shift?.Status == (int)SalesRepShiftStatus.Closing ? _svc.GetShiftStock(shift.Id) : new List<SalesRep_Shift_Stock>(),
+                        cash: shift?.Status == (int)SalesRepShiftStatus.Closing ? _svc.GetShiftCash(shift.Id) : null,
+                        boxes: MainBoxes(rep));
             });
             _shift = data.shift; _vanStock = data.van; _damagedStock = data.damaged; _pending = data.pending; _history = data.history; _mainStores = data.stores;
             BuildCount(data.count);
+            _cash = data.cash; _cashCounted = data.cash?.Counted; _remitAmount = null; _chargeShortage = true;
+            _boxes = data.boxes;
+            if (_remitBox != 0 && !_boxes.Any(b => b.Id == _remitBox)) _remitBox = 0;
+            if (_remitBox == 0) _remitBox = _boxes.FirstOrDefault()?.Id ?? 0;
         }
         catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    /// <summary>صناديق التوريد: صناديق فرع المندوب المسموحة للمستخدم، بلا صناديق عهدة المندوبين.</summary>
+    private List<SalesRepProfileService.Option> MainBoxes(SalesRepProfileService.RepRow rep)
+    {
+        var custody = _reps.Select(r => r.Cash_Box_Id).ToHashSet();
+        return _cashSvc.GetBoxes(Common.User_Id, rep.Branch_Id).Rows.Cast<System.Data.DataRow>()
+            .Select(r => new SalesRepProfileService.Option { Id = Convert.ToInt64(r["Id"]), Name = r["Bank_Display"]?.ToString() ?? "", Branch_Id = rep.Branch_Id })
+            .Where(b => !custody.Contains(b.Id)).ToList();
     }
 
     private void BuildCount(List<SalesRep_Shift_Stock> rows)
@@ -451,17 +511,34 @@
     {
         long shiftId = _shift!.Id;
         var counts = _count.Where(c => c.CountedSmall != null).Select(c => new SalesRepShiftService.CountInput { Unit_Item_Id = c.Row.Unit_Item_Table_Id, Counted_Small = c.CountedSmall!.Value }).ToList();
-        await RunAsync(() => { _svc.RecordCount(shiftId, counts); return 0; }, "FSSCountSaved");
+        decimal? cash = _cashCounted;
+        await RunAsync(() =>
+        {
+            if (counts.Count > 0) _svc.RecordCount(shiftId, counts);
+            if (cash != null) _svc.RecordCashCount(shiftId, cash.Value);
+            return 0;
+        }, "FSSCountSaved");
     }
 
     private async Task CloseShiftAsync()
     {
         int shortCount = _count.Count(c => c.DiffSmall < 0), overCount = _count.Count(c => c.DiffSmall > 0);
-        var ok = await DialogService.ShowMessageBoxAsync(Tr("FSSClose"), Tr("FSSCloseConfirm", shortCount, overCount), yesText: Tr("FSSClose"), cancelText: Tr("Cancel"));
+        decimal remit = _remitBox == 0 ? 0 : _remitAmount ?? _cashCounted ?? 0;
+        string msg = Tr("FSSCloseConfirmCash", shortCount, overCount, (CashDiff ?? 0).ToString("N2"), remit.ToString("N2"),
+                        _chargeShortage && StockShortValue > 0 ? StockShortValue.ToString("N2") : "0.00");
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("FSSClose"), msg, yesText: Tr("FSSClose"), cancelText: Tr("Cancel"));
         if (ok != true) return;
         long shiftId = _shift!.Id;
         var counts = _count.Select(c => new SalesRepShiftService.CountInput { Unit_Item_Id = c.Row.Unit_Item_Table_Id, Counted_Small = c.CountedSmall!.Value }).ToList();
-        await RunAsync(() => { _svc.RecordCount(shiftId, counts); _svc.CloseShift(shiftId); return 0; }, "FSSClosed");
+        decimal cash = _cashCounted!.Value;
+        var options = new SalesRepShiftService.CloseOptions { RemitToBoxId = _remitBox, RemitAmount = _remitBox == 0 ? null : _remitAmount, ChargeStockShortage = _chargeShortage };
+        await RunAsync(() =>
+        {
+            if (counts.Count > 0) _svc.RecordCount(shiftId, counts);
+            _svc.RecordCashCount(shiftId, cash);
+            _svc.CloseShift(shiftId, options);
+            return 0;
+        }, "FSSClosed");
     }
 
     private async Task RunAsync<T>(Func<T> action, string doneKey)

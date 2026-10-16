@@ -3021,4 +3021,20 @@
   <data name="FSSCountSaved" xml:space="preserve"><value>Inventaire enregistré</value></data>
   <data name="FSSClosed" xml:space="preserve"><value>Tournée clôturée</value></data>
   <data name="FSSVanStock" xml:space="preserve"><value>Stock du véhicule</value></data>
+  <data name="FSSCash" xml:space="preserve"><value>Espèces de la caisse</value></data>
+  <data name="FSSCashHint" xml:space="preserve"><value>Attendu = solde comptable de la caisse (tous les encaissements). Comptez les espèces réelles</value></data>
+  <data name="FSSCashExpected" xml:space="preserve"><value>Espèces attendues</value></data>
+  <data name="FSSCashCounted" xml:space="preserve"><value>Espèces comptées</value></data>
+  <data name="FSSCashCountedHelp" xml:space="preserve"><value>Montant réel remis</value></data>
+  <data name="FSSCashDiff" xml:space="preserve"><value>Écart d'espèces</value></data>
+  <data name="FSSCashShortHint" xml:space="preserve"><value>Le manque est imputé au compte personnel du commercial à la clôture</value></data>
+  <data name="FSSCashOverHint" xml:space="preserve"><value>L'excédent est encaissé en « Autres produits » à la clôture</value></data>
+  <data name="FSSRemitBox" xml:space="preserve"><value>Verser à la caisse principale</value></data>
+  <data name="FSSKeepInCustody" xml:space="preserve"><value>Pas de versement — reste en caisse</value></data>
+  <data name="FSSRemitAmount" xml:space="preserve"><value>Montant versé</value></data>
+  <data name="FSSRemitAmountHelp" xml:space="preserve"><value>Vide = toutes les espèces comptées</value></data>
+  <data name="FSSRemitTooMuch" xml:space="preserve"><value>Supérieur aux espèces comptées</value></data>
+  <data name="FSSChargeShortage" xml:space="preserve"><value>Imputer la valeur du manque ({0}) au commercial</value></data>
+  <data name="FSSChargeShortageHint" xml:space="preserve"><value>Écriture : débit commercial / crédit « Autres produits » au coût moyen. Désactivez si le superviseur le passe en charge</value></data>
+  <data name="FSSCloseConfirmCash" xml:space="preserve"><value>Clôture : {0} en manque, {1} en excédent (bons brouillons). Écart d'espèces : {2}, versé : {3}, manque imputé : {4}. Continuer ?</value></data>
 </root>

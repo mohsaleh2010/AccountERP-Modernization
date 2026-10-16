@@ -3021,4 +3021,20 @@
   <data name="FSSCountSaved" xml:space="preserve"><value>Inventur gespeichert</value></data>
   <data name="FSSClosed" xml:space="preserve"><value>Schicht abgeschlossen</value></data>
   <data name="FSSVanStock" xml:space="preserve"><value>Fahrzeugbestand</value></data>
+  <data name="FSSCash" xml:space="preserve"><value>Bargeld der Kasse</value></data>
+  <data name="FSSCashHint" xml:space="preserve"><value>Erwartet = Buchbestand der Kasse (alle Einnahmen der Schicht). Bargeld zählen und eingeben</value></data>
+  <data name="FSSCashExpected" xml:space="preserve"><value>Erwartetes Bargeld</value></data>
+  <data name="FSSCashCounted" xml:space="preserve"><value>Gezähltes Bargeld</value></data>
+  <data name="FSSCashCountedHelp" xml:space="preserve"><value>Tatsächlich übergebener Betrag</value></data>
+  <data name="FSSCashDiff" xml:space="preserve"><value>Kassendifferenz</value></data>
+  <data name="FSSCashShortHint" xml:space="preserve"><value>Der Fehlbetrag wird beim Abschluss dem persönlichen Konto belastet</value></data>
+  <data name="FSSCashOverHint" xml:space="preserve"><value>Der Überschuss wird beim Abschluss als „Sonstige Erträge“ vereinnahmt</value></data>
+  <data name="FSSRemitBox" xml:space="preserve"><value>An Hauptkasse abführen</value></data>
+  <data name="FSSKeepInCustody" xml:space="preserve"><value>Keine Abführung — bleibt in der Kasse</value></data>
+  <data name="FSSRemitAmount" xml:space="preserve"><value>Abgeführter Betrag</value></data>
+  <data name="FSSRemitAmountHelp" xml:space="preserve"><value>Leer = gesamtes gezähltes Bargeld</value></data>
+  <data name="FSSRemitTooMuch" xml:space="preserve"><value>Mehr als das gezählte Bargeld</value></data>
+  <data name="FSSChargeShortage" xml:space="preserve"><value>Fehlmengenwert ({0}) dem Mitarbeiter belasten</value></data>
+  <data name="FSSChargeShortageHint" xml:space="preserve"><value>Buchung: Soll Mitarbeiter / Haben „Sonstige Erträge“ zum Durchschnittspreis. Ausschalten, wenn als Aufwand behandelt</value></data>
+  <data name="FSSCloseConfirmCash" xml:space="preserve"><value>Abschluss: {0} Fehlmengen, {1} Überschüsse (Entwürfe). Kassendifferenz: {2}, abgeführt: {3}, belastete Fehlmenge: {4}. Fortfahren?</value></data>
 </root>

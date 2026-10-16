@@ -13,7 +13,7 @@ namespace AccountModelsLib.SalesRep
 
     public enum SalesRepShiftStatus { Open = 1, Closing = 2, Closed = 3, Reopened = 4 }
 
-    public enum SalesRepDocType { SaleInvoice = 1, SaleReturn = 2, CashVoucher = 3, StoreOrder = 4, CustomerOrder = 5 }
+    public enum SalesRepDocType { SaleInvoice = 1, SaleReturn = 2, CashVoucher = 3, StoreOrder = 4, CustomerOrder = 5, JournalEntry = 6 }
 
     public enum SalesRepVisitResult { Sale = 1, Delivery = 2, Order = 3, Collection = 4, Return = 5, NoSale = 6 }
 

@@ -190,6 +190,12 @@ namespace AccountModelsLib
         /// <summary>جدول أسطر فارغ بنفس بنية Money_Transaction_Box (يستعمله المحرك مباشرة).</summary>
         public DataTable NewLinesTable() => Money_Transaction_BoxOrderReportCLS.MakeEmpty_OrderMoney();
 
+        /// <summary>
+        /// نفس البنية من اتصال المستدعى: MakeEmpty_OrderMoney تفتح اتصالاً جديداً يُحجب خلف معاملة مفتوحة كتبت فى Money_Transaction_Box
+        /// فيرجع جدولاً بلا أعمدة؛ داخل معاملة استعمل هذه.
+        /// </summary>
+        public DataTable NewLinesTable(operations opp) => opp.return_DataTable("SELECT 0 AS Id_Test, Money_Transaction_Box.* FROM Money_Transaction_Box WHERE Id = -100");
+
         public void AddLine(DataTable dt, int transactionType, long subAccountId, int accountType, string accountName, string accountCode, long accountCurrencyId, decimal amount,
                             long costCenterId, string costCenterName, decimal factor, string notes, decimal balanceBefore, decimal balanceAfter)
         {
@@ -262,10 +268,30 @@ namespace AccountModelsLib
         {
             if (lines == null || lines.Rows.Count == 0) throw new InvalidOperationException("At least one line is required");
             var opp = new operations(1);
+            try
+            {
+                var r = SaveMultiVoucherInTx(opp, replaceOrderId, transactionType, boxId, boxName, boxCurrencyId, boxCurrencyName, date, orderNo, manName, orderNotes, factor, lines);
+                opp.Commit();
+                return r;
+            }
+            catch
+            {
+                try { opp.Rollback(); } catch { }
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// نفس SaveMultiVoucherCore داخل معاملة المستدعى (بلا Commit/Rollback) — لعمليات مركّبة كإقفال وردية المندوب تحتاج الإذن والقيد والتحويل ذرياً.
+        /// orderNo &lt;= 0: يُولَّد الرقم من المحرك (Make_New_Order_No).
+        /// </summary>
+        public (long OrderId, long OrderNo, string Message) SaveMultiVoucherInTx(operations opp, long replaceOrderId, int transactionType, long boxId, string boxName, long boxCurrencyId, string boxCurrencyName,
+                                                                                DateTime date, long orderNo, string manName, string orderNotes, decimal factor, DataTable lines)
+        {
+            if (lines == null || lines.Rows.Count == 0) throw new InvalidOperationException("At least one line is required");
             var engine = new Money_Transaction_BoxOrderReportCLS();
             int excp = 0;
             string msg = "";
-            try
             {
                 if (replaceOrderId > 0)
                 {
@@ -278,6 +304,7 @@ namespace AccountModelsLib
                 if (transactionType == 2 && total > boxBalance) throw new InvalidOperationException("Box balance does not allow this payment");
 
                 long no = orderNo;
+                if (no <= 0) no = engine.Make_New_Order_No(ref excp, ref opp, transactionType, date, boxId);
                 var probe = no;
                 var found = engine.Check_Order_NoFound(ref excp, ref opp, ref probe, transactionType, date, boxId);
                 if (found || no <= 0 || probe != no) throw new InvalidOperationException("Order number already exists");
@@ -296,13 +323,7 @@ namespace AccountModelsLib
                     boxCurrencyId, boxCurrencyName, factor <= 0 ? 1 : factor, orderId, 0);
                 if (excp1 != 0) throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg1) ? "Journal entry failed" : msg1);
 
-                opp.Commit();
                 return (orderId, no, msg + msg1);
-            }
-            catch
-            {
-                try { opp.Rollback(); } catch { }
-                throw;
             }
         }
 
@@ -366,9 +387,27 @@ namespace AccountModelsLib
             if (boxFrom == boxTo) throw new InvalidOperationException("Cannot transfer to the same box");
             if (cashValue <= 0) throw new InvalidOperationException("Value must be greater than zero");
             var opp = new operations(1);
+            try
+            {
+                var r = SaveTransferInTx(opp, boxFrom, boxFromName, currencyFrom, boxTo, boxToName, currencyTo, date, cashValue, equivalentValue, manName, orderNotes);
+                opp.Commit();
+                return r;
+            }
+            catch
+            {
+                try { opp.Rollback(); } catch { }
+                throw;
+            }
+        }
+
+        /// <summary>نفس SaveTransfer داخل معاملة المستدعى (بلا Commit/Rollback).</summary>
+        public (long OrderIdFrom, long OrderNoFrom, long OrderNoTo) SaveTransferInTx(operations opp, long boxFrom, string boxFromName, long currencyFrom, long boxTo, string boxToName, long currencyTo, DateTime date,
+                                                                                    decimal cashValue, decimal equivalentValue, string manName, string orderNotes)
+        {
+            if (boxFrom == boxTo) throw new InvalidOperationException("Cannot transfer to the same box");
+            if (cashValue <= 0) throw new InvalidOperationException("Value must be greater than zero");
             var engine = new Money_Transaction_BoxOrderReportCLS();
             int excp = 0; string msg = "";
-            try
             {
                 var noFrom = engine.Make_New_Order_No(ref excp, ref opp, 2, date, boxFrom);
                 var noTo = engine.Make_New_Order_No(ref excp, ref opp, 1, date, boxTo);
@@ -377,13 +416,7 @@ namespace AccountModelsLib
                 engine.MakeOrderBetweenTwo_Sandouk(ref excp, ref msg, ref opp, boxToName, ref orderId, date, noFrom.ToString(), boxFrom, currencyFrom, Tafkeet(cashValue, currencyFrom),
                     noTo.ToString(), boxTo, currencyTo, Tafkeet(cashValue * eq, currencyTo), cashValue, eq, manName ?? "", orderNotes ?? "", boxToName, 1, 0, 0, 0, 3);
                 if (excp != 0) throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg) ? "Transfer failed" : msg);
-                opp.Commit();
                 return (orderId, noFrom, noTo);
-            }
-            catch
-            {
-                try { opp.Rollback(); } catch { }
-                throw;
             }
         }
 

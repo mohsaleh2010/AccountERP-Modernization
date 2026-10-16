@@ -20,6 +20,10 @@ namespace AccountModelsLib.SalesRep
     {
         public const int TransferType = (int)StoreOrderType.SarfTahweel_1;
         public const int SurplusType = 1007, ShortageType = 1008;
+        /// <summary>طريقة الدفع «نقدى» فى Lookup_CashPaymentMethod.</summary>
+        public const long CashPaymentMethodId = 1;
+        /// <summary>Reference_Type لقيد تحميل عجز البضاعة على المندوب (Reference_Type_Table_Id = رقم الوردية) — قيمة لا يستعملها أى قيد آخر.</summary>
+        public const int StockChargeReferenceType = 3001;
 
         private readonly operations _external;
         public SalesRepShiftService(operations external = null) { _external = external; }
@@ -36,6 +40,21 @@ namespace AccountModelsLib.SalesRep
             public long? Unload_Order_Id { get; set; }
             public long? Damaged_Transfer_Order_Id { get; set; }
             public decimal? Stock_Diff_Value { get; set; }
+            public decimal? Cash_Expected { get; set; }
+            public decimal? Cash_Counted { get; set; }
+            public decimal? Cash_Diff { get; set; }
+        }
+
+        /// <summary>
+        /// خيارات الإقفال النهائى. RemitToBoxId: الصندوق الرئيسى الذى تُورَّد إليه النقدية (0 = تبقى فى العهدة)، RemitAmount: المبلغ
+        /// (null = كل المعدود). ChargeStockShortage: قيد قيمة عجز البضاعة على حساب المندوب (م-06-3)؛ يُلغى لو قرر المشرف تحميله مصروفاً (ق5).
+        /// </summary>
+        public class CloseOptions
+        {
+            public long RemitToBoxId { get; set; }
+            public decimal? RemitAmount { get; set; }
+            public bool ChargeStockShortage { get; set; } = true;
+            public string Notes { get; set; }
         }
 
         /// <summary>سطر رصيد فى مخزن السيارة أو التالف.</summary>
@@ -216,10 +235,34 @@ GROUP BY u.Item_id").ToList();
             if (InTransitFor(opp, rep.Van_Store_Id, toVan: true))
                 throw new InvalidOperationException("يوجد تحميل للسيارة بانتظار تأكيد المندوب؛ أكّده أو أغلقه بعجز أولاً.");
             var rows = BuildStock(opp, shift, rep);
+            RefreshCash(opp, shift, rep);
             shift.Status = (int)SalesRepShiftStatus.Closing;
             shift.StampEdit();
             opp.db.SaveChanges();
             return rows;
+        });
+
+        public SalesRep_Shift_Cash GetShiftCash(long shiftId) => Read(opp => opp.db.SalesRep_Shift_Cash.AsNoTracking()
+            .FirstOrDefault(c => c.Shift_Id == shiftId && c.Payment_Method_Id == CashPaymentMethodId));
+
+        /// <summary>
+        /// عدّ النقدية فى صندوق العهدة عند الإقفال. المتوقع = رصيد الصندوق الدفترى الآن (كل تحصيلات الوردية وإذوناتها تمر عليه)،
+        /// والفرق = المعدود − المتوقع. يرجع سطر النقدية.
+        /// </summary>
+        public SalesRep_Shift_Cash RecordCashCount(long shiftId, decimal counted) => Tx(opp =>
+        {
+            var (shift, rep) = OpenShiftAndRep(opp, shiftId, allowClosing: true);
+            if (shift.Status != (int)SalesRepShiftStatus.Closing) throw new InvalidOperationException("ابدأ الإقفال أولاً.");
+            if (counted < 0) throw new InvalidOperationException("النقدية المعدودة لا تكون سالبة.");
+            var cash = RefreshCash(opp, shift, rep);
+            cash.Counted = Math.Round(counted, 2);
+            cash.Diff = cash.Counted - cash.Expected;
+            cash.StampEdit();
+            shift.Cash_Counted = cash.Counted;
+            shift.Cash_Diff = cash.Diff;
+            shift.StampEdit();
+            opp.db.SaveChanges();
+            return cash;
         });
 
         /// <summary>تسجيل الجرد الفعلى (بالوحدة الصغرى) لأصناف السيارة.</summary>
@@ -243,11 +286,24 @@ GROUP BY u.Item_id").ToList();
         /// <summary>
         /// الإقفال النهائى: كل الأصناف يجب أن تُجرد؛ الفروق تولد إذن تسوية بالعجز 1008 وإذن بالزيادة 1007 كمسودتين يعتمدهما المشرف
         /// (§6.7-2)، وقيمة العجز بلقطة متوسط تكلفة الفرع. بسياسة «تفريغ» (ق9) يُشترط وجود إذن تفريغ.
+        /// النقدية فى نفس المعاملة: فرق العدّ يُسوّى بإذن (عجز = صرف من العهدة على حساب المندوب، زيادة = قبض فى العهدة من «إيرادات أخرى»)،
+        /// ثم تحويل المبلغ المورَّد للصندوق الرئيسى، ثم قيد عجز البضاعة على المندوب (مدين المندوب / دائن «إيرادات أخرى»).
         /// </summary>
-        public void CloseShift(long shiftId, string notes = null) => Tx(opp =>
+        public void CloseShift(long shiftId, CloseOptions options = null) => Tx(opp =>
         {
+            options ??= new CloseOptions();
+            string notes = options.Notes;
             var (shift, rep) = OpenShiftAndRep(opp, shiftId, allowClosing: true);
             if (shift.Status != (int)SalesRepShiftStatus.Closing) throw new InvalidOperationException("ابدأ الإقفال وسجّل الجرد أولاً.");
+            var cash = opp.db.SalesRep_Shift_Cash.FirstOrDefault(c => c.Shift_Id == shift.Id && c.Payment_Method_Id == CashPaymentMethodId);
+            if (cash?.Counted == null) throw new InvalidOperationException("سجّل عدّ النقدية قبل الإقفال.");
+            decimal remit = Math.Round(options.RemitAmount ?? cash.Counted.Value, 2);
+            bool doRemit = options.RemitToBoxId > 0 && remit > 0;
+            if (options.RemitAmount < 0) throw new InvalidOperationException("المبلغ المورَّد لا يكون سالباً.");
+            if (options.RemitAmount > 0 && options.RemitToBoxId <= 0) throw new InvalidOperationException("اختر الصندوق الرئيسى للتوريد.");
+            if (doRemit && remit > cash.Counted.Value) throw new InvalidOperationException("المبلغ المورَّد أكبر من النقدية المعدودة.");
+            if (doRemit && options.RemitToBoxId == rep.Cash_Box_Id) throw new InvalidOperationException("اختر صندوقاً رئيسياً غير صندوق العهدة.");
+            var remitTo = doRemit ? Box(opp, options.RemitToBoxId) : null;
             if (rep.End_Of_Day_Stock_Policy == (int)SalesRepEndOfDayStockPolicy.Unload && shift.Unload_Order_Id == null)
                 throw new InvalidOperationException("سياسة المندوب: تفريغ المتبقى آخر اليوم — أصدر إذن التفريغ قبل الإقفال.");
             if (InTransitFor(opp, rep.Van_Store_Id, toVan: true))
@@ -278,6 +334,48 @@ GROUP BY u.Item_id").ToList();
             if (surplusId != null) Link(opp, shift.Id, SalesRepDocType.StoreOrder, surplusId.Value, rep.Branch_Id);
 
             shift.Stock_Diff_Value = Math.Round(rows.Sum(r => (r.Diff ?? 0) * (r.Unit_Cost ?? 0)), 2);
+
+            // ---- النقدية: المتوقع يُعاد حسابه لحظة الإقفال، والمعدود كما سُجِّل ----
+            var box = Box(opp, rep.Cash_Box_Id);
+            cash.Expected = Common.RoundMe(new Money_Transaction_BoxOrderReportCLS().GetBank_Balance(ref opp, rep.Cash_Box_Id, true));
+            cash.Diff = cash.Counted - cash.Expected;
+            var vouchers = new CashVouchersService();
+            long branchId = rep.Branch_Id ?? Common.Branch_Id;
+            string shiftNote = $"وردية مندوب {shift.Id}";
+            if (cash.Diff != 0)
+            {
+                bool shortageCash = cash.Diff < 0;
+                var acc = shortageCash ? EmployeeAccount(opp, rep) : OtherIncomeAccount(opp, branchId);
+                var lines = vouchers.NewLinesTable(opp);
+                int type = shortageCash ? 2 : 1;
+                vouchers.AddLine(lines, type, acc.Id, acc.Type, acc.Name, acc.Code, acc.CurrencyId, Math.Abs(cash.Diff.Value), 0, "", box.Factor,
+                    (shortageCash ? "عجز نقدية " : "زيادة نقدية ") + shiftNote, 0, 0);
+                var v = vouchers.SaveMultiVoucherInTx(opp, 0, type, box.Id, box.Name, box.CurrencyId, box.CurrencyName, DateTime.Today, 0,
+                    acc.Name, (shortageCash ? "تسوية عجز نقدية " : "تسوية زيادة نقدية ") + shiftNote, box.Factor, lines);
+                cash.Diff_Voucher_Id = v.OrderId;
+                Link(opp, shift.Id, SalesRepDocType.CashVoucher, v.OrderId, rep.Branch_Id);
+            }
+
+            if (doRemit)
+            {
+                var t = vouchers.SaveTransferInTx(opp, box.Id, box.Name, box.CurrencyId, remitTo.Id, remitTo.Name, remitTo.CurrencyId, DateTime.Today, remit,
+                    vouchers.GetPairFactor(box.CurrencyId, remitTo.CurrencyId), "توريد المندوب", "توريد نقدية " + shiftNote);
+                cash.Remittance_Voucher_Id = t.OrderIdFrom;
+                Link(opp, shift.Id, SalesRepDocType.CashVoucher, t.OrderIdFrom, rep.Branch_Id);
+            }
+            cash.StampEdit();
+            shift.Cash_Expected = cash.Expected;
+            shift.Cash_Counted = cash.Counted;
+            shift.Cash_Diff = cash.Diff;
+
+            // ---- قيد عجز البضاعة على المندوب (م-06-3): قيمة الأصناف الناقصة فقط؛ الزيادة يسوّيها إذن 1007 ----
+            decimal shortageValue = Math.Round(shortage.Sum(r => Math.Abs(r.Diff ?? 0) * (r.Unit_Cost ?? 0)), 2);
+            if (options.ChargeStockShortage && shortageValue > 0)
+            {
+                long entryId = ChargeEntry(opp, shift, rep, branchId, shortageValue, "تحميل عجز بضاعة " + shiftNote);
+                Link(opp, shift.Id, SalesRepDocType.JournalEntry, entryId, rep.Branch_Id);
+            }
+
             shift.Status = (int)SalesRepShiftStatus.Closed;
             shift.Closed_At = DateTime.Now;
             shift.Closed_By = Common.User_Id;
@@ -293,7 +391,91 @@ GROUP BY u.Item_id").ToList();
         {
             Id = s.Id, Rep_Id = s.Rep_Id, Shift_Date = s.Shift_Date, Status = s.Status, Opened_At = s.Opened_At, Closed_At = s.Closed_At,
             Load_Order_Id = s.Load_Order_Id, Unload_Order_Id = s.Unload_Order_Id, Damaged_Transfer_Order_Id = s.Damaged_Transfer_Order_Id, Stock_Diff_Value = s.Stock_Diff_Value,
+            Cash_Expected = s.Cash_Expected, Cash_Counted = s.Cash_Counted, Cash_Diff = s.Cash_Diff,
         };
+
+        /// <summary>ينشئ أو يحدّث سطر النقدية للوردية بالمتوقع = رصيد صندوق العهدة الدفترى الآن.</summary>
+        private static SalesRep_Shift_Cash RefreshCash(operations opp, SalesRep_Shift shift, SalesRep_Rep rep)
+        {
+            decimal expected = Common.RoundMe(new Money_Transaction_BoxOrderReportCLS().GetBank_Balance(ref opp, rep.Cash_Box_Id, true));
+            var cash = opp.db.SalesRep_Shift_Cash.FirstOrDefault(c => c.Shift_Id == shift.Id && c.Payment_Method_Id == CashPaymentMethodId);
+            if (cash == null)
+            {
+                cash = new SalesRep_Shift_Cash { Id = CallSnowflakeIdGenerate.GenerateNewId(), Shift_Id = shift.Id, Payment_Method_Id = CashPaymentMethodId };
+                cash.StampInsert(rep.Branch_Id ?? Common.Branch_Id);
+                opp.db.SalesRep_Shift_Cash.Add(cash);
+            }
+            else cash.StampEdit();
+            cash.Expected = expected;
+            if (cash.Counted != null) cash.Diff = cash.Counted - expected;
+            shift.Cash_Expected = expected;
+            shift.Cash_Diff = cash.Diff;
+            opp.db.SaveChanges();
+            return cash;
+        }
+
+        private record BoxInfo(long Id, string Name, long CurrencyId, string CurrencyName, decimal Factor);
+        private record AccountInfo(long Id, int Type, string Name, string Code, long CurrencyId, long MainAccountId);
+
+        private static BoxInfo Box(operations opp, long boxId)
+        {
+            var dt = opp.return_DataTable("SELECT b.Id, b.Bank_Name, b.currency_Id, c.Currency_Name FROM Banks b LEFT JOIN Currency c ON c.Value = b.currency_Id WHERE b.Is_Bank = 0 AND b.Id = " + boxId);
+            if (dt.Rows.Count == 0) throw new InvalidOperationException("الصندوق غير موجود.");
+            var r = dt.Rows[0];
+            long cur = r["currency_Id"] == DBNull.Value ? 1 : Convert.ToInt64(r["currency_Id"]);
+            return new BoxInfo(boxId, r["Bank_Name"]?.ToString() ?? "", cur <= 0 ? 1 : cur, r["Currency_Name"]?.ToString() ?? "", new CashVouchersService().GetFactor(cur));
+        }
+
+        private static AccountInfo Account(operations opp, string where)
+        {
+            var dt = opp.return_DataTable("SELECT TOP 1 Id, ISNULL(Account_Customer_Type_Value, 0) AS T, SubAccount_Name, SubAccount_NO, ISNULL(Currency_Id, 1) AS Cur, ISNULL(Main_Account_Id, 0) AS M FROM Submain_Account WHERE " + where);
+            if (dt.Rows.Count == 0) return null;
+            var r = dt.Rows[0];
+            long cur = Convert.ToInt64(r["Cur"]);
+            return new AccountInfo(Convert.ToInt64(r["Id"]), Convert.ToInt32(r["T"]), r["SubAccount_Name"]?.ToString()?.Trim() ?? "", r["SubAccount_NO"]?.ToString()?.Trim() ?? "",
+                cur <= 0 ? 1 : cur, Convert.ToInt64(r["M"]));
+        }
+
+        /// <summary>حساب المندوب الشخصى (حساب الموظف) الذى يُحمَّل عليه العجز.</summary>
+        private static AccountInfo EmployeeAccount(operations opp, SalesRep_Rep rep)
+        {
+            long subId = opp.db.Employees.AsNoTracking().Where(e => e.Id == rep.Employee_Id).Select(e => e.SubAccount_Id ?? 0).FirstOrDefault();
+            return (subId > 0 ? Account(opp, "Id = " + subId) : null)
+                   ?? throw new InvalidOperationException("الموظف المرتبط بالمندوب ليس له حساب فى الدليل؛ أنشئ حسابه من شاشة الموظفين أولاً.");
+        }
+
+        /// <summary>حساب «إيرادات أخرى» (نوع 32) لفرع المندوب أو المشترك بين الفروع — الطرف الدائن لزيادة النقدية وقيد العجز (قرار المستخدم).</summary>
+        private static AccountInfo OtherIncomeAccount(operations opp, long branchId) =>
+            Account(opp, "Account_Customer_Type_Value = " + Common.Account_Type_OtherEradat + " AND (Branch_ID = " + branchId + " OR Branch_ID = -1) ORDER BY CASE WHEN Branch_ID = " + branchId + " THEN 0 ELSE 1 END, Id")
+            ?? throw new InvalidOperationException("لا يوجد حساب «إيرادات أخرى» لهذا الفرع فى الدليل.");
+
+        /// <summary>قيد يومية آلى: مدين حساب المندوب / دائن «إيرادات أخرى» بقيمة عجز البضاعة، مربوط بالوردية (Reference_Type ثابت + رقم الوردية).</summary>
+        private static long ChargeEntry(operations opp, SalesRep_Shift shift, SalesRep_Rep rep, long branchId, decimal value, string notes)
+        {
+            var debit = EmployeeAccount(opp, rep);
+            var credit = OtherIncomeAccount(opp, branchId);
+            long entryCurrency = Common.Entry_Currency_Id <= 0 ? 1 : Common.Entry_Currency_Id;
+            var curName = opp.return_DataTable("SELECT Currency_Name FROM Currency WHERE Value = " + entryCurrency);
+            string currencyName = curName.Rows.Count > 0 ? curName.Rows[0][0]?.ToString() ?? "" : "";
+            var aa = new AccountEntry_CLS { Reference_Type = StockChargeReferenceType, Reference_Type_Table_Id = shift.Id };
+            var dt = new System.Data.DataTable();
+            aa.Get_Empty_dt_Details(ref opp, ref dt);
+            int excp = 0;
+            aa.AddRow_WhenBuild(ref excp, ref dt, 0, debit.Code, debit.Type, debit.MainAccountId, "", debit.Id, debit.Name, 1, value, notes, 1, debit.CurrencyId, entryCurrency, 0, "", branchId, 1);
+            if (excp == 0) aa.AddRow_WhenBuild(ref excp, ref dt, 0, credit.Code, credit.Type, credit.MainAccountId, "", credit.Id, credit.Name, 2, value, notes, 1, credit.CurrencyId, entryCurrency, 0, "", branchId, 1);
+            if (excp != 0) throw new InvalidOperationException("تعذر تجهيز أسطر قيد العجز.");
+            for (int i = 0; i < dt.Rows.Count; i++) dt.Rows[i]["Line_No"] = i + 1;
+
+            const long journalCode = 1;
+            DateTime date = DateTime.Today;
+            long entryNo = AccountEntry_CLS.NewEntry_No(ref opp, date, journalCode, 0);
+            long entryId = 0;
+            string msg = "";
+            aa.Make_AccountEntry(ref excp, ref msg, ref entryId, ref opp, Common.User_Id, Common.User_Name, Common.Branch_Id, entryNo, date, journalCode, entryCurrency, notes,
+                Common.Transform_Type, dt, (double)value, branchId, 1, shift.Id.ToString(), entryCurrency, currencyName, 1, 0);
+            if (excp != 0 || entryId <= 0) throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg) ? "تعذر إنشاء قيد العجز." : msg);
+            return entryId;
+        }
 
         private static ShiftView Current(operations opp, long repId)
         {
