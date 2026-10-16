@@ -1,0 +1,529 @@
+@* 🟢 خطة المندوبين — المرحلة 4: «مرتجع المندوب». المرتجع المربوط بالفاتورة: اختيار العميل ← فاتورته ← الكمية من المسموح بإرجاعه
+   مع السبب والحالة (صالح ← السيارة / تالف ← مخزن التالف) والصورة حسب السبب. المستند يُبنى ويُسعَّر على السيرفر من سطر الفاتورة الأصلية
+   (SalesRepReturnService) ويُحفظ بمحرك المرتجع الحالى. المرتجع بلا فاتورة بسعر الأمان لمن يسمح له ملفه. التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/return"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using Microsoft.AspNetCore.Components.Forms
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("FSTTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .rt-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .rt-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-warning) 16%, transparent); color: var(--mud-palette-warning); }
+    .rt-head .ico .mud-icon-root { font-size: 2rem; }
+    .rt-head .titles { flex: 1 1 260px; }
+    .rt-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .rt-gap { margin-top: 16px; }
+    .rt-sec { font-weight: 700; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; }
+    .rt-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+    .rt-kpi { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); }
+    .rt-kpi .k { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .rt-kpi .v { font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .rt-line { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); margin-top: 12px; }
+    .rt-line.on { border-color: var(--mud-palette-primary); background: color-mix(in srgb, var(--mud-palette-primary) 5%, transparent); }
+    .rt-line .name { font-weight: 700; }
+    .rt-line .meta { font-size: .8125rem; color: var(--mud-palette-text-secondary); display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 2px; }
+    .rt-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 10px; align-items: start; }
+    .rt-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+    .rt-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .rt-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .rt-total { font-size: 1.25rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .rt-pick { cursor: pointer; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card rt-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.AssignmentReturn" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSTTitle")</h1>
+            <div class="sub">@Tr("FSTSub")</div>
+        </div>
+        <MudSelect T="long" Value="_repId" ValueChanged="OnRepAsync" Label="@Tr("FSRRep")" Variant="Variant.Outlined" Style="min-width:240px"
+                   ToStringFunc="@(v => _reps.FirstOrDefault(r => r.Id == v)?.Employee_Name ?? "")">
+            @foreach (var r in _reps.Where(r => r.Active)) { <MudSelectItem T="long" Value="@r.Id">@r.Employee_Name</MudSelectItem> }
+        </MudSelect>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="rt-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    @if (_loading)
+    {
+        <div class="inv-card rt-gap"><MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("FSRLoading")" /></div>
+    }
+    else if (_ctx == null)
+    {
+        <div class="inv-card rt-gap inv-empty" role="status">
+            <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Size="Size.Large" />
+            <div>@Tr(_reps.Count == 0 ? "FSSNoReps" : "FSSPickRep")</div>
+        </div>
+    }
+    else if (_savedId is long saved)
+    {
+        <div class="inv-card rt-gap inv-empty" role="status" aria-live="polite">
+            <MudIcon Icon="@Icons.Material.Filled.TaskAlt" Color="Color.Success" Size="Size.Large" />
+            <div><b>@Tr("FSTSaved")</b></div>
+            <div class="rt-acts" style="justify-content:center">
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.ReceiptLong" Href="@($"/accounts/invoices/sales-return/{saved}")">@Tr("FSTOpenReturn")</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="Reset">@Tr("FSTNew")</MudButton>
+                <MudButton Variant="Variant.Text" Href="@($"/salesrep/shift?rep={_repId}")">@Tr("FSTBackToShift")</MudButton>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="inv-card rt-gap">
+            <div class="rt-kpis">
+                <div class="rt-kpi"><div class="k">@Tr("FSSShift")</div><div class="v">@Tr(_ctx.CanSell ? "FSSStatus_" + _ctx.Shift_Status : "FSSNoShift")</div></div>
+                <div class="rt-kpi"><div class="k">@Tr("FSRVan")</div><div class="v">@_ctx.Van_Store_Name</div></div>
+                <div class="rt-kpi"><div class="k">@Tr("FSTDamagedStore")</div><div class="v">@_ctx.Damaged_Store_Name</div></div>
+                <div class="rt-kpi"><div class="k">@Tr("FSTCashOnHand")</div><div class="v rt-num">@_ctx.Cash_On_Hand.ToString("N2")</div></div>
+                <div class="rt-kpi"><div class="k">@Tr("FSTWindow")</div><div class="v rt-num">@Tr("FSTDays", _ctx.Return_Window_Days)</div></div>
+            </div>
+            @if (!_ctx.CanSell)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true" Class="rt-gap">@Tr("FSTNoShift")</MudAlert>
+                <MudButton Class="rt-gap" Variant="Variant.Outlined" Href="@($"/salesrep/shift?rep={_repId}")">@Tr("FSTBackToShift")</MudButton>
+            }
+        </div>
+
+        @if (_ctx.CanSell)
+        {
+            @* ===== العميل والنوع ===== *@
+            <div class="inv-card rt-gap">
+                <h2 class="rt-sec"><MudIcon Icon="@Icons.Material.Filled.Person" Color="Color.Primary" Size="Size.Small" />@Tr("FSTStepCustomer")</h2>
+                <div class="rt-kpis">
+                    <MudAutocomplete T="SalesRepProfileService.Option" Value="_customer" ValueChanged="OnCustomerAsync" SearchFunc="SearchCustomersAsync" ToStringFunc="@(o => o?.Name ?? "")"
+                                     Label="@Tr("FSVCustomer")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" ResetValueOnEmptyText="true" DebounceInterval="300" />
+                    <MudRadioGroup T="bool" Value="_blind" ValueChanged="OnModeChanged" aria-label="@Tr("FSTMode")">
+                        <MudRadio T="bool" Value="false" Color="Color.Primary">@Tr("FSTFromInvoice")</MudRadio>
+                        <MudRadio T="bool" Value="true" Color="Color.Primary" Disabled="@(!_ctx.Allow_Blind_Return)">@Tr("FSTBlind")</MudRadio>
+                    </MudRadioGroup>
+                </div>
+                @if (!_ctx.Allow_Blind_Return) { <div class="rt-hint">@Tr("FSTBlindNotAllowed")</div> }
+                else if (_blind) { <div class="rt-hint">@Tr("FSTBlindHint")</div> }
+            </div>
+
+            @* ===== الفاتورة الأصلية ===== *@
+            @if (_customer != null && !_blind)
+            {
+                <div class="inv-card rt-gap">
+                    <h2 class="rt-sec"><MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Color="Color.Primary" Size="Size.Small" />@Tr("FSTStepInvoice")</h2>
+                    @if (_invoices.Count == 0)
+                    {
+                        <div class="inv-empty" role="status">@Tr("FSTNoInvoices")</div>
+                    }
+                    else
+                    {
+                        <MudTable Items="@_invoices" T="SalesRepReturnService.InvoicePick" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true" Hover="true"
+                                  OnRowClick="@(e => PickInvoiceAsync(e.Item!))" RowClass="rt-pick">
+                            <HeaderContent><MudTh>@Tr("FSVDocNo")</MudTh><MudTh>@Tr("FSSDate")</MudTh><MudTh>@Tr("FSTAge")</MudTh><MudTh>@Tr("FSVDocType")</MudTh><MudTh>@Tr("FSVAmount")</MudTh><MudTh></MudTh></HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="@Tr("FSVDocNo")" Class="rt-num"><b>@context.Invoice_No</b></MudTd>
+                                <MudTd DataLabel="@Tr("FSSDate")" Class="rt-num">@context.Invoice_Date?.ToString("yyyy-MM-dd")</MudTd>
+                                <MudTd DataLabel="@Tr("FSTAge")">
+                                    <span class="rt-num">@Tr("FSTDays", context.Age_Days)</span>
+                                    @if (!context.Inside_Window) { <MudChip T="string" Size="Size.Small" Color="Color.Warning" Icon="@Icons.Material.Filled.Schedule">@Tr("FSTOutsideWindow")</MudChip> }
+                                </MudTd>
+                                <MudTd DataLabel="@Tr("FSVDocType")">@Tr(context.Is_Credit == 1 ? "FSVCreditSale" : "FSVCashSale")</MudTd>
+                                <MudTd DataLabel="@Tr("FSVAmount")" Class="rt-num">@context.Net_Total.ToString("N2")</MudTd>
+                                <MudTd>
+                                    <MudButton Size="Size.Small" Variant="@(_original?.Id == context.Id ? Variant.Filled : Variant.Outlined)" Color="Color.Primary"
+                                               OnClick="@(() => PickInvoiceAsync(context))" aria-label="@Tr("FSTPick", context.Invoice_No)">@Tr(_original?.Id == context.Id ? "FSTPicked" : "FSTPickShort")</MudButton>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </div>
+            }
+
+            @* ===== الأسطر ===== *@
+            @if (_customer != null && (_blind || _original != null))
+            {
+                <div class="inv-card rt-gap">
+                    <h2 class="rt-sec"><MudIcon Icon="@Icons.Material.Filled.Inventory2" Color="Color.Primary" Size="Size.Small" />@Tr("FSTStepLines")</h2>
+                    @if (_original != null && !_blind)
+                    {
+                        <div class="rt-hint">@Tr("FSTLinesHint", _original.Invoice_No)</div>
+                        @if (!_original.Inside_Window) { <MudAlert Severity="Severity.Warning" Dense="true" Class="rt-gap">@Tr("FSTWindowWarn", _original.Age_Days, _original.Window_Days)</MudAlert> }
+                    }
+                    @if (_blind)
+                    {
+                        <MudAutocomplete T="StoreOrderPageService.StockLineOption" Label="@Tr("FSSAddItem")" Variant="Variant.Outlined" Class="rt-gap"
+                                         SearchFunc="SearchVanAsync" ToStringFunc="@(o => o == null ? "" : o.Item_Name)"
+                                         ValueChanged="AddBlindAsync" ResetValueOnEmptyText="true" DebounceInterval="300" AdornmentIcon="@Icons.Material.Filled.Search" />
+                    }
+                    @if (_lines.Count == 0)
+                    {
+                        <div class="inv-empty rt-gap" role="status">@Tr(_blind ? "FSTNoBlindLines" : "FSTNothingToReturn")</div>
+                    }
+                    @foreach (var l in _lines)
+                    {
+                        var reason = _reasons.FirstOrDefault(r => r.Id == l.ReasonId);
+                        <div class="@("rt-line" + (l.QtySmall > 0 ? " on" : ""))">
+                            <div style="display:flex;gap:8px;align-items:flex-start">
+                                <div style="flex:1">
+                                    <div class="name">@l.Name</div>
+                                    <div class="meta">
+                                        @if (!_blind)
+                                        {
+                                            <span>@Tr("FSTSold"): <span class="rt-num">@Fmt(l.Sold, l.Factor, l.BUnit, l.SUnit)</span></span>
+                                            <span>@Tr("FSTReturnedBefore"): <span class="rt-num">@Fmt(l.ReturnedBefore, l.Factor, l.BUnit, l.SUnit)</span></span>
+                                            <span><b>@Tr("FSTReturnable"): <span class="rt-num">@Fmt(l.Returnable, l.Factor, l.BUnit, l.SUnit)</span></b></span>
+                                        }
+                                        <span>@Tr(_blind ? "FSTSafePrice" : "FSTNetPrice"): <span class="rt-num">@((l.UnitPrice * l.Factor).ToString("N2")) / @l.BUnit</span></span>
+                                    </div>
+                                </div>
+                                @if (_blind) { <MudIconButton Icon="@Icons.Material.Filled.Close" aria-label="@Tr("FSSRemove")" Title="@Tr("FSSRemove")" OnClick="@(() => RemoveLine(l))" /> }
+                            </div>
+                            <div class="rt-fields">
+                                <MudNumericField T="decimal" Value="l.Large" ValueChanged="@(v => SetQty(l, v, l.Small))" Label="@l.BUnit" Variant="Variant.Outlined" Min="0" Margin="Margin.Dense"
+                                                 Error="@(l.Over)" ErrorText="@Tr("FSTOver")" />
+                                @if (l.Factor > 1)
+                                {
+                                    <MudNumericField T="decimal" Value="l.Small" ValueChanged="@(v => SetQty(l, l.Large, v))" Label="@l.SUnit" Variant="Variant.Outlined" Min="0" Margin="Margin.Dense" Error="@(l.Over)" />
+                                }
+                                <MudSelect T="long" Value="l.ReasonId" ValueChanged="@(v => SetReason(l, v))" Label="@Tr("FSTReason")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                           Required="@(l.QtySmall > 0)" Error="@(l.QtySmall > 0 && l.ReasonId == 0)" ErrorText="@Tr("FSTReasonRequired")"
+                                           ToStringFunc="@(v => _reasons.FirstOrDefault(r => r.Id == v)?.Name ?? "")">
+                                    @foreach (var r in _reasons) { <MudSelectItem T="long" Value="@r.Id">@r.Name</MudSelectItem> }
+                                </MudSelect>
+                                <MudSelect T="int" @bind-Value="l.Condition" Label="@Tr("FSTCondition")" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="@(reason?.Is_Damaged == true)"
+                                           ToStringFunc="@(v => Tr("FSTCondition_" + v))" @bind-Value:after="Invalidate">
+                                    <MudSelectItem T="int" Value="0">@Tr("FSTCondition_0")</MudSelectItem>
+                                    <MudSelectItem T="int" Value="1">@Tr("FSTCondition_1")</MudSelectItem>
+                                </MudSelect>
+                            </div>
+                            @if (reason != null && (reason.Requires_Photo || l.Photo != null))
+                            {
+                                <div class="rt-acts">
+                                    <MudFileUpload T="IBrowserFile" FilesChanged="@(f => OnPhotoAsync(l, f))" Accept=".jpg,.jpeg,.png,.webp">
+                                        <ActivatorContent>
+                                            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="@(l.Photo == null && reason.Requires_Photo ? Color.Error : Color.Primary)"
+                                                       StartIcon="@Icons.Material.Filled.AddAPhoto">@Tr(l.Photo == null ? "FSTAddPhoto" : "FSTReplacePhoto")</MudButton>
+                                        </ActivatorContent>
+                                    </MudFileUpload>
+                                    @if (l.Photo != null) { <span class="rt-hint"><MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Success" aria-hidden="true" /> @l.PhotoName</span> }
+                                    else if (reason.Requires_Photo) { <span class="rt-hint">@Tr("FSTPhotoRequired")</span> }
+                                </div>
+                            }
+                            <div class="rt-hint" style="margin-top:6px">@Tr(l.Condition == 1 ? "FSTToDamaged" : "FSTToVan", l.Condition == 1 ? _ctx.Damaged_Store_Name : _ctx.Van_Store_Name)</div>
+                        </div>
+                    }
+                </div>
+
+                @* ===== الإتمام ===== *@
+                @if (_lines.Any(l => l.QtySmall > 0))
+                {
+                    <div class="inv-card rt-gap">
+                        <h2 class="rt-sec"><MudIcon Icon="@Icons.Material.Filled.Payments" Color="Color.Primary" Size="Size.Small" />@Tr("FSTStepSettle")</h2>
+                        <MudRadioGroup T="bool" @bind-Value="_refundCash" @bind-Value:after="Invalidate" aria-label="@Tr("FSTSettle")">
+                            <MudRadio T="bool" Value="false" Color="Color.Primary">@Tr("FSTOnAccount")</MudRadio>
+                            <MudRadio T="bool" Value="true" Color="Color.Primary">@Tr("FSTRefundCash")</MudRadio>
+                        </MudRadioGroup>
+                        <div class="rt-hint">@Tr(_refundCash ? "FSTRefundCashHint" : "FSTOnAccountHint")</div>
+                        <MudTextField T="string" @bind-Value="_notes" Label="@Tr("FSVNotes")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="rt-gap" />
+
+                        @if (_check != null)
+                        {
+                            <div class="rt-kpis rt-gap" aria-live="polite">
+                                <div class="rt-kpi"><div class="k">@Tr("FSTReturnValue")</div><div class="v rt-total">@_check.Net_Total.ToString("N2")</div></div>
+                                <div class="rt-kpi"><div class="k">@Tr("FSTLinesCount")</div><div class="v rt-num">@_check.Lines.Count</div></div>
+                                @if (_refundCash) { <div class="rt-kpi"><div class="k">@Tr("FSTCashAfter")</div><div class="v rt-num">@((_check.Cash_On_Hand - _check.Net_Total).ToString("N2"))</div></div> }
+                            </div>
+                            @foreach (var v in _check.Result.Violations)
+                            {
+                                <MudAlert Severity="@(v.Covered ? Severity.Success : Severity.Warning)" Dense="true" Class="rt-gap">
+                                    @v.Message — @Tr(v.Approval_Status is int s ? "FSVApproval_" + s : "FSVApprovalNone")
+                                </MudAlert>
+                            }
+                            @if (_check.Result.Violations.Any(v => !v.Covered))
+                            {
+                                <div class="rt-acts">
+                                    <MudTextField T="string" @bind-Value="_approvalReason" Label="@Tr("FSVReason")" Variant="Variant.Outlined" Margin="Margin.Dense" Style="min-width:240px" />
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Gavel" Disabled="@_busy" OnClick="RequestApprovalAsync">@Tr("FSVRequestApproval")</MudButton>
+                                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Refresh" Disabled="@_busy" OnClick="CheckAsync">@Tr("FSVRefreshStatus")</MudButton>
+                                </div>
+                            }
+                        }
+                        <div class="rt-acts" style="justify-content:flex-end">
+                            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Calculate" Disabled="@(_busy || !CanSubmit)" OnClick="CheckAsync">@Tr("FSTPreview")</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_busy || !CanSubmit || _check == null || !_check.Ok)" OnClick="SaveAsync">
+                                @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                                @Tr("FSTSave")
+                            </MudButton>
+                        </div>
+                        @if (_check == null) { <div class="rt-hint" style="text-align:end">@Tr("FSTPreviewFirst")</div> }
+                    </div>
+                }
+            }
+        }
+    }
+</div>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromQuery(Name = "rep")] public long? RepQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "invoice")] public long? InvoiceQuery { get; set; }
+
+    private class LineEdit
+    {
+        public long? DetailId { get; set; }
+        public long? UnitItemId { get; set; }
+        public string Name { get; set; } = "";
+        public string BUnit { get; set; } = "";
+        public string SUnit { get; set; } = "";
+        public decimal Factor { get; set; } = 1;
+        public decimal Sold { get; set; }
+        public decimal ReturnedBefore { get; set; }
+        public decimal Returnable { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal Large { get; set; }
+        public decimal Small { get; set; }
+        public long ReasonId { get; set; }
+        public int Condition { get; set; }
+        public byte[]? Photo { get; set; }
+        public string? PhotoType { get; set; }
+        public string? PhotoName { get; set; }
+        public bool IsBlind { get; set; }
+        public decimal QtySmall => Large * Factor + Small;
+        public bool Over => !IsBlind && QtySmall > Returnable;
+    }
+
+    private readonly SalesRepProfileService _profiles = new();
+    private readonly SalesRepSaleService _saleSvc = new();
+    private readonly SalesRepReturnService _svc = new();
+    private readonly StoreOrderPageService _orders = new();
+    private List<SalesRepProfileService.RepRow> _reps = new();
+    private SalesRepSaleService.SaleContext? _ctx;
+    private List<SalesRepReturnService.ReasonRow> _reasons = new();
+    private List<SalesRepReturnService.InvoicePick> _invoices = new();
+    private SalesRepReturnService.OriginalView? _original;
+    private SalesRepProfileService.Option? _customer;
+    private List<SalesRepProfileService.Option>? _customers;
+    private List<LineEdit> _lines = new();
+    private SalesRepReturnService.ReturnCheck? _check;
+    private Guid _docGuid = Guid.NewGuid();
+    private long _repId;
+    private long? _savedId;
+    private bool _loading = true, _busy, _blind, _refundCash;
+    private string? _notes, _approvalReason, _error;
+
+    private bool CanSubmit => _customer != null && _lines.Any(l => l.QtySmall > 0) && _lines.All(l => !l.Over)
+                              && _lines.Where(l => l.QtySmall > 0).All(l => l.ReasonId > 0 && (_reasons.FirstOrDefault(r => r.Id == l.ReasonId)?.Requires_Photo != true || l.Photo != null));
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            (_reps, _reasons) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_profiles.GetReps(), _svc.GetReasons()); });
+            _repId = RepQuery is long q && _reps.Any(r => r.Id == q && r.Active) ? q : _reps.FirstOrDefault(r => r.Active)?.Id ?? 0;
+            await LoadContextAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task OnRepAsync(long id)
+    {
+        _repId = id;
+        Nav.NavigateTo($"/salesrep/return?rep={id}", replace: true);
+        Reset();
+        await LoadContextAsync();
+    }
+
+    private async Task LoadContextAsync()
+    {
+        _ctx = null;
+        if (_repId == 0) return;
+        long repId = _repId;
+        try { _ctx = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _saleSvc.GetContext(repId); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private void Reset()
+    {
+        _savedId = null; _customer = null; _original = null; _invoices = new(); _lines = new(); _check = null; _notes = null; _approvalReason = null;
+        _blind = false; _refundCash = false; _docGuid = Guid.NewGuid(); _error = null;
+    }
+
+    private async Task<IEnumerable<SalesRepProfileService.Option>> SearchCustomersAsync(string text, CancellationToken ct)
+    {
+        _customers ??= await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return new AccountModelsLib.Models.CustomerCLS().Get_CustomerSupplierListForStatement(0, 0, -1, -1).Rows.Cast<System.Data.DataRow>()
+                .Select(r => new SalesRepProfileService.Option { Id = Convert.ToInt64(r["Id"]), Name = r["Name"]?.ToString()?.Trim() ?? "" }).ToList();
+        }, ct);
+        return _customers.Where(c => string.IsNullOrWhiteSpace(text) || c.Name.Contains(text.Trim(), StringComparison.OrdinalIgnoreCase)).Take(50);
+    }
+
+    private async Task OnCustomerAsync(SalesRepProfileService.Option? c)
+    {
+        _customer = c; _original = null; _lines = new(); _invoices = new(); _check = null; _docGuid = Guid.NewGuid();
+        if (c == null || _blind) return;
+        await LoadInvoicesAsync();
+    }
+
+    private async Task LoadInvoicesAsync()
+    {
+        long repId = _repId, customer = _customer!.Id;
+        try
+        {
+            _invoices = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetCustomerInvoices(repId, customer); });
+            if (InvoiceQuery is long inv && _invoices.FirstOrDefault(i => i.Id == inv) is { } pick) await PickInvoiceAsync(pick);
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private async Task OnModeChanged(bool blind)
+    {
+        _blind = blind; _original = null; _lines = new(); _check = null; _docGuid = Guid.NewGuid();
+        if (!blind && _customer != null) await LoadInvoicesAsync();
+    }
+
+    private async Task PickInvoiceAsync(SalesRepReturnService.InvoicePick pick)
+    {
+        long repId = _repId;
+        try
+        {
+            _original = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetOriginal(repId, pick.Id); });
+            // الافتراضى: رد نقدى لفاتورة نقدية، وعلى الحساب لفاتورة آجلة.
+            _refundCash = !_original.Is_Credit;
+            _check = null; _docGuid = Guid.NewGuid();
+            _lines = _original.Lines.Where(x => x.Returnable_Small > 0).Select(x => new LineEdit
+            {
+                DetailId = x.Original_Detail_Id, Name = x.Item_Name, BUnit = x.B_Unit, SUnit = x.S_Unit, Factor = x.Factor <= 0 ? 1 : x.Factor,
+                Sold = x.Sold_Small, ReturnedBefore = x.Returned_Small, Returnable = x.Returnable_Small, UnitPrice = x.Net_Unit_Price,
+            }).ToList();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private async Task<IEnumerable<StoreOrderPageService.StockLineOption>> SearchVanAsync(string text, CancellationToken ct)
+    {
+        if (_ctx == null) return Array.Empty<StoreOrderPageService.StockLineOption>();
+        long store = _ctx.Van_Store_Id;
+        return await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _orders.SearchLines(4, store, text ?? "", false); }, ct);
+    }
+
+    private async Task AddBlindAsync(StoreOrderPageService.StockLineOption? o)
+    {
+        if (o == null || _lines.Any(l => l.UnitItemId == o.Id)) return;
+        long repId = _repId, id = o.Id;
+        try
+        {
+            decimal price = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetBlindPrice(repId, id); });
+            if (price <= 0) { Snackbar.Add(Tr("FSTNoHistoryPrice", o.Item_Name), Severity.Warning); return; }
+            _lines.Add(new LineEdit { UnitItemId = o.Id, Name = o.Item_Name, BUnit = o.B_Unit, SUnit = o.S_Unit, Factor = o.Factor <= 0 ? 1 : o.Factor, UnitPrice = price, Large = 1, IsBlind = true });
+            Invalidate();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private void RemoveLine(LineEdit l) { _lines.Remove(l); Invalidate(); }
+
+    private void SetQty(LineEdit l, decimal large, decimal small) { l.Large = Math.Max(0, large); l.Small = Math.Max(0, small); Invalidate(); }
+
+    private void SetReason(LineEdit l, long id)
+    {
+        l.ReasonId = id;
+        if (_reasons.FirstOrDefault(r => r.Id == id)?.Is_Damaged == true) l.Condition = 1;
+        Invalidate();
+    }
+
+    private async Task OnPhotoAsync(LineEdit l, IBrowserFile? file)
+    {
+        if (file == null) return;
+        if (file.Size > SalesRepReturnService.MaxPhotoBytes) { Snackbar.Add(Tr("FSTPhotoTooBig"), Severity.Warning); return; }
+        using var ms = new MemoryStream();
+        await file.OpenReadStream(SalesRepReturnService.MaxPhotoBytes).CopyToAsync(ms);
+        l.Photo = ms.ToArray(); l.PhotoType = file.ContentType; l.PhotoName = file.Name;
+        Invalidate();
+    }
+
+    private void Invalidate() => _check = null;
+
+    private SalesRepReturnService.ReturnInput Input() => new()
+    {
+        Doc_Guid = _docGuid, Customer_Id = _customer?.Id ?? 0, Original_Invoice_Id = _blind ? null : _original?.Id, Refund_Cash = _refundCash, Notes = _notes,
+        Lines = _lines.Where(l => l.QtySmall > 0).Select(l => new SalesRepReturnService.ReturnLineInput
+        {
+            Original_Detail_Id = l.DetailId, Unit_Item_Id = l.IsBlind ? l.UnitItemId : null, Qty_Large = l.Large, Qty_Small = l.Small,
+            Reason_Id = l.ReasonId, Condition = l.Condition, Photo = l.Photo, Photo_Content_Type = l.PhotoType,
+        }).ToList(),
+    };
+
+    private async Task CheckAsync()
+    {
+        var input = Input(); long repId = _repId;
+        await RunAsync(() => _check = _svc.Check(repId, input));
+    }
+
+    private async Task RequestApprovalAsync()
+    {
+        var input = Input(); long repId = _repId; string? reason = _approvalReason;
+        await RunAsync(() => _check = _svc.RequestApprovals(repId, input, reason));
+        if (_error == null) Snackbar.Add(Tr("FSVApprovalRequested"), Severity.Info);
+    }
+
+    private async Task SaveAsync()
+    {
+        var input = Input(); long repId = _repId;
+        long id = 0;
+        await RunAsync(() => id = _svc.SaveReturn(repId, input));
+        if (_error == null && id > 0)
+        {
+            _savedId = id;
+            Snackbar.Add(Tr("FSTSaved"), Severity.Success);
+            await LoadContextAsync();
+        }
+    }
+
+    private async Task RunAsync(Action action)
+    {
+        _busy = true; _error = null;
+        try { await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); action(); }); }
+        catch (SalesRepApprovalRequiredException) { _error = null; Snackbar.Add(Tr("FSTApprovalNeeded"), Severity.Warning); await CheckSilentAsync(); }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task CheckSilentAsync()
+    {
+        var input = Input(); long repId = _repId;
+        try { _check = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Check(repId, input); }); } catch { }
+    }
+
+    private static string Fmt(decimal small, decimal factor, string bUnit, string sUnit)
+    {
+        if (factor <= 1) return $"{small:0.##} {bUnit}".Trim();
+        decimal l = Math.Floor(Math.Abs(small) / factor) * Math.Sign(small), s = small - l * factor;
+        return s == 0 ? $"{l:0.##} {bUnit}".Trim() : l == 0 ? $"{s:0.##} {sUnit}".Trim() : $"{l:0.##} {bUnit} + {s:0.##} {sUnit}";
+    }
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

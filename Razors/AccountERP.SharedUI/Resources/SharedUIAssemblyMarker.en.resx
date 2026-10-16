@@ -3094,4 +3094,84 @@
   <data name="FSAApproved" xml:space="preserve"><value>Approved</value></data>
   <data name="FSARejected" xml:space="preserve"><value>Request rejected</value></data>
   <data name="FSSSold" xml:space="preserve"><value>Sold</value></data>
+  <data name="FSRReturnWindow" xml:space="preserve"><value>Return window (days)</value></data>
+  <data name="FSRReturnWindowHint" xml:space="preserve"><value>Empty = 30 days; later returns need supervisor approval</value></data>
+  <data name="FSTTitle" xml:space="preserve"><value>Rep return</value></data>
+  <data name="FSTSub" xml:space="preserve"><value>Return from the customer's invoice at its original net price, or without an invoice at the safe price</value></data>
+  <data name="FSTButton" xml:space="preserve"><value>Return</value></data>
+  <data name="FSTReturns" xml:space="preserve"><value>Returns</value></data>
+  <data name="FSTReturnDoc" xml:space="preserve"><value>Sales return</value></data>
+  <data name="FSTDamagedStore" xml:space="preserve"><value>Damaged store</value></data>
+  <data name="FSTCashOnHand" xml:space="preserve"><value>Cash on hand</value></data>
+  <data name="FSTWindow" xml:space="preserve"><value>Return window</value></data>
+  <data name="FSTDays" xml:space="preserve"><value>{0} days</value></data>
+  <data name="FSTNoShift" xml:space="preserve"><value>The rep has no open shift — returns are taken inside an open shift only.</value></data>
+  <data name="FSTBackToShift" xml:space="preserve"><value>Back to the shift</value></data>
+  <data name="FSTStepCustomer" xml:space="preserve"><value>1. Customer and return type</value></data>
+  <data name="FSTMode" xml:space="preserve"><value>Return type</value></data>
+  <data name="FSTFromInvoice" xml:space="preserve"><value>From an invoice</value></data>
+  <data name="FSTBlind" xml:space="preserve"><value>Without invoice</value></data>
+  <data name="FSTBlindNotAllowed" xml:space="preserve"><value>Returns without an invoice are not allowed for this rep (rep profile).</value></data>
+  <data name="FSTBlindHint" xml:space="preserve"><value>Priced at the item's lowest past sale price minus the rep's discount cap, and listed in the supervisor's no-invoice returns report.</value></data>
+  <data name="FSTStepInvoice" xml:space="preserve"><value>2. Original invoice</value></data>
+  <data name="FSTNoInvoices" xml:space="preserve"><value>No invoices in the last 90 days with anything left to return.</value></data>
+  <data name="FSTAge" xml:space="preserve"><value>Age</value></data>
+  <data name="FSTOutsideWindow" xml:space="preserve"><value>Outside window</value></data>
+  <data name="FSTPick" xml:space="preserve"><value>Pick invoice {0}</value></data>
+  <data name="FSTPickShort" xml:space="preserve"><value>Pick</value></data>
+  <data name="FSTPicked" xml:space="preserve"><value>Selected</value></data>
+  <data name="FSTStepLines" xml:space="preserve"><value>3. Returned items</value></data>
+  <data name="FSTLinesHint" xml:space="preserve"><value>From invoice {0}: enter the returned quantity with a reason and condition. Prices come from the original invoice and cannot be changed.</value></data>
+  <data name="FSTWindowWarn" xml:space="preserve"><value>The invoice is {0} days old and the return window is {1}; saving needs supervisor approval.</value></data>
+  <data name="FSTNoBlindLines" xml:space="preserve"><value>Search and add the returned item.</value></data>
+  <data name="FSTNothingToReturn" xml:space="preserve"><value>Every item on this invoice has been returned.</value></data>
+  <data name="FSTSold" xml:space="preserve"><value>Sold</value></data>
+  <data name="FSTReturnedBefore" xml:space="preserve"><value>Returned before</value></data>
+  <data name="FSTReturnable" xml:space="preserve"><value>Returnable</value></data>
+  <data name="FSTNetPrice" xml:space="preserve"><value>Net price</value></data>
+  <data name="FSTSafePrice" xml:space="preserve"><value>Safe price</value></data>
+  <data name="FSTOver" xml:space="preserve"><value>More than the returnable quantity</value></data>
+  <data name="FSTReason" xml:space="preserve"><value>Return reason</value></data>
+  <data name="FSTReasonRequired" xml:space="preserve"><value>Reason is required</value></data>
+  <data name="FSTCondition" xml:space="preserve"><value>Condition</value></data>
+  <data name="FSTCondition_0" xml:space="preserve"><value>Good</value></data>
+  <data name="FSTCondition_1" xml:space="preserve"><value>Damaged</value></data>
+  <data name="FSTAddPhoto" xml:space="preserve"><value>Add photo</value></data>
+  <data name="FSTReplacePhoto" xml:space="preserve"><value>Replace photo</value></data>
+  <data name="FSTPhotoRequired" xml:space="preserve"><value>This reason requires a photo of the item</value></data>
+  <data name="FSTPhotoTooBig" xml:space="preserve"><value>The photo is larger than 5 MB</value></data>
+  <data name="FSTToVan" xml:space="preserve"><value>Goes back to: {0}</value></data>
+  <data name="FSTToDamaged" xml:space="preserve"><value>Goes to the damaged store: {0}</value></data>
+  <data name="FSTNoHistoryPrice" xml:space="preserve"><value>No past sale price for “{0}”; it cannot be returned without an invoice.</value></data>
+  <data name="FSTStepSettle" xml:space="preserve"><value>4. Settle and save</value></data>
+  <data name="FSTSettle" xml:space="preserve"><value>Settlement</value></data>
+  <data name="FSTOnAccount" xml:space="preserve"><value>Credit the customer's account</value></data>
+  <data name="FSTRefundCash" xml:space="preserve"><value>Cash refund from custody</value></data>
+  <data name="FSTOnAccountHint" xml:space="preserve"><value>The return value is deducted from the customer's balance as a settlement of the original invoice.</value></data>
+  <data name="FSTRefundCashHint" xml:space="preserve"><value>Paid in cash from the custody box with a payment voucher linked to the return; it cannot exceed the cash on hand.</value></data>
+  <data name="FSTReturnValue" xml:space="preserve"><value>Return value</value></data>
+  <data name="FSTLinesCount" xml:space="preserve"><value>Items</value></data>
+  <data name="FSTCashAfter" xml:space="preserve"><value>Cash after refund</value></data>
+  <data name="FSTPreview" xml:space="preserve"><value>Calculate and check</value></data>
+  <data name="FSTPreviewFirst" xml:space="preserve"><value>Calculate the return first, then save.</value></data>
+  <data name="FSTSave" xml:space="preserve"><value>Save return</value></data>
+  <data name="FSTSaved" xml:space="preserve"><value>Return saved</value></data>
+  <data name="FSTApprovalNeeded" xml:space="preserve"><value>The return needs supervisor approval</value></data>
+  <data name="FSTOpenReturn" xml:space="preserve"><value>View return</value></data>
+  <data name="FSTNew" xml:space="preserve"><value>New return</value></data>
+  <data name="FSTReturnedGood" xml:space="preserve"><value>Returned</value></data>
+  <data name="FSTReturnedDamagedShort" xml:space="preserve"><value>Damaged: {0}</value></data>
+  <data name="FSTReportTitle" xml:space="preserve"><value>Rep returns</value></data>
+  <data name="FSTReportSub" xml:space="preserve"><value>Daily review of returns, including returns without an invoice</value></data>
+  <data name="FSTFrom" xml:space="preserve"><value>From</value></data>
+  <data name="FSTTo" xml:space="preserve"><value>To</value></data>
+  <data name="FSTAllReps" xml:space="preserve"><value>All reps</value></data>
+  <data name="FSTBlindOnly" xml:space="preserve"><value>Without invoice only</value></data>
+  <data name="FSTShow" xml:space="preserve"><value>Show</value></data>
+  <data name="FSTNoReturns" xml:space="preserve"><value>No returns in this period</value></data>
+  <data name="FSTCount" xml:space="preserve"><value>Returns</value></data>
+  <data name="FSTTotalValue" xml:space="preserve"><value>Total value</value></data>
+  <data name="FSTBlindCount" xml:space="preserve"><value>Without invoice (count — value)</value></data>
+  <data name="FSTDamagedCount" xml:space="preserve"><value>With damaged items</value></data>
+  <data name="FSTOriginal" xml:space="preserve"><value>Original invoice</value></data>
 </root>

@@ -609,6 +609,14 @@ WHERE u.Store_id = {srcStoreId} AND ISNULL(u.Store_Type, 4) = {srcType}
             return missing.Count;
         }
 
+        /// <summary>سطر الصنف فى مخزن آخر (ينشئه بلا رصيد لو غير موجود، كما يفعل التحويل). يرجع Unit_item.id.</summary>
+        public long EnsureStoreLine(long srcUnitItemId, long destStoreId)
+        {
+            var src = opp.db.Unit_item.AsNoTracking().FirstOrDefault(u => u.id == srcUnitItemId) ?? throw new InvalidOperationException("سطر المخزون غير موجود.");
+            if (src.Store_id == destStoreId) return src.id;
+            return FindOrCreateDestLine(src, destStoreId, PartyStore).id;
+        }
+
         private Unit_item FindOrCreateDestLine(Unit_item src, long destStoreId, int destType)
         {
             var dest = opp.db.Unit_item.AsNoTracking().FirstOrDefault(u => u.Item_Id == src.Item_Id && u.Store_id == destStoreId

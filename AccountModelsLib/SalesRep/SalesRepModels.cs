@@ -82,6 +82,8 @@ namespace AccountModelsLib.SalesRep
         public decimal? Max_Cash_On_Hand { get; set; }
         public bool Allow_Credit_Sales { get; set; }
         public bool Allow_Blind_Return { get; set; }
+        /// <summary>نافذة الإرجاع بالأيام من تاريخ الفاتورة (فارغ = 30)؛ خارجها يحتاج موافقة المشرف (§6.6-4).</summary>
+        public int? Return_Window_Days { get; set; }
         public int End_Of_Day_Stock_Policy { get; set; }
         public long? Cost_Center_Id { get; set; }
         public long? Commission_Plan_Id { get; set; }

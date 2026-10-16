@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using AccountModelsLib.SalesRep;
 using Microsoft.EntityFrameworkCore;
 
 namespace AccountModelsLib
@@ -38,6 +39,7 @@ namespace AccountModelsLib
     [Max_Cash_On_Hand] [decimal](18, 4) NULL,
     [Allow_Credit_Sales] [bit] NOT NULL DEFAULT ((0)),
     [Allow_Blind_Return] [bit] NOT NULL DEFAULT ((0)),
+    [Return_Window_Days] [int] NULL,
     [End_Of_Day_Stock_Policy] [int] NOT NULL DEFAULT ((0)),
     [Cost_Center_Id] [bigint] NULL,
     [Commission_Plan_Id] [bigint] NULL,
@@ -341,6 +343,7 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Approvals_Guid] ON [dbo].[SalesRep_Approv
                     Step(t.Table, () => CreateTable(opp, t.Table, t.Columns, t.Indexes));
             }
             Step("SalesRepAddedColumns", () => AddedColumns(opp));
+            Step("SalesRepReturnReasons", () => SeedReturnReasons(opp));
             // مستقلة عن فحص الجداول: القواعد المرقّاة سابقاً تحتاج عناصر القائمة أيضاً.
             Step("SalesRepMenus", () => Menus(opp));
         }
@@ -357,7 +360,31 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Approvals_Guid] ON [dbo].[SalesRep_Approv
             ("SalesRep_Approvals", "Requested_Value", "[decimal](18, 4) NULL"),
             ("SalesRep_Approvals", "Allowed_Value", "[decimal](18, 4) NULL"),
             ("SalesRep_Approvals", "Approved_Value", "[decimal](18, 4) NULL"),
+            // المرحلة 4: نافذة الإرجاع لكل مندوب.
+            ("SalesRep_Reps", "Return_Window_Days", "[int] NULL"),
         };
+
+        /// <summary>أسباب الإرجاع الافتراضية (§6.6-6) تُضاف فقط لو جدول الأسباب فارغ؛ تُعدَّل وتُضاف من القاعدة. لا يمس أى صف قائم.</summary>
+        private static readonly (string Name, bool Damaged, bool Photo, bool Batch)[] DefaultReturnReasons =
+        {
+            ("رغبة العميل / فائض", false, false, false),
+            ("خطأ فى الطلب أو التسليم", false, false, false),
+            ("تالف أو مكسور", true, true, false),
+            ("منتهى أو قريب الصلاحية", true, false, true),
+        };
+
+        private static void SeedReturnReasons(operations opp)
+        {
+            if (!TableExists(opp, "Lookup_SalesRep_ReturnReasons")) return;
+            if (opp.db.Database.SqlQueryRaw<int>("SELECT COUNT(*) AS Value FROM Lookup_SalesRep_ReturnReasons").AsEnumerable().First() > 0) return;
+            foreach (var (name, damaged, photo, batch) in DefaultReturnReasons)
+            {
+                var r = new Lookup_SalesRep_ReturnReason { Id = CallSnowflakeIdGenerate.GenerateNewId(), Name = name, Is_Damaged = damaged, Requires_Photo = photo, Requires_Batch = batch };
+                r.StampInsert(Common.Branch_Id);
+                opp.db.Lookup_SalesRep_ReturnReasons.Add(r);
+            }
+            opp.db.SaveChanges();
+        }
 
         private static void AddedColumns(operations opp)
         {
@@ -375,6 +402,7 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Approvals_Guid] ON [dbo].[SalesRep_Approv
             ("menuSalesRepProfiles", "ملفات المندوبين الميدانيين", "/salesrep/reps"),
             ("menuSalesRepShift", "وردية المندوب", "/salesrep/shift"),
             ("menuSalesRepApprovals", "موافقات المندوبين", "/salesrep/approvals"),
+            ("menuSalesRepReturns", "مرتجعات المندوبين", "/salesrep/returns"),
         };
 
         /// <summary>

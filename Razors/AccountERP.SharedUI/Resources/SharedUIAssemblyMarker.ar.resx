@@ -3094,4 +3094,84 @@
   <data name="FSAApproved" xml:space="preserve"><value>تمت الموافقة</value></data>
   <data name="FSARejected" xml:space="preserve"><value>رُفض الطلب</value></data>
   <data name="FSSSold" xml:space="preserve"><value>المباع</value></data>
+  <data name="FSRReturnWindow" xml:space="preserve"><value>نافذة الإرجاع (يوم)</value></data>
+  <data name="FSRReturnWindowHint" xml:space="preserve"><value>فارغ = 30 يوماً؛ بعدها يحتاج المرتجع موافقة المشرف</value></data>
+  <data name="FSTTitle" xml:space="preserve"><value>مرتجع المندوب</value></data>
+  <data name="FSTSub" xml:space="preserve"><value>إرجاع من فاتورة العميل بسعرها الصافى الأصلى، أو بلا فاتورة بسعر الأمان</value></data>
+  <data name="FSTButton" xml:space="preserve"><value>مرتجع</value></data>
+  <data name="FSTReturns" xml:space="preserve"><value>المرتجعات</value></data>
+  <data name="FSTReturnDoc" xml:space="preserve"><value>مرتجع مبيعات</value></data>
+  <data name="FSTDamagedStore" xml:space="preserve"><value>مخزن التالف</value></data>
+  <data name="FSTCashOnHand" xml:space="preserve"><value>النقدية بالعهدة</value></data>
+  <data name="FSTWindow" xml:space="preserve"><value>نافذة الإرجاع</value></data>
+  <data name="FSTDays" xml:space="preserve"><value>{0} يوم</value></data>
+  <data name="FSTNoShift" xml:space="preserve"><value>لا وردية مفتوحة للمندوب — المرتجع يتم داخل وردية مفتوحة فقط.</value></data>
+  <data name="FSTBackToShift" xml:space="preserve"><value>الرجوع للوردية</value></data>
+  <data name="FSTStepCustomer" xml:space="preserve"><value>1. العميل ونوع المرتجع</value></data>
+  <data name="FSTMode" xml:space="preserve"><value>نوع المرتجع</value></data>
+  <data name="FSTFromInvoice" xml:space="preserve"><value>من فاتورة</value></data>
+  <data name="FSTBlind" xml:space="preserve"><value>بلا فاتورة</value></data>
+  <data name="FSTBlindNotAllowed" xml:space="preserve"><value>المرتجع بلا فاتورة غير مسموح لهذا المندوب (من ملف المندوب).</value></data>
+  <data name="FSTBlindHint" xml:space="preserve"><value>يُسعَّر بأدنى سعر بيع سابق للصنف ناقص سقف خصم المندوب، ويظهر فى تقرير المرتجعات بلا فاتورة للمشرف.</value></data>
+  <data name="FSTStepInvoice" xml:space="preserve"><value>2. الفاتورة الأصلية</value></data>
+  <data name="FSTNoInvoices" xml:space="preserve"><value>لا فواتير لهذا العميل فى آخر 90 يوماً بقى فيها ما يُرجع.</value></data>
+  <data name="FSTAge" xml:space="preserve"><value>العمر</value></data>
+  <data name="FSTOutsideWindow" xml:space="preserve"><value>خارج النافذة</value></data>
+  <data name="FSTPick" xml:space="preserve"><value>اختيار الفاتورة {0}</value></data>
+  <data name="FSTPickShort" xml:space="preserve"><value>اختيار</value></data>
+  <data name="FSTPicked" xml:space="preserve"><value>مختارة</value></data>
+  <data name="FSTStepLines" xml:space="preserve"><value>3. الأصناف المرتجعة</value></data>
+  <data name="FSTLinesHint" xml:space="preserve"><value>من الفاتورة {0}: أدخل الكمية المرتجعة لكل صنف مع السبب والحالة. الأسعار من الفاتورة الأصلية ولا تُعدَّل.</value></data>
+  <data name="FSTWindowWarn" xml:space="preserve"><value>الفاتورة عمرها {0} يوماً ونافذة الإرجاع {1}؛ الحفظ يحتاج موافقة المشرف.</value></data>
+  <data name="FSTNoBlindLines" xml:space="preserve"><value>ابحث عن الصنف المرتجع وأضفه.</value></data>
+  <data name="FSTNothingToReturn" xml:space="preserve"><value>كل أصناف هذه الفاتورة أُرجعت.</value></data>
+  <data name="FSTSold" xml:space="preserve"><value>المباع</value></data>
+  <data name="FSTReturnedBefore" xml:space="preserve"><value>أُرجع سابقاً</value></data>
+  <data name="FSTReturnable" xml:space="preserve"><value>المسموح بإرجاعه</value></data>
+  <data name="FSTNetPrice" xml:space="preserve"><value>السعر الصافى</value></data>
+  <data name="FSTSafePrice" xml:space="preserve"><value>سعر الأمان</value></data>
+  <data name="FSTOver" xml:space="preserve"><value>أكبر من المسموح بإرجاعه</value></data>
+  <data name="FSTReason" xml:space="preserve"><value>سبب الإرجاع</value></data>
+  <data name="FSTReasonRequired" xml:space="preserve"><value>السبب مطلوب</value></data>
+  <data name="FSTCondition" xml:space="preserve"><value>الحالة</value></data>
+  <data name="FSTCondition_0" xml:space="preserve"><value>صالح</value></data>
+  <data name="FSTCondition_1" xml:space="preserve"><value>تالف</value></data>
+  <data name="FSTAddPhoto" xml:space="preserve"><value>إضافة صورة</value></data>
+  <data name="FSTReplacePhoto" xml:space="preserve"><value>تغيير الصورة</value></data>
+  <data name="FSTPhotoRequired" xml:space="preserve"><value>هذا السبب يتطلب صورة للصنف</value></data>
+  <data name="FSTPhotoTooBig" xml:space="preserve"><value>حجم الصورة أكبر من 5 ميجابايت</value></data>
+  <data name="FSTToVan" xml:space="preserve"><value>يرجع إلى: {0}</value></data>
+  <data name="FSTToDamaged" xml:space="preserve"><value>يدخل مخزن التالف: {0}</value></data>
+  <data name="FSTNoHistoryPrice" xml:space="preserve"><value>لا سعر بيع سابق للصنف «{0}»؛ لا يُقبل بلا فاتورة.</value></data>
+  <data name="FSTStepSettle" xml:space="preserve"><value>4. التسوية والحفظ</value></data>
+  <data name="FSTSettle" xml:space="preserve"><value>التسوية</value></data>
+  <data name="FSTOnAccount" xml:space="preserve"><value>خصم من حساب العميل</value></data>
+  <data name="FSTRefundCash" xml:space="preserve"><value>رد نقدى من العهدة</value></data>
+  <data name="FSTOnAccountHint" xml:space="preserve"><value>قيمة المرتجع تُخصم من رصيد العميل وتُعرض كتسوية للفاتورة الأصلية.</value></data>
+  <data name="FSTRefundCashHint" xml:space="preserve"><value>يُصرف المبلغ نقداً من صندوق العهدة بإذن صرف مربوط بالمرتجع، ولا يتجاوز النقدية بالعهدة.</value></data>
+  <data name="FSTReturnValue" xml:space="preserve"><value>قيمة المرتجع</value></data>
+  <data name="FSTLinesCount" xml:space="preserve"><value>عدد الأصناف</value></data>
+  <data name="FSTCashAfter" xml:space="preserve"><value>النقدية بعد الرد</value></data>
+  <data name="FSTPreview" xml:space="preserve"><value>احسب وافحص</value></data>
+  <data name="FSTPreviewFirst" xml:space="preserve"><value>احسب المرتجع أولاً ثم احفظ.</value></data>
+  <data name="FSTSave" xml:space="preserve"><value>حفظ المرتجع</value></data>
+  <data name="FSTSaved" xml:space="preserve"><value>تم حفظ المرتجع</value></data>
+  <data name="FSTApprovalNeeded" xml:space="preserve"><value>المرتجع يحتاج موافقة المشرف</value></data>
+  <data name="FSTOpenReturn" xml:space="preserve"><value>عرض المرتجع</value></data>
+  <data name="FSTNew" xml:space="preserve"><value>مرتجع جديد</value></data>
+  <data name="FSTReturnedGood" xml:space="preserve"><value>المرتجع</value></data>
+  <data name="FSTReturnedDamagedShort" xml:space="preserve"><value>تالف: {0}</value></data>
+  <data name="FSTReportTitle" xml:space="preserve"><value>مرتجعات المندوبين</value></data>
+  <data name="FSTReportSub" xml:space="preserve"><value>مراجعة يومية للمرتجعات، ومنها المرتجعات بلا فاتورة</value></data>
+  <data name="FSTFrom" xml:space="preserve"><value>من تاريخ</value></data>
+  <data name="FSTTo" xml:space="preserve"><value>إلى تاريخ</value></data>
+  <data name="FSTAllReps" xml:space="preserve"><value>كل المندوبين</value></data>
+  <data name="FSTBlindOnly" xml:space="preserve"><value>بلا فاتورة فقط</value></data>
+  <data name="FSTShow" xml:space="preserve"><value>عرض</value></data>
+  <data name="FSTNoReturns" xml:space="preserve"><value>لا مرتجعات فى هذه الفترة</value></data>
+  <data name="FSTCount" xml:space="preserve"><value>عدد المرتجعات</value></data>
+  <data name="FSTTotalValue" xml:space="preserve"><value>إجمالى القيمة</value></data>
+  <data name="FSTBlindCount" xml:space="preserve"><value>بلا فاتورة (عدد — قيمة)</value></data>
+  <data name="FSTDamagedCount" xml:space="preserve"><value>بها تالف</value></data>
+  <data name="FSTOriginal" xml:space="preserve"><value>الفاتورة الأصلية</value></data>
 </root>

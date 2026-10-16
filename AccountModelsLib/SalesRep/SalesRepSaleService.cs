@@ -37,6 +37,10 @@ namespace AccountModelsLib.SalesRep
             public decimal? Max_Cash_On_Hand { get; set; }
             public bool Allow_Credit_Sales { get; set; }
             public decimal Cash_On_Hand { get; set; }
+            public long Damaged_Store_Id { get; set; }
+            public string Damaged_Store_Name { get; set; } = "";
+            public bool Allow_Blind_Return { get; set; }
+            public int Return_Window_Days { get; set; }
             public bool CanSell => Shift_Status is (int)SalesRepShiftStatus.Open or (int)SalesRepShiftStatus.Reopened;
         }
 
@@ -223,12 +227,17 @@ namespace AccountModelsLib.SalesRep
             return v.OrderId;
         });
 
-        /// <summary>فواتير الوردية وإذوناتها النقدية للعرض.</summary>
+        /// <summary>فواتير الوردية ومرتجعاتها (بالسالب) وإذوناتها النقدية للعرض.</summary>
         public List<ShiftDoc> GetShiftDocs(long shiftId) => Read(opp => opp.db.Database.SqlQuery<ShiftDoc>($@"
 SELECT l.Doc_Type, l.Doc_Id, CAST(ISNULL(i.Invoice_Id, 0) AS bigint) AS Doc_No, i.Invoice_Date AS Doc_Date, ISNULL(c.Name, N'') AS Party,
        CAST(ISNULL(i.Net_Total, 0) AS decimal(18,2)) AS Value, ISNULL(i.Is_Invoice_Agile, 0) AS Is_Credit
 FROM SalesRep_Document_Links l JOIN Invoices_List i ON i.Id = l.Doc_Id LEFT JOIN Customer c ON c.Id = i.Customer_Id
 WHERE l.Shift_Id = {shiftId} AND l.Doc_Type = {(int)SalesRepDocType.SaleInvoice}
+UNION ALL
+SELECT l.Doc_Type, l.Doc_Id, CAST(ISNULL(r.Invoice_Id, 0) AS bigint), r.Invoice_Date, ISNULL(c.Name, N''),
+       -CAST(ISNULL(r.Net_Total, 0) AS decimal(18,2)), ISNULL(r.Is_Invoice_Agile, 0)
+FROM SalesRep_Document_Links l JOIN Invoices_List_Reverse r ON r.Id = l.Doc_Id LEFT JOIN Customer c ON c.Id = r.Customer_Id
+WHERE l.Shift_Id = {shiftId} AND l.Doc_Type = {(int)SalesRepDocType.SaleReturn}
 UNION ALL
 SELECT l.Doc_Type, l.Doc_Id, CAST(ISNULL(o.Order_No, 0) AS bigint), o.Order_Date, ISNULL(o.Man_Name, N''),
        CAST(ISNULL(o.Total_Value, 0) AS decimal(18,2)) * CASE WHEN o.Transaction_type = 2 THEN -1 ELSE 1 END, 0
@@ -268,7 +277,7 @@ ORDER BY CASE WHEN a.Status = 0 THEN 0 ELSE 1 END, a.Insert_ServerDateTime DESC"
 
         // ============================== داخلى ==============================
 
-        private static SaleContext Context(operations opp, long repId)
+        internal static SaleContext Context(operations opp, long repId)
         {
             var rep = opp.db.SalesRep_Reps.AsNoTracking().FirstOrDefault(r => r.Id == repId) ?? throw new InvalidOperationException("ملف المندوب غير موجود.");
             if (!rep.Active) throw new InvalidOperationException("ملف المندوب موقوف.");
@@ -276,7 +285,8 @@ ORDER BY CASE WHEN a.Status = 0 THEN 0 ELSE 1 END, a.Insert_ServerDateTime DESC"
             var names = opp.db.Database.SqlQuery<NamesRow>($@"
 SELECT ISNULL((SELECT name FROM Employee WHERE Id = {rep.Employee_Id}), N'') AS Rep_Name,
        ISNULL((SELECT Store_Name FROM Store WHERE Id = {rep.Van_Store_Id}), N'') AS Van_Name,
-       ISNULL((SELECT Bank_Name FROM Banks WHERE Id = {rep.Cash_Box_Id}), N'') AS Box_Name").AsEnumerable().First();
+       ISNULL((SELECT Bank_Name FROM Banks WHERE Id = {rep.Cash_Box_Id}), N'') AS Box_Name,
+       ISNULL((SELECT Store_Name FROM Store WHERE Id = {rep.Damaged_Store_Id}), N'') AS Damaged_Name").AsEnumerable().First();
             return new SaleContext
             {
                 Rep_Id = rep.Id, Employee_Id = rep.Employee_Id, Rep_Name = names.Rep_Name, Branch_Id = rep.Branch_Id ?? Common.Branch_Id,
@@ -284,11 +294,13 @@ SELECT ISNULL((SELECT name FROM Employee WHERE Id = {rep.Employee_Id}), N'') AS 
                 Van_Store_Id = rep.Van_Store_Id, Van_Store_Name = names.Van_Name, Cash_Box_Id = rep.Cash_Box_Id, Cash_Box_Name = names.Box_Name,
                 Price_Type_List_ID = rep.Price_Type_List_ID, Max_Discount_Rate = rep.Max_Discount_Rate, Max_Cash_On_Hand = rep.Max_Cash_On_Hand,
                 Allow_Credit_Sales = rep.Allow_Credit_Sales,
+                Damaged_Store_Id = rep.Damaged_Store_Id, Damaged_Store_Name = names.Damaged_Name, Allow_Blind_Return = rep.Allow_Blind_Return,
+                Return_Window_Days = rep.Return_Window_Days ?? SalesRepReturnService.DefaultReturnWindowDays,
                 Cash_On_Hand = Common.RoundMe(new Money_Transaction_BoxOrderReportCLS().GetBank_Balance(ref opp, rep.Cash_Box_Id, true)),
             };
         }
 
-        public class NamesRow { public string Rep_Name { get; set; } = ""; public string Van_Name { get; set; } = ""; public string Box_Name { get; set; } = ""; }
+        public class NamesRow { public string Rep_Name { get; set; } = ""; public string Van_Name { get; set; } = ""; public string Box_Name { get; set; } = ""; public string Damaged_Name { get; set; } = ""; }
 
         private CheckResult CheckCore(operations opp, SaleContext ctx, SaleInput input)
         {
@@ -392,7 +404,7 @@ SELECT ISNULL((SELECT name FROM Employee WHERE Id = {rep.Employee_Id}), N'') AS 
         public class ItemGroupRow { public long Item_Id { get; set; } public long Group_Id { get; set; } }
 
         /// <summary>رصيد العميل بنفس استعلام شاشة الفاتورة (CustomerCLS.GetCustomerBalance) لكن من اتصال المعاملة.</summary>
-        private static decimal CustomerBalance(operations opp, long customerId)
+        internal static decimal CustomerBalance(operations opp, long customerId)
         {
             string sql = new CustomerCLS().MakeCustomer_MokhtalatDataByGroupNew(-1, 0, customerId, -1, -1);
             var dt = opp.return_DataTable(sql);
@@ -447,7 +459,7 @@ FROM Invoices_List WHERE Customer_Id = {customerId} AND ISNULL(Is_Invoice_Agile,
 SELECT DISTINCT CAST(Order_Mony_Id AS bigint) AS Value FROM Money_Transaction_Box
 WHERE DataDictionaryProcessesListsId = {Common.Invoice_Type_Id} AND Reference_Type_Table_Id = {invoiceId} AND ISNULL(Order_Mony_Id, 0) > 0").ToList();
 
-        private static void Link(operations opp, long shiftId, SalesRepDocType type, long docId, long branchId)
+        internal static void Link(operations opp, long shiftId, SalesRepDocType type, long docId, long branchId)
         {
             if (opp.db.SalesRep_Document_Links.Any(l => l.Doc_Type == (int)type && l.Doc_Id == docId)) return;
             var link = new SalesRep_Document_Link { Id = CallSnowflakeIdGenerate.GenerateNewId(), Doc_Type = (int)type, Doc_Id = docId, Shift_Id = shiftId };
@@ -456,7 +468,7 @@ WHERE DataDictionaryProcessesListsId = {Common.Invoice_Type_Id} AND Reference_Ty
             opp.db.SaveChanges();
         }
 
-        private static string Trim(string s, int max) => s.Length <= max ? s : s.Substring(0, max);
+        internal static string Trim(string s, int max) => s.Length <= max ? s : s.Substring(0, max);
 
         /// <summary>
         /// شرط SQL يستبعد مخازن السيارات وتالفها من شاشات البيع العادية (تُباع فقط بوضع المندوب داخل ورديته). فارغ لو جدول المندوبين

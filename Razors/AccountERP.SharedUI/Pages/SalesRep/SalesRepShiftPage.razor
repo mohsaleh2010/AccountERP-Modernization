@@ -99,6 +99,7 @@
                         <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.RequestQuote" Href="@($"/accounts/invoices/sales-invoice?rep={_rep.Id}&agile=1")">@Tr("FSVSellCredit")</MudButton>
                     }
                     <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Payments" OnClick="@(() => _panel = Panel.Collect)">@Tr("FSVCollect")</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.AssignmentReturn" Href="@($"/salesrep/return?rep={_rep.Id}")">@Tr("FSTButton")</MudButton>
                     <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Upload" OnClick="@(() => _panel = Panel.Load)">@Tr("FSSLoadMore")</MudButton>
                     <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Download" Disabled="@(_vanStock.Count == 0)" OnClick="StartUnload">@Tr("FSSUnload")</MudButton>
                     <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.DeleteSweep" Disabled="@(_damagedStock.Count == 0)" OnClick="@(() => _panel = Panel.Damaged)">@Tr("FSSDamaged")</MudButton>
@@ -209,14 +210,16 @@
                     <div class="ss-kpis">
                         <div class="ss-kpi"><div class="k">@Tr("FSVCashSales")</div><div class="v ss-num">@_docs.Where(d => d.Doc_Type == 1 && d.Is_Credit == 0).Sum(d => d.Value).ToString("N2")</div></div>
                         <div class="ss-kpi"><div class="k">@Tr("FSVCreditSales")</div><div class="v ss-num">@_docs.Where(d => d.Doc_Type == 1 && d.Is_Credit == 1).Sum(d => d.Value).ToString("N2")</div></div>
+                        <div class="ss-kpi"><div class="k">@Tr("FSTReturns")</div><div class="v ss-num">@_docs.Where(d => d.Doc_Type == 2).Sum(d => d.Value).ToString("N2")</div></div>
                         <div class="ss-kpi"><div class="k">@Tr("FSVVouchers")</div><div class="v ss-num">@_docs.Where(d => d.Doc_Type == 3).Sum(d => d.Value).ToString("N2")</div></div>
                     </div>
                     <MudTable Items="@_docs" T="SalesRepSaleService.ShiftDoc" Elevation="0" Class="inv-table ss-gap" Breakpoint="Breakpoint.Sm" Dense="true">
                         <HeaderContent><MudTh>@Tr("FSVDocType")</MudTh><MudTh>@Tr("FSVDocNo")</MudTh><MudTh>@Tr("FSSDate")</MudTh><MudTh>@Tr("FSVParty")</MudTh><MudTh>@Tr("FSVAmount")</MudTh></HeaderContent>
                         <RowTemplate>
-                            <MudTd DataLabel="@Tr("FSVDocType")">@Tr(context.Doc_Type == 1 ? (context.Is_Credit == 1 ? "FSVCreditSale" : "FSVCashSale") : "FSVVoucher")</MudTd>
+                            <MudTd DataLabel="@Tr("FSVDocType")">@Tr(context.Doc_Type == 1 ? (context.Is_Credit == 1 ? "FSVCreditSale" : "FSVCashSale") : context.Doc_Type == 2 ? "FSTReturnDoc" : "FSVVoucher")</MudTd>
                             <MudTd DataLabel="@Tr("FSVDocNo")" Class="ss-num">
                                 @if (context.Doc_Type == 1) { <MudLink Href="@($"/accounts/invoices/sales-invoice/{context.Doc_Id}")">@context.Doc_No</MudLink> }
+                                else if (context.Doc_Type == 2) { <MudLink Href="@($"/accounts/invoices/sales-return/{context.Doc_Id}")">@context.Doc_No</MudLink> }
                                 else { @context.Doc_No }
                             </MudTd>
                             <MudTd DataLabel="@Tr("FSSDate")" Class="ss-num">@context.Doc_Date?.ToString("yyyy-MM-dd HH:mm")</MudTd>
@@ -258,6 +261,7 @@
                         <MudTh>@Tr("FSSLoaded")</MudTh>
                         <MudTh>@Tr("FSSUnloaded")</MudTh>
                         <MudTh>@Tr("FSSSold")</MudTh>
+                        <MudTh>@Tr("FSTReturnedGood")</MudTh>
                         <MudTh>@Tr("FSSOther")</MudTh>
                         <MudTh>@Tr("FSSExpected")</MudTh>
                         <MudTh>@Tr("FSSCounted")</MudTh>
@@ -269,6 +273,10 @@
                         <MudTd DataLabel="@Tr("FSSLoaded")" Class="ss-num">@Fmt(context.Row.Loaded, context.Factor, context.BUnit, context.SUnit)</MudTd>
                         <MudTd DataLabel="@Tr("FSSUnloaded")" Class="ss-num">@Fmt(context.Row.Unloaded, context.Factor, context.BUnit, context.SUnit)</MudTd>
                         <MudTd DataLabel="@Tr("FSSSold")" Class="ss-num">@Fmt(context.Row.Sold, context.Factor, context.BUnit, context.SUnit)</MudTd>
+                        <MudTd DataLabel="@Tr("FSTReturnedGood")" Class="ss-num">
+                            @Fmt(context.Row.Returned_Good, context.Factor, context.BUnit, context.SUnit)
+                            @if (context.Row.Returned_Damaged > 0) { <div class="ss-hint">@Tr("FSTReturnedDamagedShort", Fmt(context.Row.Returned_Damaged, context.Factor, context.BUnit, context.SUnit))</div> }
+                        </MudTd>
                         <MudTd DataLabel="@Tr("FSSOther")" Class="ss-num">@Fmt(context.Row.Other_Movement, context.Factor, context.BUnit, context.SUnit)</MudTd>
                         <MudTd DataLabel="@Tr("FSSExpected")" Class="ss-num"><b>@Fmt(context.Row.Expected_Closing, context.Factor, context.BUnit, context.SUnit)</b></MudTd>
                         <MudTd DataLabel="@Tr("FSSCounted")">

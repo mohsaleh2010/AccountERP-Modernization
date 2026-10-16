@@ -546,14 +546,18 @@
 
     private async Task InitRepModeAsync()
     {
-        if (IsExistingInvoice && !_isReverse)
+        if (IsExistingInvoice)
         {
+            // المرحلة 4: مرتجع المندوب مربوط بوردية (Doc_Type = 2) للقراءة فقط كذلك، وفاتورة أُرجع منها بمرتجع مندوب لا تُعدَّل
+            // (المسموح بإرجاعه محسوب من أسطرها).
             var invoiceId = Id!.Value;
+            int docType = _isReverse ? 2 : 1;
             _repLinkedShiftId = await Task.Run(() =>
             {
                 AccountCultureGuard.EnsureInvariant();
                 var dt = new AccountModelsLib.operations().return_DataTable(
-                    "IF OBJECT_ID(N'dbo.SalesRep_Document_Links', N'U') IS NOT NULL SELECT TOP 1 Shift_Id FROM SalesRep_Document_Links WHERE Doc_Type = 1 AND Doc_Id = " + invoiceId +
+                    "IF OBJECT_ID(N'dbo.SalesRep_Document_Links', N'U') IS NOT NULL SELECT TOP 1 Shift_Id FROM (SELECT Shift_Id FROM SalesRep_Document_Links WHERE Doc_Type = " + docType + " AND Doc_Id = " + invoiceId +
+                    (docType == 1 ? " UNION ALL SELECT CAST(0 AS bigint) FROM SalesRep_Invoice_Return_Links WHERE Original_Invoice_Id = " + invoiceId : "") + ") x" +
                     " ELSE SELECT CAST(NULL AS bigint) AS Shift_Id WHERE 1 = 0");
                 return dt.Rows.Count > 0 && dt.Rows[0][0] != DBNull.Value ? (long?)Convert.ToInt64(dt.Rows[0][0]) : null;
             });

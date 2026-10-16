@@ -3096,4 +3096,84 @@
   <data name="FSAApproved" xml:space="preserve"><value>Freigegeben</value></data>
   <data name="FSARejected" xml:space="preserve"><value>Anfrage abgelehnt</value></data>
   <data name="FSSSold" xml:space="preserve"><value>Verkauft</value></data>
+  <data name="FSRReturnWindow" xml:space="preserve"><value>Rückgabefrist (Tage)</value></data>
+  <data name="FSRReturnWindowHint" xml:space="preserve"><value>Leer = 30 Tage; danach Freigabe nötig</value></data>
+  <data name="FSTTitle" xml:space="preserve"><value>Außendienst-Retoure</value></data>
+  <data name="FSTSub" xml:space="preserve"><value>Retoure zur Originalrechnung zum Nettopreis oder ohne Rechnung zum Sicherheitspreis</value></data>
+  <data name="FSTButton" xml:space="preserve"><value>Retoure</value></data>
+  <data name="FSTReturns" xml:space="preserve"><value>Retouren</value></data>
+  <data name="FSTReturnDoc" xml:space="preserve"><value>Verkaufsretoure</value></data>
+  <data name="FSTDamagedStore" xml:space="preserve"><value>Schadenslager</value></data>
+  <data name="FSTCashOnHand" xml:space="preserve"><value>Bargeld im Bestand</value></data>
+  <data name="FSTWindow" xml:space="preserve"><value>Rückgabefrist</value></data>
+  <data name="FSTDays" xml:space="preserve"><value>{0} Tage</value></data>
+  <data name="FSTNoShift" xml:space="preserve"><value>Keine offene Schicht — Retouren nur in einer offenen Schicht.</value></data>
+  <data name="FSTBackToShift" xml:space="preserve"><value>Zurück zur Schicht</value></data>
+  <data name="FSTStepCustomer" xml:space="preserve"><value>1. Kunde und Retourenart</value></data>
+  <data name="FSTMode" xml:space="preserve"><value>Retourenart</value></data>
+  <data name="FSTFromInvoice" xml:space="preserve"><value>Aus einer Rechnung</value></data>
+  <data name="FSTBlind" xml:space="preserve"><value>Ohne Rechnung</value></data>
+  <data name="FSTBlindNotAllowed" xml:space="preserve"><value>Retouren ohne Rechnung sind für diesen Außendienstler nicht erlaubt.</value></data>
+  <data name="FSTBlindHint" xml:space="preserve"><value>Preis = niedrigster früherer Verkaufspreis minus Rabattgrenze; erscheint im Bericht der Retouren ohne Rechnung.</value></data>
+  <data name="FSTStepInvoice" xml:space="preserve"><value>2. Originalrechnung</value></data>
+  <data name="FSTNoInvoices" xml:space="preserve"><value>Keine Rechnungen der letzten 90 Tage mit rückgabefähiger Menge.</value></data>
+  <data name="FSTAge" xml:space="preserve"><value>Alter</value></data>
+  <data name="FSTOutsideWindow" xml:space="preserve"><value>Außerhalb der Frist</value></data>
+  <data name="FSTPick" xml:space="preserve"><value>Rechnung {0} wählen</value></data>
+  <data name="FSTPickShort" xml:space="preserve"><value>Wählen</value></data>
+  <data name="FSTPicked" xml:space="preserve"><value>Gewählt</value></data>
+  <data name="FSTStepLines" xml:space="preserve"><value>3. Zurückgegebene Artikel</value></data>
+  <data name="FSTLinesHint" xml:space="preserve"><value>Rechnung {0}: Rückgabemenge mit Grund und Zustand eingeben. Preise stammen aus der Originalrechnung.</value></data>
+  <data name="FSTWindowWarn" xml:space="preserve"><value>Die Rechnung ist {0} Tage alt (Frist {1}); Speichern braucht Freigabe.</value></data>
+  <data name="FSTNoBlindLines" xml:space="preserve"><value>Zurückgegebenen Artikel suchen und hinzufügen.</value></data>
+  <data name="FSTNothingToReturn" xml:space="preserve"><value>Alle Artikel dieser Rechnung wurden zurückgegeben.</value></data>
+  <data name="FSTSold" xml:space="preserve"><value>Verkauft</value></data>
+  <data name="FSTReturnedBefore" xml:space="preserve"><value>Bereits zurück</value></data>
+  <data name="FSTReturnable" xml:space="preserve"><value>Rückgabefähig</value></data>
+  <data name="FSTNetPrice" xml:space="preserve"><value>Nettopreis</value></data>
+  <data name="FSTSafePrice" xml:space="preserve"><value>Sicherheitspreis</value></data>
+  <data name="FSTOver" xml:space="preserve"><value>Mehr als rückgabefähig</value></data>
+  <data name="FSTReason" xml:space="preserve"><value>Rückgabegrund</value></data>
+  <data name="FSTReasonRequired" xml:space="preserve"><value>Grund erforderlich</value></data>
+  <data name="FSTCondition" xml:space="preserve"><value>Zustand</value></data>
+  <data name="FSTCondition_0" xml:space="preserve"><value>Gut</value></data>
+  <data name="FSTCondition_1" xml:space="preserve"><value>Beschädigt</value></data>
+  <data name="FSTAddPhoto" xml:space="preserve"><value>Foto hinzufügen</value></data>
+  <data name="FSTReplacePhoto" xml:space="preserve"><value>Foto ersetzen</value></data>
+  <data name="FSTPhotoRequired" xml:space="preserve"><value>Dieser Grund erfordert ein Foto</value></data>
+  <data name="FSTPhotoTooBig" xml:space="preserve"><value>Das Foto ist größer als 5 MB</value></data>
+  <data name="FSTToVan" xml:space="preserve"><value>Zurück nach: {0}</value></data>
+  <data name="FSTToDamaged" xml:space="preserve"><value>Ins Schadenslager: {0}</value></data>
+  <data name="FSTNoHistoryPrice" xml:space="preserve"><value>Kein früherer Verkaufspreis für „{0}“; keine Retoure ohne Rechnung.</value></data>
+  <data name="FSTStepSettle" xml:space="preserve"><value>4. Ausgleich und Speichern</value></data>
+  <data name="FSTSettle" xml:space="preserve"><value>Ausgleich</value></data>
+  <data name="FSTOnAccount" xml:space="preserve"><value>Gutschrift auf Kundenkonto</value></data>
+  <data name="FSTRefundCash" xml:space="preserve"><value>Barerstattung aus dem Bestand</value></data>
+  <data name="FSTOnAccountHint" xml:space="preserve"><value>Der Wert wird vom Kundensaldo als Ausgleich der Rechnung abgezogen.</value></data>
+  <data name="FSTRefundCashHint" xml:space="preserve"><value>Bar aus dem Bestand mit verknüpftem Auszahlungsbeleg; höchstens der Barbestand.</value></data>
+  <data name="FSTReturnValue" xml:space="preserve"><value>Retourenwert</value></data>
+  <data name="FSTLinesCount" xml:space="preserve"><value>Artikel</value></data>
+  <data name="FSTCashAfter" xml:space="preserve"><value>Bargeld nach Erstattung</value></data>
+  <data name="FSTPreview" xml:space="preserve"><value>Berechnen und prüfen</value></data>
+  <data name="FSTPreviewFirst" xml:space="preserve"><value>Zuerst berechnen, dann speichern.</value></data>
+  <data name="FSTSave" xml:space="preserve"><value>Retoure speichern</value></data>
+  <data name="FSTSaved" xml:space="preserve"><value>Retoure gespeichert</value></data>
+  <data name="FSTApprovalNeeded" xml:space="preserve"><value>Die Retoure braucht Freigabe</value></data>
+  <data name="FSTOpenReturn" xml:space="preserve"><value>Retoure anzeigen</value></data>
+  <data name="FSTNew" xml:space="preserve"><value>Neue Retoure</value></data>
+  <data name="FSTReturnedGood" xml:space="preserve"><value>Retour</value></data>
+  <data name="FSTReturnedDamagedShort" xml:space="preserve"><value>Beschädigt: {0}</value></data>
+  <data name="FSTReportTitle" xml:space="preserve"><value>Außendienst-Retouren</value></data>
+  <data name="FSTReportSub" xml:space="preserve"><value>Tägliche Prüfung der Retouren, auch ohne Rechnung</value></data>
+  <data name="FSTFrom" xml:space="preserve"><value>Von</value></data>
+  <data name="FSTTo" xml:space="preserve"><value>Bis</value></data>
+  <data name="FSTAllReps" xml:space="preserve"><value>Alle Außendienstler</value></data>
+  <data name="FSTBlindOnly" xml:space="preserve"><value>Nur ohne Rechnung</value></data>
+  <data name="FSTShow" xml:space="preserve"><value>Anzeigen</value></data>
+  <data name="FSTNoReturns" xml:space="preserve"><value>Keine Retouren im Zeitraum</value></data>
+  <data name="FSTCount" xml:space="preserve"><value>Retouren</value></data>
+  <data name="FSTTotalValue" xml:space="preserve"><value>Gesamtwert</value></data>
+  <data name="FSTBlindCount" xml:space="preserve"><value>Ohne Rechnung (Anzahl — Wert)</value></data>
+  <data name="FSTDamagedCount" xml:space="preserve"><value>Mit beschädigten Artikeln</value></data>
+  <data name="FSTOriginal" xml:space="preserve"><value>Originalrechnung</value></data>
 </root>

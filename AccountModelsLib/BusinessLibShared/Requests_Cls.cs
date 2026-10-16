@@ -420,6 +420,21 @@ FROM            Item INNER JOIN
         public void Make_Invoice_Reverse_Update_CustomerAccount(ref int Excp, InvoicesOperationListCLS invL_O, InvoicesOperationCLS invD_O)
         {
             operations opp = new operations(1);
+            string Msg = "";
+            Make_Invoice_Reverse_Update_CustomerAccount_(ref Excp, ref Msg, ref opp, true, invL_O, invD_O);
+        }
+
+        /// <summary>
+        /// Same save inside the caller's transaction: no Commit/Rollback here. Excp = 1 means the caller must roll back.
+        /// Used by the field sales rep return (SalesRepReturnService) so the return, its checks and the invoice links are atomic.
+        /// </summary>
+        public void Make_Invoice_Reverse_Update_CustomerAccountInTx(ref int Excp, ref string Msg, ref operations opp, InvoicesOperationListCLS invL_O, InvoicesOperationCLS invD_O)
+        {
+            Make_Invoice_Reverse_Update_CustomerAccount_(ref Excp, ref Msg, ref opp, false, invL_O, invD_O);
+        }
+
+        private void Make_Invoice_Reverse_Update_CustomerAccount_(ref int Excp, ref string Msg, ref operations opp, bool ownTx, InvoicesOperationListCLS invL_O, InvoicesOperationCLS invD_O)
+        {
             try
             {
                 //checked item_report to SendKeys to store
@@ -457,7 +472,7 @@ FROM            Item INNER JOIN
                 }
                 catch { }
                 
-                string Msg = "";
+                Msg = "";
                 New_Invoice_Id= Add_UpdateInvoice_List_Reverse(ref Excp, ref Msg, ref opp, invL_O);
 
 
@@ -487,7 +502,7 @@ FROM            Item INNER JOIN
                     { }
                     if (Excp == 1)
                     {
-                        opp.Rollback();
+                        if (ownTx) opp.Rollback();
                         return;
                     }
 
@@ -597,14 +612,15 @@ FROM            Item INNER JOIN
 
 
 
-                opp.Commit();
+                if (ownTx) opp.Commit();
                 Excp = 0;
             }
             catch (Exception ee)
             {
                 New_Invoice_Id = 0;
                 Excp = 1;
-                opp.Rollback();
+                Msg = ee.Message;
+                if (ownTx) opp.Rollback();
             }
 
         }

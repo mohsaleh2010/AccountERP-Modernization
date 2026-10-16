@@ -3096,4 +3096,84 @@
   <data name="FSAApproved" xml:space="preserve"><value>Approuvée</value></data>
   <data name="FSARejected" xml:space="preserve"><value>Demande refusée</value></data>
   <data name="FSSSold" xml:space="preserve"><value>Vendu</value></data>
+  <data name="FSRReturnWindow" xml:space="preserve"><value>Délai de retour (jours)</value></data>
+  <data name="FSRReturnWindowHint" xml:space="preserve"><value>Vide = 30 jours ; au-delà, accord du superviseur</value></data>
+  <data name="FSTTitle" xml:space="preserve"><value>Retour commercial</value></data>
+  <data name="FSTSub" xml:space="preserve"><value>Retour depuis la facture au prix net d'origine, ou sans facture au prix de sécurité</value></data>
+  <data name="FSTButton" xml:space="preserve"><value>Retour</value></data>
+  <data name="FSTReturns" xml:space="preserve"><value>Retours</value></data>
+  <data name="FSTReturnDoc" xml:space="preserve"><value>Retour de vente</value></data>
+  <data name="FSTDamagedStore" xml:space="preserve"><value>Stock endommagé</value></data>
+  <data name="FSTCashOnHand" xml:space="preserve"><value>Espèces en caisse</value></data>
+  <data name="FSTWindow" xml:space="preserve"><value>Délai de retour</value></data>
+  <data name="FSTDays" xml:space="preserve"><value>{0} jours</value></data>
+  <data name="FSTNoShift" xml:space="preserve"><value>Aucune tournée ouverte — les retours se font dans une tournée ouverte.</value></data>
+  <data name="FSTBackToShift" xml:space="preserve"><value>Retour à la tournée</value></data>
+  <data name="FSTStepCustomer" xml:space="preserve"><value>1. Client et type de retour</value></data>
+  <data name="FSTMode" xml:space="preserve"><value>Type de retour</value></data>
+  <data name="FSTFromInvoice" xml:space="preserve"><value>Depuis une facture</value></data>
+  <data name="FSTBlind" xml:space="preserve"><value>Sans facture</value></data>
+  <data name="FSTBlindNotAllowed" xml:space="preserve"><value>Retours sans facture non autorisés pour ce commercial.</value></data>
+  <data name="FSTBlindHint" xml:space="preserve"><value>Prix = plus bas prix de vente passé moins le plafond de remise ; figure au rapport des retours sans facture.</value></data>
+  <data name="FSTStepInvoice" xml:space="preserve"><value>2. Facture d'origine</value></data>
+  <data name="FSTNoInvoices" xml:space="preserve"><value>Aucune facture des 90 derniers jours avec un reste à retourner.</value></data>
+  <data name="FSTAge" xml:space="preserve"><value>Âge</value></data>
+  <data name="FSTOutsideWindow" xml:space="preserve"><value>Hors délai</value></data>
+  <data name="FSTPick" xml:space="preserve"><value>Choisir la facture {0}</value></data>
+  <data name="FSTPickShort" xml:space="preserve"><value>Choisir</value></data>
+  <data name="FSTPicked" xml:space="preserve"><value>Choisie</value></data>
+  <data name="FSTStepLines" xml:space="preserve"><value>3. Articles retournés</value></data>
+  <data name="FSTLinesHint" xml:space="preserve"><value>Facture {0} : saisissez la quantité retournée avec motif et état. Les prix viennent de la facture d'origine.</value></data>
+  <data name="FSTWindowWarn" xml:space="preserve"><value>La facture a {0} jours (délai {1}) ; l'enregistrement nécessite l'accord du superviseur.</value></data>
+  <data name="FSTNoBlindLines" xml:space="preserve"><value>Recherchez et ajoutez l'article retourné.</value></data>
+  <data name="FSTNothingToReturn" xml:space="preserve"><value>Tous les articles de cette facture ont été retournés.</value></data>
+  <data name="FSTSold" xml:space="preserve"><value>Vendu</value></data>
+  <data name="FSTReturnedBefore" xml:space="preserve"><value>Déjà retourné</value></data>
+  <data name="FSTReturnable" xml:space="preserve"><value>Retournable</value></data>
+  <data name="FSTNetPrice" xml:space="preserve"><value>Prix net</value></data>
+  <data name="FSTSafePrice" xml:space="preserve"><value>Prix de sécurité</value></data>
+  <data name="FSTOver" xml:space="preserve"><value>Supérieur au retournable</value></data>
+  <data name="FSTReason" xml:space="preserve"><value>Motif du retour</value></data>
+  <data name="FSTReasonRequired" xml:space="preserve"><value>Motif obligatoire</value></data>
+  <data name="FSTCondition" xml:space="preserve"><value>État</value></data>
+  <data name="FSTCondition_0" xml:space="preserve"><value>Bon</value></data>
+  <data name="FSTCondition_1" xml:space="preserve"><value>Endommagé</value></data>
+  <data name="FSTAddPhoto" xml:space="preserve"><value>Ajouter une photo</value></data>
+  <data name="FSTReplacePhoto" xml:space="preserve"><value>Remplacer la photo</value></data>
+  <data name="FSTPhotoRequired" xml:space="preserve"><value>Ce motif exige une photo</value></data>
+  <data name="FSTPhotoTooBig" xml:space="preserve"><value>La photo dépasse 5 Mo</value></data>
+  <data name="FSTToVan" xml:space="preserve"><value>Retourne vers : {0}</value></data>
+  <data name="FSTToDamaged" xml:space="preserve"><value>Va au stock endommagé : {0}</value></data>
+  <data name="FSTNoHistoryPrice" xml:space="preserve"><value>Aucun prix de vente passé pour « {0} » ; retour sans facture impossible.</value></data>
+  <data name="FSTStepSettle" xml:space="preserve"><value>4. Règlement et enregistrement</value></data>
+  <data name="FSTSettle" xml:space="preserve"><value>Règlement</value></data>
+  <data name="FSTOnAccount" xml:space="preserve"><value>Au crédit du compte client</value></data>
+  <data name="FSTRefundCash" xml:space="preserve"><value>Remboursement en espèces</value></data>
+  <data name="FSTOnAccountHint" xml:space="preserve"><value>La valeur est déduite du solde client comme règlement de la facture.</value></data>
+  <data name="FSTRefundCashHint" xml:space="preserve"><value>Payé en espèces depuis la caisse avec un bon lié au retour ; plafonné aux espèces disponibles.</value></data>
+  <data name="FSTReturnValue" xml:space="preserve"><value>Valeur du retour</value></data>
+  <data name="FSTLinesCount" xml:space="preserve"><value>Articles</value></data>
+  <data name="FSTCashAfter" xml:space="preserve"><value>Espèces après remboursement</value></data>
+  <data name="FSTPreview" xml:space="preserve"><value>Calculer et vérifier</value></data>
+  <data name="FSTPreviewFirst" xml:space="preserve"><value>Calculez d'abord, puis enregistrez.</value></data>
+  <data name="FSTSave" xml:space="preserve"><value>Enregistrer le retour</value></data>
+  <data name="FSTSaved" xml:space="preserve"><value>Retour enregistré</value></data>
+  <data name="FSTApprovalNeeded" xml:space="preserve"><value>Le retour nécessite l'accord du superviseur</value></data>
+  <data name="FSTOpenReturn" xml:space="preserve"><value>Voir le retour</value></data>
+  <data name="FSTNew" xml:space="preserve"><value>Nouveau retour</value></data>
+  <data name="FSTReturnedGood" xml:space="preserve"><value>Retourné</value></data>
+  <data name="FSTReturnedDamagedShort" xml:space="preserve"><value>Endommagé : {0}</value></data>
+  <data name="FSTReportTitle" xml:space="preserve"><value>Retours des commerciaux</value></data>
+  <data name="FSTReportSub" xml:space="preserve"><value>Revue quotidienne des retours, dont ceux sans facture</value></data>
+  <data name="FSTFrom" xml:space="preserve"><value>Du</value></data>
+  <data name="FSTTo" xml:space="preserve"><value>Au</value></data>
+  <data name="FSTAllReps" xml:space="preserve"><value>Tous les commerciaux</value></data>
+  <data name="FSTBlindOnly" xml:space="preserve"><value>Sans facture uniquement</value></data>
+  <data name="FSTShow" xml:space="preserve"><value>Afficher</value></data>
+  <data name="FSTNoReturns" xml:space="preserve"><value>Aucun retour sur la période</value></data>
+  <data name="FSTCount" xml:space="preserve"><value>Retours</value></data>
+  <data name="FSTTotalValue" xml:space="preserve"><value>Valeur totale</value></data>
+  <data name="FSTBlindCount" xml:space="preserve"><value>Sans facture (nombre — valeur)</value></data>
+  <data name="FSTDamagedCount" xml:space="preserve"><value>Avec articles endommagés</value></data>
+  <data name="FSTOriginal" xml:space="preserve"><value>Facture d'origine</value></data>
 </root>

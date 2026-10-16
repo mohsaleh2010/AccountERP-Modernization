@@ -767,6 +767,8 @@ namespace AccountModelsLib.Models
              
         
             invL_R.Id = Insert_Invoices_List_Reverse(ref   Excp, ref opp, invoices_List);
+            // كـ Insert_Invoices_List: رقم الرأس لصفوف دفتر الصنف (Set_ItemTransactionFromInvoiceR يكتب Invoice_Id منه) — كان يبقى 0.
+            Invoices_List_Id = invL_R.Id;
             return invL_R.Id;
         }
         /*

@@ -99,6 +99,7 @@
                 </MudSelect>
                 <MudNumericField T="decimal?" @bind-Value="_form.Max_Discount_Rate" Label="@Tr("FSRMaxDiscount")" Variant="Variant.Outlined" Min="0" Max="100" Adornment="Adornment.End" AdornmentText="%" />
                 <MudNumericField T="decimal?" @bind-Value="_form.Max_Cash_On_Hand" Label="@Tr("FSRMaxCash")" Variant="Variant.Outlined" Min="0" HelperText="@Tr("FSRMaxCashHint")" />
+                <MudNumericField T="int?" @bind-Value="_form.Return_Window_Days" Label="@Tr("FSRReturnWindow")" Variant="Variant.Outlined" Min="0" Max="3650" Placeholder="30" HelperText="@Tr("FSRReturnWindowHint")" />
                 <MudSelect T="long" @bind-Value="_supervisor" Label="@Tr("FSRSupervisor")" Variant="Variant.Outlined" ToStringFunc="@(v => v == 0 ? Tr("FSRNone") : _employees.FirstOrDefault(e => e.Id == v)?.Name ?? "")">
                     <MudSelectItem T="long" Value="0L">@Tr("FSRNone")</MudSelectItem>
                     @foreach (var e in _employees.Where(e => e.Id != _form.Employee_Id)) { <MudSelectItem T="long" Value="@e.Id">@e.Name</MudSelectItem> }
@@ -229,7 +230,7 @@
         {
             Id = r.Id, Employee_Id = r.Employee_Id, Van_Store_Id = r.Van_Store_Id, Damaged_Store_Id = r.Damaged_Store_Id, Cash_Box_Id = r.Cash_Box_Id,
             Sales_Mode = r.Sales_Mode, Max_Discount_Rate = r.Max_Discount_Rate, Max_Cash_On_Hand = r.Max_Cash_On_Hand,
-            Allow_Credit_Sales = r.Allow_Credit_Sales, Allow_Blind_Return = r.Allow_Blind_Return, End_Of_Day_Stock_Policy = r.End_Of_Day_Stock_Policy, Active = r.Active,
+            Allow_Credit_Sales = r.Allow_Credit_Sales, Allow_Blind_Return = r.Allow_Blind_Return, Return_Window_Days = r.Return_Window_Days, End_Of_Day_Stock_Policy = r.End_Of_Day_Stock_Policy, Active = r.Active,
         };
         _editName = r.Employee_Name;
         _priceList = r.Price_Type_List_ID ?? 0;

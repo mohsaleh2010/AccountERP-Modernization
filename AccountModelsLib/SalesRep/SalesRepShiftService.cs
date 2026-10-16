@@ -591,18 +591,25 @@ GROUP BY Unit_item_Table_Id").ToList().ToDictionary(r => r.Unit_Item_Id);
         /// (Set_ItemTransactionFromInvoice: Invoice_Type_Id = نوع فاتورة المبيعات، Invoice_Id = رقم الفاتورة، صرف).
         /// </summary>
         private static Dictionary<long, decimal> SoldBy(operations opp, long shiftId, IEnumerable<long> unitItemIds)
+            => InvoiceQtyBy(opp, shiftId, unitItemIds, SalesRepDocType.SaleInvoice, 2, Common.Invoice_Type_Id);
+
+        /// <summary>المرتجع إلى مخزن (السيارة أو التالف) بمرتجعات الوردية المربوطة: صفوف الدفتر التى يكتبها محرك المرتجع (وارد، نوع المرتجع).</summary>
+        private static Dictionary<long, decimal> ReturnedBy(operations opp, long shiftId, IEnumerable<long> unitItemIds)
+            => InvoiceQtyBy(opp, shiftId, unitItemIds, SalesRepDocType.SaleReturn, 1, Common.InvoiceReverse_Type_Id);
+
+        private static Dictionary<long, decimal> InvoiceQtyBy(operations opp, long shiftId, IEnumerable<long> unitItemIds, SalesRepDocType docType, int transactionType, int invoiceTypeId)
         {
             var u = unitItemIds.Distinct().ToList();
             var invoices = opp.db.SalesRep_Document_Links.AsNoTracking()
-                .Where(l => l.Shift_Id == shiftId && l.Doc_Type == (int)SalesRepDocType.SaleInvoice).Select(l => l.Doc_Id).ToList();
+                .Where(l => l.Shift_Id == shiftId && l.Doc_Type == (int)docType).Select(l => l.Doc_Id).ToList();
             if (u.Count == 0 || invoices.Count == 0) return new Dictionary<long, decimal>();
             return opp.db.Database.SqlQueryRaw<MoveRow>($@"
 SELECT x.Unit_item_Table_Id AS Unit_Item_Id,
        CAST(0 AS decimal(18,4)) AS In_Qty,
-       CAST(SUM(CASE WHEN x.Engine_Posted = 1 THEN -ISNULL(x.Qty_Small, 0)
+       CAST(SUM(CASE WHEN x.Engine_Posted = 1 THEN ABS(ISNULL(x.Qty_Small, 0))
                      ELSE ISNULL(x.qua, 0) * CASE WHEN ISNULL(ui.Small_unit, 0) <= 0 THEN 1 ELSE ui.Small_unit END + ISNULL(x.Part_qua, 0) END) AS decimal(18,4)) AS Out_Qty
 FROM Detailes_Purshing_Import_Export x JOIN Unit_item ui ON ui.id = x.Unit_item_Table_Id
-WHERE x.Transaction_Type = 2 AND x.Invoice_Type_Id = {Common.Invoice_Type_Id} AND x.Invoice_Id IN ({string.Join(",", invoices)})
+WHERE x.Transaction_Type = {transactionType} AND x.Invoice_Type_Id = {invoiceTypeId} AND x.Invoice_Id IN ({string.Join(",", invoices)})
   AND x.Unit_item_Table_Id IN ({string.Join(",", u)})
 GROUP BY x.Unit_item_Table_Id").ToList().ToDictionary(r => r.Unit_Item_Id, r => r.Out_Qty);
         }
@@ -622,6 +629,11 @@ GROUP BY x.Unit_item_Table_Id").ToList().ToDictionary(r => r.Unit_Item_Id, r => 
                 .Select(u => new { u.id, u.Item_Id }).ToList();
             var moves = MovesBy(opp, ShiftOrders(opp, shift.Id), lines.Select(l => l.id));
             var sold = SoldBy(opp, shift.Id, lines.Select(l => l.id));
+            var returned = ReturnedBy(opp, shift.Id, lines.Select(l => l.id));
+            // التالف المرتجع يدخل مخزن التالف لا السيارة: يُعرض على سطر السيارة لنفس الصنف للعلم فقط (خارج معادلة السيارة).
+            var damagedLines = opp.db.Unit_item.AsNoTracking().Where(u => u.Store_id == rep.Damaged_Store_Id).Select(u => new { u.id, u.Item_Id }).ToList();
+            var damagedQty = ReturnedBy(opp, shift.Id, damagedLines.Select(d => d.id));
+            var damagedByItem = damagedLines.GroupBy(d => d.Item_Id).ToDictionary(g => g.Key, g => g.Sum(d => damagedQty.TryGetValue(d.id, out var q) ? q : 0));
             var engine = new StockMovementService(opp);
             long branchId = rep.Branch_Id ?? Common.Branch_Id;
             var result = new List<SalesRep_Shift_Stock>();
@@ -641,6 +653,8 @@ GROUP BY x.Unit_item_Table_Id").ToList().ToDictionary(r => r.Unit_Item_Id, r => 
                 row.Loaded = m?.In_Qty ?? 0;
                 row.Unloaded = m?.Out_Qty ?? 0;
                 row.Sold = sold.TryGetValue(l.id, out var s) ? s : 0;
+                row.Returned_Good = returned.TryGetValue(l.id, out var rg) ? rg : 0;
+                row.Returned_Damaged = damagedByItem.TryGetValue(l.Item_Id, out var rd) ? rd : 0;
                 row.Expected_Closing = expected;
                 row.Other_Movement = expected - row.Opening - row.Loaded + row.Unloaded + row.Sold + row.Delivered - row.Returned_Good;
                 row.Unit_Cost = opp.db.Item_Branch_Costs.AsNoTracking().Where(c => c.Item_Id == l.Item_Id && c.Branch_Id == branchId).Select(c => (decimal?)c.Avg_Cost).FirstOrDefault() ?? 0;

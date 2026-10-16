@@ -1,0 +1,140 @@
+@* 🟢 خطة المندوبين — المرحلة 4: «مرتجعات المندوبين» — تقرير مراجعة يومى للمشرف، ومنه «المرتجعات بلا فاتورة» (ق15). التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/returns"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Tr("FSTReportTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .rr-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .rr-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-warning) 16%, transparent); color: var(--mud-palette-warning); }
+    .rr-head .ico .mud-icon-root { font-size: 2rem; }
+    .rr-head .titles { flex: 1 1 260px; }
+    .rr-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .rr-gap { margin-top: 16px; }
+    .rr-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: center; }
+    .rr-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+    .rr-kpi { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); }
+    .rr-kpi .k { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .rr-kpi .v { font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .rr-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card rr-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.AssignmentReturn" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSTReportTitle")</h1>
+            <div class="sub">@Tr("FSTReportSub")</div>
+        </div>
+    </div>
+
+    <div class="inv-card rr-gap">
+        <div class="rr-filters">
+            <MudDatePicker @bind-Date="_from" Label="@Tr("FSTFrom")" Variant="Variant.Outlined" Margin="Margin.Dense" DateFormat="yyyy-MM-dd" />
+            <MudDatePicker @bind-Date="_to" Label="@Tr("FSTTo")" Variant="Variant.Outlined" Margin="Margin.Dense" DateFormat="yyyy-MM-dd" />
+            <MudSelect T="long" @bind-Value="_repId" Label="@Tr("FSRRep")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                       ToStringFunc="@(v => v == 0 ? Tr("FSTAllReps") : _reps.FirstOrDefault(r => r.Id == v)?.Employee_Name ?? "")">
+                <MudSelectItem T="long" Value="0L">@Tr("FSTAllReps")</MudSelectItem>
+                @foreach (var r in _reps) { <MudSelectItem T="long" Value="@r.Id">@r.Employee_Name</MudSelectItem> }
+            </MudSelect>
+            <MudSwitch T="bool" @bind-Value="_blindOnly" Color="Color.Warning" Label="@Tr("FSTBlindOnly")" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" Disabled="@_loading" OnClick="LoadAsync">@Tr("FSTShow")</MudButton>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="rr-gap" role="alert">@_error</MudAlert> }
+
+    <div class="inv-card rr-gap" aria-live="polite">
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("FSRLoading")" />
+        }
+        else if (_rows.Count == 0)
+        {
+            <div class="inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" /><div>@Tr("FSTNoReturns")</div></div>
+        }
+        else
+        {
+            <div class="rr-kpis">
+                <div class="rr-kpi"><div class="k">@Tr("FSTCount")</div><div class="v">@_rows.Count</div></div>
+                <div class="rr-kpi"><div class="k">@Tr("FSTTotalValue")</div><div class="v">@_rows.Sum(r => r.Net_Total).ToString("N2")</div></div>
+                <div class="rr-kpi"><div class="k">@Tr("FSTBlindCount")</div><div class="v">@_rows.Count(r => r.Is_Blind) — @_rows.Where(r => r.Is_Blind).Sum(r => r.Net_Total).ToString("N2")</div></div>
+                <div class="rr-kpi"><div class="k">@Tr("FSTDamagedCount")</div><div class="v">@_rows.Count(r => r.Has_Damaged)</div></div>
+            </div>
+            <MudTable Items="@_rows" T="SalesRepReturnService.ReturnRow" Elevation="0" Class="inv-table rr-gap" Breakpoint="Breakpoint.Sm" Dense="true">
+                <HeaderContent>
+                    <MudTh>@Tr("FSVDocNo")</MudTh><MudTh>@Tr("FSSDate")</MudTh><MudTh>@Tr("FSRRep")</MudTh><MudTh>@Tr("FSVCustomer")</MudTh>
+                    <MudTh>@Tr("FSTOriginal")</MudTh><MudTh>@Tr("FSTSettle")</MudTh><MudTh>@Tr("FSVAmount")</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("FSVDocNo")" Class="rr-num"><MudLink Href="@($"/accounts/invoices/sales-return/{context.Id}")">@context.Return_No</MudLink></MudTd>
+                    <MudTd DataLabel="@Tr("FSSDate")" Class="rr-num">@context.Return_Date?.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                    <MudTd DataLabel="@Tr("FSRRep")">@context.Rep_Name</MudTd>
+                    <MudTd DataLabel="@Tr("FSVCustomer")">@context.Customer_Name</MudTd>
+                    <MudTd DataLabel="@Tr("FSTOriginal")">
+                        @if (context.Is_Blind) { <MudChip T="string" Size="Size.Small" Color="Color.Warning" Icon="@Icons.Material.Filled.ReportProblem">@Tr("FSTBlind")</MudChip> }
+                        else if (context.Original_Invoice_Id is long oid) { <MudLink Href="@($"/accounts/invoices/sales-invoice/{oid}")" Class="rr-num">@context.Original_Invoice_No</MudLink> }
+                        @if (context.Has_Damaged) { <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Outlined">@Tr("FSTCondition_1")</MudChip> }
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("FSTSettle")">@Tr(context.Is_Credit == 1 ? "FSTOnAccount" : "FSTRefundCash")</MudTd>
+                    <MudTd DataLabel="@Tr("FSVAmount")" Class="rr-num">@context.Net_Total.ToString("N2")</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromQuery(Name = "blind")] public int? BlindQuery { get; set; }
+
+    private readonly SalesRepProfileService _profiles = new();
+    private readonly SalesRepReturnService _svc = new();
+    private List<SalesRepProfileService.RepRow> _reps = new();
+    private List<SalesRepReturnService.ReturnRow> _rows = new();
+    private DateTime? _from = DateTime.Today, _to = DateTime.Today;
+    private long _repId;
+    private bool _blindOnly, _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _blindOnly = BlindQuery == 1;
+        try { _reps = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _profiles.GetReps(); }); }
+        catch (Exception ex) { _error = ex.Message; }
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true; _error = null;
+        DateTime from = _from ?? DateTime.Today, to = _to ?? from;
+        long? rep = _repId == 0 ? null : _repId;
+        bool blind = _blindOnly;
+        try { _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetReturns(from, to, rep, blind); }); }
+        catch (Exception ex) { _error = ex.Message; _rows = new(); }
+        finally { _loading = false; }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}
