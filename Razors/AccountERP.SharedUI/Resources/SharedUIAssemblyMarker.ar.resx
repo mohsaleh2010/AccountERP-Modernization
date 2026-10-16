@@ -3368,4 +3368,115 @@
   <data name="FSQHandOverOf" xml:space="preserve"><value>تسليم الشيك {0}</value></data>
   <data name="FSQPending" xml:space="preserve"><value>مع المندوب</value></data>
   <data name="FSQReceived" xml:space="preserve"><value>مُسلَّم</value></data>
+  <data name="FSBTitle" xml:space="preserve"><value>أسباب عدم البيع</value></data>
+  <data name="FSBSub" xml:space="preserve"><value>الأسباب التى يختار منها المندوب عند تسجيل «لا بيع» فى زيارة العميل</value></data>
+  <data name="FSBNew" xml:space="preserve"><value>سبب جديد</value></data>
+  <data name="FSBEdit" xml:space="preserve"><value>تعديل السبب</value></data>
+  <data name="FSBName" xml:space="preserve"><value>السبب</value></data>
+  <data name="FSBNameRequired" xml:space="preserve"><value>اكتب السبب</value></data>
+  <data name="FSBPhoto" xml:space="preserve"><value>يتطلب صورة إثبات</value></data>
+  <data name="FSBPhotoShort" xml:space="preserve"><value>صورة</value></data>
+  <data name="FSBActive" xml:space="preserve"><value>نشط</value></data>
+  <data name="FSBInactive" xml:space="preserve"><value>موقوف</value></data>
+  <data name="FSBRulesHint" xml:space="preserve"><value>لا يُحذف السبب: أوقفه فيختفى من الوردية ويبقى على الزيارات السابقة.</value></data>
+  <data name="FSBCancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="FSBSave" xml:space="preserve"><value>حفظ السبب</value></data>
+  <data name="FSBSaved" xml:space="preserve"><value>حُفظ السبب</value></data>
+  <data name="FSBEmpty" xml:space="preserve"><value>لا أسباب بعد</value></data>
+  <data name="FSBRules" xml:space="preserve"><value>الشروط</value></data>
+  <data name="FSBUsed" xml:space="preserve"><value>مرات الاستعمال</value></data>
+  <data name="FSBStatus" xml:space="preserve"><value>الحالة</value></data>
+  <data name="FSBEditShort" xml:space="preserve"><value>تعديل</value></data>
+  <data name="FSBEditOf" xml:space="preserve"><value>تعديل {0}</value></data>
+  <data name="FSWTitle" xml:space="preserve"><value>خطوط سير المندوبين</value></data>
+  <data name="FSWSub" xml:space="preserve"><value>عملاء كل خط ويوم زيارتهم ووتيرتها؛ خطة يوم الوردية تُثبَّت عند فتحها</value></data>
+  <data name="FSWRep" xml:space="preserve"><value>المندوب</value></data>
+  <data name="FSWPickRep" xml:space="preserve"><value>اختر المندوب لعرض خطوطه</value></data>
+  <data name="FSWRoutes" xml:space="preserve"><value>الخطوط</value></data>
+  <data name="FSWNoRoutes" xml:space="preserve"><value>لا خطوط لهذا المندوب بعد؛ أضف خطاً من الأسفل.</value></data>
+  <data name="FSWCustomersCount" xml:space="preserve"><value>{0} عميل</value></data>
+  <data name="FSWStopped" xml:space="preserve"><value>موقوف</value></data>
+  <data name="FSWNewRoute" xml:space="preserve"><value>خط جديد</value></data>
+  <data name="FSWEditRoute" xml:space="preserve"><value>تعديل الخط</value></data>
+  <data name="FSWRouteName" xml:space="preserve"><value>اسم الخط</value></data>
+  <data name="FSWRouteNameRequired" xml:space="preserve"><value>اكتب اسم الخط</value></data>
+  <data name="FSWArea" xml:space="preserve"><value>المنطقة</value></data>
+  <data name="FSWActive" xml:space="preserve"><value>نشط</value></data>
+  <data name="FSWSaveRoute" xml:space="preserve"><value>حفظ الخط</value></data>
+  <data name="FSWRouteSaved" xml:space="preserve"><value>حُفظ الخط</value></data>
+  <data name="FSWRouteCustomers" xml:space="preserve"><value>عملاء الخط</value></data>
+  <data name="FSWRouteCustomersOf" xml:space="preserve"><value>عملاء خط {0}</value></data>
+  <data name="FSWPickRoute" xml:space="preserve"><value>اختر خطاً لعرض عملائه</value></data>
+  <data name="FSWCustomer" xml:space="preserve"><value>العميل</value></data>
+  <data name="FSWCustomerRequired" xml:space="preserve"><value>اختر العميل</value></data>
+  <data name="FSWDay" xml:space="preserve"><value>يوم الزيارة</value></data>
+  <data name="FSWFrequency" xml:space="preserve"><value>الوتيرة</value></data>
+  <data name="FSWFreq_1" xml:space="preserve"><value>أسبوعى</value></data>
+  <data name="FSWFreq_2" xml:space="preserve"><value>كل أسبوعين</value></data>
+  <data name="FSWFreq_4" xml:space="preserve"><value>شهرى</value></data>
+  <data name="FSWWeekAB" xml:space="preserve"><value>الأسبوع</value></data>
+  <data name="FSWWeekA" xml:space="preserve"><value>أسبوع أ</value></data>
+  <data name="FSWWeekB" xml:space="preserve"><value>أسبوع ب</value></data>
+  <data name="FSWThisWeekIs" xml:space="preserve"><value>هذا الأسبوع: {0}</value></data>
+  <data name="FSWWeekOfMonth" xml:space="preserve"><value>أسبوع الشهر</value></data>
+  <data name="FSWWeekOfMonthHint" xml:space="preserve"><value>الأيام 1-7 = الأول … 22-28 = الرابع؛ 29-31 بلا زيارة شهرية</value></data>
+  <data name="FSWWeekN" xml:space="preserve"><value>الأسبوع {0}</value></data>
+  <data name="FSWSequence" xml:space="preserve"><value>الترتيب</value></data>
+  <data name="FSWLocation" xml:space="preserve"><value>موقع العميل</value></data>
+  <data name="FSWLat" xml:space="preserve"><value>خط العرض</value></data>
+  <data name="FSWLng" xml:space="preserve"><value>خط الطول</value></data>
+  <data name="FSWRadius" xml:space="preserve"><value>النطاق (متر)</value></data>
+  <data name="FSWRadiusM" xml:space="preserve"><value>نطاق {0} م</value></data>
+  <data name="FSWLocationHint" xml:space="preserve"><value>اختيارى. الموقع يُستعمل لتسجيل بُعد المندوب عن العميل عند الزيارة للمراجعة فقط، ولا يمنع البيع. اتركه فارغاً لحذف الموقع.</value></data>
+  <data name="FSWNoLocation" xml:space="preserve"><value>بلا موقع</value></data>
+  <data name="FSWAddCustomer" xml:space="preserve"><value>إضافة للخط</value></data>
+  <data name="FSWSaveCustomer" xml:space="preserve"><value>حفظ</value></data>
+  <data name="FSWCustomerSaved" xml:space="preserve"><value>حُفظ عميل الخط</value></data>
+  <data name="FSWNoCustomers" xml:space="preserve"><value>لا عملاء فى هذا الخط بعد</value></data>
+  <data name="FSWRemove" xml:space="preserve"><value>حذف</value></data>
+  <data name="FSWRemoveOf" xml:space="preserve"><value>حذف {0} من الخط</value></data>
+  <data name="FSWRemoveTitle" xml:space="preserve"><value>حذف من الخط</value></data>
+  <data name="FSWRemoveConfirm" xml:space="preserve"><value>حذف {0} من الخط؟ يخرج من خطط الأيام القادمة، وتبقى زياراته السابقة.</value></data>
+  <data name="FSWRemoved" xml:space="preserve"><value>حُذف من الخط</value></data>
+  <data name="FSWPlanPreview" xml:space="preserve"><value>معاينة خطة يوم</value></data>
+  <data name="FSWPlanDate" xml:space="preserve"><value>التاريخ</value></data>
+  <data name="FSWPlanHint" xml:space="preserve"><value>{0} — {1} — أسبوع الشهر {2}</value></data>
+  <data name="FSWPlanEmpty" xml:space="preserve"><value>لا زيارات مخططة لهذا اليوم</value></data>
+  <data name="FSWDayPlan" xml:space="preserve"><value>خطة اليوم والزيارات</value></data>
+  <data name="FSWDayPlanHint" xml:space="preserve"><value>أى بيع أو تحصيل أو طلبية أو مرتجع لعميل يُسجَّل تلقائياً فى زيارته. تسجيل الحضور اختيارى، و«لا بيع» يحتاج سبباً.</value></data>
+  <data name="FSWKpiPlanned" xml:space="preserve"><value>مخطط</value></data>
+  <data name="FSWKpiVisited" xml:space="preserve"><value>تمت زيارته من المخطط</value></data>
+  <data name="FSWKpiUnplanned" xml:space="preserve"><value>زيارات غير مخططة</value></data>
+  <data name="FSWKpiNoSale" xml:space="preserve"><value>لا بيع</value></data>
+  <data name="FSWVisitCustomer" xml:space="preserve"><value>زيارة عميل</value></data>
+  <data name="FSWCheckIn" xml:space="preserve"><value>حضور</value></data>
+  <data name="FSWCheckInOf" xml:space="preserve"><value>تسجيل حضور عند {0}</value></data>
+  <data name="FSWCheckOut" xml:space="preserve"><value>انتهاء</value></data>
+  <data name="FSWCheckOutOf" xml:space="preserve"><value>انتهاء زيارة {0}</value></data>
+  <data name="FSWCheckedIn" xml:space="preserve"><value>سُجِّل الحضور</value></data>
+  <data name="FSWCheckedOut" xml:space="preserve"><value>انتهت الزيارة</value></data>
+  <data name="FSWRefreshPlan" xml:space="preserve"><value>تحديث الخطة</value></data>
+  <data name="FSWPlanRefreshed" xml:space="preserve"><value>أُضيف عملاء الخط الجدد إلى خطة اليوم</value></data>
+  <data name="FSWNoVisits" xml:space="preserve"><value>لا زيارات مخططة اليوم ولا زيارات مسجلة</value></data>
+  <data name="FSWVisitStatus" xml:space="preserve"><value>الحالة</value></data>
+  <data name="FSWCheckInAt" xml:space="preserve"><value>الوقت</value></data>
+  <data name="FSWGeo" xml:space="preserve"><value>الموقع</value></data>
+  <data name="FSWDocs" xml:space="preserve"><value>المستندات</value></data>
+  <data name="FSWUnplanned" xml:space="preserve"><value>غير مخطط</value></data>
+  <data name="FSWInVisit" xml:space="preserve"><value>عند العميل الآن</value></data>
+  <data name="FSWNotVisited" xml:space="preserve"><value>لم يُزَر</value></data>
+  <data name="FSWLeftNoDoc" xml:space="preserve"><value>زيارة بلا مستند</value></data>
+  <data name="FSWInside" xml:space="preserve"><value>داخل النطاق ({0} م)</value></data>
+  <data name="FSWOutside" xml:space="preserve"><value>خارج النطاق ({0} م)</value></data>
+  <data name="FSWNoSale" xml:space="preserve"><value>لا بيع</value></data>
+  <data name="FSWNoSaleOf" xml:space="preserve"><value>لا بيع عند {0}</value></data>
+  <data name="FSWNoSaleReason" xml:space="preserve"><value>سبب عدم البيع</value></data>
+  <data name="FSWNoSaleSave" xml:space="preserve"><value>تسجيل «لا بيع»</value></data>
+  <data name="FSWNoSaleSaved" xml:space="preserve"><value>سُجِّلت الزيارة «لا بيع»</value></data>
+  <data name="FSWResult_1" xml:space="preserve"><value>بيع</value></data>
+  <data name="FSWResult_2" xml:space="preserve"><value>تسليم طلبية</value></data>
+  <data name="FSWResult_3" xml:space="preserve"><value>طلبية</value></data>
+  <data name="FSWResult_4" xml:space="preserve"><value>تحصيل</value></data>
+  <data name="FSWResult_5" xml:space="preserve"><value>مرتجع</value></data>
+  <data name="FSWResult_6" xml:space="preserve"><value>لا بيع</value></data>
 </root>

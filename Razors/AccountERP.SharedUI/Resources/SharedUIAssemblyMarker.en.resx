@@ -3368,4 +3368,115 @@
   <data name="FSQHandOverOf" xml:space="preserve"><value>Hand over cheque {0}</value></data>
   <data name="FSQPending" xml:space="preserve"><value>With the rep</value></data>
   <data name="FSQReceived" xml:space="preserve"><value>Handed over</value></data>
+  <data name="FSBTitle" xml:space="preserve"><value>No-sale reasons</value></data>
+  <data name="FSBSub" xml:space="preserve"><value>Reasons the rep picks when recording a no-sale visit</value></data>
+  <data name="FSBNew" xml:space="preserve"><value>New reason</value></data>
+  <data name="FSBEdit" xml:space="preserve"><value>Edit reason</value></data>
+  <data name="FSBName" xml:space="preserve"><value>Reason</value></data>
+  <data name="FSBNameRequired" xml:space="preserve"><value>Enter the reason</value></data>
+  <data name="FSBPhoto" xml:space="preserve"><value>Requires a proof photo</value></data>
+  <data name="FSBPhotoShort" xml:space="preserve"><value>Photo</value></data>
+  <data name="FSBActive" xml:space="preserve"><value>Active</value></data>
+  <data name="FSBInactive" xml:space="preserve"><value>Stopped</value></data>
+  <data name="FSBRulesHint" xml:space="preserve"><value>Reasons are not deleted: stop one to hide it from shifts; past visits keep it.</value></data>
+  <data name="FSBCancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="FSBSave" xml:space="preserve"><value>Save reason</value></data>
+  <data name="FSBSaved" xml:space="preserve"><value>Reason saved</value></data>
+  <data name="FSBEmpty" xml:space="preserve"><value>No reasons yet</value></data>
+  <data name="FSBRules" xml:space="preserve"><value>Rules</value></data>
+  <data name="FSBUsed" xml:space="preserve"><value>Times used</value></data>
+  <data name="FSBStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="FSBEditShort" xml:space="preserve"><value>Edit</value></data>
+  <data name="FSBEditOf" xml:space="preserve"><value>Edit {0}</value></data>
+  <data name="FSWTitle" xml:space="preserve"><value>Sales rep routes</value></data>
+  <data name="FSWSub" xml:space="preserve"><value>Each route's customers, visit day and frequency; a shift's day plan is fixed when it opens</value></data>
+  <data name="FSWRep" xml:space="preserve"><value>Sales rep</value></data>
+  <data name="FSWPickRep" xml:space="preserve"><value>Pick a rep to see their routes</value></data>
+  <data name="FSWRoutes" xml:space="preserve"><value>Routes</value></data>
+  <data name="FSWNoRoutes" xml:space="preserve"><value>No routes for this rep yet; add one below.</value></data>
+  <data name="FSWCustomersCount" xml:space="preserve"><value>{0} customers</value></data>
+  <data name="FSWStopped" xml:space="preserve"><value>Stopped</value></data>
+  <data name="FSWNewRoute" xml:space="preserve"><value>New route</value></data>
+  <data name="FSWEditRoute" xml:space="preserve"><value>Edit route</value></data>
+  <data name="FSWRouteName" xml:space="preserve"><value>Route name</value></data>
+  <data name="FSWRouteNameRequired" xml:space="preserve"><value>Enter the route name</value></data>
+  <data name="FSWArea" xml:space="preserve"><value>Area</value></data>
+  <data name="FSWActive" xml:space="preserve"><value>Active</value></data>
+  <data name="FSWSaveRoute" xml:space="preserve"><value>Save route</value></data>
+  <data name="FSWRouteSaved" xml:space="preserve"><value>Route saved</value></data>
+  <data name="FSWRouteCustomers" xml:space="preserve"><value>Route customers</value></data>
+  <data name="FSWRouteCustomersOf" xml:space="preserve"><value>Customers of {0}</value></data>
+  <data name="FSWPickRoute" xml:space="preserve"><value>Pick a route to see its customers</value></data>
+  <data name="FSWCustomer" xml:space="preserve"><value>Customer</value></data>
+  <data name="FSWCustomerRequired" xml:space="preserve"><value>Pick the customer</value></data>
+  <data name="FSWDay" xml:space="preserve"><value>Visit day</value></data>
+  <data name="FSWFrequency" xml:space="preserve"><value>Frequency</value></data>
+  <data name="FSWFreq_1" xml:space="preserve"><value>Weekly</value></data>
+  <data name="FSWFreq_2" xml:space="preserve"><value>Every two weeks</value></data>
+  <data name="FSWFreq_4" xml:space="preserve"><value>Monthly</value></data>
+  <data name="FSWWeekAB" xml:space="preserve"><value>Week</value></data>
+  <data name="FSWWeekA" xml:space="preserve"><value>Week A</value></data>
+  <data name="FSWWeekB" xml:space="preserve"><value>Week B</value></data>
+  <data name="FSWThisWeekIs" xml:space="preserve"><value>This week: {0}</value></data>
+  <data name="FSWWeekOfMonth" xml:space="preserve"><value>Week of the month</value></data>
+  <data name="FSWWeekOfMonthHint" xml:space="preserve"><value>Days 1-7 = 1st … 22-28 = 4th; days 29-31 have no monthly visit</value></data>
+  <data name="FSWWeekN" xml:space="preserve"><value>Week {0}</value></data>
+  <data name="FSWSequence" xml:space="preserve"><value>Order</value></data>
+  <data name="FSWLocation" xml:space="preserve"><value>Customer location</value></data>
+  <data name="FSWLat" xml:space="preserve"><value>Latitude</value></data>
+  <data name="FSWLng" xml:space="preserve"><value>Longitude</value></data>
+  <data name="FSWRadius" xml:space="preserve"><value>Radius (m)</value></data>
+  <data name="FSWRadiusM" xml:space="preserve"><value>{0} m radius</value></data>
+  <data name="FSWLocationHint" xml:space="preserve"><value>Optional. Used only to record how far the rep was from the customer, for review; it never blocks a sale. Leave empty to remove it.</value></data>
+  <data name="FSWNoLocation" xml:space="preserve"><value>No location</value></data>
+  <data name="FSWAddCustomer" xml:space="preserve"><value>Add to route</value></data>
+  <data name="FSWSaveCustomer" xml:space="preserve"><value>Save</value></data>
+  <data name="FSWCustomerSaved" xml:space="preserve"><value>Route customer saved</value></data>
+  <data name="FSWNoCustomers" xml:space="preserve"><value>No customers on this route yet</value></data>
+  <data name="FSWRemove" xml:space="preserve"><value>Remove</value></data>
+  <data name="FSWRemoveOf" xml:space="preserve"><value>Remove {0} from the route</value></data>
+  <data name="FSWRemoveTitle" xml:space="preserve"><value>Remove from route</value></data>
+  <data name="FSWRemoveConfirm" xml:space="preserve"><value>Remove {0} from the route? Future plans drop them; past visits stay.</value></data>
+  <data name="FSWRemoved" xml:space="preserve"><value>Removed from the route</value></data>
+  <data name="FSWPlanPreview" xml:space="preserve"><value>Day plan preview</value></data>
+  <data name="FSWPlanDate" xml:space="preserve"><value>Date</value></data>
+  <data name="FSWPlanHint" xml:space="preserve"><value>{0} — {1} — week of month {2}</value></data>
+  <data name="FSWPlanEmpty" xml:space="preserve"><value>No planned visits on this day</value></data>
+  <data name="FSWDayPlan" xml:space="preserve"><value>Day plan and visits</value></data>
+  <data name="FSWDayPlanHint" xml:space="preserve"><value>Any sale, collection, order or return for a customer is recorded in their visit automatically. Check-in is optional; a no-sale needs a reason.</value></data>
+  <data name="FSWKpiPlanned" xml:space="preserve"><value>Planned</value></data>
+  <data name="FSWKpiVisited" xml:space="preserve"><value>Planned &amp; visited</value></data>
+  <data name="FSWKpiUnplanned" xml:space="preserve"><value>Unplanned visits</value></data>
+  <data name="FSWKpiNoSale" xml:space="preserve"><value>No sale</value></data>
+  <data name="FSWVisitCustomer" xml:space="preserve"><value>Visit a customer</value></data>
+  <data name="FSWCheckIn" xml:space="preserve"><value>Check in</value></data>
+  <data name="FSWCheckInOf" xml:space="preserve"><value>Check in at {0}</value></data>
+  <data name="FSWCheckOut" xml:space="preserve"><value>Check out</value></data>
+  <data name="FSWCheckOutOf" xml:space="preserve"><value>Check out of {0}</value></data>
+  <data name="FSWCheckedIn" xml:space="preserve"><value>Checked in</value></data>
+  <data name="FSWCheckedOut" xml:space="preserve"><value>Visit ended</value></data>
+  <data name="FSWRefreshPlan" xml:space="preserve"><value>Refresh plan</value></data>
+  <data name="FSWPlanRefreshed" xml:space="preserve"><value>New route customers added to today's plan</value></data>
+  <data name="FSWNoVisits" xml:space="preserve"><value>No planned or recorded visits today</value></data>
+  <data name="FSWVisitStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="FSWCheckInAt" xml:space="preserve"><value>Time</value></data>
+  <data name="FSWGeo" xml:space="preserve"><value>Location</value></data>
+  <data name="FSWDocs" xml:space="preserve"><value>Documents</value></data>
+  <data name="FSWUnplanned" xml:space="preserve"><value>Unplanned</value></data>
+  <data name="FSWInVisit" xml:space="preserve"><value>At the customer now</value></data>
+  <data name="FSWNotVisited" xml:space="preserve"><value>Not visited</value></data>
+  <data name="FSWLeftNoDoc" xml:space="preserve"><value>Visit without documents</value></data>
+  <data name="FSWInside" xml:space="preserve"><value>Inside ({0} m)</value></data>
+  <data name="FSWOutside" xml:space="preserve"><value>Outside ({0} m)</value></data>
+  <data name="FSWNoSale" xml:space="preserve"><value>No sale</value></data>
+  <data name="FSWNoSaleOf" xml:space="preserve"><value>No sale at {0}</value></data>
+  <data name="FSWNoSaleReason" xml:space="preserve"><value>No-sale reason</value></data>
+  <data name="FSWNoSaleSave" xml:space="preserve"><value>Record no sale</value></data>
+  <data name="FSWNoSaleSaved" xml:space="preserve"><value>Visit recorded as no sale</value></data>
+  <data name="FSWResult_1" xml:space="preserve"><value>Sale</value></data>
+  <data name="FSWResult_2" xml:space="preserve"><value>Order delivered</value></data>
+  <data name="FSWResult_3" xml:space="preserve"><value>Order taken</value></data>
+  <data name="FSWResult_4" xml:space="preserve"><value>Collection</value></data>
+  <data name="FSWResult_5" xml:space="preserve"><value>Return</value></data>
+  <data name="FSWResult_6" xml:space="preserve"><value>No sale</value></data>
 </root>

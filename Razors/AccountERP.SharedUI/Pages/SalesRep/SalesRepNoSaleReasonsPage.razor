@@ -1,0 +1,162 @@
+@* 🟢 خطة المندوبين — المرحلة 6: «أسباب عدم البيع». إضافة وتعديل أسباب «لا بيع» فى زيارة العميل (السبب قد يطلب صورة إثبات).
+   لا حذف: السبب يُوقف فيختفى من الوردية ويبقى على الزيارات القديمة. التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/nosale-reasons"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("FSBTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .rz-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .rz-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .rz-head .ico .mud-icon-root { font-size: 2rem; }
+    .rz-head .titles { flex: 1 1 260px; }
+    .rz-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .rz-gap { margin-top: 16px; }
+    .rz-sec { font-weight: 700; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; }
+    .rz-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px 16px; align-items: center; }
+    .rz-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+    .rz-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .rz-num { font-variant-numeric: tabular-nums; }
+    .rz-off { opacity: .6; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card rz-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.DoNotDisturbOn" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSBTitle")</h1>
+            <div class="sub">@Tr("FSBSub")</div>
+        </div>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Route" Href="/salesrep/routes">@Tr("FSWTitle")</MudButton>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="rz-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    <div class="inv-card rz-gap">
+        <h2 class="rz-sec">
+            <MudIcon Icon="@(_edit.Id == 0 ? Icons.Material.Filled.Add : Icons.Material.Filled.Edit)" Color="Color.Primary" Size="Size.Small" />
+            @Tr(_edit.Id == 0 ? "FSBNew" : "FSBEdit")
+        </h2>
+        <div class="rz-form">
+            <MudTextField T="string" @bind-Value="_edit.Name" Label="@Tr("FSBName")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" MaxLength="200"
+                          Error="@(_tried && string.IsNullOrWhiteSpace(_edit.Name))" ErrorText="@Tr("FSBNameRequired")" />
+            <MudSwitch T="bool" @bind-Value="_edit.Requires_Photo" Color="Color.Primary" Label="@Tr("FSBPhoto")" />
+            <MudSwitch T="bool" @bind-Value="_edit.Active" Color="Color.Success" Label="@Tr("FSBActive")" />
+        </div>
+        <div class="rz-hint rz-gap">@Tr("FSBRulesHint")</div>
+        <div class="rz-acts">
+            @if (_edit.Id != 0) { <MudButton Variant="Variant.Text" OnClick="NewReason" Disabled="@_busy">@Tr("FSBCancel")</MudButton> }
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@_busy" OnClick="SaveAsync">
+                @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                @Tr("FSBSave")
+            </MudButton>
+        </div>
+    </div>
+
+    <div class="inv-card rz-gap" aria-live="polite">
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("FSRLoading")" />
+        }
+        else if (_rows.Count == 0)
+        {
+            <div class="inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" /><div>@Tr("FSBEmpty")</div></div>
+        }
+        else
+        {
+            <MudTable Items="@_rows" T="SalesRepVisitService.ReasonRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true" Hover="true"
+                      RowClassFunc="@((r, i) => r.Active ? "" : "rz-off")">
+                <HeaderContent>
+                    <MudTh>@Tr("FSBName")</MudTh><MudTh>@Tr("FSBRules")</MudTh><MudTh>@Tr("FSBUsed")</MudTh><MudTh>@Tr("FSBStatus")</MudTh><MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("FSBName")"><b>@context.Name</b></MudTd>
+                    <MudTd DataLabel="@Tr("FSBRules")">
+                        @if (context.Requires_Photo) { <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.PhotoCamera">@Tr("FSBPhotoShort")</MudChip> }
+                        @if (!context.Requires_Photo) { <span class="rz-hint">—</span> }
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("FSBUsed")" Class="rz-num">@context.Used_Count</MudTd>
+                    <MudTd DataLabel="@Tr("FSBStatus")">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.Active ? Color.Success : Color.Default)">@Tr(context.Active ? "FSBActive" : "FSBInactive")</MudChip>
+                    </MudTd>
+                    <MudTd>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => Edit(context))"
+                                   aria-label="@Tr("FSBEditOf", context.Name)">@Tr("FSBEditShort")</MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private readonly SalesRepVisitService _svc = new();
+    private List<SalesRepVisitService.ReasonRow> _rows = new();
+    private SalesRepVisitService.ReasonRow _edit = new() { Active = true };
+    private bool _loading = true, _busy, _tried;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        try { _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetAllReasons(); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private void NewReason() { _edit = new() { Active = true }; _tried = false; }
+
+    private void Edit(SalesRepVisitService.ReasonRow r)
+    {
+        _edit = new() { Id = r.Id, Name = r.Name, Requires_Photo = r.Requires_Photo, Active = r.Active };
+        _tried = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        _tried = true;
+        if (string.IsNullOrWhiteSpace(_edit.Name)) return;
+        _busy = true; _error = null;
+        var input = _edit;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.SaveReason(input); });
+            Snackbar.Add(Tr("FSBSaved"), Severity.Success);
+            NewReason();
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

@@ -3370,4 +3370,115 @@
   <data name="FSQHandOverOf" xml:space="preserve"><value>Scheck {0} übergeben</value></data>
   <data name="FSQPending" xml:space="preserve"><value>Beim Außendienst</value></data>
   <data name="FSQReceived" xml:space="preserve"><value>Übergeben</value></data>
+  <data name="FSBTitle" xml:space="preserve"><value>Gründe ohne Verkauf</value></data>
+  <data name="FSBSub" xml:space="preserve"><value>Gründe, die der Außendienst bei einem Besuch ohne Verkauf wählt</value></data>
+  <data name="FSBNew" xml:space="preserve"><value>Neuer Grund</value></data>
+  <data name="FSBEdit" xml:space="preserve"><value>Grund bearbeiten</value></data>
+  <data name="FSBName" xml:space="preserve"><value>Grund</value></data>
+  <data name="FSBNameRequired" xml:space="preserve"><value>Grund eingeben</value></data>
+  <data name="FSBPhoto" xml:space="preserve"><value>Belegfoto erforderlich</value></data>
+  <data name="FSBPhotoShort" xml:space="preserve"><value>Foto</value></data>
+  <data name="FSBActive" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="FSBInactive" xml:space="preserve"><value>Gestoppt</value></data>
+  <data name="FSBRulesHint" xml:space="preserve"><value>Gründe werden nicht gelöscht: stoppen blendet ihn aus; frühere Besuche behalten ihn.</value></data>
+  <data name="FSBCancel" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="FSBSave" xml:space="preserve"><value>Grund speichern</value></data>
+  <data name="FSBSaved" xml:space="preserve"><value>Grund gespeichert</value></data>
+  <data name="FSBEmpty" xml:space="preserve"><value>Noch keine Gründe</value></data>
+  <data name="FSBRules" xml:space="preserve"><value>Regeln</value></data>
+  <data name="FSBUsed" xml:space="preserve"><value>Verwendet</value></data>
+  <data name="FSBStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="FSBEditShort" xml:space="preserve"><value>Bearbeiten</value></data>
+  <data name="FSBEditOf" xml:space="preserve"><value>{0} bearbeiten</value></data>
+  <data name="FSWTitle" xml:space="preserve"><value>Touren der Außendienstler</value></data>
+  <data name="FSWSub" xml:space="preserve"><value>Kunden je Tour, Besuchstag und Rhythmus; der Tagesplan wird bei Schichtbeginn fixiert</value></data>
+  <data name="FSWRep" xml:space="preserve"><value>Außendienst</value></data>
+  <data name="FSWPickRep" xml:space="preserve"><value>Außendienst wählen</value></data>
+  <data name="FSWRoutes" xml:space="preserve"><value>Touren</value></data>
+  <data name="FSWNoRoutes" xml:space="preserve"><value>Noch keine Touren; unten hinzufügen.</value></data>
+  <data name="FSWCustomersCount" xml:space="preserve"><value>{0} Kunden</value></data>
+  <data name="FSWStopped" xml:space="preserve"><value>Gestoppt</value></data>
+  <data name="FSWNewRoute" xml:space="preserve"><value>Neue Tour</value></data>
+  <data name="FSWEditRoute" xml:space="preserve"><value>Tour bearbeiten</value></data>
+  <data name="FSWRouteName" xml:space="preserve"><value>Tourname</value></data>
+  <data name="FSWRouteNameRequired" xml:space="preserve"><value>Tourname eingeben</value></data>
+  <data name="FSWArea" xml:space="preserve"><value>Gebiet</value></data>
+  <data name="FSWActive" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="FSWSaveRoute" xml:space="preserve"><value>Tour speichern</value></data>
+  <data name="FSWRouteSaved" xml:space="preserve"><value>Tour gespeichert</value></data>
+  <data name="FSWRouteCustomers" xml:space="preserve"><value>Tourkunden</value></data>
+  <data name="FSWRouteCustomersOf" xml:space="preserve"><value>Kunden von {0}</value></data>
+  <data name="FSWPickRoute" xml:space="preserve"><value>Tour wählen</value></data>
+  <data name="FSWCustomer" xml:space="preserve"><value>Kunde</value></data>
+  <data name="FSWCustomerRequired" xml:space="preserve"><value>Kunde wählen</value></data>
+  <data name="FSWDay" xml:space="preserve"><value>Besuchstag</value></data>
+  <data name="FSWFrequency" xml:space="preserve"><value>Rhythmus</value></data>
+  <data name="FSWFreq_1" xml:space="preserve"><value>Wöchentlich</value></data>
+  <data name="FSWFreq_2" xml:space="preserve"><value>Alle zwei Wochen</value></data>
+  <data name="FSWFreq_4" xml:space="preserve"><value>Monatlich</value></data>
+  <data name="FSWWeekAB" xml:space="preserve"><value>Woche</value></data>
+  <data name="FSWWeekA" xml:space="preserve"><value>Woche A</value></data>
+  <data name="FSWWeekB" xml:space="preserve"><value>Woche B</value></data>
+  <data name="FSWThisWeekIs" xml:space="preserve"><value>Diese Woche: {0}</value></data>
+  <data name="FSWWeekOfMonth" xml:space="preserve"><value>Woche im Monat</value></data>
+  <data name="FSWWeekOfMonthHint" xml:space="preserve"><value>Tage 1-7 = 1. … 22-28 = 4.; 29-31 ohne Monatsbesuch</value></data>
+  <data name="FSWWeekN" xml:space="preserve"><value>Woche {0}</value></data>
+  <data name="FSWSequence" xml:space="preserve"><value>Reihenfolge</value></data>
+  <data name="FSWLocation" xml:space="preserve"><value>Kundenstandort</value></data>
+  <data name="FSWLat" xml:space="preserve"><value>Breitengrad</value></data>
+  <data name="FSWLng" xml:space="preserve"><value>Längengrad</value></data>
+  <data name="FSWRadius" xml:space="preserve"><value>Radius (m)</value></data>
+  <data name="FSWRadiusM" xml:space="preserve"><value>{0} m Radius</value></data>
+  <data name="FSWLocationHint" xml:space="preserve"><value>Optional. Nur zur Prüfung der Entfernung; blockiert nie einen Verkauf. Leer lassen zum Entfernen.</value></data>
+  <data name="FSWNoLocation" xml:space="preserve"><value>Kein Standort</value></data>
+  <data name="FSWAddCustomer" xml:space="preserve"><value>Zur Tour hinzufügen</value></data>
+  <data name="FSWSaveCustomer" xml:space="preserve"><value>Speichern</value></data>
+  <data name="FSWCustomerSaved" xml:space="preserve"><value>Tourkunde gespeichert</value></data>
+  <data name="FSWNoCustomers" xml:space="preserve"><value>Noch keine Kunden auf dieser Tour</value></data>
+  <data name="FSWRemove" xml:space="preserve"><value>Entfernen</value></data>
+  <data name="FSWRemoveOf" xml:space="preserve"><value>{0} aus der Tour entfernen</value></data>
+  <data name="FSWRemoveTitle" xml:space="preserve"><value>Aus Tour entfernen</value></data>
+  <data name="FSWRemoveConfirm" xml:space="preserve"><value>{0} entfernen? Künftige Pläne entfallen; frühere Besuche bleiben.</value></data>
+  <data name="FSWRemoved" xml:space="preserve"><value>Aus der Tour entfernt</value></data>
+  <data name="FSWPlanPreview" xml:space="preserve"><value>Tagesplan-Vorschau</value></data>
+  <data name="FSWPlanDate" xml:space="preserve"><value>Datum</value></data>
+  <data name="FSWPlanHint" xml:space="preserve"><value>{0} — {1} — Woche im Monat {2}</value></data>
+  <data name="FSWPlanEmpty" xml:space="preserve"><value>Keine geplanten Besuche an diesem Tag</value></data>
+  <data name="FSWDayPlan" xml:space="preserve"><value>Tagesplan und Besuche</value></data>
+  <data name="FSWDayPlanHint" xml:space="preserve"><value>Jeder Verkauf, Inkasso, Auftrag oder Retoure wird automatisch dem Besuch zugeordnet. Check-in optional; ohne Verkauf braucht einen Grund.</value></data>
+  <data name="FSWKpiPlanned" xml:space="preserve"><value>Geplant</value></data>
+  <data name="FSWKpiVisited" xml:space="preserve"><value>Geplant &amp; besucht</value></data>
+  <data name="FSWKpiUnplanned" xml:space="preserve"><value>Ungeplante Besuche</value></data>
+  <data name="FSWKpiNoSale" xml:space="preserve"><value>Ohne Verkauf</value></data>
+  <data name="FSWVisitCustomer" xml:space="preserve"><value>Kunde besuchen</value></data>
+  <data name="FSWCheckIn" xml:space="preserve"><value>Einchecken</value></data>
+  <data name="FSWCheckInOf" xml:space="preserve"><value>Bei {0} einchecken</value></data>
+  <data name="FSWCheckOut" xml:space="preserve"><value>Auschecken</value></data>
+  <data name="FSWCheckOutOf" xml:space="preserve"><value>Besuch bei {0} beenden</value></data>
+  <data name="FSWCheckedIn" xml:space="preserve"><value>Eingecheckt</value></data>
+  <data name="FSWCheckedOut" xml:space="preserve"><value>Besuch beendet</value></data>
+  <data name="FSWRefreshPlan" xml:space="preserve"><value>Plan aktualisieren</value></data>
+  <data name="FSWPlanRefreshed" xml:space="preserve"><value>Neue Tourkunden zum Tagesplan hinzugefügt</value></data>
+  <data name="FSWNoVisits" xml:space="preserve"><value>Heute keine geplanten oder erfassten Besuche</value></data>
+  <data name="FSWVisitStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="FSWCheckInAt" xml:space="preserve"><value>Zeit</value></data>
+  <data name="FSWGeo" xml:space="preserve"><value>Standort</value></data>
+  <data name="FSWDocs" xml:space="preserve"><value>Belege</value></data>
+  <data name="FSWUnplanned" xml:space="preserve"><value>Ungeplant</value></data>
+  <data name="FSWInVisit" xml:space="preserve"><value>Gerade beim Kunden</value></data>
+  <data name="FSWNotVisited" xml:space="preserve"><value>Nicht besucht</value></data>
+  <data name="FSWLeftNoDoc" xml:space="preserve"><value>Besuch ohne Beleg</value></data>
+  <data name="FSWInside" xml:space="preserve"><value>Im Radius ({0} m)</value></data>
+  <data name="FSWOutside" xml:space="preserve"><value>Außerhalb ({0} m)</value></data>
+  <data name="FSWNoSale" xml:space="preserve"><value>Ohne Verkauf</value></data>
+  <data name="FSWNoSaleOf" xml:space="preserve"><value>Ohne Verkauf bei {0}</value></data>
+  <data name="FSWNoSaleReason" xml:space="preserve"><value>Grund ohne Verkauf</value></data>
+  <data name="FSWNoSaleSave" xml:space="preserve"><value>Ohne Verkauf erfassen</value></data>
+  <data name="FSWNoSaleSaved" xml:space="preserve"><value>Besuch ohne Verkauf erfasst</value></data>
+  <data name="FSWResult_1" xml:space="preserve"><value>Verkauf</value></data>
+  <data name="FSWResult_2" xml:space="preserve"><value>Auftrag geliefert</value></data>
+  <data name="FSWResult_3" xml:space="preserve"><value>Auftrag erfasst</value></data>
+  <data name="FSWResult_4" xml:space="preserve"><value>Inkasso</value></data>
+  <data name="FSWResult_5" xml:space="preserve"><value>Retoure</value></data>
+  <data name="FSWResult_6" xml:space="preserve"><value>Ohne Verkauf</value></data>
 </root>

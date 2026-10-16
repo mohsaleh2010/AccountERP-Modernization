@@ -378,6 +378,7 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
             }
             Step("SalesRepAddedColumns", () => AddedColumns(opp));
             Step("SalesRepReturnReasons", () => SeedReturnReasons(opp));
+            Step("SalesRepNoSaleReasons", () => SeedNoSaleReasons(opp));
             // مستقلة عن فحص الجداول: القواعد المرقّاة سابقاً تحتاج عناصر القائمة أيضاً.
             Step("SalesRepMenus", () => Menus(opp));
         }
@@ -425,6 +426,29 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
             opp.db.SaveChanges();
         }
 
+        /// <summary>أسباب عدم البيع الافتراضية (§6.2) تُضاف فقط لو الجدول فارغ. «المحل مغلق» يطلب صورة إثبات.</summary>
+        private static readonly (string Name, bool Photo)[] DefaultNoSaleReasons =
+        {
+            ("المحل مغلق", true),
+            ("لديه مخزون كافٍ", false),
+            ("صاحب القرار غير موجود", false),
+            ("السعر أو عرض منافس", false),
+            ("مديونية متأخرة", false),
+        };
+
+        private static void SeedNoSaleReasons(operations opp)
+        {
+            if (!TableExists(opp, "Lookup_SalesRep_NoSaleReasons")) return;
+            if (opp.db.Database.SqlQueryRaw<int>("SELECT COUNT(*) AS Value FROM Lookup_SalesRep_NoSaleReasons").AsEnumerable().First() > 0) return;
+            foreach (var (name, photo) in DefaultNoSaleReasons)
+            {
+                var r = new Lookup_SalesRep_NoSaleReason { Id = CallSnowflakeIdGenerate.GenerateNewId(), Name = name, Requires_Photo = photo };
+                r.StampInsert(Common.Branch_Id);
+                opp.db.Lookup_SalesRep_NoSaleReasons.Add(r);
+            }
+            opp.db.SaveChanges();
+        }
+
         private static void AddedColumns(operations opp)
         {
             foreach (var (table, column, type) in Added)
@@ -445,6 +469,8 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
             ("menuSalesRepReturnReasons", "أسباب إرجاع المندوبين", "/salesrep/return-reasons"),
             ("menuSalesRepOrders", "طلبيات المندوبين", "/salesrep/orders"),
             ("menuSalesRepPolicies", "سياسات ائتمان وخصم المندوبين", "/salesrep/policies"),
+            ("menuSalesRepRoutes", "خطوط سير المندوبين", "/salesrep/routes"),
+            ("menuSalesRepNoSaleReasons", "أسباب عدم البيع", "/salesrep/nosale-reasons"),
         };
 
         /// <summary>

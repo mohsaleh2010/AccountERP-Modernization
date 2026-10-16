@@ -1,0 +1,418 @@
+@* 🟢 خطة المندوبين — المرحلة 6: «خطوط سير المندوبين». خطوط كل مندوب وعملاؤها: يوم الزيارة، الوتيرة (أسبوعى / كل أسبوعين أ-ب / شهرى بأسبوع الشهر)،
+   الترتيب، وموقع العميل ونطاقه (للمراجعة فقط، ق17). معاينة خطة أى يوم. خطة يوم الوردية تُثبَّت عند فتحها. التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/routes"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@implements IDisposable
+
+<PageTitle>@Tr("FSWTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .rw-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .rw-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .rw-head .ico .mud-icon-root { font-size: 2rem; }
+    .rw-head .titles { flex: 1 1 260px; }
+    .rw-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .rw-head .rep { flex: 1 1 240px; max-width: 360px; }
+    .rw-gap { margin-top: 16px; }
+    .rw-sec { font-weight: 700; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; }
+    .rw-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    @@media (min-width: 1024px) { .rw-grid { grid-template-columns: minmax(280px, 1fr) minmax(0, 2fr); } }
+    .rw-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px 16px; align-items: center; }
+    .rw-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+    .rw-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .rw-num { font-variant-numeric: tabular-nums; }
+    .rw-off { opacity: .6; }
+    .rw-routes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .rw-route { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 8px 12px; border-radius: 12px; cursor: pointer; text-align: start;
+                border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); color: var(--mud-palette-text-primary); font: inherit;
+                transition: border-color .15s ease, background-color .15s ease; }
+    .rw-route:hover { border-color: var(--mud-palette-primary); }
+    .rw-route:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .rw-route.sel { border-color: var(--mud-palette-primary); background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent); }
+    .rw-route .nm { flex: 1; font-weight: 600; }
+    .rw-route .meta { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .rw-sub { font-weight: 600; margin: 16px 0 8px; font-size: .95rem; }
+    .rw-plan { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+    .rw-plan li { display: flex; gap: 12px; align-items: center; padding: 8px 12px; border-radius: 10px; background: color-mix(in srgb, var(--mud-palette-primary) 5%, transparent); }
+    .rw-plan .seq { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: .8125rem;
+                    background: var(--mud-palette-primary); color: var(--mud-palette-primary-text); }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card rw-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Route" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSWTitle")</h1>
+            <div class="sub">@Tr("FSWSub")</div>
+        </div>
+        <MudSelect T="long" Value="_repId" ValueChanged="@(v => SelectRepAsync(v))" Label="@Tr("FSWRep")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="rep"
+                   ToStringFunc="@(v => _reps.FirstOrDefault(r => r.Id == v)?.Employee_Name ?? "")">
+            @foreach (var r in _reps.Where(r => r.Active)) { <MudSelectItem T="long" Value="@r.Id">@r.Employee_Name</MudSelectItem> }
+        </MudSelect>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.DoNotDisturbOn" Href="/salesrep/nosale-reasons">@Tr("FSBTitle")</MudButton>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="rw-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    @if (_loading)
+    {
+        <div class="inv-card rw-gap"><MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("FSRLoading")" /></div>
+    }
+    else if (_repId == 0)
+    {
+        <div class="inv-card rw-gap">
+            <div class="inv-empty" role="status">
+                <MudIcon Icon="@Icons.Material.Filled.PersonSearch" Size="Size.Large" />
+                <div>@Tr(_reps.Count == 0 ? "FSSNoReps" : "FSWPickRep")</div>
+                @if (_reps.Count == 0) { <MudButton Variant="Variant.Outlined" Href="/salesrep/reps">@Tr("FSRTitle")</MudButton> }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="rw-grid rw-gap">
+            @* ===== الخطوط ===== *@
+            <div class="inv-card">
+                <h2 class="rw-sec"><MudIcon Icon="@Icons.Material.Filled.AltRoute" Color="Color.Primary" Size="Size.Small" />@Tr("FSWRoutes")</h2>
+                @if (_routes.Count == 0)
+                {
+                    <div class="rw-hint" role="status">@Tr("FSWNoRoutes")</div>
+                }
+                else
+                {
+                    <ul class="rw-routes" aria-label="@Tr("FSWRoutes")">
+                        @foreach (var r in _routes)
+                        {
+                            <li>
+                                <button type="button" class="@($"rw-route {(r.Id == _routeId ? "sel" : "")} {(r.Active ? "" : "rw-off")}")" aria-pressed="@(r.Id == _routeId)" @onclick="@(() => SelectRouteAsync(r))">
+                                    <MudIcon Icon="@Icons.Material.Filled.Route" Size="Size.Small" aria-hidden="true" />
+                                    <span class="nm">@r.Name</span>
+                                    <span class="meta rw-num">@Tr("FSWCustomersCount", r.Customers_Count)</span>
+                                    @if (!r.Active) { <MudChip T="string" Size="Size.Small">@Tr("FSWStopped")</MudChip> }
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                <h3 class="rw-sub">@Tr(_route.Id == 0 ? "FSWNewRoute" : "FSWEditRoute")</h3>
+                <div class="rw-form">
+                    <MudTextField T="string" @bind-Value="_route.Name" Label="@Tr("FSWRouteName")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" MaxLength="200"
+                                  Error="@(_routeTried && string.IsNullOrWhiteSpace(_route.Name))" ErrorText="@Tr("FSWRouteNameRequired")" />
+                    <MudSelect T="long?" @bind-Value="_route.Area_Id" Label="@Tr("FSWArea")" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"
+                               ToStringFunc="@(v => v == null ? "" : _areas.FirstOrDefault(a => a.Id == v)?.Name ?? "")">
+                        @foreach (var a in _areas) { <MudSelectItem T="long?" Value="@a.Id">@a.Name</MudSelectItem> }
+                    </MudSelect>
+                    <MudSwitch T="bool" @bind-Value="_route.Active" Color="Color.Success" Label="@Tr("FSWActive")" />
+                </div>
+                <div class="rw-acts">
+                    @if (_route.Id != 0) { <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Add" OnClick="NewRoute" Disabled="@_busy">@Tr("FSWNewRoute")</MudButton> }
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@_busy" OnClick="SaveRouteAsync">
+                        @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                        @Tr("FSWSaveRoute")
+                    </MudButton>
+                </div>
+            </div>
+
+            @* ===== عملاء الخط ===== *@
+            <div class="inv-card">
+                <h2 class="rw-sec"><MudIcon Icon="@Icons.Material.Filled.Storefront" Color="Color.Primary" Size="Size.Small" />
+                    @(_routeId == 0 ? Tr("FSWRouteCustomers") : Tr("FSWRouteCustomersOf", _routes.FirstOrDefault(r => r.Id == _routeId)?.Name ?? ""))</h2>
+                @if (_routeId == 0)
+                {
+                    <div class="inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.TouchApp" Size="Size.Large" /><div>@Tr("FSWPickRoute")</div></div>
+                }
+                else
+                {
+                    <div class="rw-form">
+                        <MudAutocomplete T="SalesRepPolicyService.Target" @bind-Value="_cust" SearchFunc="SearchCustomersAsync" ToStringFunc="@(t => t?.Name ?? "")"
+                                         Label="@Tr("FSWCustomer")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" MaxItems="50" ResetValueOnEmptyText="true"
+                                         Error="@(_rcTried && _cust is null)" ErrorText="@Tr("FSWCustomerRequired")" Disabled="@(_rc.Id != 0)" />
+                        <MudSelect T="int" @bind-Value="_rc.Visit_Day" Label="@Tr("FSWDay")" Variant="Variant.Outlined" Margin="Margin.Dense" ToStringFunc="DayName">
+                            @foreach (int d in DayOrder) { <MudSelectItem T="int" Value="@d">@DayName(d)</MudSelectItem> }
+                        </MudSelect>
+                        <MudSelect T="int" Value="_rc.Frequency" ValueChanged="@(f => { _rc.Frequency = f; _rc.Week_Parity = f == 1 ? null : 1; })" Label="@Tr("FSWFrequency")"
+                                   Variant="Variant.Outlined" Margin="Margin.Dense" ToStringFunc="@(f => Tr("FSWFreq_" + f))">
+                            <MudSelectItem T="int" Value="1">@Tr("FSWFreq_1")</MudSelectItem>
+                            <MudSelectItem T="int" Value="2">@Tr("FSWFreq_2")</MudSelectItem>
+                            <MudSelectItem T="int" Value="4">@Tr("FSWFreq_4")</MudSelectItem>
+                        </MudSelect>
+                        @if (_rc.Frequency == 2)
+                        {
+                            <MudSelect T="int?" @bind-Value="_rc.Week_Parity" Label="@Tr("FSWWeekAB")" HelperText="@Tr("FSWThisWeekIs", WeekAB(SalesRepVisitService.WeekParity(DateTime.Today)))"
+                                       Variant="Variant.Outlined" Margin="Margin.Dense" ToStringFunc="@(p => p == null ? "" : WeekAB(p.Value))">
+                                <MudSelectItem T="int?" Value="1">@WeekAB(1)</MudSelectItem>
+                                <MudSelectItem T="int?" Value="2">@WeekAB(2)</MudSelectItem>
+                            </MudSelect>
+                        }
+                        else if (_rc.Frequency == 4)
+                        {
+                            <MudSelect T="int?" @bind-Value="_rc.Week_Parity" Label="@Tr("FSWWeekOfMonth")" HelperText="@Tr("FSWWeekOfMonthHint")"
+                                       Variant="Variant.Outlined" Margin="Margin.Dense" ToStringFunc="@(p => p == null ? "" : Tr("FSWWeekN", p.Value))">
+                                @for (int w = 1; w <= 4; w++) { int ww = w; <MudSelectItem T="int?" Value="@ww">@Tr("FSWWeekN", ww)</MudSelectItem> }
+                            </MudSelect>
+                        }
+                        <MudNumericField T="int" @bind-Value="_rc.Sequence" Label="@Tr("FSWSequence")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Max="9999" HideSpinButtons="true" />
+                    </div>
+                    <h3 class="rw-sub">@Tr("FSWLocation")</h3>
+                    <div class="rw-form">
+                        <MudNumericField T="decimal?" @bind-Value="_lat" Label="@Tr("FSWLat")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="-90" Max="90" Format="0.######" HideSpinButtons="true" />
+                        <MudNumericField T="decimal?" @bind-Value="_lng" Label="@Tr("FSWLng")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="-180" Max="180" Format="0.######" HideSpinButtons="true" />
+                        <MudNumericField T="int" @bind-Value="_radius" Label="@Tr("FSWRadius")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="10" Max="5000" HideSpinButtons="true" />
+                    </div>
+                    <div class="rw-hint rw-gap">@Tr("FSWLocationHint")</div>
+                    <div class="rw-acts">
+                        @if (_rc.Id != 0) { <MudButton Variant="Variant.Text" OnClick="NewRouteCustomer" Disabled="@_busy">@Tr("FSZCancel")</MudButton> }
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@(_rc.Id == 0 ? Icons.Material.Filled.PersonAdd : Icons.Material.Filled.Save)" Disabled="@_busy" OnClick="SaveRouteCustomerAsync">
+                            @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                            @Tr(_rc.Id == 0 ? "FSWAddCustomer" : "FSWSaveCustomer")
+                        </MudButton>
+                    </div>
+
+                    @if (_lines.Count == 0)
+                    {
+                        <div class="inv-empty rw-gap" role="status"><MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" /><div>@Tr("FSWNoCustomers")</div></div>
+                    }
+                    else
+                    {
+                        <MudTable Items="@_lines" T="SalesRepVisitService.RouteCustomerRow" Elevation="0" Class="inv-table rw-gap" Breakpoint="Breakpoint.Sm" Dense="true" Hover="true">
+                            <HeaderContent>
+                                <MudTh>@Tr("FSWDay")</MudTh><MudTh>@Tr("FSWSequence")</MudTh><MudTh>@Tr("FSWCustomer")</MudTh><MudTh>@Tr("FSWFrequency")</MudTh><MudTh>@Tr("FSWLocation")</MudTh><MudTh></MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="@Tr("FSWDay")">@DayName(context.Visit_Day)</MudTd>
+                                <MudTd DataLabel="@Tr("FSWSequence")" Class="rw-num">@context.Sequence</MudTd>
+                                <MudTd DataLabel="@Tr("FSWCustomer")"><b>@context.Customer_Name</b></MudTd>
+                                <MudTd DataLabel="@Tr("FSWFrequency")">@FreqText(context)</MudTd>
+                                <MudTd DataLabel="@Tr("FSWLocation")">
+                                    @if (context.Latitude != null)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Place">@Tr("FSWRadiusM", context.Geofence_Radius_M ?? 0)</MudChip>
+                                    }
+                                    else { <span class="rw-hint">@Tr("FSWNoLocation")</span> }
+                                </MudTd>
+                                <MudTd>
+                                    <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => EditRouteCustomer(context))"
+                                               aria-label="@Tr("FSZEditOf", context.Customer_Name)">@Tr("FSZEditShort")</MudButton>
+                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Disabled="@_busy" OnClick="@(() => RemoveAsync(context))"
+                                                   aria-label="@Tr("FSWRemoveOf", context.Customer_Name)" />
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                }
+            </div>
+        </div>
+
+        @* ===== معاينة خطة يوم ===== *@
+        <div class="inv-card rw-gap">
+            <h2 class="rw-sec"><MudIcon Icon="@Icons.Material.Filled.EventNote" Color="Color.Primary" Size="Size.Small" />@Tr("FSWPlanPreview")</h2>
+            <div class="rw-form">
+                <MudDatePicker Date="_planDate" DateChanged="@(d => PlanDateChangedAsync(d))" Label="@Tr("FSWPlanDate")" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <div class="rw-hint">@Tr("FSWPlanHint", DayName((int)(_planDate ?? DateTime.Today).DayOfWeek), WeekAB(SalesRepVisitService.WeekParity(_planDate ?? DateTime.Today)), SalesRepVisitService.WeekOfMonth(_planDate ?? DateTime.Today))</div>
+            </div>
+            @if (_plan.Count == 0)
+            {
+                <div class="rw-hint rw-gap" role="status">@Tr("FSWPlanEmpty")</div>
+            }
+            else
+            {
+                <ol class="rw-plan rw-gap" aria-label="@Tr("FSWPlanPreview")">
+                    @{ int n = 0; }
+                    @foreach (var p in _plan)
+                    {
+                        n++;
+                        <li><span class="seq rw-num" aria-hidden="true">@n</span><b>@p.Customer_Name</b><span class="rw-hint">@p.Route_Name</span></li>
+                    }
+                </ol>
+            }
+        </div>
+    }
+</div>
+</MudContainer>
+
+@code {
+    private static readonly int[] DayOrder = { 6, 0, 1, 2, 3, 4, 5 };   // السبت أولاً
+    private readonly SalesRepVisitService _svc = new();
+    private readonly SalesRepProfileService _profiles = new();
+    private readonly SalesRepPolicyService _policies = new();
+    private List<SalesRepProfileService.RepRow> _reps = new();
+    private List<SalesRepVisitService.Option> _areas = new();
+    private List<SalesRepVisitService.RouteRow> _routes = new();
+    private List<SalesRepVisitService.RouteCustomerRow> _lines = new();
+    private List<SalesRepVisitService.PlanRow> _plan = new();
+    private SalesRepVisitService.RouteRow _route = new() { Active = true };
+    private SalesRepVisitService.RouteCustomerRow _rc = new();
+    private SalesRepPolicyService.Target? _cust;
+    private decimal? _lat, _lng;
+    private int _radius = 100;
+    private long _repId, _routeId;
+    private DateTime? _planDate = DateTime.Today;
+    private bool _loading = true, _busy, _routeTried, _rcTried;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            (_reps, _areas) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_profiles.GetReps(), _svc.GetAreas()); });
+            var active = _reps.Where(r => r.Active).ToList();
+            if (active.Count == 1) await SelectRepAsync(active[0].Id);
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private async Task SelectRepAsync(long repId)
+    {
+        _repId = repId; _routeId = 0; _lines = new(); NewRoute(); NewRouteCustomer();
+        await LoadRoutesAsync();
+        await LoadPlanAsync();
+    }
+
+    private async Task LoadRoutesAsync()
+    {
+        try { _routes = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetRoutes(_repId); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private async Task LoadPlanAsync()
+    {
+        if (_repId == 0) return;
+        var date = (_planDate ?? DateTime.Today).Date;
+        try { _plan = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.PlanFor(_repId, date); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private async Task PlanDateChangedAsync(DateTime? d) { _planDate = d ?? DateTime.Today; await LoadPlanAsync(); }
+
+    private async Task SelectRouteAsync(SalesRepVisitService.RouteRow r)
+    {
+        _routeId = r.Id;
+        _route = new() { Id = r.Id, Name = r.Name, Rep_Id = r.Rep_Id, Area_Id = r.Area_Id, Active = r.Active };
+        _routeTried = false;
+        NewRouteCustomer();
+        await LoadLinesAsync();
+    }
+
+    private async Task LoadLinesAsync()
+    {
+        long id = _routeId;
+        try { _lines = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetRouteCustomers(id); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private void NewRoute() { _route = new() { Active = true, Rep_Id = _repId }; _routeTried = false; }
+
+    private async Task SaveRouteAsync()
+    {
+        _routeTried = true;
+        if (string.IsNullOrWhiteSpace(_route.Name)) return;
+        _busy = true; _error = null;
+        var input = _route; input.Rep_Id = _repId;
+        try
+        {
+            long id = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.SaveRoute(input); });
+            Snackbar.Add(Tr("FSWRouteSaved"), Severity.Success);
+            await LoadRoutesAsync();
+            var row = _routes.FirstOrDefault(r => r.Id == id);
+            if (row != null) await SelectRouteAsync(row);
+            await LoadPlanAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private void NewRouteCustomer()
+    {
+        _rc = new() { Route_Id = _routeId, Visit_Day = (int)DateTime.Today.DayOfWeek, Frequency = 1, Sequence = (_lines.Count == 0 ? 0 : _lines.Max(l => l.Sequence)) + 1 };
+        _cust = null; _lat = null; _lng = null; _radius = 100; _rcTried = false;
+    }
+
+    private void EditRouteCustomer(SalesRepVisitService.RouteCustomerRow r)
+    {
+        _rc = new() { Id = r.Id, Route_Id = r.Route_Id, Customer_Id = r.Customer_Id, Visit_Day = r.Visit_Day, Frequency = r.Frequency, Week_Parity = r.Week_Parity, Sequence = r.Sequence };
+        _cust = new SalesRepPolicyService.Target { Id = r.Customer_Id, Name = r.Customer_Name };
+        _lat = r.Latitude; _lng = r.Longitude; _radius = r.Geofence_Radius_M ?? 100; _rcTried = false;
+    }
+
+    private async Task SaveRouteCustomerAsync()
+    {
+        _rcTried = true;
+        if (_cust is null) return;
+        _busy = true; _error = null;
+        var input = _rc; input.Route_Id = _routeId; input.Customer_Id = _cust.Id;
+        decimal? lat = _lat, lng = _lng; int radius = _radius;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                _svc.SaveRouteCustomer(input);
+                _svc.SaveCustomerGeo(input.Customer_Id, lat, lng, radius);
+            });
+            Snackbar.Add(Tr("FSWCustomerSaved"), Severity.Success);
+            await LoadLinesAsync();
+            await LoadRoutesAsync();
+            await LoadPlanAsync();
+            NewRouteCustomer();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task RemoveAsync(SalesRepVisitService.RouteCustomerRow r)
+    {
+        bool? ok = await DialogService.ShowMessageBoxAsync(Tr("FSWRemoveTitle"), Tr("FSWRemoveConfirm", r.Customer_Name), yesText: Tr("FSWRemove"), cancelText: Tr("FSZCancel"));
+        if (ok != true) return;
+        _busy = true; _error = null;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.RemoveRouteCustomer(r.Id); });
+            Snackbar.Add(Tr("FSWRemoved"), Severity.Success);
+            if (_rc.Id == r.Id) NewRouteCustomer();
+            await LoadLinesAsync();
+            await LoadRoutesAsync();
+            await LoadPlanAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private Task<IEnumerable<SalesRepPolicyService.Target>> SearchCustomersAsync(string search, CancellationToken ct) =>
+        Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (IEnumerable<SalesRepPolicyService.Target>)_policies.SearchTargets(SalesRepPolicyService.TargetKind.Customer, search); }, ct);
+
+    private string DayName(int d) => LangService.CurrentCultureInfo.DateTimeFormat.GetDayName((DayOfWeek)d);
+    private string WeekAB(int p) => Tr(p == 1 ? "FSWWeekA" : "FSWWeekB");
+    private string FreqText(SalesRepVisitService.RouteCustomerRow r) => r.Frequency switch
+    {
+        2 => Tr("FSWFreq_2") + " — " + WeekAB(r.Week_Parity ?? 1),
+        4 => Tr("FSWFreq_4") + " — " + Tr("FSWWeekN", r.Week_Parity ?? 1),
+        _ => Tr("FSWFreq_1"),
+    };
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

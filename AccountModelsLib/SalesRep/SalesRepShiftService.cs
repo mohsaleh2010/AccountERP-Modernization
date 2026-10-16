@@ -236,6 +236,7 @@ GROUP BY u.Item_id").ToList();
                 throw new InvalidOperationException("يوجد تحميل للسيارة بانتظار تأكيد المندوب؛ أكّده أو أغلقه بعجز أولاً.");
             var rows = BuildStock(opp, shift, rep);
             RefreshCash(opp, shift, rep);
+            SalesRepVisitService.CloseOpenVisits(opp, shift.Id);
             shift.Status = (int)SalesRepShiftStatus.Closing;
             shift.StampEdit();
             opp.db.SaveChanges();
@@ -379,6 +380,7 @@ GROUP BY u.Item_id").ToList();
                 Link(opp, shift.Id, SalesRepDocType.JournalEntry, entryId, rep.Branch_Id);
             }
 
+            SalesRepVisitService.CloseOpenVisits(opp, shift.Id);
             shift.Status = (int)SalesRepShiftStatus.Closed;
             shift.Closed_At = DateTime.Now;
             shift.Closed_By = Common.User_Id;
@@ -541,6 +543,8 @@ GROUP BY u.Item_id").ToList();
                 opp.db.SalesRep_Shift_Stock.Add(row);
             }
             opp.db.SaveChanges();
+            // المرحلة 6: خطة اليوم تُثبَّت عند الفتح من خطوط المندوب النشطة.
+            SalesRepVisitService.MaterializePlan(opp, shift);
             return shift.Id;
         }
 

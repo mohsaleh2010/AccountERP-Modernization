@@ -418,8 +418,13 @@ SELECT CAST(ISNULL(MAX(Invoice_Id), 0) + 1 AS bigint) AS Value FROM Invoices_Lis
                 vouchers.SavePartyVoucherInTx(opp, 2, 1, ctx.Cash_Box_Id, (h.Invoice_Date ?? DateTime.Today).Date, 0, "رد نقدى لمرتجع المندوب " + ctx.Rep_Name,
                     net, input.Customer_Id, vouchers.GetFactor(cur), Common.InvoiceReverse_Type_Id, returnId);
             }
+            var docs = new List<(SalesRepDocType, long)> { (SalesRepDocType.SaleReturn, returnId) };
             foreach (long orderMoneyId in VouchersOfReturn(opp, returnId))
+            {
                 SalesRepSaleService.Link(opp, ctx.Shift_Id.Value, SalesRepDocType.CashVoucher, orderMoneyId, ctx.Branch_Id);
+                docs.Add((SalesRepDocType.CashVoucher, orderMoneyId));
+            }
+            SalesRepVisitService.Attach(opp, ctx.Shift_Id.Value, input.Customer_Id, SalesRepVisitResult.Return, docs.ToArray());
 
             var used = opp.db.SalesRep_Approvals.Where(a => a.Ref_Document_Guid == input.Doc_Guid && a.Status == (int)SalesRepApprovalStatus.Approved && a.Ref_Doc_Id == null).ToList();
             foreach (var a in used) { a.Ref_Doc_Id = returnId; a.Shift_Id ??= ctx.Shift_Id; a.StampEdit(); }

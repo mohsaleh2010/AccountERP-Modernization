@@ -256,6 +256,119 @@
             </div>
         }
 
+        @* ===== المرحلة 6: خطة اليوم والزيارات (تُثبَّت عند فتح الوردية؛ كل مستند لعميل يُربط بزيارته تلقائياً) ===== *@
+        @if (_shift != null)
+        {
+            bool visitsOpen = _shift.Status != (int)SalesRepShiftStatus.Closing;
+            <div class="inv-card ss-gap">
+                <h2 class="ss-sec"><MudIcon Icon="@Icons.Material.Filled.Route" Color="Color.Primary" Size="Size.Small" />@Tr("FSWDayPlan")</h2>
+                <div class="ss-kpis">
+                    <div class="ss-kpi"><div class="k">@Tr("FSWKpiPlanned")</div><div class="v ss-num">@_visits.Count(v => v.Planned)</div></div>
+                    <div class="ss-kpi"><div class="k">@Tr("FSWKpiVisited")</div><div class="v ss-num">@_visits.Count(v => v.Planned && !v.IsMissed)</div></div>
+                    <div class="ss-kpi"><div class="k">@Tr("FSWKpiUnplanned")</div><div class="v ss-num">@_visits.Count(v => !v.Planned)</div></div>
+                    <div class="ss-kpi"><div class="k">@Tr("FSWKpiNoSale")</div><div class="v ss-num">@_visits.Count(v => v.Result == (int)SalesRepVisitResult.NoSale)</div></div>
+                </div>
+                <div class="ss-hint ss-gap">@Tr("FSWDayPlanHint")</div>
+                @if (visitsOpen)
+                {
+                    <div class="ss-acts" style="align-items:center">
+                        <MudAutocomplete T="SalesRepProfileService.Option" @bind-Value="_visitCustomer" SearchFunc="SearchCustomersAsync" ToStringFunc="@(o => o?.Name ?? "")"
+                                         Label="@Tr("FSWVisitCustomer")" Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true" DebounceInterval="300" Style="min-width:240px" />
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login" Disabled="@(_busy || _visitCustomer == null)"
+                                   OnClick="@(() => CheckInAsync(_visitCustomer!.Id))">@Tr("FSWCheckIn")</MudButton>
+                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Refresh" Disabled="@_busy" OnClick="RefreshPlanAsync">@Tr("FSWRefreshPlan")</MudButton>
+                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AltRoute" Href="/salesrep/routes">@Tr("FSWTitle")</MudButton>
+                    </div>
+                }
+                @if (_visits.Count == 0)
+                {
+                    <div class="inv-empty ss-gap" role="status"><MudIcon Icon="@Icons.Material.Filled.EventBusy" Size="Size.Large" /><div>@Tr("FSWNoVisits")</div></div>
+                }
+                else
+                {
+                    <MudTable Items="@_visits" T="SalesRepVisitService.VisitRow" Elevation="0" Class="inv-table ss-gap" Breakpoint="Breakpoint.Sm" Dense="true" Hover="true">
+                        <HeaderContent>
+                            <MudTh>@Tr("FSWCustomer")</MudTh><MudTh>@Tr("FSWVisitStatus")</MudTh><MudTh>@Tr("FSWCheckInAt")</MudTh><MudTh>@Tr("FSWGeo")</MudTh><MudTh>@Tr("FSWDocs")</MudTh><MudTh></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="@Tr("FSWCustomer")">
+                                <b>@context.Customer_Name</b>
+                                @if (!context.Planned) { <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@Tr("FSWUnplanned")</MudChip> }
+                            </MudTd>
+                            <MudTd DataLabel="@Tr("FSWVisitStatus")">
+                                <MudChip T="string" Size="Size.Small" Color="@VisitColor(context)" Icon="@VisitIcon(context)">@VisitText(context)</MudChip>
+                                @if (context.Result == (int)SalesRepVisitResult.NoSale)
+                                {
+                                    <span class="ss-hint">@context.No_Sale_Reason</span>
+                                    @if (context.Has_Photo) { <MudIcon Icon="@Icons.Material.Filled.PhotoCamera" Size="Size.Small" aria-label="@Tr("FSBPhotoShort")" /> }
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="@Tr("FSWCheckInAt")" Class="ss-num">@(context.Check_In_At?.ToString("HH:mm") ?? "—")@(context.Check_Out_At == null ? "" : " – " + context.Check_Out_At.Value.ToString("HH:mm"))</MudTd>
+                            <MudTd DataLabel="@Tr("FSWGeo")">
+                                @if (context.Inside_Geofence == true) { <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Place">@Tr("FSWInside", context.Distance_From_Customer_M ?? 0)</MudChip> }
+                                else if (context.Inside_Geofence == false) { <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.WrongLocation">@Tr("FSWOutside", context.Distance_From_Customer_M ?? 0)</MudChip> }
+                                else { <span class="ss-hint">—</span> }
+                            </MudTd>
+                            <MudTd DataLabel="@Tr("FSWDocs")" Class="ss-num">@context.Docs_Count</MudTd>
+                            <MudTd>
+                                @if (visitsOpen)
+                                {
+                                    @if (context.IsOpen)
+                                    {
+                                        <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Logout" Disabled="@_busy" OnClick="@(() => CheckOutAsync(context.Id))"
+                                                   aria-label="@Tr("FSWCheckOutOf", context.Customer_Name)">@Tr("FSWCheckOut")</MudButton>
+                                    }
+                                    else if (context.Result == null)
+                                    {
+                                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login" Disabled="@_busy" OnClick="@(() => CheckInAsync(context.Customer_Id))"
+                                                   aria-label="@Tr("FSWCheckInOf", context.Customer_Name)">@Tr("FSWCheckIn")</MudButton>
+                                    }
+                                    @if (context.Result == null)
+                                    {
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning" StartIcon="@Icons.Material.Filled.DoNotDisturbOn" Disabled="@_busy" OnClick="@(() => OpenNoSaleAsync(context))"
+                                                   aria-label="@Tr("FSWNoSaleOf", context.Customer_Name)">@Tr("FSWNoSale")</MudButton>
+                                    }
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </div>
+        }
+
+        @* ===== لا بيع: سبب إلزامى، وصورة لو السبب يطلبها ===== *@
+        @if (_panel == Panel.NoSale && _noSaleVisit != null)
+        {
+            var nsReason = _nsReasons.FirstOrDefault(r => r.Id == _nsReason);
+            <div class="inv-card ss-gap">
+                <h2 class="ss-sec"><MudIcon Icon="@Icons.Material.Filled.DoNotDisturbOn" Color="Color.Warning" Size="Size.Small" />@Tr("FSWNoSaleOf", _noSaleVisit.Customer_Name)</h2>
+                <div class="ss-kpis">
+                    <MudSelect T="long" @bind-Value="_nsReason" Label="@Tr("FSWNoSaleReason")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true"
+                               ToStringFunc="@(v => _nsReasons.FirstOrDefault(r => r.Id == v)?.Name ?? "")">
+                        @foreach (var r in _nsReasons) { <MudSelectItem T="long" Value="@r.Id">@r.Name</MudSelectItem> }
+                    </MudSelect>
+                    <MudTextField T="string" @bind-Value="_nsNotes" Label="@Tr("FSVNotes")" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="1000" />
+                </div>
+                <div class="ss-acts" style="align-items:center">
+                    <MudFileUpload T="IBrowserFile" FilesChanged="OnNoSalePhotoAsync" Accept=".jpg,.jpeg,.png,.webp">
+                        <ActivatorContent>
+                            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="@(_nsPhoto == null && nsReason?.Requires_Photo == true ? Color.Error : Color.Primary)"
+                                       StartIcon="@Icons.Material.Filled.AddAPhoto">@Tr(_nsPhoto == null ? "FSTAddPhoto" : "FSTReplacePhoto")</MudButton>
+                        </ActivatorContent>
+                    </MudFileUpload>
+                    @if (_nsPhoto != null) { <span class="ss-hint"><MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Success" aria-hidden="true" /> @_nsPhotoName</span> }
+                    else if (nsReason?.Requires_Photo == true) { <span class="ss-hint" role="alert" style="color:var(--mud-palette-error)">@Tr("FSTPhotoRequired")</span> }
+                </div>
+                <div class="ss-acts" style="justify-content:flex-end">
+                    <MudButton Variant="Variant.Text" OnClick="ClosePanel" Disabled="@_busy">@Tr("Cancel")</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Warning" Disabled="@(_busy || nsReason == null || (nsReason.Requires_Photo && _nsPhoto == null))" OnClick="SaveNoSaleAsync">
+                        @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                        @Tr("FSWNoSaleSave")
+                    </MudButton>
+                </div>
+            </div>
+        }
+
         @* ===== مستندات الوردية: فواتير البيع وإذونات النقدية والشيكات ===== *@
         @if (_shift != null)
         {
@@ -477,7 +590,7 @@
 @code {
     [SupplyParameterFromQuery(Name = "rep")] public long? RepQuery { get; set; }
 
-    private enum Panel { None, Load, Unload, Damaged, Collect, Cheque }
+    private enum Panel { None, Load, Unload, Damaged, Collect, Cheque, NoSale }
 
     private class LineEdit
     {
@@ -539,6 +652,80 @@
     private decimal? _chqAmount;
     private Guid _chqGuid = Guid.NewGuid();
     private SalesRepSaleService.CheckResult? _chqCheck;
+
+    private readonly SalesRepVisitService _visitSvc = new();
+    private List<SalesRepVisitService.VisitRow> _visits = new();
+    private List<SalesRepVisitService.ReasonRow> _nsReasons = new();
+    private SalesRepProfileService.Option? _visitCustomer;
+    private SalesRepVisitService.VisitRow? _noSaleVisit;
+    private long _nsReason;
+    private string? _nsNotes, _nsPhotoType, _nsPhotoName;
+    private byte[]? _nsPhoto;
+
+    private async Task CheckInAsync(long customerId)
+    {
+        if (_rep == null) return;
+        long repId = _rep.Id;
+        await RunAsync(() => _visitSvc.CheckIn(repId, customerId), "FSWCheckedIn");
+        if (_error == null) _visitCustomer = null;
+    }
+
+    private async Task CheckOutAsync(long visitId)
+    {
+        if (_rep == null) return;
+        long repId = _rep.Id;
+        await RunAsync(() => { _visitSvc.CheckOut(repId, visitId); return 0; }, "FSWCheckedOut");
+    }
+
+    private async Task RefreshPlanAsync()
+    {
+        if (_rep == null) return;
+        long repId = _rep.Id;
+        await RunAsync(() => _visitSvc.RefreshPlan(repId), "FSWPlanRefreshed");
+    }
+
+    private async Task OpenNoSaleAsync(SalesRepVisitService.VisitRow v)
+    {
+        _noSaleVisit = v; _nsReason = 0; _nsNotes = null; _nsPhoto = null; _nsPhotoType = _nsPhotoName = null;
+        _panel = Panel.NoSale;
+        try { _nsReasons = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _visitSvc.GetReasons(); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private async Task OnNoSalePhotoAsync(IBrowserFile? file)
+    {
+        if (file == null) return;
+        if (file.Size > SalesRepReturnService.MaxPhotoBytes) { Snackbar.Add(Tr("FSTPhotoTooBig"), Severity.Warning); return; }
+        using var ms = new MemoryStream();
+        await file.OpenReadStream(SalesRepReturnService.MaxPhotoBytes).CopyToAsync(ms);
+        _nsPhoto = ms.ToArray(); _nsPhotoType = file.ContentType; _nsPhotoName = file.Name;
+    }
+
+    private async Task SaveNoSaleAsync()
+    {
+        if (_rep == null || _noSaleVisit == null) return;
+        long repId = _rep.Id;
+        var input = new SalesRepVisitService.NoSaleInput { Customer_Id = _noSaleVisit.Customer_Id, Reason_Id = _nsReason, Notes = _nsNotes, Photo = _nsPhoto, Photo_Content_Type = _nsPhotoType };
+        await RunAsync(() => _visitSvc.RecordNoSale(repId, input), "FSWNoSaleSaved");
+        if (_error == null) { _noSaleVisit = null; _nsPhoto = null; }
+    }
+
+    private Color VisitColor(SalesRepVisitService.VisitRow v) => v.Result switch
+    {
+        null => v.IsOpen ? Color.Info : v.IsMissed ? Color.Default : Color.Default,
+        (int)SalesRepVisitResult.NoSale => Color.Warning,
+        _ => Color.Success,
+    };
+
+    private string VisitIcon(SalesRepVisitService.VisitRow v) => v.Result switch
+    {
+        null => v.IsOpen ? Icons.Material.Filled.Storefront : v.IsMissed ? Icons.Material.Filled.Schedule : Icons.Material.Filled.Logout,
+        (int)SalesRepVisitResult.NoSale => Icons.Material.Filled.DoNotDisturbOn,
+        _ => Icons.Material.Filled.CheckCircle,
+    };
+
+    private string VisitText(SalesRepVisitService.VisitRow v) => v.Result != null ? Tr("FSWResult_" + v.Result)
+        : v.IsOpen ? Tr("FSWInVisit") : v.IsMissed ? Tr("FSWNotVisited") : Tr("FSWLeftNoDoc");
 
     private bool ChequeReady => _chqCustomer != null && _chqBank > 0 && !string.IsNullOrWhiteSpace(_chqNo) && _chqDue != null && _chqAmount > 0;
 
@@ -672,6 +859,7 @@
                         cash: shift?.Status == (int)SalesRepShiftStatus.Closing ? _svc.GetShiftCash(shift.Id) : null,
                         docs: shift == null ? new List<SalesRepSaleService.ShiftDoc>() : _saleSvc.GetShiftDocs(shift.Id),
                         cheques: shift == null ? new List<SalesRepChequeService.ChequeRow>() : _chqSvc.GetShiftCheques(shift.Id),
+                        visits: shift == null ? new List<SalesRepVisitService.VisitRow>() : _visitSvc.GetShiftVisits(shift.Id),
                         boxes: MainBoxes(rep));
             });
             _shift = data.shift; _vanStock = data.van; _damagedStock = data.damaged; _pending = data.pending; _history = data.history; _mainStores = data.stores;
@@ -679,6 +867,7 @@
             _cash = data.cash; _cashCounted = data.cash?.Counted; _remitAmount = null; _chargeShortage = true;
             _docs = data.docs;
             _cheques = data.cheques;
+            _visits = data.visits;
             _boxes = data.boxes;
             if (_remitBox != 0 && !_boxes.Any(b => b.Id == _remitBox)) _remitBox = 0;
             if (_remitBox == 0) _remitBox = _boxes.FirstOrDefault()?.Id ?? 0;

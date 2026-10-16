@@ -194,6 +194,7 @@ WHERE Bank_Type = 1 AND Transaction_type = 1").AsEnumerable().First();
             SalesRepSaleService.Link(opp, ctx.Shift_Id.Value, SalesRepDocType.Cheque, chequeId, ctx.Branch_Id);
             var link = opp.db.SalesRep_Document_Links.First(l => l.Doc_Type == (int)SalesRepDocType.Cheque && l.Doc_Id == chequeId);
             link.Doc_Guid = input.Doc_Guid;
+            SalesRepVisitService.Attach(opp, ctx.Shift_Id.Value, input.Customer_Id, SalesRepVisitResult.Collection, (SalesRepDocType.Cheque, chequeId));
             var used = opp.db.SalesRep_Approvals.Where(a => a.Ref_Document_Guid == input.Doc_Guid && a.Status == (int)SalesRepApprovalStatus.Approved && a.Ref_Doc_Id == null).ToList();
             foreach (var a in used) { a.Ref_Doc_Id = chequeId; a.Shift_Id ??= ctx.Shift_Id; a.StampEdit(); }
             opp.db.SaveChanges();

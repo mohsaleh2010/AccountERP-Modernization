@@ -214,8 +214,13 @@ namespace AccountModelsLib.SalesRep
                 vouchers.SavePartyVoucherInTx(opp, 1, 0, ctx.Cash_Box_Id, (h.Invoice_Date ?? DateTime.Today).Date, 0, "بيع نقدى للمندوب " + ctx.Rep_Name,
                     net, h.Customer_Id ?? 0, vouchers.GetFactor(cur), Common.Invoice_Type_Id, invoiceId);
             }
+            var docs = new List<(SalesRepDocType, long)> { (SalesRepDocType.SaleInvoice, invoiceId) };
             foreach (long orderMoneyId in VouchersOfInvoice(opp, invoiceId))
+            {
                 Link(opp, ctx.Shift_Id.Value, SalesRepDocType.CashVoucher, orderMoneyId, ctx.Branch_Id);
+                docs.Add((SalesRepDocType.CashVoucher, orderMoneyId));
+            }
+            SalesRepVisitService.Attach(opp, ctx.Shift_Id.Value, h.Customer_Id ?? 0, SalesRepVisitResult.Sale, docs.ToArray());
 
             var used = opp.db.SalesRep_Approvals.Where(a => a.Ref_Document_Guid == docGuid && a.Status == (int)SalesRepApprovalStatus.Approved && a.Ref_Doc_Id == null).ToList();
             foreach (var a in used) { a.Ref_Doc_Id = invoiceId; a.Shift_Id ??= ctx.Shift_Id; a.StampEdit(); }
@@ -237,6 +242,7 @@ namespace AccountModelsLib.SalesRep
             var v = vouchers.SavePartyVoucherInTx(opp, 1, 0, ctx.Cash_Box_Id, DateTime.Today, 0, string.IsNullOrWhiteSpace(notes) ? "تحصيل المندوب " + ctx.Rep_Name : notes.Trim(),
                 Math.Round(amount, 2), customerId, vouchers.GetFactor(cur));
             Link(opp, ctx.Shift_Id.Value, SalesRepDocType.CashVoucher, v.OrderId, ctx.Branch_Id);
+            SalesRepVisitService.Attach(opp, ctx.Shift_Id.Value, customerId, SalesRepVisitResult.Collection, (SalesRepDocType.CashVoucher, v.OrderId));
             return v.OrderId;
         });
 

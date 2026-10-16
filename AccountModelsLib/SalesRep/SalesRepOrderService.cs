@@ -401,6 +401,8 @@ GROUP BY al.Van_Unit_Item_Id").ToList();
                 SalesRepSaleService.Link(opp, ctx.Shift_Id.Value, SalesRepDocType.CashVoucher, v.OrderId, ctx.Branch_Id);
                 voucherId = v.OrderId;
             }
+            SalesRepVisitService.Attach(opp, ctx.Shift_Id.Value, input.Customer_Id, SalesRepVisitResult.Order,
+                voucherId == null ? new[] { (SalesRepDocType.CustomerOrder, orderId) } : new[] { (SalesRepDocType.CustomerOrder, orderId), (SalesRepDocType.CashVoucher, voucherId.Value) });
 
             var used = opp.db.SalesRep_Approvals.Where(a => a.Ref_Document_Guid == input.Doc_Guid && a.Status == (int)SalesRepApprovalStatus.Approved && a.Ref_Doc_Id == null).ToList();
             foreach (var a in used) { a.Ref_Doc_Id = orderId; a.Shift_Id ??= ctx.Shift_Id; a.StampEdit(); }
@@ -476,6 +478,7 @@ GROUP BY al.Van_Unit_Item_Id").ToList();
             var b = Build(opp, ctx, input);
             var orders = new CustomerOrdersService(opp);
             long? invoiceId = null;
+            long? restVoucherId = null;
             decimal applied = 0, collected = 0;
             if (b.InvL != null)
             {
@@ -492,6 +495,7 @@ GROUP BY al.Van_Unit_Item_Id").ToList();
                     var v = vouchers.SavePartyVoucherInTx(opp, 1, 0, ctx.Cash_Box_Id, DateTime.Today, 0, $"تحصيل تسليم الطلبية {b.Order.Order_No} — المندوب {ctx.Rep_Name}",
                         rest, b.Order.Customer_Id ?? 0, vouchers.GetFactor(cur), Common.Invoice_Type_Id, invoiceId.Value);
                     SalesRepSaleService.Link(opp, ctx.Shift_Id.Value, SalesRepDocType.CashVoucher, v.OrderId, ctx.Branch_Id);
+                    restVoucherId = v.OrderId;
                     collected = rest;
                 }
                 else if (applied == 0 && input.Collect_Cash) collected = b.Check.Net_Total;
@@ -521,6 +525,9 @@ GROUP BY al.Van_Unit_Item_Id").ToList();
             opp.db.SalesRep_Order_Deliveries.Add(d);
             opp.db.SaveChanges();
             SalesRepSaleService.Link(opp, ctx.Shift_Id.Value, SalesRepDocType.CustomerOrder, input.Order_Id, ctx.Branch_Id);
+            var docs = new List<(SalesRepDocType, long)> { (SalesRepDocType.CustomerOrder, input.Order_Id) };
+            if (restVoucherId != null) docs.Add((SalesRepDocType.CashVoucher, restVoucherId.Value));
+            SalesRepVisitService.Attach(opp, ctx.Shift_Id.Value, order.Customer_Id ?? 0, SalesRepVisitResult.Delivery, docs.ToArray());
             return new DeliveryResult { Delivery_Id = d.Id, Invoice_Id = invoiceId, Order_Status = order.Status ?? 0 };
         });
 
