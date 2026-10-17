@@ -3609,4 +3609,43 @@
   <data name="FSKBalance" xml:space="preserve"><value>الرصيد</value></data>
   <data name="FSKOver90" xml:space="preserve"><value>أكثر من 90</value></data>
   <data name="FSKTotal" xml:space="preserve"><value>الإجمالى</value></data>
+  <data name="FSYTitle" xml:space="preserve"><value>بنوك طرق دفع المندوبين</value></data>
+  <data name="FSYSub" xml:space="preserve"><value>حدد البنك الذى يدخله تحصيل المندوب بكل طريقة دفع غير نقدية. المندوب يختار الطريقة فقط، والنقدى يبقى فى صندوق عهدته.</value></data>
+  <data name="FSYNoMethods" xml:space="preserve"><value>لا توجد طرق دفع غير نقدية فى النظام؛ أضفها من جدول طرق الدفع أولاً.</value></data>
+  <data name="FSYNew" xml:space="preserve"><value>ربط طريقة دفع ببنك</value></data>
+  <data name="FSYEdit" xml:space="preserve"><value>تعديل الربط</value></data>
+  <data name="FSYMethod" xml:space="preserve"><value>طريقة الدفع</value></data>
+  <data name="FSYMethodRequired" xml:space="preserve"><value>اختر طريقة الدفع</value></data>
+  <data name="FSYBranch" xml:space="preserve"><value>الفرع</value></data>
+  <data name="FSYAllBranches" xml:space="preserve"><value>كل الفروع</value></data>
+  <data name="FSYBank" xml:space="preserve"><value>البنك</value></data>
+  <data name="FSYBankRequired" xml:space="preserve"><value>اختر البنك</value></data>
+  <data name="FSYActive" xml:space="preserve"><value>نشط</value></data>
+  <data name="FSYInactive" xml:space="preserve"><value>موقوف</value></data>
+  <data name="FSYStatus" xml:space="preserve"><value>الحالة</value></data>
+  <data name="FSYRulesHint" xml:space="preserve"><value>إعداد الفرع يسبق إعداد «كل الفروع». طريقة بلا بنك نشط لا تظهر للمندوب. التحصيل بها يدخل البنك مباشرة فلا يُحسب فى عهدة المندوب ولا يُعدّ عند الإقفال.</value></data>
+  <data name="FSYSave" xml:space="preserve"><value>حفظ</value></data>
+  <data name="FSYSaved" xml:space="preserve"><value>تم الحفظ</value></data>
+  <data name="FSYDeleted" xml:space="preserve"><value>تم الحذف</value></data>
+  <data name="FSYEmpty" xml:space="preserve"><value>لا يوجد ربط بعد؛ المندوبون يحصّلون نقداً فقط.</value></data>
+  <data name="FSYEditShort" xml:space="preserve"><value>تعديل</value></data>
+  <data name="FSYEditOf" xml:space="preserve"><value>تعديل ربط {0}</value></data>
+  <data name="FSYDeleteOf" xml:space="preserve"><value>حذف ربط {0}</value></data>
+  <data name="FSYDeleteConfirm" xml:space="preserve"><value>حذف هذا الربط؟</value></data>
+  <data name="FSYDeleteYes" xml:space="preserve"><value>حذف</value></data>
+  <data name="FSYMethodCashHint" xml:space="preserve"><value>يدخل صندوق عهدة المندوب</value></data>
+  <data name="FSYMethodBankHint" xml:space="preserve"><value>يدخل بنك الطريقة مباشرة؛ ليس فى العهدة</value></data>
+  <data name="FSYCashOnHand" xml:space="preserve"><value>نقدية العهدة</value></data>
+  <data name="FSYOverBy" xml:space="preserve"><value>تجاوز الحد بـ {0}</value></data>
+  <data name="FSYInBank" xml:space="preserve"><value>فى البنك</value></data>
+  <data name="FSYRemit" xml:space="preserve"><value>توريد جزئى</value></data>
+  <data name="FSYRemitHint" xml:space="preserve"><value>حوّل جزءاً من نقدية العهدة لصندوق رئيسى أثناء الوردية؛ ينخفض المتوقع عند الإقفال بنفس المبلغ.</value></data>
+  <data name="FSYRemitAvailable" xml:space="preserve"><value>المتاح {0}</value></data>
+  <data name="FSYRemitSave" xml:space="preserve"><value>توريد</value></data>
+  <data name="FSYRemitDone" xml:space="preserve"><value>تم التوريد</value></data>
+  <data name="FSYCashLimitWarn" xml:space="preserve"><value>النقدية بالعهدة بعد التحصيل {0} تتجاوز الحد {1}؛ ورِّد النقدية (توريد جزئى).</value></data>
+  <data name="FSYNonCashHint" xml:space="preserve"><value>التحصيل غير النقدى دخل البنوك مباشرة؛ يُعرض هنا للمراجعة فقط ولا يُعدّ ولا يُورَّد.</value></data>
+  <data name="FSYAlertsTitle" xml:space="preserve"><value>مندوبون تجاوزوا حد النقدية ({0})</value></data>
+  <data name="FSYAlertsHint" xml:space="preserve"><value>تحذير بلا منع: اطلب منهم التوريد الجزئى من شاشة الوردية.</value></data>
+  <data name="FSYExcess" xml:space="preserve"><value>الزيادة</value></data>
 </root>

@@ -42,6 +42,28 @@
 
     @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="sa-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
 
+    @* بقايا المرحلة 2: تنبيه المشرف — مندوبون نقدية عهدتهم فوق الحد الآن (تحذير بلا منع؛ التوريد الجزئى من شاشة الوردية). *@
+    @if (_cashAlerts.Count > 0)
+    {
+        <div class="inv-card sa-gap" role="status" aria-live="polite">
+            <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" />@Tr("FSYAlertsTitle", _cashAlerts.Count)</h2>
+            <div class="sa-hint">@Tr("FSYAlertsHint")</div>
+            <MudTable Items="@_cashAlerts" T="SalesRepShiftService.CashStatus" Elevation="0" Class="inv-table sa-gap" Breakpoint="Breakpoint.Sm" Dense="true">
+                <HeaderContent>
+                    <MudTh>@Tr("FSRRep")</MudTh><MudTh>@Tr("FSRBox")</MudTh><MudTh>@Tr("FSYCashOnHand")</MudTh><MudTh>@Tr("FSRMaxCash")</MudTh><MudTh>@Tr("FSYExcess")</MudTh><MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("FSRRep")"><b>@context.Rep_Name</b></MudTd>
+                    <MudTd DataLabel="@Tr("FSRBox")">@context.Cash_Box_Name</MudTd>
+                    <MudTd DataLabel="@Tr("FSYCashOnHand")" Class="sa-num">@context.Cash_On_Hand.ToString("N2")</MudTd>
+                    <MudTd DataLabel="@Tr("FSRMaxCash")" Class="sa-num">@context.Max_Cash_On_Hand?.ToString("N2")</MudTd>
+                    <MudTd DataLabel="@Tr("FSYExcess")" Class="sa-num"><MudChip T="string" Size="Size.Small" Color="Color.Error">@context.Excess.ToString("N2")</MudChip></MudTd>
+                    <MudTd><MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.MoveDown" Href="@($"/salesrep/shift?rep={context.Rep_Id}")">@Tr("FSYRemit")</MudButton></MudTd>
+                </RowTemplate>
+            </MudTable>
+        </div>
+    }
+
     <div class="inv-card sa-gap">
         @if (_loading)
         {
@@ -103,6 +125,7 @@
 
 @code {
     private readonly SalesRepSaleService _svc = new();
+    private List<SalesRepShiftService.CashStatus> _cashAlerts = new();
     private List<SalesRepSaleService.ApprovalRow> _rows = new();
     private readonly Dictionary<long, string?> _notes = new();
     private bool _loading = true, _busy, _pendingOnly = true;
@@ -126,6 +149,7 @@
         {
             bool pending = _pendingOnly;
             _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetApprovals(pending); });
+            _cashAlerts = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return new SalesRepShiftService().GetCashAlerts(); });
         }
         catch (Exception ex) { _error = Inner(ex); }
         finally { _loading = false; }

@@ -86,6 +86,15 @@
                 {
                     <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2" role="alert">@Tr("FSVNoOpenShift")</MudAlert>
                 }
+                @* بقايا المرحلة 2: طريقة دفع البيع النقدى؛ غير النقدى يدخل بنك الطريقة لا صندوق العهدة. *@
+                @if (_header.Is_Invoice_Agile != 1 && _repMethods.Count > 1 && !_isSaved)
+                {
+                    <MudSelect T="long" @bind-Value="_repMethodId" Label="@Tr("FSYMethod")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2" Style="max-width:320px"
+                               HelperText="@Tr(_repMethodId == AccountModelsLib.SalesRep.SalesRepShiftService.CashPaymentMethodId ? "FSYMethodCashHint" : "FSYMethodBankHint")"
+                               ToStringFunc="@(v => _repMethods.FirstOrDefault(m => m.Id == v)?.Name ?? "")">
+                        @foreach (var m in _repMethods) { <MudSelectItem T="long" Value="@m.Id">@m.Name</MudSelectItem> }
+                    </MudSelect>
+                }
                 @foreach (var w in _repWarnings)
                 {
                     <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2">@w</MudAlert>
@@ -541,6 +550,8 @@
     private List<string> _repWarnings = new();
     private string? _repApprovalReason;
     private bool _repBusy;
+    private List<AccountModelsLib.SalesRep.SalesRepPaymentService.Option> _repMethods = new();
+    private long _repMethodId = AccountModelsLib.SalesRep.SalesRepShiftService.CashPaymentMethodId;
     // فاتورة محفوظة مربوطة بوردية مندوب: تُعرض للقراءة فقط (التصحيح بمرتجع، كما فى أنظمة المبيعات الميدانية).
     private long? _repLinkedShiftId;
 
@@ -568,6 +579,7 @@
         {
             var repId = RepQuery!.Value;
             _repCtx = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return new AccountModelsLib.SalesRep.SalesRepSaleService().GetContext(repId); });
+            _repMethods = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return new AccountModelsLib.SalesRep.SalesRepPaymentService().GetMethodsForRep(repId); });
             _salesman = new SellerOption(_repCtx.Employee_Id, _repCtx.Rep_Name);
             _header.Salesman_Id = _repCtx.Employee_Id;
         }
@@ -581,6 +593,7 @@
         Is_Credit = _header.Is_Invoice_Agile == 1,
         Net_Total = _header.Net_Total ?? 0,
         Lines = AccountModelsLib.SalesRep.SalesRepSaleService.LinesOf(new AccountModelsLib.operations(), _invL_O, _invD_O),
+        Payment_Method_Id = _header.Is_Invoice_Agile == 1 ? 0 : _repMethodId,
     };
 
     private async Task CheckRepSaleAsync() => await RunRepAsync(false);
@@ -1488,7 +1501,8 @@
                 if (IsRepMode)
                 {
                     // خطة المندوبين المرحلة 3: نفس محرك الحفظ داخل معاملة واحدة مع فحوص المندوب وربط الوردية.
-                    new AccountModelsLib.SalesRep.SalesRepSaleService().SaveSale(RepQuery!.Value, _repDocGuid, _invL_O, _invD_O);
+                    new AccountModelsLib.SalesRep.SalesRepSaleService().SaveSale(RepQuery!.Value, _repDocGuid, _invL_O, _invD_O,
+                        paymentMethodId: _header.Is_Invoice_Agile == 1 ? 0 : _repMethodId);
                     return;
                 }
                 var rc = new Requests_ModelCls();

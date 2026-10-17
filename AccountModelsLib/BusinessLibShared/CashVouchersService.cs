@@ -105,11 +105,13 @@ namespace AccountModelsLib
 
         /// <summary>نفس SavePartyVoucher داخل معاملة المستدعى (بلا Commit/Rollback) — تحصيل المندوب على صندوق العهدة مربوطاً بورديته.</summary>
         public (long OrderId, long BoxLineId, long OrderNo) SavePartyVoucherInTx(operations opp, int transactionType, int reverse, long boxId, DateTime date, long orderNo, string manName, decimal cashValue,
-                                                                                 long partyId, decimal factor, int docType = 0, long docId = 0)
+                                                                                 long partyId, decimal factor, int docType = 0, long docId = 0,
+                                                                                 long paymentMethodId = 0, string paymentMethodName = "")
         {
             if (cashValue <= 0) throw new InvalidOperationException("Value must be greater than zero");
             if (partyId <= 0) throw new InvalidOperationException("Party is required");
-            var engine = new Money_Transaction_BoxOrderReportCLS();
+            // طريقة الدفع (Lookup_CashPaymentMethod) تُنسخ لسطر الصندوق/البنك بالمحرك؛ 0 = بلا تحديد كالأصل.
+            var engine = new Money_Transaction_BoxOrderReportCLS { Lookup_CashPaymentMethodId = paymentMethodId, Lookup_CashPaymentMethodName = paymentMethodName ?? "" };
             int excp = 0;
             string msg = "";
             {

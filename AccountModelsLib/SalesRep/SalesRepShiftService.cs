@@ -246,6 +246,98 @@ GROUP BY u.Item_id").ToList();
         public SalesRep_Shift_Cash GetShiftCash(long shiftId) => Read(opp => opp.db.SalesRep_Shift_Cash.AsNoTracking()
             .FirstOrDefault(c => c.Shift_Id == shiftId && c.Payment_Method_Id == CashPaymentMethodId));
 
+        public class PaymentRow
+        {
+            public long Payment_Method_Id { get; set; }
+            public string Method_Name { get; set; } = "";
+            public decimal Expected { get; set; }
+            public decimal? Counted { get; set; }
+            public decimal? Diff { get; set; }
+        }
+
+        /// <summary>
+        /// إجماليات الوردية لكل طريقة دفع (بقايا المرحلة 2): النقدى بعدّه وفرقه، وغير النقدى للعرض فقط (دخل بنك الطريقة مباشرة،
+        /// ليس فى عهدة المندوب ولا يُعدّ ولا يُورَّد). تُحسب لحظياً من أذونات الوردية حتى قبل بدء الإقفال.
+        /// </summary>
+        public List<PaymentRow> GetShiftPayments(long shiftId) => Read(opp =>
+        {
+            var rows = opp.db.SalesRep_Shift_Cash.AsNoTracking().Where(c => c.Shift_Id == shiftId && c.Payment_Method_Id == CashPaymentMethodId)
+                .Select(c => new PaymentRow { Payment_Method_Id = c.Payment_Method_Id, Expected = c.Expected, Counted = c.Counted, Diff = c.Diff }).ToList();
+            rows.AddRange(NonCashTotals(opp, shiftId).Select(t => new PaymentRow { Payment_Method_Id = t.Method_Id, Expected = t.Total }));
+            var names = opp.db.Lookup_CashPaymentMethod.AsNoTracking().ToDictionary(m => m.Id, m => m.Name ?? "");
+            foreach (var r in rows) r.Method_Name = names.TryGetValue(r.Payment_Method_Id, out var n) ? n : "";
+            return rows;
+        });
+
+        public class CashStatus
+        {
+            public long Rep_Id { get; set; }
+            public string Rep_Name { get; set; } = "";
+            public long? Shift_Id { get; set; }
+            public long Cash_Box_Id { get; set; }
+            public string Cash_Box_Name { get; set; } = "";
+            public decimal Cash_On_Hand { get; set; }
+            public decimal? Max_Cash_On_Hand { get; set; }
+            public bool Over => Max_Cash_On_Hand is decimal m && Cash_On_Hand > m;
+            public decimal Excess => Max_Cash_On_Hand is decimal m ? Math.Max(0, Cash_On_Hand - m) : 0;
+        }
+
+        /// <summary>رصيد عهدة المندوب الآن مقابل حده (شارة الوردية).</summary>
+        public CashStatus GetCashStatus(long repId) => Read(opp =>
+        {
+            var ctx = SalesRepSaleService.Context(opp, repId);
+            return new CashStatus
+            {
+                Rep_Id = repId, Rep_Name = ctx.Rep_Name, Shift_Id = ctx.Shift_Id, Cash_Box_Id = ctx.Cash_Box_Id, Cash_Box_Name = ctx.Cash_Box_Name,
+                Cash_On_Hand = ctx.Cash_On_Hand, Max_Cash_On_Hand = ctx.Max_Cash_On_Hand,
+            };
+        });
+
+        /// <summary>تنبيه المشرف: المندوبون النشطون ذوو وردية غير مقفلة ونقدية عهدتهم فوق الحد الآن، الأكبر تجاوزاً أولاً.</summary>
+        public List<CashStatus> GetCashAlerts() => Read(opp =>
+        {
+            var reps = opp.db.SalesRep_Reps.AsNoTracking().Where(r => r.Active && r.Max_Cash_On_Hand != null).Select(r => r.Id).ToList();
+            var open = opp.db.SalesRep_Shifts.AsNoTracking().Where(s => reps.Contains(s.Rep_Id) && s.Status != (int)SalesRepShiftStatus.Closed)
+                .Select(s => s.Rep_Id).Distinct().ToList();
+            var list = new List<CashStatus>();
+            foreach (long repId in open)
+            {
+                var ctx = SalesRepSaleService.Context(opp, repId);
+                var s = new CashStatus
+                {
+                    Rep_Id = repId, Rep_Name = ctx.Rep_Name, Shift_Id = ctx.Shift_Id, Cash_Box_Id = ctx.Cash_Box_Id, Cash_Box_Name = ctx.Cash_Box_Name,
+                    Cash_On_Hand = ctx.Cash_On_Hand, Max_Cash_On_Hand = ctx.Max_Cash_On_Hand,
+                };
+                if (s.Over) list.Add(s);
+            }
+            return list.OrderByDescending(s => s.Excess).ToList();
+        });
+
+        /// <summary>
+        /// توريد جزئى أثناء الوردية (بقايا المرحلة 2): تحويل من صندوق العهدة إلى صندوق رئيسى مربوط بالوردية، فينخفض المتوقع عند الإقفال.
+        /// للوردية المفتوحة فقط (بعد بدء الإقفال يُورَّد من شاشة الإقفال). يرجع رقم إذن الصرف من العهدة.
+        /// </summary>
+        public long RemitPartial(long shiftId, decimal amount, long toBoxId, string notes = null) => Tx(opp =>
+        {
+            var (shift, rep) = OpenShiftAndRep(opp, shiftId, allowClosing: true);
+            if (shift.Status == (int)SalesRepShiftStatus.Closing) throw new InvalidOperationException("بدأ الإقفال؛ ورِّد من خطوة الإقفال.");
+            amount = Math.Round(amount, 2);
+            if (amount <= 0) throw new InvalidOperationException("المبلغ يجب أن يكون أكبر من صفر.");
+            if (toBoxId <= 0) throw new InvalidOperationException("اختر الصندوق الرئيسى للتوريد.");
+            if (toBoxId == rep.Cash_Box_Id) throw new InvalidOperationException("اختر صندوقاً رئيسياً غير صندوق العهدة.");
+            decimal onHand = Common.RoundMe(new Money_Transaction_BoxOrderReportCLS().GetBank_Balance(ref opp, rep.Cash_Box_Id, true));
+            if (amount > onHand) throw new InvalidOperationException($"المبلغ أكبر من نقدية العهدة ({onHand:N2}).");
+            var box = Box(opp, rep.Cash_Box_Id);
+            var to = Box(opp, toBoxId);
+            var vouchers = new CashVouchersService();
+            string text = string.IsNullOrWhiteSpace(notes) ? $"توريد جزئى — وردية مندوب {shift.Id}" : notes.Trim();
+            var t = vouchers.SaveTransferInTx(opp, box.Id, box.Name, box.CurrencyId, to.Id, to.Name, to.CurrencyId, DateTime.Today, amount,
+                vouchers.GetPairFactor(box.CurrencyId, to.CurrencyId), "توريد المندوب", text);
+            Link(opp, shift.Id, SalesRepDocType.CashVoucher, t.OrderIdFrom, rep.Branch_Id);
+            opp.db.SaveChanges();
+            return t.OrderIdFrom;
+        });
+
         /// <summary>
         /// عدّ النقدية فى صندوق العهدة عند الإقفال. المتوقع = رصيد الصندوق الدفترى الآن (كل تحصيلات الوردية وإذوناتها تمر عليه)،
         /// والفرق = المعدود − المتوقع. يرجع سطر النقدية.
@@ -343,6 +435,7 @@ GROUP BY u.Item_id").ToList();
             var box = Box(opp, rep.Cash_Box_Id);
             cash.Expected = Common.RoundMe(new Money_Transaction_BoxOrderReportCLS().GetBank_Balance(ref opp, rep.Cash_Box_Id, true));
             cash.Diff = cash.Counted - cash.Expected;
+            RefreshNonCash(opp, shift, rep);
             var vouchers = new CashVouchersService();
             long branchId = rep.Branch_Id ?? Common.Branch_Id;
             string shiftNote = $"وردية مندوب {shift.Id}";
@@ -415,8 +508,39 @@ GROUP BY u.Item_id").ToList();
             if (cash.Counted != null) cash.Diff = cash.Counted - expected;
             shift.Cash_Expected = expected;
             shift.Cash_Diff = cash.Diff;
+            RefreshNonCash(opp, shift, rep);
             opp.db.SaveChanges();
             return cash;
+        }
+
+        public class MethodTotal { public long Method_Id { get; set; } public decimal Total { get; set; } }
+
+        /// <summary>صافى أذونات الوردية غير النقدية لكل طريقة: القبض − الصرف من أسطر الأذونات المربوطة بالوردية والموسومة بطريقة غير النقدى.</summary>
+        private static List<MethodTotal> NonCashTotals(operations opp, long shiftId) => opp.db.Database.SqlQuery<MethodTotal>($@"
+SELECT CAST(m.Lookup_CashPaymentMethodId AS bigint) AS Method_Id,
+       CAST(SUM(CASE WHEN m.Transaction_Type = 2 THEN -ISNULL(m.Transaction_Value, 0) ELSE ISNULL(m.Transaction_Value, 0) END) AS decimal(18,2)) AS Total
+FROM SalesRep_Document_Links l JOIN Money_Transaction_Box m ON m.Order_Mony_Id = l.Doc_Id
+WHERE l.Shift_Id = {shiftId} AND l.Doc_Type = {(int)SalesRepDocType.CashVoucher}
+  AND ISNULL(m.Lookup_CashPaymentMethodId, 0) NOT IN (0, {CashPaymentMethodId})
+GROUP BY m.Lookup_CashPaymentMethodId").ToList();
+
+        /// <summary>سطر لكل طريقة غير نقدية فى SalesRep_Shift_Cash بالإجمالى فقط (لا عدّ ولا فرق): ليست فى عهدة المندوب.</summary>
+        private static void RefreshNonCash(operations opp, SalesRep_Shift shift, SalesRep_Rep rep)
+        {
+            var totals = NonCashTotals(opp, shift.Id).ToDictionary(t => t.Method_Id, t => t.Total);
+            var rows = opp.db.SalesRep_Shift_Cash.Where(c => c.Shift_Id == shift.Id && c.Payment_Method_Id != CashPaymentMethodId).ToList();
+            foreach (var r in rows)
+            {
+                decimal v = totals.TryGetValue(r.Payment_Method_Id, out var t) ? t : 0;
+                if (r.Expected != v) { r.Expected = v; r.StampEdit(); }
+                totals.Remove(r.Payment_Method_Id);
+            }
+            foreach (var (method, total) in totals)
+            {
+                var row = new SalesRep_Shift_Cash { Id = CallSnowflakeIdGenerate.GenerateNewId(), Shift_Id = shift.Id, Payment_Method_Id = method, Expected = total };
+                row.StampInsert(rep.Branch_Id ?? Common.Branch_Id);
+                opp.db.SalesRep_Shift_Cash.Add(row);
+            }
         }
 
         private record BoxInfo(long Id, string Name, long CurrencyId, string CurrencyName, decimal Factor);

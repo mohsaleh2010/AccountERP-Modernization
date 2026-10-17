@@ -1,0 +1,212 @@
+@* 🟢 خطة المندوبين — بقايا المرحلة 2: «بنوك طرق دفع المندوبين». لكل طريقة دفع غير نقدية بنك يدخله تحصيل المندوب بها (عام أو لفرع؛
+   إعداد الفرع يسبق العام). المندوب يختار الطريقة فقط من الوردية/الفاتورة. الخدمة SalesRepPaymentService. التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/payment-banks"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("FSYTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .pb-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .pb-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .pb-head .ico .mud-icon-root { font-size: 2rem; }
+    .pb-head .titles { flex: 1 1 260px; }
+    .pb-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .pb-gap { margin-top: 16px; }
+    .pb-sec { font-weight: 700; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; }
+    .pb-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px 16px; align-items: center; }
+    .pb-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+    .pb-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .pb-off { opacity: .6; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card pb-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.CreditCard" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSYTitle")</h1>
+            <div class="sub">@Tr("FSYSub")</div>
+        </div>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.PointOfSale" Href="/salesrep/shift">@Tr("FSSTitle")</MudButton>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="pb-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    @if (!_loading && _methods.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Dense="true" Class="pb-gap" role="status">@Tr("FSYNoMethods")</MudAlert>
+    }
+    else
+    {
+        <div class="inv-card pb-gap">
+            <h2 class="pb-sec">
+                <MudIcon Icon="@(_edit.Id == 0 ? Icons.Material.Filled.Add : Icons.Material.Filled.Edit)" Color="Color.Primary" Size="Size.Small" />
+                @Tr(_edit.Id == 0 ? "FSYNew" : "FSYEdit")
+            </h2>
+            <div class="pb-form">
+                <MudSelect T="long" @bind-Value="_edit.Payment_Method_Id" Label="@Tr("FSYMethod")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true"
+                           Error="@(_tried && _edit.Payment_Method_Id == 0)" ErrorText="@Tr("FSYMethodRequired")"
+                           ToStringFunc="@(v => _methods.FirstOrDefault(m => m.Id == v)?.Name ?? "")">
+                    @foreach (var m in _methods) { <MudSelectItem T="long" Value="@m.Id">@m.Name</MudSelectItem> }
+                </MudSelect>
+                <MudSelect T="long" @bind-Value="_branch" Label="@Tr("FSYBranch")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                           ToStringFunc="@(v => v == 0 ? Tr("FSYAllBranches") : _branches.FirstOrDefault(b => b.Id == v)?.Name ?? "")">
+                    <MudSelectItem T="long" Value="0L">@Tr("FSYAllBranches")</MudSelectItem>
+                    @foreach (var b in _branches) { <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem> }
+                </MudSelect>
+                <MudSelect T="long" @bind-Value="_edit.Bank_Id" Label="@Tr("FSYBank")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true"
+                           Error="@(_tried && _edit.Bank_Id == 0)" ErrorText="@Tr("FSYBankRequired")"
+                           ToStringFunc="@(v => _banks.FirstOrDefault(b => b.Id == v)?.Name ?? "")">
+                    @foreach (var b in _banks) { <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem> }
+                </MudSelect>
+                <MudSwitch T="bool" @bind-Value="_edit.Active" Color="Color.Success" Label="@Tr("FSYActive")" />
+            </div>
+            <div class="pb-hint pb-gap">@Tr("FSYRulesHint")</div>
+            <div class="pb-acts">
+                @if (_edit.Id != 0) { <MudButton Variant="Variant.Text" OnClick="NewRow" Disabled="@_busy">@Tr("Cancel")</MudButton> }
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@_busy" OnClick="SaveAsync">
+                    @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                    @Tr("FSYSave")
+                </MudButton>
+            </div>
+        </div>
+    }
+
+    <div class="inv-card pb-gap" aria-live="polite">
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("FSRLoading")" />
+        }
+        else if (_rows.Count == 0)
+        {
+            <div class="inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" /><div>@Tr("FSYEmpty")</div></div>
+        }
+        else
+        {
+            <MudTable Items="@_rows" T="SalesRepPaymentService.MappingRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true" Hover="true"
+                      RowClassFunc="@((r, i) => r.Active ? "" : "pb-off")">
+                <HeaderContent>
+                    <MudTh>@Tr("FSYMethod")</MudTh><MudTh>@Tr("FSYBranch")</MudTh><MudTh>@Tr("FSYBank")</MudTh><MudTh>@Tr("FSYStatus")</MudTh><MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("FSYMethod")"><b>@context.Method_Name</b></MudTd>
+                    <MudTd DataLabel="@Tr("FSYBranch")">@(context.Scope_Branch_Id == null ? Tr("FSYAllBranches") : context.Branch_Name)</MudTd>
+                    <MudTd DataLabel="@Tr("FSYBank")">@context.Bank_Name</MudTd>
+                    <MudTd DataLabel="@Tr("FSYStatus")">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.Active ? Color.Success : Color.Default)">@Tr(context.Active ? "FSYActive" : "FSYInactive")</MudChip>
+                    </MudTd>
+                    <MudTd>
+                        @if (_confirmDelete == context.Id)
+                        {
+                            <span class="pb-hint">@Tr("FSYDeleteConfirm")</span>
+                            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" Disabled="@_busy" OnClick="@(() => DeleteAsync(context.Id))">@Tr("FSYDeleteYes")</MudButton>
+                            <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@(() => _confirmDelete = 0)">@Tr("Cancel")</MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => Edit(context))"
+                                       aria-label="@Tr("FSYEditOf", context.Method_Name)">@Tr("FSYEditShort")</MudButton>
+                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" aria-label="@Tr("FSYDeleteOf", context.Method_Name)"
+                                           OnClick="@(() => _confirmDelete = context.Id)" />
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private readonly SalesRepPaymentService _svc = new();
+    private List<SalesRepPaymentService.MappingRow> _rows = new();
+    private List<SalesRepPaymentService.Option> _methods = new(), _banks = new(), _branches = new();
+    private SalesRepPaymentService.MappingRow _edit = new();
+    private long _branch, _confirmDelete;
+    private bool _loading = true, _busy, _tried;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            (_methods, _banks, _branches) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_svc.GetNonCashMethods(), _svc.GetBanks(), _svc.GetBranches()); });
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        try { _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetMappings(); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private void NewRow() { _edit = new(); _branch = 0; _tried = false; }
+
+    private void Edit(SalesRepPaymentService.MappingRow r)
+    {
+        _edit = new() { Id = r.Id, Payment_Method_Id = r.Payment_Method_Id, Bank_Id = r.Bank_Id, Active = r.Active };
+        _branch = r.Scope_Branch_Id ?? 0;
+        _tried = false; _confirmDelete = 0;
+    }
+
+    private async Task SaveAsync()
+    {
+        _tried = true;
+        if (_edit.Payment_Method_Id == 0 || _edit.Bank_Id == 0) return;
+        _busy = true; _error = null;
+        var input = _edit;
+        input.Scope_Branch_Id = _branch == 0 ? null : _branch;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.SaveMapping(input); });
+            Snackbar.Add(Tr("FSYSaved"), Severity.Success);
+            NewRow();
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task DeleteAsync(long id)
+    {
+        _busy = true; _error = null;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.DeleteMapping(id); });
+            Snackbar.Add(Tr("FSYDeleted"), Severity.Success);
+            _confirmDelete = 0;
+            if (_edit.Id == id) NewRow();
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

@@ -99,6 +99,8 @@ namespace AccountModelsLib.SalesRep
             public List<DeliveryLineInput> Lines { get; set; } = new();
             /// <summary>الباقى بعد العربون يُحصَّل نقداً الآن؛ وإلا على حساب العميل (بفحص الائتمان).</summary>
             public bool Collect_Cash { get; set; }
+            /// <summary>طريقة دفع الباقى المحصَّل الآن (0/1 = نقدى فى العهدة).</summary>
+            public long Payment_Method_Id { get; set; }
             /// <summary>للمتبقى غير المسلَّم: Retry أو Close (إلزامى لو بقى متبقٍ).</summary>
             public int? Remaining_Action { get; set; }
             public string Reason { get; set; }
@@ -316,8 +318,9 @@ GROUP BY al.Van_Unit_Item_Id").ToList();
             public long? Currency_Id { get; set; }
             public DateTime? Expected_Delivery_Date { get; set; }
             public string Notes { get; set; }
-            /// <summary>عربون نقدى يُقبض الآن فى صندوق العهدة (0 = بلا عربون).</summary>
+            /// <summary>عربون يُقبض الآن (0 = بلا عربون): نقداً فى صندوق العهدة، أو بطريقة غير نقدية فى بنكها.</summary>
             public decimal Deposit { get; set; }
+            public long Deposit_Payment_Method_Id { get; set; }
             public List<TakeOrderLine> Lines { get; set; } = new();
             public decimal Net_Total => Math.Round(Lines.Sum(l => l.Line_Total), 2);
         }
@@ -352,7 +355,11 @@ GROUP BY al.Van_Unit_Item_Id").ToList();
         public SalesRepSaleService.CheckResult CheckTake(long repId, TakeOrderInput input) => Read(opp =>
         {
             Validate(input);
-            return new SalesRepSaleService(opp).Check(repId, TakeInputOf(opp, input));
+            var result = new SalesRepSaleService(opp).Check(repId, TakeInputOf(opp, input));
+            bool cashDeposit = input.Deposit_Payment_Method_Id <= 0 || input.Deposit_Payment_Method_Id == SalesRepShiftService.CashPaymentMethodId;
+            if (input.Deposit > 0 && cashDeposit && SalesRepSaleService.CashLimitWarning(SalesRepSaleService.Context(opp, repId), input.Deposit) is string w)
+                result.Warnings.Add(w);
+            return result;
         });
 
         public SalesRepSaleService.CheckResult RequestTakeApprovals(long repId, TakeOrderInput input, string reason = null) => Tx(opp =>
@@ -393,10 +400,11 @@ GROUP BY al.Van_Unit_Item_Id").ToList();
             decimal deposit = Math.Round(input.Deposit, 2);
             if (deposit > 0)
             {
+                var receipt = SalesRepPaymentService.Resolve(opp, ctx, input.Deposit_Payment_Method_Id);
                 var vouchers = new CashVouchersService();
-                long cur = opp.db.Database.SqlQuery<long>($"SELECT CAST(ISNULL(currency_Id, 1) AS bigint) AS Value FROM Banks WHERE Id = {ctx.Cash_Box_Id}").AsEnumerable().FirstOrDefault();
-                var v = vouchers.SavePartyVoucherInTx(opp, 1, 0, ctx.Cash_Box_Id, DateTime.Today, 0, $"عربون الطلبية {orderNo} — المندوب {ctx.Rep_Name}",
-                    deposit, input.Customer_Id, vouchers.GetFactor(cur));
+                var v = vouchers.SavePartyVoucherInTx(opp, 1, 0, receipt.BoxId, DateTime.Today, 0,
+                    $"عربون الطلبية {orderNo}{(receipt.IsCash ? "" : " — " + receipt.MethodName)} — المندوب {ctx.Rep_Name}",
+                    deposit, input.Customer_Id, vouchers.GetFactor(SalesRepPaymentService.CurrencyOf(opp, receipt.BoxId)), 0, 0, receipt.MethodId, receipt.MethodName);
                 orders.AddDeposit(orderId, v.OrderId, v.BoxLineId, input.Customer_Id, deposit, DateTime.Today, "عربون عند أخذ الطلبية — المندوب " + ctx.Rep_Name);
                 SalesRepSaleService.Link(opp, ctx.Shift_Id.Value, SalesRepDocType.CashVoucher, v.OrderId, ctx.Branch_Id);
                 voucherId = v.OrderId;
@@ -483,17 +491,20 @@ GROUP BY al.Van_Unit_Item_Id").ToList();
             if (b.InvL != null)
             {
                 var sales = new SalesRepSaleService(opp);
-                invoiceId = sales.SaveSale(repId, input.Doc_Guid, b.InvL, b.InvD, prepaid: b.Check.Deposit_Applied, collectNow: input.Collect_Cash, orderPriced: true);
+                invoiceId = sales.SaveSale(repId, input.Doc_Guid, b.InvL, b.InvD, prepaid: b.Check.Deposit_Applied, collectNow: input.Collect_Cash, orderPriced: true,
+                    paymentMethodId: input.Payment_Method_Id);
                 orders.RecordFulfillments(input.Order_Id, invoiceId.Value, b.Allocations);
                 if (b.Check.Deposit_Applied > 0) applied = orders.ApplyDepositsToInvoice(input.Order_Id, invoiceId.Value, b.Check.Deposit_Applied);
                 // مع العربون الفاتورة آجلة: الباقى نقداً بإذن استلام على صندوق العهدة مربوط بالوردية.
                 decimal rest = Math.Round(b.Check.Net_Total - applied, 2);
                 if (applied > 0 && input.Collect_Cash && rest > 0)
                 {
+                    var receipt = SalesRepPaymentService.Resolve(opp, ctx, input.Payment_Method_Id);
                     var vouchers = new CashVouchersService();
-                    long cur = opp.db.Database.SqlQuery<long>($"SELECT CAST(ISNULL(currency_Id, 1) AS bigint) AS Value FROM Banks WHERE Id = {ctx.Cash_Box_Id}").AsEnumerable().FirstOrDefault();
-                    var v = vouchers.SavePartyVoucherInTx(opp, 1, 0, ctx.Cash_Box_Id, DateTime.Today, 0, $"تحصيل تسليم الطلبية {b.Order.Order_No} — المندوب {ctx.Rep_Name}",
-                        rest, b.Order.Customer_Id ?? 0, vouchers.GetFactor(cur), Common.Invoice_Type_Id, invoiceId.Value);
+                    var v = vouchers.SavePartyVoucherInTx(opp, 1, 0, receipt.BoxId, DateTime.Today, 0,
+                        $"تحصيل تسليم الطلبية {b.Order.Order_No}{(receipt.IsCash ? "" : " — " + receipt.MethodName)} — المندوب {ctx.Rep_Name}",
+                        rest, b.Order.Customer_Id ?? 0, vouchers.GetFactor(SalesRepPaymentService.CurrencyOf(opp, receipt.BoxId)), Common.Invoice_Type_Id, invoiceId.Value,
+                        receipt.MethodId, receipt.MethodName);
                     SalesRepSaleService.Link(opp, ctx.Shift_Id.Value, SalesRepDocType.CashVoucher, v.OrderId, ctx.Branch_Id);
                     restVoucherId = v.OrderId;
                     collected = rest;
@@ -666,7 +677,7 @@ WHERE u.id = {l.Unit_Item_Table_Id ?? 0}").AsEnumerable().FirstOrDefault() ?? ne
             Doc_Guid = input.Doc_Guid, Customer_Id = b.Order.Customer_Id ?? 0,
             Is_Credit = (b.InvL.invL.Is_Invoice_Agile ?? 0) == 1 && !(b.Check.Deposit_Applied > 0 && input.Collect_Cash),
             Net_Total = Math.Max(0, b.Check.Net_Total - b.Check.Deposit_Applied),
-            Lines = SalesRepSaleService.LinesOf(opp, b.InvL, b.InvD), Order_Priced = true,
+            Lines = SalesRepSaleService.LinesOf(opp, b.InvL, b.InvD), Order_Priced = true, Payment_Method_Id = input.Payment_Method_Id,
         };
 
         /// <summary>رقم فاتورة المبيعات التالى بنفس قواعد Make_New_Invoice_No (النوع/الفرع/السنة حسب الإعداد) مع قفل داخل المعاملة.</summary>

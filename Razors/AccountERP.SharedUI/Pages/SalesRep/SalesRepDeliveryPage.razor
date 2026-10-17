@@ -130,6 +130,14 @@
                     <MudRadio T="bool" Value="true" Color="Color.Primary">@Tr("FSDCollectCash")</MudRadio>
                     <MudRadio T="bool" Value="false" Color="Color.Primary">@Tr("FSTOnAccount")</MudRadio>
                 </MudRadioGroup>
+                @if (_collectCash && _methods.Count > 1)
+                {
+                    <MudSelect T="long" @bind-Value="_method" @bind-Value:after="Invalidate" Label="@Tr("FSYMethod")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="rd-gap" Style="max-width:320px"
+                               HelperText="@Tr(_method == SalesRepShiftService.CashPaymentMethodId ? "FSYMethodCashHint" : "FSYMethodBankHint")"
+                               ToStringFunc="@(v => _methods.FirstOrDefault(m => m.Id == v)?.Name ?? "")">
+                        @foreach (var m in _methods) { <MudSelectItem T="long" Value="@m.Id">@m.Name</MudSelectItem> }
+                    </MudSelect>
+                }
                 @if (_view.Deposit_Remaining > 0) { <div class="rd-hint">@Tr("FSDDepositHint", _view.Deposit_Remaining.ToString("N2"))</div> }
             }
             <MudTextField T="string" @bind-Value="_notes" Label="@Tr("FSVNotes")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="rd-gap" />
@@ -189,6 +197,8 @@
     private List<LineEdit> _lines = new();
     private Guid _docGuid = Guid.NewGuid();
     private bool _loading = true, _busy, _tried, _collectCash = true;
+    private List<SalesRepPaymentService.Option> _methods = new();
+    private long _method = SalesRepShiftService.CashPaymentMethodId;
     private int _action;
     private string? _reason, _notes, _approvalReason, _error;
 
@@ -205,6 +215,7 @@
         try
         {
             _view = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetDelivery(rep, order); });
+            _methods = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return new SalesRepPaymentService().GetMethodsForRep(rep); });
             _lines = _view.Lines.Select(x => new LineEdit { Src = x, Large = x.Remaining_Large, Small = x.Remaining_Small }).ToList();
         }
         catch (Exception ex) { _error = Inner(ex); }
@@ -217,7 +228,7 @@
 
     private SalesRepOrderService.DeliveryInput Input() => new()
     {
-        Doc_Guid = _docGuid, Order_Id = _view?.Order_Id ?? 0, Collect_Cash = _collectCash, Notes = _notes,
+        Doc_Guid = _docGuid, Order_Id = _view?.Order_Id ?? 0, Collect_Cash = _collectCash, Notes = _notes, Payment_Method_Id = _collectCash ? _method : 0,
         Remaining_Action = HasRemaining ? _action : null, Reason = HasRemaining ? _reason : null,
         Lines = _lines.Where(l => l.QtySmall > 0).Select(l => new SalesRepOrderService.DeliveryLineInput { Order_Line_Id = l.Src.Order_Line_Id, Qty_Large = l.Large, Qty_Small = l.Small }).ToList(),
     };

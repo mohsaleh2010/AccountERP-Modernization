@@ -72,6 +72,16 @@
                         <MudNumericField T="decimal" @bind-Value="_repDeposit" Label="@Tr("FSNDeposit")" Variant="Variant.Outlined" Min="0" Format="N2" HideSpinButtons="true"
                                          HelperText="@Tr("FSNDepositHint")" Immediate="true" />
                     </MudItem>
+                    @if (_repDeposit > 0 && _repMethods.Count > 1)
+                    {
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudSelect T="long" @bind-Value="_repDepositMethod" Label="@Tr("FSYMethod")" Variant="Variant.Outlined"
+                                       HelperText="@Tr(_repDepositMethod == AccountModelsLib.SalesRep.SalesRepShiftService.CashPaymentMethodId ? "FSYMethodCashHint" : "FSYMethodBankHint")"
+                                       ToStringFunc="@(v => _repMethods.FirstOrDefault(m => m.Id == v)?.Name ?? "")">
+                                @foreach (var m in _repMethods) { <MudSelectItem T="long" Value="@m.Id">@m.Name</MudSelectItem> }
+                            </MudSelect>
+                        </MudItem>
+                    }
                 </MudGrid>
                 @foreach (var w in _repWarnings)
                 {
@@ -419,6 +429,8 @@
     private List<AccountModelsLib.SalesRep.SalesRepOrderService.StoreRow> _repStores = new();
     private long _repStoreId;
     private decimal _repDeposit;
+    private List<AccountModelsLib.SalesRep.SalesRepPaymentService.Option> _repMethods = new();
+    private long _repDepositMethod = AccountModelsLib.SalesRep.SalesRepShiftService.CashPaymentMethodId;
     private Guid _repDocGuid = Guid.NewGuid();
     private List<AccountModelsLib.SalesRep.SalesRepSaleService.Violation> _repViolations = new();
     private List<string> _repWarnings = new();
@@ -437,6 +449,7 @@
                 var svc = new AccountModelsLib.SalesRep.SalesRepOrderService();
                 return (new AccountModelsLib.SalesRep.SalesRepSaleService().GetContext(repId), svc.GetSourceStores(repId), svc.GetDefaultSourceStore(repId));
             });
+            _repMethods = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return new AccountModelsLib.SalesRep.SalesRepPaymentService().GetMethodsForRep(repId); });
             _expectedDate ??= DateTime.Today.AddDays(1);
         }
         catch (Exception ex) { _repCtx = null; _repError = ex.Message; }
@@ -477,6 +490,7 @@
         Expected_Delivery_Date = _expectedDate,
         Notes = _notes,
         Deposit = _repDeposit,
+        Deposit_Payment_Method_Id = _repDepositMethod,
         Lines = _lines.Select(l => new AccountModelsLib.SalesRep.SalesRepOrderService.TakeOrderLine
         {
             Unit_Item_Id = l.Unit_Item_Table_Id ?? 0,

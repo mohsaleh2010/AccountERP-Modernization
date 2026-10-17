@@ -3611,4 +3611,43 @@
   <data name="FSKBalance" xml:space="preserve"><value>Saldo</value></data>
   <data name="FSKOver90" xml:space="preserve"><value>Über 90</value></data>
   <data name="FSKTotal" xml:space="preserve"><value>Summe</value></data>
+  <data name="FSYTitle" xml:space="preserve"><value>Banken der Zahlungsarten für Vertreter</value></data>
+  <data name="FSYSub" xml:space="preserve"><value>Legen Sie fest, welche Bank Zahlungen je unbarer Zahlungsart erhält. Der Vertreter wählt nur die Zahlungsart; Bargeld bleibt in seiner Kasse.</value></data>
+  <data name="FSYNoMethods" xml:space="preserve"><value>Keine unbaren Zahlungsarten vorhanden; zuerst in der Liste der Zahlungsarten anlegen.</value></data>
+  <data name="FSYNew" xml:space="preserve"><value>Zahlungsart einer Bank zuordnen</value></data>
+  <data name="FSYEdit" xml:space="preserve"><value>Zuordnung bearbeiten</value></data>
+  <data name="FSYMethod" xml:space="preserve"><value>Zahlungsart</value></data>
+  <data name="FSYMethodRequired" xml:space="preserve"><value>Zahlungsart wählen</value></data>
+  <data name="FSYBranch" xml:space="preserve"><value>Filiale</value></data>
+  <data name="FSYAllBranches" xml:space="preserve"><value>Alle Filialen</value></data>
+  <data name="FSYBank" xml:space="preserve"><value>Bank</value></data>
+  <data name="FSYBankRequired" xml:space="preserve"><value>Bank wählen</value></data>
+  <data name="FSYActive" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="FSYInactive" xml:space="preserve"><value>Gestoppt</value></data>
+  <data name="FSYStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="FSYRulesHint" xml:space="preserve"><value>Eine Filialzuordnung hat Vorrang vor „Alle Filialen“. Eine Zahlungsart ohne aktive Bank wird ausgeblendet. Zahlungen gehen direkt an die Bank, zählen nicht zur Kasse des Vertreters und werden beim Abschluss nicht gezählt.</value></data>
+  <data name="FSYSave" xml:space="preserve"><value>Speichern</value></data>
+  <data name="FSYSaved" xml:space="preserve"><value>Gespeichert</value></data>
+  <data name="FSYDeleted" xml:space="preserve"><value>Gelöscht</value></data>
+  <data name="FSYEmpty" xml:space="preserve"><value>Noch keine Zuordnung; Vertreter kassieren nur bar.</value></data>
+  <data name="FSYEditShort" xml:space="preserve"><value>Bearbeiten</value></data>
+  <data name="FSYEditOf" xml:space="preserve"><value>Zuordnung von {0} bearbeiten</value></data>
+  <data name="FSYDeleteOf" xml:space="preserve"><value>Zuordnung von {0} löschen</value></data>
+  <data name="FSYDeleteConfirm" xml:space="preserve"><value>Diese Zuordnung löschen?</value></data>
+  <data name="FSYDeleteYes" xml:space="preserve"><value>Löschen</value></data>
+  <data name="FSYMethodCashHint" xml:space="preserve"><value>Geht in die Kasse des Vertreters</value></data>
+  <data name="FSYMethodBankHint" xml:space="preserve"><value>Geht direkt an die Bank der Zahlungsart; nicht in der Kasse</value></data>
+  <data name="FSYCashOnHand" xml:space="preserve"><value>Bargeld in der Kasse</value></data>
+  <data name="FSYOverBy" xml:space="preserve"><value>Limit um {0} überschritten</value></data>
+  <data name="FSYInBank" xml:space="preserve"><value>bei der Bank</value></data>
+  <data name="FSYRemit" xml:space="preserve"><value>Teilabführung</value></data>
+  <data name="FSYRemitHint" xml:space="preserve"><value>Übertragen Sie während der Schicht einen Teil des Bargelds in eine Hauptkasse; der erwartete Betrag beim Abschluss sinkt entsprechend.</value></data>
+  <data name="FSYRemitAvailable" xml:space="preserve"><value>Verfügbar {0}</value></data>
+  <data name="FSYRemitSave" xml:space="preserve"><value>Abführen</value></data>
+  <data name="FSYRemitDone" xml:space="preserve"><value>Abgeführt</value></data>
+  <data name="FSYCashLimitWarn" xml:space="preserve"><value>Bargeld nach dieser Zahlung, {0}, überschreitet das Limit von {1}; Bargeld abführen (Teilabführung).</value></data>
+  <data name="FSYNonCashHint" xml:space="preserve"><value>Unbare Zahlungen gingen direkt an die Banken; nur zur Kontrolle angezeigt, weder gezählt noch abgeführt.</value></data>
+  <data name="FSYAlertsTitle" xml:space="preserve"><value>Vertreter über ihrem Bargeldlimit ({0})</value></data>
+  <data name="FSYAlertsHint" xml:space="preserve"><value>Nur Warnung, Verkäufe sind nicht gesperrt: Teilabführung im Schichtbildschirm veranlassen.</value></data>
+  <data name="FSYExcess" xml:space="preserve"><value>Überschuss</value></data>
 </root>

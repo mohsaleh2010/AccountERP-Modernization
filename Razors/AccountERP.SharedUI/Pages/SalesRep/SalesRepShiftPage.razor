@@ -37,6 +37,7 @@
     .ss-neg { color: var(--mud-palette-error); font-weight: 700; }
     .ss-pos { color: var(--mud-palette-success); font-weight: 700; }
     .ss-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .ss-over { border-color: var(--mud-palette-error); background: color-mix(in srgb, var(--mud-palette-error) 8%, transparent); }
     @@media (max-width: 699px) { .ss-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .ss-row > :first-child { grid-column: 1 / -1; } }
 </style>
 
@@ -81,6 +82,21 @@
                 <div class="ss-kpi"><div class="k">@Tr("FSRBox")</div><div class="v">@_rep.Cash_Box_Name</div></div>
                 <div class="ss-kpi"><div class="k">@Tr("FSSOpenedAt")</div><div class="v ss-num">@(_shift?.Opened_At?.ToString("yyyy-MM-dd HH:mm") ?? "—")</div></div>
                 <div class="ss-kpi"><div class="k">@Tr("FSSVanLines")</div><div class="v ss-num">@_vanStock.Count</div></div>
+                @if (_cashStatus != null)
+                {
+                    <div class="@("ss-kpi" + (_cashStatus.Over ? " ss-over" : ""))" aria-live="polite">
+                        <div class="k">@Tr("FSYCashOnHand")@(_cashStatus.Max_Cash_On_Hand is decimal mx ? " / " + mx.ToString("N2") : "")</div>
+                        <div class="v ss-num">@_cashStatus.Cash_On_Hand.ToString("N2")</div>
+                        @if (_cashStatus.Over)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Error" Icon="@Icons.Material.Filled.Warning">@Tr("FSYOverBy", _cashStatus.Excess.ToString("N2"))</MudChip>
+                        }
+                    </div>
+                }
+                @foreach (var p in _payments.Where(p => p.Payment_Method_Id != SalesRepShiftService.CashPaymentMethodId))
+                {
+                    <div class="ss-kpi"><div class="k">@p.Method_Name (@Tr("FSYInBank"))</div><div class="v ss-num">@p.Expected.ToString("N2")</div></div>
+                }
             </div>
             <div class="ss-acts">
                 @if (_shift == null)
@@ -99,6 +115,8 @@
                         <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.RequestQuote" Href="@($"/accounts/invoices/sales-invoice?rep={_rep.Id}&agile=1")">@Tr("FSVSellCredit")</MudButton>
                     }
                     <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Payments" OnClick="@(() => _panel = Panel.Collect)">@Tr("FSVCollect")</MudButton>
+                    <MudButton Variant="@(_cashStatus?.Over == true ? Variant.Filled : Variant.Outlined)" Color="@(_cashStatus?.Over == true ? Color.Error : Color.Default)"
+                               StartIcon="@Icons.Material.Filled.MoveDown" Disabled="@(_boxes.Count == 0 || !(_cashStatus?.Cash_On_Hand > 0))" OnClick="OpenRemitPanel">@Tr("FSYRemit")</MudButton>
                     @if (_rep.Allow_Cheque_Collection)
                     {
                         <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.AccountBalance" OnClick="OpenChequePanelAsync">@Tr("FSQCollect")</MudButton>
@@ -190,13 +208,51 @@
                     <MudAutocomplete T="SalesRepProfileService.Option" @bind-Value="_collectCustomer" SearchFunc="SearchCustomersAsync" ToStringFunc="@(o => o?.Name ?? "")"
                                      Label="@Tr("FSVCustomer")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" ResetValueOnEmptyText="true" DebounceInterval="300" />
                     <MudNumericField T="decimal?" @bind-Value="_collectAmount" Label="@Tr("FSVAmount")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Format="N2" Required="true" />
+                    @if (_methods.Count > 1)
+                    {
+                        <MudSelect T="long" @bind-Value="_collectMethod" Label="@Tr("FSYMethod")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                   HelperText="@Tr(_collectMethod == SalesRepShiftService.CashPaymentMethodId ? "FSYMethodCashHint" : "FSYMethodBankHint")"
+                                   ToStringFunc="@(v => _methods.FirstOrDefault(m => m.Id == v)?.Name ?? "")">
+                            @foreach (var m in _methods) { <MudSelectItem T="long" Value="@m.Id">@m.Name</MudSelectItem> }
+                        </MudSelect>
+                    }
                     <MudTextField T="string" @bind-Value="_collectNotes" Label="@Tr("FSVNotes")" Variant="Variant.Outlined" Margin="Margin.Dense" />
                 </div>
+                @if (CollectCashWarning is string cw)
+                {
+                    <MudAlert Severity="Severity.Warning" Dense="true" Class="ss-gap" role="status">@cw</MudAlert>
+                }
                 <div class="ss-acts" style="justify-content:flex-end">
                     <MudButton Variant="Variant.Text" OnClick="ClosePanel" Disabled="@_busy">@Tr("Cancel")</MudButton>
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(_busy || _collectCustomer == null || !(_collectAmount > 0))" OnClick="CollectAsync">
                         @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
                         @Tr("FSVCollectSave")
+                    </MudButton>
+                </div>
+            </div>
+        }
+
+        @* ===== توريد جزئى أثناء الوردية (بقايا المرحلة 2): تحويل من صندوق العهدة لصندوق رئيسى ===== *@
+        @if (_panel == Panel.Remit)
+        {
+            <div class="inv-card ss-gap">
+                <h2 class="ss-sec"><MudIcon Icon="@Icons.Material.Filled.MoveDown" Color="Color.Primary" Size="Size.Small" />@Tr("FSYRemit")</h2>
+                <div class="ss-hint">@Tr("FSYRemitHint")</div>
+                <div class="ss-kpis ss-gap">
+                    <MudSelect T="long" @bind-Value="_partialBox" Label="@Tr("FSSRemitBox")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true"
+                               ToStringFunc="@(v => _boxes.FirstOrDefault(b => b.Id == v)?.Name ?? "")">
+                        @foreach (var b in _boxes) { <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem> }
+                    </MudSelect>
+                    <MudNumericField T="decimal?" @bind-Value="_partialAmount" Label="@Tr("FSSRemitAmount")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Format="N2" Required="true"
+                                     HelperText="@Tr("FSYRemitAvailable", (_cashStatus?.Cash_On_Hand ?? 0).ToString("N2"))"
+                                     Error="@(_partialAmount > (_cashStatus?.Cash_On_Hand ?? 0))" ErrorText="@Tr("FSSRemitTooMuch")" />
+                    <MudTextField T="string" @bind-Value="_partialNotes" Label="@Tr("FSVNotes")" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </div>
+                <div class="ss-acts" style="justify-content:flex-end">
+                    <MudButton Variant="Variant.Text" OnClick="ClosePanel" Disabled="@_busy">@Tr("Cancel")</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(_busy || _partialBox == 0 || !(_partialAmount > 0) || _partialAmount > (_cashStatus?.Cash_On_Hand ?? 0))" OnClick="RemitPartialAsync">
+                        @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                        @Tr("FSYRemitSave")
                     </MudButton>
                 </div>
             </div>
@@ -519,6 +575,16 @@
                 {
                     <div class="ss-hint ss-gap">@Tr(cd < 0 ? "FSSCashShortHint" : "FSSCashOverHint")</div>
                 }
+                @if (_payments.Any(p => p.Payment_Method_Id != SalesRepShiftService.CashPaymentMethodId))
+                {
+                    <div class="ss-hint ss-gap">@Tr("FSYNonCashHint")</div>
+                    <div class="ss-kpis ss-gap">
+                        @foreach (var p in _payments.Where(p => p.Payment_Method_Id != SalesRepShiftService.CashPaymentMethodId))
+                        {
+                            <div class="ss-kpi"><div class="k">@p.Method_Name (@Tr("FSYInBank"))</div><div class="v ss-num">@p.Expected.ToString("N2")</div></div>
+                        }
+                    </div>
+                }
                 <div class="ss-kpis ss-gap">
                     <MudSelect T="long" @bind-Value="_remitBox" Label="@Tr("FSSRemitBox")" Variant="Variant.Outlined" Margin="Margin.Dense"
                                ToStringFunc="@(v => v == 0 ? Tr("FSSKeepInCustody") : _boxes.FirstOrDefault(b => b.Id == v)?.Name ?? "")">
@@ -590,7 +656,7 @@
 @code {
     [SupplyParameterFromQuery(Name = "rep")] public long? RepQuery { get; set; }
 
-    private enum Panel { None, Load, Unload, Damaged, Collect, Cheque, NoSale }
+    private enum Panel { None, Load, Unload, Damaged, Collect, Cheque, NoSale, Remit }
 
     private class LineEdit
     {
@@ -641,6 +707,14 @@
     private SalesRepProfileService.Option? _collectCustomer;
     private decimal? _collectAmount;
     private string? _collectNotes;
+    private long _collectMethod = SalesRepShiftService.CashPaymentMethodId;
+    private readonly SalesRepPaymentService _paySvc = new();
+    private List<SalesRepPaymentService.Option> _methods = new();
+    private List<SalesRepShiftService.PaymentRow> _payments = new();
+    private SalesRepShiftService.CashStatus? _cashStatus;
+    private long _partialBox;
+    private decimal? _partialAmount;
+    private string? _partialNotes;
     private List<SalesRepProfileService.Option>? _customers;
     private readonly SalesRepChequeService _chqSvc = new();
     private List<SalesRepChequeService.BankOption> _banks = new();
@@ -807,8 +881,31 @@
         long repId = _rep.Id, customer = _collectCustomer.Id;
         decimal amount = _collectAmount.Value;
         string? notes = _collectNotes;
-        await RunAsync(() => _saleSvc.Collect(repId, customer, amount, notes), "FSVCollected");
-        if (_error == null) { _collectCustomer = null; _collectAmount = null; _collectNotes = null; }
+        long method = _collectMethod;
+        await RunAsync(() => _saleSvc.Collect(repId, customer, amount, notes, method), "FSVCollected");
+        if (_error == null) { _collectCustomer = null; _collectAmount = null; _collectNotes = null; _collectMethod = SalesRepShiftService.CashPaymentMethodId; }
+    }
+
+    /// <summary>تنبيه حد النقدية قبل التحصيل النقدى (لا يمنع): نفس قاعدة الخدمة على رصيد العهدة الحالى.</summary>
+    private string? CollectCashWarning => _collectMethod == SalesRepShiftService.CashPaymentMethodId && _collectAmount > 0 && _cashStatus?.Max_Cash_On_Hand is decimal mx
+                                          && _cashStatus.Cash_On_Hand + _collectAmount.Value > mx
+        ? Tr("FSYCashLimitWarn", (_cashStatus.Cash_On_Hand + _collectAmount.Value).ToString("N2"), mx.ToString("N2")) : null;
+
+    private void OpenRemitPanel()
+    {
+        _partialBox = _remitBox != 0 ? _remitBox : _boxes.FirstOrDefault()?.Id ?? 0;
+        _partialAmount = _cashStatus?.Over == true ? _cashStatus.Excess : _cashStatus?.Cash_On_Hand;
+        _partialNotes = null;
+        _panel = Panel.Remit;
+    }
+
+    private async Task RemitPartialAsync()
+    {
+        if (_shift == null || _partialBox == 0 || !(_partialAmount > 0)) return;
+        long shiftId = _shift.Id, box = _partialBox;
+        decimal amount = _partialAmount.Value;
+        string? notes = _partialNotes;
+        await RunAsync(() => _svc.RemitPartial(shiftId, amount, box, notes), "FSYRemitDone");
     }
 
     private decimal? CashDiff => _cashCounted == null || _cash == null ? null : Math.Round(_cashCounted.Value - _cash.Expected, 2);
@@ -860,7 +957,10 @@
                         docs: shift == null ? new List<SalesRepSaleService.ShiftDoc>() : _saleSvc.GetShiftDocs(shift.Id),
                         cheques: shift == null ? new List<SalesRepChequeService.ChequeRow>() : _chqSvc.GetShiftCheques(shift.Id),
                         visits: shift == null ? new List<SalesRepVisitService.VisitRow>() : _visitSvc.GetShiftVisits(shift.Id),
-                        boxes: MainBoxes(rep));
+                        boxes: MainBoxes(rep),
+                        methods: _paySvc.GetMethodsForRep(rep.Id),
+                        payments: shift == null ? new List<SalesRepShiftService.PaymentRow>() : _svc.GetShiftPayments(shift.Id),
+                        cashStatus: _svc.GetCashStatus(rep.Id));
             });
             _shift = data.shift; _vanStock = data.van; _damagedStock = data.damaged; _pending = data.pending; _history = data.history; _mainStores = data.stores;
             BuildCount(data.count);
@@ -869,6 +969,8 @@
             _cheques = data.cheques;
             _visits = data.visits;
             _boxes = data.boxes;
+            _methods = data.methods; _payments = data.payments; _cashStatus = data.cashStatus;
+            if (!_methods.Any(m => m.Id == _collectMethod)) _collectMethod = SalesRepShiftService.CashPaymentMethodId;
             if (_remitBox != 0 && !_boxes.Any(b => b.Id == _remitBox)) _remitBox = 0;
             if (_remitBox == 0) _remitBox = _boxes.FirstOrDefault()?.Id ?? 0;
         }

@@ -3609,4 +3609,43 @@
   <data name="FSKBalance" xml:space="preserve"><value>Balance</value></data>
   <data name="FSKOver90" xml:space="preserve"><value>Over 90</value></data>
   <data name="FSKTotal" xml:space="preserve"><value>Total</value></data>
+  <data name="FSYTitle" xml:space="preserve"><value>Rep payment-method banks</value></data>
+  <data name="FSYSub" xml:space="preserve"><value>Choose the bank that receives a rep's payments for each non-cash method. The rep only picks the method; cash stays in the custody box.</value></data>
+  <data name="FSYNoMethods" xml:space="preserve"><value>There are no non-cash payment methods in the system; add them to the payment methods list first.</value></data>
+  <data name="FSYNew" xml:space="preserve"><value>Map a payment method to a bank</value></data>
+  <data name="FSYEdit" xml:space="preserve"><value>Edit mapping</value></data>
+  <data name="FSYMethod" xml:space="preserve"><value>Payment method</value></data>
+  <data name="FSYMethodRequired" xml:space="preserve"><value>Choose the payment method</value></data>
+  <data name="FSYBranch" xml:space="preserve"><value>Branch</value></data>
+  <data name="FSYAllBranches" xml:space="preserve"><value>All branches</value></data>
+  <data name="FSYBank" xml:space="preserve"><value>Bank</value></data>
+  <data name="FSYBankRequired" xml:space="preserve"><value>Choose the bank</value></data>
+  <data name="FSYActive" xml:space="preserve"><value>Active</value></data>
+  <data name="FSYInactive" xml:space="preserve"><value>Stopped</value></data>
+  <data name="FSYStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="FSYRulesHint" xml:space="preserve"><value>A branch mapping wins over the all-branches one. A method with no active bank is hidden from the rep. Payments by it go straight to the bank, so they are not in the rep's custody and are not counted at closing.</value></data>
+  <data name="FSYSave" xml:space="preserve"><value>Save</value></data>
+  <data name="FSYSaved" xml:space="preserve"><value>Saved</value></data>
+  <data name="FSYDeleted" xml:space="preserve"><value>Deleted</value></data>
+  <data name="FSYEmpty" xml:space="preserve"><value>No mappings yet; reps can collect cash only.</value></data>
+  <data name="FSYEditShort" xml:space="preserve"><value>Edit</value></data>
+  <data name="FSYEditOf" xml:space="preserve"><value>Edit mapping of {0}</value></data>
+  <data name="FSYDeleteOf" xml:space="preserve"><value>Delete mapping of {0}</value></data>
+  <data name="FSYDeleteConfirm" xml:space="preserve"><value>Delete this mapping?</value></data>
+  <data name="FSYDeleteYes" xml:space="preserve"><value>Delete</value></data>
+  <data name="FSYMethodCashHint" xml:space="preserve"><value>Goes into the rep's custody box</value></data>
+  <data name="FSYMethodBankHint" xml:space="preserve"><value>Goes straight to the method's bank; not in custody</value></data>
+  <data name="FSYCashOnHand" xml:space="preserve"><value>Cash on hand</value></data>
+  <data name="FSYOverBy" xml:space="preserve"><value>Over the limit by {0}</value></data>
+  <data name="FSYInBank" xml:space="preserve"><value>in bank</value></data>
+  <data name="FSYRemit" xml:space="preserve"><value>Partial remittance</value></data>
+  <data name="FSYRemitHint" xml:space="preserve"><value>Move part of the custody cash to a main box during the shift; the expected cash at closing drops by the same amount.</value></data>
+  <data name="FSYRemitAvailable" xml:space="preserve"><value>Available {0}</value></data>
+  <data name="FSYRemitSave" xml:space="preserve"><value>Remit</value></data>
+  <data name="FSYRemitDone" xml:space="preserve"><value>Remitted</value></data>
+  <data name="FSYCashLimitWarn" xml:space="preserve"><value>Cash on hand after this collection, {0}, is over the limit of {1}; remit cash (partial remittance).</value></data>
+  <data name="FSYNonCashHint" xml:space="preserve"><value>Non-cash payments went straight to the banks; they are shown here for review only and are not counted or remitted.</value></data>
+  <data name="FSYAlertsTitle" xml:space="preserve"><value>Reps over their cash limit ({0})</value></data>
+  <data name="FSYAlertsHint" xml:space="preserve"><value>Warning only, sales are not blocked: ask them to make a partial remittance from the shift screen.</value></data>
+  <data name="FSYExcess" xml:space="preserve"><value>Excess</value></data>
 </root>

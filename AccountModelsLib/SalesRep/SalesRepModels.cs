@@ -208,6 +208,20 @@ namespace AccountModelsLib.SalesRep
         public long? Diff_Order_Id { get; set; }
     }
 
+    /// <summary>
+    /// بقايا المرحلة 2 (قرار المستخدم 2026-10-17): البنك الذى يدخله تحصيل المندوب بطريقة دفع غير نقدية (Lookup_CashPaymentMethod).
+    /// Scope_Branch_Id فارغ = كل الفروع، وإعداد الفرع يسبق العام. المندوب يختار الطريقة فقط.
+    /// </summary>
+    [Table("SalesRep_Payment_Method_Banks")]
+    public class SalesRep_Payment_Method_Bank : SalesRepAuditEntity
+    {
+        [Key] public long Id { get; set; }
+        public long Payment_Method_Id { get; set; }
+        public long? Scope_Branch_Id { get; set; }
+        public long Bank_Id { get; set; }
+        public bool Active { get; set; } = true;
+    }
+
     [Table("SalesRep_Shift_Cash")]
     public class SalesRep_Shift_Cash : SalesRepAuditEntity
     {

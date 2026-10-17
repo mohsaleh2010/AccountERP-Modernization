@@ -148,6 +148,14 @@ CREATE UNIQUE NONCLUSTERED INDEX [UX_SalesRep_Credit_Policy_Group] ON [dbo].[Sal
     [Diff_Voucher_Id] [bigint] NULL,",
              @"CREATE UNIQUE NONCLUSTERED INDEX [UX_SalesRep_Shift_Cash] ON [dbo].[SalesRep_Shift_Cash]([Shift_Id], [Payment_Method_Id]);"),
 
+            // بقايا المرحلة 2: بنك كل طريقة دفع غير نقدية (فارغ الفرع = كل الفروع).
+            ("SalesRep_Payment_Method_Banks", @"
+    [Payment_Method_Id] [bigint] NOT NULL,
+    [Scope_Branch_Id] [bigint] NULL,
+    [Bank_Id] [bigint] NOT NULL,
+    [Active] [bit] NOT NULL DEFAULT ((1)),",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_SalesRep_Payment_Method_Banks] ON [dbo].[SalesRep_Payment_Method_Banks]([Payment_Method_Id], [Scope_Branch_Id]);"),
+
             // ق11: ربط أى مستند ERP بالوردية والزيارة بدل أعمدة على Invoices_List.
             ("SalesRep_Document_Links", @"
     [Doc_Type] [int] NOT NULL,
@@ -475,6 +483,7 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
             ("menuSalesRepNoSaleReasons", "أسباب عدم البيع", "/salesrep/nosale-reasons"),
             ("menuSalesRepCommissions", "أهداف وعمولات المندوبين", "/salesrep/commissions"),
             ("menuSalesRepPerformance", "أداء المندوبين", "/salesrep/performance"),
+            ("menuSalesRepPaymentBanks", "بنوك طرق دفع المندوبين", "/salesrep/payment-banks"),
         };
 
         /// <summary>

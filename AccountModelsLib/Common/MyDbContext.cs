@@ -654,6 +654,7 @@ namespace AccountModelsLib
         public DbSet<SalesRep_Shift> SalesRep_Shifts { get; set; }
         public DbSet<SalesRep_Shift_Stock> SalesRep_Shift_Stock { get; set; }
         public DbSet<SalesRep_Shift_Cash> SalesRep_Shift_Cash { get; set; }
+        public DbSet<SalesRep_Payment_Method_Bank> SalesRep_Payment_Method_Banks { get; set; }
         public DbSet<SalesRep_Document_Link> SalesRep_Document_Links { get; set; }
         public DbSet<SalesRep_Visit> SalesRep_Visits { get; set; }
         public DbSet<Lookup_SalesRep_NoSaleReason> Lookup_SalesRep_NoSaleReasons { get; set; }

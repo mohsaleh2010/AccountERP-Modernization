@@ -65,6 +65,9 @@ namespace AccountModelsLib.SalesRep
             /// <summary>أخذ طلبية (المرحلة 5): الأسطر من المخزن المصدر لا السيارة، ونقص الكمية تنبيه لا منع، والدفع يتحدد عند التسليم.</summary>
             public bool Order_Taking { get; set; }
             public long Source_Store_Id { get; set; }
+            /// <summary>طريقة الدفع للبيع غير الآجل (0/1 = نقدى فى العهدة)؛ غير النقدى يدخل بنك الطريقة فلا يُحسب على حد النقدية.</summary>
+            public long Payment_Method_Id { get; set; }
+            public bool Is_Cash_Payment => Payment_Method_Id <= 0 || Payment_Method_Id == SalesRepShiftService.CashPaymentMethodId;
         }
 
         /// <summary>مخالفة تحتاج موافقة: النوع، والقيمة المطلوبة، والحد المسموح، ورقم الموافقة إن طُلبت، وحالتها.</summary>
@@ -130,6 +133,24 @@ namespace AccountModelsLib.SalesRep
         /// </summary>
         public CheckResult Check(long repId, SaleInput input) => Read(opp => CheckCore(opp, Context(opp, repId), input));
 
+        /// <summary>
+        /// تنبيه حد النقدية بالعهدة (قرار المستخدم 2026-10-17: تحذير + تنبيه للمشرف بلا منع) قبل أى قبض نقدى: بيع، تحصيل، تسليم، عربون.
+        /// يرجع قائمة فارغة لو لا حد أو لن يُتجاوز.
+        /// </summary>
+        public List<string> CashWarnings(long repId, decimal cashIn) => Read(opp =>
+        {
+            var w = CashLimitWarning(Context(opp, repId), cashIn);
+            return w == null ? new List<string>() : new List<string> { w };
+        });
+
+        public static string CashLimitWarning(SaleContext ctx, decimal cashIn)
+        {
+            if (ctx.Max_Cash_On_Hand is not decimal maxCash || cashIn < 0) return null;
+            decimal after = ctx.Cash_On_Hand + cashIn;
+            if (after <= maxCash) return null;
+            return $"النقدية بالعهدة بعد العملية {after:N2} تتجاوز الحد {maxCash:N2}؛ ورِّد النقدية (توريد جزئى من شاشة الوردية).";
+        }
+
         /// <summary>يطلب موافقة لكل مخالفة ليس لها طلب قائم لهذا المستند ولا موافقة تغطى قيمتها. يرجع الفحص بعد الطلب.</summary>
         public CheckResult RequestApprovals(long repId, SaleInput input, string reason = null, SalesRepDocType docType = SalesRepDocType.SaleInvoice) => Tx(opp =>
         {
@@ -168,8 +189,9 @@ namespace AccountModelsLib.SalesRep
         /// <param name="prepaid">عربون طلبية يُسوَّى على الفاتورة (المرحلة 5): الفاتورة آجلة والفحص على (الصافى − العربون).</param>
         /// <param name="collectNow">مع العربون: الباقى يُحصَّل نقداً الآن (لا فحص ائتمان)، وإلا يبقى على الحساب.</param>
         /// <param name="orderPriced">فاتورة تسليم طلبية بسعرها المتفق عليه: لا فحص للخصم.</param>
+        /// <param name="paymentMethodId">طريقة دفع البيع غير الآجل: النقدى (0/1) فى صندوق العهدة، وغيره فى بنك الطريقة والسطر يحمل الطريقة.</param>
         public long SaveSale(long repId, Guid docGuid, InvoicesOperationListCLS invL_O, InvoicesOperationCLS invD_O,
-            decimal prepaid = 0, bool collectNow = false, bool orderPriced = false) => Tx(opp =>
+            decimal prepaid = 0, bool collectNow = false, bool orderPriced = false, long paymentMethodId = 0) => Tx(opp =>
         {
             var ctx = Context(opp, repId);
             if (!ctx.CanSell) throw new InvalidOperationException("لا وردية مفتوحة للمندوب؛ البيع يتم داخل وردية مفتوحة فقط.");
@@ -181,7 +203,8 @@ namespace AccountModelsLib.SalesRep
             h.Salesman_Id = ctx.Employee_Id;
             h.Branch_Id = ctx.Branch_Id;
             bool credit = (h.Is_Invoice_Agile ?? 0) == 1;
-            h.BanksId = credit ? 0 : ctx.Cash_Box_Id;
+            var receipt = SalesRepPaymentService.Resolve(opp, ctx, credit ? 0 : paymentMethodId);
+            h.BanksId = credit ? 0 : receipt.BoxId;
             foreach (var d in invD_O.invDlst)
             {
                 d.Store_Id = ctx.Van_Store_Id;
@@ -192,6 +215,7 @@ namespace AccountModelsLib.SalesRep
             {
                 Doc_Guid = docGuid, Customer_Id = h.Customer_Id ?? 0, Is_Credit = credit && !(prepaid > 0 && collectNow),
                 Net_Total = Math.Max(0, (h.Net_Total ?? 0) - prepaid), Lines = LinesOf(opp, invL_O, invD_O), Order_Priced = orderPriced,
+                Payment_Method_Id = receipt.MethodId,
             };
             var check = CheckCore(opp, ctx, input);
             if (!check.Ok)
@@ -204,16 +228,18 @@ namespace AccountModelsLib.SalesRep
             if (excp != 0 || invoiceId <= 0) throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg) ? "تعذر حفظ الفاتورة." : msg);
 
             Link(opp, ctx.Shift_Id.Value, SalesRepDocType.SaleInvoice, invoiceId, ctx.Branch_Id);
-            // البيع النقدى يقبض فى صندوق العهدة: لو لم ينشئ المحرك إذن الفاتورة (MakeOrderMoneyFromInvoiceAutomaticWithoutForm = 0 حيث الديسكتوب
-            // يفتح شاشة الإذن) يُنشأ إذن استلام مربوط بالفاتورة بنفس مسار «إذن نقدية مرتبط بفاتورة» (نوع العملية + رقم الفاتورة).
+            // البيع النقدى يقبض فى صندوق العهدة (وغير النقدى فى بنك الطريقة): لو لم ينشئ المحرك إذن الفاتورة (MakeOrderMoneyFromInvoiceAutomaticWithoutForm = 0
+            // حيث الديسكتوب يفتح شاشة الإذن) يُنشأ إذن استلام مربوط بالفاتورة بنفس مسار «إذن نقدية مرتبط بفاتورة» (نوع العملية + رقم الفاتورة).
             decimal net = Math.Round(h.Net_Total ?? 0, 2);
             if (!credit && net > 0 && VouchersOfInvoice(opp, invoiceId).Count == 0)
             {
                 var vouchers = new CashVouchersService();
-                long cur = opp.db.Database.SqlQuery<long>($"SELECT CAST(ISNULL(currency_Id, 1) AS bigint) AS Value FROM Banks WHERE Id = {ctx.Cash_Box_Id}").AsEnumerable().FirstOrDefault();
-                vouchers.SavePartyVoucherInTx(opp, 1, 0, ctx.Cash_Box_Id, (h.Invoice_Date ?? DateTime.Today).Date, 0, "بيع نقدى للمندوب " + ctx.Rep_Name,
-                    net, h.Customer_Id ?? 0, vouchers.GetFactor(cur), Common.Invoice_Type_Id, invoiceId);
+                vouchers.SavePartyVoucherInTx(opp, 1, 0, receipt.BoxId, (h.Invoice_Date ?? DateTime.Today).Date, 0,
+                    (receipt.IsCash ? "بيع نقدى للمندوب " : "بيع " + receipt.MethodName + " للمندوب ") + ctx.Rep_Name,
+                    net, h.Customer_Id ?? 0, vouchers.GetFactor(SalesRepPaymentService.CurrencyOf(opp, receipt.BoxId)), Common.Invoice_Type_Id, invoiceId,
+                    receipt.MethodId, receipt.MethodName);
             }
+            if (!credit) SalesRepPaymentService.TagVouchers(opp, VouchersOfInvoice(opp, invoiceId), receipt);
             var docs = new List<(SalesRepDocType, long)> { (SalesRepDocType.SaleInvoice, invoiceId) };
             foreach (long orderMoneyId in VouchersOfInvoice(opp, invoiceId))
             {
@@ -230,17 +256,21 @@ namespace AccountModelsLib.SalesRep
 
         // ============================== التحصيل ==============================
 
-        /// <summary>تحصيل نقدى من عميل على صندوق العهدة (إذن استلام) مربوط بالوردية المفتوحة. يرجع رقم الإذن (Order_Money.Id).</summary>
-        public long Collect(long repId, long customerId, decimal amount, string notes = null) => Tx(opp =>
+        /// <summary>
+        /// تحصيل من عميل مربوط بالوردية المفتوحة: النقدى فى صندوق العهدة، وغير النقدى فى بنك الطريقة والسطر يحمل الطريقة.
+        /// يرجع رقم الإذن (Order_Money.Id).
+        /// </summary>
+        public long Collect(long repId, long customerId, decimal amount, string notes = null, long paymentMethodId = 0) => Tx(opp =>
         {
             var ctx = Context(opp, repId);
             if (!ctx.CanSell) throw new InvalidOperationException("لا وردية مفتوحة للمندوب؛ التحصيل يتم داخل وردية مفتوحة فقط.");
             if (customerId <= 0) throw new InvalidOperationException("اختر العميل.");
             if (amount <= 0) throw new InvalidOperationException("المبلغ يجب أن يكون أكبر من صفر.");
+            var receipt = SalesRepPaymentService.Resolve(opp, ctx, paymentMethodId);
             var vouchers = new CashVouchersService();
-            long cur = opp.db.Database.SqlQuery<long>($"SELECT CAST(ISNULL(currency_Id, 1) AS bigint) AS Value FROM Banks WHERE Id = {ctx.Cash_Box_Id}").AsEnumerable().FirstOrDefault();
-            var v = vouchers.SavePartyVoucherInTx(opp, 1, 0, ctx.Cash_Box_Id, DateTime.Today, 0, string.IsNullOrWhiteSpace(notes) ? "تحصيل المندوب " + ctx.Rep_Name : notes.Trim(),
-                Math.Round(amount, 2), customerId, vouchers.GetFactor(cur));
+            string text = string.IsNullOrWhiteSpace(notes) ? (receipt.IsCash ? "تحصيل المندوب " : "تحصيل " + receipt.MethodName + " — المندوب ") + ctx.Rep_Name : notes.Trim();
+            var v = vouchers.SavePartyVoucherInTx(opp, 1, 0, receipt.BoxId, DateTime.Today, 0, text,
+                Math.Round(amount, 2), customerId, vouchers.GetFactor(SalesRepPaymentService.CurrencyOf(opp, receipt.BoxId)), 0, 0, receipt.MethodId, receipt.MethodName);
             Link(opp, ctx.Shift_Id.Value, SalesRepDocType.CashVoucher, v.OrderId, ctx.Branch_Id);
             SalesRepVisitService.Attach(opp, ctx.Shift_Id.Value, customerId, SalesRepVisitResult.Collection, (SalesRepDocType.CashVoucher, v.OrderId));
             return v.OrderId;
@@ -427,8 +457,8 @@ SELECT ISNULL((SELECT name FROM Employee WHERE Id = {rep.Employee_Id}), N'') AS 
             }
 
             // ---- حد النقدية بالعهدة: تنبيه بالتوريد (لا يمنع البيع) ----
-            if (!input.Is_Credit && ctx.Max_Cash_On_Hand is decimal maxCash && ctx.Cash_On_Hand + input.Net_Total > maxCash)
-                result.Warnings.Add($"النقدية بالعهدة بعد البيع {ctx.Cash_On_Hand + input.Net_Total:N2} تتجاوز الحد {maxCash:N2}؛ ورِّد النقدية.");
+            if (!input.Is_Credit && !input.Order_Taking && input.Is_Cash_Payment && CashLimitWarning(ctx, input.Net_Total) is string cashWarning)
+                result.Warnings.Add(cashWarning);
 
             // ---- حالة الموافقات لهذا المستند: موافقة معتمدة غير مستعملة تغطى القيمة المطلوبة ----
             var approvals = opp.db.SalesRep_Approvals.AsNoTracking().Where(a => a.Ref_Document_Guid == input.Doc_Guid && a.Ref_Doc_Id == null).ToList();
@@ -446,13 +476,18 @@ SELECT ISNULL((SELECT name FROM Employee WHERE Id = {rep.Employee_Id}), N'') AS 
 
         public class ItemGroupRow { public long Item_Id { get; set; } public long Group_Id { get; set; } }
 
-        /// <summary>رصيد العميل بنفس استعلام شاشة الفاتورة (CustomerCLS.GetCustomerBalance) لكن من اتصال المعاملة.</summary>
+        /// <summary>
+        /// رصيد العميل بنفس مصادر شاشة الفاتورة (CustomerCLS.GetCustomerBalance / MakeCustomer_MokhtalatDataByGroupNew): حساب العميل + حساب المورد
+        /// المرتبط عدا النوع 25، والعميل نشط ومن نوع العملاء — لكن باستعلام واحد على اتصال المعاملة. الدالة القديمة تفرّغ جدول Mokhtalat وتملؤه
+        /// من اتصال آخر، فكانت تنتظر للأبد أقفال المعاملة نفسها على صف العميل (توقف الاختبارات/التسليم بعد بيع فى نفس المعاملة).
+        /// </summary>
         internal static decimal CustomerBalance(operations opp, long customerId)
         {
-            string sql = new CustomerCLS().MakeCustomer_MokhtalatDataByGroupNew(-1, 0, customerId, -1, -1);
-            var dt = opp.return_DataTable(sql);
-            decimal bal = 0;
-            if (dt.Rows.Count > 0 && dt.Columns.Contains("Balance")) decimal.TryParse(dt.Rows[0]["Balance"]?.ToString(), out bal);
+            decimal bal = opp.db.Database.SqlQuery<decimal>($@"
+SELECT CAST(ISNULL((SELECT SUM(ISNULL(a.Export, 0) - ISNULL(a.Import, 0)) FROM Customers_Accounts a WHERE a.Customer_Id = c.Id AND a.Reference_Type <> 25), 0)
+          + ISNULL((SELECT SUM(ISNULL(sa.Export, 0) - ISNULL(sa.Import, 0)) FROM Suppliers_Accounts sa JOIN Supplier sp ON sp.Id = sa.Supplier_Id
+                    WHERE sp.Ref_Cust_Supplier_Id = c.Id AND sp.Ref_Cust_Supplier_Id > 0 AND sa.Reference_Type <> 25), 0) AS decimal(18,4)) AS Value
+FROM Customer c WHERE c.Id = {customerId} AND c.active = 1 AND c.Customer_Type = {Common.Customer_Type}").AsEnumerable().FirstOrDefault();
             return Common.RoundMe(bal);
         }
 
