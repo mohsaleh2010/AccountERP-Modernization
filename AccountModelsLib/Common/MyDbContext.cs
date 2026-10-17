@@ -651,6 +651,8 @@ namespace AccountModelsLib
 
         public DbSet<SalesRep_Rep> SalesRep_Reps { get; set; }
         public DbSet<SalesRep_Device> SalesRep_Devices { get; set; }
+        public DbSet<SalesRep_Device_Activation> SalesRep_Device_Activations { get; set; }
+        public DbSet<SalesRep_Device_Dataset> SalesRep_Device_Datasets { get; set; }
         public DbSet<SalesRep_Shift> SalesRep_Shifts { get; set; }
         public DbSet<SalesRep_Shift_Stock> SalesRep_Shift_Stock { get; set; }
         public DbSet<SalesRep_Shift_Cash> SalesRep_Shift_Cash { get; set; }

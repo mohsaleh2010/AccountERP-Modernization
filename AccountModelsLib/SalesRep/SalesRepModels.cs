@@ -25,7 +25,11 @@ namespace AccountModelsLib.SalesRep
 
     public enum SalesRepReturnCondition { Good = 0, Damaged = 1 }
 
-    public enum SalesRepSyncStatus { Received = 0, Processed = 1, Error = 2, PendingReview = 3 }
+    /// <summary>Rejected (المرحلة 7): رفض يدوى من شاشة المراجعة؛ لا يُعاد معالجته.</summary>
+    public enum SalesRepSyncStatus { Received = 0, Processed = 1, Error = 2, PendingReview = 3, Rejected = 4 }
+
+    /// <summary>أنواع مستندات الجهاز المرفوعة (SalesRep_Sync_Inbox.Doc_Type) — مستقلة عن أنواع ربط الوردية.</summary>
+    public enum SalesRepSyncDocType { Sale = 1, Return = 2, Collection = 3, TakeOrder = 4, Delivery = 5, Cheque = 6, NoSale = 7 }
 
     public enum SalesRepTargetScope { Total = 0, Item = 1, ItemGroup = 2, NewCustomers = 3, Collection = 4 }
 
@@ -107,6 +111,55 @@ namespace AccountModelsLib.SalesRep
         public long? Number_Range_From { get; set; }
         public long? Number_Range_To { get; set; }
         public long? Number_Range_Next { get; set; }
+        // المرحلة 7: التفعيل والدخول (لا كلمات مرور النظام عبر الإنترنت).
+        public string Device_Name { get; set; }
+        public string App_Version { get; set; }
+        /// <summary>مستخدم النظام الذى تُسجَّل باسمه مستندات الجهاز (حدده المكتب عند إصدار رمز التفعيل).</summary>
+        public long? Act_As_User_Id { get; set; }
+        /// <summary>PBKDF2: «تكرارات.ملح.بصمة» بـ Base64.</summary>
+        public string Pin_Hash { get; set; }
+        public int Pin_Failed_Count { get; set; }
+        public DateTime? Pin_Locked_Until { get; set; }
+        /// <summary>بصمة SHA-256 لتوكن التجديد الحالى والسابق (السابق يُقبل مرة لتحمّل ضياع الرد).</summary>
+        public string Token_Hash { get; set; }
+        public string Prev_Token_Hash { get; set; }
+        /// <summary>يتغير مع كل دخول/حظر فيُبطل توكنات الوصول السابقة.</summary>
+        public long Token_Stamp { get; set; }
+        public DateTime? Activated_At { get; set; }
+        public DateTime? Last_Login_At { get; set; }
+        public string Blocked_Reason { get; set; }
+    }
+
+    /// <summary>رمز تفعيل جهاز يصدره المكتب لمندوب: صالح مرة واحدة ولمدة محدودة، ويُخزَّن مُجزَّأ.</summary>
+    [Table("SalesRep_Device_Activations")]
+    public class SalesRep_Device_Activation : SalesRepAuditEntity
+    {
+        [Key] public long Id { get; set; }
+        public long Rep_Id { get; set; }
+        public string Code_Hash { get; set; } = "";
+        /// <summary>آخر 3 حروف من الرمز للتعرف عليه فى الشاشة.</summary>
+        public string Code_Hint { get; set; }
+        public DateTime Expires_At { get; set; }
+        public long? Act_As_User_Id { get; set; }
+        public DateTime? Used_At { get; set; }
+        public long? Device_Id { get; set; }
+        public DateTime? Revoked_At { get; set; }
+    }
+
+    /// <summary>
+    /// حالة تنزيل مجموعة بيانات لجهاز (قرار المستخدم 2026-10-17 «الفرق من السيرفر»): بصمة كل صف استلمه الجهاز
+    /// (مفتاح 8 بايت + بصمة 8 بايت لكل صف فى State)، فالتنزيل التالى يرسل المضاف/المعدَّل/المحذوف فقط.
+    /// </summary>
+    [Table("SalesRep_Device_Datasets")]
+    public class SalesRep_Device_Dataset : SalesRepAuditEntity
+    {
+        [Key] public long Id { get; set; }
+        public long Device_Id { get; set; }
+        public string Dataset { get; set; } = "";
+        public long Version { get; set; }
+        public int Row_Count { get; set; }
+        public byte[] State { get; set; }
+        public DateTime? Synced_At { get; set; }
     }
 
     [Table("SalesRep_Routes")]
@@ -404,6 +457,13 @@ namespace AccountModelsLib.SalesRep
         public long? Result_Ref_Id { get; set; }
         public DateTime Received_At { get; set; }
         public DateTime? Processed_At { get; set; }
+        // المرحلة 7: المندوب، ووقت إنشاء المستند على الجهاز، وعدد المحاولات، والمراجعة.
+        public long? Rep_Id { get; set; }
+        public DateTime? Device_Created_At { get; set; }
+        public int Attempts { get; set; }
+        public long? Reviewed_By_User_Id { get; set; }
+        public DateTime? Reviewed_At { get; set; }
+        public string Review_Notes { get; set; }
     }
 
     [Table("SalesRep_Attachments")]

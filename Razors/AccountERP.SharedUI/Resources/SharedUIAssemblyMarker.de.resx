@@ -3650,4 +3650,87 @@
   <data name="FSYAlertsTitle" xml:space="preserve"><value>Vertreter über ihrem Bargeldlimit ({0})</value></data>
   <data name="FSYAlertsHint" xml:space="preserve"><value>Nur Warnung, Verkäufe sind nicht gesperrt: Teilabführung im Schichtbildschirm veranlassen.</value></data>
   <data name="FSYExcess" xml:space="preserve"><value>Überschuss</value></data>
+  <data name="FSMTitle" xml:space="preserve"><value>Geräte der Vertreter</value></data>
+  <data name="FSMSub" xml:space="preserve"><value>Aktivieren Sie das Telefon eines Vertreters mit einem hier ausgestellten Code; der Vertreter legt eine PIN fest. Geräte verfolgen und verlorene sperren. Systempasswörter werden auf dem Telefon nie verwendet.</value></data>
+  <data name="FSMIssue" xml:space="preserve"><value>Aktivierungscode ausstellen</value></data>
+  <data name="FSMRepRequired" xml:space="preserve"><value>Vertreter wählen</value></data>
+  <data name="FSMActAs" xml:space="preserve"><value>Belege erfasst als</value></data>
+  <data name="FSMActAsHint" xml:space="preserve"><value>Der Systembenutzer auf Rechnungen und Zahlungen des Geräts</value></data>
+  <data name="FSMValidity" xml:space="preserve"><value>Code gültig für</value></data>
+  <data name="FSMHours" xml:space="preserve"><value>{0} Std.</value></data>
+  <data name="FSMDays" xml:space="preserve"><value>{0} Tag(e)</value></data>
+  <data name="FSMIssueBtn" xml:space="preserve"><value>Code ausstellen</value></data>
+  <data name="FSMIssued" xml:space="preserve"><value>Code ausgestellt; jetzt dem Vertreter geben</value></data>
+  <data name="FSMCode" xml:space="preserve"><value>Aktivierungscode</value></data>
+  <data name="FSMExpires" xml:space="preserve"><value>gültig bis {0}, nur einmal</value></data>
+  <data name="FSMShownOnce" xml:space="preserve"><value>Der Code wird nicht gespeichert und nicht erneut angezeigt; bei Verlust widerrufen und neu ausstellen.</value></data>
+  <data name="FSMHide" xml:space="preserve"><value>Ausblenden</value></data>
+  <data name="FSMOpenCodes" xml:space="preserve"><value>Unbenutzte Codes ({0})</value></data>
+  <data name="FSMNoOpenCodes" xml:space="preserve"><value>Keine gültigen unbenutzten Codes.</value></data>
+  <data name="FSMCodeEnds" xml:space="preserve"><value>Endet mit</value></data>
+  <data name="FSMExpiresAt" xml:space="preserve"><value>Läuft ab</value></data>
+  <data name="FSMIssuedBy" xml:space="preserve"><value>Ausgestellt von</value></data>
+  <data name="FSMRevoke" xml:space="preserve"><value>Widerrufen</value></data>
+  <data name="FSMRevokeOf" xml:space="preserve"><value>Code für {0} widerrufen</value></data>
+  <data name="FSMRevokeConfirm" xml:space="preserve"><value>Diesen Code widerrufen?</value></data>
+  <data name="FSMRevoked" xml:space="preserve"><value>Code widerrufen</value></data>
+  <data name="FSMDevices" xml:space="preserve"><value>Geräte ({0})</value></data>
+  <data name="FSMNoDevices" xml:space="preserve"><value>Noch keine aktivierten Geräte.</value></data>
+  <data name="FSMDevice" xml:space="preserve"><value>Gerät</value></data>
+  <data name="FSMLastLogin" xml:space="preserve"><value>Letzte Anmeldung</value></data>
+  <data name="FSMLastSync" xml:space="preserve"><value>Letzte Synchronisierung</value></data>
+  <data name="FSMPending" xml:space="preserve"><value>Ausstehend</value></data>
+  <data name="FSMBlocked" xml:space="preserve"><value>Gesperrt</value></data>
+  <data name="FSMPinLocked" xml:space="preserve"><value>PIN gesperrt</value></data>
+  <data name="FSMBlock" xml:space="preserve"><value>Sperren</value></data>
+  <data name="FSMBlockOf" xml:space="preserve"><value>Gerät von {0} sperren</value></data>
+  <data name="FSMBlockReason" xml:space="preserve"><value>Grund</value></data>
+  <data name="FSMBlockReasonRequired" xml:space="preserve"><value>Grund erforderlich</value></data>
+  <data name="FSMBlockedDone" xml:space="preserve"><value>Gerät gesperrt, Sitzungen beendet</value></data>
+  <data name="FSMUnblock" xml:space="preserve"><value>Entsperren</value></data>
+  <data name="FSMUnblockOf" xml:space="preserve"><value>Gerät von {0} entsperren</value></data>
+  <data name="FSMUnblockedDone" xml:space="preserve"><value>Entsperrt; das Gerät braucht einen neuen Aktivierungscode</value></data>
+  <data name="FSMClearPin" xml:space="preserve"><value>PIN entsperren</value></data>
+  <data name="FSMPinCleared" xml:space="preserve"><value>PIN entsperrt</value></data>
+  <data name="FSMBlockHint" xml:space="preserve"><value>Die Sperre gilt sofort für jede Anfrage; zuvor gesendete Belege bleiben zur Prüfung. Entsperren stellt die Sitzung nicht wieder her: ein neuer Code ist nötig.</value></data>
+  <data name="FSUTitle" xml:space="preserve"><value>Gerätebelege zur Prüfung</value></data>
+  <data name="FSUSub" xml:space="preserve"><value>Ein Gerätebeleg, der wegen erforderlicher Genehmigung oder eines Fehlers (Bestand, Schicht, Kreditlimit) nicht gespeichert wurde. Genehmigen und erneut verarbeiten oder mit Begründung ablehnen.</value></data>
+  <data name="FSUApprovals" xml:space="preserve"><value>Vertreter-Genehmigungen</value></data>
+  <data name="FSUAll" xml:space="preserve"><value>Alle</value></data>
+  <data name="FSUAllReps" xml:space="preserve"><value>Alle Vertreter</value></data>
+  <data name="FSURefresh" xml:space="preserve"><value>Aktualisieren</value></data>
+  <data name="FSUEmpty" xml:space="preserve"><value>Keine Belege in diesem Status.</value></data>
+  <data name="FSUReceived" xml:space="preserve"><value>Empfangen</value></data>
+  <data name="FSUOnDevice" xml:space="preserve"><value>auf dem Gerät {0}</value></data>
+  <data name="FSUDocType" xml:space="preserve"><value>Beleg</value></data>
+  <data name="FSUCustomer" xml:space="preserve"><value>Kunde</value></data>
+  <data name="FSUAmount" xml:space="preserve"><value>Betrag</value></data>
+  <data name="FSULines" xml:space="preserve"><value>{0} Zeile(n)</value></data>
+  <data name="FSUType1" xml:space="preserve"><value>Verkaufsrechnung</value></data>
+  <data name="FSUType2" xml:space="preserve"><value>Retoure</value></data>
+  <data name="FSUType3" xml:space="preserve"><value>Zahlungseingang</value></data>
+  <data name="FSUType4" xml:space="preserve"><value>Auftrag</value></data>
+  <data name="FSUType5" xml:space="preserve"><value>Auftragslieferung</value></data>
+  <data name="FSUType6" xml:space="preserve"><value>Scheck</value></data>
+  <data name="FSUType7" xml:space="preserve"><value>Kein Verkauf</value></data>
+  <data name="FSUStatus0" xml:space="preserve"><value>Empfangen</value></data>
+  <data name="FSUStatus1" xml:space="preserve"><value>Gespeichert</value></data>
+  <data name="FSUStatus2" xml:space="preserve"><value>Fehler</value></data>
+  <data name="FSUStatus3" xml:space="preserve"><value>Zur Prüfung</value></data>
+  <data name="FSUStatus4" xml:space="preserve"><value>Abgelehnt</value></data>
+  <data name="FSUReviewedBy" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="FSUAttempts" xml:space="preserve"><value>{0} Versuche</value></data>
+  <data name="FSURetry" xml:space="preserve"><value>Erneut verarbeiten</value></data>
+  <data name="FSURetryOf" xml:space="preserve"><value>Beleg von {0} erneut verarbeiten</value></data>
+  <data name="FSURetryDone" xml:space="preserve"><value>Beleg gespeichert</value></data>
+  <data name="FSURetryStill" xml:space="preserve"><value>Noch nicht gespeichert: {0}</value></data>
+  <data name="FSUReject" xml:space="preserve"><value>Ablehnen</value></data>
+  <data name="FSURejectOf" xml:space="preserve"><value>Beleg von {0} ablehnen</value></data>
+  <data name="FSURejectReason" xml:space="preserve"><value>Grund</value></data>
+  <data name="FSURejectReasonRequired" xml:space="preserve"><value>Grund erforderlich</value></data>
+  <data name="FSURejected" xml:space="preserve"><value>Beleg abgelehnt; der Vertreter sieht es auf dem Gerät</value></data>
+  <data name="FSUPayload" xml:space="preserve"><value>Belegdaten</value></data>
+  <data name="FSUGuid" xml:space="preserve"><value>Beleg-ID</value></data>
+  <data name="FSUResult" xml:space="preserve"><value>erzeugter Beleg {0}</value></data>
+  <data name="FSUHint" xml:space="preserve"><value>Abgelehnte oder gespeicherte Belege werden nicht erneut verarbeitet. Erneutes Senden vom Gerät dupliziert nie einen Beleg.</value></data>
 </root>

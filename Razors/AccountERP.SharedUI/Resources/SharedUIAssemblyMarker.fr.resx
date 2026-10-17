@@ -3650,4 +3650,87 @@
   <data name="FSYAlertsTitle" xml:space="preserve"><value>Commerciaux au-delà de leur limite d'espèces ({0})</value></data>
   <data name="FSYAlertsHint" xml:space="preserve"><value>Avertissement seulement : demandez un versement partiel depuis l'écran du service.</value></data>
   <data name="FSYExcess" xml:space="preserve"><value>Excédent</value></data>
+  <data name="FSMTitle" xml:space="preserve"><value>Appareils des commerciaux</value></data>
+  <data name="FSMSub" xml:space="preserve"><value>Activez le téléphone d'un commercial avec un code émis ici ; il y définit un code PIN. Suivez les appareils et bloquez un appareil perdu. Les mots de passe du système ne sont jamais utilisés sur le téléphone.</value></data>
+  <data name="FSMIssue" xml:space="preserve"><value>Émettre un code d'activation</value></data>
+  <data name="FSMRepRequired" xml:space="preserve"><value>Choisissez le commercial</value></data>
+  <data name="FSMActAs" xml:space="preserve"><value>Documents enregistrés au nom de</value></data>
+  <data name="FSMActAsHint" xml:space="preserve"><value>L'utilisateur affiché sur les factures et encaissements de l'appareil</value></data>
+  <data name="FSMValidity" xml:space="preserve"><value>Code valable</value></data>
+  <data name="FSMHours" xml:space="preserve"><value>{0} h</value></data>
+  <data name="FSMDays" xml:space="preserve"><value>{0} jour(s)</value></data>
+  <data name="FSMIssueBtn" xml:space="preserve"><value>Émettre le code</value></data>
+  <data name="FSMIssued" xml:space="preserve"><value>Code émis ; donnez-le au commercial maintenant</value></data>
+  <data name="FSMCode" xml:space="preserve"><value>Code d'activation</value></data>
+  <data name="FSMExpires" xml:space="preserve"><value>valable jusqu'au {0}, une seule fois</value></data>
+  <data name="FSMShownOnce" xml:space="preserve"><value>Le code n'est pas conservé et ne sera plus affiché ; s'il est perdu, révoquez-le et émettez-en un autre.</value></data>
+  <data name="FSMHide" xml:space="preserve"><value>Masquer</value></data>
+  <data name="FSMOpenCodes" xml:space="preserve"><value>Codes non utilisés ({0})</value></data>
+  <data name="FSMNoOpenCodes" xml:space="preserve"><value>Aucun code valide non utilisé.</value></data>
+  <data name="FSMCodeEnds" xml:space="preserve"><value>Se termine par</value></data>
+  <data name="FSMExpiresAt" xml:space="preserve"><value>Expire le</value></data>
+  <data name="FSMIssuedBy" xml:space="preserve"><value>Émis par</value></data>
+  <data name="FSMRevoke" xml:space="preserve"><value>Révoquer</value></data>
+  <data name="FSMRevokeOf" xml:space="preserve"><value>Révoquer le code de {0}</value></data>
+  <data name="FSMRevokeConfirm" xml:space="preserve"><value>Révoquer ce code ?</value></data>
+  <data name="FSMRevoked" xml:space="preserve"><value>Code révoqué</value></data>
+  <data name="FSMDevices" xml:space="preserve"><value>Appareils ({0})</value></data>
+  <data name="FSMNoDevices" xml:space="preserve"><value>Aucun appareil activé.</value></data>
+  <data name="FSMDevice" xml:space="preserve"><value>Appareil</value></data>
+  <data name="FSMLastLogin" xml:space="preserve"><value>Dernière connexion</value></data>
+  <data name="FSMLastSync" xml:space="preserve"><value>Dernière synchro</value></data>
+  <data name="FSMPending" xml:space="preserve"><value>En attente</value></data>
+  <data name="FSMBlocked" xml:space="preserve"><value>Bloqué</value></data>
+  <data name="FSMPinLocked" xml:space="preserve"><value>PIN verrouillé</value></data>
+  <data name="FSMBlock" xml:space="preserve"><value>Bloquer</value></data>
+  <data name="FSMBlockOf" xml:space="preserve"><value>Bloquer l'appareil de {0}</value></data>
+  <data name="FSMBlockReason" xml:space="preserve"><value>Motif</value></data>
+  <data name="FSMBlockReasonRequired" xml:space="preserve"><value>Motif obligatoire</value></data>
+  <data name="FSMBlockedDone" xml:space="preserve"><value>Appareil bloqué et sessions terminées</value></data>
+  <data name="FSMUnblock" xml:space="preserve"><value>Débloquer</value></data>
+  <data name="FSMUnblockOf" xml:space="preserve"><value>Débloquer l'appareil de {0}</value></data>
+  <data name="FSMUnblockedDone" xml:space="preserve"><value>Débloqué ; l'appareil a besoin d'un nouveau code d'activation</value></data>
+  <data name="FSMClearPin" xml:space="preserve"><value>Déverrouiller le PIN</value></data>
+  <data name="FSMPinCleared" xml:space="preserve"><value>PIN déverrouillé</value></data>
+  <data name="FSMBlockHint" xml:space="preserve"><value>Le blocage s'applique immédiatement à chaque requête ; les documents envoyés avant restent à contrôler. Le déblocage ne rétablit pas la session : un nouveau code est nécessaire.</value></data>
+  <data name="FSUTitle" xml:space="preserve"><value>Documents d'appareils à contrôler</value></data>
+  <data name="FSUSub" xml:space="preserve"><value>Document d'un appareil non enregistré car il demande une approbation ou a rencontré une erreur (stock, service, limite de crédit). Approuvez-le puis retraitez-le, ou rejetez-le avec un motif.</value></data>
+  <data name="FSUApprovals" xml:space="preserve"><value>Approbations des commerciaux</value></data>
+  <data name="FSUAll" xml:space="preserve"><value>Tous</value></data>
+  <data name="FSUAllReps" xml:space="preserve"><value>Tous les commerciaux</value></data>
+  <data name="FSURefresh" xml:space="preserve"><value>Actualiser</value></data>
+  <data name="FSUEmpty" xml:space="preserve"><value>Aucun document dans cet état.</value></data>
+  <data name="FSUReceived" xml:space="preserve"><value>Reçu</value></data>
+  <data name="FSUOnDevice" xml:space="preserve"><value>sur l'appareil {0}</value></data>
+  <data name="FSUDocType" xml:space="preserve"><value>Document</value></data>
+  <data name="FSUCustomer" xml:space="preserve"><value>Client</value></data>
+  <data name="FSUAmount" xml:space="preserve"><value>Montant</value></data>
+  <data name="FSULines" xml:space="preserve"><value>{0} ligne(s)</value></data>
+  <data name="FSUType1" xml:space="preserve"><value>Facture de vente</value></data>
+  <data name="FSUType2" xml:space="preserve"><value>Retour</value></data>
+  <data name="FSUType3" xml:space="preserve"><value>Encaissement</value></data>
+  <data name="FSUType4" xml:space="preserve"><value>Commande</value></data>
+  <data name="FSUType5" xml:space="preserve"><value>Livraison de commande</value></data>
+  <data name="FSUType6" xml:space="preserve"><value>Chèque</value></data>
+  <data name="FSUType7" xml:space="preserve"><value>Pas de vente</value></data>
+  <data name="FSUStatus0" xml:space="preserve"><value>Reçu</value></data>
+  <data name="FSUStatus1" xml:space="preserve"><value>Enregistré</value></data>
+  <data name="FSUStatus2" xml:space="preserve"><value>Erreur</value></data>
+  <data name="FSUStatus3" xml:space="preserve"><value>À contrôler</value></data>
+  <data name="FSUStatus4" xml:space="preserve"><value>Rejeté</value></data>
+  <data name="FSUReviewedBy" xml:space="preserve"><value>{0} : {1}</value></data>
+  <data name="FSUAttempts" xml:space="preserve"><value>{0} tentatives</value></data>
+  <data name="FSURetry" xml:space="preserve"><value>Retraiter</value></data>
+  <data name="FSURetryOf" xml:space="preserve"><value>Retraiter le document de {0}</value></data>
+  <data name="FSURetryDone" xml:space="preserve"><value>Document enregistré</value></data>
+  <data name="FSURetryStill" xml:space="preserve"><value>Pas encore enregistré : {0}</value></data>
+  <data name="FSUReject" xml:space="preserve"><value>Rejeter</value></data>
+  <data name="FSURejectOf" xml:space="preserve"><value>Rejeter le document de {0}</value></data>
+  <data name="FSURejectReason" xml:space="preserve"><value>Motif</value></data>
+  <data name="FSURejectReasonRequired" xml:space="preserve"><value>Motif obligatoire</value></data>
+  <data name="FSURejected" xml:space="preserve"><value>Document rejeté ; le commercial le voit sur l'appareil</value></data>
+  <data name="FSUPayload" xml:space="preserve"><value>Données du document</value></data>
+  <data name="FSUGuid" xml:space="preserve"><value>ID du document</value></data>
+  <data name="FSUResult" xml:space="preserve"><value>document créé {0}</value></data>
+  <data name="FSUHint" xml:space="preserve"><value>Un document rejeté ou enregistré n'est pas retraité. Un renvoi depuis l'appareil ne duplique jamais un document.</value></data>
 </root>

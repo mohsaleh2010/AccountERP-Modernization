@@ -60,6 +60,28 @@ CREATE UNIQUE NONCLUSTERED INDEX [UX_SalesRep_Reps_Damaged_Store] ON [dbo].[Sale
     [Number_Range_Next] [bigint] NULL,",
              @"CREATE UNIQUE NONCLUSTERED INDEX [UX_SalesRep_Devices_Uid] ON [dbo].[SalesRep_Devices]([Device_Uid]);"),
 
+            // المرحلة 7: رمز التفعيل مُجزَّأ وفريد.
+            ("SalesRep_Device_Activations", @"
+    [Rep_Id] [bigint] NOT NULL,
+    [Code_Hash] [nvarchar](100) NOT NULL,
+    [Code_Hint] [nvarchar](10) NULL,
+    [Expires_At] [datetime] NOT NULL,
+    [Act_As_User_Id] [bigint] NULL,
+    [Used_At] [datetime] NULL,
+    [Device_Id] [bigint] NULL,
+    [Revoked_At] [datetime] NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_SalesRep_Device_Activations_Hash] ON [dbo].[SalesRep_Device_Activations]([Code_Hash]);"),
+
+            // المرحلة 7 («الفرق من السيرفر»): بصمات صفوف كل مجموعة بيانات استلمها كل جهاز.
+            ("SalesRep_Device_Datasets", @"
+    [Device_Id] [bigint] NOT NULL,
+    [Dataset] [nvarchar](50) NOT NULL,
+    [Version] [bigint] NOT NULL,
+    [Row_Count] [int] NOT NULL DEFAULT ((0)),
+    [State] [varbinary](max) NULL,
+    [Synced_At] [datetime] NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_SalesRep_Device_Datasets] ON [dbo].[SalesRep_Device_Datasets]([Device_Id], [Dataset]);"),
+
             ("SalesRep_Routes", @"
     [Name] [nvarchar](200) NOT NULL,
     [Rep_Id] [bigint] NOT NULL,
@@ -412,6 +434,25 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
             ("SalesRep_Document_Links", "Handed_Over_User_Id", "[bigint] NULL"),
             // المرحلة 6 (ب): حساب مصروف العمولة فى الخطة (قرار المستخدم 2026-10-17).
             ("SalesRep_Commission_Plans", "Expense_Account_Id", "[bigint] NULL"),
+            // المرحلة 7: تفعيل الجهاز ودخوله، ومراجعة مستنداته.
+            ("SalesRep_Devices", "Device_Name", "[nvarchar](100) NULL"),
+            ("SalesRep_Devices", "App_Version", "[nvarchar](30) NULL"),
+            ("SalesRep_Devices", "Act_As_User_Id", "[bigint] NULL"),
+            ("SalesRep_Devices", "Pin_Hash", "[nvarchar](200) NULL"),
+            ("SalesRep_Devices", "Pin_Failed_Count", "[int] NOT NULL DEFAULT ((0))"),
+            ("SalesRep_Devices", "Pin_Locked_Until", "[datetime] NULL"),
+            ("SalesRep_Devices", "Token_Hash", "[nvarchar](100) NULL"),
+            ("SalesRep_Devices", "Prev_Token_Hash", "[nvarchar](100) NULL"),
+            ("SalesRep_Devices", "Token_Stamp", "[bigint] NOT NULL DEFAULT ((0))"),
+            ("SalesRep_Devices", "Activated_At", "[datetime] NULL"),
+            ("SalesRep_Devices", "Last_Login_At", "[datetime] NULL"),
+            ("SalesRep_Devices", "Blocked_Reason", "[nvarchar](300) NULL"),
+            ("SalesRep_Sync_Inbox", "Rep_Id", "[bigint] NULL"),
+            ("SalesRep_Sync_Inbox", "Device_Created_At", "[datetime] NULL"),
+            ("SalesRep_Sync_Inbox", "Attempts", "[int] NOT NULL DEFAULT ((0))"),
+            ("SalesRep_Sync_Inbox", "Reviewed_By_User_Id", "[bigint] NULL"),
+            ("SalesRep_Sync_Inbox", "Reviewed_At", "[datetime] NULL"),
+            ("SalesRep_Sync_Inbox", "Review_Notes", "[nvarchar](500) NULL"),
         };
 
         /// <summary>أسباب الإرجاع الافتراضية (§6.6-6) تُضاف فقط لو جدول الأسباب فارغ؛ تُعدَّل وتُضاف من القاعدة. لا يمس أى صف قائم.</summary>
@@ -484,6 +525,8 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
             ("menuSalesRepCommissions", "أهداف وعمولات المندوبين", "/salesrep/commissions"),
             ("menuSalesRepPerformance", "أداء المندوبين", "/salesrep/performance"),
             ("menuSalesRepPaymentBanks", "بنوك طرق دفع المندوبين", "/salesrep/payment-banks"),
+            ("menuSalesRepDevices", "أجهزة المندوبين", "/salesrep/devices"),
+            ("menuSalesRepSyncReview", "مستندات الأجهزة بانتظار المراجعة", "/salesrep/sync-review"),
         };
 
         /// <summary>

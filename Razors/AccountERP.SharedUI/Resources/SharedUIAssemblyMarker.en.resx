@@ -3648,4 +3648,87 @@
   <data name="FSYAlertsTitle" xml:space="preserve"><value>Reps over their cash limit ({0})</value></data>
   <data name="FSYAlertsHint" xml:space="preserve"><value>Warning only, sales are not blocked: ask them to make a partial remittance from the shift screen.</value></data>
   <data name="FSYExcess" xml:space="preserve"><value>Excess</value></data>
+  <data name="FSMTitle" xml:space="preserve"><value>Rep devices</value></data>
+  <data name="FSMSub" xml:space="preserve"><value>Activate a rep's phone with a code issued here; the rep sets a PIN on it. Track devices and block a lost one. System passwords are never used on the phone.</value></data>
+  <data name="FSMIssue" xml:space="preserve"><value>Issue an activation code</value></data>
+  <data name="FSMRepRequired" xml:space="preserve"><value>Choose the rep</value></data>
+  <data name="FSMActAs" xml:space="preserve"><value>Documents recorded as</value></data>
+  <data name="FSMActAsHint" xml:space="preserve"><value>The system user shown on the device's invoices and collections</value></data>
+  <data name="FSMValidity" xml:space="preserve"><value>Code valid for</value></data>
+  <data name="FSMHours" xml:space="preserve"><value>{0} h</value></data>
+  <data name="FSMDays" xml:space="preserve"><value>{0} day(s)</value></data>
+  <data name="FSMIssueBtn" xml:space="preserve"><value>Issue code</value></data>
+  <data name="FSMIssued" xml:space="preserve"><value>Code issued; give it to the rep now</value></data>
+  <data name="FSMCode" xml:space="preserve"><value>Activation code</value></data>
+  <data name="FSMExpires" xml:space="preserve"><value>valid until {0}, once only</value></data>
+  <data name="FSMShownOnce" xml:space="preserve"><value>The code is not stored and won't be shown again; if it is lost, revoke it and issue another.</value></data>
+  <data name="FSMHide" xml:space="preserve"><value>Hide</value></data>
+  <data name="FSMOpenCodes" xml:space="preserve"><value>Unused codes ({0})</value></data>
+  <data name="FSMNoOpenCodes" xml:space="preserve"><value>No valid unused codes.</value></data>
+  <data name="FSMCodeEnds" xml:space="preserve"><value>Ends with</value></data>
+  <data name="FSMExpiresAt" xml:space="preserve"><value>Expires</value></data>
+  <data name="FSMIssuedBy" xml:space="preserve"><value>Issued by</value></data>
+  <data name="FSMRevoke" xml:space="preserve"><value>Revoke</value></data>
+  <data name="FSMRevokeOf" xml:space="preserve"><value>Revoke the code for {0}</value></data>
+  <data name="FSMRevokeConfirm" xml:space="preserve"><value>Revoke this code?</value></data>
+  <data name="FSMRevoked" xml:space="preserve"><value>Code revoked</value></data>
+  <data name="FSMDevices" xml:space="preserve"><value>Devices ({0})</value></data>
+  <data name="FSMNoDevices" xml:space="preserve"><value>No activated devices yet.</value></data>
+  <data name="FSMDevice" xml:space="preserve"><value>Device</value></data>
+  <data name="FSMLastLogin" xml:space="preserve"><value>Last sign-in</value></data>
+  <data name="FSMLastSync" xml:space="preserve"><value>Last sync</value></data>
+  <data name="FSMPending" xml:space="preserve"><value>Pending</value></data>
+  <data name="FSMBlocked" xml:space="preserve"><value>Blocked</value></data>
+  <data name="FSMPinLocked" xml:space="preserve"><value>PIN locked</value></data>
+  <data name="FSMBlock" xml:space="preserve"><value>Block</value></data>
+  <data name="FSMBlockOf" xml:space="preserve"><value>Block {0}'s device</value></data>
+  <data name="FSMBlockReason" xml:space="preserve"><value>Reason</value></data>
+  <data name="FSMBlockReasonRequired" xml:space="preserve"><value>Reason required</value></data>
+  <data name="FSMBlockedDone" xml:space="preserve"><value>Device blocked and its sessions ended</value></data>
+  <data name="FSMUnblock" xml:space="preserve"><value>Unblock</value></data>
+  <data name="FSMUnblockOf" xml:space="preserve"><value>Unblock {0}'s device</value></data>
+  <data name="FSMUnblockedDone" xml:space="preserve"><value>Unblocked; the device needs a new activation code</value></data>
+  <data name="FSMClearPin" xml:space="preserve"><value>Unlock PIN</value></data>
+  <data name="FSMPinCleared" xml:space="preserve"><value>PIN unlocked</value></data>
+  <data name="FSMBlockHint" xml:space="preserve"><value>Blocking applies at once to every request from the device; documents it sent before stay for review. Unblocking does not restore the session: a new activation code is needed.</value></data>
+  <data name="FSUTitle" xml:space="preserve"><value>Device documents awaiting review</value></data>
+  <data name="FSUSub" xml:space="preserve"><value>A document from a rep's device that was not saved because it needs approval or hit an error (stock, shift, credit limit). Approve it in Rep approvals and process it again, or reject it with a reason.</value></data>
+  <data name="FSUApprovals" xml:space="preserve"><value>Rep approvals</value></data>
+  <data name="FSUAll" xml:space="preserve"><value>All</value></data>
+  <data name="FSUAllReps" xml:space="preserve"><value>All reps</value></data>
+  <data name="FSURefresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="FSUEmpty" xml:space="preserve"><value>No documents in this status.</value></data>
+  <data name="FSUReceived" xml:space="preserve"><value>Received</value></data>
+  <data name="FSUOnDevice" xml:space="preserve"><value>on device {0}</value></data>
+  <data name="FSUDocType" xml:space="preserve"><value>Document</value></data>
+  <data name="FSUCustomer" xml:space="preserve"><value>Customer</value></data>
+  <data name="FSUAmount" xml:space="preserve"><value>Amount</value></data>
+  <data name="FSULines" xml:space="preserve"><value>{0} line(s)</value></data>
+  <data name="FSUType1" xml:space="preserve"><value>Sales invoice</value></data>
+  <data name="FSUType2" xml:space="preserve"><value>Return</value></data>
+  <data name="FSUType3" xml:space="preserve"><value>Collection</value></data>
+  <data name="FSUType4" xml:space="preserve"><value>Order</value></data>
+  <data name="FSUType5" xml:space="preserve"><value>Order delivery</value></data>
+  <data name="FSUType6" xml:space="preserve"><value>Cheque</value></data>
+  <data name="FSUType7" xml:space="preserve"><value>No sale</value></data>
+  <data name="FSUStatus0" xml:space="preserve"><value>Received</value></data>
+  <data name="FSUStatus1" xml:space="preserve"><value>Saved</value></data>
+  <data name="FSUStatus2" xml:space="preserve"><value>Error</value></data>
+  <data name="FSUStatus3" xml:space="preserve"><value>Awaiting review</value></data>
+  <data name="FSUStatus4" xml:space="preserve"><value>Rejected</value></data>
+  <data name="FSUReviewedBy" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="FSUAttempts" xml:space="preserve"><value>{0} attempts</value></data>
+  <data name="FSURetry" xml:space="preserve"><value>Process again</value></data>
+  <data name="FSURetryOf" xml:space="preserve"><value>Process {0}'s document again</value></data>
+  <data name="FSURetryDone" xml:space="preserve"><value>Document saved</value></data>
+  <data name="FSURetryStill" xml:space="preserve"><value>Not saved yet: {0}</value></data>
+  <data name="FSUReject" xml:space="preserve"><value>Reject</value></data>
+  <data name="FSURejectOf" xml:space="preserve"><value>Reject {0}'s document</value></data>
+  <data name="FSURejectReason" xml:space="preserve"><value>Reason</value></data>
+  <data name="FSURejectReasonRequired" xml:space="preserve"><value>Reason required</value></data>
+  <data name="FSURejected" xml:space="preserve"><value>Document rejected; the rep sees it on the device</value></data>
+  <data name="FSUPayload" xml:space="preserve"><value>Document data</value></data>
+  <data name="FSUGuid" xml:space="preserve"><value>Document ID</value></data>
+  <data name="FSUResult" xml:space="preserve"><value>resulting document {0}</value></data>
+  <data name="FSUHint" xml:space="preserve"><value>Rejected or saved documents are not processed again. A resend from the device never duplicates a document.</value></data>
 </root>

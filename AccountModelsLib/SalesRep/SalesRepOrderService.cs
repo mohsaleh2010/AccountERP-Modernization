@@ -640,30 +640,12 @@ WHERE u.id = {l.Unit_Item_Table_Id ?? 0}").AsEnumerable().FirstOrDefault() ?? ne
             }
 
             var h = invL.invL;
-            var customer = opp.db.Database.SqlQuery<SalesRepReturnService.CustomerRow>($"SELECT Name, CAST(ISNULL(SubAccount_Id, 0) AS bigint) AS SubAccount_Id FROM Customer WHERE Id = {order.Customer_Id ?? 0}")
-                .AsEnumerable().FirstOrDefault() ?? throw new InvalidOperationException("العميل غير موجود.");
-            DateTime now = DateTime.Now;
-            h.Invoice_Type = 0; h.Is_InvoiceKta3y = 0; h.IS_Make_Sarf_Item_BalanceFromInvoice = 1;
-            h.Customer_Id = order.Customer_Id; h.CustomerName = customer.Name ?? ""; h.SubAccount_Name = h.CustomerName; h.SubAccount_Id = customer.SubAccount_Id;
-            h.Currency_id = order.Currency_Id ?? opp.db.Database.SqlQuery<long>($"SELECT CAST(ISNULL(currency_Id, 1) AS bigint) AS Value FROM Banks WHERE Id = {ctx.Cash_Box_Id}").AsEnumerable().FirstOrDefault();
-            h.Currency = "";
-            h.Invoice_Date = now; h.Invoice_DateTime = now; h.InvoiceDueDate = now; h.Insert_ServerDateTime = now; h.OperationDate = now.Date;
-            h.Notes = SalesRepSaleService.Trim($"تسليم الطلبية رقم {order.Order_No}" + (string.IsNullOrWhiteSpace(input.Notes) ? "" : " — " + input.Notes.Trim()), 500);
-            h.User_Id = Common.User_Id; h.Branch_Id = ctx.Branch_Id; h.Salesman_Id = ctx.Employee_Id;
-            h.PolicaNo = "0"; h.troodContainerNo = "0"; h.Customer_Notes = ""; h.Emp_Name = ""; h.ShipmentCompany_Name = "";
-            h.Emp_Id = 0; h.ShipmentCompany_Id = 0; h.Shipment_Value = 0; h.AnotherPayment = 0; h.IS_Posted_Flage = 0;
-            h.IsInvoiceTaxInfo = anyTax ? 1 : 0; h.Is_Tax_Per_Item = anyTax ? 1 : 0; h.TaxSales10 = 0; h.ATS05 = 0;
-            InvoiceLineCalculator.ComputeHeaderTotals(h, invD.invDlst, anyTax);
+            SalesRepSaleService.FillSaleHeader(opp, ctx, invL, invD, order.Customer_Id ?? 0, order.Currency_Id,
+                $"تسليم الطلبية رقم {order.Order_No}" + (string.IsNullOrWhiteSpace(input.Notes) ? "" : " — " + input.Notes.Trim()), anyTax);
             decimal net = Math.Round(h.Net_Total ?? 0, 2);
             decimal deposit = Math.Min(DepositRemaining(opp, order.Id), net);
             // العربون يجعل الفاتورة آجلة (العميل دائن بالعربون فيتسوى من القيدين)؛ بلا عربون: نقدى لو يُحصَّل الآن وإلا آجل.
-            h.Is_Invoice_Agile = deposit > 0 || !input.Collect_Cash ? 1 : 0;
-            h.Invoice_Id = NextInvoiceNo(opp, ctx.Branch_Id, now);
-            decimal before = SalesRepSaleService.CustomerBalance(opp, order.Customer_Id ?? 0);
-            h.CustomerAccountBefor = before; h.CustomerAccountAfter = before + net;
-            invL.Invoice_Type_Id = Common.Invoice_Type_Id;
-            InvoiceLineCalculator.ZeroNullNumerics(h);
-            foreach (var d in invD.invDlst) InvoiceLineCalculator.ZeroNullNumerics(d);
+            SalesRepSaleService.FinishSaleHeader(opp, ctx, invL, invD, deposit > 0 || !input.Collect_Cash);
 
             b.InvL = invL; b.InvD = invD;
             b.Check.Net_Total = net;
@@ -681,7 +663,7 @@ WHERE u.id = {l.Unit_Item_Table_Id ?? 0}").AsEnumerable().FirstOrDefault() ?? ne
         };
 
         /// <summary>رقم فاتورة المبيعات التالى بنفس قواعد Make_New_Invoice_No (النوع/الفرع/السنة حسب الإعداد) مع قفل داخل المعاملة.</summary>
-        private static long NextInvoiceNo(operations opp, long branchId, DateTime date)
+        internal static long NextInvoiceNo(operations opp, long branchId, DateTime date)
         {
             int byType = Common.Is_InvoiceNoBy_Invoice_Type == 1 ? 1 : 0, byBranch = Common.Is_InvoiceNoBy_Branch_Id == 1 ? 1 : 0, byYear = Common.Is_InvoiceNoBy_FinancialYear == 1 ? 1 : 0;
             return opp.db.Database.SqlQuery<long>($@"

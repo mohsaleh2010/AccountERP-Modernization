@@ -65,6 +65,20 @@ builder.Services.AddScoped<operations>(provider => {
  
 builder.Services.AddScoped<IAuthService, WebAuthService>();
 
+// 🔐 م6 (المرحلة 7): جلسة مستخدم مستقلة لكل دائرة/طلب بدل حقول Common الثابتة المشتركة بين كل المستخدمين المتزامنين
+// (كان دخول أى مستخدم يغيّر Common.User_Id/Branch_Id للجميع). راجع AccountModelsLib/Common/UserSessionContext.cs.
+builder.Services.AddScoped(_ => AccountModelsLib.UserSession.FromProcessDefaults());
+builder.Services.AddScoped<Microsoft.AspNetCore.Components.Server.Circuits.CircuitHandler, AccountERP.Web.Services.UserSessionCircuitHandler>();
+
+// 📱 المرحلة 7: حد محاولات تفعيل/دخول أجهزة المندوبين (10 فى الدقيقة لكل عنوان) ضد تخمين رمز التفعيل والـ PIN.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy(AccountERP.Web.Api.SalesRepMobileApi.AuthRateLimitPolicy, httpContext =>
+        System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+});
+
 // 🔐 يتيحان استعادة جلسة الدخول بعد إعادة تحميل كاملة للصفحة (دائرة/Circuit جديدة) - راجع
 // LoginTokenStore ونقطتي "/Auth/Persist" و"/Auth/Clear" أسفل هذا الملف، وتفاصيل السبب فى
 // MODERNIZATION_NOTES.md (بحث عن "submenu click → back to login").
@@ -113,9 +127,26 @@ else
 }
 
 app.UseStatusCodePagesWithReExecute("/notfound", createScopeForStatusCodePages: true);
+
+// 🔐 م6: الطلبات العادية (العرض المسبق وواجهة /api) تحمل جلسة نطاق الطلب؛ أنشطة الدائرة يضبطها UserSessionCircuitHandler.
+app.Use((httpContext, next) =>
+{
+    AccountModelsLib.UserSessionContext.Current = httpContext.RequestServices.GetRequiredService<AccountModelsLib.UserSession>();
+    // 📱 واجهة الأجهزة ترجع حالتها كما هى (401/429...) لا صفحة /notfound بالإعادة الداخلية.
+    if (httpContext.Request.Path.StartsWithSegments("/api"))
+    {
+        var statusPages = httpContext.Features.Get<Microsoft.AspNetCore.Diagnostics.IStatusCodePagesFeature>();
+        if (statusPages != null) statusPages.Enabled = false;
+    }
+    return next(httpContext);
+});
 app.UseHttpsRedirection();
 app.UseAntiforgery();
+app.UseRateLimiter();
 app.MapStaticAssets();
+
+// 📱 المرحلة 7: واجهة جهاز المندوب (/api/v1) - راجع Api/SalesRepMobileApi.cs.
+AccountERP.Web.Api.SalesRepMobileApi.MapSalesRepMobileApi(app);
 
 // 🔥 3. جلب وتفعيل إعدادات اللغات (يجب أن تكون قبل عمل Map للـ Components)
 // تأكد أن كلاس LanguageService يحتوي على تفريغ الـ Providers لتعطيل لغة المتصفح

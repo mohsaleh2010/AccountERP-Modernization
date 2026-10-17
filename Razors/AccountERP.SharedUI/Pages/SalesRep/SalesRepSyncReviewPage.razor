@@ -1,0 +1,235 @@
+@* 🟢 خطة المندوبين — المرحلة 7 (أ): «مستندات الأجهزة بانتظار المراجعة». مستند من جهاز مندوب لم يُحفظ لمخالفة تحتاج موافقة أو خطأ عمل
+   (مخزون/وردية/حد) يبقى PendingReview بدل الرفض الصامت، وطلب الموافقة يُنشأ تلقائياً فى «موافقات المندوبين». المكتب: إعادة المعالجة
+   بعد القرار أو التصحيح، أو الرفض بسبب. الخدمة SalesRepSyncService. التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/sync-review"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("FSUTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .sr-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .sr-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-warning) 16%, transparent); color: var(--mud-palette-warning); }
+    .sr-head .ico .mud-icon-root { font-size: 2rem; }
+    .sr-head .titles { flex: 1 1 260px; }
+    .sr-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .sr-gap { margin-top: 16px; }
+    .sr-filters { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+    .sr-filters .rep { min-width: 220px; flex: 0 1 280px; }
+    .sr-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .sr-sub { font-size: .75rem; color: var(--mud-palette-text-secondary); }
+    .sr-err { font-size: .8125rem; color: var(--mud-palette-error); white-space: normal; overflow-wrap: anywhere; max-width: 420px; }
+    .sr-num { font-variant-numeric: tabular-nums; text-align: end; }
+    .sr-inline { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .sr-payload { margin: 8px 0 0; padding: 8px 12px; border-radius: 8px; background: var(--mud-palette-background-gray); font-family: ui-monospace, Consolas, monospace;
+                  font-size: .75rem; direction: ltr; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 240px; overflow: auto; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card sr-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.RuleFolder" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSUTitle")</h1>
+            <div class="sub">@Tr("FSUSub")</div>
+        </div>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FactCheck" Href="/salesrep/approvals">@Tr("FSUApprovals")</MudButton>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.PhonelinkLock" Href="/salesrep/devices">@Tr("FSMTitle")</MudButton>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="sr-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    <div class="inv-card sr-gap sr-filters">
+        <MudChipSet T="int" SelectedValue="@_status" SelectedValueChanged="@(v => FilterAsync(v))" SelectionMode="SelectionMode.SingleSelection" CheckMark="true"
+                    aria-label="@Tr("FSYStatus")">
+            <MudChip T="int" Value="@((int)SalesRepSyncStatus.PendingReview)" Color="Color.Warning">@Tr("FSUStatus3")</MudChip>
+            <MudChip T="int" Value="@((int)SalesRepSyncStatus.Error)" Color="Color.Error">@Tr("FSUStatus2")</MudChip>
+            <MudChip T="int" Value="@((int)SalesRepSyncStatus.Rejected)">@Tr("FSUStatus4")</MudChip>
+            <MudChip T="int" Value="@((int)SalesRepSyncStatus.Processed)" Color="Color.Success">@Tr("FSUStatus1")</MudChip>
+            <MudChip T="int" Value="-1">@Tr("FSUAll")</MudChip>
+        </MudChipSet>
+        <div class="rep">
+            <MudSelect T="long" Value="@_repId" ValueChanged="@(v => RepAsync(v))" Label="@Tr("FSRRep")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                       ToStringFunc="@(v => v == 0 ? Tr("FSUAllReps") : _reps.FirstOrDefault(r => r.Id == v)?.Name ?? "")">
+                <MudSelectItem T="long" Value="0L">@Tr("FSUAllReps")</MudSelectItem>
+                @foreach (var r in _reps) { <MudSelectItem T="long" Value="@r.Id">@r.Name</MudSelectItem> }
+            </MudSelect>
+        </div>
+        <MudIconButton Icon="@Icons.Material.Filled.Refresh" aria-label="@Tr("FSURefresh")" Disabled="@_loading" OnClick="LoadAsync" />
+    </div>
+
+    <div class="inv-card sr-gap" aria-live="polite">
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("FSRLoading")" />
+        }
+        else if (_rows.Count == 0)
+        {
+            <div class="inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.TaskAlt" Size="Size.Large" /><div>@Tr("FSUEmpty")</div></div>
+        }
+        else
+        {
+            <MudTable Items="@_rows" T="SalesRepSyncService.InboxRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Md" Dense="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>@Tr("FSUReceived")</MudTh><MudTh>@Tr("FSRRep")</MudTh><MudTh>@Tr("FSUDocType")</MudTh><MudTh>@Tr("FSUCustomer")</MudTh>
+                    <MudTh>@Tr("FSUAmount")</MudTh><MudTh>@Tr("FSYStatus")</MudTh><MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("FSUReceived")">
+                        <div>@context.Received_At.ToString("yyyy-MM-dd HH:mm")</div>
+                        @if (context.Device_Created_At != null) { <div class="sr-sub">@Tr("FSUOnDevice", context.Device_Created_At.Value.ToString("yyyy-MM-dd HH:mm"))</div> }
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("FSRRep")"><b>@context.Rep_Name</b><div class="sr-sub">@context.Device_Name</div></MudTd>
+                    <MudTd DataLabel="@Tr("FSUDocType")">@Tr("FSUType" + context.Doc_Type)@(context.Lines_Count > 0 ? " · " + Tr("FSULines", context.Lines_Count) : "")</MudTd>
+                    <MudTd DataLabel="@Tr("FSUCustomer")">@context.Customer_Name</MudTd>
+                    <MudTd DataLabel="@Tr("FSUAmount")" Class="sr-num">@(context.Amount != 0 ? context.Amount.ToString("N2") : "")</MudTd>
+                    <MudTd DataLabel="@Tr("FSYStatus")">
+                        <MudChip T="string" Size="Size.Small" Color="@StatusColor(context.Status)">@Tr("FSUStatus" + context.Status)</MudChip>
+                        @if (!string.IsNullOrEmpty(context.Error) && context.Status != (int)SalesRepSyncStatus.Processed) { <div class="sr-err">@context.Error</div> }
+                        @if (!string.IsNullOrEmpty(context.Review_Notes)) { <div class="sr-sub">@Tr("FSUReviewedBy", context.Reviewed_By, context.Review_Notes)</div> }
+                        @if (context.Attempts > 1) { <div class="sr-sub">@Tr("FSUAttempts", context.Attempts)</div> }
+                    </MudTd>
+                    <MudTd>
+                        <span class="sr-inline">
+                            @if (Actionable(context))
+                            {
+                                if (_rejectId == context.Id)
+                                {
+                                    <MudTextField T="string" @bind-Value="_rejectNotes" Label="@Tr("FSURejectReason")" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true"
+                                                  Error="@(_rejectTried && string.IsNullOrWhiteSpace(_rejectNotes))" ErrorText="@Tr("FSURejectReasonRequired")" />
+                                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" Disabled="@_busy" OnClick="@(() => RejectAsync(context.Id))">@Tr("FSUReject")</MudButton>
+                                    <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@(() => _rejectId = 0)">@Tr("Cancel")</MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Replay" Disabled="@_busy"
+                                               aria-label="@Tr("FSURetryOf", context.Customer_Name)" OnClick="@(() => RetryAsync(context.Id))">@Tr("FSURetry")</MudButton>
+                                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.DoNotDisturbOn"
+                                               aria-label="@Tr("FSURejectOf", context.Customer_Name)" OnClick="@(() => { _rejectId = context.Id; _rejectNotes = ""; _rejectTried = false; })">@Tr("FSUReject")</MudButton>
+                                }
+                            }
+                            <MudIconButton Size="Size.Small" Icon="@(_openId == context.Id ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.DataObject)"
+                                           aria-label="@Tr("FSUPayload")" aria-expanded="@(_openId == context.Id ? "true" : "false")"
+                                           OnClick="@(() => _openId = _openId == context.Id ? 0 : context.Id)" />
+                        </span>
+                    </MudTd>
+                </RowTemplate>
+                <ChildRowContent>
+                    @if (_openId == context.Id)
+                    {
+                        <MudTr>
+                            <td colspan="7">
+                                <div class="sr-sub">@Tr("FSUGuid") <span dir="ltr">@context.Doc_Guid</span>@(context.Result_Ref_Id != null ? " · " + Tr("FSUResult", context.Result_Ref_Id) : "")</div>
+                                <pre class="sr-payload">@Pretty(context.Payload)</pre>
+                            </td>
+                        </MudTr>
+                    }
+                </ChildRowContent>
+            </MudTable>
+            <div class="sr-hint sr-gap">@Tr("FSUHint")</div>
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private readonly SalesRepSyncService _svc = new();
+    private List<SalesRepSyncService.InboxRow> _rows = new();
+    private List<SalesRepDeviceService.Option> _reps = new();
+    private int _status = (int)SalesRepSyncStatus.PendingReview;
+    private long _repId, _rejectId, _openId;
+    private string _rejectNotes = "";
+    private bool _loading = true, _busy, _rejectTried;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try { _reps = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return new SalesRepDeviceService().GetReps(); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        int? status = _status < 0 ? null : _status;
+        long? rep = _repId == 0 ? null : _repId;
+        try { _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetInbox(status, rep); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private Task FilterAsync(int status) { _status = status; return LoadAsync(); }
+    private Task RepAsync(long rep) { _repId = rep; return LoadAsync(); }
+
+    private static bool Actionable(SalesRepSyncService.InboxRow r) => r.Status is (int)SalesRepSyncStatus.PendingReview or (int)SalesRepSyncStatus.Error;
+
+    private async Task RetryAsync(long id)
+    {
+        _busy = true; _error = null;
+        try
+        {
+            var r = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Retry(id); });
+            if (r.Status == (int)SalesRepSyncStatus.Processed) Snackbar.Add(Tr("FSURetryDone"), Severity.Success);
+            else Snackbar.Add(Tr("FSURetryStill", r.Error ?? ""), Severity.Warning);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task RejectAsync(long id)
+    {
+        _rejectTried = true;
+        if (string.IsNullOrWhiteSpace(_rejectNotes)) return;
+        string notes = _rejectNotes;
+        _busy = true; _error = null;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.Reject(id, notes); });
+            _rejectId = 0;
+            Snackbar.Add(Tr("FSURejected"), Severity.Info);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private static Color StatusColor(int s) => s switch
+    {
+        (int)SalesRepSyncStatus.Processed => Color.Success,
+        (int)SalesRepSyncStatus.PendingReview => Color.Warning,
+        (int)SalesRepSyncStatus.Error => Color.Error,
+        _ => Color.Default,
+    };
+
+    private static string Pretty(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return "";
+        try { return Newtonsoft.Json.Linq.JToken.Parse(json).ToString(Newtonsoft.Json.Formatting.Indented); }
+        catch { return json; }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

@@ -32,7 +32,13 @@ namespace AccountModelsLib
         public static string DesignedBy = "EgySIT Co. - Designed By:Eng.Mohammed Saleh ,+201557668366,moh_saleh2010@yahoo.com";
         public static string CompanyPhone = "01208800915-01115556074";
         public static int Project_ID = 0;
-        public static int Is_Force_Admin_Permission = 0;
+        // م6: قيم المستخدم الحالى خصائص تقرأ جلسة التدفق (UserSessionContext) متى وُجدت، وإلا الحقل الثابت كالأصل (الويندوز فورمز).
+        private static int _Is_Force_Admin_Permission = 0;
+        public static int Is_Force_Admin_Permission
+        {
+            get { var s = UserSessionContext.Current; return s != null ? s.Is_Force_Admin_Permission : _Is_Force_Admin_Permission; }
+            set { var s = UserSessionContext.Current; if (s != null) s.Is_Force_Admin_Permission = value; else _Is_Force_Admin_Permission = value; }
+        }
         public static DataTable dtUnit = new DataTable();
         public static int Project_GeneralAccounts = 0;
         public static int Make_Login = 1;
@@ -47,12 +53,49 @@ namespace AccountModelsLib
 
         public static int Language_ID = 0;//arabic language
         public static string DataBaseType = "SqlServer";
-        public static int Is_User_Admin = 1;
-        public static long User_Id = 1;
-        public static long Branch_Id = 1;
+        private static int _Is_User_Admin = 1;
+        public static int Is_User_Admin
+        {
+            get { var s = UserSessionContext.Current; return s != null ? s.Is_User_Admin : _Is_User_Admin; }
+            set { var s = UserSessionContext.Current; if (s != null) s.Is_User_Admin = value; else _Is_User_Admin = value; }
+        }
+        private static long _User_Id = 1;
+        public static long User_Id
+        {
+            get { var s = UserSessionContext.Current; return s != null ? s.User_Id : _User_Id; }
+            set { var s = UserSessionContext.Current; if (s != null) s.User_Id = value; else _User_Id = value; }
+        }
+        private static long _Branch_Id = 1;
+        public static long Branch_Id
+        {
+            get { var s = UserSessionContext.Current; return s != null ? s.Branch_Id : _Branch_Id; }
+            set { var s = UserSessionContext.Current; if (s != null) s.Branch_Id = value; else _Branch_Id = value; }
+        }
         public static int Tax_BranchesId = 1;
-        public static string User_Name = "Admin";
-        public static string FullUserName = "Admin";
+        private static string _User_Name = "Admin";
+        public static string User_Name
+        {
+            get { var s = UserSessionContext.Current; return s != null ? s.User_Name : _User_Name; }
+            set { var s = UserSessionContext.Current; if (s != null) s.User_Name = value; else _User_Name = value; }
+        }
+        private static string _FullUserName = "Admin";
+        public static string FullUserName
+        {
+            get { var s = UserSessionContext.Current; return s != null ? s.FullUserName : _FullUserName; }
+            set { var s = UserSessionContext.Current; if (s != null) s.FullUserName = value; else _FullUserName = value; }
+        }
+
+        /// <summary>نسخة من قيم العملية الثابتة (لا الجلسة) لبدء جلسة جديدة.</summary>
+        internal static UserSession SnapshotProcessUser() => new UserSession
+        {
+            Is_User_Admin = _Is_User_Admin,
+            User_Id = _User_Id,
+            Branch_Id = _Branch_Id,
+            User_Name = _User_Name,
+            FullUserName = _FullUserName,
+            IsAdministration_AlterDBLogin = _IsAdministration_AlterDBLogin,
+            Is_Force_Admin_Permission = _Is_Force_Admin_Permission
+        };
         public static string Branch_Name { get; set; } = "Company Name";
         public static string CompanyTitle_Client07 = "مؤسسة المهدى الأعمى";
 
@@ -679,7 +722,12 @@ namespace AccountModelsLib
         public static int RenewExpireCount = 3; // maximum Three Times
                                                 //public static DateTime dtExpire;// = new DateTime(DateTime.Now.Date.Year, DateTime.Now.Date.Minute, DateTime.Now.Date.Day - 1);
         public static DateTime dtExpire { get; set; } = new DateTime(2026, 7, 1);
-        public static int IsAdministration_AlterDBLogin = 0;
+        private static int _IsAdministration_AlterDBLogin = 0;
+        public static int IsAdministration_AlterDBLogin
+        {
+            get { var s = UserSessionContext.Current; return s != null ? s.IsAdministration_AlterDBLogin : _IsAdministration_AlterDBLogin; }
+            set { var s = UserSessionContext.Current; if (s != null) s.IsAdministration_AlterDBLogin = value; else _IsAdministration_AlterDBLogin = value; }
+        }
         public static int IsMake_AlterDBLogin = 1;
 
         public Common()

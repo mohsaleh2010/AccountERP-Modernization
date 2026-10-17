@@ -1,0 +1,319 @@
+@* 🟢 خطة المندوبين — المرحلة 7 (أ): «أجهزة المندوبين». المكتب يصدر رمز تفعيل لمندوب (صالح مرة ولمدة محدودة، يظهر مرة واحدة فقط)،
+   ويتابع الأجهزة المفعّلة: آخر دخول ومزامنة، المستندات المعلّقة، الحظر وفكه، وفك قفل الـ PIN. الخدمة SalesRepDeviceService.
+   قرار المستخدم 2026-10-17 «رمز تفعيل وPIN». التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/devices"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("FSMTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .dv-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .dv-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .dv-head .ico .mud-icon-root { font-size: 2rem; }
+    .dv-head .titles { flex: 1 1 260px; }
+    .dv-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .dv-gap { margin-top: 16px; }
+    .dv-sec { font-weight: 700; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; }
+    .dv-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px 16px; align-items: center; }
+    .dv-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+    .dv-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .dv-code { margin-top: 16px; padding: 16px; border-radius: 12px; border: 2px dashed var(--mud-palette-success);
+               background: color-mix(in srgb, var(--mud-palette-success) 8%, transparent); display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+    .dv-code .val { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 2rem; font-weight: 700; letter-spacing: .12em;
+                    direction: ltr; user-select: all; color: var(--mud-palette-text-primary); }
+    .dv-code .meta { flex: 1 1 220px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .dv-mono { font-family: ui-monospace, Consolas, monospace; direction: ltr; display: inline-block; }
+    .dv-sub2 { font-size: .75rem; color: var(--mud-palette-text-secondary); }
+    .dv-off { opacity: .65; }
+    .dv-inline { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card dv-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.PhonelinkLock" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSMTitle")</h1>
+            <div class="sub">@Tr("FSMSub")</div>
+        </div>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.RuleFolder" Href="/salesrep/sync-review">@Tr("FSUTitle")</MudButton>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="dv-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    @* ===== إصدار رمز ===== *@
+    <div class="inv-card dv-gap">
+        <h2 class="dv-sec"><MudIcon Icon="@Icons.Material.Filled.Key" Color="Color.Primary" Size="Size.Small" />@Tr("FSMIssue")</h2>
+        <div class="dv-form">
+            <MudSelect T="long" @bind-Value="_repId" Label="@Tr("FSRRep")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true"
+                       Error="@(_tried && _repId == 0)" ErrorText="@Tr("FSMRepRequired")" ToStringFunc="@(v => _reps.FirstOrDefault(r => r.Id == v)?.Name ?? "")">
+                @foreach (var r in _reps) { <MudSelectItem T="long" Value="@r.Id">@r.Name</MudSelectItem> }
+            </MudSelect>
+            <MudSelect T="long" @bind-Value="_userId" Label="@Tr("FSMActAs")" Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@Tr("FSMActAsHint")"
+                       ToStringFunc="@(v => _users.FirstOrDefault(u => u.Id == v)?.Name ?? "")">
+                @foreach (var u in _users) { <MudSelectItem T="long" Value="@u.Id">@u.Name</MudSelectItem> }
+            </MudSelect>
+            <MudSelect T="int" @bind-Value="_hours" Label="@Tr("FSMValidity")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                       ToStringFunc="@(v => HoursText(v))">
+                @foreach (int h in new[] { 1, 8, 24, 72, 168 }) { <MudSelectItem T="int" Value="@h">@HoursText(h)</MudSelectItem> }
+            </MudSelect>
+        </div>
+        <div class="dv-acts">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.VpnKey" Disabled="@_busy" OnClick="IssueAsync">
+                @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                @Tr("FSMIssueBtn")
+            </MudButton>
+        </div>
+        @if (_issued != null)
+        {
+            <div class="dv-code" role="status" aria-live="polite">
+                <span class="val" aria-label="@Tr("FSMCode")">@_issued.Code</span>
+                <div class="meta">
+                    <div><b>@_issuedRep</b> — @Tr("FSMExpires", _issued.Expires_At.ToString("yyyy-MM-dd HH:mm"))</div>
+                    <div>@Tr("FSMShownOnce")</div>
+                </div>
+                <MudButton Variant="Variant.Text" OnClick="@(() => _issued = null)">@Tr("FSMHide")</MudButton>
+            </div>
+        }
+    </div>
+
+    @* ===== الرموز الصالحة ===== *@
+    <div class="inv-card dv-gap" aria-live="polite">
+        <h2 class="dv-sec"><MudIcon Icon="@Icons.Material.Filled.HourglassTop" Color="Color.Primary" Size="Size.Small" />@Tr("FSMOpenCodes", _codes.Count)</h2>
+        @if (_codes.Count == 0)
+        {
+            <div class="dv-hint">@Tr("FSMNoOpenCodes")</div>
+        }
+        else
+        {
+            <MudTable Items="@_codes" T="SalesRepDeviceService.ActivationRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true">
+                <HeaderContent>
+                    <MudTh>@Tr("FSRRep")</MudTh><MudTh>@Tr("FSMCodeEnds")</MudTh><MudTh>@Tr("FSMActAs")</MudTh><MudTh>@Tr("FSMExpiresAt")</MudTh><MudTh>@Tr("FSMIssuedBy")</MudTh><MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("FSRRep")"><b>@context.Rep_Name</b></MudTd>
+                    <MudTd DataLabel="@Tr("FSMCodeEnds")"><span class="dv-mono">…@context.Code_Hint</span></MudTd>
+                    <MudTd DataLabel="@Tr("FSMActAs")">@context.Act_As_User_Name</MudTd>
+                    <MudTd DataLabel="@Tr("FSMExpiresAt")">@context.Expires_At.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                    <MudTd DataLabel="@Tr("FSMIssuedBy")">@context.Issued_By</MudTd>
+                    <MudTd>
+                        @if (_confirmRevoke == context.Id)
+                        {
+                            <span class="dv-inline">
+                                <span class="dv-hint">@Tr("FSMRevokeConfirm")</span>
+                                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" Disabled="@_busy" OnClick="@(() => RevokeAsync(context.Id))">@Tr("FSMRevoke")</MudButton>
+                                <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@(() => _confirmRevoke = 0)">@Tr("Cancel")</MudButton>
+                            </span>
+                        }
+                        else
+                        {
+                            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Block"
+                                       aria-label="@Tr("FSMRevokeOf", context.Rep_Name)" OnClick="@(() => _confirmRevoke = context.Id)">@Tr("FSMRevoke")</MudButton>
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </div>
+
+    @* ===== الأجهزة ===== *@
+    <div class="inv-card dv-gap" aria-live="polite">
+        <h2 class="dv-sec"><MudIcon Icon="@Icons.Material.Filled.Smartphone" Color="Color.Primary" Size="Size.Small" />@Tr("FSMDevices", _devices.Count)</h2>
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("FSRLoading")" />
+        }
+        else if (_devices.Count == 0)
+        {
+            <div class="inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.PhonelinkOff" Size="Size.Large" /><div>@Tr("FSMNoDevices")</div></div>
+        }
+        else
+        {
+            <MudTable Items="@_devices" T="SalesRepDeviceService.DeviceRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Md" Dense="true" Hover="true"
+                      RowClassFunc="@((d, i) => d.Is_Blocked ? "dv-off" : "")">
+                <HeaderContent>
+                    <MudTh>@Tr("FSRRep")</MudTh><MudTh>@Tr("FSMDevice")</MudTh><MudTh>@Tr("FSMActAs")</MudTh><MudTh>@Tr("FSMLastLogin")</MudTh>
+                    <MudTh>@Tr("FSMLastSync")</MudTh><MudTh>@Tr("FSMPending")</MudTh><MudTh>@Tr("FSYStatus")</MudTh><MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("FSRRep")"><b>@context.Rep_Name</b></MudTd>
+                    <MudTd DataLabel="@Tr("FSMDevice")">
+                        <div>@(string.IsNullOrEmpty(context.Device_Name) ? context.Platform : context.Device_Name)</div>
+                        <div class="dv-sub2">@context.Platform @(string.IsNullOrEmpty(context.App_Version) ? "" : "· v" + context.App_Version)</div>
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("FSMActAs")">@context.Act_As_User_Name</MudTd>
+                    <MudTd DataLabel="@Tr("FSMLastLogin")">@context.Last_Login_At?.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                    <MudTd DataLabel="@Tr("FSMLastSync")">@context.Last_Sync_At?.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                    <MudTd DataLabel="@Tr("FSMPending")">
+                        @if (context.Pending_Docs > 0)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Href="/salesrep/sync-review">@context.Pending_Docs</MudChip>
+                        }
+                        else { <span class="dv-hint">0</span> }
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("FSYStatus")">
+                        @if (context.Is_Blocked)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Error" Icon="@Icons.Material.Filled.Block">@Tr("FSMBlocked")</MudChip>
+                            <div class="dv-sub2">@context.Blocked_Reason</div>
+                        }
+                        else if (context.Pin_Locked)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Icon="@Icons.Material.Filled.Lock">@Tr("FSMPinLocked")</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Icon="@Icons.Material.Filled.CheckCircle">@Tr("FSYActive")</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd>
+                        @if (_blockId == context.Id)
+                        {
+                            <span class="dv-inline">
+                                <MudTextField T="string" @bind-Value="_blockReason" Label="@Tr("FSMBlockReason")" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true"
+                                              Error="@(_blockTried && string.IsNullOrWhiteSpace(_blockReason))" ErrorText="@Tr("FSMBlockReasonRequired")" />
+                                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" Disabled="@_busy" OnClick="@(() => BlockAsync(context.Id))">@Tr("FSMBlock")</MudButton>
+                                <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@(() => _blockId = 0)">@Tr("Cancel")</MudButton>
+                            </span>
+                        }
+                        else if (context.Is_Blocked)
+                        {
+                            <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.LockOpen" Disabled="@_busy"
+                                       aria-label="@Tr("FSMUnblockOf", context.Rep_Name)" OnClick="@(() => UnblockAsync(context.Id))">@Tr("FSMUnblock")</MudButton>
+                        }
+                        else
+                        {
+                            <span class="dv-inline">
+                                @if (context.Pin_Locked)
+                                {
+                                    <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.LockReset" Disabled="@_busy"
+                                               OnClick="@(() => ClearPinAsync(context.Id))">@Tr("FSMClearPin")</MudButton>
+                                }
+                                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Block"
+                                           aria-label="@Tr("FSMBlockOf", context.Rep_Name)" OnClick="@(() => { _blockId = context.Id; _blockReason = ""; _blockTried = false; })">@Tr("FSMBlock")</MudButton>
+                            </span>
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+            <div class="dv-hint dv-gap">@Tr("FSMBlockHint")</div>
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private readonly SalesRepDeviceService _svc = new();
+    private List<SalesRepDeviceService.Option> _reps = new(), _users = new();
+    private List<SalesRepDeviceService.ActivationRow> _codes = new();
+    private List<SalesRepDeviceService.DeviceRow> _devices = new();
+    private SalesRepDeviceService.IssuedCode? _issued;
+    private string _issuedRep = "", _blockReason = "";
+    private long _repId, _userId, _confirmRevoke, _blockId;
+    private int _hours = SalesRepDeviceService.DefaultCodeHours;
+    private bool _loading = true, _busy, _tried, _blockTried;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _userId = Common.User_Id;
+        try
+        {
+            (_reps, _users) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_svc.GetReps(), _svc.GetUsers()); });
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        try
+        {
+            (_codes, _devices) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_svc.GetActivations(true), _svc.GetDevices()); });
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private async Task IssueAsync()
+    {
+        _tried = true;
+        if (_repId == 0) return;
+        await Busy(async () =>
+        {
+            long rep = _repId, user = _userId;
+            int hours = _hours;
+            _issued = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.IssueActivation(rep, user > 0 ? user : null, hours); });
+            _issuedRep = _reps.FirstOrDefault(r => r.Id == rep)?.Name ?? "";
+            _tried = false;
+            Snackbar.Add(Tr("FSMIssued"), Severity.Success);
+        });
+    }
+
+    private Task RevokeAsync(long id) => Busy(async () =>
+    {
+        await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.RevokeActivation(id); });
+        _confirmRevoke = 0;
+        Snackbar.Add(Tr("FSMRevoked"), Severity.Success);
+    });
+
+    private async Task BlockAsync(long id)
+    {
+        _blockTried = true;
+        if (string.IsNullOrWhiteSpace(_blockReason)) return;
+        string reason = _blockReason;
+        await Busy(async () =>
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.Block(id, reason); });
+            _blockId = 0;
+            Snackbar.Add(Tr("FSMBlockedDone"), Severity.Success);
+        });
+    }
+
+    private Task UnblockAsync(long id) => Busy(async () =>
+    {
+        await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.Unblock(id); });
+        Snackbar.Add(Tr("FSMUnblockedDone"), Severity.Info);
+    });
+
+    private Task ClearPinAsync(long id) => Busy(async () =>
+    {
+        await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.ClearPinLock(id); });
+        Snackbar.Add(Tr("FSMPinCleared"), Severity.Success);
+    });
+
+    private async Task Busy(Func<Task> action)
+    {
+        _busy = true; _error = null;
+        try { await action(); await LoadAsync(); }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private string HoursText(int h) => h % 24 == 0 ? Tr("FSMDays", h / 24) : Tr("FSMHours", h);
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

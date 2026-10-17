@@ -3648,4 +3648,87 @@
   <data name="FSYAlertsTitle" xml:space="preserve"><value>مندوبون تجاوزوا حد النقدية ({0})</value></data>
   <data name="FSYAlertsHint" xml:space="preserve"><value>تحذير بلا منع: اطلب منهم التوريد الجزئى من شاشة الوردية.</value></data>
   <data name="FSYExcess" xml:space="preserve"><value>الزيادة</value></data>
+  <data name="FSMTitle" xml:space="preserve"><value>أجهزة المندوبين</value></data>
+  <data name="FSMSub" xml:space="preserve"><value>فعّل جهاز المندوب برمز يصدره المكتب ويضع عليه المندوب رقماً سرياً (PIN)، وتابع الأجهزة واحظر المفقود منها. كلمات مرور النظام لا تُستعمل على الجهاز.</value></data>
+  <data name="FSMIssue" xml:space="preserve"><value>إصدار رمز تفعيل</value></data>
+  <data name="FSMRepRequired" xml:space="preserve"><value>اختر المندوب</value></data>
+  <data name="FSMActAs" xml:space="preserve"><value>تُسجَّل المستندات باسم</value></data>
+  <data name="FSMActAsHint" xml:space="preserve"><value>مستخدم النظام الذى تظهر باسمه فواتير وتحصيلات الجهاز</value></data>
+  <data name="FSMValidity" xml:space="preserve"><value>صلاحية الرمز</value></data>
+  <data name="FSMHours" xml:space="preserve"><value>{0} ساعة</value></data>
+  <data name="FSMDays" xml:space="preserve"><value>{0} يوم</value></data>
+  <data name="FSMIssueBtn" xml:space="preserve"><value>إصدار الرمز</value></data>
+  <data name="FSMIssued" xml:space="preserve"><value>صدر الرمز؛ أعطه للمندوب الآن</value></data>
+  <data name="FSMCode" xml:space="preserve"><value>رمز التفعيل</value></data>
+  <data name="FSMExpires" xml:space="preserve"><value>صالح حتى {0}، ومرة واحدة فقط</value></data>
+  <data name="FSMShownOnce" xml:space="preserve"><value>لا يُحفظ الرمز ولا يظهر ثانية؛ لو ضاع ألغِه وأصدر غيره.</value></data>
+  <data name="FSMHide" xml:space="preserve"><value>إخفاء</value></data>
+  <data name="FSMOpenCodes" xml:space="preserve"><value>رموز لم تُستعمل بعد ({0})</value></data>
+  <data name="FSMNoOpenCodes" xml:space="preserve"><value>لا رموز صالحة لم تُستعمل.</value></data>
+  <data name="FSMCodeEnds" xml:space="preserve"><value>ينتهى بـ</value></data>
+  <data name="FSMExpiresAt" xml:space="preserve"><value>ينتهى فى</value></data>
+  <data name="FSMIssuedBy" xml:space="preserve"><value>أصدره</value></data>
+  <data name="FSMRevoke" xml:space="preserve"><value>إلغاء الرمز</value></data>
+  <data name="FSMRevokeOf" xml:space="preserve"><value>إلغاء رمز {0}</value></data>
+  <data name="FSMRevokeConfirm" xml:space="preserve"><value>إلغاء هذا الرمز؟</value></data>
+  <data name="FSMRevoked" xml:space="preserve"><value>أُلغى الرمز</value></data>
+  <data name="FSMDevices" xml:space="preserve"><value>الأجهزة ({0})</value></data>
+  <data name="FSMNoDevices" xml:space="preserve"><value>لا أجهزة مفعّلة بعد.</value></data>
+  <data name="FSMDevice" xml:space="preserve"><value>الجهاز</value></data>
+  <data name="FSMLastLogin" xml:space="preserve"><value>آخر دخول</value></data>
+  <data name="FSMLastSync" xml:space="preserve"><value>آخر مزامنة</value></data>
+  <data name="FSMPending" xml:space="preserve"><value>معلّقة</value></data>
+  <data name="FSMBlocked" xml:space="preserve"><value>محظور</value></data>
+  <data name="FSMPinLocked" xml:space="preserve"><value>الـ PIN مقفل</value></data>
+  <data name="FSMBlock" xml:space="preserve"><value>حظر</value></data>
+  <data name="FSMBlockOf" xml:space="preserve"><value>حظر جهاز {0}</value></data>
+  <data name="FSMBlockReason" xml:space="preserve"><value>سبب الحظر</value></data>
+  <data name="FSMBlockReasonRequired" xml:space="preserve"><value>السبب مطلوب</value></data>
+  <data name="FSMBlockedDone" xml:space="preserve"><value>حُظر الجهاز وأُبطلت جلساته</value></data>
+  <data name="FSMUnblock" xml:space="preserve"><value>فك الحظر</value></data>
+  <data name="FSMUnblockOf" xml:space="preserve"><value>فك حظر جهاز {0}</value></data>
+  <data name="FSMUnblockedDone" xml:space="preserve"><value>فُك الحظر؛ الجهاز يحتاج رمز تفعيل جديداً</value></data>
+  <data name="FSMClearPin" xml:space="preserve"><value>فك قفل الـ PIN</value></data>
+  <data name="FSMPinCleared" xml:space="preserve"><value>فُك قفل الـ PIN</value></data>
+  <data name="FSMBlockHint" xml:space="preserve"><value>الحظر يسرى فوراً على كل طلب من الجهاز، ومستنداته المرفوعة قبله تبقى للمراجعة. فك الحظر لا يعيد الجلسة: يلزم رمز تفعيل جديد.</value></data>
+  <data name="FSUTitle" xml:space="preserve"><value>مستندات الأجهزة بانتظار المراجعة</value></data>
+  <data name="FSUSub" xml:space="preserve"><value>مستند من جهاز مندوب لم يُحفظ لأنه يحتاج موافقة أو لخطأ (مخزون، وردية، حد ائتمان). وافق عليه من «موافقات المندوبين» ثم أعد معالجته، أو ارفضه بسبب.</value></data>
+  <data name="FSUApprovals" xml:space="preserve"><value>موافقات المندوبين</value></data>
+  <data name="FSUAll" xml:space="preserve"><value>الكل</value></data>
+  <data name="FSUAllReps" xml:space="preserve"><value>كل المندوبين</value></data>
+  <data name="FSURefresh" xml:space="preserve"><value>تحديث</value></data>
+  <data name="FSUEmpty" xml:space="preserve"><value>لا مستندات فى هذه الحالة.</value></data>
+  <data name="FSUReceived" xml:space="preserve"><value>وصل</value></data>
+  <data name="FSUOnDevice" xml:space="preserve"><value>على الجهاز {0}</value></data>
+  <data name="FSUDocType" xml:space="preserve"><value>المستند</value></data>
+  <data name="FSUCustomer" xml:space="preserve"><value>العميل</value></data>
+  <data name="FSUAmount" xml:space="preserve"><value>المبلغ</value></data>
+  <data name="FSULines" xml:space="preserve"><value>{0} سطر</value></data>
+  <data name="FSUType1" xml:space="preserve"><value>فاتورة بيع</value></data>
+  <data name="FSUType2" xml:space="preserve"><value>مرتجع</value></data>
+  <data name="FSUType3" xml:space="preserve"><value>تحصيل</value></data>
+  <data name="FSUType4" xml:space="preserve"><value>طلبية</value></data>
+  <data name="FSUType5" xml:space="preserve"><value>تسليم طلبية</value></data>
+  <data name="FSUType6" xml:space="preserve"><value>شيك</value></data>
+  <data name="FSUType7" xml:space="preserve"><value>عدم بيع</value></data>
+  <data name="FSUStatus0" xml:space="preserve"><value>وصل</value></data>
+  <data name="FSUStatus1" xml:space="preserve"><value>حُفظ</value></data>
+  <data name="FSUStatus2" xml:space="preserve"><value>خطأ</value></data>
+  <data name="FSUStatus3" xml:space="preserve"><value>ينتظر المراجعة</value></data>
+  <data name="FSUStatus4" xml:space="preserve"><value>مرفوض</value></data>
+  <data name="FSUReviewedBy" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="FSUAttempts" xml:space="preserve"><value>{0} محاولات</value></data>
+  <data name="FSURetry" xml:space="preserve"><value>إعادة المعالجة</value></data>
+  <data name="FSURetryOf" xml:space="preserve"><value>إعادة معالجة مستند {0}</value></data>
+  <data name="FSURetryDone" xml:space="preserve"><value>حُفظ المستند</value></data>
+  <data name="FSURetryStill" xml:space="preserve"><value>لم يُحفظ بعد: {0}</value></data>
+  <data name="FSUReject" xml:space="preserve"><value>رفض</value></data>
+  <data name="FSURejectOf" xml:space="preserve"><value>رفض مستند {0}</value></data>
+  <data name="FSURejectReason" xml:space="preserve"><value>سبب الرفض</value></data>
+  <data name="FSURejectReasonRequired" xml:space="preserve"><value>السبب مطلوب</value></data>
+  <data name="FSURejected" xml:space="preserve"><value>رُفض المستند؛ يراه المندوب على جهازه</value></data>
+  <data name="FSUPayload" xml:space="preserve"><value>بيانات المستند</value></data>
+  <data name="FSUGuid" xml:space="preserve"><value>معرّف المستند</value></data>
+  <data name="FSUResult" xml:space="preserve"><value>المستند الناتج {0}</value></data>
+  <data name="FSUHint" xml:space="preserve"><value>المستند المرفوض أو المحفوظ لا يُعاد. إعادة الإرسال من الجهاز لا تكرر المستند أبداً.</value></data>
 </root>
