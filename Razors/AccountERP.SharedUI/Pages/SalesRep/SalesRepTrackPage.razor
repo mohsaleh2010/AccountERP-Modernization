@@ -97,7 +97,7 @@
                     @foreach (var e in _timeline)
                     {
                         <li>
-                            <span class="t">@e.At.ToString("HH:mm")</span>
+                            <span class="t">@(e.At == DateTime.MinValue ? "—" : e.At.ToString("HH:mm"))</span>
                             <span class="d">
                                 <MudIcon Icon="@e.Icon" Size="Size.Small" Color="@e.Color" Style="vertical-align:middle" />
                                 <b>@e.Title</b>
@@ -167,7 +167,8 @@
         if (d.Last_At is DateTime l && d.Points.Count > 1) list.Add(new(l, Tr("FSXEnd"), "", Icons.Material.Filled.Flag, Color.Error));
         var missed = d.Visits.Count(v => v.Check_In_At == null);
         var sorted = list.OrderBy(e => e.At).ToList();
-        if (missed > 0) sorted.Add(new(d.Last_At ?? DateTime.Today, Tr("FSXMissed", missed), string.Join("، ", d.Visits.Where(v => v.Check_In_At == null).Select(v => v.Customer_Name).Take(8)),
+        // غير المزارين بلا وقت: يُعرضون آخر الخط الزمنى بـ «—».
+        if (missed > 0) sorted.Add(new(DateTime.MinValue, Tr("FSXMissed", missed), string.Join("، ", d.Visits.Where(v => v.Check_In_At == null).Select(v => v.Customer_Name).Take(8)),
             Icons.Material.Filled.EventBusy, Color.Default));
         return sorted;
     }
