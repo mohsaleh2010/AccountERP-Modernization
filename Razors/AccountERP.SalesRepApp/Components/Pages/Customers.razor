@@ -1,0 +1,57 @@
+@* العملاء: خط اليوم بالترتيب أو الكل مع البحث؛ من العميل مباشرة إلى البيع أو التحصيل. *@
+@page "/customers"
+@inject AppState State
+
+<div class="ra-page">
+    <h1 class="mud-typography mud-typography-h5">العملاء</h1>
+    <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pt-2" @bind-ActivePanelIndex="_tab">
+        <MudTabPanel Text="@($"خط اليوم ({_plan.Count})")" />
+        <MudTabPanel Text="@($"الكل ({_all.Count})")" />
+    </MudTabs>
+    <MudTextField @bind-Value="_q" Placeholder="بحث بالاسم أو الكود أو الهاتف" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" DebounceInterval="250"
+                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="ra-gap" Clearable="true" aria-label="بحث عن عميل" />
+
+    @if (Shown.Count == 0)
+    {
+        <MudText Class="ra-muted ra-gap">@(_tab == 0 && _plan.Count == 0 ? "لا عملاء مخططين لليوم." : "لا نتائج.")</MudText>
+    }
+    else
+    {
+        <MudList T="long" Class="ra-gap" Dense="false">
+            @foreach (var c in Shown)
+            {
+                <MudListItem T="long" Value="@c.Id">
+                    <div class="ra-row">
+                        <div class="ra-grow">
+                            <div><b>@c.Name</b></div>
+                            <div class="ra-muted">@(string.IsNullOrEmpty(c.Mobile) ? c.Tel : c.Mobile) @(string.IsNullOrEmpty(c.Address) ? "" : "· " + c.Address)</div>
+                        </div>
+                        <span class="ra-num" title="الرصيد">@c.Balance.ToString("N2")</span>
+                        <MudIconButton Icon="@Icons.Material.Filled.PointOfSale" Color="Color.Primary" Href="@($"/sale?customer={c.Id}")" aria-label="@($"بيع لـ {c.Name}")" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Payments" Color="Color.Secondary" Href="@($"/collect?customer={c.Id}")" aria-label="@($"تحصيل من {c.Name}")" />
+                    </div>
+                </MudListItem>
+            }
+        </MudList>
+    }
+</div>
+
+@code {
+    private List<CustomerRow> _all = new();
+    private List<CustomerRow> _plan = new();
+    private string _q = "";
+    private int _tab;
+
+    protected override void OnInitialized()
+    {
+        _all = State.Book.Customers;
+        var byId = _all.ToDictionary(c => c.Id);
+        _plan = State.Book.Plan.Where(p => byId.ContainsKey(p.Customer_Id)).Select(p => byId[p.Customer_Id]).ToList();
+        if (_plan.Count == 0) _tab = 1;
+    }
+
+    private List<CustomerRow> Shown => (_tab == 0 ? _plan : _all)
+        .Where(c => string.IsNullOrWhiteSpace(_q) || c.Name.Contains(_q.Trim(), StringComparison.OrdinalIgnoreCase) || c.Code.Contains(_q.Trim())
+                    || c.Mobile.Contains(_q.Trim()) || c.Tel.Contains(_q.Trim()))
+        .Take(200).ToList();
+}

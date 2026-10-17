@@ -1,0 +1,20 @@
+/* تطبيق المندوب: أهداف لمس 48dp على الأقل، أرقام جدولية، وهوامش منطقة الأمان. */
+html, body { margin: 0; font-family: "Segoe UI", Tahoma, "Noto Sans Arabic", Arial, sans-serif; background: var(--mud-palette-background); }
+body { padding-bottom: env(safe-area-inset-bottom); }
+.boot { display: grid; place-items: center; height: 100vh; font-size: 1.1rem; color: #555; }
+#blazor-error-ui { display: none; position: fixed; inset: auto 0 0 0; padding: 12px 16px; background: #fdecea; color: #b71c1c; z-index: 2000; }
+.ra-page { padding: 12px 12px 96px; max-width: 720px; margin: 0 auto; }
+.ra-num { font-variant-numeric: tabular-nums; }
+.ra-row { display: flex; align-items: center; gap: 8px; }
+.ra-grow { flex: 1 1 auto; min-width: 0; }
+.ra-muted { color: var(--mud-palette-text-secondary); font-size: .875rem; }
+.ra-total { font-size: 1.5rem; font-weight: 700; }
+.ra-btn { min-height: 48px; }
+.ra-gap { margin-top: 12px; }
+.ra-bottom { position: fixed; inset: auto 0 0 0; padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); background: var(--mud-palette-surface);
+             box-shadow: 0 -2px 8px rgba(0,0,0,.08); z-index: 10; }
+.ra-bottom-inner { max-width: 720px; margin: 0 auto; display: flex; gap: 8px; align-items: center; }
+.ra-code input { letter-spacing: .15em; text-transform: uppercase; direction: ltr; text-align: center; font-family: ui-monospace, Consolas, monospace; }
+.ra-pin input { letter-spacing: .5em; text-align: center; direction: ltr; font-size: 1.5rem; }
+.ra-card { border-radius: 12px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

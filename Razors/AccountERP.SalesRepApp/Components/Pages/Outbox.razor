@@ -1,0 +1,93 @@
+@* المستندات: كل ما أنشأه الجهاز وحالته على السيرفر (بانتظار الرفع/حُفظ/بانتظار المراجعة/خطأ/مرفوض). *@
+@page "/outbox"
+@implements IDisposable
+@inject AppState State
+@inject ISnackbar Snackbar
+
+<div class="ra-page">
+    <div class="ra-row">
+        <h1 class="mud-typography mud-typography-h5 ra-grow">المستندات</h1>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="ra-btn" Disabled="@_syncing" OnClick="SyncAsync" StartIcon="@Icons.Material.Filled.Sync">مزامنة</MudButton>
+    </div>
+    @if (_items.Count == 0)
+    {
+        <MudText Class="ra-muted ra-gap">لا مستندات بعد.</MudText>
+    }
+    else
+    {
+        <MudList T="string" Class="ra-gap">
+            @foreach (var o in _items)
+            {
+                <MudListItem T="string">
+                    <div class="ra-row">
+                        <MudIcon Icon="@(o.Doc_Type == DocType.Sale ? Icons.Material.Filled.PointOfSale : Icons.Material.Filled.Payments)" Color="Color.Primary" />
+                        <div class="ra-grow">
+                            <div><b>@TypeName(o.Doc_Type)</b> — @(_names.TryGetValue(o.Customer_Id, out var n) ? n : "")</div>
+                            <div class="ra-muted">@o.Created_At.ToString("yyyy-MM-dd HH:mm")@(o.Result_Ref_Id != null ? $" · رقم {o.Result_Ref_Id}" : "")</div>
+                            @if (!string.IsNullOrEmpty(o.Error) && o.Status != OutboxStatus.Processed) { <div class="ra-muted" style="color:var(--mud-palette-error)">@o.Error</div> }
+                        </div>
+                        <div style="text-align:end">
+                            <div class="ra-num"><b>@o.Amount.ToString("N2")</b></div>
+                            <MudChip T="string" Size="Size.Small" Color="@StatusColor(o.Status)">@StatusName(o.Status)</MudChip>
+                        </div>
+                    </div>
+                </MudListItem>
+            }
+        </MudList>
+    }
+</div>
+
+@code {
+    private List<OutboxItem> _items = new();
+    private Dictionary<long, string> _names = new();
+    private bool _syncing;
+
+    protected override void OnInitialized()
+    {
+        State.Changed += Refresh;
+        Load();
+    }
+
+    private void Load()
+    {
+        _items = State.Store.Outbox().OrderByDescending(o => o.Created_At).Take(300).ToList();
+        _names = State.Book.Customers.ToDictionary(c => c.Id, c => c.Name);
+    }
+
+    private void Refresh() => InvokeAsync(() => { Load(); StateHasChanged(); });
+
+    private async Task SyncAsync()
+    {
+        _syncing = true;
+        try
+        {
+            var r = await State.SyncNowAsync();
+            if (r.Offline) Snackbar.Add("لا اتصال؛ تُرفع لاحقاً.", Severity.Warning);
+            else if (r.Error != null) Snackbar.Add(r.Error, Severity.Error);
+        }
+        finally { _syncing = false; Load(); }
+    }
+
+    private static string TypeName(DocType t) => t switch { DocType.Sale => "بيع", DocType.Collection => "تحصيل", DocType.Return => "مرتجع", DocType.TakeOrder => "طلبية", DocType.Delivery => "تسليم", DocType.Cheque => "شيك", _ => "مستند" };
+
+    private static string StatusName(OutboxStatus s) => s switch
+    {
+        OutboxStatus.Queued => "بانتظار الرفع",
+        OutboxStatus.Received => "وصل",
+        OutboxStatus.Processed => "حُفظ",
+        OutboxStatus.PendingReview => "بانتظار المراجعة",
+        OutboxStatus.Error => "خطأ",
+        OutboxStatus.Rejected => "مرفوض",
+        _ => "",
+    };
+
+    private static Color StatusColor(OutboxStatus s) => s switch
+    {
+        OutboxStatus.Processed => Color.Success,
+        OutboxStatus.PendingReview or OutboxStatus.Queued => Color.Warning,
+        OutboxStatus.Error => Color.Error,
+        _ => Color.Default,
+    };
+
+    public void Dispose() => State.Changed -= Refresh;
+}

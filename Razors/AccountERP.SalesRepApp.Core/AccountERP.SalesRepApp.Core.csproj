@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- منطق تطبيق المندوب بلا واجهة (المرحلة 7 ب): عميل /api/v1، القاعدة المحلية المشفرة، المزامنة، وحساب البيع.
+       لا مرجع لـ AccountModelsLib ولا لقاعدة البيانات: الجهاز لا يحمل نص اتصال. يُختبر على الويندوز بلا محاكى. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>AccountERP.SalesRepApp.Core</RootNamespace>
+    <!-- ناتج مستقل عن مجلد Accounts\bin المشترك (Directory.Build.props). -->
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.10" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.11" />
+  </ItemGroup>
+
+</Project>

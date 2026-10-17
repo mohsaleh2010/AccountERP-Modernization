@@ -3655,7 +3655,7 @@
   <data name="FSMIssue" xml:space="preserve"><value>Aktivierungscode ausstellen</value></data>
   <data name="FSMRepRequired" xml:space="preserve"><value>Vertreter wählen</value></data>
   <data name="FSMActAs" xml:space="preserve"><value>Belege erfasst als</value></data>
-  <data name="FSMActAsHint" xml:space="preserve"><value>Der Systembenutzer auf Rechnungen und Zahlungen des Geräts</value></data>
+  <data name="FSMActAsHint" xml:space="preserve"><value>Der Systembenutzer auf Rechnungen und Zahlungen des Geräts; er kann deren Anfragen nicht genehmigen, daher nicht den Vorgesetzten wählen</value></data>
   <data name="FSMValidity" xml:space="preserve"><value>Code gültig für</value></data>
   <data name="FSMHours" xml:space="preserve"><value>{0} Std.</value></data>
   <data name="FSMDays" xml:space="preserve"><value>{0} Tag(e)</value></data>

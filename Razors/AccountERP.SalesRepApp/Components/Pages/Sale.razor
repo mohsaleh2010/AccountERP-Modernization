@@ -1,0 +1,152 @@
+@* فاتورة بيع على الجهاز: العميل، أصناف السيارة بسعرها الافتراضى (قابل للتعديل) والمتاح، الخصم، نقدى/آجل وطريقة الدفع.
+   الحفظ يضيفها للصادر فوراً (بلا اتصال) ويخصم المتاح محلياً؛ السيرفر يعيد الفحص عند الرفع. *@
+@page "/sale"
+@inject AppState State
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<div class="ra-page">
+    <h1 class="mud-typography mud-typography-h5">فاتورة بيع</h1>
+
+    <MudAutocomplete T="CustomerRow" Label="العميل" @bind-Value="_customer" SearchFunc="SearchCustomers" ToStringFunc="@(c => c?.Name ?? "")"
+                     Variant="Variant.Outlined" Class="ra-gap" ResetValueOnEmptyText="true" Required="true" Clearable="true" MaxItems="30"
+                     AdornmentIcon="@Icons.Material.Filled.Person" Adornment="Adornment.Start" />
+    @if (_customer != null) { <div class="ra-muted mt-1">الرصيد: <span class="ra-num">@_customer.Balance.ToString("N2")</span></div> }
+
+    <MudAutocomplete T="ItemRow" Label="إضافة صنف" Value="@_pick" ValueChanged="AddItem" SearchFunc="SearchItems" ToStringFunc="@(i => i?.Item_Name ?? "")"
+                     Variant="Variant.Outlined" Class="ra-gap" ResetValueOnEmptyText="true" MaxItems="40" CoerceText="false"
+                     AdornmentIcon="@Icons.Material.Filled.AddShoppingCart" Adornment="Adornment.Start">
+        <ItemTemplate Context="i">
+            <div class="ra-row" style="width:100%">
+                <span class="ra-grow">@i.Item_Name <span class="ra-muted">@i.Code</span></span>
+                <span class="ra-muted ra-num">@SalesBook.Format(State.Book.AvailableSmall(i.Id), i)</span>
+            </div>
+        </ItemTemplate>
+    </MudAutocomplete>
+
+    @foreach (var l in _lines)
+    {
+        var item = _items[l.Unit_Item_Id];
+        var c = SalesBook.Calc(l, item.Factor);
+        <MudPaper Class="pa-3 ra-gap ra-card" Elevation="1">
+            <div class="ra-row">
+                <b class="ra-grow">@item.Item_Name</b>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" aria-label="@($"حذف {item.Item_Name}")" OnClick="@(() => _lines.Remove(l))" />
+            </div>
+            <div class="ra-muted">المتاح: @SalesBook.Format(State.Book.AvailableSmall(item.Id), item)</div>
+            <MudGrid Spacing="1" Class="mt-1">
+                <MudItem xs="@(item.Factor > 1 ? 6 : 12)">
+                    <MudNumericField T="decimal" @bind-Value="l.Qty_Large" Label="@($"الكمية ({item.B_Unit})")" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" InputMode="@(InputMode.@decimal)" />
+                </MudItem>
+                @if (item.Factor > 1)
+                {
+                    <MudItem xs="6">
+                        <MudNumericField T="decimal" @bind-Value="l.Qty_Small" Label="@($"({item.S_Unit})")" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" InputMode="@(InputMode.@decimal)" />
+                    </MudItem>
+                }
+                <MudItem xs="6">
+                    <MudNumericField T="decimal" @bind-Value="l.Unit_Price" Label="@($"سعر {item.B_Unit}")" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" InputMode="@(InputMode.@decimal)" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudNumericField T="decimal" @bind-Value="l.Discount_Value" Label="الخصم (قيمة)" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" InputMode="@(InputMode.@decimal)" />
+                </MudItem>
+            </MudGrid>
+            <div class="ra-row mt-1">
+                <span class="ra-muted ra-grow">@(c.Tax > 0 ? $"ضريبة {c.Tax:N2}" : "") @(c.Discount > 0 ? $"خصم {c.DiscountRate:0.##}%" : "")</span>
+                <span class="ra-num"><b>@c.Net.ToString("N2")</b></span>
+            </div>
+        </MudPaper>
+    }
+
+    <MudPaper Class="pa-3 ra-gap ra-card" Elevation="1">
+        @if (State.Book.Profile?.Allow_Credit_Sales == true)
+        {
+            <MudSwitch T="bool" @bind-Value="_credit" Color="Color.Warning" Label="آجل (على حساب العميل)" />
+        }
+        @if (!_credit && _methods.Count > 1)
+        {
+            <MudSelect T="long" @bind-Value="_method" Label="طريقة الدفع" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2"
+                       ToStringFunc="@(v => _methods.FirstOrDefault(m => m.Id == v)?.Name ?? "")">
+                @foreach (var m in _methods) { <MudSelectItem T="long" Value="@m.Id">@m.Name</MudSelectItem> }
+            </MudSelect>
+        }
+        <MudTextField @bind-Value="_notes" Label="ملاحظات" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2" MaxLength="300" />
+    </MudPaper>
+
+    @{ var check = State.Book.Check(Input()); }
+    @if (_tried) { foreach (var p in check.Problems) { <MudAlert Severity="Severity.Error" Dense="true" Class="ra-gap">@p</MudAlert> } }
+    @foreach (var w in check.Warnings) { <MudAlert Severity="Severity.Warning" Dense="true" Class="ra-gap">@w</MudAlert> }
+</div>
+
+<div class="ra-bottom">
+    <div class="ra-bottom-inner">
+        <div class="ra-grow">
+            <div class="ra-muted">الإجمالى</div>
+            <div class="ra-total ra-num">@check.Net.ToString("N2")</div>
+        </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ra-btn" Style="min-width:140px" Disabled="@_busy" OnClick="SaveAsync" StartIcon="@Icons.Material.Filled.Save">حفظ</MudButton>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "customer")] public long? CustomerId { get; set; }
+
+    private CustomerRow? _customer;
+    private ItemRow? _pick;
+    private readonly List<SaleLine> _lines = new();
+    private Dictionary<long, ItemRow> _items = new();
+    private List<CustomerRow> _customers = new();
+    private List<PaymentMethod> _methods = new();
+    private long _method;
+    private bool _credit, _busy, _tried;
+    private string? _notes;
+
+    protected override void OnInitialized()
+    {
+        _customers = State.Book.Customers;
+        _items = State.Book.Items.ToDictionary(i => i.Id);
+        _methods = State.Book.Methods;
+        _method = _methods.FirstOrDefault()?.Id ?? 0;
+        if (CustomerId is long id) _customer = _customers.FirstOrDefault(c => c.Id == id);
+    }
+
+    private Task<IEnumerable<CustomerRow>> SearchCustomers(string q, CancellationToken _) =>
+        Task.FromResult(_customers.Where(c => string.IsNullOrWhiteSpace(q) || c.Name.Contains(q.Trim(), StringComparison.OrdinalIgnoreCase) || c.Code.Contains(q.Trim()) || c.Mobile.Contains(q.Trim())));
+
+    private Task<IEnumerable<ItemRow>> SearchItems(string q, CancellationToken _) =>
+        Task.FromResult(_items.Values.Where(i => string.IsNullOrWhiteSpace(q) || i.Item_Name.Contains(q.Trim(), StringComparison.OrdinalIgnoreCase)
+                                              || i.Code == q.Trim() || i.BarCode2 == q.Trim()).OrderBy(i => i.Item_Name).AsEnumerable());
+
+    private void AddItem(ItemRow? item)
+    {
+        _pick = null;
+        if (item == null) return;
+        var existing = _lines.FirstOrDefault(l => l.Unit_Item_Id == item.Id);
+        if (existing != null) { existing.Qty_Large += 1; return; }
+        _lines.Add(new SaleLine { Unit_Item_Id = item.Id, Qty_Large = 1, Unit_Price = State.Book.DefaultPrice(item, _customer), Tax_Rate = item.Tax_Rate });
+    }
+
+    private SaleInput Input() => new()
+    {
+        Customer_Id = _customer?.Id ?? 0, Is_Credit = _credit, Payment_Method_Id = _credit ? 0 : _method, Notes = _notes,
+        Lines = _lines.Where(l => l.Qty_Large + l.Qty_Small > 0).ToList(),
+    };
+
+    private async Task SaveAsync()
+    {
+        _tried = true;
+        if (!State.Book.Check(Input()).Ok) return;
+        _busy = true;
+        try
+        {
+            State.Book.SaveSale(Input());
+            Snackbar.Add("حُفظت الفاتورة على الجهاز" + (State.Online ? "؛ جارٍ رفعها." : "؛ تُرفع عند الاتصال."), Severity.Success);
+            if (State.Online) _ = State.SyncNowAsync();
+            else State.NotifyChanged();
+            Nav.NavigateTo("/");
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        finally { _busy = false; }
+        await Task.CompletedTask;
+    }
+}

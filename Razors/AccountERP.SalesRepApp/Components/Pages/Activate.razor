@@ -1,0 +1,61 @@
+@* تفعيل الجهاز: عنوان السيرفر + رمز التفعيل من المكتب + PIN يختاره المندوب (لا كلمات مرور النظام). *@
+@page "/activate"
+@inject AppState State
+@inject NavigationManager Nav
+
+<div class="ra-page">
+    <h1 class="mud-typography mud-typography-h5">تفعيل الجهاز</h1>
+    <MudText Class="ra-muted">اطلب من المكتب رمز تفعيل باسمك (من شاشة «أجهزة المندوبين»)، ثم اختر رقماً سرياً (PIN) تدخل به كل مرة.</MudText>
+
+    <MudPaper Class="pa-4 ra-gap ra-card" Elevation="1">
+        <MudTextField @bind-Value="_url" Label="عنوان السيرفر" Placeholder="https://erp.example.com" Variant="Variant.Outlined" InputType="InputType.Url"
+                      HelperText="يعطيه لك المكتب" Required="true" Error="@(_tried && string.IsNullOrWhiteSpace(_url))" ErrorText="العنوان مطلوب" />
+        <MudTextField @bind-Value="_code" Label="رمز التفعيل" Placeholder="XXXXX-XXXXX" Variant="Variant.Outlined" Class="ra-code mt-3" MaxLength="13"
+                      Required="true" Error="@(_tried && string.IsNullOrWhiteSpace(_code))" ErrorText="الرمز مطلوب" autocomplete="@("off")" />
+        <MudTextField @bind-Value="_pin" Label="الرقم السرى (PIN)" InputType="InputType.Password" Variant="Variant.Outlined" Class="ra-pin mt-3" MaxLength="8"
+                      HelperText="من 4 إلى 8 أرقام، لا تكرار ولا تسلسل" InputMode="InputMode.numeric" autocomplete="@("new-password")"
+                      Error="@(_tried && !PinOk)" ErrorText="من 4 إلى 8 أرقام" />
+        <MudTextField @bind-Value="_pin2" Label="تأكيد الرقم السرى" InputType="InputType.Password" Variant="Variant.Outlined" Class="ra-pin mt-3" MaxLength="8"
+                      InputMode="InputMode.numeric" autocomplete="@("new-password")" Error="@(_tried && _pin != _pin2)" ErrorText="غير مطابق" />
+        <MudTextField @bind-Value="_name" Label="اسم الجهاز" Variant="Variant.Outlined" Class="mt-3" HelperText="ليتعرف عليه المكتب" />
+
+        @if (_error != null) { <MudAlert Severity="Severity.Error" Class="mt-3" role="alert">@_error</MudAlert> }
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="ra-btn mt-4" Disabled="@_busy" OnClick="ActivateAsync"
+                   StartIcon="@Icons.Material.Filled.PhonelinkLock">
+            @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+            تفعيل
+        </MudButton>
+    </MudPaper>
+</div>
+
+@code {
+    private string _url = "", _code = "", _pin = "", _pin2 = "", _name = "";
+    private string? _error;
+    private bool _busy, _tried;
+    private bool PinOk => _pin.Length is >= 4 and <= 8 && _pin.All(char.IsAsciiDigit);
+
+    protected override void OnInitialized()
+    {
+        _url = State.ServerUrl;
+        _name = DeviceInfo.Current.Name;
+    }
+
+    private async Task ActivateAsync()
+    {
+        _tried = true; _error = null;
+        if (string.IsNullOrWhiteSpace(_url) || string.IsNullOrWhiteSpace(_code) || !PinOk || _pin != _pin2) return;
+        _busy = true;
+        try
+        {
+            if (AppState.ValidateServerUrl(_url) != State.ServerUrl) State.SetServerUrl(_url);
+            await State.Session.ActivateAsync(_code, _pin, DeviceInfo.Current.Platform.ToString(), _name, State.AppVersion);
+            _pin = _pin2 = "";
+            var r = await State.SyncNowAsync();
+            Nav.NavigateTo("/");
+        }
+        catch (RepOfflineException) { _error = "لا اتصال بالسيرفر؛ تأكد من العنوان والإنترنت."; }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+}

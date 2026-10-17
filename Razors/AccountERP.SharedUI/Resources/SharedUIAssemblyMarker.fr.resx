@@ -3655,7 +3655,7 @@
   <data name="FSMIssue" xml:space="preserve"><value>Émettre un code d'activation</value></data>
   <data name="FSMRepRequired" xml:space="preserve"><value>Choisissez le commercial</value></data>
   <data name="FSMActAs" xml:space="preserve"><value>Documents enregistrés au nom de</value></data>
-  <data name="FSMActAsHint" xml:space="preserve"><value>L'utilisateur affiché sur les factures et encaissements de l'appareil</value></data>
+  <data name="FSMActAsHint" xml:space="preserve"><value>L'utilisateur affiché sur les factures et encaissements de l'appareil ; il ne peut pas approuver leurs demandes, choisissez donc un autre que le superviseur</value></data>
   <data name="FSMValidity" xml:space="preserve"><value>Code valable</value></data>
   <data name="FSMHours" xml:space="preserve"><value>{0} h</value></data>
   <data name="FSMDays" xml:space="preserve"><value>{0} jour(s)</value></data>

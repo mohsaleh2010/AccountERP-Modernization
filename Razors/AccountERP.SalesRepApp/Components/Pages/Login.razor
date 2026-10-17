@@ -1,0 +1,60 @@
+@* الدخول بالـ PIN: على السيرفر، أو بلا اتصال حتى 7 أيام من آخر دخول بالاتصال. *@
+@page "/login"
+@inject AppState State
+@inject NavigationManager Nav
+
+<div class="ra-page">
+    <h1 class="mud-typography mud-typography-h5">أهلاً @State.Session.RepName</h1>
+    <MudText Class="ra-muted">أدخل رقمك السرى للمتابعة.</MudText>
+
+    <MudPaper Class="pa-4 ra-gap ra-card" Elevation="1">
+        <MudTextField @bind-Value="_pin" Label="الرقم السرى (PIN)" InputType="InputType.Password" Variant="Variant.Outlined" Class="ra-pin" MaxLength="8"
+                      InputMode="InputMode.numeric" autocomplete="@("current-password")" Immediate="true" OnKeyUp="@(e => e.Key == "Enter" ? LoginAsync() : Task.CompletedTask)" />
+        @if (_error != null) { <MudAlert Severity="Severity.Error" Class="mt-3" role="alert">@_error</MudAlert> }
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="ra-btn mt-4" Disabled="@(_busy || _pin.Length < 4)" OnClick="LoginAsync"
+                   StartIcon="@Icons.Material.Filled.Login">
+            @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+            دخول
+        </MudButton>
+    </MudPaper>
+
+    <MudButton Variant="Variant.Text" Class="ra-btn ra-gap" OnClick="@(() => _confirmReset = true)">تفعيل الجهاز برمز جديد</MudButton>
+    @if (_confirmReset)
+    {
+        <MudAlert Severity="Severity.Warning" Class="mt-2">
+            يُلغى تفعيل هذا الجهاز وتحتاج رمزاً جديداً من المكتب. المستندات غير المرفوعة تبقى وتُرفع بعد التفعيل.
+            <div class="ra-row mt-2">
+                <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="ResetAsync">إلغاء التفعيل</MudButton>
+                <MudButton Variant="Variant.Text" OnClick="@(() => _confirmReset = false)">تراجع</MudButton>
+            </div>
+        </MudAlert>
+    }
+</div>
+
+@code {
+    private string _pin = "";
+    private string? _error;
+    private bool _busy, _confirmReset;
+
+    private async Task LoginAsync()
+    {
+        if (_busy || _pin.Length < 4) return;
+        _busy = true; _error = null;
+        try
+        {
+            await State.Session.LoginAsync(_pin, State.AppVersion);
+            _pin = "";
+            if (!State.Session.OfflineLogin) _ = State.SyncNowAsync();
+            Nav.NavigateTo("/");
+        }
+        catch (RepApiException ex) when (ex.SessionLost) { _error = ex.Message; Nav.NavigateTo("/activate"); }
+        catch (Exception ex) { _error = ex.Message; _pin = ""; }
+        finally { _busy = false; }
+    }
+
+    private async Task ResetAsync()
+    {
+        await State.Session.DeactivateAsync();
+        Nav.NavigateTo("/activate");
+    }
+}

@@ -1,0 +1,118 @@
+@* الرئيسية: الوردية، آخر مزامنة، ما ينتظر الرفع أو المراجعة، وأزرار العمل الكبيرة. *@
+@page "/"
+@implements IDisposable
+@inject AppState State
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<div class="ra-page">
+    <h1 class="mud-typography mud-typography-h5">اليوم</h1>
+
+    <MudPaper Class="pa-3 ra-gap ra-card" Elevation="1">
+        <div class="ra-row">
+            <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Color="Color.Primary" />
+            <div class="ra-grow">
+                <div><b>@(_profile?.Van_Store_Name ?? "—")</b></div>
+                <div class="ra-muted">@(_profile?.Cash_Box_Name)</div>
+            </div>
+            @if (_profile?.ShiftOpen == true)
+            {
+                <MudChip T="string" Color="Color.Success" Size="Size.Small" Icon="@Icons.Material.Filled.CheckCircle">الوردية مفتوحة</MudChip>
+            }
+            else
+            {
+                <MudChip T="string" Color="Color.Default" Size="Size.Small" Icon="@Icons.Material.Filled.Block">لا وردية مفتوحة</MudChip>
+            }
+        </div>
+        <div class="ra-row mt-2">
+            <span class="ra-muted ra-grow">النقدية بالعهدة</span>
+            <span class="ra-num"><b>@_cash.ToString("N2")</b>@(_profile?.Max_Cash_On_Hand is decimal m ? " / " + m.ToString("N2") : "")</span>
+        </div>
+        @if (_profile?.Max_Cash_On_Hand is decimal max && _cash > max)
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2">تجاوزت حد النقدية؛ ورِّد جزءاً منها للمكتب.</MudAlert>
+        }
+        @if (!_canSell.Ok && _profile != null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2">@_canSell.Reason</MudAlert>
+        }
+    </MudPaper>
+
+    <MudPaper Class="pa-3 ra-gap ra-card" Elevation="1">
+        <div class="ra-row">
+            <MudIcon Icon="@Icons.Material.Filled.Sync" Color="@(State.LastReport?.Ok == false ? Color.Warning : Color.Primary)" />
+            <div class="ra-grow">
+                <div>آخر مزامنة: <b>@(State.Session.LastSyncOk?.ToString("yyyy-MM-dd HH:mm") ?? "لم تتم")</b></div>
+                <div class="ra-muted">
+                    @if (_queued > 0) { <span>@_queued بانتظار الرفع · </span> }
+                    @if (_review > 0) { <span>@_review بانتظار المراجعة · </span> }
+                    @if (_rejected > 0) { <span>@_rejected مرفوض</span> }
+                    @if (_queued + _review + _rejected == 0) { <span>كل المستندات مرفوعة</span> }
+                </div>
+                @if (State.LastReport is { Error: not null } r) { <div class="ra-muted" style="color:var(--mud-palette-error)">@r.Error</div> }
+            </div>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="ra-btn" Disabled="@_syncing" OnClick="SyncAsync" aria-label="مزامنة الآن">
+                @if (_syncing) { <MudProgressCircular Size="Size.Small" Indeterminate="true" /> } else { <span>مزامنة</span> }
+            </MudButton>
+        </div>
+    </MudPaper>
+
+    <MudGrid Spacing="2" Class="ra-gap">
+        <MudItem xs="6"><MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Style="min-height:88px" StartIcon="@Icons.Material.Filled.PointOfSale" Href="/sale">بيع</MudButton></MudItem>
+        <MudItem xs="6"><MudButton Variant="Variant.Filled" Color="Color.Secondary" FullWidth="true" Style="min-height:88px" StartIcon="@Icons.Material.Filled.Payments" Href="/collect">تحصيل</MudButton></MudItem>
+        <MudItem xs="6"><MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Style="min-height:72px" StartIcon="@Icons.Material.Filled.Groups" Href="/customers">العملاء</MudButton></MudItem>
+        <MudItem xs="6">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Style="min-height:72px" StartIcon="@Icons.Material.Filled.Outbox" Href="/outbox">
+                المستندات @(_queued + _review + _rejected > 0 ? $"({_queued + _review + _rejected})" : "")
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+
+    <MudButton Variant="Variant.Text" Class="ra-btn ra-gap" StartIcon="@Icons.Material.Filled.Logout" OnClick="Logout">خروج</MudButton>
+    <div class="ra-muted">الإصدار @State.AppVersion</div>
+</div>
+
+@code {
+    private RepProfile? _profile;
+    private decimal _cash;
+    private int _queued, _review, _rejected;
+    private bool _syncing;
+    private (bool Ok, string? Reason) _canSell;
+
+    protected override void OnInitialized()
+    {
+        State.Changed += Refresh;
+        Load();
+    }
+
+    private void Load()
+    {
+        _profile = State.Book.Profile;
+        _cash = State.Book.CashOnHand();
+        var box = State.Store.Outbox();
+        _queued = box.Count(o => o.Status == OutboxStatus.Queued);
+        _review = box.Count(o => o.Status is OutboxStatus.PendingReview or OutboxStatus.Error or OutboxStatus.Received);
+        _rejected = box.Count(o => o.Status == OutboxStatus.Rejected && o.Created_At > DateTime.Now.AddDays(-7));
+        _canSell = State.Session.CanSellOffline();
+    }
+
+    private void Refresh() => InvokeAsync(() => { Load(); StateHasChanged(); });
+
+    private async Task SyncAsync()
+    {
+        _syncing = true;
+        try
+        {
+            var r = await State.SyncNowAsync();
+            if (r.Offline) Snackbar.Add("لا اتصال؛ المستندات محفوظة على الجهاز وتُرفع لاحقاً.", Severity.Warning);
+            else if (r.Error != null) Snackbar.Add(r.Error, Severity.Error);
+            else Snackbar.Add($"تمت المزامنة: رُفع {r.Pushed}، حُفظ {r.Processed}" + (r.PendingReview > 0 ? $"، بانتظار المراجعة {r.PendingReview}" : ""), Severity.Success);
+            if (!State.Session.IsActivated) Nav.NavigateTo("/activate");
+        }
+        finally { _syncing = false; Load(); }
+    }
+
+    private void Logout() { State.Session.Logout(); Nav.NavigateTo("/login"); }
+
+    public void Dispose() => State.Changed -= Refresh;
+}

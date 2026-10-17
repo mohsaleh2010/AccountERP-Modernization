@@ -3653,7 +3653,7 @@
   <data name="FSMIssue" xml:space="preserve"><value>Issue an activation code</value></data>
   <data name="FSMRepRequired" xml:space="preserve"><value>Choose the rep</value></data>
   <data name="FSMActAs" xml:space="preserve"><value>Documents recorded as</value></data>
-  <data name="FSMActAsHint" xml:space="preserve"><value>The system user shown on the device's invoices and collections</value></data>
+  <data name="FSMActAsHint" xml:space="preserve"><value>The system user shown on the device's invoices and collections; that user cannot approve their requests, so pick someone other than the supervisor</value></data>
   <data name="FSMValidity" xml:space="preserve"><value>Code valid for</value></data>
   <data name="FSMHours" xml:space="preserve"><value>{0} h</value></data>
   <data name="FSMDays" xml:space="preserve"><value>{0} day(s)</value></data>

@@ -1,0 +1,72 @@
+@* تحصيل من عميل: المبلغ وطريقة الدفع (النقدى فى العهدة، وغيره فى بنك الطريقة على السيرفر). *@
+@page "/collect"
+@inject AppState State
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<div class="ra-page">
+    <h1 class="mud-typography mud-typography-h5">تحصيل</h1>
+
+    <MudAutocomplete T="CustomerRow" Label="العميل" @bind-Value="_customer" SearchFunc="SearchCustomers" ToStringFunc="@(c => c?.Name ?? "")"
+                     Variant="Variant.Outlined" Class="ra-gap" ResetValueOnEmptyText="true" Clearable="true" MaxItems="30"
+                     AdornmentIcon="@Icons.Material.Filled.Person" Adornment="Adornment.Start" />
+    @if (_customer != null) { <div class="ra-muted mt-1">الرصيد: <span class="ra-num">@_customer.Balance.ToString("N2")</span></div> }
+
+    <MudNumericField T="decimal" @bind-Value="_amount" Label="المبلغ" Min="0" Variant="Variant.Outlined" Class="ra-gap" Immediate="true" InputMode="@(InputMode.@decimal)" />
+    @if (_methods.Count > 1)
+    {
+        <MudSelect T="long" @bind-Value="_method" Label="طريقة الدفع" Variant="Variant.Outlined" Class="ra-gap"
+                   ToStringFunc="@(v => _methods.FirstOrDefault(m => m.Id == v)?.Name ?? "")">
+            @foreach (var m in _methods) { <MudSelectItem T="long" Value="@m.Id">@m.Name</MudSelectItem> }
+        </MudSelect>
+    }
+    <MudTextField @bind-Value="_notes" Label="ملاحظات" Variant="Variant.Outlined" Class="ra-gap" MaxLength="300" />
+
+    @{ var check = State.Book.CheckCollection(Input()); }
+    @if (_tried) { foreach (var p in check.Problems) { <MudAlert Severity="Severity.Error" Dense="true" Class="ra-gap">@p</MudAlert> } }
+    @foreach (var w in check.Warnings) { <MudAlert Severity="Severity.Warning" Dense="true" Class="ra-gap">@w</MudAlert> }
+
+    <MudButton Variant="Variant.Filled" Color="Color.Secondary" FullWidth="true" Class="ra-btn ra-gap" Disabled="@_busy" OnClick="Save" StartIcon="@Icons.Material.Filled.Save">حفظ التحصيل</MudButton>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "customer")] public long? CustomerId { get; set; }
+
+    private CustomerRow? _customer;
+    private List<CustomerRow> _customers = new();
+    private List<PaymentMethod> _methods = new();
+    private decimal _amount;
+    private long _method;
+    private string? _notes;
+    private bool _busy, _tried;
+
+    protected override void OnInitialized()
+    {
+        _customers = State.Book.Customers;
+        _methods = State.Book.Methods;
+        _method = _methods.FirstOrDefault()?.Id ?? 0;
+        if (CustomerId is long id) _customer = _customers.FirstOrDefault(c => c.Id == id);
+    }
+
+    private Task<IEnumerable<CustomerRow>> SearchCustomers(string q, CancellationToken _) =>
+        Task.FromResult(_customers.Where(c => string.IsNullOrWhiteSpace(q) || c.Name.Contains(q.Trim(), StringComparison.OrdinalIgnoreCase) || c.Code.Contains(q.Trim()) || c.Mobile.Contains(q.Trim())));
+
+    private CollectionInput Input() => new() { Customer_Id = _customer?.Id ?? 0, Amount = _amount, Payment_Method_Id = _method, Notes = _notes };
+
+    private void Save()
+    {
+        _tried = true;
+        if (!State.Book.CheckCollection(Input()).Ok) return;
+        _busy = true;
+        try
+        {
+            State.Book.SaveCollection(Input());
+            Snackbar.Add("حُفظ التحصيل على الجهاز" + (State.Online ? "؛ جارٍ رفعه." : "؛ يُرفع عند الاتصال."), Severity.Success);
+            if (State.Online) _ = State.SyncNowAsync();
+            else State.NotifyChanged();
+            Nav.NavigateTo("/");
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        finally { _busy = false; }
+    }
+}
