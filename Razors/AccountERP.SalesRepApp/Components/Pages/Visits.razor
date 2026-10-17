@@ -1,0 +1,200 @@
+@* زيارات اليوم: خطة اليوم بالترتيب وحال كل عميل، الدخول بالموقع والمسافة من نطاق العميل، والخروج، ومستندات الزيارة الجارية.
+   تعمل بلا اتصال؛ الدخول والخروج مستندان يُرفعان بوقت الجهاز. خارج النطاق تحذير لا منع (للمراجعة كالسيرفر). *@
+@page "/visits"
+@implements IDisposable
+@inject AppState State
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<div class="ra-page">
+    <h1 class="mud-typography mud-typography-h5">زيارات اليوم</h1>
+
+    <MudPaper Class="pa-3 ra-gap ra-card" Elevation="1">
+        <div class="ra-row">
+            <span class="ra-grow">زُرت <b class="ra-num">@_planDone</b> من <b class="ra-num">@_planCount</b> مخططاً@(_extra > 0 ? $" · {_extra} خارج الخطة" : "")</span>
+        </div>
+        <MudProgressLinear Color="Color.Primary" Value="@(_planCount == 0 ? 0 : 100.0 * _planDone / _planCount)" Class="mt-2" aria-label="نسبة تنفيذ الخطة" />
+    </MudPaper>
+
+    @if (_active != null)
+    {
+        <MudPaper Class="pa-3 ra-gap ra-card" Elevation="2" Style="border-inline-start:4px solid var(--mud-palette-primary)">
+            <div class="ra-row">
+                <MudIcon Icon="@Icons.Material.Filled.Storefront" Color="Color.Primary" />
+                <div class="ra-grow">
+                    <div><b>@_active.Customer_Name</b></div>
+                    <div class="ra-muted">زيارة جارية منذ @(_active.Check_In_At?.ToString("HH:mm") ?? "—") @Geo(_active)</div>
+                </div>
+            </div>
+            <MudGrid Spacing="1" Class="mt-2">
+                <MudItem xs="6"><MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="ra-btn" StartIcon="@Icons.Material.Filled.PointOfSale" Href="@($"/sale?customer={_active.Customer_Id}")">بيع</MudButton></MudItem>
+                <MudItem xs="6"><MudButton Variant="Variant.Filled" Color="Color.Secondary" FullWidth="true" Class="ra-btn" StartIcon="@Icons.Material.Filled.Payments" Href="@($"/collect?customer={_active.Customer_Id}")">تحصيل</MudButton></MudItem>
+                <MudItem xs="6">
+                    <MudMenu FullWidth="true" AnchorOrigin="Origin.BottomCenter" AriaLabel="مستندات أخرى للزيارة">
+                        <ActivatorContent>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Class="ra-btn" StartIcon="@Icons.Material.Filled.MoreHoriz">مستند آخر</MudButton>
+                        </ActivatorContent>
+                        <ChildContent>
+                            <MudMenuItem Href="@($"/return?customer={_active.Customer_Id}")" Icon="@Icons.Material.Filled.AssignmentReturn">مرتجع</MudMenuItem>
+                            <MudMenuItem Href="@($"/order?customer={_active.Customer_Id}")" Icon="@Icons.Material.Filled.NoteAdd">طلبية</MudMenuItem>
+                            @if (State.Book.Profile?.Allow_Cheque_Collection == true)
+                            {
+                                <MudMenuItem Href="@($"/cheque?customer={_active.Customer_Id}")" Icon="@Icons.Material.Filled.RequestPage">شيك</MudMenuItem>
+                            }
+                            <MudMenuItem Href="@($"/nosale?customer={_active.Customer_Id}")" Icon="@Icons.Material.Filled.DoNotDisturbOn">بلا بيع</MudMenuItem>
+                        </ChildContent>
+                    </MudMenu>
+                </MudItem>
+                <MudItem xs="6"><MudButton Variant="Variant.Outlined" Color="Color.Error" FullWidth="true" Class="ra-btn" StartIcon="@Icons.Material.Filled.Logout" Disabled="@_busy" OnClick="CheckOut">خروج</MudButton></MudItem>
+            </MudGrid>
+        </MudPaper>
+    }
+
+    <MudAutocomplete T="CustomerRow" Label="زيارة عميل خارج الخطة" Value="@_pick" ValueChanged="PickOther" SearchFunc="SearchCustomers" ToStringFunc="@(c => c?.Name ?? "")"
+                     Variant="Variant.Outlined" Class="ra-gap" ResetValueOnEmptyText="true" Clearable="true" MaxItems="30" CoerceText="false"
+                     AdornmentIcon="@Icons.Material.Filled.PersonSearch" Adornment="Adornment.Start" />
+
+    @if (_rows.Count == 0)
+    {
+        <MudText Class="ra-muted ra-gap">لا عملاء مخططين لليوم؛ اختر عميلاً من البحث للدخول عنده.</MudText>
+    }
+    <MudList T="long" Class="ra-gap">
+        @foreach (var v in _rows)
+        {
+            <MudListItem T="long" Value="@v.Customer_Id">
+                <div class="ra-row">
+                    <MudIcon Icon="@StateIcon(v)" Color="@StateColor(v)" Title="@StateText(v)" />
+                    <div class="ra-grow">
+                        <div>
+                            <b>@v.Customer_Name</b>
+                            @if (!v.Planned) { <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Class="ms-1">خارج الخطة</MudChip> }
+                        </div>
+                        <div class="ra-muted">
+                            @StateText(v)
+                            @if (v.Check_In_At != null) { <span> · @v.Check_In_At.Value.ToString("HH:mm")@(v.Check_Out_At != null ? "–" + v.Check_Out_At.Value.ToString("HH:mm") : "")</span> }
+                            @if (v.Result != null) { <span> · @SalesBook.ResultName(v.Result)</span> }
+                            @Geo(v)
+                            @if (v.Pending) { <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Title="بانتظار الرفع" Class="ms-1" Style="vertical-align:middle" /> }
+                        </div>
+                    </div>
+                    @if (v.State != VisitState.InProgress)
+                    {
+                        <MudButton Variant="@(v.State == VisitState.NotVisited ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Class="ra-btn"
+                                   Disabled="@_busy" OnClick="@(() => CheckIn(v.Customer_Id))" aria-label="@($"دخول عند {v.Customer_Name}")">
+                            @if (_busy && _locating == v.Customer_Id) { <MudProgressCircular Size="Size.Small" Indeterminate="true" /> } else { <span>دخول</span> }
+                        </MudButton>
+                    }
+                </div>
+            </MudListItem>
+        }
+    </MudList>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "checkin")] public long? CheckInCustomer { get; set; }
+
+    private List<VisitStatus> _rows = new();
+    private VisitStatus? _active;
+    private List<CustomerRow> _customers = new();
+    private CustomerRow? _pick;
+    private int _planCount, _planDone, _extra;
+    private bool _busy;
+    private long _locating;
+
+    protected override async Task OnInitializedAsync()
+    {
+        State.Changed += Refresh;
+        _customers = State.Book.Customers;
+        Load();
+        if (CheckInCustomer is long id && _active?.Customer_Id != id)
+        {
+            Nav.NavigateTo("/visits", replace: true);
+            await CheckIn(id);
+        }
+    }
+
+    private void Load()
+    {
+        _rows = State.Book.TodayVisits();
+        _active = _rows.FirstOrDefault(v => v.State == VisitState.InProgress);
+        _planCount = _rows.Count(v => v.Planned);
+        _planDone = _rows.Count(v => v.Planned && v.State != VisitState.NotVisited);
+        _extra = _rows.Count(v => !v.Planned);
+    }
+
+    private void Refresh() => InvokeAsync(() => { Load(); StateHasChanged(); });
+
+    private Task<IEnumerable<CustomerRow>> SearchCustomers(string q, CancellationToken _) =>
+        Task.FromResult(_customers.Where(c => string.IsNullOrWhiteSpace(q) || c.Name.Contains(q.Trim(), StringComparison.OrdinalIgnoreCase) || c.Code.Contains(q.Trim()) || c.Mobile.Contains(q.Trim())));
+
+    private async Task PickOther(CustomerRow? c)
+    {
+        _pick = null;
+        if (c != null) await CheckIn(c.Id);
+    }
+
+    private async Task CheckIn(long customerId)
+    {
+        _busy = true;
+        _locating = customerId;
+        StateHasChanged();
+        try
+        {
+            var input = new VisitInput { Customer_Id = customerId };
+            var loc = await DeviceMedia.LocationAsync();
+            if (loc != null) { input.Lat = loc.Value.Lat; input.Lng = loc.Value.Lng; }
+            var check = State.Book.CheckCheckIn(input);
+            if (!check.Ok) { foreach (var p in check.Problems) Snackbar.Add(p, Severity.Error); return; }
+            State.Book.SaveCheckIn(input);
+            foreach (var w in check.Warnings) Snackbar.Add(w, Severity.Warning);
+            Snackbar.Add("سُجل الدخول عند العميل.", Severity.Success);
+            Saved();
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        finally { _busy = false; _locating = 0; Load(); }
+    }
+
+    private void CheckOut()
+    {
+        if (_active == null) return;
+        _busy = true;
+        try
+        {
+            State.Book.SaveCheckOut(_active.Customer_Id);
+            Snackbar.Add("انتهت الزيارة.", Severity.Success);
+            Saved();
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        finally { _busy = false; Load(); }
+    }
+
+    private void Saved()
+    {
+        if (State.Online) _ = State.SyncNowAsync(); else State.NotifyChanged();
+    }
+
+    private static string Geo(VisitStatus v) => v.Distance_M is int d
+        ? (v.Inside == false ? $" · خارج النطاق ({d:N0} م)" : $" · داخل النطاق ({d:N0} م)")
+        : "";
+
+    private static string StateText(VisitStatus v) => v.State switch
+    {
+        VisitState.InProgress => "جارية", VisitState.Done => "تمت", _ => "لم تُزر",
+    };
+
+    private static string StateIcon(VisitStatus v) => v.State switch
+    {
+        VisitState.InProgress => Icons.Material.Filled.Storefront,
+        VisitState.Done => v.Inside == false ? Icons.Material.Filled.WrongLocation : Icons.Material.Filled.CheckCircle,
+        _ => Icons.Material.Filled.RadioButtonUnchecked,
+    };
+
+    private static Color StateColor(VisitStatus v) => v.State switch
+    {
+        VisitState.InProgress => Color.Primary,
+        VisitState.Done => v.Inside == false ? Color.Warning : Color.Success,
+        _ => Color.Default,
+    };
+
+    public void Dispose() => State.Changed -= Refresh;
+}

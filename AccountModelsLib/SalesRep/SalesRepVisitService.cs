@@ -360,14 +360,50 @@ ORDER BY v.Planned DESC, v.Id").ToList());
         /// تسجيل حضور يدوى عند عميل (اختيارى): يستعمل زيارته المفتوحة أو المخططة أو ينشئ غير مخططة، ويسجّل الموقع إن وُجد
         /// ويحسب المسافة من موقع العميل والنطاق (للمراجعة فقط). يُخرج المندوب من زيارته المفتوحة عند عميل آخر. يرجع رقم الزيارة.
         /// </summary>
-        public long CheckIn(long repId, long customerId, decimal? lat = null, decimal? lng = null) => Tx(opp =>
+        /// <para><paramref name="at"/>: وقت الحضور على جهاز المندوب (المستند المرفوع بلا اتصال)، يُحصر بين فتح الوردية والآن.</para>
+        public long CheckIn(long repId, long customerId, decimal? lat = null, decimal? lng = null, DateTime? at = null) => Tx(opp =>
         {
             var shift = OpenShift(opp, repId);
-            var v = Active(opp, shift, customerId);
+            var v = Active(opp, shift, customerId, When(shift, at));
             if (lat != null && lng != null && v.Check_In_Lat == null) SetLocation(opp, v, lat.Value, lng.Value);
             opp.db.SaveChanges();
             return v.Id;
         });
+
+        /// <summary>
+        /// خروج الجهاز من عند العميل: ينهى زيارته المفتوحة فى الوردية إن وُجدت (وإلا لا شىء؛ فحضور لاحق عند عميل آخر أنهاها).
+        /// يرجع رقم الزيارة أو 0.
+        /// </summary>
+        public long CheckOutCustomer(long repId, long customerId, DateTime? at = null) => Tx(opp =>
+        {
+            var shift = OpenShift(opp, repId);
+            var v = opp.db.SalesRep_Visits.Where(x => x.Shift_Id == shift.Id && x.Customer_Id == customerId && x.Check_In_At != null && x.Check_Out_At == null)
+                .OrderByDescending(x => x.Id).FirstOrDefault();
+            if (v == null) return 0L;
+            DateTime when = When(shift, at);
+            v.Check_Out_At = when < v.Check_In_At ? v.Check_In_At : when;
+            v.StampEdit();
+            opp.db.SaveChanges();
+            return v.Id;
+        });
+
+        /// <summary>زيارات الوردية المفتوحة للمندوب (للجهاز)؛ فارغة إن لم تكن له وردية مفتوحة.</summary>
+        internal static List<VisitRow> OpenShiftVisits(operations opp, long repId)
+        {
+            long shiftId = opp.db.SalesRep_Shifts.AsNoTracking()
+                .Where(s => s.Rep_Id == repId && s.Status != (int)SalesRepShiftStatus.Closed && s.Status != (int)SalesRepShiftStatus.Closing)
+                .Select(s => s.Id).FirstOrDefault();
+            return shiftId == 0 ? new List<VisitRow>() : new SalesRepVisitService(opp).GetShiftVisits(shiftId);
+        }
+
+        /// <summary>وقت الجهاز محصوراً بين فتح الوردية والآن (لا مستقبل ولا قبل الوردية).</summary>
+        internal static DateTime When(SalesRep_Shift shift, DateTime? at)
+        {
+            DateTime now = DateTime.Now;
+            if (at == null || at > now) return now;
+            DateTime from = shift.Opened_At ?? shift.Shift_Date.Date;
+            return at < from ? from : at.Value;
+        }
 
         /// <summary>انتهاء الزيارة (الخروج من عند العميل).</summary>
         public void CheckOut(long repId, long visitId) => Tx(opp =>
@@ -461,12 +497,12 @@ ORDER BY v.Planned DESC, v.Id").ToList());
         }
 
         /// <summary>زيارة العميل النشطة فى الوردية: المفتوحة، ثم المخططة التى لم تبدأ، وإلا تُنشأ غير مخططة. تُنهى زيارة مفتوحة لعميل آخر.</summary>
-        private static SalesRep_Visit Active(operations opp, SalesRep_Shift shift, long customerId)
+        private static SalesRep_Visit Active(operations opp, SalesRep_Shift shift, long customerId, DateTime? at = null)
         {
-            DateTime now = DateTime.Now;
+            DateTime now = at ?? DateTime.Now;
             foreach (var o in opp.db.SalesRep_Visits.Where(x => x.Shift_Id == shift.Id && x.Customer_Id != customerId && x.Check_In_At != null && x.Check_Out_At == null).ToList())
             {
-                o.Check_Out_At = now;
+                o.Check_Out_At = now < o.Check_In_At ? o.Check_In_At : now;
                 o.StampEdit();
             }
             var v = opp.db.SalesRep_Visits.Where(x => x.Shift_Id == shift.Id && x.Customer_Id == customerId && x.Check_In_At != null && x.Check_Out_At == null)

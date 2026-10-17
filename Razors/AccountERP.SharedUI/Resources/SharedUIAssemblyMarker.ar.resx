@@ -3711,6 +3711,8 @@
   <data name="FSUType5" xml:space="preserve"><value>تسليم طلبية</value></data>
   <data name="FSUType6" xml:space="preserve"><value>شيك</value></data>
   <data name="FSUType7" xml:space="preserve"><value>عدم بيع</value></data>
+  <data name="FSUType8" xml:space="preserve"><value>دخول عند عميل</value></data>
+  <data name="FSUType9" xml:space="preserve"><value>خروج من عند عميل</value></data>
   <data name="FSUStatus0" xml:space="preserve"><value>وصل</value></data>
   <data name="FSUStatus1" xml:space="preserve"><value>حُفظ</value></data>
   <data name="FSUStatus2" xml:space="preserve"><value>خطأ</value></data>

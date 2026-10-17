@@ -3713,6 +3713,8 @@
   <data name="FSUType5" xml:space="preserve"><value>Auftragslieferung</value></data>
   <data name="FSUType6" xml:space="preserve"><value>Scheck</value></data>
   <data name="FSUType7" xml:space="preserve"><value>Kein Verkauf</value></data>
+  <data name="FSUType8" xml:space="preserve"><value>Check-in beim Kunden</value></data>
+  <data name="FSUType9" xml:space="preserve"><value>Check-out beim Kunden</value></data>
   <data name="FSUStatus0" xml:space="preserve"><value>Empfangen</value></data>
   <data name="FSUStatus1" xml:space="preserve"><value>Gespeichert</value></data>
   <data name="FSUStatus2" xml:space="preserve"><value>Fehler</value></data>

@@ -57,7 +57,22 @@
         </div>
     </MudPaper>
 
+    @if (_visit != null)
+    {
+        <MudPaper Class="pa-3 ra-gap ra-card" Elevation="1" Style="border-inline-start:4px solid var(--mud-palette-primary)">
+            <div class="ra-row">
+                <MudIcon Icon="@Icons.Material.Filled.Storefront" Color="Color.Primary" />
+                <div class="ra-grow">
+                    <div>زيارة جارية: <b>@_visit.Customer_Name</b></div>
+                    <div class="ra-muted">منذ @(_visit.Check_In_At?.ToString("HH:mm") ?? "—")</div>
+                </div>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="ra-btn" Href="/visits">الزيارة</MudButton>
+            </div>
+        </MudPaper>
+    }
+
     <MudGrid Spacing="2" Class="ra-gap">
+        <MudItem xs="12"><MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Style="min-height:64px" StartIcon="@Icons.Material.Filled.Route" Href="/visits">زيارات اليوم @(_planCount > 0 ? $"({_planDone}/{_planCount})" : "")</MudButton></MudItem>
         <MudItem xs="6"><MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Style="min-height:80px" StartIcon="@Icons.Material.Filled.PointOfSale" Href="/sale">بيع</MudButton></MudItem>
         <MudItem xs="6"><MudButton Variant="Variant.Filled" Color="Color.Secondary" FullWidth="true" Style="min-height:80px" StartIcon="@Icons.Material.Filled.Payments" Href="/collect">تحصيل</MudButton></MudItem>
         <MudItem xs="6"><MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Style="min-height:64px" StartIcon="@Icons.Material.Filled.AssignmentReturn" Href="/return">مرتجع</MudButton></MudItem>
@@ -83,7 +98,8 @@
 @code {
     private RepProfile? _profile;
     private decimal _cash;
-    private int _queued, _review, _rejected, _deliveries;
+    private int _queued, _review, _rejected, _deliveries, _planCount, _planDone;
+    private VisitStatus? _visit;
     private bool _syncing;
     private (bool Ok, string? Reason) _canSell;
 
@@ -103,6 +119,10 @@
         _rejected = box.Count(o => o.Status == OutboxStatus.Rejected && o.Created_At > DateTime.Now.AddDays(-7));
         _canSell = State.Session.CanSellOffline();
         _deliveries = State.Book.OpenOrders().Count;
+        var visits = State.Book.TodayVisits();
+        _visit = visits.FirstOrDefault(v => v.State == VisitState.InProgress);
+        _planCount = visits.Count(v => v.Planned);
+        _planDone = visits.Count(v => v.Planned && v.State != VisitState.NotVisited);
     }
 
     private void Refresh() => InvokeAsync(() => { Load(); StateHasChanged(); });

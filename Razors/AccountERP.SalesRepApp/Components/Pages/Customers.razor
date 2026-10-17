@@ -30,6 +30,7 @@
                         <MudIconButton Icon="@Icons.Material.Filled.PointOfSale" Color="Color.Primary" Href="@($"/sale?customer={c.Id}")" aria-label="@($"بيع لـ {c.Name}")" />
                         <MudIconButton Icon="@Icons.Material.Filled.Payments" Color="Color.Secondary" Href="@($"/collect?customer={c.Id}")" aria-label="@($"تحصيل من {c.Name}")" />
                         <MudMenu Icon="@Icons.Material.Filled.MoreVert" AriaLabel="@($"مستندات أخرى لـ {c.Name}")" AnchorOrigin="Origin.BottomLeft">
+                            <MudMenuItem Href="@($"/visits?checkin={c.Id}")" Icon="@Icons.Material.Filled.Storefront">دخول (زيارة)</MudMenuItem>
                             <MudMenuItem Href="@($"/return?customer={c.Id}")" Icon="@Icons.Material.Filled.AssignmentReturn">مرتجع</MudMenuItem>
                             <MudMenuItem Href="@($"/order?customer={c.Id}")" Icon="@Icons.Material.Filled.NoteAdd">طلبية</MudMenuItem>
                             <MudMenuItem Href="@($"/cheque?customer={c.Id}")" Icon="@Icons.Material.Filled.RequestPage">شيك</MudMenuItem>

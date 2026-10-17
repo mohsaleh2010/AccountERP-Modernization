@@ -76,6 +76,14 @@ namespace AccountModelsLib.SalesRep
             public string Notes { get; set; }
         }
 
+        /// <summary>دخول/خروج من عند عميل على الجهاز؛ الوقت = Device_Created_At للمستند.</summary>
+        public class DeviceVisitInput
+        {
+            public long Customer_Id { get; set; }
+            public decimal? Lat { get; set; }
+            public decimal? Lng { get; set; }
+        }
+
         public class InboxRow
         {
             public long Id { get; set; }
@@ -115,7 +123,7 @@ namespace AccountModelsLib.SalesRep
         }
 
         public static readonly string[] Datasets =
-            { "profile", "payment_methods", "return_reasons", "nosale_reasons", "banks", "customers", "items", "prices", "stock", "orders", "plan", "invoices", "order_items" };
+            { "profile", "payment_methods", "return_reasons", "nosale_reasons", "banks", "customers", "items", "prices", "stock", "orders", "plan", "invoices", "order_items", "visits" };
 
         // ============================== الرفع ==============================
 
@@ -278,6 +286,13 @@ namespace AccountModelsLib.SalesRep
                 }
                 case SalesRepSyncDocType.NoSale:
                     return new SalesRepVisitService(opp).RecordNoSale(id.RepId, Payload<SalesRepVisitService.NoSaleInput>(row));
+                case SalesRepSyncDocType.CheckIn:
+                {
+                    var input = Payload<DeviceVisitInput>(row);
+                    return new SalesRepVisitService(opp).CheckIn(id.RepId, input.Customer_Id, input.Lat, input.Lng, row.Device_Created_At);
+                }
+                case SalesRepSyncDocType.CheckOut:
+                    return new SalesRepVisitService(opp).CheckOutCustomer(id.RepId, Payload<DeviceVisitInput>(row).Customer_Id, row.Device_Created_At);
                 default:
                     throw new NotSupportedException($"نوع مستند غير معروف ({row.Doc_Type}).");
             }
@@ -597,6 +612,9 @@ FROM Unit_item u WHERE u.Store_id = {store}").ToList().Select(x => new SyncRow(x
                 }
                 case "plan":
                     return new SalesRepVisitService(opp).PlanFor(repId, DateTime.Today).Select(p => new SyncRow(p.Customer_Id, p)).ToList();
+                case "visits":
+                    // زيارات الوردية المفتوحة (المخططة المثبَّتة والمنفَّذة) بمسافتها ونتيجتها؛ الجهاز يضيف عليها ما لم يُرفع بعد.
+                    return SalesRepVisitService.OpenShiftVisits(opp, repId).Select(v => new SyncRow(v.Id, v)).ToList();
                 case "invoices":
                 {
                     // المرتجع المربوط على الجهاز: فواتير المندوب نفسه داخل نافذة الإرجاع وفيها كمية قابلة للإرجاع (الأحدث 300)، بأسطرها وسعرها الصافى.

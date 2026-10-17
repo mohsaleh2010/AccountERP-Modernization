@@ -3711,6 +3711,8 @@
   <data name="FSUType5" xml:space="preserve"><value>Order delivery</value></data>
   <data name="FSUType6" xml:space="preserve"><value>Cheque</value></data>
   <data name="FSUType7" xml:space="preserve"><value>No sale</value></data>
+  <data name="FSUType8" xml:space="preserve"><value>Customer check-in</value></data>
+  <data name="FSUType9" xml:space="preserve"><value>Customer check-out</value></data>
   <data name="FSUStatus0" xml:space="preserve"><value>Received</value></data>
   <data name="FSUStatus1" xml:space="preserve"><value>Saved</value></data>
   <data name="FSUStatus2" xml:space="preserve"><value>Error</value></data>

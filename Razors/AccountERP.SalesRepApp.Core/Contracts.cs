@@ -63,7 +63,7 @@ namespace AccountERP.SalesRepApp.Core
     }
 
     /// <summary>أنواع المستندات المرفوعة (= SalesRepSyncDocType على السيرفر).</summary>
-    public enum DocType { Sale = 1, Return = 2, Collection = 3, TakeOrder = 4, Delivery = 5, Cheque = 6, NoSale = 7 }
+    public enum DocType { Sale = 1, Return = 2, Collection = 3, TakeOrder = 4, Delivery = 5, Cheque = 6, NoSale = 7, CheckIn = 8, CheckOut = 9 }
 
     /// <summary>حالة مستند الصادر: Queued محلى (لم يُقبل بعد)، والباقى = SalesRepSyncStatus على السيرفر.</summary>
     public enum OutboxStatus { Queued = -1, Received = 0, Processed = 1, Error = 2, PendingReview = 3, Rejected = 4 }
@@ -112,6 +112,7 @@ namespace AccountERP.SalesRepApp.Core
         public decimal Balance { get; set; }
         public decimal? Latitude { get; set; }
         public decimal? Longitude { get; set; }
+        public int? Geofence_Radius_M { get; set; }
     }
 
     public class ItemRow

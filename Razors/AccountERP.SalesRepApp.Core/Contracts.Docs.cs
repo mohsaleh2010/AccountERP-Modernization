@@ -188,4 +188,29 @@ namespace AccountERP.SalesRepApp.Core
         public decimal? Lat { get; set; }
         public decimal? Lng { get; set; }
     }
+
+    /// <summary>دخول/خروج من عند عميل (= DeviceVisitInput على السيرفر؛ الوقت = وقت إنشاء المستند على الجهاز).</summary>
+    public class VisitInput
+    {
+        public long Customer_Id { get; set; }
+        public decimal? Lat { get; set; }
+        public decimal? Lng { get; set; }
+    }
+
+    /// <summary>زيارة فى الوردية المفتوحة كما على السيرفر (مجموعة visits = SalesRepVisitService.VisitRow).</summary>
+    public class VisitRow
+    {
+        public long Id { get; set; }
+        public long Customer_Id { get; set; }
+        public string Customer_Name { get; set; } = "";
+        public bool Planned { get; set; }
+        public DateTime? Check_In_At { get; set; }
+        public DateTime? Check_Out_At { get; set; }
+        public int? Distance_From_Customer_M { get; set; }
+        public bool? Inside_Geofence { get; set; }
+        /// <summary>SalesRepVisitResult: 1 بيع، 2 تسليم، 3 طلبية، 4 تحصيل، 5 مرتجع، 6 لا بيع.</summary>
+        public int? Result { get; set; }
+        public string No_Sale_Reason { get; set; } = "";
+        public int Docs_Count { get; set; }
+    }
 }

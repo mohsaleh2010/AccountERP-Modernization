@@ -222,7 +222,7 @@ namespace AccountERP.SalesRepApp.Core
             else if (reason.Requires_Photo && (input.Photo == null || input.Photo.Length == 0)) r.Problems.Add($"سبب «{reason.Name}» يتطلب صورة.");
             if (input.Photo is { Length: > 2_000_000 }) r.Problems.Add("الصورة أكبر من 2 ميجا.");
             // نفس قاعدة السيرفر: زيارة بها مستند اليوم لا تُسجَّل «لا بيع».
-            if (_store.Outbox().Any(o => o.Customer_Id == input.Customer_Id && o.Doc_Type != DocType.NoSale && o.Status != OutboxStatus.Rejected
+            if (_store.Outbox().Any(o => o.Customer_Id == input.Customer_Id && ResultOf(o.Doc_Type) is not (null or 6) && o.Status != OutboxStatus.Rejected
                                          && o.Created_At.Date == _now().Date))
                 r.Problems.Add("للعميل مستند اليوم؛ لا تُسجَّل «لا بيع» لنفس الزيارة.");
             return r;

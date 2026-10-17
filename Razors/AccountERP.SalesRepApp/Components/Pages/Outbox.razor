@@ -68,12 +68,12 @@
         finally { _syncing = false; Load(); }
     }
 
-    private static string TypeName(DocType t) => t switch { DocType.Sale => "بيع", DocType.Collection => "تحصيل", DocType.Return => "مرتجع", DocType.TakeOrder => "طلبية", DocType.Delivery => "تسليم", DocType.Cheque => "شيك", DocType.NoSale => "بلا بيع", _ => "مستند" };
+    private static string TypeName(DocType t) => t switch { DocType.Sale => "بيع", DocType.Collection => "تحصيل", DocType.Return => "مرتجع", DocType.TakeOrder => "طلبية", DocType.Delivery => "تسليم", DocType.Cheque => "شيك", DocType.NoSale => "بلا بيع", DocType.CheckIn => "دخول", DocType.CheckOut => "خروج", _ => "مستند" };
 
     private static string TypeIcon(DocType t) => t switch
     {
         DocType.Sale => Icons.Material.Filled.PointOfSale, DocType.Collection => Icons.Material.Filled.Payments, DocType.Return => Icons.Material.Filled.AssignmentReturn,
-        DocType.TakeOrder => Icons.Material.Filled.NoteAdd, DocType.Delivery => Icons.Material.Filled.LocalShipping, DocType.Cheque => Icons.Material.Filled.RequestPage,
+        DocType.TakeOrder => Icons.Material.Filled.NoteAdd, DocType.Delivery => Icons.Material.Filled.LocalShipping, DocType.Cheque => Icons.Material.Filled.RequestPage, DocType.CheckIn => Icons.Material.Filled.Storefront, DocType.CheckOut => Icons.Material.Filled.Logout,
         _ => Icons.Material.Filled.DoNotDisturbOn,
     };
 

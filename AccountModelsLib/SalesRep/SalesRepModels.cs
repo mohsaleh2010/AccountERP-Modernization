@@ -29,7 +29,7 @@ namespace AccountModelsLib.SalesRep
     public enum SalesRepSyncStatus { Received = 0, Processed = 1, Error = 2, PendingReview = 3, Rejected = 4 }
 
     /// <summary>أنواع مستندات الجهاز المرفوعة (SalesRep_Sync_Inbox.Doc_Type) — مستقلة عن أنواع ربط الوردية.</summary>
-    public enum SalesRepSyncDocType { Sale = 1, Return = 2, Collection = 3, TakeOrder = 4, Delivery = 5, Cheque = 6, NoSale = 7 }
+    public enum SalesRepSyncDocType { Sale = 1, Return = 2, Collection = 3, TakeOrder = 4, Delivery = 5, Cheque = 6, NoSale = 7, CheckIn = 8, CheckOut = 9 }
 
     public enum SalesRepTargetScope { Total = 0, Item = 1, ItemGroup = 2, NewCustomers = 3, Collection = 4 }
 
