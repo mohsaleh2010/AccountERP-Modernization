@@ -585,6 +585,7 @@ ORDER BY i.Received_At DESC").ToList();
                         Id = repId, ctx.Rep_Name, ctx.Employee_Id, ctx.Branch_Id, rep.Sales_Mode, ctx.Van_Store_Id, ctx.Van_Store_Name, ctx.Damaged_Store_Id, ctx.Damaged_Store_Name,
                         ctx.Cash_Box_Id, ctx.Cash_Box_Name, ctx.Cash_On_Hand, ctx.Price_Type_List_ID, ctx.Max_Discount_Rate, ctx.Max_Cash_On_Hand, ctx.Allow_Credit_Sales, ctx.Allow_Blind_Return,
                         ctx.Return_Window_Days, rep.Allow_Cheque_Collection, rep.Max_Cheque_Due_Days, ctx.Shift_Id, ctx.Shift_Status,
+                        rep.Track_Location, Track_Interval_Sec = rep.Track_Interval_Sec ?? SalesRepTrackService.DefaultIntervalSec,
                     }) };
                 }
                 case "payment_methods":

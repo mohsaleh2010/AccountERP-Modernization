@@ -30,6 +30,7 @@ namespace AccountERP.SalesRepApp.Core
         Task<PullResult> PullAsync(string accessToken, string dataset, long? since);
         Task<List<PushResult>> PushAsync(string accessToken, IReadOnlyList<PushDoc> docs);
         Task<PushResult?> StatusAsync(string accessToken, Guid docGuid);
+        Task<TrackUploadResult> TrackAsync(string accessToken, IReadOnlyList<TrackPoint> points);
     }
 
     public sealed class RepApi : IRepApi
@@ -65,6 +66,9 @@ namespace AccountERP.SalesRepApp.Core
             try { return await Send<PushResult>(HttpMethod.Get, $"api/v1/sync/status/{docGuid}", accessToken, null); }
             catch (RepApiException e) when (e.Status == HttpStatusCode.NotFound) { return null; }
         }
+
+        public Task<TrackUploadResult> TrackAsync(string accessToken, IReadOnlyList<TrackPoint> points) =>
+            Send<TrackUploadResult>(HttpMethod.Post, "api/v1/track", accessToken, new { Points = points });
 
         private class PushResponse { public List<PushResult> Results { get; set; } = new(); }
 

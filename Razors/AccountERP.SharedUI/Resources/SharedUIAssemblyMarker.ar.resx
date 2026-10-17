@@ -3714,6 +3714,34 @@
   <data name="FSUType8" xml:space="preserve"><value>دخول عند عميل</value></data>
   <data name="FSUType9" xml:space="preserve"><value>خروج من عند عميل</value></data>
   <data name="FSUSearch" xml:space="preserve"><value>بحث برقم الجهاز أو العميل</value></data>
+  <data name="FSRTrack" xml:space="preserve"><value>تتبع المسار أثناء الوردية</value></data>
+  <data name="FSRTrackInterval" xml:space="preserve"><value>فاصل التسجيل (ثانية)</value></data>
+  <data name="FSRTrackHint" xml:space="preserve"><value>30 إلى 900؛ فارغ = 120. يرى المندوب إشعاراً طوال التتبع</value></data>
+  <data name="FSXTitle" xml:space="preserve"><value>مسار المندوبين</value></data>
+  <data name="FSXSub" xml:space="preserve"><value>مسار يوم المندوب من جهازه أثناء الوردية: المسافة والتوقفات والزيارات بموقعها</value></data>
+  <data name="FSXPickRep" xml:space="preserve"><value>اختر المندوب</value></data>
+  <data name="FSXDate" xml:space="preserve"><value>التاريخ</value></data>
+  <data name="FSXDisabled" xml:space="preserve"><value>التتبع غير مفعّل لهذا المندوب؛ فعّله من ملف المندوب.</value></data>
+  <data name="FSXDistance" xml:space="preserve"><value>المسافة</value></data>
+  <data name="FSXKm" xml:space="preserve"><value>{0} كم</value></data>
+  <data name="FSXFirst" xml:space="preserve"><value>أول نقطة</value></data>
+  <data name="FSXLast" xml:space="preserve"><value>آخر نقطة</value></data>
+  <data name="FSXVisits" xml:space="preserve"><value>الزيارات المنفذة</value></data>
+  <data name="FSXStops" xml:space="preserve"><value>التوقفات</value></data>
+  <data name="FSXPoints" xml:space="preserve"><value>النقاط</value></data>
+  <data name="FSXMap" xml:space="preserve"><value>خريطة المسار</value></data>
+  <data name="FSXMapOffline" xml:space="preserve"><value>تعذر تحميل الخريطة (يلزم اتصال بالإنترنت)؛ الخط الزمنى متاح.</value></data>
+  <data name="FSXNoPoints" xml:space="preserve"><value>لا نقاط مسار لهذا اليوم.</value></data>
+  <data name="FSXTimeline" xml:space="preserve"><value>الخط الزمنى</value></data>
+  <data name="FSXStart" xml:space="preserve"><value>بداية المسار</value></data>
+  <data name="FSXEnd" xml:space="preserve"><value>آخر موقع</value></data>
+  <data name="FSXOutside" xml:space="preserve"><value>خارج النطاق ({0} م)</value></data>
+  <data name="FSXInside" xml:space="preserve"><value>داخل النطاق ({0} م)</value></data>
+  <data name="FSXNoGeo" xml:space="preserve"><value>بلا مسافة</value></data>
+  <data name="FSXUntil" xml:space="preserve"><value>حتى {0}</value></data>
+  <data name="FSXUnplanned" xml:space="preserve"><value>خارج الخطة</value></data>
+  <data name="FSXStopAt" xml:space="preserve"><value>توقف {0} دقيقة</value></data>
+  <data name="FSXMissed" xml:space="preserve"><value>لم تُزر: {0}</value></data>
   <data name="FSUStatus0" xml:space="preserve"><value>وصل</value></data>
   <data name="FSUStatus1" xml:space="preserve"><value>حُفظ</value></data>
   <data name="FSUStatus2" xml:space="preserve"><value>خطأ</value></data>

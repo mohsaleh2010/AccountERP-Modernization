@@ -28,6 +28,7 @@ namespace AccountERP.SalesRepApp.Services
         public RepSession Session { get; private set; } = null!;
         public SyncEngine Sync { get; private set; } = null!;
         public SalesBook Book { get; private set; } = null!;
+        public RepTracker Tracker { get; private set; } = null!;
         public bool Ready { get; private set; }
         public SyncReport? LastReport { get; private set; }
         public string AppVersion => AppInfo.Current.VersionString;
@@ -64,6 +65,7 @@ namespace AccountERP.SalesRepApp.Services
             Session = new RepSession(api, _secrets, Store);
             Sync = new SyncEngine(api, Store, Session);
             Book = new SalesBook(Store, Session);
+            Tracker = new RepTracker(Store, Session);
         }
 
         /// <summary>الإصدار يشترط https؛ التطوير يقبل http للشبكة المحلية.</summary>
@@ -88,6 +90,7 @@ namespace AccountERP.SalesRepApp.Services
         public async Task<SyncReport> SyncNowAsync()
         {
             LastReport = await Sync.SyncAsync();
+            await TrackingController.UpdateAsync(this);
             Changed?.Invoke();
             return LastReport;
         }
@@ -96,6 +99,7 @@ namespace AccountERP.SalesRepApp.Services
         {
             if (!Ready || !Session.LoggedIn || !Online || Sync.Running) return;
             LastReport = await Sync.SyncAsync(force: false);
+            await TrackingController.UpdateAsync(this);
             Changed?.Invoke();
         }
 

@@ -9,6 +9,7 @@ namespace AccountERP.SalesRepApp.Core
         public int PendingReview { get; set; }
         public int Failed { get; set; }
         public int Rejected { get; set; }
+        public int TrackUploaded { get; set; }
         public Dictionary<string, int> Pulled { get; } = new();
         public bool Offline { get; set; }
         public string? Error { get; set; }
@@ -49,6 +50,7 @@ namespace AccountERP.SalesRepApp.Core
                 string token = await _session.AccessTokenAsync();
                 await PushAsync(token, report, force);
                 await FollowUpAsync(token, report);
+                await TrackAsync(token, report);
                 if (pull)
                 {
                     foreach (string ds in Datasets)
@@ -65,6 +67,22 @@ namespace AccountERP.SalesRepApp.Core
             finally { _gate.Release(); }
             return report;
         }
+
+        /// <summary>يرفع نقاط المسار على دفعات ويحذف ما وصل (المقبول والمُهمل كلاهما نهائى)؛ الأقدم من 8 أيام يُحذف بلا رفع.</summary>
+        private async Task TrackAsync(string token, SyncReport report)
+        {
+            _store.DeleteTrack(_now().AddDays(-8));
+            for (int round = 0; round < 20; round++)
+            {
+                var batch = _store.Track(TrackBatch);
+                if (batch.Count == 0) return;
+                var r = await _api.TrackAsync(token, batch);
+                report.TrackUploaded += r.Accepted;
+                _store.DeleteTrack(batch[^1].Recorded_At);
+            }
+        }
+
+        public const int TrackBatch = 500;
 
         private async Task PushAsync(string token, SyncReport report, bool force)
         {

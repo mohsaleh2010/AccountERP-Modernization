@@ -98,8 +98,27 @@ namespace AccountERP.SalesRepApp.Core
         public bool Allow_Cheque_Collection { get; set; }
         public long? Shift_Id { get; set; }
         public int? Shift_Status { get; set; }
+        /// <summary>تتبع المسار مفعّل لهذا المندوب (من المكتب) وفاصل التسجيل بالثوانى.</summary>
+        public bool Track_Location { get; set; }
+        public int Track_Interval_Sec { get; set; } = 120;
         /// <summary>وردية مفتوحة أو أُعيد فتحها (SalesRepShiftStatus 1/4).</summary>
         public bool ShiftOpen => Shift_Status is 1 or 4;
+    }
+
+    /// <summary>نقطة من مسار المندوب (= SalesRepTrackService.PointInput).</summary>
+    public class TrackPoint
+    {
+        public DateTime Recorded_At { get; set; }
+        public decimal Latitude { get; set; }
+        public decimal Longitude { get; set; }
+        public int? Accuracy_M { get; set; }
+        public decimal? Speed_Kmh { get; set; }
+    }
+
+    public class TrackUploadResult
+    {
+        public int Accepted { get; set; }
+        public int Skipped { get; set; }
     }
 
     public class PaymentMethod

@@ -1,0 +1,220 @@
+@* 🟢 خطة المندوبين — المرحلة 7: «مسار المندوبين». مسار يوم مندوب على خريطة (OpenStreetMap) من نقاط الجهاز أثناء الوردية:
+   المسافة، أول/آخر نقطة، التوقفات (5 دقائق فأكثر)، والزيارات بموقع الحضور ومسافتها من نطاق العميل، وخط زمنى نصى بجانب الخريطة.
+   الخدمة SalesRepTrackService. التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/track"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<PageTitle>@Tr("FSXTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .st-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .st-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .st-head .ico .mud-icon-root { font-size: 2rem; }
+    .st-head .titles { flex: 1 1 260px; }
+    .st-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .st-gap { margin-top: 16px; }
+    .st-filters { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+    .st-filters .f { min-width: 200px; flex: 0 1 280px; }
+    .st-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+    .st-kpi { padding: 12px 16px; border-radius: 12px; background: var(--mud-palette-background-gray); }
+    .st-kpi .k { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .st-kpi .v { font-size: 1.375rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .st-body { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 16px; }
+    @@media (max-width: 960px) { .st-body { grid-template-columns: 1fr; } }
+    .st-map { height: 560px; border-radius: 12px; overflow: hidden; background: var(--mud-palette-background-gray); }
+    @@media (max-width: 600px) { .st-map { height: 380px; } }
+    .st-line { list-style: none; margin: 0; padding: 0; max-height: 560px; overflow: auto; }
+    .st-line li { display: flex; gap: 12px; padding: 10px 4px; border-bottom: 1px solid var(--mud-palette-lines-default); }
+    .st-line .t { flex: none; width: 56px; font-variant-numeric: tabular-nums; color: var(--mud-palette-text-secondary); }
+    .st-line .d { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    .st-sub { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .srt-pin { display: grid; place-items: center; }
+    .srt-pin span { position: absolute; inset: 0; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+    .srt-pin b { position: relative; color: #fff; font-size: 12px; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card st-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Route" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSXTitle")</h1>
+            <div class="sub">@Tr("FSXSub")</div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="st-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    <div class="inv-card st-gap st-filters">
+        <div class="f">
+            <MudSelect T="long" Value="@_repId" ValueChanged="@(v => RepAsync(v))" Label="@Tr("FSRRep")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                       ToStringFunc="@(v => _reps.FirstOrDefault(r => r.Id == v)?.Name ?? Tr("FSXPickRep"))">
+                @foreach (var r in _reps) { <MudSelectItem T="long" Value="@r.Id">@r.Name</MudSelectItem> }
+            </MudSelect>
+        </div>
+        <div class="f">
+            <MudDatePicker Date="@_date" DateChanged="@(d => DateAsync(d))" Label="@Tr("FSXDate")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                           DateFormat="yyyy-MM-dd" MaxDate="DateTime.Today" />
+        </div>
+        <MudIconButton Icon="@Icons.Material.Filled.Refresh" aria-label="@Tr("FSURefresh")" Disabled="@(_loading || _repId == 0)" OnClick="LoadAsync" />
+    </div>
+
+    @if (_loading) { <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="st-gap" aria-label="@Tr("FSRLoading")" /> }
+
+    @if (_day != null)
+    {
+        @if (!_day.Tracking_Enabled) { <MudAlert Severity="Severity.Info" Dense="true" Class="st-gap">@Tr("FSXDisabled")</MudAlert> }
+        <div class="st-kpis st-gap" aria-live="polite">
+            <div class="st-kpi"><div class="k">@Tr("FSXDistance")</div><div class="v">@Tr("FSXKm", _day.Distance_Km.ToString("0.##", CultureInfo.InvariantCulture))</div></div>
+            <div class="st-kpi"><div class="k">@Tr("FSXFirst")</div><div class="v">@(_day.First_At?.ToString("HH:mm") ?? "—")</div></div>
+            <div class="st-kpi"><div class="k">@Tr("FSXLast")</div><div class="v">@(_day.Last_At?.ToString("HH:mm") ?? "—")</div></div>
+            <div class="st-kpi"><div class="k">@Tr("FSXVisits")</div><div class="v">@(_day.Visits.Count(v => v.Check_In_At != null)) / @(_day.Visits.Count)</div></div>
+            <div class="st-kpi"><div class="k">@Tr("FSXStops")</div><div class="v">@_day.Stops.Count</div></div>
+            <div class="st-kpi"><div class="k">@Tr("FSXPoints")</div><div class="v">@_day.Points.Count</div></div>
+        </div>
+
+        <div class="st-body st-gap">
+            <div class="inv-card" style="padding:8px">
+                <div id="@MapId" class="st-map" role="region" aria-label="@Tr("FSXMap")"></div>
+                @if (!_mapOk) { <div class="st-sub" style="padding:8px">@Tr("FSXMapOffline")</div> }
+                @if (_day.Points.Count == 0) { <div class="st-sub" style="padding:8px">@Tr("FSXNoPoints")</div> }
+            </div>
+            <div class="inv-card">
+                <h2 class="mud-typography mud-typography-subtitle1" style="margin:0 0 8px">@Tr("FSXTimeline")</h2>
+                @if (_timeline.Count == 0) { <div class="st-sub">@Tr("FSXNoPoints")</div> }
+                <ul class="st-line">
+                    @foreach (var e in _timeline)
+                    {
+                        <li>
+                            <span class="t">@e.At.ToString("HH:mm")</span>
+                            <span class="d">
+                                <MudIcon Icon="@e.Icon" Size="Size.Small" Color="@e.Color" Style="vertical-align:middle" />
+                                <b>@e.Title</b>
+                                @if (!string.IsNullOrEmpty(e.Sub)) { <div class="st-sub">@e.Sub</div> }
+                            </span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    }
+</div>
+</MudContainer>
+
+@code {
+    private const string MapId = "srTrackMap";
+    private List<SalesRepDeviceService.Option> _reps = new();
+    private long _repId;
+    private DateTime? _date = DateTime.Today;
+    private SalesRepTrackService.DayTrack? _day;
+    private List<TimelineEntry> _timeline = new();
+    private bool _loading, _render, _mapOk = true;
+    private string? _error;
+    private IJSObjectReference? _module;
+
+    private record TimelineEntry(DateTime At, string Title, string Sub, string Icon, Color Color);
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try { _reps = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return new SalesRepDeviceService().GetReps(); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+        if (_reps.Count == 1) { _repId = _reps[0].Id; await LoadAsync(); }
+    }
+
+    private Task RepAsync(long rep) { _repId = rep; return LoadAsync(); }
+    private Task DateAsync(DateTime? d) { _date = d ?? DateTime.Today; return LoadAsync(); }
+
+    private async Task LoadAsync()
+    {
+        if (_repId == 0) return;
+        _loading = true; _error = null;
+        long rep = _repId; DateTime date = (_date ?? DateTime.Today).Date;
+        try
+        {
+            _day = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return new SalesRepTrackService().GetDay(rep, date); });
+            _timeline = Timeline(_day);
+            _render = true;
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private List<TimelineEntry> Timeline(SalesRepTrackService.DayTrack d)
+    {
+        var list = new List<TimelineEntry>();
+        if (d.First_At is DateTime f) list.Add(new(f, Tr("FSXStart"), "", Icons.Material.Filled.PlayArrow, Color.Success));
+        foreach (var v in d.Visits.Where(v => v.Check_In_At != null))
+        {
+            string geo = v.Distance_From_Customer_M is int m ? (v.Inside_Geofence == false ? Tr("FSXOutside", m) : Tr("FSXInside", m)) : Tr("FSXNoGeo");
+            string until = v.Check_Out_At != null ? Tr("FSXUntil", v.Check_Out_At.Value.ToString("HH:mm")) : "";
+            list.Add(new(v.Check_In_At!.Value, v.Customer_Name, string.Join(" · ", new[] { until, geo, v.Planned ? "" : Tr("FSXUnplanned") }.Where(s => s != "")),
+                v.Inside_Geofence == false ? Icons.Material.Filled.WrongLocation : Icons.Material.Filled.Storefront, v.Inside_Geofence == false ? Color.Warning : Color.Primary));
+        }
+        foreach (var s in d.Stops)
+            list.Add(new(s.From, Tr("FSXStopAt", s.Minutes), Tr("FSXUntil", s.To.ToString("HH:mm")), Icons.Material.Filled.PauseCircle, Color.Warning));
+        if (d.Last_At is DateTime l && d.Points.Count > 1) list.Add(new(l, Tr("FSXEnd"), "", Icons.Material.Filled.Flag, Color.Error));
+        var missed = d.Visits.Count(v => v.Check_In_At == null);
+        var sorted = list.OrderBy(e => e.At).ToList();
+        if (missed > 0) sorted.Add(new(d.Last_At ?? DateTime.Today, Tr("FSXMissed", missed), string.Join("، ", d.Visits.Where(v => v.Check_In_At == null).Select(v => v.Customer_Name).Take(8)),
+            Icons.Material.Filled.EventBusy, Color.Default));
+        return sorted;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_render || _day == null) return;
+        _render = false;
+        try
+        {
+            _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./_content/AccountERP.SharedUI/js/salesrep-track.js");
+            var data = new
+            {
+                points = _day.Points.Select(p => new object[] { p.Latitude, p.Longitude, p.Recorded_At.ToString("HH:mm") }).ToList(),
+                visits = _day.Visits.Where(v => v.Check_In_Lat != null && v.Check_In_Lng != null).Select(v => new
+                {
+                    lat = v.Check_In_Lat, lng = v.Check_In_Lng, inside = v.Inside_Geofence,
+                    title = v.Customer_Name + " " + (v.Check_In_At?.ToString("HH:mm") ?? ""),
+                }).ToList(),
+                stops = _day.Stops.Select(s => new { lat = s.Latitude, lng = s.Longitude, title = Tr("FSXStopAt", s.Minutes) + " " + s.From.ToString("HH:mm") }).ToList(),
+                labels = new { start = Tr("FSXStart"), end = Tr("FSXEnd") },
+            };
+            bool ok = await _module.InvokeAsync<bool>("render", MapId, data);
+            if (ok != _mapOk) { _mapOk = ok; StateHasChanged(); }
+        }
+        catch (JSDisconnectedException) { }
+        catch (Exception) { _mapOk = false; StateHasChanged(); }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(() => { if (_day != null) { _timeline = Timeline(_day); _render = true; } StateHasChanged(); });
+
+    public async ValueTask DisposeAsync()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+        if (_module != null)
+        {
+            try { await _module.InvokeVoidAsync("dispose", MapId); await _module.DisposeAsync(); }
+            catch (JSDisconnectedException) { }
+        }
+    }
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

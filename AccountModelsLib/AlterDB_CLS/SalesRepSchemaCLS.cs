@@ -82,6 +82,19 @@ CREATE UNIQUE NONCLUSTERED INDEX [UX_SalesRep_Reps_Damaged_Store] ON [dbo].[Sale
     [Synced_At] [datetime] NULL,",
              @"CREATE UNIQUE NONCLUSTERED INDEX [UX_SalesRep_Device_Datasets] ON [dbo].[SalesRep_Device_Datasets]([Device_Id], [Dataset]);"),
 
+            // المرحلة 7: مسار المندوب (نقاط الموقع أثناء الوردية).
+            ("SalesRep_Track_Points", @"
+    [Device_Id] [bigint] NOT NULL,
+    [Rep_Id] [bigint] NOT NULL,
+    [Shift_Id] [bigint] NOT NULL,
+    [Recorded_At] [datetime] NOT NULL,
+    [Latitude] [decimal](9, 6) NOT NULL,
+    [Longitude] [decimal](9, 6) NOT NULL,
+    [Accuracy_M] [int] NULL,
+    [Speed_Kmh] [decimal](9, 2) NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_SalesRep_Track_Points] ON [dbo].[SalesRep_Track_Points]([Device_Id], [Recorded_At]);
+CREATE NONCLUSTERED INDEX [IX_SalesRep_Track_Points_Rep] ON [dbo].[SalesRep_Track_Points]([Rep_Id], [Recorded_At]);"),
+
             ("SalesRep_Routes", @"
     [Name] [nvarchar](200) NOT NULL,
     [Rep_Id] [bigint] NOT NULL,
@@ -457,6 +470,9 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
             ("SalesRep_Devices", "Doc_Prefix", "[nvarchar](10) NULL"),
             ("SalesRep_Sync_Inbox", "Device_Doc_No", "[nvarchar](30) NULL"),
             ("SalesRep_Sync_Inbox", "Device_Doc_Seq", "[bigint] NULL"),
+            // المرحلة 7: تتبع المسار لكل مندوب.
+            ("SalesRep_Reps", "Track_Location", "[bit] NOT NULL DEFAULT ((0))"),
+            ("SalesRep_Reps", "Track_Interval_Sec", "[int] NULL"),
         };
 
         /// <summary>أسباب الإرجاع الافتراضية (§6.6-6) تُضاف فقط لو جدول الأسباب فارغ؛ تُعدَّل وتُضاف من القاعدة. لا يمس أى صف قائم.</summary>
@@ -544,6 +560,7 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
             ("menuSalesRepPaymentBanks", "بنوك طرق دفع المندوبين", "/salesrep/payment-banks"),
             ("menuSalesRepDevices", "أجهزة المندوبين", "/salesrep/devices"),
             ("menuSalesRepSyncReview", "مستندات الأجهزة بانتظار المراجعة", "/salesrep/sync-review"),
+            ("menuSalesRepTrack", "مسار المندوبين", "/salesrep/track"),
         };
 
         /// <summary>

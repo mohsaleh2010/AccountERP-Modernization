@@ -32,6 +32,10 @@
         {
             <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2">تجاوزت حد النقدية؛ ورِّد جزءاً منها للمكتب.</MudAlert>
         }
+        @if (TrackingController.Running)
+        {
+            <div class="ra-row mt-2"><MudIcon Icon="@Icons.Material.Filled.MyLocation" Size="Size.Small" Color="Color.Info" /><span class="ra-muted">تتبع مسار الوردية يعمل (أثناء الوردية فقط)</span></div>
+        }
         @if (!_canSell.Ok && _profile != null)
         {
             <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2">@_canSell.Reason</MudAlert>
@@ -145,7 +149,7 @@
         finally { _syncing = false; Load(); }
     }
 
-    private void Logout() { State.Session.Logout(); Nav.NavigateTo("/login"); }
+    private void Logout() { TrackingController.Stop(); State.Session.Logout(); Nav.NavigateTo("/login"); }
 
     public void Dispose() => State.Changed -= Refresh;
 }

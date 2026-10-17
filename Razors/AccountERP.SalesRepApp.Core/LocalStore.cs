@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS outbox (
     guid TEXT PRIMARY KEY, seq INTEGER NOT NULL, type INTEGER NOT NULL, payload TEXT NOT NULL, created_at TEXT NOT NULL,
     status INTEGER NOT NULL, error TEXT, result_ref INTEGER, attempts INTEGER NOT NULL DEFAULT 0, next_try_at TEXT,
     customer_id INTEGER NOT NULL DEFAULT 0, amount TEXT NOT NULL DEFAULT '0');");
+            Exec("CREATE TABLE IF NOT EXISTS track (t TEXT PRIMARY KEY, lat TEXT NOT NULL, lng TEXT NOT NULL, acc INTEGER, speed TEXT);");
             // ترقية قاعدة أقدم: أعمدة رقم المستند.
             using (var info = Cmd("SELECT COUNT(*) FROM pragma_table_info('outbox') WHERE name = 'doc_no'"))
                 if (Convert.ToInt32(info.ExecuteScalar()) == 0) Exec("ALTER TABLE outbox ADD COLUMN doc_no TEXT; ALTER TABLE outbox ADD COLUMN doc_seq INTEGER;");
@@ -211,6 +212,47 @@ VALUES ($g, (SELECT IFNULL(MAX(seq), 0) + 1 FROM outbox), $t, $p, $c, $s, 0, $cu
             using var cmd = Cmd("UPDATE outbox SET status = $s, error = $e, result_ref = $r, attempts = $a, next_try_at = $n WHERE guid = $g",
                 ("$s", (int)status), ("$e", (object?)error ?? DBNull.Value), ("$r", (object?)resultRef ?? DBNull.Value), ("$a", attempts),
                 ("$n", (object?)nextTry?.ToString("o", CultureInfo.InvariantCulture) ?? DBNull.Value), ("$g", guid.ToString()));
+            cmd.ExecuteNonQuery();
+        }
+
+        // ============================== المسار ==============================
+
+        /// <summary>يحفظ نقطة مسار (نفس الوقت مرة واحدة). الوقت بالثانية كما يخزنه السيرفر.</summary>
+        public void AddTrack(TrackPoint p)
+        {
+            var t = new DateTime(p.Recorded_At.Ticks - p.Recorded_At.Ticks % TimeSpan.TicksPerSecond, p.Recorded_At.Kind);
+            using var cmd = Cmd("INSERT OR IGNORE INTO track (t, lat, lng, acc, speed) VALUES ($t, $la, $ln, $a, $s)",
+                ("$t", t.ToString("o", CultureInfo.InvariantCulture)), ("$la", p.Latitude.ToString(CultureInfo.InvariantCulture)), ("$ln", p.Longitude.ToString(CultureInfo.InvariantCulture)),
+                ("$a", (object?)p.Accuracy_M ?? DBNull.Value), ("$s", (object?)p.Speed_Kmh?.ToString(CultureInfo.InvariantCulture) ?? DBNull.Value));
+            cmd.ExecuteNonQuery();
+        }
+
+        /// <summary>أقدم نقاط لم تُرفع بعد.</summary>
+        public List<TrackPoint> Track(int limit)
+        {
+            var list = new List<TrackPoint>();
+            using var cmd = Cmd("SELECT t, lat, lng, acc, speed FROM track ORDER BY t LIMIT $n", ("$n", limit));
+            using var rd = cmd.ExecuteReader();
+            while (rd.Read())
+                list.Add(new TrackPoint
+                {
+                    Recorded_At = DateTime.Parse(rd.GetString(0), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                    Latitude = decimal.Parse(rd.GetString(1), CultureInfo.InvariantCulture), Longitude = decimal.Parse(rd.GetString(2), CultureInfo.InvariantCulture),
+                    Accuracy_M = rd.IsDBNull(3) ? null : rd.GetInt32(3), Speed_Kmh = rd.IsDBNull(4) ? null : decimal.Parse(rd.GetString(4), CultureInfo.InvariantCulture),
+                });
+            return list;
+        }
+
+        public int TrackCount()
+        {
+            using var cmd = Cmd("SELECT COUNT(*) FROM track");
+            return Convert.ToInt32(cmd.ExecuteScalar());
+        }
+
+        /// <summary>يحذف النقاط حتى وقت معيّن (بعد رفعها، أو الأقدم من مدة الاحتفاظ).</summary>
+        public void DeleteTrack(DateTime upTo)
+        {
+            using var cmd = Cmd("DELETE FROM track WHERE t <= $t", ("$t", upTo.ToString("o", CultureInfo.InvariantCulture)));
             cmd.ExecuteNonQuery();
         }
 

@@ -45,6 +45,8 @@ namespace AccountModelsLib.SalesRep
             public int? Return_Window_Days { get; set; }
             public bool Allow_Cheque_Collection { get; set; }
             public int? Max_Cheque_Due_Days { get; set; }
+            public bool Track_Location { get; set; }
+            public int? Track_Interval_Sec { get; set; }
             public int End_Of_Day_Stock_Policy { get; set; }
             public long? Supervisor_Employee_Id { get; set; }
             public bool Active { get; set; }
@@ -75,6 +77,8 @@ namespace AccountModelsLib.SalesRep
             public int? Return_Window_Days { get; set; }
             public bool Allow_Cheque_Collection { get; set; }
             public int? Max_Cheque_Due_Days { get; set; }
+            public bool Track_Location { get; set; }
+            public int? Track_Interval_Sec { get; set; }
             public int End_Of_Day_Stock_Policy { get; set; }
             public long? Supervisor_Employee_Id { get; set; }
             public bool Active { get; set; } = true;
@@ -84,7 +88,7 @@ namespace AccountModelsLib.SalesRep
 SELECT r.Id, r.Employee_Id, ISNULL(e.name, N'') AS Employee_Name, ISNULL(r.Branch_Id, 0) AS Branch_Id, ISNULL(b.Branch_Name, N'') AS Branch_Name,
        r.Van_Store_Id, ISNULL(vs.Store_Name, N'') AS Van_Store_Name, r.Damaged_Store_Id, ISNULL(ds.Store_Name, N'') AS Damaged_Store_Name,
        r.Cash_Box_Id, ISNULL(bx.Bank_Name, N'') AS Cash_Box_Name, r.Sales_Mode, r.Price_Type_List_ID, r.Max_Discount_Rate, r.Max_Cash_On_Hand,
-       r.Allow_Credit_Sales, r.Allow_Blind_Return, r.Return_Window_Days, r.Allow_Cheque_Collection, r.Max_Cheque_Due_Days, r.End_Of_Day_Stock_Policy, r.Supervisor_Employee_Id, r.Active,
+       r.Allow_Credit_Sales, r.Allow_Blind_Return, r.Return_Window_Days, r.Allow_Cheque_Collection, r.Max_Cheque_Due_Days, r.Track_Location, r.Track_Interval_Sec, r.End_Of_Day_Stock_Policy, r.Supervisor_Employee_Id, r.Active,
        CAST(CASE WHEN EXISTS (SELECT 1 FROM SalesRep_Shifts s WHERE s.Rep_Id = r.Id) THEN 1 ELSE 0 END AS bit) AS Has_Shifts
 FROM SalesRep_Reps r
 LEFT JOIN Employee e ON e.Id = r.Employee_Id
@@ -217,6 +221,8 @@ SELECT CAST(ID AS bigint) AS Id, ISNULL(Price_Name, N'') AS Name, CAST(0 AS bigi
             rep.Return_Window_Days = input.Return_Window_Days;
             rep.Allow_Cheque_Collection = input.Allow_Cheque_Collection;
             rep.Max_Cheque_Due_Days = input.Allow_Cheque_Collection ? input.Max_Cheque_Due_Days : null;
+            rep.Track_Location = input.Track_Location;
+            rep.Track_Interval_Sec = input.Track_Location && input.Track_Interval_Sec is int sec ? Math.Clamp(sec, 30, 900) : null;
             rep.End_Of_Day_Stock_Policy = input.End_Of_Day_Stock_Policy;
             rep.Supervisor_Employee_Id = input.Supervisor_Employee_Id is > 0 ? input.Supervisor_Employee_Id : null;
             rep.Active = input.Active;

@@ -31,6 +31,12 @@ namespace AccountERP.Web.Api
             public int Doc_Type { get; set; }
             public JsonElement Payload { get; set; }
             public DateTime? Created_At { get; set; }
+            public long? Doc_Seq { get; set; }
+        }
+
+        public class TrackRequest
+        {
+            public List<SalesRepTrackService.PointInput> Points { get; set; } = new();
         }
 
         public static IEndpointRouteBuilder MapSalesRepMobileApi(this IEndpointRouteBuilder app)
@@ -57,11 +63,14 @@ namespace AccountERP.Web.Api
                 {
                     var docs = (req?.Docs ?? new()).Select(d => new SalesRepSyncService.PushDoc
                     {
-                        Doc_Guid = d.Doc_Guid, Doc_Type = d.Doc_Type, Created_At = d.Created_At,
+                        Doc_Guid = d.Doc_Guid, Doc_Type = d.Doc_Type, Created_At = d.Created_At, Doc_Seq = d.Doc_Seq,
                         Payload = d.Payload.ValueKind == JsonValueKind.Undefined ? null : d.Payload.GetRawText(),
                     });
                     return Results.Json(new { Results = new SalesRepSyncService().Push(id, docs) }, Json);
                 }));
+
+            api.MapPost("/track", (HttpContext http, IDataProtectionProvider dp, TrackRequest req) =>
+                Authed(http, dp, id => Results.Json(new SalesRepTrackService().Upload(id, req?.Points), Json)));
 
             api.MapGet("/sync/status/{docGuid:guid}", (HttpContext http, IDataProtectionProvider dp, Guid docGuid) =>
                 Authed(http, dp, id =>

@@ -92,6 +92,9 @@ namespace AccountModelsLib.SalesRep
         public bool Allow_Cheque_Collection { get; set; }
         /// <summary>أقصى أيام بين التحصيل واستحقاق الشيك؛ ما بعده يحتاج موافقة المشرف (فارغ = بلا حد).</summary>
         public int? Max_Cheque_Due_Days { get; set; }
+        /// <summary>المرحلة 7: تتبع مسار المندوب أثناء الوردية المفتوحة فقط (يفعّله المكتب؛ مطفأ افتراضياً للخصوصية) وفاصل التسجيل بالثوانى.</summary>
+        public bool Track_Location { get; set; }
+        public int? Track_Interval_Sec { get; set; }
         public int End_Of_Day_Stock_Policy { get; set; }
         public long? Cost_Center_Id { get; set; }
         public long? Commission_Plan_Id { get; set; }
@@ -162,6 +165,21 @@ namespace AccountModelsLib.SalesRep
         public int Row_Count { get; set; }
         public byte[] State { get; set; }
         public DateTime? Synced_At { get; set; }
+    }
+
+    /// <summary>نقطة من مسار المندوب: وقت الجهاز وموقعه أثناء وردية مفتوحة. فريدة للجهاز والوقت (رفع آمن للتكرار).</summary>
+    [Table("SalesRep_Track_Points")]
+    public class SalesRep_Track_Point : SalesRepAuditEntity
+    {
+        [Key] public long Id { get; set; }
+        public long Device_Id { get; set; }
+        public long Rep_Id { get; set; }
+        public long Shift_Id { get; set; }
+        public DateTime Recorded_At { get; set; }
+        public decimal Latitude { get; set; }
+        public decimal Longitude { get; set; }
+        public int? Accuracy_M { get; set; }
+        public decimal? Speed_Kmh { get; set; }
     }
 
     [Table("SalesRep_Routes")]

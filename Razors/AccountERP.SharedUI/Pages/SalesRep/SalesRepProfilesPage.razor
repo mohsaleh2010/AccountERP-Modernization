@@ -113,6 +113,11 @@
                 {
                     <MudNumericField T="int?" @bind-Value="_form.Max_Cheque_Due_Days" Label="@Tr("FSRMaxChequeDays")" Variant="Variant.Outlined" Min="0" Max="3650" HelperText="@Tr("FSRMaxChequeDaysHint")" />
                 }
+                <MudSwitch T="bool" @bind-Value="_form.Track_Location" Color="Color.Primary" Label="@Tr("FSRTrack")" />
+                @if (_form.Track_Location)
+                {
+                    <MudNumericField T="int?" @bind-Value="_form.Track_Interval_Sec" Label="@Tr("FSRTrackInterval")" Variant="Variant.Outlined" Min="30" Max="900" HelperText="@Tr("FSRTrackHint")" />
+                }
                 <MudSwitch T="bool" @bind-Value="_form.Active" Color="Color.Primary" Label="@Tr("FSRActive")" />
             </div>
 
@@ -237,6 +242,7 @@
             Sales_Mode = r.Sales_Mode, Max_Discount_Rate = r.Max_Discount_Rate, Max_Cash_On_Hand = r.Max_Cash_On_Hand,
             Allow_Credit_Sales = r.Allow_Credit_Sales, Allow_Blind_Return = r.Allow_Blind_Return, Return_Window_Days = r.Return_Window_Days, End_Of_Day_Stock_Policy = r.End_Of_Day_Stock_Policy, Active = r.Active,
             Allow_Cheque_Collection = r.Allow_Cheque_Collection, Max_Cheque_Due_Days = r.Max_Cheque_Due_Days,
+            Track_Location = r.Track_Location, Track_Interval_Sec = r.Track_Interval_Sec,
         };
         _editName = r.Employee_Name;
         _priceList = r.Price_Type_List_ID ?? 0;
