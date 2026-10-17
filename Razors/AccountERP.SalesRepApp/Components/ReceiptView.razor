@@ -1,0 +1,22 @@
+@* معاينة المستند المطبوع كما يخرج من الطابعة الحرارية (عرض ضيق، أبيض وأسود). *@
+<div class="ra-receipt" role="document" aria-label="@Receipt.Title">
+    @if (Receipt.Copy) { <div class="rc-center rc-bold">— نسخة —</div> }
+    @foreach (var row in Receipt.Rows)
+    {
+        if (row.Rule) { <hr class="rc-rule" /> }
+        else if (row.Value == null)
+        {
+            <div class="@Css(row)">@row.Text</div>
+        }
+        else
+        {
+            <div class="rc-pair @Css(row)"><span>@row.Text</span><bdi class="rc-val">@row.Value</bdi></div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Receipt Receipt { get; set; } = default!;
+
+    private static string Css(ReceiptRow r) => string.Join(" ", new[] { r.Center ? "rc-center" : "", r.Bold ? "rc-bold" : "", r.Large ? "rc-large" : "" }.Where(s => s != ""));
+}

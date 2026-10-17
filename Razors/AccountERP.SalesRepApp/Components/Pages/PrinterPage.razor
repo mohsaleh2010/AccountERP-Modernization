@@ -1,0 +1,92 @@
+@* الطابعة: اختيار طابعة بلوتوث مقترنة، عرض الورق، الطباعة التلقائية بعد الحفظ، وطباعة تجربة. *@
+@page "/printer"
+@inject AppState State
+@inject ISnackbar Snackbar
+
+<div class="ra-page">
+    <h1 class="mud-typography mud-typography-h5">الطابعة</h1>
+
+    @if (!ReceiptPrinter.Supported)
+    {
+        <MudAlert Severity="Severity.Info" Class="ra-gap">الطباعة بالبلوتوث من تطبيق أندرويد فقط.</MudAlert>
+    }
+    else
+    {
+        <MudPaper Class="pa-3 ra-gap ra-card" Elevation="1">
+            <div class="ra-row">
+                <MudIcon Icon="@Icons.Material.Filled.Print" Color="@(ReceiptPrinter.Ready ? Color.Success : Color.Default)" />
+                <div class="ra-grow">
+                    <div><b>@(ReceiptPrinter.Name ?? "لم تُختر طابعة")</b></div>
+                    <div class="ra-muted"><bdi>@ReceiptPrinter.Address</bdi></div>
+                </div>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="ra-btn" Disabled="@_loading" OnClick="LoadAsync">بحث</MudButton>
+            </div>
+            <div class="ra-muted mt-2">تظهر الطابعات المقترنة فقط؛ اقرن الطابعة أولاً من إعدادات البلوتوث فى الجهاز.</div>
+        </MudPaper>
+
+        @if (_devices.Count > 0)
+        {
+            <MudList T="string" Class="ra-gap">
+                @foreach (var d in _devices)
+                {
+                    <MudListItem T="string" Value="@d.Address" OnClick="@(() => Pick(d))" Icon="@(d.Address == ReceiptPrinter.Address ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Filled.RadioButtonUnchecked)">
+                        <div><b>@d.Name</b></div><div class="ra-muted"><bdi>@d.Address</bdi></div>
+                    </MudListItem>
+                }
+            </MudList>
+        }
+
+        <MudPaper Class="pa-3 ra-gap ra-card" Elevation="1">
+            <MudRadioGroup T="int" Value="@_width" ValueChanged="SetWidth">
+                <MudRadio T="int" Value="@EscPos.Width58" Color="Color.Primary">ورق 58 مم</MudRadio>
+                <MudRadio T="int" Value="@EscPos.Width80" Color="Color.Primary">ورق 80 مم</MudRadio>
+            </MudRadioGroup>
+            <MudSwitch T="bool" Value="@_auto" ValueChanged="SetAuto" Color="Color.Primary" Label="طباعة تلقائية بعد الحفظ" Class="mt-2" />
+        </MudPaper>
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="ra-btn ra-gap" Disabled="@(!ReceiptPrinter.Ready || _printing)" OnClick="TestAsync"
+                   StartIcon="@Icons.Material.Filled.Print">طباعة تجربة</MudButton>
+    }
+</div>
+
+@code {
+    private List<PrinterDevice> _devices = new();
+    private int _width = ReceiptPrinter.Width;
+    private bool _auto = ReceiptPrinter.Auto, _loading, _printing;
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        try
+        {
+            _devices = await ReceiptPrinter.PairedAsync();
+            if (_devices.Count == 0) Snackbar.Add("لا أجهزة مقترنة؛ اقرن الطابعة من إعدادات البلوتوث.", Severity.Warning);
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        finally { _loading = false; }
+    }
+
+    private void Pick(PrinterDevice d) { ReceiptPrinter.Address = d.Address; ReceiptPrinter.Name = d.Name; }
+    private void SetWidth(int w) { _width = w; ReceiptPrinter.Width = w; }
+    private void SetAuto(bool a) { _auto = a; ReceiptPrinter.Auto = a; }
+
+    private async Task TestAsync()
+    {
+        _printing = true;
+        try
+        {
+            var p = State.Book.Profile;
+            var r = new Receipt { Title = "طباعة تجربة" };
+            r.Rows.Add(new ReceiptRow { Text = p?.Company_Name ?? "", Bold = true, Large = true, Center = true });
+            r.Rows.Add(new ReceiptRow { Rule = true });
+            r.Rows.Add(new ReceiptRow { Text = "طباعة تجربة — العربى سليم", Bold = true, Center = true });
+            r.Rows.Add(new ReceiptRow { Text = "المندوب", Value = p?.Rep_Name ?? "—" });
+            r.Rows.Add(new ReceiptRow { Text = "التاريخ", Value = DateTime.Now.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) });
+            r.Rows.Add(new ReceiptRow { Text = "مبلغ", Value = 1234.5m.ToString("N2", CultureInfo.InvariantCulture), Bold = true, Large = true });
+            await ReceiptPrinter.PrintAsync(r);
+            Snackbar.Add("أُرسلت طباعة التجربة.", Severity.Success);
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        finally { _printing = false; }
+    }
+}

@@ -30,6 +30,10 @@
                             <div class="ra-num"><b>@o.Amount.ToString("N2")</b></div>
                             <MudChip T="string" Size="Size.Small" Color="@StatusColor(o.Status)">@StatusName(o.Status)</MudChip>
                         </div>
+                        @if (o.Doc_No != null)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Print" Href="@($"/receipt/{o.Doc_Guid}")" aria-label="@($"طباعة {o.Doc_No}")" />
+                        }
                     </div>
                 </MudListItem>
             }

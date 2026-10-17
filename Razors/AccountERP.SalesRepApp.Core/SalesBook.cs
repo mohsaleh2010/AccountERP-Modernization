@@ -181,6 +181,7 @@ namespace AccountERP.SalesRepApp.Core
             {
                 Doc_Guid = guid, Doc_Type = type, Payload = payload, Created_At = _now(), Status = OutboxStatus.Queued, Customer_Id = customerId, Amount = amount,
             }, _session.DocPrefix);
+            SnapshotReceipt(guid);
             return guid;
         }
 

@@ -17,4 +17,13 @@ body { padding-bottom: env(safe-area-inset-bottom); }
 .ra-code input { letter-spacing: .15em; text-transform: uppercase; direction: ltr; text-align: center; font-family: ui-monospace, Consolas, monospace; }
 .ra-pin input { letter-spacing: .5em; text-align: center; direction: ltr; font-size: 1.5rem; }
 .ra-card { border-radius: 12px; }
+/* معاينة المستند كورق حرارى (أبيض وأسود عمداً كما يخرج من الطابعة). */
+.ra-receipt { max-width: 360px; margin: 12px auto; padding: 16px 12px; background: #fff; color: #000; border-radius: 4px;
+              box-shadow: 0 1px 4px rgba(0,0,0,.25); font-size: 15px; line-height: 1.5; }
+.ra-receipt .rc-center { text-align: center; }
+.ra-receipt .rc-bold { font-weight: 700; }
+.ra-receipt .rc-large { font-size: 19px; }
+.ra-receipt .rc-rule { border: 0; border-top: 2px dashed #000; margin: 6px 0; }
+.ra-receipt .rc-pair { display: flex; justify-content: space-between; gap: 8px; }
+.ra-receipt .rc-val { font-variant-numeric: tabular-nums; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

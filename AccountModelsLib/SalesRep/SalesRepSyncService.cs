@@ -578,8 +578,10 @@ ORDER BY i.Received_At DESC").ToList();
                 {
                     var ctx = SalesRepSaleService.Context(opp, repId);
                     var rep = opp.db.SalesRep_Reps.AsNoTracking().First(r => r.Id == repId);
+                    var co = CompanyOf(opp, ctx.Branch_Id);
                     return new List<SyncRow> { new SyncRow(repId, new
                     {
+                        co.Company_Name, co.Company_Address, co.Company_Phone, co.Tax_Number,
                         Id = repId, ctx.Rep_Name, ctx.Employee_Id, ctx.Branch_Id, rep.Sales_Mode, ctx.Van_Store_Id, ctx.Van_Store_Name, ctx.Damaged_Store_Id, ctx.Damaged_Store_Name,
                         ctx.Cash_Box_Id, ctx.Cash_Box_Name, ctx.Cash_On_Hand, ctx.Price_Type_List_ID, ctx.Max_Discount_Rate, ctx.Max_Cash_On_Hand, ctx.Allow_Credit_Sales, ctx.Allow_Blind_Return,
                         ctx.Return_Window_Days, rep.Allow_Cheque_Collection, rep.Max_Cheque_Due_Days, ctx.Shift_Id, ctx.Shift_Status,
@@ -675,6 +677,26 @@ WHERE u.Store_id = {store} AND i.Active_flage = 1").ToList().Select(x => new Syn
             }
             throw new ArgumentException("مجموعة بيانات غير معروفة: " + dataset);
         }
+
+        public class CompanyInfo
+        {
+            public string Company_Name { get; set; } = "";
+            public string Company_Address { get; set; } = "";
+            public string Company_Phone { get; set; } = "";
+            public string Tax_Number { get; set; } = "";
+        }
+
+        /// <summary>
+        /// رأس المستند المطبوع على الجهاز: بيانات الفرع الضريبية (الاسم، الرقم الضريبى، العنوان، الهاتف) وإلا اسم الفرع وعنوانه.
+        /// أعمدة محددة فقط: الجدول فيه بيانات دخول بوابة الضرائب ولا تنزل للجهاز.
+        /// </summary>
+        internal static CompanyInfo CompanyOf(operations opp, long branchId) => opp.db.Database.SqlQuery<CompanyInfo>($@"
+SELECT TOP 1 ISNULL(NULLIF(t.CompanyName, N''), ISNULL(b.Branch_Name, N'')) AS Company_Name,
+       ISNULL(NULLIF(t.Address, N''), ISNULL(b.Address, N'')) AS Company_Address,
+       ISNULL(t.Phone1, N'') AS Company_Phone, ISNULL(t.TaxNumber, N'') AS Tax_Number
+FROM (SELECT 1 AS k) x
+LEFT JOIN Account_Branches b ON b.Id = {branchId}
+LEFT JOIN Account_BranchesTaxInfo t ON LTRIM(RTRIM(t.BranchID)) = CAST({branchId} AS nvarchar(30))").AsEnumerable().First();
 
         public class CustomerSync
         {

@@ -91,7 +91,11 @@
         </MudItem>
     </MudGrid>
 
-    <MudButton Variant="Variant.Text" Class="ra-btn ra-gap" StartIcon="@Icons.Material.Filled.Logout" OnClick="Logout">خروج</MudButton>
+    <div class="ra-row ra-gap">
+        <MudButton Variant="Variant.Text" Class="ra-btn" StartIcon="@Icons.Material.Filled.Print" Href="/printer">الطابعة</MudButton>
+        <span class="ra-grow"></span>
+        <MudButton Variant="Variant.Text" Class="ra-btn" StartIcon="@Icons.Material.Filled.Logout" OnClick="Logout">خروج</MudButton>
+    </div>
     <div class="ra-muted">الإصدار @State.AppVersion</div>
 </div>
 

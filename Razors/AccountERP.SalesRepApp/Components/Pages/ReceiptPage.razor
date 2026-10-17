@@ -1,0 +1,72 @@
+@* المستند المطبوع: معاينة وطباعة (وإعادة الطباعة بعلامة «نسخة»). بعد الحفظ مباشرة تُطبع تلقائياً إن فُعِّل ذلك. *@
+@page "/receipt/{Id:guid}"
+@inject AppState State
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<div class="ra-page">
+    @if (_receipt == null)
+    {
+        <MudAlert Severity="Severity.Info" Class="ra-gap">لا مستند مطبوع لهذا النوع.</MudAlert>
+    }
+    else
+    {
+        <h1 class="mud-typography mud-typography-h5">@_receipt.Title <bdi class="ra-muted">@_receipt.Doc_No</bdi></h1>
+        @if (!ReceiptPrinter.Supported)
+        {
+            <MudAlert Severity="Severity.Info" Dense="true" Class="ra-gap">الطباعة بالبلوتوث من تطبيق أندرويد؛ هنا معاينة فقط.</MudAlert>
+        }
+        else if (!ReceiptPrinter.Ready)
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true" Class="ra-gap">لم تُختر طابعة بعد. <MudLink Href="/printer">اختر الطابعة</MudLink></MudAlert>
+        }
+        <ReceiptView Receipt="_receipt" />
+    }
+    <div style="height:88px"></div>
+</div>
+
+<div class="ra-bottom">
+    <div class="ra-bottom-inner">
+        <MudButton Variant="Variant.Text" Class="ra-btn" Href="/">الرئيسية</MudButton>
+        <span class="ra-grow"></span>
+        @if (_receipt != null && ReceiptPrinter.Supported)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ra-btn" Style="min-width:140px" Disabled="@(_printing || !ReceiptPrinter.Ready)" OnClick="PrintAsync"
+                       StartIcon="@Icons.Material.Filled.Print">
+                @if (_printing) { <MudProgressCircular Size="Size.Small" Indeterminate="true" /> } else { <span>@(_receipt.Copy ? "طباعة نسخة" : "طباعة")</span> }
+            </MudButton>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    [SupplyParameterFromQuery(Name = "new")] public int? IsNew { get; set; }
+
+    private Receipt? _receipt;
+    private bool _printing;
+
+    protected override void OnInitialized() => _receipt = State.Book.Receipt(Id);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && IsNew == 1 && _receipt is { Copy: false } && ReceiptPrinter.Ready && ReceiptPrinter.Auto)
+            await PrintAsync();
+    }
+
+    private async Task PrintAsync()
+    {
+        if (_receipt == null) return;
+        _printing = true;
+        StateHasChanged();
+        try
+        {
+            await ReceiptPrinter.PrintAsync(_receipt);
+            State.Book.MarkPrinted(Id);
+            Snackbar.Add(_receipt.Copy ? "طُبعت نسخة." : "طُبع المستند.", Severity.Success);
+            _receipt = State.Book.Receipt(Id);
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        finally { _printing = false; StateHasChanged(); }
+    }
+}

@@ -64,7 +64,7 @@
             Snackbar.Add("حُفظ التحصيل" + (saved?.Doc_No is string no ? " " + no : "") + " على الجهاز" + (State.Online ? "؛ جارٍ رفعه." : "؛ يُرفع عند الاتصال."), Severity.Success);
             if (State.Online) _ = State.SyncNowAsync();
             else State.NotifyChanged();
-            Nav.NavigateTo("/");
+            Nav.NavigateTo(saved?.Doc_No != null ? $"/receipt/{saved.Doc_Guid}?new=1" : "/");
         }
         catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
         finally { _busy = false; }

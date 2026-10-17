@@ -77,6 +77,11 @@ namespace AccountERP.SalesRepApp.Core
     public class RepProfile
     {
         public long Id { get; set; }
+        /// <summary>رأس المستند المطبوع (بيانات الفرع الضريبية وإلا اسم الفرع).</summary>
+        public string Company_Name { get; set; } = "";
+        public string Company_Address { get; set; } = "";
+        public string Company_Phone { get; set; } = "";
+        public string Tax_Number { get; set; } = "";
         public string Rep_Name { get; set; } = "";
         public long Branch_Id { get; set; }
         public int Sales_Mode { get; set; }
