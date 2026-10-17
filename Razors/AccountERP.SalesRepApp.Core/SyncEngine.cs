@@ -24,7 +24,7 @@ namespace AccountERP.SalesRepApp.Core
         public const int BatchSize = 20;
         /// <summary>المجموعات بترتيب التنزيل (= SalesRepSyncService.Datasets).</summary>
         public static readonly string[] Datasets =
-            { "profile", "payment_methods", "return_reasons", "nosale_reasons", "banks", "customers", "items", "prices", "stock", "orders", "plan" };
+            { "profile", "payment_methods", "return_reasons", "nosale_reasons", "banks", "customers", "items", "prices", "stock", "orders", "plan", "invoices", "order_items" };
 
         private readonly IRepApi _api;
         private readonly LocalStore _store;

@@ -115,7 +115,7 @@ namespace AccountModelsLib.SalesRep
         }
 
         public static readonly string[] Datasets =
-            { "profile", "payment_methods", "return_reasons", "nosale_reasons", "banks", "customers", "items", "prices", "stock", "orders", "plan" };
+            { "profile", "payment_methods", "return_reasons", "nosale_reasons", "banks", "customers", "items", "prices", "stock", "orders", "plan", "invoices", "order_items" };
 
         // ============================== الرفع ==============================
 
@@ -597,6 +597,39 @@ FROM Unit_item u WHERE u.Store_id = {store}").ToList().Select(x => new SyncRow(x
                 }
                 case "plan":
                     return new SalesRepVisitService(opp).PlanFor(repId, DateTime.Today).Select(p => new SyncRow(p.Customer_Id, p)).ToList();
+                case "invoices":
+                {
+                    // المرتجع المربوط على الجهاز: فواتير المندوب نفسه داخل نافذة الإرجاع وفيها كمية قابلة للإرجاع (الأحدث 300)، بأسطرها وسعرها الصافى.
+                    var ctx = SalesRepSaleService.Context(opp, repId);
+                    DateTime from = DateTime.Today.AddDays(-Math.Max(1, ctx.Return_Window_Days));
+                    var ids = opp.db.Database.SqlQuery<long>($@"
+SELECT TOP (300) l.Id AS Value FROM Invoices_List l
+WHERE l.Salesman_Id = {ctx.Employee_Id} AND ISNULL(l.Deleted, 0) = 0 AND l.Invoice_Date >= {from}
+  AND EXISTS (SELECT 1 FROM Invoices_Details d
+              LEFT JOIN Unit_item u ON u.id = d.Unit_Item_Table_Id
+              CROSS APPLY (SELECT CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END AS Factor) f
+              OUTER APPLY (SELECT SUM(k.Qty_Large) AS L, SUM(k.Qty_Small) AS S FROM SalesRep_Invoice_Return_Links k WHERE k.Original_Detail_Id = d.Id) k
+              WHERE d.Invoice_Id = l.Id
+                AND ISNULL(d.Larg_Qnty, 0) * f.Factor + ISNULL(d.Small_Qnty, 0) > ISNULL(k.L, 0) * f.Factor + ISNULL(k.S, 0))
+ORDER BY l.Invoice_Date DESC, l.Id DESC").ToList();
+                    return ids.Select(i => new SyncRow(i, SalesRepReturnService.Original(opp, ctx, i))).ToList();
+                }
+                case "order_items":
+                {
+                    // أخذ الطلبية على الجهاز: أصناف المخزن المصدر الافتراضى (آخر مخزن حُمِّلت منه السيارة) والمتاح منها بعد المحجوز للطلبيات.
+                    long store = new SalesRepOrderService(opp).GetDefaultSourceStore(repId);
+                    if (store <= 0) return new List<SyncRow>();
+                    return opp.db.Database.SqlQuery<OrderItemSync>($@"
+SELECT u.id AS Id, CAST({store} AS bigint) AS Store_Id, ISNULL(s.Store_Name, N'') AS Store_Name, CAST(ISNULL(u.Item_id, 0) AS bigint) AS Item_Id,
+       ISNULL(i.Item_Name, N'') AS Item_Name, ISNULL(i.code, N'') AS Code, ISNULL(un.B_Unit, N'') AS B_Unit, ISNULL(un.S_unit, N'') AS S_Unit,
+       CAST(CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END AS decimal(18,6)) AS Factor,
+       CAST(ISNULL(NULLIF(u.S_price_LargeUnit, 0), ISNULL(i.S_price_LargeUnit, 0)) AS decimal(18,4)) AS Price_Large,
+       CAST(ISNULL(i.TaxSales10_Value, 0) AS decimal(9,4)) AS Tax_Rate,
+       CAST((ISNULL(u.Full_qua, 0) - ISNULL(u.Reserved_Balance_Larg_Qnty, 0)) * CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END
+            + ISNULL(u.D_Qua, 0) - ISNULL(u.Reserved_Balance_Small_Qnty, 0) AS decimal(18,4)) AS Available_Small
+FROM Unit_item u JOIN Item i ON i.id = u.Item_id LEFT JOIN unit un ON un.id = u.unit_id LEFT JOIN Store s ON s.Id = u.Store_id
+WHERE u.Store_id = {store} AND i.Active_flage = 1").ToList().Select(x => new SyncRow(x.Id, x)).ToList();
+                }
             }
             throw new ArgumentException("مجموعة بيانات غير معروفة: " + dataset);
         }
@@ -629,6 +662,22 @@ FROM Unit_item u WHERE u.Store_id = {store}").ToList().Select(x => new SyncRow(x
             public decimal Price_Large { get; set; }
             public decimal Price_Small { get; set; }
             public decimal Tax_Rate { get; set; }
+        }
+
+        public class OrderItemSync
+        {
+            public long Id { get; set; }
+            public long Store_Id { get; set; }
+            public string Store_Name { get; set; } = "";
+            public long Item_Id { get; set; }
+            public string Item_Name { get; set; } = "";
+            public string Code { get; set; } = "";
+            public string B_Unit { get; set; } = "";
+            public string S_Unit { get; set; } = "";
+            public decimal Factor { get; set; }
+            public decimal Price_Large { get; set; }
+            public decimal Tax_Rate { get; set; }
+            public decimal Available_Small { get; set; }
         }
 
         public class PriceSync

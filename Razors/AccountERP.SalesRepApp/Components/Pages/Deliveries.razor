@@ -1,0 +1,134 @@
+@* تسليم الطلبيات المسندة: القائمة، ثم لكل طلبية الكميات المسلَّمة من السيارة (المتبقى افتراضياً)، والتحصيل الآن أو على الحساب،
+   ومصير غير المسلَّم (إعادة المحاولة/إغلاق) بسبب. *@
+@page "/deliveries"
+@inject AppState State
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<div class="ra-page">
+    <h1 class="mud-typography mud-typography-h5">تسليم الطلبيات</h1>
+
+    @if (_order == null)
+    {
+        @if (_orders.Count == 0)
+        {
+            <MudText Class="ra-muted ra-gap">لا طلبيات مسندة لك للتسليم.</MudText>
+        }
+        <MudList T="long" Class="ra-gap">
+            @foreach (var o in _orders)
+            {
+                <MudListItem T="long" Value="@o.Order.Id" OnClick="@(() => Open(o))">
+                    <div class="ra-row">
+                        <div class="ra-grow">
+                            <div><b>@o.Order.Customer_Name</b></div>
+                            <div class="ra-muted">طلبية @o.Order.Order_No · @(o.Order.Expected_Delivery_Date?.ToString("yyyy-MM-dd") ?? "") · @o.Lines.Count صنف</div>
+                        </div>
+                        <span class="ra-num">@o.Order.Remaining_Value.ToString("N2")</span>
+                        <MudIcon Icon="@Icons.Material.Filled.ChevronLeft" />
+                    </div>
+                </MudListItem>
+            }
+        </MudList>
+    }
+    else
+    {
+        <MudPaper Class="pa-3 ra-gap ra-card" Elevation="1">
+            <div class="ra-row"><b class="ra-grow">@_order.Order.Customer_Name</b><span class="ra-muted">طلبية @_order.Order.Order_No</span></div>
+            @if (_order.Order.Deposit_Remaining > 0) { <div class="ra-muted">عربون مدفوع: <span class="ra-num">@_order.Order.Deposit_Remaining.ToString("N2")</span></div> }
+        </MudPaper>
+        @foreach (var l in _order.Lines)
+        {
+            var input = _input.Lines.First(x => x.Order_Line_Id == l.Order_Line_Id);
+            var item = new ItemRow { Factor = l.Factor, B_Unit = l.B_Unit, S_Unit = l.S_Unit };
+            <MudPaper Class="pa-3 ra-gap ra-card" Elevation="1">
+                <b>@l.Item_Name</b>
+                <div class="ra-muted">المطلوب @SalesBook.Format(l.Remaining_Qty_Small, item) · بالسيارة @SalesBook.Format(State.Book.AvailableSmall(l.Unit_Item_Id), item)</div>
+                <MudGrid Spacing="1" Class="mt-1">
+                    <MudItem xs="@(l.Factor > 1 ? 6 : 12)"><MudNumericField T="decimal" @bind-Value="input.Qty_Large" Label="@($"المسلَّم ({l.B_Unit})")" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" InputMode="@(InputMode.@decimal)" /></MudItem>
+                    @if (l.Factor > 1)
+                    {
+                        <MudItem xs="6"><MudNumericField T="decimal" @bind-Value="input.Qty_Small" Label="@($"({l.S_Unit})")" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" InputMode="@(InputMode.@decimal)" /></MudItem>
+                    }
+                </MudGrid>
+            </MudPaper>
+        }
+        <MudPaper Class="pa-3 ra-gap ra-card" Elevation="1">
+            <MudSwitch T="bool" @bind-Value="_input.Collect_Cash" Color="Color.Primary" Label="تحصيل الباقى الآن (وإلا على حساب العميل)" />
+            @if (_input.Collect_Cash && _methods.Count > 1)
+            {
+                <MudSelect T="long" @bind-Value="_input.Payment_Method_Id" Label="طريقة الدفع" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2"
+                           ToStringFunc="@(v => _methods.FirstOrDefault(m => m.Id == v)?.Name ?? "")">
+                    @foreach (var m in _methods) { <MudSelectItem T="long" Value="@m.Id">@m.Name</MudSelectItem> }
+                </MudSelect>
+            }
+            @if (HasRemaining)
+            {
+                <MudSelect T="int?" @bind-Value="_input.Remaining_Action" Label="غير المسلَّم" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2"
+                           ToStringFunc="@(v => v == 1 ? "إغلاق المتبقى" : v == 0 ? "إعادة المحاولة لاحقاً" : "")">
+                    <MudSelectItem T="int?" Value="0">إعادة المحاولة لاحقاً</MudSelectItem>
+                    <MudSelectItem T="int?" Value="1">إغلاق المتبقى</MudSelectItem>
+                </MudSelect>
+                <MudTextField @bind-Value="_input.Reason" Label="السبب" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2" MaxLength="300" />
+            }
+        </MudPaper>
+        var check = State.Book.CheckDelivery(_input);
+        @if (_tried) { foreach (var p in check.Problems) { <MudAlert Severity="Severity.Error" Dense="true" Class="ra-gap">@p</MudAlert> } }
+        @foreach (var w in check.Warnings) { <MudAlert Severity="Severity.Warning" Dense="true" Class="ra-gap">@w</MudAlert> }
+
+        <div class="ra-bottom">
+            <div class="ra-bottom-inner">
+                <MudButton Variant="Variant.Text" Class="ra-btn" OnClick="@(() => _order = null)">رجوع</MudButton>
+                <div class="ra-grow"><div class="ra-muted">قيمة المسلَّم</div><div class="ra-total ra-num">@check.Net.ToString("N2")</div></div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ra-btn" Disabled="@_busy" OnClick="Save" StartIcon="@Icons.Material.Filled.LocalShipping">تسليم</MudButton>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<OrderSync> _orders = new();
+    private List<PaymentMethod> _methods = new();
+    private OrderSync? _order;
+    private DeliveryInput _input = new();
+    private bool _busy, _tried;
+
+    protected override void OnInitialized()
+    {
+        _orders = State.Book.OpenOrders();
+        _methods = State.Book.Methods;
+    }
+
+    private bool HasRemaining => _order != null && _order.Lines.Any(l =>
+    {
+        var i = _input.Lines.First(x => x.Order_Line_Id == l.Order_Line_Id);
+        return i.Qty_Large * (l.Factor <= 0 ? 1 : l.Factor) + i.Qty_Small < l.Remaining_Qty_Small;
+    });
+
+    private void Open(OrderSync o)
+    {
+        _order = o;
+        _tried = false;
+        _input = new DeliveryInput
+        {
+            Order_Id = o.Order.Id, Collect_Cash = true, Payment_Method_Id = _methods.FirstOrDefault()?.Id ?? 0,
+            Lines = o.Lines.Select(l => new DeliveryLineInput { Order_Line_Id = l.Order_Line_Id, Qty_Large = l.Remaining_Large, Qty_Small = l.Remaining_Small }).ToList(),
+        };
+    }
+
+    private void Save()
+    {
+        _tried = true;
+        if (!HasRemaining) { _input.Remaining_Action = null; _input.Reason = null; }
+        if (!State.Book.CheckDelivery(_input).Ok) return;
+        _busy = true;
+        try
+        {
+            State.Book.SaveDelivery(_input);
+            Snackbar.Add("حُفظ التسليم على الجهاز" + (State.Online ? "؛ جارٍ رفعه." : "؛ يُرفع عند الاتصال."), Severity.Success);
+            if (State.Online) _ = State.SyncNowAsync(); else State.NotifyChanged();
+            Nav.NavigateTo("/");
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        finally { _busy = false; }
+    }
+}

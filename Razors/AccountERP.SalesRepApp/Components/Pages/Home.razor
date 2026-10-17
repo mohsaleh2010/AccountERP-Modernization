@@ -58,11 +58,19 @@
     </MudPaper>
 
     <MudGrid Spacing="2" Class="ra-gap">
-        <MudItem xs="6"><MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Style="min-height:88px" StartIcon="@Icons.Material.Filled.PointOfSale" Href="/sale">بيع</MudButton></MudItem>
-        <MudItem xs="6"><MudButton Variant="Variant.Filled" Color="Color.Secondary" FullWidth="true" Style="min-height:88px" StartIcon="@Icons.Material.Filled.Payments" Href="/collect">تحصيل</MudButton></MudItem>
-        <MudItem xs="6"><MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Style="min-height:72px" StartIcon="@Icons.Material.Filled.Groups" Href="/customers">العملاء</MudButton></MudItem>
-        <MudItem xs="6">
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Style="min-height:72px" StartIcon="@Icons.Material.Filled.Outbox" Href="/outbox">
+        <MudItem xs="6"><MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Style="min-height:80px" StartIcon="@Icons.Material.Filled.PointOfSale" Href="/sale">بيع</MudButton></MudItem>
+        <MudItem xs="6"><MudButton Variant="Variant.Filled" Color="Color.Secondary" FullWidth="true" Style="min-height:80px" StartIcon="@Icons.Material.Filled.Payments" Href="/collect">تحصيل</MudButton></MudItem>
+        <MudItem xs="6"><MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Style="min-height:64px" StartIcon="@Icons.Material.Filled.AssignmentReturn" Href="/return">مرتجع</MudButton></MudItem>
+        <MudItem xs="6"><MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Style="min-height:64px" StartIcon="@Icons.Material.Filled.NoteAdd" Href="/order">طلبية</MudButton></MudItem>
+        <MudItem xs="6"><MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Style="min-height:64px" StartIcon="@Icons.Material.Filled.LocalShipping" Href="/deliveries">تسليم @(_deliveries > 0 ? $"({_deliveries})" : "")</MudButton></MudItem>
+        @if (_profile?.Allow_Cheque_Collection == true)
+        {
+            <MudItem xs="6"><MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Style="min-height:64px" StartIcon="@Icons.Material.Filled.RequestPage" Href="/cheque">شيك</MudButton></MudItem>
+        }
+        <MudItem xs="6"><MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Style="min-height:64px" StartIcon="@Icons.Material.Filled.DoNotDisturbOn" Href="/nosale">بلا بيع</MudButton></MudItem>
+        <MudItem xs="6"><MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Style="min-height:64px" StartIcon="@Icons.Material.Filled.Groups" Href="/customers">العملاء</MudButton></MudItem>
+        <MudItem xs="12">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Style="min-height:56px" StartIcon="@Icons.Material.Filled.Outbox" Href="/outbox">
                 المستندات @(_queued + _review + _rejected > 0 ? $"({_queued + _review + _rejected})" : "")
             </MudButton>
         </MudItem>
@@ -75,7 +83,7 @@
 @code {
     private RepProfile? _profile;
     private decimal _cash;
-    private int _queued, _review, _rejected;
+    private int _queued, _review, _rejected, _deliveries;
     private bool _syncing;
     private (bool Ok, string? Reason) _canSell;
 
@@ -94,6 +102,7 @@
         _review = box.Count(o => o.Status is OutboxStatus.PendingReview or OutboxStatus.Error or OutboxStatus.Received);
         _rejected = box.Count(o => o.Status == OutboxStatus.Rejected && o.Created_At > DateTime.Now.AddDays(-7));
         _canSell = State.Session.CanSellOffline();
+        _deliveries = State.Book.OpenOrders().Count;
     }
 
     private void Refresh() => InvokeAsync(() => { Load(); StateHasChanged(); });

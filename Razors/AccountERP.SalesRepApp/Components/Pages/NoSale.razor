@@ -1,0 +1,82 @@
+@* «لا بيع»: زيارة عميل بلا مستند، بسببها وصورة إثبات إن طلبها السبب، والموقع الحالى إن سمح الجهاز. *@
+@page "/nosale"
+@inject AppState State
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<div class="ra-page">
+    <h1 class="mud-typography mud-typography-h5">زيارة بلا بيع</h1>
+
+    <MudAutocomplete T="CustomerRow" Label="العميل" @bind-Value="_customer" SearchFunc="SearchCustomers" ToStringFunc="@(c => c?.Name ?? "")"
+                     Variant="Variant.Outlined" Class="ra-gap" ResetValueOnEmptyText="true" Clearable="true" MaxItems="30"
+                     AdornmentIcon="@Icons.Material.Filled.Person" Adornment="Adornment.Start" />
+    <MudSelect T="long" @bind-Value="_input.Reason_Id" Label="السبب" Variant="Variant.Outlined" Class="ra-gap"
+               ToStringFunc="@(v => _reasons.FirstOrDefault(r => r.Id == v)?.Name ?? "")">
+        @foreach (var r in _reasons) { <MudSelectItem T="long" Value="@r.Id">@r.Name@(r.Requires_Photo ? " (بصورة)" : "")</MudSelectItem> }
+    </MudSelect>
+    <MudTextField @bind-Value="_input.Notes" Label="ملاحظات" Variant="Variant.Outlined" Class="ra-gap" MaxLength="300" />
+
+    <div class="ra-row ra-gap">
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.PhotoCamera" Class="ra-btn" OnClick="PhotoAsync">@(_input.Photo == null ? "صورة إثبات" : "تغيير الصورة")</MudButton>
+        @if (_input.Photo != null) { <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Title="أُرفقت صورة" /> }
+        <span class="ra-grow"></span>
+        <span class="ra-muted">@(_input.Lat == null ? (_locating ? "جارٍ تحديد الموقع…" : "بلا موقع") : "حُدد الموقع")</span>
+    </div>
+
+    @{ var check = State.Book.CheckNoSale(Input()); }
+    @if (_tried) { foreach (var p in check.Problems) { <MudAlert Severity="Severity.Error" Dense="true" Class="ra-gap">@p</MudAlert> } }
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="ra-btn ra-gap" Disabled="@_busy" OnClick="Save" StartIcon="@Icons.Material.Filled.Save">تسجيل</MudButton>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "customer")] public long? CustomerId { get; set; }
+
+    private CustomerRow? _customer;
+    private List<CustomerRow> _customers = new();
+    private List<ReasonRow> _reasons = new();
+    private readonly NoSaleInput _input = new();
+    private bool _busy, _tried, _locating;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _customers = State.Book.Customers;
+        _reasons = State.Book.NoSaleReasons;
+        if (CustomerId is long id) _customer = _customers.FirstOrDefault(c => c.Id == id);
+        _locating = true;
+        var loc = await DeviceMedia.LocationAsync();
+        _locating = false;
+        if (loc != null) { _input.Lat = loc.Value.Lat; _input.Lng = loc.Value.Lng; }
+    }
+
+    private Task<IEnumerable<CustomerRow>> SearchCustomers(string q, CancellationToken _) =>
+        Task.FromResult(_customers.Where(c => string.IsNullOrWhiteSpace(q) || c.Name.Contains(q.Trim(), StringComparison.OrdinalIgnoreCase) || c.Code.Contains(q.Trim()) || c.Mobile.Contains(q.Trim())));
+
+    private NoSaleInput Input() { _input.Customer_Id = _customer?.Id ?? 0; return _input; }
+
+    private async Task PhotoAsync()
+    {
+        try
+        {
+            var p = await DeviceMedia.TakePhotoAsync();
+            if (p != null) { _input.Photo = p.Value.Data; _input.Photo_Content_Type = p.Value.ContentType; }
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+    }
+
+    private void Save()
+    {
+        _tried = true;
+        if (!State.Book.CheckNoSale(Input()).Ok) return;
+        _busy = true;
+        try
+        {
+            State.Book.SaveNoSale(Input());
+            Snackbar.Add("سُجلت الزيارة" + (State.Online ? "؛ جارٍ رفعها." : "؛ تُرفع عند الاتصال."), Severity.Success);
+            if (State.Online) _ = State.SyncNowAsync(); else State.NotifyChanged();
+            Nav.NavigateTo("/");
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        finally { _busy = false; }
+    }
+}

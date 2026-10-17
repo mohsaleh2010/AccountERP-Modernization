@@ -735,7 +735,7 @@ FROM Unit_item u JOIN Item i ON i.id = u.Item_id LEFT JOIN unit un ON un.id = u.
                 if (p.GetValue(h) is null) p.SetValue(h, 0m);
         }
 
-        private static OriginalView Original(operations opp, SalesRepSaleService.SaleContext ctx, long invoiceId)
+        internal static OriginalView Original(operations opp, SalesRepSaleService.SaleContext ctx, long invoiceId)
         {
             var inv = opp.db.Database.SqlQuery<OriginalView>($@"
 SELECT l.Id, CAST(ISNULL(l.Invoice_Id, 0) AS bigint) AS Invoice_No, l.Invoice_Date, CAST(ISNULL(l.Customer_Id, 0) AS bigint) AS Customer_Id,

@@ -1,0 +1,207 @@
+@* مرتجع على الجهاز: من فاتورة للمندوب (الافتراضى) أو بلا فاتورة؛ لكل سطر سبب وحالة (سليم للسيارة/تالف) وصورة إن طلبها السبب. *@
+@page "/return"
+@inject AppState State
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<div class="ra-page">
+    <h1 class="mud-typography mud-typography-h5">مرتجع</h1>
+
+    <MudAutocomplete T="CustomerRow" Label="العميل" Value="@_customer" ValueChanged="CustomerChanged" SearchFunc="SearchCustomers" ToStringFunc="@(c => c?.Name ?? "")"
+                     Variant="Variant.Outlined" Class="ra-gap" ResetValueOnEmptyText="true" Clearable="true" MaxItems="30"
+                     AdornmentIcon="@Icons.Material.Filled.Person" Adornment="Adornment.Start" />
+
+    @if (_customer != null)
+    {
+        <MudToggleGroup T="bool" Value="@_blind" ValueChanged="ModeChanged" Class="ra-gap" Color="Color.Primary" FixedContent="true">
+            <MudToggleItem Value="false" Text="من فاتورة" />
+            <MudToggleItem Value="true" Text="بلا فاتورة" />
+        </MudToggleGroup>
+
+        @if (!_blind)
+        {
+            @if (_invoices.Count == 0)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Class="ra-gap">لا فواتير لك لهذا العميل داخل نافذة الإرجاع.</MudAlert>
+            }
+            else
+            {
+                <MudSelect T="long" Value="@(_invoice?.Id ?? 0)" ValueChanged="InvoiceChanged" Label="الفاتورة" Variant="Variant.Outlined" Class="ra-gap"
+                           ToStringFunc="@(v => InvoiceText(_invoices.FirstOrDefault(i => i.Id == v)))">
+                    @foreach (var i in _invoices) { <MudSelectItem T="long" Value="@i.Id">@InvoiceText(i)</MudSelectItem> }
+                </MudSelect>
+            }
+        }
+        else
+        {
+            <MudAutocomplete T="ItemRow" Label="إضافة صنف" Value="@_pick" ValueChanged="AddBlind" SearchFunc="SearchItems" ToStringFunc="@(i => i?.Item_Name ?? "")"
+                             Variant="Variant.Outlined" Class="ra-gap" ResetValueOnEmptyText="true" MaxItems="40" CoerceText="false"
+                             AdornmentIcon="@Icons.Material.Filled.AddShoppingCart" Adornment="Adornment.Start" />
+        }
+
+        @foreach (var x in _lines)
+        {
+            <MudPaper Class="pa-3 ra-gap ra-card" Elevation="1">
+                <div class="ra-row">
+                    <b class="ra-grow">@x.Name</b>
+                    @if (x.Returnable != null) { <span class="ra-muted">القابل @x.Returnable</span> }
+                    @if (_blind) { <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" aria-label="@($"حذف {x.Name}")" OnClick="@(() => _lines.Remove(x))" /> }
+                </div>
+                <MudGrid Spacing="1" Class="mt-1">
+                    <MudItem xs="@(x.Factor > 1 ? 6 : 12)">
+                        <MudNumericField T="decimal" @bind-Value="x.Input.Qty_Large" Label="@($"الكمية ({x.BUnit})")" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" InputMode="@(InputMode.@decimal)" />
+                    </MudItem>
+                    @if (x.Factor > 1)
+                    {
+                        <MudItem xs="6"><MudNumericField T="decimal" @bind-Value="x.Input.Qty_Small" Label="@($"({x.SUnit})")" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" InputMode="@(InputMode.@decimal)" /></MudItem>
+                    }
+                    <MudItem xs="12">
+                        <MudSelect T="long" @bind-Value="x.Input.Reason_Id" Label="السبب" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                   ToStringFunc="@(v => _reasons.FirstOrDefault(r => r.Id == v)?.Name ?? "")">
+                            @foreach (var r in _reasons) { <MudSelectItem T="long" Value="@r.Id">@r.Name</MudSelectItem> }
+                        </MudSelect>
+                    </MudItem>
+                </MudGrid>
+                <div class="ra-row mt-1">
+                    <MudSwitch T="bool" Value="@(x.Input.Condition == 1)" ValueChanged="@(v => x.Input.Condition = v ? 1 : 0)" Color="Color.Error" Label="تالف" />
+                    <span class="ra-grow"></span>
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.PhotoCamera" OnClick="@(() => PhotoAsync(x))">
+                        @(x.Input.Photo == null ? "صورة" : "تغيير الصورة")
+                    </MudButton>
+                    @if (x.Input.Photo != null) { <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Title="أُرفقت صورة" /> }
+                </div>
+            </MudPaper>
+        }
+
+        <MudPaper Class="pa-3 ra-gap ra-card" Elevation="1">
+            <MudSwitch T="bool" @bind-Value="_refundCash" Color="Color.Warning" Label="رد المبلغ نقداً الآن (وإلا يُخصم من حساب العميل)" />
+            <MudTextField @bind-Value="_notes" Label="ملاحظات" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2" MaxLength="300" />
+        </MudPaper>
+    }
+
+    @{ var check = State.Book.CheckReturn(Input()); }
+    @if (_tried) { foreach (var p in check.Problems) { <MudAlert Severity="Severity.Error" Dense="true" Class="ra-gap">@p</MudAlert> } }
+    @foreach (var w in check.Warnings) { <MudAlert Severity="Severity.Warning" Dense="true" Class="ra-gap">@w</MudAlert> }
+</div>
+
+<div class="ra-bottom">
+    <div class="ra-bottom-inner">
+        <div class="ra-grow">
+            <div class="ra-muted">@(_blind ? "القيمة يحددها السيرفر" : "قيمة المرتجع")</div>
+            <div class="ra-total ra-num">@(_blind ? "—" : check.Net.ToString("N2"))</div>
+        </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ra-btn" Style="min-width:140px" Disabled="@_busy" OnClick="Save" StartIcon="@Icons.Material.Filled.Save">حفظ</MudButton>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "customer")] public long? CustomerId { get; set; }
+
+    private sealed class Line
+    {
+        public ReturnLineInput Input { get; } = new();
+        public string Name { get; set; } = "";
+        public string BUnit { get; set; } = "";
+        public string SUnit { get; set; } = "";
+        public decimal Factor { get; set; } = 1;
+        public string? Returnable { get; set; }
+    }
+
+    private CustomerRow? _customer;
+    private ItemRow? _pick;
+    private bool _blind, _refundCash, _busy, _tried;
+    private string? _notes;
+    private List<CustomerRow> _customers = new();
+    private List<InvoiceView> _invoices = new();
+    private InvoiceView? _invoice;
+    private List<ReasonRow> _reasons = new();
+    private readonly List<Line> _lines = new();
+
+    protected override void OnInitialized()
+    {
+        _customers = State.Book.Customers;
+        _reasons = State.Book.ReturnReasons;
+        if (CustomerId is long id) CustomerChanged(_customers.FirstOrDefault(c => c.Id == id));
+    }
+
+    private void CustomerChanged(CustomerRow? c)
+    {
+        _customer = c;
+        _invoices = c == null ? new() : State.Book.ReturnableInvoices(c.Id);
+        _blind = c != null && _invoices.Count == 0;
+        _lines.Clear();
+        _invoice = null;
+        if (!_blind && _invoices.Count > 0) InvoiceChanged(_invoices[0].Id);
+    }
+
+    private void ModeChanged(bool blind) { _blind = blind; _lines.Clear(); _invoice = null; if (!blind && _invoices.Count > 0) InvoiceChanged(_invoices[0].Id); }
+
+    private void InvoiceChanged(long id)
+    {
+        _invoice = _invoices.FirstOrDefault(i => i.Id == id);
+        _lines.Clear();
+        if (_invoice == null) return;
+        _refundCash = !_invoice.Is_Credit;
+        foreach (var l in _invoice.Lines.Where(l => l.Returnable_Small > 0))
+        {
+            var x = new Line { Name = l.Item_Name, BUnit = l.B_Unit, SUnit = l.S_Unit, Factor = l.Factor, Returnable = FormatSmall(l.Returnable_Small, l) };
+            x.Input.Original_Detail_Id = l.Original_Detail_Id;
+            x.Input.Reason_Id = _reasons.FirstOrDefault()?.Id ?? 0;
+            _lines.Add(x);
+        }
+    }
+
+    private void AddBlind(ItemRow? item)
+    {
+        _pick = null;
+        if (item == null || _lines.Any(l => l.Input.Unit_Item_Id == item.Id)) return;
+        var x = new Line { Name = item.Item_Name, BUnit = item.B_Unit, SUnit = item.S_Unit, Factor = item.Factor };
+        x.Input.Unit_Item_Id = item.Id;
+        x.Input.Qty_Large = 1;
+        x.Input.Reason_Id = _reasons.FirstOrDefault()?.Id ?? 0;
+        _lines.Add(x);
+    }
+
+    private async Task PhotoAsync(Line x)
+    {
+        try
+        {
+            var p = await DeviceMedia.TakePhotoAsync();
+            if (p != null) { x.Input.Photo = p.Value.Data; x.Input.Photo_Content_Type = p.Value.ContentType; }
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+    }
+
+    private static string FormatSmall(decimal small, ReturnableLine l) =>
+        SalesBook.Format(small, new ItemRow { Factor = l.Factor, B_Unit = l.B_Unit, S_Unit = l.S_Unit });
+
+    private static string InvoiceText(InvoiceView? i) => i == null ? "" : $"رقم {i.Invoice_No} — {i.Invoice_Date:yyyy-MM-dd} — {i.Net_Total:N2}";
+
+    private Task<IEnumerable<CustomerRow>> SearchCustomers(string q, CancellationToken _) =>
+        Task.FromResult(_customers.Where(c => string.IsNullOrWhiteSpace(q) || c.Name.Contains(q.Trim(), StringComparison.OrdinalIgnoreCase) || c.Code.Contains(q.Trim()) || c.Mobile.Contains(q.Trim())));
+
+    private Task<IEnumerable<ItemRow>> SearchItems(string q, CancellationToken _) =>
+        Task.FromResult(State.Book.Items.Where(i => string.IsNullOrWhiteSpace(q) || i.Item_Name.Contains(q.Trim(), StringComparison.OrdinalIgnoreCase) || i.Code == q.Trim()).AsEnumerable());
+
+    private ReturnInput Input() => new()
+    {
+        Customer_Id = _customer?.Id ?? 0, Original_Invoice_Id = _blind ? null : _invoice?.Id, Refund_Cash = _refundCash, Notes = _notes,
+        Lines = _lines.Where(l => l.Input.Qty_Large + l.Input.Qty_Small > 0).Select(l => l.Input).ToList(),
+    };
+
+    private void Save()
+    {
+        _tried = true;
+        if (!State.Book.CheckReturn(Input()).Ok) return;
+        _busy = true;
+        try
+        {
+            State.Book.SaveReturn(Input());
+            Snackbar.Add("حُفظ المرتجع على الجهاز" + (State.Online ? "؛ جارٍ رفعه." : "؛ يُرفع عند الاتصال."), Severity.Success);
+            if (State.Online) _ = State.SyncNowAsync(); else State.NotifyChanged();
+            Nav.NavigateTo("/");
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        finally { _busy = false; }
+    }
+}

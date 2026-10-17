@@ -17,7 +17,7 @@ namespace AccountERP.SalesRepApp.Core
     /// البيع والتحصيل على الجهاز من البيانات المنزَّلة: السعر الافتراضى، المتاح بالسيارة (رصيد السيرفر − مبيعات الجهاز غير المحفوظة بعد)،
     /// الفحص قبل الحفظ، ثم إضافة المستند للصادر بمعرّف جديد. السيرفر يعيد كل الفحوص عند الرفع.
     /// </summary>
-    public sealed class SalesBook
+    public sealed partial class SalesBook
     {
         private readonly LocalStore _store;
         private readonly RepSession _session;
@@ -67,14 +67,20 @@ namespace AccountERP.SalesRepApp.Core
             return server - PendingSmall(unitItemId, f);
         }
 
+        /// <summary>ما خرج من السيارة على الجهاز ولم يحفظه السيرفر: مبيعات وتسليمات طلبيات (المرتجع لا يُضاف للمتاح حتى يُحفظ).</summary>
         private decimal PendingSmall(long unitItemId, decimal factor)
         {
             decimal sum = 0;
-            foreach (var o in _store.Outbox(openOnly: true).Where(o => o.Doc_Type == DocType.Sale))
+            Dictionary<long, long>? orderLines = null;
+            foreach (var o in _store.Outbox(openOnly: true))
             {
-                var s = Json.Deserialize<SaleInput>(o.Payload);
-                if (s == null) continue;
-                sum += s.Lines.Where(l => l.Unit_Item_Id == unitItemId).Sum(l => l.Qty_Large * factor + l.Qty_Small);
+                if (o.Doc_Type == DocType.Sale && Json.Deserialize<SaleInput>(o.Payload) is { } s)
+                    sum += s.Lines.Where(l => l.Unit_Item_Id == unitItemId).Sum(l => l.Qty_Large * factor + l.Qty_Small);
+                else if (o.Doc_Type == DocType.Delivery && Json.Deserialize<DeliveryInput>(o.Payload) is { } d)
+                {
+                    orderLines ??= _store.Rows<OrderSync>("orders").SelectMany(x => x.Lines).ToDictionary(l => l.Order_Line_Id, l => l.Unit_Item_Id);
+                    sum += d.Lines.Where(l => orderLines.TryGetValue(l.Order_Line_Id, out long u) && u == unitItemId).Sum(l => l.Qty_Large * factor + l.Qty_Small);
+                }
             }
             return sum;
         }
@@ -90,6 +96,9 @@ namespace AccountERP.SalesRepApp.Core
             {
                 if (o.Doc_Type == DocType.Sale && Json.Deserialize<SaleInput>(o.Payload) is { Is_Credit: false } s && IsCash(s.Payment_Method_Id)) pending += o.Amount;
                 if (o.Doc_Type == DocType.Collection && Json.Deserialize<CollectionInput>(o.Payload) is { } c && IsCash(c.Payment_Method_Id)) pending += o.Amount;
+                if (o.Doc_Type == DocType.Delivery && Json.Deserialize<DeliveryInput>(o.Payload) is { Collect_Cash: true } d && IsCash(d.Payment_Method_Id)) pending += o.Amount;
+                if (o.Doc_Type == DocType.TakeOrder && Json.Deserialize<TakeOrderInput>(o.Payload) is { } t && IsCash(t.Deposit_Payment_Method_Id)) pending += t.Deposit;
+                if (o.Doc_Type == DocType.Return && Json.Deserialize<ReturnInput>(o.Payload) is { Refund_Cash: true }) pending -= o.Amount;
             }
             return server + pending;
         }
@@ -147,7 +156,7 @@ namespace AccountERP.SalesRepApp.Core
             return Enqueue(DocType.Collection, Json.Serialize(input), input.Customer_Id, c.Net);
         }
 
-        private void CommonChecks(SaleCheck r, RepProfile? profile, long customerId)
+        internal void CommonChecks(SaleCheck r, RepProfile? profile, long customerId)
         {
             if (profile == null) { r.Problems.Add("لم تكتمل أول مزامنة بعد."); return; }
             if (!profile.ShiftOpen) r.Problems.Add("لا وردية مفتوحة؛ يفتحها المكتب بالتحميل ثم زامِن.");
@@ -156,7 +165,7 @@ namespace AccountERP.SalesRepApp.Core
             if (customerId <= 0 || Customer(customerId) == null) r.Problems.Add("اختر العميل.");
         }
 
-        private void CashLimit(SaleCheck r, RepProfile? profile, long methodId, decimal amount)
+        internal void CashLimit(SaleCheck r, RepProfile? profile, long methodId, decimal amount)
         {
             if (profile?.Max_Cash_On_Hand is not decimal max) return;
             bool cash = methodId <= 0 || Methods.Any(m => m.Id == methodId && m.Is_Cash);
@@ -165,7 +174,7 @@ namespace AccountERP.SalesRepApp.Core
             if (after > max) r.Warnings.Add($"النقدية بالعهدة بعد القبض {after:N2} تتجاوز الحد {max:N2}؛ ورِّد جزءاً منها.");
         }
 
-        private Guid Enqueue(DocType type, string payload, long customerId, decimal amount)
+        internal Guid Enqueue(DocType type, string payload, long customerId, decimal amount)
         {
             var guid = Guid.NewGuid();
             _store.Enqueue(new OutboxItem

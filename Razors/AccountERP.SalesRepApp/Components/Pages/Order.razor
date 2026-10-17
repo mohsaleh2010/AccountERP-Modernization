@@ -1,0 +1,135 @@
+@* أخذ طلبية: أصناف المخزن المصدر بسعرها، تاريخ التسليم المتوقع، وعربون اختيارى. تُسند للمندوب تلقائياً على السيرفر. *@
+@page "/order"
+@inject AppState State
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<div class="ra-page">
+    <h1 class="mud-typography mud-typography-h5">طلبية</h1>
+    @if (_items.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Dense="true" Class="ra-gap">لا أصناف من المخزن المصدر بعد؛ زامِن أولاً.</MudAlert>
+    }
+    else { <div class="ra-muted ra-gap">من مخزن: <b>@_items.Values.First().Store_Name</b></div> }
+
+    <MudAutocomplete T="CustomerRow" Label="العميل" @bind-Value="_customer" SearchFunc="SearchCustomers" ToStringFunc="@(c => c?.Name ?? "")"
+                     Variant="Variant.Outlined" Class="ra-gap" ResetValueOnEmptyText="true" Clearable="true" MaxItems="30"
+                     AdornmentIcon="@Icons.Material.Filled.Person" Adornment="Adornment.Start" />
+
+    <MudAutocomplete T="OrderItemRow" Label="إضافة صنف" Value="@_pick" ValueChanged="AddItem" SearchFunc="SearchItems" ToStringFunc="@(i => i?.Item_Name ?? "")"
+                     Variant="Variant.Outlined" Class="ra-gap" ResetValueOnEmptyText="true" MaxItems="40" CoerceText="false"
+                     AdornmentIcon="@Icons.Material.Filled.AddShoppingCart" Adornment="Adornment.Start" />
+
+    @foreach (var l in _lines)
+    {
+        var it = _items[l.Unit_Item_Id];
+        SalesBook.PriceOrderLine(l, it.Factor, it.Tax_Rate);
+        <MudPaper Class="pa-3 ra-gap ra-card" Elevation="1">
+            <div class="ra-row">
+                <b class="ra-grow">@it.Item_Name</b>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" aria-label="@($"حذف {it.Item_Name}")" OnClick="@(() => _lines.Remove(l))" />
+            </div>
+            <MudGrid Spacing="1" Class="mt-1">
+                <MudItem xs="@(it.Factor > 1 ? 6 : 12)"><MudNumericField T="decimal" @bind-Value="l.Qty_Large" Label="@($"الكمية ({it.B_Unit})")" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" InputMode="@(InputMode.@decimal)" /></MudItem>
+                @if (it.Factor > 1)
+                {
+                    <MudItem xs="6"><MudNumericField T="decimal" @bind-Value="l.Qty_Small" Label="@($"({it.S_Unit})")" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" InputMode="@(InputMode.@decimal)" /></MudItem>
+                }
+                <MudItem xs="6"><MudNumericField T="decimal" @bind-Value="l.Unit_Price" Label="@($"سعر {it.B_Unit}")" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" InputMode="@(InputMode.@decimal)" /></MudItem>
+                <MudItem xs="6"><MudNumericField T="decimal" @bind-Value="l.Discount_Value" Label="الخصم (قيمة)" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" InputMode="@(InputMode.@decimal)" /></MudItem>
+            </MudGrid>
+            <div class="ra-row mt-1"><span class="ra-grow ra-muted">@(l.Tax_Value > 0 ? $"ضريبة {l.Tax_Value:N2}" : "")</span><span class="ra-num"><b>@l.Line_Total.ToString("N2")</b></span></div>
+        </MudPaper>
+    }
+
+    <MudPaper Class="pa-3 ra-gap ra-card" Elevation="1">
+        <MudDatePicker Label="التسليم المتوقع" @bind-Date="_expected" MinDate="DateTime.Today" Variant="Variant.Outlined" Margin="Margin.Dense" DateFormat="yyyy-MM-dd" />
+        <MudNumericField T="decimal" @bind-Value="_deposit" Label="عربون الآن (اختيارى)" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2" InputMode="@(InputMode.@decimal)" />
+        @if (_deposit > 0 && _methods.Count > 1)
+        {
+            <MudSelect T="long" @bind-Value="_method" Label="طريقة دفع العربون" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2"
+                       ToStringFunc="@(v => _methods.FirstOrDefault(m => m.Id == v)?.Name ?? "")">
+                @foreach (var m in _methods) { <MudSelectItem T="long" Value="@m.Id">@m.Name</MudSelectItem> }
+            </MudSelect>
+        }
+        <MudTextField @bind-Value="_notes" Label="ملاحظات" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-2" MaxLength="300" />
+    </MudPaper>
+
+    @{ var check = State.Book.CheckOrder(Input()); }
+    @if (_tried) { foreach (var p in check.Problems) { <MudAlert Severity="Severity.Error" Dense="true" Class="ra-gap">@p</MudAlert> } }
+    @foreach (var w in check.Warnings) { <MudAlert Severity="Severity.Warning" Dense="true" Class="ra-gap">@w</MudAlert> }
+</div>
+
+<div class="ra-bottom">
+    <div class="ra-bottom-inner">
+        <div class="ra-grow"><div class="ra-muted">صافى الطلبية</div><div class="ra-total ra-num">@check.Net.ToString("N2")</div></div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ra-btn" Style="min-width:140px" Disabled="@_busy" OnClick="Save" StartIcon="@Icons.Material.Filled.Save">حفظ</MudButton>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "customer")] public long? CustomerId { get; set; }
+
+    private CustomerRow? _customer;
+    private OrderItemRow? _pick;
+    private Dictionary<long, OrderItemRow> _items = new();
+    private List<CustomerRow> _customers = new();
+    private List<PaymentMethod> _methods = new();
+    private readonly List<TakeOrderLine> _lines = new();
+    private DateTime? _expected = DateTime.Today.AddDays(1);
+    private decimal _deposit;
+    private long _method;
+    private string? _notes;
+    private bool _busy, _tried;
+
+    protected override void OnInitialized()
+    {
+        _customers = State.Book.Customers;
+        _items = State.Book.OrderItems.ToDictionary(i => i.Id);
+        _methods = State.Book.Methods;
+        _method = _methods.FirstOrDefault()?.Id ?? 0;
+        if (CustomerId is long id) _customer = _customers.FirstOrDefault(c => c.Id == id);
+    }
+
+    private Task<IEnumerable<CustomerRow>> SearchCustomers(string q, CancellationToken _) =>
+        Task.FromResult(_customers.Where(c => string.IsNullOrWhiteSpace(q) || c.Name.Contains(q.Trim(), StringComparison.OrdinalIgnoreCase) || c.Code.Contains(q.Trim()) || c.Mobile.Contains(q.Trim())));
+
+    private Task<IEnumerable<OrderItemRow>> SearchItems(string q, CancellationToken _) =>
+        Task.FromResult(_items.Values.Where(i => string.IsNullOrWhiteSpace(q) || i.Item_Name.Contains(q.Trim(), StringComparison.OrdinalIgnoreCase) || i.Code == q.Trim()).AsEnumerable());
+
+    private void AddItem(OrderItemRow? item)
+    {
+        _pick = null;
+        if (item == null) return;
+        var existing = _lines.FirstOrDefault(l => l.Unit_Item_Id == item.Id);
+        if (existing != null) { existing.Qty_Large += 1; return; }
+        _lines.Add(new TakeOrderLine { Unit_Item_Id = item.Id, Qty_Large = 1, Unit_Price = item.Price_Large });
+    }
+
+    private TakeOrderInput Input()
+    {
+        foreach (var l in _lines) if (_items.TryGetValue(l.Unit_Item_Id, out var it)) SalesBook.PriceOrderLine(l, it.Factor, it.Tax_Rate);
+        return new TakeOrderInput
+        {
+            Customer_Id = _customer?.Id ?? 0, Source_Store_Id = _items.Values.FirstOrDefault()?.Store_Id ?? 0, Expected_Delivery_Date = _expected,
+            Notes = _notes, Deposit = _deposit, Deposit_Payment_Method_Id = _method, Lines = _lines.Where(l => l.Qty_Large + l.Qty_Small > 0).ToList(),
+        };
+    }
+
+    private void Save()
+    {
+        _tried = true;
+        var input = Input();
+        if (!State.Book.CheckOrder(input).Ok) return;
+        _busy = true;
+        try
+        {
+            State.Book.SaveOrder(input);
+            Snackbar.Add("حُفظت الطلبية على الجهاز" + (State.Online ? "؛ جارٍ رفعها." : "؛ تُرفع عند الاتصال."), Severity.Success);
+            if (State.Online) _ = State.SyncNowAsync(); else State.NotifyChanged();
+            Nav.NavigateTo("/");
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        finally { _busy = false; }
+    }
+}

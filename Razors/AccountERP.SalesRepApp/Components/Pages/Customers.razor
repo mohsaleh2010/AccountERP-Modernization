@@ -29,6 +29,12 @@
                         <span class="ra-num" title="الرصيد">@c.Balance.ToString("N2")</span>
                         <MudIconButton Icon="@Icons.Material.Filled.PointOfSale" Color="Color.Primary" Href="@($"/sale?customer={c.Id}")" aria-label="@($"بيع لـ {c.Name}")" />
                         <MudIconButton Icon="@Icons.Material.Filled.Payments" Color="Color.Secondary" Href="@($"/collect?customer={c.Id}")" aria-label="@($"تحصيل من {c.Name}")" />
+                        <MudMenu Icon="@Icons.Material.Filled.MoreVert" AriaLabel="@($"مستندات أخرى لـ {c.Name}")" AnchorOrigin="Origin.BottomLeft">
+                            <MudMenuItem Href="@($"/return?customer={c.Id}")" Icon="@Icons.Material.Filled.AssignmentReturn">مرتجع</MudMenuItem>
+                            <MudMenuItem Href="@($"/order?customer={c.Id}")" Icon="@Icons.Material.Filled.NoteAdd">طلبية</MudMenuItem>
+                            <MudMenuItem Href="@($"/cheque?customer={c.Id}")" Icon="@Icons.Material.Filled.RequestPage">شيك</MudMenuItem>
+                            <MudMenuItem Href="@($"/nosale?customer={c.Id}")" Icon="@Icons.Material.Filled.DoNotDisturbOn">بلا بيع</MudMenuItem>
+                        </MudMenu>
                     </div>
                 </MudListItem>
             }

@@ -1,0 +1,78 @@
+@* تحصيل شيك من عميل (لمن فُعِّل له): يُسلَّم للمكتب عند إقفال الوردية. *@
+@page "/cheque"
+@inject AppState State
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<div class="ra-page">
+    <h1 class="mud-typography mud-typography-h5">تحصيل شيك</h1>
+    @if (State.Book.Profile is { Allow_Cheque_Collection: false })
+    {
+        <MudAlert Severity="Severity.Info" Class="ra-gap">تحصيل الشيكات غير مفعّل لك؛ يفعّله المكتب من ملف المندوب.</MudAlert>
+    }
+    else
+    {
+        <MudAutocomplete T="CustomerRow" Label="العميل" @bind-Value="_customer" SearchFunc="SearchCustomers" ToStringFunc="@(c => c?.Name ?? "")"
+                         Variant="Variant.Outlined" Class="ra-gap" ResetValueOnEmptyText="true" Clearable="true" MaxItems="30"
+                         AdornmentIcon="@Icons.Material.Filled.Person" Adornment="Adornment.Start" />
+        <MudTextField @bind-Value="_input.Check_No" Label="رقم الشيك" Variant="Variant.Outlined" Class="ra-gap" MaxLength="30" InputMode="InputMode.numeric" />
+        <MudSelect T="long" @bind-Value="_input.Bank_Id" Label="البنك المسحوب عليه" Variant="Variant.Outlined" Class="ra-gap"
+                   ToStringFunc="@(v => _banks.FirstOrDefault(b => b.Id == v)?.Name ?? "")">
+            @foreach (var b in _banks) { <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem> }
+        </MudSelect>
+        <MudDatePicker Label="تاريخ الاستحقاق" @bind-Date="_due" Variant="Variant.Outlined" Class="ra-gap" DateFormat="yyyy-MM-dd" />
+        <MudNumericField T="decimal" @bind-Value="_input.Amount" Label="المبلغ" Min="0" Variant="Variant.Outlined" Class="ra-gap" InputMode="@(InputMode.@decimal)" />
+        <MudTextField @bind-Value="_input.Drawer_Name" Label="اسم الساحب" Variant="Variant.Outlined" Class="ra-gap" MaxLength="200" />
+        <MudTextField @bind-Value="_input.Notes" Label="ملاحظات" Variant="Variant.Outlined" Class="ra-gap" MaxLength="300" />
+
+        var check = State.Book.CheckCheque(Input());
+        @if (_tried) { foreach (var p in check.Problems) { <MudAlert Severity="Severity.Error" Dense="true" Class="ra-gap">@p</MudAlert> } }
+
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" FullWidth="true" Class="ra-btn ra-gap" Disabled="@_busy" OnClick="Save" StartIcon="@Icons.Material.Filled.Save">حفظ الشيك</MudButton>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "customer")] public long? CustomerId { get; set; }
+
+    private CustomerRow? _customer;
+    private List<CustomerRow> _customers = new();
+    private List<BankRow> _banks = new();
+    private readonly ChequeInput _input = new();
+    private DateTime? _due = DateTime.Today;
+    private bool _busy, _tried;
+
+    protected override void OnInitialized()
+    {
+        _customers = State.Book.Customers;
+        _banks = State.Book.Banks;
+        if (CustomerId is long id) _customer = _customers.FirstOrDefault(c => c.Id == id);
+    }
+
+    private Task<IEnumerable<CustomerRow>> SearchCustomers(string q, CancellationToken _) =>
+        Task.FromResult(_customers.Where(c => string.IsNullOrWhiteSpace(q) || c.Name.Contains(q.Trim(), StringComparison.OrdinalIgnoreCase) || c.Code.Contains(q.Trim()) || c.Mobile.Contains(q.Trim())));
+
+    private ChequeInput Input()
+    {
+        _input.Customer_Id = _customer?.Id ?? 0;
+        _input.Due_Date = _due ?? default;
+        _input.Check_No = (_input.Check_No ?? "").Trim();
+        return _input;
+    }
+
+    private void Save()
+    {
+        _tried = true;
+        if (!State.Book.CheckCheque(Input()).Ok) return;
+        _busy = true;
+        try
+        {
+            State.Book.SaveCheque(Input());
+            Snackbar.Add("حُفظ الشيك على الجهاز" + (State.Online ? "؛ جارٍ رفعه." : "؛ يُرفع عند الاتصال."), Severity.Success);
+            if (State.Online) _ = State.SyncNowAsync(); else State.NotifyChanged();
+            Nav.NavigateTo("/");
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        finally { _busy = false; }
+    }
+}

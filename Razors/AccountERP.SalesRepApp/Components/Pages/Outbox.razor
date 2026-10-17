@@ -20,7 +20,7 @@
             {
                 <MudListItem T="string">
                     <div class="ra-row">
-                        <MudIcon Icon="@(o.Doc_Type == DocType.Sale ? Icons.Material.Filled.PointOfSale : Icons.Material.Filled.Payments)" Color="Color.Primary" />
+                        <MudIcon Icon="@TypeIcon(o.Doc_Type)" Color="Color.Primary" />
                         <div class="ra-grow">
                             <div><b>@TypeName(o.Doc_Type)</b> — @(_names.TryGetValue(o.Customer_Id, out var n) ? n : "")</div>
                             <div class="ra-muted">@o.Created_At.ToString("yyyy-MM-dd HH:mm")@(o.Result_Ref_Id != null ? $" · رقم {o.Result_Ref_Id}" : "")</div>
@@ -68,7 +68,14 @@
         finally { _syncing = false; Load(); }
     }
 
-    private static string TypeName(DocType t) => t switch { DocType.Sale => "بيع", DocType.Collection => "تحصيل", DocType.Return => "مرتجع", DocType.TakeOrder => "طلبية", DocType.Delivery => "تسليم", DocType.Cheque => "شيك", _ => "مستند" };
+    private static string TypeName(DocType t) => t switch { DocType.Sale => "بيع", DocType.Collection => "تحصيل", DocType.Return => "مرتجع", DocType.TakeOrder => "طلبية", DocType.Delivery => "تسليم", DocType.Cheque => "شيك", DocType.NoSale => "بلا بيع", _ => "مستند" };
+
+    private static string TypeIcon(DocType t) => t switch
+    {
+        DocType.Sale => Icons.Material.Filled.PointOfSale, DocType.Collection => Icons.Material.Filled.Payments, DocType.Return => Icons.Material.Filled.AssignmentReturn,
+        DocType.TakeOrder => Icons.Material.Filled.NoteAdd, DocType.Delivery => Icons.Material.Filled.LocalShipping, DocType.Cheque => Icons.Material.Filled.RequestPage,
+        _ => Icons.Material.Filled.DoNotDisturbOn,
+    };
 
     private static string StatusName(OutboxStatus s) => s switch
     {
