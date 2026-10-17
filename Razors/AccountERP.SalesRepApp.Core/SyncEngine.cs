@@ -74,7 +74,7 @@ namespace AccountERP.SalesRepApp.Core
             {
                 var docs = batch.Select(o => new PushDoc
                 {
-                    Doc_Guid = o.Doc_Guid, Doc_Type = (int)o.Doc_Type, Created_At = o.Created_At,
+                    Doc_Guid = o.Doc_Guid, Doc_Type = (int)o.Doc_Type, Created_At = o.Created_At, Doc_Seq = o.Doc_Seq,
                     Payload = JsonDocument.Parse(o.Payload).RootElement.Clone(),
                 }).ToList();
                 List<PushResult> results;

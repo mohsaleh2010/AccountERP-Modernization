@@ -22,7 +22,7 @@
                     <div class="ra-row">
                         <MudIcon Icon="@TypeIcon(o.Doc_Type)" Color="Color.Primary" />
                         <div class="ra-grow">
-                            <div><b>@TypeName(o.Doc_Type)</b> — @(_names.TryGetValue(o.Customer_Id, out var n) ? n : "")</div>
+                            <div><b>@TypeName(o.Doc_Type)</b>@if (o.Doc_No != null) { <span class="ra-muted"> <bdi>@o.Doc_No</bdi></span> } — @(_names.TryGetValue(o.Customer_Id, out var n) ? n : "")</div>
                             <div class="ra-muted">@o.Created_At.ToString("yyyy-MM-dd HH:mm")@(o.Result_Ref_Id != null ? $" · رقم {o.Result_Ref_Id}" : "")</div>
                             @if (!string.IsNullOrEmpty(o.Error) && o.Status != OutboxStatus.Processed) { <div class="ra-muted" style="color:var(--mud-palette-error)">@o.Error</div> }
                         </div>

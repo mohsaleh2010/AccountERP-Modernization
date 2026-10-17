@@ -196,8 +196,8 @@
         _busy = true;
         try
         {
-            State.Book.SaveReturn(Input());
-            Snackbar.Add("حُفظ المرتجع على الجهاز" + (State.Online ? "؛ جارٍ رفعه." : "؛ يُرفع عند الاتصال."), Severity.Success);
+            var saved = State.Book.Doc(State.Book.SaveReturn(Input()));
+            Snackbar.Add("حُفظ المرتجع" + (saved?.Doc_No is string no ? " " + no : "") + " على الجهاز" + (State.Online ? "؛ جارٍ رفعه." : "؛ يُرفع عند الاتصال."), Severity.Success);
             if (State.Online) _ = State.SyncNowAsync(); else State.NotifyChanged();
             Nav.NavigateTo("/");
         }

@@ -33,6 +33,9 @@ namespace AccountERP.SalesRepApp.Core
         public DateTime? Next_Try_At { get; set; }
         public long Customer_Id { get; set; }
         public decimal Amount { get; set; }
+        /// <summary>رقم المستند المطبوع (M001-S000012) وتسلسله لنوعه؛ null للأنواع بلا رقم.</summary>
+        public string? Doc_No { get; set; }
+        public long? Doc_Seq { get; set; }
         /// <summary>لم يُحفظ على السيرفر بعد ولم يُرفض: أثره (المخزون/العهدة) محسوب محلياً.</summary>
         public bool Open => Status is OutboxStatus.Queued or OutboxStatus.Received or OutboxStatus.Error or OutboxStatus.PendingReview;
     }
@@ -58,6 +61,9 @@ CREATE TABLE IF NOT EXISTS outbox (
     guid TEXT PRIMARY KEY, seq INTEGER NOT NULL, type INTEGER NOT NULL, payload TEXT NOT NULL, created_at TEXT NOT NULL,
     status INTEGER NOT NULL, error TEXT, result_ref INTEGER, attempts INTEGER NOT NULL DEFAULT 0, next_try_at TEXT,
     customer_id INTEGER NOT NULL DEFAULT 0, amount TEXT NOT NULL DEFAULT '0');");
+            // ترقية قاعدة أقدم: أعمدة رقم المستند.
+            using (var info = Cmd("SELECT COUNT(*) FROM pragma_table_info('outbox') WHERE name = 'doc_no'"))
+                if (Convert.ToInt32(info.ExecuteScalar()) == 0) Exec("ALTER TABLE outbox ADD COLUMN doc_no TEXT; ALTER TABLE outbox ADD COLUMN doc_seq INTEGER;");
         }
 
         // ============================== الإعدادات ==============================
@@ -140,19 +146,48 @@ CREATE TABLE IF NOT EXISTS outbox (
 
         // ============================== الصادر ==============================
 
-        public void Enqueue(OutboxItem item)
+        /// <summary>
+        /// يضيف المستند للصادر. للأنواع المرقَّمة ومع بادئة الجهاز: يأخذ التسلسل التالى لنوعه فى نفس المعاملة (لا فجوة ولا تكرار على الجهاز).
+        /// </summary>
+        public void Enqueue(OutboxItem item, string? prefix = null)
         {
-            using var cmd = Cmd(@"INSERT INTO outbox (guid, seq, type, payload, created_at, status, attempts, customer_id, amount)
-VALUES ($g, (SELECT IFNULL(MAX(seq), 0) + 1 FROM outbox), $t, $p, $c, $s, 0, $cu, $a)",
+            using var tx = _conn.BeginTransaction();
+            if (!string.IsNullOrEmpty(prefix) && DocNumbers.Code(item.Doc_Type) != null)
+            {
+                string key = DocNumbers.SeqKey(item.Doc_Type);
+                long next = long.TryParse(Get(key, tx), out long last) ? last + 1 : 1;
+                Set(key, next.ToString(CultureInfo.InvariantCulture), tx);
+                item.Doc_Seq = next;
+                item.Doc_No = DocNumbers.Format(prefix, item.Doc_Type, next);
+            }
+            using var cmd = Cmd(@"INSERT INTO outbox (guid, seq, type, payload, created_at, status, attempts, customer_id, amount, doc_no, doc_seq)
+VALUES ($g, (SELECT IFNULL(MAX(seq), 0) + 1 FROM outbox), $t, $p, $c, $s, 0, $cu, $a, $dn, $ds)",
                 ("$g", item.Doc_Guid.ToString()), ("$t", (int)item.Doc_Type), ("$p", item.Payload), ("$c", item.Created_At.ToString("o", CultureInfo.InvariantCulture)),
-                ("$s", (int)item.Status), ("$cu", item.Customer_Id), ("$a", item.Amount.ToString(CultureInfo.InvariantCulture)));
+                ("$s", (int)item.Status), ("$cu", item.Customer_Id), ("$a", item.Amount.ToString(CultureInfo.InvariantCulture)),
+                ("$dn", (object?)item.Doc_No ?? DBNull.Value), ("$ds", (object?)item.Doc_Seq ?? DBNull.Value));
+            cmd.Transaction = tx;
+            cmd.ExecuteNonQuery();
+            tx.Commit();
+        }
+
+        private string? Get(string key, SqliteTransaction tx)
+        {
+            using var cmd = Cmd("SELECT v FROM kv WHERE k = $k", ("$k", key));
+            cmd.Transaction = tx;
+            return cmd.ExecuteScalar() as string;
+        }
+
+        private void Set(string key, string value, SqliteTransaction tx)
+        {
+            using var cmd = Cmd("INSERT INTO kv (k, v) VALUES ($k, $v) ON CONFLICT(k) DO UPDATE SET v = excluded.v", ("$k", key), ("$v", value));
+            cmd.Transaction = tx;
             cmd.ExecuteNonQuery();
         }
 
         public List<OutboxItem> Outbox(bool openOnly = false)
         {
             var list = new List<OutboxItem>();
-            using var cmd = Cmd("SELECT guid, type, payload, created_at, status, error, result_ref, attempts, next_try_at, customer_id, amount FROM outbox ORDER BY seq");
+            using var cmd = Cmd("SELECT guid, type, payload, created_at, status, error, result_ref, attempts, next_try_at, customer_id, amount, doc_no, doc_seq FROM outbox ORDER BY seq");
             using var rd = cmd.ExecuteReader();
             while (rd.Read())
             {
@@ -164,6 +199,7 @@ VALUES ($g, (SELECT IFNULL(MAX(seq), 0) + 1 FROM outbox), $t, $p, $c, $s, 0, $cu
                     Attempts = rd.GetInt32(7),
                     Next_Try_At = rd.IsDBNull(8) ? null : DateTime.Parse(rd.GetString(8), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
                     Customer_Id = rd.GetInt64(9), Amount = decimal.Parse(rd.GetString(10), CultureInfo.InvariantCulture),
+                    Doc_No = rd.IsDBNull(11) ? null : rd.GetString(11), Doc_Seq = rd.IsDBNull(12) ? null : rd.GetInt64(12),
                 };
                 if (!openOnly || o.Open) list.Add(o);
             }

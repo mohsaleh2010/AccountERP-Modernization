@@ -67,8 +67,8 @@
         _busy = true;
         try
         {
-            State.Book.SaveCheque(Input());
-            Snackbar.Add("حُفظ الشيك على الجهاز" + (State.Online ? "؛ جارٍ رفعه." : "؛ يُرفع عند الاتصال."), Severity.Success);
+            var saved = State.Book.Doc(State.Book.SaveCheque(Input()));
+            Snackbar.Add("حُفظ الشيك" + (saved?.Doc_No is string no ? " " + no : "") + " على الجهاز" + (State.Online ? "؛ جارٍ رفعه." : "؛ يُرفع عند الاتصال."), Severity.Success);
             if (State.Online) _ = State.SyncNowAsync(); else State.NotifyChanged();
             Nav.NavigateTo("/");
         }

@@ -453,6 +453,10 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
             ("SalesRep_Sync_Inbox", "Reviewed_By_User_Id", "[bigint] NULL"),
             ("SalesRep_Sync_Inbox", "Reviewed_At", "[datetime] NULL"),
             ("SalesRep_Sync_Inbox", "Review_Notes", "[nvarchar](500) NULL"),
+            // المرحلة 7 (م9): أرقام مستندات الجهاز (بادئة لكل جهاز + تسلسل لكل نوع).
+            ("SalesRep_Devices", "Doc_Prefix", "[nvarchar](10) NULL"),
+            ("SalesRep_Sync_Inbox", "Device_Doc_No", "[nvarchar](30) NULL"),
+            ("SalesRep_Sync_Inbox", "Device_Doc_Seq", "[bigint] NULL"),
         };
 
         /// <summary>أسباب الإرجاع الافتراضية (§6.6-6) تُضاف فقط لو جدول الأسباب فارغ؛ تُعدَّل وتُضاف من القاعدة. لا يمس أى صف قائم.</summary>
@@ -508,6 +512,19 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
             if (TableExists(opp, "SalesRep_Approvals") && opp.db.Database.SqlQueryRaw<int>(
                     "SELECT COUNT(*) AS Value FROM sys.indexes WHERE name = N'IX_SalesRep_Approvals_Guid' AND object_id = OBJECT_ID(N'dbo.SalesRep_Approvals')").AsEnumerable().First() == 0)
                 opp.db.Database.ExecuteSqlRaw("CREATE NONCLUSTERED INDEX [IX_SalesRep_Approvals_Guid] ON [dbo].[SalesRep_Approvals]([Ref_Document_Guid], [Type])");
+            AddIndex(opp, "SalesRep_Devices", "UX_SalesRep_Devices_Prefix",
+                "CREATE UNIQUE NONCLUSTERED INDEX [UX_SalesRep_Devices_Prefix] ON [dbo].[SalesRep_Devices]([Doc_Prefix]) WHERE [Doc_Prefix] IS NOT NULL");
+            AddIndex(opp, "SalesRep_Sync_Inbox", "UX_SalesRep_Sync_Inbox_Doc_Seq",
+                "CREATE UNIQUE NONCLUSTERED INDEX [UX_SalesRep_Sync_Inbox_Doc_Seq] ON [dbo].[SalesRep_Sync_Inbox]([Device_Id], [Doc_Type], [Device_Doc_Seq]) WHERE [Device_Doc_Seq] IS NOT NULL");
+            AddIndex(opp, "SalesRep_Sync_Inbox", "IX_SalesRep_Sync_Inbox_Doc_No",
+                "CREATE NONCLUSTERED INDEX [IX_SalesRep_Sync_Inbox_Doc_No] ON [dbo].[SalesRep_Sync_Inbox]([Device_Doc_No]) WHERE [Device_Doc_No] IS NOT NULL");
+        }
+
+        private static void AddIndex(operations opp, string table, string name, string sql)
+        {
+            if (TableExists(opp, table) && opp.db.Database.SqlQueryRaw<int>(
+                    $"SELECT COUNT(*) AS Value FROM sys.indexes WHERE name = N'{name}' AND object_id = OBJECT_ID(N'dbo.{table}')").AsEnumerable().First() == 0)
+                opp.db.Database.ExecuteSqlRaw(sql);
         }
 
         /// <summary>عناصر القائمة تحت «تعاملات المندوبين» (menuSalesManProcess): اسم العنصر، الوصف، صفحة Razor.</summary>

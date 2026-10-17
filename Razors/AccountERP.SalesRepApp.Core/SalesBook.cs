@@ -180,9 +180,12 @@ namespace AccountERP.SalesRepApp.Core
             _store.Enqueue(new OutboxItem
             {
                 Doc_Guid = guid, Doc_Type = type, Payload = payload, Created_At = _now(), Status = OutboxStatus.Queued, Customer_Id = customerId, Amount = amount,
-            });
+            }, _session.DocPrefix);
             return guid;
         }
+
+        /// <summary>مستند الصادر بمعرّفه (لعرض رقمه أو طباعته بعد الحفظ).</summary>
+        public OutboxItem? Doc(Guid guid) => _store.Outbox().FirstOrDefault(o => o.Doc_Guid == guid);
 
         public static string Format(decimal small, ItemRow item)
         {

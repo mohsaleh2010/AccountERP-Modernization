@@ -139,8 +139,8 @@
         _busy = true;
         try
         {
-            State.Book.SaveSale(Input());
-            Snackbar.Add("حُفظت الفاتورة على الجهاز" + (State.Online ? "؛ جارٍ رفعها." : "؛ تُرفع عند الاتصال."), Severity.Success);
+            var saved = State.Book.Doc(State.Book.SaveSale(Input()));
+            Snackbar.Add("حُفظت الفاتورة" + (saved?.Doc_No is string no ? " " + no : "") + " على الجهاز" + (State.Online ? "؛ جارٍ رفعها." : "؛ تُرفع عند الاتصال."), Severity.Success);
             if (State.Online) _ = State.SyncNowAsync();
             else State.NotifyChanged();
             Nav.NavigateTo("/");

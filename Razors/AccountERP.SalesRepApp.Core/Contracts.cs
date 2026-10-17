@@ -27,6 +27,9 @@ namespace AccountERP.SalesRepApp.Core
         public string Refresh_Token { get; set; } = "";
         public string Access_Token { get; set; } = "";
         public int Expires_In { get; set; }
+        /// <summary>بادئة أرقام مستندات الجهاز (M001) وآخر تسلسل استلمه السيرفر لكل نوع.</summary>
+        public string Doc_Prefix { get; set; } = "";
+        public Dictionary<int, long> Doc_Seqs { get; set; } = new();
     }
 
     public class ApiError
@@ -51,6 +54,7 @@ namespace AccountERP.SalesRepApp.Core
         public int Doc_Type { get; set; }
         public JsonElement Payload { get; set; }
         public DateTime? Created_At { get; set; }
+        public long? Doc_Seq { get; set; }
     }
 
     public class PushResult

@@ -81,7 +81,7 @@ namespace AccountERP.Web.Api
             string access = protector.Protect($"{g.Device_Id}|{g.Token_Stamp}", AccessTokenLifetime);
             return Results.Json(new
             {
-                g.Device_Id, g.Rep_Id, g.Rep_Name, g.Refresh_Token, Access_Token = access, Expires_In = (int)AccessTokenLifetime.TotalSeconds,
+                g.Device_Id, g.Rep_Id, g.Rep_Name, g.Refresh_Token, Access_Token = access, Expires_In = (int)AccessTokenLifetime.TotalSeconds, g.Doc_Prefix, g.Doc_Seqs,
             }, Json);
         }
 

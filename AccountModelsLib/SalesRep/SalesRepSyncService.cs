@@ -35,6 +35,8 @@ namespace AccountModelsLib.SalesRep
             /// <summary>مدخل الخدمة بصيغة JSON (أسماء الخصائص كما فى C#).</summary>
             public string Payload { get; set; }
             public DateTime? Created_At { get; set; }
+            /// <summary>تسلسل المستند لنوعه على الجهاز (للأنواع المرقَّمة)؛ الرقم = DocNo(بادئة الجهاز، النوع، التسلسل).</summary>
+            public long? Doc_Seq { get; set; }
         }
 
         public class PushResult
@@ -92,6 +94,7 @@ namespace AccountModelsLib.SalesRep
             public long? Rep_Id { get; set; }
             public string Rep_Name { get; set; } = "";
             public Guid Doc_Guid { get; set; }
+            public string Device_Doc_No { get; set; }
             public int Doc_Type { get; set; }
             public int Status { get; set; }
             public string Error { get; set; }
@@ -127,6 +130,17 @@ namespace AccountModelsLib.SalesRep
 
         // ============================== الرفع ==============================
 
+        /// <summary>رمز النوع فى رقم مستند الجهاز (S بيع، R مرتجع، C تحصيل، O طلبية، D تسليم، Q شيك)؛ null = نوع بلا رقم.</summary>
+        public static string DocCode(int docType) => (SalesRepSyncDocType)docType switch
+        {
+            SalesRepSyncDocType.Sale => "S", SalesRepSyncDocType.Return => "R", SalesRepSyncDocType.Collection => "C",
+            SalesRepSyncDocType.TakeOrder => "O", SalesRepSyncDocType.Delivery => "D", SalesRepSyncDocType.Cheque => "Q", _ => null,
+        };
+
+        /// <summary>رقم مستند الجهاز: M001-S000012 (= DocNumbers.Format على الجهاز).</summary>
+        public static string DocNo(string prefix, int docType, long seq) =>
+            string.IsNullOrEmpty(prefix) || DocCode(docType) == null || seq <= 0 ? null : $"{prefix}-{DocCode(docType)}{seq:000000}";
+
         public List<PushResult> Push(SalesRepDeviceService.DeviceIdentity id, IEnumerable<PushDoc> docs)
         {
             var list = (docs ?? Enumerable.Empty<PushDoc>()).ToList();
@@ -152,6 +166,16 @@ namespace AccountModelsLib.SalesRep
                         Id = CallSnowflakeIdGenerate.GenerateNewId(), Device_Id = id.DeviceId, Rep_Id = id.RepId, Doc_Guid = doc.Doc_Guid, Doc_Type = doc.Doc_Type,
                         Payload = doc.Payload, Status = (int)SalesRepSyncStatus.Received, Received_At = DateTime.Now, Device_Created_At = doc.Created_At,
                     };
+                    string prefix = opp.db.SalesRep_Devices.AsNoTracking().Where(x => x.Id == id.DeviceId).Select(x => x.Doc_Prefix).FirstOrDefault();
+                    string no = doc.Doc_Seq is long seq ? DocNo(prefix, doc.Doc_Type, seq) : null;
+                    if (no != null)
+                    {
+                        row.Device_Doc_No = no;
+                        // تسلسل مكرر (جهاز أُعيد تثبيته قبل أن يعرف آخر رقم): يُقبل المستند ويبقى رقمه للبحث، ويُنبَّه المراجع.
+                        if (opp.db.SalesRep_Sync_Inboxes.Any(i => i.Device_Id == id.DeviceId && i.Doc_Type == doc.Doc_Type && i.Device_Doc_Seq == doc.Doc_Seq))
+                            row.Review_Notes = "رقم الجهاز " + no + " مكرر على هذا الجهاز.";
+                        else row.Device_Doc_Seq = doc.Doc_Seq;
+                    }
                     using (UserSessionContext.Use(SalesRepDeviceService.SessionOf(id))) row.StampInsert(id.BranchId);
                     opp.db.SalesRep_Sync_Inboxes.Add(row);
                     opp.db.SaveChanges();
@@ -407,7 +431,7 @@ WHERE u.id = {l.Unit_Item_Id}").AsEnumerable().FirstOrDefault() ?? throw new Arg
             long rep = repId ?? 0;
             var rows = opp.db.Database.SqlQuery<InboxRow>($@"
 SELECT TOP ({take}) i.Id, i.Device_Id, ISNULL(NULLIF(d.Device_Name, N''), ISNULL(d.Platform, N'')) AS Device_Name, i.Rep_Id, ISNULL(e.Name, N'') AS Rep_Name,
-       i.Doc_Guid, i.Doc_Type, i.Status, i.Error, i.Result_Ref_Id, i.Received_At, i.Processed_At, i.Device_Created_At, i.Attempts,
+       i.Doc_Guid, i.Device_Doc_No, i.Doc_Type, i.Status, i.Error, i.Result_Ref_Id, i.Received_At, i.Processed_At, i.Device_Created_At, i.Attempts,
        ISNULL(NULLIF(u.NAME, N''), ISNULL(u.USER_NAME, N'')) AS Reviewed_By, i.Reviewed_At, i.Review_Notes, i.Payload,
        CAST(0 AS bigint) AS Customer_Id, N'' AS Customer_Name, CAST(0 AS decimal(18,2)) AS Amount, 0 AS Lines_Count
 FROM SalesRep_Sync_Inbox i

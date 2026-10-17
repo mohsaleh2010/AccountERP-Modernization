@@ -65,6 +65,10 @@
                 @foreach (var r in _reps) { <MudSelectItem T="long" Value="@r.Id">@r.Name</MudSelectItem> }
             </MudSelect>
         </div>
+        <div class="rep">
+            <MudTextField @bind-Value="_q" Label="@Tr("FSUSearch")" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" DebounceInterval="250" Clearable="true"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+        </div>
         <MudIconButton Icon="@Icons.Material.Filled.Refresh" aria-label="@Tr("FSURefresh")" Disabled="@_loading" OnClick="LoadAsync" />
     </div>
 
@@ -79,7 +83,7 @@
         }
         else
         {
-            <MudTable Items="@_rows" T="SalesRepSyncService.InboxRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Md" Dense="true" Hover="true">
+            <MudTable Items="@Shown" T="SalesRepSyncService.InboxRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Md" Dense="true" Hover="true">
                 <HeaderContent>
                     <MudTh>@Tr("FSUReceived")</MudTh><MudTh>@Tr("FSRRep")</MudTh><MudTh>@Tr("FSUDocType")</MudTh><MudTh>@Tr("FSUCustomer")</MudTh>
                     <MudTh>@Tr("FSUAmount")</MudTh><MudTh>@Tr("FSYStatus")</MudTh><MudTh></MudTh>
@@ -90,13 +94,16 @@
                         @if (context.Device_Created_At != null) { <div class="sr-sub">@Tr("FSUOnDevice", context.Device_Created_At.Value.ToString("yyyy-MM-dd HH:mm"))</div> }
                     </MudTd>
                     <MudTd DataLabel="@Tr("FSRRep")"><b>@context.Rep_Name</b><div class="sr-sub">@context.Device_Name</div></MudTd>
-                    <MudTd DataLabel="@Tr("FSUDocType")">@Tr("FSUType" + context.Doc_Type)@(context.Lines_Count > 0 ? " · " + Tr("FSULines", context.Lines_Count) : "")</MudTd>
+                    <MudTd DataLabel="@Tr("FSUDocType")">
+                        <div>@Tr("FSUType" + context.Doc_Type)@(context.Lines_Count > 0 ? " · " + Tr("FSULines", context.Lines_Count) : "")</div>
+                        @if (!string.IsNullOrEmpty(context.Device_Doc_No)) { <div class="sr-sub"><bdi>@context.Device_Doc_No</bdi></div> }
+                    </MudTd>
                     <MudTd DataLabel="@Tr("FSUCustomer")">@context.Customer_Name</MudTd>
                     <MudTd DataLabel="@Tr("FSUAmount")" Class="sr-num">@(context.Amount != 0 ? context.Amount.ToString("N2") : "")</MudTd>
                     <MudTd DataLabel="@Tr("FSYStatus")">
                         <MudChip T="string" Size="Size.Small" Color="@StatusColor(context.Status)">@Tr("FSUStatus" + context.Status)</MudChip>
                         @if (!string.IsNullOrEmpty(context.Error) && context.Status != (int)SalesRepSyncStatus.Processed) { <div class="sr-err">@context.Error</div> }
-                        @if (!string.IsNullOrEmpty(context.Review_Notes)) { <div class="sr-sub">@Tr("FSUReviewedBy", context.Reviewed_By, context.Review_Notes)</div> }
+                        @if (!string.IsNullOrEmpty(context.Review_Notes)) { <div class="sr-sub">@(string.IsNullOrEmpty(context.Reviewed_By) ? context.Review_Notes : Tr("FSUReviewedBy", context.Reviewed_By, context.Review_Notes))</div> }
                         @if (context.Attempts > 1) { <div class="sr-sub">@Tr("FSUAttempts", context.Attempts)</div> }
                     </MudTd>
                     <MudTd>
@@ -148,7 +155,7 @@
     private List<SalesRepDeviceService.Option> _reps = new();
     private int _status = (int)SalesRepSyncStatus.PendingReview;
     private long _repId, _rejectId, _openId;
-    private string _rejectNotes = "";
+    private string _rejectNotes = "", _q = "";
     private bool _loading = true, _busy, _rejectTried;
     private string? _error;
 
@@ -171,6 +178,11 @@
     }
 
     private Task FilterAsync(int status) { _status = status; return LoadAsync(); }
+
+    /// <summary>بحث فورى برقم مستند الجهاز (المطبوع للعميل) أو اسم العميل أو المندوب.</summary>
+    private List<SalesRepSyncService.InboxRow> Shown => string.IsNullOrWhiteSpace(_q) ? _rows : _rows.Where(r =>
+        (r.Device_Doc_No ?? "").Contains(_q.Trim(), StringComparison.OrdinalIgnoreCase) || r.Customer_Name.Contains(_q.Trim(), StringComparison.OrdinalIgnoreCase)
+        || r.Rep_Name.Contains(_q.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
     private Task RepAsync(long rep) { _repId = rep; return LoadAsync(); }
 
     private static bool Actionable(SalesRepSyncService.InboxRow r) => r.Status is (int)SalesRepSyncStatus.PendingReview or (int)SalesRepSyncStatus.Error;

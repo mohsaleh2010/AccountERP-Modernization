@@ -60,8 +60,8 @@
         _busy = true;
         try
         {
-            State.Book.SaveCollection(Input());
-            Snackbar.Add("حُفظ التحصيل على الجهاز" + (State.Online ? "؛ جارٍ رفعه." : "؛ يُرفع عند الاتصال."), Severity.Success);
+            var saved = State.Book.Doc(State.Book.SaveCollection(Input()));
+            Snackbar.Add("حُفظ التحصيل" + (saved?.Doc_No is string no ? " " + no : "") + " على الجهاز" + (State.Online ? "؛ جارٍ رفعه." : "؛ يُرفع عند الاتصال."), Severity.Success);
             if (State.Online) _ = State.SyncNowAsync();
             else State.NotifyChanged();
             Nav.NavigateTo("/");

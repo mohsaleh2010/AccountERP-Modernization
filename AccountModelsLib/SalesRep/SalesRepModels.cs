@@ -128,6 +128,8 @@ namespace AccountModelsLib.SalesRep
         public DateTime? Activated_At { get; set; }
         public DateTime? Last_Login_At { get; set; }
         public string Blocked_Reason { get; set; }
+        /// <summary>بادئة أرقام مستندات الجهاز (M001…): تُحجز عند التفعيل ولا تتغير، فلا تتداخل أرقام جهازين.</summary>
+        public string Doc_Prefix { get; set; }
     }
 
     /// <summary>رمز تفعيل جهاز يصدره المكتب لمندوب: صالح مرة واحدة ولمدة محدودة، ويُخزَّن مُجزَّأ.</summary>
@@ -464,6 +466,9 @@ namespace AccountModelsLib.SalesRep
         public long? Reviewed_By_User_Id { get; set; }
         public DateTime? Reviewed_At { get; set; }
         public string Review_Notes { get; set; }
+        /// <summary>رقم المستند المطبوع على الجهاز (M001-S000012) وتسلسله لنوعه على هذا الجهاز.</summary>
+        public string Device_Doc_No { get; set; }
+        public long? Device_Doc_Seq { get; set; }
     }
 
     [Table("SalesRep_Attachments")]

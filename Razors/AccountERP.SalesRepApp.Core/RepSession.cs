@@ -135,6 +135,9 @@ namespace AccountERP.SalesRepApp.Core
             return (true, null);
         }
 
+        /// <summary>بادئة أرقام مستندات هذا الجهاز (M001)، أو null قبل أول تفعيل.</summary>
+        public string? DocPrefix => _store.Get(DocNumbers.PrefixKey);
+
         internal void MarkSynced() => _store.SetTime("last_sync_ok", _now());
 
         private async Task AcceptGrant(SessionGrant g)
@@ -142,6 +145,13 @@ namespace AccountERP.SalesRepApp.Core
             await _secrets.SetAsync(RefreshKey, g.Refresh_Token);   // قبل أى شىء: السيرفر أبطل السابق
             _access = g.Access_Token;
             _accessUntil = _now().AddSeconds(Math.Max(60, g.Expires_In) - 60);
+            // أرقام المستندات: البادئة من السيرفر، والتسلسل لا يرجع أبداً عمّا استلمه السيرفر (جهاز أُعيد تثبيته).
+            if (!string.IsNullOrEmpty(g.Doc_Prefix)) _store.Set(DocNumbers.PrefixKey, g.Doc_Prefix);
+            foreach (var (type, seq) in g.Doc_Seqs ?? new())
+            {
+                string key = DocNumbers.SeqKey((DocType)type);
+                if (!long.TryParse(_store.Get(key), out long local) || local < seq) _store.Set(key, seq.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
         }
 
         public static string HashPin(string pin)

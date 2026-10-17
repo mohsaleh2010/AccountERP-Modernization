@@ -93,6 +93,9 @@ namespace AccountModelsLib.SalesRep
             public string Rep_Name { get; set; } = "";
             public string Refresh_Token { get; set; } = "";
             public long Token_Stamp { get; set; }
+            /// <summary>بادئة أرقام مستندات الجهاز وآخر تسلسل استلمه السيرفر لكل نوع (الجهاز يبدأ بعده لو أُعيد تثبيته).</summary>
+            public string Doc_Prefix { get; set; } = "";
+            public Dictionary<int, long> Doc_Seqs { get; set; } = new();
         }
 
         /// <summary>هوية الجهاز الموثَّقة لطلب واحد.</summary>
@@ -383,7 +386,18 @@ ORDER BY d.Is_Blocked, e.Name, d.Last_Login_At DESC").ToList());
         {
             var rep = opp.db.SalesRep_Reps.AsNoTracking().First(r => r.Id == d.Rep_Id);
             string repName = opp.db.Database.SqlQuery<string>($"SELECT ISNULL(Name, N'') AS Value FROM Employee WHERE Id = {rep.Employee_Id}").AsEnumerable().FirstOrDefault() ?? "";
-            return new SessionGrant { Device_Id = d.Id, Rep_Id = d.Rep_Id, Rep_Name = repName, Refresh_Token = token, Token_Stamp = d.Token_Stamp };
+            if (string.IsNullOrEmpty(d.Doc_Prefix))
+            {
+                // M + رقم تسلسلى للجهاز (M001، M002…)، تحت قفل حتى لا يأخذ جهازان نفس البادئة.
+                int n = opp.db.Database.SqlQuery<int>($@"
+SELECT ISNULL(MAX(TRY_CAST(SUBSTRING(Doc_Prefix, 2, 9) AS int)), 0) + 1 AS Value FROM SalesRep_Devices WITH (UPDLOCK, HOLDLOCK)
+WHERE Doc_Prefix LIKE N'M%'").AsEnumerable().First();
+                d.Doc_Prefix = "M" + n.ToString("000");
+                opp.db.SaveChanges();
+            }
+            var seqs = opp.db.SalesRep_Sync_Inboxes.AsNoTracking().Where(i => i.Device_Id == d.Id && i.Device_Doc_Seq != null)
+                .GroupBy(i => i.Doc_Type).Select(g => new { g.Key, Max = g.Max(i => i.Device_Doc_Seq.Value) }).ToDictionary(x => x.Key, x => x.Max);
+            return new SessionGrant { Device_Id = d.Id, Rep_Id = d.Rep_Id, Rep_Name = repName, Refresh_Token = token, Token_Stamp = d.Token_Stamp, Doc_Prefix = d.Doc_Prefix, Doc_Seqs = seqs };
         }
 
         private static string NewCode()

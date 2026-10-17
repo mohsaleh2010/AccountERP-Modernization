@@ -3715,6 +3715,7 @@
   <data name="FSUType7" xml:space="preserve"><value>Pas de vente</value></data>
   <data name="FSUType8" xml:space="preserve"><value>Arrivée chez le client</value></data>
   <data name="FSUType9" xml:space="preserve"><value>Départ du client</value></data>
+  <data name="FSUSearch" xml:space="preserve"><value>Rechercher par n° appareil ou client</value></data>
   <data name="FSUStatus0" xml:space="preserve"><value>Reçu</value></data>
   <data name="FSUStatus1" xml:space="preserve"><value>Enregistré</value></data>
   <data name="FSUStatus2" xml:space="preserve"><value>Erreur</value></data>
