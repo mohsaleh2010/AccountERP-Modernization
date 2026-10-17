@@ -3479,4 +3479,134 @@
   <data name="FSWResult_4" xml:space="preserve"><value>تحصيل</value></data>
   <data name="FSWResult_5" xml:space="preserve"><value>مرتجع</value></data>
   <data name="FSWResult_6" xml:space="preserve"><value>لا بيع</value></data>
+  <data name="FSCTitle" xml:space="preserve"><value>أهداف وعمولات المندوبين</value></data>
+  <data name="FSCSub" xml:space="preserve"><value>حدد أهداف كل مندوب، وصمم خطط العمولة بشرائحها، ثم احسب الدفعات واعتمدها لتُقيَّد على حساب الموظف.</value></data>
+  <data name="FSCPerformance" xml:space="preserve"><value>أداء المندوبين</value></data>
+  <data name="FSCTargetsTab" xml:space="preserve"><value>الأهداف</value></data>
+  <data name="FSCPlansTab" xml:space="preserve"><value>خطط العمولة</value></data>
+  <data name="FSCRunsTab" xml:space="preserve"><value>دفعات العمولة</value></data>
+  <data name="FSCNewTarget" xml:space="preserve"><value>هدف جديد</value></data>
+  <data name="FSCEditTarget" xml:space="preserve"><value>تعديل الهدف</value></data>
+  <data name="FSCRep" xml:space="preserve"><value>المندوب</value></data>
+  <data name="FSCRepRequired" xml:space="preserve"><value>اختر المندوب</value></data>
+  <data name="FSCAllReps" xml:space="preserve"><value>كل المندوبين</value></data>
+  <data name="FSCScope" xml:space="preserve"><value>نوع الهدف</value></data>
+  <data name="FSCScope_0" xml:space="preserve"><value>إجمالى المبيعات</value></data>
+  <data name="FSCScope_1" xml:space="preserve"><value>صنف</value></data>
+  <data name="FSCScope_2" xml:space="preserve"><value>مجموعة أصناف</value></data>
+  <data name="FSCScope_3" xml:space="preserve"><value>عملاء جدد</value></data>
+  <data name="FSCScope_4" xml:space="preserve"><value>التحصيل</value></data>
+  <data name="FSCScopeRequired" xml:space="preserve"><value>اختر الصنف أو المجموعة</value></data>
+  <data name="FSCFrom" xml:space="preserve"><value>من</value></data>
+  <data name="FSCTo" xml:space="preserve"><value>إلى</value></data>
+  <data name="FSCMonth" xml:space="preserve"><value>الشهر</value></data>
+  <data name="FSCPeriod" xml:space="preserve"><value>الفترة</value></data>
+  <data name="FSCTarget" xml:space="preserve"><value>الهدف</value></data>
+  <data name="FSCTargetValue" xml:space="preserve"><value>قيمة الهدف</value></data>
+  <data name="FSCTargetCount" xml:space="preserve"><value>عدد العملاء المستهدف</value></data>
+  <data name="FSCValueRequired" xml:space="preserve"><value>أدخل قيمة أكبر من صفر</value></data>
+  <data name="FSCCustomers" xml:space="preserve"><value>{0} عميل</value></data>
+  <data name="FSCTargetRules" xml:space="preserve"><value>المبيعات والصنف والمجموعة تُقاس بالقيمة بدون الضريبة؛ التحصيل نقدى + شيكات؛ العميل الجديد أول فاتورة له فى النظام. لا يتكرر نفس الهدف فى فترتين متداخلتين.</value></data>
+  <data name="FSCNoTargets" xml:space="preserve"><value>لا توجد أهداف لهذا الاختيار</value></data>
+  <data name="FSCDeleteTargetOf" xml:space="preserve"><value>حذف هدف {0}</value></data>
+  <data name="FSCSave" xml:space="preserve"><value>حفظ</value></data>
+  <data name="FSCSaved" xml:space="preserve"><value>تم الحفظ</value></data>
+  <data name="FSCDeleted" xml:space="preserve"><value>تم الحذف</value></data>
+  <data name="FSCNewPlan" xml:space="preserve"><value>خطة عمولة جديدة</value></data>
+  <data name="FSCEditPlan" xml:space="preserve"><value>تعديل خطة العمولة</value></data>
+  <data name="FSCPlanName" xml:space="preserve"><value>اسم الخطة</value></data>
+  <data name="FSCNameRequired" xml:space="preserve"><value>اكتب اسم الخطة</value></data>
+  <data name="FSCExpenseAccount" xml:space="preserve"><value>حساب مصروف العمولة</value></data>
+  <data name="FSCExpenseAccountHint" xml:space="preserve"><value>الطرف المدين فى قيد الاعتماد؛ الدائن حساب الموظف</value></data>
+  <data name="FSCAccountRequired" xml:space="preserve"><value>اختر حساب المصروف</value></data>
+  <data name="FSCSpeedDays" xml:space="preserve"><value>أيام سرعة التحصيل</value></data>
+  <data name="FSCSpeedDaysHint" xml:space="preserve"><value>ما يُسدَّد من الفاتورة خلالها يأخذ المكافأة</value></data>
+  <data name="FSCSpeedRate" xml:space="preserve"><value>نسبة مكافأة سرعة التحصيل</value></data>
+  <data name="FSCDeductReturns" xml:space="preserve"><value>خصم المرتجعات من المبيعات</value></data>
+  <data name="FSCActive" xml:space="preserve"><value>نشطة</value></data>
+  <data name="FSCStopped" xml:space="preserve"><value>موقوفة</value></data>
+  <data name="FSCTiers" xml:space="preserve"><value>الشرائح</value></data>
+  <data name="FSCTierRules" xml:space="preserve"><value>نسبة الإنجاز = الفعلى ÷ الهدف. الشريحة التى يبلغها المندوب تُطبَّق على كامل الأساس. بلا هدف يُحسب صافى المبيعات والتحصيل بشريحة «من 0» فقط؛ مكافأة الهدف الإجمالى وهدف الصنف تحتاج هدفاً.</value></data>
+  <data name="FSCNoTiers" xml:space="preserve"><value>لا شرائح بعد — أضف شريحة</value></data>
+  <data name="FSCComponent" xml:space="preserve"><value>المكوّن</value></data>
+  <data name="FSCComp_0" xml:space="preserve"><value>صافى المبيعات</value></data>
+  <data name="FSCComp_1" xml:space="preserve"><value>التحصيل</value></data>
+  <data name="FSCComp_2" xml:space="preserve"><value>مكافأة الهدف الإجمالى</value></data>
+  <data name="FSCComp_3" xml:space="preserve"><value>هدف صنف / مجموعة</value></data>
+  <data name="FSCAchFrom" xml:space="preserve"><value>إنجاز من</value></data>
+  <data name="FSCAchTo" xml:space="preserve"><value>إلى (فارغ = بلا حد)</value></data>
+  <data name="FSCRate" xml:space="preserve"><value>النسبة</value></data>
+  <data name="FSCFixed" xml:space="preserve"><value>مبلغ ثابت</value></data>
+  <data name="FSCAddTier" xml:space="preserve"><value>إضافة شريحة</value></data>
+  <data name="FSCRemoveTier" xml:space="preserve"><value>حذف الشريحة</value></data>
+  <data name="FSCPlans" xml:space="preserve"><value>الخطط</value></data>
+  <data name="FSCNoPlans" xml:space="preserve"><value>لا توجد خطط عمولة بعد</value></data>
+  <data name="FSCRepsCount" xml:space="preserve"><value>المندوبون</value></data>
+  <data name="FSCDeletePlanOf" xml:space="preserve"><value>حذف الخطة {0}</value></data>
+  <data name="FSCAssign" xml:space="preserve"><value>خطة كل مندوب</value></data>
+  <data name="FSCAssignHint" xml:space="preserve"><value>الدفعة تُحسب بالخطة المسندة للمندوب وقت الحساب؛ الخطط الموقوفة لا تُسند.</value></data>
+  <data name="FSCPlan" xml:space="preserve"><value>الخطة</value></data>
+  <data name="FSCPlanOf" xml:space="preserve"><value>خطة {0}</value></data>
+  <data name="FSCNoPlan" xml:space="preserve"><value>بلا خطة</value></data>
+  <data name="FSCAssigned" xml:space="preserve"><value>تم تحديث خطة {0}</value></data>
+  <data name="FSCNoReps" xml:space="preserve"><value>لا توجد ملفات مندوبين</value></data>
+  <data name="FSCCalculate" xml:space="preserve"><value>حساب دفعة عمولة</value></data>
+  <data name="FSCCalcRules" xml:space="preserve"><value>المبيعات بتاريخ الوردية. لا تتداخل دفعتان لنفس المندوب، ولا تُحسب فترة لم تنته. راجع الأسطر ثم اعتمد: الاعتماد من مستخدم غير الحاسب ويُنشئ القيد.</value></data>
+  <data name="FSCCalculateBtn" xml:space="preserve"><value>احسب</value></data>
+  <data name="FSCCalculated" xml:space="preserve"><value>حُسبت الدفعة — راجع أسطرها</value></data>
+  <data name="FSCNoRuns" xml:space="preserve"><value>لا توجد دفعات عمولة بعد</value></data>
+  <data name="FSCTotal" xml:space="preserve"><value>الإجمالى</value></data>
+  <data name="FSCStatus" xml:space="preserve"><value>الحالة</value></data>
+  <data name="FSCStatus_0" xml:space="preserve"><value>محسوبة</value></data>
+  <data name="FSCStatus_1" xml:space="preserve"><value>معتمدة</value></data>
+  <data name="FSCStatus_2" xml:space="preserve"><value>معتمدة ومقيدة</value></data>
+  <data name="FSCEntryNo" xml:space="preserve"><value>قيد {0}</value></data>
+  <data name="FSCDetails" xml:space="preserve"><value>التفاصيل</value></data>
+  <data name="FSCApprove" xml:space="preserve"><value>اعتماد</value></data>
+  <data name="FSCConfirmApprove" xml:space="preserve"><value>تأكيد اعتماد {0} وقيده</value></data>
+  <data name="FSCApproved" xml:space="preserve"><value>اعتُمدت الدفعة</value></data>
+  <data name="FSCRecalc" xml:space="preserve"><value>إعادة الحساب</value></data>
+  <data name="FSCRecalculated" xml:space="preserve"><value>أعيد حساب الدفعة</value></data>
+  <data name="FSCDeleteRun" xml:space="preserve"><value>حذف الدفعة</value></data>
+  <data name="FSCNoLines" xml:space="preserve"><value>لا أسطر — لا مكوّنات مطبقة فى الخطة</value></data>
+  <data name="FSCBase" xml:space="preserve"><value>الأساس</value></data>
+  <data name="FSCAch" xml:space="preserve"><value>الإنجاز</value></data>
+  <data name="FSCAmount" xml:space="preserve"><value>العمولة</value></data>
+  <data name="FSCNotes" xml:space="preserve"><value>ملاحظات</value></data>
+  <data name="FSKTitle" xml:space="preserve"><value>أداء المندوبين</value></data>
+  <data name="FSKSub" xml:space="preserve"><value>المبيعات والتحصيل والالتزام بخطة الزيارات وتقدم الأهداف وأعمار ديون العملاء لكل مندوب.</value></data>
+  <data name="FSKCommissions" xml:space="preserve"><value>الأهداف والعمولات</value></data>
+  <data name="FSKShow" xml:space="preserve"><value>عرض</value></data>
+  <data name="FSKPick" xml:space="preserve"><value>اختر المندوب والفترة ثم «عرض»</value></data>
+  <data name="FSKSales" xml:space="preserve"><value>المبيعات والتحصيل</value></data>
+  <data name="FSKNetSales" xml:space="preserve"><value>صافى المبيعات</value></data>
+  <data name="FSKExTax" xml:space="preserve"><value>بدون الضريبة، بعد المرتجعات</value></data>
+  <data name="FSKGross" xml:space="preserve"><value>المبيعات</value></data>
+  <data name="FSKInvoices" xml:space="preserve"><value>{0} فاتورة</value></data>
+  <data name="FSKReturns" xml:space="preserve"><value>المرتجعات</value></data>
+  <data name="FSKOfSales" xml:space="preserve"><value>{0}% من المبيعات</value></data>
+  <data name="FSKCollection" xml:space="preserve"><value>التحصيل</value></data>
+  <data name="FSKCollectionHint" xml:space="preserve"><value>نقدى + شيكات</value></data>
+  <data name="FSKNewCustomers" xml:space="preserve"><value>عملاء جدد</value></data>
+  <data name="FSKShifts" xml:space="preserve"><value>{0} وردية</value></data>
+  <data name="FSKVisits" xml:space="preserve"><value>الزيارات</value></data>
+  <data name="FSKPlanned" xml:space="preserve"><value>زيارات مخططة</value></data>
+  <data name="FSKCompliance" xml:space="preserve"><value>الالتزام بالخطة</value></data>
+  <data name="FSKDoneOf" xml:space="preserve"><value>{0} من {1}</value></data>
+  <data name="FSKMissed" xml:space="preserve"><value>لم تُزَر</value></data>
+  <data name="FSKUnplanned" xml:space="preserve"><value>غير مخططة</value></data>
+  <data name="FSKStrike" xml:space="preserve"><value>زيارات منتجة</value></data>
+  <data name="FSKStrikeHint" xml:space="preserve"><value>{0} منتجة، {1} لا بيع</value></data>
+  <data name="FSKTargets" xml:space="preserve"><value>تقدم الأهداف</value></data>
+  <data name="FSKNoTargets" xml:space="preserve"><value>لا أهداف تتقاطع مع هذه الفترة</value></data>
+  <data name="FSKAchOf" xml:space="preserve"><value>الإنجاز {0}%</value></data>
+  <data name="FSKNoSaleReasons" xml:space="preserve"><value>أسباب عدم البيع</value></data>
+  <data name="FSKNoNoSale" xml:space="preserve"><value>لا زيارات «لا بيع» فى الفترة</value></data>
+  <data name="FSKAging" xml:space="preserve"><value>أعمار ديون العملاء</value></data>
+  <data name="FSKAgingHint" xml:space="preserve"><value>عملاء المندوب (باع لهم أو على خطوط سيره) برصيد مدين. الرصيد يُغطّى بأحدث الفواتير الآجلة أولاً، والعمر من تاريخ الاستحقاق حتى {0}.</value></data>
+  <data name="FSKNoDebt" xml:space="preserve"><value>لا ديون على عملاء المندوب</value></data>
+  <data name="FSKCustomer" xml:space="preserve"><value>العميل</value></data>
+  <data name="FSKBalance" xml:space="preserve"><value>الرصيد</value></data>
+  <data name="FSKOver90" xml:space="preserve"><value>أكثر من 90</value></data>
+  <data name="FSKTotal" xml:space="preserve"><value>الإجمالى</value></data>
 </root>

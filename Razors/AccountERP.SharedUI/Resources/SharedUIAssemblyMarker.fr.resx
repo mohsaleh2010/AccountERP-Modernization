@@ -3481,4 +3481,134 @@
   <data name="FSWResult_4" xml:space="preserve"><value>Encaissement</value></data>
   <data name="FSWResult_5" xml:space="preserve"><value>Retour</value></data>
   <data name="FSWResult_6" xml:space="preserve"><value>Sans vente</value></data>
+  <data name="FSCTitle" xml:space="preserve"><value>Objectifs et commissions des commerciaux</value></data>
+  <data name="FSCSub" xml:space="preserve"><value>Définissez les objectifs, concevez des plans de commission par paliers, puis calculez et approuvez les paiements comptabilisés au compte de l'employé.</value></data>
+  <data name="FSCPerformance" xml:space="preserve"><value>Performance des commerciaux</value></data>
+  <data name="FSCTargetsTab" xml:space="preserve"><value>Objectifs</value></data>
+  <data name="FSCPlansTab" xml:space="preserve"><value>Plans de commission</value></data>
+  <data name="FSCRunsTab" xml:space="preserve"><value>Calculs de commission</value></data>
+  <data name="FSCNewTarget" xml:space="preserve"><value>Nouvel objectif</value></data>
+  <data name="FSCEditTarget" xml:space="preserve"><value>Modifier l'objectif</value></data>
+  <data name="FSCRep" xml:space="preserve"><value>Commercial</value></data>
+  <data name="FSCRepRequired" xml:space="preserve"><value>Choisissez le commercial</value></data>
+  <data name="FSCAllReps" xml:space="preserve"><value>Tous les commerciaux</value></data>
+  <data name="FSCScope" xml:space="preserve"><value>Type d'objectif</value></data>
+  <data name="FSCScope_0" xml:space="preserve"><value>Ventes totales</value></data>
+  <data name="FSCScope_1" xml:space="preserve"><value>Article</value></data>
+  <data name="FSCScope_2" xml:space="preserve"><value>Groupe d'articles</value></data>
+  <data name="FSCScope_3" xml:space="preserve"><value>Nouveaux clients</value></data>
+  <data name="FSCScope_4" xml:space="preserve"><value>Encaissement</value></data>
+  <data name="FSCScopeRequired" xml:space="preserve"><value>Choisissez l'article ou le groupe</value></data>
+  <data name="FSCFrom" xml:space="preserve"><value>Du</value></data>
+  <data name="FSCTo" xml:space="preserve"><value>Au</value></data>
+  <data name="FSCMonth" xml:space="preserve"><value>Mois</value></data>
+  <data name="FSCPeriod" xml:space="preserve"><value>Période</value></data>
+  <data name="FSCTarget" xml:space="preserve"><value>Objectif</value></data>
+  <data name="FSCTargetValue" xml:space="preserve"><value>Valeur cible</value></data>
+  <data name="FSCTargetCount" xml:space="preserve"><value>Nombre de clients visé</value></data>
+  <data name="FSCValueRequired" xml:space="preserve"><value>Saisissez une valeur positive</value></data>
+  <data name="FSCCustomers" xml:space="preserve"><value>{0} clients</value></data>
+  <data name="FSCTargetRules" xml:space="preserve"><value>Ventes, article et groupe sont mesurés en valeur hors taxe ; l'encaissement = espèces + chèques ; un nouveau client a sa première facture dans la période. Un même objectif ne peut se chevaucher.</value></data>
+  <data name="FSCNoTargets" xml:space="preserve"><value>Aucun objectif pour cette sélection</value></data>
+  <data name="FSCDeleteTargetOf" xml:space="preserve"><value>Supprimer l'objectif de {0}</value></data>
+  <data name="FSCSave" xml:space="preserve"><value>Enregistrer</value></data>
+  <data name="FSCSaved" xml:space="preserve"><value>Enregistré</value></data>
+  <data name="FSCDeleted" xml:space="preserve"><value>Supprimé</value></data>
+  <data name="FSCNewPlan" xml:space="preserve"><value>Nouveau plan de commission</value></data>
+  <data name="FSCEditPlan" xml:space="preserve"><value>Modifier le plan</value></data>
+  <data name="FSCPlanName" xml:space="preserve"><value>Nom du plan</value></data>
+  <data name="FSCNameRequired" xml:space="preserve"><value>Saisissez le nom du plan</value></data>
+  <data name="FSCExpenseAccount" xml:space="preserve"><value>Compte de charge de commission</value></data>
+  <data name="FSCExpenseAccountHint" xml:space="preserve"><value>Débité à l'approbation ; le compte de l'employé est crédité</value></data>
+  <data name="FSCAccountRequired" xml:space="preserve"><value>Choisissez le compte de charge</value></data>
+  <data name="FSCSpeedDays" xml:space="preserve"><value>Jours d'encaissement rapide</value></data>
+  <data name="FSCSpeedDaysHint" xml:space="preserve"><value>Les montants réglant une facture dans ce délai ouvrent droit au bonus</value></data>
+  <data name="FSCSpeedRate" xml:space="preserve"><value>Taux du bonus d'encaissement rapide</value></data>
+  <data name="FSCDeductReturns" xml:space="preserve"><value>Déduire les retours des ventes</value></data>
+  <data name="FSCActive" xml:space="preserve"><value>Actif</value></data>
+  <data name="FSCStopped" xml:space="preserve"><value>Arrêté</value></data>
+  <data name="FSCTiers" xml:space="preserve"><value>Paliers</value></data>
+  <data name="FSCTierRules" xml:space="preserve"><value>Réalisation = réel ÷ objectif. Le palier atteint s'applique à toute la base. Sans objectif, ventes nettes et encaissement n'utilisent que le palier « à partir de 0 » ; le bonus d'objectif global et les objectifs d'article exigent un objectif.</value></data>
+  <data name="FSCNoTiers" xml:space="preserve"><value>Aucun palier — ajoutez-en un</value></data>
+  <data name="FSCComponent" xml:space="preserve"><value>Composante</value></data>
+  <data name="FSCComp_0" xml:space="preserve"><value>Ventes nettes</value></data>
+  <data name="FSCComp_1" xml:space="preserve"><value>Encaissement</value></data>
+  <data name="FSCComp_2" xml:space="preserve"><value>Bonus objectif global</value></data>
+  <data name="FSCComp_3" xml:space="preserve"><value>Objectif article / groupe</value></data>
+  <data name="FSCAchFrom" xml:space="preserve"><value>Réalisation de</value></data>
+  <data name="FSCAchTo" xml:space="preserve"><value>À (vide = sans limite)</value></data>
+  <data name="FSCRate" xml:space="preserve"><value>Taux</value></data>
+  <data name="FSCFixed" xml:space="preserve"><value>Montant fixe</value></data>
+  <data name="FSCAddTier" xml:space="preserve"><value>Ajouter un palier</value></data>
+  <data name="FSCRemoveTier" xml:space="preserve"><value>Supprimer le palier</value></data>
+  <data name="FSCPlans" xml:space="preserve"><value>Plans</value></data>
+  <data name="FSCNoPlans" xml:space="preserve"><value>Aucun plan de commission</value></data>
+  <data name="FSCRepsCount" xml:space="preserve"><value>Commerciaux</value></data>
+  <data name="FSCDeletePlanOf" xml:space="preserve"><value>Supprimer le plan {0}</value></data>
+  <data name="FSCAssign" xml:space="preserve"><value>Plan par commercial</value></data>
+  <data name="FSCAssignHint" xml:space="preserve"><value>Un calcul utilise le plan affecté au moment du calcul ; un plan arrêté ne peut être affecté.</value></data>
+  <data name="FSCPlan" xml:space="preserve"><value>Plan</value></data>
+  <data name="FSCPlanOf" xml:space="preserve"><value>Plan de {0}</value></data>
+  <data name="FSCNoPlan" xml:space="preserve"><value>Aucun plan</value></data>
+  <data name="FSCAssigned" xml:space="preserve"><value>Plan de {0} mis à jour</value></data>
+  <data name="FSCNoReps" xml:space="preserve"><value>Aucun profil commercial</value></data>
+  <data name="FSCCalculate" xml:space="preserve"><value>Calculer une commission</value></data>
+  <data name="FSCCalcRules" xml:space="preserve"><value>Les ventes comptent à la date de tournée. Deux calculs d'un même commercial ne peuvent se chevaucher et la période doit être terminée. Vérifiez puis approuvez : l'approbation vient d'un autre utilisateur et crée l'écriture.</value></data>
+  <data name="FSCCalculateBtn" xml:space="preserve"><value>Calculer</value></data>
+  <data name="FSCCalculated" xml:space="preserve"><value>Calcul effectué — vérifiez les lignes</value></data>
+  <data name="FSCNoRuns" xml:space="preserve"><value>Aucun calcul de commission</value></data>
+  <data name="FSCTotal" xml:space="preserve"><value>Total</value></data>
+  <data name="FSCStatus" xml:space="preserve"><value>Statut</value></data>
+  <data name="FSCStatus_0" xml:space="preserve"><value>Calculé</value></data>
+  <data name="FSCStatus_1" xml:space="preserve"><value>Approuvé</value></data>
+  <data name="FSCStatus_2" xml:space="preserve"><value>Approuvé et comptabilisé</value></data>
+  <data name="FSCEntryNo" xml:space="preserve"><value>Écriture {0}</value></data>
+  <data name="FSCDetails" xml:space="preserve"><value>Détails</value></data>
+  <data name="FSCApprove" xml:space="preserve"><value>Approuver</value></data>
+  <data name="FSCConfirmApprove" xml:space="preserve"><value>Confirmer l'approbation et la comptabilisation de {0}</value></data>
+  <data name="FSCApproved" xml:space="preserve"><value>Calcul approuvé</value></data>
+  <data name="FSCRecalc" xml:space="preserve"><value>Recalculer</value></data>
+  <data name="FSCRecalculated" xml:space="preserve"><value>Calcul refait</value></data>
+  <data name="FSCDeleteRun" xml:space="preserve"><value>Supprimer le calcul</value></data>
+  <data name="FSCNoLines" xml:space="preserve"><value>Aucune ligne — aucune composante applicable</value></data>
+  <data name="FSCBase" xml:space="preserve"><value>Base</value></data>
+  <data name="FSCAch" xml:space="preserve"><value>Réalisation</value></data>
+  <data name="FSCAmount" xml:space="preserve"><value>Commission</value></data>
+  <data name="FSCNotes" xml:space="preserve"><value>Notes</value></data>
+  <data name="FSKTitle" xml:space="preserve"><value>Performance des commerciaux</value></data>
+  <data name="FSKSub" xml:space="preserve"><value>Ventes, encaissement, respect du plan de visites, progression des objectifs et âge des créances par commercial.</value></data>
+  <data name="FSKCommissions" xml:space="preserve"><value>Objectifs et commissions</value></data>
+  <data name="FSKShow" xml:space="preserve"><value>Afficher</value></data>
+  <data name="FSKPick" xml:space="preserve"><value>Choisissez un commercial et une période, puis Afficher</value></data>
+  <data name="FSKSales" xml:space="preserve"><value>Ventes et encaissement</value></data>
+  <data name="FSKNetSales" xml:space="preserve"><value>Ventes nettes</value></data>
+  <data name="FSKExTax" xml:space="preserve"><value>Hors taxe, après retours</value></data>
+  <data name="FSKGross" xml:space="preserve"><value>Ventes</value></data>
+  <data name="FSKInvoices" xml:space="preserve"><value>{0} factures</value></data>
+  <data name="FSKReturns" xml:space="preserve"><value>Retours</value></data>
+  <data name="FSKOfSales" xml:space="preserve"><value>{0} % des ventes</value></data>
+  <data name="FSKCollection" xml:space="preserve"><value>Encaissement</value></data>
+  <data name="FSKCollectionHint" xml:space="preserve"><value>Espèces + chèques</value></data>
+  <data name="FSKNewCustomers" xml:space="preserve"><value>Nouveaux clients</value></data>
+  <data name="FSKShifts" xml:space="preserve"><value>{0} tournées</value></data>
+  <data name="FSKVisits" xml:space="preserve"><value>Visites</value></data>
+  <data name="FSKPlanned" xml:space="preserve"><value>Visites planifiées</value></data>
+  <data name="FSKCompliance" xml:space="preserve"><value>Respect du plan</value></data>
+  <data name="FSKDoneOf" xml:space="preserve"><value>{0} sur {1}</value></data>
+  <data name="FSKMissed" xml:space="preserve"><value>Manquées</value></data>
+  <data name="FSKUnplanned" xml:space="preserve"><value>Hors plan</value></data>
+  <data name="FSKStrike" xml:space="preserve"><value>Visites productives</value></data>
+  <data name="FSKStrikeHint" xml:space="preserve"><value>{0} productives, {1} sans vente</value></data>
+  <data name="FSKTargets" xml:space="preserve"><value>Progression des objectifs</value></data>
+  <data name="FSKNoTargets" xml:space="preserve"><value>Aucun objectif sur cette période</value></data>
+  <data name="FSKAchOf" xml:space="preserve"><value>Réalisation {0} %</value></data>
+  <data name="FSKNoSaleReasons" xml:space="preserve"><value>Motifs de non-vente</value></data>
+  <data name="FSKNoNoSale" xml:space="preserve"><value>Aucune visite sans vente</value></data>
+  <data name="FSKAging" xml:space="preserve"><value>Âge des créances clients</value></data>
+  <data name="FSKAgingHint" xml:space="preserve"><value>Clients du commercial (servis ou sur ses tournées) avec solde débiteur. Le solde est affecté aux factures à crédit les plus récentes ; l'âge court de l'échéance au {0}.</value></data>
+  <data name="FSKNoDebt" xml:space="preserve"><value>Aucune créance sur ses clients</value></data>
+  <data name="FSKCustomer" xml:space="preserve"><value>Client</value></data>
+  <data name="FSKBalance" xml:space="preserve"><value>Solde</value></data>
+  <data name="FSKOver90" xml:space="preserve"><value>Plus de 90</value></data>
+  <data name="FSKTotal" xml:space="preserve"><value>Total</value></data>
 </root>

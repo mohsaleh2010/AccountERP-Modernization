@@ -1,0 +1,563 @@
+@* 🟢 خطة المندوبين — المرحلة 6 (ب): «أهداف وعمولات المندوبين».
+   الأهداف (إجمالى / صنف / مجموعة أصناف / عملاء جدد / تحصيل)، خطط العمولة بشرائحها وحساب مصروفها وإسنادها للمندوبين،
+   ودفعات العمولة: حساب ← مراجعة الأسطر ← اعتماد (من مستخدم غير الحاسب) يُنشئ قيد مدين المصروف / دائن حساب الموظف.
+   التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/commissions"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("FSCTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .cm-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .cm-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .cm-head .ico .mud-icon-root { font-size: 2rem; }
+    .cm-head .titles { flex: 1 1 260px; }
+    .cm-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .cm-gap { margin-top: 16px; }
+    .cm-sec { font-weight: 700; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; }
+    .cm-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px 16px; align-items: start; }
+    .cm-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+    .cm-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); line-height: 1.5; }
+    .cm-num { font-variant-numeric: tabular-nums; }
+    .cm-confirm { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .cm-tiers { width: 100%; border-collapse: collapse; }
+    .cm-tiers th { text-align: start; font-size: .8125rem; font-weight: 600; color: var(--mud-palette-text-secondary); padding: 4px 6px; }
+    .cm-tiers td { padding: 2px 6px; vertical-align: top; }
+    .cm-filter { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 8px; }
+    .cm-filter > * { flex: 1 1 200px; }
+    .cm-lines { padding: 8px 12px 12px; border-radius: 12px; background: color-mix(in srgb, var(--mud-palette-primary) 5%, transparent); }
+    @@media (max-width: 600px) { .cm-tiers th:nth-child(5), .cm-tiers td:nth-child(5) { display: none; } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card cm-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.EmojiEvents" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSCTitle")</h1>
+            <div class="sub">@Tr("FSCSub")</div>
+        </div>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Insights" Href="/salesrep/performance">@Tr("FSCPerformance")</MudButton>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="cm-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pt-2" Class="cm-gap">
+        @* ===================== الأهداف ===================== *@
+        <MudTabPanel Text="@Tr("FSCTargetsTab")" Icon="@Icons.Material.Filled.TrackChanges" BadgeData="@(_targets.Count > 0 ? _targets.Count : null)">
+            <div class="inv-card">
+                <h2 class="cm-sec">
+                    <MudIcon Icon="@(_t.Id == 0 ? Icons.Material.Filled.Add : Icons.Material.Filled.Edit)" Color="Color.Primary" Size="Size.Small" />
+                    @Tr(_t.Id == 0 ? "FSCNewTarget" : "FSCEditTarget")
+                </h2>
+                <div class="cm-form">
+                    <MudSelect T="long?" Value="@(_t.Rep_Id == 0 ? null : _t.Rep_Id)" ValueChanged="@((long? v) => _t.Rep_Id = v ?? 0)" Label="@Tr("FSCRep")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true"
+                               Error="@(_tTried && _t.Rep_Id == 0)" ErrorText="@Tr("FSCRepRequired")">
+                        @foreach (var r in _reps) { <MudSelectItem T="long?" Value="@((long?)r.Id)">@r.Name</MudSelectItem> }
+                    </MudSelect>
+                    <MudSelect T="int" Value="_t.Scope" ValueChanged="@(s => { _t.Scope = s; _tScope = null; })" Label="@Tr("FSCScope")" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        @foreach (var s in new[] { 0, 1, 2, 3, 4 }) { <MudSelectItem T="int" Value="@s">@Tr("FSCScope_" + s)</MudSelectItem> }
+                    </MudSelect>
+                    @if (_t.Scope is 1 or 2)
+                    {
+                        <MudAutocomplete T="SalesRepCommissionService.Option" @bind-Value="_tScope" SearchFunc="@((s, ct) => SearchScopeAsync(_t.Scope, s, ct))"
+                                         ToStringFunc="@(o => o?.Name ?? "")" Label="@Tr("FSCScope_" + _t.Scope)" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true"
+                                         Error="@(_tTried && _tScope is null)" ErrorText="@Tr("FSCScopeRequired")" MaxItems="50" ResetValueOnEmptyText="true" />
+                    }
+                    <MudDatePicker T="DateTime?" Date="_t.Period_From" DateChanged="@((DateTime? d) => _t.Period_From = d ?? _t.Period_From)" Label="@Tr("FSCFrom")" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    <MudDatePicker T="DateTime?" Date="_t.Period_To" DateChanged="@((DateTime? d) => _t.Period_To = d ?? _t.Period_To)" Label="@Tr("FSCTo")" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    @if (_t.Scope == 3)
+                    {
+                        <MudNumericField T="decimal?" @bind-Value="_t.Target_Qty" Label="@Tr("FSCTargetCount")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="1" Format="0" HideSpinButtons="true"
+                                         Error="@(_tTried && (_t.Target_Qty ?? 0) <= 0)" ErrorText="@Tr("FSCValueRequired")" />
+                    }
+                    else
+                    {
+                        <MudNumericField T="decimal?" @bind-Value="_t.Target_Value" Label="@Tr("FSCTargetValue")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Format="N2" HideSpinButtons="true"
+                                         Error="@(_tTried && (_t.Target_Value ?? 0) <= 0)" ErrorText="@Tr("FSCValueRequired")" />
+                    }
+                </div>
+                <div class="cm-hint cm-gap">@Tr("FSCTargetRules")</div>
+                <div class="cm-acts">
+                    @if (_t.Id != 0) { <MudButton Variant="Variant.Text" OnClick="NewTarget" Disabled="@_busy">@Tr("FSZCancel")</MudButton> }
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@_busy" OnClick="SaveTargetAsync">
+                        @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                        @Tr("FSCSave")
+                    </MudButton>
+                </div>
+            </div>
+
+            <div class="inv-card cm-gap" aria-live="polite">
+                <div class="cm-filter">
+                    <MudSelect T="long" Value="_fRep" ValueChanged="@(async (long v) => { _fRep = v; await LoadTargetsAsync(); })" Label="@Tr("FSCRep")" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        <MudSelectItem T="long" Value="0L">@Tr("FSCAllReps")</MudSelectItem>
+                        @foreach (var r in _reps) { <MudSelectItem T="long" Value="@r.Id">@r.Name</MudSelectItem> }
+                    </MudSelect>
+                    <MudDatePicker T="DateTime?" Date="_fMonth" DateChanged="@(async (DateTime? d) => { _fMonth = d; await LoadTargetsAsync(); })" OpenTo="OpenTo.Month" FixDay="1" DateFormat="yyyy-MM"
+                                   Label="@Tr("FSCMonth")" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" />
+                </div>
+                @if (_loading) { <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("FSRLoading")" /> }
+                else if (_targets.Count == 0) { <div class="inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" /><div>@Tr("FSCNoTargets")</div></div> }
+                else
+                {
+                    <MudTable Items="@_targets" T="SalesRepCommissionService.TargetRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true" Hover="true">
+                        <HeaderContent>
+                            <MudTh>@Tr("FSCRep")</MudTh><MudTh>@Tr("FSCPeriod")</MudTh><MudTh>@Tr("FSCScope")</MudTh><MudTh Style="text-align:end">@Tr("FSCTarget")</MudTh><MudTh></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="@Tr("FSCRep")"><b>@context.Rep_Name</b></MudTd>
+                            <MudTd DataLabel="@Tr("FSCPeriod")" Class="cm-num">@context.Period_From.ToString("yyyy-MM-dd") → @context.Period_To.ToString("yyyy-MM-dd")</MudTd>
+                            <MudTd DataLabel="@Tr("FSCScope")">
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">@Tr("FSCScope_" + context.Scope)</MudChip>
+                                @if (!string.IsNullOrEmpty(context.Scope_Name)) { <span>@context.Scope_Name</span> }
+                            </MudTd>
+                            <MudTd DataLabel="@Tr("FSCTarget")" Class="cm-num" Style="text-align:end">@(context.Scope == 3 ? Tr("FSCCustomers", (context.Target_Qty ?? 0).ToString("0")) : (context.Target_Value ?? 0).ToString("N2"))</MudTd>
+                            <MudTd>
+                                @if (_delTarget == context.Id)
+                                {
+                                    <div class="cm-confirm">
+                                        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" Disabled="@_busy" OnClick="@(() => DeleteTargetAsync(context))">@Tr("FSPConfirmDelete")</MudButton>
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@(() => _delTarget = 0)">@Tr("FSZCancel")</MudButton>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => EditTarget(context))" aria-label="@Tr("FSZEditOf", context.Rep_Name)">@Tr("FSZEditShort")</MudButton>
+                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.DeleteOutline" Color="Color.Error" OnClick="@(() => _delTarget = context.Id)" aria-label="@Tr("FSCDeleteTargetOf", context.Rep_Name)" />
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </div>
+        </MudTabPanel>
+
+        @* ===================== خطط العمولة ===================== *@
+        <MudTabPanel Text="@Tr("FSCPlansTab")" Icon="@Icons.Material.Filled.Rule" BadgeData="@(_plans.Count > 0 ? _plans.Count : null)">
+            <div class="inv-card">
+                <h2 class="cm-sec">
+                    <MudIcon Icon="@(_p.Id == 0 ? Icons.Material.Filled.Add : Icons.Material.Filled.Edit)" Color="Color.Primary" Size="Size.Small" />
+                    @Tr(_p.Id == 0 ? "FSCNewPlan" : "FSCEditPlan")
+                </h2>
+                <div class="cm-form">
+                    <MudTextField T="string" @bind-Value="_p.Name" Label="@Tr("FSCPlanName")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" MaxLength="200"
+                                  Error="@(_pTried && string.IsNullOrWhiteSpace(_p.Name))" ErrorText="@Tr("FSCNameRequired")" />
+                    <MudAutocomplete T="SalesRepCommissionService.Option" @bind-Value="_pAccount" SearchFunc="SearchAccountsAsync" ToStringFunc="@(o => o?.Name ?? "")"
+                                     Label="@Tr("FSCExpenseAccount")" HelperText="@Tr("FSCExpenseAccountHint")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true"
+                                     Error="@(_pTried && _pAccount is null)" ErrorText="@Tr("FSCAccountRequired")" MaxItems="50" ResetValueOnEmptyText="true" />
+                    <MudNumericField T="int?" @bind-Value="_p.Collection_Speed_Days" Label="@Tr("FSCSpeedDays")" HelperText="@Tr("FSCSpeedDaysHint")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                     Min="0" Max="3650" HideSpinButtons="true" Clearable="true" />
+                    <MudNumericField T="decimal?" @bind-Value="_p.Collection_Speed_Bonus_Rate" Label="@Tr("FSCSpeedRate")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                     Min="0" Max="100" Format="0.##" Adornment="Adornment.End" AdornmentText="%" HideSpinButtons="true" Clearable="true" />
+                    <MudSwitch T="bool" @bind-Value="_p.Deduct_Returns" Color="Color.Primary" Label="@Tr("FSCDeductReturns")" />
+                    <MudSwitch T="bool" @bind-Value="_p.Active" Color="Color.Success" Label="@Tr("FSCActive")" />
+                </div>
+
+                <h3 class="cm-sec cm-gap"><MudIcon Icon="@Icons.Material.Filled.Stairs" Color="Color.Primary" Size="Size.Small" />@Tr("FSCTiers")</h3>
+                <div class="cm-hint" style="margin-bottom:8px">@Tr("FSCTierRules")</div>
+                @if (_p.Tiers.Count == 0) { <div class="cm-hint" role="status">@Tr("FSCNoTiers")</div> }
+                else
+                {
+                    <div style="overflow-x:auto">
+                        <table class="cm-tiers">
+                            <thead><tr><th>@Tr("FSCComponent")</th><th>@Tr("FSCAchFrom")</th><th>@Tr("FSCAchTo")</th><th>@Tr("FSCRate")</th><th>@Tr("FSCFixed")</th><th></th></tr></thead>
+                            <tbody>
+                                @foreach (var tier in _p.Tiers)
+                                {
+                                    var row = tier;
+                                    <tr>
+                                        <td style="min-width:170px">
+                                            <MudSelect T="int" @bind-Value="row.Component" Variant="Variant.Outlined" Margin="Margin.Dense" aria-label="@Tr("FSCComponent")">
+                                                @foreach (var c in new[] { 0, 1, 2, 3 }) { <MudSelectItem T="int" Value="@c">@Tr("FSCComp_" + c)</MudSelectItem> }
+                                            </MudSelect>
+                                        </td>
+                                        <td><MudNumericField T="decimal" @bind-Value="row.Achievement_From" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Format="0.##" Adornment="Adornment.End" AdornmentText="%" HideSpinButtons="true" aria-label="@Tr("FSCAchFrom")" /></td>
+                                        <td><MudNumericField T="decimal?" @bind-Value="row.Achievement_To" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Format="0.##" Adornment="Adornment.End" AdornmentText="%" HideSpinButtons="true" Placeholder="∞" aria-label="@Tr("FSCAchTo")" /></td>
+                                        <td><MudNumericField T="decimal?" @bind-Value="row.Rate" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Max="100" Format="0.####" Adornment="Adornment.End" AdornmentText="%" HideSpinButtons="true" aria-label="@Tr("FSCRate")" /></td>
+                                        <td><MudNumericField T="decimal?" @bind-Value="row.Fixed_Amount" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Format="N2" HideSpinButtons="true" aria-label="@Tr("FSCFixed")" /></td>
+                                        <td><MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Color="Color.Error" OnClick="@(() => _p.Tiers.Remove(row))" aria-label="@Tr("FSCRemoveTier")" /></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Add" Class="mt-2" OnClick="AddTier">@Tr("FSCAddTier")</MudButton>
+
+                <div class="cm-acts">
+                    @if (_p.Id != 0) { <MudButton Variant="Variant.Text" OnClick="NewPlan" Disabled="@_busy">@Tr("FSZCancel")</MudButton> }
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@_busy" OnClick="SavePlanAsync">
+                        @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                        @Tr("FSCSave")
+                    </MudButton>
+                </div>
+            </div>
+
+            <div class="inv-card cm-gap" aria-live="polite">
+                <h2 class="cm-sec"><MudIcon Icon="@Icons.Material.Filled.List" Color="Color.Primary" Size="Size.Small" />@Tr("FSCPlans")</h2>
+                @if (_plans.Count == 0) { <div class="inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" /><div>@Tr("FSCNoPlans")</div></div> }
+                else
+                {
+                    <MudTable Items="@_plans" T="SalesRepCommissionService.PlanRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true" Hover="true">
+                        <HeaderContent>
+                            <MudTh>@Tr("FSCPlanName")</MudTh><MudTh>@Tr("FSCExpenseAccount")</MudTh><MudTh>@Tr("FSCTiers")</MudTh><MudTh>@Tr("FSCRepsCount")</MudTh><MudTh></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="@Tr("FSCPlanName")">
+                                <b>@context.Name</b>
+                                @if (!context.Active) { <MudChip T="string" Size="Size.Small" Color="Color.Default">@Tr("FSCStopped")</MudChip> }
+                            </MudTd>
+                            <MudTd DataLabel="@Tr("FSCExpenseAccount")">@context.Expense_Account_Name</MudTd>
+                            <MudTd DataLabel="@Tr("FSCTiers")">
+                                @foreach (var g in context.Tiers.GroupBy(x => x.Component))
+                                {
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">@Tr("FSCComp_" + g.Key) × @g.Count()</MudChip>
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="@Tr("FSCRepsCount")" Class="cm-num">@context.Reps_Count</MudTd>
+                            <MudTd>
+                                @if (_delPlan == context.Id)
+                                {
+                                    <div class="cm-confirm">
+                                        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" Disabled="@_busy" OnClick="@(() => DeletePlanAsync(context))">@Tr("FSPConfirmDelete")</MudButton>
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@(() => _delPlan = 0)">@Tr("FSZCancel")</MudButton>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => EditPlan(context))" aria-label="@Tr("FSZEditOf", context.Name)">@Tr("FSZEditShort")</MudButton>
+                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.DeleteOutline" Color="Color.Error" OnClick="@(() => _delPlan = context.Id)" aria-label="@Tr("FSCDeletePlanOf", context.Name)" />
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </div>
+
+            <div class="inv-card cm-gap" aria-live="polite">
+                <h2 class="cm-sec"><MudIcon Icon="@Icons.Material.Filled.AssignmentInd" Color="Color.Primary" Size="Size.Small" />@Tr("FSCAssign")</h2>
+                <div class="cm-hint" style="margin-bottom:8px">@Tr("FSCAssignHint")</div>
+                @if (_repPlans.Count == 0) { <div class="inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" /><div>@Tr("FSCNoReps")</div></div> }
+                else
+                {
+                    <MudTable Items="@_repPlans" T="SalesRepCommissionService.RepPlanRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true" Hover="true">
+                        <HeaderContent><MudTh>@Tr("FSCRep")</MudTh><MudTh>@Tr("FSCPlan")</MudTh></HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="@Tr("FSCRep")">
+                                <b>@context.Rep_Name</b>
+                                @if (!context.Active) { <MudChip T="string" Size="Size.Small" Color="Color.Default">@Tr("FSCStopped")</MudChip> }
+                            </MudTd>
+                            <MudTd DataLabel="@Tr("FSCPlan")" Style="min-width:220px">
+                                <MudSelect T="long" Value="@(context.Plan_Id ?? 0)" ValueChanged="@((long v) => SetPlanAsync(context, v))" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                           Disabled="@_busy" aria-label="@Tr("FSCPlanOf", context.Rep_Name)">
+                                    <MudSelectItem T="long" Value="0L">@Tr("FSCNoPlan")</MudSelectItem>
+                                    @foreach (var p in _plans.Where(x => x.Active || x.Id == context.Plan_Id)) { <MudSelectItem T="long" Value="@p.Id">@p.Name</MudSelectItem> }
+                                </MudSelect>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </div>
+        </MudTabPanel>
+
+        @* ===================== الدفعات ===================== *@
+        <MudTabPanel Text="@Tr("FSCRunsTab")" Icon="@Icons.Material.Filled.Payments" BadgeData="@(_runs.Count(r => r.Status == 0) is int n && n > 0 ? n : null)" BadgeColor="Color.Warning">
+            <div class="inv-card">
+                <h2 class="cm-sec"><MudIcon Icon="@Icons.Material.Filled.Calculate" Color="Color.Primary" Size="Size.Small" />@Tr("FSCCalculate")</h2>
+                <div class="cm-form">
+                    <MudSelect T="long?" Value="@(_cRep == 0 ? null : _cRep)" ValueChanged="@((long? v) => _cRep = v ?? 0)" Label="@Tr("FSCRep")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true"
+                               Error="@(_cTried && _cRep == 0)" ErrorText="@Tr("FSCRepRequired")">
+                        @foreach (var r in _repPlans.Where(x => x.Plan_Id != null)) { <MudSelectItem T="long?" Value="@((long?)r.Rep_Id)">@r.Rep_Name — @r.Plan_Name</MudSelectItem> }
+                    </MudSelect>
+                    <MudDatePicker T="DateTime?" Date="_cFrom" DateChanged="@((DateTime? d) => _cFrom = d ?? _cFrom)" Label="@Tr("FSCFrom")" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    <MudDatePicker T="DateTime?" Date="_cTo" DateChanged="@((DateTime? d) => _cTo = d ?? _cTo)" Label="@Tr("FSCTo")" Variant="Variant.Outlined" Margin="Margin.Dense" MaxDate="DateTime.Today" />
+                </div>
+                <div class="cm-hint cm-gap">@Tr("FSCCalcRules")</div>
+                <div class="cm-acts">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Calculate" Disabled="@_busy" OnClick="CalculateAsync">
+                        @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                        @Tr("FSCCalculateBtn")
+                    </MudButton>
+                </div>
+            </div>
+
+            <div class="inv-card cm-gap" aria-live="polite">
+                @if (_runs.Count == 0) { <div class="inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" /><div>@Tr("FSCNoRuns")</div></div> }
+                else
+                {
+                    <MudTable Items="@_runs" T="SalesRepCommissionService.RunRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true" Hover="true">
+                        <HeaderContent>
+                            <MudTh>@Tr("FSCRep")</MudTh><MudTh>@Tr("FSCPeriod")</MudTh><MudTh>@Tr("FSCPlan")</MudTh><MudTh Style="text-align:end">@Tr("FSCTotal")</MudTh><MudTh>@Tr("FSCStatus")</MudTh><MudTh></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="@Tr("FSCRep")"><b>@context.Rep_Name</b></MudTd>
+                            <MudTd DataLabel="@Tr("FSCPeriod")" Class="cm-num">@context.Period_From.ToString("yyyy-MM-dd") → @context.Period_To.ToString("yyyy-MM-dd")</MudTd>
+                            <MudTd DataLabel="@Tr("FSCPlan")">@context.Plan_Name</MudTd>
+                            <MudTd DataLabel="@Tr("FSCTotal")" Class="cm-num" Style="text-align:end"><b>@context.Total_Amount.ToString("N2")</b></MudTd>
+                            <MudTd DataLabel="@Tr("FSCStatus")">
+                                <MudChip T="string" Size="Size.Small" Color="@StatusColor(context.Status)" Icon="@StatusIcon(context.Status)">@Tr("FSCStatus_" + context.Status)</MudChip>
+                                @if (context.Entry_No is long en) { <span class="cm-hint cm-num">@Tr("FSCEntryNo", en)</span> }
+                            </MudTd>
+                            <MudTd>
+                                <div class="cm-confirm">
+                                    <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@(_openRun == context.Id ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                               OnClick="@(() => ToggleLinesAsync(context))" aria-expanded="@(_openRun == context.Id ? "true" : "false")">@Tr("FSCDetails")</MudButton>
+                                    @if (context.Status == 0)
+                                    {
+                                        @if (_confirm == (context.Id, 1))
+                                        {
+                                            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" Disabled="@_busy" OnClick="@(() => ApproveAsync(context))">@Tr("FSCConfirmApprove", context.Total_Amount.ToString("N2"))</MudButton>
+                                            <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@(() => _confirm = (0, 0))">@Tr("FSZCancel")</MudButton>
+                                        }
+                                        else if (_confirm == (context.Id, 2))
+                                        {
+                                            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" Disabled="@_busy" OnClick="@(() => DeleteRunAsync(context))">@Tr("FSPConfirmDelete")</MudButton>
+                                            <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@(() => _confirm = (0, 0))">@Tr("FSZCancel")</MudButton>
+                                        }
+                                        else
+                                        {
+                                            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.TaskAlt" Disabled="@_busy" OnClick="@(() => _confirm = (context.Id, 1))">@Tr("FSCApprove")</MudButton>
+                                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Refresh" Disabled="@_busy" OnClick="@(() => RecalcAsync(context))" aria-label="@Tr("FSCRecalc")" title="@Tr("FSCRecalc")" />
+                                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.DeleteOutline" Color="Color.Error" OnClick="@(() => _confirm = (context.Id, 2))" aria-label="@Tr("FSCDeleteRun")" title="@Tr("FSCDeleteRun")" />
+                                        }
+                                    }
+                                </div>
+                            </MudTd>
+                        </RowTemplate>
+                        <ChildRowContent>
+                            @if (_openRun == context.Id)
+                            {
+                                <td colspan="6">
+                                    <div class="cm-lines">
+                                        @if (_lines.Count == 0) { <div class="cm-hint">@Tr("FSCNoLines")</div> }
+                                        else
+                                        {
+                                            <MudSimpleTable Dense="true" Elevation="0" Style="background:transparent">
+                                                <thead><tr><th>@Tr("FSCComponent")</th><th style="text-align:end">@Tr("FSCBase")</th><th style="text-align:end">@Tr("FSCTarget")</th><th style="text-align:end">@Tr("FSCAch")</th><th style="text-align:end">@Tr("FSCRate")</th><th style="text-align:end">@Tr("FSCAmount")</th><th>@Tr("FSCNotes")</th></tr></thead>
+                                                <tbody>
+                                                    @foreach (var l in _lines)
+                                                    {
+                                                        <tr>
+                                                            <td>@Tr("FSCComp_" + l.Component)</td>
+                                                            <td class="cm-num" style="text-align:end">@l.Base_Amount.ToString("N2")</td>
+                                                            <td class="cm-num" style="text-align:end">@(l.Target_Value?.ToString("N2") ?? "—")</td>
+                                                            <td class="cm-num" style="text-align:end">@(l.Achievement_Rate is decimal a ? a.ToString("0.#") + "%" : "—")</td>
+                                                            <td class="cm-num" style="text-align:end">@(l.Rate is decimal r ? r.ToString("0.####") + "%" : "—")</td>
+                                                            <td class="cm-num" style="text-align:end"><b>@l.Amount.ToString("N2")</b></td>
+                                                            <td class="cm-hint">@l.Notes</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </MudSimpleTable>
+                                        }
+                                    </div>
+                                </td>
+                            }
+                        </ChildRowContent>
+                    </MudTable>
+                }
+            </div>
+        </MudTabPanel>
+    </MudTabs>
+</div>
+</MudContainer>
+
+@code {
+    private readonly SalesRepCommissionService _svc = new();
+    private List<SalesRepCommissionService.Option> _reps = new();
+    private List<SalesRepCommissionService.TargetRow> _targets = new();
+    private List<SalesRepCommissionService.PlanRow> _plans = new();
+    private List<SalesRepCommissionService.RepPlanRow> _repPlans = new();
+    private List<SalesRepCommissionService.RunRow> _runs = new();
+    private List<SalesRepCommissionService.RunLineRow> _lines = new();
+    private SalesRepCommissionService.TargetRow _t = new();
+    private SalesRepCommissionService.PlanRow _p = NewPlanRow();
+    private SalesRepCommissionService.Option? _tScope, _pAccount;
+    private long _fRep, _delTarget, _delPlan, _cRep, _openRun;
+    private DateTime? _fMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+    private DateTime? _cFrom = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(-1);
+    private DateTime? _cTo = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddDays(-1);
+    private (long Id, int Action) _confirm;
+    private bool _loading = true, _busy, _tTried, _pTried, _cTried;
+    private string? _error;
+
+    private static SalesRepCommissionService.PlanRow NewPlanRow() => new()
+    {
+        Tiers = new() { new() { Component = 0, Achievement_From = 0, Rate = 1 } },
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadAllAsync();
+    }
+
+    private async Task LoadAllAsync()
+    {
+        _loading = true;
+        try
+        {
+            (_reps, _plans, _repPlans, _runs) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return (_svc.GetReps(), _svc.GetPlans(), _svc.GetRepPlans(), _svc.GetRuns(null));
+            });
+            await LoadTargetsAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private async Task LoadTargetsAsync()
+    {
+        try
+        {
+            DateTime? from = _fMonth, to = _fMonth?.AddMonths(1).AddDays(-1);
+            long? rep = _fRep == 0 ? null : _fRep;
+            _targets = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetTargets(rep, from, to); });
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private async Task RunAsync(Action action, string? ok, Func<Task>? after = null)
+    {
+        _busy = true; _error = null;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); action(); });
+            if (ok != null) Snackbar.Add(ok, Severity.Success);
+            if (after != null) await after();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    // ---------- الأهداف ----------
+    private Task<IEnumerable<SalesRepCommissionService.Option>> SearchScopeAsync(int scope, string search, CancellationToken ct) =>
+        Task.Run<IEnumerable<SalesRepCommissionService.Option>>(() => { AccountCultureGuard.EnsureInvariant(); return scope == 1 ? _svc.SearchItems(search) : _svc.SearchItemGroups(search); }, ct);
+
+    private void NewTarget() { _t = new() { Rep_Id = _t.Rep_Id, Scope = _t.Scope }; _tScope = null; _tTried = false; }
+
+    private void EditTarget(SalesRepCommissionService.TargetRow r)
+    {
+        _t = new() { Id = r.Id, Rep_Id = r.Rep_Id, Period_From = r.Period_From, Period_To = r.Period_To, Scope = r.Scope, Scope_Id = r.Scope_Id, Target_Qty = r.Target_Qty, Target_Value = r.Target_Value };
+        _tScope = r.Scope_Id is long id ? new() { Id = id, Name = r.Scope_Name } : null;
+        _tTried = false;
+    }
+
+    private async Task SaveTargetAsync()
+    {
+        _tTried = true;
+        if (_t.Rep_Id == 0 || (_t.Scope is 1 or 2 && _tScope is null)) return;
+        _t.Scope_Id = _tScope?.Id;
+        var input = _t;
+        await RunAsync(() => _svc.SaveTarget(input), Tr("FSCSaved"), async () => { NewTarget(); await LoadTargetsAsync(); });
+    }
+
+    private Task DeleteTargetAsync(SalesRepCommissionService.TargetRow r) =>
+        RunAsync(() => _svc.DeleteTarget(r.Id), Tr("FSCDeleted"), async () => { if (_t.Id == r.Id) NewTarget(); _delTarget = 0; await LoadTargetsAsync(); });
+
+    // ---------- الخطط ----------
+    private Task<IEnumerable<SalesRepCommissionService.Option>> SearchAccountsAsync(string search, CancellationToken ct) =>
+        Task.Run<IEnumerable<SalesRepCommissionService.Option>>(() => { AccountCultureGuard.EnsureInvariant(); return _svc.SearchAccounts(search); }, ct);
+
+    private void NewPlan() { _p = NewPlanRow(); _pAccount = null; _pTried = false; }
+
+    private void AddTier()
+    {
+        var last = _p.Tiers.LastOrDefault();
+        _p.Tiers.Add(new() { Component = last?.Component ?? 0, Achievement_From = last?.Achievement_To ?? 0 });
+    }
+
+    private void EditPlan(SalesRepCommissionService.PlanRow r)
+    {
+        _p = new()
+        {
+            Id = r.Id, Name = r.Name, Deduct_Returns = r.Deduct_Returns, Collection_Speed_Days = r.Collection_Speed_Days, Collection_Speed_Bonus_Rate = r.Collection_Speed_Bonus_Rate,
+            Expense_Account_Id = r.Expense_Account_Id, Active = r.Active,
+            Tiers = r.Tiers.Select(t => new SalesRepCommissionService.TierRow { Component = t.Component, Achievement_From = t.Achievement_From, Achievement_To = t.Achievement_To, Rate = t.Rate, Fixed_Amount = t.Fixed_Amount }).ToList(),
+        };
+        _pAccount = r.Expense_Account_Id is long a ? new() { Id = a, Name = r.Expense_Account_Name } : null;
+        _pTried = false;
+    }
+
+    private async Task SavePlanAsync()
+    {
+        _pTried = true;
+        if (string.IsNullOrWhiteSpace(_p.Name) || _pAccount is null) return;
+        _p.Expense_Account_Id = _pAccount.Id;
+        var input = _p;
+        await RunAsync(() => _svc.SavePlan(input), Tr("FSCSaved"), async () => { NewPlan(); await LoadAllAsync(); });
+    }
+
+    private Task DeletePlanAsync(SalesRepCommissionService.PlanRow r) =>
+        RunAsync(() => _svc.DeletePlan(r.Id), Tr("FSCDeleted"), async () => { if (_p.Id == r.Id) NewPlan(); _delPlan = 0; await LoadAllAsync(); });
+
+    private Task SetPlanAsync(SalesRepCommissionService.RepPlanRow r, long planId) =>
+        RunAsync(() => _svc.SetRepPlan(r.Rep_Id, planId == 0 ? null : planId), Tr("FSCAssigned", r.Rep_Name), LoadAllAsync);
+
+    // ---------- الدفعات ----------
+    private async Task CalculateAsync()
+    {
+        _cTried = true;
+        if (_cRep == 0 || _cFrom is null || _cTo is null) return;
+        long rep = _cRep; DateTime from = _cFrom.Value, to = _cTo.Value;
+        long runId = 0;
+        await RunAsync(() => runId = _svc.Calculate(rep, from, to), Tr("FSCCalculated"), async () =>
+        {
+            await LoadAllAsync();
+            _openRun = runId;
+            _lines = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetRunLines(runId); });
+        });
+    }
+
+    private async Task ToggleLinesAsync(SalesRepCommissionService.RunRow r)
+    {
+        if (_openRun == r.Id) { _openRun = 0; return; }
+        try
+        {
+            _lines = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetRunLines(r.Id); });
+            _openRun = r.Id;
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private Task RecalcAsync(SalesRepCommissionService.RunRow r) =>
+        RunAsync(() => _svc.RecalculateRun(r.Id), Tr("FSCRecalculated"), async () =>
+        {
+            await LoadAllAsync();
+            if (_openRun == r.Id) _lines = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetRunLines(r.Id); });
+        });
+
+    private Task ApproveAsync(SalesRepCommissionService.RunRow r) =>
+        RunAsync(() => _svc.ApproveRun(r.Id), Tr("FSCApproved"), async () => { _confirm = (0, 0); await LoadAllAsync(); });
+
+    private Task DeleteRunAsync(SalesRepCommissionService.RunRow r) =>
+        RunAsync(() => _svc.DeleteRun(r.Id), Tr("FSCDeleted"), async () => { _confirm = (0, 0); if (_openRun == r.Id) _openRun = 0; await LoadAllAsync(); });
+
+    private static Color StatusColor(int s) => s switch { 0 => Color.Warning, 1 => Color.Info, _ => Color.Success };
+    private static string StatusIcon(int s) => s switch { 0 => Icons.Material.Filled.HourglassTop, 1 => Icons.Material.Filled.Check, _ => Icons.Material.Filled.TaskAlt };
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

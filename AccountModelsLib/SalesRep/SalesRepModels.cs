@@ -427,6 +427,8 @@ namespace AccountModelsLib.SalesRep
         public bool Deduct_Returns { get; set; } = true;
         public int? Collection_Speed_Days { get; set; }
         public decimal? Collection_Speed_Bonus_Rate { get; set; }
+        /// <summary>حساب مصروف العمولة (المدين فى قيد اعتماد الدفعة؛ الدائن حساب الموظف).</summary>
+        public long? Expense_Account_Id { get; set; }
         public bool Active { get; set; } = true;
     }
 

@@ -402,6 +402,8 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
             ("SalesRep_Reps", "Max_Cheque_Due_Days", "[int] NULL"),
             ("SalesRep_Document_Links", "Handed_Over_At", "[datetime] NULL"),
             ("SalesRep_Document_Links", "Handed_Over_User_Id", "[bigint] NULL"),
+            // المرحلة 6 (ب): حساب مصروف العمولة فى الخطة (قرار المستخدم 2026-10-17).
+            ("SalesRep_Commission_Plans", "Expense_Account_Id", "[bigint] NULL"),
         };
 
         /// <summary>أسباب الإرجاع الافتراضية (§6.6-6) تُضاف فقط لو جدول الأسباب فارغ؛ تُعدَّل وتُضاف من القاعدة. لا يمس أى صف قائم.</summary>
@@ -471,6 +473,8 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
             ("menuSalesRepPolicies", "سياسات ائتمان وخصم المندوبين", "/salesrep/policies"),
             ("menuSalesRepRoutes", "خطوط سير المندوبين", "/salesrep/routes"),
             ("menuSalesRepNoSaleReasons", "أسباب عدم البيع", "/salesrep/nosale-reasons"),
+            ("menuSalesRepCommissions", "أهداف وعمولات المندوبين", "/salesrep/commissions"),
+            ("menuSalesRepPerformance", "أداء المندوبين", "/salesrep/performance"),
         };
 
         /// <summary>

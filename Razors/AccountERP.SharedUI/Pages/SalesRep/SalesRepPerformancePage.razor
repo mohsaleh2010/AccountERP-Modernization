@@ -1,0 +1,219 @@
+@* 🟢 خطة المندوبين — المرحلة 6 (ب): «أداء المندوبين».
+   لمندوب وفترة: المبيعات والمرتجعات والتحصيل، الالتزام بخطة الزيارات (المخطط / المنفّذ / الفائت / غير المخطط)، أسباب عدم البيع،
+   تقدم كل هدف على فترته، وأعمار ديون عملائه (FIFO من أحدث الفواتير الآجلة). قراءة فقط. التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/performance"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Tr("FSKTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .pf-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .pf-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .pf-head .ico .mud-icon-root { font-size: 2rem; }
+    .pf-head .titles { flex: 1 1 260px; }
+    .pf-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .pf-gap { margin-top: 16px; }
+    .pf-sec { font-weight: 700; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; }
+    .pf-filter { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px 16px; align-items: center; }
+    .pf-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+    .pf-kpi { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); }
+    .pf-kpi .k { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .pf-kpi .v { font-weight: 700; font-size: 1.25rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .pf-kpi .h { font-size: .75rem; color: var(--mud-palette-text-secondary); margin-top: 2px; }
+    .pf-num { font-variant-numeric: tabular-nums; }
+    .pf-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); line-height: 1.5; }
+    .pf-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+    .pf-target { padding: 10px 0; border-bottom: 1px solid var(--mud-palette-lines-default); }
+    .pf-target:last-child { border-bottom: none; }
+    .pf-target .row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin-bottom: 6px; }
+    .pf-reason { display: grid; grid-template-columns: minmax(120px, 1fr) 2fr auto; gap: 8px; align-items: center; padding: 4px 0; }
+    .pf-over { color: var(--mud-palette-error); font-weight: 700; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card pf-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Insights" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSKTitle")</h1>
+            <div class="sub">@Tr("FSKSub")</div>
+        </div>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.EmojiEvents" Href="/salesrep/commissions">@Tr("FSKCommissions")</MudButton>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="pf-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    <div class="inv-card pf-gap">
+        <div class="pf-filter">
+            <MudSelect T="long?" Value="@(_rep == 0 ? null : _rep)" ValueChanged="@((long? v) => _rep = v ?? 0)" Label="@Tr("FSCRep")" Variant="Variant.Outlined" Margin="Margin.Dense">
+                @foreach (var r in _reps) { <MudSelectItem T="long?" Value="@((long?)r.Id)">@r.Name</MudSelectItem> }
+            </MudSelect>
+            <MudDatePicker T="DateTime?" Date="_from" DateChanged="@((DateTime? d) => _from = d ?? _from)" Label="@Tr("FSCFrom")" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudDatePicker T="DateTime?" Date="_to" DateChanged="@((DateTime? d) => _to = d ?? _to)" Label="@Tr("FSCTo")" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" Disabled="@(_busy || _rep == 0)" OnClick="LoadAsync">
+                @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                @Tr("FSKShow")
+            </MudButton>
+        </div>
+    </div>
+
+    <div aria-live="polite">
+    @if (_busy && _perf is null) { <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="pf-gap" aria-label="@Tr("FSRLoading")" /> }
+    else if (_perf is null)
+    {
+        <div class="inv-card pf-gap"><div class="inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Large" /><div>@Tr(_reps.Count == 0 ? "FSCNoReps" : "FSKPick")</div></div></div>
+    }
+    else
+    {
+        var m = _perf.Measures;
+        <div class="inv-card pf-gap">
+            <h2 class="pf-sec"><MudIcon Icon="@Icons.Material.Filled.PointOfSale" Color="Color.Primary" Size="Size.Small" />@Tr("FSKSales")</h2>
+            <div class="pf-kpis">
+                <div class="pf-kpi"><div class="k">@Tr("FSKNetSales")</div><div class="v">@m.Net_Sales.ToString("N2")</div><div class="h">@Tr("FSKExTax")</div></div>
+                <div class="pf-kpi"><div class="k">@Tr("FSKGross")</div><div class="v">@m.Gross_Sales.ToString("N2")</div><div class="h">@Tr("FSKInvoices", m.Invoices)</div></div>
+                <div class="pf-kpi"><div class="k">@Tr("FSKReturns")</div><div class="v">@m.Returns.ToString("N2")</div><div class="h">@(m.Gross_Sales > 0 ? Tr("FSKOfSales", (m.Returns / m.Gross_Sales * 100).ToString("0.#")) : "—")</div></div>
+                <div class="pf-kpi"><div class="k">@Tr("FSKCollection")</div><div class="v">@m.Collection.ToString("N2")</div><div class="h">@Tr("FSKCollectionHint")</div></div>
+                <div class="pf-kpi"><div class="k">@Tr("FSKNewCustomers")</div><div class="v">@m.New_Customers</div><div class="h">@Tr("FSKShifts", _perf.Shifts)</div></div>
+            </div>
+        </div>
+
+        <div class="inv-card pf-gap">
+            <h2 class="pf-sec"><MudIcon Icon="@Icons.Material.Filled.Route" Color="Color.Primary" Size="Size.Small" />@Tr("FSKVisits")</h2>
+            <div class="pf-kpis">
+                <div class="pf-kpi"><div class="k">@Tr("FSKPlanned")</div><div class="v">@_perf.Planned_Visits</div></div>
+                <div class="pf-kpi"><div class="k">@Tr("FSKCompliance")</div><div class="v">@Pct(_perf.Planned_Done, _perf.Planned_Visits)</div><div class="h">@Tr("FSKDoneOf", _perf.Planned_Done, _perf.Planned_Visits)</div></div>
+                <div class="pf-kpi"><div class="k">@Tr("FSKMissed")</div><div class="v @(_perf.Missed > 0 ? "pf-over" : "")">@_perf.Missed</div></div>
+                <div class="pf-kpi"><div class="k">@Tr("FSKUnplanned")</div><div class="v">@_perf.Unplanned</div></div>
+                <div class="pf-kpi"><div class="k">@Tr("FSKStrike")</div><div class="v">@Pct(_perf.Productive, _perf.Productive + _perf.No_Sale)</div><div class="h">@Tr("FSKStrikeHint", _perf.Productive, _perf.No_Sale)</div></div>
+            </div>
+        </div>
+
+        <div class="pf-cols pf-gap">
+            <div class="inv-card">
+                <h2 class="pf-sec"><MudIcon Icon="@Icons.Material.Filled.TrackChanges" Color="Color.Primary" Size="Size.Small" />@Tr("FSKTargets")</h2>
+                @if (_perf.Targets.Count == 0) { <div class="pf-hint" role="status">@Tr("FSKNoTargets")</div> }
+                @foreach (var t in _perf.Targets)
+                {
+                    decimal ach = t.Achievement ?? 0;
+                    <div class="pf-target">
+                        <div class="row">
+                            <span><b>@Tr("FSCScope_" + t.Scope)</b>@(string.IsNullOrEmpty(t.Scope_Name) ? "" : " — " + t.Scope_Name)</span>
+                            <span class="pf-hint pf-num">@t.Period_From.ToString("yyyy-MM-dd") → @t.Period_To.ToString("yyyy-MM-dd")</span>
+                        </div>
+                        <MudProgressLinear Value="@((double)Math.Min(ach, 100))" Color="@(ach >= 100 ? Color.Success : ach >= 70 ? Color.Primary : Color.Warning)" Rounded="true" Size="Size.Medium"
+                                           aria-label="@Tr("FSKAchOf", ach.ToString("0.#"))" />
+                        <div class="row pf-gap" style="margin-top:4px">
+                            <span class="pf-num">@Fmt(t.Scope, t.Actual) / @Fmt(t.Scope, t.Target)</span>
+                            <b class="pf-num">@(t.Achievement is decimal a ? a.ToString("0.#") + "%" : "—")</b>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="inv-card">
+                <h2 class="pf-sec"><MudIcon Icon="@Icons.Material.Filled.DoNotDisturbOn" Color="Color.Primary" Size="Size.Small" />@Tr("FSKNoSaleReasons")</h2>
+                @if (_perf.No_Sale_Reasons.Count == 0) { <div class="pf-hint" role="status">@Tr("FSKNoNoSale")</div> }
+                @{ int maxR = _perf.No_Sale_Reasons.Count > 0 ? _perf.No_Sale_Reasons.Max(r => r.Count) : 1; }
+                @foreach (var r in _perf.No_Sale_Reasons)
+                {
+                    <div class="pf-reason">
+                        <span>@(string.IsNullOrEmpty(r.Name) ? "—" : r.Name)</span>
+                        <MudProgressLinear Value="@(r.Count * 100.0 / maxR)" Color="Color.Warning" Rounded="true" aria-hidden="true" />
+                        <b class="pf-num">@r.Count</b>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="inv-card pf-gap">
+            <h2 class="pf-sec"><MudIcon Icon="@Icons.Material.Filled.HourglassBottom" Color="Color.Primary" Size="Size.Small" />@Tr("FSKAging")</h2>
+            <div class="pf-hint" style="margin-bottom:8px">@Tr("FSKAgingHint", (_to ?? DateTime.Today).ToString("yyyy-MM-dd"))</div>
+            @if (_perf.Aging.Count == 0) { <div class="inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline" Size="Size.Large" /><div>@Tr("FSKNoDebt")</div></div> }
+            else
+            {
+                <MudTable Items="@_perf.Aging" T="SalesRepCommissionService.AgingRow" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true" Hover="true">
+                    <HeaderContent>
+                        <MudTh>@Tr("FSKCustomer")</MudTh>
+                        <MudTh Style="text-align:end">@Tr("FSKBalance")</MudTh>
+                        <MudTh Style="text-align:end">0–30</MudTh><MudTh Style="text-align:end">31–60</MudTh><MudTh Style="text-align:end">61–90</MudTh><MudTh Style="text-align:end">@Tr("FSKOver90")</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="@Tr("FSKCustomer")"><b>@context.Customer_Name</b></MudTd>
+                        <MudTd DataLabel="@Tr("FSKBalance")" Class="pf-num" Style="text-align:end"><b>@context.Balance.ToString("N2")</b></MudTd>
+                        <MudTd DataLabel="0–30" Class="pf-num" Style="text-align:end">@Cell(context.B0_30)</MudTd>
+                        <MudTd DataLabel="31–60" Class="pf-num" Style="text-align:end">@Cell(context.B31_60)</MudTd>
+                        <MudTd DataLabel="61–90" Class="pf-num" Style="text-align:end">@Cell(context.B61_90)</MudTd>
+                        <MudTd DataLabel="@Tr("FSKOver90")" Class="@("pf-num" + (context.B90 > 0 ? " pf-over" : ""))" Style="text-align:end">@Cell(context.B90)</MudTd>
+                    </RowTemplate>
+                    <FooterContent>
+                        <MudTd><b>@Tr("FSKTotal")</b></MudTd>
+                        <MudTd Class="pf-num" Style="text-align:end"><b>@_perf.Aging.Sum(a => a.Balance).ToString("N2")</b></MudTd>
+                        <MudTd Class="pf-num" Style="text-align:end">@_perf.Aging.Sum(a => a.B0_30).ToString("N2")</MudTd>
+                        <MudTd Class="pf-num" Style="text-align:end">@_perf.Aging.Sum(a => a.B31_60).ToString("N2")</MudTd>
+                        <MudTd Class="pf-num" Style="text-align:end">@_perf.Aging.Sum(a => a.B61_90).ToString("N2")</MudTd>
+                        <MudTd Class="pf-num" Style="text-align:end">@_perf.Aging.Sum(a => a.B90).ToString("N2")</MudTd>
+                    </FooterContent>
+                </MudTable>
+            }
+        </div>
+    }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private readonly SalesRepCommissionService _svc = new();
+    private List<SalesRepCommissionService.Option> _reps = new();
+    private SalesRepCommissionService.Performance? _perf;
+    private long _rep;
+    private DateTime? _from = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1), _to = DateTime.Today;
+    private bool _busy;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            _reps = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetReps(); });
+            if (_reps.Count == 1) { _rep = _reps[0].Id; await LoadAsync(); }
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private async Task LoadAsync()
+    {
+        if (_rep == 0 || _from is null || _to is null) return;
+        _busy = true; _error = null;
+        long rep = _rep; DateTime from = _from.Value, to = _to.Value;
+        try { _perf = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetPerformance(rep, from, to); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private static string Pct(int part, int whole) => whole > 0 ? (part * 100.0 / whole).ToString("0") + "%" : "—";
+    private string Fmt(int scope, decimal v) => scope == 3 ? v.ToString("0") : v.ToString("N2");
+    private static string Cell(decimal v) => v > 0 ? v.ToString("N2") : "—";
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}
