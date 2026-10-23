@@ -282,6 +282,9 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("menuItemItemsList", "/items/new"), ("menuItemItemsListSpecGlass", "/items/p/glass/new"),
             // خطة 05 بند 19: أنواع السيارات وموديلاتها تحت قائمة السيارات
             ("lookupCarTypeToolStripMenuItem", "/cars/types"), ("lookupCarTypeModelToolStripMenuItem", "/cars/models"),
+            // خطة 05 بند 23: لقطات الأرصدة بالتاريخ والوقت (بدل balanceSelect_Date/balanceWithDate) وأرصدة الصلاحية (بدل ItemBalanceWithExpireFrm)
+            ("menuItemItemsListSavedBalance", "/store/balances/snapshots"), ("ToolStripMenuItem_Save_ItemBalanceNow", "/store/balances/snapshots"),
+            ("menuItemItemBalanceWithExpire", "/store/balances/expiry"),
             // خطة 04 م5: الأسعار (طباعة الأسعار menuItemItemPrices لم تُبنَ بعد)
             ("menuPrice_Type_List", "/items/prices/lists"), ("menuPriceCategory", "/items/prices/lists"), ("menuItemSearchItemPrices_List_Values", "/items/prices/lists"),
             ("menuItemEditPrices", "/items/prices/bulk"), ("MenuCustomer_PriceCLS", "/items/prices/customers"),

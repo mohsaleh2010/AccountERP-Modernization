@@ -3894,4 +3894,42 @@
   <data name="ShipmentLegacyFound" xml:space="preserve"><value>{0} shipment companies in the old table have no account: {1}</value></data>
   <data name="ShipmentLegacyImport" xml:space="preserve"><value>Import with accounts</value></data>
   <data name="ShipmentLegacyImported" xml:space="preserve"><value>{0} shipment companies imported</value></data>
+  <data name="SSTitle" xml:space="preserve"><value>Stock balance snapshots</value></data>
+  <data name="SSSub" xml:space="preserve"><value>Save all item balances now with their date and time, then compare any snapshot with the current balance or another snapshot</value></data>
+  <data name="SSSubCompare" xml:space="preserve"><value>Snapshot {0} compared with {1}</value></data>
+  <data name="SSCurrent" xml:space="preserve"><value>Current balance</value></data>
+  <data name="SSSaveNow" xml:space="preserve"><value>Save snapshot now</value></data>
+  <data name="SSSaveConfirm" xml:space="preserve"><value>Balances of all items in all stores will be saved with the current date and time. Earlier snapshots are not changed. Continue?</value></data>
+  <data name="SSSaved_Done" xml:space="preserve"><value>Snapshot {0} saved</value></data>
+  <data name="SSSaved" xml:space="preserve"><value>Saved snapshots</value></data>
+  <data name="SSNone" xml:space="preserve"><value>No snapshots saved yet</value></data>
+  <data name="SSNoneHint" xml:space="preserve"><value>Press “Save snapshot now” to save the first one, for example before a stock count or at month end</value></data>
+  <data name="SSLinesMeta" xml:space="preserve"><value>{0} lines with stock — value {1}</value></data>
+  <data name="SSBy" xml:space="preserve"><value>By {0}</value></data>
+  <data name="SSCompareTitle" xml:space="preserve"><value>Comparison</value></data>
+  <data name="SSCompareWith" xml:space="preserve"><value>Compare with</value></data>
+  <data name="SSOnlyDiff" xml:space="preserve"><value>Differences only</value></data>
+  <data name="SSDiffLines" xml:space="preserve"><value>Lines with a difference</value></data>
+  <data name="SSInSnapshot" xml:space="preserve"><value>In snapshot {0}</value></data>
+  <data name="SSDiff" xml:space="preserve"><value>Difference</value></data>
+  <data name="SSNoDiff" xml:space="preserve"><value>No differences</value></data>
+  <data name="EXTitle" xml:space="preserve"><value>Item balances by expiry date</value></data>
+  <data name="EXSub" xml:space="preserve"><value>Batches ordered by nearest expiry — “near” = within {0} days</value></data>
+  <data name="EXStatus_1" xml:space="preserve"><value>Expired</value></data>
+  <data name="EXStatus_2" xml:space="preserve"><value>Expiring soon</value></data>
+  <data name="EXStatus_3" xml:space="preserve"><value>Valid</value></data>
+  <data name="EXStatus_4" xml:space="preserve"><value>No date</value></data>
+  <data name="EXStatusFilter" xml:space="preserve"><value>Filter by status</value></data>
+  <data name="EXNearDays" xml:space="preserve"><value>Near-expiry limit (days)</value></data>
+  <data name="EXNearDaysHint" xml:space="preserve"><value>A batch is near if it expires within these days</value></data>
+  <data name="EXSearch" xml:space="preserve"><value>Search by item, code or batch</value></data>
+  <data name="EXIncludeZero" xml:space="preserve"><value>Show batches without stock</value></data>
+  <data name="EXResults" xml:space="preserve"><value>Batches</value></data>
+  <data name="EXBatch" xml:space="preserve"><value>Batch</value></data>
+  <data name="EXExpireDate" xml:space="preserve"><value>Expiry date</value></data>
+  <data name="EXState" xml:space="preserve"><value>Status</value></data>
+  <data name="EXEmpty" xml:space="preserve"><value>No matching batches</value></data>
+  <data name="EXExpiredAgo" xml:space="preserve"><value>Expired {0} days ago</value></data>
+  <data name="EXExpiresToday" xml:space="preserve"><value>Expires today</value></data>
+  <data name="EXDaysLeft" xml:space="preserve"><value>{0} days left</value></data>
 </root>

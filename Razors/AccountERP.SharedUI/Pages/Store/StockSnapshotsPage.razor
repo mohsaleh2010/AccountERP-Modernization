@@ -1,0 +1,315 @@
+@* 🟢 خطة 05 بند 23: لقطات أرصدة الأصناف بالتاريخ والوقت (بدل balanceSelect_Date «حفظ أرصدة الأصناف بالتاريخ والوقت الحالى» وbalanceWithDate).
+   حفظ لقطة الآن (لا تُحذف ولا تُستبدل لقطة سابقة)، قائمة اللقطات، ومقارنة لقطة بالرصيد الحالى أو بلقطة أخرى مع الفروق.
+   الاستعلامات فى StockSnapshotService بمعاملات. التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@page "/store/balances/snapshots"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.StockSnapshotService
+@inject LanguageService LangService
+@inject IJSRuntime JS
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("SSTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .ss-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .ss-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .ss-head .ico .mud-icon-root { font-size: 2rem; }
+    .ss-head .titles { flex: 1 1 260px; min-width: 0; }
+    .ss-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .ss-head .mud-button-root { min-height: 44px; }
+    .ss-gap { margin-top: 16px; }
+    .ss-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+    .ss-snap { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; min-height: 44px; border-radius: 12px; text-align: start;
+               border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); color: var(--mud-palette-text-primary);
+               font: inherit; cursor: pointer; transition: background .15s, border-color .15s; }
+    .ss-snap:hover { border-color: var(--mud-palette-primary); }
+    .ss-snap:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .ss-snap[aria-pressed="true"] { background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent); border-color: var(--mud-palette-primary); }
+    .ss-snap .when { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .ss-snap .meta { font-size: .8125rem; color: var(--mud-palette-text-secondary); font-variant-numeric: tabular-nums; }
+    .ss-filters { display: grid; grid-template-columns: minmax(200px, 1.2fr) minmax(180px, 1fr) minmax(180px, 1fr) minmax(220px, 1.4fr); gap: 12px; align-items: start; }
+    .ss-row2 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 8px; }
+    .ss-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .ss-tile { padding: 14px 18px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); }
+    .ss-tile .k { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .ss-tile .v { margin-top: 4px; font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .ss-tile.warn .v { color: var(--mud-palette-warning-darken); }
+    .ss-name { font-weight: 600; }
+    .ss-code { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .ss-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .ss-up { color: var(--mud-palette-success-darken); font-weight: 700; }
+    .ss-down { color: var(--mud-palette-error); font-weight: 700; }
+    .ss-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-top: 12px; }
+    .ss-pager .info { font-size: .875rem; color: var(--mud-palette-text-secondary); font-variant-numeric: tabular-nums; }
+    .ss-pager .btns { display: flex; gap: 8px; }
+    .ss-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .ss-empty .mud-icon-root { opacity: .5; }
+    @@media (max-width: 1199px) { .ss-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 599px) { .ss-filters, .ss-tiles { grid-template-columns: minmax(0, 1fr); } }
+    @@media print {
+        body * { visibility: hidden; }
+        .ss-print, .ss-print * { visibility: visible; }
+        .ss-print { position: absolute; inset-inline-start: 0; top: 0; width: 100%; }
+        .ss-noprint { display: none !important; }
+    }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page ss-print">
+
+    <div class="inv-card ss-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.History" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("SSTitle")</h1>
+            <div class="sub">@(_sel is DateTime d ? Tr("SSSubCompare", When(d), _compareTo == 0 ? Tr("SSCurrent") : When(new DateTime(_compareTo))) : Tr("SSSub"))</div>
+        </div>
+        <MudButton Class="ss-noprint" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Print" Disabled="@(_sel is null || _loading)" OnClick="PrintAsync">@Tr("PrintButton")</MudButton>
+        <MudButton Class="ss-noprint" Variant="Variant.Filled" Color="Color.Primary" Disabled="_saving" OnClick="SaveAsync"
+                   StartIcon="@(_saving ? null : Icons.Material.Filled.AddAPhoto)">
+            @if (_saving) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+            @Tr("SSSaveNow")
+        </MudButton>
+    </div>
+
+    <div class="inv-card ss-gap ss-noprint">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.PhotoLibrary" />@Tr("SSSaved")<span class="inv-count">@_snaps.Count</span></h2>
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3" role="alert">@_error</MudAlert>
+        }
+        @if (_snapsLoading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+        else if (_snaps.Count == 0)
+        {
+            <div class="ss-empty">
+                <MudIcon Icon="@Icons.Material.Filled.PhotoCamera" Size="Size.Large" />
+                <b>@Tr("SSNone")</b>
+                <span>@Tr("SSNoneHint")</span>
+            </div>
+        }
+        else
+        {
+            <div class="ss-list" role="group" aria-label="@Tr("SSSaved")">
+                @foreach (var s in _snaps)
+                {
+                    <button type="button" class="ss-snap" aria-pressed="@(_sel == s.Balance_Date ? "true" : "false")" @onclick="@(() => SelectAsync(s.Balance_Date))">
+                        <span class="when">@When(s.Balance_Date)</span>
+                        <span class="meta">@Tr("SSLinesMeta", s.Non_Zero_Lines, Money(s.Total_Value))</span>
+                        @if (!string.IsNullOrWhiteSpace(s.User_Name)) { <span class="meta">@Tr("SSBy", s.User_Name)</span> }
+                    </button>
+                }
+            </div>
+        }
+    </div>
+
+    @if (_sel is DateTime)
+    {
+        <div class="inv-card ss-gap ss-noprint" role="search">
+            <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.CompareArrows" />@Tr("SSCompareTitle")</h2>
+            <div class="ss-filters">
+                <MudSelect T="long" Value="_compareTo" ValueChanged="OnCompareToAsync" Label="@Tr("SSCompareWith")" Variant="Variant.Outlined"
+                           ToStringFunc="@(v => v == 0 ? Tr("SSCurrent") : When(new DateTime(v)))">
+                    <MudSelectItem T="long" Value="0L">@Tr("SSCurrent")</MudSelectItem>
+                    @foreach (var s in _snaps.Where(s => s.Balance_Date != _sel))
+                    {
+                        <MudSelectItem T="long" Value="@s.Balance_Date.Ticks">@When(s.Balance_Date)</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudSelect T="long" Value="_storeId" ValueChanged="OnStoreAsync" Label="@Tr("SOParty_4")" Variant="Variant.Outlined"
+                           ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _stores.FirstOrDefault(s => s.Id == v)?.Name ?? "")">
+                    <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                    @foreach (var s in _stores) { <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem> }
+                </MudSelect>
+                <MudSelect T="long" Value="_categoryId" ValueChanged="OnCategoryAsync" Label="@Tr("SBCategory")" Variant="Variant.Outlined"
+                           ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _categories.FirstOrDefault(c => c.Id == v)?.Name ?? "")">
+                    <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                    @foreach (var c in _categories) { <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem> }
+                </MudSelect>
+                <MudTextField T="string" Value="_text" ValueChanged="OnTextAsync" Label="@Tr("SOItemSearch")" Variant="Variant.Outlined"
+                              Immediate="true" DebounceInterval="400" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+            </div>
+            <div class="ss-row2">
+                <MudSwitch T="bool" Value="_onlyDiff" ValueChanged="OnOnlyDiffAsync" Color="Color.Primary" Label="@Tr("SSOnlyDiff")" />
+            </div>
+        </div>
+
+        <div class="ss-tiles ss-gap">
+            <div class="ss-tile"><div class="k">@Tr("SBLines")</div><div class="v">@_total</div></div>
+            <div class="ss-tile @(_diffRows > 0 ? "warn" : "")"><div class="k">@Tr("SSDiffLines")</div><div class="v">@_diffRows</div></div>
+        </div>
+
+        <div class="inv-card ss-gap">
+            <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("SSCompareTitle")<span class="inv-count">@_total</span></h2>
+            <MudTable Items="@_rows" T="CompareRow" Hover="true" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Loading="_loading" LoadingProgressColor="Color.Primary">
+                <HeaderContent>
+                    <MudTh>@Tr("SOParty_4")</MudTh>
+                    <MudTh>@Tr("SOItem")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("SSInSnapshot", When(_sel.Value))</MudTh>
+                    <MudTh Style="text-align:end">@(_compareTo == 0 ? Tr("SSCurrent") : When(new DateTime(_compareTo)))</MudTh>
+                    <MudTh Style="text-align:end">@Tr("SSDiff")</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("SOParty_4")">@context.Store_Name</MudTd>
+                    <MudTd DataLabel="@Tr("SOItem")"><div class="ss-name">@context.Item_Name</div><div class="ss-code">@CodeText(context.Code)</div></MudTd>
+                    <MudTd DataLabel="@Tr("SSInSnapshot", When(_sel.Value))" Style="text-align:end"><span class="ss-num">@SmallToText(context.Snapshot_Small, context.Factor, context.B_Unit, context.S_Unit)</span></MudTd>
+                    <MudTd DataLabel="@(_compareTo == 0 ? Tr("SSCurrent") : When(new DateTime(_compareTo)))" Style="text-align:end"><span class="ss-num">@SmallToText(context.Other_Small, context.Factor, context.B_Unit, context.S_Unit)</span></MudTd>
+                    <MudTd DataLabel="@Tr("SSDiff")" Style="text-align:end">
+                        @if (context.Diff_Small == 0) { <span class="ss-num">—</span> }
+                        else
+                        {
+                            <span class="ss-num @(context.Diff_Small > 0 ? "ss-up" : "ss-down")">
+                                @(context.Diff_Small > 0 ? "+" : "")@SmallToText(context.Diff_Small, context.Factor, context.B_Unit, context.S_Unit)
+                            </span>
+                        }
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <div class="ss-empty">
+                        <MudIcon Icon="@Icons.Material.Filled.Inventory" Size="Size.Large" />
+                        <b>@(_onlyDiff ? Tr("SSNoDiff") : Tr("SBEmpty"))</b>
+                    </div>
+                </NoRecordsContent>
+            </MudTable>
+            @if (_total > 0)
+            {
+                <div class="ss-pager ss-noprint">
+                    <span class="info" aria-live="polite">@Tr("SOPageInfo", _skip + 1, Math.Min(_skip + PageSize, _total), _total)</span>
+                    <div class="btns">
+                        <MudButton Variant="Variant.Outlined" StartIcon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)"
+                                   Disabled="@(_skip == 0 || _loading)" OnClick="@(() => PageAsync(-1))">@Tr("SOPrev")</MudButton>
+                        <MudButton Variant="Variant.Outlined" EndIcon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)"
+                                   Disabled="@(_skip + PageSize >= _total || _loading)" OnClick="@(() => PageAsync(1))">@Tr("SONext")</MudButton>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+</MudContainer>
+
+@code {
+    private const int PageSize = 50;
+
+    private readonly StockSnapshotService _svc = new();
+    private readonly StoreBalancesService _balances = new();
+    private List<SnapshotRow> _snaps = new();
+    private List<Option> _stores = new();
+    private List<StoreBalancesService.Option> _categories = new();
+    private List<CompareRow> _rows = new();
+    private DateTime? _sel;
+    private long _compareTo, _storeId, _categoryId;
+    private string? _text, _error;
+    private bool _onlyDiff, _loading, _snapsLoading = true, _saving;
+    private int _skip, _total, _diffRows;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            (_stores, _categories) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_svc.GetStores(), _balances.GetCategories()); });
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        await LoadSnapshotsAsync();
+        if (_snaps.Count > 0) await SelectAsync(_snaps[0].Balance_Date);
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task LoadSnapshotsAsync()
+    {
+        _snapsLoading = true;
+        try { _snaps = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetSnapshots(); }); }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); _snaps = new(); }
+        finally { _snapsLoading = false; }
+    }
+
+    private async Task SaveAsync()
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("SSSaveNow"), Tr("SSSaveConfirm"), yesText: Tr("SSSaveNow"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _saving = true; _error = null;
+        try
+        {
+            var at = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.SaveSnapshot(); });
+            Snackbar.Add(Tr("SSSaved_Done", When(at)), Severity.Success);
+            await LoadSnapshotsAsync();
+            await SelectAsync(at);
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _saving = false; }
+    }
+
+    private async Task SelectAsync(DateTime d)
+    {
+        _sel = d; _skip = 0;
+        if (_compareTo != 0 && new DateTime(_compareTo) == d) _compareTo = 0;
+        await LoadAsync();
+    }
+    private async Task OnCompareToAsync(long v) { _compareTo = v; _skip = 0; await LoadAsync(); }
+    private async Task OnStoreAsync(long id) { _storeId = id; _skip = 0; await LoadAsync(); }
+    private async Task OnCategoryAsync(long id) { _categoryId = id; _skip = 0; await LoadAsync(); }
+    private async Task OnTextAsync(string? t) { _text = t; _skip = 0; await LoadAsync(); }
+    private async Task OnOnlyDiffAsync(bool v) { _onlyDiff = v; _skip = 0; await LoadAsync(); }
+    private async Task PageAsync(int dir) { _skip = Math.Max(0, _skip + dir * PageSize); await LoadAsync(); }
+
+    private async Task LoadAsync()
+    {
+        if (_sel is not DateTime sel) return;
+        _loading = true; _error = null;
+        var f = new CompareFilter
+        {
+            Snapshot = sel, CompareTo = _compareTo == 0 ? null : new DateTime(_compareTo), StoreId = _storeId, CategoryId = _categoryId,
+            Text = _text, OnlyDifferences = _onlyDiff, Skip = _skip, Take = PageSize,
+        };
+        try
+        {
+            _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Compare(f); });
+            var first = _rows.FirstOrDefault();
+            _total = first?.Total_Rows ?? 0; _diffRows = first?.Diff_Rows ?? 0;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); _rows = new(); _total = 0; _diffRows = 0; }
+        finally { _loading = false; }
+    }
+
+    private async Task PrintAsync() => await JS.InvokeVoidAsync("window.print");
+
+    private static string When(DateTime d) => d.ToString(d.TimeOfDay == TimeSpan.Zero ? "yyyy/MM/dd" : "yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture);
+    private static string Money(decimal v) => v.ToString("N2", CultureInfo.InvariantCulture);
+    private static string Qty(decimal v) => v.ToString("0.##", CultureInfo.InvariantCulture);
+    private static string CodeText(string code) => string.IsNullOrWhiteSpace(code) || code.Trim() == "0" ? "" : code;
+    private static string SmallToText(decimal small, decimal factor, string bUnit, string sUnit)
+    {
+        if (factor <= 0) factor = 1;
+        decimal abs = Math.Abs(small), large = Math.Floor(abs / factor), rest = abs - large * factor;
+        string t = rest != 0 ? $"{Qty(large)} {bUnit} + {Qty(rest)} {sUnit}" : $"{Qty(large)} {bUnit}";
+        return small < 0 ? "-" + t : t;
+    }
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

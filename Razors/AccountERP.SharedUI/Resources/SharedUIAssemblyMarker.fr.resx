@@ -3896,4 +3896,42 @@
   <data name="ShipmentLegacyFound" xml:space="preserve"><value>{0} transporteurs de l’ancienne table n’ont pas de compte : {1}</value></data>
   <data name="ShipmentLegacyImport" xml:space="preserve"><value>Importer avec comptes</value></data>
   <data name="ShipmentLegacyImported" xml:space="preserve"><value>{0} transporteurs importés</value></data>
+  <data name="SSTitle" xml:space="preserve"><value>Instantanés des stocks</value></data>
+  <data name="SSSub" xml:space="preserve"><value>Enregistrez maintenant tous les stocks avec leur date et heure, puis comparez un instantané au stock actuel ou à un autre instantané</value></data>
+  <data name="SSSubCompare" xml:space="preserve"><value>Instantané {0} comparé à {1}</value></data>
+  <data name="SSCurrent" xml:space="preserve"><value>Stock actuel</value></data>
+  <data name="SSSaveNow" xml:space="preserve"><value>Enregistrer un instantané</value></data>
+  <data name="SSSaveConfirm" xml:space="preserve"><value>Les stocks de tous les articles de tous les magasins seront enregistrés à la date et l'heure actuelles. Les instantanés précédents ne changent pas. Continuer ?</value></data>
+  <data name="SSSaved_Done" xml:space="preserve"><value>Instantané {0} enregistré</value></data>
+  <data name="SSSaved" xml:space="preserve"><value>Instantanés enregistrés</value></data>
+  <data name="SSNone" xml:space="preserve"><value>Aucun instantané enregistré</value></data>
+  <data name="SSNoneHint" xml:space="preserve"><value>Cliquez sur « Enregistrer un instantané », par exemple avant un inventaire ou en fin de mois</value></data>
+  <data name="SSLinesMeta" xml:space="preserve"><value>{0} lignes en stock — valeur {1}</value></data>
+  <data name="SSBy" xml:space="preserve"><value>Par {0}</value></data>
+  <data name="SSCompareTitle" xml:space="preserve"><value>Comparaison</value></data>
+  <data name="SSCompareWith" xml:space="preserve"><value>Comparer avec</value></data>
+  <data name="SSOnlyDiff" xml:space="preserve"><value>Écarts uniquement</value></data>
+  <data name="SSDiffLines" xml:space="preserve"><value>Lignes avec écart</value></data>
+  <data name="SSInSnapshot" xml:space="preserve"><value>Dans l'instantané {0}</value></data>
+  <data name="SSDiff" xml:space="preserve"><value>Écart</value></data>
+  <data name="SSNoDiff" xml:space="preserve"><value>Aucun écart</value></data>
+  <data name="EXTitle" xml:space="preserve"><value>Stocks par date de péremption</value></data>
+  <data name="EXSub" xml:space="preserve"><value>Lots triés par péremption la plus proche — « proche » = sous {0} jours</value></data>
+  <data name="EXStatus_1" xml:space="preserve"><value>Périmé</value></data>
+  <data name="EXStatus_2" xml:space="preserve"><value>Péremption proche</value></data>
+  <data name="EXStatus_3" xml:space="preserve"><value>Valide</value></data>
+  <data name="EXStatus_4" xml:space="preserve"><value>Sans date</value></data>
+  <data name="EXStatusFilter" xml:space="preserve"><value>Filtrer par statut</value></data>
+  <data name="EXNearDays" xml:space="preserve"><value>Seuil « proche » (jours)</value></data>
+  <data name="EXNearDaysHint" xml:space="preserve"><value>Un lot est proche s'il expire dans ces jours</value></data>
+  <data name="EXSearch" xml:space="preserve"><value>Rechercher par article, code ou lot</value></data>
+  <data name="EXIncludeZero" xml:space="preserve"><value>Afficher les lots sans stock</value></data>
+  <data name="EXResults" xml:space="preserve"><value>Lots</value></data>
+  <data name="EXBatch" xml:space="preserve"><value>Lot</value></data>
+  <data name="EXExpireDate" xml:space="preserve"><value>Date de péremption</value></data>
+  <data name="EXState" xml:space="preserve"><value>Statut</value></data>
+  <data name="EXEmpty" xml:space="preserve"><value>Aucun lot correspondant</value></data>
+  <data name="EXExpiredAgo" xml:space="preserve"><value>Périmé depuis {0} jours</value></data>
+  <data name="EXExpiresToday" xml:space="preserve"><value>Expire aujourd'hui</value></data>
+  <data name="EXDaysLeft" xml:space="preserve"><value>{0} jours restants</value></data>
 </root>

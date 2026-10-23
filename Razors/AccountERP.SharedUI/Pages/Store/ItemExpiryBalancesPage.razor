@@ -1,0 +1,288 @@
+@* 🟢 خطة 05 بند 23: أرصدة الأصناف بتاريخ الصلاحية (بدل ItemBalanceWithExpireFrm). سطر لكل تشغيلة بحالتها (منتهية / قريبة / سليمة / بلا تاريخ)
+   نصاً ولوناً، مرتبة بالأقرب انتهاءً، مع حد «القريبة» (افتراضياً 90 يوماً) وتصفية بالمخزن والتصنيف والبحث، وذات الرصيد فقط افتراضياً، وطباعة.
+   الاستعلامات فى ItemExpiryBalancesService بمعاملات. التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@page "/store/balances/expiry"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.ItemExpiryBalancesService
+@inject LanguageService LangService
+@inject IJSRuntime JS
+@implements IDisposable
+
+<PageTitle>@Tr("EXTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .ex-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .ex-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .ex-head .ico .mud-icon-root { font-size: 2rem; }
+    .ex-head .titles { flex: 1 1 260px; min-width: 0; }
+    .ex-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .ex-gap { margin-top: 16px; }
+    .ex-filters { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) minmax(140px, .6fr) minmax(220px, 1.4fr); gap: 12px; align-items: start; }
+    .ex-row2 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 8px; }
+    .ex-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .ex-tile { display: flex; flex-direction: column; gap: 2px; padding: 14px 18px; min-height: 44px; border-radius: 12px; text-align: start; font: inherit;
+               border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); color: var(--mud-palette-text-primary);
+               cursor: pointer; transition: background .15s, border-color .15s; }
+    .ex-tile:hover { border-color: var(--mud-palette-primary); }
+    .ex-tile:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .ex-tile[aria-pressed="true"] { background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent); border-color: var(--mud-palette-primary); }
+    .ex-tile .k { display: flex; align-items: center; gap: 6px; font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .ex-tile .v { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .ex-tile .m { font-size: .8125rem; color: var(--mud-palette-text-secondary); font-variant-numeric: tabular-nums; }
+    .ex-tile.s1 .v { color: var(--mud-palette-error); }
+    .ex-tile.s2 .v { color: var(--mud-palette-warning-darken); }
+    .ex-tile.s3 .v { color: var(--mud-palette-success-darken); }
+    .ex-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; font-size: .8125rem; font-weight: 600; white-space: nowrap; }
+    .ex-badge .mud-icon-root { font-size: 1rem; }
+    .ex-badge.s1 { background: color-mix(in srgb, var(--mud-palette-error) 14%, transparent); color: var(--mud-palette-error-darken); }
+    .ex-badge.s2 { background: color-mix(in srgb, var(--mud-palette-warning) 18%, transparent); color: var(--mud-palette-warning-darken); }
+    .ex-badge.s3 { background: color-mix(in srgb, var(--mud-palette-success) 14%, transparent); color: var(--mud-palette-success-darken); }
+    .ex-badge.s4 { background: var(--mud-palette-background-gray); color: var(--mud-palette-text-secondary); }
+    .ex-name { font-weight: 600; }
+    .ex-code { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .ex-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .ex-neg { color: var(--mud-palette-error); font-weight: 700; }
+    .ex-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-top: 12px; }
+    .ex-pager .info { font-size: .875rem; color: var(--mud-palette-text-secondary); font-variant-numeric: tabular-nums; }
+    .ex-pager .btns { display: flex; gap: 8px; }
+    .ex-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .ex-empty .mud-icon-root { opacity: .5; }
+    @@media (max-width: 1199px) { .ex-filters, .ex-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 599px) { .ex-filters { grid-template-columns: minmax(0, 1fr); } }
+    @@media print {
+        body * { visibility: hidden; }
+        .ex-print, .ex-print * { visibility: visible; }
+        .ex-print { position: absolute; inset-inline-start: 0; top: 0; width: 100%; }
+        .ex-noprint { display: none !important; }
+    }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page ex-print">
+
+    <div class="inv-card ex-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.EventBusy" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("EXTitle")</h1>
+            <div class="sub">@Tr("EXSub", _nearDays) @(_status == ExpiryStatus.All ? "" : " — " + Tr("EXStatus_" + (int)_status))</div>
+        </div>
+        <MudButton Class="ex-noprint" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Print" Disabled="_loading" OnClick="PrintAsync">@Tr("PrintButton")</MudButton>
+    </div>
+
+    <div class="inv-card ex-gap ex-noprint" role="search">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.FilterList" />@Tr("SOFiltersTitle")</h2>
+        <div class="ex-filters">
+            <MudSelect T="long" Value="_storeId" ValueChanged="OnStoreAsync" Label="@Tr("SOParty_4")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _stores.FirstOrDefault(s => s.Id == v)?.Name ?? "")">
+                <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                @foreach (var s in _stores) { <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem> }
+            </MudSelect>
+            <MudSelect T="long" Value="_categoryId" ValueChanged="OnCategoryAsync" Label="@Tr("SBCategory")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _categories.FirstOrDefault(c => c.Id == v)?.Name ?? "")">
+                <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                @foreach (var c in _categories) { <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem> }
+            </MudSelect>
+            <MudNumericField T="int" Value="_nearDays" ValueChanged="OnNearDaysAsync" Label="@Tr("EXNearDays")" Variant="Variant.Outlined"
+                             Min="1" Max="3650" Immediate="false" HelperText="@Tr("EXNearDaysHint")" />
+            <MudTextField T="string" Value="_text" ValueChanged="OnTextAsync" Label="@Tr("EXSearch")" Variant="Variant.Outlined"
+                          Immediate="true" DebounceInterval="400" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+        </div>
+        <div class="ex-row2">
+            <MudSwitch T="bool" Value="_includeZero" ValueChanged="OnIncludeZeroAsync" Color="Color.Primary" Label="@Tr("EXIncludeZero")" />
+        </div>
+    </div>
+
+    <div class="ex-tiles ex-gap" role="group" aria-label="@Tr("EXStatusFilter")">
+        @foreach (var t in Tiles)
+        {
+            <button type="button" class="ex-tile s@((int)t.Status)" aria-pressed="@(_status == t.Status ? "true" : "false")"
+                    @onclick="@(() => OnStatusAsync(_status == t.Status ? ExpiryStatus.All : t.Status))">
+                <span class="k"><MudIcon Icon="@t.Icon" Size="Size.Small" />@Tr("EXStatus_" + (int)t.Status)</span>
+                <span class="v">@Count(t.Status)</span>
+                @if (t.Status is ExpiryStatus.Expired or ExpiryStatus.Near) { <span class="m">@Money(t.Status == ExpiryStatus.Expired ? _sum.Expired_Value : _sum.Near_Value)</span> }
+            </button>
+        }
+    </div>
+
+    <div class="inv-card ex-gap">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("EXResults")<span class="inv-count">@_total</span></h2>
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" role="alert">@_error</MudAlert>
+        }
+        <MudTable Items="@_rows" T="ExpiryRow" Hover="true" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Loading="_loading" LoadingProgressColor="Color.Primary">
+            <HeaderContent>
+                <MudTh>@Tr("SOItem")</MudTh>
+                <MudTh>@Tr("SOParty_4")</MudTh>
+                <MudTh>@Tr("EXBatch")</MudTh>
+                <MudTh>@Tr("EXExpireDate")</MudTh>
+                <MudTh>@Tr("EXState")</MudTh>
+                <MudTh Style="text-align:end">@Tr("SOBalance")</MudTh>
+                <MudTh Style="text-align:end">@Tr("SOLineValue")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("SOItem")"><div class="ex-name">@context.Item_Name</div><div class="ex-code">@CodeText(context.Code) @context.Category_Name</div></MudTd>
+                <MudTd DataLabel="@Tr("SOParty_4")">@(string.IsNullOrEmpty(context.Store_Name) ? "—" : context.Store_Name)</MudTd>
+                <MudTd DataLabel="@Tr("EXBatch")">@(string.IsNullOrEmpty(context.Batch) ? "—" : context.Batch)</MudTd>
+                <MudTd DataLabel="@Tr("EXExpireDate")"><span class="ex-num">@(context.Expire_Date is DateTime d ? d.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture) : "—")</span></MudTd>
+                <MudTd DataLabel="@Tr("EXState")">
+                    <span class="ex-badge s@(context.Status)"><MudIcon Icon="@StatusIcon(context.Status)" />@StatusText(context)</span>
+                </MudTd>
+                <MudTd DataLabel="@Tr("SOBalance")" Style="text-align:end">
+                    <span class="ex-num @(context.Qty_Small < 0 ? "ex-neg" : "")">@SmallToText(context.Qty_Small, context.Factor, context.B_Unit, context.S_Unit)</span>
+                </MudTd>
+                <MudTd DataLabel="@Tr("SOLineValue")" Style="text-align:end"><b class="ex-num">@(context.Value is decimal v ? Money(v) : "—")</b></MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="ex-empty">
+                    <MudIcon Icon="@Icons.Material.Filled.EventAvailable" Size="Size.Large" />
+                    <b>@Tr("EXEmpty")</b>
+                    @if (!_includeZero)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-2" OnClick="@(() => OnIncludeZeroAsync(true))">@Tr("EXIncludeZero")</MudButton>
+                    }
+                </div>
+            </NoRecordsContent>
+        </MudTable>
+        @if (_total > 0)
+        {
+            <div class="ex-pager ex-noprint">
+                <span class="info" aria-live="polite">@Tr("SOPageInfo", _skip + 1, Math.Min(_skip + PageSize, _total), _total)</span>
+                <div class="btns">
+                    <MudButton Variant="Variant.Outlined" StartIcon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)"
+                               Disabled="@(_skip == 0 || _loading)" OnClick="@(() => PageAsync(-1))">@Tr("SOPrev")</MudButton>
+                    <MudButton Variant="Variant.Outlined" EndIcon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)"
+                               Disabled="@(_skip + PageSize >= _total || _loading)" OnClick="@(() => PageAsync(1))">@Tr("SONext")</MudButton>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private const int PageSize = 50;
+    private record Tile(ExpiryStatus Status, string Icon);
+    private static readonly Tile[] Tiles =
+    {
+        new(ExpiryStatus.Expired, Icons.Material.Filled.Error), new(ExpiryStatus.Near, Icons.Material.Filled.Warning),
+        new(ExpiryStatus.Ok, Icons.Material.Filled.CheckCircle), new(ExpiryStatus.NoDate, Icons.Material.Filled.HelpOutline),
+    };
+
+    /// <summary>status=1..4 يفتح على حالة، days=N حد القريبة.</summary>
+    [SupplyParameterFromQuery(Name = "status")] public int? StatusQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "days")] public int? DaysQuery { get; set; }
+
+    private readonly ItemExpiryBalancesService _svc = new();
+    private readonly StoreBalancesService _balances = new();
+    private List<StoreBalancesService.Option> _stores = new(), _categories = new();
+    private List<ExpiryRow> _rows = new();
+    private ExpiryRow _sum = new();
+    private ExpiryStatus _status;
+    private long _storeId, _categoryId;
+    private int _nearDays = 90, _skip, _total;
+    private string? _text, _error;
+    private bool _includeZero, _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        if (StatusQuery is >= 1 and <= 4) _status = (ExpiryStatus)StatusQuery.Value;
+        if (DaysQuery is >= 1 and <= 3650) _nearDays = DaysQuery.Value;
+        try
+        {
+            (_stores, _categories) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_balances.GetStores(4), _balances.GetCategories()); });
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task OnStoreAsync(long id) { _storeId = id; _skip = 0; await LoadAsync(); }
+    private async Task OnCategoryAsync(long id) { _categoryId = id; _skip = 0; await LoadAsync(); }
+    private async Task OnNearDaysAsync(int d) { _nearDays = Math.Clamp(d, 1, 3650); _skip = 0; await LoadAsync(); }
+    private async Task OnTextAsync(string? t) { _text = t; _skip = 0; await LoadAsync(); }
+    private async Task OnIncludeZeroAsync(bool v) { _includeZero = v; _skip = 0; await LoadAsync(); }
+    private async Task OnStatusAsync(ExpiryStatus s) { _status = s; _skip = 0; await LoadAsync(); }
+    private async Task PageAsync(int dir) { _skip = Math.Max(0, _skip + dir * PageSize); await LoadAsync(); }
+
+    private async Task LoadAsync()
+    {
+        _loading = true; _error = null;
+        var f = new ExpiryFilter
+        {
+            StoreId = _storeId, CategoryId = _categoryId, Text = _text, Status = _status, NearDays = _nearDays,
+            IncludeZero = _includeZero, Skip = _skip, Take = PageSize,
+        };
+        try
+        {
+            _rows = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var rows = _svc.GetBatches(f);
+                // عدّادات الحالات تأتى مع الأسطر؛ إن خلت الحالة المختارة تُقرأ العدّادات بلا تصفية حالة (سطر واحد)
+                _sum = rows.FirstOrDefault() ?? (f.Status == ExpiryStatus.All ? new ExpiryRow()
+                       : _svc.GetBatches(new ExpiryFilter { StoreId = f.StoreId, CategoryId = f.CategoryId, Text = f.Text, NearDays = f.NearDays, IncludeZero = f.IncludeZero, Take = 1 }).FirstOrDefault() ?? new ExpiryRow());
+                return rows;
+            });
+            _total = _rows.FirstOrDefault()?.Total_Rows ?? 0;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); _rows = new(); _total = 0; _sum = new(); }
+        finally { _loading = false; }
+    }
+
+    private int Count(ExpiryStatus s) => s switch
+    {
+        ExpiryStatus.Expired => _sum.Expired_Rows, ExpiryStatus.Near => _sum.Near_Rows, ExpiryStatus.Ok => _sum.Ok_Rows, _ => _sum.NoDate_Rows,
+    };
+
+    private static string StatusIcon(int s) => s switch
+    {
+        1 => Icons.Material.Filled.Error, 2 => Icons.Material.Filled.Warning, 3 => Icons.Material.Filled.CheckCircle, _ => Icons.Material.Filled.HelpOutline,
+    };
+
+    private string StatusText(ExpiryRow r) => r.Days_Left switch
+    {
+        null => Tr("EXStatus_4"),
+        < 0 => Tr("EXExpiredAgo", -r.Days_Left.Value),
+        0 => Tr("EXExpiresToday"),
+        _ => Tr("EXDaysLeft", r.Days_Left.Value),
+    };
+
+    private async Task PrintAsync() => await JS.InvokeVoidAsync("window.print");
+
+    private static string Money(decimal v) => v.ToString("N2", CultureInfo.InvariantCulture);
+    private static string Qty(decimal v) => v.ToString("0.##", CultureInfo.InvariantCulture);
+    private static string CodeText(string code) => string.IsNullOrWhiteSpace(code) || code.Trim() == "0" ? "" : code;
+    private static string SmallToText(decimal small, decimal factor, string bUnit, string sUnit)
+    {
+        if (factor <= 0) factor = 1;
+        decimal abs = Math.Abs(small), large = Math.Floor(abs / factor), rest = abs - large * factor;
+        string t = rest != 0 ? $"{Qty(large)} {bUnit} + {Qty(rest)} {sUnit}" : $"{Qty(large)} {bUnit}";
+        return small < 0 ? "-" + t : t;
+    }
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

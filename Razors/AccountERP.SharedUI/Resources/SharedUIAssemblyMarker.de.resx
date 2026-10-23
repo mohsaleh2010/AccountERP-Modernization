@@ -3896,4 +3896,42 @@
   <data name="ShipmentLegacyFound" xml:space="preserve"><value>{0} Versandfirmen in der alten Tabelle haben kein Konto: {1}</value></data>
   <data name="ShipmentLegacyImport" xml:space="preserve"><value>Mit Konten importieren</value></data>
   <data name="ShipmentLegacyImported" xml:space="preserve"><value>{0} Versandfirmen importiert</value></data>
+  <data name="SSTitle" xml:space="preserve"><value>Bestands-Snapshots</value></data>
+  <data name="SSSub" xml:space="preserve"><value>Alle Artikelbestände jetzt mit Datum und Uhrzeit speichern und dann mit dem aktuellen Bestand oder einem anderen Snapshot vergleichen</value></data>
+  <data name="SSSubCompare" xml:space="preserve"><value>Snapshot {0} verglichen mit {1}</value></data>
+  <data name="SSCurrent" xml:space="preserve"><value>Aktueller Bestand</value></data>
+  <data name="SSSaveNow" xml:space="preserve"><value>Snapshot jetzt speichern</value></data>
+  <data name="SSSaveConfirm" xml:space="preserve"><value>Die Bestände aller Artikel in allen Lagern werden mit aktuellem Datum und Uhrzeit gespeichert. Frühere Snapshots bleiben unverändert. Fortfahren?</value></data>
+  <data name="SSSaved_Done" xml:space="preserve"><value>Snapshot {0} gespeichert</value></data>
+  <data name="SSSaved" xml:space="preserve"><value>Gespeicherte Snapshots</value></data>
+  <data name="SSNone" xml:space="preserve"><value>Noch keine Snapshots gespeichert</value></data>
+  <data name="SSNoneHint" xml:space="preserve"><value>Klicken Sie auf „Snapshot jetzt speichern“, z. B. vor einer Inventur oder zum Monatsende</value></data>
+  <data name="SSLinesMeta" xml:space="preserve"><value>{0} Zeilen mit Bestand — Wert {1}</value></data>
+  <data name="SSBy" xml:space="preserve"><value>Von {0}</value></data>
+  <data name="SSCompareTitle" xml:space="preserve"><value>Vergleich</value></data>
+  <data name="SSCompareWith" xml:space="preserve"><value>Vergleichen mit</value></data>
+  <data name="SSOnlyDiff" xml:space="preserve"><value>Nur Abweichungen</value></data>
+  <data name="SSDiffLines" xml:space="preserve"><value>Zeilen mit Abweichung</value></data>
+  <data name="SSInSnapshot" xml:space="preserve"><value>Im Snapshot {0}</value></data>
+  <data name="SSDiff" xml:space="preserve"><value>Abweichung</value></data>
+  <data name="SSNoDiff" xml:space="preserve"><value>Keine Abweichungen</value></data>
+  <data name="EXTitle" xml:space="preserve"><value>Artikelbestände nach Verfallsdatum</value></data>
+  <data name="EXSub" xml:space="preserve"><value>Chargen nach nächstem Verfall sortiert — „bald“ = innerhalb von {0} Tagen</value></data>
+  <data name="EXStatus_1" xml:space="preserve"><value>Abgelaufen</value></data>
+  <data name="EXStatus_2" xml:space="preserve"><value>Läuft bald ab</value></data>
+  <data name="EXStatus_3" xml:space="preserve"><value>Gültig</value></data>
+  <data name="EXStatus_4" xml:space="preserve"><value>Ohne Datum</value></data>
+  <data name="EXStatusFilter" xml:space="preserve"><value>Nach Status filtern</value></data>
+  <data name="EXNearDays" xml:space="preserve"><value>Grenze „bald“ (Tage)</value></data>
+  <data name="EXNearDaysHint" xml:space="preserve"><value>Charge gilt als bald ablaufend innerhalb dieser Tage</value></data>
+  <data name="EXSearch" xml:space="preserve"><value>Nach Artikel, Code oder Charge suchen</value></data>
+  <data name="EXIncludeZero" xml:space="preserve"><value>Chargen ohne Bestand anzeigen</value></data>
+  <data name="EXResults" xml:space="preserve"><value>Chargen</value></data>
+  <data name="EXBatch" xml:space="preserve"><value>Charge</value></data>
+  <data name="EXExpireDate" xml:space="preserve"><value>Verfallsdatum</value></data>
+  <data name="EXState" xml:space="preserve"><value>Status</value></data>
+  <data name="EXEmpty" xml:space="preserve"><value>Keine passenden Chargen</value></data>
+  <data name="EXExpiredAgo" xml:space="preserve"><value>Seit {0} Tagen abgelaufen</value></data>
+  <data name="EXExpiresToday" xml:space="preserve"><value>Läuft heute ab</value></data>
+  <data name="EXDaysLeft" xml:space="preserve"><value>Noch {0} Tage</value></data>
 </root>

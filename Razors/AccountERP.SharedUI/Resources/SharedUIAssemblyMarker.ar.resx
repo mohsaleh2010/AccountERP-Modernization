@@ -3894,4 +3894,42 @@
   <data name="ShipmentLegacyFound" xml:space="preserve"><value>توجد {0} شركة شحن فى الجدول القديم بلا حساب: {1}</value></data>
   <data name="ShipmentLegacyImport" xml:space="preserve"><value>استيرادها بحساباتها</value></data>
   <data name="ShipmentLegacyImported" xml:space="preserve"><value>تم استيراد {0} شركة شحن</value></data>
+  <data name="SSTitle" xml:space="preserve"><value>لقطات أرصدة الأصناف</value></data>
+  <data name="SSSub" xml:space="preserve"><value>احفظ أرصدة كل الأصناف الآن بتاريخها ووقتها، ثم قارن أى لقطة بالرصيد الحالى أو بلقطة أخرى</value></data>
+  <data name="SSSubCompare" xml:space="preserve"><value>لقطة {0} مقارنة بـ {1}</value></data>
+  <data name="SSCurrent" xml:space="preserve"><value>الرصيد الحالى</value></data>
+  <data name="SSSaveNow" xml:space="preserve"><value>حفظ لقطة الآن</value></data>
+  <data name="SSSaveConfirm" xml:space="preserve"><value>ستُحفظ أرصدة كل الأصناف فى كل المخازن بالتاريخ والوقت الحاليين. اللقطات السابقة لا تتغير. متابعة؟</value></data>
+  <data name="SSSaved_Done" xml:space="preserve"><value>حُفظت اللقطة {0}</value></data>
+  <data name="SSSaved" xml:space="preserve"><value>اللقطات المحفوظة</value></data>
+  <data name="SSNone" xml:space="preserve"><value>لا توجد لقطات محفوظة بعد</value></data>
+  <data name="SSNoneHint" xml:space="preserve"><value>اضغط «حفظ لقطة الآن» لحفظ أول لقطة، مثلاً قبل الجرد أو آخر الشهر</value></data>
+  <data name="SSLinesMeta" xml:space="preserve"><value>{0} سطر برصيد — قيمة {1}</value></data>
+  <data name="SSBy" xml:space="preserve"><value>بواسطة {0}</value></data>
+  <data name="SSCompareTitle" xml:space="preserve"><value>المقارنة</value></data>
+  <data name="SSCompareWith" xml:space="preserve"><value>قارن مع</value></data>
+  <data name="SSOnlyDiff" xml:space="preserve"><value>الفروق فقط</value></data>
+  <data name="SSDiffLines" xml:space="preserve"><value>أسطر بها فرق</value></data>
+  <data name="SSInSnapshot" xml:space="preserve"><value>فى لقطة {0}</value></data>
+  <data name="SSDiff" xml:space="preserve"><value>الفرق</value></data>
+  <data name="SSNoDiff" xml:space="preserve"><value>لا توجد فروق</value></data>
+  <data name="EXTitle" xml:space="preserve"><value>أرصدة الأصناف بتاريخ الصلاحية</value></data>
+  <data name="EXSub" xml:space="preserve"><value>التشغيلات مرتبة بالأقرب انتهاءً — «قريبة» = خلال {0} يوماً</value></data>
+  <data name="EXStatus_1" xml:space="preserve"><value>منتهية</value></data>
+  <data name="EXStatus_2" xml:space="preserve"><value>قريبة الانتهاء</value></data>
+  <data name="EXStatus_3" xml:space="preserve"><value>سليمة</value></data>
+  <data name="EXStatus_4" xml:space="preserve"><value>بلا تاريخ</value></data>
+  <data name="EXStatusFilter" xml:space="preserve"><value>تصفية بالحالة</value></data>
+  <data name="EXNearDays" xml:space="preserve"><value>حد القريبة (يوم)</value></data>
+  <data name="EXNearDaysHint" xml:space="preserve"><value>التشغيلة قريبة إن انتهت خلال هذه الأيام</value></data>
+  <data name="EXSearch" xml:space="preserve"><value>ابحث بالصنف أو الكود أو التشغيلة</value></data>
+  <data name="EXIncludeZero" xml:space="preserve"><value>إظهار التشغيلات بلا رصيد</value></data>
+  <data name="EXResults" xml:space="preserve"><value>التشغيلات</value></data>
+  <data name="EXBatch" xml:space="preserve"><value>التشغيلة</value></data>
+  <data name="EXExpireDate" xml:space="preserve"><value>تاريخ الصلاحية</value></data>
+  <data name="EXState" xml:space="preserve"><value>الحالة</value></data>
+  <data name="EXEmpty" xml:space="preserve"><value>لا توجد تشغيلات مطابقة</value></data>
+  <data name="EXExpiredAgo" xml:space="preserve"><value>منتهية منذ {0} يوم</value></data>
+  <data name="EXExpiresToday" xml:space="preserve"><value>تنتهى اليوم</value></data>
+  <data name="EXDaysLeft" xml:space="preserve"><value>باقٍ {0} يوم</value></data>
 </root>
