@@ -11,6 +11,11 @@
     <OutputPath>bin\$(Configuration)\</OutputPath>
   </PropertyGroup>
 
+  <!-- حساب السطر الموحد: الملف نفسه الذى يحسب به السيرفر (بلا أى اعتماد على AccountModelsLib). -->
+  <ItemGroup>
+    <Compile Include="..\..\AccountModelsLib\BusinessLibShared\LineMath.cs" Link="Shared\LineMath.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.10" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.11" />

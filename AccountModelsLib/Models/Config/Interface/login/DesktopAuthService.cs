@@ -62,7 +62,7 @@ namespace AccountModelsLib.Models
 
         // 🟢 لا يوجد كوكي دخول على الديسك توب/الموبايل (لا يوجد HttpContext/متصفح يحمله) - غير مستخدمة هنا،
         // موجودة فقط لتحقيق واجهة IAuthService المشتركة مع الويب.
-        public Task<bool> RestoreSessionAsync(int userId) => Task.FromResult(false);
+        public Task<bool> RestoreSessionAsync(long userId) => Task.FromResult(false);
 
 
         public Task LogoutAsync()

@@ -19,17 +19,19 @@ namespace AccountModelsLib
     /// وقسم الفاتورة الإلكترونية (نوع وكود الصنف فى البوابة، كود الوحدة، بلد المنشأ) وعرض التشغيلات والصلاحيات (Unit_Item_ExpireDate) للقراءة فقط.
     /// المرحلة 4: ملفات قطع غيار السيارات (رقم القطعة، نوع السيارة، المواصفات) والسيراميك (النوع/المصنع/المقاس/اللون/الفرز/الأبعاد)
     /// والزجاج (النوع والسُمك والعرض والطول، مع الاسم المركّب كالقديم). الأسماء المنسوخة فى Item تُملأ من الجداول المرجعية عند الحفظ.
+    /// خطة 05 بند 18: ملف النسيج — نوع الصنف حسب نوع المخزن (Item.StoreUsed_Type: منتج تام / خامات ومشتريات / غير مكتمل / تحت التشغيل)
+    /// ووصف المقاس (ItemSizeDescription)؛ المخزن الرئيسى وإضافة الصنف لكل المخازن تتبع نفس نوع المخزن.
     /// </summary>
     public class ItemEditorService
     {
         public const int PermissionAdd = 916, PermissionEdit = 917;
 
         /// <summary>قيم Item_Category.Item_Profile المسموحة (فارغ = عام). الخدمات تُعرف من Is_ItemOrService لا من الملف.</summary>
-        public static readonly string[] CategoryProfiles = { "general", "pharmacy", "cars", "ceramics", "glass" };
+        public static readonly string[] CategoryProfiles = { "general", "pharmacy", "cars", "ceramics", "glass", "textile" };
         /// <summary>ملفات المسار /items/p/{profile}.</summary>
-        public static readonly string[] RouteProfiles = { "general", "services", "pharmacy", "pharmacy-retail", "cars", "ceramics", "glass" };
+        public static readonly string[] RouteProfiles = { "general", "services", "pharmacy", "pharmacy-retail", "cars", "ceramics", "glass", "textile" };
         /// <summary>ملفات تُصفّى قوائمها بملف الفئة (أو كل الأصناف إن لم تُحدَّد فئة بهذا الملف بعد).</summary>
-        private static readonly string[] CategoryFilteredProfiles = { "pharmacy", "cars", "ceramics", "glass" };
+        private static readonly string[] CategoryFilteredProfiles = { "pharmacy", "cars", "ceramics", "glass", "textile" };
 
         /// <summary>جداول المواصفات المرجعية (نفس تعريفات ItemLookupService) وأعمدة الاسم المنسوخ فى Item.</summary>
         public static readonly string[] SpecKinds = { "types", "factories", "sizes", "colors", "degrees", "descriptions", "other-names" };
@@ -118,6 +120,10 @@ namespace AccountModelsLib
             public string Factory_Code { get; set; }
             public long Car_Type_Id { get; set; }
             public bool Hide_On_Invoice { get; set; }
+            // النسيج
+            /// <summary>Item.StoreUsed_Type: 1 إنتاج تام - مبيعات، 2 مشتريات/خامات/مستلزمات، 3 غير مكتمل التصنيع، 4 تحت التشغيل.</summary>
+            public int Store_Used_Type { get; set; } = 1;
+            public string Size_Description { get; set; }
         }
 
         public class BatchRow
@@ -194,6 +200,8 @@ namespace AccountModelsLib
             /// <summary>قيم المواصفات لكل نوع فى SpecKinds.</summary>
             public Dictionary<string, List<Option>> Specs { get; set; } = new();
             public List<Option> Car_Types { get; set; } = new();
+            /// <summary>نوع كل مخزن (Store.StoreUsed_Type) لتصفية المخزن الرئيسى حسب نوع صنف النسيج.</summary>
+            public Dictionary<long, int> Store_Types { get; set; } = new();
         }
 
         public class ListRow
@@ -228,6 +236,8 @@ namespace AccountModelsLib
             public int Top { get; set; } = 500;
             /// <summary>ملف المسار: pharmacy = فئات ملفها أدوية (أو كل الأصناف إن لم تُحدَّد فئة أدوية بعد)، pharmacy-retail = أصناف تباع بالتجزئة، غير ذلك بلا تصفية.</summary>
             public string Profile { get; set; }
+            /// <summary>نوع صنف النسيج (Item.StoreUsed_Type)؛ 0 = الكل.</summary>
+            public int Store_Used_Type { get; set; }
         }
 
         // ===================== القراءة =====================
@@ -260,6 +270,8 @@ WHERE Active = 1 AND ISNULL(IS_ItemSecond_degree, 0) = 0 ORDER BY IS_Default_Sto
                     + (d.ActiveCol != null ? $" AND ISNULL([{d.ActiveCol}], 1) = 1" : "") + $" ORDER BY [{d.NameCol}]")).ToList();
             }
             l.Car_Types = opp.db.Database.SqlQuery<Option>($"SELECT Id, ISNULL(Name, N'') AS Name FROM Lookup_CarType ORDER BY Name").ToList();
+            l.Store_Types = opp.db.Database.SqlQuery<Option>($@"SELECT Id, CAST(ISNULL(StoreUsed_Type, 1) AS nvarchar(10)) AS Name FROM Store
+WHERE Active = 1 AND ISNULL(IS_ItemSecond_degree, 0) = 0").AsEnumerable().ToDictionary(o => o.Id, o => int.TryParse(o.Name, out var t) ? t : 1);
             return l;
         });
 
@@ -282,6 +294,7 @@ SELECT TOP ({top}) i.id AS Id, ISNULL(i.code, N'') AS Code, ISNULL(i.Item_Name, 
          WHEN N'cars' THEN LTRIM(ISNULL(i.FactoryCode, N'') + ISNULL(N' · ' + ct.Name, N''))
          WHEN N'ceramics' THEN LTRIM(ISNULL(NULLIF(i.Items_TypesSize_Name, N''), N'') + ISNULL(N' · ' + NULLIF(i.Items_TypesColor_Name, N''), N'') + ISNULL(N' · ' + NULLIF(i.Items_TypesDegreeFarz_Name, N''), N''))
          WHEN N'glass' THEN LTRIM(ISNULL(i.Items_Name_Somk_Str, N'') + N' ' + ISNULL(i.Height_Width_Str, N''))
+         WHEN N'textile' THEN ISNULL(i.ItemSizeDescription, N'')
          ELSE N'' END AS Spec_Text
 FROM Item i
 LEFT JOIN Lookup_CarType ct ON ct.Id = i.Lookup_CarTypeId
@@ -290,10 +303,11 @@ LEFT JOIN unit u ON u.id = i.Unit_Id
 WHERE ({t} = N'' OR i.Item_Name LIKE {like} OR i.code = {t} OR i.AnotherName LIKE {like} OR i.BarCode2 = {t} OR i.BarCode3 = {t}
        OR i.ScientificName LIKE {like} OR i.FactoryCode = {t} OR EXISTS (SELECT 1 FROM Unit_item b WHERE b.Item_id = i.id AND b.Code = {t}))
   AND ({f.Category_Id} = 0 OR i.Item_Category_ID = {f.Category_Id})
-  AND ({prof} NOT IN (N'pharmacy', N'pharmacy-retail', N'cars', N'ceramics', N'glass')
+  AND ({prof} NOT IN (N'pharmacy', N'pharmacy-retail', N'cars', N'ceramics', N'glass', N'textile')
        OR ({prof} = N'pharmacy-retail' AND i.IsRetailItem = 1)
-       OR ({prof} IN (N'pharmacy', N'cars', N'ceramics', N'glass') AND (c.Item_Profile = {prof} OR NOT EXISTS (SELECT 1 FROM Item_Category pc WHERE pc.Item_Profile = {prof}))))
+       OR ({prof} IN (N'pharmacy', N'cars', N'ceramics', N'glass', N'textile') AND (c.Item_Profile = {prof} OR NOT EXISTS (SELECT 1 FROM Item_Category pc WHERE pc.Item_Profile = {prof}))))
   AND ({f.Kind} = 0 OR ({f.Kind} = 2 AND (i.Is_ItemOrService = 2 OR i.Is_ItemWithoutBalance = 1)) OR ({f.Kind} = 1 AND ISNULL(i.Is_ItemOrService, 1) <> 2 AND ISNULL(i.Is_ItemWithoutBalance, 0) = 0))
+  AND ({f.Store_Used_Type} = 0 OR ISNULL(i.StoreUsed_Type, 1) = {f.Store_Used_Type})
   AND ({f.Active} = -1 OR ({f.Active} = 1 AND ISNULL(i.Active_flage, 1) NOT IN (0, -1)) OR ({f.Active} = 0 AND i.Active_flage IN (0, -1)))
 ORDER BY i.Item_Name").ToList());
         }
@@ -322,6 +336,7 @@ ORDER BY i.Item_Name").ToList());
                     Description_Id = i.Items_TypesDescription_NameId ?? 0, Other_Description_Id = i.Items_TypesDescriptionNameOtherId ?? 0,
                     Width = i.Width_ ?? 0, Height = i.Height_ ?? 0, Thickness = i.Somk ?? 0, Thickness_Unit = i.Somk_Unit,
                     Factory_Code = i.FactoryCode, Car_Type_Id = i.Lookup_CarTypeId ?? 0, Hide_On_Invoice = i.Is_NotShowOnInvoice == 1,
+                    Store_Used_Type = i.StoreUsed_Type is >= 1 and <= 4 ? i.StoreUsed_Type.Value : 1, Size_Description = i.ItemSizeDescription,
                 },
                 Tax_Uploaded = i.Is_UploadToTaxPortal == 1,
             };
@@ -412,6 +427,11 @@ WHERE ui.Item_id = {itemId} ORDER BY s.Store_Name").ToList();
             if (f.Thickness_Unit?.Length > 20) throw new InvalidOperationException("وحدة السُمك طويلة جداً.");
             f.Factory_Code = string.IsNullOrWhiteSpace(f.Factory_Code) ? null : f.Factory_Code.Trim();
             if (f.Factory_Code?.Length > 100) throw new InvalidOperationException("رقم القطعة طويل جداً.");
+
+            // النسيج
+            if (f.Store_Used_Type is < 1 or > 4) throw new InvalidOperationException("نوع صنف النسيج غير صحيح.");
+            f.Size_Description = string.IsNullOrWhiteSpace(f.Size_Description) ? null : f.Size_Description.Trim();
+            if (f.Size_Description?.Length > 1000) throw new InvalidOperationException("وصف المقاس طويل جداً.");
         }
 
         /// <summary>
@@ -489,7 +509,7 @@ WHERE TRY_CAST(code AS bigint) >= 1000").AsEnumerable().First().ToString();
             im.code = code;
             im.InternalCode = long.TryParse(code, out var ic) ? ic : 0;
             im.S_id = f.Store_Id;
-            im.StoreUsed_Type = 1;
+            im.StoreUsed_Type = f.Store_Used_Type;
             im.User_Id = Common.User_Id;
             im.Branch_Id = Common.Branch_Id;
             opp.db.Item.Add(im);
@@ -501,7 +521,7 @@ WHERE TRY_CAST(code AS bigint) >= 1000").AsEnumerable().First().ToString();
 
             if (Common.IsAddAllItemInAllStores == 1)
             {
-                var others = opp.db.Database.SqlQuery<long>($@"SELECT id AS Value FROM Store WHERE id <> {f.Store_Id} AND Active = 1 AND StoreUsed_Type = 1 AND ISNULL(IS_ItemSecond_degree, 0) = 0").ToList();
+                var others = opp.db.Database.SqlQuery<long>($@"SELECT id AS Value FROM Store WHERE id <> {f.Store_Id} AND Active = 1 AND StoreUsed_Type = {f.Store_Used_Type} AND ISNULL(IS_ItemSecond_degree, 0) = 0").ToList();
                 foreach (long s in others) opp.db.Unit_item.Add(NewUnitItem(im, f, unit, s, code));
                 if (others.Count > 0) opp.db.SaveChanges();
             }
@@ -528,6 +548,14 @@ WHERE TRY_CAST(code AS bigint) >= 1000").AsEnumerable().First().ToString();
                 var lines = StoreLines(opp, f.Id);
                 if (lines.Any(s => s.Full_Qua != 0 || s.D_Qua != 0 || s.Movements > 0))
                     throw new InvalidOperationException("لا تتغير وحدة صنف له رصيد أو حركات، لأن الأرصدة محسوبة بمعامل الوحدة.");
+            }
+            int curType = im.StoreUsed_Type is >= 1 and <= 4 ? im.StoreUsed_Type.Value : 1;   // نفس تطبيع Get، فلا يتغير صنف قديم بقيمة شاذة
+            if (curType != f.Store_Used_Type)
+            {
+                var lines = StoreLines(opp, f.Id);
+                if (lines.Any(s => s.Full_Qua != 0 || s.D_Qua != 0 || s.Movements > 0))
+                    throw new InvalidOperationException("لا يتغير نوع صنف النسيج لصنف له رصيد أو حركات مخزن.");
+                im.StoreUsed_Type = f.Store_Used_Type;
             }
             bool wasWithoutBalance = im.Is_ItemWithoutBalance == 1;
             if (wasWithoutBalance != f.Without_Balance)
@@ -618,6 +646,7 @@ WHERE Item_id = {f.Id}");
             im.Unit_Used_For_S_price_Default = f.Default_Sale_Unit;
             im.Unit_Used_For_P_price_Default = f.Default_Purchase_Unit;
             im.description = string.IsNullOrWhiteSpace(f.Description) ? null : f.Description.Trim();
+            im.ItemSizeDescription = f.Size_Description;
             static string T(string v) => string.IsNullOrWhiteSpace(v) ? null : v.Trim();
             im.ScientificName = T(f.Scientific_Name);
             im.Pharmacology = T(f.Pharmacology);

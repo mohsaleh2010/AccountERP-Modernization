@@ -1,4 +1,5 @@
 using AccountModelsLib.Models;
+using AccountModelsLib.Services;
 using Microsoft.Data.SqlClient;
 using Net.Pkcs11Interop.Common;
 using System;
@@ -30,6 +31,7 @@ namespace AccountModelsLib
         public FixedAssetCLS fixedAssetCLS = new FixedAssetCLS();
         public Employee emp = new Employee();
         public Store store = new Store();
+        public ShipmentCompany shipmentCompany = new ShipmentCompany();
         public int Accept_Cost_Center_Flage = 1;
         public Submain_AccountCLS sa = new Submain_AccountCLS();
         public bool IsUse_SubAccount_Id_Select = false;
@@ -450,7 +452,7 @@ namespace AccountModelsLib
 
                 bool Add_Account_Customer_List = true;
                 //Add_Account_(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, sa, Add_Account_Customer_List);
-                if (Account_Type_Value == Common.Supplier_Account_Type)
+                if (Account_Type_Value == Common.Supplier_Account_Type || Account_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier)
                 {
                     sa.sb.Account_Customer_Type_ID = spCls.sp.Id;
                 }
@@ -727,7 +729,7 @@ namespace AccountModelsLib
                 {
                     New_Account_Id = cuCls.InsertCustomer(ref Excp, ref Msg, ref opp, sa_);
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Supplier_Account_Type) ///���� ����
+                else if (sa_.Account_Customer_Type_Value == Common.Supplier_Account_Type || sa_.Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) ///���� ����
                 {
                     New_Account_Id = spCls.InsertSupplier(ref Excp, ref Msg, ref opp, sa_);
                 }
@@ -770,12 +772,20 @@ namespace AccountModelsLib
                     storeCLS.store = store;
                     New_Account_Id = storeCLS.AddNewServiceStore(ref Excp, ref Msg, ref opp, sa_);
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete) //���� ���� ����� ��� �����
+                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete || sa_.Account_Customer_Type_Value == Common.Account_Type_ForWIP) //���� ���� ����� ��� �����
                 {
                     StoreCLS storeCLS = new StoreCLS();
                     storeCLS.store = store;
                     New_Account_Id = storeCLS.AddNewServiceStore(ref Excp, ref Msg, ref opp, sa_);
                 }
+                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) //���� ���� ����� ��� �����
+                {
+                    ShipmentCompanyEFCLS companyCls = new  ShipmentCompanyEFCLS ();
+                    //storeCLS.store = store;
+                    New_Account_Id = companyCls.AddNewCompany(ref Excp, ref Msg, ref opp, shipmentCompany, sa_);
+                }
+                
+
             }
 
 
@@ -799,7 +809,7 @@ namespace AccountModelsLib
                     Account_Customer_Type_ID = cuCls.cs.Id;
 
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Supplier_Account_Type) ///���� ����
+                else if (sa_.Account_Customer_Type_Value == Common.Supplier_Account_Type || sa_.Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) ///���� ����
                 {
                     spCls.sp.SubAccount_Id = sa_.Id;
                     New_Account_Id = spCls.UpdateSupplierOnly(ref Excp, ref Msg, ref opp);
@@ -876,7 +886,7 @@ namespace AccountModelsLib
                     SubAccount_Name = storeCLS.store.Store_Name;
                     SubAccount_Id = sa_.Id;
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete) //���� ���� ����� ��� �����
+                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete || sa_.Account_Customer_Type_Value == Common.Account_Type_ForWIP) //���� ���� ����� ��� �����
                 {
                     StoreCLS storeCLS = new StoreCLS();
                     storeCLS.store = store;
@@ -998,7 +1008,7 @@ namespace AccountModelsLib
 
 
                 }
-                if (Account_Customer_Type_Value == Common.Supplier_Account_Type) ///5���� ����
+                if (Account_Customer_Type_Value == Common.Supplier_Account_Type || Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) ///5���� ����
                 {
                     spCls.UpdateSupplier(ref Excp, ref Msg, ref opp, sa.sb);
                     sa.sb.Account_Customer_Type_ID = cuCls.cs.Id;
@@ -1276,7 +1286,7 @@ namespace AccountModelsLib
 
                     }
 
-                    if (Account_Customer_Type_Value == Common.Supplier_Account_Type) //5/���� ����
+                    if (Account_Customer_Type_Value == Common.Supplier_Account_Type || Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) //5/���� ����
                     {
 
                         sp.MakeDeleteSupplier(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
@@ -1348,7 +1358,7 @@ namespace AccountModelsLib
 
             }
 
-            if (Account_Customer_Type_Value == Common.Supplier_Account_Type) //5/���� ����
+            if (Account_Customer_Type_Value == Common.Supplier_Account_Type || Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) //5/���� ����
             {
                 spCls.MakeDeleteSupplier(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
 
@@ -1389,7 +1399,7 @@ namespace AccountModelsLib
 
                 storeCLS.MakeDeleteStore(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
             }
-            if (Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete) //���� ���� ����� ��� �����
+            if (Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete || Account_Customer_Type_Value == Common.Account_Type_ForWIP) //���� ���� ����� ��� �����
             {
                 StoreCLS storeCLS = new StoreCLS();
                 //storeCLS.store = store;

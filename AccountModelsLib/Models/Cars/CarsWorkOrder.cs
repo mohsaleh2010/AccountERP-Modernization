@@ -54,7 +54,7 @@ namespace AccountModelsLib.Models
         public long? LookUp_CarStatusLocationId { get; set; }
         public string? LookUp_CarStatusLocationName { get; set; }
         public DateTime? WorkOrderClosedDate { get; set; }
-        public int IsWorkOrderClosed { get; set; }
+        public int? IsWorkOrderClosed { get; set; }
         public int? IsInvoiceTaxInfo { get; set; }
 
         

@@ -23,7 +23,7 @@
     @foreach (var l in _lines)
     {
         var it = _items[l.Unit_Item_Id];
-        SalesBook.PriceOrderLine(l, it.Factor, it.Tax_Rate);
+        SalesBook.PriceOrderLine(l, it.Factor, it.Tax_Rate, State.Book.Decimals);
         <MudPaper Class="pa-3 ra-gap ra-card" Elevation="1">
             <div class="ra-row">
                 <b class="ra-grow">@it.Item_Name</b>
@@ -108,7 +108,7 @@
 
     private TakeOrderInput Input()
     {
-        foreach (var l in _lines) if (_items.TryGetValue(l.Unit_Item_Id, out var it)) SalesBook.PriceOrderLine(l, it.Factor, it.Tax_Rate);
+        foreach (var l in _lines) if (_items.TryGetValue(l.Unit_Item_Id, out var it)) SalesBook.PriceOrderLine(l, it.Factor, it.Tax_Rate, State.Book.Decimals);
         return new TakeOrderInput
         {
             Customer_Id = _customer?.Id ?? 0, Source_Store_Id = _items.Values.FirstOrDefault()?.Store_Id ?? 0, Expected_Delivery_Date = _expected,

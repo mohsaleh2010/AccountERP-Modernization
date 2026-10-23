@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace AccountModelsLib.Models
 {
+    [Table("Items_Nature")]
     public class Items_Nature
     {
         public long Id { get; set; }

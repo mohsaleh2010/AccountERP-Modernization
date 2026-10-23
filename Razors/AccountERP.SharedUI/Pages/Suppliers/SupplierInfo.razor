@@ -57,7 +57,10 @@
             <MudItem xs="12" md="6">
                 <MudPaper Class="pa-4 h-100" Elevation="1">
                     <MudText Typo="Typo.subtitle1" Class="fw-bold mb-3">@Tr("ContactInfoSection")</MudText>
-                    <MudGrid Spacing="2">
+                    <MudGrid Spacing="2"> 
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="model.Name" Label="@Tr("SupplierName")" Variant="Variant.Outlined" Required="true" />
+                        </MudItem>
                         <MudItem xs="12" sm="6">
                             <MudTextField @bind-Value="model.Code" Label="@Tr("SupplierCode")" Variant="Variant.Outlined" />
                         </MudItem>
@@ -70,9 +73,7 @@
                                 }
                             </MudSelect>
                         </MudItem>
-                        <MudItem xs="12">
-                            <MudTextField @bind-Value="model.Name" Label="@Tr("SupplierName")" Variant="Variant.Outlined" Required="true" />
-                        </MudItem>
+                       
                         <MudItem xs="12">
                             <MudTextField @bind-Value="model.Address" Label="@Tr("Address")" Variant="Variant.Outlined" />
                         </MudItem>

@@ -21,6 +21,8 @@ namespace AccountERP.SharedUI.Services
         public bool IsLoaded { get; private set; }
         public bool ShowBreadcrumb { get; private set; } = true;
         public bool ShowTabs { get; private set; } = true;
+        public bool BreadcrumbMainMenus { get; private set; } = true;
+        public bool BreadcrumbSubMenus { get; private set; } = true;
         public string DateFormat { get; private set; } = DefaultDateFormat;
 
         // 🟢 null = لا يوجد تفضيل محفوظ بعد لهذا المستخدم (أول دخول، أو لم يُغيِّر اللغة يدوياً من قبل) -
@@ -38,6 +40,8 @@ namespace AccountERP.SharedUI.Services
                 var settings = _cls.GetUserSettings(Common.User_Id);
                 ShowBreadcrumb = !settings.TryGetValue(UserSettingKeys.ShowBreadcrumb, out var showBreadcrumb) || showBreadcrumb != "false";
                 ShowTabs = !settings.TryGetValue(UserSettingKeys.ShowTabs, out var showTabs) || showTabs != "false";
+                BreadcrumbMainMenus = !settings.TryGetValue(UserSettingKeys.BreadcrumbMainMenus, out var mainMenus) || mainMenus != "false";
+                BreadcrumbSubMenus = !settings.TryGetValue(UserSettingKeys.BreadcrumbSubMenus, out var subMenus) || subMenus != "false";
                 DateFormat = settings.TryGetValue(UserSettingKeys.DateFormat, out var dateFormat) && !string.IsNullOrWhiteSpace(dateFormat)
                     ? dateFormat
                     : DefaultDateFormat;
@@ -50,6 +54,8 @@ namespace AccountERP.SharedUI.Services
                 // غير حرج: تبقى القيم الافتراضية (الإظهار مفعّل للجميع) سارية لهذه الجلسة حتى لو تعذّرت القراءة
                 ShowBreadcrumb = true;
                 ShowTabs = true;
+                BreadcrumbMainMenus = true;
+                BreadcrumbSubMenus = true;
                 DateFormat = DefaultDateFormat;
                 Language = null;
             }
@@ -65,6 +71,8 @@ namespace AccountERP.SharedUI.Services
             IsLoaded = false;
             ShowBreadcrumb = true;
             ShowTabs = true;
+            BreadcrumbMainMenus = true;
+            BreadcrumbSubMenus = true;
             DateFormat = DefaultDateFormat;
             Language = null;
             OnChanged?.Invoke();
@@ -83,6 +91,22 @@ namespace AccountERP.SharedUI.Services
             if (ShowTabs == value) return;
             ShowTabs = value;
             TrySave(UserSettingKeys.ShowTabs, value);
+            OnChanged?.Invoke();
+        }
+
+        public void SetBreadcrumbMainMenus(bool value)
+        {
+            if (BreadcrumbMainMenus == value) return;
+            BreadcrumbMainMenus = value;
+            TrySave(UserSettingKeys.BreadcrumbMainMenus, value);
+            OnChanged?.Invoke();
+        }
+
+        public void SetBreadcrumbSubMenus(bool value)
+        {
+            if (BreadcrumbSubMenus == value) return;
+            BreadcrumbSubMenus = value;
+            TrySave(UserSettingKeys.BreadcrumbSubMenus, value);
             OnChanged?.Invoke();
         }
 

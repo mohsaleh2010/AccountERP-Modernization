@@ -1,16 +1,15 @@
 @page "/main-data/shipment-companies"
 
-@* 🟢 النسخة Blazor من Connection4It.ShipmentCompanyLisFrm (WinForms، فى connectionit\ShipmentCompany\
-   ShipmentCompanyLisFrm.cs) - شاشة بسيطة لجدول ShipmentCompany (عمودان فقط: Id/Name، حقلا Phone/Notes معلَّقان
-   فى الموديل الأصلى ولم يُفعَّلا هنا). تُستخدَم AccountModelsLib.Services.ShipmentCompanyEFCLS كما هى دون أى
-   تعديل - كلاس EF Core حديث غير حالة (async، معلَّق فى الأصل صراحة "Used in WinForms and Razor Pages")، بخلاف
-   CashPaymentMethodCLS (نمط DataTable/SqlCommandBuilder الأقدم فى البند السابق من نفس الدفعة). النموذج التفاعلى
-   هنا يتبع نفس أسلوب CustomerGroupsList.razor/CashPaymentMethodList.razor (مودال إضافة + تعديل داخل الصف + حذف
-   بتأكيد) توحيداً لتجربة المستخدم عبر شاشات "القوائم البسيطة". *@
+@* 🟢 النسخة Blazor من Connection4It.ShipmentCompanyLisFrm (WinForms، فى connectionit\ShipmentCompany\ShipmentCompanyLisFrm.cs).
+   شركات الشحن = موردو خدمات فى جدول Supplier بعلامة IS_ShipmentCompany = 1 (قرار المستخدم 2026-10-23)، ولكل شركة حساب من النوع 65
+   تحت الحساب الأب «شركات الشحن». الإضافة والإضافة المتعددة وتعديل الاسم والحذف كلها عبر AccountModelsLib.Services.ShipmentCompanyEFCLS
+   (نفس الكود الذى تستخدمه شاشة الويندوز فورمز). صفوف جدول ShipmentCompany القديم تظهر فى تنبيه بزر استيراد صريح، ولا يتغير الجدول القديم.
+   النموذج التفاعلى بنفس أسلوب CustomerGroupsList.razor (مودال إضافة + تعديل داخل الصف + حذف بتأكيد). *@
 
 @using System.Globalization
 @using AccountERP.SharedUI.Services
 @using AccountModelsLib.Models
+@using AccountModelsLib.Services
 @inject LanguageService LangService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -22,13 +21,28 @@
 
     <MudPaper Class="pa-4 mb-4" Elevation="1">
         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
-            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("ShipmentCompaniesTitle")</MudText>
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("ShipmentCompaniesTitle")</MudText>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">@Tr("ShipmentCompaniesHint")</MudText>
+            </MudStack>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
                        OnClick="OpenAddDialog">
                 @Tr("AddShipmentCompany")
             </MudButton>
         </MudStack>
     </MudPaper>
+
+    @if (legacyNames.Count > 0)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap" Spacing="2">
+                <span>@Tr("ShipmentLegacyFound", legacyNames.Count, string.Join("، ", legacyNames))</span>
+                <MudButton Variant="Variant.Outlined" Color="Color.Warning" Size="Size.Small" OnClick="ImportLegacy" Disabled="@isImporting">
+                    @Tr("ShipmentLegacyImport")
+                </MudButton>
+            </MudStack>
+        </MudAlert>
+    }
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
@@ -38,26 +52,29 @@
     <MudTable Items="@companies" Hover="true" Striped="true" Bordered="true" Loading="@isLoading" Elevation="1" Breakpoint="Breakpoint.None">
         <HeaderContent>
             <MudTh>@Tr("NameColumn")</MudTh>
+            <MudTh>@Tr("ShipmentAccountColumn")</MudTh>
             <MudTh Style="width:140px;"></MudTh>
         </HeaderContent>
         <RowTemplate>
             @if (editingId == context.Id)
             {
                 <MudTd>
-                    <MudTextField T="string" @bind-Value="editingName" Immediate="true" AutoFocus="true" />
+                    <MudTextField T="string" @bind-Value="editingName" Immediate="true" AutoFocus="true" OnKeyDown="@(e => OnEditKeyDown(e, context.Id))" />
                 </MudTd>
+                <MudTd>@AccountNo(context)</MudTd>
                 <MudTd>
-                    <MudIconButton Icon="@Icons.Material.Filled.Check" Color="Color.Success" Size="Size.Small"
+                    <MudIconButton Icon="@Icons.Material.Filled.Check" Color="Color.Success" Size="Size.Small" aria-label="@Tr("Save")"
                                    OnClick="@(() => SaveEdit(context.Id))" Disabled="@isSavingEdit" />
-                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="CancelEdit" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-label="@Tr("Close")" OnClick="CancelEdit" />
                 </MudTd>
             }
             else
             {
                 <MudTd>@context.Name</MudTd>
+                <MudTd><span class="ship-acc-no">@AccountNo(context)</span></MudTd>
                 <MudTd>
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => StartEdit(context))" />
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" aria-label="@Tr("DrawEditButton")" OnClick="@(() => StartEdit(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" aria-label="@Tr("DeleteShipmentCompanyTitle")"
                                    OnClick="@(() => DeleteCompany(context))" />
                 </MudTd>
             }
@@ -94,7 +111,10 @@
 
 @code {
     private List<ShipmentCompany> companies = new();
+    private Dictionary<long, string> accountNos = new();
+    private List<string> legacyNames = new();
     private bool isLoading = true;
+    private bool isImporting;
     private string errorMessage = string.Empty;
 
     private long? editingId;
@@ -128,15 +148,28 @@
         }
     }
 
+    private string AccountNo(ShipmentCompany c) => accountNos.TryGetValue(c.SubAccount_Id, out var no) ? no : "";
+
     private async Task LoadCompanies()
     {
         isLoading = true;
         errorMessage = string.Empty;
         try
         {
-            AccountCultureGuard.EnsureInvariant();
-            var service = new AccountModelsLib.Services.ShipmentCompanyEFCLS();
-            companies = await service.GetAllAsync();
+            var data = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var service = new ShipmentCompanyEFCLS();
+                var list = service.GetAll();
+                var ids = list.Select(c => c.SubAccount_Id).Where(id => id > 0).ToList();
+                var nos = new AccountModelsLib.operations().db.Submain_Account
+                    .Where(a => ids.Contains(a.Id)).Select(a => new { a.Id, a.SubAccount_NO }).ToList()
+                    .ToDictionary(a => a.Id, a => a.SubAccount_NO ?? "");
+                return (list, nos, service.GetLegacyNotImported());
+            });
+            companies = data.list;
+            accountNos = data.nos;
+            legacyNames = data.Item3;
         }
         catch (Exception ex)
         {
@@ -146,6 +179,19 @@
         {
             isLoading = false;
         }
+    }
+
+    // حفظ موحَّد (إضافة Id=0 أو تعديل اسم): يرجع رسالة الخطأ أو فارغ عند النجاح.
+    private static async Task<string> SaveAsync(long id, string name)
+    {
+        int excp = 0;
+        string msg = string.Empty;
+        await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            new ShipmentCompanyEFCLS().Save(ref excp, ref msg, id, name);
+        });
+        return excp == 0 ? string.Empty : msg;
     }
 
     private void OpenAddDialog()
@@ -165,6 +211,14 @@
         if (e.Key != "Enter" || isSavingAdd) return;
         await Task.Delay(150); // يترك آخر حرف مكتوب (Immediate) يصل للخادم قبل الحفظ
         await ConfirmAdd();
+    }
+
+    private async Task OnEditKeyDown(KeyboardEventArgs e, long id)
+    {
+        if (e.Key == "Escape") { CancelEdit(); return; }
+        if (e.Key != "Enter" || isSavingEdit) return;
+        await Task.Delay(150);
+        await SaveEdit(id);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -188,9 +242,8 @@
         addErrorMessage = string.Empty;
         try
         {
-            AccountCultureGuard.EnsureInvariant();
-            var service = new AccountModelsLib.Services.ShipmentCompanyEFCLS();
-            await service.SaveAsync(new ShipmentCompany { Id = 0, Name = newName });
+            var error = await SaveAsync(0, newName);
+            if (error != "") { addErrorMessage = error; return; }
 
             if (_addMultiple) { newName = string.Empty; _multipleAdded = true; } else { addDialogOpen = false; }
             await LoadCompanies();
@@ -231,12 +284,11 @@
         errorMessage = string.Empty;
         try
         {
-            AccountCultureGuard.EnsureInvariant();
-            var service = new AccountModelsLib.Services.ShipmentCompanyEFCLS();
-            await service.SaveAsync(new ShipmentCompany { Id = id, Name = editingName });
-
+            var error = await SaveAsync(id, editingName);
+            if (error != "") { errorMessage = error; return; }
             editingId = null;
             await LoadCompanies();
+            Snackbar.Add(Tr("StoreSaved"), Severity.Success);
         }
         catch (Exception ex)
         {
@@ -263,19 +315,48 @@
         errorMessage = string.Empty;
         try
         {
-            AccountCultureGuard.EnsureInvariant();
-            var service = new AccountModelsLib.Services.ShipmentCompanyEFCLS();
-            var deleted = await service.DeleteAsync(company.Id);
-
-            if (deleted)
+            int excp = 0;
+            string msg = string.Empty;
+            var id = company.Id;
+            await Task.Run(() =>
             {
-                await LoadCompanies();
-                Snackbar.Add(Tr("ShipmentCompanyDeleted"), Severity.Success);
-            }
+                AccountCultureGuard.EnsureInvariant();
+                new ShipmentCompanyEFCLS().Delete(ref excp, ref msg, id);
+            });
+            if (excp != 0) { errorMessage = msg; return; }
+            await LoadCompanies();
+            Snackbar.Add(Tr("ShipmentCompanyDeleted"), Severity.Success);
         }
         catch (Exception ex)
         {
             errorMessage = Tr("SystemError", ex.Message);
+        }
+    }
+
+    // استيراد صريح لصفوف جدول ShipmentCompany القديم: كل اسم يُضاف بنفس Save (مورد + حساب)، والجدول القديم لا يتغير.
+    private async Task ImportLegacy()
+    {
+        isImporting = true;
+        errorMessage = string.Empty;
+        try
+        {
+            string msg = string.Empty;
+            int n = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return new ShipmentCompanyEFCLS().ImportLegacy(ref msg);
+            });
+            await LoadCompanies();
+            if (n > 0) Snackbar.Add(Tr("ShipmentLegacyImported", n), Severity.Success);
+            if (!string.IsNullOrEmpty(msg)) errorMessage = msg;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            isImporting = false;
         }
     }
 
@@ -284,3 +365,7 @@
         LangService.OnLanguageChanged -= OnLanguageChangedHandler;
     }
 }
+
+<style>
+    .ship-acc-no { font-variant-numeric: tabular-nums; color: var(--mud-palette-text-secondary); }
+</style>

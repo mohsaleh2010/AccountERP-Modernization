@@ -27,7 +27,7 @@ namespace AccountModelsLib.BusinessLibShared.Store
                 "Bills_List.Is_Invoice_Agile, Supplier.Id AS Supplier_Id, Supplier.Name, USER_DETAILES.USER_NAME, " +
                 paid + " AS PaymentValue, IIF(" + still + " > 0, " + still + ", 0) AS StillValues " +
                 "FROM Bills_List INNER JOIN Supplier ON Bills_List.Supplier_Id = Supplier.Id " +
-                "LEFT OUTER JOIN USER_DETAILES ON Bills_List.User_Id = USER_DETAILES.USER_ID " +
+                "LEFT OUTER JOIN USER_DETAILES ON Bills_List.User_Id = USER_DETAILES.Id " +
                 "WHERE (ISNULL(Bills_List.Deleted, 0) <> 1) ";
             if (invoiceNo > 0)
             {

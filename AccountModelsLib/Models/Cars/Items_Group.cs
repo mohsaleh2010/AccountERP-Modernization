@@ -7,11 +7,13 @@ using System.Threading.Tasks;
 
 namespace AccountModelsLib.Models
 {
+    [Table("Items_Group")]
     public class Items_Group
     {
         
        public long Id { get; set; }
         public string Name { get; set; }
-
+        public string ItemsGroup_Name { get; set; }
+        
     } 
 }

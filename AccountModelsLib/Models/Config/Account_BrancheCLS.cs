@@ -83,7 +83,7 @@ namespace AccountModelsLib.Models
 
             mysql = @" SELECT     Account_Branches.*, USER_DETAILES_Branches_Permission.USER_DETAILES_Id
 FROM         Account_Branches INNER JOIN
-                      USER_DETAILES_Branches_Permission ON Account_Branches.Id = USER_DETAILES_Branches_Permission.Branche_Id ";
+                      USER_DETAILES_Branches_Permission ON Account_Branches.Id = USER_DETAILES_Branches_Permission.Branch_Id ";
             mysql = mysql + " WHERE     (USER_DETAILES_Branches_Permission.USER_DETAILES_Id =  " + USER_DETAILES_Id + ")   ";
 
             if (Common.Is_User_Admin == 1)
@@ -106,29 +106,29 @@ FROM         Account_Branches INNER JOIN
             Branch_Enabled = Branch_Enabled_;
             mysql = " Select * from Account_Branches   ORDER BY Branch_Name   ";
 
+             
 
 
-         
             dt_Branch = Get_Data_(mysql, Add_All);
             
             return dt_Branch;
 
 
         }
-        public DataTable  Get_Data(long Branch_Id)
-        {
-            string mysql = "";
+        //public DataTable  Get_Data(long Branch_Id)
+        //{
+        //    string mysql = "";
 
-            mysql = " Select * from Account_Branches   Where Id=" + Branch_Id;
+        //    mysql = " Select * from Account_Branches   Where Id=" + Branch_Id;
 
            
-            dt_Branch = Get_Data_(mysql, false );
+        //    dt_Branch = Get_Data_(mysql, false );
             
-            return dt_Branch;
+        //    return dt_Branch;
 
 
 
-        }
+        //}
         public static DataTable Get_DataAccount_Branches()
         {
             string mysql = "";

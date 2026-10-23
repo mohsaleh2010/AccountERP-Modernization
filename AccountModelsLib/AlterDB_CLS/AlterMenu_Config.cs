@@ -1,17 +1,18 @@
 ﻿using AccountModelsLib;
 using AccountModelsLib.Models;
- 
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
- 
- 
+
+
 namespace AccountModelsLib
 {
     public class AlterMenu_Config
@@ -602,7 +603,7 @@ CREATE TABLE [dbo].[SysConfig](
             C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfig] ([Id], [KeysData], [DefaultValue], [Value], [DefaultDescription], [Description], [Client_B], [Client_A], [POS], [Market], [Factory], [AlFawzan], [Tourism]) VALUES (CAST(403 AS Numeric(18, 0)), N'Is_Save_DataDictionaryLogerException', N'0', N'0', N' // Save The DML To  DataDictionaryLogerException   ', N'0', 0, 0, 0,0, 0, 0, 0)  ");
             C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfig] ([Id], [KeysData], [DefaultValue], [Value], [DefaultDescription], [Description], [Client_B], [Client_A], [POS], [Market], [Factory], [AlFawzan], [Tourism]) VALUES (CAST(404 AS Numeric(18, 0)), N'mainServerConnectionString', N' ', N' ', N' //  Connection String for Main Server to Sync Data   ', N'0', 0, 0, 0,0, 0, 0, 0)  ");
 
-             
+
 
 
             //////////////////////////////
@@ -623,17 +624,23 @@ CREATE TABLE [dbo].[SysConfig](
         {
 
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
-            GetSetConfigStr_Menus(ref   opp);
+            GetSetConfigStr_Menus(ref opp);
 
         }
         public static void GetSetConfigStr_Menus(ref AccountModelsLib.operations opp)
         {
             try
             {
+                string Msg = "";
+                SysConfigCLS ss = new SysConfigCLS();
+                ss.Encrypt_Menu(ref Msg);
 
+                
+                ss.Decrypt_Menu(ref opp);
+                
                 int Excp = 0;
                 int C = 0;
-                string Msg = "";
+               
                 string Is_Identity = "";
 
                 DeleteMenuNeglected(ref opp);
@@ -661,11 +668,58 @@ CREATE TABLE [dbo].[SysConfig](
                 DeleteMenu(ref opp, 751);       //  VALUES(CAST(751 AS Numeric(18, 0)), 748, N'menuPurchaseReportTotalMa7l', N'تقارير إجمالى مشتريات', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 DeleteMenu(ref opp, 752);       //     VALUES(CAST(752 AS Numeric(18, 0)), 748, N'menuItemPurchaseReportReverseTotalMa7l', N'تقارير إجمالى  مردود المشتريات', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                                                 //DeleteMenu(ref opp, 396);       //     C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(416 AS Numeric(18, 0)), 399, N'ToolStripMenuItemFinancial_Period_FirstBalance', N'أرصدة أول المده', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+
+
+                DeleteMenu(ref opp, 508);       //  VALUES(CAST(508 AS Numeric(18, 0)), 492, N'menuItemItemsAllNesseg', N'أصناف النسيج', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+
                 UpdateParent(ref opp, 393, 399);
                 UpdateParent(ref opp, 416, 393);
+                ////////////////
+                ///
+                UpdateParent(ref opp, 493, 501);
+                UpdateParent(ref opp, 494, 501);
+                UpdateParent(ref opp, 495, 501);
+                UpdateParent(ref opp, 496, 501);
+                UpdateParent(ref opp, 497, 501);
+                UpdateParent(ref opp, 498, 501);
+                UpdateParent(ref opp, 814, 501);
+                UpdateParent(ref opp, 815, 501);
+                UpdateParent(ref opp, 816, 501);
+                UpdateParent(ref opp, 817, 501);
+                UpdateParent(ref opp, 818, 501);
+                UpdateParent(ref opp, 845, 501);
+                UpdateParent(ref opp, 846, 501);
+                UpdateParent(ref opp, 501, 492);
+
+                UpdateParent(ref opp, 500, 499);
+                UpdateParent(ref opp, 503, 499);
+                UpdateParent(ref opp, 509, 499);
+                UpdateParent(ref opp, 512, 499);
+                UpdateParent(ref opp, 515, 499);
+                UpdateParent(ref opp, 516, 499);
+
+                 
+
+                UpdateMenuName(ref opp, 374, "بيان بأرصدة الحسابات المختلطة", "");
+                UpdateMenuName(ref opp, 509, "إضافة الأصناف والمنتجات", "");
+                UpdateMenuName(ref opp, 500, "قائمة أصناف المنتجات", "menuItemProductionItelList");
+
+                UpdateMenuName(ref opp, 516, "قائمة  أصناف المشتريات", "menuItemPurchaseList");
+                UpdateMenuName(ref opp, 501, "مواصفات الأصناف", "toolStripMenuItemٍSpecificatiobsList");
 
 
 
+
+                 //DeleteMenu(ref opp, 1000);    //  VALUES(CAST(501 AS Numeric(18, 0)), 499, N'menuItem108', N'بيانات أصناف منتجات المصنع - بالمخازن', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                DeleteMenu(ref opp, 513);    //  VALUES(CAST(513 AS Numeric(18, 0)), 508, N'menuItemItemData_ListWabara', N' بيانات أصناف الوبرة', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                DeleteMenu(ref opp, 514);   //  VALUES(CAST(514 AS Numeric(18, 0)), 508, N'menuItemItemData_List_Lehaf', N' بيانات أصناف اللحاف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                DeleteMenu(ref opp, 502);   //   VALUES(CAST(502 AS Numeric(18, 0)), 499, N'menuItem107', N'تقرير طباعة  بيانات أصناف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                DeleteMenu(ref opp, 510);   //  VALUES(CAST(510 AS Numeric(18, 0)), 508, N'menuItemItems_ProductionDataFRMLehaf', N'تقرير طباعة  بيانات أصناف الحاف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                DeleteMenu(ref opp, 511);   //   VALUES(CAST(511 AS Numeric(18, 0)), 508, N'menuItemItems_ProductionDataFRMWabara', N'تقرير طباعة  بيانات أصناف الوبرة', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                DeleteMenu(ref opp, 504);   //   VALUES(CAST(504 AS Numeric(18, 0)), 499, N'menuItem110', N'بيانات أصناف مشتريات المصنع - بالمخازن', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                DeleteMenu(ref opp, 505);   //  VALUES(CAST(505 AS Numeric(18, 0)), 499, N'menuItem111', N'تقرير قائمة بيانات أصناف المشتريات', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+
+                
 
                 if (Common.Use_Auto_Identity_Column == 1)
                 {
@@ -728,7 +782,7 @@ CREATE TABLE [dbo].[SysConfig](
 
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(372 AS Numeric(18, 0)), 366, N'menuItemCustomerDataListPrint', N'طباعة كشف بيانات العملاء', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(373 AS Numeric(18, 0)), 366, N'menuItemSupplierCustomer', N'بيانات حساب عميل - مورد - مختلط', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(374 AS Numeric(18, 0)), 366, N'menuItemConfigSharedAccount', N'ضبط الحسابات المختلطة', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(374 AS Numeric(18, 0)), 366, N'menuItemConfigSharedAccount', N'بيان بأرصدة الحسابات المختلطة', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(375 AS Numeric(18, 0)), 365, N'menuSalesManMain', N'مندوبين المبيعات', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(376 AS Numeric(18, 0)), 375, N'menuSalesMan', N'بيانات مندوبين المبيعات', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(377 AS Numeric(18, 0)), 375, N'menuItemCustomerSalesMan', N'عملاء مندوبى المبيعات', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
@@ -831,30 +885,23 @@ CREATE TABLE [dbo].[SysConfig](
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(490 AS Numeric(18, 0)), 477, N'toolStripMenuItemAccountBalance', N'إعداد قائمة المركز المالى', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(491 AS Numeric(18, 0)), 477, N'ToolStripMenuItemMasterCostCenter1', N' أستاذ مساعد مراكز التكلفه قديم', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(492 AS Numeric(18, 0)), 0, N'toolStripMenuItemItemsMain', N'الأصناف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(493 AS Numeric(18, 0)), 492, N'menuItemItemMainCategory', N'أنواع فئات الأصناف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(494 AS Numeric(18, 0)), 492, N'menuItemItemٍSubCategory', N'فئات الأصناف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(495 AS Numeric(18, 0)), 492, N'menuUnits', N'وحدات الأصناف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(496 AS Numeric(18, 0)), 492, N'menuItemItem_Types', N'أنواع الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(497 AS Numeric(18, 0)), 492, N'menuItemBodies_Item', N'هيئات الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(498 AS Numeric(18, 0)), 492, N'menuItem9Item_Color', N'ألوان الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(493 AS Numeric(18, 0)), 501, N'menuItemItemMainCategory', N'أنواع فئات الأصناف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(494 AS Numeric(18, 0)), 501, N'menuItemItemٍSubCategory', N'فئات الأصناف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(495 AS Numeric(18, 0)), 501, N'menuUnits', N'وحدات الأصناف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(496 AS Numeric(18, 0)), 501, N'menuItemItem_Types', N'أنواع الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(497 AS Numeric(18, 0)), 501, N'menuItemBodies_Item', N'هيئات الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(498 AS Numeric(18, 0)), 501, N'menuItem9Item_Color', N'ألوان الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(499 AS Numeric(18, 0)), 492, N'menuItemItemData', N'بيانات الأصناف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(500 AS Numeric(18, 0)), 499, N'menuItem109', N' بيانات أصناف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(501 AS Numeric(18, 0)), 499, N'menuItem108', N'بيانات أصناف منتجات المصنع - بالمخازن', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(502 AS Numeric(18, 0)), 499, N'menuItem107', N'تقرير طباعة  بيانات أصناف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(500 AS Numeric(18, 0)), 499, N'menuItemProductionItelList', N' قائمة أصناف المنتجات', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(501 AS Numeric(18, 0)), 492, N'toolStripMenuItemٍSpecificatiobsList', N'مواصفات الأصناف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(503 AS Numeric(18, 0)), 499, N'menuItem53', N'-', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(504 AS Numeric(18, 0)), 499, N'menuItem110', N'بيانات أصناف مشتريات المصنع - بالمخازن', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(505 AS Numeric(18, 0)), 499, N'menuItem111', N'تقرير قائمة بيانات أصناف المشتريات', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(506 AS Numeric(18, 0)), 492, N'menuItemItemsListSpecGlass', N'إضافة صنف - الزجاج', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(507 AS Numeric(18, 0)), 492, N'menuItemItemsList', N'إضافة صنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(508 AS Numeric(18, 0)), 492, N'menuItemItemsAllNesseg', N'إصناف النسيج', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(509 AS Numeric(18, 0)), 508, N'menuProducts', N'الأصناف والمنتجات', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(510 AS Numeric(18, 0)), 508, N'menuItemItems_ProductionDataFRMLehaf', N'تقرير طباعة  بيانات أصناف الحاف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(511 AS Numeric(18, 0)), 508, N'menuItemItems_ProductionDataFRMWabara', N'تقرير طباعة  بيانات أصناف الوبرة', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(512 AS Numeric(18, 0)), 508, N'menuItemSellItems', N'بيانات أصناف منتجات المصنع - بالمخازن', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(513 AS Numeric(18, 0)), 508, N'menuItemItemData_ListWabara', N' بيانات أصناف الوبرة', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(514 AS Numeric(18, 0)), 508, N'menuItemItemData_List_Lehaf', N' بيانات أصناف اللحاف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(515 AS Numeric(18, 0)), 508, N'menuItemItemPurchase', N'بيانات أصناف مشتريات المصنع - بالمخازن', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(516 AS Numeric(18, 0)), 508, N'menuItem16ItemItemData_ListFRM', N'تقرير قائمة بيانات أصناف المشتريات', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(509 AS Numeric(18, 0)), 499, N'menuProducts', N'إضافة الأصناف والمنتجات', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(512 AS Numeric(18, 0)), 499, N'menuItemSellItems', N'بيانات أصناف منتجات المصنع - بالمخازن', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(515 AS Numeric(18, 0)), 499, N'menuItemItemPurchase', N'بيانات أصناف مشتريات المصنع - بالمخازن', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(516 AS Numeric(18, 0)), 499, N'menuItemPurchaseList', N' قائمة  أصناف المشتريات', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(517 AS Numeric(18, 0)), 492, N'menuItemPrices', N'أسعار الأصناف والمنتجات', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(518 AS Numeric(18, 0)), 517, N'menuPrice_Type_List', N' أنواع أسعار  مبيعات الأصناف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(519 AS Numeric(18, 0)), 517, N'menuPriceCategory', N'تصنيف أسعار مبيعات الأصناف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
@@ -1128,11 +1175,11 @@ CREATE TABLE [dbo].[SysConfig](
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(811 AS Numeric(18, 0)), 321, N'-', N'  صلاحية حذف من حساب العميل او المورد', 2, N'0', N'0', N'', N'0', N'0', N'0', N'0', N'0', N'0', N'0', N'0') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(812 AS Numeric(18, 0)), 492, N'menuItemItemsListNoBalance', N'إضافة الأصناف / الخدمات', 2, N'0', N'0', NULL, N'0', N'0', N'0', N'0', N'0', N'0', N'0', N'0') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(813 AS Numeric(18, 0)), 633, N'ToolStripMenuItemMoneyDayDetails', N'كشف حركة الخزينة تفصيلى عن يوم', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(814 AS Numeric(18, 0)), 492, N'ToolStripMenuitemsTypesDescription', N'وصف الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(815 AS Numeric(18, 0)), 492, N'ToolStripMenuItems_TypesDescriptionNameOther', N'إسم الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(816 AS Numeric(18, 0)), 492, N'ToolStripMenuItems_TypesFactory_Name', N'مصانع الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(817 AS Numeric(18, 0)), 492, N'ToolStripMenuItems_TypesSize_Name', N'مقاسات الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(818 AS Numeric(18, 0)), 492, N'ToolStripMenuItems_TypesDegreeFarz_Name', N'فرز درجات الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(814 AS Numeric(18, 0)), 501, N'ToolStripMenuitemsTypesDescription', N'وصف الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(815 AS Numeric(18, 0)), 501, N'ToolStripMenuItems_TypesDescriptionNameOther', N'إسم الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(816 AS Numeric(18, 0)), 501, N'ToolStripMenuItems_TypesFactory_Name', N'مصانع الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(817 AS Numeric(18, 0)), 501, N'ToolStripMenuItems_TypesSize_Name', N'مقاسات الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(818 AS Numeric(18, 0)), 501, N'ToolStripMenuItems_TypesDegreeFarz_Name', N'فرز درجات الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(819 AS Numeric(18, 0)), 492, N'menuItemItemsListSpecSeramek', N'قائمة الأصناف -سيراميك', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(820 AS Numeric(18, 0)), 557, N'toolStripMenuItemNewInvoiceMoney', N'فاتورة نقدي جديدة ', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(821 AS Numeric(18, 0)), 557, N'toolStripMenuItemInvoices_List_Payment_', N' عرض مدفوعات الفواتير ', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
@@ -1168,8 +1215,8 @@ CREATE TABLE [dbo].[SysConfig](
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(843 AS Numeric(18, 0)), 840, N'ToolStripMenuItemAddCarNewCustomer', N'إضافة سيارة عميل جديد', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
 
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(844 AS Numeric(18, 0)), 840, N'ToolStripMenuItemWorkOrderNew', N'اصدار أمر شغل جديد', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(845 AS Numeric(18, 0)), 492, N'ToolStripMenuItemItems_Nature', N'طبيعة الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
-                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(846 AS Numeric(18, 0)), 492, N'ToolStripMenuItemItems_Groups', N'مجموعة الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(845 AS Numeric(18, 0)), 501, N'ToolStripMenuItemItems_Nature', N'طبيعة الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(846 AS Numeric(18, 0)), 501, N'ToolStripMenuItemItems_Groups', N'مجموعة الصنف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(847 AS Numeric(18, 0)), 492, N'menuItemItemsListSpecCars', N'قائمة الأصناف ومواصفاتها - السيارات', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(848 AS Numeric(18, 0)), 840, N'ToolStripMenuItemWorkOrderList', N'أوامر التشغيل', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(849 AS Numeric(18, 0)), 528, N'ToolStripMenuItemWorkOrderListWithNewItems', N'أوامر التشغيل للاصناف', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
@@ -1352,23 +1399,39 @@ CREATE TABLE [dbo].[SysConfig](
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(982 AS Numeric(18, 0)), 321, N'-', N'صلاحية حذف فاتورة المشتريات', 2, N'0', N'0', N'0', N'0', N'0', N'0', N'0', N'0', N'0', N'0', N'0') ");
                 C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(983 AS Numeric(18, 0)), 321, N'-', N'إلغاء طلبية عميل', 2, N'0', N'0', N'0', N'0', N'0', N'0', N'0', N'0', N'0', N'0', N'0') ");
 
-
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(984 AS Numeric(18, 0)), 321, N'StoreTransferDirectWithoutReceipt', N'تحويل مباشر بين المخازن بدون تأكيد استلام', 2, N'1', N'1', NULL, N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(985 AS Numeric(18, 0)), 592, N'menuSalesRepProfiles', N'ملفات المندوبين الميدانيين', 2, N'1', N'1', N'ملفات المندوبين الميدانيين', N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(986 AS Numeric(18, 0)), 592, N'menuSalesRepShift', N'وردية المندوب', 2, N'1', N'1', N'وردية المندوب', N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(987 AS Numeric(18, 0)), 592, N'menuSalesRepApprovals', N'موافقات المندوبين', 2, N'1', N'1', N'موافقات المندوبين', N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(988 AS Numeric(18, 0)), 592, N'menuSalesRepReturns', N'مرتجعات المندوبين', 2, N'1', N'1', N'مرتجعات المندوبين', N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(989 AS Numeric(18, 0)), 592, N'menuSalesRepReturnReasons', N'أسباب إرجاع المندوبين', 2, N'1', N'1', N'أسباب إرجاع المندوبين', N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(990 AS Numeric(18, 0)), 592, N'menuSalesRepOrders', N'طلبيات المندوبين', 2, N'1', N'1', N'طلبيات المندوبين', N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(991 AS Numeric(18, 0)), 592, N'menuSalesRepPolicies', N'سياسات ائتمان وخصم المندوبين', 2, N'1', N'1', N'سياسات ائتمان وخصم المندوبين', N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(992 AS Numeric(18, 0)), 592, N'menuSalesRepRoutes', N'خطوط سير المندوبين', 2, N'1', N'1', N'خطوط سير المندوبين', N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(993 AS Numeric(18, 0)), 592, N'menuSalesRepNoSaleReasons', N'أسباب عدم البيع', 2, N'1', N'1', N'أسباب عدم البيع', N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(994 AS Numeric(18, 0)), 592, N'menuSalesRepCommissions', N'أهداف وعمولات المندوبين', 2, N'1', N'1', N'أهداف وعمولات المندوبين', N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(995 AS Numeric(18, 0)), 592, N'menuSalesRepPerformance', N'أداء المندوبين', 2, N'1', N'1', N'أداء المندوبين', N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(996 AS Numeric(18, 0)), 592, N'menuSalesRepPaymentBanks', N'بنوك طرق دفع المندوبين', 2, N'1', N'1', N'بنوك طرق دفع المندوبين', N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(997 AS Numeric(18, 0)), 592, N'menuSalesRepDevices', N'أجهزة المندوبين', 2, N'1', N'1', N'أجهزة المندوبين', N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(998 AS Numeric(18, 0)), 592, N'menuSalesRepSyncReview', N'مستندات الأجهزة بانتظار المراجعة', 2, N'1', N'1', N'مستندات الأجهزة بانتظار المراجعة', N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+                C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "INSERT [dbo].[SysConfigMenus]([Id], [Parent_Id], [KeysData], [Description], [PROJECT_ID], [Value], [DefaultValue], [DefaultDescription], [POS], [Market], [Factory], [Tourism], [AlFawzan], [Client_A], [Client_B], [UserSells]) VALUES(CAST(999 AS Numeric(18, 0)), 592, N'menuSalesRepTrack', N'مسار المندوبين', 2, N'1', N'1', N'مسار المندوبين', N'1', N'1', N'1', N'1', N'1', N'1', N'1', N'1') ");
+               
                 ////////////////////////////////////////
                 if (Common.Use_Auto_Identity_Column == 1)
                 {
                     Is_Identity = "";
                     C = MakeInsert(ref opp, ref Excp, ref Msg, ref Is_Identity, "SET IDENTITY_INSERT[dbo].[SysConfigMenus] OFF");
                 }
-
+                ss.Encrypt_Menu(ref Msg);
 
             }
             catch (Exception ee)
             {
-                 
+
             }
         }
 
-        private static void UpdateParent(ref operations opp, long SysConfigMenusId, long Parent_IdNew )
+        private static void UpdateParent(ref operations opp, long SysConfigMenusId, long Parent_IdNew)
         {
             string mysql = " Update  SysConfigMenus Set Parent_Id=" + Parent_IdNew + " Where Id = " + SysConfigMenusId;
             opp.insert_me(mysql);
@@ -1376,7 +1439,18 @@ CREATE TABLE [dbo].[SysConfig](
             mysql = " Update SysConfigMenusPERMATIONS Set Parent_Id=" + Parent_IdNew + " Where Menu_ID = " + SysConfigMenusId;
             opp.insert_me(mysql);
         }
+        private static void UpdateMenuName(ref operations opp, long SysConfigMenusId, string Description, string KeysData)
+        {
+            string mysql = " Update  SysConfigMenus Set Description=N'" + Description + "' ";
+            if (KeysData.Trim() != "")
+            {
+                mysql = mysql + " , KeysData=N'" + KeysData + "' ";
+            }
+            mysql = mysql + "  Where Id = " + SysConfigMenusId;
+            opp.insert_me(mysql);
 
+
+        }
         static void DeleteMenu(ref AccountModelsLib.operations opp, int SysConfigMenusId)
         {
             //int C = 0;
@@ -1454,7 +1528,7 @@ CREATE TABLE [dbo].[SysConfig](
                 }
                 catch (Exception ee)
                 {
-                     
+
                 }
                 if (Is_Identity.Trim() != "")
                 {

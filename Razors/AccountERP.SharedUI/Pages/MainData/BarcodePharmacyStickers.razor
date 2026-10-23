@@ -51,6 +51,7 @@
                         <MudNumericField @bind-Value="settings.FooterFontSize" @bind-Value:after="Refresh" Label="@Tr("BarcodeFooterFontSize")" Variant="Variant.Outlined" Min="3" Max="20" />
                     </MudStack>
                     <MudCheckBox T="bool" @bind-Value="settings.ShowDividerLine" Label="@Tr("BarcodeShowDivider")" />
+                    <MudCheckBox T="bool" @bind-Value="settings.OneStickerPerPage" Label="@Tr("BarcodeOneStickerPerPage")" />
                 </MudStack>
             </MudPaper>
 
@@ -141,14 +142,12 @@
     .sticker-page { display: flex; flex-wrap: wrap; }
     .sticker { display: flex; flex-direction: column; box-sizing: border-box; border: 1px dashed #bbb; background: #fff; overflow: hidden; }
     .sticker-slot { display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; text-align: center; }
-    .s-header { font-weight: 600; width: 100%; }
-    .s-footer { width: 100%; }
-    .s-image { max-width: 92%; }
+    /* الصورة تأخذ المساحة الباقية بين العنوان والكود فقط - بدون max-height كانت أطول من الخانة فتُقص بالكامل */
+    .s-header, .s-footer { flex: 0 0 auto; width: 100%; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .s-header { font-weight: 600; }
+    .s-image { flex: 1 1 auto; min-height: 0; max-width: 92%; max-height: 100%; object-fit: contain; image-rendering: pixelated; }
 
     @@media print {
-        body * { visibility: hidden; }
-        .print-area, .print-area * { visibility: visible; }
-        .print-area { position: absolute; inset-inline-start: 0; top: 0; }
         .no-print { display: none !important; }
         .sticker { border: none; }
     }
@@ -164,6 +163,8 @@
         public float HeaderFontSize { get; set; } = 6f;
         public float FooterFontSize { get; set; } = 6f;
         public bool ShowDividerLine { get; set; } = true;
+        // طابعة استيكرات: كل استيكر صفحة بمقاسه بالضبط، وإلا تُرص على ورقة A4
+        public bool OneStickerPerPage { get; set; } = true;
     }
 
     private class StickerItem
@@ -286,7 +287,16 @@
         }
     }
 
-    private async Task PrintAsync() => await JS.InvokeVoidAsync("window.print");
+    // يطبع منطقة الاستيكرات وحدها داخل iframe (راجع accountErpInterop.printElement فى interop.js)
+    private async Task PrintAsync()
+    {
+        var w = settings.StickerWidthMm.ToString(CultureInfo.InvariantCulture);
+        var h = settings.StickerHeightMm.ToString(CultureInfo.InvariantCulture);
+        var pageCss = settings.OneStickerPerPage
+            ? $"@page {{ size: {w}mm {h}mm; margin: 0; }} .sticker-page {{ display: block !important; }} .sticker {{ margin: 0 !important; border: none !important; break-after: page; page-break-after: always; }} .sticker:last-child {{ break-after: auto; page-break-after: auto; }}"
+            : "@page { size: A4; margin: 5mm; } .sticker { border: none !important; break-inside: avoid; }";
+        await JS.InvokeVoidAsync("accountErpInterop.printElement", ".print-area", Tr("BarcodeStickersTitle"), LangService.IsRtl ? "rtl" : "ltr", pageCss);
+    }
 
     private string Tr(string key, params object[] args)
     {

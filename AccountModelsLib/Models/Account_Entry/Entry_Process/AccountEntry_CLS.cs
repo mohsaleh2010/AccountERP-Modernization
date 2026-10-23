@@ -1858,11 +1858,11 @@ WHERE        (Account_Entry_List.Id = - 1)";
 
                     mysql = mysql + " SELECT " + Cach_Value + "  as All_Import, " + Transform_Type + " AS Transform_Type, " + Account_Entry_List_ID + " AS Account_Entry_List_ID," + Transaction_Date + "," + Transaction_Type_Employee + "  AS TransactionType," + PriceTypeFlage + " as PriceTypeFlage, N'" + Notes + "' AS Notes ,";
                     mysql = mysql + "  " + Cach_Value + "  as Import, 0  as Export," + Customer_Type + " as Customer_Type,'" + PaymentMethod + "' AS PaymentMethod ," + Currency_Id + " AS Currency_ID ,";
-                    mysql = mysql + " USER_DETAILES.USER_ID, USER_DETAILES.Branch_Id,";
+                    mysql = mysql + " USER_DETAILES.Id, USER_DETAILES.Branch_Id,";
                     mysql = mysql + " USER_DETAILES.Balance_Air AS USER_Balance_Air, USER_DETAILES.Balance_Road AS USER_Balance_Road , ";
                     mysql = mysql + " Customer.Balance_Air AS Customer_Balance_Air, Customer.Balance_Road AS Customer_Balance_Road ";
                     mysql = mysql + " FROM USER_DETAILES INNER JOIN Customer ON USER_DETAILES.Branch_Id = Customer.Id ";
-                    mysql = mysql + " Where USER_DETAILES.USER_ID=" + User_Details_ID + "";
+                    mysql = mysql + " Where USER_DETAILES.Id=" + User_Details_ID + "";
                     opp.insert_me(mysql);
                 }
 
@@ -2005,11 +2005,11 @@ WHERE        (Account_Entry_List.Id = - 1)";
 
                     mysql = mysql + " SELECT " + Transform_Type + " AS Transform_Type, " + Account_Entry_List_ID + " AS Account_Entry_List_ID," + Transaction_Date + "," + Transaction_Type_Employee + "  AS TransactionType," + PriceTypeFlage + " as PriceTypeFlage,N'" + Notes + "' AS Notes ,";
                     mysql = mysql + "  0   as Import, " + Cach_Value + "   as Export," + Customer_Type + " as Customer_Type,'" + PaymentMethod + "' AS PaymentMethod ," + Currency_Id + " AS Currency_ID ,";
-                    mysql = mysql + " USER_DETAILES.USER_ID, USER_DETAILES.Branch_Id,";
+                    mysql = mysql + " USER_DETAILES.Id, USER_DETAILES.Branch_Id,";
                     mysql = mysql + " USER_DETAILES.Balance_Air AS USER_Balance_Air, USER_DETAILES.Balance_Road AS USER_Balance_Road , ";
                     mysql = mysql + " Customer.Balance_Air AS Customer_Balance_Air, Customer.Balance_Road AS Customer_Balance_Road ";
                     mysql = mysql + " FROM USER_DETAILES INNER JOIN Customer ON USER_DETAILES.Branch_Id = Customer.Id ";
-                    mysql = mysql + " Where USER_DETAILES.USER_ID=" + User_Details_ID + "";
+                    mysql = mysql + " Where USER_DETAILES.Id=" + User_Details_ID + "";
                     opp.insert_me(mysql);
                 }
 
@@ -2073,8 +2073,8 @@ FROM            Account_Entry_Details INNER JOIN
                          Account_Entry_List.Journal_Name, Account_Entry_List.Entry_Currency_Name AS Currency_Name
 FROM            Account_Entry_List INNER JOIN
                          Account_Entry_Details ON Account_Entry_List.Id = Account_Entry_Details.Account_Entry_List_ID LEFT OUTER JOIN
-                         USER_DETAILES ON Account_Entry_List.User_ID_Login = USER_DETAILES.USER_ID LEFT OUTER JOIN
-                         USER_DETAILES AS USER_DETAILES_1 ON Account_Entry_List.User_ID_LoginUpdate = USER_DETAILES_1.USER_ID 
+                         USER_DETAILES ON Account_Entry_List.User_ID_Login = USER_DETAILES.Id LEFT OUTER JOIN
+                         USER_DETAILES AS USER_DETAILES_1 ON Account_Entry_List.User_ID_LoginUpdate = USER_DETAILES_1.Id 
  
 ";
             mysql = mysql + " WHERE  Account_Entry_List.ID >=0 ";

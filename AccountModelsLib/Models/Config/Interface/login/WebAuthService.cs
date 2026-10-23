@@ -42,7 +42,7 @@ namespace AccountModelsLib.Models
             return Result;
         }
 
-        public async Task<bool> RestoreSessionAsync(int userId)
+        public async Task<bool> RestoreSessionAsync(long userId)
         {
             bool Result = await service.RestoreSessionAsync(userId);
             dt_Branch = service.dt_Branch;

@@ -7,6 +7,17 @@ using AccountModelsLib.Models;
 
 namespace AccountModelsLib
 {
+    public class DuplicateMachineNameException : InvalidOperationException
+    {
+        public string MachineName { get; }
+
+        public DuplicateMachineNameException(string machineName)
+            : base("اسم الماكينة \"" + machineName + "\" مستخدم من قبل")
+        {
+            MachineName = machineName;
+        }
+    }
+
     public class Machin_listCLs
     {
         private readonly operations opp;
@@ -41,6 +52,8 @@ namespace AccountModelsLib
         /// </summary>
         public async Task UpdateDataTableAsync(List<Machin_list> machines)
         {
+            await EnsureUniqueNamesAsync(machines);
+
             foreach (var item in machines)
             {
                 item.Active = 1;
@@ -67,6 +80,31 @@ namespace AccountModelsLib
         }
 
         /// <summary>
+        /// يمنع تكرار اسم الماكينة بين الماكينات الفعالة (بعد حذف المسافات وبدون تفرقة حالة الأحرف)،
+        /// سواء داخل نفس الدفعة أو مع المحفوظ بالقاعدة
+        /// </summary>
+        public async Task EnsureUniqueNamesAsync(List<Machin_list> machines)
+        {
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in machines)
+            {
+                item.Machin_Name = (item.Machin_Name ?? "").Trim();
+                if (!seen.Add(item.Machin_Name))
+                    throw new DuplicateMachineNameException(item.Machin_Name);
+            }
+
+            var names = seen.ToList();
+            var ids = machines.Where(m => m.Id != 0).Select(m => m.Id).ToList();
+            var existing = await opp.db.Machin_list
+                                       .AsNoTracking()
+                                       .Where(m => m.Active == 1 && names.Contains(m.Machin_Name.Trim()) && !ids.Contains(m.Id))
+                                       .Select(m => m.Machin_Name)
+                                       .FirstOrDefaultAsync();
+            if (existing != null)
+                throw new DuplicateMachineNameException(existing.Trim());
+        }
+
+        /// <summary>
         /// حذف منطقي (Soft Delete)
         /// </summary>
         public async Task DeleteMachin_listAsync(long id)
@@ -84,6 +122,9 @@ namespace AccountModelsLib
         /// </summary>
         public async Task Add_MachinAsync(string machineName, decimal priceOfNazlla, string code = null, decimal? speed = null, int? machineWidth = null, string description = null, decimal? abstractHadafat = null)
         {
+            machineName = (machineName ?? "").Trim();
+            await EnsureUniqueNamesAsync(new List<Machin_list> { new Machin_list { Id = 0, Machin_Name = machineName } });
+
             var newMachine = new Machin_list
             {
                 Id = CallSnowflakeIdGenerate.GenerateNewId(), // استخدام الميثود الجديدة
@@ -106,6 +147,9 @@ namespace AccountModelsLib
         /// </summary>
         public async Task Update_MachineAsync(long id, string machineName, decimal priceOfNazlla, string code = null, decimal? speed = null, int? machineWidth = null, string description = null, decimal? abstractHadafat = null)
         {
+            machineName = (machineName ?? "").Trim();
+            await EnsureUniqueNamesAsync(new List<Machin_list> { new Machin_list { Id = id, Machin_Name = machineName } });
+
             var machine = await opp.db.Machin_list.FirstOrDefaultAsync(m => m.Id == id);
             if (machine != null)
             {

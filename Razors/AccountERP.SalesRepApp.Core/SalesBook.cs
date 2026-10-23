@@ -1,6 +1,6 @@
 namespace AccountERP.SalesRepApp.Core
 {
-    /// <summary>حساب سطر البيع كما على السيرفر (InvoiceLineCalculator، السعر للوحدة الكبرى).</summary>
+    /// <summary>حساب سطر البيع بالكود نفسه الذى يحسب به السيرفر (LineMath، السعر للوحدة الكبرى).</summary>
     public readonly record struct LineCalc(decimal Value, decimal Discount, decimal WithoutTax, decimal Tax, decimal Net, decimal QtySmall, decimal DiscountRate);
 
     public class SaleCheck
@@ -36,15 +36,25 @@ namespace AccountERP.SalesRepApp.Core
         public ItemRow? Item(long unitItemId) => _store.Row<ItemRow>("items", unitItemId);
         public CustomerRow? Customer(long id) => _store.Row<CustomerRow>("customers", id);
 
-        public static LineCalc Calc(SaleLine l, decimal factor)
+        /// <summary>منازل التقريب كما على السيرفر (SysConfig.DecimalPlaces، تنزل مع الملف الشخصى).</summary>
+        public int Decimals => Profile?.Decimal_Places ?? 2;
+
+        /// <summary>
+        /// سطر البيع كما يبنيه السيرفر من مستند الجهاز (SalesRepSyncService.BuildSale → InvoiceLineCalculator.ComputeLine → LineMath):
+        /// السعر للكبرى، الخصم قيمة (عمولة الصنف) مقرّبة لمنزلتين، الضريبة نسبة مقرّبة لمنزلتين.
+        /// </summary>
+        public static LineCalc Calc(SaleLine l, decimal factor, int decimals = 2)
         {
             decimal f = factor <= 0 ? 1 : factor;
-            decimal value = (l.Qty_Large + l.Qty_Small / f) * l.Unit_Price;
             decimal disc = Math.Round(l.Discount_Value, 2);
-            decimal without = Math.Max(0, value - disc);
-            decimal tax = Math.Round(without * l.Tax_Rate / 100, 2);
-            return new LineCalc(Math.Round(value, 2), disc, Math.Round(without, 2), tax, Math.Round(without + tax, 2), l.Qty_Large * f + l.Qty_Small,
-                value > 0 ? Math.Round(disc / value * 100, 4) : 0);
+            var r = AccountModelsLib.Pricing.LineMath.Compute(new AccountModelsLib.Pricing.LineInput
+            {
+                Unit_Used_for_Price = 1, Larg_Qnty = l.Qty_Large, Small_Qnty = l.Qty_Small, PriceUnit = l.Unit_Price, Factor = f,
+                Item_CommissionValue = disc, Item_TaxSales10 = Math.Round(l.Tax_Rate, 2),
+            }, AccountModelsLib.Pricing.LineMath.RoundPositive(decimals));
+            decimal raw = (l.Qty_Large + l.Qty_Small / f) * l.Unit_Price;
+            return new LineCalc(r.Qnty_value, r.ItemCommissionTotal, r.Item_Total_WithoutTax, r.Item_TaxSales10_Value, r.Item_Net_Total_Price,
+                l.Qty_Large * f + l.Qty_Small, raw > 0 ? Math.Round(r.ItemCommissionTotal / raw * 100, 4) : 0);
         }
 
         /// <summary>سعر الوحدة الكبرى: نوع سعر العميل، ثم نوع المندوب، ثم سعر بيع الصنف.</summary>
@@ -117,7 +127,7 @@ namespace AccountERP.SalesRepApp.Core
                 {
                     if (l.Qty_Large < 0 || l.Qty_Small < 0 || l.Qty_Large + l.Qty_Small <= 0) r.Problems.Add($"كمية «{item.Item_Name}» غير صحيحة.");
                     if (l.Unit_Price < 0 || l.Discount_Value < 0) r.Problems.Add($"سعر أو خصم «{item.Item_Name}» غير صحيح.");
-                    var c = Calc(l, item.Factor);
+                    var c = Calc(l, item.Factor, Decimals);
                     r.Net += c.Net;
                     if (profile?.Max_Discount_Rate is decimal max && c.DiscountRate > max)
                         r.Warnings.Add($"خصم «{item.Item_Name}» {c.DiscountRate:0.##}% فوق حدك {max:0.##}%؛ سيحتاج موافقة المشرف.");

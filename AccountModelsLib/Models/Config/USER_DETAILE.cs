@@ -14,8 +14,8 @@ namespace AccountModelsLib.Models
     public class USER_DETAILE
     {
         [Key]
-        [Column("USER_ID")]
-        public long USER_ID { get; set; }
+        [Column("Id")]
+        public long Id { get; set; }
 
         public string Name { get; set; }
 

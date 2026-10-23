@@ -27,7 +27,7 @@
     @foreach (var l in _lines)
     {
         var item = _items[l.Unit_Item_Id];
-        var c = SalesBook.Calc(l, item.Factor);
+        var c = SalesBook.Calc(l, item.Factor, State.Book.Decimals);
         <MudPaper Class="pa-3 ra-gap ra-card" Elevation="1">
             <div class="ra-row">
                 <b class="ra-grow">@item.Item_Name</b>

@@ -758,6 +758,7 @@
   <data name="AddMachine" xml:space="preserve"><value>New Machine</value></data>
   <data name="NoMachinesYet" xml:space="preserve"><value>No machines to display yet.</value></data>
   <data name="MachineNameRequired" xml:space="preserve"><value>Please enter a name</value></data>
+  <data name="MachineNameDuplicate" xml:space="preserve"><value>The name "{0}" is already used by another machine</value></data>
   <data name="MachineAdded" xml:space="preserve"><value>Added successfully</value></data>
   <data name="MachineDeleted" xml:space="preserve"><value>Deleted successfully</value></data>
   <data name="DeleteMachineTitle" xml:space="preserve"><value>Delete Machine</value></data>
@@ -2404,6 +2405,7 @@
   <data name="BarcodeHeaderFontSize" xml:space="preserve"><value>Header Font Size</value></data>
   <data name="BarcodeFooterFontSize" xml:space="preserve"><value>Footer Font Size</value></data>
   <data name="BarcodeShowDivider" xml:space="preserve"><value>Divider Line Between Barcodes</value></data>
+  <data name="BarcodeOneStickerPerPage" xml:space="preserve"><value>One sticker per page (label printer)</value></data>
   <data name="BarcodeAddItemsSection" xml:space="preserve"><value>Add Items to Print</value></data>
   <data name="BarcodeNoItemsAdded" xml:space="preserve"><value>No items added yet</value></data>
   <data name="BarcodeSlotsWord" xml:space="preserve"><value>barcodes</value></data>
@@ -2645,7 +2647,7 @@
   <data name="IL_degrees" xml:space="preserve"><value>Item grades</value></data>
   <data name="IL_natures" xml:space="preserve"><value>Item natures</value></data>
   <data name="IL_groups" xml:space="preserve"><value>Item groups</value></data>
-  <data name="ILSub" xml:space="preserve"><value>Reference lists that item data is chosen from</value></data>
+  <data name="ILSub" xml:space="preserve"><value>Reference lists for item specifications; shown on the item screen for ceramics items (group, nature and spec lists)</value></data>
   <data name="ILLists" xml:space="preserve"><value>Lists</value></data>
   <data name="ILAdd" xml:space="preserve"><value>Add a value</value></data>
   <data name="ILAddButton" xml:space="preserve"><value>Add</value></data>
@@ -2694,6 +2696,13 @@
   <data name="IC_T2" xml:space="preserve"><value>Purchases</value></data>
   <data name="IC_T3" xml:space="preserve"><value>Work in progress</value></data>
   <data name="IC_NewCat" xml:space="preserve"><value>New category</value></data>
+  <data name="IC_MultiHint" xml:space="preserve"><value>Enter saves and keeps the dialog open for the next name; Esc closes it</value></data>
+  <data name="IT_QuickAdd" xml:space="preserve"><value>Quick add</value></data>
+  <data name="IT_QuickAddTitle" xml:space="preserve"><value>Quick add item</value></data>
+  <data name="IT_QuickHint" xml:space="preserve"><value>The item is added to the default store with a zero balance. Other data (barcodes, specs, opening balance) is on the full item screen.</value></data>
+  <data name="IT_QuickMultiHint" xml:space="preserve"><value>Enter saves and keeps the dialog open for the next item with the same category and unit; Esc closes it</value></data>
+  <data name="IT_SaveOpen" xml:space="preserve"><value>Save and open card</value></data>
+  <data name="IT_NoStore" xml:space="preserve"><value>There is no active store to add the item to.</value></data>
   <data name="IC_CatName" xml:space="preserve"><value>Category name</value></data>
   <data name="IC_Main" xml:space="preserve"><value>Main type</value></data>
   <data name="IC_Kind" xml:space="preserve"><value>Used for</value></data>
@@ -2842,6 +2851,38 @@
   <data name="IC_ProfileCars" xml:space="preserve"><value>Car spare parts</value></data>
   <data name="IC_ProfileCeramics" xml:space="preserve"><value>Ceramics / specifications</value></data>
   <data name="IC_ProfileGlass" xml:space="preserve"><value>Glass / sized</value></data>
+  <data name="IC_ProfileTextile" xml:space="preserve"><value>Textile</value></data>
+  <data name="IT_ListTextile" xml:space="preserve"><value>Textile items</value></data>
+  <data name="IT_Textile" xml:space="preserve"><value>Textile item data</value></data>
+  <data name="IT_TextileType" xml:space="preserve"><value>Textile item type</value></data>
+  <data name="IT_TT1" xml:space="preserve"><value>Finished goods - sales</value></data>
+  <data name="IT_TT2" xml:space="preserve"><value>Raw materials, purchases and supplies</value></data>
+  <data name="IT_TT3" xml:space="preserve"><value>Semi-finished</value></data>
+  <data name="IT_TT4" xml:space="preserve"><value>Work in progress</value></data>
+  <data name="IT_AllTypes" xml:space="preserve"><value>All types</value></data>
+  <data name="IT_SizeDesc" xml:space="preserve"><value>Size description</value></data>
+  <data name="IT_SizeDescHelp" xml:space="preserve"><value>e.g. 200×220 cm, or size and weight</value></data>
+  <data name="IT_TextileHelp" xml:space="preserve"><value>The main store and adding the item to all stores follow the item type (store type).</value></data>
+  <data name="IT_TextileLocked" xml:space="preserve"><value>The type cannot change for an item with a balance or movements</value></data>
+  <data name="IT_NoStoreOfType" xml:space="preserve"><value>There is no active store of this type; add a store of the same type first.</value></data>
+  <data name="IT_NewByType" xml:space="preserve"><value>New item by type</value></data>
+  <data name="CT_Title" xml:space="preserve"><value>Car types</value></data>
+  <data name="CT_Sub" xml:space="preserve"><value>Makes and types used for cars and spare parts; click the models count to open the type's models.</value></data>
+  <data name="CT_New" xml:space="preserve"><value>New car type</value></data>
+  <data name="CT_Name" xml:space="preserve"><value>Type name</value></data>
+  <data name="CT_NameEn" xml:space="preserve"><value>English name</value></data>
+  <data name="CT_ItemsCount" xml:space="preserve"><value>Items</value></data>
+  <data name="CT_CarsCount" xml:space="preserve"><value>Cars</value></data>
+  <data name="CT_ModelsOf" xml:space="preserve"><value>Models of {0}</value></data>
+  <data name="CT_UsedNoDelete" xml:space="preserve"><value>In use; cannot be deleted</value></data>
+  <data name="CT_Empty" xml:space="preserve"><value>No car types yet</value></data>
+  <data name="CM_Title" xml:space="preserve"><value>Car models</value></data>
+  <data name="CM_Sub" xml:space="preserve"><value>Models of each car type, chosen in the car data.</value></data>
+  <data name="CM_New" xml:space="preserve"><value>New model</value></data>
+  <data name="CM_Name" xml:space="preserve"><value>Model name</value></data>
+  <data name="CM_Empty" xml:space="preserve"><value>No models</value></data>
+  <data name="CM_NoTypes" xml:space="preserve"><value>Add a car type first, then its models.</value></data>
+  <data name="CM_MultiHint" xml:space="preserve"><value>Enter saves and keeps the dialog open for the next model of the same type; Esc closes it</value></data>
   <data name="IL_car-types" xml:space="preserve"><value>Car makes</value></data>
   <data name="PR_Title" xml:space="preserve"><value>Item prices</value></data>
   <data name="PR_Sub" xml:space="preserve"><value>Price lists and derived lists, bulk changes, and special customer and supplier prices</value></data>
@@ -3762,4 +3803,50 @@
   <data name="FSUGuid" xml:space="preserve"><value>Document ID</value></data>
   <data name="FSUResult" xml:space="preserve"><value>resulting document {0}</value></data>
   <data name="FSUHint" xml:space="preserve"><value>Rejected or saved documents are not processed again. A resend from the device never duplicates a document.</value></data>
+  <data name="BreadcrumbMainMenusSetting" xml:space="preserve"><value>Main modules menu</value></data>
+  <data name="BreadcrumbMainMenusSettingHint" xml:space="preserve"><value>An arrow next to “Available modules” lists every module for quick switching</value></data>
+  <data name="BreadcrumbSubMenusSetting" xml:space="preserve"><value>Submenus for each level</value></data>
+  <data name="BreadcrumbSubMenusSettingHint" xml:space="preserve"><value>An arrow next to each level lists its submenus; deeper menus open on hover</value></data>
+  <data name="BreadcrumbAriaLabel" xml:space="preserve"><value>Breadcrumb</value></data>
+  <data name="BreadcrumbShowSubmenus" xml:space="preserve"><value>Show {0} menus</value></data>
+  <data name="SADTitle" xml:space="preserve"><value>Store accounts</value></data>
+  <data name="SADSubtitle" xml:space="preserve"><value>For each stock movement, set the account posted opposite the store account. The most specific wins: the store, then its type, then the branch default.</value></data>
+  <data name="SADLevelLabel" xml:space="preserve"><value>Setting level</value></data>
+  <data name="SADLevelBranch" xml:space="preserve"><value>Branch default (all stores)</value></data>
+  <data name="SADLevelType" xml:space="preserve"><value>Store type</value></data>
+  <data name="SADLevelStore" xml:space="preserve"><value>Specific store</value></data>
+  <data name="SADStoreLabel" xml:space="preserve"><value>Store</value></data>
+  <data name="SADChooseStore" xml:space="preserve"><value>Choose a store to see its settings</value></data>
+  <data name="SADRoleColumn" xml:space="preserve"><value>Movement</value></data>
+  <data name="SADUsedByColumn" xml:space="preserve"><value>Used by</value></data>
+  <data name="SADAccountColumn" xml:space="preserve"><value>Offset account</value></data>
+  <data name="SADSourceHere" xml:space="preserve"><value>Set at this level</value></data>
+  <data name="SADSourceInherited" xml:space="preserve"><value>Inherited from: {0}</value></data>
+  <data name="SADNotSet" xml:space="preserve"><value>Not set</value></data>
+  <data name="SADPick" xml:space="preserve"><value>Pick an account from the tree</value></data>
+  <data name="SADClear" xml:space="preserve"><value>Clear (falls back to the broader level)</value></data>
+  <data name="SADPickTitle" xml:space="preserve"><value>Choose the offset account: {0}</value></data>
+  <data name="SADSuggest" xml:space="preserve"><value>Suggest from account types</value></data>
+  <data name="SADSuggestDone" xml:space="preserve"><value>{0} accounts suggested</value></data>
+  <data name="SADSuggestNone" xml:space="preserve"><value>No suggestions: no single sub-account per type, pick accounts manually</value></data>
+  <data name="SADSaved" xml:space="preserve"><value>Saved</value></data>
+  <data name="SADNotWiredYet" xml:space="preserve"><value>These settings are not used in journal entries yet; linking orders and invoices to them is a later phase.</value></data>
+  <data name="SADSalesInvoices" xml:space="preserve"><value>Sales invoices</value></data>
+  <data name="SADPurchaseInvoices" xml:space="preserve"><value>Purchase invoices</value></data>
+  <data name="SADItemOpening" xml:space="preserve"><value>Item opening balances</value></data>
+  <data name="SADRole1" xml:space="preserve"><value>Goods received not invoiced</value></data>
+  <data name="SADRole2" xml:space="preserve"><value>Cost of goods sold</value></data>
+  <data name="SADRole3" xml:space="preserve"><value>Stock count surplus</value></data>
+  <data name="SADRole4" xml:space="preserve"><value>Stock count shortage</value></data>
+  <data name="SADRole5" xml:space="preserve"><value>Work in progress</value></data>
+  <data name="SADRole6" xml:space="preserve"><value>Scrap</value></data>
+  <data name="SADRole7" xml:space="preserve"><value>Goods in transit (transfers)</value></data>
+  <data name="SADRole8" xml:space="preserve"><value>Consumption expense (spare parts, workshop, machines, employees)</value></data>
+  <data name="SADRole9" xml:space="preserve"><value>Purchase price variance</value></data>
+  <data name="SADRole10" xml:space="preserve"><value>Opening balance</value></data>
+  <data name="ShipmentCompaniesHint" xml:space="preserve"><value>Shipment companies are service suppliers: each has an account under “Shipment companies” and a supplier statement</value></data>
+  <data name="ShipmentAccountColumn" xml:space="preserve"><value>Account code</value></data>
+  <data name="ShipmentLegacyFound" xml:space="preserve"><value>{0} shipment companies in the old table have no account: {1}</value></data>
+  <data name="ShipmentLegacyImport" xml:space="preserve"><value>Import with accounts</value></data>
+  <data name="ShipmentLegacyImported" xml:space="preserve"><value>{0} shipment companies imported</value></data>
 </root>

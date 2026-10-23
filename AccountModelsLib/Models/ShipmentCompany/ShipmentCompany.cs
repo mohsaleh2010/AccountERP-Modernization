@@ -12,6 +12,7 @@ namespace AccountModelsLib.Models
 
         [Required(ErrorMessage = "اسم الشركة مطلوب")]
         public string Name { get; set; }
+        public long SubAccount_Id { get;  set; }
 
         //public string Phone { get; set; }
 

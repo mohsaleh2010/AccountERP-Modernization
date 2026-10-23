@@ -1,13 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using AccountModelsLib.Models;
+using Connection4It; 
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore; 
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
-using Microsoft.Data.SqlClient;
-using Connection4It; 
-using Microsoft.EntityFrameworkCore; 
+using System.Linq;
+using System.Text;
  
  
  
@@ -31,22 +33,38 @@ namespace AccountModelsLib
         }
         public void Add_Group(ref int Excp,ref string Msg, string GroupName, int GroupType)
         {
-            string mysql = " Select * from Customer_Supplier_Group Where GroupName='" + GroupName + "' And GroupType="+ GroupType + " ";
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
-            DataTable dt = opp.return_DataTable(mysql);
-            if (dt.Rows.Count > 0)
+            try
             {
-                Msg="الإسم مستخدم من قبل" ;
-                Excp = 1;
-                return;
+                GroupName = (GroupName ?? "").Trim();
+                // فحص التكرار عبر EF حتى لا يكسر اسم به علامة ' الاستعلام
+                if (opp.db.Customer_Supplier_Group.Any(i => i.GroupName == GroupName && i.GroupType == GroupType))
+                {
+                    Msg = "الإسم مستخدم من قبل";
+                    Excp = 1;
+                    return;
+                }
+
+                // ID ليس Identity، فكان INSERT القديم بدونه يفشل دائماً (Cannot insert NULL into column 'ID')
+                DateTime now = DateTime.Now;
+                opp.db.Customer_Supplier_Group.Add(new Customer_Supplier_Group
+                {
+                    ID = CallSnowflakeIdGenerate.GenerateNewId(),
+                    GroupName = GroupName,
+                    GroupType = GroupType,
+                    User_Id = Common.User_Id,
+                    Branch_Id = Common.Branch_Id,
+                    OperationDate = now,
+                    Insert_ServerDateTime = now
+                });
+                opp.db.SaveChanges();
+                Excp = 0;
             }
-            
-            mysql = @"INSERT INTO Customer_Supplier_Group (GroupName,  GroupType ) ";
-            mysql = mysql + " VALUES ('" + GroupName + "', " + GroupType + " )";
-
-            opp.insert_me(mysql);
-            Excp = 0;
-
+            catch (Exception exceptionObj)
+            {
+                Msg = exceptionObj.InnerException?.Message ?? exceptionObj.Message;
+                Excp = 1;
+            }
         }
 
         public void Delete_Customer_Supplier_Group(ref int Excp,ref string Msg, string Value)
@@ -84,18 +102,35 @@ namespace AccountModelsLib
             AccountModelsLib.operations opp = new AccountModelsLib.operations();
             try
             {
-                string mysqlDup = " Select * from Customer_Supplier_Group Where GroupName='" + GroupName + "' And GroupType=" + GroupType + " And ID<>" + Id + " ";
-                DataTable dt = opp.return_DataTable(mysqlDup);
-                if (dt.Rows.Count > 0)
+                long.TryParse(Id, out long Id_);
+                GroupName = (GroupName ?? "").Trim();
+                // فحص التكرار عبر EF حتى لا يكسر اسم به علامة ' الاستعلام
+                bool isDup = opp.db.Customer_Supplier_Group.Any(i => i.GroupName == GroupName && i.GroupType == GroupType && i.ID != Id_);
+                if (isDup)
                 {
                     Msg = "الإسم مستخدم من قبل";
                     Excp = 1;
                     return;
                 }
+                var csg = opp.db.Customer_Supplier_Group.Where(i => i.ID == Id_).FirstOrDefault();
 
-                string mysql = "Update Customer_Supplier_Group Set GroupName='" + GroupName + "', Edit_User_Id=" + Common.User_Id + ", EditOperationDate='" + AccountModelsLib.operations.dateFormat(DateTime.Now) + "' Where ID=" + Id;
-                opp.update_me(mysql);
-                Excp = 0;
+                if (csg == null)
+                {
+                    Msg = "المجموعة غير موجودة";
+                    Excp = 1;
+                }
+                else
+                {
+                    //string mysql = "Update Customer_Supplier_Group Set GroupName='" + GroupName + "', Edit_User_Id=" + Common.User_Id + ", EditOperationDate='" + AccountModelsLib.operations.dateFormat(DateTime.Now.Date) + "' Where ID=" + Id;
+                    //opp.insert_me(mysql);
+
+                    csg.GroupName = GroupName;
+                    csg.Edit_User_Id = Common.User_Id;
+                    csg.EditOperationDate = DateTime.Now;
+
+                    opp.db.SaveChanges();
+                    Excp = 0;
+                }
             }
             catch (Exception exceptionObj)
             {

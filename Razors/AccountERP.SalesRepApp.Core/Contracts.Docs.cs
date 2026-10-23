@@ -133,6 +133,8 @@ namespace AccountERP.SalesRepApp.Core
         public decimal Discount_Value { get; set; }
         public decimal Tax_Value { get; set; }
         public decimal Line_Total { get; set; }
+        /// <summary>نسبة الضريبة: السيرفر يعيد حساب السطر بها.</summary>
+        public decimal Tax_Rate { get; set; }
         public string? Notes { get; set; }
     }
 

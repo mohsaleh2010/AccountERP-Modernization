@@ -26,6 +26,20 @@
             <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="margin-inline-start:52px;">@Tr("ShowBreadcrumbSettingHint")</MudText>
         </MudStack>
 
+        @* 🟢 قوائم مسار التنقّل - خيارات تابعة لإظهار المسار نفسه، فتُعطَّل (لا تُخفى) عند إلغائه حتى يبقى واضحاً أنها موجودة *@
+        <div class="user-settings-sub">
+            <MudStack Spacing="0" Class="mb-1">
+                <MudSwitch T="bool" Value="@Prefs.BreadcrumbMainMenus" ValueChanged="@((bool v) => Prefs.SetBreadcrumbMainMenus(v))"
+                           Disabled="@(!Prefs.ShowBreadcrumb)" Color="Color.Primary" Size="Size.Small" Label="@Tr("BreadcrumbMainMenusSetting")" />
+                <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="margin-inline-start:44px;">@Tr("BreadcrumbMainMenusSettingHint")</MudText>
+            </MudStack>
+            <MudStack Spacing="0">
+                <MudSwitch T="bool" Value="@Prefs.BreadcrumbSubMenus" ValueChanged="@((bool v) => Prefs.SetBreadcrumbSubMenus(v))"
+                           Disabled="@(!Prefs.ShowBreadcrumb)" Color="Color.Primary" Size="Size.Small" Label="@Tr("BreadcrumbSubMenusSetting")" />
+                <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="margin-inline-start:44px;">@Tr("BreadcrumbSubMenusSettingHint")</MudText>
+            </MudStack>
+        </div>
+
         <MudDivider Class="my-3" />
 
         <MudStack Spacing="1" Class="mb-2">
@@ -107,3 +121,12 @@
         Prefs.OnChanged -= OnChangedHandler;
     }
 }
+
+<style>
+    .user-settings-sub {
+        margin-inline-start: 20px;
+        padding-inline-start: 12px;
+        border-inline-start: 2px solid var(--mud-palette-lines-default);
+        margin-top: 4px;
+    }
+</style>

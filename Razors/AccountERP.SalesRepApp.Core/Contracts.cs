@@ -82,6 +82,8 @@ namespace AccountERP.SalesRepApp.Core
         public string Company_Address { get; set; } = "";
         public string Company_Phone { get; set; } = "";
         public string Tax_Number { get; set; } = "";
+        /// <summary>منازل التقريب (SysConfig.DecimalPlaces) ليطابق حساب الجهاز حساب السيرفر.</summary>
+        public int Decimal_Places { get; set; } = 2;
         public string Rep_Name { get; set; } = "";
         public long Branch_Id { get; set; }
         public int Sales_Mode { get; set; }

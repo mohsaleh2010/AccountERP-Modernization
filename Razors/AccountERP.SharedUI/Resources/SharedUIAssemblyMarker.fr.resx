@@ -759,6 +759,7 @@
   <data name="AddMachine" xml:space="preserve"><value>New Machine</value><comment>TODO: translate to French</comment></data>
   <data name="NoMachinesYet" xml:space="preserve"><value>No machines to display yet.</value><comment>TODO: translate to French</comment></data>
   <data name="MachineNameRequired" xml:space="preserve"><value>Please enter a name</value><comment>TODO: translate to French</comment></data>
+  <data name="MachineNameDuplicate" xml:space="preserve"><value>The name "{0}" is already used by another machine</value><comment>TODO: translate to French</comment></data>
   <data name="MachineAdded" xml:space="preserve"><value>Added successfully</value><comment>TODO: translate to French</comment></data>
   <data name="MachineDeleted" xml:space="preserve"><value>Deleted successfully</value><comment>TODO: translate to French</comment></data>
   <data name="DeleteMachineTitle" xml:space="preserve"><value>Delete Machine</value><comment>TODO: translate to French</comment></data>
@@ -2406,6 +2407,7 @@
   <data name="BarcodeHeaderFontSize" xml:space="preserve"><value>Header Font Size</value></data>
   <data name="BarcodeFooterFontSize" xml:space="preserve"><value>Footer Font Size</value></data>
   <data name="BarcodeShowDivider" xml:space="preserve"><value>Divider Line Between Barcodes</value></data>
+  <data name="BarcodeOneStickerPerPage" xml:space="preserve"><value>One sticker per page (label printer)</value><comment>TODO: translate to French</comment></data>
   <data name="BarcodeAddItemsSection" xml:space="preserve"><value>Add Items to Print</value></data>
   <data name="BarcodeNoItemsAdded" xml:space="preserve"><value>No items added yet</value></data>
   <data name="BarcodeSlotsWord" xml:space="preserve"><value>barcodes</value></data>
@@ -2647,7 +2649,7 @@
   <data name="IL_degrees" xml:space="preserve"><value>Choix / qualités</value></data>
   <data name="IL_natures" xml:space="preserve"><value>Natures d'article</value></data>
   <data name="IL_groups" xml:space="preserve"><value>Groupes d'article</value></data>
-  <data name="ILSub" xml:space="preserve"><value>Listes de référence des données d'article</value></data>
+  <data name="ILSub" xml:space="preserve"><value>Listes de référence des spécifications ; affichées dans l'écran de l'article pour les articles céramiques (groupe, nature et listes)</value></data>
   <data name="ILLists" xml:space="preserve"><value>Listes</value></data>
   <data name="ILAdd" xml:space="preserve"><value>Ajouter une valeur</value></data>
   <data name="ILAddButton" xml:space="preserve"><value>Ajouter</value></data>
@@ -2696,6 +2698,13 @@
   <data name="IC_T2" xml:space="preserve"><value>Achats</value></data>
   <data name="IC_T3" xml:space="preserve"><value>En-cours de fabrication</value></data>
   <data name="IC_NewCat" xml:space="preserve"><value>Nouvelle catégorie</value></data>
+  <data name="IC_MultiHint" xml:space="preserve"><value>Entrée enregistre et garde la fenêtre ouverte pour le nom suivant ; Échap la ferme</value></data>
+  <data name="IT_QuickAdd" xml:space="preserve"><value>Ajout rapide</value></data>
+  <data name="IT_QuickAddTitle" xml:space="preserve"><value>Ajout rapide d'article</value></data>
+  <data name="IT_QuickHint" xml:space="preserve"><value>L'article est ajouté au magasin par défaut avec un solde nul. Les autres données (codes-barres, spécifications, solde d'ouverture) sont sur l'écran complet de l'article.</value></data>
+  <data name="IT_QuickMultiHint" xml:space="preserve"><value>Entrée enregistre et garde la fenêtre ouverte pour l'article suivant avec la même catégorie et unité ; Échap la ferme</value></data>
+  <data name="IT_SaveOpen" xml:space="preserve"><value>Enregistrer et ouvrir la fiche</value></data>
+  <data name="IT_NoStore" xml:space="preserve"><value>Aucun magasin actif pour ajouter l'article.</value></data>
   <data name="IC_CatName" xml:space="preserve"><value>Nom de la catégorie</value></data>
   <data name="IC_Main" xml:space="preserve"><value>Type principal</value></data>
   <data name="IC_Kind" xml:space="preserve"><value>Utilisée pour</value></data>
@@ -2844,6 +2853,38 @@
   <data name="IC_ProfileCars" xml:space="preserve"><value>Pièces automobiles</value></data>
   <data name="IC_ProfileCeramics" xml:space="preserve"><value>Céramique / spécifications</value></data>
   <data name="IC_ProfileGlass" xml:space="preserve"><value>Verre / sur mesure</value></data>
+  <data name="IC_ProfileTextile" xml:space="preserve"><value>Textile</value></data>
+  <data name="IT_ListTextile" xml:space="preserve"><value>Articles textiles</value></data>
+  <data name="IT_Textile" xml:space="preserve"><value>Données de l'article textile</value></data>
+  <data name="IT_TextileType" xml:space="preserve"><value>Type d'article textile</value></data>
+  <data name="IT_TT1" xml:space="preserve"><value>Produits finis - ventes</value></data>
+  <data name="IT_TT2" xml:space="preserve"><value>Matières premières, achats et fournitures</value></data>
+  <data name="IT_TT3" xml:space="preserve"><value>Semi-fini</value></data>
+  <data name="IT_TT4" xml:space="preserve"><value>En cours de production</value></data>
+  <data name="IT_AllTypes" xml:space="preserve"><value>Tous les types</value></data>
+  <data name="IT_SizeDesc" xml:space="preserve"><value>Description de la taille</value></data>
+  <data name="IT_SizeDescHelp" xml:space="preserve"><value>ex. 200×220 cm, ou taille et poids</value></data>
+  <data name="IT_TextileHelp" xml:space="preserve"><value>Le magasin principal et l'ajout à tous les magasins suivent le type d'article (type de magasin).</value></data>
+  <data name="IT_TextileLocked" xml:space="preserve"><value>Le type ne peut pas changer pour un article avec solde ou mouvements</value></data>
+  <data name="IT_NoStoreOfType" xml:space="preserve"><value>Aucun magasin actif de ce type ; ajoutez d'abord un magasin du même type.</value></data>
+  <data name="IT_NewByType" xml:space="preserve"><value>Nouvel article par type</value></data>
+  <data name="CT_Title" xml:space="preserve"><value>Types de véhicules</value></data>
+  <data name="CT_Sub" xml:space="preserve"><value>Marques et types utilisés pour les véhicules et les pièces ; le nombre de modèles ouvre les modèles du type.</value></data>
+  <data name="CT_New" xml:space="preserve"><value>Nouveau type de véhicule</value></data>
+  <data name="CT_Name" xml:space="preserve"><value>Nom du type</value></data>
+  <data name="CT_NameEn" xml:space="preserve"><value>Nom anglais</value></data>
+  <data name="CT_ItemsCount" xml:space="preserve"><value>Articles</value></data>
+  <data name="CT_CarsCount" xml:space="preserve"><value>Véhicules</value></data>
+  <data name="CT_ModelsOf" xml:space="preserve"><value>Modèles de {0}</value></data>
+  <data name="CT_UsedNoDelete" xml:space="preserve"><value>Utilisé ; suppression impossible</value></data>
+  <data name="CT_Empty" xml:space="preserve"><value>Aucun type de véhicule</value></data>
+  <data name="CM_Title" xml:space="preserve"><value>Modèles de véhicules</value></data>
+  <data name="CM_Sub" xml:space="preserve"><value>Modèles de chaque type, choisis dans les données du véhicule.</value></data>
+  <data name="CM_New" xml:space="preserve"><value>Nouveau modèle</value></data>
+  <data name="CM_Name" xml:space="preserve"><value>Nom du modèle</value></data>
+  <data name="CM_Empty" xml:space="preserve"><value>Aucun modèle</value></data>
+  <data name="CM_NoTypes" xml:space="preserve"><value>Ajoutez d'abord un type de véhicule, puis ses modèles.</value></data>
+  <data name="CM_MultiHint" xml:space="preserve"><value>Entrée enregistre et garde la fenêtre ouverte pour le modèle suivant du même type ; Échap la ferme</value></data>
   <data name="IL_car-types" xml:space="preserve"><value>Marques de véhicules</value></data>
   <data name="PR_Title" xml:space="preserve"><value>Prix des articles</value></data>
   <data name="PR_Sub" xml:space="preserve"><value>Listes de prix, modification en masse, prix clients et fournisseurs</value></data>
@@ -3764,4 +3805,50 @@
   <data name="FSUGuid" xml:space="preserve"><value>ID du document</value></data>
   <data name="FSUResult" xml:space="preserve"><value>document créé {0}</value></data>
   <data name="FSUHint" xml:space="preserve"><value>Un document rejeté ou enregistré n'est pas retraité. Un renvoi depuis l'appareil ne duplique jamais un document.</value></data>
+  <data name="BreadcrumbMainMenusSetting" xml:space="preserve"><value>Menu des modules principaux</value></data>
+  <data name="BreadcrumbMainMenusSettingHint" xml:space="preserve"><value>Une flèche à côté de « Modules disponibles » liste tous les modules pour passer rapidement de l'un à l'autre</value></data>
+  <data name="BreadcrumbSubMenusSetting" xml:space="preserve"><value>Sous-menus de chaque niveau</value></data>
+  <data name="BreadcrumbSubMenusSettingHint" xml:space="preserve"><value>Une flèche à côté de chaque niveau liste ses sous-menus ; les menus plus profonds s'ouvrent au survol</value></data>
+  <data name="BreadcrumbAriaLabel" xml:space="preserve"><value>Fil d'Ariane</value></data>
+  <data name="BreadcrumbShowSubmenus" xml:space="preserve"><value>Afficher les menus de {0}</value></data>
+  <data name="SADTitle" xml:space="preserve"><value>Comptes des magasins</value></data>
+  <data name="SADSubtitle" xml:space="preserve"><value>Pour chaque mouvement de stock, définir le compte opposé au compte du magasin. Le plus précis l’emporte : le magasin, puis son type, puis le défaut de l’agence.</value></data>
+  <data name="SADLevelLabel" xml:space="preserve"><value>Niveau</value></data>
+  <data name="SADLevelBranch" xml:space="preserve"><value>Défaut de l’agence (tous les magasins)</value></data>
+  <data name="SADLevelType" xml:space="preserve"><value>Type de magasin</value></data>
+  <data name="SADLevelStore" xml:space="preserve"><value>Magasin précis</value></data>
+  <data name="SADStoreLabel" xml:space="preserve"><value>Magasin</value></data>
+  <data name="SADChooseStore" xml:space="preserve"><value>Choisissez un magasin pour voir ses réglages</value></data>
+  <data name="SADRoleColumn" xml:space="preserve"><value>Mouvement</value></data>
+  <data name="SADUsedByColumn" xml:space="preserve"><value>Utilisé par</value></data>
+  <data name="SADAccountColumn" xml:space="preserve"><value>Compte de contrepartie</value></data>
+  <data name="SADSourceHere" xml:space="preserve"><value>Défini à ce niveau</value></data>
+  <data name="SADSourceInherited" xml:space="preserve"><value>Hérité de : {0}</value></data>
+  <data name="SADNotSet" xml:space="preserve"><value>Non défini</value></data>
+  <data name="SADPick" xml:space="preserve"><value>Choisir un compte dans l’arbre</value></data>
+  <data name="SADClear" xml:space="preserve"><value>Effacer (le niveau supérieur s’applique)</value></data>
+  <data name="SADPickTitle" xml:space="preserve"><value>Choisir le compte de contrepartie : {0}</value></data>
+  <data name="SADSuggest" xml:space="preserve"><value>Proposer selon les types de comptes</value></data>
+  <data name="SADSuggestDone" xml:space="preserve"><value>{0} comptes proposés</value></data>
+  <data name="SADSuggestNone" xml:space="preserve"><value>Aucune proposition : pas de sous-compte unique par type, choisissez manuellement</value></data>
+  <data name="SADSaved" xml:space="preserve"><value>Enregistré</value></data>
+  <data name="SADNotWiredYet" xml:space="preserve"><value>Ces réglages ne sont pas encore utilisés dans les écritures ; le lien avec les bons et factures viendra plus tard.</value></data>
+  <data name="SADSalesInvoices" xml:space="preserve"><value>Factures de vente</value></data>
+  <data name="SADPurchaseInvoices" xml:space="preserve"><value>Factures d’achat</value></data>
+  <data name="SADItemOpening" xml:space="preserve"><value>Soldes d’ouverture des articles</value></data>
+  <data name="SADRole1" xml:space="preserve"><value>Marchandises reçues non facturées</value></data>
+  <data name="SADRole2" xml:space="preserve"><value>Coût des marchandises vendues</value></data>
+  <data name="SADRole3" xml:space="preserve"><value>Excédent d’inventaire</value></data>
+  <data name="SADRole4" xml:space="preserve"><value>Manquant d’inventaire</value></data>
+  <data name="SADRole5" xml:space="preserve"><value>En-cours de production</value></data>
+  <data name="SADRole6" xml:space="preserve"><value>Rebut</value></data>
+  <data name="SADRole7" xml:space="preserve"><value>Marchandises en transit (transferts)</value></data>
+  <data name="SADRole8" xml:space="preserve"><value>Charge de consommation (pièces, atelier, machines, employés)</value></data>
+  <data name="SADRole9" xml:space="preserve"><value>Écart sur prix d’achat</value></data>
+  <data name="SADRole10" xml:space="preserve"><value>Solde d’ouverture</value></data>
+  <data name="ShipmentCompaniesHint" xml:space="preserve"><value>Les transporteurs sont des fournisseurs de services : chacun a un compte sous « Transporteurs » et un relevé fournisseur</value></data>
+  <data name="ShipmentAccountColumn" xml:space="preserve"><value>Code du compte</value></data>
+  <data name="ShipmentLegacyFound" xml:space="preserve"><value>{0} transporteurs de l’ancienne table n’ont pas de compte : {1}</value></data>
+  <data name="ShipmentLegacyImport" xml:space="preserve"><value>Importer avec comptes</value></data>
+  <data name="ShipmentLegacyImported" xml:space="preserve"><value>{0} transporteurs importés</value></data>
 </root>

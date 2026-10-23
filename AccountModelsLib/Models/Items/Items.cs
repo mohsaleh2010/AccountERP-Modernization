@@ -60,7 +60,7 @@ namespace AccountModelsLib.Models
         public Nullable<long> Unit_Id { get; set; }
         public Nullable<int> StoreUsed_Type { get; set; }
         public string AnotherName { get; set; }
-        public Nullable<int> Items_Types_Name_Id { get; set; }
+        public Nullable<long> Items_Types_Name_Id { get; set; }
         public string Items_Types_Name { get; set; }
         public Nullable<decimal> Width_ { get; set; }
         public Nullable<decimal> Height_ { get; set; }

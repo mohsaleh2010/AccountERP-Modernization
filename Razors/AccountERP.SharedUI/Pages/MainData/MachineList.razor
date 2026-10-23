@@ -201,6 +201,10 @@
             await LoadMachines();
             Snackbar.Add(Tr("MachineAdded"), Severity.Success);
         }
+        catch (DuplicateMachineNameException dup)
+        {
+            addErrorMessage = Tr("MachineNameDuplicate", dup.MachineName);
+        }
         catch (Exception ex)
         {
             addErrorMessage = Tr("SystemError", ex.Message);
@@ -244,6 +248,11 @@
             await cls.UpdateDataTableAsync(new List<Machin_list> { machine });
 
             editingId = null;
+            await LoadMachines();
+        }
+        catch (DuplicateMachineNameException dup)
+        {
+            errorMessage = Tr("MachineNameDuplicate", dup.MachineName);
             await LoadMachines();
         }
         catch (Exception ex)

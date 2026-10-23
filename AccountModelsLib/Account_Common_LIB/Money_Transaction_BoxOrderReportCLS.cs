@@ -5210,7 +5210,7 @@ FROM            Order_Money INNER JOIN
 
             //mysql = mysql + @" FROM Invoices_List INNER JOIN
             //             Customer ON Invoices_List.Customer_Id = Customer.Id INNER JOIN
-            //             USER_DETAILES ON Invoices_List.User_Id = USER_DETAILES.USER_ID ";
+            //             USER_DETAILES ON Invoices_List.User_Id = USER_DETAILES.Id ";
 
             //mysql = mysql + " WHERE (Invoices_List.Id =" + Invoice_List_Table_Id + ") ";
         }

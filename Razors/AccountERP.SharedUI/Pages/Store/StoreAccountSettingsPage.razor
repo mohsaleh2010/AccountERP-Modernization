@@ -1,0 +1,371 @@
+@page "/store/account-settings"
+
+@* 🟢 «ربط المخازن بالحسابات» (SysConfigMenus menuItemRelatedStoreAccounts تحت «ربط الحسابات»): لكل حركة مخزنية الحساب المقابل لحساب المخزن
+   (مثل جدول تحديد الحسابات فى SAP وحسابات تقييم المخزون فى Odoo). ثلاثة مستويات: افتراضى الفرع، نوع مخزن، مخزن محدد - والأخص يغلب.
+   كل اختيار يُحفظ فوراً عبر AccountModelsLib.Models.StoreAccountDeterminationCLS (جدول Store_Account_Determination).
+   القيود الفعلية لا تقرأ هذه الإعدادات بعد - ربط الأذون والفواتير بها مرحلة لاحقة منفصلة، والتنبيه أعلى الجدول يوضح ذلك. *@
+
+@using System.Globalization
+@using AccountERP.SharedUI.Components.Shared
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("SADTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudStack Spacing="1">
+            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("SADTitle")</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">@Tr("SADSubtitle")</MudText>
+        </MudStack>
+        <MudGrid Spacing="2" Class="mt-2" Style="align-items:center;">
+            <MudItem xs="12" sm="4">
+                <MudSelect T="int" Value="_level" ValueChanged="OnLevelChanged" Label="@Tr("SADLevelLabel")" Variant="Variant.Outlined"
+                           Margin="Margin.Dense" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelectItem T="int" Value="0">@Tr("SADLevelBranch")</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">@Tr("SADLevelType")</MudSelectItem>
+                    <MudSelectItem T="int" Value="2">@Tr("SADLevelStore")</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            @if (_level == 1)
+            {
+                <MudItem xs="12" sm="4">
+                    <MudSelect T="int" @bind-Value="_type" Label="@Tr("StoreUsedTypeLabel")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                               AnchorOrigin="Origin.BottomCenter">
+                        @foreach (var t in _storeTypes)
+                        {
+                            <MudSelectItem T="int" Value="@((int)t.Value)">@t.Text</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            }
+            else if (_level == 2)
+            {
+                <MudItem xs="12" sm="4">
+                    <MudSelect T="long" @bind-Value="_storeId" Label="@Tr("SADStoreLabel")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                               AnchorOrigin="Origin.BottomCenter">
+                        <MudSelectItem T="long" Value="0L">@Tr("SADChooseStore")</MudSelectItem>
+                        @foreach (var s in _stores)
+                        {
+                            <MudSelectItem T="long" Value="@s.Id">@s.Store_Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            }
+            @if (_level == 0)
+            {
+                <MudItem xs="12" sm="4">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoFixHigh"
+                               OnClick="SuggestAsync" Disabled="_busy">@Tr("SADSuggest")</MudButton>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudPaper>
+
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-4">@Tr("SADNotWiredYet")</MudAlert>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
+    }
+
+    @if (_level == 2 && _storeId == 0)
+    {
+        <MudPaper Class="pa-6" Elevation="1">
+            <MudText Align="Align.Center" Class="mud-text-secondary">@Tr("SADChooseStore")</MudText>
+        </MudPaper>
+    }
+    else
+    {
+        <MudTable T="StoreAccountRoleInfo" Items="@StoreAccountDeterminationCLS.Roles" Hover="true" Bordered="true" Loading="@_isLoading"
+                  Elevation="1" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>@Tr("SADRoleColumn")</MudTh>
+                <MudTh>@Tr("SADUsedByColumn")</MudTh>
+                <MudTh>@Tr("SADAccountColumn")</MudTh>
+                <MudTh Style="width:120px;"></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                @{
+                    var own = Own(context.Role);
+                    var (inherited, source) = Inherited(context.Role);
+                }
+                <MudTd DataLabel="@Tr("SADRoleColumn")"><span class="font-weight-bold">@Tr("SADRole" + (int)context.Role)</span></MudTd>
+                <MudTd DataLabel="@Tr("SADUsedByColumn")">
+                    <div class="sad-usedby">
+                        @foreach (var t in UsedBy(context))
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@t</MudChip>
+                        }
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="@Tr("SADAccountColumn")">
+                    @if (own != null)
+                    {
+                        <div>@own.SubAccount_Name <span class="mud-text-secondary sad-code">@own.SubAccount_NO</span></div>
+                        <MudText Typo="Typo.caption" Color="Color.Success">@Tr("SADSourceHere")</MudText>
+                    }
+                    else if (inherited != null)
+                    {
+                        <div class="mud-text-secondary">@inherited.SubAccount_Name <span class="sad-code">@inherited.SubAccount_NO</span></div>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("SADSourceInherited", source)</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Warning">@Tr("SADNotSet")</MudText>
+                    }
+                </MudTd>
+                <MudTd>
+                    <MudTooltip Text="@Tr("SADPick")">
+                        <MudIconButton Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" Size="Size.Small"
+                                       aria-label="@Tr("SADPick")" OnClick="@(() => OpenPicker(context))" Disabled="_busy" />
+                    </MudTooltip>
+                    @if (own != null)
+                    {
+                        <MudTooltip Text="@Tr("SADClear")">
+                            <MudIconButton Icon="@Icons.Material.Filled.Clear" Color="Color.Error" Size="Size.Small"
+                                           aria-label="@Tr("SADClear")" OnClick="@(() => SaveAsync(context.Role, 0))" Disabled="_busy" />
+                        </MudTooltip>
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudContainer>
+
+<MudDialog @bind-Visible="_pickerOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true })">
+    <TitleContent>@Tr("SADPickTitle", _pickRole == null ? "" : Tr("SADRole" + (int)_pickRole.Role))</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_pickError))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-2">@_pickError</MudAlert>
+        }
+        <div style="height:50vh;">
+            <AccountTreePicker BranchId="Common.Branch_Id" SelectedValue="_pickedNode" SelectedValueChanged="OnAccountPicked" Height="50vh" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _pickerOpen = false)">@Tr("Cancel")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<StoreAccountSetting> _settings = new();
+    private List<StoreLookupItem> _storeTypes = new();
+    private List<StoreRow> _stores = new();
+    private Dictionary<int, string> _orderTypeNames = new();
+    private bool _isLoading = true;
+    private bool _busy;
+    private string _errorMessage = string.Empty;
+
+    private int _level;          // 0 فرع، 1 نوع مخزن، 2 مخزن
+    private int _type = 1;
+    private long _storeId;
+
+    private bool _pickerOpen;
+    private StoreAccountRoleInfo? _pickRole;
+    private AccountTreeNodeViewModel? _pickedNode;
+    private string _pickError = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        _errorMessage = string.Empty;
+        try
+        {
+            var branch = Common.Branch_Id;
+            var data = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var stores = new StoreCLS();
+                var orderTypes = new StoreOrderPageService().GetOrderTypes().ToDictionary(o => o.Order_Type, o => o.Name_Ar);
+                return (new StoreAccountDeterminationCLS().GetSettings(branch), stores.GetStoreTypes(), stores.GetStores(branch), orderTypes);
+            });
+            _settings = data.Item1;
+            _storeTypes = data.Item2;
+            _stores = data.Item3;
+            _orderTypeNames = data.Item4;
+            if (_storeTypes.Count > 0 && !_storeTypes.Any(t => t.Value == _type)) _type = (int)_storeTypes[0].Value;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OnLevelChanged(int level) => _level = level;
+
+    // مفتاح المستوى المعروض حالياً (نوع، مخزن) كما يُخزَّن فى الجدول.
+    private (int Type, long Store) CurrentKey => _level switch
+    {
+        1 => (_type, 0L),
+        2 => (0, _storeId),
+        _ => (0, 0L),
+    };
+
+    private StoreAccountSetting? Find(int type, long store, StoreAccountRole role) =>
+        _settings.FirstOrDefault(s => s.StoreUsed_Type == type && s.Store_Id == store && s.Account_Role == (int)role);
+
+    private StoreAccountSetting? Own(StoreAccountRole role)
+    {
+        var key = CurrentKey;
+        return Find(key.Type, key.Store, role);
+    }
+
+    // ما يسرى عند غياب إعداد هذا المستوى: للمخزن ← نوعه ثم الفرع، وللنوع ← الفرع.
+    private (StoreAccountSetting? Setting, string Source) Inherited(StoreAccountRole role)
+    {
+        if (_level == 0) return (null, "");
+        if (_level == 2)
+        {
+            int storeType = _stores.FirstOrDefault(s => s.Id == _storeId)?.StoreUsed_Type ?? 0;
+            var byType = storeType == 0 ? null : Find(storeType, 0, role);
+            if (byType != null) return (byType, _storeTypes.FirstOrDefault(t => t.Value == storeType)?.Text ?? "");
+        }
+        var branch = Find(0, 0, role);
+        return (branch, branch == null ? "" : Tr("SADLevelBranch"));
+    }
+
+    private IEnumerable<string> UsedBy(StoreAccountRoleInfo info)
+    {
+        foreach (var part in info.OrderTypes.Split(',', StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (int.TryParse(part, out int t)) yield return _orderTypeNames.TryGetValue(t, out var name) ? name : part;
+        }
+        if (info.Role == StoreAccountRole.COGS) yield return Tr("SADSalesInvoices");
+        if (info.Role == StoreAccountRole.PurchasePriceVariance) yield return Tr("SADPurchaseInvoices");
+        if (info.Role == StoreAccountRole.OpeningBalance) yield return Tr("SADItemOpening");
+    }
+
+    private void OpenPicker(StoreAccountRoleInfo info)
+    {
+        _pickRole = info;
+        _pickedNode = null;
+        _pickError = string.Empty;
+        _pickerOpen = true;
+    }
+
+    private async Task OnAccountPicked(AccountTreeNodeViewModel? node)
+    {
+        _pickedNode = node;
+        if (node == null || _pickRole == null) return;
+        string error = await SaveAsync(_pickRole.Role, node.Id);
+        if (string.IsNullOrEmpty(error)) _pickerOpen = false;
+        else _pickError = error;
+    }
+
+    // يحفظ ثم يعيد التحميل؛ يرجع نص الخطأ (فارغ = نجاح) ليُعرض داخل حوار الاختيار.
+    private async Task<string> SaveAsync(StoreAccountRole role, long subAccountId)
+    {
+        _busy = true;
+        try
+        {
+            var key = CurrentKey;
+            var branch = Common.Branch_Id;
+            int excp = 0;
+            string msg = string.Empty;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new StoreAccountDeterminationCLS().Save(ref excp, ref msg, branch, key.Type, key.Store, role, subAccountId);
+            });
+            if (excp != 0)
+            {
+                if (!_pickerOpen) _errorMessage = msg;
+                return string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            }
+            await LoadAsync();
+            Snackbar.Add(Tr("SADSaved"), Severity.Success);
+            return string.Empty;
+        }
+        catch (Exception ex)
+        {
+            return Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    // يملأ أدوار الفرع الفارغة التى يوجد لها حساب فرعى واحد بالضبط من نوعها فى الشجرة؛ لا يغيّر دوراً محدداً.
+    private async Task SuggestAsync()
+    {
+        _busy = true;
+        int count = 0;
+        try
+        {
+            var branch = Common.Branch_Id;
+            var empty = StoreAccountDeterminationCLS.Roles.Where(r => Find(0, 0, r.Role) == null).Select(r => r.Role).ToList();
+            count = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var cls = new StoreAccountDeterminationCLS();
+                int n = 0;
+                foreach (var role in empty)
+                {
+                    long id = cls.SuggestAccount(branch, role);
+                    if (id == 0) continue;
+                    int excp = 0;
+                    string msg = string.Empty;
+                    cls.Save(ref excp, ref msg, branch, 0, 0, role, id);
+                    if (excp == 0) n++;
+                }
+                return n;
+            });
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _busy = false;
+        }
+        Snackbar.Add(count > 0 ? Tr("SADSuggestDone", count) : Tr("SADSuggestNone"), count > 0 ? Severity.Success : Severity.Info);
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    }
+}
+
+<style>
+    .sad-usedby { display: flex; flex-wrap: wrap; gap: 4px; }
+    .sad-usedby .mud-chip { margin: 0; }
+    .sad-code { font-variant-numeric: tabular-nums; margin-inline-start: 6px; font-size: .85em; }
+</style>

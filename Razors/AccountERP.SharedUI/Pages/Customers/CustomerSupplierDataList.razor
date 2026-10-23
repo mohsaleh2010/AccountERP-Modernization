@@ -58,33 +58,44 @@
         </MudStack>
     </MudPaper>
 
-    <MudPaper Class="pa-4 mb-4" Elevation="1">
-        <MudGrid Spacing="2" AlignItems="AlignItems.Center">
-            <MudItem xs="12" sm="3">
-                <MudCheckBox T="bool" @bind-Value="activeOnly" Label="@Tr("ActiveOnly")" Color="Color.Primary" />
-            </MudItem>
-            <MudItem xs="12" sm="3">
-                <MudTextField @bind-Value="nameSearch" Label="@Tr("SearchByName")" Variant="Variant.Outlined"
+    @* شريط البحث: أدوات البحث فى بداية السطر (يميناً فى العربية) وزر العرض فى نهايته (يساراً)، وكلها بارتفاع 40px *@
+    <MudPaper Class="pa-3 mb-4" Elevation="1">
+        <div class="csl-filter-bar">
+            <div class="csl-filter-tools">
+                <MudTextField @bind-Value="nameSearch" Placeholder="@Tr("SearchByName")" Variant="Variant.Outlined"
+                              Margin="Margin.Dense" Class="csl-search mt-0"
                               Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true"
-                              OnKeyDown="OnSearchKeyDown" />
-            </MudItem>
-            @if (!IsSupplier)
-            {
-                <MudItem xs="12" sm="4">
-                    <MudRadioGroup T="int" @bind-Value="generalCustomerFlag">
-                        <MudRadio T="int" Value="-1" Color="Color.Primary">@Tr("AllCustomers")</MudRadio>
-                        <MudRadio T="int" Value="0" Color="Color.Primary">@Tr("MainCustomer")</MudRadio>
-                        <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("GeneralCustomer")</MudRadio>
+                              Clearable="true" OnKeyDown="OnSearchKeyDown" />
+                <MudCheckBox T="bool" @bind-Value="activeOnly" Label="@Tr("ActiveOnly")" Color="Color.Primary" Dense="true" />
+                @if (!IsSupplier)
+                {
+                    <MudRadioGroup T="int" @bind-Value="generalCustomerFlag" Class="csl-radios">
+                        <MudRadio T="int" Value="-1" Color="Color.Primary" Dense="true">@Tr("AllCustomers")</MudRadio>
+                        <MudRadio T="int" Value="0" Color="Color.Primary" Dense="true">@Tr("MainCustomer")</MudRadio>
+                        <MudRadio T="int" Value="1" Color="Color.Primary" Dense="true">@Tr("GeneralCustomer")</MudRadio>
                     </MudRadioGroup>
-                </MudItem>
-            }
-            <MudItem xs="12" sm="2">
-                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadRowsAsync" FullWidth="true">
-                    @Tr("ShowButton")
-                </MudButton>
-            </MudItem>
-        </MudGrid>
+                }
+            </div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="LoadRowsAsync" Class="csl-show-btn" Disabled="@isLoading">
+                @Tr("ShowButton")
+            </MudButton>
+        </div>
     </MudPaper>
+
+    <style>
+        .csl-filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+        .csl-filter-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; flex: 1 1 auto; min-width: 0; }
+        .csl-filter-tools .csl-search { flex: 0 1 340px; min-width: 220px; }
+        .csl-filter-tools .csl-search .mud-input-outlined { height: 40px; }
+        .csl-filter-tools .mud-input-control { margin: 0; }
+        .csl-radios { display: flex; flex-wrap: wrap; align-items: center; }
+        .csl-show-btn { height: 40px; min-width: 120px; margin-inline-start: auto; }
+        @@media (max-width: 600px) {
+            .csl-filter-tools .csl-search { flex-basis: 100%; }
+            .csl-show-btn { width: 100%; }
+        }
+    </style>
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {

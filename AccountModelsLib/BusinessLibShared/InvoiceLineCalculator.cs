@@ -47,53 +47,24 @@ namespace AccountERP.SharedUI.Services
         public static void ComputeLine(IInvoices_Details line, decimal unitSmallValue)
         {
             ZeroNullNumerics(line);
-            var largQnty = line.Larg_Qnty ?? 0;
-            var smallQnty = line.Small_Qnty ?? 0;
-            var qntyAnother = line.Qnty_Another ?? 0;
-            var priceUnit = line.PriceUnit ?? 0;
-
-            line.Qnty_value = line.Unit_Used_for_Price switch
-            {
-                1 => largQnty * priceUnit + (unitSmallValue == 0 ? 0 : smallQnty / unitSmallValue) * priceUnit,
-                2 => largQnty * unitSmallValue * priceUnit + smallQnty * priceUnit,
-                3 => qntyAnother * priceUnit,
-                _ => 0,
-            };
-
             // 🟢 يقابل ItemData.Compute_3Mola_Value: عمولة العدد = عدد القطع × قيمة _3Mola_Value، وتُحسب فقط لو IsCompute_3Mola_Value_OnInvoiceMonitor=1
             Compute3Mola(line);
-
-            line.Total = line.Qnty_value;
-            line.Item_Net_Total_Price = line.Qnty_value;
-
-            // 🟢 يقابل ComputeCommission الأصلية بالضبط (عمولة الصنف: نسبة على القيمة + قيمة عمولة الوحدة * الكمية)
-            var commissionRate = line.Item_CommissionRate ?? 0;
-            var commissionValue = line.Item_CommissionValue ?? 0;
-            var unitCommissionValue = line.Unit_CommissionValue ?? 0;
-            var qnty = largQnty + smallQnty / (unitSmallValue == 0 ? 1 : unitSmallValue);
-            var itemCommissionTotal = (line.Total ?? 0) * commissionRate / 100 + commissionValue + unitCommissionValue * qnty;
-            line.ItemCommissionTotal = Common.RoundMePositive(itemCommissionTotal);
-            line.Net_Total_Item_Commission = line.ItemCommissionTotal;
-
-            line.Item_Total_WithoutTax = (line.Item_Net_Total_Price ?? 0) - (line.Net_Total_Item_Commission ?? 0);
-
-            line.Item_TaxSales10_Value = (line.Item_Total_WithoutTax ?? 0) * (line.Item_TaxSales10 ?? 0) / 100;
-            line.Item_ATS05_Value = (line.Item_Total_WithoutTax ?? 0) * (line.Item_ATS05 ?? 0) / 100;
-
-            line.Item_Net_Total_Price = (line.Item_Total_WithoutTax ?? 0) - (line.Item_ATS05_Value ?? 0) + (line.Item_TaxSales10_Value ?? 0);
-
-            // يقابل ItemData.ComputePrice سطر 1336-1338: عمولة العدد تُضاف إلى إجمالى السطر وصافيه بعد الضريبة.
-            line.Total = (line.Total ?? 0) + (line.Total3Mola ?? 0);
-            line.Item_Net_Total_Price = (line.Item_Net_Total_Price ?? 0) + (line.Total3Mola ?? 0);
-
-            if ((line.Item_Net_Total_Price ?? 0) < 0) line.Item_Net_Total_Price = 0;
-            if ((line.Item_Total_WithoutTax ?? 0) < 0) line.Item_Total_WithoutTax = 0;
-
-            line.Item_TaxSales10_Value = Common.RoundMePositive(line.Item_TaxSales10_Value ?? 0);
-            line.Item_ATS05_Value = Common.RoundMePositive(line.Item_ATS05_Value ?? 0);
-            line.Qnty_value = Common.RoundMePositive(line.Qnty_value ?? 0);
-            line.Item_Total_WithoutTax = Common.RoundMePositive(line.Item_Total_WithoutTax ?? 0);
-            line.Item_Net_Total_Price = Common.RoundMePositive(line.Item_Net_Total_Price ?? 0);
+            // الحساب نفسه فى LineMath (مشترك مع تطبيق المندوب)؛ هنا ربط حقول السطر فقط.
+            var r = AccountModelsLib.Pricing.LineMath.Compute(new AccountModelsLib.Pricing.LineInput
+            {
+                Unit_Used_for_Price = line.Unit_Used_for_Price ?? 0, Larg_Qnty = line.Larg_Qnty ?? 0, Small_Qnty = line.Small_Qnty ?? 0,
+                Qnty_Another = line.Qnty_Another ?? 0, PriceUnit = line.PriceUnit ?? 0, Factor = unitSmallValue,
+                Item_CommissionRate = line.Item_CommissionRate ?? 0, Item_CommissionValue = line.Item_CommissionValue ?? 0, Unit_CommissionValue = line.Unit_CommissionValue ?? 0,
+                Item_TaxSales10 = line.Item_TaxSales10 ?? 0, Item_ATS05 = line.Item_ATS05 ?? 0, Total3Mola = line.Total3Mola ?? 0,
+            }, x => Common.RoundMePositive(x));
+            line.Qnty_value = r.Qnty_value;
+            line.ItemCommissionTotal = r.ItemCommissionTotal;
+            line.Net_Total_Item_Commission = r.ItemCommissionTotal;
+            line.Item_Total_WithoutTax = r.Item_Total_WithoutTax;
+            line.Item_TaxSales10_Value = r.Item_TaxSales10_Value;
+            line.Item_ATS05_Value = r.Item_ATS05_Value;
+            line.Total = r.Total;
+            line.Item_Net_Total_Price = r.Item_Net_Total_Price;
         }
 
         // 🟢 قاعدة المستخدم (Is_Tax_Per_Item=1): الضريبة تُحسب على كل صنف على حدة من قيمته بعد العمولة، ولذلك يُجرَّد الرأس من

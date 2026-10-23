@@ -29,7 +29,7 @@ namespace AccountModelsLib.Models
 
         // 🟢 يستعيد جلسة دخول سابقة من كوكي دخول موقّع (بدون كلمة سر) - راجع AuthService.RestoreSessionAsync
         // وLoginTokenStore و"/Auth/Persist" فى AccountERP.Web\Program.cs لسبب وجودها.
-        Task<bool> RestoreSessionAsync(int userId);
+        Task<bool> RestoreSessionAsync(long userId);
 
         Task LogoutAsync();
 

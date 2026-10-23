@@ -64,7 +64,7 @@ namespace AccountModelsLib.Models
         public string Notes_To { get; set; }
         public string Notes_From { get; set; }
         public string ProcessName { get; set; }
-        public int? ProcessNameId { get; set; }
+        public long? ProcessNameId { get; set; }
         public string ProcessNameNumber { get; set; }
         public string Id_FromStr { get; set; }
         public string Id_ToStr { get; set; }

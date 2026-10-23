@@ -144,7 +144,9 @@
             : _all.Where(c => !string.IsNullOrEmpty(c.Name) && c.Name.Contains(_search, StringComparison.OrdinalIgnoreCase)).ToList();
     }
 
-    private async Task PrintAsync() => await JS.InvokeVoidAsync("window.print");
+    // يطبع منطقة التقرير وحدها داخل iframe (راجع accountErpInterop.printElement فى interop.js)
+    private async Task PrintAsync() =>
+        await JS.InvokeVoidAsync("accountErpInterop.printElement", ".print-area", Tr("CustomerPrintReportTitle"), LangService.IsRtl ? "rtl" : "ltr", null);
 
     private string Tr(string key, params object[] args)
     {

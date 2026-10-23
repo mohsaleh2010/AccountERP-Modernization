@@ -139,6 +139,8 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        // خطة 05 بند 19: أنواع السيارات انتقلت إلى قائمة السيارات
+        if (string.Equals(Kind, "car-types", StringComparison.OrdinalIgnoreCase)) { Nav.NavigateTo("/cars/types", replace: true); return; }
         var k = Lookups.FirstOrDefault(l => string.Equals(l.Kind, Kind, StringComparison.OrdinalIgnoreCase))?.Kind ?? "types";
         if (k != _kind || _rows.Count == 0) { _kind = k; _def = ItemLookupService.Get(k); _editId = 0; _error = null; await LoadAsync(); }
     }

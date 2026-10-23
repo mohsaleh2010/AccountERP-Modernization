@@ -279,4 +279,10 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// 🔐 م6: من هنا فصاعداً كل كود يعمل داخل دائرة أو طلب له جلسته؛ قراءة Common.User_Id/Branch_Id/... بلا جلسة تُسجَّل كخطأ
+// (كود خارج سياق أى مستخدم)، وكتابتها بلا جلسة تُرفض لأنها كانت ستغيّر القيمة للمستخدمين المتصلين جميعاً.
+// يُفعَّل بعد التهيئة عمداً: LoadTenantSettings أعلاه وما شابهها تعمل قبل وجود أى مستخدم.
+AccountModelsLib.UserSessionContext.MisuseReporter = message => app.Logger.LogError("{UserSessionMisuse}", message);
+AccountModelsLib.UserSessionContext.IsMultiUserHost = true;
+
 app.Run();

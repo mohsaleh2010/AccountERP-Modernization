@@ -109,7 +109,7 @@ WHERE r.Active = 1 ORDER BY e.Name").ToList());
 
         /// <summary>مستخدمو النظام النشطون لاختيار من تُسجَّل باسمه مستندات الجهاز.</summary>
         public List<Option> GetUsers() => Read(opp => opp.db.Database.SqlQueryRaw<Option>(@"
-SELECT CAST(USER_ID AS bigint) AS Id, ISNULL(NULLIF(NAME, N''), ISNULL(USER_NAME, N'')) AS Name FROM USER_DETAILES ORDER BY Name").ToList());
+SELECT CAST(Id AS bigint) AS Id, ISNULL(NULLIF(NAME, N''), ISNULL(USER_NAME, N'')) AS Name FROM USER_DETAILES ORDER BY Name").ToList());
 
         /// <summary>يصدر رمز تفعيل لمندوب؛ الرمز النصى يعود هنا فقط ولا يُخزَّن إلا مُجزَّأ.</summary>
         public IssuedCode IssueActivation(long repId, long? actAsUserId = null, int validHours = DefaultCodeHours) => Tx(opp =>
@@ -118,7 +118,7 @@ SELECT CAST(USER_ID AS bigint) AS Id, ISNULL(NULLIF(NAME, N''), ISNULL(USER_NAME
             if (!rep.Active) throw new InvalidOperationException("المندوب موقوف.");
             if (validHours < 1 || validHours > 24 * 7) throw new InvalidOperationException("مدة صلاحية الرمز من ساعة إلى 7 أيام.");
             long user = actAsUserId is > 0 ? actAsUserId.Value : Common.User_Id;
-            if (opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM USER_DETAILES WHERE USER_ID = {user}").AsEnumerable().First() == 0)
+            if (opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM USER_DETAILES WHERE Id = {user}").AsEnumerable().First() == 0)
                 throw new InvalidOperationException("المستخدم الذى تُسجَّل باسمه المستندات غير موجود.");
             string code = NewCode();
             var row = new SalesRep_Device_Activation
@@ -138,7 +138,7 @@ SELECT TOP ({take}) a.Id, a.Rep_Id, ISNULL(e.Name, N'') AS Rep_Name, ISNULL(a.Co
        ISNULL(NULLIF(iu.NAME, N''), ISNULL(iu.USER_NAME, N'')) AS Issued_By
 FROM SalesRep_Device_Activations a
 LEFT JOIN SalesRep_Reps r ON r.Id = a.Rep_Id LEFT JOIN Employee e ON e.Id = r.Employee_Id
-LEFT JOIN USER_DETAILES u ON u.USER_ID = a.Act_As_User_Id LEFT JOIN USER_DETAILES iu ON iu.USER_ID = a.User_Id
+LEFT JOIN USER_DETAILES u ON u.Id = a.Act_As_User_Id LEFT JOIN USER_DETAILES iu ON iu.Id = a.User_Id
 WHERE {(openOnly ? 1 : 0)} = 0 OR (a.Used_At IS NULL AND a.Revoked_At IS NULL AND a.Expires_At > GETDATE())
 ORDER BY a.Insert_ServerDateTime DESC").ToList());
 
@@ -157,7 +157,7 @@ SELECT d.Id, d.Rep_Id, ISNULL(e.Name, N'') AS Rep_Name, d.Device_Uid, ISNULL(d.D
        (SELECT COUNT(*) FROM SalesRep_Sync_Inbox i WHERE i.Device_Id = d.Id AND i.Status IN ({(int)SalesRepSyncStatus.PendingReview}, {(int)SalesRepSyncStatus.Error})) AS Pending_Docs
 FROM SalesRep_Devices d
 LEFT JOIN SalesRep_Reps r ON r.Id = d.Rep_Id LEFT JOIN Employee e ON e.Id = r.Employee_Id
-LEFT JOIN USER_DETAILES u ON u.USER_ID = d.Act_As_User_Id
+LEFT JOIN USER_DETAILES u ON u.Id = d.Act_As_User_Id
 ORDER BY d.Is_Blocked, e.Name, d.Last_Login_At DESC").ToList());
 
         /// <summary>حظر الجهاز: يسرى فوراً (كل طلب يتحقق) ويبطل توكناته. لا يمس مستنداته المرفوعة.</summary>
@@ -288,7 +288,7 @@ ORDER BY d.Is_Blocked, e.Name, d.Last_Login_At DESC").ToList());
             var rep = opp.db.SalesRep_Reps.AsNoTracking().FirstOrDefault(r => r.Id == d.Rep_Id);
             if (rep == null || !rep.Active) throw new SalesRepDeviceAuthException("rep_inactive", "المندوب موقوف.");
             long user = d.Act_As_User_Id ?? 0;
-            string userName = opp.db.Database.SqlQuery<string>($"SELECT ISNULL(USER_NAME, N'') AS Value FROM USER_DETAILES WHERE USER_ID = {user}").AsEnumerable().FirstOrDefault() ?? "";
+            string userName = opp.db.Database.SqlQuery<string>($"SELECT ISNULL(USER_NAME, N'') AS Value FROM USER_DETAILES WHERE Id = {user}").AsEnumerable().FirstOrDefault() ?? "";
             string repName = opp.db.Database.SqlQuery<string>($"SELECT ISNULL(Name, N'') AS Value FROM Employee WHERE Id = {rep.Employee_Id}").AsEnumerable().FirstOrDefault() ?? "";
             return new DeviceIdentity(d.Id, d.Rep_Id, rep.Branch_Id ?? Common.Branch_Id, user, userName, repName);
         });

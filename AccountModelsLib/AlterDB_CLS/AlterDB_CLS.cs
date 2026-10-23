@@ -1,6 +1,7 @@
 ﻿namespace AccountModelsLib
 {
     using AccountModelsLib.Models;
+    using IdGen;
     using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 
@@ -14,7 +15,7 @@
     using System.Drawing;
     using System.Net.NetworkInformation;
     using System.Reflection.Metadata;
- 
+
     using System.Threading;
     using System.Xml.Linq;
 
@@ -37,943 +38,955 @@
         //public static  int d = 2;
         static void AlterDBThisYear(ref operations opp, int d)
         {
+            try
+            {
 
-            CreateTable(ref opp);
-
-            ChangeTypeToLongUserId(ref opp);
-            Create_Lookup_OrderDeliveryTypes(ref opp);
-            SetDataDictionaryProcessesNo(ref opp);
-            Update(ref opp, "Customer", "Customer_Type", "1", " (Customer_Type IS NULL)");
 
-            ChangeType(ref opp, "numeric", d);
-            ChangeType(ref opp, "float", d);
-            //ChangeType(ref opp, "decimal(18, 2)");
-            AlterColumnAddKey(ref opp, "SysConfigMenus", "Id");
+                CreateTable(ref opp);
 
-            AlterColumn(ref opp, "Employee", "jobsListId", "bigint");
-            AlterColumn(ref opp, "Employee", "Edit_User_Id", "bigint");
-            AlterColumn(ref opp, "Employee", "SubDeptID", "bigint");
-            AlterColumn(ref opp, "Employee", "SubAccount_Id", "bigint");
-            AlterColumn(ref opp, "Employee", "Branch_Id", "bigint");
-            AlterColumn(ref opp, "Employee", "User_Id", "bigint");
-            AlterColumn(ref opp, "Account_Entry_Master_Balance", "Year_Financial_Period_Id", "bigint");
-            AlterColumn(ref opp, "Account_Entry_Master_Balance", "Branch_Id", "bigint");
-            AlterColumn(ref opp, "Account_Entry_Master_Balance", "Account_Currency_Id", "bigint");
-            AlterColumn(ref opp, "Account_Entry_Master_Balance", "Equivalent_Account_Currency_Id", "bigint");
-            AlterColumn(ref opp, "Account_Entry_Master_Balance", "User_Id", "bigint");
-            AlterColumn(ref opp, "Account_Entry_Master_Balance", "Cost_Center_Tree_ID", "bigint");
-            AlterColumn(ref opp, "Account_Entry_Master_Balance", "Edit_User_Id", "bigint");
+                ChangeTypeToLongUserId(ref opp);
+                Create_Lookup_OrderDeliveryTypes(ref opp);
+                SetDataDictionaryProcessesNo(ref opp);
+                Update(ref opp, "Customer", "Customer_Type", "1", " (Customer_Type IS NULL)");
 
-            AlterColumn(ref opp, "Unit_item", "Branch_Id", "bigint");
-            AlterColumn(ref opp, "Unit_item", "User_Id", "bigint");
-            AlterColumn(ref opp, "Unit_item", "Edit_User_Id", "bigint");
+                ChangeType(ref opp, "numeric", d);
+                ChangeType(ref opp, "float", d);
+                //ChangeType(ref opp, "decimal(18, 2)");
+                AlterColumnAddKey(ref opp, "SysConfigMenus", "Id");
 
-            AlterColumn(ref opp, "unit", "Branch_Id", "bigint");
-            AlterColumn(ref opp, "unit", "User_Id", "bigint");
-            AlterColumn(ref opp, "unit", "Edit_User_Id", "bigint");
+                AlterColumn(ref opp, "Employee", "jobsListId", "bigint");
+                AlterColumn(ref opp, "Employee", "Edit_User_Id", "bigint");
+                AlterColumn(ref opp, "Employee", "SubDeptID", "bigint");
+                AlterColumn(ref opp, "Employee", "SubAccount_Id", "bigint");
+                AlterColumn(ref opp, "Employee", "Branch_Id", "bigint");
+                AlterColumn(ref opp, "Employee", "User_Id", "bigint");
+                AlterColumn(ref opp, "Account_Entry_Master_Balance", "Year_Financial_Period_Id", "bigint");
+                AlterColumn(ref opp, "Account_Entry_Master_Balance", "Branch_Id", "bigint");
+                AlterColumn(ref opp, "Account_Entry_Master_Balance", "Account_Currency_Id", "bigint");
+                AlterColumn(ref opp, "Account_Entry_Master_Balance", "Equivalent_Account_Currency_Id", "bigint");
+                AlterColumn(ref opp, "Account_Entry_Master_Balance", "User_Id", "bigint");
+                AlterColumn(ref opp, "Account_Entry_Master_Balance", "Cost_Center_Tree_ID", "bigint");
+                AlterColumn(ref opp, "Account_Entry_Master_Balance", "Edit_User_Id", "bigint");
 
-            AlterBD_(ref opp, "Machin_list", "Abstract_Hadafat", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Machin_list", "Speed", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Machin_list", "Machine_Width", "int", "0", "0");
 
-            
-            AlterBD_(ref opp, "DataDictionaryDbSyncLogs", "RecordIdStr", "nvarchar(MAX)");
-            AlterBD_(ref opp, "DataDictionaryDbSyncLogs", "IsStatus", "int", "0", "0");
-            AlterBD_(ref opp, "DataDictionaryDbSyncLogs", "User_Id", "bigint", "0", "0");
-            AlterBD_(ref opp, "DataDictionaryDbSyncLogs", "Is_EF_Or_Adonet", "int", "0", "0");
+                
+                AlterColumn(ref opp, "Unit_item", "Branch_Id", "bigint");
+                AlterColumn(ref opp, "Unit_item", "User_Id", "bigint");
+                AlterColumn(ref opp, "Unit_item", "Edit_User_Id", "bigint");
 
-           
+                AlterColumn(ref opp, "unit", "Branch_Id", "bigint");
+                AlterColumn(ref opp, "unit", "User_Id", "bigint");
+                AlterColumn(ref opp, "unit", "Edit_User_Id", "bigint");
 
-            AlterBD_(ref opp, "Cars", "Active", "int", "0", "0");
-            AlterBD_(ref opp, "Cars", "IsChangeOwner", "int", "0", "0");
-            AlterBD_(ref opp, "Cars", "Lookup_CarTypeId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Cars", "Lookup_CarTypeModelId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Cars", "Lookup_TransmissionTypeId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Cars", "NewId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Cars", "OldId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Cars", "CarAddress", "nvarchar(500)");
-            AlterBD_(ref opp, "Cars", "DriverName", "nvarchar(500)");
-            AlterBD_(ref opp, "Cars", "DriverTel", "nvarchar(500)");
-            AlterBD_(ref opp, "Cars", "DriverTel", "nvarchar(500)");
-            AlterColumn(ref opp, "Cars", "Active", "int","1","1");
-            AlterColumn(ref opp, "Cars", "IsChangeOwner", "int", "0","0");
+                AlterBD_(ref opp, "Machin_list", "Abstract_Hadafat", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Machin_list", "Speed", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Machin_list", "Machine_Width", "int", "0", "0");
+                AlterBD_(ref opp, "Item_PriceUnit_List", "Item_With_Draw", "int", "0", "0");
 
-            //Microsoft.Data.SqlClient.SqlException: 'Invalid column name 'Active'.
-//Invalid column name 'CarAddress'.
-//Invalid column name 'DriverName'.
-//Invalid column name 'DriverTel'.
-//Invalid column name 'IsChangeOwner'.
 
+                AlterBD_(ref opp, "DataDictionaryDbSyncLogs", "RecordIdStr", "nvarchar(MAX)");
+                AlterBD_(ref opp, "DataDictionaryDbSyncLogs", "IsStatus", "int", "0", "0");
+                AlterBD_(ref opp, "DataDictionaryDbSyncLogs", "User_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "DataDictionaryDbSyncLogs", "Is_EF_Or_Adonet", "int", "0", "0");
+                AlterBD_(ref opp, "ShipmentCompany", "SubAccount_Id", "bigint", "0", "0");
 
 
-            AlterColumn(ref opp, "Invoices_Details", "Bills_Details_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "Bills_Details_Id", "bigint");
 
-            AlterBD_(ref opp, "Invoices_Details", "Store_Name", "nvarchar(500)");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "Store_Name", "nvarchar(500)");
+                AlterBD_(ref opp, "Cars", "Active", "int", "0", "0");
+                AlterBD_(ref opp, "Cars", "IsChangeOwner", "int", "0", "0");
+                AlterBD_(ref opp, "Cars", "Lookup_CarTypeId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Cars", "Lookup_CarTypeModelId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Cars", "Lookup_TransmissionTypeId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Cars", "NewId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Cars", "OldId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Cars", "CarAddress", "nvarchar(500)");
+                AlterBD_(ref opp, "Cars", "DriverName", "nvarchar(500)");
+                AlterBD_(ref opp, "Cars", "DriverTel", "nvarchar(500)");
+                AlterBD_(ref opp, "Cars", "DriverTel", "nvarchar(500)");
+                AlterColumn(ref opp, "Cars", "Active", "int", "1", "1");
+                AlterColumn(ref opp, "Cars", "IsChangeOwner", "int", "0", "0");
 
+                //Microsoft.Data.SqlClient.SqlException: 'Invalid column name 'Active'.
+                //Invalid column name 'CarAddress'.
+                //Invalid column name 'DriverName'.
+                //Invalid column name 'DriverTel'.
+                //Invalid column name 'IsChangeOwner'.
 
-            AlterBD_(ref opp, "SysConfigMenus", "RazorPath", "nvarchar(500)");
-            AlterBD_(ref opp, "SysConfigMenus", "RazorPathTemp", "nvarchar(500)");
-            AlterBD_(ref opp, "SysConfigMenus", "Description_En", "nvarchar(500)");
-            AlterBD_(ref opp, "SysConfigMenus", "Description_Fr", "nvarchar(500)");
-            AlterBD_(ref opp, "SysConfigMenus", "Description_DE", "nvarchar(500)");
-            AlterBD_(ref opp, "SysConfigMenus", "UserSells", "nvarchar(500)");
-            AlterBD_(ref opp, "SysConfigMenus", "IsShowToUser", "int", "0", "0");
 
 
-            AlterBD_(ref opp, "USER_DETAILES_Branches_Permission", "Branch_Id", "bigint", "0", "0");
+                AlterColumn(ref opp, "Invoices_Details", "Bills_Details_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "Bills_Details_Id", "bigint");
 
+                AlterBD_(ref opp, "Invoices_Details", "Store_Name", "nvarchar(500)");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "Store_Name", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Machin_list", "Code", "nvarchar(max)");
-            AlterBD_(ref opp, "Machin_list", "Description", "nvarchar(max)");
 
-            AlterBD_(ref opp, "Invoices_List", "CustomerPhone", "nvarchar(max)");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "CustomerPhone", "nvarchar(max)");
-            AlterBD_(ref opp, "Invoices_List", "Delivery_Address", "nvarchar(max)");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Delivery_Address", "nvarchar(max)");
+                AlterBD_(ref opp, "SysConfigMenus", "RazorPath", "nvarchar(500)");
+                AlterBD_(ref opp, "SysConfigMenus", "RazorPathTemp", "nvarchar(500)");
+                AlterBD_(ref opp, "SysConfigMenus", "Description_En", "nvarchar(500)");
+                AlterBD_(ref opp, "SysConfigMenus", "Description_Fr", "nvarchar(500)");
+                AlterBD_(ref opp, "SysConfigMenus", "Description_DE", "nvarchar(500)");
+                AlterBD_(ref opp, "SysConfigMenus", "UserSells", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Invoices_List", "AppointmentsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "AppointmentsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "SysConfigMenus", "Sort_Order", "int", "1", "1");
 
+                AlterBD_(ref opp, "USER_DETAILES_Branches_Permission", "Branch_Id", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "WaiterManId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "WaiterManId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "Money_Transaction_BoxId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Money_Transaction_BoxId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Machin_list", "Code", "nvarchar(max)");
+                AlterBD_(ref opp, "Machin_list", "Description", "nvarchar(max)");
 
-            AlterBD_(ref opp, "Invoices_List", "Invoices_ListTempId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Invoices_ListTempId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "CustomerPhone", "nvarchar(max)");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "CustomerPhone", "nvarchar(max)");
+                AlterBD_(ref opp, "Invoices_List", "Delivery_Address", "nvarchar(max)");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Delivery_Address", "nvarchar(max)");
 
-            AlterBD_(ref opp, "Invoices_List", "IsDeliveryFeeAddedToInvoiceTotal", "int", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "IsDeliveryFeeAddedToInvoiceTotal", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "AppointmentsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "AppointmentsId", "bigint", "0", "0");
 
 
-            AlterBD_(ref opp, "Invoices_List", "IsDeliveryFeeAddedToInvoiceTotalAfterTax", "int", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "IsDeliveryFeeAddedToInvoiceTotalAfterTax", "int", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Is_Reconciled_With_ManDriver", "int", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Is_Reconciled_With_ManDriver", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "WaiterManId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "WaiterManId", "bigint", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_List", "Money_Transaction_BoxId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Money_Transaction_BoxId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "CustomerAccountAfterNakdia", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "CustomerAccountAfterNakdia", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Invoices_ListTempId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Invoices_ListTempId", "bigint", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_List", "IsDeliveryFeeAddedToInvoiceTotal", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "IsDeliveryFeeAddedToInvoiceTotal", "int", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "PaymentValueFor_Is_Invoice_Agile", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "PaymentValueFor_Is_Invoice_Agile", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "OverPaidAmount", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "OverPaidAmount", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "IsDeliveryFeeAddedToInvoiceTotalAfterTax", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "IsDeliveryFeeAddedToInvoiceTotalAfterTax", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Is_Reconciled_With_ManDriver", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Is_Reconciled_With_ManDriver", "int", "0", "0");
 
 
+                AlterBD_(ref opp, "Invoices_List", "CustomerAccountAfterNakdia", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "CustomerAccountAfterNakdia", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "IsUseExtraAmountToPayDebt", "bit", "1", "1");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "IsUseExtraAmountToPayDebt", "bit", "1", "1");
 
+                AlterBD_(ref opp, "Invoices_List", "PaymentValueFor_Is_Invoice_Agile", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "PaymentValueFor_Is_Invoice_Agile", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_Details", "AppointmentsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "AppointmentsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "OverPaidAmount", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "OverPaidAmount", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_Details", "AppointmentServicesId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "AppointmentServicesId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_Details", "InvoiceKitchenStatusId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "InvoiceKitchenStatusId", "bigint", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_List", "IsUseExtraAmountToPayDebt", "bit", "1", "1");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "IsUseExtraAmountToPayDebt", "bit", "1", "1");
 
-            AlterBD_(ref opp, "Invoices_List", "IsInvoiceTaxInfo", "int", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "IsInvoiceTaxInfo", "int", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "Is_DeletedProcessed", "int", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Is_DeletedProcessed", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details", "AppointmentsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "AppointmentsId", "bigint", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_Details", "AppointmentServicesId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "AppointmentServicesId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "RestValueFromCashNakdia", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "RestValueFromCashNakdia", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details", "InvoiceKitchenStatusId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "InvoiceKitchenStatusId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "PaidValueFromCashNakdy", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "PaidValueFromCashNakdy", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_List", "IsInvoiceTaxInfo", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "IsInvoiceTaxInfo", "int", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_List", "Is_DeletedProcessed", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Is_DeletedProcessed", "int", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "IsMaintainceInvoice", "int", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "IsMaintainceInvoice", "int", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "TaxInvoices_ListId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "TaxInvoices_ListId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "RestValueFromCashNakdia", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "RestValueFromCashNakdia", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "TaxInvoices_ListId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "TaxInvoices_ListId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "PaidValueFromCashNakdy", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "PaidValueFromCashNakdy", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "IsUploadToPortal", "int", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "IsUploadToPortal", "int", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "TaxInternalId", "nvarchar(500)");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "TaxInternalId", "nvarchar(500)");
 
+                AlterBD_(ref opp, "Invoices_List", "IsMaintainceInvoice", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "IsMaintainceInvoice", "int", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "CarNumber", "nvarchar(500)");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "CarNumber", "nvarchar(500)");
+                AlterBD_(ref opp, "Invoices_List", "TaxInvoices_ListId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "TaxInvoices_ListId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "CarsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "CarsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "TaxInvoices_ListId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "TaxInvoices_ListId", "bigint", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_List", "IsUploadToPortal", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "IsUploadToPortal", "int", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_List", "TaxInternalId", "nvarchar(500)");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "TaxInternalId", "nvarchar(500)");
 
 
+                AlterBD_(ref opp, "Invoices_List", "CarNumber", "nvarchar(500)");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "CarNumber", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Invoices_List", "CarsWorkOrdersId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "CarsWorkOrdersId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "CarsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "CarsId", "bigint", "0", "0");
 
 
-            AlterBD_(ref opp, "Invoices_List", "WorkOrderNumber", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "WorkOrderNumber", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "CustomerName", "nvarchar(500)");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "CustomerName", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Invoices_List", "CustomerDeliveryName", "nvarchar(500)");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "CustomerDeliveryName", "nvarchar(500)");
 
+                AlterBD_(ref opp, "Invoices_List", "CarsWorkOrdersId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "CarsWorkOrdersId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "TaxInternalId", "nvarchar(500)");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "TaxInternalId", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Invoices_List", "Service_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Service_Amount", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Delivery_Fee", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "WorkOrderNumber", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "WorkOrderNumber", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Service_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Service_Amount", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Delivery_Fee", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "CustomerName", "nvarchar(500)");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "CustomerName", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Invoices_List", "Lookup_ShiftsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Lookup_ShiftsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "CustomerDeliveryName", "nvarchar(500)");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "CustomerDeliveryName", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Invoices_List", "TableId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "TableId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "DeliveryMan_DriverId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "DeliveryMan_DriverId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "TaxInternalId", "nvarchar(500)");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "TaxInternalId", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Invoices_List", "Lookup_DiscountTypesId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Lookup_DiscountTypesId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Service_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Service_Amount", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Delivery_Fee", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "Is_Printed", "int", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Is_Printed", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Service_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Service_Amount", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Delivery_Fee", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_List", "Lookup_ShiftsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Lookup_ShiftsId", "bigint", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_List", "TableId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "TableId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "InvoiceStatus", "int", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "InvoiceStatus", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "DeliveryMan_DriverId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "DeliveryMan_DriverId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "InvoiceStatus_Reason", "nvarchar(max)");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "InvoiceStatus_Reason", "nvarchar(max)");
+                AlterBD_(ref opp, "Invoices_List", "Lookup_DiscountTypesId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Lookup_DiscountTypesId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "Qnty_ValueSparePartsOils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "ATS05ListSparePartsOils_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "ATS05ListSparePartsOils_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "TaxSalesListSparePartsOils_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "TaxSalesListSparePartsOils_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "CommissionListSparePartsOils_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "CommissionListSparePartsOils_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Total_CommissionListSparePartsOils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Total_ListPriceWithoutTax_SparePartsOils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "NetInvoiceTotal_SparePartsOils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Item_Net_TotalSparePartsOils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Total_ListPriceAfterTaxSales_SparePartsOils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Qnty_ValueRawMaterials", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Qnty_ValueRawMaterials", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Is_Printed", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Is_Printed", "int", "0", "0");
 
 
 
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Qnty_ValueSparePartsOils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "ATS05ListSparePartsOils_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "ATS05ListSparePartsOils_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "TaxSalesListSparePartsOils_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "TaxSalesListSparePartsOils_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "CommissionListSparePartsOils_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "CommissionListSparePartsOils_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_CommissionListSparePartsOils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceWithoutTax_SparePartsOils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "NetInvoiceTotal_SparePartsOils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Item_Net_TotalSparePartsOils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceAfterTaxSales_SparePartsOils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "InvoiceStatus", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "InvoiceStatus", "int", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_List", "InvoiceStatus_Reason", "nvarchar(max)");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "InvoiceStatus_Reason", "nvarchar(max)");
 
+                AlterBD_(ref opp, "Invoices_List", "Qnty_ValueSparePartsOils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "ATS05ListSparePartsOils_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "ATS05ListSparePartsOils_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "TaxSalesListSparePartsOils_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "TaxSalesListSparePartsOils_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "CommissionListSparePartsOils_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "CommissionListSparePartsOils_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total_CommissionListSparePartsOils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total_ListPriceWithoutTax_SparePartsOils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "NetInvoiceTotal_SparePartsOils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Item_Net_TotalSparePartsOils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total_ListPriceAfterTaxSales_SparePartsOils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Qnty_ValueRawMaterials", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Qnty_ValueRawMaterials", "decimal(18, " + d + ")", "0", "0");
 
 
-            AlterBD_(ref opp, "Invoices_List", "TaxInvoiceNo", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "TaxInvoiceNo", "bigint", "0", "0");
 
-            ///////
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Qnty_ValueSparePartsOils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "ATS05ListSparePartsOils_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "ATS05ListSparePartsOils_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "TaxSalesListSparePartsOils_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "TaxSalesListSparePartsOils_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "CommissionListSparePartsOils_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "CommissionListSparePartsOils_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_CommissionListSparePartsOils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceWithoutTax_SparePartsOils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "NetInvoiceTotal_SparePartsOils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Item_Net_TotalSparePartsOils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceAfterTaxSales_SparePartsOils", "decimal(18, " + d + ")", "0", "0");
 
 
-            AlterBD_(ref opp, "Invoices_List", "Total_ListPriceWithoutTax_RawMaterial", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceWithoutTax_RawMaterial", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "Total_ListPriceWithoutTax_RawMaterial", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceWithoutTax_RawMaterial", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "NetInvoiceTotal_RawMaterial", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "NetInvoiceTotal_RawMaterial", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "TaxInvoiceNo", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "TaxInvoiceNo", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "Total_ListPriceAfterTaxSales_RawMaterial", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceAfterTaxSales_RawMaterial", "decimal(18, " + d + ")", "0", "0");
+                ///////
 
-            AlterBD_(ref opp, "Invoices_List", "Customer_Id_RelatedToAccount", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Customer_Id_RelatedToAccount", "bigint", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_List", "Total_ListPriceWithoutTax_RawMaterial", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceWithoutTax_RawMaterial", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_List", "Total_ListPriceWithoutTax_RawMaterial", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceWithoutTax_RawMaterial", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Items_GroupsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details", "CarsWorkOrdersItemProcessedDetailsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "CarsWorkOrdersItemProcessedDetailsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "TafkeetNet_Total", "nvarchar(max)");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "TafkeetNet_Total", "nvarchar(max)");
-            AlterBD_(ref opp, "Invoices_List", "Qnty_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Qnty_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "NetInvoiceTotal_RawMaterial", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "NetInvoiceTotal_RawMaterial", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_List", "Total_ListPriceAfterTaxSales_RawMaterial", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceAfterTaxSales_RawMaterial", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_Details", "WaiterManId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "WaiterManId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Customer_Id_RelatedToAccount", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Customer_Id_RelatedToAccount", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "Qnty_ValueWorkmanship", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Qnty_ValueSpareParts", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Qnty_ValueOils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "ATS05ListWorkmanship_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "ATS05ListSpareParts_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "ATS05ListOils_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "ATS05ListWorkmanship_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "ATS05ListSpareParts_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "ATS05ListOils_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "TotalListATS05_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "TaxSalesListWorkmanship_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "TaxSalesListSpareParts_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "TaxSalesListOils_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "TaxSalesListWorkmanship_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "TaxSalesListSpareParts_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "TaxSalesListOils_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "TotalListTaxSales10_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "CommissionListWorkmanship_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "CommissionListSpareParts_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "CommissionListOils_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "CommissionListWorkmanship_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "CommissionListSpareParts_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "CommissionListOils_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Total_CommissionListWorkmanship", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Total_CommissionListSpareParts", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Total_CommissionListOils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Total_CommissionList", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "List_Final_CommissionValue", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Net_Total_CommissionValue", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Total_ListPriceWithoutTax_Workmanship", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Total_ListPriceWithoutTax_SpareParts", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Total_ListPriceWithoutTax_Oils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Total_ListPriceWithoutTax", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "NetInvoiceTotal_Workmanship", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "NetInvoiceTotal_SpareParts", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "NetInvoiceTotal_Oils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "NetInvoiceTotal", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "Item_Net_TotalWorkmanship", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Item_Net_TotalSpareParts", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Item_Net_TotalOils", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Items_GroupsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details", "CarsWorkOrdersItemProcessedDetailsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "CarsWorkOrdersItemProcessedDetailsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "TafkeetNet_Total", "nvarchar(max)");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "TafkeetNet_Total", "nvarchar(max)");
+                AlterBD_(ref opp, "Invoices_List", "Qnty_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Qnty_Value", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "Item_Net_Total", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Total_ItemPriceWithoutTax", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Total_ListPriceAfterTaxSales_Workmanship", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Total_ListPriceAfterTaxSales_SpareParts", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Total_ListPriceAfterTaxSales_Oils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Total_ListPriceAfterTaxSales", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_Details", "WaiterManId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "WaiterManId", "bigint", "0", "0");
 
-            ///////////////////
-            ///
+                AlterBD_(ref opp, "Invoices_List", "Qnty_ValueWorkmanship", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Qnty_ValueSpareParts", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Qnty_ValueOils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "ATS05ListWorkmanship_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "ATS05ListSpareParts_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "ATS05ListOils_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "ATS05ListWorkmanship_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "ATS05ListSpareParts_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "ATS05ListOils_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "TotalListATS05_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "TaxSalesListWorkmanship_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "TaxSalesListSpareParts_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "TaxSalesListOils_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "TaxSalesListWorkmanship_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "TaxSalesListSpareParts_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "TaxSalesListOils_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "TotalListTaxSales10_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "CommissionListWorkmanship_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "CommissionListSpareParts_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "CommissionListOils_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "CommissionListWorkmanship_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "CommissionListSpareParts_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "CommissionListOils_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total_CommissionListWorkmanship", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total_CommissionListSpareParts", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total_CommissionListOils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total_CommissionList", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "List_Final_CommissionValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Net_Total_CommissionValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total_ListPriceWithoutTax_Workmanship", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total_ListPriceWithoutTax_SpareParts", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total_ListPriceWithoutTax_Oils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total_ListPriceWithoutTax", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "NetInvoiceTotal_Workmanship", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "NetInvoiceTotal_SpareParts", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "NetInvoiceTotal_Oils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "NetInvoiceTotal", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_List", "Item_Net_TotalWorkmanship", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Item_Net_TotalSpareParts", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Item_Net_TotalOils", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Qnty_ValueWorkmanship", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Qnty_ValueSpareParts", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Qnty_ValueOils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "ATS05ListWorkmanship_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "ATS05ListSpareParts_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "ATS05ListOils_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "ATS05ListWorkmanship_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "ATS05ListSpareParts_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "ATS05ListOils_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "TotalListATS05_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "TaxSalesListWorkmanship_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "TaxSalesListSpareParts_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "TaxSalesListOils_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "TaxSalesListWorkmanship_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "TaxSalesListSpareParts_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "TaxSalesListOils_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "TotalListTaxSales10_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "CommissionListWorkmanship_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "CommissionListSpareParts_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "CommissionListOils_Rate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "CommissionListWorkmanship_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "CommissionListSpareParts_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "CommissionListOils_Value", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_CommissionListWorkmanship", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_CommissionListSpareParts", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_CommissionListOils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_CommissionList", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "List_Final_CommissionValue", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Net_Total_CommissionValue", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceWithoutTax_Workmanship", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceWithoutTax_SpareParts", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceWithoutTax_Oils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceWithoutTax", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "NetInvoiceTotal_Workmanship", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "NetInvoiceTotal_SpareParts", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "NetInvoiceTotal_Oils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "NetInvoiceTotal", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Item_Net_TotalWorkmanship", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Item_Net_TotalSpareParts", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Item_Net_TotalOils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Item_Net_Total", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total_ItemPriceWithoutTax", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total_ListPriceAfterTaxSales_Workmanship", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total_ListPriceAfterTaxSales_SpareParts", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total_ListPriceAfterTaxSales_Oils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total_ListPriceAfterTaxSales", "decimal(18, " + d + ")", "0", "0");
 
 
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Item_Net_Total", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ItemPriceWithoutTax", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceAfterTaxSales_Workmanship", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceAfterTaxSales_SpareParts", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceAfterTaxSales_Oils", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceAfterTaxSales", "decimal(18, " + d + ")", "0", "0");
+                ///////////////////
+                ///
 
 
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Qnty_ValueWorkmanship", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Qnty_ValueSpareParts", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Qnty_ValueOils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "ATS05ListWorkmanship_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "ATS05ListSpareParts_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "ATS05ListOils_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "ATS05ListWorkmanship_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "ATS05ListSpareParts_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "ATS05ListOils_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "TotalListATS05_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "TaxSalesListWorkmanship_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "TaxSalesListSpareParts_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "TaxSalesListOils_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "TaxSalesListWorkmanship_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "TaxSalesListSpareParts_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "TaxSalesListOils_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "TotalListTaxSales10_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "CommissionListWorkmanship_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "CommissionListSpareParts_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "CommissionListOils_Rate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "CommissionListWorkmanship_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "CommissionListSpareParts_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "CommissionListOils_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_CommissionListWorkmanship", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_CommissionListSpareParts", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_CommissionListOils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_CommissionList", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "List_Final_CommissionValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Net_Total_CommissionValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceWithoutTax_Workmanship", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceWithoutTax_SpareParts", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceWithoutTax_Oils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceWithoutTax", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "NetInvoiceTotal_Workmanship", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "NetInvoiceTotal_SpareParts", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "NetInvoiceTotal_Oils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "NetInvoiceTotal", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Item_Net_TotalWorkmanship", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Item_Net_TotalSpareParts", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Item_Net_TotalOils", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "Item_Net_TotalRawMaterials", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Item_Net_TotalRawMaterials", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "Total_List3Mola", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total_List3Mola", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Item_Net_Total", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ItemPriceWithoutTax", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceAfterTaxSales_Workmanship", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceAfterTaxSales_SpareParts", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceAfterTaxSales_Oils", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_ListPriceAfterTaxSales", "decimal(18, " + d + ")", "0", "0");
 
 
-            AlterBD_(ref opp, "Invoices_List", "WahbaValue", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "WahbaValue", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "NawlounValue", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "NawlounValue", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "Total3MolaRate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Total3MolaRate", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_List", "Item_Net_TotalRawMaterials", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Item_Net_TotalRawMaterials", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "Value_3Mola", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Value_3Mola", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total_List3Mola", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total_List3Mola", "decimal(18, " + d + ")", "0", "0");
 
 
+                AlterBD_(ref opp, "Invoices_List", "WahbaValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "WahbaValue", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "ShipmentCompany_Id", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List", "ShipmentCompany_Name", "nvarchar(500)");
-            AlterBD_(ref opp, "Invoices_List", "Shipment_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "NawlounValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "NawlounValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Total3MolaRate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Total3MolaRate", "decimal(18, " + d + ")", "0", "0");
 
 
-            AlterBD_(ref opp, "Invoices_List_Reverse", "ShipmentCompany_Id", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "ShipmentCompany_Name", "nvarchar(500)");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "Shipment_Value", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "Value_3Mola", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Value_3Mola", "decimal(18, " + d + ")", "0", "0");
 
 
 
+                AlterBD_(ref opp, "Invoices_List", "ShipmentCompany_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "ShipmentCompany_Name", "nvarchar(500)");
+                AlterBD_(ref opp, "Invoices_List", "Shipment_Value", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_List", "InvoiceDueDate", "datetime", "getdate()", "null");
-            AlterBD_(ref opp, "Invoices_List_Reverse", "InvoiceDueDate", "datetime", "getdate()", "null");
-            AlterBD_(ref opp, "Bills_List", "InvoiceDueDate", "datetime", "getdate()", "null");
-            AlterBD_(ref opp, "Bills_List_Reverse", "InvoiceDueDate", "datetime", "getdate()", "null");
 
+                AlterBD_(ref opp, "Invoices_List_Reverse", "ShipmentCompany_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "ShipmentCompany_Name", "nvarchar(500)");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "Shipment_Value", "decimal(18, " + d + ")", "0", "0");
 
-            //////////////////////
-            ///
 
 
 
-            AlterBD_(ref opp, "Bills_List", "CarsWorkOrdersId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Bills_List_Reverse", "CarsWorkOrdersId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_List", "InvoiceDueDate", "datetime", "getdate()", "null");
+                AlterBD_(ref opp, "Invoices_List_Reverse", "InvoiceDueDate", "datetime", "getdate()", "null");
+                AlterBD_(ref opp, "Bills_List", "InvoiceDueDate", "datetime", "getdate()", "null");
+                AlterBD_(ref opp, "Bills_List_Reverse", "InvoiceDueDate", "datetime", "getdate()", "null");
 
 
+                //////////////////////
+                ///
 
 
 
-            AlterBD_(ref opp, "AppointmentServices", "Invoices_List_Id", "bigint", "0", "0");
-            AlterBD_(ref opp, "AppointmentServices", "Invoices_Details_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "Bills_List", "CarsWorkOrdersId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Bills_List_Reverse", "CarsWorkOrdersId", "bigint", "0", "0");
 
 
 
 
-            AlterBD_(ref opp, "Bills_Details", "Qnty_Another_Balance", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_Details_Reverse", "Qnty_Another_Balance", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "AppointmentServices", "Invoices_List_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "AppointmentServices", "Invoices_Details_Id", "bigint", "0", "0");
 
 
 
-            AlterBD_(ref opp, "Bills_List", "CustomerAccountBefor", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_List_Reverse", "CustomerAccountBefor", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Bills_List", "CustomerAccountAfter", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_List_Reverse", "CustomerAccountAfter", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_Details", "Qnty_Another_Balance", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_Details_Reverse", "Qnty_Another_Balance", "decimal(18, " + d + ")", "0", "0");
 
 
-            AlterBD_(ref opp, "Bills_List", "Total_ItemPriceWithoutTax", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_List_Reverse", "Total_ItemPriceWithoutTax", "decimal(18, " + d + ")", "0", "0");
 
 
-            AlterBD_(ref opp, "Bills_List", "Total_ListPriceWithoutTax", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_List_Reverse", "Total_ListPriceWithoutTax", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_List", "CustomerAccountBefor", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_List_Reverse", "CustomerAccountBefor", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "Bills_List", "CustomerAccountAfter", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_List_Reverse", "CustomerAccountAfter", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Bills_List", "IsMaintainceInvoice", "int", "0", "0");
-            AlterBD_(ref opp, "Bills_List_Reverse", "IsMaintainceInvoice", "int", "0", "0");
-            AlterBD_(ref opp, "Bills_List", "IsInvoiceTaxInfo", "int", "0", "0");
-            AlterBD_(ref opp, "Bills_List_Reverse", "IsInvoiceTaxInfo", "int", "0", "0");
 
-            AlterBD_(ref opp, "Item_BarCodeSetting", "TextUnderCode", "nvarchar(500)");
-            AlterBD_(ref opp, "Item_BarCodeSetting", "IsPrintPrice", "nvarchar(500)");
+                AlterBD_(ref opp, "Bills_List", "Total_ItemPriceWithoutTax", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_List_Reverse", "Total_ItemPriceWithoutTax", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "CarsExaminations", "IsCarsExaminationClosed", "int", "0", "0");
-            AlterBD_(ref opp, "CarsExaminations", "Transaction_Type", "int", "0", "2");
-            AlterBD_(ref opp, "CarsExaminations", "IS_Posted_Flage", "int", "0", "0");
-            AlterBD_(ref opp, "Supplier_Price", "Price_PurchaseType", "int", "0", "0");
 
+                AlterBD_(ref opp, "Bills_List", "Total_ListPriceWithoutTax", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_List_Reverse", "Total_ListPriceWithoutTax", "decimal(18, " + d + ")", "0", "0");
 
 
+                AlterBD_(ref opp, "Bills_List", "IsMaintainceInvoice", "int", "0", "0");
+                AlterBD_(ref opp, "Bills_List_Reverse", "IsMaintainceInvoice", "int", "0", "0");
+                AlterBD_(ref opp, "Bills_List", "IsInvoiceTaxInfo", "int", "0", "0");
+                AlterBD_(ref opp, "Bills_List_Reverse", "IsInvoiceTaxInfo", "int", "0", "0");
 
-            AlterBD_(ref opp, "CarsExaminations", "Account_Entry_List_ID", "bigint", "0", "0");
-            AlterBD_(ref opp, "CarsExaminations", "SubAccount_Id", "bigint", "0", "0");
-            AlterBD_(ref opp, "CarsExaminations", "Currency_Id", "bigint", "0", "0");
-            AlterBD_(ref opp, "CarsExaminations", "CarsExaminationValue", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "CarsExaminations", "CarsExaminationClosedDate", "datetime", "getdate()", "null");
-            AlterBD_(ref opp, "CarsExaminations", "CarsExaminationStatus", "nvarchar(500)");
-            AlterBD_(ref opp, "CarsExaminations", "Notes", "nvarchar(MAX)");
+                AlterBD_(ref opp, "Item_BarCodeSetting", "TextUnderCode", "nvarchar(500)");
+                AlterBD_(ref opp, "Item_BarCodeSetting", "IsPrintPrice", "nvarchar(500)");
 
-            AlterBD_(ref opp, "CarsExaminations", "ProcessNo", "bigint", "0", "0");
-            AlterBD_(ref opp, "CarsExaminations", "Order_MoneyId", "bigint", "0", "0");
+                AlterBD_(ref opp, "CarsExaminations", "IsCarsExaminationClosed", "int", "0", "0");
+                AlterBD_(ref opp, "CarsExaminations", "Transaction_Type", "int", "0", "2");
+                AlterBD_(ref opp, "CarsExaminations", "IS_Posted_Flage", "int", "0", "0");
+                AlterBD_(ref opp, "Supplier_Price", "Price_PurchaseType", "int", "0", "0");
 
 
 
-            AlterBD_(ref opp, "CarsExaminations", "Lookup_CarTypeId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "CarsExaminations", "Lookup_CarTypeModelId", "bigint", "0", "0");
-            AlterBD_(ref opp, "CarsExaminations", "CarType", "nvarchar(500)");
-            AlterBD_(ref opp, "CarsExaminations", "Model", "nvarchar(500)");
-            AlterBD_(ref opp, "CarsExaminations", "Year", "nvarchar(500)");
+                AlterBD_(ref opp, "CarsExaminations", "Account_Entry_List_ID", "bigint", "0", "0");
+                AlterBD_(ref opp, "CarsExaminations", "SubAccount_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "CarsExaminations", "Currency_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "CarsExaminations", "CarsExaminationValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "CarsExaminations", "CarsExaminationClosedDate", "datetime", "getdate()", "null");
+                AlterBD_(ref opp, "CarsExaminations", "CarsExaminationStatus", "nvarchar(500)");
+                AlterBD_(ref opp, "CarsExaminations", "Notes", "nvarchar(MAX)");
 
+                AlterBD_(ref opp, "CarsExaminations", "ProcessNo", "bigint", "0", "0");
+                AlterBD_(ref opp, "CarsExaminations", "Order_MoneyId", "bigint", "0", "0");
 
 
-            AlterBD_(ref opp, "CarsWorkOrdersRequestedDetails", "P_Price", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersDeliverDetails", "P_Price", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersDeliverItemBalances", "P_Price", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersItemProcessedDetails", "P_Price", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersItemReversedProcessedDetails", "P_Price", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "CarsExaminations", "Lookup_CarTypeId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "CarsWorkOrdersItemProcessedDetails", "Qnty_Value_P_Price", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersItemReversedProcessedDetails", "Qnty_Value_P_Price", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "CarsExaminations", "Lookup_CarTypeModelId", "bigint", "0", "0");
+                AlterBD_(ref opp, "CarsExaminations", "CarType", "nvarchar(500)");
+                AlterBD_(ref opp, "CarsExaminations", "Model", "nvarchar(500)");
+                AlterBD_(ref opp, "CarsExaminations", "Year", "nvarchar(500)");
 
-            AlterBD_(ref opp, "CarsWorkOrdersItemProcessedDetails", "Profits", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersItemReversedProcessedDetails", "Profits", "decimal(18, " + d + ")", "0", "0");
 
 
+                AlterBD_(ref opp, "CarsWorkOrdersRequestedDetails", "P_Price", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersDeliverDetails", "P_Price", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersDeliverItemBalances", "P_Price", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersItemProcessedDetails", "P_Price", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersItemReversedProcessedDetails", "P_Price", "decimal(18, " + d + ")", "0", "0");
 
 
-            AlterBD_(ref opp, "CarsWorkOrdersRequestedDetails", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersDeliverDetails", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersDeliverItemBalances", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersItemProcessedDetails", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersItemReversedProcessedDetails", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersItemProcessedDetails", "Qnty_Value_P_Price", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersItemReversedProcessedDetails", "Qnty_Value_P_Price", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "CarsWorkOrdersItemProcessedDetails", "Profits", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersItemReversedProcessedDetails", "Profits", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "CarsWorkOrdersRequestedDetails", "Order_PurshingId", "bigint", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersDeliverDetails", "Order_PurshingId", "bigint", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersItemProcessedDetails", "Order_PurshingId", "bigint", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersItemReversedProcessedDetails", "Order_PurshingId", "bigint", "0", "0");
 
-            //Order_PurshingId Order_Purshing_No  Order_Purshing_Date
 
-            AlterBD_(ref opp, "CarsWorkOrdersRequestedDetails", "Order_Purshing_No", "bigint", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersDeliverDetails", "Order_Purshing_No", "bigint", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersItemProcessedDetails", "Order_Purshing_No", "bigint", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersItemReversedProcessedDetails", "Order_Purshing_No", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "CarsWorkOrdersRequestedDetails", "Order_Purshing_Date", "datetime", "getdate()", "null");
-            AlterBD_(ref opp, "CarsWorkOrdersDeliverDetails", "Order_Purshing_Date", "datetime", "getdate()", "null");
+                AlterBD_(ref opp, "CarsWorkOrdersRequestedDetails", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersDeliverDetails", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersDeliverItemBalances", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersItemProcessedDetails", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersItemReversedProcessedDetails", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "CarsWorkOrdersItemProcessedDetails", "Order_Purshing_Date", "datetime", "getdate()", "null");
-            AlterBD_(ref opp, "CarsWorkOrdersItemReversedProcessedDetails", "Order_Purshing_Date", "datetime", "getdate()", "null");
 
+                AlterBD_(ref opp, "CarsWorkOrdersRequestedDetails", "Order_PurshingId", "bigint", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersDeliverDetails", "Order_PurshingId", "bigint", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersItemProcessedDetails", "Order_PurshingId", "bigint", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersItemReversedProcessedDetails", "Order_PurshingId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "USER_DETAILES", "Emp_Id", "bigint", "0", "0");
-            AlterBD_(ref opp, "AccountTaxInfo", "MinAllowedValueToComputeTax", "decimal(18, " + d + ")", "0", "0");
+                //Order_PurshingId Order_Purshing_No  Order_Purshing_Date
 
+                AlterBD_(ref opp, "CarsWorkOrdersRequestedDetails", "Order_Purshing_No", "bigint", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersDeliverDetails", "Order_Purshing_No", "bigint", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersItemProcessedDetails", "Order_Purshing_No", "bigint", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersItemReversedProcessedDetails", "Order_Purshing_No", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "CarsWorkOrders", "Repairs_NotDone", "nvarchar(max)");
+                AlterBD_(ref opp, "CarsWorkOrdersRequestedDetails", "Order_Purshing_Date", "datetime", "getdate()", "null");
+                AlterBD_(ref opp, "CarsWorkOrdersDeliverDetails", "Order_Purshing_Date", "datetime", "getdate()", "null");
 
+                AlterBD_(ref opp, "CarsWorkOrdersItemProcessedDetails", "Order_Purshing_Date", "datetime", "getdate()", "null");
+                AlterBD_(ref opp, "CarsWorkOrdersItemReversedProcessedDetails", "Order_Purshing_Date", "datetime", "getdate()", "null");
 
-            AlterBD_(ref opp, "CarsWorkOrders", "ExaminationReport", "nvarchar(max)");
-            AlterBD_(ref opp, "CarsWorkOrders", "WorkOrderClosed_Reason", "nvarchar(max)");
-            AlterBD_(ref opp, "CarsWorkOrders", "CustomerOrderNumberPO", "nvarchar(max)");
-            AlterBD_(ref opp, "CarsWorkOrders", "CustomerOrderNumberGR", "nvarchar(max)");
-            AlterBD_(ref opp, "CarsWorkOrders", "CustomerId_CarOwner", "bigint", "0", "CustomerId");
-            AlterBD_(ref opp, "CarsWorkOrders", "IsInsuranceCompanyStaus", "int", "0", "1");
-            AlterBD_(ref opp, "CarsWorkOrders", "IsInvoiceTaxInfo", "int", "0", "0");
 
+                AlterBD_(ref opp, "USER_DETAILES", "Emp_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "AccountTaxInfo", "MinAllowedValueToComputeTax", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Machin_list", "active", "int", "0", "1");
 
+                AlterBD_(ref opp, "CarsWorkOrders", "Repairs_NotDone", "nvarchar(max)");
 
 
-            AlterBD_(ref opp, "Currency", "code", "nvarchar(500)");
+                AlterBD_(ref opp, "CarsWorkOrders", "ExaminationReport", "nvarchar(max)");
+                AlterBD_(ref opp, "CarsWorkOrders", "WorkOrderClosed_Reason", "nvarchar(max)");
+                AlterBD_(ref opp, "CarsWorkOrders", "CustomerOrderNumberPO", "nvarchar(max)");
+                AlterBD_(ref opp, "CarsWorkOrders", "CustomerOrderNumberGR", "nvarchar(max)");
+                AlterBD_(ref opp, "CarsWorkOrders", "CustomerId_CarOwner", "bigint", "0", "CustomerId");
+                AlterBD_(ref opp, "CarsWorkOrders", "IsInsuranceCompanyStaus", "int", "0", "1");
+                AlterBD_(ref opp, "CarsWorkOrders", "IsInvoiceTaxInfo", "int", "0", "0");
 
-            AlterBD_(ref opp, "Currency", "rate", "decimal(18, " + d + ")");
 
+                AlterBD_(ref opp, "Machin_list", "active", "int", "0", "1");
 
 
 
-            AlterBD_(ref opp, "", "TafkeetNet_Total", "nvarchar(max)");
+                AlterBD_(ref opp, "Currency", "code", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Bills_List", "IsInvoiceTaxInfo", "int", "0", "0");
-            AlterBD_(ref opp, "Bills_List_Reverse", "IsInvoiceTaxInfo", "int", "0", "0");
+                AlterBD_(ref opp, "Currency", "rate", "decimal(18, " + d + ")");
 
 
-            AlterBD_(ref opp, "FixedAssetData", "Active", "int", "1", "1");
-            AlterBD_(ref opp, "Store", "Active", "int", "1");
-            AlterBD_(ref opp, "Store", "IsCar", "int", "0");
-            AlterBD_(ref opp, "Store", "IS_Virtual_OuterStore", "int", "0", "0");
-            AlterBD_(ref opp, "Store", "IS_ServicesVirtual_Item_NoBalance", "int", "0", "0");
-            AlterBD_(ref opp, "Store", "LookUp_StoreOrderTypesId", "int", "0", "4");
-            AlterBD_(ref opp, "Store", "SubAccount_Id", "bigint", "0", "0");
 
 
-            AlterBD_(ref opp, "Detailes_Purshing", "WorkOrderNumber", "nvarchar(500)");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "WorkOrderNumber", "nvarchar(500)");
+                AlterBD_(ref opp, "", "TafkeetNet_Total", "nvarchar(max)");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "CarNumber", "nvarchar(500)");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "CarNumber", "nvarchar(500)");
+                AlterBD_(ref opp, "Bills_List", "IsInvoiceTaxInfo", "int", "0", "0");
+                AlterBD_(ref opp, "Bills_List_Reverse", "IsInvoiceTaxInfo", "int", "0", "0");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "CarsWorkOrdersId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "CarsWorkOrdersId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "CarsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "CarsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "ProcessName", "nvarchar(500)", "''", "Notes");
+                AlterBD_(ref opp, "FixedAssetData", "Active", "int", "1", "1");
+                AlterBD_(ref opp, "Store", "Active", "int", "1");
+                AlterBD_(ref opp, "Store", "IsCar", "int", "0");
+                AlterBD_(ref opp, "Store", "IS_Virtual_OuterStore", "int", "0", "0");
+                AlterBD_(ref opp, "Store", "IS_ServicesVirtual_Item_NoBalance", "int", "0", "0");
+                AlterBD_(ref opp, "Store", "LookUp_StoreOrderTypesId", "int", "0", "4");
+                AlterBD_(ref opp, "Store", "SubAccount_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "Store", "LookUp_StoreOrderTypesId", "bigint", "1", "1");
 
+                
+                AlterBD_(ref opp, "Detailes_Purshing", "WorkOrderNumber", "nvarchar(500)");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "WorkOrderNumber", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Id_FromStr", "nvarchar(500)", "''", "Notes");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Id_ToStr", "nvarchar(500)", "''", "Notes");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "ProcessNameId", "int", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Type_From", "int", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Id_From", "bigint", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Type_To", "int", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Id_To", "bigint", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "StoreId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "CarNumber", "nvarchar(500)");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "CarNumber", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "StoreId_Name", "nvarchar(500)", "''", "Notes");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Type_From_Name", "nvarchar(500)", "''", "Notes");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Type_To_Name", "nvarchar(500)", "''", "Notes");
+                AlterBD_(ref opp, "Detailes_Purshing", "CarsWorkOrdersId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "CarsWorkOrdersId", "bigint", "0", "0");
 
+                AlterBD_(ref opp, "Detailes_Purshing", "CarsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "CarsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "ProcessName", "nvarchar(500)", "''", "Notes");
 
 
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "ProcessNameNumber", "nvarchar(500)", "''", "Notes");
-            AlterBD_(ref opp, "Detailes_Purshing", "ProcessNameNumber", "nvarchar(500)", "''", "Notes");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Id_FromStr", "nvarchar(500)", "''", "Notes");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Id_ToStr", "nvarchar(500)", "''", "Notes");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "ProcessNameId", "int", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Type_From", "int", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Id_From", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Type_To", "int", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Id_To", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "StoreId", "bigint", "0", "0");
 
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "StoreId_Name", "nvarchar(500)", "''", "Notes");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Type_From_Name", "nvarchar(500)", "''", "Notes");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Type_To_Name", "nvarchar(500)", "''", "Notes");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "ProcessName", "nvarchar(500)", "''", "Notes");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "Id_From", "bigint", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing", "Id_To", "bigint", "0", "0");
 
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "ProcessNameNumber", "nvarchar(500)", "''", "Notes");
+                AlterBD_(ref opp, "Detailes_Purshing", "ProcessNameNumber", "nvarchar(500)", "''", "Notes");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "Id_FromStr", "nvarchar(500)", "''", "Notes");
-            AlterBD_(ref opp, "Detailes_Purshing", "Id_ToStr", "nvarchar(500)", "''", "Notes");
-            AlterBD_(ref opp, "Detailes_Purshing", "ProcessNameId", "int", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing", "Type_From", "int", "0", "0");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "Type_To", "int", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "ProcessName", "nvarchar(500)", "''", "Notes");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "EmployeeId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "EmployeeId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Order_Purshing", "EmployeeId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "Id_From", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "Id_To", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "EmployeeName", "nvarchar(500)");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "EmployeeName", "nvarchar(500)");
-            AlterBD_(ref opp, "Order_Purshing", "EmployeeName", "nvarchar(500)");
 
+                AlterBD_(ref opp, "Detailes_Purshing", "Id_FromStr", "nvarchar(500)", "''", "Notes");
+                AlterBD_(ref opp, "Detailes_Purshing", "Id_ToStr", "nvarchar(500)", "''", "Notes");
+                AlterBD_(ref opp, "Detailes_Purshing", "ProcessNameId", "int", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "Type_From", "int", "0", "0");
 
+                AlterBD_(ref opp, "Detailes_Purshing", "Type_To", "int", "0", "0");
 
-            AlterBD_(ref opp, "Customer", "Customer_Id_RelatedToAccount", "bigint", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrders", "Customer_Id_RelatedToAccount", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "EmployeeId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "EmployeeId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Order_Purshing", "EmployeeId", "bigint", "0", "0");
 
+                AlterBD_(ref opp, "Detailes_Purshing", "EmployeeName", "nvarchar(500)");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "EmployeeName", "nvarchar(500)");
+                AlterBD_(ref opp, "Order_Purshing", "EmployeeName", "nvarchar(500)");
 
 
 
-            AlterBD_(ref opp, "Customers_Accounts", "CarsWorkOrdersId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "Customer_Id_RelatedToAccount", "bigint", "0", "0");
-            AlterBD_(ref opp, "Customers_Accounts", "Customer_Id_RelatedToAccount", "bigint", "0", "Customer_Id");
-            //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "CarsWorkOrdersId", "bigint", "0", "0");
-            //     CarNumber   CarsId
-            //        WorkOrderNumber bigint  Checked
-            //CustomerName    nvarchar(500)   Checked
-            //CarsWorkOrdersId    bigint Checked
+                AlterBD_(ref opp, "Customer", "Customer_Id_RelatedToAccount", "bigint", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrders", "Customer_Id_RelatedToAccount", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Customers_Accounts", "CarsId", "bigint", "0", "0");
-            //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "CarsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Suppliers_Accounts", "CarsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "User_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "Branch_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "Edit_User_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "Machine_Id", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Customers_Accounts", "CarNumber", "nvarchar(500)");
-            //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "CarNumber", "nvarchar(500)");
-            AlterBD_(ref opp, "Suppliers_Accounts", "CarNumber", "nvarchar(500)");
 
 
-            AlterBD_(ref opp, "Customers_Accounts", "WorkOrderNumber", "bigint", "0", "0");
-            //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "WorkOrderNumber", "bigint", "0", "0");
-            //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "Serial", "int", "0", "0");
+                AlterBD_(ref opp, "Customers_Accounts", "CarsWorkOrdersId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "Customer_Id_RelatedToAccount", "bigint", "0", "0");
+                AlterBD_(ref opp, "Customers_Accounts", "Customer_Id_RelatedToAccount", "bigint", "0", "Customer_Id");
+                //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "CarsWorkOrdersId", "bigint", "0", "0");
+                //     CarNumber   CarsId
+                //        WorkOrderNumber bigint  Checked
+                //CustomerName    nvarchar(500)   Checked
+                //CarsWorkOrdersId    bigint Checked
 
-            AlterBD_(ref opp, "Customers_Accounts", "CustomerName", "nvarchar(500)");
-            //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "CustomerName", "nvarchar(500)");
+                AlterBD_(ref opp, "Customers_Accounts", "CarsId", "bigint", "0", "0");
+                //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "CarsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Suppliers_Accounts", "CarsId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Customers_Accounts", "TaxInternalId", "nvarchar(500)");
-            //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "TaxInternalId", "nvarchar(500)");
-            AlterBD_(ref opp, "Suppliers_Accounts", "TaxInternalId", "nvarchar(500)");
+                AlterBD_(ref opp, "Customers_Accounts", "CarNumber", "nvarchar(500)");
+                //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "CarNumber", "nvarchar(500)");
+                AlterBD_(ref opp, "Suppliers_Accounts", "CarNumber", "nvarchar(500)");
 
 
-            AlterBD_(ref opp, "Suppliers_Accounts", "SupplierName", "nvarchar(500)");
-            AlterBD_(ref opp, "Suppliers_Accounts", "WorkOrderNumber", "bigint", "0", "0");
-            AlterBD_(ref opp, "Suppliers_Accounts", "CarsWorkOrdersId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Customers_Accounts", "WorkOrderNumber", "bigint", "0", "0");
+                //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "WorkOrderNumber", "bigint", "0", "0");
+                //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "Serial", "int", "0", "0");
 
+                AlterBD_(ref opp, "Customers_Accounts", "CustomerName", "nvarchar(500)");
+                //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "CustomerName", "nvarchar(500)");
 
+                AlterBD_(ref opp, "Customers_Accounts", "TaxInternalId", "nvarchar(500)");
+                //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "TaxInternalId", "nvarchar(500)");
+                AlterBD_(ref opp, "Suppliers_Accounts", "TaxInternalId", "nvarchar(500)");
 
 
+                AlterBD_(ref opp, "Suppliers_Accounts", "SupplierName", "nvarchar(500)");
+                AlterBD_(ref opp, "Suppliers_Accounts", "WorkOrderNumber", "bigint", "0", "0");
+                AlterBD_(ref opp, "Suppliers_Accounts", "CarsWorkOrdersId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Bills_Details", "UnitSmallStr", "nvarchar(500)");
-            AlterBD_(ref opp, "Bills_Details_Reverse", "UnitSmallStr", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Bills_Details", "Available_Larg_Balance", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_Details_Reverse", "Available_Larg_Balance", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_Details", "Available_Small_Balance", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_Details_Reverse", "Available_Small_Balance", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Bills_Details", "PriceUnit", "decimal(18, " + d + ")", "0", "Larg_Unit_Price");
 
 
+                AlterBD_(ref opp, "Bills_Details", "UnitSmallStr", "nvarchar(500)");
+                AlterBD_(ref opp, "Bills_Details_Reverse", "UnitSmallStr", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Invoices_Details", "Unit_Item_SalesDateId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "Unit_Item_SalesDateId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Bills_Details", "Available_Larg_Balance", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_Details_Reverse", "Available_Larg_Balance", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_Details", "Available_Small_Balance", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_Details_Reverse", "Available_Small_Balance", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_Details", "Qnty", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "Qnty", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_Details", "PriceUnit", "decimal(18, " + d + ")", "0", "Larg_Unit_Price");
 
 
-            AlterBD_(ref opp, "Invoices_Details", "Available_Larg_Balance", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "Available_Larg_Balance", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details", "Available_Small_Balance", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "Available_Small_Balance", "decimal(18, " + d + ")", "0", "0");
 
-            ////////
-            ///
-            AlterBD_(ref opp, "Invoices_Details", "ProductCost_Price", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "ProductCost_Price", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details", "Unit_Item_SalesDateId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "Unit_Item_SalesDateId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_Details", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details", "S_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "S_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details", "Qnty", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "Qnty", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_Details", "Larg_Qnty_Balance", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "Larg_Qnty_Balance", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_Details", "Available_Larg_Balance", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "Available_Larg_Balance", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details", "Available_Small_Balance", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "Available_Small_Balance", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_Details", "Small_Qnty_Balance", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "Small_Qnty_Balance", "decimal(18, " + d + ")", "0", "0");
+                ////////
+                ///
+                AlterBD_(ref opp, "Invoices_Details", "ProductCost_Price", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "ProductCost_Price", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "Invoices_Details", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details", "S_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "S_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_Details", "PriceUnit", "decimal(18, " + d + ")", "0", "Larg_Unit_Price");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "PriceUnit", "decimal(18, " + d + ")", "0", "Larg_Unit_Price");
+                AlterBD_(ref opp, "Invoices_Details", "Larg_Qnty_Balance", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "Larg_Qnty_Balance", "decimal(18, " + d + ")", "0", "0");
 
 
+                AlterBD_(ref opp, "Invoices_Details", "Small_Qnty_Balance", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "Small_Qnty_Balance", "decimal(18, " + d + ")", "0", "0");
 
 
-            AlterBD_(ref opp, "Invoices_Details", "CarsWorkOrdersItemProcessedDetailsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "CarsWorkOrdersItemProcessedDetailsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details", "PriceUnit", "decimal(18, " + d + ")", "0", "Larg_Unit_Price");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "PriceUnit", "decimal(18, " + d + ")", "0", "Larg_Unit_Price");
 
 
-            AlterBD_(ref opp, "Bills_List", "TafkeetNet_Total", "nvarchar(max)");
-            AlterBD_(ref opp, "Bills_List_Reverse", "TafkeetNet_Total", "nvarchar(max)");
 
 
+                AlterBD_(ref opp, "Invoices_Details", "CarsWorkOrdersItemProcessedDetailsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "CarsWorkOrdersItemProcessedDetailsId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Item", "IsCommissionEmployeeBased", "int", "0", "0");
-            AlterBD_(ref opp, "Item", "IsRetailItem", "int", "0", "0");
-            AlterBD_(ref opp, "Item", "RetailPrice", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Item", "CommissionEmployeeValue", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Item", "ItemServiceCategoryId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Item", "TotalSessions", "int", "1", "1");
+                AlterBD_(ref opp, "Bills_List", "TafkeetNet_Total", "nvarchar(max)");
+                AlterBD_(ref opp, "Bills_List_Reverse", "TafkeetNet_Total", "nvarchar(max)");
 
 
-            AlterBD_(ref opp, "Item", "ServiceDurationInMinutes", "int", "0", "0");
-            AlterBD_(ref opp, "Item", "LookUp_CodeTaxTypesId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Item", "LookUp_TaxableTypesId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Item", "LookUp_TaxableSubTypesId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Item", "LookUp_NonTaxableTypesId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Item", "Items_NaturesId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Item", "LookUp_CodeTaxTypesId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Item", "Is_NotShowOnInvoice", "int", "0", "0");
-            AlterBD_(ref opp, "Item", "IsMasna3iatKhamat", "int", "0", "0");
-            AlterBD_(ref opp, "Item", "Is_ItemOrService", "int", "0", "1");
-            AlterBD_(ref opp, "Item", "InternalCode", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Item", "ItemName_OnInvoice", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "ItemSizeDescription", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "CountryOfOrigin", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "InternationalTaxNumber", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "ItemCodeType", "nvarchar(500)", "", "EGS");
-            AlterBD_(ref opp, "Item", "UnitCodeTax", "nvarchar(500)", "", "SET");
-            AlterBD_(ref opp, "Item", "CodeNameAr", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "CodeName", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "FactoryCode", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "ItemCodeType", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "UnitCodeTax", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "IsCommissionEmployeeBased", "int", "0", "0");
+                AlterBD_(ref opp, "Item", "IsRetailItem", "int", "0", "0");
+                AlterBD_(ref opp, "Item", "RetailPrice", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "Item", "CommissionEmployeeValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Item", "ItemServiceCategoryId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Item", "TotalSessions", "int", "1", "1");
 
-            AlterBD_(ref opp, "CarsWorkOrdersDeliverDetails", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersItemProcessedDetails", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersItemReversedProcessedDetails", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "CarsWorkOrdersRequestedDetails", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "Item", "ServiceDurationInMinutes", "int", "0", "0");
+                AlterBD_(ref opp, "Item", "LookUp_CodeTaxTypesId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Item", "LookUp_TaxableTypesId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Item", "LookUp_TaxableSubTypesId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Item", "LookUp_NonTaxableTypesId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Item", "Items_NaturesId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Item", "LookUp_CodeTaxTypesId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Item", "Is_NotShowOnInvoice", "int", "0", "0");
+                AlterBD_(ref opp, "Item", "IsMasna3iatKhamat", "int", "0", "0");
+                AlterBD_(ref opp, "Item", "Is_ItemOrService", "int", "0", "1");
+                AlterBD_(ref opp, "Item", "InternalCode", "bigint", "0", "0");
 
+                AlterBD_(ref opp, "Item", "ItemName_OnInvoice", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "ItemSizeDescription", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "CountryOfOrigin", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "InternationalTaxNumber", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "ItemCodeType", "nvarchar(500)", "", "EGS");
+                AlterBD_(ref opp, "Item", "UnitCodeTax", "nvarchar(500)", "", "SET");
+                AlterBD_(ref opp, "Item", "CodeNameAr", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "CodeName", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "FactoryCode", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "ItemCodeType", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "UnitCodeTax", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Item_First_Period_Balance", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Item_First_Period_Balance", "S_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Item_First_Period_Balance", "P_price", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Item_First_Period_Balance", "S_price", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersDeliverDetails", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersItemProcessedDetails", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersItemReversedProcessedDetails", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "CarsWorkOrdersRequestedDetails", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
 
 
-            AlterBD_(ref opp, "Item", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Item", "S_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Unit_Item", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Unit_Item", "S_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Unit_Item", "ProductCost_Price", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Item_First_Period_Balance", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Item_First_Period_Balance", "S_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "Item_First_Period_Balance", "P_price", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Item_First_Period_Balance", "S_price", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Item", "ATS05_Value", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Item", "TaxSales10_Value", "decimal(18, " + d + ")");
 
-            AlterBD_(ref opp, "Item", "LookUp_CodeTaxTypeStr", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "description", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "descriptionAr", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "ItemCode", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "linkedCode", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "ParentCode", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "requestReason", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Item", "S_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "Unit_Item", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Unit_Item", "S_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Unit_Item", "ProductCost_Price", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Item", "Items_GroupsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Item", "ItemCodeTaxAcceptedId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Item", "Is_UploadToTaxPortal", "int", "0", "0");
 
+                AlterBD_(ref opp, "Item", "ATS05_Value", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Item", "TaxSales10_Value", "decimal(18, " + d + ")");
 
-            //AlterBD_(ref opp, "Item", "items_Group_Id", "bigint", "0", "0");
-            //AlterBD_(ref opp, "Item", "lookUp_NonTaxableType_Id", "bigint", "0", "0");
-            //AlterBD_(ref opp, "Item", "lookUp_TaxableSubType_Id", "bigint", "0", "0");
-            //AlterBD_(ref opp, "Item", "lookUp_TaxableType_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "Item", "LookUp_CodeTaxTypeStr", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "description", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "descriptionAr", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "ItemCode", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "linkedCode", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "ParentCode", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "requestReason", "nvarchar(500)");
 
 
+                AlterBD_(ref opp, "Item", "Items_GroupsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Item", "ItemCodeTaxAcceptedId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Item", "Is_UploadToTaxPortal", "int", "0", "0");
 
 
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "S_Price", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "P_Price", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "PriceUnit", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Qnty_value", "decimal(18, " + d + ")", "0", "0");
+                //AlterBD_(ref opp, "Item", "items_Group_Id", "bigint", "0", "0");
+                //AlterBD_(ref opp, "Item", "lookUp_NonTaxableType_Id", "bigint", "0", "0");
+                //AlterBD_(ref opp, "Item", "lookUp_TaxableSubType_Id", "bigint", "0", "0");
+                //AlterBD_(ref opp, "Item", "lookUp_TaxableType_Id", "bigint", "0", "0");
 
 
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "S_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
 
 
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "S_Price", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "P_Price", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "PriceUnit", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "Qnty_value", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing", "S_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
 
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "S_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "QntyStr", "nvarchar(500)");
-            AlterBD_(ref opp, "Detailes_Purshing", "Item_NoStr", "nvarchar(500)");
-            AlterBD_(ref opp, "Detailes_Purshing", "QntyStr_Befor", "nvarchar(500)");
-            AlterBD_(ref opp, "Detailes_Purshing", "Item_NoStr_Befor", "nvarchar(500)");
-            AlterBD_(ref opp, "Detailes_Purshing", "QntyStr_After", "nvarchar(500)");
-            AlterBD_(ref opp, "Detailes_Purshing", "Item_NoStr_After", "nvarchar(500)");
-            AlterBD_(ref opp, "Detailes_Purshing", "Item_Name", "nvarchar(500)");
-            AlterBD_(ref opp, "Detailes_Purshing", "WorkOrderNumber", "nvarchar(500)");
-            AlterBD_(ref opp, "Detailes_Purshing", "Invoice_No", "nvarchar(500)");
-            AlterBD_(ref opp, "Detailes_Purshing", "Code", "nvarchar(500)");
 
 
-            AlterBD_(ref opp, "Detailes_Purshing", "PriceUnit", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Qnty_value", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Item_Total_WithoutTax", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Item_ATS05_Value", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Item_TaxSales10_Value", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Total", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Net_Total_Item_Commission", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Item_Net_Total_Price", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "S_Price", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "P_Price", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "P_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "S_priceAvgCost", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "FromStoreId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing", "ToStoreId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "Item_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "QntyStr", "nvarchar(500)");
+                AlterBD_(ref opp, "Detailes_Purshing", "Item_NoStr", "nvarchar(500)");
+                AlterBD_(ref opp, "Detailes_Purshing", "QntyStr_Befor", "nvarchar(500)");
+                AlterBD_(ref opp, "Detailes_Purshing", "Item_NoStr_Befor", "nvarchar(500)");
+                AlterBD_(ref opp, "Detailes_Purshing", "QntyStr_After", "nvarchar(500)");
+                AlterBD_(ref opp, "Detailes_Purshing", "Item_NoStr_After", "nvarchar(500)");
+                AlterBD_(ref opp, "Detailes_Purshing", "Item_Name", "nvarchar(500)");
+                AlterBD_(ref opp, "Detailes_Purshing", "WorkOrderNumber", "nvarchar(500)");
+                AlterBD_(ref opp, "Detailes_Purshing", "Invoice_No", "nvarchar(500)");
+                AlterBD_(ref opp, "Detailes_Purshing", "Code", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "Item_DeletedFlage", "int", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing", "Item_ProcessedFlage", "int", "0", "0");
 
+                AlterBD_(ref opp, "Detailes_Purshing", "PriceUnit", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Qnty_value", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Item_Total_WithoutTax", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Item_ATS05_Value", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Item_TaxSales10_Value", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Total", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Net_Total_Item_Commission", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Item_Net_Total_Price", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "S_Price", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "P_Price", "decimal(18, " + d + ")");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "CarsWorkOrdersItemProcessedDetailsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing", "Item_Category_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "FromStoreId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "ToStoreId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "Item_Category_Name", "nvarchar(500)");
+                AlterBD_(ref opp, "Detailes_Purshing", "Item_Id", "bigint", "0", "0");
 
+                AlterBD_(ref opp, "Detailes_Purshing", "Item_DeletedFlage", "int", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "Item_ProcessedFlage", "int", "0", "0");
 
 
-            AlterBD_(ref opp, "unit", "IS_Default", "int", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "CarsWorkOrdersItemProcessedDetailsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "Item_Category_Id", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "unit", "Code", "nvarchar(500)");
-            AlterBD_(ref opp, "unit", "Desc_ar", "nvarchar(500)");
-            AlterBD_(ref opp, "unit", "Desc_en", "nvarchar(500)");
-            AlterBD_(ref opp, "Currency", "Code", "nvarchar(500)");
-            AlterBD_(ref opp, "Currency", "Desc_en", "nvarchar(500)");
-            AlterBD_(ref opp, "Currency", "Desc_ar", "nvarchar(500)");
+                AlterBD_(ref opp, "Detailes_Purshing", "Item_Category_Name", "nvarchar(500)");
 
 
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "CarsWorkOrdersId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "CarsWorkOrdersDetailsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "CarsWorkOrdersItemProcessedDetailsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing", "Item_ATS05", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Item_TaxSales10", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Item_CommissionValue", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Unit_CommissionValue", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Item_CommissionRate", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "ItemCommissionTotal", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Unit_Used_for_Price", "int", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing", "Larg_Unit_Price", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Small_Unit_Price", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Import_Qua", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Import_Part_Qua", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Import_Item_No", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Export_Qua", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Export_Part_Qua", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Detailes_Purshing", "Export_Item_No", "decimal(18, " + d + ")");
 
+                AlterBD_(ref opp, "unit", "IS_Default", "int", "0", "0");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "StoreId_Name", "nvarchar(500)");
-            AlterBD_(ref opp, "Detailes_Purshing", "StoreId", "bigint", "0", "0");
+                AlterBD_(ref opp, "unit", "Code", "nvarchar(500)");
+                AlterBD_(ref opp, "unit", "Desc_ar", "nvarchar(500)");
+                AlterBD_(ref opp, "unit", "Desc_en", "nvarchar(500)");
+                AlterBD_(ref opp, "Currency", "Code", "nvarchar(500)");
+                AlterBD_(ref opp, "Currency", "Desc_en", "nvarchar(500)");
+                AlterBD_(ref opp, "Currency", "Desc_ar", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "Unit_Id", "bigint", "0", "0");
-            AlterBD__(ref opp, "Detailes_Purshing", "UnitStr", "nvarchar(500)", @$" UPDATE       Detailes_Purshing
+
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "CarsWorkOrdersId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "CarsWorkOrdersDetailsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing_Import_Export", "CarsWorkOrdersItemProcessedDetailsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "Item_ATS05", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Item_TaxSales10", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Item_CommissionValue", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Unit_CommissionValue", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Item_CommissionRate", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "ItemCommissionTotal", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Unit_Used_for_Price", "int", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "Larg_Unit_Price", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Small_Unit_Price", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Import_Qua", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Import_Part_Qua", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Import_Item_No", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Export_Qua", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Export_Part_Qua", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Detailes_Purshing", "Export_Item_No", "decimal(18, " + d + ")");
+
+
+                AlterBD_(ref opp, "Detailes_Purshing", "StoreId_Name", "nvarchar(500)");
+                AlterBD_(ref opp, "Detailes_Purshing", "StoreId", "bigint", "0", "0");
+
+                AlterBD_(ref opp, "Detailes_Purshing", "Unit_Id", "bigint", "0", "0");
+                AlterBD__(ref opp, "Detailes_Purshing", "UnitStr", "nvarchar(500)", @$" UPDATE       Detailes_Purshing
 SET                UnitStr = unit.B_Unit
 FROM            Detailes_Purshing INNER JOIN
                          Unit_item ON Detailes_Purshing.Unit_item_Table_Id = Unit_item.id INNER JOIN
@@ -983,900 +996,906 @@ WHERE        (Detailes_Purshing.UnitStr IS NULL) ");
 
 
 
-            AlterBD_(ref opp, "Detailes_Purshing", "CarsWorkOrdersId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing", "CarsWorkOrdersRequestedDetailsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Detailes_Purshing", "CarsWorkOrdersDeliverDetailsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "CarsWorkOrdersId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "CarsWorkOrdersRequestedDetailsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "CarsWorkOrdersDeliverDetailsId", "bigint", "0", "0");
 
 
-            AlterBD_(ref opp, "Detailes_Purshing", "Type_From_Name", "nvarchar(500)");
-            AlterBD_(ref opp, "Detailes_Purshing", "Type_To_Name", "nvarchar(500)");
+                AlterBD_(ref opp, "Detailes_Purshing", "Type_From_Name", "nvarchar(500)");
+                AlterBD_(ref opp, "Detailes_Purshing", "Type_To_Name", "nvarchar(500)");
 
 
 
-            AlterBD_(ref opp, "Order_Purshing", "Transaction_Type", "int", "0", "0");
-            AlterBD_(ref opp, "Order_Purshing", "IsMoreTheOneOrderShow", "int", "0", "2");
-            AlterBD_(ref opp, "Order_Purshing", "CarNumber", "nvarchar(500)");
-            AlterBD_(ref opp, "Order_Purshing", "WorkOrderNumber", "nvarchar(500)");
-            AlterBD_(ref opp, "Order_Purshing", "CarsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Order_Purshing", "IsActiveMainOrder_Purshing", "int", "1", "1");
+                AlterBD_(ref opp, "Order_Purshing", "Transaction_Type", "int", "0", "0");
+                AlterBD_(ref opp, "Order_Purshing", "IsMoreTheOneOrderShow", "int", "0", "2");
+                AlterBD_(ref opp, "Order_Purshing", "CarNumber", "nvarchar(500)");
+                AlterBD_(ref opp, "Order_Purshing", "WorkOrderNumber", "nvarchar(500)");
+                AlterBD_(ref opp, "Order_Purshing", "CarsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Order_Purshing", "IsActiveMainOrder_Purshing", "int", "1", "1");
 
-            AlterBD_(ref opp, "Detailes_Purshing", "Qnty", "decimal(18, " + d + ")");
-
-
-            AlterBD_(ref opp, "Order_Purshing", "CarsWorkOrdersId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Detailes_Purshing", "Qnty", "decimal(18, " + d + ")");
 
 
-            AlterBD_(ref opp, "Order_Purshing", "OrderTitle", "nvarchar(500)");
+                AlterBD_(ref opp, "Order_Purshing", "CarsWorkOrdersId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Order_Purshing", "IS_EstlamRawMaterial", "int", "0", "0");
-            AlterBD_(ref opp, "Order_Purshing", "WorkOrderNumber", "nvarchar(500)");
-            AlterBD_(ref opp, "Order_Purshing", "Invoice_No", "nvarchar(500)");
-            AlterBD__(ref opp, "Invoices_Details", "UnitStr", "nvarchar(500)", @$" UPDATE       Invoices_Details
+
+                AlterBD_(ref opp, "Order_Purshing", "OrderTitle", "nvarchar(500)");
+
+                AlterBD_(ref opp, "Order_Purshing", "IS_EstlamRawMaterial", "int", "0", "0");
+                AlterBD_(ref opp, "Order_Purshing", "WorkOrderNumber", "nvarchar(500)");
+                AlterBD_(ref opp, "Order_Purshing", "Invoice_No", "nvarchar(500)");
+                AlterBD__(ref opp, "Invoices_Details", "UnitStr", "nvarchar(500)", @$" UPDATE       Invoices_Details
 SET                UnitStr = unit.B_Unit
 FROM            Invoices_Details INNER JOIN
                          Item ON Invoices_Details.Item_Id = Item.id INNER JOIN
                          unit ON Item.Unit_Id = unit.id WHERE (Invoices_Details.UnitStr IS NULL)");
 
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "UnitStr", "nvarchar(500)");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "UnitStr", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Invoices_Details", "UnitSmallStr", "nvarchar(500)");
-            AlterBD__(ref opp, "Invoices_Details_Reverse", "UnitSmallStr", "nvarchar(500)", @"						 UPDATE       Invoices_Details_Reverse
+                AlterBD_(ref opp, "Invoices_Details", "UnitSmallStr", "nvarchar(500)");
+                AlterBD__(ref opp, "Invoices_Details_Reverse", "UnitSmallStr", "nvarchar(500)", @"						 UPDATE       Invoices_Details_Reverse
 SET                UnitStr = unit.B_Unit
 FROM            Invoices_Details_Reverse INNER JOIN
                          Item ON Invoices_Details_Reverse.Item_Id = Item.id INNER JOIN
                          unit ON Item.Unit_Id = unit.id");
 
 
-            AlterBD__(ref opp, "Item", "UnitStr", "nvarchar(500)", @"UPDATE       Item
+                AlterBD__(ref opp, "Item", "UnitStr", "nvarchar(500)", @"UPDATE       Item
 SET                UnitStr = unit.B_Unit
 FROM            Item INNER JOIN
                          unit ON Item.Unit_Id = unit.id ");
 
-            AlterBD_(ref opp, "Item", "Pharmacology", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "ScientificName", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "Mark", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "Licensing", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "CommisionPurchase", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Item", "Offers", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "hiddenItem", "nvarchar(500)");
-            AlterBD_(ref opp, "Item", "IsPrintBarCode", "int", "1", "1");
-            AlterBD_(ref opp, "Item", "IsStopBuying", "int", "1", "1");
-            AlterBD_(ref opp, "Item", "StorageTempratureDegree", "decimal(18, " + d + ")");
-            AlterBD_(ref opp, "Item", "TableNo", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "Pharmacology", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "ScientificName", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "Mark", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "Licensing", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "CommisionPurchase", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Item", "Offers", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "hiddenItem", "nvarchar(500)");
+                AlterBD_(ref opp, "Item", "IsPrintBarCode", "int", "1", "1");
+                AlterBD_(ref opp, "Item", "IsStopBuying", "int", "1", "1");
+                AlterBD_(ref opp, "Item", "StorageTempratureDegree", "decimal(18, " + d + ")");
+                AlterBD_(ref opp, "Item", "TableNo", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Item", "Code", "nvarchar(MAX)");
-            AlterBD_(ref opp, "Unit_Item", "Code", "nvarchar(MAX)");
-            AlterBD_(ref opp, "Item", "BarCode2", "nvarchar(MAX)");
-            AlterBD_(ref opp, "Item", "BarCode3", "nvarchar(MAX)");
-            AlterBD_(ref opp, "Item", "BarCode4", "nvarchar(MAX)");
-            AlterBD_(ref opp, "Item", "BarCode5", "nvarchar(MAX)");
+                AlterBD_(ref opp, "Item", "Code", "nvarchar(MAX)");
+                AlterBD_(ref opp, "Unit_Item", "Code", "nvarchar(MAX)");
+                AlterBD_(ref opp, "Item", "BarCode2", "nvarchar(MAX)");
+                AlterBD_(ref opp, "Item", "BarCode3", "nvarchar(MAX)");
+                AlterBD_(ref opp, "Item", "BarCode4", "nvarchar(MAX)");
+                AlterBD_(ref opp, "Item", "BarCode5", "nvarchar(MAX)");
 
-            AlterBD_(ref opp, "Item", "BlockNo", "int", "0", "0");
-            AlterBD_(ref opp, "Item", "shelfNo", "int", "0", "0");
-            AlterBD_(ref opp, "Item", "OrderOnshelfNo", "int", "0", "0");
+                AlterBD_(ref opp, "Item", "BlockNo", "int", "0", "0");
+                AlterBD_(ref opp, "Item", "shelfNo", "int", "0", "0");
+                AlterBD_(ref opp, "Item", "OrderOnshelfNo", "int", "0", "0");
 
-            AlterBD_(ref opp, "Items_Types_Name", "IsActive", "int", "1", "1");
+                AlterBD_(ref opp, "Items_Types_Name", "IsActive", "int", "1", "1");
 
-            AlterBD_(ref opp, "Unit_Item_ExpireDate", "Bills_Details_Id", "bigint", "0", "0");
-            AlterBD_(ref opp, "Unit_Item_ExpireDate", "Supplier_Id", "bigint", "0", "0");
-            //AlterBD_(ref opp, "Unit_Item_ExpireDate", "Unit_Item_BatchListId", "bigint", "0", "0");
-            //AlterBD_(ref opp, "Unit_Item_ExpireDate", "Unit_Item_BatchGroupListId", "bigint", "0", "Unit_Item_BatchListId");
+                AlterBD_(ref opp, "Unit_Item_ExpireDate", "Bills_Details_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "Unit_Item_ExpireDate", "Supplier_Id", "bigint", "0", "0");
+                //AlterBD_(ref opp, "Unit_Item_ExpireDate", "Unit_Item_BatchListId", "bigint", "0", "0");
+                //AlterBD_(ref opp, "Unit_Item_ExpireDate", "Unit_Item_BatchGroupListId", "bigint", "0", "Unit_Item_BatchListId");
 
-            //AlterBD_drop(ref opp, "Unit_Item_ExpireDate", "Unit_Item_BatchListId");
-            AlterBD_drop(ref opp, "Unit_Item_ExpireDate", "Unit_Item_BatchListId", "Unit_Item_BatchGroupListId", "bigint", "0", "Unit_Item_BatchListId");
-            AlterBD_drop(ref opp, "Unit_Item_SalesDate", "Unit_Item_BatchListId", "Unit_Item_BatchGroupListId", "bigint", "0", "Unit_Item_BatchListId");
-            AlterBD_(ref opp, "Unit_Item_SalesDate", "Item_ProcessedFlage", "int", "100", "100");
-
-
-            AlterBD_(ref opp, "Unit_Item_ExpireDate", "BatchNo", "bigint", "0", "0");
-            AlterBD_(ref opp, "Unit_Item_ExpireDate", "P_Price", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Unit_Item_ExpireDate", "QntyValue", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Unit_Item_ExpireDate", "IsActive", "int", "0", "1");
-            //AlterBD_(ref opp, "Unit_Item_ExpireDate", "Unit_Item_BatchGroupId", "bigint", "0", "1");
+                //AlterBD_drop(ref opp, "Unit_Item_ExpireDate", "Unit_Item_BatchListId");
+                AlterBD_drop(ref opp, "Unit_Item_ExpireDate", "Unit_Item_BatchListId", "Unit_Item_BatchGroupListId", "bigint", "0", "Unit_Item_BatchListId");
+                AlterBD_drop(ref opp, "Unit_Item_SalesDate", "Unit_Item_BatchListId", "Unit_Item_BatchGroupListId", "bigint", "0", "Unit_Item_BatchListId");
+                AlterBD_(ref opp, "Unit_Item_SalesDate", "Item_ProcessedFlage", "int", "100", "100");
 
 
-            AlterBD_(ref opp, "Unit_Item_BatchList", "BatchGroupId", "uniqueidentifier");
-
-            AlterBD_(ref opp, "Unit_Item_BatchList", "Invoices_ListId", "bigint", "0", "1");
-            AlterBD_(ref opp, "Unit_Item_BatchList", "GroupName", "nvarchar(MAX)");
-            AlterBD_(ref opp, "Unit_Item_BatchList", "User_Id", "bigint", "0", "1");
-            AlterBD_(ref opp, "Unit_Item_BatchList", "Branch_Id", "bigint", "0", "1");
-            AlterBD_(ref opp, "Unit_Item_BatchList", "CreatedDate", "datetime");
-
-            AlterBD_(ref opp, "Unit_Item_BatchList", "WahbaValue", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Unit_Item_BatchList", "NawlounValue", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Unit_Item_BatchList", "Total3MolaRate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Unit_Item_BatchList", "Total3Mola", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Unit_Item_BatchList", "Value_3Mola", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Unit_Item_BatchList", "IsActive", "int", "1", "1");
-
-            ChangeTableName(ref opp, "Unit_Item_BatchList", "Unit_Item_BatchGroupLists");
-
-            AlterBD_(ref opp, "unit", "SS_unit_Value", "int", "1", "1");
-            AlterBD_(ref opp, "Customer", "Street", "nvarchar(200)");
-            AlterBD_(ref opp, "Customer", "BuildingNumber", "nvarchar(200)");
-            AlterBD_(ref opp, "Customer", "floor", "nvarchar(200)");
-            AlterBD_(ref opp, "Customer", "room", "nvarchar(200)");
-            AlterBD_(ref opp, "Customer", "landmark", "nvarchar(200)");
-            AlterBD_(ref opp, "Customer", "additionalInformation", "nvarchar(200)");
-            AlterBD_(ref opp, "Customer", "TaxCompanyName", "nvarchar(500)");
-            AlterBD_(ref opp, "Customer", "LookUp_PersonCompany_TypeCodeTax", "nvarchar(500)");
+                AlterBD_(ref opp, "Unit_Item_ExpireDate", "BatchNo", "bigint", "0", "0");
+                AlterBD_(ref opp, "Unit_Item_ExpireDate", "P_Price", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Unit_Item_ExpireDate", "QntyValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Unit_Item_ExpireDate", "IsActive", "int", "0", "1");
+                //AlterBD_(ref opp, "Unit_Item_ExpireDate", "Unit_Item_BatchGroupId", "bigint", "0", "1");
 
 
+                AlterBD_(ref opp, "Unit_Item_BatchList", "BatchGroupId", "uniqueidentifier");
 
-            AlterBD_(ref opp, "Bills_Details", "PriceUnit", "decimal(18, " + d + ")", "0", "Larg_Unit_Price");
-            AlterBD_(ref opp, "Bills_Details_Reverse", "PriceUnit", "decimal(18, " + d + ")", "0", "Larg_Unit_Price");
+                AlterBD_(ref opp, "Unit_Item_BatchList", "Invoices_ListId", "bigint", "0", "1");
+                AlterBD_(ref opp, "Unit_Item_BatchList", "GroupName", "nvarchar(MAX)");
+                AlterBD_(ref opp, "Unit_Item_BatchList", "User_Id", "bigint", "0", "1");
+                AlterBD_(ref opp, "Unit_Item_BatchList", "Branch_Id", "bigint", "0", "1");
+                AlterBD_(ref opp, "Unit_Item_BatchList", "CreatedDate", "datetime");
 
-            AlterBD_(ref opp, "Bills_Details", "Unit_Item_SalesDateId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Bills_Details_Reverse", "Unit_Item_SalesDateId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Unit_Item_BatchList", "WahbaValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Unit_Item_BatchList", "NawlounValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Unit_Item_BatchList", "Total3MolaRate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Unit_Item_BatchList", "Total3Mola", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Unit_Item_BatchList", "Value_3Mola", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Unit_Item_BatchList", "IsActive", "int", "1", "1");
 
+                ChangeTableName(ref opp, "Unit_Item_BatchList", "Unit_Item_BatchGroupLists");
 
-            AlterBD_(ref opp, "Bills_Details", "Store_Name", "nvarchar(MAX)");
-            AlterBD_(ref opp, "Bills_Details_Reverse", "Store_Name", "nvarchar(MAX)");
-
-
-            AlterBD_(ref opp, "Money_Transaction_Box", "Balance_BeforStr", "nvarchar(MAX)");
-            AlterBD_(ref opp, "Money_Transaction_Box", "Balance_AfterStr", "nvarchar(MAX)");
-
-            AlterBD_(ref opp, "Money_Transaction_Box", "CarsWorkOrdersId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Money_Transaction_Box", "Lookup_CashPaymentMethodId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Money_Transaction_Box", "Lookup_CashPaymentMethodName", "nvarchar(500)");
-            AlterBD_(ref opp, "Money_Transaction_Box", "Order_No", "bigint", "0", "0");
-            AlterBD_(ref opp, "Money_Transaction_Box", "Bank_Name", "nvarchar(MAX)");
-            AlterBD_(ref opp, "Money_Transaction_Box", "BankSubAccount_Id", "bigint", "0", "0");
-            AlterBD_(ref opp, "Money_Transaction_Box", "IsDefault_Bank", "int", "0", "0");
-            AlterBD_(ref opp, "Money_Transaction_Box", "Factor", "decimal(18, " + d + ")", "0", "0");
-
-
-            AlterBD_(ref opp, "Money_Transaction_Box", "CarsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Money_Transaction_Box", "CarsWorkOrdersId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Money_Transaction_Box", "Invoice_No", "bigint", "0", "0");
-
-            AlterBD_(ref opp, "Money_Transaction_Box", "CarNumber", "nvarchar(MAX)");
-            AlterBD_(ref opp, "Money_Transaction_Box", "WorkOrderNumber", "bigint", "0", "0");
-            AlterBD_(ref opp, "Money_Transaction_Box", "Account_Entry_List_ID", "bigint", "0", "0");
-            AlterBD_(ref opp, "Money_Transaction_Box", "IS_Posted_Flage", "int", "0", "0");
-            AlterBD_(ref opp, "Money_Transaction_Box", "SubOrder_Money_Id", "bigint", "0", "0");
-            //AlterColumn(ref opp, "Money_Transaction_Box", "SubOrder_Mony_Id", "bigint" );
-            AlterBD_(ref opp, "Money_Transaction_Box", "TaxInternalId", "nvarchar(MAX)");
-
-
-            AlterBD_(ref opp, "Money_Transaction_Box", "DataDictionaryProcessesListsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Money_Transaction_Box", "Reference_Type_Table_Id", "bigint", "0", "0");
-
-
-            AlterBD_(ref opp, "Order_Money", "DataDictionaryProcessesListsId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Order_Money", "Reference_Type_Table_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "unit", "SS_unit_Value", "int", "1", "1");
+                AlterBD_(ref opp, "Customer", "Street", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "BuildingNumber", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "floor", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "room", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "landmark", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "additionalInformation", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "TaxCompanyName", "nvarchar(500)");
+                AlterBD_(ref opp, "Customer", "LookUp_PersonCompany_TypeCodeTax", "nvarchar(500)");
 
 
 
+                AlterBD_(ref opp, "Bills_Details", "PriceUnit", "decimal(18, " + d + ")", "0", "Larg_Unit_Price");
+                AlterBD_(ref opp, "Bills_Details_Reverse", "PriceUnit", "decimal(18, " + d + ")", "0", "Larg_Unit_Price");
 
-            AlterBD_(ref opp, "DataDictionary", "MethodName", "nvarchar(MAX)");
-            AlterBD_(ref opp, "DataDictionary", "TableName", "nvarchar(1000)");
-            //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "Customers_AccountsId", "bigint", "0", "0");
-            //            WorkOrderNumber bigint  Checked
-            //CustomerName    nvarchar(500)   Checked
-            //CarsWorkOrdersId    bigint Checked
-            //TaxInternalId nvarchar(500)	Checked
-            //CarsId  bigint Checked
-            //CarNumber nvarchar(500)	Checked
-
-            AlterBD_(ref opp, "Checks_Memory", "Checks_MemoryMainDataListId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Checks_Memory", "ProcessNo", "bigint", "0", "0");
-            AlterBD_(ref opp, "Checks_MemoryHistory", "HistoryReceipt", "int", "0", "0");
-            AlterBD_(ref opp, "Checks_MemoryHistory", "HistoryDate", "datetime");
-
-            AlterBD_(ref opp, "Invoices_Details", "Qnty_FreeStr", "nvarchar(500)");
-            AlterBD_(ref opp, "Invoices_Details", "Qnty_Free", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details", "Qnty", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_Details", "Unit_Item_SalesDateId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Bills_Details_Reverse", "Unit_Item_SalesDateId", "bigint", "0", "0");
 
 
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "Qnty_FreeStr", "nvarchar(500)");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "Qnty_Free", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "Qnty", "decimal(18, " + d + ")", "0", "0");
-
-            AlterBD_(ref opp, "Bills_Details", "Qnty_FreeStr", "nvarchar(500)");
-            AlterBD_(ref opp, "Bills_Details", "Qnty_Free", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_Details", "Qnty", "decimal(18, " + d + ")", "0", "0");
-
-            AlterBD_(ref opp, "Bills_Details_Reverse", "Qnty_FreeStr", "nvarchar(500)");
-            AlterBD_(ref opp, "Bills_Details_Reverse", "Qnty_Free", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_Details_Reverse", "Qnty", "decimal(18, " + d + ")", "0", "0");
-
-            AlterBD_(ref opp, "Bills_Details", "S_price_LargeUnit", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_Details_Reverse", "S_price_LargeUnit", "decimal(18, " + d + ")", "0", "0");
-
-            AlterBD_(ref opp, "Bills_Details", "S_price_SmallUnit", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_Details_Reverse", "S_price_SmallUnit", "decimal(18, " + d + ")", "0", "0");
-
-            AlterBD_(ref opp, "Bills_Details", "S_price", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_Details_Reverse", "S_price", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_Details", "Store_Name", "nvarchar(MAX)");
+                AlterBD_(ref opp, "Bills_Details_Reverse", "Store_Name", "nvarchar(MAX)");
 
 
+                AlterBD_(ref opp, "Money_Transaction_Box", "Balance_BeforStr", "nvarchar(MAX)");
+                AlterBD_(ref opp, "Money_Transaction_Box", "Balance_AfterStr", "nvarchar(MAX)");
 
-            AlterBD_(ref opp, "Unit_Item_SalesDate", "Unit3Mola", "decimal(18, " + d + ")", "0", "3");
-            AlterBD_(ref opp, "Unit_Item_SalesDate", "Total3Mola", "decimal(18, " + d + ")", "0", " Unit3Mola * Item_No ");
+                AlterBD_(ref opp, "Money_Transaction_Box", "CarsWorkOrdersId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Money_Transaction_Box", "Lookup_CashPaymentMethodId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Money_Transaction_Box", "Lookup_CashPaymentMethodName", "nvarchar(500)");
+                AlterBD_(ref opp, "Money_Transaction_Box", "Order_No", "bigint", "0", "0");
+                AlterBD_(ref opp, "Money_Transaction_Box", "Bank_Name", "nvarchar(MAX)");
+                AlterBD_(ref opp, "Money_Transaction_Box", "BankSubAccount_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "Money_Transaction_Box", "IsDefault_Bank", "int", "0", "0");
+                AlterBD_(ref opp, "Money_Transaction_Box", "Factor", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Unit_Item_SalesDate", "Total", "decimal(18, " + d + ")", "0", "QntyValue + Total3Mola");
-            AlterBD_(ref opp, "Unit_Item_SalesDate", "IsSelect", "bit", "1", "1");
+
+                AlterBD_(ref opp, "Money_Transaction_Box", "CarsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Money_Transaction_Box", "CarsWorkOrdersId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Money_Transaction_Box", "Invoice_No", "bigint", "0", "0");
+
+                AlterBD_(ref opp, "Money_Transaction_Box", "CarNumber", "nvarchar(MAX)");
+                AlterBD_(ref opp, "Money_Transaction_Box", "WorkOrderNumber", "bigint", "0", "0");
+                AlterBD_(ref opp, "Money_Transaction_Box", "Account_Entry_List_ID", "bigint", "0", "0");
+                AlterBD_(ref opp, "Money_Transaction_Box", "IS_Posted_Flage", "int", "0", "0");
+                AlterBD_(ref opp, "Money_Transaction_Box", "SubOrder_Money_Id", "bigint", "0", "0");
+                //AlterColumn(ref opp, "Money_Transaction_Box", "SubOrder_Mony_Id", "bigint" );
+                AlterBD_(ref opp, "Money_Transaction_Box", "TaxInternalId", "nvarchar(MAX)");
+
+
+                AlterBD_(ref opp, "Money_Transaction_Box", "DataDictionaryProcessesListsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Money_Transaction_Box", "Reference_Type_Table_Id", "bigint", "0", "0");
+
+
+                AlterBD_(ref opp, "Order_Money", "DataDictionaryProcessesListsId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Order_Money", "Reference_Type_Table_Id", "bigint", "0", "0");
 
 
 
-            AlterBD_(ref opp, "Invoices_Details", "Total3Mola", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details", "Unit3Mola", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "Total3Mola", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "Unit3Mola", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Bills_Details", "Total3Mola", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_Details", "Unit3Mola", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_Details_Reverse", "Total3Mola", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_Details_Reverse", "Unit3Mola", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "DataDictionary", "MethodName", "nvarchar(MAX)");
+                AlterBD_(ref opp, "DataDictionary", "TableName", "nvarchar(1000)");
+                //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "Customers_AccountsId", "bigint", "0", "0");
+                //            WorkOrderNumber bigint  Checked
+                //CustomerName    nvarchar(500)   Checked
+                //CarsWorkOrdersId    bigint Checked
+                //TaxInternalId nvarchar(500)	Checked
+                //CarsId  bigint Checked
+                //CarNumber nvarchar(500)	Checked
+
+                AlterBD_(ref opp, "Checks_Memory", "Checks_MemoryMainDataListId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Checks_Memory", "ProcessNo", "bigint", "0", "0");
+                AlterBD_(ref opp, "Checks_MemoryHistory", "HistoryReceipt", "int", "0", "0");
+                AlterBD_(ref opp, "Checks_MemoryHistory", "HistoryDate", "datetime");
+
+                AlterBD_(ref opp, "Invoices_Details", "Qnty_FreeStr", "nvarchar(500)");
+                AlterBD_(ref opp, "Invoices_Details", "Qnty_Free", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details", "Qnty", "decimal(18, " + d + ")", "0", "0");
+
+
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "Qnty_FreeStr", "nvarchar(500)");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "Qnty_Free", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "Qnty", "decimal(18, " + d + ")", "0", "0");
+
+                AlterBD_(ref opp, "Bills_Details", "Qnty_FreeStr", "nvarchar(500)");
+                AlterBD_(ref opp, "Bills_Details", "Qnty_Free", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_Details", "Qnty", "decimal(18, " + d + ")", "0", "0");
+
+                AlterBD_(ref opp, "Bills_Details_Reverse", "Qnty_FreeStr", "nvarchar(500)");
+                AlterBD_(ref opp, "Bills_Details_Reverse", "Qnty_Free", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_Details_Reverse", "Qnty", "decimal(18, " + d + ")", "0", "0");
+
+                AlterBD_(ref opp, "Bills_Details", "S_price_LargeUnit", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_Details_Reverse", "S_price_LargeUnit", "decimal(18, " + d + ")", "0", "0");
+
+                AlterBD_(ref opp, "Bills_Details", "S_price_SmallUnit", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_Details_Reverse", "S_price_SmallUnit", "decimal(18, " + d + ")", "0", "0");
+
+                AlterBD_(ref opp, "Bills_Details", "S_price", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_Details_Reverse", "S_price", "decimal(18, " + d + ")", "0", "0");
 
 
 
-            AlterBD__(ref opp, "Bills_Details", "UnitStr", "nvarchar(500)", @"	  UPDATE       Bills_Details
+                AlterBD_(ref opp, "Unit_Item_SalesDate", "Unit3Mola", "decimal(18, " + d + ")", "0", "3");
+                AlterBD_(ref opp, "Unit_Item_SalesDate", "Total3Mola", "decimal(18, " + d + ")", "0", " Unit3Mola * Item_No ");
+
+                AlterBD_(ref opp, "Unit_Item_SalesDate", "Total", "decimal(18, " + d + ")", "0", "QntyValue + Total3Mola");
+                AlterBD_(ref opp, "Unit_Item_SalesDate", "IsSelect", "bit", "1", "1");
+
+
+
+                AlterBD_(ref opp, "Invoices_Details", "Total3Mola", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details", "Unit3Mola", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "Total3Mola", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "Unit3Mola", "decimal(18, " + d + ")", "0", "0");
+
+                AlterBD_(ref opp, "Bills_Details", "Total3Mola", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_Details", "Unit3Mola", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_Details_Reverse", "Total3Mola", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_Details_Reverse", "Unit3Mola", "decimal(18, " + d + ")", "0", "0");
+
+
+
+                AlterBD__(ref opp, "Bills_Details", "UnitStr", "nvarchar(500)", @"	  UPDATE       Bills_Details
 SET                UnitStr = unit.B_Unit
 FROM            Bills_Details INNER JOIN
                          Item ON Bills_Details.Item_Id = Item.id INNER JOIN
                          unit ON Item.Unit_Id = unit.id  WHERE (Bills_Details.UnitStr IS NULL)");
-            AlterBD__(ref opp, "Bills_Details_Reverse", "UnitStr", "nvarchar(500)", @"	  UPDATE       Bills_Details_Reverse
+                AlterBD__(ref opp, "Bills_Details_Reverse", "UnitStr", "nvarchar(500)", @"	  UPDATE       Bills_Details_Reverse
 SET                UnitStr = unit.B_Unit
 FROM            Bills_Details_Reverse INNER JOIN
                          Item ON Bills_Details_Reverse.Item_Id = Item.id INNER JOIN
                          unit ON Item.Unit_Id = unit.id  WHERE (Bills_Details_Reverse.UnitStr IS NULL)");
 
 
-            AlterBD_(ref opp, "Invoices_Details", "Item_DeletedFlage", "int", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "Item_DeletedFlage", "int", "0", "0");
-            AlterBD_(ref opp, "Bills_Details", "Item_DeletedFlage", "int", "0", "0");
-            AlterBD_(ref opp, "Bills_Details_Reverse", "Item_DeletedFlage", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details", "Item_DeletedFlage", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "Item_DeletedFlage", "int", "0", "0");
+                AlterBD_(ref opp, "Bills_Details", "Item_DeletedFlage", "int", "0", "0");
+                AlterBD_(ref opp, "Bills_Details_Reverse", "Item_DeletedFlage", "int", "0", "0");
 
-            AlterBD_(ref opp, "Invoices_Details", "Item_ProcessedFlage", "int", "0", "0");
-            AlterBD_(ref opp, "Invoices_Details_Reverse", "Item_ProcessedFlage", "int", "0", "0");
-            AlterBD_(ref opp, "Bills_Details", "Item_ProcessedFlage", "int", "0", "0");
-            AlterBD_(ref opp, "Bills_Details_Reverse", "Item_ProcessedFlage", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details", "Item_ProcessedFlage", "int", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "Item_ProcessedFlage", "int", "0", "0");
+                AlterBD_(ref opp, "Bills_Details", "Item_ProcessedFlage", "int", "0", "0");
+                AlterBD_(ref opp, "Bills_Details_Reverse", "Item_ProcessedFlage", "int", "0", "0");
 
 
 
 
-            AlterBD_(ref opp, "Bills_List", "Total_List3Mola", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_List_Reverse", "Total_List3Mola", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_List", "Total_List3Mola", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_List_Reverse", "Total_List3Mola", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Bills_List", "WahbaValue", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_List_Reverse", "WahbaValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_List", "WahbaValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_List_Reverse", "WahbaValue", "decimal(18, " + d + ")", "0", "0");
 
-            AlterBD_(ref opp, "Bills_List", "NawlounValue", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_List_Reverse", "NawlounValue", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_List", "Total3MolaRate", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_List_Reverse", "Total3MolaRate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_List", "NawlounValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_List_Reverse", "NawlounValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_List", "Total3MolaRate", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_List_Reverse", "Total3MolaRate", "decimal(18, " + d + ")", "0", "0");
 
 
 
 
-            AlterBD_(ref opp, "Bills_List", "Value_3Mola", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Bills_List_Reverse", "Value_3Mola", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_List", "Value_3Mola", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Bills_List_Reverse", "Value_3Mola", "decimal(18, " + d + ")", "0", "0");
 
 
 
-            AlterBD_(ref opp, "Govern_Area_List", "Gov_Country_ListId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Govern_Area_List", "Gov_Country_ListId", "bigint", "0", "0");
 
-            AlterBD_(ref opp, "Govern_List", "Gov_Country_ListId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Govern_List", "Govern_Area_ListId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Govern_List", "Gov_Country_ListId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Govern_List", "Govern_Area_ListId", "bigint", "0", "0");
 
 
-            AlterBD_(ref opp, "Gov_City_List", "Gov_Country_ListId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Gov_City_List", "Govern_Area_ListId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Gov_City_List", "Govern_ListId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Order_Money", "CarsWorkOrdersId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Order_Money", "MainOrder_MoneyId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Order_Money", "Reverse_Order", "int", "0", "0");
-            AlterBD_(ref opp, "Order_Money", "Account_Type", "int", "0", "0");
-            AlterBD_(ref opp, "Order_Money", "Account_Id", "bigint", "0", "0");
-            AlterBD_(ref opp, "Order_Money", "IsMoreTheOneBoxShow", "int", "0", "0");
+                AlterBD_(ref opp, "Gov_City_List", "Gov_Country_ListId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Gov_City_List", "Govern_Area_ListId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Gov_City_List", "Govern_ListId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Order_Money", "CarsWorkOrdersId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Order_Money", "MainOrder_MoneyId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Order_Money", "Reverse_Order", "int", "0", "0");
+                AlterBD_(ref opp, "Order_Money", "Account_Type", "int", "0", "0");
+                AlterBD_(ref opp, "Order_Money", "Account_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "Order_Money", "IsMoreTheOneBoxShow", "int", "0", "0");
 
 
-            AlterBD_(ref opp, "Order_Money", "RequirementValue", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Order_Money", "StillValue", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Order_Money", "paidTotal", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Order_Money", "RequirementValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Order_Money", "StillValue", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Order_Money", "paidTotal", "decimal(18, " + d + ")", "0", "0");
 
 
 
 
-            AlterBD_(ref opp, "Customer", "CompanyName", "nvarchar(200)");
-            AlterBD_(ref opp, "Customer", "CompanyContactName", "nvarchar(200)");
-            AlterBD_(ref opp, "Customer", "Gov_Country_ListName", "nvarchar(200)");
-            AlterBD_(ref opp, "Customer", "Govern_Area_ListName", "nvarchar(200)");
-            AlterBD_(ref opp, "Customer", "Govern_ListName", "nvarchar(200)");
-            AlterBD_(ref opp, "Customer", "Gov_City_ListName", "nvarchar(200)");
-            AlterBD_(ref opp, "Customer", "Street", "nvarchar(200)");
-            AlterBD_(ref opp, "Customer", "BuildingNumber", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "CompanyName", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "CompanyContactName", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "Gov_Country_ListName", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "Govern_Area_ListName", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "Govern_ListName", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "Gov_City_ListName", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "Street", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "BuildingNumber", "nvarchar(200)");
 
 
 
-            AlterBD_(ref opp, "Customer", "CompanyContactData", "nvarchar(200)");
-            AlterBD_(ref opp, "Customer", "NationalId", "nvarchar(200)");
-            AlterBD_(ref opp, "Customer", "PassportNo", "nvarchar(200)");
-            AlterBD_(ref opp, "Customer", "PostalNo", "nvarchar(200)");
-            AlterBD_(ref opp, "Customer", "LookUp_PersonCompany_TypeId", "bigInt");
-            AlterBD_(ref opp, "Customer", "LookUp_PersonCompany_Type", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "CompanyContactData", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "NationalId", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "PassportNo", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "PostalNo", "nvarchar(200)");
+                AlterBD_(ref opp, "Customer", "LookUp_PersonCompany_TypeId", "bigInt");
+                AlterBD_(ref opp, "Customer", "LookUp_PersonCompany_Type", "nvarchar(200)");
 
-            AlterBD_(ref opp, "Customer", "RegistrationDate", "datetime", "getdate()", "null");
+                AlterBD_(ref opp, "Customer", "RegistrationDate", "datetime", "getdate()", "null");
 
-            AlterBD_(ref opp, "Customer", "gov_Country_ListId", "bigint");
-            AlterBD_(ref opp, "Customer", "Govern_Area_ListId", "bigint");
-            AlterBD_(ref opp, "Customer", "govern_ListId", "bigint");
-            AlterBD_(ref opp, "Customer", "Gov_City_ListId", "bigint");
-            AlterBD_(ref opp, "Currency", "Tax_BranchesId", "bigint", "0", "0");
-            AlterBD_(ref opp, "Customer", "Tax_BranchesId", "bigint");
-            AlterBD_(ref opp, "Customer", "IsInsuranceCompany", "int", "0", "0");
+                AlterBD_(ref opp, "Customer", "gov_Country_ListId", "bigint");
+                AlterBD_(ref opp, "Customer", "Govern_Area_ListId", "bigint");
+                AlterBD_(ref opp, "Customer", "govern_ListId", "bigint");
+                AlterBD_(ref opp, "Customer", "Gov_City_ListId", "bigint");
+                AlterBD_(ref opp, "Currency", "Tax_BranchesId", "bigint", "0", "0");
+                AlterBD_(ref opp, "Customer", "Tax_BranchesId", "bigint");
+                AlterBD_(ref opp, "Customer", "IsInsuranceCompany", "int", "0", "0");
 
 
 
-            AlterBD_(ref opp, "Supplier", "CompanyName", "nvarchar(200)");
-            AlterBD_(ref opp, "Supplier", "CompanyContactName", "nvarchar(200)");
+                AlterBD_(ref opp, "Supplier", "CompanyName", "nvarchar(200)");
+                AlterBD_(ref opp, "Supplier", "CompanyContactName", "nvarchar(200)");
 
 
-            AlterBD_(ref opp, "Supplier", "CompanyContactData", "nvarchar(200)");
-            AlterBD_(ref opp, "Supplier", "NationalId", "nvarchar(200)");
-            AlterBD_(ref opp, "Supplier", "PassportNo", "nvarchar(200)");
-            AlterBD_(ref opp, "Supplier", "PostalNo", "nvarchar(200)");
-            //AlterBD_(ref opp, "Supplier", "PersonCompanyType", "bigInt");
-            AlterBD_(ref opp, "Supplier", "RegistrationDate", "datetime", "getdate()", "null");
+                AlterBD_(ref opp, "Supplier", "CompanyContactData", "nvarchar(200)");
+                AlterBD_(ref opp, "Supplier", "NationalId", "nvarchar(200)");
+                AlterBD_(ref opp, "Supplier", "PassportNo", "nvarchar(200)");
+                AlterBD_(ref opp, "Supplier", "PostalNo", "nvarchar(200)");
+                //AlterBD_(ref opp, "Supplier", "PersonCompanyType", "bigInt");
+                AlterBD_(ref opp, "Supplier", "RegistrationDate", "datetime", "getdate()", "null");
 
 
 
 
 
-            AlterBD_(ref opp, "Supplier", "LookUp_PersonCompany_TypeId", "bigInt");
-            AlterBD_(ref opp, "Supplier", "LookUp_PersonCompany_Type", "nvarchar(200)");
+                AlterBD_(ref opp, "Supplier", "LookUp_PersonCompany_TypeId", "bigInt");
+                AlterBD_(ref opp, "Supplier", "LookUp_PersonCompany_Type", "nvarchar(200)");
 
 
-            AlterBD_(ref opp, "Account_Entry_List", "CarsWorkOrdersId", "bigint");
-            AlterBD_(ref opp, "Account_Entry_List", "CarsId", "bigint");
-            AlterBD_(ref opp, "Account_Entry_List", "WorkOrderNumber", "bigint");
-            AlterBD_(ref opp, "Account_Entry_List", "CarNumber", "nvarchar(500)");
+                AlterBD_(ref opp, "Account_Entry_List", "CarsWorkOrdersId", "bigint");
+                AlterBD_(ref opp, "Account_Entry_List", "CarsId", "bigint");
+                AlterBD_(ref opp, "Account_Entry_List", "WorkOrderNumber", "bigint");
+                AlterBD_(ref opp, "Account_Entry_List", "CarNumber", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Account_Entry_List", "IsAutomaticEntryOrManualy", "bigint");
+                AlterBD_(ref opp, "Account_Entry_List", "IsAutomaticEntryOrManualy", "bigint");
 
 
-            AlterBD_(ref opp, "Account_Entry_Details", "DocType", "nvarchar(500)");
+                AlterBD_(ref opp, "Account_Entry_Details", "DocType", "nvarchar(500)");
 
-            AlterBD_(ref opp, "Account_Entry_Details", "DocNo", "bigint");
-            AlterBD_(ref opp, "Account_Entry_Details", "CarsWorkOrdersId", "bigint");
-            AlterBD_(ref opp, "Account_Entry_Details", "CarsId", "bigint");
-            AlterBD_(ref opp, "Account_Entry_Details", "WorkOrderNumber", "bigint");
-            AlterBD_(ref opp, "Account_Entry_Details", "CarNumber", "nvarchar(500)");
+                AlterBD_(ref opp, "Account_Entry_Details", "DocNo", "bigint");
+                AlterBD_(ref opp, "Account_Entry_Details", "CarsWorkOrdersId", "bigint");
+                AlterBD_(ref opp, "Account_Entry_Details", "CarsId", "bigint");
+                AlterBD_(ref opp, "Account_Entry_Details", "WorkOrderNumber", "bigint");
+                AlterBD_(ref opp, "Account_Entry_Details", "CarNumber", "nvarchar(500)");
 
 
-            AlterBD_(ref opp, "Account_Entry_Details", "DataDictionaryProcessesListsId", "bigint");
-            AlterBD_(ref opp, "Account_Entry_Details", "Reference_Type_Table_Id", "bigint");
-            AlterBD_(ref opp, "Account_Entry_Details", "MainAccount_Id", "bigint", "0", "0", "UPDATE       Account_Entry_Details SET                MainAccount_Id = Submain_Account.Main_Account_Id FROM            Account_Entry_Details INNER JOIN                          Submain_Account ON Account_Entry_Details.Submain_Account_ID = Submain_Account.Id");
+                AlterBD_(ref opp, "Account_Entry_Details", "DataDictionaryProcessesListsId", "bigint");
+                AlterBD_(ref opp, "Account_Entry_Details", "Reference_Type_Table_Id", "bigint");
+                AlterBD_(ref opp, "Account_Entry_Details", "MainAccount_Id", "bigint", "0", "0", "UPDATE       Account_Entry_Details SET                MainAccount_Id = Submain_Account.Main_Account_Id FROM            Account_Entry_Details INNER JOIN                          Submain_Account ON Account_Entry_Details.Submain_Account_ID = Submain_Account.Id");
 
 
 
 
 
-            //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "Customers_AccountsId", "bigint", "0", "0");
+                //AlterBD_(ref opp, "Customers_Accounts_Mokhtalat", "Customers_AccountsId", "bigint", "0", "0");
 
 
 
-            AlterBD_(ref opp, "Checks_Memory", "Transfer_Check_Id_TO", "bigint", "0", "0");
-            AlterBD_(ref opp, "Checks_Memory", "Transfer_Check_Id_From", "bigint", "0", "0");
+                AlterBD_(ref opp, "Checks_Memory", "Transfer_Check_Id_TO", "bigint", "0", "0");
+                AlterBD_(ref opp, "Checks_Memory", "Transfer_Check_Id_From", "bigint", "0", "0");
 
 
-            AlterBD_(ref opp, "Submain_Account", "AccountCode1", "int", "0", "0");
-            AlterBD_(ref opp, "Submain_Account", "AccountCode2", "int", "0", "0");
-            AlterBD_(ref opp, "Submain_Account", "AccountCode3", "int", "0", "0");
-            AlterBD_(ref opp, "Submain_Account", "AccountCode4", "int", "0", "0");
-            AlterBD_(ref opp, "Submain_Account", "AccountCode5", "int", "0", "0");
-            AlterBD_(ref opp, "Submain_Account", "AccountCode6", "int", "0", "0");
-            AlterBD_(ref opp, "Submain_Account", "Is_MasrofatAffect", "int", "1", "1");
-            AlterBD_(ref opp, "Submain_Account", "Accept_EntryNew_Flage", "int", "1", "1");
-            AlterBD_(ref opp, "Submain_Account", "Cost_Center_Tree_ID", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Submain_Account", "IS_SubAccount_FollowingAccount", "int", "0");
-            AlterBD_(ref opp, "Submain_Account", "IS_SubAccount_AccountType", "int", "0", "0");
-            AlterBD_(ref opp, "Submain_Account", "FirstSubCode", "int", "0", "0");
-            AlterBD_(ref opp, "Submain_Account", "code", "int", "0", "0");
-            AlterBD_(ref opp, "Submain_Account", "Is_Last_Level", "int", "0", "0");
-            AlterBD_(ref opp, "Submain_Account", "CashFlowType", "int", "0", "0");
-            AlterBD_(ref opp, "Submain_Account", "User_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "Submain_Account", "AccountCode1", "int", "0", "0");
+                AlterBD_(ref opp, "Submain_Account", "AccountCode2", "int", "0", "0");
+                AlterBD_(ref opp, "Submain_Account", "AccountCode3", "int", "0", "0");
+                AlterBD_(ref opp, "Submain_Account", "AccountCode4", "int", "0", "0");
+                AlterBD_(ref opp, "Submain_Account", "AccountCode5", "int", "0", "0");
+                AlterBD_(ref opp, "Submain_Account", "AccountCode6", "int", "0", "0");
+                AlterBD_(ref opp, "Submain_Account", "Is_MasrofatAffect", "int", "1", "1");
+                AlterBD_(ref opp, "Submain_Account", "Accept_EntryNew_Flage", "int", "1", "1");
+                AlterBD_(ref opp, "Submain_Account", "Cost_Center_Tree_ID", "decimal(18, " + d + ")", "0", "0");
+                AlterBD_(ref opp, "Submain_Account", "IS_SubAccount_FollowingAccount", "int", "0");
+                AlterBD_(ref opp, "Submain_Account", "IS_SubAccount_AccountType", "int", "0", "0");
+                AlterBD_(ref opp, "Submain_Account", "FirstSubCode", "int", "0", "0");
+                AlterBD_(ref opp, "Submain_Account", "code", "int", "0", "0");
+                AlterBD_(ref opp, "Submain_Account", "Is_Last_Level", "int", "0", "0");
+                AlterBD_(ref opp, "Submain_Account", "CashFlowType", "int", "0", "0");
+                AlterBD_(ref opp, "Submain_Account", "User_Id", "bigint", "0", "0");
 
 
-            //////////////
-            ///
+                //////////////
+                ///
 
 
 
+                AlterBD_(ref opp, "Items_Group", "ItemsGroup_Name", "nvarchar(500)");
+                AlterBD_(ref opp, "Items_Group", "Name", "nvarchar(500)");
 
-            AlterColumn(ref opp, "FixedAssetData", "Branch_Id", "bigint");
-            AlterColumn(ref opp, "Submain_Account", "Branch_Id", "bigint");
-            AlterColumn(ref opp, "SysPrinterSettings", "Id", "bigint");
 
-            // MenuViewModel
-            //AlterColumn(ref opp, "MenuViewModel", "Id", "bigint");
-            //AlterColumn(ref opp, "MenuViewModel", "ParentId", "bigint");
-            //AlterColumn(ref opp, "MenuViewModel", "Menu_ID", "bigint");
+                AlterColumn(ref opp, "FixedAssetData", "Branch_Id", "bigint");
+                AlterColumn(ref opp, "Submain_Account", "Branch_Id", "bigint");
+                AlterColumn(ref opp, "SysPrinterSettings", "Id", "bigint");
 
-            // ConsPeriodServiceType
-            AlterColumn(ref opp, "ConsPeriodServiceType", "Id", "bigint");
+                // MenuViewModel
+                //AlterColumn(ref opp, "MenuViewModel", "Id", "bigint");
+                //AlterColumn(ref opp, "MenuViewModel", "ParentId", "bigint");
+                //AlterColumn(ref opp, "MenuViewModel", "Menu_ID", "bigint");
 
-            // Project
-            AlterColumn(ref opp, "ConsProject", "Id", "bigint");
+                // ConsPeriodServiceType
+                AlterColumn(ref opp, "ConsPeriodServiceType", "Id", "bigint");
 
-            // ProjectSpacesGroup
-            AlterColumn(ref opp, "ConsProjectSpacesGroup", "Id", "bigint");
-            AlterColumn(ref opp, "ConsProjectSpacesGroup", "ProjectId", "bigint");
+                // Project
+                AlterColumn(ref opp, "ConsProject", "Id", "bigint");
 
-            // Residentialbuilding
-            AlterColumn(ref opp, "ConsResidentialbuilding", "Id", "bigint");
-            AlterColumn(ref opp, "ConsResidentialbuilding", "ProjectId", "bigint");
+                // ProjectSpacesGroup
+                AlterColumn(ref opp, "ConsProjectSpacesGroup", "Id", "bigint");
+                AlterColumn(ref opp, "ConsProjectSpacesGroup", "ProjectId", "bigint");
 
-            // Service
-            AlterColumn(ref opp, "ConsService", "Id", "bigint");
-            AlterColumn(ref opp, "ConsService", "PeriodServiceTypeId", "bigint");
+                // Residentialbuilding
+                AlterColumn(ref opp, "ConsResidentialbuilding", "Id", "bigint");
+                AlterColumn(ref opp, "ConsResidentialbuilding", "ProjectId", "bigint");
 
-            // ServicesGroupList
-            AlterColumn(ref opp, "ConsServicesGroupList", "Id", "bigint");
-            AlterColumn(ref opp, "ConsServicesGroupList", "ProjectId", "bigint");
+                // Service
+                AlterColumn(ref opp, "ConsService", "Id", "bigint");
+                AlterColumn(ref opp, "ConsService", "PeriodServiceTypeId", "bigint");
 
-            // UnitType
-            AlterColumn(ref opp, "ConsUnitType", "Id", "bigint");
+                // ServicesGroupList
+                AlterColumn(ref opp, "ConsServicesGroupList", "Id", "bigint");
+                AlterColumn(ref opp, "ConsServicesGroupList", "ProjectId", "bigint");
 
-            // WaterCounterType
-            AlterColumn(ref opp, "ConsWaterCounterType", "Id", "bigint");
+                // UnitType
+                AlterColumn(ref opp, "ConsUnitType", "Id", "bigint");
 
-            // Lookup_OrderTypes
-            //AlterColumn(ref opp, "Lookup_OrderTypes", "Id", "bigint");
+                // WaterCounterType
+                AlterColumn(ref opp, "ConsWaterCounterType", "Id", "bigint");
 
-            // Base
-            //AlterColumn(ref opp, "Base", "Id", "bigint");
-            //AlterColumn(ref opp, "Base", "UserId", "bigint");
+                // Lookup_OrderTypes
+                //AlterColumn(ref opp, "Lookup_OrderTypes", "Id", "bigint");
 
+                // Base
+                //AlterColumn(ref opp, "Base", "Id", "bigint");
+                //AlterColumn(ref opp, "Base", "UserId", "bigint");
 
-            ///////////////////////
-            AlterColumn(ref opp, "Item", "Code", "nvarchar(MAX)");
-            AlterColumn(ref opp, "Unit_Item", "Code", "nvarchar(MAX)");
-            AlterColumn(ref opp, "Item", "BarCode2", "nvarchar(MAX)");
-            AlterColumn(ref opp, "Item", "BarCode3", "nvarchar(MAX)");
-            AlterColumn(ref opp, "Item", "BarCode4", "nvarchar(MAX)");
-            AlterColumn(ref opp, "Item", "BarCode5", "nvarchar(MAX)");
 
+                ///////////////////////
+                AlterColumn(ref opp, "Item", "Code", "nvarchar(MAX)");
+                AlterColumn(ref opp, "Unit_Item", "Code", "nvarchar(MAX)");
+                AlterColumn(ref opp, "Item", "BarCode2", "nvarchar(MAX)");
+                AlterColumn(ref opp, "Item", "BarCode3", "nvarchar(MAX)");
+                AlterColumn(ref opp, "Item", "BarCode4", "nvarchar(MAX)");
+                AlterColumn(ref opp, "Item", "BarCode5", "nvarchar(MAX)");
 
-            AlterColumn(ref opp, "Item", "Unit_Id", "bigint");
-            AlterColumn(ref opp, "Item", "Item_Category_ID", "bigint");
-            AlterColumn(ref opp, "Order_Purshing", "Order_Type", "int");
 
-            AlterColumn(ref opp, "Order_Purshing", "Id_From", "bigint");
-            AlterColumn(ref opp, "Order_Purshing", "Id_To", "bigint");
-            AlterColumn(ref opp, "Order_Purshing", "Cust_Supplier_id", "bigint");
-            AlterColumn(ref opp, "Order_Purshing", "IS_EstlamRawMaterial", "bit");
-            AlterColumn(ref opp, "Order_Purshing", "Invoice_ID", "bigint");
-            AlterColumn(ref opp, "Detailes_Purshing", "qua", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Detailes_Purshing", "Part_qua", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Detailes_Purshing", "Item_No", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Detailes_Purshing", "Qua_Befor", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Detailes_Purshing", "Part_qua_Befor", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Detailes_Purshing", "Item_No_Befor", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Detailes_Purshing", "Qua_After", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Detailes_Purshing", "Part_qua_After", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Detailes_Purshing", "Item_No_After", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Detailes_Purshing", "Unit_Used_for_Price", "int");
+                AlterColumn(ref opp, "Item", "Unit_Id", "bigint");
+                AlterColumn(ref opp, "Item", "Item_Category_ID", "bigint");
+                AlterColumn(ref opp, "Order_Purshing", "Order_Type", "int");
 
+                AlterColumn(ref opp, "Order_Purshing", "Id_From", "bigint");
+                AlterColumn(ref opp, "Order_Purshing", "Id_To", "bigint");
+                AlterColumn(ref opp, "Order_Purshing", "Cust_Supplier_id", "bigint");
+                AlterColumn(ref opp, "Order_Purshing", "IS_EstlamRawMaterial", "bit");
+                AlterColumn(ref opp, "Order_Purshing", "Invoice_ID", "bigint");
+                AlterColumn(ref opp, "Detailes_Purshing", "qua", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Detailes_Purshing", "Part_qua", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Detailes_Purshing", "Item_No", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Detailes_Purshing", "Qua_Befor", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Detailes_Purshing", "Part_qua_Befor", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Detailes_Purshing", "Item_No_Befor", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Detailes_Purshing", "Qua_After", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Detailes_Purshing", "Part_qua_After", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Detailes_Purshing", "Item_No_After", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Detailes_Purshing", "Unit_Used_for_Price", "int");
 
-            AlterColumn(ref opp, "Detailes_Purshing_Import_Export", "qua", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Detailes_Purshing_Import_Export", "Part_qua", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Detailes_Purshing_Import_Export", "Item_No", "decimal(18, " + d + ")");
 
+                AlterColumn(ref opp, "Detailes_Purshing_Import_Export", "qua", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Detailes_Purshing_Import_Export", "Part_qua", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Detailes_Purshing_Import_Export", "Item_No", "decimal(18, " + d + ")");
 
 
-            AlterColumn(ref opp, "Invoices_List_Reverse", "IsMaintainceInvoice", "int");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "Store_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "Bills_Details_Id", "bigint");
 
+                AlterColumn(ref opp, "Invoices_List_Reverse", "IsMaintainceInvoice", "int");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "Store_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "Bills_Details_Id", "bigint");
 
 
 
 
-            AlterColumn(ref opp, "Supplier", "Group_Id", "bigint");
 
-            AlterColumn(ref opp, "Customer", "Group_Id", "bigint");
-            AlterColumn(ref opp, "Customer", "CustomerTypeTax", "bigint");
-            AlterColumn(ref opp, "Customer", "LookUp_CustomerTypeTaxId", "int");
-            AlterColumn(ref opp, "Customer", "CountryId", "int");
-            AlterColumn(ref opp, "Customer", "CountryName", "nvarchar(200)");
-            AlterColumn(ref opp, "Customer", "floor", "nvarchar(200)");
-            AlterColumn(ref opp, "Customer", "room", "nvarchar(200)");
-            AlterColumn(ref opp, "Customer", "landmark", "nvarchar(200)");
-            AlterColumn(ref opp, "Customer", "additionalInformation", "nvarchar(200)");
-            AlterColumn(ref opp, "Customer", "Id", "bigint");
-            AlterColumn(ref opp, "Customer", "SubAccount_Id", "bigint");
-            AlterColumn(ref opp, "Customer", "Price_Type_List_ID", "bigint");
-            AlterColumn(ref opp, "Customer", "gov_Country_ListId", "bigint");
-            AlterColumn(ref opp, "Customer", "Govern_Area_ListId", "bigint");
-            AlterColumn(ref opp, "Customer", "govern_ListId", "bigint");
-            AlterColumn(ref opp, "Customer", "Gov_City_ListId", "bigint");
-            AlterColumn(ref opp, "Customer", "Ref_Cust_Supplier_Id", "bigint");
+                AlterColumn(ref opp, "Supplier", "Group_Id", "bigint");
 
-            AlterColumn(ref opp, "Customer", "Tax_BranchesId", "bigint");
-            AlterColumn(ref opp, "Customer", "Location_Id", "bigint");
-            
+                AlterColumn(ref opp, "Customer", "Group_Id", "bigint");
+                AlterColumn(ref opp, "Customer", "CustomerTypeTax", "bigint");
+                AlterColumn(ref opp, "Customer", "LookUp_CustomerTypeTaxId", "int");
+                AlterColumn(ref opp, "Customer", "CountryId", "int");
+                AlterColumn(ref opp, "Customer", "CountryName", "nvarchar(200)");
+                AlterColumn(ref opp, "Customer", "floor", "nvarchar(200)");
+                AlterColumn(ref opp, "Customer", "room", "nvarchar(200)");
+                AlterColumn(ref opp, "Customer", "landmark", "nvarchar(200)");
+                AlterColumn(ref opp, "Customer", "additionalInformation", "nvarchar(200)");
+                AlterColumn(ref opp, "Customer", "Id", "bigint");
+                AlterColumn(ref opp, "Customer", "SubAccount_Id", "bigint");
+                AlterColumn(ref opp, "Customer", "Price_Type_List_ID", "bigint");
+                AlterColumn(ref opp, "Customer", "gov_Country_ListId", "bigint");
+                AlterColumn(ref opp, "Customer", "Govern_Area_ListId", "bigint");
+                AlterColumn(ref opp, "Customer", "govern_ListId", "bigint");
+                AlterColumn(ref opp, "Customer", "Gov_City_ListId", "bigint");
+                AlterColumn(ref opp, "Customer", "Ref_Cust_Supplier_Id", "bigint");
 
-            AlterColumn(ref opp, "Customer", "Balance", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Customer", "Balance_Actual", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Customer", "Balance_First", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Customer", "Balance_Actual", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Customer", "Tax_BranchesId", "bigint");
+                AlterColumn(ref opp, "Customer", "Location_Id", "bigint");
 
-            AlterColumn(ref opp, "Invoices_Details", "Bills_Details_Id", "bigint");
 
+                AlterColumn(ref opp, "Customer", "Balance", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Customer", "Balance_Actual", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Customer", "Balance_First", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Customer", "Balance_Actual", "decimal(18, " + d + ")");
 
+                AlterColumn(ref opp, "Invoices_Details", "Bills_Details_Id", "bigint");
 
 
-            AlterColumn(ref opp, "Bills_Details", "Store_Id", "bigint");
 
-            AlterColumn(ref opp, "Bills_Details_Reverse", "Store_Id", "bigint");
 
+                AlterColumn(ref opp, "Bills_Details", "Store_Id", "bigint");
 
-            AlterColumn(ref opp, "Invoices_Details", "Store_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "Store_Id", "bigint");
-            AlterColumn(ref opp, "Bills_Details", "Unit_Item_Table_Id", "bigint");
-            AlterColumn(ref opp, "Bills_Details_Reverse", "Unit_Item_Table_Id", "bigint");
+                AlterColumn(ref opp, "Bills_Details_Reverse", "Store_Id", "bigint");
 
 
-            AlterColumn(ref opp, "Invoices_Details", "Item_Notes", "nvarchar(MAX)");
-            AlterColumn(ref opp, "Bills_Details", "Item_Notes", "nvarchar(MAX)");
-            AlterColumn(ref opp, "Invoices_Details", "Notes", "nvarchar(MAX)");
-            AlterColumn(ref opp, "Bills_Details", "Notes", "nvarchar(MAX)");
+                AlterColumn(ref opp, "Invoices_Details", "Store_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "Store_Id", "bigint");
+                AlterColumn(ref opp, "Bills_Details", "Unit_Item_Table_Id", "bigint");
+                AlterColumn(ref opp, "Bills_Details_Reverse", "Unit_Item_Table_Id", "bigint");
 
 
-            AlterColumn(ref opp, "Money_Transaction_Box", "Lookup_CashPaymentMethodName", "nvarchar(500)");
-            AlterColumn(ref opp, "Submain_Account", "code", "bigint");
+                AlterColumn(ref opp, "Invoices_Details", "Item_Notes", "nvarchar(MAX)");
+                AlterColumn(ref opp, "Bills_Details", "Item_Notes", "nvarchar(MAX)");
+                AlterColumn(ref opp, "Invoices_Details", "Notes", "nvarchar(MAX)");
+                AlterColumn(ref opp, "Bills_Details", "Notes", "nvarchar(MAX)");
 
 
+                AlterColumn(ref opp, "Money_Transaction_Box", "Lookup_CashPaymentMethodName", "nvarchar(500)");
+                AlterColumn(ref opp, "Submain_Account", "code", "bigint");
 
 
-            AlterColumn(ref opp, "Submain_Account", "Cost_Center_Tree_ID", "bigint");
-            AlterColumn(ref opp, "Submain_Account", "AccountCode1", "bigint");
-            AlterColumn(ref opp, "Submain_Account", "AccountCode2", "bigint");
-            AlterColumn(ref opp, "Submain_Account", "AccountCode3", "bigint");
-            AlterColumn(ref opp, "Submain_Account", "AccountCode4", "bigint");
-            AlterColumn(ref opp, "Submain_Account", "AccountCode5", "bigint");
-            AlterColumn(ref opp, "Submain_Account", "AccountCode6", "bigint");
 
-            AlterColumn(ref opp, "Submain_Account", "Account_Customer_Type_ID", "bigint");
-            AlterColumn(ref opp, "Submain_Account", "Account_Type_ValueGeneralCustomer", "int", "0", "0");
 
+                AlterColumn(ref opp, "Submain_Account", "Cost_Center_Tree_ID", "bigint");
+                AlterColumn(ref opp, "Submain_Account", "AccountCode1", "bigint");
+                AlterColumn(ref opp, "Submain_Account", "AccountCode2", "bigint");
+                AlterColumn(ref opp, "Submain_Account", "AccountCode3", "bigint");
+                AlterColumn(ref opp, "Submain_Account", "AccountCode4", "bigint");
+                AlterColumn(ref opp, "Submain_Account", "AccountCode5", "bigint");
+                AlterColumn(ref opp, "Submain_Account", "AccountCode6", "bigint");
 
-            AlterColumn(ref opp, "Item", "CommisionPurchase", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Item", "IsPrintBarCode", "int", "1", "1");
-            AlterColumn(ref opp, "Item", "IsStopBuying", "int", "1", "1");
-            AlterColumn(ref opp, "Item", "StorageTempratureDegree", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Submain_Account", "Account_Customer_Type_ID", "bigint");
+                AlterColumn(ref opp, "Submain_Account", "Account_Type_ValueGeneralCustomer", "int", "0", "0");
 
-            AlterColumn(ref opp, "Order_Money", "Order_No", "bigint");
-            AlterColumn(ref opp, "Order_Money", "Bank_ID", "bigint");
-            AlterColumn(ref opp, "Order_Money", "User_Id", "bigint");
-            AlterColumn(ref opp, "Order_Money", "Branch_Id", "bigint");
-            AlterColumn(ref opp, "Order_Money", "Year_Financial_Period_Id", "bigint");
-            AlterColumn(ref opp, "Order_Money", "Ticket_Supplier_Id", "bigint");
-            AlterColumn(ref opp, "Order_Money", "Edit_User_Id", "bigint");
 
+                AlterColumn(ref opp, "Item", "CommisionPurchase", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Item", "IsPrintBarCode", "int", "1", "1");
+                AlterColumn(ref opp, "Item", "IsStopBuying", "int", "1", "1");
+                AlterColumn(ref opp, "Item", "StorageTempratureDegree", "decimal(18, " + d + ")");
 
+                AlterColumn(ref opp, "Order_Money", "Order_No", "bigint");
+                AlterColumn(ref opp, "Order_Money", "Bank_ID", "bigint");
+                AlterColumn(ref opp, "Order_Money", "User_Id", "bigint");
+                AlterColumn(ref opp, "Order_Money", "Branch_Id", "bigint");
+                AlterColumn(ref opp, "Order_Money", "Year_Financial_Period_Id", "bigint");
+                AlterColumn(ref opp, "Order_Money", "Ticket_Supplier_Id", "bigint");
+                AlterColumn(ref opp, "Order_Money", "Edit_User_Id", "bigint");
 
-            AlterColumn(ref opp, "Bills_Details", "Unit_Id", "bigint");
-            AlterColumn(ref opp, "Bills_Details_Reverse", "Unit_Id", "bigint");
 
-            AlterColumn(ref opp, "Invoices_Details", "Unit_Id", "bigint");
 
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "Unit_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "Bills_Details_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "Store_Id", "bigint");
+                AlterColumn(ref opp, "Bills_Details", "Unit_Id", "bigint");
+                AlterColumn(ref opp, "Bills_Details_Reverse", "Unit_Id", "bigint");
 
+                AlterColumn(ref opp, "Invoices_Details", "Unit_Id", "bigint");
 
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "Unit_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "Bills_Details_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "Store_Id", "bigint");
 
-            AlterColumn(ref opp, "Invoices_List", "Order_No", "bigint");
-            AlterColumn(ref opp, "Invoices_List", "ID", "bigint");
-            AlterColumn(ref opp, "Invoices_List", "Invoice_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_List", "CarsWorkOrdersId", "bigint");
-            AlterColumn(ref opp, "Invoices_List", "DayReg_List_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_List", "Account_Entry_List_ID", "bigint");
-            AlterColumn(ref opp, "Invoices_List", "Order_MoneyId", "bigint");
 
 
+                AlterColumn(ref opp, "Invoices_List", "Order_No", "bigint");
+                AlterColumn(ref opp, "Invoices_List", "ID", "bigint");
+                AlterColumn(ref opp, "Invoices_List", "Invoice_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_List", "CarsWorkOrdersId", "bigint");
+                AlterColumn(ref opp, "Invoices_List", "DayReg_List_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_List", "Account_Entry_List_ID", "bigint");
+                AlterColumn(ref opp, "Invoices_List", "Order_MoneyId", "bigint");
 
-            AlterColumn(ref opp, "Invoices_List", "Total", "decimal(18, " + d + ")");
-            //AlterColumn(ref opp, "Invoices_List", "commission", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List", "TaxSales10", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List", "ATS05", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List", "TaxSales10_Value", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List", "ATS05_Value", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List", "commissionValue", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List", "CustomerAccountBefor", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List", "Net_Total", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List", "CustomerAccountAfter", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List", "Net_Total", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List", "commissionValue", "decimal(18, " + d + ")");
 
-            ///////////////////////
-            ///
 
+                AlterColumn(ref opp, "Invoices_List", "Total", "decimal(18, " + d + ")");
+                //AlterColumn(ref opp, "Invoices_List", "commission", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List", "TaxSales10", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List", "ATS05", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List", "TaxSales10_Value", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List", "ATS05_Value", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List", "commissionValue", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List", "CustomerAccountBefor", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List", "Net_Total", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List", "CustomerAccountAfter", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List", "Net_Total", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List", "commissionValue", "decimal(18, " + d + ")");
 
-            AlterColumn(ref opp, "Invoices_List_Reverse", "ID", "bigint");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "Invoice_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "DayReg_List_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "Account_Entry_List_ID", "bigint");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "Order_MoneyId", "bigint");
+                ///////////////////////
+                ///
 
 
-            AlterColumn(ref opp, "Invoices_List_Reverse", "Total", "decimal(18, " + d + ")");
-            //AlterColumn(ref opp, "Invoices_List_Reverse", "commission", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "TaxSales10", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "ATS05", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "TaxSales10_Value", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "ATS05_Value", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "commissionValue", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "CustomerAccountBefor", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "Net_Total", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "CustomerAccountAfter", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "Net_Total", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "commissionValue", "decimal(18, " + d + ")");
-            ///////////////////
-            ///
+                AlterColumn(ref opp, "Invoices_List_Reverse", "ID", "bigint");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "Invoice_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "DayReg_List_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "Account_Entry_List_ID", "bigint");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "Order_MoneyId", "bigint");
 
-            AlterColumn(ref opp, "Invoices_List", "User_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_List", "Branch_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_List", "Salesman_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_List", "Edit_User_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_List", "BanksId", "bigint");
-            AlterColumn(ref opp, "Invoices_List", "Emp_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_List", "License_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_List", "Currency_id", "bigint");
 
-            AlterColumn(ref opp, "Invoices_List_Reverse", "User_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "Branch_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "Salesman_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "Edit_User_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "BanksId", "bigint");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "Emp_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "License_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_List_Reverse", "Currency_id", "bigint");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "Total", "decimal(18, " + d + ")");
+                //AlterColumn(ref opp, "Invoices_List_Reverse", "commission", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "TaxSales10", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "ATS05", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "TaxSales10_Value", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "ATS05_Value", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "commissionValue", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "CustomerAccountBefor", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "Net_Total", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "CustomerAccountAfter", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "Net_Total", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "commissionValue", "decimal(18, " + d + ")");
+                ///////////////////
+                ///
 
+                AlterColumn(ref opp, "Invoices_List", "User_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_List", "Branch_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_List", "Salesman_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_List", "Edit_User_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_List", "BanksId", "bigint");
+                AlterColumn(ref opp, "Invoices_List", "Emp_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_List", "License_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_List", "Currency_id", "bigint");
 
-            AlterColumn(ref opp, "Bills_List", "User_Id", "bigint");
-            AlterColumn(ref opp, "Bills_List", "Branch_Id", "bigint");
-            AlterColumn(ref opp, "Bills_List", "Salesman_Id", "bigint");
-            AlterColumn(ref opp, "Bills_List", "Edit_User_Id", "bigint");
-            AlterColumn(ref opp, "Bills_List", "BanksId", "bigint");
-            AlterColumn(ref opp, "Bills_List", "Emp_Id", "bigint");
-            AlterColumn(ref opp, "Bills_List", "License_Id", "bigint");
-            AlterColumn(ref opp, "Bills_List", "Currency_id", "bigint");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "User_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "Branch_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "Salesman_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "Edit_User_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "BanksId", "bigint");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "Emp_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "License_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_List_Reverse", "Currency_id", "bigint");
 
 
-            AlterColumn(ref opp, "Bills_List_Reverse", "User_Id", "bigint");
-            AlterColumn(ref opp, "Bills_List_Reverse", "Branch_Id", "bigint");
-            AlterColumn(ref opp, "Bills_List_Reverse", "Salesman_Id", "bigint");
-            AlterColumn(ref opp, "Bills_List_Reverse", "Edit_User_Id", "bigint");
-            AlterColumn(ref opp, "Bills_List_Reverse", "BanksId", "bigint");
-            AlterColumn(ref opp, "Bills_List_Reverse", "Emp_Id", "bigint");
-            AlterColumn(ref opp, "Bills_List_Reverse", "License_Id", "bigint");
-            AlterColumn(ref opp, "Bills_List_Reverse", "Currency_id", "bigint");
+                AlterColumn(ref opp, "Bills_List", "User_Id", "bigint");
+                AlterColumn(ref opp, "Bills_List", "Branch_Id", "bigint");
+                AlterColumn(ref opp, "Bills_List", "Salesman_Id", "bigint");
+                AlterColumn(ref opp, "Bills_List", "Edit_User_Id", "bigint");
+                AlterColumn(ref opp, "Bills_List", "BanksId", "bigint");
+                AlterColumn(ref opp, "Bills_List", "Emp_Id", "bigint");
+                AlterColumn(ref opp, "Bills_List", "License_Id", "bigint");
+                AlterColumn(ref opp, "Bills_List", "Currency_id", "bigint");
 
 
+                AlterColumn(ref opp, "Bills_List_Reverse", "User_Id", "bigint");
+                AlterColumn(ref opp, "Bills_List_Reverse", "Branch_Id", "bigint");
+                AlterColumn(ref opp, "Bills_List_Reverse", "Salesman_Id", "bigint");
+                AlterColumn(ref opp, "Bills_List_Reverse", "Edit_User_Id", "bigint");
+                AlterColumn(ref opp, "Bills_List_Reverse", "BanksId", "bigint");
+                AlterColumn(ref opp, "Bills_List_Reverse", "Emp_Id", "bigint");
+                AlterColumn(ref opp, "Bills_List_Reverse", "License_Id", "bigint");
+                AlterColumn(ref opp, "Bills_List_Reverse", "Currency_id", "bigint");
 
-            AlterColumn(ref opp, "Store", "User_Id", "bigint");
-            AlterColumn(ref opp, "Store", "Branch_Id", "bigint");
-            AlterColumn(ref opp, "Store", "Edit_User_Id", "bigint");
-            AlterColumn(ref opp, "Store", "Job_id", "bigint");
-            AlterColumn(ref opp, "Store", "LookUp_StoreOrderTypesId", "bigint");
 
 
+                AlterColumn(ref opp, "Store", "User_Id", "bigint");
+                AlterColumn(ref opp, "Store", "Branch_Id", "bigint");
+                AlterColumn(ref opp, "Store", "Edit_User_Id", "bigint");
+                AlterColumn(ref opp, "Store", "Job_id", "bigint");
+                AlterColumn(ref opp, "Store", "LookUp_StoreOrderTypesId", "bigint");
 
-            AlterColumn(ref opp, "Banks_Balance", "User_Id", "bigint");
-            AlterColumn(ref opp, "Banks_Balance", "Branch_Id", "bigint");
-            AlterColumn(ref opp, "Banks_Balance", "Bank_Id", "bigint");
-            AlterColumn(ref opp, "Banks_Balance", "Edit_User_Id", "bigint");
 
 
-            AlterColumn(ref opp, "Invoices_Details", "Id", "bigint");
-            AlterColumn(ref opp, "Invoices_Details", "Invoice_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_Details", "Item_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_Details", "Unit_Item_Table_Id", "bigint");
+                AlterColumn(ref opp, "Banks_Balance", "User_Id", "bigint");
+                AlterColumn(ref opp, "Banks_Balance", "Branch_Id", "bigint");
+                AlterColumn(ref opp, "Banks_Balance", "Bank_Id", "bigint");
+                AlterColumn(ref opp, "Banks_Balance", "Edit_User_Id", "bigint");
 
-            AlterColumn(ref opp, "Invoices_Details", "Larg_Qnty", "decimal(18, " + d + ")");
 
-            AlterColumn(ref opp, "Invoices_Details", "Small_Qnty", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details", "Qnty_Another", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details", "Larg_Unit_Price", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details", "Small_Unit_Price", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details", "Qnty_value", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details", "ATS05", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details", "TaxSales10", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details", "ATS05_Value", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details", "TaxSales10_Value", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details", "Total", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details", "commissionValue", "decimal(18, " + d + ")");
-            /////////
-            ///
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "Id", "bigint");
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "Invoice_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "Item_Id", "bigint");
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "Unit_Item_Table_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_Details", "Id", "bigint");
+                AlterColumn(ref opp, "Invoices_Details", "Invoice_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_Details", "Item_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_Details", "Unit_Item_Table_Id", "bigint");
 
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "Larg_Qnty", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details", "Larg_Qnty", "decimal(18, " + d + ")");
 
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "Small_Qnty", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "Qnty_Another", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "Larg_Unit_Price", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "Small_Unit_Price", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "Qnty_value", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "ATS05", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "TaxSales10", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "ATS05_Value", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "TaxSales10_Value", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "Total", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Invoices_Details_Reverse", "commissionValue", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details", "Small_Qnty", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details", "Qnty_Another", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details", "Larg_Unit_Price", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details", "Small_Unit_Price", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details", "Qnty_value", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details", "ATS05", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details", "TaxSales10", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details", "ATS05_Value", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details", "TaxSales10_Value", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details", "Total", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details", "commissionValue", "decimal(18, " + d + ")");
+                /////////
+                ///
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "Id", "bigint");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "Invoice_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "Item_Id", "bigint");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "Unit_Item_Table_Id", "bigint");
 
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "Larg_Qnty", "decimal(18, " + d + ")");
 
-       
-                 AlterColumn(ref opp, "Supplier", "Ref_Cust_Supplier_Id", "bigint");
-            AlterColumn(ref opp, "Supplier", "Tax_BranchesId", "bigint");
-            AlterColumn(ref opp, "Account_BranchesimagesLogo", "Id", "bigint");
-            AlterColumn(ref opp, "ConsService", "Id", "bigint");
-            AlterColumn(ref opp, "Department", "Id", "bigint");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "Small_Qnty", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "Qnty_Another", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "Larg_Unit_Price", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "Small_Unit_Price", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "Qnty_value", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "ATS05", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "TaxSales10", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "ATS05_Value", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "TaxSales10_Value", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "Total", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Invoices_Details_Reverse", "commissionValue", "decimal(18, " + d + ")");
 
 
 
-            ////////////
+                AlterColumn(ref opp, "Supplier", "Ref_Cust_Supplier_Id", "bigint");
+                AlterColumn(ref opp, "Supplier", "Tax_BranchesId", "bigint");
+                AlterColumn(ref opp, "Account_BranchesimagesLogo", "Id", "bigint");
+                AlterColumn(ref opp, "ConsService", "Id", "bigint");
+                AlterColumn(ref opp, "Department", "Id", "bigint");
 
 
-            AlterColumn(ref opp, "item", "id", "bigint");
-            AlterColumn(ref opp, "item", "S_id", "bigint");
 
-            AlterColumn(ref opp, "Item", "ServiceDurationInMinutes", "int");
+                ////////////
 
-            AlterColumn(ref opp, "Checks_Memory", "id", "bigint");
-            AlterColumn(ref opp, "Unit_item", "id", "bigint");
-            AlterColumn(ref opp, "Unit_item", "Item_id", "bigint");
 
-            AlterColumn(ref opp, "Unit_item", "Store_id", "bigint");
-            AlterColumn(ref opp, "Unit_item", "unit_id", "bigint");
+                AlterColumn(ref opp, "item", "id", "bigint");
+                AlterColumn(ref opp, "item", "S_id", "bigint");
 
+                AlterColumn(ref opp, "Item", "ServiceDurationInMinutes", "int");
 
+                AlterColumn(ref opp, "Checks_Memory", "id", "bigint");
+                AlterColumn(ref opp, "Unit_item", "id", "bigint");
+                AlterColumn(ref opp, "Unit_item", "Item_id", "bigint");
 
+                AlterColumn(ref opp, "Unit_item", "Store_id", "bigint");
+                AlterColumn(ref opp, "Unit_item", "unit_id", "bigint");
 
 
-            AlterColumn(ref opp, "Checks_Memory", "Order_Mony_Id", "bigint");
-            AlterColumn(ref opp, "Checks_Memory", "Bank_id", "bigint");
-            AlterColumn(ref opp, "Checks_Memory", "Customer_Id", "bigint");
-            AlterColumn(ref opp, "Checks_Memory", "Supplier_Id", "bigint");
-            AlterColumn(ref opp, "Checks_Memory", "Account_Id", "bigint");
-            AlterColumn(ref opp, "Checks_Memory", "SubAccount_Id", "bigint");
-            AlterColumn(ref opp, "Checks_Memory", "Balance_BeginingPeriod", "decimal(18, " + d + ")");
 
-            AlterColumn(ref opp, "Checks_Memory", "Import_Value", "decimal(18, " + d + ")");
-            AlterColumn(ref opp, "Checks_Memory", "Export_Value", "decimal(18, " + d + ")");
 
 
+                AlterColumn(ref opp, "Checks_Memory", "Order_Mony_Id", "bigint");
+                AlterColumn(ref opp, "Checks_Memory", "Bank_id", "bigint");
+                AlterColumn(ref opp, "Checks_Memory", "Customer_Id", "bigint");
+                AlterColumn(ref opp, "Checks_Memory", "Supplier_Id", "bigint");
+                AlterColumn(ref opp, "Checks_Memory", "Account_Id", "bigint");
+                AlterColumn(ref opp, "Checks_Memory", "SubAccount_Id", "bigint");
+                AlterColumn(ref opp, "Checks_Memory", "Balance_BeginingPeriod", "decimal(18, " + d + ")");
 
+                AlterColumn(ref opp, "Checks_Memory", "Import_Value", "decimal(18, " + d + ")");
+                AlterColumn(ref opp, "Checks_Memory", "Export_Value", "decimal(18, " + d + ")");
 
 
-            AlterColumn(ref opp, "Checks_Memory", "Id", "bigint");
-            AlterColumn(ref opp, "Supplier", "Id", "bigint");
-            AlterColumn(ref opp, "Supplier", "SubAccount_Id", "bigint");
 
-           
 
 
-            AlterColumn(ref opp, "Customers_Accounts", "Id", "bigint");
-            AlterColumn(ref opp, "Customers_Accounts", "Customer_Id", "bigint");
-            AlterColumn(ref opp, "Customers_Accounts", "Reference_Type_Table_Id", "bigint");
-            AlterColumn(ref opp, "Customers_Accounts", "DayReg_List_Id", "bigint");
-            AlterColumn(ref opp, "Customers_Accounts", "Item_Id", "bigint");
-            AlterColumn(ref opp, "Customers_Accounts", "Reference_Id", "bigint");
-            AlterColumn(ref opp, "Customers_Accounts", "ProcessNo", "bigint");
+                AlterColumn(ref opp, "Checks_Memory", "Id", "bigint");
+                AlterColumn(ref opp, "Supplier", "Id", "bigint");
+                AlterColumn(ref opp, "Supplier", "SubAccount_Id", "bigint");
 
 
-            AlterColumn(ref opp, "Suppliers_Accounts", "Id", "bigint");
-            AlterColumn(ref opp, "Suppliers_Accounts", "Reference_Type_Table_Id", "bigint");
-            AlterColumn(ref opp, "Suppliers_Accounts", "Reference_Id", "bigint");
-            AlterColumn(ref opp, "Suppliers_Accounts", "DayReg_List_Id", "bigint");
-            AlterColumn(ref opp, "Suppliers_Accounts", "Item_Id", "bigint");
-            AlterColumn(ref opp, "Suppliers_Accounts", "Supplier_Id", "bigint");
-            AlterColumn(ref opp, "Suppliers_Accounts", "ProcessNo", "bigint");
 
-            AlterColumn(ref opp, "Account_Entry_Details", "Id", "bigint");
-            AlterColumn(ref opp, "Account_Entry_Details", "Account_Entry_List_ID", "bigint");
-            AlterColumn(ref opp, "Account_Entry_Details", "CostCenter_Id", "bigint");
-            AlterColumn(ref opp, "Account_Entry_Details", "Submain_Account_ID", "bigint");
-            AlterColumn(ref opp, "Account_Entry_Details", "Account_Code", "bigint");
-            AlterColumn(ref opp, "Account_Entry_Details", "Transaction_Value", "decimal(18,3)");
-            AlterColumn(ref opp, "Account_Entry_Details", "Equivalent_Transaction_Value", "decimal(18,3)");
 
-            AlterColumn(ref opp, "Account_Entry_List", "Id", "bigint");
-            AlterColumn(ref opp, "Account_Entry_List", "Entry_No", "bigint");
-            AlterColumn(ref opp, "Account_Entry_List", "Order_Money_Id", "bigint");
-            AlterColumn(ref opp, "Account_Entry_List", "Reference_Type_Table_Id", "bigint");
+                AlterColumn(ref opp, "Customers_Accounts", "Id", "bigint");
+                AlterColumn(ref opp, "Customers_Accounts", "Customer_Id", "bigint");
+                AlterColumn(ref opp, "Customers_Accounts", "Reference_Type_Table_Id", "bigint");
+                AlterColumn(ref opp, "Customers_Accounts", "DayReg_List_Id", "bigint");
+                AlterColumn(ref opp, "Customers_Accounts", "Item_Id", "bigint");
+                AlterColumn(ref opp, "Customers_Accounts", "Reference_Id", "bigint");
+                AlterColumn(ref opp, "Customers_Accounts", "ProcessNo", "bigint");
 
-            AlterColumn(ref opp, "Supplier", "Gov_Country_ListId", "bigint");
 
-            AlterColumn(ref opp, "Supplier", "Gov_City_ListId", "bigint");
+                AlterColumn(ref opp, "Suppliers_Accounts", "Id", "bigint");
+                AlterColumn(ref opp, "Suppliers_Accounts", "Reference_Type_Table_Id", "bigint");
+                AlterColumn(ref opp, "Suppliers_Accounts", "Reference_Id", "bigint");
+                AlterColumn(ref opp, "Suppliers_Accounts", "DayReg_List_Id", "bigint");
+                AlterColumn(ref opp, "Suppliers_Accounts", "Item_Id", "bigint");
+                AlterColumn(ref opp, "Suppliers_Accounts", "Supplier_Id", "bigint");
+                AlterColumn(ref opp, "Suppliers_Accounts", "ProcessNo", "bigint");
 
-            AlterColumn(ref opp, "Supplier", "Govern_Area_ListId", "bigint");
-            AlterColumn(ref opp, "Supplier", "Govern_ListId", "bigint");
-            AlterColumn(ref opp, "Banks", "User_Id", "bigint");
+                AlterColumn(ref opp, "Account_Entry_Details", "Id", "bigint");
+                AlterColumn(ref opp, "Account_Entry_Details", "Account_Entry_List_ID", "bigint");
+                AlterColumn(ref opp, "Account_Entry_Details", "CostCenter_Id", "bigint");
+                AlterColumn(ref opp, "Account_Entry_Details", "Submain_Account_ID", "bigint");
+                AlterColumn(ref opp, "Account_Entry_Details", "Account_Code", "bigint");
+                AlterColumn(ref opp, "Account_Entry_Details", "Transaction_Value", "decimal(18,3)");
+                AlterColumn(ref opp, "Account_Entry_Details", "Equivalent_Transaction_Value", "decimal(18,3)");
 
-            AlterColumn(ref opp, "Banks", "User_Id", "bigint");
-            AlterColumn(ref opp, "Banks", "Branch_Id", "bigint");
-            AlterColumn(ref opp, "Banks", "Account_Branches_ID", "bigint");
-            AlterColumn(ref opp, "Banks", "Account_Branches_ID", "bigint");
-            AlterColumnChangeName(ref opp, "Banks", "Account_Branches_ID", "Branch_Id", "bigint", "0");
+                AlterColumn(ref opp, "Account_Entry_List", "Id", "bigint");
+                AlterColumn(ref opp, "Account_Entry_List", "Entry_No", "bigint");
+                AlterColumn(ref opp, "Account_Entry_List", "Order_Money_Id", "bigint");
+                AlterColumn(ref opp, "Account_Entry_List", "Reference_Type_Table_Id", "bigint");
 
-            AlterColumn(ref opp, "SysConfigMenusPERMATIONS", "MenuId", "bigint");
-            AlterColumn(ref opp, "SysConfigMenusPERMATIONS", "ParentId", "bigint");
-            AlterColumn(ref opp, "SysConfigMenusPERMATIONS", "UserId", "bigint");
-            AlterColumn(ref opp, "SysConfigMenus", "Id", "bigint");
-            AlterColumn(ref opp, "SysConfigMenus", "Parent_Id", "bigint");
-            AlterColumn(ref opp, "USER_DETAILES_Branches_Permission", "Id", "bigint");
-            AlterColumn(ref opp, "Total_of_Nazlla", "Id", "bigint");
-            AlterColumn(ref opp, "Textile_Item_Dept_Balance", "Id", "bigint");
-            AlterColumn(ref opp, "Matwa_Items", "Id", "bigint");
-            AlterColumn(ref opp, "Maintaining_Item_List", "Id", "bigint");
-            AlterColumn(ref opp, "LookUp_StoreOrderTypes", "Id", "bigint");
-            AlterColumn(ref opp, "Item_Images", "Id", "bigint");
-            AlterColumn(ref opp, "ConsService", "Id", "bigint");
-            AlterColumn(ref opp, "Account_BranchesimagesLogo", "Id", "bigint");
-            AlterColumn(ref opp, "Department", "Id", "bigint");
+                AlterColumn(ref opp, "Supplier", "Gov_Country_ListId", "bigint");
 
+                AlterColumn(ref opp, "Supplier", "Gov_City_ListId", "bigint");
 
+                AlterColumn(ref opp, "Supplier", "Govern_Area_ListId", "bigint");
+                AlterColumn(ref opp, "Supplier", "Govern_ListId", "bigint");
+                AlterColumn(ref opp, "Banks", "User_Id", "bigint");
 
+                AlterColumn(ref opp, "Banks", "User_Id", "bigint");
+                AlterColumn(ref opp, "Banks", "Branch_Id", "bigint");
+                AlterColumn(ref opp, "Banks", "Account_Branches_ID", "bigint");
+                AlterColumn(ref opp, "Banks", "Account_Branches_ID", "bigint");
+                AlterColumnChangeName(ref opp, "Banks", "Account_Branches_ID", "Branch_Id", "bigint", "0");
 
+                AlterColumn(ref opp, "SysConfigMenusPERMATIONS", "MenuId", "bigint");
+                AlterColumn(ref opp, "SysConfigMenusPERMATIONS", "ParentId", "bigint");
+                AlterColumn(ref opp, "SysConfigMenusPERMATIONS", "UserId", "bigint");
+                AlterColumn(ref opp, "SysConfigMenus", "Id", "bigint");
+                AlterColumn(ref opp, "SysConfigMenus", "Parent_Id", "bigint");
+                AlterColumn(ref opp, "USER_DETAILES_Branches_Permission", "Id", "bigint");
+                AlterColumn(ref opp, "Total_of_Nazlla", "Id", "bigint");
+                AlterColumn(ref opp, "Textile_Item_Dept_Balance", "Id", "bigint");
+                AlterColumn(ref opp, "Matwa_Items", "Id", "bigint");
+                AlterColumn(ref opp, "Maintaining_Item_List", "Id", "bigint");
+                AlterColumn(ref opp, "LookUp_StoreOrderTypes", "Id", "bigint");
+                AlterColumn(ref opp, "Item_Images", "Id", "bigint");
+                AlterColumn(ref opp, "ConsService", "Id", "bigint");
+                AlterColumn(ref opp, "Account_BranchesimagesLogo", "Id", "bigint");
+                AlterColumn(ref opp, "Department", "Id", "bigint");
 
-            AlterColumnAddPrimaryKey(ref opp, "Customer_Supplier_Group", "Id");
-            AlterColumnAddPrimaryKey(ref opp, "Items_Group", "Id");
-            AlterColumnAddPrimaryKey(ref opp, "Items_Types_Name", "Id");
-            AlterColumnAddPrimaryKey(ref opp, "Currency_Factor", "ID");
-            AlterColumnAddPrimaryKey(ref opp, "Currency", "ID");
-            AlterColumnAddPrimaryKey(ref opp, "Lookup_CarType", "Id");
-            AlterColumnAddPrimaryKey(ref opp, "Submain_Account", "SubAccount_Id", "Id");
 
 
 
-            AlterBD_dropColumn(ref opp, "Invoices_List", "commission");
-            AlterBD_dropColumn(ref opp, "Invoices_List_Reverse", "commission");
 
-            AlterBD_dropColumn(ref opp, "Supplier", "PersonCompanyType");
-            AlterBD_dropColumn(ref opp, "FixedAssetData", "Serial");
-            AlterBD_dropColumn(ref opp, "Detailes_Receiving", "Serial");
-            AlterBD_dropColumn(ref opp, "Order_Money", "Serial");
-            AlterBD_dropColumn(ref opp, "Money_Transaction_Box", "Serial");
-            AlterBD_dropColumn(ref opp, "Order_Money_Check", "Serial");
-            AlterBD_dropColumn(ref opp, "Order_Receiving", "Serial");
-            AlterBD_dropColumn(ref opp, "Customers_Accounts_Mokhtalat", "Serial");
+                AlterColumnAddPrimaryKey(ref opp, "Customer_Supplier_Group", "Id");
+                AlterColumnAddPrimaryKey(ref opp, "Items_Group", "Id");
+                AlterColumnAddPrimaryKey(ref opp, "Items_Types_Name", "Id");
+                AlterColumnAddPrimaryKey(ref opp, "Currency_Factor", "ID");
+                AlterColumnAddPrimaryKey(ref opp, "Currency", "ID");
+                AlterColumnAddPrimaryKey(ref opp, "Lookup_CarType", "Id");
+                AlterColumnAddPrimaryKey(ref opp, "Submain_Account", "SubAccount_Id", "Id");
+                AlterColumnAddPrimaryKey(ref opp, "USER_DETAILES", "USER_ID", "Id");
 
-            AlterBD_dropColumn(ref opp, "Submain_Account", "Submain_Account_Balance");
-            AlterBD_dropColumn(ref opp, "Submain_Account", "destruction_date");
-            AlterBD_dropColumn(ref opp, "Submain_Account", "destruction");
-            AlterBD_dropColumn(ref opp, "Submain_Account", "Last_destruction");
-            AlterBD_dropColumn(ref opp, "Submain_Account", "Import_Value");
-            AlterBD_dropColumn(ref opp, "Submain_Account", "Export_Value");
-            AlterBD_dropColumn(ref opp, "Submain_Account", "Account_Employee_Type_ID");
-            AlterBD_dropColumn(ref opp, "Account_Entry_Details", "Account_Employee_Type_ID");
 
+                AlterBD_dropColumn(ref opp, "Invoices_List", "commission");
+                AlterBD_dropColumn(ref opp, "Invoices_List_Reverse", "commission");
 
+                AlterBD_dropColumn(ref opp, "Supplier", "PersonCompanyType");
+                AlterBD_dropColumn(ref opp, "FixedAssetData", "Serial");
+                AlterBD_dropColumn(ref opp, "Detailes_Receiving", "Serial");
+                AlterBD_dropColumn(ref opp, "Order_Money", "Serial");
+                AlterBD_dropColumn(ref opp, "Money_Transaction_Box", "Serial");
+                AlterBD_dropColumn(ref opp, "Order_Money_Check", "Serial");
+                AlterBD_dropColumn(ref opp, "Order_Receiving", "Serial");
+                AlterBD_dropColumn(ref opp, "Customers_Accounts_Mokhtalat", "Serial");
 
-            AlterBD_dropTable(ref opp, "form_control");
-            AlterBD_dropTable(ref opp, "SupplierLS11");
-            AlterBD_dropTable(ref opp, "SupplierLS");
-            AlterBD_dropTable(ref opp, "CustomerLS");
-            AlterBD_dropTable(ref opp, "CustomerLS11");
-            AlterBD_dropTable(ref opp, "UsersModulesPermission");
-            AlterBD_dropTable(ref opp, "users");
-            AlterBD_dropTable(ref opp, "application_form");
-            AlterBD_dropTable(ref opp, "application");
-            AlterBD_dropTable(ref opp, "Order_Purshing_old");
-            AlterBD_dropTable(ref opp, "SysConfigMenusPERMATIONS_");
+                AlterBD_dropColumn(ref opp, "Submain_Account", "Submain_Account_Balance");
+                AlterBD_dropColumn(ref opp, "Submain_Account", "destruction_date");
+                AlterBD_dropColumn(ref opp, "Submain_Account", "destruction");
+                AlterBD_dropColumn(ref opp, "Submain_Account", "Last_destruction");
+                AlterBD_dropColumn(ref opp, "Submain_Account", "Import_Value");
+                AlterBD_dropColumn(ref opp, "Submain_Account", "Export_Value");
+                AlterBD_dropColumn(ref opp, "Submain_Account", "Account_Employee_Type_ID");
+                AlterBD_dropColumn(ref opp, "Account_Entry_Details", "Account_Employee_Type_ID");
 
 
 
-            
+                AlterBD_dropTable(ref opp, "form_control");
+                AlterBD_dropTable(ref opp, "SupplierLS11");
+                AlterBD_dropTable(ref opp, "SupplierLS");
+                AlterBD_dropTable(ref opp, "CustomerLS");
+                AlterBD_dropTable(ref opp, "CustomerLS11");
+                AlterBD_dropTable(ref opp, "UsersModulesPermission");
+                AlterBD_dropTable(ref opp, "users");
+                AlterBD_dropTable(ref opp, "application_form");
+                AlterBD_dropTable(ref opp, "application");
+                AlterBD_dropTable(ref opp, "Order_Purshing_old");
+                AlterBD_dropTable(ref opp, "SysConfigMenusPERMATIONS_");
+            }
+
+            catch (Exception ee)
+            {
+
+            }
+
         }
 
         static void SetDataDictionaryProcessesNo(ref operations opp)
@@ -2365,7 +2384,7 @@ WHERE        (Order_Purshing.Order_Purshing_No = - 1)  ";
             //    {
             //    }
             //}
-           
+
 
 
 
@@ -2792,7 +2811,7 @@ WHERE        (Order_Purshing.Order_Purshing_No = - 1)  ";
             AlterColumn(ref opp, "Checks_Memory", "Balance_Before", "decimal(18, " + d + ")");
             AlterColumn(ref opp, "Checks_Memory", "Balance_After", "decimal(18, " + d + ")");
 
-            
+
 
             AlterColumn(ref opp, "Employee", "jobsListId", "bigint");
             AlterColumn(ref opp, "Employee", "Edit_User_Id", "bigint");
@@ -4574,21 +4593,76 @@ FROM INFORMATION_SCHEMA.COLUMNS Where DATA_TYPE='" + DATA_TYPE + "'";
     COLUMN_NAME, 
     DATA_TYPE
 FROM INFORMATION_SCHEMA.COLUMNS
-WHERE DATA_TYPE ='int' and  COLUMN_NAME IN (
-    'Currency_Id',
-    'User_Id',
-    'Branch_Id',
-    'Edit_User_Id',
-    'Entry_Currency_ID',
-    'Year_Financial_Period_Id',
-    'User_ID_Login',
-    'Branch_ID_Login',
-    'User_ID_LoginUpdate',
-    'Machine_Id',
+WHERE DATA_TYPE = 'int' 
+  AND COLUMN_NAME IN (
+    'Account_Branch_Id',
+    'Account_Branches_Id',
     'Account_Currency_ID',
-    'SalesMan_Id'
+    'Account_ID',
+    'Assets_Account_ID',
+    'Bank_Id',
+    'Banke_id',
+    'Branch_Id',
+    'Branch_ID_Login',
+    'CompanyID',
+    'Cost_Center_Tree_ID',
+    'Currency_Id',
+    'Customer_Id',
+    'CustomerId',
+    'DayReg_List_Id',
+    'Default_Store_Id',
+    'Edit_User_Id',
+    'Emp_Booking_Id',
+    'Emp_Id',
+    'Entry_Currency_ID',
+    'Equivalent_Account_Currency_Id',
+    'FixedAssetData_Id',
+    'Invoice_Id_No',
+    'Item_Id',
+    'Item_Id_New',
+    'Item_Id_Old',
+    'Items_Bodies_Name_Id',
+    'Items_Color_Name_Id',
+    'Items_Types_Name_Id',
+    'job_list_Id',
+    'License_Id',
+    'Machine_Id',
+    'Main_Account_ID',
+    'Main_Item_Category_Id_Lehaf_Wabara',
+    'Maintaining_Item_List_Id',
+    'Matwa_Items_Id',
+    'Matwa_List_Id',
+    'Menu_ID',
+    'Parent_Id',
+    'PeriodServiceTypeId',
+    'Price_Type_List_Master_Id',
+    'ProcessNameId',
+    'PROJECT_ID',
+    'ProjectId',
+    'ProjectSpacesGroupId',
+    'ProjectUnitesId',
+    'ResidentialbuildingId',
+    'Salary_Type_Id',
+    'SalesMan_Id',
+    'Sandouk_Cost_Center_Tree_Id',
+    'ServicesGroupListId',
+    'ServicesId',
+    'Store_id',
+    'Supplier_Id',
+    'Textile_Item_Dept_Balance_Id',
+    'Ticket_Supplier_Id',
+    'Tours_Program_Omra_Heg_List_Id',
+    'unit_id',
+    'Unit_Item_Table_Id',
+    'UnitTypeId',
+    'User_Id',
+    'User_ID_Login',
+    'User_ID_LoginUpdate',
+    'USER_DETAILES_Id',
+    'Year_Financial_Period_Id',
+'ProcessNameId'
 ) ";
-              
+
             DataTable dt = opp.return_DataTable(mysql);
 
             for (int i = 0; i < dt.Rows.Count; i++)
@@ -4653,13 +4727,13 @@ ADD CONSTRAINT [PK_SysConfigMenus_Id] PRIMARY KEY CLUSTERED ([Id] ASC); ";
             {
             }
         }
-        public static  string ExecuteInsertWithIdentityCheck(string tableName, string insertCommand)
+        public static string ExecuteInsertWithIdentityCheck(string tableName, string insertCommand)
         {
             string sql = Common.Use_Auto_Identity_Column == 1
                 ? $"SET IDENTITY_INSERT {tableName} ON; {insertCommand} SET IDENTITY_INSERT {tableName} OFF;"
                 : insertCommand;
             return sql;
-           // opp.insert_me(sql);
+            // opp.insert_me(sql);
         }
         static void CreateTable(ref operations opp)
         {
@@ -4676,7 +4750,24 @@ ADD CONSTRAINT [PK_SysConfigMenus_Id] PRIMARY KEY CLUSTERED ([Id] ASC); ";
             catch
             {
             }
+            try
+            {
+                str = @$"  CREATE TABLE[dbo].[Lookup_TransmissionType] (
+    [Id]  [bigint]   {IDENTITY}  NOT NULL,
 
+    [Name] [nvarchar] (50) NULL
+                )  ";
+                opp.insert_me(str);
+
+                //str = @$"  ";
+                //opp.insert_me(str);
+            }
+            catch
+            {
+            }
+           
+ 
+ 
             try
             {
                 try
@@ -5069,7 +5160,7 @@ CREATE TABLE [dbo].[Lookup_CashPaymentMethod](
     [FontHeader] NVARCHAR(MAX) NULL DEFAULT ' ' 
 ) ";
                 opp.insert_me(str);
-               
+
                 //str = @$"  ";
                 //opp.insert_me(str);
             }
@@ -6322,28 +6413,31 @@ CREATE TABLE [dbo].[LookUp_CodeTaxType](
 	[Id] [bigint] primary key NOT NULL,
 	[Name] [nvarchar](50) NULL,
   )  
-   
-CREATE TABLE [dbo].Items_Group(
-	[Id] [bigint] {IDENTITY} NOT NULL,
-	[Name] [nvarchar](50) NULL,
-  ) 
-  
-CREATE TABLE [dbo].[LookUp_TaxableSubTypes](
+    ";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+
+            try
+            {
+                str = @$"  CREATE TABLE [dbo].[LookUp_TaxableSubTypes](
 	[Id] [bigint] {IDENTITY} NOT NULL,
 	[Code] [nvarchar](200) NULL,
 	[NameAr] [nvarchar](200) NULL,
 	[NameEn] [nvarchar](200) NULL,
 	[LookUp_TaxableTypeId] [bigint] NULL
 )  
-
-CREATE TABLE [dbo].[LookUp_TaxableTypes](
-	[Id] [bigint] {IDENTITY} NOT NULL,
-	[Code] [nvarchar](200) NULL,
-	[NameAr] [nvarchar](200) NULL,
-	[NameEn] [nvarchar](200) NULL
-)  
-
-CREATE TABLE [dbo].LookUp_NonTaxableType(
+ ";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+            try
+            {
+                str = @$"   CREATE TABLE [dbo].[LookUp_TaxableTypes](
 	[Id] [bigint] {IDENTITY} NOT NULL,
 	[Code] [nvarchar](200) NULL,
 	[NameAr] [nvarchar](200) NULL,
@@ -6357,18 +6451,41 @@ CREATE TABLE [dbo].LookUp_NonTaxableType(
             }
             try
             {
+                str = @$"   CREATE TABLE [dbo].LookUp_NonTaxableType(
+	[Id] [bigint] {IDENTITY} NOT NULL,
+	[Code] [nvarchar](200) NULL,
+	[NameAr] [nvarchar](200) NULL,
+	[NameEn] [nvarchar](200) NULL
+)  
+ ";
+                opp.insert_me(str);
+            }
+            catch
+            {
+            }
+
+
+            //           try
+            //           {
+            //               str = @$" CREATE TABLE [dbo].Items_Group(
+            //[Id] [bigint] {IDENTITY} NOT NULL,
+            //[Name] [nvarchar](50) NULL,
+            // ) 
+            //  ";
+            //               opp.insert_me(str);
+            //           }
+            //           catch
+            //           {
+            //           }
+
+
+            try
+            {
                 str = @$" CREATE TABLE [dbo]. Items_Group(
- 
-	[Id] [bigint] {IDENTITY} primary key NOT NULL,
-	[ ItemsGroup_Name] [nvarchar](100) NULL,
-	[OperationDate] [datetime] NULL      DEFAULT (getdate()),
-	[User_Id] [bigint] NULL      DEFAULT ((0)),
-	[Branch_Id] [bigint] NULL      DEFAULT ((0)),
-	[Insert_ServerDateTime] [datetime] NULL      DEFAULT (getdate()),
-	[Update_ServerDateTime] [datetime] NULL      DEFAULT (getdate()),
-	[EditOperationDate] [datetime] NULL      DEFAULT (getdate()),
-	[Edit_User_Id] [bigint] NULL      DEFAULT ((0)),
-	[ProcessNo] [bigint] NULL      DEFAULT ((0)),
+ [Id] [bigint] {IDENTITY} primary key NOT NULL,
+	[ItemsGroup_Name] [nvarchar](500) NULL,
+	[Name] [nvarchar](500) NULL,
+	 
 	[IsActive] [int] NULL DEFAULT ((1))
 )  ";
                 opp.insert_me(str);
@@ -6919,7 +7036,7 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
         }
         static void AlterBD_(ref operations opp, string TableName, string ColumnName, string DataType, string Default, string UpdateValue, bool dropUpdateValue)
         {
-            
+
             string mysql = "";
             try
             {
@@ -7212,7 +7329,57 @@ CREATE TABLE [dbo].[Work_Out_Details_Received](
 
 
         }
-        public static void AlterColumnAddPrimaryKey(ref operations opp, string TableName, string ColumnNameOld, string ColumnNameNew)
+
+        public static void AlterColumnAddPrimaryKey(ref operations opp, string tableName, string columnNameOld, string columnNameNew)
+        {
+            if (opp == null)
+                throw new ArgumentNullException(nameof(opp));
+
+            if (string.IsNullOrWhiteSpace(tableName))
+                throw new ArgumentException("Table name cannot be empty.", nameof(tableName));
+
+            if (string.IsNullOrWhiteSpace(columnNameOld))
+                throw new ArgumentException("Old column name cannot be empty.", nameof(columnNameOld));
+
+            if (string.IsNullOrWhiteSpace(columnNameNew))
+                throw new ArgumentException("New column name cannot be empty.", nameof(columnNameNew));
+
+            try
+            {
+                string sqlScript = $@"
+            -- 1. حذف الـ Primary Key القديم تلقائياً إن وجد
+            DECLARE @ConstraintName NVARCHAR(200);
+            SELECT @ConstraintName = CONSTRAINT_NAME
+            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+            WHERE TABLE_NAME = '{tableName}' AND CONSTRAINT_TYPE = 'PRIMARY KEY';
+
+            IF @ConstraintName IS NOT NULL
+            BEGIN
+                DECLARE @SqlDrop NVARCHAR(MAX) = 'ALTER TABLE [dbo].[{tableName}] DROP CONSTRAINT ' + QUOTENAME(@ConstraintName);
+                EXEC sp_executesql @SqlDrop;
+            END;
+
+            -- 2. إعادة تسمية العمود
+            EXEC sp_rename '{tableName}.{columnNameOld}', '{columnNameNew}', 'COLUMN';
+
+            -- 3. جعل العمود الجديد NOT NULL
+            ALTER TABLE [dbo].[{tableName}] 
+            ALTER COLUMN [{columnNameNew}] BIGINT NOT NULL; 
+
+            -- 4. إنشاء الـ Primary Key الجديد
+            ALTER TABLE [dbo].[{tableName}] 
+            ADD CONSTRAINT [PK_{tableName}_{columnNameNew}] PRIMARY KEY CLUSTERED ([{columnNameNew}]);
+        ";
+
+                opp.insert_me(sqlScript);
+            }
+            catch (Exception ex)
+            {
+                operations.DataDictionaryLogerException(ex);
+                //throw;
+            }
+        }
+        public static void AlterColumnAddPrimaryKey1(ref operations opp, string TableName, string ColumnNameOld, string ColumnNameNew)
         {
 
             try
@@ -7248,7 +7415,7 @@ ADD CONSTRAINT [PK_{TableName}_{ColumnNameNew}] PRIMARY KEY CLUSTERED ([{ColumnN
             catch (Exception ex)
             {
                 // تسجيل الخطأ لمعرفة سبب الفشل في SQL
-                AccountModelsLib.operations.DataDictionaryLogerException(ex);
+                //AccountModelsLib.operations.DataDictionaryLogerException(ex);
                 throw;
             }/*
             string mysql = "";
@@ -7729,6 +7896,7 @@ INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Mai
 INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [ProcessNo], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (40, N'حساب تسويات وتسفية العجز والزيادة بالمخزون', 62, 3, 4, 1, NULL, NULL, 0, NULL, CAST(N'2026-07-26T22:07:09.080' AS DateTime), 0, 0, 0, CAST(N'2026-07-26T22:07:09.080' AS DateTime), CAST(N'2026-07-26T22:07:09.080' AS DateTime), CAST(N'2026-07-26T22:07:09.080' AS DateTime), 0)
 INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [ProcessNo], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (41, N'حساب فروق أسعار الشراء (PPV)', 63, 3, 4, 1, NULL, NULL, 0, NULL, CAST(N'2026-07-26T22:07:09.080' AS DateTime), 0, 0, 0, CAST(N'2026-07-26T22:07:09.080' AS DateTime), CAST(N'2026-07-26T22:07:09.080' AS DateTime), CAST(N'2026-07-26T22:07:09.080' AS DateTime), 0)
 INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [ProcessNo], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (42, N'حساب الأرصدة الافتتاحية (التأسيس)', 64, 4, 3, 1, NULL, NULL, 0, NULL, CAST(N'2026-07-26T22:07:09.080' AS DateTime), 0, 0, 0, CAST(N'2026-07-26T22:07:09.080' AS DateTime), CAST(N'2026-07-26T22:07:09.080' AS DateTime), CAST(N'2026-07-26T22:07:09.080' AS DateTime), 0)
+INSERT [dbo].[Account_Type] ([ID], [Name], [Value], [Account_Follows], [Head_Main_Account], [Active], [Main_Account_Id], [Cost_Center_Tree_ID], [Customer_Type], [Table_Name], [OperationDate], [User_Id], [Branch_Id], [ProcessNo], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id]) VALUES (43, N'حساب شركات الشحن', 65, 4, 2, 1, NULL, NULL, 0, NULL, CAST(N'2026-07-26T22:07:09.080' AS DateTime), 0, 0, 0, CAST(N'2026-07-26T22:07:09.080' AS DateTime), CAST(N'2026-07-26T22:07:09.080' AS DateTime), CAST(N'2026-07-26T22:07:09.080' AS DateTime), 0)
 
 ";
                 opp.insert_me(str);
@@ -8644,6 +8812,7 @@ VALUES
 
 
 
+
             mysql = " UPDATE       SysConfigMenus SET IsShowToUser =0 WHERE (Parent_Id = 0) AND (Id = 321) ";
             mysql = mysql + "  UPDATE       SysConfigMenusPERMATIONS SET                IsShowToUser = 0 FROM            SysConfigMenusPERMATIONS INNER JOIN  SysConfigMenus ON SysConfigMenusPERMATIONS.Menu_ID = SysConfigMenus.Id WHERE        (SysConfigMenusPERMATIONS.Parent_Id = 321) ";
             AlterBD_(ref opp, "SysConfigMenusPERMATIONS", "IsShowToUser", "int", "1", "1", mysql);
@@ -8959,12 +9128,20 @@ ALTER TABLE [dbo].[Items_Color_Name] ADD  DEFAULT ((0)) FOR [ProcessNo]
             string mysql = "";
             try
             {
+                mysql = @"
+                        truncate table  Items_Types_Name
+                        truncate table  Items_TypesColor_Name
+                           truncate table  Items_TypesDegreeFarz_Name 
+                        truncate table  Items_TypesDescription_Name
+                        truncate table  Items_TypesDescriptionNameOther  
+                        truncate table  Items_TypesFactory_Name  
+                        truncate table  Items_TypesSize_Name
+                         ";
                 opp.insert_me(mysql);
             }
             catch { }
             mysql = @"
-
-SET IDENTITY_INSERT [dbo].[Items_Types_Name] ON 
+ 
 
 INSERT [dbo].[Items_Types_Name] ([Id], [ItemsType_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(1 AS Numeric(18, 0)), N'غير محدد', CAST(N'2023-05-10 07:41:48.160' AS DateTime), 0, 0, CAST(N'2023-05-10 07:41:48.160' AS DateTime), CAST(N'2023-05-10 07:41:48.160' AS DateTime), CAST(N'2023-05-10 07:41:48.160' AS DateTime), 0, 0)
 INSERT [dbo].[Items_Types_Name] ([Id], [ItemsType_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(2 AS Numeric(18, 0)), N'بورسلين', CAST(N'2023-05-10 07:41:48.160' AS DateTime), 0, 0, CAST(N'2023-05-10 07:41:48.160' AS DateTime), CAST(N'2023-05-10 07:41:48.160' AS DateTime), CAST(N'2023-05-10 07:41:48.160' AS DateTime), 0, 0)
@@ -8978,17 +9155,18 @@ INSERT [dbo].[Items_Types_Name] ([Id], [ItemsType_Name], [OperationDate], [User_
 INSERT [dbo].[Items_Types_Name] ([Id], [ItemsType_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(10 AS Numeric(18, 0)), N'نواكل', CAST(N'2023-05-10 07:41:48.160' AS DateTime), 0, 0, CAST(N'2023-05-10 07:41:48.160' AS DateTime), CAST(N'2023-05-10 07:41:48.160' AS DateTime), CAST(N'2023-05-10 07:41:48.160' AS DateTime), 0, 0)
 INSERT [dbo].[Items_Types_Name] ([Id], [ItemsType_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(11 AS Numeric(18, 0)), N'وحدات', CAST(N'2023-05-10 07:41:48.160' AS DateTime), 0, 0, CAST(N'2023-05-10 07:41:48.160' AS DateTime), CAST(N'2023-05-10 07:41:48.160' AS DateTime), CAST(N'2023-05-10 07:41:48.160' AS DateTime), 0, 0)
 INSERT [dbo].[Items_Types_Name] ([Id], [ItemsType_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(12 AS Numeric(18, 0)), N'بانيوهات', CAST(N'2023-05-10 07:42:41.547' AS DateTime), 0, 0, CAST(N'2023-05-10 07:42:41.547' AS DateTime), CAST(N'2023-05-10 07:42:41.547' AS DateTime), CAST(N'2023-05-10 07:42:41.547' AS DateTime), 0, 0)
-SET IDENTITY_INSERT [dbo].[Items_Types_Name] OFF
+ 
 
 ";
             try
             {
+                mysql = ExecuteInsertWithIdentityCheck("Items_Types_Name", mysql);
+
                 opp.insert_me(mysql);
             }
             catch { }
             mysql = @"
-
-SET IDENTITY_INSERT [dbo].[Items_TypesColor_Name] ON 
+ 
 
 INSERT [dbo].[Items_TypesColor_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(1 AS Numeric(18, 0)), NULL, CAST(N'2023-05-10 07:50:16.663' AS DateTime), 0, 0, CAST(N'2023-05-10 07:50:16.663' AS DateTime), CAST(N'2023-05-10 07:50:16.663' AS DateTime), CAST(N'2023-05-10 07:50:16.663' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesColor_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(2 AS Numeric(18, 0)), N'ابيض', CAST(N'2023-05-10 07:50:16.663' AS DateTime), 0, 0, CAST(N'2023-05-10 07:50:16.663' AS DateTime), CAST(N'2023-05-10 07:50:16.663' AS DateTime), CAST(N'2023-05-10 07:50:16.663' AS DateTime), 0, 0)
@@ -9023,34 +9201,34 @@ INSERT [dbo].[Items_TypesColor_Name] ([Id], [Type_Name], [OperationDate], [User_
 INSERT [dbo].[Items_TypesColor_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(31 AS Numeric(18, 0)), N'كافيه غامق', CAST(N'2023-05-10 07:50:16.663' AS DateTime), 0, 0, CAST(N'2023-05-10 07:50:16.663' AS DateTime), CAST(N'2023-05-10 07:50:16.663' AS DateTime), CAST(N'2023-05-10 07:50:16.663' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesColor_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(32 AS Numeric(18, 0)), N'كافيه فاتح', CAST(N'2023-05-10 07:50:16.663' AS DateTime), 0, 0, CAST(N'2023-05-10 07:50:16.663' AS DateTime), CAST(N'2023-05-10 07:50:16.663' AS DateTime), CAST(N'2023-05-10 07:50:16.663' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesColor_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(33 AS Numeric(18, 0)), N'ليزر', CAST(N'2023-05-10 07:50:16.663' AS DateTime), 0, 0, CAST(N'2023-05-10 07:50:16.663' AS DateTime), CAST(N'2023-05-10 07:50:16.663' AS DateTime), CAST(N'2023-05-10 07:50:16.663' AS DateTime), 0, 0)
-SET IDENTITY_INSERT [dbo].[Items_TypesColor_Name] OFF
+ 
 
 ";
             try
             {
+                mysql = ExecuteInsertWithIdentityCheck("Items_TypesColor_Name", mysql);
                 opp.insert_me(mysql);
             }
             catch { }
             mysql = @"
-
-SET IDENTITY_INSERT [dbo].[Items_TypesDegreeFarz_Name] ON 
+ 
 
 INSERT [dbo].[Items_TypesDegreeFarz_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(1 AS Numeric(18, 0)), NULL, CAST(N'2023-05-10 07:50:46.760' AS DateTime), 0, 0, CAST(N'2023-05-10 07:50:46.760' AS DateTime), CAST(N'2023-05-10 07:50:46.760' AS DateTime), CAST(N'2023-05-10 07:50:46.760' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesDegreeFarz_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(2 AS Numeric(18, 0)), N'- 1', CAST(N'2023-05-10 07:50:46.760' AS DateTime), 0, 0, CAST(N'2023-05-10 07:50:46.760' AS DateTime), CAST(N'2023-05-10 07:50:46.760' AS DateTime), CAST(N'2023-05-10 07:50:46.760' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesDegreeFarz_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(3 AS Numeric(18, 0)), N'- 2', CAST(N'2023-05-10 07:50:46.760' AS DateTime), 0, 0, CAST(N'2023-05-10 07:50:46.760' AS DateTime), CAST(N'2023-05-10 07:50:46.760' AS DateTime), CAST(N'2023-05-10 07:50:46.760' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesDegreeFarz_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(4 AS Numeric(18, 0)), N'- 3', CAST(N'2023-05-10 07:50:46.760' AS DateTime), 0, 0, CAST(N'2023-05-10 07:50:46.760' AS DateTime), CAST(N'2023-05-10 07:50:46.760' AS DateTime), CAST(N'2023-05-10 07:50:46.760' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesDegreeFarz_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(5 AS Numeric(18, 0)), N'- 4', CAST(N'2023-05-10 07:50:46.760' AS DateTime), 0, 0, CAST(N'2023-05-10 07:50:46.760' AS DateTime), CAST(N'2023-05-10 07:50:46.760' AS DateTime), CAST(N'2023-05-10 07:50:46.760' AS DateTime), 0, 0)
-SET IDENTITY_INSERT [dbo].[Items_TypesDegreeFarz_Name] OFF
+ 
 
 ";
             try
             {
+                mysql = ExecuteInsertWithIdentityCheck("Items_TypesDegreeFarz_Name", mysql);
                 opp.insert_me(mysql);
             }
             catch { }
             mysql = @"
-
-SET IDENTITY_INSERT [dbo].[Items_TypesDescription_Name] ON 
+ 
 
 INSERT [dbo].[Items_TypesDescription_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(1 AS Numeric(18, 0)), NULL, CAST(N'2023-05-10 07:45:05.490' AS DateTime), 0, 0, CAST(N'2023-05-10 07:45:05.490' AS DateTime), CAST(N'2023-05-10 07:45:05.490' AS DateTime), CAST(N'2023-05-10 07:45:05.490' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesDescription_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(2 AS Numeric(18, 0)), N'ارضيات', CAST(N'2023-05-10 07:45:05.490' AS DateTime), 0, 0, CAST(N'2023-05-10 07:45:05.490' AS DateTime), CAST(N'2023-05-10 07:45:05.490' AS DateTime), CAST(N'2023-05-10 07:45:05.490' AS DateTime), 0, 0)
@@ -9095,15 +9273,18 @@ INSERT [dbo].[Items_TypesDescription_Name] ([Id], [Type_Name], [OperationDate], 
 INSERT [dbo].[Items_TypesDescription_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(43 AS Numeric(18, 0)), N'ميكس هندسي', CAST(N'2023-05-10 07:45:05.490' AS DateTime), 0, 0, CAST(N'2023-05-10 07:45:05.490' AS DateTime), CAST(N'2023-05-10 07:45:05.490' AS DateTime), CAST(N'2023-05-10 07:45:05.490' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesDescription_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(44 AS Numeric(18, 0)), N'نصف عامود', CAST(N'2023-05-10 07:45:05.490' AS DateTime), 0, 0, CAST(N'2023-05-10 07:45:05.490' AS DateTime), CAST(N'2023-05-10 07:45:05.490' AS DateTime), CAST(N'2023-05-10 07:45:05.490' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesDescription_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(45 AS Numeric(18, 0)), N'وحده زجاجيه', CAST(N'2023-05-10 07:45:05.490' AS DateTime), 0, 0, CAST(N'2023-05-10 07:45:05.490' AS DateTime), CAST(N'2023-05-10 07:45:05.490' AS DateTime), CAST(N'2023-05-10 07:45:05.490' AS DateTime), 0, 0)
-SET IDENTITY_INSERT [dbo].[Items_TypesDescription_Name] OFF
+ 
 ";
             try
             {
+                mysql = ExecuteInsertWithIdentityCheck("Items_TypesDescription_Name", mysql);
                 opp.insert_me(mysql);
             }
             catch { }
             mysql = @"
-SET IDENTITY_INSERT [dbo].[Items_TypesDescriptionNameOther] ON 
+
+
+ 
 
 INSERT [dbo].[Items_TypesDescriptionNameOther] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(1 AS Numeric(18, 0)), NULL, CAST(N'2023-05-10 07:47:42.227' AS DateTime), 0, 0, CAST(N'2023-05-10 07:47:42.227' AS DateTime), CAST(N'2023-05-10 07:47:42.227' AS DateTime), CAST(N'2023-05-10 07:47:42.227' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesDescriptionNameOther] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(2 AS Numeric(18, 0)), N' استانلس', CAST(N'2023-05-10 07:47:42.227' AS DateTime), 0, 0, CAST(N'2023-05-10 07:47:42.227' AS DateTime), CAST(N'2023-05-10 07:47:42.227' AS DateTime), CAST(N'2023-05-10 07:47:42.227' AS DateTime), 0, 0)
@@ -9248,17 +9429,17 @@ INSERT [dbo].[Items_TypesDescriptionNameOther] ([Id], [Type_Name], [OperationDat
 INSERT [dbo].[Items_TypesDescriptionNameOther] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(141 AS Numeric(18, 0)), N'وش حنفية', CAST(N'2023-05-10 07:47:42.227' AS DateTime), 0, 0, CAST(N'2023-05-10 07:47:42.227' AS DateTime), CAST(N'2023-05-10 07:47:42.227' AS DateTime), CAST(N'2023-05-10 07:47:42.227' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesDescriptionNameOther] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(142 AS Numeric(18, 0)), N'وعاء شامبو', CAST(N'2023-05-10 07:47:42.227' AS DateTime), 0, 0, CAST(N'2023-05-10 07:47:42.227' AS DateTime), CAST(N'2023-05-10 07:47:42.227' AS DateTime), CAST(N'2023-05-10 07:47:42.227' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesDescriptionNameOther] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(143 AS Numeric(18, 0)), N'ويندر', CAST(N'2023-05-10 07:47:42.227' AS DateTime), 0, 0, CAST(N'2023-05-10 07:47:42.227' AS DateTime), CAST(N'2023-05-10 07:47:42.227' AS DateTime), CAST(N'2023-05-10 07:47:42.227' AS DateTime), 0, 0)
-SET IDENTITY_INSERT [dbo].[Items_TypesDescriptionNameOther] OFF
+ 
 
 ";
             try
             {
+                mysql = ExecuteInsertWithIdentityCheck("Items_TypesDescriptionNameOther", mysql);
                 opp.insert_me(mysql);
             }
             catch { }
             mysql = @"
-
-SET IDENTITY_INSERT [dbo].[Items_TypesFactory_Name] ON 
+ 
 
 INSERT [dbo].[Items_TypesFactory_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(1 AS Numeric(18, 0)), N'لا يوجد', CAST(N'2023-05-10 07:49:25.160' AS DateTime), 0, 0, CAST(N'2023-05-10 07:49:25.160' AS DateTime), CAST(N'2023-05-10 07:49:25.160' AS DateTime), CAST(N'2023-05-10 07:49:25.160' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesFactory_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(2 AS Numeric(18, 0)), N'اسباني', CAST(N'2023-05-10 07:49:25.160' AS DateTime), 0, 0, CAST(N'2023-05-10 07:49:25.160' AS DateTime), CAST(N'2023-05-10 07:49:25.160' AS DateTime), CAST(N'2023-05-10 07:49:25.160' AS DateTime), 0, 0)
@@ -9288,17 +9469,17 @@ INSERT [dbo].[Items_TypesFactory_Name] ([Id], [Type_Name], [OperationDate], [Use
 INSERT [dbo].[Items_TypesFactory_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(27 AS Numeric(18, 0)), N'مستورد', CAST(N'2023-05-10 07:49:25.160' AS DateTime), 0, 0, CAST(N'2023-05-10 07:49:25.160' AS DateTime), CAST(N'2023-05-10 07:49:25.160' AS DateTime), CAST(N'2023-05-10 07:49:25.160' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesFactory_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(28 AS Numeric(18, 0)), N'مصري', CAST(N'2023-05-10 07:49:25.160' AS DateTime), 0, 0, CAST(N'2023-05-10 07:49:25.160' AS DateTime), CAST(N'2023-05-10 07:49:25.160' AS DateTime), CAST(N'2023-05-10 07:49:25.160' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesFactory_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(29 AS Numeric(18, 0)), N'أدوات صحية', CAST(N'2023-05-10 08:16:48.033' AS DateTime), 0, 0, CAST(N'2023-05-10 08:16:48.033' AS DateTime), CAST(N'2023-05-10 08:16:48.033' AS DateTime), CAST(N'2023-05-10 08:16:48.033' AS DateTime), 0, 0)
-SET IDENTITY_INSERT [dbo].[Items_TypesFactory_Name] OFF
+ 
 
 ";
             try
             {
+                mysql = ExecuteInsertWithIdentityCheck("Items_TypesFactory_Name", mysql);
                 opp.insert_me(mysql);
             }
             catch { }
             mysql = @"
-
-SET IDENTITY_INSERT [dbo].[Items_TypesSize_Name] ON 
+ 
 
 INSERT [dbo].[Items_TypesSize_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(1 AS Numeric(18, 0)), NULL, CAST(N'2023-05-10 07:49:52.863' AS DateTime), 0, 0, CAST(N'2023-05-10 07:49:52.863' AS DateTime), CAST(N'2023-05-10 07:49:52.863' AS DateTime), CAST(N'2023-05-10 07:49:52.863' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesSize_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(2 AS Numeric(18, 0)), N'10*10', CAST(N'2023-05-10 07:49:52.863' AS DateTime), 0, 0, CAST(N'2023-05-10 07:49:52.863' AS DateTime), CAST(N'2023-05-10 07:49:52.863' AS DateTime), CAST(N'2023-05-10 07:49:52.863' AS DateTime), 0, 0)
@@ -9335,11 +9516,12 @@ INSERT [dbo].[Items_TypesSize_Name] ([Id], [Type_Name], [OperationDate], [User_I
 INSERT [dbo].[Items_TypesSize_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(33 AS Numeric(18, 0)), N'صحي', CAST(N'2023-05-10 07:49:52.863' AS DateTime), 0, 0, CAST(N'2023-05-10 07:49:52.863' AS DateTime), CAST(N'2023-05-10 07:49:52.863' AS DateTime), CAST(N'2023-05-10 07:49:52.863' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesSize_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(34 AS Numeric(18, 0)), N'غطاء كمبنيشن', CAST(N'2023-05-10 07:49:52.863' AS DateTime), 0, 0, CAST(N'2023-05-10 07:49:52.863' AS DateTime), CAST(N'2023-05-10 07:49:52.863' AS DateTime), CAST(N'2023-05-10 07:49:52.863' AS DateTime), 0, 0)
 INSERT [dbo].[Items_TypesSize_Name] ([Id], [Type_Name], [OperationDate], [User_Id], [Branch_Id], [Insert_ServerDateTime], [Update_ServerDateTime], [EditOperationDate], [Edit_User_Id], [ProcessNo]) VALUES (CAST(35 AS Numeric(18, 0)), N'مسطره', CAST(N'2023-05-10 07:49:52.863' AS DateTime), 0, 0, CAST(N'2023-05-10 07:49:52.863' AS DateTime), CAST(N'2023-05-10 07:49:52.863' AS DateTime), CAST(N'2023-05-10 07:49:52.863' AS DateTime), 0, 0)
-SET IDENTITY_INSERT [dbo].[Items_TypesSize_Name] OFF
+ 
 
 ";
             try
             {
+                mysql = ExecuteInsertWithIdentityCheck("Items_TypesSize_Name", mysql);
                 opp.insert_me(mysql);
             }
             catch { }

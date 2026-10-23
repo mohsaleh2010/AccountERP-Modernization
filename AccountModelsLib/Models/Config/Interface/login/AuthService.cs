@@ -65,7 +65,7 @@ namespace AccountModelsLib.Models
             // Common.User_Id مباشرة (وليس عبر باراميتر)؛ ضبطها بعد الاستعلام كان يجعل الاستعلام
             // ينفَّذ بقيمة User_Id قديمة/صفرية، فتعود قائمة القوائم فارغة دائماً ويظهر السايد بار بلا عناصر.
             Common.Is_User_Admin = user.AdminFlage ?? 0;
-            Common.User_Id = (long)user.USER_ID;
+            Common.User_Id = (long)user.Id;
             Common.User_Name = user.USER_NAME;
             Common.FullUserName = user.Name;
             Common.Branch_Id = user.Branch_Id ?? 1;
@@ -77,7 +77,7 @@ namespace AccountModelsLib.Models
 
             // جلب وتجهيز الصلاحيات والقوائم ديناميكياً لهذا المستخدم فوراً
             // نمرر الـ USER_ID الخاص به، والمشروع رقم 2 (Accounting) كما حددنا سابقاً
-            var allowedMenus = _menuRepo.GetUserAllowedMenus(  projectId: 2,  user.USER_ID);
+            var allowedMenus = _menuRepo.GetUserAllowedMenus(  projectId: 2,  user.Id);
 
             // شحن الـ MenuStateService بالبيانات الحقيقية للمستخدم لتظهر في السايد بار فوراً
             _menuState.UserAllowedMenus = allowedMenus;
@@ -108,10 +108,10 @@ namespace AccountModelsLib.Models
         // دخول موقّع صالحاً من دخول سابق ناجح فعلياً - راجع LoginTokenStore و"/Auth/Persist" فى
         // AccountERP.Web\Program.cs. لا يتحقق من كلمة سر هنا عمداً: الكوكي نفسه (موقَّع بواسطة
         // Data Protection، غير قابل للتزوير من طرف العميل) هو إثبات الدخول، تماماً كما تعمل أي كوكي جلسة.
-        public async Task<bool> RestoreSessionAsync(int userId)
+        public async Task<bool> RestoreSessionAsync(long userId)
         {
             var user = await _dbContext.Set<USER_DETAILE>()
-                .FirstOrDefaultAsync(u => u.USER_ID == userId && u.Active == true);
+                .FirstOrDefaultAsync(u => u.Id == userId && u.Active == true);
 
             if (user == null) return false; // المستخدم حُذف/عُطِّل منذ إصدار الكوكي
 
@@ -184,7 +184,7 @@ namespace AccountModelsLib.Models
         //        {
         //            mylogin.flage_Valid = 1;
         //            Common.Is_User_Admin = int.Parse(set.Tables[0].Rows[0]["AdminFlage"].ToString());
-        //            mylogin.User_Id = long.Parse(set.Tables[0].Rows[0]["USER_ID"].ToString());
+        //            mylogin.User_Id = long.Parse(set.Tables[0].Rows[0][ID"].ToString());
         //            Common.User_Id = mylogin.User_Id;
         //            mylogin.username = set.Tables[0].Rows[0]["USER_NAME"].ToString();
         //            Common.User_Name = mylogin.username;
@@ -243,7 +243,7 @@ namespace AccountModelsLib.Models
         public async Task<ChangePasswordResult> ChangePasswordAsync(string oldPassword, string newPassword)
         {
             var user = await _dbContext.Set<USER_DETAILE>()
-                .FirstOrDefaultAsync(u => u.USER_ID == Common.User_Id && u.USER_NAME == Common.User_Name && u.USER_PASSWORD == oldPassword);
+                .FirstOrDefaultAsync(u => u.Id == Common.User_Id && u.USER_NAME == Common.User_Name && u.USER_PASSWORD == oldPassword);
 
             if (user == null) return ChangePasswordResult.InvalidOldPassword;
 

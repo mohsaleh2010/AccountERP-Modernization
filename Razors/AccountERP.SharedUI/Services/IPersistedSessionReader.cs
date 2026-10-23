@@ -8,6 +8,6 @@ namespace AccountERP.SharedUI.Services
     public interface IPersistedSessionReader
     {
         // يعيد الـ UserId المخزَّن فى كوكي دخول موقّع سابق لهذا الطلب الحالي، أو null إن لم يوجد/تالف/منتهي الصلاحية.
-        int? TryReadUserId();
+        long? TryReadUserId();
     }
 }

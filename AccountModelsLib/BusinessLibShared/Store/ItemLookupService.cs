@@ -34,7 +34,7 @@ namespace AccountModelsLib
             new("degrees",      "Items_TypesDegreeFarz_Name",      "Id", "Type_Name",        null,       false, true,  "Items_TypesDegreeFarz_NameId",       "Items_TypesDegreeFarz_Name"),
             new("natures",      "Items_Nature",                    "Id", "ItemsNature_Name", "IsActive", true,  true,  "Items_NaturesId",                    null),
             new("groups",       "Items_Group",                     "Id", "Name",             null,       true,  false, "Items_GroupsId",                     null),
-            new("car-types",    "Lookup_CarType",                  "Id", "Name",             null,       true,  false, "Lookup_CarTypeId",                   null),
+            // أنواع السيارات انتقلت إلى قائمة السيارات (خطة 05 بند 19: CarTypeService و/cars/types)
         };
 
         public static LookupDef Get(string kind) =>

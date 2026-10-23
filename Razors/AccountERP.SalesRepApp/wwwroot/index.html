@@ -11,7 +11,8 @@
 <body>
     <div id="app"><div class="boot">جارٍ التحميل…</div></div>
     <div id="blazor-error-ui">حدث خطأ غير متوقع. <a href="" class="reload">إعادة التحميل</a></div>
-    <script src="_framework/blazor.webview.js"></script>
+    <!-- autostart=false: المضيف (أندرويد) يبدأ Blazor بعد تجهيز جسر الاتصال؛ البدء التلقائى يسبقه فيبقى على «جارٍ التحميل». -->
+    <script src="_framework/blazor.webview.js" autostart="false"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 </body>
 </html>

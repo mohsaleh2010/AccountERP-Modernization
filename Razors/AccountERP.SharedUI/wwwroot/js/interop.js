@@ -55,5 +55,81 @@ window.accountErpInterop = {
         try {
             if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (e) { /* تجاهل بأمان */ }
+    },
+
+    // 🟢 يطبع عنصراً واحداً فقط داخل iframe مخفى بأنماطه الخاصة بدل window.print للصفحة كلها.
+    // سبب وجودها: إخفاء باقى الصفحة بـ visibility:hidden داخل تخطيط MudBlazor كان يترك مساحة القائمة الجانبية
+    // وشريط التطبيق محجوزة، ومنطقة المحتوى نفسها تمرير داخلى - فتخرج الطباعة مقصوصة على صفحة واحدة أو مزاحة
+    // أو بصفحات بيضاء زائدة. هنا يُنسخ العنصر وحده (مع تحويل أى canvas لصورة) ومعه كل أنماط الصفحة.
+    printElement: function (selector, title, dir, pageCss) {
+        var src = typeof selector === 'string' ? document.querySelector(selector) : selector;
+        if (!src) { window.print(); return; }
+
+        var clone = src.cloneNode(true);
+        var srcCanvases = src.querySelectorAll('canvas');
+        var cloneCanvases = clone.querySelectorAll('canvas');
+        for (var i = 0; i < srcCanvases.length; i++) {
+            try {
+                var img = document.createElement('img');
+                img.src = srcCanvases[i].toDataURL('image/png');
+                img.style.cssText = srcCanvases[i].style.cssText;
+                img.width = srcCanvases[i].width;
+                img.height = srcCanvases[i].height;
+                cloneCanvases[i].parentNode.replaceChild(img, cloneCanvases[i]);
+            } catch (e) { /* canvas ملوث - يبقى كما هو */ }
+        }
+
+        var styles = '';
+        document.querySelectorAll('link[rel="stylesheet"], style').forEach(function (n) { styles += n.outerHTML; });
+        var esc = function (s) { return String(s || '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+        dir = dir || document.documentElement.getAttribute('dir') || 'rtl';
+        var lang = document.documentElement.getAttribute('lang') || (dir === 'rtl' ? 'ar' : 'en');
+
+        var iframe = document.createElement('iframe');
+        iframe.setAttribute('aria-hidden', 'true');
+        // بمقاس حقيقى خارج الشاشة (لا 0×0) حتى تُحسَب أبعاد الصور والنسب المئوية داخله صحيحة
+        iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:800px;height:1100px;border:0;';
+        document.body.appendChild(iframe);
+
+        var doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write('<!doctype html><html dir="' + dir + '" lang="' + lang + '"><head><meta charset="utf-8">' +
+            '<base href="' + esc(document.baseURI) + '"><title>' + esc(title) + '</title>' + styles +
+            '<style>' +
+            '@page { size: A4; margin: 12mm; }' +
+            'html, body { background: #fff !important; color: #000 !important; margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; }' +
+            'body { direction: ' + dir + '; -webkit-print-color-adjust: exact; print-color-adjust: exact; }' +
+            'body * { visibility: visible !important; }' +
+            '.print-area { position: static !important; width: 100% !important; }' +
+            '.print-header, .print-only { display: block !important; }' +
+            '.no-print { display: none !important; }' +
+            'thead { display: table-header-group; } tfoot { display: table-footer-group; }' +
+            'tr, img, svg { page-break-inside: avoid; break-inside: avoid; }' +
+            '.print-table th, .print-table td { border-color: #888 !important; }' +
+            (pageCss || '') +
+            '</style></head><body></body></html>');
+        doc.close();
+        doc.body.appendChild(doc.importNode(clone, true));
+
+        var printed = false;
+        var go = function () {
+            if (printed) return;
+            printed = true;
+            try {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            } finally {
+                setTimeout(function () { iframe.remove(); }, 1500);
+            }
+        };
+        // ننتظر تحميل الأنماط والصور (الباركود) قبل فتح مربع الطباعة، مع حد أقصى احتياطى
+        var pending = Array.prototype.slice.call(doc.querySelectorAll('img, link[rel="stylesheet"]')).filter(function (n) {
+            return n.tagName === 'IMG' ? !n.complete : !n.sheet;
+        });
+        if (pending.length === 0) { setTimeout(go, 50); return; }
+        var left = pending.length;
+        var one = function () { if (--left <= 0) setTimeout(go, 50); };
+        pending.forEach(function (n) { n.addEventListener('load', one); n.addEventListener('error', one); });
+        setTimeout(go, 3000);
     }
 };

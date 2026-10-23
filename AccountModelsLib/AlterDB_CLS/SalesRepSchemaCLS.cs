@@ -574,7 +574,7 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
             var parent = menus.FirstOrDefault(m => Key(m) == "menuSalesManProcess");
             if (parent == null) return;   // قاعدة بلا قائمة المندوبين
             string E(string s) => Common.EncryptMe(s);
-            var admins = opp.db.Database.SqlQueryRaw<long>("SELECT USER_ID AS Value FROM USER_DETAILES WHERE ISNULL(AdminFlage, 0) = 1").ToList();
+            var admins = opp.db.Database.SqlQueryRaw<long>("SELECT Id AS Value FROM USER_DETAILES WHERE ISNULL(AdminFlage, 0) = 1").ToList();
             foreach (var (key, desc, path) in MenuItems)
             {
                 long id = menus.FirstOrDefault(m => Key(m) == key)?.Id ?? 0;

@@ -307,7 +307,42 @@ GROUP BY al.Van_Unit_Item_Id").ToList();
             public decimal Discount_Value { get; set; }
             public decimal Tax_Value { get; set; }
             public decimal Line_Total { get; set; }
+            /// <summary>نسبة الضريبة (من الجهاز)؛ فارغة فى مستند قديم فتُستنتج من القيم.</summary>
+            public decimal? Tax_Rate { get; set; }
             public string Notes { get; set; }
+        }
+
+        /// <summary>
+        /// مستند الجهاز غير موثوق فى إجمالياته: يُعاد حساب كل سطر بالمحرك الموحد (LineMath عبر نفس قواعد InvoiceLineCalculator) من الكمية
+        /// والسعر للكبرى والخصم قيمة ونسبة الضريبة، ويُستبدل ما أرسله الجهاز. الخصم لا يتجاوز قيمة السطر.
+        /// (شاشة طلبيات الويب تحسب أسطرها على السيرفر أصلاً بالمحرك نفسه، فلا تمر من هنا.)
+        /// </summary>
+        internal static void RepriceDeviceLines(operations opp, TakeOrderInput input)
+        {
+            if (input?.Lines == null) return;
+            var ids = input.Lines.Select(l => l.Unit_Item_Id).Distinct().ToList();
+            var factors = opp.db.Unit_item.AsNoTracking().Where(u => ids.Contains(u.id)).Select(u => new { u.id, u.Small_unit }).ToList()
+                .ToDictionary(u => u.id, u => (u.Small_unit ?? 0) <= 0 ? 1m : u.Small_unit.Value);
+            foreach (var l in input.Lines) RepriceLine(l, factors.TryGetValue(l.Unit_Item_Id, out var x) ? x : 1);
+        }
+
+        /// <summary>سطر طلبية واحد بالمحرك الموحد (السعر للكبرى، الخصم قيمة لا تتجاوز قيمة السطر).</summary>
+        public static void RepriceLine(TakeOrderLine l, decimal f)
+        {
+            if (f <= 0) f = 1;
+            decimal net = l.Gross - l.Discount_Value;
+            decimal rate = Math.Round(l.Tax_Rate ?? (net > 0 ? l.Tax_Value / net * 100 : 0), 2);
+            if (rate < 0 || rate > 100) throw new ArgumentException("نسبة ضريبة سطر غير صحيحة.");
+            if (l.Unit_Price < 0 || l.Discount_Value < 0 || l.Qty_Large < 0 || l.Qty_Small < 0) throw new ArgumentException("سعر أو خصم أو كمية سطر غير صحيحة.");
+            decimal raw = (l.Qty_Large + l.Qty_Small / f) * l.Unit_Price;
+            decimal disc = Math.Round(Math.Min(l.Discount_Value, raw), 2);
+            var r = AccountModelsLib.Pricing.LineMath.Compute(new AccountModelsLib.Pricing.LineInput
+            {
+                Unit_Used_for_Price = 1, Larg_Qnty = l.Qty_Large, Small_Qnty = l.Qty_Small, PriceUnit = l.Unit_Price, Factor = f,
+                Item_CommissionValue = disc, Item_TaxSales10 = rate,
+            }, v => Common.RoundMePositive(v));
+            l.Discount_Value = disc; l.Tax_Rate = rate;
+            l.Gross = r.Qnty_value; l.Tax_Value = r.Item_TaxSales10_Value; l.Line_Total = r.Item_Net_Total_Price;
         }
 
         public class TakeOrderInput

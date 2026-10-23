@@ -455,7 +455,7 @@ namespace AccountModelsLib
             sql.Append("cur.Currency_Name, b.Bank_Name, ISNULL(m.Transaction_Value,0) AS Line_Value, m.Account_Name, ISNULL(cu.Name, ISNULL(su.Name, s.SubAccount_Name)) AS Party_Name, u.Name AS User_Name ");
             sql.Append("FROM Order_Money o INNER JOIN Money_Transaction_Box m ON o.Id = m.Order_Mony_Id ");
             sql.Append("LEFT JOIN Currency cur ON o.Currency_Id = cur.ID LEFT JOIN Banks b ON m.Bank_Id = b.id LEFT JOIN Submain_Account s ON m.SubAccount_Id = s.Id ");
-            sql.Append("LEFT JOIN Customer cu ON m.Customer_Id = cu.Id LEFT JOIN Supplier su ON m.Supplier_Id = su.Id LEFT JOIN USER_DETAILES u ON o.User_Id = u.USER_ID ");
+            sql.Append("LEFT JOIN Customer cu ON m.Customer_Id = cu.Id LEFT JOIN Supplier su ON m.Supplier_Id = su.Id LEFT JOIN USER_DETAILES u ON o.User_Id = u.Id ");
             sql.Append("WHERE o.Order_No <> 0 AND o.Order_No <> -1 ");
             if (mode == "customers") sql.Append("AND m.Customer_Id > 0 ");
             else if (mode == "suppliers") sql.Append("AND m.Supplier_Id > 0 ");

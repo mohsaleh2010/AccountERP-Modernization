@@ -1,6 +1,8 @@
 @* 🟢 خطة 04 — المرحلة 2: قائمة الأصناف الموحَّدة (بديل ItemsListGridFrm/ItemsListViewFrm/قائمة الخدمات). بحث بالاسم/الكود/الباركود،
    تصفية بالفئة والنوع (أصناف/خدمات) والحالة، والرصيد الإجمالى بالوحدتين للعرض فقط. الصف يفتح شاشة الصنف. التصميم حسب ui-ux-pro-max.
-   المرحلة 3: /items/p/{Profile} قائمة بملف ثابت (general، services، pharmacy، pharmacy-retail) بأعمدته، والصف يفتح الصنف بنفس الملف. *@
+   المرحلة 3: /items/p/{Profile} قائمة بملف ثابت (general، services، pharmacy، pharmacy-retail) بأعمدته، والصف يفتح الصنف بنفس الملف.
+   خطة 05 بند 18: «صنف جديد حسب النوع» يفتح شاشة الإضافة المخصصة لكل ملف، وقائمة النسيج بشرائح نوع الصنف (نوع المخزن).
+   خطة 05 بند 16: «إضافة سريعة» فى حوار (الاسم، الفئة، الكود، الوحدة، سعرا البيع والشراء) برصيد صفر فى المخزن الافتراضى، مع إضافة متعددة. *@
 @page "/items"
 @page "/items/p/{Profile}"
 
@@ -11,6 +13,7 @@
 @using static AccountModelsLib.ItemEditorService
 @inject LanguageService LangService
 @inject NavigationManager Nav
+@inject ISnackbar Snackbar
 @implements IDisposable
 
 <PageTitle>@Tr(TitleKey)</PageTitle>
@@ -41,18 +44,34 @@
     .it-neg { color: var(--mud-palette-error); }
     .it-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
     .it-empty .mud-icon-root { opacity: .5; }
+    .it-qform { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px 16px; align-items: start; }
+    .it-qform .full { grid-column: 1 / -1; }
+    .it-hint { margin-top: 4px; font-size: .8rem; color: var(--mud-palette-text-secondary); }
     @@media (max-width: 899px) { .it-filters { grid-template-columns: minmax(0, 1fr); } }
+    @@media (max-width: 599px) { .it-qform { grid-template-columns: minmax(0, 1fr); } }
 </style>
 
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
 <div class="inv-page">
     <div class="inv-card it-head">
-        <div class="ico" aria-hidden="true"><MudIcon Icon="@(_pharm ? Icons.Material.Filled.Medication : _profile == "cars" ? Icons.Material.Filled.CarRepair : _profile == "glass" ? Icons.Material.Filled.Window : _profile == "ceramics" ? Icons.Material.Filled.GridOn : Icons.Material.Filled.Inventory2)" /></div>
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@(_pharm ? Icons.Material.Filled.Medication : _profile == "cars" ? Icons.Material.Filled.CarRepair : _profile == "glass" ? Icons.Material.Filled.Window : _profile == "ceramics" ? Icons.Material.Filled.GridOn : _profile == "textile" ? Icons.Material.Filled.Texture : Icons.Material.Filled.Inventory2)" /></div>
         <div class="titles">
             <h1 class="inv-title">@Tr(TitleKey)</h1>
             <div class="sub">@Tr(_pharm ? "IT_PhListSub" : "IT_ListSub")</div>
         </div>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Bolt" OnClick="OpenQuick" Disabled="@(_lk is null)">@Tr("IT_QuickAdd")</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="@NewHref">@Tr(_f.Kind == 2 ? "IT_NewService" : _pharm ? "IT_NewMedicine" : _profile == "cars" ? "IT_NewCarPart" : "IT_NewItem")</MudButton>
+        @if (_profile.Length == 0)
+        {
+            @* شاشة إضافة مخصصة لكل نوع صنف (/items/p/{profile}/new) *@
+            <MudMenu Label="@Tr("IT_NewByType")" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Category" EndIcon="@Icons.Material.Filled.ArrowDropDown"
+                     AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" aria-label="@Tr("IT_NewByType")">
+                @foreach (var (p, key, icon) in NewTypes)
+                {
+                    <MudMenuItem Href="@($"/items/p/{p}/new")" Icon="@icon">@Tr(key)</MudMenuItem>
+                }
+            </MudMenu>
+        }
     </div>
 
     <div class="inv-card it-gap">
@@ -79,6 +98,16 @@
             }
         </div>
         }
+        @if (_profile == "textile")
+        {
+        <div class="it-kinds" role="group" aria-label="@Tr("IT_TextileType")">
+            @for (int t = 0; t <= 4; t++)
+            {
+                var k = t;
+                <button type="button" class="it-chip" aria-pressed="@(_f.Store_Used_Type == k ? "true" : "false")" @onclick="@(() => OnTextileTypeAsync(k))">@Tr(k == 0 ? "IT_AllTypes" : "IT_TT" + k)</button>
+            }
+        </div>
+        }
     </div>
 
     <div class="inv-card it-gap">
@@ -91,7 +120,7 @@
                 <MudTh>@Tr("IT_Code")</MudTh>
                 <MudTh>@Tr("IT_Name")</MudTh>
                 <MudTh>@Tr("IC_CatName")</MudTh>
-                @if (_specs) { <MudTh>@Tr(_profile == "cars" ? "IT_FactoryCode" : "IT_Specs")</MudTh> }
+                @if (_specs) { <MudTh>@Tr(_profile == "cars" ? "IT_FactoryCode" : _profile == "textile" ? "IT_SizeDesc" : "IT_Specs")</MudTh> }
                 <MudTh>@Tr("IT_Unit")</MudTh>
                 <MudTh Style="text-align:end">@Tr("IT_SalePrice")</MudTh>
                 <MudTh Style="text-align:end">@Tr("IT_PurchasePrice")</MudTh>
@@ -132,6 +161,47 @@
 </div>
 </MudContainer>
 
+@* ===== الإضافة السريعة: الاسم والفئة والكود والوحدة والسعرين فقط؛ الرصيد صفر فى المخزن الافتراضى ===== *@
+<MudDialog @bind-Visible="_qOpen"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@Tr("IT_QuickAddTitle")</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_qError)) { <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3" role="alert">@_qError</MudAlert> }
+        <div class="it-qform">
+            <MudTextField T="string" @bind-Value="_q.Name" Label="@Tr("IT_Name")" Variant="Variant.Outlined" Required="true" MaxLength="500" Class="full"
+                          Immediate="true" @ref="_qNameField" OnKeyDown="OnQuickKeyDown" />
+            <MudSelect T="long" Value="_q.Category_Id" ValueChanged="OnQuickCategory" Label="@Tr("IC_CatName")" Variant="Variant.Outlined" Required="true"
+                       ToStringFunc="@(id => QuickCategories.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
+                @foreach (var c in QuickCategories) { <MudSelectItem T="long" Value="c.Id">@c.Name</MudSelectItem> }
+            </MudSelect>
+            <MudTextField T="string" @bind-Value="_q.Code" Label="@Tr("IT_Code")" Variant="Variant.Outlined" MaxLength="50" Style="direction:ltr"
+                          Disabled="@(_lk?.Auto_Code == true)" Placeholder="@(_lk?.Auto_Code == true ? Tr("IT_AutoCode") : null)"
+                          HelperText="@(_lk?.Auto_Code == true ? Tr("IT_AutoCodeHelp") : null)" OnKeyDown="OnQuickKeyDown" Immediate="true" />
+            <MudSelect T="long" @bind-Value="_q.Unit_Id" Label="@Tr("IT_Unit")" Variant="Variant.Outlined" Required="true" Class="full"
+                       ToStringFunc="@(id => _lk?.Units.FirstOrDefault(u => u.Id == id)?.Name ?? string.Empty)">
+                @foreach (var u in _lk?.Units ?? new()) { <MudSelectItem T="long" Value="u.Id">@u.Name (1 @u.Big_Unit = @Num(u.Factor) @u.Small_Unit)</MudSelectItem> }
+            </MudSelect>
+            <MudNumericField T="decimal" @bind-Value="_q.Sale_Price_Large" Label="@Tr("IT_SalePrice")" Variant="Variant.Outlined" Min="0" Format="0.####"
+                             Immediate="true" OnKeyDown="OnQuickKeyDown" />
+            <MudNumericField T="decimal" @bind-Value="_q.Purchase_Price_Large" Label="@Tr("IT_PurchasePrice")" Variant="Variant.Outlined" Min="0" Format="0.####"
+                             Immediate="true" OnKeyDown="OnQuickKeyDown" />
+            <div class="full it-hint">@Tr("IT_QuickHint")</div>
+            <div class="full">
+                <MudCheckBox T="bool" @bind-Value="_qMulti" Label="@Tr("MultipleAddLabel")" Color="Color.Primary" Dense="true" />
+                @if (_qMulti) { <div class="it-hint">@Tr("IT_QuickMultiHint")</div> }
+            </div>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _qOpen = false)">@Tr("Close")</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="@(_qBusy || !QuickReady)" OnClick="@(() => SaveQuickAsync(true))">@Tr("IT_SaveOpen")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_qBusy || !QuickReady)" OnClick="@(() => SaveQuickAsync(false))">
+            @if (_qBusy) { <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" /> }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     [SupplyParameterFromQuery(Name = "kind")] public string? KindQuery { get; set; }
     [Parameter] public string? Profile { get; set; }
@@ -145,11 +215,19 @@
     private string _profile = "";
 
     private string TitleKey => _profile switch { "pharmacy" => "IT_ListPharmacy", "pharmacy-retail" => "IT_ListPharmacyRetail", "services" => "IT_ListServices",
-        "cars" => "IT_ListCars", "ceramics" => "IT_ListCeramics", "glass" => "IT_ListGlass", _ => "IT_ListTitle" };
+        "cars" => "IT_ListCars", "ceramics" => "IT_ListCeramics", "glass" => "IT_ListGlass", "textile" => "IT_ListTextile", _ => "IT_ListTitle" };
     private bool _specs;
     private string ProfilePrefix => _profile.Length > 0 ? $"/items/p/{_profile}" : "/items";
     private string ItemHref(long id) => $"{ProfilePrefix}/{id}";
-    private string NewHref => _profile.Length > 0 ? $"{ProfilePrefix}/new" : $"/items/new{(_f.Kind == 2 ? "?kind=services" : "")}";
+    private string NewHref => _profile.Length > 0 ? $"{ProfilePrefix}/new{(_profile == "textile" && _f.Store_Used_Type > 0 ? $"?type={_f.Store_Used_Type}" : "")}"
+        : $"/items/new{(_f.Kind == 2 ? "?kind=services" : "")}";
+    private static readonly (string, string, string)[] NewTypes =
+    {
+        ("general", "IC_ProfileGeneral", Icons.Material.Filled.Inventory2), ("services", "IC_Services", Icons.Material.Filled.MiscellaneousServices),
+        ("pharmacy", "IC_ProfilePharmacy", Icons.Material.Filled.Medication), ("cars", "IC_ProfileCars", Icons.Material.Filled.CarRepair),
+        ("ceramics", "IC_ProfileCeramics", Icons.Material.Filled.GridOn), ("glass", "IC_ProfileGlass", Icons.Material.Filled.Window),
+        ("textile", "IC_ProfileTextile", Icons.Material.Filled.Texture),
+    };
 
     protected override void OnInitialized() => LangService.OnLanguageChanged += OnLanguageChangedHandler;
 
@@ -158,7 +236,8 @@
         string p = (Profile ?? "").Trim().ToLowerInvariant();
         _profile = ItemEditorService.RouteProfiles.Contains(p) ? p : "";
         _pharm = ItemEditorService.IsPharmacy(_profile);
-        _specs = _profile is "cars" or "ceramics" or "glass";
+        _specs = _profile is "cars" or "ceramics" or "glass" or "textile";
+        _f.Store_Used_Type = 0;
         _fixedKind = _profile is "services" || _pharm || _specs;
         _f.Profile = _profile;
         _f.Kind = _profile == "services" ? 2 : _pharm || _specs ? 1 : KindQuery == "services" ? 2 : KindQuery == "items" ? 1 : 0;
@@ -174,16 +253,117 @@
     private async Task LoadAsync()
     {
         _loading = true;
-        var f = new ListFilter { Text = _f.Text, Category_Id = _f.Category_Id, Kind = _f.Kind, Active = _f.Active, Top = _f.Top, Profile = _f.Profile };
+        var f = new ListFilter { Text = _f.Text, Category_Id = _f.Category_Id, Kind = _f.Kind, Active = _f.Active, Top = _f.Top, Profile = _f.Profile, Store_Used_Type = _f.Store_Used_Type };
         try { _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.List(f); }); _error = null; }
         catch (Exception ex) { _error = Inner(ex); _rows = new(); }
         finally { _loading = false; }
+    }
+
+    // ===== الإضافة السريعة =====
+    private ItemForm _q = new();
+    private bool _qOpen, _qBusy, _qMulti, _qRefocus;
+    private string? _qError;
+    private MudTextField<string>? _qNameField;
+
+    /// <summary>فئات الإضافة السريعة: حسب نوع القائمة (أصناف/خدمات) وملفها إن كان لها فئات بنفس الملف.</summary>
+    private List<CategoryOption> QuickCategories
+    {
+        get
+        {
+            var all = _lk?.Categories ?? new();
+            int kind = _f.Kind;
+            var byKind = all.Where(c => kind == 0 || (kind == 2 ? c.Item_Or_Service != 1 : c.Item_Or_Service != 2)).ToList();
+            string prof = _pharm ? "pharmacy" : _profile;
+            if (prof is "pharmacy" or "cars" or "ceramics" or "glass" or "textile" && byKind.Any(c => c.Profile == prof)) return byKind.Where(c => c.Profile == prof).ToList();
+            return byKind;
+        }
+    }
+
+    /// <summary>صنف النسيج السريع: نوعه من شريحة القائمة (منتج تام افتراضياً)، ومخزنه أول مخزن من نفس النوع.</summary>
+    private int QuickStoreType => _profile == "textile" && _f.Store_Used_Type > 0 ? _f.Store_Used_Type : 1;
+    private long QuickStoreId => _profile != "textile" ? _lk?.Default_Store_Id ?? 0
+        : _lk?.Stores.FirstOrDefault(s => _lk.Store_Types.GetValueOrDefault(s.Id, 1) == QuickStoreType)?.Id ?? 0;
+
+    private bool QuickReady => !string.IsNullOrWhiteSpace(_q.Name) && _q.Category_Id != 0 && _q.Unit_Id != 0;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_qRefocus && _qNameField is not null) { _qRefocus = false; await Task.Delay(60); await _qNameField.FocusAsync(); }
+    }
+
+    // AutoFocus لا يعمل داخل MudDialog (مصيدة التركيز تأخذه)؛ ننتظر رسم الحوار ثم نركّز على الاسم
+    private async Task FocusQuickSoonAsync()
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            await Task.Delay(80);
+            if (_qNameField is null) continue;
+            try { await Task.Delay(120); await _qNameField.FocusAsync(); } catch { }
+            return;
+        }
+    }
+
+    private void OpenQuick()
+    {
+        var cats = QuickCategories;
+        long cat = _f.Category_Id != 0 && cats.Any(c => c.Id == _f.Category_Id) ? _f.Category_Id
+            : cats.FirstOrDefault(c => c.Id == (_f.Kind == 2 ? _lk!.Default_Category_Service : _lk!.Default_Category_Item))?.Id ?? cats.FirstOrDefault()?.Id ?? 0;
+        long unit = _lk!.Units.FirstOrDefault(u => u.Is_Default)?.Id ?? _lk.Units.FirstOrDefault()?.Id ?? 0;
+        _q = new ItemForm { Category_Id = cat, Unit_Id = unit };
+        _qError = null;
+        _qNameField = null; _qOpen = true;
+        _ = FocusQuickSoonAsync();
+    }
+
+    private void OnQuickCategory(long id) => _q.Category_Id = id;
+
+    private async Task OnQuickKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || _qBusy) return;
+        await Task.Delay(150); // يترك آخر حرف مكتوب (Immediate) يصل للخادم قبل الحفظ
+        if (QuickReady) await SaveQuickAsync(false);
+    }
+
+    private async Task SaveQuickAsync(bool open)
+    {
+        if (QuickStoreId == 0) { _qError = Tr(_profile == "textile" ? "IT_NoStoreOfType" : "IT_NoStore"); return; }
+        var unit = _lk.Units.FirstOrDefault(u => u.Id == _q.Unit_Id);
+        decimal factor = unit?.Factor is > 0 and var fc ? fc : 1;
+        var cat = _lk.Categories.FirstOrDefault(c => c.Id == _q.Category_Id);
+        int kind = _profile == "services" || _f.Kind == 2 || cat?.Item_Or_Service == 2 ? 2 : 1;
+        var f = new ItemForm
+        {
+            Name = _q.Name, Code = _lk.Auto_Code ? null : _q.Code, Category_Id = _q.Category_Id, Unit_Id = _q.Unit_Id,
+            Item_Or_Service = kind, Without_Balance = kind == 2, Store_Id = QuickStoreId, Store_Used_Type = QuickStoreType,
+            Sale_Price_Large = _q.Sale_Price_Large, Sale_Price_Small = Math.Round(_q.Sale_Price_Large / factor, 4),
+            Purchase_Price_Large = _q.Purchase_Price_Large, Purchase_Price_Small = Math.Round(_q.Purchase_Price_Large / factor, 4),
+            // قائمة التجزئة: يُعلَّم الصنف تجزئة إن كانت وحدته تقبل التجزئة (وإلا يكمل المستخدم من الشاشة الكاملة)
+            Is_Retail = _profile == "pharmacy-retail" && unit?.Retail_Parts > 1,
+        };
+        _qBusy = true; _qError = null;
+        try
+        {
+            long id = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Save(f); });
+            Snackbar.Add(Tr("IT_Added"), Severity.Success);
+            if (open) { _qOpen = false; Nav.NavigateTo(ItemHref(id)); return; }
+            if (_qMulti)
+            {
+                // تبقى الفئة والوحدة للصنف التالي
+                _q = new ItemForm { Category_Id = f.Category_Id, Unit_Id = f.Unit_Id };
+                _qRefocus = true;
+            }
+            else _qOpen = false;
+            await LoadAsync();
+        }
+        catch (Exception ex) { _qError = Inner(ex); }
+        finally { _qBusy = false; }
     }
 
     private async Task OnTextAsync(string? s) { _f.Text = s; await LoadAsync(); }
     private async Task OnCategoryAsync(long c) { _f.Category_Id = c; await LoadAsync(); }
     private async Task OnActiveAsync(int a) { _f.Active = a; await LoadAsync(); }
     private async Task OnKindAsync(int k) { _f.Kind = k; await LoadAsync(); }
+    private async Task OnTextileTypeAsync(int t) { _f.Store_Used_Type = t; await LoadAsync(); }
 
     /// <summary>الرصيد بالوحدة الصغرى معروض بالوحدتين: «5 + 2».</summary>
     private static string BalanceText(decimal small, decimal factor)

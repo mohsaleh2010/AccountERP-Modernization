@@ -19,6 +19,8 @@ namespace AccountModelsLib
             return opp.db.Database.SqlQueryRaw<int>(@"
 SELECT CASE WHEN OBJECT_ID(N'dbo.Item_Branch_Cost', N'U') IS NOT NULL
              AND OBJECT_ID(N'dbo.Store_Order_Type_Settings', N'U') IS NOT NULL
+             AND OBJECT_ID(N'dbo.Store_Account_Determination', N'U') IS NOT NULL
+             AND COL_LENGTH(N'dbo.Supplier', N'IS_ShipmentCompany') IS NOT NULL
              AND COL_LENGTH(N'dbo.Order_Purshing', N'Posted_By') IS NOT NULL
              AND COL_LENGTH(N'dbo.Detailes_Purshing_Import_Export', N'Engine_Posted') IS NOT NULL
              AND COL_LENGTH(N'dbo.Item_First_Period_Balance', N'Source') IS NOT NULL
@@ -61,10 +63,77 @@ WHERE Order_Type IN (1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1012,1013
                 Step(opp, TransferReceipts);
                 Step(opp, ItemProfiles);
                 Step(opp, PriceUnitDecimal);
+                Step(opp, StoreAccountDetermination);
+                Step(opp, ShipmentCompanySupplierFlag);
             }
             // مستقلة عن فحص المخطط: القواعد المرقّاة سابقاً تحتاج الربط أيضاً، وتقرأ فقط العناصر غير المربوطة.
             Step(opp, LinkStoreOrderMenus);
             Step(opp, TransferSettings);
+            Step(opp, StoreAccountMenu);
+        }
+
+        // ---------------- حسابات المخازن: الحساب المقابل لكل حركة مخزنية (StoreAccountDeterminationCLS) ----------------
+        // صف واحد لكل (فرع × نوع مخزن × مخزن × دور)؛ النوع 0 والمخزن 0 = افتراضى الفرع.
+        private static void StoreAccountDetermination(operations opp)
+        {
+            Run(opp, @"
+IF OBJECT_ID(N'dbo.Store_Account_Determination', N'U') IS NULL
+CREATE TABLE [dbo].[Store_Account_Determination](
+    [Id] [bigint] NOT NULL,
+    [Account_Branch_Id] [bigint] NOT NULL,
+    [StoreUsed_Type] [int] NOT NULL DEFAULT ((0)),
+    [Store_Id] [bigint] NOT NULL DEFAULT ((0)),
+    [Account_Role] [int] NOT NULL,
+    [SubAccount_Id] [bigint] NOT NULL,
+    [OperationDate] [datetime] NULL,
+    [User_Id] [bigint] NULL DEFAULT ((0)),
+    [Branch_Id] [bigint] NULL,
+    [Insert_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
+    [Update_ServerDateTime] [datetime] NULL,
+    [EditOperationDate] [datetime] NULL,
+    [Edit_User_Id] [bigint] NULL,
+    CONSTRAINT [PK_Store_Account_Determination] PRIMARY KEY CLUSTERED ([Id] ASC)
+);");
+            Run(opp, @"
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Store_Account_Determination_Key')
+CREATE UNIQUE NONCLUSTERED INDEX [UX_Store_Account_Determination_Key]
+    ON [dbo].[Store_Account_Determination]([Account_Branch_Id] ASC, [StoreUsed_Type] ASC, [Store_Id] ASC, [Account_Role] ASC);");
+        }
+
+        // ---------------- شركات الشحن موردو خدمات فى جدول Supplier (قرار المستخدم 2026-10-23) ----------------
+        // عمود جديد يقبل NULL فلا يُلمس أى صف قائم؛ NULL/0 = مورد عادى، 1 = شركة شحن (حسابها من النوع 65).
+        private static void ShipmentCompanySupplierFlag(operations opp)
+        {
+            Run(opp, @"
+IF COL_LENGTH(N'dbo.Supplier', N'IS_ShipmentCompany') IS NULL ALTER TABLE [dbo].[Supplier] ADD [IS_ShipmentCompany] [int] NULL;");
+        }
+
+        /// <summary>
+        /// عنصر «ربط المخازن بالحسابات» تحت «ربط الحسابات» (بجوار ربط العملاء/الموردين/الصندوق/البنك) يفتح /store/account-settings،
+        /// وصلاحيته للمديرين فقط (AdminFlage = 1) والباقون من شاشة الصلاحيات - نفس نمط SalesRepSchemaCLS.Menus. لا يغيّر أى صف قائم.
+        /// </summary>
+        private static void StoreAccountMenu(operations opp)
+        {
+            const string key = "menuItemRelatedStoreAccounts";
+            const string desc = "ربط المخازن بالحسابات";
+            var menus = opp.db.Database.SqlQueryRaw<StoreTransferPolicy.KeyValueRow>("SELECT Id, KeysData, Value FROM SysConfigMenus").ToList();
+            string Key(StoreTransferPolicy.KeyValueRow r) => r.KeysData == null ? "" : Common.DecryptMe(r.KeysData).Trim();
+            var parent = menus.FirstOrDefault(m => Key(m) == "menuItemRelatedAccounts");
+            if (parent == null) return;
+            string E(string s) => Common.EncryptMe(s);
+            long id = menus.FirstOrDefault(m => Key(m) == key)?.Id ?? 0;
+            if (id != 0) return;
+            id = menus.Max(m => m.Id) + 1;
+            opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenus (Id, Parent_Id, KeysData, Description, PROJECT_ID, Value, DefaultValue, DefaultDescription,
+                            POS, Market, Factory, Tourism, AlFawzan, Client_A, Client_B, UserSells, IsShowToUser, RazorPath)
+VALUES ({id}, {parent.Id}, {E(key)}, {E(desc)}, 2, {E("1")}, {E("1")}, {E(desc)},
+        {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, 1, {E("/store/account-settings")})");
+            var admins = opp.db.Database.SqlQueryRaw<long>("SELECT Id AS Value FROM USER_DETAILES WHERE ISNULL(AdminFlage, 0) = 1").ToList();
+            foreach (long user in admins)
+                opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenusPERMATIONS (Id, Menu_ID, Parent_Id, USER_ID, PERMATION, PROJECT_ID, IsShowToUser)
+VALUES ({CallSnowflakeIdGenerate.GenerateNewId()}, {id}, {parent.Id}, {user}, {E("1")}, 2, 1)");
         }
 
         /// <summary>
@@ -169,6 +238,8 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             // خطة 04 م4: ملفات السيارات والسيراميك (عنصر الزجاج menuItemItemsListSpecGlass بلا صف فى SysConfigMenus)
             ("menuItemItemsListSpecCars", "/items/p/cars"), ("ToolStripMenuItemItemsForCars", "/items/p/cars"),
             ("menuItemItemsListSpecSeramek", "/items/p/ceramics"),
+            // خطة 05 بند 19: أنواع السيارات وموديلاتها تحت قائمة السيارات
+            ("lookupCarTypeToolStripMenuItem", "/cars/types"), ("lookupCarTypeModelToolStripMenuItem", "/cars/models"),
             // خطة 04 م5: الأسعار (طباعة الأسعار menuItemItemPrices لم تُبنَ بعد)
             ("menuPrice_Type_List", "/items/prices/lists"), ("menuPriceCategory", "/items/prices/lists"), ("menuItemSearchItemPrices_List_Values", "/items/prices/lists"),
             ("menuItemEditPrices", "/items/prices/bulk"), ("MenuCustomer_PriceCLS", "/items/prices/customers"),

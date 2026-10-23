@@ -135,7 +135,7 @@ namespace AccountModelsLib.Models
         public long? CarsWorkOrdersItemProcessedDetailsId { get; set; }
         public long? Item_Category_Id { get; set; }
         public string Item_Category_Name { get; set; }
-        public int? ProcessNameId { get; set; }
+        public long? ProcessNameId { get; set; }
         public string ProcessName { get; set; }
         public string ProcessNameNumber { get; set; }
         

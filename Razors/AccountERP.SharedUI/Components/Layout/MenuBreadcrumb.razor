@@ -8,15 +8,13 @@
    العنصر الجذر ("الوحدات المتاحة لك") والعناصر الوسيطة (الوحدات/المجموعات التى لا تفتح شاشة بنفسها) روابط
    تعيد المستخدم لنفس المستوى فى بطاقات الرئيسية الهرمية (Home.razor)، وعنصر الشاشة الحالية نص غير قابل للنقر.
 
-   🟢 شكل "متقدّم" بطلب المستخدم: أي عنصر فى المسار له "قوائم فرعية" (أبناء حقيقيون - عناصر ParentId الخاصة
-   بهم تساوي Menu_ID لهذا العنصر) يظهر بجواره سهم صغير لأسفل يفتح قائمة منسدلة بهذه القوائم الفرعية، للانتقال
-   المباشر لأي منها (أو الدخول لها إن كانت تحتوي هى نفسها شاشات فرعية أعمق) بدون العودة للرئيسية والنقر خطوة
-   بخطوة - مثال: السهم بجوار "الموردين" يعرض "مجموعات الموردين"/"بيانات الموردين"/"قائمة الموردين"... (أبناء
-   الموردين نفسها)، وليس "العملاء"/"الأصناف" (تلك أشقاء الموردين تحت بيانات أساسية، لا صلة لها بهذا السهم -
-   كان هذا خطأ فى محاولة أولى مبنية على "الأشقاء" بدل "الأبناء"، صُحِّح بناءً على ملاحظة المستخدم المباشرة).
-   الجذر ("الوحدات المتاحة لك") حالة خاصة: "أبناؤه" هى الوحدات الرئيسية نفسها (ParentId == 0) لعدم وجود عنصر
-   MenuViewModel حقيقي يمثّله. الضغط على النص نفسه يبقى بنفس سلوكه الحالي (الانتقال لمستوى هذا العنصر تحديداً)
-   - السهم إضافة، وليس تغييراً لذلك السلوك. أي عنصر بلا أبناء (كالشاشة الحالية نفسها عادة) لا يظهر بجواره سهم. *@
+   🟢 القوائم المنسدلة: أي عنصر فى المسار له أبناء (عناصر ParentId الخاصة بها = Menu_ID له) يظهر بجواره سهم
+   يفتح قائمة تحت المسار مباشرة بأبنائه - وليس أشقاءه (كان هذا خطأ محاولة أولى صُحِّح بملاحظة المستخدم).
+   الجذر حالة خاصة: أبناؤه هى الوحدات الرئيسية (ParentId == 0). أي ابن له أبناء بدوره يظهر كقائمة فرعية
+   متداخلة (MudMenu داخل MudMenu) تتفتح بالوقوف عليها أو بالضغط/السهم من لوحة المفاتيح (للمس أيضاً)، حتى أعمق
+   مستوى، والعنصر الأخير (بلا أبناء) يفتح شاشته مباشرة. عناصر المسار الحالى مميَّزة داخل القوائم.
+   إعدادا المستخدم BreadcrumbMainMenus (سهم الجذر) وBreadcrumbSubMenus (أسهم باقى المستويات) يتحكمان فى
+   ظهور الأسهم - راجع UserSettingsMenu.razor. الضغط على النص نفسه يبقى بنفس سلوكه (الانتقال لمستوى العنصر). *@
 
 @using System.Globalization
 @using AccountModelsLib
@@ -26,51 +24,65 @@
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 @inject NotificationCenterService NotificationCenter
+@inject UserPreferencesService Prefs
 @implements IDisposable
 
 @if (_ancestors.Count > 0)
 {
-    <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3 page-breadcrumb">
-        <MudLink Underline="Underline.Hover" Href="/" Class="d-flex align-items-center" Style="gap:4px;">
-            <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small" />
-            @Tr("HomeQuickAccessTitle")
-        </MudLink>
-        @{ var rootChildren = GetTopLevelModules(); }
-        @if (rootChildren.Count > 0)
-        {
-            @ChildrenCaret(rootChildren)
-        }
+    <nav class="page-breadcrumb mb-3" aria-label="@Tr("BreadcrumbAriaLabel")">
+        <ol class="bc-list">
+            <li class="bc-item">
+                <a href="/" class="bc-link bc-home">
+                    <MudIcon Icon="@Icons.Material.Outlined.Home" Size="Size.Small" aria-hidden="true" />
+                    <span>@Tr("HomeQuickAccessTitle")</span>
+                </a>
+                @if (Prefs.BreadcrumbMainMenus)
+                {
+                    var rootChildren = GetTopLevelModules();
+                    @if (rootChildren.Count > 0)
+                    {
+                        @ChildrenCaret(rootChildren, Tr("HomeQuickAccessTitle"), true)
+                    }
+                }
+            </li>
 
-        @for (var i = 0; i < _ancestors.Count; i++)
-        {
-            var idx = i;
-            var node = _ancestors[idx];
-            var isLast = idx == _ancestors.Count - 1;
-            var children = GetChildrenOf(node);
-
-            <MudIcon Icon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)" Size="Size.Small" Class="mud-text-secondary" />
-
-            @if (isLast)
+            @for (var i = 0; i < _ancestors.Count; i++)
             {
-                <MudText Typo="Typo.body2" Class="fw-medium">@node.GetLocalizedDescription(LangService.CurrentLanguage)</MudText>
-            }
-            else
-            {
-                <MudLink Underline="Underline.Hover" Href="@("/?openMenu=" + node.Menu_ID)" Style="cursor:pointer;">
-                    @node.GetLocalizedDescription(LangService.CurrentLanguage)
-                </MudLink>
-            }
+                var node = _ancestors[i];
+                var isLast = i == _ancestors.Count - 1;
+                var title = node.GetLocalizedDescription(LangService.CurrentLanguage);
 
-            @if (children.Count > 0)
-            {
-                @ChildrenCaret(children)
+                <li class="bc-item">
+                    <MudIcon Icon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)"
+                             Size="Size.Small" Class="bc-sep" aria-hidden="true" />
+                    @if (isLast)
+                    {
+                        <span class="bc-current" aria-current="page">@title</span>
+                    }
+                    else
+                    {
+                        <a href="@("/?openMenu=" + node.Menu_ID)" class="bc-link">@title</a>
+                    }
+                    @if (Prefs.BreadcrumbSubMenus)
+                    {
+                        var children = GetChildrenOf(node);
+                        @if (children.Count > 0)
+                        {
+                            @ChildrenCaret(children, title, false)
+                        }
+                    }
+                </li>
             }
-        }
-    </MudStack>
+        </ol>
+    </nav>
 }
 
 @code {
+    // أقصى عمق للقوائم الفرعية المتداخلة - حماية من أى حلقة فى بيانات ParentId
+    private const int MaxMenuDepth = 6;
+
     private List<MenuViewModel> _ancestors = new();
+    private HashSet<long> _ancestorIds = new();
 
     protected override void OnInitialized()
     {
@@ -79,6 +91,7 @@
         MenuState.OnAuthChanged += OnStateChanged;
         MenuState.OnMainMenuChanged += OnStateChanged;
         LangService.OnLanguageChanged += OnStateChanged;
+        Prefs.OnChanged += OnStateChanged;
     }
 
     private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e) => OnStateChanged();
@@ -94,27 +107,54 @@
         var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         var leaf = MenuState.UserAllowedMenus.FindMenuForRoute(relativePath);
         _ancestors = leaf == null ? new List<MenuViewModel>() : MenuState.UserAllowedMenus.BuildAncestorPath(leaf);
+        _ancestorIds = _ancestors.Select(a => a.Menu_ID).ToHashSet();
     }
 
     // "أبناء" الجذر = الوحدات الرئيسية نفسها (ParentId == 0) - لا يوجد عنصر MenuViewModel حقيقي يمثّل الجذر
-    // نفسه، فتُعامَل كل الوحدات الرئيسية كخيارات القائمة المنسدلة الخاصة به مباشرة.
     private List<MenuViewModel> GetTopLevelModules() =>
         MenuState.UserAllowedMenus.Where(m => m != null && m.ParentId == 0).ToList();
 
-    // أبناء أي عنصر آخر فى المسار = كل عنصر ParentId الخاص به يساوي Menu_ID هذا العنصر - أي المستوى التالي
-    // مباشرة تحته (وليس أشقاءه على نفس مستواه هو).
+    // أبناء أي عنصر آخر = كل عنصر ParentId الخاص به يساوي Menu_ID هذا العنصر (المستوى التالي، لا الأشقاء)
     private List<MenuViewModel> GetChildrenOf(MenuViewModel node) =>
         MenuState.UserAllowedMenus.Where(m => m != null && m.ParentId == node.Menu_ID).ToList();
 
-    // 🟢 RenderFragment مشترك لسهم "القوائم الفرعية" حتى لا يتكرر نفس الـ MudMenu مرتين (الجذر + الحلقة) -
-    // Dense/Size.Small لتصغير مساحة الزر قدر الإمكان فيبدو تفصيلة صغيرة بجانب النص لا عنصراً منفصلاً بارزاً.
-    private RenderFragment ChildrenCaret(List<MenuViewModel> children) => @<MudMenu Icon="@Icons.Material.Filled.ArrowDropDown" Size="Size.Small" Dense="true"
-             Class="breadcrumb-caret" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
-        @foreach (var item in children)
+    // 🟢 السهم + القائمة المنسدلة تحته مباشرة (BottomCenter→TopCenter)؛ زر حقيقى بحجم 28px واسم مقروء لقارئ الشاشة
+    private RenderFragment ChildrenCaret(List<MenuViewModel> children, string ownerTitle, bool isModuleLevel) =>
+        @<MudMenu Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small" Class="bc-caret"
+                  AriaLabel="@Tr("BreadcrumbShowSubmenus", ownerTitle)" title="@Tr("BreadcrumbShowSubmenus", ownerTitle)"
+                  Dense="true" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter"
+                  PopoverClass="bc-menu" MaxHeight="420">
+            @MenuItems(children, isModuleLevel, 0)
+        </MudMenu>;
+
+    // 🟢 عنصر له أبناء = قائمة فرعية متداخلة تتفتح بالوقوف عليها، وإلا عنصر يفتح شاشته. عناصر المسار الحالى مميَّزة.
+    private RenderFragment MenuItems(List<MenuViewModel> items, bool isModuleLevel, int depth) => __builder =>
+    {
+        foreach (var item in items)
         {
-            <MudMenuItem OnClick="@(() => GoToMenuItem(item))">@item.GetLocalizedDescription(LangService.CurrentLanguage)</MudMenuItem>
+            var title = item.GetLocalizedDescription(LangService.CurrentLanguage);
+            var kids = depth < MaxMenuDepth ? GetChildrenOf(item) : new List<MenuViewModel>();
+            var cssClass = _ancestorIds.Contains(item.Menu_ID) ? "bc-menu-item bc-menu-item-active" : "bc-menu-item";
+
+            if (kids.Count > 0)
+            {
+                @* القائمة الفرعية تتفتح فى اتجاه القراءة: يساراً فى العربية ويميناً فى اللغات اللاتينية *@
+                <MudMenu Label="@title" Dense="true" PopoverClass="bc-menu" MaxHeight="420" Class="@cssClass"
+                         AnchorOrigin="@(LangService.IsRtl ? Origin.TopLeft : Origin.TopRight)"
+                         TransformOrigin="@(LangService.IsRtl ? Origin.TopRight : Origin.TopLeft)"
+                         StartIcon="@(isModuleLevel ? MenuIcons.GetModuleIcon(item.Description) : MenuIcons.GetGroupIcon(item.Description))">
+                    @MenuItems(kids, false, depth + 1)
+                </MudMenu>
+            }
+            else
+            {
+                <MudMenuItem Class="@cssClass" OnClick="@(() => GoToMenuItem(item))"
+                             Icon="@(isModuleLevel ? MenuIcons.GetModuleIcon(item.Description) : MenuIcons.GetLeafIcon(item.Description))">
+                    @title
+                </MudMenuItem>
+            }
         }
-    </MudMenu>;
+    };
 
     // نفس منطق فتح عنصر قائمة المستخدَم فى NavMenuMud.razor/MenuNode.razor/Home.razor بالضبط: عنصر له أبناء
     // يفتح الرئيسية عند مستواه هو (وليس شاشة له بنفسه)، وإلا يُفتَح كشاشة حقيقية إن وُجدت أو "قيد الإنشاء".
@@ -162,17 +202,138 @@
         MenuState.OnAuthChanged -= OnStateChanged;
         MenuState.OnMainMenuChanged -= OnStateChanged;
         LangService.OnLanguageChanged -= OnStateChanged;
+        Prefs.OnChanged -= OnStateChanged;
     }
 }
 
 <style>
-    /* 🟢 يصغّر مساحة زر السهم المنسدل (الافتراضي لأي MudMenu بأيقونة أكبر من اللازم لتفصيلة صغيرة بجانب نص) */
-    .breadcrumb-caret.mud-icon-button {
-        padding: 2px;
-        margin-inline-start: -6px;
+    /* 🟢 شريط المسار: سطح خفيف بحد رفيع وزوايا مستديرة، يلتف على الشاشات الضيقة بدل تمرير أفقى */
+    .page-breadcrumb {
+        background: var(--mud-palette-surface);
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 10px;
+        padding: 4px 8px;
     }
 
-    .breadcrumb-caret .mud-icon-root {
-        font-size: 1.1rem;
+    .page-breadcrumb .bc-list {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 2px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .page-breadcrumb .bc-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    .page-breadcrumb .bc-sep {
+        color: var(--mud-palette-text-disabled);
+        margin-inline: 2px;
+    }
+
+    .page-breadcrumb .bc-link,
+    .page-breadcrumb .bc-current {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 32px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+
+    .page-breadcrumb .bc-link {
+        color: var(--mud-palette-text-secondary);
+        text-decoration: none;
+        transition: background-color 150ms ease, color 150ms ease;
+    }
+
+    .page-breadcrumb .bc-link:hover {
+        background: var(--mud-palette-action-default-hover);
+        color: var(--mud-palette-primary);
+    }
+
+    .page-breadcrumb .bc-current {
+        color: var(--mud-palette-text-primary);
+        font-weight: 600;
+    }
+
+    /* 🟢 زر السهم (زر MudMenu الافتراضى - Class على غلاف القائمة): 28px (فوق حد WCAG 24px)، يدور 180° أثناء فتح قائمته */
+    .page-breadcrumb .bc-caret .mud-icon-button {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border-radius: 6px;
+        color: var(--mud-palette-text-secondary);
+        transition: background-color 150ms ease, color 150ms ease;
+    }
+
+    .page-breadcrumb .bc-caret .mud-icon-button:hover,
+    .page-breadcrumb .bc-caret .mud-icon-button[aria-expanded="true"] {
+        background: var(--mud-palette-action-default-hover);
+        color: var(--mud-palette-primary);
+    }
+
+    .page-breadcrumb .bc-caret .mud-icon-root {
+        font-size: 1.2rem;
+        transition: transform 200ms ease;
+    }
+
+    .page-breadcrumb .bc-caret .mud-icon-button[aria-expanded="true"] .mud-icon-root {
+        transform: rotate(180deg);
+    }
+
+    .page-breadcrumb .bc-link:focus-visible,
+    .page-breadcrumb .bc-caret .mud-icon-button:focus-visible {
+        outline: 2px solid var(--mud-palette-primary);
+        outline-offset: 1px;
+    }
+
+    /* 🟢 القوائم المنسدلة (تُرسَم فى طبقة MudPopover خارج الشريط، فالمحدِّد عام بـ bc-menu) */
+    .bc-menu.mud-popover {
+        min-width: 240px;
+        border-radius: 10px;
+        border: 1px solid var(--mud-palette-lines-default);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    .bc-menu .mud-list {
+        padding: 6px;
+    }
+
+    .bc-menu .mud-menu-item {
+        border-radius: 6px;
+        min-height: 36px;
+    }
+
+    .bc-menu .mud-menu-item .mud-icon-root {
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .bc-menu .bc-menu-item-active,
+    .bc-menu .bc-menu-item-active .mud-menu-item {
+        color: var(--mud-palette-primary);
+        font-weight: 600;
+        background: var(--mud-palette-primary-hover);
+    }
+
+    .bc-menu .bc-menu-item-active .mud-icon-root {
+        color: var(--mud-palette-primary);
+    }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .page-breadcrumb .bc-link,
+        .page-breadcrumb .bc-caret .mud-icon-button,
+        .page-breadcrumb .bc-caret .mud-icon-root {
+            transition: none;
+        }
     }
 </style>

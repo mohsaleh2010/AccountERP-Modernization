@@ -14,6 +14,11 @@ namespace AccountModelsLib
         public const string ShowBreadcrumb = "ShowBreadcrumb";
         public const string ShowTabs = "ShowTabs";
 
+        // 🟢 قوائم مسار التنقّل (راجع MenuBreadcrumb.razor): الرئيسية = سهم الجذر بجوار "الوحدات المتاحة لك" يعرض
+        // الوحدات الرئيسية، والفرعية = السهم بجوار كل مستوى يعرض أبناءه (بقوائم فرعية تتفتح بالوقوف عليها).
+        public const string BreadcrumbMainMenus = "BreadcrumbMainMenus";
+        public const string BreadcrumbSubMenus = "BreadcrumbSubMenus";
+
         // 🟢 يقابل UserPreferencesService.DateFormat: نمط عرض التواريخ فى شاشات Blazor الجديدة/المُعدَّلة
         // (راجع المعيار الموثَّق فى MODERNIZATION_NOTES.md) - القيمة نص جاهز لـ DateTime.ToString(...)
         // (مثال "dd/MM/yyyy")، الافتراضى عند غياب القيمة هو نفس الافتراضى.

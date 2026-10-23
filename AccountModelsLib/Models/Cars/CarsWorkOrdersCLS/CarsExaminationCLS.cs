@@ -252,7 +252,7 @@ namespace AccountModelsLib.Models
 
             mysql = mysql + @" FROM            CarsExaminations INNER JOIN
                          Customer ON CarsExaminations.CustomerId = Customer.Id INNER JOIN
-                         USER_DETAILES ON CarsExaminations.User_Id = USER_DETAILES.USER_ID ";
+                         USER_DETAILES ON CarsExaminations.User_Id = USER_DETAILES.Id ";
             //mysql = mysql + " WHERE (Invoices_List.Invoice_Type = " + Invoice_Type + ") ";
             mysql = mysql + " WHERE (CarsExaminations.Id > 0  )  ";
 

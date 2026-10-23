@@ -1,0 +1,240 @@
+@* 🟢 خطة 05 بند 19: أنواع السيارات (Lookup_CarType) تحت قائمة السيارات، بدل /items/lookups/car-types وCarsTypeListFrm.
+   جدول الأنواع بعدد الموديلات (رابط لشاشة الموديلات مصفّاة بالنوع) والأصناف والسيارات؛ الإضافة والتعديل من نافذة منبثقة مع إضافة متعددة
+   (Enter يحفظ ويُبقي النافذة للاسم التالي، Esc يغلق)؛ الحذف لغير المستعمل فقط. التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@page "/cars/types"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.CarTypeService
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("CT_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .ct-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .ct-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .ct-head .ico .mud-icon-root { font-size: 2rem; }
+    .ct-head .titles { flex: 1 1 260px; }
+    .ct-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .ct-head .acts { display: flex; flex-wrap: wrap; gap: 8px; }
+    .ct-head .mud-button-root { min-height: 44px; }
+    .ct-gap { margin-top: 16px; }
+    .ct-bar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; }
+    .ct-num { font-variant-numeric: tabular-nums; }
+    .ct-code { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--mud-palette-text-secondary); }
+    .ct-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .ct-empty .mud-icon-root { opacity: .5; }
+    .ct-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px 16px; align-items: start; }
+    .ct-form .full { grid-column: 1 / -1; }
+    .ct-hint { margin-top: 4px; font-size: .8rem; color: var(--mud-palette-text-secondary); }
+    @@media (max-width: 599px) { .ct-form { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card ct-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.DirectionsCar" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("CT_Title")</h1>
+            <div class="sub">@Tr("CT_Sub")</div>
+        </div>
+        <div class="acts">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ViewList" Href="/cars/models">@Tr("CM_Title")</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">@Tr("CT_New")</MudButton>
+        </div>
+    </div>
+
+    <div class="inv-card ct-gap">
+        <div class="ct-bar">
+            <h2 class="inv-card-title" style="margin:0"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("CT_Title")<span class="inv-count">@_rows.Count</span></h2>
+            <div style="flex:0 1 320px"><MudTextField T="string" Value="_search" ValueChanged="OnSearchAsync" Label="@Tr("ILSearch")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                          Immediate="true" DebounceInterval="300" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" /></div>
+        </div>
+        @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-3" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+        <MudTable Items="@_rows" T="TypeRow" Hover="true" Elevation="0" Class="inv-table mt-3" Breakpoint="Breakpoint.Sm" Loading="_loading" LoadingProgressColor="Color.Primary">
+            <HeaderContent>
+                <MudTh>@Tr("CT_Name")</MudTh>
+                <MudTh>@Tr("CT_NameEn")</MudTh>
+                <MudTh>@Tr("IT_Code")</MudTh>
+                <MudTh Style="text-align:end">@Tr("CM_Title")</MudTh>
+                <MudTh Style="text-align:end">@Tr("CT_ItemsCount")</MudTh>
+                <MudTh Style="text-align:end">@Tr("CT_CarsCount")</MudTh>
+                <MudTh Style="width:110px"></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("CT_Name")"><strong>@context.Name</strong></MudTd>
+                <MudTd DataLabel="@Tr("CT_NameEn")"><span dir="ltr">@context.Name_En</span></MudTd>
+                <MudTd DataLabel="@Tr("IT_Code")"><span class="ct-code">@context.Code</span></MudTd>
+                <MudTd DataLabel="@Tr("CM_Title")" Style="text-align:end">
+                    <MudLink Href="@($"/cars/models?type={context.Id}")" aria-label="@Tr("CT_ModelsOf", context.Name)"><span class="ct-num">@context.Models_Count</span></MudLink>
+                </MudTd>
+                <MudTd DataLabel="@Tr("CT_ItemsCount")" Style="text-align:end"><span class="ct-num">@context.Items_Count</span></MudTd>
+                <MudTd DataLabel="@Tr("CT_CarsCount")" Style="text-align:end"><span class="ct-num">@context.Cars_Count</span></MudTd>
+                <MudTd Style="white-space:nowrap">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="@Tr("IU_EditAria", context.Name)" OnClick="@(() => OpenEdit(context))" />
+                    <MudTooltip Text="@(InUse(context) ? Tr("CT_UsedNoDelete") : Tr("Delete"))">
+                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Color="Color.Error" aria-label="@Tr("Delete")" Disabled="@(_busy || InUse(context))" OnClick="@(() => DeleteAsync(context))" />
+                    </MudTooltip>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="ct-empty"><MudIcon Icon="@Icons.Material.Filled.DirectionsCar" Size="Size.Large" /><span>@Tr("CT_Empty")</span>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">@Tr("CT_New")</MudButton></div>
+            </NoRecordsContent>
+        </MudTable>
+    </div>
+</div>
+</MudContainer>
+
+<MudDialog @bind-Visible="_open"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@(_t.Id == 0 ? Tr("CT_New") : Tr("IU_Edit", _title))</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_dlgError)) { <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3" role="alert">@_dlgError</MudAlert> }
+        <div class="ct-form">
+            <MudTextField T="string" @bind-Value="_t.Name" Label="@Tr("CT_Name")" Variant="Variant.Outlined" Required="true" MaxLength="255" Class="full"
+                          Immediate="true" @ref="_nameField" OnKeyDown="OnKeyDown" />
+            <MudTextField T="string" @bind-Value="_t.Name_En" Label="@Tr("CT_NameEn")" Variant="Variant.Outlined" MaxLength="500" Style="direction:ltr"
+                          Immediate="true" OnKeyDown="OnKeyDown" />
+            <MudTextField T="string" @bind-Value="_t.Code" Label="@Tr("IT_Code")" Variant="Variant.Outlined" MaxLength="500" Style="direction:ltr"
+                          Immediate="true" OnKeyDown="OnKeyDown" />
+            @if (_t.Id == 0)
+            {
+                <div class="full">
+                    <MudCheckBox T="bool" @bind-Value="_multi" Label="@Tr("MultipleAddLabel")" Color="Color.Primary" Dense="true" />
+                    @if (_multi) { <div class="ct-hint">@Tr("IC_MultiHint")</div> }
+                </div>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _open = false)">@Tr("Close")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_busy || string.IsNullOrWhiteSpace(_t.Name))" OnClick="SaveAsync">
+            @if (_busy) { <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" /> }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private readonly CarTypeService _svc = new();
+    private List<TypeRow> _rows = new();
+    private TypeRow _t = new();
+    private string? _search, _error, _dlgError;
+    private string _title = "";
+    private bool _loading = true, _busy, _open, _multi, _refocus;
+    private MudTextField<string>? _nameField;
+
+    private static bool InUse(TypeRow r) => r.Models_Count > 0 || r.Items_Count > 0 || r.Cars_Count > 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_refocus && _nameField is not null) { _refocus = false; await Task.Delay(60); await _nameField.FocusAsync(); }
+    }
+
+    // AutoFocus لا يعمل داخل MudDialog (مصيدة التركيز تأخذه)؛ ننتظر رسم الحوار ثم نركّز على الاسم
+    private async Task FocusSoonAsync()
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            await Task.Delay(80);
+            if (_nameField is null) continue;
+            try { await Task.Delay(120); await _nameField.FocusAsync(); } catch { }
+            return;
+        }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        string s = _search ?? "";
+        try { _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.ListTypes(s); }); }
+        catch (Exception ex) { _error = Inner(ex); _rows = new(); }
+        finally { _loading = false; }
+    }
+
+    private async Task OnSearchAsync(string? s) { _search = s; await LoadAsync(); }
+
+    private void OpenNew()
+    {
+        _t = new TypeRow();
+        _dlgError = null;
+        _nameField = null; _open = true;
+        _ = FocusSoonAsync();
+    }
+
+    private void OpenEdit(TypeRow r)
+    {
+        _t = new TypeRow { Id = r.Id, Name = r.Name, Name_En = r.Name_En, Code = r.Code };
+        _title = r.Name ?? "";
+        _dlgError = null;
+        _nameField = null; _open = true;
+        _ = FocusSoonAsync();
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || _busy) return;
+        await Task.Delay(150); // يترك آخر حرف مكتوب (Immediate) يصل للخادم قبل الحفظ
+        if (!string.IsNullOrWhiteSpace(_t.Name)) await SaveAsync();
+    }
+
+    private async Task SaveAsync()
+    {
+        _busy = true; _dlgError = null;
+        var t = _t; bool isNew = t.Id == 0;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.SaveType(t); });
+            Snackbar.Add(isNew ? Tr("ILAdded") : Tr("IU_Saved"), Severity.Success);
+            if (isNew && _multi) { _t = new TypeRow(); _refocus = true; }
+            else _open = false;
+            await LoadAsync();
+        }
+        catch (Exception ex) { _dlgError = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task DeleteAsync(TypeRow r)
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("Delete"), Tr("ILDeleteConfirm", r.Name ?? ""), yesText: Tr("Delete"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null;
+        long id = r.Id;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.DeleteType(id); });
+            Snackbar.Add(Tr("ILDeleted"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

@@ -475,7 +475,7 @@ namespace AccountModelsLib
 
                 mysql = mysql + @" FROM Invoices_List INNER JOIN
                          Customer ON Invoices_List.Customer_Id = Customer.Id INNER JOIN
-                         USER_DETAILES ON Invoices_List.User_Id = USER_DETAILES.USER_ID ";
+                         USER_DETAILES ON Invoices_List.User_Id = USER_DETAILES.Id ";
                 //mysql = mysql + " WHERE (Invoices_List.Invoice_Type = " + Invoice_Type + ") ";
                 mysql = mysql + " WHERE (Invoices_List.Is_DeletedProcessed <> 1) ";
                 //(Invoices_List.Id > 0  ) AND 
@@ -590,7 +590,7 @@ namespace AccountModelsLib
 
                 mysql = mysql + @" FROM Invoices_List INNER JOIN
                          Customer ON Invoices_List.Customer_Id = Customer.Id INNER JOIN
-                         USER_DETAILES ON Invoices_List.User_Id = USER_DETAILES.USER_ID ";
+                         USER_DETAILES ON Invoices_List.User_Id = USER_DETAILES.Id ";
                 //mysql = mysql + " WHERE (Invoices_List.Invoice_Type = " + Invoice_Type + ") ";
                 mysql = mysql + " WHERE (Invoices_List.Is_DeletedProcessed <> 1) ";
                 //(Invoices_List.Id > 0  ) AND 
@@ -702,7 +702,7 @@ namespace AccountModelsLib
                 //              ISNULL((SELECT SUM(Import_Value) - SUM(Export_Value) AS Expr1 FROM Money_Transaction_Box AS Money_Transaction_Box_1 WHERE (Invoice_Id = Invoices_List.Id)), 0) AS StillValues ";
                 mysql = mysql + @" FROM Invoices_List INNER JOIN
                          Customer ON Invoices_List.Customer_Id = Customer.Id INNER JOIN
-                         USER_DETAILES ON Invoices_List.User_Id = USER_DETAILES.USER_ID ";
+                         USER_DETAILES ON Invoices_List.User_Id = USER_DETAILES.Id ";
 
                 mysql = mysql + " WHERE (Invoices_List.Id > 0  ) ";
 
@@ -880,7 +880,7 @@ WHERE         (CarsWorkOrdersId = Invoices_List.CarsWorkOrdersId)), 0) AS Total_
 
                 mysql = mysql + @" FROM Invoices_List INNER JOIN
                          Customer ON Invoices_List.Customer_Id = Customer.Id INNER JOIN
-                         USER_DETAILES ON Invoices_List.User_Id = USER_DETAILES.USER_ID ";
+                         USER_DETAILES ON Invoices_List.User_Id = USER_DETAILES.Id ";
                 //mysql = mysql + " WHERE (Invoices_List.Invoice_Type = " + Invoice_Type + ") ";
                 mysql = mysql + " WHERE (Invoices_List.Id > 0  ) ";
                 mysql = mysql + " AND (Invoices_List.Is_DeletedProcessed = 0 ) ";
@@ -999,7 +999,7 @@ WHERE         (CarsWorkOrdersId = Invoices_List.CarsWorkOrdersId)), 0) AS Total_
                 string mysql = @" SELECT   '' as Serial,     USER_DETAILES.USER_NAME, USER_DETAILES.Name AS FullName, Customer.Id AS Customer_Id, Customer.Name, Invoices_List_Reverse.*
 FROM            Invoices_List_Reverse INNER JOIN
                          Customer ON Invoices_List_Reverse.Customer_Id = Customer.Id INNER JOIN
-                         USER_DETAILES ON Invoices_List_Reverse.User_Id = USER_DETAILES.USER_ID ";
+                         USER_DETAILES ON Invoices_List_Reverse.User_Id = USER_DETAILES.Id ";
 
 
                 //mysql = mysql + " WHERE (Invoices_List_Reverse.Invoice_Type = " + Invoice_Type + ") ";
@@ -1131,7 +1131,7 @@ FROM            Invoices_List_Reverse INNER JOIN
 
                 mysql = mysql + @" FROM            Invoices_List INNER JOIN
                          Customer ON Invoices_List.Customer_Id = Customer.Id INNER JOIN
-                         USER_DETAILES ON Invoices_List.User_Id = USER_DETAILES.USER_ID ";
+                         USER_DETAILES ON Invoices_List.User_Id = USER_DETAILES.Id ";
                 mysql = mysql + @" LEFT OUTER JOIN Money_Transaction_BoxForInvoices ON Invoices_List.ID = Money_Transaction_BoxForInvoices.Invoices_ListId ";
                 mysql = mysql + " WHERE   (Money_Transaction_BoxForInvoices.Money_Transaction_BoxId = " + Money_Transaction_BoxId + ") ";
                 mysql = mysql + " OR (Invoices_List.Is_DeletedProcessed <> 1) ";

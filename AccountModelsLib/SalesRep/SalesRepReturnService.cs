@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AccountModelsLib.Models;
+using AccountERP.SharedUI.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace AccountModelsLib.SalesRep
@@ -703,30 +704,11 @@ FROM Unit_item u JOIN Item i ON i.id = u.Item_id LEFT JOIN unit un ON un.id = u.
         /// <summary>إجماليات الرأس بنفس قواعد InvoiceLineCalculator.ComputeHeaderTotals (شاشة الفاتورة): خصم الرأس قيمة ثابتة هنا.</summary>
         private static void ComputeHeader(IInvoices_List h, List<IInvoices_Details> lines, bool taxPerItem)
         {
-            decimal total = lines.Sum(l => l.Qnty_value ?? 0), commission = lines.Sum(l => l.Net_Total_Item_Commission ?? 0), mola = lines.Sum(l => l.Total3Mola ?? 0);
-            h.Total = total;
-            h.Qnty_Value = total;
-            h.Total_Item_CommissionValue = commission;
-            h.List_Final_CommissionValue = h.List_CommissionValue ?? 0;
-            h.Net_Total_CommissionValue = h.List_Final_CommissionValue + commission;
-            h.Total_PriceWithoutTax = total - h.Net_Total_CommissionValue;
-            if (taxPerItem)
-            {
-                h.TaxSales10_Value = lines.Sum(l => l.Item_TaxSales10_Value ?? 0);
-                h.ATS05_Value = lines.Sum(l => l.Item_ATS05_Value ?? 0);
-            }
-            else
-            {
-                h.TaxSales10_Value = Common.RoundMePositive((h.Total_PriceWithoutTax ?? 0) * (h.TaxSales10 ?? 0) / 100);
-                h.ATS05_Value = Common.RoundMePositive((h.Total_PriceWithoutTax ?? 0) * (h.ATS05 ?? 0) / 100);
-            }
-            h.Total_List3Mola = mola;
-            decimal net = (h.Total_PriceWithoutTax ?? 0) + (h.TaxSales10_Value ?? 0) - (h.ATS05_Value ?? 0) + mola;
-            h.Net_Total = Common.RoundMePositive(net < 0 ? 0 : net);
-            h.NetInvoiceTotal = h.Net_Total;
-            h.Equivalent_Net_Total_Price = h.Net_Total;
-            h.Equivalent_Net_Total_CommissionValue = h.Net_Total_CommissionValue;
-            h.Total_PriceWithoutTax = Common.RoundMePositive(h.Total_PriceWithoutTax ?? 0);
+            // خصم رأس المرتجع قيمة ثابتة: نسبة صفر، وبلا مصاريف أخرى/شحن؛ الباقى محرك الفاتورة نفسه (توحيد المحرك 2026-10-17).
+            h.List_CommissionRate = 0;
+            h.AnotherPayment ??= 0;
+            h.Shipment_Value ??= 0;
+            InvoiceLineCalculator.ComputeHeaderTotals(h, lines, taxPerItem);
         }
 
         private static void ZeroNulls(IInvoices_List h)

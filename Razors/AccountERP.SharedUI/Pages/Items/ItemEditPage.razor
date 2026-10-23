@@ -3,7 +3,9 @@
    الصلاحيات 916/917 فى الخدمة. التصميم حسب ui-ux-pro-max ونظام inv-* المشترك.
    المرحلة 3: ملف النشاط من فئة الصنف (الشاشة الموحَّدة) أو ثابت من المسار /items/p/{Profile}؛ قسم الدواء (ملف أدوية)،
    قسم الفاتورة الإلكترونية (كل الملفات)، والتشغيلات والصلاحية للعرض فقط.
-   المرحلة 4: قسم المواصفات لملفات قطع غيار السيارات والسيراميك والزجاج (القيم من القوائم المرجعية، والاسم المقترح للزجاج). *@
+   خطة 05 بند 18: ملف النسيج (نوع الصنف = نوع المخزن، ووصف المقاس) والمخزن الرئيسى من مخازن نفس النوع.
+   المرحلة 4: قسم المواصفات لملفات قطع غيار السيارات والسيراميك والزجاج (القيم من القوائم المرجعية، والاسم المقترح للزجاج).
+   خطة 05 بند 17: بيانات القوائم المرجعية (المجموعة والطبيعة وقوائم المواصفات) تظهر لأصناف السيراميك فقط؛ السيارات رقم القطعة ونوع السيارة، والزجاج الأبعاد. *@
 @page "/items/new"
 @page "/items/{Id:long}"
 @page "/items/p/{Profile}/new"
@@ -17,6 +19,7 @@
 @inject LanguageService LangService
 @inject ISnackbar Snackbar
 @inject NavigationManager Nav
+@inject TabWorkspaceService TabWorkspace
 @implements IDisposable
 
 <PageTitle>@(_isNew ? Tr(NewTitleKey) : _f.Name)</PageTitle>
@@ -101,6 +104,8 @@
                        ToStringFunc="@(id => _lk!.Categories.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
                 @foreach (var c in _lk!.Categories) { <MudSelectItem T="long" Value="c.Id">@c.Name</MudSelectItem> }
             </MudSelect>
+            @if (Lookups)
+            {
             <MudSelect T="long" @bind-Value="_f.Group_Id" Label="@Tr("IL_groups")" Variant="Variant.Outlined" Clearable="true"
                        ToStringFunc="@(id => _lk!.Groups.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
                 @foreach (var c in _lk!.Groups) { <MudSelectItem T="long" Value="c.Id">@c.Name</MudSelectItem> }
@@ -109,6 +114,7 @@
                        ToStringFunc="@(id => _lk!.Natures.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
                 @foreach (var c in _lk!.Natures) { <MudSelectItem T="long" Value="c.Id">@c.Name</MudSelectItem> }
             </MudSelect>
+            }
             <MudTextField T="string" @bind-Value="_f.Barcode2" Label="@Tr("IT_Barcode2")" Variant="Variant.Outlined" MaxLength="100" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.QrCode2" />
             <MudTextField T="string" @bind-Value="_f.Barcode3" Label="@Tr("IT_Barcode3")" Variant="Variant.Outlined" MaxLength="100" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.QrCode2" />
             <div class="ie-row full">
@@ -223,11 +229,6 @@
                            ToStringFunc="@(id => id == 0 ? string.Empty : _lk!.Car_Types.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
                     @foreach (var c in _lk!.Car_Types) { <MudSelectItem T="long" Value="c.Id">@c.Name</MudSelectItem> }
                 </MudSelect>
-                @SpecSelect("descriptions", "IT_SpecDesc", _f.Description_Id, v => _f.Description_Id = v)
-                @SpecSelect("other-names", "IT_SpecOther", _f.Other_Description_Id, v => _f.Other_Description_Id = v)
-                @SpecSelect("sizes", "IT_SpecSize", _f.Size_Id, v => _f.Size_Id = v)
-                @SpecSelect("colors", "IT_SpecColor", _f.Color_Id, v => _f.Color_Id = v)
-                @SpecSelect("degrees", "IT_SpecDegree", _f.Degree_Id, v => _f.Degree_Id = v)
             }
             else if (EffectiveProfile == "ceramics")
             {
@@ -238,10 +239,6 @@
                 @SpecSelect("degrees", "IT_SpecDegree", _f.Degree_Id, v => _f.Degree_Id = v)
                 @SpecSelect("descriptions", "IT_SpecDesc", _f.Description_Id, v => _f.Description_Id = v)
                 @SpecSelect("other-names", "IT_SpecOther", _f.Other_Description_Id, v => _f.Other_Description_Id = v)
-            }
-            else
-            {
-                @SpecSelect("types", "IT_SpecType", _f.Type_Id, v => _f.Type_Id = v)
             }
         </div>
         @if (EffectiveProfile != "cars")
@@ -268,10 +265,30 @@
         {
             <div class="ie-row"><MudSwitch T="bool" @bind-Value="_f.Hide_On_Invoice" Color="Color.Primary" Label="@Tr("IT_HideOnInvoice")" /></div>
         }
+        @if (EffectiveProfile != "glass")
+        {
         <div class="ie-note">
             <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Style="vertical-align:middle" /> @Tr("IT_SpecsHelp")
-            <MudLink Href="@(EffectiveProfile == "cars" && _lk!.Car_Types.Count == 0 ? "/items/lookups/car-types" : "/items/lookups/types")" Class="ms-1">@Tr("IT_ManageLists")</MudLink>
+            <MudLink Href="@(EffectiveProfile == "cars" && _lk!.Car_Types.Count == 0 ? "/cars/types" : "/items/lookups/types")" Class="ms-1">@Tr("IT_ManageLists")</MudLink>
         </div>
+        }
+    </section>
+    }
+
+    @* ===== النسيج: نوع الصنف حسب نوع المخزن ووصف المقاس ===== *@
+    @if (EffectiveProfile == "textile")
+    {
+    <section class="inv-card ie-gap" aria-labelledby="ie-textile">
+        <h2 class="inv-card-title" id="ie-textile"><MudIcon Icon="@Icons.Material.Filled.Texture" />@Tr("IT_Textile")</h2>
+        <div class="ie-grid">
+            <MudSelect T="int" Value="_f.Store_Used_Type" ValueChanged="OnTextileTypeChanged" Label="@Tr("IT_TextileType")" Variant="Variant.Outlined" Required="true"
+                       Disabled="@(!_isNew && _locked)" HelperText="@(!_isNew && _locked ? Tr("IT_TextileLocked") : null)" ToStringFunc="@(t => Tr("IT_TT" + t))">
+                @for (int t = 1; t <= 4; t++) { var k = t; <MudSelectItem T="int" Value="k">@Tr("IT_TT" + k)</MudSelectItem> }
+            </MudSelect>
+            <MudTextField T="string" @bind-Value="_f.Size_Description" Label="@Tr("IT_SizeDesc")" Variant="Variant.Outlined" MaxLength="1000" Class="span2"
+                          HelperText="@Tr("IT_SizeDescHelp")" />
+        </div>
+        <div class="ie-note"><MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Style="vertical-align:middle" /> @Tr("IT_TextileHelp")</div>
     </section>
     }
 
@@ -302,9 +319,9 @@
         {
             <div class="ie-grid">
                 <MudSelect T="long" @bind-Value="_f.Store_Id" Label="@Tr("IT_MainStore")" Variant="Variant.Outlined" Required="true"
-                           HelperText="@(_lk!.All_Stores ? Tr("IT_AllStoresNote") : null)"
+                           HelperText="@(FormStores.Count == 0 ? Tr("IT_NoStoreOfType") : _lk!.All_Stores ? Tr("IT_AllStoresNote") : null)" Error="@(FormStores.Count == 0)"
                            ToStringFunc="@(id => _lk!.Stores.FirstOrDefault(s => s.Id == id)?.Name ?? string.Empty)">
-                    @foreach (var s in _lk!.Stores) { <MudSelectItem T="long" Value="s.Id">@s.Name</MudSelectItem> }
+                    @foreach (var s in FormStores) { <MudSelectItem T="long" Value="s.Id">@s.Name</MudSelectItem> }
                 </MudSelect>
             </div>
             @if (!_f.Without_Balance && _f.Item_Or_Service != 2)
@@ -396,6 +413,8 @@
 @code {
     [Parameter] public long? Id { get; set; }
     [SupplyParameterFromQuery(Name = "kind")] public string? KindQuery { get; set; }
+    /// <summary>نوع صنف النسيج من القائمة (?type=1..4).</summary>
+    [SupplyParameterFromQuery(Name = "type")] public int? TypeQuery { get; set; }
     [Parameter] public string? Profile { get; set; }
 
     private readonly ItemEditorService _svc = new();
@@ -417,7 +436,12 @@
     private string EffectiveProfile => _routeProfile.Length > 0 && _f.Item_Or_Service != 2 ? _routeProfile
         : ResolveProfile(_lk?.Categories.FirstOrDefault(c => c.Id == _f.Category_Id)?.Profile, _f.Item_Or_Service);
     private bool Pharm => IsPharmacy(EffectiveProfile);
+    /// <summary>مخازن الصنف الجديد: لصنف النسيج المخازن من نفس نوعه فقط (كالديسك توب Store_DataByStoreUsed_Type)، وإلا كل المخازن.</summary>
+    private List<Option> FormStores => EffectiveProfile == "textile"
+        ? _lk!.Stores.Where(s => _lk.Store_Types.GetValueOrDefault(s.Id, 1) == _f.Store_Used_Type).ToList() : _lk!.Stores;
     private bool Specs => EffectiveProfile is "cars" or "ceramics" or "glass";
+    /// <summary>بيانات القوائم المرجعية (/items/lookups: المجموعة والطبيعة والمواصفات) لأصناف السيراميك فقط؛ القيم المحفوظة لغيرها تبقى كما هى عند الحفظ.</summary>
+    private bool Lookups => EffectiveProfile == "ceramics";
     private string SpecIcon => EffectiveProfile switch { "cars" => Icons.Material.Filled.CarRepair, "glass" => Icons.Material.Filled.Window, _ => Icons.Material.Filled.GridOn };
     private string GlassName => SuggestGlassName(_f.Thickness, _f.Thickness_Unit, SpecName("types", _f.Type_Id), _f.Width, _f.Height);
     private string SpecName(string kind, long id) => id == 0 ? "" : _lk?.Specs.GetValueOrDefault(kind)?.FirstOrDefault(o => o.Id == id)?.Name ?? "";
@@ -435,7 +459,7 @@
     private string ListHref => _routeProfile.Length > 0 ? Prefix : $"/items{(_f.Item_Or_Service == 2 ? "?kind=services" : "")}";
 
     private static string ProfileKey(string p) => p switch { "pharmacy" or "pharmacy-retail" => "IC_ProfilePharmacy", "services" => "IC_Services",
-        "cars" => "IC_ProfileCars", "ceramics" => "IC_ProfileCeramics", "glass" => "IC_ProfileGlass", _ => "IC_ProfileGeneral" };
+        "cars" => "IC_ProfileCars", "ceramics" => "IC_ProfileCeramics", "glass" => "IC_ProfileGlass", "textile" => "IC_ProfileTextile", _ => "IC_ProfileGeneral" };
 
     private static (string, Color) ExpiryState(DateTime? d)
     {
@@ -480,8 +504,18 @@
         };
         // ملف أدوية ثابت: الفئة الافتراضية الأولى ذات ملف أدوية إن وُجدت
         string catProfile = IsPharmacy(_routeProfile) ? "pharmacy" : _routeProfile;
-        if (catProfile is "pharmacy" or "cars" or "ceramics" or "glass" && _lk.Categories.FirstOrDefault(c => c.Profile == catProfile) is { } pc) _f.Category_Id = pc.Id;
+        if (catProfile is "pharmacy" or "cars" or "ceramics" or "glass" or "textile" && _lk.Categories.FirstOrDefault(c => c.Profile == catProfile) is { } pc) _f.Category_Id = pc.Id;
+        // لا فئة افتراضية: أول فئة من نفس النوع (أصناف/خدمات)، كالإضافة السريعة
+        if (_f.Category_Id == 0) _f.Category_Id = _lk.Categories.FirstOrDefault(c => kind == 2 ? c.Item_Or_Service != 1 : c.Item_Or_Service != 2)?.Id ?? 0;
         if (_routeProfile == "glass") _f.Thickness_Unit = "مم";
+        if (_routeProfile == "textile") OnTextileTypeChanged(TypeQuery is >= 1 and <= 4 ? TypeQuery.Value : 1);
+    }
+
+    /// <summary>تغيير نوع صنف النسيج يعيد اختيار المخزن الرئيسى من مخازن نفس النوع.</summary>
+    private void OnTextileTypeChanged(int t)
+    {
+        _f.Store_Used_Type = t;
+        if (_isNew && FormStores.All(s => s.Id != _f.Store_Id)) _f.Store_Id = FormStores.FirstOrDefault()?.Id ?? 0;
     }
 
     private void OnRetailChanged(bool v)
@@ -526,7 +560,13 @@
             long id = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Save(f); });
             Snackbar.Add(isNew ? Tr("IT_Added") : Tr("IU_Saved"), Severity.Success);
             if (isNew && andNew) { NewForm(f.Item_Or_Service); }
-            else if (isNew) Nav.NavigateTo($"{Prefix}/{id}");
+            else if (isNew)
+            {
+                // تبويب «صنف جديد» يبقى حياً (KeepPanelsAlive) ببياناته؛ نغلقه حتى لا يُحفظ نفس الصنف مرتين منه (كالفواتير)
+                var oldRelative = Nav.ToBaseRelativePath(Nav.Uri);
+                Nav.NavigateTo($"{Prefix}/{id}", replace: true);
+                CloseStaleNewTab(oldRelative);
+            }
             else
             {
                 var d = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Get(id); });
@@ -535,6 +575,14 @@
         }
         catch (Exception ex) { _error = Inner(ex); }
         finally { _busy = false; }
+    }
+
+    private void CloseStaleNewTab(string relativeWithQuery)
+    {
+        var parts = relativeWithQuery.Split('?', 2);
+        var key = "/" + parts[0].Trim('/');
+        TabWorkspace.Close(key);
+        if (parts.Length > 1 && parts[1].Length > 0) TabWorkspace.Close(key + "?" + parts[1]);
     }
 
     private async Task AddToStoreAsync()

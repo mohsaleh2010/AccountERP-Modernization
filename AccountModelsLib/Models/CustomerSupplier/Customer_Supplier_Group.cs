@@ -14,8 +14,8 @@ namespace AccountModelsLib.Models
     using System.ComponentModel.DataAnnotations;
     //using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations.Schema;
-
-    public partial class Customer_Supplier_Group
+    [Table("Customer_Supplier_Group")]
+    public   class Customer_Supplier_Group
     {
         [Key]
         public long ID { get; set; }

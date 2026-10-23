@@ -1,0 +1,251 @@
+@* 🟢 خطة 05 بند 19: موديلات السيارات (Lookup_CarTypeModel) تحت قائمة السيارات. تصفية بالنوع (?type=) وبحث بالاسم، وعدد السيارات لكل موديل؛
+   الإضافة والتعديل من نافذة منبثقة (الاسم ونوع السيارة) مع إضافة متعددة تُبقي النوع للموديل التالي؛ الحذف لغير المستعمل فقط.
+   التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@page "/cars/models"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.CarTypeService
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@implements IDisposable
+
+<PageTitle>@Tr("CM_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .cm-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .cm-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .cm-head .ico .mud-icon-root { font-size: 2rem; }
+    .cm-head .titles { flex: 1 1 260px; }
+    .cm-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .cm-head .acts { display: flex; flex-wrap: wrap; gap: 8px; }
+    .cm-head .mud-button-root { min-height: 44px; }
+    .cm-gap { margin-top: 16px; }
+    .cm-filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 12px 16px; align-items: start; }
+    .cm-num { font-variant-numeric: tabular-nums; }
+    .cm-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .cm-empty .mud-icon-root { opacity: .5; }
+    .cm-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px 16px; }
+    .cm-hint { margin-top: 4px; font-size: .8rem; color: var(--mud-palette-text-secondary); }
+    @@media (max-width: 699px) { .cm-filters { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card cm-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.ViewList" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("CM_Title")</h1>
+            <div class="sub">@Tr("CM_Sub")</div>
+        </div>
+        <div class="acts">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.DirectionsCar" Href="/cars/types">@Tr("CT_Title")</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="@(_types.Count == 0)" OnClick="OpenNew">@Tr("CM_New")</MudButton>
+        </div>
+    </div>
+
+    @if (!_loading && _types.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Class="cm-gap" role="status">@Tr("CM_NoTypes") <MudLink Href="/cars/types" Class="ms-1">@Tr("CT_Title")</MudLink></MudAlert>
+    }
+
+    <div class="inv-card cm-gap">
+        <div class="cm-filters">
+            <MudSelect T="long" Value="_typeId" ValueChanged="OnTypeAsync" Label="@Tr("IT_CarType")" Variant="Variant.Outlined"
+                       ToStringFunc="@(id => id == 0 ? Tr("IT_AllTypes") : _types.FirstOrDefault(t => t.Id == id)?.Name ?? string.Empty)">
+                <MudSelectItem T="long" Value="0L">@Tr("IT_AllTypes")</MudSelectItem>
+                @foreach (var t in _types) { <MudSelectItem T="long" Value="t.Id">@t.Name</MudSelectItem> }
+            </MudSelect>
+            <MudTextField T="string" Value="_search" ValueChanged="OnSearchAsync" Label="@Tr("ILSearch")" Variant="Variant.Outlined" Immediate="true" DebounceInterval="300"
+                          Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+        </div>
+        @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-3" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+    </div>
+
+    <div class="inv-card cm-gap">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@(_typeId == 0 ? Tr("CM_Title") : Tr("CT_ModelsOf", _types.FirstOrDefault(t => t.Id == _typeId)?.Name ?? ""))<span class="inv-count">@_rows.Count</span></h2>
+        <MudTable Items="@_rows" T="ModelRow" Hover="true" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Loading="_loading" LoadingProgressColor="Color.Primary">
+            <HeaderContent>
+                <MudTh>@Tr("CM_Name")</MudTh>
+                @if (_typeId == 0) { <MudTh>@Tr("IT_CarType")</MudTh> }
+                <MudTh Style="text-align:end">@Tr("CT_CarsCount")</MudTh>
+                <MudTh Style="width:110px"></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("CM_Name")"><strong>@context.Name</strong></MudTd>
+                @if (_typeId == 0) { <MudTd DataLabel="@Tr("IT_CarType")">@context.Type_Name</MudTd> }
+                <MudTd DataLabel="@Tr("CT_CarsCount")" Style="text-align:end"><span class="cm-num">@context.Cars_Count</span></MudTd>
+                <MudTd Style="white-space:nowrap">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="@Tr("IU_EditAria", context.Name)" OnClick="@(() => OpenEdit(context))" />
+                    <MudTooltip Text="@(context.Cars_Count > 0 ? Tr("CT_UsedNoDelete") : Tr("Delete"))">
+                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Color="Color.Error" aria-label="@Tr("Delete")" Disabled="@(_busy || context.Cars_Count > 0)" OnClick="@(() => DeleteAsync(context))" />
+                    </MudTooltip>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="cm-empty"><MudIcon Icon="@Icons.Material.Filled.ViewList" Size="Size.Large" /><span>@Tr("CM_Empty")</span></div>
+            </NoRecordsContent>
+        </MudTable>
+    </div>
+</div>
+</MudContainer>
+
+<MudDialog @bind-Visible="_open"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@(_m.Id == 0 ? Tr("CM_New") : Tr("IU_Edit", _title))</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_dlgError)) { <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3" role="alert">@_dlgError</MudAlert> }
+        <div class="cm-form">
+            <MudSelect T="long" @bind-Value="_m.Type_Id" Label="@Tr("IT_CarType")" Variant="Variant.Outlined" Required="true"
+                       ToStringFunc="@(id => _types.FirstOrDefault(t => t.Id == id)?.Name ?? string.Empty)">
+                @foreach (var t in _types) { <MudSelectItem T="long" Value="t.Id">@t.Name</MudSelectItem> }
+            </MudSelect>
+            <MudTextField T="string" @bind-Value="_m.Name" Label="@Tr("CM_Name")" Variant="Variant.Outlined" Required="true" MaxLength="500"
+                          Immediate="true" @ref="_nameField" OnKeyDown="OnKeyDown" />
+            @if (_m.Id == 0)
+            {
+                <div>
+                    <MudCheckBox T="bool" @bind-Value="_multi" Label="@Tr("MultipleAddLabel")" Color="Color.Primary" Dense="true" />
+                    @if (_multi) { <div class="cm-hint">@Tr("CM_MultiHint")</div> }
+                </div>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _open = false)">@Tr("Close")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_busy || !Ready)" OnClick="SaveAsync">
+            @if (_busy) { <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" /> }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [SupplyParameterFromQuery(Name = "type")] public long? TypeQuery { get; set; }
+
+    private readonly CarTypeService _svc = new();
+    private List<TypeRow> _types = new();
+    private List<ModelRow> _rows = new();
+    private ModelRow _m = new();
+    private long _typeId;
+    private string? _search, _error, _dlgError;
+    private string _title = "";
+    private bool _loading = true, _busy, _open, _multi, _refocus;
+    private MudTextField<string>? _nameField;
+
+    private bool Ready => !string.IsNullOrWhiteSpace(_m.Name) && _m.Type_Id != 0;
+
+    protected override void OnInitialized() => LangService.OnLanguageChanged += OnLanguageChangedHandler;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try { _types = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.ListTypes(""); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+        _typeId = TypeQuery is long t && _types.Any(x => x.Id == t) ? t : 0;
+        await LoadAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_refocus && _nameField is not null) { _refocus = false; await Task.Delay(60); await _nameField.FocusAsync(); }
+    }
+
+    // AutoFocus لا يعمل داخل MudDialog (مصيدة التركيز تأخذه)؛ ننتظر رسم الحوار ثم نركّز على الاسم
+    private async Task FocusSoonAsync()
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            await Task.Delay(80);
+            if (_nameField is null) continue;
+            try { await Task.Delay(120); await _nameField.FocusAsync(); } catch { }
+            return;
+        }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        long t = _typeId; string s = _search ?? "";
+        try { _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.ListModels(t, s); }); }
+        catch (Exception ex) { _error = Inner(ex); _rows = new(); }
+        finally { _loading = false; }
+    }
+
+    private async Task OnTypeAsync(long t) { _typeId = t; await LoadAsync(); }
+    private async Task OnSearchAsync(string? s) { _search = s; await LoadAsync(); }
+
+    private void OpenNew()
+    {
+        _m = new ModelRow { Type_Id = _typeId != 0 ? _typeId : _types.FirstOrDefault()?.Id ?? 0 };
+        _dlgError = null;
+        _nameField = null; _open = true;
+        _ = FocusSoonAsync();
+    }
+
+    private void OpenEdit(ModelRow r)
+    {
+        _m = new ModelRow { Id = r.Id, Name = r.Name, Type_Id = r.Type_Id };
+        _title = r.Name ?? "";
+        _dlgError = null;
+        _nameField = null; _open = true;
+        _ = FocusSoonAsync();
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || _busy) return;
+        await Task.Delay(150); // يترك آخر حرف مكتوب (Immediate) يصل للخادم قبل الحفظ
+        if (Ready) await SaveAsync();
+    }
+
+    private async Task SaveAsync()
+    {
+        _busy = true; _dlgError = null;
+        var m = _m; bool isNew = m.Id == 0;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.SaveModel(m); });
+            Snackbar.Add(isNew ? Tr("ILAdded") : Tr("IU_Saved"), Severity.Success);
+            // الإضافة المتعددة: يبقى النوع للموديل التالي
+            if (isNew && _multi) { _m = new ModelRow { Type_Id = m.Type_Id }; _refocus = true; }
+            else _open = false;
+            await LoadAsync();
+        }
+        catch (Exception ex) { _dlgError = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task DeleteAsync(ModelRow r)
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("Delete"), Tr("ILDeleteConfirm", r.Name ?? ""), yesText: Tr("Delete"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null;
+        long id = r.Id;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.DeleteModel(id); });
+            Snackbar.Add(Tr("ILDeleted"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

@@ -229,7 +229,7 @@ namespace AccountModelsLib
                 return query;
 
             // تجهيز القيمة وتنسيقها (إضافة ' ' إذا كانت نصية)
-            string formattedIdValue = int.TryParse(newIdValue, out _) ? newIdValue : $"'{newIdValue}'";
+            string formattedIdValue = long.TryParse(newIdValue, out _) ? newIdValue : $"'{newIdValue}'";
 
             string tableName = string.Empty;
             string finalSqlQuery = string.Empty;

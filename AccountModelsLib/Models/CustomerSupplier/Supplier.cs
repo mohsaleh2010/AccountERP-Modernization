@@ -28,6 +28,8 @@ namespace AccountModelsLib.Models
         public decimal? Balance { get; set; }
         public decimal? Balance_Actual { get; set; }
         public int? Supplier_Type { get; set; }
+        // 1 = shipment company (a service supplier with an account of type 65); NULL/0 = regular supplier
+        public int? IS_ShipmentCompany { get; set; }
         
         public int? Active { get; set; }
         public long? SubAccount_Id { get; set; }

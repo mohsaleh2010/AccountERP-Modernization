@@ -100,7 +100,7 @@ namespace AccountERP.SalesRepApp.Core
             foreach (var l in s.Lines)
             {
                 var item = Item(l.Unit_Item_Id) ?? new ItemRow { Item_Name = "صنف", Factor = 1 };
-                var c = Calc(l, item.Factor);
+                var c = Calc(l, item.Factor, Decimals);
                 value += c.Value; disc += c.Discount; tax += c.Tax; net += c.Net;
                 r.Line(item.Item_Name, bold: true).Pair($"{Format(c.QtySmall, item)} × {N2(l.Unit_Price)}", N2(c.Value));
                 if (c.Discount > 0) r.Pair("خصم", "-" + N2(c.Discount));

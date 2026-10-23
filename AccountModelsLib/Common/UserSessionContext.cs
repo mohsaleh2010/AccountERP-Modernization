@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace AccountModelsLib
@@ -31,6 +34,50 @@ namespace AccountModelsLib
         {
             get => _current.Value;
             set => _current.Value = value;
+        }
+
+        /// <summary>
+        /// يضبطها مضيف متعدد المستخدمين (الويب وواجهة الموبايل) بعد انتهاء التهيئة؛ بعدها أى وصول لقيم المستخدم بلا جلسة
+        /// يعنى كوداً يعمل خارج دائرة/طلب مستخدم، فقيمته ستكون قيمة العملية لا مستخدماً حقيقياً.
+        /// الويندوز فورمز والموبايل الهجين (مستخدم واحد) لا تضبطها فيبقى السلوك القديم كما هو.
+        /// </summary>
+        public static bool IsMultiUserHost { get; set; }
+
+        /// <summary>جهة تسجيل القراءة بلا جلسة (المضيف يربطها بالـ Logger)؛ كل موضع استدعاء يُسجَّل مرة واحدة فقط.</summary>
+        public static Action<string> MisuseReporter { get; set; }
+
+        private static readonly ConcurrentDictionary<string, byte> _reportedSites = new ConcurrentDictionary<string, byte>();
+
+        /// <summary>جلسة القراءة لخاصية فى Common؛ بلا جلسة فى مضيف متعدد المستخدمين تُسجَّل ثم تُرجع null (قيمة العملية) كالأصل.</summary>
+        internal static UserSession ForRead([CallerMemberName] string property = "")
+        {
+            var s = _current.Value;
+            if (s == null && IsMultiUserHost)
+            {
+                string stack = Environment.StackTrace;
+                if (_reportedSites.TryAdd(property + "|" + stack, 0))
+                {
+                    try
+                    {
+                        (MisuseReporter ?? (m => Debug.WriteLine(m)))(
+                            "Common." + property + " قُرئت خارج جلسة مستخدم فى مضيف متعدد المستخدمين - القيمة ليست لمستخدم حقيقى." + Environment.NewLine + stack);
+                    }
+                    catch { }
+                }
+            }
+            return s;
+        }
+
+        /// <summary>جلسة الكتابة لخاصية فى Common؛ الكتابة بلا جلسة فى مضيف متعدد المستخدمين كانت ستغيّر القيمة لكل المستخدمين فتُرفض.</summary>
+        internal static UserSession ForWrite([CallerMemberName] string property = "")
+        {
+            var s = _current.Value;
+            if (s == null && IsMultiUserHost)
+            {
+                throw new InvalidOperationException(
+                    "لا يجوز ضبط Common." + property + " خارج جلسة مستخدم فى الويب/الموبايل - كانت ستتغير لكل المستخدمين المتصلين.");
+            }
+            return s;
         }
 
         /// <summary>يضبط الجلسة لكتلة كود ثم يعيد السابقة (للخدمات الخلفية والاختبارات).</summary>

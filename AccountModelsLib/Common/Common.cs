@@ -36,8 +36,8 @@ namespace AccountModelsLib
         private static int _Is_Force_Admin_Permission = 0;
         public static int Is_Force_Admin_Permission
         {
-            get { var s = UserSessionContext.Current; return s != null ? s.Is_Force_Admin_Permission : _Is_Force_Admin_Permission; }
-            set { var s = UserSessionContext.Current; if (s != null) s.Is_Force_Admin_Permission = value; else _Is_Force_Admin_Permission = value; }
+            get { var s = UserSessionContext.ForRead(); return s != null ? s.Is_Force_Admin_Permission : _Is_Force_Admin_Permission; }
+            set { var s = UserSessionContext.ForWrite(); if (s != null) s.Is_Force_Admin_Permission = value; else _Is_Force_Admin_Permission = value; }
         }
         public static DataTable dtUnit = new DataTable();
         public static int Project_GeneralAccounts = 0;
@@ -56,33 +56,33 @@ namespace AccountModelsLib
         private static int _Is_User_Admin = 1;
         public static int Is_User_Admin
         {
-            get { var s = UserSessionContext.Current; return s != null ? s.Is_User_Admin : _Is_User_Admin; }
-            set { var s = UserSessionContext.Current; if (s != null) s.Is_User_Admin = value; else _Is_User_Admin = value; }
+            get { var s = UserSessionContext.ForRead(); return s != null ? s.Is_User_Admin : _Is_User_Admin; }
+            set { var s = UserSessionContext.ForWrite(); if (s != null) s.Is_User_Admin = value; else _Is_User_Admin = value; }
         }
         private static long _User_Id = 1;
         public static long User_Id
         {
-            get { var s = UserSessionContext.Current; return s != null ? s.User_Id : _User_Id; }
-            set { var s = UserSessionContext.Current; if (s != null) s.User_Id = value; else _User_Id = value; }
+            get { var s = UserSessionContext.ForRead(); return s != null ? s.User_Id : _User_Id; }
+            set { var s = UserSessionContext.ForWrite(); if (s != null) s.User_Id = value; else _User_Id = value; }
         }
         private static long _Branch_Id = 1;
         public static long Branch_Id
         {
-            get { var s = UserSessionContext.Current; return s != null ? s.Branch_Id : _Branch_Id; }
-            set { var s = UserSessionContext.Current; if (s != null) s.Branch_Id = value; else _Branch_Id = value; }
+            get { var s = UserSessionContext.ForRead(); return s != null ? s.Branch_Id : _Branch_Id; }
+            set { var s = UserSessionContext.ForWrite(); if (s != null) s.Branch_Id = value; else _Branch_Id = value; }
         }
         public static int Tax_BranchesId = 1;
         private static string _User_Name = "Admin";
         public static string User_Name
         {
-            get { var s = UserSessionContext.Current; return s != null ? s.User_Name : _User_Name; }
-            set { var s = UserSessionContext.Current; if (s != null) s.User_Name = value; else _User_Name = value; }
+            get { var s = UserSessionContext.ForRead(); return s != null ? s.User_Name : _User_Name; }
+            set { var s = UserSessionContext.ForWrite(); if (s != null) s.User_Name = value; else _User_Name = value; }
         }
         private static string _FullUserName = "Admin";
         public static string FullUserName
         {
-            get { var s = UserSessionContext.Current; return s != null ? s.FullUserName : _FullUserName; }
-            set { var s = UserSessionContext.Current; if (s != null) s.FullUserName = value; else _FullUserName = value; }
+            get { var s = UserSessionContext.ForRead(); return s != null ? s.FullUserName : _FullUserName; }
+            set { var s = UserSessionContext.ForWrite(); if (s != null) s.FullUserName = value; else _FullUserName = value; }
         }
 
         /// <summary>نسخة من قيم العملية الثابتة (لا الجلسة) لبدء جلسة جديدة.</summary>
@@ -725,8 +725,8 @@ namespace AccountModelsLib
         private static int _IsAdministration_AlterDBLogin = 0;
         public static int IsAdministration_AlterDBLogin
         {
-            get { var s = UserSessionContext.Current; return s != null ? s.IsAdministration_AlterDBLogin : _IsAdministration_AlterDBLogin; }
-            set { var s = UserSessionContext.Current; if (s != null) s.IsAdministration_AlterDBLogin = value; else _IsAdministration_AlterDBLogin = value; }
+            get { var s = UserSessionContext.ForRead(); return s != null ? s.IsAdministration_AlterDBLogin : _IsAdministration_AlterDBLogin; }
+            set { var s = UserSessionContext.ForWrite(); if (s != null) s.IsAdministration_AlterDBLogin = value; else _IsAdministration_AlterDBLogin = value; }
         }
         public static int IsMake_AlterDBLogin = 1;
 
@@ -822,8 +822,11 @@ namespace AccountModelsLib
         public static int Account_Type_ForInventoryAdjustment = 62;     // حساب تسويات وتسفية العجز والزيادة بالمخزون
         public static int Account_Type_ForPurchasePriceVariance = 63;   // حساب فروق أسعار الشراء (PPV)
         public static int Account_Type_ForOpeningBalanceEquity { get; set; } = 64; //(أو حساب حقوق الملكية الافتتاحي) حساب الأرصدة الافتتاحية (Opening Balance Equity)
+        public static int Account_Type_ForShippmentCompanyAsServicesSupplier { get; set; } = 65; //حساب شركات الشحن موردى خدمات
 
-        public static long Journal_Code_ForSandouk_Sarf = 3;
+
+
+        public static int Journal_Code_ForSandouk_Sarf = 3;
         public static long Journal_Code_ForSandouk_Estlam = 2;
         public static long Journal_Code_ForSandouk = 2;
         public static int job_list_Id_SalesMan = 100;
@@ -1917,7 +1920,7 @@ namespace AccountModelsLib
 
         public static string GetUserName(long USER_ID, long Branch_Id)
         {
-            string mysql = " Select * from USER_DETAILES where USER_ID=" + USER_ID + "";
+            string mysql = " Select * from USER_DETAILES where Id=" + USER_ID + "";
             if (Branch_Id > 0)
             {
                 mysql = mysql + " And Branch_Id=" + Branch_Id + "";

@@ -504,6 +504,7 @@ namespace AccountModelsLib
         public DbSet<Unit_item> Unit_item { get; set; }
         public DbSet<Items> Item { get; set; }
         public DbSet<Store> Stores { get; set; }
+        public DbSet<Store_Account_Determination> Store_Account_Determination { get; set; }
     
         public DbSet<Draws_List> DrawsLists { get; set; }
         public DbSet<SupplierPrice> SupplierPrice { get; set; }
@@ -599,7 +600,7 @@ namespace AccountModelsLib
 
         public DbSet<Machin_list> Machin_list { get; set; }
         public DbSet<ShipmentCompany> ShipmentCompany { get; set; }
-        public DbSet<Customer_Supplier_Group> Customer_Supplier_Groups { get; set; }
+        public DbSet<Customer_Supplier_Group> Customer_Supplier_Group { get; set; }
         public DbSet<Item_BarCodeSetting> Item_BarCodeSetting { get; set; }
         public DbSet<Item_BarCodeSettingDefault> Item_BarCodeSettingDefault { get; set; }
 

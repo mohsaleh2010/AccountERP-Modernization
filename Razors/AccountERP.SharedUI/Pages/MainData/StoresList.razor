@@ -3,8 +3,9 @@
 @* 🟢 النسخة Blazor من Store_LIB.Store_ListFrm (WinForms، فى Store_LIB\Copy of Store) - عنصر القائمة «قائمة المخازن» (SysConfigMenus 389).
    الشاشة الأصلية: قائمة منسدلة بمخازن الفرع الحالى + حقول (نوع المخزن، النوع الرئيسى، الكود، الاسم، المكان، أمين المخزن) + خمسة أعلام + أزرار
    (مخزن جديد/إضافة/تعديل/حذف/تفريغ). هنا جدول بمخازن الفرع الحالى + حوار إضافة/تعديل واحد بزر «حفظ» + حذف + تفريغ الأصناف.
-   كود الأعمال فى AccountModelsLib.Models.StoresGridCLS (جديد) فوق StoreCLS/Sub_Account القائمتين. أُصلح فيه بموافقة المستخدم: نوع حساب المخزن عند
-   الإضافة/الحذف (الأصل يفشل فى حسابه)، والتعديل لا يمسح SubAccount_Id، و«تفريغ» لا يحذف المخزن نفسه، ومنع تكرار الاسم فى نفس الفرع.
+   كود الأعمال فى AccountModelsLib.Models.StoreCLS - نفس الكلاس الذى تستخدمه شاشة الويندوز فورمز (دُمج فيه StoresGridCLS السابق). أُصلح فيه:
+   نوع حساب المخزن (النوع 1 كان يأخذ حساب WIP)، والتعديل لا يمسح SubAccount_Id، و«تفريغ» لا يحذف المخزن نفسه، ومنع تكرار الاسم فى نفس الفرع،
+   والحذف يتحقق قبل حذف الحساب. فلتر نوع المخزن فى رأس الشاشة يصفّى الجدول فوراً (بلا طلب جديد للخادم).
    أمين المخزن نص حر (Emp_id=Job_id=0 دائماً فى الأصل). *@
 
 @using System.Data
@@ -24,9 +25,20 @@
     <MudPaper Class="pa-4 mb-4" Elevation="1">
         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
             <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("StoresTitle")</MudText>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddDialog">
-                @Tr("StoreNewButton")
-            </MudButton>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+                @* فلتر نوع المخزن - كل خيار يعرض عدد مخازنه *@
+                <MudSelect T="int" @bind-Value="_typeFilter" Label="@Tr("StoreUsedTypeLabel")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                           AnchorOrigin="Origin.BottomCenter" Style="min-width:260px;" Class="stores-type-filter">
+                    <MudSelectItem T="int" Value="0">@($"{Tr("AllKinds")} ({_rows.Count})")</MudSelectItem>
+                    @foreach (var t in _storeTypes)
+                    {
+                        <MudSelectItem T="int" Value="@((int)t.Value)">@($"{t.Text} ({_rows.Count(r => r.StoreUsed_Type == t.Value)})")</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddDialog">
+                    @Tr("StoreNewButton")
+                </MudButton>
+            </MudStack>
         </MudStack>
     </MudPaper>
 
@@ -35,7 +47,7 @@
         <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
     }
 
-    <MudTable T="StoreRow" Items="@_rows" Hover="true" Bordered="true" Loading="@_isLoading" Elevation="1" Breakpoint="Breakpoint.None"
+    <MudTable T="StoreRow" Items="@VisibleRows" Hover="true" Bordered="true" Loading="@_isLoading" Elevation="1" Breakpoint="Breakpoint.None"
               FixedHeader="true" Height="calc(100vh - 300px)">
         <HeaderContent>
             <MudTh>@Tr("CodeColumn")</MudTh>
@@ -134,6 +146,8 @@
 
 @code {
     private List<StoreRow> _rows = new();
+    private int _typeFilter;
+    private IEnumerable<StoreRow> VisibleRows => _typeFilter == 0 ? _rows : _rows.Where(r => r.StoreUsed_Type == _typeFilter);
     private List<StoreLookupItem> _storeTypes = new();
     private List<StoreLookupItem> _mainTypes = new();
     private bool _isLoading = true;
@@ -192,7 +206,7 @@
             var data = await Task.Run(() =>
             {
                 AccountCultureGuard.EnsureInvariant();
-                var cls = new StoresGridCLS();
+                var cls = new StoreCLS();
                 return (cls.GetStores(branch), cls.GetStoreTypes(), cls.GetMainTypes());
             });
             _rows = data.Item1;
@@ -212,7 +226,7 @@
     private void OpenAddDialog()
     {
         _editId = 0;
-        _fType = 0;
+        _fType = _typeFilter;
         _fMainType = _mainTypes.FirstOrDefault(t => t.Value == 4)?.Value ?? 0;
         _fCode = string.Empty;
         _fName = string.Empty;
@@ -311,7 +325,7 @@
             await Task.Run(() =>
             {
                 AccountCultureGuard.EnsureInvariant();
-                var cls = new StoresGridCLS();
+                var cls = new StoreCLS();
                 if (id == 0) cls.AddStore(ref excp, ref msg, store);
                 else cls.UpdateStore(ref excp, ref msg, store, id);
             });
@@ -342,7 +356,7 @@
         }
     }
 
-    // يقابل BtnDelete_Click: تأكيد ثم StoresGridCLS.DeleteStore (Excp=10 ← لا يمكن الحذف لوجود أصناف/حركات).
+    // يقابل BtnDelete_Click: تأكيد ثم StoreCLS.DeleteStore (Excp=10 ← لا يمكن الحذف لوجود أصناف/حركات).
     private async Task DeleteAsync(StoreRow row)
     {
         bool? confirmed = await DialogService.ShowMessageBoxAsync(Tr("GeoDeleteTitle"), Tr("StoreDeleteConfirm", row.Store_Name),
@@ -358,7 +372,7 @@
             await Task.Run(() =>
             {
                 AccountCultureGuard.EnsureInvariant();
-                new StoresGridCLS().DeleteStore(ref excp, ref msg, id);
+                new StoreCLS().DeleteStore(ref excp, ref msg, id);
             });
             if (excp == 10) { _errorMessage = string.IsNullOrWhiteSpace(msg) ? Tr("StoreDeleteBlocked") : msg; return; }
             if (excp != 0) { _errorMessage = Tr("StoreDeleteFailed"); return; }
@@ -388,7 +402,7 @@
             await Task.Run(() =>
             {
                 AccountCultureGuard.EnsureInvariant();
-                new StoresGridCLS().EmptyStoreItems(ref excp, ref msg, id);
+                new StoreCLS().EmptyItemsStore(ref excp, ref msg, id);
             });
             if (excp != 0) { _errorMessage = string.IsNullOrEmpty(msg) ? Tr("StoreDeleteFailed") : msg; return; }
             Snackbar.Add(Tr("StoreEmptied"), Severity.Success);
@@ -404,3 +418,8 @@
         LangService.OnLanguageChanged -= OnLanguageChangedHandler;
     }
 }
+
+<style>
+    /* الفلتر بنفس ارتفاع زر «مخزن جديد» */
+    .stores-type-filter .mud-input-control { margin-top: 0; }
+</style>

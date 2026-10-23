@@ -154,18 +154,20 @@ namespace AccountModelsLib
             DataTable dt = opp.return_DataTable(mysql);
             if (dt.Rows.Count > 0)
             {
-                USER_Id = long.Parse(dt.Rows[0]["USER_ID"].ToString());
+                USER_Id = long.Parse(dt.Rows[0]["Id"].ToString());
                 mysql = "Update    USER_DETAILES Set USER_NAME='" + USER_NAME + "'" +
-                    ", USER_PASSWORD='" + USER_PASSWORD + "', Branch_Id=" + Common.Branch_Id + ", AdminFlage=" + AdminFlage + ",Active=" + Active + ", Account_Proj=" + Account_Proj + ", HR_Proj=" + HR_Proj + ", Store_Proj=" + Store_Proj + ", Production_Proj=" + Production_Proj + ", Gawda_Proj=" + Gawda_Proj + " Where USER_ID= " + USER_Id + " ";
+                    ", USER_PASSWORD='" + USER_PASSWORD + "', Branch_Id=" + Common.Branch_Id + ", AdminFlage=" + AdminFlage + ",Active=" + Active + ", Account_Proj=" + Account_Proj + ", HR_Proj=" + HR_Proj + ", Store_Proj=" + Store_Proj + ", Production_Proj=" + Production_Proj + ", Gawda_Proj=" + Gawda_Proj + " Where Id= " + USER_Id + " ";
 
                 opp.insert_me(mysql);
             }
 
             else
             {
-                mysql = "  INSERT INTO USER_DETAILES (USER_NAME, USER_PASSWORD, Branch_Id, AdminFlage,Active, Account_Proj, HR_Proj, Store_Proj, Production_Proj, Gawda_Proj) ";
-                mysql = mysql + " values ( '" + USER_NAME + "','" + USER_PASSWORD + "'," + Common.Branch_Id + "," + AdminFlage + "," + Active + "," + Account_Proj + "," + HR_Proj + "," + Store_Proj + "," + Production_Proj + "," + Gawda_Proj + ") ";
-                USER_Id = opp.Insert_me_Return_Last_Identify(mysql);
+                // USER_DETAILES.Id لم يعد Identity بعد تحويل USER_ID إلى Id - يُولَّد المعرّف هنا كباقى الجداول
+                USER_Id = CallSnowflakeIdGenerate.GenerateNewId();
+                mysql = "  INSERT INTO USER_DETAILES (Id, USER_NAME, USER_PASSWORD, Branch_Id, AdminFlage,Active, Account_Proj, HR_Proj, Store_Proj, Production_Proj, Gawda_Proj) ";
+                mysql = mysql + " values ( " + USER_Id + ", '" + USER_NAME + "','" + USER_PASSWORD + "'," + Common.Branch_Id + "," + AdminFlage + "," + Active + "," + Account_Proj + "," + HR_Proj + "," + Store_Proj + "," + Production_Proj + "," + Gawda_Proj + ") ";
+                opp.insert_me(mysql);
             }
 
             ///////////////////////////////////////////
@@ -195,18 +197,20 @@ namespace AccountModelsLib
             DataTable dt = opp.return_DataTable(mysql);
             if (dt.Rows.Count > 0)
             {
-                USER_Id = long.Parse(dt.Rows[0]["USER_ID"].ToString());
+                USER_Id = long.Parse(dt.Rows[0]["Id"].ToString());
                 mysql = "Update    USER_DETAILES Set USER_NAME='" + USER_NAME + "'" +
-                    ", USER_PASSWORD='" + USER_PASSWORD + "', Branch_Id=" + Common.Branch_Id + ", AdminFlage=" + AdminFlage + ",Active=" + Active + ", Account_Proj=" + Account_Proj + ", HR_Proj=" + HR_Proj + ", Store_Proj=" + Store_Proj + ", Production_Proj=" + Production_Proj + ", Gawda_Proj=" + Gawda_Proj + " Where USER_ID= " + USER_Id + " ";
+                    ", USER_PASSWORD='" + USER_PASSWORD + "', Branch_Id=" + Common.Branch_Id + ", AdminFlage=" + AdminFlage + ",Active=" + Active + ", Account_Proj=" + Account_Proj + ", HR_Proj=" + HR_Proj + ", Store_Proj=" + Store_Proj + ", Production_Proj=" + Production_Proj + ", Gawda_Proj=" + Gawda_Proj + " Where Id= " + USER_Id + " ";
 
                 opp.insert_me(mysql);
             }
 
             else
             {
-                mysql = "  INSERT INTO USER_DETAILES (USER_NAME, USER_PASSWORD, Branch_Id, AdminFlage,Active, Account_Proj, HR_Proj, Store_Proj, Production_Proj, Gawda_Proj) ";
-                mysql = mysql + " values ( '" + USER_NAME + "','" + USER_PASSWORD + "'," + Common.Branch_Id + "," + AdminFlage + "," + Active + "," + Account_Proj + "," + HR_Proj + "," + Store_Proj + "," + Production_Proj + "," + Gawda_Proj + ") ";
-                USER_Id = opp.Insert_me_Return_Last_Identify(mysql);
+                // USER_DETAILES.Id لم يعد Identity بعد تحويل USER_ID إلى Id - يُولَّد المعرّف هنا كباقى الجداول
+                USER_Id = CallSnowflakeIdGenerate.GenerateNewId();
+                mysql = "  INSERT INTO USER_DETAILES (Id, USER_NAME, USER_PASSWORD, Branch_Id, AdminFlage,Active, Account_Proj, HR_Proj, Store_Proj, Production_Proj, Gawda_Proj) ";
+                mysql = mysql + " values ( " + USER_Id + ", '" + USER_NAME + "','" + USER_PASSWORD + "'," + Common.Branch_Id + "," + AdminFlage + "," + Active + "," + Account_Proj + "," + HR_Proj + "," + Store_Proj + "," + Production_Proj + "," + Gawda_Proj + ") ";
+                opp.insert_me(mysql);
             }
 
             ///////////////////////////////////////////
@@ -236,7 +240,7 @@ namespace AccountModelsLib
             mysql = "";
             for (int x = 0; x < dt.Rows.Count; x++)
             {
-                USER_Id = long.Parse(dt.Rows[x]["USER_ID"].ToString());
+                USER_Id = long.Parse(dt.Rows[x]["Id"].ToString());
                 mysql = mysql + " INSERT INTO SysConfigMenusPERMATIONS (Parent_Id,    PERMATION, PROJECT_ID, Menu_ID, USER_ID)";
                 mysql = mysql + " SELECT Parent_Id,   Value, PROJECT_ID, Id, " + USER_Id + " AS USER_ID FROM SysConfigMenus";// Where PROJECT_ID="+ PROJECT_ID + "";
 
@@ -282,7 +286,7 @@ namespace AccountModelsLib
 
                 for (int y = 0; y < dtUsers.Rows.Count; y++)
                 {
-                    long USER_ID = long.Parse(dtUsers.Rows[y]["USER_ID"].ToString());
+                    long USER_ID = long.Parse(dtUsers.Rows[y]["Id"].ToString());
                     for (int x = 0; x < dtMenus.Rows.Count; x++)
                     {
                         string Parent_Id = dtMenus.Rows[x]["Parent_Id"].ToString();

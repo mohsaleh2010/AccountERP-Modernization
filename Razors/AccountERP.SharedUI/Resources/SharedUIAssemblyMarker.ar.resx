@@ -758,6 +758,7 @@
   <data name="AddMachine" xml:space="preserve"><value>ماكينة جديدة</value></data>
   <data name="NoMachinesYet" xml:space="preserve"><value>لا توجد ماكينات لعرضها حتى الآن.</value></data>
   <data name="MachineNameRequired" xml:space="preserve"><value>الرجاء إدخال الاسم</value></data>
+  <data name="MachineNameDuplicate" xml:space="preserve"><value>الاسم "{0}" مستخدم لماكينة أخرى</value></data>
   <data name="MachineAdded" xml:space="preserve"><value>تمت الإضافة بنجاح</value></data>
   <data name="MachineDeleted" xml:space="preserve"><value>تم الحذف بنجاح</value></data>
   <data name="DeleteMachineTitle" xml:space="preserve"><value>حذف الماكينة</value></data>
@@ -2404,6 +2405,7 @@
   <data name="BarcodeHeaderFontSize" xml:space="preserve"><value>حجم خط النص العلوى</value></data>
   <data name="BarcodeFooterFontSize" xml:space="preserve"><value>حجم خط النص السفلى</value></data>
   <data name="BarcodeShowDivider" xml:space="preserve"><value>خط فاصل بين الباركودات</value></data>
+  <data name="BarcodeOneStickerPerPage" xml:space="preserve"><value>كل استيكر فى صفحة (طابعة استيكرات)</value></data>
   <data name="BarcodeAddItemsSection" xml:space="preserve"><value>إضافة أصناف للطباعة</value></data>
   <data name="BarcodeNoItemsAdded" xml:space="preserve"><value>لم تتم إضافة أى صنف بعد</value></data>
   <data name="BarcodeSlotsWord" xml:space="preserve"><value>باركود</value></data>
@@ -2645,7 +2647,7 @@
   <data name="IL_degrees" xml:space="preserve"><value>فرز / درجات الصنف</value></data>
   <data name="IL_natures" xml:space="preserve"><value>طبيعة الصنف</value></data>
   <data name="IL_groups" xml:space="preserve"><value>مجموعات الصنف</value></data>
-  <data name="ILSub" xml:space="preserve"><value>القوائم المرجعية التى تُختار منها بيانات الأصناف</value></data>
+  <data name="ILSub" xml:space="preserve"><value>القوائم المرجعية لمواصفات الأصناف؛ تظهر فى شاشة الصنف لأصناف السيراميك (المجموعة والطبيعة وقوائم المواصفات)</value></data>
   <data name="ILLists" xml:space="preserve"><value>القوائم</value></data>
   <data name="ILAdd" xml:space="preserve"><value>إضافة قيمة</value></data>
   <data name="ILAddButton" xml:space="preserve"><value>إضافة</value></data>
@@ -2694,6 +2696,13 @@
   <data name="IC_T2" xml:space="preserve"><value>مشتريات</value></data>
   <data name="IC_T3" xml:space="preserve"><value>غير مكتمل التصنيع</value></data>
   <data name="IC_NewCat" xml:space="preserve"><value>فئة جديدة</value></data>
+  <data name="IC_MultiHint" xml:space="preserve"><value>Enter يحفظ ويُبقي النافذة مفتوحة للاسم التالي، وEsc يغلقها</value></data>
+  <data name="IT_QuickAdd" xml:space="preserve"><value>إضافة سريعة</value></data>
+  <data name="IT_QuickAddTitle" xml:space="preserve"><value>إضافة صنف سريعة</value></data>
+  <data name="IT_QuickHint" xml:space="preserve"><value>يُضاف الصنف للمخزن الافتراضى برصيد صفر. باقى البيانات (الباركود، المواصفات، الرصيد الابتدائى) من شاشة الصنف الكاملة.</value></data>
+  <data name="IT_QuickMultiHint" xml:space="preserve"><value>Enter يحفظ ويُبقي النافذة مفتوحة للصنف التالي بنفس الفئة والوحدة، وEsc يغلقها</value></data>
+  <data name="IT_SaveOpen" xml:space="preserve"><value>حفظ وفتح البطاقة</value></data>
+  <data name="IT_NoStore" xml:space="preserve"><value>لا يوجد مخزن نشط لإضافة الصنف إليه.</value></data>
   <data name="IC_CatName" xml:space="preserve"><value>اسم الفئة</value></data>
   <data name="IC_Main" xml:space="preserve"><value>النوع الرئيسى</value></data>
   <data name="IC_Kind" xml:space="preserve"><value>تستخدم لـ</value></data>
@@ -2842,6 +2851,38 @@
   <data name="IC_ProfileCars" xml:space="preserve"><value>قطع غيار سيارات</value></data>
   <data name="IC_ProfileCeramics" xml:space="preserve"><value>سيراميك / مواصفات</value></data>
   <data name="IC_ProfileGlass" xml:space="preserve"><value>زجاج / بالمقاس</value></data>
+  <data name="IC_ProfileTextile" xml:space="preserve"><value>نسيج</value></data>
+  <data name="IT_ListTextile" xml:space="preserve"><value>أصناف النسيج</value></data>
+  <data name="IT_Textile" xml:space="preserve"><value>بيانات صنف النسيج</value></data>
+  <data name="IT_TextileType" xml:space="preserve"><value>نوع صنف النسيج</value></data>
+  <data name="IT_TT1" xml:space="preserve"><value>إنتاج تام - مبيعات</value></data>
+  <data name="IT_TT2" xml:space="preserve"><value>خامات ومشتريات ومستلزمات</value></data>
+  <data name="IT_TT3" xml:space="preserve"><value>غير مكتمل التصنيع</value></data>
+  <data name="IT_TT4" xml:space="preserve"><value>إنتاج تحت التشغيل</value></data>
+  <data name="IT_AllTypes" xml:space="preserve"><value>كل الأنواع</value></data>
+  <data name="IT_SizeDesc" xml:space="preserve"><value>وصف المقاس</value></data>
+  <data name="IT_SizeDescHelp" xml:space="preserve"><value>مثل 200×220 سم، أو المقاس والوزن</value></data>
+  <data name="IT_TextileHelp" xml:space="preserve"><value>المخزن الرئيسى وإضافة الصنف لكل المخازن تتبع نوع الصنف (نوع المخزن).</value></data>
+  <data name="IT_TextileLocked" xml:space="preserve"><value>لا يتغير النوع لصنف له رصيد أو حركات</value></data>
+  <data name="IT_NoStoreOfType" xml:space="preserve"><value>لا يوجد مخزن نشط من هذا النوع؛ أضف مخزناً بنفس النوع أولاً.</value></data>
+  <data name="IT_NewByType" xml:space="preserve"><value>صنف جديد حسب النوع</value></data>
+  <data name="CT_Title" xml:space="preserve"><value>أنواع السيارات</value></data>
+  <data name="CT_Sub" xml:space="preserve"><value>الماركات والأنواع المستعملة فى السيارات وقطع الغيار؛ الضغط على عدد الموديلات يفتح موديلات النوع.</value></data>
+  <data name="CT_New" xml:space="preserve"><value>نوع سيارة جديد</value></data>
+  <data name="CT_Name" xml:space="preserve"><value>اسم النوع</value></data>
+  <data name="CT_NameEn" xml:space="preserve"><value>الاسم بالإنجليزية</value></data>
+  <data name="CT_ItemsCount" xml:space="preserve"><value>الأصناف</value></data>
+  <data name="CT_CarsCount" xml:space="preserve"><value>السيارات</value></data>
+  <data name="CT_ModelsOf" xml:space="preserve"><value>موديلات {0}</value></data>
+  <data name="CT_UsedNoDelete" xml:space="preserve"><value>مستعمل؛ لا يُحذف</value></data>
+  <data name="CT_Empty" xml:space="preserve"><value>لا توجد أنواع سيارات بعد</value></data>
+  <data name="CM_Title" xml:space="preserve"><value>موديلات السيارات</value></data>
+  <data name="CM_Sub" xml:space="preserve"><value>موديلات كل نوع سيارة، تُختار فى بيانات السيارة.</value></data>
+  <data name="CM_New" xml:space="preserve"><value>موديل جديد</value></data>
+  <data name="CM_Name" xml:space="preserve"><value>اسم الموديل</value></data>
+  <data name="CM_Empty" xml:space="preserve"><value>لا توجد موديلات</value></data>
+  <data name="CM_NoTypes" xml:space="preserve"><value>أضف نوع سيارة أولاً، ثم موديلاته.</value></data>
+  <data name="CM_MultiHint" xml:space="preserve"><value>Enter يحفظ ويُبقي النافذة مفتوحة للموديل التالي بنفس النوع، وEsc يغلقها</value></data>
   <data name="IL_car-types" xml:space="preserve"><value>أنواع السيارات</value></data>
   <data name="PR_Title" xml:space="preserve"><value>أسعار الأصناف</value></data>
   <data name="PR_Sub" xml:space="preserve"><value>قوائم الأسعار ومشتقاتها، التعديل الجماعى، وأسعار العملاء والموردين الخاصة</value></data>
@@ -3762,4 +3803,50 @@
   <data name="FSUGuid" xml:space="preserve"><value>معرّف المستند</value></data>
   <data name="FSUResult" xml:space="preserve"><value>المستند الناتج {0}</value></data>
   <data name="FSUHint" xml:space="preserve"><value>المستند المرفوض أو المحفوظ لا يُعاد. إعادة الإرسال من الجهاز لا تكرر المستند أبداً.</value></data>
+  <data name="BreadcrumbMainMenusSetting" xml:space="preserve"><value>قائمة الوحدات الرئيسية</value></data>
+  <data name="BreadcrumbMainMenusSettingHint" xml:space="preserve"><value>سهم بجوار «الوحدات المتاحة لك» يعرض كل الوحدات للانتقال السريع بينها</value></data>
+  <data name="BreadcrumbSubMenusSetting" xml:space="preserve"><value>القوائم الفرعية لكل مستوى</value></data>
+  <data name="BreadcrumbSubMenusSettingHint" xml:space="preserve"><value>سهم بجوار كل مستوى يعرض قوائمه الفرعية، وتتفتح القوائم الأعمق بالوقوف عليها</value></data>
+  <data name="BreadcrumbAriaLabel" xml:space="preserve"><value>مسار التنقّل</value></data>
+  <data name="BreadcrumbShowSubmenus" xml:space="preserve"><value>عرض قوائم {0}</value></data>
+  <data name="SADTitle" xml:space="preserve"><value>ربط المخازن بالحسابات</value></data>
+  <data name="SADSubtitle" xml:space="preserve"><value>لكل حركة مخزنية يُحدَّد الحساب المقابل لحساب المخزن. الأخص يغلب: المخزن نفسه، ثم نوعه، ثم افتراضى الفرع.</value></data>
+  <data name="SADLevelLabel" xml:space="preserve"><value>مستوى الإعداد</value></data>
+  <data name="SADLevelBranch" xml:space="preserve"><value>افتراضى الفرع (كل المخازن)</value></data>
+  <data name="SADLevelType" xml:space="preserve"><value>نوع مخزن</value></data>
+  <data name="SADLevelStore" xml:space="preserve"><value>مخزن محدد</value></data>
+  <data name="SADStoreLabel" xml:space="preserve"><value>المخزن</value></data>
+  <data name="SADChooseStore" xml:space="preserve"><value>اختر مخزناً لعرض إعداداته</value></data>
+  <data name="SADRoleColumn" xml:space="preserve"><value>الحركة</value></data>
+  <data name="SADUsedByColumn" xml:space="preserve"><value>تستخدمه</value></data>
+  <data name="SADAccountColumn" xml:space="preserve"><value>الحساب المقابل</value></data>
+  <data name="SADSourceHere" xml:space="preserve"><value>محدد فى هذا المستوى</value></data>
+  <data name="SADSourceInherited" xml:space="preserve"><value>يسرى من: {0}</value></data>
+  <data name="SADNotSet" xml:space="preserve"><value>غير محدد</value></data>
+  <data name="SADPick" xml:space="preserve"><value>اختيار حساب من الشجرة</value></data>
+  <data name="SADClear" xml:space="preserve"><value>إلغاء التحديد (يعود للمستوى الأعم)</value></data>
+  <data name="SADPickTitle" xml:space="preserve"><value>اختر الحساب المقابل: {0}</value></data>
+  <data name="SADSuggest" xml:space="preserve"><value>اقتراح من أنواع الحسابات</value></data>
+  <data name="SADSuggestDone" xml:space="preserve"><value>تم اقتراح {0} حساب</value></data>
+  <data name="SADSuggestNone" xml:space="preserve"><value>لا اقتراحات: لا يوجد حساب فرعى واحد بالضبط لكل نوع، اختر الحسابات يدوياً</value></data>
+  <data name="SADSaved" xml:space="preserve"><value>تم الحفظ</value></data>
+  <data name="SADNotWiredYet" xml:space="preserve"><value>هذه الإعدادات لا تُستخدم فى القيود بعد؛ ربط الأذون والفواتير بها مرحلة لاحقة.</value></data>
+  <data name="SADSalesInvoices" xml:space="preserve"><value>فواتير البيع</value></data>
+  <data name="SADPurchaseInvoices" xml:space="preserve"><value>فواتير الشراء</value></data>
+  <data name="SADItemOpening" xml:space="preserve"><value>أرصدة أول المدة للأصناف</value></data>
+  <data name="SADRole1" xml:space="preserve"><value>بضاعة مستلمة غير مفوترة</value></data>
+  <data name="SADRole2" xml:space="preserve"><value>تكلفة البضاعة المباعة</value></data>
+  <data name="SADRole3" xml:space="preserve"><value>تسوية الجرد بالزيادة</value></data>
+  <data name="SADRole4" xml:space="preserve"><value>تسوية الجرد بالنقص</value></data>
+  <data name="SADRole5" xml:space="preserve"><value>إنتاج تحت التشغيل</value></data>
+  <data name="SADRole6" xml:space="preserve"><value>الهالك</value></data>
+  <data name="SADRole7" xml:space="preserve"><value>بضاعة بالطريق (تحويلات)</value></data>
+  <data name="SADRole8" xml:space="preserve"><value>مصروف الاستهلاك (قطع غيار، ورشة، ماكينات، موظفين)</value></data>
+  <data name="SADRole9" xml:space="preserve"><value>فروق أسعار الشراء</value></data>
+  <data name="SADRole10" xml:space="preserve"><value>أرصدة أول المدة</value></data>
+  <data name="ShipmentCompaniesHint" xml:space="preserve"><value>شركات الشحن موردو خدمات: لكل شركة حساب فى شجرة الحسابات تحت «شركات الشحن»، ويظهر لها كشف حساب المورد</value></data>
+  <data name="ShipmentAccountColumn" xml:space="preserve"><value>كود الحساب</value></data>
+  <data name="ShipmentLegacyFound" xml:space="preserve"><value>توجد {0} شركة شحن فى الجدول القديم بلا حساب: {1}</value></data>
+  <data name="ShipmentLegacyImport" xml:space="preserve"><value>استيرادها بحساباتها</value></data>
+  <data name="ShipmentLegacyImported" xml:space="preserve"><value>تم استيراد {0} شركة شحن</value></data>
 </root>

@@ -294,6 +294,7 @@ namespace AccountModelsLib.SalesRep
                 {
                     var input = Payload<SalesRepOrderService.TakeOrderInput>(row);
                     input.Doc_Guid = row.Doc_Guid;
+                    SalesRepOrderService.RepriceDeviceLines(opp, input);
                     return new SalesRepOrderService(opp).TakeOrder(id.RepId, input).Order_Id;
                 }
                 case SalesRepSyncDocType.Delivery:
@@ -352,6 +353,7 @@ namespace AccountModelsLib.SalesRep
                 {
                     var input = Payload<SalesRepOrderService.TakeOrderInput>(row);
                     input.Doc_Guid = row.Doc_Guid;
+                    SalesRepOrderService.RepriceDeviceLines(opp, input);
                     new SalesRepOrderService(opp).RequestTakeApprovals(id.RepId, input, reason);
                     break;
                 }
@@ -437,7 +439,7 @@ SELECT TOP ({take}) i.Id, i.Device_Id, ISNULL(NULLIF(d.Device_Name, N''), ISNULL
 FROM SalesRep_Sync_Inbox i
 LEFT JOIN SalesRep_Devices d ON d.Id = i.Device_Id
 LEFT JOIN SalesRep_Reps r ON r.Id = i.Rep_Id LEFT JOIN Employee e ON e.Id = r.Employee_Id
-LEFT JOIN USER_DETAILES u ON u.USER_ID = i.Reviewed_By_User_Id
+LEFT JOIN USER_DETAILES u ON u.Id = i.Reviewed_By_User_Id
 WHERE ({st} = -1 OR i.Status = {st}) AND ({rep} = 0 OR i.Rep_Id = {rep})
 ORDER BY i.Received_At DESC").ToList();
             foreach (var r in rows) Describe(r);
@@ -518,7 +520,7 @@ ORDER BY i.Received_At DESC").ToList();
             var d = opp.db.SalesRep_Devices.AsNoTracking().FirstOrDefault(x => x.Id == deviceId) ?? throw new InvalidOperationException("الجهاز غير موجود.");
             var rep = opp.db.SalesRep_Reps.AsNoTracking().FirstOrDefault(r => r.Id == d.Rep_Id) ?? throw new InvalidOperationException("المندوب غير موجود.");
             long user = d.Act_As_User_Id ?? Common.User_Id;
-            string userName = opp.db.Database.SqlQuery<string>($"SELECT ISNULL(USER_NAME, N'') AS Value FROM USER_DETAILES WHERE USER_ID = {user}").AsEnumerable().FirstOrDefault() ?? "";
+            string userName = opp.db.Database.SqlQuery<string>($"SELECT ISNULL(USER_NAME, N'') AS Value FROM USER_DETAILES WHERE Id = {user}").AsEnumerable().FirstOrDefault() ?? "";
             return new SalesRepDeviceService.DeviceIdentity(d.Id, d.Rep_Id, rep.Branch_Id ?? Common.Branch_Id, user, userName, "");
         }
 
@@ -581,7 +583,7 @@ ORDER BY i.Received_At DESC").ToList();
                     var co = CompanyOf(opp, ctx.Branch_Id);
                     return new List<SyncRow> { new SyncRow(repId, new
                     {
-                        co.Company_Name, co.Company_Address, co.Company_Phone, co.Tax_Number,
+                        co.Company_Name, co.Company_Address, co.Company_Phone, co.Tax_Number, Decimal_Places = Common.DecimalPlaces,
                         Id = repId, ctx.Rep_Name, ctx.Employee_Id, ctx.Branch_Id, rep.Sales_Mode, ctx.Van_Store_Id, ctx.Van_Store_Name, ctx.Damaged_Store_Id, ctx.Damaged_Store_Name,
                         ctx.Cash_Box_Id, ctx.Cash_Box_Name, ctx.Cash_On_Hand, ctx.Price_Type_List_ID, ctx.Max_Discount_Rate, ctx.Max_Cash_On_Hand, ctx.Allow_Credit_Sales, ctx.Allow_Blind_Return,
                         ctx.Return_Window_Days, rep.Allow_Cheque_Collection, rep.Max_Cheque_Due_Days, ctx.Shift_Id, ctx.Shift_Status,

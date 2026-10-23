@@ -222,7 +222,7 @@ namespace AccountModelsLib.Models
         public long GetNewItemCode(ref operations opp)
         {
             long InternalCode = 0;
-            Items itm = opp.db.Item.OrderByDescending(i => i.Id).Take(1).FirstOrDefault();
+            Items itm = opp.db.Item.AsNoTracking().OrderByDescending(i => i.Id).Take(1).FirstOrDefault();
             if (Common.Use_Auto_Identity_Column == 1)
             {
                 
@@ -2967,7 +2967,7 @@ FROM            Item INNER JOIN
             {
                 string mysql;
 
-                mysql = @" SELECT DISTINCT 
+                mysql = @" SELECT DISTINCT 0 As Serial_,
                          Store.Store_Name, Item.id AS Item_Id, Item.code, Item.Item_Name, Item.S_id, Item.Item_Category_ID, Item.No3eboa, Item.Active_flage, 
                          Item_Category.Category_Name, unit.u_name, unit.B_Unit, unit.S_unit, unit.B_Unit_Value, unit.S_unit_Value, Store.StoreUsed_Type, Unit_item.id AS Unit_item_Id, 
                          Item_Category.Main_Item_Category_Id

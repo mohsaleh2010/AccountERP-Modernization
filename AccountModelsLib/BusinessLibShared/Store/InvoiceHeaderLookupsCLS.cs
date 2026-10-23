@@ -4,7 +4,7 @@ namespace AccountModelsLib.BusinessLibShared.Store
 {
     // 🟢 قوائم الاختيار لحقول رأس الفاتورة (فاتورة المبيعات/المرتجع)، نسخة قراءة فقط من مصادر عناصر التحكم الأصلية:
     // employeeSellerUSR1 (كل الموظفين بالاسم)، وSalesMan_List.GetSalesMan (الموظفون بوظيفة مندوب مبيعات Common.job_list_Id_SalesMan والفعّالون)،
-    // وShipmentCoUSR (جدول ShipmentCompany). تعيد Id وName.
+    // وShipmentCoUSR (شركات الشحن: موردو Supplier بعلامة IS_ShipmentCompany = 1). تعيد Id وName.
     public class InvoiceHeaderLookupsCLS
     {
         public DataTable GetSellers()
@@ -20,7 +20,7 @@ namespace AccountModelsLib.BusinessLibShared.Store
 
         public DataTable GetShipmentCompanies()
         {
-            return new AccountModelsLib.operations().return_DataTable("SELECT Id, Name FROM ShipmentCompany ORDER BY Name");
+            return new AccountModelsLib.operations().return_DataTable("SELECT Id, Name FROM Supplier WHERE IS_ShipmentCompany = 1 AND Active = 1 ORDER BY Name");
         }
     }
 }

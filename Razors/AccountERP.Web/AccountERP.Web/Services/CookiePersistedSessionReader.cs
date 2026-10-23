@@ -19,7 +19,7 @@ namespace AccountERP.Web.Services
             _dataProtectionProvider = dataProtectionProvider;
         }
 
-        public int? TryReadUserId()
+        public long? TryReadUserId()
         {
             var cookieValue = _httpContextAccessor.HttpContext?.Request.Cookies[AuthCookieConstants.CookieName];
             if (string.IsNullOrEmpty(cookieValue)) return null;
@@ -28,7 +28,7 @@ namespace AccountERP.Web.Services
             {
                 var protector = _dataProtectionProvider.CreateProtector(AuthCookieConstants.ProtectorPurpose);
                 var userIdText = protector.Unprotect(cookieValue);
-                return int.TryParse(userIdText, out var userId) ? userId : null;
+                return long.TryParse(userIdText, out var userId) ? userId : null;
             }
             catch
             {

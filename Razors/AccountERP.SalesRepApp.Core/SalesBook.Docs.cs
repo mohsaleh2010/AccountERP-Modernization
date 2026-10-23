@@ -93,13 +93,17 @@ namespace AccountERP.SalesRepApp.Core
         // ============================== أخذ طلبية ==============================
 
         /// <summary>يحسب أعمدة السطر كما يرسلها شاشة الطلبية للسيرفر: الإجمالى، الضريبة بعد الخصم، والصافى.</summary>
-        public static TakeOrderLine PriceOrderLine(TakeOrderLine l, decimal factor, decimal taxRate)
+        /// <summary>سطر الطلبية بالحساب الموحد نفسه (= ما يعيد السيرفر حسابه عند الحفظ): الخصم لا يتجاوز قيمة السطر.</summary>
+        public static TakeOrderLine PriceOrderLine(TakeOrderLine l, decimal factor, decimal taxRate, int decimals = 2)
         {
             decimal f = factor <= 0 ? 1 : factor;
-            l.Gross = Math.Round((l.Qty_Large + l.Qty_Small / f) * l.Unit_Price, 2);
-            l.Discount_Value = Math.Round(Math.Min(l.Discount_Value, l.Gross), 2);
-            l.Tax_Value = Math.Round((l.Gross - l.Discount_Value) * taxRate / 100, 2);
-            l.Line_Total = l.Gross - l.Discount_Value + l.Tax_Value;
+            decimal raw = (l.Qty_Large + l.Qty_Small / f) * l.Unit_Price;
+            l.Discount_Value = Math.Round(Math.Min(Math.Max(0, l.Discount_Value), raw), 2);
+            var c = Calc(new SaleLine { Qty_Large = l.Qty_Large, Qty_Small = l.Qty_Small, Unit_Price = l.Unit_Price, Discount_Value = l.Discount_Value, Tax_Rate = taxRate }, f, decimals);
+            l.Gross = c.Value;
+            l.Tax_Rate = Math.Round(taxRate, 2);
+            l.Tax_Value = c.Tax;
+            l.Line_Total = c.Net;
             return l;
         }
 

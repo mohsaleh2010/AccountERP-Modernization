@@ -372,7 +372,7 @@
             }
             _currencies = currencies;
 
-            var usersDt = new AccountModelsLib.operations().return_DataTable("SELECT USER_ID, Name FROM USER_DETAILES ORDER BY Name");
+            var usersDt = new AccountModelsLib.operations().return_DataTable("SELECT Id AS USER_ID, Name FROM USER_DETAILES ORDER BY Name");
             var users = new List<UserOption>();
             foreach (DataRow r in usersDt.Rows)
             {
