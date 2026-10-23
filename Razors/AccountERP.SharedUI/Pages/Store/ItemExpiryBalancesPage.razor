@@ -95,6 +95,10 @@
                           Immediate="true" DebounceInterval="400" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
         </div>
         <div class="ex-row2">
+            @if (_itemId != 0)
+            {
+                <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" OnClose="@(() => OnItemClearAsync())">@Tr("EXOneItem", _rows.FirstOrDefault()?.Item_Name ?? "")</MudChip>
+            }
             <MudSwitch T="bool" Value="_includeZero" ValueChanged="OnIncludeZeroAsync" Color="Color.Primary" Label="@Tr("EXIncludeZero")" />
         </div>
     </div>
@@ -179,6 +183,8 @@
     /// <summary>status=1..4 يفتح على حالة، days=N حد القريبة.</summary>
     [SupplyParameterFromQuery(Name = "status")] public int? StatusQuery { get; set; }
     [SupplyParameterFromQuery(Name = "days")] public int? DaysQuery { get; set; }
+    /// <summary>item=Id يعرض تشغيلات صنف واحد (من أرصدة الأدوية).</summary>
+    [SupplyParameterFromQuery(Name = "item")] public long? ItemQuery { get; set; }
 
     private readonly ItemExpiryBalancesService _svc = new();
     private readonly StoreBalancesService _balances = new();
@@ -186,7 +192,7 @@
     private List<ExpiryRow> _rows = new();
     private ExpiryRow _sum = new();
     private ExpiryStatus _status;
-    private long _storeId, _categoryId;
+    private long _storeId, _categoryId, _itemId;
     private int _nearDays = 90, _skip, _total;
     private string? _text, _error;
     private bool _includeZero, _loading = true;
@@ -196,6 +202,7 @@
         LangService.OnLanguageChanged += OnLanguageChangedHandler;
         if (StatusQuery is >= 1 and <= 4) _status = (ExpiryStatus)StatusQuery.Value;
         if (DaysQuery is >= 1 and <= 3650) _nearDays = DaysQuery.Value;
+        if (ItemQuery is > 0) _itemId = ItemQuery.Value;
         try
         {
             (_stores, _categories) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_balances.GetStores(4), _balances.GetCategories()); });
@@ -212,6 +219,7 @@
     private async Task OnNearDaysAsync(int d) { _nearDays = Math.Clamp(d, 1, 3650); _skip = 0; await LoadAsync(); }
     private async Task OnTextAsync(string? t) { _text = t; _skip = 0; await LoadAsync(); }
     private async Task OnIncludeZeroAsync(bool v) { _includeZero = v; _skip = 0; await LoadAsync(); }
+    private async Task OnItemClearAsync() { _itemId = 0; _skip = 0; await LoadAsync(); }
     private async Task OnStatusAsync(ExpiryStatus s) { _status = s; _skip = 0; await LoadAsync(); }
     private async Task PageAsync(int dir) { _skip = Math.Max(0, _skip + dir * PageSize); await LoadAsync(); }
 
@@ -220,7 +228,7 @@
         _loading = true; _error = null;
         var f = new ExpiryFilter
         {
-            StoreId = _storeId, CategoryId = _categoryId, Text = _text, Status = _status, NearDays = _nearDays,
+            StoreId = _storeId, CategoryId = _categoryId, ItemId = _itemId, Text = _text, Status = _status, NearDays = _nearDays,
             IncludeZero = _includeZero, Skip = _skip, Take = PageSize,
         };
         try
@@ -231,7 +239,7 @@
                 var rows = _svc.GetBatches(f);
                 // عدّادات الحالات تأتى مع الأسطر؛ إن خلت الحالة المختارة تُقرأ العدّادات بلا تصفية حالة (سطر واحد)
                 _sum = rows.FirstOrDefault() ?? (f.Status == ExpiryStatus.All ? new ExpiryRow()
-                       : _svc.GetBatches(new ExpiryFilter { StoreId = f.StoreId, CategoryId = f.CategoryId, Text = f.Text, NearDays = f.NearDays, IncludeZero = f.IncludeZero, Take = 1 }).FirstOrDefault() ?? new ExpiryRow());
+                       : _svc.GetBatches(new ExpiryFilter { StoreId = f.StoreId, CategoryId = f.CategoryId, ItemId = f.ItemId, Text = f.Text, NearDays = f.NearDays, IncludeZero = f.IncludeZero, Take = 1 }).FirstOrDefault() ?? new ExpiryRow());
                 return rows;
             });
             _total = _rows.FirstOrDefault()?.Total_Rows ?? 0;

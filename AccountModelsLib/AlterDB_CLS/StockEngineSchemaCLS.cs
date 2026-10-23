@@ -285,6 +285,8 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             // خطة 05 بند 23: لقطات الأرصدة بالتاريخ والوقت (بدل balanceSelect_Date/balanceWithDate) وأرصدة الصلاحية (بدل ItemBalanceWithExpireFrm)
             ("menuItemItemsListSavedBalance", "/store/balances/snapshots"), ("ToolStripMenuItem_Save_ItemBalanceNow", "/store/balances/snapshots"),
             ("menuItemItemBalanceWithExpire", "/store/balances/expiry"),
+            // خطة 05 بند 24: أرصدة أصناف الأدوية (بدل Item_balance_ph)
+            ("ToolStripMenuItemItemBalanceAdwia", "/store/balances/pharmacy"),
             // خطة 04 م5: الأسعار (طباعة الأسعار menuItemItemPrices لم تُبنَ بعد)
             ("menuPrice_Type_List", "/items/prices/lists"), ("menuPriceCategory", "/items/prices/lists"), ("menuItemSearchItemPrices_List_Values", "/items/prices/lists"),
             ("menuItemEditPrices", "/items/prices/bulk"), ("MenuCustomer_PriceCLS", "/items/prices/customers"),

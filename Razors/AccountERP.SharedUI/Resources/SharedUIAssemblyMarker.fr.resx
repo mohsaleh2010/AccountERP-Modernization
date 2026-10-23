@@ -3934,4 +3934,26 @@
   <data name="EXExpiredAgo" xml:space="preserve"><value>Périmé depuis {0} jours</value></data>
   <data name="EXExpiresToday" xml:space="preserve"><value>Expire aujourd'hui</value></data>
   <data name="EXDaysLeft" xml:space="preserve"><value>{0} jours restants</value></data>
+  <data name="PHTitle" xml:space="preserve"><value>Stocks des médicaments</value></data>
+  <data name="PHSub" xml:space="preserve"><value>Stock en boîtes et unités avec seuil de commande et péremption la plus proche</value></data>
+  <data name="PHSubBelow" xml:space="preserve"><value>Médicaments au seuil de commande ou en dessous</value></data>
+  <data name="PHAddItem" xml:space="preserve"><value>Ajouter un médicament</value></data>
+  <data name="PHType" xml:space="preserve"><value>Type d'article</value></data>
+  <data name="PHFactory" xml:space="preserve"><value>Fabricant</value></data>
+  <data name="PHSearch" xml:space="preserve"><value>Rechercher par nom arabe ou anglais, code ou code-barres</value></data>
+  <data name="PHBelowOnly" xml:space="preserve"><value>Seuil de commande uniquement</value></data>
+  <data name="PHBelowTile" xml:space="preserve"><value>Seuil atteint</value></data>
+  <data name="PHExpiredTile" xml:space="preserve"><value>Avec un lot périmé</value></data>
+  <data name="PHNearTile" xml:space="preserve"><value>Avec un lot bientôt périmé</value></data>
+  <data name="PHReorder" xml:space="preserve"><value>Seuil de commande</value></data>
+  <data name="PHReachedReorder" xml:space="preserve"><value>Atteint ({0})</value></data>
+  <data name="PHNearest" xml:space="preserve"><value>Péremption la plus proche</value></data>
+  <data name="PHNoBatches" xml:space="preserve"><value>Aucun lot</value></data>
+  <data name="PHActions" xml:space="preserve"><value>Actions</value></data>
+  <data name="PHBatches" xml:space="preserve"><value>Lots ({0})</value></data>
+  <data name="PHOpenItem" xml:space="preserve"><value>Ouvrir l'article</value></data>
+  <data name="PHEditNote" xml:space="preserve"><value>Pour modifier un stock, utilisez un bon d'ajustement afin d'enregistrer le mouvement et son coût :</value></data>
+  <data name="PHAdjustUp" xml:space="preserve"><value>Ajustement en plus</value></data>
+  <data name="PHAdjustDown" xml:space="preserve"><value>Ajustement en moins</value></data>
+  <data name="EXOneItem" xml:space="preserve"><value>Un article : {0}</value></data>
 </root>

@@ -3932,4 +3932,26 @@
   <data name="EXExpiredAgo" xml:space="preserve"><value>منتهية منذ {0} يوم</value></data>
   <data name="EXExpiresToday" xml:space="preserve"><value>تنتهى اليوم</value></data>
   <data name="EXDaysLeft" xml:space="preserve"><value>باقٍ {0} يوم</value></data>
+  <data name="PHTitle" xml:space="preserve"><value>أرصدة أصناف الأدوية</value></data>
+  <data name="PHSub" xml:space="preserve"><value>الرصيد بالعبوة والجزء مع حد الطلب وأقرب صلاحية لكل دواء</value></data>
+  <data name="PHSubBelow" xml:space="preserve"><value>الأدوية التى بلغت حد الطلب</value></data>
+  <data name="PHAddItem" xml:space="preserve"><value>إضافة دواء</value></data>
+  <data name="PHType" xml:space="preserve"><value>نوع الصنف</value></data>
+  <data name="PHFactory" xml:space="preserve"><value>الشركة المصنعة</value></data>
+  <data name="PHSearch" xml:space="preserve"><value>ابحث بالاسم العربى أو الإنجليزى أو الكود أو الباركود</value></data>
+  <data name="PHBelowOnly" xml:space="preserve"><value>حد الطلب فقط</value></data>
+  <data name="PHBelowTile" xml:space="preserve"><value>بلغت حد الطلب</value></data>
+  <data name="PHExpiredTile" xml:space="preserve"><value>بها تشغيلة منتهية</value></data>
+  <data name="PHNearTile" xml:space="preserve"><value>بها تشغيلة قريبة الانتهاء</value></data>
+  <data name="PHReorder" xml:space="preserve"><value>حد الطلب</value></data>
+  <data name="PHReachedReorder" xml:space="preserve"><value>بلغ الحد ({0})</value></data>
+  <data name="PHNearest" xml:space="preserve"><value>أقرب صلاحية</value></data>
+  <data name="PHNoBatches" xml:space="preserve"><value>لا تشغيلات</value></data>
+  <data name="PHActions" xml:space="preserve"><value>إجراءات</value></data>
+  <data name="PHBatches" xml:space="preserve"><value>التشغيلات ({0})</value></data>
+  <data name="PHOpenItem" xml:space="preserve"><value>فتح الصنف</value></data>
+  <data name="PHEditNote" xml:space="preserve"><value>لتعديل رصيد دواء استخدم إذن تسوية حتى تُسجَّل الحركة وتكلفتها:</value></data>
+  <data name="PHAdjustUp" xml:space="preserve"><value>تسوية بالزيادة</value></data>
+  <data name="PHAdjustDown" xml:space="preserve"><value>تسوية بالنقص</value></data>
+  <data name="EXOneItem" xml:space="preserve"><value>صنف واحد: {0}</value></data>
 </root>

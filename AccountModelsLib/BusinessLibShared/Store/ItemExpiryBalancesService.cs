@@ -23,6 +23,8 @@ namespace AccountModelsLib
         {
             public long StoreId { get; set; }
             public long CategoryId { get; set; }
+            /// <summary>0 = كل الأصناف؛ وإلا تشغيلات صنف واحد (رابط «التشغيلات» من أرصدة الأدوية).</summary>
+            public long ItemId { get; set; }
             public string Text { get; set; }
             public ExpiryStatus Status { get; set; }
             public int NearDays { get; set; } = 90;
@@ -91,6 +93,7 @@ WITH l AS (
     WHERE ISNULL(e.IsActive, 1) = 1
       AND ({f.StoreId} = 0 OR u.Store_id = {f.StoreId})
       AND ({f.CategoryId} = 0 OR i.Item_Category_ID = {f.CategoryId})
+      AND ({f.ItemId} = 0 OR e.Item_id = {f.ItemId})
       AND ({text} = N'' OR i.Item_Name LIKE {like} OR u.Code = {text} OR i.code = {text} OR e.Tash3ela = {text})
 ), v AS (
     SELECT l.*, CAST(CASE WHEN l.Price_Large IS NULL THEN NULL ELSE l.Qty_Small / l.Factor * l.Price_Large END AS decimal(18,2)) AS Value
