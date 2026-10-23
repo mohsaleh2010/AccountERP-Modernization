@@ -3956,4 +3956,39 @@
   <data name="PHAdjustUp" xml:space="preserve"><value>Ajustement en plus</value></data>
   <data name="PHAdjustDown" xml:space="preserve"><value>Ajustement en moins</value></data>
   <data name="EXOneItem" xml:space="preserve"><value>Un article : {0}</value></data>
+  <data name="BLTitle" xml:space="preserve"><value>Imprimer des étiquettes code-barres</value></data>
+  <data name="BLSub" xml:space="preserve"><value>{0} articles — {1} étiquettes</value></data>
+  <data name="BLLayoutSettings" xml:space="preserve"><value>Format d'étiquette</value></data>
+  <data name="BLPrint" xml:space="preserve"><value>Imprimer ({0})</value></data>
+  <data name="BLAddItems" xml:space="preserve"><value>Ajouter des articles</value></data>
+  <data name="BLSearchItem" xml:space="preserve"><value>Rechercher un article à ajouter</value></data>
+  <data name="BLSearchHint" xml:space="preserve"><value>Par nom, code ou code-barres ; le choix l'ajoute à la liste</value></data>
+  <data name="BLLoadTitle" xml:space="preserve"><value>Charger les articles d'un magasin ou d'une catégorie</value></data>
+  <data name="BLOnlyInStock" xml:space="preserve"><value>En stock uniquement</value></data>
+  <data name="BLCopiesFromBalance" xml:space="preserve"><value>Copies = stock</value></data>
+  <data name="BLLoadButton" xml:space="preserve"><value>Charger les articles</value></data>
+  <data name="BLLoaded" xml:space="preserve"><value>{0} articles ajoutés</value></data>
+  <data name="BLOptions" xml:space="preserve"><value>Contenu de l'étiquette</value></data>
+  <data name="BLNameShown" xml:space="preserve"><value>Nom sur l'étiquette</value></data>
+  <data name="BLName_name" xml:space="preserve"><value>Nom de l'article</value></data>
+  <data name="BLName_invoice" xml:space="preserve"><value>Nom sur facture</value></data>
+  <data name="BLName_english" xml:space="preserve"><value>Nom anglais</value></data>
+  <data name="BLName_none" xml:space="preserve"><value>Sans nom</value></data>
+  <data name="BLCodeShown" xml:space="preserve"><value>Code imprimé</value></data>
+  <data name="BLCode_code" xml:space="preserve"><value>Code article</value></data>
+  <data name="BLCode_barcode2" xml:space="preserve"><value>Code-barres 2</value></data>
+  <data name="BLCode_barcode3" xml:space="preserve"><value>Code-barres 3</value></data>
+  <data name="BLShowPrice" xml:space="preserve"><value>Imprimer le prix de vente</value></data>
+  <data name="BLShowCode" xml:space="preserve"><value>Imprimer le code sous le code-barres</value></data>
+  <data name="BLLayoutNote" xml:space="preserve"><value>Taille {0}×{1} mm depuis les paramètres d'impression</value></data>
+  <data name="BLLines" xml:space="preserve"><value>Articles à imprimer</value></data>
+  <data name="BLClear" xml:space="preserve"><value>Tout effacer</value></data>
+  <data name="BLNoLines" xml:space="preserve"><value>Aucun article ajouté</value></data>
+  <data name="BLNoLinesHint" xml:space="preserve"><value>Recherchez un article ou chargez un magasin/une catégorie</value></data>
+  <data name="BLNoCode" xml:space="preserve"><value>Pas de code — aucun code-barres imprimé</value></data>
+  <data name="BLBadCode" xml:space="preserve"><value>Le code contient des caractères non encodables</value></data>
+  <data name="BLCopies" xml:space="preserve"><value>Copies</value></data>
+  <data name="BLRemove" xml:space="preserve"><value>Retirer {0}</value></data>
+  <data name="BLPriceOnLabel" xml:space="preserve"><value>Prix {0}</value></data>
+  <data name="BLPreviewCapped" xml:space="preserve"><value>Maximum {0} étiquettes par impression ; réduisez ou imprimez par lots</value></data>
 </root>

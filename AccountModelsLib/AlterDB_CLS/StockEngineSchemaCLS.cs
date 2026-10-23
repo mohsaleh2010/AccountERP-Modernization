@@ -287,6 +287,10 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("menuItemItemBalanceWithExpire", "/store/balances/expiry"),
             // خطة 05 بند 24: أرصدة أصناف الأدوية (بدل Item_balance_ph)
             ("ToolStripMenuItemItemBalanceAdwia", "/store/balances/pharmacy"),
+            // خطة 05 بند 25: طباعة الباركود (صنف / مع السعر / قائمة أصناف) فى شاشة الملصقات الموحَّدة، والأدوية فى استيكر الصيدلية
+            ("menuItemPrintBarCodeForOneItem", "/items/barcode-labels"), ("menuItemPrintBarCodeForOneItemWithPrice", "/items/barcode-labels?price=1"),
+            ("toolStripMenuItemBill_PrintItemsBarCodeItemsList", "/items/barcode-labels"),
+            ("menuItemPrintBarCodeForOneItemSaidalia", "/main-data/barcode-pharmacy-stickers"),
             // خطة 04 م5: الأسعار (طباعة الأسعار menuItemItemPrices لم تُبنَ بعد)
             ("menuPrice_Type_List", "/items/prices/lists"), ("menuPriceCategory", "/items/prices/lists"), ("menuItemSearchItemPrices_List_Values", "/items/prices/lists"),
             ("menuItemEditPrices", "/items/prices/bulk"), ("MenuCustomer_PriceCLS", "/items/prices/customers"),

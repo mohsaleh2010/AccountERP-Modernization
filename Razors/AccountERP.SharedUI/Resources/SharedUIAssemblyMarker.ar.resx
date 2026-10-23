@@ -3954,4 +3954,39 @@
   <data name="PHAdjustUp" xml:space="preserve"><value>تسوية بالزيادة</value></data>
   <data name="PHAdjustDown" xml:space="preserve"><value>تسوية بالنقص</value></data>
   <data name="EXOneItem" xml:space="preserve"><value>صنف واحد: {0}</value></data>
+  <data name="BLTitle" xml:space="preserve"><value>طباعة ملصقات الباركود</value></data>
+  <data name="BLSub" xml:space="preserve"><value>{0} صنف — {1} ملصق</value></data>
+  <data name="BLLayoutSettings" xml:space="preserve"><value>مقاس الملصق</value></data>
+  <data name="BLPrint" xml:space="preserve"><value>طباعة ({0})</value></data>
+  <data name="BLAddItems" xml:space="preserve"><value>إضافة أصناف</value></data>
+  <data name="BLSearchItem" xml:space="preserve"><value>ابحث عن صنف وأضفه</value></data>
+  <data name="BLSearchHint" xml:space="preserve"><value>بالاسم أو الكود أو الباركود؛ اختيار الصنف يضيفه للقائمة</value></data>
+  <data name="BLLoadTitle" xml:space="preserve"><value>تحميل أصناف مخزن أو فئة</value></data>
+  <data name="BLOnlyInStock" xml:space="preserve"><value>ذات الرصيد فقط</value></data>
+  <data name="BLCopiesFromBalance" xml:space="preserve"><value>النسخ = الرصيد</value></data>
+  <data name="BLLoadButton" xml:space="preserve"><value>تحميل الأصناف</value></data>
+  <data name="BLLoaded" xml:space="preserve"><value>أُضيف {0} صنف</value></data>
+  <data name="BLOptions" xml:space="preserve"><value>محتوى الملصق</value></data>
+  <data name="BLNameShown" xml:space="preserve"><value>الاسم على الملصق</value></data>
+  <data name="BLName_name" xml:space="preserve"><value>اسم الصنف</value></data>
+  <data name="BLName_invoice" xml:space="preserve"><value>الاسم فى الفاتورة</value></data>
+  <data name="BLName_english" xml:space="preserve"><value>الاسم الإنجليزى</value></data>
+  <data name="BLName_none" xml:space="preserve"><value>بلا اسم</value></data>
+  <data name="BLCodeShown" xml:space="preserve"><value>الكود المطبوع</value></data>
+  <data name="BLCode_code" xml:space="preserve"><value>كود الصنف</value></data>
+  <data name="BLCode_barcode2" xml:space="preserve"><value>باركود 2</value></data>
+  <data name="BLCode_barcode3" xml:space="preserve"><value>باركود 3</value></data>
+  <data name="BLShowPrice" xml:space="preserve"><value>طباعة سعر البيع</value></data>
+  <data name="BLShowCode" xml:space="preserve"><value>طباعة الكود تحت الباركود</value></data>
+  <data name="BLLayoutNote" xml:space="preserve"><value>مقاس الملصق {0}×{1} مم من «إعدادات طباعة الباركود»</value></data>
+  <data name="BLLines" xml:space="preserve"><value>الأصناف المطلوبة</value></data>
+  <data name="BLClear" xml:space="preserve"><value>مسح الكل</value></data>
+  <data name="BLNoLines" xml:space="preserve"><value>لم تُضف أصناف بعد</value></data>
+  <data name="BLNoLinesHint" xml:space="preserve"><value>ابحث عن صنف أو حمّل أصناف مخزن أو فئة</value></data>
+  <data name="BLNoCode" xml:space="preserve"><value>لا يوجد كود لهذا الصنف — لن يُطبع باركود</value></data>
+  <data name="BLBadCode" xml:space="preserve"><value>الكود يحتوى حروفاً لا يقبلها الباركود</value></data>
+  <data name="BLCopies" xml:space="preserve"><value>النسخ</value></data>
+  <data name="BLRemove" xml:space="preserve"><value>حذف {0}</value></data>
+  <data name="BLPriceOnLabel" xml:space="preserve"><value>السعر {0}</value></data>
+  <data name="BLPreviewCapped" xml:space="preserve"><value>الحد الأقصى {0} ملصق فى المرة؛ قلّل النسخ أو اطبع على دفعات</value></data>
 </root>

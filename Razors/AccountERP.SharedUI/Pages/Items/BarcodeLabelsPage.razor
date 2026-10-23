@@ -1,0 +1,334 @@
+@* 🟢 خطة 05 بند 25: طباعة ملصقات الباركود (بدل PrintBarCodeForOneItems «طباعة البار كود الصنف»، PrintBarCodeForOneItemsWithPrice
+   «مع السعر»، Bill_PrintItemsBarCodeItemsList «قائمة الأصناف»). قائمة أصناف بعدد نسخ لكل صنف: إضافة بالبحث، أو تحميل أصناف مخزن/فئة
+   (النسخ = 1 أو = الرصيد بالوحدة الكبرى). الملصق: الاسم (عربى/الفاتورة/إنجليزى أو بلا)، الباركود، الكود، والسعر اختيارياً.
+   مقاس الملصق والتباعد والهوامش من الإعداد المحفوظ فى «إعدادات طباعة الباركود» (BarCodeSettingCLS.GetCurrent).
+   الترميز Code 128 (يقبل الحروف الصغيرة والرموز وأقصر من Code 39 لنفس الكود — المعتاد فى الأنظمة الحديثة).
+   التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@page "/items/barcode-labels"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using ZXing
+@using static AccountModelsLib.BarcodeLabelsService
+@inject LanguageService LangService
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("BLTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .bl-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .bl-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .bl-head .ico .mud-icon-root { font-size: 2rem; }
+    .bl-head .titles { flex: 1 1 260px; min-width: 0; }
+    .bl-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .bl-head .mud-button-root { min-height: 44px; }
+    .bl-gap { margin-top: 16px; }
+    .bl-cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+    .bl-load { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+    .bl-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 8px; }
+    .bl-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+    .bl-line { display: grid; grid-template-columns: minmax(0, 1fr) 120px 44px; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--mud-palette-lines-default); }
+    .bl-line .nm { font-weight: 600; overflow-wrap: anywhere; }
+    .bl-line .cd { font-size: .8125rem; color: var(--mud-palette-text-secondary); font-variant-numeric: tabular-nums; }
+    .bl-line .bad { font-size: .8125rem; color: var(--mud-palette-error); }
+    .bl-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 32px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .bl-empty .mud-icon-root { opacity: .5; }
+    .bl-preview { overflow: auto; max-height: 70vh; padding: 8px; background: var(--mud-palette-background-gray); border-radius: 12px; }
+    .bl-sheet { display: grid; justify-content: start; }
+    .bl-label { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; box-sizing: border-box; overflow: hidden;
+                background: #fff; color: #000; border: 1px dashed #bbb; font-family: Tahoma, Arial, sans-serif; text-align: center; }
+    .bl-label .n { font-size: 9px; font-weight: 700; line-height: 1.15; max-width: 100%; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .bl-label img { max-width: 100%; display: block; }
+    .bl-label .c { font-size: 9px; font-variant-numeric: tabular-nums; letter-spacing: .5px; }
+    .bl-label .p { font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .bl-more { margin-top: 8px; font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    @@media (max-width: 1199px) { .bl-cols { grid-template-columns: minmax(0, 1fr); } }
+    @@media (max-width: 599px) { .bl-load, .bl-opts { grid-template-columns: minmax(0, 1fr); } .bl-line { grid-template-columns: minmax(0, 1fr) 96px 44px; } }
+    @@media print {
+        body * { visibility: hidden; }
+        .bl-print, .bl-print * { visibility: visible; }
+        .bl-print { position: absolute; inset-inline-start: 0; top: 0; }
+        .bl-preview { max-height: none; overflow: visible; background: none; padding: 0; }
+        .bl-label { border: none; }
+        .bl-noprint { display: none !important; }
+    }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-card bl-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.QrCode2" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("BLTitle")</h1>
+            <div class="sub">@Tr("BLSub", _lines.Count, TotalLabels)</div>
+        </div>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Tune" Href="/main-data/barcode-print-settings">@Tr("BLLayoutSettings")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Print" Disabled="@(TotalLabels == 0)" OnClick="PrintAsync">@Tr("BLPrint", TotalLabels)</MudButton>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3" role="alert">@_error</MudAlert>
+    }
+
+    <div class="bl-cols bl-gap">
+        <div>
+            <div class="inv-card">
+                <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.AddCircleOutline" />@Tr("BLAddItems")</h2>
+                <MudAutocomplete T="LabelItem" Label="@Tr("BLSearchItem")" Value="_pick" ValueChanged="AddPickedAsync" SearchFunc="SearchAsync"
+                                 ToStringFunc="@(i => i == null ? null : $"{i.Code} - {i.Item_Name}")" DebounceInterval="300" MinCharacters="1"
+                                 Clearable="true" ResetValueOnEmptyText="true" Variant="Variant.Outlined" FullWidth="true"
+                                 Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" HelperText="@Tr("BLSearchHint")" />
+
+                <MudDivider Class="my-4" />
+                <h3 class="inv-card-title" style="font-size:1rem"><MudIcon Icon="@Icons.Material.Filled.Inventory2" />@Tr("BLLoadTitle")</h3>
+                <div class="bl-load">
+                    <MudSelect T="long" @bind-Value="_storeId" Label="@Tr("SOParty_4")" Variant="Variant.Outlined"
+                               ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _stores.FirstOrDefault(s => s.Id == v)?.Name ?? "")">
+                        <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                        @foreach (var s in _stores) { <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem> }
+                    </MudSelect>
+                    <MudSelect T="long" @bind-Value="_categoryId" Label="@Tr("SBCategory")" Variant="Variant.Outlined"
+                               ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _categories.FirstOrDefault(c => c.Id == v)?.Name ?? "")">
+                        <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                        @foreach (var c in _categories) { <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem> }
+                    </MudSelect>
+                </div>
+                <div class="bl-row">
+                    <MudSwitch T="bool" @bind-Value="_onlyInStock" Color="Color.Primary" Label="@Tr("BLOnlyInStock")" />
+                    <MudSwitch T="bool" @bind-Value="_copiesFromBalance" Color="Color.Primary" Label="@Tr("BLCopiesFromBalance")" />
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="_loadingItems" OnClick="LoadItemsAsync"
+                               StartIcon="@(_loadingItems ? null : Icons.Material.Filled.PlaylistAdd)">
+                        @if (_loadingItems) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                        @Tr("BLLoadButton")
+                    </MudButton>
+                </div>
+            </div>
+
+            <div class="inv-card bl-gap">
+                <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Tune" />@Tr("BLOptions")</h2>
+                <div class="bl-opts">
+                    <MudSelect T="string" @bind-Value="_nameSource" Label="@Tr("BLNameShown")" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@("name")">@Tr("BLName_name")</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("invoice")">@Tr("BLName_invoice")</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("english")">@Tr("BLName_english")</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("none")">@Tr("BLName_none")</MudSelectItem>
+                    </MudSelect>
+                    <MudSelect T="string" Value="_codeSource" ValueChanged="OnCodeSourceChanged" Label="@Tr("BLCodeShown")" Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@("code")">@Tr("BLCode_code")</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("barcode2")">@Tr("BLCode_barcode2")</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("barcode3")">@Tr("BLCode_barcode3")</MudSelectItem>
+                    </MudSelect>
+                    <MudNumericField T="int" @bind-Value="_columns" Label="@Tr("BarcodeColumnsCount")" Variant="Variant.Outlined" Min="1" Max="10" />
+                </div>
+                <div class="bl-row">
+                    <MudSwitch T="bool" @bind-Value="_showPrice" Color="Color.Primary" Label="@Tr("BLShowPrice")" />
+                    <MudSwitch T="bool" @bind-Value="_showCode" Color="Color.Primary" Label="@Tr("BLShowCode")" />
+                </div>
+                <div class="bl-more">@Tr("BLLayoutNote", Num(_w), Num(_h))</div>
+            </div>
+
+            <div class="inv-card bl-gap">
+                <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("BLLines")<span class="inv-count">@_lines.Count</span>
+                    @if (_lines.Count > 0)
+                    {
+                        <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" Class="ms-auto" StartIcon="@Icons.Material.Filled.ClearAll" OnClick="ClearAll">@Tr("BLClear")</MudButton>
+                    }
+                </h2>
+                @if (_lines.Count == 0)
+                {
+                    <div class="bl-empty"><MudIcon Icon="@Icons.Material.Filled.QrCodeScanner" Size="Size.Large" /><b>@Tr("BLNoLines")</b><span>@Tr("BLNoLinesHint")</span></div>
+                }
+                else
+                {
+                    @foreach (var l in _lines)
+                    {
+                        <div class="bl-line">
+                            <div>
+                                <div class="nm">@l.Item.Item_Name</div>
+                                <div class="cd">@CodeOf(l.Item) · @Money(l.Item.Sale_Price)</div>
+                                @if (string.IsNullOrWhiteSpace(CodeOf(l.Item))) { <div class="bad">@Tr("BLNoCode")</div> }
+                                else if (Image(CodeOf(l.Item)) == "") { <div class="bad">@Tr("BLBadCode")</div> }
+                            </div>
+                            <MudNumericField T="int" @bind-Value="l.Copies" Label="@Tr("BLCopies")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Max="999" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Close" aria-label="@Tr("BLRemove", l.Item.Item_Name)" OnClick="@(() => _lines.Remove(l))" />
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <div class="inv-card">
+            <h2 class="inv-card-title bl-noprint"><MudIcon Icon="@Icons.Material.Filled.Preview" />@Tr("BarcodePreviewLabel")<span class="inv-count">@TotalLabels</span></h2>
+            <div class="bl-preview bl-print">
+                <div class="bl-sheet" style="@SheetStyle">
+                    @foreach (var lab in Labels)
+                    {
+                        <div class="bl-label" style="@LabelStyle">
+                            @if (_nameSource != "none" && !string.IsNullOrWhiteSpace(NameOf(lab))) { <div class="n">@NameOf(lab)</div> }
+                            @{ var img = Image(CodeOf(lab)); }
+                            @if (img != "") { <img src="@img" alt="@CodeOf(lab)" style="@BarStyle" /> }
+                            @if (_showCode) { <div class="c">@CodeOf(lab)</div> }
+                            @if (_showPrice) { <div class="p">@Tr("BLPriceOnLabel", Money(lab.Sale_Price))</div> }
+                        </div>
+                    }
+                </div>
+                @if (_lines.Sum(l => Math.Max(0, l.Copies)) > MaxLabels) { <div class="bl-more bl-noprint">@Tr("BLPreviewCapped", MaxLabels)</div> }
+            </div>
+        </div>
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private const int MaxLabels = 500;
+
+    private class Line
+    {
+        public LabelItem Item { get; set; } = new();
+        public int Copies { get; set; } = 1;
+    }
+
+    /// <summary>price=1 يفتح وطباعة السعر مفعَّلة (عنصر «مع السعر»).</summary>
+    [SupplyParameterFromQuery(Name = "price")] public int? PriceQuery { get; set; }
+
+    private readonly BarcodeLabelsService _svc = new();
+    private readonly StoreBalancesService _balances = new();
+    private List<StoreBalancesService.Option> _stores = new(), _categories = new();
+    private readonly List<Line> _lines = new();
+    private readonly Dictionary<string, string> _images = new();
+    private LabelItem? _pick;
+    private long _storeId, _categoryId;
+    private bool _onlyInStock = true, _copiesFromBalance, _loadingItems, _showPrice, _showCode = true;
+    private string _nameSource = "name", _codeSource = "code";
+    private string? _error;
+    private int _columns = 3;
+    // مقاس الملصق (مم) من الإعداد المحفوظ؛ هذه قيم «إعدادات طباعة الباركود» الافتراضية
+    private float _w = 45f, _h = 28f, _barH = 12f, _sx = 50f, _sy = 30f, _lm = 2f, _tm = 2f;
+
+    private int TotalLabels => Math.Min(_lines.Sum(l => Math.Max(0, l.Copies)), MaxLabels);
+    private IEnumerable<LabelItem> Labels => _lines.SelectMany(l => Enumerable.Repeat(l.Item, Math.Max(0, l.Copies))).Take(MaxLabels);
+
+    private string SheetStyle => FormattableString.Invariant(
+        $"grid-template-columns: repeat({Math.Clamp(_columns, 1, 10)}, {_w}mm); column-gap: {Math.Max(0, _sx - _w)}mm; row-gap: {Math.Max(0, _sy - _h)}mm;");
+    private string LabelStyle => FormattableString.Invariant($"width:{_w}mm; height:{_h}mm; padding:{_tm}mm {_lm}mm;");
+    private string BarStyle => FormattableString.Invariant($"height:{Math.Max(4f, Math.Min(_barH, _h - 6))}mm; width:100%;");
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        _showPrice = PriceQuery == 1;
+        try
+        {
+            Item_BarCodeSetting? row = null;
+            (_stores, _categories, row) = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var opp = new operations();
+                return (_balances.GetStores(4), _balances.GetCategories(), new BarCodeSettingCLS().GetCurrent(ref opp));
+            });
+            if (row != null)
+            {
+                _w = F(row.Width, _w); _h = F(row.Height, _h); _barH = F(row.BarCodeHeight, _barH);
+                _sx = F(row.Space_X_Item, _sx); _sy = F(row.Space_Y_Item, _sy); _lm = F(row.LeftMargin, _lm); _tm = F(row.TopMargin, _tm);
+                if (PriceQuery is null) _showPrice = row.IsPrintPrice == "True";
+            }
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task<IEnumerable<LabelItem>> SearchAsync(string value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return Array.Empty<LabelItem>();
+        try { return await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Search(value); }, token); }
+        catch { return Array.Empty<LabelItem>(); }
+    }
+
+    private Task AddPickedAsync(LabelItem? item)
+    {
+        if (item != null) AddLine(item, 1);
+        _pick = null;
+        return Task.CompletedTask;
+    }
+
+    private void AddLine(LabelItem item, int copies)
+    {
+        var existing = _lines.FirstOrDefault(l => l.Item.Item_Id == item.Item_Id);
+        if (existing != null) existing.Copies = Math.Min(999, existing.Copies + copies);
+        else _lines.Add(new Line { Item = item, Copies = copies });
+    }
+
+    private async Task LoadItemsAsync()
+    {
+        _loadingItems = true; _error = null;
+        long s = _storeId, c = _categoryId; bool only = _onlyInStock;
+        try
+        {
+            var items = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Load(s, c, only); });
+            foreach (var i in items) AddLine(i, _copiesFromBalance ? (int)Math.Clamp(Math.Ceiling(i.Balance_Large), 0, 999) : 1);
+            Snackbar.Add(Tr("BLLoaded", items.Count), items.Count > 0 ? Severity.Success : Severity.Info);
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _loadingItems = false; }
+    }
+
+    private void ClearAll() => _lines.Clear();
+    private void OnCodeSourceChanged(string v) { _codeSource = v; }
+
+    private string CodeOf(LabelItem i) => (_codeSource switch
+    {
+        "barcode2" => i.BarCode2, "barcode3" => i.BarCode3, _ => i.Code,
+    } ?? "").Trim();
+
+    private string NameOf(LabelItem i) => (_nameSource switch
+    {
+        "invoice" => string.IsNullOrWhiteSpace(i.Name_On_Invoice) ? i.Item_Name : i.Name_On_Invoice,
+        "english" => string.IsNullOrWhiteSpace(i.English_Name) ? i.Item_Name : i.English_Name,
+        "none" => "",
+        _ => i.Item_Name,
+    } ?? "").Trim();
+
+    /// <summary>صورة الباركود لكل كود مرة واحدة (Code 128)؛ "" إن تعذَّر ترميز الكود.</summary>
+    private string Image(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code)) return "";
+        if (_images.TryGetValue(code, out var uri)) return uri;
+        try { uri = BarcodeImageService.GeneratePngDataUri(code, BarcodeFormat.CODE_128, 360, 90); }
+        catch { uri = ""; }
+        _images[code] = uri;
+        return uri;
+    }
+
+    private async Task PrintAsync() => await JS.InvokeVoidAsync("window.print");
+
+    private static float F(string? s, float fallback) => float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var v) && v > 0 ? v : fallback;
+    private static string Num(float v) => v.ToString("0.#", CultureInfo.InvariantCulture);
+    private static string Money(decimal v) => v.ToString("N2", CultureInfo.InvariantCulture);
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

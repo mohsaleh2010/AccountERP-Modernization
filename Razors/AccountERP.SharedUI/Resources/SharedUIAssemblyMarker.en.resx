@@ -3954,4 +3954,39 @@
   <data name="PHAdjustUp" xml:space="preserve"><value>Adjustment increase</value></data>
   <data name="PHAdjustDown" xml:space="preserve"><value>Adjustment decrease</value></data>
   <data name="EXOneItem" xml:space="preserve"><value>One item: {0}</value></data>
+  <data name="BLTitle" xml:space="preserve"><value>Print barcode labels</value></data>
+  <data name="BLSub" xml:space="preserve"><value>{0} items — {1} labels</value></data>
+  <data name="BLLayoutSettings" xml:space="preserve"><value>Label layout</value></data>
+  <data name="BLPrint" xml:space="preserve"><value>Print ({0})</value></data>
+  <data name="BLAddItems" xml:space="preserve"><value>Add items</value></data>
+  <data name="BLSearchItem" xml:space="preserve"><value>Search an item to add</value></data>
+  <data name="BLSearchHint" xml:space="preserve"><value>By name, code or barcode; picking an item adds it to the list</value></data>
+  <data name="BLLoadTitle" xml:space="preserve"><value>Load items of a store or category</value></data>
+  <data name="BLOnlyInStock" xml:space="preserve"><value>In stock only</value></data>
+  <data name="BLCopiesFromBalance" xml:space="preserve"><value>Copies = balance</value></data>
+  <data name="BLLoadButton" xml:space="preserve"><value>Load items</value></data>
+  <data name="BLLoaded" xml:space="preserve"><value>{0} items added</value></data>
+  <data name="BLOptions" xml:space="preserve"><value>Label content</value></data>
+  <data name="BLNameShown" xml:space="preserve"><value>Name on label</value></data>
+  <data name="BLName_name" xml:space="preserve"><value>Item name</value></data>
+  <data name="BLName_invoice" xml:space="preserve"><value>Name on invoice</value></data>
+  <data name="BLName_english" xml:space="preserve"><value>English name</value></data>
+  <data name="BLName_none" xml:space="preserve"><value>No name</value></data>
+  <data name="BLCodeShown" xml:space="preserve"><value>Printed code</value></data>
+  <data name="BLCode_code" xml:space="preserve"><value>Item code</value></data>
+  <data name="BLCode_barcode2" xml:space="preserve"><value>Barcode 2</value></data>
+  <data name="BLCode_barcode3" xml:space="preserve"><value>Barcode 3</value></data>
+  <data name="BLShowPrice" xml:space="preserve"><value>Print sale price</value></data>
+  <data name="BLShowCode" xml:space="preserve"><value>Print code under barcode</value></data>
+  <data name="BLLayoutNote" xml:space="preserve"><value>Label size {0}×{1} mm from “Barcode print settings”</value></data>
+  <data name="BLLines" xml:space="preserve"><value>Items to print</value></data>
+  <data name="BLClear" xml:space="preserve"><value>Clear all</value></data>
+  <data name="BLNoLines" xml:space="preserve"><value>No items added yet</value></data>
+  <data name="BLNoLinesHint" xml:space="preserve"><value>Search an item or load a store or category</value></data>
+  <data name="BLNoCode" xml:space="preserve"><value>This item has no code — no barcode will print</value></data>
+  <data name="BLBadCode" xml:space="preserve"><value>The code contains characters a barcode cannot hold</value></data>
+  <data name="BLCopies" xml:space="preserve"><value>Copies</value></data>
+  <data name="BLRemove" xml:space="preserve"><value>Remove {0}</value></data>
+  <data name="BLPriceOnLabel" xml:space="preserve"><value>Price {0}</value></data>
+  <data name="BLPreviewCapped" xml:space="preserve"><value>Maximum {0} labels per run; reduce copies or print in batches</value></data>
 </root>
