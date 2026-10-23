@@ -74,7 +74,23 @@ namespace AccountERP.SharedUI
         // مضمون 100% بغض النظر عن ثقافة الخيط الفعلي الذى نُفِّذت عليه رندرته - راجع MODERNIZATION_NOTES.md
         // (حالة NavMenuMud/MenuNode/Home.razor حيث بقيت نصوص Lang[...] بلغتها القديمة بعد تبديل اللغة رغم
         // أن قيماً أخرى محسوبة من CurrentLanguage مباشرة، مثل GetLocalizedDescription، تحدّثت بشكل صحيح).
-        public CultureInfo CurrentCultureInfo => new CultureInfo(_currentCultureCode);
+        public CultureInfo CurrentCultureInfo => UiCulture(_currentCultureCode);
+
+        /// <summary>
+        /// 🐛 خطة 05 (بند 22): ثقافة الواجهة بأرقام لاتينية الفواصل. MudBlazor 9 يأخذ ثقافة الحقول الرقمية/التواريخ الافتراضية من
+        /// CurrentUICulture، وar-EG فاصلها العشرى «٫» وعلامة السالب فيها حرف اتجاه خفى، فكان «12.5» يُقرأ صفراً فى كل الحقول.
+        /// النسخة هنا بنفس الاسم (فتبقى ملفات .resx ونصوص الواجهة كما هى) لكن الفاصل العشرى «.» والآلاف «,» والسالب «-».
+        /// </summary>
+        public static CultureInfo UiCulture(string code) => _uiCultures.GetOrAdd(code ?? DefaultCultureCode, c =>
+        {
+            var ci = (CultureInfo)CultureInfo.GetCultureInfo(c).Clone();
+            ci.NumberFormat.NumberDecimalSeparator = ci.NumberFormat.CurrencyDecimalSeparator = ci.NumberFormat.PercentDecimalSeparator = ".";
+            ci.NumberFormat.NumberGroupSeparator = ci.NumberFormat.CurrencyGroupSeparator = ci.NumberFormat.PercentGroupSeparator = ",";
+            ci.NumberFormat.NegativeSign = "-";
+            ci.NumberFormat.PositiveSign = "+";
+            return CultureInfo.ReadOnly(ci);
+        });
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, CultureInfo> _uiCultures = new(StringComparer.OrdinalIgnoreCase);
 
         public LanguageInfo CurrentLanguageInfo =>
             SupportedLanguages.FirstOrDefault(l => l.CultureCode.Equals(CurrentLanguage, StringComparison.OrdinalIgnoreCase))
@@ -94,13 +110,20 @@ namespace AccountERP.SharedUI
 #if !ANDROID && !IOS && !MACCATALYST && !WINDOWS
         public static RequestLocalizationOptions GetLocalizationOptions()
         {
-            var options = new RequestLocalizationOptions()
-                .SetDefaultCulture(DefaultCultureCode)
-                .AddSupportedCultures(SupportedCultures)
-                .AddSupportedUICultures(SupportedCultures);
+            // خطة 05 (بند 22): ثقافة التنسيق للطلب (CurrentCulture) = الثابتة دائماً، كما يفرضها ApplyToCurrentThread قبل كل رندرة،
+            // فلا تبقى ar-EG فى أحداث الدائرة وما تبدؤه من Task.Run (مشكلة «-1» بحرف الاتجاه الخفى المذكورة أدناه). لغة الواجهة
+            // (CurrentUICulture) تبقى من الكوكي كما هى، بنسخة UiCulture ذات الفواصل اللاتينية (سبب «12.5 ← 0» الفعلى فى MudBlazor).
+            // ar-EG غير مدعومة كثقافة تنسيق فيرجع الوسيط للافتراضى الثابت.
+            var options = new RequestLocalizationOptions
+            {
+                DefaultRequestCulture = new RequestCulture(CultureInfo.InvariantCulture, UiCulture(DefaultCultureCode)),
+                SupportedCultures = new List<CultureInfo> { CultureInfo.InvariantCulture },
+                SupportedUICultures = SupportedCultures.Select(UiCulture).ToList(),
+                FallBackToParentCultures = false,
+            };
 
-            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo(DefaultCultureCode);
-            CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo(DefaultCultureCode);
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+            CultureInfo.DefaultThreadCurrentUICulture = UiCulture(DefaultCultureCode);
 
             options.RequestCultureProviders.Clear();
             options.RequestCultureProviders.Add(new CookieRequestCultureProvider());
@@ -148,7 +171,7 @@ namespace AccountERP.SharedUI
         // التواريخ) يبقيان على الثقافة الغازية (Invariant) بغض النظر عن لغة الواجهة المختارة.
         public void ApplyToCurrentThread()
         {
-            var culture = new CultureInfo(_currentCultureCode);
+            var culture = UiCulture(_currentCultureCode);
             CultureInfo.CurrentUICulture = culture;
             CultureInfo.DefaultThreadCurrentUICulture = culture;
 
