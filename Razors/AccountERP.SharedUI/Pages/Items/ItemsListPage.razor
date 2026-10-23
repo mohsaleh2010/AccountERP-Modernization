@@ -2,9 +2,11 @@
    تصفية بالفئة والنوع (أصناف/خدمات) والحالة، والرصيد الإجمالى بالوحدتين للعرض فقط. الصف يفتح شاشة الصنف. التصميم حسب ui-ux-pro-max.
    المرحلة 3: /items/p/{Profile} قائمة بملف ثابت (general، services، pharmacy، pharmacy-retail) بأعمدته، والصف يفتح الصنف بنفس الملف.
    خطة 05 بند 18: «صنف جديد حسب النوع» يفتح شاشة الإضافة المخصصة لكل ملف، وقائمة النسيج بشرائح نوع الصنف (نوع المخزن).
+   خطة 05 بند 21: /items/stores/{type} عرض «أصناف مخازن نوع» (بدل Mitems_List و ItemDataProduction/Purchase_ListFRM) بمخزن اختيارى والرصيد فيه.
    خطة 05 بند 16: «إضافة سريعة» فى حوار (الاسم، الفئة، الكود، الوحدة، سعرا البيع والشراء) برصيد صفر فى المخزن الافتراضى، مع إضافة متعددة. *@
 @page "/items"
 @page "/items/p/{Profile}"
+@page "/items/stores/{StoreType:int}"
 
 @using System.Globalization
 @using AccountModelsLib
@@ -40,6 +42,9 @@
     .it-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
     .it-code { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--mud-palette-text-secondary); }
     .it-row { cursor: pointer; }
+    .it-stores { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; margin-top: 12px; }
+    .it-stores .mud-input-control { flex: 0 1 320px; }
+    a.it-chip { display: inline-flex; align-items: center; text-decoration: none; }
     .it-muted { color: var(--mud-palette-text-secondary); font-size: .8rem; }
     .it-neg { color: var(--mud-palette-error); }
     .it-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
@@ -98,6 +103,25 @@
             }
         </div>
         }
+        @if (_storeType > 0)
+        {
+        @* خطة 05 بند 21: أصناف مخازن نوع واحد (منتجات المصنع / المشتريات ...) مع اختيار مخزن بعينه، والرصيد فى هذه المخازن فقط *@
+        <div class="it-stores">
+            <div class="it-kinds" role="group" aria-label="@Tr("IT_StoreTypeLabel")">
+                @for (int t = 1; t <= 4; t++)
+                {
+                    var k = t;
+                    <a class="it-chip" href="@($"/items/stores/{k}")" aria-current="@(_storeType == k ? "page" : null)" aria-pressed="@(_storeType == k ? "true" : "false")">@Tr("IT_TT" + k)</a>
+                }
+            </div>
+            <MudSelect T="long" Value="_f.Store_Id" ValueChanged="OnStoreAsync" Label="@Tr("IT_Store")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                       HelperText="@(TypeStores.Count == 0 ? Tr("IT_NoStoreOfType") : null)" Error="@(TypeStores.Count == 0)"
+                       ToStringFunc="@(id => id == 0 ? Tr("IT_AllTypeStores") : TypeStores.FirstOrDefault(s => s.Id == id)?.Name ?? string.Empty)">
+                <MudSelectItem T="long" Value="0L">@Tr("IT_AllTypeStores")</MudSelectItem>
+                @foreach (var st in TypeStores) { <MudSelectItem T="long" Value="st.Id">@st.Name</MudSelectItem> }
+            </MudSelect>
+        </div>
+        }
         @if (_profile == "textile")
         {
         <div class="it-kinds" role="group" aria-label="@Tr("IT_TextileType")">
@@ -125,7 +149,7 @@
                 <MudTh Style="text-align:end">@Tr("IT_SalePrice")</MudTh>
                 <MudTh Style="text-align:end">@Tr("IT_PurchasePrice")</MudTh>
                 @if (_pharm) { <MudTh Style="text-align:end">@Tr("IT_RetailPrice")</MudTh> }
-                <MudTh Style="text-align:end">@Tr("IT_Balance")</MudTh>
+                <MudTh Style="text-align:end">@Tr(_storeType > 0 ? "IT_BalanceInStores" : "IT_Balance")</MudTh>
                 <MudTh>@Tr("IT_Status")</MudTh>
             </HeaderContent>
             <RowTemplate>
@@ -205,6 +229,8 @@
 @code {
     [SupplyParameterFromQuery(Name = "kind")] public string? KindQuery { get; set; }
     [Parameter] public string? Profile { get; set; }
+    /// <summary>/items/stores/{type}: نوع المخزن (1 منتجات تامة، 2 مشتريات وخامات، 3 غير مكتمل، 4 تحت التشغيل).</summary>
+    [Parameter] public int? StoreType { get; set; }
 
     private readonly ItemEditorService _svc = new();
     private Lookups? _lk;
@@ -213,14 +239,16 @@
     private string? _error;
     private bool _loading = true, _pharm, _fixedKind;
     private string _profile = "";
+    private int _storeType;
+    private List<Option> TypeStores => _lk?.Stores.Where(s => _lk.Store_Types.GetValueOrDefault(s.Id, 1) == _storeType).ToList() ?? new();
 
     private string TitleKey => _profile switch { "pharmacy" => "IT_ListPharmacy", "pharmacy-retail" => "IT_ListPharmacyRetail", "services" => "IT_ListServices",
-        "cars" => "IT_ListCars", "ceramics" => "IT_ListCeramics", "glass" => "IT_ListGlass", "textile" => "IT_ListTextile", _ => "IT_ListTitle" };
+        "cars" => "IT_ListCars", "ceramics" => "IT_ListCeramics", "glass" => "IT_ListGlass", "textile" => "IT_ListTextile", _ => _storeType > 0 ? "IT_ListStoreType" + _storeType : "IT_ListTitle" };
     private bool _specs;
     private string ProfilePrefix => _profile.Length > 0 ? $"/items/p/{_profile}" : "/items";
     private string ItemHref(long id) => $"{ProfilePrefix}/{id}";
     private string NewHref => _profile.Length > 0 ? $"{ProfilePrefix}/new{(_profile == "textile" && _f.Store_Used_Type > 0 ? $"?type={_f.Store_Used_Type}" : "")}"
-        : $"/items/new{(_f.Kind == 2 ? "?kind=services" : "")}";
+        : _storeType > 0 ? $"/items/new?type={_storeType}" : $"/items/new{(_f.Kind == 2 ? "?kind=services" : "")}";
     private static readonly (string, string, string)[] NewTypes =
     {
         ("general", "IC_ProfileGeneral", Icons.Material.Filled.Inventory2), ("services", "IC_Services", Icons.Material.Filled.MiscellaneousServices),
@@ -238,6 +266,8 @@
         _pharm = ItemEditorService.IsPharmacy(_profile);
         _specs = _profile is "cars" or "ceramics" or "glass" or "textile";
         _f.Store_Used_Type = 0;
+        _storeType = _profile.Length == 0 && StoreType is >= 1 and <= 4 ? StoreType.Value : 0;
+        _f.Store_Type = _storeType; _f.Store_Id = 0;
         _fixedKind = _profile is "services" || _pharm || _specs;
         _f.Profile = _profile;
         _f.Kind = _profile == "services" ? 2 : _pharm || _specs ? 1 : KindQuery == "services" ? 2 : KindQuery == "items" ? 1 : 0;
@@ -253,7 +283,8 @@
     private async Task LoadAsync()
     {
         _loading = true;
-        var f = new ListFilter { Text = _f.Text, Category_Id = _f.Category_Id, Kind = _f.Kind, Active = _f.Active, Top = _f.Top, Profile = _f.Profile, Store_Used_Type = _f.Store_Used_Type };
+        var f = new ListFilter { Text = _f.Text, Category_Id = _f.Category_Id, Kind = _f.Kind, Active = _f.Active, Top = _f.Top, Profile = _f.Profile, Store_Used_Type = _f.Store_Used_Type,
+                              Store_Type = _f.Store_Type, Store_Id = _f.Store_Id };
         try { _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.List(f); }); _error = null; }
         catch (Exception ex) { _error = Inner(ex); _rows = new(); }
         finally { _loading = false; }
@@ -280,8 +311,9 @@
     }
 
     /// <summary>صنف النسيج السريع: نوعه من شريحة القائمة (منتج تام افتراضياً)، ومخزنه أول مخزن من نفس النوع.</summary>
-    private int QuickStoreType => _profile == "textile" && _f.Store_Used_Type > 0 ? _f.Store_Used_Type : 1;
-    private long QuickStoreId => _profile != "textile" ? _lk?.Default_Store_Id ?? 0
+    private int QuickStoreType => _storeType > 0 ? _storeType : _profile == "textile" && _f.Store_Used_Type > 0 ? _f.Store_Used_Type : 1;
+    private long QuickStoreId => _storeType > 0 && _f.Store_Id != 0 ? _f.Store_Id
+        : _profile != "textile" && _storeType == 0 ? _lk?.Default_Store_Id ?? 0
         : _lk?.Stores.FirstOrDefault(s => _lk.Store_Types.GetValueOrDefault(s.Id, 1) == QuickStoreType)?.Id ?? 0;
 
     private bool QuickReady => !string.IsNullOrWhiteSpace(_q.Name) && _q.Category_Id != 0 && _q.Unit_Id != 0;
@@ -326,7 +358,7 @@
 
     private async Task SaveQuickAsync(bool open)
     {
-        if (QuickStoreId == 0) { _qError = Tr(_profile == "textile" ? "IT_NoStoreOfType" : "IT_NoStore"); return; }
+        if (QuickStoreId == 0) { _qError = Tr(_profile == "textile" || _storeType > 0 ? "IT_NoStoreOfType" : "IT_NoStore"); return; }
         var unit = _lk.Units.FirstOrDefault(u => u.Id == _q.Unit_Id);
         decimal factor = unit?.Factor is > 0 and var fc ? fc : 1;
         var cat = _lk.Categories.FirstOrDefault(c => c.Id == _q.Category_Id);
@@ -364,6 +396,7 @@
     private async Task OnActiveAsync(int a) { _f.Active = a; await LoadAsync(); }
     private async Task OnKindAsync(int k) { _f.Kind = k; await LoadAsync(); }
     private async Task OnTextileTypeAsync(int t) { _f.Store_Used_Type = t; await LoadAsync(); }
+    private async Task OnStoreAsync(long id) { _f.Store_Id = id; await LoadAsync(); }
 
     /// <summary>الرصيد بالوحدة الصغرى معروض بالوحدتين: «5 + 2».</summary>
     private static string BalanceText(decimal small, decimal factor)

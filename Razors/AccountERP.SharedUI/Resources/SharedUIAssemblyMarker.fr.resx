@@ -2868,6 +2868,14 @@
   <data name="IT_TextileLocked" xml:space="preserve"><value>Le type ne peut pas changer pour un article avec solde ou mouvements</value></data>
   <data name="IT_NoStoreOfType" xml:space="preserve"><value>Aucun magasin actif de ce type ; ajoutez d'abord un magasin du même type.</value></data>
   <data name="IT_NewByType" xml:space="preserve"><value>Nouvel article par type</value></data>
+  <data name="IT_ListStoreType1" xml:space="preserve"><value>Produits finis de l'usine en magasins</value></data>
+  <data name="IT_ListStoreType2" xml:space="preserve"><value>Articles d'achat et matières premières en magasins</value></data>
+  <data name="IT_ListStoreType3" xml:space="preserve"><value>Articles semi-finis en magasins</value></data>
+  <data name="IT_ListStoreType4" xml:space="preserve"><value>Articles en cours de production en magasins</value></data>
+  <data name="IT_StoreTypeLabel" xml:space="preserve"><value>Type de magasin</value></data>
+  <data name="IT_AllTypeStores" xml:space="preserve"><value>Tous les magasins de ce type</value></data>
+  <data name="IT_BalanceInStores" xml:space="preserve"><value>Solde en magasins</value></data>
+  <data name="IT_StoreTypeNote" xml:space="preserve"><value>Un magasin « {0} » ; l'ajout à tous les magasins ne concerne que ce type</value></data>
   <data name="CT_Title" xml:space="preserve"><value>Types de véhicules</value></data>
   <data name="CT_Sub" xml:space="preserve"><value>Marques et types utilisés pour les véhicules et les pièces ; le nombre de modèles ouvre les modèles du type.</value></data>
   <data name="CT_New" xml:space="preserve"><value>Nouveau type de véhicule</value></data>

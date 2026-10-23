@@ -2866,6 +2866,14 @@
   <data name="IT_TextileLocked" xml:space="preserve"><value>The type cannot change for an item with a balance or movements</value></data>
   <data name="IT_NoStoreOfType" xml:space="preserve"><value>There is no active store of this type; add a store of the same type first.</value></data>
   <data name="IT_NewByType" xml:space="preserve"><value>New item by type</value></data>
+  <data name="IT_ListStoreType1" xml:space="preserve"><value>Factory product items in stores</value></data>
+  <data name="IT_ListStoreType2" xml:space="preserve"><value>Purchase and raw-material items in stores</value></data>
+  <data name="IT_ListStoreType3" xml:space="preserve"><value>Semi-finished items in stores</value></data>
+  <data name="IT_ListStoreType4" xml:space="preserve"><value>Work-in-progress items in stores</value></data>
+  <data name="IT_StoreTypeLabel" xml:space="preserve"><value>Store type</value></data>
+  <data name="IT_AllTypeStores" xml:space="preserve"><value>All stores of this type</value></data>
+  <data name="IT_BalanceInStores" xml:space="preserve"><value>Balance in stores</value></data>
+  <data name="IT_StoreTypeNote" xml:space="preserve"><value>A “{0}” store; adding to all stores covers stores of this type only</value></data>
   <data name="CT_Title" xml:space="preserve"><value>Car types</value></data>
   <data name="CT_Sub" xml:space="preserve"><value>Makes and types used for cars and spare parts; click the models count to open the type's models.</value></data>
   <data name="CT_New" xml:space="preserve"><value>New car type</value></data>

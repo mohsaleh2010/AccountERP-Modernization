@@ -2866,6 +2866,14 @@
   <data name="IT_TextileLocked" xml:space="preserve"><value>لا يتغير النوع لصنف له رصيد أو حركات</value></data>
   <data name="IT_NoStoreOfType" xml:space="preserve"><value>لا يوجد مخزن نشط من هذا النوع؛ أضف مخزناً بنفس النوع أولاً.</value></data>
   <data name="IT_NewByType" xml:space="preserve"><value>صنف جديد حسب النوع</value></data>
+  <data name="IT_ListStoreType1" xml:space="preserve"><value>أصناف منتجات المصنع بالمخازن</value></data>
+  <data name="IT_ListStoreType2" xml:space="preserve"><value>أصناف المشتريات والخامات بالمخازن</value></data>
+  <data name="IT_ListStoreType3" xml:space="preserve"><value>أصناف غير مكتملة التصنيع بالمخازن</value></data>
+  <data name="IT_ListStoreType4" xml:space="preserve"><value>أصناف الإنتاج تحت التشغيل بالمخازن</value></data>
+  <data name="IT_StoreTypeLabel" xml:space="preserve"><value>نوع المخزن</value></data>
+  <data name="IT_AllTypeStores" xml:space="preserve"><value>كل مخازن النوع</value></data>
+  <data name="IT_BalanceInStores" xml:space="preserve"><value>الرصيد فى المخازن</value></data>
+  <data name="IT_StoreTypeNote" xml:space="preserve"><value>المخزن من مخازن «{0}»؛ والإضافة لكل المخازن تشمل مخازن هذا النوع فقط</value></data>
   <data name="CT_Title" xml:space="preserve"><value>أنواع السيارات</value></data>
   <data name="CT_Sub" xml:space="preserve"><value>الماركات والأنواع المستعملة فى السيارات وقطع الغيار؛ الضغط على عدد الموديلات يفتح موديلات النوع.</value></data>
   <data name="CT_New" xml:space="preserve"><value>نوع سيارة جديد</value></data>

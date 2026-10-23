@@ -319,7 +319,7 @@
         {
             <div class="ie-grid">
                 <MudSelect T="long" @bind-Value="_f.Store_Id" Label="@Tr("IT_MainStore")" Variant="Variant.Outlined" Required="true"
-                           HelperText="@(FormStores.Count == 0 ? Tr("IT_NoStoreOfType") : _lk!.All_Stores ? Tr("IT_AllStoresNote") : null)" Error="@(FormStores.Count == 0)"
+                           HelperText="@(FormStores.Count == 0 ? Tr("IT_NoStoreOfType") : _f.Store_Used_Type != 1 && EffectiveProfile != "textile" ? Tr("IT_StoreTypeNote", Tr("IT_TT" + _f.Store_Used_Type)) : _lk!.All_Stores ? Tr("IT_AllStoresNote") : null)" Error="@(FormStores.Count == 0)"
                            ToStringFunc="@(id => _lk!.Stores.FirstOrDefault(s => s.Id == id)?.Name ?? string.Empty)">
                     @foreach (var s in FormStores) { <MudSelectItem T="long" Value="s.Id">@s.Name</MudSelectItem> }
                 </MudSelect>
@@ -437,7 +437,7 @@
         : ResolveProfile(_lk?.Categories.FirstOrDefault(c => c.Id == _f.Category_Id)?.Profile, _f.Item_Or_Service);
     private bool Pharm => IsPharmacy(EffectiveProfile);
     /// <summary>مخازن الصنف الجديد: لصنف النسيج المخازن من نفس نوعه فقط (كالديسك توب Store_DataByStoreUsed_Type)، وإلا كل المخازن.</summary>
-    private List<Option> FormStores => EffectiveProfile == "textile"
+    private List<Option> FormStores => EffectiveProfile == "textile" || _f.Store_Used_Type != 1
         ? _lk!.Stores.Where(s => _lk.Store_Types.GetValueOrDefault(s.Id, 1) == _f.Store_Used_Type).ToList() : _lk!.Stores;
     private bool Specs => EffectiveProfile is "cars" or "ceramics" or "glass";
     /// <summary>بيانات القوائم المرجعية (/items/lookups: المجموعة والطبيعة والمواصفات) لأصناف السيراميك فقط؛ القيم المحفوظة لغيرها تبقى كما هى عند الحفظ.</summary>
@@ -508,7 +508,8 @@
         // لا فئة افتراضية: أول فئة من نفس النوع (أصناف/خدمات)، كالإضافة السريعة
         if (_f.Category_Id == 0) _f.Category_Id = _lk.Categories.FirstOrDefault(c => kind == 2 ? c.Item_Or_Service != 1 : c.Item_Or_Service != 2)?.Id ?? 0;
         if (_routeProfile == "glass") _f.Thickness_Unit = "مم";
-        if (_routeProfile == "textile") OnTextileTypeChanged(TypeQuery is >= 1 and <= 4 ? TypeQuery.Value : 1);
+        // صنف النسيج، أو صنف جديد من «أصناف مخازن نوع» (/items/stores/{type}): نوع الصنف = نوع المخزن، والمخزن الرئيسى من مخازن النوع
+        if (_routeProfile == "textile" || TypeQuery is >= 2 and <= 4) OnTextileTypeChanged(TypeQuery is >= 1 and <= 4 ? TypeQuery.Value : 1);
     }
 
     /// <summary>تغيير نوع صنف النسيج يعيد اختيار المخزن الرئيسى من مخازن نفس النوع.</summary>

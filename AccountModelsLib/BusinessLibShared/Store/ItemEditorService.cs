@@ -238,6 +238,10 @@ namespace AccountModelsLib
             public string Profile { get; set; }
             /// <summary>نوع صنف النسيج (Item.StoreUsed_Type)؛ 0 = الكل.</summary>
             public int Store_Used_Type { get; set; }
+            /// <summary>خطة 05 بند 21: الأصناف الموجودة فى مخازن من هذا النوع (Store.StoreUsed_Type، كـ Mitems_List)؛ 0 = بلا تصفية. والرصيد يُحسب فى هذه المخازن فقط.</summary>
+            public int Store_Type { get; set; }
+            /// <summary>مخزن بعينه (مع Store_Type أو وحده)؛ 0 = كل المخازن.</summary>
+            public long Store_Id { get; set; }
         }
 
         // ===================== القراءة =====================
@@ -285,7 +289,8 @@ WHERE Active = 1 AND ISNULL(IS_ItemSecond_degree, 0) = 0").AsEnumerable().ToDict
 SELECT TOP ({top}) i.id AS Id, ISNULL(i.code, N'') AS Code, ISNULL(i.Item_Name, N'') AS Name, ISNULL(c.Category_Name, N'') AS Category,
        ISNULL(u.B_Unit, N'') AS Unit, CAST(ISNULL(u.S_unit_Value, 1) AS decimal(18,4)) AS Factor,
        CAST(ISNULL(i.S_price_LargeUnit, 0) AS decimal(18,4)) AS Sale_Price, CAST(ISNULL(i.P_price_LargeUnit, 0) AS decimal(18,4)) AS Purchase_Price,
-       CAST(ISNULL((SELECT SUM(ISNULL(ui.Full_qua, 0) * ISNULL(ui.Small_unit, 1) + ISNULL(ui.D_Qua, 0)) FROM Unit_item ui WHERE ui.Item_id = i.id), 0) AS decimal(18,4)) AS Balance_Small,
+       CAST(ISNULL((SELECT SUM(ISNULL(ui.Full_qua, 0) * ISNULL(ui.Small_unit, 1) + ISNULL(ui.D_Qua, 0)) FROM Unit_item ui LEFT JOIN Store us ON us.id = ui.Store_id
+                    WHERE ui.Item_id = i.id AND ({f.Store_Id} = 0 OR ui.Store_id = {f.Store_Id}) AND ({f.Store_Type} = 0 OR ISNULL(us.StoreUsed_Type, 1) = {f.Store_Type})), 0) AS decimal(18,4)) AS Balance_Small,
        ISNULL(i.Is_ItemOrService, 1) AS Item_Or_Service, CAST(CASE WHEN i.Is_ItemWithoutBalance = 1 THEN 1 ELSE 0 END AS bit) AS Without_Balance,
        CAST(CASE WHEN ISNULL(i.Active_flage, 1) = -1 OR i.Active_flage = 0 THEN 0 ELSE 1 END AS bit) AS Is_Active,
        ISNULL(i.ScientificName, N'') AS Scientific_Name, CAST(CASE WHEN i.IsRetailItem = 1 THEN 1 ELSE 0 END AS bit) AS Is_Retail,
@@ -308,6 +313,8 @@ WHERE ({t} = N'' OR i.Item_Name LIKE {like} OR i.code = {t} OR i.AnotherName LIK
        OR ({prof} IN (N'pharmacy', N'cars', N'ceramics', N'glass', N'textile') AND (c.Item_Profile = {prof} OR NOT EXISTS (SELECT 1 FROM Item_Category pc WHERE pc.Item_Profile = {prof}))))
   AND ({f.Kind} = 0 OR ({f.Kind} = 2 AND (i.Is_ItemOrService = 2 OR i.Is_ItemWithoutBalance = 1)) OR ({f.Kind} = 1 AND ISNULL(i.Is_ItemOrService, 1) <> 2 AND ISNULL(i.Is_ItemWithoutBalance, 0) = 0))
   AND ({f.Store_Used_Type} = 0 OR ISNULL(i.StoreUsed_Type, 1) = {f.Store_Used_Type})
+  AND (({f.Store_Type} = 0 AND {f.Store_Id} = 0) OR EXISTS (SELECT 1 FROM Unit_item sx JOIN Store st ON st.id = sx.Store_id WHERE sx.Item_id = i.id
+       AND ({f.Store_Type} = 0 OR ISNULL(st.StoreUsed_Type, 1) = {f.Store_Type}) AND ({f.Store_Id} = 0 OR sx.Store_id = {f.Store_Id})))
   AND ({f.Active} = -1 OR ({f.Active} = 1 AND ISNULL(i.Active_flage, 1) NOT IN (0, -1)) OR ({f.Active} = 0 AND i.Active_flage IN (0, -1)))
 ORDER BY i.Item_Name").ToList());
         }

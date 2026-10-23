@@ -2868,6 +2868,14 @@
   <data name="IT_TextileLocked" xml:space="preserve"><value>Der Typ kann bei Bestand oder Bewegungen nicht geändert werden</value></data>
   <data name="IT_NoStoreOfType" xml:space="preserve"><value>Es gibt kein aktives Lager dieses Typs; legen Sie zuerst ein Lager dieses Typs an.</value></data>
   <data name="IT_NewByType" xml:space="preserve"><value>Neuer Artikel nach Typ</value></data>
+  <data name="IT_ListStoreType1" xml:space="preserve"><value>Fertigwaren in Lagern</value></data>
+  <data name="IT_ListStoreType2" xml:space="preserve"><value>Einkaufs- und Rohstoffartikel in Lagern</value></data>
+  <data name="IT_ListStoreType3" xml:space="preserve"><value>Halbfertige Artikel in Lagern</value></data>
+  <data name="IT_ListStoreType4" xml:space="preserve"><value>Artikel in Produktion in Lagern</value></data>
+  <data name="IT_StoreTypeLabel" xml:space="preserve"><value>Lagertyp</value></data>
+  <data name="IT_AllTypeStores" xml:space="preserve"><value>Alle Lager dieses Typs</value></data>
+  <data name="IT_BalanceInStores" xml:space="preserve"><value>Bestand in Lagern</value></data>
+  <data name="IT_StoreTypeNote" xml:space="preserve"><value>Ein Lager vom Typ „{0}“; Hinzufügen zu allen Lagern betrifft nur Lager dieses Typs</value></data>
   <data name="CT_Title" xml:space="preserve"><value>Fahrzeugtypen</value></data>
   <data name="CT_Sub" xml:space="preserve"><value>Marken und Typen für Fahrzeuge und Ersatzteile; die Modellanzahl öffnet die Modelle des Typs.</value></data>
   <data name="CT_New" xml:space="preserve"><value>Neuer Fahrzeugtyp</value></data>

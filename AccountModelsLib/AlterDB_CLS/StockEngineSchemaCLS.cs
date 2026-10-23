@@ -238,6 +238,11 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             // خطة 04 م4: ملفات السيارات والسيراميك (عنصر الزجاج menuItemItemsListSpecGlass بلا صف فى SysConfigMenus)
             ("menuItemItemsListSpecCars", "/items/p/cars"), ("ToolStripMenuItemItemsForCars", "/items/p/cars"),
             ("menuItemItemsListSpecSeramek", "/items/p/ceramics"),
+            // خطة 05 بند 21: «بيانات الأصناف» — أصناف مخازن نوع (منتجات المصنع 1 / المشتريات 2) بدل Mitems_List و Item*_ListFRM،
+            // وإضافة الصنف العام والزجاج (Mitems_ListNew / Mitems_List_WH)
+            ("menuItemProductionItelList", "/items/stores/1"), ("menuProducts", "/items"), ("menuItemSellItems", "/items/stores/1"),
+            ("menuItemItemPurchase", "/items/stores/2"), ("menuItemPurchaseList", "/items/stores/2"),
+            ("menuItemItemsList", "/items/new"), ("menuItemItemsListSpecGlass", "/items/p/glass/new"),
             // خطة 05 بند 19: أنواع السيارات وموديلاتها تحت قائمة السيارات
             ("lookupCarTypeToolStripMenuItem", "/cars/types"), ("lookupCarTypeModelToolStripMenuItem", "/cars/models"),
             // خطة 04 م5: الأسعار (طباعة الأسعار menuItemItemPrices لم تُبنَ بعد)
