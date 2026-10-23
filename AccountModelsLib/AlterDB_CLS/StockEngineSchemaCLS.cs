@@ -70,6 +70,7 @@ WHERE Order_Type IN (1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1012,1013
             Step(opp, LinkStoreOrderMenus);
             Step(opp, TransferSettings);
             Step(opp, StoreAccountMenu);
+            Step(opp, TextileItemsMenu);
         }
 
         // ---------------- حسابات المخازن: الحساب المقابل لكل حركة مخزنية (StoreAccountDeterminationCLS) ----------------
@@ -134,6 +135,42 @@ VALUES ({id}, {parent.Id}, {E(key)}, {E(desc)}, 2, {E("1")}, {E("1")}, {E(desc)}
                 opp.db.Database.ExecuteSqlInterpolated($@"
 INSERT INTO SysConfigMenusPERMATIONS (Id, Menu_ID, Parent_Id, USER_ID, PERMATION, PROJECT_ID, IsShowToUser)
 VALUES ({CallSnowflakeIdGenerate.GenerateNewId()}, {id}, {parent.Id}, {user}, {E("1")}, 2, 1)");
+        }
+
+        /// <summary>
+        /// خطة 05 بند 22: «أصناف النسيج» تحت «الأصناف» (عنصر الديسك توب menuItemItemsAllNesseg بلا صف فى SysConfigMenus) وتحته
+        /// «قائمة أصناف النسيج» (/items/p/textile) و«بيانات إنتاج الأصناف» (/items/production-data). صلاحيتها للمديرين فقط
+        /// والباقون من شاشة الصلاحيات - نفس نمط StoreAccountMenu. إدراج فقط، لا يغيّر أى صف قائم، ولا يتكرر.
+        /// </summary>
+        private static void TextileItemsMenu(operations opp)
+        {
+            var menus = opp.db.Database.SqlQueryRaw<StoreTransferPolicy.KeyValueRow>("SELECT Id, KeysData, Value FROM SysConfigMenus").ToList();
+            string Key(StoreTransferPolicy.KeyValueRow r) => r.KeysData == null ? "" : Common.DecryptMe(r.KeysData).Trim();
+            var items = menus.FirstOrDefault(m => Key(m) == "toolStripMenuItemItemsMain");
+            if (items == null) return;
+            string E(string s) => Common.EncryptMe(s);
+            long next = menus.Max(m => m.Id) + 1;
+            var admins = opp.db.Database.SqlQueryRaw<long>("SELECT Id AS Value FROM USER_DETAILES WHERE ISNULL(AdminFlage, 0) = 1").ToList();
+            long Ensure(string key, string desc, long parentId, string path)
+            {
+                long id = menus.FirstOrDefault(m => Key(m) == key)?.Id ?? 0;
+                if (id != 0) return id;
+                id = next++;
+                string p = path == null ? null : E(path);
+                opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenus (Id, Parent_Id, KeysData, Description, PROJECT_ID, Value, DefaultValue, DefaultDescription,
+                            POS, Market, Factory, Tourism, AlFawzan, Client_A, Client_B, UserSells, IsShowToUser, RazorPath)
+VALUES ({id}, {parentId}, {E(key)}, {E(desc)}, 2, {E("1")}, {E("1")}, {E(desc)},
+        {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, 1, {p})");
+                foreach (long user in admins)
+                    opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenusPERMATIONS (Id, Menu_ID, Parent_Id, USER_ID, PERMATION, PROJECT_ID, IsShowToUser)
+VALUES ({CallSnowflakeIdGenerate.GenerateNewId()}, {id}, {parentId}, {user}, {E("1")}, 2, 1)");
+                return id;
+            }
+            long textile = Ensure("menuItemItemsAllNesseg", "أصناف النسيج", items.Id, null);
+            Ensure("menuItemItemsListTextile", "قائمة أصناف النسيج", textile, "/items/p/textile");
+            Ensure("menuItemItemsProductionData", "بيانات إنتاج الأصناف", textile, "/items/production-data");
         }
 
         /// <summary>

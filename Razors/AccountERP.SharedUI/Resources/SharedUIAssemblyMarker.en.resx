@@ -2866,6 +2866,43 @@
   <data name="IT_TextileLocked" xml:space="preserve"><value>The type cannot change for an item with a balance or movements</value></data>
   <data name="IT_NoStoreOfType" xml:space="preserve"><value>There is no active store of this type; add a store of the same type first.</value></data>
   <data name="IT_NewByType" xml:space="preserve"><value>New item by type</value></data>
+  <data name="PD_Title" xml:space="preserve"><value>Production data</value></data>
+  <data name="PD_Kind" xml:space="preserve"><value>Product type</value></data>
+  <data name="PD_Wabara" xml:space="preserve"><value>Wabara</value></data>
+  <data name="PD_Lehaf" xml:space="preserve"><value>Lehaf (quilt)</value></data>
+  <data name="PD_SaveFirst" xml:space="preserve"><value>Save the item first, then enter its production data.</value></data>
+  <data name="PD_Empty" xml:space="preserve"><value>No production data for this item yet</value></data>
+  <data name="PD_Enter" xml:space="preserve"><value>Enter production data</value></data>
+  <data name="PD_TextileDrawing" xml:space="preserve"><value>Weaving design name</value></data>
+  <data name="PD_Weight" xml:space="preserve"><value>Piece weight</value></data>
+  <data name="PD_Gram" xml:space="preserve"><value>g</value></data>
+  <data name="PD_Dims" xml:space="preserve"><value>Length × width</value></data>
+  <data name="PD_Cm" xml:space="preserve"><value>cm</value></data>
+  <data name="PD_AlfHadfaPrice" xml:space="preserve"><value>Price per 1000 picks</value></data>
+  <data name="PD_HadafatNazla" xml:space="preserve"><value>Picks per repeat</value></data>
+  <data name="PD_HadafatTash3heel" xml:space="preserve"><value>Running picks</value></data>
+  <data name="PD_DrawName" xml:space="preserve"><value>Embroidery design name</value></data>
+  <data name="PD_Stitches" xml:space="preserve"><value>Stitch count</value></data>
+  <data name="PD_Edit" xml:space="preserve"><value>Edit production data</value></data>
+  <data name="PD_PieceNo" xml:space="preserve"><value>Piece no.</value></data>
+  <data name="PD_PieceName" xml:space="preserve"><value>Piece name</value></data>
+  <data name="PD_NoPieces" xml:space="preserve"><value>No pieces yet; add the quilt pieces</value></data>
+  <data name="PD_AddPiece" xml:space="preserve"><value>Add piece</value></data>
+  <data name="PD_TextileGroup" xml:space="preserve"><value>Weaving data</value></data>
+  <data name="PD_WeightGram" xml:space="preserve"><value>Piece weight (g)</value></data>
+  <data name="PD_LengthCm" xml:space="preserve"><value>Length (cm)</value></data>
+  <data name="PD_WidthCm" xml:space="preserve"><value>Width (cm)</value></data>
+  <data name="PD_WeightM2" xml:space="preserve"><value>Weight per m² (g/cm²)</value></data>
+  <data name="PD_EmbroideryGroup" xml:space="preserve"><value>Embroidery data</value></data>
+  <data name="PD_Unit" xml:space="preserve"><value>Unit of measure</value></data>
+  <data name="PD_UnitPrice" xml:space="preserve"><value>Price per 1000 units</value></data>
+  <data name="PD_Piasters" xml:space="preserve"><value>in piasters</value></data>
+  <data name="PD_AbalekNo" xml:space="preserve"><value>Appliqué count</value></data>
+  <data name="PD_AblekaPrice" xml:space="preserve"><value>Appliqué price</value></data>
+  <data name="PD_ReportTitle" xml:space="preserve"><value>Item production data</value></data>
+  <data name="PD_ReportSub" xml:space="preserve"><value>Weaving and embroidery data of wabara and quilt items, for review and printing.</value></data>
+  <data name="PD_Search" xml:space="preserve"><value>Search by item, design or piece</value></data>
+  <data name="PD_ReportEmpty" xml:space="preserve"><value>No matching production data</value></data>
   <data name="IT_ListStoreType1" xml:space="preserve"><value>Factory product items in stores</value></data>
   <data name="IT_ListStoreType2" xml:space="preserve"><value>Purchase and raw-material items in stores</value></data>
   <data name="IT_ListStoreType3" xml:space="preserve"><value>Semi-finished items in stores</value></data>

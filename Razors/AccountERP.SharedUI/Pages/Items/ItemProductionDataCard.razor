@@ -1,0 +1,271 @@
+@* 🟢 خطة 05 بند 22: قسم «بيانات الإنتاج» فى شاشة صنف النسيج (بدل Item_ProductionData). نوع المنتج صريح: وبرة (صف واحد) أو لحاف
+   (قطع فرعية باسم ورقم). الإدخال والتعديل من نافذة منبثقة بمجموعتين (النسيج والتطريز) ويُحفظ فوراً مستقلاً عن حفظ الصنف.
+   التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using static AccountModelsLib.ItemProductionDataService
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<style>
+    .pd-bar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+    .pd-kind { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pd-sum { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 16px; margin-top: 12px; }
+    .pd-sum .k { font-size: .78rem; color: var(--mud-palette-text-secondary); }
+    .pd-sum .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .pd-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .pd-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 16px; align-items: start; }
+    .pd-form .full { grid-column: 1 / -1; }
+    .pd-form .span2 { grid-column: span 2; }
+    .pd-grp { grid-column: 1 / -1; margin: 8px 0 0; font-size: .95rem; font-weight: 700; display: flex; align-items: center; gap: 6px; color: var(--mud-palette-primary); }
+    .pd-num { font-variant-numeric: tabular-nums; }
+    @@media (max-width: 899px) { .pd-sum { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pd-form { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 599px) { .pd-form { grid-template-columns: minmax(0, 1fr); } .pd-form .span2 { grid-column: auto; } }
+</style>
+
+<section class="inv-card ie-gap" aria-labelledby="ie-production">
+    <div class="pd-bar">
+        <h2 class="inv-card-title" id="ie-production" style="margin:0"><MudIcon Icon="@Icons.Material.Filled.PrecisionManufacturing" />@Tr("PD_Title")
+            @if (_rows.Count > 0) { <span class="inv-count">@_rows.Count</span> }
+        </h2>
+        @if (ItemId > 0)
+        {
+            <div class="pd-kind" role="radiogroup" aria-label="@Tr("PD_Kind")">
+                <MudRadioGroup T="int" Value="_kind" ValueChanged="OnKindAsync">
+                    <MudRadio T="int" Value="@Wabara" Color="Color.Primary" Disabled="_busy">@Tr("PD_Wabara")</MudRadio>
+                    <MudRadio T="int" Value="@Lehaf" Color="Color.Primary" Disabled="_busy">@Tr("PD_Lehaf")</MudRadio>
+                </MudRadioGroup>
+            </div>
+        }
+    </div>
+
+    @if (ItemId <= 0)
+    {
+        <div class="ie-note"><MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Style="vertical-align:middle" /> @Tr("PD_SaveFirst")</div>
+    }
+    else if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mt-3" />
+    }
+    else
+    {
+        @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-3" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+        @if (_kind == Wabara)
+        {
+            var w = _rows.FirstOrDefault();
+            if (w is null)
+            {
+                <div class="pd-empty"><MudIcon Icon="@Icons.Material.Filled.PrecisionManufacturing" Size="Size.Large" Style="opacity:.5" /><span>@Tr("PD_Empty")</span>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => Open(null))">@Tr("PD_Enter")</MudButton></div>
+            }
+            else
+            {
+                <div class="pd-sum">
+                    @Summary("PD_TextileDrawing", w.Textile_Drawing) @Summary("PD_Weight", Num(w.Weight) + " " + Tr("PD_Gram"))
+                    @Summary("PD_Dims", $"{Num(w.Length)} × {Num(w.Width)} {Tr("PD_Cm")}") @Summary("PD_AlfHadfaPrice", Num(w.Alf_Hadfa_Price))
+                    @Summary("PD_HadafatNazla", Num(w.Hadafat_Nazla)) @Summary("PD_HadafatTash3heel", Num(w.Hadafat_Tash3heel))
+                    @Summary("PD_DrawName", w.Draw_Name) @Summary("PD_Stitches", Num(w.Stitch_No))
+                </div>
+                <div class="mt-3"><MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => Open(w))">@Tr("PD_Edit")</MudButton></div>
+            }
+        }
+        else
+        {
+            <MudTable Items="@_rows" T="ProductionRow" Hover="true" Elevation="0" Class="inv-table mt-3" Breakpoint="Breakpoint.Sm">
+                <HeaderContent>
+                    <MudTh Style="width:60px">@Tr("PD_PieceNo")</MudTh>
+                    <MudTh>@Tr("PD_PieceName")</MudTh>
+                    <MudTh>@Tr("PD_TextileDrawing")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("PD_Weight")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("PD_Dims")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("PD_AlfHadfaPrice")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("PD_Stitches")</MudTh>
+                    <MudTh Style="width:110px"></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("PD_PieceNo")"><span class="pd-num">@context.Sub_No</span></MudTd>
+                    <MudTd DataLabel="@Tr("PD_PieceName")"><strong>@context.Sub_Name</strong></MudTd>
+                    <MudTd DataLabel="@Tr("PD_TextileDrawing")">@context.Textile_Drawing</MudTd>
+                    <MudTd DataLabel="@Tr("PD_Weight")" Style="text-align:end"><span class="pd-num">@Num(context.Weight)</span></MudTd>
+                    <MudTd DataLabel="@Tr("PD_Dims")" Style="text-align:end"><span class="pd-num">@Num(context.Length) × @Num(context.Width)</span></MudTd>
+                    <MudTd DataLabel="@Tr("PD_AlfHadfaPrice")" Style="text-align:end"><span class="pd-num">@Num(context.Alf_Hadfa_Price)</span></MudTd>
+                    <MudTd DataLabel="@Tr("PD_Stitches")" Style="text-align:end"><span class="pd-num">@Num(context.Stitch_No)</span></MudTd>
+                    <MudTd Style="white-space:nowrap">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="@Tr("IU_EditAria", context.Sub_Name ?? "")" OnClick="@(() => Open(context))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Color="Color.Error" aria-label="@Tr("Delete")" Disabled="_busy" OnClick="@(() => DeleteAsync(context))" />
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent><div class="pd-empty"><span>@Tr("PD_NoPieces")</span></div></NoRecordsContent>
+            </MudTable>
+            <div class="mt-3"><MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => Open(null))">@Tr("PD_AddPiece")</MudButton></div>
+        }
+    }
+</section>
+
+<MudDialog @bind-Visible="_open"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true, BackdropClick = false })">
+    <TitleContent>@(_kind == Lehaf ? (_r.Id == 0 ? Tr("PD_AddPiece") : Tr("IU_Edit", _r.Sub_Name ?? "")) : Tr("PD_Title"))</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_dlgError)) { <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3" role="alert">@_dlgError</MudAlert> }
+        <div class="pd-form">
+            @if (_kind == Lehaf)
+            {
+                <MudTextField T="string" @bind-Value="_r.Sub_Name" Label="@Tr("PD_PieceName")" Variant="Variant.Outlined" Required="true" MaxLength="200" Class="span2" />
+                <MudNumericField T="int" Culture="@Inv" @bind-Value="_r.Sub_No" Label="@Tr("PD_PieceNo")" Variant="Variant.Outlined" Min="0" />
+            }
+            <div class="pd-grp"><MudIcon Icon="@Icons.Material.Filled.Texture" Size="Size.Small" />@Tr("PD_TextileGroup")</div>
+            <MudTextField T="string" @bind-Value="_r.Textile_Drawing" Label="@Tr("PD_TextileDrawing")" Variant="Variant.Outlined" MaxLength="1000" Class="span2" />
+            <MudNumericField T="decimal" Culture="@Inv" @bind-Value="_r.Alf_Hadfa_Price" Label="@Tr("PD_AlfHadfaPrice")" Variant="Variant.Outlined" Min="0" Format="0" />
+            <MudNumericField T="decimal" Culture="@Inv" @bind-Value="_r.Hadafat_Nazla" Label="@Tr("PD_HadafatNazla")" Variant="Variant.Outlined" Min="0" Format="0" />
+            <MudNumericField T="decimal" Culture="@Inv" @bind-Value="_r.Hadafat_Tash3heel" Label="@Tr("PD_HadafatTash3heel")" Variant="Variant.Outlined" Min="0" Format="0.##" />
+            <MudNumericField T="decimal" Culture="@Inv" @bind-Value="_r.Weight" Label="@Tr("PD_WeightGram")" Variant="Variant.Outlined" Min="0" Format="0.##" />
+            <MudNumericField T="decimal" Culture="@Inv" @bind-Value="_r.Length" Label="@Tr("PD_LengthCm")" Variant="Variant.Outlined" Min="0" Format="0.##" />
+            <MudNumericField T="decimal" Culture="@Inv" @bind-Value="_r.Width" Label="@Tr("PD_WidthCm")" Variant="Variant.Outlined" Min="0" Format="0.##" />
+            <MudNumericField T="decimal" Culture="@Inv" @bind-Value="_r.Weight_M2" Label="@Tr("PD_WeightM2")" Variant="Variant.Outlined" Min="0" Format="0.##" />
+            <MudSelect T="long" @bind-Value="_r.Body_Id" Label="@Tr("IL_bodies")" Variant="Variant.Outlined" Clearable="true"
+                       ToStringFunc="@(id => id == 0 ? string.Empty : _bodies.FirstOrDefault(o => o.Id == id)?.Name ?? string.Empty)">
+                @foreach (var o in _bodies) { <MudSelectItem T="long" Value="o.Id">@o.Name</MudSelectItem> }
+            </MudSelect>
+            <MudSelect T="long" @bind-Value="_r.Type_Id" Label="@Tr("IL_types")" Variant="Variant.Outlined" Clearable="true"
+                       ToStringFunc="@(id => id == 0 ? string.Empty : _types.FirstOrDefault(o => o.Id == id)?.Name ?? string.Empty)">
+                @foreach (var o in _types) { <MudSelectItem T="long" Value="o.Id">@o.Name</MudSelectItem> }
+            </MudSelect>
+            <div class="pd-grp"><MudIcon Icon="@Icons.Material.Filled.Gesture" Size="Size.Small" />@Tr("PD_EmbroideryGroup")</div>
+            <MudTextField T="string" @bind-Value="_r.Draw_Name" Label="@Tr("PD_DrawName")" Variant="Variant.Outlined" MaxLength="100" />
+            <MudNumericField T="decimal" Culture="@Inv" @bind-Value="_r.Stitch_No" Label="@Tr("PD_Stitches")" Variant="Variant.Outlined" Min="0" Format="0.##" />
+            <MudSelect T="string" @bind-Value="_r.Unit" Label="@Tr("PD_Unit")" Variant="Variant.Outlined" Clearable="true">
+                @foreach (var u in Units) { <MudSelectItem T="string" Value="@u">@u</MudSelectItem> }
+            </MudSelect>
+            <MudNumericField T="decimal" Culture="@Inv" @bind-Value="_r.Unit_Price" Label="@Tr("PD_UnitPrice")" Variant="Variant.Outlined" Min="0" Format="0.##" HelperText="@Tr("PD_Piasters")" />
+            <MudNumericField T="long" Culture="@Inv" @bind-Value="_r.Abalek_No" Label="@Tr("PD_AbalekNo")" Variant="Variant.Outlined" Min="0" />
+            <MudNumericField T="long" Culture="@Inv" @bind-Value="_r.Ableka_Price" Label="@Tr("PD_AblekaPrice")" Variant="Variant.Outlined" Min="0" HelperText="@Tr("PD_Piasters")" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _open = false)">@Tr("Close")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_busy || (_kind == Lehaf && string.IsNullOrWhiteSpace(_r.Sub_Name)))" OnClick="SaveAsync">
+            @if (_busy) { <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" /> }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public long ItemId { get; set; }
+
+    private readonly ItemProductionDataService _svc = new();
+    private readonly ItemLookupService _lookups = new();
+    private List<ProductionRow> _rows = new();
+    private List<ItemLookupService.LookupRow> _bodies = new(), _types = new();
+    private ProductionRow _r = new();
+    private int _kind = Wabara;
+    private long _loadedFor = -1;
+    private bool _loading = true, _busy, _open;
+    private string? _error, _dlgError;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ItemId <= 0 || ItemId == _loadedFor) { _loading = false; return; }
+        _loadedFor = ItemId;
+        await LoadAsync();
+        try
+        {
+            _bodies = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _lookups.List("bodies", ""); });
+            _types = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _lookups.List("types", "").Where(t => t.Is_Active).ToList(); });
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        long id = ItemId;
+        try
+        {
+            _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.List(id); });
+            if (_rows.Count > 0) _kind = _rows[0].Kind == Lehaf ? Lehaf : Wabara;
+        }
+        catch (Exception ex) { _error = Inner(ex); _rows = new(); }
+        finally { _loading = false; }
+    }
+
+    private async Task OnKindAsync(int k)
+    {
+        if (k == _kind) return;
+        if (_rows.Count == 0) { _kind = k; return; }
+        _busy = true; _error = null;
+        long id = ItemId;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.SetKind(id, k); });
+            _kind = k;
+            Snackbar.Add(Tr("IU_Saved"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private void Open(ProductionRow? r)
+    {
+        _r = r is null
+            ? new ProductionRow { Item_Id = ItemId, Kind = _kind, Sub_No = _kind == Lehaf ? (_rows.Count == 0 ? 1 : _rows.Max(x => x.Sub_No) + 1) : 0 }
+            : new ProductionRow
+            {
+                Id = r.Id, Item_Id = ItemId, Kind = _kind, Sub_Name = r.Sub_Name, Sub_No = r.Sub_No, Textile_Drawing = r.Textile_Drawing,
+                Hadafat_Nazla = r.Hadafat_Nazla, Hadafat_Tash3heel = r.Hadafat_Tash3heel, Weight = r.Weight, Length = r.Length, Width = r.Width,
+                Weight_M2 = r.Weight_M2, Alf_Hadfa_Price = r.Alf_Hadfa_Price, Body_Id = r.Body_Id, Type_Id = r.Type_Id, Draw_Name = r.Draw_Name,
+                Stitch_No = r.Stitch_No, Unit = string.IsNullOrEmpty(r.Unit) ? null : r.Unit, Unit_Price = r.Unit_Price, Abalek_No = r.Abalek_No, Ableka_Price = r.Ableka_Price,
+            };
+        _dlgError = null;
+        _open = true;
+    }
+
+    private async Task SaveAsync()
+    {
+        _busy = true; _dlgError = null;
+        var r = _r; bool isNew = r.Id == 0;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Save(r); });
+            Snackbar.Add(isNew ? Tr("ILAdded") : Tr("IU_Saved"), Severity.Success);
+            _open = false;
+            await LoadAsync();
+        }
+        catch (Exception ex) { _dlgError = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task DeleteAsync(ProductionRow r)
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("Delete"), Tr("ILDeleteConfirm", r.Sub_Name ?? ""), yesText: Tr("Delete"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null;
+        long item = ItemId, id = r.Id;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.Delete(item, id); });
+            Snackbar.Add(Tr("ILDeleted"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private RenderFragment Summary(string key, string? value) =>
+        @<div><div class="k">@Tr(key)</div><div class="v">@(string.IsNullOrWhiteSpace(value) ? "—" : value)</div></div>;
+
+    // أحداث الإدخال تعمل بثقافة الطلب (ar-EG: فاصل عشرى «٫») فيُرفض «850.5» ويصبح صفراً؛ الحقول الرقمية هنا بالثقافة الثابتة
+    private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+    private static string Num(decimal v) => v.ToString("#,0.##", CultureInfo.InvariantCulture);
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

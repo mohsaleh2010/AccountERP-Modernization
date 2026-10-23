@@ -1,0 +1,177 @@
+@* 🟢 خطة 05 بند 22: قائمة بيانات إنتاج الأصناف للطباعة (بدل تقريرى Items_ProductionDataWabaraFRM / Items_ProductionDataLehafFRM).
+   تصفية بالنوع (وبرة / لحاف) والفئة وبحث بالصنف أو الرسمة أو القطعة؛ الصف يفتح صنف النسيج. الطباعة لمنطقة التقرير وحدها
+   (accountErpInterop.printElement فى interop.js) كباقى تقارير الطباعة. التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@page "/items/production-data"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.ItemProductionDataService
+@inject LanguageService LangService
+@inject IJSRuntime JS
+@implements IDisposable
+
+<PageTitle>@Tr("PD_ReportTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .pr-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .pr-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .pr-head .ico .mud-icon-root { font-size: 2rem; }
+    .pr-head .titles { flex: 1 1 260px; }
+    .pr-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .pr-head .mud-button-root { min-height: 44px; }
+    .pr-gap { margin-top: 16px; }
+    .pr-filters { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1fr); gap: 12px 16px; align-items: start; }
+    .pr-table { width: 100%; border-collapse: collapse; }
+    .pr-table th, .pr-table td { border-bottom: 1px solid var(--mud-palette-lines-default); padding: 8px 10px; font-size: .875rem; text-align: start; vertical-align: top; }
+    .pr-table th { font-weight: 700; color: var(--mud-palette-text-secondary); background: var(--mud-palette-background-gray); white-space: nowrap; }
+    .pr-table td.num, .pr-table th.num { text-align: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .pr-table tr.lnk { cursor: pointer; }
+    .pr-table tr.lnk:hover td { background: color-mix(in srgb, var(--mud-palette-primary) 6%, transparent); }
+    .pr-wrap { overflow-x: auto; }
+    .pr-muted { color: var(--mud-palette-text-secondary); font-size: .8rem; }
+    .pr-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .print-header { display: none; }
+    @@media (max-width: 899px) { .pr-filters { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card pr-head no-print">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.PrecisionManufacturing" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("PD_ReportTitle")</h1>
+            <div class="sub">@Tr("PD_ReportSub")</div>
+        </div>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Texture" Href="/items/p/textile">@Tr("IT_ListTextile")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Print" Disabled="@(_rows.Count == 0)" OnClick="PrintAsync">@Tr("PrintButton")</MudButton>
+    </div>
+
+    <div class="inv-card pr-gap no-print">
+        <div class="pr-filters">
+            <MudTextField T="string" Value="_text" ValueChanged="OnTextAsync" Label="@Tr("PD_Search")" Variant="Variant.Outlined" Immediate="true" DebounceInterval="300"
+                          Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+            <MudSelect T="long" Value="_cat" ValueChanged="OnCategoryAsync" Label="@Tr("IC_CatName")" Variant="Variant.Outlined"
+                       ToStringFunc="@(id => id == 0 ? Tr("IC_AllCats") : _cats.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
+                <MudSelectItem T="long" Value="0L">@Tr("IC_AllCats")</MudSelectItem>
+                @foreach (var c in _cats) { <MudSelectItem T="long" Value="c.Id">@c.Name</MudSelectItem> }
+            </MudSelect>
+            <MudSelect T="int" Value="_kind" ValueChanged="OnKindAsync" Label="@Tr("PD_Kind")" Variant="Variant.Outlined">
+                <MudSelectItem T="int" Value="0">@Tr("IT_AllTypes")</MudSelectItem>
+                <MudSelectItem T="int" Value="@Wabara">@Tr("PD_Wabara")</MudSelectItem>
+                <MudSelectItem T="int" Value="@Lehaf">@Tr("PD_Lehaf")</MudSelectItem>
+            </MudSelect>
+        </div>
+        @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-3" role="alert">@_error</MudAlert> }
+    </div>
+
+    <div class="inv-card pr-gap print-area">
+        <div class="print-header">
+            <h2>@Tr("PD_ReportTitle")@(_kind == 0 ? "" : " — " + Tr(_kind == Wabara ? "PD_Wabara" : "PD_Lehaf"))</h2>
+            <div class="print-meta">@Tr("PrintDateLabel"): @DateTime.Now.ToString("yyyy/MM/dd HH:mm") — @Tr("PrintCountLabel"): @_rows.Count</div>
+        </div>
+        <h2 class="inv-card-title no-print"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("PD_ReportTitle")<span class="inv-count">@_rows.Count</span></h2>
+        @if (_loading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="no-print" />
+        }
+        else if (_rows.Count == 0)
+        {
+            <div class="pr-empty"><MudIcon Icon="@Icons.Material.Filled.PrecisionManufacturing" Size="Size.Large" Style="opacity:.5" /><span>@Tr("PD_ReportEmpty")</span></div>
+        }
+        else
+        {
+            <div class="pr-wrap">
+            <table class="pr-table print-table">
+                <thead>
+                    <tr>
+                        <th>@Tr("IT_Code")</th><th>@Tr("IT_Name")</th><th>@Tr("PD_Kind")</th><th>@Tr("PD_PieceName")</th>
+                        <th>@Tr("PD_TextileDrawing")</th><th class="num">@Tr("PD_HadafatNazla")</th><th class="num">@Tr("PD_HadafatTash3heel")</th>
+                        <th class="num">@Tr("PD_WeightGram")</th><th class="num">@Tr("PD_Dims")</th><th class="num">@Tr("PD_WeightM2")</th><th class="num">@Tr("PD_AlfHadfaPrice")</th>
+                        <th>@Tr("PD_DrawName")</th><th class="num">@Tr("PD_Stitches")</th><th>@Tr("PD_Unit")</th><th class="num">@Tr("PD_UnitPrice")</th>
+                        <th class="num">@Tr("PD_AbalekNo")</th><th class="num">@Tr("PD_AblekaPrice")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in _rows)
+                    {
+                        <tr class="lnk" @onclick="@(() => Nav.NavigateTo($"/items/p/textile/{r.Item_Id}"))">
+                            <td><span class="pr-muted">@r.Item_Code</span></td>
+                            <td><strong>@r.Item_Name</strong><div class="pr-muted">@r.Category</div></td>
+                            <td>@Tr(r.Kind == Lehaf ? "PD_Lehaf" : "PD_Wabara")</td>
+                            <td>@(r.Kind == Lehaf ? $"{r.Sub_No}. {r.Sub_Name}" : "—")</td>
+                            <td>@r.Textile_Drawing</td>
+                            <td class="num">@Num(r.Hadafat_Nazla)</td><td class="num">@Num(r.Hadafat_Tash3heel)</td>
+                            <td class="num">@Num(r.Weight)</td><td class="num">@Num(r.Length) × @Num(r.Width)</td><td class="num">@Num(r.Weight_M2)</td>
+                            <td class="num">@Num(r.Alf_Hadfa_Price)</td>
+                            <td>@r.Draw_Name</td><td class="num">@Num(r.Stitch_No)</td><td>@r.Unit</td><td class="num">@Num(r.Unit_Price)</td>
+                            <td class="num">@r.Abalek_No</td><td class="num">@r.Ableka_Price</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            </div>
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    private readonly ItemProductionDataService _svc = new();
+    private readonly ItemEditorService _items = new();
+    private List<ReportRow> _rows = new();
+    private List<ItemEditorService.CategoryOption> _cats = new();
+    private string? _text, _error;
+    private long _cat;
+    private int _kind;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            var lk = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _items.GetLookups(); });
+            var textile = lk.Categories.Where(c => c.Profile == "textile").ToList();
+            _cats = textile.Count > 0 ? textile : lk.Categories;
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        int k = _kind; string t = _text ?? ""; long c = _cat;
+        try { _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Report(k, t, c); }); _error = null; }
+        catch (Exception ex) { _error = Inner(ex); _rows = new(); }
+        finally { _loading = false; }
+    }
+
+    private async Task OnTextAsync(string? s) { _text = s; await LoadAsync(); }
+    private async Task OnCategoryAsync(long c) { _cat = c; await LoadAsync(); }
+    private async Task OnKindAsync(int k) { _kind = k; await LoadAsync(); }
+
+    // يطبع منطقة التقرير وحدها داخل iframe (راجع accountErpInterop.printElement فى interop.js)؛ أفقى لكثرة الأعمدة
+    private async Task PrintAsync() =>
+        await JS.InvokeVoidAsync("accountErpInterop.printElement", ".print-area", Tr("PD_ReportTitle"), LangService.IsRtl ? "rtl" : "ltr", "@page { size: A4 landscape; margin: 10mm; }");
+
+    private static string Num(decimal v) => v.ToString("#,0.##", CultureInfo.InvariantCulture);
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

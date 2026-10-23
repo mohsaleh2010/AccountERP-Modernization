@@ -2866,6 +2866,43 @@
   <data name="IT_TextileLocked" xml:space="preserve"><value>لا يتغير النوع لصنف له رصيد أو حركات</value></data>
   <data name="IT_NoStoreOfType" xml:space="preserve"><value>لا يوجد مخزن نشط من هذا النوع؛ أضف مخزناً بنفس النوع أولاً.</value></data>
   <data name="IT_NewByType" xml:space="preserve"><value>صنف جديد حسب النوع</value></data>
+  <data name="PD_Title" xml:space="preserve"><value>بيانات الإنتاج</value></data>
+  <data name="PD_Kind" xml:space="preserve"><value>نوع المنتج</value></data>
+  <data name="PD_Wabara" xml:space="preserve"><value>وبرة</value></data>
+  <data name="PD_Lehaf" xml:space="preserve"><value>لحاف</value></data>
+  <data name="PD_SaveFirst" xml:space="preserve"><value>احفظ الصنف أولاً، ثم أدخل بيانات الإنتاج.</value></data>
+  <data name="PD_Empty" xml:space="preserve"><value>لا توجد بيانات إنتاج لهذا الصنف بعد</value></data>
+  <data name="PD_Enter" xml:space="preserve"><value>إدخال بيانات الإنتاج</value></data>
+  <data name="PD_TextileDrawing" xml:space="preserve"><value>اسم رسمة النسيج</value></data>
+  <data name="PD_Weight" xml:space="preserve"><value>وزن القطعة</value></data>
+  <data name="PD_Gram" xml:space="preserve"><value>جم</value></data>
+  <data name="PD_Dims" xml:space="preserve"><value>الطول × العرض</value></data>
+  <data name="PD_Cm" xml:space="preserve"><value>سم</value></data>
+  <data name="PD_AlfHadfaPrice" xml:space="preserve"><value>سعر الألف حدفة</value></data>
+  <data name="PD_HadafatNazla" xml:space="preserve"><value>عدد حدفات النزلة</value></data>
+  <data name="PD_HadafatTash3heel" xml:space="preserve"><value>حدفات التشغيل</value></data>
+  <data name="PD_DrawName" xml:space="preserve"><value>اسم رسمة التطريز</value></data>
+  <data name="PD_Stitches" xml:space="preserve"><value>عدد الغرز</value></data>
+  <data name="PD_Edit" xml:space="preserve"><value>تعديل بيانات الإنتاج</value></data>
+  <data name="PD_PieceNo" xml:space="preserve"><value>رقم القطعة</value></data>
+  <data name="PD_PieceName" xml:space="preserve"><value>اسم القطعة</value></data>
+  <data name="PD_NoPieces" xml:space="preserve"><value>لا توجد قطع بعد؛ أضف قطع اللحاف</value></data>
+  <data name="PD_AddPiece" xml:space="preserve"><value>إضافة قطعة</value></data>
+  <data name="PD_TextileGroup" xml:space="preserve"><value>بيانات النسيج</value></data>
+  <data name="PD_WeightGram" xml:space="preserve"><value>وزن القطعة (جم)</value></data>
+  <data name="PD_LengthCm" xml:space="preserve"><value>الطول (سم)</value></data>
+  <data name="PD_WidthCm" xml:space="preserve"><value>العرض (سم)</value></data>
+  <data name="PD_WeightM2" xml:space="preserve"><value>وزن المتر المربع (جم/سم²)</value></data>
+  <data name="PD_EmbroideryGroup" xml:space="preserve"><value>بيانات التطريز</value></data>
+  <data name="PD_Unit" xml:space="preserve"><value>وحدة القياس</value></data>
+  <data name="PD_UnitPrice" xml:space="preserve"><value>سعر الألف وحدة</value></data>
+  <data name="PD_Piasters" xml:space="preserve"><value>بالقرش</value></data>
+  <data name="PD_AbalekNo" xml:space="preserve"><value>عدد الأباليك</value></data>
+  <data name="PD_AblekaPrice" xml:space="preserve"><value>سعر الأبليكة</value></data>
+  <data name="PD_ReportTitle" xml:space="preserve"><value>بيانات إنتاج الأصناف</value></data>
+  <data name="PD_ReportSub" xml:space="preserve"><value>بيانات النسيج والتطريز لأصناف الوبرة واللحاف، للمراجعة والطباعة.</value></data>
+  <data name="PD_Search" xml:space="preserve"><value>بحث بالصنف أو الرسمة أو القطعة</value></data>
+  <data name="PD_ReportEmpty" xml:space="preserve"><value>لا توجد بيانات إنتاج مطابقة</value></data>
   <data name="IT_ListStoreType1" xml:space="preserve"><value>أصناف منتجات المصنع بالمخازن</value></data>
   <data name="IT_ListStoreType2" xml:space="preserve"><value>أصناف المشتريات والخامات بالمخازن</value></data>
   <data name="IT_ListStoreType3" xml:space="preserve"><value>أصناف غير مكتملة التصنيع بالمخازن</value></data>

@@ -2868,6 +2868,43 @@
   <data name="IT_TextileLocked" xml:space="preserve"><value>Le type ne peut pas changer pour un article avec solde ou mouvements</value></data>
   <data name="IT_NoStoreOfType" xml:space="preserve"><value>Aucun magasin actif de ce type ; ajoutez d'abord un magasin du même type.</value></data>
   <data name="IT_NewByType" xml:space="preserve"><value>Nouvel article par type</value></data>
+  <data name="PD_Title" xml:space="preserve"><value>Données de production</value></data>
+  <data name="PD_Kind" xml:space="preserve"><value>Type de produit</value></data>
+  <data name="PD_Wabara" xml:space="preserve"><value>Wabara</value></data>
+  <data name="PD_Lehaf" xml:space="preserve"><value>Couette</value></data>
+  <data name="PD_SaveFirst" xml:space="preserve"><value>Enregistrez d'abord l'article, puis ses données de production.</value></data>
+  <data name="PD_Empty" xml:space="preserve"><value>Aucune donnée de production pour cet article</value></data>
+  <data name="PD_Enter" xml:space="preserve"><value>Saisir les données de production</value></data>
+  <data name="PD_TextileDrawing" xml:space="preserve"><value>Nom du dessin de tissage</value></data>
+  <data name="PD_Weight" xml:space="preserve"><value>Poids de la pièce</value></data>
+  <data name="PD_Gram" xml:space="preserve"><value>g</value></data>
+  <data name="PD_Dims" xml:space="preserve"><value>Longueur × largeur</value></data>
+  <data name="PD_Cm" xml:space="preserve"><value>cm</value></data>
+  <data name="PD_AlfHadfaPrice" xml:space="preserve"><value>Prix pour 1000 duites</value></data>
+  <data name="PD_HadafatNazla" xml:space="preserve"><value>Duites par rapport</value></data>
+  <data name="PD_HadafatTash3heel" xml:space="preserve"><value>Duites de production</value></data>
+  <data name="PD_DrawName" xml:space="preserve"><value>Nom du dessin de broderie</value></data>
+  <data name="PD_Stitches" xml:space="preserve"><value>Nombre de points</value></data>
+  <data name="PD_Edit" xml:space="preserve"><value>Modifier les données de production</value></data>
+  <data name="PD_PieceNo" xml:space="preserve"><value>N° de pièce</value></data>
+  <data name="PD_PieceName" xml:space="preserve"><value>Nom de la pièce</value></data>
+  <data name="PD_NoPieces" xml:space="preserve"><value>Aucune pièce ; ajoutez les pièces de la couette</value></data>
+  <data name="PD_AddPiece" xml:space="preserve"><value>Ajouter une pièce</value></data>
+  <data name="PD_TextileGroup" xml:space="preserve"><value>Données de tissage</value></data>
+  <data name="PD_WeightGram" xml:space="preserve"><value>Poids de la pièce (g)</value></data>
+  <data name="PD_LengthCm" xml:space="preserve"><value>Longueur (cm)</value></data>
+  <data name="PD_WidthCm" xml:space="preserve"><value>Largeur (cm)</value></data>
+  <data name="PD_WeightM2" xml:space="preserve"><value>Poids au m² (g/cm²)</value></data>
+  <data name="PD_EmbroideryGroup" xml:space="preserve"><value>Données de broderie</value></data>
+  <data name="PD_Unit" xml:space="preserve"><value>Unité de mesure</value></data>
+  <data name="PD_UnitPrice" xml:space="preserve"><value>Prix pour 1000 unités</value></data>
+  <data name="PD_Piasters" xml:space="preserve"><value>en piastres</value></data>
+  <data name="PD_AbalekNo" xml:space="preserve"><value>Nombre d'appliqués</value></data>
+  <data name="PD_AblekaPrice" xml:space="preserve"><value>Prix de l'appliqué</value></data>
+  <data name="PD_ReportTitle" xml:space="preserve"><value>Données de production des articles</value></data>
+  <data name="PD_ReportSub" xml:space="preserve"><value>Données de tissage et de broderie des articles wabara et couette, pour revue et impression.</value></data>
+  <data name="PD_Search" xml:space="preserve"><value>Recherche par article, dessin ou pièce</value></data>
+  <data name="PD_ReportEmpty" xml:space="preserve"><value>Aucune donnée de production correspondante</value></data>
   <data name="IT_ListStoreType1" xml:space="preserve"><value>Produits finis de l'usine en magasins</value></data>
   <data name="IT_ListStoreType2" xml:space="preserve"><value>Articles d'achat et matières premières en magasins</value></data>
   <data name="IT_ListStoreType3" xml:space="preserve"><value>Articles semi-finis en magasins</value></data>

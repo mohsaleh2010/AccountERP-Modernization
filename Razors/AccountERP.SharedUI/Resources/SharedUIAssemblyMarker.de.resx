@@ -2868,6 +2868,43 @@
   <data name="IT_TextileLocked" xml:space="preserve"><value>Der Typ kann bei Bestand oder Bewegungen nicht geändert werden</value></data>
   <data name="IT_NoStoreOfType" xml:space="preserve"><value>Es gibt kein aktives Lager dieses Typs; legen Sie zuerst ein Lager dieses Typs an.</value></data>
   <data name="IT_NewByType" xml:space="preserve"><value>Neuer Artikel nach Typ</value></data>
+  <data name="PD_Title" xml:space="preserve"><value>Produktionsdaten</value></data>
+  <data name="PD_Kind" xml:space="preserve"><value>Produkttyp</value></data>
+  <data name="PD_Wabara" xml:space="preserve"><value>Wabara</value></data>
+  <data name="PD_Lehaf" xml:space="preserve"><value>Steppdecke</value></data>
+  <data name="PD_SaveFirst" xml:space="preserve"><value>Speichern Sie zuerst den Artikel, dann die Produktionsdaten.</value></data>
+  <data name="PD_Empty" xml:space="preserve"><value>Noch keine Produktionsdaten für diesen Artikel</value></data>
+  <data name="PD_Enter" xml:space="preserve"><value>Produktionsdaten erfassen</value></data>
+  <data name="PD_TextileDrawing" xml:space="preserve"><value>Webmuster</value></data>
+  <data name="PD_Weight" xml:space="preserve"><value>Stückgewicht</value></data>
+  <data name="PD_Gram" xml:space="preserve"><value>g</value></data>
+  <data name="PD_Dims" xml:space="preserve"><value>Länge × Breite</value></data>
+  <data name="PD_Cm" xml:space="preserve"><value>cm</value></data>
+  <data name="PD_AlfHadfaPrice" xml:space="preserve"><value>Preis je 1000 Schüsse</value></data>
+  <data name="PD_HadafatNazla" xml:space="preserve"><value>Schüsse je Rapport</value></data>
+  <data name="PD_HadafatTash3heel" xml:space="preserve"><value>Laufende Schüsse</value></data>
+  <data name="PD_DrawName" xml:space="preserve"><value>Stickmuster</value></data>
+  <data name="PD_Stitches" xml:space="preserve"><value>Stichanzahl</value></data>
+  <data name="PD_Edit" xml:space="preserve"><value>Produktionsdaten bearbeiten</value></data>
+  <data name="PD_PieceNo" xml:space="preserve"><value>Teil-Nr.</value></data>
+  <data name="PD_PieceName" xml:space="preserve"><value>Teilname</value></data>
+  <data name="PD_NoPieces" xml:space="preserve"><value>Noch keine Teile; fügen Sie die Deckenteile hinzu</value></data>
+  <data name="PD_AddPiece" xml:space="preserve"><value>Teil hinzufügen</value></data>
+  <data name="PD_TextileGroup" xml:space="preserve"><value>Webdaten</value></data>
+  <data name="PD_WeightGram" xml:space="preserve"><value>Stückgewicht (g)</value></data>
+  <data name="PD_LengthCm" xml:space="preserve"><value>Länge (cm)</value></data>
+  <data name="PD_WidthCm" xml:space="preserve"><value>Breite (cm)</value></data>
+  <data name="PD_WeightM2" xml:space="preserve"><value>Gewicht je m² (g/cm²)</value></data>
+  <data name="PD_EmbroideryGroup" xml:space="preserve"><value>Stickdaten</value></data>
+  <data name="PD_Unit" xml:space="preserve"><value>Maßeinheit</value></data>
+  <data name="PD_UnitPrice" xml:space="preserve"><value>Preis je 1000 Einheiten</value></data>
+  <data name="PD_Piasters" xml:space="preserve"><value>in Piaster</value></data>
+  <data name="PD_AbalekNo" xml:space="preserve"><value>Applikationen</value></data>
+  <data name="PD_AblekaPrice" xml:space="preserve"><value>Applikationspreis</value></data>
+  <data name="PD_ReportTitle" xml:space="preserve"><value>Produktionsdaten der Artikel</value></data>
+  <data name="PD_ReportSub" xml:space="preserve"><value>Web- und Stickdaten von Wabara- und Deckenartikeln zur Prüfung und zum Druck.</value></data>
+  <data name="PD_Search" xml:space="preserve"><value>Suche nach Artikel, Muster oder Teil</value></data>
+  <data name="PD_ReportEmpty" xml:space="preserve"><value>Keine passenden Produktionsdaten</value></data>
   <data name="IT_ListStoreType1" xml:space="preserve"><value>Fertigwaren in Lagern</value></data>
   <data name="IT_ListStoreType2" xml:space="preserve"><value>Einkaufs- und Rohstoffartikel in Lagern</value></data>
   <data name="IT_ListStoreType3" xml:space="preserve"><value>Halbfertige Artikel in Lagern</value></data>
