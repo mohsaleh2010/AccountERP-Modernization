@@ -4009,4 +4009,12 @@
   <data name="SBSupplier" xml:space="preserve"><value>Lieferant</value></data>
   <data name="SBSupplierHint" xml:space="preserve"><value>Leer = neuester Preis eines beliebigen Lieferanten</value></data>
   <data name="SBFifoNote" xml:space="preserve"><value>Der Bestand wird zu den neuesten deckenden Einkaufsrechnungen bewertet (mengengewichtet), der Rest zu Durchschnittskosten</value></data>
+  <data name="HubOpen" xml:space="preserve"><value>Übersichtsseite</value></data>
+  <data name="HubSub" xml:space="preserve"><value>{0} Masken in {1} Gruppen — jede Maske einmal, auch wenn mehrere Menüs sie öffnen</value></data>
+  <data name="HubSearch" xml:space="preserve"><value>Maske suchen</value></data>
+  <data name="HubGeneral" xml:space="preserve"><value>Allgemeine Masken</value></data>
+  <data name="HubAlso" xml:space="preserve"><value>Auch geöffnet über: {0}</value></data>
+  <data name="HubNoResults" xml:space="preserve"><value>Keine passenden Masken</value></data>
+  <data name="HubNotFound" xml:space="preserve"><value>Dieses Menü ist für Ihr Konto nicht verfügbar oder hat keine Masken</value></data>
+  <data name="HubBack" xml:space="preserve"><value>Ihre Module</value></data>
 </root>

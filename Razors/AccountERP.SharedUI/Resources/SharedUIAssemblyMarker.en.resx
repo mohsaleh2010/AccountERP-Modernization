@@ -4007,4 +4007,12 @@
   <data name="SBSupplier" xml:space="preserve"><value>Supplier</value></data>
   <data name="SBSupplierHint" xml:space="preserve"><value>Empty = latest price from any supplier</value></data>
   <data name="SBFifoNote" xml:space="preserve"><value>The balance is valued at the latest purchase bills that cover it (weighted by quantity); any remainder at average cost</value></data>
+  <data name="HubOpen" xml:space="preserve"><value>Hub page</value></data>
+  <data name="HubSub" xml:space="preserve"><value>{0} screens in {1} groups — each screen once even when several menus open it</value></data>
+  <data name="HubSearch" xml:space="preserve"><value>Find a screen</value></data>
+  <data name="HubGeneral" xml:space="preserve"><value>General screens</value></data>
+  <data name="HubAlso" xml:space="preserve"><value>Also opened from: {0}</value></data>
+  <data name="HubNoResults" xml:space="preserve"><value>No screens match the search</value></data>
+  <data name="HubNotFound" xml:space="preserve"><value>This menu is not available to your account or has no screens</value></data>
+  <data name="HubBack" xml:space="preserve"><value>Your modules</value></data>
 </root>

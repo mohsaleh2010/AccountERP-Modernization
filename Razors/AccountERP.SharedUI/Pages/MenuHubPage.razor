@@ -1,0 +1,237 @@
+@* 🟢 خطة 05 بند 27: صفحة تجميع بالكروت لأى قائمة (مثال /hub/517 = أسعار الأصناف، /hub/492 = كل الأصناف). تُبنى من قوائم المستخدم
+   المسموح بها (MenuState.UserAllowedMenus) فتحترم الصلاحيات تلقائياً: كل مجموعة فرعية قسم، وكل شاشة كارت واحد حتى لو فتحتها أكثر من
+   قائمة (التجميع بالمسار الكامل مع الـ query)، والقوائم المكرَّرة تظهر كـ «تُفتح أيضاً من». تُفتح من زر «صفحة التجميع» فى الرئيسية.
+   التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@page "/hub/{MenuId:long}"
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject MenuStateService MenuState
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@(_root?.GetLocalizedDescription(LangService.CurrentLanguage) ?? Tr("HubOpen"))</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .hub-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .hub-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                     background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .hub-head .ico .mud-icon-root { font-size: 2rem; }
+    .hub-head .titles { flex: 1 1 260px; min-width: 0; }
+    .hub-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .hub-head .search { flex: 0 1 320px; min-width: 220px; }
+    .hub-back { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; font-size: .875rem; }
+    .hub-sec { margin-top: 20px; }
+    .hub-sec-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .hub-sec-head h2 { margin: 0; font-size: 1.05rem; font-weight: 700; }
+    .hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+    .hub-card { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 14px; border-radius: 12px;
+                border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); color: inherit; text-decoration: none;
+                transition: border-color 150ms ease, box-shadow 150ms ease; }
+    a.hub-card { cursor: pointer; }
+    a.hub-card:hover, a.hub-card:focus-visible { border-color: var(--mud-palette-primary); box-shadow: var(--mud-elevation-2); }
+    a.hub-card:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .hub-card .cico { flex: none; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center;
+                      background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent); color: var(--mud-palette-primary); }
+    .hub-card .txt { flex: 1; min-width: 0; }
+    .hub-card .name { font-weight: 600; font-size: .95rem; line-height: 1.4; }
+    .hub-card .also { margin-top: 2px; font-size: .78rem; color: var(--mud-palette-text-secondary); overflow-wrap: anywhere; }
+    .hub-card.off { opacity: .6; }
+    .hub-card .go { flex: none; color: var(--mud-palette-text-secondary); }
+    .hub-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    @@media (prefers-reduced-motion: reduce) { .hub-card { transition: none; } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <a class="hub-back" href="@BackHref">
+        <MudIcon Icon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)" Size="Size.Small" />
+        @Tr("HubBack")
+    </a>
+
+    @if (_root == null || _sections.Count == 0)
+    {
+        <div class="inv-card hub-empty" role="status">
+            <MudIcon Icon="@Icons.Material.Outlined.FolderOff" Size="Size.Large" />
+            <div>@Tr("HubNotFound")</div>
+        </div>
+    }
+    else
+    {
+        <div class="inv-card hub-head">
+            <div class="ico" aria-hidden="true"><MudIcon Icon="@RootIcon" /></div>
+            <div class="titles">
+                <h1 class="inv-title">@_root.GetLocalizedDescription(LangService.CurrentLanguage)</h1>
+                <div class="sub">@Tr("HubSub", _sections.Sum(s => s.Cards.Count), _sections.Count)</div>
+            </div>
+            <div class="search">
+                <MudTextField T="string" Value="_search" ValueChanged="@(v => _search = v ?? "")" Immediate="true" DebounceInterval="200"
+                              Label="@Tr("HubSearch")" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+            </div>
+        </div>
+
+        var visible = _sections.Select(s => (Sec: s, Cards: s.Cards.Where(Matches).ToList())).Where(x => x.Cards.Count > 0).ToList();
+        @if (visible.Count == 0)
+        {
+            <div class="inv-card hub-empty hub-sec" role="status">
+                <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" />
+                <div>@Tr("HubNoResults")</div>
+            </div>
+        }
+        @foreach (var (sec, cards) in visible)
+        {
+            <section class="hub-sec" aria-label="@sec.Title">
+                @if (_sections.Count > 1)
+                {
+                    <div class="hub-sec-head">
+                        <MudIcon Icon="@sec.Icon" Color="Color.Primary" Size="Size.Small" />
+                        <h2>@sec.Title</h2>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Text="@cards.Count.ToString(CultureInfo.InvariantCulture)" />
+                    </div>
+                }
+                <div class="hub-grid">
+                    @foreach (var c in cards)
+                    {
+                        var also = c.Also.Count > 0 ? Tr("HubAlso", string.Join("، ", c.Also)) : null;
+                        @if (c.Implemented)
+                        {
+                            <a class="hub-card" href="@c.Route" title="@also">
+                                <span class="cico" aria-hidden="true"><MudIcon Icon="@c.Icon" Size="Size.Small" /></span>
+                                <span class="txt">
+                                    <span class="name d-block">@c.Title</span>
+                                    @if (also != null) { <span class="also d-block">@also</span> }
+                                </span>
+                                <MudIcon Class="go" Icon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)" Size="Size.Small" aria-hidden="true" />
+                            </a>
+                        }
+                        else
+                        {
+                            <div class="hub-card off" aria-disabled="true">
+                                <span class="cico" aria-hidden="true"><MudIcon Icon="@c.Icon" Size="Size.Small" /></span>
+                                <span class="txt"><span class="name d-block">@c.Title</span></span>
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Text="@Tr("ComingSoon")" />
+                            </div>
+                        }
+                    }
+                </div>
+            </section>
+        }
+    }
+</div>
+</MudContainer>
+
+@code {
+    [Parameter] public long MenuId { get; set; }
+
+    private sealed class HubCard
+    {
+        public string Title = "";
+        public string Route = "";
+        public string Icon = "";
+        public bool Implemented;
+        public List<string> Also = new();
+    }
+
+    private sealed class HubSection
+    {
+        public string Title = "";
+        public string Icon = "";
+        public List<HubCard> Cards = new();
+    }
+
+    private MenuViewModel? _root;
+    private List<HubSection> _sections = new();
+    private string _search = "";
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnChanged;
+        // نفس سبب Home.razor: بعد Refresh تُستعاد الجلسة متأخرة فتُبنى الصفحة من جديد عند OnAuthChanged
+        MenuState.OnAuthChanged += OnAuthChanged;
+    }
+
+    protected override void OnParametersSet() => Build();
+
+    private void OnChanged() => InvokeAsync(() => { Build(); StateHasChanged(); });
+    private void OnAuthChanged() => OnChanged();
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnChanged;
+        MenuState.OnAuthChanged -= OnAuthChanged;
+    }
+
+    private void Build()
+    {
+        var all = MenuState.UserAllowedMenus ?? new();
+        _root = all.FirstOrDefault(m => m != null && m.Menu_ID == MenuId);
+        _sections = new();
+        if (_root == null) return;
+
+        var lang = LangService.CurrentLanguage;
+        var byRoute = new Dictionary<string, HubCard>(StringComparer.OrdinalIgnoreCase);
+        bool HasChildren(MenuViewModel m) => all.Any(c => c.ParentId == m.Menu_ID);
+
+        // الأوراق تحت مجموعة بترتيب القائمة (عمق أولاً)؛ الفواصل «-» والأسماء الفارغة لا تُعدّ شاشات
+        IEnumerable<MenuViewModel> Leaves(MenuViewModel g)
+        {
+            foreach (var c in all.Where(c => c.ParentId == g.Menu_ID))
+            {
+                if (HasChildren(c)) { foreach (var x in Leaves(c)) yield return x; }
+                else if (!string.IsNullOrWhiteSpace(c.Description) && c.Description.Trim() != "-") yield return c;
+            }
+        }
+
+        HubSection Section(string title, string icon, IEnumerable<MenuViewModel> leaves)
+        {
+            var sec = new HubSection { Title = title, Icon = icon };
+            foreach (var m in leaves)
+            {
+                var name = m.GetLocalizedDescription(lang);
+                var route = m.GetEffectiveRoute() ?? "";
+                bool implemented = KnownRoutes.IsImplemented(route);
+                // شاشة واحدة لكل مسار فعلى؛ غير المنفَّذة كارت لكل قائمة
+                if (implemented && byRoute.TryGetValue(route, out var existing))
+                {
+                    if (existing.Title != name && !existing.Also.Contains(name)) existing.Also.Add(name);
+                    continue;
+                }
+                var card = new HubCard { Title = name, Route = route, Implemented = implemented, Icon = MenuIcons.GetLeafIcon(m.Description) };
+                if (implemented) byRoute[route] = card;
+                sec.Cards.Add(card);
+            }
+            return sec;
+        }
+
+        var children = all.Where(c => c.ParentId == _root.Menu_ID).ToList();
+        var direct = children.Where(c => !HasChildren(c) && !string.IsNullOrWhiteSpace(c.Description) && c.Description.Trim() != "-").ToList();
+        var groups = children.Where(HasChildren).ToList();
+
+        if (direct.Count > 0)
+            _sections.Add(Section(groups.Count > 0 ? Tr("HubGeneral") : _root.GetLocalizedDescription(lang), Icons.Material.Outlined.Apps, direct));
+        foreach (var g in groups)
+            _sections.Add(Section(g.GetLocalizedDescription(lang), MenuIcons.GetGroupIcon(g.Description), Leaves(g)));
+        _sections.RemoveAll(s => s.Cards.Count == 0);
+    }
+
+    private bool Matches(HubCard c) => string.IsNullOrWhiteSpace(_search)
+        || c.Title.Contains(_search.Trim(), StringComparison.CurrentCultureIgnoreCase)
+        || c.Also.Any(a => a.Contains(_search.Trim(), StringComparison.CurrentCultureIgnoreCase));
+
+    private string RootIcon => _root == null ? Icons.Material.Filled.Apps
+        : _root.ParentId == 0 ? MenuIcons.GetModuleIcon(_root.Description) : MenuIcons.GetGroupIcon(_root.Description);
+
+    // الرجوع لمستوى هذه القائمة فى الرئيسية (نفس رابط MenuBreadcrumb)
+    private string BackHref => _root == null ? "/" : "/?openMenu=" + _root.Menu_ID.ToString(CultureInfo.InvariantCulture);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

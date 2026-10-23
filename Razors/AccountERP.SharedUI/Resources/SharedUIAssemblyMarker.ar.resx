@@ -4007,4 +4007,12 @@
   <data name="SBSupplier" xml:space="preserve"><value>المورد</value></data>
   <data name="SBSupplierHint" xml:space="preserve"><value>فارغ = أحدث سعر لأى مورد</value></data>
   <data name="SBFifoNote" xml:space="preserve"><value>يُقيَّم الرصيد بأسعار أحدث فواتير الشراء التى تغطيه (بالكمية)، وما يزيد عنها بمتوسط التكلفة</value></data>
+  <data name="HubOpen" xml:space="preserve"><value>صفحة التجميع</value></data>
+  <data name="HubSub" xml:space="preserve"><value>{0} شاشة فى {1} مجموعة — كل شاشة مرة واحدة حتى لو فُتحت من أكثر من قائمة</value></data>
+  <data name="HubSearch" xml:space="preserve"><value>ابحث عن شاشة</value></data>
+  <data name="HubGeneral" xml:space="preserve"><value>شاشات عامة</value></data>
+  <data name="HubAlso" xml:space="preserve"><value>تُفتح أيضاً من: {0}</value></data>
+  <data name="HubNoResults" xml:space="preserve"><value>لا توجد شاشات مطابقة للبحث</value></data>
+  <data name="HubNotFound" xml:space="preserve"><value>هذه القائمة غير متاحة لحسابك أو ليس لها شاشات</value></data>
+  <data name="HubBack" xml:space="preserve"><value>الوحدات المتاحة لك</value></data>
 </root>

@@ -58,6 +58,10 @@
                 </MudLink>
             }
         }
+        @* خطة 05 بند 27: نفس المستوى كصفحة تجميع بالكروت (أقسام لكل مجموعة، وكل شاشة مرة واحدة) *@
+        <MudSpacer />
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Dashboard"
+                   Href="@($"/hub/{CurrentParentId}")">@Tr("HubOpen")</MudButton>
     </MudStack>
 }
 else

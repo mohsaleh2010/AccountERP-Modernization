@@ -4009,4 +4009,12 @@
   <data name="SBSupplier" xml:space="preserve"><value>Fournisseur</value></data>
   <data name="SBSupplierHint" xml:space="preserve"><value>Vide = dernier prix de tout fournisseur</value></data>
   <data name="SBFifoNote" xml:space="preserve"><value>Le stock est valorisé aux dernières factures d'achat qui le couvrent (pondéré), le reste au coût moyen</value></data>
+  <data name="HubOpen" xml:space="preserve"><value>Page d'ensemble</value></data>
+  <data name="HubSub" xml:space="preserve"><value>{0} écrans dans {1} groupes — chaque écran une fois même si plusieurs menus l'ouvrent</value></data>
+  <data name="HubSearch" xml:space="preserve"><value>Rechercher un écran</value></data>
+  <data name="HubGeneral" xml:space="preserve"><value>Écrans généraux</value></data>
+  <data name="HubAlso" xml:space="preserve"><value>Aussi ouvert depuis : {0}</value></data>
+  <data name="HubNoResults" xml:space="preserve"><value>Aucun écran correspondant</value></data>
+  <data name="HubNotFound" xml:space="preserve"><value>Ce menu n'est pas disponible pour votre compte ou n'a pas d'écrans</value></data>
+  <data name="HubBack" xml:space="preserve"><value>Vos modules</value></data>
 </root>
