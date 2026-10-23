@@ -3989,4 +3989,22 @@
   <data name="BLRemove" xml:space="preserve"><value>Remove {0}</value></data>
   <data name="BLPriceOnLabel" xml:space="preserve"><value>Price {0}</value></data>
   <data name="BLPreviewCapped" xml:space="preserve"><value>Maximum {0} labels per run; reduce copies or print in batches</value></data>
+  <data name="PSTitle" xml:space="preserve"><value>Item price sheet</value></data>
+  <data name="PSSub" xml:space="preserve"><value>Base sale price and each selected price list, ready to print</value></data>
+  <data name="PSManage" xml:space="preserve"><value>Price lists</value></data>
+  <data name="PSLists" xml:space="preserve"><value>Price lists shown</value></data>
+  <data name="PSListsHint" xml:space="preserve"><value>Up to {0} lists, one column each</value></data>
+  <data name="PSPricedOnly" xml:space="preserve"><value>Only items priced in the selected lists</value></data>
+  <data name="PSUnit" xml:space="preserve"><value>Unit</value></data>
+  <data name="PSBasePrice" xml:space="preserve"><value>Sale price</value></data>
+  <data name="PSNoPrice" xml:space="preserve"><value>No price in this list</value></data>
+  <data name="PSEmpty" xml:space="preserve"><value>No matching items</value></data>
+  <data name="PSTop" xml:space="preserve"><value>The sheet shows the first {0} items; filter by category or search to narrow it</value></data>
+  <data name="SBFifo" xml:space="preserve"><value>FIFO latest purchases</value></data>
+  <data name="SBSupplierPrice" xml:space="preserve"><value>Supplier price</value></data>
+  <data name="SBPurchaseType" xml:space="preserve"><value>Purchase price type</value></data>
+  <data name="SBNoPurchaseType" xml:space="preserve"><value>No type</value></data>
+  <data name="SBSupplier" xml:space="preserve"><value>Supplier</value></data>
+  <data name="SBSupplierHint" xml:space="preserve"><value>Empty = latest price from any supplier</value></data>
+  <data name="SBFifoNote" xml:space="preserve"><value>The balance is valued at the latest purchase bills that cover it (weighted by quantity); any remainder at average cost</value></data>
 </root>

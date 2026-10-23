@@ -9,7 +9,9 @@ namespace AccountModelsLib
     /// أرصدة الأصناف والتقييم (خطة 03 — المرحلة 5) لصفحة /store/balances: بديل balance وItemQntyFrm وItemPurchaseQntyFrm
     /// وBalanceWith_* وItem_Balance_Date. الرصيد الحالى من Unit_item، والرصيد «بتاريخ» يُحسب من دفتر الحركة DPIE
     /// بنفس قاعدة StockMovementService.GetComputedBalanceSmall (آخر أول مدة قبل التاريخ + الحركات حتى التاريخ) لكن لكل الأسطر معاً.
-    /// التقييم بمتوسط تكلفة الفرع (Item_Branch_Cost، واحتياطياً Unit_item.P_priceAvgCost) أو آخر سعر شراء أو سعر البيع.
+    /// التقييم بمتوسط تكلفة الفرع (Item_Branch_Cost، واحتياطياً Unit_item.P_priceAvgCost) أو آخر سعر شراء أو سعر البيع،
+    /// أو FIFO (أحدث فواتير الشراء التى تغطى الرصيد — بديل balance_CostAvgLastBalance، خطة 05 بند 26)،
+    /// أو سعر المورد بنوع سعر شراء (Supplier_Price — بديل BalanceWith_Purchase_Price).
     /// </summary>
     public class StoreBalancesService
     {
@@ -17,8 +19,8 @@ namespace AccountModelsLib
 
         public StoreBalancesService(Func<operations> newOpp = null) => _newOpp = newOpp ?? (() => new operations());
 
-        /// <summary>أساس التقييم: 0 كمية فقط، 1 متوسط التكلفة، 2 آخر سعر شراء، 3 سعر البيع.</summary>
-        public enum PriceBasis { QuantityOnly = 0, AverageCost = 1, LastPurchase = 2, SalePrice = 3 }
+        /// <summary>أساس التقييم: 0 كمية فقط، 1 متوسط التكلفة، 2 آخر سعر شراء، 3 سعر البيع، 4 FIFO أحدث المشتريات، 5 سعر المورد بنوع سعر شراء.</summary>
+        public enum PriceBasis { QuantityOnly = 0, AverageCost = 1, LastPurchase = 2, SalePrice = 3, Fifo = 4, SupplierPrice = 5 }
 
         public class BalanceFilter
         {
@@ -32,6 +34,9 @@ namespace AccountModelsLib
             public DateTime? AsOf { get; set; }
             public bool IncludeZero { get; set; }
             public PriceBasis Price { get; set; }
+            /// <summary>لأساس SupplierPrice: نوع سعر الشراء (Price_Purhase_Type_List، 0 = بلا نوع) والمورد (0 = أحدث سعر لأى مورد).</summary>
+            public long PurchaseTypeId { get; set; }
+            public long SupplierId { get; set; }
             public int Skip { get; set; }
             public int Take { get; set; } = 50;
         }
@@ -79,18 +84,24 @@ SELECT CAST(ID AS bigint) AS Id, Category_Name AS Name FROM Item_Category WHERE 
             int skip = Math.Max(0, f.Skip), take = Math.Clamp(f.Take, 1, 500);
             int includeZero = f.IncludeZero ? 1 : 0, useAsOf = asOf ? 1 : 0;
             int opening = StockMovementService.OpeningBalanceProcessId;
+            long ptype = f.PurchaseTypeId, supplier = f.SupplierId;
             return Run(opp => opp.db.Database.SqlQuery<BalanceRow>($@"
 WITH l AS (
     SELECT u.id AS Unit_Item_Id, s.Store_Name, ISNULL(i.Item_Name, N'') AS Item_Name, ISNULL(ISNULL(u.Code, i.code), N'') AS Code,
            c.Category_Name, ISNULL(un.B_Unit, N'') AS B_Unit, ISNULL(un.S_unit, N'') AS S_Unit,
            CAST(CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END AS decimal(18,6)) AS Factor,
-           CAST(CASE WHEN {useAsOf} = 0
-                     THEN ISNULL(u.Full_qua, 0) * CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END + ISNULL(u.D_Qua, 0)
-                     ELSE ISNULL(comp.Bal, 0) END AS decimal(18,4)) AS Balance_Small,
+           bs.Small AS Balance_Small,
            CAST(CASE {price}
                      WHEN 1 THEN ISNULL(bc.Avg_Cost * CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END, u.P_priceAvgCost)
                      WHEN 2 THEN ISNULL(bc.Last_Purchase_Price * CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END, u.P_price)
                      WHEN 3 THEN u.S_price
+                     -- FIFO: قيمة ما تغطيه أحدث المشتريات من الرصيد + الباقى (أقدم من الفواتير المسجَّلة) بمتوسط التكلفة ÷ الرصيد
+                     WHEN 4 THEN CASE WHEN bs.Small <= 0 OR ISNULL(fifo.Covered, 0) <= 0
+                                      THEN COALESCE(fifo.Last_Price, bc.Avg_Cost * CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END, u.P_priceAvgCost, u.P_price)
+                                      ELSE (fifo.Covered_Value + (bs.Small / CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END - fifo.Covered)
+                                            * COALESCE(bc.Avg_Cost * CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END, u.P_priceAvgCost, u.P_price, 0))
+                                           / (bs.Small / CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END) END
+                     WHEN 5 THEN spp.PriceUnit
                      ELSE NULL END AS decimal(18,6)) AS Price_Large
     FROM Unit_item u
     INNER JOIN Store s ON s.Id = u.Store_id
@@ -113,6 +124,33 @@ WITH l AS (
         WHERE {useAsOf} = 1 AND x.Unit_item_Table_Id = u.id
           AND (x.Process_Date IS NULL OR x.Process_Date < {until})
           AND (o.OpeningFrom IS NULL OR x.Process_Date >= o.OpeningFrom)) comp
+    CROSS APPLY (SELECT CAST(CASE WHEN {useAsOf} = 0
+                              THEN ISNULL(u.Full_qua, 0) * CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END + ISNULL(u.D_Qua, 0)
+                              ELSE ISNULL(comp.Bal, 0) END AS decimal(18,4)) AS Small) bs
+    -- FIFO (بند 26): فواتير الشراء الأحدث أولاً حتى تغطية الرصيد (بالوحدة الكبرى)؛ قيم السطر الخارجى تُدخَل كأعمدة داخلية (CROSS APPLY)
+    OUTER APPLY (
+        SELECT SUM(t.Took * t.Pr) AS Covered_Value, SUM(t.Took) AS Covered, MAX(CASE WHEN t.Rn = 1 THEN t.Pr END) AS Last_Price
+        FROM (
+            SELECT p.Pr, p.Rn, CASE WHEN p.Cum <= b.B THEN p.Q WHEN p.Cum - p.Q < b.B THEN b.B - (p.Cum - p.Q) ELSE 0 END AS Took
+            FROM (
+                SELECT CAST(ISNULL(bd.Larg_Qnty, 0) + ISNULL(bd.Small_Qnty, 0) / k3.F AS decimal(18,6)) AS Q,
+                       CAST(ISNULL(bd.Larg_Unit_Price, 0) AS decimal(18,6)) AS Pr,
+                       ROW_NUMBER() OVER (ORDER BY bl.Invoice_Date DESC, bd.Id DESC) AS Rn,
+                       SUM(CAST(ISNULL(bd.Larg_Qnty, 0) + ISNULL(bd.Small_Qnty, 0) / k3.F AS decimal(18,6)))
+                           OVER (ORDER BY bl.Invoice_Date DESC, bd.Id DESC ROWS UNBOUNDED PRECEDING) AS Cum
+                FROM Bills_Details bd
+                INNER JOIN Bills_List bl ON bl.ID = bd.Invoice_Id
+                CROSS APPLY (SELECT CAST(CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END AS decimal(18,6)) AS F) k3
+                WHERE {price} = 4 AND bd.Unit_Item_Table_Id = u.id
+                  AND (ISNULL(bd.Larg_Qnty, 0) > 0 OR ISNULL(bd.Small_Qnty, 0) > 0)
+                  AND ({useAsOf} = 0 OR bl.Invoice_Date < {until})) p
+            CROSS APPLY (SELECT CAST(bs.Small / CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END AS decimal(18,6)) AS B) b) t) fifo
+    -- سعر المورد بنوع سعر الشراء (بند 26): سعر مخزن السطر أولاً ثم العام، والأحدث
+    OUTER APPLY (SELECT TOP 1 sp.PriceUnit FROM Supplier_Price sp
+                 WHERE {price} = 5 AND sp.Item_Id = u.Item_id AND ISNULL(sp.Price_PurchaseType, 0) = {ptype}
+                   AND ({supplier} = 0 OR sp.Supplier_Id = {supplier})
+                   AND (ISNULL(sp.Store_id, 0) = 0 OR sp.Store_id = u.Store_id)
+                 ORDER BY CASE WHEN sp.Store_id = u.Store_id THEN 0 ELSE 1 END, sp.Id DESC) spp
     WHERE ISNULL(u.Store_Type, 4) = {f.StoreType}
       AND ISNULL(s.LookUp_StoreOrderTypesId, 4) = {f.StoreType}
       AND ({f.StoreId} = 0 OR u.Store_id = {f.StoreId})

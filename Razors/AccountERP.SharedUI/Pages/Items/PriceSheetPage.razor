@@ -1,0 +1,188 @@
+@* 🟢 خطة 05 بند 26: طباعة أسعار الأصناف (بدل ItemPriceFRM / تقرير Item_Prices). كشف بالأصناف وسعر البيع الأساسى وعمود لكل قائمة أسعار
+   مختارة (حتى 6 قوائم)، بتصفية بالفئة والبحث و«المسعَّرة فقط». الطباعة لمنطقة الكشف وحدها (accountErpInterop.printElement) أفقياً.
+   البيانات من PriceListService.PriceSheet. التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@page "/items/price-sheet"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.PriceListService
+@inject LanguageService LangService
+@inject IJSRuntime JS
+@implements IDisposable
+
+<PageTitle>@Tr("PSTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .ps-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .ps-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .ps-head .ico .mud-icon-root { font-size: 2rem; }
+    .ps-head .titles { flex: 1 1 260px; min-width: 0; }
+    .ps-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .ps-head .mud-button-root { min-height: 44px; }
+    .ps-gap { margin-top: 16px; }
+    .ps-filters { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1.4fr); gap: 12px 16px; align-items: start; }
+    .ps-row2 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 8px; }
+    .ps-wrap { overflow-x: auto; }
+    .ps-table { width: 100%; border-collapse: collapse; }
+    .ps-table th, .ps-table td { border-bottom: 1px solid var(--mud-palette-lines-default); padding: 8px 10px; font-size: .875rem; text-align: start; vertical-align: top; }
+    .ps-table th { font-weight: 700; color: var(--mud-palette-text-secondary); background: var(--mud-palette-background-gray); white-space: nowrap; }
+    .ps-table td.num, .ps-table th.num { text-align: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .ps-muted { color: var(--mud-palette-text-secondary); font-size: .8rem; }
+    .ps-none { color: var(--mud-palette-text-disabled); }
+    .ps-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .print-header { display: none; }
+    @@media (max-width: 899px) { .ps-filters { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card ps-head no-print">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.RequestQuote" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("PSTitle")</h1>
+            <div class="sub">@Tr("PSSub")</div>
+        </div>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Sell" Href="/items/prices/lists">@Tr("PSManage")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Print" Disabled="@(_rows.Count == 0 || _loading)" OnClick="PrintAsync">@Tr("PrintButton")</MudButton>
+    </div>
+
+    <div class="inv-card ps-gap no-print" role="search">
+        <div class="ps-filters">
+            <MudSelect T="long" MultiSelection="true" SelectedValues="_selected" SelectedValuesChanged="OnTypesAsync" Label="@Tr("PSLists")" Variant="Variant.Outlined"
+                       HelperText="@Tr("PSListsHint", MaxTypes)" MultiSelectionTextFunc="@(v => string.Join("، ", _selected.Select(TypeName)))">
+                @foreach (var t in _types) { <MudSelectItem T="long" Value="@t.Id" Disabled="@(!_selected.Contains(t.Id) && _selected.Count >= MaxTypes)">@t.Name</MudSelectItem> }
+            </MudSelect>
+            <MudSelect T="long" Value="_categoryId" ValueChanged="OnCategoryAsync" Label="@Tr("SBCategory")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _categories.FirstOrDefault(c => c.Id == v)?.Name ?? "")">
+                <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                @foreach (var c in _categories) { <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem> }
+            </MudSelect>
+            <MudTextField T="string" Value="_text" ValueChanged="OnTextAsync" Label="@Tr("SOItemSearch")" Variant="Variant.Outlined" Immediate="true" DebounceInterval="400"
+                          Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+        </div>
+        <div class="ps-row2">
+            <MudSwitch T="bool" Value="_pricedOnly" ValueChanged="OnPricedOnlyAsync" Color="Color.Primary" Disabled="@(_selected.Count == 0)" Label="@Tr("PSPricedOnly")" />
+        </div>
+        @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3" role="alert">@_error</MudAlert> }
+    </div>
+
+    <div class="inv-card ps-gap print-area">
+        <div class="print-header">
+            <h2>@Tr("PSTitle")@(_categoryId == 0 ? "" : " — " + (_categories.FirstOrDefault(c => c.Id == _categoryId)?.Name ?? ""))</h2>
+            <div class="print-meta">@Tr("PrintDateLabel"): @DateTime.Now.ToString("yyyy/MM/dd HH:mm") — @Tr("PrintCountLabel"): @_rows.Count</div>
+        </div>
+        <h2 class="inv-card-title no-print"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("PSTitle")<span class="inv-count">@_rows.Count</span></h2>
+        @if (_loading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="no-print" />
+        }
+        else if (_rows.Count == 0)
+        {
+            <div class="ps-empty"><MudIcon Icon="@Icons.Material.Filled.RequestQuote" Size="Size.Large" Style="opacity:.5" /><span>@Tr("PSEmpty")</span></div>
+        }
+        else
+        {
+            <div class="ps-wrap">
+            <table class="ps-table print-table">
+                <thead>
+                    <tr>
+                        <th>@Tr("IT_Code")</th><th>@Tr("IT_Name")</th><th>@Tr("PSUnit")</th><th class="num">@Tr("PSBasePrice")</th>
+                        @foreach (var id in _shown) { <th class="num">@TypeName(id)</th> }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in _rows)
+                    {
+                        <tr>
+                            <td><span class="ps-muted">@CodeText(r.Code)</span></td>
+                            <td><strong>@r.Name</strong><div class="ps-muted">@r.Category</div></td>
+                            <td>@r.Unit</td>
+                            <td class="num">@Money(r.Sale_Price)</td>
+                            @foreach (var id in _shown)
+                            {
+                                <td class="num">@if (r.Prices.TryGetValue(id, out var p)) { @Money(p) } else { <span class="ps-none" aria-label="@Tr("PSNoPrice")">—</span> }</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            </div>
+            @if (_rows.Count >= Top) { <MudAlert Severity="Severity.Info" Dense="true" Class="mt-3 no-print">@Tr("PSTop", Top)</MudAlert> }
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private const int MaxTypes = 6, Top = 3000;
+
+    /// <summary>types=1,2 يفتح على قوائم محددة.</summary>
+    [SupplyParameterFromQuery(Name = "types")] public string? TypesQuery { get; set; }
+
+    private readonly PriceListService _svc = new();
+    private readonly StoreBalancesService _balances = new();
+    private List<PriceType> _types = new();
+    private List<StoreBalancesService.Option> _categories = new();
+    private HashSet<long> _selected = new();
+    private List<long> _shown = new();
+    private List<PriceSheetRow> _rows = new();
+    private long _categoryId;
+    private string? _text, _error;
+    private bool _pricedOnly, _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            (_types, _categories) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_svc.ListTypes().Where(t => t.Is_Active).ToList(), _balances.GetCategories()); });
+            var fromQuery = (TypesQuery ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => long.TryParse(x, out var v) ? v : 0).Where(v => _types.Any(t => t.Id == v)).Take(MaxTypes).ToHashSet();
+            // افتراضياً أكثر القوائم تسعيراً (حتى 3) لأن الكشف بلا قوائم يعرض سعر البيع وحده
+            _selected = fromQuery.Count > 0 ? fromQuery
+                : _svc.MostPricedTypes(3).Where(id => _types.Any(t => t.Id == id)).ToHashSet();
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task OnTypesAsync(IReadOnlyCollection<long> ids) { _selected = ids.Take(MaxTypes).ToHashSet(); if (_selected.Count == 0) _pricedOnly = false; await LoadAsync(); }
+    private async Task OnCategoryAsync(long id) { _categoryId = id; await LoadAsync(); }
+    private async Task OnTextAsync(string? t) { _text = t; await LoadAsync(); }
+    private async Task OnPricedOnlyAsync(bool v) { _pricedOnly = v; await LoadAsync(); }
+
+    private async Task LoadAsync()
+    {
+        _loading = true; _error = null;
+        // ترتيب الأعمدة بترتيب القوائم فى الشجرة لا بترتيب الاختيار
+        var ids = _types.Where(t => _selected.Contains(t.Id)).Select(t => t.Id).ToList();
+        var f = new PriceFilter { Text = _text, Category_Id = _categoryId, Priced_Only = _pricedOnly, Top = Top };
+        try { _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.PriceSheet(ids, f); }); _shown = ids; }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); _rows = new(); }
+        finally { _loading = false; }
+    }
+
+    private string TypeName(long id) => _types.FirstOrDefault(t => t.Id == id)?.Name ?? id.ToString(CultureInfo.InvariantCulture);
+
+    private async Task PrintAsync() =>
+        await JS.InvokeVoidAsync("accountErpInterop.printElement", ".print-area", Tr("PSTitle"), LangService.IsRtl ? "rtl" : "ltr", "@page { size: A4 landscape; margin: 10mm; }");
+
+    private static string Money(decimal v) => v.ToString("N2", CultureInfo.InvariantCulture);
+    private static string CodeText(string code) => string.IsNullOrWhiteSpace(code) || code.Trim() == "0" ? "" : code;
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

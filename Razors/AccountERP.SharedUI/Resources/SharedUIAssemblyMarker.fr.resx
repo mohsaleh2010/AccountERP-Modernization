@@ -3991,4 +3991,22 @@
   <data name="BLRemove" xml:space="preserve"><value>Retirer {0}</value></data>
   <data name="BLPriceOnLabel" xml:space="preserve"><value>Prix {0}</value></data>
   <data name="BLPreviewCapped" xml:space="preserve"><value>Maximum {0} étiquettes par impression ; réduisez ou imprimez par lots</value></data>
+  <data name="PSTitle" xml:space="preserve"><value>Liste des prix des articles</value></data>
+  <data name="PSSub" xml:space="preserve"><value>Prix de vente de base et chaque liste choisie, prêt à imprimer</value></data>
+  <data name="PSManage" xml:space="preserve"><value>Listes de prix</value></data>
+  <data name="PSLists" xml:space="preserve"><value>Listes affichées</value></data>
+  <data name="PSListsHint" xml:space="preserve"><value>Jusqu'à {0} listes, une colonne chacune</value></data>
+  <data name="PSPricedOnly" xml:space="preserve"><value>Seulement les articles tarifés dans les listes choisies</value></data>
+  <data name="PSUnit" xml:space="preserve"><value>Unité</value></data>
+  <data name="PSBasePrice" xml:space="preserve"><value>Prix de vente</value></data>
+  <data name="PSNoPrice" xml:space="preserve"><value>Pas de prix dans cette liste</value></data>
+  <data name="PSEmpty" xml:space="preserve"><value>Aucun article correspondant</value></data>
+  <data name="PSTop" xml:space="preserve"><value>La liste affiche les {0} premiers articles ; filtrez pour réduire</value></data>
+  <data name="SBFifo" xml:space="preserve"><value>FIFO derniers achats</value></data>
+  <data name="SBSupplierPrice" xml:space="preserve"><value>Prix fournisseur</value></data>
+  <data name="SBPurchaseType" xml:space="preserve"><value>Type de prix d'achat</value></data>
+  <data name="SBNoPurchaseType" xml:space="preserve"><value>Sans type</value></data>
+  <data name="SBSupplier" xml:space="preserve"><value>Fournisseur</value></data>
+  <data name="SBSupplierHint" xml:space="preserve"><value>Vide = dernier prix de tout fournisseur</value></data>
+  <data name="SBFifoNote" xml:space="preserve"><value>Le stock est valorisé aux dernières factures d'achat qui le couvrent (pondéré), le reste au coût moyen</value></data>
 </root>

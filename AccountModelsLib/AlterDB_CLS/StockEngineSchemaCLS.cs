@@ -291,6 +291,10 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("menuItemPrintBarCodeForOneItem", "/items/barcode-labels"), ("menuItemPrintBarCodeForOneItemWithPrice", "/items/barcode-labels?price=1"),
             ("toolStripMenuItemBill_PrintItemsBarCodeItemsList", "/items/barcode-labels"),
             ("menuItemPrintBarCodeForOneItemSaidalia", "/main-data/barcode-pharmacy-stickers"),
+            // خطة 05 بند 26: طباعة الأسعار، وتقارير التقييم كأسس تقييم فى أرصدة الأصناف (balance_ / balance_Price / BalanceWith_* / balance_CostAvgLastBalance)
+            ("menuItemItemPrices", "/items/price-sheet"), ("menuItemPricesList", "/store/balances?price=1"),
+            ("toolStripMenuItemPurchasItemNo", "/store/balances?price=2"), ("toolStripMenuItembalance_CostAvg", "/store/balances?price=4"),
+            ("menuItem67", "/store/balances?price=3"), ("menuItem73", "/store/balances?price=2"), ("menuItemPriceTypeSupplier", "/store/balances?price=5"),
             // خطة 04 م5: الأسعار (طباعة الأسعار menuItemItemPrices لم تُبنَ بعد)
             ("menuPrice_Type_List", "/items/prices/lists"), ("menuPriceCategory", "/items/prices/lists"), ("menuItemSearchItemPrices_List_Values", "/items/prices/lists"),
             ("menuItemEditPrices", "/items/prices/bulk"), ("MenuCustomer_PriceCLS", "/items/prices/customers"),

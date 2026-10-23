@@ -110,6 +110,23 @@
             </div>
             <MudSwitch T="bool" Value="_includeZero" ValueChanged="OnIncludeZeroAsync" Color="Color.Primary" Label="@Tr("SBIncludeZero")" />
         </div>
+        @if (_price == PriceBasis.SupplierPrice)
+        {
+            <div class="sb-filters mt-3" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+                <MudSelect T="long" Value="_purchaseTypeId" ValueChanged="OnPurchaseTypeAsync" Label="@Tr("SBPurchaseType")" Variant="Variant.Outlined"
+                           ToStringFunc="@(v => v == 0 ? Tr("SBNoPurchaseType") : _purchaseTypes.FirstOrDefault(t => t.Id == v)?.Name ?? "")">
+                    <MudSelectItem T="long" Value="0L">@Tr("SBNoPurchaseType")</MudSelectItem>
+                    @foreach (var t in _purchaseTypes) { <MudSelectItem T="long" Value="@t.Id">@t.Name</MudSelectItem> }
+                </MudSelect>
+                <MudAutocomplete T="PriceListService.Option" Label="@Tr("SBSupplier")" Value="_supplier" ValueChanged="OnSupplierAsync" SearchFunc="SearchSuppliersAsync"
+                                 ToStringFunc="@(o => o?.Name)" Clearable="true" ResetValueOnEmptyText="true" Variant="Variant.Outlined" DebounceInterval="300"
+                                 HelperText="@Tr("SBSupplierHint")" />
+            </div>
+        }
+        @if (_price == PriceBasis.Fifo)
+        {
+            <MudAlert Severity="Severity.Info" Dense="true" Class="mt-3">@Tr("SBFifoNote")</MudAlert>
+        }
         @if (_asOf is not null)
         {
             <MudAlert Severity="Severity.Info" Dense="true" Class="mt-3">@Tr("SBAsOfNote")</MudAlert>
@@ -186,14 +203,19 @@
     private static readonly PriceOption[] PriceOptions =
     {
         new(PriceBasis.QuantityOnly, "SBQtyOnly"), new(PriceBasis.AverageCost, "SBAvgCost"), new(PriceBasis.LastPurchase, "SBLastPurchase"), new(PriceBasis.SalePrice, "SBSalePrice"),
+        new(PriceBasis.Fifo, "SBFifo"), new(PriceBasis.SupplierPrice, "SBSupplierPrice"),
     };
 
-    /// <summary>price=0..3 أساس التقييم، type=20 للأقسام، asof=1 يفتح بتاريخ اليوم (عناصر القائمة القديمة).</summary>
+    /// <summary>price=0..5 أساس التقييم (4 FIFO، 5 سعر المورد)، type=20 للأقسام، asof=1 يفتح بتاريخ اليوم (عناصر القائمة القديمة).</summary>
     [SupplyParameterFromQuery(Name = "price")] public int? PriceQuery { get; set; }
     [SupplyParameterFromQuery(Name = "type")] public int? TypeQuery { get; set; }
     [SupplyParameterFromQuery(Name = "asof")] public int? AsOfQuery { get; set; }
 
     private readonly StoreBalancesService _svc = new();
+    private readonly PriceListService _prices = new();
+    private List<PriceListService.Option> _purchaseTypes = new();
+    private PriceListService.Option? _supplier;
+    private long _purchaseTypeId;
     private List<Option> _stores = new(), _categories = new();
     private List<BalanceRow> _rows = new();
     private int _storeType = 4, _skip, _total, _negative;
@@ -210,12 +232,12 @@
     {
         LangService.OnLanguageChanged += OnLanguageChangedHandler;
         _storeType = TypeQuery == 20 ? 20 : 4;
-        _price = PriceQuery is >= 0 and <= 3 ? (PriceBasis)PriceQuery.Value : PriceBasis.QuantityOnly;
+        _price = PriceQuery is >= 0 and <= 5 ? (PriceBasis)PriceQuery.Value : PriceBasis.QuantityOnly;
         if (AsOfQuery == 1) _asOf = DateTime.Today;
         try
         {
             var type = _storeType;
-            (_stores, _categories) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_svc.GetStores(type), _svc.GetCategories()); });
+            (_stores, _categories, _purchaseTypes) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_svc.GetStores(type), _svc.GetCategories(), _prices.ListPurchaseTypes()); });
         }
         catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
         await LoadAsync();
@@ -235,6 +257,13 @@
     private async Task OnAsOfAsync(DateTime? d) { _asOf = d; _skip = 0; await LoadAsync(); }
     private async Task OnTextAsync(string? t) { _text = t; _skip = 0; await LoadAsync(); }
     private async Task OnPriceAsync(PriceBasis p) { _price = p; _skip = 0; await LoadAsync(); }
+    private async Task OnPurchaseTypeAsync(long v) { _purchaseTypeId = v; _skip = 0; await LoadAsync(); }
+    private async Task OnSupplierAsync(PriceListService.Option? o) { _supplier = o; _skip = 0; await LoadAsync(); }
+    private async Task<IEnumerable<PriceListService.Option>> SearchSuppliersAsync(string text, CancellationToken token)
+    {
+        try { return await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _prices.SearchParties(true, text ?? ""); }, token); }
+        catch { return Array.Empty<PriceListService.Option>(); }
+    }
     private async Task OnIncludeZeroAsync(bool v) { _includeZero = v; _skip = 0; await LoadAsync(); }
     private async Task PageAsync(int dir) { _skip = Math.Max(0, _skip + dir * PageSize); await LoadAsync(); }
 
@@ -244,7 +273,7 @@
         var f = new BalanceFilter
         {
             StoreType = _storeType, StoreId = _storeId, CategoryId = _categoryId, Text = _text, AsOf = _asOf,
-            IncludeZero = _includeZero, Price = _price, Skip = _skip, Take = PageSize,
+            IncludeZero = _includeZero, Price = _price, PurchaseTypeId = _purchaseTypeId, SupplierId = _supplier?.Id ?? 0, Skip = _skip, Take = PageSize,
         };
         try
         {

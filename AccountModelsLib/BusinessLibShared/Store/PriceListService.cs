@@ -226,6 +226,59 @@ WHERE ISNULL(i.Active_flage, 1) NOT IN (0, -1)
 ORDER BY i.Item_Name").ToList());
         }
 
+        public class PriceSheetRow
+        {
+            public long Item_Id { get; set; }
+            public string Code { get; set; }
+            public string Name { get; set; }
+            public string Category { get; set; }
+            public string Unit { get; set; }
+            public decimal Sale_Price { get; set; }
+            /// <summary>سعر الصنف فى كل قائمة مختارة (المفتاح رقم القائمة)؛ غياب المفتاح = لا سعر للصنف فى القائمة.</summary>
+            public Dictionary<long, decimal> Prices { get; set; } = new();
+        }
+
+        private class SheetPrice
+        {
+            public long Item_Id { get; set; }
+            public long Type_Id { get; set; }
+            public decimal Price { get; set; }
+        }
+
+        /// <summary>
+        /// كشف أسعار للطباعة (خطة 05 بند 26، بدل ItemPriceFRM «طباعة أسعار الأصناف»): الأصناف بسعر البيع الأساسى وسعر كل قائمة مختارة.
+        /// Priced_Only يقصر النتيجة على الأصناف التى لها سعر فى قائمة مختارة واحدة على الأقل.
+        /// </summary>
+        public List<PriceSheetRow> PriceSheet(IReadOnlyCollection<long> typeIds, PriceFilter f)
+        {
+            var ids = (typeIds ?? Array.Empty<long>()).Distinct().ToList();
+            var rows = ListPrices(0, new PriceFilter { Text = f.Text, Category_Id = f.Category_Id, Group_Id = f.Group_Id, Top = f.Top })
+                .Select(r => new PriceSheetRow { Item_Id = r.Item_Id, Code = r.Code, Name = r.Name, Category = r.Category, Unit = r.Unit, Sale_Price = r.Sale_Price })
+                .ToList();
+            if (ids.Count == 0 || rows.Count == 0) return f.Priced_Only && ids.Count > 0 ? new() : rows;
+            // أرقام القوائم أعداد صحيحة من الواجهة فتُضمَّن نصاً فى IN بأمان
+            string inList = string.Join(",", ids);
+            var prices = Run(opp => opp.db.Database.SqlQueryRaw<SheetPrice>(
+                // أول صف لكل صنف وقائمة (بالترتيب ID) كما تقرأه ListPrices
+                "SELECT Item_Id, Type_Id, Price FROM (SELECT CAST(Item_ID AS bigint) AS Item_Id, CAST(Price_Type_List_ID AS bigint) AS Type_Id, " +
+                "CAST(PriceUnit AS decimal(18,4)) AS Price, ROW_NUMBER() OVER (PARTITION BY Item_ID, Price_Type_List_ID ORDER BY ID) AS Rn " +
+                "FROM Price_Type_Sell_Values WHERE Price_Type_List_ID IN (" + inList + ") AND PriceUnit IS NOT NULL) x WHERE Rn = 1").ToList());
+            var byItem = prices.GroupBy(p => p.Item_Id).ToDictionary(g => g.Key, g => g.ToDictionary(x => x.Type_Id, x => x.Price));
+            foreach (var r in rows)
+                if (byItem.TryGetValue(r.Item_Id, out var d)) r.Prices = d;
+            return f.Priced_Only ? rows.Where(r => r.Prices.Values.Any(v => v != 0)).ToList() : rows;
+        }
+
+        /// <summary>القوائم الأكثر تسعيراً للأصناف النشطة (سعر غير صفرى) لاختيار كشف الأسعار الافتراضى؛ Priced_Items يعدّ كل الصفوف.</summary>
+        public List<long> MostPricedTypes(int take) => Run(opp => opp.db.Database.SqlQuery<long>($@"
+SELECT TOP ({take}) CAST(v.Price_Type_List_ID AS bigint) AS Value
+FROM Price_Type_Sell_Values v
+INNER JOIN Item i ON i.id = v.Item_ID AND ISNULL(i.Active_flage, 1) NOT IN (0, -1)
+INNER JOIN Price_Type_List t ON t.ID = v.Price_Type_List_ID AND ISNULL(t.IS_Active, 1) = 1
+WHERE ISNULL(v.PriceUnit, 0) <> 0
+GROUP BY v.Price_Type_List_ID
+ORDER BY COUNT(DISTINCT v.Item_ID) DESC, v.Price_Type_List_ID").ToList());
+
         /// <summary>سعر صنف فى قائمة (null = حذف السعر من القائمة)، ثم إعادة حساب كل القوائم المشتقة منها لهذا الصنف (كالقديم).</summary>
         public void SetPrice(long typeId, long itemId, decimal? price)
         {

@@ -3991,4 +3991,22 @@
   <data name="BLRemove" xml:space="preserve"><value>{0} entfernen</value></data>
   <data name="BLPriceOnLabel" xml:space="preserve"><value>Preis {0}</value></data>
   <data name="BLPreviewCapped" xml:space="preserve"><value>Maximal {0} Etiketten pro Druck; Kopien reduzieren oder in Teilen drucken</value></data>
+  <data name="PSTitle" xml:space="preserve"><value>Artikelpreisliste</value></data>
+  <data name="PSSub" xml:space="preserve"><value>Basisverkaufspreis und jede gewählte Preisliste, druckfertig</value></data>
+  <data name="PSManage" xml:space="preserve"><value>Preislisten</value></data>
+  <data name="PSLists" xml:space="preserve"><value>Angezeigte Preislisten</value></data>
+  <data name="PSListsHint" xml:space="preserve"><value>Bis zu {0} Listen, je eine Spalte</value></data>
+  <data name="PSPricedOnly" xml:space="preserve"><value>Nur in den gewählten Listen bepreiste Artikel</value></data>
+  <data name="PSUnit" xml:space="preserve"><value>Einheit</value></data>
+  <data name="PSBasePrice" xml:space="preserve"><value>Verkaufspreis</value></data>
+  <data name="PSNoPrice" xml:space="preserve"><value>Kein Preis in dieser Liste</value></data>
+  <data name="PSEmpty" xml:space="preserve"><value>Keine passenden Artikel</value></data>
+  <data name="PSTop" xml:space="preserve"><value>Die Liste zeigt die ersten {0} Artikel; nach Kategorie oder Suche filtern</value></data>
+  <data name="SBFifo" xml:space="preserve"><value>FIFO neueste Einkäufe</value></data>
+  <data name="SBSupplierPrice" xml:space="preserve"><value>Lieferantenpreis</value></data>
+  <data name="SBPurchaseType" xml:space="preserve"><value>Einkaufspreistyp</value></data>
+  <data name="SBNoPurchaseType" xml:space="preserve"><value>Ohne Typ</value></data>
+  <data name="SBSupplier" xml:space="preserve"><value>Lieferant</value></data>
+  <data name="SBSupplierHint" xml:space="preserve"><value>Leer = neuester Preis eines beliebigen Lieferanten</value></data>
+  <data name="SBFifoNote" xml:space="preserve"><value>Der Bestand wird zu den neuesten deckenden Einkaufsrechnungen bewertet (mengengewichtet), der Rest zu Durchschnittskosten</value></data>
 </root>

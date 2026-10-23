@@ -3989,4 +3989,22 @@
   <data name="BLRemove" xml:space="preserve"><value>حذف {0}</value></data>
   <data name="BLPriceOnLabel" xml:space="preserve"><value>السعر {0}</value></data>
   <data name="BLPreviewCapped" xml:space="preserve"><value>الحد الأقصى {0} ملصق فى المرة؛ قلّل النسخ أو اطبع على دفعات</value></data>
+  <data name="PSTitle" xml:space="preserve"><value>كشف أسعار الأصناف</value></data>
+  <data name="PSSub" xml:space="preserve"><value>سعر البيع الأساسى وسعر كل قائمة أسعار مختارة، جاهز للطباعة</value></data>
+  <data name="PSManage" xml:space="preserve"><value>قوائم الأسعار</value></data>
+  <data name="PSLists" xml:space="preserve"><value>قوائم الأسعار المعروضة</value></data>
+  <data name="PSListsHint" xml:space="preserve"><value>حتى {0} قوائم، كل قائمة عمود</value></data>
+  <data name="PSPricedOnly" xml:space="preserve"><value>المسعَّرة فى القوائم المختارة فقط</value></data>
+  <data name="PSUnit" xml:space="preserve"><value>الوحدة</value></data>
+  <data name="PSBasePrice" xml:space="preserve"><value>سعر البيع</value></data>
+  <data name="PSNoPrice" xml:space="preserve"><value>لا سعر فى هذه القائمة</value></data>
+  <data name="PSEmpty" xml:space="preserve"><value>لا توجد أصناف مطابقة</value></data>
+  <data name="PSTop" xml:space="preserve"><value>يعرض الكشف أول {0} صنف؛ صفِّ بالفئة أو البحث لتضييقه</value></data>
+  <data name="SBFifo" xml:space="preserve"><value>FIFO أحدث المشتريات</value></data>
+  <data name="SBSupplierPrice" xml:space="preserve"><value>سعر المورد</value></data>
+  <data name="SBPurchaseType" xml:space="preserve"><value>نوع سعر الشراء</value></data>
+  <data name="SBNoPurchaseType" xml:space="preserve"><value>بلا نوع</value></data>
+  <data name="SBSupplier" xml:space="preserve"><value>المورد</value></data>
+  <data name="SBSupplierHint" xml:space="preserve"><value>فارغ = أحدث سعر لأى مورد</value></data>
+  <data name="SBFifoNote" xml:space="preserve"><value>يُقيَّم الرصيد بأسعار أحدث فواتير الشراء التى تغطيه (بالكمية)، وما يزيد عنها بمتوسط التكلفة</value></data>
 </root>
