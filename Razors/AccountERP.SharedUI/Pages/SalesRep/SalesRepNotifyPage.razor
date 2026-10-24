@@ -1,0 +1,270 @@
+@* 🟢 خطة المندوبين — المرحلة 8: إشعارات العميل SMS/WhatsApp. ثلاثة تبويبات: إعداد البوابة، قوالب الرسائل لكل حدث وقناة، وطابور الإرسال
+   (إعادة محاولة/إلغاء/إرسال الآن). الخدمة SalesRepNotifyService؛ الإرسال الفعلى من السيرفر. التصميم حسب ui-ux-pro-max. *@
+@page "/salesrep/notifications"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.SalesRep
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("FSJTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .nt-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .nt-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .nt-head .ico .mud-icon-root { font-size: 2rem; }
+    .nt-head .titles { flex: 1 1 260px; }
+    .nt-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .nt-gap { margin-top: 16px; }
+    .nt-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px 16px; align-items: start; }
+    .nt-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; justify-content: flex-end; align-items: center; }
+    .nt-hint { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .nt-tpl { display: grid; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--mud-palette-lines-default); }
+    .nt-tpl:last-child { border-bottom: 0; }
+    .nt-tpl .top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+    .nt-msg { max-width: 360px; white-space: normal; word-break: break-word; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card nt-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Sms" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("FSJTitle")</h1>
+            <div class="sub">@Tr("FSJSub")</div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Error" Dense="true" Class="nt-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    <div class="inv-card nt-gap">
+    <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pt-4" @bind-ActivePanelIndex="_tab">
+
+        <MudTabPanel Text="@Tr("FSJTabSettings")" Icon="@Icons.Material.Filled.Settings">
+            @if (_settings.Provider == 0)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3" role="status">@Tr("FSJOffNote")</MudAlert>
+            }
+            <div class="nt-form">
+                <MudSelect T="int" @bind-Value="_settings.Provider" Label="@Tr("FSJProvider")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                           ToStringFunc="@(v => Tr("FSJProvider" + v))">
+                    <MudSelectItem T="int" Value="0">@Tr("FSJProvider0")</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">@Tr("FSJProvider1")</MudSelectItem>
+                    <MudSelectItem T="int" Value="2">@Tr("FSJProvider2")</MudSelectItem>
+                </MudSelect>
+                <MudTextField T="string" @bind-Value="_settings.Default_Country_Code" Label="@Tr("FSJCountry")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                              HelperText="@Tr("FSJCountryHint")" MaxLength="4" InputMode="InputMode.numeric" />
+                <MudNumericField T="int" @bind-Value="_settings.Max_Attempts" Label="@Tr("FSJMaxAttempts")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="1" Max="10" />
+            </div>
+            @if (_settings.Provider == 1)
+            {
+                <div class="nt-form nt-gap">
+                    <MudTextField T="string" @bind-Value="_settings.Endpoint_Url" Label="@Tr("FSJUrl")" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="500"
+                                  HelperText="@Tr("FSJUrlHint")" InputMode="InputMode.url" Style="direction: ltr" />
+                    <MudTextField T="string" @bind-Value="_settings.Auth_Header" Label="@Tr("FSJAuthHeader")" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="100"
+                                  HelperText="@Tr("FSJAuthHeaderHint")" Style="direction: ltr" />
+                    <MudTextField T="string" @bind-Value="_authValue" Label="@Tr(_settings.Has_Auth_Value ? "FSJAuthValueSet" : "FSJAuthValue")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                  MaxLength="500" InputType="InputType.Password" AutoComplete="new-password" HelperText="@Tr("FSJSecretHint")" Style="direction: ltr" />
+                    @if (_settings.Has_Auth_Value)
+                    {
+                        <MudCheckBox T="bool" @bind-Value="_clearAuth" Label="@Tr("FSJAuthClear")" />
+                    }
+                </div>
+                <MudTextField T="string" @bind-Value="_settings.Body_Template" Label="@Tr("FSJBody")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="nt-gap"
+                              Lines="3" MaxLength="1000" HelperText="@Tr("FSJBodyHint")" Style="direction: ltr; font-family: monospace" />
+            }
+            <div class="nt-acts">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@_busy" OnClick="SaveSettingsAsync">@Tr("FSJSave")</MudButton>
+            </div>
+
+            @if (_settings.Provider != 0)
+            {
+                <MudDivider Class="my-4" />
+                <div class="nt-form">
+                    <MudTextField T="string" @bind-Value="_testPhone" Label="@Tr("FSJTestPhone")" Variant="Variant.Outlined" Margin="Margin.Dense" InputMode="InputMode.tel" Style="direction: ltr" />
+                    <MudSelect T="int" @bind-Value="_testChannel" Label="@Tr("FSJChannel")" Variant="Variant.Outlined" Margin="Margin.Dense" ToStringFunc="@(v => Tr("FSJChannel" + v))">
+                        <MudSelectItem T="int" Value="1">@Tr("FSJChannel1")</MudSelectItem>
+                        <MudSelectItem T="int" Value="2">@Tr("FSJChannel2")</MudSelectItem>
+                    </MudSelect>
+                    <div><MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Send" Disabled="@(_busy || string.IsNullOrWhiteSpace(_testPhone))" OnClick="SendTestAsync">@Tr("FSJTestSend")</MudButton></div>
+                </div>
+            }
+        </MudTabPanel>
+
+        <MudTabPanel Text="@Tr("FSJTabTemplates")" Icon="@Icons.Material.Filled.Article">
+            <div class="nt-hint">@Tr("FSJTemplateHint") <bdi dir="ltr">@string.Join("  ", SalesRepNotifyService.Placeholders)</bdi></div>
+            @foreach (var t in _templates)
+            {
+                var row = t;
+                <div class="nt-tpl">
+                    <div class="top">
+                        <b>@Tr("FSJEvent" + row.Event_Type)</b>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Info">@Tr("FSJChannel" + row.Channel)</MudChip>
+                        <MudSwitch T="bool" @bind-Value="row.Enabled" Color="Color.Success" Label="@Tr("FSJEnabled")" />
+                    </div>
+                    <MudTextField T="string" @bind-Value="row.Body" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="2" MaxLength="500" aria-label="@Tr("FSJEvent" + row.Event_Type)" />
+                    <div class="nt-acts" style="margin-top:0">
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Save" Disabled="@_busy" OnClick="@(() => SaveTemplateAsync(row))">@Tr("FSJSave")</MudButton>
+                    </div>
+                </div>
+            }
+        </MudTabPanel>
+
+        <MudTabPanel Text="@Tr("FSJTabOutbox")" Icon="@Icons.Material.Filled.Outbox">
+            <div class="nt-acts" style="margin-top:0; justify-content: space-between">
+                <MudSelect T="int" @bind-Value="_filter" Label="@Tr("FSJColStatus")" Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width: 220px"
+                           ToStringFunc="@(v => v < 0 ? Tr("FSJFilterAll") : Tr("FSJStatus" + v))" SelectedValuesChanged="@(_ => ReloadOutboxAsync())">
+                    <MudSelectItem T="int" Value="-1">@Tr("FSJFilterAll")</MudSelectItem>
+                    @for (int s = 0; s <= 4; s++) { var v = s; <MudSelectItem T="int" Value="@v">@Tr("FSJStatus" + v)</MudSelectItem> }
+                </MudSelect>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Send" Disabled="@_busy" OnClick="SendNowAsync">@Tr("FSJSendNow")</MudButton>
+            </div>
+            @if (_loading)
+            {
+                <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="nt-gap" aria-label="@Tr("FSRLoading")" />
+            }
+            else if (_outbox.Count == 0)
+            {
+                <div class="inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" /><div>@Tr("FSJEmpty")</div></div>
+            }
+            else
+            {
+                <MudTable Items="@_outbox" T="SalesRepNotifyService.OutboxRow" Elevation="0" Class="inv-table nt-gap" Breakpoint="Breakpoint.Sm" Dense="true" Hover="true">
+                    <HeaderContent>
+                        <MudTh>@Tr("FSJColWhen")</MudTh><MudTh>@Tr("FSJEvent")</MudTh><MudTh>@Tr("FSJColCustomer")</MudTh><MudTh>@Tr("FSJColMessage")</MudTh>
+                        <MudTh>@Tr("FSJColStatus")</MudTh><MudTh>@Tr("FSJColAttempts")</MudTh><MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="@Tr("FSJColWhen")">@(context.Insert_ServerDateTime?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture))</MudTd>
+                        <MudTd DataLabel="@Tr("FSJEvent")">@Tr("FSJEvent" + context.Event_Type) · @Tr("FSJChannel" + context.Channel)</MudTd>
+                        <MudTd DataLabel="@Tr("FSJColCustomer")">@context.Customer_Name<div class="nt-hint" dir="ltr">@context.Phone</div></MudTd>
+                        <MudTd DataLabel="@Tr("FSJColMessage")"><div class="nt-msg">@context.Message</div></MudTd>
+                        <MudTd DataLabel="@Tr("FSJColStatus")">
+                            <MudChip T="string" Size="Size.Small" Color="@StatusColor(context.Status)">@Tr("FSJStatus" + context.Status)</MudChip>
+                            @if (!string.IsNullOrEmpty(context.Last_Error)) { <div class="nt-hint">@context.Last_Error</div> }
+                        </MudTd>
+                        <MudTd DataLabel="@Tr("FSJColAttempts")">@context.Attempts</MudTd>
+                        <MudTd>
+                            @if (context.Status == 2)
+                            {
+                                <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Replay" Disabled="@_busy" OnClick="@(() => RetryAsync(context.Id))">@Tr("FSJRetry")</MudButton>
+                            }
+                            @if (context.Status == 0 || context.Status == 2)
+                            {
+                                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error" Disabled="@_busy" OnClick="@(() => CancelAsync(context.Id))">@Tr("FSJCancel")</MudButton>
+                            }
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudTabPanel>
+    </MudTabs>
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private readonly SalesRepNotifyService _svc = new();
+    private SalesRepNotifyService.SettingsView _settings = new();
+    private List<SalesRepNotifyService.TemplateRow> _templates = new();
+    private List<SalesRepNotifyService.OutboxRow> _outbox = new();
+    private string _authValue = "", _testPhone = "";
+    private bool _clearAuth, _loading = true, _busy;
+    private int _tab, _filter = -1, _testChannel = 1;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            (_settings, _templates) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_svc.GetSettings(), _svc.GetTemplates()); });
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        await ReloadOutboxAsync();
+    }
+
+    private async Task ReloadOutboxAsync()
+    {
+        _loading = true;
+        int? status = _filter < 0 ? null : _filter;
+        try { _outbox = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetOutbox(status); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private async Task RunAsync(Func<Task> work)
+    {
+        _busy = true; _error = null;
+        try { await work(); }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private Task SaveSettingsAsync() => RunAsync(async () =>
+    {
+        var input = new SalesRepNotifyService.SettingsInput
+        {
+            Provider = _settings.Provider, Endpoint_Url = _settings.Endpoint_Url, Auth_Header = _settings.Auth_Header, Body_Template = _settings.Body_Template,
+            Default_Country_Code = _settings.Default_Country_Code, Max_Attempts = _settings.Max_Attempts, Auth_Value = _authValue, Clear_Auth_Value = _clearAuth,
+        };
+        await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.SaveSettings(input); });
+        _authValue = ""; _clearAuth = false;
+        _settings = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetSettings(); });
+        Snackbar.Add(Tr("FSJSaved"), Severity.Success);
+    });
+
+    private Task SendTestAsync() => RunAsync(async () =>
+    {
+        string phone = _testPhone; int channel = _testChannel;
+        await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.SendTest(phone, channel); });
+        Snackbar.Add(Tr("FSJTestSent"), Severity.Success);
+    });
+
+    private Task SaveTemplateAsync(SalesRepNotifyService.TemplateRow row) => RunAsync(async () =>
+    {
+        await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.SaveTemplate(row); });
+        _templates = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetTemplates(); });
+        Snackbar.Add(Tr("FSJSaved"), Severity.Success);
+    });
+
+    private Task SendNowAsync() => RunAsync(async () =>
+    {
+        var r = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.ProcessPending(50); });
+        Snackbar.Add(Tr("FSJSendResult", r.Sent, r.Retry, r.Failed), r.Failed > 0 ? Severity.Warning : Severity.Success);
+        await ReloadOutboxAsync();
+    });
+
+    private Task RetryAsync(long id) => RunAsync(async () =>
+    {
+        await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.Retry(id); });
+        await ReloadOutboxAsync();
+    });
+
+    private Task CancelAsync(long id) => RunAsync(async () =>
+    {
+        await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.Cancel(id); });
+        await ReloadOutboxAsync();
+    });
+
+    private static Color StatusColor(int s) => s switch { 1 => Color.Success, 2 => Color.Error, 0 => Color.Info, _ => Color.Default };
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

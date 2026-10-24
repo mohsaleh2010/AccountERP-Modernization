@@ -742,6 +742,8 @@ namespace AccountModelsLib
                             }
                             catch { }
                             ii.Set_ItemTransactionFromInvoices(ref opp, invD_O.invDlst[x].Unit_Item_Table_Id ?? 0, invD_O.invDlst[x].Larg_Unit_Price ?? 0, invD_O.invDlst[x].Item_Net_Total_Price ?? 0, invD_O.invDlst[x].Larg_Qnty ?? 0, invD_O.invDlst[x].Small_Qnty ?? 0, invD_O.invDlst[x].Qnty_Another ?? 0, 0, Transaction_Type, invL_O.invL.Invoice_Date.Value, Invoice_List_Table_Id, invD_O.invDlst[x].Id, Invoice_Type_Id, "›« Ê—… „»Ì⁄« ", Store_Name, Customer_Name, Customer_Name, invL_O.invL.Invoice_Id ?? 0);
+                            // «·„Ã«‰Ï: ’› œ› — »‰›” „›« ÌÕ «·”ÿ— («·„Õ—ﬂ Õ—¯ﬂ Unit_item »«·„Ã«‰Ï Ê’› «·„œ›Ê⁄ ·« Ì‘„·Â) ó ··„” ‰œ«  «·ÃœÌœ… ›ﬁÿ.
+                            FreeQtyLedgerCLS.PostForInvoice(opp, invD_O.invDlst[x], invL_O, 2, Common.Invoice_Type_Id, "„Ã«‰Ï ›« Ê—… „»Ì⁄« ");
                             //InvoiceDataSetCLS ii = new InvoiceDataSetCLS();
 
 

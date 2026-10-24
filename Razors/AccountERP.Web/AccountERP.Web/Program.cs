@@ -112,6 +112,8 @@ builder.Services.AddScoped<AccountERP.SharedUI.Services.UserPreferencesService>(
 builder.Services.AddScoped<AccountERP.SharedUI.Services.ThemeService>();
 // سجلّ الإشعارات (جرس الإشعارات فى الشريط العلوي) - Scoped لتكون مستقلة لكل مستخدم على الويب
 builder.Services.AddScoped<AccountERP.SharedUI.Services.NotificationCenterService>();
+// 📨 المرحلة 8: مرسل إشعارات عملاء المندوبين (SMS/WhatsApp) من طابور الإرسال.
+builder.Services.AddHostedService<AccountERP.Web.Services.SalesRepNotifyWorker>();
 builder.Services.AddMudServices();
 var app = builder.Build();
 

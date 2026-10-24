@@ -4181,4 +4181,60 @@
   <data name="IAMOpenDone" xml:space="preserve"><value>تم تسجيل قيد البداية برقم {0}</value></data>
   <data name="IAMOpenNone" xml:space="preserve"><value>لا فرق يستدعى قيداً</value></data>
   <data name="IAMOpenConfirm" xml:space="preserve"><value>سجّل قيد بداية المخزون بالفروق المعروضة؟</value></data>
+  <data name="FSJTitle" xml:space="preserve"><value>إشعارات عملاء المندوبين</value></data>
+  <data name="FSJSub" xml:space="preserve"><value>رسائل SMS وWhatsApp تلقائية للعميل عند الطلبية والتسليم والتحصيل؛ تُرسَل من السيرفر مع إعادة محاولة تلقائية.</value></data>
+  <data name="FSJTabSettings" xml:space="preserve"><value>إعداد البوابة</value></data>
+  <data name="FSJTabTemplates" xml:space="preserve"><value>قوالب الرسائل</value></data>
+  <data name="FSJTabOutbox" xml:space="preserve"><value>طابور الإرسال</value></data>
+  <data name="FSJOffNote" xml:space="preserve"><value>الإرسال معطّل: لا تُنشأ رسائل فى الطابور حتى تختار مزوّداً وتحفظ.</value></data>
+  <data name="FSJProvider" xml:space="preserve"><value>طريقة الإرسال</value></data>
+  <data name="FSJProvider0" xml:space="preserve"><value>معطّل</value></data>
+  <data name="FSJProvider1" xml:space="preserve"><value>بوابة HTTP (مزوّد رسائل)</value></data>
+  <data name="FSJProvider2" xml:space="preserve"><value>تجريبى (بلا إرسال فعلى)</value></data>
+  <data name="FSJCountry" xml:space="preserve"><value>رمز الدولة</value></data>
+  <data name="FSJCountryHint" xml:space="preserve"><value>يُضاف للأرقام التى تبدأ بصفر (مصر 20).</value></data>
+  <data name="FSJMaxAttempts" xml:space="preserve"><value>أقصى عدد محاولات</value></data>
+  <data name="FSJUrl" xml:space="preserve"><value>عنوان البوابة (HTTPS)</value></data>
+  <data name="FSJUrlHint" xml:space="preserve"><value>يرسل النظام طلب POST بصيغة JSON لهذا العنوان.</value></data>
+  <data name="FSJAuthHeader" xml:space="preserve"><value>ترويسة التفويض</value></data>
+  <data name="FSJAuthHeaderHint" xml:space="preserve"><value>مثل Authorization أو X-Api-Key.</value></data>
+  <data name="FSJAuthValue" xml:space="preserve"><value>قيمة التفويض (مفتاح/رمز)</value></data>
+  <data name="FSJAuthValueSet" xml:space="preserve"><value>قيمة التفويض (محفوظة — اكتب لاستبدالها)</value></data>
+  <data name="FSJAuthClear" xml:space="preserve"><value>مسح قيمة التفويض المحفوظة</value></data>
+  <data name="FSJSecretHint" xml:space="preserve"><value>لا تُعرض القيمة بعد الحفظ.</value></data>
+  <data name="FSJBody" xml:space="preserve"><value>قالب الطلب (JSON)</value></data>
+  <data name="FSJBodyHint" xml:space="preserve"><value>استعمل {to} للرقم و{message} للنص و{channel} للقناة (sms/whatsapp).</value></data>
+  <data name="FSJSave" xml:space="preserve"><value>حفظ</value></data>
+  <data name="FSJSaved" xml:space="preserve"><value>تم الحفظ</value></data>
+  <data name="FSJTestPhone" xml:space="preserve"><value>رقم لتجربة الإرسال</value></data>
+  <data name="FSJChannel" xml:space="preserve"><value>القناة</value></data>
+  <data name="FSJChannel1" xml:space="preserve"><value>SMS</value></data>
+  <data name="FSJChannel2" xml:space="preserve"><value>WhatsApp</value></data>
+  <data name="FSJTestSend" xml:space="preserve"><value>أرسل رسالة تجريبية</value></data>
+  <data name="FSJTestSent" xml:space="preserve"><value>أُرسلت الرسالة التجريبية</value></data>
+  <data name="FSJTemplateHint" xml:space="preserve"><value>اكتب نص الرسالة لكل حدث وقناة ثم فعّله. المتغيرات المتاحة:</value></data>
+  <data name="FSJEnabled" xml:space="preserve"><value>مفعّل</value></data>
+  <data name="FSJEvent" xml:space="preserve"><value>الحدث</value></data>
+  <data name="FSJEvent1" xml:space="preserve"><value>أخذ طلبية</value></data>
+  <data name="FSJEvent2" xml:space="preserve"><value>إسناد الطلبية لمندوب</value></data>
+  <data name="FSJEvent3" xml:space="preserve"><value>تسليم كامل</value></data>
+  <data name="FSJEvent4" xml:space="preserve"><value>تسليم جزئى</value></data>
+  <data name="FSJEvent5" xml:space="preserve"><value>رفض التسليم</value></data>
+  <data name="FSJEvent6" xml:space="preserve"><value>استلام دفعة</value></data>
+  <data name="FSJFilterAll" xml:space="preserve"><value>الكل</value></data>
+  <data name="FSJStatus0" xml:space="preserve"><value>بالانتظار</value></data>
+  <data name="FSJStatus1" xml:space="preserve"><value>مُرسَل</value></data>
+  <data name="FSJStatus2" xml:space="preserve"><value>فشل</value></data>
+  <data name="FSJStatus3" xml:space="preserve"><value>ملغى</value></data>
+  <data name="FSJStatus4" xml:space="preserve"><value>متجاوَز (بلا رقم)</value></data>
+  <data name="FSJColWhen" xml:space="preserve"><value>الوقت</value></data>
+  <data name="FSJColCustomer" xml:space="preserve"><value>العميل</value></data>
+  <data name="FSJColMessage" xml:space="preserve"><value>الرسالة</value></data>
+  <data name="FSJColStatus" xml:space="preserve"><value>الحالة</value></data>
+  <data name="FSJColAttempts" xml:space="preserve"><value>المحاولات</value></data>
+  <data name="FSJSendNow" xml:space="preserve"><value>أرسل المستحق الآن</value></data>
+  <data name="FSJSendResult" xml:space="preserve"><value>أُرسل {0} — سيُعاد {1} — فشل {2}</value></data>
+  <data name="FSJRetry" xml:space="preserve"><value>إعادة المحاولة</value></data>
+  <data name="FSJCancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="FSJEmpty" xml:space="preserve"><value>لا رسائل فى الطابور</value></data>
 </root>

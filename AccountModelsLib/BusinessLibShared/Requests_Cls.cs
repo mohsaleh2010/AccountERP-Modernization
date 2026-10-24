@@ -695,6 +695,8 @@ FROM            Item INNER JOIN
                             catch { }
                             //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, Invoice_List_Table_Id, invd.Invoices_Details_Id, invL.Invoice_Type_Id, "„— Ã⁄ „»Ì⁄« ", invd.Store_Name, invL.Customer_Name, invL.Customer_Name, invL.Invoice_No);
                             ii.Set_ItemTransactionFromInvoiceR(ref opp, invD_O.invDlst[x], invL_O, 0, Transaction_Type, Common.InvoiceReverse_Type_Id, "›« Ê—… „— Ã⁄ „»Ì⁄« ");
+                            // «·„Ã«‰Ï: ’› œ› — »‰›” „›« ÌÕ «·”ÿ— («·„Õ—ﬂ Õ—¯ﬂ Unit_item »«·„Ã«‰Ï Ê’› «·„œ›Ê⁄ ·« Ì‘„·Â) ó ··„” ‰œ«  «·ÃœÌœ… ›ﬁÿ.
+                            FreeQtyLedgerCLS.PostForInvoice(opp, invD_O.invDlst[x], invL_O, 1, Common.InvoiceReverse_Type_Id, "„Ã«‰Ï „— Ã⁄ „»Ì⁄« ");
                             //InvoiceDataSetCLS ii = new InvoiceDataSetCLS();
                         }
                     }

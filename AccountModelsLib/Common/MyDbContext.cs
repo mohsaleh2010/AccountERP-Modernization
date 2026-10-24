@@ -668,6 +668,9 @@ namespace AccountModelsLib
         public DbSet<SalesRep_Credit_Policy> SalesRep_Credit_Policies { get; set; }
         public DbSet<SalesRep_Discount_Policy> SalesRep_Discount_Policies { get; set; }
         public DbSet<SalesRep_Route> SalesRep_Routes { get; set; }
+        public DbSet<SalesRep_Notify_Setting> SalesRep_Notify_Settings { get; set; }
+        public DbSet<SalesRep_Notify_Template> SalesRep_Notify_Templates { get; set; }
+        public DbSet<SalesRep_Notify_Outbox> SalesRep_Notify_Outboxes { get; set; }
         public DbSet<SalesRep_Route_Customer> SalesRep_Route_Customers { get; set; }
         public DbSet<SalesRep_Customer_Geo> SalesRep_Customer_Geos { get; set; }
         public DbSet<SalesRep_GPS_Track> SalesRep_GPS_Tracks { get; set; }

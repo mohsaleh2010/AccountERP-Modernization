@@ -4183,4 +4183,60 @@
   <data name="IAMOpenDone" xml:space="preserve"><value>Eröffnungsbuchung Nr. {0} erfasst</value></data>
   <data name="IAMOpenNone" xml:space="preserve"><value>Keine Differenz zu buchen</value></data>
   <data name="IAMOpenConfirm" xml:space="preserve"><value>Bestands-Eröffnungsbuchung für die angezeigten Differenzen erfassen?</value></data>
+  <data name="FSJTitle" xml:space="preserve"><value>Kundenbenachrichtigungen der Außendienstler</value></data>
+  <data name="FSJSub" xml:space="preserve"><value>Automatische SMS und WhatsApp an den Kunden bei Bestellung, Lieferung und Zahlung; vom Server gesendet, mit automatischen Wiederholungen.</value></data>
+  <data name="FSJTabSettings" xml:space="preserve"><value>Gateway-Einstellungen</value></data>
+  <data name="FSJTabTemplates" xml:space="preserve"><value>Nachrichtenvorlagen</value></data>
+  <data name="FSJTabOutbox" xml:space="preserve"><value>Sendewarteschlange</value></data>
+  <data name="FSJOffNote" xml:space="preserve"><value>Versand ist aus: Es werden keine Nachrichten eingereiht, bis ein Anbieter gewählt und gespeichert ist.</value></data>
+  <data name="FSJProvider" xml:space="preserve"><value>Versandart</value></data>
+  <data name="FSJProvider0" xml:space="preserve"><value>Aus</value></data>
+  <data name="FSJProvider1" xml:space="preserve"><value>HTTP-Gateway (Anbieter)</value></data>
+  <data name="FSJProvider2" xml:space="preserve"><value>Test (kein echter Versand)</value></data>
+  <data name="FSJCountry" xml:space="preserve"><value>Ländervorwahl</value></data>
+  <data name="FSJCountryHint" xml:space="preserve"><value>Wird Nummern mit führender 0 vorangestellt (Ägypten 20).</value></data>
+  <data name="FSJMaxAttempts" xml:space="preserve"><value>Max. Versuche</value></data>
+  <data name="FSJUrl" xml:space="preserve"><value>Gateway-URL (HTTPS)</value></data>
+  <data name="FSJUrlHint" xml:space="preserve"><value>Das System sendet einen JSON-POST an diese Adresse.</value></data>
+  <data name="FSJAuthHeader" xml:space="preserve"><value>Autorisierungs-Header</value></data>
+  <data name="FSJAuthHeaderHint" xml:space="preserve"><value>Z. B. Authorization oder X-Api-Key.</value></data>
+  <data name="FSJAuthValue" xml:space="preserve"><value>Autorisierungswert (Schlüssel/Token)</value></data>
+  <data name="FSJAuthValueSet" xml:space="preserve"><value>Autorisierungswert (gespeichert — zum Ersetzen eingeben)</value></data>
+  <data name="FSJAuthClear" xml:space="preserve"><value>Gespeicherten Autorisierungswert löschen</value></data>
+  <data name="FSJSecretHint" xml:space="preserve"><value>Der Wert wird nach dem Speichern nicht angezeigt.</value></data>
+  <data name="FSJBody" xml:space="preserve"><value>Anfrage-Body (JSON)</value></data>
+  <data name="FSJBodyHint" xml:space="preserve"><value>{to} für die Nummer, {message} für den Text und {channel} für den Kanal (sms/whatsapp) verwenden.</value></data>
+  <data name="FSJSave" xml:space="preserve"><value>Speichern</value></data>
+  <data name="FSJSaved" xml:space="preserve"><value>Gespeichert</value></data>
+  <data name="FSJTestPhone" xml:space="preserve"><value>Testnummer</value></data>
+  <data name="FSJChannel" xml:space="preserve"><value>Kanal</value></data>
+  <data name="FSJChannel1" xml:space="preserve"><value>SMS</value></data>
+  <data name="FSJChannel2" xml:space="preserve"><value>WhatsApp</value></data>
+  <data name="FSJTestSend" xml:space="preserve"><value>Testnachricht senden</value></data>
+  <data name="FSJTestSent" xml:space="preserve"><value>Testnachricht gesendet</value></data>
+  <data name="FSJTemplateHint" xml:space="preserve"><value>Text je Ereignis und Kanal schreiben und aktivieren. Verfügbare Platzhalter:</value></data>
+  <data name="FSJEnabled" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="FSJEvent" xml:space="preserve"><value>Ereignis</value></data>
+  <data name="FSJEvent1" xml:space="preserve"><value>Bestellung aufgenommen</value></data>
+  <data name="FSJEvent2" xml:space="preserve"><value>Bestellung zugewiesen</value></data>
+  <data name="FSJEvent3" xml:space="preserve"><value>Vollständig geliefert</value></data>
+  <data name="FSJEvent4" xml:space="preserve"><value>Teillieferung</value></data>
+  <data name="FSJEvent5" xml:space="preserve"><value>Lieferung abgelehnt</value></data>
+  <data name="FSJEvent6" xml:space="preserve"><value>Zahlung erhalten</value></data>
+  <data name="FSJFilterAll" xml:space="preserve"><value>Alle</value></data>
+  <data name="FSJStatus0" xml:space="preserve"><value>Ausstehend</value></data>
+  <data name="FSJStatus1" xml:space="preserve"><value>Gesendet</value></data>
+  <data name="FSJStatus2" xml:space="preserve"><value>Fehlgeschlagen</value></data>
+  <data name="FSJStatus3" xml:space="preserve"><value>Storniert</value></data>
+  <data name="FSJStatus4" xml:space="preserve"><value>Übersprungen (keine Nummer)</value></data>
+  <data name="FSJColWhen" xml:space="preserve"><value>Zeit</value></data>
+  <data name="FSJColCustomer" xml:space="preserve"><value>Kunde</value></data>
+  <data name="FSJColMessage" xml:space="preserve"><value>Nachricht</value></data>
+  <data name="FSJColStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="FSJColAttempts" xml:space="preserve"><value>Versuche</value></data>
+  <data name="FSJSendNow" xml:space="preserve"><value>Fällige jetzt senden</value></data>
+  <data name="FSJSendResult" xml:space="preserve"><value>Gesendet {0} — Wiederholung {1} — fehlgeschlagen {2}</value></data>
+  <data name="FSJRetry" xml:space="preserve"><value>Erneut versuchen</value></data>
+  <data name="FSJCancel" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="FSJEmpty" xml:space="preserve"><value>Keine Nachrichten in der Warteschlange</value></data>
 </root>

@@ -556,6 +556,51 @@ namespace AccountModelsLib.SalesRep
         public long? Account_Entry_List_ID { get; set; }
     }
 
+    /// <summary>إعداد بوابة الإرسال (صف واحد): Provider 0 معطّل، 1 بوابة HTTP، 2 تجريبى بلا إرسال (يعلّم الرسائل مُرسَلة).</summary>
+    [Table("SalesRep_Notify_Settings")]
+    public class SalesRep_Notify_Setting : SalesRepAuditEntity
+    {
+        [Key] public long Id { get; set; }
+        public int Provider { get; set; }
+        public string Endpoint_Url { get; set; }
+        public string Auth_Header { get; set; }
+        public string Auth_Value { get; set; }
+        public string Body_Template { get; set; }
+        public string Default_Country_Code { get; set; }
+        public int Max_Attempts { get; set; } = 3;
+    }
+
+    /// <summary>قالب رسالة لكل (حدث، قناة). القناة: 1 SMS، 2 WhatsApp.</summary>
+    [Table("SalesRep_Notify_Templates")]
+    public class SalesRep_Notify_Template : SalesRepAuditEntity
+    {
+        [Key] public long Id { get; set; }
+        public int Event_Type { get; set; }
+        public int Channel { get; set; }
+        public string Body { get; set; }
+        public bool Enabled { get; set; }
+    }
+
+    /// <summary>طابور الإرسال: Status 0 بالانتظار، 1 مُرسَل، 2 فشل نهائى، 3 ملغى، 4 متجاوَز (بلا رقم هاتف).</summary>
+    [Table("SalesRep_Notify_Outbox")]
+    public class SalesRep_Notify_Outbox : SalesRepAuditEntity
+    {
+        [Key] public long Id { get; set; }
+        public int Event_Type { get; set; }
+        public int Channel { get; set; }
+        public long? Customer_Id { get; set; }
+        public long? Rep_Id { get; set; }
+        public string Phone { get; set; }
+        public string Message { get; set; }
+        public int Status { get; set; }
+        public int Attempts { get; set; }
+        public DateTime? Next_Attempt_At { get; set; }
+        public DateTime? Sent_At { get; set; }
+        public string Last_Error { get; set; }
+        public string Provider_Message_Id { get; set; }
+        public long? Ref_Id { get; set; }
+    }
+
     [Table("SalesRep_Commission_Run_Lines")]
     public class SalesRep_Commission_Run_Line : SalesRepAuditEntity
     {

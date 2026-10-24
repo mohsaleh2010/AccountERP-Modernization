@@ -312,6 +312,7 @@ namespace AccountModelsLib.SalesRep
                 Math.Round(amount, 2), customerId, vouchers.GetFactor(SalesRepPaymentService.CurrencyOf(opp, receipt.BoxId)), 0, 0, receipt.MethodId, receipt.MethodName);
             Link(opp, ctx.Shift_Id.Value, SalesRepDocType.CashVoucher, v.OrderId, ctx.Branch_Id);
             SalesRepVisitService.Attach(opp, ctx.Shift_Id.Value, customerId, SalesRepVisitResult.Collection, (SalesRepDocType.CashVoucher, v.OrderId));
+            SalesRepNotifyService.Enqueue(opp, SalesRepNotifyEvent.PaymentReceived, customerId, repId, v.OrderId, null, Math.Round(amount, 2));
             return v.OrderId;
         });
 

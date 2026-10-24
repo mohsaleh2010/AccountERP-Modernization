@@ -268,6 +268,7 @@ GROUP BY al.Van_Unit_Item_Id").ToList();
             order.EditOperationDate = now;
             order.Update_ServerDateTime = now;
             opp.db.SaveChanges();
+            SalesRepNotifyService.Enqueue(opp, SalesRepNotifyEvent.OrderAssigned, order.Customer_Id ?? 0, repId, assignment.Id, (order.Order_No ?? 0).ToString());
             return assignment.Id;
         });
 
@@ -450,6 +451,7 @@ GROUP BY al.Van_Unit_Item_Id").ToList();
             var used = opp.db.SalesRep_Approvals.Where(a => a.Ref_Document_Guid == input.Doc_Guid && a.Status == (int)SalesRepApprovalStatus.Approved && a.Ref_Doc_Id == null).ToList();
             foreach (var a in used) { a.Ref_Doc_Id = orderId; a.Shift_Id ??= ctx.Shift_Id; a.StampEdit(); }
             opp.db.SaveChanges();
+            SalesRepNotifyService.Enqueue(opp, SalesRepNotifyEvent.OrderTaken, input.Customer_Id, repId, orderId, orderNo.ToString(), input.Net_Total);
             return new TakeOrderResult { Order_Id = orderId, Order_No = orderNo, Assignment_Id = assignmentId, Deposit_Voucher_Id = voucherId };
         });
 
@@ -574,6 +576,9 @@ GROUP BY al.Van_Unit_Item_Id").ToList();
             var docs = new List<(SalesRepDocType, long)> { (SalesRepDocType.CustomerOrder, input.Order_Id) };
             if (restVoucherId != null) docs.Add((SalesRepDocType.CashVoucher, restVoucherId.Value));
             SalesRepVisitService.Attach(opp, ctx.Shift_Id.Value, order.Customer_Id ?? 0, SalesRepVisitResult.Delivery, docs.ToArray());
+            SalesRepNotifyService.Enqueue(opp,
+                invoiceId == null ? SalesRepNotifyEvent.OrderRefused : b.Check.Has_Remaining ? SalesRepNotifyEvent.OrderPartial : SalesRepNotifyEvent.OrderDelivered,
+                order.Customer_Id ?? 0, repId, d.Id, (order.Order_No ?? 0).ToString(), invoiceId == null ? null : b.Check.Net_Total);
             return new DeliveryResult { Delivery_Id = d.Id, Invoice_Id = invoiceId, Order_Status = order.Status ?? 0 };
         });
 

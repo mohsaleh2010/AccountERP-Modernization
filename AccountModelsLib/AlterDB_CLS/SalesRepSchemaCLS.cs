@@ -382,6 +382,40 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
     [Cash_Collected] [decimal](18, 4) NOT NULL DEFAULT ((0)),
     [Notes] [nvarchar](500) NULL,",
              @"CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Deliveries_A] ON [dbo].[SalesRep_Order_Deliveries]([Assignment_Id]);"),
+
+            // إشعارات العميل (SMS/WhatsApp، مرحلة 8): إعداد البوابة، قوالب الرسائل، وطابور إرسال يعالجه السيرفر (لا الجهاز).
+            ("SalesRep_Notify_Settings", @"
+    [Provider] [int] NOT NULL DEFAULT ((0)),
+    [Endpoint_Url] [nvarchar](500) NULL,
+    [Auth_Header] [nvarchar](100) NULL,
+    [Auth_Value] [nvarchar](500) NULL,
+    [Body_Template] [nvarchar](1000) NULL,
+    [Default_Country_Code] [nvarchar](5) NULL,
+    [Max_Attempts] [int] NOT NULL DEFAULT ((3)),", ""),
+
+            ("SalesRep_Notify_Templates", @"
+    [Event_Type] [int] NOT NULL,
+    [Channel] [int] NOT NULL,
+    [Body] [nvarchar](1000) NOT NULL,
+    [Enabled] [bit] NOT NULL DEFAULT ((0)),",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_SalesRep_Notify_Templates_EC] ON [dbo].[SalesRep_Notify_Templates]([Event_Type], [Channel]);"),
+
+            ("SalesRep_Notify_Outbox", @"
+    [Event_Type] [int] NOT NULL,
+    [Channel] [int] NOT NULL,
+    [Customer_Id] [bigint] NULL,
+    [Rep_Id] [bigint] NULL,
+    [Phone] [nvarchar](30) NULL,
+    [Message] [nvarchar](1000) NOT NULL,
+    [Status] [int] NOT NULL DEFAULT ((0)),
+    [Attempts] [int] NOT NULL DEFAULT ((0)),
+    [Next_Attempt_At] [datetime] NULL,
+    [Sent_At] [datetime] NULL,
+    [Last_Error] [nvarchar](500) NULL,
+    [Provider_Message_Id] [nvarchar](100) NULL,
+    [Ref_Id] [bigint] NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_SalesRep_Notify_Outbox_Status] ON [dbo].[SalesRep_Notify_Outbox]([Status], [Next_Attempt_At]);
+CREATE UNIQUE NONCLUSTERED INDEX [UX_SalesRep_Notify_Outbox_Ref] ON [dbo].[SalesRep_Notify_Outbox]([Event_Type], [Channel], [Ref_Id]) WHERE [Ref_Id] IS NOT NULL;"),
         };
 
         /// <summary>جداول النسخة السابقة غير المعتمدة التى ليس لها مقابل بنفس الاسم.</summary>
@@ -561,6 +595,7 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
             ("menuSalesRepDevices", "أجهزة المندوبين", "/salesrep/devices"),
             ("menuSalesRepSyncReview", "مستندات الأجهزة بانتظار المراجعة", "/salesrep/sync-review"),
             ("menuSalesRepTrack", "مسار المندوبين", "/salesrep/track"),
+            ("menuSalesRepNotify", "إشعارات عملاء المندوبين", "/salesrep/notifications"),
         };
 
         /// <summary>
