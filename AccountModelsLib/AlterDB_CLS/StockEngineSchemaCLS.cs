@@ -116,6 +116,24 @@ CREATE TABLE [dbo].[Inventory_Accounting_Setting](
     [Update_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
     CONSTRAINT [PK_Inventory_Accounting_Setting] PRIMARY KEY CLUSTERED ([Account_Branch_Id] ASC)
 );");
+            // طريقة تقييم قيد البداية (شريحة 5): 0 متوسط التكلفة (الافتراضى)، 1 آخر سعر شراء
+            Run(opp, @"
+IF COL_LENGTH(N'dbo.Inventory_Accounting_Setting', N'Valuation_Method') IS NULL
+    ALTER TABLE [dbo].[Inventory_Accounting_Setting] ADD [Valuation_Method] [int] NOT NULL CONSTRAINT [DF_Inventory_Accounting_Setting_Valuation] DEFAULT ((0));");
+            // ما قُيِّد فعلاً كقيد بداية لكل مخزن؛ إعادة الإنشاء تقيّد الفرق فقط (صفوف جديدة فقط، لا تعديل ولا حذف)
+            Run(opp, @"
+IF OBJECT_ID(N'dbo.Inventory_Opening_Entry', N'U') IS NULL
+CREATE TABLE [dbo].[Inventory_Opening_Entry](
+    [Id] [bigint] IDENTITY(1,1) NOT NULL,
+    [Account_Branch_Id] [bigint] NOT NULL,
+    [Store_Id] [bigint] NOT NULL,
+    [Amount] [decimal](18, 3) NOT NULL,
+    [As_Of_Date] [date] NOT NULL,
+    [Entry_Id] [bigint] NOT NULL,
+    [User_Id] [bigint] NULL,
+    [Insert_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
+    CONSTRAINT [PK_Inventory_Opening_Entry] PRIMARY KEY CLUSTERED ([Id] ASC)
+);");
         }
 
         // ---------------- شركات الشحن موردو خدمات فى جدول Supplier (قرار المستخدم 2026-10-23) ----------------

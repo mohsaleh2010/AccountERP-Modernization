@@ -4169,4 +4169,18 @@
   <data name="IAMSaved" xml:space="preserve"><value>Méthode enregistrée</value></data>
   <data name="IAMStartRequired" xml:space="preserve"><value>Indiquez la date de début</value></data>
   <data name="IAMHelp" xml:space="preserve"><value>En mode « permanent », chaque bon validé (et son extourne) à partir de la date de début est comptabilisé entre le compte du dépôt et le compte du rôle ci-dessous. La validation est refusée si un compte manque. Les factures ne sont pas encore liées.</value></data>
+  <data name="IAMValuation" xml:space="preserve"><value>Méthode de valorisation du stock pour l'écriture d'ouverture</value></data>
+  <data name="IAMValAvg" xml:space="preserve"><value>Coût moyen</value></data>
+  <data name="IAMValLast" xml:space="preserve"><value>Dernier prix d'achat</value></data>
+  <data name="IAMOpenTitle" xml:space="preserve"><value>Écriture d'ouverture du stock (bascule)</value></data>
+  <data name="IAMOpenHelp" xml:space="preserve"><value>Avant de passer en permanent : vérifiez la valeur du stock avant la date de début, puis passez l'écriture une seule fois (débit comptes de stock / crédit solde d'ouverture). Une nouvelle création n'enregistre que la différence et ne modifie aucune écriture antérieure. Enregistrez d'abord la méthode et la date de début.</value></data>
+  <data name="IAMOpenPreview" xml:space="preserve"><value>Aperçu de la valeur du stock</value></data>
+  <data name="IAMOpenPost" xml:space="preserve"><value>Passer l'écriture d'ouverture</value></data>
+  <data name="IAMOpenStore" xml:space="preserve"><value>Magasin</value></data>
+  <data name="IAMOpenTarget" xml:space="preserve"><value>Valeur actuelle</value></data>
+  <data name="IAMOpenPosted" xml:space="preserve"><value>Déjà comptabilisé</value></data>
+  <data name="IAMOpenDelta" xml:space="preserve"><value>Écart</value></data>
+  <data name="IAMOpenDone" xml:space="preserve"><value>Écriture d'ouverture n° {0} passée</value></data>
+  <data name="IAMOpenNone" xml:space="preserve"><value>Aucun écart à comptabiliser</value></data>
+  <data name="IAMOpenConfirm" xml:space="preserve"><value>Passer l'écriture d'ouverture du stock pour les écarts affichés ?</value></data>
 </root>

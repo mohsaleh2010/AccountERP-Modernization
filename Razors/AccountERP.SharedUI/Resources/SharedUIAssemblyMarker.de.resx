@@ -4169,4 +4169,18 @@
   <data name="IAMSaved" xml:space="preserve"><value>Methode gespeichert</value></data>
   <data name="IAMStartRequired" xml:space="preserve"><value>Startdatum für permanente Inventur wählen</value></data>
   <data name="IAMHelp" xml:space="preserve"><value>Bei „permanent“ wird jeder gebuchte Beleg (und seine Stornierung) ab dem Startdatum zwischen Lagerkonto und dem unten gesetzten Rollenkonto gebucht. Fehlt eine Kontozuordnung, wird die Buchung abgelehnt. Rechnungen sind noch nicht angebunden.</value></data>
+  <data name="IAMValuation" xml:space="preserve"><value>Bewertungsmethode für die Eröffnungsbuchung des Bestands</value></data>
+  <data name="IAMValAvg" xml:space="preserve"><value>Durchschnittskosten</value></data>
+  <data name="IAMValLast" xml:space="preserve"><value>Letzter Einkaufspreis</value></data>
+  <data name="IAMOpenTitle" xml:space="preserve"><value>Bestands-Eröffnungsbuchung (Umstellung)</value></data>
+  <data name="IAMOpenHelp" xml:space="preserve"><value>Vor der Umstellung auf permanent: Wert des Bestands vor dem Startdatum prüfen und die Buchung einmal erfassen (Soll Lagerkonten / Haben Eröffnungsbilanzkonto). Bei erneutem Erstellen wird nur die Differenz gebucht; frühere Buchungen bleiben unverändert. Zuerst Methode und Startdatum speichern.</value></data>
+  <data name="IAMOpenPreview" xml:space="preserve"><value>Bestandswert anzeigen</value></data>
+  <data name="IAMOpenPost" xml:space="preserve"><value>Eröffnungsbuchung erfassen</value></data>
+  <data name="IAMOpenStore" xml:space="preserve"><value>Lager</value></data>
+  <data name="IAMOpenTarget" xml:space="preserve"><value>Aktueller Wert</value></data>
+  <data name="IAMOpenPosted" xml:space="preserve"><value>Bereits gebucht</value></data>
+  <data name="IAMOpenDelta" xml:space="preserve"><value>Differenz</value></data>
+  <data name="IAMOpenDone" xml:space="preserve"><value>Eröffnungsbuchung Nr. {0} erfasst</value></data>
+  <data name="IAMOpenNone" xml:space="preserve"><value>Keine Differenz zu buchen</value></data>
+  <data name="IAMOpenConfirm" xml:space="preserve"><value>Bestands-Eröffnungsbuchung für die angezeigten Differenzen erfassen?</value></data>
 </root>

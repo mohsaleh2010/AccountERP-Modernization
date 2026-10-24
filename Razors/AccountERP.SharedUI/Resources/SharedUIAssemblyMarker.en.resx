@@ -4167,4 +4167,18 @@
   <data name="IAMSaved" xml:space="preserve"><value>Inventory accounting method saved</value></data>
   <data name="IAMStartRequired" xml:space="preserve"><value>Pick a start date for perpetual inventory</value></data>
   <data name="IAMHelp" xml:space="preserve"><value>With "perpetual", every posted order (and its reversal) dated on/after the start date is journaled between the store account and the role account set below. Posting is refused if an account link is missing. Invoices are not linked yet.</value></data>
+  <data name="IAMValuation" xml:space="preserve"><value>Inventory valuation method for the opening entry</value></data>
+  <data name="IAMValAvg" xml:space="preserve"><value>Average cost</value></data>
+  <data name="IAMValLast" xml:space="preserve"><value>Last purchase price</value></data>
+  <data name="IAMOpenTitle" xml:space="preserve"><value>Inventory opening entry (cutover)</value></data>
+  <data name="IAMOpenHelp" xml:space="preserve"><value>Before switching to perpetual: review the stock value held before the start date, then post the entry once (debit store accounts / credit opening balance equity). Re-creating later posts only the difference and never edits an earlier entry. Save the method and start date first.</value></data>
+  <data name="IAMOpenPreview" xml:space="preserve"><value>Preview stock value</value></data>
+  <data name="IAMOpenPost" xml:space="preserve"><value>Post opening entry</value></data>
+  <data name="IAMOpenStore" xml:space="preserve"><value>Store</value></data>
+  <data name="IAMOpenTarget" xml:space="preserve"><value>Current value</value></data>
+  <data name="IAMOpenPosted" xml:space="preserve"><value>Previously posted</value></data>
+  <data name="IAMOpenDelta" xml:space="preserve"><value>Difference</value></data>
+  <data name="IAMOpenDone" xml:space="preserve"><value>Opening entry posted as no. {0}</value></data>
+  <data name="IAMOpenNone" xml:space="preserve"><value>No difference to post</value></data>
+  <data name="IAMOpenConfirm" xml:space="preserve"><value>Post the inventory opening entry for the differences shown?</value></data>
 </root>

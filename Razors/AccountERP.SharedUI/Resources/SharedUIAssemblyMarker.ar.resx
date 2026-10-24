@@ -4167,4 +4167,18 @@
   <data name="IAMSaved" xml:space="preserve"><value>تم حفظ طريقة المحاسبة المخزنية</value></data>
   <data name="IAMStartRequired" xml:space="preserve"><value>حدد تاريخ البدء للجرد المستمر</value></data>
   <data name="IAMHelp" xml:space="preserve"><value>عند «مستمر» يُقيَّد كل إذن مرحَّل (وعكسه) بتاريخ البدء أو بعده: مدين/دائن حساب المخزن مقابل حساب الدور المحدد أدناه. إن نقص ربط حساب يُرفض الترحيل. الفواتير لم تُربط بعد.</value></data>
+  <data name="IAMValuation" xml:space="preserve"><value>طريقة تقييم المخزون فى قيد البداية</value></data>
+  <data name="IAMValAvg" xml:space="preserve"><value>متوسط التكلفة</value></data>
+  <data name="IAMValLast" xml:space="preserve"><value>آخر سعر شراء</value></data>
+  <data name="IAMOpenTitle" xml:space="preserve"><value>قيد بداية المخزون (عند التحول)</value></data>
+  <data name="IAMOpenHelp" xml:space="preserve"><value>قبل تفعيل «مستمر»: راجع قيمة المخزون الموجود فعلاً قبل تاريخ البدء ثم سجّل القيد مرة واحدة (مدين حسابات المخازن / دائن الرصيد الافتتاحى). لو أعدت الإنشاء لاحقاً يُقيَّد الفرق فقط، ولا يُعدَّل أى قيد سابق. احفظ الطريقة وتاريخ البدء أولاً.</value></data>
+  <data name="IAMOpenPreview" xml:space="preserve"><value>معاينة قيمة المخزون</value></data>
+  <data name="IAMOpenPost" xml:space="preserve"><value>تسجيل قيد البداية</value></data>
+  <data name="IAMOpenStore" xml:space="preserve"><value>المخزن</value></data>
+  <data name="IAMOpenTarget" xml:space="preserve"><value>القيمة الحالية</value></data>
+  <data name="IAMOpenPosted" xml:space="preserve"><value>المقيَّد سابقاً</value></data>
+  <data name="IAMOpenDelta" xml:space="preserve"><value>الفرق</value></data>
+  <data name="IAMOpenDone" xml:space="preserve"><value>تم تسجيل قيد البداية برقم {0}</value></data>
+  <data name="IAMOpenNone" xml:space="preserve"><value>لا فرق يستدعى قيداً</value></data>
+  <data name="IAMOpenConfirm" xml:space="preserve"><value>سجّل قيد بداية المخزون بالفروق المعروضة؟</value></data>
 </root>
