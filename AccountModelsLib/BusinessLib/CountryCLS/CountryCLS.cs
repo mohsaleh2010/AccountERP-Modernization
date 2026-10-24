@@ -88,6 +88,7 @@ namespace AccountModelsLib
                     if (existing == null) { Excp = 1; Msg = "الدولة غير موجودة"; return; }
                     existing.NameAr = country.NameAr;
                     existing.NameEn = country.NameEn;
+                    existing.Edit_User_Id = Common.User_Id; existing.EditOperationDate = DateTime.Now; // تدقيق التعديل
                 }
                 else if (GeoIdentityInsertHelper.IsIdentityId(o, "Gov_Country_List"))
                 {

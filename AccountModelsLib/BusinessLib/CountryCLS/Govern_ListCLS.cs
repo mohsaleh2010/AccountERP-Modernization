@@ -149,6 +149,7 @@ namespace AccountModelsLib
 
 
                     opp1.db.Entry(ga).State = EntityState.Detached;
+                    ga.Edit_User_Id = Common.User_Id; ga.EditOperationDate = DateTime.Now; // تدقيق التعديل (Edit_User_Id + EditOperationDate معاً)
                     opp1.db.Govern_List.Attach(ga);
                     opp1.db.Entry(ga).State = EntityState.Modified;
 
