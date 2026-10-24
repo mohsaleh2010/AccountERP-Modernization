@@ -4237,4 +4237,10 @@
   <data name="FSJRetry" xml:space="preserve"><value>إعادة المحاولة</value></data>
   <data name="FSJCancel" xml:space="preserve"><value>إلغاء</value></data>
   <data name="FSJEmpty" xml:space="preserve"><value>لا رسائل فى الطابور</value></data>
+  <data name="EBTitle" xml:space="preserve"><value>أرصدة الأصناف لدى الموظفين</value></data>
+  <data name="EBSub" xml:space="preserve"><value>عهدة كل موظف من الأصناف كما سجّلتها أذون الصرف للموظف (عرض للقراءة).</value></data>
+  <data name="EBEmployee" xml:space="preserve"><value>الموظف</value></data>
+  <data name="EBEmployeesCount" xml:space="preserve"><value>عدد الموظفين</value></data>
+  <data name="EBTotalValue" xml:space="preserve"><value>إجمالى القيمة</value></data>
+  <data name="EBEmpty" xml:space="preserve"><value>لا أصناف لدى الموظفين</value></data>
 </root>

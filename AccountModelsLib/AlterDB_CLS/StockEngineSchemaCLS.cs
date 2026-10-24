@@ -320,6 +320,7 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             // خطة 05 بند 23: لقطات الأرصدة بالتاريخ والوقت (بدل balanceSelect_Date/balanceWithDate) وأرصدة الصلاحية (بدل ItemBalanceWithExpireFrm)
             ("menuItemItemsListSavedBalance", "/store/balances/snapshots"), ("ToolStripMenuItem_Save_ItemBalanceNow", "/store/balances/snapshots"),
             ("menuItemItemBalanceWithExpire", "/store/balances/expiry"),
+            ("ToolStripMenuItememployeeBalance", "/store/balances/employees"),
             // خطة 05 بند 24: أرصدة أصناف الأدوية (بدل Item_balance_ph)
             ("ToolStripMenuItemItemBalanceAdwia", "/store/balances/pharmacy"),
             // خطة 05 بند 25: طباعة الباركود (صنف / مع السعر / قائمة أصناف) فى شاشة الملصقات الموحَّدة، والأدوية فى استيكر الصيدلية

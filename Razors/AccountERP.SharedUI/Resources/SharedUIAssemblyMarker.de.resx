@@ -4239,4 +4239,10 @@
   <data name="FSJRetry" xml:space="preserve"><value>Erneut versuchen</value></data>
   <data name="FSJCancel" xml:space="preserve"><value>Abbrechen</value></data>
   <data name="FSJEmpty" xml:space="preserve"><value>Keine Nachrichten in der Warteschlange</value></data>
+  <data name="EBTitle" xml:space="preserve"><value>Artikel im Besitz von Mitarbeitern</value></data>
+  <data name="EBSub" xml:space="preserve"><value>Bestand je Mitarbeiter laut Ausgabebelegen an Mitarbeiter (nur Lesen).</value></data>
+  <data name="EBEmployee" xml:space="preserve"><value>Mitarbeiter</value></data>
+  <data name="EBEmployeesCount" xml:space="preserve"><value>Mitarbeiter</value></data>
+  <data name="EBTotalValue" xml:space="preserve"><value>Gesamtwert</value></data>
+  <data name="EBEmpty" xml:space="preserve"><value>Keine Artikel bei Mitarbeitern</value></data>
 </root>

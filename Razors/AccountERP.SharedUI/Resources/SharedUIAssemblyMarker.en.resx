@@ -4237,4 +4237,10 @@
   <data name="FSJRetry" xml:space="preserve"><value>Retry</value></data>
   <data name="FSJCancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="FSJEmpty" xml:space="preserve"><value>No messages in the queue</value></data>
+  <data name="EBTitle" xml:space="preserve"><value>Items held by employees</value></data>
+  <data name="EBSub" xml:space="preserve"><value>Each employee's custody of items as recorded by the issue orders to employees (read-only).</value></data>
+  <data name="EBEmployee" xml:space="preserve"><value>Employee</value></data>
+  <data name="EBEmployeesCount" xml:space="preserve"><value>Employees</value></data>
+  <data name="EBTotalValue" xml:space="preserve"><value>Total value</value></data>
+  <data name="EBEmpty" xml:space="preserve"><value>No items held by employees</value></data>
 </root>
