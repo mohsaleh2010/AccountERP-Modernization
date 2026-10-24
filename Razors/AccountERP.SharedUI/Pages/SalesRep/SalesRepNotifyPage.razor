@@ -165,6 +165,46 @@
                 </MudTable>
             }
         </MudTabPanel>
+
+        <MudTabPanel Text="@Tr("FSJTabOptOut")" Icon="@Icons.Material.Filled.NotificationsOff">
+            <div class="nt-hint">@Tr("FSJOptHint")</div>
+            <div class="nt-form nt-gap">
+                <MudAutocomplete T="SalesRepProfileService.Option" Value="_optCustomer" ValueChanged="@(o => _optCustomer = o)" SearchFunc="SearchCustomersAsync"
+                                 ToStringFunc="@(o => o?.Name ?? "")" Label="@Tr("FSJOptCustomer")" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true"
+                                 ResetValueOnEmptyText="true" DebounceInterval="300" AdornmentIcon="@Icons.Material.Filled.Search" />
+                <MudSelect T="int" @bind-Value="_optChannel" Label="@Tr("FSJOptChannel")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                           ToStringFunc="@(v => v == 0 ? Tr("FSJOptChannel0") : Tr("FSJChannel" + v))">
+                    <MudSelectItem T="int" Value="0">@Tr("FSJOptChannel0")</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">@Tr("FSJChannel1")</MudSelectItem>
+                    <MudSelectItem T="int" Value="2">@Tr("FSJChannel2")</MudSelectItem>
+                </MudSelect>
+                <MudTextField T="string" @bind-Value="_optReason" Label="@Tr("FSJOptReason")" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="200" />
+            </div>
+            <div class="nt-acts">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="@(_busy || _optCustomer == null)" OnClick="AddOptOutAsync">@Tr("FSJOptAdd")</MudButton>
+            </div>
+            @if (_optOuts.Count == 0)
+            {
+                <div class="inv-empty" role="status"><MudIcon Icon="@Icons.Material.Filled.NotificationsActive" Size="Size.Large" /><div>@Tr("FSJOptEmpty")</div></div>
+            }
+            else
+            {
+                <MudTable Items="@_optOuts" T="SalesRepNotifyService.OptOutRow" Elevation="0" Class="inv-table nt-gap" Breakpoint="Breakpoint.Sm" Dense="true" Hover="true">
+                    <HeaderContent>
+                        <MudTh>@Tr("FSJColCustomer")</MudTh><MudTh>@Tr("FSJOptChannel")</MudTh><MudTh>@Tr("FSJOptReason")</MudTh><MudTh>@Tr("FSJColWhen")</MudTh><MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="@Tr("FSJColCustomer")">@context.Customer_Name</MudTd>
+                        <MudTd DataLabel="@Tr("FSJOptChannel")"><MudChip T="string" Size="Size.Small" Color="@(context.Channel == 0 ? Color.Warning : Color.Default)">@(context.Channel == 0 ? Tr("FSJOptChannel0") : Tr("FSJChannel" + context.Channel))</MudChip></MudTd>
+                        <MudTd DataLabel="@Tr("FSJOptReason")">@context.Reason</MudTd>
+                        <MudTd DataLabel="@Tr("FSJColWhen")">@(context.Insert_ServerDateTime?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture))</MudTd>
+                        <MudTd>
+                            <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.NotificationsActive" Disabled="@_busy" OnClick="@(() => RemoveOptOutAsync(context.Id))">@Tr("FSJOptRemove")</MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudTabPanel>
     </MudTabs>
     </div>
 </div>
@@ -179,6 +219,11 @@
     private bool _clearAuth, _loading = true, _busy;
     private int _tab, _filter = -1, _testChannel = 1;
     private string? _error;
+    private List<SalesRepNotifyService.OptOutRow> _optOuts = new();
+    private List<SalesRepProfileService.Option>? _customers;
+    private SalesRepProfileService.Option? _optCustomer;
+    private int _optChannel;
+    private string _optReason = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -189,6 +234,7 @@
         }
         catch (Exception ex) { _error = Inner(ex); }
         await ReloadOutboxAsync();
+        await ReloadOptOutsAsync();
     }
 
     private async Task ReloadOutboxAsync()
@@ -199,6 +245,41 @@
         catch (Exception ex) { _error = Inner(ex); }
         finally { _loading = false; }
     }
+
+    private async Task ReloadOptOutsAsync()
+    {
+        try { _optOuts = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetOptOuts(); }); }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private async Task<IEnumerable<SalesRepProfileService.Option>> SearchCustomersAsync(string text, CancellationToken ct)
+    {
+        _customers ??= await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return new AccountModelsLib.Models.CustomerCLS().Get_CustomerSupplierListForStatement(0, 0, -1, -1).Rows.Cast<System.Data.DataRow>()
+                .Select(r => new SalesRepProfileService.Option { Id = Convert.ToInt64(r["Id"]), Name = r["Name"]?.ToString()?.Trim() ?? "" }).ToList();
+        }, ct);
+        return _customers.Where(c => string.IsNullOrWhiteSpace(text) || c.Name.Contains(text.Trim(), StringComparison.OrdinalIgnoreCase)).Take(50);
+    }
+
+    private Task AddOptOutAsync() => RunAsync(async () =>
+    {
+        if (_optCustomer == null) return;
+        long id = _optCustomer.Id; int channel = _optChannel; string reason = _optReason;
+        await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.AddOptOut(id, channel, reason); });
+        _optCustomer = null; _optReason = ""; _optChannel = 0;
+        await ReloadOptOutsAsync();
+        await ReloadOutboxAsync();
+        Snackbar.Add(Tr("FSJOptAdded"), Severity.Success);
+    });
+
+    private Task RemoveOptOutAsync(long id) => RunAsync(async () =>
+    {
+        await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _svc.RemoveOptOut(id); });
+        await ReloadOptOutsAsync();
+        Snackbar.Add(Tr("FSJOptRemoved"), Severity.Success);
+    });
 
     private async Task RunAsync(Func<Task> work)
     {

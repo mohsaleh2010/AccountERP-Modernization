@@ -4243,4 +4243,15 @@
   <data name="EBEmployeesCount" xml:space="preserve"><value>Employees</value></data>
   <data name="EBTotalValue" xml:space="preserve"><value>Total value</value></data>
   <data name="EBEmpty" xml:space="preserve"><value>No items held by employees</value></data>
+  <data name="FSJTabOptOut" xml:space="preserve"><value>Opt-out</value></data>
+  <data name="FSJOptHint" xml:space="preserve"><value>Customers listed here receive no rep notifications; their messages are skipped and pending ones are cancelled when added.</value></data>
+  <data name="FSJOptCustomer" xml:space="preserve"><value>Customer</value></data>
+  <data name="FSJOptChannel" xml:space="preserve"><value>Channel</value></data>
+  <data name="FSJOptChannel0" xml:space="preserve"><value>All channels</value></data>
+  <data name="FSJOptReason" xml:space="preserve"><value>Reason (optional)</value></data>
+  <data name="FSJOptAdd" xml:space="preserve"><value>Record opt-out</value></data>
+  <data name="FSJOptAdded" xml:space="preserve"><value>Opt-out recorded and the customer's pending messages were cancelled</value></data>
+  <data name="FSJOptRemoved" xml:space="preserve"><value>Customer consent restored</value></data>
+  <data name="FSJOptEmpty" xml:space="preserve"><value>No customers have opted out</value></data>
+  <data name="FSJOptRemove" xml:space="preserve"><value>Restore consent</value></data>
 </root>

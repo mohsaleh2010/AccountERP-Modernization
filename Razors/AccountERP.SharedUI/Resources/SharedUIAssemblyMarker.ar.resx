@@ -4243,4 +4243,15 @@
   <data name="EBEmployeesCount" xml:space="preserve"><value>عدد الموظفين</value></data>
   <data name="EBTotalValue" xml:space="preserve"><value>إجمالى القيمة</value></data>
   <data name="EBEmpty" xml:space="preserve"><value>لا أصناف لدى الموظفين</value></data>
+  <data name="FSJTabOptOut" xml:space="preserve"><value>سحب الموافقة</value></data>
+  <data name="FSJOptHint" xml:space="preserve"><value>العملاء المسجَّلون هنا لا تُرسل لهم إشعارات المندوبين؛ تُتجاوز رسائلهم وتُلغى المنتظرة عند التسجيل.</value></data>
+  <data name="FSJOptCustomer" xml:space="preserve"><value>العميل</value></data>
+  <data name="FSJOptChannel" xml:space="preserve"><value>القناة</value></data>
+  <data name="FSJOptChannel0" xml:space="preserve"><value>كل القنوات</value></data>
+  <data name="FSJOptReason" xml:space="preserve"><value>السبب (اختياري)</value></data>
+  <data name="FSJOptAdd" xml:space="preserve"><value>تسجيل سحب الموافقة</value></data>
+  <data name="FSJOptAdded" xml:space="preserve"><value>سُجّل سحب الموافقة وأُلغيت رسائل العميل المنتظرة</value></data>
+  <data name="FSJOptRemoved" xml:space="preserve"><value>أُعيدت موافقة العميل على الإشعارات</value></data>
+  <data name="FSJOptEmpty" xml:space="preserve"><value>لا عملاء سحبوا موافقتهم</value></data>
+  <data name="FSJOptRemove" xml:space="preserve"><value>إعادة الموافقة</value></data>
 </root>

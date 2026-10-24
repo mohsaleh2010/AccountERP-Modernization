@@ -4245,4 +4245,15 @@
   <data name="EBEmployeesCount" xml:space="preserve"><value>Mitarbeiter</value></data>
   <data name="EBTotalValue" xml:space="preserve"><value>Gesamtwert</value></data>
   <data name="EBEmpty" xml:space="preserve"><value>Keine Artikel bei Mitarbeitern</value></data>
+  <data name="FSJTabOptOut" xml:space="preserve"><value>Abmeldung</value></data>
+  <data name="FSJOptHint" xml:space="preserve"><value>Hier gelistete Kunden erhalten keine Vertreter-Benachrichtigungen; ihre Nachrichten werden übersprungen, wartende beim Hinzufügen storniert.</value></data>
+  <data name="FSJOptCustomer" xml:space="preserve"><value>Kunde</value></data>
+  <data name="FSJOptChannel" xml:space="preserve"><value>Kanal</value></data>
+  <data name="FSJOptChannel0" xml:space="preserve"><value>Alle Kanäle</value></data>
+  <data name="FSJOptReason" xml:space="preserve"><value>Grund (optional)</value></data>
+  <data name="FSJOptAdd" xml:space="preserve"><value>Abmeldung erfassen</value></data>
+  <data name="FSJOptAdded" xml:space="preserve"><value>Abmeldung erfasst und wartende Nachrichten des Kunden storniert</value></data>
+  <data name="FSJOptRemoved" xml:space="preserve"><value>Einwilligung des Kunden wiederhergestellt</value></data>
+  <data name="FSJOptEmpty" xml:space="preserve"><value>Keine Kunden haben sich abgemeldet</value></data>
+  <data name="FSJOptRemove" xml:space="preserve"><value>Einwilligung wiederherstellen</value></data>
 </root>

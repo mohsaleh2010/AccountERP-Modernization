@@ -4245,4 +4245,15 @@
   <data name="EBEmployeesCount" xml:space="preserve"><value>Employés</value></data>
   <data name="EBTotalValue" xml:space="preserve"><value>Valeur totale</value></data>
   <data name="EBEmpty" xml:space="preserve"><value>Aucun article détenu par les employés</value></data>
+  <data name="FSJTabOptOut" xml:space="preserve"><value>Désabonnement</value></data>
+  <data name="FSJOptHint" xml:space="preserve"><value>Les clients listés ici ne reçoivent aucune notification des représentants ; leurs messages sont ignorés et ceux en attente sont annulés à l'ajout.</value></data>
+  <data name="FSJOptCustomer" xml:space="preserve"><value>Client</value></data>
+  <data name="FSJOptChannel" xml:space="preserve"><value>Canal</value></data>
+  <data name="FSJOptChannel0" xml:space="preserve"><value>Tous les canaux</value></data>
+  <data name="FSJOptReason" xml:space="preserve"><value>Motif (facultatif)</value></data>
+  <data name="FSJOptAdd" xml:space="preserve"><value>Enregistrer le désabonnement</value></data>
+  <data name="FSJOptAdded" xml:space="preserve"><value>Désabonnement enregistré et messages en attente du client annulés</value></data>
+  <data name="FSJOptRemoved" xml:space="preserve"><value>Consentement du client rétabli</value></data>
+  <data name="FSJOptEmpty" xml:space="preserve"><value>Aucun client désabonné</value></data>
+  <data name="FSJOptRemove" xml:space="preserve"><value>Rétablir le consentement</value></data>
 </root>
