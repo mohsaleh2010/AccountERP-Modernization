@@ -468,6 +468,7 @@ namespace AccountModelsLib.Models
             }
             else
             {
+                sp.Edit_User_Id = Common.User_Id; sp.EditOperationDate = DateTime.Now; // تدقيق التعديل
                 opp.db.Entry(sp).State = EntityState.Modified;
                 opp.db.SaveChanges();
                 return sp.Id;
@@ -477,6 +478,7 @@ namespace AccountModelsLib.Models
         {
              
                  
+                sp.Edit_User_Id = Common.User_Id; sp.EditOperationDate = DateTime.Now; // تدقيق التعديل
                 opp.db.Entry(sp).State = EntityState.Modified;
                 opp.db.SaveChanges();
                 return sp.Id;
@@ -551,6 +553,7 @@ namespace AccountModelsLib.Models
 
 
             //sp.SubAccount_Id = SubAccount_Id_;
+                sp.Edit_User_Id = Common.User_Id; sp.EditOperationDate = DateTime.Now; // تدقيق التعديل
             opp.db.Entry(sp).State = EntityState.Modified;
             opp.db.SaveChanges();
 

@@ -363,6 +363,7 @@ namespace AccountModelsLib.Models
         public void EditCustomer(ref operations opp, Customer customer)
         {
 
+                customer.Edit_User_Id = Common.User_Id; customer.EditOperationDate = DateTime.Now; // تدقيق التعديل
             opp.db.Entry(customer).State = EntityState.Modified;
             opp.db.SaveChanges();
         }
