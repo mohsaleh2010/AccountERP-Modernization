@@ -9,7 +9,7 @@ using System.Collections;
 
 namespace AccountModelsLib
 {
-    public class Account_Entry_Invoice_CLS : Accounts_Entry_POST_CLS
+    public partial class Account_Entry_Invoice_CLS : Accounts_Entry_POST_CLS
     {
         //public  int Reference_Type = 0;
         // public long Reference_Type_Table_Id = 0;
@@ -58,7 +58,7 @@ FROM            Invoices_List INNER JOIN
 
 
 
-        public void Make_EntryForInvoices(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long Invoices_List_Id, DateTime dtFrom, DateTime dtTo, int IS_Posted_Flage)
+        public void Make_EntryForInvoices_Legacy(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long Invoices_List_Id, DateTime dtFrom, DateTime dtTo, int IS_Posted_Flage)
         {
             if (Common.IS_Make_AutomaticFromTar7eel_For_Invoice == 0)
             {
@@ -517,7 +517,7 @@ FROM            Invoices_List INNER JOIN
 
         }
 
-        public void Make_EntryForInvoices_Reverse(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long Invoices_List_Id, DateTime dtFrom, DateTime dtTo, int IS_Posted_Flage)
+        public void Make_EntryForInvoices_Reverse_Legacy(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long Invoices_List_Id, DateTime dtFrom, DateTime dtTo, int IS_Posted_Flage)
         {
             if (Common.IS_Make_AutomaticFromTar7eel_For_Invoice == 0)
             {

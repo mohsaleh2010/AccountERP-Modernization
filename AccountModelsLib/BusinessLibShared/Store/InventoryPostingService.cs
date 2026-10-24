@@ -314,6 +314,108 @@ ORDER BY s.id";
             }
         }
 
+        // ============================== تكلفة المبيعات للفواتير (شريحة 4) ==============================
+
+        /// <summary>Reference_Type لقيد تكلفة فاتورة مبيعات (Reference_Type_Table_Id = رقم الفاتورة).</summary>
+        public const int InvoiceCogsReferenceType = 3005;
+        /// <summary>Reference_Type لقيد عكس تكلفة مرتجع مبيعات.</summary>
+        public const int InvoiceReturnCogsReferenceType = 3006;
+
+        /// <summary>
+        /// قيد تكلفة البضاعة المباعة لفاتورة بيع (أو مرتجع): قيد منفصل مرتبط بالفاتورة يُعاد بناؤه عند كل حفظ.
+        /// يحذف قيد التكلفة السابق للفاتورة دائماً (لا أثر لمن ليسوا «مستمر»)، ثم لو الفرع «مستمر» وتاريخ الفاتورة ≥ تاريخ البدء
+        /// وللفاتورة أسطر مخزنية غير محذوفة: البيع مدين حساب التكلفة / دائن حساب المخزن، والمرتجع العكس.
+        /// الكمية بالوحدة الصغرى (الكبرى × المعامل + الصغرى + المجانى)، والتكلفة بطريقة التقييم المختارة فى الإعداد (متوسط أو آخر شراء).
+        /// تُهمَل الخدمات والأصناف «بلا رصيد». ترمى استثناء عربياً لو نقص ربط حساب (فيرفض حفظ الفاتورة). يرجع رقم القيد أو 0.
+        /// </summary>
+        public long PostInvoiceCogsEntry(operations opp, long invoiceId, bool isReturn)
+        {
+            int refType = isReturn ? InvoiceReturnCogsReferenceType : InvoiceCogsReferenceType;
+            string id = invoiceId.ToString(CultureInfo.InvariantCulture);
+            // قاعدة لم تُرقَّ بعد (بلا الجدول) = دورى: لا قيد ولا حذف
+            var has = opp.return_DataTable("SELECT CASE WHEN OBJECT_ID(N'dbo.Inventory_Accounting_Setting', N'U') IS NULL THEN 0 ELSE 1 END");
+            if (Convert.ToInt32(has.Rows[0][0]) == 0) return 0;
+
+            int excp = 0; string msg = "";
+            new AccountEntry_CLS().Delete_EntryFromAutomatic(ref opp, ref excp, ref msg, invoiceId, refType, false);
+
+            string listTbl = isReturn ? "Invoices_List_Reverse" : "Invoices_List";
+            string detTbl = isReturn ? "Invoices_Details_Reverse" : "Invoices_Details";
+            var head = opp.return_DataTable("SELECT Invoice_Id, Invoice_Date, ISNULL(Branch_Id, 0) AS Br, ISNULL(Is_DeletedProcessed, 0) AS Del FROM " + listTbl + " WHERE Id = " + id);
+            if (head.Rows.Count == 0) return 0;
+            var h = head.Rows[0];
+            if (Convert.ToInt32(h["Del"]) == 1 || h["Invoice_Date"] == DBNull.Value) return 0;
+            long branch = Convert.ToInt64(h["Br"]);
+            if (branch <= 0) branch = Common.Branch_Id;
+            DateTime date = Convert.ToDateTime(h["Invoice_Date"]).Date;
+            string invoiceNo = h["Invoice_Id"]?.ToString() ?? "";
+            if (!IsContinuous(opp, branch, date)) return 0;
+
+            var setting = GetSettingWith(opp, branch);
+            string cost = setting.Valuation == ValuationMethod.LastPurchase
+                ? "ISNULL(NULLIF(c.Last_Purchase_Price, 0), c.Avg_Cost)"
+                : "c.Avg_Cost";
+            const string factor = "(CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END)";
+            var vals = opp.return_DataTable(@"
+SELECT u.Store_id AS StoreId,
+       SUM(((ISNULL(d.Larg_Qnty, 0) + ISNULL(d.LargItemsQnty_Free, 0)) * " + factor + @" + ISNULL(d.Small_Qnty, 0) + ISNULL(d.SmallItemsQnty_Free, 0))
+           * ISNULL(" + cost + @", ISNULL(u.P_priceAvgCost, 0) / " + factor + @")) AS Val
+FROM " + detTbl + @" d
+INNER JOIN Unit_item u ON u.id = d.Unit_Item_Table_Id
+INNER JOIN Store st ON st.id = u.Store_id
+LEFT JOIN Item it ON it.Id = u.Item_id
+LEFT JOIN Item_Branch_Cost c ON c.Item_Id = u.Item_id AND c.Branch_Id = ISNULL(NULLIF(st.Branch_Id, 0), " + branch.ToString(CultureInfo.InvariantCulture) + @")
+WHERE d.Invoice_Id = " + id + @" AND ISNULL(d.Item_DeletedFlage, 0) <> 1
+  AND ISNULL(it.Is_ItemOrService, 0) <> 2 AND ISNULL(u.Is_ItemWithoutBalance, 0) <> 1
+GROUP BY u.Store_id");
+
+            var determination = new StoreAccountDeterminationCLS();
+            var debit = new Dictionary<long, decimal>();
+            var credit = new Dictionary<long, decimal>();
+            long entryBranch = 0;
+            foreach (DataRow r in vals.Rows)
+            {
+                decimal value = r["Val"] == DBNull.Value ? 0 : Common.RoundMe(Convert.ToDecimal(r["Val"]));
+                if (Math.Abs(value) <= Tolerance) continue;
+                long storeId = Convert.ToInt64(r["StoreId"]);
+                var store = opp.return_DataTable("SELECT Store_Name AS name, ISNULL(StoreUsed_Type, 0) AS T, ISNULL(Branch_Id, 0) AS Br, ISNULL(SubAccount_Id, 0) AS Acc FROM Store WHERE id = " + storeId.ToString(CultureInfo.InvariantCulture));
+                var s = store.Rows[0];
+                string storeName = s["name"]?.ToString()?.Trim() ?? "";
+                long inventoryAccount = Convert.ToInt64(s["Acc"]);
+                long storeBranch = Convert.ToInt64(s["Br"]);
+                if (inventoryAccount <= 0) throw new InvalidOperationException("المخزن «" + storeName + "» بلا حساب مخزون فى شجرة الحسابات؛ اربطه من «ربط المخازن بالحسابات».");
+                long cogs = determination.ResolveAccount(storeBranch > 0 ? storeBranch : branch, storeId, Convert.ToInt32(s["T"]), StoreAccountRole.COGS, opp);
+                if (cogs <= 0) throw new InvalidOperationException("لم يُحدَّد حساب «تكلفة البضاعة المباعة» للمخزن «" + storeName + "»؛ حدده من «ربط المخازن بالحسابات».");
+                if (entryBranch == 0) entryBranch = storeBranch > 0 ? storeBranch : branch;
+                var (dr, cr) = isReturn ? (inventoryAccount, cogs) : (cogs, inventoryAccount);
+                debit[dr] = (debit.TryGetValue(dr, out var d0) ? d0 : 0) + value;
+                credit[cr] = (credit.TryGetValue(cr, out var c0) ? c0 : 0) + value;
+            }
+            if (debit.Count == 0) return 0;
+
+            long entryCurrency = Common.Entry_Currency_Id <= 0 ? 1 : Common.Entry_Currency_Id;
+            var cur = opp.return_DataTable("SELECT Currency_Name FROM Currency WHERE Value = " + entryCurrency.ToString(CultureInfo.InvariantCulture));
+            string currencyName = cur.Rows.Count > 0 ? cur.Rows[0][0]?.ToString() ?? "" : "";
+            string notes = (isReturn ? "عكس تكلفة مرتجع مبيعات رقم " : "تكلفة بضاعة مباعة لفاتورة رقم ") + invoiceNo;
+
+            var aa = new AccountEntry_CLS { Reference_Type = refType, Reference_Type_Table_Id = invoiceId };
+            var dt = new DataTable();
+            aa.Get_Empty_dt_Details(ref opp, ref dt);
+            decimal total = 0;
+            foreach (var (accountId, amount) in debit) { AddLine(aa, opp, ref excp, dt, accountId, 1, amount, notes, entryCurrency, entryBranch); total += amount; }
+            foreach (var (accountId, amount) in credit) AddLine(aa, opp, ref excp, dt, accountId, 2, amount, notes, entryCurrency, entryBranch);
+            if (excp != 0) throw new InvalidOperationException("تعذر تجهيز أسطر قيد التكلفة.");
+            for (int i = 0; i < dt.Rows.Count; i++) dt.Rows[i]["Line_No"] = i + 1;
+
+            const long journalCode = 1;
+            long entryNo = AccountEntry_CLS.NewEntry_No(ref opp, date, journalCode, 0);
+            long entryId = 0;
+            aa.Make_AccountEntry(ref excp, ref msg, ref entryId, ref opp, Common.User_Id, Common.User_Name, Common.Branch_Id, entryNo, date, journalCode, entryCurrency, notes,
+                Common.Transform_Type, dt, (double)total, entryBranch, 1, invoiceNo, entryCurrency, currencyName, 1, 0);
+            if (excp != 0 || entryId <= 0) throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg) ? "تعذر إنشاء قيد التكلفة." : msg);
+            return entryId;
+        }
+
         private static void AddLine(AccountEntry_CLS aa, operations opp, ref int excp, DataTable dt, long subAccountId, int madinDa2n, decimal amount, string notes, long entryCurrency, long branchId)
         {
             if (excp != 0) return;
