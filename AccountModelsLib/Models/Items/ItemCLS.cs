@@ -94,11 +94,12 @@ namespace AccountModelsLib.Models
 
                 im.S_Price = invD.Larg_Unit_Price;
                 im.S_price_LargeUnit = invD.Larg_Unit_Price;
+                im.Edit_User_Id = Common.User_Id; im.EditOperationDate = DateTime.Now; // تدقيق التعديل
 
                 opp.db.Entry(im).State = EntityState.Modified;
                 opp.db.SaveChanges();
 
-                string mysql = "Update Unit_Item Set S_price_LargeUnit=" + invD.Larg_Unit_Price + ", S_price=" + invD.Larg_Unit_Price + " Where Item_Id=" + Item_Id;
+                string mysql = "Update Unit_Item Set S_price_LargeUnit=" + invD.Larg_Unit_Price + ", S_price=" + invD.Larg_Unit_Price + ", Edit_User_Id=" + Common.User_Id + ", EditOperationDate=GETDATE() Where Item_Id=" + Item_Id;
                 opp.insert_me(mysql);
                 excp = 0;
             }
@@ -2780,8 +2781,8 @@ namespace AccountModelsLib.Models
 
                 long Id = long.Parse(dr["Id"].ToString());
                 long Item_id = long.Parse(dr["Item_id"].ToString());
-                mysql = mysql + " UPDATE Unit_item SET Full_qua =" + Full_Qua + ", D_Qua =" + D_Qua + ", Item_No =" + Item_No + ",Upon_Request=" + Upon_Request + ",P_Price=" + P_Price + " ,P_priceAvgCost=" + P_Price + " WHERE(id = " + Id + ") ";
-                mysql = mysql + " UPDATE  item SET   Upon_Request=" + Upon_Request + ",P_Price=" + P_Price + " ,P_price_LargeUnit=" + P_Price + ", P_price_SmallUnit=" + P_Price + " ,P_priceAvgCost=" + P_Price + " WHERE(id = " + Item_id + ") ";
+                mysql = mysql + " UPDATE Unit_item SET Full_qua =" + Full_Qua + ", D_Qua =" + D_Qua + ", Item_No =" + Item_No + ",Upon_Request=" + Upon_Request + ",P_Price=" + P_Price + " ,P_priceAvgCost=" + P_Price + ", Edit_User_Id=" + Common.User_Id + ", EditOperationDate=GETDATE() WHERE(id = " + Id + ") ";
+                mysql = mysql + " UPDATE  item SET   Upon_Request=" + Upon_Request + ",P_Price=" + P_Price + " ,P_price_LargeUnit=" + P_Price + ", P_price_SmallUnit=" + P_Price + " ,P_priceAvgCost=" + P_Price + ", Edit_User_Id=" + Common.User_Id + ", EditOperationDate=GETDATE() WHERE(id = " + Item_id + ") ";
 
 
                 if (Common.Compute_ItemBalance_With_Fraction == 0)
