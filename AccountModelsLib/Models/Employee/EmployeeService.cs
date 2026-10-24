@@ -112,6 +112,7 @@ namespace AccountModelsLib.Services
                             _opp.db.Entry(local).State = EntityState.Detached;
                         }
 
+                        item.Edit_User_Id = Common.User_Id; item.EditOperationDate = DateTime.Now; // تدقيق التعديل
                         _opp.db.Employees.Update(item);
                     }
                 }
@@ -192,6 +193,7 @@ namespace AccountModelsLib.Services
                     {
                         // 2. تحديث الموظف فقط وتغيير حالته إلى Modified
                         // استخدام Entry يعلم EF Core بتحديث جدول الموظف فقط دون مساس الكائنات المرتبطة (مثل jobsList)
+                        item.Edit_User_Id = Common.User_Id; item.EditOperationDate = DateTime.Now; // تدقيق التعديل
                         opp.db.Entry(item).State = EntityState.Modified;
                         await opp.db.SaveChangesAsync();
                     }
@@ -219,6 +221,7 @@ namespace AccountModelsLib.Services
                 if (Common.Update_DeleteSupplier == 0)
                 {
                     employee.active = 0; // Soft delete
+                    employee.Edit_User_Id = Common.User_Id; employee.EditOperationDate = DateTime.Now; // تدقيق التعديل
                     _opp.db.Employees.Update(employee);
                 }
                 else
@@ -263,6 +266,7 @@ namespace AccountModelsLib.Services
                 emp.name = sb.SubAccount_Name;
                 emp.SubAccount_Id = sb.Id;
                 emp.Account_Code = sb.Account_Code;
+                emp.Edit_User_Id = Common.User_Id; emp.EditOperationDate = DateTime.Now; // تدقيق التعديل
                 _opp.db.Employees.Update(emp);
             }
 

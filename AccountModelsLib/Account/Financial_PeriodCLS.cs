@@ -181,7 +181,7 @@ namespace AccountModelsLib
                 }
                 mysql = " Update Financial_Period Set  Done= 1 ,IS_Active=0";
                 opp.insert_me(mysql);
-                mysql = " Update Financial_Period Set  Done=" + Active + ", IS_Active=1 where Id=" + Financial_Period_ID;
+                mysql = " Update Financial_Period Set  Done=" + Active + ", IS_Active=1, Edit_User_Id=" + Common.User_Id + ", EditOperationDate=GETDATE() where Id=" + Financial_Period_ID;
                 int Count = opp.insert_me(mysql);
                 Common.Year_Financial_Period_Id = Financial_Period_ID;
 
