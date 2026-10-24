@@ -70,8 +70,30 @@ namespace AccountModelsLib
             DataTable dtConfig = menuPerm.SetSystemParameters_Menus_DB(projectId, userId);
             List<MenuViewModel> menuViewModels = new List<MenuViewModel>();
             Common.Is_Ecrypted_Config = 1;
+            // 🟢 مثل MainFrm_AccountUpdate.SearchMenuStrip فى الديسك توب: تظهر القائمة فقط لو PERMATION = "1"، وكل ما تحت
+            // قائمة مخفية يُخفى معها. كان الويب يعرض كل صف صلاحية حتى الممنوع ("0") فلا تؤثر شاشة الصلاحيات (خطة 05 م7).
+            var granted = new HashSet<long>();
+            var parentOf = new Dictionary<long, long>();
+            for (int x = 0; x < dtConfig.Rows.Count; x++)
+            {
+                long menuId = long.Parse(dtConfig.Rows[x]["Menu_ID"].ToString());
+                long.TryParse(dtConfig.Rows[x]["Parent_Id"].ToString(), out long parentId);
+                parentOf[menuId] = parentId;
+                if (Common.DecryptMe(dtConfig.Rows[x]["PERMATION"].ToString()).Trim() == "1") granted.Add(menuId);
+            }
+            // أب غير موجود فى النتيجة (مثل مجموعة صلاحيات العمليات 321 المخفية بـ IsShowToUser) لا يُخفى أبناءه - كالسلوك السابق.
+            bool Visible(long menuId)
+            {
+                for (int depth = 0; menuId != 0 && depth < 20 && parentOf.ContainsKey(menuId); depth++)
+                {
+                    if (!granted.Contains(menuId)) return false;
+                    menuId = parentOf[menuId];
+                }
+                return true;
+            }
                 for (int x=0;x<dtConfig.Rows.Count ;x++)
             {
+                if (!Visible(long.Parse(dtConfig.Rows[x]["Menu_ID"].ToString()))) continue;
                 MenuViewModel menuViewModel = new MenuViewModel();
                 menuViewModel.Id = long.Parse(dtConfig.Rows[x]["Id"].ToString());
                 menuViewModel.Menu_ID = int.Parse(dtConfig.Rows[x]["Menu_ID"].ToString());
