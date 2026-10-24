@@ -75,12 +75,13 @@ namespace AccountModelsLib
             int excp = 0;
             notes = (notes ?? "").Replace("'", "''");
             if (_isReturn)
-                new InvoicesTotalReverseCls().updateinvoice(ref excp, oldNetTotal, currencyId, date, invoiceValue, commissionPercent, taxValue, ats05Value, netTotal, customerId, id, notes, customerId);
+                new InvoicesTotalReverseCls().updateinvoice(ref excp, oldNetTotal, currencyId, date, invoiceValue, commissionPercent, taxValue, ats05Value, netTotal, customerId, id, notes, customerId, taxRate, ats05Rate, damghat);
             else
-                new InvoicesTotalCls().updateinvoice(ref excp, oldNetTotal, currencyId, date, invoiceValue, commissionPercent, taxValue, ats05Value, netTotal, customerId, id, notes, customerId);
+                new InvoicesTotalCls().updateinvoice(ref excp, oldNetTotal, currencyId, date, invoiceValue, commissionPercent, taxValue, ats05Value, netTotal, customerId, id, notes, customerId, taxRate, ats05Rate, damghat);
             if (excp != 0) throw new InvalidOperationException("Update failed");
 
-            new operations().update_me("UPDATE " + ListTable + " SET DAMGHAT = " + damghat + ", TaxSales10 = " + taxRate + ", ATS05 = " + ats05Rate + ", IsInvoiceTaxInfo = " + (isTax ? 1 : 0) + " WHERE Id = " + id);
+            // DAMGHAT والنسب تُحفظ داخل updateinvoice الآن؛ يبقى علم الضريبة فقط (لا تحدّثه الدالة القديمة)
+            new operations().update_me("UPDATE " + ListTable + " SET IsInvoiceTaxInfo = " + (isTax ? 1 : 0) + " WHERE Id = " + id);
         }
 
         public void Delete(long id, decimal netTotal, long invoiceNo, long customerId)
