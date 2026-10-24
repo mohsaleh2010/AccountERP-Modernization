@@ -1,0 +1,599 @@
+@* 🟢 خطة 05 — المرحلة 7 (قائمة «ملف» ← «ربط الحسابات»): شاشة واحدة بتبويبات بدل MainAccountSettingListFrm و CustomerDataListFRMSubAccount
+   و AccountsCustomerLinkFrm، وتغطى الصندوق والبنك والموظفين التى كانت عناصرها فارغة فى الديسك توب (قرار المستخدم 2026-10-24).
+   كل تبويب يتبع صلاحية عنصره فى SysConfigMenus (AccountLinksService.MenuKey)، والقواعد فى AccountLinksService:
+   الربط فى الاتجاهين، حساب فرعى بلا أبناء، لا يُنقل حساب مربوط بطرف آخر تلقائياً. التصميم حسب ui-ux-pro-max ونظام inv-*. *@
+@page "/settings/account-links"
+@page "/settings/account-links/{Tab}"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject MenuStateService MenuState
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("AL_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .al-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .al-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .al-head .ico .mud-icon-root { font-size: 2rem; }
+    .al-head .titles { flex: 1 1 260px; min-width: 0; }
+    .al-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .al-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .al-tab { min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface);
+              color: var(--mud-palette-text-primary); font: inherit; font-size: .9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .al-tab:hover { border-color: var(--mud-palette-primary); }
+    .al-tab:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .al-tab[aria-current="page"] { background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent); border-color: var(--mud-palette-primary);
+                                   color: var(--mud-palette-primary); font-weight: 600; }
+    .al-gap { margin-top: 16px; }
+    .al-stats { display: flex; flex-wrap: wrap; gap: 8px; }
+    .al-stat { min-height: 44px; padding: 6px 14px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface);
+               font: inherit; color: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+    .al-stat b { font-variant-numeric: tabular-nums; font-size: 1.1rem; }
+    .al-stat:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .al-stat[aria-pressed="true"] { border-color: var(--mud-palette-primary); background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent); }
+    .al-filters { display: grid; grid-template-columns: minmax(0, 2fr) auto auto; gap: 12px; align-items: center; margin-top: 12px; }
+    .al-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+    .al-acts .mud-button-root { min-height: 44px; }
+    .al-code { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--mud-palette-text-secondary); direction: ltr; unicode-bidi: isolate; }
+    .al-name { overflow-wrap: anywhere; }
+    .al-muted { color: var(--mud-palette-text-secondary); font-size: .85rem; }
+    .al-row-acts { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+    .al-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .al-match { max-height: 50vh; overflow: auto; }
+    @@media (max-width: 649px) { .al-filters { grid-template-columns: minmax(0, 1fr); } .al-row-acts { justify-content: flex-start; } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card">
+        <div class="al-head">
+            <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Link" /></div>
+            <div class="titles">
+                <h1 class="inv-title">@Tr("AL_Title")</h1>
+                <div class="sub">@Tr("AL_Sub")</div>
+            </div>
+        </div>
+        @if (AllowedTabs.Count > 0)
+        {
+            <nav class="al-tabs" aria-label="@Tr("AL_Title")">
+                @foreach (var t in AllowedTabs)
+                {
+                    <button type="button" class="al-tab" aria-current="@(_tab == t.Slug ? "page" : null)" @onclick="@(() => Nav.NavigateTo($"/settings/account-links/{t.Slug}"))">
+                        <MudIcon Icon="@t.Icon" Size="Size.Small" />@Tr(t.Key)
+                    </button>
+                }
+            </nav>
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Class="al-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    @if (AllowedTabs.Count == 0)
+    {
+        <div class="inv-card al-gap"><div class="al-empty"><MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" />@Tr("AL_NoAccess")</div></div>
+    }
+    else if (_tab == "main")
+    {
+        <section class="inv-card al-gap" aria-labelledby="al-main-h">
+            <h2 class="inv-card-title" id="al-main-h"><MudIcon Icon="@Icons.Material.Filled.AccountTree" />@Tr("AL_TabMain")</h2>
+            <div class="al-muted">@Tr("AL_MainHint")</div>
+            <MudTable Items="@_parents" T="AccountLinkParentRow" Hover="true" Elevation="0" Class="inv-table al-gap" Breakpoint="Breakpoint.Sm" Dense="true" Loading="_loading" LoadingProgressColor="Color.Primary">
+                <HeaderContent>
+                    <MudTh>@Tr("AL_ColType")</MudTh>
+                    <MudTh>@Tr("AL_ColParent")</MudTh>
+                    <MudTh Style="width:1%"></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("AL_ColType")">
+                        <span class="font-weight-bold">@TypeName(context.Account_Type_Value)</span>
+                        @if (context.GeneralCustomer) { <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@Tr("AL_GeneralCustomer")</MudChip> }
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("AL_ColParent")">
+                        @if (context.Main_Account_Id > 0)
+                        {
+                            <span class="al-name">@context.Main_Account_Name</span> <span class="al-code">@context.Main_Account_NO</span>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Warning"><MudIcon Icon="@Icons.Material.Filled.WarningAmber" Size="Size.Small" Style="vertical-align:middle" /> @Tr("AL_NotSet")</MudText>
+                        }
+                    </MudTd>
+                    <MudTd>
+                        <div class="al-row-acts">
+                            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.AccountTree" Disabled="_busy"
+                                       OnClick="@(() => OpenParentPicker(context))">@Tr(context.Main_Account_Id > 0 ? "AL_Change" : "AL_Choose")</MudButton>
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </section>
+    }
+    else
+    {
+        <section class="inv-card al-gap" aria-labelledby="al-party-h">
+            <h2 class="inv-card-title" id="al-party-h"><MudIcon Icon="@CurrentTab.Icon" />@Tr(CurrentTab.Key)<span class="inv-count">@_rows.Count</span></h2>
+
+            <div class="al-stats" role="group" aria-label="@Tr("AL_FilterState")">
+                @foreach (var (state, key) in StateFilters)
+                {
+                    <button type="button" class="al-stat" aria-pressed="@(_state == state ? "true" : "false")" @onclick="@(() => _state = state)">
+                        <b>@CountOf(state)</b>@Tr(key)
+                    </button>
+                }
+            </div>
+
+            <div class="al-filters">
+                <MudTextField T="string" @bind-Value="_search" Label="@Tr("AL_Search")" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" DebounceInterval="250"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true" />
+                <MudSwitch T="bool" @bind-Value="_showInactive" Color="Color.Primary" Label="@Tr("AL_ShowInactive")" />
+                <div class="al-acts">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoFixHigh" Disabled="_busy" OnClick="OpenMatchesAsync">@Tr("AL_MatchByName")</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlaylistAdd" Disabled="@(_busy || VisibleUnlinked.Count == 0)" OnClick="CreateAllAsync">@Tr("AL_CreateAll", VisibleUnlinked.Count)</MudButton>
+                </div>
+            </div>
+
+            <MudTable Items="@Visible" T="AccountLinkRow" Hover="true" Elevation="0" Class="inv-table al-gap" Breakpoint="Breakpoint.Sm" Dense="true" Loading="_loading"
+                      LoadingProgressColor="Color.Primary" RowsPerPage="50">
+                <HeaderContent>
+                    <MudTh>@Tr(CurrentTab.PartyKey)</MudTh>
+                    <MudTh>@Tr("AL_ColAccount")</MudTh>
+                    <MudTh>@Tr("AL_ColState")</MudTh>
+                    <MudTh Style="width:1%"></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr(CurrentTab.PartyKey)">
+                        <span class="al-name">@context.PartyName</span>
+                        @if (context.IsShipmentCompany) { <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.LocalShipping">@Tr("AL_Shipment")</MudChip> }
+                        @if (!context.Active) { <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@Tr("AL_Inactive")</MudChip> }
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("AL_ColAccount")">
+                        @if (!string.IsNullOrEmpty(context.SubAccount_Name)) { <span class="al-name">@context.SubAccount_Name</span> <span class="al-code">@context.SubAccount_NO</span> }
+                        else if (context.SubAccount_Id > 0) { <span class="al-code">#@context.SubAccount_Id</span> }
+                        else { <span class="al-muted">—</span> }
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("AL_ColState")">
+                        @switch (context.State)
+                        {
+                            case AccountLinkState.Linked:
+                                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text" Icon="@Icons.Material.Filled.CheckCircle">@Tr("AL_StateLinked")</MudChip>
+                                break;
+                            case AccountLinkState.Broken:
+                                <MudTooltip Text="@Tr("AL_BrokenHint")"><MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Text" Icon="@Icons.Material.Filled.LinkOff">@Tr("AL_StateBroken")</MudChip></MudTooltip>
+                                break;
+                            default:
+                                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text" Icon="@Icons.Material.Filled.RadioButtonUnchecked">@Tr("AL_StateUnlinked")</MudChip>
+                                break;
+                        }
+                    </MudTd>
+                    <MudTd>
+                        <div class="al-row-acts">
+                            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Link" Disabled="_busy"
+                                       OnClick="@(() => OpenLinkAsync(context))">@Tr(context.State == AccountLinkState.Unlinked ? "AL_Link" : "AL_Change")</MudButton>
+                            @if (context.State == AccountLinkState.Unlinked)
+                            {
+                                <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddCircleOutline" Disabled="_busy"
+                                           OnClick="@(() => CreateAsync(context))">@Tr("AL_Create")</MudButton>
+                            }
+                            else
+                            {
+                                <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Error" StartIcon="@Icons.Material.Filled.LinkOff" Disabled="_busy"
+                                           OnClick="@(() => UnlinkAsync(context))">@Tr("AL_Unlink")</MudButton>
+                            }
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <div class="al-empty"><MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" />@Tr("AL_NoRows")</div>
+                </NoRecordsContent>
+                <PagerContent><MudTablePager PageSizeOptions="new[] { 25, 50, 100, 250 }" /></PagerContent>
+            </MudTable>
+        </section>
+    }
+</div>
+</MudContainer>
+
+@* ===== حوار ربط طرف: حسابات شاغرة من نوعه، أو أى حساب من الشجرة ===== *@
+<MudDialog @bind-Visible="_linkOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true })">
+    <TitleContent>@Tr("AL_LinkTitle", _linkRow?.PartyName ?? "")</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_dialogError)) { <MudAlert Severity="Severity.Error" Dense="true" Class="mb-2" role="alert">@_dialogError</MudAlert> }
+        @if (!_useTree)
+        {
+            @if (_candidates.Count == 0)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">@Tr("AL_NoCandidates")</MudAlert>
+            }
+            else
+            {
+                <MudAutocomplete T="AccountLinkCandidate" @bind-Value="_candidate" Label="@Tr("AL_VacantAccounts", _candidates.Count)" Variant="Variant.Outlined"
+                                 SearchFunc="SearchCandidates" ToStringFunc="@(c => c == null ? "" : $"{c.SubAccount_NO} - {c.SubAccount_Name}")"
+                                 MaxItems="50" ResetValueOnEmptyText="true" Clearable="true" AutoFocus="true" />
+            }
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AccountTree" Class="mt-2" OnClick="@(() => _useTree = true)">@Tr("AL_FromTree")</MudButton>
+        }
+        else
+        {
+            <div style="height:50vh;">
+                <AccountTreePicker BranchId="Common.Branch_Id" SelectedValue="_treeNode" SelectedValueChanged="@(n => { _treeNode = n; _dialogError = null; })" Height="50vh" />
+            </div>
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.List" Class="mt-2" OnClick="@(() => _useTree = false)">@Tr("AL_FromVacant")</MudButton>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _linkOpen = false)">@Tr("Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(_busy || PickedAccountId == 0)" OnClick="ConfirmLinkAsync">@Tr("AL_Link")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* ===== حوار الحساب الرئيسى لنوع ===== *@
+<MudDialog @bind-Visible="_parentOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true })">
+    <TitleContent>@Tr("AL_ParentTitle", _parentRow == null ? "" : TypeName(_parentRow.Account_Type_Value))</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_dialogError)) { <MudAlert Severity="Severity.Error" Dense="true" Class="mb-2" role="alert">@_dialogError</MudAlert> }
+        <div style="height:50vh;">
+            <AccountTreePicker BranchId="Common.Branch_Id" SelectedValue="_treeNode" SelectedValueChanged="OnParentPicked" Height="50vh" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _parentOpen = false)">@Tr("Cancel")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* ===== حوار المطابقة بالاسم: معاينة قبل التنفيذ ===== *@
+<MudDialog @bind-Visible="_matchOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true })">
+    <TitleContent>@Tr("AL_MatchByName")</TitleContent>
+    <DialogContent>
+        @if (_matches.Count == 0)
+        {
+            <div class="al-empty"><MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" />@Tr("AL_NoMatches")</div>
+        }
+        else
+        {
+            <div class="al-muted mb-2">@Tr("AL_MatchHint", _matches.Count)</div>
+            <div class="al-match">
+                <MudSimpleTable Dense="true" Hover="true" Class="inv-table">
+                    <thead><tr><th>@Tr(CurrentTab.PartyKey)</th><th>@Tr("AL_ColAccount")</th></tr></thead>
+                    <tbody>
+                        @foreach (var m in _matches)
+                        {
+                            <tr><td class="al-name">@m.PartyName</td><td><span class="al-code">@m.SubAccount_NO</span></td></tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _matchOpen = false)">@Tr("Cancel")</MudButton>
+        @if (_matches.Count > 0)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_busy" OnClick="ApplyMatchesAsync">@Tr("AL_LinkN", _matches.Count)</MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public string? Tab { get; set; }
+
+    private record TabDef(string Slug, string Key, string Icon, string MenuKey, AccountLinkKind? Kind, string PartyKey);
+
+    private static readonly TabDef[] Tabs =
+    {
+        new("main", "AL_TabMain", Icons.Material.Filled.AccountTree, AccountLinksService.MainAccountsMenuKey, null, ""),
+        new("customers", "AL_TabCustomers", Icons.Material.Filled.People, AccountLinksService.MenuKey(AccountLinkKind.Customer), AccountLinkKind.Customer, "AL_ColCustomer"),
+        new("suppliers", "AL_TabSuppliers", Icons.Material.Filled.LocalShipping, AccountLinksService.MenuKey(AccountLinkKind.Supplier), AccountLinkKind.Supplier, "AL_ColSupplier"),
+        new("cash-boxes", "AL_TabCashBoxes", Icons.Material.Filled.PointOfSale, AccountLinksService.MenuKey(AccountLinkKind.CashBox), AccountLinkKind.CashBox, "AL_ColCashBox"),
+        new("banks", "AL_TabBanks", Icons.Material.Filled.AccountBalance, AccountLinksService.MenuKey(AccountLinkKind.Bank), AccountLinkKind.Bank, "AL_ColBank"),
+        new("employees", "AL_TabEmployees", Icons.Material.Filled.Badge, AccountLinksService.MenuKey(AccountLinkKind.Employee), AccountLinkKind.Employee, "AL_ColEmployee"),
+    };
+
+    private static readonly (AccountLinkState?, string)[] StateFilters =
+    {
+        (null, "AL_All"), (AccountLinkState.Unlinked, "AL_StateUnlinked"), (AccountLinkState.Broken, "AL_StateBroken"), (AccountLinkState.Linked, "AL_StateLinked"),
+    };
+
+    private readonly AccountLinksService _svc = new();
+    private List<AccountLinkRow> _rows = new();
+    private List<AccountLinkParentRow> _parents = new();
+    private string _tab = "main";
+    private AccountLinkState? _state;
+    private string? _search;
+    private bool _showInactive = true;
+    private bool _loading, _busy;
+    private string? _error, _dialogError;
+
+    private bool _linkOpen, _useTree;
+    private AccountLinkRow? _linkRow;
+    private List<AccountLinkCandidate> _candidates = new();
+    private AccountLinkCandidate? _candidate;
+    private AccountTreeNodeViewModel? _treeNode;
+
+    private bool _parentOpen;
+    private AccountLinkParentRow? _parentRow;
+
+    private bool _matchOpen;
+    private List<AccountLinkMatch> _matches = new();
+
+    private List<TabDef> AllowedTabs
+    {
+        get
+        {
+            var keys = (MenuState.UserAllowedMenus ?? new()).Select(m => (m.KeysData ?? "").Trim()).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            return Tabs.Where(t => keys.Contains(t.MenuKey)).ToList();
+        }
+    }
+
+    private TabDef CurrentTab => Tabs.First(t => t.Slug == _tab);
+    private AccountLinkKind Kind => CurrentTab.Kind ?? AccountLinkKind.Customer;
+    private long PickedAccountId => _useTree ? (_treeNode?.Id ?? 0) : (_candidate?.Id ?? 0);
+
+    private IEnumerable<AccountLinkRow> Filtered(AccountLinkState? state) => _rows
+        .Where(r => _showInactive || r.Active)
+        .Where(r => state == null || r.State == state)
+        .Where(r => string.IsNullOrWhiteSpace(_search)
+                 || r.PartyName.Contains(_search.Trim(), StringComparison.CurrentCultureIgnoreCase)
+                 || r.SubAccount_Name.Contains(_search.Trim(), StringComparison.CurrentCultureIgnoreCase)
+                 || r.SubAccount_NO.Contains(_search.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    private List<AccountLinkRow> Visible => Filtered(_state).ToList();
+    private List<AccountLinkRow> VisibleUnlinked => Visible.Where(r => r.State == AccountLinkState.Unlinked).ToList();
+    private int CountOf(AccountLinkState? state) => Filtered(state).Count();
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        MenuState.OnAuthChanged += OnAuthChanged;
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    // بعد Refresh تُستعاد الجلسة متأخرة (نفس سبب MenuHubPage) فتُعاد قراءة التبويبات المسموحة والبيانات.
+    private void OnAuthChanged() => InvokeAsync(async () => { await OnParametersSetAsync(); StateHasChanged(); });
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+        MenuState.OnAuthChanged -= OnAuthChanged;
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private string TypeName(int type) => type switch
+    {
+        2 => Tr("AL_TabCustomers"), 5 => Tr("AL_TabSuppliers"), 4 => Tr("AL_TabEmployees"), 6 => Tr("AL_TabCashBoxes"), 7 => Tr("AL_TabBanks"),
+        _ when type == Common.Account_Type_ForShippmentCompanyAsServicesSupplier => Tr("AL_ShipmentCompanies"),
+        _ => type.ToString(),
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var allowed = AllowedTabs;
+        string t = (Tab ?? "").ToLowerInvariant();
+        _tab = allowed.Any(x => x.Slug == t) ? t : allowed.FirstOrDefault()?.Slug ?? "main";
+        _state = null;
+        _search = null;
+        _error = null;
+        if (allowed.Count > 0) await LoadAsync();
+    }
+
+    private Task<T> Bg<T>(Func<T> f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return f(); });
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        try
+        {
+            long branch = Common.Branch_Id;
+            if (_tab == "main") _parents = await Bg(() => _svc.GetParents(branch));
+            else { var kind = Kind; _rows = await Bg(() => _svc.GetRows(kind)); }
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _loading = false; }
+    }
+
+    private static string Inner(Exception ex) => ex.InnerException?.Message ?? ex.Message;
+
+    // يشغّل عملية خدمة (Excp/Msg) فى الخلفية؛ يرجع نص الخطأ أو فارغاً عند النجاح.
+    private async Task<string> RunAsync(Func<(int Excp, string Msg)> op)
+    {
+        try
+        {
+            var (excp, msg) = await Bg(op);
+            return excp == 0 ? "" : (string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg);
+        }
+        catch (Exception ex) { return Tr("SystemError", Inner(ex)); }
+    }
+
+    // ---------- ربط طرف ----------
+    private async Task OpenLinkAsync(AccountLinkRow row)
+    {
+        _linkRow = row;
+        _candidate = null;
+        _treeNode = null;
+        _useTree = false;
+        _dialogError = null;
+        try
+        {
+            var kind = Kind;
+            long branch = Common.Branch_Id;
+            _candidates = await Bg(() => _svc.GetCandidates(kind, branch));
+        }
+        catch (Exception ex) { _candidates = new(); _dialogError = Tr("SystemError", Inner(ex)); }
+        _linkOpen = true;
+    }
+
+    private Task<IEnumerable<AccountLinkCandidate>> SearchCandidates(string text, CancellationToken token)
+    {
+        IEnumerable<AccountLinkCandidate> result = _candidates;
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            string s = text.Trim();
+            // الحساب الذى يحمل اسم الطرف أولاً
+            result = _candidates.Where(c => (c.SubAccount_Name ?? "").Contains(s, StringComparison.CurrentCultureIgnoreCase) || (c.SubAccount_NO ?? "").Contains(s, StringComparison.OrdinalIgnoreCase));
+        }
+        else if (_linkRow != null)
+        {
+            string name = _linkRow.PartyName.Trim();
+            result = _candidates.OrderBy(c => string.Equals((c.SubAccount_Name ?? "").Trim(), name, StringComparison.CurrentCultureIgnoreCase) ? 0 : 1);
+        }
+        return Task.FromResult(result);
+    }
+
+    private async Task ConfirmLinkAsync()
+    {
+        if (_linkRow == null || PickedAccountId == 0) return;
+        _busy = true;
+        var kind = Kind;
+        long party = _linkRow.PartyId, account = PickedAccountId;
+        string err = await RunAsync(() => { int e = 0; string m = ""; _svc.Link(ref e, ref m, kind, party, account); return (e, m); });
+        _busy = false;
+        if (err != "") { _dialogError = err; return; }
+        _linkOpen = false;
+        Snackbar.Add(Tr("AL_Linked", _linkRow.PartyName), Severity.Success);
+        await LoadAsync();
+    }
+
+    private async Task UnlinkAsync(AccountLinkRow row)
+    {
+        bool? ok = await DialogService.ShowMessageBoxAsync(Tr("AL_Unlink"), Tr("AL_UnlinkConfirm", row.PartyName, row.SubAccount_Name),
+                                                          yesText: Tr("AL_Unlink"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true;
+        var kind = Kind;
+        long party = row.PartyId;
+        string err = await RunAsync(() => { int e = 0; string m = ""; _svc.Unlink(ref e, ref m, kind, party); return (e, m); });
+        _busy = false;
+        if (err != "") { _error = err; return; }
+        Snackbar.Add(Tr("AL_Unlinked", row.PartyName), Severity.Success);
+        await LoadAsync();
+    }
+
+    // ---------- إنشاء حساب ----------
+    private async Task CreateAsync(AccountLinkRow row)
+    {
+        _busy = true;
+        var kind = Kind;
+        long party = row.PartyId, branch = Common.Branch_Id;
+        string err = await RunAsync(() => { int e = 0; string m = ""; _svc.CreateAccount(ref e, ref m, kind, party, branch); return (e, m); });
+        _busy = false;
+        if (err != "") { _error = err; return; }
+        Snackbar.Add(Tr("AL_Created", row.PartyName), Severity.Success);
+        await LoadAsync();
+    }
+
+    private async Task CreateAllAsync()
+    {
+        var targets = VisibleUnlinked;
+        if (targets.Count == 0) return;
+        bool? ok = await DialogService.ShowMessageBoxAsync(Tr("AL_CreateAll", targets.Count), Tr("AL_CreateAllConfirm", targets.Count),
+                                                          yesText: Tr("AL_CreateAll", targets.Count), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true;
+        var kind = Kind;
+        long branch = Common.Branch_Id;
+        var ids = targets.Select(r => r.PartyId).ToList();
+        var (done, firstError) = await Bg(() =>
+        {
+            int n = 0;
+            string first = "";
+            foreach (long id in ids)
+            {
+                int e = 0; string m = "";
+                _svc.CreateAccount(ref e, ref m, kind, id, branch);
+                if (e == 0) n++;
+                else if (first == "") first = m;
+                if (e == 2 && m.Contains("الحساب الرئيسى")) break;   // لا أب للنوع: باقى المحاولات ستفشل بنفس السبب
+            }
+            return (n, first);
+        });
+        _busy = false;
+        if (firstError != "") _error = firstError;
+        Snackbar.Add(Tr("AL_CreatedN", done), done > 0 ? Severity.Success : Severity.Info);
+        await LoadAsync();
+    }
+
+    // ---------- المطابقة بالاسم ----------
+    private async Task OpenMatchesAsync()
+    {
+        try
+        {
+            var kind = Kind;
+            long branch = Common.Branch_Id;
+            _matches = await Bg(() => _svc.SuggestMatches(kind, branch));
+            _matchOpen = true;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+    }
+
+    private async Task ApplyMatchesAsync()
+    {
+        _busy = true;
+        var kind = Kind;
+        var pairs = _matches.Select(m => (m.PartyId, m.SubAccount_Id)).ToList();
+        var (done, firstError) = await Bg(() =>
+        {
+            int n = 0;
+            string first = "";
+            foreach (var (party, account) in pairs)
+            {
+                int e = 0; string m = "";
+                _svc.Link(ref e, ref m, kind, party, account);
+                if (e == 0) n++;
+                else if (first == "") first = m;
+            }
+            return (n, first);
+        });
+        _busy = false;
+        _matchOpen = false;
+        if (firstError != "") _error = firstError;
+        Snackbar.Add(Tr("AL_LinkedN", done), done > 0 ? Severity.Success : Severity.Info);
+        await LoadAsync();
+    }
+
+    // ---------- الحسابات الرئيسية ----------
+    private void OpenParentPicker(AccountLinkParentRow row)
+    {
+        _parentRow = row;
+        _treeNode = null;
+        _dialogError = null;
+        _parentOpen = true;
+    }
+
+    private async Task OnParentPicked(AccountTreeNodeViewModel? node)
+    {
+        _treeNode = node;
+        if (node == null || _parentRow == null) return;
+        _busy = true;
+        long branch = Common.Branch_Id, account = node.Id;
+        int type = _parentRow.Account_Type_Value;
+        bool general = _parentRow.GeneralCustomer;
+        string err = await RunAsync(() => { int e = 0; string m = ""; _svc.SaveParent(ref e, ref m, branch, type, general, account); return (e, m); });
+        _busy = false;
+        if (err != "") { _dialogError = err; return; }
+        _parentOpen = false;
+        Snackbar.Add(Tr("AL_ParentSaved", TypeName(type)), Severity.Success);
+        await LoadAsync();
+    }
+}

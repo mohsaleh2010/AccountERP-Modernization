@@ -4015,4 +4015,61 @@
   <data name="HubNoResults" xml:space="preserve"><value>No screens match the search</value></data>
   <data name="HubNotFound" xml:space="preserve"><value>This menu is not available to your account or has no screens</value></data>
   <data name="HubBack" xml:space="preserve"><value>Your modules</value></data>
+  <data name="AL_Title" xml:space="preserve"><value>Account links</value></data>
+  <data name="AL_Sub" xml:space="preserve"><value>The ledger account of each customer, supplier, cash box, bank and employee, and the parent account new accounts of each type are created under</value></data>
+  <data name="AL_TabMain" xml:space="preserve"><value>Parent accounts</value></data>
+  <data name="AL_TabCustomers" xml:space="preserve"><value>Customers</value></data>
+  <data name="AL_TabSuppliers" xml:space="preserve"><value>Suppliers</value></data>
+  <data name="AL_TabCashBoxes" xml:space="preserve"><value>Cash boxes</value></data>
+  <data name="AL_TabBanks" xml:space="preserve"><value>Banks</value></data>
+  <data name="AL_TabEmployees" xml:space="preserve"><value>Employees</value></data>
+  <data name="AL_ShipmentCompanies" xml:space="preserve"><value>Shipping companies</value></data>
+  <data name="AL_NoAccess" xml:space="preserve"><value>You have no permission for any account-link screen</value></data>
+  <data name="AL_MainHint" xml:space="preserve"><value>When a new customer, supplier, cash box, bank or employee is created, its account is created under the parent set here for its type in the current branch</value></data>
+  <data name="AL_ColType" xml:space="preserve"><value>Type</value></data>
+  <data name="AL_ColParent" xml:space="preserve"><value>Parent account</value></data>
+  <data name="AL_GeneralCustomer" xml:space="preserve"><value>General customers</value></data>
+  <data name="AL_NotSet" xml:space="preserve"><value>Not set</value></data>
+  <data name="AL_Choose" xml:space="preserve"><value>Choose</value></data>
+  <data name="AL_Change" xml:space="preserve"><value>Change</value></data>
+  <data name="AL_ColAccount" xml:space="preserve"><value>Account</value></data>
+  <data name="AL_ColState" xml:space="preserve"><value>Status</value></data>
+  <data name="AL_ColCustomer" xml:space="preserve"><value>Customer</value></data>
+  <data name="AL_ColSupplier" xml:space="preserve"><value>Supplier</value></data>
+  <data name="AL_ColCashBox" xml:space="preserve"><value>Cash box</value></data>
+  <data name="AL_ColBank" xml:space="preserve"><value>Bank</value></data>
+  <data name="AL_ColEmployee" xml:space="preserve"><value>Employee</value></data>
+  <data name="AL_FilterState" xml:space="preserve"><value>Filter by status</value></data>
+  <data name="AL_All" xml:space="preserve"><value>All</value></data>
+  <data name="AL_StateLinked" xml:space="preserve"><value>Linked</value></data>
+  <data name="AL_StateUnlinked" xml:space="preserve"><value>Not linked</value></data>
+  <data name="AL_StateBroken" xml:space="preserve"><value>Broken link</value></data>
+  <data name="AL_BrokenHint" xml:space="preserve"><value>The account is missing, does not point back to this party, or has another type — link again</value></data>
+  <data name="AL_Search" xml:space="preserve"><value>Search by name, account or code</value></data>
+  <data name="AL_ShowInactive" xml:space="preserve"><value>Show inactive</value></data>
+  <data name="AL_MatchByName" xml:space="preserve"><value>Match by name</value></data>
+  <data name="AL_CreateAll" xml:space="preserve"><value>Create accounts for unlinked ({0})</value></data>
+  <data name="AL_CreateAllConfirm" xml:space="preserve"><value>A new account named after each of the {0} visible unlinked parties will be created under its type's parent account and linked. Continue?</value></data>
+  <data name="AL_Inactive" xml:space="preserve"><value>Inactive</value></data>
+  <data name="AL_Shipment" xml:space="preserve"><value>Shipping company</value></data>
+  <data name="AL_Link" xml:space="preserve"><value>Link</value></data>
+  <data name="AL_Unlink" xml:space="preserve"><value>Unlink</value></data>
+  <data name="AL_Create" xml:space="preserve"><value>Create account</value></data>
+  <data name="AL_NoRows" xml:space="preserve"><value>No matching rows</value></data>
+  <data name="AL_LinkTitle" xml:space="preserve"><value>Link “{0}” to an account</value></data>
+  <data name="AL_NoCandidates" xml:space="preserve"><value>No vacant accounts of this type in the branch — pick from the tree or create one</value></data>
+  <data name="AL_VacantAccounts" xml:space="preserve"><value>Vacant accounts of this type ({0})</value></data>
+  <data name="AL_FromTree" xml:space="preserve"><value>Pick from the chart of accounts</value></data>
+  <data name="AL_FromVacant" xml:space="preserve"><value>Back to vacant accounts</value></data>
+  <data name="AL_ParentTitle" xml:space="preserve"><value>Parent account for {0}</value></data>
+  <data name="AL_NoMatches" xml:space="preserve"><value>No unlinked party matches exactly one vacant account of its type by name</value></data>
+  <data name="AL_MatchHint" xml:space="preserve"><value>{0} unlinked parties exactly match one vacant account of their type by name. Review, then link</value></data>
+  <data name="AL_LinkN" xml:space="preserve"><value>Link {0}</value></data>
+  <data name="AL_Linked" xml:space="preserve"><value>“{0}” linked</value></data>
+  <data name="AL_Unlinked" xml:space="preserve"><value>“{0}” unlinked</value></data>
+  <data name="AL_UnlinkConfirm" xml:space="preserve"><value>Unlink “{0}” from account “{1}”? The account and its balance stay in the tree as vacant</value></data>
+  <data name="AL_Created" xml:space="preserve"><value>Account for “{0}” created and linked</value></data>
+  <data name="AL_CreatedN" xml:space="preserve"><value>{0} accounts created and linked</value></data>
+  <data name="AL_LinkedN" xml:space="preserve"><value>{0} linked</value></data>
+  <data name="AL_ParentSaved" xml:space="preserve"><value>Parent account for {0} saved</value></data>
 </root>

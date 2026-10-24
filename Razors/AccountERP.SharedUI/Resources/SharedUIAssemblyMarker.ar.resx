@@ -4015,4 +4015,61 @@
   <data name="HubNoResults" xml:space="preserve"><value>لا توجد شاشات مطابقة للبحث</value></data>
   <data name="HubNotFound" xml:space="preserve"><value>هذه القائمة غير متاحة لحسابك أو ليس لها شاشات</value></data>
   <data name="HubBack" xml:space="preserve"><value>الوحدات المتاحة لك</value></data>
+  <data name="AL_Title" xml:space="preserve"><value>ربط الحسابات</value></data>
+  <data name="AL_Sub" xml:space="preserve"><value>حساب كل عميل ومورد وصندوق وبنك وموظف فى شجرة الحسابات، والحساب الرئيسى الذى تُنشأ تحته حسابات كل نوع</value></data>
+  <data name="AL_TabMain" xml:space="preserve"><value>الحسابات الرئيسية</value></data>
+  <data name="AL_TabCustomers" xml:space="preserve"><value>العملاء</value></data>
+  <data name="AL_TabSuppliers" xml:space="preserve"><value>الموردون</value></data>
+  <data name="AL_TabCashBoxes" xml:space="preserve"><value>الصناديق</value></data>
+  <data name="AL_TabBanks" xml:space="preserve"><value>البنوك</value></data>
+  <data name="AL_TabEmployees" xml:space="preserve"><value>الموظفون</value></data>
+  <data name="AL_ShipmentCompanies" xml:space="preserve"><value>شركات الشحن</value></data>
+  <data name="AL_NoAccess" xml:space="preserve"><value>لا تملك صلاحية أى من شاشات ربط الحسابات</value></data>
+  <data name="AL_MainHint" xml:space="preserve"><value>عند إنشاء عميل أو مورد أو صندوق أو بنك أو موظف جديد يُنشأ حسابه تلقائياً تحت الحساب المحدد هنا لنوعه فى الفرع الحالى</value></data>
+  <data name="AL_ColType" xml:space="preserve"><value>النوع</value></data>
+  <data name="AL_ColParent" xml:space="preserve"><value>الحساب الرئيسى</value></data>
+  <data name="AL_GeneralCustomer" xml:space="preserve"><value>العملاء العموميون</value></data>
+  <data name="AL_NotSet" xml:space="preserve"><value>غير محدد</value></data>
+  <data name="AL_Choose" xml:space="preserve"><value>اختيار</value></data>
+  <data name="AL_Change" xml:space="preserve"><value>تغيير</value></data>
+  <data name="AL_ColAccount" xml:space="preserve"><value>الحساب</value></data>
+  <data name="AL_ColState" xml:space="preserve"><value>الحالة</value></data>
+  <data name="AL_ColCustomer" xml:space="preserve"><value>العميل</value></data>
+  <data name="AL_ColSupplier" xml:space="preserve"><value>المورد</value></data>
+  <data name="AL_ColCashBox" xml:space="preserve"><value>الصندوق</value></data>
+  <data name="AL_ColBank" xml:space="preserve"><value>البنك</value></data>
+  <data name="AL_ColEmployee" xml:space="preserve"><value>الموظف</value></data>
+  <data name="AL_FilterState" xml:space="preserve"><value>تصفية حسب الحالة</value></data>
+  <data name="AL_All" xml:space="preserve"><value>الكل</value></data>
+  <data name="AL_StateLinked" xml:space="preserve"><value>مربوط</value></data>
+  <data name="AL_StateUnlinked" xml:space="preserve"><value>غير مربوط</value></data>
+  <data name="AL_StateBroken" xml:space="preserve"><value>ربط معطوب</value></data>
+  <data name="AL_BrokenHint" xml:space="preserve"><value>الحساب غير موجود، أو لا يشير إلى هذا الطرف، أو من نوع آخر - أعد الربط</value></data>
+  <data name="AL_Search" xml:space="preserve"><value>بحث بالاسم أو الحساب أو الكود</value></data>
+  <data name="AL_ShowInactive" xml:space="preserve"><value>إظهار غير النشطين</value></data>
+  <data name="AL_MatchByName" xml:space="preserve"><value>مطابقة بالاسم</value></data>
+  <data name="AL_CreateAll" xml:space="preserve"><value>إنشاء حسابات لغير المربوطين ({0})</value></data>
+  <data name="AL_CreateAllConfirm" xml:space="preserve"><value>سيُنشأ حساب جديد باسم كل طرف من {0} طرف ظاهر غير مربوط، تحت الحساب الرئيسى لنوعه، ثم يُربط به. متابعة؟</value></data>
+  <data name="AL_Inactive" xml:space="preserve"><value>غير نشط</value></data>
+  <data name="AL_Shipment" xml:space="preserve"><value>شركة شحن</value></data>
+  <data name="AL_Link" xml:space="preserve"><value>ربط</value></data>
+  <data name="AL_Unlink" xml:space="preserve"><value>فك الربط</value></data>
+  <data name="AL_Create" xml:space="preserve"><value>إنشاء حساب</value></data>
+  <data name="AL_NoRows" xml:space="preserve"><value>لا توجد صفوف مطابقة</value></data>
+  <data name="AL_LinkTitle" xml:space="preserve"><value>ربط «{0}» بحساب</value></data>
+  <data name="AL_NoCandidates" xml:space="preserve"><value>لا توجد حسابات شاغرة من هذا النوع فى الفرع - اختر من الشجرة أو أنشئ حساباً</value></data>
+  <data name="AL_VacantAccounts" xml:space="preserve"><value>الحسابات الشاغرة من نفس النوع ({0})</value></data>
+  <data name="AL_FromTree" xml:space="preserve"><value>اختيار من شجرة الحسابات</value></data>
+  <data name="AL_FromVacant" xml:space="preserve"><value>العودة للحسابات الشاغرة</value></data>
+  <data name="AL_ParentTitle" xml:space="preserve"><value>الحساب الرئيسى لـ {0}</value></data>
+  <data name="AL_NoMatches" xml:space="preserve"><value>لا يوجد طرف غير مربوط يطابق اسمه حساباً شاغراً واحداً من نوعه</value></data>
+  <data name="AL_MatchHint" xml:space="preserve"><value>{0} طرف غير مربوط اسمه مطابق تماماً لحساب شاغر واحد من نوعه. راجعها ثم اربطها</value></data>
+  <data name="AL_LinkN" xml:space="preserve"><value>ربط {0}</value></data>
+  <data name="AL_Linked" xml:space="preserve"><value>تم ربط «{0}»</value></data>
+  <data name="AL_Unlinked" xml:space="preserve"><value>تم فك ربط «{0}»</value></data>
+  <data name="AL_UnlinkConfirm" xml:space="preserve"><value>فك ربط «{0}» بالحساب «{1}»؟ يبقى الحساب ورصيده فى الشجرة شاغراً</value></data>
+  <data name="AL_Created" xml:space="preserve"><value>تم إنشاء حساب «{0}» وربطه</value></data>
+  <data name="AL_CreatedN" xml:space="preserve"><value>تم إنشاء {0} حساب وربطها</value></data>
+  <data name="AL_LinkedN" xml:space="preserve"><value>تم ربط {0}</value></data>
+  <data name="AL_ParentSaved" xml:space="preserve"><value>تم تحديد الحساب الرئيسى لـ {0}</value></data>
 </root>

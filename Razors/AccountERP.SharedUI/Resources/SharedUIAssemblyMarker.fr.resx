@@ -4017,4 +4017,61 @@
   <data name="HubNoResults" xml:space="preserve"><value>Aucun écran correspondant</value></data>
   <data name="HubNotFound" xml:space="preserve"><value>Ce menu n'est pas disponible pour votre compte ou n'a pas d'écrans</value></data>
   <data name="HubBack" xml:space="preserve"><value>Vos modules</value></data>
+  <data name="AL_Title" xml:space="preserve"><value>Liaison des comptes</value></data>
+  <data name="AL_Sub" xml:space="preserve"><value>Le compte de chaque client, fournisseur, caisse, banque et employé, et le compte parent sous lequel chaque type est créé</value></data>
+  <data name="AL_TabMain" xml:space="preserve"><value>Comptes parents</value></data>
+  <data name="AL_TabCustomers" xml:space="preserve"><value>Clients</value></data>
+  <data name="AL_TabSuppliers" xml:space="preserve"><value>Fournisseurs</value></data>
+  <data name="AL_TabCashBoxes" xml:space="preserve"><value>Caisses</value></data>
+  <data name="AL_TabBanks" xml:space="preserve"><value>Banques</value></data>
+  <data name="AL_TabEmployees" xml:space="preserve"><value>Employés</value></data>
+  <data name="AL_ShipmentCompanies" xml:space="preserve"><value>Sociétés de transport</value></data>
+  <data name="AL_NoAccess" xml:space="preserve"><value>Vous n'avez accès à aucun écran de liaison des comptes</value></data>
+  <data name="AL_MainHint" xml:space="preserve"><value>Le compte d'un nouveau client, fournisseur, caisse, banque ou employé est créé sous le parent défini ici pour son type dans la succursale actuelle</value></data>
+  <data name="AL_ColType" xml:space="preserve"><value>Type</value></data>
+  <data name="AL_ColParent" xml:space="preserve"><value>Compte parent</value></data>
+  <data name="AL_GeneralCustomer" xml:space="preserve"><value>Clients généraux</value></data>
+  <data name="AL_NotSet" xml:space="preserve"><value>Non défini</value></data>
+  <data name="AL_Choose" xml:space="preserve"><value>Choisir</value></data>
+  <data name="AL_Change" xml:space="preserve"><value>Modifier</value></data>
+  <data name="AL_ColAccount" xml:space="preserve"><value>Compte</value></data>
+  <data name="AL_ColState" xml:space="preserve"><value>Statut</value></data>
+  <data name="AL_ColCustomer" xml:space="preserve"><value>Client</value></data>
+  <data name="AL_ColSupplier" xml:space="preserve"><value>Fournisseur</value></data>
+  <data name="AL_ColCashBox" xml:space="preserve"><value>Caisse</value></data>
+  <data name="AL_ColBank" xml:space="preserve"><value>Banque</value></data>
+  <data name="AL_ColEmployee" xml:space="preserve"><value>Employé</value></data>
+  <data name="AL_FilterState" xml:space="preserve"><value>Filtrer par statut</value></data>
+  <data name="AL_All" xml:space="preserve"><value>Tous</value></data>
+  <data name="AL_StateLinked" xml:space="preserve"><value>Lié</value></data>
+  <data name="AL_StateUnlinked" xml:space="preserve"><value>Non lié</value></data>
+  <data name="AL_StateBroken" xml:space="preserve"><value>Liaison rompue</value></data>
+  <data name="AL_BrokenHint" xml:space="preserve"><value>Le compte manque, ne pointe pas vers ce tiers ou a un autre type — reliez à nouveau</value></data>
+  <data name="AL_Search" xml:space="preserve"><value>Rechercher par nom, compte ou code</value></data>
+  <data name="AL_ShowInactive" xml:space="preserve"><value>Afficher les inactifs</value></data>
+  <data name="AL_MatchByName" xml:space="preserve"><value>Associer par nom</value></data>
+  <data name="AL_CreateAll" xml:space="preserve"><value>Créer les comptes des non liés ({0})</value></data>
+  <data name="AL_CreateAllConfirm" xml:space="preserve"><value>Un nouveau compte au nom de chacun des {0} tiers non liés visibles sera créé sous le compte parent de son type puis lié. Continuer ?</value></data>
+  <data name="AL_Inactive" xml:space="preserve"><value>Inactif</value></data>
+  <data name="AL_Shipment" xml:space="preserve"><value>Transporteur</value></data>
+  <data name="AL_Link" xml:space="preserve"><value>Lier</value></data>
+  <data name="AL_Unlink" xml:space="preserve"><value>Délier</value></data>
+  <data name="AL_Create" xml:space="preserve"><value>Créer un compte</value></data>
+  <data name="AL_NoRows" xml:space="preserve"><value>Aucune ligne correspondante</value></data>
+  <data name="AL_LinkTitle" xml:space="preserve"><value>Lier « {0} » à un compte</value></data>
+  <data name="AL_NoCandidates" xml:space="preserve"><value>Aucun compte libre de ce type dans la succursale — choisissez dans l'arbre ou créez-en un</value></data>
+  <data name="AL_VacantAccounts" xml:space="preserve"><value>Comptes libres de ce type ({0})</value></data>
+  <data name="AL_FromTree" xml:space="preserve"><value>Choisir dans le plan comptable</value></data>
+  <data name="AL_FromVacant" xml:space="preserve"><value>Retour aux comptes libres</value></data>
+  <data name="AL_ParentTitle" xml:space="preserve"><value>Compte parent pour {0}</value></data>
+  <data name="AL_NoMatches" xml:space="preserve"><value>Aucun tiers non lié ne correspond par son nom à un seul compte libre de son type</value></data>
+  <data name="AL_MatchHint" xml:space="preserve"><value>{0} tiers non liés correspondent exactement par nom à un compte libre. Vérifiez puis liez</value></data>
+  <data name="AL_LinkN" xml:space="preserve"><value>Lier {0}</value></data>
+  <data name="AL_Linked" xml:space="preserve"><value>« {0} » lié</value></data>
+  <data name="AL_Unlinked" xml:space="preserve"><value>« {0} » délié</value></data>
+  <data name="AL_UnlinkConfirm" xml:space="preserve"><value>Délier « {0} » du compte « {1} » ? Le compte et son solde restent libres dans l'arbre</value></data>
+  <data name="AL_Created" xml:space="preserve"><value>Compte de « {0} » créé et lié</value></data>
+  <data name="AL_CreatedN" xml:space="preserve"><value>{0} comptes créés et liés</value></data>
+  <data name="AL_LinkedN" xml:space="preserve"><value>{0} liés</value></data>
+  <data name="AL_ParentSaved" xml:space="preserve"><value>Compte parent pour {0} enregistré</value></data>
 </root>

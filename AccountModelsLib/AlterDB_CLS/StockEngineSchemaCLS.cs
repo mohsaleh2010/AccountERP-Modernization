@@ -295,6 +295,10 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("menuItemItemPrices", "/items/price-sheet"), ("menuItemPricesList", "/store/balances?price=1"),
             ("toolStripMenuItemPurchasItemNo", "/store/balances?price=2"), ("toolStripMenuItembalance_CostAvg", "/store/balances?price=4"),
             ("menuItem67", "/store/balances?price=3"), ("menuItem73", "/store/balances?price=2"), ("menuItemPriceTypeSupplier", "/store/balances?price=5"),
+            // خطة 05 م7: «ملف» ← «ربط الحسابات» تبويبات شاشة واحدة (بدل MainAccountSettingListFrm / CustomerDataListFRMSubAccount / AccountsCustomerLinkFrm)
+            ("menuItemRelatedMainAccounts", "/settings/account-links/main"), ("menuItemRelatedCustomerAccounts", "/settings/account-links/customers"),
+            ("menuItemRelatedSupplierAccounts", "/settings/account-links/suppliers"), ("menuItemRelatedSandoukAccounts", "/settings/account-links/cash-boxes"),
+            ("menuItemRelatedBankAccounts", "/settings/account-links/banks"), ("menuItemRelatedEmployeeAccounts", "/settings/account-links/employees"),
             // خطة 04 م5: الأسعار (طباعة الأسعار menuItemItemPrices لم تُبنَ بعد)
             ("menuPrice_Type_List", "/items/prices/lists"), ("menuPriceCategory", "/items/prices/lists"), ("menuItemSearchItemPrices_List_Values", "/items/prices/lists"),
             ("menuItemEditPrices", "/items/prices/bulk"), ("MenuCustomer_PriceCLS", "/items/prices/customers"),

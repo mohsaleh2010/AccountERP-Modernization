@@ -4017,4 +4017,61 @@
   <data name="HubNoResults" xml:space="preserve"><value>Keine passenden Masken</value></data>
   <data name="HubNotFound" xml:space="preserve"><value>Dieses Menü ist für Ihr Konto nicht verfügbar oder hat keine Masken</value></data>
   <data name="HubBack" xml:space="preserve"><value>Ihre Module</value></data>
+  <data name="AL_Title" xml:space="preserve"><value>Kontenverknüpfung</value></data>
+  <data name="AL_Sub" xml:space="preserve"><value>Das Sachkonto jedes Kunden, Lieferanten, Kassenkontos, Bankkontos und Mitarbeiters sowie das übergeordnete Konto je Typ</value></data>
+  <data name="AL_TabMain" xml:space="preserve"><value>Übergeordnete Konten</value></data>
+  <data name="AL_TabCustomers" xml:space="preserve"><value>Kunden</value></data>
+  <data name="AL_TabSuppliers" xml:space="preserve"><value>Lieferanten</value></data>
+  <data name="AL_TabCashBoxes" xml:space="preserve"><value>Kassen</value></data>
+  <data name="AL_TabBanks" xml:space="preserve"><value>Banken</value></data>
+  <data name="AL_TabEmployees" xml:space="preserve"><value>Mitarbeiter</value></data>
+  <data name="AL_ShipmentCompanies" xml:space="preserve"><value>Versandunternehmen</value></data>
+  <data name="AL_NoAccess" xml:space="preserve"><value>Sie haben keine Berechtigung für die Kontenverknüpfung</value></data>
+  <data name="AL_MainHint" xml:space="preserve"><value>Neue Kunden, Lieferanten, Kassen, Banken und Mitarbeiter erhalten ihr Konto unter dem hier festgelegten übergeordneten Konto der aktuellen Filiale</value></data>
+  <data name="AL_ColType" xml:space="preserve"><value>Typ</value></data>
+  <data name="AL_ColParent" xml:space="preserve"><value>Übergeordnetes Konto</value></data>
+  <data name="AL_GeneralCustomer" xml:space="preserve"><value>Allgemeine Kunden</value></data>
+  <data name="AL_NotSet" xml:space="preserve"><value>Nicht festgelegt</value></data>
+  <data name="AL_Choose" xml:space="preserve"><value>Auswählen</value></data>
+  <data name="AL_Change" xml:space="preserve"><value>Ändern</value></data>
+  <data name="AL_ColAccount" xml:space="preserve"><value>Konto</value></data>
+  <data name="AL_ColState" xml:space="preserve"><value>Status</value></data>
+  <data name="AL_ColCustomer" xml:space="preserve"><value>Kunde</value></data>
+  <data name="AL_ColSupplier" xml:space="preserve"><value>Lieferant</value></data>
+  <data name="AL_ColCashBox" xml:space="preserve"><value>Kasse</value></data>
+  <data name="AL_ColBank" xml:space="preserve"><value>Bank</value></data>
+  <data name="AL_ColEmployee" xml:space="preserve"><value>Mitarbeiter</value></data>
+  <data name="AL_FilterState" xml:space="preserve"><value>Nach Status filtern</value></data>
+  <data name="AL_All" xml:space="preserve"><value>Alle</value></data>
+  <data name="AL_StateLinked" xml:space="preserve"><value>Verknüpft</value></data>
+  <data name="AL_StateUnlinked" xml:space="preserve"><value>Nicht verknüpft</value></data>
+  <data name="AL_StateBroken" xml:space="preserve"><value>Defekte Verknüpfung</value></data>
+  <data name="AL_BrokenHint" xml:space="preserve"><value>Das Konto fehlt, verweist nicht zurück oder hat einen anderen Typ — neu verknüpfen</value></data>
+  <data name="AL_Search" xml:space="preserve"><value>Nach Name, Konto oder Code suchen</value></data>
+  <data name="AL_ShowInactive" xml:space="preserve"><value>Inaktive anzeigen</value></data>
+  <data name="AL_MatchByName" xml:space="preserve"><value>Nach Name zuordnen</value></data>
+  <data name="AL_CreateAll" xml:space="preserve"><value>Konten für Unverknüpfte anlegen ({0})</value></data>
+  <data name="AL_CreateAllConfirm" xml:space="preserve"><value>Für jede der {0} sichtbaren unverknüpften Parteien wird ein neues Konto unter dem übergeordneten Konto angelegt und verknüpft. Fortfahren?</value></data>
+  <data name="AL_Inactive" xml:space="preserve"><value>Inaktiv</value></data>
+  <data name="AL_Shipment" xml:space="preserve"><value>Versandunternehmen</value></data>
+  <data name="AL_Link" xml:space="preserve"><value>Verknüpfen</value></data>
+  <data name="AL_Unlink" xml:space="preserve"><value>Verknüpfung lösen</value></data>
+  <data name="AL_Create" xml:space="preserve"><value>Konto anlegen</value></data>
+  <data name="AL_NoRows" xml:space="preserve"><value>Keine passenden Zeilen</value></data>
+  <data name="AL_LinkTitle" xml:space="preserve"><value>„{0}“ mit einem Konto verknüpfen</value></data>
+  <data name="AL_NoCandidates" xml:space="preserve"><value>Keine freien Konten dieses Typs in der Filiale — aus dem Baum wählen oder anlegen</value></data>
+  <data name="AL_VacantAccounts" xml:space="preserve"><value>Freie Konten dieses Typs ({0})</value></data>
+  <data name="AL_FromTree" xml:space="preserve"><value>Aus dem Kontenplan wählen</value></data>
+  <data name="AL_FromVacant" xml:space="preserve"><value>Zurück zu freien Konten</value></data>
+  <data name="AL_ParentTitle" xml:space="preserve"><value>Übergeordnetes Konto für {0}</value></data>
+  <data name="AL_NoMatches" xml:space="preserve"><value>Keine unverknüpfte Partei passt namentlich zu genau einem freien Konto</value></data>
+  <data name="AL_MatchHint" xml:space="preserve"><value>{0} unverknüpfte Parteien passen namentlich genau zu einem freien Konto. Prüfen und verknüpfen</value></data>
+  <data name="AL_LinkN" xml:space="preserve"><value>{0} verknüpfen</value></data>
+  <data name="AL_Linked" xml:space="preserve"><value>„{0}“ verknüpft</value></data>
+  <data name="AL_Unlinked" xml:space="preserve"><value>Verknüpfung von „{0}“ gelöst</value></data>
+  <data name="AL_UnlinkConfirm" xml:space="preserve"><value>Verknüpfung von „{0}“ mit „{1}“ lösen? Das Konto und sein Saldo bleiben frei im Baum</value></data>
+  <data name="AL_Created" xml:space="preserve"><value>Konto für „{0}“ angelegt und verknüpft</value></data>
+  <data name="AL_CreatedN" xml:space="preserve"><value>{0} Konten angelegt und verknüpft</value></data>
+  <data name="AL_LinkedN" xml:space="preserve"><value>{0} verknüpft</value></data>
+  <data name="AL_ParentSaved" xml:space="preserve"><value>Übergeordnetes Konto für {0} gespeichert</value></data>
 </root>
