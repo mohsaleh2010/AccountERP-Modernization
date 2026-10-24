@@ -51,7 +51,7 @@
 و1 خطة 05 الإنتاج (Work_In/Work_Out + النسيج) — مؤجّلة بقرارك؛ تضاف ملاحظة أن الاستلام يحرّك `Textile_Item_Dept_Balance` · ~~و2 جرد/أرصدة~~: «أرصدة بتاريخ الصلاحية» (830) كانت منفّذة أصلاً (خطة 05 بند 23، `/store/balances/expiry`)؛ «أصناف لدى الموظفين» (870) ✅ 2026-10-24 (`EmployeeItemBalancesService` + `/store/balances/employees`، قراءة فقط من `Unit_itemEmployeeBalance` — فارغ على ClientNew ويكتبه مسار الأذون القديم فقط؛ اختُبر بصف تجريبى داخل معاملة ملغاة) · و3 التحويل بين المخازن: الاختبار بالإعداد 2 فى الإنتاج.
 
 ## ز) صيانة
-ز1 `AccountsEInvoicesLIB` NU1605 (**لا يُصلح بقرارك**) · ز2 مراجعة `HMIS` و`.claude` المحلى (لا commit) · ~~ز3 تقرير حقول `Common` الساكنة~~ ✅ 2026-10-24 ([`common-static-fields-report.md`](common-static-fields-report.md): لا تسرب مستخدم غير الحقول السبعة المعزولة؛ فرق وظيفى فقط فى حقول شاشات الديسكتوب) · ز4 ترجمات fr/de TODO.
+ز1 `AccountsEInvoicesLIB` NU1605 (**لا يُصلح بقرارك**) · ز2 مراجعة `HMIS` و`.claude` المحلى (لا commit) · ~~ز3 تقرير حقول `Common` الساكنة~~ ✅ 2026-10-24 ([`common-static-fields-report.md`](common-static-fields-report.md): لا تسرب مستخدم غير الحقول السبعة المعزولة؛ فرق وظيفى فقط فى حقول شاشات الديسكتوب) · ~~ز4 ترجمات fr/de TODO~~ ✅ 2026-10-24: ترجمة 858 مفتاحاً (836 فرنسى + 819 ألمانى كانت إنجليزية مؤقتة) وإزالة كل علامات TODO؛ ما بقى مطابقاً للإنجليزية كلمات مشتركة فى اللغتين (Date، Code، Notes، Document…). ملاحظة: بالملف 4 مفاتيح مكررة قديمة (`AcceptCostCenterLabel`، `DeleteAccountTitle`، `DeleteAccountConfirm`، `ValueColumn`) فى اللغات الأربع — تُركت.
 
 ## الترتيب المقترح
 1. **أ1 + أ2** (اختبار ما بُنى مؤخراً — أقل مخاطرة وأعلى قيمة؛ يحتاج وقتك فى المتصفح).

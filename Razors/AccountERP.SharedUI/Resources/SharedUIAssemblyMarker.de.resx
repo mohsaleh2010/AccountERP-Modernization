@@ -35,28 +35,28 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
 
   <!-- 🚧 لغة قيد التجهيز: القيم أدناه إنجليزية مؤقتاً (Placeholder) لحين اعتماد ترجمة ألمانية حقيقية. لا تُحذف التعليقات عند الترجمة. -->
-  <data name="AppTitle" xml:space="preserve"><value>Account ERP</value><comment>TODO: translate to German</comment></data>
-  <data name="NavHome" xml:space="preserve"><value>Home</value><comment>TODO: translate to German</comment></data>
-  <data name="NavAbout" xml:space="preserve"><value>About Us</value><comment>TODO: translate to German</comment></data>
-  <data name="MainMenuTitle" xml:space="preserve"><value>Main Menu</value><comment>TODO: translate to German</comment></data>
-  <data name="ErpModulesSection" xml:space="preserve"><value>ERP Modules</value><comment>TODO: translate to German</comment></data>
-  <data name="LoadingModules" xml:space="preserve"><value>Loading modules...</value><comment>TODO: translate to German</comment></data>
-  <data name="NoModulesAvailable" xml:space="preserve"><value>No modules available for your account. Please contact the administrator.</value><comment>TODO: translate to German</comment></data>
-  <data name="ComingSoon" xml:space="preserve"><value>Coming soon</value><comment>TODO: translate to German</comment></data>
-  <data name="ScreenNotBuiltYet" xml:space="preserve"><value>The "{0}" screen is not built on the web yet</value><comment>TODO: translate to German</comment></data>
-  <data name="HomeSubtitle" xml:space="preserve"><value>Manage your business from one place — pick a module from the sidebar or the shortcuts below to get started.</value><comment>TODO: translate to German</comment></data>
-  <data name="HomeQuickAccessTitle" xml:space="preserve"><value>Your available modules</value><comment>TODO: translate to German</comment></data>
+  <data name="AppTitle" xml:space="preserve"><value>Account ERP</value></data>
+  <data name="NavHome" xml:space="preserve"><value>Startseite</value></data>
+  <data name="NavAbout" xml:space="preserve"><value>Über uns</value></data>
+  <data name="MainMenuTitle" xml:space="preserve"><value>Hauptmenü</value></data>
+  <data name="ErpModulesSection" xml:space="preserve"><value>ERP-Module</value></data>
+  <data name="LoadingModules" xml:space="preserve"><value>Module werden geladen...</value></data>
+  <data name="NoModulesAvailable" xml:space="preserve"><value>Für Ihr Konto sind keine Module verfügbar. Bitte wenden Sie sich an den Administrator.</value></data>
+  <data name="ComingSoon" xml:space="preserve"><value>Demnächst verfügbar</value></data>
+  <data name="ScreenNotBuiltYet" xml:space="preserve"><value>Der Bildschirm „{0}“ ist im Web noch nicht verfügbar</value></data>
+  <data name="HomeSubtitle" xml:space="preserve"><value>Verwalten Sie Ihr Geschäft an einem Ort – wählen Sie ein Modul in der Seitenleiste oder über die Verknüpfungen unten, um zu beginnen.</value></data>
+  <data name="HomeQuickAccessTitle" xml:space="preserve"><value>Ihre verfügbaren Module</value></data>
   <data name="ExpandAllMenus" xml:space="preserve"><value>Alle erweitern</value></data>
   <data name="CollapseAllMenus" xml:space="preserve"><value>Alle einklappen</value></data>
-  <data name="OpenNewTabTooltip" xml:space="preserve"><value>TODO: translate</value></data>
-  <data name="CloseAllTabsTooltip" xml:space="preserve"><value>TODO: translate</value></data>
-  <data name="AccountSettingsTooltip" xml:space="preserve"><value>TODO: translate</value></data>
-  <data name="UserSettingsTitle" xml:space="preserve"><value>TODO: translate</value></data>
-  <data name="ShowBreadcrumbSetting" xml:space="preserve"><value>TODO: translate</value></data>
-  <data name="ShowBreadcrumbSettingHint" xml:space="preserve"><value>TODO: translate</value></data>
-  <data name="ShowTabsSetting" xml:space="preserve"><value>TODO: translate</value></data>
-  <data name="ShowTabsSettingHint" xml:space="preserve"><value>TODO: translate</value></data>
-  <data name="UserSettingsSavedHint" xml:space="preserve"><value>TODO: translate</value></data>
+  <data name="OpenNewTabTooltip" xml:space="preserve"><value>Neuen Bildschirm öffnen</value></data>
+  <data name="CloseAllTabsTooltip" xml:space="preserve"><value>Alle Tabs schließen</value></data>
+  <data name="AccountSettingsTooltip" xml:space="preserve"><value>Kontoeinstellungen</value></data>
+  <data name="UserSettingsTitle" xml:space="preserve"><value>Kontoeinstellungen</value></data>
+  <data name="ShowBreadcrumbSetting" xml:space="preserve"><value>Navigationspfad anzeigen</value></data>
+  <data name="ShowBreadcrumbSettingHint" xml:space="preserve"><value>Zeigt oben auf der Seite den Pfad zu jedem Bildschirm an (Verfügbare Module › ... › aktueller Bildschirm)</value></data>
+  <data name="ShowTabsSetting" xml:space="preserve"><value>Tabs aktivieren</value></data>
+  <data name="ShowTabsSettingHint" xml:space="preserve"><value>Öffnet jeden Bildschirm in einem eigenen schließbaren Tab, zwischen denen Sie wechseln können, ohne Daten zu verlieren, statt jeweils nur einen Bildschirm anzuzeigen</value></data>
+  <data name="UserSettingsSavedHint" xml:space="preserve"><value>Diese Einstellungen werden automatisch in Ihrem Konto gespeichert und gelten auf jedem Gerät, mit dem Sie sich anmelden</value></data>
   <data name="MenuOrderMenuItem" xml:space="preserve"><value>Menüreihenfolge</value></data>
   <data name="MenuOrderPageTitle" xml:space="preserve"><value>Anzeigereihenfolge der Menüs</value></data>
   <data name="MenuOrderPageSubtitle" xml:space="preserve"><value>Menüs per Drag &amp; Drop oder mit den Auf-/Ab-Schaltflächen neu anordnen - dieselbe Reihenfolge gilt für die Startseite und das Seitenmenü</value></data>
@@ -71,311 +71,311 @@
   <data name="MenuOrderSavedMessage" xml:space="preserve"><value>Reihenfolge erfolgreich gespeichert</value></data>
   <data name="MenuOrderResetButton" xml:space="preserve"><value>Auf Standard zurücksetzen</value></data>
 
-  <data name="MenuChangePassword" xml:space="preserve"><value>Change Password</value><comment>TODO: translate to German</comment></data>
-  <data name="ChangePasswordTitle" xml:space="preserve"><value>Change Password</value><comment>TODO: translate to German</comment></data>
-  <data name="ChangePasswordSubtitle" xml:space="preserve"><value>Update your account password</value><comment>TODO: translate to German</comment></data>
-  <data name="OldPassword" xml:space="preserve"><value>Current Password</value><comment>TODO: translate to German</comment></data>
-  <data name="EnterOldPassword" xml:space="preserve"><value>Enter current password</value><comment>TODO: translate to German</comment></data>
-  <data name="NewPassword" xml:space="preserve"><value>New Password</value><comment>TODO: translate to German</comment></data>
-  <data name="EnterNewPassword" xml:space="preserve"><value>Enter new password</value><comment>TODO: translate to German</comment></data>
-  <data name="ConfirmNewPassword" xml:space="preserve"><value>Confirm New Password</value><comment>TODO: translate to German</comment></data>
-  <data name="EnterConfirmNewPassword" xml:space="preserve"><value>Re-enter new password</value><comment>TODO: translate to German</comment></data>
-  <data name="SaveNewPassword" xml:space="preserve"><value>Save New Password</value><comment>TODO: translate to German</comment></data>
-  <data name="SavingPassword" xml:space="preserve"><value>Saving...</value><comment>TODO: translate to German</comment></data>
-  <data name="ChangePasswordSuccess" xml:space="preserve"><value>Password changed successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="InvalidOldPassword" xml:space="preserve"><value>Current password is incorrect</value><comment>TODO: translate to German</comment></data>
-  <data name="NewPasswordAlreadyUsed" xml:space="preserve"><value>This password is already in use, please choose a different one</value><comment>TODO: translate to German</comment></data>
-  <data name="NewPasswordMustDiffer" xml:space="preserve"><value>New password must be different from the current password</value><comment>TODO: translate to German</comment></data>
-  <data name="PasswordsDoNotMatch" xml:space="preserve"><value>Passwords do not match</value><comment>TODO: translate to German</comment></data>
-  <data name="BackToHome" xml:space="preserve"><value>Back to Home</value><comment>TODO: translate to German</comment></data>
+  <data name="MenuChangePassword" xml:space="preserve"><value>Passwort ändern</value></data>
+  <data name="ChangePasswordTitle" xml:space="preserve"><value>Passwort ändern</value></data>
+  <data name="ChangePasswordSubtitle" xml:space="preserve"><value>Aktualisieren Sie das Passwort Ihres Kontos</value></data>
+  <data name="OldPassword" xml:space="preserve"><value>Aktuelles Passwort</value></data>
+  <data name="EnterOldPassword" xml:space="preserve"><value>Aktuelles Passwort eingeben</value></data>
+  <data name="NewPassword" xml:space="preserve"><value>Neues Passwort</value></data>
+  <data name="EnterNewPassword" xml:space="preserve"><value>Neues Passwort eingeben</value></data>
+  <data name="ConfirmNewPassword" xml:space="preserve"><value>Neues Passwort bestätigen</value></data>
+  <data name="EnterConfirmNewPassword" xml:space="preserve"><value>Neues Passwort erneut eingeben</value></data>
+  <data name="SaveNewPassword" xml:space="preserve"><value>Neues Passwort speichern</value></data>
+  <data name="SavingPassword" xml:space="preserve"><value>Wird gespeichert...</value></data>
+  <data name="ChangePasswordSuccess" xml:space="preserve"><value>Passwort erfolgreich geändert</value></data>
+  <data name="InvalidOldPassword" xml:space="preserve"><value>Das aktuelle Passwort ist falsch</value></data>
+  <data name="NewPasswordAlreadyUsed" xml:space="preserve"><value>Dieses Passwort wird bereits verwendet, bitte wählen Sie ein anderes</value></data>
+  <data name="NewPasswordMustDiffer" xml:space="preserve"><value>Das neue Passwort muss sich vom aktuellen Passwort unterscheiden</value></data>
+  <data name="PasswordsDoNotMatch" xml:space="preserve"><value>Die Passwörter stimmen nicht überein</value></data>
+  <data name="BackToHome" xml:space="preserve"><value>Zurück zur Startseite</value></data>
 
-  <data name="NavNotifications" xml:space="preserve"><value>Notifications</value><comment>TODO: translate to German</comment></data>
-  <data name="NotificationsTitle" xml:space="preserve"><value>Notifications</value><comment>TODO: translate to German</comment></data>
-  <data name="NotificationsEmpty" xml:space="preserve"><value>No new notifications</value><comment>TODO: translate to German</comment></data>
+  <data name="NavNotifications" xml:space="preserve"><value>Benachrichtigungen</value></data>
+  <data name="NotificationsTitle" xml:space="preserve"><value>Benachrichtigungen</value></data>
+  <data name="NotificationsEmpty" xml:space="preserve"><value>Keine neuen Benachrichtigungen</value></data>
 
-  <data name="ToggleTheme" xml:space="preserve"><value>Toggle theme</value><comment>TODO: translate to German</comment></data>
-  <data name="ThemeLight" xml:space="preserve"><value>Light</value><comment>TODO: translate to German</comment></data>
-  <data name="ThemeDark" xml:space="preserve"><value>Dark</value><comment>TODO: translate to German</comment></data>
-  <data name="ThemesTitle" xml:space="preserve"><value>Themes</value><comment>TODO: translate to German</comment></data>
-  <data name="ThemeModeLabel" xml:space="preserve"><value>Mode</value><comment>TODO: translate to German</comment></data>
-  <data name="ThemeColorLabel" xml:space="preserve"><value>Color</value><comment>TODO: translate to German</comment></data>
+  <data name="ToggleTheme" xml:space="preserve"><value>Design wechseln</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>Hell</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>Dunkel</value></data>
+  <data name="ThemesTitle" xml:space="preserve"><value>Designs</value></data>
+  <data name="ThemeModeLabel" xml:space="preserve"><value>Modus</value></data>
+  <data name="ThemeColorLabel" xml:space="preserve"><value>Farbe</value></data>
 
-  <data name="ChangeLanguage" xml:space="preserve"><value>Change language</value><comment>TODO: translate to German</comment></data>
+  <data name="ChangeLanguage" xml:space="preserve"><value>Sprache ändern</value></data>
 
-  <data name="Login" xml:space="preserve"><value>Login</value><comment>TODO: translate to German</comment></data>
-  <data name="Logout" xml:space="preserve"><value>Logout</value><comment>TODO: translate to German</comment></data>
-  <data name="LoginTitle" xml:space="preserve"><value>Account ERP Login</value><comment>TODO: translate to German</comment></data>
-  <data name="Username" xml:space="preserve"><value>Username</value><comment>TODO: translate to German</comment></data>
-  <data name="Password" xml:space="preserve"><value>Password</value><comment>TODO: translate to German</comment></data>
-  <data name="EnterUsername" xml:space="preserve"><value>Enter username</value><comment>TODO: translate to German</comment></data>
-  <data name="EnterPassword" xml:space="preserve"><value>Enter password</value><comment>TODO: translate to German</comment></data>
-  <data name="LoginButton" xml:space="preserve"><value>Login to System</value><comment>TODO: translate to German</comment></data>
-  <data name="VerifyingLogin" xml:space="preserve"><value>Verifying...</value><comment>TODO: translate to German</comment></data>
-  <data name="InvalidCredentials" xml:space="preserve"><value>Invalid username, password, or inactive account.</value><comment>TODO: translate to German</comment></data>
-  <data name="SystemError" xml:space="preserve"><value>System error: {0}</value><comment>TODO: translate to German</comment></data>
-  <data name="WelcomeUser" xml:space="preserve"><value>Welcome, {0}</value><comment>TODO: translate to German</comment></data>
-  <data name="LoginSubtitle" xml:space="preserve"><value>Sign in to continue to your account</value><comment>TODO: translate to German</comment></data>
-  <data name="LoginWelcomeTitle" xml:space="preserve"><value>Run your business with confidence</value><comment>TODO: translate to German</comment></data>
-  <data name="LoginWelcomeSubtitle" xml:space="preserve"><value>One system for accounting, inventory, sales, and e-invoicing — built for how your business actually works.</value><comment>TODO: translate to German</comment></data>
-  <data name="LoginFeatureAccounting" xml:space="preserve"><value>General ledger &amp; multi-branch accounting</value><comment>TODO: translate to German</comment></data>
-  <data name="LoginFeatureInventory" xml:space="preserve"><value>Inventory &amp; warehouse management</value><comment>TODO: translate to German</comment></data>
-  <data name="LoginFeatureMultiBranch" xml:space="preserve"><value>Multi-currency, multi-branch by design</value><comment>TODO: translate to German</comment></data>
-  <data name="ShowPassword" xml:space="preserve"><value>Show password</value><comment>TODO: translate to German</comment></data>
-  <data name="HidePassword" xml:space="preserve"><value>Hide password</value><comment>TODO: translate to German</comment></data>
-  <data name="CopyrightText" xml:space="preserve"><value>© {0} {1}. All rights reserved.</value><comment>TODO: translate to German</comment></data>
+  <data name="Login" xml:space="preserve"><value>Anmelden</value></data>
+  <data name="Logout" xml:space="preserve"><value>Abmelden</value></data>
+  <data name="LoginTitle" xml:space="preserve"><value>Anmeldung bei Account ERP</value></data>
+  <data name="Username" xml:space="preserve"><value>Benutzername</value></data>
+  <data name="Password" xml:space="preserve"><value>Passwort</value></data>
+  <data name="EnterUsername" xml:space="preserve"><value>Benutzernamen eingeben</value></data>
+  <data name="EnterPassword" xml:space="preserve"><value>Passwort eingeben</value></data>
+  <data name="LoginButton" xml:space="preserve"><value>Am System anmelden</value></data>
+  <data name="VerifyingLogin" xml:space="preserve"><value>Wird überprüft...</value></data>
+  <data name="InvalidCredentials" xml:space="preserve"><value>Ungültiger Benutzername, ungültiges Passwort oder inaktives Konto.</value></data>
+  <data name="SystemError" xml:space="preserve"><value>Systemfehler: {0}</value></data>
+  <data name="WelcomeUser" xml:space="preserve"><value>Willkommen, {0}</value></data>
+  <data name="LoginSubtitle" xml:space="preserve"><value>Melden Sie sich an, um auf Ihr Konto zuzugreifen</value></data>
+  <data name="LoginWelcomeTitle" xml:space="preserve"><value>Führen Sie Ihr Unternehmen mit Zuversicht</value></data>
+  <data name="LoginWelcomeSubtitle" xml:space="preserve"><value>Ein System für Buchhaltung, Lager, Verkauf und E-Rechnung – gebaut für die Realität Ihres Geschäfts.</value></data>
+  <data name="LoginFeatureAccounting" xml:space="preserve"><value>Hauptbuch und Mehrfilialen-Buchhaltung</value></data>
+  <data name="LoginFeatureInventory" xml:space="preserve"><value>Bestands- und Lagerverwaltung</value></data>
+  <data name="LoginFeatureMultiBranch" xml:space="preserve"><value>Mehrwährungs- und Mehrfilialenfähig von Grund auf</value></data>
+  <data name="ShowPassword" xml:space="preserve"><value>Passwort anzeigen</value></data>
+  <data name="HidePassword" xml:space="preserve"><value>Passwort verbergen</value></data>
+  <data name="CopyrightText" xml:space="preserve"><value>© {0} {1}. Alle Rechte vorbehalten.</value></data>
 
-  <data name="AboutUsTitle" xml:space="preserve"><value>About Account ERP</value><comment>TODO: translate to German</comment></data>
-  <data name="AboutUsBody" xml:space="preserve"><value>Account ERP is a multi-module accounting and inventory management system, integrated with sales, purchasing, taxes, e-invoicing, and more. This web/mobile/desktop experience is a modern rebuild of the original desktop system, built with Blazor.</value><comment>TODO: translate to German</comment></data>
+  <data name="AboutUsTitle" xml:space="preserve"><value>Über Account ERP</value></data>
+  <data name="AboutUsBody" xml:space="preserve"><value>Account ERP ist ein modulares Buchhaltungs- und Lagerverwaltungssystem, integriert mit Verkauf, Einkauf, Steuern, E-Rechnung und mehr. Diese Web-/Mobil-/Desktop-Anwendung ist eine moderne Neuentwicklung des ursprünglichen Desktop-Systems auf Basis von Blazor.</value></data>
 
-  <data name="Save" xml:space="preserve"><value>Save</value><comment>TODO: translate to German</comment></data>
-  <data name="Delete" xml:space="preserve"><value>Delete</value><comment>TODO: translate to German</comment></data>
-  <data name="Cancel" xml:space="preserve"><value>Cancel</value><comment>TODO: translate to German</comment></data>
-  <data name="Yes" xml:space="preserve"><value>Yes</value><comment>TODO: translate to German</comment></data>
-  <data name="No" xml:space="preserve"><value>No</value><comment>TODO: translate to German</comment></data>
+  <data name="Save" xml:space="preserve"><value>Speichern</value></data>
+  <data name="Delete" xml:space="preserve"><value>Löschen</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="Yes" xml:space="preserve"><value>Ja</value></data>
+  <data name="No" xml:space="preserve"><value>Nein</value></data>
 
-  <data name="AccountsTreeTitle" xml:space="preserve"><value>Chart of Accounts</value><comment>TODO: translate to German</comment></data>
-  <data name="BranchLabel" xml:space="preserve"><value>Branch</value><comment>TODO: translate to German</comment></data>
-  <data name="AddAccountButton" xml:space="preserve"><value>Add Account</value><comment>TODO: translate to German</comment></data>
-  <data name="NoAccountsYet" xml:space="preserve"><value>No accounts yet</value><comment>TODO: translate to German</comment></data>
-  <data name="NoAccountSelected" xml:space="preserve"><value>Select an account from the tree to view its details</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountNameLabel" xml:space="preserve"><value>Account Name</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountCodeLabel" xml:space="preserve"><value>Account Code</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyLabel" xml:space="preserve"><value>Currency</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountTypeLabel" xml:space="preserve"><value>Account Type</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountFollowsLabel" xml:space="preserve"><value>Account Follows</value><comment>TODO: translate to German</comment></data>
-  <data name="CashFlowTypeLabel" xml:space="preserve"><value>Cash Flow Type</value><comment>TODO: translate to German</comment></data>
-  <data name="NatureDebitLabel" xml:space="preserve"><value>Debit</value><comment>TODO: translate to German</comment></data>
-  <data name="NatureCreditLabel" xml:space="preserve"><value>Credit</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountLevelLabel" xml:space="preserve"><value>Account Level</value><comment>TODO: translate to German</comment></data>
-  <data name="NotesLabel" xml:space="preserve"><value>Notes</value><comment>TODO: translate to German</comment></data>
-  <data name="AcceptEntryLabel" xml:space="preserve"><value>Accepts journal entries</value><comment>TODO: translate to German</comment></data>
-  <data name="AcceptCostCenterLabel" xml:space="preserve"><value>Accepts cost centers</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountTypeChangeForChildrenLabel" xml:space="preserve"><value>Sub-accounts have the same account type</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountFollowChangeForChildrenLabel" xml:space="preserve"><value>Sub-accounts have the same account follow-up</value><comment>TODO: translate to German</comment></data>
-  <data name="MasrofatAffectLabel" xml:space="preserve"><value>Shows in expenses/revenue report</value><comment>TODO: translate to German</comment></data>
-  <data name="SaveEditButton" xml:space="preserve"><value>Save Changes</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteAccountButton" xml:space="preserve"><value>Delete</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteAllChildrenButton" xml:space="preserve"><value>Delete Sub-Accounts</value><comment>TODO: translate to German</comment></data>
-  <data name="RecodeChildrenButton" xml:space="preserve"><value>Re-code</value><comment>TODO: translate to German</comment></data>
-  <data name="RecodeAllChildrenButton" xml:space="preserve"><value>Re-code All</value><comment>TODO: translate to German</comment></data>
-  <data name="MoveAccountButton" xml:space="preserve"><value>New Position</value><comment>TODO: translate to German</comment></data>
-  <data name="MoveAccountTitle" xml:space="preserve"><value>Change Account Position</value><comment>TODO: translate to German</comment></data>
-  <data name="MoveAccountInstructions" xml:space="preserve"><value>Pick from the tree the account that will become the new parent of this account</value><comment>TODO: translate to German</comment></data>
-  <data name="MoveAccountCurrentLabel" xml:space="preserve"><value>Account to move</value><comment>TODO: translate to German</comment></data>
-  <data name="MoveAccountNewParentLabel" xml:space="preserve"><value>Selected new parent</value><comment>TODO: translate to German</comment></data>
-  <data name="MoveAccountSelfError" xml:space="preserve"><value>An account cannot be its own parent</value><comment>TODO: translate to German</comment></data>
-  <data name="MoveAccountDescendantError" xml:space="preserve"><value>Cannot move an account into one of its own descendants</value><comment>TODO: translate to German</comment></data>
-  <data name="MoveAccountSelectTarget" xml:space="preserve"><value>Select the new parent account first</value><comment>TODO: translate to German</comment></data>
-  <data name="MoveAccountSaveButton" xml:space="preserve"><value>Confirm Move</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountAdded" xml:space="preserve"><value>Account added successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountUpdated" xml:space="preserve"><value>Account updated</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountDeleted" xml:space="preserve"><value>Account deleted</value><comment>TODO: translate to German</comment></data>
-  <data name="SubAccountsDeleted" xml:space="preserve"><value>Sub-accounts deleted</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountCannotDelete" xml:space="preserve"><value>This account cannot be deleted</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteAccountTitle" xml:space="preserve"><value>Delete Account</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteAccountConfirm" xml:space="preserve"><value>Delete account "{0}"? It may have been used before and other accounts could be affected</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteAllSubAccountsTitle" xml:space="preserve"><value>Delete Sub-Accounts</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteAllSubAccountsConfirm" xml:space="preserve"><value>Delete all direct sub-accounts of "{0}"?</value><comment>TODO: translate to German</comment></data>
-  <data name="AddAccountTitle" xml:space="preserve"><value>Add New Account</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectParentAccountFirst" xml:space="preserve"><value>You must select the parent account before adding</value><comment>TODO: translate to German</comment></data>
-  <data name="ParentAccountLabel" xml:space="preserve"><value>Parent Account</value><comment>TODO: translate to German</comment></data>
-  <data name="FirstSubCodeLabel" xml:space="preserve"><value>Sub-account numbering pattern</value><comment>TODO: translate to German</comment></data>
-  <data name="CompanyCustomerLabel" xml:space="preserve"><value>Company Customer</value><comment>TODO: translate to German</comment></data>
-  <data name="GeneralCustomerLabel" xml:space="preserve"><value>General Customer</value><comment>TODO: translate to German</comment></data>
-  <data name="HasSubAccountsLabel" xml:space="preserve"><value>Has sub-accounts</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountNameRequired" xml:space="preserve"><value>Enter the account name</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountCodeRequired" xml:space="preserve"><value>Account code is required</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyRequired" xml:space="preserve"><value>Select the currency</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountTypeRequired" xml:space="preserve"><value>Select the account type</value><comment>TODO: translate to German</comment></data>
-  <data name="ExpandAllAccounts" xml:space="preserve"><value>Expand all</value><comment>TODO: translate to German</comment></data>
-  <data name="CollapseAllAccounts" xml:space="preserve"><value>Collapse all</value><comment>TODO: translate to German</comment></data>
-  <data name="SearchAccountLabel" xml:space="preserve"><value>Search for an account</value><comment>TODO: translate to German</comment></data>
-  <data name="ScrollTreeToTop" xml:space="preserve"><value>Back to top of the tree</value><comment>TODO: translate to German</comment></data>
-  <data name="SearchAccountPlaceholder" xml:space="preserve"><value>Type an account name or code...</value><comment>TODO: translate to German</comment></data>
+  <data name="AccountsTreeTitle" xml:space="preserve"><value>Kontenplan</value></data>
+  <data name="BranchLabel" xml:space="preserve"><value>Filiale</value></data>
+  <data name="AddAccountButton" xml:space="preserve"><value>Konto hinzufügen</value></data>
+  <data name="NoAccountsYet" xml:space="preserve"><value>Noch keine Konten</value></data>
+  <data name="NoAccountSelected" xml:space="preserve"><value>Wählen Sie ein Konto im Baum aus, um seine Details anzuzeigen</value></data>
+  <data name="AccountNameLabel" xml:space="preserve"><value>Kontoname</value></data>
+  <data name="AccountCodeLabel" xml:space="preserve"><value>Kontocode</value></data>
+  <data name="CurrencyLabel" xml:space="preserve"><value>Währung</value></data>
+  <data name="AccountTypeLabel" xml:space="preserve"><value>Kontotyp</value></data>
+  <data name="AccountFollowsLabel" xml:space="preserve"><value>Konto gehört zu</value></data>
+  <data name="CashFlowTypeLabel" xml:space="preserve"><value>Art des Zahlungsflusses</value></data>
+  <data name="NatureDebitLabel" xml:space="preserve"><value>Soll</value></data>
+  <data name="NatureCreditLabel" xml:space="preserve"><value>Haben</value></data>
+  <data name="AccountLevelLabel" xml:space="preserve"><value>Kontoebene</value></data>
+  <data name="NotesLabel" xml:space="preserve"><value>Notizen</value></data>
+  <data name="AcceptEntryLabel" xml:space="preserve"><value>Akzeptiert Buchungssätze</value></data>
+  <data name="AcceptCostCenterLabel" xml:space="preserve"><value>Akzeptiert Kostenstelle</value></data>
+  <data name="AccountTypeChangeForChildrenLabel" xml:space="preserve"><value>Unterkonten haben denselben Kontotyp</value></data>
+  <data name="AccountFollowChangeForChildrenLabel" xml:space="preserve"><value>Unterkonten haben dieselbe Kontozuordnung</value></data>
+  <data name="MasrofatAffectLabel" xml:space="preserve"><value>Erscheint im Aufwands-/Ertragsbericht</value></data>
+  <data name="SaveEditButton" xml:space="preserve"><value>Änderungen speichern</value></data>
+  <data name="DeleteAccountButton" xml:space="preserve"><value>Löschen</value></data>
+  <data name="DeleteAllChildrenButton" xml:space="preserve"><value>Unterkonten löschen</value></data>
+  <data name="RecodeChildrenButton" xml:space="preserve"><value>Neu codieren</value></data>
+  <data name="RecodeAllChildrenButton" xml:space="preserve"><value>Alle neu codieren</value></data>
+  <data name="MoveAccountButton" xml:space="preserve"><value>Neue Position</value></data>
+  <data name="MoveAccountTitle" xml:space="preserve"><value>Kontoposition ändern</value></data>
+  <data name="MoveAccountInstructions" xml:space="preserve"><value>Wählen Sie im Baum das Konto, das das neue übergeordnete Konto dieses Kontos werden soll</value></data>
+  <data name="MoveAccountCurrentLabel" xml:space="preserve"><value>Zu verschiebendes Konto</value></data>
+  <data name="MoveAccountNewParentLabel" xml:space="preserve"><value>Ausgewähltes neues übergeordnetes Konto</value></data>
+  <data name="MoveAccountSelfError" xml:space="preserve"><value>Ein Konto kann nicht sein eigenes übergeordnetes Konto sein</value></data>
+  <data name="MoveAccountDescendantError" xml:space="preserve"><value>Ein Konto kann nicht in eines seiner eigenen Unterkonten verschoben werden</value></data>
+  <data name="MoveAccountSelectTarget" xml:space="preserve"><value>Wählen Sie zuerst das neue übergeordnete Konto aus</value></data>
+  <data name="MoveAccountSaveButton" xml:space="preserve"><value>Verschieben bestätigen</value></data>
+  <data name="AccountAdded" xml:space="preserve"><value>Konto erfolgreich hinzugefügt</value></data>
+  <data name="AccountUpdated" xml:space="preserve"><value>Konto aktualisiert</value></data>
+  <data name="AccountDeleted" xml:space="preserve"><value>Konto gelöscht</value></data>
+  <data name="SubAccountsDeleted" xml:space="preserve"><value>Unterkonten gelöscht</value></data>
+  <data name="AccountCannotDelete" xml:space="preserve"><value>Dieses Konto kann nicht gelöscht werden</value></data>
+  <data name="DeleteAccountTitle" xml:space="preserve"><value>Konten</value></data>
+  <data name="DeleteAccountConfirm" xml:space="preserve"><value>Konto {0} löschen? Es wird möglicherweise bereits verwendet, was andere Konten beeinträchtigen würde</value></data>
+  <data name="DeleteAllSubAccountsTitle" xml:space="preserve"><value>Unterkonten löschen</value></data>
+  <data name="DeleteAllSubAccountsConfirm" xml:space="preserve"><value>Alle direkten Unterkonten von „{0}“ löschen?</value></data>
+  <data name="AddAccountTitle" xml:space="preserve"><value>Neues Konto hinzufügen</value></data>
+  <data name="SelectParentAccountFirst" xml:space="preserve"><value>Sie müssen vor dem Hinzufügen das übergeordnete Konto auswählen</value></data>
+  <data name="ParentAccountLabel" xml:space="preserve"><value>Übergeordnetes Konto</value></data>
+  <data name="FirstSubCodeLabel" xml:space="preserve"><value>Nummerierungsmuster der Unterkonten</value></data>
+  <data name="CompanyCustomerLabel" xml:space="preserve"><value>Firmenkunde</value></data>
+  <data name="GeneralCustomerLabel" xml:space="preserve"><value>Allgemeiner Kunde</value></data>
+  <data name="HasSubAccountsLabel" xml:space="preserve"><value>Hat Unterkonten</value></data>
+  <data name="AccountNameRequired" xml:space="preserve"><value>Geben Sie den Kontonamen ein</value></data>
+  <data name="AccountCodeRequired" xml:space="preserve"><value>Der Kontocode ist erforderlich</value></data>
+  <data name="CurrencyRequired" xml:space="preserve"><value>Wählen Sie die Währung</value></data>
+  <data name="AccountTypeRequired" xml:space="preserve"><value>Wählen Sie den Kontotyp</value></data>
+  <data name="ExpandAllAccounts" xml:space="preserve"><value>Alle ausklappen</value></data>
+  <data name="CollapseAllAccounts" xml:space="preserve"><value>Alle einklappen</value></data>
+  <data name="SearchAccountLabel" xml:space="preserve"><value>Konto suchen</value></data>
+  <data name="ScrollTreeToTop" xml:space="preserve"><value>Zurück zum Anfang des Baums</value></data>
+  <data name="SearchAccountPlaceholder" xml:space="preserve"><value>Kontoname oder -code eingeben...</value></data>
 
-  <data name="CurrenciesTitle" xml:space="preserve"><value>Currencies</value><comment>TODO: translate to German</comment></data>
-  <data name="AddCurrencyLabel" xml:space="preserve"><value>New Currency</value><comment>TODO: translate to German</comment></data>
-  <data name="EditCurrencyLabel" xml:space="preserve"><value>Edit Currency</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyCodeLabel" xml:space="preserve"><value>Code (ISO)</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyNameArLabel" xml:space="preserve"><value>Currency Name (Arabic)</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyNameEnLabel" xml:space="preserve"><value>Currency Name (English)</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyEnumValueLabel" xml:space="preserve"><value>Enum Value</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyExchangeRateLabel" xml:space="preserve"><value>Exchange Rate</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyDescArLabel" xml:space="preserve"><value>Arabic Description</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyDescEnLabel" xml:space="preserve"><value>English Description</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyActiveLabel" xml:space="preserve"><value>Active</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyIsGLLabel" xml:space="preserve"><value>Primary (GL)</value><comment>TODO: translate to German</comment></data>
-  <data name="NoCurrenciesYet" xml:space="preserve"><value>No currencies to display yet.</value><comment>TODO: translate to German</comment></data>
-  <data name="SearchCurrencyPlaceholder" xml:space="preserve"><value>Search by name, code or value...</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencySaved" xml:space="preserve"><value>Currency saved successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyDeleted" xml:space="preserve"><value>Currency deleted successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteCurrencyTitle" xml:space="preserve"><value>Confirm Currency Deletion</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteCurrencyConfirm" xml:space="preserve"><value>Are you sure you want to delete currency ({0})?</value><comment>TODO: translate to German</comment></data>
+  <data name="CurrenciesTitle" xml:space="preserve"><value>Währungen</value></data>
+  <data name="AddCurrencyLabel" xml:space="preserve"><value>Neue Währung</value></data>
+  <data name="EditCurrencyLabel" xml:space="preserve"><value>Währung bearbeiten</value></data>
+  <data name="CurrencyCodeLabel" xml:space="preserve"><value>Code (ISO)</value></data>
+  <data name="CurrencyNameArLabel" xml:space="preserve"><value>Währungsname (Arabisch)</value></data>
+  <data name="CurrencyNameEnLabel" xml:space="preserve"><value>Währungsname (Englisch)</value></data>
+  <data name="CurrencyEnumValueLabel" xml:space="preserve"><value>Enum-Wert</value></data>
+  <data name="CurrencyExchangeRateLabel" xml:space="preserve"><value>Wechselkurs</value></data>
+  <data name="CurrencyDescArLabel" xml:space="preserve"><value>Beschreibung (Arabisch)</value></data>
+  <data name="CurrencyDescEnLabel" xml:space="preserve"><value>Beschreibung (Englisch)</value></data>
+  <data name="CurrencyActiveLabel" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="CurrencyIsGLLabel" xml:space="preserve"><value>Hauptwährung (Hauptbuch)</value></data>
+  <data name="NoCurrenciesYet" xml:space="preserve"><value>Noch keine Währungen vorhanden.</value></data>
+  <data name="SearchCurrencyPlaceholder" xml:space="preserve"><value>Nach Name, Code oder Wert suchen...</value></data>
+  <data name="CurrencySaved" xml:space="preserve"><value>Währung erfolgreich gespeichert</value></data>
+  <data name="CurrencyDeleted" xml:space="preserve"><value>Währung erfolgreich gelöscht</value></data>
+  <data name="DeleteCurrencyTitle" xml:space="preserve"><value>Löschen der Währung bestätigen</value></data>
+  <data name="DeleteCurrencyConfirm" xml:space="preserve"><value>Möchten Sie die Währung ({0}) wirklich löschen?</value></data>
 
-  <data name="CustomerGroupsTitle" xml:space="preserve"><value>Customer Groups</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierGroupsTitle" xml:space="preserve"><value>Supplier Groups</value><comment>TODO: translate to German</comment></data>
-  <data name="GroupName" xml:space="preserve"><value>Group Name</value><comment>TODO: translate to German</comment></data>
-  <data name="AddGroup" xml:space="preserve"><value>New Group</value><comment>TODO: translate to German</comment></data>
-  <data name="NoGroupsYet" xml:space="preserve"><value>No groups to display yet.</value><comment>TODO: translate to German</comment></data>
-  <data name="GroupNameRequired" xml:space="preserve"><value>Please enter a group name</value><comment>TODO: translate to German</comment></data>
-  <data name="GroupNameAlreadyUsed" xml:space="preserve"><value>This name is already in use</value><comment>TODO: translate to German</comment></data>
-  <data name="GroupAdded" xml:space="preserve"><value>Group added successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="GroupDeleted" xml:space="preserve"><value>Group deleted successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteGroupTitle" xml:space="preserve"><value>Delete Group</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteGroupConfirm" xml:space="preserve"><value>Are you sure you want to delete the group "{0}"?</value><comment>TODO: translate to German</comment></data>
-  <data name="GroupInUseCannotDelete" xml:space="preserve"><value>This group cannot be deleted because it is assigned to one or more customers/suppliers</value><comment>TODO: translate to German</comment></data>
+  <data name="CustomerGroupsTitle" xml:space="preserve"><value>Kundengruppen</value></data>
+  <data name="SupplierGroupsTitle" xml:space="preserve"><value>Lieferantengruppen</value></data>
+  <data name="GroupName" xml:space="preserve"><value>Gruppenname</value></data>
+  <data name="AddGroup" xml:space="preserve"><value>Neue Gruppe</value></data>
+  <data name="NoGroupsYet" xml:space="preserve"><value>Noch keine Gruppen vorhanden.</value></data>
+  <data name="GroupNameRequired" xml:space="preserve"><value>Bitte geben Sie einen Gruppennamen ein</value></data>
+  <data name="GroupNameAlreadyUsed" xml:space="preserve"><value>Dieser Name wird bereits verwendet</value></data>
+  <data name="GroupAdded" xml:space="preserve"><value>Gruppe erfolgreich hinzugefügt</value></data>
+  <data name="GroupDeleted" xml:space="preserve"><value>Gruppe erfolgreich gelöscht</value></data>
+  <data name="DeleteGroupTitle" xml:space="preserve"><value>Gruppe löschen</value></data>
+  <data name="DeleteGroupConfirm" xml:space="preserve"><value>Möchten Sie die Gruppe „{0}“ wirklich löschen?</value></data>
+  <data name="GroupInUseCannotDelete" xml:space="preserve"><value>Diese Gruppe kann nicht gelöscht werden, da sie einem oder mehreren Kunden/Lieferanten zugewiesen ist</value></data>
 
-  <data name="SupplierInfoTitle" xml:space="preserve"><value>Supplier Info</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectSupplierLabel" xml:space="preserve"><value>Select Supplier</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectSupplierPlaceholder" xml:space="preserve"><value>Search for a supplier by name...</value><comment>TODO: translate to German</comment></data>
-  <data name="NewSupplierButton" xml:space="preserve"><value>New Supplier</value><comment>TODO: translate to German</comment></data>
-  <data name="AddSupplier" xml:space="preserve"><value>Add</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteSupplierTitle" xml:space="preserve"><value>Delete Supplier</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteSupplierConfirm" xml:space="preserve"><value>Are you sure you want to delete supplier "{0}"?</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierAdded" xml:space="preserve"><value>Supplier added successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierUpdated" xml:space="preserve"><value>Supplier updated successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierDeleted" xml:space="preserve"><value>Supplier deleted successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierNameRequired" xml:space="preserve"><value>Please enter the supplier name</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierNameNoQuote" xml:space="preserve"><value>The single quote (') character is not allowed in the name</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierNameAlreadyUsed" xml:space="preserve"><value>This supplier name is already in use</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierGroupRequired" xml:space="preserve"><value>Please select the supplier group</value><comment>TODO: translate to German</comment></data>
-  <data name="NoSupplierSelected" xml:space="preserve"><value>No supplier selected</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierCannotDelete" xml:space="preserve"><value>This supplier cannot be deleted because it has accounting transactions</value><comment>TODO: translate to German</comment></data>
+  <data name="SupplierInfoTitle" xml:space="preserve"><value>Lieferanteninformationen</value></data>
+  <data name="SelectSupplierLabel" xml:space="preserve"><value>Lieferant auswählen</value></data>
+  <data name="SelectSupplierPlaceholder" xml:space="preserve"><value>Lieferant nach Name suchen...</value></data>
+  <data name="NewSupplierButton" xml:space="preserve"><value>Neuer Lieferant</value></data>
+  <data name="AddSupplier" xml:space="preserve"><value>Hinzufügen</value></data>
+  <data name="DeleteSupplierTitle" xml:space="preserve"><value>Lieferant löschen</value></data>
+  <data name="DeleteSupplierConfirm" xml:space="preserve"><value>Möchten Sie den Lieferanten „{0}“ wirklich löschen?</value></data>
+  <data name="SupplierAdded" xml:space="preserve"><value>Lieferant erfolgreich hinzugefügt</value></data>
+  <data name="SupplierUpdated" xml:space="preserve"><value>Lieferant erfolgreich aktualisiert</value></data>
+  <data name="SupplierDeleted" xml:space="preserve"><value>Lieferant erfolgreich gelöscht</value></data>
+  <data name="SupplierNameRequired" xml:space="preserve"><value>Bitte geben Sie den Lieferantennamen ein</value></data>
+  <data name="SupplierNameNoQuote" xml:space="preserve"><value>Das Apostroph-Zeichen (') ist im Namen nicht erlaubt</value></data>
+  <data name="SupplierNameAlreadyUsed" xml:space="preserve"><value>Dieser Lieferantenname wird bereits verwendet</value></data>
+  <data name="SupplierGroupRequired" xml:space="preserve"><value>Bitte wählen Sie die Lieferantengruppe aus</value></data>
+  <data name="NoSupplierSelected" xml:space="preserve"><value>Kein Lieferant ausgewählt</value></data>
+  <data name="SupplierCannotDelete" xml:space="preserve"><value>Dieser Lieferant kann nicht gelöscht werden, da Buchungen vorhanden sind</value></data>
 
-  <data name="ContactInfoSection" xml:space="preserve"><value>Contact Information</value><comment>TODO: translate to German</comment></data>
-  <data name="CompanyPersonSection" xml:space="preserve"><value>Company / Person Details</value><comment>TODO: translate to German</comment></data>
+  <data name="ContactInfoSection" xml:space="preserve"><value>Kontaktinformationen</value></data>
+  <data name="CompanyPersonSection" xml:space="preserve"><value>Firma / Person</value></data>
 
-  <data name="SupplierCode" xml:space="preserve"><value>Code</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierName" xml:space="preserve"><value>Name</value><comment>TODO: translate to German</comment></data>
-  <data name="Address" xml:space="preserve"><value>Address</value><comment>TODO: translate to German</comment></data>
-  <data name="Tel" xml:space="preserve"><value>Phone</value><comment>TODO: translate to German</comment></data>
-  <data name="Tel2" xml:space="preserve"><value>Phone 2</value><comment>TODO: translate to German</comment></data>
-  <data name="Mobile" xml:space="preserve"><value>Mobile</value><comment>TODO: translate to German</comment></data>
-  <data name="Fax" xml:space="preserve"><value>Fax</value><comment>TODO: translate to German</comment></data>
-  <data name="Email" xml:space="preserve"><value>Email</value><comment>TODO: translate to German</comment></data>
-  <data name="Website" xml:space="preserve"><value>Website</value><comment>TODO: translate to German</comment></data>
-  <data name="TaxRegistrationNo" xml:space="preserve"><value>Tax Registration No.</value><comment>TODO: translate to German</comment></data>
-  <data name="CommercialRegister" xml:space="preserve"><value>Commercial Register No.</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierGroupLabel" xml:space="preserve"><value>Supplier Group</value><comment>TODO: translate to German</comment></data>
-  <data name="RegistrationDate" xml:space="preserve"><value>Registration Date</value><comment>TODO: translate to German</comment></data>
-  <data name="PersonCompanyTypeLabel" xml:space="preserve"><value>Account Type</value><comment>TODO: translate to German</comment></data>
-  <data name="CompanyName" xml:space="preserve"><value>Company Name</value><comment>TODO: translate to German</comment></data>
-  <data name="CompanyContactName" xml:space="preserve"><value>Contact Person Name</value><comment>TODO: translate to German</comment></data>
-  <data name="CompanyContactData" xml:space="preserve"><value>Contact Person Details</value><comment>TODO: translate to German</comment></data>
-  <data name="NationalId" xml:space="preserve"><value>National ID</value><comment>TODO: translate to German</comment></data>
-  <data name="PassportNo" xml:space="preserve"><value>Passport No.</value><comment>TODO: translate to German</comment></data>
-  <data name="PostalNo" xml:space="preserve"><value>Postal Code</value><comment>TODO: translate to German</comment></data>
-  <data name="CountryLabel" xml:space="preserve"><value>Country</value><comment>TODO: translate to German</comment></data>
-  <data name="GovAreaLabel" xml:space="preserve"><value>Region</value><comment>TODO: translate to German</comment></data>
-  <data name="GovernorateLabel" xml:space="preserve"><value>Governorate</value><comment>TODO: translate to German</comment></data>
-  <data name="CityLabel" xml:space="preserve"><value>City</value><comment>TODO: translate to German</comment></data>
-  <data name="LoadingSettingsTitle" xml:space="preserve"><value>Loading Settings</value><comment>TODO: translate to German</comment></data>
-  <data name="LoadingSettingsSubtitle" xml:space="preserve"><value>Setting up your account, please wait...</value><comment>TODO: translate to German</comment></data>
+  <data name="SupplierCode" xml:space="preserve"><value>Code</value></data>
+  <data name="SupplierName" xml:space="preserve"><value>Name</value></data>
+  <data name="Address" xml:space="preserve"><value>Adresse</value></data>
+  <data name="Tel" xml:space="preserve"><value>Telefon</value></data>
+  <data name="Tel2" xml:space="preserve"><value>Telefon 2</value></data>
+  <data name="Mobile" xml:space="preserve"><value>Mobiltelefon</value></data>
+  <data name="Fax" xml:space="preserve"><value>Fax</value></data>
+  <data name="Email" xml:space="preserve"><value>E-Mail</value></data>
+  <data name="Website" xml:space="preserve"><value>Webseite</value></data>
+  <data name="TaxRegistrationNo" xml:space="preserve"><value>Steuernummer</value></data>
+  <data name="CommercialRegister" xml:space="preserve"><value>Handelsregisternummer</value></data>
+  <data name="SupplierGroupLabel" xml:space="preserve"><value>Lieferantengruppe</value></data>
+  <data name="RegistrationDate" xml:space="preserve"><value>Registrierungsdatum</value></data>
+  <data name="PersonCompanyTypeLabel" xml:space="preserve"><value>Kontoart</value></data>
+  <data name="CompanyName" xml:space="preserve"><value>Firmenname</value></data>
+  <data name="CompanyContactName" xml:space="preserve"><value>Name der Kontaktperson</value></data>
+  <data name="CompanyContactData" xml:space="preserve"><value>Angaben zur Kontaktperson</value></data>
+  <data name="NationalId" xml:space="preserve"><value>Nationaler Ausweis</value></data>
+  <data name="PassportNo" xml:space="preserve"><value>Reisepassnummer</value></data>
+  <data name="PostalNo" xml:space="preserve"><value>Postleitzahl</value></data>
+  <data name="CountryLabel" xml:space="preserve"><value>Land</value></data>
+  <data name="GovAreaLabel" xml:space="preserve"><value>Region</value></data>
+  <data name="GovernorateLabel" xml:space="preserve"><value>Gouvernement</value></data>
+  <data name="CityLabel" xml:space="preserve"><value>Stadt</value></data>
+  <data name="LoadingSettingsTitle" xml:space="preserve"><value>Einstellungen werden geladen</value></data>
+  <data name="LoadingSettingsSubtitle" xml:space="preserve"><value>Ihr Konto wird eingerichtet, bitte warten...</value></data>
 
-  <data name="CustomerInfoTitle" xml:space="preserve"><value>Customer Info</value><comment>TODO: translate to German</comment></data>
-  <data name="NewCustomerButton" xml:space="preserve"><value>New Customer</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectCustomerLabel" xml:space="preserve"><value>Select Customer</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectCustomerPlaceholder" xml:space="preserve"><value>Search for a customer by name...</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerCode" xml:space="preserve"><value>Code</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerGroupLabel" xml:space="preserve"><value>Customer Group</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerName" xml:space="preserve"><value>Name</value><comment>TODO: translate to German</comment></data>
-  <data name="MainCustomer" xml:space="preserve"><value>Main Customer</value><comment>TODO: translate to German</comment></data>
-  <data name="GeneralCustomer" xml:space="preserve"><value>General Customer</value><comment>TODO: translate to German</comment></data>
-  <data name="IsInsuranceCompany" xml:space="preserve"><value>Insurance Company</value><comment>TODO: translate to German</comment></data>
-  <data name="TaxCompanyName" xml:space="preserve"><value>Tax Portal Company Name</value><comment>TODO: translate to German</comment></data>
-  <data name="AddCustomer" xml:space="preserve"><value>Add</value><comment>TODO: translate to German</comment></data>
-  <data name="NoCustomerSelected" xml:space="preserve"><value>No customer selected</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerNameRequired" xml:space="preserve"><value>Customer name is required</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerNameNoQuote" xml:space="preserve"><value>Customer name cannot contain an apostrophe (')</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerGroupRequired" xml:space="preserve"><value>Customer group is required</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerNameAlreadyUsed" xml:space="preserve"><value>Another customer already has this name</value><comment>TODO: translate to German</comment></data>
-  <data name="MixedInfoTitle" xml:space="preserve"><value>Mixed Customer-Supplier Account</value><comment>TODO: translate to German</comment></data>
-  <data name="NewMixedButton" xml:space="preserve"><value>New customer &amp; supplier</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectMixedLabel" xml:space="preserve"><value>Select a mixed account</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectMixedPlaceholder" xml:space="preserve"><value>Search by name...</value><comment>TODO: translate to German</comment></data>
-  <data name="NoMixedSelected" xml:space="preserve"><value>No account selected</value><comment>TODO: translate to German</comment></data>
-  <data name="LinkedSupplierInfo" xml:space="preserve"><value>Linked to supplier: {0} (code {1})</value><comment>TODO: translate to German</comment></data>
-  <data name="AddMixed" xml:space="preserve"><value>Add</value><comment>TODO: translate to German</comment></data>
-  <data name="MixedAdded" xml:space="preserve"><value>Customer and supplier added successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="MixedUpdated" xml:space="preserve"><value>Data updated successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="MixedDeleted" xml:space="preserve"><value>Deleted successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="MixedCannotDelete" xml:space="preserve"><value>Cannot delete - it may have recorded transactions</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteMixedTitle" xml:space="preserve"><value>Delete mixed account</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteMixedConfirm" xml:space="preserve"><value>This will delete the customer and its linked supplier for "{0}". Are you sure?</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerPrintReportTitle" xml:space="preserve"><value>Print Customer Data Report</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierPrintReportTitle" xml:space="preserve"><value>Print Supplier Data Report</value><comment>TODO: translate to German</comment></data>
-  <data name="SearchByNameLabel" xml:space="preserve"><value>Search by name</value><comment>TODO: translate to German</comment></data>
-  <data name="PrintButton" xml:space="preserve"><value>Print</value><comment>TODO: translate to German</comment></data>
-  <data name="PrintDateLabel" xml:space="preserve"><value>Print date</value><comment>TODO: translate to German</comment></data>
-  <data name="PrintCountLabel" xml:space="preserve"><value>Record count</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerAdded" xml:space="preserve"><value>Customer added successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerUpdated" xml:space="preserve"><value>Customer updated successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteCustomerTitle" xml:space="preserve"><value>Delete Customer</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteCustomerConfirm" xml:space="preserve"><value>Are you sure you want to delete customer "{0}"?</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerDeleted" xml:space="preserve"><value>Customer deleted successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerCannotDelete" xml:space="preserve"><value>This customer cannot be deleted because it has recorded transactions</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerListTitle" xml:space="preserve"><value>Customer List</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierListTitle" xml:space="preserve"><value>Supplier List</value><comment>TODO: translate to German</comment></data>
-  <data name="ActiveOnly" xml:space="preserve"><value>Active only</value><comment>TODO: translate to German</comment></data>
-  <data name="SearchByName" xml:space="preserve"><value>Search by name</value><comment>TODO: translate to German</comment></data>
-  <data name="AllCustomers" xml:space="preserve"><value>All</value><comment>TODO: translate to German</comment></data>
-  <data name="ShowButton" xml:space="preserve"><value>Show</value><comment>TODO: translate to German</comment></data>
-  <data name="NoCustomersYet" xml:space="preserve"><value>No customers to show</value><comment>TODO: translate to German</comment></data>
-  <data name="NoSuppliersYet" xml:space="preserve"><value>No suppliers to show</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerCarsListTitle" xml:space="preserve"><value>Customer Cars List</value><comment>TODO: translate to German</comment></data>
-  <data name="AddCarNewCustomerButton" xml:space="preserve"><value>Add Car + New Customer</value><comment>TODO: translate to German</comment></data>
-  <data name="CostCentersTitle" xml:space="preserve"><value>Cost Centers</value><comment>TODO: translate to German</comment></data>
-  <data name="AddCostCenterButton" xml:space="preserve"><value>Add Cost Center</value><comment>TODO: translate to German</comment></data>
-  <data name="AddRootCostCenterButton" xml:space="preserve"><value>Add Parent Cost Center</value><comment>TODO: translate to German</comment></data>
-  <data name="AddRootCostCenterTitle" xml:space="preserve"><value>Add Parent Cost Center</value><comment>TODO: translate to German</comment></data>
-  <data name="RootCostCenterAdded" xml:space="preserve"><value>Parent cost center added successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="RootCostCenterLevelLabel" xml:space="preserve"><value>Root cost center level (no parent)</value><comment>TODO: translate to German</comment></data>
-  <data name="NoCostCenterSelected" xml:space="preserve"><value>Select a cost center from the tree to view its details</value><comment>TODO: translate to German</comment></data>
-  <data name="NoCostCentersYet" xml:space="preserve"><value>No cost centers yet</value><comment>TODO: translate to German</comment></data>
-  <data name="CostCenterAdded" xml:space="preserve"><value>Cost center added successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="AddCostCenterTitle" xml:space="preserve"><value>Add New Cost Center</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectParentCostCenterFirst" xml:space="preserve"><value>Select the parent cost center from the tree first</value><comment>TODO: translate to German</comment></data>
-  <data name="ParentCostCenterLabel" xml:space="preserve"><value>Parent Cost Center</value><comment>TODO: translate to German</comment></data>
-  <data name="CostCenterNameLabel" xml:space="preserve"><value>Cost Center Name</value><comment>TODO: translate to German</comment></data>
-  <data name="CostCenterCodeLabel" xml:space="preserve"><value>Cost Center Code</value><comment>TODO: translate to German</comment></data>
-  <data name="CostCenterNameRequired" xml:space="preserve"><value>Enter the cost center name</value><comment>TODO: translate to German</comment></data>
-  <data name="CostCenterCodeGenerationFailed" xml:space="preserve"><value>Failed to generate the cost center code</value><comment>TODO: translate to German</comment></data>
-  <data name="CostCenterCodeEditableHint" xml:space="preserve"><value>Der Code kann manuell bearbeitet werden</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteCostCenterTitle" xml:space="preserve"><value>Delete Cost Center</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteCostCenterConfirm" xml:space="preserve"><value>Do you want to delete the cost center "{0}"? It may have been used before, which would affect other accounts</value><comment>TODO: translate to German</comment></data>
-  <data name="CostCenterCannotDeleteHasChildren" xml:space="preserve"><value>This cost center cannot be deleted because it has sub cost centers</value><comment>TODO: translate to German</comment></data>
-  <data name="SearchCostCenterLabel" xml:space="preserve"><value>Search for a cost center</value><comment>TODO: translate to German</comment></data>
-  <data name="SearchCostCenterPlaceholder" xml:space="preserve"><value>Type the cost center name or code...</value><comment>TODO: translate to German</comment></data>
-  <data name="CostCenterForAccountsTitle" xml:space="preserve"><value>Account Cost Centers</value><comment>TODO: translate to German</comment></data>
-  <data name="AssignCostCenterButton" xml:space="preserve"><value>Assign Cost Center</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectedAccountLabel" xml:space="preserve"><value>Selected Account</value><comment>TODO: translate to German</comment></data>
-  <data name="NoCostCentersAssignedYet" xml:space="preserve"><value>No cost centers assigned to this account yet</value><comment>TODO: translate to German</comment></data>
-  <data name="AssignCostCentersTitle" xml:space="preserve"><value>Assign Cost Centers to Account</value><comment>TODO: translate to German</comment></data>
+  <data name="CustomerInfoTitle" xml:space="preserve"><value>Kundeninformationen</value></data>
+  <data name="NewCustomerButton" xml:space="preserve"><value>Neuer Kunde</value></data>
+  <data name="SelectCustomerLabel" xml:space="preserve"><value>Kunde auswählen</value></data>
+  <data name="SelectCustomerPlaceholder" xml:space="preserve"><value>Kunde nach Name suchen...</value></data>
+  <data name="CustomerCode" xml:space="preserve"><value>Code</value></data>
+  <data name="CustomerGroupLabel" xml:space="preserve"><value>Kundengruppe</value></data>
+  <data name="CustomerName" xml:space="preserve"><value>Name</value></data>
+  <data name="MainCustomer" xml:space="preserve"><value>Hauptkunde</value></data>
+  <data name="GeneralCustomer" xml:space="preserve"><value>Allgemeiner Kunde</value></data>
+  <data name="IsInsuranceCompany" xml:space="preserve"><value>Versicherungsgesellschaft</value></data>
+  <data name="TaxCompanyName" xml:space="preserve"><value>Firmenname im Steuerportal</value></data>
+  <data name="AddCustomer" xml:space="preserve"><value>Hinzufügen</value></data>
+  <data name="NoCustomerSelected" xml:space="preserve"><value>Kein Kunde ausgewählt</value></data>
+  <data name="CustomerNameRequired" xml:space="preserve"><value>Der Kundenname ist erforderlich</value></data>
+  <data name="CustomerNameNoQuote" xml:space="preserve"><value>Der Kundenname darf kein Apostroph (') enthalten</value></data>
+  <data name="CustomerGroupRequired" xml:space="preserve"><value>Die Kundengruppe ist erforderlich</value></data>
+  <data name="CustomerNameAlreadyUsed" xml:space="preserve"><value>Ein anderer Kunde hat bereits diesen Namen</value></data>
+  <data name="MixedInfoTitle" xml:space="preserve"><value>Gemischtes Kunden-/Lieferantenkonto</value></data>
+  <data name="NewMixedButton" xml:space="preserve"><value>Neuer Kunde und Lieferant</value></data>
+  <data name="SelectMixedLabel" xml:space="preserve"><value>Gemischtes Konto auswählen</value></data>
+  <data name="SelectMixedPlaceholder" xml:space="preserve"><value>Nach Name suchen...</value></data>
+  <data name="NoMixedSelected" xml:space="preserve"><value>Kein Konto ausgewählt</value></data>
+  <data name="LinkedSupplierInfo" xml:space="preserve"><value>Verknüpft mit Lieferant: {0} (Code {1})</value></data>
+  <data name="AddMixed" xml:space="preserve"><value>Hinzufügen</value></data>
+  <data name="MixedAdded" xml:space="preserve"><value>Kunde und Lieferant erfolgreich hinzugefügt</value></data>
+  <data name="MixedUpdated" xml:space="preserve"><value>Daten erfolgreich aktualisiert</value></data>
+  <data name="MixedDeleted" xml:space="preserve"><value>Erfolgreich gelöscht</value></data>
+  <data name="MixedCannotDelete" xml:space="preserve"><value>Löschen nicht möglich – möglicherweise sind Buchungen erfasst</value></data>
+  <data name="DeleteMixedTitle" xml:space="preserve"><value>Gemischtes Konto löschen</value></data>
+  <data name="DeleteMixedConfirm" xml:space="preserve"><value>Dadurch werden der Kunde und der verknüpfte Lieferant für „{0}“ gelöscht. Fortfahren?</value></data>
+  <data name="CustomerPrintReportTitle" xml:space="preserve"><value>Kundendatenbericht drucken</value></data>
+  <data name="SupplierPrintReportTitle" xml:space="preserve"><value>Lieferantendatenbericht drucken</value></data>
+  <data name="SearchByNameLabel" xml:space="preserve"><value>Nach Name suchen</value></data>
+  <data name="PrintButton" xml:space="preserve"><value>Drucken</value></data>
+  <data name="PrintDateLabel" xml:space="preserve"><value>Druckdatum</value></data>
+  <data name="PrintCountLabel" xml:space="preserve"><value>Anzahl der Datensätze</value></data>
+  <data name="CustomerAdded" xml:space="preserve"><value>Kunde erfolgreich hinzugefügt</value></data>
+  <data name="CustomerUpdated" xml:space="preserve"><value>Kunde erfolgreich aktualisiert</value></data>
+  <data name="DeleteCustomerTitle" xml:space="preserve"><value>Kunde löschen</value></data>
+  <data name="DeleteCustomerConfirm" xml:space="preserve"><value>Möchten Sie den Kunden „{0}“ wirklich löschen?</value></data>
+  <data name="CustomerDeleted" xml:space="preserve"><value>Kunde erfolgreich gelöscht</value></data>
+  <data name="CustomerCannotDelete" xml:space="preserve"><value>Dieser Kunde kann nicht gelöscht werden, da Buchungen erfasst sind</value></data>
+  <data name="CustomerListTitle" xml:space="preserve"><value>Kundenliste</value></data>
+  <data name="SupplierListTitle" xml:space="preserve"><value>Lieferantenliste</value></data>
+  <data name="ActiveOnly" xml:space="preserve"><value>Nur aktive</value></data>
+  <data name="SearchByName" xml:space="preserve"><value>Nach Name suchen</value></data>
+  <data name="AllCustomers" xml:space="preserve"><value>Alle</value></data>
+  <data name="ShowButton" xml:space="preserve"><value>Anzeigen</value></data>
+  <data name="NoCustomersYet" xml:space="preserve"><value>Keine Kunden vorhanden</value></data>
+  <data name="NoSuppliersYet" xml:space="preserve"><value>Keine Lieferanten vorhanden</value></data>
+  <data name="CustomerCarsListTitle" xml:space="preserve"><value>Fahrzeugliste des Kunden</value></data>
+  <data name="AddCarNewCustomerButton" xml:space="preserve"><value>Fahrzeug + neuen Kunden hinzufügen</value></data>
+  <data name="CostCentersTitle" xml:space="preserve"><value>Kostenstellen</value></data>
+  <data name="AddCostCenterButton" xml:space="preserve"><value>Kostenstelle hinzufügen</value></data>
+  <data name="AddRootCostCenterButton" xml:space="preserve"><value>Übergeordnete Kostenstelle hinzufügen</value></data>
+  <data name="AddRootCostCenterTitle" xml:space="preserve"><value>Übergeordnete Kostenstelle hinzufügen</value></data>
+  <data name="RootCostCenterAdded" xml:space="preserve"><value>Übergeordnete Kostenstelle erfolgreich hinzugefügt</value></data>
+  <data name="RootCostCenterLevelLabel" xml:space="preserve"><value>Stammkostenstelle (ohne übergeordnete)</value></data>
+  <data name="NoCostCenterSelected" xml:space="preserve"><value>Wählen Sie eine Kostenstelle im Baum aus, um ihre Details anzuzeigen</value></data>
+  <data name="NoCostCentersYet" xml:space="preserve"><value>Noch keine Kostenstellen</value></data>
+  <data name="CostCenterAdded" xml:space="preserve"><value>Kostenstelle erfolgreich hinzugefügt</value></data>
+  <data name="AddCostCenterTitle" xml:space="preserve"><value>Neue Kostenstelle hinzufügen</value></data>
+  <data name="SelectParentCostCenterFirst" xml:space="preserve"><value>Wählen Sie zuerst die übergeordnete Kostenstelle im Baum aus</value></data>
+  <data name="ParentCostCenterLabel" xml:space="preserve"><value>Übergeordnete Kostenstelle</value></data>
+  <data name="CostCenterNameLabel" xml:space="preserve"><value>Kostenstellenname</value></data>
+  <data name="CostCenterCodeLabel" xml:space="preserve"><value>Kostenstellencode</value></data>
+  <data name="CostCenterNameRequired" xml:space="preserve"><value>Geben Sie den Namen der Kostenstelle ein</value></data>
+  <data name="CostCenterCodeGenerationFailed" xml:space="preserve"><value>Der Kostenstellencode konnte nicht erzeugt werden</value></data>
+  <data name="CostCenterCodeEditableHint" xml:space="preserve"><value>Sie können den Code manuell bearbeiten</value></data>
+  <data name="DeleteCostCenterTitle" xml:space="preserve"><value>Kostenstelle löschen</value></data>
+  <data name="DeleteCostCenterConfirm" xml:space="preserve"><value>Möchten Sie die Kostenstelle „{0}“ löschen? Sie wurde möglicherweise bereits verwendet, was andere Konten beeinträchtigen würde</value></data>
+  <data name="CostCenterCannotDeleteHasChildren" xml:space="preserve"><value>Diese Kostenstelle kann nicht gelöscht werden, da sie Unterkostenstellen hat</value></data>
+  <data name="SearchCostCenterLabel" xml:space="preserve"><value>Kostenstelle suchen</value></data>
+  <data name="SearchCostCenterPlaceholder" xml:space="preserve"><value>Name oder Code der Kostenstelle eingeben...</value></data>
+  <data name="CostCenterForAccountsTitle" xml:space="preserve"><value>Kostenstellen der Konten</value></data>
+  <data name="AssignCostCenterButton" xml:space="preserve"><value>Kostenstelle zuweisen</value></data>
+  <data name="SelectedAccountLabel" xml:space="preserve"><value>Ausgewähltes Konto</value></data>
+  <data name="NoCostCentersAssignedYet" xml:space="preserve"><value>Diesem Konto sind noch keine Kostenstellen zugewiesen</value></data>
+  <data name="AssignCostCentersTitle" xml:space="preserve"><value>Kostenstellen dem Konto zuweisen</value></data>
   <data name="CostCenterAlreadyAssigned" xml:space="preserve"><value>(Bereits zugewiesen)</value></data>
   <data name="MustSelectChildrenError" xml:space="preserve"><value>Es muss mindestens ein Kind des übergeordneten Kostenstells ausgewählt werden</value></data>
-  <data name="CostCenterAssigned" xml:space="preserve"><value>Cost center(s) assigned successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="RemoveCostCenterAssignmentTitle" xml:space="preserve"><value>Remove Cost Center Assignment</value><comment>TODO: translate to German</comment></data>
-  <data name="RemoveCostCenterAssignmentConfirm" xml:space="preserve"><value>Do you want to remove the assignment of cost center "{0}" from this account?</value><comment>TODO: translate to German</comment></data>
-  <data name="CostCenterAssignmentRemoved" xml:space="preserve"><value>Assignment removed successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="FinancialPeriodsTitle" xml:space="preserve"><value>Financial Periods</value><comment>TODO: translate to German</comment></data>
-  <data name="AddPeriodButton" xml:space="preserve"><value>Add</value><comment>TODO: translate to German</comment></data>
-  <data name="ActivatePeriodButton" xml:space="preserve"><value>Activate Period</value><comment>TODO: translate to German</comment></data>
-  <data name="DeletePeriodButton" xml:space="preserve"><value>Delete</value><comment>TODO: translate to German</comment></data>
-  <data name="PeriodSerialColumn" xml:space="preserve"><value>No.</value><comment>TODO: translate to German</comment></data>
-  <data name="PeriodDateFromColumn" xml:space="preserve"><value>From</value><comment>TODO: translate to German</comment></data>
-  <data name="PeriodDateToColumn" xml:space="preserve"><value>To</value><comment>TODO: translate to German</comment></data>
-  <data name="PeriodNotesColumn" xml:space="preserve"><value>Notes</value><comment>TODO: translate to German</comment></data>
-  <data name="NoPeriodsYet" xml:space="preserve"><value>No financial periods yet</value><comment>TODO: translate to German</comment></data>
-  <data name="OpeningPeriodNote" xml:space="preserve"><value>Opening Period</value><comment>TODO: translate to German</comment></data>
-  <data name="ClosedPeriodNote" xml:space="preserve"><value>Closed Period</value><comment>TODO: translate to German</comment></data>
-  <data name="PeriodDateRangeInvalid" xml:space="preserve"><value>Invalid financial period date range</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectPeriodToDelete" xml:space="preserve"><value>Please select the financial period to delete</value><comment>TODO: translate to German</comment></data>
-  <data name="OnlyLastPeriodDeletable" xml:space="preserve"><value>Cannot delete this period — only the most recently created period can be deleted</value><comment>TODO: translate to German</comment></data>
-  <data name="ClosedPeriodCannotDelete" xml:space="preserve"><value>Cannot delete this period — it has already been posted and closed</value><comment>TODO: translate to German</comment></data>
-  <data name="FinancialPeriodConfirmTitle" xml:space="preserve"><value>Financial Period</value><comment>TODO: translate to German</comment></data>
-  <data name="ConfirmActivatePeriodMessage" xml:space="preserve"><value>Are you sure you want to activate this financial period?</value><comment>TODO: translate to German</comment></data>
-  <data name="ConfirmDeletePeriodMessage" xml:space="preserve"><value>Are you sure you want to delete this financial period?</value><comment>TODO: translate to German</comment></data>
-  <data name="PeriodAdded" xml:space="preserve"><value>Financial period added successfully</value><comment>TODO: translate to German</comment></data>
+  <data name="CostCenterAssigned" xml:space="preserve"><value>Kostenstelle(n) erfolgreich zugewiesen</value></data>
+  <data name="RemoveCostCenterAssignmentTitle" xml:space="preserve"><value>Kostenstellenzuweisung entfernen</value></data>
+  <data name="RemoveCostCenterAssignmentConfirm" xml:space="preserve"><value>Möchten Sie die Zuweisung der Kostenstelle „{0}“ von diesem Konto entfernen?</value></data>
+  <data name="CostCenterAssignmentRemoved" xml:space="preserve"><value>Zuweisung erfolgreich entfernt</value></data>
+  <data name="FinancialPeriodsTitle" xml:space="preserve"><value>Geschäftsperioden</value></data>
+  <data name="AddPeriodButton" xml:space="preserve"><value>Hinzufügen</value></data>
+  <data name="ActivatePeriodButton" xml:space="preserve"><value>Periode aktivieren</value></data>
+  <data name="DeletePeriodButton" xml:space="preserve"><value>Löschen</value></data>
+  <data name="PeriodSerialColumn" xml:space="preserve"><value>Nr.</value></data>
+  <data name="PeriodDateFromColumn" xml:space="preserve"><value>Von</value></data>
+  <data name="PeriodDateToColumn" xml:space="preserve"><value>Bis</value></data>
+  <data name="PeriodNotesColumn" xml:space="preserve"><value>Notizen</value></data>
+  <data name="NoPeriodsYet" xml:space="preserve"><value>Noch keine Geschäftsperioden</value></data>
+  <data name="OpeningPeriodNote" xml:space="preserve"><value>Eröffnungsperiode</value></data>
+  <data name="ClosedPeriodNote" xml:space="preserve"><value>Abgeschlossene Periode</value></data>
+  <data name="PeriodDateRangeInvalid" xml:space="preserve"><value>Ungültiger Datumsbereich der Geschäftsperiode</value></data>
+  <data name="SelectPeriodToDelete" xml:space="preserve"><value>Bitte wählen Sie die zu löschende Geschäftsperiode aus</value></data>
+  <data name="OnlyLastPeriodDeletable" xml:space="preserve"><value>Diese Periode kann nicht gelöscht werden – nur die zuletzt erstellte Periode kann gelöscht werden</value></data>
+  <data name="ClosedPeriodCannotDelete" xml:space="preserve"><value>Diese Periode kann nicht gelöscht werden – sie wurde bereits gebucht und abgeschlossen</value></data>
+  <data name="FinancialPeriodConfirmTitle" xml:space="preserve"><value>Geschäftsperiode</value></data>
+  <data name="ConfirmActivatePeriodMessage" xml:space="preserve"><value>Möchten Sie diese Geschäftsperiode wirklich aktivieren?</value></data>
+  <data name="ConfirmDeletePeriodMessage" xml:space="preserve"><value>Möchten Sie diese Geschäftsperiode wirklich löschen?</value></data>
+  <data name="PeriodAdded" xml:space="preserve"><value>Geschäftsperiode erfolgreich hinzugefügt</value></data>
   <data name="PeriodActionsColumn" xml:space="preserve"><value>Aktionen</value></data>
   <data name="SplitIntoMonthlyPeriods" xml:space="preserve"><value>In monatliche Perioden aufteilen</value></data>
   <data name="SplitIntoMonthlyPeriodsHint" xml:space="preserve"><value>Für jeden Monat zwischen dem "Von"- und "Bis"-Datum wird eine eigene Periode erstellt, anstatt einer einzigen Periode für den gesamten Zeitraum</value></data>
@@ -383,193 +383,193 @@
   <data name="SomePeriodsFailedToAdd" xml:space="preserve"><value>Einige monatliche Perioden konnten nicht hinzugefügt werden - siehe Liste unten</value></data>
   <data name="DateFormatSetting" xml:space="preserve"><value>Datumsanzeigeformat</value></data>
   <data name="DateFormatSettingHint" xml:space="preserve"><value>Steuert, wie Daten auf neuen Bildschirmen angezeigt werden, die diese Einstellung verwenden (z. B. der Bildschirm für Finanzperioden)</value></data>
-  <data name="JournalDaysTitle" xml:space="preserve"><value>Journal Days</value><comment>TODO: translate to German</comment></data>
-  <data name="AddJournalDayButton" xml:space="preserve"><value>Add</value><comment>TODO: translate to German</comment></data>
-  <data name="EditJournalDayTitle" xml:space="preserve"><value>Edit Journal Day</value><comment>TODO: translate to German</comment></data>
-  <data name="JournalCodeLabel" xml:space="preserve"><value>Code</value><comment>TODO: translate to German</comment></data>
-  <data name="JournalNameLabel" xml:space="preserve"><value>Journal Day</value><comment>TODO: translate to German</comment></data>
-  <data name="NoJournalDaysYet" xml:space="preserve"><value>No journal days yet</value><comment>TODO: translate to German</comment></data>
-  <data name="JournalCodeRequired" xml:space="preserve"><value>Please enter the code</value><comment>TODO: translate to German</comment></data>
-  <data name="JournalNameRequired" xml:space="preserve"><value>Please enter the journal day name</value><comment>TODO: translate to German</comment></data>
-  <data name="JournalDayAdded" xml:space="preserve"><value>Journal day added successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="JournalDayUpdated" xml:space="preserve"><value>Journal day updated successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="JournalDayDeleted" xml:space="preserve"><value>Journal day deleted successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteJournalDayTitle" xml:space="preserve"><value>Delete Journal Day</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteJournalDayConfirm" xml:space="preserve"><value>Do you want to delete journal day "{0}"?</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyFactorsTitle" xml:space="preserve"><value>Currency Exchange Rates</value><comment>TODO: translate to German</comment></data>
-  <data name="AddCurrencyFactorButton" xml:space="preserve"><value>Add</value><comment>TODO: translate to German</comment></data>
-  <data name="EditCurrencyFactorTitle" xml:space="preserve"><value>Edit Exchange Rate</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyPrimaryLabel" xml:space="preserve"><value>First Currency</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencySecondaryLabel" xml:space="preserve"><value>Second Currency</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyFactorLabel" xml:space="preserve"><value>Rate</value><comment>TODO: translate to German</comment></data>
-  <data name="NoCurrencyFactorsYet" xml:space="preserve"><value>No exchange rates to display yet.</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectPrimaryCurrencyRequired" xml:space="preserve"><value>Please select the first currency</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectSecondaryCurrencyRequired" xml:space="preserve"><value>Please select the second currency</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyFactorRequired" xml:space="preserve"><value>Please enter the exchange rate</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyFactorAdded" xml:space="preserve"><value>Exchange rate added successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrencyFactorUpdated" xml:space="preserve"><value>Data saved successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="StoreItemsMovementTitle" xml:space="preserve"><value>Store Items Movement</value><comment>TODO: translate to German</comment></data>
-  <data name="StoreDailyMovementTitle" xml:space="preserve"><value>Daily Store Movement</value><comment>TODO: translate to German</comment></data>
-  <data name="StoreUsedTypeSell" xml:space="preserve"><value>Sales</value><comment>TODO: translate to German</comment></data>
-  <data name="StoreUsedTypePurchase" xml:space="preserve"><value>Purchases</value><comment>TODO: translate to German</comment></data>
-  <data name="StoreLabel" xml:space="preserve"><value>Store</value><comment>TODO: translate to German</comment></data>
-  <data name="ItemCategoryLabel" xml:space="preserve"><value>Item Category</value><comment>TODO: translate to German</comment></data>
-  <data name="SortByCategoryLabel" xml:space="preserve"><value>Sort by Category</value><comment>TODO: translate to German</comment></data>
-  <data name="SortByDateLabel" xml:space="preserve"><value>Sort by Date</value><comment>TODO: translate to German</comment></data>
-  <data name="DateLabel" xml:space="preserve"><value>Date</value><comment>TODO: translate to German</comment></data>
-  <data name="DateFromLabel" xml:space="preserve"><value>Date From</value><comment>TODO: translate to German</comment></data>
-  <data name="DateToLabel" xml:space="preserve"><value>Date To</value><comment>TODO: translate to German</comment></data>
-  <data name="ShowDataButton" xml:space="preserve"><value>Show Data</value><comment>TODO: translate to German</comment></data>
-  <data name="SarfOutgoingLabel" xml:space="preserve"><value>Outgoing</value><comment>TODO: translate to German</comment></data>
-  <data name="EstlamIncomingLabel" xml:space="preserve"><value>Incoming</value><comment>TODO: translate to German</comment></data>
-  <data name="SerialColumn" xml:space="preserve"><value>#</value><comment>TODO: translate to German</comment></data>
-  <data name="DateColumn" xml:space="preserve"><value>Date</value><comment>TODO: translate to German</comment></data>
-  <data name="DocNoColumn" xml:space="preserve"><value>Document No</value><comment>TODO: translate to German</comment></data>
-  <data name="DescriptionColumn" xml:space="preserve"><value>Description</value><comment>TODO: translate to German</comment></data>
-  <data name="BalanceItemNoColumn" xml:space="preserve"><value>Count</value><comment>TODO: translate to German</comment></data>
-  <data name="BalanceColumn" xml:space="preserve"><value>Balance</value><comment>TODO: translate to German</comment></data>
-  <data name="ItemNoExportColumn" xml:space="preserve"><value>Count</value><comment>TODO: translate to German</comment></data>
-  <data name="QtyExportColumn" xml:space="preserve"><value>Quantity</value><comment>TODO: translate to German</comment></data>
-  <data name="ItemNameColumn" xml:space="preserve"><value>Item</value><comment>TODO: translate to German</comment></data>
-  <data name="CategoryColumn" xml:space="preserve"><value>Item Category</value><comment>TODO: translate to German</comment></data>
-  <data name="OrderTypeColumn" xml:space="preserve"><value>Order Type</value><comment>TODO: translate to German</comment></data>
-  <data name="AllStoresOption" xml:space="preserve"><value>All</value><comment>TODO: translate to German</comment></data>
-  <data name="AllCategoriesOption" xml:space="preserve"><value>All</value><comment>TODO: translate to German</comment></data>
-  <data name="NoMovementYet" xml:space="preserve"><value>No movement to display yet.</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectStoreRequired" xml:space="preserve"><value>Please select the store</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectCategoryRequired" xml:space="preserve"><value>Please select the item category</value><comment>TODO: translate to German</comment></data>
-  <data name="ExpenseDailyJournalTitle" xml:space="preserve"><value>Expense Daily Journal</value><comment>TODO: translate to German</comment></data>
-  <data name="CashBoxDailyJournalTitle" xml:space="preserve"><value>Cash Box Daily Journal</value><comment>TODO: translate to German</comment></data>
-  <data name="PayTypeCashLabel" xml:space="preserve"><value>Cash</value><comment>TODO: translate to German</comment></data>
-  <data name="PayTypeCheckLabel" xml:space="preserve"><value>Checks</value><comment>TODO: translate to German</comment></data>
-  <data name="DirectionIncomingLabel" xml:space="preserve"><value>Incoming</value><comment>TODO: translate to German</comment></data>
-  <data name="DirectionOutgoingLabel" xml:space="preserve"><value>Outgoing</value><comment>TODO: translate to German</comment></data>
-  <data name="DirectionAllLabel" xml:space="preserve"><value>All</value><comment>TODO: translate to German</comment></data>
-  <data name="SortByAccountLabel" xml:space="preserve"><value>Sort by Account</value><comment>TODO: translate to German</comment></data>
-  <data name="MasrofatAffectingLabel" xml:space="preserve"><value>Accounts Affecting the Report</value><comment>TODO: translate to German</comment></data>
-  <data name="MasrofatNotAffectingLabel" xml:space="preserve"><value>Accounts Not Affecting the Report</value><comment>TODO: translate to German</comment></data>
-  <data name="MasrofatAllLabel" xml:space="preserve"><value>All</value><comment>TODO: translate to German</comment></data>
-  <data name="BoxLabel" xml:space="preserve"><value>Cash Box</value><comment>TODO: translate to German</comment></data>
-  <data name="DetailsTabLabel" xml:space="preserve"><value>Expense Analysis Details</value><comment>TODO: translate to German</comment></data>
-  <data name="TotalsTabLabel" xml:space="preserve"><value>Expense Analysis Totals</value><comment>TODO: translate to German</comment></data>
-  <data name="NotesColumn" xml:space="preserve"><value>Notes</value><comment>TODO: translate to German</comment></data>
-  <data name="MainAccountColumn" xml:space="preserve"><value>Main Account</value><comment>TODO: translate to German</comment></data>
-  <data name="SubAccountColumn" xml:space="preserve"><value>Sub Account Name</value><comment>TODO: translate to German</comment></data>
-  <data name="ExportColumn" xml:space="preserve"><value>Outgoing</value><comment>TODO: translate to German</comment></data>
-  <data name="ImportColumn" xml:space="preserve"><value>Incoming</value><comment>TODO: translate to German</comment></data>
-  <data name="PaymentMethodColumn" xml:space="preserve"><value>Payment Method</value><comment>TODO: translate to German</comment></data>
-  <data name="CashTotalLabel" xml:space="preserve"><value>Cash Total</value><comment>TODO: translate to German</comment></data>
-  <data name="ChecksTotalLabel" xml:space="preserve"><value>Checks Total</value><comment>TODO: translate to German</comment></data>
-  <data name="NetForPeriodLabel" xml:space="preserve"><value>Net for Day/Period</value><comment>TODO: translate to German</comment></data>
-  <data name="NoExpenseDataYet" xml:space="preserve"><value>No data yet</value><comment>TODO: translate to German</comment></data>
-  <data name="SearchButton" xml:space="preserve"><value>Search</value><comment>TODO: translate to German</comment></data>
-  <data name="OrderNoColumn" xml:space="preserve"><value>Voucher No.</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountColumn" xml:space="preserve"><value>Account</value><comment>TODO: translate to German</comment></data>
-  <data name="ValueColumn" xml:space="preserve"><value>Value</value><comment>TODO: translate to German</comment></data>
-  <data name="PreviousBalanceLabel" xml:space="preserve"><value>Previous Balance</value><comment>TODO: translate to German</comment></data>
-  <data name="ReceiptsLabel" xml:space="preserve"><value>Receipts</value><comment>TODO: translate to German</comment></data>
-  <data name="SubtotalLabel" xml:space="preserve"><value>Subtotal</value><comment>TODO: translate to German</comment></data>
-  <data name="PaymentsLabel" xml:space="preserve"><value>Payments</value><comment>TODO: translate to German</comment></data>
-  <data name="CurrentBalanceLabel" xml:space="preserve"><value>Current Balance</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectBoxRequired" xml:space="preserve"><value>You must select the cash box first</value><comment>TODO: translate to German</comment></data>
-  <data name="NoReceiptsYet" xml:space="preserve"><value>No receipts yet</value><comment>TODO: translate to German</comment></data>
-  <data name="NoPaymentsYet" xml:space="preserve"><value>No payments yet</value><comment>TODO: translate to German</comment></data>
-  <data name="FixedAssetsTitle" xml:space="preserve"><value>Fixed Assets Register</value><comment>TODO: translate to German</comment></data>
-  <data name="AddCategoryButton" xml:space="preserve"><value>Add Category</value><comment>TODO: translate to German</comment></data>
-  <data name="AddAssetButton" xml:space="preserve"><value>Add Asset</value><comment>TODO: translate to German</comment></data>
-  <data name="CategoryNodeHint" xml:space="preserve"><value>This is a category (main account) - choose "Add Asset" to add a new asset under it, or "Add Category" to add a sub-category</value><comment>TODO: translate to German</comment></data>
-  <data name="GeneralInfoTab" xml:space="preserve"><value>General Info</value><comment>TODO: translate to German</comment></data>
-  <data name="AssetCodeLabel" xml:space="preserve"><value>Asset Code</value><comment>TODO: translate to German</comment></data>
-  <data name="AssetNameArLabel" xml:space="preserve"><value>Asset Name</value><comment>TODO: translate to German</comment></data>
-  <data name="AssetNameEnLabel" xml:space="preserve"><value>Name (English)</value><comment>TODO: translate to German</comment></data>
-  <data name="PurchaseDateLabel" xml:space="preserve"><value>Purchase Date</value><comment>TODO: translate to German</comment></data>
-  <data name="DepreciationStatusLabel" xml:space="preserve"><value>Depreciation Status</value><comment>TODO: translate to German</comment></data>
-  <data name="ResponsibleEmployeeLabel" xml:space="preserve"><value>Responsible Employee</value><comment>TODO: translate to German</comment></data>
-  <data name="EmpReceiveDateLabel" xml:space="preserve"><value>Receive Date</value><comment>TODO: translate to German</comment></data>
-  <data name="ModelLabel" xml:space="preserve"><value>Model</value><comment>TODO: translate to German</comment></data>
-  <data name="IndustryFactoryLabel" xml:space="preserve"><value>Manufacturer</value><comment>TODO: translate to German</comment></data>
-  <data name="FixedSerialNoLabel" xml:space="preserve"><value>Serial No.</value><comment>TODO: translate to German</comment></data>
-  <data name="LocationLabel" xml:space="preserve"><value>Location</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierNameLabel" xml:space="preserve"><value>Supplier Name</value><comment>TODO: translate to German</comment></data>
-  <data name="WarrantyFinalDateLabel" xml:space="preserve"><value>Warranty End Date</value><comment>TODO: translate to German</comment></data>
-  <data name="WarrantyDetailsLabel" xml:space="preserve"><value>Warranty Details</value><comment>TODO: translate to German</comment></data>
-  <data name="DepreciationTab" xml:space="preserve"><value>Depreciation Method</value><comment>TODO: translate to German</comment></data>
-  <data name="DepreciationTypeLabel" xml:space="preserve"><value>Depreciation Type</value><comment>TODO: translate to German</comment></data>
-  <data name="BeginServiceDateLabel" xml:space="preserve"><value>Service Start Date</value><comment>TODO: translate to German</comment></data>
-  <data name="MainValueLabel" xml:space="preserve"><value>Original Value</value><comment>TODO: translate to German</comment></data>
-  <data name="RateOfDepreciationLabel" xml:space="preserve"><value>Depreciation Rate %</value><comment>TODO: translate to German</comment></data>
-  <data name="DefaultAgeLabel" xml:space="preserve"><value>Useful Life</value><comment>TODO: translate to German</comment></data>
-  <data name="AccumulatedDepreciationLabel" xml:space="preserve"><value>Accumulated Depreciation</value><comment>TODO: translate to German</comment></data>
-  <data name="BookValueLabel" xml:space="preserve"><value>Book Value</value><comment>TODO: translate to German</comment></data>
-  <data name="PriceScrapValueLabel" xml:space="preserve"><value>Scrap Value</value><comment>TODO: translate to German</comment></data>
-  <data name="LastModifiedValueLabel" xml:space="preserve"><value>Last Adjusted Value</value><comment>TODO: translate to German</comment></data>
-  <data name="ImagesTab" xml:space="preserve"><value>Image</value><comment>TODO: translate to German</comment></data>
-  <data name="ImageDescriptionLabel" xml:space="preserve"><value>Image Description</value><comment>TODO: translate to German</comment></data>
-  <data name="AddImageButton" xml:space="preserve"><value>Add Image</value><comment>TODO: translate to German</comment></data>
-  <data name="UnnamedImage" xml:space="preserve"><value>Untitled image</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteImageButton" xml:space="preserve"><value>Delete Image</value><comment>TODO: translate to German</comment></data>
-  <data name="AttachOneImageButton" xml:space="preserve"><value>Attach Image</value><comment>TODO: translate to German</comment></data>
-  <data name="Unspecified" xml:space="preserve"><value>Unspecified</value><comment>TODO: translate to German</comment></data>
-  <data name="AssetNameRequired" xml:space="preserve"><value>Enter the asset name</value><comment>TODO: translate to German</comment></data>
-  <data name="AssetAdded" xml:space="preserve"><value>Asset data added successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="AssetUpdated" xml:space="preserve"><value>Asset data updated successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="CategoryAdded" xml:space="preserve"><value>Account added successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteAccountTitle" xml:space="preserve"><value>Accounts</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteAccountConfirm" xml:space="preserve"><value>Delete account {0}? It may already be in use, which would affect other accounts</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountCannotDeleteHasChildren" xml:space="preserve"><value>This account cannot be deleted because it is used as a parent for sub-accounts</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountCannotDeleteUsedInEntries" xml:space="preserve"><value>This account has been used in journal entries and cannot be deleted</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteImageTitle" xml:space="preserve"><value>Delete</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteImageConfirm" xml:space="preserve"><value>Are you sure you want to delete this image</value><comment>TODO: translate to German</comment></data>
-  <data name="AddFixedAssetCategoryTitle" xml:space="preserve"><value>Add New Account</value><comment>TODO: translate to German</comment></data>
-  <data name="NewAccountNameLabel" xml:space="preserve"><value>New Account Name</value><comment>TODO: translate to German</comment></data>
-  <data name="NewAccountCodeLabel" xml:space="preserve"><value>New Account Code</value><comment>TODO: translate to German</comment></data>
-  <data name="CanDeleteLabel" xml:space="preserve"><value>Deletable</value><comment>TODO: translate to German</comment></data>
-  <data name="AcceptCostCenterLabel" xml:space="preserve"><value>Accepts Cost Center</value><comment>TODO: translate to German</comment></data>
-  <data name="NoFixedAssetsYet" xml:space="preserve"><value>No fixed assets yet</value><comment>TODO: translate to German</comment></data>
-  <data name="DepreciationCalcTitle" xml:space="preserve"><value>Depreciation Calculation</value><comment>TODO: translate to German</comment></data>
-  <data name="FinancialPeriodLabel" xml:space="preserve"><value>Financial Period</value><comment>TODO: translate to German</comment></data>
-  <data name="PendingAssetsHeader" xml:space="preserve"><value>Assets not yet depreciated for this period</value><comment>TODO: translate to German</comment></data>
-  <data name="ComputeButton" xml:space="preserve"><value>Compute Depreciation</value><comment>TODO: translate to German</comment></data>
-  <data name="DepreciationRateColumn" xml:space="preserve"><value>Depreciation Rate</value><comment>TODO: translate to German</comment></data>
-  <data name="AssetNameColumn" xml:space="preserve"><value>Asset</value><comment>TODO: translate to German</comment></data>
-  <data name="NoPendingAssets" xml:space="preserve"><value>No assets pending depreciation for this period</value><comment>TODO: translate to German</comment></data>
-  <data name="ComputedEhlakHeader" xml:space="preserve"><value>Depreciation records computed for this period</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteSelectedButton" xml:space="preserve"><value>Delete Selected</value><comment>TODO: translate to German</comment></data>
-  <data name="AssetValueNowColumn" xml:space="preserve"><value>Current Asset Value</value><comment>TODO: translate to German</comment></data>
-  <data name="TotalDepreciationColumn" xml:space="preserve"><value>Total Depreciation</value><comment>TODO: translate to German</comment></data>
-  <data name="PeriodDepreciationColumn" xml:space="preserve"><value>Period Depreciation</value><comment>TODO: translate to German</comment></data>
-  <data name="NoComputedEhlak" xml:space="preserve"><value>No depreciation records computed for this period</value><comment>TODO: translate to German</comment></data>
-  <data name="ComputeFailedError" xml:space="preserve"><value>An error occurred while computing depreciation</value><comment>TODO: translate to German</comment></data>
-  <data name="ComputeSuccessMessage" xml:space="preserve"><value>Depreciation computed successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteEhlakTitle" xml:space="preserve"><value>Delete</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteEhlakConfirm" xml:space="preserve"><value>Delete {0} selected depreciation record(s)?</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteFailedError" xml:space="preserve"><value>An error occurred while deleting</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteSuccessMessage" xml:space="preserve"><value>Deleted successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="FirstBalanceTitle" xml:space="preserve"><value>Opening Balance</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerLabel" xml:space="preserve"><value>Customer</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierLabel" xml:space="preserve"><value>Supplier</value><comment>TODO: translate to German</comment></data>
-  <data name="NoOpeningPeriodFound" xml:space="preserve"><value>No financial period found</value><comment>TODO: translate to German</comment></data>
-  <data name="OpeningPeriodLabel" xml:space="preserve"><value>Opening Financial Period</value><comment>TODO: translate to German</comment></data>
-  <data name="FirstBalanceButton" xml:space="preserve"><value>Opening Balance</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerBalanceSummaryTitle" xml:space="preserve"><value>Customer Balances</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierBalanceSummaryTitle" xml:space="preserve"><value>Supplier Balances</value><comment>TODO: translate to German</comment></data>
-  <data name="GroupLabel" xml:space="preserve"><value>Group</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerNatureFilterLabel" xml:space="preserve"><value>Customer Nature</value><comment>TODO: translate to German</comment></data>
-  <data name="MixedCustomersOnlyOption" xml:space="preserve"><value>Mixed Customers Only</value><comment>TODO: translate to German</comment></data>
-  <data name="NonMixedCustomersOnlyOption" xml:space="preserve"><value>Non-Mixed Customers Only</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerTypeFilterLabel" xml:space="preserve"><value>Customer Type</value><comment>TODO: translate to German</comment></data>
-  <data name="BalanceStatusFilterLabel" xml:space="preserve"><value>Balance Status</value><comment>TODO: translate to German</comment></data>
-  <data name="AllItemsOption" xml:space="preserve"><value>All, with or without balance</value><comment>TODO: translate to German</comment></data>
-  <data name="ItemsWithBalanceOption" xml:space="preserve"><value>With balance only</value><comment>TODO: translate to German</comment></data>
-  <data name="ItemsWithZeroBalanceOption" xml:space="preserve"><value>Zero balance only</value><comment>TODO: translate to German</comment></data>
-  <data name="TotalCreditLabel" xml:space="preserve"><value>Total Credit</value><comment>TODO: translate to German</comment></data>
-  <data name="TotalDebitLabel" xml:space="preserve"><value>Total Debit</value><comment>TODO: translate to German</comment></data>
-  <data name="NetCreditLabel" xml:space="preserve"><value>Net Credit</value><comment>TODO: translate to German</comment></data>
-  <data name="NetDebitLabel" xml:space="preserve"><value>Net Debit</value><comment>TODO: translate to German</comment></data>
-  <data name="CreditBalanceColumn" xml:space="preserve"><value>Credit Balance</value><comment>TODO: translate to German</comment></data>
-  <data name="DebitBalanceColumn" xml:space="preserve"><value>Debit Balance</value><comment>TODO: translate to German</comment></data>
-  <data name="NameColumn" xml:space="preserve"><value>Name</value><comment>TODO: translate to German</comment></data>
-  <data name="NoRecordsFound" xml:space="preserve"><value>No records found</value><comment>TODO: translate to German</comment></data>
+  <data name="JournalDaysTitle" xml:space="preserve"><value>Journaltage</value></data>
+  <data name="AddJournalDayButton" xml:space="preserve"><value>Hinzufügen</value></data>
+  <data name="EditJournalDayTitle" xml:space="preserve"><value>Journaltag bearbeiten</value></data>
+  <data name="JournalCodeLabel" xml:space="preserve"><value>Code</value></data>
+  <data name="JournalNameLabel" xml:space="preserve"><value>Journaltag</value></data>
+  <data name="NoJournalDaysYet" xml:space="preserve"><value>Noch keine Journaltage</value></data>
+  <data name="JournalCodeRequired" xml:space="preserve"><value>Bitte geben Sie den Code ein</value></data>
+  <data name="JournalNameRequired" xml:space="preserve"><value>Bitte geben Sie den Namen des Journaltags ein</value></data>
+  <data name="JournalDayAdded" xml:space="preserve"><value>Journaltag erfolgreich hinzugefügt</value></data>
+  <data name="JournalDayUpdated" xml:space="preserve"><value>Journaltag erfolgreich aktualisiert</value></data>
+  <data name="JournalDayDeleted" xml:space="preserve"><value>Journaltag erfolgreich gelöscht</value></data>
+  <data name="DeleteJournalDayTitle" xml:space="preserve"><value>Journaltag löschen</value></data>
+  <data name="DeleteJournalDayConfirm" xml:space="preserve"><value>Möchten Sie den Journaltag „{0}“ löschen?</value></data>
+  <data name="CurrencyFactorsTitle" xml:space="preserve"><value>Wechselkurse</value></data>
+  <data name="AddCurrencyFactorButton" xml:space="preserve"><value>Hinzufügen</value></data>
+  <data name="EditCurrencyFactorTitle" xml:space="preserve"><value>Wechselkurs bearbeiten</value></data>
+  <data name="CurrencyPrimaryLabel" xml:space="preserve"><value>Erste Währung</value></data>
+  <data name="CurrencySecondaryLabel" xml:space="preserve"><value>Zweite Währung</value></data>
+  <data name="CurrencyFactorLabel" xml:space="preserve"><value>Kurs</value></data>
+  <data name="NoCurrencyFactorsYet" xml:space="preserve"><value>Noch keine Wechselkurse vorhanden.</value></data>
+  <data name="SelectPrimaryCurrencyRequired" xml:space="preserve"><value>Bitte wählen Sie die erste Währung aus</value></data>
+  <data name="SelectSecondaryCurrencyRequired" xml:space="preserve"><value>Bitte wählen Sie die zweite Währung aus</value></data>
+  <data name="CurrencyFactorRequired" xml:space="preserve"><value>Bitte geben Sie den Wechselkurs ein</value></data>
+  <data name="CurrencyFactorAdded" xml:space="preserve"><value>Wechselkurs erfolgreich hinzugefügt</value></data>
+  <data name="CurrencyFactorUpdated" xml:space="preserve"><value>Daten erfolgreich gespeichert</value></data>
+  <data name="StoreItemsMovementTitle" xml:space="preserve"><value>Artikelbewegungen des Lagers</value></data>
+  <data name="StoreDailyMovementTitle" xml:space="preserve"><value>Tägliche Lagerbewegung</value></data>
+  <data name="StoreUsedTypeSell" xml:space="preserve"><value>Verkäufe</value></data>
+  <data name="StoreUsedTypePurchase" xml:space="preserve"><value>Einkäufe</value></data>
+  <data name="StoreLabel" xml:space="preserve"><value>Lager</value></data>
+  <data name="ItemCategoryLabel" xml:space="preserve"><value>Artikelkategorie</value></data>
+  <data name="SortByCategoryLabel" xml:space="preserve"><value>Nach Kategorie sortieren</value></data>
+  <data name="SortByDateLabel" xml:space="preserve"><value>Nach Datum sortieren</value></data>
+  <data name="DateLabel" xml:space="preserve"><value>Datum</value></data>
+  <data name="DateFromLabel" xml:space="preserve"><value>Datum von</value></data>
+  <data name="DateToLabel" xml:space="preserve"><value>Datum bis</value></data>
+  <data name="ShowDataButton" xml:space="preserve"><value>Daten anzeigen</value></data>
+  <data name="SarfOutgoingLabel" xml:space="preserve"><value>Ausgehend</value></data>
+  <data name="EstlamIncomingLabel" xml:space="preserve"><value>Eingehend</value></data>
+  <data name="SerialColumn" xml:space="preserve"><value>Nr.</value></data>
+  <data name="DateColumn" xml:space="preserve"><value>Datum</value></data>
+  <data name="DocNoColumn" xml:space="preserve"><value>Belegnummer</value></data>
+  <data name="DescriptionColumn" xml:space="preserve"><value>Beschreibung</value></data>
+  <data name="BalanceItemNoColumn" xml:space="preserve"><value>Anzahl</value></data>
+  <data name="BalanceColumn" xml:space="preserve"><value>Saldo</value></data>
+  <data name="ItemNoExportColumn" xml:space="preserve"><value>Anzahl</value></data>
+  <data name="QtyExportColumn" xml:space="preserve"><value>Menge</value></data>
+  <data name="ItemNameColumn" xml:space="preserve"><value>Artikel</value></data>
+  <data name="CategoryColumn" xml:space="preserve"><value>Artikelkategorie</value></data>
+  <data name="OrderTypeColumn" xml:space="preserve"><value>Belegart</value></data>
+  <data name="AllStoresOption" xml:space="preserve"><value>Alle</value></data>
+  <data name="AllCategoriesOption" xml:space="preserve"><value>Alle</value></data>
+  <data name="NoMovementYet" xml:space="preserve"><value>Noch keine Bewegungen vorhanden.</value></data>
+  <data name="SelectStoreRequired" xml:space="preserve"><value>Bitte wählen Sie das Lager aus</value></data>
+  <data name="SelectCategoryRequired" xml:space="preserve"><value>Bitte wählen Sie die Artikelkategorie aus</value></data>
+  <data name="ExpenseDailyJournalTitle" xml:space="preserve"><value>Tagesjournal der Aufwendungen</value></data>
+  <data name="CashBoxDailyJournalTitle" xml:space="preserve"><value>Tagesjournal der Kasse</value></data>
+  <data name="PayTypeCashLabel" xml:space="preserve"><value>Bar</value></data>
+  <data name="PayTypeCheckLabel" xml:space="preserve"><value>Schecks</value></data>
+  <data name="DirectionIncomingLabel" xml:space="preserve"><value>Eingehend</value></data>
+  <data name="DirectionOutgoingLabel" xml:space="preserve"><value>Ausgehend</value></data>
+  <data name="DirectionAllLabel" xml:space="preserve"><value>Alle</value></data>
+  <data name="SortByAccountLabel" xml:space="preserve"><value>Nach Konto sortieren</value></data>
+  <data name="MasrofatAffectingLabel" xml:space="preserve"><value>Konten, die den Bericht beeinflussen</value></data>
+  <data name="MasrofatNotAffectingLabel" xml:space="preserve"><value>Konten, die den Bericht nicht beeinflussen</value></data>
+  <data name="MasrofatAllLabel" xml:space="preserve"><value>Alle</value></data>
+  <data name="BoxLabel" xml:space="preserve"><value>Kasse</value></data>
+  <data name="DetailsTabLabel" xml:space="preserve"><value>Details der Aufwandsanalyse</value></data>
+  <data name="TotalsTabLabel" xml:space="preserve"><value>Summen der Aufwandsanalyse</value></data>
+  <data name="NotesColumn" xml:space="preserve"><value>Notizen</value></data>
+  <data name="MainAccountColumn" xml:space="preserve"><value>Hauptkonto</value></data>
+  <data name="SubAccountColumn" xml:space="preserve"><value>Name des Unterkontos</value></data>
+  <data name="ExportColumn" xml:space="preserve"><value>Ausgang</value></data>
+  <data name="ImportColumn" xml:space="preserve"><value>Eingang</value></data>
+  <data name="PaymentMethodColumn" xml:space="preserve"><value>Zahlungsart</value></data>
+  <data name="CashTotalLabel" xml:space="preserve"><value>Barsumme</value></data>
+  <data name="ChecksTotalLabel" xml:space="preserve"><value>Schecksumme</value></data>
+  <data name="NetForPeriodLabel" xml:space="preserve"><value>Netto für Tag/Zeitraum</value></data>
+  <data name="NoExpenseDataYet" xml:space="preserve"><value>Noch keine Daten</value></data>
+  <data name="SearchButton" xml:space="preserve"><value>Suchen</value></data>
+  <data name="OrderNoColumn" xml:space="preserve"><value>Belegnr.</value></data>
+  <data name="AccountColumn" xml:space="preserve"><value>Konto</value></data>
+  <data name="ValueColumn" xml:space="preserve"><value>Wert</value></data>
+  <data name="PreviousBalanceLabel" xml:space="preserve"><value>Vorheriger Saldo</value></data>
+  <data name="ReceiptsLabel" xml:space="preserve"><value>Einzahlungen</value></data>
+  <data name="SubtotalLabel" xml:space="preserve"><value>Zwischensumme</value></data>
+  <data name="PaymentsLabel" xml:space="preserve"><value>Zahlungen</value></data>
+  <data name="CurrentBalanceLabel" xml:space="preserve"><value>Aktueller Saldo</value></data>
+  <data name="SelectBoxRequired" xml:space="preserve"><value>Sie müssen zuerst die Kasse auswählen</value></data>
+  <data name="NoReceiptsYet" xml:space="preserve"><value>Noch keine Einzahlungen</value></data>
+  <data name="NoPaymentsYet" xml:space="preserve"><value>Noch keine Zahlungen</value></data>
+  <data name="FixedAssetsTitle" xml:space="preserve"><value>Anlagenverzeichnis</value></data>
+  <data name="AddCategoryButton" xml:space="preserve"><value>Kategorie hinzufügen</value></data>
+  <data name="AddAssetButton" xml:space="preserve"><value>Anlagegut hinzufügen</value></data>
+  <data name="CategoryNodeHint" xml:space="preserve"><value>Dies ist eine Kategorie (Hauptkonto) – wählen Sie „Anlagegut hinzufügen“, um darunter ein Anlagegut anzulegen, oder „Kategorie hinzufügen“ für eine Unterkategorie</value></data>
+  <data name="GeneralInfoTab" xml:space="preserve"><value>Allgemeine Informationen</value></data>
+  <data name="AssetCodeLabel" xml:space="preserve"><value>Anlagencode</value></data>
+  <data name="AssetNameArLabel" xml:space="preserve"><value>Name des Anlageguts</value></data>
+  <data name="AssetNameEnLabel" xml:space="preserve"><value>Name (Englisch)</value></data>
+  <data name="PurchaseDateLabel" xml:space="preserve"><value>Kaufdatum</value></data>
+  <data name="DepreciationStatusLabel" xml:space="preserve"><value>Abschreibungsstatus</value></data>
+  <data name="ResponsibleEmployeeLabel" xml:space="preserve"><value>Verantwortlicher Mitarbeiter</value></data>
+  <data name="EmpReceiveDateLabel" xml:space="preserve"><value>Empfangsdatum</value></data>
+  <data name="ModelLabel" xml:space="preserve"><value>Modell</value></data>
+  <data name="IndustryFactoryLabel" xml:space="preserve"><value>Hersteller</value></data>
+  <data name="FixedSerialNoLabel" xml:space="preserve"><value>Seriennummer</value></data>
+  <data name="LocationLabel" xml:space="preserve"><value>Standort</value></data>
+  <data name="SupplierNameLabel" xml:space="preserve"><value>Lieferantenname</value></data>
+  <data name="WarrantyFinalDateLabel" xml:space="preserve"><value>Garantieende</value></data>
+  <data name="WarrantyDetailsLabel" xml:space="preserve"><value>Garantiedetails</value></data>
+  <data name="DepreciationTab" xml:space="preserve"><value>Abschreibungsmethode</value></data>
+  <data name="DepreciationTypeLabel" xml:space="preserve"><value>Abschreibungsart</value></data>
+  <data name="BeginServiceDateLabel" xml:space="preserve"><value>Datum der Inbetriebnahme</value></data>
+  <data name="MainValueLabel" xml:space="preserve"><value>Ursprünglicher Wert</value></data>
+  <data name="RateOfDepreciationLabel" xml:space="preserve"><value>Abschreibungssatz %</value></data>
+  <data name="DefaultAgeLabel" xml:space="preserve"><value>Nutzungsdauer</value></data>
+  <data name="AccumulatedDepreciationLabel" xml:space="preserve"><value>Kumulierte Abschreibung</value></data>
+  <data name="BookValueLabel" xml:space="preserve"><value>Buchwert</value></data>
+  <data name="PriceScrapValueLabel" xml:space="preserve"><value>Schrottwert</value></data>
+  <data name="LastModifiedValueLabel" xml:space="preserve"><value>Zuletzt angepasster Wert</value></data>
+  <data name="ImagesTab" xml:space="preserve"><value>Bild</value></data>
+  <data name="ImageDescriptionLabel" xml:space="preserve"><value>Bildbeschreibung</value></data>
+  <data name="AddImageButton" xml:space="preserve"><value>Bild hinzufügen</value></data>
+  <data name="UnnamedImage" xml:space="preserve"><value>Unbenanntes Bild</value></data>
+  <data name="DeleteImageButton" xml:space="preserve"><value>Bild löschen</value></data>
+  <data name="AttachOneImageButton" xml:space="preserve"><value>Bild anhängen</value></data>
+  <data name="Unspecified" xml:space="preserve"><value>Nicht angegeben</value></data>
+  <data name="AssetNameRequired" xml:space="preserve"><value>Geben Sie den Namen des Anlageguts ein</value></data>
+  <data name="AssetAdded" xml:space="preserve"><value>Anlagedaten erfolgreich hinzugefügt</value></data>
+  <data name="AssetUpdated" xml:space="preserve"><value>Anlagedaten erfolgreich aktualisiert</value></data>
+  <data name="CategoryAdded" xml:space="preserve"><value>Konto erfolgreich hinzugefügt</value></data>
+  <data name="DeleteAccountTitle" xml:space="preserve"><value>Konten</value></data>
+  <data name="DeleteAccountConfirm" xml:space="preserve"><value>Konto {0} löschen? Es wird möglicherweise bereits verwendet, was andere Konten beeinträchtigen würde</value></data>
+  <data name="AccountCannotDeleteHasChildren" xml:space="preserve"><value>Dieses Konto kann nicht gelöscht werden, da es als übergeordnetes Konto von Unterkonten verwendet wird</value></data>
+  <data name="AccountCannotDeleteUsedInEntries" xml:space="preserve"><value>Dieses Konto wurde in Buchungssätzen verwendet und kann nicht gelöscht werden</value></data>
+  <data name="DeleteImageTitle" xml:space="preserve"><value>Löschen</value></data>
+  <data name="DeleteImageConfirm" xml:space="preserve"><value>Möchten Sie dieses Bild wirklich löschen</value></data>
+  <data name="AddFixedAssetCategoryTitle" xml:space="preserve"><value>Neues Konto hinzufügen</value></data>
+  <data name="NewAccountNameLabel" xml:space="preserve"><value>Name des neuen Kontos</value></data>
+  <data name="NewAccountCodeLabel" xml:space="preserve"><value>Code des neuen Kontos</value></data>
+  <data name="CanDeleteLabel" xml:space="preserve"><value>Löschbar</value></data>
+  <data name="AcceptCostCenterLabel" xml:space="preserve"><value>Akzeptiert Kostenstelle</value></data>
+  <data name="NoFixedAssetsYet" xml:space="preserve"><value>Noch keine Anlagegüter</value></data>
+  <data name="DepreciationCalcTitle" xml:space="preserve"><value>Abschreibungsberechnung</value></data>
+  <data name="FinancialPeriodLabel" xml:space="preserve"><value>Geschäftsperiode</value></data>
+  <data name="PendingAssetsHeader" xml:space="preserve"><value>Für diese Periode noch nicht abgeschriebene Anlagegüter</value></data>
+  <data name="ComputeButton" xml:space="preserve"><value>Abschreibung berechnen</value></data>
+  <data name="DepreciationRateColumn" xml:space="preserve"><value>Abschreibungssatz</value></data>
+  <data name="AssetNameColumn" xml:space="preserve"><value>Anlagegut</value></data>
+  <data name="NoPendingAssets" xml:space="preserve"><value>Keine Anlagegüter mit ausstehender Abschreibung für diese Periode</value></data>
+  <data name="ComputedEhlakHeader" xml:space="preserve"><value>Für diese Periode berechnete Abschreibungen</value></data>
+  <data name="DeleteSelectedButton" xml:space="preserve"><value>Auswahl löschen</value></data>
+  <data name="AssetValueNowColumn" xml:space="preserve"><value>Aktueller Anlagenwert</value></data>
+  <data name="TotalDepreciationColumn" xml:space="preserve"><value>Gesamtabschreibung</value></data>
+  <data name="PeriodDepreciationColumn" xml:space="preserve"><value>Abschreibung der Periode</value></data>
+  <data name="NoComputedEhlak" xml:space="preserve"><value>Für diese Periode wurden keine Abschreibungen berechnet</value></data>
+  <data name="ComputeFailedError" xml:space="preserve"><value>Bei der Berechnung der Abschreibung ist ein Fehler aufgetreten</value></data>
+  <data name="ComputeSuccessMessage" xml:space="preserve"><value>Abschreibung erfolgreich berechnet</value></data>
+  <data name="DeleteEhlakTitle" xml:space="preserve"><value>Löschen</value></data>
+  <data name="DeleteEhlakConfirm" xml:space="preserve"><value>{0} ausgewählte Abschreibung(en) löschen?</value></data>
+  <data name="DeleteFailedError" xml:space="preserve"><value>Beim Löschen ist ein Fehler aufgetreten</value></data>
+  <data name="DeleteSuccessMessage" xml:space="preserve"><value>Erfolgreich gelöscht</value></data>
+  <data name="FirstBalanceTitle" xml:space="preserve"><value>Eröffnungssaldo</value></data>
+  <data name="CustomerLabel" xml:space="preserve"><value>Kunde</value></data>
+  <data name="SupplierLabel" xml:space="preserve"><value>Lieferant</value></data>
+  <data name="NoOpeningPeriodFound" xml:space="preserve"><value>Keine Geschäftsperiode gefunden</value></data>
+  <data name="OpeningPeriodLabel" xml:space="preserve"><value>Eröffnungs-Geschäftsperiode</value></data>
+  <data name="FirstBalanceButton" xml:space="preserve"><value>Eröffnungssaldo</value></data>
+  <data name="CustomerBalanceSummaryTitle" xml:space="preserve"><value>Kundensalden</value></data>
+  <data name="SupplierBalanceSummaryTitle" xml:space="preserve"><value>Lieferantensalden</value></data>
+  <data name="GroupLabel" xml:space="preserve"><value>Gruppe</value></data>
+  <data name="CustomerNatureFilterLabel" xml:space="preserve"><value>Kundenart</value></data>
+  <data name="MixedCustomersOnlyOption" xml:space="preserve"><value>Nur gemischte Kunden</value></data>
+  <data name="NonMixedCustomersOnlyOption" xml:space="preserve"><value>Nur nicht gemischte Kunden</value></data>
+  <data name="CustomerTypeFilterLabel" xml:space="preserve"><value>Kundentyp</value></data>
+  <data name="BalanceStatusFilterLabel" xml:space="preserve"><value>Saldostatus</value></data>
+  <data name="AllItemsOption" xml:space="preserve"><value>Alle, mit oder ohne Bestand</value></data>
+  <data name="ItemsWithBalanceOption" xml:space="preserve"><value>Nur mit Bestand</value></data>
+  <data name="ItemsWithZeroBalanceOption" xml:space="preserve"><value>Nur mit Nullbestand</value></data>
+  <data name="TotalCreditLabel" xml:space="preserve"><value>Gesamt Haben</value></data>
+  <data name="TotalDebitLabel" xml:space="preserve"><value>Gesamt Soll</value></data>
+  <data name="NetCreditLabel" xml:space="preserve"><value>Netto-Haben</value></data>
+  <data name="NetDebitLabel" xml:space="preserve"><value>Netto-Soll</value></data>
+  <data name="CreditBalanceColumn" xml:space="preserve"><value>Habensaldo</value></data>
+  <data name="DebitBalanceColumn" xml:space="preserve"><value>Sollsaldo</value></data>
+  <data name="NameColumn" xml:space="preserve"><value>Name</value></data>
+  <data name="NoRecordsFound" xml:space="preserve"><value>Keine Datensätze gefunden</value></data>
   <data name="JournalEntriesTitle" xml:space="preserve"><value>Buchungsübersicht</value></data>
   <data name="JEEntryNoFromLabel" xml:space="preserve"><value>Buchungsnr. von</value></data>
   <data name="JEEntryNoToLabel" xml:space="preserve"><value>Buchungsnr. bis</value></data>
@@ -624,266 +624,266 @@
   <data name="JEEquivalentValueLabel" xml:space="preserve"><value>Gegenwert verwenden</value></data>
   <data name="JEReferenceFilterActive" xml:space="preserve"><value>Es werden nur Buchungen zu einem bestimmten Beleg angezeigt</value></data>
   <data name="JEClearReferenceFilter" xml:space="preserve"><value>Einschränkung aufheben und alle Buchungen anzeigen</value></data>
-  <data name="ShowMixedAccountLabel" xml:space="preserve"><value>Show Mixed Account</value><comment>TODO: translate to German</comment></data>
-  <data name="MixedBalanceSummaryTitle" xml:space="preserve"><value>Mixed Accounts Balance Summary</value><comment>TODO: translate to German</comment></data>
-  <data name="RefreshButton" xml:space="preserve"><value>Refresh</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerBalanceColumn" xml:space="preserve"><value>Balance as Customer</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierBalanceColumn" xml:space="preserve"><value>Balance as Supplier</value><comment>TODO: translate to German</comment></data>
-  <data name="NetBalanceColumn" xml:space="preserve"><value>Net Balance</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerAccountStatementTitle" xml:space="preserve"><value>Customer Account Statement</value><comment>TODO: translate to German</comment></data>
-  <data name="SupplierAccountStatementTitle" xml:space="preserve"><value>Supplier Account Statement</value><comment>TODO: translate to German</comment></data>
-  <data name="OperationColumn" xml:space="preserve"><value>Operation</value><comment>TODO: translate to German</comment></data>
-  <data name="RunningDebitBalanceColumn" xml:space="preserve"><value>Running Debit Balance</value><comment>TODO: translate to German</comment></data>
-  <data name="RunningCreditBalanceColumn" xml:space="preserve"><value>Running Credit Balance</value><comment>TODO: translate to German</comment></data>
-  <data name="CarNumberColumn" xml:space="preserve"><value>Car</value><comment>TODO: translate to German</comment></data>
-  <data name="WorkOrderNumberColumn" xml:space="preserve"><value>Work Order</value><comment>TODO: translate to German</comment></data>
-  <data name="TaxInternalIdColumn" xml:space="preserve"><value>Tax Internal ID</value><comment>TODO: translate to German</comment></data>
-  <data name="DocumentColumn" xml:space="preserve"><value>Document</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteRowButton" xml:space="preserve"><value>Delete Row</value><comment>TODO: translate to German</comment></data>
-  <data name="ViewCustomerBalanceListButton" xml:space="preserve"><value>Customer Balance List</value><comment>TODO: translate to German</comment></data>
-  <data name="ViewSupplierBalanceListButton" xml:space="preserve"><value>Supplier Balance List</value><comment>TODO: translate to German</comment></data>
-  <data name="OtherAccountLabel" xml:space="preserve"><value>Other Account</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountLabel" xml:space="preserve"><value>Account</value><comment>TODO: translate to German</comment></data>
-  <data name="Close" xml:space="preserve"><value>Close</value><comment>TODO: translate to German</comment></data>
-  <data name="NewButton" xml:space="preserve"><value>New</value><comment>TODO: translate to German</comment></data>
-  <data name="FinancialNoticeTitle" xml:space="preserve"><value>Financial Settlement Notice</value><comment>TODO: translate to German</comment></data>
-  <data name="FinancialNoticeReviewTitle" xml:space="preserve"><value>Review Settlement Notices</value><comment>TODO: translate to German</comment></data>
-  <data name="NoticeNoLabel" xml:space="preserve"><value>Notice No.</value><comment>TODO: translate to German</comment></data>
-  <data name="NoticeNoColumn" xml:space="preserve"><value>Notice No.</value><comment>TODO: translate to German</comment></data>
-  <data name="AmountInWordsLabel" xml:space="preserve"><value>Amount in Words</value><comment>TODO: translate to German</comment></data>
-  <data name="AmountInFiguresLabel" xml:space="preserve"><value>Amount in Figures</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteNoticeButton" xml:space="preserve"><value>Delete Notice</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectCustomerValidation" xml:space="preserve"><value>Please select the customer</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectSupplierValidation" xml:space="preserve"><value>Please select the supplier</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectNatureValidation" xml:space="preserve"><value>You must choose the notice nature (debit or credit)</value><comment>TODO: translate to German</comment></data>
-  <data name="EnterValueValidation" xml:space="preserve"><value>Enter the value</value><comment>TODO: translate to German</comment></data>
-  <data name="EnterValidValueValidation" xml:space="preserve"><value>Enter a valid value</value><comment>TODO: translate to German</comment></data>
-  <data name="EnterOrderNoValidation" xml:space="preserve"><value>Please enter the notice number</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectCurrencyValidation" xml:space="preserve"><value>Please select the currency</value><comment>TODO: translate to German</comment></data>
-  <data name="EnterNotesValidation" xml:space="preserve"><value>Enter the operation description or notes</value><comment>TODO: translate to German</comment></data>
-  <data name="ConfirmSaveNoticeMessage" xml:space="preserve"><value>Are you sure you want to save this data?</value><comment>TODO: translate to German</comment></data>
-  <data name="ConfirmDeleteNoticeMessage" xml:space="preserve"><value>Do you want to delete the notice?</value><comment>TODO: translate to German</comment></data>
-  <data name="NoticeSavedMessage" xml:space="preserve"><value>Settlement notice saved</value><comment>TODO: translate to German</comment></data>
-  <data name="NoticeDeletedMessage" xml:space="preserve"><value>Settlement notice deleted</value><comment>TODO: translate to German</comment></data>
-  <data name="NoticeSaveErrorMessage" xml:space="preserve"><value>Error issuing the settlement notice</value><comment>TODO: translate to German</comment></data>
-  <data name="NoticeDeleteErrorMessage" xml:space="preserve"><value>Error deleting the settlement notice</value><comment>TODO: translate to German</comment></data>
-  <data name="ValueColumn" xml:space="preserve"><value>Value</value><comment>TODO: translate to German</comment></data>
-  <data name="TypeColumn" xml:space="preserve"><value>Type</value><comment>TODO: translate to German</comment></data>
-  <data name="DetailsButton" xml:space="preserve"><value>Notice Details</value><comment>TODO: translate to German</comment></data>
-  <data name="QuantityColumn" xml:space="preserve"><value>Quantity</value><comment>TODO: translate to German</comment></data>
-  <data name="PriceColumn" xml:space="preserve"><value>Price</value><comment>TODO: translate to German</comment></data>
-  <data name="TotalColumn" xml:space="preserve"><value>Total</value><comment>TODO: translate to German</comment></data>
-  <data name="AddItemButton" xml:space="preserve"><value>Add Item</value><comment>TODO: translate to German</comment></data>
-  <data name="EditItemButton" xml:space="preserve"><value>Edit Item</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteItemButton" xml:space="preserve"><value>Delete Item</value><comment>TODO: translate to German</comment></data>
-  <data name="SelectItemValidation" xml:space="preserve"><value>You must select the item</value><comment>TODO: translate to German</comment></data>
-  <data name="EnterQtyValidation" xml:space="preserve"><value>Enter the item quantity</value><comment>TODO: translate to German</comment></data>
-  <data name="EnterPriceValidation" xml:space="preserve"><value>Enter the item price</value><comment>TODO: translate to German</comment></data>
-  <data name="EnterItemsValidation" xml:space="preserve"><value>Enter the items</value><comment>TODO: translate to German</comment></data>
-  <data name="AddItemDialogTitle" xml:space="preserve"><value>Add Item</value><comment>TODO: translate to German</comment></data>
-  <data name="ConfirmDeleteItemMessage" xml:space="preserve"><value>Do you want to delete the item?</value><comment>TODO: translate to German</comment></data>
-  <data name="ItemsTitle" xml:space="preserve"><value>Items</value><comment>TODO: translate to German</comment></data>
-  <data name="FinancialNoticeByItemTitle" xml:space="preserve"><value>Financial Settlement Notice by Item</value><comment>TODO: translate to German</comment></data>
-  <data name="FinancialNoticeByItemReviewTitle" xml:space="preserve"><value>Review Settlement Notices by Item</value><comment>TODO: translate to German</comment></data>
-  <data name="OpeningBalanceListTitle" xml:space="preserve"><value>Opening Balances</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountCodeColumn" xml:space="preserve"><value>Account Code</value><comment>TODO: translate to German</comment></data>
-  <data name="DebitFirstBalanceColumn" xml:space="preserve"><value>Opening Balance Debit</value><comment>TODO: translate to German</comment></data>
-  <data name="CreditFirstBalanceColumn" xml:space="preserve"><value>Opening Balance Credit</value><comment>TODO: translate to German</comment></data>
-  <data name="DebitEquivalentFirstBalanceColumn" xml:space="preserve"><value>Equivalent Opening Balance Debit</value><comment>TODO: translate to German</comment></data>
-  <data name="CreditEquivalentFirstBalanceColumn" xml:space="preserve"><value>Equivalent Opening Balance Credit</value><comment>TODO: translate to German</comment></data>
-  <data name="EditFirstBalanceButton" xml:space="preserve"><value>Edit Opening Balance</value><comment>TODO: translate to German</comment></data>
-  <data name="ReviewAddAccountsButton" xml:space="preserve"><value>Review New Accounts for Opening Balances</value><comment>TODO: translate to German</comment></data>
-  <data name="SpecificAccountFilterLabel" xml:space="preserve"><value>Specific Account (optional)</value><comment>TODO: translate to German</comment></data>
-  <data name="ShowTotalLabel" xml:space="preserve"><value>Show Totals</value><comment>TODO: translate to German</comment></data>
-  <data name="EditGLFirstBalanceTitle" xml:space="preserve"><value>Edit Opening Balance</value><comment>TODO: translate to German</comment></data>
-  <data name="EquivalentFactorLabel" xml:space="preserve"><value>Exchange Factor</value><comment>TODO: translate to German</comment></data>
-  <data name="EquivalentBalanceLabel" xml:space="preserve"><value>Equivalent Balance</value><comment>TODO: translate to German</comment></data>
-  <data name="ExistingBalancesLabel" xml:space="preserve"><value>Existing Balances by Currency</value><comment>TODO: translate to German</comment></data>
-  <data name="GrandTotalLabel" xml:space="preserve"><value>Grand Total</value><comment>TODO: translate to German</comment></data>
-  <data name="SubtotalPrefixLabel" xml:space="preserve"><value>Total</value><comment>TODO: translate to German</comment></data>
-  <data name="EquivalentCurrencyOption" xml:space="preserve"><value>Equivalent</value><comment>TODO: translate to German</comment></data>
-  <data name="AllCurrenciesOption" xml:space="preserve"><value>All</value><comment>TODO: translate to German</comment></data>
-  <data name="AccountNameSearchLabel" xml:space="preserve"><value>Search by Name</value><comment>TODO: translate to German</comment></data>
-  <data name="DailyWorkSummaryTitle" xml:space="preserve"><value>Daily Export/Import Journal</value><comment>TODO: translate to German</comment></data>
-  <data name="ExportSectionTitle" xml:space="preserve"><value>Export</value><comment>TODO: translate to German</comment></data>
-  <data name="ImportSectionTitle" xml:space="preserve"><value>Import</value><comment>TODO: translate to German</comment></data>
-  <data name="CashPaymentDescription" xml:space="preserve"><value>Cash payment: {0}</value><comment>TODO: translate to German</comment></data>
-  <data name="CashReceiptDescription" xml:space="preserve"><value>Cash receipt: {0}</value><comment>TODO: translate to German</comment></data>
-  <data name="CheckNumberDescription" xml:space="preserve"><value>Check No. {0} {1}</value><comment>TODO: translate to German</comment></data>
-  <data name="SalesInvoiceDescription" xml:space="preserve"><value>Sales invoice for customer {0}</value><comment>TODO: translate to German</comment></data>
-  <data name="PurchaseReturnDescription" xml:space="preserve"><value>Purchase return invoice, supplier {0}</value><comment>TODO: translate to German</comment></data>
-  <data name="WorkOutExportDescription" xml:space="preserve"><value>Items to external processing, supplier {0}</value><comment>TODO: translate to German</comment></data>
-  <data name="PurchaseInvoiceDescription" xml:space="preserve"><value>Purchase invoice, supplier {0}</value><comment>TODO: translate to German</comment></data>
-  <data name="SalesReturnDescription" xml:space="preserve"><value>Sales return invoice for customer {0}</value><comment>TODO: translate to German</comment></data>
-  <data name="WorkOutImportDescription" xml:space="preserve"><value>External processing receipt from {0}</value><comment>TODO: translate to German</comment></data>
-  <data name="NazalatDescription" xml:space="preserve"><value>Discount total {0}</value><comment>TODO: translate to German</comment></data>
-  <data name="CashExportTotalLabel" xml:space="preserve"><value>Total cash payments</value><comment>TODO: translate to German</comment></data>
-  <data name="CheckExportTotalLabel" xml:space="preserve"><value>Total check payments</value><comment>TODO: translate to German</comment></data>
-  <data name="SalesTotalLabel" xml:space="preserve"><value>Total sales</value><comment>TODO: translate to German</comment></data>
-  <data name="PurchaseReturnTotalLabel" xml:space="preserve"><value>Purchase returns</value><comment>TODO: translate to German</comment></data>
-  <data name="CashImportTotalLabel" xml:space="preserve"><value>Total cash receipts</value><comment>TODO: translate to German</comment></data>
-  <data name="CheckImportTotalLabel" xml:space="preserve"><value>Total check receipts</value><comment>TODO: translate to German</comment></data>
-  <data name="PurchaseTotalLabel" xml:space="preserve"><value>Total purchases</value><comment>TODO: translate to German</comment></data>
-  <data name="SalesReturnTotalLabel" xml:space="preserve"><value>Total sales returns</value><comment>TODO: translate to German</comment></data>
-  <data name="WorkOutTotalLabel" xml:space="preserve"><value>Total external processing</value><comment>TODO: translate to German</comment></data>
-  <data name="NazalatTotalLabel" xml:space="preserve"><value>Total discounts</value><comment>TODO: translate to German</comment></data>
-  <data name="EqualExportImportMessage" xml:space="preserve"><value>Export and import are equal at {0}</value><comment>TODO: translate to German</comment></data>
-  <data name="ExportExceedsImportMessage" xml:space="preserve"><value>Export exceeds import by {0}</value><comment>TODO: translate to German</comment></data>
-  <data name="ImportExceedsExportMessage" xml:space="preserve"><value>Import exceeds export by {0}</value><comment>TODO: translate to German</comment></data>
-  <data name="ResponsibleManLabel" xml:space="preserve"><value>Responsible</value><comment>TODO: translate to German</comment></data>
+  <data name="ShowMixedAccountLabel" xml:space="preserve"><value>Gemischtes Konto anzeigen</value></data>
+  <data name="MixedBalanceSummaryTitle" xml:space="preserve"><value>Saldenübersicht der gemischten Konten</value></data>
+  <data name="RefreshButton" xml:space="preserve"><value>Aktualisieren</value></data>
+  <data name="CustomerBalanceColumn" xml:space="preserve"><value>Saldo als Kunde</value></data>
+  <data name="SupplierBalanceColumn" xml:space="preserve"><value>Saldo als Lieferant</value></data>
+  <data name="NetBalanceColumn" xml:space="preserve"><value>Nettosaldo</value></data>
+  <data name="CustomerAccountStatementTitle" xml:space="preserve"><value>Kundenkontoauszug</value></data>
+  <data name="SupplierAccountStatementTitle" xml:space="preserve"><value>Lieferantenkontoauszug</value></data>
+  <data name="OperationColumn" xml:space="preserve"><value>Vorgang</value></data>
+  <data name="RunningDebitBalanceColumn" xml:space="preserve"><value>Laufender Sollsaldo</value></data>
+  <data name="RunningCreditBalanceColumn" xml:space="preserve"><value>Laufender Habensaldo</value></data>
+  <data name="CarNumberColumn" xml:space="preserve"><value>Fahrzeug</value></data>
+  <data name="WorkOrderNumberColumn" xml:space="preserve"><value>Arbeitsauftrag</value></data>
+  <data name="TaxInternalIdColumn" xml:space="preserve"><value>Interne Steuer-ID</value></data>
+  <data name="DocumentColumn" xml:space="preserve"><value>Beleg</value></data>
+  <data name="DeleteRowButton" xml:space="preserve"><value>Zeile löschen</value></data>
+  <data name="ViewCustomerBalanceListButton" xml:space="preserve"><value>Kundensaldenliste</value></data>
+  <data name="ViewSupplierBalanceListButton" xml:space="preserve"><value>Lieferantensaldenliste</value></data>
+  <data name="OtherAccountLabel" xml:space="preserve"><value>Gegenkonto</value></data>
+  <data name="AccountLabel" xml:space="preserve"><value>Konto</value></data>
+  <data name="Close" xml:space="preserve"><value>Schließen</value></data>
+  <data name="NewButton" xml:space="preserve"><value>Neu</value></data>
+  <data name="FinancialNoticeTitle" xml:space="preserve"><value>Finanzielle Abrechnungsmitteilung</value></data>
+  <data name="FinancialNoticeReviewTitle" xml:space="preserve"><value>Prüfung der Abrechnungsmitteilungen</value></data>
+  <data name="NoticeNoLabel" xml:space="preserve"><value>Mitteilungsnr.</value></data>
+  <data name="NoticeNoColumn" xml:space="preserve"><value>Mitteilungsnr.</value></data>
+  <data name="AmountInWordsLabel" xml:space="preserve"><value>Betrag in Worten</value></data>
+  <data name="AmountInFiguresLabel" xml:space="preserve"><value>Betrag in Ziffern</value></data>
+  <data name="DeleteNoticeButton" xml:space="preserve"><value>Mitteilung löschen</value></data>
+  <data name="SelectCustomerValidation" xml:space="preserve"><value>Bitte wählen Sie den Kunden aus</value></data>
+  <data name="SelectSupplierValidation" xml:space="preserve"><value>Bitte wählen Sie den Lieferanten aus</value></data>
+  <data name="SelectNatureValidation" xml:space="preserve"><value>Sie müssen die Art der Mitteilung wählen (Soll oder Haben)</value></data>
+  <data name="EnterValueValidation" xml:space="preserve"><value>Geben Sie den Wert ein</value></data>
+  <data name="EnterValidValueValidation" xml:space="preserve"><value>Geben Sie einen gültigen Wert ein</value></data>
+  <data name="EnterOrderNoValidation" xml:space="preserve"><value>Bitte geben Sie die Nummer der Mitteilung ein</value></data>
+  <data name="SelectCurrencyValidation" xml:space="preserve"><value>Bitte wählen Sie die Währung aus</value></data>
+  <data name="EnterNotesValidation" xml:space="preserve"><value>Geben Sie die Beschreibung oder Notizen des Vorgangs ein</value></data>
+  <data name="ConfirmSaveNoticeMessage" xml:space="preserve"><value>Möchten Sie diese Daten wirklich speichern?</value></data>
+  <data name="ConfirmDeleteNoticeMessage" xml:space="preserve"><value>Möchten Sie die Mitteilung löschen?</value></data>
+  <data name="NoticeSavedMessage" xml:space="preserve"><value>Abrechnungsmitteilung gespeichert</value></data>
+  <data name="NoticeDeletedMessage" xml:space="preserve"><value>Abrechnungsmitteilung gelöscht</value></data>
+  <data name="NoticeSaveErrorMessage" xml:space="preserve"><value>Fehler beim Erstellen der Abrechnungsmitteilung</value></data>
+  <data name="NoticeDeleteErrorMessage" xml:space="preserve"><value>Fehler beim Löschen der Abrechnungsmitteilung</value></data>
+  <data name="ValueColumn" xml:space="preserve"><value>Wert</value></data>
+  <data name="TypeColumn" xml:space="preserve"><value>Typ</value></data>
+  <data name="DetailsButton" xml:space="preserve"><value>Details der Mitteilung</value></data>
+  <data name="QuantityColumn" xml:space="preserve"><value>Menge</value></data>
+  <data name="PriceColumn" xml:space="preserve"><value>Preis</value></data>
+  <data name="TotalColumn" xml:space="preserve"><value>Summe</value></data>
+  <data name="AddItemButton" xml:space="preserve"><value>Artikel hinzufügen</value></data>
+  <data name="EditItemButton" xml:space="preserve"><value>Artikel bearbeiten</value></data>
+  <data name="DeleteItemButton" xml:space="preserve"><value>Artikel löschen</value></data>
+  <data name="SelectItemValidation" xml:space="preserve"><value>Sie müssen den Artikel auswählen</value></data>
+  <data name="EnterQtyValidation" xml:space="preserve"><value>Geben Sie die Artikelmenge ein</value></data>
+  <data name="EnterPriceValidation" xml:space="preserve"><value>Geben Sie den Artikelpreis ein</value></data>
+  <data name="EnterItemsValidation" xml:space="preserve"><value>Geben Sie die Artikel ein</value></data>
+  <data name="AddItemDialogTitle" xml:space="preserve"><value>Artikel hinzufügen</value></data>
+  <data name="ConfirmDeleteItemMessage" xml:space="preserve"><value>Möchten Sie den Artikel löschen?</value></data>
+  <data name="ItemsTitle" xml:space="preserve"><value>Artikel</value></data>
+  <data name="FinancialNoticeByItemTitle" xml:space="preserve"><value>Finanzielle Abrechnungsmitteilung nach Artikel</value></data>
+  <data name="FinancialNoticeByItemReviewTitle" xml:space="preserve"><value>Prüfung der Abrechnungsmitteilungen nach Artikel</value></data>
+  <data name="OpeningBalanceListTitle" xml:space="preserve"><value>Eröffnungssalden</value></data>
+  <data name="AccountCodeColumn" xml:space="preserve"><value>Kontocode</value></data>
+  <data name="DebitFirstBalanceColumn" xml:space="preserve"><value>Eröffnungssaldo Soll</value></data>
+  <data name="CreditFirstBalanceColumn" xml:space="preserve"><value>Eröffnungssaldo Haben</value></data>
+  <data name="DebitEquivalentFirstBalanceColumn" xml:space="preserve"><value>Gegenwert Eröffnungssaldo Soll</value></data>
+  <data name="CreditEquivalentFirstBalanceColumn" xml:space="preserve"><value>Gegenwert Eröffnungssaldo Haben</value></data>
+  <data name="EditFirstBalanceButton" xml:space="preserve"><value>Eröffnungssaldo bearbeiten</value></data>
+  <data name="ReviewAddAccountsButton" xml:space="preserve"><value>Neue Konten für Eröffnungssalden prüfen</value></data>
+  <data name="SpecificAccountFilterLabel" xml:space="preserve"><value>Bestimmtes Konto (optional)</value></data>
+  <data name="ShowTotalLabel" xml:space="preserve"><value>Summen anzeigen</value></data>
+  <data name="EditGLFirstBalanceTitle" xml:space="preserve"><value>Eröffnungssaldo bearbeiten</value></data>
+  <data name="EquivalentFactorLabel" xml:space="preserve"><value>Umrechnungsfaktor</value></data>
+  <data name="EquivalentBalanceLabel" xml:space="preserve"><value>Gegenwertsaldo</value></data>
+  <data name="ExistingBalancesLabel" xml:space="preserve"><value>Vorhandene Salden nach Währung</value></data>
+  <data name="GrandTotalLabel" xml:space="preserve"><value>Gesamtsumme</value></data>
+  <data name="SubtotalPrefixLabel" xml:space="preserve"><value>Summe</value></data>
+  <data name="EquivalentCurrencyOption" xml:space="preserve"><value>Gegenwert</value></data>
+  <data name="AllCurrenciesOption" xml:space="preserve"><value>Alle</value></data>
+  <data name="AccountNameSearchLabel" xml:space="preserve"><value>Nach Name suchen</value></data>
+  <data name="DailyWorkSummaryTitle" xml:space="preserve"><value>Tagesjournal Aus-/Eingänge</value></data>
+  <data name="ExportSectionTitle" xml:space="preserve"><value>Ausgänge</value></data>
+  <data name="ImportSectionTitle" xml:space="preserve"><value>Eingänge</value></data>
+  <data name="CashPaymentDescription" xml:space="preserve"><value>Barzahlung: {0}</value></data>
+  <data name="CashReceiptDescription" xml:space="preserve"><value>Bareinzahlung: {0}</value></data>
+  <data name="CheckNumberDescription" xml:space="preserve"><value>Scheck Nr. {0} {1}</value></data>
+  <data name="SalesInvoiceDescription" xml:space="preserve"><value>Verkaufsrechnung für Kunde {0}</value></data>
+  <data name="PurchaseReturnDescription" xml:space="preserve"><value>Einkaufsgutschrift, Lieferant {0}</value></data>
+  <data name="WorkOutExportDescription" xml:space="preserve"><value>Artikel zur externen Bearbeitung, Lieferant {0}</value></data>
+  <data name="PurchaseInvoiceDescription" xml:space="preserve"><value>Einkaufsrechnung, Lieferant {0}</value></data>
+  <data name="SalesReturnDescription" xml:space="preserve"><value>Verkaufsgutschrift für Kunde {0}</value></data>
+  <data name="WorkOutImportDescription" xml:space="preserve"><value>Wareneingang externe Bearbeitung von {0}</value></data>
+  <data name="NazalatDescription" xml:space="preserve"><value>Rabattsumme {0}</value></data>
+  <data name="CashExportTotalLabel" xml:space="preserve"><value>Summe der Barzahlungen</value></data>
+  <data name="CheckExportTotalLabel" xml:space="preserve"><value>Summe der Scheckzahlungen</value></data>
+  <data name="SalesTotalLabel" xml:space="preserve"><value>Gesamtverkäufe</value></data>
+  <data name="PurchaseReturnTotalLabel" xml:space="preserve"><value>Einkaufsretouren</value></data>
+  <data name="CashImportTotalLabel" xml:space="preserve"><value>Summe der Bareinzahlungen</value></data>
+  <data name="CheckImportTotalLabel" xml:space="preserve"><value>Summe der Scheckeingänge</value></data>
+  <data name="PurchaseTotalLabel" xml:space="preserve"><value>Gesamteinkäufe</value></data>
+  <data name="SalesReturnTotalLabel" xml:space="preserve"><value>Gesamte Verkaufsretouren</value></data>
+  <data name="WorkOutTotalLabel" xml:space="preserve"><value>Gesamt externe Bearbeitung</value></data>
+  <data name="NazalatTotalLabel" xml:space="preserve"><value>Gesamtrabatte</value></data>
+  <data name="EqualExportImportMessage" xml:space="preserve"><value>Ausgänge und Eingänge sind gleich: {0}</value></data>
+  <data name="ExportExceedsImportMessage" xml:space="preserve"><value>Die Ausgänge übersteigen die Eingänge um {0}</value></data>
+  <data name="ImportExceedsExportMessage" xml:space="preserve"><value>Die Eingänge übersteigen die Ausgänge um {0}</value></data>
+  <data name="ResponsibleManLabel" xml:space="preserve"><value>Verantwortlicher</value></data>
 
-  <data name="InvoiceNotesSettingsTitle" xml:space="preserve"><value>Fixed Note Printed on Invoice</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceNotesLabel" xml:space="preserve"><value>Fixed note text</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceNotesSaved" xml:space="preserve"><value>Saved successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceNotesSaveError" xml:space="preserve"><value>Error saving: {0}</value><comment>TODO: translate to German</comment></data>
+  <data name="InvoiceNotesSettingsTitle" xml:space="preserve"><value>Fester Hinweis auf der Rechnung</value></data>
+  <data name="InvoiceNotesLabel" xml:space="preserve"><value>Fester Hinweistext</value></data>
+  <data name="InvoiceNotesSaved" xml:space="preserve"><value>Erfolgreich gespeichert</value></data>
+  <data name="InvoiceNotesSaveError" xml:space="preserve"><value>Fehler beim Speichern: {0}</value></data>
 
-  <data name="CashPaymentMethodsTitle" xml:space="preserve"><value>Cash Payment Methods</value><comment>TODO: translate to German</comment></data>
-  <data name="AddCashPaymentMethod" xml:space="preserve"><value>New Payment Method</value><comment>TODO: translate to German</comment></data>
-  <data name="NoCashPaymentMethodsYet" xml:space="preserve"><value>No cash payment methods to display yet.</value><comment>TODO: translate to German</comment></data>
-  <data name="CashPaymentMethodNameRequired" xml:space="preserve"><value>Please enter a name</value><comment>TODO: translate to German</comment></data>
-  <data name="CashPaymentMethodAdded" xml:space="preserve"><value>Added successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="CashPaymentMethodDeleted" xml:space="preserve"><value>Deleted successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteCashPaymentMethodTitle" xml:space="preserve"><value>Delete Payment Method</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteCashPaymentMethodConfirm" xml:space="preserve"><value>Are you sure you want to delete "{0}"?</value><comment>TODO: translate to German</comment></data>
+  <data name="CashPaymentMethodsTitle" xml:space="preserve"><value>Barzahlungsarten</value></data>
+  <data name="AddCashPaymentMethod" xml:space="preserve"><value>Neue Zahlungsart</value></data>
+  <data name="NoCashPaymentMethodsYet" xml:space="preserve"><value>Noch keine Barzahlungsarten vorhanden.</value></data>
+  <data name="CashPaymentMethodNameRequired" xml:space="preserve"><value>Bitte geben Sie einen Namen ein</value></data>
+  <data name="CashPaymentMethodAdded" xml:space="preserve"><value>Erfolgreich hinzugefügt</value></data>
+  <data name="CashPaymentMethodDeleted" xml:space="preserve"><value>Erfolgreich gelöscht</value></data>
+  <data name="DeleteCashPaymentMethodTitle" xml:space="preserve"><value>Zahlungsart löschen</value></data>
+  <data name="DeleteCashPaymentMethodConfirm" xml:space="preserve"><value>Möchten Sie „{0}“ wirklich löschen?</value></data>
 
-  <data name="ShipmentCompaniesTitle" xml:space="preserve"><value>Shipment Companies</value><comment>TODO: translate to German</comment></data>
-  <data name="AddShipmentCompany" xml:space="preserve"><value>New Shipment Company</value><comment>TODO: translate to German</comment></data>
-  <data name="NoShipmentCompaniesYet" xml:space="preserve"><value>No shipment companies to display yet.</value><comment>TODO: translate to German</comment></data>
-  <data name="ShipmentCompanyNameRequired" xml:space="preserve"><value>Please enter a name</value><comment>TODO: translate to German</comment></data>
-  <data name="ShipmentCompanyAdded" xml:space="preserve"><value>Added successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="ShipmentCompanyDeleted" xml:space="preserve"><value>Deleted successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteShipmentCompanyTitle" xml:space="preserve"><value>Delete Shipment Company</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteShipmentCompanyConfirm" xml:space="preserve"><value>Are you sure you want to delete "{0}"?</value><comment>TODO: translate to German</comment></data>
+  <data name="ShipmentCompaniesTitle" xml:space="preserve"><value>Versandunternehmen</value></data>
+  <data name="AddShipmentCompany" xml:space="preserve"><value>Neues Versandunternehmen</value></data>
+  <data name="NoShipmentCompaniesYet" xml:space="preserve"><value>Noch keine Versandunternehmen vorhanden.</value></data>
+  <data name="ShipmentCompanyNameRequired" xml:space="preserve"><value>Bitte geben Sie einen Namen ein</value></data>
+  <data name="ShipmentCompanyAdded" xml:space="preserve"><value>Erfolgreich hinzugefügt</value></data>
+  <data name="ShipmentCompanyDeleted" xml:space="preserve"><value>Erfolgreich gelöscht</value></data>
+  <data name="DeleteShipmentCompanyTitle" xml:space="preserve"><value>Versandunternehmen löschen</value></data>
+  <data name="DeleteShipmentCompanyConfirm" xml:space="preserve"><value>Möchten Sie „{0}“ wirklich löschen?</value></data>
 
-  <data name="MachinesTitle" xml:space="preserve"><value>Machines</value><comment>TODO: translate to German</comment></data>
-  <data name="AddMachine" xml:space="preserve"><value>New Machine</value><comment>TODO: translate to German</comment></data>
-  <data name="NoMachinesYet" xml:space="preserve"><value>No machines to display yet.</value><comment>TODO: translate to German</comment></data>
-  <data name="MachineNameRequired" xml:space="preserve"><value>Please enter a name</value><comment>TODO: translate to German</comment></data>
-  <data name="MachineNameDuplicate" xml:space="preserve"><value>The name "{0}" is already used by another machine</value><comment>TODO: translate to German</comment></data>
-  <data name="MachineAdded" xml:space="preserve"><value>Added successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="MachineDeleted" xml:space="preserve"><value>Deleted successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteMachineTitle" xml:space="preserve"><value>Delete Machine</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteMachineConfirm" xml:space="preserve"><value>Are you sure you want to delete "{0}"?</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceNoLabel" xml:space="preserve"><value>Invoice No.</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceDateLabel" xml:space="preserve"><value>Invoice Date</value><comment>TODO: translate to German</comment></data>
-  <data name="ItemsHeader" xml:space="preserve"><value>Invoice Items</value><comment>TODO: translate to German</comment></data>
-  <data name="UnitPriceColumn" xml:space="preserve"><value>Unit Price</value><comment>TODO: translate to German</comment></data>
-  <data name="TaxSalesColumn" xml:space="preserve"><value>Sales Tax</value><comment>TODO: translate to German</comment></data>
-  <data name="ATS05Column" xml:space="preserve"><value>Additional Discount</value><comment>TODO: translate to German</comment></data>
-  <data name="NetTotalColumn" xml:space="preserve"><value>Net Total</value><comment>TODO: translate to German</comment></data>
-  <data name="ActionsColumn" xml:space="preserve"><value>Actions</value><comment>TODO: translate to German</comment></data>
-  <data name="NoItemsMessage" xml:space="preserve"><value>No items added yet</value><comment>TODO: translate to German</comment></data>
-  <data name="TotalLabel" xml:space="preserve"><value>Items Total</value><comment>TODO: translate to German</comment></data>
-  <data name="TotalWithoutTaxLabel" xml:space="preserve"><value>Total Without Tax</value><comment>TODO: translate to German</comment></data>
-  <data name="NetTotalLabel" xml:space="preserve"><value>Invoice Net Total</value><comment>TODO: translate to German</comment></data>
-  <data name="SaveButton" xml:space="preserve"><value>Save Invoice</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceTitleKta3y" xml:space="preserve"><value>Retail Sales Invoice</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceTitleAgile" xml:space="preserve"><value>Credit Sales Invoice</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceTitleCash" xml:space="preserve"><value>Cash Sales Invoice</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceTitleReturnCash" xml:space="preserve"><value>Cash Sales Return Invoice</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceTitleReturn" xml:space="preserve"><value>Sales Return Invoice</value><comment>TODO: translate to German</comment></data>
-  <data name="CustomerRequiredError" xml:space="preserve"><value>Please select a customer</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceSavedMessage" xml:space="preserve"><value>Invoice saved successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceSaveError" xml:space="preserve"><value>An error occurred while saving the invoice</value><comment>TODO: translate to German</comment></data>
-  <data name="EditItemTitle" xml:space="preserve"><value>Edit Item</value><comment>TODO: translate to German</comment></data>
-  <data name="AddItemTitle" xml:space="preserve"><value>Add Item</value><comment>TODO: translate to German</comment></data>
-  <data name="ItemLabel" xml:space="preserve"><value>Item</value><comment>TODO: translate to German</comment></data>
-  <data name="ItemCodeLabel" xml:space="preserve"><value>Item Code</value><comment>TODO: translate to German</comment></data>
-  <data name="LargBalanceLabel" xml:space="preserve"><value>Balance (Large Unit)</value><comment>TODO: translate to German</comment></data>
-  <data name="SmallBalanceLabel" xml:space="preserve"><value>Balance (Small Unit)</value><comment>TODO: translate to German</comment></data>
-  <data name="UnitPriceLabel" xml:space="preserve"><value>Unit Price</value><comment>TODO: translate to German</comment></data>
-  <data name="QuantityLabel" xml:space="preserve"><value>Quantity</value><comment>TODO: translate to German</comment></data>
-  <data name="LineTotalLabel" xml:space="preserve"><value>Line Total</value><comment>TODO: translate to German</comment></data>
-  <data name="PriceRequiredError" xml:space="preserve"><value>Please enter the unit price</value><comment>TODO: translate to German</comment></data>
-  <data name="QuantityRequiredError" xml:space="preserve"><value>Please enter the quantity</value><comment>TODO: translate to German</comment></data>
-  <data name="AddAndContinueButton" xml:space="preserve"><value>Add</value><comment>TODO: translate to German</comment></data>
-  <data name="OkButton" xml:space="preserve"><value>OK</value><comment>TODO: translate to German</comment></data>
-  <data name="ItemAddedMessage" xml:space="preserve"><value>Item added</value><comment>TODO: translate to German</comment></data>
-  <data name="SearchByCodeLabel" xml:space="preserve"><value>Item Code</value><comment>TODO: translate to German</comment></data>
-  <data name="BarcodeSearchLabel" xml:space="preserve"><value>Search by code or barcode</value><comment>TODO: translate to German</comment></data>
-  <data name="SearchByCodeToggleLabel" xml:space="preserve"><value>Search by Code</value><comment>TODO: translate to German</comment></data>
-  <data name="ShowItemsWithoutBalanceLabel" xml:space="preserve"><value>Show items without balance</value><comment>TODO: translate to German</comment></data>
-  <data name="ItemCodeNotFoundError" xml:space="preserve"><value>No item found with this code</value><comment>TODO: translate to German</comment></data>
+  <data name="MachinesTitle" xml:space="preserve"><value>Maschinen</value></data>
+  <data name="AddMachine" xml:space="preserve"><value>Neue Maschine</value></data>
+  <data name="NoMachinesYet" xml:space="preserve"><value>Noch keine Maschinen vorhanden.</value></data>
+  <data name="MachineNameRequired" xml:space="preserve"><value>Bitte geben Sie einen Namen ein</value></data>
+  <data name="MachineNameDuplicate" xml:space="preserve"><value>Der Name „{0}“ wird bereits von einer anderen Maschine verwendet</value></data>
+  <data name="MachineAdded" xml:space="preserve"><value>Erfolgreich hinzugefügt</value></data>
+  <data name="MachineDeleted" xml:space="preserve"><value>Erfolgreich gelöscht</value></data>
+  <data name="DeleteMachineTitle" xml:space="preserve"><value>Maschine löschen</value></data>
+  <data name="DeleteMachineConfirm" xml:space="preserve"><value>Möchten Sie „{0}“ wirklich löschen?</value></data>
+  <data name="InvoiceNoLabel" xml:space="preserve"><value>Rechnungsnr.</value></data>
+  <data name="InvoiceDateLabel" xml:space="preserve"><value>Rechnungsdatum</value></data>
+  <data name="ItemsHeader" xml:space="preserve"><value>Rechnungsartikel</value></data>
+  <data name="UnitPriceColumn" xml:space="preserve"><value>Stückpreis</value></data>
+  <data name="TaxSalesColumn" xml:space="preserve"><value>Umsatzsteuer</value></data>
+  <data name="ATS05Column" xml:space="preserve"><value>Zusätzlicher Rabatt</value></data>
+  <data name="NetTotalColumn" xml:space="preserve"><value>Nettosumme</value></data>
+  <data name="ActionsColumn" xml:space="preserve"><value>Aktionen</value></data>
+  <data name="NoItemsMessage" xml:space="preserve"><value>Noch keine Artikel hinzugefügt</value></data>
+  <data name="TotalLabel" xml:space="preserve"><value>Artikelsumme</value></data>
+  <data name="TotalWithoutTaxLabel" xml:space="preserve"><value>Summe ohne Steuer</value></data>
+  <data name="NetTotalLabel" xml:space="preserve"><value>Rechnungsnettosumme</value></data>
+  <data name="SaveButton" xml:space="preserve"><value>Rechnung speichern</value></data>
+  <data name="InvoiceTitleKta3y" xml:space="preserve"><value>Einzelhandelsrechnung</value></data>
+  <data name="InvoiceTitleAgile" xml:space="preserve"><value>Verkaufsrechnung auf Ziel</value></data>
+  <data name="InvoiceTitleCash" xml:space="preserve"><value>Barverkaufsrechnung</value></data>
+  <data name="InvoiceTitleReturnCash" xml:space="preserve"><value>Barverkaufsgutschrift</value></data>
+  <data name="InvoiceTitleReturn" xml:space="preserve"><value>Verkaufsgutschrift</value></data>
+  <data name="CustomerRequiredError" xml:space="preserve"><value>Bitte wählen Sie einen Kunden</value></data>
+  <data name="InvoiceSavedMessage" xml:space="preserve"><value>Rechnung erfolgreich gespeichert</value></data>
+  <data name="InvoiceSaveError" xml:space="preserve"><value>Beim Speichern der Rechnung ist ein Fehler aufgetreten</value></data>
+  <data name="EditItemTitle" xml:space="preserve"><value>Artikel bearbeiten</value></data>
+  <data name="AddItemTitle" xml:space="preserve"><value>Artikel hinzufügen</value></data>
+  <data name="ItemLabel" xml:space="preserve"><value>Artikel</value></data>
+  <data name="ItemCodeLabel" xml:space="preserve"><value>Artikelcode</value></data>
+  <data name="LargBalanceLabel" xml:space="preserve"><value>Bestand (große Einheit)</value></data>
+  <data name="SmallBalanceLabel" xml:space="preserve"><value>Bestand (kleine Einheit)</value></data>
+  <data name="UnitPriceLabel" xml:space="preserve"><value>Stückpreis</value></data>
+  <data name="QuantityLabel" xml:space="preserve"><value>Menge</value></data>
+  <data name="LineTotalLabel" xml:space="preserve"><value>Zeilensumme</value></data>
+  <data name="PriceRequiredError" xml:space="preserve"><value>Bitte geben Sie den Stückpreis ein</value></data>
+  <data name="QuantityRequiredError" xml:space="preserve"><value>Bitte geben Sie die Menge ein</value></data>
+  <data name="AddAndContinueButton" xml:space="preserve"><value>Hinzufügen</value></data>
+  <data name="OkButton" xml:space="preserve"><value>OK</value></data>
+  <data name="ItemAddedMessage" xml:space="preserve"><value>Artikel hinzugefügt</value></data>
+  <data name="SearchByCodeLabel" xml:space="preserve"><value>Artikelcode</value></data>
+  <data name="BarcodeSearchLabel" xml:space="preserve"><value>Nach Code oder Barcode suchen</value></data>
+  <data name="SearchByCodeToggleLabel" xml:space="preserve"><value>Nach Code suchen</value></data>
+  <data name="ShowItemsWithoutBalanceLabel" xml:space="preserve"><value>Artikel ohne Bestand anzeigen</value></data>
+  <data name="ItemCodeNotFoundError" xml:space="preserve"><value>Kein Artikel mit diesem Code gefunden</value></data>
 
-  <data name="DS_TitleDaily" xml:space="preserve"><value>Daily Customer Sales</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_TitleSingle" xml:space="preserve"><value>Single Item Sale</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_ItemSourceLabel" xml:space="preserve"><value>Item Source</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_SourceBatch" xml:space="preserve"><value>From Incoming Batch</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_SourceItemList" xml:space="preserve"><value>From Item List</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_BatchOrItemLabel" xml:space="preserve"><value>Batch / Item</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_QtyKgLabel" xml:space="preserve"><value>Quantity (kg)</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_QtyCountLabel" xml:space="preserve"><value>Count</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_AddSaleButton" xml:space="preserve"><value>Add Sale</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_NewButton" xml:space="preserve"><value>New</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_SearchButton" xml:space="preserve"><value>Search</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_InvoiceCash" xml:space="preserve"><value>Cash</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_InvoiceCredit" xml:space="preserve"><value>Credit</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_PaymentValueLabel" xml:space="preserve"><value>Paid Amount</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_ListCommissionLabel" xml:space="preserve"><value>Invoice Commission</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_UseExtraAmountLabel" xml:space="preserve"><value>Use extra amount to settle previous debts</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_ShowInvoicedLabel" xml:space="preserve"><value>Show invoiced</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_ShowNotInvoicedLabel" xml:space="preserve"><value>Show not invoiced</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_SelectColumn" xml:space="preserve"><value>Select</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_DateColumn" xml:space="preserve"><value>Date</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_StatusColumn" xml:space="preserve"><value>Status</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_StatusInvoiced" xml:space="preserve"><value>Invoiced</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_StatusNotInvoiced" xml:space="preserve"><value>Not invoiced</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_NoSalesMessage" xml:space="preserve"><value>No sales found</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_InsufficientBalanceError" xml:space="preserve"><value>Cannot sell: insufficient balance</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_SelectSalesError" xml:space="preserve"><value>Please select the sales to include in the invoice</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_ItemRequiredError" xml:space="preserve"><value>Please select the item first</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_QtyInvalidError" xml:space="preserve"><value>Please enter a valid quantity</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_KgColumn" xml:space="preserve"><value>Kg</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_ValueColumn" xml:space="preserve"><value>Value</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_NetTotalLabel" xml:space="preserve"><value>Invoice Net Total</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_InvoiceCreated" xml:space="preserve"><value>Invoice created successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="DS_FeatureMissing" xml:space="preserve"><value>The batch-sales feature is not enabled in the current database (Unit_Item_SalesDate tables are missing).</value><comment>TODO: translate to German</comment></data>
-  <data name="BC_Title" xml:space="preserve"><value>Beauty Center Invoice</value><comment>TODO: translate to German</comment></data>
-  <data name="BC_AppointmentInfo" xml:space="preserve"><value>Appointment</value><comment>TODO: translate to German</comment></data>
-  <data name="BC_NotFound" xml:space="preserve"><value>The specified appointment was not found</value><comment>TODO: translate to German</comment></data>
-  <data name="BC_ServiceColumn" xml:space="preserve"><value>Service / Product</value><comment>TODO: translate to German</comment></data>
-  <data name="BC_DurationColumn" xml:space="preserve"><value>Duration (min)</value><comment>TODO: translate to German</comment></data>
-  <data name="BC_EmployeesColumn" xml:space="preserve"><value>Employees</value><comment>TODO: translate to German</comment></data>
-  <data name="BC_InvoicedColumn" xml:space="preserve"><value>Invoiced?</value><comment>TODO: translate to German</comment></data>
-  <data name="BC_SelectServicesError" xml:space="preserve"><value>Please select services or products to include in the invoice</value><comment>TODO: translate to German</comment></data>
-  <data name="BC_Saved" xml:space="preserve"><value>Invoice saved and linked to the services successfully</value><comment>TODO: translate to German</comment></data>
-  <data name="BC_OpenInvoice" xml:space="preserve"><value>Open invoice</value><comment>TODO: translate to German</comment></data>
-  <data name="POS_Title" xml:space="preserve"><value>Point of Sale</value><comment>TODO: translate to German</comment></data>
-  <data name="POS_Categories" xml:space="preserve"><value>Categories</value><comment>TODO: translate to German</comment></data>
-  <data name="POS_OrderItemsHeader" xml:space="preserve"><value>Order Items</value><comment>TODO: translate to German</comment></data>
-  <data name="POS_OrderType" xml:space="preserve"><value>Order Type</value><comment>TODO: translate to German</comment></data>
-  <data name="POS_DineIn" xml:space="preserve"><value>Dine-in</value><comment>TODO: translate to German</comment></data>
-  <data name="POS_TakeAway" xml:space="preserve"><value>Take-away</value><comment>TODO: translate to German</comment></data>
-  <data name="POS_Delivery" xml:space="preserve"><value>Delivery</value><comment>TODO: translate to German</comment></data>
-  <data name="POS_ServiceRate" xml:space="preserve"><value>Service Rate %</value><comment>TODO: translate to German</comment></data>
-  <data name="POS_TaxRate" xml:space="preserve"><value>Tax Rate %</value><comment>TODO: translate to German</comment></data>
-  <data name="POS_DeliveryFee" xml:space="preserve"><value>Delivery Fee</value><comment>TODO: translate to German</comment></data>
-  <data name="POS_ServiceAmount" xml:space="preserve"><value>Service Amount</value><comment>TODO: translate to German</comment></data>
-  <data name="POS_TaxAmount" xml:space="preserve"><value>Tax Amount</value><comment>TODO: translate to German</comment></data>
-  <data name="POS_NetTotal" xml:space="preserve"><value>Grand Total</value><comment>TODO: translate to German</comment></data>
-  <data name="POS_PaidLabel" xml:space="preserve"><value>Paid</value><comment>TODO: translate to German</comment></data>
-  <data name="POS_ChangeLabel" xml:space="preserve"><value>Change</value><comment>TODO: translate to German</comment></data>
-  <data name="POS_EmptyOrder" xml:space="preserve"><value>No items in the order</value><comment>TODO: translate to German</comment></data>
-  <data name="POS_NewOrder" xml:space="preserve"><value>New Order</value><comment>TODO: translate to German</comment></data>
-  <data name="TaxInvoiceLabel" xml:space="preserve"><value>Tax invoice</value><comment>TODO: translate to German</comment></data>
-  <data name="TaxPerItemLabel" xml:space="preserve"><value>Tax per item</value><comment>TODO: translate to German</comment></data>
-  <data name="TaxSalesValueLabel" xml:space="preserve"><value>Sales tax value</value><comment>TODO: translate to German</comment></data>
-  <data name="ATS05ValueLabel" xml:space="preserve"><value>Withholding tax value</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceTabSales" xml:space="preserve"><value>Sales invoice no. {0}</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceTabReturn" xml:space="preserve"><value>Sales return invoice no. {0}</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceStatusNew" xml:space="preserve"><value>New</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceStatusSaved" xml:space="preserve"><value>Saved</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceDataTitle" xml:space="preserve"><value>Invoice details</value><comment>TODO: translate to German</comment></data>
-  <data name="InvoiceSummaryTitle" xml:space="preserve"><value>Invoice summary</value><comment>TODO: translate to German</comment></data>
-  <data name="BalanceBeforeLabel" xml:space="preserve"><value>Customer balance before</value><comment>TODO: translate to German</comment></data>
-  <data name="BalanceAfterLabel" xml:space="preserve"><value>Customer balance after</value><comment>TODO: translate to German</comment></data>
-  <data name="AddFirstItemHint" xml:space="preserve"><value>Start by adding the first item to the invoice</value><comment>TODO: translate to German</comment></data>
-  <data name="LinesCountLabel" xml:space="preserve"><value>Items</value><comment>TODO: translate to German</comment></data>
-  <data name="LinesQtyLabel" xml:space="preserve"><value>Total quantity</value><comment>TODO: translate to German</comment></data>
-  <data name="EditItemLabel" xml:space="preserve"><value>Edit item</value><comment>TODO: translate to German</comment></data>
-  <data name="DeleteItemLabel" xml:space="preserve"><value>Delete item</value><comment>TODO: translate to German</comment></data>
-  <data name="SummaryDetailsShow" xml:space="preserve"><value>Show detailed summary</value><comment>TODO: translate to German</comment></data>
-  <data name="SummaryDetailsHide" xml:space="preserve"><value>Hide detailed summary</value><comment>TODO: translate to German</comment></data>
+  <data name="DS_TitleDaily" xml:space="preserve"><value>Tägliche Kundenverkäufe</value></data>
+  <data name="DS_TitleSingle" xml:space="preserve"><value>Einzelartikelverkauf</value></data>
+  <data name="DS_ItemSourceLabel" xml:space="preserve"><value>Artikelquelle</value></data>
+  <data name="DS_SourceBatch" xml:space="preserve"><value>Aus eingehender Charge</value></data>
+  <data name="DS_SourceItemList" xml:space="preserve"><value>Aus der Artikelliste</value></data>
+  <data name="DS_BatchOrItemLabel" xml:space="preserve"><value>Charge / Artikel</value></data>
+  <data name="DS_QtyKgLabel" xml:space="preserve"><value>Menge (kg)</value></data>
+  <data name="DS_QtyCountLabel" xml:space="preserve"><value>Anzahl</value></data>
+  <data name="DS_AddSaleButton" xml:space="preserve"><value>Verkauf hinzufügen</value></data>
+  <data name="DS_NewButton" xml:space="preserve"><value>Neu</value></data>
+  <data name="DS_SearchButton" xml:space="preserve"><value>Suchen</value></data>
+  <data name="DS_InvoiceCash" xml:space="preserve"><value>Bar</value></data>
+  <data name="DS_InvoiceCredit" xml:space="preserve"><value>Auf Rechnung</value></data>
+  <data name="DS_PaymentValueLabel" xml:space="preserve"><value>Gezahlter Betrag</value></data>
+  <data name="DS_ListCommissionLabel" xml:space="preserve"><value>Provision der Rechnung</value></data>
+  <data name="DS_UseExtraAmountLabel" xml:space="preserve"><value>Überschuss zum Ausgleich früherer Schulden verwenden</value></data>
+  <data name="DS_ShowInvoicedLabel" xml:space="preserve"><value>Abgerechnete anzeigen</value></data>
+  <data name="DS_ShowNotInvoicedLabel" xml:space="preserve"><value>Nicht abgerechnete anzeigen</value></data>
+  <data name="DS_SelectColumn" xml:space="preserve"><value>Auswählen</value></data>
+  <data name="DS_DateColumn" xml:space="preserve"><value>Datum</value></data>
+  <data name="DS_StatusColumn" xml:space="preserve"><value>Status</value></data>
+  <data name="DS_StatusInvoiced" xml:space="preserve"><value>Abgerechnet</value></data>
+  <data name="DS_StatusNotInvoiced" xml:space="preserve"><value>Nicht abgerechnet</value></data>
+  <data name="DS_NoSalesMessage" xml:space="preserve"><value>Keine Verkäufe gefunden</value></data>
+  <data name="DS_InsufficientBalanceError" xml:space="preserve"><value>Verkauf nicht möglich: unzureichender Bestand</value></data>
+  <data name="DS_SelectSalesError" xml:space="preserve"><value>Bitte wählen Sie die Verkäufe für die Rechnung aus</value></data>
+  <data name="DS_ItemRequiredError" xml:space="preserve"><value>Bitte wählen Sie zuerst den Artikel aus</value></data>
+  <data name="DS_QtyInvalidError" xml:space="preserve"><value>Bitte geben Sie eine gültige Menge ein</value></data>
+  <data name="DS_KgColumn" xml:space="preserve"><value>kg</value></data>
+  <data name="DS_ValueColumn" xml:space="preserve"><value>Wert</value></data>
+  <data name="DS_NetTotalLabel" xml:space="preserve"><value>Rechnungsnettosumme</value></data>
+  <data name="DS_InvoiceCreated" xml:space="preserve"><value>Rechnung erfolgreich erstellt</value></data>
+  <data name="DS_FeatureMissing" xml:space="preserve"><value>Die Chargenverkauf-Funktion ist in der aktuellen Datenbank nicht aktiviert (die Tabellen Unit_Item_SalesDate fehlen).</value></data>
+  <data name="BC_Title" xml:space="preserve"><value>Rechnung des Schönheitsstudios</value></data>
+  <data name="BC_AppointmentInfo" xml:space="preserve"><value>Termin</value></data>
+  <data name="BC_NotFound" xml:space="preserve"><value>Der angegebene Termin wurde nicht gefunden</value></data>
+  <data name="BC_ServiceColumn" xml:space="preserve"><value>Leistung / Produkt</value></data>
+  <data name="BC_DurationColumn" xml:space="preserve"><value>Dauer (Min.)</value></data>
+  <data name="BC_EmployeesColumn" xml:space="preserve"><value>Mitarbeiter</value></data>
+  <data name="BC_InvoicedColumn" xml:space="preserve"><value>Abgerechnet?</value></data>
+  <data name="BC_SelectServicesError" xml:space="preserve"><value>Bitte wählen Sie die Leistungen oder Produkte für die Rechnung aus</value></data>
+  <data name="BC_Saved" xml:space="preserve"><value>Rechnung gespeichert und erfolgreich mit den Leistungen verknüpft</value></data>
+  <data name="BC_OpenInvoice" xml:space="preserve"><value>Rechnung öffnen</value></data>
+  <data name="POS_Title" xml:space="preserve"><value>Kassensystem</value></data>
+  <data name="POS_Categories" xml:space="preserve"><value>Kategorien</value></data>
+  <data name="POS_OrderItemsHeader" xml:space="preserve"><value>Bestellte Artikel</value></data>
+  <data name="POS_OrderType" xml:space="preserve"><value>Bestellart</value></data>
+  <data name="POS_DineIn" xml:space="preserve"><value>Vor Ort</value></data>
+  <data name="POS_TakeAway" xml:space="preserve"><value>Zum Mitnehmen</value></data>
+  <data name="POS_Delivery" xml:space="preserve"><value>Lieferung</value></data>
+  <data name="POS_ServiceRate" xml:space="preserve"><value>Servicesatz %</value></data>
+  <data name="POS_TaxRate" xml:space="preserve"><value>Steuersatz %</value></data>
+  <data name="POS_DeliveryFee" xml:space="preserve"><value>Liefergebühr</value></data>
+  <data name="POS_ServiceAmount" xml:space="preserve"><value>Servicebetrag</value></data>
+  <data name="POS_TaxAmount" xml:space="preserve"><value>Steuerbetrag</value></data>
+  <data name="POS_NetTotal" xml:space="preserve"><value>Gesamtsumme</value></data>
+  <data name="POS_PaidLabel" xml:space="preserve"><value>Bezahlt</value></data>
+  <data name="POS_ChangeLabel" xml:space="preserve"><value>Wechselgeld</value></data>
+  <data name="POS_EmptyOrder" xml:space="preserve"><value>Keine Artikel in der Bestellung</value></data>
+  <data name="POS_NewOrder" xml:space="preserve"><value>Neue Bestellung</value></data>
+  <data name="TaxInvoiceLabel" xml:space="preserve"><value>Steuerrechnung</value></data>
+  <data name="TaxPerItemLabel" xml:space="preserve"><value>Steuer pro Artikel</value></data>
+  <data name="TaxSalesValueLabel" xml:space="preserve"><value>Umsatzsteuerbetrag</value></data>
+  <data name="ATS05ValueLabel" xml:space="preserve"><value>Betrag der Quellensteuer</value></data>
+  <data name="InvoiceTabSales" xml:space="preserve"><value>Verkaufsrechnung Nr. {0}</value></data>
+  <data name="InvoiceTabReturn" xml:space="preserve"><value>Verkaufsgutschrift Nr. {0}</value></data>
+  <data name="InvoiceStatusNew" xml:space="preserve"><value>Neu</value></data>
+  <data name="InvoiceStatusSaved" xml:space="preserve"><value>Gespeichert</value></data>
+  <data name="InvoiceDataTitle" xml:space="preserve"><value>Rechnungsdetails</value></data>
+  <data name="InvoiceSummaryTitle" xml:space="preserve"><value>Rechnungsübersicht</value></data>
+  <data name="BalanceBeforeLabel" xml:space="preserve"><value>Kundensaldo davor</value></data>
+  <data name="BalanceAfterLabel" xml:space="preserve"><value>Kundensaldo danach</value></data>
+  <data name="AddFirstItemHint" xml:space="preserve"><value>Beginnen Sie mit dem ersten Artikel der Rechnung</value></data>
+  <data name="LinesCountLabel" xml:space="preserve"><value>Artikel</value></data>
+  <data name="LinesQtyLabel" xml:space="preserve"><value>Gesamtmenge</value></data>
+  <data name="EditItemLabel" xml:space="preserve"><value>Artikel bearbeiten</value></data>
+  <data name="DeleteItemLabel" xml:space="preserve"><value>Artikel löschen</value></data>
+  <data name="SummaryDetailsShow" xml:space="preserve"><value>Detaillierte Übersicht anzeigen</value></data>
+  <data name="SummaryDetailsHide" xml:space="preserve"><value>Detaillierte Übersicht ausblenden</value></data>
   <data name="InvoicesListTitle" xml:space="preserve">
     <value>Verkaufsrechnungen</value>
   </data>
@@ -2357,62 +2357,62 @@
   <data name="AccountBranchSpecificLabel" xml:space="preserve">
     <value>Konto nur für diese Filiale</value>
   </data>
-  <data name="BarcodeSettingsTitle" xml:space="preserve"><value>Barcode Print Settings</value></data>
-  <data name="BarcodeLoadStaticDefault" xml:space="preserve"><value>Built-in Default</value></data>
-  <data name="BarcodeLoadSavedDefault" xml:space="preserve"><value>Load Saved Default</value></data>
-  <data name="BarcodeSaveAsDefault" xml:space="preserve"><value>Save as Default</value></data>
-  <data name="BarcodeLoadSaved" xml:space="preserve"><value>Load Saved</value></data>
-  <data name="BarcodeSaveSettings" xml:space="preserve"><value>Save Settings</value></data>
-  <data name="BarcodeSearchItemLabel" xml:space="preserve"><value>Search Item</value></data>
+  <data name="BarcodeSettingsTitle" xml:space="preserve"><value>Barcode-Druckeinstellungen</value></data>
+  <data name="BarcodeLoadStaticDefault" xml:space="preserve"><value>Integrierter Standard</value></data>
+  <data name="BarcodeLoadSavedDefault" xml:space="preserve"><value>Gespeicherten Standard laden</value></data>
+  <data name="BarcodeSaveAsDefault" xml:space="preserve"><value>Als Standard speichern</value></data>
+  <data name="BarcodeLoadSaved" xml:space="preserve"><value>Gespeicherte laden</value></data>
+  <data name="BarcodeSaveSettings" xml:space="preserve"><value>Einstellungen speichern</value></data>
+  <data name="BarcodeSearchItemLabel" xml:space="preserve"><value>Artikel suchen</value></data>
   <data name="BarcodeCodeLabel" xml:space="preserve"><value>Code</value></data>
-  <data name="BarcodeHeaderTextLabel" xml:space="preserve"><value>Header Text (Item Name)</value></data>
-  <data name="BarcodeTextUnderLabel" xml:space="preserve"><value>Text Under Barcode</value></data>
-  <data name="BarcodeAlignLabel" xml:space="preserve"><value>Alignment</value></data>
-  <data name="AlignLeft" xml:space="preserve"><value>Left</value></data>
-  <data name="AlignCenter" xml:space="preserve"><value>Center</value></data>
-  <data name="AlignRight" xml:space="preserve"><value>Right</value></data>
-  <data name="BarcodeWeightLabel" xml:space="preserve"><value>Barcode Weight</value></data>
-  <data name="WeightSmall" xml:space="preserve"><value>Small</value></data>
-  <data name="WeightMedium" xml:space="preserve"><value>Medium</value></data>
-  <data name="WeightLarge" xml:space="preserve"><value>Large</value></data>
-  <data name="BarcodeLabelSizeSection" xml:space="preserve"><value>Label Size</value></data>
-  <data name="BarcodeLabelWidthMm" xml:space="preserve"><value>Label Width (mm)</value></data>
-  <data name="BarcodeLabelHeightMm" xml:space="preserve"><value>Label Height (mm)</value></data>
-  <data name="BarcodeBarHeightMm" xml:space="preserve"><value>Bar Height (mm)</value></data>
-  <data name="BarcodeSpaceXMm" xml:space="preserve"><value>Horizontal Spacing (mm)</value></data>
-  <data name="BarcodeSpaceYMm" xml:space="preserve"><value>Vertical Spacing (mm)</value></data>
-  <data name="BarcodeLeftMarginMm" xml:space="preserve"><value>Left Margin (mm)</value></data>
-  <data name="BarcodeTopMarginMm" xml:space="preserve"><value>Top Margin (mm)</value></data>
-  <data name="BarcodePrintQuantitySection" xml:space="preserve"><value>Print Quantity</value></data>
-  <data name="BarcodeColumnsCount" xml:space="preserve"><value>Columns Count</value></data>
-  <data name="BarcodeQuantityRequired" xml:space="preserve"><value>Labels Required</value></data>
-  <data name="BarcodeUseCustomPaperSize" xml:space="preserve"><value>Use Custom Paper Size</value></data>
-  <data name="BarcodePaperWidthMm" xml:space="preserve"><value>Paper Width (mm)</value></data>
-  <data name="BarcodePaperHeightMm" xml:space="preserve"><value>Paper Height (mm)</value></data>
-  <data name="BarcodePaperLeftMargin" xml:space="preserve"><value>Paper Left Margin (mm)</value></data>
-  <data name="BarcodePaperTopMargin" xml:space="preserve"><value>Paper Top Margin (mm)</value></data>
-  <data name="BarcodePaperRightMargin" xml:space="preserve"><value>Paper Right Margin (mm)</value></data>
-  <data name="BarcodePaperBottomMargin" xml:space="preserve"><value>Paper Bottom Margin (mm)</value></data>
-  <data name="BarcodePreviewLabel" xml:space="preserve"><value>Print Preview</value></data>
-  <data name="BarcodeDefaultsLoaded" xml:space="preserve"><value>Built-in default loaded</value></data>
-  <data name="BarcodeSavedLoaded" xml:space="preserve"><value>Saved settings loaded</value></data>
-  <data name="BarcodeNoSavedSettings" xml:space="preserve"><value>No saved settings found</value></data>
-  <data name="BarcodeSettingsSaved" xml:space="preserve"><value>Barcode settings saved</value></data>
-  <data name="BarcodeStickersTitle" xml:space="preserve"><value>Print Barcode Stickers (Multi-Item)</value></data>
-  <data name="BarcodeStickerSettingsSection" xml:space="preserve"><value>Sticker Settings</value></data>
-  <data name="BarcodeStickerWidthMm" xml:space="preserve"><value>Sticker Width (mm)</value></data>
-  <data name="BarcodeStickerHeightMm" xml:space="preserve"><value>Sticker Height (mm)</value></data>
-  <data name="BarcodeStickerGapMm" xml:space="preserve"><value>Gap Between Stickers (mm)</value></data>
-  <data name="BarcodeCountPerSticker" xml:space="preserve"><value>Barcodes per Sticker</value></data>
-  <data name="BarcodeHeaderFontSize" xml:space="preserve"><value>Header Font Size</value></data>
-  <data name="BarcodeFooterFontSize" xml:space="preserve"><value>Footer Font Size</value></data>
-  <data name="BarcodeShowDivider" xml:space="preserve"><value>Divider Line Between Barcodes</value></data>
-  <data name="BarcodeOneStickerPerPage" xml:space="preserve"><value>One sticker per page (label printer)</value><comment>TODO: translate to German</comment></data>
-  <data name="BarcodeAddItemsSection" xml:space="preserve"><value>Add Items to Print</value></data>
-  <data name="BarcodeNoItemsAdded" xml:space="preserve"><value>No items added yet</value></data>
-  <data name="BarcodeSlotsWord" xml:space="preserve"><value>barcodes</value></data>
-  <data name="BarcodeStickersWord" xml:space="preserve"><value>stickers</value></data>
-  <data name="BarcodeCodeRequired" xml:space="preserve"><value>Enter the barcode code first</value></data>
+  <data name="BarcodeHeaderTextLabel" xml:space="preserve"><value>Kopfzeilentext (Artikelname)</value></data>
+  <data name="BarcodeTextUnderLabel" xml:space="preserve"><value>Text unter dem Barcode</value></data>
+  <data name="BarcodeAlignLabel" xml:space="preserve"><value>Ausrichtung</value></data>
+  <data name="AlignLeft" xml:space="preserve"><value>Links</value></data>
+  <data name="AlignCenter" xml:space="preserve"><value>Zentriert</value></data>
+  <data name="AlignRight" xml:space="preserve"><value>Rechts</value></data>
+  <data name="BarcodeWeightLabel" xml:space="preserve"><value>Barcode-Gewicht</value></data>
+  <data name="WeightSmall" xml:space="preserve"><value>Klein</value></data>
+  <data name="WeightMedium" xml:space="preserve"><value>Mittel</value></data>
+  <data name="WeightLarge" xml:space="preserve"><value>Groß</value></data>
+  <data name="BarcodeLabelSizeSection" xml:space="preserve"><value>Etikettengröße</value></data>
+  <data name="BarcodeLabelWidthMm" xml:space="preserve"><value>Etikettenbreite (mm)</value></data>
+  <data name="BarcodeLabelHeightMm" xml:space="preserve"><value>Etikettenhöhe (mm)</value></data>
+  <data name="BarcodeBarHeightMm" xml:space="preserve"><value>Balkenhöhe (mm)</value></data>
+  <data name="BarcodeSpaceXMm" xml:space="preserve"><value>Horizontaler Abstand (mm)</value></data>
+  <data name="BarcodeSpaceYMm" xml:space="preserve"><value>Vertikaler Abstand (mm)</value></data>
+  <data name="BarcodeLeftMarginMm" xml:space="preserve"><value>Linker Rand (mm)</value></data>
+  <data name="BarcodeTopMarginMm" xml:space="preserve"><value>Oberer Rand (mm)</value></data>
+  <data name="BarcodePrintQuantitySection" xml:space="preserve"><value>Druckmenge</value></data>
+  <data name="BarcodeColumnsCount" xml:space="preserve"><value>Anzahl der Spalten</value></data>
+  <data name="BarcodeQuantityRequired" xml:space="preserve"><value>Erforderliche Etiketten</value></data>
+  <data name="BarcodeUseCustomPaperSize" xml:space="preserve"><value>Benutzerdefiniertes Papierformat verwenden</value></data>
+  <data name="BarcodePaperWidthMm" xml:space="preserve"><value>Papierbreite (mm)</value></data>
+  <data name="BarcodePaperHeightMm" xml:space="preserve"><value>Papierhöhe (mm)</value></data>
+  <data name="BarcodePaperLeftMargin" xml:space="preserve"><value>Linker Papierrand (mm)</value></data>
+  <data name="BarcodePaperTopMargin" xml:space="preserve"><value>Oberer Papierrand (mm)</value></data>
+  <data name="BarcodePaperRightMargin" xml:space="preserve"><value>Rechter Papierrand (mm)</value></data>
+  <data name="BarcodePaperBottomMargin" xml:space="preserve"><value>Unterer Papierrand (mm)</value></data>
+  <data name="BarcodePreviewLabel" xml:space="preserve"><value>Druckvorschau</value></data>
+  <data name="BarcodeDefaultsLoaded" xml:space="preserve"><value>Integrierte Standardwerte geladen</value></data>
+  <data name="BarcodeSavedLoaded" xml:space="preserve"><value>Gespeicherte Einstellungen geladen</value></data>
+  <data name="BarcodeNoSavedSettings" xml:space="preserve"><value>Keine gespeicherten Einstellungen gefunden</value></data>
+  <data name="BarcodeSettingsSaved" xml:space="preserve"><value>Barcode-Einstellungen gespeichert</value></data>
+  <data name="BarcodeStickersTitle" xml:space="preserve"><value>Barcode-Etiketten drucken (mehrere Artikel)</value></data>
+  <data name="BarcodeStickerSettingsSection" xml:space="preserve"><value>Etiketteneinstellungen</value></data>
+  <data name="BarcodeStickerWidthMm" xml:space="preserve"><value>Etikettenbreite (mm)</value></data>
+  <data name="BarcodeStickerHeightMm" xml:space="preserve"><value>Etikettenhöhe (mm)</value></data>
+  <data name="BarcodeStickerGapMm" xml:space="preserve"><value>Abstand zwischen Etiketten (mm)</value></data>
+  <data name="BarcodeCountPerSticker" xml:space="preserve"><value>Barcodes pro Etikett</value></data>
+  <data name="BarcodeHeaderFontSize" xml:space="preserve"><value>Schriftgröße der Kopfzeile</value></data>
+  <data name="BarcodeFooterFontSize" xml:space="preserve"><value>Schriftgröße der Fußzeile</value></data>
+  <data name="BarcodeShowDivider" xml:space="preserve"><value>Trennlinie zwischen Barcodes</value></data>
+  <data name="BarcodeOneStickerPerPage" xml:space="preserve"><value>Ein Etikett pro Seite (Etikettendrucker)</value></data>
+  <data name="BarcodeAddItemsSection" xml:space="preserve"><value>Artikel zum Drucken hinzufügen</value></data>
+  <data name="BarcodeNoItemsAdded" xml:space="preserve"><value>Noch keine Artikel hinzugefügt</value></data>
+  <data name="BarcodeSlotsWord" xml:space="preserve"><value>Barcodes</value></data>
+  <data name="BarcodeStickersWord" xml:space="preserve"><value>Etiketten</value></data>
+  <data name="BarcodeCodeRequired" xml:space="preserve"><value>Geben Sie zuerst den Barcode ein</value></data>
   <data name="FBChkTitleIn" xml:space="preserve"><value>Eröffnungssaldo-Schecks (eingehend)</value></data>
   <data name="FBChkTitleOut" xml:space="preserve"><value>Eröffnungssaldo-Schecks (ausgehend)</value></data>
   <data name="FBChkColAccount" xml:space="preserve"><value>Zugehöriges Konto</value></data>
