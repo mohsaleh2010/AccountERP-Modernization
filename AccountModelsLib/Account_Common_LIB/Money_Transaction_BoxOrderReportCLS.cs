@@ -1,4 +1,4 @@
-
+﻿
 using System;
 using System.Collections;
 using System.ComponentModel;
@@ -358,7 +358,7 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
                 dr1["Export_Value_Total"] = T_Export_Value_Total;
                 dr1["Import_Value_Total"] = T_Import_Value_Total;
                 dr1["FinalBalance"] = T_FinalBalance;
-                dr1["DayDate"] = "��������";
+                dr1["DayDate"] = "الإجمالى";
                 dtTotal.Rows.Add(dr1);
 
 
@@ -465,7 +465,7 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
                 dr1["Export_Value_Total"] = T_Export_Value_Total;
                 dr1["Import_Value_Total"] = T_Import_Value_Total;
                 dr1["FinalBalance"] = T_FinalBalance;
-                dr1["DayDate"] = "��������";
+                dr1["DayDate"] = "الإجمالى";
                 dtTotal.Rows.Add(dr1);
 
 
@@ -619,7 +619,7 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
                 //dr1["Import_Value_Total"] = T_Import_Value_Total;
                 //T_FinalBalance = T_FirstBalance + T_Import_Value_Total - T_Export_Value_Total;
                 //dr1["FinalBalance"] = T_FinalBalance;
-                //dr1["Bank_Name"] = "��������";
+                //dr1["Bank_Name"] = "الإجمالى";
                 //dtTotal.Rows.Add(dr1);
 
 
@@ -676,7 +676,7 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
 
                 if (dt.Rows.Count == 0)
                 {
-                    msg = "�� ���� ����� �����";
+                    msg = "لا توجد نتيجة للبحث";
                     Excp = 1;
                     return;
                 }
@@ -734,20 +734,20 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
                 //////Add FirstBalance
                 DataRow dr = dt.NewRow();
                 dr["Bank_Balance"] = FirstBalance;
-                dr["Notes"] = "������ ���������";
+                dr["Notes"] = "الرصيد الإفتتاحى";
                 dt.Rows.InsertAt(dr, 0);
 
 
-                ////����� ������ ������ �������
+                ////اضافة اجمالى الصادر والوارد
                 //Export_Value_Total = Common.RoundMe(Export_Value_Total);
                 //Import_Value_Total = Common.RoundMe(Import_Value_Total);
 
                 DataRow dr2 = dt.NewRow();
                 dr2["Import_Value"] = Import_Value_Total;
                 dr2["Export_Value"] = Export_Value_Total;
-                dr2["Notes"] = "������ ������  ";
+                dr2["Notes"] = "إجمالى الحركة  ";
                 dt.Rows.Add(dr2);
-                //// ����� ������
+                //// اضافة الصافى
                 decimal Day_Diff = FirstBalance + Import_Value_Total - Export_Value_Total;
 
                 Day_Diff = Common.RoundMe(Day_Diff);
@@ -755,7 +755,7 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
                 DataRow dr3 = dt.NewRow();
                 dr3["Bank_Balance"] = Day_Diff;
 
-                dr3["Notes"] = "���� ������ ";
+                dr3["Notes"] = "صافى الرصيد ";
                 dt.Rows.Add(dr3);
             }
             catch (Exception ee)
@@ -839,7 +839,7 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
                 FirstBalance = Common.RoundMe(FirstBalance);
                 //////Add FirstBalance
 
-                //// ����� ������
+                //// اضافة الصافى
                 FinalBalance = FirstBalance + Import_Value_Total - Export_Value_Total;
 
 
@@ -877,7 +877,7 @@ WHERE      (Order_No=  " + Order_No + ") And   (Transaction_type =  " + Transact
 
                 if (dt.Rows.Count == 0)
                 {
-                    msg = "�� ���� ����� �����";
+                    msg = "لا توجد نتيجة للبحث";
                     Excp = 1;
                     return;
                 }
@@ -939,16 +939,16 @@ FROM            Order_Money INNER JOIN
             dr["Import_Value"] = Import_Value;
             dr["Export_Value"] = Export_Value;
             dr["Id"] = 0;
-            dr["Order_Notes"] = "��������";
-            dr["Bank_Name"] = "��������";
+            dr["Order_Notes"] = "الإجمالى";
+            dr["Bank_Name"] = "الإجمالى";
             dt.Rows.Add(dr);
             if (InvoiceNetTotal > 0)
             {
                 decimal Diff = Import_Value - Export_Value;
                 dr = dt.NewRow();
                 dr["Id"] = 0;
-                dr["Order_Notes"] = "������";
-                dr["Bank_Name"] = "������";
+                dr["Order_Notes"] = "الصافى";
+                dr["Bank_Name"] = "الصافى";
                 if (Diff > 0)
                 {
 
@@ -966,12 +966,12 @@ FROM            Order_Money INNER JOIN
                 //dt.Rows.Add(dr);
 
 
-                ///////// ������� �� ���� ��������
+                ///////// المتبقى من قيمة الفاتورة
                 decimal DiffStill = InvoiceNetTotal - Diff;
                 dr = dt.NewRow();
                 dr["Id"] = 0;
-                dr["Order_Notes"] = "�������";
-                dr["Bank_Name"] = "�������";
+                dr["Order_Notes"] = "الصافى";
+                dr["Bank_Name"] = "الصافى";
                 if (DiffStill > 0)
                 {
 
@@ -1045,16 +1045,16 @@ FROM            Order_Money INNER JOIN
             dr["Import_Value"] = Import_Value;
             dr["Export_Value"] = Export_Value;
             dr["Id"] = 0;
-            dr["Order_Notes"] = "��������";
-            dr["Bank_Name"] = "��������";
+            dr["Order_Notes"] = "الإجمالى";
+            dr["Bank_Name"] = "الإجمالى";
             dt.Rows.Add(dr);
             if (InvoiceNetTotal > 0)
             {
                 decimal Diff = Import_Value - Export_Value;
                 dr = dt.NewRow();
                 dr["Id"] = 0;
-                dr["Order_Notes"] = "������";
-                dr["Bank_Name"] = "������";
+                dr["Order_Notes"] = "الصافى";
+                dr["Bank_Name"] = "الصافى";
                 if (Diff > 0)
                 {
 
@@ -1072,12 +1072,12 @@ FROM            Order_Money INNER JOIN
                 //dt.Rows.Add(dr);
 
 
-                ///////// ������� �� ���� ��������
+                ///////// المتبقى من قيمة الفاتورة
                 decimal DiffStill = InvoiceNetTotal - Diff;
                 dr = dt.NewRow();
                 dr["Id"] = 0;
-                dr["Order_Notes"] = "�������";
-                dr["Bank_Name"] = "�������";
+                dr["Order_Notes"] = "المتبقى";
+                dr["Bank_Name"] = "المتبقى";
                 if (DiffStill > 0)
                 {
 
@@ -1632,7 +1632,7 @@ FROM            Order_Money INNER JOIN
             mysql = mysql + " WHERE (Bank_Id = " + Bank_Id + ") AND (Balance_Date = " + operations.Get_DateTimeToInsert(Balance_Date.Date) + ")  ";
             DataTable dt = opp.return_DataTable(mysql);
 
-            if (dt.Rows.Count > 0)///��  ���� ������ �� ���
+            if (dt.Rows.Count > 0)//////تم  حفظظ الرصيد من قبل
             {
                 long Id = long.Parse(dt.Rows[0]["Id"].ToString());
 
@@ -1653,10 +1653,10 @@ FROM            Order_Money INNER JOIN
             }
             else
             {
-                ////����� ������ ���� ���
+                ////تاريخ يستعمل لاول مره
                 decimal Last_Balance = 0;
 
-                ///����� �� ������� ������ ��� ���� ��� ������ �������
+                ///البحث عن التاريخ السابق حتى ناخذ منه الرصيد النهائى
                 mysql = @" SELECT Top(1) Banks_Balance.* FROM    Banks_Balance ";
                 mysql = mysql + " WHERE (Bank_Id = " + Bank_Id + ") AND (Balance_Date < " + operations.Get_DateTimeToInsert(Balance_Date.Date) + ")  ";
                 mysql = mysql + " Order By Balance_Date Desc";
@@ -1668,7 +1668,7 @@ FROM            Order_Money INNER JOIN
                 }
                 else
                 {
-                    ///����� �� ������� ������ ��� ���� ��� ������ �������
+                    ///البحث عن التاريخ التالى حتى ناخذ منه الرصيد النهائى
                     mysql = @" SELECT Top(1) Banks_Balance.* FROM    Banks_Balance ";
                     mysql = mysql + " WHERE (Bank_Id = " + Bank_Id + ") AND (Balance_Date > " + operations.Get_DateTimeToInsert(Balance_Date.Date) + ")  ";
                     mysql = mysql + " Order By Balance_Date Asc";
@@ -1865,7 +1865,7 @@ FROM            Order_Money INNER JOIN
                 Entry_Currency_ID = bnk.Currency_Id ?? 1;
                 Bank_Name = bnk.Bank_Name;
             }
-            string Entry_Currency_Name = "���� ����";
+            string Entry_Currency_Name = "جنية مصرى";
             int Ticket_Supplier_Id = 0;
             int Sandouk_Cost_Center_Tree_Id = 0;
             int IS_Posted_Flage = 0;
@@ -1886,8 +1886,8 @@ FROM            Order_Money INNER JOIN
                 Order_Mony_Id2 = B_Id;
                 Money_Transaction_Box_ID = 0;
 
-                //B_Idx= Insert_Order_Money(ref   opp, Order_No, Order_Date, Transaction_Type, Cach_Value, Currency_Id, 0, Box_Id, Man_Name, 0, 0, 0, 0, 0, 0, "", "", 0, 1.0, 1, "���� ����");
-                if (Transaction_Type == 1 & Reverse_Order == 0)  //������ �� ����
+                //B_Idx= Insert_Order_Money(ref   opp, Order_No, Order_Date, Transaction_Type, Cach_Value, Currency_Id, 0, Box_Id, Man_Name, 0, 0, 0, 0, 0, 0, "", "", 0, 1.0, 1, "جنية مصرى");
+                if (Transaction_Type == 1 & Reverse_Order == 0)  //استلام من عميل
                 {
 
                     GetCustomer_Balance("Customer", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -1906,7 +1906,7 @@ FROM            Order_Money INNER JOIN
                     cu.Set_Customer_Balance_WithMoney_Transaction(ref Excp, ref opp, Customer_ID_Supplier, Transaction_Type, Order_Mony_Id2, Money_Transaction_Box_ID, Cach_Value, Notes);
                 }
 
-                if (Transaction_Type == 2 & Reverse_Order == 0) // ��� �����
+                if (Transaction_Type == 2 & Reverse_Order == 0) // صرف لمورد
                 {
 
                     GetCustomer_Balance("Supplier", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -1923,7 +1923,7 @@ FROM            Order_Money INNER JOIN
                 }
 
                 //////////////////////////***********************************
-                if (Transaction_Type == 1 & Reverse_Order == 1)  // ������ �� ������
+                if (Transaction_Type == 1 & Reverse_Order == 1)  // أستلام من المورد
                 {
                     Cach_Value_Comput = Cach_Value_Comput * -1;
                     GetCustomer_Balance("Supplier", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -1938,7 +1938,7 @@ FROM            Order_Money INNER JOIN
                     cu.Set_Supplier_Balance_WithMoney_Transaction(ref Excp, ref opp, Customer_ID_Supplier, Transaction_Type, Order_Mony_Id2, Money_Transaction_Box_ID, Cach_Value, Notes);
                 }
 
-                if (Transaction_Type == 2 & Reverse_Order == 1)   // ��� �������
+                if (Transaction_Type == 2 & Reverse_Order == 1)   // صرف للعملاء
                 {
                     Cach_Value_Comput = Cach_Value_Comput * -1;
                     GetCustomer_Balance("Customer", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -2014,7 +2014,7 @@ FROM            Order_Money INNER JOIN
                 Entry_Currency_ID = bnk.Currency_Id ?? 1;
                 Bank_Name = bnk.Bank_Name;
             }
-            string Entry_Currency_Name = "���� ����";
+            string Entry_Currency_Name = "جنية مصرى";
             int Ticket_Supplier_Id = 0;
             int Sandouk_Cost_Center_Tree_Id = 0;
             int IS_Posted_Flage = 0;
@@ -2035,8 +2035,8 @@ FROM            Order_Money INNER JOIN
                 Order_Mony_Id2 = B_Id;
                 Money_Transaction_Box_ID = 0;
 
-                //B_Idx= Insert_Order_Money(ref   opp, Order_No, Order_Date, Transaction_Type, Cach_Value, Currency_Id, 0, Box_Id, Man_Name, 0, 0, 0, 0, 0, 0, "", "", 0, 1.0, 1, "���� ����");
-                if (Transaction_Type == 1 & Reverse_Order == 0)  //������ �� ����
+                //B_Idx= Insert_Order_Money(ref   opp, Order_No, Order_Date, Transaction_Type, Cach_Value, Currency_Id, 0, Box_Id, Man_Name, 0, 0, 0, 0, 0, 0, "", "", 0, 1.0, 1, "جنية مصرى");
+                if (Transaction_Type == 1 & Reverse_Order == 0)  //استلام من عميل
                 {
 
                     GetCustomer_Balance("Customer", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -2055,7 +2055,7 @@ FROM            Order_Money INNER JOIN
                     cu.Set_Customer_Balance_WithMoney_Transaction(ref Excp, ref opp, Customer_ID_Supplier, Transaction_Type, Order_Mony_Id2, Money_Transaction_Box_ID, Cach_Value, Notes);
                 }
 
-                if (Transaction_Type == 2 & Reverse_Order == 0) // ��� �����
+                if (Transaction_Type == 2 & Reverse_Order == 0) // صرف لمورد
                 {
 
                     GetCustomer_Balance("Supplier", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -2072,7 +2072,7 @@ FROM            Order_Money INNER JOIN
                 }
 
                 //////////////////////////***********************************
-                if (Transaction_Type == 1 & Reverse_Order == 1)  // ������ �� ������
+                if (Transaction_Type == 1 & Reverse_Order == 1)  // أستلام من المورد
                 {
                     Cach_Value_Comput = Cach_Value_Comput * -1;
                     GetCustomer_Balance("Supplier", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -2087,7 +2087,7 @@ FROM            Order_Money INNER JOIN
                     cu.Set_Supplier_Balance_WithMoney_Transaction(ref Excp, ref opp, Customer_ID_Supplier, Transaction_Type, Order_Mony_Id2, Money_Transaction_Box_ID, Cach_Value, Notes);
                 }
 
-                if (Transaction_Type == 2 & Reverse_Order == 1)   // ��� �������
+                if (Transaction_Type == 2 & Reverse_Order == 1)   // صرف للعملاء
                 {
                     Cach_Value_Comput = Cach_Value_Comput * -1;
                     GetCustomer_Balance("Customer", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -2165,7 +2165,7 @@ FROM            Order_Money INNER JOIN
                 Entry_Currency_ID = bnk.Currency_Id ?? 1;
                 Bank_Name = bnk.Bank_Name;
             }
-            string Entry_Currency_Name = "���� ����";
+            string Entry_Currency_Name = "جنية مصرى";
             long Ticket_Supplier_Id = 0;
             long Sandouk_Cost_Center_Tree_Id = 0;
             int IS_Posted_Flage = 0;
@@ -2186,8 +2186,8 @@ FROM            Order_Money INNER JOIN
                 Order_Mony_Id2 = B_Id;
                 Money_Transaction_Box_ID = 0;
 
-                //B_Idx= Insert_Order_Money(ref   opp, Order_No, Order_Date, Transaction_Type, Cach_Value, Currency_Id, 0, Box_Id, Man_Name, 0, 0, 0, 0, 0, 0, "", "", 0, 1.0, 1, "���� ����");
-                if (Transaction_Type == 1 & Reverse_Order == 0)  //������ �� ����
+                //B_Idx= Insert_Order_Money(ref   opp, Order_No, Order_Date, Transaction_Type, Cach_Value, Currency_Id, 0, Box_Id, Man_Name, 0, 0, 0, 0, 0, 0, "", "", 0, 1.0, 1, "جنية مصرى");
+                if (Transaction_Type == 1 & Reverse_Order == 0)  //استلام من عميل
                 {
 
                     GetCustomer_Balance("Customer", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -2206,7 +2206,7 @@ FROM            Order_Money INNER JOIN
                     cu.Set_Customer_Balance_WithMoney_Transaction(ref Excp, ref opp, Customer_ID_Supplier, Transaction_Type, Order_Mony_Id2, Money_Transaction_Box_ID, Cach_Value, Notes);
                 }
 
-                if (Transaction_Type == 2 & Reverse_Order == 0) // ��� �����
+                if (Transaction_Type == 2 & Reverse_Order == 0) // صرف لمورد
                 {
 
                     GetCustomer_Balance("Supplier", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -2223,7 +2223,7 @@ FROM            Order_Money INNER JOIN
                 }
 
                 //////////////////////////***********************************
-                if (Transaction_Type == 1 & Reverse_Order == 1)  // ������ �� ������
+                if (Transaction_Type == 1 & Reverse_Order == 1)  // أستلام من المورد
                 {
                     Cach_Value_Comput = Cach_Value_Comput * -1;
                     GetCustomer_Balance("Supplier", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -2238,7 +2238,7 @@ FROM            Order_Money INNER JOIN
                     cu.Set_Supplier_Balance_WithMoney_Transaction(ref Excp, ref opp, Customer_ID_Supplier, Transaction_Type, Order_Mony_Id2, Money_Transaction_Box_ID, Cach_Value, Notes);
                 }
 
-                if (Transaction_Type == 2 & Reverse_Order == 1)   // ��� �������
+                if (Transaction_Type == 2 & Reverse_Order == 1)   // صرف للعملاء
                 {
                     Cach_Value_Comput = Cach_Value_Comput * -1;
                     GetCustomer_Balance("Customer", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -2327,7 +2327,7 @@ FROM            Order_Money INNER JOIN
                     long Bank_Id = item.Bank_Id;
                     decimal Box_Balance = 0;
                     long Entry_Currency_ID = 1;
-                    string Entry_Currency_Name = "���� ����";
+                    string Entry_Currency_Name = "جنية مصرى";
                     Bank bnk = GetBank_Balance(Bank_Id, ref opp, ref Box_Balance);
                     //if (bnk != null)
                     //{
@@ -2416,7 +2416,7 @@ FROM            Order_Money INNER JOIN
                     long Bank_Id = item.Bank_Id;
                     decimal Box_Balance = 0;
                     long Entry_Currency_ID = 1;
-                    string Entry_Currency_Name = "���� ����";
+                    string Entry_Currency_Name = "جنية مصرى";
                     Bank bnk = GetBank_Balance(Bank_Id, ref opp, ref Box_Balance);
 
 
@@ -2523,7 +2523,7 @@ FROM            Order_Money INNER JOIN
                 long Bank_Id = mbx.Bank_Id;
                 decimal Box_Balance = 0;
                 long Entry_Currency_ID = 1;
-                string Entry_Currency_Name = "���� ����";
+                string Entry_Currency_Name = "جنية مصرى";
                 Bank bnk = GetBank_Balance(Bank_Id, ref opp, ref Box_Balance);
 
 
@@ -2626,11 +2626,11 @@ FROM            Order_Money INNER JOIN
             Notes = bnk.Bank_Name;
             if (Invoice_No != "")
             {
-                Notes = Notes + "   ������ ��� " + Invoice_No;
+                Notes = Notes + "   فاتورة رقم " + Invoice_No;
             }
             if (WorkOrderNumber != "")
             {
-                Notes = Notes + " ��� ����� ��� " + WorkOrderNumber;
+                Notes = Notes + " أمر الشغل رقم " + WorkOrderNumber;
 
             }
             if (omMain.Order_Notes.Trim() != "")
@@ -2732,7 +2732,7 @@ FROM            Order_Money INNER JOIN
             //    Entry_Currency_ID = bnk.Currency_Id ?? 1;
             //    Bank_Name = bnk.Bank_Name;
             //}
-            //string Entry_Currency_Name = "���� ����";
+            //string Entry_Currency_Name = "جنية مصرى";
 
 
             string Order_Tafkeet_Value = TafkeetProj.NumberToText.GetText(item.Transaction_Value ?? 0, omMain.Currency_Id);
@@ -2787,7 +2787,7 @@ FROM            Order_Money INNER JOIN
 
                     int Id_Test = item.Is_ProcessedFlage ?? 0;// long.Parse(dt_Order.Rows[x]["Id_Test"].ToString());
 
-                    if (Id_Test == 0) ///��� ���� ����� �� �� ����� ��� ���������
+                    if (Id_Test == 0) ///سطر بدون تعديل اى من القيد قبل التعديلات
                     {
                         //
                         //continue;
@@ -2802,9 +2802,9 @@ FROM            Order_Money INNER JOIN
                     long Bank_Id = item.Bank_Id;
                     decimal Box_Balance = 0;
                     //long Entry_Currency_ID = 1;
-                    //string Entry_Currency_Name = "���� ����";
+                    //string Entry_Currency_Name = "جنية مصرى";
                     Bank bnk = GetBank_Balance(Bank_Id, ref opp, ref Box_Balance);
-                    if (Id_Test == 1) //   ����� ��� �����
+                    if (Id_Test == 1) //   اضافة على الاذن
                     {
                         Order_Money order_Money = Get_Order_Money(Order_Mony_Id2, bnk, omMain, item);
                         item.Order_No = omMain.Order_No;
@@ -2819,7 +2819,7 @@ FROM            Order_Money INNER JOIN
                             Set_BankBalanceDay(ref opp, item.Transaction_Date.Value, bnk.Id, Box_Balance, item.Transaction_Value.Value, Transaction_Type);
                         }
                     }
-                    if (Id_Test == 2) //�����
+                    if (Id_Test == 2) //تعديل
                     {
                         Money_Transaction_Box_ID = item.Id;// long.Parse(dt_Order.Rows[x]["Id"].ToString());
                         decimal Transaction_Value_Old = 0;
@@ -2916,7 +2916,7 @@ FROM            Order_Money INNER JOIN
                 }
                 if (Excp == 0)
                 {
-                    //����� �����
+                    //انشاء القيد
                     Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
                     long Entry_No = 0;
                     aa.IsNotDeletePrevEntry = false;
@@ -2963,10 +2963,10 @@ FROM            Order_Money INNER JOIN
                 long Bank_Id = mbx.Bank_Id;
                 decimal Box_Balance = 0;
                 //long Entry_Currency_ID = 1;
-                //string Entry_Currency_Name = "���� ����";
+                //string Entry_Currency_Name = "جنية مصرى";
                 Bank bnk = GetBank_Balance(Bank_Id, ref opp, ref Box_Balance);
 
-                if (mbx.Is_ProcessedFlage == 2) //�����
+                if (mbx.Is_ProcessedFlage == 2) //تعديل
                 {
                     Money_Transaction_Box_ID = mbx.Id;// long.Parse(dt_Order.Rows[x]["Id"].ToString());
                     decimal Transaction_Value_Old = 0;
@@ -3021,7 +3021,7 @@ FROM            Order_Money INNER JOIN
 
                 if (Excp == 0)
                 {
-                    //����� �����
+                    //انشاء القيد
                     Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
                     long Entry_No = 0;
                     aa.IsNotDeletePrevEntry = false;
@@ -3096,7 +3096,7 @@ FROM            Order_Money INNER JOIN
             {
                 CustomersAccountCLS ca = new CustomersAccountCLS();
                 ca.ProcessNo = item.ProcessNo;
-                if (Transaction_Type == 1)  //������ �� ����
+                if (Transaction_Type == 1)  //استلام من عميل
                 {
                     GetCustomer_Balance("Customer", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
 
@@ -3117,7 +3117,7 @@ FROM            Order_Money INNER JOIN
                     }
 
                 }
-                if (Transaction_Type == 2)   // ��� �������
+                if (Transaction_Type == 2)   // صرف للعملاء
                 {
 
 
@@ -3155,7 +3155,7 @@ FROM            Order_Money INNER JOIN
 
                 Suppliers_AccountsCls sp = new Suppliers_AccountsCls();
                 sp.ProcessNo = item.ProcessNo;
-                if (Transaction_Type == 1)  // ������ �� ������
+                if (Transaction_Type == 1)  // أستلام من المورد
                 {
 
                     Cach_Value_Comput = Cach_Value_Comput * -1;
@@ -3180,7 +3180,7 @@ FROM            Order_Money INNER JOIN
 
 
                 }
-                if (Transaction_Type == 2) // ��� �����
+                if (Transaction_Type == 2) // صرف لمورد
                 {
 
 
@@ -3234,7 +3234,7 @@ FROM            Order_Money INNER JOIN
             {
                 CustomersAccountCLS ca = new CustomersAccountCLS();
                 ca.ProcessNo = item.ProcessNo;
-                if (Transaction_Type == 1)  //������ �� ����
+                if (Transaction_Type == 1)  //استلام من عميل
                 {
                     GetCustomer_Balance("Customer", Customer_ID_Supplier, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
 
@@ -3247,7 +3247,7 @@ FROM            Order_Money INNER JOIN
                     }
 
                 }
-                if (Transaction_Type == 2)   // ��� �������
+                if (Transaction_Type == 2)   // صرف للعملاء
                 {
 
 
@@ -3274,7 +3274,7 @@ FROM            Order_Money INNER JOIN
 
                 Suppliers_AccountsCls sp = new Suppliers_AccountsCls();
                 sp.ProcessNo = item.ProcessNo;
-                if (Transaction_Type == 1)  // ������ �� ������
+                if (Transaction_Type == 1)  // أستلام من المورد
                 {
 
                     Cach_Value_Comput = Cach_Value_Comput * -1;
@@ -3291,7 +3291,7 @@ FROM            Order_Money INNER JOIN
 
 
                 }
-                if (Transaction_Type == 2) // ��� �����
+                if (Transaction_Type == 2) // صرف لمورد
                 {
 
 
@@ -3329,7 +3329,7 @@ FROM            Order_Money INNER JOIN
 
                     long Id_Test = long.Parse(dt_Order.Rows[x]["Id_Test"].ToString());
 
-                    if (Id_Test == 0) ///��� ���� ����� �� �� ����� ��� ���������
+                    if (Id_Test == 0) ///سطر بدون تعديل اى من القيد قبل التعديلات
                     {
                         //
                         continue;
@@ -3405,12 +3405,12 @@ FROM            Order_Money INNER JOIN
                         //Supplier_Id = SubAccount_Customer_Supplier_Id;
                     }
                     long ProcessNo = 0;
-                    if (Id_Test == 1) //   ����� ��� �����
+                    if (Id_Test == 1) //   اضافة على الاذن
                     {
                         Money_Transaction_Box_ID = Insert_Money_Transaction_Box(ref opp, Order_Mony_Id2, long.Parse(Order_No), Bank_Name, Order_Date, Box_Currency_Id, Account_Currency_Id, Transaction_Type, Cach_Value, Cach_Value.ToString(), Box_Id, Customer_Id, Supplier_Id, SubAccount_Id, Account_Type_Value, Notes_Details, Balance_Before, Balance_After, Balance_BeforStr, Balance_AfterStr, 0, 0, 0, 0, 0, Account_Cost_Center_Tree_Id, Account_Name, CostCenter_Name, Factor, Account_Code, CarsWorkOrdersId, Reference_Type_Table_Id, DataDictionaryProcessesListsId);
                         Set_TransactionMoney_For_Customer_SupplierAccounts(ref opp, Order_Mony_Id2, Money_Transaction_Box_ID, Transaction_Type, Cach_Value, Customer_Id, Supplier_Id, SubAccount_Id, Account_Type_Value, Notes_Details, ProcessNo);
                     }
-                    if (Id_Test == 2) //�����
+                    if (Id_Test == 2) //تعديل
                     {
                         Money_Transaction_Box_ID = long.Parse(dt_Order.Rows[x]["Id"].ToString());
                         decimal Transaction_Value_Old = 0;
@@ -3486,7 +3486,7 @@ FROM            Order_Money INNER JOIN
 
                     long Id_Test = long.Parse(dt_Order.Rows[x]["Id_Test"].ToString());
 
-                    if (Id_Test == 0) ///��� ���� ����� �� �� ����� ��� ���������
+                    if (Id_Test == 0) ///سطر بدون تعديل اى من القيد قبل التعديلات
                     {
                         //
                         continue;
@@ -3562,12 +3562,12 @@ FROM            Order_Money INNER JOIN
                         //Supplier_Id = SubAccount_Customer_Supplier_Id;
                     }
                     long ProcessNo = 0;
-                    if (Id_Test == 1) //   ����� ��� �����
+                    if (Id_Test == 1) //   اضافة على الاذن
                     {
                         Money_Transaction_Box_ID = Insert_Money_Transaction_Box(ref opp, Order_Mony_Id2, long.Parse(Order_No), Bank_Name, Order_Date, Box_Currency_Id, Account_Currency_Id, Transaction_Type, Cach_Value, Cach_Value.ToString(), Box_Id, Customer_Id, Supplier_Id, SubAccount_Id_, Account_Type_Value, Notes_Details, Balance_Before, Balance_After, Balance_BeforStr, Balance_AfterStr, 0, 0, 0, 0, 0, Account_Cost_Center_Tree_Id, Account_Name, CostCenter_Name, Factor, Account_Code, CarsWorkOrdersId, Reference_Type_Table_Id, DataDictionaryProcessesListsId);
                         Set_TransactionMoney_For_Customer_SupplierAccounts(ref opp, Order_Mony_Id2, Money_Transaction_Box_ID, Transaction_Type, Cach_Value, Customer_Id, Supplier_Id, SubAccount_Id_, Account_Type_Value, Notes_Details, ProcessNo);
                     }
-                    if (Id_Test == 2) //�����
+                    if (Id_Test == 2) //تعديل
                     {
                         Money_Transaction_Box_ID = long.Parse(dt_Order.Rows[x]["Id"].ToString());
                         decimal Transaction_Value_Old = 0;
@@ -3658,7 +3658,7 @@ FROM            Order_Money INNER JOIN
             {
                 CustomersAccountCLS ca = new CustomersAccountCLS();
                 ca.ProcessNo = ProcessNo;
-                if (Transaction_Type == 1)  //������ �� ����
+                if (Transaction_Type == 1)  //استلام من عميل
                 {
 
                     GetCustomer_Balance("Customer", Customer_Id, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -3668,7 +3668,7 @@ FROM            Order_Money INNER JOIN
 
 
                 }
-                if (Transaction_Type == 2)   // ��� �������
+                if (Transaction_Type == 2)   // صرف للعملاء
                 {
                     Cach_Value_Comput = Cach_Value_Comput * -1;
                     GetCustomer_Balance("Customer", Customer_Id, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -3690,7 +3690,7 @@ FROM            Order_Money INNER JOIN
 
                 Suppliers_AccountsCls sp = new Suppliers_AccountsCls();
                 sp.ProcessNo = ProcessNo;
-                if (Transaction_Type == 1)  // ������ �� ������
+                if (Transaction_Type == 1)  // أستلام من المورد
                 {
                     Cach_Value_Comput = Cach_Value_Comput * -1;
                     GetCustomer_Balance("Supplier", Supplier_Id, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -3700,7 +3700,7 @@ FROM            Order_Money INNER JOIN
 
 
                 }
-                if (Transaction_Type == 2) // ��� �����
+                if (Transaction_Type == 2) // صرف لمورد
                 {
 
                     GetCustomer_Balance("Supplier", Supplier_Id, ref opp, ref Balance_Before, ref Balance_After, Cach_Value_Comput);
@@ -3950,14 +3950,14 @@ FROM            Order_Money INNER JOIN
                     string Msg_1 = "";
 
                     //decimal Factor = 1;
-                    //if (Common.MsgBoxYesNo("�� ���� ����� ����� ��� �������� ������ ������ �����", "�������"))
+                    //if (Common.MsgBoxYesNo("هل تريد ترحيل الإذن الى الحسابات العامة بإصدار القيد", "الصندوق"))
                     //{
                     aa.Make_Entry_For_AccountsSandouk(ref Excp_1, ref Msg_1, ref opp, IS_Tar7eel_Sandouk_Automatic, Branch_Id, DateFrom, DateTo, omMain.Entry_Currency_ID ?? 1, omMain.Entry_Currency_Name, Factor, omMain.Id, 0);
 
                     if (Excp_1 == 0)
                     {
                         Msg_1 = Msg_1 + "\n\r\n";
-                        Msg_1 = Msg_1 + "�� ����� ��� ������� ������� ��� �������� ������  ";
+                        Msg_1 = Msg_1 + "تم إصدار سند النقدية وترحيلة إلى الحسابات العامه  ";
                         //opp.Commit();
 
 
@@ -3965,7 +3965,7 @@ FROM            Order_Money INNER JOIN
                     else
                     {
                         //Msg_1 = Msg_1 + "\n\r\n";
-                        Msg_1 = Msg_1 + "��� �� ����� ����� � ��� �� ����� ����� ��� �������� ������ ���� ������ ��������  ������ ������";
+                        Msg_1 = Msg_1 + "خطإ فى إصدار الإذن و خطأ فى ترحيل الإذن إلى الحسابات العامه يرجى مراجعة الحسابات  وإدخال القيود";
                         //MessageBox.Show(Msg_1);
                         //opp.Rollback(); 
                     }
@@ -4059,7 +4059,7 @@ FROM            Order_Money INNER JOIN
                 if (omMain == null)
                 {
                     Excp = 2;
-                    Msg = "��� ������� ��� �����";
+                    Msg = "إذن النقدية غير موجود";
                     return;
                 }
                 List<Money_Transaction_Box> mbxlst = opp.db.Money_Transaction_Box.Where(i => i.Order_Mony_Id == Order_MoneyId).ToList();
@@ -4099,7 +4099,7 @@ FROM            Order_Money INNER JOIN
                         opp.insert_me(mysql);
                     }
 
-                    ////////////����� ������ �����
+                    ////////////تعديل اجمالى الاذن
                     mysql = "Update Order_Money Set Total_Value=Total_Value + " + Transaction_Value_Old + " Where Id= " + mbx.Order_Mony_Id;
                     opp.insert_me(mysql);
 
@@ -4126,7 +4126,7 @@ FROM            Order_Money INNER JOIN
                 decimal Box_BalanceBeforAction = GetBank_Balance(ref opp, omMain.Bank_Id, true);
                 Set_Delete_BankBalanceDay(ref opp, omMain.Order_Date, omMain.Bank_Id, Box_BalanceBeforAction, Total_Value_New, omMain.Transaction_type);
 
-                Msg = "�� ��� ��� ������� �����";
+                Msg = "تم حذف إذن النقدية بنجاح";
                 AccountModelsLib.Accounts_Entry_POST_CLS aa = new AccountModelsLib.Accounts_Entry_POST_CLS();
 
                 long Branch_Id = Common.Branch_Id;
@@ -4136,7 +4136,7 @@ FROM            Order_Money INNER JOIN
                 string Msg_1 = "";
 
                 //decimal Factor = 1;
-                //if (Common.MsgBoxYesNo("�� ���� ����� ����� ��� �������� ������ ������ �����", "�������"))
+                //if (Common.MsgBoxYesNo("هل تريد ترحيل الإذن الى الحسابات العامة بإصدار القيد", "الصندوق"))
                 //{
                 string Doc_No = omMain.Order_No.ToString();
 
@@ -4160,7 +4160,7 @@ FROM            Order_Money INNER JOIN
 
 
                     Msg_1 = Msg_1 + "\n\r\n";
-                    Msg_1 = Msg_1 + "��   ��� ����� �� �������� ������  ";
+                    Msg_1 = Msg_1 + "تم   حذف القيد فى الحسابات العامه  ";
                 }
 
                 Msg = Msg + "\n\r";
@@ -4171,7 +4171,7 @@ FROM            Order_Money INNER JOIN
             catch (Exception ee)
             {
                 Excp = 1;
-                Msg = Msg + "��� �� ��� ��� �������";
+                Msg = Msg + "خطأ فى حذا إذن النقدية";
                 Msg = Msg + "\n\r\n";
                 Msg = Msg + ee.Message;
 
@@ -4188,7 +4188,7 @@ FROM            Order_Money INNER JOIN
                 if (Cach_Value > Balance_S)
                 {
                     Excp = 10;
-                    Msg = "���� ������� �� ���� ������";
+                    Msg = "رصيد الصندوق لا يسمح بالصرف";
                     return;
                 }
 
@@ -4198,7 +4198,7 @@ FROM            Order_Money INNER JOIN
                 int Account_Type_Value_S = 6;
                 int Account_Type_Value_T = 6;
 
-                //��� ���
+                //إذن صرف
                 SubAccount_Customer_Supplier_Id = GetBank_SubAccount_Id(ref opp, Box_Id_T);
                 Equivalent_ValueBetween_Banks = Equivalent_Value;
 
@@ -4221,7 +4221,7 @@ FROM            Order_Money INNER JOIN
                     Equivalent_ValueBetween_Banks = Common.RoundMe(Equivalent_ValueBetween_Banks);
                 }
                 catch { Equivalent_ValueBetween_Banks = 1; }
-                // ��� ������
+                // اذن استلام
                 SubAccount_Customer_Supplier_Id = GetBank_SubAccount_Id(ref opp, Box_Id_S);
                 long Order_Mony_Id = 0;
 
@@ -4292,7 +4292,7 @@ FROM            Order_Money INNER JOIN
                 long ProcessNo = 0;
                 Set_TransactionMoney_For_Customer_SupplierAccounts(ref opp, Order_Mony_Id2, Money_Transaction_Box_ID, Transaction_Type, Cach_Value, Customer_Id, Supplier_Id, SubAccount_Customer_Supplier_Id, Account_Type_Value, Order_Notes, ProcessNo);
 
-                //////���123
+                //////قيد123
                 Excp = 0;
             }
             catch (Exception ee)
@@ -4478,7 +4478,7 @@ FROM            Order_Money INNER JOIN
                 opp.insert_me(mysql);
             }
 
-            ////////////����� ������ �����
+            ////////////تعديل اجمالى الاذن
             mysql = "Update Order_Money Set Total_Value=Total_Value + " + Transaction_Value + " Where Id= " + Order_Mony_Id;
             opp.insert_me(mysql);
             decimal Last_Balance = GetBank_Balance(ref opp, Bank_Id, true);
@@ -4540,7 +4540,7 @@ FROM            Order_Money INNER JOIN
                 opp.insert_me(mysql);
             }
 
-            ////////////����� ������ �����
+            ////////////تعديل اجمالى الاذن
             mysql = "Update Order_Money Set Total_Value=Total_Value + " + DiffValue + " Where Id= " + Order_Mony_Id;
             opp.insert_me(mysql);
             decimal Last_Balance = GetBank_Balance(ref opp, Bank_Id, true);
@@ -4606,7 +4606,7 @@ FROM            Order_Money INNER JOIN
                 opp.insert_me(mysql);
             }
 
-            ////////////����� ������ �����
+            ////////////تعديل اجمالى الاذن
             mysql = "Update Order_Money Set Total_Value=Total_Value + " + Transaction_Value + " Where Id= " + Order_Mony_Id;
             opp.insert_me(mysql);
 
@@ -4690,7 +4690,7 @@ FROM            Order_Money INNER JOIN
         //                Excp = 1;
         //                return;
         //            }
-        //            ///��� ���� ��� �����
+        //            ///ليس رصيد أول المدة
         //            if (Common.Balance_BeginingPeriod == 0)
         //            {
         //                mysql = "  UPDATE Banks SET Last_Balance = Last_Balance +  " + Cash_Value + "   WHERE (Id = " + Bank_id + ")";
@@ -4725,7 +4725,7 @@ FROM            Order_Money INNER JOIN
         //                Excp = 1;
         //                return;
         //            }
-        //            ///��� ���� ��� �����
+        //            ///ليس رصيد أول المدة
         //            if (Common.Balance_BeginingPeriod == 0)
         //            {
         //                mysql = "  UPDATE Banks SET Last_Balance = Last_Balance -  " + Cash_Value + "   WHERE (Id = " + Bank_id + ")";
@@ -4750,10 +4750,10 @@ FROM            Order_Money INNER JOIN
         //        //arr.Add(mysql);
         //        opp.insert_me(mysql);
 
-        //        //(Account_Selection == 0)             ������ ����
-        //        if (Account_Selection_ == 2)  //�����
+        //        //(Account_Selection == 0)             حسابات أخرى
+        //        if (Account_Selection_ == 2)  //عملاء
         //        {
-        //            ///��� ���� ��� �����
+        //            ///ليس رصيد أول المدة
         //            if (Common.Balance_BeginingPeriod == 0)
         //            {
         //                mysql = "  UPDATE Customer SET Balance = Balance -  " + Cash_Value + " , Balance_Actual = Balance_Actual - " + Cash_Value + "  WHERE (Id = " + Customer_Id + ")";
@@ -4769,12 +4769,12 @@ FROM            Order_Money INNER JOIN
         //            // arr.Add(mysql);
         //            opp.insert_me(mysql);
         //        }
-        //        if (Account_Selection_ == 1)       // ������
+        //        if (Account_Selection_ == 1)       // موردين
         //        {
 
-        //            if (Check_Static_Data.Transaction_Type == 2)  // ��� �����
+        //            if (Check_Static_Data.Transaction_Type == 2)  // صرف نقدية
         //            {
-        //                ///��� ���� ��� �����
+        //                ///ليس رصيد أول المدة
         //                if (Common.Balance_BeginingPeriod == 0)
         //                {
         //                    mysql = " UPDATE Supplier SET Balance = Balance -  " + Cash_Value + "   WHERE (Id = " + Supplier_Id + ")";
@@ -4791,9 +4791,9 @@ FROM            Order_Money INNER JOIN
         //                opp.insert_me(mysql);
         //            }
         //            ////////////***********************************************************************************
-        //            if (Check_Static_Data.Transaction_Type == 1)  // ������ �����
+        //            if (Check_Static_Data.Transaction_Type == 1)  // استلام نقدية
         //            {
-        //                ///��� ���� ��� �����
+        //                ///ليس رصيد أول المدة
         //                if (Common.Balance_BeginingPeriod == 0)
         //                {
         //                    mysql = " UPDATE Supplier SET Balance = Balance -  " + Cash_Value + "   WHERE (Id = " + Supplier_Id + ")";
@@ -4869,7 +4869,7 @@ FROM            Order_Money INNER JOIN
                 Box_Balance = decimal.Parse(dtBanks.Rows[0]["Last_Balance"].ToString());
                 decimal Cach_Value = PaidValueFromMarket;// ot.nuValue.Value;
                 DateTime Order_Date = Invoice_Date;
-                string Man_Name = " ������ ������ ��� " + Invoice_No;
+                string Man_Name = " فاتورة مبيعات رقم " + Invoice_No;
                 int Reverse_Order = 0;
                 long Order_Mony_Id2 = 0;
                 mt.Invoice_ID = Invoice_Id;
@@ -4895,7 +4895,7 @@ FROM            Order_Money INNER JOIN
             else
             {
                 Msg = Msg + "\n";
-                Msg = "�� ��� ����� ������� ���� ���� ���� ����� ������� ��������";
+                Msg = "لم يتم إصدار النقدية ربما لعدم وجود صندوق إفتراضى للفواتير";
             }
 
         }
@@ -4924,7 +4924,7 @@ FROM            Order_Money INNER JOIN
                 Box_Balance = decimal.Parse(dtBanks.Rows[0]["Last_Balance"].ToString());
                 decimal Cach_Value = PaidValueFromMarket;// ot.nuValue.Value;
                 DateTime Order_Date = Invoice_Date;
-                string Man_Name = " ������ ����� ������ ��� " + Invoice_No;
+                string Man_Name = " فاتورة مرتجع مبيعات رقم " + Invoice_No;
                 int Reverse_Order = 1;
                 long Order_Mony_Id2 = 0;
                 mt.Invoice_ID = Invoice_Id;
@@ -4948,7 +4948,7 @@ FROM            Order_Money INNER JOIN
             else
             {
                 Msg = Msg + "\n";
-                Msg = "�� ��� ����� ������� ���� ���� ���� ����� ������� ��������";
+                Msg = "لم يتم إصدار النقدية ربما لعدم وجود صندوق إفتراضى للفواتير";
             }
 
         }
@@ -4987,7 +4987,7 @@ FROM            Order_Money INNER JOIN
                 mtVM.Box_Balance = decimal.Parse(dtBanks.Rows[0]["Last_Balance"].ToString());
 
                 DateTime Order_Date = Invoice_Date;
-                mtVM.Man_Name = " ������ ������ ��� " + Invoice_No;
+                mtVM.Man_Name = " فاتورة مبيعات رقم " + Invoice_No;
                 int Reverse_Order = 0;
                 long Order_Mony_Id2 = 0;
                 mt.Invoice_ID = Invoice_Id;
@@ -5013,7 +5013,7 @@ FROM            Order_Money INNER JOIN
             else
             {
                 Msg = Msg + "\n";
-                Msg = "�� ��� ����� ������� ���� ���� ���� ����� ������� ��������";
+                Msg = "لم يتم إصدار النقدية ربما لعدم وجود صندوق إفتراضى للفواتير";
             }
 
         }
@@ -5070,7 +5070,7 @@ FROM            Order_Money INNER JOIN
                 DateTime Order_Date = Invoice_Date;
 
 
-                string Man_Name = " ������ ������� ��� " + Invoice_No;
+                string Man_Name = " فاتورة مشتريات رقم " + Invoice_No;
 
 
                 long Order_Mony_Id2 = 0;
@@ -5091,7 +5091,7 @@ FROM            Order_Money INNER JOIN
                 opp.insert_me(mysql);
 
                 Msg = Msg + "\n\r";
-                Msg = Msg + "  �� ����� ��� �������  ";
+                Msg = Msg + "  تم إصدار صرف النقدية  ";
             }
             else
             {
@@ -5133,7 +5133,7 @@ FROM            Order_Money INNER JOIN
                 if (Box_BalanceBeforAction < PaidValueFromMarket)
                 {
                     Msg = Msg + "\n\r";
-                    Msg = Msg + "�� ��� ����� �������   ���� ���� ����� ������� ��������";
+                    Msg = Msg + "لم يتم إصدار النقدية   لعدم وجود صندوق إفتراضى للفواتير";
                     return;
 
                 }
@@ -5150,7 +5150,7 @@ FROM            Order_Money INNER JOIN
                 DateTime Order_Date = Invoice_Date;
 
 
-                string Man_Name = " ������ ����� ������� ��� " + Invoice_No;
+                string Man_Name = " فاتورة مرتجع مشتريات رقم " + Invoice_No;
 
 
                 long Order_Mony_Id2 = 0;
@@ -5171,7 +5171,7 @@ FROM            Order_Money INNER JOIN
                 opp.insert_me(mysql);
 
                 Msg = Msg + "\n\r";
-                Msg = Msg + "  �� ����� ��� �������  ";
+                Msg = Msg + "  تم إصدار صرف النقدية  ";
             }
             else
             {

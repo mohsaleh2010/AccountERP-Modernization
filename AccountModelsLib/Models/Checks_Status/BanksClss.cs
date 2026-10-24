@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Data;
@@ -265,7 +265,7 @@ namespace AccountModelsLib.Models
             }
         }
         public void GetCurrencyData(List<BanksListViewModel> banksListViewModels)
-        {///������
+        {///العملة
             try
             {
                 foreach (var item in banksListViewModels)
@@ -617,12 +617,12 @@ namespace AccountModelsLib.Models
                 int Status = opp.insert_me_transaction(arr);
                 if (Status == 1)
                 {
-                    Msg="�� ����� ���� ��� �����";
+                    Msg="تم تعديل رصيد أول المدة";
                     Excp = 0;
                 }
                 else
                 {
-                    Msg = "��� ��  ����� ���� ��� �����" ;
+                    Msg = "خطأ فى  تعديل رصيد أول المدة" ;
                     Excp = 1;
                 }
                 opp = null;
@@ -718,7 +718,7 @@ FROM   Banks LEFT OUTER JOIN
                 DataSet ds = opp.return_dataset("Select * from Order_Money Where Bank_ID=" + Bank_Id);
                 if (ds.Tables[0].Rows.Count > 0)
                 {
-                    Msg="�� ����� ����� ����� ���� ����� ������ ��� ������� ���� ����� \\ �������";
+                    Msg="تم إلغاء عملية الحذف نظرا لوجود اذونات صرف وإستلام لهذا البنك \\ الصندوق";
                     Excp = 10;
                     return;
                 }
@@ -729,12 +729,12 @@ FROM   Banks LEFT OUTER JOIN
                 if (Excp == 0)
                 {
                     opp.Commit();
-                    Msg = "��  ��� �����/������� �����";
+                    Msg = "تم  حذف البنك/الصندوق بنجاح";
                 }
                 else
                 {
                     opp.Rollback();
-                    string Msg2 = "��� �� ��� �����/�������";
+                    string Msg2 = "خطأ فى حذف البنك/الصندوق";
                     Msg = Msg2 + "\n\r" + Msg2;
                 }
             }

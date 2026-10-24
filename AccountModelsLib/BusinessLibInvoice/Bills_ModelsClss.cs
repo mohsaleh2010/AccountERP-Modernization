@@ -21,10 +21,10 @@ namespace AccountModelsLib
     public class Bills_ModelsClss
     {
         //long New_Invoice_Id;
-        public Int64 New_Invoices_No;   // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        public Int64 New_Invoices_No;   // ÑÞã ÇáÝÇÊæÑå ÇáÌÏíÏÉ
         public long New_Bills_List_Id;
-        public int Invoice_Type;  ///Invoice_Type=0 if ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½   or =1 if    ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ 
-        public ArrayList arr_Order_Purshing_Id_Automatic; //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        public int Invoice_Type;  ///Invoice_Type=0 if ÞØÇÚ ÚÇã   or =1 if    ÞØÇÚ ÎÇÕ 
+        public ArrayList arr_Order_Purshing_Id_Automatic; //áÍÝÙ ÑÞã ÇáÇáì áÇÕÏÇÑ ÇáÇÐä æíÓÊÎÏã ááØÈÇÚÉ
         public Bills_ModelsClss()
         {
             New_Invoices_No = 0;
@@ -250,8 +250,8 @@ namespace AccountModelsLib
                         // , Type_From,  Type_To,  Id_From,  Id_To,  StoreId,  StoreId_Name
 
 
-                        //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, invL.Bills_List_Id, invd.Bills_Details_Id, invL.Invoice_Type_Id, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", invL.Supplier_Name, invd.Store_Name, invL.Supplier_Name, invL.Invoice_No, Type_From, Type_To, Id_From, Id_To, StoreId, StoreId_Name);
-                        ii.Set_ItemTransactionFromBill(ref opp, invd, invL, 0, Transaction_Type, Common.Bill_Type_Id, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                        //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, invL.Bills_List_Id, invd.Bills_Details_Id, invL.Invoice_Type_Id, "ÝÇÊæÑÉ ãÔÊÑíÇÊ", invL.Supplier_Name, invd.Store_Name, invL.Supplier_Name, invL.Invoice_No, Type_From, Type_To, Id_From, Id_To, StoreId, StoreId_Name);
+                        ii.Set_ItemTransactionFromBill(ref opp, invd, invL, 0, Transaction_Type, Common.Bill_Type_Id, "ÝÇÊæÑÉ ãÔÊÑíÇÊ");
 
                     }
                     if (Common.Project_Market == 1 & invL.IS_Make_Sarf_Item_BalanceFromInvoice == 1)
@@ -259,7 +259,7 @@ namespace AccountModelsLib
                         mysql = " UPDATE Unit_item SET Full_qua =Full_qua + " + invd.Larg_Qnty + ", D_Qua =D_Qua + " + invd.Small_Qnty + ", Item_No =Item_No + " + invd.Qnty_Another + " WHERE (id = " + invd.Unit_Item_Table_Id + ") ";
                         opp.insert_me(mysql);
 
-                        //// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                        //// ÇáÈæäÕ
                         mysql = " UPDATE Unit_item SET Full_qua =Full_qua + " + invd.LargItemsQnty_Free + ", D_Qua =D_Qua + " + invd.SmallItemsQnty_Free + ", Item_No =Item_No + " + invd.Item_No_Free + " WHERE (id = " + invd.Unit_Item_Table_Id + ") ";
                         opp.insert_me(mysql);
 
@@ -279,7 +279,7 @@ namespace AccountModelsLib
 
                         opp.insert_me(mysql);
                     }
-                    //////////////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                    //////////////ÊÍÏíË ÇÎÑ ÓÚÑ ÇáÔÑÇÁ
                     ///
 
                     UpdatePurchasePrice(ref opp, invd);
@@ -291,8 +291,8 @@ namespace AccountModelsLib
                 if (Common.Make_Store_Order_Sarf_Estlam_Automatic_From_Invoice == 1 & invL.IS_Make_Sarf_Item_BalanceFromInvoice == 1)
                 {
                     Order_Details_AutomaticCls oo = new Order_Details_AutomaticCls();
-                    oo.Make_Order_From_Bill_Details(ref Excp, ref opp, Invoice_ds.Tables[0], invL.Bills_List_Id, invL.Supplier_Id, invL.Invoice_Date, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
-                    Msg = "ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+                    oo.Make_Order_From_Bill_Details(ref Excp, ref opp, Invoice_ds.Tables[0], invL.Bills_List_Id, invL.Supplier_Id, invL.Invoice_Date, "ÝÇÊæÑÉ ãÔÊÑíÇÊ");
+                    Msg = "Êã ÅÕÏÇÑ ÅÐä ÇáÅÓÊáÇã ãä ÇáãæÑÏ Åáì ÇáãÎÒä";
                 }
                 ////////// set the work on database
                 if (Common.IsSetSuppliers_AccountsForBills == 1)
@@ -302,7 +302,7 @@ namespace AccountModelsLib
                     ca.Set_Supplier_Balance_MakeBill(ref Excp, ref opp, invL.Supplier_Id, invL.Bills_List_Id, invL.Net_Total_Price, invL.Notes);
 
 
-                    //ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
+                    //ÇäÔÇÁ ÇáÞíÏ
                     Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
                     aa.IsNotDeletePrevEntry = true;
                     aa.Make_EntryFor_Bills(ref Excp, ref Msg, ref opp, invL.Bills_List_Id, invL.Invoice_Date, invL.Invoice_Date, -1);
@@ -475,8 +475,8 @@ namespace AccountModelsLib
                         // , Type_From,  Type_To,  Id_From,  Id_To,  StoreId,  StoreId_Name
 
 
-                        //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, invL.Bills_List_Id, invd.Bills_Details_Id, invL.Invoice_Type_Id, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", invL.Supplier_Name, invd.Store_Name, invL.Supplier_Name, invL.Invoice_No, Type_From, Type_To, Id_From, Id_To, StoreId, StoreId_Name);
-                        ii.Set_ItemTransactionFromBill(ref opp, bills_Details, invL_O, 0, Transaction_Type, Common.Bill_Type_Id, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                        //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, invL.Bills_List_Id, invd.Bills_Details_Id, invL.Invoice_Type_Id, "ÝÇÊæÑÉ ãÔÊÑíÇÊ", invL.Supplier_Name, invd.Store_Name, invL.Supplier_Name, invL.Invoice_No, Type_From, Type_To, Id_From, Id_To, StoreId, StoreId_Name);
+                        ii.Set_ItemTransactionFromBill(ref opp, bills_Details, invL_O, 0, Transaction_Type, Common.Bill_Type_Id, "ÝÇÊæÑÉ ãÔÊÑíÇÊ");
 
                     }
                     if (Common.Project_Market == 1 & invL_O.IS_Make_Sarf_Item_BalanceFromInvoice == 1)
@@ -484,7 +484,7 @@ namespace AccountModelsLib
                         mysql = " UPDATE Unit_item SET Full_qua =Full_qua + " + bills_Details.Larg_Qnty + ", D_Qua =D_Qua + " + bills_Details.Small_Qnty + ", Item_No =Item_No + " + bills_Details.Qnty_Another + " WHERE (id = " + bills_Details.Unit_Item_Table_Id + ") ";
                         opp.insert_me(mysql);
 
-                        //// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                        //// ÇáÈæäÕ
                         mysql = " UPDATE Unit_item SET Full_qua =Full_qua + " + bills_Details.LargItemsQnty_Free + ", D_Qua =D_Qua + " + bills_Details.SmallItemsQnty_Free + ", Item_No =Item_No + " + bills_Details.Item_No_Free + " WHERE (id = " + bills_Details.Unit_Item_Table_Id + ") ";
                         opp.insert_me(mysql);
 
@@ -504,7 +504,7 @@ namespace AccountModelsLib
 
                         opp.insert_me(mysql);
                     }
-                    //////////////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                    //////////////ÊÍÏíË ÇÎÑ ÓÚÑ ÇáÔÑÇÁ
                     ///
 
                     UpdatePurchasePrice(ref opp, bills_Details);
@@ -522,11 +522,11 @@ namespace AccountModelsLib
                     if (Common.Make_Store_Order_Sarf_Estlam_Automatic_From_Invoice == 1 & invL_O.IS_Make_Sarf_Item_BalanceFromInvoice == 1)
                     {
                         Order_Details_AutomaticCls oo = new Order_Details_AutomaticCls();
-                        oo.Make_Order_From_Bill_Details(ref Excp, ref opp, invD_O.invDlst, invL_O.invL.Id, invL_O.invL.Supplier_Id ?? 0, invL_O.invL.Invoice_Date.Value, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
-                        Msg = "ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+                        oo.Make_Order_From_Bill_Details(ref Excp, ref opp, invD_O.invDlst, invL_O.invL.Id, invL_O.invL.Supplier_Id ?? 0, invL_O.invL.Invoice_Date.Value, "ÝÇÊæÑÉ ãÔÊÑíÇÊ");
+                        Msg = "Êã ÅÕÏÇÑ ÅÐä ÇáÅÓÊáÇã ãä ÇáãæÑÏ Åáì ÇáãÎÒä";
                     }
 
-                    //ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
+                    //ÇäÔÇÁ ÇáÞíÏ
                     Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
                     aa.IsNotDeletePrevEntry = true;
                     aa.Make_EntryFor_Bills(ref Excp, ref Msg, ref opp, invL_O.invL.Id, invL_O.invL.Invoice_Date.Value, invL_O.invL.Invoice_Date.Value, -1);
@@ -731,8 +731,8 @@ namespace AccountModelsLib
                         // , Type_From,  Type_To,  Id_From,  Id_To,  StoreId,  StoreId_Name
 
 
-                        //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, invL.Bills_List_Id, invd.Bills_Details_Id, invL.Invoice_Type_Id, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", invL.Supplier_Name, invd.Store_Name, invL.Supplier_Name, invL.Invoice_No, Type_From, Type_To, Id_From, Id_To, StoreId, StoreId_Name);
-                        ii.Set_ItemTransactionFromBill(ref opp, bills_Details, invL_O, 0, Transaction_Type, Common.Bill_Type_Id, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                        //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, invL.Bills_List_Id, invd.Bills_Details_Id, invL.Invoice_Type_Id, "ÝÇÊæÑÉ ãÔÊÑíÇÊ", invL.Supplier_Name, invd.Store_Name, invL.Supplier_Name, invL.Invoice_No, Type_From, Type_To, Id_From, Id_To, StoreId, StoreId_Name);
+                        ii.Set_ItemTransactionFromBill(ref opp, bills_Details, invL_O, 0, Transaction_Type, Common.Bill_Type_Id, "ÝÇÊæÑÉ ãÔÊÑíÇÊ");
 
                     }
                     if (Common.Project_Market == 1 & invL_O.invL.IS_Make_Sarf_Item_BalanceFromInvoice == 1)
@@ -740,7 +740,7 @@ namespace AccountModelsLib
                         mysql = " UPDATE Unit_item SET Full_qua =Full_qua + " + bills_Details.Larg_Qnty + ", D_Qua =D_Qua + " + bills_Details.Small_Qnty + ", Item_No =Item_No + " + bills_Details.Qnty_Another + " WHERE (id = " + bills_Details.Unit_Item_Table_Id + ") ";
                         opp.insert_me(mysql);
 
-                        //// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                        //// ÇáÈæäÕ
                         mysql = " UPDATE Unit_item SET Full_qua =Full_qua + " + bills_Details.LargItemsQnty_Free + ", D_Qua =D_Qua + " + bills_Details.SmallItemsQnty_Free + ", Item_No =Item_No + " + bills_Details.Item_No_Free + " WHERE (id = " + bills_Details.Unit_Item_Table_Id + ") ";
                         opp.insert_me(mysql);
 
@@ -760,7 +760,7 @@ namespace AccountModelsLib
 
                         opp.insert_me(mysql);
                     }
-                    //////////////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                    //////////////ÊÍÏíË ÇÎÑ ÓÚÑ ÇáÔÑÇÁ
                     ///
 
                     UpdatePurchasePrice(ref opp, bills_Details);
@@ -778,11 +778,11 @@ namespace AccountModelsLib
                     if (Common.Make_Store_Order_Sarf_Estlam_Automatic_From_Invoice == 1 & invL_O.invL.IS_Make_Sarf_Item_BalanceFromInvoice == 1)
                     {
                         Order_Details_AutomaticCls oo = new Order_Details_AutomaticCls();
-                        oo.Make_Order_From_Bill_Details(ref Excp, ref opp, invD_O.invDlst, invL_O.invL.Id, invL_O.invL.Supplier_Id ?? 0, invL_O.invL.Invoice_Date.Value, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
-                        Msg = "ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+                        oo.Make_Order_From_Bill_Details(ref Excp, ref opp, invD_O.invDlst, invL_O.invL.Id, invL_O.invL.Supplier_Id ?? 0, invL_O.invL.Invoice_Date.Value, "ÝÇÊæÑÉ ãÔÊÑíÇÊ");
+                        Msg = "Êã ÅÕÏÇÑ ÅÐä ÇáÅÓÊáÇã ãä ÇáãæÑÏ Åáì ÇáãÎÒä";
                     }
 
-                    //ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
+                    //ÇäÔÇÁ ÇáÞíÏ
                     Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
                     aa.IsNotDeletePrevEntry = true;
                     aa.Make_EntryFor_Bills(ref Excp, ref Msg, ref opp, invL_O.invL.Id, invL_O.invL.Invoice_Date.Value, invL_O.invL.Invoice_Date.Value, -1);
@@ -1083,8 +1083,8 @@ namespace AccountModelsLib
                         long Invoices_Details_Id_ = item.Id;
                         //InvoiceDataSetCLS ii = new InvoiceDataSetCLS();
 
-                        //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, Bills_List_Id_, invd.Bills_Details_Id, invL.Invoice_Type_Id, "ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", invL.Supplier_Name, invd.Store_Name, invL.Supplier_Name, invL.Invoice_No);
-                        ii.Set_ItemTransactionFromBill(ref opp, item, invL_O, 0, Transaction_Type, Common.BilleReverse_Type_Id, "ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                        //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, Bills_List_Id_, invd.Bills_Details_Id, invL.Invoice_Type_Id, "ãÑÊÌÚ ãÔÊÑíÇÊ", invL.Supplier_Name, invd.Store_Name, invL.Supplier_Name, invL.Invoice_No);
+                        ii.Set_ItemTransactionFromBill(ref opp, item, invL_O, 0, Transaction_Type, Common.BilleReverse_Type_Id, "ãÑÊÌÚ ãÔÊÑíÇÊ");
 
                     }
                     if (Common.Project_Market == 1 & invL_O.invL.IS_Make_Sarf_Item_BalanceFromInvoice == 1)
@@ -1093,7 +1093,7 @@ namespace AccountModelsLib
                         opp.insert_me(mysql);
                         //arr.Add(mysql);
 
-                        //// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                        //// ÇáÈæäÕ
                         mysql = " UPDATE Unit_item SET Full_qua =Full_qua - " + item.LargItemsQnty_Free + ", D_Qua =D_Qua - " + item.SmallItemsQnty_Free + ", Item_No =Item_No - " + item.Item_No_Free + " WHERE (id = " + item.Unit_Item_Table_Id + ") ";
                         opp.insert_me(mysql);
 
@@ -1121,14 +1121,14 @@ namespace AccountModelsLib
 
                     //    if (item.Item_DeletedFlage==1)
                     //    {
-                    //        //ï¿½ï¿½ï¿½
+                    //        //ÍÐÝ
                     //        Fill_Ds(ref opp, ref New_Items_ds_Minus, item);
 
 
 
                     //    }
                     //    else if (item.Item_DeletedFlage == -1)
-                    //    {//ï¿½ï¿½ï¿½ï¿½ï¿½
+                    //    {//ÇÖÇÝÉ
 
                     //        Fill_Ds(ref opp, ref New_Items_ds_Add, item);
                     //    }
@@ -1193,8 +1193,8 @@ namespace AccountModelsLib
                 if (Common.Make_Store_Order_Sarf_Estlam_Automatic_From_Invoice == 1)
                 {
                     Order_Details_AutomaticCls oo = new Order_Details_AutomaticCls();
-                    oo.Make_Order_From_Bills_Details_Reverse(ref Excp, ref opp, invD_O.invDlst, New_Bills_List_Id, invL_O.invL.Supplier_Id ?? 0, invL_O.invL.Invoice_Date.Value, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
-                    Msg = "ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½) ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+                    oo.Make_Order_From_Bills_Details_Reverse(ref Excp, ref opp, invD_O.invDlst, New_Bills_List_Id, invL_O.invL.Supplier_Id ?? 0, invL_O.invL.Invoice_Date.Value, "ÝÇÊæÑÉ ãÑÊÌÚ ãÔÊÑíÇÊ");
+                    Msg = "Êã ÅÕÏÇÑ ÅÐä ÇáÕÑÝ (ãÑÊÌÚ ÅÓÊáÇã) Åáì ÇáãæÑÏ";
                 }
 
                 if (Common.IsSetSuppliers_AccountsForBills == 1)
@@ -1202,7 +1202,7 @@ namespace AccountModelsLib
                     Suppliers_AccountsCls ca = new Suppliers_AccountsCls();
                     ca.Set_Supplier_Balance_MakeBill_Reverse(ref Excp, ref opp, invL_O.invL.Supplier_Id ?? 0, invL_O.invL.Id, invL_O.invL.Net_Total ?? 0, invL_O.invL.Notes);
 
-                    //ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
+                    //ÇäÔÇÁ ÇáÞíÏ
                    
                     Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
                     aa.IsNotDeletePrevEntry = true;
@@ -1303,7 +1303,7 @@ namespace AccountModelsLib
                     //invD_O.Bills_List_Id = invL_O.invL.Id;
                     //invD_O.Get_Item_Details(Invoice_ds, x);
 
-                    ////ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                    ////ÇáÑÕíÏ ÇáÓÇÈÞ
                     DataSet dsN = opp.return_dataset("Select * from Bills_Details Where Id=" + item.Id + "");
                     if (dsN.Tables[0].Rows.Count > 0)
                     {
@@ -1333,11 +1333,11 @@ namespace AccountModelsLib
                     //    if (Common.Project_Market == 1 & invL_O.invL.IS_Make_Sarf_Item_BalanceFromInvoice == 1)
                     //    {
 
-                    //        //ï¿½ï¿½ï¿½
+                    //        //ÍÐÝ
                     //        mysql = " UPDATE Unit_item SET Full_qua =Full_qua - " + item.Larg_Qnty + ", D_Qua =D_Qua - " + item.Small_Qnty + ", Item_No =Item_No - " + item.Qnty_Another + " WHERE (id = " + item.Unit_Item_Table_Id + ") ";
                     //        opp.insert_me(mysql);
 
-                    //        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                    //        //ÇáÈæäÕ
                     //        mysql = " UPDATE Unit_item SET Full_qua =Full_qua - " + item.LargItemsQnty_Free + ", D_Qua =D_Qua - " + item.SmallItemsQnty_Free + ", Item_No =Item_No - " + item.Item_No_Free + " WHERE (id = " + item.Unit_Item_Table_Id + ") ";
                     //        opp.insert_me(mysql);
                     //        CommonAccounts.SetBalanceWithExpireDate_Tash3ela_Bill(ref opp, 2, item, OLD_Larg_Qnty, OLD_Small_Qnty, OLD_Item_No);
@@ -1373,14 +1373,14 @@ namespace AccountModelsLib
                             }
                             catch { }
 
-                            //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, invL.Bills_List_Id, invd.Bills_List_Id, invL.Invoice_Type_Id, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", invd.Store_Name, invL.Supplier_Name, invL.Supplier_Name, invL.Invoice_No);
-                            ii.Set_ItemTransactionFromBill(ref opp, item, invL_O, 0, Transaction_Type, Common.Bill_Type_Id, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                            //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, invL.Bills_List_Id, invd.Bills_List_Id, invL.Invoice_Type_Id, "ÝÇÊæÑÉ ãÔÊÑíÇÊ", invd.Store_Name, invL.Supplier_Name, invL.Supplier_Name, invL.Invoice_No);
+                            ii.Set_ItemTransactionFromBill(ref opp, item, invL_O, 0, Transaction_Type, Common.Bill_Type_Id, "ÝÇÊæÑÉ ãÔÊÑíÇÊ");
 
 
-                            //ï¿½ï¿½ï¿½ï¿½ï¿½
+                            //ÇÖÇÝÉ
                             mysql = " UPDATE Unit_item SET Full_qua =Full_qua + " + item.Larg_Qnty + ", D_Qua =D_Qua + " + item.Small_Qnty + ", Item_No =Item_No + " + item.Qnty_Another + " WHERE (id = " + item.Unit_Item_Table_Id + ") ";
                             opp.insert_me(mysql);
-                            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                            //ÇáÈæäÕ
                             mysql = " UPDATE Unit_item SET Full_qua =Full_qua + " + item.LargItemsQnty_Free + ", D_Qua =D_Qua + " + item.SmallItemsQnty_Free + ", Item_No =Item_No + " + item.Item_No_Free + " WHERE (id = " + item.Unit_Item_Table_Id + ") ";
                             opp.insert_me(mysql);
 
@@ -1394,7 +1394,7 @@ namespace AccountModelsLib
                         if (Common.Make_Store_Order_Sarf_Estlam_Automatic_From_Invoice == 1 & invL_O.invL.IS_Make_Sarf_Item_BalanceFromInvoice == 1)
                         {
 
-                            //ï¿½ï¿½ï¿½ï¿½ï¿½
+                            //ÇÖÇÝÉ
 
                                 Fill_Ds(ref opp, ref New_Items_ds_Add, item);
                              
@@ -1422,8 +1422,8 @@ namespace AccountModelsLib
                             }
                             catch { }
 
-                            //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, invL.Bills_List_Id, invd.Bills_Details_Id, invL.Invoice_Type_Id, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", invd.Store_Name, invL.Supplier_Name, invL.Supplier_Name, invL.Invoice_No);
-                            ii.Set_ItemTransactionFromBill(ref opp, item, invL_O, 0, Transaction_Type, Common.Bill_Type_Id, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                            //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, invL.Bills_List_Id, invd.Bills_Details_Id, invL.Invoice_Type_Id, "ÝÇÊæÑÉ ãÔÊÑíÇÊ", invd.Store_Name, invL.Supplier_Name, invL.Supplier_Name, invL.Invoice_No);
+                            ii.Set_ItemTransactionFromBill(ref opp, item, invL_O, 0, Transaction_Type, Common.Bill_Type_Id, "ÝÇÊæÑÉ ãÔÊÑíÇÊ");
 
 
                             decimal Larg_Qnty = (item.Larg_Qnty ?? 0) - OLD_Larg_Qnty;
@@ -1519,11 +1519,11 @@ namespace AccountModelsLib
                         if (Common.Project_Market == 1 & invL_O.invL.IS_Make_Sarf_Item_BalanceFromInvoice == 1)
                         {
 
-                            //ï¿½ï¿½ï¿½
+                            //ÍÐÝ
                             mysql = " UPDATE Unit_item SET Full_qua =Full_qua - " + item.Larg_Qnty + ", D_Qua =D_Qua - " + item.Small_Qnty + ", Item_No =Item_No - " + item.Qnty_Another + " WHERE (id = " + item.Unit_Item_Table_Id + ") ";
                             opp.insert_me(mysql);
 
-                            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                            //ÇáÈæäÕ
                             mysql = " UPDATE Unit_item SET Full_qua =Full_qua - " + item.LargItemsQnty_Free + ", D_Qua =D_Qua - " + item.SmallItemsQnty_Free + ", Item_No =Item_No - " + item.Item_No_Free + " WHERE (id = " + item.Unit_Item_Table_Id + ") ";
                             opp.insert_me(mysql);
                             CommonAccounts.SetBalanceWithExpireDate_Tash3ela_Bill(ref opp, 2, item, OLD_Larg_Qnty, OLD_Small_Qnty, OLD_Item_No);
@@ -1549,7 +1549,7 @@ namespace AccountModelsLib
 
                         if (item.Item_DeletedFlage == 1)
                         {
-                            //ï¿½ï¿½ï¿½
+                            //ÍÐÝ
                             Fill_Ds(ref opp, ref New_Items_ds_Minus, item);
 
                         }
@@ -1571,7 +1571,7 @@ namespace AccountModelsLib
                     bool MakeOrderOk = false;
                     if (New_Items_ds_Add.Tables[0].Rows.Count > 0)
                     {
-                        oo.Make_Order_From_Edit_Bill_Details(ref Excp, ref mysql_Arr, ref opp, ref arr_Order_Purshing_Id_Automatic, ref MakeOrderOk, New_Items_ds_Add.Tables[0], invL_O.invL.Id, invL_O.invL.Supplier_Id ?? 0, invL_O.invL.Invoice_Date.Value, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                        oo.Make_Order_From_Edit_Bill_Details(ref Excp, ref mysql_Arr, ref opp, ref arr_Order_Purshing_Id_Automatic, ref MakeOrderOk, New_Items_ds_Add.Tables[0], invL_O.invL.Id, invL_O.invL.Supplier_Id ?? 0, invL_O.invL.Invoice_Date.Value, "ÝÇÊæÑÉ ãÔÊÑíÇÊ");
                         if (Excp > 0)
                         {
                             opp.Rollback();
@@ -1582,14 +1582,14 @@ namespace AccountModelsLib
                     if (MakeOrderOk)
                     {
                         Msg = Msg + "\n";
-                        Msg = Msg + "ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+                        Msg = Msg + "Êã ÅÕÏÇÑ ÅÐä ÇáÕÑÝ ááÚãíá ãä ÇáãÎÒä";
                     }
 
 
-                    //////////////////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
+                    //////////////////ãÑÊÌÚ ÕÑÝ
                     if (New_Items_ds_Minus.Tables[0].Rows.Count > 0)
                     {
-                        oo.Make_Order_From_Edit_Bill_Details_Reverse(ref Excp, ref opp, ref mysql_Arr, New_Items_ds_Minus.Tables[0], invL_O.invL.Id, invL_O.invL.Supplier_Id ?? 0, invL_O.invL.Invoice_Date.Value, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                        oo.Make_Order_From_Edit_Bill_Details_Reverse(ref Excp, ref opp, ref mysql_Arr, New_Items_ds_Minus.Tables[0], invL_O.invL.Id, invL_O.invL.Supplier_Id ?? 0, invL_O.invL.Invoice_Date.Value, "ÝÇÊæÑÉ ãÔÊÑíÇÊ");
                         if (Excp > 0)
                         {
                             opp.Rollback();
@@ -1688,7 +1688,7 @@ namespace AccountModelsLib
                     ca.ProcessNo = invL_O.invL.ProcessNo ?? 0;
                     ca.Update_Supplier_BalanceWithEditBill(ref Excp, ref opp, invL_O.invL.Invoice_Date.Value, invL_O.invL.Supplier_Id ?? 0, invL_O.invL.Id, invL_O.invL.Net_Total ?? 0, invL_O.invL.Notes);
 
-                    //ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
+                    //ÇäÔÇÁ ÇáÞíÏ
                     Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
                     aa.IsNotDeletePrevEntry = false;
                     aa.Make_EntryFor_Bills(ref Excp, ref Msg, ref opp, invL_O.invL.Id, invL_O.invL.Invoice_Date.Value, invL_O.invL.Invoice_Date.Value, -1);
@@ -1841,8 +1841,8 @@ namespace AccountModelsLib
                                 item.Store_Name = Common.GetStoreName(ref opp, item.Store_Id ?? 0);
                             }
                             catch { }
-                            //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, invL.Bills_List_Id, invd.Bills_Details_Id, invL.Invoice_Type_Id, "ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", invd.Store_Name, invL.Supplier_Name, invL.Supplier_Name, invL.Invoice_No);
-                            ii.Set_ItemTransactionFromBill(ref opp, item, invL_O, 0, Transaction_Type, Common.BilleReverse_Type_Id, "ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                            //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, invL.Bills_List_Id, invd.Bills_Details_Id, invL.Invoice_Type_Id, "ãÑÊÌÚ ãÔÊÑíÇÊ", invd.Store_Name, invL.Supplier_Name, invL.Supplier_Name, invL.Invoice_No);
+                            ii.Set_ItemTransactionFromBill(ref opp, item, invL_O, 0, Transaction_Type, Common.BilleReverse_Type_Id, "ãÑÊÌÚ ãÔÊÑíÇÊ");
 
                         }
                     }
@@ -1880,8 +1880,8 @@ namespace AccountModelsLib
                                 item.Store_Name = Common.GetStoreName(ref opp, item.Store_Id ?? 0);
                             }
                             catch { }
-                            //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, invL.Bills_List_Id, invd.Bills_Details_Id, invL.Invoice_Type_Id, "ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", invd.Store_Name, invL.Supplier_Name, invL.Supplier_Name, invL.Invoice_No);
-                            ii.Set_ItemTransactionFromBill(ref opp, item, invL_O, 0, Transaction_Type, Common.BilleReverse_Type_Id, "ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                            //ii.Set_ItemTransactionFromInvoices(ref opp, invd.Unit_Item_Table_Id, invd.Item_Net_Total_Price, invd.Larg_Qnty, invd.Small_Qnty, invd.Qnty_Another, 0, Transaction_Type, invL.Invoice_Date, invL.Bills_List_Id, invd.Bills_Details_Id, invL.Invoice_Type_Id, "ãÑÊÌÚ ãÔÊÑíÇÊ", invd.Store_Name, invL.Supplier_Name, invL.Supplier_Name, invL.Invoice_No);
+                            ii.Set_ItemTransactionFromBill(ref opp, item, invL_O, 0, Transaction_Type, Common.BilleReverse_Type_Id, "ãÑÊÌÚ ãÔÊÑíÇÊ");
 
                         }
                     }
@@ -1891,11 +1891,11 @@ namespace AccountModelsLib
 
                         //if (item.Item_DeletedFlage == 1)
                         //{
-                        //    //ï¿½ï¿½ï¿½
+                        //    //ÍÐÝ
                         //    mysql = " UPDATE Unit_item SET Full_qua =Full_qua + " + item.Larg_Qnty + ", D_Qua =D_Qua + " + item.Small_Qnty + ", Item_No =Item_No + " + item.Qnty_Another + " WHERE (id = " + item.Unit_Item_Table_Id + ") ";
                         //    opp.insert_me(mysql);
 
-                        //    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                        //    //ÇáÈæäÕ
                         //    mysql = " UPDATE Unit_item SET Full_qua =Full_qua + " + item.LargItemsQnty_Free + ", D_Qua =D_Qua + " + item.SmallItemsQnty_Free + ", Item_No =Item_No + " + item.Item_No_Free + " WHERE (id = " + item.Unit_Item_Table_Id + ") ";
                         //    opp.insert_me(mysql);
 
@@ -1903,11 +1903,11 @@ namespace AccountModelsLib
                         //    CommonAccounts.SetBalanceWithExpireDate_Tash3ela_Bill(ref opp, 1, item, OLD_Larg_Qnty, OLD_Small_Qnty, OLD_Item_No, false);
                         //}
                           if (flagAtStart == 0)
-                        {//ï¿½ï¿½ï¿½ï¿½ï¿½
+                        {//ÇÖÇÝÉ
                             mysql = " UPDATE Unit_item SET Full_qua =Full_qua - " + item.Larg_Qnty + ", D_Qua =D_Qua - " + item.Small_Qnty + ", Item_No =Item_No - " + item.Qnty_Another + " WHERE (id = " + item.Unit_Item_Table_Id + ") ";
                             opp.insert_me(mysql);
 
-                            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                            //ÇáÈæäÕ
                             mysql = " UPDATE Unit_item SET Full_qua =Full_qua - " + item.LargItemsQnty_Free + ", D_Qua =D_Qua - " + item.SmallItemsQnty_Free + ", Item_No =Item_No - " + item.Item_No_Free + " WHERE (id = " + item.Unit_Item_Table_Id + ") ";
                             opp.insert_me(mysql);
 
@@ -1952,12 +1952,12 @@ namespace AccountModelsLib
                     {
                         if (flagAtStart == 1)
                         {
-                            //ï¿½ï¿½ï¿½
+                            //ÍÐÝ
                             Fill_Ds(ref opp, ref New_Items_ds_Minus, item);
 
                         }
                         else if (flagAtStart == 0)
-                        {//ï¿½ï¿½ï¿½ï¿½ï¿½
+                        {//ÇÖÇÝÉ
 
                             Fill_Ds(ref opp, ref New_Items_ds_Add, item);
                         }
@@ -2038,11 +2038,11 @@ namespace AccountModelsLib
 
                         if (item.Item_DeletedFlage == 1)
                         {
-                            //ï¿½ï¿½ï¿½
+                            //ÍÐÝ
                             mysql = " UPDATE Unit_item SET Full_qua =Full_qua + " + item.Larg_Qnty + ", D_Qua =D_Qua + " + item.Small_Qnty + ", Item_No =Item_No + " + item.Qnty_Another + " WHERE (id = " + item.Unit_Item_Table_Id + ") ";
                             opp.insert_me(mysql);
 
-                            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                            //ÇáÈæäÕ
                             mysql = " UPDATE Unit_item SET Full_qua =Full_qua + " + item.LargItemsQnty_Free + ", D_Qua =D_Qua + " + item.SmallItemsQnty_Free + ", Item_No =Item_No + " + item.Item_No_Free + " WHERE (id = " + item.Unit_Item_Table_Id + ") ";
                             opp.insert_me(mysql);
 
@@ -2068,7 +2068,7 @@ namespace AccountModelsLib
                     {
                         if (item.Item_DeletedFlage == 1)
                         {
-                            //ï¿½ï¿½ï¿½
+                            //ÍÐÝ
                             Fill_Ds(ref opp, ref New_Items_ds_Minus, item);
 
                         }
@@ -2093,7 +2093,7 @@ namespace AccountModelsLib
                     bool MakeOrderOk = false;
                     if (New_Items_ds_Add.Tables[0].Rows.Count > 0)
                     {
-                        oo.Make_Order_From_Edit_Bill_Details_Reverse(ref Excp, ref opp, ref mysql_Arr, New_Items_ds_Add.Tables[0], invL_O.invL.Id, invL_O.invL.Supplier_Id ?? 0, invL_O.invL.Invoice_Date.Value, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                        oo.Make_Order_From_Edit_Bill_Details_Reverse(ref Excp, ref opp, ref mysql_Arr, New_Items_ds_Add.Tables[0], invL_O.invL.Id, invL_O.invL.Supplier_Id ?? 0, invL_O.invL.Invoice_Date.Value, "ÝÇÊæÑÉ ãÑÊÌÚ ãÔÊÑíÇÊ");
 
                         if (Excp > 0)
                         {
@@ -2105,15 +2105,15 @@ namespace AccountModelsLib
                     if (MakeOrderOk)
                     {
                         Msg = Msg + "\n";
-                        Msg = Msg + "ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+                        Msg = Msg + "Êã ÅÕÏÇÑ ÅÐä ÇáÕÑÝ ááãæÑÏ ãä ÇáãÎÒä";
                     }
 
 
-                    //////////////////ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
+                    //////////////////ãÑÊÌÚ ÕÑÝ
                     if (New_Items_ds_Minus.Tables[0].Rows.Count > 0)
                     {
 
-                        oo.Make_Order_From_Edit_Bill_Details(ref Excp, ref mysql_Arr, ref opp, ref arr_Order_Purshing_Id_Automatic, ref MakeOrderOk, New_Items_ds_Minus.Tables[0], invL_O.invL.Id, invL_O.invL.Supplier_Id ?? 0, invL_O.invL.Invoice_Date.Value, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                        oo.Make_Order_From_Edit_Bill_Details(ref Excp, ref mysql_Arr, ref opp, ref arr_Order_Purshing_Id_Automatic, ref MakeOrderOk, New_Items_ds_Minus.Tables[0], invL_O.invL.Id, invL_O.invL.Supplier_Id ?? 0, invL_O.invL.Invoice_Date.Value, "ÝÇÊæÑÉ ãÑÊÌÚ ãÔÊÑíÇÊ");
 
                         if (Excp > 0)
                         {
@@ -2199,7 +2199,7 @@ namespace AccountModelsLib
                     ca.ProcessNo = invL_O.invL.ProcessNo ?? 0;
                     ca.Update_Supplier_BalanceWithEditBill_Reverse(ref Excp, ref opp, invL_O.invL.Invoice_Date.Value, invL_O.invL.Supplier_Id ?? 0, invL_O.invL.Id, invL_O.invL.Net_Total ?? 0, invL_O.invL.Notes);
 
-                    //ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
+                    //ÇäÔÇÁ ÇáÞíÏ
 
                     Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
                     aa.IsNotDeletePrevEntry = false;

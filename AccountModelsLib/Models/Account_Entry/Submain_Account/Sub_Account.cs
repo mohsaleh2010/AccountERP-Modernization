@@ -1,4 +1,4 @@
-using AccountModelsLib.Models;
+﻿using AccountModelsLib.Models;
 using AccountModelsLib.Services;
 using Microsoft.Data.SqlClient;
 using Net.Pkcs11Interop.Common;
@@ -229,14 +229,14 @@ namespace AccountModelsLib
                     Msg = "هذا الحساب موجود فى شجرة الحسابات هل تريد الإستمرار و إضافة الحساب";
                     Msg = "هذا الحساب موجود فى شجرة الحسابات  ";
                     Excp = 10;
-                    // MessageBox.Show("��� ������ ����� �� ���� ��������");
+                    // MessageBox.Show("هذا الحساب موجود فى شجرة الحسابات");
                     opp.Rollback();
                     return;
 
-                    //if (!AccountCommonDataLIB.Common.MsgBoxYesNo("��� ������ ����� �� ���� �������� �� ���� ��������� � ����� ������", ""))
+                    //if (!AccountCommonDataLIB.Common.MsgBoxYesNo("هذا الحساب موجود فى شجرة الحسابات هل تريد الإستمرار و إضافة الحساب", ""))
                     //{
                     //    Excp = 10;
-                    //    // MessageBox.Show("��� ������ ����� �� ���� ��������");
+                    //    // MessageBox.Show("هذا الحساب موجود فى شجرة الحسابات");
                     //    opp.Rollback();
                     //    return;
                     //}
@@ -247,7 +247,7 @@ namespace AccountModelsLib
                 // Common.GETAutoNumber(ref opp, ref Submain_Account_Id);
 
 
-                ////////////////////////��� ���� �����
+                ////////////////////////رقم حساب الفرع
                 long Main_Account_Id = 0;
                 mysql = " select * from Submain_Account where (Head_Main_Account= 0) And (Branch_Id= " + Branch_Id + ") ";
                 DataTable dt2 = opp.return_DataTable(mysql);
@@ -349,7 +349,7 @@ namespace AccountModelsLib
                 {
                     if (IsUse_SubAccount_Id_Select == false)
                     {
-                        /////����� �� ���� ����� ��������
+                        /////اضافة فى جدول اسماء الحسابات
                         Add_Submain_Account(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, sa.sb, Add_Account_Customer_List);
                     }
                 }
@@ -358,7 +358,7 @@ namespace AccountModelsLib
                 //{
                 //    sa.sb = sa.Get_Submain_Account(ref   opp, New_Submain_Account_Id);
                 //}
-                //����� ����� ������ ������ ���� �����
+                //اضافة عملاء موردين وخزينة وبنك وموظف
                 AddAnother_Submain_Account(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, sa.sb, Add_Account_Customer_List);
                 UpdateSubmain_SubAccount_Id(ref Excp, ref opp, ref Msg);
 
@@ -408,7 +408,7 @@ namespace AccountModelsLib
                     if (IsUse_SubAccount_Id_Select == false)
                     {
                         sa = SetUpSubmain_AccountCLS(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, ref Account_Code, Account_Type_Value, Account_Name, Account_Branch_Id, Currency_Id, Account_Type_ValueGeneralCustomer);
-                        /////����� �� ���� ����� ��������
+                        /////اضافة فى جدول اسماء الحسابات
                         Add_Submain_Account(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, sa.sb, Add_Account_Customer_List);
                     }
                 }
@@ -422,13 +422,13 @@ namespace AccountModelsLib
                         {
                             New_Submain_Account_Id = -1;
                             sa = SetUpSubmain_AccountCLS(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, ref Account_Code, Account_Type_Value, Account_Name, Account_Branch_Id, Currency_Id, Account_Type_ValueGeneralCustomer);
-                            /////����� �� ���� ����� ��������
+                            /////اضافة فى جدول اسماء الحسابات
                             Add_Submain_Account(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, sa.sb, Add_Account_Customer_List);
                         }
                     }
                 }
 
-                //����� ����� ������ ������ ���� �����
+                //اضافة عملاء موردين وخزينة وبنك وموظف
                 UpdateAnother_Submain_Account(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, sa.sb, Add_Account_Customer_List);
 
 
@@ -458,7 +458,7 @@ namespace AccountModelsLib
                 }
                 if (IsUse_SubAccount_Id_Select == false)
                 {
-                    /////����� �� ���� ����� ��������
+                    /////اضافة فى جدول اسماء الحسابات
                     Add_Submain_Account(ref Excp, ref Msg, ref opp, ref New_Submain_Account_Id, sa.sb, Add_Account_Customer_List);
                 }
                 Excp = 0;
@@ -484,7 +484,7 @@ namespace AccountModelsLib
 
                 if (IsUse_SubAccount_Id_Select == false)
                 {
-                    /////����� �� ���� ����� ��������
+                    /////اضافة فى جدول اسماء الحسابات
                     //Add_Submain_Account(ref Excp, ref Msg, ref opp, ref Submain_Account_Id, sa_, Add_Account_Customer_List);
                     if (sa.sb.Account_Customer_Type_Value == Common.Customer_Account_Type)
                     {
@@ -535,7 +535,7 @@ namespace AccountModelsLib
             //   ref   Excp, ref   Msg,
 
 
-            //�� ���� ����� �������
+            //فى حالة عملاء متنوعون
             if (Account_Type_ValueGeneralCustomer == 1 & Main_Account_Id > 0)
             {
                 sa.sb = new Submain_Account();
@@ -606,7 +606,7 @@ namespace AccountModelsLib
             int Account_Follows = 4;
             int Head_Main_Account = 1;
             string Account_Type_Name = dt.Rows[0]["Name"].ToString();
-            Account_Type_Name = Account_Type_Name + " (����� �����) ";
+            Account_Type_Name = Account_Type_Name + " (إضافة اّلية) ";
             try
             {
                 Account_Follows = int.Parse(dt.Rows[0]["Account_Follows"].ToString());
@@ -700,10 +700,10 @@ namespace AccountModelsLib
         {
             if (IsUse_SubAccount_Id_Select == false)
             {
-                /////����� �� ���� ����� ��������
+                /////اضافة فى جدول اسماء الحسابات
                 Add_Submain_Account(ref Excp, ref Msg, ref opp, ref Submain_Account_Id, sa_, Add_Account_Customer_List);
             }
-            //����� ����� ������ ������ ���� �����
+            //اضافة عملاء موردين وخزينة وبنك وموظف
             AddAnother_Submain_Account(ref Excp, ref Msg, ref opp, ref Submain_Account_Id, sa_, Add_Account_Customer_List);
         }
 
@@ -720,27 +720,27 @@ namespace AccountModelsLib
         }
         void AddAnother_Submain_Account(ref int Excp, ref string Msg, ref operations opp, ref long Submain_Account_Id, Submain_Account sa_, bool Add_Account_Customer_List)
         {
-            //////////////����� ��� ������ ������� ���� ��  ���� ����� ������ ������
+            //////////////اضافة رقم الحساب الرئيسى ونوع فى  جدول انواع حسابات الفروع
             //Account_Customer_Type_Value
             string mysql = "";
-            if (Add_Account_Customer_List) /////���� �� ���� ������� �� ���� ��������
+            if (Add_Account_Customer_List) /////تضاف فى حاله الاضافة من شجرة الحسابات
             {
-                if (sa_.Account_Customer_Type_Value == Common.Customer_Account_Type) ///���� ����
+                if (sa_.Account_Customer_Type_Value == Common.Customer_Account_Type) ///حساب عميل
                 {
                     New_Account_Id = cuCls.InsertCustomer(ref Excp, ref Msg, ref opp, sa_);
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Supplier_Account_Type || sa_.Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) ///���� ����
+                else if (sa_.Account_Customer_Type_Value == Common.Supplier_Account_Type || sa_.Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) ///حساب مورد
                 {
                     New_Account_Id = spCls.InsertSupplier(ref Excp, ref Msg, ref opp, sa_);
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Sandouk_Account_Type) ///�������
+                else if (sa_.Account_Customer_Type_Value == Common.Sandouk_Account_Type) ///الصندوق
                 {
                     BanksClss bcls = new BanksClss();
 
                     ba.Is_Bank = 0;
                     New_Account_Id = bcls.InsertBank(ref Excp, ref Msg, ref opp, ba, sa_);
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Bank_Account_Type) ///�����
+                else if (sa_.Account_Customer_Type_Value == Common.Bank_Account_Type) ///البنك
                 {
                     BanksClss bcls = new BanksClss();
 
@@ -749,36 +749,36 @@ namespace AccountModelsLib
                     New_Account_Id = bcls.InsertBank(ref Excp, ref Msg, ref opp, ba, sa_);
 
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Employee_Account_Type) ///����
+                else if (sa_.Account_Customer_Type_Value == Common.Employee_Account_Type) ///موظف
                 {
                     EmployeeListCLS employeeListCLS = new EmployeeListCLS();
                     New_Account_Id = employeeListCLS.AddUpdteEmployee(ref Excp, ref Msg, ref opp, sa_);
 
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) ///���� �����
+                else if (sa_.Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) ///اصول ثابته
                 {
                     New_Account_Id = fixedAssetCLS.InsertFixedAsset(ref Excp, ref Msg, ref opp, sa_);
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreEntagTam) ////���� ����� ���
+                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreEntagTam) ////مخزن انتاج تام
                 {
                     StoreCLS storeCLS = new StoreCLS();
                     storeCLS.store = store;
                     New_Account_Id = storeCLS.AddNewServiceStore(ref Excp, ref Msg, ref opp, sa_);
                 }
 
-                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreKhamat)  // ���� ���� �����
+                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreKhamat)  // حساب مخزن خامات
                 {
                     StoreCLS storeCLS = new StoreCLS();
                     storeCLS.store = store;
                     New_Account_Id = storeCLS.AddNewServiceStore(ref Excp, ref Msg, ref opp, sa_);
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete || sa_.Account_Customer_Type_Value == Common.Account_Type_ForWIP) //���� ���� ����� ��� �����
+                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete || sa_.Account_Customer_Type_Value == Common.Account_Type_ForWIP) //حساب مخزن إنتاج غير مكتمل
                 {
                     StoreCLS storeCLS = new StoreCLS();
                     storeCLS.store = store;
                     New_Account_Id = storeCLS.AddNewServiceStore(ref Excp, ref Msg, ref opp, sa_);
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) //���� ���� ����� ��� �����
+                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) //حساب شركات الشحن موردى خدمات
                 {
                     ShipmentCompanyEFCLS companyCls = new  ShipmentCompanyEFCLS ();
                     //storeCLS.store = store;
@@ -792,15 +792,15 @@ namespace AccountModelsLib
         }
         void UpdateAnother_Submain_Account(ref int Excp, ref string Msg, ref operations opp, ref long Submain_Account_Id, Submain_Account sa_, bool Add_Account_Customer_List)
         {
-            //////////////����� ��� ������ ������� ���� ��  ���� ����� ������ ������
+            //////////////اضافة رقم الحساب الرئيسى ونوع فى  جدول انواع حسابات الفروع
             //Account_Customer_Type_Value
             string SubAccount_Name = "";
             long SubAccount_Id = 0;
             long Account_Customer_Type_ID = 0;
             string mysql = "";
-            if (Add_Account_Customer_List) /////���� �� ���� ������� �� ���� ��������
+            if (Add_Account_Customer_List) /////تضاف فى حاله الاضافة من شجرة الحسابات
             {
-                if (sa_.Account_Customer_Type_Value == Common.Customer_Account_Type) ///���� ����
+                if (sa_.Account_Customer_Type_Value == Common.Customer_Account_Type) ///حساب عميل
                 {
                     cuCls.cs.SubAccount_Id = sa_.Id;
                     New_Account_Id = cuCls.UpdateCustomerOnly(ref Excp, ref Msg, ref opp);
@@ -809,7 +809,7 @@ namespace AccountModelsLib
                     Account_Customer_Type_ID = cuCls.cs.Id;
 
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Supplier_Account_Type || sa_.Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) ///���� ����
+                else if (sa_.Account_Customer_Type_Value == Common.Supplier_Account_Type || sa_.Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) ///حساب مورد
                 {
                     spCls.sp.SubAccount_Id = sa_.Id;
                     New_Account_Id = spCls.UpdateSupplierOnly(ref Excp, ref Msg, ref opp);
@@ -819,7 +819,7 @@ namespace AccountModelsLib
 
 
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Sandouk_Account_Type) ///�������
+                else if (sa_.Account_Customer_Type_Value == Common.Sandouk_Account_Type) ///الصندوق
                 {
                     ba.SubAccount_Id = sa_.Id;
                     BanksClss bcls = new BanksClss();
@@ -831,7 +831,7 @@ namespace AccountModelsLib
                     SubAccount_Id = sa_.Id;
 
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Bank_Account_Type) ///�����
+                else if (sa_.Account_Customer_Type_Value == Common.Bank_Account_Type) ///البنك
                 {
                     ba.SubAccount_Id = sa_.Id;
                     BanksClss bcls = new BanksClss();
@@ -843,7 +843,7 @@ namespace AccountModelsLib
                     SubAccount_Name = ba.Branch_Name;
                     SubAccount_Id = sa_.Id;
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Employee_Account_Type) ///����
+                else if (sa_.Account_Customer_Type_Value == Common.Employee_Account_Type) ///موظف
                 {
 
                     EmployeeListCLS employeeListCLS = new EmployeeListCLS();
@@ -853,7 +853,7 @@ namespace AccountModelsLib
                     SubAccount_Name = employeeListCLS.emp.name;
                     SubAccount_Id = sa_.Id;
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) ///���� �����
+                else if (sa_.Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) ///اصول ثابته
                 {
                     fixedAssetCLS.fxd.SubAccount_Id = sa_.Id;
                     New_Account_Id = fixedAssetCLS.UpdateFixedAsset(ref opp);
@@ -862,7 +862,7 @@ namespace AccountModelsLib
                     SubAccount_Id = sa_.Id;
 
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreEntagTam) ////���� ����� ���
+                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreEntagTam) ////مخزن انتاج تام
                 {
                     StoreCLS storeCLS = new StoreCLS();
                     storeCLS.store = store;
@@ -875,7 +875,7 @@ namespace AccountModelsLib
 
                 }
 
-                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreKhamat)  // ���� ���� �����
+                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreKhamat)  // حساب مخزن خامات
                 {
                     StoreCLS storeCLS = new StoreCLS();
                     storeCLS.store = store;
@@ -886,7 +886,7 @@ namespace AccountModelsLib
                     SubAccount_Name = storeCLS.store.Store_Name;
                     SubAccount_Id = sa_.Id;
                 }
-                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete || sa_.Account_Customer_Type_Value == Common.Account_Type_ForWIP) //���� ���� ����� ��� �����
+                else if (sa_.Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete || sa_.Account_Customer_Type_Value == Common.Account_Type_ForWIP) //حساب مخزن إنتاج غير مكتمل
                 {
                     StoreCLS storeCLS = new StoreCLS();
                     storeCLS.store = store;
@@ -969,7 +969,7 @@ namespace AccountModelsLib
                 //sa = SetUpSubmain_AccountCLS(ref Excp, ref Msg, ref opp, ref SubAccount_Id, ref Account_Code, Account_Type_Value, SubAccount_Name, Account_Branch_Id);
                 //sa.sb.Account_Customer_Type_ID = Account_Customer_Type_ID;
                 //sa.sb.Account_Customer_Type_Value = Account_Customer_Type_Value;
-                ///////����� �� ���� ����� ��������
+                ///////اضافة فى جدول اسماء الحسابات
                 Add_Submain_Account(ref Excp, ref Msg, ref opp, ref SubAccount_Id, sa.sb, false);
 
             }
@@ -989,7 +989,7 @@ namespace AccountModelsLib
                 int Account_Customer_Type_Value = sa.sb.Account_Customer_Type_Value;
                 long    Currency_Id = sa.sb.Currency_Id??1;
                 string SubAccount_NO = sa.sb.SubAccount_NO;
-                if (sa.sb.Account_Customer_Type_Value == Common.Customer_Account_Type) ///2���� ����
+                if (sa.sb.Account_Customer_Type_Value == Common.Customer_Account_Type) ///2حساب عميل
                 {
 
                     //cs.Id = sa.Account_Customer_Type_ID;
@@ -1008,13 +1008,13 @@ namespace AccountModelsLib
 
 
                 }
-                if (Account_Customer_Type_Value == Common.Supplier_Account_Type || Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) ///5���� ����
+                if (Account_Customer_Type_Value == Common.Supplier_Account_Type || Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) ///5حساب مورد
                 {
                     spCls.UpdateSupplier(ref Excp, ref Msg, ref opp, sa.sb);
                     sa.sb.Account_Customer_Type_ID = cuCls.cs.Id;
 
                 }
-                if (Account_Customer_Type_Value == Common.Sandouk_Account_Type) ///6�������
+                if (Account_Customer_Type_Value == Common.Sandouk_Account_Type) ///6الصندوق
                 {
                     BanksClss bankCLS = new BanksClss();
                     ba.Is_Bank = 0;
@@ -1024,7 +1024,7 @@ namespace AccountModelsLib
 
 
                 }
-                if (Account_Customer_Type_Value == Common.Bank_Account_Type) ///7�����
+                if (Account_Customer_Type_Value == Common.Bank_Account_Type) ///7البنك
                 {
                     BanksClss bankCLS = new BanksClss();
                     ba.Is_Bank = 1;
@@ -1032,7 +1032,7 @@ namespace AccountModelsLib
                     sa.sb.Account_Customer_Type_ID = ba.Id;
 
                 }
-                if (Account_Customer_Type_Value == Common.Employee_Account_Type) //4/����
+                if (Account_Customer_Type_Value == Common.Employee_Account_Type) //4/موظف
                 {
                     EmployeeListCLS employeeListCLS = new EmployeeListCLS(true);
 
@@ -1040,7 +1040,7 @@ namespace AccountModelsLib
 
 
                 }
-                if (sa.sb.Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) ///���� �����
+                if (sa.sb.Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) ///اصول ثابته
                 {
                     fixedAssetCLS.UpdateFixedAsset(ref Excp, ref opp, sa.sb);
                     sa.sb.Account_Customer_Type_ID = ba.Id;
@@ -1279,55 +1279,55 @@ namespace AccountModelsLib
                     EmployeeListCLS emp = new EmployeeListCLS();
                     string mysql = "";
 
-                    if (Account_Customer_Type_Value == Common.Customer_Account_Type) ///2���� ����
+                    if (Account_Customer_Type_Value == Common.Customer_Account_Type) ///2حساب عميل
                     {
 
                         cs.MakeDeleteCustomer(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
 
                     }
 
-                    if (Account_Customer_Type_Value == Common.Supplier_Account_Type || Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) //5/���� ����
+                    if (Account_Customer_Type_Value == Common.Supplier_Account_Type || Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) //5/حساب مورد
                     {
 
                         sp.MakeDeleteSupplier(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
 
                     }
-                    if (Account_Customer_Type_Value == Common.Sandouk_Account_Type) //6/�������
+                    if (Account_Customer_Type_Value == Common.Sandouk_Account_Type) //6/الصندوق
                     {
 
                         bankCLS.MakeDeleteBanks(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
 
 
                     }
-                    if (Account_Customer_Type_Value == Common.Bank_Account_Type) //7/�����
+                    if (Account_Customer_Type_Value == Common.Bank_Account_Type) //7/البنك
                     {
 
                         bankCLS.MakeDeleteBanks(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
                     }
-                    if (Account_Customer_Type_Value == Common.Employee_Account_Type) //4/����
+                    if (Account_Customer_Type_Value == Common.Employee_Account_Type) //4/موظف
                     {
 
                         emp.MakeDeleteEmployee(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
                     }
-                    if (Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) //8/���� �����
+                    if (Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) //8/اصول ثابته
                     {
 
                         fixedAssetCLS.MakeDeleteFixedAssetData(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
                     }
-                    if (Account_Customer_Type_Value == Common.Account_Type_ForStoreEntagTam) ////���� ����� ���
+                    if (Account_Customer_Type_Value == Common.Account_Type_ForStoreEntagTam) ////مخزن انتاج تام
                     {
                         StoreCLS storeCLS = new StoreCLS();
                         storeCLS.store = store;
                         //New_Account_Id = storeCLS.AddNewServiceStore(ref Excp, ref Msg, ref opp, sa_);
                     }
 
-                    if (Account_Customer_Type_Value == Common.Account_Type_ForStoreKhamat)  // ���� ���� �����
+                    if (Account_Customer_Type_Value == Common.Account_Type_ForStoreKhamat)  // حساب مخزن خامات
                     {
                         StoreCLS storeCLS = new StoreCLS();
                         storeCLS.store = store;
                         //New_Account_Id = storeCLS.AddNewServiceStore(ref Excp, ref Msg, ref opp, sa_);
                     }
-                    if (Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete) //���� ���� ����� ��� �����
+                    if (Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete) //حساب مخزن إنتاج غير مكتمل
                     {
                         StoreCLS storeCLS = new StoreCLS();
                         storeCLS.store = store;
@@ -1352,39 +1352,39 @@ namespace AccountModelsLib
             }
             string mysql = "";
 
-            if (Account_Customer_Type_Value == Common.Customer_Account_Type) ///2���� ����
+            if (Account_Customer_Type_Value == Common.Customer_Account_Type) ///2حساب عميل
             {
                 cuCls.MakeDeleteCustomer(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
 
             }
 
-            if (Account_Customer_Type_Value == Common.Supplier_Account_Type || Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) //5/���� ����
+            if (Account_Customer_Type_Value == Common.Supplier_Account_Type || Account_Customer_Type_Value == Common.Account_Type_ForShippmentCompanyAsServicesSupplier) //5/حساب مورد
             {
                 spCls.MakeDeleteSupplier(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
 
             }
-            if (Account_Customer_Type_Value == Common.Sandouk_Account_Type) //6/�������
+            if (Account_Customer_Type_Value == Common.Sandouk_Account_Type) //6/الصندوق
             {
                 BanksClss bankCLS = new BanksClss();
                 bankCLS.MakeDeleteBanks(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
 
 
             }
-            if (Account_Customer_Type_Value == Common.Bank_Account_Type) //7/�����
+            if (Account_Customer_Type_Value == Common.Bank_Account_Type) //7/البنك
             {
                 BanksClss bankCLS = new BanksClss();
                 bankCLS.MakeDeleteBanks(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
             }
-            if (Account_Customer_Type_Value == Common.Employee_Account_Type) //4/����
+            if (Account_Customer_Type_Value == Common.Employee_Account_Type) //4/موظف
             {
                 EmployeeListCLS emp = new EmployeeListCLS();
                 emp.MakeDeleteEmployee(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
             }
-            if (Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) //8/���� �����
+            if (Account_Customer_Type_Value == Common.Assoul_Sabta_Account_Type) //8/اصول ثابته
             {
                 fixedAssetCLS.MakeDeleteFixedAssetData(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
             }
-            else if (Account_Customer_Type_Value == Common.Account_Type_ForStoreEntagTam) ////���� ����� ���
+            else if (Account_Customer_Type_Value == Common.Account_Type_ForStoreEntagTam) ////مخزن انتاج تام
             {
                 StoreCLS storeCLS = new StoreCLS();
                 //storeCLS.store = store;
@@ -1392,14 +1392,14 @@ namespace AccountModelsLib
                 storeCLS.MakeDeleteStore(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
             }
 
-            if (Account_Customer_Type_Value == Common.Account_Type_ForStoreKhamat)  // ���� ���� �����
+            if (Account_Customer_Type_Value == Common.Account_Type_ForStoreKhamat)  // حساب مخزن خامات
             {
                 StoreCLS storeCLS = new StoreCLS();
                 //storeCLS.store = store;
 
                 storeCLS.MakeDeleteStore(ref opp, ref Excp, ref Msg, Account_Customer_Type_ID, SubAccount_Id);
             }
-            if (Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete || Account_Customer_Type_Value == Common.Account_Type_ForWIP) //���� ���� ����� ��� �����
+            if (Account_Customer_Type_Value == Common.Account_Type_ForStoreNotComplete || Account_Customer_Type_Value == Common.Account_Type_ForWIP) //حساب مخزن إنتاج غير مكتمل
             {
                 StoreCLS storeCLS = new StoreCLS();
                 //storeCLS.store = store;
