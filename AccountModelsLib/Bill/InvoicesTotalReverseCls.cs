@@ -79,7 +79,7 @@ namespace AccountModelsLib
                 if (ATS05.HasValue) extraCols += ",ATS05=" + ATS05.Value;
                 if (DAMGHAT.HasValue) extraCols += ",DAMGHAT=" + DAMGHAT.Value;
 
-                mysql = "update Invoices_List_Reverse set Currency_id= " + Currency_Id + ",Invoice_Date='" + operations.dateFormat(dt) + "',total=" + total + " ,commission=" + commisition + " ,TaxSales10_Value=" + taxsal + ",ATS05_Value=" + dtsos + " ,net_total=" + nettotal + ",Customer_Id=" + custid + ",Notes='" + notes + "'" + extraCols + " where id=" + invoiceid;
+                mysql = "update Invoices_List_Reverse set Currency_id= " + Currency_Id + ",Invoice_Date='" + operations.dateFormat(dt) + "',total=" + total + " ,commission=" + commisition + " ,TaxSales10_Value=" + taxsal + ",ATS05_Value=" + dtsos + " ,net_total=" + nettotal + ",Customer_Id=" + custid + ",Notes='" + notes + "'" + extraCols + ", Edit_User_Id=" + Common.User_Id + ", EditOperationDate=GETDATE() where id=" + invoiceid;
                 arr.Add(mysql);
 
                 decimal Invoice_NetTotal_Diff = Invoice_Net_Total_Old - nettotal;
