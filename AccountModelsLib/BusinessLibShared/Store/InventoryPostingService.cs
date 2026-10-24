@@ -113,14 +113,14 @@ GROUP BY ui.Store_id");
                 decimal value = Common.RoundMe(Convert.ToDecimal(r["Val"]));
                 if (Math.Abs(value) <= Tolerance) continue;
                 long storeId = Convert.ToInt64(r["StoreId"]);
-                var store = opp.return_DataTable("SELECT name, ISNULL(StoreUsed_Type, 0) AS T, ISNULL(Branch_Id, 0) AS Br, ISNULL(SubAccount_Id, 0) AS Acc FROM Store WHERE id = " + storeId.ToString(CultureInfo.InvariantCulture));
+                var store = opp.return_DataTable("SELECT Store_Name AS name, ISNULL(StoreUsed_Type, 0) AS T, ISNULL(Branch_Id, 0) AS Br, ISNULL(SubAccount_Id, 0) AS Acc FROM Store WHERE id = " + storeId.ToString(CultureInfo.InvariantCulture));
                 if (store.Rows.Count == 0) throw new InvalidOperationException("المخزن غير موجود (رقم " + storeId + ").");
                 var s = store.Rows[0];
                 string storeName = s["name"]?.ToString()?.Trim() ?? "";
                 long inventoryAccount = Convert.ToInt64(s["Acc"]);
                 long storeBranch = Convert.ToInt64(s["Br"]);
                 if (inventoryAccount <= 0) throw new InvalidOperationException("المخزن «" + storeName + "» بلا حساب مخزون فى شجرة الحسابات؛ اربطه من «ربط المخازن بالحسابات».");
-                long counter = determination.ResolveAccount(storeBranch > 0 ? storeBranch : orderBranch, storeId, Convert.ToInt32(s["T"]), role.Value);
+                long counter = determination.ResolveAccount(storeBranch > 0 ? storeBranch : orderBranch, storeId, Convert.ToInt32(s["T"]), role.Value, opp);
                 if (counter <= 0)
                 {
                     var name = StoreAccountDeterminationCLS.Roles.First(x => x.Role == role.Value).Name;

@@ -105,9 +105,10 @@ namespace AccountModelsLib.Models
         }
 
         /// <summary>الحساب المقابل لحركة مخزن: تخصيص المخزن، ثم نوعه، ثم افتراضى الفرع. 0 = غير محدد.</summary>
-        public long ResolveAccount(long branchId, long storeId, int storeUsedType, StoreAccountRole role)
+        public long ResolveAccount(long branchId, long storeId, int storeUsedType, StoreAccountRole role, operations opp = null)
         {
-            var rows = new operations().db.Store_Account_Determination.AsNoTracking()
+            // opp: معاملة المستدعى (الترحيل)؛ بدونه اتصال مستقل
+            var rows = (opp ?? new operations()).db.Store_Account_Determination.AsNoTracking()
                 .Where(d => d.Account_Branch_Id == branchId && d.Account_Role == (int)role
                          && ((d.Store_Id == storeId && storeId != 0) || (d.Store_Id == 0 && (d.StoreUsed_Type == storeUsedType || d.StoreUsed_Type == 0))))
                 .ToList();
