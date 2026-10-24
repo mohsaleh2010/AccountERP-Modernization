@@ -1,0 +1,282 @@
+@* 🟢 خطة 05 — المرحلة 7 (قائمة «ملف» ← «المستخدمين» و«صلاحيات الفروع»): المستخدمون وفروعهم المسموحة فى شاشة واحدة بدل UsersList / ADDNEWUSER /
+   Branch_UserPermission. القواعد فى UserAdminService: لا حذف (إيقاف فقط)، كلمة المرور لا تُعرض أبداً وتُترك فارغة للإبقاء عليها، مدير نشط واحد على الأقل.
+   صلاحيات القوائم لكل مستخدم فى /settings/permissions. التصميم حسب ui-ux-pro-max ونظام inv-*. *@
+@page "/settings/users"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject MenuStateService MenuState
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("US_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .us-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .us-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .us-head .ico .mud-icon-root { font-size: 2rem; }
+    .us-head .titles { flex: 1 1 260px; min-width: 0; }
+    .us-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .us-head .mud-button-root { min-height: 44px; }
+    .us-gap { margin-top: 16px; }
+    .us-filters { display: grid; grid-template-columns: minmax(0, 2fr) auto; gap: 12px; align-items: center; }
+    .us-login { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; color: var(--mud-palette-text-secondary); direction: ltr; unicode-bidi: isolate; }
+    .us-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    .us-chips .mud-chip { margin: 0; }
+    .us-acts { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+    .us-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+    .us-form .full { grid-column: 1 / -1; }
+    .us-branches { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+    .us-help { font-size: .8rem; color: var(--mud-palette-text-secondary); margin-top: 2px; }
+    .us-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    @@media (max-width: 649px) { .us-filters, .us-form { grid-template-columns: minmax(0, 1fr); } .us-acts { justify-content: flex-start; } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card">
+        <div class="us-head">
+            <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.ManageAccounts" /></div>
+            <div class="titles">
+                <h1 class="inv-title">@Tr("US_Title")</h1>
+                <div class="sub">@Tr("US_Sub")</div>
+            </div>
+            @if (CanEdit)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="@(() => OpenEditor(null))">@Tr("US_New")</MudButton>
+            }
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Class="us-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    @if (!CanEdit)
+    {
+        <div class="inv-card us-gap"><div class="us-empty"><MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" />@Tr("US_NoAccess")</div></div>
+    }
+    else
+    {
+        <section class="inv-card us-gap" aria-labelledby="us-list-h">
+            <h2 class="inv-card-title" id="us-list-h"><MudIcon Icon="@Icons.Material.Filled.People" />@Tr("US_Title")<span class="inv-count">@_users.Count</span></h2>
+            <div class="us-filters">
+                <MudTextField T="string" @bind-Value="_search" Label="@Tr("US_Search")" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" DebounceInterval="250"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true" />
+                <MudSwitch T="bool" @bind-Value="_showInactive" Color="Color.Primary" Label="@Tr("US_ShowInactive")" />
+            </div>
+            <MudTable Items="@Visible" T="UserAdminRow" Hover="true" Elevation="0" Class="inv-table us-gap" Breakpoint="Breakpoint.Sm" Dense="true" Loading="_loading" LoadingProgressColor="Color.Primary">
+                <HeaderContent>
+                    <MudTh>@Tr("US_ColName")</MudTh>
+                    <MudTh>@Tr("US_ColRole")</MudTh>
+                    <MudTh>@Tr("US_ColBranches")</MudTh>
+                    <MudTh Style="width:1%"></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("US_ColName")">
+                        <div>@context.Name</div>
+                        <div class="us-login">@context.USER_NAME</div>
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("US_ColRole")">
+                        <div class="us-chips">
+                            @if (context.IsAdmin) { <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Text" Icon="@Icons.Material.Filled.AdminPanelSettings">@Tr("US_Admin")</MudChip> }
+                            @if (context.Active) { <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text" Icon="@Icons.Material.Filled.CheckCircle">@Tr("US_Active")</MudChip> }
+                            else { <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.Block">@Tr("US_Inactive")</MudChip> }
+                        </div>
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("US_ColBranches")">
+                        <div class="us-chips">
+                            @foreach (long b in context.Branches.OrderBy(b => b == context.Branch_Id ? 0 : 1))
+                            {
+                                <MudChip T="string" Size="Size.Small" Variant="@(b == context.Branch_Id ? Variant.Filled : Variant.Outlined)"
+                                         Title="@(b == context.Branch_Id ? Tr("US_DefaultBranch") : null)">@BranchName(b)</MudChip>
+                            }
+                        </div>
+                    </MudTd>
+                    <MudTd>
+                        <div class="us-acts">
+                            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => OpenEditor(context))">@Tr("US_Edit")</MudButton>
+                            @if (CanPermissions)
+                            {
+                                <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Rule"
+                                           OnClick="@(() => Nav.NavigateTo($"/settings/permissions?user={context.Id}"))">@Tr("US_Permissions")</MudButton>
+                            }
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent><div class="us-empty"><MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" />@Tr("US_NoRows")</div></NoRecordsContent>
+            </MudTable>
+        </section>
+    }
+</div>
+</MudContainer>
+
+<MudDialog @bind-Visible="_editorOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true })">
+    <TitleContent>@(_edit.Id == 0 ? Tr("US_New") : Tr("US_EditTitle", _edit.USER_NAME))</TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_dialogError)) { <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3" role="alert">@_dialogError</MudAlert> }
+        <div class="us-form">
+            <MudTextField T="string" @bind-Value="_edit.Name" Label="@Tr("US_FullName")" Variant="Variant.Outlined" MaxLength="100" AutoFocus="true" />
+            <MudTextField T="string" @bind-Value="_edit.USER_NAME" Label="@Tr("US_Login")" Variant="Variant.Outlined" MaxLength="50" Required="true"
+                          InputMode="InputMode.text" UserAttributes="@(new Dictionary<string, object> { ["autocomplete"] = "off", ["dir"] = "ltr" })" />
+            <div>
+                <MudTextField T="string" @bind-Value="_edit.Password" Label="@(_edit.Id == 0 ? Tr("US_Password") : Tr("US_NewPassword"))" Variant="Variant.Outlined"
+                              InputType="@(_showPassword ? InputType.Text : InputType.Password)" Required="@(_edit.Id == 0)"
+                              Adornment="Adornment.End" AdornmentIcon="@(_showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                              OnAdornmentClick="@(() => _showPassword = !_showPassword)" AdornmentAriaLabel="@Tr("US_ShowPassword")"
+                              UserAttributes="@(new Dictionary<string, object> { ["autocomplete"] = "new-password" })" />
+                @if (_edit.Id != 0) { <div class="us-help">@Tr("US_KeepPassword")</div> }
+            </div>
+            <MudTextField T="string" @bind-Value="_confirm" Label="@Tr("US_ConfirmPassword")" Variant="Variant.Outlined"
+                          InputType="@(_showPassword ? InputType.Text : InputType.Password)" Required="@(_edit.Id == 0)"
+                          Error="@(!string.IsNullOrEmpty(_edit.Password) && _confirm != _edit.Password)" ErrorText="@Tr("US_PasswordMismatch")"
+                          UserAttributes="@(new Dictionary<string, object> { ["autocomplete"] = "new-password" })" />
+            <MudSelect T="long" @bind-Value="_edit.Branch_Id" Label="@Tr("US_DefaultBranch")" Variant="Variant.Outlined" Required="true"
+                       ToStringFunc="@(b => b == 0 ? "" : BranchName(b))">
+                @foreach (var b in _branches) { <MudSelectItem T="long" Value="b.Id">@b.Name</MudSelectItem> }
+            </MudSelect>
+            @if (_edit.Id == 0)
+            {
+                <MudSelect T="long" @bind-Value="_edit.CopyPermissionsFrom" Label="@Tr("US_CopyFrom")" Variant="Variant.Outlined" HelperText="@Tr("US_CopyFromHelp")"
+                           ToStringFunc="@(id => id == 0 ? Tr("US_DefaultPermissions") : _users.FirstOrDefault(u => u.Id == id)?.Name ?? "")">
+                    <MudSelectItem T="long" Value="0L">@Tr("US_DefaultPermissions")</MudSelectItem>
+                    @foreach (var u in _users.Where(u => u.Active)) { <MudSelectItem T="long" Value="u.Id">@u.Name</MudSelectItem> }
+                </MudSelect>
+            }
+            <fieldset class="full" style="border:0;padding:0;margin:0">
+                <legend class="mud-typography mud-typography-subtitle2">@Tr("US_AllowedBranches")</legend>
+                <div class="us-branches">
+                    @foreach (var b in _branches)
+                    {
+                        bool isDefault = b.Id == _edit.Branch_Id;
+                        <MudCheckBox T="bool" Value="@(isDefault || _edit.Branches.Contains(b.Id))" Disabled="isDefault" Color="Color.Primary" Label="@b.Name"
+                                     ValueChanged="@(v => ToggleBranch(b.Id, v))" />
+                    }
+                </div>
+                <div class="us-help">@Tr("US_BranchesHelp")</div>
+            </fieldset>
+            <MudSwitch T="bool" @bind-Value="_edit.Active" Color="Color.Success" Label="@Tr("US_Active")" />
+            <MudSwitch T="bool" @bind-Value="_edit.IsAdmin" Color="Color.Primary" Label="@Tr("US_Admin")" />
+            @if (_edit.IsAdmin) { <MudAlert Class="full" Severity="Severity.Info" Dense="true">@Tr("US_AdminHelp")</MudAlert> }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _editorOpen = false)">@Tr("Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_busy" OnClick="SaveAsync">
+            @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private const string UsersMenuKey = "ToolStripMenuItemUserDaetails";
+    private const string BranchesMenuKey = "toolStripMenuItemBranch_UserPermission";
+
+    private readonly UserAdminService _svc = new();
+    private List<UserAdminRow> _users = new();
+    private List<(long Id, string Name)> _branches = new();
+    private string? _search, _error, _dialogError, _confirm;
+    private bool _showInactive, _loading, _busy, _editorOpen, _showPassword;
+    private UserAdminInput _edit = new();
+
+    private HashSet<string> MenuKeys => (MenuState.UserAllowedMenus ?? new()).Select(m => (m.KeysData ?? "").Trim()).ToHashSet(StringComparer.OrdinalIgnoreCase);
+    private bool CanEdit => MenuKeys.Contains(UsersMenuKey) || MenuKeys.Contains(BranchesMenuKey);
+    private bool CanPermissions => MenuKeys.Contains(MenuPermissionService.PermissionsMenuKey);
+
+    private List<UserAdminRow> Visible => _users
+        .Where(u => _showInactive || u.Active)
+        .Where(u => string.IsNullOrWhiteSpace(_search) || u.Name.Contains(_search.Trim(), StringComparison.CurrentCultureIgnoreCase)
+                                                      || u.USER_NAME.Contains(_search.Trim(), StringComparison.CurrentCultureIgnoreCase))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        MenuState.OnAuthChanged += OnAuthChanged;
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    private void OnAuthChanged() => InvokeAsync(async () => { await LoadAsync(); StateHasChanged(); });
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+        MenuState.OnAuthChanged -= OnAuthChanged;
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private string BranchName(long id) => _branches.FirstOrDefault(b => b.Id == id).Name ?? id.ToString();
+
+    private Task<T> Bg<T>(Func<T> f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return f(); });
+
+    private async Task LoadAsync()
+    {
+        if (!CanEdit) return;
+        _loading = true;
+        try
+        {
+            var data = await Bg(() => (_svc.GetUsers(), _svc.GetBranches()));
+            _users = data.Item1;
+            _branches = data.Item2;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", ex.InnerException?.Message ?? ex.Message); }
+        finally { _loading = false; }
+    }
+
+    private void OpenEditor(UserAdminRow? row)
+    {
+        _edit = row == null
+            ? new UserAdminInput { Active = true, Branch_Id = Common.Branch_Id, Branches = new List<long> { Common.Branch_Id } }
+            : new UserAdminInput { Id = row.Id, Name = row.Name, USER_NAME = row.USER_NAME, IsAdmin = row.IsAdmin, Active = row.Active,
+                                   Branch_Id = row.Branch_Id, Branches = row.Branches.ToList() };
+        _confirm = "";
+        _showPassword = false;
+        _dialogError = null;
+        _editorOpen = true;
+    }
+
+    private void ToggleBranch(long id, bool on)
+    {
+        if (on) { if (!_edit.Branches.Contains(id)) _edit.Branches.Add(id); }
+        else _edit.Branches.Remove(id);
+    }
+
+    private async Task SaveAsync()
+    {
+        _dialogError = null;
+        if (!string.IsNullOrEmpty(_edit.Password) && _confirm != _edit.Password) { _dialogError = Tr("US_PasswordMismatch"); return; }
+        _busy = true;
+        var input = _edit;
+        long acting = Common.User_Id;
+        try
+        {
+            var (excp, msg) = await Bg(() => { int e = 0; string m = ""; _svc.Save(ref e, ref m, input, acting); return (e, m); });
+            if (excp != 0) { _dialogError = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg; return; }
+            _editorOpen = false;
+            Snackbar.Add(Tr("US_Saved", input.Name == "" ? input.USER_NAME : input.Name), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _dialogError = Tr("SystemError", ex.InnerException?.Message ?? ex.Message); }
+        finally { _busy = false; }
+    }
+}

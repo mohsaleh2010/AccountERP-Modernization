@@ -1,0 +1,357 @@
+@* 🟢 خطة 05 — المرحلة 7 (قائمة «ملف» ← «صلاحيات المستخدمين»): شجرة القوائم بعلامات اختيار لكل مستخدم بدل MenuFrmAdmin (قرار المستخدم 2026-10-24).
+   تحديد قائمة يحدد كل ما تحتها، وتحديد عنصر يحدد آباءه (وإلا لا يظهر)، ونسخ صلاحيات مستخدم آخر. التغييرات تتجمع ثم تُحفظ مرة واحدة.
+   صلاحيات العمليات (تعديل الصنف 917، حذف من حساب العميل 811 ...) عناصر مخفية فى نفس الشجرة. القواعد فى MenuPermissionService. *@
+@page "/settings/permissions"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject MenuStateService MenuState
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("PM_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .pm-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .pm-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .pm-head .ico .mud-icon-root { font-size: 2rem; }
+    .pm-head .titles { flex: 1 1 260px; min-width: 0; }
+    .pm-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .pm-gap { margin-top: 16px; }
+    .pm-split { display: grid; grid-template-columns: minmax(240px, 300px) minmax(0, 1fr); gap: 16px; align-items: start; }
+    .pm-users { display: grid; gap: 4px; margin-top: 8px; max-height: 70vh; overflow: auto; }
+    .pm-user { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; border: 1px solid transparent; cursor: pointer; min-height: 44px;
+               background: none; font: inherit; color: inherit; text-align: start; width: 100%; }
+    .pm-user:hover { background: color-mix(in srgb, var(--mud-palette-primary) 6%, transparent); }
+    .pm-user:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 1px; }
+    .pm-user[aria-pressed="true"] { border-color: var(--mud-palette-primary); background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent); }
+    .pm-user .nm { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    .pm-user.off .nm { opacity: .55; }
+    .pm-tools { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+    .pm-tools .grow { flex: 1 1 240px; }
+    .pm-tools .mud-button-root { min-height: 44px; }
+    .pm-tree { margin-top: 12px; border: 1px solid var(--mud-palette-lines-default); border-radius: 10px; padding: 6px; max-height: 62vh; overflow: auto; }
+    .pm-node { display: flex; align-items: center; gap: 2px; min-height: 40px; border-radius: 8px; }
+    .pm-node:hover { background: color-mix(in srgb, var(--mud-palette-primary) 5%, transparent); }
+    .pm-node .lbl { flex: 1; min-width: 0; overflow-wrap: anywhere; cursor: pointer; }
+    .pm-node .cnt { font-size: .75rem; color: var(--mud-palette-text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; padding-inline: 8px; }
+    .pm-node .tag { font-size: .7rem; color: var(--mud-palette-text-secondary); border: 1px solid var(--mud-palette-lines-default); border-radius: 999px; padding: 0 8px; margin-inline-start: 6px; }
+    .pm-node.changed .lbl { font-weight: 600; color: var(--mud-palette-warning-darken); }
+    .pm-spacer { width: 40px; flex: none; }
+    .pm-save { position: sticky; bottom: 0; z-index: 10; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-top: 12px; padding: 12px 16px; border-radius: 12px;
+               background: var(--mud-palette-surface); border: 1px solid var(--mud-palette-warning); box-shadow: 0 -2px 8px rgba(0,0,0,.08); }
+    .pm-save .msg { flex: 1 1 200px; }
+    .pm-save .mud-button-root { min-height: 44px; }
+    .pm-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    @@media (max-width: 899px) { .pm-split { grid-template-columns: minmax(0, 1fr); } .pm-users { max-height: 30vh; } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card">
+        <div class="pm-head">
+            <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Rule" /></div>
+            <div class="titles">
+                <h1 class="inv-title">@Tr("PM_Title")</h1>
+                <div class="sub">@Tr("PM_Sub")</div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Class="pm-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    @if (!CanUse)
+    {
+        <div class="inv-card pm-gap"><div class="pm-empty"><MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" />@Tr("PM_NoAccess")</div></div>
+    }
+    else
+    {
+    <div class="pm-split pm-gap">
+        <section class="inv-card" aria-labelledby="pm-users-h">
+            <h2 class="inv-card-title" id="pm-users-h"><MudIcon Icon="@Icons.Material.Filled.People" />@Tr("PM_Users")<span class="inv-count">@_users.Count</span></h2>
+            <div class="pm-users" role="list">
+                @foreach (var u in _users)
+                {
+                    <button type="button" role="listitem" class="pm-user @(u.Active ? "" : "off")" aria-pressed="@(_userId == u.Id ? "true" : "false")" @onclick="@(() => SelectUserAsync(u.Id))">
+                        <MudIcon Icon="@(u.IsAdmin ? Icons.Material.Filled.AdminPanelSettings : Icons.Material.Filled.Person)" Size="Size.Small" />
+                        <span class="nm">@u.Name</span>
+                        @if (!u.Active) { <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@Tr("US_Inactive")</MudChip> }
+                    </button>
+                }
+            </div>
+        </section>
+
+        <section class="inv-card" aria-labelledby="pm-tree-h">
+            @if (SelectedUser == null)
+            {
+                <div class="pm-empty"><MudIcon Icon="@Icons.Material.Filled.TouchApp" Size="Size.Large" />@Tr("PM_PickUser")</div>
+            }
+            else
+            {
+                <h2 class="inv-card-title" id="pm-tree-h"><MudIcon Icon="@Icons.Material.Filled.AccountTree" />@Tr("PM_For", SelectedUser.Name)
+                    <span class="inv-count">@_granted.Count / @_nodes.Count</span></h2>
+                @if (SelectedUser.IsAdmin) { <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">@Tr("PM_AdminNote")</MudAlert> }
+                <div class="pm-tools">
+                    <MudTextField T="string" @bind-Value="_search" Class="grow" Label="@Tr("PM_Search")" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true"
+                                  DebounceInterval="250" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true" />
+                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.UnfoldMore" OnClick="@(() => SetAllExpanded(true))">@Tr("PM_ExpandAll")</MudButton>
+                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.UnfoldLess" OnClick="@(() => SetAllExpanded(false))">@Tr("PM_CollapseAll")</MudButton>
+                    <MudMenu Label="@Tr("PM_CopyFrom")" StartIcon="@Icons.Material.Filled.ContentCopy" Variant="Variant.Outlined" Color="Color.Primary" AnchorOrigin="Origin.BottomCenter">
+                        @foreach (var u in _users.Where(u => u.Id != _userId))
+                        {
+                            <MudMenuItem OnClick="@(() => CopyFromAsync(u))">@u.Name</MudMenuItem>
+                        }
+                    </MudMenu>
+                </div>
+                <div class="pm-tree" role="tree" aria-label="@Tr("PM_Title")">
+                    @foreach (var root in Children(0)) { @RenderNode(root, 0) }
+                    @if (!string.IsNullOrWhiteSpace(_search) && _match.Count == 0) { <div class="pm-empty">@Tr("PM_NoMatch")</div> }
+                </div>
+                @if (PendingCount > 0)
+                {
+                    <div class="pm-save" role="status" aria-live="polite">
+                        <MudIcon Icon="@Icons.Material.Filled.EditNote" Color="Color.Warning" />
+                        <span class="msg">@Tr("PM_Pending", PendingCount)</span>
+                        <MudButton Variant="Variant.Text" OnClick="Discard" Disabled="_busy">@Tr("PM_Discard")</MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveAsync" Disabled="_busy">@Tr("Save")</MudButton>
+                    </div>
+                }
+            }
+        </section>
+    </div>
+    }
+</div>
+</MudContainer>
+
+@code {
+    private readonly MenuPermissionService _svc = new();
+    private readonly UserAdminService _users_svc = new();
+    private List<UserAdminRow> _users = new();
+    private List<MenuPermissionNode> _nodes = new();
+    private Dictionary<long, List<MenuPermissionNode>> _children = new();
+    private Dictionary<long, MenuPermissionNode> _byId = new();
+    private HashSet<long> _granted = new(), _original = new(), _expanded = new(), _match = new();
+    private long _userId;
+    private string? _searchValue, _error;
+    private bool _busy;
+
+    private bool CanUse => (MenuState.UserAllowedMenus ?? new()).Any(m => string.Equals((m.KeysData ?? "").Trim(), MenuPermissionService.PermissionsMenuKey, StringComparison.OrdinalIgnoreCase));
+    private UserAdminRow? SelectedUser => _users.FirstOrDefault(u => u.Id == _userId);
+    private int PendingCount => _granted.Count(id => !_original.Contains(id)) + _original.Count(id => !_granted.Contains(id));
+
+    private string? _search
+    {
+        get => _searchValue;
+        set { _searchValue = value; ComputeMatch(); }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        MenuState.OnAuthChanged += OnAuthChanged;
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    private void OnAuthChanged() => InvokeAsync(async () => { await LoadAsync(); StateHasChanged(); });
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+        MenuState.OnAuthChanged -= OnAuthChanged;
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private Task<T> Bg<T>(Func<T> f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return f(); });
+
+    private string Label(MenuPermissionNode n)
+    {
+        string text = !LangService.IsRtl && !string.IsNullOrWhiteSpace(n.Description_En) ? n.Description_En : n.Description;
+        return string.IsNullOrWhiteSpace(text) ? n.Key : text.Trim();
+    }
+
+    private async Task LoadAsync()
+    {
+        if (!CanUse) return;
+        try
+        {
+            var data = await Bg(() => (_users_svc.GetUsers(), _svc.GetTree()));
+            _users = data.Item1;
+            _nodes = data.Item2;
+            _byId = _nodes.ToDictionary(n => n.Id);
+            // عقدة أبوها غير موجود فى الشجرة تُعامل كجذر
+            _children = _nodes.GroupBy(n => _byId.ContainsKey(n.Parent_Id) ? n.Parent_Id : 0).ToDictionary(g => g.Key, g => g.ToList());
+            var q = new Uri(Nav.Uri).Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => p.Split('=', 2)).FirstOrDefault(p => p[0] == "user");
+            long fromQuery = q != null && q.Length == 2 && long.TryParse(q[1], out long uid) ? uid : 0;
+            long pick = _userId != 0 ? _userId : fromQuery;
+            if (pick != 0 && _users.Any(u => u.Id == pick)) await SelectUserAsync(pick, force: true);
+        }
+        catch (Exception ex) { _error = Tr("SystemError", ex.InnerException?.Message ?? ex.Message); }
+    }
+
+    private IEnumerable<MenuPermissionNode> Children(long parent) =>
+        (_children.TryGetValue(parent, out var list) ? list : Enumerable.Empty<MenuPermissionNode>())
+        .Where(n => string.IsNullOrWhiteSpace(_search) || _match.Contains(n.Id));
+
+    private IEnumerable<long> Subtree(long id)
+    {
+        yield return id;
+        if (_children.TryGetValue(id, out var kids))
+            foreach (var k in kids) foreach (var d in Subtree(k.Id)) yield return d;
+    }
+
+    private IEnumerable<long> Ancestors(long id)
+    {
+        for (int i = 0; i < 20 && _byId.TryGetValue(id, out var n) && _byId.ContainsKey(n.Parent_Id); i++)
+        {
+            id = n.Parent_Id;
+            yield return id;
+        }
+    }
+
+    // البحث: العقد المطابقة وآباؤها، مع فتح الآباء.
+    private void ComputeMatch()
+    {
+        _match.Clear();
+        if (string.IsNullOrWhiteSpace(_searchValue)) return;
+        string s = _searchValue.Trim();
+        foreach (var n in _nodes.Where(n => Label(n).Contains(s, StringComparison.CurrentCultureIgnoreCase) || n.Key.Contains(s, StringComparison.OrdinalIgnoreCase)))
+        {
+            _match.Add(n.Id);
+            foreach (long a in Ancestors(n.Id)) { _match.Add(a); _expanded.Add(a); }
+        }
+    }
+
+    private async Task SelectUserAsync(long id, bool force = false)
+    {
+        if (id == _userId && !force) return;
+        if (PendingCount > 0 && id != _userId)
+        {
+            bool? ok = await DialogService.ShowMessageBoxAsync(Tr("PM_Title"), Tr("PM_DiscardConfirm", PendingCount), yesText: Tr("PM_Discard"), cancelText: Tr("Cancel"));
+            if (ok != true) return;
+        }
+        _userId = id;
+        try
+        {
+            var granted = await Bg(() => _svc.GetGranted(id));
+            _original = granted.Where(_byId.ContainsKey).ToHashSet();
+            _granted = _original.ToHashSet();
+            if (_expanded.Count == 0) foreach (var r in Children(0)) _expanded.Add(r.Id);
+        }
+        catch (Exception ex) { _error = Tr("SystemError", ex.InnerException?.Message ?? ex.Message); }
+    }
+
+    // null = جزئى: العنصر مسموح لكن بعض ما تحته ممنوع.
+    private bool? State(long id)
+    {
+        if (!_granted.Contains(id)) return false;
+        return Subtree(id).All(_granted.Contains) ? true : null;
+    }
+
+    private void Toggle(long id)
+    {
+        if (State(id) == true)
+        {
+            foreach (long d in Subtree(id)) _granted.Remove(d);
+        }
+        else
+        {
+            foreach (long d in Subtree(id)) _granted.Add(d);
+            foreach (long a in Ancestors(id)) _granted.Add(a);
+        }
+    }
+
+    private void ToggleExpand(long id)
+    {
+        if (!_expanded.Remove(id)) _expanded.Add(id);
+    }
+
+    private void SetAllExpanded(bool open)
+    {
+        _expanded.Clear();
+        if (open) foreach (var k in _children.Keys.Where(k => k != 0)) _expanded.Add(k);
+    }
+
+    private RenderFragment RenderNode(MenuPermissionNode n, int depth) => __builder =>
+    {
+        bool hasKids = _children.ContainsKey(n.Id);
+        bool open = _expanded.Contains(n.Id) || !string.IsNullOrWhiteSpace(_search);
+        bool changed = _granted.Contains(n.Id) != _original.Contains(n.Id);
+        <div class="pm-node @(changed ? "changed" : "")" role="treeitem" aria-expanded="@(hasKids ? (open ? "true" : "false") : null)" aria-level="@(depth + 1)"
+             style="@($"padding-inline-start:{depth * 22}px")">
+            @if (hasKids)
+            {
+                <MudIconButton Icon="@(open ? Icons.Material.Filled.ExpandMore : (LangService.IsRtl ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight))"
+                               Size="Size.Small" aria-label="@Tr(open ? "PM_Collapse" : "PM_Expand")" OnClick="@(() => ToggleExpand(n.Id))" />
+            }
+            else { <span class="pm-spacer"></span> }
+            <MudCheckBox T="bool?" Value="@State(n.Id)" TriState="true" Color="Color.Primary" Dense="true" aria-label="@Label(n)"
+                         ValueChanged="@(_ => Toggle(n.Id))" />
+            <span class="lbl" @onclick="@(() => Toggle(n.Id))">
+                @Label(n)
+                @if (n.Hidden) { <span class="tag">@Tr("PM_Operation")</span> }
+            </span>
+            @if (hasKids)
+            {
+                var sub = Subtree(n.Id).Skip(1).ToList();
+                <span class="cnt">@sub.Count(_granted.Contains) / @sub.Count</span>
+            }
+        </div>
+        if (hasKids && open)
+        {
+            foreach (var c in Children(n.Id)) { @RenderNode(c, depth + 1) }
+        }
+    };
+
+    private void Discard() => _granted = _original.ToHashSet();
+
+    private async Task CopyFromAsync(UserAdminRow source)
+    {
+        try
+        {
+            var granted = await Bg(() => _svc.GetGranted(source.Id));
+            _granted = granted.Where(_byId.ContainsKey).ToHashSet();
+            Snackbar.Add(Tr("PM_Copied", source.Name), Severity.Info);
+        }
+        catch (Exception ex) { _error = Tr("SystemError", ex.InnerException?.Message ?? ex.Message); }
+    }
+
+    private async Task SaveAsync()
+    {
+        _busy = true;
+        long user = _userId, acting = Common.User_Id;
+        var granted = _granted.ToHashSet();
+        try
+        {
+            var (excp, msg, n) = await Bg(() => { int e = 0; string m = ""; int c = _svc.Save(ref e, ref m, user, granted, acting); return (e, m, c); });
+            if (excp != 0) { _error = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg; return; }
+            _original = granted;
+            _granted = granted.ToHashSet();
+            Snackbar.Add(Tr("PM_Saved", SelectedUser?.Name ?? ""), Severity.Success);
+        }
+        catch (Exception ex) { _error = Tr("SystemError", ex.InnerException?.Message ?? ex.Message); }
+        finally { _busy = false; }
+    }
+}

@@ -4072,4 +4072,56 @@
   <data name="AL_CreatedN" xml:space="preserve"><value>تم إنشاء {0} حساب وربطها</value></data>
   <data name="AL_LinkedN" xml:space="preserve"><value>تم ربط {0}</value></data>
   <data name="AL_ParentSaved" xml:space="preserve"><value>تم تحديد الحساب الرئيسى لـ {0}</value></data>
+  <data name="US_Title" xml:space="preserve"><value>المستخدمون</value></data>
+  <data name="US_Sub" xml:space="preserve"><value>حسابات الدخول وفروعها المسموحة. لا يُحذف مستخدم له حركات - أوقفه بدلاً من ذلك</value></data>
+  <data name="US_New" xml:space="preserve"><value>مستخدم جديد</value></data>
+  <data name="US_NoAccess" xml:space="preserve"><value>لا تملك صلاحية شاشة المستخدمين</value></data>
+  <data name="US_Search" xml:space="preserve"><value>بحث بالاسم أو اسم الدخول</value></data>
+  <data name="US_ShowInactive" xml:space="preserve"><value>إظهار الموقوفين</value></data>
+  <data name="US_ColName" xml:space="preserve"><value>المستخدم</value></data>
+  <data name="US_ColRole" xml:space="preserve"><value>الحالة</value></data>
+  <data name="US_ColBranches" xml:space="preserve"><value>الفروع المسموحة</value></data>
+  <data name="US_Admin" xml:space="preserve"><value>مدير</value></data>
+  <data name="US_Active" xml:space="preserve"><value>نشط</value></data>
+  <data name="US_Inactive" xml:space="preserve"><value>موقوف</value></data>
+  <data name="US_DefaultBranch" xml:space="preserve"><value>الفرع الافتراضى</value></data>
+  <data name="US_Edit" xml:space="preserve"><value>تعديل</value></data>
+  <data name="US_Permissions" xml:space="preserve"><value>الصلاحيات</value></data>
+  <data name="US_NoRows" xml:space="preserve"><value>لا يوجد مستخدمون مطابقون</value></data>
+  <data name="US_EditTitle" xml:space="preserve"><value>تعديل المستخدم {0}</value></data>
+  <data name="US_FullName" xml:space="preserve"><value>الاسم الكامل</value></data>
+  <data name="US_Login" xml:space="preserve"><value>اسم الدخول</value></data>
+  <data name="US_Password" xml:space="preserve"><value>كلمة المرور</value></data>
+  <data name="US_NewPassword" xml:space="preserve"><value>كلمة مرور جديدة</value></data>
+  <data name="US_KeepPassword" xml:space="preserve"><value>اتركها فارغة للإبقاء على كلمة المرور الحالية</value></data>
+  <data name="US_ConfirmPassword" xml:space="preserve"><value>تأكيد كلمة المرور</value></data>
+  <data name="US_PasswordMismatch" xml:space="preserve"><value>كلمتا المرور غير متطابقتين</value></data>
+  <data name="US_ShowPassword" xml:space="preserve"><value>إظهار كلمة المرور</value></data>
+  <data name="US_CopyFrom" xml:space="preserve"><value>صلاحيات القوائم</value></data>
+  <data name="US_CopyFromHelp" xml:space="preserve"><value>انسخها من مستخدم مشابه، ويمكن تعديلها لاحقاً من شاشة الصلاحيات</value></data>
+  <data name="US_DefaultPermissions" xml:space="preserve"><value>الافتراضية للنظام</value></data>
+  <data name="US_AllowedBranches" xml:space="preserve"><value>الفروع المسموحة</value></data>
+  <data name="US_BranchesHelp" xml:space="preserve"><value>الفروع التى يمكن للمستخدم الدخول عليها؛ الفرع الافتراضى مسموح دائماً</value></data>
+  <data name="US_AdminHelp" xml:space="preserve"><value>المدير يملك كل صلاحيات العمليات (التعديل والحذف ...) فى كل الشاشات، وتبقى القوائم الظاهرة له حسب شاشة الصلاحيات</value></data>
+  <data name="US_Saved" xml:space="preserve"><value>تم حفظ المستخدم «{0}»</value></data>
+  <data name="PM_Title" xml:space="preserve"><value>صلاحيات المستخدمين</value></data>
+  <data name="PM_Sub" xml:space="preserve"><value>ما يظهر لكل مستخدم من القوائم والشاشات، وصلاحيات العمليات مثل التعديل والحذف. تُطبَّق عند دخول المستخدم التالى</value></data>
+  <data name="PM_NoAccess" xml:space="preserve"><value>لا تملك صلاحية شاشة الصلاحيات</value></data>
+  <data name="PM_Users" xml:space="preserve"><value>المستخدمون</value></data>
+  <data name="PM_PickUser" xml:space="preserve"><value>اختر مستخدماً لعرض صلاحياته</value></data>
+  <data name="PM_For" xml:space="preserve"><value>صلاحيات {0}</value></data>
+  <data name="PM_AdminNote" xml:space="preserve"><value>هذا المستخدم مدير: صلاحيات العمليات مسموحة له دائماً، والقوائم الظاهرة تتبع هذه الشجرة</value></data>
+  <data name="PM_Search" xml:space="preserve"><value>ابحث عن قائمة أو شاشة</value></data>
+  <data name="PM_ExpandAll" xml:space="preserve"><value>فتح الكل</value></data>
+  <data name="PM_CollapseAll" xml:space="preserve"><value>طى الكل</value></data>
+  <data name="PM_Expand" xml:space="preserve"><value>فتح</value></data>
+  <data name="PM_Collapse" xml:space="preserve"><value>طى</value></data>
+  <data name="PM_CopyFrom" xml:space="preserve"><value>نسخ من مستخدم</value></data>
+  <data name="PM_Copied" xml:space="preserve"><value>نُسخت صلاحيات «{0}» - راجعها ثم احفظ</value></data>
+  <data name="PM_NoMatch" xml:space="preserve"><value>لا توجد قوائم مطابقة</value></data>
+  <data name="PM_Operation" xml:space="preserve"><value>صلاحية عملية</value></data>
+  <data name="PM_Pending" xml:space="preserve"><value>{0} تغيير لم يُحفظ</value></data>
+  <data name="PM_Discard" xml:space="preserve"><value>تجاهل التغييرات</value></data>
+  <data name="PM_DiscardConfirm" xml:space="preserve"><value>لديك {0} تغيير لم يُحفظ. تجاهلها والانتقال لمستخدم آخر؟</value></data>
+  <data name="PM_Saved" xml:space="preserve"><value>تم حفظ صلاحيات «{0}»</value></data>
 </root>

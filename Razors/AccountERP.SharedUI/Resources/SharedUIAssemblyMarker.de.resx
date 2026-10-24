@@ -4074,4 +4074,56 @@
   <data name="AL_CreatedN" xml:space="preserve"><value>{0} Konten angelegt und verknüpft</value></data>
   <data name="AL_LinkedN" xml:space="preserve"><value>{0} verknüpft</value></data>
   <data name="AL_ParentSaved" xml:space="preserve"><value>Übergeordnetes Konto für {0} gespeichert</value></data>
+  <data name="US_Title" xml:space="preserve"><value>Benutzer</value></data>
+  <data name="US_Sub" xml:space="preserve"><value>Anmeldekonten und erlaubte Filialen. Benutzer mit Historie werden nicht gelöscht — stattdessen deaktivieren</value></data>
+  <data name="US_New" xml:space="preserve"><value>Neuer Benutzer</value></data>
+  <data name="US_NoAccess" xml:space="preserve"><value>Keine Berechtigung für die Benutzerverwaltung</value></data>
+  <data name="US_Search" xml:space="preserve"><value>Nach Name oder Anmeldename suchen</value></data>
+  <data name="US_ShowInactive" xml:space="preserve"><value>Inaktive anzeigen</value></data>
+  <data name="US_ColName" xml:space="preserve"><value>Benutzer</value></data>
+  <data name="US_ColRole" xml:space="preserve"><value>Status</value></data>
+  <data name="US_ColBranches" xml:space="preserve"><value>Erlaubte Filialen</value></data>
+  <data name="US_Admin" xml:space="preserve"><value>Administrator</value></data>
+  <data name="US_Active" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="US_Inactive" xml:space="preserve"><value>Inaktiv</value></data>
+  <data name="US_DefaultBranch" xml:space="preserve"><value>Standardfiliale</value></data>
+  <data name="US_Edit" xml:space="preserve"><value>Bearbeiten</value></data>
+  <data name="US_Permissions" xml:space="preserve"><value>Berechtigungen</value></data>
+  <data name="US_NoRows" xml:space="preserve"><value>Keine passenden Benutzer</value></data>
+  <data name="US_EditTitle" xml:space="preserve"><value>Benutzer {0} bearbeiten</value></data>
+  <data name="US_FullName" xml:space="preserve"><value>Vollständiger Name</value></data>
+  <data name="US_Login" xml:space="preserve"><value>Anmeldename</value></data>
+  <data name="US_Password" xml:space="preserve"><value>Passwort</value></data>
+  <data name="US_NewPassword" xml:space="preserve"><value>Neues Passwort</value></data>
+  <data name="US_KeepPassword" xml:space="preserve"><value>Leer lassen, um das aktuelle Passwort zu behalten</value></data>
+  <data name="US_ConfirmPassword" xml:space="preserve"><value>Passwort bestätigen</value></data>
+  <data name="US_PasswordMismatch" xml:space="preserve"><value>Passwörter stimmen nicht überein</value></data>
+  <data name="US_ShowPassword" xml:space="preserve"><value>Passwort anzeigen</value></data>
+  <data name="US_CopyFrom" xml:space="preserve"><value>Menüberechtigungen</value></data>
+  <data name="US_CopyFromHelp" xml:space="preserve"><value>Von einem ähnlichen Benutzer kopieren; später im Berechtigungsbildschirm änderbar</value></data>
+  <data name="US_DefaultPermissions" xml:space="preserve"><value>Systemstandard</value></data>
+  <data name="US_AllowedBranches" xml:space="preserve"><value>Erlaubte Filialen</value></data>
+  <data name="US_BranchesHelp" xml:space="preserve"><value>Filialen, bei denen sich der Benutzer anmelden kann; die Standardfiliale ist immer erlaubt</value></data>
+  <data name="US_AdminHelp" xml:space="preserve"><value>Ein Administrator hat alle Vorgangsberechtigungen; sichtbare Menüs folgen weiterhin dem Berechtigungsbildschirm</value></data>
+  <data name="US_Saved" xml:space="preserve"><value>Benutzer „{0}“ gespeichert</value></data>
+  <data name="PM_Title" xml:space="preserve"><value>Benutzerberechtigungen</value></data>
+  <data name="PM_Sub" xml:space="preserve"><value>Welche Menüs und Masken jeder Benutzer sieht sowie Vorgangsberechtigungen. Gilt ab der nächsten Anmeldung</value></data>
+  <data name="PM_NoAccess" xml:space="preserve"><value>Keine Berechtigung für die Berechtigungsverwaltung</value></data>
+  <data name="PM_Users" xml:space="preserve"><value>Benutzer</value></data>
+  <data name="PM_PickUser" xml:space="preserve"><value>Benutzer wählen, um Berechtigungen anzuzeigen</value></data>
+  <data name="PM_For" xml:space="preserve"><value>Berechtigungen von {0}</value></data>
+  <data name="PM_AdminNote" xml:space="preserve"><value>Dieser Benutzer ist Administrator: Vorgangsberechtigungen sind immer erlaubt; sichtbare Menüs folgen diesem Baum</value></data>
+  <data name="PM_Search" xml:space="preserve"><value>Menü oder Maske suchen</value></data>
+  <data name="PM_ExpandAll" xml:space="preserve"><value>Alle aufklappen</value></data>
+  <data name="PM_CollapseAll" xml:space="preserve"><value>Alle zuklappen</value></data>
+  <data name="PM_Expand" xml:space="preserve"><value>Aufklappen</value></data>
+  <data name="PM_Collapse" xml:space="preserve"><value>Zuklappen</value></data>
+  <data name="PM_CopyFrom" xml:space="preserve"><value>Von Benutzer kopieren</value></data>
+  <data name="PM_Copied" xml:space="preserve"><value>Berechtigungen von „{0}“ kopiert — prüfen und speichern</value></data>
+  <data name="PM_NoMatch" xml:space="preserve"><value>Keine passenden Menüs</value></data>
+  <data name="PM_Operation" xml:space="preserve"><value>Vorgang</value></data>
+  <data name="PM_Pending" xml:space="preserve"><value>{0} ungespeicherte Änderungen</value></data>
+  <data name="PM_Discard" xml:space="preserve"><value>Änderungen verwerfen</value></data>
+  <data name="PM_DiscardConfirm" xml:space="preserve"><value>{0} ungespeicherte Änderungen. Verwerfen und Benutzer wechseln?</value></data>
+  <data name="PM_Saved" xml:space="preserve"><value>Berechtigungen von „{0}“ gespeichert</value></data>
 </root>
