@@ -132,7 +132,7 @@ namespace AccountModelsLib.BusinessLibShared.Currency
                     existing.IS_GL_Currency_Flage = currencyInput.IS_GL_Currency_Flage;
                     existing.Update_ServerDateTime = DateTime.Now;
                     existing.EditOperationDate = DateTime.Now;
-                    existing.Edit_User_Id = currencyInput.Edit_User_Id;
+                    existing.Edit_User_Id = Common.User_Id;
                 }
 
                 await opp.db.SaveChangesAsync();

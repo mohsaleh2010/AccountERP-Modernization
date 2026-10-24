@@ -137,7 +137,8 @@ WHERE        (Submain_Account_ID = " + Submain_Account_ID + ") AND (Year_Financi
                 Equivalent_Balance_Da2n = {eqFirstBalanceDa2n},
                 IS_Madin_Da2n = {transformType},
                 Update_ServerDateTime = GETDATE(),
-                Edit_User_Id = {Common.User_Id}
+                Edit_User_Id = {Common.User_Id},
+                EditOperationDate = GETDATE()
             WHERE Id = {recordId}";
 
                  opp.insert_me(updateSql);
