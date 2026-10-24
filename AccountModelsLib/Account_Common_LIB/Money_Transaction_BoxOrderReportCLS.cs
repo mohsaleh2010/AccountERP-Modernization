@@ -4399,7 +4399,7 @@ FROM            Order_Money INNER JOIN
             long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);
 
             //Id,Serial,
-            mysql = " Update  Order_Money Set  Order_No=" + Order_No + ",Order_Date=" + operations.Get_DateToInsert(Order_Date) + ",  Man_Name='" + Man_Name + "',User_Id=" + Common.User_Id + ",Year_Financial_Period_Id=" + Year_Financial_Period_Id + ",Order_Tafkeet_Value='" + Tafkeet_Value + "',Order_Notes='" + Order_Notes + "',Factor=" + Factor + " ";
+            mysql = " Update  Order_Money Set  Order_No=" + Order_No + ",Order_Date=" + operations.Get_DateToInsert(Order_Date) + ",  Man_Name='" + Man_Name + "',User_Id=" + Common.User_Id + ",Year_Financial_Period_Id=" + Year_Financial_Period_Id + ",Order_Tafkeet_Value='" + Tafkeet_Value + "',Order_Notes='" + Order_Notes + "',Factor=" + Factor + ", Edit_User_Id=" + Common.User_Id + ", EditOperationDate=GETDATE() ";
 
 
             mysql = mysql + " Where Id=" + Order_Money_Id;
