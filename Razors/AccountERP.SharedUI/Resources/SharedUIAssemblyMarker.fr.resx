@@ -4161,4 +4161,12 @@
   <data name="RD_FillRest" xml:space="preserve"><value>Remplir le reste</value></data>
   <data name="RD_ClearAll" xml:space="preserve"><value>Tout effacer</value></data>
   <data name="RD_HintPick" xml:space="preserve"><value>Choisissez un encaissement ci-dessus puis répartissez son montant sur les factures du client.</value></data>
+  <data name="IAMTitle" xml:space="preserve"><value>Méthode de comptabilité des stocks de cette succursale</value></data>
+  <data name="IAMPeriodic" xml:space="preserve"><value>Inventaire périodique (sans écritures de stock)</value></data>
+  <data name="IAMContinuous" xml:space="preserve"><value>Inventaire permanent (écriture par bon validé)</value></data>
+  <data name="IAMStart" xml:space="preserve"><value>Date de début</value></data>
+  <data name="IAMSave" xml:space="preserve"><value>Enregistrer la méthode</value></data>
+  <data name="IAMSaved" xml:space="preserve"><value>Méthode enregistrée</value></data>
+  <data name="IAMStartRequired" xml:space="preserve"><value>Indiquez la date de début</value></data>
+  <data name="IAMHelp" xml:space="preserve"><value>En mode « permanent », chaque bon validé (et son extourne) à partir de la date de début est comptabilisé entre le compte du dépôt et le compte du rôle ci-dessous. La validation est refusée si un compte manque. Les factures ne sont pas encore liées.</value></data>
 </root>

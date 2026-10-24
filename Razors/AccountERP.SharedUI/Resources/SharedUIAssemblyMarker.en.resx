@@ -4159,4 +4159,12 @@
   <data name="RD_FillRest" xml:space="preserve"><value>Fill remaining</value></data>
   <data name="RD_ClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="RD_HintPick" xml:space="preserve"><value>Pick a receipt above, then distribute its amount over the customer's invoices.</value></data>
+  <data name="IAMTitle" xml:space="preserve"><value>Inventory accounting method for this branch</value></data>
+  <data name="IAMPeriodic" xml:space="preserve"><value>Periodic (no stock journal entries)</value></data>
+  <data name="IAMContinuous" xml:space="preserve"><value>Perpetual (journal entry per posted order)</value></data>
+  <data name="IAMStart" xml:space="preserve"><value>Start date</value></data>
+  <data name="IAMSave" xml:space="preserve"><value>Save method</value></data>
+  <data name="IAMSaved" xml:space="preserve"><value>Inventory accounting method saved</value></data>
+  <data name="IAMStartRequired" xml:space="preserve"><value>Pick a start date for perpetual inventory</value></data>
+  <data name="IAMHelp" xml:space="preserve"><value>With "perpetual", every posted order (and its reversal) dated on/after the start date is journaled between the store account and the role account set below. Posting is refused if an account link is missing. Invoices are not linked yet.</value></data>
 </root>

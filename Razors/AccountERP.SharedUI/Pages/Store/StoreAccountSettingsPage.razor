@@ -68,7 +68,24 @@
         </MudGrid>
     </MudPaper>
 
-    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-4">@Tr("SADNotWiredYet")</MudAlert>
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h6" Class="font-weight-bold mb-2">@Tr("IAMTitle")</MudText>
+        <MudGrid Spacing="2" Style="align-items:center;">
+            <MudItem xs="12" md="5">
+                <MudSelect T="int" @bind-Value="_method" Label="@Tr("IAMTitle")" Variant="Variant.Outlined" Margin="Margin.Dense" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelectItem T="int" Value="0">@Tr("IAMPeriodic")</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">@Tr("IAMContinuous")</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudDatePicker T="DateTime?" @bind-Date="_methodStart" Label="@Tr("IAMStart")" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="@(_method != 1)" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveMethodAsync" Disabled="_busy">@Tr("IAMSave")</MudButton>
+            </MudItem>
+        </MudGrid>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mt-2">@Tr("IAMHelp")</MudText>
+    </MudPaper>
 
     @if (!string.IsNullOrEmpty(_errorMessage))
     {
@@ -165,6 +182,11 @@
     private string _errorMessage = string.Empty;
 
     private int _level;          // 0 فرع، 1 نوع مخزن، 2 مخزن
+
+    // طريقة المحاسبة المخزنية للفرع (InventoryPostingService): 0 دورى (الافتراضى)، 1 مستمر من تاريخ
+    private readonly InventoryPostingService _posting = new();
+    private int _method;
+    private DateTime? _methodStart;
     private int _type = 1;
     private long _storeId;
 
@@ -177,6 +199,38 @@
     {
         LangService.OnLanguageChanged += OnLanguageChangedHandler;
         await LoadAsync();
+        try
+        {
+            var branch = Common.Branch_Id;
+            var setting = await Task.Run(() => _posting.GetSetting(branch));
+            _method = (int)setting.Method;
+            _methodStart = setting.StartDate;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+    }
+
+    private async Task SaveMethodAsync()
+    {
+        _errorMessage = string.Empty;
+        if (_method == 1 && _methodStart == null) { Snackbar.Add(Tr("IAMStartRequired"), Severity.Warning); return; }
+        _busy = true;
+        try
+        {
+            var branch = Common.Branch_Id; var method = (InventoryPostingService.Method)_method; var start = _methodStart;
+            await Task.Run(() => _posting.SaveSetting(branch, method, start));
+            Snackbar.Add(Tr("IAMSaved"), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
     }
 
     private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);

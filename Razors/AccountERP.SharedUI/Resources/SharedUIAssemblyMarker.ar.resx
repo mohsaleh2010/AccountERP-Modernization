@@ -4159,4 +4159,12 @@
   <data name="RD_FillRest" xml:space="preserve"><value>تعبئة المتبقى</value></data>
   <data name="RD_ClearAll" xml:space="preserve"><value>تفريغ الكل</value></data>
   <data name="RD_HintPick" xml:space="preserve"><value>اختر إذن قبض من الأعلى ثم وزّع مبلغه على فواتير العميل.</value></data>
+  <data name="IAMTitle" xml:space="preserve"><value>طريقة المحاسبة المخزنية لهذا الفرع</value></data>
+  <data name="IAMPeriodic" xml:space="preserve"><value>جرد دورى (بلا قيود مخزنية)</value></data>
+  <data name="IAMContinuous" xml:space="preserve"><value>جرد مستمر (قيد لكل إذن مرحَّل)</value></data>
+  <data name="IAMStart" xml:space="preserve"><value>تاريخ بدء القيد</value></data>
+  <data name="IAMSave" xml:space="preserve"><value>حفظ الطريقة</value></data>
+  <data name="IAMSaved" xml:space="preserve"><value>تم حفظ طريقة المحاسبة المخزنية</value></data>
+  <data name="IAMStartRequired" xml:space="preserve"><value>حدد تاريخ البدء للجرد المستمر</value></data>
+  <data name="IAMHelp" xml:space="preserve"><value>عند «مستمر» يُقيَّد كل إذن مرحَّل (وعكسه) بتاريخ البدء أو بعده: مدين/دائن حساب المخزن مقابل حساب الدور المحدد أدناه. إن نقص ربط حساب يُرفض الترحيل. الفواتير لم تُربط بعد.</value></data>
 </root>

@@ -4161,4 +4161,12 @@
   <data name="RD_FillRest" xml:space="preserve"><value>Rest einsetzen</value></data>
   <data name="RD_ClearAll" xml:space="preserve"><value>Alle leeren</value></data>
   <data name="RD_HintPick" xml:space="preserve"><value>Wählen Sie oben einen Beleg und verteilen Sie den Betrag auf die Rechnungen des Kunden.</value></data>
+  <data name="IAMTitle" xml:space="preserve"><value>Bestandsbuchungsmethode dieser Filiale</value></data>
+  <data name="IAMPeriodic" xml:space="preserve"><value>Periodische Inventur (keine Lagerbuchungen)</value></data>
+  <data name="IAMContinuous" xml:space="preserve"><value>Permanente Inventur (Buchung je gebuchtem Beleg)</value></data>
+  <data name="IAMStart" xml:space="preserve"><value>Startdatum</value></data>
+  <data name="IAMSave" xml:space="preserve"><value>Methode speichern</value></data>
+  <data name="IAMSaved" xml:space="preserve"><value>Methode gespeichert</value></data>
+  <data name="IAMStartRequired" xml:space="preserve"><value>Startdatum für permanente Inventur wählen</value></data>
+  <data name="IAMHelp" xml:space="preserve"><value>Bei „permanent“ wird jeder gebuchte Beleg (und seine Stornierung) ab dem Startdatum zwischen Lagerkonto und dem unten gesetzten Rollenkonto gebucht. Fehlt eine Kontozuordnung, wird die Buchung abgelehnt. Rechnungen sind noch nicht angebunden.</value></data>
 </root>

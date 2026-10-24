@@ -215,6 +215,7 @@ FROM Store_Order_Type_Settings WHERE Order_Type = {orderType}").AsEnumerable().F
                     opp.db.Database.ExecuteSqlInterpolated($@"UPDATE Order_Purshing SET Doc_Status = {(int)DocStatus.Posted},
     Posted_Date = ISNULL(Posted_Date, {DateTime.Now}), Posted_By = ISNULL(Posted_By, {Common.User_Id}) WHERE Id = {orderId}");
                     opp.db.SaveChanges();
+                    PostInventoryEntry(orderId);
                     Log(1, header, "ترحيل شحنة تحويل (فى الطريق)");
                     return result;
                 }
@@ -260,9 +261,13 @@ FROM Store_Order_Type_Settings WHERE Order_Type = {orderType}").AsEnumerable().F
             opp.db.Database.ExecuteSqlInterpolated($@"UPDATE Order_Purshing SET Doc_Status = {(int)DocStatus.Posted},
     Posted_Date = ISNULL(Posted_Date, {DateTime.Now}), Posted_By = ISNULL(Posted_By, {Common.User_Id}) WHERE Id = {orderId}");
             opp.db.SaveChanges();
+            PostInventoryEntry(orderId);
             Log(1, header, "ترحيل إذن");
             return result;
         }
+
+        /// <summary>قيد الجرد المستمر للإذن (لا يفعل شيئاً لفرع «دورى» وهو الافتراضى)؛ يرمى استثناءً لو نقص ربط حساب فيتراجع الترحيل كله.</summary>
+        private void PostInventoryEntry(long orderId) => new InventoryPostingService().PostOrderEntry(opp, orderId);
 
         // ============================== العكس ==============================
 
@@ -307,6 +312,7 @@ FROM Store_Order_Type_Settings WHERE Order_Type = {orderType}").AsEnumerable().F
             // عكس إذن استلام تحويل: الشحنة تعود «فى الطريق» بما لم يُستلم (ويُلغى إغلاق العجز إن كان).
             if (link.SourceOrderId is long shipmentId) RefreshTransferStatus(shipmentId, reopen: true);
 
+            PostInventoryEntry(rev.Id);
             Log(3, orig, "عكس إذن: " + reason);
             return rev.Id;
         }
@@ -443,6 +449,7 @@ ORDER BY d.Id").ToList();
     Posted_Date = ISNULL(Posted_Date, {DateTime.Now}), Posted_By = ISNULL(Posted_By, {Common.User_Id}) WHERE Id = {receipt.Id}");
 
             RefreshTransferStatus(shipmentId, reopen: false);
+            PostInventoryEntry(receipt.Id);
             Log(1, receipt, $"استلام التحويل رقم {ship.Order_Purshing_No}");
             return receipt.Id;
         }

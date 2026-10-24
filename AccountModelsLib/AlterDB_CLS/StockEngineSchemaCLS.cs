@@ -69,6 +69,7 @@ WHERE Order_Type IN (1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1012,1013
             // مستقلة عن فحص المخطط: القواعد المرقّاة سابقاً تحتاج الربط أيضاً، وتقرأ فقط العناصر غير المربوطة.
             Step(opp, LinkStoreOrderMenus);
             Step(opp, TransferSettings);
+            Step(opp, InventoryAccountingSetting);
             Step(opp, StoreAccountMenu);
             Step(opp, TextileItemsMenu);
         }
@@ -99,6 +100,22 @@ CREATE TABLE [dbo].[Store_Account_Determination](
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Store_Account_Determination_Key')
 CREATE UNIQUE NONCLUSTERED INDEX [UX_Store_Account_Determination_Key]
     ON [dbo].[Store_Account_Determination]([Account_Branch_Id] ASC, [StoreUsed_Type] ASC, [Store_Id] ASC, [Account_Role] ASC);");
+        }
+
+        // ---------------- طريقة المحاسبة المخزنية لكل فرع (خطة المخازن 01 §2.8، شريحة 1 من ب1) ----------------
+        // لا صف = جرد دورى (الافتراضى، لا قيود مخزنية). Method = 1 مستمر: كل إذن مرحَّل بعد Start_Date يقيَّد (InventoryPostingService).
+        private static void InventoryAccountingSetting(operations opp)
+        {
+            Run(opp, @"
+IF OBJECT_ID(N'dbo.Inventory_Accounting_Setting', N'U') IS NULL
+CREATE TABLE [dbo].[Inventory_Accounting_Setting](
+    [Account_Branch_Id] [bigint] NOT NULL,
+    [Method] [int] NOT NULL DEFAULT ((0)),
+    [Start_Date] [date] NULL,
+    [User_Id] [bigint] NULL,
+    [Update_ServerDateTime] [datetime] NULL DEFAULT (getdate()),
+    CONSTRAINT [PK_Inventory_Accounting_Setting] PRIMARY KEY CLUSTERED ([Account_Branch_Id] ASC)
+);");
         }
 
         // ---------------- شركات الشحن موردو خدمات فى جدول Supplier (قرار المستخدم 2026-10-23) ----------------
