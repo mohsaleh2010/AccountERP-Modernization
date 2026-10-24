@@ -4135,4 +4135,30 @@
   <data name="TX_NoRows" xml:space="preserve"><value>Keine Steuersätze</value></data>
   <data name="TX_Help" xml:space="preserve"><value>Nur Satz und Mindestwert sind änderbar; Sätze können nicht hinzugefügt oder gelöscht werden</value></data>
   <data name="TX_Saved" xml:space="preserve"><value>{0} Satz/Sätze gespeichert</value></data>
+  <data name="RD_PickTitle" xml:space="preserve"><value>Zahlungseingang zur Verteilung auf Rechnungen wählen</value></data>
+  <data name="RD_SearchReceipts" xml:space="preserve"><value>Zahlungseingänge suchen</value></data>
+  <data name="RD_BankLabel" xml:space="preserve"><value>Kasse / Bank</value></data>
+  <data name="RD_Select" xml:space="preserve"><value>Auswählen</value></data>
+  <data name="RD_ReceiptNo" xml:space="preserve"><value>Beleg-Nr.</value></data>
+  <data name="RD_ReceiptValue" xml:space="preserve"><value>Betrag</value></data>
+  <data name="RD_AllocatedCol" xml:space="preserve"><value>Verteilt</value></data>
+  <data name="RD_PayCol" xml:space="preserve"><value>Zugeordneter Betrag</value></data>
+  <data name="RD_Selected" xml:space="preserve"><value>Gewählter Beleg: Nr. {0} — {1}</value></data>
+  <data name="RD_RestOfReceipt" xml:space="preserve"><value>Restbetrag des Belegs</value></data>
+  <data name="RD_TotalApplied" xml:space="preserve"><value>Zugeordnet gesamt</value></data>
+  <data name="RD_Save" xml:space="preserve"><value>Verteilung speichern</value></data>
+  <data name="RD_Delete" xml:space="preserve"><value>Verteilung löschen</value></data>
+  <data name="RD_DeleteConfirm" xml:space="preserve"><value>Verteilung dieses Belegs löschen? Der Beleg selbst bleibt erhalten.</value></data>
+  <data name="RD_Saved" xml:space="preserve"><value>Verteilung auf {0} Rechnung(en) gespeichert</value></data>
+  <data name="RD_Deleted" xml:space="preserve"><value>Verteilung gelöscht ({0} Zeile(n))</value></data>
+  <data name="RD_NoReceipts" xml:space="preserve"><value>Keine passenden Belege</value></data>
+  <data name="RD_PickFirst" xml:space="preserve"><value>Bitte zuerst einen Beleg wählen</value></data>
+  <data name="RD_ExceedsReceipt" xml:space="preserve"><value>Summe übersteigt den Belegbetrag</value></data>
+  <data name="RD_ExceedsInvoice" xml:space="preserve"><value>Betrag übersteigt den offenen Rechnungsbetrag</value></data>
+  <data name="RD_InvoiceOtherCustomer" xml:space="preserve"><value>Die Rechnung gehört einem anderen Kunden</value></data>
+  <data name="RD_ReceiptNotFound" xml:space="preserve"><value>Beleg nicht gefunden</value></data>
+  <data name="RD_InvoiceNotFound" xml:space="preserve"><value>Rechnung nicht gefunden</value></data>
+  <data name="RD_FillRest" xml:space="preserve"><value>Rest einsetzen</value></data>
+  <data name="RD_ClearAll" xml:space="preserve"><value>Alle leeren</value></data>
+  <data name="RD_HintPick" xml:space="preserve"><value>Wählen Sie oben einen Beleg und verteilen Sie den Betrag auf die Rechnungen des Kunden.</value></data>
 </root>

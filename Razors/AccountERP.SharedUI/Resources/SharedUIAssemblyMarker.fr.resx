@@ -4135,4 +4135,30 @@
   <data name="TX_NoRows" xml:space="preserve"><value>Aucun taux de taxe</value></data>
   <data name="TX_Help" xml:space="preserve"><value>Seuls le taux et la valeur minimale sont modifiables ; aucun ajout ni suppression</value></data>
   <data name="TX_Saved" xml:space="preserve"><value>{0} taux enregistré(s)</value></data>
+  <data name="RD_PickTitle" xml:space="preserve"><value>Choisir un encaissement à répartir sur les factures</value></data>
+  <data name="RD_SearchReceipts" xml:space="preserve"><value>Rechercher les encaissements</value></data>
+  <data name="RD_BankLabel" xml:space="preserve"><value>Caisse / banque</value></data>
+  <data name="RD_Select" xml:space="preserve"><value>Choisir</value></data>
+  <data name="RD_ReceiptNo" xml:space="preserve"><value>N° encaissement</value></data>
+  <data name="RD_ReceiptValue" xml:space="preserve"><value>Montant</value></data>
+  <data name="RD_AllocatedCol" xml:space="preserve"><value>Réparti</value></data>
+  <data name="RD_PayCol" xml:space="preserve"><value>Montant affecté</value></data>
+  <data name="RD_Selected" xml:space="preserve"><value>Encaissement choisi : n° {0} — {1}</value></data>
+  <data name="RD_RestOfReceipt" xml:space="preserve"><value>Reste de l'encaissement</value></data>
+  <data name="RD_TotalApplied" xml:space="preserve"><value>Total affecté</value></data>
+  <data name="RD_Save" xml:space="preserve"><value>Enregistrer la répartition</value></data>
+  <data name="RD_Delete" xml:space="preserve"><value>Supprimer la répartition</value></data>
+  <data name="RD_DeleteConfirm" xml:space="preserve"><value>Supprimer la répartition de cet encaissement ? L'encaissement est conservé.</value></data>
+  <data name="RD_Saved" xml:space="preserve"><value>Répartition enregistrée sur {0} facture(s)</value></data>
+  <data name="RD_Deleted" xml:space="preserve"><value>Répartition supprimée ({0} ligne(s))</value></data>
+  <data name="RD_NoReceipts" xml:space="preserve"><value>Aucun encaissement correspondant</value></data>
+  <data name="RD_PickFirst" xml:space="preserve"><value>Choisissez d'abord un encaissement</value></data>
+  <data name="RD_ExceedsReceipt" xml:space="preserve"><value>Le total dépasse le montant de l'encaissement</value></data>
+  <data name="RD_ExceedsInvoice" xml:space="preserve"><value>Montant supérieur au reste dû sur la facture</value></data>
+  <data name="RD_InvoiceOtherCustomer" xml:space="preserve"><value>La facture appartient à un autre client</value></data>
+  <data name="RD_ReceiptNotFound" xml:space="preserve"><value>Encaissement introuvable</value></data>
+  <data name="RD_InvoiceNotFound" xml:space="preserve"><value>Facture introuvable</value></data>
+  <data name="RD_FillRest" xml:space="preserve"><value>Remplir le reste</value></data>
+  <data name="RD_ClearAll" xml:space="preserve"><value>Tout effacer</value></data>
+  <data name="RD_HintPick" xml:space="preserve"><value>Choisissez un encaissement ci-dessus puis répartissez son montant sur les factures du client.</value></data>
 </root>

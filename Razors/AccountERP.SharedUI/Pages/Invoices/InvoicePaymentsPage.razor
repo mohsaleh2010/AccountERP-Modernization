@@ -10,10 +10,10 @@
        (Common.IsShowInvoices_List_WithDueDate) - يُقرأ هنا من قوائم المستخدم الحالى بدل Common.User_Id الثابت (متعدد المستخدمين).
        ?view=due لا يغيّر السلوك (عنصر قائمة ثانٍ لنفس الفورم) بل عنوان الصفحة فقط.
 
-   مؤجَّل عمداً (يحتاج شاشات أذون النقدية التى لم تُحوَّل بعد، وهى تكتب بيانات مالية): زر "استلام نقدية" (MakeOrderMoneyNowMulti →
-   OrderMoney_TransactionMany)، فتح إذن النقدية بالنقر المزدوج على سطر المدفوعات (New_OrderMoney_SarfNew)، اختيار الإذن وحفظ/حذف
-   التوزيع (Cash_Money_ListFromCustomersToSelect + SaveUpdateMoney_Transaction_BoxForInvoice)، الطباعة (RDLC). فلاتر "تاريخ الاستحقاق"
-   و"نوع العميل" فى الأصل لا تؤثر على الاستعلام أصلاً (أو تؤثر على قائمة العملاء فقط) فلم تُنقل. *@
+   خطة المتبقى ج1–ج3: وضع ?mode=distribution صار يكتب أيضاً: اختيار إذن قبض (Cash_Money_ListFromCustomersToSelect) ثم توزيع مبلغه على فواتير
+   عميله وحفظه/حذفه عبر ReceiptDistributionService (SaveUpdate/DeleteMoney_Transaction_BoxForInvoice الأصليتين)؛ وزر "إذن نقدية" لكل فاتورة
+   (MakeOrderMoneyNowMulti) يفتح صفحة إذن الطرف مربوطاً بالفاتورة، والنقر المزدوج على سطر المدفوعات يفتح الإذن (/accounts/cash/voucher).
+   مؤجَّل: الطباعة (RDLC). فلاتر "تاريخ الاستحقاق" و"نوع العميل" فى الأصل لا تؤثر على الاستعلام أصلاً فلم تُنقل. *@
 @page "/accounts/invoices/payments"
 
 @using System.Data
@@ -24,6 +24,8 @@
 @inject LanguageService LangService
 @inject NavigationManager Nav
 @inject MenuStateService MenuState
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
 @implements IDisposable
 
 <PageTitle>@_title</PageTitle>
@@ -95,6 +97,85 @@
         </MudStack>
     </MudPaper>
 
+    @if (_isDistribution)
+    {
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap" Spacing="2">
+                <MudText Typo="Typo.h6" Class="font-weight-bold">@Tr("RD_PickTitle")</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ReceiptLong" OnClick="@(() => _pickerOpen = !_pickerOpen)">
+                    @Tr("RD_SearchReceipts")
+                </MudButton>
+            </MudStack>
+
+            @if (_voucher == null)
+            {
+                <MudText Typo="Typo.body2" Class="mud-text-secondary mt-2">@Tr("RD_HintPick")</MudText>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mt-3">@Tr("RD_Selected", _voucher.OrderNo, _voucher.Customer)</MudAlert>
+                <MudGrid Class="mt-2" Spacing="2">
+                    <MudItem xs="6" sm="3"><MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("RD_ReceiptValue")</MudText><MudText Typo="Typo.h6">@_voucher.Value.ToString("N2")</MudText></MudItem>
+                    <MudItem xs="6" sm="3"><MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("RD_TotalApplied")</MudText><MudText Typo="Typo.h6">@AppliedTotal.ToString("N2")</MudText></MudItem>
+                    <MudItem xs="6" sm="3">
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("RD_RestOfReceipt")</MudText>
+                        <MudText Typo="Typo.h6" Color="@(ReceiptRest < 0 ? Color.Error : Color.Default)">@ReceiptRest.ToString("N2")</MudText>
+                    </MudItem>
+                    <MudItem xs="6" sm="3"><MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("PmtBankColumn")</MudText><MudText Typo="Typo.subtitle1">@_voucher.Bank</MudText></MudItem>
+                </MudGrid>
+                <MudStack Row="true" Spacing="2" Class="mt-3" Wrap="Wrap.Wrap">
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveDistributionAsync"
+                               Disabled="@(_isBusy || ReceiptRest < 0)">@Tr("RD_Save")</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteOutline" OnClick="DeleteDistributionAsync"
+                               Disabled="@(_isBusy || _voucher.Allocated <= 0)">@Tr("RD_Delete")</MudButton>
+                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ClearAll" OnClick="ClearAllocations">@Tr("RD_ClearAll")</MudButton>
+                </MudStack>
+            }
+
+            @if (_pickerOpen)
+            {
+                <MudDivider Class="my-3" />
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudAutocomplete T="LookupOption" @bind-Value="_rcCustomer" SearchFunc="SearchCustomersAsync" ToStringFunc="@(c => c?.Name ?? "")"
+                                         Label="@Tr("CustomerLabel")" Placeholder="@Tr("AllCustomers")" Variant="Variant.Outlined"
+                                         Clearable="true" CoerceText="false" ResetValueOnEmptyText="true" MaxItems="50" />
+                    </MudItem>
+                    <MudItem xs="6" md="3"><MudDatePicker T="DateTime?" @bind-Date="_rcFrom" Label="@Tr("DateFromLabel")" Variant="Variant.Outlined" Clearable="true" /></MudItem>
+                    <MudItem xs="6" md="3"><MudDatePicker T="DateTime?" @bind-Date="_rcTo" Label="@Tr("DateToLabel")" Variant="Variant.Outlined" Clearable="true" /></MudItem>
+                    <MudItem xs="12" md="2" Class="d-flex align-center">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Search"
+                                   OnClick="SearchReceiptsAsync" Disabled="@_receiptsLoading">@Tr("SearchButton")</MudButton>
+                    </MudItem>
+                </MudGrid>
+                <MudTable Items="@_receipts" T="ReceiptDistributionService.ReceiptRow" Hover="true" Striped="true" Dense="true" Elevation="0" Class="mt-3"
+                          Loading="@_receiptsLoading" Bordered="true">
+                    <HeaderContent>
+                        <MudTh>@Tr("RD_ReceiptNo")</MudTh>
+                        <MudTh>@Tr("DateColumn")</MudTh>
+                        <MudTh>@Tr("CustomerLabel")</MudTh>
+                        <MudTh>@Tr("RD_BankLabel")</MudTh>
+                        <MudTh Style="text-align:end">@Tr("RD_ReceiptValue")</MudTh>
+                        <MudTh Style="text-align:end">@Tr("RD_AllocatedCol")</MudTh>
+                        <MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="@Tr("RD_ReceiptNo")">@context.OrderNo</MudTd>
+                        <MudTd DataLabel="@Tr("DateColumn")">@FormatDate(context.Date)</MudTd>
+                        <MudTd DataLabel="@Tr("CustomerLabel")">@context.Customer</MudTd>
+                        <MudTd DataLabel="@Tr("RD_BankLabel")">@context.Bank</MudTd>
+                        <MudTd DataLabel="@Tr("RD_ReceiptValue")" Style="text-align:end;font-variant-numeric:tabular-nums">@context.Value.ToString("N2")</MudTd>
+                        <MudTd DataLabel="@Tr("RD_AllocatedCol")" Style="text-align:end;font-variant-numeric:tabular-nums">@context.Allocated.ToString("N2")</MudTd>
+                        <MudTd><MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SelectReceiptAsync(context))">@Tr("RD_Select")</MudButton></MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Align="Align.Center" Class="py-3 mud-text-secondary">@(_receiptsSearched ? Tr("RD_NoReceipts") : Tr("PressSearchHint"))</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            }
+        </MudPaper>
+    }
+
     @if (!string.IsNullOrEmpty(_errorMessage))
     {
         <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
@@ -144,6 +225,10 @@
             <MudTh Style="text-align:end">@Tr("PmtRemainingColumn")</MudTh>
             <MudTh>@Tr("NotesColumn")</MudTh>
             <MudTh>@Tr("UserColumn")</MudTh>
+            @if (_voucher != null)
+            {
+                <MudTh Style="text-align:end;min-width:150px">@Tr("RD_PayCol")</MudTh>
+            }
             <MudTh></MudTh>
         </HeaderContent>
         <RowTemplate>
@@ -160,9 +245,23 @@
             <MudTd DataLabel="@Tr("PmtRemainingColumn")" Style="@($"text-align:end;font-variant-numeric:tabular-nums;{(context.Remaining > 0 ? "color:var(--mud-palette-error);font-weight:600;" : "")}")">@context.Remaining.ToString("N2")</MudTd>
             <MudTd DataLabel="@Tr("NotesColumn")">@context.Notes</MudTd>
             <MudTd DataLabel="@Tr("UserColumn")">@context.User</MudTd>
+            @if (_voucher != null)
+            {
+                <MudTd DataLabel="@Tr("RD_PayCol")" Style="text-align:end">
+                    <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end" @onclick:stopPropagation="true">
+                        <MudNumericField T="decimal?" Value="@GetAlloc(context.Id)" ValueChanged="@((decimal? v) => SetAlloc(context, v))" Min="0" Max="@context.Remaining"
+                                         Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true" Immediate="true" Format="N2" Style="max-width:130px"
+                                         Disabled="@(context.Remaining <= 0 && (GetAlloc(context.Id) ?? 0) == 0)" aria-label="@Tr("RD_PayCol")" />
+                        <MudIconButton Icon="@Icons.Material.Filled.PlaylistAddCheck" Size="Size.Small" Color="Color.Primary" title="@Tr("RD_FillRest")" aria-label="@Tr("RD_FillRest")"
+                                       OnClick="@(() => FillRest(context))" Disabled="@(context.Remaining <= 0)" />
+                    </div>
+                </MudTd>
+            }
             <MudTd>
                 <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small" Color="Color.Primary"
-                               OnClick="@(() => Open(context.Id))" title="@Tr("ShowInvoiceButton")" />
+                               OnClick="@(() => Open(context.Id))" title="@Tr("ShowInvoiceButton")" aria-label="@Tr("ShowInvoiceButton")" />
+                <MudIconButton Icon="@Icons.Material.Filled.Payments" Size="Size.Small" Color="Color.Success"
+                               OnClick="@(() => OpenCashVoucher(context.Id))" title="@Tr("InvCashVoucherButton")" aria-label="@Tr("InvCashVoucherButton")" />
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>
@@ -173,7 +272,8 @@
     @if (_selectedId != null)
     {
         <MudText Typo="Typo.h6" Class="mt-6 mb-2 font-weight-bold">@Tr("PmtPaymentsOfInvoiceTitle")</MudText>
-        <MudTable Items="@_payments" T="PaymentRow" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" Loading="@_isPaymentsLoading">
+        <MudTable Items="@_payments" T="PaymentRow" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="1" Loading="@_isPaymentsLoading"
+                  OnRowClick="@((TableRowClickEventArgs<PaymentRow> e) => OpenVoucher(e.Item.OrderId))">
             <HeaderContent>
                 <MudTh>@Tr("SerialColumn")</MudTh>
                 <MudTh>@Tr("PmtReceiptNoColumn")</MudTh>
@@ -205,12 +305,24 @@
     private record LookupOption(long Id, string Name);
     private record InvoiceRow(long Id, int Serial, string Customer, long InvoiceNo, DateTime? Date, DateTime? DueDate, decimal Net, decimal Paid,
                               decimal Remaining, string Notes, string User);
-    private record PaymentRow(int Serial, string OrderNo, DateTime? Date, string Bank, string Name, decimal Import, decimal Export, string Notes);
+    private record PaymentRow(long OrderId, int Serial, string OrderNo, DateTime? Date, string Bank, string Name, decimal Import, decimal Export, string Notes);
 
     [SupplyParameterFromQuery(Name = "mode")] public string? ModeQuery { get; set; }
     [SupplyParameterFromQuery(Name = "view")] public string? ViewQuery { get; set; }
 
     private readonly CustomerCLS _customerCls = new();
+    private readonly ReceiptDistributionService _distSvc = new();
+
+    // توزيع إذن قبض (?mode=distribution): الإذن المختار والمبالغ المسددة لكل فاتورة (Invoices_List.Id ← مبلغ)
+    private ReceiptDistributionService.ReceiptRow? _voucher;
+    private readonly Dictionary<long, decimal?> _alloc = new();
+    private bool _pickerOpen, _receiptsLoading, _receiptsSearched, _isBusy;
+    private List<ReceiptDistributionService.ReceiptRow> _receipts = new();
+    private LookupOption? _rcCustomer;
+    private DateTime? _rcFrom = DateTime.Now.Date.AddDays(-30);
+    private DateTime? _rcTo = DateTime.Now.Date;
+    private decimal AppliedTotal => _alloc.Values.Sum(v => v ?? 0);
+    private decimal ReceiptRest => (_voucher?.Value ?? 0) - AppliedTotal;
 
     private bool _isDistribution;
     private bool _showDueDate;
@@ -334,6 +446,30 @@
 
         try
         {
+            if (isDistribution && _voucher != null)
+            {
+                // عند اختيار إذن قبض: فواتير عميل الإذن وحده بتوزيعه الحالى (نفس معنى Get_Customers_InvoicesForDistributeMoney بمعرّف الإذن)
+                var voucher = _voucher;
+                var found = await Task.Run(() =>
+                {
+                    AccountCultureGuard.EnsureInvariant();
+                    return _distSvc.GetInvoices(voucher.BoxLineId, voucher.CustomerId, useFrom ? from : null, useTo ? to : null, invoiceNo, paid == 0);
+                });
+                var vrows = new List<InvoiceRow>();
+                _alloc.Clear();
+                foreach (var f in found)
+                {
+                    vrows.Add(new InvoiceRow(f.Id, vrows.Count + 1, f.Customer, f.InvoiceNo, f.Date, f.DueDate, f.Net, f.PaidAll - f.Allocated, f.Remaining, f.Notes, f.User));
+                    if (f.Allocated > 0) _alloc[f.Id] = f.Allocated;
+                }
+                _rows = vrows;
+                _netSum = Common.RoundMe(vrows.Sum(x => x.Net));
+                _paidSum = Common.RoundMe(vrows.Sum(x => x.Paid));
+                _remainingSum = Common.RoundMe(vrows.Sum(x => x.Remaining));
+                _searched = true;
+                return;
+            }
+
             var dt = await Task.Run(() =>
             {
                 AccountCultureGuard.EnsureInvariant();
@@ -404,7 +540,7 @@
                 // الأصل يُلحق صف إجمالى بلا رقم إذن؛ نتخطاه لأن الإجمالى يظهر فى بطاقات الصفحة.
                 if (!dt.Columns.Contains("Order_No") || r["Order_No"] == DBNull.Value) continue;
                 serial++;
-                list.Add(new PaymentRow(serial, r["Order_No"].ToString() ?? "", Dt(r, "Order_Date"), r["Bank_Name"]?.ToString() ?? "",
+                list.Add(new PaymentRow(r.Table.Columns.Contains("Id") && r["Id"] != DBNull.Value ? Convert.ToInt64(r["Id"]) : 0, serial, r["Order_No"].ToString() ?? "", Dt(r, "Order_Date"), r["Bank_Name"]?.ToString() ?? "",
                     r["Man_Name"]?.ToString() ?? "", Dec(r, "Import_Value"), Dec(r, "Export_Value"), r["Order_Notes"]?.ToString() ?? ""));
             }
             _payments = list;
@@ -417,6 +553,153 @@
         {
             _isPaymentsLoading = false;
         }
+    }
+
+    private async Task SearchReceiptsAsync()
+    {
+        _receiptsLoading = true;
+        _errorMessage = null;
+        StateHasChanged();
+        var customerId = _rcCustomer?.Id ?? 0;
+        var from = _rcFrom; var to = _rcTo;
+        try
+        {
+            _receipts = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return _distSvc.SearchReceipts(0, customerId, from, to);
+            });
+            _receiptsSearched = true;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _receiptsLoading = false;
+        }
+    }
+
+    // يقابل BtnSelectOrder_Click ثم Get_SearchResult(): آخر 30 يوماً وغير المسددة فقط كالأصل
+    private async Task SelectReceiptAsync(ReceiptDistributionService.ReceiptRow receipt)
+    {
+        _voucher = receipt;
+        _pickerOpen = false;
+        _invoiceNo = null;
+        _customer = new LookupOption(receipt.CustomerId, receipt.Customer);
+        _useFrom = true; _useTo = true;
+        _dateFrom = DateTime.Now.Date.AddDays(-30); _dateTo = DateTime.Now.Date;
+        _invoiceKind = -1; _paidStatus = 0;
+        await SearchAsync(false);
+    }
+
+    private decimal? GetAlloc(long invoiceId) => _alloc.TryGetValue(invoiceId, out var v) ? v : null;
+
+    private void SetAlloc(InvoiceRow row, decimal? value)
+    {
+        if (value is null or <= 0) { _alloc.Remove(row.Id); return; }
+        _alloc[row.Id] = Math.Min(value.Value, row.Remaining);
+    }
+
+    // أقصى ما يسمح به الإذن والفاتورة معاً
+    private void FillRest(InvoiceRow row)
+    {
+        var otherApplied = AppliedTotal - (GetAlloc(row.Id) ?? 0);
+        var room = Math.Max(0, (_voucher?.Value ?? 0) - otherApplied);
+        var amount = Math.Min(row.Remaining, room);
+        if (amount > 0) _alloc[row.Id] = Common.RoundMe(amount); else _alloc.Remove(row.Id);
+    }
+
+    private void ClearAllocations() => _alloc.Clear();
+
+    private async Task SaveDistributionAsync()
+    {
+        if (_voucher == null) { Snackbar.Add(Tr("RD_PickFirst"), Severity.Warning); return; }
+        _isBusy = true;
+        _errorMessage = null;
+        StateHasChanged();
+        var voucher = _voucher;
+        var amounts = _alloc.Where(a => a.Value is > 0).ToDictionary(a => a.Key, a => a.Value!.Value);
+        try
+        {
+            var count = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return _distSvc.Save(voucher.BoxLineId, amounts);
+            });
+            Snackbar.Add(Tr("RD_Saved", count), Severity.Success);
+            await ReloadVoucherAsync(voucher.BoxLineId);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _errorMessage = DistributionError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task DeleteDistributionAsync()
+    {
+        if (_voucher == null) { Snackbar.Add(Tr("RD_PickFirst"), Severity.Warning); return; }
+        var ok = await Dialog.ShowMessageBoxAsync(Tr("RD_Delete"), Tr("RD_DeleteConfirm"), yesText: Tr("RD_Delete"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _isBusy = true;
+        _errorMessage = null;
+        StateHasChanged();
+        var boxId = _voucher.BoxLineId;
+        try
+        {
+            var removed = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return _distSvc.Delete(boxId);
+            });
+            Snackbar.Add(Tr("RD_Deleted", removed), Severity.Success);
+            await ReloadVoucherAsync(boxId);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    // بعد الحفظ/الحذف: يعيد قراءة الإذن (الموزَّع منه) والفواتير من القاعدة
+    private async Task ReloadVoucherAsync(long boxLineId)
+    {
+        var fresh = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return _distSvc.GetReceipt(boxLineId);
+        });
+        if (fresh == null) return;
+        _voucher = fresh;
+        await SearchAsync(false);
+    }
+
+    private string DistributionError(string code) => code switch
+    {
+        "ReceiptNotFound" or "InvoiceNotFound" or "ExceedsReceipt" or "ExceedsInvoice" or "InvoiceOtherCustomer" => Tr("RD_" + code),
+        _ => Tr("SystemError", code)
+    };
+
+    // يقابل MakeOrderMoneyNowMulti: صفحة إذن الطرف مربوطاً بالفاتورة (نفس رابط صفحة فاتورة المبيعات)
+    private void OpenCashVoucher(long invoiceId) => Nav.NavigateTo($"/accounts/cash/voucher-party?doc={invoiceId}&dtype=1");
+
+    // يقابل dg_Payment_CellDoubleClick → New_OrderMoney_SarfNew
+    private void OpenVoucher(long orderId)
+    {
+        if (orderId > 0) Nav.NavigateTo($"/accounts/cash/voucher?id={orderId}");
     }
 
     private static decimal Dec(DataRow r, string column) =>

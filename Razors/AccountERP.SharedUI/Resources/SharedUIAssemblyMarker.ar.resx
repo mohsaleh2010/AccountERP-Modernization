@@ -4133,4 +4133,30 @@
   <data name="TX_NoRows" xml:space="preserve"><value>لا توجد معدلات ضريبية</value></data>
   <data name="TX_Help" xml:space="preserve"><value>يمكن تعديل المعدل والحد الأدنى فقط؛ لا تُضاف معدلات ولا تُحذف</value></data>
   <data name="TX_Saved" xml:space="preserve"><value>تم حفظ {0} معدل</value></data>
+  <data name="RD_PickTitle" xml:space="preserve"><value>اختيار إذن قبض لتوزيعه على الفواتير</value></data>
+  <data name="RD_SearchReceipts" xml:space="preserve"><value>بحث عن أذون القبض</value></data>
+  <data name="RD_BankLabel" xml:space="preserve"><value>الصندوق / البنك</value></data>
+  <data name="RD_Select" xml:space="preserve"><value>اختيار</value></data>
+  <data name="RD_ReceiptNo" xml:space="preserve"><value>رقم الإذن</value></data>
+  <data name="RD_ReceiptValue" xml:space="preserve"><value>قيمة الإذن</value></data>
+  <data name="RD_AllocatedCol" xml:space="preserve"><value>الموزَّع</value></data>
+  <data name="RD_PayCol" xml:space="preserve"><value>المبلغ المسدَّد</value></data>
+  <data name="RD_Selected" xml:space="preserve"><value>الإذن المختار: رقم {0} — {1}</value></data>
+  <data name="RD_RestOfReceipt" xml:space="preserve"><value>المتبقى من الإذن</value></data>
+  <data name="RD_TotalApplied" xml:space="preserve"><value>إجمالى التوزيع</value></data>
+  <data name="RD_Save" xml:space="preserve"><value>حفظ التوزيع</value></data>
+  <data name="RD_Delete" xml:space="preserve"><value>حذف التوزيع</value></data>
+  <data name="RD_DeleteConfirm" xml:space="preserve"><value>حذف توزيع هذا الإذن على الفواتير؟ لا يُحذف الإذن نفسه.</value></data>
+  <data name="RD_Saved" xml:space="preserve"><value>تم حفظ التوزيع على {0} فاتورة</value></data>
+  <data name="RD_Deleted" xml:space="preserve"><value>تم حذف التوزيع ({0} سطر)</value></data>
+  <data name="RD_NoReceipts" xml:space="preserve"><value>لا توجد أذون قبض مطابقة</value></data>
+  <data name="RD_PickFirst" xml:space="preserve"><value>اختر إذن القبض أولاً</value></data>
+  <data name="RD_ExceedsReceipt" xml:space="preserve"><value>مجموع التوزيع أكبر من قيمة الإذن</value></data>
+  <data name="RD_ExceedsInvoice" xml:space="preserve"><value>مبلغ أكبر من المتبقى على الفاتورة</value></data>
+  <data name="RD_InvoiceOtherCustomer" xml:space="preserve"><value>الفاتورة لا تخص عميل الإذن</value></data>
+  <data name="RD_ReceiptNotFound" xml:space="preserve"><value>الإذن غير موجود</value></data>
+  <data name="RD_InvoiceNotFound" xml:space="preserve"><value>فاتورة غير موجودة</value></data>
+  <data name="RD_FillRest" xml:space="preserve"><value>تعبئة المتبقى</value></data>
+  <data name="RD_ClearAll" xml:space="preserve"><value>تفريغ الكل</value></data>
+  <data name="RD_HintPick" xml:space="preserve"><value>اختر إذن قبض من الأعلى ثم وزّع مبلغه على فواتير العميل.</value></data>
 </root>

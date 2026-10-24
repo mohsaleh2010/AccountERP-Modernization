@@ -4133,4 +4133,30 @@
   <data name="TX_NoRows" xml:space="preserve"><value>No tax rates</value></data>
   <data name="TX_Help" xml:space="preserve"><value>Only the rate and minimum value can be edited; rates cannot be added or deleted</value></data>
   <data name="TX_Saved" xml:space="preserve"><value>{0} rate(s) saved</value></data>
+  <data name="RD_PickTitle" xml:space="preserve"><value>Pick a receipt to distribute over invoices</value></data>
+  <data name="RD_SearchReceipts" xml:space="preserve"><value>Find receipts</value></data>
+  <data name="RD_BankLabel" xml:space="preserve"><value>Cash box / bank</value></data>
+  <data name="RD_Select" xml:space="preserve"><value>Select</value></data>
+  <data name="RD_ReceiptNo" xml:space="preserve"><value>Receipt no.</value></data>
+  <data name="RD_ReceiptValue" xml:space="preserve"><value>Receipt value</value></data>
+  <data name="RD_AllocatedCol" xml:space="preserve"><value>Distributed</value></data>
+  <data name="RD_PayCol" xml:space="preserve"><value>Amount applied</value></data>
+  <data name="RD_Selected" xml:space="preserve"><value>Selected receipt: no. {0} — {1}</value></data>
+  <data name="RD_RestOfReceipt" xml:space="preserve"><value>Receipt balance left</value></data>
+  <data name="RD_TotalApplied" xml:space="preserve"><value>Total applied</value></data>
+  <data name="RD_Save" xml:space="preserve"><value>Save distribution</value></data>
+  <data name="RD_Delete" xml:space="preserve"><value>Delete distribution</value></data>
+  <data name="RD_DeleteConfirm" xml:space="preserve"><value>Delete this receipt's distribution? The receipt itself is kept.</value></data>
+  <data name="RD_Saved" xml:space="preserve"><value>Distribution saved on {0} invoice(s)</value></data>
+  <data name="RD_Deleted" xml:space="preserve"><value>Distribution deleted ({0} line(s))</value></data>
+  <data name="RD_NoReceipts" xml:space="preserve"><value>No matching receipts</value></data>
+  <data name="RD_PickFirst" xml:space="preserve"><value>Pick a receipt first</value></data>
+  <data name="RD_ExceedsReceipt" xml:space="preserve"><value>Total exceeds the receipt value</value></data>
+  <data name="RD_ExceedsInvoice" xml:space="preserve"><value>Amount exceeds what is still due on the invoice</value></data>
+  <data name="RD_InvoiceOtherCustomer" xml:space="preserve"><value>The invoice belongs to another customer</value></data>
+  <data name="RD_ReceiptNotFound" xml:space="preserve"><value>Receipt not found</value></data>
+  <data name="RD_InvoiceNotFound" xml:space="preserve"><value>Invoice not found</value></data>
+  <data name="RD_FillRest" xml:space="preserve"><value>Fill remaining</value></data>
+  <data name="RD_ClearAll" xml:space="preserve"><value>Clear all</value></data>
+  <data name="RD_HintPick" xml:space="preserve"><value>Pick a receipt above, then distribute its amount over the customer's invoices.</value></data>
 </root>
