@@ -229,6 +229,7 @@ namespace AccountModelsLib.Models
 
                 opp.db.Entry(invD).State = EntityState.Modified;
                 opp.db.SaveChanges();
+                opp.insert_me("UPDATE Invoices_Details SET Edit_User_Id=" + Common.User_Id + ", EditOperationDate=GETDATE() WHERE Id=" + invD.Id); // تدقيق التعديل
 
             }
             catch (Exception ee)
@@ -445,6 +446,7 @@ namespace AccountModelsLib.Models
                 {
                     opp.db.Entry(invd_FF).CurrentValues.SetValues(invd_R);
                     opp.db.SaveChanges();
+                    opp.insert_me("UPDATE Invoices_Details_Reverse SET Edit_User_Id=" + Common.User_Id + ", EditOperationDate=GETDATE() WHERE Id=" + invd_R.Id); // تدقيق التعديل
                 }
                 //opp.db.Entry(invd_R).State = EntityState.Modified;
 

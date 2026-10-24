@@ -338,6 +338,7 @@ namespace AccountModelsLib.Models
 
                 opp.db.Entry(invD).State = EntityState.Modified;
                 opp.db.SaveChanges();
+                opp.insert_me("UPDATE Invoices_Details SET Edit_User_Id=" + Common.User_Id + ", EditOperationDate=GETDATE() WHERE Id=" + invD.Id); // تدقيق التعديل
 
             }
             catch (Exception ee)
