@@ -4124,4 +4124,13 @@
   <data name="PM_Discard" xml:space="preserve"><value>تجاهل التغييرات</value></data>
   <data name="PM_DiscardConfirm" xml:space="preserve"><value>لديك {0} تغيير لم يُحفظ. تجاهلها والانتقال لمستخدم آخر؟</value></data>
   <data name="PM_Saved" xml:space="preserve"><value>تم حفظ صلاحيات «{0}»</value></data>
+  <data name="TX_Title" xml:space="preserve"><value>المعدلات الضريبية</value></data>
+  <data name="TX_Sub" xml:space="preserve"><value>نسب الضرائب المستخدمة فى الفواتير والحد الأدنى لاحتسابها</value></data>
+  <data name="TX_NoAccess" xml:space="preserve"><value>لا تملك صلاحية شاشة المعدلات الضريبية</value></data>
+  <data name="TX_ColName" xml:space="preserve"><value>الضريبة</value></data>
+  <data name="TX_ColRate" xml:space="preserve"><value>المعدل %</value></data>
+  <data name="TX_ColMin" xml:space="preserve"><value>الحد الأدنى للاحتساب</value></data>
+  <data name="TX_NoRows" xml:space="preserve"><value>لا توجد معدلات ضريبية</value></data>
+  <data name="TX_Help" xml:space="preserve"><value>يمكن تعديل المعدل والحد الأدنى فقط؛ لا تُضاف معدلات ولا تُحذف</value></data>
+  <data name="TX_Saved" xml:space="preserve"><value>تم حفظ {0} معدل</value></data>
 </root>

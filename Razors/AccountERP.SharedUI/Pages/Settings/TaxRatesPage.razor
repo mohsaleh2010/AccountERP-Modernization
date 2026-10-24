@@ -1,0 +1,157 @@
+@* 🟢 خطة 05 — المرحلة 7 («ملف» ← «بيانات المعدلات الضريبية»): بدل TaxListFrm. تعديل المعدل والحد الأدنى فقط؛ لا إضافة ولا حذف ولا «إعادة الضبط»
+   (تحذف الجدول فى الديسك توب). الاستعلام والحفظ فى TaxRatesService. التصميم حسب ui-ux-pro-max ونظام inv-*. *@
+@page "/settings/tax-rates"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject MenuStateService MenuState
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("TX_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .tx-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .tx-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .tx-head .ico .mud-icon-root { font-size: 2rem; }
+    .tx-head .titles { flex: 1 1 260px; min-width: 0; }
+    .tx-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .tx-head .mud-button-root { min-height: 44px; }
+    .tx-gap { margin-top: 16px; }
+    .tx-num { max-width: 180px; }
+    .tx-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card">
+        <div class="tx-head">
+            <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Percent" /></div>
+            <div class="titles">
+                <h1 class="inv-title">@Tr("TX_Title")</h1>
+                <div class="sub">@Tr("TX_Sub")</div>
+            </div>
+            @if (CanEdit)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_busy || !Dirty)" OnClick="SaveAsync">@Tr("Save")</MudButton>
+            }
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Class="tx-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    @if (!CanEdit)
+    {
+        <div class="inv-card tx-gap"><div class="tx-empty"><MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" />@Tr("TX_NoAccess")</div></div>
+    }
+    else
+    {
+        <section class="inv-card tx-gap" aria-labelledby="tx-list-h">
+            <h2 class="inv-card-title" id="tx-list-h"><MudIcon Icon="@Icons.Material.Filled.Percent" />@Tr("TX_Title")<span class="inv-count">@_rows.Count</span></h2>
+            <MudTable Items="@_rows" T="TaxRateRow" Hover="true" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true" Loading="_loading" LoadingProgressColor="Color.Primary">
+                <HeaderContent>
+                    <MudTh>@Tr("TX_ColName")</MudTh>
+                    <MudTh>@Tr("TX_ColRate")</MudTh>
+                    <MudTh>@Tr("TX_ColMin")</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("TX_ColName")">
+                        <div>@(LangService.IsRtl || string.IsNullOrWhiteSpace(context.TaxName_En) ? context.TaxName_Ar : context.TaxName_En)</div>
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("TX_ColRate")">
+                        <MudNumericField T="decimal" @bind-Value="context.TaxRate" Class="tx-num" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Max="100" Culture="CultureInfo.InvariantCulture"
+                                         Adornment="Adornment.End" AdornmentText="%" HideSpinButtons="true" aria-label="@Tr("TX_ColRate")" />
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("TX_ColMin")">
+                        <MudNumericField T="decimal" @bind-Value="context.MinAllowedValue" Class="tx-num" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Culture="CultureInfo.InvariantCulture"
+                                         HideSpinButtons="true" aria-label="@Tr("TX_ColMin")" />
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent><div class="tx-empty"><MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" />@Tr("TX_NoRows")</div></NoRecordsContent>
+            </MudTable>
+            <div class="mud-typography mud-typography-caption mt-3">@Tr("TX_Help")</div>
+        </section>
+    }
+</div>
+</MudContainer>
+
+@code {
+    private const string MenuKey = "TaxInfotoolStripMenuItem";
+
+    private readonly TaxRatesService _svc = new();
+    private List<TaxRateRow> _rows = new();
+    private Dictionary<long, (decimal Rate, decimal Min)> _orig = new();
+    private string? _error;
+    private bool _loading, _busy;
+
+    private bool CanEdit => (MenuState.UserAllowedMenus ?? new()).Any(m => string.Equals((m.KeysData ?? "").Trim(), MenuKey, StringComparison.OrdinalIgnoreCase));
+    private bool IsChanged(TaxRateRow r) => !_orig.TryGetValue(r.Id, out var o) || o.Rate != r.TaxRate || o.Min != r.MinAllowedValue;
+    private bool Dirty => _rows.Any(IsChanged);
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        MenuState.OnAuthChanged += OnAuthChanged;
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    private void OnAuthChanged() => InvokeAsync(async () => { await LoadAsync(); StateHasChanged(); });
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+        MenuState.OnAuthChanged -= OnAuthChanged;
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private Task<T> Bg<T>(Func<T> f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return f(); });
+
+    private async Task LoadAsync()
+    {
+        if (!CanEdit) return;
+        _loading = true;
+        try
+        {
+            _rows = await Bg(() => _svc.GetRates());
+            _orig = _rows.ToDictionary(r => r.Id, r => (r.TaxRate, r.MinAllowedValue));
+        }
+        catch (Exception ex) { _error = Tr("SystemError", ex.InnerException?.Message ?? ex.Message); }
+        finally { _loading = false; }
+    }
+
+    private async Task SaveAsync()
+    {
+        _error = null;
+        _busy = true;
+        var changed = _rows.Where(IsChanged).ToList();
+        try
+        {
+            var (excp, msg) = await Bg(() => { int e = 0; string m = ""; _svc.Save(ref e, ref m, changed); return (e, m); });
+            if (excp != 0) { _error = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg; return; }
+            Snackbar.Add(Tr("TX_Saved", changed.Count), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Tr("SystemError", ex.InnerException?.Message ?? ex.Message); }
+        finally { _busy = false; }
+    }
+}

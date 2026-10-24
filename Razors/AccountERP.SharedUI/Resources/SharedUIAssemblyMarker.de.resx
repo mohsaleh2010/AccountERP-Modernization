@@ -4126,4 +4126,13 @@
   <data name="PM_Discard" xml:space="preserve"><value>Änderungen verwerfen</value></data>
   <data name="PM_DiscardConfirm" xml:space="preserve"><value>{0} ungespeicherte Änderungen. Verwerfen und Benutzer wechseln?</value></data>
   <data name="PM_Saved" xml:space="preserve"><value>Berechtigungen von „{0}“ gespeichert</value></data>
+  <data name="TX_Title" xml:space="preserve"><value>Steuersätze</value></data>
+  <data name="TX_Sub" xml:space="preserve"><value>In Rechnungen verwendete Steuersätze und der Mindestwert für deren Anwendung</value></data>
+  <data name="TX_NoAccess" xml:space="preserve"><value>Keine Berechtigung für die Steuersätze</value></data>
+  <data name="TX_ColName" xml:space="preserve"><value>Steuer</value></data>
+  <data name="TX_ColRate" xml:space="preserve"><value>Satz %</value></data>
+  <data name="TX_ColMin" xml:space="preserve"><value>Mindestwert</value></data>
+  <data name="TX_NoRows" xml:space="preserve"><value>Keine Steuersätze</value></data>
+  <data name="TX_Help" xml:space="preserve"><value>Nur Satz und Mindestwert sind änderbar; Sätze können nicht hinzugefügt oder gelöscht werden</value></data>
+  <data name="TX_Saved" xml:space="preserve"><value>{0} Satz/Sätze gespeichert</value></data>
 </root>

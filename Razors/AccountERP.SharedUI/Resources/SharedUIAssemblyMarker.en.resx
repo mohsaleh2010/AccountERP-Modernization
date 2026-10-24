@@ -4124,4 +4124,13 @@
   <data name="PM_Discard" xml:space="preserve"><value>Discard changes</value></data>
   <data name="PM_DiscardConfirm" xml:space="preserve"><value>You have {0} unsaved changes. Discard them and switch user?</value></data>
   <data name="PM_Saved" xml:space="preserve"><value>Permissions of “{0}” saved</value></data>
+  <data name="TX_Title" xml:space="preserve"><value>Tax rates</value></data>
+  <data name="TX_Sub" xml:space="preserve"><value>Tax rates used on invoices and the minimum value to apply them</value></data>
+  <data name="TX_NoAccess" xml:space="preserve"><value>You have no permission for the tax rates screen</value></data>
+  <data name="TX_ColName" xml:space="preserve"><value>Tax</value></data>
+  <data name="TX_ColRate" xml:space="preserve"><value>Rate %</value></data>
+  <data name="TX_ColMin" xml:space="preserve"><value>Minimum value to apply</value></data>
+  <data name="TX_NoRows" xml:space="preserve"><value>No tax rates</value></data>
+  <data name="TX_Help" xml:space="preserve"><value>Only the rate and minimum value can be edited; rates cannot be added or deleted</value></data>
+  <data name="TX_Saved" xml:space="preserve"><value>{0} rate(s) saved</value></data>
 </root>

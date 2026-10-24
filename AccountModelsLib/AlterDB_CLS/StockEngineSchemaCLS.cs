@@ -301,7 +301,7 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("menuItemRelatedBankAccounts", "/settings/account-links/banks"), ("menuItemRelatedEmployeeAccounts", "/settings/account-links/employees"),
             // خطة 05 م7: المستخدمون وفروعهم (بدل UsersList / Branch_UserPermission) وشجرة الصلاحيات (بدل MenuFrmAdmin)
             ("ToolStripMenuItemUserDaetails", "/settings/users"), ("toolStripMenuItemBranch_UserPermission", "/settings/users"),
-            ("toolStripMenuItemPermissinForm", "/settings/permissions"),
+            ("toolStripMenuItemPermissinForm", "/settings/permissions"), ("TaxInfotoolStripMenuItem", "/settings/tax-rates"), ("menuItemChangePassword", "/change-password"), ("toolStripMenuItemPrinterSelection", "/printer"),
             // خطة 04 م5: الأسعار (طباعة الأسعار menuItemItemPrices لم تُبنَ بعد)
             ("menuPrice_Type_List", "/items/prices/lists"), ("menuPriceCategory", "/items/prices/lists"), ("menuItemSearchItemPrices_List_Values", "/items/prices/lists"),
             ("menuItemEditPrices", "/items/prices/bulk"), ("MenuCustomer_PriceCLS", "/items/prices/customers"),

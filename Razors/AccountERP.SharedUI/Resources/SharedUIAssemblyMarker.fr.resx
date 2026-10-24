@@ -4126,4 +4126,13 @@
   <data name="PM_Discard" xml:space="preserve"><value>Annuler les modifications</value></data>
   <data name="PM_DiscardConfirm" xml:space="preserve"><value>{0} modifications non enregistrées. Les annuler et changer d'utilisateur ?</value></data>
   <data name="PM_Saved" xml:space="preserve"><value>Autorisations de « {0} » enregistrées</value></data>
+  <data name="TX_Title" xml:space="preserve"><value>Taux de taxes</value></data>
+  <data name="TX_Sub" xml:space="preserve"><value>Taux de taxes utilisés sur les factures et valeur minimale d'application</value></data>
+  <data name="TX_NoAccess" xml:space="preserve"><value>Vous n'avez pas accès à l'écran des taux de taxes</value></data>
+  <data name="TX_ColName" xml:space="preserve"><value>Taxe</value></data>
+  <data name="TX_ColRate" xml:space="preserve"><value>Taux %</value></data>
+  <data name="TX_ColMin" xml:space="preserve"><value>Valeur minimale</value></data>
+  <data name="TX_NoRows" xml:space="preserve"><value>Aucun taux de taxe</value></data>
+  <data name="TX_Help" xml:space="preserve"><value>Seuls le taux et la valeur minimale sont modifiables ; aucun ajout ni suppression</value></data>
+  <data name="TX_Saved" xml:space="preserve"><value>{0} taux enregistré(s)</value></data>
 </root>
