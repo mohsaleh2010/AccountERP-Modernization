@@ -416,6 +416,13 @@ CREATE NONCLUSTERED INDEX [IX_SalesRep_Order_Assignments_Rep] ON [dbo].[SalesRep
     [Ref_Id] [bigint] NULL,",
              @"CREATE NONCLUSTERED INDEX [IX_SalesRep_Notify_Outbox_Status] ON [dbo].[SalesRep_Notify_Outbox]([Status], [Next_Attempt_At]);
 CREATE UNIQUE NONCLUSTERED INDEX [UX_SalesRep_Notify_Outbox_Ref] ON [dbo].[SalesRep_Notify_Outbox]([Event_Type], [Channel], [Ref_Id]) WHERE [Ref_Id] IS NOT NULL;"),
+
+            // سحب موافقة العميل على الإشعارات (Channel = 0 يعنى كل القنوات).
+            ("SalesRep_Notify_OptOut", @"
+    [Customer_Id] [bigint] NOT NULL,
+    [Channel] [int] NOT NULL DEFAULT ((0)),
+    [Reason] [nvarchar](200) NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_SalesRep_Notify_OptOut_CC] ON [dbo].[SalesRep_Notify_OptOut]([Customer_Id], [Channel]);"),
         };
 
         /// <summary>جداول النسخة السابقة غير المعتمدة التى ليس لها مقابل بنفس الاسم.</summary>

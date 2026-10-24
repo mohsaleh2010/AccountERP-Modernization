@@ -204,15 +204,17 @@ namespace AccountModelsLib.SalesRep
                 if (cust == null) return;
                 string rep = opp.db.Database.SqlQuery<string>($"SELECT ISNULL(e.name, N'') AS Value FROM SalesRep_Reps r LEFT JOIN Employee e ON e.Id = r.Employee_Id WHERE r.Id = {repId}").AsEnumerable().FirstOrDefault() ?? "";
                 string phone = FirstValidPhone(settings.Default_Country_Code, cust.Mobile, cust.Tel, cust.Tel2);
+                var optOutChannels = opp.db.SalesRep_Notify_OptOuts.AsNoTracking().Where(x => x.Customer_Id == customerId).Select(x => x.Channel).ToList();
                 foreach (var t in templates)
                 {
                     if (opp.db.SalesRep_Notify_Outboxes.Any(o => o.Event_Type == (int)ev && o.Channel == t.Channel && o.Ref_Id == refId)) continue;
+                    bool optedOut = optOutChannels.Contains(0) || optOutChannels.Contains(t.Channel);
                     var row = new SalesRep_Notify_Outbox
                     {
                         Id = CallSnowflakeIdGenerate.GenerateNewId(), Event_Type = (int)ev, Channel = t.Channel, Customer_Id = customerId, Rep_Id = repId, Ref_Id = refId,
                         Phone = phone, Message = Render(t.Body, cust.Name, rep, docNo, amount, DateTime.Today),
-                        Status = phone == null ? (int)SalesRepNotifyStatus.Skipped : (int)SalesRepNotifyStatus.Pending,
-                        Next_Attempt_At = DateTime.Now, Last_Error = phone == null ? "لا رقم هاتف صالح للعميل" : null,
+                        Status = optedOut || phone == null ? (int)SalesRepNotifyStatus.Skipped : (int)SalesRepNotifyStatus.Pending,
+                        Next_Attempt_At = DateTime.Now, Last_Error = optedOut ? "العميل سحب موافقته على الإشعارات" : phone == null ? "لا رقم هاتف صالح للعميل" : null,
                     };
                     row.StampInsert(Common.Branch_Id);
                     opp.db.SalesRep_Notify_Outboxes.Add(row);
@@ -284,6 +286,57 @@ ORDER BY o.Insert_ServerDateTime DESC, o.Id DESC").ToList());
             if (o.Status != (int)SalesRepNotifyStatus.Pending && o.Status != (int)SalesRepNotifyStatus.Failed) throw new InvalidOperationException("تُلغى الرسائل المنتظرة أو الفاشلة فقط.");
             o.Status = (int)SalesRepNotifyStatus.Cancelled; o.Next_Attempt_At = null;
             o.StampEdit();
+            opp.db.SaveChanges();
+            return 0;
+        });
+
+        // ============================== سحب الموافقة (opt-out) ==============================
+
+        public class OptOutRow
+        {
+            public long Id { get; set; }
+            public long Customer_Id { get; set; }
+            public string Customer_Name { get; set; } = "";
+            public int Channel { get; set; }
+            public string Reason { get; set; } = "";
+            public DateTime? Insert_ServerDateTime { get; set; }
+        }
+
+        public List<OptOutRow> GetOptOuts() => Read(opp => opp.db.Database.SqlQuery<OptOutRow>($@"
+SELECT o.Id, o.Customer_Id, ISNULL(c.Name, N'') AS Customer_Name, o.Channel, ISNULL(o.Reason, N'') AS Reason, o.Insert_ServerDateTime
+FROM SalesRep_Notify_OptOut o LEFT JOIN Customer c ON c.Id = o.Customer_Id
+ORDER BY o.Insert_ServerDateTime DESC, o.Id DESC").ToList());
+
+        /// <summary>يسجّل سحب موافقة عميل (channel 0 = كل القنوات). تكرار نفس (عميل، قناة) لا يضيف صفاً جديداً.</summary>
+        public void AddOptOut(long customerId, int channel, string reason) => Tx(opp =>
+        {
+            if (customerId <= 0) throw new InvalidOperationException("اختر العميل.");
+            if (channel < 0 || channel > 2) throw new InvalidOperationException("قناة غير صالحة.");
+            if (!opp.db.Database.SqlQuery<long>($"SELECT Id AS Value FROM Customer WHERE Id = {customerId}").AsEnumerable().Any()) throw new InvalidOperationException("العميل غير موجود.");
+            if (opp.db.SalesRep_Notify_OptOuts.Any(x => x.Customer_Id == customerId && x.Channel == channel)) return 0;
+            var row = new SalesRep_Notify_OptOut
+            {
+                Id = CallSnowflakeIdGenerate.GenerateNewId(), Customer_Id = customerId, Channel = channel,
+                Reason = string.IsNullOrWhiteSpace(reason) ? null : (reason.Trim().Length > 200 ? reason.Trim().Substring(0, 200) : reason.Trim()),
+            };
+            row.StampInsert(Common.Branch_Id);
+            opp.db.SalesRep_Notify_OptOuts.Add(row);
+            // الرسائل المنتظرة لهذا العميل على القناة المسحوبة تُلغى (لا تُحذف) كى لا تُرسل بعد السحب.
+            var pending = opp.db.SalesRep_Notify_Outboxes.Where(o => o.Customer_Id == customerId && o.Status == (int)SalesRepNotifyStatus.Pending && (channel == 0 || o.Channel == channel)).ToList();
+            foreach (var o in pending)
+            {
+                o.Status = (int)SalesRepNotifyStatus.Cancelled; o.Next_Attempt_At = null; o.Last_Error = "العميل سحب موافقته على الإشعارات";
+                o.StampEdit();
+            }
+            opp.db.SaveChanges();
+            return 0;
+        });
+
+        /// <summary>يعيد الموافقة بحذف صف السحب (صف أنشأه هذا الجزء نفسه؛ لا يمس بيانات قديمة).</summary>
+        public void RemoveOptOut(long id) => Tx(opp =>
+        {
+            var row = opp.db.SalesRep_Notify_OptOuts.FirstOrDefault(x => x.Id == id) ?? throw new InvalidOperationException("السجل غير موجود.");
+            opp.db.SalesRep_Notify_OptOuts.Remove(row);
             opp.db.SaveChanges();
             return 0;
         });

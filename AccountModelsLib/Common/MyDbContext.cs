@@ -671,6 +671,7 @@ namespace AccountModelsLib
         public DbSet<SalesRep_Notify_Setting> SalesRep_Notify_Settings { get; set; }
         public DbSet<SalesRep_Notify_Template> SalesRep_Notify_Templates { get; set; }
         public DbSet<SalesRep_Notify_Outbox> SalesRep_Notify_Outboxes { get; set; }
+        public DbSet<SalesRep_Notify_OptOut> SalesRep_Notify_OptOuts { get; set; }
         public DbSet<SalesRep_Route_Customer> SalesRep_Route_Customers { get; set; }
         public DbSet<SalesRep_Customer_Geo> SalesRep_Customer_Geos { get; set; }
         public DbSet<SalesRep_GPS_Track> SalesRep_GPS_Tracks { get; set; }

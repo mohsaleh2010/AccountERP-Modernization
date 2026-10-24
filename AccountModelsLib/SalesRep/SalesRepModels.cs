@@ -601,6 +601,16 @@ namespace AccountModelsLib.SalesRep
         public long? Ref_Id { get; set; }
     }
 
+    /// <summary>عميل سحب موافقته على الإشعارات. Channel 0 = كل القنوات، 1 SMS، 2 WhatsApp.</summary>
+    [Table("SalesRep_Notify_OptOut")]
+    public class SalesRep_Notify_OptOut : SalesRepAuditEntity
+    {
+        [Key] public long Id { get; set; }
+        public long Customer_Id { get; set; }
+        public int Channel { get; set; }
+        public string Reason { get; set; }
+    }
+
     [Table("SalesRep_Commission_Run_Lines")]
     public class SalesRep_Commission_Run_Line : SalesRepAuditEntity
     {
