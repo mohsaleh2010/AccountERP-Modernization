@@ -386,7 +386,7 @@ WHERE        (Submain_Account_ID = " + Submain_Account_ID + ") AND (Year_Financi
 
             if (dt2.Rows.Count > 0)
             {
-                mysql = @" Update Account_Entry_Master_Balance Set  First_Balance =" + Equivalent_First_Balance + ",  First_Balance_Madin=" + Equivalent_First_Balance_Madin + ",    First_Balance_Da2n =" + Equivalent_First_Balance_Da2n + ",  Equivalent_First_Balance =" + Equivalent_First_Balance + ", Equivalent_First_Balance_Madin=" + Equivalent_First_Balance_Madin + ",   Equivalent_First_Balance_Da2n =" + Equivalent_First_Balance_Da2n + " ";
+                mysql = @" Update Account_Entry_Master_Balance Set  First_Balance =" + Equivalent_First_Balance + ",  First_Balance_Madin=" + Equivalent_First_Balance_Madin + ",    First_Balance_Da2n =" + Equivalent_First_Balance_Da2n + ",  Equivalent_First_Balance =" + Equivalent_First_Balance + ", Equivalent_First_Balance_Madin=" + Equivalent_First_Balance_Madin + ",   Equivalent_First_Balance_Da2n =" + Equivalent_First_Balance_Da2n + ", Edit_User_Id=" + Common.User_Id + ", EditOperationDate=GETDATE(), Update_ServerDateTime=GETDATE() ";
                 mysql = mysql + "  WHERE        (Submain_Account_ID = " + Submain_Account_ID + ") AND (Year_Financial_Period_Id = " + Year_Financial_Period_Id + ") AND (Branch_Id = " + Branch_Id + ") AND (Equivalent_Account_Currency_Id  = 0)";
                 opp.insert_me(mysql);
             }
@@ -774,6 +774,7 @@ FROM            Account_Entry_List INNER JOIN
             mysql = mysql + " , Equivalent_Balance_Da2n =0";
             mysql = mysql + " ,IS_Madin_Da2n=" + IS_Madin_Da2n;
             mysql = mysql + " ,Factor=" + EquivalentValue;
+            mysql = mysql + ", Edit_User_Id=" + Common.User_Id + ", EditOperationDate=GETDATE(), Update_ServerDateTime=GETDATE()"; // تدقيق التعديل
 
             mysql = mysql + " WHERE   (Id = " + Account_Entry_Master_Balance_Id + ")";
             opp.insert_me(mysql);
@@ -875,6 +876,7 @@ FROM            Account_Entry_List INNER JOIN
             mysql = mysql + " , Equivalent_Balance_Da2n =0";
             mysql = mysql + " ,IS_Madin_Da2n=" + IS_Madin_Da2n;
             mysql = mysql + " ,Factor=" + EquivalentValue;
+            mysql = mysql + ", Edit_User_Id=" + Common.User_Id + ", EditOperationDate=GETDATE(), Update_ServerDateTime=GETDATE()"; // تدقيق التعديل
 
             mysql = mysql + " WHERE   (Id = " + Account_Entry_Master_Balance_Id + ")";
             opp.insert_me(mysql);
