@@ -146,7 +146,16 @@ GROUP BY ui.Store_id");
                 debit[dr] = (debit.TryGetValue(dr, out var d0) ? d0 : 0) + abs;
                 credit[cr] = (credit.TryGetValue(cr, out var c0) ? c0 : 0) + abs;
             }
-            if (debit.Count == 0) return 0;
+            // حساب ظهر مدينا ودائنا فى نفس القيد (تحويل مباشر عبر حساب الطريق، أو مخزنان بنفس الحساب) يُسوّى بصافيه؛ لا قيد لحركة تتلاشى
+            foreach (var accountId in debit.Keys.Intersect(credit.Keys).ToList())
+            {
+                decimal net = debit[accountId] - credit[accountId];
+                debit.Remove(accountId);
+                credit.Remove(accountId);
+                if (net > Tolerance) debit[accountId] = net;
+                else if (net < -Tolerance) credit[accountId] = -net;
+            }
+            if (debit.Count == 0 || credit.Count == 0) return 0;
 
             long entryCurrency = Common.Entry_Currency_Id <= 0 ? 1 : Common.Entry_Currency_Id;
             var cur = opp.return_DataTable("SELECT Currency_Name FROM Currency WHERE Value = " + entryCurrency.ToString(CultureInfo.InvariantCulture));
