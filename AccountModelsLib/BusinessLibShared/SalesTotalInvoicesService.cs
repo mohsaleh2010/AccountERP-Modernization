@@ -81,7 +81,7 @@ namespace AccountModelsLib
             if (excp != 0) throw new InvalidOperationException("Update failed");
 
             // DAMGHAT والنسب تُحفظ داخل updateinvoice الآن؛ يبقى علم الضريبة فقط (لا تحدّثه الدالة القديمة)
-            new operations().update_me("UPDATE " + ListTable + " SET IsInvoiceTaxInfo = " + (isTax ? 1 : 0) + " WHERE Id = " + id);
+            new operations().update_me("UPDATE " + ListTable + " SET IsInvoiceTaxInfo = " + (isTax ? 1 : 0) + ", Edit_User_Id = " + Common.User_Id + ", EditOperationDate = GETDATE() WHERE Id = " + id);
         }
 
         public void Delete(long id, decimal netTotal, long invoiceNo, long customerId)

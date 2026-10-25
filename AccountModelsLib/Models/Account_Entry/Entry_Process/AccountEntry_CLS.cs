@@ -1448,7 +1448,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
             try
             {
                 opp.cmd.Parameters.Clear();
-                mysql = "Update Account_Entry_List Set Year_Financial_Period_Id=@Year_Financial_Period_Id,Entry_Date=@Entry_Date, Currency_ID=@Currency_ID, Entry_No =@Entry_No, ActionDate=@ActionDate, journal_Code=@journal_Code ,Journal_Name=@Journal_Name, Entry_Notes =@Entry_Notes, Entry_Total=@Entry_Total,User_ID_LoginUpdate =@User_ID_LoginUpdate, Branch_ID_Login=@Branch_ID_Login,Transform_Type=@Transform_Type,   Branch_Id_Entry =@Branch_Id_Entry,Process_Date  =@Process_Date ,IS_Make_AutomaticFromTar7eel =@IS_Make_AutomaticFromTar7eel,Doc_No=@Doc_No,User_Id_Login_Name=@User_Id_Login_Name ";
+                mysql = "Update Account_Entry_List Set Year_Financial_Period_Id=@Year_Financial_Period_Id,Entry_Date=@Entry_Date, Currency_ID=@Currency_ID, Entry_No =@Entry_No, ActionDate=@ActionDate, journal_Code=@journal_Code ,Journal_Name=@Journal_Name, Entry_Notes =@Entry_Notes, Entry_Total=@Entry_Total,User_ID_LoginUpdate =@User_ID_LoginUpdate, Branch_ID_Login=@Branch_ID_Login,Transform_Type=@Transform_Type,   Branch_Id_Entry =@Branch_Id_Entry,Process_Date  =@Process_Date ,IS_Make_AutomaticFromTar7eel =@IS_Make_AutomaticFromTar7eel,Doc_No=@Doc_No,User_Id_Login_Name=@User_Id_Login_Name , Edit_User_Id=" + Common.User_Id + ", EditOperationDate=GETDATE() ";
                 mysql = mysql + " , Entry_Currency_ID=@Entry_Currency_ID,Entry_Currency_Name=@Entry_Currency_Name,Factor =@Factor ";
                 mysql = mysql + " Where Id=" + Account_Entry_List_ID;
 
@@ -1733,7 +1733,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
                 Master_Submain_Account_Id = Master_Submain_Account_Id + " - " + dr[y]["Submain_Account_ID"].ToString();
             }
 
-            string mysql = "Update Account_Entry_Details Set Master_Submain_Account_Id='" + Master_Submain_Account_Id + "'  , Master_Submain_Account_Name='" + Master_Submain_Account_Name + "' Where Id=" + Account_Entry_Details_Id;
+            string mysql = "Update Account_Entry_Details Set Master_Submain_Account_Id='" + Master_Submain_Account_Id + "'  , Master_Submain_Account_Name='" + Master_Submain_Account_Name + "', Edit_User_Id=" + Common.User_Id + ", EditOperationDate=GETDATE() Where Id=" + Account_Entry_Details_Id;
             opp.insert_me(mysql);
 
         }

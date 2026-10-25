@@ -77,3 +77,9 @@ Govern_AreaCLS، InvoiceValuesCLS، SupplierBillsDueCLS، ShipmentCompanyEFCLS،
 ## طريقة الاستئناف
 
 فى الجلسة التى يُطلَب فيها تنفيذ هذه الخطة: ابدأ بالطبقة ب (الأعلى ثقة كفجوة حقيقية)، ثم تأكَّد من الطبقة أ (تأكيد لا إصلاح غالباً)، ثم افحص الطبقة ج بسرعة لاستبعادها أو نقل ما يلزم منها إلى طبقة ب. استخدم `AskUserQuestion` لتقسيم الدفعات إن كان العدد كبيراً (نحو 30+ كلاساً)، بدل تنفيذها كلها فى جلسة واحدة.
+
+## حالة التنفيذ (محدَّثة 2026-10-25، د1 — الطبقة ب)
+- ✅ مُطبَّق سابقاً/موثَّق: BillsCLS، Assets_EhlakCLS، FixedAssetCLS، ItemCLS، Journal_DaysListCLS، GroupsCLS، CostCenterCLS، CountryCLS، SalesMenCLS، Money_Transaction_BoxOrderReportCLS، InvoicesOperationCLS (تفوّض إلى InvoiceDetails*CLS المختومة d9114d4).
+- ✅ نُفِّذ فى دفعة 2026-10-25: AccountEntry_CLS (تحديث Account_Entry_List وAccount_Entry_Details)، SalesTotalInvoicesService (تحديث IsInvoiceTaxInfo)، DailyItemSalesService.UpdateSale (Edit_User_Id فقط؛ لا يوجد عمود تاريخ فى نموذج Unit_Item_SalesDate).
+- ➖ لا ينطبق: Money_Financial_NoticeCLS وMoney_Financial_Notice_ItemsCLS وCashVouchersService.EditMultiVoucher (التعديل = حذف + إدراج جديد)، TagerKontraCLS وSubmain_AccountCLS وAdd_Account_CodesCLS وCashPaymentMethodCLS (الجداول بلا عمودى التدقيق)، CustomersAccountCLS (الدالة المعنية تحويل فقط، الباقى معلَّق).
+- متبقٍ: تأكيد الطبقة أ وفحص الطبقة ج (دفعة تالية).

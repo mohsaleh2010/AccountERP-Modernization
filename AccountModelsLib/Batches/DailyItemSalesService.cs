@@ -671,6 +671,7 @@ namespace AccountModelsLib
 
 
                 _opp.db.Entry(existing).CurrentValues.SetValues(sale);
+                existing.Edit_User_Id = Common.User_Id; // تدقيق التعديل
                 //context.SaveChanges();
 
 
