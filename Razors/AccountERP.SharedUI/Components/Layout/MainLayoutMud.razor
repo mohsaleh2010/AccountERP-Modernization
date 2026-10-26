@@ -368,12 +368,22 @@
         }
         else
         {
-            title = menu?.GetLocalizedDescription(LangService.CurrentLanguage);
+            // صفحة التجميع /hub/{id} لا تطابق RazorPath أى قائمة؛ عنوانها اسم القائمة صاحبة المعرّف (وليس رقمها)
+            MenuViewModel? hubRoot = null;
+            var hubParts = relativePath.Split('/');
+            if (hubParts.Length == 2 && hubParts[0].Equals("hub", StringComparison.OrdinalIgnoreCase)
+                && long.TryParse(hubParts[1], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var hubId))
+            {
+                hubRoot = MenuState.UserAllowedMenus.FirstOrDefault(m => m != null && m.Menu_ID == hubId);
+            }
+            title = (hubRoot ?? menu)?.GetLocalizedDescription(LangService.CurrentLanguage);
             if (string.IsNullOrWhiteSpace(title))
             {
                 title = relativePath.Split('/').LastOrDefault(s => !string.IsNullOrWhiteSpace(s)) ?? relativePath;
             }
-            icon = MenuIcons.GetLeafIcon(menu?.Description);
+            icon = hubRoot != null
+                ? (hubRoot.ParentId == 0 ? MenuIcons.GetModuleIcon(hubRoot.Description) : MenuIcons.GetGroupIcon(hubRoot.Description))
+                : MenuIcons.GetLeafIcon(menu?.Description);
         }
 
         TabWorkspace.OpenOrActivate(screenKey, pageType, routeValues, title, icon);
