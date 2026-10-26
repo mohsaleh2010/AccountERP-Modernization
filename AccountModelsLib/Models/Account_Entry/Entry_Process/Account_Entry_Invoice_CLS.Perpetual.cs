@@ -23,6 +23,33 @@ namespace AccountModelsLib
             PostCogs(ref Excp, ref Msg, ref opp, Invoices_List_Id, true);
         }
 
+        // فواتير الشراء/مرتجع الشراء: القديمة حرفياً (مدين المشتريات) ثم قيد منفصل ينقل قيمة المخزنى من المشتريات إلى حساب المخزن (فرع «مستمر» فقط)
+        public void Make_EntryFor_Bills(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long Bills_List_Id, DateTime dtFrom, DateTime dtTo, int IS_Posted_Flage)
+        {
+            Make_EntryFor_Bills_Legacy(ref Excp, ref Msg, ref opp, Bills_List_Id, dtFrom, dtTo, IS_Posted_Flage);
+            PostBillStock(ref Excp, ref Msg, ref opp, Bills_List_Id, false);
+        }
+
+        public void Make_EntryFor_Bills_Reverse(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long Bills_List_Id, DateTime dtFrom, DateTime dtTo, int IS_Posted_Flage)
+        {
+            Make_EntryFor_Bills_Reverse_Legacy(ref Excp, ref Msg, ref opp, Bills_List_Id, dtFrom, dtTo, IS_Posted_Flage);
+            PostBillStock(ref Excp, ref Msg, ref opp, Bills_List_Id, true);
+        }
+
+        private static void PostBillStock(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long billId, bool isReturn)
+        {
+            if (Common.IS_Make_AutomaticFromTar7eel_For_Invoice == 0 || Excp != 0 || billId <= 0) return;
+            try
+            {
+                new InventoryPostingService().PostBillStockEntry(opp, billId, isReturn);
+            }
+            catch (Exception ee)
+            {
+                Excp = 1;
+                Msg = ee.Message;
+            }
+        }
+
         private static void PostCogs(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long invoiceId, bool isReturn)
         {
             // نفس شرط القديمة: بلا قيود تلقائية للفواتير ⇒ لا قيد تكلفة. وفشل القيد الأصلى ⇒ لا نضيف فوقه.

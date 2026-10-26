@@ -999,7 +999,7 @@ FROM            Money_Transaction_Box INNER JOIN
 
             return opp.return_DataTable(mysql);
         }
-        public void Make_EntryFor_Bills(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long Bills_List_Id, DateTime dtFrom, DateTime dtTo, int IS_Posted_Flage)
+        public void Make_EntryFor_Bills_Legacy(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long Bills_List_Id, DateTime dtFrom, DateTime dtTo, int IS_Posted_Flage)
         {
             if (Common.IS_Make_AutomaticFromTar7eel_For_Invoice == 0)
             {
@@ -1180,7 +1180,7 @@ FROM            Money_Transaction_Box INNER JOIN
             dt_ProcessName = opp.return_DataTable(mysql);
             return dt_ProcessName;
         }
-        public void Make_EntryFor_Bills_Reverse(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long Bills_List_Id, DateTime dtFrom, DateTime dtTo, int IS_Posted_Flage)
+        public void Make_EntryFor_Bills_Reverse_Legacy(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long Bills_List_Id, DateTime dtFrom, DateTime dtTo, int IS_Posted_Flage)
         {
             if (Common.IS_Make_AutomaticFromTar7eel_For_Invoice == 0)
             {

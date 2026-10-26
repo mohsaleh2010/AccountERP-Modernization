@@ -425,6 +425,103 @@ GROUP BY u.Store_id");
             return entryId;
         }
 
+        // ============================== مخزون فواتير الشراء (ب1 — فواتير الشراء) ==============================
+
+        /// <summary>Reference_Type لقيد مخزون فاتورة شراء (Reference_Type_Table_Id = Bills_List.ID).</summary>
+        public const int BillStockReferenceType = 3007;
+        /// <summary>Reference_Type لقيد مخزون مرتجع شراء.</summary>
+        public const int BillReturnStockReferenceType = 3008;
+
+        /// <summary>
+        /// قيد مخزون فاتورة شراء (أو مرتجع): قيد منفصل مرتبط بالفاتورة يُعاد بناؤه عند كل حفظ، يلى قيد الفاتورة القديم الذى يخصم/يقيّد حساب المشتريات.
+        /// الشراء: مدين حساب المخزن / دائن حساب المشتريات (فيتحول المشتريات إلى مخزون). المرتجع العكس.
+        /// القيمة = Qnty_value (قيمة السطر قبل الضرائب) للأسطر المخزنية غير المحذوفة، لكل مخزن، بسعر الفاتورة نفسها لا بالتكلفة الحالية.
+        /// لا يعمل إلا لفرع «مستمر» وتاريخ الفاتورة ≥ تاريخ البدء؛ غير ذلك يحذف القيد السابق فقط (إن وُجد). أذون الشراء الآلية (نوع 4/5) لا تُقيَّد بنفسها فلا ازدواج.
+        /// ترمى استثناء عربياً لو نقص حساب المخزن أو المشتريات. يرجع رقم القيد أو 0.
+        /// </summary>
+        public long PostBillStockEntry(operations opp, long billId, bool isReturn)
+        {
+            int refType = isReturn ? BillReturnStockReferenceType : BillStockReferenceType;
+            string id = billId.ToString(CultureInfo.InvariantCulture);
+            var has = opp.return_DataTable("SELECT CASE WHEN OBJECT_ID(N'dbo.Inventory_Accounting_Setting', N'U') IS NULL THEN 0 ELSE 1 END");
+            if (Convert.ToInt32(has.Rows[0][0]) == 0) return 0;
+
+            int excp = 0; string msg = "";
+            new AccountEntry_CLS().Delete_EntryFromAutomatic(ref opp, ref excp, ref msg, billId, refType, false);
+
+            string listTbl = isReturn ? "Bills_List_Reverse" : "Bills_List";
+            string detTbl = isReturn ? "Bills_Details_Reverse" : "Bills_Details";
+            var head = opp.return_DataTable("SELECT Invoice_Id, Invoice_Date, ISNULL(Branch_Id, 0) AS Br, ISNULL(Deleted, 0) AS Del FROM " + listTbl + " WHERE ID = " + id);
+            if (head.Rows.Count == 0) return 0;
+            var h = head.Rows[0];
+            if (Convert.ToInt32(h["Del"]) == 1 || h["Invoice_Date"] == DBNull.Value) return 0;
+            long branch = Convert.ToInt64(h["Br"]);
+            if (branch <= 0) branch = Common.Branch_Id;
+            DateTime date = Convert.ToDateTime(h["Invoice_Date"]).Date;
+            string invoiceNo = h["Invoice_Id"]?.ToString() ?? "";
+            if (!IsContinuous(opp, branch, date)) return 0;
+
+            var vals = opp.return_DataTable(@"
+SELECT ISNULL(NULLIF(d.Store_Id, 0), u.Store_id) AS StoreId, SUM(ISNULL(d.Qnty_value, 0)) AS Val
+FROM " + detTbl + @" d
+INNER JOIN Unit_item u ON u.id = d.Unit_Item_Table_Id
+LEFT JOIN Item it ON it.Id = u.Item_id
+WHERE d.Invoice_Id = " + id + @" AND ISNULL(d.Item_DeletedFlage, 0) <> 1
+  AND ISNULL(it.Is_ItemOrService, 0) <> 2 AND ISNULL(u.Is_ItemWithoutBalance, 0) <> 1
+GROUP BY ISNULL(NULLIF(d.Store_Id, 0), u.Store_id)");
+
+            var debit = new Dictionary<long, decimal>();
+            var credit = new Dictionary<long, decimal>();
+            long purchasesAccount = 0;
+            long entryBranch = 0;
+            foreach (DataRow r in vals.Rows)
+            {
+                decimal value = r["Val"] == DBNull.Value ? 0 : Common.RoundMe(Convert.ToDecimal(r["Val"]));
+                if (value <= Tolerance) continue;
+                long storeId = Convert.ToInt64(r["StoreId"]);
+                var store = opp.return_DataTable("SELECT Store_Name AS name, ISNULL(Branch_Id, 0) AS Br, ISNULL(SubAccount_Id, 0) AS Acc FROM Store WHERE id = " + storeId.ToString(CultureInfo.InvariantCulture));
+                if (store.Rows.Count == 0) throw new InvalidOperationException("المخزن غير موجود (رقم " + storeId + ").");
+                var s = store.Rows[0];
+                string storeName = s["name"]?.ToString()?.Trim() ?? "";
+                long inventoryAccount = Convert.ToInt64(s["Acc"]);
+                long storeBranch = Convert.ToInt64(s["Br"]);
+                if (inventoryAccount <= 0) throw new InvalidOperationException("المخزن «" + storeName + "» بلا حساب مخزون فى شجرة الحسابات؛ اربطه من «ربط المخازن بالحسابات».");
+                if (purchasesAccount == 0)
+                {
+                    var pa = new Submain_AccountCLS().GetSubmain_Account(ref opp, Common.Account_Type_ForPurchase);
+                    if (pa.Rows.Count == 0) throw new InvalidOperationException("حساب المشتريات غير موجود فى شجرة الحسابات.");
+                    purchasesAccount = Convert.ToInt64(pa.Rows[0]["Id"]);
+                }
+                if (entryBranch == 0) entryBranch = storeBranch > 0 ? storeBranch : branch;
+                var (dr, cr) = isReturn ? (purchasesAccount, inventoryAccount) : (inventoryAccount, purchasesAccount);
+                debit[dr] = (debit.TryGetValue(dr, out var d0) ? d0 : 0) + value;
+                credit[cr] = (credit.TryGetValue(cr, out var c0) ? c0 : 0) + value;
+            }
+            if (debit.Count == 0) return 0;
+
+            long entryCurrency = Common.Entry_Currency_Id <= 0 ? 1 : Common.Entry_Currency_Id;
+            var cur = opp.return_DataTable("SELECT Currency_Name FROM Currency WHERE Value = " + entryCurrency.ToString(CultureInfo.InvariantCulture));
+            string currencyName = cur.Rows.Count > 0 ? cur.Rows[0][0]?.ToString() ?? "" : "";
+            string notes = (isReturn ? "عكس مخزون مرتجع مشتريات رقم " : "مخزون فاتورة مشتريات رقم ") + invoiceNo;
+
+            var aa = new AccountEntry_CLS { Reference_Type = refType, Reference_Type_Table_Id = billId };
+            var dt = new DataTable();
+            aa.Get_Empty_dt_Details(ref opp, ref dt);
+            decimal total = 0;
+            foreach (var (accountId, amount) in debit) { AddLine(aa, opp, ref excp, dt, accountId, 1, amount, notes, entryCurrency, entryBranch); total += amount; }
+            foreach (var (accountId, amount) in credit) AddLine(aa, opp, ref excp, dt, accountId, 2, amount, notes, entryCurrency, entryBranch);
+            if (excp != 0) throw new InvalidOperationException("تعذر تجهيز أسطر قيد المخزون.");
+            for (int i = 0; i < dt.Rows.Count; i++) dt.Rows[i]["Line_No"] = i + 1;
+
+            const long journalCode = 1;
+            long entryNo = AccountEntry_CLS.NewEntry_No(ref opp, date, journalCode, 0);
+            long entryId = 0;
+            aa.Make_AccountEntry(ref excp, ref msg, ref entryId, ref opp, Common.User_Id, Common.User_Name, Common.Branch_Id, entryNo, date, journalCode, entryCurrency, notes,
+                Common.Transform_Type, dt, (double)total, entryBranch, 1, invoiceNo, entryCurrency, currencyName, 1, 0);
+            if (excp != 0 || entryId <= 0) throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg) ? "تعذر إنشاء قيد المخزون." : msg);
+            return entryId;
+        }
+
         private static void AddLine(AccountEntry_CLS aa, operations opp, ref int excp, DataTable dt, long subAccountId, int madinDa2n, decimal amount, string notes, long entryCurrency, long branchId)
         {
             if (excp != 0) return;
