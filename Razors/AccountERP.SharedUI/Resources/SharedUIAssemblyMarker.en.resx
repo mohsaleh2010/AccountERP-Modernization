@@ -4282,4 +4282,12 @@
   <data name="IOCarryHint" xml:space="preserve"><value>"Carry forward" snapshots the previous period's closing balance from the stock ledger (at the current average cost) as the opening balance, with no new ledger entry; lines that already have an opening balance are untouched. Carried lines are read-only.</value></data>
   <data name="IOCarryConfirm" xml:space="preserve"><value>The previous period's closing balance will be carried into the opening of period {0} (store: {1}) for lines without an opening balance. Continue?</value></data>
   <data name="IOCarryDone" xml:space="preserve"><value>{0} line(s) carried; {1} skipped (already have an opening balance), {2} skipped (zero or negative balance). Previous period: {3}</value></data>
+  <data name="IOExport" xml:space="preserve"><value>Export Excel template</value></data>
+  <data name="IOImport" xml:space="preserve"><value>Import from Excel</value></data>
+  <data name="IOExportEmpty" xml:space="preserve"><value>No lines to export with this filter</value></data>
+  <data name="IOImportTooBig" xml:space="preserve"><value>The file is larger than {0} MB</value></data>
+  <data name="IOImportEmpty" xml:space="preserve"><value>No valid lines in the file</value></data>
+  <data name="IOImportProblems" xml:space="preserve"><value>{0} row(s) could not be read (row: column): {1}</value></data>
+  <data name="IOImportConfirm" xml:space="preserve"><value>Opening balances of {0} line(s) will be imported into period {1} (lines identical to what is saved are skipped). Continue?</value></data>
+  <data name="IOImportDone" xml:space="preserve"><value>{0} line(s) saved, {1} skipped (unchanged), {2} failed</value></data>
 </root>

@@ -4282,4 +4282,12 @@
   <data name="IOCarryHint" xml:space="preserve"><value>«النقل من الفترة السابقة» يأخذ رصيد نهاية الفترة السابقة من دفتر المخزن (بمتوسط التكلفة الحالى) لقطةً لأول المدة، دون أى قيد جديد فى الدفتر؛ ولا يمس سطراً له أول مدة. السطور المنقولة للقراءة فقط.</value></data>
   <data name="IOCarryConfirm" xml:space="preserve"><value>سيُنقل رصيد نهاية الفترة السابقة إلى أول مدة الفترة {0} (المخزن: {1}) للأسطر التى بلا أول مدة. المتابعة؟</value></data>
   <data name="IOCarryDone" xml:space="preserve"><value>نُقل {0} سطر؛ تُرك {1} لوجود أول مدة له، و{2} لأن رصيده صفر أو سالب (الفترة السابقة: {3})</value></data>
+  <data name="IOExport" xml:space="preserve"><value>تصدير قالب Excel</value></data>
+  <data name="IOImport" xml:space="preserve"><value>استيراد من Excel</value></data>
+  <data name="IOExportEmpty" xml:space="preserve"><value>لا توجد أسطر قابلة للتصدير بهذا الفلتر</value></data>
+  <data name="IOImportTooBig" xml:space="preserve"><value>الملف أكبر من {0} ميجابايت</value></data>
+  <data name="IOImportEmpty" xml:space="preserve"><value>لا توجد أسطر صالحة فى الملف</value></data>
+  <data name="IOImportProblems" xml:space="preserve"><value>تعذّرت قراءة {0} صف (رقم الصف: العمود): {1}</value></data>
+  <data name="IOImportConfirm" xml:space="preserve"><value>سيُستورد أول المدة لـ {0} سطر فى الفترة {1} (الأسطر المطابقة لما هو محفوظ تُتجاوز). المتابعة؟</value></data>
+  <data name="IOImportDone" xml:space="preserve"><value>حُفظ {0} سطر، وتُجوز {1} لعدم الاختلاف، وتعذّر {2}</value></data>
 </root>

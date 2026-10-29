@@ -8,11 +8,13 @@
 @using AccountModelsLib
 @using AccountERP.SharedUI.Services
 @using AccountERP.SharedUI.Components.Shared
+@using Microsoft.AspNetCore.Components.Forms
 @using static AccountModelsLib.StoreBalancesService
 @using static AccountModelsLib.ItemOpeningBalanceListService
 @inject LanguageService LangService
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject IJSRuntime JS
 @implements IDisposable
 
 <PageTitle>@Tr("IOTitle")</PageTitle>
@@ -144,6 +146,13 @@
         <div class="io-bar">
             <span class="info" aria-live="polite">@(_total > 0 ? Tr("SOPageInfo", _skip + 1, Math.Min(_skip + PageSize, _total), _total) : "")</span>
             <div class="btns">
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FileDownload"
+                           Disabled="@(_busy || _loading)" OnClick="ExportAsync">@Tr("IOExport")</MudButton>
+                <MudFileUpload T="IBrowserFile" FilesChanged="ImportAsync" Accept=".xlsx" Disabled="@(_busy || _closed || _loading)">
+                    <ActivatorContent>
+                        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FileUpload" Disabled="@(_busy || _closed || _loading)">@Tr("IOImport")</MudButton>
+                    </ActivatorContent>
+                </MudFileUpload>
                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.CopyAll"
                            Disabled="@(_busy || _closed || _loading)" OnClick="CarryAsync">@Tr("IOCarry")</MudButton>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
@@ -286,6 +295,56 @@
             var r = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.CarryForward(_periodId, _storeId); });
             Snackbar.Add(Tr("IOCarryDone", r.Carried, r.SkippedExisting, r.SkippedNotPositive, r.FromPeriodText), r.Carried > 0 ? Severity.Success : Severity.Info);
             await LoadAsync();
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _busy = false; }
+    }
+
+    private const long MaxImportBytes = 5 * 1024 * 1024;
+
+    private OpeningFilter CurrentFilter() => new() { PeriodId = _periodId, StoreId = _storeId, CategoryId = _categoryId, Text = _text, OnlyWithOpening = _onlyWith };
+
+    // قالب Excel = أسطر الفلتر الحالى بقيمها الحالية (بلا الأسطر المنقولة المقفلة)؛ المفتاح Unit_Item_Id.
+    private async Task ExportAsync()
+    {
+        _busy = true; _error = null;
+        try
+        {
+            var f = CurrentFilter();
+            var rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetAllRows(f).Where(r => !Locked(r)).ToList(); });
+            if (rows.Count == 0) { Snackbar.Add(Tr("IOExportEmpty"), Severity.Info); return; }
+            var bytes = ItemOpeningExcel.BuildTemplate(rows);
+            await JS.InvokeVoidAsync("accountErpInterop.downloadBase64", $"item-opening-balances-{_periodId}.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", Convert.ToBase64String(bytes));
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _busy = false; }
+    }
+
+    private async Task ImportAsync(IBrowserFile? file)
+    {
+        if (file == null) return;
+        if (!await ConfirmDiscardAsync()) return;
+        _busy = true; _error = null; _saveErrors.Clear();
+        try
+        {
+            if (file.Size > MaxImportBytes) { _error = Tr("IOImportTooBig", MaxImportBytes / 1024 / 1024); return; }
+            using var ms = new MemoryStream();
+            await using (var input = file.OpenReadStream(MaxImportBytes)) await input.CopyToAsync(ms);
+            ms.Position = 0;
+            var (lines, problems) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return ItemOpeningExcel.Parse(ms); });
+            if (problems.Count > 0) _error = Tr("IOImportProblems", problems.Count, string.Join(" ، ", problems.Take(5)));
+            if (lines.Count == 0) { if (problems.Count == 0) _error = Tr("IOImportEmpty"); return; }
+
+            var ok = await DialogService.ShowMessageBoxAsync(Tr("IOTitle"), Tr("IOImportConfirm", lines.Count, PeriodText(_periodId)), yesText: Tr("IOConfirm"), cancelText: Tr("Cancel"));
+            if (ok != true) return;
+            var report = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Save(_periodId, lines, ItemOpeningBalanceService.OpeningSource.Import); });
+            var errs = report.Errors.Select(e => new SaveErr(e.UnitItemId.ToString(), e.Message)).ToList();
+            Snackbar.Add(Tr("IOImportDone", report.Saved, report.Unchanged, errs.Count), errs.Count == 0 ? Severity.Success : Severity.Warning);
+            var keepError = _error;
+            await LoadAsync();
+            _error = keepError;
+            _saveErrors.AddRange(errs);
         }
         catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
         finally { _busy = false; }

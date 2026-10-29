@@ -64,11 +64,21 @@ namespace AccountModelsLib
             public decimal CostLarge { get; set; }
         }
 
+        public class CurrentOpening
+        {
+            public decimal TotalSmall { get; set; }
+            public decimal ItemNo { get; set; }
+            public decimal CostLarge { get; set; }
+            public decimal Factor { get; set; }
+            public bool Has { get; set; }
+        }
+
         public record SaveError(long UnitItemId, string Message);
 
         public class SaveReport
         {
             public int Saved { get; set; }
+            public int Unchanged { get; set; }
             public List<SaveError> Errors { get; } = new();
         }
 
@@ -105,6 +115,19 @@ ORDER BY s.Store_Name, i.Item_Name, u.id
 OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY").ToList();
         }
 
+        /// <summary>كل أسطر الفلتر (بلا ترقيم) حتى حد أقصى؛ لتصدير قالب Excel.</summary>
+        public List<OpeningRow> GetAllRows(OpeningFilter f, int max = 20000)
+        {
+            var all = new List<OpeningRow>();
+            for (int skip = 0; all.Count < max; skip += 500)
+            {
+                var page = GetRows(new OpeningFilter { PeriodId = f.PeriodId, StoreId = f.StoreId, CategoryId = f.CategoryId, Text = f.Text, OnlyWithOpening = f.OnlyWithOpening, Skip = skip, Take = 500 });
+                all.AddRange(page);
+                if (page.Count < 500) break;
+            }
+            return all;
+        }
+
         /// <summary>يحفظ الأسطر (كل سطر بمعاملته). السطر المرفوض يُسجَّل فى التقرير ولا يمنع غيره.</summary>
         public SaveReport Save(long periodId, IEnumerable<SaveLine> lines, ItemOpeningBalanceService.OpeningSource source)
         {
@@ -117,6 +140,22 @@ OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY").ToList();
                 {
                     report.Errors.Add(new SaveError(l.UnitItemId, "هذا السطر منقول من الفترة السابقة كلقطة؛ لا يُعدَّل هنا (رصيده فى الدفتر مستمر)."));
                     continue;
+                }
+                // سطر قيمه مطابقة لما هو محفوظ (أو صفر بلا صف) لا يُرحَّل: إعادة رفع قالب كما هو لا تُنتج عكساً وترحيلاً بلا فرق.
+                var cur = opp.db.Database.SqlQuery<CurrentOpening>($@"
+SELECT CAST(ISNULL(b.Larg_Qnty, 0) * k.F + ISNULL(b.Small_Qnty, 0) AS decimal(18,6)) AS TotalSmall, CAST(ISNULL(b.Item_No, 0) AS decimal(18,6)) AS ItemNo,
+       CAST(ISNULL(b.Unit_Cost, 0) * k.F AS decimal(18,6)) AS CostLarge, CAST(k.F AS decimal(18,6)) AS Factor, CAST(CASE WHEN b.Id IS NULL THEN 0 ELSE 1 END AS bit) AS Has
+FROM Unit_item u
+CROSS APPLY (SELECT CAST(CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END AS decimal(18,6)) AS F) k
+LEFT JOIN Item_First_Period_Balance b ON b.Unit_Item_Id = u.id AND b.Year_Financial_Period_Id = {periodId}
+WHERE u.id = {l.UnitItemId}").AsEnumerable().FirstOrDefault();
+                if (cur != null)
+                {
+                    decimal newTotal = l.QtyLarge * cur.Factor + l.QtySmall;
+                    bool same = cur.Has
+                        ? cur.TotalSmall == newTotal && cur.ItemNo == l.ItemNo && Math.Abs(cur.CostLarge - l.CostLarge) < 0.005m
+                        : newTotal == 0;
+                    if (same) { report.Unchanged++; continue; }
                 }
                 opp.BeginTransaction();
                 try

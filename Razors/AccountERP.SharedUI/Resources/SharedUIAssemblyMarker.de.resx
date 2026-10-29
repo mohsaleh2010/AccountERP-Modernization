@@ -4284,4 +4284,12 @@
   <data name="IOCarryHint" xml:space="preserve"><value>„Übernehmen“ legt den Schlussbestand der Vorperiode aus dem Lagerbuch (zum aktuellen Durchschnittspreis) als Anfangsbestand ab, ohne neue Buchung; Zeilen mit Anfangsbestand bleiben unberührt. Übernommene Zeilen sind schreibgeschützt.</value></data>
   <data name="IOCarryConfirm" xml:space="preserve"><value>Der Schlussbestand der Vorperiode wird für Zeilen ohne Anfangsbestand in den Anfang der Periode {0} (Lager: {1}) übernommen. Fortfahren?</value></data>
   <data name="IOCarryDone" xml:space="preserve"><value>{0} Zeile(n) übernommen; {1} übersprungen (Anfangsbestand vorhanden), {2} übersprungen (Bestand null oder negativ). Vorperiode: {3}</value></data>
+  <data name="IOExport" xml:space="preserve"><value>Excel-Vorlage exportieren</value></data>
+  <data name="IOImport" xml:space="preserve"><value>Aus Excel importieren</value></data>
+  <data name="IOExportEmpty" xml:space="preserve"><value>Keine Zeilen zum Exportieren bei diesem Filter</value></data>
+  <data name="IOImportTooBig" xml:space="preserve"><value>Die Datei ist größer als {0} MB</value></data>
+  <data name="IOImportEmpty" xml:space="preserve"><value>Keine gültigen Zeilen in der Datei</value></data>
+  <data name="IOImportProblems" xml:space="preserve"><value>{0} Zeile(n) nicht lesbar (Zeile: Spalte): {1}</value></data>
+  <data name="IOImportConfirm" xml:space="preserve"><value>Anfangsbestände von {0} Zeile(n) werden in Periode {1} importiert (unveränderte Zeilen werden übersprungen). Fortfahren?</value></data>
+  <data name="IOImportDone" xml:space="preserve"><value>{0} Zeile(n) gespeichert, {1} übersprungen (unverändert), {2} fehlgeschlagen</value></data>
 </root>

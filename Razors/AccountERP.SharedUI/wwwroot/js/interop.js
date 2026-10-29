@@ -61,6 +61,15 @@ window.accountErpInterop = {
     // سبب وجودها: إخفاء باقى الصفحة بـ visibility:hidden داخل تخطيط MudBlazor كان يترك مساحة القائمة الجانبية
     // وشريط التطبيق محجوزة، ومنطقة المحتوى نفسها تمرير داخلى - فتخرج الطباعة مقصوصة على صفحة واحدة أو مزاحة
     // أو بصفحات بيضاء زائدة. هنا يُنسخ العنصر وحده (مع تحويل أى canvas لصورة) ومعه كل أنماط الصفحة.
+    downloadBase64: function (fileName, contentType, base64) {
+        var bin = atob(base64), bytes = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        var url = URL.createObjectURL(new Blob([bytes], { type: contentType }));
+        var a = document.createElement('a');
+        a.href = url; a.download = fileName; document.body.appendChild(a); a.click();
+        document.body.removeChild(a); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    },
+
     printElement: function (selector, title, dir, pageCss) {
         var src = typeof selector === 'string' ? document.querySelector(selector) : selector;
         if (!src) { window.print(); return; }
