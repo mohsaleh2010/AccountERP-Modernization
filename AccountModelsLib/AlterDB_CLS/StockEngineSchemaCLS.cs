@@ -277,6 +277,8 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("aToolStripMenuItem", "/store/balances?asof=1"), ("menuItemItemsListBeforBalance", "/store/balances?asof=1"),
             // مطابقة الأرصدة (خطة 01 م3) بدل التعديل المباشر للأرصدة: الفرق يُعتمد بتصحيح الدفتر أو يُسوّى بإذن تسوية.
             ("menuItemEditStoreBalance", "/store/reconciliation"), ("menuItemItemBalanceOnlyEdit", "/store/reconciliation"),
+            // رصيد أول المدة للأصناف لكل فترة (خطة 02 م3) بدل Item_FirstBalance.
+            ("menuItemItemFirstBalance", "/store/opening-balances"),
             // كارت الصنف الموحَّد (خطة 01 م4) على دفتر الحركة.
             ("menuItemCardsStore", "/store/item-card"), ("ToolStripMenuItem_Transaction_Details", "/store/item-card"),
             ("ToolStripMenuItem_Transaction_DetailsWithCost", "/store/item-card?value=1"), ("menuItemCardsDept", "/store/item-card?type=20"),

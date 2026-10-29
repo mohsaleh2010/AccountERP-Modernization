@@ -4256,4 +4256,28 @@
   <data name="FSJOptRemoved" xml:space="preserve"><value>Einwilligung des Kunden wiederhergestellt</value></data>
   <data name="FSJOptEmpty" xml:space="preserve"><value>Keine Kunden haben sich abgemeldet</value></data>
   <data name="FSJOptRemove" xml:space="preserve"><value>Einwilligung wiederherstellen</value></data>
+  <data name="IOTitle" xml:space="preserve"><value>Anfangsbestände der Artikel</value></data>
+  <data name="IOSub" xml:space="preserve"><value>Je Geschäftsperiode: Menge und Kosten jedes Artikels je Lager, im Lagerbuch zum Periodenbeginn gebucht</value></data>
+  <data name="IOPeriod" xml:space="preserve"><value>Geschäftsperiode</value></data>
+  <data name="IOOnlyWith" xml:space="preserve"><value>Nur Zeilen mit Anfangsbestand</value></data>
+  <data name="IOClosed" xml:space="preserve"><value>Diese Geschäftsperiode ist abgeschlossen; nur Lesezugriff.</value></data>
+  <data name="IOLarge" xml:space="preserve"><value>Große Einheit</value></data>
+  <data name="IOSmall" xml:space="preserve"><value>Kleine Einheit</value></data>
+  <data name="IOPacks" xml:space="preserve"><value>Gebinde</value></data>
+  <data name="IOCost" xml:space="preserve"><value>Kosten je große Einheit</value></data>
+  <data name="IOValue" xml:space="preserve"><value>Wert</value></data>
+  <data name="IOCurrent" xml:space="preserve"><value>Aktueller Bestand</value></data>
+  <data name="IOSource" xml:space="preserve"><value>Quelle</value></data>
+  <data name="IOSource_0" xml:space="preserve"><value>Alt</value></data>
+  <data name="IOSource_1" xml:space="preserve"><value>Manuell</value></data>
+  <data name="IOSource_2" xml:space="preserve"><value>Import</value></data>
+  <data name="IOSource_3" xml:space="preserve"><value>Übertragen</value></data>
+  <data name="IONoRows" xml:space="preserve"><value>Keine passenden Zeilen</value></data>
+  <data name="IOSave" xml:space="preserve"><value>Speichern ({0})</value></data>
+  <data name="IOErrorsTitle" xml:space="preserve"><value>{0} Zeile(n) konnten nicht gespeichert werden:</value></data>
+  <data name="IODiscardText" xml:space="preserve"><value>{0} geänderte Zeile(n) sind nicht gespeichert und gehen verloren. Fortfahren?</value></data>
+  <data name="IODiscard" xml:space="preserve"><value>Änderungen verwerfen</value></data>
+  <data name="IOConfirmText" xml:space="preserve"><value>Anfangsbestände von {0} Zeile(n) werden für Periode {1} gespeichert und im Lagerbuch gebucht. Fortfahren?</value></data>
+  <data name="IOConfirm" xml:space="preserve"><value>Speichern</value></data>
+  <data name="IODone" xml:space="preserve"><value>{0} Zeile(n) gespeichert</value></data>
 </root>

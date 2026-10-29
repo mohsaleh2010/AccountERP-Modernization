@@ -4256,4 +4256,28 @@
   <data name="FSJOptRemoved" xml:space="preserve"><value>Consentement du client rétabli</value></data>
   <data name="FSJOptEmpty" xml:space="preserve"><value>Aucun client désabonné</value></data>
   <data name="FSJOptRemove" xml:space="preserve"><value>Rétablir le consentement</value></data>
+  <data name="IOTitle" xml:space="preserve"><value>Soldes d'ouverture des articles</value></data>
+  <data name="IOSub" xml:space="preserve"><value>Par période : quantité et coût de chaque article par magasin, comptabilisés au journal de stock à la date de début</value></data>
+  <data name="IOPeriod" xml:space="preserve"><value>Période fiscale</value></data>
+  <data name="IOOnlyWith" xml:space="preserve"><value>Uniquement les lignes avec solde d'ouverture</value></data>
+  <data name="IOClosed" xml:space="preserve"><value>Cette période est clôturée ; lecture seule.</value></data>
+  <data name="IOLarge" xml:space="preserve"><value>Grande unité</value></data>
+  <data name="IOSmall" xml:space="preserve"><value>Petite unité</value></data>
+  <data name="IOPacks" xml:space="preserve"><value>Colis</value></data>
+  <data name="IOCost" xml:space="preserve"><value>Coût de la grande unité</value></data>
+  <data name="IOValue" xml:space="preserve"><value>Valeur</value></data>
+  <data name="IOCurrent" xml:space="preserve"><value>Solde actuel</value></data>
+  <data name="IOSource" xml:space="preserve"><value>Source</value></data>
+  <data name="IOSource_0" xml:space="preserve"><value>Ancien</value></data>
+  <data name="IOSource_1" xml:space="preserve"><value>Manuel</value></data>
+  <data name="IOSource_2" xml:space="preserve"><value>Import</value></data>
+  <data name="IOSource_3" xml:space="preserve"><value>Reporté</value></data>
+  <data name="IONoRows" xml:space="preserve"><value>Aucune ligne correspondante</value></data>
+  <data name="IOSave" xml:space="preserve"><value>Enregistrer ({0})</value></data>
+  <data name="IOErrorsTitle" xml:space="preserve"><value>{0} ligne(s) non enregistrée(s) :</value></data>
+  <data name="IODiscardText" xml:space="preserve"><value>{0} ligne(s) modifiée(s) non enregistrée(s) seront perdues. Continuer ?</value></data>
+  <data name="IODiscard" xml:space="preserve"><value>Abandonner les modifications</value></data>
+  <data name="IOConfirmText" xml:space="preserve"><value>Les soldes d'ouverture de {0} ligne(s) seront enregistrés pour la période {1} et comptabilisés au journal de stock. Continuer ?</value></data>
+  <data name="IOConfirm" xml:space="preserve"><value>Enregistrer</value></data>
+  <data name="IODone" xml:space="preserve"><value>{0} ligne(s) enregistrée(s)</value></data>
 </root>

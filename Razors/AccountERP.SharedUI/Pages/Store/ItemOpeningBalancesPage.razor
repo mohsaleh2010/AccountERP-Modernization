@@ -1,0 +1,296 @@
+@* 🟢 خطة 02 — رصيد أول المدة للأصناف لكل فترة مالية (بدل Store_LIB\Items\Item_FirstBalance).
+   الحفظ عبر ItemOpeningBalanceService: صف افتتاحى فى دفتر المخزن بتاريخ بداية الفترة + Item_First_Period_Balance (بالفترة والمخزن والتكلفة).
+   الفترة المقفلة للقراءة فقط. السطر الذى له رصيد قديم غير مسجل فى الدفتر يُرفض برسالته (يُعالج أولاً من «مطابقة أرصدة الأصناف»).
+   التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@page "/store/opening-balances"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.StoreBalancesService
+@using static AccountModelsLib.ItemOpeningBalanceListService
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@implements IDisposable
+
+<PageTitle>@Tr("IOTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .io-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .io-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .io-head .ico .mud-icon-root { font-size: 2rem; }
+    .io-head .titles { flex: 1 1 260px; min-width: 0; }
+    .io-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .io-gap { margin-top: 16px; }
+    .io-filters { display: grid; grid-template-columns: minmax(200px, 1.2fr) minmax(180px, 1fr) minmax(180px, 1fr) minmax(220px, 1.4fr); gap: 12px; align-items: start; }
+    .io-name { font-weight: 600; color: var(--mud-palette-text-primary); }
+    .io-code { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .io-num { font-variant-numeric: tabular-nums; }
+    .io-src { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .io-cell { min-width: 96px; max-width: 130px; }
+    .io-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-top: 12px; }
+    .io-bar .info { font-size: .875rem; color: var(--mud-palette-text-secondary); font-variant-numeric: tabular-nums; }
+    .io-bar .btns { display: flex; flex-wrap: wrap; gap: 8px; }
+    .io-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .io-errs { margin-top: 12px; }
+    .io-errs li { margin-bottom: 4px; }
+    @@media (max-width: 1099px) { .io-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 599px) { .io-filters { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-card io-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.PlaylistAddCheck" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("IOTitle")</h1>
+            <div class="sub">@Tr("IOSub")</div>
+        </div>
+    </div>
+
+    <div class="inv-card io-gap" role="search">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.FilterList" />@Tr("SOFiltersTitle")</h2>
+        <div class="io-filters">
+            <MudSelect T="long" Value="_periodId" ValueChanged="OnPeriodAsync" Label="@Tr("IOPeriod")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => PeriodText(v))">
+                @foreach (var p in _periods)
+                {
+                    <MudSelectItem T="long" Value="@p.Id">@PeriodText(p.Id)</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="long" Value="_storeId" ValueChanged="OnStoreAsync" Label="@Tr("SOParty_4")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _stores.FirstOrDefault(s => s.Id == v)?.Name ?? "")">
+                <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                @foreach (var s in _stores)
+                {
+                    <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="long" Value="_categoryId" ValueChanged="OnCategoryAsync" Label="@Tr("SBCategory")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _categories.FirstOrDefault(c => c.Id == v)?.Name ?? "")">
+                <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                @foreach (var c in _categories)
+                {
+                    <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField T="string" Value="_text" ValueChanged="OnTextAsync" Label="@Tr("SOItemSearch")" Variant="Variant.Outlined"
+                          Immediate="true" DebounceInterval="400" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+        </div>
+        <MudSwitch T="bool" Value="_onlyWith" ValueChanged="OnOnlyWithAsync" Color="Color.Primary" Label="@Tr("IOOnlyWith")" Class="mt-2" />
+    </div>
+
+    @if (_closed)
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true" Class="io-gap" role="status">@Tr("IOClosed")</MudAlert>
+    }
+
+    <div class="inv-card io-gap">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("SRResults")<span class="inv-count">@_total</span></h2>
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" role="alert">@_error</MudAlert>
+        }
+        <MudTable Items="@_rows" T="OpeningRow" Hover="true" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Loading="_loading" LoadingProgressColor="Color.Primary">
+            <HeaderContent>
+                <MudTh>@Tr("SOParty_4")</MudTh>
+                <MudTh>@Tr("SOItem")</MudTh>
+                <MudTh Style="text-align:end">@Tr("IOLarge")</MudTh>
+                <MudTh Style="text-align:end">@Tr("IOSmall")</MudTh>
+                <MudTh Style="text-align:end">@Tr("IOPacks")</MudTh>
+                <MudTh Style="text-align:end">@Tr("IOCost")</MudTh>
+                <MudTh Style="text-align:end">@Tr("IOValue")</MudTh>
+                <MudTh Style="text-align:end">@Tr("IOCurrent")</MudTh>
+                <MudTh>@Tr("IOSource")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                @{ var d = Draft(context); }
+                <MudTd DataLabel="@Tr("SOParty_4")">@context.Store_Name</MudTd>
+                <MudTd DataLabel="@Tr("SOItem")">
+                    <div class="io-name">@context.Item_Name</div>
+                    <div class="io-code">@CodeText(context.Code) · @context.B_Unit / @context.S_Unit (@Qty(context.Factor))</div>
+                </MudTd>
+                <MudTd DataLabel="@Tr("IOLarge")" Style="text-align:end">
+                    <MudNumericField T="decimal" Value="d.Large" ValueChanged="@(v => Edit(d, x => x.Large = v))" Min="0" HideSpinButtons="true" Variant="Variant.Text" Margin="Margin.Dense" Class="io-cell" Disabled="@(_closed || _busy)" />
+                </MudTd>
+                <MudTd DataLabel="@Tr("IOSmall")" Style="text-align:end">
+                    <MudNumericField T="decimal" Value="d.Small" ValueChanged="@(v => Edit(d, x => x.Small = v))" Min="0" HideSpinButtons="true" Variant="Variant.Text" Margin="Margin.Dense" Class="io-cell" Disabled="@(_closed || _busy)" />
+                </MudTd>
+                <MudTd DataLabel="@Tr("IOPacks")" Style="text-align:end">
+                    <MudNumericField T="decimal" Value="d.No" ValueChanged="@(v => Edit(d, x => x.No = v))" Min="0" HideSpinButtons="true" Variant="Variant.Text" Margin="Margin.Dense" Class="io-cell" Disabled="@(_closed || _busy)" />
+                </MudTd>
+                <MudTd DataLabel="@Tr("IOCost")" Style="text-align:end">
+                    <MudNumericField T="decimal" Value="d.Cost" ValueChanged="@(v => Edit(d, x => x.Cost = v))" Min="0" HideSpinButtons="true" Variant="Variant.Text" Margin="Margin.Dense" Class="io-cell" Disabled="@(_closed || _busy)" />
+                </MudTd>
+                <MudTd DataLabel="@Tr("IOValue")" Style="text-align:end"><span class="io-num">@Money(ValueOf(context, d))</span></MudTd>
+                <MudTd DataLabel="@Tr("IOCurrent")" Style="text-align:end"><span class="io-num">@SmallToText(context.Current_Small, context.Factor, context.B_Unit, context.S_Unit)</span></MudTd>
+                <MudTd DataLabel="@Tr("IOSource")"><span class="io-src">@(context.Has_Opening ? Tr("IOSource_" + context.Source) : "—")</span></MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="io-empty">
+                    <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Large" />
+                    <b>@Tr("IONoRows")</b>
+                </div>
+            </NoRecordsContent>
+        </MudTable>
+        <div class="io-bar">
+            <span class="info" aria-live="polite">@(_total > 0 ? Tr("SOPageInfo", _skip + 1, Math.Min(_skip + PageSize, _total), _total) : "")</span>
+            <div class="btns">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
+                           Disabled="@(_busy || _closed || DirtyCount == 0)" OnClick="SaveAsync">@Tr("IOSave", DirtyCount)</MudButton>
+                <MudButton Variant="Variant.Outlined" StartIcon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)"
+                           Disabled="@(_skip == 0 || _loading || _busy)" OnClick="@(() => PageAsync(-1))">@Tr("SOPrev")</MudButton>
+                <MudButton Variant="Variant.Outlined" EndIcon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)"
+                           Disabled="@(_skip + PageSize >= _total || _loading || _busy)" OnClick="@(() => PageAsync(1))">@Tr("SONext")</MudButton>
+            </div>
+        </div>
+        @if (_saveErrors.Count > 0)
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true" Class="io-errs" role="alert">
+                <div>@Tr("IOErrorsTitle", _saveErrors.Count)</div>
+                <ul>
+                    @foreach (var e in _saveErrors)
+                    {
+                        <li><b>@e.Name</b> — @e.Message</li>
+                    }
+                </ul>
+            </MudAlert>
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private const int PageSize = 50;
+    private sealed class DraftRow { public decimal Large, Small, No, Cost; public bool Dirty; }
+    private sealed record SaveErr(string Name, string Message);
+
+    private readonly StoreBalancesService _lists = new();
+    private readonly ItemOpeningBalanceListService _svc = new();
+    private List<PeriodOption> _periods = new();
+    private List<Option> _stores = new(), _categories = new();
+    private List<OpeningRow> _rows = new();
+    private readonly Dictionary<long, DraftRow> _drafts = new();
+    private readonly List<SaveErr> _saveErrors = new();
+    private long _periodId, _storeId, _categoryId;
+    private int _skip, _total;
+    private string? _text, _error;
+    private bool _onlyWith, _loading = true, _busy, _closed;
+
+    private int DirtyCount => _drafts.Values.Count(d => d.Dirty);
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            (_periods, _stores, _categories) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (_svc.GetPeriods(), _lists.GetStores(4), _lists.GetCategories()); });
+            var today = DateTime.Today;
+            _periodId = (_periods.FirstOrDefault(p => p.DateFrom <= today && today <= p.DateTo) ?? _periods.FirstOrDefault())?.Id ?? 0;
+            _closed = IsClosed(_periodId);
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private bool IsClosed(long id) => _periods.FirstOrDefault(p => p.Id == id)?.IS_Finished_Posted == 1;
+    private string PeriodText(long id)
+    {
+        var p = _periods.FirstOrDefault(x => x.Id == id);
+        return p == null ? "" : $"{p.DateFrom:yyyy/MM/dd} — {p.DateTo:yyyy/MM/dd}" + (p.IS_Finished_Posted == 1 ? " 🔒" : "");
+    }
+
+    // أى تغيير فلتر/فترة/صفحة يتجاهل الأسطر غير المحفوظة؛ نسأل قبل ضياعها.
+    private async Task<bool> ConfirmDiscardAsync()
+    {
+        if (DirtyCount == 0) return true;
+        return await DialogService.ShowMessageBoxAsync(Tr("IOTitle"), Tr("IODiscardText", DirtyCount), yesText: Tr("IODiscard"), cancelText: Tr("Cancel")) == true;
+    }
+
+    private async Task OnPeriodAsync(long id) { if (!await ConfirmDiscardAsync()) return; _periodId = id; _closed = IsClosed(id); _skip = 0; await LoadAsync(); }
+    private async Task OnStoreAsync(long id) { if (!await ConfirmDiscardAsync()) return; _storeId = id; _skip = 0; await LoadAsync(); }
+    private async Task OnCategoryAsync(long id) { if (!await ConfirmDiscardAsync()) return; _categoryId = id; _skip = 0; await LoadAsync(); }
+    private async Task OnTextAsync(string? t) { if (!await ConfirmDiscardAsync()) return; _text = t; _skip = 0; await LoadAsync(); }
+    private async Task OnOnlyWithAsync(bool v) { if (!await ConfirmDiscardAsync()) return; _onlyWith = v; _skip = 0; await LoadAsync(); }
+    private async Task PageAsync(int dir) { if (!await ConfirmDiscardAsync()) return; _skip = Math.Max(0, _skip + dir * PageSize); await LoadAsync(); }
+
+    private async Task LoadAsync()
+    {
+        _loading = true; _error = null; _saveErrors.Clear(); _drafts.Clear();
+        var f = new OpeningFilter { PeriodId = _periodId, StoreId = _storeId, CategoryId = _categoryId, Text = _text, OnlyWithOpening = _onlyWith, Skip = _skip, Take = PageSize };
+        try
+        {
+            _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetRows(f); });
+            _total = _rows.FirstOrDefault()?.Total_Rows ?? 0;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); _rows = new(); _total = 0; }
+        finally { _loading = false; }
+    }
+
+    private DraftRow Draft(OpeningRow r)
+    {
+        if (!_drafts.TryGetValue(r.Unit_Item_Id, out var d))
+            _drafts[r.Unit_Item_Id] = d = new DraftRow { Large = r.Open_Large, Small = r.Open_Small, No = r.Open_No, Cost = r.Cost_Large };
+        return d;
+    }
+
+    private static void Edit(DraftRow d, Action<DraftRow> change) { change(d); d.Dirty = true; }
+
+    private static decimal ValueOf(OpeningRow r, DraftRow d) => (d.Large + (r.Factor <= 0 ? 0 : d.Small / r.Factor)) * d.Cost;
+
+    private async Task SaveAsync()
+    {
+        var dirty = _rows.Where(r => _drafts.TryGetValue(r.Unit_Item_Id, out var d) && d.Dirty).ToList();
+        if (dirty.Count == 0) return;
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("IOTitle"), Tr("IOConfirmText", dirty.Count, PeriodText(_periodId)), yesText: Tr("IOConfirm"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null; _saveErrors.Clear();
+        var lines = dirty.Select(r => { var d = _drafts[r.Unit_Item_Id]; return new SaveLine { UnitItemId = r.Unit_Item_Id, QtyLarge = d.Large, QtySmall = d.Small, ItemNo = d.No, CostLarge = d.Cost }; }).ToList();
+        var names = dirty.ToDictionary(r => r.Unit_Item_Id, r => r.Item_Name);
+        try
+        {
+            var report = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Save(_periodId, lines, ItemOpeningBalanceService.OpeningSource.Manual); });
+            var errs = report.Errors.Select(e => new SaveErr(names.GetValueOrDefault(e.UnitItemId, e.UnitItemId.ToString()), e.Message)).ToList();
+            if (report.Saved > 0) Snackbar.Add(Tr("IODone", report.Saved), Severity.Success);
+            await LoadAsync();
+            _saveErrors.AddRange(errs);
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _busy = false; }
+    }
+
+    private static string Qty(decimal v) => v.ToString("0.##", CultureInfo.InvariantCulture);
+    private static string Money(decimal v) => v.ToString("N2", CultureInfo.InvariantCulture);
+    private static string CodeText(string code) => string.IsNullOrWhiteSpace(code) || code.Trim() == "0" ? "" : code;
+    private static string SmallToText(decimal small, decimal factor, string bUnit, string sUnit)
+    {
+        if (factor <= 0) factor = 1;
+        decimal abs = Math.Abs(small), large = Math.Floor(abs / factor), rest = abs - large * factor;
+        string t = rest != 0 ? $"{Qty(large)} {bUnit} + {Qty(rest)} {sUnit}" : $"{Qty(large)} {bUnit}";
+        return small < 0 ? "-" + t : t;
+    }
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

@@ -4254,4 +4254,28 @@
   <data name="FSJOptRemoved" xml:space="preserve"><value>Customer consent restored</value></data>
   <data name="FSJOptEmpty" xml:space="preserve"><value>No customers have opted out</value></data>
   <data name="FSJOptRemove" xml:space="preserve"><value>Restore consent</value></data>
+  <data name="IOTitle" xml:space="preserve"><value>Item opening balances</value></data>
+  <data name="IOSub" xml:space="preserve"><value>Per fiscal period: quantity and cost of each item in each store, posted to the stock ledger on the period start date</value></data>
+  <data name="IOPeriod" xml:space="preserve"><value>Fiscal period</value></data>
+  <data name="IOOnlyWith" xml:space="preserve"><value>Only lines that have an opening balance</value></data>
+  <data name="IOClosed" xml:space="preserve"><value>This fiscal period is closed; read-only.</value></data>
+  <data name="IOLarge" xml:space="preserve"><value>Large unit</value></data>
+  <data name="IOSmall" xml:space="preserve"><value>Small unit</value></data>
+  <data name="IOPacks" xml:space="preserve"><value>Packs</value></data>
+  <data name="IOCost" xml:space="preserve"><value>Large-unit cost</value></data>
+  <data name="IOValue" xml:space="preserve"><value>Value</value></data>
+  <data name="IOCurrent" xml:space="preserve"><value>Current balance</value></data>
+  <data name="IOSource" xml:space="preserve"><value>Source</value></data>
+  <data name="IOSource_0" xml:space="preserve"><value>Legacy</value></data>
+  <data name="IOSource_1" xml:space="preserve"><value>Manual</value></data>
+  <data name="IOSource_2" xml:space="preserve"><value>Import</value></data>
+  <data name="IOSource_3" xml:space="preserve"><value>Carried forward</value></data>
+  <data name="IONoRows" xml:space="preserve"><value>No matching lines</value></data>
+  <data name="IOSave" xml:space="preserve"><value>Save ({0})</value></data>
+  <data name="IOErrorsTitle" xml:space="preserve"><value>{0} line(s) could not be saved:</value></data>
+  <data name="IODiscardText" xml:space="preserve"><value>{0} edited line(s) are not saved and will be lost. Continue?</value></data>
+  <data name="IODiscard" xml:space="preserve"><value>Discard changes</value></data>
+  <data name="IOConfirmText" xml:space="preserve"><value>Opening balances of {0} line(s) will be saved for period {1} and posted to the stock ledger. Continue?</value></data>
+  <data name="IOConfirm" xml:space="preserve"><value>Save</value></data>
+  <data name="IODone" xml:space="preserve"><value>{0} line(s) saved</value></data>
 </root>

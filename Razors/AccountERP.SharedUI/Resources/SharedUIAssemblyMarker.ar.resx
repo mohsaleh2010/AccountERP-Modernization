@@ -4254,4 +4254,28 @@
   <data name="FSJOptRemoved" xml:space="preserve"><value>أُعيدت موافقة العميل على الإشعارات</value></data>
   <data name="FSJOptEmpty" xml:space="preserve"><value>لا عملاء سحبوا موافقتهم</value></data>
   <data name="FSJOptRemove" xml:space="preserve"><value>إعادة الموافقة</value></data>
+  <data name="IOTitle" xml:space="preserve"><value>رصيد أول المدة للأصناف</value></data>
+  <data name="IOSub" xml:space="preserve"><value>لكل فترة مالية: كمية وتكلفة كل صنف فى كل مخزن، تُسجَّل فى دفتر المخزن بتاريخ بداية الفترة</value></data>
+  <data name="IOPeriod" xml:space="preserve"><value>الفترة المالية</value></data>
+  <data name="IOOnlyWith" xml:space="preserve"><value>الأسطر التى لها رصيد أول مدة فقط</value></data>
+  <data name="IOClosed" xml:space="preserve"><value>الفترة المالية مقفلة؛ العرض للقراءة فقط.</value></data>
+  <data name="IOLarge" xml:space="preserve"><value>الوحدة الكبرى</value></data>
+  <data name="IOSmall" xml:space="preserve"><value>الوحدة الصغرى</value></data>
+  <data name="IOPacks" xml:space="preserve"><value>العبوات</value></data>
+  <data name="IOCost" xml:space="preserve"><value>تكلفة الوحدة الكبرى</value></data>
+  <data name="IOValue" xml:space="preserve"><value>القيمة</value></data>
+  <data name="IOCurrent" xml:space="preserve"><value>الرصيد الجارى</value></data>
+  <data name="IOSource" xml:space="preserve"><value>المصدر</value></data>
+  <data name="IOSource_0" xml:space="preserve"><value>قديم</value></data>
+  <data name="IOSource_1" xml:space="preserve"><value>يدوى</value></data>
+  <data name="IOSource_2" xml:space="preserve"><value>استيراد</value></data>
+  <data name="IOSource_3" xml:space="preserve"><value>منقول من فترة سابقة</value></data>
+  <data name="IONoRows" xml:space="preserve"><value>لا توجد أسطر مطابقة</value></data>
+  <data name="IOSave" xml:space="preserve"><value>حفظ ({0})</value></data>
+  <data name="IOErrorsTitle" xml:space="preserve"><value>تعذّر حفظ {0} سطر:</value></data>
+  <data name="IODiscardText" xml:space="preserve"><value>توجد {0} أسطر معدَّلة غير محفوظة وستضيع. المتابعة؟</value></data>
+  <data name="IODiscard" xml:space="preserve"><value>تجاهل التعديلات</value></data>
+  <data name="IOConfirmText" xml:space="preserve"><value>سيُحفظ رصيد أول المدة لـ {0} سطر فى الفترة {1} ويُسجَّل فى دفتر المخزن. المتابعة؟</value></data>
+  <data name="IOConfirm" xml:space="preserve"><value>حفظ</value></data>
+  <data name="IODone" xml:space="preserve"><value>تم حفظ {0} سطر</value></data>
 </root>
