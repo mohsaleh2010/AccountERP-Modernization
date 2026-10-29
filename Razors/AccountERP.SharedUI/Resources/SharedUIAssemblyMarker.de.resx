@@ -4292,4 +4292,21 @@
   <data name="IOImportProblems" xml:space="preserve"><value>{0} Zeile(n) nicht lesbar (Zeile: Spalte): {1}</value></data>
   <data name="IOImportConfirm" xml:space="preserve"><value>Anfangsbestände von {0} Zeile(n) werden in Periode {1} importiert (unveränderte Zeilen werden übersprungen). Fortfahren?</value></data>
   <data name="IOImportDone" xml:space="preserve"><value>{0} Zeile(n) gespeichert, {1} übersprungen (unverändert), {2} fehlgeschlagen</value></data>
+  <data name="EPTitle" xml:space="preserve"><value>Buchungen verbuchen</value></data>
+  <data name="EPSub" xml:space="preserve"><value>Unverbuchte Buchungen in die Kontensalden verbuchen oder die Verbuchung einer Periode je Filiale aufheben</value></data>
+  <data name="EPPeriod" xml:space="preserve"><value>Geschäftsperiode</value></data>
+  <data name="EPJournal" xml:space="preserve"><value>Journal</value></data>
+  <data name="EPBranch" xml:space="preserve"><value>Filiale</value></data>
+  <data name="EPDateTo" xml:space="preserve"><value>Bis Datum</value></data>
+  <data name="EPUnposted" xml:space="preserve"><value>Unverbuchte Buchungen</value></data>
+  <data name="EPPosted" xml:space="preserve"><value>Verbuchte Buchungen</value></data>
+  <data name="EPHint" xml:space="preserve"><value>Verbucht die noch nicht verbuchten Buchungen der gewählten Periode (Periodenbeginn bis zum gewählten Datum) für Journal und Filiale. Das Aufheben setzt die Kontensalden der ganzen Periode und Filiale zurück und markiert deren Buchungen als unverbucht; sie können danach erneut verbucht werden.</value></data>
+  <data name="EPPost" xml:space="preserve"><value>Verbuchen ({0})</value></data>
+  <data name="EPCancel" xml:space="preserve"><value>Verbuchung der Periode aufheben</value></data>
+  <data name="EPRefresh" xml:space="preserve"><value>Aktualisieren</value></data>
+  <data name="EPConfirmPost" xml:space="preserve"><value>{0} Buchungen der Periode {1} werden verbucht. Fortfahren?</value></data>
+  <data name="EPPostYes" xml:space="preserve"><value>Verbuchen</value></data>
+  <data name="EPConfirmCancel" xml:space="preserve"><value>Die Verbuchung aller Buchungen der Periode {0} für Filiale „{1}“ wird aufgehoben (Kontensalden werden zurückgesetzt) und lässt sich nur durch erneutes Verbuchen wiederherstellen. Fortfahren?</value></data>
+  <data name="EPCancelYes" xml:space="preserve"><value>Verbuchung aufheben</value></data>
+  <data name="EPDonePost" xml:space="preserve"><value>{0} Buchungen erfolgreich verbucht</value></data>
 </root>

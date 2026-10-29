@@ -279,6 +279,8 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("menuItemEditStoreBalance", "/store/reconciliation"), ("menuItemItemBalanceOnlyEdit", "/store/reconciliation"),
             // رصيد أول المدة للأصناف لكل فترة (خطة 02 م3) بدل Item_FirstBalance.
             ("menuItemItemFirstBalance", "/store/opening-balances"),
+            // ترحيل القيود (قائمة القيود) بدل Tar7eel_Account_Entry.
+            ("ToolStripMenuAccountEntryTar7eel", "/accounts/entries-posting"),
             // كارت الصنف الموحَّد (خطة 01 م4) على دفتر الحركة.
             ("menuItemCardsStore", "/store/item-card"), ("ToolStripMenuItem_Transaction_Details", "/store/item-card"),
             ("ToolStripMenuItem_Transaction_DetailsWithCost", "/store/item-card?value=1"), ("menuItemCardsDept", "/store/item-card?type=20"),

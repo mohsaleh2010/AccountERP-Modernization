@@ -1,0 +1,225 @@
+@* 🟢 «ترحيل القيود» (بدل General_Ledger.Tar7eel_Account_Entry): ترحيل القيود غير المرحَّلة إلى أرصدة الاستاذ، وإلغاء ترحيل الفترة للفرع.
+   الترحيل الفعلى هو Accounts_Entry_POST_CLS نفسه بلا تعديل؛ الخدمة EntryPostingService تضيف فقط التحقق ذاته (البداية كما فى الفترة والنهاية داخلها)
+   وتراجعاً كاملاً عند أى خطأ (القديمة كانت تعيد «تمت بنجاح» حتى مع الخطأ). التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@page "/accounts/entries-posting"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountModelsLib.BusinessLibShared.GeneralLedger
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@implements IDisposable
+
+<PageTitle>@Tr("EPTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .ep-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .ep-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .ep-head .ico .mud-icon-root { font-size: 2rem; }
+    .ep-head .titles { flex: 1 1 260px; min-width: 0; }
+    .ep-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .ep-gap { margin-top: 16px; }
+    .ep-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: start; }
+    .ep-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .ep-tile { padding: 14px 18px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); }
+    .ep-tile .k { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .ep-tile .v { margin-top: 4px; font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--mud-palette-text-primary); }
+    .ep-tile.warn .v { color: var(--mud-palette-warning-darken, var(--mud-palette-warning)); }
+    .ep-tile.ok .v { color: var(--mud-palette-success); }
+    .ep-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    @@media (max-width: 1099px) { .ep-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 599px) { .ep-filters, .ep-tiles { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-card ep-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.PublishedWithChanges" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("EPTitle")</h1>
+            <div class="sub">@Tr("EPSub")</div>
+        </div>
+    </div>
+
+    <div class="inv-card ep-gap">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.FilterList" />@Tr("SOFiltersTitle")</h2>
+        <div class="ep-filters">
+            <MudSelect T="long" Value="_periodId" ValueChanged="OnPeriodAsync" Label="@Tr("EPPeriod")" Variant="Variant.Outlined" ToStringFunc="@(v => PeriodText(v))">
+                @foreach (var p in _periods)
+                {
+                    <MudSelectItem T="long" Value="@p.Id">@PeriodText(p.Id)</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="long" Value="_journal" ValueChanged="OnJournalAsync" Label="@Tr("EPJournal")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _journals.FirstOrDefault(j => j.Id == v).Name ?? "")">
+                <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                @foreach (var j in _journals)
+                {
+                    <MudSelectItem T="long" Value="@j.Id">@j.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="long" Value="_branch" ValueChanged="OnBranchAsync" Label="@Tr("EPBranch")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => _branches.FirstOrDefault(b => b.Id == v).Name ?? "")">
+                @foreach (var b in _branches)
+                {
+                    <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudDatePicker T="DateTime?" Date="_dateTo" DateChanged="OnDateToAsync" Label="@Tr("EPDateTo")" Variant="Variant.Outlined"
+                           MinDate="@PeriodFrom" MaxDate="@PeriodTo" Editable="true" />
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="ep-gap" role="alert">@_error</MudAlert>
+    }
+
+    <div class="ep-tiles ep-gap">
+        <div class="ep-tile @(_unposted > 0 ? "warn" : "ok")"><div class="k">@Tr("EPUnposted")</div><div class="v">@_unposted</div></div>
+        <div class="ep-tile"><div class="k">@Tr("EPPosted")</div><div class="v">@_posted</div></div>
+    </div>
+
+    <div class="inv-card ep-gap">
+        <MudAlert Severity="Severity.Info" Dense="true" role="note">@Tr("EPHint")</MudAlert>
+        <div class="ep-btns">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlaylistAddCheck"
+                       Disabled="@(_busy || _loading || _unposted == 0)" OnClick="PostAsync">@Tr("EPPost", _unposted)</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Undo"
+                       Disabled="@(_busy || _loading || _posted == 0)" OnClick="CancelAsync">@Tr("EPCancel")</MudButton>
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Refresh" Disabled="@(_busy || _loading)" OnClick="LoadCountsAsync">@Tr("EPRefresh")</MudButton>
+        </div>
+        @if (!string.IsNullOrEmpty(_result))
+        {
+            <MudAlert Severity="Severity.Success" Dense="true" Class="ep-gap" role="status">@_result</MudAlert>
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private readonly EntryPostingService _svc = new();
+    private List<EntryPostingService.PeriodRow> _periods = new();
+    private List<(long Id, string Name)> _journals = new(), _branches = new();
+    private long _periodId, _journal, _branch;
+    private DateTime? _dateTo;
+    private int _unposted, _posted;
+    private string? _error, _result;
+    private bool _loading = true, _busy;
+
+    private DateTime? PeriodFrom => _periods.FirstOrDefault(p => p.Id == _periodId)?.DateFrom;
+    private DateTime? PeriodTo => _periods.FirstOrDefault(p => p.Id == _periodId)?.DateTo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                _periods = _svc.GetPeriods();
+                var branchDt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, AccountModelsLib.Common.User_Id);
+                _branches = branchDt.Rows.Cast<DataRow>().Select(r => (Convert.ToInt64(r["Id"]), r["Branch_Name"]?.ToString() ?? "")).ToList();
+                var opp = new AccountModelsLib.operations();
+                var journalDt = new AccountModelsLib.BusinessLibShared.GeneralLedger.Journal_DaysListCLS().Gey_Journal_Codes(ref opp);
+                _journals = journalDt.Rows.Cast<DataRow>().Select(r => (Convert.ToInt64(r["Code"]), r["Journal_Name"]?.ToString() ?? "")).ToList();
+            });
+            var today = DateTime.Today;
+            var cur = _periods.FirstOrDefault(p => p.DateFrom <= today && today <= p.DateTo) ?? _periods.FirstOrDefault();
+            _periodId = cur?.Id ?? 0;
+            _dateTo = cur?.DateTo;
+            _branch = _branches.Any(b => b.Id == AccountModelsLib.Common.Branch_Id) ? AccountModelsLib.Common.Branch_Id : _branches.FirstOrDefault().Id;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        await LoadCountsAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private string PeriodText(long id)
+    {
+        var p = _periods.FirstOrDefault(x => x.Id == id);
+        return p == null ? "" : $"{p.DateFrom:yyyy/MM/dd} — {p.DateTo:yyyy/MM/dd}";
+    }
+
+    private async Task OnPeriodAsync(long id) { _periodId = id; _dateTo = PeriodTo; await LoadCountsAsync(); }
+    private async Task OnJournalAsync(long id) { _journal = id; await LoadCountsAsync(); }
+    private async Task OnBranchAsync(long id) { _branch = id; await LoadCountsAsync(); }
+    private async Task OnDateToAsync(DateTime? d) { _dateTo = d; await LoadCountsAsync(); }
+
+    private async Task LoadCountsAsync()
+    {
+        _loading = true; _error = null; _result = null;
+        try
+        {
+            if (_periodId == 0 || PeriodFrom == null || _dateTo == null) { _unposted = _posted = 0; return; }
+            long j = _journal, b = _branch; DateTime from = PeriodFrom.Value, to = _dateTo.Value;
+            var c = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetCounts(j, b, from, to); });
+            _unposted = c.Unposted; _posted = c.Posted;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); _unposted = _posted = 0; }
+        finally { _loading = false; }
+    }
+
+    private async Task PostAsync()
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("EPTitle"), Tr("EPConfirmPost", _unposted, PeriodText(_periodId)), yesText: Tr("EPPostYes"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null; _result = null;
+        try
+        {
+            long j = _journal, b = _branch, p = _periodId; DateTime from = PeriodFrom!.Value, to = _dateTo!.Value;
+            var r = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Post(j, b, p, from, to); });
+            _result = r.Entries > 0 ? Tr("EPDonePost", r.Entries) : r.Message;
+            Snackbar.Add(_result, r.Entries > 0 ? Severity.Success : Severity.Info);
+            await LoadCountsAsync();
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _busy = false; }
+    }
+
+    private async Task CancelAsync()
+    {
+        var branchName = _branches.FirstOrDefault(b => b.Id == _branch).Name ?? "";
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("EPTitle"), Tr("EPConfirmCancel", PeriodText(_periodId), branchName), yesText: Tr("EPCancelYes"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null; _result = null;
+        try
+        {
+            long b = _branch, p = _periodId;
+            var r = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.CancelPost(p, b); });
+            _result = r.Message;
+            Snackbar.Add(r.Message, Severity.Success);
+            await LoadCountsAsync();
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _busy = false; }
+    }
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

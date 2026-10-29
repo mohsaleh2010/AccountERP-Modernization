@@ -4292,4 +4292,21 @@
   <data name="IOImportProblems" xml:space="preserve"><value>{0} ligne(s) illisible(s) (ligne : colonne) : {1}</value></data>
   <data name="IOImportConfirm" xml:space="preserve"><value>Les soldes d'ouverture de {0} ligne(s) seront importés dans la période {1} (les lignes identiques sont ignorées). Continuer ?</value></data>
   <data name="IOImportDone" xml:space="preserve"><value>{0} ligne(s) enregistrée(s), {1} ignorée(s) (inchangées), {2} en échec</value></data>
+  <data name="EPTitle" xml:space="preserve"><value>Report des écritures</value></data>
+  <data name="EPSub" xml:space="preserve"><value>Reporter les écritures non reportées aux soldes du grand livre, ou annuler le report d'une période pour une agence</value></data>
+  <data name="EPPeriod" xml:space="preserve"><value>Période fiscale</value></data>
+  <data name="EPJournal" xml:space="preserve"><value>Journal</value></data>
+  <data name="EPBranch" xml:space="preserve"><value>Agence</value></data>
+  <data name="EPDateTo" xml:space="preserve"><value>Jusqu'au</value></data>
+  <data name="EPUnposted" xml:space="preserve"><value>Écritures non reportées</value></data>
+  <data name="EPPosted" xml:space="preserve"><value>Écritures reportées</value></data>
+  <data name="EPHint" xml:space="preserve"><value>Reporte les écritures non encore reportées de la période choisie (du début de la période à la date choisie) pour le journal et l'agence. L'annulation remet à zéro les soldes du grand livre de toute la période et de l'agence et repasse leurs écritures en « non reporté » ; elles peuvent ensuite être reportées de nouveau.</value></data>
+  <data name="EPPost" xml:space="preserve"><value>Reporter ({0})</value></data>
+  <data name="EPCancel" xml:space="preserve"><value>Annuler le report de la période</value></data>
+  <data name="EPRefresh" xml:space="preserve"><value>Actualiser</value></data>
+  <data name="EPConfirmPost" xml:space="preserve"><value>{0} écritures de la période {1} seront reportées. Continuer ?</value></data>
+  <data name="EPPostYes" xml:space="preserve"><value>Reporter</value></data>
+  <data name="EPConfirmCancel" xml:space="preserve"><value>Le report de toutes les écritures de la période {0} pour l'agence « {1} » sera annulé (soldes remis à zéro) et ne se rétablit qu'en reportant de nouveau. Continuer ?</value></data>
+  <data name="EPCancelYes" xml:space="preserve"><value>Annuler le report</value></data>
+  <data name="EPDonePost" xml:space="preserve"><value>{0} écritures reportées avec succès</value></data>
 </root>

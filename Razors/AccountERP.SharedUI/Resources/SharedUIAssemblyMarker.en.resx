@@ -4290,4 +4290,21 @@
   <data name="IOImportProblems" xml:space="preserve"><value>{0} row(s) could not be read (row: column): {1}</value></data>
   <data name="IOImportConfirm" xml:space="preserve"><value>Opening balances of {0} line(s) will be imported into period {1} (lines identical to what is saved are skipped). Continue?</value></data>
   <data name="IOImportDone" xml:space="preserve"><value>{0} line(s) saved, {1} skipped (unchanged), {2} failed</value></data>
+  <data name="EPTitle" xml:space="preserve"><value>Post journal entries</value></data>
+  <data name="EPSub" xml:space="preserve"><value>Post unposted entries to the ledger balances, or cancel posting of a period for a branch</value></data>
+  <data name="EPPeriod" xml:space="preserve"><value>Fiscal period</value></data>
+  <data name="EPJournal" xml:space="preserve"><value>Journal</value></data>
+  <data name="EPBranch" xml:space="preserve"><value>Branch</value></data>
+  <data name="EPDateTo" xml:space="preserve"><value>Up to date</value></data>
+  <data name="EPUnposted" xml:space="preserve"><value>Unposted entries</value></data>
+  <data name="EPPosted" xml:space="preserve"><value>Posted entries</value></data>
+  <data name="EPHint" xml:space="preserve"><value>Posts the entries of the chosen period (period start up to the chosen date) that are not yet posted, for the journal and branch. Cancelling posting resets the ledger balances of the whole period and branch and marks their entries as unposted; they can then be posted again.</value></data>
+  <data name="EPPost" xml:space="preserve"><value>Post ({0})</value></data>
+  <data name="EPCancel" xml:space="preserve"><value>Cancel period posting</value></data>
+  <data name="EPRefresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="EPConfirmPost" xml:space="preserve"><value>{0} entries of period {1} will be posted. Continue?</value></data>
+  <data name="EPPostYes" xml:space="preserve"><value>Post</value></data>
+  <data name="EPConfirmCancel" xml:space="preserve"><value>Posting of all entries of period {0} for branch "{1}" will be cancelled (their ledger balances are reset) and can only be restored by posting again. Continue?</value></data>
+  <data name="EPCancelYes" xml:space="preserve"><value>Cancel posting</value></data>
+  <data name="EPDonePost" xml:space="preserve"><value>{0} entries posted successfully</value></data>
 </root>

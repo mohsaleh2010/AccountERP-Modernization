@@ -4290,4 +4290,21 @@
   <data name="IOImportProblems" xml:space="preserve"><value>تعذّرت قراءة {0} صف (رقم الصف: العمود): {1}</value></data>
   <data name="IOImportConfirm" xml:space="preserve"><value>سيُستورد أول المدة لـ {0} سطر فى الفترة {1} (الأسطر المطابقة لما هو محفوظ تُتجاوز). المتابعة؟</value></data>
   <data name="IOImportDone" xml:space="preserve"><value>حُفظ {0} سطر، وتُجوز {1} لعدم الاختلاف، وتعذّر {2}</value></data>
+  <data name="EPTitle" xml:space="preserve"><value>ترحيل القيود</value></data>
+  <data name="EPSub" xml:space="preserve"><value>ترحيل القيود غير المرحَّلة إلى أرصدة الاستاذ، أو إلغاء ترحيل الفترة للفرع</value></data>
+  <data name="EPPeriod" xml:space="preserve"><value>الفترة المالية</value></data>
+  <data name="EPJournal" xml:space="preserve"><value>اليومية</value></data>
+  <data name="EPBranch" xml:space="preserve"><value>الفرع</value></data>
+  <data name="EPDateTo" xml:space="preserve"><value>حتى تاريخ</value></data>
+  <data name="EPUnposted" xml:space="preserve"><value>قيود غير مرحَّلة</value></data>
+  <data name="EPPosted" xml:space="preserve"><value>قيود مرحَّلة</value></data>
+  <data name="EPHint" xml:space="preserve"><value>يُرحَّل ما لم يُرحَّل بعد من قيود الفترة المحددة (بداية الفترة حتى التاريخ المختار) لليومية والفرع. إلغاء الترحيل يصفّر أرصدة الاستاذ لكل الفترة والفرع ويعيد قيودهما «غير مرحل»، ثم يمكن ترحيلها من جديد.</value></data>
+  <data name="EPPost" xml:space="preserve"><value>ترحيل ({0})</value></data>
+  <data name="EPCancel" xml:space="preserve"><value>إلغاء ترحيل الفترة</value></data>
+  <data name="EPRefresh" xml:space="preserve"><value>تحديث</value></data>
+  <data name="EPConfirmPost" xml:space="preserve"><value>سيُرحَّل {0} قيد من الفترة {1}. المتابعة؟</value></data>
+  <data name="EPPostYes" xml:space="preserve"><value>ترحيل</value></data>
+  <data name="EPConfirmCancel" xml:space="preserve"><value>سيُلغى ترحيل كل قيود الفترة {0} للفرع «{1}» (يصفّر أرصدة الاستاذ لها). لا يُلغى بعده إلا بإعادة الترحيل. المتابعة؟</value></data>
+  <data name="EPCancelYes" xml:space="preserve"><value>إلغاء الترحيل</value></data>
+  <data name="EPDonePost" xml:space="preserve"><value>تمت عملية ترحيل {0} قيد بنجاح</value></data>
 </root>
