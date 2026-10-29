@@ -4307,4 +4307,25 @@
   <data name="EPConfirmCancel" xml:space="preserve"><value>سيُلغى ترحيل كل قيود الفترة {0} للفرع «{1}» (يصفّر أرصدة الاستاذ لها). لا يُلغى بعده إلا بإعادة الترحيل. المتابعة؟</value></data>
   <data name="EPCancelYes" xml:space="preserve"><value>إلغاء الترحيل</value></data>
   <data name="EPDonePost" xml:space="preserve"><value>تمت عملية ترحيل {0} قيد بنجاح</value></data>
+  <data name="SETitle" xml:space="preserve"><value>إنشاء قيود الصندوق آلياً</value></data>
+  <data name="SESub" xml:space="preserve"><value>توليد القيد لأذون الصندوق (استلام/صرف) التى لم يُنشأ لها قيد بعد</value></data>
+  <data name="SEFrom" xml:space="preserve"><value>من تاريخ</value></data>
+  <data name="SETo" xml:space="preserve"><value>إلى تاريخ</value></data>
+  <data name="SEHint" xml:space="preserve"><value>يُنشأ لكل إذن قيده بنفس طريقة الحفظ من شاشة السندات، ويُربط الإذن به. كل إذن فى معاملة مستقلة: فشل إذن لا يمنع الباقى ويظهر سببه فى التقرير. الأذون التى لها قيد لا تُمس.</value></data>
+  <data name="SECreate" xml:space="preserve"><value>إنشاء القيود ({0})</value></data>
+  <data name="SEPendingTitle" xml:space="preserve"><value>أذون بلا قيد ({0})</value></data>
+  <data name="SENonePending" xml:space="preserve"><value>لا توجد أذون صندوق بلا قيد فى هذا النطاق</value></data>
+  <data name="SEColNo" xml:space="preserve"><value>رقم الإذن</value></data>
+  <data name="SEColDate" xml:space="preserve"><value>التاريخ</value></data>
+  <data name="SEColType" xml:space="preserve"><value>النوع</value></data>
+  <data name="SEColBox" xml:space="preserve"><value>الصندوق</value></data>
+  <data name="SEColValue" xml:space="preserve"><value>القيمة</value></data>
+  <data name="SEColResult" xml:space="preserve"><value>النتيجة</value></data>
+  <data name="SEColEntry" xml:space="preserve"><value>رقم القيد (المعرّف)</value></data>
+  <data name="SETypeReceipt" xml:space="preserve"><value>استلام نقدية</value></data>
+  <data name="SETypePayment" xml:space="preserve"><value>صرف نقدية</value></data>
+  <data name="SEOk" xml:space="preserve"><value>تم</value></data>
+  <data name="SEConfirm" xml:space="preserve"><value>سيُنشأ قيد لـ {0} إذن صندوق. المتابعة؟</value></data>
+  <data name="SEConfirmYes" xml:space="preserve"><value>إنشاء</value></data>
+  <data name="SEResultTitle" xml:space="preserve"><value>تم إنشاء {0} قيد، وتعذّر {1}</value></data>
 </root>

@@ -4309,4 +4309,25 @@
   <data name="EPConfirmCancel" xml:space="preserve"><value>Die Verbuchung aller Buchungen der Periode {0} für Filiale „{1}“ wird aufgehoben (Kontensalden werden zurückgesetzt) und lässt sich nur durch erneutes Verbuchen wiederherstellen. Fortfahren?</value></data>
   <data name="EPCancelYes" xml:space="preserve"><value>Verbuchung aufheben</value></data>
   <data name="EPDonePost" xml:space="preserve"><value>{0} Buchungen erfolgreich verbucht</value></data>
+  <data name="SETitle" xml:space="preserve"><value>Generate cash-box entries</value></data>
+  <data name="SESub" xml:space="preserve"><value>Create journal entries for cash-box orders (receipt/payment) that have none yet</value></data>
+  <data name="SEFrom" xml:space="preserve"><value>From date</value></data>
+  <data name="SETo" xml:space="preserve"><value>To date</value></data>
+  <data name="SEHint" xml:space="preserve"><value>Each order gets its entry the same way as when saved from the vouchers screen, and the order is linked to it. Every order runs in its own transaction: one failure does not stop the rest and its reason appears in the report. Orders that already have an entry are untouched.</value></data>
+  <data name="SECreate" xml:space="preserve"><value>Create entries ({0})</value></data>
+  <data name="SEPendingTitle" xml:space="preserve"><value>Orders without an entry ({0})</value></data>
+  <data name="SENonePending" xml:space="preserve"><value>No cash-box orders without an entry in this range</value></data>
+  <data name="SEColNo" xml:space="preserve"><value>Order no.</value></data>
+  <data name="SEColDate" xml:space="preserve"><value>Date</value></data>
+  <data name="SEColType" xml:space="preserve"><value>Type</value></data>
+  <data name="SEColBox" xml:space="preserve"><value>Cash box</value></data>
+  <data name="SEColValue" xml:space="preserve"><value>Amount</value></data>
+  <data name="SEColResult" xml:space="preserve"><value>Result</value></data>
+  <data name="SEColEntry" xml:space="preserve"><value>Entry (id)</value></data>
+  <data name="SETypeReceipt" xml:space="preserve"><value>Cash receipt</value></data>
+  <data name="SETypePayment" xml:space="preserve"><value>Cash payment</value></data>
+  <data name="SEOk" xml:space="preserve"><value>Done</value></data>
+  <data name="SEConfirm" xml:space="preserve"><value>An entry will be created for {0} cash-box order(s). Continue?</value></data>
+  <data name="SEConfirmYes" xml:space="preserve"><value>Create</value></data>
+  <data name="SEResultTitle" xml:space="preserve"><value>{0} entries created, {1} failed</value></data>
 </root>

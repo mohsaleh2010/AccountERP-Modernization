@@ -281,6 +281,8 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("menuItemItemFirstBalance", "/store/opening-balances"),
             // ترحيل القيود (قائمة القيود) بدل Tar7eel_Account_Entry.
             ("ToolStripMenuAccountEntryTar7eel", "/accounts/entries-posting"),
+            // إنشاء قيود الصندوق آلياً بدل Make_Account_Entry_Automatic.
+            ("ToolStripMenuItemMake_Account_Entry_Automatic", "/accounts/sandouk-entries"),
             // كارت الصنف الموحَّد (خطة 01 م4) على دفتر الحركة.
             ("menuItemCardsStore", "/store/item-card"), ("ToolStripMenuItem_Transaction_Details", "/store/item-card"),
             ("ToolStripMenuItem_Transaction_DetailsWithCost", "/store/item-card?value=1"), ("menuItemCardsDept", "/store/item-card?type=20"),

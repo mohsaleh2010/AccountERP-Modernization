@@ -1,0 +1,225 @@
+@* 🟢 «إنشاء قيود الصندوق آلياً» (بدل General_Ledger.Make_Account_Entry_Automatic): يولّد القيد لأذون الصندوق التى لم يُنشأ لها قيد بعد.
+   الإنشاء الفعلى هو Accounts_Entry_POST_CLS.Make_Entry_For_AccountsSandouk نفسه؛ الخدمة SandoukEntriesBatchService تنفّذ إذناً لكل معاملة وتتحقق من النتيجة
+   (الدفعة القديمة كانت تعيد «نجاح» دائماً وتعيد استعمال رقم قيد واحد). التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@page "/accounts/sandouk-entries"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountModelsLib.BusinessLibShared.GeneralLedger
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@implements IDisposable
+
+<PageTitle>@Tr("SETitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .se-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .se-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .se-head .ico .mud-icon-root { font-size: 2rem; }
+    .se-head .titles { flex: 1 1 260px; min-width: 0; }
+    .se-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .se-gap { margin-top: 16px; }
+    .se-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+    .se-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .se-num { font-variant-numeric: tabular-nums; }
+    .se-scroll { overflow-x: auto; }
+    @@media (max-width: 899px) { .se-filters { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-card se-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.AutoFixHigh" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("SETitle")</h1>
+            <div class="sub">@Tr("SESub")</div>
+        </div>
+    </div>
+
+    <div class="inv-card se-gap">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.FilterList" />@Tr("SOFiltersTitle")</h2>
+        <div class="se-filters">
+            <MudDatePicker T="DateTime?" Date="_from" DateChanged="OnFromAsync" Label="@Tr("SEFrom")" Variant="Variant.Outlined" Editable="true" />
+            <MudDatePicker T="DateTime?" Date="_to" DateChanged="OnToAsync" Label="@Tr("SETo")" Variant="Variant.Outlined" Editable="true" />
+            <MudSelect T="long" Value="_branch" ValueChanged="OnBranchAsync" Label="@Tr("EPBranch")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _branches.FirstOrDefault(b => b.Id == v).Name ?? "")">
+                <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                @foreach (var b in _branches)
+                {
+                    <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="se-gap" role="alert">@_error</MudAlert>
+    }
+
+    <div class="inv-card se-gap">
+        <MudAlert Severity="Severity.Info" Dense="true" role="note">@Tr("SEHint")</MudAlert>
+        <div class="se-btns">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoFixHigh"
+                       Disabled="@(_busy || _loading || _pending.Count == 0)" OnClick="RunAsync">@Tr("SECreate", _pending.Count)</MudButton>
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Refresh" Disabled="@(_busy || _loading)" OnClick="LoadAsync">@Tr("EPRefresh")</MudButton>
+        </div>
+        @if (_busy || _loading)
+        {
+            <MudProgressLinear Indeterminate="true" Class="se-gap" />
+        }
+    </div>
+
+    <div class="inv-card se-gap">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.PendingActions" />@Tr("SEPendingTitle", _pending.Count)</h2>
+        @if (_pending.Count == 0 && !_loading)
+        {
+            <MudAlert Severity="Severity.Success" Dense="true" role="status">@Tr("SENonePending")</MudAlert>
+        }
+        else
+        {
+            <div class="se-scroll">
+                <MudSimpleTable Dense="true" Hover="true" Striped="true">
+                    <thead>
+                        <tr>
+                            <th>@Tr("SEColNo")</th><th>@Tr("SEColDate")</th><th>@Tr("SEColType")</th><th>@Tr("SEColBox")</th><th class="se-num">@Tr("SEColValue")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in _pending)
+                        {
+                            <tr>
+                                <td class="se-num">@p.OrderNo</td>
+                                <td>@p.OrderDate.ToString("yyyy/MM/dd")</td>
+                                <td>@(p.TransactionType == 1 ? Tr("SETypeReceipt") : p.TransactionType == 2 ? Tr("SETypePayment") : p.TransactionType.ToString())</td>
+                                <td>@p.BoxName</td>
+                                <td class="se-num">@p.TotalValue.ToString("N2", CultureInfo.InvariantCulture)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            </div>
+        }
+    </div>
+
+    @if (_outcomes.Count > 0)
+    {
+        <div class="inv-card se-gap">
+            <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Checklist" />@Tr("SEResultTitle", _createdCount, _failedCount)</h2>
+            <div class="se-scroll">
+                <MudSimpleTable Dense="true" Hover="true">
+                    <thead><tr><th>@Tr("SEColNo")</th><th>@Tr("SEColResult")</th><th>@Tr("SEColEntry")</th></tr></thead>
+                    <tbody>
+                        @foreach (var o in _outcomes)
+                        {
+                            <tr>
+                                <td class="se-num">@o.OrderNo</td>
+                                <td>
+                                    @if (o.Created) { <MudChip T="string" Size="Size.Small" Color="Color.Success">@Tr("SEOk")</MudChip> }
+                                    else { <MudChip T="string" Size="Size.Small" Color="Color.Error">@o.Message</MudChip> }
+                                </td>
+                                <td class="se-num">@(o.Created ? o.EntryId.ToString() : "")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            </div>
+        </div>
+    }
+</div>
+</MudContainer>
+
+@code {
+    private readonly SandoukEntriesBatchService _svc = new();
+    private List<SandoukEntriesBatchService.PendingOrder> _pending = new();
+    private List<SandoukEntriesBatchService.OrderOutcome> _outcomes = new();
+    private List<(long Id, string Name)> _branches = new();
+    private long _branch;
+    private DateTime? _from, _to;
+    private int _createdCount, _failedCount;
+    private string? _error;
+    private bool _loading = true, _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var branchDt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, AccountModelsLib.Common.User_Id);
+                _branches = branchDt.Rows.Cast<DataRow>().Select(r => (Convert.ToInt64(r["Id"]), r["Branch_Name"]?.ToString() ?? "")).ToList();
+                var period = new EntryPostingService().GetPeriods();
+                var today = DateTime.Today;
+                var cur = period.FirstOrDefault(p => p.DateFrom <= today && today <= p.DateTo) ?? period.FirstOrDefault();
+                _from = cur?.DateFrom; _to = cur?.DateTo;
+            });
+            _branch = 0;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task OnFromAsync(DateTime? d) { _from = d; await LoadAsync(); }
+    private async Task OnToAsync(DateTime? d) { _to = d; await LoadAsync(); }
+    private async Task OnBranchAsync(long id) { _branch = id; await LoadAsync(); }
+
+    private async Task LoadAsync()
+    {
+        _loading = true; _error = null;
+        try
+        {
+            if (_from == null || _to == null) { _pending = new(); return; }
+            DateTime f = _from.Value, t = _to.Value; long b = _branch;
+            _pending = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetPending(f, t, b); });
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); _pending = new(); }
+        finally { _loading = false; }
+    }
+
+    private async Task RunAsync()
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("SETitle"), Tr("SEConfirm", _pending.Count), yesText: Tr("SEConfirmYes"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null; _outcomes = new();
+        try
+        {
+            DateTime f = _from!.Value, t = _to!.Value; long b = _branch;
+            var r = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Run(f, t, b); });
+            _outcomes = r.Outcomes; _createdCount = r.Created; _failedCount = r.Failed;
+            Snackbar.Add(Tr("SEResultTitle", r.Created, r.Failed), r.Failed == 0 ? Severity.Success : Severity.Warning);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _busy = false; }
+    }
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}
