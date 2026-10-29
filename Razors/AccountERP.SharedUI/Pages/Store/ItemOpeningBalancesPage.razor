@@ -91,6 +91,8 @@
         <MudAlert Severity="Severity.Warning" Dense="true" Class="io-gap" role="status">@Tr("IOClosed")</MudAlert>
     }
 
+    <MudAlert Severity="Severity.Info" Dense="true" Class="io-gap" role="note">@Tr("IOCarryHint")</MudAlert>
+
     <div class="inv-card io-gap">
         <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("SRResults")<span class="inv-count">@_total</span></h2>
         @if (!string.IsNullOrEmpty(_error))
@@ -117,16 +119,16 @@
                     <div class="io-code">@CodeText(context.Code) · @context.B_Unit / @context.S_Unit (@Qty(context.Factor))</div>
                 </MudTd>
                 <MudTd DataLabel="@Tr("IOLarge")" Style="text-align:end">
-                    <MudNumericField T="decimal" Value="d.Large" ValueChanged="@(v => Edit(d, x => x.Large = v))" Min="0" HideSpinButtons="true" Variant="Variant.Text" Margin="Margin.Dense" Class="io-cell" Disabled="@(_closed || _busy)" />
+                    <MudNumericField T="decimal" Value="d.Large" ValueChanged="@(v => Edit(d, x => x.Large = v))" Min="0" HideSpinButtons="true" Variant="Variant.Text" Margin="Margin.Dense" Class="io-cell" Disabled="@(_closed || _busy || Locked(context))" />
                 </MudTd>
                 <MudTd DataLabel="@Tr("IOSmall")" Style="text-align:end">
-                    <MudNumericField T="decimal" Value="d.Small" ValueChanged="@(v => Edit(d, x => x.Small = v))" Min="0" HideSpinButtons="true" Variant="Variant.Text" Margin="Margin.Dense" Class="io-cell" Disabled="@(_closed || _busy)" />
+                    <MudNumericField T="decimal" Value="d.Small" ValueChanged="@(v => Edit(d, x => x.Small = v))" Min="0" HideSpinButtons="true" Variant="Variant.Text" Margin="Margin.Dense" Class="io-cell" Disabled="@(_closed || _busy || Locked(context))" />
                 </MudTd>
                 <MudTd DataLabel="@Tr("IOPacks")" Style="text-align:end">
-                    <MudNumericField T="decimal" Value="d.No" ValueChanged="@(v => Edit(d, x => x.No = v))" Min="0" HideSpinButtons="true" Variant="Variant.Text" Margin="Margin.Dense" Class="io-cell" Disabled="@(_closed || _busy)" />
+                    <MudNumericField T="decimal" Value="d.No" ValueChanged="@(v => Edit(d, x => x.No = v))" Min="0" HideSpinButtons="true" Variant="Variant.Text" Margin="Margin.Dense" Class="io-cell" Disabled="@(_closed || _busy || Locked(context))" />
                 </MudTd>
                 <MudTd DataLabel="@Tr("IOCost")" Style="text-align:end">
-                    <MudNumericField T="decimal" Value="d.Cost" ValueChanged="@(v => Edit(d, x => x.Cost = v))" Min="0" HideSpinButtons="true" Variant="Variant.Text" Margin="Margin.Dense" Class="io-cell" Disabled="@(_closed || _busy)" />
+                    <MudNumericField T="decimal" Value="d.Cost" ValueChanged="@(v => Edit(d, x => x.Cost = v))" Min="0" HideSpinButtons="true" Variant="Variant.Text" Margin="Margin.Dense" Class="io-cell" Disabled="@(_closed || _busy || Locked(context))" />
                 </MudTd>
                 <MudTd DataLabel="@Tr("IOValue")" Style="text-align:end"><span class="io-num">@Money(ValueOf(context, d))</span></MudTd>
                 <MudTd DataLabel="@Tr("IOCurrent")" Style="text-align:end"><span class="io-num">@SmallToText(context.Current_Small, context.Factor, context.B_Unit, context.S_Unit)</span></MudTd>
@@ -142,6 +144,8 @@
         <div class="io-bar">
             <span class="info" aria-live="polite">@(_total > 0 ? Tr("SOPageInfo", _skip + 1, Math.Min(_skip + PageSize, _total), _total) : "")</span>
             <div class="btns">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.CopyAll"
+                           Disabled="@(_busy || _closed || _loading)" OnClick="CarryAsync">@Tr("IOCarry")</MudButton>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
                            Disabled="@(_busy || _closed || DirtyCount == 0)" OnClick="SaveAsync">@Tr("IOSave", DirtyCount)</MudButton>
                 <MudButton Variant="Variant.Outlined" StartIcon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)"
@@ -243,6 +247,9 @@
         return d;
     }
 
+    // سطر منقول من الفترة السابقة = لقطة؛ رصيده متصل فى الدفتر فلا يُعدَّل من هنا.
+    private static bool Locked(OpeningRow r) => r.Has_Opening && r.Source == (int)ItemOpeningBalanceService.OpeningSource.CarriedForward;
+
     private static void Edit(DraftRow d, Action<DraftRow> change) { change(d); d.Dirty = true; }
 
     private static decimal ValueOf(OpeningRow r, DraftRow d) => (d.Large + (r.Factor <= 0 ? 0 : d.Small / r.Factor)) * d.Cost;
@@ -263,6 +270,22 @@
             if (report.Saved > 0) Snackbar.Add(Tr("IODone", report.Saved), Severity.Success);
             await LoadAsync();
             _saveErrors.AddRange(errs);
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _busy = false; }
+    }
+
+    private async Task CarryAsync()
+    {
+        if (!await ConfirmDiscardAsync()) return;
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("IOTitle"), Tr("IOCarryConfirm", PeriodText(_periodId), _storeId == 0 ? Tr("SBAll") : _stores.FirstOrDefault(s => s.Id == _storeId)?.Name ?? ""), yesText: Tr("IOCarry"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null;
+        try
+        {
+            var r = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.CarryForward(_periodId, _storeId); });
+            Snackbar.Add(Tr("IOCarryDone", r.Carried, r.SkippedExisting, r.SkippedNotPositive, r.FromPeriodText), r.Carried > 0 ? Severity.Success : Severity.Info);
+            await LoadAsync();
         }
         catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
         finally { _busy = false; }

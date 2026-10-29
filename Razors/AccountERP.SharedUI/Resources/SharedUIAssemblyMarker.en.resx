@@ -4278,4 +4278,8 @@
   <data name="IOConfirmText" xml:space="preserve"><value>Opening balances of {0} line(s) will be saved for period {1} and posted to the stock ledger. Continue?</value></data>
   <data name="IOConfirm" xml:space="preserve"><value>Save</value></data>
   <data name="IODone" xml:space="preserve"><value>{0} line(s) saved</value></data>
+  <data name="IOCarry" xml:space="preserve"><value>Carry forward from previous period</value></data>
+  <data name="IOCarryHint" xml:space="preserve"><value>"Carry forward" snapshots the previous period's closing balance from the stock ledger (at the current average cost) as the opening balance, with no new ledger entry; lines that already have an opening balance are untouched. Carried lines are read-only.</value></data>
+  <data name="IOCarryConfirm" xml:space="preserve"><value>The previous period's closing balance will be carried into the opening of period {0} (store: {1}) for lines without an opening balance. Continue?</value></data>
+  <data name="IOCarryDone" xml:space="preserve"><value>{0} line(s) carried; {1} skipped (already have an opening balance), {2} skipped (zero or negative balance). Previous period: {3}</value></data>
 </root>

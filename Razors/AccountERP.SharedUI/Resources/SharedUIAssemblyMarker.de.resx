@@ -4280,4 +4280,8 @@
   <data name="IOConfirmText" xml:space="preserve"><value>Anfangsbestände von {0} Zeile(n) werden für Periode {1} gespeichert und im Lagerbuch gebucht. Fortfahren?</value></data>
   <data name="IOConfirm" xml:space="preserve"><value>Speichern</value></data>
   <data name="IODone" xml:space="preserve"><value>{0} Zeile(n) gespeichert</value></data>
+  <data name="IOCarry" xml:space="preserve"><value>Aus Vorperiode übernehmen</value></data>
+  <data name="IOCarryHint" xml:space="preserve"><value>„Übernehmen“ legt den Schlussbestand der Vorperiode aus dem Lagerbuch (zum aktuellen Durchschnittspreis) als Anfangsbestand ab, ohne neue Buchung; Zeilen mit Anfangsbestand bleiben unberührt. Übernommene Zeilen sind schreibgeschützt.</value></data>
+  <data name="IOCarryConfirm" xml:space="preserve"><value>Der Schlussbestand der Vorperiode wird für Zeilen ohne Anfangsbestand in den Anfang der Periode {0} (Lager: {1}) übernommen. Fortfahren?</value></data>
+  <data name="IOCarryDone" xml:space="preserve"><value>{0} Zeile(n) übernommen; {1} übersprungen (Anfangsbestand vorhanden), {2} übersprungen (Bestand null oder negativ). Vorperiode: {3}</value></data>
 </root>

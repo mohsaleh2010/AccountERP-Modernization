@@ -4280,4 +4280,8 @@
   <data name="IOConfirmText" xml:space="preserve"><value>Les soldes d'ouverture de {0} ligne(s) seront enregistrés pour la période {1} et comptabilisés au journal de stock. Continuer ?</value></data>
   <data name="IOConfirm" xml:space="preserve"><value>Enregistrer</value></data>
   <data name="IODone" xml:space="preserve"><value>{0} ligne(s) enregistrée(s)</value></data>
+  <data name="IOCarry" xml:space="preserve"><value>Reporter de la période précédente</value></data>
+  <data name="IOCarryHint" xml:space="preserve"><value>« Reporter » enregistre le solde de clôture de la période précédente depuis le journal de stock (au coût moyen actuel) comme solde d'ouverture, sans nouvelle écriture ; les lignes ayant déjà un solde d'ouverture sont inchangées. Les lignes reportées sont en lecture seule.</value></data>
+  <data name="IOCarryConfirm" xml:space="preserve"><value>Le solde de clôture de la période précédente sera reporté à l'ouverture de la période {0} (magasin : {1}) pour les lignes sans solde d'ouverture. Continuer ?</value></data>
+  <data name="IOCarryDone" xml:space="preserve"><value>{0} ligne(s) reportée(s) ; {1} ignorée(s) (solde d'ouverture existant), {2} ignorée(s) (solde nul ou négatif). Période précédente : {3}</value></data>
 </root>

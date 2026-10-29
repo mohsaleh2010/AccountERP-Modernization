@@ -112,6 +112,12 @@ OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY").ToList();
             foreach (var l in lines)
             {
                 var opp = _newOpp();
+                int carried = opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM Item_First_Period_Balance WHERE Year_Financial_Period_Id = {periodId} AND Unit_Item_Id = {l.UnitItemId} AND Source = {(int)ItemOpeningBalanceService.OpeningSource.CarriedForward}").AsEnumerable().First();
+                if (carried > 0)
+                {
+                    report.Errors.Add(new SaveError(l.UnitItemId, "هذا السطر منقول من الفترة السابقة كلقطة؛ لا يُعدَّل هنا (رصيده فى الدفتر مستمر)."));
+                    continue;
+                }
                 opp.BeginTransaction();
                 try
                 {
@@ -128,5 +134,105 @@ OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY").ToList();
             }
             return report;
         }
+
+        public class CarryRow
+        {
+            public long Unit_Item_Id { get; set; }
+            public long Item_Id { get; set; }
+            public long Store_Id { get; set; }
+            public long Branch_Id { get; set; }
+            public decimal Factor { get; set; }
+            public decimal Bal { get; set; }
+            public decimal Cost_Small { get; set; }
+        }
+
+        public record CarryReport(int Carried, int SkippedExisting, int SkippedNotPositive, string FromPeriodText);
+
+        /// <summary>
+        /// «نقل من الفترة السابقة» (قرار 2026-10-29: لقطة فقط بلا قيد دفتر). الدفتر يحمل الرصيد متصلاً أصلاً، فلا يُرحَّل قيد جديد (كان سيضاعف المخزَّن)؛
+        /// يُكتب صف Item_First_Period_Balance بالمصدر «منقول» بقيمة رصيد نهاية الفترة السابقة المحسوب من الدفتر وبمتوسط التكلفة الحالى.
+        /// لا يمس سطراً له صف فى الفترة، ولا يحمل رصيداً صفرياً أو سالباً. معاملة واحدة.
+        /// </summary>
+        public CarryReport CarryForward(long toPeriodId, long storeId, operations callerOpp = null)
+        {
+            // callerOpp: معاملة المستدعى (للاختبار الملغى)؛ بدونها تفتح الدالة معاملتها وتعتمدها.
+            bool ownTransaction = callerOpp == null;
+            var opp = callerOpp ?? _newOpp();
+            var periods = opp.db.Database.SqlQuery<PeriodOption>($"SELECT Id, DateFrom, DateTo, IS_Finished_Posted FROM Financial_Period").ToList();
+            var to = periods.FirstOrDefault(p => p.Id == toPeriodId);
+            if (to?.DateFrom == null) throw new InvalidOperationException("الفترة المالية غير موجودة.");
+            if (to.IS_Finished_Posted == 1) throw new InvalidOperationException("الفترة المالية مقفلة؛ لا يُنقل إليها رصيد.");
+            var from = periods.Where(p => p.DateFrom != null && p.DateFrom < to.DateFrom).OrderByDescending(p => p.DateFrom).FirstOrDefault();
+            if (from == null) throw new InvalidOperationException("لا توجد فترة سابقة لنقل رصيدها.");
+
+            DateTime openingDate = to.DateFrom.Value.Date;
+            DateTime until = openingDate;                       // أقل من بداية الفترة الجديدة = حتى نهاية السابقة
+            int opening = StockMovementService.OpeningBalanceProcessId;
+            long store = storeId;
+            string fromText = $"{from.DateFrom:yyyy/MM/dd} — {from.DateTo:yyyy/MM/dd}";
+
+            var rows = opp.db.Database.SqlQuery<CarryRow>($@"
+SELECT u.id AS Unit_Item_Id, u.Item_id AS Item_Id, u.Store_id AS Store_Id, ISNULL(s.Branch_Id, 0) AS Branch_Id, k.F AS Factor,
+       CAST(ISNULL(bal.Bal, 0) AS decimal(18,6)) AS Bal,
+       CAST(COALESCE(bc.Avg_Cost, u.P_priceAvgCost / k.F, 0) AS decimal(18,6)) AS Cost_Small
+FROM Unit_item u
+INNER JOIN Store s ON s.Id = u.Store_id
+INNER JOIN Item i ON i.id = u.Item_id
+CROSS APPLY (SELECT CAST(CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END AS decimal(18,6)) AS F) k
+OUTER APPLY (SELECT TOP 1 b.Avg_Cost FROM Item_Branch_Cost b WHERE b.Item_Id = u.Item_id AND b.Branch_Id = s.Branch_Id) bc
+OUTER APPLY (
+    SELECT SUM(CASE WHEN x.Engine_Posted = 1 THEN ISNULL(x.Qty_Small, 0)
+                    WHEN x.Transaction_Type = 1 THEN  (ISNULL(x.qua, 0) * kk.F + ISNULL(x.Part_qua, 0))
+                    WHEN x.Transaction_Type = 2 THEN -(ISNULL(x.qua, 0) * kk.F + ISNULL(x.Part_qua, 0))
+                    ELSE 0 END) AS Bal
+    FROM Detailes_Purshing_Import_Export x
+    -- عامل الوحدة كعمود داخلى: SQL Server لا يقبل تجميع تعبير يخلط عموداً خارجياً بأعمدة الاستعلام الداخلى
+    CROSS APPLY (SELECT CAST(CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END AS decimal(18,6)) AS F) kk
+    OUTER APPLY (SELECT MAX(d.Process_Date) AS OpeningFrom FROM Detailes_Purshing_Import_Export d
+                 WHERE d.Unit_item_Table_Id = u.id AND d.ProcessNameId = {opening} AND d.Engine_Posted = 1 AND d.Reversal_Of_Id IS NULL
+                   AND d.Process_Date < {until}
+                   AND NOT EXISTS (SELECT 1 FROM Detailes_Purshing_Import_Export r WHERE r.Reversal_Of_Id = d.Id)) o
+    WHERE x.Unit_item_Table_Id = u.id AND (x.Process_Date IS NULL OR x.Process_Date < {until})
+      AND (o.OpeningFrom IS NULL OR x.Process_Date >= o.OpeningFrom)) bal
+WHERE ISNULL(i.Is_ItemOrService, 1) <> 2 AND ISNULL(i.Is_ItemWithoutBalance, 0) <> 1 AND ({store} = 0 OR u.Store_id = {store})
+  AND NOT EXISTS (SELECT 1 FROM Item_First_Period_Balance e WHERE e.Unit_Item_Id = u.id AND e.Year_Financial_Period_Id = {toPeriodId})").ToList();
+
+            int existing = opp.db.Database.SqlQuery<int>($@"
+SELECT COUNT(*) AS Value FROM Item_First_Period_Balance e INNER JOIN Unit_item u ON u.id = e.Unit_Item_Id
+WHERE e.Year_Financial_Period_Id = {toPeriodId} AND ({store} = 0 OR u.Store_id = {store})").AsEnumerable().First();
+
+            var positive = rows.Where(r => r.Bal > 0).ToList();
+            long userId = Common.User_Id;
+            DateTime now = DateTime.Now;
+            if (ownTransaction) opp.BeginTransaction();
+            try
+            {
+                foreach (var r in positive)
+                {
+                    decimal larg = Math.Floor(r.Bal / r.Factor), small = r.Bal - larg * r.Factor;
+                    decimal costLarge = Math.Round(r.Cost_Small * r.Factor, 2);
+                    long id = CallSnowflakeIdGenerate.GenerateNewId();
+                    int src = (int)ItemOpeningBalanceService.OpeningSource.CarriedForward;
+                    opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO Item_First_Period_Balance (Id, Item_Id, Unit_Item_Id, Larg_Qnty, Small_Qnty, Item_No, Balance_Date, Active,
+    Year_Financial_Period_Id, Store_Id, Unit_Cost, Source, P_priceAvgCost, OperationDate, User_Id, Branch_Id, Insert_ServerDateTime)
+VALUES ({id}, {r.Item_Id}, {r.Unit_Item_Id}, {larg}, {small}, {0m}, {openingDate}, 1,
+    {toPeriodId}, {r.Store_Id}, {Dec6(r.Cost_Small)}, {src}, {costLarge}, {now.Date}, {userId}, {r.Branch_Id}, {now})");
+                }
+                if (ownTransaction) opp.Commit();
+            }
+            catch
+            {
+                if (ownTransaction) opp.Rollback();
+                throw;
+            }
+            return new CarryReport(positive.Count, existing, rows.Count - positive.Count, fromText);
+        }
+
+        private static int _paramNo;
+
+        private static Microsoft.Data.SqlClient.SqlParameter Dec6(decimal value) =>
+            new Microsoft.Data.SqlClient.SqlParameter("@clDec" + System.Threading.Interlocked.Increment(ref _paramNo), System.Data.SqlDbType.Decimal)
+            { Precision = 18, Scale = 6, Value = Math.Round(value, 6) };
     }
 }

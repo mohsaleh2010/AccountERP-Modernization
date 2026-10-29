@@ -4278,4 +4278,8 @@
   <data name="IOConfirmText" xml:space="preserve"><value>سيُحفظ رصيد أول المدة لـ {0} سطر فى الفترة {1} ويُسجَّل فى دفتر المخزن. المتابعة؟</value></data>
   <data name="IOConfirm" xml:space="preserve"><value>حفظ</value></data>
   <data name="IODone" xml:space="preserve"><value>تم حفظ {0} سطر</value></data>
+  <data name="IOCarry" xml:space="preserve"><value>نقل من الفترة السابقة</value></data>
+  <data name="IOCarryHint" xml:space="preserve"><value>«النقل من الفترة السابقة» يأخذ رصيد نهاية الفترة السابقة من دفتر المخزن (بمتوسط التكلفة الحالى) لقطةً لأول المدة، دون أى قيد جديد فى الدفتر؛ ولا يمس سطراً له أول مدة. السطور المنقولة للقراءة فقط.</value></data>
+  <data name="IOCarryConfirm" xml:space="preserve"><value>سيُنقل رصيد نهاية الفترة السابقة إلى أول مدة الفترة {0} (المخزن: {1}) للأسطر التى بلا أول مدة. المتابعة؟</value></data>
+  <data name="IOCarryDone" xml:space="preserve"><value>نُقل {0} سطر؛ تُرك {1} لوجود أول مدة له، و{2} لأن رصيده صفر أو سالب (الفترة السابقة: {3})</value></data>
 </root>
