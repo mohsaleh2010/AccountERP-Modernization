@@ -1195,9 +1195,10 @@ WHERE        (Account_Entry_List.Id = - 1)";
                     Factor = 1;//
                     try
                     {
-                        decimal.Parse(dt_Details.Rows[x]["Factor"].ToString());
+                        Factor = decimal.Parse(dt_Details.Rows[x]["Factor"].ToString());
+                        if (Factor <= 0) Factor = 1;
                     }
-                    catch { }
+                    catch { Factor = 1; }
                     int Transaction_Type = int.Parse(dt_Details.Rows[x]["Transaction_Type"].ToString());
                     decimal Import_Value = decimal.Parse(dt_Details.Rows[x]["Import_Value"].ToString());
                     decimal Export_Value = decimal.Parse(dt_Details.Rows[x]["Export_Value"].ToString());
