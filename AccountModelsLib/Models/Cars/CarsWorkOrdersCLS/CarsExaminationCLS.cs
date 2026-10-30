@@ -158,6 +158,7 @@ namespace AccountModelsLib.Models
                 Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
                 aa.IsNotDeletePrevEntry = false;
                 aa.Make_EntryForCarsExaminations(ref Excp, ref Msg, ref opp, Reference_Type_Table_Id, OrderDate, OrderDate, -1);
+                Account_Entry_Invoice_CLS.GuardCarsExamination(Excp, opp, Reference_Type_Table_Id);
 
             }
             catch (Exception ee)

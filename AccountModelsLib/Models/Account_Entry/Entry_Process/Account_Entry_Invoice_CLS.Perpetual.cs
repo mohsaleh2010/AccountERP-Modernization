@@ -60,6 +60,12 @@ namespace AccountModelsLib
             Guard(excp, opp, new[] { Common.Account_Type_Taswea_Malia }, noticeId, "تسوية مالية");
         }
 
+        // نفس الحارس لقيود تقارير فحص السيارات (Reference_Type = Account_Type_ForCarsExaminations): يُستدعى بعد Make_EntryForCarsExaminations
+        public static void GuardCarsExamination(int excp, AccountModelsLib.operations opp, long examinationId)
+        {
+            Guard(excp, opp, new[] { Common.Account_Type_ForCarsExaminations }, examinationId, "تقرير فحص سيارة");
+        }
+
         private static void PostBillStock(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long billId, bool isReturn)
         {
             if (Common.IS_Make_AutomaticFromTar7eel_For_Invoice == 0 || Excp != 0 || billId <= 0) return;
