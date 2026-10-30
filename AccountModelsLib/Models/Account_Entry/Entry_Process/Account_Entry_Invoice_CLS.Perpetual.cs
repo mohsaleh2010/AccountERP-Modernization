@@ -48,6 +48,12 @@ namespace AccountModelsLib
                 BusinessLibShared.GeneralLedger.EntryValidator.ValidateSource(opp, refTypes, docId), label + " " + docId);
         }
 
+        // نفس الحارس لقيود الشيكات (Reference_Type = 5): يُستدعى قبل Commit فى Order_Receipt_ChecksNewNew
+        public static void GuardCheck(int excp, AccountModelsLib.operations opp, long checksMemoryId)
+        {
+            Guard(excp, opp, new[] { Common.Checks_Memory_Reference_Type }, checksMemoryId, "شيك");
+        }
+
         private static void PostBillStock(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long billId, bool isReturn)
         {
             if (Common.IS_Make_AutomaticFromTar7eel_For_Invoice == 0 || Excp != 0 || billId <= 0) return;

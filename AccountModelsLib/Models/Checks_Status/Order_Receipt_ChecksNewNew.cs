@@ -178,6 +178,7 @@ namespace AccountCheckMoney
                 }
                 if (Excp == 0)
                 {
+                    Account_Entry_Invoice_CLS.GuardCheck(Excp, opp, chm.Id);
                     if (ownTx) opp.Commit();
 
                 }
@@ -294,6 +295,7 @@ namespace AccountCheckMoney
                 }
                 if (Excp == 0)
                 {
+                    Account_Entry_Invoice_CLS.GuardCheck(Excp, opp, chm.Id);
                     opp.Commit();
                 }
                 else
@@ -626,6 +628,7 @@ namespace AccountCheckMoney
 
                 if (Excp == 0)
                 {
+                    Account_Entry_Invoice_CLS.GuardCheck(Excp, opp, chm.Id);
                     opp.Commit();
                 }
                 else
