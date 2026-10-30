@@ -72,6 +72,12 @@ namespace AccountModelsLib
             Guard(excp, opp, new[] { Common.Bill_Suppliers_Destruction_Id }, destructionId, "إتلاف مورد");
         }
 
+        // نفس الحارس لقيود مستحقات الفترة (Reference_Type = Account_Type_Taswea_Malia برقم قائمة المديونية): يُستدعى بعد Make_EntryForMoney_DuePeriod
+        public static void GuardDuePeriod(int excp, AccountModelsLib.operations opp, long debitListId)
+        {
+            Guard(excp, opp, new[] { Common.Account_Type_Taswea_Malia }, debitListId, "مستحقات فترة");
+        }
+
         private static void PostBillStock(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long billId, bool isReturn)
         {
             if (Common.IS_Make_AutomaticFromTar7eel_For_Invoice == 0 || Excp != 0 || billId <= 0) return;
