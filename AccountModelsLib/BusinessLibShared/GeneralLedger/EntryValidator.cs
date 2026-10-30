@@ -88,6 +88,34 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
             return Validate(opp, details, Convert.ToDateTime(head.Rows[0]["Entry_Date"]));
         }
 
+        /// <summary>
+        /// يفحص كل قيود مستند واحد (الأصلى + قيود التكلفة/المخزون المرتبطة به) بعد بنائها. لا يرمى أبداً: فشل الفحص لا يمنع الحفظ.
+        /// </summary>
+        public static List<Issue> ValidateSource(operations opp, int[] referenceTypes, long referenceId)
+        {
+            var all = new List<Issue>();
+            try
+            {
+                var ids = opp.return_DataTable("SELECT ID FROM Account_Entry_List WHERE Reference_Type IN (" + string.Join(",", referenceTypes) +
+                                               ") AND Reference_Type_Table_Id = " + referenceId);
+                foreach (DataRow r in ids.Rows) all.AddRange(ValidateSaved(opp, Convert.ToInt64(r[0])));
+            }
+            catch { }
+            return all;
+        }
+
+        /// <summary>
+        /// مخالفات القيود الآلية للمستند الأخير فى هذا الخيط (الوضع التحذيرى): تُمسح عند كل بناء جديد ويقرؤها المستدعى بعد الحفظ.
+        /// </summary>
+        [ThreadStatic] private static List<string> _autoWarnings;
+        public static List<string> AutoWarnings => _autoWarnings ?? (_autoWarnings = new List<string>());
+
+        public static void RecordAuto(List<Issue> issues, string label)
+        {
+            AutoWarnings.Clear();
+            foreach (var i in issues) AutoWarnings.Add(label + " — " + i);
+        }
+
         /// <summary>true إن كان الحفظ ممنوعاً حسب الوضع الحالى.</summary>
         public static bool ShouldBlock(List<Issue> issues) => CurrentMode == Mode.Reject && issues.Count > 0;
 

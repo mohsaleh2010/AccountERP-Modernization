@@ -15,12 +15,14 @@ namespace AccountModelsLib
         {
             Make_EntryForInvoices_Legacy(ref Excp, ref Msg, ref opp, Invoices_List_Id, dtFrom, dtTo, IS_Posted_Flage);
             PostCogs(ref Excp, ref Msg, ref opp, Invoices_List_Id, false);
+            Guard(Excp, opp, new[] { Common.Invoice_Type_Id, InventoryPostingService.InvoiceCogsReferenceType }, Invoices_List_Id, "فاتورة مبيعات");
         }
 
         public void Make_EntryForInvoices_Reverse(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long Invoices_List_Id, DateTime dtFrom, DateTime dtTo, int IS_Posted_Flage)
         {
             Make_EntryForInvoices_Reverse_Legacy(ref Excp, ref Msg, ref opp, Invoices_List_Id, dtFrom, dtTo, IS_Posted_Flage);
             PostCogs(ref Excp, ref Msg, ref opp, Invoices_List_Id, true);
+            Guard(Excp, opp, new[] { Common.InvoiceReverse_Type_Id, InventoryPostingService.InvoiceReturnCogsReferenceType }, Invoices_List_Id, "مرتجع مبيعات");
         }
 
         // فواتير الشراء/مرتجع الشراء: القديمة حرفياً (مدين المشتريات) ثم قيد منفصل ينقل قيمة المخزنى من المشتريات إلى حساب المخزن (فرع «مستمر» فقط)
@@ -28,12 +30,22 @@ namespace AccountModelsLib
         {
             Make_EntryFor_Bills_Legacy(ref Excp, ref Msg, ref opp, Bills_List_Id, dtFrom, dtTo, IS_Posted_Flage);
             PostBillStock(ref Excp, ref Msg, ref opp, Bills_List_Id, false);
+            Guard(Excp, opp, new[] { Common.Bill_Type_Id, InventoryPostingService.BillStockReferenceType }, Bills_List_Id, "فاتورة مشتريات");
         }
 
         public void Make_EntryFor_Bills_Reverse(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long Bills_List_Id, DateTime dtFrom, DateTime dtTo, int IS_Posted_Flage)
         {
             Make_EntryFor_Bills_Reverse_Legacy(ref Excp, ref Msg, ref opp, Bills_List_Id, dtFrom, dtTo, IS_Posted_Flage);
             PostBillStock(ref Excp, ref Msg, ref opp, Bills_List_Id, true);
+            Guard(Excp, opp, new[] { Common.BilleReverse_Type_Id, InventoryPostingService.BillReturnStockReferenceType }, Bills_List_Id, "مرتجع مشتريات");
+        }
+
+        // الحارس المركزى (وضع تحذيرى): يفحص القيود المبنية ويسجل المخالفات فى EntryValidator.AutoWarnings دون أى تغيير فى Excp/Msg أو الحفظ.
+        private static void Guard(int excp, AccountModelsLib.operations opp, int[] refTypes, long docId, string label)
+        {
+            if (excp != 0 || docId <= 0) return;
+            BusinessLibShared.GeneralLedger.EntryValidator.RecordAuto(
+                BusinessLibShared.GeneralLedger.EntryValidator.ValidateSource(opp, refTypes, docId), label + " " + docId);
         }
 
         private static void PostBillStock(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long billId, bool isReturn)
