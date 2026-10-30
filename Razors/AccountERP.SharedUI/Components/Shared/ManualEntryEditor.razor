@@ -1,4 +1,7 @@
-@* 🟢 محرر القيد اليدوى المشترك لشاشات القيود الثلاث (NewAccount_EntryMadinDa2nFRM هنا؛ والأخريان تستعملانه بنمطهما).
+@* 🟢 محرر القيد اليدوى المشترك لشاشات القيود الثلاث، بثلاثة أنماط إدخال:
+   Typed   = NewAccount_EntryFRM (472): نوع (مدين/دائن) + قيمة واحدة، تُعبَّأ القيمة والنوع تلقائياً بالفرق الجارى؛
+   Columns = NewAccount_EntryMadinDa2nFRM (808): عمودا مدين ودائن (واحد منهما فقط) + نسخ قيد سابق؛
+   Pair    = NewSimpleAccount_EntryMadinDa2nFRM (827): حسابان فى كل إضافة (لكل منهما مدين/دائن ومركز تكلفة وبيان).
    الحفظ/التعديل/الحذف عبر ManualEntryService ← AccountEntry_CLS نفسه + الحارس المركزى EntryValidator (عدم الاتزان يمنع الحفظ، والباقى تنبيهات).
    القيد المُرحَّل أو الآلى للقراءة فقط. تعديل السطر = حذفه وإضافته من جديد. التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
 @using System.Data
@@ -24,6 +27,8 @@
     .me-tile.bad .v { color: var(--mud-palette-error); }
     .me-tile.ok .v { color: var(--mud-palette-success); }
     .me-num { font-variant-numeric: tabular-nums; text-align: end; }
+    .me-slot { padding: 12px; margin-bottom: 12px; border: 1px solid var(--mud-palette-lines-default); border-radius: 12px; }
+    .me-slot-title { font-weight: 600; margin-bottom: 4px; }
     .me-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
     @@media (max-width: 599px) { .me-totals { grid-template-columns: minmax(0, 1fr); } }
 </style>
@@ -54,7 +59,7 @@
         <MudGrid Spacing="3">
             <MudItem xs="12" sm="6" md="3">
                 <MudSelect T="long" Value="_head.JournalCode" ValueChanged="OnJournalAsync" Label="@Tr("EPJournal")" Variant="Variant.Outlined" Disabled="@(_head.Id > 0)"
-                           ToStringFunc="@(v => _journals.FirstOrDefault(j => j.Id == v).Name ?? "")">
+                           ToStringFunc="@(v => _journals.FirstOrDefault(j => j.Id == v)?.Name ?? "")">
                     @foreach (var j in _journals)
                     {
                         <MudSelectItem T="long" Value="@j.Id">@j.Name</MudSelectItem>
@@ -63,7 +68,7 @@
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
                 <MudSelect T="long" @bind-Value="_head.BranchId" Label="@Tr("EPBranch")" Variant="Variant.Outlined" Disabled="@(!_editable)"
-                           ToStringFunc="@(v => _branches.FirstOrDefault(b => b.Id == v).Name ?? "")">
+                           ToStringFunc="@(v => _branches.FirstOrDefault(b => b.Id == v)?.Name ?? "")">
                     @foreach (var b in _branches)
                     {
                         <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
@@ -75,7 +80,7 @@
             <MudItem xs="6" md="2"><MudTextField T="string" @bind-Value="_head.DocNo" Label="@Tr("MEDocNo")" Variant="Variant.Outlined" Disabled="@(!_editable)" /></MudItem>
             <MudItem xs="12" sm="6" md="3">
                 <MudSelect T="long" Value="_head.EntryCurrencyId" ValueChanged="OnCurrencyAsync" Label="@Tr("MECurrency")" Variant="Variant.Outlined" Disabled="@(!_editable || _lines.Count > 0)"
-                           ToStringFunc="@(v => _currencies.FirstOrDefault(c => c.Id == v).Name ?? "")">
+                           ToStringFunc="@(v => _currencies.FirstOrDefault(c => c.Id == v)?.Name ?? "")">
                     @foreach (var c in _currencies)
                     {
                         <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
@@ -96,40 +101,55 @@
     {
         <div class="inv-card">
             <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.AddCircle" />@Tr("MELinesTitle")</h2>
-            <AccountSelector @key="_selectorKey" AccountSelection="_selection" AccountSelectionChanged="OnSelectionChanged"
-                             CustomerId="_customerId" CustomerIdChanged="@(v => _customerId = v)"
-                             SupplierId="_supplierId" SupplierIdChanged="@(v => _supplierId = v)"
-                             SubAccountId="_subId" SubAccountIdChanged="OnSubAccountChangedAsync"
-                             SubAccountName="_subName" SubAccountNameChanged="@(v => _subName = v)"
-                             AccountTypeValue="_accountType" AccountTypeValueChanged="@(v => _accountType = v)"
-                             Balance="_balanceBefore" BalanceChanged="@(v => _balanceBefore = v)"
-                             BranchId="AccountModelsLib.Common.Branch_Id" />
-            <MudGrid Spacing="3" Class="mt-1">
-                <MudItem xs="12" sm="4" md="2">
-                    <MudSelect T="bool" @bind-Value="_lineDebit" Label="@Tr("METype")" Variant="Variant.Outlined">
-                        <MudSelectItem T="bool" Value="true">@Tr("MEDebit")</MudSelectItem>
-                        <MudSelectItem T="bool" Value="false">@Tr("MECredit")</MudSelectItem>
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" sm="8" md="3">
-                    <MudNumericField T="decimal" @bind-Value="_lineAmount" Label="@Tr("CVAmountLabel")" Variant="Variant.Outlined" Immediate="true" HideSpinButtons="true" Format="0.##" />
-                </MudItem>
-                <MudItem xs="12" md="3">
-                    <MudSelect T="long" @bind-Value="_costCenterId" Label="@Tr("CVCostCenter")" Variant="Variant.Outlined" Disabled="@(_subId == 0)"
-                               ToStringFunc="@(v => _costCenters.FirstOrDefault(c => c.Id == v).Name ?? "")">
-                        @foreach (var c in _costCenters)
+            @for (int si = 0; si < _slots.Count; si++)
+            {
+                var s = _slots[si];
+                <div class="@(_slots.Count > 1 ? "me-slot" : "")">
+                    @if (_slots.Count > 1) { <div class="me-slot-title">@Tr(si == 0 ? "MESlot1" : "MESlot2")</div> }
+                    <AccountSelector @key="s.Key" AccountSelection="s.Selection" AccountSelectionChanged="@(v => OnSelectionChanged(s, v))"
+                                     CustomerId="s.CustomerId" CustomerIdChanged="@(v => s.CustomerId = v)"
+                                     SupplierId="s.SupplierId" SupplierIdChanged="@(v => s.SupplierId = v)"
+                                     SubAccountId="s.SubId" SubAccountIdChanged="@(v => OnSubAccountChangedAsync(s, v))"
+                                     SubAccountName="s.SubName" SubAccountNameChanged="@(v => s.SubName = v)"
+                                     AccountTypeValue="s.AccountType" AccountTypeValueChanged="@(v => s.AccountType = v)"
+                                     Balance="s.BalanceBefore" BalanceChanged="@(v => s.BalanceBefore = v)"
+                                     BranchId="AccountModelsLib.Common.Branch_Id" />
+                    <MudGrid Spacing="3" Class="mt-1">
+                        @if (Mode == "Typed")
                         {
-                            <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
+                            <MudItem xs="12" sm="4" md="2">
+                                <MudSelect T="bool" @bind-Value="s.IsDebit" Label="@Tr("METype")" Variant="Variant.Outlined">
+                                    <MudSelectItem T="bool" Value="true">@Tr("MEDebit")</MudSelectItem>
+                                    <MudSelectItem T="bool" Value="false">@Tr("MECredit")</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" sm="8" md="3">
+                                <MudNumericField T="decimal" @bind-Value="s.Amount" Label="@Tr("CVAmountLabel")" Variant="Variant.Outlined" Immediate="true" HideSpinButtons="true" Format="0.##" />
+                            </MudItem>
                         }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" md="4"><MudTextField T="string" @bind-Value="_lineNotes" Label="@Tr("CVLineNotes")" Variant="Variant.Outlined" /></MudItem>
-            </MudGrid>
+                        else
+                        {
+                            <MudItem xs="6" md="2"><MudNumericField T="decimal" @bind-Value="s.Debit" Label="@Tr("MEDebit")" Variant="Variant.Outlined" Immediate="true" HideSpinButtons="true" Format="0.##" /></MudItem>
+                            <MudItem xs="6" md="2"><MudNumericField T="decimal" @bind-Value="s.Credit" Label="@Tr("MECredit")" Variant="Variant.Outlined" Immediate="true" HideSpinButtons="true" Format="0.##" /></MudItem>
+                        }
+                        <MudItem xs="12" md="3">
+                            <MudSelect T="long" @bind-Value="s.CostCenterId" Label="@Tr("CVCostCenter")" Variant="Variant.Outlined" Disabled="@(s.SubId == 0)"
+                                       ToStringFunc="@(v => s.CostCenters.FirstOrDefault(c => c.Id == v)?.Name ?? "")">
+                                @foreach (var c in s.CostCenters)
+                                {
+                                    <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="@(Mode == "Typed" ? 4 : 5)"><MudTextField T="string" @bind-Value="s.Notes" Label="@Tr("CVLineNotes")" Variant="Variant.Outlined" /></MudItem>
+                    </MudGrid>
+                </div>
+            }
             @if (!string.IsNullOrEmpty(_lineError))
             {
                 <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2" role="alert">@_lineError</MudAlert>
             }
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Class="mt-3" OnClick="AddLine">@Tr("CVAddLine")</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Class="mt-3" OnClick="AddLine">@(_slots.Count > 1 ? Tr("MEAddPair") : Tr("CVAddLine"))</MudButton>
         </div>
     }
 
@@ -155,7 +175,7 @@
                 <MudTd Style="white-space:nowrap">
                     @if (_editable)
                     {
-                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Medium" Color="Color.Error" OnClick="@(() => _lines.Remove(context))" aria-label="@Tr("DeleteItemLabel")" />
+                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Medium" Color="Color.Error" OnClick="@(() => RemoveLine(context))" aria-label="@Tr("DeleteItemLabel")" />
                     }
                 </MudTd>
             </RowTemplate>
@@ -181,6 +201,10 @@
             {
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_busy || _lines.Count == 0)" OnClick="SaveAsync">@(_head.Id > 0 ? Tr("MEUpdate") : Tr("MESave"))</MudButton>
             }
+            @if (_head.Id > 0)
+            {
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.ContentCopy" Disabled="_busy" OnClick="CopyEntry">@Tr("MECopy")</MudButton>
+            }
             @if (_head.Id > 0 && _head.IsEditable && _canDelete)
             {
                 <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteOutline" Disabled="_busy" OnClick="DeleteAsync">@Tr("MEDelete")</MudButton>
@@ -193,28 +217,36 @@
 @code {
     [Parameter] public string Title { get; set; } = "";
     [Parameter] public long? EntryId { get; set; }
-    /// <summary>مسار الصفحة الحالية (للعودة لقيد جديد).</summary>
+    /// <summary>نسخ قيد سابق: يفتح محتوى هذا القيد كقيد جديد (تاريخ اليوم ورقم جديد).</summary>
+    [Parameter] public long? CopyFromId { get; set; }
+    /// <summary>نمط الإدخال: Typed | Columns | Pair (انظر أعلى الملف).</summary>
+    [Parameter] public string Mode { get; set; } = "Columns";
+    /// <summary>مسار الصفحة الحالية (للعودة لقيد جديد/النسخ).</summary>
     [Parameter] public string BasePath { get; set; } = "/accounts/journal-entry/madin-da2n";
 
     private record Opt(long Id, string Name);
+
+    private class Slot
+    {
+        public int Selection = 2, AccountType, Key;
+        public long CustomerId, SupplierId, SubId, CostCenterId;
+        public string SubName = "", Notes = "";
+        public decimal BalanceBefore, Amount, Debit, Credit;
+        public bool IsDebit = true;
+        public List<Opt> CostCenters = new();
+        public (string Code, long CurrencyId, int AcceptCostCenter, int AccountType, long MainAccountId) Info;
+    }
 
     private readonly ManualEntryService _svc = new();
     private readonly CashVouchersService _cv = new();
     private ManualEntryService.Head _head = new();
     private List<ManualEntryService.Line> _lines = new();
-    private List<Opt> _journals = new(), _branches = new(), _currencies = new(), _costCenters = new();
+    private List<Opt> _journals = new(), _branches = new(), _currencies = new();
+    private List<Slot> _slots = new();
     private List<string> _warnings = new();
-    private string? _error, _lineError, _lineNotes;
+    private string? _error, _lineError;
     private bool _busy, _canDelete;
-
-    private int _selection = 2;
-    private long _customerId, _supplierId, _subId, _costCenterId;
-    private string _subName = "";
-    private int _accountType;
-    private decimal _balanceBefore, _lineAmount;
-    private bool _lineDebit = true;
-    private (string Code, long CurrencyId, int AcceptCostCenter, int AccountType, long MainAccountId) _info;
-    private int _selectorKey;
+    private int _keySeq;
 
     private bool _editable => _head.Id == 0 || _head.IsEditable;
     private decimal _debit => _lines.Where(l => l.IsDebit).Sum(l => l.Amount);
@@ -236,6 +268,7 @@
                 _currencies = _svc.GetCurrencies().Rows.Cast<DataRow>().Select(r => new Opt(Convert.ToInt64(r["ID"]), r["Currency_Name"]?.ToString() ?? "")).ToList();
             });
             if (EntryId is > 0) await LoadAsync(EntryId.Value);
+            else if (CopyFromId is > 0) await CopyLoadAsync(CopyFromId.Value);
             else await ResetNewAsync();
         }
         catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
@@ -256,7 +289,7 @@
         };
         _head.EntryCurrencyName = _currencies.FirstOrDefault(c => c.Id == _head.EntryCurrencyId)?.Name ?? "";
         _lines = new(); _warnings = new(); _error = null; _lineError = null;
-        _selectorKey++; ClearLineInput();
+        ResetSlots();
         await RefreshNumberAsync();
     }
 
@@ -272,6 +305,18 @@
         var (h, ls) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Load(id); });
         if (h == null) { _error = Tr("MENotFound"); await ResetNewAsync(); return; }
         _head = h; _lines = ls; _warnings = new(); _error = null;
+        ResetSlots();
+    }
+
+    private async Task CopyLoadAsync(long id)
+    {
+        var (h, ls) = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Load(id); });
+        if (h == null) { _error = Tr("MENotFound"); await ResetNewAsync(); return; }
+        h.Id = 0; h.EntryNo = 0; h.Date = DateTime.Today; h.Posted = false; h.ReferenceType = 0;
+        foreach (var l in ls) l.DetailsId = 0;
+        _head = h; _lines = ls; _warnings = new(); _error = null;
+        ResetSlots();
+        await RefreshNumberAsync();
     }
 
     private async Task OnJournalAsync(long j) { _head.JournalCode = j; await RefreshNumberAsync(); }
@@ -284,11 +329,11 @@
         _head.Factor = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetFactor(id); });
     }
 
-    private void OnSelectionChanged(int value) { _selection = value; _subId = 0; _subName = ""; _customerId = 0; _supplierId = 0; _costCenters = new(); _costCenterId = 0; }
+    private void OnSelectionChanged(Slot s, int value) { s.Selection = value; s.SubId = 0; s.SubName = ""; s.CustomerId = 0; s.SupplierId = 0; s.CostCenters = new(); s.CostCenterId = 0; }
 
-    private async Task OnSubAccountChangedAsync(long id)
+    private async Task OnSubAccountChangedAsync(Slot s, long id)
     {
-        _subId = id; _costCenters = new(); _costCenterId = 0; _lineError = null;
+        s.SubId = id; s.CostCenters = new(); s.CostCenterId = 0; _lineError = null;
         if (id == 0) return;
         var none = Tr("CVNoCostCenter");
         var (info, ccs) = await Task.Run(() =>
@@ -298,33 +343,67 @@
             var dt = _cv.GetCostCenters(id, inf.AcceptCostCenter, none);
             return (inf, dt.Rows.Cast<DataRow>().Select(r => new Opt(Convert.ToInt64(r["Id"]), r["Name"]?.ToString() ?? "")).ToList());
         });
-        _info = info; _costCenters = ccs; _costCenterId = ccs.FirstOrDefault()?.Id ?? 0;
+        s.Info = info; s.CostCenters = ccs; s.CostCenterId = ccs.FirstOrDefault()?.Id ?? 0;
+    }
+
+    private void ResetSlots()
+    {
+        int n = Mode == "Pair" ? 2 : 1;
+        _slots = Enumerable.Range(0, n).Select(_ => new Slot { Key = ++_keySeq }).ToList();
+        SuggestDifference();
+    }
+
+    // نمط Typed: القيمة والنوع المقترحان = الفرق الجارى بين المدين والدائن (كما فى الأصل).
+    private void SuggestDifference()
+    {
+        if (Mode != "Typed" || _slots.Count == 0) return;
+        var diff = _debit - _credit;
+        if (Math.Abs(diff) < 0.005m) return;
+        _slots[0].IsDebit = diff < 0;
+        _slots[0].Amount = Math.Abs(diff);
+    }
+
+    // يستخرج (مدين؟، قيمة) من خانات الإدخال حسب النمط؛ false + رسالة عند الخطأ.
+    private bool TryRead(Slot s, out bool isDebit, out decimal amount)
+    {
+        isDebit = s.IsDebit; amount = s.Amount;
+        if (Mode != "Typed")
+        {
+            if (s.Debit > 0 && s.Credit > 0) { _lineError = Tr("MEOneSide"); return false; }
+            isDebit = s.Debit > 0; amount = isDebit ? s.Debit : s.Credit;
+        }
+        if (amount <= 0) { _lineError = Tr("STInvoiceValueRequired"); return false; }
+        return true;
     }
 
     private void AddLine()
     {
         _lineError = null;
-        if (_subId == 0) { _lineError = Tr("CVSelectAccount"); return; }
-        if (_lineAmount <= 0) { _lineError = Tr("STInvoiceValueRequired"); return; }
-        var cc = _costCenters.FirstOrDefault(c => c.Id == _costCenterId);
-        if (cc is null) { _lineError = Tr("CVCostCenterRequired"); return; }
-        _lines.Add(new ManualEntryService.Line
+        var toAdd = new List<ManualEntryService.Line>();
+        foreach (var s in _slots)
         {
-            SubAccountId = _subId, AccountName = _subName, AccountCode = _info.Code, AccountType = _info.AccountType, MainAccountId = _info.MainAccountId,
-            AccountCurrencyId = _info.CurrencyId, IsDebit = _lineDebit, Amount = _lineAmount, CostCenterId = cc.Id, CostCenterName = cc.Name, Notes = _lineNotes ?? ""
-        });
-        ClearLineInput(); _selectorKey++;
+            if (s.SubId == 0) { _lineError = Tr("CVSelectAccount"); return; }
+            var cc = s.CostCenters.FirstOrDefault(c => c.Id == s.CostCenterId);
+            if (cc is null) { _lineError = Tr("CVCostCenterRequired"); return; }
+            if (!TryRead(s, out var isDebit, out var amount)) return;
+            toAdd.Add(new ManualEntryService.Line
+            {
+                SubAccountId = s.SubId, AccountName = s.SubName, AccountCode = s.Info.Code, AccountType = s.Info.AccountType, MainAccountId = s.Info.MainAccountId,
+                AccountCurrencyId = s.Info.CurrencyId, IsDebit = isDebit, Amount = amount, CostCenterId = cc.Id, CostCenterName = cc.Name, Notes = s.Notes ?? ""
+            });
+        }
+        _lines.AddRange(toAdd);
+        ResetSlots();
     }
 
-    private void ClearLineInput()
-    {
-        _lineAmount = 0; _lineNotes = null; _subId = 0; _subName = ""; _customerId = 0; _supplierId = 0; _costCenters = new(); _costCenterId = 0; _balanceBefore = 0;
-    }
+    private void RemoveLine(ManualEntryService.Line l) { _lines.Remove(l); SuggestDifference(); }
+
+    private void CopyEntry() => Nav.NavigateTo(BasePath + "?copy=" + _head.Id);
 
     private async Task NewEntryAsync()
     {
         await ResetNewAsync();
-        if (EntryId is > 0) Nav.NavigateTo(BasePath);
+        if (EntryId is > 0 || CopyFromId is > 0) Nav.NavigateTo(BasePath);
     }
 
     private async Task SaveAsync()
@@ -338,12 +417,11 @@
         {
             var r = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return head.Id > 0 ? _svc.SaveEdit(head, lines) : _svc.SaveNew(head, lines); });
             if (!r.Ok) { _error = r.Message; return; }
-            _warnings = r.Warnings.Select(w => w.ToString()).ToList();
+            var warnings = r.Warnings.Select(w => w.ToString()).ToList();
             Snackbar.Add(Tr("MESaved", r.EntryNo), Severity.Success);
             // بعد الحفظ نعيد تحميل القيد من القاعدة (يعرض ما حُفظ فعلاً ويقفل الرأس).
-            long id = head.Id > 0 ? head.Id : r.EntryId;
-            await LoadAsync(id);
-            _warnings = r.Warnings.Select(w => w.ToString()).ToList();
+            await LoadAsync(head.Id > 0 ? head.Id : r.EntryId);
+            _warnings = warnings;
         }
         catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
         finally { _busy = false; }

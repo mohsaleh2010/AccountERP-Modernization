@@ -1,4 +1,4 @@
-@* 🟢 «إدخال القيود مدين-دائن» (بدل General_Ledger.NewAccount_EntryMadinDa2nFRM) — المحرر المشترك ManualEntryEditor. المعامل id=<رقم القيد> لعرض/تعديل قيد قائم. *@
+@* 🟢 «إدخال القيود مدين-دائن» (بدل General_Ledger.NewAccount_EntryMadinDa2nFRM): عمودا مدين/دائن + نسخ قيد سابق (?copy=). المعامل id=<رقم القيد> لعرض/تعديل قيد قائم. *@
 @page "/accounts/journal-entry/madin-da2n"
 @using AccountERP.SharedUI.Components.Shared
 @using AccountERP.SharedUI.Services
@@ -6,10 +6,11 @@
 
 <PageTitle>@Title</PageTitle>
 
-<ManualEntryEditor Title="@Title" EntryId="IdQuery" BasePath="/accounts/journal-entry/madin-da2n" @key="IdQuery" />
+<ManualEntryEditor Title="@Title" Mode="Columns" EntryId="IdQuery" CopyFromId="CopyQuery" BasePath="/accounts/journal-entry/madin-da2n" @key="(IdQuery, CopyQuery)" />
 
 @code {
     [SupplyParameterFromQuery(Name = "id")] public long? IdQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "copy")] public long? CopyQuery { get; set; }
 
     private string Title => Tr("METitleMadin");
 

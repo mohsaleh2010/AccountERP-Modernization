@@ -285,6 +285,9 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("ToolStripMenuItemMake_Account_Entry_Automatic", "/accounts/sandouk-entries"),
             // إدخال القيود مدين-دائن بدل NewAccount_EntryMadinDa2nFRM.
             ("ToolStripNew_MenuAccountEntryMadinDa2n", "/accounts/journal-entry/madin-da2n"),
+            // إدخال القيود (472) والقيود البسيطة (827) بدل NewAccount_EntryFRM / NewSimpleAccount_EntryMadinDa2nFRM.
+            ("ToolStripNew_MenuAccountEntry", "/accounts/journal-entry"),
+            ("toolStripMenuNewSimpleAccount_EntryMadinDa2nFRM", "/accounts/journal-entry/simple"),
             // كارت الصنف الموحَّد (خطة 01 م4) على دفتر الحركة.
             ("menuItemCardsStore", "/store/item-card"), ("ToolStripMenuItem_Transaction_Details", "/store/item-card"),
             ("ToolStripMenuItem_Transaction_DetailsWithCost", "/store/item-card?value=1"), ("menuItemCardsDept", "/store/item-card?type=20"),

@@ -1,0 +1,23 @@
+@* 🟢 «إدخال القيود» (بدل General_Ledger.NewAccount_EntryFRM): نوع (مدين/دائن) + قيمة واحدة تُعبَّأ تلقائياً بالفرق الجارى. المعامل id=<رقم القيد> لعرض/تعديل قيد قائم. *@
+@page "/accounts/journal-entry"
+@using AccountERP.SharedUI.Components.Shared
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+
+<PageTitle>@Title</PageTitle>
+
+<ManualEntryEditor Title="@Title" Mode="Typed" EntryId="IdQuery" CopyFromId="CopyQuery" BasePath="/accounts/journal-entry" @key="(IdQuery, CopyQuery)" />
+
+@code {
+    [SupplyParameterFromQuery(Name = "id")] public long? IdQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "copy")] public long? CopyQuery { get; set; }
+
+    private string Title => Tr("METitleTyped");
+
+    private string Tr(string key)
+    {
+        var previous = System.Globalization.CultureInfo.CurrentUICulture;
+        try { System.Globalization.CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key]; }
+        finally { System.Globalization.CultureInfo.CurrentUICulture = previous; }
+    }
+}

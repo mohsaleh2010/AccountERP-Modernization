@@ -4355,4 +4355,11 @@
   <data name="MENotFound" xml:space="preserve"><value>القيد غير موجود</value></data>
   <data name="MEPostedRO" xml:space="preserve"><value>القيد مُرحَّل إلى الاستاذ فهو للقراءة فقط. ألغِ ترحيل الفترة من «ترحيل القيود» لتعديله.</value></data>
   <data name="MEAutoRO" xml:space="preserve"><value>قيد آلى مولَّد من مستند (فاتورة/سند...) فهو للقراءة فقط؛ يُعدَّل أو يُحذف من مستنده.</value></data>
+  <data name="METitleTyped" xml:space="preserve"><value>إدخال القيود</value></data>
+  <data name="METitleSimple" xml:space="preserve"><value>إدخال القيود البسيطة</value></data>
+  <data name="MESlot1" xml:space="preserve"><value>الحساب الأول</value></data>
+  <data name="MESlot2" xml:space="preserve"><value>الحساب الثانى</value></data>
+  <data name="MEAddPair" xml:space="preserve"><value>إضافة الحسابين</value></data>
+  <data name="MECopy" xml:space="preserve"><value>نسخ القيد</value></data>
+  <data name="MEOneSide" xml:space="preserve"><value>أدخل قيمة مدين أو دائن (واحدة فقط)</value></data>
 </root>

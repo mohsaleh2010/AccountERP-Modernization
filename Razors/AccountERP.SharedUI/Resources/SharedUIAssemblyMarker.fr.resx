@@ -4357,4 +4357,11 @@
   <data name="MENotFound" xml:space="preserve"><value>Entry not found</value></data>
   <data name="MEPostedRO" xml:space="preserve"><value>This entry is posted to the ledger, so it is read-only. Cancel the period posting from "Post entries" to edit it.</value></data>
   <data name="MEAutoRO" xml:space="preserve"><value>This entry was generated automatically from a document (invoice/voucher...), so it is read-only; edit or delete it from its document.</value></data>
+  <data name="METitleTyped" xml:space="preserve"><value>Journal entry</value></data>
+  <data name="METitleSimple" xml:space="preserve"><value>Simple journal entry</value></data>
+  <data name="MESlot1" xml:space="preserve"><value>First account</value></data>
+  <data name="MESlot2" xml:space="preserve"><value>Second account</value></data>
+  <data name="MEAddPair" xml:space="preserve"><value>Add both accounts</value></data>
+  <data name="MECopy" xml:space="preserve"><value>Copy entry</value></data>
+  <data name="MEOneSide" xml:space="preserve"><value>Enter a debit or a credit value (only one)</value></data>
 </root>

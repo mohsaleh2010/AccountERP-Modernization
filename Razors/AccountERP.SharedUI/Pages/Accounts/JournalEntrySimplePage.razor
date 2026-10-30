@@ -1,0 +1,23 @@
+@* 🟢 «إدخال القيود البسيطة» (بدل General_Ledger.NewSimpleAccount_EntryMadinDa2nFRM): حسابان فى كل إضافة، لكل منهما مدين/دائن ومركز تكلفة وبيان. المعامل id=<رقم القيد> لعرض/تعديل قيد قائم. *@
+@page "/accounts/journal-entry/simple"
+@using AccountERP.SharedUI.Components.Shared
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+
+<PageTitle>@Title</PageTitle>
+
+<ManualEntryEditor Title="@Title" Mode="Pair" EntryId="IdQuery" CopyFromId="CopyQuery" BasePath="/accounts/journal-entry/simple" @key="(IdQuery, CopyQuery)" />
+
+@code {
+    [SupplyParameterFromQuery(Name = "id")] public long? IdQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "copy")] public long? CopyQuery { get; set; }
+
+    private string Title => Tr("METitleSimple");
+
+    private string Tr(string key)
+    {
+        var previous = System.Globalization.CultureInfo.CurrentUICulture;
+        try { System.Globalization.CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key]; }
+        finally { System.Globalization.CultureInfo.CurrentUICulture = previous; }
+    }
+}
