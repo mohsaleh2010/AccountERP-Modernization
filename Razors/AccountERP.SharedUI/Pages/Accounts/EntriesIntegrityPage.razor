@@ -1,0 +1,139 @@
+@* 🟢 «فحص سلامة القيود» (خطة القيود الموحَّدة م5): قراءة فقط عبر EntryIntegrityService — لا يعدّل أى بيانات.
+   يكشف القيود غير المتزنة، أرقام القيود المكررة، القيود بلا سطور أو بلا مستند، أذون الصندوق بلا قيد، وفرق المرحَّل عن أرصدة الاستاذ. *@
+@page "/accounts/entries-integrity"
+
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.Models
+@using AccountModelsLib.BusinessLibShared.GeneralLedger
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Tr("ICTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .ic-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+    .ic-gap { margin-top: 16px; }
+    .ic-scroll { overflow-x: auto; }
+    @@media (max-width: 899px) { .ic-filters { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-card">
+        <h1 class="inv-title">@Tr("ICTitle")</h1>
+        <div class="mud-text-secondary">@Tr("ICSub")</div>
+    </div>
+
+    <div class="inv-card ic-gap">
+        <div class="ic-filters">
+            <MudDatePicker T="DateTime?" @bind-Date="_from" Label="@Tr("SEFrom")" Variant="Variant.Outlined" Editable="true" />
+            <MudDatePicker T="DateTime?" @bind-Date="_to" Label="@Tr("SETo")" Variant="Variant.Outlined" Editable="true" />
+            <MudSelect T="long" @bind-Value="_branch" Label="@Tr("EPBranch")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("SBAll") : _branches.FirstOrDefault(b => b.Id == v).Name ?? "")">
+                <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                @foreach (var b in _branches)
+                {
+                    <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FactCheck" Class="mt-3" Disabled="_busy" OnClick="RunAsync">@Tr("ICRun")</MudButton>
+        @if (_busy) { <MudProgressLinear Indeterminate="true" Class="mt-2" /> }
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="ic-gap" role="alert">@_error</MudAlert>
+    }
+
+    @foreach (var c in _checks)
+    {
+        <div class="inv-card ic-gap">
+            <h2 class="inv-card-title">
+                <MudIcon Icon="@(c.Count == 0 && c.Error == null ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Warning)"
+                         Color="@(c.Error != null ? Color.Error : c.Count == 0 ? Color.Success : c.Level == EntryIntegrityService.Level.Error ? Color.Error : c.Level == EntryIntegrityService.Level.Warning ? Color.Warning : Color.Info)" />
+                @Tr("IC_" + c.Code)
+                <span class="inv-count">@c.Count</span>
+            </h2>
+            <div class="mud-text-secondary">@Tr("ICD_" + c.Code)</div>
+            @if (c.Error != null)
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2">@c.Error</MudAlert>
+            }
+            else if (c.Count > 0 && c.Rows != null)
+            {
+                <div class="ic-scroll mt-2">
+                    <MudSimpleTable Dense="true" Hover="true" Striped="true">
+                        <thead><tr>@foreach (DataColumn col in c.Rows.Columns) { <th>@col.ColumnName</th> }</tr></thead>
+                        <tbody>
+                            @foreach (DataRow r in c.Rows.Rows)
+                            {
+                                <tr>@foreach (DataColumn col in c.Rows.Columns) { <td>@Cell(r[col])</td> }</tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                </div>
+                @if (c.Count > c.Rows.Rows.Count)
+                {
+                    <div class="mud-text-secondary mt-1">@Tr("ICShowingFirst", c.Rows.Rows.Count, c.Count)</div>
+                }
+            }
+        </div>
+    }
+</div>
+</MudContainer>
+
+@code {
+    private readonly EntryIntegrityService _svc = new();
+    private List<EntryIntegrityService.Check> _checks = new();
+    private List<(long Id, string Name)> _branches = new();
+    private DateTime? _from = new DateTime(DateTime.Today.Year, 1, 1), _to = DateTime.Today;
+    private long _branch;
+    private string? _error;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var dt = new Account_BrancheCLS().Get_DataUSER_DETAILES_Branches_Permission(false, AccountModelsLib.Common.User_Id);
+                _branches = dt.Rows.Cast<DataRow>().Select(r => (Convert.ToInt64(r["Id"]), r["Branch_Name"]?.ToString() ?? "")).ToList();
+            });
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task RunAsync()
+    {
+        if (_from == null || _to == null) return;
+        _busy = true; _error = null;
+        DateTime f = _from.Value, t = _to.Value; long b = _branch;
+        try { _checks = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Run(f, t, b); }); }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _busy = false; }
+    }
+
+    private static string Cell(object v) => v is DateTime d ? d.ToString("yyyy/MM/dd") : v is decimal m ? m.ToString("N2") : v?.ToString() ?? "";
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

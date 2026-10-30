@@ -4363,4 +4363,28 @@
   <data name="MECopy" xml:space="preserve"><value>Copy entry</value></data>
   <data name="MEOneSide" xml:space="preserve"><value>Enter a debit or a credit value (only one)</value></data>
   <data name="MEOpen" xml:space="preserve"><value>Open entry</value></data>
+  <data name="ICTitle" xml:space="preserve"><value>Journal entries integrity check</value></data>
+  <data name="ICSub" xml:space="preserve"><value>Read-only check that reveals problems in journal entries without changing any data</value></data>
+  <data name="ICRun" xml:space="preserve"><value>Run check</value></data>
+  <data name="ICShowingFirst" xml:space="preserve"><value>Showing first {0} of {1}</value></data>
+  <data name="IC_UNBAL" xml:space="preserve"><value>Unbalanced entries</value></data>
+  <data name="ICD_UNBAL" xml:space="preserve"><value>Total debit differs from total credit (account currency).</value></data>
+  <data name="IC_UNBALEQ" xml:space="preserve"><value>Unbalanced entries (equivalent)</value></data>
+  <data name="ICD_UNBALEQ" xml:space="preserve"><value>Total debit differs from total credit in the base-currency equivalent.</value></data>
+  <data name="IC_DUPNO" xml:space="preserve"><value>Duplicate entry numbers</value></data>
+  <data name="ICD_DUPNO" xml:space="preserve"><value>More than one entry with the same number in the same journal and fiscal period.</value></data>
+  <data name="IC_NOLINES" xml:space="preserve"><value>Entries without lines</value></data>
+  <data name="ICD_NOLINES" xml:space="preserve"><value>Entry header with no detail lines.</value></data>
+  <data name="IC_ORPHAN" xml:space="preserve"><value>Entries whose document is missing</value></data>
+  <data name="ICD_ORPHAN" xml:space="preserve"><value>Automatic entry referencing a deleted invoice or cash voucher.</value></data>
+  <data name="IC_SANDOUK" xml:space="preserve"><value>Cash-box orders without entry</value></data>
+  <data name="ICD_SANDOUK" xml:space="preserve"><value>Order with no entry, or flagged as entered while its entry is missing. Create them from "Generate cash-box entries".</value></data>
+  <data name="IC_INVNOENTRY" xml:space="preserve"><value>Sales invoices without entry</value></data>
+  <data name="ICD_INVNOENTRY" xml:space="preserve"><value>For information: may be normal if the branch does not post its invoices to accounts.</value></data>
+  <data name="IC_BILLNOENTRY" xml:space="preserve"><value>Purchase invoices without entry</value></data>
+  <data name="ICD_BILLNOENTRY" xml:space="preserve"><value>For information: may be normal if the branch does not post its invoices to accounts.</value></data>
+  <data name="IC_UNKNOWNREF" xml:space="preserve"><value>Unregistered entry sources</value></data>
+  <data name="ICD_UNKNOWNREF" xml:space="preserve"><value>Entry reference type missing from the source registry (information only).</value></data>
+  <data name="IC_LEDGER" xml:space="preserve"><value>Posted entries vs ledger balances</value></data>
+  <data name="ICD_LEDGER" xml:space="preserve"><value>Total debit of posted entries does not match the ledger balances for a period/branch (partial posting or an entry edited after posting).</value></data>
 </root>

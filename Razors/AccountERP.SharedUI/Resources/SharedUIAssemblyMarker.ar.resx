@@ -4363,4 +4363,28 @@
   <data name="MECopy" xml:space="preserve"><value>نسخ القيد</value></data>
   <data name="MEOneSide" xml:space="preserve"><value>أدخل قيمة مدين أو دائن (واحدة فقط)</value></data>
   <data name="MEOpen" xml:space="preserve"><value>فتح القيد</value></data>
+  <data name="ICTitle" xml:space="preserve"><value>فحص سلامة القيود</value></data>
+  <data name="ICSub" xml:space="preserve"><value>فحص للقراءة فقط يكشف المشاكل فى القيود دون تعديل أى بيانات</value></data>
+  <data name="ICRun" xml:space="preserve"><value>تشغيل الفحص</value></data>
+  <data name="ICShowingFirst" xml:space="preserve"><value>يُعرض أول {0} من {1}</value></data>
+  <data name="IC_UNBAL" xml:space="preserve"><value>قيود غير متزنة</value></data>
+  <data name="ICD_UNBAL" xml:space="preserve"><value>مجموع المدين لا يساوى مجموع الدائن (بعملة الحساب).</value></data>
+  <data name="IC_UNBALEQ" xml:space="preserve"><value>قيود غير متزنة بالمكافئ</value></data>
+  <data name="ICD_UNBALEQ" xml:space="preserve"><value>مجموع المدين لا يساوى مجموع الدائن بالمكافئ بالعملة الأساسية.</value></data>
+  <data name="IC_DUPNO" xml:space="preserve"><value>أرقام قيود مكررة</value></data>
+  <data name="ICD_DUPNO" xml:space="preserve"><value>أكثر من قيد بنفس الرقم فى نفس اليومية والفترة المالية.</value></data>
+  <data name="IC_NOLINES" xml:space="preserve"><value>قيود بلا سطور</value></data>
+  <data name="ICD_NOLINES" xml:space="preserve"><value>رأس قيد بلا أى سطر تفاصيل.</value></data>
+  <data name="IC_ORPHAN" xml:space="preserve"><value>قيود مستندها غير موجود</value></data>
+  <data name="ICD_ORPHAN" xml:space="preserve"><value>قيد آلى مرجعه فاتورة أو سند صندوق محذوف.</value></data>
+  <data name="IC_SANDOUK" xml:space="preserve"><value>أذون صندوق بلا قيد</value></data>
+  <data name="ICD_SANDOUK" xml:space="preserve"><value>إذن لم يُنشأ له قيد، أو معلَّم مقيَّد وقيده غير موجود. يمكن إنشاؤها من «إنشاء قيود الصندوق آلياً».</value></data>
+  <data name="IC_INVNOENTRY" xml:space="preserve"><value>فواتير مبيعات بلا قيد</value></data>
+  <data name="ICD_INVNOENTRY" xml:space="preserve"><value>للعلم: قد يكون طبيعياً إن كان الفرع لا يقيّد فواتيره فى الحسابات.</value></data>
+  <data name="IC_BILLNOENTRY" xml:space="preserve"><value>فواتير مشتريات بلا قيد</value></data>
+  <data name="ICD_BILLNOENTRY" xml:space="preserve"><value>للعلم: قد يكون طبيعياً إن كان الفرع لا يقيّد فواتيره فى الحسابات.</value></data>
+  <data name="IC_UNKNOWNREF" xml:space="preserve"><value>مصادر قيود غير مسجَّلة</value></data>
+  <data name="ICD_UNKNOWNREF" xml:space="preserve"><value>نوع مرجع القيد غير موجود فى سجل المصادر (للعلم فقط).</value></data>
+  <data name="IC_LEDGER" xml:space="preserve"><value>فرق المرحَّل عن أرصدة الاستاذ</value></data>
+  <data name="ICD_LEDGER" xml:space="preserve"><value>مجموع مدين القيود المرحَّلة لا يطابق مجموعه فى أرصدة الاستاذ لفترة/فرع (ترحيل ناقص أو قيد عُدِّل بعد الترحيل).</value></data>
 </root>
