@@ -9,7 +9,7 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
     /// المستدعى يقرر حسب الوضع (Warn: يعرض ويكمل، Reject: يمنع الحفظ عند أى مخالفة).
     /// أعمدة details المطلوبة هى نفسها التى يستعملها AccountEntry_CLS: Submain_Account_ID, Import_Value, Export_Value,
     /// Equivalent_Import_Value, Equivalent_Export_Value, CostCenter_Id.
-    /// لم تُضَف «الفترة مفتوحة»: أعلام Financial_Period (Done/IS_Active) لا تطابق الفترة الجارية فى البيانات، فيُكتفى بوجود الفترة.
+    /// فحص PERIODCLOSED (Done/IS_Active) تحذيرى فقط: يظهر خطأً حتى تُضبط الفترة الجارية من شاشة الفترات.
     /// </summary>
     public static class EntryValidator
     {
@@ -54,10 +54,12 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
             if (Math.Abs(eImp - eExp) > Tolerance)
                 issues.Add(new Issue { Code = "BALEQ", Message = "القيد غير متزن بالمكافئ: مدين " + eImp.ToString("N2") + " ≠ دائن " + eExp.ToString("N2") });
 
-            var per = opp.return_DataTable("SELECT COUNT(*) AS C FROM Financial_Period WHERE DateFrom <= " + operations.Get_DateToInsert(entryDate.Date) +
+            var per = opp.return_DataTable("SELECT Done, IS_Active FROM Financial_Period WHERE DateFrom <= " + operations.Get_DateToInsert(entryDate.Date) +
                                            " AND DateTo >= " + operations.Get_DateToInsert(entryDate.Date));
-            if (Convert.ToInt32(per.Rows[0]["C"]) == 0)
+            if (per.Rows.Count == 0)
                 issues.Add(new Issue { Code = "PERIOD", Message = "التاريخ " + entryDate.ToString("yyyy/MM/dd") + " خارج أى فترة مالية" });
+            else if (Dec(per.Rows[0], "Done") == 1 || Dec(per.Rows[0], "IS_Active") != 1)
+                issues.Add(new Issue { Code = "PERIODCLOSED", Message = "الفترة المالية لتاريخ " + entryDate.ToString("yyyy/MM/dd") + " مغلقة أو غير نشطة (تحذير فقط)" });
 
             var ids = new List<string>();
             foreach (DataRow r in details.Rows) ids.Add(Convert.ToInt64(r["Submain_Account_ID"]).ToString());
