@@ -242,6 +242,7 @@ namespace AccountModelsLib
             Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
             aa.IsNotDeletePrevEntry = false ;
             aa.Make_EntryFor_Suppliers_Destruction(ref Excp, ref Msg, ref opp, dt_date, Suppliers_Destruction_Id, Notes);
+            Account_Entry_Invoice_CLS.GuardSuppliersDestruction(Excp, opp, Suppliers_Destruction_Id);
 
             if (Excp == 0)
             {
@@ -277,6 +278,7 @@ namespace AccountModelsLib
                 Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
                 aa.IsNotDeletePrevEntry = true;
                 aa.Make_EntryFor_Suppliers_Destruction(ref Excp, ref Msg, ref opp, dt_date, Suppliers_Destruction_Id, Notes);
+                Account_Entry_Invoice_CLS.GuardSuppliersDestruction(Excp, opp, Suppliers_Destruction_Id);
 
                 if (Excp == 0)
                 {

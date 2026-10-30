@@ -66,6 +66,12 @@ namespace AccountModelsLib
             Guard(excp, opp, new[] { Common.Account_Type_ForCarsExaminations }, examinationId, "تقرير فحص سيارة");
         }
 
+        // نفس الحارس لقيود إتلاف الموردين (Reference_Type = Bill_Suppliers_Destruction_Id): يُستدعى بعد Make_EntryFor_Suppliers_Destruction
+        public static void GuardSuppliersDestruction(int excp, AccountModelsLib.operations opp, long destructionId)
+        {
+            Guard(excp, opp, new[] { Common.Bill_Suppliers_Destruction_Id }, destructionId, "إتلاف مورد");
+        }
+
         private static void PostBillStock(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long billId, bool isReturn)
         {
             if (Common.IS_Make_AutomaticFromTar7eel_For_Invoice == 0 || Excp != 0 || billId <= 0) return;
