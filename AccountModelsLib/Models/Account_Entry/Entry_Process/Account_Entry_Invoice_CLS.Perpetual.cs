@@ -54,6 +54,12 @@ namespace AccountModelsLib
             Guard(excp, opp, new[] { Common.Checks_Memory_Reference_Type }, checksMemoryId, "شيك");
         }
 
+        // نفس الحارس لقيود التسويات المالية (Reference_Type = 26 للرأس والأصناف): يُستدعى بعد Make_EntryForMoney_Financial_Notice
+        public static void GuardTaswea(int excp, AccountModelsLib.operations opp, long noticeId)
+        {
+            Guard(excp, opp, new[] { Common.Account_Type_Taswea_Malia }, noticeId, "تسوية مالية");
+        }
+
         private static void PostBillStock(ref int Excp, ref string Msg, ref AccountModelsLib.operations opp, long billId, bool isReturn)
         {
             if (Common.IS_Make_AutomaticFromTar7eel_For_Invoice == 0 || Excp != 0 || billId <= 0) return;

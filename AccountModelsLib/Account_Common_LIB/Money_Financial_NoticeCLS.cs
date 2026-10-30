@@ -223,6 +223,7 @@ namespace AccountModelsLib
                 Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
                 aa.IsNotDeletePrevEntry = true;
                 aa.Make_EntryForMoney_Financial_Notice(ref Excp, ref Msg, ref opp, Money_Financial_Notice_Id, OrderDate, OrderDate, -1);
+                Account_Entry_Invoice_CLS.GuardTaswea(Excp, opp, Money_Financial_Notice_Id);
             }
             catch (Exception ee)
             {
@@ -374,6 +375,7 @@ namespace AccountModelsLib
                 Account_Entry_Invoice_CLS aa = new Account_Entry_Invoice_CLS();
                 aa.IsNotDeletePrevEntry = false ;
                 aa.Make_EntryForMoney_Financial_Notice(ref Excp, ref Msg, ref opp, Money_Financial_Notice_Id, OrderDate, OrderDate, -1);
+                Account_Entry_Invoice_CLS.GuardTaswea(Excp, opp, Money_Financial_Notice_Id);
 
             }
 
