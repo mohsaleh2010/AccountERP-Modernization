@@ -4362,4 +4362,5 @@
   <data name="MEAddPair" xml:space="preserve"><value>Add both accounts</value></data>
   <data name="MECopy" xml:space="preserve"><value>Copy entry</value></data>
   <data name="MEOneSide" xml:space="preserve"><value>Enter a debit or a credit value (only one)</value></data>
+  <data name="MEOpen" xml:space="preserve"><value>Open entry</value></data>
 </root>

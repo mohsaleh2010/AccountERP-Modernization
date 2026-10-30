@@ -219,6 +219,13 @@
         <span>@Tr("JEResultsCount"): <b>@_rows.Count</b></span>
     </MudPaper>
 
+    @if (_selectedEntryId > 0)
+    {
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew" Href="@($"/accounts/journal-entry/madin-da2n?id={_selectedEntryId}")">@Tr("MEOpen")</MudButton>
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.ContentCopy" Href="@($"/accounts/journal-entry/madin-da2n?copy={_selectedEntryId}")">@Tr("MECopy")</MudButton>
+        </div>
+    }
     <JournalEntryDetailsPanel EntryId="_selectedEntryId" />
 </MudContainer>
 

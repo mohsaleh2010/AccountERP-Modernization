@@ -15,6 +15,7 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 @implements IDisposable
 
 <InvoiceStyles />
@@ -30,18 +31,24 @@
     .me-slot { padding: 12px; margin-bottom: 12px; border: 1px solid var(--mud-palette-lines-default); border-radius: 12px; }
     .me-slot-title { font-weight: 600; margin-bottom: 4px; }
     .me-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    @@media print {
+        body * { visibility: hidden; }
+        .me-print, .me-print * { visibility: visible; }
+        .me-print { position: absolute; inset-inline-start: 0; top: 0; width: 100%; }
+        .me-noprint { display: none !important; }
+    }
     @@media (max-width: 599px) { .me-totals { grid-template-columns: minmax(0, 1fr); } }
 </style>
 
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
-<div class="inv-page">
+<div class="inv-page me-print">
 
     <div class="inv-head inv-card">
         <h1 class="inv-title">@Title</h1>
         <div class="inv-badges">
             <span class="inv-chip primary"><MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />@(_head.EntryNo > 0 ? _head.EntryNo.ToString() : "")</span>
             <span class="inv-chip @(_head.Id > 0 ? "success" : "warn")">@(_head.Id > 0 ? Tr("InvoiceStatusSaved") : Tr("InvoiceStatusNew"))</span>
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_busy" OnClick="NewEntryAsync">@Tr("MENew")</MudButton>
+            <MudButton Class="me-noprint" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_busy" OnClick="NewEntryAsync">@Tr("MENew")</MudButton>
         </div>
     </div>
 
@@ -99,7 +106,7 @@
 
     @if (_editable)
     {
-        <div class="inv-card">
+        <div class="inv-card me-noprint">
             <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.AddCircle" />@Tr("MELinesTitle")</h2>
             @for (int si = 0; si < _slots.Count; si++)
             {
@@ -196,13 +203,14 @@
             </MudAlert>
         }
 
-        <div class="me-btns">
+        <div class="me-btns me-noprint">
             @if (_editable)
             {
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_busy || _lines.Count == 0)" OnClick="SaveAsync">@(_head.Id > 0 ? Tr("MEUpdate") : Tr("MESave"))</MudButton>
             }
             @if (_head.Id > 0)
             {
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Print" Disabled="_busy" OnClick="PrintAsync">@Tr("PrintButton")</MudButton>
                 <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.ContentCopy" Disabled="_busy" OnClick="CopyEntry">@Tr("MECopy")</MudButton>
             }
             @if (_head.Id > 0 && _head.IsEditable && _canDelete)
@@ -397,6 +405,8 @@
     }
 
     private void RemoveLine(ManualEntryService.Line l) { _lines.Remove(l); SuggestDifference(); }
+
+    private async Task PrintAsync() => await JS.InvokeVoidAsync("window.print");
 
     private void CopyEntry() => Nav.NavigateTo(BasePath + "?copy=" + _head.Id);
 
