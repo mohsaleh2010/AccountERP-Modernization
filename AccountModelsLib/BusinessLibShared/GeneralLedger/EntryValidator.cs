@@ -76,6 +76,18 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
             return issues;
         }
 
+        /// <summary>
+        /// يفحص قيداً أُنشئ فعلاً (داخل معاملة المنشئ) بقراءة رأسه وسطوره؛ للمصادر الآلية التى يبنى قيدها كود قديم مشترك فيُفحص بعد البناء (وضع تحذيرى: لا رفض).
+        /// </summary>
+        public static List<Issue> ValidateSaved(operations opp, long entryId)
+        {
+            var head = opp.return_DataTable("SELECT Entry_Date FROM Account_Entry_List WHERE ID = " + entryId);
+            if (head.Rows.Count == 0) return new List<Issue> { new Issue { Code = "LIST", Message = "القيد غير موجود" } };
+            var details = opp.return_DataTable("SELECT Submain_Account_ID, Import_Value, Export_Value, Equivalent_Import_Value, Equivalent_Export_Value, CostCenter_Id " +
+                                               "FROM Account_Entry_Details WHERE Account_Entry_List_ID = " + entryId + " ORDER BY Id");
+            return Validate(opp, details, Convert.ToDateTime(head.Rows[0]["Entry_Date"]));
+        }
+
         /// <summary>true إن كان الحفظ ممنوعاً حسب الوضع الحالى.</summary>
         public static bool ShouldBlock(List<Issue> issues) => CurrentMode == Mode.Reject && issues.Count > 0;
 

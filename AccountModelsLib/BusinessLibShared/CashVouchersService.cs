@@ -337,7 +337,17 @@ namespace AccountModelsLib
                     boxCurrencyId, boxCurrencyName, factor <= 0 ? 1 : factor, orderId, 0);
                 if (excp1 != 0) throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg1) ? "Journal entry failed" : msg1);
 
-                return (orderId, no, msg + msg1);
+                // الحارس المركزى (وضع تحذيرى): تُلحق المخالفات بالرسالة ولا تمنع الحفظ.
+                string warn = "";
+                try
+                {
+                    var eid = opp.return_DataTable("SELECT Account_Entry_List_ID FROM Order_Money WHERE Id = " + orderId);
+                    if (eid.Rows.Count > 0 && eid.Rows[0][0] != DBNull.Value && Convert.ToInt64(eid.Rows[0][0]) > 0)
+                        warn = string.Join("; ", BusinessLibShared.GeneralLedger.EntryValidator.ValidateSaved(opp, Convert.ToInt64(eid.Rows[0][0])).Select(i => i.ToString()));
+                }
+                catch { }
+
+                return (orderId, no, msg + msg1 + warn);
             }
         }
 

@@ -36,6 +36,7 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
             public bool Created { get; set; }
             public long EntryId { get; set; }
             public string Message { get; set; }
+            public List<string> Warnings { get; } = new List<string>();
         }
 
         public class BatchResult
@@ -111,6 +112,10 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
                     outcome.Message = string.IsNullOrWhiteSpace(msg) ? "تعذّر إنشاء القيد (لا توجد سطور صالحة للإذن)" : msg;
                     return outcome;
                 }
+
+                // الحارس المركزى فى الوضع التحذيرى: المخالفات تُسجَّل فى نتيجة الإذن ولا تمنع الإنشاء.
+                try { foreach (var i in EntryValidator.ValidateSaved(opp, entryId)) outcome.Warnings.Add(i.ToString()); }
+                catch (Exception vex) { outcome.Warnings.Add("تعذّر فحص القيد: " + vex.Message); }
 
                 if (own) { if (dryRun) opp.Rollback(); else opp.Commit(); }
                 outcome.Created = true;
