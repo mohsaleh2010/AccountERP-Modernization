@@ -4328,4 +4328,31 @@
   <data name="SEConfirm" xml:space="preserve"><value>سيُنشأ قيد لـ {0} إذن صندوق. المتابعة؟</value></data>
   <data name="SEConfirmYes" xml:space="preserve"><value>إنشاء</value></data>
   <data name="SEResultTitle" xml:space="preserve"><value>تم إنشاء {0} قيد، وتعذّر {1}</value></data>
+  <data name="METitleMadin" xml:space="preserve"><value>إدخال القيود (مدين / دائن)</value></data>
+  <data name="MENew" xml:space="preserve"><value>قيد جديد</value></data>
+  <data name="MEHead" xml:space="preserve"><value>بيانات القيد</value></data>
+  <data name="MEEntryNo" xml:space="preserve"><value>رقم القيد</value></data>
+  <data name="MEDocNo" xml:space="preserve"><value>رقم المستند</value></data>
+  <data name="MECurrency" xml:space="preserve"><value>عملة القيد</value></data>
+  <data name="MEFactor" xml:space="preserve"><value>معامل التحويل</value></data>
+  <data name="MENotes" xml:space="preserve"><value>بيان القيد</value></data>
+  <data name="MELinesTitle" xml:space="preserve"><value>إضافة سطر</value></data>
+  <data name="MELinesList" xml:space="preserve"><value>أسطر القيد</value></data>
+  <data name="METype" xml:space="preserve"><value>النوع</value></data>
+  <data name="MEDebit" xml:space="preserve"><value>مدين</value></data>
+  <data name="MECredit" xml:space="preserve"><value>دائن</value></data>
+  <data name="MENoLines" xml:space="preserve"><value>لا توجد أسطر بعد</value></data>
+  <data name="MEBalanced" xml:space="preserve"><value>القيد متزن</value></data>
+  <data name="MEDiff" xml:space="preserve"><value>الفرق (غير متزن)</value></data>
+  <data name="MEWarnings" xml:space="preserve"><value>تنبيهات (لم تمنع الحفظ):</value></data>
+  <data name="MESave" xml:space="preserve"><value>حفظ القيد</value></data>
+  <data name="MEUpdate" xml:space="preserve"><value>حفظ التعديل</value></data>
+  <data name="MEDelete" xml:space="preserve"><value>حذف القيد</value></data>
+  <data name="MEConfirmSave" xml:space="preserve"><value>هل تريد حفظ القيد؟</value></data>
+  <data name="MEDeleteConfirm" xml:space="preserve"><value>سيُحذف القيد وأسطره نهائياً. المتابعة؟</value></data>
+  <data name="MESaved" xml:space="preserve"><value>تم حفظ القيد رقم {0}</value></data>
+  <data name="MEDeleted" xml:space="preserve"><value>تم حذف القيد</value></data>
+  <data name="MENotFound" xml:space="preserve"><value>القيد غير موجود</value></data>
+  <data name="MEPostedRO" xml:space="preserve"><value>القيد مُرحَّل إلى الاستاذ فهو للقراءة فقط. ألغِ ترحيل الفترة من «ترحيل القيود» لتعديله.</value></data>
+  <data name="MEAutoRO" xml:space="preserve"><value>قيد آلى مولَّد من مستند (فاتورة/سند...) فهو للقراءة فقط؛ يُعدَّل أو يُحذف من مستنده.</value></data>
 </root>

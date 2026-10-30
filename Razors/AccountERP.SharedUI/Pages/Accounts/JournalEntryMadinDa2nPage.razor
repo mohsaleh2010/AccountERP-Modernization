@@ -1,0 +1,22 @@
+@* 🟢 «إدخال القيود مدين-دائن» (بدل General_Ledger.NewAccount_EntryMadinDa2nFRM) — المحرر المشترك ManualEntryEditor. المعامل id=<رقم القيد> لعرض/تعديل قيد قائم. *@
+@page "/accounts/journal-entry/madin-da2n"
+@using AccountERP.SharedUI.Components.Shared
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+
+<PageTitle>@Title</PageTitle>
+
+<ManualEntryEditor Title="@Title" EntryId="IdQuery" BasePath="/accounts/journal-entry/madin-da2n" @key="IdQuery" />
+
+@code {
+    [SupplyParameterFromQuery(Name = "id")] public long? IdQuery { get; set; }
+
+    private string Title => Tr("METitleMadin");
+
+    private string Tr(string key)
+    {
+        var previous = System.Globalization.CultureInfo.CurrentUICulture;
+        try { System.Globalization.CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key]; }
+        finally { System.Globalization.CultureInfo.CurrentUICulture = previous; }
+    }
+}

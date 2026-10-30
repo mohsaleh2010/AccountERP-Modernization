@@ -4330,4 +4330,31 @@
   <data name="SEConfirm" xml:space="preserve"><value>An entry will be created for {0} cash-box order(s). Continue?</value></data>
   <data name="SEConfirmYes" xml:space="preserve"><value>Create</value></data>
   <data name="SEResultTitle" xml:space="preserve"><value>{0} entries created, {1} failed</value></data>
+  <data name="METitleMadin" xml:space="preserve"><value>Journal entry (debit / credit)</value></data>
+  <data name="MENew" xml:space="preserve"><value>New entry</value></data>
+  <data name="MEHead" xml:space="preserve"><value>Entry data</value></data>
+  <data name="MEEntryNo" xml:space="preserve"><value>Entry no.</value></data>
+  <data name="MEDocNo" xml:space="preserve"><value>Document no.</value></data>
+  <data name="MECurrency" xml:space="preserve"><value>Entry currency</value></data>
+  <data name="MEFactor" xml:space="preserve"><value>Exchange factor</value></data>
+  <data name="MENotes" xml:space="preserve"><value>Entry description</value></data>
+  <data name="MELinesTitle" xml:space="preserve"><value>Add a line</value></data>
+  <data name="MELinesList" xml:space="preserve"><value>Entry lines</value></data>
+  <data name="METype" xml:space="preserve"><value>Type</value></data>
+  <data name="MEDebit" xml:space="preserve"><value>Debit</value></data>
+  <data name="MECredit" xml:space="preserve"><value>Credit</value></data>
+  <data name="MENoLines" xml:space="preserve"><value>No lines yet</value></data>
+  <data name="MEBalanced" xml:space="preserve"><value>Entry is balanced</value></data>
+  <data name="MEDiff" xml:space="preserve"><value>Difference (unbalanced)</value></data>
+  <data name="MEWarnings" xml:space="preserve"><value>Warnings (did not block saving):</value></data>
+  <data name="MESave" xml:space="preserve"><value>Save entry</value></data>
+  <data name="MEUpdate" xml:space="preserve"><value>Save changes</value></data>
+  <data name="MEDelete" xml:space="preserve"><value>Delete entry</value></data>
+  <data name="MEConfirmSave" xml:space="preserve"><value>Save this entry?</value></data>
+  <data name="MEDeleteConfirm" xml:space="preserve"><value>The entry and its lines will be deleted permanently. Continue?</value></data>
+  <data name="MESaved" xml:space="preserve"><value>Entry no. {0} saved</value></data>
+  <data name="MEDeleted" xml:space="preserve"><value>Entry deleted</value></data>
+  <data name="MENotFound" xml:space="preserve"><value>Entry not found</value></data>
+  <data name="MEPostedRO" xml:space="preserve"><value>This entry is posted to the ledger, so it is read-only. Cancel the period posting from "Post entries" to edit it.</value></data>
+  <data name="MEAutoRO" xml:space="preserve"><value>This entry was generated automatically from a document (invoice/voucher...), so it is read-only; edit or delete it from its document.</value></data>
 </root>

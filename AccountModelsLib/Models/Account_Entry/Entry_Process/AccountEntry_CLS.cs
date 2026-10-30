@@ -763,6 +763,29 @@ WHERE        (Account_Entry_List.Id = - 1)";
             Make_AccountEntry_(ref Excp, ref Msg, ref Account_Entry_List_ID, false, ref opp, User_ID_Login, User_Id_Login_Name, Branch_ID_Login, Entry_No, Entry_Date, journal_Code, Currency_Id, Entry_Notes, Transform_Type, dt_Details, Entry_Total, Branch_Id_Entry, IS_Make_AutomaticFromTar7eel, Doc_No, Entry_Currency_ID, Entry_Currency_Name, Factor, Order_Money_Id);
 
         }
+        /// <summary>
+        /// نفس Make_AccountEntry (معاملة + دفتر العميل/المورد) لكن رقم القيد يُخصَّص داخل المعاملة بقفل (EntryNumbering) ويُعاد فى Entry_No.
+        /// إضافة جديدة لشاشات Razor للقيد اليدوى؛ لا تغيّر سلوك الدوال القائمة.
+        /// </summary>
+        public void Make_AccountEntry_LockedNo(ref int Excp, ref string Msg, ref long Account_Entry_List_ID, ref long Entry_No, long User_ID_Login, string User_Id_Login_Name, long Branch_ID_Login, DateTime Entry_Date, long journal_Code, long Currency_Id, string Entry_Notes, int Transform_Type, DataTable dt_Details, double Entry_Total, long Branch_Id_Entry, int IS_Make_AutomaticFromTar7eel, string Doc_No, long Entry_Currency_ID, string Entry_Currency_Name, decimal Factor)
+        {
+            AccountModelsLib.operations opp = new AccountModelsLib.operations(1);
+            try
+            {
+                Account_Entry_List_ID = 0;
+                Entry_No = BusinessLibShared.GeneralLedger.EntryNumbering.Next(opp, Entry_Date, journal_Code);
+                Make_AccountEntry_(ref Excp, ref Msg, ref Account_Entry_List_ID, false, ref opp, User_ID_Login, User_Id_Login_Name, Branch_ID_Login, Entry_No, Entry_Date, journal_Code, Currency_Id, Entry_Notes, Transform_Type, dt_Details, Entry_Total, Branch_Id_Entry, IS_Make_AutomaticFromTar7eel, Doc_No, Entry_Currency_ID, Entry_Currency_Name, Factor, 0);
+                if (Excp == 0) SetCustomerSupplierAccount(ref Excp, ref opp, dt_Details, Account_Entry_List_ID);
+                if (Excp == 0) opp.Commit(); else opp.Rollback();
+            }
+            catch (Exception ee)
+            {
+                Excp = 1;
+                Msg = ee.Message;
+                try { opp.Rollback(); } catch { }
+            }
+        }
+
         void SetCustomerSupplierAccount(ref int Excp, ref AccountModelsLib.operations opp, DataTable dt_Details, long Account_Entry_List_ID)
         {
             for (int x = 0; x < dt_Details.Rows.Count; x++)
