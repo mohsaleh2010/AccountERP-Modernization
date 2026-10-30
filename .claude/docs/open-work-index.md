@@ -138,6 +138,12 @@ git log --oneline -14
   - خطة 06 §3 ما زالت تصف الجرد المستمر كـ«إن اعتُمد لاحقاً» بعد أن حُسم بناؤه مع المحرك (م-01-1 المراجَع).
   - خطة 01 المرحلة 7 (إعداد «طريقة التحويل» + الصلاحية) مطلوبة قبل صفحة التحويل، لكنها غير مذكورة فى اعتماديات خطة 03 المرحلة 3.
 
+## 16) خطة القيود الموحدة (Journal Entries)
+
+- **المرجع:** [`journal-entries-handoff.md`](journal-entries-handoff.md) (ابدأ منه) · [`journal-entries-unified-plan.md`](journal-entries-unified-plan.md) · [`journal-entries-study-findings.md`](journal-entries-study-findings.md).
+- **الحالة (2026-10-30):** م0–م5 منتهية كوداً (الحارس المركزى، شاشات الإدخال، قيود الصندوق الآلية، تقرير السلامة `/accounts/entries-integrity`، والحارس التحذيرى على كل المصادر عدا المستشفى المؤجل عمداً)، وم6 توثيق منتهية. اختبارات المستخدم م-154…م-182 فى `master-user-test-plan.md`.
+- **ما تبقى:** (١) عرض `EntryValidator.AutoWarnings` فى نتيجة حفظ الفاتورة عند بناء شاشة Razor؛ (٢) قراران معلّقان: تصحيح `Factor = 1` فى تفاصيل القيد (مؤجل لأنه كود مشترك)، ومعنى `Financial_Period.Done/IS_Active` قبل فحص «الفترة مفتوحة».
+
 ---
 
 ## كيف تستخدم هذا الفهرس فى session جديدة

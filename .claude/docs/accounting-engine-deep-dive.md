@@ -241,6 +241,8 @@ Account_Entry_Master_Balance_MezanTemp  +  Account_Entry_Master_TransactionTemp
 
 ## 8.5) 🔴 تصحيح جوهرى: تكامل المخزون مع الحسابات (GRIR/PPV/COGS) — نظرى بالكامل فى `ERP_V1_3.md`، **غير موجود فى الكود الفعلى إطلاقاً**
 
+> **⚠️ تحديث 2026-10-30 — ما يلى وصف للحالة وقت الدراسة الأولى وقد تغيّر جزئياً:** صار فى الكود الآن محرك **المخزون المستمر (Perpetual)** فى `Account_Entry_Invoice_CLS.Perpetual.cs`: `Make_EntryForInvoices`/`_Reverse` تستدعى القديمة (`*_Legacy` حرفياً) ثم `PostCogs` → `InventoryPostingService.PostInvoiceCogsEntry` (قيد منفصل لتكلفة البضاعة المباعة، مرجع `InvoiceCogsReferenceType`/`InvoiceReturnCogsReferenceType`)، و`Make_EntryFor_Bills`/`_Reverse` تستدعى القديمة ثم `PostBillStock` (ينقل قيمة المخزنى من المشتريات إلى حساب المخزن). كلاهما **لا يفعل شيئاً إلا لفرع طريقته «مستمر» وتاريخ المستند ≥ تاريخ البدء**، فالجرد الدورى يبقى الأصل (م-01-1 فى `inventory-01-stock-engine-balance-costing-plan.md`). **ما زال صحيحاً:** `Order_DetailsNewCls` (أذون الاستلام/الصرف) لا يُنشئ قيداً، ولا GRIR/PPV مستخدمان. فوق ذلك أُضيف **حارس مركزى تحذيرى** (`EntryValidator.ValidateSource` + `AutoWarnings`) على قيود الفواتير والشيكات والتسويات المالية وفحص السيارات وإتلاف الموردين ومستحقات الفترة وسندات الصندوق — لا يرفض شيئاً ولا يغيّر `Excp/Msg`. التفاصيل: `journal-entries-handoff.md`.
+
 بدء دراسة وحدة المخازن/المشتريات (`Store_LIB`، محرك أذونات الصرف/الاستلام الموحَّد
 `Order_DetailsWorkNewFrm`/`Order_DetailsNewCls` — 4800 سطر، يُستخدَم من ~20 نوع إذن مختلف عبر كل قوائم
 "المخازن") كشف تناقضاً جوهرياً مع ما ورد فى `ERP_V1_3.md` §11-16 (أنواع حركة المخزون، GRIR، PPV، COGS):
