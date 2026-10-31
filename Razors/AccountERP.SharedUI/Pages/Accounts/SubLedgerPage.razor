@@ -1,5 +1,5 @@
 @* 🟢 «الأستاذ المساعد» صفحتان كما فى الديسكتوب (م2 من final-accounts-razor-plan.md):
-   mode=range  ⇒ «الأستاذ المساعد عن فترة» (Master_Account_Details2): تاريخان حران بلا فترة مالية، مع خيار «إضافة الرصيد اللاحق».
+   mode=range  ⇒ «الأستاذ المساعد عن فترة» (Master_Account_Details2): تاريخان حران بلا فترة مالية؛ الرصيد السابق يُنقل دائماً (خيار الديسكتوب «إضافة الرصيد السابق» بلا أثر فى الكود).
    mode=fiscal ⇒ «الأستاذ المساعد بالفترة المالية» (Master_Account_DetailsTarseed22): رصيد أول المدة من الفترة المالية.
    الحساب نفسه: FinalAccountsService ⇒ AccountEntry_CLS.Get_MasterAccount_Entry_Details_* بلا تعديل. قراءة فقط.
    النقر المزدوج على سطر القيد يفتحه (شاشة مدين/دائن لمن يملك صلاحية 808، وإلا الشاشة العادية). *@
@@ -111,10 +111,6 @@
             <MudDatePicker T="DateTime?" Date="_to" DateChanged="@(d => { _to = d; Reset(); })" Label="@Tr("FADateTo")" Variant="Variant.Outlined" Editable="true" />
         </div>
         <div class="lg-btns">
-            @if (!Fiscal)
-            {
-                <MudCheckBox T="bool" @bind-Value="_addBalanceAfter" Label="@Tr("LGAddBalanceAfter")" Color="Color.Primary" Dense="true" />
-            }
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility"
                        Disabled="@_loading" OnClick="ShowAsync">@Tr("FAShow")</MudButton>
             <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Print"
@@ -194,7 +190,6 @@
     private FinalAccountsService.LedgerAccount? _account;
     private long _periodId, _branch, _journal, _accountType, _currency = FinalAccountsService.EquivalentCurrencyId;
     private DateTime? _from, _to;
-    private bool _addBalanceAfter;
     private List<FinalAccountsService.LedgerLine>? _lines;
     private string _shownName = "";
     private string? _error;
@@ -276,11 +271,11 @@
         _loading = true;
         try
         {
-            long acc = _account.Id, cur = _currency, jr = _journal, br = _branch; DateTime from = _from.Value, to = _to.Value; bool after = _addBalanceAfter; bool fiscal = Fiscal;
+            long acc = _account.Id, cur = _currency, jr = _journal, br = _branch; DateTime from = _from.Value, to = _to.Value; bool fiscal = Fiscal;
             _lines = await Task.Run(() =>
             {
                 AccountCultureGuard.EnsureInvariant();
-                return fiscal ? _svc.GetLedgerFiscal(acc, from, to, cur, jr, br) : _svc.GetLedgerRange(acc, from, to, cur, jr, br, after);
+                return fiscal ? _svc.GetLedgerFiscal(acc, from, to, cur, jr, br) : _svc.GetLedgerRange(acc, from, to, cur, jr, br, true);
             });
             _shownName = $"{_account.Number}  {_account.Name}";
         }
