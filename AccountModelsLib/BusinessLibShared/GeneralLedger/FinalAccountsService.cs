@@ -23,7 +23,7 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
 
         public FinalAccountsService(Func<operations> newOpp = null) => _newOpp = newOpp ?? (() => new operations());
 
-        public record PeriodRow(long Id, string Name, DateTime DateFrom, DateTime DateTo);
+        public record PeriodRow(long Id, string Name, DateTime DateFrom, DateTime DateTo, bool IsActive = false);
         public record Option(long Id, string Name);
 
         /// <summary>عملة «بالمكافىء» فى الديسكتوب (القيمة -1): كل القيود بما يعادلها بالعملة الأساسية.</summary>
@@ -35,7 +35,8 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
             return dt.Rows.Cast<DataRow>().Select(r => new PeriodRow(
                 Convert.ToInt64(r["Id"]),
                 dt.Columns.Contains("Financial_Period_Name") ? r["Financial_Period_Name"]?.ToString() ?? "" : "",
-                Convert.ToDateTime(r["DateFrom"]), Convert.ToDateTime(r["DateTo"]))).ToList();
+                Convert.ToDateTime(r["DateFrom"]), Convert.ToDateTime(r["DateTo"]),
+                dt.Columns.Contains("IS_Active") && r["IS_Active"] != DBNull.Value && Convert.ToInt32(r["IS_Active"]) == 1)).ToList();
         }
 
         /// <summary>العملات: الاختيار الأول «بالمكافىء» (-1) ثم عملات الجدول بقيمتها (Value) كما فى Currency_List_2.</summary>
@@ -76,10 +77,13 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
             return list;
         }
 
-        /// <summary>قائمة الحسابات الفرعية الورقية كما فى الديسكتوب (Get_MasterAccount_Entry_List بعلامة «بحركات» = False).</summary>
-        public List<LedgerAccount> GetLedgerAccounts(DateTime from, DateTime to, long journal, long branch, long currency, int accountType)
+        /// <summary>
+        /// شبكة الحسابات كما فى الديسكتوب (Get_MasterAccount_Entry_List): withTransactions=True ⇒ الحسابات التى لها قيود فى التاريخين واليومية
+        /// والفرع والعملة والنوع؛ False ⇒ كل الحسابات الورقية. subAccountId>0 يقصرها على حساب واحد.
+        /// </summary>
+        public List<LedgerAccount> GetLedgerAccounts(DateTime from, DateTime to, long journal, long branch, long currency, int accountType, long subAccountId = 0, bool withTransactions = false)
         {
-            var dt = new AccountEntry_CLS().Get_MasterAccount_Entry_List(from, to, journal, branch, currency, accountType, 0, false);
+            var dt = new AccountEntry_CLS().Get_MasterAccount_Entry_List(from, to, journal, branch, currency, accountType, subAccountId, withTransactions);
             return dt.Rows.Cast<DataRow>().Select(r => new LedgerAccount(
                 Convert.ToInt64(r["Submain_Account_ID"]),
                 r["SubAccount_Name"]?.ToString()?.Trim() ?? "",

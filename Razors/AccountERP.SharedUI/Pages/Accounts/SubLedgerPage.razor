@@ -1,7 +1,11 @@
-@* 🟢 «الأستاذ المساعد» صفحتان كما فى الديسكتوب (م2 من final-accounts-razor-plan.md):
-   mode=range  ⇒ «الأستاذ المساعد عن فترة» (Master_Account_Details2): تاريخان حران بلا فترة مالية؛ الرصيد السابق يُنقل دائماً (خيار الديسكتوب «إضافة الرصيد السابق» بلا أثر فى الكود).
-   mode=fiscal ⇒ «الأستاذ المساعد بالفترة المالية» (Master_Account_DetailsTarseed22): رصيد أول المدة من الفترة المالية.
-   الحساب نفسه: FinalAccountsService ⇒ AccountEntry_CLS.Get_MasterAccount_Entry_Details_* بلا تعديل. قراءة فقط.
+@* 🟢 «الأستاذ المساعد» صفحتان كما فى الديسكتوب (م2 من final-accounts-razor-plan.md)، بتصميم الديسكتوب: شبكتان.
+   الشبكة الأولى (يمين/أعلى): الحسابات (التى لها حركات إن أُشِّر «عرض الحسابات التى لها حركات») مع بحث بالاسم؛ باختيار حساب منها
+   تظهر حركته فى الشبكة الثانية، وفوقها بحث فى «البيان».
+   mode=range  ⇒ «الأستاذ المساعد عن فترة» (Master_Account_Details2): تاريخان حران بلا فترة مالية؛ قائمة كل الحسابات الورقية.
+   mode=fiscal ⇒ «الأستاذ المساعد بالفترة المالية» (Master_Account_DetailsTarseed22): قائمة الفترة المالية باسمها، تغيير الفترة يملأ التاريخين،
+                  وتغيير تاريخ البداية يحدّد الفترة التى يقع فيها (كما فى dtDateFrom_ValueChanged).
+   اختيار الحساب للتصفية: بحث مباشر بالاسم/الرقم + زر «...» لشجرة الحسابات (AccountSelector) بدل account_ListSearchKey2.
+   الحساب نفسه: FinalAccountsService ⇒ AccountEntry_CLS بلا تعديل. قراءة فقط.
    النقر المزدوج على سطر القيد يفتحه (شاشة مدين/دائن لمن يملك صلاحية 808، وإلا الشاشة العادية). *@
 @page "/accounts/final/ledger"
 
@@ -28,7 +32,16 @@
     .lg-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
     .lg-gap { margin-top: 16px; }
     .lg-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: start; }
+    .lg-filters .wide { grid-column: span 2; }
     .lg-btns { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; align-items: center; }
+    .lg-split { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; }
+    .lg-list { max-height: 68vh; overflow: auto; border: 1px solid var(--mud-palette-lines-default); border-radius: 8px; margin-top: 8px; }
+    table.lg-acc { width: 100%; border-collapse: collapse; }
+    table.lg-acc th, table.lg-acc td { padding: 6px 10px; border-bottom: 1px solid var(--mud-palette-lines-default); }
+    table.lg-acc thead th { position: sticky; top: 0; background: var(--mud-palette-surface); font-weight: 700; z-index: 1; text-align: start; }
+    table.lg-acc tr.pick { cursor: pointer; }
+    table.lg-acc tr.pick:hover td { background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent); }
+    table.lg-acc tr.sel td { background: color-mix(in srgb, var(--mud-palette-primary) 18%, transparent); font-weight: 700; }
     .lg-wrap { overflow-x: auto; }
     table.lg { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
     table.lg th, table.lg td { padding: 6px 10px; border-bottom: 1px solid var(--mud-palette-lines-default); white-space: nowrap; }
@@ -40,12 +53,14 @@
     table.lg tr.open td { font-weight: 700; background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent); }
     table.lg tr.tot td { font-weight: 700; border-top: 1px solid var(--mud-palette-text-secondary); }
     table.lg tr.close td { font-weight: 800; background: color-mix(in srgb, var(--mud-palette-primary) 16%, transparent); border-top: 2px solid var(--mud-palette-primary); }
-    .lg-acc { font-weight: 700; font-size: 1.05rem; }
+    .lg-acc-title { font-weight: 700; font-size: 1.05rem; display: flex; flex-wrap: wrap; gap: 4px 24px; align-items: baseline; }
+    .lg-acc-title .cur { font-weight: 400; color: var(--mud-palette-text-secondary); font-size: .9rem; }
     .lg-print-title { display: none; }
-    @@media (max-width: 1099px) { .lg-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @@media (max-width: 599px) { .lg-filters { grid-template-columns: minmax(0, 1fr); } }
+    @@media (max-width: 1099px) { .lg-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .lg-split { grid-template-columns: minmax(0, 1fr); } .lg-list { max-height: 40vh; } }
+    @@media (max-width: 599px) { .lg-filters { grid-template-columns: minmax(0, 1fr); } .lg-filters .wide { grid-column: auto; } }
     @@media print {
         .lg-noprint, .mud-appbar, .mud-drawer, nav { display: none !important; }
+        .lg-split { display: block; }
         .lg-print-title { display: block; margin-bottom: 8px; }
         .lg-wrap { overflow: visible; }
         table.lg thead th { position: static; }
@@ -53,7 +68,7 @@
 </style>
 
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
-<div class="inv-page">
+<div class="inv-page" @onkeydown="OnKeyDown">
 
     <div class="inv-card lg-head lg-noprint">
         <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.MenuBook" /></div>
@@ -66,22 +81,11 @@
     <div class="inv-card lg-gap lg-noprint">
         <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.FilterList" />@Tr("SOFiltersTitle")</h2>
         <div class="lg-filters">
-            <MudAutocomplete T="FinalAccountsService.LedgerAccount" Value="_account" ValueChanged="@(a => { _account = a; Reset(); })"
-                             SearchFunc="SearchAccounts" ToStringFunc="@(a => a == null ? "" : $"{a.Number}  {a.Name}")"
-                             Label="@Tr("LGAccount")" Variant="Variant.Outlined" MaxItems="30" CoerceText="false" ResetValueOnEmptyText="true"
-                             Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Style="grid-column: span 2;" />
-            <MudSelect T="long" Value="_accountType" ValueChanged="OnTypeAsync" Label="@Tr("LGAccountType")" Variant="Variant.Outlined"
-                       ToStringFunc="@(v => _types.FirstOrDefault(t => t.Id == v)?.Name ?? "")">
-                @foreach (var t in _types)
+            <MudSelect T="long" Value="_branch" ValueChanged="OnBranchAsync" Label="@Tr("FABranch")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => _branches.FirstOrDefault(b => b.Id == v)?.Name ?? "")">
+                @foreach (var b in _branches)
                 {
-                    <MudSelectItem T="long" Value="@t.Id">@t.Name</MudSelectItem>
-                }
-            </MudSelect>
-            <MudSelect T="long" Value="_journal" ValueChanged="@(v => { _journal = v; Reset(); })" Label="@Tr("LGJournal")" Variant="Variant.Outlined"
-                       ToStringFunc="@(v => _journals.FirstOrDefault(j => j.Id == v)?.Name ?? "")">
-                @foreach (var j in _journals)
-                {
-                    <MudSelectItem T="long" Value="@j.Id">@j.Name</MudSelectItem>
+                    <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
                 }
             </MudSelect>
             @if (Fiscal)
@@ -93,13 +97,8 @@
                     }
                 </MudSelect>
             }
-            <MudSelect T="long" Value="_branch" ValueChanged="@(v => { _branch = v; Reset(); })" Label="@Tr("FABranch")" Variant="Variant.Outlined"
-                       ToStringFunc="@(v => _branches.FirstOrDefault(b => b.Id == v)?.Name ?? "")">
-                @foreach (var b in _branches)
-                {
-                    <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
-                }
-            </MudSelect>
+            <MudDatePicker T="DateTime?" Date="_from" DateChanged="OnFromAsync" Label="@Tr("FADateFrom")" Variant="Variant.Outlined" Editable="true" />
+            <MudDatePicker T="DateTime?" Date="_to" DateChanged="@(d => { _to = d; Reset(); })" Label="@Tr("FADateTo")" Variant="Variant.Outlined" Editable="true" />
             <MudSelect T="long" Value="_currency" ValueChanged="@(v => { _currency = v; Reset(); })" Label="@Tr("FACurrency")" Variant="Variant.Outlined"
                        ToStringFunc="@(v => _currencies.FirstOrDefault(c => c.Id == v)?.Name ?? "")">
                 @foreach (var c in _currencies)
@@ -107,12 +106,34 @@
                     <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
                 }
             </MudSelect>
-            <MudDatePicker T="DateTime?" Date="_from" DateChanged="@(d => { _from = d; Reset(); })" Label="@Tr("FADateFrom")" Variant="Variant.Outlined" Editable="true" />
-            <MudDatePicker T="DateTime?" Date="_to" DateChanged="@(d => { _to = d; Reset(); })" Label="@Tr("FADateTo")" Variant="Variant.Outlined" Editable="true" />
+            <MudSelect T="long" Value="_journal" ValueChanged="@(v => { _journal = v; Reset(); })" Label="@Tr("LGJournal")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => _journals.FirstOrDefault(j => j.Id == v)?.Name ?? "")">
+                @foreach (var j in _journals)
+                {
+                    <MudSelectItem T="long" Value="@j.Id">@j.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="long" Value="_accountType" ValueChanged="@(v => { _accountType = v; Reset(); })" Label="@Tr("LGAccountType")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => _types.FirstOrDefault(t => t.Id == v)?.Name ?? "")">
+                @foreach (var t in _types)
+                {
+                    <MudSelectItem T="long" Value="@t.Id">@t.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <div class="wide">
+                <AccountSelector @key="_selectorKey" ShowPartyChoice="false" AccountSelection="0" BranchId="_branch"
+                                 SubAccountId="_filterAccountId" SubAccountIdChanged="@(v => { _filterAccountId = v; Reset(); })"
+                                 SubAccountName="_filterAccountName" SubAccountNameChanged="@(v => _filterAccountName = v)" />
+            </div>
         </div>
         <div class="lg-btns">
+            @if (Fiscal)
+            {
+                <MudCheckBox T="bool" @bind-Value="_withTransactions" Label="@Tr("LGOnlyWithMoves")" Color="Color.Primary" Dense="true" />
+            }
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility"
-                       Disabled="@_loading" OnClick="ShowAsync">@Tr("FAShow")</MudButton>
+                       Disabled="@_loading" OnClick="ShowListAsync">@Tr("FAShow")</MudButton>
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Clear" Disabled="@(_filterAccountId == 0)" OnClick="ClearAccount">@Tr("LGClearAccount")</MudButton>
             <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Print"
                        Disabled="@(_loading || _lines == null)" OnClick="PrintAsync">@Tr("FAPrint")</MudButton>
             @if (_loading) { <MudProgressCircular Indeterminate="true" Size="Size.Small" /> }
@@ -124,57 +145,95 @@
         <MudAlert Severity="Severity.Error" Dense="true" Class="lg-gap" role="alert">@_error</MudAlert>
     }
 
-    @if (_lines != null)
+    @if (_list != null)
     {
-        <div class="inv-card lg-gap">
-            <div class="lg-print-title">
-                <strong>@Title</strong> — @_shownName — @(_currencies.FirstOrDefault(c => c.Id == _currency)?.Name)
-                (@_from?.ToString("yyyy/MM/dd") → @_to?.ToString("yyyy/MM/dd"))
-            </div>
-            <div class="lg-acc">@_shownName</div>
-            <div class="lg-wrap lg-gap">
-                <table class="lg">
-                    <thead>
-                        <tr>
-                            <th>@Tr("LGColSerial")</th><th>@Tr("LGColDate")</th><th>@Tr("LGColEntryNo")</th><th>@Tr("LGJournal")</th>
-                            <th>@Tr("LGColDocType")</th><th>@Tr("LGColDocNo")</th><th>@Tr("LGColOther")</th><th>@Tr("LGColCostCenter")</th>
-                            <th>@Tr("LGColNotes")</th><th>@Tr("LGColDebit")</th><th>@Tr("LGColCredit")</th>
-                            <th>@Tr("LGColBalDebit")</th><th>@Tr("LGColBalCredit")</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @{ int serial = 0; }
-                        @foreach (var l in _lines)
-                        {
-                            if (l.Kind == 0)
+        <div class="lg-split lg-gap">
+            <div class="inv-card lg-noprint">
+                <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.AccountTree" />@Tr("LGAccountsGrid") (@VisibleAccounts.Count())</h2>
+                <MudTextField T="string" @bind-Value="_accountSearch" Immediate="true" Label="@Tr("TBSearch")" Variant="Variant.Outlined" Dense="true"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true" />
+                <div class="lg-list">
+                    <table class="lg-acc">
+                        <thead><tr><th>@Tr("TBColCode")</th><th>@Tr("TBColAccount")</th></tr></thead>
+                        <tbody>
+                            @foreach (var a in VisibleAccounts)
                             {
-                                serial++;
-                                <tr class="move" title="@Tr("LGOpenHint")" @ondblclick="@(() => OpenEntry(l))">
-                                    <td>@serial</td>
-                                    <td>@l.Date?.ToString("yyyy/MM/dd")</td>
-                                    <td>@l.EntryNo</td><td>@l.Journal</td><td>@l.DocType</td><td>@l.DocNo</td>
-                                    <td class="txt">@l.OtherAccount</td><td>@l.CostCenter</td><td class="txt">@l.Notes</td>
-                                    <td class="num">@N(l.Debit)</td><td class="num">@N(l.Credit)</td>
-                                    <td class="num">@N(l.BalanceDebit)</td><td class="num">@N(l.BalanceCredit)</td>
+                                <tr class="pick @(a.Id == _selectedId ? "sel" : "")" @onclick="@(() => SelectAccountAsync(a))">
+                                    <td>@a.Number</td><td>@a.Name</td>
                                 </tr>
                             }
-                            else
-                            {
-                                <tr class="@(l.Kind == 1 ? "open" : l.Kind == 2 ? "tot" : "close")">
-                                    <td colspan="8"></td>
-                                    <td>@l.Notes</td>
-                                    <td class="num">@N(l.Debit)</td><td class="num">@N(l.Credit)</td>
-                                    <td class="num">@N(l.BalanceDebit)</td><td class="num">@N(l.BalanceCredit)</td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
+                @if (_list.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="lg-gap" role="status">@Tr("LGNoAccounts")</MudAlert>
+                }
             </div>
-            @if (serial == 0)
-            {
-                <MudAlert Severity="Severity.Info" Dense="true" Class="lg-gap" role="status">@Tr("LGNoMoves")</MudAlert>
-            }
+
+            <div class="inv-card">
+                @if (_lines == null)
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true" role="status">@Tr("LGPickAccount")</MudAlert>
+                }
+                else
+                {
+                    <div class="lg-print-title">
+                        <strong>@Title</strong> — @_shownName — @_shownCurrency
+                        (@_from?.ToString("yyyy/MM/dd") → @_to?.ToString("yyyy/MM/dd"))
+                    </div>
+                    <div class="lg-acc-title">
+                        <span>@_shownName</span><span class="cur">@Tr("FACurrency"): @_shownCurrency</span>
+                    </div>
+                    <div class="lg-noprint lg-gap">
+                        <MudTextField T="string" @bind-Value="_notesSearch" Immediate="true" Label="@Tr("LGSearchNotes")" Variant="Variant.Outlined" Dense="true"
+                                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true" />
+                    </div>
+                    <div class="lg-wrap lg-gap">
+                        <table class="lg">
+                            <thead>
+                                <tr>
+                                    <th>@Tr("LGColSerial")</th><th>@Tr("LGColDate")</th><th>@Tr("LGColEntryNo")</th><th>@Tr("LGJournal")</th>
+                                    <th>@Tr("LGColDocType")</th><th>@Tr("LGColDocNo")</th><th>@Tr("LGColOther")</th><th>@Tr("LGColCostCenter")</th>
+                                    <th>@Tr("LGColNotes")</th><th>@Tr("LGColDebit")</th><th>@Tr("LGColCredit")</th>
+                                    <th>@Tr("LGColBalDebit")</th><th>@Tr("LGColBalCredit")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{ int serial = 0; }
+                                @foreach (var l in VisibleLines)
+                                {
+                                    if (l.Kind == 0)
+                                    {
+                                        serial++;
+                                        <tr class="move" title="@Tr("LGOpenHint")" @ondblclick="@(() => OpenEntry(l))">
+                                            <td>@serial</td>
+                                            <td>@l.Date?.ToString("yyyy/MM/dd")</td>
+                                            <td>@l.EntryNo</td><td>@l.Journal</td><td>@l.DocType</td><td>@l.DocNo</td>
+                                            <td class="txt">@l.OtherAccount</td><td>@l.CostCenter</td><td class="txt">@l.Notes</td>
+                                            <td class="num">@N(l.Debit)</td><td class="num">@N(l.Credit)</td>
+                                            <td class="num">@N(l.BalanceDebit)</td><td class="num">@N(l.BalanceCredit)</td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        <tr class="@(l.Kind == 1 ? "open" : l.Kind == 2 ? "tot" : "close")">
+                                            <td colspan="8"></td>
+                                            <td>@l.Notes</td>
+                                            <td class="num">@N(l.Debit)</td><td class="num">@N(l.Credit)</td>
+                                            <td class="num">@N(l.BalanceDebit)</td><td class="num">@N(l.BalanceCredit)</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (_lines.All(l => l.Kind != 0))
+                    {
+                        <MudAlert Severity="Severity.Info" Dense="true" Class="lg-gap" role="status">@Tr("LGNoMoves")</MudAlert>
+                    }
+                }
+            </div>
         </div>
     }
 </div>
@@ -186,17 +245,31 @@
     private readonly FinalAccountsService _svc = new();
     private List<FinalAccountsService.PeriodRow> _periods = new();
     private List<FinalAccountsService.Option> _branches = new(), _currencies = new(), _journals = new(), _types = new();
-    private List<FinalAccountsService.LedgerAccount> _accounts = new();
-    private FinalAccountsService.LedgerAccount? _account;
+    private List<FinalAccountsService.LedgerAccount>? _list;
     private long _periodId, _branch, _journal, _accountType, _currency = FinalAccountsService.EquivalentCurrencyId;
+    private long _filterAccountId, _selectedId;
+    private string _filterAccountName = "";
+    private int _selectorKey;
     private DateTime? _from, _to;
+    private bool _withTransactions = true;
+    private string _accountSearch = "", _notesSearch = "";
     private List<FinalAccountsService.LedgerLine>? _lines;
-    private string _shownName = "";
+    private string _shownName = "", _shownCurrency = "";
     private string? _error;
     private bool _loading;
 
     private bool Fiscal => string.Equals(Mode, "fiscal", StringComparison.OrdinalIgnoreCase);
     private string Title => Tr(Fiscal ? "LGTitleFiscal" : "LGTitleRange");
+
+    private IEnumerable<FinalAccountsService.LedgerAccount> VisibleAccounts =>
+        _list == null ? Enumerable.Empty<FinalAccountsService.LedgerAccount>()
+        : string.IsNullOrWhiteSpace(_accountSearch) ? _list
+        : _list.Where(a => a.Name.Contains(_accountSearch.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    // بحث «البيان» يصفّى كل الصفوف بما فيها المجاميع كما يفعل RowFilter فى الديسكتوب
+    private IEnumerable<FinalAccountsService.LedgerLine> VisibleLines =>
+        string.IsNullOrWhiteSpace(_notesSearch) ? _lines!
+        : _lines!.Where(l => l.Notes.Contains(_notesSearch.Trim(), StringComparison.OrdinalIgnoreCase));
 
     protected override async Task OnInitializedAsync()
     {
@@ -212,10 +285,11 @@
                 _currencies = _svc.GetCurrencies(equivalent);
                 _journals = _svc.GetJournals(allJournals);
                 _types = _svc.GetAccountTypes(allTypes);
-                _accounts = _svc.GetLedgerAccounts(DateTime.Today, DateTime.Today, 0, 0, _currency, 0);
             });
             var today = DateTime.Today;
-            var cur = _periods.FirstOrDefault(p => p.DateFrom <= today && today <= p.DateTo) ?? _periods.LastOrDefault();
+            // الفترة الافتراضية كالديسكتوب: الفترة النشطة (IS_Active)، وإلا التى تضم اليوم
+            var cur = _periods.FirstOrDefault(p => p.IsActive)
+                      ?? _periods.FirstOrDefault(p => p.DateFrom <= today && today <= p.DateTo) ?? _periods.LastOrDefault();
             _periodId = cur?.Id ?? 0;
             if (Fiscal) { _from = cur?.DateFrom; _to = cur?.DateTo; }
             else { _from = new DateTime(today.Year, 1, 1); _to = today; }
@@ -227,26 +301,12 @@
     private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
     public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
 
-    private void Reset() { _lines = null; _error = null; }
+    // أى تغيير فى المرشحات يخفى النتائج الحالية (كما يفرغ الديسكتوب الشبكتين عند «عرض» جديد)
+    private void Reset() { _list = null; _lines = null; _selectedId = 0; _error = null; }
 
-    private async Task<IEnumerable<FinalAccountsService.LedgerAccount>> SearchAccounts(string value, CancellationToken ct)
-    {
-        await Task.CompletedTask;
-        var q = (value ?? "").Trim();
-        return string.IsNullOrEmpty(q)
-            ? _accounts.Take(30)
-            : _accounts.Where(a => a.Name.Contains(q, StringComparison.OrdinalIgnoreCase) || a.Number.Contains(q, StringComparison.OrdinalIgnoreCase)).Take(30);
-    }
+    private void OnBranchAsync(long id) { _branch = id; ClearAccount(); }
 
-    private async Task OnTypeAsync(long type)
-    {
-        _accountType = type; _account = null; Reset();
-        try
-        {
-            _accounts = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetLedgerAccounts(DateTime.Today, DateTime.Today, 0, 0, _currency, (int)type); });
-        }
-        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
-    }
+    private void ClearAccount() { _filterAccountId = 0; _filterAccountName = ""; _selectorKey++; Reset(); }
 
     private void OnPeriodAsync(long id)
     {
@@ -255,29 +315,65 @@
         _from = p?.DateFrom; _to = p?.DateTo; Reset();
     }
 
+    // كما فى dtDateFrom_ValueChanged: الفترة المالية المعروضة تتبع تاريخ البداية
+    private void OnFromAsync(DateTime? d)
+    {
+        _from = d; Reset();
+        if (Fiscal && d != null)
+        {
+            var p = _periods.FirstOrDefault(x => x.DateFrom.Date <= d.Value.Date && d.Value.Date <= x.DateTo.Date);
+            if (p != null) _periodId = p.Id;
+        }
+    }
+
+    // الديسكتوب يعرض اسم الفترة فقط (Financial_Period_Name)؛ التواريخ احتياطاً عند خلو الاسم
     private string PeriodText(long id)
     {
         var p = _periods.FirstOrDefault(x => x.Id == id);
-        return p == null ? "" : $"{(string.IsNullOrWhiteSpace(p.Name) ? "" : p.Name + "  ")}{p.DateFrom:yyyy/MM/dd} — {p.DateTo:yyyy/MM/dd}";
+        if (p == null) return "";
+        return string.IsNullOrWhiteSpace(p.Name) ? $"{p.DateFrom:yyyy/MM/dd} — {p.DateTo:yyyy/MM/dd}" : p.Name;
     }
 
-    private async Task ShowAsync()
+    private async Task OnKeyDown(KeyboardEventArgs e)
     {
-        _error = null; _lines = null;
-        if (_account == null) { _error = Tr("LGErrAccountRequired"); return; }
+        if (e.Key == "F8") await ShowListAsync();
+    }
+
+    private async Task ShowListAsync()
+    {
+        _error = null; _lines = null; _list = null; _selectedId = 0;
         if (Fiscal && _periodId == 0) { _error = Tr("FAErrPeriodRequired"); return; }
         if (_from == null || _to == null) { _error = Tr("FAErrPeriodRequired"); return; }
         if (_to.Value.Date < _from.Value.Date) { _error = Tr("FAErrToBeforeFrom"); return; }
         _loading = true;
         try
         {
-            long acc = _account.Id, cur = _currency, jr = _journal, br = _branch; DateTime from = _from.Value, to = _to.Value; bool fiscal = Fiscal;
+            DateTime from = _from.Value, to = _to.Value; long jr = _journal, br = _branch, cur = _currency, acc = _filterAccountId; int type = (int)_accountType;
+            // وضع «عن فترة» فى الديسكتوب يعرض كل الحسابات (علامة «بحركات» = False دائماً)
+            bool withTx = Fiscal && _withTransactions;
+            _list = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetLedgerAccounts(from, to, jr, br, cur, type, acc, withTx); });
+            // حساب محدد بالمرشح ⇒ تُعرض حركته مباشرة (كما يفعل الديسكتوب بأول صف)
+            if (_filterAccountId > 0 && _list.Count > 0) await SelectAccountAsync(_list[0]);
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _loading = false; }
+    }
+
+    private async Task SelectAccountAsync(FinalAccountsService.LedgerAccount account)
+    {
+        if (_from == null || _to == null) return;
+        _error = null; _lines = null; _selectedId = account.Id; _notesSearch = "";
+        _loading = true;
+        try
+        {
+            long cur = _currency, jr = _journal, br = _branch; DateTime from = _from.Value, to = _to.Value; bool fiscal = Fiscal; long acc = account.Id;
             _lines = await Task.Run(() =>
             {
                 AccountCultureGuard.EnsureInvariant();
                 return fiscal ? _svc.GetLedgerFiscal(acc, from, to, cur, jr, br) : _svc.GetLedgerRange(acc, from, to, cur, jr, br, true);
             });
-            _shownName = $"{_account.Number}  {_account.Name}";
+            _shownName = $"{account.Number}  {account.Name}".Trim();
+            _shownCurrency = _currencies.FirstOrDefault(c => c.Id == _currency)?.Name ?? "";
         }
         catch (ArgumentException ex) when (ex.Message == "NoFiscalPeriod") { _error = Tr("LGErrNoFiscalPeriod"); }
         catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }

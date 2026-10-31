@@ -707,6 +707,12 @@
   <data name="LGNoMoves" xml:space="preserve"><value>Keine Bewegungen für dieses Konto im Zeitraum</value></data>
   <data name="LGErrAccountRequired" xml:space="preserve"><value>Bitte ein Konto wählen</value></data>
   <data name="LGErrNoFiscalPeriod" xml:space="preserve"><value>Das Startdatum muss in einer erfassten Geschäftsperiode liegen</value></data>
+  <data name="LGOnlyWithMoves" xml:space="preserve"><value>Konten mit Bewegungen anzeigen</value></data>
+  <data name="LGClearAccount" xml:space="preserve"><value>Konto löschen</value></data>
+  <data name="LGAccountsGrid" xml:space="preserve"><value>Konten</value></data>
+  <data name="LGNoAccounts" xml:space="preserve"><value>Keine Konten für die Filter</value></data>
+  <data name="LGPickAccount" xml:space="preserve"><value>Konto aus der Liste wählen, um Bewegungen zu sehen</value></data>
+  <data name="LGSearchNotes" xml:space="preserve"><value>Im Text suchen</value></data>
   <data name="Close" xml:space="preserve"><value>Schließen</value></data>
   <data name="NewButton" xml:space="preserve"><value>Neu</value></data>
   <data name="FinancialNoticeTitle" xml:space="preserve"><value>Finanzielle Abrechnungsmitteilung</value></data>

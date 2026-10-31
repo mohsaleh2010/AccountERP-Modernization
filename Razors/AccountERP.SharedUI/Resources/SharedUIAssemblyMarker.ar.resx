@@ -706,6 +706,12 @@
   <data name="LGNoMoves" xml:space="preserve"><value>لا توجد حركات للحساب فى الفترة المحددة</value></data>
   <data name="LGErrAccountRequired" xml:space="preserve"><value>تأكد من اختيار الحساب</value></data>
   <data name="LGErrNoFiscalPeriod" xml:space="preserve"><value>يجب اختيار تاريخ لفترة ضمن فترة مالية مسجلة</value></data>
+  <data name="LGOnlyWithMoves" xml:space="preserve"><value>عرض الحسابات التى لها حركات</value></data>
+  <data name="LGClearAccount" xml:space="preserve"><value>مسح الحساب</value></data>
+  <data name="LGAccountsGrid" xml:space="preserve"><value>الحسابات</value></data>
+  <data name="LGNoAccounts" xml:space="preserve"><value>لا توجد حسابات مطابقة للمرشحات</value></data>
+  <data name="LGPickAccount" xml:space="preserve"><value>اختر حساباً من القائمة لعرض حركته</value></data>
+  <data name="LGSearchNotes" xml:space="preserve"><value>بحث فى البيان</value></data>
   <data name="Close" xml:space="preserve"><value>غلق</value></data>
   <data name="NewButton" xml:space="preserve"><value>جديد</value></data>
   <data name="FinancialNoticeTitle" xml:space="preserve"><value>إشعار تسوية مالية</value></data>

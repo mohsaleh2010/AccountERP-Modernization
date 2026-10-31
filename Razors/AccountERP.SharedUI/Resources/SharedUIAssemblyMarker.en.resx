@@ -706,6 +706,12 @@
   <data name="LGNoMoves" xml:space="preserve"><value>No movements for this account in the selected period</value></data>
   <data name="LGErrAccountRequired" xml:space="preserve"><value>Please choose an account</value></data>
   <data name="LGErrNoFiscalPeriod" xml:space="preserve"><value>The start date must fall inside a registered fiscal period</value></data>
+  <data name="LGOnlyWithMoves" xml:space="preserve"><value>Show accounts with movements</value></data>
+  <data name="LGClearAccount" xml:space="preserve"><value>Clear account</value></data>
+  <data name="LGAccountsGrid" xml:space="preserve"><value>Accounts</value></data>
+  <data name="LGNoAccounts" xml:space="preserve"><value>No accounts match the filters</value></data>
+  <data name="LGPickAccount" xml:space="preserve"><value>Pick an account from the list to see its movements</value></data>
+  <data name="LGSearchNotes" xml:space="preserve"><value>Search notes</value></data>
   <data name="Close" xml:space="preserve"><value>Close</value></data>
   <data name="NewButton" xml:space="preserve"><value>New</value></data>
   <data name="FinancialNoticeTitle" xml:space="preserve"><value>Financial Settlement Notice</value></data>
