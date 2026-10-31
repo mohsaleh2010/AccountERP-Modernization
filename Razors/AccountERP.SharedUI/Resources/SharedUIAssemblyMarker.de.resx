@@ -644,6 +644,69 @@
   <data name="ViewSupplierBalanceListButton" xml:space="preserve"><value>Lieferantensaldenliste</value></data>
   <data name="OtherAccountLabel" xml:space="preserve"><value>Gegenkonto</value></data>
   <data name="AccountLabel" xml:space="preserve"><value>Konto</value></data>
+  <data name="SelectAccountLabel" xml:space="preserve"><value>Konto auswählen</value></data>
+  <data name="FAPeriod" xml:space="preserve"><value>Geschäftsperiode</value></data>
+  <data name="FABranch" xml:space="preserve"><value>Filiale</value></data>
+  <data name="FACurrency" xml:space="preserve"><value>Währung</value></data>
+  <data name="FADateFrom" xml:space="preserve"><value>Von Datum</value></data>
+  <data name="FADateTo" xml:space="preserve"><value>Bis Datum</value></data>
+  <data name="FAShow" xml:space="preserve"><value>Anzeigen</value></data>
+  <data name="FAPrint" xml:space="preserve"><value>Drucken</value></data>
+  <data name="FAErrPeriodRequired" xml:space="preserve"><value>Geschäftsperiode auswählen</value></data>
+  <data name="FAErrFromOutsidePeriod" xml:space="preserve"><value>Das Startdatum muss in der Geschäftsperiode liegen</value></data>
+  <data name="FAErrToOutsidePeriod" xml:space="preserve"><value>Das Enddatum muss in der Geschäftsperiode liegen</value></data>
+  <data name="FAErrToBeforeFrom" xml:space="preserve"><value>Das Enddatum darf nicht vor dem Startdatum liegen</value></data>
+  <data name="TBTitleTotals" xml:space="preserve"><value>Saldenliste für einen Zeitraum (Summen)</value></data>
+  <data name="TBTitleClosing" xml:space="preserve"><value>Abschluss-Saldenliste (Summen und Salden)</value></data>
+  <data name="TBSub" xml:space="preserve"><value>Aus den Buchungen der gewählten Periode, Filiale und Währung, mit der Desktop-Engine</value></data>
+  <data name="TBFilter" xml:space="preserve"><value>Angezeigte Konten</value></data>
+  <data name="TBFilterAll" xml:space="preserve"><value>Alle Konten</value></data>
+  <data name="TBFilterBalance" xml:space="preserve"><value>Konten mit Saldo</value></data>
+  <data name="TBFilterMovement" xml:space="preserve"><value>Mit Bewegung ohne Saldo</value></data>
+  <data name="TBSearch" xml:space="preserve"><value>Nach Kontonamen suchen</value></data>
+  <data name="TBColCode" xml:space="preserve"><value>Kontonummer</value></data>
+  <data name="TBColAccount" xml:space="preserve"><value>Kontoname</value></data>
+  <data name="TBFirstDebit" xml:space="preserve"><value>Eröffnung Soll</value></data>
+  <data name="TBFirstCredit" xml:space="preserve"><value>Eröffnung Haben</value></data>
+  <data name="TBMoveDebit" xml:space="preserve"><value>Summe Soll-Bewegung</value></data>
+  <data name="TBMoveCredit" xml:space="preserve"><value>Summe Haben-Bewegung</value></data>
+  <data name="TBLastDebit" xml:space="preserve"><value>Saldo Soll</value></data>
+  <data name="TBLastCredit" xml:space="preserve"><value>Saldo Haben</value></data>
+  <data name="TBPeriodDebit" xml:space="preserve"><value>Periodensaldo Soll</value></data>
+  <data name="TBPeriodCredit" xml:space="preserve"><value>Periodensaldo Haben</value></data>
+  <data name="TBSubTotal" xml:space="preserve"><value>Summe</value></data>
+  <data name="TBTotal" xml:space="preserve"><value>Gesamtsumme</value></data>
+  <data name="TBNoData" xml:space="preserve"><value>Keine Daten für die gewählte Periode, Filiale und Währung</value></data>
+  <data name="TBBalanced" xml:space="preserve"><value>Ausgeglichen: Soll- und Haben-Bewegung sind gleich</value></data>
+  <data name="TBUnbalanced" xml:space="preserve"><value>Nicht ausgeglichen: Differenz {0}</value></data>
+  <data name="TBEquivalent" xml:space="preserve"><value>Gegenwert</value></data>
+  <data name="TBWritesHint" xml:space="preserve"><value>Nur Ansicht: „Schlusssaldo in die nächste Periode übertragen“ und „Eröffnungssaldo aktualisieren“ schreiben Salden neu und bleiben vorerst im Desktop.</value></data>
+  <data name="LGTitleRange" xml:space="preserve"><value>Nebenbuch für einen Zeitraum</value></data>
+  <data name="LGTitleFiscal" xml:space="preserve"><value>Nebenbuch nach Geschäftsperiode</value></data>
+  <data name="LGSubRange" xml:space="preserve"><value>Kontobewegungen zwischen zwei freien Daten, Eröffnungssaldo aus allem Früheren, mit der Desktop-Logik</value></data>
+  <data name="LGSubFiscal" xml:space="preserve"><value>Kontobewegungen mit Eröffnungssaldo der Geschäftsperiode, mit der Desktop-Logik</value></data>
+  <data name="LGAccount" xml:space="preserve"><value>Konto</value></data>
+  <data name="LGAccountType" xml:space="preserve"><value>Kontotyp</value></data>
+  <data name="LGJournal" xml:space="preserve"><value>Journal</value></data>
+  <data name="LGAllJournals" xml:space="preserve"><value>Alle Journale</value></data>
+  <data name="LGAllTypes" xml:space="preserve"><value>Alle Konten</value></data>
+  <data name="LGAddBalanceAfter" xml:space="preserve"><value>Späteren Saldo hinzufügen</value></data>
+  <data name="LGColSerial" xml:space="preserve"><value>Nr.</value></data>
+  <data name="LGColDate" xml:space="preserve"><value>Datum</value></data>
+  <data name="LGColEntryNo" xml:space="preserve"><value>Buchungsnr.</value></data>
+  <data name="LGColDocType" xml:space="preserve"><value>Belegart</value></data>
+  <data name="LGColDocNo" xml:space="preserve"><value>Beleg</value></data>
+  <data name="LGColOther" xml:space="preserve"><value>Gegenkonto</value></data>
+  <data name="LGColCostCenter" xml:space="preserve"><value>Kostenstelle</value></data>
+  <data name="LGColNotes" xml:space="preserve"><value>Text</value></data>
+  <data name="LGColDebit" xml:space="preserve"><value>Soll</value></data>
+  <data name="LGColCredit" xml:space="preserve"><value>Haben</value></data>
+  <data name="LGColBalDebit" xml:space="preserve"><value>Sollsaldo</value></data>
+  <data name="LGColBalCredit" xml:space="preserve"><value>Habensaldo</value></data>
+  <data name="LGOpenHint" xml:space="preserve"><value>Doppelklick zum Öffnen der Buchung</value></data>
+  <data name="LGNoMoves" xml:space="preserve"><value>Keine Bewegungen für dieses Konto im Zeitraum</value></data>
+  <data name="LGErrAccountRequired" xml:space="preserve"><value>Bitte ein Konto wählen</value></data>
+  <data name="LGErrNoFiscalPeriod" xml:space="preserve"><value>Das Startdatum muss in einer erfassten Geschäftsperiode liegen</value></data>
   <data name="Close" xml:space="preserve"><value>Schließen</value></data>
   <data name="NewButton" xml:space="preserve"><value>Neu</value></data>
   <data name="FinancialNoticeTitle" xml:space="preserve"><value>Finanzielle Abrechnungsmitteilung</value></data>

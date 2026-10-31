@@ -643,6 +643,69 @@
   <data name="ViewSupplierBalanceListButton" xml:space="preserve"><value>كشف أرصدة الموردين</value></data>
   <data name="OtherAccountLabel" xml:space="preserve"><value>حساب آخر</value></data>
   <data name="AccountLabel" xml:space="preserve"><value>الحساب</value></data>
+  <data name="SelectAccountLabel" xml:space="preserve"><value>اختيار الحساب</value></data>
+  <data name="FAPeriod" xml:space="preserve"><value>الفترة المالية</value></data>
+  <data name="FABranch" xml:space="preserve"><value>الفرع</value></data>
+  <data name="FACurrency" xml:space="preserve"><value>العملة</value></data>
+  <data name="FADateFrom" xml:space="preserve"><value>من تاريخ</value></data>
+  <data name="FADateTo" xml:space="preserve"><value>إلى تاريخ</value></data>
+  <data name="FAShow" xml:space="preserve"><value>عرض</value></data>
+  <data name="FAPrint" xml:space="preserve"><value>طباعة</value></data>
+  <data name="FAErrPeriodRequired" xml:space="preserve"><value>يجب اختيار الفترة المالية</value></data>
+  <data name="FAErrFromOutsidePeriod" xml:space="preserve"><value>تاريخ بداية الفترة المحدد يجب أن يقع داخل الفترة المالية</value></data>
+  <data name="FAErrToOutsidePeriod" xml:space="preserve"><value>تاريخ نهاية الفترة المحدد يجب أن يقع داخل الفترة المالية</value></data>
+  <data name="FAErrToBeforeFrom" xml:space="preserve"><value>تاريخ نهاية الفترة يجب أن يكون أكبر من أو يساوى تاريخ بداية البحث</value></data>
+  <data name="TBTitleTotals" xml:space="preserve"><value>ميزان المراجعة عن فترة بالمجاميع</value></data>
+  <data name="TBTitleClosing" xml:space="preserve"><value>ميزان المراجعة ختامى بالمجاميع والأرصدة</value></data>
+  <data name="TBSub" xml:space="preserve"><value>من حركة القيود فى الفترة المالية والفرع والعملة المختارة، بنفس محرك الديسكتوب</value></data>
+  <data name="TBFilter" xml:space="preserve"><value>الحسابات المعروضة</value></data>
+  <data name="TBFilterAll" xml:space="preserve"><value>كل الحسابات</value></data>
+  <data name="TBFilterBalance" xml:space="preserve"><value>الحسابات ذات الرصيد</value></data>
+  <data name="TBFilterMovement" xml:space="preserve"><value>ذات حركة بدون رصيد</value></data>
+  <data name="TBSearch" xml:space="preserve"><value>بحث باسم الحساب</value></data>
+  <data name="TBColCode" xml:space="preserve"><value>كود الحساب</value></data>
+  <data name="TBColAccount" xml:space="preserve"><value>اسم الحساب</value></data>
+  <data name="TBFirstDebit" xml:space="preserve"><value>رصيد أول المدة مدين</value></data>
+  <data name="TBFirstCredit" xml:space="preserve"><value>رصيد أول المدة دائن</value></data>
+  <data name="TBMoveDebit" xml:space="preserve"><value>مجموع الحركة المدينة</value></data>
+  <data name="TBMoveCredit" xml:space="preserve"><value>مجموع الحركة الدائنة</value></data>
+  <data name="TBLastDebit" xml:space="preserve"><value>رصيد مدين</value></data>
+  <data name="TBLastCredit" xml:space="preserve"><value>رصيد دائن</value></data>
+  <data name="TBPeriodDebit" xml:space="preserve"><value>رصيد الفترة مدين</value></data>
+  <data name="TBPeriodCredit" xml:space="preserve"><value>رصيد الفترة دائن</value></data>
+  <data name="TBSubTotal" xml:space="preserve"><value>مجموع</value></data>
+  <data name="TBTotal" xml:space="preserve"><value>الإجمالى</value></data>
+  <data name="TBNoData" xml:space="preserve"><value>لا توجد بيانات للفترة والفرع والعملة المختارة</value></data>
+  <data name="TBBalanced" xml:space="preserve"><value>الميزان متزن: مجموع الحركة المدينة يساوى الدائنة</value></data>
+  <data name="TBUnbalanced" xml:space="preserve"><value>الميزان غير متزن: الفرق {0}</value></data>
+  <data name="TBEquivalent" xml:space="preserve"><value>بالمكافىء</value></data>
+  <data name="TBWritesHint" xml:space="preserve"><value>عرض فقط: «ترحيل الرصيد الختامى للفترة التالية» و«تحديث رصيد أول المدة» تعيدان كتابة الأرصدة وتبقيان فى الديسكتوب حالياً.</value></data>
+  <data name="LGTitleRange" xml:space="preserve"><value>الأستاذ المساعد عن فترة</value></data>
+  <data name="LGTitleFiscal" xml:space="preserve"><value>الأستاذ المساعد بالفترة المالية</value></data>
+  <data name="LGSubRange" xml:space="preserve"><value>حركة حساب بين تاريخين حرين، ورصيد أول المدة منقول من كل ما سبق، بنفس محرك الديسكتوب</value></data>
+  <data name="LGSubFiscal" xml:space="preserve"><value>حركة حساب مع رصيد أول المدة من الفترة المالية، بنفس محرك الديسكتوب</value></data>
+  <data name="LGAccount" xml:space="preserve"><value>الحساب</value></data>
+  <data name="LGAccountType" xml:space="preserve"><value>نوع الحسابات</value></data>
+  <data name="LGJournal" xml:space="preserve"><value>اليومية</value></data>
+  <data name="LGAllJournals" xml:space="preserve"><value>كل اليوميات</value></data>
+  <data name="LGAllTypes" xml:space="preserve"><value>كل الحسابات</value></data>
+  <data name="LGAddBalanceAfter" xml:space="preserve"><value>إضافة الرصيد اللاحق</value></data>
+  <data name="LGColSerial" xml:space="preserve"><value>م</value></data>
+  <data name="LGColDate" xml:space="preserve"><value>التاريخ</value></data>
+  <data name="LGColEntryNo" xml:space="preserve"><value>رقم القيد</value></data>
+  <data name="LGColDocType" xml:space="preserve"><value>نوع المستند</value></data>
+  <data name="LGColDocNo" xml:space="preserve"><value>المستند</value></data>
+  <data name="LGColOther" xml:space="preserve"><value>الحساب المقابل</value></data>
+  <data name="LGColCostCenter" xml:space="preserve"><value>م.التكلفة</value></data>
+  <data name="LGColNotes" xml:space="preserve"><value>البيان</value></data>
+  <data name="LGColDebit" xml:space="preserve"><value>مدين</value></data>
+  <data name="LGColCredit" xml:space="preserve"><value>دائن</value></data>
+  <data name="LGColBalDebit" xml:space="preserve"><value>رصيد مدين</value></data>
+  <data name="LGColBalCredit" xml:space="preserve"><value>رصيد دائن</value></data>
+  <data name="LGOpenHint" xml:space="preserve"><value>نقر مزدوج لفتح القيد</value></data>
+  <data name="LGNoMoves" xml:space="preserve"><value>لا توجد حركات للحساب فى الفترة المحددة</value></data>
+  <data name="LGErrAccountRequired" xml:space="preserve"><value>تأكد من اختيار الحساب</value></data>
+  <data name="LGErrNoFiscalPeriod" xml:space="preserve"><value>يجب اختيار تاريخ لفترة ضمن فترة مالية مسجلة</value></data>
   <data name="Close" xml:space="preserve"><value>غلق</value></data>
   <data name="NewButton" xml:space="preserve"><value>جديد</value></data>
   <data name="FinancialNoticeTitle" xml:space="preserve"><value>إشعار تسوية مالية</value></data>

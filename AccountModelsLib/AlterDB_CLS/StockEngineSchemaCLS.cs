@@ -72,6 +72,33 @@ WHERE Order_Type IN (1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1012,1013
             Step(opp, InventoryAccountingSetting);
             Step(opp, StoreAccountMenu);
             Step(opp, TextileItemsMenu);
+            Step(opp, EntriesIntegrityMenu);
+        }
+
+        /// <summary>
+        /// عنصر «فحص سلامة القيود» تحت «القيود» (ToolStripMenuAccountEntry) يفتح /accounts/entries-integrity، وصلاحيته للمديرين فقط
+        /// والباقون من شاشة الصلاحيات - نفس نمط StoreAccountMenu. إدراج فقط، لا يغيّر أى صف قائم، ولا يتكرر.
+        /// </summary>
+        private static void EntriesIntegrityMenu(operations opp)
+        {
+            const string key = "menuItemEntriesIntegrity";
+            const string desc = "فحص سلامة القيود";
+            var menus = opp.db.Database.SqlQueryRaw<StoreTransferPolicy.KeyValueRow>("SELECT Id, KeysData, Value FROM SysConfigMenus").ToList();
+            string Key(StoreTransferPolicy.KeyValueRow r) => r.KeysData == null ? "" : Common.DecryptMe(r.KeysData).Trim();
+            var parent = menus.FirstOrDefault(m => Key(m) == "ToolStripMenuAccountEntry");
+            if (parent == null || menus.Any(m => Key(m) == key)) return;
+            string E(string s) => Common.EncryptMe(s);
+            long id = menus.Max(m => m.Id) + 1;
+            opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenus (Id, Parent_Id, KeysData, Description, PROJECT_ID, Value, DefaultValue, DefaultDescription,
+                            POS, Market, Factory, Tourism, AlFawzan, Client_A, Client_B, UserSells, IsShowToUser, RazorPath)
+VALUES ({id}, {parent.Id}, {E(key)}, {E(desc)}, 2, {E("1")}, {E("1")}, {E(desc)},
+        {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, 1, {E("/accounts/entries-integrity")})");
+            var admins = opp.db.Database.SqlQueryRaw<long>("SELECT Id AS Value FROM USER_DETAILES WHERE ISNULL(AdminFlage, 0) = 1").ToList();
+            foreach (long user in admins)
+                opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenusPERMATIONS (Id, Menu_ID, Parent_Id, USER_ID, PERMATION, PROJECT_ID, IsShowToUser)
+VALUES ({CallSnowflakeIdGenerate.GenerateNewId()}, {id}, {parent.Id}, {user}, {E("1")}, 2, 1)");
         }
 
         // ---------------- حسابات المخازن: الحساب المقابل لكل حركة مخزنية (StoreAccountDeterminationCLS) ----------------
@@ -281,6 +308,16 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("menuItemItemFirstBalance", "/store/opening-balances"),
             // ترحيل القيود (قائمة القيود) بدل Tar7eel_Account_Entry.
             ("ToolStripMenuAccountEntryTar7eel", "/accounts/entries-posting"),
+            // اليوميات (كانت مربوطة بأداة لمرة واحدة على قاعدة التطوير فقط؛ هنا تصل لأى قاعدة): يومية الصادر والوارد/المصروفات/الصندوق وقائمة اليوميات.
+            ("menuDayShowWork", "/accounts/daily-work-summary"), ("menuItemExpensDays", "/accounts/expense-daily-journal"),
+            ("menuItemBoxMonyDays", "/accounts/cashbox-daily-journal"), ("ToolStripMenuItem_JournalsDays", "/accounts/journal-days"),
+            // الحسابات الختامية (خطة final-accounts-razor-plan.md): ميزان المراجعة بوضعيه، والطباعتان RDLC تفتحان نفس الصفحة (الطباعة منها).
+            ("ToolStripMenuItemMasterAccount", "/accounts/final/ledger?mode=range"), ("toolStripMenuItemMaster_Account_DetailsTarseed", "/accounts/final/ledger?mode=fiscal"),
+            ("ToolStripMenuItemMezanByPeriodMagame33", "/accounts/final/trial-balance?mode=totals"), ("ToolStripMenuItemMezanByPeriodMagame3", "/accounts/final/trial-balance?mode=totals"),
+            ("ToolStripMenuItem_Mezan_Morgaa", "/accounts/final/trial-balance?mode=closing"),
+            ("ToolStripMenuItemMezanByPeriodToolStripMenuItemMezanByPeriodMagame3Arseda", "/accounts/final/trial-balance?mode=closing"),
+            // مراجعة القيود (473) بدل Review_Account_Entry.
+            ("ToolStripMenuAccountEntryReview", "/accounts/journal-entries"),
             // إنشاء قيود الصندوق آلياً بدل Make_Account_Entry_Automatic.
             ("ToolStripMenuItemMake_Account_Entry_Automatic", "/accounts/sandouk-entries"),
             // إدخال القيود مدين-دائن بدل NewAccount_EntryMadinDa2nFRM.

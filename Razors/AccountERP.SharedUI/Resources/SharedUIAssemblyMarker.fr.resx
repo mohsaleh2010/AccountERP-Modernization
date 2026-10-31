@@ -644,6 +644,69 @@
   <data name="ViewSupplierBalanceListButton" xml:space="preserve"><value>Liste des soldes fournisseurs</value></data>
   <data name="OtherAccountLabel" xml:space="preserve"><value>Autre compte</value></data>
   <data name="AccountLabel" xml:space="preserve"><value>Compte</value></data>
+  <data name="SelectAccountLabel" xml:space="preserve"><value>Sélectionner le compte</value></data>
+  <data name="FAPeriod" xml:space="preserve"><value>Période financière</value></data>
+  <data name="FABranch" xml:space="preserve"><value>Agence</value></data>
+  <data name="FACurrency" xml:space="preserve"><value>Devise</value></data>
+  <data name="FADateFrom" xml:space="preserve"><value>Date de début</value></data>
+  <data name="FADateTo" xml:space="preserve"><value>Date de fin</value></data>
+  <data name="FAShow" xml:space="preserve"><value>Afficher</value></data>
+  <data name="FAPrint" xml:space="preserve"><value>Imprimer</value></data>
+  <data name="FAErrPeriodRequired" xml:space="preserve"><value>Sélectionnez la période financière</value></data>
+  <data name="FAErrFromOutsidePeriod" xml:space="preserve"><value>La date de début doit être dans la période financière</value></data>
+  <data name="FAErrToOutsidePeriod" xml:space="preserve"><value>La date de fin doit être dans la période financière</value></data>
+  <data name="FAErrToBeforeFrom" xml:space="preserve"><value>La date de fin ne peut pas précéder la date de début</value></data>
+  <data name="TBTitleTotals" xml:space="preserve"><value>Balance de vérification d'une période (totaux)</value></data>
+  <data name="TBTitleClosing" xml:space="preserve"><value>Balance de clôture (totaux et soldes)</value></data>
+  <data name="TBSub" xml:space="preserve"><value>À partir des écritures de la période, de l'agence et de la devise choisies, avec le moteur du poste de bureau</value></data>
+  <data name="TBFilter" xml:space="preserve"><value>Comptes affichés</value></data>
+  <data name="TBFilterAll" xml:space="preserve"><value>Tous les comptes</value></data>
+  <data name="TBFilterBalance" xml:space="preserve"><value>Comptes avec solde</value></data>
+  <data name="TBFilterMovement" xml:space="preserve"><value>Avec mouvement sans solde</value></data>
+  <data name="TBSearch" xml:space="preserve"><value>Rechercher par nom de compte</value></data>
+  <data name="TBColCode" xml:space="preserve"><value>Code du compte</value></data>
+  <data name="TBColAccount" xml:space="preserve"><value>Nom du compte</value></data>
+  <data name="TBFirstDebit" xml:space="preserve"><value>Ouverture débit</value></data>
+  <data name="TBFirstCredit" xml:space="preserve"><value>Ouverture crédit</value></data>
+  <data name="TBMoveDebit" xml:space="preserve"><value>Total mouvement débit</value></data>
+  <data name="TBMoveCredit" xml:space="preserve"><value>Total mouvement crédit</value></data>
+  <data name="TBLastDebit" xml:space="preserve"><value>Solde débiteur</value></data>
+  <data name="TBLastCredit" xml:space="preserve"><value>Solde créditeur</value></data>
+  <data name="TBPeriodDebit" xml:space="preserve"><value>Solde de la période débit</value></data>
+  <data name="TBPeriodCredit" xml:space="preserve"><value>Solde de la période crédit</value></data>
+  <data name="TBSubTotal" xml:space="preserve"><value>Total</value></data>
+  <data name="TBTotal" xml:space="preserve"><value>Total général</value></data>
+  <data name="TBNoData" xml:space="preserve"><value>Aucune donnée pour la période, l'agence et la devise choisies</value></data>
+  <data name="TBBalanced" xml:space="preserve"><value>Équilibrée : le total des mouvements débit égale celui du crédit</value></data>
+  <data name="TBUnbalanced" xml:space="preserve"><value>Non équilibrée : écart {0}</value></data>
+  <data name="TBEquivalent" xml:space="preserve"><value>Contre-valeur</value></data>
+  <data name="TBWritesHint" xml:space="preserve"><value>Consultation seule : « reporter le solde de clôture » et « mettre à jour le solde d'ouverture » réécrivent les soldes et restent pour l'instant sur le poste de bureau.</value></data>
+  <data name="LGTitleRange" xml:space="preserve"><value>Grand livre auxiliaire sur période</value></data>
+  <data name="LGTitleFiscal" xml:space="preserve"><value>Grand livre auxiliaire par période fiscale</value></data>
+  <data name="LGSubRange" xml:space="preserve"><value>Mouvements d'un compte entre deux dates libres, solde d'ouverture reporté, avec le moteur du poste de bureau</value></data>
+  <data name="LGSubFiscal" xml:space="preserve"><value>Mouvements d'un compte avec le solde d'ouverture de la période fiscale, avec le moteur du poste de bureau</value></data>
+  <data name="LGAccount" xml:space="preserve"><value>Compte</value></data>
+  <data name="LGAccountType" xml:space="preserve"><value>Type de compte</value></data>
+  <data name="LGJournal" xml:space="preserve"><value>Journal</value></data>
+  <data name="LGAllJournals" xml:space="preserve"><value>Tous les journaux</value></data>
+  <data name="LGAllTypes" xml:space="preserve"><value>Tous les comptes</value></data>
+  <data name="LGAddBalanceAfter" xml:space="preserve"><value>Ajouter le solde ultérieur</value></data>
+  <data name="LGColSerial" xml:space="preserve"><value>N°</value></data>
+  <data name="LGColDate" xml:space="preserve"><value>Date</value></data>
+  <data name="LGColEntryNo" xml:space="preserve"><value>N° d'écriture</value></data>
+  <data name="LGColDocType" xml:space="preserve"><value>Type de document</value></data>
+  <data name="LGColDocNo" xml:space="preserve"><value>Document</value></data>
+  <data name="LGColOther" xml:space="preserve"><value>Contrepartie</value></data>
+  <data name="LGColCostCenter" xml:space="preserve"><value>Centre de coût</value></data>
+  <data name="LGColNotes" xml:space="preserve"><value>Libellé</value></data>
+  <data name="LGColDebit" xml:space="preserve"><value>Débit</value></data>
+  <data name="LGColCredit" xml:space="preserve"><value>Crédit</value></data>
+  <data name="LGColBalDebit" xml:space="preserve"><value>Solde débiteur</value></data>
+  <data name="LGColBalCredit" xml:space="preserve"><value>Solde créditeur</value></data>
+  <data name="LGOpenHint" xml:space="preserve"><value>Double-clic pour ouvrir l'écriture</value></data>
+  <data name="LGNoMoves" xml:space="preserve"><value>Aucun mouvement pour ce compte sur la période</value></data>
+  <data name="LGErrAccountRequired" xml:space="preserve"><value>Veuillez choisir un compte</value></data>
+  <data name="LGErrNoFiscalPeriod" xml:space="preserve"><value>La date de début doit être dans une période fiscale enregistrée</value></data>
   <data name="Close" xml:space="preserve"><value>Fermer</value></data>
   <data name="NewButton" xml:space="preserve"><value>Nouveau</value></data>
   <data name="FinancialNoticeTitle" xml:space="preserve"><value>Avis de règlement financier</value></data>

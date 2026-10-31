@@ -1,0 +1,334 @@
+@* 🟢 «ميزان المراجعة» (بدل Mezan_Morgaa_ByPeriod وMezan_Morgaa_ByPeriodByAccountDeletePrevious وطباعتيهما RDLC): صفحة واحدة بوضعين.
+   mode=totals: مجاميع الحركة ورصيد الفترة (Mezan_Morgaa_ByPeriod(false))؛ mode=closing: رصيد أول المدة + الحركة + الرصيد الختامى (النسخة الكاملة).
+   الحساب نفسه فى الاثنين: FinalAccountsService ⇒ Mezan_MorgaaCLS.Get_Mezan_Morgaa_ByPeiodNew بلا تعديل (ويمر من قفل لأن جداوله المؤقتة عالمية).
+   «ترحيل الرصيد الختامى» و«تحديث رصيد أول المدة» (صلاحيتا 317/318) لا تُنقلان هنا: تعيدان كتابة Account_Entry_Master_Balance وتنتظران قراراً (خطة final-accounts-razor-plan.md §3.4).
+   الطباعة بـ window.print مع CSS للطباعة بدل تقرير RDLC. التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@page "/accounts/final/trial-balance"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.BusinessLibShared.GeneralLedger
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Title</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .tb-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .tb-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .tb-head .ico .mud-icon-root { font-size: 2rem; }
+    .tb-head .titles { flex: 1 1 260px; min-width: 0; }
+    .tb-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .tb-gap { margin-top: 16px; }
+    .tb-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: start; }
+    .tb-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+    .tb-wrap { overflow-x: auto; }
+    table.tb { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    table.tb th, table.tb td { padding: 6px 10px; border-bottom: 1px solid var(--mud-palette-lines-default); white-space: nowrap; }
+    table.tb thead th { position: sticky; top: 0; background: var(--mud-palette-surface); font-weight: 700; text-align: center; z-index: 1; }
+    table.tb td.num { text-align: end; }
+    table.tb td.name { white-space: normal; min-width: 220px; }
+    table.tb tr.grp td { background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent); font-weight: 700; }
+    table.tb tr.sub td { font-weight: 700; border-top: 1px solid var(--mud-palette-text-secondary); }
+    table.tb tr.grand td { font-weight: 800; background: color-mix(in srgb, var(--mud-palette-primary) 16%, transparent); border-top: 2px solid var(--mud-palette-primary); }
+    .tb-status { margin-top: 12px; }
+    .tb-print-title { display: none; }
+    @@media (max-width: 1099px) { .tb-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 599px) { .tb-filters { grid-template-columns: minmax(0, 1fr); } }
+    @@media print {
+        .tb-noprint, .mud-appbar, .mud-drawer, nav { display: none !important; }
+        .tb-print-title { display: block; margin-bottom: 8px; }
+        .tb-wrap { overflow: visible; }
+        table.tb thead th { position: static; }
+    }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-card tb-head tb-noprint">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.AccountBalance" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Title</h1>
+            <div class="sub">@Tr("TBSub")</div>
+        </div>
+    </div>
+
+    <div class="inv-card tb-gap tb-noprint">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.FilterList" />@Tr("SOFiltersTitle")</h2>
+        <div class="tb-filters">
+            <MudSelect T="long" Value="_periodId" ValueChanged="OnPeriodAsync" Label="@Tr("FAPeriod")" Variant="Variant.Outlined" ToStringFunc="@(v => PeriodText(v))">
+                @foreach (var p in _periods)
+                {
+                    <MudSelectItem T="long" Value="@p.Id">@PeriodText(p.Id)</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="long" Value="_branch" ValueChanged="@(v => { _branch = v; Reset(); })" Label="@Tr("FABranch")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => _branches.FirstOrDefault(b => b.Id == v)?.Name ?? "")">
+                @foreach (var b in _branches)
+                {
+                    <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="long" Value="_currency" ValueChanged="@(v => { _currency = v; Reset(); })" Label="@Tr("FACurrency")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => _currencies.FirstOrDefault(c => c.Id == v)?.Name ?? "")">
+                @foreach (var c in _currencies)
+                {
+                    <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="FinalAccountsService.BalanceFilter" Value="_filter" ValueChanged="@(v => { _filter = v; Reset(); })" Label="@Tr("TBFilter")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => FilterText(v))">
+                <MudSelectItem T="FinalAccountsService.BalanceFilter" Value="FinalAccountsService.BalanceFilter.All">@FilterText(FinalAccountsService.BalanceFilter.All)</MudSelectItem>
+                <MudSelectItem T="FinalAccountsService.BalanceFilter" Value="FinalAccountsService.BalanceFilter.WithBalance">@FilterText(FinalAccountsService.BalanceFilter.WithBalance)</MudSelectItem>
+                <MudSelectItem T="FinalAccountsService.BalanceFilter" Value="FinalAccountsService.BalanceFilter.MovementOnly">@FilterText(FinalAccountsService.BalanceFilter.MovementOnly)</MudSelectItem>
+            </MudSelect>
+            <MudDatePicker T="DateTime?" Date="_from" DateChanged="@(d => { _from = d; Reset(); })" Label="@Tr("FADateFrom")" Variant="Variant.Outlined"
+                           MinDate="@PeriodFrom" MaxDate="@PeriodTo" Editable="true" />
+            <MudDatePicker T="DateTime?" Date="_to" DateChanged="@(d => { _to = d; Reset(); })" Label="@Tr("FADateTo")" Variant="Variant.Outlined"
+                           MinDate="@PeriodFrom" MaxDate="@PeriodTo" Editable="true" />
+            <MudTextField T="string" @bind-Value="_search" Immediate="true" Label="@Tr("TBSearch")" Variant="Variant.Outlined"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+        </div>
+        <div class="tb-btns">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility"
+                       Disabled="@_loading" OnClick="ShowAsync">@Tr("FAShow")</MudButton>
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Print"
+                       Disabled="@(_loading || _result == null)" OnClick="PrintAsync">@Tr("FAPrint")</MudButton>
+            @if (_loading) { <MudProgressCircular Indeterminate="true" Size="Size.Small" /> }
+        </div>
+        <MudAlert Severity="Severity.Info" Dense="true" Class="tb-status" role="note">@Tr("TBWritesHint")</MudAlert>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="tb-gap" role="alert">@_error</MudAlert>
+    }
+
+    @if (_result != null)
+    {
+        <div class="inv-card tb-gap">
+            <div class="tb-print-title">
+                <strong>@Title</strong> — @PeriodText(_periodId) — @(_branches.FirstOrDefault(b => b.Id == _branch)?.Name) — @(_currencies.FirstOrDefault(c => c.Id == _currency)?.Name)
+                (@_from?.ToString("yyyy/MM/dd") → @_to?.ToString("yyyy/MM/dd"))
+            </div>
+            @if (_result.RowCount == 0)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" role="status">@Tr("TBNoData")</MudAlert>
+            }
+            else
+            {
+                <div class="tb-wrap">
+                    <table class="tb">
+                        <thead>
+                            <tr>
+                                <th>@Tr("TBColCode")</th>
+                                <th>@Tr("TBColAccount")</th>
+                                @if (Closing)
+                                {
+                                    <th>@Tr("TBFirstDebit")</th><th>@Tr("TBFirstCredit")</th>
+                                }
+                                <th>@Tr("TBMoveDebit")</th><th>@Tr("TBMoveCredit")</th>
+                                @if (Closing)
+                                {
+                                    <th>@Tr("TBLastDebit")</th><th>@Tr("TBLastCredit")</th>
+                                }
+                                else
+                                {
+                                    <th>@Tr("TBPeriodDebit")</th><th>@Tr("TBPeriodCredit")</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var g in VisibleGroups)
+                            {
+                                <tr class="grp"><td colspan="@ColCount">@g.MainCode @g.MainAccountName</td></tr>
+                                @foreach (var r in g.Rows)
+                                {
+                                    <tr>
+                                        <td>@r.Code</td>
+                                        <td class="name">@r.AccountName</td>
+                                        @if (Closing)
+                                        {
+                                            <td class="num">@N(r.FirstMadin)</td><td class="num">@N(r.FirstDa2n)</td>
+                                        }
+                                        <td class="num">@N(r.Import)</td><td class="num">@N(r.Export)</td>
+                                        @if (Closing)
+                                        {
+                                            <td class="num">@N(r.LastMadin)</td><td class="num">@N(r.LastDa2n)</td>
+                                        }
+                                        else
+                                        {
+                                            <td class="num">@N(r.TransactionMadin)</td><td class="num">@N(r.TransactionDa2n)</td>
+                                        }
+                                    </tr>
+                                }
+                                <tr class="sub">
+                                    <td></td><td>@Tr("TBSubTotal") @g.MainAccountName</td>
+                                    @if (Closing)
+                                    {
+                                        <td class="num">@N(g.Total.FirstMadin)</td><td class="num">@N(g.Total.FirstDa2n)</td>
+                                    }
+                                    <td class="num">@N(g.Total.Import)</td><td class="num">@N(g.Total.Export)</td>
+                                    @if (Closing)
+                                    {
+                                        <td class="num">@N(g.Total.LastMadin)</td><td class="num">@N(g.Total.LastDa2n)</td>
+                                    }
+                                    else
+                                    {
+                                        <td class="num">@N(g.Total.TransactionMadin)</td><td class="num">@N(g.Total.TransactionDa2n)</td>
+                                    }
+                                </tr>
+                            }
+                            <tr class="grand">
+                                <td></td><td>@Tr("TBTotal")</td>
+                                @if (Closing)
+                                {
+                                    <td class="num">@N(_result.Total.FirstMadin)</td><td class="num">@N(_result.Total.FirstDa2n)</td>
+                                }
+                                <td class="num">@N(_result.Total.Import)</td><td class="num">@N(_result.Total.Export)</td>
+                                @if (Closing)
+                                {
+                                    <td class="num">@N(_result.Total.LastMadin)</td><td class="num">@N(_result.Total.LastDa2n)</td>
+                                }
+                                else
+                                {
+                                    <td class="num">@N(_result.Total.TransactionMadin)</td><td class="num">@N(_result.Total.TransactionDa2n)</td>
+                                }
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <MudAlert Severity="@(Balanced ? Severity.Success : Severity.Warning)" Dense="true" Class="tb-status tb-noprint" role="status">
+                    @(Balanced ? Tr("TBBalanced") : Tr("TBUnbalanced", N(Math.Abs(_result.Total.Import - _result.Total.Export))))
+                </MudAlert>
+            }
+        </div>
+    }
+</div>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromQuery(Name = "mode")] public string? Mode { get; set; }
+
+    private readonly FinalAccountsService _svc = new();
+    private List<FinalAccountsService.PeriodRow> _periods = new();
+    private List<FinalAccountsService.Option> _branches = new(), _currencies = new();
+    private long _periodId, _branch, _currency = FinalAccountsService.EquivalentCurrencyId;
+    private DateTime? _from, _to;
+    private FinalAccountsService.BalanceFilter _filter = FinalAccountsService.BalanceFilter.All;
+    private string _search = "";
+    private FinalAccountsService.TrialBalanceResult? _result;
+    private string? _error;
+    private bool _loading;
+
+    private bool Closing => string.Equals(Mode, "closing", StringComparison.OrdinalIgnoreCase);
+    private string Title => Tr(Closing ? "TBTitleClosing" : "TBTitleTotals");
+    private int ColCount => Closing ? 8 : 6;
+    private DateTime? PeriodFrom => _periods.FirstOrDefault(p => p.Id == _periodId)?.DateFrom;
+    private DateTime? PeriodTo => _periods.FirstOrDefault(p => p.Id == _periodId)?.DateTo;
+    // مجموع الحركة المدينة = الدائنة فى ميزان سليم
+    private bool Balanced => _result != null && _result.Total.Import == _result.Total.Export;
+
+    // التصفية بالاسم تخفى الصفوف غير المطابقة مع إبقاء مجاميع المجموعة والإجمالى من النتيجة الكاملة (كما فى الديسكتوب: الفلتر على الشبكة فقط)
+    private IEnumerable<FinalAccountsService.TrialBalanceGroup> VisibleGroups =>
+        string.IsNullOrWhiteSpace(_search)
+            ? _result!.Groups
+            : _result!.Groups.Select(g => new FinalAccountsService.TrialBalanceGroup
+              {
+                  MainCode = g.MainCode, MainAccountName = g.MainAccountName, Total = g.Total,
+                  Rows = g.Rows.Where(r => r.AccountName.Contains(_search.Trim(), StringComparison.OrdinalIgnoreCase)).ToList()
+              }).Where(g => g.Rows.Count > 0);
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            var equivalent = Tr("TBEquivalent");
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                _periods = _svc.GetPeriods();
+                _branches = _svc.GetBranches();
+                _currencies = _svc.GetCurrencies(equivalent);
+            });
+            var today = DateTime.Today;
+            var cur = _periods.FirstOrDefault(p => p.DateFrom <= today && today <= p.DateTo) ?? _periods.LastOrDefault();
+            _periodId = cur?.Id ?? 0;
+            _from = cur?.DateFrom; _to = cur?.DateTo;
+            _branch = _branches.Any(b => b.Id == AccountModelsLib.Common.Branch_Id) ? AccountModelsLib.Common.Branch_Id : _branches.FirstOrDefault()?.Id ?? 0;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private void Reset() { _result = null; _error = null; }
+
+    private void OnPeriodAsync(long id)
+    {
+        _periodId = id; _from = PeriodFrom; _to = PeriodTo; Reset();
+    }
+
+    private string PeriodText(long id)
+    {
+        var p = _periods.FirstOrDefault(x => x.Id == id);
+        return p == null ? "" : $"{(string.IsNullOrWhiteSpace(p.Name) ? "" : p.Name + "  ")}{p.DateFrom:yyyy/MM/dd} — {p.DateTo:yyyy/MM/dd}";
+    }
+
+    private string FilterText(FinalAccountsService.BalanceFilter f) => f switch
+    {
+        FinalAccountsService.BalanceFilter.WithBalance => Tr("TBFilterBalance"),
+        FinalAccountsService.BalanceFilter.MovementOnly => Tr("TBFilterMovement"),
+        _ => Tr("TBFilterAll"),
+    };
+
+    private async Task ShowAsync()
+    {
+        _error = null; _result = null;
+        var period = _periods.FirstOrDefault(p => p.Id == _periodId);
+        var bad = FinalAccountsService.ValidateRange(period!, _from ?? default, _to ?? default);
+        if (period == null || _from == null || _to == null || bad != null)
+        {
+            _error = Tr("FAErr" + (bad ?? "PeriodRequired"));
+            return;
+        }
+        _loading = true;
+        try
+        {
+            long branch = _branch, currency = _currency; DateTime from = _from.Value, to = _to.Value; var filter = _filter;
+            _result = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetTrialBalance(period, branch, currency, from, to, filter); });
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _loading = false; }
+    }
+
+    private async Task PrintAsync() => await JS.InvokeVoidAsync("window.print");
+
+    private static string N(decimal v) => v == 0 ? "" : v.ToString("N2", CultureInfo.InvariantCulture);
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

@@ -643,6 +643,69 @@
   <data name="ViewSupplierBalanceListButton" xml:space="preserve"><value>Supplier Balance List</value></data>
   <data name="OtherAccountLabel" xml:space="preserve"><value>Other Account</value></data>
   <data name="AccountLabel" xml:space="preserve"><value>Account</value></data>
+  <data name="SelectAccountLabel" xml:space="preserve"><value>Select account</value></data>
+  <data name="FAPeriod" xml:space="preserve"><value>Financial period</value></data>
+  <data name="FABranch" xml:space="preserve"><value>Branch</value></data>
+  <data name="FACurrency" xml:space="preserve"><value>Currency</value></data>
+  <data name="FADateFrom" xml:space="preserve"><value>From date</value></data>
+  <data name="FADateTo" xml:space="preserve"><value>To date</value></data>
+  <data name="FAShow" xml:space="preserve"><value>Show</value></data>
+  <data name="FAPrint" xml:space="preserve"><value>Print</value></data>
+  <data name="FAErrPeriodRequired" xml:space="preserve"><value>Select the financial period</value></data>
+  <data name="FAErrFromOutsidePeriod" xml:space="preserve"><value>The start date must fall within the financial period</value></data>
+  <data name="FAErrToOutsidePeriod" xml:space="preserve"><value>The end date must fall within the financial period</value></data>
+  <data name="FAErrToBeforeFrom" xml:space="preserve"><value>The end date must be on or after the start date</value></data>
+  <data name="TBTitleTotals" xml:space="preserve"><value>Trial balance for a period (totals)</value></data>
+  <data name="TBTitleClosing" xml:space="preserve"><value>Closing trial balance (totals and balances)</value></data>
+  <data name="TBSub" xml:space="preserve"><value>From journal entries in the selected period, branch and currency, using the desktop engine</value></data>
+  <data name="TBFilter" xml:space="preserve"><value>Accounts shown</value></data>
+  <data name="TBFilterAll" xml:space="preserve"><value>All accounts</value></data>
+  <data name="TBFilterBalance" xml:space="preserve"><value>Accounts with a balance</value></data>
+  <data name="TBFilterMovement" xml:space="preserve"><value>With movement but no balance</value></data>
+  <data name="TBSearch" xml:space="preserve"><value>Search by account name</value></data>
+  <data name="TBColCode" xml:space="preserve"><value>Account code</value></data>
+  <data name="TBColAccount" xml:space="preserve"><value>Account name</value></data>
+  <data name="TBFirstDebit" xml:space="preserve"><value>Opening debit</value></data>
+  <data name="TBFirstCredit" xml:space="preserve"><value>Opening credit</value></data>
+  <data name="TBMoveDebit" xml:space="preserve"><value>Total debit movement</value></data>
+  <data name="TBMoveCredit" xml:space="preserve"><value>Total credit movement</value></data>
+  <data name="TBLastDebit" xml:space="preserve"><value>Debit balance</value></data>
+  <data name="TBLastCredit" xml:space="preserve"><value>Credit balance</value></data>
+  <data name="TBPeriodDebit" xml:space="preserve"><value>Period balance debit</value></data>
+  <data name="TBPeriodCredit" xml:space="preserve"><value>Period balance credit</value></data>
+  <data name="TBSubTotal" xml:space="preserve"><value>Total</value></data>
+  <data name="TBTotal" xml:space="preserve"><value>Grand total</value></data>
+  <data name="TBNoData" xml:space="preserve"><value>No data for the selected period, branch and currency</value></data>
+  <data name="TBBalanced" xml:space="preserve"><value>Balanced: total debit movement equals total credit movement</value></data>
+  <data name="TBUnbalanced" xml:space="preserve"><value>Unbalanced: difference {0}</value></data>
+  <data name="TBEquivalent" xml:space="preserve"><value>Equivalent</value></data>
+  <data name="TBWritesHint" xml:space="preserve"><value>View only: "carry closing balance to next period" and "update opening balance" rewrite balances and stay in the desktop for now.</value></data>
+  <data name="LGTitleRange" xml:space="preserve"><value>Sub-ledger for a period</value></data>
+  <data name="LGTitleFiscal" xml:space="preserve"><value>Sub-ledger by fiscal period</value></data>
+  <data name="LGSubRange" xml:space="preserve"><value>Account movements between two free dates, with the opening balance carried from everything before, using the desktop engine</value></data>
+  <data name="LGSubFiscal" xml:space="preserve"><value>Account movements with the opening balance of the fiscal period, using the desktop engine</value></data>
+  <data name="LGAccount" xml:space="preserve"><value>Account</value></data>
+  <data name="LGAccountType" xml:space="preserve"><value>Account type</value></data>
+  <data name="LGJournal" xml:space="preserve"><value>Journal</value></data>
+  <data name="LGAllJournals" xml:space="preserve"><value>All journals</value></data>
+  <data name="LGAllTypes" xml:space="preserve"><value>All accounts</value></data>
+  <data name="LGAddBalanceAfter" xml:space="preserve"><value>Add the later balance</value></data>
+  <data name="LGColSerial" xml:space="preserve"><value>#</value></data>
+  <data name="LGColDate" xml:space="preserve"><value>Date</value></data>
+  <data name="LGColEntryNo" xml:space="preserve"><value>Entry no.</value></data>
+  <data name="LGColDocType" xml:space="preserve"><value>Document type</value></data>
+  <data name="LGColDocNo" xml:space="preserve"><value>Document</value></data>
+  <data name="LGColOther" xml:space="preserve"><value>Counter account</value></data>
+  <data name="LGColCostCenter" xml:space="preserve"><value>Cost center</value></data>
+  <data name="LGColNotes" xml:space="preserve"><value>Notes</value></data>
+  <data name="LGColDebit" xml:space="preserve"><value>Debit</value></data>
+  <data name="LGColCredit" xml:space="preserve"><value>Credit</value></data>
+  <data name="LGColBalDebit" xml:space="preserve"><value>Debit balance</value></data>
+  <data name="LGColBalCredit" xml:space="preserve"><value>Credit balance</value></data>
+  <data name="LGOpenHint" xml:space="preserve"><value>Double-click to open the entry</value></data>
+  <data name="LGNoMoves" xml:space="preserve"><value>No movements for this account in the selected period</value></data>
+  <data name="LGErrAccountRequired" xml:space="preserve"><value>Please choose an account</value></data>
+  <data name="LGErrNoFiscalPeriod" xml:space="preserve"><value>The start date must fall inside a registered fiscal period</value></data>
   <data name="Close" xml:space="preserve"><value>Close</value></data>
   <data name="NewButton" xml:space="preserve"><value>New</value></data>
   <data name="FinancialNoticeTitle" xml:space="preserve"><value>Financial Settlement Notice</value></data>
