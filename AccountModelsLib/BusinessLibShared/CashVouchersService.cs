@@ -241,21 +241,21 @@ namespace AccountModelsLib
         /// بالضبط، داخل معاملة واحدة. الصرف لا يتجاوز رصيد الصندوق (الفحص فى هذا الفورم غير مشروط بـIsBoxBalanceAllowSarfAny كالأصل).
         /// </summary>
         public (long OrderId, long OrderNo, string Message) SaveMultiVoucher(int transactionType, long boxId, string boxName, long boxCurrencyId, string boxCurrencyName, DateTime date, long orderNo,
-                                                                            string manName, string orderNotes, decimal factor, DataTable lines)
-            => SaveMultiVoucherCore(0, transactionType, boxId, boxName, boxCurrencyId, boxCurrencyName, date, orderNo, manName, orderNotes, factor, lines);
+                                                                            string manName, string orderNotes, decimal factor, DataTable lines, long sandoukCenterId = 0)
+            => SaveMultiVoucherCore(0, transactionType, boxId, boxName, boxCurrencyId, boxCurrencyName, date, orderNo, manName, orderNotes, factor, lines, sandoukCenterId);
 
         /// <summary>
         /// تعديل إذن متعدد الأسطر محفوظ: حذف الإذن القديم ثم إصدار الجديد بنفس الرقم داخل معاملة واحدة (تتراجع كلها عند أى فشل). يتغير المعرّف الداخلى للإذن،
         /// لذلك يُمنع التعديل إذا كان الإذن مرتبطاً بعربون طلبية أو بمستند (يُحذف/يُعدَّل من مصدره).
         /// </summary>
         public (long OrderId, long OrderNo, string Message) EditMultiVoucher(long orderId, int transactionType, long boxId, string boxName, long boxCurrencyId, string boxCurrencyName, DateTime date, long orderNo,
-                                                                            string manName, string orderNotes, decimal factor, DataTable lines)
+                                                                            string manName, string orderNotes, decimal factor, DataTable lines, long sandoukCenterId = 0)
         {
             if (orderId <= 0) throw new InvalidOperationException("Voucher is required");
             if (HasAmbiguousLineIds(orderId)) throw new InvalidOperationException("Line ids are not unique; edit blocked");
             if (!IsMultiEngineVoucher(orderId)) throw new InvalidOperationException("Voucher was not issued by the multi-line screen; edit blocked");
             if (IsVoucherLinked(orderId)) throw new InvalidOperationException("Voucher is linked to an order deposit or a document; edit blocked");
-            return SaveMultiVoucherCore(orderId, transactionType, boxId, boxName, boxCurrencyId, boxCurrencyName, date, orderNo, manName, orderNotes, factor, lines);
+            return SaveMultiVoucherCore(orderId, transactionType, boxId, boxName, boxCurrencyId, boxCurrencyName, date, orderNo, manName, orderNotes, factor, lines, sandoukCenterId);
         }
 
         /// <summary>
@@ -278,13 +278,13 @@ namespace AccountModelsLib
         }
 
         private (long OrderId, long OrderNo, string Message) SaveMultiVoucherCore(long replaceOrderId, int transactionType, long boxId, string boxName, long boxCurrencyId, string boxCurrencyName, DateTime date, long orderNo,
-                                                                            string manName, string orderNotes, decimal factor, DataTable lines)
+                                                                            string manName, string orderNotes, decimal factor, DataTable lines, long sandoukCenterId = 0)
         {
             if (lines == null || lines.Rows.Count == 0) throw new InvalidOperationException("At least one line is required");
             var opp = new operations(1);
             try
             {
-                var r = SaveMultiVoucherInTx(opp, replaceOrderId, transactionType, boxId, boxName, boxCurrencyId, boxCurrencyName, date, orderNo, manName, orderNotes, factor, lines);
+                var r = SaveMultiVoucherInTx(opp, replaceOrderId, transactionType, boxId, boxName, boxCurrencyId, boxCurrencyName, date, orderNo, manName, orderNotes, factor, lines, sandoukCenterId);
                 opp.Commit();
                 return r;
             }
@@ -300,7 +300,7 @@ namespace AccountModelsLib
         /// orderNo &lt;= 0: يُولَّد الرقم من المحرك (Make_New_Order_No).
         /// </summary>
         public (long OrderId, long OrderNo, string Message) SaveMultiVoucherInTx(operations opp, long replaceOrderId, int transactionType, long boxId, string boxName, long boxCurrencyId, string boxCurrencyName,
-                                                                                DateTime date, long orderNo, string manName, string orderNotes, decimal factor, DataTable lines)
+                                                                                DateTime date, long orderNo, string manName, string orderNotes, decimal factor, DataTable lines, long sandoukCenterId = 0)
         {
             if (lines == null || lines.Rows.Count == 0) throw new InvalidOperationException("At least one line is required");
             var engine = new Money_Transaction_BoxOrderReportCLS();
@@ -325,7 +325,7 @@ namespace AccountModelsLib
 
                 long orderId = 0;
                 var tafkeet = Tafkeet(total, boxCurrencyId);
-                engine.Make_Transaction_BanksBox_NewSarf(ref excp, ref msg, ref opp, ref orderId, boxName, lines, transactionType, 0, no.ToString(), boxId, boxBalance, date, manName ?? "",
+                engine.Make_Transaction_BanksBox_NewSarf(ref excp, ref msg, ref opp, ref orderId, boxName, lines, transactionType, sandoukCenterId, no.ToString(), boxId, boxBalance, date, manName ?? "",
                     boxCurrencyId, tafkeet, orderNotes ?? "", factor <= 0 ? 1 : factor, boxCurrencyId, boxCurrencyName, 0, 0, 0, 3);
                 if (excp != 0 || orderId <= 0) throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg) ? "Voucher was not saved" : msg);
 
@@ -336,6 +336,7 @@ namespace AccountModelsLib
                 post.Make_Entry_For_AccountsSandouk(ref excp1, ref msg1, ref opp, 1, Common.Branch_Id, new DateTime(DateTime.Now.Year, 1, 1), new DateTime(DateTime.Now.Year, 12, 31),
                     boxCurrencyId, boxCurrencyName, factor <= 0 ? 1 : factor, orderId, 0);
                 if (excp1 != 0) throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg1) ? "Journal entry failed" : msg1);
+                if (sandoukCenterId > 0) ApplyBoxSideCenter(opp, orderId, new[] { boxId }, sandoukCenterId);
 
                 // الحارس المركزى (وضع تحذيرى): تُلحق المخالفات بالرسالة ولا تمنع الحفظ.
                 string warn = "";
@@ -559,7 +560,7 @@ namespace AccountModelsLib
         /// </summary>
         public (long OrderId, long OrderNo) SaveManyBoxVoucher(int transactionType, DateTime date, long orderNo, string manName, string notes, long subAccountId, string accountName, string accountCode,
                                                                int accountType, long costCenterId, string costCenterName, long currencyId, string currencyName, decimal balanceBefore, decimal balanceAfter,
-                                                               System.Collections.Generic.List<Money_Transaction_Box> boxes)
+                                                               System.Collections.Generic.List<Money_Transaction_Box> boxes, long sandoukCenterId = 0)
         {
             if (subAccountId <= 0) throw new InvalidOperationException("Account is required");
             if (boxes == null || !boxes.Any(b => (b.Transaction_Value ?? 0) > 0)) throw new InvalidOperationException("Value must be greater than zero");
@@ -589,7 +590,7 @@ namespace AccountModelsLib
                 om.Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(date);
                 om.Order_mony_id_transform = -1;
                 om.Ticket_Supplier_Id = 0;
-                om.Sandouk_Cost_Center_Tree_Id = 0;
+                om.Sandouk_Cost_Center_Tree_Id = (int)sandoukCenterId;
                 om.IS_Posted_Flage = 0;
                 om.Entry_Currency_ID = om.Currency_Id;
                 om.RequirementValue = 0; om.paidTotal = 0; om.StillValue = 0;
@@ -659,6 +660,7 @@ namespace AccountModelsLib
                 engine.Customer_ID_Supplier = partyId;
                 engine.Make_Transaction_BanksBox_FromInvoicesMulti_(ref excp, ref msg, ref opp, ref orderId, om, boxes, partyId);
                 if (excp != 0 || orderId <= 0) throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg) ? "Voucher was not saved" : msg);
+                if (sandoukCenterId > 0) ApplyBoxSideCenter(opp, orderId, boxes.Where(b => (b.Transaction_Value ?? 0) > 0).Select(b => b.Bank_Id), sandoukCenterId);
                 opp.Commit();
                 return (orderId, om.Order_No);
             }
@@ -717,6 +719,43 @@ namespace AccountModelsLib
         }
 
         /// <summary>رأس الإذن وسطوره للعرض.</summary>
+        /// <summary>حساب كل صندوق (Banks.SubAccount_Id) — لحساب المراكز المسموحة لطرف الصندوق.</summary>
+        public System.Collections.Generic.List<long> BoxSubAccountIds(System.Collections.Generic.IEnumerable<long> boxIds)
+        {
+            var ids = boxIds.Where(i => i > 0).Distinct().ToList();
+            if (ids.Count == 0) return new System.Collections.Generic.List<long>();
+            var dt = new operations().return_DataTable("SELECT SubAccount_Id FROM Banks WHERE Id IN (" + string.Join(",", ids) + ") AND SubAccount_Id IS NOT NULL");
+            return dt.Rows.Cast<DataRow>().Select(r => Convert.ToInt64(r[0])).Where(i => i > 0).Distinct().ToList();
+        }
+
+        /// <summary>خريطة صندوق ← حسابه (Banks.SubAccount_Id).</summary>
+        public System.Collections.Generic.Dictionary<long, long> BoxSubAccountMap(System.Collections.Generic.IEnumerable<long> boxIds)
+        {
+            var ids = boxIds.Where(i => i > 0).Distinct().ToList();
+            var map = new System.Collections.Generic.Dictionary<long, long>();
+            if (ids.Count == 0) return map;
+            var dt = new operations().return_DataTable("SELECT Id, SubAccount_Id FROM Banks WHERE Id IN (" + string.Join(",", ids) + ") AND SubAccount_Id IS NOT NULL");
+            foreach (DataRow r in dt.Rows) map[Convert.ToInt64(r[0])] = Convert.ToInt64(r[1]);
+            return map;
+        }
+
+        /// <summary>
+        /// مركز طرف الصندوق: المحرك القديم يقرأ مركز سطر الصندوق فى القيد ثابتاً 0 (الاستعلام يضع 0 AS CostCenter_Id)،
+        /// فنكتب المركز المختار على سطر/أسطر الصندوق فى القيد المُنشأ حديثاً (داخل معاملة الإصدار نفسها). لا تلمس أى قيد قائم.
+        /// </summary>
+        private static void ApplyBoxSideCenter(operations opp, long orderId, System.Collections.Generic.IEnumerable<long> boxIds, long centerId)
+        {
+            var ids = boxIds.Where(i => i > 0).Distinct().ToList();
+            if (ids.Count == 0 || centerId <= 0) return;
+            var e = opp.return_DataTable("SELECT Account_Entry_List_ID FROM Order_Money WHERE Id = " + orderId);
+            if (e.Rows.Count == 0 || e.Rows[0][0] == DBNull.Value || Convert.ToInt64(e.Rows[0][0]) <= 0) return;
+            long entryId = Convert.ToInt64(e.Rows[0][0]);
+            int excp = 0;
+            opp.update_me("UPDATE Account_Entry_Details SET CostCenter_Id = " + centerId + ", CostCenter_Name = (SELECT TOP 1 Name FROM Cost_Center_Tree WHERE Id = " + centerId + ") " +
+                          "WHERE Account_Entry_List_ID = " + entryId + " AND Submain_Account_ID IN (SELECT SubAccount_Id FROM Banks WHERE Id IN (" + string.Join(",", ids) + "))", ref excp);
+            if (excp != 0) throw new InvalidOperationException("Box cost center update failed");
+        }
+
         public (DataRow? Head, DataTable Lines) GetVoucher(long orderId)
         {
             var opp = new operations();

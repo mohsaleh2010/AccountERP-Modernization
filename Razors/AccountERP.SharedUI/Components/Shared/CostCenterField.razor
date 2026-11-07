@@ -1,0 +1,83 @@
+@* 🟢 منتقى مركز التكلفة المضغوط المشترك (نفس نمط ManualEntryEditor): يعرض فقط المراكز المسموحة للحساب عبر CostCenterService.AllowedFor
+   (أو التقاطع لعدة حسابات عبر AllowedForAll)، بحث بالكود/الاسم/المسار، إلزامى (*) لو سياسة الحساب 2، ومعطَّل لو لا يقبل الحساب مراكز (سياسة 0).
+   عند تغيّر الحساب: يحتفظ بـCenterId إن كان مسموحاً، وإلا PreferredId (آخر مركز مستعمل) ثم الافتراضى المعرَّف للحساب.
+   القرار النهائى بالرفض/التحذير يبقى فى EntryValidator. *@
+@using AccountModelsLib.BusinessLibShared.CostCenters
+@using AccountERP.SharedUI.Services
+
+<MudAutocomplete T="CostCenterService.AllowedCenter" Value="@_selected" ValueChanged="OnPickedAsync"
+                 SearchFunc="@((text, ct) => Search(text))" ToStringFunc="@(c => c == null ? "" : c.Code + "  " + c.Name)"
+                 Label="@(Label + (_allowed.Policy == 2 ? " *" : ""))" Variant="Variant.Outlined" Dense="true"
+                 Clearable="@(_allowed.Policy != 2)" CoerceText="false" CoerceValue="false" ResetValueOnEmptyText="true" OpenOnFocus="true" SelectOnActivation="true"
+                 Required="@(_allowed.Policy == 2)" Disabled="@(Disabled || (!AllLeaves && AccountIds.Count == 0) || _allowed.Policy == 0)"
+                 HelperText="@(_selected == null ? "" : _selected.Path)">
+    <ItemTemplate Context="c"><div><b>@c.Code</b> @c.Name<br /><small class="mud-text-secondary">@c.Path</small></div></ItemTemplate>
+</MudAutocomplete>
+
+@code {
+    /// <summary>الحسابات التى يُحسب لها المسموح (واحد عادةً؛ عدة حسابات = تقاطع). فارغة = لا شىء.</summary>
+    [Parameter] public IReadOnlyList<long> AccountIds { get; set; } = Array.Empty<long>();
+    /// <summary>مركز رأس مستند (فاتورة): كل الأوراق المفتوحة بلا ربط بحساب، والترحيل على الأسطر يقيّده بسياسة كل حساب.</summary>
+    [Parameter] public bool AllLeaves { get; set; }
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public long CenterId { get; set; }
+    [Parameter] public EventCallback<long> CenterIdChanged { get; set; }
+    /// <summary>المركز المختار بكامل بياناته (الاسم للعرض/الحفظ) — null عند المسح.</summary>
+    [Parameter] public EventCallback<CostCenterService.AllowedCenter?> CenterChanged { get; set; }
+    /// <summary>المجموعة المسموحة (السياسة) بعد كل تحميل — ليتحقق الأب من الإلزام قبل الإضافة/الحفظ.</summary>
+    [Parameter] public EventCallback<CostCenterService.AllowedSet> AllowedChanged { get; set; }
+    /// <summary>آخر مركز استُعمل فى الشاشة؛ يُفضَّل على الافتراضى إن كان مسموحاً.</summary>
+    [Parameter] public long PreferredId { get; set; }
+
+    private CostCenterService.AllowedSet _allowed = new();
+    private CostCenterService.AllowedCenter? _selected;
+    private string _key = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var key = AllLeaves ? "*" : string.Join(",", AccountIds);
+        if (key != _key)
+        {
+            _key = key;
+            var ids = AccountIds.ToList();
+            _allowed = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var opp = new AccountModelsLib.operations();
+                if (AllLeaves) return CostCenterService.AllOpenLeaves(opp);
+                return ids.Count == 1 ? CostCenterService.AllowedFor(opp, ids[0]) : CostCenterService.AllowedForAll(opp, ids);
+            });
+            _selected = _allowed.Centers.FirstOrDefault(c => c.Id == CenterId)
+                        ?? _allowed.Centers.FirstOrDefault(c => c.Id == PreferredId)
+                        ?? _allowed.Centers.FirstOrDefault(c => c.Id == _allowed.DefaultId);
+            await AllowedChanged.InvokeAsync(_allowed);
+            await Publish();
+        }
+        else if ((_selected?.Id ?? 0) != CenterId)
+        {
+            // الأب غيّر القيمة من خارج المنتقى (إعادة ضبط أو تحميل إذن محفوظ).
+            _selected = _allowed.Centers.FirstOrDefault(c => c.Id == CenterId);
+        }
+    }
+
+    private async Task OnPickedAsync(CostCenterService.AllowedCenter? c)
+    {
+        _selected = c;
+        await Publish();
+    }
+
+    private async Task Publish()
+    {
+        await CenterIdChanged.InvokeAsync(_selected?.Id ?? 0);
+        await CenterChanged.InvokeAsync(_selected);
+    }
+
+    private Task<IEnumerable<CostCenterService.AllowedCenter>> Search(string? text)
+    {
+        var q = _allowed.Centers.AsEnumerable();
+        if (!string.IsNullOrWhiteSpace(text))
+            q = q.Where(c => c.Name.Contains(text, StringComparison.OrdinalIgnoreCase) || c.Code.Contains(text, StringComparison.OrdinalIgnoreCase) || c.Path.Contains(text, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(q.Take(50));
+    }
+}

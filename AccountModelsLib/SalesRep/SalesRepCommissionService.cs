@@ -706,6 +706,8 @@ FROM Checks_Memory m WHERE m.Customer_Id = {c} AND ISNULL(m.Day_Date, m.Insert_S
             aa.Make_AccountEntry(ref excp, ref msg, ref entryId, ref opp, Common.User_Id, Common.User_Name, Common.Branch_Id, entryNo, date, journalCode, entryCurrency, notes,
                 Common.Transform_Type, dt, (double)value, branchId, 1, run.Id.ToString(), entryCurrency, currencyName, 1, 0);
             if (excp != 0 || entryId <= 0) throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg) ? "تعذر إنشاء قيد العمولة." : msg);
+            // م3 دفعة 5: مصروف العمولة على مركز المندوب إن كان حسابه يقبل مراكز
+            AccountModelsLib.BusinessLibShared.CostCenters.InvoiceCostCenter.ApplyToEntry(opp, entryId, rep.Cost_Center_Id ?? 0);
             return entryId;
         }
 

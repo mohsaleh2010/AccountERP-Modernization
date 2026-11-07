@@ -12,6 +12,7 @@
 @using AccountModelsLib.Models
 @using AccountERP.SharedUI.Services
 @using AccountERP.SharedUI.Components.Shared
+@using AccountModelsLib.BusinessLibShared.CostCenters
 @inject LanguageService LangService
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
@@ -48,6 +49,10 @@
             <MudItem xs="6" md="2"><MudTextField T="string" Value="@_boxBalance.ToString("N2")" Label="@Tr("CVBoxBalanceLabel")" Variant="Variant.Outlined" ReadOnly="true" /></MudItem>
             <MudItem xs="6" md="2"><MudTextField T="string" Value="@(_orderNo > 0 ? _orderNo.ToString() : "")" Label="@Tr("CVOrderNoLabel")" Variant="Variant.Outlined" ReadOnly="true" /></MudItem>
             <MudItem xs="12" md="4"><MudDatePicker T="DateTime?" Date="_date" DateChanged="OnDateChangedAsync" Label="@Tr("DateColumn")" Variant="Variant.Outlined" Disabled="@(_readOnly || _editing)" /></MudItem>
+            <MudItem xs="12" md="6">
+                <CostCenterField AccountIds="_boxSubIds" Label="@Tr("CVBoxCostCenter")" Disabled="@_readOnly"
+                                 CenterId="_boxCcId" CenterIdChanged="@(v => _boxCcId = v)" AllowedChanged="@(a => _boxSet = a)" />
+            </MudItem>
             <MudItem xs="12" md="6"><MudTextField T="string" @bind-Value="_manName" Label="@(_type == 1 ? Tr("CVReceivedFrom") : Tr("CVPaidTo"))" Variant="Variant.Outlined" Disabled="@_readOnly" /></MudItem>
             <MudItem xs="12" md="6"><MudTextField T="string" @bind-Value="_orderNotes" Label="@Tr("CVMainNotes")" Variant="Variant.Outlined" Disabled="@_readOnly" /></MudItem>
             <MudItem xs="12" sm="6" md="3"><MudTextField T="string" Value="@(_box?.CurrencyName ?? "")" Label="@Tr("CurrencyLabel")" Variant="Variant.Outlined" ReadOnly="true" /></MudItem>
@@ -74,12 +79,8 @@
                              BranchId="AccountModelsLib.Common.Branch_Id" />
             <MudGrid Spacing="3" Class="mt-1">
                 <MudItem xs="12" md="4">
-                    <MudSelect T="long" @bind-Value="_costCenterId" Label="@Tr("CVCostCenter")" Variant="Variant.Outlined" Disabled="@(_subId == 0)">
-                        @foreach (var c in _costCenters)
-                        {
-                            <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
-                        }
-                    </MudSelect>
+                    <CostCenterField AccountIds="_lineAcc" Label="@Tr("CVCostCenter")" PreferredId="_lastCcId"
+                                     CenterId="_costCenterId" CenterIdChanged="@(v => _costCenterId = v)" CenterChanged="@(c => _cc = c)" AllowedChanged="@(a => _ccSet = a)" />
                 </MudItem>
                 <MudItem xs="12" sm="6" md="3">
                     <MudNumericField T="decimal" @bind-Value="_lineAmount" Label="@Tr("CVAmountLabel")" Variant="Variant.Outlined" Immediate="true" HideSpinButtons="true" Format="0.##" />
@@ -161,8 +162,7 @@
 </MudContainer>
 
 @code {
-    private record BoxOption(long Id, string Name, long CurrencyId, string CurrencyName);
-    private record CostCenterOption(long Id, string Name);
+    private record BoxOption(long Id, string Name, long CurrencyId, string CurrencyName, long SubAccountId);
     private record LineRow(long SubAccountId, int AccountType, string Name, string Code, long CurrencyId, decimal Amount, long CostCenterId, string CostCenterName, string Notes, decimal BalBefore, decimal BalAfter);
 
     [SupplyParameterFromQuery(Name = "type")] public int? TypeQuery { get; set; }
@@ -172,7 +172,11 @@
     private int _type = 1;
     private List<BoxOption> _boxes = new();
     private List<LineRow> _rows = new();
-    private List<CostCenterOption> _costCenters = new();
+    private CostCenterService.AllowedCenter? _cc;
+    private CostCenterService.AllowedSet _ccSet = new(), _boxSet = new();
+    private long _boxCcId, _lastCcId;
+    private List<long> _boxSubIds = new();
+    private IReadOnlyList<long> _lineAcc => _subId > 0 ? new[] { _subId } : Array.Empty<long>();
     private long _boxId, _savedOrderId, _orderNo;
     private BoxOption? _box;
     private decimal _boxBalance, _factor = 1;
@@ -204,7 +208,8 @@
             _canEditDelete = AccountModelsLib.Common.IsHavePermissionSysMenu(AccountModelsLib.Common.User_Id, 316, 2, -1);
             var dt = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetBoxes(AccountModelsLib.Common.User_Id, AccountModelsLib.Common.Branch_Id); });
             _boxes = dt.Rows.Cast<DataRow>().Select(r => new BoxOption(Convert.ToInt64(r["Id"]), r["Bank_Name"]?.ToString() ?? "",
-                r["Currency_Id"] == DBNull.Value ? 1 : Convert.ToInt64(r["Currency_Id"]), r["Currency_Name"]?.ToString() ?? "")).ToList();
+                r["Currency_Id"] == DBNull.Value ? 1 : Convert.ToInt64(r["Currency_Id"]), r["Currency_Name"]?.ToString() ?? "",
+                r["SubAccount_Id"] == DBNull.Value ? 0 : Convert.ToInt64(r["SubAccount_Id"]))).ToList();
             var def = dt.Rows.Cast<DataRow>().FirstOrDefault(r => r["Default_Bank"] != DBNull.Value && Convert.ToInt32(r["Default_Bank"]) == 1);
             var firstId = def != null ? Convert.ToInt64(def["Id"]) : _boxes.FirstOrDefault()?.Id ?? 0;
             if (IdQuery is > 0) await LoadVoucherAsync(IdQuery.Value);
@@ -220,6 +225,7 @@
     {
         _boxId = id;
         _box = _boxes.FirstOrDefault(b => b.Id == id);
+        _boxSubIds = _box is { SubAccountId: > 0 } ? new List<long> { _box.SubAccountId } : new List<long>();
         var date = (_date ?? DateTime.Now).Date; var t = _type; var cur = _box?.CurrencyId ?? 1;
         var (balance, factor, no) = await Task.Run(() =>
         {
@@ -239,25 +245,16 @@
         }
     }
 
-    private void OnSelectionChanged(int value) { _selection = value; _subId = 0; _subName = ""; _customerId = 0; _supplierId = 0; _costCenters = new(); _costCenterId = 0; }
+    private void OnSelectionChanged(int value) { _selection = value; _subId = 0; _subName = ""; _customerId = 0; _supplierId = 0; _cc = null; _costCenterId = 0; }
 
     // عند تحديد الحساب (عميل/مورد/حساب آخر) نحمّل كوده وعملته ومراكز تكلفته.
     private async Task OnSubAccountChangedAsync(long id)
     {
         _subId = id;
-        _costCenters = new(); _costCenterId = 0; _lineError = null;
+        _cc = null; _costCenterId = 0; _lineError = null;
         if (id == 0) return;
-        var none = Tr("CVNoCostCenter");
-        var (info, ccs) = await Task.Run(() =>
-        {
-            AccountCultureGuard.EnsureInvariant();
-            var inf = _svc.AccountInfo(id);
-            var dt = _svc.GetCostCenters(id, inf.AcceptCostCenter, none);
-            return (inf, dt.Rows.Cast<DataRow>().Select(r => new CostCenterOption(Convert.ToInt64(r["Id"]), r["Name"]?.ToString() ?? "")).ToList());
-        });
+        var info = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.AccountInfo(id); });
         _lineAccountCode = info.Code; _lineAccountCurrency = info.CurrencyId;
-        _costCenters = ccs;
-        _costCenterId = ccs.FirstOrDefault()?.Id ?? 0;
     }
 
     private void AddLine()
@@ -267,22 +264,23 @@
         if (string.IsNullOrWhiteSpace(_manName)) { _lineError = Tr("CVNeedManName"); return; }
         if (_subId == 0) { _lineError = Tr("CVSelectAccount"); return; }
         if (_lineAmount <= 0) { _lineError = Tr("STInvoiceValueRequired"); return; }
-        var cc = _costCenters.FirstOrDefault(c => c.Id == _costCenterId);
-        if (cc is null) { _lineError = Tr("CVCostCenterRequired"); return; }
+        var cc = _cc;
+        if (cc is null && _ccSet.Policy == 2) { _lineError = Tr("CVCostCenterRequired"); return; }
 
         // معاينة الرصيد بعد: العميل: الاستلام يخفض ما عليه؛ المورد: الصرف يخفض ما له (المحرك هو الذى يسجّل الحركة الفعلية).
         decimal after = _balanceBefore;
         if (_accountType == AccountModelsLib.Common.Customer_Account_Type) after = _type == 1 ? _balanceBefore - _lineAmount : _balanceBefore + _lineAmount;
         else if (_accountType == AccountModelsLib.Common.Supplier_Account_Type) after = _type == 2 ? _balanceBefore - _lineAmount : _balanceBefore + _lineAmount;
 
-        _rows.Add(new LineRow(_subId, _accountType, _subName, _lineAccountCode, _lineAccountCurrency, _lineAmount, cc.Id, cc.Name, _lineNotes ?? "", _balanceBefore, after));
-        _lineAmount = 0; _lineNotes = null; _subId = 0; _subName = ""; _customerId = 0; _supplierId = 0; _costCenters = new(); _costCenterId = 0; _balanceBefore = 0;
+        if (cc != null) _lastCcId = cc.Id;
+        _rows.Add(new LineRow(_subId, _accountType, _subName, _lineAccountCode, _lineAccountCurrency, _lineAmount, cc?.Id ?? 0, cc?.Name ?? "", _lineNotes ?? "", _balanceBefore, after));
+        _lineAmount = 0; _lineNotes = null; _subId = 0; _subName = ""; _customerId = 0; _supplierId = 0; _cc = null; _costCenterId = 0; _balanceBefore = 0;
         _selectorKey++;
     }
 
     private async Task NewVoucherAsync()
     {
-        _readOnly = false; _editing = false; _linked = false; _savedOrderId = 0; _rows = new(); _manName = null; _orderNotes = null; _errorMessage = null; _lineError = null;
+        _readOnly = false; _editing = false; _linked = false; _savedOrderId = 0; _rows = new(); _manName = null; _orderNotes = null; _errorMessage = null; _lineError = null; _boxCcId = 0;
         _date = DateTime.Now.Date; _selectorKey++;
         if (_boxId > 0) await OnBoxChangedAsync(_boxId);
         if (IdQuery is > 0) Nav.NavigateTo($"/accounts/cash/voucher?type={_type}");
@@ -297,6 +295,8 @@
         _type = Convert.ToInt32(head["Transaction_type"]);
         _boxId = Convert.ToInt64(head["Bank_ID"]);
         _box = _boxes.FirstOrDefault(b => b.Id == _boxId);
+        _boxSubIds = _box is { SubAccountId: > 0 } ? new List<long> { _box.SubAccountId } : new List<long>();
+        _boxCcId = head.Table.Columns.Contains("Sandouk_Cost_Center_Tree_Id") && head["Sandouk_Cost_Center_Tree_Id"] != DBNull.Value ? Convert.ToInt64(head["Sandouk_Cost_Center_Tree_Id"]) : 0;
         _orderNo = head["Order_No"] == DBNull.Value ? 0 : Convert.ToInt64(head["Order_No"]);
         _date = Convert.ToDateTime(head["Order_Date"]);
         _manName = head["Man_Name"]?.ToString();
@@ -326,11 +326,12 @@
     private async Task SaveAsync()
     {
         _errorMessage = null;
+        if (_boxSet.Policy == 2 && _boxCcId == 0) { _errorMessage = Tr("CVCostCenterRequired"); return; }
         var ok = await DialogService.ShowMessageBoxAsync(Tr("CVSaveButton"), Tr("CVConfirmIssue"), yesText: Tr("CVSaveButton"), cancelText: Tr("Cancel"));
         if (ok != true) return;
         _isBusy = true;
         var type = _type; var box = _box!; var date = (_date ?? DateTime.Now).Date; var no = _orderNo; var man = _manName!.Trim(); var notes = _orderNotes!.Trim(); var factor = _factor;
-        var rows = _rows.ToList(); var editId = _editing ? _savedOrderId : 0;
+        var rows = _rows.ToList(); var editId = _editing ? _savedOrderId : 0; var boxCc = _boxCcId;
         try
         {
             var (orderId, savedNo, _) = await Task.Run(() =>
@@ -340,8 +341,8 @@
                 foreach (var r in rows)
                     _svc.AddLine(dt, type, r.SubAccountId, r.AccountType, r.Name, r.Code, r.CurrencyId, r.Amount, r.CostCenterId, r.CostCenterName, factor, r.Notes, r.BalBefore, r.BalAfter);
                 return editId > 0
-                    ? _svc.EditMultiVoucher(editId, type, box.Id, box.Name, box.CurrencyId, box.CurrencyName, date, no, man, notes, factor, dt)
-                    : _svc.SaveMultiVoucher(type, box.Id, box.Name, box.CurrencyId, box.CurrencyName, date, no, man, notes, factor, dt);
+                    ? _svc.EditMultiVoucher(editId, type, box.Id, box.Name, box.CurrencyId, box.CurrencyName, date, no, man, notes, factor, dt, boxCc)
+                    : _svc.SaveMultiVoucher(type, box.Id, box.Name, box.CurrencyId, box.CurrencyName, date, no, man, notes, factor, dt, boxCc);
             });
             _savedOrderId = orderId; _orderNo = savedNo; _readOnly = true; _editing = false;
             Snackbar.Add(Tr("CVSavedMsg", savedNo), Severity.Success);

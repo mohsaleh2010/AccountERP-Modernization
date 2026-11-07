@@ -163,6 +163,60 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
             return BuildLedger(dt);
         }
 
+        // ---------------- الأستاذ المساعد لمراكز التكلفة بالفترة المالية (Master_Account_CostCenter_TarsesdFRM) ----------------
+
+        public record CostCenterItem(long Id, string Code, string Name);
+
+        /// <summary>
+        /// شبكة المراكز كما فى الديسكتوب (Get_MasterAccount_CostCenter_Lis): المراكز التى لها أسطر قيود فى التاريخين.
+        /// الديسكتوب يكتب مرشحات النوع/العملة/الحساب على Submain_Account دون ضمّه للاستعلام فيفشل عند اختيارها؛ هنا يُضمّ الجدول فتعمل.
+        /// </summary>
+        public List<CostCenterItem> GetCostCenterLedgerCenters(DateTime from, DateTime to, long journal, long branch, long currency, int accountType, long subAccountId = 0)
+        {
+            string sql = "SELECT DISTINCT c.Name, d.CostCenter_Id, c.Code_Str FROM Account_Entry_List l " +
+                         "INNER JOIN Account_Entry_Details d ON l.Id = d.Account_Entry_List_ID " +
+                         "INNER JOIN Cost_Center_Tree c ON d.CostCenter_Id = c.Id " +
+                         "INNER JOIN Submain_Account a ON d.Submain_Account_ID = a.Id " +
+                         "WHERE d.CostCenter_Id > 0 AND l.Entry_Date >= " + operations.Get_DateToInsert(from.Date) + " AND l.Entry_Date <= " + operations.Get_DateToInsert(to.Date);
+            if (journal > 0) sql += " AND l.journal_Code = " + journal;
+            if (branch > 0) sql += " AND l.Branch_Id_Entry = " + branch;
+            if (accountType > 0) sql += " AND a.Account_Customer_Type_Value = " + accountType;
+            if (currency > 0) sql += " AND a.Currency_Id = " + currency;
+            if (subAccountId > 0) sql += " AND a.Id = " + subAccountId;
+            var dt = new operations().return_DataTable(sql + " ORDER BY c.Code_Str");
+            return dt.Rows.Cast<DataRow>().Select(r => new CostCenterItem(
+                Convert.ToInt64(r["CostCenter_Id"]), r["Code_Str"]?.ToString()?.Trim() ?? "", r["Name"]?.ToString()?.Trim() ?? "")).ToList();
+        }
+
+        /// <summary>حركة مركز: يستدعى Get_MasterCostCenter_Details_TarseedNewNew بالفترة المالية المختارة (رصيد أول المدة من ترحيل المراكز + حركات الفترة حتى البداية).</summary>
+        public List<LedgerLine> GetCostCenterLedger(PeriodRow period, long costCenterId, DateTime from, DateTime to, long currency, long journal, long branch, long accountId)
+        {
+            if (to.Date < from.Date) throw new ArgumentException("ToBeforeFrom");
+            var dt = new AccountEntry_CLS().Get_MasterCostCenter_Details_TarseedNewNew(period.Id, period.DateFrom, from, to, journal, branch, costCenterId, currency, accountId);
+            return BuildLedger(dt);
+        }
+
+        /// <summary>
+        /// «تحديث رصيد أول المدة» (UpdateFirstBalanceCostCenter): يعيد بناء ترحيل أرصدة المراكز للفترة والفرع (جدول مشتق قابل لإعادة البناء، يحذف صفوف الفترة والفرع فقط).
+        /// onlyIfEmpty=True ⇒ ينفَّذ فقط إن لم يكن للفترة والفرع ترحيل (فلا يحذف شيئاً). يعيد رسالة الخطأ أو null.
+        /// </summary>
+        public string RefreshCostCenterFirstBalance(PeriodRow period, long branch, long currency, int currencyCount, bool onlyIfEmpty)
+        {
+            EngineLock.Wait();
+            try
+            {
+                if (onlyIfEmpty)
+                {
+                    var c = new operations().return_DataTable("SELECT COUNT(*) AS N FROM Account_Entry_Master_Balance_CostCenter WHERE Year_Financial_Period_Id = " + period.Id + " AND Branch_Id = " + branch);
+                    if (c.Rows.Count > 0 && Convert.ToInt64(c.Rows[0]["N"]) > 0) return null;
+                }
+                int excp = 0; string msg = "";
+                new Mezan_MorgaaCLS().UpdateFirstBalanceCostCenter(ref excp, ref msg, currency, branch, period.DateFrom, period.DateTo, period.Id, Math.Max(1, currencyCount));
+                return excp != 0 ? msg : null;
+            }
+            finally { EngineLock.Release(); }
+        }
+
         // ---------------- ميزان المراجعة ----------------
 
         /// <summary>0 كل الحسابات، 1 لها رصيد، 2 لها حركات بدون رصيد (rdBalanceAllZero / rdBalance / rdBalanceZeroTR).</summary>

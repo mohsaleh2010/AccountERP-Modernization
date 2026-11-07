@@ -15,6 +15,7 @@ namespace AccountModelsLib
     {
         public CostCenterCLS()
         { }
+        static string Esc(string s) => (s ?? "").Replace("'", "''");
         public DataTable Get_CostCenter()
         {
             DataTable dt = new DataTable();
@@ -114,7 +115,7 @@ Order By Cost_Center_Tree.Id
             try
             {
                 string mysql;
-                mysql = "Select * from Submain_Account where Id= '" + CostCenter_Id + "'";
+                mysql = "Select * from Cost_Center_Tree where Id= '" + CostCenter_Id + "'";
 
                 dt = opp.return_DataTable(mysql);
                 if (dt.Rows.Count > 0)
@@ -150,12 +151,12 @@ Order By Cost_Center_Tree.Id
                 Id = Common.GETAutoNumber(ref opp, "Cost_Center_Tree", "Id", "");
 
                 mysql = "INSERT INTO Cost_Center_Tree( Id, Parent_Id, Name, Code, Code_Str, Cost_Type, Notes, Currency_Id, Currency_Str, Head_Main_Cost, lastPartIncrease, Cost_Level, FirstSubCode) ";
-                mysql = mysql + " VALUES        (" + Id + ", " + Parent_Id + ",'" + Name + "'," + Code + ",'" + Code_Str + "'," + Cost_Type + ",'" + Notes + "'," + Currency_Id + ",'" + Currency_Str + "'," + Head_Main_Cost + "," + lastPartIncrease + "," + Cost_Level + ",'" + FirstSubCode + "')";
+                mysql = mysql + " VALUES        (" + Id + ", " + Parent_Id + ",'" + Esc(Name) + "'," + Code + ",'" + Code_Str + "'," + Cost_Type + ",'" + Esc(Notes) + "'," + Currency_Id + ",'" + Currency_Str + "'," + Head_Main_Cost + "," + lastPartIncrease + "," + Cost_Level + ",'" + FirstSubCode + "')";
             }
             else
             {
                 mysql = "INSERT INTO Cost_Center_Tree(   Parent_Id, Name, Code, Code_Str, Cost_Type, Notes, Currency_Id, Currency_Str, Head_Main_Cost, lastPartIncrease, Cost_Level, FirstSubCode) ";
-                mysql = mysql + " VALUES        ( " + Parent_Id + ",'" + Name + "'," + Code + ",'" + Code_Str + "'," + Cost_Type + ",'" + Notes + "'," + Currency_Id + ",'" + Currency_Str + "'," + Head_Main_Cost + "," + lastPartIncrease + "," + Cost_Level + ",'" + FirstSubCode + "')";
+                mysql = mysql + " VALUES        ( " + Parent_Id + ",'" + Esc(Name) + "'," + Code + ",'" + Code_Str + "'," + Cost_Type + ",'" + Esc(Notes) + "'," + Currency_Id + ",'" + Currency_Str + "'," + Head_Main_Cost + "," + lastPartIncrease + "," + Cost_Level + ",'" + FirstSubCode + "')";
 
             }
             try
@@ -181,9 +182,9 @@ Order By Cost_Center_Tree.Id
         }
         public void Edit_CostCenter(ref int Excp, ref string Msg, long Id, string Name, string Code_Str, string Notes)
         {
-            long Code = 0;
+            // لا نكتب Code: الكود الرقمى مشتق من Code_Str عند الإنشاء/النقل وكان التعديل يمحوه (عيب 1 فى خطة مراكز التكلفة).
             string mysql = " ";
-            mysql = " Update Cost_Center_Tree Set Name='" + Name + "', Code=" + Code + ", Code_Str='" + Code_Str + "',Notes='" + Notes + "', Edit_User_Id=" + Common.User_Id + ", EditOperationDate='" + AccountModelsLib.operations.dateFormat(DateTime.Now) + "'   ";
+            mysql = " Update Cost_Center_Tree Set Name='" + Esc(Name) + "', Code_Str='" + Esc(Code_Str) + "',Notes='" + Esc(Notes) + "', Edit_User_Id=" + Common.User_Id + ", EditOperationDate='" + AccountModelsLib.operations.dateFormat(DateTime.Now) + "'   ";
             mysql = mysql + " Where Id=" + Id;
             try
             {
@@ -207,6 +208,14 @@ Order By Cost_Center_Tree.Id
             try
             {
                 AccountModelsLib.operations opp = new AccountModelsLib.operations();
+                // منع حذف المستخدم (أبناء/حركات/ربط) بدل كسر المراجع؛ البديل هو الإغلاق (CostCenterService.SetStatus).
+                var usage = AccountModelsLib.BusinessLibShared.CostCenters.CostCenterService.GetUsage(opp, Id);
+                if (usage.InUse)
+                {
+                    Excp = 1;
+                    Msg = "لا يمكن حذف مركز التكلفة لأنه مستخدم: " + usage.Describe();
+                    return;
+                }
                 opp.insert_me(mysql);
                 Excp = 0;
             }

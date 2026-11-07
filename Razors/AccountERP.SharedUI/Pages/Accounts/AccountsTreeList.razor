@@ -16,6 +16,7 @@
 @using System.Globalization
 @using AccountModelsLib
 @using AccountModelsLib.Models
+@using AccountModelsLib.BusinessLibShared.CostCenters
 @using AccountERP.SharedUI.Services
 @using AccountERP.SharedUI.ViewModels
 @using AccountERP.SharedUI.Components.Shared
@@ -135,9 +136,26 @@
                                        Color="Color.Primary" Label="@Tr("AcceptEntryLabel")" />
                         </MudItem>
                         <MudItem xs="12" sm="6">
-                            <MudSwitch T="bool" Value="@(_selected.Accept_Cost_Center_Flage == 1)" ValueChanged="@((bool v) => { _selected.Accept_Cost_Center_Flage = v ? 1 : 0; })"
-                                       Color="Color.Primary" Label="@Tr("AcceptCostCenterLabel")" />
+                            <MudSelect T="int" @bind-Value="_policy" Label="@Tr("CostCenterPolicyLabel")" Dense="true" Disabled="@(!_policyLoaded)">
+                                <MudSelectItem T="int" Value="0">@Tr("CostCenterPolicy0")</MudSelectItem>
+                                <MudSelectItem T="int" Value="1">@Tr("CostCenterPolicy1")</MudSelectItem>
+                                <MudSelectItem T="int" Value="2">@Tr("CostCenterPolicy2")</MudSelectItem>
+                            </MudSelect>
                         </MudItem>
+                        @if (_policy > 0)
+                        {
+                            <MudItem xs="12" sm="6">
+                                <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                    <MudTextField T="string" Value="@_defaultCenterName" ReadOnly="true" Label="@Tr("DefaultCostCenterLabel")"
+                                                  Placeholder="@Tr("DefaultCostCenterNone")" Dense="true" Style="flex:1;" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" OnClick="@(() => { _centerPick = null; _centerDialogOpen = true; })" />
+                                    @if (_defaultCenterId > 0)
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.Clear" Size="Size.Small" OnClick="@(() => { _defaultCenterId = 0; _defaultCenterName = ""; })" />
+                                    }
+                                </MudStack>
+                            </MudItem>
+                        }
                         <MudItem xs="12" sm="6">
                             <MudSwitch T="bool" Value="@(_selected.IS_SubAccount_AccountType == 1)" ValueChanged="@((bool v) => { _selected.IS_SubAccount_AccountType = v ? 1 : 0; })"
                                        Color="Color.Primary" Label="@Tr("AccountTypeChangeForChildrenLabel")" />
@@ -195,6 +213,20 @@
 <AddAccountDialog @bind-Visible="_addDialogOpen" ParentNode="_selected" BranchId="_branchId" OnAccountAdded="OnAccountAddedAsync" />
 <MoveAccountDialog @bind-Visible="_moveDialogOpen" AccountToMove="_selected" BranchId="_branchId" OnMoved="OnAccountMovedAsync" />
 
+<MudDialog @bind-Visible="_centerDialogOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true })">
+    <TitleContent>@Tr("DefaultCostCenterLabel")</TitleContent>
+    <DialogContent>
+        <div style="height:360px;">
+            <CostCenterTreePicker SelectedValue="_centerPick" SelectedValueChanged="n => _centerPick = n" Height="100%" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _centerDialogOpen = false">@Tr("Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(_centerPick == null || _centerPick.HasChildren)"
+                   OnClick="UseDefaultCenter">@Tr("UseThisCenterButton")</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     private List<(long Id, string Name)> _branches = new();
     private List<(long Id, string Name, int Value, int HeadMainAccount)> _accountTypes = new();
@@ -207,6 +239,12 @@
     private bool _moveDialogOpen;
     private bool _isBusy;
     private string? _errorMessage;
+    private int _policy;
+    private bool _policyLoaded;
+    private long _defaultCenterId;
+    private string _defaultCenterName = "";
+    private bool _centerDialogOpen;
+    private CostCenterNodeViewModel? _centerPick;
 
     protected override void OnInitialized()
     {
@@ -266,10 +304,29 @@
         _selected = null;
     }
 
-    private void OnNodeSelected(AccountTreeNodeViewModel? node)
+    private async Task OnNodeSelected(AccountTreeNodeViewModel? node)
     {
         _selected = node;
         _errorMessage = null;
+        _policyLoaded = false; _policy = 0; _defaultCenterId = 0; _defaultCenterName = "";
+        if (node == null) return;
+        var id = node.Id;
+        try
+        {
+            var p = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return CostCenterService.GetAccountPolicy(new operations(), id); });
+            if (_selected?.Id == id)
+            {
+                _policy = p.Policy; _defaultCenterId = p.DefaultCenterId; _defaultCenterName = p.DefaultCenterName; _policyLoaded = true;
+            }
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+    }
+
+    private void UseDefaultCenter()
+    {
+        if (_centerPick == null) return;
+        _defaultCenterId = _centerPick.Id; _defaultCenterName = $"{_centerPick.Code_Str}  {_centerPick.Name}";
+        _centerDialogOpen = false;
     }
 
     private void OnAccountTypeChanged(int value)
@@ -365,6 +422,11 @@
                 sa.sb.Account_Type_ValueGeneralCustomer = node.Account_Type_ValueGeneralCustomer;
 
                 new Add_Account_CodesCLS().EditAccount(ref excp, ref msg, sa);
+                if (excp == 0 && _policyLoaded)
+                {
+                    var pr = CostCenterService.SetAccountPolicy(new operations(), node.Id, _policy, _defaultCenterId);
+                    if (!pr.Ok) { excp = 1; msg = pr.Message; }
+                }
             });
 
             if (excp == 0)

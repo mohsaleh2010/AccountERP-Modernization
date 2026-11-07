@@ -4684,4 +4684,128 @@
   <data name="IVREmptyStore" xml:space="preserve"><value>Keine Artikel mit Bestand</value></data>
   <data name="HelpTitle" xml:space="preserve"><value>Buchhalter-Handbuch</value></data>
   <data name="HelpOpenTab" xml:space="preserve"><value>In neuem Tab öffnen</value></data>
+  <data name="CVBoxCostCenter" xml:space="preserve">
+    <value>Cash box cost center</value>
+  </data>
+  <data name="FSRCostCenter" xml:space="preserve"><value>Cost center (commissions and expenses)</value></data>
+  <data name="FACostCenter" xml:space="preserve"><value>Cost center</value></data>
+  <data name="CostCenterTypeLabel" xml:space="preserve"><value>Type</value></data>
+  <data name="CostCenterType0" xml:space="preserve"><value>General</value></data>
+  <data name="CostCenterType1" xml:space="preserve"><value>Project</value></data>
+  <data name="CostCenterType2" xml:space="preserve"><value>Phase</value></data>
+  <data name="CostCenterType3" xml:space="preserve"><value>Cost item</value></data>
+  <data name="CostCenterType4" xml:space="preserve"><value>Department</value></data>
+  <data name="CostCenterType5" xml:space="preserve"><value>Site / area</value></data>
+  <data name="CostCenterType6" xml:space="preserve"><value>Sales rep / route</value></data>
+  <data name="CostCenterNameELabel" xml:space="preserve"><value>Name (English)</value></data>
+  <data name="CostCenterStatus1" xml:space="preserve"><value>Active</value></data>
+  <data name="CostCenterStatus2" xml:space="preserve"><value>Suspended</value></data>
+  <data name="CostCenterStatus3" xml:space="preserve"><value>Closed</value></data>
+  <data name="CostCenterIsLeaf" xml:space="preserve"><value>Leaf (accepts postings)</value></data>
+  <data name="CostCenterNotLeaf" xml:space="preserve"><value>Has sub-centers</value></data>
+  <data name="CostCenterEntryLines" xml:space="preserve"><value>Entry lines</value></data>
+  <data name="CostCenterAccountLinks" xml:space="preserve"><value>Linked accounts</value></data>
+  <data name="MoveCostCenterButton" xml:space="preserve"><value>Move</value></data>
+  <data name="MoveCostCenterTitle" xml:space="preserve"><value>Move cost center under another parent</value></data>
+  <data name="MoveToRootButton" xml:space="preserve"><value>Make root</value></data>
+  <data name="MoveHereButton" xml:space="preserve"><value>Move under selected</value></data>
+  <data name="CostCenterMoved" xml:space="preserve"><value>Cost center moved</value></data>
+  <data name="CloseCostCenterButton" xml:space="preserve"><value>Close center</value></data>
+  <data name="ReopenCostCenterButton" xml:space="preserve"><value>Reopen</value></data>
+  <data name="CostCenterStatusChanged" xml:space="preserve"><value>Status changed</value></data>
+  <data name="CostCenterProjectCard" xml:space="preserve"><value>Project card</value></data>
+  <data name="ProjectCustomerLabel" xml:space="preserve"><value>Customer</value></data>
+  <data name="ProjectContractValueLabel" xml:space="preserve"><value>Contract value</value></data>
+  <data name="ProjectStartDateLabel" xml:space="preserve"><value>Start date</value></data>
+  <data name="ProjectEndDateLabel" xml:space="preserve"><value>End date</value></data>
+  <data name="ProjectStatusLabel" xml:space="preserve"><value>Project status</value></data>
+  <data name="ProjectStatus1" xml:space="preserve"><value>Planning</value></data>
+  <data name="ProjectStatus2" xml:space="preserve"><value>In progress</value></data>
+  <data name="ProjectStatus3" xml:space="preserve"><value>Completed</value></data>
+  <data name="ProjectStatus4" xml:space="preserve"><value>On hold</value></data>
+  <data name="ProjectRetentionLabel" xml:space="preserve"><value>Retention %</value></data>
+  <data name="SaveProjectButton" xml:space="preserve"><value>Save project</value></data>
+  <data name="ProjectSaved" xml:space="preserve"><value>Project saved</value></data>
+  <data name="CostCenterPolicyLabel" xml:space="preserve"><value>Cost center policy</value></data>
+  <data name="CostCenterPolicy0" xml:space="preserve"><value>Not allowed</value></data>
+  <data name="CostCenterPolicy1" xml:space="preserve"><value>Optional</value></data>
+  <data name="CostCenterPolicy2" xml:space="preserve"><value>Required</value></data>
+  <data name="DefaultCostCenterLabel" xml:space="preserve"><value>Default cost center</value></data>
+  <data name="DefaultCostCenterNone" xml:space="preserve"><value>No default center</value></data>
+  <data name="UseThisCenterButton" xml:space="preserve"><value>Use this center</value></data>
+  <data name="LinkTabByAccount" xml:space="preserve"><value>By account</value></data>
+  <data name="LinkTabByCenter" xml:space="preserve"><value>By cost center</value></data>
+  <data name="LinkTabGaps" xml:space="preserve"><value>Gap report</value></data>
+  <data name="BulkLinkAccountsButton" xml:space="preserve"><value>Link accounts</value></data>
+  <data name="LinkInheritNote" xml:space="preserve"><value>This center has sub-centers: linking applies to all of its leaf centers.</value></data>
+  <data name="NoAccountsLinkedYet" xml:space="preserve"><value>No accounts linked to this center yet</value></data>
+  <data name="GapRequiredOnly" xml:space="preserve"><value>Required only</value></data>
+  <data name="GapReportHint" xml:space="preserve"><value>Accounts with an optional/required policy that have no center links, or have entry lines without a center.</value></data>
+  <data name="NoGaps" xml:space="preserve"><value>No gaps found</value></data>
+  <data name="GapLinkCount" xml:space="preserve"><value>Links</value></data>
+  <data name="GapViolatingLines" xml:space="preserve"><value>Lines without center</value></data>
+  <data name="BulkLinkDone" xml:space="preserve"><value>{0} new links added</value></data>
+  <data name="Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="AccountNoLabel" xml:space="preserve"><value>Account no.</value></data>
+  <data name="SelectedCountLabel" xml:space="preserve"><value>Selected</value></data>
+  <data name="MEApplyCenterToAll" xml:space="preserve">
+    <value>Kostenstelle „{0}“ auf alle Zeilen anwenden</value>
+  </data>
+  <data name="MEApplyCenterSkipped" xml:space="preserve">
+    <value>Kostenstelle bei {0} Zeile(n) nicht angewendet (für das Konto nicht erlaubt)</value>
+  </data>
+  <data name="InvCostCenter" xml:space="preserve">
+    <value>Document cost center</value>
+  </data>
+  <data name="CCRTitle" xml:space="preserve"><value>Kostenstellenberichte</value></data>
+  <data name="CCRSub" xml:space="preserve"><value>Kostenstellen-Hauptbuch, Saldenliste, Rentabilität und Projektkostenanalyse — in Gegenwert</value></data>
+  <data name="CCRAllCenters" xml:space="preserve"><value>Alle Kostenstellen</value></data>
+  <data name="CCRAllBranches" xml:space="preserve"><value>Alle Filialen</value></data>
+  <data name="CCRPressShow" xml:space="preserve"><value>Filter wählen und auf Anzeigen klicken.</value></data>
+  <data name="CCRWithChildren" xml:space="preserve"><value>Unterkostenstellen einbeziehen</value></data>
+  <data name="CCRBalance" xml:space="preserve"><value>Saldo</value></data>
+  <data name="CCRPrevBalance" xml:space="preserve"><value>Vorsaldo</value></data>
+  <data name="CCRPeriodTotal" xml:space="preserve"><value>Periodensumme</value></data>
+  <data name="CCRClosing" xml:space="preserve"><value>Schlusssaldo</value></data>
+  <data name="CCRTabLedger" xml:space="preserve"><value>Kostenstellen-Hauptbuch</value></data>
+  <data name="CCRTabTb" xml:space="preserve"><value>Saldenliste je Kostenstelle</value></data>
+  <data name="CCRTabProfit" xml:space="preserve"><value>Rentabilität je Kostenstelle</value></data>
+  <data name="CCRTabProject" xml:space="preserve"><value>Projektkostenanalyse</value></data>
+  <data name="CCRRollUp" xml:space="preserve"><value>Kumuliert (inkl. Unterstellen)</value></data>
+  <data name="CCRRollUpNote" xml:space="preserve"><value>Eine übergeordnete Kostenstelle enthält ihre Unterstellen; Zeilen nicht addieren – die Gesamtsumme stammt nur aus echten Buchungen.</value></data>
+  <data name="CCRLayoutCenterAccount" xml:space="preserve"><value>Kostenstelle, dann Konto</value></data>
+  <data name="CCRLayoutAccountCenter" xml:space="preserve"><value>Konto, dann Kostenstelle</value></data>
+  <data name="CCRColCenterCode" xml:space="preserve"><value>Kostenstellencode</value></data>
+  <data name="CCROpenDebit" xml:space="preserve"><value>Eröffnung Soll</value></data>
+  <data name="CCROpenCredit" xml:space="preserve"><value>Eröffnung Haben</value></data>
+  <data name="CCRCloseDebit" xml:space="preserve"><value>Saldo Soll</value></data>
+  <data name="CCRCloseCredit" xml:space="preserve"><value>Saldo Haben</value></data>
+  <data name="CCRTotal" xml:space="preserve"><value>Summe</value></data>
+  <data name="CCRGrandTotal" xml:space="preserve"><value>Gesamtsumme</value></data>
+  <data name="CCRCompare" xml:space="preserve"><value>Mit gleich langem Vorzeitraum vergleichen</value></data>
+  <data name="CCRRevenue" xml:space="preserve"><value>Erlöse</value></data>
+  <data name="CCRCost" xml:space="preserve"><value>Kosten</value></data>
+  <data name="CCRProfit" xml:space="preserve"><value>Ergebnis</value></data>
+  <data name="CCRMargin" xml:space="preserve"><value>Marge</value></data>
+  <data name="CCRPrevProfit" xml:space="preserve"><value>Ergebnis Vorperiode</value></data>
+  <data name="CCRChange" xml:space="preserve"><value>Veränderung</value></data>
+  <data name="CCRPrevRange" xml:space="preserve"><value>Vorperiode</value></data>
+  <data name="CCRPickProject" xml:space="preserve"><value>Projekt-Kostenstelle in den Filtern wählen und auf Anzeigen klicken.</value></data>
+  <data name="CCRContractValue" xml:space="preserve"><value>Vertragswert</value></data>
+  <data name="CCRActualCost" xml:space="preserve"><value>Istkosten</value></data>
+  <data name="CCRCostOfContract" xml:space="preserve"><value>Kosten in % des Vertrags</value></data>
+  <data name="CCRRemaining" xml:space="preserve"><value>Restvertrag</value></data>
+  <data name="CCRByGroup" xml:space="preserve"><value>Nach Kontengruppe</value></data>
+  <data name="CCRByPhase" xml:space="preserve"><value>Nach Phase</value></data>
+  <data name="CCRColName" xml:space="preserve"><value>Bezeichnung</value></data>
+  <data name="CCRAmount" xml:space="preserve"><value>Betrag</value></data>
+  <data name="CCLTitle" xml:space="preserve"><value>Kostenstellen-Nebenbuch nach Geschäftsperiode</value></data>
+  <data name="CCLSub" xml:space="preserve"><value>Kostenstellen mit Bewegungen im Zeitraum und deren Buchungen mit Eröffnungs- bzw. Vortragssaldo</value></data>
+  <data name="CCLCentersGrid" xml:space="preserve"><value>Kostenstellen</value></data>
+  <data name="CCLPickCenter" xml:space="preserve"><value>Kostenstelle aus der Liste wählen, um ihre Bewegungen zu sehen.</value></data>
+  <data name="CCLNoCenters" xml:space="preserve"><value>Keine Kostenstellen mit Bewegungen für diese Filter.</value></data>
+  <data name="CCLUpdateFirstBalance" xml:space="preserve"><value>Eröffnungssaldo aktualisieren</value></data>
+  <data name="CCLUpdateConfirm" xml:space="preserve"><value>Der Kostenstellen-Vortrag für die gewählte Periode und Filiale wird aus der Vorperiode neu aufgebaut. Fortfahren?</value></data>
+  <data name="CCLUpdatedOk" xml:space="preserve"><value>Eröffnungssaldo aktualisiert.</value></data>
+  <data name="CCLErrOutsidePeriod" xml:space="preserve"><value>Die Daten müssen innerhalb der gewählten Geschäftsperiode liegen</value></data>
 </root>

@@ -12,6 +12,7 @@
 
 @using System.Globalization
 @using AccountModelsLib
+@using AccountModelsLib.BusinessLibShared.CostCenters
 @using AccountERP.SharedUI.Services
 @using AccountERP.SharedUI.ViewModels
 @using AccountERP.SharedUI.Components.Shared
@@ -61,12 +62,30 @@
                 }
                 else
                 {
+                    <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-3" AlignItems="AlignItems.Center">
+                        <MudChip T="string" Size="Size.Small" Color="@StatusColor()" Variant="Variant.Filled">@Tr("CostCenterStatus" + (_detail?.Status ?? 1))</MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@(_detail?.IsLeaf == false ? Tr("CostCenterNotLeaf") : Tr("CostCenterIsLeaf"))</MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@Tr("CostCenterEntryLines"): @(_usage?.EntryLines ?? 0)</MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@Tr("CostCenterAccountLinks"): @(_usage?.AccountLinks ?? 0)</MudChip>
+                    </MudStack>
+
                     <MudGrid Spacing="3">
                         <MudItem xs="12" sm="7">
                             <MudTextField T="string" @bind-Value="_selected.Name" Label="@Tr("CostCenterNameLabel")" Required="true" />
                         </MudItem>
                         <MudItem xs="12" sm="5">
-                            <MudTextField T="string" @bind-Value="_selected.Code_Str" Label="@Tr("CostCenterCodeLabel")" Required="true" />
+                            <MudTextField T="string" Value="_selected.Code_Str" Label="@Tr("CostCenterCodeLabel")" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="7">
+                            <MudTextField T="string" @bind-Value="_nameE" Label="@Tr("CostCenterNameELabel")" />
+                        </MudItem>
+                        <MudItem xs="12" sm="5">
+                            <MudSelect T="int" @bind-Value="_type" Label="@Tr("CostCenterTypeLabel")">
+                                @for (var t = 0; t <= 6; t++)
+                                {
+                                    <MudSelectItem T="int" Value="@t">@Tr("CostCenterType" + t)</MudSelectItem>
+                                }
+                            </MudSelect>
                         </MudItem>
 
                         <MudItem xs="12" sm="6">
@@ -88,11 +107,63 @@
                                    OnClick="SaveEditAsync" Disabled="_isBusy">
                             @Tr("SaveEditButton")
                         </MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.DriveFileMove"
+                                   OnClick="OpenMoveDialog" Disabled="_isBusy">
+                            @Tr("MoveCostCenterButton")
+                        </MudButton>
+                        @if (_detail?.IsOpen == false)
+                        {
+                            <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.LockOpen"
+                                       OnClick="() => SetStatusAsync(1)" Disabled="_isBusy">@Tr("ReopenCostCenterButton")</MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Lock"
+                                       OnClick="() => SetStatusAsync(3)" Disabled="_isBusy">@Tr("CloseCostCenterButton")</MudButton>
+                        }
                         <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
                                    OnClick="DeleteAsync" Disabled="_isBusy">
                             @Tr("DeleteAccountButton")
                         </MudButton>
                     </MudStack>
+
+                    @if (_type == 1)
+                    {
+                        <MudDivider Class="my-4" />
+                        <MudText Typo="Typo.h6" Class="mb-3">@Tr("CostCenterProjectCard")</MudText>
+                        <MudGrid Spacing="3">
+                            <MudItem xs="12" sm="6">
+                                <MudAutocomplete T="CostCenterService.CustomerRow" Value="_customer" ValueChanged="c => _customer = c"
+                                                 SearchFunc="SearchCustomersAsync" ToStringFunc="@(c => c?.Name)" Label="@Tr("ProjectCustomerLabel")"
+                                                 Clearable="true" ResetValueOnEmptyText="true" CoerceText="false" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudNumericField T="decimal" @bind-Value="_project.ContractValue" Label="@Tr("ProjectContractValueLabel")" Min="0" HideSpinButtons="true" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudDatePicker Date="_project.StartDate" DateChanged="d => _project.StartDate = d" Label="@Tr("ProjectStartDateLabel")" Clearable="true" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudDatePicker Date="_project.EndDate" DateChanged="d => _project.EndDate = d" Label="@Tr("ProjectEndDateLabel")" Clearable="true" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudSelect T="int" @bind-Value="_project.Status" Label="@Tr("ProjectStatusLabel")">
+                                    @for (var s = 1; s <= 4; s++)
+                                    {
+                                        <MudSelectItem T="int" Value="@s">@Tr("ProjectStatus" + s)</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudNumericField T="decimal" @bind-Value="_project.RetentionPercent" Label="@Tr("ProjectRetentionLabel")" Min="0" Max="100" HideSpinButtons="true" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField T="string" @bind-Value="_project.Notes" Label="@Tr("NotesLabel")" Lines="2" />
+                            </MudItem>
+                        </MudGrid>
+                        <MudButton Class="mt-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
+                                   OnClick="SaveProjectAsync" Disabled="_isBusy">@Tr("SaveProjectButton")</MudButton>
+                    }
                 }
             </MudPaper>
         </MudItem>
@@ -102,6 +173,21 @@
 <AddCostCenterDialog @bind-Visible="_addDialogOpen" ParentNode="_selected" OnCostCenterAdded="OnCostCenterAddedAsync" />
 <AddCostCenterDialog @bind-Visible="_addRootDialogOpen" ParentNode="_selected" IsRoot="true" OnCostCenterAdded="OnRootCostCenterAddedAsync" />
 
+<MudDialog @bind-Visible="_moveDialogOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true })">
+    <TitleContent>@Tr("MoveCostCenterTitle")</TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">@_selected?.Code_Str &nbsp; @_selected?.Name</MudText>
+        <div style="height:360px;">
+            <CostCenterTreePicker SelectedValue="_moveTarget" SelectedValueChanged="n => _moveTarget = n" Height="100%" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _moveDialogOpen = false">@Tr("Cancel")</MudButton>
+        <MudButton Variant="Variant.Outlined" OnClick="() => MoveAsync(0)">@Tr("MoveToRootButton")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(_moveTarget == null)" OnClick="() => MoveAsync(_moveTarget!.Id)">@Tr("MoveHereButton")</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     private CostCenterTreePicker? _treePicker;
     private CostCenterNodeViewModel? _selected;
@@ -109,6 +195,14 @@
     private bool _addRootDialogOpen;
     private bool _isBusy;
     private string? _errorMessage;
+    private bool _moveDialogOpen;
+    private CostCenterNodeViewModel? _moveTarget;
+    private CostCenterService.Node? _detail;
+    private CostCenterService.Usage? _usage;
+    private string _nameE = "";
+    private int _type;
+    private CostCenterService.ProjectInfo _project = new();
+    private CostCenterService.CustomerRow? _customer;
 
     protected override void OnInitialized()
     {
@@ -117,10 +211,95 @@
 
     private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
 
-    private void OnNodeSelected(CostCenterNodeViewModel? node)
+    private async Task OnNodeSelected(CostCenterNodeViewModel? node)
     {
         _selected = node;
         _errorMessage = null;
+        await LoadDetailAsync();
+    }
+
+    // تفاصيل العقدة المختارة (الحالة/الورقية/الاستخدام/NameE/النوع/بطاقة المشروع) من الخدمة المشتركة.
+    private async Task LoadDetailAsync()
+    {
+        _detail = null; _usage = null; _customer = null; _project = new();
+        if (_selected == null) return;
+        var id = _selected.Id;
+        try
+        {
+            var r = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var opp = new operations();
+                var d = CostCenterService.Get(opp, id);
+                return (d, CostCenterService.GetUsage(opp, id), d != null && d.CostType == 1 ? CostCenterService.GetProject(opp, id) : new CostCenterService.ProjectInfo());
+            });
+            _detail = r.d; _usage = r.Item2; _project = r.Item3;
+            _nameE = _detail?.NameE ?? "";
+            _type = (int)(_detail?.CostType ?? 0);
+            if (_project.CustomerId > 0) _customer = new CostCenterService.CustomerRow { Id = _project.CustomerId, Name = _project.CustomerName };
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+    }
+
+    private Color StatusColor() => (_detail?.Status ?? 1) switch { 3 => Color.Error, 2 => Color.Warning, _ => Color.Success };
+
+    private async Task<IEnumerable<CostCenterService.CustomerRow>> SearchCustomersAsync(string value, CancellationToken token) =>
+        await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return (IEnumerable<CostCenterService.CustomerRow>)CostCenterService.SearchCustomers(new operations(), value); });
+
+    private void OpenMoveDialog() { _moveTarget = null; _moveDialogOpen = true; }
+
+    private async Task RefreshAfterChangeAsync(long id)
+    {
+        if (_treePicker != null)
+        {
+            await _treePicker.ReloadAsync();
+            await _treePicker.SelectAndRevealAsync(id);
+        }
+    }
+
+    private async Task MoveAsync(long newParentId)
+    {
+        if (_selected == null) return;
+        _isBusy = true; _errorMessage = null;
+        var id = _selected.Id; var first = string.IsNullOrEmpty(_selected.FirstSubCode) ? "1" : _selected.FirstSubCode;
+        try
+        {
+            var res = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return CostCenterService.Move(new operations(), id, newParentId, first); });
+            if (res.Ok) { _moveDialogOpen = false; Snackbar.Add(Tr("CostCenterMoved"), Severity.Success); await RefreshAfterChangeAsync(id); }
+            else _errorMessage = res.Message;
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+        finally { _isBusy = false; }
+    }
+
+    private async Task SetStatusAsync(int status)
+    {
+        if (_selected == null) return;
+        _isBusy = true; _errorMessage = null;
+        var id = _selected.Id;
+        try
+        {
+            var res = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return CostCenterService.SetStatus(new operations(), id, (CostCenterStatus)status, Common.User_Id); });
+            if (res.Ok) { Snackbar.Add(Tr("CostCenterStatusChanged"), Severity.Success); await LoadDetailAsync(); }
+            else _errorMessage = res.Message;
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+        finally { _isBusy = false; }
+    }
+
+    private async Task SaveProjectAsync()
+    {
+        if (_selected == null) return;
+        _isBusy = true; _errorMessage = null;
+        var id = _selected.Id; _project.CustomerId = _customer?.Id ?? 0; var p = _project;
+        try
+        {
+            var res = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return CostCenterService.SaveProject(new operations(), id, p, Common.User_Id); });
+            if (res.Ok) Snackbar.Add(Tr("ProjectSaved"), Severity.Success);
+            else _errorMessage = res.Message;
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+        finally { _isBusy = false; }
     }
 
     private void OpenAddDialog()
@@ -164,22 +343,20 @@
     {
         if (_selected == null) return;
         if (string.IsNullOrWhiteSpace(_selected.Name)) { _errorMessage = Tr("CostCenterNameRequired"); return; }
-        if (string.IsNullOrWhiteSpace(_selected.Code_Str)) { _errorMessage = Tr("CostCenterCodeGenerationFailed"); return; }
 
         _isBusy = true;
         _errorMessage = null;
-        int excp = 0;
-        string msg = "";
-        var node = _selected;
+        var node = _selected; var nameE = _nameE; var type = (CostCenterType)_type;
+        CostCenterService.Result res = null!;
         try
         {
-            await Task.Run(() =>
+            res = await Task.Run(() =>
             {
                 AccountCultureGuard.EnsureInvariant();
-                new CostCenterCLS().Edit_CostCenter(ref excp, ref msg, node.Id, node.Name.Trim(), node.Code_Str.Trim(), node.Notes ?? "");
+                return CostCenterService.Update(new operations(), node.Id, node.Name, nameE, type, node.Notes ?? "", Common.User_Id);
             });
 
-            if (excp == 0)
+            if (res.Ok)
             {
                 Snackbar.Add(Tr("AccountUpdated"), Severity.Success);
                 var selectedId = node.Id;
@@ -191,7 +368,7 @@
             }
             else
             {
-                _errorMessage = string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+                _errorMessage = string.IsNullOrEmpty(res.Message) ? Tr("SystemError", "") : res.Message;
             }
         }
         catch (Exception ex)
@@ -222,26 +399,8 @@
         var id = _selected.Id;
         try
         {
-            bool hasChildren = false;
-            int excp = 0;
-            string msg = "";
-            await Task.Run(() =>
-            {
-                AccountCultureGuard.EnsureInvariant();
-                var cc = new CostCenterCLS();
-                hasChildren = cc.Check_Account_No_Found_OnSubAccount(ref excp, id);
-                if (!hasChildren)
-                {
-                    cc.Delete_CostCenter(ref excp, ref msg, id);
-                }
-            });
-
-            if (hasChildren)
-            {
-                _errorMessage = Tr("CostCenterCannotDeleteHasChildren");
-                return;
-            }
-
+            var res = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return CostCenterService.Delete(new operations(), id); });
+            int excp = res.Ok ? 0 : 1; string msg = res.Message ?? "";
             if (excp == 0)
             {
                 Snackbar.Add(Tr("AccountDeleted"), Severity.Success);

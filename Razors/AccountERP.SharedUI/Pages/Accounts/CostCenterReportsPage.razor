@@ -1,0 +1,442 @@
+@* 🟢 تقارير مراكز التكلفة (المرحلة 5 من cost-centers-razor-plan.md): أستاذ المركز، ميزان مراجعة بالمراكز، ربحية المراكز، تحليل تكاليف المشروع.
+   قراءة فقط عبر CostCenterReportsService (استعلام مباشر على Account_Entry_Details بلا جداول Temp). القيم بالمكافىء.
+   «أستاذ مساعد مراكز التكلفة» بالفترة المالية (قائمة الديسكتوب) صفحة مستقلة: CostCenterLedgerPage على /accounts/final/cost-center-ledger. *@
+@page "/accounts/cost-centers/reports"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.BusinessLibShared.CostCenters
+@using AccountModelsLib.BusinessLibShared.GeneralLedger
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.ViewModels
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("CCRTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .cr-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .cr-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .cr-head .ico .mud-icon-root { font-size: 2rem; }
+    .cr-head .titles { flex: 1 1 260px; min-width: 0; }
+    .cr-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .cr-gap { margin-top: 16px; }
+    .cr-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: center; }
+    .cr-filters .wide { grid-column: span 2; display: flex; gap: 8px; align-items: center; }
+    .cr-btns { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; align-items: center; }
+    .cr-wrap { overflow-x: auto; }
+    table.cr { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    table.cr th, table.cr td { padding: 6px 10px; border-bottom: 1px solid var(--mud-palette-lines-default); white-space: nowrap; }
+    table.cr thead th { position: sticky; top: 0; background: var(--mud-palette-surface); font-weight: 700; text-align: center; z-index: 1; }
+    table.cr td.num { text-align: end; }
+    table.cr td.txt { white-space: normal; min-width: 180px; }
+    table.cr tr.move { cursor: pointer; }
+    table.cr tr.move:hover td { background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent); }
+    table.cr tr.open td { font-weight: 700; background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent); }
+    table.cr tr.tot td { font-weight: 700; border-top: 1px solid var(--mud-palette-text-secondary); }
+    table.cr tr.close td { font-weight: 800; background: color-mix(in srgb, var(--mud-palette-primary) 16%, transparent); border-top: 2px solid var(--mud-palette-primary); }
+    table.cr tr.grp td { font-weight: 800; background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent); }
+    table.cr tr.grand td { font-weight: 800; border-top: 2px solid var(--mud-palette-primary); }
+    .cr-pos { color: var(--mud-palette-success); } .cr-neg { color: var(--mud-palette-error); }
+    .cr-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 12px; }
+    .cr-kpi { border: 1px solid var(--mud-palette-lines-default); border-radius: 10px; padding: 10px 14px; }
+    .cr-kpi .k { font-size: .8rem; color: var(--mud-palette-text-secondary); } .cr-kpi .v { font-size: 1.15rem; font-weight: 800; }
+    .cr-bar { height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--mud-palette-primary) 70%, transparent); min-width: 2px; }
+    .cr-print-title { display: none; }
+    @@media (max-width: 1099px) { .cr-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 599px) { .cr-filters { grid-template-columns: minmax(0, 1fr); } .cr-filters .wide { grid-column: auto; } }
+    @@media print {
+        .cr-noprint, .mud-appbar, .mud-drawer, nav, .mud-tabs-tabbar { display: none !important; }
+        .cr-print-title { display: block; margin-bottom: 8px; }
+        .cr-wrap { overflow: visible; }
+        table.cr thead th { position: static; }
+    }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page" @onkeydown="OnKeyDown">
+
+    <div class="inv-card cr-head cr-noprint">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Assessment" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("CCRTitle")</h1>
+            <div class="sub">@Tr("CCRSub")</div>
+        </div>
+    </div>
+
+    <div class="inv-card cr-gap cr-noprint">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.FilterList" />@Tr("SOFiltersTitle")</h2>
+        <div class="cr-filters">
+            <div class="wide">
+                <MudTextField T="string" Value="@(_centerId == 0 ? Tr("CCRAllCenters") : _centerName)" ReadOnly="true" Label="@Tr("JECostCenterLabel")" Variant="Variant.Outlined" Dense="true" />
+                <MudButton Variant="Variant.Outlined" OnClick="@(() => _pickerOpen = true)">...</MudButton>
+                @if (_centerId != 0)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Clear" Size="Size.Small" OnClick="ClearCenter" aria-label="@Tr("LGClearAccount")" />
+                }
+            </div>
+            <MudDatePicker T="DateTime?" Date="_from" DateChanged="@(d => { _from = d; })" Label="@Tr("FADateFrom")" Variant="Variant.Outlined" Editable="true" />
+            <MudDatePicker T="DateTime?" Date="_to" DateChanged="@(d => { _to = d; })" Label="@Tr("FADateTo")" Variant="Variant.Outlined" Editable="true" />
+            <MudSelect T="long" @bind-Value="_branch" Label="@Tr("FABranch")" Variant="Variant.Outlined" Dense="true"
+                       ToStringFunc="@(v => v == 0 ? Tr("CCRAllBranches") : _branches.FirstOrDefault(b => b.Id == v)?.Name ?? "")">
+                <MudSelectItem T="long" Value="0L">@Tr("CCRAllBranches")</MudSelectItem>
+                @foreach (var b in _branches)
+                {
+                    <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </div>
+        <div class="cr-btns">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility" Disabled="@_loading" OnClick="ShowAsync">@Tr("FAShow")</MudButton>
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Print" Disabled="@_loading" OnClick="PrintAsync">@Tr("FAPrint")</MudButton>
+            @if (_loading) { <MudProgressCircular Indeterminate="true" Size="Size.Small" /> }
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="cr-gap" role="alert">@_error</MudAlert>
+    }
+
+    <div class="inv-card cr-gap">
+        <MudTabs @bind-ActivePanelIndex="_tab" Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pt-4">
+
+            @* ---------------- 1) أستاذ المركز ---------------- *@
+            <MudTabPanel Text="@Tr("CCRTabLedger")" Icon="@Icons.Material.Filled.MenuBook">
+                <div class="cr-noprint">
+                    <MudCheckBox T="bool" @bind-Value="_withChildren" Label="@Tr("CCRWithChildren")" Color="Color.Primary" Dense="true" />
+                    @if (_ledger != null)
+                    {
+                        <MudTextField T="string" @bind-Value="_search" Immediate="true" Label="@Tr("LGSearchNotes")" Variant="Variant.Outlined" Dense="true"
+                                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true" />
+                    }
+                </div>
+                @if (_ledger == null) { <MudAlert Severity="Severity.Info" Dense="true" role="status">@Tr("CCRPressShow")</MudAlert> }
+                else
+                {
+                    <div class="cr-print-title"><strong>@Tr("CCRTabLedger")</strong> — @ScopeText</div>
+                    <div class="cr-wrap cr-gap">
+                        <table class="cr">
+                            <thead><tr>
+                                <th>@Tr("LGColSerial")</th><th>@Tr("LGColDate")</th><th>@Tr("LGColEntryNo")</th><th>@Tr("LGJournal")</th>
+                                <th>@Tr("TBColCode")</th><th>@Tr("TBColAccount")</th><th>@Tr("JECostCenterLabel")</th><th>@Tr("LGColNotes")</th>
+                                <th>@Tr("LGColDebit")</th><th>@Tr("LGColCredit")</th><th>@Tr("CCRBalance")</th>
+                            </tr></thead>
+                            <tbody>
+                                @{ int serial = 0; }
+                                @foreach (var l in VisibleLedger)
+                                {
+                                    if (l.Kind == 0)
+                                    {
+                                        serial++;
+                                        <tr class="move" title="@Tr("LGOpenHint")" @ondblclick="@(() => OpenEntry(l.EntryId))">
+                                            <td>@serial</td><td>@l.Date?.ToString("yyyy/MM/dd")</td><td>@l.EntryNo</td><td>@l.Journal</td>
+                                            <td>@l.AccountNo</td><td class="txt">@l.AccountName</td><td>@l.CenterName</td><td class="txt">@l.Notes</td>
+                                            <td class="num">@N(l.Debit)</td><td class="num">@N(l.Credit)</td><td class="num">@Bal(l.Balance)</td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        <tr class="@(l.Kind == 1 ? "open" : l.Kind == 2 ? "tot" : "close")">
+                                            <td colspan="7"></td>
+                                            <td>@Tr(l.Kind == 1 ? "CCRPrevBalance" : l.Kind == 2 ? "CCRPeriodTotal" : "CCRClosing")</td>
+                                            <td class="num">@N(l.Debit)</td><td class="num">@N(l.Credit)</td><td class="num">@Bal(l.Balance)</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (_ledger.All(l => l.Kind != 0)) { <MudAlert Severity="Severity.Info" Dense="true" Class="cr-gap" role="status">@Tr("LGNoMoves")</MudAlert> }
+                }
+            </MudTabPanel>
+
+            @* ---------------- 2) ميزان مراجعة بالمراكز ---------------- *@
+            <MudTabPanel Text="@Tr("CCRTabTb")" Icon="@Icons.Material.Filled.Balance">
+                <div class="cr-noprint" style="display:flex; flex-wrap:wrap; gap:8px 24px; align-items:center;">
+                    <MudCheckBox T="bool" @bind-Value="_rollUp" Label="@Tr("CCRRollUp")" Color="Color.Primary" Dense="true" />
+                    <MudRadioGroup T="int" @bind-Value="_tbLayout">
+                        <MudRadio T="int" Value="0" Color="Color.Primary" Dense="true">@Tr("CCRLayoutCenterAccount")</MudRadio>
+                        <MudRadio T="int" Value="1" Color="Color.Primary" Dense="true">@Tr("CCRLayoutAccountCenter")</MudRadio>
+                    </MudRadioGroup>
+                </div>
+                @if (_tb == null) { <MudAlert Severity="Severity.Info" Dense="true" Class="cr-gap" role="status">@Tr("CCRPressShow")</MudAlert> }
+                else if (_tb.Groups.Count == 0) { <MudAlert Severity="Severity.Info" Dense="true" Class="cr-gap" role="status">@Tr("LGNoMoves")</MudAlert> }
+                else
+                {
+                    <div class="cr-print-title"><strong>@Tr("CCRTabTb")</strong> — @ScopeText</div>
+                    <div class="cr-wrap cr-gap">
+                        <table class="cr">
+                            <thead><tr>
+                                <th>@Tr(_tbLayout == 0 ? "TBColCode" : "CCRColCenterCode")</th><th>@Tr(_tbLayout == 0 ? "TBColAccount" : "JECostCenterLabel")</th>
+                                <th>@Tr("CCROpenDebit")</th><th>@Tr("CCROpenCredit")</th><th>@Tr("LGColDebit")</th><th>@Tr("LGColCredit")</th>
+                                <th>@Tr("CCRCloseDebit")</th><th>@Tr("CCRCloseCredit")</th>
+                            </tr></thead>
+                            <tbody>
+                                @if (_tbLayout == 0)
+                                {
+                                    @foreach (var g in _tb.Groups)
+                                    {
+                                        <tr class="grp"><td>@g.Center.CodeStr</td><td colspan="7">@g.Center.Name</td></tr>
+                                        @foreach (var r in g.Rows) { @TbLine(r.AccountNo, r.AccountName, r, "") }
+                                        @TbLine("", Tr("CCRTotal"), g.Total, "tot")
+                                    }
+                                }
+                                else
+                                {
+                                    @foreach (var acc in TbByAccount)
+                                    {
+                                        <tr class="grp"><td>@acc.Key.AccountNo</td><td colspan="7">@acc.Key.AccountName</td></tr>
+                                        @foreach (var x in acc.OrderBy(v => v.Center.CodeStr, StringComparer.Ordinal)) { @TbLine(x.Center.CodeStr, x.Center.Name, x.Row, "") }
+                                    }
+                                }
+                                @TbLine("", Tr("CCRGrandTotal"), _tb.Total, "grand")
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (_rollUp) { <MudAlert Severity="Severity.Normal" Dense="true" Class="cr-gap" role="note">@Tr("CCRRollUpNote")</MudAlert> }
+                }
+            </MudTabPanel>
+
+            @* ---------------- 3) الربحية ---------------- *@
+            <MudTabPanel Text="@Tr("CCRTabProfit")" Icon="@Icons.Material.Filled.TrendingUp">
+                <div class="cr-noprint" style="display:flex; flex-wrap:wrap; gap:8px 24px; align-items:center;">
+                    <MudCheckBox T="bool" @bind-Value="_rollUp" Label="@Tr("CCRRollUp")" Color="Color.Primary" Dense="true" />
+                    <MudCheckBox T="bool" @bind-Value="_compare" Label="@Tr("CCRCompare")" Color="Color.Primary" Dense="true" />
+                </div>
+                @if (_profit == null) { <MudAlert Severity="Severity.Info" Dense="true" Class="cr-gap" role="status">@Tr("CCRPressShow")</MudAlert> }
+                else if (_profit.Rows.Count == 0) { <MudAlert Severity="Severity.Info" Dense="true" Class="cr-gap" role="status">@Tr("LGNoMoves")</MudAlert> }
+                else
+                {
+                    <div class="cr-print-title"><strong>@Tr("CCRTabProfit")</strong> — @ScopeText</div>
+                    <div class="cr-wrap cr-gap">
+                        <table class="cr">
+                            <thead><tr>
+                                <th>@Tr("CCRColCenterCode")</th><th>@Tr("JECostCenterLabel")</th><th>@Tr("CCRRevenue")</th><th>@Tr("CCRCost")</th><th>@Tr("CCRProfit")</th><th>@Tr("CCRMargin")</th>
+                                @if (_compare)
+                                {
+                                    <th>@Tr("CCRPrevProfit")</th><th>@Tr("CCRChange")</th>
+                                }
+                            </tr></thead>
+                            <tbody>
+                                @foreach (var r in _profit.Rows)
+                                {
+                                    <tr>
+                                        <td>@r.Center.CodeStr</td><td class="txt" style="@($"padding-inline-start:{10 + Math.Max(0, r.Center.Level - 1) * 14}px")">@r.Center.Name</td>
+                                        <td class="num">@N(r.Revenue)</td><td class="num">@N(r.Cost)</td>
+                                        <td class="num @(r.Profit < 0 ? "cr-neg" : "cr-pos")">@N(r.Profit)</td><td class="num">@(r.Revenue == 0 ? "" : r.Margin.ToString("N1", CultureInfo.InvariantCulture) + "%")</td>
+                                        @if (_compare)
+                                        {
+                                            <td class="num">@N(r.PrevProfit)</td><td class="num @(r.Profit - r.PrevProfit < 0 ? "cr-neg" : "cr-pos")">@N(r.Profit - r.PrevProfit)</td>
+                                        }
+                                    </tr>
+                                }
+                                <tr class="grand">
+                                    <td></td><td>@Tr("CCRGrandTotal")</td>
+                                    <td class="num">@N(_profit.Total.Revenue)</td><td class="num">@N(_profit.Total.Cost)</td>
+                                    <td class="num @(_profit.Total.Profit < 0 ? "cr-neg" : "cr-pos")">@N(_profit.Total.Profit)</td>
+                                    <td class="num">@(_profit.Total.Revenue == 0 ? "" : _profit.Total.Margin.ToString("N1", CultureInfo.InvariantCulture) + "%")</td>
+                                    @if (_compare)
+                                    {
+                                        <td class="num">@N(_profit.Total.PrevProfit)</td><td class="num">@N(_profit.Total.Profit - _profit.Total.PrevProfit)</td>
+                                    }
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (_compare && _profit.PrevFrom != null)
+                    {
+                        <div class="cr-gap" style="font-size:.85rem; color:var(--mud-palette-text-secondary);">@Tr("CCRPrevRange"): @_profit.PrevFrom?.ToString("yyyy/MM/dd") → @_profit.PrevTo?.ToString("yyyy/MM/dd")</div>
+                    }
+                    @if (_rollUp) { <MudAlert Severity="Severity.Normal" Dense="true" Class="cr-gap" role="note">@Tr("CCRRollUpNote")</MudAlert> }
+                }
+            </MudTabPanel>
+
+            @* ---------------- 4) تحليل تكاليف المشروع ---------------- *@
+            <MudTabPanel Text="@Tr("CCRTabProject")" Icon="@Icons.Material.Filled.Engineering">
+                @if (_project == null) { <MudAlert Severity="Severity.Info" Dense="true" role="status">@Tr(_centerId == 0 ? "CCRPickProject" : "CCRPressShow")</MudAlert> }
+                else
+                {
+                    <div class="cr-print-title"><strong>@Tr("CCRTabProject")</strong> — @ScopeText</div>
+                    <div class="cr-kpis">
+                        <div class="cr-kpi"><div class="k">@Tr("CCRContractValue")</div><div class="v">@N(_project.ContractValue)</div></div>
+                        <div class="cr-kpi"><div class="k">@Tr("CCRRevenue")</div><div class="v">@N(_project.TotalRevenue)</div></div>
+                        <div class="cr-kpi"><div class="k">@Tr("CCRActualCost")</div><div class="v">@N(_project.TotalCost)</div></div>
+                        <div class="cr-kpi"><div class="k">@Tr("CCRProfit")</div><div class="v @(_project.TotalRevenue - _project.TotalCost < 0 ? "cr-neg" : "cr-pos")">@N(_project.TotalRevenue - _project.TotalCost)</div></div>
+                        @if (_project.ContractValue != 0)
+                        {
+                            <div class="cr-kpi"><div class="k">@Tr("CCRCostOfContract")</div><div class="v">@_project.CostPercentOfContract.ToString("N1", CultureInfo.InvariantCulture)%</div></div>
+                            <div class="cr-kpi"><div class="k">@Tr("CCRRemaining")</div><div class="v">@N(_project.ContractValue - _project.TotalCost)</div></div>
+                        }
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px;">
+                        <div>
+                            <h3 class="inv-card-title">@Tr("CCRByGroup")</h3>
+                            @AmountTable(_project.ByGroup)
+                        </div>
+                        <div>
+                            <h3 class="inv-card-title">@Tr("CCRByPhase")</h3>
+                            @AmountTable(_project.ByPhase)
+                        </div>
+                    </div>
+                }
+            </MudTabPanel>
+        </MudTabs>
+    </div>
+</div>
+</MudContainer>
+
+<MudDialog @bind-Visible="_pickerOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true })">
+    <TitleContent>@Tr("JECostCenterLabel")</TitleContent>
+    <DialogContent>
+        <div style="height:45vh;">
+            <CostCenterTreePicker SelectedValue="_pickedNode" SelectedValueChanged="OnCenterPicked" Height="45vh" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _pickerOpen = false)">@Tr("Cancel")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<FinalAccountsService.Option> _branches = new();
+    private long _centerId, _branch;
+    private string _centerName = "";
+    private CostCenterNodeViewModel? _pickedNode;
+    private bool _pickerOpen, _withChildren = true, _rollUp = true, _compare, _loading;
+    private int _tab, _tbLayout;
+    private DateTime? _from, _to;
+    private string _search = "";
+    private string? _error;
+
+    private List<CostCenterReportsService.LedgerLine>? _ledger;
+    private CostCenterReportsService.TbResult? _tb;
+    private CostCenterReportsService.ProfitResult? _profit;
+    private CostCenterReportsService.ProjectAnalysis? _project;
+
+    private string ScopeText => $"{(_centerId == 0 ? Tr("CCRAllCenters") : _centerName)} ({_from?.ToString("yyyy/MM/dd")} → {_to?.ToString("yyyy/MM/dd")})";
+
+    private IEnumerable<CostCenterReportsService.LedgerLine> VisibleLedger =>
+        string.IsNullOrWhiteSpace(_search) ? _ledger!
+        : _ledger!.Where(l => l.Kind != 0 || (l.Notes + " " + l.AccountName + " " + l.AccountNo).Contains(_search.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    private record AccCenter(CostCenterService.Node Center, CostCenterReportsService.TbRow Row);
+
+    private IEnumerable<IGrouping<(long AccountId, string AccountNo, string AccountName), AccCenter>> TbByAccount =>
+        _tb!.Groups.SelectMany(g => g.Rows.Select(r => new AccCenter(g.Center, r)))
+            .GroupBy(x => (x.Row.AccountId, x.Row.AccountNo, x.Row.AccountName))
+            .OrderBy(g => g.Key.AccountNo, StringComparer.Ordinal);
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _branches = new FinalAccountsService().GetBranches(); });
+            var today = DateTime.Today;
+            _from = new DateTime(today.Year, 1, 1); _to = today;
+            _branch = 0;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private void OnCenterPicked(CostCenterNodeViewModel? node)
+    {
+        _pickerOpen = false;
+        if (node == null) return;
+        _centerId = node.Id; _centerName = node.Name; _pickedNode = node;
+    }
+
+    private void ClearCenter() { _centerId = 0; _centerName = ""; _pickedNode = null; }
+
+    private async Task OnKeyDown(KeyboardEventArgs e) { if (e.Key == "F8") await ShowAsync(); }
+
+    private async Task ShowAsync()
+    {
+        _error = null;
+        if (_from == null || _to == null) { _error = Tr("FAErrPeriodRequired"); return; }
+        if (_to.Value.Date < _from.Value.Date) { _error = Tr("FAErrToBeforeFrom"); return; }
+        if (_tab == 3 && _centerId == 0) { _error = Tr("CCRPickProject"); return; }
+        _loading = true;
+        try
+        {
+            DateTime from = _from.Value, to = _to.Value; long center = _centerId, branch = _branch; bool kids = _withChildren, roll = _rollUp, cmp = _compare; int tab = _tab;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var opp = new operations();
+                switch (tab)
+                {
+                    case 0: _ledger = CostCenterReportsService.Ledger(opp, center, kids, from, to, branch, 0); _search = ""; break;
+                    case 1: _tb = CostCenterReportsService.TrialBalance(opp, center, from, to, branch, roll); break;
+                    case 2: _profit = CostCenterReportsService.Profitability(opp, center, from, to, branch, roll, cmp); break;
+                    default: _project = CostCenterReportsService.AnalyzeProject(opp, center, from, to, branch); break;
+                }
+            });
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _loading = false; }
+    }
+
+    private void OpenEntry(long entryId)
+    {
+        if (entryId <= 0) return;
+        bool columns = Common.IsHavePermission(Common.User_Id, 808, 2, Common.Branch_Id);
+        Nav.NavigateTo(columns ? $"/accounts/journal-entry/madin-da2n?id={entryId}" : $"/accounts/journal-entry?id={entryId}");
+    }
+
+    private async Task PrintAsync() => await JS.InvokeVoidAsync("window.print");
+
+    private RenderFragment TbLine(string code, string name, CostCenterReportsService.TbRow r, string cls) => __b =>
+    {
+        decimal c = r.Close;
+        __b.OpenElement(0, "tr"); __b.AddAttribute(1, "class", cls);
+        __b.AddMarkupContent(2, $"<td>{System.Net.WebUtility.HtmlEncode(code)}</td><td class=\"txt\">{System.Net.WebUtility.HtmlEncode(name)}</td>" +
+            $"<td class=\"num\">{N(r.OpenDebit)}</td><td class=\"num\">{N(r.OpenCredit)}</td><td class=\"num\">{N(r.Debit)}</td><td class=\"num\">{N(r.Credit)}</td>" +
+            $"<td class=\"num\">{N(c > 0 ? c : 0)}</td><td class=\"num\">{N(c < 0 ? -c : 0)}</td>");
+        __b.CloseElement();
+    };
+
+    private RenderFragment AmountTable(List<CostCenterReportsService.AmountRow> rows) => __b =>
+    {
+        if (rows.Count == 0) { __b.AddMarkupContent(0, $"<div class=\"cr-kpi\">{System.Net.WebUtility.HtmlEncode(Tr("LGNoMoves"))}</div>"); return; }
+        var sb = new System.Text.StringBuilder("<div class=\"cr-wrap\"><table class=\"cr\"><thead><tr><th>")
+            .Append(System.Net.WebUtility.HtmlEncode(Tr("CCRColName"))).Append("</th><th>").Append(System.Net.WebUtility.HtmlEncode(Tr("CCRAmount")))
+            .Append("</th><th>%</th><th></th></tr></thead><tbody>");
+        foreach (var r in rows)
+            sb.Append("<tr><td class=\"txt\">").Append(System.Net.WebUtility.HtmlEncode(r.Name)).Append("</td><td class=\"num\">").Append(N(r.Amount))
+              .Append("</td><td class=\"num\">").Append(r.Percent.ToString("N1", CultureInfo.InvariantCulture)).Append("%</td><td style=\"min-width:90px\"><div class=\"cr-bar\" style=\"width:")
+              .Append(Math.Min(100, Math.Max(0, (double)r.Percent)).ToString("0", CultureInfo.InvariantCulture)).Append("%\"></div></td></tr>");
+        decimal tot = rows.Sum(x => x.Amount);
+        sb.Append("<tr class=\"grand\"><td>").Append(System.Net.WebUtility.HtmlEncode(Tr("CCRTotal"))).Append("</td><td class=\"num\">").Append(N(tot)).Append("</td><td></td><td></td></tr></tbody></table></div>");
+        __b.AddMarkupContent(0, sb.ToString());
+    };
+
+    private static string N(decimal v) => v == 0 ? "" : v.ToString("N2", CultureInfo.InvariantCulture);
+    private static string Bal(decimal v) => v == 0 ? "0.00" : (v < 0 ? "(" + (-v).ToString("N2", CultureInfo.InvariantCulture) + ")" : v.ToString("N2", CultureInfo.InvariantCulture));
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

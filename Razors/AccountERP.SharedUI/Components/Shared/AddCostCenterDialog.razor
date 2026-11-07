@@ -59,6 +59,15 @@
                     </MudSelect>
                 </MudItem>
 
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int" @bind-Value="_costType" Label="@Tr("CostCenterTypeLabel")">
+                        @for (var t = 0; t <= 6; t++)
+                        {
+                            <MudSelectItem T="int" Value="@t">@Tr("CostCenterType" + t)</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
                 <MudItem xs="12">
                     <MudTextField T="string" @bind-Value="_notes" Label="@Tr("NotesLabel")" Lines="2" />
                 </MudItem>
@@ -86,6 +95,7 @@
 
     private string _name = "";
     private string _notes = "";
+    private int _costType;
     private string _firstSubCode = AccountLookups.FirstSubCodeDefault;
     private string _codeStr = "";
     private long _code;
@@ -175,7 +185,7 @@
                 AccountCultureGuard.EnsureInvariant();
                 new CostCenterCLS().Add_NewCostCenter(
                     ref excp, ref msg,
-                    parentId, _name.Trim(), _code, _codeStr, Cost_Type: 0, Notes: _notes,
+                    parentId, _name.Trim(), _code, _codeStr, Cost_Type: _costType, Notes: _notes,
                     Currency_Id: 0, Currency_Str: "", Head_Main_Cost: 0,
                     lastPartIncrease: _lastPartIncrease, Cost_Level: _costLevel, FirstSubCode: _firstSubCode);
             });

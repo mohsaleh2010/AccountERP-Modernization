@@ -12,6 +12,7 @@
 @using System.Globalization
 @using AccountModelsLib
 @using AccountModelsLib.Models
+@using AccountModelsLib.BusinessLibShared.CostCenters
 @using AccountERP.SharedUI.Services
 @using AccountERP.SharedUI.ViewModels
 @using AccountERP.SharedUI.Components.Shared
@@ -47,7 +48,9 @@
         <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4" Style="flex: 0 0 auto;" ContentAlignment="HorizontalAlignment.Left">@_errorMessage</MudAlert>
     }
 
-    <MudGrid Spacing="3" Style="flex: 1 1 auto; min-height: 0;">
+    <MudTabs Elevation="0" Rounded="false" PanelClass="pt-3" Style="flex: 1 1 auto; min-height: 0;" ActivePanelIndexChanged="OnTabChanged">
+    <MudTabPanel Text="@Tr("LinkTabByAccount")">
+    <MudGrid Spacing="3" Style="height: calc(100vh - 290px); min-height: 320px;">
         <MudItem xs="12" md="5" Style="height:100%;">
             <MudPaper Class="pa-3" Elevation="1" Style="height:100%; overflow:hidden;">
                 <AccountTreePicker @ref="_treePicker" BranchId="_branchId" SelectedValue="_selectedAccount"
@@ -97,7 +100,123 @@
             </MudPaper>
         </MudItem>
     </MudGrid>
+    </MudTabPanel>
+
+    <MudTabPanel Text="@Tr("LinkTabByCenter")">
+    <MudGrid Spacing="3" Style="height: calc(100vh - 290px); min-height: 320px;">
+        <MudItem xs="12" md="5" Style="height:100%;">
+            <MudPaper Class="pa-3" Elevation="1" Style="height:100%; overflow:hidden;">
+                <CostCenterTreePicker SelectedValue="_centerSel" SelectedValueChanged="OnCenterSelected" Height="100%" />
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="7" Style="height:100%;">
+            <MudPaper Class="pa-4" Elevation="1" Style="height:100%; overflow-y:auto;">
+                @if (_centerSel == null)
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("NoCostCenterSelected")</MudAlert>
+                }
+                else
+                {
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                        <MudText Typo="Typo.subtitle1"><strong>@_centerSel.Code_Str &nbsp; @_centerSel.Name</strong></MudText>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenBulkDialog" Disabled="_isBusy">@Tr("BulkLinkAccountsButton")</MudButton>
+                    </MudStack>
+                    @if (_centerSel.HasChildren)
+                    {
+                        <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3">@Tr("LinkInheritNote")</MudAlert>
+                    }
+                    @if (_centerAccounts.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("NoAccountsLinkedYet")</MudAlert>
+                    }
+                    else
+                    {
+                        <MudTable Items="@_centerAccounts" Hover="true" Dense="true">
+                            <HeaderContent>
+                                <MudTh>@Tr("AccountNoLabel")</MudTh>
+                                <MudTh>@Tr("AccountNameLabel")</MudTh>
+                                <MudTh>@Tr("CostCenterPolicyLabel")</MudTh>
+                                <MudTh Style="width:60px;"></MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd>@context.No</MudTd>
+                                <MudTd>@context.Name</MudTd>
+                                <MudTd><MudChip T="string" Size="Size.Small" Color="@PolicyColor(context.Policy)">@Tr("CostCenterPolicy" + context.Policy)</MudChip></MudTd>
+                                <MudTd>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" Disabled="_isBusy"
+                                                   OnClick="@(() => RemoveFromCenterAsync(context))" />
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+    </MudTabPanel>
+
+    <MudTabPanel Text="@Tr("LinkTabGaps")">
+        <MudPaper Class="pa-4" Elevation="1" Style="height: calc(100vh - 290px); min-height: 320px; overflow-y:auto;">
+            <MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center" Class="mb-3" Wrap="Wrap.Wrap">
+                <MudSwitch T="bool" Value="_gapRequiredOnly" ValueChanged="OnGapFilterChanged" Color="Color.Primary" Label="@Tr("GapRequiredOnly")" />
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadGapsAsync" Disabled="_isBusy">@Tr("Refresh")</MudButton>
+            </MudStack>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">@Tr("GapReportHint")</MudText>
+            @if (_gapsLoading)
+            {
+                <MudProgressLinear Indeterminate="true" />
+            }
+            else if (_gaps.Count == 0)
+            {
+                <MudAlert Severity="Severity.Success" Variant="Variant.Outlined">@Tr("NoGaps")</MudAlert>
+            }
+            else
+            {
+                <MudTable Items="@_gaps" Hover="true" Dense="true">
+                    <HeaderContent>
+                        <MudTh>@Tr("AccountNoLabel")</MudTh>
+                        <MudTh>@Tr("AccountNameLabel")</MudTh>
+                        <MudTh>@Tr("CostCenterPolicyLabel")</MudTh>
+                        <MudTh>@Tr("GapLinkCount")</MudTh>
+                        <MudTh>@Tr("GapViolatingLines")</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.No</MudTd>
+                        <MudTd>@context.Name</MudTd>
+                        <MudTd><MudChip T="string" Size="Size.Small" Color="@PolicyColor(context.Policy)">@Tr("CostCenterPolicy" + context.Policy)</MudChip></MudTd>
+                        <MudTd>@context.LinkCount</MudTd>
+                        <MudTd>@(context.ViolatingLines > 0 ? context.ViolatingLines.ToString() : "-")</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudPaper>
+    </MudTabPanel>
+    </MudTabs>
 </MudContainer>
+
+<MudDialog @bind-Visible="_bulkOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true })">
+    <TitleContent>@Tr("BulkLinkAccountsButton")</TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">@_centerSel?.Code_Str &nbsp; @_centerSel?.Name</MudText>
+        <MudTextField T="string" Value="_bulkText" ValueChanged="OnBulkSearchAsync" Immediate="true" DebounceInterval="300" Label="@Tr("SearchAccountLabel")"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Variant="Variant.Outlined" Dense="true" Class="mb-2" />
+        <div style="max-height:320px; overflow-y:auto;">
+            @foreach (var a in _bulkResults)
+            {
+                var acc = a;
+                <div style="display:flex; align-items:center;">
+                    <MudCheckBox T="bool" Value="@_bulkPicked.Contains(acc.Id)" ValueChanged="@((bool v) => TogglePick(acc.Id, v))" Dense="true" />
+                    <span>@acc.No &nbsp; @acc.Name</span>
+                </div>
+            }
+        </div>
+        <MudText Typo="Typo.caption" Class="mt-2">@Tr("SelectedCountLabel"): @_bulkPicked.Count</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _bulkOpen = false">@Tr("Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(_bulkPicked.Count == 0 || _isBusy)" OnClick="BulkLinkAsync">@Tr("Save")</MudButton>
+    </DialogActions>
+</MudDialog>
 
 <AssignCostCentersDialog @bind-Visible="_assignDialogOpen" SubmainAccountId="@(_selectedAccount?.Id ?? 0)" OnAssigned="OnAssignedAsync" />
 
@@ -234,6 +353,108 @@
         {
             _isBusy = false;
         }
+    }
+
+    // ───── المرحلة 2: تبويب «بحسب المركز» + الربط الجماعى + تقرير الفجوات ─────
+    private CostCenterNodeViewModel? _centerSel;
+    private List<CostCenterService.AccountRow> _centerAccounts = new();
+    private bool _bulkOpen;
+    private string _bulkText = "";
+    private List<CostCenterService.AccountRow> _bulkResults = new();
+    private HashSet<long> _bulkPicked = new();
+    private bool _gapRequiredOnly = true;
+    private bool _gapsLoading;
+    private bool _gapsLoaded;
+    private List<CostCenterService.AccountRow> _gaps = new();
+
+    private static Color PolicyColor(int p) => p switch { 2 => Color.Error, 1 => Color.Info, _ => Color.Default };
+
+    private async Task OnTabChanged(int index)
+    {
+        if (index == 2 && !_gapsLoaded) await LoadGapsAsync();
+    }
+
+    private async Task OnCenterSelected(CostCenterNodeViewModel? node)
+    {
+        _centerSel = node;
+        _errorMessage = null;
+        await LoadCenterAccountsAsync();
+    }
+
+    private async Task LoadCenterAccountsAsync()
+    {
+        _centerAccounts = new();
+        if (_centerSel == null) return;
+        var id = _centerSel.Id;
+        try { _centerAccounts = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return CostCenterService.LinkedAccounts(new operations(), id); }); }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+    }
+
+    private async Task RemoveFromCenterAsync(CostCenterService.AccountRow row)
+    {
+        if (_centerSel == null) return;
+        var confirmed = await DialogService.ShowMessageBoxAsync(Tr("RemoveCostCenterAssignmentTitle"), Tr("RemoveCostCenterAssignmentConfirm", _centerSel.Name),
+            yesText: Tr("Yes"), cancelText: Tr("No"));
+        if (confirmed != true) return;
+        _isBusy = true; _errorMessage = null;
+        var cid = _centerSel.Id;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); new CostCenterCLS().Delete_CostCenterForAccounts(cid, row.Id); });
+            Snackbar.Add(Tr("CostCenterAssignmentRemoved"), Severity.Success);
+            await LoadCenterAccountsAsync();
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+        finally { _isBusy = false; }
+    }
+
+    private void OpenBulkDialog() { _bulkText = ""; _bulkResults = new(); _bulkPicked = new(); _bulkOpen = true; }
+
+    private async Task OnBulkSearchAsync(string text)
+    {
+        _bulkText = text;
+        try { _bulkResults = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return CostCenterService.SearchAccounts(new operations(), text); }); }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+    }
+
+    private void TogglePick(long id, bool on) { if (on) _bulkPicked.Add(id); else _bulkPicked.Remove(id); }
+
+    // ربط الحسابات المختارة بالمركز؛ إن كان أباً فبكل أوراقه (وراثة من جهة المركز - ق5). يُضيف فقط ويتخطى المكرر.
+    private async Task BulkLinkAsync()
+    {
+        if (_centerSel == null || _bulkPicked.Count == 0) return;
+        _isBusy = true; _errorMessage = null;
+        var cid = _centerSel.Id; var accs = _bulkPicked.ToList();
+        try
+        {
+            var res = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                var opp = new operations();
+                var centers = CostCenterService.Descendants(opp, cid).Select(n => n.Id).ToList();
+                centers.Add(cid);
+                return CostCenterService.BulkLink(opp, accs, centers);
+            });
+            if (res.Ok) { _bulkOpen = false; Snackbar.Add(Tr("BulkLinkDone", res.Id), Severity.Success); await LoadCenterAccountsAsync(); _gapsLoaded = false; }
+            else _errorMessage = res.Message;
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+        finally { _isBusy = false; }
+    }
+
+    private async Task OnGapFilterChanged(bool v) { _gapRequiredOnly = v; await LoadGapsAsync(); }
+
+    private async Task LoadGapsAsync()
+    {
+        _gapsLoading = true; _errorMessage = null;
+        var only = _gapRequiredOnly;
+        try
+        {
+            _gaps = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return CostCenterService.GapReport(new operations(), only); });
+            _gapsLoaded = true;
+        }
+        catch (Exception ex) { _errorMessage = Tr("SystemError", ex.Message); }
+        finally { _gapsLoading = false; }
     }
 
     private string Tr(string key, params object[] args)

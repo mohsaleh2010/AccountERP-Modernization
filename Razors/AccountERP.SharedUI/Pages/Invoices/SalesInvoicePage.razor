@@ -379,6 +379,12 @@
                                                  ResetValueOnEmptyText="true" MaxItems="50" Disabled="_isSaved" />
                             </MudItem>
                         }
+                        <MudItem xs="12" sm="6" md="3" Style="@(_ccAny ? null : "display:none")">
+                            @* مركز تكلفة المستند (ق9): يُرحَّل على أسطر القيد التى يقبل حسابها مراكز (إيراد/تكلفة)، ويُخفى لو لا توجد مراكز *@
+                            <CostCenterField AllLeaves="true" Label="@Tr("InvCostCenter")" Disabled="_isSaved" CenterId="_costCenterId"
+                                             CenterIdChanged="@(id => { _costCenterId = id; return Task.CompletedTask; })"
+                                             AllowedChanged="@(a => { _ccAny = a.Centers.Count > 0; return Task.CompletedTask; })" />
+                        </MudItem>
                         @if (Common.Show_Customer_Notes_OnInvoiceMonitor == 1)
                         {
                             <MudItem xs="12" sm="6" md="6">
@@ -505,6 +511,8 @@
     private long _fromOrderId;
     private long _fromOrderNo;
     private List<CustomerOrdersService.Allocation> _orderAllocations = new();
+    private long _costCenterId;
+    private bool _ccAny;
 
     private readonly CustomerCLS _customerCls = new();
     private bool _isReverse;
@@ -870,6 +878,12 @@
         _invoiceNoDisplay = _header.Invoice_Id?.ToString() ?? "";
         _invoiceDate = _header.Invoice_Date;
         _notes = _header.Notes ?? "";
+        _costCenterId = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return AccountModelsLib.BusinessLibShared.CostCenters.InvoiceCostCenter.GetHeaderCenter(new AccountModelsLib.operations(),
+                _isReverse ? AccountModelsLib.BusinessLibShared.CostCenters.InvoiceCostCenter.Table_SalesReturn : AccountModelsLib.BusinessLibShared.CostCenters.InvoiceCostCenter.Table_Sales, invoiceListTableId);
+        });
         _dueDate = _header.InvoiceDueDate ?? _invoiceDate;
         _seller = (_header.Emp_Id ?? 0) > 0 ? new SellerOption(_header.Emp_Id!.Value, _header.Emp_Name ?? "") : null;
         _shipmentCompany = (_header.ShipmentCompany_Id ?? 0) > 0 ? new SellerOption(_header.ShipmentCompany_Id!.Value, _header.ShipmentCompany_Name ?? "") : null;
@@ -1337,6 +1351,7 @@
         _customerAccountBefore = 0;
         _balanceLabel = "";
         _notes = "";
+        _costCenterId = 0;
         _invoiceDate = DateTime.Now;
         _dueDate = DateTime.Now;
         _seller = null;
@@ -1484,6 +1499,10 @@
             await Task.Run(() =>
             {
                 AccountCultureGuard.EnsureInvariant();
+                // مركز التكلفة يُمرَّر للخيط نفسه؛ يستهلكه قيد الفاتورة (InvoiceCostCenter.Apply) ويُمسح هنا لو فشل الحفظ قبله.
+                AccountModelsLib.BusinessLibShared.CostCenters.InvoiceCostCenter.SetPending(_costCenterId);
+                try
+                {
                 if (_isReverse)
                 {
                     // محرك المرتجع المستقل (Requests_Cls) - يقابل EditFRM_Invoices_Reverse سطر 586/603.
@@ -1514,6 +1533,8 @@
                 {
                     rc.Make_Invoice_Update_CustomerAccount(ref excp, ref msg, _invL_O, _invD_O);
                 }
+                }
+                finally { AccountModelsLib.BusinessLibShared.CostCenters.InvoiceCostCenter.ClearPending(); }
             });
         }
         catch (AccountModelsLib.SalesRep.SalesRepApprovalRequiredException ex)

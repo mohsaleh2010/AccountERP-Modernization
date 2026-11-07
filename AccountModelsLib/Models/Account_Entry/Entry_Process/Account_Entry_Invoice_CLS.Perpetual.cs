@@ -15,6 +15,7 @@ namespace AccountModelsLib
         {
             Make_EntryForInvoices_Legacy(ref Excp, ref Msg, ref opp, Invoices_List_Id, dtFrom, dtTo, IS_Posted_Flage);
             PostCogs(ref Excp, ref Msg, ref opp, Invoices_List_Id, false);
+            BusinessLibShared.CostCenters.InvoiceCostCenter.Apply(opp, Excp, BusinessLibShared.CostCenters.InvoiceCostCenter.Table_Sales, new[] { Common.Invoice_Type_Id, InventoryPostingService.InvoiceCogsReferenceType }, Invoices_List_Id);
             Guard(Excp, opp, new[] { Common.Invoice_Type_Id, InventoryPostingService.InvoiceCogsReferenceType }, Invoices_List_Id, "فاتورة مبيعات");
         }
 
@@ -22,6 +23,7 @@ namespace AccountModelsLib
         {
             Make_EntryForInvoices_Reverse_Legacy(ref Excp, ref Msg, ref opp, Invoices_List_Id, dtFrom, dtTo, IS_Posted_Flage);
             PostCogs(ref Excp, ref Msg, ref opp, Invoices_List_Id, true);
+            BusinessLibShared.CostCenters.InvoiceCostCenter.Apply(opp, Excp, BusinessLibShared.CostCenters.InvoiceCostCenter.Table_SalesReturn, new[] { Common.InvoiceReverse_Type_Id, InventoryPostingService.InvoiceReturnCogsReferenceType }, Invoices_List_Id);
             Guard(Excp, opp, new[] { Common.InvoiceReverse_Type_Id, InventoryPostingService.InvoiceReturnCogsReferenceType }, Invoices_List_Id, "مرتجع مبيعات");
         }
 
@@ -30,6 +32,7 @@ namespace AccountModelsLib
         {
             Make_EntryFor_Bills_Legacy(ref Excp, ref Msg, ref opp, Bills_List_Id, dtFrom, dtTo, IS_Posted_Flage);
             PostBillStock(ref Excp, ref Msg, ref opp, Bills_List_Id, false);
+            BusinessLibShared.CostCenters.InvoiceCostCenter.Apply(opp, Excp, BusinessLibShared.CostCenters.InvoiceCostCenter.Table_Purchase, new[] { Common.Bill_Type_Id, InventoryPostingService.BillStockReferenceType }, Bills_List_Id);
             Guard(Excp, opp, new[] { Common.Bill_Type_Id, InventoryPostingService.BillStockReferenceType }, Bills_List_Id, "فاتورة مشتريات");
         }
 
@@ -37,6 +40,7 @@ namespace AccountModelsLib
         {
             Make_EntryFor_Bills_Reverse_Legacy(ref Excp, ref Msg, ref opp, Bills_List_Id, dtFrom, dtTo, IS_Posted_Flage);
             PostBillStock(ref Excp, ref Msg, ref opp, Bills_List_Id, true);
+            BusinessLibShared.CostCenters.InvoiceCostCenter.Apply(opp, Excp, BusinessLibShared.CostCenters.InvoiceCostCenter.Table_PurchaseReturn, new[] { Common.BilleReverse_Type_Id, InventoryPostingService.BillReturnStockReferenceType }, Bills_List_Id);
             Guard(Excp, opp, new[] { Common.BilleReverse_Type_Id, InventoryPostingService.BillReturnStockReferenceType }, Bills_List_Id, "مرتجع مشتريات");
         }
 

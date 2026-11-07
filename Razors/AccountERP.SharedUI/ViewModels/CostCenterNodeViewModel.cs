@@ -24,6 +24,8 @@ namespace AccountERP.SharedUI.ViewModels
         public long lastPartIncrease { get; set; }
         public int Cost_Level { get; set; }
         public string FirstSubCode { get; set; } = "";
+        public long Cost_Type { get; set; }
+        public string NameE { get; set; } = "";
         public string Parent_Name { get; set; } = "";
         public string Parent_Code_Str { get; set; } = "";
 
@@ -83,6 +85,7 @@ namespace AccountERP.SharedUI.ViewModels
             lastPartIncrease = GetLong(row, "lastPartIncrease"),
             Cost_Level = GetInt(row, "Cost_Level"),
             FirstSubCode = GetString(row, "FirstSubCode"),
+            Cost_Type = GetLong(row, "Cost_Type"),
             Parent_Name = GetString(row, "Parent_Name"),
             Parent_Code_Str = GetString(row, "Parent_Code_Str"),
         };

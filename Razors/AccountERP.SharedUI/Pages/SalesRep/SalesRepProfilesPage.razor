@@ -104,6 +104,7 @@
                     <MudSelectItem T="long" Value="0L">@Tr("FSRNone")</MudSelectItem>
                     @foreach (var e in _employees.Where(e => e.Id != _form.Employee_Id)) { <MudSelectItem T="long" Value="@e.Id">@e.Name</MudSelectItem> }
                 </MudSelect>
+                <CostCenterField AllLeaves="true" Label="@Tr("FSRCostCenter")" CenterId="_costCenter" CenterIdChanged="@(v => _costCenter = v)" />
             </div>
             <div class="sr-grid sr-gap">
                 <MudSwitch T="bool" @bind-Value="_form.Allow_Credit_Sales" Color="Color.Primary" Label="@Tr("FSRAllowCredit")" />
@@ -184,7 +185,7 @@
     private List<SalesRepProfileService.RepRow> _reps = new();
     private List<SalesRepProfileService.Option> _candidates = new(), _stores = new(), _boxes = new(), _priceLists = new(), _employees = new();
     private SalesRepProfileService.ProfileInput? _form;
-    private long _priceList, _supervisor;
+    private long _priceList, _supervisor, _costCenter;
     private string _editName = "";
     private bool _locked, _loading = true, _busy;
     private string? _error;
@@ -216,7 +217,7 @@
     private async Task NewAsync()
     {
         _form = new SalesRepProfileService.ProfileInput { Active = true, Employee_Id = _candidates.FirstOrDefault()?.Id ?? 0 };
-        _priceList = 0; _supervisor = 0; _locked = false;
+        _priceList = 0; _supervisor = 0; _costCenter = 0; _locked = false;
         await OnEmployeeAsync();
     }
 
@@ -247,6 +248,7 @@
         _editName = r.Employee_Name;
         _priceList = r.Price_Type_List_ID ?? 0;
         _supervisor = r.Supervisor_Employee_Id ?? 0;
+        _costCenter = r.Cost_Center_Id ?? 0;
         _locked = r.Has_Shifts;
         await LoadLinksAsync(r.Branch_Id, r.Id);
     }
@@ -259,6 +261,7 @@
         _busy = true; _error = null;
         _form.Price_Type_List_ID = _priceList == 0 ? null : _priceList;
         _form.Supervisor_Employee_Id = _supervisor == 0 ? null : _supervisor;
+        _form.Cost_Center_Id = _costCenter == 0 ? null : _costCenter;
         var input = _form;
         try
         {

@@ -229,7 +229,7 @@
             {
                 Value = n,
                 Text = $"{n.Code_Str}  {n.Name}",
-                Icon = n.HasChildren ? Icons.Material.Filled.Folder : Icons.Material.Filled.Description,
+                Icon = TypeIcon(n),
                 Expandable = n.HasChildren,
                 Children = n.HasChildren ? BuildTreeItems(n.Children, index) : null,
             };
@@ -238,6 +238,18 @@
         }
         return list;
     }
+
+    // أيقونة حسب Cost_Type (ق2): مشروع/مرحلة/بند تكلفة/قسم/موقع/مندوب؛ 0 (القديم) كما كان: مجلد أو ورقة.
+    private static string TypeIcon(CostCenterNodeViewModel n) => n.Cost_Type switch
+    {
+        1 => Icons.Material.Filled.Apartment,
+        2 => Icons.Material.Filled.Layers,
+        3 => Icons.Material.Filled.Receipt,
+        4 => Icons.Material.Filled.Business,
+        5 => Icons.Material.Filled.Place,
+        6 => Icons.Material.Filled.Person,
+        _ => n.HasChildren ? Icons.Material.Filled.Folder : Icons.Material.Filled.Description,
+    };
 
     private static Dictionary<long, CostCenterNodeViewModel> FlattenById(List<CostCenterNodeViewModel> roots)
     {

@@ -215,6 +215,12 @@
                             <MudNumericField T="decimal" @bind-Value="Damaghat" Label="@Tr("DamaghatLabel")" Variant="Variant.Outlined" Margin="Margin.Dense"
                                              Format="0.##" Immediate="true" HideSpinButtons="true" Disabled="_isSaved" />
                         </MudItem>
+                        <MudItem xs="12" sm="6" md="3" Style="@(_ccAny ? null : "display:none")">
+                            @* مركز تكلفة المستند (ق9): يُرحَّل على أسطر القيد التى يقبل حسابها مراكز (مشتريات/مصروف)، ويُخفى لو لا توجد مراكز *@
+                            <CostCenterField AllLeaves="true" Label="@Tr("InvCostCenter")" Disabled="_isSaved" CenterId="_costCenterId"
+                                             CenterIdChanged="@(id => { _costCenterId = id; return Task.CompletedTask; })"
+                                             AllowedChanged="@(a => { _ccAny = a.Centers.Count > 0; return Task.CompletedTask; })" />
+                        </MudItem>
                         @if (!_isTaxInvoice)
                         {
                             <MudItem xs="12" sm="6" md="3">
@@ -318,6 +324,8 @@
     private string _invoiceNoDisplay = "";
     private DateTime? _invoiceDate = DateTime.Now;
     private string _notes = "";
+    private long _costCenterId;
+    private bool _ccAny;
     private string _pageTitle = "";
     private bool _isSaved;
     private bool _isSaving;
@@ -530,6 +538,12 @@
         _invoiceNoDisplay = _header.Invoice_Id?.ToString() ?? "";
         _invoiceDate = _header.Invoice_Date;
         _notes = _header.Notes ?? "";
+        _costCenterId = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            return AccountModelsLib.BusinessLibShared.CostCenters.InvoiceCostCenter.GetHeaderCenter(new AccountModelsLib.operations(),
+                _isReverse ? AccountModelsLib.BusinessLibShared.CostCenters.InvoiceCostCenter.Table_PurchaseReturn : AccountModelsLib.BusinessLibShared.CostCenters.InvoiceCostCenter.Table_Purchase, billTableId);
+        });
         _currencyId = _header.Currency_id ?? _currencyId;
         _isAgile = _header.Is_Invoice_Agile == 1;
         _isTaxInvoice = _header.IsInvoiceTaxInfo == 1;
@@ -766,6 +780,7 @@
         _selectedSupplier = null;
         _supplierBalanceBefore = 0;
         _notes = "";
+        _costCenterId = 0;
         _invoiceDate = DateTime.Now;
         _isSaved = false;
         _editingLine = null;
@@ -870,16 +885,22 @@
             {
                 AccountCultureGuard.EnsureInvariant();
                 var engine = new BillsClss();
-                if (_isReverse)
+                // مركز التكلفة يُمرَّر للخيط نفسه؛ يستهلكه قيد الفاتورة (InvoiceCostCenter.Apply) ويُمسح هنا لو فشل الحفظ قبله.
+                AccountModelsLib.BusinessLibShared.CostCenters.InvoiceCostCenter.SetPending(_costCenterId);
+                try
                 {
-                    if (IsExistingInvoice) engine.Edit_Bill_List_reverse_Update_Supplier_Account(ref excp, ref msg, _invD_O, _invL_O);
-                    else engine.Make_Bills_List_Reverse_Update_SupplierAccount(ref excp, ref msg, _invD_O, _invL_O);
+                    if (_isReverse)
+                    {
+                        if (IsExistingInvoice) engine.Edit_Bill_List_reverse_Update_Supplier_Account(ref excp, ref msg, _invD_O, _invL_O);
+                        else engine.Make_Bills_List_Reverse_Update_SupplierAccount(ref excp, ref msg, _invD_O, _invL_O);
+                    }
+                    else
+                    {
+                        if (IsExistingInvoice) engine.Edit_Bill_Update_Supplier_Account(ref excp, ref msg, _invD_O, _invL_O);
+                        else engine.Make_Bill_Update_SupplierAccount(ref excp, ref msg, _invD_O, _invL_O);
+                    }
                 }
-                else
-                {
-                    if (IsExistingInvoice) engine.Edit_Bill_Update_Supplier_Account(ref excp, ref msg, _invD_O, _invL_O);
-                    else engine.Make_Bill_Update_SupplierAccount(ref excp, ref msg, _invD_O, _invL_O);
-                }
+                finally { AccountModelsLib.BusinessLibShared.CostCenters.InvoiceCostCenter.ClearPending(); }
             });
         }
         catch (Exception ex)

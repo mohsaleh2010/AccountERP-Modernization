@@ -25,7 +25,7 @@ namespace AccountModelsLib
         public record OrderLineInput(long UnitItemId, decimal QtyLarge, decimal QtySmall, decimal ItemNo = 0, decimal? UnitCostLarge = null, string Notes = null);
 
         public record OrderInput(int OrderType, DateTime OrderDate, int TypeFrom, long IdFrom, int TypeTo, long IdTo,
-                                 IReadOnlyList<OrderLineInput> Lines, string Notes = null, long InvoiceId = 0);
+                                 IReadOnlyList<OrderLineInput> Lines, string Notes = null, long InvoiceId = 0, long CostCenterId = 0);
 
         /// <summary>صف Store_Order_Type_Settings (عام لأن EF يملؤه من SQL خام).</summary>
         public class OrderTypeSettings
@@ -125,6 +125,8 @@ FROM Store_Order_Type_Settings WHERE Order_Type = {orderType}").AsEnumerable().F
                 opp.db.SaveChanges();
                 opp.db.Database.ExecuteSqlInterpolated($"UPDATE Order_Purshing SET Doc_Status = {(int)DocStatus.Draft} WHERE Id = {header.Id}");
             }
+            // مركز تكلفة الإذن (ق9): يُرحَّل على أسطر قيد الإذن عند الترحيل (InventoryPostingService.PostOrderEntry)
+            BusinessLibShared.CostCenters.InvoiceCostCenter.SetHeaderCenter(opp, BusinessLibShared.CostCenters.InvoiceCostCenter.Table_StoreOrder, header.Id, input.CostCenterId);
 
             for (int i = 0; i < input.Lines.Count; i++)
             {
@@ -312,6 +314,8 @@ FROM Store_Order_Type_Settings WHERE Order_Type = {orderType}").AsEnumerable().F
             // عكس إذن استلام تحويل: الشحنة تعود «فى الطريق» بما لم يُستلم (ويُلغى إغلاق العجز إن كان).
             if (link.SourceOrderId is long shipmentId) RefreshTransferStatus(shipmentId, reopen: true);
 
+            BusinessLibShared.CostCenters.InvoiceCostCenter.SetHeaderCenter(opp, BusinessLibShared.CostCenters.InvoiceCostCenter.Table_StoreOrder, rev.Id,
+                BusinessLibShared.CostCenters.InvoiceCostCenter.GetHeaderCenter(opp, BusinessLibShared.CostCenters.InvoiceCostCenter.Table_StoreOrder, orderId));
             PostInventoryEntry(rev.Id);
             Log(3, orig, "عكس إذن: " + reason);
             return rev.Id;

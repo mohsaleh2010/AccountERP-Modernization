@@ -361,6 +361,20 @@
                 </NoRecordsContent>
             </MudTable>
 
+            @* مركز تكلفة الإذن (ق9): يُرحَّل على أسطر قيد الإذن (حساب المقابل: مصروف/تكلفة) عند الترحيل لفرع الجرد المستمر *@
+            @if (_ccAny)
+            {
+                <div class="so-notes" style="max-width:420px">
+                    <CostCenterField AllLeaves="true" Label="@Tr("InvCostCenter")" Disabled="@ReadOnly" CenterId="_costCenterId"
+                                     CenterIdChanged="@(id => { _costCenterId = id; return Task.CompletedTask; })" />
+                </div>
+            }
+            else
+            {
+                <div style="display:none"><CostCenterField AllLeaves="true" Label="" Disabled="true" CenterId="_costCenterId"
+                                 AllowedChanged="@(a => { _ccAny = a.Centers.Count > 0; return Task.CompletedTask; })" /></div>
+            }
+
             @* ملاحظات الإذن أسفل جدول الأصناف (طلب المستخدم) *@
             <div class="so-notes">
                 <MudTextField T="string" @bind-Value="_notes" Label="@Tr("SONotes")" Variant="Variant.Outlined" Disabled="@ReadOnly"
@@ -567,6 +581,8 @@
     private int _typeFrom, _typeTo, _status = -1;
     private long _idFrom, _idTo, _orderId, _orderNo;
     private DateTime? _date = DateTime.Today;
+    private long _costCenterId;
+    private bool _ccAny;
     private string? _notes, _lineNotes, _lineError, _errorMessage, _reverseReason;
     private bool _isBusy, _onlyWithBalance = true, _showReverse, _reverseAndCopy;
 
@@ -792,7 +808,7 @@
 
     private OrderInput BuildInput() => new OrderInput(OrderType, (_date ?? DateTime.Today).Date, _typeFrom, PartyHasList(_typeFrom) ? _idFrom : 0,
         _typeTo, PartyHasList(_typeTo) ? _idTo : 0,
-        _lines.Select(l => new OrderLineInput(l.UnitItemId, l.QtyLarge, l.QtySmall, 0, l.Cost, l.Notes)).ToList(), _notes);
+        _lines.Select(l => new OrderLineInput(l.UnitItemId, l.QtyLarge, l.QtySmall, 0, l.Cost, l.Notes)).ToList(), _notes, 0, _costCenterId);
 
     private async Task SaveDraftAsync()
     {
@@ -879,6 +895,7 @@
         _header = h;
         _orderId = h.Id; _orderNo = h.Order_No; _status = h.Doc_Status;
         _date = h.Order_Date.Date; _notes = h.Notes;
+        _costCenterId = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return AccountModelsLib.BusinessLibShared.CostCenters.InvoiceCostCenter.GetHeaderCenter(new AccountModelsLib.operations(), AccountModelsLib.BusinessLibShared.CostCenters.InvoiceCostCenter.Table_StoreOrder, id); });
         _typeFrom = h.Type_From; _typeTo = h.Type_To; _idFrom = h.Id_From; _idTo = h.Id_To;
         _fromList = await LoadPartiesAsync(_typeFrom, _settings!.Is_Virtual_Outer_From);
         _toList = await LoadPartiesAsync(_typeTo, _settings.Is_Virtual_Outer_To);
@@ -948,7 +965,7 @@
 
     private async Task NewOrderAsync()
     {
-        _header = null; _orderId = 0; _orderNo = 0; _status = -1; _lines = new(); _notes = null; _errorMessage = null; _showReverse = false;
+        _header = null; _orderId = 0; _orderNo = 0; _status = -1; _lines = new(); _notes = null; _costCenterId = 0; _errorMessage = null; _showReverse = false;
         _date = DateTime.Today;
         ClearPicker();
         await ResetPartiesAsync();

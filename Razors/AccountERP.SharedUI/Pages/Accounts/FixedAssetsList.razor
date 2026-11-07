@@ -150,6 +150,9 @@
                                 <MudItem xs="12" sm="4">
                                     <MudTextField T="string" @bind-Value="_warrantyDetails" Label="@Tr("WarrantyDetailsLabel")" />
                                 </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <CostCenterField AllLeaves="true" Label="@Tr("FACostCenter")" CenterId="_costCenterId" CenterIdChanged="@(v => _costCenterId = v)" />
+                                </MudItem>
                             </MudGrid>
                         </MudTabPanel>
 
@@ -285,6 +288,7 @@
 
     private readonly FixedAssetCLS _cls = new();
     private long _fixedAssetDataId;
+    private long _costCenterId;
     private List<(long Id, string Name)> _employees = new();
     private List<(long Id, string Name)> _depreciationTypes = new();
 
@@ -431,6 +435,7 @@
     private void LoadFieldsFromRow(DataRow r)
     {
         _fixedAssetDataId = Convert.ToInt64(r["Id"]);
+        _costCenterId = r.Table.Columns.Contains("Cost_Center_Id") && r["Cost_Center_Id"] != DBNull.Value ? Convert.ToInt64(r["Cost_Center_Id"]) : 0;
         _code = r["Code"]?.ToString() ?? "";
         _nameAr = r["Name_Ar"]?.ToString() ?? "";
         _nameEn = r["Name_En"]?.ToString() ?? "";
@@ -509,6 +514,7 @@
         _priceScrapValue = 0;
         _lastModifiedValue = 0;
         _defaultAge = 0;
+        _costCenterId = 0;
         _newAssetImageBytes = null;
         _newAssetImageName = null;
     }
@@ -546,6 +552,7 @@
             long newSubAccountId = -1;
             var imageBytes = _newAssetImageBytes;
             var imageDesc = _imageDesc;
+            var costCenterId = _costCenterId;
 
             await Task.Run(() =>
             {
@@ -559,6 +566,7 @@
                     fx.AddNewFixedAssets(ref localExcp, ref localMsg, ref opp, fx);
                     if (localExcp == 0)
                     {
+                        AccountModelsLib.BusinessLibShared.CostCenters.InvoiceCostCenter.SetAssetCenter(opp, fx.fxd.Id, costCenterId);
                         if (imageBytes != null)
                         {
                             int imgExcp = 0;
@@ -651,6 +659,7 @@
         _errorMessage = null;
         var subAccountId = _selected.Id;
         var fixedAssetDataId = _fixedAssetDataId;
+        var costCenterId = _costCenterId;
         try
         {
             int excp = 0;
@@ -662,6 +671,7 @@
                 fx.fxd.Id = fixedAssetDataId;
                 fx.fxd.SubAccount_Id = subAccountId;
                 fx.Update_FixedAssetData_Full(ref excp, ref msg);
+                if (excp == 0) AccountModelsLib.BusinessLibShared.CostCenters.InvoiceCostCenter.SetAssetCenter(new operations(), fixedAssetDataId, costCenterId);
             });
 
             if (excp == 0)

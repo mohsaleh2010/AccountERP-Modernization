@@ -179,6 +179,7 @@ GROUP BY ui.Store_id");
             aa.Make_AccountEntry(ref excp, ref msg, ref entryId, ref opp, Common.User_Id, Common.User_Name, Common.Branch_Id, entryNo, date, journalCode, entryCurrency, notes,
                 Common.Transform_Type, dt, (double)total, entryBranch, 1, orderNo.ToString(CultureInfo.InvariantCulture), entryCurrency, currencyName, 1, 0);
             if (excp != 0 || entryId <= 0) throw new InvalidOperationException(string.IsNullOrWhiteSpace(msg) ? "تعذر إنشاء القيد المخزنى." : msg);
+            BusinessLibShared.CostCenters.InvoiceCostCenter.Apply(opp, excp, BusinessLibShared.CostCenters.InvoiceCostCenter.Table_StoreOrder, new[] { ReferenceType }, orderId);
             return entryId;
         }
 

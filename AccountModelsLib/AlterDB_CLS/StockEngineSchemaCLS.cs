@@ -78,6 +78,7 @@ WHERE Order_Type IN (1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1012,1013
             Step(opp, EntriesIntegrityMenu);
             Step(opp, InventoryValueMenu);
             Step(opp, HelpMenu);
+            CostCenterSchemaCLS.Ensure(opp, Step);
         }
 
         /// <summary>
@@ -376,6 +377,7 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             // الحسابات الختامية (خطة final-accounts-razor-plan.md): ميزان المراجعة بوضعيه، والطباعتان RDLC تفتحان نفس الصفحة (الطباعة منها).
             ("ToolStripMenuItemMasterAccount", "/accounts/final/ledger?mode=range"), ("toolStripMenuItemMaster_Account_DetailsTarseed", "/accounts/final/ledger?mode=fiscal"),
             ("ToolStripMenuItemMezanByPeriodMagame33", "/accounts/final/trial-balance?mode=totals"), ("ToolStripMenuItemMezanByPeriodMagame3", "/accounts/final/trial-balance?mode=totals"),
+            ("ToolStripMenuItemMasterCostCenter", "/accounts/final/cost-center-ledger"), ("ToolStripMenuItemMasterCostCenter1", "/accounts/final/cost-center-ledger"),
             ("ToolStripMenuItem_Mezan_Morgaa", "/accounts/final/trial-balance?mode=closing"),
             ("ToolStripMenuItemMezanByPeriodToolStripMenuItemMezanByPeriodMagame3Arseda", "/accounts/final/trial-balance?mode=closing"),
             // مراجعة القيود (473) بدل Review_Account_Entry.

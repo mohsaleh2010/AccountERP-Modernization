@@ -4682,4 +4682,128 @@
   <data name="IVREmptyStore" xml:space="preserve"><value>لا توجد أصناف برصيد فى هذا المخزن</value></data>
   <data name="HelpTitle" xml:space="preserve"><value>دليل المحاسب</value></data>
   <data name="HelpOpenTab" xml:space="preserve"><value>فتح فى تبويب جديد</value></data>
+  <data name="CVBoxCostCenter" xml:space="preserve">
+    <value>مركز تكلفة الصندوق</value>
+  </data>
+  <data name="FSRCostCenter" xml:space="preserve"><value>مركز التكلفة (للعمولات والمصروفات)</value></data>
+  <data name="FACostCenter" xml:space="preserve"><value>مركز التكلفة</value></data>
+  <data name="CostCenterTypeLabel" xml:space="preserve"><value>نوع المركز</value></data>
+  <data name="CostCenterType0" xml:space="preserve"><value>عام</value></data>
+  <data name="CostCenterType1" xml:space="preserve"><value>مشروع</value></data>
+  <data name="CostCenterType2" xml:space="preserve"><value>مرحلة</value></data>
+  <data name="CostCenterType3" xml:space="preserve"><value>بند تكلفة</value></data>
+  <data name="CostCenterType4" xml:space="preserve"><value>قسم / إدارة</value></data>
+  <data name="CostCenterType5" xml:space="preserve"><value>موقع / منطقة</value></data>
+  <data name="CostCenterType6" xml:space="preserve"><value>مندوب / خط سير</value></data>
+  <data name="CostCenterNameELabel" xml:space="preserve"><value>الاسم بالإنجليزية</value></data>
+  <data name="CostCenterStatus1" xml:space="preserve"><value>نشط</value></data>
+  <data name="CostCenterStatus2" xml:space="preserve"><value>موقوف</value></data>
+  <data name="CostCenterStatus3" xml:space="preserve"><value>مغلق</value></data>
+  <data name="CostCenterIsLeaf" xml:space="preserve"><value>ورقة (يقبل الترحيل)</value></data>
+  <data name="CostCenterNotLeaf" xml:space="preserve"><value>له مراكز فرعية</value></data>
+  <data name="CostCenterEntryLines" xml:space="preserve"><value>أسطر القيود</value></data>
+  <data name="CostCenterAccountLinks" xml:space="preserve"><value>الحسابات المربوطة</value></data>
+  <data name="MoveCostCenterButton" xml:space="preserve"><value>نقل</value></data>
+  <data name="MoveCostCenterTitle" xml:space="preserve"><value>نقل مركز التكلفة إلى أب آخر</value></data>
+  <data name="MoveToRootButton" xml:space="preserve"><value>جعله جذراً</value></data>
+  <data name="MoveHereButton" xml:space="preserve"><value>نقل إلى المختار</value></data>
+  <data name="CostCenterMoved" xml:space="preserve"><value>تم نقل المركز</value></data>
+  <data name="CloseCostCenterButton" xml:space="preserve"><value>إغلاق المركز</value></data>
+  <data name="ReopenCostCenterButton" xml:space="preserve"><value>إعادة فتح</value></data>
+  <data name="CostCenterStatusChanged" xml:space="preserve"><value>تم تغيير حالة المركز</value></data>
+  <data name="CostCenterProjectCard" xml:space="preserve"><value>بطاقة المشروع</value></data>
+  <data name="ProjectCustomerLabel" xml:space="preserve"><value>العميل</value></data>
+  <data name="ProjectContractValueLabel" xml:space="preserve"><value>قيمة العقد</value></data>
+  <data name="ProjectStartDateLabel" xml:space="preserve"><value>تاريخ البداية</value></data>
+  <data name="ProjectEndDateLabel" xml:space="preserve"><value>تاريخ النهاية</value></data>
+  <data name="ProjectStatusLabel" xml:space="preserve"><value>حالة المشروع</value></data>
+  <data name="ProjectStatus1" xml:space="preserve"><value>تخطيط</value></data>
+  <data name="ProjectStatus2" xml:space="preserve"><value>قيد التنفيذ</value></data>
+  <data name="ProjectStatus3" xml:space="preserve"><value>مكتمل</value></data>
+  <data name="ProjectStatus4" xml:space="preserve"><value>متوقف</value></data>
+  <data name="ProjectRetentionLabel" xml:space="preserve"><value>نسبة الاستقطاع %</value></data>
+  <data name="SaveProjectButton" xml:space="preserve"><value>حفظ بيانات المشروع</value></data>
+  <data name="ProjectSaved" xml:space="preserve"><value>تم حفظ بيانات المشروع</value></data>
+  <data name="CostCenterPolicyLabel" xml:space="preserve"><value>سياسة مراكز التكلفة</value></data>
+  <data name="CostCenterPolicy0" xml:space="preserve"><value>ممنوع</value></data>
+  <data name="CostCenterPolicy1" xml:space="preserve"><value>اختيارى</value></data>
+  <data name="CostCenterPolicy2" xml:space="preserve"><value>إلزامى</value></data>
+  <data name="DefaultCostCenterLabel" xml:space="preserve"><value>المركز الافتراضى</value></data>
+  <data name="DefaultCostCenterNone" xml:space="preserve"><value>بلا مركز افتراضى</value></data>
+  <data name="UseThisCenterButton" xml:space="preserve"><value>استخدام هذا المركز</value></data>
+  <data name="LinkTabByAccount" xml:space="preserve"><value>بحسب الحساب</value></data>
+  <data name="LinkTabByCenter" xml:space="preserve"><value>بحسب المركز</value></data>
+  <data name="LinkTabGaps" xml:space="preserve"><value>تقرير الفجوات</value></data>
+  <data name="BulkLinkAccountsButton" xml:space="preserve"><value>ربط حسابات</value></data>
+  <data name="LinkInheritNote" xml:space="preserve"><value>هذا المركز له مراكز فرعية: الربط سيشمل كل مراكزه النهائية.</value></data>
+  <data name="NoAccountsLinkedYet" xml:space="preserve"><value>لا توجد حسابات مربوطة بهذا المركز</value></data>
+  <data name="GapRequiredOnly" xml:space="preserve"><value>الإلزامى فقط</value></data>
+  <data name="GapReportHint" xml:space="preserve"><value>حسابات سياستها إلزامى/اختيارى وليس لها ربط بأى مركز، أو لها أسطر قيود بلا مركز.</value></data>
+  <data name="NoGaps" xml:space="preserve"><value>لا توجد فجوات</value></data>
+  <data name="GapLinkCount" xml:space="preserve"><value>عدد الروابط</value></data>
+  <data name="GapViolatingLines" xml:space="preserve"><value>أسطر قيود بلا مركز</value></data>
+  <data name="BulkLinkDone" xml:space="preserve"><value>تم إضافة {0} رابط جديد</value></data>
+  <data name="Refresh" xml:space="preserve"><value>تحديث</value></data>
+  <data name="AccountNoLabel" xml:space="preserve"><value>رقم الحساب</value></data>
+  <data name="SelectedCountLabel" xml:space="preserve"><value>المحدد</value></data>
+  <data name="MEApplyCenterToAll" xml:space="preserve">
+    <value>تطبيق المركز «{0}» على كل الأسطر</value>
+  </data>
+  <data name="MEApplyCenterSkipped" xml:space="preserve">
+    <value>تعذّر تطبيق المركز على {0} سطر (غير مسموح لحسابه)</value>
+  </data>
+  <data name="InvCostCenter" xml:space="preserve">
+    <value>مركز تكلفة المستند</value>
+  </data>
+  <data name="CCRTitle" xml:space="preserve"><value>تقارير مراكز التكلفة</value></data>
+  <data name="CCRSub" xml:space="preserve"><value>أستاذ المركز، ميزان المراجعة بالمراكز، الربحية، وتحليل تكاليف المشروع — بالمكافىء</value></data>
+  <data name="CCRAllCenters" xml:space="preserve"><value>كل المراكز</value></data>
+  <data name="CCRAllBranches" xml:space="preserve"><value>كل الفروع</value></data>
+  <data name="CCRPressShow" xml:space="preserve"><value>اختر المرشحات ثم اضغط «عرض».</value></data>
+  <data name="CCRWithChildren" xml:space="preserve"><value>شامل المراكز الفرعية</value></data>
+  <data name="CCRBalance" xml:space="preserve"><value>الرصيد</value></data>
+  <data name="CCRPrevBalance" xml:space="preserve"><value>رصيد سابق</value></data>
+  <data name="CCRPeriodTotal" xml:space="preserve"><value>إجمالى الفترة</value></data>
+  <data name="CCRClosing" xml:space="preserve"><value>الرصيد الختامى</value></data>
+  <data name="CCRTabLedger" xml:space="preserve"><value>أستاذ المركز</value></data>
+  <data name="CCRTabTb" xml:space="preserve"><value>ميزان مراجعة بالمراكز</value></data>
+  <data name="CCRTabProfit" xml:space="preserve"><value>ربحية المراكز</value></data>
+  <data name="CCRTabProject" xml:space="preserve"><value>تحليل تكاليف المشروع</value></data>
+  <data name="CCRRollUp" xml:space="preserve"><value>تجميع تراكمى (يشمل الأبناء)</value></data>
+  <data name="CCRRollUpNote" xml:space="preserve"><value>المركز الأب يشمل أرصدة أبنائه، لذا لا تجمع الأسطر يدوياً؛ الإجمالى الكلى يُحسب من الحركات الفعلية فقط.</value></data>
+  <data name="CCRLayoutCenterAccount" xml:space="preserve"><value>مركز ثم حساب</value></data>
+  <data name="CCRLayoutAccountCenter" xml:space="preserve"><value>حساب ثم مركز</value></data>
+  <data name="CCRColCenterCode" xml:space="preserve"><value>كود المركز</value></data>
+  <data name="CCROpenDebit" xml:space="preserve"><value>أول المدة مدين</value></data>
+  <data name="CCROpenCredit" xml:space="preserve"><value>أول المدة دائن</value></data>
+  <data name="CCRCloseDebit" xml:space="preserve"><value>الرصيد مدين</value></data>
+  <data name="CCRCloseCredit" xml:space="preserve"><value>الرصيد دائن</value></data>
+  <data name="CCRTotal" xml:space="preserve"><value>الإجمالى</value></data>
+  <data name="CCRGrandTotal" xml:space="preserve"><value>الإجمالى الكلى</value></data>
+  <data name="CCRCompare" xml:space="preserve"><value>مقارنة بفترة سابقة مماثلة</value></data>
+  <data name="CCRRevenue" xml:space="preserve"><value>الإيرادات</value></data>
+  <data name="CCRCost" xml:space="preserve"><value>التكاليف</value></data>
+  <data name="CCRProfit" xml:space="preserve"><value>الربح</value></data>
+  <data name="CCRMargin" xml:space="preserve"><value>الهامش</value></data>
+  <data name="CCRPrevProfit" xml:space="preserve"><value>ربح الفترة السابقة</value></data>
+  <data name="CCRChange" xml:space="preserve"><value>التغيّر</value></data>
+  <data name="CCRPrevRange" xml:space="preserve"><value>الفترة السابقة</value></data>
+  <data name="CCRPickProject" xml:space="preserve"><value>اختر مركز المشروع من المرشحات ثم اضغط «عرض».</value></data>
+  <data name="CCRContractValue" xml:space="preserve"><value>قيمة العقد</value></data>
+  <data name="CCRActualCost" xml:space="preserve"><value>التكلفة الفعلية</value></data>
+  <data name="CCRCostOfContract" xml:space="preserve"><value>التكلفة من قيمة العقد</value></data>
+  <data name="CCRRemaining" xml:space="preserve"><value>المتبقى من العقد</value></data>
+  <data name="CCRByGroup" xml:space="preserve"><value>حسب مجموعة الحساب</value></data>
+  <data name="CCRByPhase" xml:space="preserve"><value>حسب المرحلة</value></data>
+  <data name="CCRColName" xml:space="preserve"><value>البيان</value></data>
+  <data name="CCRAmount" xml:space="preserve"><value>المبلغ</value></data>
+  <data name="CCLTitle" xml:space="preserve"><value>الأستاذ المساعد لمراكز التكلفة بالفترة المالية</value></data>
+  <data name="CCLSub" xml:space="preserve"><value>المراكز التى لها حركات فى الفترة، وحركة المركز المختار برصيد أول المدة (من ترحيل المراكز) أو المنقول</value></data>
+  <data name="CCLCentersGrid" xml:space="preserve"><value>مراكز التكلفة</value></data>
+  <data name="CCLPickCenter" xml:space="preserve"><value>اختر مركز تكلفة من القائمة لعرض حركته.</value></data>
+  <data name="CCLNoCenters" xml:space="preserve"><value>لا توجد مراكز تكلفة لها حركات بهذه المرشحات.</value></data>
+  <data name="CCLUpdateFirstBalance" xml:space="preserve"><value>تحديث رصيد أول المدة</value></data>
+  <data name="CCLUpdateConfirm" xml:space="preserve"><value>يعاد بناء ترحيل أرصدة المراكز للفترة والفرع المختارين من الفترة السابقة. متابعة؟</value></data>
+  <data name="CCLUpdatedOk" xml:space="preserve"><value>تم تحديث رصيد أول المدة.</value></data>
+  <data name="CCLErrOutsidePeriod" xml:space="preserve"><value>التاريخان يجب أن يكونا داخل الفترة المالية المختارة</value></data>
 </root>

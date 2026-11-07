@@ -10,6 +10,7 @@
 @using AccountModelsLib.Models
 @using AccountModelsLib.BusinessLibShared
 @using AccountModelsLib.BusinessLibShared.GeneralLedger
+@using AccountModelsLib.BusinessLibShared.CostCenters
 @using AccountERP.SharedUI.Services
 @inject LanguageService LangService
 @inject ISnackbar Snackbar
@@ -113,7 +114,7 @@
                 var s = _slots[si];
                 <div class="@(_slots.Count > 1 ? "me-slot" : "")">
                     @if (_slots.Count > 1) { <div class="me-slot-title">@Tr(si == 0 ? "MESlot1" : "MESlot2")</div> }
-                    <AccountSelector @key="s.Key" AccountSelection="s.Selection" AccountSelectionChanged="@(v => OnSelectionChanged(s, v))"
+                    <AccountSelector @key="s.Key" ShowPartyChoice="false" AccountSelection="s.Selection" AccountSelectionChanged="@(v => OnSelectionChanged(s, v))"
                                      CustomerId="s.CustomerId" CustomerIdChanged="@(v => s.CustomerId = v)"
                                      SupplierId="s.SupplierId" SupplierIdChanged="@(v => s.SupplierId = v)"
                                      SubAccountId="s.SubId" SubAccountIdChanged="@(v => OnSubAccountChangedAsync(s, v))"
@@ -140,13 +141,14 @@
                             <MudItem xs="6" md="2"><MudNumericField T="decimal" @bind-Value="s.Credit" Label="@Tr("MECredit")" Variant="Variant.Outlined" Immediate="true" HideSpinButtons="true" Format="0.##" /></MudItem>
                         }
                         <MudItem xs="12" md="3">
-                            <MudSelect T="long" @bind-Value="s.CostCenterId" Label="@Tr("CVCostCenter")" Variant="Variant.Outlined" Disabled="@(s.SubId == 0)"
-                                       ToStringFunc="@(v => s.CostCenters.FirstOrDefault(c => c.Id == v)?.Name ?? "")">
-                                @foreach (var c in s.CostCenters)
-                                {
-                                    <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
-                                }
-                            </MudSelect>
+                            <MudAutocomplete T="CostCenterService.AllowedCenter" Value="@s.SelectedCenter" ValueChanged="@(c => OnCenterPicked(s, c))"
+                                             SearchFunc="@((text, ct) => SearchCenters(s, text))" ToStringFunc="@(c => c == null ? "" : c.Code + "  " + c.Name)"
+                                             Label="@(Tr("CVCostCenter") + (s.Allowed.Policy == 2 ? " *" : ""))" Variant="Variant.Outlined" Dense="true"
+                                             Clearable="@(s.Allowed.Policy != 2)" CoerceText="false" CoerceValue="false" ResetValueOnEmptyText="true" OpenOnFocus="true" SelectOnActivation="true"
+                                             Required="@(s.Allowed.Policy == 2)" Disabled="@(s.SubId == 0 || s.Allowed.Policy == 0)"
+                                             HelperText="@(s.SelectedCenter == null ? "" : s.SelectedCenter.Path)">
+                                <ItemTemplate Context="c"><div><b>@c.Code</b> @c.Name<br /><small class="mud-text-secondary">@c.Path</small></div></ItemTemplate>
+                            </MudAutocomplete>
                         </MudItem>
                         <MudItem xs="12" md="@(Mode == "Typed" ? 4 : 5)"><MudTextField T="string" @bind-Value="s.Notes" Label="@Tr("CVLineNotes")" Variant="Variant.Outlined" /></MudItem>
                     </MudGrid>
@@ -162,6 +164,10 @@
 
     <div class="inv-card">
         <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@Tr("MELinesList")<span class="inv-count">@_lines.Count</span></h2>
+        @if (_editable && _lastCenter != null && _lines.Count > 1)
+        {
+            <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.AccountTree" Class="me-noprint mb-2" OnClick="@(() => ApplyCenterToAllAsync(_lastCenter))">@Tr("MEApplyCenterToAll", _lastCenter.Name)</MudButton>
+        }
         <MudTable Items="@_lines" T="ManualEntryService.Line" Hover="true" Striped="true" Bordered="true" Dense="true" Elevation="0">
             <HeaderContent>
                 <MudTh>#</MudTh>
@@ -236,12 +242,13 @@
 
     private class Slot
     {
-        public int Selection = 2, AccountType, Key;
-        public long CustomerId, SupplierId, SubId, CostCenterId;
+        public int Selection = 0, AccountType, Key;
+        public long CustomerId, SupplierId, SubId;
+        public CostCenterService.AllowedCenter? SelectedCenter;
+        public CostCenterService.AllowedSet Allowed = new();
         public string SubName = "", Notes = "";
         public decimal BalanceBefore, Amount, Debit, Credit;
         public bool IsDebit = true;
-        public List<Opt> CostCenters = new();
         public (string Code, long CurrencyId, int AcceptCostCenter, int AccountType, long MainAccountId) Info;
     }
 
@@ -337,21 +344,51 @@
         _head.Factor = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetFactor(id); });
     }
 
-    private void OnSelectionChanged(Slot s, int value) { s.Selection = value; s.SubId = 0; s.SubName = ""; s.CustomerId = 0; s.SupplierId = 0; s.CostCenters = new(); s.CostCenterId = 0; }
+    private void OnSelectionChanged(Slot s, int value) { s.Selection = value; s.SubId = 0; s.SubName = ""; s.CustomerId = 0; s.SupplierId = 0; s.Allowed = new(); s.SelectedCenter = null; }
 
     private async Task OnSubAccountChangedAsync(Slot s, long id)
     {
-        s.SubId = id; s.CostCenters = new(); s.CostCenterId = 0; _lineError = null;
+        s.SubId = id; s.Allowed = new(); s.SelectedCenter = null; _lineError = null;
         if (id == 0) return;
-        var none = Tr("CVNoCostCenter");
-        var (info, ccs) = await Task.Run(() =>
+        var (info, allowed) = await Task.Run(() =>
         {
             AccountCultureGuard.EnsureInvariant();
-            var inf = _svc.AccountInfo(id);
-            var dt = _cv.GetCostCenters(id, inf.AcceptCostCenter, none);
-            return (inf, dt.Rows.Cast<DataRow>().Select(r => new Opt(Convert.ToInt64(r["Id"]), r["Name"]?.ToString() ?? "")).ToList());
+            return (_svc.AccountInfo(id), CostCenterService.AllowedFor(new AccountModelsLib.operations(), id));
         });
-        s.Info = info; s.CostCenters = ccs; s.CostCenterId = ccs.FirstOrDefault()?.Id ?? 0;
+        s.Info = info; s.Allowed = allowed;
+        // الأولوية: المركز المستعمل فى السطر السابق (إن كان مسموحاً) ثم الافتراضى للحساب.
+        s.SelectedCenter = allowed.Centers.FirstOrDefault(c => c.Id == _lastCenter?.Id) ?? allowed.Centers.FirstOrDefault(c => c.Id == allowed.DefaultId);
+    }
+
+    private CostCenterService.AllowedCenter? _lastCenter;
+
+    private void OnCenterPicked(Slot s, CostCenterService.AllowedCenter? c) { s.SelectedCenter = c; if (c != null) _lastCenter = c; }
+
+    private static Task<IEnumerable<CostCenterService.AllowedCenter>> SearchCenters(Slot s, string? text)
+    {
+        var q = s.Allowed.Centers.AsEnumerable();
+        if (!string.IsNullOrWhiteSpace(text))
+            q = q.Where(c => c.Name.Contains(text, StringComparison.OrdinalIgnoreCase) || c.Code.Contains(text, StringComparison.OrdinalIgnoreCase) || c.Path.Contains(text, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(q.Take(50));
+    }
+
+    // «تطبيق المركز على كل الأسطر»: يضبط مركز الأسطر المدخلة (المسموح به لحساب كل سطر فقط) ويُبلغ بعدد ما لم يُطبَّق.
+    private async Task ApplyCenterToAllAsync(CostCenterService.AllowedCenter? c)
+    {
+        if (c == null || _lines.Count == 0) return;
+        var skipped = 0;
+        var sets = await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var opp = new AccountModelsLib.operations();
+            return _lines.Select(l => l.SubAccountId).Distinct().ToDictionary(id => id, id => CostCenterService.AllowedFor(opp, id).Centers.Any(x => x.Id == c.Id));
+        });
+        foreach (var l in _lines)
+        {
+            if (sets.TryGetValue(l.SubAccountId, out var ok) && ok) { l.CostCenterId = c.Id; l.CostCenterName = c.Name; }
+            else skipped++;
+        }
+        if (skipped > 0) Snackbar.Add(Tr("MEApplyCenterSkipped", skipped), Severity.Warning);
     }
 
     private void ResetSlots()
@@ -391,13 +428,13 @@
         foreach (var s in _slots)
         {
             if (s.SubId == 0) { _lineError = Tr("CVSelectAccount"); return; }
-            var cc = s.CostCenters.FirstOrDefault(c => c.Id == s.CostCenterId);
-            if (cc is null) { _lineError = Tr("CVCostCenterRequired"); return; }
+            var cc = s.SelectedCenter;
+            if (cc is null && s.Allowed.Policy == 2) { _lineError = Tr("CVCostCenterRequired"); return; }
             if (!TryRead(s, out var isDebit, out var amount)) return;
             toAdd.Add(new ManualEntryService.Line
             {
                 SubAccountId = s.SubId, AccountName = s.SubName, AccountCode = s.Info.Code, AccountType = s.Info.AccountType, MainAccountId = s.Info.MainAccountId,
-                AccountCurrencyId = s.Info.CurrencyId, IsDebit = isDebit, Amount = amount, CostCenterId = cc.Id, CostCenterName = cc.Name, Notes = s.Notes ?? ""
+                AccountCurrencyId = s.Info.CurrencyId, IsDebit = isDebit, Amount = amount, CostCenterId = cc?.Id ?? 0, CostCenterName = cc?.Name ?? "", Notes = s.Notes ?? ""
             });
         }
         _lines.AddRange(toAdd);
