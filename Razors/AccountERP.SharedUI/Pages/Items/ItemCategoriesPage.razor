@@ -26,11 +26,30 @@
     .ic-head .ico .mud-icon-root { font-size: 2rem; }
     .ic-head .titles { flex: 1 1 260px; }
     .ic-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
-    .ic-grid { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(0, 2.2fr); gap: 16px; margin-top: 16px; align-items: start; }
-    .ic-bar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; }
+    .ic-grid { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(0, 2.2fr); gap: 16px; margin-top: 16px; align-items: stretch; }
+    /* المربعان فى نفس المستوى: إلغاء هامش (.inv-card + .inv-card) العام داخل الشبكة؛ المسافة تأتى من gap فقط */
+    .ic-grid > .inv-card { margin-top: 0; min-width: 0; display: flex; flex-direction: column; }
+    /* قاعدة InvoiceStyles (.inv-card + .inv-card { margin-top:16px }) لها نفس الأولوية؛ نرفع الأولوية صراحةً لمربع الفئات */
+    .inv-page .ic-grid > .inv-card.ic-cats { margin-top: 0; }
+    .ic-bar { min-height: 44px; }
+    .ic-bar { flex: none; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; }
     .ic-bar .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; flex: 0 1 auto; }
     .ic-bar .mud-button-root { min-height: 44px; }
-    .ic-mains { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; max-height: 70vh; overflow-y: auto; }
+    /* شريط الفئات: العنوان + البحث + زر فئة جديدة فى صف واحد (يلتف فقط على الشاشات الضيقة) */
+    .ic-bar.ic-catbar { flex-wrap: nowrap; }
+    .ic-catbar .inv-card-title { flex: 0 1 auto; min-width: 0; white-space: nowrap; }
+    .ic-catbar .inv-card-title .ttl { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .ic-catbar .tools { flex: 1 1 auto; flex-wrap: nowrap; justify-content: flex-end; min-width: 0; }
+    .ic-catbar .tools .mud-button-root { flex: none; white-space: nowrap; }
+    .ic-search { flex: 1 1 240px; min-width: 160px; max-width: 360px; }
+    .ic-search .mud-input-control { margin: 0; }
+    .ic-search .mud-input.mud-input-outlined { min-height: 44px; }
+    @@media (max-width: 699px) {
+        .ic-bar.ic-catbar { flex-wrap: wrap; }
+        .ic-catbar .tools { flex-basis: 100%; }
+        .ic-search { max-width: none; }
+    }
+    .ic-mains { flex: 0 1 auto; display: flex; flex-direction: column; gap: 6px; margin-top: 12px; max-height: 70vh; overflow-y: auto; }
     .ic-main { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 10px; border-radius: 10px; border: 1px solid transparent;
                background: none; font: inherit; color: var(--mud-palette-text-primary); text-align: start; cursor: pointer; width: 100%; transition: background .15s; }
     .ic-main:hover { background: var(--mud-palette-action-default-hover); }
@@ -86,11 +105,12 @@
         </section>
 
         @* ===== الفئات ===== *@
-        <section class="inv-card">
-            <div class="ic-bar">
-                <h2 class="inv-card-title" style="margin:0"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@(_selMain == 0 ? Tr("IC_AllCats") : _mains.FirstOrDefault(m => m.Id == _selMain)?.Name)<span class="inv-count">@_cats.Count</span></h2>
+        <section class="inv-card ic-cats" style="margin-top:0">
+            <div class="ic-bar ic-catbar">
+                @{ var catTitle = _selMain == 0 ? Tr("IC_AllCats") : _mains.FirstOrDefault(m => m.Id == _selMain)?.Name; }
+                <h2 class="inv-card-title" style="margin:0" title="@catTitle"><MudIcon Icon="@Icons.Material.Filled.ListAlt" /><span class="ttl">@catTitle</span><span class="inv-count">@_cats.Count</span></h2>
                 <div class="tools">
-                    <div style="flex:0 1 280px"><MudTextField T="string" Value="_search" ValueChanged="OnSearchAsync" Label="@Tr("ILSearch")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                    <div class="ic-search" role="search" aria-label="@Tr("ILSearch")"><MudTextField T="string" Value="_search" ValueChanged="OnSearchAsync" Placeholder="@Tr("ILSearch")" Variant="Variant.Outlined" Margin="Margin.Dense"
                                   Immediate="true" DebounceInterval="300" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" /></div>
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="@(_mains.Count == 0)" OnClick="OpenNewCat">@Tr("IC_NewCat")</MudButton>
                 </div>
