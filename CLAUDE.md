@@ -20,19 +20,26 @@ This repository contains many independent codebases. **This document covers only
 8. **Arabic text may be Windows-1256 encoded** — detect and preserve encoding; don't corrupt with UTF-8 tooling.
 9. **Open forms via constructor parameters**: `new TargetForm(args).Show()`/`.ShowDialog()`.
 10. **Respect the permission system** (`PERMATIONS`/`FORMS_DETAILES`/`USER_DETAILES`) — it is load-bearing, not decorative.
+11. **Invoice tax flags**: `IsInvoiceTaxInfo = 1` = tax invoice; `Is_Tax_Per_Item = 1` = tax per item (never tax the total again or discount the total after per-item tax). **Never use `Invoice_Type` as a tax flag** (keep it only as the numbering-series arg of `Make_New_Invoice_No`/`Make_New_Invoice_ReverseNo`). `IsMaintainceInvoice == 1` = car-maintenance invoice.
+12. **Invoice tests must check stock**: read `Unit_Item.Full_Qua`/`D_Qua` before and after saving (sale decreases, sale return increases, purchase increases, purchase return decreases; per store).
 
 ---
 
-## Documentation Index
+## Documentation Index (not auto-loaded — Read a file only when the task needs it)
 
-@docs/overview.md
-@docs/projects.md
-@docs/technology-stack.md
-@docs/database.md
-@docs/architecture.md
-@docs/forms-inventory.md
-@docs/coding-naming.md
-@docs/configuration.md
-@docs/known-constraints.md
-@docs/dev-rules.md
-@docs/investigations.md
+| File | Read when |
+|---|---|
+| `docs/overview.md` | solution layout, out-of-scope folders, legacy copies |
+| `docs/projects.md` | project list, purposes, project references |
+| `docs/technology-stack.md` | NuGet packages, frameworks, report engines |
+| `docs/database.md` | DB access patterns, `operations` DAL, connection config |
+| `docs/architecture.md` | layering, static state, base forms |
+| `docs/forms-inventory.md` | where forms/menus are (then `FORMS_INVENTORY.md`) |
+| `docs/coding-naming.md` | coding/naming conventions, Arabic transliterations (`Da2n`, `Madin`, `Sarf` …) |
+| `docs/configuration.md` | config files, XML conn info, startup flags |
+| `docs/known-constraints.md` | known risks/limitations |
+| `docs/dev-rules.md` | full development rules (summary above) |
+| `docs/investigations.md` | open/unresolved questions |
+| `docs/invoices-plan.md` | invoice-screen plan (large — search, don't read whole) |
+
+Read large files (`MainFrm_AccountUpdate*.cs`, `StockEngineSchemaCLS.cs`, `ERP_V1_3.md`, `FORMS_INVENTORY.md`) by Grep + ranged Read, never whole.

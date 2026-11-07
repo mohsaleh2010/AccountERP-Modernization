@@ -26,6 +26,8 @@
 4. اختبار «مراجعة القيود» (`testing-plan.md:228`).
 
 ## تحديث 2026-10-30
+- عنصر جديد «فحص سلامة القيود» تحت «القيود» → `/accounts/entries-integrity` (`EntriesIntegrityMenu` فى `StockEngineSchemaCLS`، للمديرين فقط، إدراج مرة واحدة).
+- ربط «مراجعة القيود» (473) بالقائمة: كان `/accounts/journal-entries` بلا صف فى `StoreOrderMenus` فلم يظهر فى قائمة Razor؛ أُضيف `ToolStripMenuAccountEntryReview`. يُطبَّق عند تشغيل «تحديث قاعدة البيانات» (يملأ `RazorPath` الفارغ فقط).
 - إنشاء قيود الصندوق آلياً (474): ✅ كوداً `/accounts/sandouk-entries` (اختبارات م-154…م-156).
 - إدخال القيود مدين-دائن (808): ✅ كوداً `/accounts/journal-entry/madin-da2n` (`ManualEntryEditor` + `ManualEntryService`؛ اختبارات م-157…م-165). قرارات: عدم الاتزان يمنع الحفظ؛ تعديل السطر = حذف وإضافة؛ المُرحَّل والآلى للقراءة فقط؛ الحذف بصلاحية 326 والسنة الأخرى بصلاحية 915 كالأصل؛ الترقيم بقفل داخل المعاملة عبر `AccountEntry_CLS.Make_AccountEntry_LockedNo` (إضافة جديدة لا تغيّر الدوال القائمة).
 - إدخال القيود (472) `/accounts/journal-entry` (نمط Typed: نوع + قيمة تُعبَّأ بالفرق) والقيود البسيطة (827) `/accounts/journal-entry/simple` (نمط Pair: حسابان فى كل إضافة): ✅ كوداً على نفس `ManualEntryEditor` (اختبارات م-166…م-171). نسخ القيد السابق `?copy=` من الأصل فى الثلاث.

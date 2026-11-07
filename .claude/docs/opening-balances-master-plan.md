@@ -313,5 +313,10 @@ Design System منفصل عند البدء الفعلى فى المرحلة 6.
 3. **العملاء/الموردون**: `Customers_Accounts`/`Suppliers_Accounts` ستصبحان **مرآة تلقائية** لـ
    `Account_Entry_Master_Balance` بعد كل ترحيل فترة (لا تجمّد بعد الفترة الأولى، ولا مزامنة يدوية) — هذا يُنفَّذ
    ضمن المرحلة 2.
+   **(2026-10-25) قرار معدَّل — لا تُبنى المرآة:** كشف الحساب بفترة (`Get_Customer_AccountComputeBalanceMokhtalatPeriod`
+   وما يستعمله Razor) يستثنى الصف `-7` (`Reference_Type <> -7`) ويأخذ رصيد أول الفترة من
+   `Account_Entry_Master_Balance` عبر `Get_FirstBalance_Period`، فلا تجمّد فيه. التجمّد يخص الكشوف بلا فترة فقط.
+   يبقى الصف `-7` للفترة الأولى، ويُعتمد الأستاذ للفترات التالية. لا عمود `Year_Financial_Period_Id` جديد
+   على `Customers_Accounts`/`Suppliers_Accounts`. إن ظهرت حاجة فعلية تُفتح من جديد.
 
 **المرحلة الحالية قيد التنفيذ الآن: المرحلة 1 — توحيد الصناديق والبنوك.**
