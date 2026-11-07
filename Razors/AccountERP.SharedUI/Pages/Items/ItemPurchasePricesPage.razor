@@ -1,0 +1,377 @@
+@* أسعار مشتريات الأصناف — شاشة مستقلة بدل Supplier_Price «بيان بأصناف الموردين» (عنصر القائمة menuItemPurchaedItemPrice) و Suppliers_PriceEditFRM (نافذة السعر).
+   الفلاتر كالقديمة: فئة الصنف (فئات المشتريات أولاً)، الصنف، المورد، نوع سعر الشراء — كلٌّ «الكل» افتراضياً، مع بحث نصى.
+   BtnAddNew = نافذة إضافة (صنف واحد أو كل أصناف الفئة: استبدال الموجود أو إضافة الناقص فقط كالقديم)، BtnEdit = نافذة تعديل الصف نفسه، BtnDelet = حذف المحدد.
+   القواعد فى PriceListService (ListSupplierPriceRows / SaveSupplierPriceRow / SaveSupplierPriceForCategory / DeleteSupplierPrices، الصلاحية 917).
+   التصميم حسب ui-ux-pro-max ونظام inv-*. *@
+@page "/items/purchase-prices"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.PriceListService
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@implements IDisposable
+
+<PageTitle>@Tr("IPP_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .ipp-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .ipp-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                     background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .ipp-head .ico .mud-icon-root { font-size: 2rem; }
+    .ipp-head .titles { flex: 1 1 260px; min-width: 0; }
+    .ipp-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .ipp-head .acts { display: flex; flex-wrap: wrap; gap: 8px; }
+    .ipp-head .acts .mud-button-root { min-height: 44px; }
+    .ipp-gap { margin-top: 16px; }
+    .ipp-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: center; }
+    .ipp-filters .wide { grid-column: 1 / -1; }
+    .ipp-sum { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin-top: 12px; padding: 10px 16px; border-radius: 10px;
+               background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent); font-size: .9rem; }
+    .ipp-sum b, .ipp-num { font-variant-numeric: tabular-nums; }
+    .ipp-sum .grow { flex: 1 1 auto; }
+    .ipp-num { white-space: nowrap; }
+    .ipp-code { font-family: ui-monospace, Consolas, monospace; font-size: .8rem; color: var(--mud-palette-text-secondary); }
+    .ipp-muted { color: var(--mud-palette-text-secondary); font-size: .8rem; }
+    .ipp-up { color: var(--mud-palette-error); }
+    .ipp-down { color: var(--mud-palette-success-darken); }
+    .ipp-row { cursor: pointer; }
+    .ipp-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .ipp-dlg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; align-items: start; }
+    .ipp-dlg .full { grid-column: 1 / -1; }
+    .ipp-net { display: flex; flex-wrap: wrap; gap: 6px 20px; padding: 10px 14px; border-radius: 10px; font-size: .9rem;
+               background: color-mix(in srgb, var(--mud-palette-primary) 7%, transparent); }
+    .ipp-net b { font-variant-numeric: tabular-nums; }
+    @@media (max-width: 1099px) { .ipp-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 599px) { .ipp-filters, .ipp-dlg { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card">
+        <div class="ipp-head">
+            <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.LocalShipping" /></div>
+            <div class="titles">
+                <h1 class="inv-title">@Tr("IPP_Title")</h1>
+                <div class="sub">@Tr("IPP_Sub")</div>
+            </div>
+            <div class="acts">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ShoppingCart" Href="/items/purchase-price-types">@Tr("PPT_Title")</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAdd">@Tr("SPV_Add")</MudButton>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Class="ipp-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    <section class="inv-card ipp-gap" aria-labelledby="ipp-list-h">
+        <h2 class="inv-card-title" id="ipp-list-h"><MudIcon Icon="@Icons.Material.Filled.FilterList" />@Tr("SPV_Filter")</h2>
+        <div class="ipp-filters">
+            <MudSelect T="long" Value="_catId" ValueChanged="@(async (long v) => { _catId = v; _item = null; await LoadAsync(); })" Label="@Tr("SPV_Category")" Variant="Variant.Outlined"
+                       ToStringFunc="@(id => id == 0 ? Tr("IC_AllCats") : _cats.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
+                <MudSelectItem T="long" Value="0L">@Tr("IC_AllCats")</MudSelectItem>
+                @foreach (var c in _cats) { <MudSelectItem T="long" Value="c.Id">@c.Name · @CatType(c.Type_Id)</MudSelectItem> }
+            </MudSelect>
+            <MudAutocomplete T="Option" Value="_item" ValueChanged="@(async (Option? o) => { _item = o; await LoadAsync(); })" SearchFunc="@SearchFilterItemAsync"
+                             ToStringFunc="@(o => o?.Name ?? string.Empty)" Label="@Tr("IPP_ItemAll")" Variant="Variant.Outlined"
+                             Clearable="true" DebounceInterval="300" ResetValueOnEmptyText="true" />
+            <MudAutocomplete T="Option" Value="_supplier" ValueChanged="@(async (Option? o) => { _supplier = o; await LoadAsync(); })" SearchFunc="@SearchSupplierAsync"
+                             ToStringFunc="@(o => o?.Name ?? string.Empty)" Label="@Tr("IPP_SupplierAll")" Variant="Variant.Outlined"
+                             Clearable="true" DebounceInterval="300" ResetValueOnEmptyText="true" />
+            <MudSelect T="long" Value="_typeId" ValueChanged="@(async (long v) => { _typeId = v; await LoadAsync(); })" Label="@Tr("IPP_Type")" Variant="Variant.Outlined"
+                       ToStringFunc="@TypeLabel">
+                <MudSelectItem T="long" Value="0L">@Tr("IPP_AllTypes")</MudSelectItem>
+                <MudSelectItem T="long" Value="-1L">@Tr("IPP_NoType")</MudSelectItem>
+                @foreach (var t in _types) { <MudSelectItem T="long" Value="t.Id">@t.Name@(t.Is_Active ? "" : $" ({Tr("SPV_Inactive")})")</MudSelectItem> }
+            </MudSelect>
+            <MudTextField T="string" Value="_text" ValueChanged="@(async (string? v) => { _text = v; await LoadAsync(); })" Label="@Tr("IPP_Search")" Class="wide"
+                          Variant="Variant.Outlined" Immediate="true" DebounceInterval="300" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+        </div>
+        <div class="ipp-sum" aria-live="polite">
+            <span>@Tr("SPV_Count") <b>@_rows.Count</b></span>
+            <span>@Tr("SPV_Items") <b>@_rows.Select(r => r.Item_Id).Distinct().Count()</b></span>
+            <span>@Tr("IPP_Suppliers") <b>@_rows.Select(r => r.Supplier_Id).Distinct().Count()</b></span>
+            @if (_rows.Count >= Top) { <span class="ipp-muted">@Tr("SPV_TopNote", Top)</span> }
+            <span class="grow"></span>
+            @if (_selected.Count > 0)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteSweep" Disabled="_busy" Style="min-height:40px"
+                           OnClick="DeleteSelectedAsync">@Tr("IPP_DeleteSelected", _selected.Count)</MudButton>
+            }
+        </div>
+
+        <MudTable Items="@_rows" T="SupplierPriceRow" Hover="true" Elevation="0" Class="inv-table ipp-gap" Breakpoint="Breakpoint.Sm" Dense="true"
+                  Loading="_loading" LoadingProgressColor="Color.Primary" RowClass="ipp-row" MultiSelection="true" SelectOnRowClick="false"
+                  @bind-SelectedItems="_selected" OnRowClick="@((TableRowClickEventArgs<SupplierPriceRow> e) => OpenEdit(e.Item!))">
+            <HeaderContent>
+                <MudTh Style="width:48px">#</MudTh>
+                <MudTh>@Tr("SPV_Category")</MudTh>
+                <MudTh>@Tr("IT_Name")</MudTh>
+                <MudTh>@Tr("IPP_Supplier")</MudTh>
+                <MudTh>@Tr("IPP_Type")</MudTh>
+                <MudTh Style="text-align:end">@Tr("IPP_Price")</MudTh>
+                <MudTh Style="text-align:end">@Tr("IPP_CardPrice")</MudTh>
+                <MudTh Style="text-align:end">@Tr("SIP_VsCard")</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="#"><span class="ipp-muted">@(_rows.IndexOf(context) + 1)</span></MudTd>
+                <MudTd DataLabel="@Tr("SPV_Category")">@(string.IsNullOrEmpty(context.Category) ? "—" : context.Category)</MudTd>
+                <MudTd DataLabel="@Tr("IT_Name")">@context.Item_Name<div class="ipp-code">@context.Item_Code@(string.IsNullOrEmpty(context.Unit) ? "" : $" · {context.Unit}")</div></MudTd>
+                <MudTd DataLabel="@Tr("IPP_Supplier")">@(string.IsNullOrEmpty(context.Supplier_Name) ? "—" : context.Supplier_Name)</MudTd>
+                <MudTd DataLabel="@Tr("IPP_Type")">@(context.Type_Id == 0 ? Tr("IPP_NoType") : context.Type_Name)</MudTd>
+                <MudTd DataLabel="@Tr("IPP_Price")" Style="text-align:end"><b class="ipp-num">@Money(context.Price)</b></MudTd>
+                <MudTd DataLabel="@Tr("IPP_CardPrice")" Style="text-align:end"><span class="ipp-num ipp-muted">@Money(context.Card_Price)</span></MudTd>
+                <MudTd DataLabel="@Tr("SIP_VsCard")" Style="text-align:end"><span class="ipp-num @DiffClass(context.Price, context.Card_Price)">@Diff(context.Price, context.Card_Price)</span></MudTd>
+                <MudTd Style="white-space:nowrap"><span @onclick:stopPropagation="true">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" aria-label="@Tr("SPV_EditOf", context.Item_Name)" title="@Tr("SPV_Edit")" OnClick="@(() => OpenEdit(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" aria-label="@Tr("SPV_DeleteOf", context.Item_Name)" title="@Tr("Delete")"
+                                   Disabled="_busy" OnClick="@(() => DeleteAsync(new[] { context }))" />
+                </span></MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="ipp-empty">
+                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" />
+                    <span>@Tr("SPV_Empty")</span>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAdd">@Tr("SPV_Add")</MudButton>
+                </div>
+            </NoRecordsContent>
+        </MudTable>
+    </section>
+</div>
+</MudContainer>
+
+@* ---------------- نافذة إضافة/تعديل سعر مورد (بدل Suppliers_PriceEditFRM) ---------------- *@
+<MudDialog Visible="_dlgOpen" VisibleChanged="@((bool v) => _dlgOpen = v)"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>
+        <MudText Typo="Typo.h6"><MudIcon Icon="@(_dId != 0 ? Icons.Material.Filled.Edit : Icons.Material.Filled.AddCircle)" Class="me-2" Style="vertical-align:middle" />@Tr(_dId != 0 ? "IPP_EditTitle" : "IPP_AddTitle")</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_dlgError)) { <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3" role="alert">@_dlgError</MudAlert> }
+        <div class="ipp-dlg">
+            <MudAutocomplete T="Option" Value="_dSupplier" ValueChanged="@(async (Option? o) => { _dSupplier = o; await LoadExistingAsync(); })" SearchFunc="@SearchSupplierAsync"
+                             ToStringFunc="@(o => o?.Name ?? string.Empty)" Label="@Tr("IPP_Supplier")" Variant="Variant.Outlined" Required="true" Class="full"
+                             Clearable="true" DebounceInterval="300" ResetValueOnEmptyText="true" AutoFocus="@(_dId == 0)" />
+            <MudSelect T="long" Value="_dCat" ValueChanged="@(async (long v) => { _dCat = v; _dItem = null; if (v == 0) _dAll = false; await LoadExistingAsync(); })"
+                       Label="@Tr("SPV_Category")" Variant="Variant.Outlined" ToStringFunc="@(id => id == 0 ? Tr("IC_AllCats") : _cats.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
+                <MudSelectItem T="long" Value="0L">@Tr("IC_AllCats")</MudSelectItem>
+                @foreach (var c in _cats) { <MudSelectItem T="long" Value="c.Id">@c.Name · @CatType(c.Type_Id)</MudSelectItem> }
+            </MudSelect>
+            <MudSelect T="long" Value="_dType" ValueChanged="@(async (long v) => { _dType = v; await LoadExistingAsync(); })" Label="@Tr("IPP_Type")" Variant="Variant.Outlined"
+                       ToStringFunc="@(id => id == 0 ? Tr("IPP_NoType") : _types.FirstOrDefault(t => t.Id == id)?.Name ?? string.Empty)">
+                <MudSelectItem T="long" Value="0L">@Tr("IPP_NoType")</MudSelectItem>
+                @foreach (var t in _types.Where(x => x.Is_Active || x.Id == _dType)) { <MudSelectItem T="long" Value="t.Id">@t.Name</MudSelectItem> }
+            </MudSelect>
+            @if (_dId == 0)
+            {
+                <MudSwitch T="bool" Value="_dAll" ValueChanged="@(async (bool v) => { _dAll = v; _dItem = null; await LoadExistingAsync(); })" Color="Color.Primary" Class="full"
+                           Disabled="@(_dCat == 0)" Label="@Tr(_dCat == 0 ? "IPP_AllItemsNeedCat" : "IPP_AllItems")" />
+            }
+            @if (!_dAll)
+            {
+                <MudAutocomplete T="Option" Value="_dItem" ValueChanged="@(async (Option? o) => { _dItem = o; await LoadExistingAsync(); })" SearchFunc="@SearchDialogItemAsync"
+                                 ToStringFunc="@(o => o?.Name ?? string.Empty)" Label="@Tr("IT_Name")" Variant="Variant.Outlined" Required="true" Class="full"
+                                 Clearable="true" DebounceInterval="300" ResetValueOnEmptyText="true" HelperText="@Tr("SPV_ItemHelp")" />
+            }
+            else
+            {
+                <MudRadioGroup T="bool" @bind-Value="_dOverwrite" Class="full">
+                    <MudRadio T="bool" Value="false" Color="Color.Primary">@Tr("IPP_OnlyMissing")</MudRadio>
+                    <MudRadio T="bool" Value="true" Color="Color.Warning">@Tr("IPP_Overwrite")</MudRadio>
+                </MudRadioGroup>
+            }
+            <MudNumericField T="decimal" @bind-Value="_dPrice" Label="@Tr("IPP_Price")" Variant="Variant.Outlined" Min="0" Format="0.####" Required="true" Immediate="true" Class="full" />
+            @if (!_dAll && _dCard is decimal cp)
+            {
+                <div class="ipp-net full" aria-live="polite">
+                    <span>@Tr("IPP_CardPrice"): <b>@Money(cp)</b></span>
+                    @if (_dPrice > 0) { <span>@Tr("SIP_VsCard"): <b class="@DiffClass(_dPrice, cp)">@Diff(_dPrice, cp)</b></span> }
+                </div>
+            }
+            @if (_existing != null && _existing.Id != _dId)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true" Class="full">@Tr(_dId == 0 ? "IPP_ExistsAdd" : "IPP_ExistsEdit", Money(_existing.Price))</MudAlert>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _dlgOpen = false)" Style="min-height:44px">@Tr("Cancel")</MudButton>
+        @if (_dId == 0)
+        {
+            <MudButton Color="Color.Primary" Variant="Variant.Outlined" Style="min-height:44px" Disabled="@(!CanSave)" OnClick="@(() => SaveAsync(true))">@Tr("IPP_SaveAndNew")</MudButton>
+        }
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Style="min-height:44px" Disabled="@(!CanSave)" OnClick="@(() => SaveAsync(false))">
+            @if (_busy) { <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" /> }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private const int Top = 1000;
+
+    private readonly PriceListService _svc = new();
+    /// <summary>فئات الأصناف: فئات المشتريات أولاً ثم بقية الأنواع (ListCategories(2)).</summary>
+    private List<CategoryPick> _cats = new();
+    private List<PurchaseType> _types = new();
+    private List<SupplierPriceRow> _rows = new();
+    private HashSet<SupplierPriceRow> _selected = new();
+    private long _catId, _typeId;
+    private Option? _item, _supplier;
+    private string? _text;
+    private bool _loading, _busy;
+    private string? _error;
+
+    // النافذة
+    private bool _dlgOpen, _dAll, _dOverwrite;
+    private long _dId, _dCat, _dType;
+    private Option? _dSupplier, _dItem;
+    private decimal _dPrice;
+    private decimal? _dCard;
+    private SupplierPriceRow? _existing;
+    private string? _dlgError;
+
+    private bool CanSave => !_busy && _dSupplier != null && _dPrice > 0 && (_dAll ? _dCat != 0 : _dItem != null);
+
+    protected override void OnInitialized() => LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _cats = await Bg(() => _svc.ListCategories(2));
+            _types = await Bg(() => _svc.ListPurchaseTypesAll());
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private Task<T> Bg<T>(Func<T> f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return f(); });
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        long c = _catId, i = _item?.Id ?? 0, s = _supplier?.Id ?? 0, t = _typeId; string? x = _text;
+        try { _rows = await Bg(() => _svc.ListSupplierPriceRows(c, i, s, t, x, Top)); _selected = new(); }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private string TypeLabel(long id) => id switch { 0 => Tr("IPP_AllTypes"), -1 => Tr("IPP_NoType"), _ => _types.FirstOrDefault(t => t.Id == id)?.Name ?? string.Empty };
+
+    private Task<IEnumerable<Option>> SearchFilterItemAsync(string? text, CancellationToken ct) { long c = _catId; return Bg(() => (IEnumerable<Option>)_svc.SearchItems(text, c)); }
+    private Task<IEnumerable<Option>> SearchDialogItemAsync(string? text, CancellationToken ct) { long c = _dCat; return Bg(() => (IEnumerable<Option>)_svc.SearchItems(text, c)); }
+    private Task<IEnumerable<Option>> SearchSupplierAsync(string? text, CancellationToken ct) => Bg(() => (IEnumerable<Option>)_svc.SearchParties(true, text));
+
+    /// <summary>الإضافة تبدأ من فلاتر الشاشة (المورد/الفئة/النوع) لتسريع إدخال عدة أسعار لنفس المورد؛ النوع الافتراضى أول نوع نشط كالقديم.</summary>
+    private void OpenAdd()
+    {
+        _dId = 0; _dlgError = null; _existing = null; _dAll = false; _dOverwrite = false;
+        _dSupplier = _supplier; _dCat = _catId; _dItem = _item; _dPrice = 0; _dCard = null;
+        _dType = _typeId > 0 && (_types.FirstOrDefault(t => t.Id == _typeId)?.Is_Active ?? false) ? _typeId : _types.FirstOrDefault(t => t.Is_Active)?.Id ?? 0;
+        _dlgOpen = true;
+        _ = InvokeAsync(LoadExistingAsync);
+    }
+
+    private void OpenEdit(SupplierPriceRow r)
+    {
+        _dId = r.Id; _dlgError = null; _existing = null; _dAll = false; _dOverwrite = false;
+        _dSupplier = new Option { Id = r.Supplier_Id, Name = r.Supplier_Name };
+        _dCat = r.Category_Id; _dType = r.Type_Id;
+        _dItem = new Option { Id = r.Item_Id, Name = $"{r.Item_Code} - {r.Item_Name}" };
+        _dPrice = r.Price; _dCard = r.Card_Price;
+        _dlgOpen = true;
+    }
+
+    /// <summary>سعر البطاقة للصنف المختار، وتنبيه لو لنفس المورد والصنف والنوع سعر مسجَّل (يُستبدل عند الإضافة، ويمنع الحفظ عند التعديل).</summary>
+    private async Task LoadExistingAsync()
+    {
+        _existing = null; _dlgError = null;
+        if (_dAll || _dItem == null) { _dCard = null; StateHasChanged(); return; }
+        long s = _dSupplier?.Id ?? 0, i = _dItem.Id, t = _dType;
+        try
+        {
+            _dCard = await Bg(() => _svc.GetItemPurchasePrice(i));
+            _existing = await Bg(() => _svc.FindSupplierPrice(s, i, t));
+            if (_dId == 0 && _existing != null && _dPrice == 0) _dPrice = _existing.Price;
+        }
+        catch (Exception ex) { _dlgError = Inner(ex); }
+        StateHasChanged();
+    }
+
+    private async Task SaveAsync(bool andNew)
+    {
+        if (!CanSave) return;
+        _busy = true; _dlgError = null;
+        long id = _dId, s = _dSupplier!.Id, t = _dType, c = _dCat; decimal p = _dPrice; bool all = _dAll, over = _dOverwrite;
+        long i = _dItem?.Id ?? 0; string itemName = _dItem?.Name ?? "";
+        try
+        {
+            if (all)
+            {
+                var (added, updated) = await Bg(() => _svc.SaveSupplierPriceForCategory(s, c, p, t, over));
+                Snackbar.Add(Tr("IPP_SavedCategory", added, updated), added + updated > 0 ? Severity.Success : Severity.Info);
+            }
+            else
+            {
+                await Bg(() => _svc.SaveSupplierPriceRow(id, s, i, p, t));
+                Snackbar.Add(Tr("PR_SavedOne", itemName), Severity.Success);
+            }
+            await LoadAsync();
+            if (andNew) { _dItem = null; _dPrice = 0; _dCard = null; _existing = null; _dAll = false; }   // نفس المورد والفئة والنوع لإدخال صنف آخر
+            else _dlgOpen = false;
+        }
+        catch (Exception ex) { _dlgError = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private Task DeleteSelectedAsync() => DeleteAsync(_selected.ToList());
+
+    private async Task DeleteAsync(IReadOnlyCollection<SupplierPriceRow> rows)
+    {
+        if (rows.Count == 0) return;
+        string msg = rows.Count == 1
+            ? Tr("IPP_DeleteOne", rows.First().Item_Name, rows.First().Supplier_Name)
+            : Tr("IPP_DeleteMany", rows.Count);
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("Delete"), msg, yesText: Tr("Delete"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null;
+        var ids = rows.Select(r => r.Id).ToList();
+        try
+        {
+            int n = await Bg(() => _svc.DeleteSupplierPrices(ids));
+            Snackbar.Add(Tr("IPP_Deleted", n), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    /// <summary>فرق سعر المورد عن سعر الشراء فى البطاقة كنسبة؛ الأعلى بالأحمر (أغلى) والأقل بالأخضر.</summary>
+    private static string Diff(decimal p, decimal card)
+    {
+        if (card == 0) return "—";
+        decimal pct = Math.Round((p - card) / card * 100, 1);
+        return pct == 0 ? "0%" : (pct > 0 ? "+" : "") + pct.ToString("0.#", CultureInfo.InvariantCulture) + "%";
+    }
+    private static string DiffClass(decimal p, decimal card) => card == 0 || p == card ? "ipp-muted" : p > card ? "ipp-up" : "ipp-down";
+
+    private static string CatType(int t) => t >= 0 && t < ItemUnitCategoryService.CategoryTypes.Length ? ItemUnitCategoryService.CategoryTypes[t] : ItemUnitCategoryService.CategoryTypes[0];
+    private static string Money(decimal v) => v.ToString("#,0.00", CultureInfo.InvariantCulture);
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

@@ -68,6 +68,9 @@ WHERE Order_Type IN (1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1012,1013
             }
             // مستقلة عن فحص المخطط: القواعد المرقّاة سابقاً تحتاج الربط أيضاً، وتقرأ فقط العناصر غير المربوطة.
             Step(opp, LinkStoreOrderMenus);
+            Step(opp, PriceTypesMenuPath);
+            Step(opp, PriceListsMenu);
+            Step(opp, PricesHubMenu);
             Step(opp, TransferSettings);
             Step(opp, InventoryAccountingSetting);
             Step(opp, StoreAccountMenu);
@@ -387,9 +390,13 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("ToolStripMenuItemUserDaetails", "/settings/users"), ("toolStripMenuItemBranch_UserPermission", "/settings/users"),
             ("toolStripMenuItemPermissinForm", "/settings/permissions"), ("TaxInfotoolStripMenuItem", "/settings/tax-rates"), ("menuItemChangePassword", "/change-password"), ("toolStripMenuItemPrinterSelection", "/printer"),
             // خطة 04 م5: الأسعار (طباعة الأسعار menuItemItemPrices لم تُبنَ بعد)
-            ("menuPrice_Type_List", "/items/prices/lists"), ("menuPriceCategory", "/items/prices/lists"), ("menuItemSearchItemPrices_List_Values", "/items/prices/lists"),
-            ("menuItemEditPrices", "/items/prices/bulk"), ("MenuCustomer_PriceCLS", "/items/prices/customers"),
-            ("menuItemPricePurchaseType", "/items/prices/suppliers"), ("menuItemPurchaedItemPrice", "/items/prices/suppliers"),
+            // أنواع الأسعار (Price_Type_ListFRM) لها شاشة مستقلة /items/price-types؛ الربط يملأ RazorPath الفارغ فقط (لا يغيّر قيمة قديمة)
+            // «تصنيف أسعار الأصناف» (menuPriceCategory = Prices_List_Edit_Values) له شاشة مستقلة /items/sales-prices (2026-11-07)
+            // «تعديل أسعار مبيعات الأصناف» (menuItemEditPrices = Edit_Prices_List_Values) له شاشة مستقلة /items/sales-prices/edit (2026-11-07)
+            // «بحث أسعار الصنف» (menuItemSearchItemPrices_List_Values = SearchItemPrices_List_Values) له شاشة مستقلة /items/prices/search (2026-11-07)
+            ("menuPrice_Type_List", "/items/price-types"), ("menuPriceCategory", "/items/sales-prices"), ("menuItemSearchItemPrices_List_Values", "/items/prices/search"),
+            ("menuItemEditPrices", "/items/sales-prices/edit"), ("MenuCustomer_PriceCLS", "/items/prices/customers"),
+            ("menuItemPricePurchaseType", "/items/purchase-price-types"), ("menuItemPurchaedItemPrice", "/items/purchase-prices"),
             // قائمة وبحث الأذون (المرحلة 4) بدل Order_detailes لكل نوع، وقائمة كل الأذون.
             // ملاحظة: القائمة القديمة تفتح «مرتجع صرف قطع الغيار» (879) على 1022 وعنصر «صرف إلى موظف» (881) بلا شاشة؛ هنا كلٌّ لنوعه الصحيح.
             ("menuItemOrdersList", "/store/orders"),
@@ -413,6 +420,99 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
                 opp.db.Database.ExecuteSqlInterpolated(
                     $"UPDATE SysConfigMenus SET RazorPath = {path} WHERE Id = {r.Id} AND ISNULL(RazorPath, N'') = N''");
             }
+        }
+
+        /// <summary>
+        /// عنصر «أنواع الأسعار» (menuPrice_Type_List = Price_Type_ListFRM) صار له شاشة مستقلة /items/price-types (بموافقة المستخدم 2026-11-07).
+        /// ينقل الرابط فقط إن كان لا يزال القيمة التى وضعها الربط التلقائى سابقاً (/items/prices/lists)؛ أى قيمة غيّرها المستخدم يدوياً تبقى كما هى.
+        /// </summary>
+        private static void PriceTypesMenuPath(operations opp)
+        {
+            var rows = opp.db.Database.SqlQueryRaw<MenuPathRow>(
+                "SELECT Id, KeysData, RazorPath FROM SysConfigMenus WHERE KeysData IS NOT NULL AND ISNULL(RazorPath, N'') <> N''").ToList();
+            foreach (var r in rows)
+            {
+                string key, path;
+                try { key = Common.DecryptMe(r.KeysData).Trim(); path = Common.DecryptMe(r.RazorPath).Trim(); }
+                catch { continue; }
+                // «تعديل أسعار مبيعات الأصناف» (menuItemEditPrices = Edit_Prices_List_Values) له شاشة مستقلة /items/sales-prices/edit (2026-11-07)
+                string target = (key, path) switch
+                {
+                    ("menuPrice_Type_List", "/items/prices/lists") => "/items/price-types",
+                    ("menuPriceCategory", "/items/prices/lists") => "/items/sales-prices",
+                    ("menuItemEditPrices", "/items/prices/bulk") => "/items/sales-prices/edit",
+                    ("menuItemSearchItemPrices_List_Values", "/items/prices/lists") => "/items/prices/search",
+                    // «أنواع سعر المشتريات» (Price_Type_List_PurchasFRM) له شاشة مستقلة /items/purchase-price-types (2026-11-07)
+                    ("menuItemPricePurchaseType", "/items/prices/suppliers") => "/items/purchase-price-types",
+                    // «أسعار مشتريات الأصناف» (Supplier_Price) له شاشة مستقلة /items/purchase-prices (2026-11-07)
+                    ("menuItemPurchaedItemPrice", "/items/prices/suppliers") => "/items/purchase-prices",
+                    _ => null
+                };
+                if (target == null) continue;
+                opp.db.Database.ExecuteSqlInterpolated(
+                    $"UPDATE SysConfigMenus SET RazorPath = {Common.EncryptMe(target)} WHERE Id = {r.Id} AND RazorPath = {r.RazorPath}");
+            }
+        }
+
+        /// <summary>
+        /// بعد نقل «تصنيف أسعار الأصناف» لشاشته المستقلة (2026-11-07) تبقى شاشة القوائم /items/prices/lists (الأنواع كشجرة + أسعارها والتعديل الجماعى
+        /// والعملاء والموردون) بعنصر جديد «إدارة قوائم الأسعار» بجوار menuPriceCategory. صلاحيته لمن يملك صلاحية العنصر المجاور (فلا يفقد أحد وصولاً كان له)،
+        /// والباقون من شاشة الصلاحيات. إدراج فقط، لا يغيّر أى صف قائم، ولا يتكرر.
+        /// </summary>
+        private static void PriceListsMenu(operations opp) => AddPriceMenuItem(opp, "menuItemPriceListsManage", "إدارة قوائم الأسعار", "/items/prices/lists");
+
+        /// <summary>
+        /// عنصر «إدارة أسعار المبيعات» (طلب المستخدم 2026-11-07) بجوار menuPriceCategory يفتح /items/pricing: صفحة روابط لكل شاشات الأسعار الحالية.
+        /// نفس قواعد PriceListsMenu: إدراج فقط، الصلاحية لمن يملك العنصر المجاور + المديرين، ولا يتكرر.
+        /// </summary>
+        private static void PricesHubMenu(operations opp) => AddPriceMenuItem(opp, "menuItemSalesPricesHub", "إدارة أسعار المبيعات", "/items/pricing");
+
+        /// <summary>يُدرج عنصر قائمة أسعار جديداً بجوار menuPriceCategory (نفس الأب) بصلاحية من يملك العنصر المجاور والمديرين. إدراج فقط.</summary>
+        private static void AddPriceMenuItem(operations opp, string key, string desc, string path)
+        {
+            var menus = opp.db.Database.SqlQueryRaw<StoreTransferPolicy.KeyValueRow>("SELECT Id, KeysData, Value FROM SysConfigMenus").ToList();
+            string Key(StoreTransferPolicy.KeyValueRow r) => r.KeysData == null ? "" : Common.DecryptMe(r.KeysData).Trim();
+            if (menus.Any(m => Key(m) == key)) return;
+            var sibling = menus.FirstOrDefault(m => Key(m) == "menuPriceCategory");
+            if (sibling == null) return;
+            long parentId = opp.db.Database.SqlQuery<long>($"SELECT CAST(Parent_Id AS bigint) AS Value FROM SysConfigMenus WHERE Id = {sibling.Id}").FirstOrDefault();
+            if (parentId == 0) return;
+            string E(string s) => Common.EncryptMe(s);
+            long id = menus.Max(m => m.Id) + 1;
+            opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenus (Id, Parent_Id, KeysData, Description, PROJECT_ID, Value, DefaultValue, DefaultDescription,
+                            POS, Market, Factory, Tourism, AlFawzan, Client_A, Client_B, UserSells, IsShowToUser, RazorPath)
+VALUES ({id}, {parentId}, {E(key)}, {E(desc)}, 2, {E("1")}, {E("1")}, {E(desc)},
+        {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, 1, {E(path)})");
+            // نفس من له صلاحية «تصنيف أسعار الأصناف» (PERMATION مشفَّرة "1") + المديرون
+            var grants = opp.db.Database.SqlQuery<PriceMenuGrant>($@"
+SELECT CAST(USER_ID AS bigint) AS User_Id, PERMATION AS Permation FROM SysConfigMenusPERMATIONS
+WHERE Menu_ID = {sibling.Id} AND USER_ID IS NOT NULL AND PROJECT_ID = 2").ToList();
+            var users = new System.Collections.Generic.HashSet<long>(opp.db.Database.SqlQueryRaw<long>("SELECT CAST(Id AS bigint) AS Value FROM USER_DETAILES WHERE ISNULL(AdminFlage, 0) = 1").ToList());
+            foreach (var g in grants)
+            {
+                try { if (Common.DecryptMe(g.Permation ?? "").Trim() == "1") users.Add(g.User_Id); }
+                catch { }
+            }
+            foreach (long user in users)
+                opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenusPERMATIONS (Id, Menu_ID, Parent_Id, USER_ID, PERMATION, PROJECT_ID, IsShowToUser)
+VALUES ({CallSnowflakeIdGenerate.GenerateNewId()}, {id}, {parentId}, {user}, {E("1")}, 2, 1)");
+        }
+
+        /// <summary>صف قراءة صلاحية مستخدم على عنصر قائمة (PERMATION مشفَّرة).</summary>
+        public class PriceMenuGrant
+        {
+            public long User_Id { get; set; }
+            public string Permation { get; set; }
+        }
+
+        /// <summary>صف قراءة (Id + اسم العنصر + المسار، مشفَّرين).</summary>
+        public class MenuPathRow
+        {
+            public long Id { get; set; }
+            public string KeysData { get; set; }
+            public string RazorPath { get; set; }
         }
 
         /// <summary>صف قراءة (Id + اسم العنصر المشفَّر) — عام لأن EF يملؤه من SQL خام.</summary>

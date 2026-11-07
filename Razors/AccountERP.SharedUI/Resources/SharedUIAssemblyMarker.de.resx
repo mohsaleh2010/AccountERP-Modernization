@@ -4458,4 +4458,198 @@
   <data name="ICD_UNKNOWNREF" xml:space="preserve"><value>Entry reference type missing from the source registry (information only).</value></data>
   <data name="IC_LEDGER" xml:space="preserve"><value>Posted entries vs ledger balances</value></data>
   <data name="ICD_LEDGER" xml:space="preserve"><value>Total debit of posted entries does not match the ledger balances for a period/branch (partial posting or an entry edited after posting).</value></data>
+  <data name="PT_Title" xml:space="preserve"><value>Artikelpreisarten</value></data>
+  <data name="PT_Sub" xml:space="preserve"><value>Jede Preisart ist entweder eine manuell gepflegte Basisliste oder entspricht einer anderen Preisart plus oder minus Prozent oder Betrag</value></data>
+  <data name="PT_New" xml:space="preserve"><value>Neue Preisart</value></data>
+  <data name="PT_Formula" xml:space="preserve"><value>Berechnung</value></data>
+  <data name="PT_Base" xml:space="preserve"><value>Basisliste</value></data>
+  <data name="PT_Equals" xml:space="preserve"><value>= {0} {1}</value></data>
+  <data name="PT_Customers" xml:space="preserve"><value>Kunden</value></data>
+  <data name="PT_Items" xml:space="preserve"><value>Artikel</value></data>
+  <data name="PT_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="PT_All" xml:space="preserve"><value>Alle</value></data>
+  <data name="PT_ActiveOnly" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="PT_Stopped" xml:space="preserve"><value>Gestoppt</value></data>
+  <data name="PT_Activated" xml:space="preserve"><value>„{0}“ aktiviert</value></data>
+  <data name="PT_Deactivated" xml:space="preserve"><value>„{0}“ gestoppt</value></data>
+  <data name="PT_ConfirmDelete" xml:space="preserve"><value>Preisart „{0}“ löschen? Nicht umkehrbar. Nur unbenutzte Preisarten können gelöscht werden; sonst stoppen.</value></data>
+  <data name="PT_Empty" xml:space="preserve"><value>Keine passenden Preisarten — neue hinzufügen</value></data>
+  <data name="PT_OpenPrices" xml:space="preserve"><value>Artikelpreise in Listen</value></data>
+  <data name="PT_ManageTypes" xml:space="preserve"><value>Preisarten-Ansicht</value></data>
+  <data name="PT_Preview" xml:space="preserve"><value>Beispiel: wenn Preis „{0}“ = 100, dann Preis = {1}</value></data>
+  <data name="PT_Rate" xml:space="preserve"><value>Prozent</value></data>
+  <data name="PT_Search" xml:space="preserve"><value>Nach Preisartname suchen</value></data>
+  <data name="SPV_Title" xml:space="preserve"><value>Verkaufspreise nach Preisliste</value></data>
+  <data name="SPV_Sub" xml:space="preserve"><value>Verkaufspreis und Rabatt je Artikel und Preisart, nach Kategorie gefiltert</value></data>
+  <data name="SPV_ManageLists" xml:space="preserve"><value>Preislisten verwalten</value></data>
+  <data name="SPV_Add" xml:space="preserve"><value>Preis hinzufügen</value></data>
+  <data name="SPV_Filter" xml:space="preserve"><value>Preise anzeigen</value></data>
+  <data name="SPV_PriceType" xml:space="preserve"><value>Preisart</value></data>
+  <data name="SPV_AllTypes" xml:space="preserve"><value>Alle Preisarten</value></data>
+  <data name="SPV_Inactive" xml:space="preserve"><value>inaktiv</value></data>
+  <data name="SPV_Category" xml:space="preserve"><value>Artikelkategorie</value></data>
+  <data name="SPV_Count" xml:space="preserve"><value>Preise:</value></data>
+  <data name="SPV_Items" xml:space="preserve"><value>Artikel:</value></data>
+  <data name="SPV_WithDiscount" xml:space="preserve"><value>Mit Rabatt:</value></data>
+  <data name="SPV_TopNote" xml:space="preserve"><value>Erste {0} Preise — Suche eingrenzen</value></data>
+  <data name="SPV_CardPrice" xml:space="preserve"><value>Kartenpreis</value></data>
+  <data name="SPV_SalePrice" xml:space="preserve"><value>Verkaufspreis</value></data>
+  <data name="SPV_Discount" xml:space="preserve"><value>Verkaufsrabatt</value></data>
+  <data name="SPV_Net" xml:space="preserve"><value>Netto</value></data>
+  <data name="SPV_Derived" xml:space="preserve"><value>Abgeleitet</value></data>
+  <data name="SPV_DerivedHint" xml:space="preserve"><value>Aus einer Hauptliste berechnet; ändert sich mit deren Preis</value></data>
+  <data name="SPV_Edit" xml:space="preserve"><value>Bearbeiten</value></data>
+  <data name="SPV_EditOf" xml:space="preserve"><value>Preis von {0} bearbeiten</value></data>
+  <data name="SPV_DeleteOf" xml:space="preserve"><value>Preis von {0} löschen</value></data>
+  <data name="SPV_Empty" xml:space="preserve"><value>Keine Preise für diese Auswahl</value></data>
+  <data name="SPV_AddTitle" xml:space="preserve"><value>Artikelpreis hinzufügen</value></data>
+  <data name="SPV_EditTitle" xml:space="preserve"><value>Artikelpreis bearbeiten</value></data>
+  <data name="SPV_ItemHelp" xml:space="preserve"><value>Suche nach Name, Code oder Barcode</value></data>
+  <data name="SPV_DiscountHelp" xml:space="preserve"><value>Betrag vom Verkaufspreis (kein Prozentsatz)</value></data>
+  <data name="SPV_DerivedWarn" xml:space="preserve"><value>Diese Art ist von „{0}“ abgeleitet: der Preis wird bei Änderung des Hauptpreises neu berechnet.</value></data>
+  <data name="SPV_OverrideDerived" xml:space="preserve"><value>Preis trotzdem manuell ändern</value></data>
+  <data name="SPV_ExistsWarn" xml:space="preserve"><value>Der Artikel hat bereits einen Preis ({0}, Rabatt {1}) — Speichern ersetzt ihn.</value></data>
+  <data name="SPV_CascadeNote" xml:space="preserve"><value>Der Preis wird in {0} abgeleiteten Liste(n) neu berechnet.</value></data>
+  <data name="SPV_DeleteConfirm" xml:space="preserve"><value>Preis von „{0}“ aus „{1}“ löschen?</value></data>
+  <data name="SPV_DeleteCascade" xml:space="preserve"><value>Er wird auch aus abgeleiteten Listen entfernt.</value></data>
+  <data name="EPV_Title" xml:space="preserve"><value>Verkaufspreise der Artikel bearbeiten</value></data>
+  <data name="EPV_Sub" xml:space="preserve"><value>Verkaufspreis ausgewählter Artikel erhöhen oder senken oder eine Preisart aus einer anderen per Prozentsatz oder Betrag bilden</value></data>
+  <data name="EPV_Tab1" xml:space="preserve"><value>Ausgewählte Artikel bearbeiten</value></data>
+  <data name="EPV_Tab2" xml:space="preserve"><value>Preisart aus anderer (alle Artikel)</value></data>
+  <data name="EPV_Tab3" xml:space="preserve"><value>Preisart aus anderer (ausgewählte Artikel)</value></data>
+  <data name="EPV_PickItems" xml:space="preserve"><value>Preisart und Artikel wählen</value></data>
+  <data name="EPV_PickTypeFirst" xml:space="preserve"><value>Wählen Sie eine Preisart, um ihre Artikel und Preise anzuzeigen</value></data>
+  <data name="EPV_PickSourceItems" xml:space="preserve"><value>Quell-Preisart und Artikel wählen</value></data>
+  <data name="EPV_PickSourceFirst" xml:space="preserve"><value>Wählen Sie die Quell-Preisart, um ihre Artikel anzuzeigen</value></data>
+  <data name="EPV_HowToChange" xml:space="preserve"><value>Art der Änderung</value></data>
+  <data name="EPV_Types" xml:space="preserve"><value>Ziel- und Quell-Preisart</value></data>
+  <data name="EPV_Target" xml:space="preserve"><value>Zu ändernde Preisart</value></data>
+  <data name="EPV_TargetHelp" xml:space="preserve"><value>Nur Basis-Preisarten; abgeleitete werden aus ihrer Mutter berechnet</value></data>
+  <data name="EPV_Source" xml:space="preserve"><value>Entspricht Preisart</value></data>
+  <data name="EPV_SourceCount" xml:space="preserve"><value>Bepreiste Artikel in der Quelle:</value></data>
+  <data name="EPV_Selected" xml:space="preserve"><value>Ausgewählt:</value></data>
+  <data name="EPV_SelectAll" xml:space="preserve"><value>Alle angezeigten auswählen</value></data>
+  <data name="EPV_ClearSel" xml:space="preserve"><value>Auswahl aufheben</value></data>
+  <data name="EPV_SourcePrice" xml:space="preserve"><value>Quellpreis</value></data>
+  <data name="EPV_TargetPrice" xml:space="preserve"><value>Aktueller Zielpreis</value></data>
+  <data name="EPV_NewPrice" xml:space="preserve"><value>Neuer Preis</value></data>
+  <data name="EPV_NoPrice" xml:space="preserve"><value>Kein Preis (wird hinzugefügt)</value></data>
+  <data name="EPV_DiscOverPrice" xml:space="preserve"><value>Rabatt übersteigt den neuen Preis</value></data>
+  <data name="EPV_NoPrices" xml:space="preserve"><value>Keine passenden Preise in dieser Preisart</value></data>
+  <data name="EPV_Required" xml:space="preserve"><value>Gewünscht</value></data>
+  <data name="EPV_RateOrValue" xml:space="preserve"><value>Prozentsatz oder Betrag</value></data>
+  <data name="EPV_ByRate" xml:space="preserve"><value>Prozentsatz %</value></data>
+  <data name="EPV_ByValue" xml:space="preserve"><value>Betrag</value></data>
+  <data name="EPV_RatePct" xml:space="preserve"><value>Prozentsatz</value></data>
+  <data name="EPV_Amount" xml:space="preserve"><value>Betrag</value></data>
+  <data name="EPV_ZeroHelp" xml:space="preserve"><value>Null = gleicher Preis, unverändert</value></data>
+  <data name="EPV_SetDiscount" xml:space="preserve"><value>Neuen Verkaufsrabatt festlegen</value></data>
+  <data name="EPV_DiscountHelp" xml:space="preserve"><value>Ein Betrag, kein Prozentsatz; nicht über dem Preis</value></data>
+  <data name="EPV_KeepDiscount" xml:space="preserve"><value>Jeder Artikel behält seinen Rabatt</value></data>
+  <data name="EPV_KeepDiscountTarget" xml:space="preserve"><value>Vorhandene Artikel im Ziel behalten ihren Rabatt, neue erhalten keinen</value></data>
+  <data name="EPV_AllowDerived" xml:space="preserve"><value>Abgeleitete Liste trotzdem bearbeiten (wird bei Änderung des Mutterpreises ersetzt)</value></data>
+  <data name="EPV_Formula" xml:space="preserve"><value>{0} = {1} {2}</value></data>
+  <data name="EPV_OthersUntouched" xml:space="preserve"><value>Nicht ausgewählte Artikel bleiben unverändert</value></data>
+  <data name="EPV_ApplyN" xml:space="preserve"><value>Auf {0} Artikel anwenden</value></data>
+  <data name="EPV_ConfirmTitle" xml:space="preserve"><value>Preisänderung bestätigen</value></data>
+  <data name="EPV_Execute" xml:space="preserve"><value>Anwenden</value></data>
+  <data name="EPV_NothingToChange" xml:space="preserve"><value>Keine Änderung: Betrag eingeben oder neuen Rabatt festlegen.</value></data>
+  <data name="EPV_Confirm1" xml:space="preserve"><value>Preis von {0} Artikeln in „{1}“ um {2} ändern? Abgeleitete Listen werden neu berechnet.</value></data>
+  <data name="EPV_Confirm2" xml:space="preserve"><value>„{0}“ = „{1}“ {2} für {3} Artikel? Vorhandene Preise in „{0}“ werden ersetzt, fehlende ergänzt.</value></data>
+  <data name="EPV_Confirm3" xml:space="preserve"><value>„{0}“ = „{1}“ {2} nur für die {3} ausgewählten Artikel?</value></data>
+  <data name="SIP_Title" xml:space="preserve"><value>Artikelpreise suchen</value></data>
+  <data name="SIP_Sub" xml:space="preserve"><value>Artikel suchen, um Preis und Rabatt in jeder Preisart zu sehen; Preise im Popup hinzufügen oder ändern</value></data>
+  <data name="SIP_Item" xml:space="preserve"><value>Artikel</value></data>
+  <data name="SIP_Code" xml:space="preserve"><value>Code</value></data>
+  <data name="SIP_Unit" xml:space="preserve"><value>Einheit</value></data>
+  <data name="SIP_Prices" xml:space="preserve"><value>Artikelpreise nach Preisart</value></data>
+  <data name="SIP_Priced" xml:space="preserve"><value>Mit Preis:</value></data>
+  <data name="SIP_Unpriced" xml:space="preserve"><value>Ohne Preis:</value></data>
+  <data name="SIP_ShowUnpriced" xml:space="preserve"><value>Preisarten ohne Preis anzeigen</value></data>
+  <data name="SIP_VsCard" xml:space="preserve"><value>ggü. Stammpreis</value></data>
+  <data name="SIP_DerivedFrom" xml:space="preserve"><value>Abgeleitet von „{0}“</value></data>
+  <data name="SIP_EditIn" xml:space="preserve"><value>Preis in {0} ändern</value></data>
+  <data name="SIP_DeleteIn" xml:space="preserve"><value>Preis aus {0} löschen</value></data>
+  <data name="SIP_AddIn" xml:space="preserve"><value>Preis in {0} hinzufügen</value></data>
+  <data name="SIP_NoPrice" xml:space="preserve"><value>Kein Preis</value></data>
+  <data name="SIP_NoTypes" xml:space="preserve"><value>Keine aktiven Preisarten — im Bildschirm Preisarten anlegen</value></data>
+  <data name="SIP_NoPricesYet" xml:space="preserve"><value>Für diesen Artikel gibt es noch keine Preise</value></data>
+  <data name="SIP_PickItem" xml:space="preserve"><value>Artikel wählen, um seine Preise zu sehen</value></data>
+  <data name="SIP_OldPrice" xml:space="preserve"><value>Aktueller Preis</value></data>
+  <data name="PPT_Title" xml:space="preserve"><value>Einkaufspreisarten</value></data>
+  <data name="PPT_Sub" xml:space="preserve"><value>Preisarten für Lieferantenpreise: anlegen, umbenennen, deaktivieren</value></data>
+  <data name="PPT_Add" xml:space="preserve"><value>Preisart anlegen</value></data>
+  <data name="PPT_List" xml:space="preserve"><value>Preisarten</value></data>
+  <data name="PPT_Show" xml:space="preserve"><value>Anzeigen</value></data>
+  <data name="PPT_ShowActive" xml:space="preserve"><value>Aktive</value></data>
+  <data name="PPT_ShowInactive" xml:space="preserve"><value>Inaktive</value></data>
+  <data name="PPT_ShowAll" xml:space="preserve"><value>Alle</value></data>
+  <data name="PPT_Search" xml:space="preserve"><value>Nach Name suchen</value></data>
+  <data name="PPT_Active" xml:space="preserve"><value>Aktiv:</value></data>
+  <data name="PPT_Inactive" xml:space="preserve"><value>Inaktiv:</value></data>
+  <data name="PPT_Name" xml:space="preserve"><value>Name der Preisart</value></data>
+  <data name="PPT_Prices" xml:space="preserve"><value>Gespeicherte Preise</value></data>
+  <data name="PPT_Suppliers" xml:space="preserve"><value>Lieferanten</value></data>
+  <data name="PPT_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="PPT_StatusOn" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="PPT_StatusOff" xml:space="preserve"><value>Inaktiv</value></data>
+  <data name="PPT_ToggleOf" xml:space="preserve"><value>{0} aktivieren oder deaktivieren</value></data>
+  <data name="PPT_EditOf" xml:space="preserve"><value>{0} bearbeiten</value></data>
+  <data name="PPT_DeleteOf" xml:space="preserve"><value>{0} löschen</value></data>
+  <data name="PPT_UsedHint" xml:space="preserve"><value>In Lieferantenpreisen verwendet — stattdessen deaktivieren</value></data>
+  <data name="PPT_Empty" xml:space="preserve"><value>Keine Preisarten für diese Auswahl</value></data>
+  <data name="PPT_AddTitle" xml:space="preserve"><value>Einkaufspreisart anlegen</value></data>
+  <data name="PPT_EditTitle" xml:space="preserve"><value>Einkaufspreisart bearbeiten</value></data>
+  <data name="PPT_RenameNote" xml:space="preserve"><value>Der neue Name erscheint bei {0} Lieferantenpreisen dieser Art.</value></data>
+  <data name="PPT_Added" xml:space="preserve"><value>„{0}“ angelegt</value></data>
+  <data name="PPT_Saved" xml:space="preserve"><value>„{0}“ gespeichert</value></data>
+  <data name="PPT_Activated" xml:space="preserve"><value>„{0}“ aktiviert</value></data>
+  <data name="PPT_Deactivated" xml:space="preserve"><value>„{0}“ deaktiviert</value></data>
+  <data name="PPT_DeleteConfirm" xml:space="preserve"><value>Preisart „{0}“ endgültig löschen?</value></data>
+  <data name="PPT_Deleted" xml:space="preserve"><value>„{0}“ gelöscht</value></data>
+  <data name="IPP_Title" xml:space="preserve"><value>Einkaufspreise der Artikel</value></data>
+  <data name="IPP_Sub" xml:space="preserve"><value>Einkaufspreis je Artikel und Lieferant nach Preisart: anlegen, ändern, löschen</value></data>
+  <data name="IPP_ItemAll" xml:space="preserve"><value>Artikel (alle)</value></data>
+  <data name="IPP_SupplierAll" xml:space="preserve"><value>Lieferant (alle)</value></data>
+  <data name="IPP_Type" xml:space="preserve"><value>Einkaufspreisart</value></data>
+  <data name="IPP_AllTypes" xml:space="preserve"><value>Alle Preisarten</value></data>
+  <data name="IPP_NoType" xml:space="preserve"><value>Ohne Preisart</value></data>
+  <data name="IPP_Search" xml:space="preserve"><value>Suche nach Artikel, Code oder Lieferant</value></data>
+  <data name="IPP_Suppliers" xml:space="preserve"><value>Lieferanten:</value></data>
+  <data name="IPP_DeleteSelected" xml:space="preserve"><value>Auswahl löschen ({0})</value></data>
+  <data name="IPP_Supplier" xml:space="preserve"><value>Lieferant</value></data>
+  <data name="IPP_Price" xml:space="preserve"><value>Einkaufspreis</value></data>
+  <data name="IPP_CardPrice" xml:space="preserve"><value>Stamm-Einkaufspreis</value></data>
+  <data name="IPP_AddTitle" xml:space="preserve"><value>Lieferantenpreis anlegen</value></data>
+  <data name="IPP_EditTitle" xml:space="preserve"><value>Lieferantenpreis bearbeiten</value></data>
+  <data name="IPP_AllItems" xml:space="preserve"><value>Gleicher Preis für alle Artikel der Kategorie</value></data>
+  <data name="IPP_AllItemsNeedCat" xml:space="preserve"><value>Für alle Artikel einer Kategorie: zuerst Kategorie wählen</value></data>
+  <data name="IPP_OnlyMissing" xml:space="preserve"><value>Nur Artikel ohne Preis ergänzen</value></data>
+  <data name="IPP_Overwrite" xml:space="preserve"><value>Vorhandene Preise auch ersetzen</value></data>
+  <data name="IPP_ExistsAdd" xml:space="preserve"><value>Für diesen Artikel und diese Preisart gibt es schon einen Preis ({0}) — Speichern ersetzt ihn.</value></data>
+  <data name="IPP_ExistsEdit" xml:space="preserve"><value>Es gibt schon einen anderen Preis für Lieferant, Artikel und Preisart ({0}) — diesen zuerst ändern oder löschen.</value></data>
+  <data name="IPP_SaveAndNew" xml:space="preserve"><value>Speichern und weiteren anlegen</value></data>
+  <data name="IPP_SavedCategory" xml:space="preserve"><value>{0} Preise angelegt, {1} geändert</value></data>
+  <data name="IPP_DeleteOne" xml:space="preserve"><value>Preis von „{0}“ für Lieferant „{1}“ löschen?</value></data>
+  <data name="IPP_DeleteMany" xml:space="preserve"><value>{0} ausgewählte Preise löschen?</value></data>
+  <data name="IPP_Deleted" xml:space="preserve"><value>{0} Preise gelöscht</value></data>
+  <data name="PHB_Title" xml:space="preserve"><value>Verkaufspreisverwaltung</value></data>
+  <data name="PHB_Sub" xml:space="preserve"><value>Alle Preisbildschirme an einem Ort: Verkauf, Einkauf und Druck</value></data>
+  <data name="PHB_Search" xml:space="preserve"><value>Bildschirm suchen</value></data>
+  <data name="PHB_Empty" xml:space="preserve"><value>Keine passenden Bildschirme</value></data>
+  <data name="PHB_New" xml:space="preserve"><value>Neu</value></data>
+  <data name="PHB_SecSales" xml:space="preserve"><value>Verkaufspreise</value></data>
+  <data name="PHB_SecPurchase" xml:space="preserve"><value>Einkaufspreise</value></data>
+  <data name="PHB_SecPrint" xml:space="preserve"><value>Druck</value></data>
+  <data name="PHB_D_SalesPrices" xml:space="preserve"><value>Verkaufspreis und Rabatt je Artikel und Preisart, nach Kategorie</value></data>
+  <data name="PHB_D_EditPrices" xml:space="preserve"><value>Preise ausgewählter Artikel erhöhen/senken oder eine Preisart aus einer anderen bilden</value></data>
+  <data name="PHB_D_Search" xml:space="preserve"><value>Artikel suchen und seinen Preis je Preisart sehen und ändern</value></data>
+  <data name="PHB_D_Types" xml:space="preserve"><value>Verkaufspreisarten: Basis oder abgeleitet per Prozent oder Betrag</value></data>
+  <data name="PHB_D_Lists" xml:space="preserve"><value>Preislisten als Baum mit den Preisen jeder Liste</value></data>
+  <data name="PHB_D_Bulk" xml:space="preserve"><value>Massenänderung von Verkaufs-, Einkaufs- oder Listenpreisen</value></data>
+  <data name="PHB_D_Customers" xml:space="preserve"><value>Sonderpreise für einen Kunden auf bestimmte Artikel</value></data>
+  <data name="PHB_D_PurchaseTypes" xml:space="preserve"><value>Einkaufspreisarten: anlegen, umbenennen, deaktivieren</value></data>
+  <data name="PHB_D_PurchasePrices" xml:space="preserve"><value>Einkaufspreis je Artikel und Lieferant nach Preisart</value></data>
+  <data name="PHB_D_Suppliers" xml:space="preserve"><value>Lieferantenpreise im Preislisten-Bildschirm</value></data>
+  <data name="PHB_D_Sheet" xml:space="preserve"><value>Druckbare Preisübersicht über mehrere Listen</value></data>
 </root>

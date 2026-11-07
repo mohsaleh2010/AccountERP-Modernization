@@ -1,0 +1,228 @@
+@* أنواع سعر المشتريات — شاشة مستقلة بدل Price_Type_List_PurchasFRM (القائمة) و Price_Type_Edit_PurchasFRM (الإضافة/التعديل)، عنصر القائمة menuItemPricePurchaseType.
+   BtnAddNew / BtnEdit = نافذة منبثقة بالاسم. BtnEditStatus (حفظ علامات التفعيل كلها مرة واحدة) صار مفتاح تفعيل لكل صف يحفظ فوراً.
+   الحذف للنوع غير المستعمل فقط (القديم كان يوقف نوع سعر بيع بنفس الرقم بالخطأ). القواعد فى PriceListService
+   (ListPurchaseTypesAll / SavePurchaseType / SetPurchaseTypeActive / DeletePurchaseType، الصلاحية 917). التصميم حسب ui-ux-pro-max ونظام inv-*. *@
+@page "/items/purchase-price-types"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.PriceListService
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@implements IDisposable
+
+<PageTitle>@Tr("PPT_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .ppt-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .ppt-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                     background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .ppt-head .ico .mud-icon-root { font-size: 2rem; }
+    .ppt-head .titles { flex: 1 1 260px; min-width: 0; }
+    .ppt-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .ppt-head .acts { display: flex; flex-wrap: wrap; gap: 8px; }
+    .ppt-head .acts .mud-button-root { min-height: 44px; }
+    .ppt-gap { margin-top: 16px; }
+    .ppt-filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 12px; align-items: center; }
+    .ppt-sum { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 12px; padding: 10px 16px; border-radius: 10px;
+               background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent); font-size: .9rem; }
+    .ppt-sum b, .ppt-num { font-variant-numeric: tabular-nums; }
+    .ppt-muted { color: var(--mud-palette-text-secondary); font-size: .8rem; }
+    .ppt-off td { opacity: .7; }
+    .ppt-row { cursor: pointer; }
+    .ppt-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    @@media (max-width: 599px) { .ppt-filters { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card">
+        <div class="ppt-head">
+            <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.ShoppingCart" /></div>
+            <div class="titles">
+                <h1 class="inv-title">@Tr("PPT_Title")</h1>
+                <div class="sub">@Tr("PPT_Sub")</div>
+            </div>
+            <div class="acts">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAdd">@Tr("PPT_Add")</MudButton>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Class="ppt-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    <section class="inv-card ppt-gap" aria-labelledby="ppt-list-h">
+        <h2 class="inv-card-title" id="ppt-list-h"><MudIcon Icon="@Icons.Material.Filled.List" />@Tr("PPT_List")</h2>
+        <div class="ppt-filters">
+            <MudSelect T="int" @bind-Value="_show" Label="@Tr("PPT_Show")" Variant="Variant.Outlined">
+                <MudSelectItem T="int" Value="1">@Tr("PPT_ShowActive")</MudSelectItem>
+                <MudSelectItem T="int" Value="0">@Tr("PPT_ShowInactive")</MudSelectItem>
+                <MudSelectItem T="int" Value="2">@Tr("PPT_ShowAll")</MudSelectItem>
+            </MudSelect>
+            <MudTextField T="string" @bind-Value="_text" Label="@Tr("PPT_Search")" Variant="Variant.Outlined" Immediate="true" Clearable="true"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+        </div>
+        <div class="ppt-sum" aria-live="polite">
+            <span>@Tr("PPT_Active") <b>@_rows.Count(r => r.Is_Active)</b></span>
+            <span>@Tr("PPT_Inactive") <b>@_rows.Count(r => !r.Is_Active)</b></span>
+        </div>
+
+        <MudTable Items="@Visible" T="PurchaseType" Hover="true" Elevation="0" Class="inv-table ppt-gap" Breakpoint="Breakpoint.Sm" Dense="true"
+                  Loading="_loading" LoadingProgressColor="Color.Primary" RowClassFunc="@((r, _) => r.Is_Active ? "ppt-row" : "ppt-row ppt-off")"
+                  OnRowClick="@((TableRowClickEventArgs<PurchaseType> e) => OpenEdit(e.Item!))">
+            <HeaderContent>
+                <MudTh Style="width:48px">#</MudTh>
+                <MudTh>@Tr("PPT_Name")</MudTh>
+                <MudTh Style="text-align:end">@Tr("PPT_Prices")</MudTh>
+                <MudTh Style="text-align:end">@Tr("PPT_Suppliers")</MudTh>
+                <MudTh>@Tr("PPT_Status")</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="#"><span class="ppt-muted">@(Visible.IndexOf(context) + 1)</span></MudTd>
+                <MudTd DataLabel="@Tr("PPT_Name")"><b>@context.Name</b></MudTd>
+                <MudTd DataLabel="@Tr("PPT_Prices")" Style="text-align:end"><span class="ppt-num">@context.Prices</span></MudTd>
+                <MudTd DataLabel="@Tr("PPT_Suppliers")" Style="text-align:end"><span class="ppt-num">@context.Suppliers</span></MudTd>
+                <MudTd DataLabel="@Tr("PPT_Status")"><span @onclick:stopPropagation="true">
+                    <MudSwitch T="bool" Value="context.Is_Active" ValueChanged="@((bool v) => ToggleAsync(context, v))" Color="Color.Success" Disabled="_busy"
+                               Label="@Tr(context.Is_Active ? "PPT_StatusOn" : "PPT_StatusOff")" aria-label="@Tr("PPT_ToggleOf", context.Name)" />
+                </span></MudTd>
+                <MudTd Style="white-space:nowrap"><span @onclick:stopPropagation="true">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" aria-label="@Tr("PPT_EditOf", context.Name)" title="@Tr("SPV_Edit")" OnClick="@(() => OpenEdit(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" aria-label="@Tr("PPT_DeleteOf", context.Name)"
+                                   title="@(context.Prices > 0 ? Tr("PPT_UsedHint") : Tr("Delete"))" Disabled="@(_busy || context.Prices > 0)" OnClick="@(() => DeleteAsync(context))" />
+                </span></MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="ppt-empty">
+                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" />
+                    <span>@Tr("PPT_Empty")</span>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAdd">@Tr("PPT_Add")</MudButton>
+                </div>
+            </NoRecordsContent>
+        </MudTable>
+    </section>
+</div>
+</MudContainer>
+
+@* ---------------- نافذة الإضافة/التعديل (بدل Price_Type_Edit_PurchasFRM) ---------------- *@
+<MudDialog Visible="_dlgOpen" VisibleChanged="@((bool v) => _dlgOpen = v)"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.ExtraSmall, CloseButton = true, BackdropClick = false })">
+    <TitleContent>
+        <MudText Typo="Typo.h6"><MudIcon Icon="@(_dId != 0 ? Icons.Material.Filled.Edit : Icons.Material.Filled.AddCircle)" Class="me-2" Style="vertical-align:middle" />@Tr(_dId != 0 ? "PPT_EditTitle" : "PPT_AddTitle")</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_dlgError)) { <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3" role="alert">@_dlgError</MudAlert> }
+        <MudTextField T="string" @bind-Value="_dName" Label="@Tr("PPT_Name")" Variant="Variant.Outlined" Required="true" MaxLength="100" Counter="100"
+                      Immediate="true" AutoFocus="true" OnKeyUp="@(async (KeyboardEventArgs e) => { if (e.Key == "Enter" && CanSave) await SaveAsync(); })" />
+        @if (_dId != 0 && _dPrices > 0) { <div class="ppt-muted mt-2">@Tr("PPT_RenameNote", _dPrices)</div> }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _dlgOpen = false)" Style="min-height:44px">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Style="min-height:44px" Disabled="@(!CanSave)" OnClick="SaveAsync">
+            @if (_busy) { <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" /> }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private readonly PriceListService _svc = new();
+    private List<PurchaseType> _rows = new();
+    /// <summary>1 النشطة (افتراضى كالقديم)، 0 الموقوفة، 2 الكل.</summary>
+    private int _show = 1;
+    private string? _text;
+    private bool _loading, _busy;
+    private string? _error;
+
+    private bool _dlgOpen;
+    private long _dId;
+    private int _dPrices;
+    private string? _dName, _dlgError;
+
+    private bool CanSave => !_busy && !string.IsNullOrWhiteSpace(_dName);
+
+    private List<PurchaseType> Visible => _rows
+        .Where(r => _show == 2 || r.Is_Active == (_show == 1))
+        .Where(r => string.IsNullOrWhiteSpace(_text) || r.Name.Contains(_text.Trim(), StringComparison.CurrentCultureIgnoreCase))
+        .ToList();
+
+    protected override void OnInitialized() => LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private Task<T> Bg<T>(Func<T> f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return f(); });
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        try { _rows = await Bg(() => _svc.ListPurchaseTypesAll()); }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private void OpenAdd() { _dId = 0; _dPrices = 0; _dName = null; _dlgError = null; _dlgOpen = true; }
+    private void OpenEdit(PurchaseType r) { _dId = r.Id; _dPrices = r.Prices; _dName = r.Name; _dlgError = null; _dlgOpen = true; }
+
+    private async Task SaveAsync()
+    {
+        _busy = true; _dlgError = null;
+        long id = _dId; string name = (_dName ?? "").Trim();
+        try
+        {
+            await Bg(() => _svc.SavePurchaseType(id, name));
+            Snackbar.Add(Tr(id == 0 ? "PPT_Added" : "PPT_Saved", name), Severity.Success);
+            _dlgOpen = false;
+            if (id == 0 && _show == 0) _show = 1;   // ليظهر النوع الجديد (نشط)
+            await LoadAsync();
+        }
+        catch (Exception ex) { _dlgError = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task ToggleAsync(PurchaseType r, bool active)
+    {
+        _busy = true; _error = null;
+        long id = r.Id;
+        try
+        {
+            await Bg(() => { _svc.SetPurchaseTypeActive(id, active); return 0; });
+            r.Is_Active = active;
+            Snackbar.Add(Tr(active ? "PPT_Activated" : "PPT_Deactivated", r.Name), Severity.Success);
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task DeleteAsync(PurchaseType r)
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("Delete"), Tr("PPT_DeleteConfirm", r.Name), yesText: Tr("Delete"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null;
+        long id = r.Id;
+        try
+        {
+            await Bg(() => { _svc.DeletePurchaseType(id); return 0; });
+            Snackbar.Add(Tr("PPT_Deleted", r.Name), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

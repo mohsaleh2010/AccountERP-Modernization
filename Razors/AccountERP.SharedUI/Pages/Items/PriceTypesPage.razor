@@ -1,0 +1,298 @@
+@* 🟢 أنواع أسعار الأصناف — شاشة مستقلة بدل Price_Type_ListFRM (القائمة) و Price_Type_EditFRM (الإضافة/التعديل).
+   كل نوع: قائمة أساسية (يُدخل سعرها يدوياً) أو = نوع آخر (+/−) نسبة أو قيمة. القواعد والتحقق فى PriceListService
+   (SaveType/DeleteType، الصلاحية 917، إعادة حساب المشتقة عند تغيير القاعدة). التصميم حسب ui-ux-pro-max ونظام inv-*. *@
+@page "/items/price-types"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.PriceListService
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@implements IDisposable
+
+<PageTitle>@Tr("PT_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .pt-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .pt-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .pt-head .ico .mud-icon-root { font-size: 2rem; }
+    .pt-head .titles { flex: 1 1 280px; min-width: 0; }
+    .pt-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .pt-head .acts { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pt-head .acts .mud-button-root { min-height: 44px; }
+    .pt-gap { margin-top: 16px; }
+    .pt-filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .pt-filters .search { flex: 1 1 260px; min-width: 0; }
+    .pt-chip { min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface);
+               color: var(--mud-palette-text-primary); font: inherit; font-size: .9rem; cursor: pointer; }
+    .pt-chip:hover { border-color: var(--mud-palette-primary); }
+    .pt-chip:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .pt-chip[aria-pressed="true"] { background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent); border-color: var(--mud-palette-primary);
+                                    color: var(--mud-palette-primary); font-weight: 600; }
+    .pt-name { font-weight: 600; overflow-wrap: anywhere; }
+    .pt-off .pt-name { opacity: .55; text-decoration: line-through; }
+    .pt-rule { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+    .pt-rule .val { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; font-weight: 600; }
+    .pt-rule .plus { color: var(--mud-palette-success); } .pt-rule .minus { color: var(--mud-palette-error); }
+    .pt-base { color: var(--mud-palette-text-secondary); font-size: .85rem; }
+    .pt-num { font-variant-numeric: tabular-nums; }
+    .pt-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+    .pt-form .full { grid-column: 1 / -1; }
+    .pt-preview { padding: 10px 14px; border-radius: 10px; background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent); font-size: .9rem; }
+    .pt-note { font-size: .85rem; color: var(--mud-palette-text-secondary); }
+    .pt-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    @@media (max-width: 599px) { .pt-form { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card">
+        <div class="pt-head">
+            <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Sell" /></div>
+            <div class="titles">
+                <h1 class="inv-title">@Tr("PT_Title")</h1>
+                <div class="sub">@Tr("PT_Sub")</div>
+            </div>
+            <div class="acts">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNew">@Tr("PT_New")</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PriceChange" Href="/items/prices/lists">@Tr("PT_OpenPrices")</MudButton>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Class="pt-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    <section class="inv-card pt-gap" aria-labelledby="pt-list-h">
+        <h2 class="inv-card-title" id="pt-list-h"><MudIcon Icon="@Icons.Material.Filled.AccountTree" />@Tr("PR_Types")<span class="inv-count">@Filtered.Count()</span></h2>
+        <div class="pt-filters">
+            <MudTextField T="string" @bind-Value="_search" Label="@Tr("PT_Search")" Variant="Variant.Outlined" Immediate="true" DebounceInterval="200" Clearable="true"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="search" />
+            <div role="group" aria-label="@Tr("PT_Status")" style="display:flex;gap:8px;flex-wrap:wrap">
+                @foreach (var (k, key) in StatusFilters)
+                {
+                    <button type="button" class="pt-chip" aria-pressed="@(_status == k ? "true" : "false")" @onclick="@(() => _status = k)">@Tr(key)</button>
+                }
+            </div>
+        </div>
+
+        <MudTable Items="@Filtered" T="PriceType" Hover="true" Elevation="0" Class="inv-table pt-gap" Breakpoint="Breakpoint.Sm" Dense="true"
+                  Loading="_loading" LoadingProgressColor="Color.Primary" RowClassFunc="@((t, _) => t.Is_Active ? "" : "pt-off")">
+            <HeaderContent>
+                <MudTh Style="width:56px">#</MudTh>
+                <MudTh>@Tr("PR_TypeName")</MudTh>
+                <MudTh>@Tr("PT_Formula")</MudTh>
+                <MudTh Style="text-align:end">@Tr("PT_Items")</MudTh>
+                <MudTh Style="text-align:end">@Tr("PT_Customers")</MudTh>
+                <MudTh>@Tr("PT_Status")</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="#"><span class="pt-num">@context.Id</span></MudTd>
+                <MudTd DataLabel="@Tr("PR_TypeName")"><span class="pt-name">@context.Name</span></MudTd>
+                <MudTd DataLabel="@Tr("PT_Formula")">
+                    @if (context.Master_Id == 0)
+                    {
+                        <span class="pt-base">@Tr("PT_Base")</span>
+                    }
+                    else
+                    {
+                        <span class="pt-rule">
+                            <span>= @(string.IsNullOrWhiteSpace(context.Master_Name) ? $"#{context.Master_Id}" : context.Master_Name)</span>
+                            <span class="val @(context.Is_Plus ? "plus" : "minus")">@RuleText(context)</span>
+                        </span>
+                    }
+                </MudTd>
+                <MudTd DataLabel="@Tr("PT_Items")" Style="text-align:end"><span class="pt-num">@context.Priced_Items</span></MudTd>
+                <MudTd DataLabel="@Tr("PT_Customers")" Style="text-align:end"><span class="pt-num">@context.Customers</span></MudTd>
+                <MudTd DataLabel="@Tr("PT_Status")">
+                    <MudSwitch T="bool" Value="context.Is_Active" ValueChanged="@((bool v) => ToggleActiveAsync(context, v))" Color="Color.Primary" Disabled="_busy"
+                               Label="@(context.Is_Active ? Tr("ILActive") : Tr("PT_Stopped"))" aria-label="@($"{Tr("PT_Status")} {context.Name}")" />
+                </MudTd>
+                <MudTd Style="white-space:nowrap;text-align:end">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="@($"{Tr("PR_EditBtn")} {context.Name}")" title="@Tr("PR_EditBtn")" Disabled="_busy" OnClick="@(() => OpenEdit(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" aria-label="@($"{Tr("PR_Delete")} {context.Name}")" title="@Tr("PR_Delete")" Disabled="_busy" OnClick="@(() => DeleteAsync(context))" />
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent><div class="pt-empty"><MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" /><span>@Tr("PT_Empty")</span></div></NoRecordsContent>
+        </MudTable>
+    </section>
+</div>
+</MudContainer>
+
+@* ===== حوار الإضافة/التعديل (بدل Price_Type_EditFRM) ===== *@
+<MudDialog @bind-Visible="_dlgOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(_edit.Id == 0 ? Tr("PT_New") : Tr("PR_EditType", _editOldName))</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_dlgError)) { <MudAlert Severity="Severity.Warning" Class="mb-3" role="alert">@_dlgError</MudAlert> }
+        <div class="pt-form">
+            <MudTextField T="string" @bind-Value="_edit.Name" Label="@Tr("PR_TypeName")" Variant="Variant.Outlined" MaxLength="200" Class="full" Required="true" AutoFocus="true" />
+            <MudSelect T="long" @bind-Value="_edit.Master_Id" Label="@Tr("PR_Master")" Variant="Variant.Outlined" Class="full"
+                       ToStringFunc="@(id => id == 0 ? Tr("PR_Independent") : _types.FirstOrDefault(x => x.Id == id)?.Name ?? string.Empty)">
+                <MudSelectItem T="long" Value="0L">@Tr("PR_Independent")</MudSelectItem>
+                @foreach (var t in MasterOptions) { <MudSelectItem T="long" Value="t.Id">@t.Name</MudSelectItem> }
+            </MudSelect>
+            @if (_edit.Master_Id != 0)
+            {
+                <MudSelect T="bool" @bind-Value="_edit.Is_Plus" Label="@Tr("PR_Direction")" Variant="Variant.Outlined">
+                    <MudSelectItem T="bool" Value="true">+ @Tr("PR_Plus")</MudSelectItem>
+                    <MudSelectItem T="bool" Value="false">− @Tr("PR_Minus")</MudSelectItem>
+                </MudSelect>
+                <MudSelect T="bool" @bind-Value="_edit.Is_Rate" Label="@Tr("PT_Formula")" Variant="Variant.Outlined">
+                    <MudSelectItem T="bool" Value="true">% @Tr("PT_Rate")</MudSelectItem>
+                    <MudSelectItem T="bool" Value="false">@Tr("PR_Amount")</MudSelectItem>
+                </MudSelect>
+                <MudNumericField T="decimal" @bind-Value="_edit.Added_Value" Label="@Tr("PR_Value")" Variant="Variant.Outlined" Min="0" Format="0.####" Class="full"
+                                 Adornment="Adornment.End" AdornmentText="@(_edit.Is_Rate ? "%" : "")" />
+                <div class="pt-preview full" aria-live="polite">
+                    <div>= @MasterName(_edit.Master_Id) <b class="pt-num" style="direction:ltr;unicode-bidi:isolate">@RuleText(_edit)</b></div>
+                    <div class="pt-note">@Tr("PT_Preview", MasterName(_edit.Master_Id), Num(Example(_edit)))</div>
+                </div>
+                @if (_edit.Id != 0) { <div class="pt-note full">@Tr("PR_RuleChangeNote")</div> }
+            }
+            <MudSwitch T="bool" @bind-Value="_edit.Is_Active" Color="Color.Primary" Label="@Tr("ILActive")" Class="full" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="@(() => _dlgOpen = false)">@Tr("Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="_busy" OnClick="SaveAsync">@Tr("Save")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private static readonly (string, string)[] StatusFilters = { ("all", "PT_All"), ("active", "PT_ActiveOnly"), ("stopped", "PT_Stopped") };
+
+    private readonly PriceListService _svc = new();
+    private List<PriceType> _types = new();
+    private PriceType _edit = new();
+    private string _editOldName = "";
+    private string? _search;
+    private string _status = "all";
+    private bool _loading, _busy, _dlgOpen;
+    private string? _error, _dlgError;
+
+    private IEnumerable<PriceType> Filtered => _types
+        .Where(t => _status == "all" || (_status == "active") == t.Is_Active)
+        .Where(t => string.IsNullOrWhiteSpace(_search) || (t.Name ?? "").Contains(_search.Trim(), StringComparison.CurrentCultureIgnoreCase)
+                    || (t.Master_Name ?? "").Contains(_search.Trim(), StringComparison.CurrentCultureIgnoreCase));
+
+    /// <summary>الأنواع المسموح أن تكون أماً: ليس النوع نفسه ولا ما يتفرع منه (يمنع الدوران).</summary>
+    private IEnumerable<PriceType> MasterOptions
+    {
+        get
+        {
+            if (_edit.Id == 0) return _types;
+            var banned = new HashSet<long> { _edit.Id };
+            bool added = true;
+            while (added)
+            {
+                added = false;
+                foreach (var t in _types.Where(x => x.Master_Id != 0 && banned.Contains(x.Master_Id) && !banned.Contains(x.Id)).ToList()) { banned.Add(t.Id); added = true; }
+            }
+            return _types.Where(x => !banned.Contains(x.Id));
+        }
+    }
+
+    protected override void OnInitialized() => LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private Task<T> Bg<T>(Func<T> f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return f(); });
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        try { _types = await Bg(() => _svc.ListTypes()); }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private void OpenNew()
+    {
+        _edit = new PriceType { Master_Id = _types.FirstOrDefault(t => t.Master_Id == 0 && t.Is_Active)?.Id ?? 0, Is_Plus = true, Is_Rate = true, Is_Active = true };
+        _editOldName = ""; _dlgError = null; _dlgOpen = true;
+    }
+
+    private void OpenEdit(PriceType t)
+    {
+        _edit = Copy(t);
+        _editOldName = t.Name ?? ""; _dlgError = null; _dlgOpen = true;
+    }
+
+    private static PriceType Copy(PriceType t) => new()
+    {
+        Id = t.Id, Name = t.Name, Master_Id = t.Master_Id, Is_Plus = t.Is_Plus, Added_Value = t.Added_Value, Is_Rate = t.Is_Rate, Is_Active = t.Is_Active,
+    };
+
+    private async Task SaveAsync()
+    {
+        _busy = true; _dlgError = null;
+        var t = Copy(_edit); bool isNew = t.Id == 0;
+        try
+        {
+            await Bg(() => _svc.SaveType(t));
+            Snackbar.Add(Tr(isNew ? "PR_TypeAdded" : "IU_Saved"), Severity.Success);
+            _dlgOpen = false;
+            await LoadAsync();
+        }
+        catch (Exception ex) { _dlgError = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    /// <summary>تفعيل/إيقاف من الجدول مباشرة (بدل «حفظ الحالة» القديم)؛ القاعدة لا تتغير فلا إعادة حساب.</summary>
+    private async Task ToggleActiveAsync(PriceType row, bool active)
+    {
+        _busy = true; _error = null;
+        var t = Copy(row); t.Is_Active = active;
+        try
+        {
+            await Bg(() => _svc.SaveType(t));
+            row.Is_Active = active;
+            Snackbar.Add(Tr(active ? "PT_Activated" : "PT_Deactivated", row.Name ?? ""), Severity.Success);
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task DeleteAsync(PriceType row)
+    {
+        bool? ok = await DialogService.ShowMessageBoxAsync(Tr("PR_Delete"), Tr("PT_ConfirmDelete", row.Name ?? ""), yesText: Tr("PR_Delete"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null;
+        long id = row.Id;
+        try
+        {
+            await Bg(() => { _svc.DeleteType(id); return 0; });
+            Snackbar.Add(Tr("PR_TypeDeleted"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private string MasterName(long id) => _types.FirstOrDefault(x => x.Id == id)?.Name ?? "";
+    private static string RuleText(PriceType t) => t.Master_Id == 0 ? "" : $"{(t.Is_Plus ? "+" : "−")} {Num(t.Added_Value)}{(t.Is_Rate ? "%" : "")}";
+    private static decimal Example(PriceType t)
+    {
+        decimal d = t.Is_Rate ? 100m * t.Added_Value / 100m : t.Added_Value;
+        return Math.Round(t.Is_Plus ? 100m + d : 100m - d, 2);
+    }
+    private static string Num(decimal v) => v.ToString("#,0.####", CultureInfo.InvariantCulture);
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

@@ -94,7 +94,8 @@
     <div class="pr-split pr-gap">
         @* ===== أنواع الأسعار ===== *@
         <section class="inv-card" aria-labelledby="pr-types-h">
-            <h2 class="inv-card-title" id="pr-types-h"><MudIcon Icon="@Icons.Material.Filled.AccountTree" />@Tr("PR_Types")<span class="inv-count">@_types.Count</span></h2>
+            <h2 class="inv-card-title" id="pr-types-h"><MudIcon Icon="@Icons.Material.Filled.AccountTree" />@Tr("PR_Types")<span class="inv-count">@_types.Count</span>
+                <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInNew" Href="/items/price-types" Style="margin-inline-start:auto">@Tr("PT_ManageTypes")</MudButton></h2>
             <div class="pr-types" role="list">
                 @foreach (var (t, depth) in TypeTree())
                 {
@@ -157,9 +158,9 @@
                     <MudTextField T="string" Value="_pf.Text" ValueChanged="@(async (string? v) => { _pf.Text = v; await LoadPricesAsync(); })" Label="@Tr("IT_Search")"
                                   Variant="Variant.Outlined" Immediate="true" DebounceInterval="300" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
                     <MudSelect T="long" Value="_pf.Category_Id" ValueChanged="@(async (long v) => { _pf.Category_Id = v; await LoadPricesAsync(); })" Label="@Tr("IC_CatName")" Variant="Variant.Outlined"
-                               ToStringFunc="@(id => id == 0 ? Tr("IC_AllCats") : _lk?.Categories.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
+                               ToStringFunc="@(id => id == 0 ? Tr("IC_AllCats") : _cats.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
                         <MudSelectItem T="long" Value="0L">@Tr("IC_AllCats")</MudSelectItem>
-                        @foreach (var c in _lk?.Categories ?? new()) { <MudSelectItem T="long" Value="c.Id">@c.Name</MudSelectItem> }
+                        @foreach (var c in _cats) { <MudSelectItem T="long" Value="c.Id">@c.Name · @CatType(c.Type_Id)</MudSelectItem> }
                     </MudSelect>
                     <MudSelect T="long" Value="_pf.Group_Id" ValueChanged="@(async (long v) => { _pf.Group_Id = v; await LoadPricesAsync(); })" Label="@Tr("IL_groups")" Variant="Variant.Outlined"
                                ToStringFunc="@(id => id == 0 ? Tr("IT_KindAll") : _lk?.Groups.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
@@ -224,9 +225,9 @@
                 </MudSelect>
             }
             <MudSelect T="long" Value="_bulk.Category_Id" ValueChanged="@((long v) => { _bulk.Category_Id = v; _preview = null; })" Label="@Tr("IC_CatName")" Variant="Variant.Outlined"
-                       ToStringFunc="@(id => id == 0 ? Tr("IC_AllCats") : _lk?.Categories.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
+                       ToStringFunc="@(id => id == 0 ? Tr("IC_AllCats") : _cats.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
                 <MudSelectItem T="long" Value="0L">@Tr("IC_AllCats")</MudSelectItem>
-                @foreach (var c in _lk?.Categories ?? new()) { <MudSelectItem T="long" Value="c.Id">@c.Name</MudSelectItem> }
+                @foreach (var c in _cats) { <MudSelectItem T="long" Value="c.Id">@c.Name · @CatType(c.Type_Id)</MudSelectItem> }
             </MudSelect>
             <MudSelect T="long" Value="_bulk.Group_Id" ValueChanged="@((long v) => { _bulk.Group_Id = v; _preview = null; })" Label="@Tr("IL_groups")" Variant="Variant.Outlined"
                        ToStringFunc="@(id => id == 0 ? Tr("IT_KindAll") : _lk?.Groups.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
@@ -350,6 +351,8 @@
     };
 
     private readonly PriceListService _svc = new();
+    /// <summary>فئات الأصناف: فئات المبيعات أولاً ثم بقية الأنواع (ListCategories(1)).</summary>
+    private List<PriceListService.CategoryPick> _cats = new();
     private readonly ItemEditorService _items = new();
     private ItemEditorService.Lookups? _lk;
     private List<PriceType> _types = new();
@@ -384,6 +387,7 @@
         try
         {
             _lk ??= await Bg(() => _items.GetLookups());
+            if (_cats.Count == 0) _cats = await Bg(() => _svc.ListCategories(1));
             await LoadTypesAsync();
             if (_tab is "customers" or "suppliers")
             {
@@ -597,6 +601,7 @@
     }
 
     private static string Num(decimal v) => v.ToString("#,0.####", CultureInfo.InvariantCulture);
+    private static string CatType(int t) => t >= 0 && t < ItemUnitCategoryService.CategoryTypes.Length ? ItemUnitCategoryService.CategoryTypes[t] : ItemUnitCategoryService.CategoryTypes[0];
     private static string Money(decimal v) => v.ToString("#,0.00", CultureInfo.InvariantCulture);
     private static string Signed(decimal v) => (v > 0 ? "+" : "") + v.ToString("#,0.00", CultureInfo.InvariantCulture);
     private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }

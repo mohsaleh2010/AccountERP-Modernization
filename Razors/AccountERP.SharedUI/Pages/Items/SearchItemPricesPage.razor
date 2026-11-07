@@ -1,0 +1,328 @@
+@* بحث أسعار الصنف (بدل SearchItemPrices_List_Values — عنصر القائمة menuItemSearchItemPrices_List_Values).
+   اختيار الصنف يعرض سعره وخصمه فى كل نوع سعر نشط (المسعَّر أولاً، ثم الأنواع التى ليس له فيها سعر) — القديمة كانت تعرض المسعَّر فقط.
+   الضغط على الصف يفتح نافذة منبثقة: تعديل السعر الموجود أو إضافته للنوع الناقص. الحذف من نفس الصف.
+   القواعد فى PriceListService (ListItemPrices / SaveSellValue / SetPrice للحذف): المشتقة يعاد حسابها، الصلاحية 917.
+   ?item={id} يفتح الشاشة على صنف محدد. التصميم حسب ui-ux-pro-max ونظام inv-*. *@
+@page "/items/prices/search"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.PriceListService
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@implements IDisposable
+
+<PageTitle>@Tr("SIP_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .sip-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .sip-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                     background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .sip-head .ico .mud-icon-root { font-size: 2rem; }
+    .sip-head .titles { flex: 1 1 260px; min-width: 0; }
+    .sip-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .sip-head .acts { display: flex; flex-wrap: wrap; gap: 8px; }
+    .sip-head .acts .mud-button-root { min-height: 44px; }
+    .sip-gap { margin-top: 16px; }
+    .sip-item { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 16px; margin-top: 14px; }
+    .sip-fact { padding: 10px 14px; border-radius: 10px; background: color-mix(in srgb, var(--mud-palette-primary) 7%, transparent); min-width: 0; }
+    .sip-fact .k { font-size: .78rem; color: var(--mud-palette-text-secondary); }
+    .sip-fact .v { font-weight: 600; overflow-wrap: anywhere; }
+    .sip-sum { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 12px; padding: 10px 16px; border-radius: 10px;
+               background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent); font-size: .9rem; }
+    .sip-sum b, .sip-num { font-variant-numeric: tabular-nums; }
+    .sip-num { white-space: nowrap; }
+    .sip-code { font-family: ui-monospace, Consolas, monospace; }
+    .sip-muted { color: var(--mud-palette-text-secondary); font-size: .8rem; }
+    .sip-disc { color: var(--mud-palette-warning-darken); }
+    .sip-up { color: var(--mud-palette-success-darken); }
+    .sip-down { color: var(--mud-palette-error); }
+    .sip-row { cursor: pointer; }
+    .sip-row.none td { background: color-mix(in srgb, var(--mud-palette-text-secondary) 4%, transparent); }
+    .sip-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    .sip-dlg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; align-items: start; }
+    .sip-dlg .full { grid-column: 1 / -1; }
+    .sip-net { display: flex; flex-wrap: wrap; gap: 6px 20px; padding: 10px 14px; border-radius: 10px; font-size: .9rem;
+               background: color-mix(in srgb, var(--mud-palette-primary) 7%, transparent); }
+    .sip-net b { font-variant-numeric: tabular-nums; }
+    @@media (max-width: 899px) { .sip-item { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 599px) { .sip-item, .sip-dlg { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card">
+        <div class="sip-head">
+            <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.ManageSearch" /></div>
+            <div class="titles">
+                <h1 class="inv-title">@Tr("SIP_Title")</h1>
+                <div class="sub">@Tr("SIP_Sub")</div>
+            </div>
+            <div class="acts">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Sell" Href="/items/sales-prices">@Tr("SPV_Title")</MudButton>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Class="sip-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    <section class="inv-card sip-gap" aria-labelledby="sip-item-h">
+        <h2 class="inv-card-title" id="sip-item-h"><MudIcon Icon="@Icons.Material.Filled.Inventory2" />@Tr("SIP_Item")</h2>
+        <MudAutocomplete T="Option" Value="_pick" ValueChanged="@(async (Option? o) => { _pick = o; await LoadAsync(); })" SearchFunc="@SearchItemAsync"
+                         ToStringFunc="@(o => o?.Name ?? string.Empty)" Label="@Tr("IT_Name")" Variant="Variant.Outlined" AutoFocus="true"
+                         Clearable="true" DebounceInterval="300" ResetValueOnEmptyText="true" HelperText="@Tr("SPV_ItemHelp")"
+                         Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+        @if (_item != null)
+        {
+            <div class="sip-item">
+                <div class="sip-fact"><div class="k">@Tr("SIP_Code")</div><div class="v sip-code">@_item.Code</div></div>
+                <div class="sip-fact"><div class="k">@Tr("SPV_Category")</div><div class="v">@(string.IsNullOrEmpty(_item.Category) ? "—" : _item.Category)</div></div>
+                <div class="sip-fact"><div class="k">@Tr("SIP_Unit")</div><div class="v">@(string.IsNullOrEmpty(_item.Unit) ? "—" : _item.Unit)</div></div>
+                <div class="sip-fact"><div class="k">@Tr("SPV_CardPrice")</div><div class="v sip-num">@Money(_item.Sale_Price)</div></div>
+            </div>
+        }
+    </section>
+
+    @if (_item != null)
+    {
+        <section class="inv-card sip-gap" aria-labelledby="sip-list-h">
+            <h2 class="inv-card-title" id="sip-list-h"><MudIcon Icon="@Icons.Material.Filled.PriceChange" />@Tr("SIP_Prices")</h2>
+            <div class="sip-sum" aria-live="polite">
+                <span>@Tr("SIP_Priced") <b>@_rows.Count(r => r.Price != null)</b></span>
+                <span>@Tr("SIP_Unpriced") <b>@_rows.Count(r => r.Price == null)</b></span>
+                <MudSwitch T="bool" @bind-Value="_showUnpriced" Color="Color.Primary" Label="@Tr("SIP_ShowUnpriced")" />
+            </div>
+
+            <MudTable Items="@Visible" T="ItemTypePrice" Hover="true" Elevation="0" Class="inv-table sip-gap" Breakpoint="Breakpoint.Sm" Dense="true"
+                      Loading="_loading" LoadingProgressColor="Color.Primary" RowClassFunc="@((r, _) => r.Price == null ? "sip-row none" : "sip-row")"
+                      OnRowClick="@((TableRowClickEventArgs<ItemTypePrice> e) => Open(e.Item!))">
+                <HeaderContent>
+                    <MudTh Style="width:48px">#</MudTh>
+                    <MudTh>@Tr("SPV_PriceType")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("SPV_SalePrice")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("SPV_Discount")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("SPV_Net")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("SIP_VsCard")</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="#"><span class="sip-muted">@(Visible.IndexOf(context) + 1)</span></MudTd>
+                    <MudTd DataLabel="@Tr("SPV_PriceType")">@context.Type_Name
+                        @if (context.Is_Derived) { <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Info" title="@Tr("SIP_DerivedFrom", context.Master_Name ?? "")">@Tr("SPV_Derived")</MudChip> }
+                        @if (!context.Is_Active) { <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Default">@Tr("SPV_Inactive")</MudChip> }
+                    </MudTd>
+                    @if (context.Price is decimal p)
+                    {
+                        <MudTd DataLabel="@Tr("SPV_SalePrice")" Style="text-align:end"><b class="sip-num">@Money(p)</b></MudTd>
+                        <MudTd DataLabel="@Tr("SPV_Discount")" Style="text-align:end"><span class="sip-num @(context.Discount > 0 ? "sip-disc" : "sip-muted")">@Money(context.Discount)</span></MudTd>
+                        <MudTd DataLabel="@Tr("SPV_Net")" Style="text-align:end"><span class="sip-num">@Money(p - context.Discount)</span></MudTd>
+                        <MudTd DataLabel="@Tr("SIP_VsCard")" Style="text-align:end"><span class="sip-num @DiffClass(p)">@Diff(p)</span></MudTd>
+                        <MudTd Style="white-space:nowrap"><span @onclick:stopPropagation="true">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" aria-label="@Tr("SIP_EditIn", context.Type_Name)" title="@Tr("SPV_Edit")" OnClick="@(() => Open(context))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" aria-label="@Tr("SIP_DeleteIn", context.Type_Name)" title="@Tr("Delete")"
+                                           Disabled="_busy" OnClick="@(() => DeleteAsync(context))" />
+                        </span></MudTd>
+                    }
+                    else
+                    {
+                        <MudTd DataLabel="@Tr("SPV_SalePrice")" Style="text-align:end"><span class="sip-muted">@Tr("SIP_NoPrice")</span></MudTd>
+                        <MudTd DataLabel="@Tr("SPV_Discount")" Style="text-align:end"><span class="sip-muted">—</span></MudTd>
+                        <MudTd DataLabel="@Tr("SPV_Net")" Style="text-align:end"><span class="sip-muted">—</span></MudTd>
+                        <MudTd DataLabel="@Tr("SIP_VsCard")" Style="text-align:end"><span class="sip-muted">—</span></MudTd>
+                        <MudTd Style="white-space:nowrap"><span @onclick:stopPropagation="true">
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Style="min-height:40px"
+                                       aria-label="@Tr("SIP_AddIn", context.Type_Name)" OnClick="@(() => Open(context))">@Tr("SPV_Add")</MudButton>
+                        </span></MudTd>
+                    }
+                </RowTemplate>
+                <NoRecordsContent>
+                    <div class="sip-empty">
+                        <MudIcon Icon="@Icons.Material.Filled.PriceChange" Size="Size.Large" />
+                        <span>@Tr(_rows.Count == 0 ? "SIP_NoTypes" : "SIP_NoPricesYet")</span>
+                        @if (_rows.Count > 0) { <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => _showUnpriced = true)">@Tr("SIP_ShowUnpriced")</MudButton> }
+                    </div>
+                </NoRecordsContent>
+            </MudTable>
+        </section>
+    }
+    else
+    {
+        <div class="inv-card sip-gap">
+            <div class="sip-empty">
+                <MudIcon Icon="@Icons.Material.Filled.ManageSearch" Size="Size.Large" />
+                <span>@Tr("SIP_PickItem")</span>
+            </div>
+        </div>
+    }
+</div>
+</MudContainer>
+
+@* ---------------- نافذة إضافة/تعديل سعر الصنف فى نوع (بدل Edit_Item_PriceType) ---------------- *@
+<MudDialog Visible="_dlgOpen" VisibleChanged="@((bool v) => _dlgOpen = v)"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent>
+        <MudText Typo="Typo.h6"><MudIcon Icon="@(_dIsEdit ? Icons.Material.Filled.Edit : Icons.Material.Filled.AddCircle)" Class="me-2" Style="vertical-align:middle" />@Tr(_dIsEdit ? "SPV_EditTitle" : "SPV_AddTitle")</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (!string.IsNullOrEmpty(_dlgError)) { <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3" role="alert">@_dlgError</MudAlert> }
+        @if (_dRow != null && _item != null)
+        {
+            <div class="sip-dlg">
+                <MudTextField T="string" Value="@_item.Name" Label="@Tr("IT_Name")" Variant="Variant.Outlined" ReadOnly="true" Class="full" />
+                <MudTextField T="string" Value="@_dRow.Type_Name" Label="@Tr("SPV_PriceType")" Variant="Variant.Outlined" ReadOnly="true" Class="full" />
+                <MudNumericField T="decimal" @bind-Value="_dPrice" Label="@Tr("SPV_SalePrice")" Variant="Variant.Outlined" Min="0" Format="0.####" Required="true"
+                                 Immediate="true" Disabled="@(_dRow.Is_Derived && !_overrideDerived)" AutoFocus="true" />
+                <MudNumericField T="decimal" @bind-Value="_dDiscount" Label="@Tr("SPV_Discount")" Variant="Variant.Outlined" Min="0" Format="0.##" Immediate="true"
+                                 HelperText="@Tr("SPV_DiscountHelp")" />
+                <div class="sip-net full" aria-live="polite">
+                    <span>@Tr("SPV_CardPrice"): <b>@Money(_item.Sale_Price)</b></span>
+                    <span>@Tr("SPV_Net"): <b>@Money(_dPrice - _dDiscount)</b></span>
+                    @if (_dIsEdit) { <span>@Tr("SIP_OldPrice"): <b>@Money(_dRow.Price ?? 0)</b></span> }
+                </div>
+                @if (_dRow.Is_Derived)
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="full">@Tr("SPV_DerivedWarn", _dRow.Master_Name ?? "")</MudAlert>
+                    <MudSwitch T="bool" @bind-Value="_overrideDerived" Color="Color.Warning" Label="@Tr("SPV_OverrideDerived")" Class="full" />
+                }
+                @if (ChildCount(_dRow.Type_Id) is int n && n > 0) { <div class="sip-muted full">@Tr("SPV_CascadeNote", n)</div> }
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _dlgOpen = false)" Style="min-height:44px">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Style="min-height:44px"
+                   Disabled="@(_busy || _dRow == null || _dPrice <= 0)" OnClick="SaveAsync">
+            @if (_busy) { <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" /> }
+            @Tr("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    /// <summary>فتح الشاشة على صنف محدد (رابط من شاشة أخرى).</summary>
+    [SupplyParameterFromQuery(Name = "item")] public long? ItemId { get; set; }
+
+    private readonly PriceListService _svc = new();
+    private List<PriceType> _types = new();
+    private List<ItemTypePrice> _rows = new();
+    private Option? _pick;
+    private ItemPrice? _item;
+    private bool _loading, _busy, _showUnpriced = true;
+    private string? _error;
+
+    // النافذة
+    private bool _dlgOpen, _dIsEdit, _overrideDerived;
+    private ItemTypePrice? _dRow;
+    private decimal _dPrice, _dDiscount;
+    private string? _dlgError;
+
+    private List<ItemTypePrice> Visible => _showUnpriced ? _rows : _rows.Where(r => r.Price != null).ToList();
+    private int ChildCount(long typeId) => _types.Count(x => x.Master_Id == typeId);
+
+    protected override void OnInitialized() => LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _types = await Bg(() => _svc.ListTypes());
+            if (ItemId is long id && id > 0)
+            {
+                var it = await Bg(() => _svc.GetItem(id));
+                if (it != null) { _pick = new Option { Id = it.Item_Id, Name = $"{it.Code} - {it.Name}" }; await LoadAsync(); }
+            }
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private Task<T> Bg<T>(Func<T> f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return f(); });
+
+    private Task<IEnumerable<Option>> SearchItemAsync(string? text, CancellationToken ct) => Bg(() => (IEnumerable<Option>)_svc.SearchItems(text));
+
+    private async Task LoadAsync()
+    {
+        if (_pick == null) { _item = null; _rows = new(); return; }
+        _loading = true; _error = null;
+        long id = _pick.Id;
+        try
+        {
+            _item = await Bg(() => _svc.GetItem(id));
+            _rows = _item == null ? new() : await Bg(() => _svc.ListItemPrices(id));
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    /// <summary>صف مسعَّر = تعديل؛ صف بلا سعر = إضافة مقترحاً سعر البطاقة.</summary>
+    private void Open(ItemTypePrice r)
+    {
+        if (_item == null) return;
+        _dRow = r; _dlgError = null; _overrideDerived = false;
+        _dIsEdit = r.Price != null;
+        _dPrice = r.Price ?? _item.Sale_Price;
+        _dDiscount = r.Price != null ? r.Discount : 0;
+        _dlgOpen = true;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_dRow == null || _item == null) return;
+        _busy = true; _dlgError = null;
+        long t = _dRow.Type_Id, i = _item.Item_Id; decimal p = _dPrice, d = _dDiscount;
+        bool cascade = ChildCount(t) > 0;
+        try
+        {
+            await Bg(() => { _svc.SaveSellValue(t, i, p, d); return 0; });
+            Snackbar.Add(cascade ? Tr("PR_SavedCascade", _item.Name) : Tr("PR_SavedOne", _item.Name), Severity.Success);
+            _dlgOpen = false;
+            await LoadAsync();
+        }
+        catch (Exception ex) { _dlgError = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task DeleteAsync(ItemTypePrice r)
+    {
+        if (_item == null) return;
+        string msg = Tr("SPV_DeleteConfirm", _item.Name, r.Type_Name) + (ChildCount(r.Type_Id) > 0 ? " " + Tr("SPV_DeleteCascade") : "");
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("Delete"), msg, yesText: Tr("Delete"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _busy = true; _error = null;
+        long t = r.Type_Id, i = _item.Item_Id;
+        try
+        {
+            await Bg(() => { _svc.SetPrice(t, i, null); return 0; });
+            Snackbar.Add(Tr("PR_PriceDeleted"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    /// <summary>الفرق عن سعر البطاقة كنسبة (+/-)؛ «—» إن كان سعر البطاقة صفراً.</summary>
+    private string Diff(decimal p)
+    {
+        decimal card = _item?.Sale_Price ?? 0;
+        if (card == 0) return "—";
+        decimal pct = Math.Round((p - card) / card * 100, 1);
+        return pct == 0 ? "0%" : (pct > 0 ? "+" : "") + pct.ToString("0.#", CultureInfo.InvariantCulture) + "%";
+    }
+    private string DiffClass(decimal p) { decimal card = _item?.Sale_Price ?? 0; return card == 0 || p == card ? "sip-muted" : p > card ? "sip-up" : "sip-down"; }
+
+    private static string Money(decimal v) => v.ToString("#,0.00", CultureInfo.InvariantCulture);
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

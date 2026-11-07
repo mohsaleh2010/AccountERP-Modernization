@@ -297,11 +297,280 @@ ORDER BY COUNT(DISTINCT v.Item_ID) DESC, v.Price_Type_List_ID").ToList());
             });
         }
 
+        // ===================== تصنيف أسعار مبيعات الأصناف (بدل Prices_List_Edit_Values) =====================
+
+        /// <summary>صف سعر مسجَّل فى Price_Type_Sell_Values: نوع السعر + الصنف + السعر + خصم البيع (CommisionValue قيمة لا نسبة).</summary>
+        public class SellValue
+        {
+            public long Type_Id { get; set; }
+            public string Type_Name { get; set; }
+            /// <summary>true = القائمة مشتقة من أخرى (سعرها يُعاد حسابه عند تغيير الأم).</summary>
+            public bool Is_Derived { get; set; }
+            public long Item_Id { get; set; }
+            public string Code { get; set; }
+            public string Name { get; set; }
+            public string Category { get; set; }
+            public string Unit { get; set; }
+            /// <summary>سعر البيع الأساسى فى بطاقة الصنف (للمقارنة).</summary>
+            public decimal Item_Sale_Price { get; set; }
+            public decimal Price { get; set; }
+            public decimal Discount { get; set; }
+        }
+
+        /// <summary>
+        /// الأسعار المسجَّلة (كشاشة «قيم أسعار بيع الأصناف» القديمة): typeId = 0 كل الأنواع، categoryId = 0 كل الفئات.
+        /// صف واحد لكل (صنف × نوع) — أول صف بالترتيب ID كما تقرؤه ListPrices.
+        /// </summary>
+        public List<SellValue> ListSellValues(long typeId, long categoryId, string text, int top = 1000)
+        {
+            string t = (text ?? "").Trim();
+            string like = "%" + t + "%";
+            int n = Math.Clamp(top, 1, 5000);
+            return Run(opp => opp.db.Database.SqlQuery<SellValue>($@"
+SELECT TOP ({n}) CAST(v.Price_Type_List_ID AS bigint) AS Type_Id, ISNULL(LTRIM(RTRIM(p.Price_Name)), N'') AS Type_Name,
+       CAST(CASE WHEN ISNULL(p.Price_Type_List_Master_Id, -1) <= 0 OR p.Price_Type_List_Master_Id = p.ID THEN 0 ELSE 1 END AS bit) AS Is_Derived,
+       CAST(i.id AS bigint) AS Item_Id, ISNULL(i.code, N'') AS Code, ISNULL(i.Item_Name, N'') AS Name, ISNULL(c.Category_Name, N'') AS Category,
+       ISNULL(u.B_Unit, N'') AS Unit, CAST(ISNULL(i.S_price_LargeUnit, ISNULL(i.S_Price, 0)) AS decimal(18,4)) AS Item_Sale_Price,
+       CAST(ISNULL(v.PriceUnit, 0) AS decimal(18,4)) AS Price, CAST(ISNULL(v.CommisionValue, 0) AS decimal(18,4)) AS Discount
+FROM (SELECT Item_ID, Price_Type_List_ID, PriceUnit, CommisionValue,
+             ROW_NUMBER() OVER (PARTITION BY Item_ID, Price_Type_List_ID ORDER BY ID) AS Rn
+      FROM Price_Type_Sell_Values WHERE ({typeId} = 0 OR Price_Type_List_ID = {typeId})) v
+INNER JOIN Item i ON i.id = v.Item_ID
+INNER JOIN Price_Type_List p ON p.ID = v.Price_Type_List_ID
+LEFT JOIN Item_Category c ON c.ID = i.Item_Category_ID
+LEFT JOIN unit u ON u.id = i.Unit_Id
+WHERE v.Rn = 1
+  AND ({categoryId} = 0 OR i.Item_Category_ID = {categoryId})
+  AND ({t} = N'' OR i.Item_Name LIKE {like} OR i.code = {t} OR i.BarCode2 = {t} OR i.BarCode3 = {t})
+ORDER BY p.Price_Name, c.Category_Name, i.Item_Name").ToList());
+        }
+
+        /// <summary>
+        /// حفظ سعر صنف فى نوع سعر مع خصم البيع (إضافة أو تعديل). السعر يعيد حساب القوائم المشتقة كـ SetPrice؛
+        /// الخصم يخص هذا النوع فقط (لا يُنسخ للمشتقة، كالقديم). السعر يجب أن يكون أكبر من صفر كالشاشة القديمة.
+        /// </summary>
+        public void SaveSellValue(long typeId, long itemId, decimal price, decimal discount)
+        {
+            Demand();
+            if (typeId == 0) throw new InvalidOperationException("اختر نوع السعر.");
+            if (itemId == 0) throw new InvalidOperationException("اختر الصنف.");
+            if (price <= 0) throw new InvalidOperationException("أدخل السعر.");
+            if (discount < 0) throw new InvalidOperationException("الخصم لا يكون سالباً.");
+            if (discount > price) throw new InvalidOperationException("الخصم أكبر من السعر.");
+            RunTx(opp =>
+            {
+                var all = LoadTypes(opp);
+                if (all.All(x => x.Id != typeId)) throw new InvalidOperationException("نوع السعر غير موجود.");
+                if (opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM Item WHERE id = {itemId}").AsEnumerable().First() == 0)
+                    throw new InvalidOperationException("الصنف غير موجود.");
+                Upsert(opp, typeId, itemId, Math.Round(price, 4));
+                decimal d = Math.Round(discount, 2);
+                opp.db.Database.ExecuteSql($"UPDATE Price_Type_Sell_Values SET CommisionValue = {d} WHERE Item_ID = {itemId} AND Price_Type_List_ID = {typeId}");
+                RecomputeChildren(opp, all, typeId, new[] { itemId });
+                return 0;
+            });
+        }
+
+        /// <summary>سعر البيع الأساسى فى بطاقة الصنف (الوحدة الكبرى) — للمقارنة فى نافذة السعر.</summary>
+        public decimal GetItemSalePrice(long itemId) => Run(opp => opp.db.Database.SqlQuery<decimal>($@"
+SELECT CAST(ISNULL(S_price_LargeUnit, ISNULL(S_Price, 0)) AS decimal(18,4)) AS Value FROM Item WHERE id = {itemId}").AsEnumerable().FirstOrDefault());
+
+        /// <summary>هل للصنف سعر مسجَّل فى هذا النوع؟ (لتنبيه «سيُستبدل السعر الحالى» عند الإضافة).</summary>
+        public SellValue GetSellValue(long typeId, long itemId) =>
+            typeId == 0 || itemId == 0 ? null : Run(opp => opp.db.Database.SqlQuery<SellValue>($@"
+SELECT TOP 1 CAST(Price_Type_List_ID AS bigint) AS Type_Id, CAST(N'' AS nvarchar(1)) AS Type_Name, CAST(0 AS bit) AS Is_Derived,
+       CAST(Item_ID AS bigint) AS Item_Id, CAST(N'' AS nvarchar(1)) AS Code, CAST(N'' AS nvarchar(1)) AS Name, CAST(N'' AS nvarchar(1)) AS Category,
+       CAST(N'' AS nvarchar(1)) AS Unit, CAST(0 AS decimal(18,4)) AS Item_Sale_Price,
+       CAST(ISNULL(PriceUnit, 0) AS decimal(18,4)) AS Price, CAST(ISNULL(CommisionValue, 0) AS decimal(18,4)) AS Discount
+FROM Price_Type_Sell_Values WHERE Item_ID = {itemId} AND Price_Type_List_ID = {typeId} ORDER BY ID").AsEnumerable().FirstOrDefault());
+
+        // ===================== بحث أسعار الصنف (بدل SearchItemPrices_List_Values) =====================
+
+        /// <summary>سعر الصنف فى نوع سعر واحد؛ Price = null يعنى لا سعر مسجَّل للصنف فى هذا النوع.</summary>
+        public class ItemTypePrice
+        {
+            public long Type_Id { get; set; }
+            public string Type_Name { get; set; }
+            public bool Is_Active { get; set; }
+            public bool Is_Derived { get; set; }
+            public string Master_Name { get; set; }
+            public decimal? Price { get; set; }
+            public decimal Discount { get; set; }
+        }
+
+        /// <summary>بيانات الصنف للعرض أعلى شاشة البحث (الكود، الاسم، الفئة، الوحدة، سعر البطاقة)؛ null إن لم يوجد.</summary>
+        public ItemPrice GetItem(long itemId) => itemId == 0 ? null : Run(opp => opp.db.Database.SqlQuery<ItemPrice>($@"
+SELECT CAST(i.id AS bigint) AS Item_Id, ISNULL(i.code, N'') AS Code, ISNULL(i.Item_Name, N'') AS Name, ISNULL(c.Category_Name, N'') AS Category,
+       ISNULL(u.B_Unit, N'') AS Unit, CAST(ISNULL(i.S_price_LargeUnit, ISNULL(i.S_Price, 0)) AS decimal(18,4)) AS Sale_Price,
+       CAST(NULL AS decimal(18,4)) AS Price, CAST(0 AS decimal(18,4)) AS Commission_Value
+FROM Item i LEFT JOIN Item_Category c ON c.ID = i.Item_Category_ID LEFT JOIN unit u ON u.id = i.Unit_Id
+WHERE i.id = {itemId}").AsEnumerable().FirstOrDefault());
+
+        /// <summary>
+        /// كل أنواع الأسعار مع سعر الصنف وخصمه فى كل نوع (القديمة كانت تعرض الأنواع المسعَّرة فقط؛ هنا تظهر الأنواع النشطة كلها
+        /// ليُضاف السعر الناقص من نفس الشاشة). النوع الموقوف يظهر فقط إن كان للصنف سعر فيه. أول صف بالترتيب ID كبقية الشاشات.
+        /// </summary>
+        public List<ItemTypePrice> ListItemPrices(long itemId) => Run(opp => opp.db.Database.SqlQuery<ItemTypePrice>($@"
+SELECT CAST(t.ID AS bigint) AS Type_Id, ISNULL(LTRIM(RTRIM(t.Price_Name)), N'') AS Type_Name,
+       CAST(CASE WHEN ISNULL(t.IS_Active, 1) = 1 THEN 1 ELSE 0 END AS bit) AS Is_Active,
+       CAST(CASE WHEN ISNULL(t.Price_Type_List_Master_Id, -1) <= 0 OR t.Price_Type_List_Master_Id = t.ID THEN 0 ELSE 1 END AS bit) AS Is_Derived,
+       ISNULL(LTRIM(RTRIM(m.Price_Name)), N'') AS Master_Name,
+       CAST(v.PriceUnit AS decimal(18,4)) AS Price, CAST(ISNULL(v.CommisionValue, 0) AS decimal(18,4)) AS Discount
+FROM Price_Type_List t
+LEFT JOIN Price_Type_List m ON m.ID = t.Price_Type_List_Master_Id AND m.ID <> t.ID
+OUTER APPLY (SELECT TOP 1 PriceUnit, CommisionValue FROM Price_Type_Sell_Values x WHERE x.Item_ID = {itemId} AND x.Price_Type_List_ID = t.ID ORDER BY x.ID) v
+WHERE ISNULL(t.IS_Active, 1) = 1 OR v.PriceUnit IS NOT NULL
+ORDER BY CASE WHEN v.PriceUnit IS NULL THEN 1 ELSE 0 END, t.Price_Name").ToList());
+
         /// <summary>إعادة حساب قائمة مشتقة (وما يتفرع منها) لكل الأصناف من أسعار أمها.</summary>
         public int RecomputeType(long typeId)
         {
             Demand();
             return RunTx(opp => RecomputeTypeAllItems(opp, typeId));
+        }
+
+        // ===================== تعديل أسعار مبيعات الأصناف (بدل Edit_Prices_List_Values) =====================
+
+        /// <summary>فئة صنف للاختيار فى شاشات الأسعار مع نوعها (Category_Type_Id: 1 مبيعات، 2 مشتريات...).</summary>
+        public class CategoryPick
+        {
+            public long Id { get; set; }
+            public string Name { get; set; }
+            public int Type_Id { get; set; }
+        }
+
+        /// <summary>
+        /// فئات الأصناف النشطة مرتبة: فئات النوع المفضَّل أولاً (1 = مبيعات لشاشات أسعار البيع، 2 = مشتريات لأسعار الشراء)، ثم بقية الأنواع، ثم بالاسم.
+        /// (طلب المستخدم 2026-11-07: الشاشات القديمة كانت تعرض فئات المبيعات فقط بـ Item_Data(1)، والجديدة تعرض الكل مرتبة بالنوع.)
+        /// </summary>
+        public List<CategoryPick> ListCategories(int preferType) => Run(opp => opp.db.Database.SqlQuery<CategoryPick>($@"
+SELECT CAST(ID AS bigint) AS Id, ISNULL(Category_Name, N'') AS Name, CAST(ISNULL(Category_Type_Id, 0) AS int) AS Type_Id
+FROM Item_Category WHERE ISNULL(IS_Active, 1) = 1
+ORDER BY CASE WHEN ISNULL(Category_Type_Id, 0) = {preferType} THEN 0 ELSE 1 END, ISNULL(Category_Type_Id, 0), Category_Name").ToList());
+
+        /// <summary>
+        /// تعديل جماعى لسعر البيع (وخصم البيع اختيارياً) لأصناف محددة فى نوع سعر واحد — زر BtnEditValue القديم.
+        /// السعر الجديد = السعر الحالى ± (قيمة أو نسبة) مقرَّباً بخطوة يختارها المستخدم (القديم كان يقرّب لأقرب جنيه دائماً).
+        /// discount = null يُبقى الخصم الحالى لكل صنف. النوع المشتق يحتاج allowDerived (سعره يُعاد حسابه عند تغيّر الأم).
+        /// يعيد حساب القوائم المشتقة من النوع للأصناف المعدَّلة. يرجع عدد الأصناف.
+        /// </summary>
+        public int EditSellValues(long typeId, IReadOnlyCollection<long> itemIds, bool isRate, bool isPlus, decimal value, decimal? discount, decimal rounding, bool allowDerived)
+        {
+            Demand();
+            var ids = (itemIds ?? Array.Empty<long>()).Distinct().ToList();
+            if (typeId == 0) throw new InvalidOperationException("اختر نوع السعر.");
+            if (ids.Count == 0) throw new InvalidOperationException("اختر الأصناف المراد تعديل أسعارها.");
+            CheckAdjust(isRate, isPlus, value, discount, rounding);
+            if (value == 0 && discount == null) throw new InvalidOperationException("لا يوجد تغيير: أدخل قيمة التعديل أو خصماً جديداً.");
+            return RunTx(opp =>
+            {
+                var all = LoadTypes(opp);
+                var t = all.FirstOrDefault(x => x.Id == typeId) ?? throw new InvalidOperationException("نوع السعر غير موجود.");
+                if (t.Master_Id != 0 && !allowDerived)
+                    throw new InvalidOperationException("نوع السعر مشتق؛ أسعاره تُحسب من القائمة الأم. فعّل «تعديل القائمة المشتقة» للتعديل على أى حال.");
+                var cur = CurrentValues(opp, typeId, ids);
+                var missing = ids.Where(i => !cur.ContainsKey(i)).ToList();
+                if (missing.Count > 0) throw new InvalidOperationException($"{missing.Count} صنف ليس لها سعر فى هذا النوع؛ حدّث العرض وأعد الاختيار.");
+                foreach (long item in ids)
+                {
+                    var (price, disc) = cur[item];
+                    decimal np = Adjust(price, isRate, isPlus, value, rounding);
+                    decimal nd = discount ?? disc;
+                    if (np < 0) throw new InvalidOperationException("بعض الأسعار ستصبح سالبة؛ قلّل النقص.");
+                    if (nd > np) throw new InvalidOperationException($"الخصم ({nd:0.##}) سيصبح أكبر من السعر ({np:0.##}) لبعض الأصناف.");
+                    Upsert(opp, typeId, item, np);
+                    if (discount != null) opp.db.Database.ExecuteSql($"UPDATE Price_Type_Sell_Values SET CommisionValue = {Math.Round(nd, 2)} WHERE Item_ID = {item} AND Price_Type_List_ID = {typeId}");
+                }
+                RecomputeChildren(opp, all, typeId, ids);
+                return ids.Count;
+            });
+        }
+
+        /// <summary>
+        /// نوع سعر = نوع سعر آخر ± (قيمة أو نسبة) — زرّا BtnEditByType (itemIds = null: كل أصناف المصدر) و BtnEditByType_Item (الأصناف المحددة فقط).
+        /// الأصناف غير المسعَّرة فى الهدف تُضاف، والمسعَّرة يُستبدل سعرها. قرار حديث: الأصناف غير المحددة لا تُمس
+        /// (القديم كان ينسخ سعر المصدر كما هو لكل الأصناف غير المحددة). لا يُنسخ إلى نوع مشتق (يُعاد حسابه من أمه).
+        /// discount = null: الأصناف الموجودة تحتفظ بخصمها والجديدة بلا خصم. يرجع عدد الأصناف.
+        /// </summary>
+        public int CopySellValues(long sourceTypeId, long targetTypeId, IReadOnlyCollection<long> itemIds, bool isRate, bool isPlus, decimal value, decimal? discount, decimal rounding)
+        {
+            Demand();
+            if (sourceTypeId == 0) throw new InvalidOperationException("اختر نوع السعر المصدر.");
+            if (targetTypeId == 0) throw new InvalidOperationException("اختر نوع السعر المطلوب تعديله.");
+            if (sourceTypeId == targetTypeId) throw new InvalidOperationException("نوع السعر المطلوب هو نفس المصدر؛ استخدم تبويب «تعديل أسعار الأصناف المحددة».");
+            if (itemIds != null && itemIds.Count == 0) throw new InvalidOperationException("اختر الأصناف المراد تعديل أسعارها.");
+            CheckAdjust(isRate, isPlus, value, discount, rounding);
+            return RunTx(opp =>
+            {
+                var all = LoadTypes(opp);
+                if (all.All(x => x.Id != sourceTypeId)) throw new InvalidOperationException("نوع السعر المصدر غير موجود.");
+                var target = all.FirstOrDefault(x => x.Id == targetTypeId) ?? throw new InvalidOperationException("نوع السعر المطلوب غير موجود.");
+                if (target.Master_Id != 0)
+                    throw new InvalidOperationException($"«{target.Name}» قائمة مشتقة؛ أسعارها تُحسب تلقائياً من أمها. غيّر قاعدتها من «أنواع الأسعار».");
+                if (Descendants(all, targetTypeId).Contains(sourceTypeId))
+                    throw new InvalidOperationException("المصدر مشتق من النوع المطلوب؛ النسخ سيدور فى حلقة.");
+                var src = itemIds == null
+                    ? opp.db.Database.SqlQuery<long>($"SELECT DISTINCT CAST(Item_ID AS bigint) AS Value FROM Price_Type_Sell_Values WHERE Price_Type_List_ID = {sourceTypeId}").ToList()
+                    : itemIds.Distinct().ToList();
+                if (src.Count == 0) throw new InvalidOperationException("لا توجد أسعار فى نوع السعر المصدر.");
+                var srcVals = CurrentValues(opp, sourceTypeId, src);
+                var missing = src.Where(i => !srcVals.ContainsKey(i)).ToList();
+                if (missing.Count > 0) throw new InvalidOperationException($"{missing.Count} صنف ليس لها سعر فى المصدر؛ حدّث العرض وأعد الاختيار.");
+                var tgtVals = CurrentValues(opp, targetTypeId, src);
+                foreach (long item in src)
+                {
+                    decimal np = Adjust(srcVals[item].Price, isRate, isPlus, value, rounding);
+                    decimal nd = discount ?? (tgtVals.TryGetValue(item, out var tv) ? tv.Discount : 0);
+                    if (np < 0) throw new InvalidOperationException("بعض الأسعار ستصبح سالبة؛ قلّل النقص.");
+                    if (nd > np) throw new InvalidOperationException($"الخصم ({nd:0.##}) سيصبح أكبر من السعر ({np:0.##}) لبعض الأصناف.");
+                    Upsert(opp, targetTypeId, item, np);
+                    if (discount != null) opp.db.Database.ExecuteSql($"UPDATE Price_Type_Sell_Values SET CommisionValue = {Math.Round(nd, 2)} WHERE Item_ID = {item} AND Price_Type_List_ID = {targetTypeId}");
+                }
+                RecomputeChildren(opp, all, targetTypeId, src);
+                return src.Count;
+            });
+        }
+
+        /// <summary>عدد الأصناف المسعَّرة فى نوع (لمعاينة «نوع = نوع آخر» قبل التنفيذ).</summary>
+        public int CountPricedItems(long typeId) => typeId == 0 ? 0 : Run(opp => opp.db.Database.SqlQuery<int>(
+            $"SELECT COUNT(DISTINCT Item_ID) AS Value FROM Price_Type_Sell_Values WHERE Price_Type_List_ID = {typeId}").AsEnumerable().First());
+
+        /// <summary>السعر بعد التعديل (نفس حساب الخادم) — تستعمله الواجهة لعمود «السعر الجديد».</summary>
+        public static decimal Adjust(decimal price, bool isRate, bool isPlus, decimal value, decimal rounding)
+        {
+            decimal delta = isRate ? price * value / 100m : value;
+            return RoundTo(price + (isPlus ? delta : -delta), rounding);
+        }
+
+        private static void CheckAdjust(bool isRate, bool isPlus, decimal value, decimal? discount, decimal rounding)
+        {
+            if (value < 0) throw new InvalidOperationException("قيمة التعديل لا تكون سالبة؛ اختر «نقص» بدلاً من ذلك.");
+            if (isRate && !isPlus && value >= 100) throw new InvalidOperationException("نسبة النقص يجب أن تقل عن 100%.");
+            if (discount < 0) throw new InvalidOperationException("الخصم لا يكون سالباً.");
+            if (!Roundings.Contains(rounding)) throw new InvalidOperationException("خطوة التقريب غير صحيحة.");
+        }
+
+        private class PriceDisc
+        {
+            public long Item_Id { get; set; }
+            public decimal Price { get; set; }
+            public decimal Discount { get; set; }
+        }
+
+        /// <summary>السعر والخصم الحاليان لأصناف فى نوع (أول صف لكل صنف بالترتيب ID كبقية الخدمة).</summary>
+        private static Dictionary<long, (decimal Price, decimal Discount)> CurrentValues(operations opp, long typeId, List<long> itemIds)
+        {
+            var res = new Dictionary<long, (decimal, decimal)>();
+            // أرقام الأصناف أعداد صحيحة فتُضمَّن نصاً فى IN بأمان؛ على دفعات لتجنب حد معاملات SQL
+            foreach (var chunk in itemIds.Chunk(1000))
+            {
+                var rows = opp.db.Database.SqlQueryRaw<PriceDisc>(
+                    "SELECT Item_Id, Price, Discount FROM (SELECT CAST(Item_ID AS bigint) AS Item_Id, CAST(ISNULL(PriceUnit, 0) AS decimal(18,4)) AS Price, " +
+                    "CAST(ISNULL(CommisionValue, 0) AS decimal(18,4)) AS Discount, ROW_NUMBER() OVER (PARTITION BY Item_ID ORDER BY ID) AS Rn " +
+                    "FROM Price_Type_Sell_Values WHERE Price_Type_List_ID = {0} AND Item_ID IN (" + string.Join(",", chunk) + ")) x WHERE Rn = 1", typeId).ToList();
+                foreach (var r in rows) res[r.Item_Id] = (r.Price, r.Discount);
+            }
+            return res;
         }
 
         // ===================== التعديل الجماعى =====================
@@ -459,6 +728,166 @@ ORDER BY c.Name, i.Item_Name").ToList());
         public void DeleteCustomerPrice(long id) { Demand(); Run(opp => opp.db.Database.ExecuteSql($"DELETE FROM Customer_Price WHERE Id = {id}")); }
         public void DeleteSupplierPrice(long id) { Demand(); Run(opp => opp.db.Database.ExecuteSql($"DELETE FROM Supplier_Price WHERE Id = {id}")); }
 
+        // ===================== أسعار مشتريات الأصناف (بدل Supplier_Price / Suppliers_PriceEditFRM) =====================
+
+        /// <summary>حذف عدة أسعار موردين معاً (زر BtnDelet القديم يحذف كل الصفوف المحددة) فى معاملة واحدة. يرجع عدد المحذوف.</summary>
+        public int DeleteSupplierPrices(IReadOnlyCollection<long> ids)
+        {
+            Demand();
+            var list = (ids ?? Array.Empty<long>()).Distinct().ToList();
+            if (list.Count == 0) throw new InvalidOperationException("اختر الأسعار المراد حذفها.");
+            return RunTx(opp => list.Sum(id => opp.db.Database.ExecuteSql($"DELETE FROM Supplier_Price WHERE Id = {id}")));
+        }
+
+        private class ItemRowId
+        {
+            public long Item_Id { get; set; }
+            public long Row_Id { get; set; }
+        }
+
+        public class SupplierPriceRow
+        {
+            public long Id { get; set; }
+            public long Supplier_Id { get; set; }
+            public string Supplier_Name { get; set; }
+            public long Item_Id { get; set; }
+            public string Item_Code { get; set; }
+            public string Item_Name { get; set; }
+            public long Category_Id { get; set; }
+            public string Category { get; set; }
+            public string Unit { get; set; }
+            /// <summary>سعر الشراء فى بطاقة الصنف (الوحدة الكبرى) للمقارنة.</summary>
+            public decimal Card_Price { get; set; }
+            public long Type_Id { get; set; }
+            public string Type_Name { get; set; }
+            public decimal Price { get; set; }
+        }
+
+        /// <summary>
+        /// أسعار الموردين بفلاتر الشاشة القديمة: الفئة، الصنف، المورد، نوع سعر الشراء (0 = الكل فى الأربعة؛ typeId = -1 = بدون نوع)
+        /// مع بحث نصى اختيارى بالصنف أو المورد. أول {top} صف.
+        /// </summary>
+        public List<SupplierPriceRow> ListSupplierPriceRows(long categoryId, long itemId, long supplierId, long typeId, string text, int top = 1000)
+        {
+            string t = (text ?? "").Trim();
+            string like = "%" + t + "%";
+            int n = Math.Clamp(top, 1, 5000);
+            return Run(opp => opp.db.Database.SqlQuery<SupplierPriceRow>($@"
+SELECT TOP ({n}) CAST(p.Id AS bigint) AS Id, CAST(p.Supplier_Id AS bigint) AS Supplier_Id, ISNULL(s.Name, N'') AS Supplier_Name,
+       CAST(p.Item_Id AS bigint) AS Item_Id, ISNULL(i.code, N'') AS Item_Code, ISNULL(i.Item_Name, N'') AS Item_Name,
+       CAST(ISNULL(i.Item_Category_ID, 0) AS bigint) AS Category_Id, ISNULL(c.Category_Name, N'') AS Category, ISNULL(u.B_Unit, N'') AS Unit,
+       CAST(ISNULL(i.P_price_LargeUnit, ISNULL(i.P_Price, 0)) AS decimal(18,4)) AS Card_Price,
+       CAST(ISNULL(p.Price_PurchaseType, 0) AS bigint) AS Type_Id, ISNULL(LTRIM(RTRIM(pt.Price_Name)), N'') AS Type_Name,
+       CAST(ISNULL(p.PriceUnit, 0) AS decimal(18,4)) AS Price
+FROM Supplier_Price p
+JOIN Item i ON i.id = p.Item_Id
+LEFT JOIN Supplier s ON s.Id = p.Supplier_Id
+LEFT JOIN Item_Category c ON c.ID = i.Item_Category_ID
+LEFT JOIN unit u ON u.id = i.Unit_Id
+LEFT JOIN Price_Purhase_Type_List pt ON pt.Id = p.Price_PurchaseType
+WHERE ({categoryId} = 0 OR i.Item_Category_ID = {categoryId})
+  AND ({itemId} = 0 OR p.Item_Id = {itemId})
+  AND ({supplierId} = 0 OR p.Supplier_Id = {supplierId})
+  AND ({typeId} = 0 OR ({typeId} = -1 AND ISNULL(p.Price_PurchaseType, 0) = 0) OR p.Price_PurchaseType = {typeId})
+  AND ({t} = N'' OR i.Item_Name LIKE {like} OR i.code = {t} OR s.Name LIKE {like})
+ORDER BY c.Category_Name, i.Item_Name, s.Name, pt.Price_Name").ToList());
+        }
+
+        /// <summary>السعر المسجَّل لنفس (المورد × الصنف × نوع السعر) إن وُجد — لتنبيه «سيُستبدل» عند الإضافة.</summary>
+        public SupplierPriceRow FindSupplierPrice(long supplierId, long itemId, long typeId) =>
+            supplierId == 0 || itemId == 0 ? null : Run(opp => opp.db.Database.SqlQuery<SupplierPriceRow>($@"
+SELECT TOP 1 CAST(Id AS bigint) AS Id, CAST(Supplier_Id AS bigint) AS Supplier_Id, CAST(N'' AS nvarchar(1)) AS Supplier_Name, CAST(Item_Id AS bigint) AS Item_Id,
+       CAST(N'' AS nvarchar(1)) AS Item_Code, CAST(N'' AS nvarchar(1)) AS Item_Name, CAST(0 AS bigint) AS Category_Id, CAST(N'' AS nvarchar(1)) AS Category,
+       CAST(N'' AS nvarchar(1)) AS Unit, CAST(0 AS decimal(18,4)) AS Card_Price, CAST(ISNULL(Price_PurchaseType, 0) AS bigint) AS Type_Id,
+       CAST(N'' AS nvarchar(1)) AS Type_Name, CAST(ISNULL(PriceUnit, 0) AS decimal(18,4)) AS Price
+FROM Supplier_Price WHERE Supplier_Id = {supplierId} AND Item_Id = {itemId} AND ISNULL(Price_PurchaseType, 0) = {typeId} ORDER BY Id").AsEnumerable().FirstOrDefault());
+
+        /// <summary>سعر الشراء فى بطاقة الصنف (الوحدة الكبرى) للمقارنة فى نافذة السعر.</summary>
+        public decimal GetItemPurchasePrice(long itemId) => Run(opp => opp.db.Database.SqlQuery<decimal>($@"
+SELECT CAST(ISNULL(P_price_LargeUnit, ISNULL(P_Price, 0)) AS decimal(18,4)) AS Value FROM Item WHERE id = {itemId}").AsEnumerable().FirstOrDefault());
+
+        /// <summary>
+        /// سعر واحد لمورد على كل أصناف فئة نشطة (اختيار «كل الأصناف» فى Suppliers_PriceEditFRM القديمة).
+        /// overwrite = true يستبدل الأسعار الموجودة لنفس المورد والنوع؛ false يضيف للأصناف التى ليس لها سعر فقط. يرجع (أُضيف، عُدِّل).
+        /// </summary>
+        public (int Added, int Updated) SaveSupplierPriceForCategory(long supplierId, long categoryId, decimal price, long typeId, bool overwrite)
+        {
+            Demand();
+            if (supplierId == 0) throw new InvalidOperationException("اختر المورد.");
+            if (categoryId == 0) throw new InvalidOperationException("اختر فئة الصنف.");
+            if (price <= 0) throw new InvalidOperationException("أدخل السعر.");
+            int ptype = checked((int)typeId);
+            decimal p = Math.Round(price, 4);
+            // معاملة واحدة: كل أصناف الفئة تُحفظ معاً أو لا يُحفظ شىء
+            return RunTx(opp =>
+            {
+                if (opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM Supplier WHERE Id = {supplierId}").AsEnumerable().First() == 0)
+                    throw new InvalidOperationException("المورد غير موجود.");
+                if (typeId != 0 && opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM Price_Purhase_Type_List WHERE Id = {typeId}").AsEnumerable().First() == 0)
+                    throw new InvalidOperationException("نوع سعر الشراء غير موجود.");
+                var items = opp.db.Database.SqlQuery<long>($@"SELECT CAST(id AS bigint) AS Value FROM Item
+WHERE Item_Category_ID = {categoryId} AND ISNULL(Active_flage, 1) NOT IN (0, -1)").ToList();
+                if (items.Count == 0) throw new InvalidOperationException("لا توجد أصناف نشطة فى هذه الفئة.");
+                // أول صف لكل صنف (بالترتيب Id) لنفس المورد والنوع، كما يعدّله SaveParty
+                var existing = opp.db.Database.SqlQuery<ItemRowId>($@"SELECT Item_Id, CAST(Id AS bigint) AS Row_Id FROM (
+    SELECT CAST(p.Item_Id AS bigint) AS Item_Id, p.Id, ROW_NUMBER() OVER (PARTITION BY p.Item_Id ORDER BY p.Id) AS Rn
+    FROM Supplier_Price p JOIN Item i ON i.id = p.Item_Id
+    WHERE p.Supplier_Id = {supplierId} AND ISNULL(p.Price_PurchaseType, 0) = {ptype} AND i.Item_Category_ID = {categoryId}) x WHERE Rn = 1")
+                    .ToList().ToDictionary(x => x.Item_Id, x => x.Row_Id);
+                DateTime now = DateTime.Now;
+                int added = 0, updated = 0;
+                foreach (long item in items)
+                {
+                    if (existing.TryGetValue(item, out long rowId))
+                    {
+                        if (!overwrite) continue;
+                        opp.db.Database.ExecuteSql($"UPDATE Supplier_Price SET PriceUnit = {p}, Update_ServerDateTime = {now}, EditOperationDate = {now}, Edit_User_Id = {Common.User_Id} WHERE Id = {rowId}");
+                        updated++;
+                    }
+                    else
+                    {
+                        Insert(opp, "Supplier_Price", "Id", "Supplier_Id, Item_Id, PriceUnit, Store_id, Price_PurchaseType, OperationDate, User_Id, Branch_Id, Insert_ServerDateTime",
+                               "{1}, {2}, {3}, 0, {4}, {5}, {6}, {7}, {8}", supplierId, item, p, ptype, now.Date, Common.User_Id, Common.Branch_Id, now);
+                        added++;
+                    }
+                }
+                return (added, updated);
+            });
+        }
+
+        /// <summary>
+        /// حفظ سعر مورد من نافذة الشاشة: id = 0 إضافة (أو استبدال سعر نفس المورد × الصنف × النوع كـ SaveSupplierPrice)؛
+        /// id ≠ 0 تعديل الصف نفسه بما فيه المورد/الصنف/النوع (كـ Edit_Supplier_Price القديم)، ويُرفض لو صار مطابقاً لصف آخر.
+        /// السعر أكبر من صفر (القديمة كانت تقبل الصفر).
+        /// </summary>
+        public long SaveSupplierPriceRow(long id, long supplierId, long itemId, decimal price, long typeId)
+        {
+            if (price <= 0) throw new InvalidOperationException("أدخل السعر.");
+            if (id == 0) return SaveSupplierPrice(supplierId, itemId, price, typeId);
+            Demand();
+            if (supplierId == 0) throw new InvalidOperationException("اختر المورد.");
+            if (itemId == 0) throw new InvalidOperationException("اختر الصنف.");
+            return RunTx(opp =>
+            {
+                if (opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM Supplier_Price WHERE Id = {id}").AsEnumerable().First() == 0)
+                    throw new InvalidOperationException("السعر غير موجود؛ ربما حُذف. حدّث العرض.");
+                if (opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM Supplier WHERE Id = {supplierId}").AsEnumerable().First() == 0)
+                    throw new InvalidOperationException("المورد غير موجود.");
+                if (opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM Item WHERE id = {itemId}").AsEnumerable().First() == 0)
+                    throw new InvalidOperationException("الصنف غير موجود.");
+                if (typeId != 0 && opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM Price_Purhase_Type_List WHERE Id = {typeId}").AsEnumerable().First() == 0)
+                    throw new InvalidOperationException("نوع سعر الشراء غير موجود.");
+                int ptype = checked((int)typeId);
+                if (opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM Supplier_Price WHERE Id <> {id} AND Supplier_Id = {supplierId} AND Item_Id = {itemId} AND ISNULL(Price_PurchaseType, 0) = {ptype}").AsEnumerable().First() > 0)
+                    throw new InvalidOperationException("يوجد سعر آخر لنفس المورد والصنف ونوع السعر؛ عدّله هو أو احذفه أولاً.");
+                DateTime now = DateTime.Now;
+                decimal p = Math.Round(price, 4);
+                opp.db.Database.ExecuteSql($@"UPDATE Supplier_Price SET Supplier_Id = {supplierId}, Item_Id = {itemId}, PriceUnit = {p}, Price_PurchaseType = {ptype},
+    Update_ServerDateTime = {now}, EditOperationDate = {now}, Edit_User_Id = {Common.User_Id} WHERE Id = {id}");
+                return id;
+            });
+        }
+
         /// <summary>
         /// سعر العميل الخاص للصنف (للفاتورة): المخزن المحدد أولاً ثم «كل المخازن» (Store_id = 0)؛ null = لا سعر خاص.
         /// الأولوية فى الفاتورة: سعر العميل ← قائمة أسعاره ← سعر الصنف.
@@ -484,12 +913,16 @@ ORDER BY CASE WHEN Store_id = {storeId} AND {storeId} <> 0 THEN 0 ELSE 1 END, Id
         }
 
         /// <summary>بحث الأصناف النشطة بالاسم أو الكود أو الباركود (أول 30)؛ الاسم يُعرض «الكود - الاسم».</summary>
-        public List<Option> SearchItems(string text)
+        public List<Option> SearchItems(string text) => SearchItems(text, 0);
+
+        /// <summary>كـ SearchItems مع قصر النتيجة على فئة (categoryId = 0 كل الفئات).</summary>
+        public List<Option> SearchItems(string text, long categoryId)
         {
             string t = (text ?? "").Trim();
             string like = "%" + t + "%";
             return Run(opp => opp.db.Database.SqlQuery<Option>($@"SELECT TOP (30) id AS Id, ISNULL(code + N' - ', N'') + ISNULL(Item_Name, N'') AS Name FROM Item
-WHERE ISNULL(Active_flage, 1) NOT IN (0, -1) AND ({t} = N'' OR Item_Name LIKE {like} OR code = {t} OR BarCode2 = {t} OR BarCode3 = {t}) ORDER BY Item_Name").ToList());
+WHERE ISNULL(Active_flage, 1) NOT IN (0, -1) AND ({categoryId} = 0 OR Item_Category_ID = {categoryId})
+  AND ({t} = N'' OR Item_Name LIKE {like} OR code = {t} OR BarCode2 = {t} OR BarCode3 = {t}) ORDER BY Item_Name").ToList());
         }
 
         // ---------- أنواع سعر الشراء (قائمة بسيطة ضمن أسعار الموردين) ----------
@@ -515,6 +948,74 @@ OUTPUT CAST(INSERTED.Id AS bigint) AS Value VALUES ({n}, 1, -1, {now.Date}, {Com
                 opp.db.Database.ExecuteSql($@"INSERT INTO Price_Purhase_Type_List (Id, Price_Name, IS_Active, Price_Type_List_Master_Id, OperationDate, User_Id, Branch_Id, Insert_ServerDateTime)
 VALUES ({id}, {n}, 1, -1, {now.Date}, {Common.User_Id}, {Common.Branch_Id}, {now})");
                 return id;
+            });
+        }
+
+        // ===================== أنواع سعر المشتريات (بدل Price_Type_List_PurchasFRM / Price_Type_Edit_PurchasFRM) =====================
+
+        public class PurchaseType
+        {
+            public long Id { get; set; }
+            public string Name { get; set; }
+            public bool Is_Active { get; set; }
+            /// <summary>عدد أسعار الموردين (Supplier_Price) المسجَّلة بهذا النوع.</summary>
+            public int Prices { get; set; }
+            public int Suppliers { get; set; }
+        }
+
+        /// <summary>كل أنواع سعر الشراء (النشطة والموقوفة) مع عدد الأسعار والموردين المرتبطين بكل نوع.</summary>
+        public List<PurchaseType> ListPurchaseTypesAll() => Run(opp => opp.db.Database.SqlQuery<PurchaseType>($@"
+SELECT CAST(t.Id AS bigint) AS Id, ISNULL(LTRIM(RTRIM(t.Price_Name)), N'') AS Name,
+       CAST(CASE WHEN ISNULL(t.IS_Active, 1) = 1 THEN 1 ELSE 0 END AS bit) AS Is_Active,
+       (SELECT COUNT(*) FROM Supplier_Price p WHERE p.Price_PurchaseType = t.Id) AS Prices,
+       (SELECT COUNT(DISTINCT p.Supplier_Id) FROM Supplier_Price p WHERE p.Price_PurchaseType = t.Id) AS Suppliers
+FROM Price_Purhase_Type_List t ORDER BY t.Price_Name").ToList());
+
+        /// <summary>إضافة (id = 0) أو إعادة تسمية نوع سعر شراء. الاسم مطلوب، حتى 100 حرف، وغير مكرر.</summary>
+        public long SavePurchaseType(long id, string name)
+        {
+            string n = (name ?? "").Trim();
+            if (n.Length > 100) throw new InvalidOperationException("اسم نوع سعر الشراء أطول من 100 حرف.");
+            if (id == 0) return AddPurchaseType(n);
+            Demand();
+            if (n.Length == 0) throw new InvalidOperationException("اسم نوع سعر الشراء مطلوب.");
+            return RunTx(opp =>
+            {
+                if (opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM Price_Purhase_Type_List WHERE Id = {id}").AsEnumerable().First() == 0)
+                    throw new InvalidOperationException("نوع سعر الشراء غير موجود.");
+                if (opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM Price_Purhase_Type_List WHERE Id <> {id} AND LTRIM(RTRIM(Price_Name)) = {n}").AsEnumerable().First() > 0)
+                    throw new InvalidOperationException("الاسم موجود بالفعل.");
+                DateTime now = DateTime.Now;
+                opp.db.Database.ExecuteSql($@"UPDATE Price_Purhase_Type_List SET Price_Name = {n}, Update_ServerDateTime = {now}, EditOperationDate = {now}, Edit_User_Id = {Common.User_Id} WHERE Id = {id}");
+                return id;
+            });
+        }
+
+        /// <summary>إيقاف/تفعيل نوع سعر شراء (زر BtnEditStatus القديم، هنا لكل صف على حدة). الموقوف لا يظهر فى اختيارات الأسعار الجديدة وأسعاره القديمة تبقى.</summary>
+        public void SetPurchaseTypeActive(long id, bool active)
+        {
+            Demand();
+            RunTx(opp =>
+            {
+                DateTime now = DateTime.Now;
+                int n = opp.db.Database.ExecuteSql($@"UPDATE Price_Purhase_Type_List SET IS_Active = {(active ? 1 : 0)}, Update_ServerDateTime = {now}, EditOperationDate = {now}, Edit_User_Id = {Common.User_Id} WHERE Id = {id}");
+                if (n == 0) throw new InvalidOperationException("نوع سعر الشراء غير موجود.");
+                return n;
+            });
+        }
+
+        /// <summary>حذف نوع سعر شراء غير مستعمل فقط؛ المستعمل فى أسعار الموردين يُوقف بدلاً من الحذف.
+        /// (زر الحذف القديم كان يوقف نوع سعر <b>بيع</b> بنفس الرقم بالخطأ — Delete_Price_Name.)</summary>
+        public void DeletePurchaseType(long id)
+        {
+            Demand();
+            RunTx(opp =>
+            {
+                int used = opp.db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM Supplier_Price WHERE Price_PurchaseType = {id}").AsEnumerable().First();
+                if (used > 0) throw new InvalidOperationException($"مستعمل فى {used} سعر مورد؛ أوقفه بدلاً من الحذف.");
+                int n = opp.db.Database.ExecuteSql($"DELETE FROM Price_Purhase_Type_List WHERE Id = {id}");
+                if (n == 0) throw new InvalidOperationException("نوع سعر الشراء غير موجود.");
+                return n;
             });
         }
 

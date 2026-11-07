@@ -4456,4 +4456,198 @@
   <data name="ICD_UNKNOWNREF" xml:space="preserve"><value>نوع مرجع القيد غير موجود فى سجل المصادر (للعلم فقط).</value></data>
   <data name="IC_LEDGER" xml:space="preserve"><value>فرق المرحَّل عن أرصدة الاستاذ</value></data>
   <data name="ICD_LEDGER" xml:space="preserve"><value>مجموع مدين القيود المرحَّلة لا يطابق مجموعه فى أرصدة الاستاذ لفترة/فرع (ترحيل ناقص أو قيد عُدِّل بعد الترحيل).</value></data>
+  <data name="PT_Title" xml:space="preserve"><value>أنواع أسعار الأصناف</value></data>
+  <data name="PT_Sub" xml:space="preserve"><value>كل نوع سعر إما قائمة أساسية يُدخل سعرها يدوياً، أو يساوى نوعاً آخر مع زيادة أو نقص بنسبة أو قيمة</value></data>
+  <data name="PT_New" xml:space="preserve"><value>نوع سعر جديد</value></data>
+  <data name="PT_Formula" xml:space="preserve"><value>طريقة الحساب</value></data>
+  <data name="PT_Base" xml:space="preserve"><value>قائمة أساسية</value></data>
+  <data name="PT_Equals" xml:space="preserve"><value>= {0} {1}</value></data>
+  <data name="PT_Customers" xml:space="preserve"><value>العملاء</value></data>
+  <data name="PT_Items" xml:space="preserve"><value>الأصناف</value></data>
+  <data name="PT_Status" xml:space="preserve"><value>الحالة</value></data>
+  <data name="PT_All" xml:space="preserve"><value>الكل</value></data>
+  <data name="PT_ActiveOnly" xml:space="preserve"><value>النشطة</value></data>
+  <data name="PT_Stopped" xml:space="preserve"><value>الموقوفة</value></data>
+  <data name="PT_Activated" xml:space="preserve"><value>تم تفعيل «{0}»</value></data>
+  <data name="PT_Deactivated" xml:space="preserve"><value>تم إيقاف «{0}»</value></data>
+  <data name="PT_ConfirmDelete" xml:space="preserve"><value>حذف نوع السعر «{0}»؟ لا يمكن التراجع. الحذف مسموح فقط لنوع غير مستعمل؛ وإلا أوقفه.</value></data>
+  <data name="PT_Empty" xml:space="preserve"><value>لا توجد أنواع أسعار مطابقة — أضف نوع سعر جديد</value></data>
+  <data name="PT_OpenPrices" xml:space="preserve"><value>أسعار الأصناف فى القوائم</value></data>
+  <data name="PT_ManageTypes" xml:space="preserve"><value>شاشة أنواع الأسعار</value></data>
+  <data name="PT_Preview" xml:space="preserve"><value>مثال: إذا كان سعر «{0}» = 100 يكون السعر = {1}</value></data>
+  <data name="PT_Rate" xml:space="preserve"><value>نسبة</value></data>
+  <data name="PT_Search" xml:space="preserve"><value>بحث باسم نوع السعر</value></data>
+  <data name="SPV_Title" xml:space="preserve"><value>تصنيف أسعار مبيعات الأصناف</value></data>
+  <data name="SPV_Sub" xml:space="preserve"><value>سعر البيع وخصم البيع لكل صنف فى كل نوع سعر، مع التصفية بفئة الصنف</value></data>
+  <data name="SPV_ManageLists" xml:space="preserve"><value>إدارة قوائم الأسعار</value></data>
+  <data name="SPV_Add" xml:space="preserve"><value>إضافة سعر</value></data>
+  <data name="SPV_Filter" xml:space="preserve"><value>عرض الأسعار</value></data>
+  <data name="SPV_PriceType" xml:space="preserve"><value>نوع السعر</value></data>
+  <data name="SPV_AllTypes" xml:space="preserve"><value>كل أنواع الأسعار</value></data>
+  <data name="SPV_Inactive" xml:space="preserve"><value>موقوف</value></data>
+  <data name="SPV_Category" xml:space="preserve"><value>فئة الصنف</value></data>
+  <data name="SPV_Count" xml:space="preserve"><value>عدد الأسعار:</value></data>
+  <data name="SPV_Items" xml:space="preserve"><value>الأصناف:</value></data>
+  <data name="SPV_WithDiscount" xml:space="preserve"><value>بخصم:</value></data>
+  <data name="SPV_TopNote" xml:space="preserve"><value>يُعرض أول {0} سعر — ضيّق البحث</value></data>
+  <data name="SPV_CardPrice" xml:space="preserve"><value>سعر البطاقة</value></data>
+  <data name="SPV_SalePrice" xml:space="preserve"><value>سعر البيع</value></data>
+  <data name="SPV_Discount" xml:space="preserve"><value>خصم البيع</value></data>
+  <data name="SPV_Net" xml:space="preserve"><value>الصافى</value></data>
+  <data name="SPV_Derived" xml:space="preserve"><value>مشتق</value></data>
+  <data name="SPV_DerivedHint" xml:space="preserve"><value>سعر محسوب من قائمة أم؛ يتغير عند تغيير سعرها</value></data>
+  <data name="SPV_Edit" xml:space="preserve"><value>تعديل</value></data>
+  <data name="SPV_EditOf" xml:space="preserve"><value>تعديل سعر {0}</value></data>
+  <data name="SPV_DeleteOf" xml:space="preserve"><value>حذف سعر {0}</value></data>
+  <data name="SPV_Empty" xml:space="preserve"><value>لا توجد أسعار مسجلة لهذا الاختيار</value></data>
+  <data name="SPV_AddTitle" xml:space="preserve"><value>إضافة سعر صنف</value></data>
+  <data name="SPV_EditTitle" xml:space="preserve"><value>تعديل سعر صنف</value></data>
+  <data name="SPV_ItemHelp" xml:space="preserve"><value>ابحث بالاسم أو الكود أو الباركود</value></data>
+  <data name="SPV_DiscountHelp" xml:space="preserve"><value>قيمة تخصم من سعر البيع (ليست نسبة)</value></data>
+  <data name="SPV_DerivedWarn" xml:space="preserve"><value>هذا النوع مشتق من «{0}»: سعره يُحسب تلقائياً ويُستبدل عند تغيير سعر الأم.</value></data>
+  <data name="SPV_OverrideDerived" xml:space="preserve"><value>تعديل السعر يدوياً رغم ذلك</value></data>
+  <data name="SPV_ExistsWarn" xml:space="preserve"><value>للصنف سعر مسجل فى هذا النوع ({0}، خصم {1}) — الحفظ يستبدله.</value></data>
+  <data name="SPV_CascadeNote" xml:space="preserve"><value>سيعاد حساب سعر الصنف فى {0} قائمة مشتقة من هذا النوع.</value></data>
+  <data name="SPV_DeleteConfirm" xml:space="preserve"><value>حذف سعر «{0}» من «{1}»؟</value></data>
+  <data name="SPV_DeleteCascade" xml:space="preserve"><value>سيُحذف أيضاً من القوائم المشتقة منه.</value></data>
+  <data name="EPV_Title" xml:space="preserve"><value>تعديل أسعار مبيعات الأصناف</value></data>
+  <data name="EPV_Sub" xml:space="preserve"><value>زيادة أو نقص سعر البيع للأصناف المحددة، أو بناء نوع سعر من نوع آخر بنسبة أو قيمة</value></data>
+  <data name="EPV_Tab1" xml:space="preserve"><value>تعديل الأصناف المحددة</value></data>
+  <data name="EPV_Tab2" xml:space="preserve"><value>نوع سعر من نوع آخر (كل الأصناف)</value></data>
+  <data name="EPV_Tab3" xml:space="preserve"><value>نوع سعر من نوع آخر (أصناف محددة)</value></data>
+  <data name="EPV_PickItems" xml:space="preserve"><value>اختر نوع السعر والأصناف</value></data>
+  <data name="EPV_PickTypeFirst" xml:space="preserve"><value>اختر نوع السعر لعرض أصنافه وأسعارها</value></data>
+  <data name="EPV_PickSourceItems" xml:space="preserve"><value>اختر نوع السعر المصدر والأصناف</value></data>
+  <data name="EPV_PickSourceFirst" xml:space="preserve"><value>اختر نوع السعر المصدر لعرض أصنافه</value></data>
+  <data name="EPV_HowToChange" xml:space="preserve"><value>طريقة التعديل</value></data>
+  <data name="EPV_Types" xml:space="preserve"><value>نوع السعر المطلوب والمصدر</value></data>
+  <data name="EPV_Target" xml:space="preserve"><value>نوع السعر المطلوب تعديله</value></data>
+  <data name="EPV_TargetHelp" xml:space="preserve"><value>الأنواع الأساسية فقط؛ المشتقة تُحسب من أمها</value></data>
+  <data name="EPV_Source" xml:space="preserve"><value>يساوى نوع السعر</value></data>
+  <data name="EPV_SourceCount" xml:space="preserve"><value>أصناف مسعَّرة فى المصدر:</value></data>
+  <data name="EPV_Selected" xml:space="preserve"><value>المحدد:</value></data>
+  <data name="EPV_SelectAll" xml:space="preserve"><value>تحديد الكل فى العرض</value></data>
+  <data name="EPV_ClearSel" xml:space="preserve"><value>إلغاء التحديد</value></data>
+  <data name="EPV_SourcePrice" xml:space="preserve"><value>سعر المصدر</value></data>
+  <data name="EPV_TargetPrice" xml:space="preserve"><value>السعر الحالى فى المطلوب</value></data>
+  <data name="EPV_NewPrice" xml:space="preserve"><value>السعر الجديد</value></data>
+  <data name="EPV_NoPrice" xml:space="preserve"><value>لا سعر (يُضاف)</value></data>
+  <data name="EPV_DiscOverPrice" xml:space="preserve"><value>الخصم أكبر من السعر الجديد</value></data>
+  <data name="EPV_NoPrices" xml:space="preserve"><value>لا توجد أسعار مطابقة فى هذا النوع</value></data>
+  <data name="EPV_Required" xml:space="preserve"><value>المطلوب</value></data>
+  <data name="EPV_RateOrValue" xml:space="preserve"><value>بالنسبة أو بالقيمة</value></data>
+  <data name="EPV_ByRate" xml:space="preserve"><value>نسبة %</value></data>
+  <data name="EPV_ByValue" xml:space="preserve"><value>قيمة</value></data>
+  <data name="EPV_RatePct" xml:space="preserve"><value>النسبة</value></data>
+  <data name="EPV_Amount" xml:space="preserve"><value>المبلغ</value></data>
+  <data name="EPV_ZeroHelp" xml:space="preserve"><value>صفر = نفس السعر بلا تغيير</value></data>
+  <data name="EPV_SetDiscount" xml:space="preserve"><value>تحديد خصم بيع جديد</value></data>
+  <data name="EPV_DiscountHelp" xml:space="preserve"><value>قيمة لا نسبة، ولا تزيد عن السعر</value></data>
+  <data name="EPV_KeepDiscount" xml:space="preserve"><value>يبقى خصم كل صنف كما هو</value></data>
+  <data name="EPV_KeepDiscountTarget" xml:space="preserve"><value>الأصناف الموجودة فى المطلوب تحتفظ بخصمها، والجديدة بلا خصم</value></data>
+  <data name="EPV_AllowDerived" xml:space="preserve"><value>تعديل القائمة المشتقة على أى حال (يُستبدل عند تغيير سعر الأم)</value></data>
+  <data name="EPV_Formula" xml:space="preserve"><value>{0} = {1} {2}</value></data>
+  <data name="EPV_OthersUntouched" xml:space="preserve"><value>الأصناف غير المحددة لا تتغير</value></data>
+  <data name="EPV_ApplyN" xml:space="preserve"><value>تنفيذ على {0} صنف</value></data>
+  <data name="EPV_ConfirmTitle" xml:space="preserve"><value>تأكيد تعديل الأسعار</value></data>
+  <data name="EPV_Execute" xml:space="preserve"><value>تنفيذ</value></data>
+  <data name="EPV_NothingToChange" xml:space="preserve"><value>لا يوجد تغيير: أدخل قيمة التعديل أو حدّد خصماً جديداً.</value></data>
+  <data name="EPV_Confirm1" xml:space="preserve"><value>تعديل سعر {0} صنف فى «{1}» بـ {2}؟ سيُعاد حساب القوائم المشتقة منه.</value></data>
+  <data name="EPV_Confirm2" xml:space="preserve"><value>«{0}» = «{1}» {2} لعدد {3} صنف؟ الأسعار الموجودة فى «{0}» تُستبدل والناقصة تُضاف.</value></data>
+  <data name="EPV_Confirm3" xml:space="preserve"><value>«{0}» = «{1}» {2} للأصناف المحددة ({3} صنف) فقط؟</value></data>
+  <data name="SIP_Title" xml:space="preserve"><value>بحث أسعار الصنف</value></data>
+  <data name="SIP_Sub" xml:space="preserve"><value>ابحث عن الصنف لعرض سعره وخصمه فى كل نوع سعر، وأضف أو عدّل السعر من نافذة منبثقة</value></data>
+  <data name="SIP_Item" xml:space="preserve"><value>الصنف</value></data>
+  <data name="SIP_Code" xml:space="preserve"><value>الكود</value></data>
+  <data name="SIP_Unit" xml:space="preserve"><value>الوحدة</value></data>
+  <data name="SIP_Prices" xml:space="preserve"><value>أسعار الصنف حسب نوع السعر</value></data>
+  <data name="SIP_Priced" xml:space="preserve"><value>أنواع مسعَّرة:</value></data>
+  <data name="SIP_Unpriced" xml:space="preserve"><value>بلا سعر:</value></data>
+  <data name="SIP_ShowUnpriced" xml:space="preserve"><value>عرض الأنواع التى ليس لها سعر</value></data>
+  <data name="SIP_VsCard" xml:space="preserve"><value>مقابل سعر البطاقة</value></data>
+  <data name="SIP_DerivedFrom" xml:space="preserve"><value>مشتق من «{0}»</value></data>
+  <data name="SIP_EditIn" xml:space="preserve"><value>تعديل السعر فى {0}</value></data>
+  <data name="SIP_DeleteIn" xml:space="preserve"><value>حذف السعر من {0}</value></data>
+  <data name="SIP_AddIn" xml:space="preserve"><value>إضافة سعر فى {0}</value></data>
+  <data name="SIP_NoPrice" xml:space="preserve"><value>لا يوجد سعر</value></data>
+  <data name="SIP_NoTypes" xml:space="preserve"><value>لا توجد أنواع أسعار نشطة — أضفها من شاشة أنواع الأسعار</value></data>
+  <data name="SIP_NoPricesYet" xml:space="preserve"><value>لا توجد أسعار مسجلة لهذا الصنف بعد</value></data>
+  <data name="SIP_PickItem" xml:space="preserve"><value>اختر صنفاً لعرض أسعاره</value></data>
+  <data name="SIP_OldPrice" xml:space="preserve"><value>السعر الحالى</value></data>
+  <data name="PPT_Title" xml:space="preserve"><value>أنواع سعر المشتريات</value></data>
+  <data name="PPT_Sub" xml:space="preserve"><value>أنواع أسعار الشراء التى تُسجَّل بها أسعار الموردين للأصناف: إضافة وتعديل وإيقاف</value></data>
+  <data name="PPT_Add" xml:space="preserve"><value>إضافة نوع سعر</value></data>
+  <data name="PPT_List" xml:space="preserve"><value>الأنواع</value></data>
+  <data name="PPT_Show" xml:space="preserve"><value>العرض</value></data>
+  <data name="PPT_ShowActive" xml:space="preserve"><value>النشطة</value></data>
+  <data name="PPT_ShowInactive" xml:space="preserve"><value>الموقوفة</value></data>
+  <data name="PPT_ShowAll" xml:space="preserve"><value>الكل</value></data>
+  <data name="PPT_Search" xml:space="preserve"><value>بحث بالاسم</value></data>
+  <data name="PPT_Active" xml:space="preserve"><value>نشطة:</value></data>
+  <data name="PPT_Inactive" xml:space="preserve"><value>موقوفة:</value></data>
+  <data name="PPT_Name" xml:space="preserve"><value>اسم نوع السعر</value></data>
+  <data name="PPT_Prices" xml:space="preserve"><value>أسعار مسجلة</value></data>
+  <data name="PPT_Suppliers" xml:space="preserve"><value>الموردون</value></data>
+  <data name="PPT_Status" xml:space="preserve"><value>الحالة</value></data>
+  <data name="PPT_StatusOn" xml:space="preserve"><value>نشط</value></data>
+  <data name="PPT_StatusOff" xml:space="preserve"><value>موقوف</value></data>
+  <data name="PPT_ToggleOf" xml:space="preserve"><value>تفعيل أو إيقاف {0}</value></data>
+  <data name="PPT_EditOf" xml:space="preserve"><value>تعديل {0}</value></data>
+  <data name="PPT_DeleteOf" xml:space="preserve"><value>حذف {0}</value></data>
+  <data name="PPT_UsedHint" xml:space="preserve"><value>مستعمل فى أسعار الموردين — أوقفه بدلاً من الحذف</value></data>
+  <data name="PPT_Empty" xml:space="preserve"><value>لا توجد أنواع لهذا الاختيار</value></data>
+  <data name="PPT_AddTitle" xml:space="preserve"><value>إضافة نوع سعر شراء</value></data>
+  <data name="PPT_EditTitle" xml:space="preserve"><value>تعديل نوع سعر شراء</value></data>
+  <data name="PPT_RenameNote" xml:space="preserve"><value>الاسم الجديد يظهر فى {0} سعر مورد مسجل بهذا النوع.</value></data>
+  <data name="PPT_Added" xml:space="preserve"><value>أُضيف «{0}»</value></data>
+  <data name="PPT_Saved" xml:space="preserve"><value>حُفظ «{0}»</value></data>
+  <data name="PPT_Activated" xml:space="preserve"><value>فُعِّل «{0}»</value></data>
+  <data name="PPT_Deactivated" xml:space="preserve"><value>أُوقف «{0}»</value></data>
+  <data name="PPT_DeleteConfirm" xml:space="preserve"><value>حذف نوع السعر «{0}» نهائياً؟</value></data>
+  <data name="PPT_Deleted" xml:space="preserve"><value>حُذف «{0}»</value></data>
+  <data name="IPP_Title" xml:space="preserve"><value>أسعار مشتريات الأصناف</value></data>
+  <data name="IPP_Sub" xml:space="preserve"><value>سعر شراء كل صنف من كل مورد حسب نوع سعر الشراء، مع الإضافة والتعديل والحذف</value></data>
+  <data name="IPP_ItemAll" xml:space="preserve"><value>الصنف (الكل)</value></data>
+  <data name="IPP_SupplierAll" xml:space="preserve"><value>المورد (الكل)</value></data>
+  <data name="IPP_Type" xml:space="preserve"><value>نوع سعر الشراء</value></data>
+  <data name="IPP_AllTypes" xml:space="preserve"><value>كل الأنواع</value></data>
+  <data name="IPP_NoType" xml:space="preserve"><value>بدون نوع</value></data>
+  <data name="IPP_Search" xml:space="preserve"><value>بحث باسم الصنف أو الكود أو المورد</value></data>
+  <data name="IPP_Suppliers" xml:space="preserve"><value>الموردون:</value></data>
+  <data name="IPP_DeleteSelected" xml:space="preserve"><value>حذف المحدد ({0})</value></data>
+  <data name="IPP_Supplier" xml:space="preserve"><value>المورد</value></data>
+  <data name="IPP_Price" xml:space="preserve"><value>سعر الشراء</value></data>
+  <data name="IPP_CardPrice" xml:space="preserve"><value>سعر شراء البطاقة</value></data>
+  <data name="IPP_AddTitle" xml:space="preserve"><value>إضافة سعر مورد</value></data>
+  <data name="IPP_EditTitle" xml:space="preserve"><value>تعديل سعر مورد</value></data>
+  <data name="IPP_AllItems" xml:space="preserve"><value>نفس السعر لكل أصناف الفئة</value></data>
+  <data name="IPP_AllItemsNeedCat" xml:space="preserve"><value>لكل أصناف فئة: اختر الفئة أولاً</value></data>
+  <data name="IPP_OnlyMissing" xml:space="preserve"><value>إضافة للأصناف التى ليس لها سعر فقط</value></data>
+  <data name="IPP_Overwrite" xml:space="preserve"><value>استبدال الأسعار الموجودة أيضاً</value></data>
+  <data name="IPP_ExistsAdd" xml:space="preserve"><value>للمورد سعر مسجل لهذا الصنف بنفس النوع ({0}) — الحفظ يستبدله.</value></data>
+  <data name="IPP_ExistsEdit" xml:space="preserve"><value>يوجد سعر آخر لنفس المورد والصنف والنوع ({0}) — عدّله هو أو احذفه أولاً.</value></data>
+  <data name="IPP_SaveAndNew" xml:space="preserve"><value>حفظ وإضافة آخر</value></data>
+  <data name="IPP_SavedCategory" xml:space="preserve"><value>أُضيف {0} سعر وعُدّل {1}</value></data>
+  <data name="IPP_DeleteOne" xml:space="preserve"><value>حذف سعر «{0}» للمورد «{1}»؟</value></data>
+  <data name="IPP_DeleteMany" xml:space="preserve"><value>حذف {0} سعر محدد؟</value></data>
+  <data name="IPP_Deleted" xml:space="preserve"><value>حُذف {0} سعر</value></data>
+  <data name="PHB_Title" xml:space="preserve"><value>إدارة أسعار المبيعات</value></data>
+  <data name="PHB_Sub" xml:space="preserve"><value>كل شاشات الأسعار فى مكان واحد: أسعار البيع، أسعار الشراء، والطباعة</value></data>
+  <data name="PHB_Search" xml:space="preserve"><value>بحث عن شاشة</value></data>
+  <data name="PHB_Empty" xml:space="preserve"><value>لا توجد شاشات مطابقة</value></data>
+  <data name="PHB_New" xml:space="preserve"><value>جديد</value></data>
+  <data name="PHB_SecSales" xml:space="preserve"><value>أسعار البيع</value></data>
+  <data name="PHB_SecPurchase" xml:space="preserve"><value>أسعار الشراء</value></data>
+  <data name="PHB_SecPrint" xml:space="preserve"><value>الطباعة</value></data>
+  <data name="PHB_D_SalesPrices" xml:space="preserve"><value>سعر البيع وخصم البيع لكل صنف فى كل نوع سعر، بالفئة والنوع</value></data>
+  <data name="PHB_D_EditPrices" xml:space="preserve"><value>زيادة أو نقص الأسعار للأصناف المحددة، أو بناء نوع سعر من نوع آخر</value></data>
+  <data name="PHB_D_Search" xml:space="preserve"><value>ابحث عن صنف لترى سعره فى كل نوع سعر وتضيف أو تعدّل</value></data>
+  <data name="PHB_D_Types" xml:space="preserve"><value>أنواع أسعار البيع: أساسية أو مشتقة من نوع آخر بنسبة أو قيمة</value></data>
+  <data name="PHB_D_Lists" xml:space="preserve"><value>القوائم كشجرة مع أسعار كل قائمة وتعديلها</value></data>
+  <data name="PHB_D_Bulk" xml:space="preserve"><value>تعديل جماعى لسعر البيع أو الشراء أو قائمة بنسبة أو قيمة</value></data>
+  <data name="PHB_D_Customers" xml:space="preserve"><value>أسعار خاصة لعميل على أصناف محددة</value></data>
+  <data name="PHB_D_PurchaseTypes" xml:space="preserve"><value>أنواع أسعار الشراء: إضافة وتعديل وإيقاف</value></data>
+  <data name="PHB_D_PurchasePrices" xml:space="preserve"><value>سعر شراء كل صنف من كل مورد حسب نوع السعر</value></data>
+  <data name="PHB_D_Suppliers" xml:space="preserve"><value>أسعار الموردين داخل شاشة إدارة القوائم</value></data>
+  <data name="PHB_D_Sheet" xml:space="preserve"><value>كشف أسعار الأصناف فى عدة قوائم للطباعة</value></data>
 </root>

@@ -1,0 +1,466 @@
+@* تعديل أسعار مبيعات الأصناف (بدل Edit_Prices_List_Values — عنصر القائمة menuItemEditPrices). ثلاثة تبويبات كالشاشة القديمة:
+   1) tabPage1 / BtnEditValue: تعديل سعر البيع (وخصم البيع) للأصناف المحددة فى نوع سعر ± نسبة أو قيمة.
+   2) tabPage2 / BtnEditByType: نوع سعر = نوع سعر آخر ± نسبة أو قيمة لكل أصناف المصدر (بلا عرض أصناف).
+   3) tabPage3 / BtnEditByType_Item: نفس الثانى للأصناف المحددة فقط.
+   القواعد فى PriceListService (EditSellValues / CopySellValues): التقريب بخطوة يختارها المستخدم، المشتقة يُعاد حسابها، الصلاحية 917.
+   عمود «السعر الجديد» يُحسب بنفس دالة الخادم (PriceListService.Adjust). التصميم حسب ui-ux-pro-max ونظام inv-*. *@
+@page "/items/sales-prices/edit"
+@page "/items/sales-prices/edit/{Tab:int}"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.PriceListService
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@implements IDisposable
+
+<PageTitle>@Tr("EPV_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .epv-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .epv-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                     background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .epv-head .ico .mud-icon-root { font-size: 2rem; }
+    .epv-head .titles { flex: 1 1 260px; min-width: 0; }
+    .epv-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .epv-head .acts { display: flex; flex-wrap: wrap; gap: 8px; }
+    .epv-head .acts .mud-button-root { min-height: 44px; }
+    .epv-gap { margin-top: 16px; }
+    .epv-filters { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(0, 2fr); gap: 12px; align-items: center; }
+    .epv-adj { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 14px; align-items: start; }
+    .epv-adj .full { grid-column: 1 / -1; }
+    .epv-adj .half { grid-column: span 2; }
+    .epv-step { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-weight: 600; font-size: .95rem; }
+    .epv-step .n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: .8rem;
+                   background: var(--mud-palette-primary); color: var(--mud-palette-primary-text); }
+    .epv-sum { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin-top: 12px; padding: 10px 16px; border-radius: 10px;
+               background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent); font-size: .9rem; }
+    .epv-sum b { font-variant-numeric: tabular-nums; }
+    .epv-sum .grow { flex: 1 1 auto; }
+    .epv-sum .mud-button-root { min-height: 44px; }
+    .epv-formula { padding: 10px 14px; border-radius: 10px; border: 1px dashed var(--mud-palette-lines-default); font-size: .9rem; }
+    .epv-formula b { color: var(--mud-palette-primary); }
+    .epv-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .epv-code { font-family: ui-monospace, Consolas, monospace; font-size: .8rem; color: var(--mud-palette-text-secondary); }
+    .epv-muted { color: var(--mud-palette-text-secondary); font-size: .8rem; }
+    .epv-up { color: var(--mud-palette-success-darken); font-weight: 600; }
+    .epv-down { color: var(--mud-palette-error); font-weight: 600; }
+    .epv-bad { color: var(--mud-palette-error); font-weight: 700; }
+    .epv-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    @@media (max-width: 899px) { .epv-filters, .epv-adj { grid-template-columns: repeat(2, minmax(0, 1fr)); } .epv-filters .wide { grid-column: 1 / -1; } }
+    @@media (max-width: 599px) { .epv-filters, .epv-adj { grid-template-columns: minmax(0, 1fr); } .epv-adj .half { grid-column: 1 / -1; } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card">
+        <div class="epv-head">
+            <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.PriceChange" /></div>
+            <div class="titles">
+                <h1 class="inv-title">@Tr("EPV_Title")</h1>
+                <div class="sub">@Tr("EPV_Sub")</div>
+            </div>
+            <div class="acts">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Sell" Href="/items/sales-prices">@Tr("SPV_Title")</MudButton>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Class="epv-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pt-4" Class="epv-gap"
+             ActivePanelIndex="_tab" ActivePanelIndexChanged="@((int i) => _tab = i)">
+
+        @* ======================= التبويب 1: تعديل الأصناف المحددة فى نوع سعر ======================= *@
+        <MudTabPanel Text="@Tr("EPV_Tab1")" Icon="@Icons.Material.Filled.Checklist">
+            <section class="inv-card" aria-labelledby="epv-t1-h">
+                <h2 class="epv-step" id="epv-t1-h"><span class="n">1</span>@Tr("EPV_PickItems")</h2>
+                <div class="epv-filters">
+                    <MudSelect T="long" Value="_t1.Type" ValueChanged="@(async (long v) => { _t1.Type = v; await Load1Async(); })" Label="@Tr("SPV_PriceType")" Variant="Variant.Outlined"
+                               Required="true" ToStringFunc="@TypeName">
+                        @foreach (var t in _types) { <MudSelectItem T="long" Value="t.Id">@TypeLabel(t)</MudSelectItem> }
+                    </MudSelect>
+                    <MudSelect T="long" Value="_t1.Cat" ValueChanged="@(async (long v) => { _t1.Cat = v; await Load1Async(); })" Label="@Tr("SPV_Category")" Variant="Variant.Outlined"
+                               ToStringFunc="@CatName">
+                        <MudSelectItem T="long" Value="0L">@Tr("IC_AllCats")</MudSelectItem>
+                        @foreach (var c in _cats) { <MudSelectItem T="long" Value="c.Id">@CatLabel(c)</MudSelectItem> }
+                    </MudSelect>
+                    <MudTextField T="string" Value="_t1.Text" ValueChanged="@(async (string? v) => { _t1.Text = v; await Load1Async(); })" Label="@Tr("IT_Search")" Class="wide"
+                                  Variant="Variant.Outlined" Immediate="true" DebounceInterval="300" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+                </div>
+                @if (_t1.Type == 0)
+                {
+                    <div class="epv-empty"><MudIcon Icon="@Icons.Material.Filled.TouchApp" Size="Size.Large" /><span>@Tr("EPV_PickTypeFirst")</span></div>
+                }
+                else
+                {
+                    @PricesTable(_t1, _a1, null)
+                }
+            </section>
+
+            <section class="inv-card epv-gap" aria-labelledby="epv-t1-a">
+                <h2 class="epv-step" id="epv-t1-a"><span class="n">2</span>@Tr("EPV_HowToChange")</h2>
+                @AdjPanel(_a1, true)
+                @if (Type(_t1.Type) is { Master_Id: > 0 } dt1)
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="mt-3">@Tr("SPV_DerivedWarn", dt1.Master_Name ?? "")</MudAlert>
+                    <MudSwitch T="bool" @bind-Value="_allowDerived" Color="Color.Warning" Label="@Tr("EPV_AllowDerived")" />
+                }
+                <div class="epv-sum" aria-live="polite">
+                    <span>@Tr("EPV_Selected") <b>@_t1.Sel.Count</b> / <b>@_t1.Rows.Count</b></span>
+                    @if (Children(_t1.Type) > 0) { <span class="epv-muted">@Tr("SPV_CascadeNote", Children(_t1.Type))</span> }
+                    <span class="grow"></span>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Bolt"
+                               Disabled="@(_busy || _t1.Sel.Count == 0 || (Type(_t1.Type)?.Master_Id > 0 && !_allowDerived))" OnClick="ApplyEditAsync">
+                        @if (_busy) { <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" /> }
+                        @Tr("EPV_ApplyN", _t1.Sel.Count)
+                    </MudButton>
+                </div>
+            </section>
+        </MudTabPanel>
+
+        @* ======================= التبويب 2: نوع = نوع آخر (كل الأصناف) ======================= *@
+        <MudTabPanel Text="@Tr("EPV_Tab2")" Icon="@Icons.Material.Filled.ContentCopy">
+            <section class="inv-card" aria-labelledby="epv-t2-h">
+                <h2 class="epv-step" id="epv-t2-h"><span class="n">1</span>@Tr("EPV_Types")</h2>
+                <div class="epv-adj">
+                    <MudSelect T="long" Value="_t2Target" ValueChanged="@((long v) => _t2Target = v)" Label="@Tr("EPV_Target")" Variant="Variant.Outlined" Class="half"
+                               Required="true" ToStringFunc="@TypeName" HelperText="@Tr("EPV_TargetHelp")">
+                        @foreach (var t in _types.Where(x => x.Master_Id == 0)) { <MudSelectItem T="long" Value="t.Id">@TypeLabel(t)</MudSelectItem> }
+                    </MudSelect>
+                    <MudSelect T="long" Value="_t2Source" ValueChanged="@(async (long v) => { _t2Source = v; await Count2Async(); })" Label="@Tr("EPV_Source")" Variant="Variant.Outlined" Class="half"
+                               Required="true" ToStringFunc="@TypeName">
+                        @foreach (var t in _types) { <MudSelectItem T="long" Value="t.Id">@TypeLabel(t)</MudSelectItem> }
+                    </MudSelect>
+                </div>
+            </section>
+            <section class="inv-card epv-gap" aria-labelledby="epv-t2-a">
+                <h2 class="epv-step" id="epv-t2-a"><span class="n">2</span>@Tr("EPV_HowToChange")</h2>
+                @AdjPanel(_a2, false)
+                <div class="epv-formula mt-3">@((MarkupString)Formula(_t2Target, _t2Source, _a2))</div>
+                <div class="epv-sum" aria-live="polite">
+                    <span>@Tr("EPV_SourceCount") <b>@_t2Count</b></span>
+                    @if (Children(_t2Target) > 0) { <span class="epv-muted">@Tr("SPV_CascadeNote", Children(_t2Target))</span> }
+                    <span class="grow"></span>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Bolt"
+                               Disabled="@(_busy || _t2Target == 0 || _t2Source == 0 || _t2Target == _t2Source || _t2Count == 0)" OnClick="ApplyCopyAllAsync">
+                        @if (_busy) { <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" /> }
+                        @Tr("EPV_ApplyN", _t2Count)
+                    </MudButton>
+                </div>
+            </section>
+        </MudTabPanel>
+
+        @* ======================= التبويب 3: نوع = نوع آخر (أصناف محددة) ======================= *@
+        <MudTabPanel Text="@Tr("EPV_Tab3")" Icon="@Icons.Material.Filled.FactCheck">
+            <section class="inv-card" aria-labelledby="epv-t3-h">
+                <h2 class="epv-step" id="epv-t3-h"><span class="n">1</span>@Tr("EPV_PickSourceItems")</h2>
+                <div class="epv-filters">
+                    <MudSelect T="long" Value="_t3.Type" ValueChanged="@(async (long v) => { _t3.Type = v; await Load3Async(); })" Label="@Tr("EPV_Source")" Variant="Variant.Outlined"
+                               Required="true" ToStringFunc="@TypeName">
+                        @foreach (var t in _types) { <MudSelectItem T="long" Value="t.Id">@TypeLabel(t)</MudSelectItem> }
+                    </MudSelect>
+                    <MudSelect T="long" Value="_t3.Cat" ValueChanged="@(async (long v) => { _t3.Cat = v; await Load3Async(); })" Label="@Tr("SPV_Category")" Variant="Variant.Outlined"
+                               ToStringFunc="@CatName">
+                        <MudSelectItem T="long" Value="0L">@Tr("IC_AllCats")</MudSelectItem>
+                        @foreach (var c in _cats) { <MudSelectItem T="long" Value="c.Id">@CatLabel(c)</MudSelectItem> }
+                    </MudSelect>
+                    <MudTextField T="string" Value="_t3.Text" ValueChanged="@(async (string? v) => { _t3.Text = v; await Load3Async(); })" Label="@Tr("IT_Search")" Class="wide"
+                                  Variant="Variant.Outlined" Immediate="true" DebounceInterval="300" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+                </div>
+                @if (_t3.Type == 0)
+                {
+                    <div class="epv-empty"><MudIcon Icon="@Icons.Material.Filled.TouchApp" Size="Size.Large" /><span>@Tr("EPV_PickSourceFirst")</span></div>
+                }
+                else
+                {
+                    @PricesTable(_t3, _a3, _t3Target)
+                }
+            </section>
+            <section class="inv-card epv-gap" aria-labelledby="epv-t3-a">
+                <h2 class="epv-step" id="epv-t3-a"><span class="n">2</span>@Tr("EPV_HowToChange")</h2>
+                <div class="epv-adj mb-3">
+                    <MudSelect T="long" Value="_t3Target" ValueChanged="@(async (long v) => { _t3Target = v; await LoadTargetAsync(); })" Label="@Tr("EPV_Target")" Variant="Variant.Outlined" Class="half"
+                               Required="true" ToStringFunc="@TypeName" HelperText="@Tr("EPV_TargetHelp")">
+                        @foreach (var t in _types.Where(x => x.Master_Id == 0 && x.Id != _t3.Type)) { <MudSelectItem T="long" Value="t.Id">@TypeLabel(t)</MudSelectItem> }
+                    </MudSelect>
+                </div>
+                @AdjPanel(_a3, false)
+                <div class="epv-formula mt-3">@((MarkupString)Formula(_t3Target, _t3.Type, _a3))</div>
+                <div class="epv-sum" aria-live="polite">
+                    <span>@Tr("EPV_Selected") <b>@_t3.Sel.Count</b> / <b>@_t3.Rows.Count</b></span>
+                    <span class="epv-muted">@Tr("EPV_OthersUntouched")</span>
+                    <span class="grow"></span>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Bolt"
+                               Disabled="@(_busy || _t3Target == 0 || _t3.Type == 0 || _t3.Sel.Count == 0)" OnClick="ApplyCopySelAsync">
+                        @if (_busy) { <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" /> }
+                        @Tr("EPV_ApplyN", _t3.Sel.Count)
+                    </MudButton>
+                </div>
+            </section>
+        </MudTabPanel>
+    </MudTabs>
+</div>
+</MudContainer>
+
+@code {
+    private const int Top = 2000;
+
+    /// <summary>حالة جدول أصناف (التبويب 1 أو 3).</summary>
+    private sealed class Grid
+    {
+        public long Type, Cat;
+        public string? Text;
+        public bool Loading;
+        public List<SellValue> Rows = new();
+        public HashSet<SellValue> Sel = new();
+    }
+
+    /// <summary>طريقة التعديل: ± نسبة/قيمة، التقريب، والخصم (null = بدون تغيير).</summary>
+    private sealed class Adj
+    {
+        public bool IsPlus = true, IsRate = true, SetDiscount;
+        public decimal Value, Discount;
+        public decimal Rounding = 0.01m;
+        public decimal? DiscountOrNull => SetDiscount ? Discount : null;
+    }
+
+    [Parameter] public int? Tab { get; set; }
+
+    private readonly PriceListService _svc = new();
+    private List<PriceType> _types = new();
+    private List<CategoryPick> _cats = new();
+    private readonly Grid _t1 = new(), _t3 = new();
+    private readonly Adj _a1 = new(), _a2 = new() { Value = 0 }, _a3 = new();
+    private long _t2Target, _t2Source, _t3Target;
+    private int _t2Count, _tab;
+    private Dictionary<long, decimal> _t3TargetPrices = new();
+    private bool _busy, _allowDerived;
+    private string? _error;
+
+    protected override void OnInitialized() => LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    protected override void OnParametersSet() { if (Tab is int t && t >= 1 && t <= 3) _tab = t - 1; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _types = await Bg(() => _svc.ListTypes());
+            _cats = await Bg(() => _svc.ListCategories(1));
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private Task<T> Bg<T>(Func<T> f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return f(); });
+
+    // ---------- العرض ----------
+
+    /// <summary>جدول الأصناف بتحديد متعدد وعمود «السعر الجديد» (معاينة). targetType: للتبويب 3 لعرض السعر الحالى فى الهدف.</summary>
+    private RenderFragment PricesTable(Grid g, Adj a, long? targetType) => __builder =>
+    {
+        <div class="epv-sum" aria-live="polite">
+            <span>@Tr("SPV_Count") <b>@g.Rows.Count</b></span>
+            <span>@Tr("EPV_Selected") <b>@g.Sel.Count</b></span>
+            @if (g.Rows.Count >= Top) { <span class="epv-muted">@Tr("SPV_TopNote", Top)</span> }
+            <span class="grow"></span>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.DoneAll" Disabled="@(g.Rows.Count == 0)"
+                       OnClick="@(() => { g.Sel = new HashSet<SellValue>(g.Rows); })">@Tr("EPV_SelectAll")</MudButton>
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.RemoveDone" Disabled="@(g.Sel.Count == 0)"
+                       OnClick="@(() => { g.Sel = new HashSet<SellValue>(); })">@Tr("EPV_ClearSel")</MudButton>
+        </div>
+        <MudTable Items="@g.Rows" T="SellValue" Hover="true" Elevation="0" Class="inv-table epv-gap" Breakpoint="Breakpoint.Sm" Dense="true"
+                  MultiSelection="true" SelectOnRowClick="true" SelectedItems="g.Sel" SelectedItemsChanged="@((HashSet<SellValue> s) => g.Sel = s)"
+                  Loading="g.Loading" LoadingProgressColor="Color.Primary" FixedHeader="true" Height="480px">
+            <HeaderContent>
+                <MudTh>@Tr("SPV_Category")</MudTh>
+                <MudTh>@Tr("IT_Name")</MudTh>
+                <MudTh Style="text-align:end">@Tr(targetType == null ? "SPV_SalePrice" : "EPV_SourcePrice")</MudTh>
+                <MudTh Style="text-align:end">@Tr("SPV_Discount")</MudTh>
+                @if (targetType != null) { <MudTh Style="text-align:end">@Tr("EPV_TargetPrice")</MudTh> }
+                <MudTh Style="text-align:end">@Tr("EPV_NewPrice")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("SPV_Category")">@(string.IsNullOrEmpty(context.Category) ? "—" : context.Category)</MudTd>
+                <MudTd DataLabel="@Tr("IT_Name")">@context.Name<div class="epv-code">@context.Code@(string.IsNullOrEmpty(context.Unit) ? "" : $" · {context.Unit}")</div></MudTd>
+                <MudTd DataLabel="@Tr(targetType == null ? "SPV_SalePrice" : "EPV_SourcePrice")" Style="text-align:end"><span class="epv-num">@Money(context.Price)</span></MudTd>
+                <MudTd DataLabel="@Tr("SPV_Discount")" Style="text-align:end"><span class="epv-num epv-muted">@Money(context.Discount)</span></MudTd>
+                @if (targetType != null)
+                {
+                    <MudTd DataLabel="@Tr("EPV_TargetPrice")" Style="text-align:end">
+                        <span class="epv-num epv-muted">@(_t3TargetPrices.TryGetValue(context.Item_Id, out var tp) ? Money(tp) : Tr("EPV_NoPrice"))</span>
+                    </MudTd>
+                }
+                <MudTd DataLabel="@Tr("EPV_NewPrice")" Style="text-align:end">
+                    @if (g.Sel.Contains(context))
+                    {
+                        var np = PriceListService.Adjust(context.Price, a.IsRate, a.IsPlus, a.Value, a.Rounding);
+                        var basis = targetType == null ? context.Price : (_t3TargetPrices.TryGetValue(context.Item_Id, out var bp) ? bp : (decimal?)null);
+                        var nd = a.SetDiscount ? a.Discount : (targetType == null ? context.Discount : (_t3TargetPrices.ContainsKey(context.Item_Id) ? (decimal?)null : 0));
+                        <span class="epv-num @(np < 0 || (nd is decimal d && d > np) ? "epv-bad" : basis == null ? "" : np > basis ? "epv-up" : np < basis ? "epv-down" : "")"
+                              title="@(nd is decimal d2 && d2 > np ? Tr("EPV_DiscOverPrice") : "")">@Money(np)</span>
+                    }
+                    else { <span class="epv-muted">—</span> }
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="epv-empty"><MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" /><span>@Tr("EPV_NoPrices")</span></div>
+            </NoRecordsContent>
+        </MudTable>
+    };
+
+    /// <summary>حقول طريقة التعديل (زيادة/نقص، نسبة/قيمة، القيمة، التقريب، الخصم).</summary>
+    private RenderFragment AdjPanel(Adj a, bool keepDiscountOwn) => __builder =>
+    {
+        <div class="epv-adj">
+            <MudSelect T="bool" @bind-Value="a.IsPlus" Label="@Tr("EPV_Required")" Variant="Variant.Outlined" ToStringFunc="@(b => Tr(b ? "PR_Plus" : "PR_Minus"))">
+                <MudSelectItem T="bool" Value="true">@Tr("PR_Plus") (+)</MudSelectItem>
+                <MudSelectItem T="bool" Value="false">@Tr("PR_Minus") (−)</MudSelectItem>
+            </MudSelect>
+            <MudSelect T="bool" @bind-Value="a.IsRate" Label="@Tr("EPV_RateOrValue")" Variant="Variant.Outlined" ToStringFunc="@(b => Tr(b ? "EPV_ByRate" : "EPV_ByValue"))">
+                <MudSelectItem T="bool" Value="true">@Tr("EPV_ByRate")</MudSelectItem>
+                <MudSelectItem T="bool" Value="false">@Tr("EPV_ByValue")</MudSelectItem>
+            </MudSelect>
+            <MudNumericField T="decimal" @bind-Value="a.Value" Label="@Tr(a.IsRate ? "EPV_RatePct" : "EPV_Amount")" Variant="Variant.Outlined" Min="0" Format="0.####" Immediate="true"
+                             Adornment="Adornment.End" AdornmentText="@(a.IsRate ? "%" : "")" HelperText="@Tr("EPV_ZeroHelp")" />
+            <MudSelect T="decimal" @bind-Value="a.Rounding" Label="@Tr("PR_Rounding")" Variant="Variant.Outlined" ToStringFunc="@(r => r.ToString("0.##", CultureInfo.InvariantCulture))">
+                @foreach (var r in PriceListService.Roundings) { <MudSelectItem T="decimal" Value="r">@r.ToString("0.##", CultureInfo.InvariantCulture)</MudSelectItem> }
+            </MudSelect>
+            <MudSwitch T="bool" @bind-Value="a.SetDiscount" Color="Color.Primary" Class="half" Label="@Tr("EPV_SetDiscount")" />
+            @if (a.SetDiscount)
+            {
+                <MudNumericField T="decimal" @bind-Value="a.Discount" Label="@Tr("SPV_Discount")" Variant="Variant.Outlined" Min="0" Format="0.##" Immediate="true" Class="half"
+                                 HelperText="@Tr("EPV_DiscountHelp")" />
+            }
+            else
+            {
+                <div class="epv-muted half" style="align-self:center">@Tr(keepDiscountOwn ? "EPV_KeepDiscount" : "EPV_KeepDiscountTarget")</div>
+            }
+        </div>
+    };
+
+    private string Formula(long target, long source, Adj a)
+    {
+        string T(long id) => System.Net.WebUtility.HtmlEncode(id == 0 ? "…" : TypeName(id));
+        string op = a.IsPlus ? "+" : "−";
+        string v = a.Value.ToString("0.####", CultureInfo.InvariantCulture) + (a.IsRate ? "%" : "");
+        return Tr("EPV_Formula", $"<b>{T(target)}</b>", $"<b>{T(source)}</b>", $"{op} {v}");
+    }
+
+    // ---------- التحميل ----------
+
+    private async Task LoadGrid(Grid g)
+    {
+        g.Sel = new HashSet<SellValue>();
+        if (g.Type == 0) { g.Rows = new(); return; }
+        g.Loading = true;
+        long t = g.Type, c = g.Cat; string? x = g.Text;
+        try { g.Rows = await Bg(() => _svc.ListSellValues(t, c, x, Top)); }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { g.Loading = false; }
+    }
+
+    private Task Load1Async() { _allowDerived = false; return LoadGrid(_t1); }
+
+    private async Task Load3Async()
+    {
+        if (_t3Target == _t3.Type) { _t3Target = 0; _t3TargetPrices = new(); }
+        await LoadGrid(_t3);
+    }
+
+    /// <summary>أسعار الهدف الحالية (للمقارنة فى التبويب 3).</summary>
+    private async Task LoadTargetAsync()
+    {
+        _t3TargetPrices = new();
+        if (_t3Target == 0) return;
+        long t = _t3Target;
+        try { _t3TargetPrices = (await Bg(() => _svc.ListSellValues(t, 0, null, 5000))).GroupBy(r => r.Item_Id).ToDictionary(g => g.Key, g => g.First().Price); }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private async Task Count2Async()
+    {
+        long s = _t2Source;
+        try { _t2Count = await Bg(() => _svc.CountPricedItems(s)); }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    // ---------- التنفيذ ----------
+
+    private async Task<bool> ConfirmAsync(string msg)
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("EPV_ConfirmTitle"), msg, yesText: Tr("EPV_Execute"), cancelText: Tr("Cancel"));
+        return ok == true;
+    }
+
+    private string AdjText(Adj a) => $"{(a.IsPlus ? "+" : "−")} {a.Value.ToString("0.####", CultureInfo.InvariantCulture)}{(a.IsRate ? "%" : "")}"
+        + (a.SetDiscount ? " · " + Tr("SPV_Discount") + " " + Money(a.Discount) : "");
+
+    /// <summary>BtnEditValue: الأصناف المحددة فى نوع السعر.</summary>
+    private async Task ApplyEditAsync()
+    {
+        if (_a1.Value == 0 && !_a1.SetDiscount) { _error = Tr("EPV_NothingToChange"); return; }
+        if (!await ConfirmAsync(Tr("EPV_Confirm1", _t1.Sel.Count, TypeName(_t1.Type), AdjText(_a1)))) return;
+        var ids = _t1.Sel.Select(r => r.Item_Id).ToList();
+        long t = _t1.Type; var a = _a1; bool der = _allowDerived;
+        await RunAsync(() => _svc.EditSellValues(t, ids, a.IsRate, a.IsPlus, a.Value, a.DiscountOrNull, a.Rounding, der), () => LoadGrid(_t1));
+    }
+
+    /// <summary>BtnEditByType: كل أصناف المصدر.</summary>
+    private async Task ApplyCopyAllAsync()
+    {
+        if (!await ConfirmAsync(Tr("EPV_Confirm2", TypeName(_t2Target), TypeName(_t2Source), AdjText(_a2), _t2Count))) return;
+        long s = _t2Source, t = _t2Target; var a = _a2;
+        await RunAsync(() => _svc.CopySellValues(s, t, null, a.IsRate, a.IsPlus, a.Value, a.DiscountOrNull, a.Rounding), () => Task.CompletedTask);
+    }
+
+    /// <summary>BtnEditByType_Item: الأصناف المحددة فقط.</summary>
+    private async Task ApplyCopySelAsync()
+    {
+        if (!await ConfirmAsync(Tr("EPV_Confirm3", TypeName(_t3Target), TypeName(_t3.Type), AdjText(_a3), _t3.Sel.Count))) return;
+        var ids = _t3.Sel.Select(r => r.Item_Id).ToList();
+        long s = _t3.Type, t = _t3Target; var a = _a3;
+        await RunAsync(() => _svc.CopySellValues(s, t, ids, a.IsRate, a.IsPlus, a.Value, a.DiscountOrNull, a.Rounding), async () => { await LoadTargetAsync(); _t3.Sel = new(); });
+    }
+
+    private async Task RunAsync(Func<int> action, Func<Task> reload)
+    {
+        _busy = true; _error = null;
+        try
+        {
+            int n = await Bg(action);
+            Snackbar.Add(Tr("PR_Applied", n), Severity.Success);
+            _types = await Bg(() => _svc.ListTypes());
+            await reload();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _busy = false; }
+    }
+
+    // ---------- مساعدات ----------
+
+    private PriceType? Type(long id) => _types.FirstOrDefault(x => x.Id == id);
+    private int Children(long id) => id == 0 ? 0 : _types.Count(x => x.Master_Id == id);
+    private string TypeName(long id) => Type(id)?.Name ?? string.Empty;
+    private string TypeLabel(PriceType t) => t.Name + (t.Is_Active ? "" : $" ({Tr("SPV_Inactive")})") + (t.Master_Id > 0 ? $" · {Tr("SPV_Derived")}" : "") + $" — {t.Priced_Items}";
+    private string CatName(long id) => id == 0 ? Tr("IC_AllCats") : _cats.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty;
+    private string CatLabel(CategoryPick c) => $"{c.Name} · {CatType(c.Type_Id)}";
+    private static string CatType(int t) => t >= 0 && t < ItemUnitCategoryService.CategoryTypes.Length ? ItemUnitCategoryService.CategoryTypes[t] : ItemUnitCategoryService.CategoryTypes[0];
+
+    private static string Money(decimal v) => v.ToString("#,0.00", CultureInfo.InvariantCulture);
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

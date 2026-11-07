@@ -1,0 +1,159 @@
+@* إدارة أسعار المبيعات — صفحة روابط لكل شاشات الأسعار الحالية (طلب المستخدم 2026-11-07)، عنصر القائمة الجديد menuItemSalesPricesHub.
+   الكروت مرتبة فى أقسام (أسعار البيع، أسعار الشراء، الطباعة). يظهر الكارت لمن تسمح له قوائمه بفتح نفس المسار (MenuState.UserAllowedMenus)؛
+   لو لم تُحمَّل القوائم بعد تظهر الكل (كل شاشة تتحقق بنفسها من صلاحية التعديل 917). التصميم حسب ui-ux-pro-max ونظام inv-* كصفحة /hub. *@
+@page "/items/pricing"
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject MenuStateService MenuState
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Tr("PHB_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .phb-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .phb-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                     background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .phb-head .ico .mud-icon-root { font-size: 2rem; }
+    .phb-head .titles { flex: 1 1 260px; min-width: 0; }
+    .phb-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .phb-head .search { flex: 0 1 320px; min-width: 220px; }
+    .phb-sec { margin-top: 20px; }
+    .phb-sec-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; color: var(--mud-palette-primary); }
+    .phb-sec-head h2 { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--mud-palette-text-primary); }
+    .phb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+    .phb-card { display: flex; align-items: flex-start; gap: 12px; min-height: 76px; padding: 14px; border-radius: 12px;
+                border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); color: inherit; text-decoration: none;
+                transition: border-color 150ms ease, box-shadow 150ms ease; }
+    .phb-card:hover, .phb-card:focus-visible { border-color: var(--mud-palette-primary); box-shadow: var(--mud-elevation-2); }
+    .phb-card:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .phb-card .cico { flex: none; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center;
+                      background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent); color: var(--mud-palette-primary); }
+    .phb-card .txt { flex: 1; min-width: 0; }
+    .phb-card .name { font-weight: 600; font-size: .95rem; line-height: 1.4; }
+    .phb-card .desc { margin-top: 2px; font-size: .8rem; color: var(--mud-palette-text-secondary); line-height: 1.5; }
+    .phb-card .badge { display: inline-block; margin-inline-start: 6px; padding: 0 8px; border-radius: 999px; font-size: .7rem; font-weight: 600; vertical-align: middle;
+                       background: color-mix(in srgb, var(--mud-palette-success) 16%, transparent); color: var(--mud-palette-success-darken); }
+    .phb-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    @@media (prefers-reduced-motion: reduce) { .phb-card { transition: none; } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card">
+        <div class="phb-head">
+            <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.PriceChange" /></div>
+            <div class="titles">
+                <h1 class="inv-title">@Tr("PHB_Title")</h1>
+                <div class="sub">@Tr("PHB_Sub")</div>
+            </div>
+            <div class="search">
+                <MudTextField T="string" @bind-Value="_search" Label="@Tr("PHB_Search")" Variant="Variant.Outlined" Immediate="true" Clearable="true"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+            </div>
+        </div>
+    </div>
+
+    @{ var sections = Visible(); }
+    @if (sections.Count == 0)
+    {
+        <div class="inv-card phb-sec"><div class="phb-empty"><MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" /><span>@Tr("PHB_Empty")</span></div></div>
+    }
+    @foreach (var sec in sections)
+    {
+        <section class="inv-card phb-sec" aria-labelledby="@($"phb-{sec.Key}")">
+            <div class="phb-sec-head"><MudIcon Icon="@sec.Icon" /><h2 id="@($"phb-{sec.Key}")">@Tr(sec.Title)</h2></div>
+            <div class="phb-grid">
+                @foreach (var c in sec.Cards)
+                {
+                    <a class="phb-card" href="@c.Route">
+                        <span class="cico" aria-hidden="true"><MudIcon Icon="@c.Icon" /></span>
+                        <span class="txt">
+                            <span class="name">@Tr(c.Title)@if (c.IsNew) { <span class="badge">@Tr("PHB_New")</span> }</span>
+                            <span class="desc" style="display:block">@Tr(c.Desc)</span>
+                        </span>
+                    </a>
+                }
+            </div>
+        </section>
+    }
+</div>
+</MudContainer>
+
+@code {
+    private sealed record Card(string Route, string Title, string Desc, string Icon, bool IsNew = false);
+    private sealed record Section(string Key, string Title, string Icon, List<Card> Cards);
+
+    /// <summary>كل شاشات الأسعار الحالية؛ «جديد» = الشاشات المستقلة المبنية فى طلب 2026-11-07.</summary>
+    private static readonly Section[] All =
+    {
+        new("sales", "PHB_SecSales", Icons.Material.Filled.Sell, new()
+        {
+            new("/items/sales-prices", "SPV_Title", "PHB_D_SalesPrices", Icons.Material.Filled.Sell, true),
+            new("/items/sales-prices/edit", "EPV_Title", "PHB_D_EditPrices", Icons.Material.Filled.Tune, true),
+            new("/items/prices/search", "SIP_Title", "PHB_D_Search", Icons.Material.Filled.ManageSearch, true),
+            new("/items/price-types", "PT_Title", "PHB_D_Types", Icons.Material.Filled.Category),
+            new("/items/prices/lists", "SPV_ManageLists", "PHB_D_Lists", Icons.Material.Filled.AccountTree),
+            new("/items/prices/bulk", "PR_TabBulk", "PHB_D_Bulk", Icons.Material.Filled.AutoFixHigh),
+            new("/items/prices/customers", "PR_TabCustomers", "PHB_D_Customers", Icons.Material.Filled.PersonPin),
+        }),
+        new("purchase", "PHB_SecPurchase", Icons.Material.Filled.ShoppingCart, new()
+        {
+            new("/items/purchase-price-types", "PPT_Title", "PHB_D_PurchaseTypes", Icons.Material.Filled.ShoppingCart, true),
+            new("/items/purchase-prices", "IPP_Title", "PHB_D_PurchasePrices", Icons.Material.Filled.LocalShipping, true),
+            new("/items/prices/suppliers", "PR_TabSuppliers", "PHB_D_Suppliers", Icons.Material.Filled.Storefront),
+        }),
+        new("print", "PHB_SecPrint", Icons.Material.Filled.Print, new()
+        {
+            new("/items/price-sheet", "PSTitle", "PHB_D_Sheet", Icons.Material.Filled.Print),
+        }),
+    };
+
+    private string? _search;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnChanged;
+        MenuState.OnAuthChanged += OnChanged;   // بعد Refresh تُستعاد الجلسة متأخرة (كصفحة /hub)
+    }
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnChanged;
+        MenuState.OnAuthChanged -= OnChanged;
+    }
+
+    /// <summary>
+    /// المسارات التى تفتحها قوائم المستخدم المسموح بها. المسار الذى لا يفتحه أى عنصر قائمة مسموح يُخفى؛
+    /// الاستثناء: /items/prices/{bulk,suppliers} تبويبات لشاشة القوائم فتتبع صلاحية /items/prices/lists.
+    /// </summary>
+    private List<Section> Visible()
+    {
+        var menus = MenuState.UserAllowedMenus;
+        HashSet<string>? allowed = null;
+        if (menus != null && menus.Count > 0)
+            allowed = new HashSet<string>(menus.Select(m => (m?.GetEffectiveRoute() ?? "").Split('?')[0].TrimEnd('/'))
+                                               .Where(r => r.StartsWith("/")), StringComparer.OrdinalIgnoreCase);
+        bool Allowed(string route)
+        {
+            if (allowed == null) return true;
+            if (allowed.Contains(route)) return true;
+            return route is "/items/prices/bulk" or "/items/prices/suppliers" && allowed.Contains("/items/prices/lists");
+        }
+        string q = (_search ?? "").Trim();
+        bool Match(Card c) => q.Length == 0 || Tr(c.Title).Contains(q, StringComparison.CurrentCultureIgnoreCase) || Tr(c.Desc).Contains(q, StringComparison.CurrentCultureIgnoreCase);
+        return All.Select(s => s with { Cards = s.Cards.Where(c => Allowed(c.Route) && Match(c)).ToList() })
+                  .Where(s => s.Cards.Count > 0).ToList();
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}
