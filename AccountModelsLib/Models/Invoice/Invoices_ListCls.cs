@@ -104,13 +104,16 @@ namespace AccountModelsLib.Models
                 invL.Invoice_Date = invL.Invoice_Date.Value.Date;
                 invL.Equivalent_Net_Total_Price = invL.Net_Total;
                 invL.Equivalent_Net_Total_CommissionValue = invL.Net_Total_CommissionValue;
-
+                
+                var existingEntity = opp.db.Invoices_List.Where(x => x.Id == invL.Id).FirstOrDefault();
+                //var existingInvoice = opp.db.Invoices_List.Find(invL.Id);
                 opp.cmd.Parameters.Clear();
 
-                opp.db.Entry(invL).State = EntityState.Modified;
+                opp.db.Entry(existingEntity).CurrentValues.SetValues(invL);
+                //opp.db.Entry(invL).State = EntityState.Modified;
                 opp.db.SaveChanges();
                 Excp = 0;
-
+                //opp.db.Entry.setvalues
             }
             catch (Exception ee)
             {

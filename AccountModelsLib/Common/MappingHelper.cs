@@ -64,7 +64,35 @@ namespace AccountModelsLib
 
             return target;
         }
- 
+        public static void CopyScalarProperties<TSource, TTarget>(TSource source, TTarget target)
+        {
+            if (source == null || target == null) return;
+
+            // Use your existing property cache
+            var targetProperties = PropertiesCache.GetOrAdd(typeof(TTarget), t => t.GetProperties());
+            var sourceType = source.GetType();
+
+            foreach (var prop in targetProperties)
+            {
+                string propertyName = prop.Name;
+
+                // Skip Primary Key, classes, and collections (navigation properties)
+                if (propertyName == "Id") continue;
+
+                if (prop.PropertyType != typeof(string) &&
+                    (prop.PropertyType.IsClass || typeof(System.Collections.IEnumerable).IsAssignableFrom(prop.PropertyType)))
+                {
+                    continue;
+                }
+
+                var sourceProp = sourceType.GetProperty(propertyName);
+                if (sourceProp != null && sourceProp.CanRead && prop.CanWrite)
+                {
+                    var val = sourceProp.GetValue(source, null);
+                    prop.SetValue(target, val, null);
+                }
+            }
+        }
 
         /// <summary>
         /// دالة عامة لنسخ الحقول الأساسية وتجاهل العلاقات والمفاتيح الأساسية بين كائنين متشابهين

@@ -598,7 +598,9 @@ namespace AccountModelsLib
 
         long Add_UpdateInvoice_List(ref int Excp, ref string  Msg, ref operations opp, InvoicesOperationListCLS invL_O )
         {
-            if (invL_O.invL.Id == 0)
+            //var existingInvoice1 = opp.db.Invoices_List.AsNoTracking().Where(i => i.Id == invL_O.invL.Id);
+            var existingInvoice = opp.db.Invoices_List.Where(x => x.Id == invL_O.invL.Id).FirstOrDefault();
+            if (existingInvoice==null)
             {
 
                 New_Invoice_Id = invL_O.Insert_Invoices_List(ref opp, ref Excp, invL_O.invL);

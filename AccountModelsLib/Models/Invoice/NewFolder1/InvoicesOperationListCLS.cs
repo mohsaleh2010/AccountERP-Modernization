@@ -468,11 +468,20 @@ namespace AccountModelsLib.Models
 
             try
             {
-                Invoices_List invoices_List = MappingHelper.MapScalarProperties<Invoices_List, IInvoices_List>(invL,true);
+                //var existingInvoice = opp.db.Invoices_List.Find(invL.Id); // Replace 'Invoices_Lists' with your actual DbSet name
+                var existingInvoice = opp.db.Invoices_List.Where(x => x.Id == invL.Id).FirstOrDefault();
+                MappingHelper.CopyScalarProperties(invL, existingInvoice);
+                //Invoices_List invoices_List = MappingHelper.MapScalarProperties<Invoices_List, IInvoices_List>(invL, true);
 
-                
+
                 Invoices_ListCls invoices_ListCls = new Invoices_ListCls();
-                invoices_ListCls.Update_Invoices_List(ref Excp,   ref opp, invoices_List);
+                invoices_ListCls.Update_Invoices_List(ref Excp, ref opp, existingInvoice);
+
+                //Invoices_List invoices_List = MappingHelper.MapScalarProperties<Invoices_List, IInvoices_List>(invL,true);
+
+
+                //Invoices_ListCls invoices_ListCls = new Invoices_ListCls();
+                //invoices_ListCls.Update_Invoices_List(ref Excp,   ref opp, invoices_List);
 
             }
             catch (Exception ee)

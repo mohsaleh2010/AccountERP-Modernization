@@ -189,11 +189,11 @@ namespace AccountModelsLib
             string mysql = ""; ;
             if (Invoice_Type == 3)
             {
-                mysql = "select * from Invoices_List_Reverse ORDER BY ID DESC";
+                mysql = "select * from Invoices_List_Reverse where NOT EXISTS (SELECT 1 FROM Invoices_Details_Reverse d WHERE d.Invoice_Id = Invoices_List_Reverse.Id) ORDER BY ID DESC";
             }
             else
             {
-                mysql = "select * from Invoices_List_Reverse where Invoice_Type = " + Invoice_Type + " ORDER BY ID DESC";
+                mysql = "select * from Invoices_List_Reverse where NOT EXISTS (SELECT 1 FROM Invoices_Details_Reverse d WHERE d.Invoice_Id = Invoices_List_Reverse.Id) and Invoice_Type = " + Invoice_Type + " ORDER BY ID DESC";
             }
 
             DataSet ds = opp.return_dataset(mysql);

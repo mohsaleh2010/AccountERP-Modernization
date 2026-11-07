@@ -871,7 +871,7 @@ namespace AccountModelsLib
         public void UpdatePurchasePrice(ref AccountModelsLib.operations opp, BillOperationCLS invd)
         {
             Items itm = opp.db.Item.Where(i => i.Id == invd.Item_Id).FirstOrDefault();
-            if (itm != null)
+            if (itm != null && Common.is_pharmacy == 1) // skip guard only for pharmacy (it writes S_Price from Audience_price)
             {
                 if (itm.S_Price > invd.Audience_price)
                 {
@@ -919,7 +919,7 @@ namespace AccountModelsLib
         void UpdatePurchasePrice(ref AccountModelsLib.operations opp, IBills_Details invd)
         {
             Items itm = opp.db.Item.Where(i => i.Id == invd.Item_Id).FirstOrDefault();
-            if (itm != null)
+            if (itm != null && Common.is_pharmacy == 1) // skip guard only for pharmacy (it writes S_Price from Audience_price)
             {
                 if (itm.S_Price > invd.Audience_price)
                 {

@@ -113,6 +113,8 @@
                 //Invalid column name 'IsChangeOwner'.
 
 
+                
+                
 
                 AlterColumn(ref opp, "Invoices_Details", "Bills_Details_Id", "bigint");
                 AlterColumn(ref opp, "Invoices_Details_Reverse", "Bills_Details_Id", "bigint");
@@ -188,6 +190,17 @@
 
                 AlterBD_(ref opp, "Invoices_Details", "InvoiceKitchenStatusId", "bigint", "0", "0");
                 AlterBD_(ref opp, "Invoices_Details_Reverse", "InvoiceKitchenStatusId", "bigint", "0", "0");
+
+                AlterBD_(ref opp, "Invoices_Details", "User_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "User_Id", "bigint", "0", "0");
+
+                AlterBD_(ref opp, "Invoices_Details", "Branch_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "Branch_Id", "bigint", "0", "0");
+
+
+                AlterBD_(ref opp, "Invoices_Details", "Edit_User_Id", "bigint", "0", "0");
+                AlterBD_(ref opp, "Invoices_Details_Reverse", "Edit_User_Id", "bigint", "0", "0");
+
 
 
                 AlterBD_(ref opp, "Invoices_List", "IsInvoiceTaxInfo", "int", "0", "0");
@@ -1068,6 +1081,9 @@ FROM            Item INNER JOIN
                 AlterBD_(ref opp, "Item", "shelfNo", "int", "0", "0");
                 AlterBD_(ref opp, "Item", "OrderOnshelfNo", "int", "0", "0");
 
+                AlterColumn(ref opp, "Item", "Items_Types_Name_Id", "bigint", "0", "0");
+
+
                 AlterBD_(ref opp, "Items_Types_Name", "IsActive", "int", "1", "1");
 
                 AlterBD_(ref opp, "Unit_Item_ExpireDate", "Bills_Details_Id", "bigint", "0", "0");
@@ -1656,6 +1672,37 @@ FROM            Bills_Details_Reverse INNER JOIN
                 AlterColumn(ref opp, "Invoices_List_Reverse", "Currency_id", "bigint");
 
 
+                AlterColumn(ref opp, "Money_Transaction_Box", "Currency_Id", "bigint", "1", "1");
+                AlterColumn(ref opp, "Supplier", "Currency_Id", "bigint", "1", "1");
+                AlterColumn(ref opp, "Customer", "Currency_Id", "bigint", "1", "1");
+                AlterColumn(ref opp, "Supplier", "Group_Id", "bigint", "1", "1");
+                AlterColumn(ref opp, "Customer", "Group_Id", "bigint", "1", "1");
+                AlterColumn(ref opp, "Customer", "Ref_Cust_Supplier_Id", "bigint", "1", "1");
+                AlterColumn(ref opp, "Customer", "Govern_Area_Id", "bigint", "1", "1");
+                AlterColumn(ref opp, "Customer", "Govern_Id", "bigint", "1", "1");
+                AlterColumn(ref opp, "Customer", "User_Id", "bigint", "1", "1");
+                AlterColumn(ref opp, "Customer", "Branch_Id", "bigint", "1", "1");
+                AlterColumn(ref opp, "Customer", "Edit_User_Id", "bigint", "1", "1");
+                AlterColumn(ref opp, "Customer", "Gov_Country_ListId", "bigint", "1", "1");
+                AlterColumn(ref opp, "Customer", "Gov_City_ListId", "bigint", "1", "1");
+                AlterColumn(ref opp, "Customer", "Govern_Area_ListId", "bigint", "1", "1");
+                AlterColumn(ref opp, "Customer", "Govern_ListId", "bigint", "1", "1");
+                AlterColumn(ref opp, "Customer", "Govern_ListId", "bigint", "1", "1");
+
+
+                AlterColumn(ref opp, "Supplier", "Ref_Cust_Supplier_Id", "bigint", "1", "1");
+                AlterColumn(ref opp, "Supplier", "Govern_Area_Id", "bigint", "1", "1");
+                AlterColumn(ref opp, "Supplier", "Govern_Id", "bigint", "1", "1");
+                AlterColumn(ref opp, "Supplier", "User_Id", "bigint", "1", "1");
+                AlterColumn(ref opp, "Supplier", "Branch_Id", "bigint", "1", "1");
+                AlterColumn(ref opp, "Supplier", "Edit_User_Id", "bigint", "1", "1");
+                AlterColumn(ref opp, "Supplier", "Gov_Country_ListId", "bigint", "1", "1");
+                AlterColumn(ref opp, "Supplier", "Gov_City_ListId", "bigint", "1", "1");
+                AlterColumn(ref opp, "Supplier", "Govern_Area_ListId", "bigint", "1", "1");
+                AlterColumn(ref opp, "Supplier", "Govern_ListId", "bigint", "1", "1");
+                AlterColumn(ref opp, "Supplier", "Govern_ListId", "bigint", "1", "1");
+
+
                 AlterColumn(ref opp, "Bills_List", "User_Id", "bigint");
                 AlterColumn(ref opp, "Bills_List", "Branch_Id", "bigint");
                 AlterColumn(ref opp, "Bills_List", "Salesman_Id", "bigint");
@@ -1682,7 +1729,7 @@ FROM            Bills_Details_Reverse INNER JOIN
                 AlterColumn(ref opp, "Store", "Edit_User_Id", "bigint");
                 AlterColumn(ref opp, "Store", "Job_id", "bigint");
                 AlterColumn(ref opp, "Store", "LookUp_StoreOrderTypesId", "bigint");
-
+                AlterColumn(ref opp, "Store", "LookUp_StoreOrderTypesId", "bigint", "0", "0");
 
 
                 AlterColumn(ref opp, "Banks_Balance", "User_Id", "bigint");
@@ -1822,8 +1869,8 @@ FROM            Bills_Details_Reverse INNER JOIN
                 AlterColumn(ref opp, "Banks", "User_Id", "bigint");
                 AlterColumn(ref opp, "Banks", "Branch_Id", "bigint");
                 AlterColumn(ref opp, "Banks", "Account_Branches_ID", "bigint");
-                AlterColumn(ref opp, "Banks", "Account_Branches_ID", "bigint");
-                AlterColumnChangeName(ref opp, "Banks", "Account_Branches_ID", "Branch_Id", "bigint", "0");
+                //AlterColumn(ref opp, "Banks", "Account_Branches_ID", "bigint");
+                AlterColumnChangeName(ref opp, "Banks", "Account_Branches_ID", "Branch_Id", "bigint", "1");
 
                 AlterColumn(ref opp, "SysConfigMenusPERMATIONS", "MenuId", "bigint");
                 AlterColumn(ref opp, "SysConfigMenusPERMATIONS", "ParentId", "bigint");
@@ -3210,8 +3257,8 @@ WHERE        (Order_Purshing.Order_Purshing_No = - 1)  ";
             AlterBD_(ref opp, "Money_Transaction_Box", "Equivalent_Value", "decimal(18, " + d + ")", "0", "0");
             AlterBD_(ref opp, "Money_Transaction_Box", "Account_Code", "nvarchar(max)");
             AlterBD_(ref opp, "Money_Transaction_Box", "Account_Type", "decimal(18, " + d + ")", "0", "0");
-            AlterBD_(ref opp, "Money_Transaction_Box", "Currency_Id", "int", "0", "0");
-            AlterBD_(ref opp, "Supplier", "Currency_Id", "int", "0", "0");
+            AlterBD_(ref opp, "Money_Transaction_Box", "Currency_Id", "bigint", "0", "0");
+            AlterBD_(ref opp, "Supplier", "Currency_Id", "bigint", "0", "0");
             AlterBD_(ref opp, "Money_Transaction_Box", "Cost_Center", "nvarchar(max)");
 
             AlterBD_(ref opp, " Order_Purshing", "MainOrderTable_id", "bigint", "0");

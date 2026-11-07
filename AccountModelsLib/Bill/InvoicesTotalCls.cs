@@ -154,11 +154,11 @@ namespace AccountModelsLib
             string mysql = ""; ;
             if (Invoice_Type == 3)
             {
-                mysql = "select * from Invoices_List ORDER BY ID DESC";
+                mysql = "select * from Invoices_List where NOT EXISTS (SELECT 1 FROM Invoices_Details d WHERE d.Invoice_Id = Invoices_List.Id) ORDER BY ID DESC";
             }
             else
             {
-                mysql = "select * from Invoices_List where Invoice_Type = " + Invoice_Type + " ORDER BY ID DESC";
+                mysql = "select * from Invoices_List where NOT EXISTS (SELECT 1 FROM Invoices_Details d WHERE d.Invoice_Id = Invoices_List.Id) and Invoice_Type = " + Invoice_Type + " ORDER BY ID DESC";
             }
 
             DataSet ds = opp.return_dataset(mysql);

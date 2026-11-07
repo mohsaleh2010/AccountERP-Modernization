@@ -1730,7 +1730,7 @@ namespace AccountModelsLib.Models
                     return;
                 }
                 um = new Unit_item();
-
+                //var ss = opp.db.Stores.ToList();
                 um = opp.db.Unit_item.AsNoTracking().Where(i => i.id == Unit_Item_Id).Include(u => u.unit).Include(s => s.Store).FirstOrDefault();
                 if (um != null)
                 {
