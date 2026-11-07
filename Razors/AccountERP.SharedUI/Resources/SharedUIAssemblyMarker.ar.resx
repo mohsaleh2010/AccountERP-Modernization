@@ -4650,4 +4650,17 @@
   <data name="PHB_D_PurchasePrices" xml:space="preserve"><value>سعر شراء كل صنف من كل مورد حسب نوع السعر</value></data>
   <data name="PHB_D_Suppliers" xml:space="preserve"><value>أسعار الموردين داخل شاشة إدارة القوائم</value></data>
   <data name="PHB_D_Sheet" xml:space="preserve"><value>كشف أسعار الأصناف فى عدة قوائم للطباعة</value></data>
+  <data name="SIATitle" xml:space="preserve"><value>حساب المخزون لكل مخزن</value></data>
+  <data name="SIAHelp" xml:space="preserve"><value>الحساب الذى يُقيَّد عليه قيمة بضاعة المخزن فى القيود (مدين عند الدخول ودائن عند الخروج). اضغط أيقونة الشجرة لاختيار الحساب أو تغييره؛ يُحفظ فور الاختيار.</value></data>
+  <data name="SIAAccount" xml:space="preserve"><value>حساب المخزون</value></data>
+  <data name="SIANotLinked" xml:space="preserve"><value>غير مربوط</value></data>
+  <data name="SIAPickTitle" xml:space="preserve"><value>اختر حساب مخزون: {0}</value></data>
+  <data name="SIAChangeConfirm" xml:space="preserve"><value>المخزن «{0}» مربوط بحساب مخزون بالفعل. تغيير الحساب لا ينقل القيود القديمة؛ ستبقى على الحساب السابق والقيود الجديدة تُسجَّل على الحساب الجديد. هل تريد المتابعة؟</value></data>
+  <data name="SIAChangeYes" xml:space="preserve"><value>نعم، غيّر الحساب</value></data>
+  <data name="SIAClear" xml:space="preserve"><value>حذف الحساب المربوط</value></data>
+  <data name="SIAClearConfirm" xml:space="preserve"><value>سيتم فك ربط حساب المخزون عن المخزن «{0}». القيود القديمة لا تتأثر. هل تريد المتابعة؟</value></data>
+  <data name="SIAClearYes" xml:space="preserve"><value>نعم، احذف الربط</value></data>
+  <data name="SADTableTitle" xml:space="preserve"><value>الحسابات المقابلة للحركات المخزنية</value></data>
+  <data name="SADSelectedAccount" xml:space="preserve"><value>الحساب المختار</value></data>
+  <data name="SADConfirm" xml:space="preserve"><value>موافقة</value></data>
 </root>

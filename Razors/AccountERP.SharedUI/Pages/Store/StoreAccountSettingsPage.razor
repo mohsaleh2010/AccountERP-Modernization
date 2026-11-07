@@ -118,6 +118,47 @@
         }
     </MudPaper>
 
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h6" Class="font-weight-bold mb-1">@Tr("SIATitle")</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">@Tr("SIAHelp")</MudText>
+        <MudTable T="StoreRow" Items="@_stores" Dense="true" Hover="true" Bordered="true" Elevation="0" Breakpoint="Breakpoint.Sm" Loading="@_isLoading">
+            <HeaderContent>
+                <MudTh>@Tr("SADStoreLabel")</MudTh>
+                <MudTh>@Tr("StoreUsedTypeLabel")</MudTh>
+                <MudTh>@Tr("SIAAccount")</MudTh>
+                <MudTh Style="width:120px;"></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                @{ var acc = StoreAccount(context.Id); }
+                <MudTd DataLabel="@Tr("SADStoreLabel")"><span class="font-weight-bold">@context.Store_Name</span></MudTd>
+                <MudTd DataLabel="@Tr("StoreUsedTypeLabel")">@(_storeTypes.FirstOrDefault(t => t.Value == context.StoreUsed_Type)?.Text)</MudTd>
+                <MudTd DataLabel="@Tr("SIAAccount")">
+                    @if (acc != null)
+                    {
+                        <div>@acc.Value.Name <span class="mud-text-secondary sad-code">@acc.Value.No</span></div>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Warning">@Tr("SIANotLinked")</MudText>
+                    }
+                </MudTd>
+                <MudTd>
+                    <MudTooltip Text="@Tr("SADPick")">
+                        <MudIconButton Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" Size="Size.Small"
+                                       aria-label="@Tr("SADPick")" OnClick="@(() => OpenStorePicker(context))" Disabled="_busy" />
+                    </MudTooltip>
+                    @if (acc != null)
+                    {
+                        <MudTooltip Text="@Tr("SIAClear")">
+                            <MudIconButton Icon="@Icons.Material.Filled.Clear" Color="Color.Error" Size="Size.Small"
+                                           aria-label="@Tr("SIAClear")" OnClick="@(() => ClearStoreAccountAsync(context))" Disabled="_busy" />
+                        </MudTooltip>
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+
     @if (!string.IsNullOrEmpty(_errorMessage))
     {
         <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_errorMessage</MudAlert>
@@ -131,6 +172,7 @@
     }
     else
     {
+        <MudText Typo="Typo.h6" Class="font-weight-bold mb-1">@Tr("SADTableTitle")</MudText>
         <MudTable T="StoreAccountRoleInfo" Items="@StoreAccountDeterminationCLS.Roles" Hover="true" Bordered="true" Loading="@_isLoading"
                   Elevation="1" Breakpoint="Breakpoint.Sm">
             <HeaderContent>
@@ -188,7 +230,7 @@
 </MudContainer>
 
 <MudDialog @bind-Visible="_pickerOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true })">
-    <TitleContent>@Tr("SADPickTitle", _pickRole == null ? "" : Tr("SADRole" + (int)_pickRole.Role))</TitleContent>
+    <TitleContent>@(_pickStore != null ? Tr("SIAPickTitle", _pickStore.Store_Name) : Tr("SADPickTitle", _pickRole == null ? "" : Tr("SADRole" + (int)_pickRole.Role)))</TitleContent>
     <DialogContent>
         @if (!string.IsNullOrEmpty(_pickError))
         {
@@ -197,8 +239,14 @@
         <div style="height:50vh;">
             <AccountTreePicker BranchId="Common.Branch_Id" SelectedValue="_pickedNode" SelectedValueChanged="OnAccountPicked" Height="50vh" />
         </div>
+        @if (_pickedNode != null)
+        {
+            <MudText Typo="Typo.body2" Class="mt-2">@Tr("SADSelectedAccount"): <b>@_pickedNode.SubAccount_Name</b> <span class="sad-code">@_pickedNode.SubAccount_NO</span></MudText>
+        }
     </DialogContent>
     <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Check"
+                   OnClick="ConfirmPickAsync" Disabled="@(_busy || _pickedNode == null)">@Tr("SADConfirm")</MudButton>
         <MudButton OnClick="@(() => _pickerOpen = false)">@Tr("Cancel")</MudButton>
     </DialogActions>
 </MudDialog>
@@ -345,8 +393,10 @@
                 AccountCultureGuard.EnsureInvariant();
                 var stores = new StoreCLS();
                 var orderTypes = new StoreOrderPageService().GetOrderTypes().ToDictionary(o => o.Order_Type, o => o.Name_Ar);
-                return (new StoreAccountDeterminationCLS().GetSettings(branch), stores.GetStoreTypes(), stores.GetStores(branch), orderTypes);
+                var det = new StoreAccountDeterminationCLS();
+                return (det.GetSettings(branch), stores.GetStoreTypes(), stores.GetStores(branch), orderTypes, det.GetStoreInventoryAccounts(branch));
             });
+            _storeAccounts = data.Item5;
             _settings = data.Item1;
             _storeTypes = data.Item2;
             _stores = data.Item3;
@@ -410,15 +460,86 @@
     private void OpenPicker(StoreAccountRoleInfo info)
     {
         _pickRole = info;
+        _pickStore = null;
         _pickedNode = null;
         _pickError = string.Empty;
         _pickerOpen = true;
     }
 
-    private async Task OnAccountPicked(AccountTreeNodeViewModel? node)
+    // حساب المخزون لكل مخزن (Store.SubAccount_Id)
+    private Dictionary<long, (string Name, string No)> _storeAccounts = new();
+    private StoreRow? _pickStore;
+
+    private (string Name, string No)? StoreAccount(long storeId) =>
+        _storeAccounts.TryGetValue(storeId, out var a) ? a : null;
+
+    private async Task OpenStorePicker(StoreRow store)
+    {
+        if (_storeAccounts.ContainsKey(store.Id))
+        {
+            var ok = await DialogService.ShowMessageBoxAsync(Tr("SIATitle"), Tr("SIAChangeConfirm", store.Store_Name), yesText: Tr("SIAChangeYes"), cancelText: Tr("Cancel"));
+            if (ok != true) return;
+        }
+        _pickStore = store;
+        _pickRole = null;
+        _pickedNode = null;
+        _pickError = string.Empty;
+        _pickerOpen = true;
+    }
+
+    private async Task<string> SaveStoreAccountAsync(long storeId, long subAccountId)
+    {
+        _busy = true;
+        try
+        {
+            int excp = 0;
+            string msg = string.Empty;
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                new StoreAccountDeterminationCLS().SetStoreInventoryAccount(ref excp, ref msg, storeId, subAccountId);
+            });
+            if (excp != 0) return string.IsNullOrEmpty(msg) ? Tr("SystemError", "") : msg;
+            await LoadAsync();
+            Snackbar.Add(Tr("SADSaved"), Severity.Success);
+            return string.Empty;
+        }
+        catch (Exception ex)
+        {
+            return Tr("SystemError", ex.Message);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ClearStoreAccountAsync(StoreRow store)
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("SIATitle"), Tr("SIAClearConfirm", store.Store_Name), yesText: Tr("SIAClearYes"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        _errorMessage = await SaveStoreAccountAsync(store.Id, 0);
+    }
+
+    // الاختيار من الشجرة يحدد الحساب فقط؛ الحفظ عند زر «موافقة».
+    private void OnAccountPicked(AccountTreeNodeViewModel? node)
     {
         _pickedNode = node;
-        if (node == null || _pickRole == null) return;
+        _pickError = string.Empty;
+    }
+
+    private async Task ConfirmPickAsync()
+    {
+        var node = _pickedNode;
+        if (node == null) return;
+        if (_pickStore != null)
+        {
+            string storeError = await SaveStoreAccountAsync(_pickStore.Id, node.Id);
+            if (string.IsNullOrEmpty(storeError)) _pickerOpen = false;
+            else _pickError = storeError;
+            return;
+        }
+        if (_pickRole == null) return;
         string error = await SaveAsync(_pickRole.Role, node.Id);
         if (string.IsNullOrEmpty(error)) _pickerOpen = false;
         else _pickError = error;

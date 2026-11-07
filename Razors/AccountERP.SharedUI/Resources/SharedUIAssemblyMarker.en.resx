@@ -4650,4 +4650,17 @@
   <data name="PHB_D_PurchasePrices" xml:space="preserve"><value>Each item's purchase price from each supplier by price type</value></data>
   <data name="PHB_D_Suppliers" xml:space="preserve"><value>Supplier prices inside the price lists screen</value></data>
   <data name="PHB_D_Sheet" xml:space="preserve"><value>Printable sheet of item prices across several lists</value></data>
+  <data name="SIATitle" xml:space="preserve"><value>Inventory account per store</value></data>
+  <data name="SIAHelp" xml:space="preserve"><value>The account that carries the value of the store's goods in journal entries (debit on receipt, credit on issue). Click the tree icon to pick or change it; it saves immediately.</value></data>
+  <data name="SIAAccount" xml:space="preserve"><value>Inventory account</value></data>
+  <data name="SIANotLinked" xml:space="preserve"><value>Not linked</value></data>
+  <data name="SIAPickTitle" xml:space="preserve"><value>Choose inventory account: {0}</value></data>
+  <data name="SIAChangeConfirm" xml:space="preserve"><value>Store "{0}" already has an inventory account. Changing it does not move old entries; they stay on the previous account and new entries use the new one. Continue?</value></data>
+  <data name="SIAChangeYes" xml:space="preserve"><value>Yes, change it</value></data>
+  <data name="SIAClear" xml:space="preserve"><value>Remove linked account</value></data>
+  <data name="SIAClearConfirm" xml:space="preserve"><value>The inventory account will be unlinked from store "{0}". Past entries are not affected. Continue?</value></data>
+  <data name="SIAClearYes" xml:space="preserve"><value>Yes, unlink</value></data>
+  <data name="SADTableTitle" xml:space="preserve"><value>Offset accounts for stock movements</value></data>
+  <data name="SADSelectedAccount" xml:space="preserve"><value>Selected account</value></data>
+  <data name="SADConfirm" xml:space="preserve"><value>Confirm</value></data>
 </root>

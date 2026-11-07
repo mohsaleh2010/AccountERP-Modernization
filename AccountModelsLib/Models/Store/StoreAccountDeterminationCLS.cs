@@ -203,5 +203,59 @@ namespace AccountModelsLib.Models
                 .Select(a => a.Id).Take(2).ToList();
             return ids.Count == 1 ? ids[0] : 0;
         }
+
+        /// <summary>حساب المخزون (Store.SubAccount_Id) لكل مخزن فعّال فى الفرع، مع اسم الحساب وكوده. المفتاح = رقم المخزن؛ غير المربوط غير موجود.</summary>
+        public Dictionary<long, (string Name, string No)> GetStoreInventoryAccounts(long branchId)
+        {
+            var db = new operations().db;
+            return (from s in db.Stores.AsNoTracking()
+                    where s.Branch_Id == branchId && s.Active == 1 && s.SubAccount_Id != null && s.SubAccount_Id != 0
+                    join a in db.Submain_Account.AsNoTracking() on s.SubAccount_Id equals a.Id
+                    select new { s.Id, a.SubAccount_Name, a.SubAccount_NO })
+                .ToList()
+                .ToDictionary(x => x.Id, x => (x.SubAccount_Name ?? "", x.SubAccount_NO ?? ""));
+        }
+
+        /// <summary>
+        /// ربط حساب المخزون بمخزن (Store.SubAccount_Id). الحساب لازم يكون فرعياً (بلا حسابات تحته) وغير مستخدم لمخزن آخر.
+        /// Excp: 0 نجاح، 2 حساب غير صالح (Msg)، غير ذلك خطأ.
+        /// </summary>
+        public void SetStoreInventoryAccount(ref int Excp, ref string Msg, long storeId, long subAccountId)
+        {
+            Excp = 0;
+            Msg = "";
+            try
+            {
+                var opp = new operations();
+                var store = opp.db.Stores.FirstOrDefault(s => s.Id == storeId);
+                if (store == null) { Excp = 2; Msg = "المخزن غير موجود"; return; }
+                if (subAccountId == 0)
+                {
+                    store.SubAccount_Id = null;
+                    opp.db.SaveChanges();
+                    return;
+                }
+                if (subAccountId < 0 || !opp.db.Submain_Account.AsNoTracking().Any(a => a.Id == subAccountId))
+                {
+                    Excp = 2; Msg = "الحساب غير موجود"; return;
+                }
+                if (opp.db.Submain_Account.AsNoTracking().Any(a => a.Main_Account_Id == subAccountId))
+                {
+                    Excp = 2; Msg = "اختر حساباً فرعياً (بلا حسابات تحته) ليُرحَّل عليه القيد"; return;
+                }
+                var other = opp.db.Stores.AsNoTracking().Where(s => s.SubAccount_Id == subAccountId && s.Id != storeId).Select(s => s.Store_Name).FirstOrDefault();
+                if (other != null)
+                {
+                    Excp = 2; Msg = "هذا الحساب مربوط بالمخزن «" + other + "»؛ اختر حساباً آخر"; return;
+                }
+                store.SubAccount_Id = subAccountId;
+                opp.db.SaveChanges();
+            }
+            catch (Exception ee)
+            {
+                Excp = 1;
+                Msg = ee.InnerException != null ? ee.InnerException.Message : ee.Message;
+            }
+        }
     }
 }

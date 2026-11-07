@@ -4652,4 +4652,17 @@
   <data name="PHB_D_PurchasePrices" xml:space="preserve"><value>Einkaufspreis je Artikel und Lieferant nach Preisart</value></data>
   <data name="PHB_D_Suppliers" xml:space="preserve"><value>Lieferantenpreise im Preislisten-Bildschirm</value></data>
   <data name="PHB_D_Sheet" xml:space="preserve"><value>Druckbare Preisübersicht über mehrere Listen</value></data>
+  <data name="SIATitle" xml:space="preserve"><value>Bestandskonto je Lager</value></data>
+  <data name="SIAHelp" xml:space="preserve"><value>Das Konto, das den Warenwert des Lagers in Buchungen trägt (Soll beim Zugang, Haben beim Abgang). Baum-Symbol anklicken, um es zu wählen oder zu ändern; es wird sofort gespeichert.</value></data>
+  <data name="SIAAccount" xml:space="preserve"><value>Bestandskonto</value></data>
+  <data name="SIANotLinked" xml:space="preserve"><value>Nicht verknüpft</value></data>
+  <data name="SIAPickTitle" xml:space="preserve"><value>Bestandskonto wählen: {0}</value></data>
+  <data name="SIAChangeConfirm" xml:space="preserve"><value>Lager „{0}“ hat bereits ein Bestandskonto. Eine Änderung verschiebt alte Buchungen nicht; sie bleiben auf dem alten Konto, neue nutzen das neue. Fortfahren?</value></data>
+  <data name="SIAChangeYes" xml:space="preserve"><value>Ja, ändern</value></data>
+  <data name="SIAClear" xml:space="preserve"><value>Verknüpftes Konto entfernen</value></data>
+  <data name="SIAClearConfirm" xml:space="preserve"><value>Das Bestandskonto wird vom Lager „{0}“ getrennt. Frühere Buchungen bleiben unverändert. Fortfahren?</value></data>
+  <data name="SIAClearYes" xml:space="preserve"><value>Ja, trennen</value></data>
+  <data name="SADTableTitle" xml:space="preserve"><value>Gegenkonten der Lagerbewegungen</value></data>
+  <data name="SADSelectedAccount" xml:space="preserve"><value>Gewähltes Konto</value></data>
+  <data name="SADConfirm" xml:space="preserve"><value>Bestätigen</value></data>
 </root>

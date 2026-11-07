@@ -4652,4 +4652,17 @@
   <data name="PHB_D_PurchasePrices" xml:space="preserve"><value>Prix d'achat de chaque article par fournisseur et type</value></data>
   <data name="PHB_D_Suppliers" xml:space="preserve"><value>Prix fournisseurs dans l'écran des listes de prix</value></data>
   <data name="PHB_D_Sheet" xml:space="preserve"><value>Fiche imprimable des prix sur plusieurs listes</value></data>
+  <data name="SIATitle" xml:space="preserve"><value>Compte de stock par magasin</value></data>
+  <data name="SIAHelp" xml:space="preserve"><value>Le compte qui porte la valeur des marchandises du magasin dans les écritures (débit à l’entrée, crédit à la sortie). Cliquez sur l’icône d’arbre pour le choisir ou le changer ; l’enregistrement est immédiat.</value></data>
+  <data name="SIAAccount" xml:space="preserve"><value>Compte de stock</value></data>
+  <data name="SIANotLinked" xml:space="preserve"><value>Non lié</value></data>
+  <data name="SIAPickTitle" xml:space="preserve"><value>Choisir le compte de stock : {0}</value></data>
+  <data name="SIAChangeConfirm" xml:space="preserve"><value>Le magasin « {0} » a déjà un compte de stock. Le changer ne déplace pas les anciennes écritures ; elles restent sur l’ancien compte et les nouvelles utilisent le nouveau. Continuer ?</value></data>
+  <data name="SIAChangeYes" xml:space="preserve"><value>Oui, changer</value></data>
+  <data name="SIAClear" xml:space="preserve"><value>Supprimer le compte lié</value></data>
+  <data name="SIAClearConfirm" xml:space="preserve"><value>Le compte de stock sera dissocié du magasin « {0} ». Les écritures passées ne changent pas. Continuer ?</value></data>
+  <data name="SIAClearYes" xml:space="preserve"><value>Oui, dissocier</value></data>
+  <data name="SADTableTitle" xml:space="preserve"><value>Comptes de contrepartie des mouvements de stock</value></data>
+  <data name="SADSelectedAccount" xml:space="preserve"><value>Compte sélectionné</value></data>
+  <data name="SADConfirm" xml:space="preserve"><value>Valider</value></data>
 </root>
