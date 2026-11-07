@@ -4808,4 +4808,12 @@
   <data name="CCLUpdateConfirm" xml:space="preserve"><value>Der Kostenstellen-Vortrag für die gewählte Periode und Filiale wird aus der Vorperiode neu aufgebaut. Fortfahren?</value></data>
   <data name="CCLUpdatedOk" xml:space="preserve"><value>Eröffnungssaldo aktualisiert.</value></data>
   <data name="CCLErrOutsidePeriod" xml:space="preserve"><value>Die Daten müssen innerhalb der gewählten Geschäftsperiode liegen</value></data>
+  <data name="DepEntrySettingsTitle" xml:space="preserve"><value>Depreciation entry settings</value></data>
+  <data name="DepPostEntries" xml:space="preserve"><value>Post a journal entry with each calculation</value></data>
+  <data name="DepExpenseAccount" xml:space="preserve"><value>Depreciation expense account (debit)</value></data>
+  <data name="DepAccumAccount" xml:space="preserve"><value>Accumulated depreciation account (credit)</value></data>
+  <data name="DepSaveSettings" xml:space="preserve"><value>Save settings</value></data>
+  <data name="DepSettingsSaved" xml:space="preserve"><value>Depreciation entry settings saved</value></data>
+  <data name="DepEntrySettingsHint" xml:space="preserve"><value>Off by default; when on, each asset gets an entry carrying its cost center, deleted together with its depreciation record.</value></data>
+  <data name="DepPostFailed" xml:space="preserve"><value>Depreciation calculated but the entry failed:</value></data>
 </root>

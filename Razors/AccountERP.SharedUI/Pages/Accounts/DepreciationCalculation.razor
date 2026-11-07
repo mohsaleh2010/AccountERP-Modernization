@@ -32,6 +32,8 @@
 @inject LanguageService LangService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@using AccountModelsLib.BusinessLibShared.FixedAssets
+@using AccountModelsLib.BusinessLibShared.CostCenters
 @implements IDisposable
 
 <PageTitle>@Tr("DepreciationCalcTitle")</PageTitle>
@@ -72,6 +74,21 @@
     {
         <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-4" Style="white-space:pre-line;">@_warningMessage</MudAlert>
     }
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h6" Class="mb-2">@Tr("DepEntrySettingsTitle")</MudText>
+        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+            <MudSwitch T="bool" @bind-Value="_postEntries" Color="Color.Primary" Label="@Tr("DepPostEntries")" />
+            <MudAutocomplete T="CostCenterService.AccountRow" Value="_expenseAcc" ValueChanged="@(a => _expenseAcc = a)" SearchFunc="SearchAccountsAsync"
+                             ToStringFunc="@(a => a == null ? "" : a.No + "  " + a.Name)" Label="@Tr("DepExpenseAccount")" Variant="Variant.Outlined" Dense="true"
+                             Style="min-width:280px;" Clearable="true" CoerceText="false" CoerceValue="false" ResetValueOnEmptyText="true" />
+            <MudAutocomplete T="CostCenterService.AccountRow" Value="_accumAcc" ValueChanged="@(a => _accumAcc = a)" SearchFunc="SearchAccountsAsync"
+                             ToStringFunc="@(a => a == null ? "" : a.No + "  " + a.Name)" Label="@Tr("DepAccumAccount")" Variant="Variant.Outlined" Dense="true"
+                             Style="min-width:280px;" Clearable="true" CoerceText="false" CoerceValue="false" ResetValueOnEmptyText="true" />
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="SaveSettingAsync" Disabled="_isBusy">@Tr("DepSaveSettings")</MudButton>
+        </MudStack>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-1">@Tr("DepEntrySettingsHint")</MudText>
+    </MudPaper>
 
     <MudGrid Spacing="3">
         <MudItem xs="12" md="6">
@@ -162,6 +179,33 @@
     }
 
     private readonly Assets_EhlakCLS _cls = new();
+    private readonly AssetDepreciationPostingService _post = new();
+    private bool _postEntries;
+    private CostCenterService.AccountRow? _expenseAcc, _accumAcc;
+
+    private async Task<IEnumerable<CostCenterService.AccountRow>> SearchAccountsAsync(string text, CancellationToken ct)
+        => await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return CostCenterService.SearchAccounts(new AccountModelsLib.operations(), text); });
+
+    private async Task LoadSettingAsync()
+    {
+        var br = _branchId;
+        var st = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _post.GetSetting(br); });
+        _postEntries = st.PostEntries;
+        _expenseAcc = st.ExpenseAccountId > 0 ? new CostCenterService.AccountRow { Id = st.ExpenseAccountId, Name = st.ExpenseAccountName } : null;
+        _accumAcc = st.AccumulatedAccountId > 0 ? new CostCenterService.AccountRow { Id = st.AccumulatedAccountId, Name = st.AccumulatedAccountName } : null;
+    }
+
+    private async Task SaveSettingAsync()
+    {
+        _errorMessage = null;
+        var br = _branchId; var post = _postEntries; long e = _expenseAcc?.Id ?? 0, a = _accumAcc?.Id ?? 0;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _post.SaveSetting(br, post, e, a); });
+            Snackbar.Add(Tr("DepSettingsSaved"), Severity.Success);
+        }
+        catch (Exception ex) { _errorMessage = ex.Message; }
+    }
     private List<(long Id, string Name)> _branches = new();
     private long _branchId;
     private List<(long Id, DateTime DateFrom, DateTime DateTo, bool IsActive)> _periods = new();
@@ -228,12 +272,14 @@
             _dateTo = active.DateTo;
             await SearchAsync();
         }
+        await LoadSettingAsync();
     }
 
     private async Task OnBranchChanged(long value)
     {
         _branchId = value;
         await SearchAsync();
+        await LoadSettingAsync();
     }
 
     private async Task OnPeriodChanged(long? value)
@@ -289,7 +335,7 @@
                 {
                     c.Add(new ComputedEhlakRow
                     {
-                        Id = Convert.ToInt64(r["Id"]),
+                        Id = Convert.ToInt64(r.Table.Columns.Contains("Id1") ? r["Id1"] : r["Id"]),
                         Name = r["SubAccount_Name"]?.ToString() ?? "",
                         AssetValueNow = r["Asset_Value_Now"]?.ToString() ?? "",
                         TotalEklak = r["Total_Eklak"]?.ToString() ?? "",
@@ -336,6 +382,11 @@
                 int localExcp = 0;
                 string localMsg = "";
                 _cls.Make_Ehlak(ref localExcp, ref localMsg, branchId, arr, periodId, dateFrom, dateTo);
+                if (localExcp == 0)
+                {
+                    try { _post.PostForPeriod(branchId, dateFrom, dateTo); }
+                    catch (Exception ex) { localMsg = (localMsg + "\n" + Tr("DepPostFailed") + " " + ex.Message).Trim(); }
+                }
                 return (localExcp, localMsg);
             });
 
@@ -386,6 +437,7 @@
                 AccountCultureGuard.EnsureInvariant();
                 var arr = new ArrayList(ids);
                 int localExcp = 0;
+                _post.DeleteEntries(ids.Select(long.Parse));
                 _cls.Delete_Ehlak(ref localExcp, arr);
                 return localExcp;
             });

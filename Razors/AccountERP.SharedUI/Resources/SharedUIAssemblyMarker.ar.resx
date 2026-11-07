@@ -4806,4 +4806,12 @@
   <data name="CCLUpdateConfirm" xml:space="preserve"><value>يعاد بناء ترحيل أرصدة المراكز للفترة والفرع المختارين من الفترة السابقة. متابعة؟</value></data>
   <data name="CCLUpdatedOk" xml:space="preserve"><value>تم تحديث رصيد أول المدة.</value></data>
   <data name="CCLErrOutsidePeriod" xml:space="preserve"><value>التاريخان يجب أن يكونا داخل الفترة المالية المختارة</value></data>
+  <data name="DepEntrySettingsTitle" xml:space="preserve"><value>إعداد قيد الإهلاك</value></data>
+  <data name="DepPostEntries" xml:space="preserve"><value>إنشاء قيد إهلاك مع كل حساب</value></data>
+  <data name="DepExpenseAccount" xml:space="preserve"><value>حساب مصروف الإهلاك (مدين)</value></data>
+  <data name="DepAccumAccount" xml:space="preserve"><value>حساب مجمع الإهلاك (دائن)</value></data>
+  <data name="DepSaveSettings" xml:space="preserve"><value>حفظ الإعداد</value></data>
+  <data name="DepSettingsSaved" xml:space="preserve"><value>تم حفظ إعداد قيد الإهلاك</value></data>
+  <data name="DepEntrySettingsHint" xml:space="preserve"><value>مغلق افتراضياً؛ عند تفعيله يُنشأ لكل أصل قيد بمركز تكلفة الأصل، ويُحذف القيد مع حذف سجل الإهلاك.</value></data>
+  <data name="DepPostFailed" xml:space="preserve"><value>تم حساب الإهلاك لكن تعذر إنشاء القيد:</value></data>
 </root>
