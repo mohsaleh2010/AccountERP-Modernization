@@ -22,11 +22,14 @@
 @using AccountERP.SharedUI.ViewModels
 @inject LanguageService LangService
 
-<MudRadioGroup T="int" Value="AccountSelection" ValueChanged="OnSelectionChangedAsync" Row="true">
-    <MudRadio T="int" Value="2" Color="Color.Primary">@Tr("CustomerLabel")</MudRadio>
-    <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("SupplierLabel")</MudRadio>
-    <MudRadio T="int" Value="0" Color="Color.Primary">@Tr("OtherAccountLabel")</MudRadio>
-</MudRadioGroup>
+@if (ShowPartyChoice)
+{
+    <MudRadioGroup T="int" Value="AccountSelection" ValueChanged="OnSelectionChangedAsync" Row="true">
+        <MudRadio T="int" Value="2" Color="Color.Primary">@Tr("CustomerLabel")</MudRadio>
+        <MudRadio T="int" Value="1" Color="Color.Primary">@Tr("SupplierLabel")</MudRadio>
+        <MudRadio T="int" Value="0" Color="Color.Primary">@Tr("OtherAccountLabel")</MudRadio>
+    </MudRadioGroup>
+}
 
 @if (AccountSelection == 2)
 {
@@ -39,6 +42,17 @@ else if (AccountSelection == 1)
     <MudAutocomplete T="PickerOption" Value="_selectedSupplier" SearchFunc="SearchSuppliersAsync"
                       ToStringFunc="@(o => o?.Name ?? "")" Label="@Tr("SupplierLabel")" Variant="Variant.Outlined"
                       ValueChanged="OnSupplierPickedAsync" ResetValueOnEmptyText="true" Class="mt-2" />
+}
+else if (!ShowPartyChoice)
+{
+    @* شاشات القيود: بحث مباشر بالاسم أو الرقم داخل المربع، وزر ... يفتح الشجرة كاملة *@
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
+        <MudAutocomplete T="AccountTreeNodeViewModel" Value="CurrentAccount" SearchFunc="SearchAccountsAsync"
+                          ToStringFunc="@(a => a == null ? "" : $"{a.SubAccount_NO}  {a.SubAccount_Name}".Trim())"
+                          Label="@Tr("SelectAccountLabel")" Variant="Variant.Outlined" Clearable="true" FullWidth="true"
+                          ResetValueOnEmptyText="true" CoerceText="false" MaxItems="30" ValueChanged="OnAccountSearchPickedAsync" />
+        <MudButton Variant="Variant.Outlined" OnClick="@(() => _pickerOpen = true)">...</MudButton>
+    </MudStack>
 }
 else
 {
@@ -68,6 +82,8 @@ else
 @code {
     private record PickerOption(long Id, string Name);
 
+    // false = شجرة الحسابات فقط بلا اختيار عميل/مورد (شاشات القيود: الديسكتوب يستخدم account_ListSearchKey2 بلا هذه الخيارات)؛ مع false يجب تمرير AccountSelection = 0
+    [Parameter] public bool ShowPartyChoice { get; set; } = true;
     [Parameter] public int AccountSelection { get; set; } = 2;
     [Parameter] public EventCallback<int> AccountSelectionChanged { get; set; }
     [Parameter] public long CustomerId { get; set; }
@@ -204,6 +220,58 @@ else
         AccountTypeValue = accType == 0 ? Common.Supplier_Account_Type : accType;
         await AccountTypeValueChanged.InvokeAsync(AccountTypeValue);
         _balanceLabel = FormatBalanceLabel(balance, name);
+    }
+
+    // حساب الحقل الحالى: المختار من الشجرة/البحث، وإلا حساب معروف بالمعرّف والاسم فقط (عند تعبئة الحقل من الشاشة المستضيفة)
+    private AccountTreeNodeViewModel? CurrentAccount =>
+        _pickedNode != null && _pickedNode.Id == SubAccountId ? _pickedNode
+        : SubAccountId != 0 ? new AccountTreeNodeViewModel { Id = SubAccountId, SubAccount_Name = SubAccountName }
+        : null;
+
+    private List<AccountTreeNodeViewModel>? _allAccounts;
+    private long _allAccountsBranch;
+
+    // قائمة مسطحة بحسابات الفرع تُحمَّل عند أول بحث (نفس استعلام AccountTreePicker) وتُعاد عند تغيّر الفرع
+    private async Task<IEnumerable<AccountTreeNodeViewModel>> SearchAccountsAsync(string value, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return Enumerable.Empty<AccountTreeNodeViewModel>();
+        if (_allAccounts == null || _allAccountsBranch != BranchId)
+        {
+            var branchId = BranchId;
+            _allAccounts = await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                int excp = 0;
+                var dt = new AccountsTree().Get_SubMain_Account(ref excp, branchId);
+                var flat = new List<AccountTreeNodeViewModel>();
+                void Walk(IEnumerable<AccountTreeNodeViewModel> nodes)
+                {
+                    foreach (var n in nodes) { flat.Add(n); Walk(n.Children); }
+                }
+                Walk(AccountTreeNodeViewModel.BuildTree(dt));
+                return flat;
+            }, ct);
+            _allAccountsBranch = branchId;
+        }
+        return _allAccounts.Where(a =>
+            (!string.IsNullOrEmpty(a.SubAccount_Name) && a.SubAccount_Name.Contains(value, StringComparison.OrdinalIgnoreCase)) ||
+            (!string.IsNullOrEmpty(a.SubAccount_NO) && a.SubAccount_NO.Contains(value, StringComparison.OrdinalIgnoreCase)))
+            .Take(30).ToList();
+    }
+
+    private async Task OnAccountSearchPickedAsync(AccountTreeNodeViewModel? node)
+    {
+        if (node == null)
+        {
+            // مسح الحقل
+            _pickedNode = null;
+            SubAccountId = 0;
+            await SubAccountIdChanged.InvokeAsync(0);
+            SubAccountName = "";
+            await SubAccountNameChanged.InvokeAsync("");
+            return;
+        }
+        await OnOtherAccountPicked(node);
     }
 
     private async Task OnOtherAccountPicked(AccountTreeNodeViewModel? node)
