@@ -76,6 +76,36 @@ WHERE Order_Type IN (1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1012,1013
             Step(opp, StoreAccountMenu);
             Step(opp, TextileItemsMenu);
             Step(opp, EntriesIntegrityMenu);
+            Step(opp, InventoryValueMenu);
+        }
+
+        /// <summary>
+        /// عنصر «تقرير قيمة المخزون» بجوار «أرصدة الأصناف كمية ومتوسط تكلفة» (menuItemItemBalanceWithCost) يفتح /store/inventory-value،
+        /// وصلاحيته للمديرين فقط والباقون من شاشة الصلاحيات - نفس نمط StoreAccountMenu. إدراج فقط، لا يغيّر أى صف قائم، ولا يتكرر.
+        /// </summary>
+        private static void InventoryValueMenu(operations opp)
+        {
+            const string key = "menuItemInventoryValueReport";
+            const string desc = "تقرير قيمة المخزون";
+            var menus = opp.db.Database.SqlQueryRaw<StoreTransferPolicy.KeyValueRow>("SELECT Id, KeysData, Value FROM SysConfigMenus").ToList();
+            string Key(StoreTransferPolicy.KeyValueRow r) => r.KeysData == null ? "" : Common.DecryptMe(r.KeysData).Trim();
+            if (menus.Any(m => Key(m) == key)) return;
+            var sibling = menus.FirstOrDefault(m => Key(m) == "menuItemItemBalanceWithCost");
+            if (sibling == null) return;
+            long parentId = opp.db.Database.SqlQuery<long>($"SELECT CAST(Parent_Id AS bigint) AS Value FROM SysConfigMenus WHERE Id = {sibling.Id}").FirstOrDefault();
+            if (parentId == 0) return;
+            string E(string s) => Common.EncryptMe(s);
+            long id = menus.Max(m => m.Id) + 1;
+            opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenus (Id, Parent_Id, KeysData, Description, PROJECT_ID, Value, DefaultValue, DefaultDescription,
+                            POS, Market, Factory, Tourism, AlFawzan, Client_A, Client_B, UserSells, IsShowToUser, RazorPath)
+VALUES ({id}, {parentId}, {E(key)}, {E(desc)}, 2, {E("1")}, {E("1")}, {E(desc)},
+        {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, 1, {E("/store/inventory-value")})");
+            var admins = opp.db.Database.SqlQueryRaw<long>("SELECT Id AS Value FROM USER_DETAILES WHERE ISNULL(AdminFlage, 0) = 1").ToList();
+            foreach (long user in admins)
+                opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenusPERMATIONS (Id, Menu_ID, Parent_Id, USER_ID, PERMATION, PROJECT_ID, IsShowToUser)
+VALUES ({CallSnowflakeIdGenerate.GenerateNewId()}, {id}, {parentId}, {user}, {E("1")}, 2, 1)");
         }
 
         /// <summary>

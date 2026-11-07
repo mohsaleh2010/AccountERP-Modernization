@@ -4665,4 +4665,21 @@
   <data name="SADTableTitle" xml:space="preserve"><value>Gegenkonten der Lagerbewegungen</value></data>
   <data name="SADSelectedAccount" xml:space="preserve"><value>Gewähltes Konto</value></data>
   <data name="SADConfirm" xml:space="preserve"><value>Bestätigen</value></data>
+  <data name="IVRTitle" xml:space="preserve"><value>Lagerwertbericht</value></data>
+  <data name="IVRSubAll" xml:space="preserve"><value>Lagerwert je Lager</value></data>
+  <data name="IVRSubStore" xml:space="preserve"><value>Artikel des Lagers: {0}</value></data>
+  <data name="IVRBack" xml:space="preserve"><value>Zurück zu Lagern</value></data>
+  <data name="IVRStores" xml:space="preserve"><value>Lager</value></data>
+  <data name="IVRStore" xml:space="preserve"><value>Lager</value></data>
+  <data name="IVRClickHint" xml:space="preserve"><value>Lager anklicken, um Artikel zu sehen.</value></data>
+  <data name="IVRItemsCount" xml:space="preserve"><value>Artikel</value></data>
+  <data name="IVRItem" xml:space="preserve"><value>Artikel</value></data>
+  <data name="IVRQty" xml:space="preserve"><value>Menge</value></data>
+  <data name="IVRLastPrice" xml:space="preserve"><value>Letzter Einkaufspreis</value></data>
+  <data name="IVRAvgCost" xml:space="preserve"><value>Durchschnittskosten</value></data>
+  <data name="IVRLastTotal" xml:space="preserve"><value>Summe letzter Einkaufspreis</value></data>
+  <data name="IVRAvgTotal" xml:space="preserve"><value>Summe Durchschnittskosten</value></data>
+  <data name="IVRGrandTotal" xml:space="preserve"><value>Gesamtsumme</value></data>
+  <data name="IVREmpty" xml:space="preserve"><value>Keine Lager mit Bestand</value></data>
+  <data name="IVREmptyStore" xml:space="preserve"><value>Keine Artikel mit Bestand</value></data>
 </root>

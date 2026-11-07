@@ -1,0 +1,204 @@
+@* تقرير قيمة المخزون (م-8): ملخص لكل المخازن بآخر سعر شراء وبمتوسط التكلفة معاً، وبالضغط على مخزن تظهر أصنافه
+   (الكمية، آخر سعر شراء، متوسط التكلفة، وإجمالى كل منهما) مع الإجمالى فى آخر الجدول. قراءة فقط عبر InventoryValueReportService.
+   التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@page "/store/inventory-value"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.InventoryValueReportService
+@inject LanguageService LangService
+@inject IJSRuntime JS
+@implements IDisposable
+
+<PageTitle>@Tr("IVRTitle")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .iv-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .iv-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .iv-head .ico .mud-icon-root { font-size: 2rem; }
+    .iv-head .titles { flex: 1 1 260px; min-width: 0; }
+    .iv-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .iv-gap { margin-top: 16px; }
+    .iv-num { font-variant-numeric: tabular-nums; }
+    .iv-name { font-weight: 600; color: var(--mud-palette-text-primary); }
+    .iv-code { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .iv-neg { color: var(--mud-palette-error); font-weight: 700; }
+    .iv-link { cursor: pointer; }
+    .iv-link:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: -2px; }
+    .iv-total td { font-weight: 700; background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent); }
+    .iv-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    @@media print {
+        body * { visibility: hidden; }
+        .iv-print, .iv-print * { visibility: visible; }
+        .iv-print { position: absolute; inset-inline-start: 0; top: 0; width: 100%; }
+        .iv-noprint { display: none !important; }
+    }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page iv-print">
+
+    <div class="inv-card iv-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Inventory2" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("IVRTitle")</h1>
+            <div class="sub">@(_store is null ? Tr("IVRSubAll") : Tr("IVRSubStore", _store.Store_Name))</div>
+        </div>
+        @if (_store is not null)
+        {
+            <MudButton Class="iv-noprint" Variant="Variant.Outlined" StartIcon="@(LangService.IsRtl ? Icons.Material.Filled.ArrowForward : Icons.Material.Filled.ArrowBack)"
+                       OnClick="BackAsync">@Tr("IVRBack")</MudButton>
+        }
+        <MudButton Class="iv-noprint" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Print" Disabled="_loading" OnClick="PrintAsync">@Tr("PrintButton")</MudButton>
+    </div>
+
+    <div class="inv-card iv-gap">
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" role="alert">@_error</MudAlert>
+        }
+
+        @if (_store is null)
+        {
+            <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Warehouse" />@Tr("IVRStores")<span class="inv-count">@_stores.Count</span></h2>
+            <MudAlert Severity="Severity.Info" Dense="true" Class="iv-noprint mb-2">@Tr("IVRClickHint")</MudAlert>
+            <MudTable Items="@_stores" T="StoreValueRow" Hover="true" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Loading="_loading" LoadingProgressColor="Color.Primary"
+                      OnRowClick="@((TableRowClickEventArgs<StoreValueRow> a) => OpenStoreAsync(a.Item!))" RowClass="iv-link">
+                <HeaderContent>
+                    <MudTh>@Tr("IVRStore")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("IVRItemsCount")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("IVRLastTotal")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("IVRAvgTotal")</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("IVRStore")"><span class="iv-name">@context.Store_Name</span></MudTd>
+                    <MudTd DataLabel="@Tr("IVRItemsCount")" Style="text-align:end"><span class="iv-num">@context.Items_Count</span></MudTd>
+                    <MudTd DataLabel="@Tr("IVRLastTotal")" Style="text-align:end"><span class="iv-num">@Money(context.Last_Purchase_Total)</span></MudTd>
+                    <MudTd DataLabel="@Tr("IVRAvgTotal")" Style="text-align:end"><span class="iv-num">@Money(context.Avg_Cost_Total)</span></MudTd>
+                </RowTemplate>
+                <FooterContent>
+                    @if (_stores.Count > 0)
+                    {
+                        <MudTFootRow Class="iv-total">
+                            <MudTd>@Tr("IVRGrandTotal")</MudTd>
+                            <MudTd Style="text-align:end"><span class="iv-num">@_stores.Sum(s => s.Items_Count)</span></MudTd>
+                            <MudTd Style="text-align:end"><span class="iv-num">@Money(_stores.Sum(s => s.Last_Purchase_Total))</span></MudTd>
+                            <MudTd Style="text-align:end"><span class="iv-num">@Money(_stores.Sum(s => s.Avg_Cost_Total))</span></MudTd>
+                        </MudTFootRow>
+                    }
+                </FooterContent>
+                <NoRecordsContent>
+                    <div class="iv-empty"><MudIcon Icon="@Icons.Material.Filled.Inventory" Size="Size.Large" /><b>@Tr("IVREmpty")</b></div>
+                </NoRecordsContent>
+            </MudTable>
+        }
+        else
+        {
+            <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ListAlt" />@_store.Store_Name<span class="inv-count">@_items.Count</span></h2>
+            <MudTable Items="@_items" T="ItemValueRow" Hover="true" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Loading="_loading" LoadingProgressColor="Color.Primary">
+                <HeaderContent>
+                    <MudTh>@Tr("IVRItem")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("IVRQty")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("IVRLastPrice")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("IVRAvgCost")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("IVRLastTotal")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("IVRAvgTotal")</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("IVRItem")"><div class="iv-name">@context.Item_Name</div><div class="iv-code">@CodeText(context.Code)</div></MudTd>
+                    <MudTd DataLabel="@Tr("IVRQty")" Style="text-align:end"><span class="iv-num @(context.Balance_Small < 0 ? "iv-neg" : "")">@SmallToText(context.Balance_Small, context.Factor, context.B_Unit, context.S_Unit)</span></MudTd>
+                    <MudTd DataLabel="@Tr("IVRLastPrice")" Style="text-align:end"><span class="iv-num">@(context.Last_Purchase_Price is decimal p ? Money(p) : "—")</span></MudTd>
+                    <MudTd DataLabel="@Tr("IVRAvgCost")" Style="text-align:end"><span class="iv-num">@(context.Avg_Cost is decimal c ? Money(c) : "—")</span></MudTd>
+                    <MudTd DataLabel="@Tr("IVRLastTotal")" Style="text-align:end"><b class="iv-num">@Money(context.Last_Purchase_Total)</b></MudTd>
+                    <MudTd DataLabel="@Tr("IVRAvgTotal")" Style="text-align:end"><b class="iv-num">@Money(context.Avg_Cost_Total)</b></MudTd>
+                </RowTemplate>
+                <FooterContent>
+                    @if (_items.Count > 0)
+                    {
+                        <MudTFootRow Class="iv-total">
+                            <MudTd>@Tr("IVRGrandTotal")</MudTd>
+                            <MudTd></MudTd>
+                            <MudTd></MudTd>
+                            <MudTd></MudTd>
+                            <MudTd Style="text-align:end"><span class="iv-num">@Money(_items.Sum(i => i.Last_Purchase_Total))</span></MudTd>
+                            <MudTd Style="text-align:end"><span class="iv-num">@Money(_items.Sum(i => i.Avg_Cost_Total))</span></MudTd>
+                        </MudTFootRow>
+                    }
+                </FooterContent>
+                <NoRecordsContent>
+                    <div class="iv-empty"><MudIcon Icon="@Icons.Material.Filled.Inventory" Size="Size.Large" /><b>@Tr("IVREmptyStore")</b></div>
+                </NoRecordsContent>
+            </MudTable>
+        }
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private readonly InventoryValueReportService _svc = new();
+    private List<StoreValueRow> _stores = new();
+    private List<ItemValueRow> _items = new();
+    private StoreValueRow? _store;
+    private string? _error;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        await LoadStoresAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private async Task LoadStoresAsync()
+    {
+        _loading = true; _error = null;
+        try { _stores = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetStoreSummary(); }); }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); _stores = new(); }
+        finally { _loading = false; }
+    }
+
+    private async Task OpenStoreAsync(StoreValueRow s)
+    {
+        _store = s; _items = new(); _loading = true; _error = null;
+        try { _items = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetItems(s.Store_Id); }); }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _loading = false; }
+    }
+
+    private Task BackAsync() { _store = null; _items = new(); return Task.CompletedTask; }
+
+    private async Task PrintAsync() => await JS.InvokeVoidAsync("window.print");
+
+    private static string Money(decimal v) => v.ToString("N2", CultureInfo.InvariantCulture);
+    private static string Qty(decimal v) => v.ToString("0.##", CultureInfo.InvariantCulture);
+    private static string CodeText(string code) => string.IsNullOrWhiteSpace(code) || code.Trim() == "0" ? "" : code;
+    private static string SmallToText(decimal small, decimal factor, string bUnit, string sUnit)
+    {
+        if (factor <= 0) factor = 1;
+        decimal abs = Math.Abs(small), large = Math.Floor(abs / factor), rest = abs - large * factor;
+        string t = rest != 0 ? $"{Qty(large)} {bUnit} + {Qty(rest)} {sUnit}" : $"{Qty(large)} {bUnit}";
+        return small < 0 ? "-" + t : t;
+    }
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

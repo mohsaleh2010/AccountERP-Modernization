@@ -4665,4 +4665,21 @@
   <data name="SADTableTitle" xml:space="preserve"><value>Comptes de contrepartie des mouvements de stock</value></data>
   <data name="SADSelectedAccount" xml:space="preserve"><value>Compte sélectionné</value></data>
   <data name="SADConfirm" xml:space="preserve"><value>Valider</value></data>
+  <data name="IVRTitle" xml:space="preserve"><value>Rapport de valeur du stock</value></data>
+  <data name="IVRSubAll" xml:space="preserve"><value>Valeur du stock par entrepôt</value></data>
+  <data name="IVRSubStore" xml:space="preserve"><value>Articles de l&apos;entrepôt : {0}</value></data>
+  <data name="IVRBack" xml:space="preserve"><value>Retour aux entrepôts</value></data>
+  <data name="IVRStores" xml:space="preserve"><value>Entrepôts</value></data>
+  <data name="IVRStore" xml:space="preserve"><value>Entrepôt</value></data>
+  <data name="IVRClickHint" xml:space="preserve"><value>Cliquez sur un entrepôt pour voir ses articles.</value></data>
+  <data name="IVRItemsCount" xml:space="preserve"><value>Articles</value></data>
+  <data name="IVRItem" xml:space="preserve"><value>Article</value></data>
+  <data name="IVRQty" xml:space="preserve"><value>Quantité</value></data>
+  <data name="IVRLastPrice" xml:space="preserve"><value>Dernier prix d&apos;achat</value></data>
+  <data name="IVRAvgCost" xml:space="preserve"><value>Coût moyen</value></data>
+  <data name="IVRLastTotal" xml:space="preserve"><value>Total au dernier prix d&apos;achat</value></data>
+  <data name="IVRAvgTotal" xml:space="preserve"><value>Total au coût moyen</value></data>
+  <data name="IVRGrandTotal" xml:space="preserve"><value>Total général</value></data>
+  <data name="IVREmpty" xml:space="preserve"><value>Aucun entrepôt avec stock</value></data>
+  <data name="IVREmptyStore" xml:space="preserve"><value>Aucun article en stock</value></data>
 </root>

@@ -4663,4 +4663,21 @@
   <data name="SADTableTitle" xml:space="preserve"><value>Offset accounts for stock movements</value></data>
   <data name="SADSelectedAccount" xml:space="preserve"><value>Selected account</value></data>
   <data name="SADConfirm" xml:space="preserve"><value>Confirm</value></data>
+  <data name="IVRTitle" xml:space="preserve"><value>Inventory value report</value></data>
+  <data name="IVRSubAll" xml:space="preserve"><value>Each store&apos;s stock value at last purchase price and average cost</value></data>
+  <data name="IVRSubStore" xml:space="preserve"><value>Items of store: {0}</value></data>
+  <data name="IVRBack" xml:space="preserve"><value>Back to stores</value></data>
+  <data name="IVRStores" xml:space="preserve"><value>Stores</value></data>
+  <data name="IVRStore" xml:space="preserve"><value>Store</value></data>
+  <data name="IVRClickHint" xml:space="preserve"><value>Click a store to see its items and value details.</value></data>
+  <data name="IVRItemsCount" xml:space="preserve"><value>Items</value></data>
+  <data name="IVRItem" xml:space="preserve"><value>Item</value></data>
+  <data name="IVRQty" xml:space="preserve"><value>Quantity</value></data>
+  <data name="IVRLastPrice" xml:space="preserve"><value>Last purchase price</value></data>
+  <data name="IVRAvgCost" xml:space="preserve"><value>Average cost</value></data>
+  <data name="IVRLastTotal" xml:space="preserve"><value>Total at last purchase price</value></data>
+  <data name="IVRAvgTotal" xml:space="preserve"><value>Total at average cost</value></data>
+  <data name="IVRGrandTotal" xml:space="preserve"><value>Grand total</value></data>
+  <data name="IVREmpty" xml:space="preserve"><value>No stores with stock</value></data>
+  <data name="IVREmptyStore" xml:space="preserve"><value>No items with stock in this store</value></data>
 </root>

@@ -4663,4 +4663,21 @@
   <data name="SADTableTitle" xml:space="preserve"><value>الحسابات المقابلة للحركات المخزنية</value></data>
   <data name="SADSelectedAccount" xml:space="preserve"><value>الحساب المختار</value></data>
   <data name="SADConfirm" xml:space="preserve"><value>موافقة</value></data>
+  <data name="IVRTitle" xml:space="preserve"><value>تقرير قيمة المخزون</value></data>
+  <data name="IVRSubAll" xml:space="preserve"><value>قيمة رصيد كل مخزن بآخر سعر شراء وبمتوسط التكلفة</value></data>
+  <data name="IVRSubStore" xml:space="preserve"><value>أصناف المخزن: {0}</value></data>
+  <data name="IVRBack" xml:space="preserve"><value>رجوع للمخازن</value></data>
+  <data name="IVRStores" xml:space="preserve"><value>المخازن</value></data>
+  <data name="IVRStore" xml:space="preserve"><value>المخزن</value></data>
+  <data name="IVRClickHint" xml:space="preserve"><value>اضغط على أى مخزن لعرض أصنافه وتفاصيل قيمتها.</value></data>
+  <data name="IVRItemsCount" xml:space="preserve"><value>عدد الأصناف</value></data>
+  <data name="IVRItem" xml:space="preserve"><value>الصنف</value></data>
+  <data name="IVRQty" xml:space="preserve"><value>الكمية</value></data>
+  <data name="IVRLastPrice" xml:space="preserve"><value>آخر سعر شراء</value></data>
+  <data name="IVRAvgCost" xml:space="preserve"><value>متوسط التكلفة</value></data>
+  <data name="IVRLastTotal" xml:space="preserve"><value>إجمالى آخر سعر شراء</value></data>
+  <data name="IVRAvgTotal" xml:space="preserve"><value>إجمالى متوسط التكلفة</value></data>
+  <data name="IVRGrandTotal" xml:space="preserve"><value>الإجمالى</value></data>
+  <data name="IVREmpty" xml:space="preserve"><value>لا توجد مخازن برصيد</value></data>
+  <data name="IVREmptyStore" xml:space="preserve"><value>لا توجد أصناف برصيد فى هذا المخزن</value></data>
 </root>
