@@ -52,6 +52,11 @@ AccountModelsLib.Common.IS_ReadConStrFromXMLInfo = 1;
 // الإقلاع) لا يجب أن يمنع التطبيق من البدء - تماماً كما يفعل Program.cs الأصلي فى الويندوز فورمز.
 try { AccountModelsLib.SystemSettingsLoader.LoadTenantSettings(); } catch { }
 
+// ترقية القاعدة كما يفعل الديسك توب عند الإقلاع (AccountsERPSystem/Program.cs): الجداول والأعمدة الناقصة وربط RazorPath الفارغ فقط؛
+// بدونها لا تصل ربوط القوائم الجديدة (مثل «إدخال القيود») لقاعدة لم يُشغَّل عليها الديسك توب فتظهر «قريباً». الفشل لا يمنع الإقلاع.
+try { AccountModelsLib.StockEngineSchemaCLS.EnsureSchema(); } catch (Exception ee) { AccountModelsLib.operations.DataDictionaryLogerException(ee); }
+try { AccountModelsLib.SalesRepSchemaCLS.EnsureSchema(); } catch (Exception ee) { AccountModelsLib.operations.DataDictionaryLogerException(ee); }
+
 // 2. تسجيل الخدمة وتمرير الـ string داخل الـ Constructor مانيوال
 builder.Services.AddScoped<My_DbContext>(provider => new My_DbContext(connectionString));
 builder.Services.AddScoped<operations>(provider => {
