@@ -4682,4 +4682,6 @@
   <data name="IVRGrandTotal" xml:space="preserve"><value>Total général</value></data>
   <data name="IVREmpty" xml:space="preserve"><value>Aucun entrepôt avec stock</value></data>
   <data name="IVREmptyStore" xml:space="preserve"><value>Aucun article en stock</value></data>
+  <data name="HelpTitle" xml:space="preserve"><value>Guide du comptable</value></data>
+  <data name="HelpOpenTab" xml:space="preserve"><value>Ouvrir dans un nouvel onglet</value></data>
 </root>

@@ -4680,4 +4680,6 @@
   <data name="IVRGrandTotal" xml:space="preserve"><value>الإجمالى</value></data>
   <data name="IVREmpty" xml:space="preserve"><value>لا توجد مخازن برصيد</value></data>
   <data name="IVREmptyStore" xml:space="preserve"><value>لا توجد أصناف برصيد فى هذا المخزن</value></data>
+  <data name="HelpTitle" xml:space="preserve"><value>دليل المحاسب</value></data>
+  <data name="HelpOpenTab" xml:space="preserve"><value>فتح فى تبويب جديد</value></data>
 </root>

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الفواتير</title>
+<link rel="stylesheet" href="help.css">
+</head>
+<body>
+<header class="top"><div class="wrap"><nav>
+  <a href="index.html">الرئيسية</a>
+  <a href="start.html">البداية وربط الحسابات</a>
+  <a href="master.html">البيانات الأساسية</a>
+  <a href="stores.html">المخازن والأصناف</a>
+  <a href="inventory-acc.html">المخزون والقيود</a>
+  <a class="on" href="invoices.html">الفواتير</a>
+  <a href="cash.html">الصندوق والبنوك</a>
+  <a href="entries.html">القيود والتقارير</a>
+  <a href="opening.html">الأرصدة الافتتاحية</a>
+  <a href="costcenters.html">مراكز التكلفة</a>
+  <a href="salesrep.html">المندوبون</a>
+  <a href="faq.html">أسئلة وأجوبة</a>
+</nav></div></header>
+
+<main class="wrap">
+<h1>الفواتير: مبيعات ومشتريات ومرتجعات</h1>
+<p class="lead">الفاتورة هي أكثر مستند يحرّك كل شيء معاً: حساب العميل أو المورد، والمبيعات أو المشتريات، والضريبة، ورصيد المخزن، وأحياناً تكلفة البضاعة.</p>
+
+<h2>ماذا يحدث عند حفظ أي فاتورة؟</h2>
+<ol>
+<li>تتحقق الفاتورة من البيانات (العميل أو المورد، الأصناف، الكميات، المخزن).</li>
+<li>تُحفظ الفاتورة وسطورها.</li>
+<li><b>يتغير رصيد المخزن</b> لكل صنف مخزني: البيع ينقص، ومرتجع البيع يزيد، والشراء يزيد، ومرتجع الشراء ينقص.</li>
+<li><b>يتولد قيد يومية</b> بين الأطراف المربوطة بحساباتها.</li>
+<li>في الفرع «المستمر» يتولد قيد إضافي للمخزون أو للتكلفة (<a href="inventory-acc.html">المخزون والقيود</a>).</li>
+</ol>
+<p>لو أي خطوة فشلت تُلغى الفاتورة كلها، فلا تجد فاتورة محفوظة بلا قيدها.</p>
+
+<h2>فاتورة المبيعات</h2>
+<p><span class="path">/accounts/invoices/sales-invoice</span> (جديدة) أو <span class="path">/accounts/invoices/sales-invoice/{رقم}</span> (عرض وتعديل).</p>
+<p>نفس الشاشة تغطي أنواع البيع كلها: نقدي، آجل، قطاعي، وحفظ الأصناف مباشرة. تختار النوع من القائمة حسب ما تفتح.</p>
+<ul>
+<li><b>نقدي:</b> يدخل المبلغ الصندوق فوراً.</li>
+<li><b>آجل:</b> يُسجَّل على حساب العميل ويُسدَّد لاحقاً بسند قبض.</li>
+<li><b>الضريبة:</b> الفاتورة إما «فاتورة ضريبية» أو لا. والضريبة تُحسب إما <b>على الإجمالي</b> أو <b>على كل صنف</b>. إذا كانت على كل صنف فلا تُحسب مرة ثانية على الإجمالي ولا يُخصم الخصم على الإجمالي بعد ضريبة الأصناف.</li>
+</ul>
+<div class="example"><b>مثال بيع آجل بضريبة 14%:</b> صنف بـ 1,000.
+<table>
+<tr><th>القيد</th><th class="n">مدين</th><th class="n">دائن</th></tr>
+<tr><td>العميل (شركة النور)</td><td class="n">1,140</td><td class="n"></td></tr>
+<tr><td>المبيعات</td><td class="n"></td><td class="n">1,000</td></tr>
+<tr><td>ضريبة القيمة المضافة (مخرجات)</td><td class="n"></td><td class="n">140</td></tr>
+</table>
+<p>المخزن: ينقص الصنف بالكمية المباعة. رصيد العميل: يزيد 1,140.</p></div>
+<div class="example"><b>نفس الفاتورة نقدي:</b> الصف الأول يصبح «الصندوق» بدل «العميل»، والباقي كما هو.</div>
+
+<h3>مرتجع المبيعات</h3>
+<p><span class="path">/accounts/invoices/sales-return</span>. عكس البيع: يزيد رصيد المخزن، ويُنقص مديونية العميل (أو يرد له نقداً)، وتنقص المبيعات والضريبة بالقدر المرتجع.</p>
+
+<h3>قوائم وتقارير المبيعات</h3>
+<ul>
+<li><span class="path">/accounts/invoices/list</span> — قائمة الفواتير للبحث والفتح.</li>
+<li><span class="path">/accounts/invoices/sales-total</span> و<span class="path">sales-return-total</span> — إجماليات المبيعات والمرتجعات.</li>
+<li><span class="path">/accounts/sales/daily-customer-sales</span> و<span class="path">daily-item-sale</span> — مبيعات يومية لكل عميل ولكل صنف.</li>
+<li><span class="path">/accounts/invoices/payments</span> — سداد الفواتير: توزع إذن قبض على فواتير العميل المفتوحة. لا تتجاوز المتبقي على الفاتورة، ولا تربط فاتورة بعميل غير صاحب الإذن.</li>
+</ul>
+
+<h2>فاتورة المشتريات</h2>
+<p><span class="path">/accounts/invoices/purchase-invoice</span>، ومرتجعها <span class="path">/accounts/invoices/purchase-return</span>.</p>
+<div class="example"><b>مثال شراء آجل بضريبة 14%:</b> 100 كيلو سكر بسعر 30 = 3,000.
+<table>
+<tr><th>القيد</th><th class="n">مدين</th><th class="n">دائن</th></tr>
+<tr><td>المشتريات</td><td class="n">3,000</td><td class="n"></td></tr>
+<tr><td>ضريبة القيمة المضافة (مدخلات)</td><td class="n">420</td><td class="n"></td></tr>
+<tr><td>المورد (مورد الخير)</td><td class="n"></td><td class="n">3,420</td></tr>
+</table>
+<p>المخزن: يزيد السكر 100 كيلو، ويتحدث متوسط تكلفته وآخر سعر شراء. في الفرع المستمر يُضاف قيد: مدين حساب المخزن 3,000، دائن المشتريات 3,000.</p></div>
+<ul>
+<li><span class="path">/accounts/invoices/purchases-list</span> — قائمة فواتير الشراء.</li>
+<li><span class="path">/accounts/invoices/purchase-items-report</span> — مشتريات كل صنف (كميات وأسعار) عبر الفترة.</li>
+<li><span class="path">/accounts/invoices/purchase-sale-prices</span> — مقارنة أسعار الشراء بالبيع لمراجعة الهوامش.</li>
+<li><span class="path">/accounts/invoices/purchase-due-invoices</span> — فواتير الشراء المستحقة السداد.</li>
+</ul>
+
+<h2>طلبيات العملاء</h2>
+<p><span class="path">/accounts/sales/customer-orders</span> و<span class="path">/accounts/sales/customer-order</span>. الطلبية مستند حجز لا يحرك مخزناً ولا حسابات، حتى تتحول إلى فاتورة. وبعد التحويل تتبع الفاتورة كل القواعد أعلاه. تقارير الطلبيات في <span class="path">/accounts/sales/customer-orders-report</span>.</p>
+
+<h2>نقطة البيع والصيدلية والمراكز</h2>
+<p><span class="path">/accounts/pos/invoice</span> فاتورة بيع سريعة للكاشير. وفي مركز التجميل فاتورة الموعد من <span class="path">/accounts/beauty/invoice-create/{موعد}</span>. تعمل بنفس منطق قيد البيع.</p>
+
+<h2>مكان الفاتورة في الدفاتر</h2>
+<p>لترى القيد الذي ولّدته فاتورة بعينها: افتح <span class="path">/accounts/journal-entries</span> وابحث بنوع المستند ورقمه، أو افتحه من الفاتورة إن وُجد الزر. وتوجد حارسة تحذيرية تنبّهك لو قيد فاتورة غير متزن أو ناقص.</p>
+
+<div class="warn"><b>لا تعدّل رصيد المخزن بعد الفاتورة بإذن يدوي</b> إلا لسبب حقيقي (تلف، جرد). أي إذن يدوي على بضاعة بعتها يخرّب مطابقة الكمية مع الفاتورة.</div>
+
+<div class="pager"><a href="inventory-acc.html">→ المخزون والقيود</a><a href="cash.html">الصندوق والبنوك ←</a></div>
+</main>
+</body>
+</html>

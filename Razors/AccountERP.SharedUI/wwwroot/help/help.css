@@ -1,0 +1,61 @@
+:root {
+  --bg: #f6f7f9; --card: #ffffff; --text: #1d2733; --muted: #5b6776; --line: #dfe3e8;
+  --primary: #1565c0; --primary-soft: #e3effc; --warn: #8a5a00; --warn-bg: #fff4d6; --ok: #1b6e3a; --ok-bg: #e2f5e9;
+  --code-bg: #eef1f5;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14181d; --card: #1d232a; --text: #e6eaef; --muted: #9aa6b5; --line: #323b46;
+    --primary: #6aa9ee; --primary-soft: #1e2f44; --warn: #f1c565; --warn-bg: #3a2f15; --ok: #77d49a; --ok-bg: #173324;
+    --code-bg: #262e37;
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: "Segoe UI", Tahoma, "Noto Naskh Arabic", Arial, sans-serif; font-size: 17px; line-height: 1.9;
+}
+.wrap { max-width: 920px; margin: 0 auto; padding: 0 16px 48px; }
+header.top { background: var(--card); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+header.top .wrap { padding-bottom: 0; }
+nav { display: flex; flex-wrap: wrap; gap: 4px 6px; padding: 10px 0; font-size: 15px; }
+nav a { text-decoration: none; color: var(--muted); padding: 4px 12px; border-radius: 999px; border: 1px solid transparent; }
+nav a:hover { color: var(--primary); border-color: var(--line); }
+nav a.on { background: var(--primary-soft); color: var(--primary); font-weight: 700; }
+h1 { font-size: 1.9rem; margin: 28px 0 6px; line-height: 1.4; }
+h2 { font-size: 1.35rem; margin: 36px 0 8px; padding-top: 8px; border-top: 1px solid var(--line); line-height: 1.5; }
+h3 { font-size: 1.1rem; margin: 22px 0 4px; color: var(--primary); }
+p { margin: 8px 0; }
+.lead { color: var(--muted); font-size: 1.05rem; margin-bottom: 18px; }
+ul, ol { padding-inline-start: 24px; margin: 8px 0; }
+li { margin: 4px 0; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin: 14px 0; }
+.card h3 { margin-top: 0; }
+.path { display: inline-block; background: var(--code-bg); border-radius: 6px; padding: 0 8px; font-family: Consolas, monospace; font-size: .92rem; direction: ltr; unicode-bidi: embed; }
+.note, .warn, .ok { border-radius: 10px; padding: 10px 16px; margin: 14px 0; border-inline-start: 5px solid; }
+.note { background: var(--primary-soft); border-color: var(--primary); }
+.warn { background: var(--warn-bg); border-color: var(--warn); }
+.ok { background: var(--ok-bg); border-color: var(--ok); }
+.note b:first-child, .warn b:first-child, .ok b:first-child { display: block; margin-bottom: 2px; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; background: var(--card); font-size: .98rem; }
+th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: start; vertical-align: top; }
+th { background: var(--primary-soft); }
+td.n, th.n { text-align: end; font-variant-numeric: tabular-nums; direction: ltr; }
+.example { background: var(--card); border: 1px dashed var(--primary); border-radius: 12px; padding: 12px 18px; margin: 16px 0; }
+.example > b:first-child { color: var(--primary); }
+.toc { columns: 2; column-gap: 24px; }
+@media (max-width: 640px) { .toc { columns: 1; } body { font-size: 16px; } }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.grid a.tile { display: block; text-decoration: none; color: inherit; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.grid a.tile:hover { border-color: var(--primary); }
+.grid a.tile b { color: var(--primary); display: block; }
+.grid a.tile span { color: var(--muted); font-size: .95rem; }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; }
+.pager a { color: var(--primary); text-decoration: none; border: 1px solid var(--line); border-radius: 10px; padding: 8px 16px; background: var(--card); }
+footer { color: var(--muted); font-size: .9rem; margin-top: 36px; }
+@media print {
+  header.top, .pager { display: none; }
+  body { background: #fff; color: #000; font-size: 13pt; }
+  .card, .example, table { break-inside: avoid; }
+}

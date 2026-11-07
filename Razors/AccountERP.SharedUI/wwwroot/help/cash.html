@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الصندوق والبنوك</title>
+<link rel="stylesheet" href="help.css">
+</head>
+<body>
+<header class="top"><div class="wrap"><nav>
+  <a href="index.html">الرئيسية</a>
+  <a href="start.html">البداية وربط الحسابات</a>
+  <a href="master.html">البيانات الأساسية</a>
+  <a href="stores.html">المخازن والأصناف</a>
+  <a href="inventory-acc.html">المخزون والقيود</a>
+  <a href="invoices.html">الفواتير</a>
+  <a class="on" href="cash.html">الصندوق والبنوك</a>
+  <a href="entries.html">القيود والتقارير</a>
+  <a href="opening.html">الأرصدة الافتتاحية</a>
+  <a href="costcenters.html">مراكز التكلفة</a>
+  <a href="salesrep.html">المندوبون</a>
+  <a href="faq.html">أسئلة وأجوبة</a>
+</nav></div></header>
+
+<main class="wrap">
+<h1>الصندوق والبنوك</h1>
+<p class="lead">سندات القبض والصرف هي الطريقة الأساسية لتحريك النقدية بعيداً عن الفواتير: تحصيل من عميل، دفع لمورد، سداد مصروف، تحويل بين صندوقين.</p>
+
+<h2>إذن القبض والصرف</h2>
+<p><span class="path">/accounts/cash/voucher</span> (إذن متعدد الأسطر) و<span class="path">/accounts/cash/voucher-party</span> (إذن لعميل أو مورد) و<span class="path">/accounts/cash/vouchers</span> (القائمة).</p>
+<p>الإذن يخص <b>صندوقاً واحداً</b> وعدة حسابات مقابلة (عميل، مورد، أو أي حساب في الشجرة)، ولكل سطر مركز تكلفة اختياري.</p>
+<ul>
+<li><b>إذن قبض (استلام نقدية):</b> الصندوق مدين، والأطراف دائنة.</li>
+<li><b>إذن صرف:</b> الأطراف مدينة، والصندوق دائن.</li>
+</ul>
+<div class="example"><b>مثال قبض:</b> «شركة النور» سدّدت 1,140 نقداً.
+<table>
+<tr><th>القيد</th><th class="n">مدين</th><th class="n">دائن</th></tr>
+<tr><td>الصندوق</td><td class="n">1,140</td><td class="n"></td></tr>
+<tr><td>شركة النور</td><td class="n"></td><td class="n">1,140</td></tr>
+</table>
+<p>أثره: رصيد الصندوق +1,140، ومديونية العميل −1,140.</p></div>
+<div class="example"><b>مثال صرف مصروف:</b> دفعت 300 إيجار.
+<table>
+<tr><th>القيد</th><th class="n">مدين</th><th class="n">دائن</th></tr>
+<tr><td>مصروف الإيجار</td><td class="n">300</td><td class="n"></td></tr>
+<tr><td>الصندوق</td><td class="n"></td><td class="n">300</td></tr>
+</table></div>
+<h3>إذن قائم</h3>
+<ul>
+<li><b>عرض:</b> افتح الإذن برقمه للقراءة.</li>
+<li><b>تعديل:</b> يتم بحذف الإذن وإصداره من جديد بنفس الرقم في عملية واحدة، فلا يبقى قيد قديم. ويُمنع لو الإذن مرتبط بعربون أو مستند آخر.</li>
+<li><b>حذف:</b> مسموح بصلاحية الحذف، ويمنعه البرنامج لو تكرر رقم أحد أسطره في حركات الصندوق حتى لا يُحذف إذن آخر بالخطأ.</li>
+</ul>
+
+<h2>التحويل بين الصناديق</h2>
+<p><span class="path">/accounts/cash/transfer</span>. تنقل مبلغاً من صندوق إلى آخر (أو إلى بنك). الأثر: الأول دائن والثاني مدين بنفس المبلغ، فلا يتغير إجمالي النقدية.</p>
+
+<h2>كشوف الصندوق</h2>
+<ul>
+<li><span class="path">/accounts/cash/box-statement</span> — كشف حركة صندوق: كل قبض وصرف ورصيد بعده.</li>
+<li><span class="path">/accounts/cash/box-totals</span> — إجماليات القبض والصرف لكل صندوق.</li>
+<li><span class="path">/accounts/cash/many-boxes</span> — كشف لعدة صناديق معاً.</li>
+<li><span class="path">/accounts/cashbox-daily-journal</span> — يومية الصندوق.</li>
+<li><span class="path">/accounts/sandouk-entries</span> — إنشاء قيود الصندوق آلياً لسندات لم يُنشأ لها قيد.</li>
+</ul>
+
+<h2>الإشعارات المالية</h2>
+<p><span class="path">/accounts/financial-notice/general-review</span> و<span class="path">by-item-review</span>. إشعارات خصم وإضافة (تسويات) على حساب عميل أو مورد، عامة أو بصنف. تعدّل رصيد الطرف بقيد تسوية دون حركة نقدية.</p>
+
+<div class="warn"><b>الصندوق بالسالب</b> لو رصيد الصندوق سيصبح سالباً بعد الصرف فراجع: غالباً هناك قبض لم يُسجَّل، أو الصندوق المختار ليس صندوق الفرع الصحيح.</div>
+
+<div class="pager"><a href="invoices.html">→ الفواتير</a><a href="entries.html">القيود والتقارير ←</a></div>
+</main>
+</body>
+</html>

@@ -4682,4 +4682,6 @@
   <data name="IVRGrandTotal" xml:space="preserve"><value>Gesamtsumme</value></data>
   <data name="IVREmpty" xml:space="preserve"><value>Keine Lager mit Bestand</value></data>
   <data name="IVREmptyStore" xml:space="preserve"><value>Keine Artikel mit Bestand</value></data>
+  <data name="HelpTitle" xml:space="preserve"><value>Buchhalter-Handbuch</value></data>
+  <data name="HelpOpenTab" xml:space="preserve"><value>In neuem Tab öffnen</value></data>
 </root>

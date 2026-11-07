@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مراكز التكلفة</title>
+<link rel="stylesheet" href="help.css">
+</head>
+<body>
+<header class="top"><div class="wrap"><nav>
+  <a href="index.html">الرئيسية</a>
+  <a href="start.html">البداية وربط الحسابات</a>
+  <a href="master.html">البيانات الأساسية</a>
+  <a href="stores.html">المخازن والأصناف</a>
+  <a href="inventory-acc.html">المخزون والقيود</a>
+  <a href="invoices.html">الفواتير</a>
+  <a href="cash.html">الصندوق والبنوك</a>
+  <a href="entries.html">القيود والتقارير</a>
+  <a href="opening.html">الأرصدة الافتتاحية</a>
+  <a class="on" href="costcenters.html">مراكز التكلفة</a>
+  <a href="salesrep.html">المندوبون</a>
+  <a href="faq.html">أسئلة وأجوبة</a>
+</nav></div></header>
+
+<main class="wrap">
+<h1>مراكز التكلفة</h1>
+<p class="lead">مركز التكلفة طريقة لتقسيم نفس الحساب على مشروعات أو أقسام أو فروع. الإيجار مصروف واحد في الدفاتر، لكنك تريد أن تعرف كم منه على مشروع (أ) وكم على مشروع (ب).</p>
+
+<h2>الشاشات</h2>
+<table>
+<tr><th>الشاشة</th><th>المسار</th><th>ماذا تفعل</th></tr>
+<tr><td>مراكز التكلفة</td><td><span class="path">/accounts/cost-centers</span></td><td>شجرة المراكز: أب وأولاد، تضيف وتعدل وتوقف.</td></tr>
+<tr><td>ربط الحسابات بمراكز التكلفة</td><td><span class="path">/accounts/cost-center-assignment</span></td><td>تحدد أي حسابات تقبل مركز تكلفة على سطورها.</td></tr>
+<tr><td>تقارير مراكز التكلفة</td><td><span class="path">/accounts/cost-centers/reports</span></td><td>مصروفات وإيرادات كل مركز.</td></tr>
+<tr><td>أستاذ مراكز التكلفة</td><td><span class="path">/accounts/final/cost-center-ledger</span></td><td>حركة كل مركز حسابا حسابا.</td></tr>
+</table>
+
+<h2>كيف يعمل؟</h2>
+<p>مركز التكلفة لا يغير القيد نفسه، بل يوسّم السطر. يظهر الحقل في سطور القيد اليدوي، وفي سندات القبض والصرف. وفي التقارير تفلتر أو تجمّع حسب المركز.</p>
+<div class="example"><b>مثال:</b> دفعت إيجار 3,000 لمشروعين. تعمل قيداً بسطرين مدينين:
+<table>
+<tr><th>الحساب</th><th>المركز</th><th class="n">مدين</th><th class="n">دائن</th></tr>
+<tr><td>مصروف الإيجار</td><td>مشروع (أ)</td><td class="n">1,800</td><td class="n"></td></tr>
+<tr><td>مصروف الإيجار</td><td>مشروع (ب)</td><td class="n">1,200</td><td class="n"></td></tr>
+<tr><td>الصندوق</td><td></td><td class="n"></td><td class="n">3,000</td></tr>
+</table>
+<p>ميزان المراجعة يعرض مصروف الإيجار 3,000 كحساب واحد، وتقرير المراكز يعرض لكل مشروع نصيبه.</p></div>
+
+<div class="note"><b>نصيحة</b> قبل ما تبدأ، اتفق على شجرة المراكز وسمّها بأسماء ثابتة (مشروع، قسم، فرع). تغيير الشجرة بعد التشغيل يربك المقارنة بين الفترات.</div>
+
+<div class="pager"><a href="opening.html">→ الأرصدة الافتتاحية</a><a href="salesrep.html">المندوبون ←</a></div>
+</main>
+</body>
+</html>

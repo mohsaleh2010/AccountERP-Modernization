@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>البيانات الأساسية</title>
+<link rel="stylesheet" href="help.css">
+</head>
+<body>
+<header class="top"><div class="wrap"><nav>
+  <a href="index.html">الرئيسية</a>
+  <a href="start.html">البداية وربط الحسابات</a>
+  <a class="on" href="master.html">البيانات الأساسية</a>
+  <a href="stores.html">المخازن والأصناف</a>
+  <a href="inventory-acc.html">المخزون والقيود</a>
+  <a href="invoices.html">الفواتير</a>
+  <a href="cash.html">الصندوق والبنوك</a>
+  <a href="entries.html">القيود والتقارير</a>
+  <a href="opening.html">الأرصدة الافتتاحية</a>
+  <a href="costcenters.html">مراكز التكلفة</a>
+  <a href="salesrep.html">المندوبون</a>
+  <a href="faq.html">أسئلة وأجوبة</a>
+</nav></div></header>
+
+<main class="wrap">
+<h1>البيانات الأساسية</h1>
+<p class="lead">هذه الشاشات لا تعمل قيوداً بنفسها، لكن كل فاتورة وسند وإذن يعتمد عليها. أي خطأ هنا (عميل بلا حساب، مخزن بلا فرع، صندوق بلا ربط) يظهر لاحقاً كرسالة رفض أو قيد ناقص.</p>
+
+<h2>الفروع والمخازن والصناديق</h2>
+
+<div class="card">
+<h3>فروع الشركة</h3>
+<p><span class="path">/main-data/branches</span></p>
+<p>الفرع هو الوحدة التي تُحسب عليها القيود والأرصدة. كل مخزن وكل صندوق ينتمي لفرع. طريقة المحاسبة المخزنية (دوري أو مستمر) تُضبط <b>لكل فرع</b>.</p>
+<p><b>أثره:</b> لا قيد يتولد من حفظ الفرع. لكن قيود الفرع ومخازنه وصناديقه تُفصل عن بقية الفروع في التقارير.</p>
+</div>
+
+<div class="card">
+<h3>المخازن</h3>
+<p><span class="path">/main-data/stores</span></p>
+<p>المخزن هو المكان الذي تقف فيه الكميات. الأرصدة تُحفظ لكل (صنف × مخزن). السيارات (مخازن المندوبين) والأقسام وأي مخزن خاص تُعامل كمخازن أيضاً.</p>
+<p><b>أثره:</b> لو الفرع «مستمر» فلازم يكون للمخزن حساب مربوط من <span class="path">/store/account-settings</span>، وإلا يُرفض ترحيل أذونه.</p>
+<div class="example"><b>مثال:</b> مخازنك: «مخزن مشتريات» و«مخزن انتاج رئيسي» و«سيارة - أحمد». كل واحد منها له رصيد مستقل للصنف الواحد، وتنقل بينها بإذن تحويل.</div>
+</div>
+
+<div class="card">
+<h3>الصناديق وصناديق الفروع والبنوك</h3>
+<p><span class="path">/main-data/cash-boxes</span> · <span class="path">/main-data/branch-cash-boxes</span> · <span class="path">/main-data/banks</span> · <span class="path">/main-data/cash-payment-methods</span></p>
+<p>الصندوق أو البنك هو مكان النقدية. كل واحد يُربط بحساب في الشجرة (من ربط الحسابات ← الصناديق أو البنوك). طرق الدفع تحدد كيف يُدفع (نقداً، شيك، تحويل) وإلى أي صندوق أو بنك.</p>
+<p><b>أثره:</b> كل سند قبض أو صرف يحرّك رصيد الصندوق المختار ويعمل قيداً على حسابه.</p>
+</div>
+
+<h2>العملاء والموردون</h2>
+
+<div class="card">
+<h3>العملاء</h3>
+<p><span class="path">/customers/info</span> (بيانات عميل) · <span class="path">/customers/list</span> (القائمة) · <span class="path">/customers/groups</span> · <span class="path">/customers/mixed-info</span> · <span class="path">/customers/print-report</span></p>
+<ul>
+<li><b>بيانات العملاء:</b> الاسم والعنوان والتليفون وحد الائتمان والمجموعة، وربطه بحسابه.</li>
+<li><b>مجموعات العملاء:</b> تصنيف (جملة، قطاعي، حكومي...) تسهّل التقارير والأسعار.</li>
+<li><b>حساب مختلط:</b> عندما يكون الطرف عميلاً ومورداً في نفس الوقت، فتجمع حسابه في كشف واحد بدل كشفين.</li>
+</ul>
+<p><b>أثره على الحسابات:</b> إضافة العميل بحد ذاتها لا تعمل قيداً. الرصيد يظهر فقط بعد أول فاتورة أو سند أو رصيد افتتاحي. رصيد العميل في الكشوف يُحسب من الحركات.</p>
+</div>
+
+<div class="card">
+<h3>الموردون</h3>
+<p><span class="path">/suppliers/info</span> · <span class="path">/suppliers/list</span> · <span class="path">/suppliers/groups</span> · <span class="path">/suppliers/print-report</span></p>
+<p>نفس منطق العملاء. شركات الشحن تُسجَّل كموردين أيضاً (<span class="path">/main-data/shipment-companies</span>)، فتظهر في كشوف الموردين وتُربط بحساب كأي مورد.</p>
+</div>
+
+<h2>الأصناف</h2>
+<p>الأصناف لها صفحة خاصة تشرح الوحدات والأسعار والأرصدة: <a href="stores.html">المخازن والأصناف</a>.</p>
+
+<h2>بيانات مساعدة</h2>
+<table>
+<tr><th>الشاشة</th><th>المسار</th><th>تستخدم في</th></tr>
+<tr><td>الدول والمحافظات والمدن والمناطق</td><td><span class="path">/main-data/countries</span> ← <span class="path">/main-data/areas</span></td><td>عناوين العملاء والموردين، وتقارير حسب المنطقة.</td></tr>
+<tr><td>الموظفون</td><td><span class="path">/main-data/employees</span></td><td>العهد، الصرف للموظف، العمولات.</td></tr>
+<tr><td>مندوبو المبيعات وعملاؤهم</td><td><span class="path">/main-data/sales-reps</span> · <span class="path">/main-data/sales-rep-customers</span></td><td>راجع <a href="salesrep.html">المندوبون</a>.</td></tr>
+<tr><td>الماكينات</td><td><span class="path">/main-data/machines</span></td><td>أذون الصرف على الماكينات (مصروف استهلاك).</td></tr>
+<tr><td>أنواع الكونترا</td><td><span class="path">/main-data/kontra-types</span></td><td>تصنيف عمليات خاصة في الحسابات.</td></tr>
+<tr><td>الجهات الخارجية للسحب</td><td><span class="path">/main-data/external-draws</span></td><td>عمليات السحب والتحويل مع جهات خارج المخازن.</td></tr>
+<tr><td>العملات ومعاملات التحويل</td><td><span class="path">/accounts/currencies</span> · <span class="path">/accounts/currency-factors</span></td><td>الفواتير والسندات بعملة أجنبية، وقيمتها المكافئة بالعملة الأساسية.</td></tr>
+</table>
+
+<div class="warn"><b>انتبه</b> لا تكرر العميل نفسه بأكثر من اسم. التكرار يقسم رصيده على حسابين، ثم تضطر لدمجهما بقيد يدوي.</div>
+
+<div class="pager"><a href="start.html">→ البداية</a><a href="stores.html">المخازن والأصناف ←</a></div>
+</main>
+</body>
+</html>

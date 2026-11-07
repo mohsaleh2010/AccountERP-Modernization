@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>المندوبون</title>
+<link rel="stylesheet" href="help.css">
+</head>
+<body>
+<header class="top"><div class="wrap"><nav>
+  <a href="index.html">الرئيسية</a>
+  <a href="start.html">البداية وربط الحسابات</a>
+  <a href="master.html">البيانات الأساسية</a>
+  <a href="stores.html">المخازن والأصناف</a>
+  <a href="inventory-acc.html">المخزون والقيود</a>
+  <a href="invoices.html">الفواتير</a>
+  <a href="cash.html">الصندوق والبنوك</a>
+  <a href="entries.html">القيود والتقارير</a>
+  <a href="opening.html">الأرصدة الافتتاحية</a>
+  <a href="costcenters.html">مراكز التكلفة</a>
+  <a class="on" href="salesrep.html">المندوبون</a>
+  <a href="faq.html">أسئلة وأجوبة</a>
+</nav></div></header>
+
+<main class="wrap">
+<h1>مندوبو المبيعات</h1>
+<p class="lead">المندوب عنده «مخزن سيارة» يحمّله بضاعة، ويبيع ويحصّل من العملاء، ثم يسلّم ما تبقى ويقفل ورديته. هذه الصفحة تشرح الدورة وأثرها على المخزن والحسابات.</p>
+
+<div class="note"><b>ملاحظة</b> بعض شاشات المندوبين تعمل بحسب ما فُعِّل عندك في الإعدادات والصلاحيات. إن لم تجد شاشة هنا في قائمتك فاسأل مسؤول النظام.</div>
+
+<h2>الدورة بالترتيب</h2>
+<ol>
+<li><b>الإعداد:</b> تضيف المندوب وعملاءه (<span class="path">/main-data/sales-reps</span> و<span class="path">/main-data/sales-rep-customers</span>) وتربط له مخزن سيارة.</li>
+<li><b>التحميل:</b> تحوّل بضاعة من المخزن الرئيسي إلى مخزن السيارة بإذن تحويل. الرئيسي ينقص والسيارة تزيد.</li>
+<li><b>الوردية:</b> يبدأ المندوب ورديته ويتحرك على خط سير.</li>
+<li><b>البيع والتحصيل:</b> فواتير وسندات من تطبيق المندوب. البيع ينقص مخزن السيارة، والتحصيل يدخل عهدة المندوب.</li>
+<li><b>المرتجع:</b> مرتجع صالح يعود لمخزن السيارة، والتالف يذهب لمخزن التالف.</li>
+<li><b>التفريغ والإقفال:</b> يعيد البضاعة المتبقية ويسلّم النقدية، وتُراجع الوردية.</li>
+<li><b>العمولة:</b> تُحسب حسب سياسة العمولات.</li>
+</ol>
+
+<h2>شاشات المكتب</h2>
+<table>
+<tr><th>الشاشة</th><th>المسار</th><th>ماذا تفعل</th></tr>
+<tr><td>المندوبون</td><td><span class="path">/salesrep/reps</span></td><td>بيانات المندوب وحالته.</td></tr>
+<tr><td>خطوط السير</td><td><span class="path">/salesrep/routes</span></td><td>تحدد العملاء والأيام لكل مندوب.</td></tr>
+<tr><td>الطلبيات</td><td><span class="path">/salesrep/orders</span></td><td>طلبيات العملاء التي أخذها المندوب، قبل أن تتحول إلى فواتير.</td></tr>
+<tr><td>التسليم</td><td><span class="path">/salesrep/deliver</span></td><td>تسليم الطلبية للعميل وإصدار الفاتورة.</td></tr>
+<tr><td>المرتجعات</td><td><span class="path">/salesrep/returns</span> · <span class="path">/salesrep/return</span></td><td>مرتجعات العملاء على المندوب، وأسبابها من <span class="path">/salesrep/return-reasons</span>.</td></tr>
+<tr><td>الوردية</td><td><span class="path">/salesrep/shift</span></td><td>فتح الوردية وإقفالها ومراجعة العهدة.</td></tr>
+<tr><td>الموافقات</td><td><span class="path">/salesrep/approvals</span></td><td>طلبات تحتاج موافقتك (خصم، مرتجع، حد ائتمان...).</td></tr>
+<tr><td>العمولات</td><td><span class="path">/salesrep/commissions</span> · <span class="path">/salesrep/policies</span></td><td>سياسات العمولة والعمولات المحسوبة.</td></tr>
+<tr><td>الأداء والتتبع</td><td><span class="path">/salesrep/performance</span> · <span class="path">/salesrep/track</span></td><td>مبيعات وزيارات المندوب، وموقعه على الخريطة.</td></tr>
+<tr><td>الأجهزة</td><td><span class="path">/salesrep/devices</span></td><td>الأجهزة المسموح لها بالدخول.</td></tr>
+<tr><td>مراجعة المزامنة</td><td><span class="path">/salesrep/sync-review</span></td><td>مستندات المندوب التي تعمل بدون إنترنت وتنتظر المراجعة.</td></tr>
+<tr><td>أسباب عدم البيع والبنوك والإشعارات</td><td><span class="path">/salesrep/nosale-reasons</span> · <span class="path">/salesrep/payment-banks</span> · <span class="path">/salesrep/notifications</span></td><td>قوائم مساعدة، ورسائل SMS وواتساب للعملاء.</td></tr>
+</table>
+
+<h2>الأثر على المخزن والحسابات</h2>
+<table>
+<tr><th>العملية</th><th>المخزن</th><th>الحسابات</th></tr>
+<tr><td>تحميل السيارة</td><td>الرئيسي −، السيارة +</td><td>تحويل بين مخزنين، بلا ربح أو خسارة. في الفرع المستمر يمر عبر «بضاعة بالطريق».</td></tr>
+<tr><td>بيع من السيارة</td><td>السيارة −</td><td>قيد الفاتورة العادي (عميل أو نقدية مقابل مبيعات). وفي المستمر قيد تكلفة المبيعات.</td></tr>
+<tr><td>تحصيل من العميل</td><td>—</td><td>مدين عهدة المندوب أو الصندوق، دائن العميل.</td></tr>
+<tr><td>مرتجع صالح</td><td>السيارة +</td><td>عكس البيع.</td></tr>
+<tr><td>تفريغ السيارة</td><td>السيارة −، الرئيسي +</td><td>تحويل بلا قيد في الدوري.</td></tr>
+</table>
+<div class="example"><b>مثال:</b> حمّلت السيارة بـ 50 كرتونة بتكلفة 100، وباع المندوب 30 بسعر 150 آجل، بدون ضريبة.
+<ul>
+<li>الرئيسي: −50، السيارة: +50 ثم −30 = 20 كرتونة متبقية.</li>
+<li>قيد البيع: مدين العملاء 4,500، دائن المبيعات 4,500.</li>
+<li>لو الفرع مستمر: قيد تكلفة: مدين تكلفة المبيعات 3,000، دائن مخزن السيارة 3,000. الربح 1,500.</li>
+</ul></div>
+
+<div class="warn"><b>العجز</b> لو في نهاية الوردية البضاعة التي مع المندوب أقل من المسجل، يظهر عجز. بحسب سياسة شركتك يحمّل على المندوب أو يُسجَّل كتسوية بالنقص. راجعه في الوردية قبل الإقفال.</div>
+
+<div class="pager"><a href="costcenters.html">→ مراكز التكلفة</a><a href="faq.html">أسئلة وأجوبة ←</a></div>
+</main>
+</body>
+</html>

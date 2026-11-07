@@ -1,0 +1,46 @@
+@* دليل المحاسب: صفحات HTML ثابتة فى wwwroot/help (index.html ثم start/master/stores/inventory-acc/invoices/cash/entries/opening/costcenters/salesrep/faq)،
+   تُعرض داخل هذه الصفحة بإطار حتى تبقى القائمة الجانبية والصلاحيات كما هى. الرابط المباشر للصفحات: _content/AccountERP.SharedUI/help/index.html. *@
+@page "/help"
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Tr("HelpTitle")</PageTitle>
+
+<style>
+    .help-frame { width: 100%; height: calc(100vh - 150px); min-height: 480px; border: 1px solid var(--mud-palette-lines-default); border-radius: 12px; background: var(--mud-palette-surface); }
+    .help-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 8px; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+    <div class="help-bar">
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">@Tr("HelpTitle")</MudText>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.OpenInNew" Href="@HelpUrl" Target="_blank">@Tr("HelpOpenTab")</MudButton>
+    </div>
+    <iframe class="help-frame" src="@HelpUrl" title="@Tr("HelpTitle")"></iframe>
+</MudContainer>
+
+@code {
+    private const string HelpUrl = "_content/AccountERP.SharedUI/help/index.html";
+
+    protected override void OnInitialized() => LangService.OnLanguageChanged += OnLanguageChangedHandler;
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

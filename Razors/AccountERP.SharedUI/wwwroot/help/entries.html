@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>القيود والتقارير</title>
+<link rel="stylesheet" href="help.css">
+</head>
+<body>
+<header class="top"><div class="wrap"><nav>
+  <a href="index.html">الرئيسية</a>
+  <a href="start.html">البداية وربط الحسابات</a>
+  <a href="master.html">البيانات الأساسية</a>
+  <a href="stores.html">المخازن والأصناف</a>
+  <a href="inventory-acc.html">المخزون والقيود</a>
+  <a href="invoices.html">الفواتير</a>
+  <a href="cash.html">الصندوق والبنوك</a>
+  <a class="on" href="entries.html">القيود والتقارير</a>
+  <a href="opening.html">الأرصدة الافتتاحية</a>
+  <a href="costcenters.html">مراكز التكلفة</a>
+  <a href="salesrep.html">المندوبون</a>
+  <a href="faq.html">أسئلة وأجوبة</a>
+</nav></div></header>
+
+<main class="wrap">
+<h1>القيود والتقارير المحاسبية</h1>
+<p class="lead">من قيد اليومية اليدوي، إلى المراجعة والترحيل، إلى ميزان المراجعة وكشوف الحسابات. هنا ترى نتيجة كل ما سجلته في باقي الشاشات.</p>
+
+<h2>دورة القيد</h2>
+<ol>
+<li><b>إنشاء القيد:</b> تلقائياً من فاتورة أو سند أو إذن، أو يدوياً من شاشات إدخال القيود.</li>
+<li><b>المراجعة:</b> تفتح قائمة القيود وتتأكد أنه كما تريد.</li>
+<li><b>الترحيل:</b> القيد غير المرحَّل لا يدخل أرصدة الأستاذ. الترحيل ينقل أثر القيود إلى الأرصدة.</li>
+<li><b>التقارير:</b> الميزان والأستاذ والحسابات الختامية.</li>
+</ol>
+
+<h2>إدخال القيود يدوياً</h2>
+<p>ثلاث شاشات لنفس الغرض. اختر الأسهل لك:</p>
+<table>
+<tr><th>الشاشة</th><th>المسار</th><th>تناسب</th></tr>
+<tr><td>إدخال القيود (نوع + قيمة)</td><td><span class="path">/accounts/journal-entry</span></td><td>تختار لكل سطر مدين أو دائن وتكتب القيمة. والقيمة تُعبَّأ تلقائياً بالفرق الجاري لتتزن بسرعة.</td></tr>
+<tr><td>القيود البسيطة</td><td><span class="path">/accounts/journal-entry/simple</span></td><td>قيد من حسابين: كل سطر فيه مدين أو دائن ومركز تكلفة وبيان.</td></tr>
+<tr><td>مدين - دائن</td><td><span class="path">/accounts/journal-entry/madin-da2n</span></td><td>عمودان للمدين والدائن جنب بعض، ويمكن نسخ قيد سابق.</td></tr>
+</table>
+<div class="example"><b>مثال قيد يدوي:</b> سداد إيجار شهر 300 بشيك من البنك.
+<table>
+<tr><th>الحساب</th><th class="n">مدين</th><th class="n">دائن</th></tr>
+<tr><td>مصروف الإيجار</td><td class="n">300</td><td class="n"></td></tr>
+<tr><td>البنك</td><td class="n"></td><td class="n">300</td></tr>
+</table>
+<p>القيد لا يُحفظ إلا إذا تساوى المدين والدائن. تقدر تكتب مركز تكلفة وبيان لكل سطر.</p></div>
+<div class="warn"><b>لا تستخدم القيد اليدوي لما له شاشة</b> فاتورة بيع أو سند قبض أو إذن مخزن له شاشته. القيد اليدوي لا يحرك الرصيد في المخزن ولا في كشف العميل بالطريقة التي يتوقعها التقرير.</div>
+
+<h2>مراجعة القيود</h2>
+<p><span class="path">/accounts/journal-entries</span>. فلتر بالتاريخ والحساب ونطاق رقم القيد، وفلاتر متقدمة (فرع، يومية، عملة، مركز تكلفة، مستخدم، بيان السطر، قيمة). اضغط على قيد لتعرض سطوره في لوحة التفاصيل. تفيدك لمعرفة <b>أي قيد ولّدته فاتورة أو سند معين</b>. هي معاينة للقراءة، والتعديل من شاشة الإدخال أو من المستند الأصلي.</p>
+
+<h2>ترحيل القيود</h2>
+<p><span class="path">/accounts/entries-posting</span>. ترحّل القيود غير المرحَّلة في فترة وفرع، أو تلغي ترحيل الفترة. العملية كلها تتم أو تتراجع كلها عند أي خطأ. ويُتحقق أن التاريخين داخل الفترة المالية.</p>
+
+<h2>فحص سلامة القيود</h2>
+<p><span class="path">/accounts/entries-integrity</span>. قراءة فقط، لا تعدل شيئاً. تكشف:</p>
+<ul>
+<li>قيوداً غير متزنة (مدين ≠ دائن).</li>
+<li>أرقام قيود مكررة.</li>
+<li>قيوداً بلا سطور، أو بلا مستند أصل.</li>
+<li>أذون صندوق بلا قيد.</li>
+<li>فرقاً بين المرحَّل وأرصدة الأستاذ.</li>
+</ul>
+<p>شغّلها بعد أي تحويل أو استيراد كبير، وقبل إقفال أي فترة.</p>
+
+<h2>اليوميات</h2>
+<ul>
+<li><span class="path">/accounts/journal-days</span> — قائمة اليوميات.</li>
+<li><span class="path">/accounts/daily-work-summary</span> — ملخص عمل اليوم (وارد وصادر).</li>
+<li><span class="path">/accounts/expense-daily-journal</span> — يومية المصروفات.</li>
+<li><span class="path">/accounts/cashbox-daily-journal</span> — يومية الصندوق.</li>
+</ul>
+
+<h2>ميزان المراجعة</h2>
+<p><span class="path">/accounts/final/trial-balance</span> بوضعين:</p>
+<ul>
+<li><b>مجاميع الحركة:</b> مدين ودائن كل حساب خلال الفترة ورصيده.</li>
+<li><b>مع الرصيد الافتتاحي:</b> رصيد أول المدة + الحركة = الرصيد الختامي.</li>
+</ul>
+<div class="example"><b>مثال:</b> حساب الصندوق، فترة يناير.
+<table>
+<tr><th>الحساب</th><th class="n">أول المدة</th><th class="n">مدين</th><th class="n">دائن</th><th class="n">الرصيد</th></tr>
+<tr><td>الصندوق</td><td class="n">2,000</td><td class="n">5,400</td><td class="n">3,100</td><td class="n">4,300</td></tr>
+</table>
+<p>2,000 + 5,400 − 3,100 = 4,300. وإجمالي المدين في الميزان كله يجب أن يساوي إجمالي الدائن، وإلا فهناك قيد غير متزن (استخدم فحص السلامة).</p></div>
+<div class="note"><b>الميزان يُحسب عند الطلب</b> ولا يُحفظ كصورة. لو عدّلت قيداً قديماً في فترة سابقة تتغير أرقامها في المرة القادمة. لذلك أغلق الفترة بعد المراجعة.</div>
+
+<h2>الأستاذ</h2>
+<ul>
+<li><span class="path">/accounts/final/ledger?mode=range</span> — أستاذ مساعد عن فترة حرة (تاريخان).</li>
+<li><span class="path">/accounts/final/ledger?mode=fiscal</span> — بالفترة المالية.</li>
+</ul>
+<p>الشاشة جزءان: الحسابات (مع خيار «الحسابات التي لها حركات فقط») وتفاصيل حركة الحساب المختار.</p>
+<p>وهناك أستاذ مراكز التكلفة: <span class="path">/accounts/final/cost-center-ledger</span>.</p>
+
+<h2>كشوف العملاء والموردين</h2>
+<ul>
+<li><span class="path">/accounts/customer-account-statement/{الوضع}</span> و<span class="path">/accounts/supplier-account-statement/{الوضع}</span> — كشف حساب عادي أو بفترة.</li>
+<li><span class="path">/accounts/customer-balance-summary</span> و<span class="path">/accounts/supplier-balance-summary</span> — أرصدة كل العملاء أو الموردين.</li>
+<li><span class="path">/accounts/mixed-account-balance-summary</span> — الأرصدة المختلطة.</li>
+</ul>
+<div class="example"><b>مثال كشف عميل:</b>
+<table>
+<tr><th>البيان</th><th class="n">مدين</th><th class="n">دائن</th><th class="n">الرصيد</th></tr>
+<tr><td>فاتورة بيع آجل رقم 101</td><td class="n">1,140</td><td class="n"></td><td class="n">1,140</td></tr>
+<tr><td>إذن قبض</td><td class="n"></td><td class="n">500</td><td class="n">640</td></tr>
+<tr><td>مرتجع جزئي</td><td class="n"></td><td class="n">114</td><td class="n">526</td></tr>
+</table>
+<p>الرصيد يأتي من مجموع الحركات، فلا يمكن أن يختلف إلا إذا أُدخلت حركة.</p></div>
+
+<h2>الأصول الثابتة والإهلاك</h2>
+<ul>
+<li><span class="path">/accounts/fixed-assets</span> — دليل الأصول الثابتة: فئات وأصول.</li>
+<li><span class="path">/accounts/depreciation-calculation</span> — حساب إهلاك فترة مالية لفرع. اختر الفرع والفترة، يحسب الإهلاك ويحفظ.</li>
+</ul>
+
+<h2>الحسابات الختامية</h2>
+<p>التشغيل ثم المتاجرة ثم الأرباح والخسائر ثم الميزانية. تتسلسل بحيث يُرحَّل صافي كل مستوى للذي بعده، وصافي الربح يظهر ضمن حقوق الملكية في الميزانية. لا يُنتج البرنامج قيد إقفال، بل يحسبها عند العرض.</p>
+
+<div class="pager"><a href="cash.html">→ الصندوق والبنوك</a><a href="opening.html">الأرصدة الافتتاحية ←</a></div>
+</main>
+</body>
+</html>
