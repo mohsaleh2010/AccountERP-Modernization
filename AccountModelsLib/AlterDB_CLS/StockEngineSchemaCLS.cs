@@ -71,6 +71,7 @@ WHERE Order_Type IN (1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1012,1013
             Step(opp, PriceTypesMenuPath);
             Step(opp, PriceListsMenu);
             Step(opp, PricesHubMenu);
+            Step(opp, PriceInquiryMenu);
             Step(opp, TransferSettings);
             Step(opp, InventoryAccountingSetting);
             Step(opp, StoreAccountMenu);
@@ -528,13 +529,19 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
         /// </summary>
         private static void PricesHubMenu(operations opp) => AddPriceMenuItem(opp, "menuItemSalesPricesHub", "إدارة أسعار المبيعات", "/items/pricing");
 
-        /// <summary>يُدرج عنصر قائمة أسعار جديداً بجوار menuPriceCategory (نفس الأب) بصلاحية من يملك العنصر المجاور والمديرين. إدراج فقط.</summary>
-        private static void AddPriceMenuItem(operations opp, string key, string desc, string path)
+        /// <summary>
+        /// عنصر «استعلام أسعار صنف» (طلب المستخدم 2026-11-08) يفتح /items/prices/inquiry: عرض سعر الصنف فى كل نوع سعر بلا تعديل
+        /// (كشاشة الديسك توب SearchItemPrices_List_Values). بجوار «بحث أسعار الصنف» وبصلاحية من يملكه + المديرين. إدراج فقط، ولا يتكرر.
+        /// </summary>
+        private static void PriceInquiryMenu(operations opp) => AddPriceMenuItem(opp, "menuItemItemPriceInquiry", "استعلام أسعار صنف", "/items/prices/inquiry", "menuItemSearchItemPrices_List_Values");
+
+        /// <summary>يُدرج عنصر قائمة أسعار جديداً بجوار siblingKey (نفس الأب؛ الافتراضى menuPriceCategory) بصلاحية من يملك العنصر المجاور والمديرين. إدراج فقط.</summary>
+        private static void AddPriceMenuItem(operations opp, string key, string desc, string path, string siblingKey = "menuPriceCategory")
         {
             var menus = opp.db.Database.SqlQueryRaw<StoreTransferPolicy.KeyValueRow>("SELECT Id, KeysData, Value FROM SysConfigMenus").ToList();
             string Key(StoreTransferPolicy.KeyValueRow r) => r.KeysData == null ? "" : Common.DecryptMe(r.KeysData).Trim();
             if (menus.Any(m => Key(m) == key)) return;
-            var sibling = menus.FirstOrDefault(m => Key(m) == "menuPriceCategory");
+            var sibling = menus.FirstOrDefault(m => Key(m) == siblingKey);
             if (sibling == null) return;
             long parentId = opp.db.Database.SqlQuery<long>($"SELECT CAST(Parent_Id AS bigint) AS Value FROM SysConfigMenus WHERE Id = {sibling.Id}").FirstOrDefault();
             if (parentId == 0) return;
@@ -545,7 +552,7 @@ INSERT INTO SysConfigMenus (Id, Parent_Id, KeysData, Description, PROJECT_ID, Va
                             POS, Market, Factory, Tourism, AlFawzan, Client_A, Client_B, UserSells, IsShowToUser, RazorPath)
 VALUES ({id}, {parentId}, {E(key)}, {E(desc)}, 2, {E("1")}, {E("1")}, {E(desc)},
         {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, 1, {E(path)})");
-            // نفس من له صلاحية «تصنيف أسعار الأصناف» (PERMATION مشفَّرة "1") + المديرون
+            // نفس من له صلاحية العنصر المجاور (PERMATION مشفَّرة "1") + المديرون
             var grants = opp.db.Database.SqlQuery<PriceMenuGrant>($@"
 SELECT CAST(USER_ID AS bigint) AS User_Id, PERMATION AS Permation FROM SysConfigMenusPERMATIONS
 WHERE Menu_ID = {sibling.Id} AND USER_ID IS NOT NULL AND PROJECT_ID = 2").ToList();

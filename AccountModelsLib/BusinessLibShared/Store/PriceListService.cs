@@ -315,23 +315,49 @@ ORDER BY COUNT(DISTINCT v.Item_ID) DESC, v.Price_Type_List_ID").ToList());
             public decimal Item_Sale_Price { get; set; }
             public decimal Price { get; set; }
             public decimal Discount { get; set; }
+            /// <summary>false = لا سعر مسجَّل للصنف فى هذا النوع (يظهر فقط مع includeUnpriced).</summary>
+            public bool Has_Price { get; set; } = true;
         }
 
         /// <summary>
         /// الأسعار المسجَّلة (كشاشة «قيم أسعار بيع الأصناف» القديمة): typeId = 0 كل الأنواع، categoryId = 0 كل الفئات.
         /// صف واحد لكل (صنف × نوع) — أول صف بالترتيب ID كما تقرؤه ListPrices.
+        /// includeUnpriced = true: كل الأصناف النشطة × الأنواع (النوع المختار، أو كل الأنواع النشطة) سواء لها سعر أم لا؛
+        /// الصف بلا سعر Has_Price = false والسعر والخصم صفر. الأسعار المسجَّلة تظهر دائماً حتى للصنف/النوع الموقوف.
         /// </summary>
-        public List<SellValue> ListSellValues(long typeId, long categoryId, string text, int top = 1000)
+        public List<SellValue> ListSellValues(long typeId, long categoryId, string text, int top = 1000, bool includeUnpriced = false)
         {
             string t = (text ?? "").Trim();
             string like = "%" + t + "%";
             int n = Math.Clamp(top, 1, 5000);
+            if (includeUnpriced)
+                return Run(opp => opp.db.Database.SqlQuery<SellValue>($@"
+SELECT TOP ({n}) CAST(p.ID AS bigint) AS Type_Id, ISNULL(LTRIM(RTRIM(p.Price_Name)), N'') AS Type_Name,
+       CAST(CASE WHEN ISNULL(p.Price_Type_List_Master_Id, -1) <= 0 OR p.Price_Type_List_Master_Id = p.ID THEN 0 ELSE 1 END AS bit) AS Is_Derived,
+       CAST(i.id AS bigint) AS Item_Id, ISNULL(i.code, N'') AS Code, ISNULL(i.Item_Name, N'') AS Name, ISNULL(c.Category_Name, N'') AS Category,
+       ISNULL(u.B_Unit, N'') AS Unit, CAST(ISNULL(i.S_price_LargeUnit, ISNULL(i.S_Price, 0)) AS decimal(18,4)) AS Item_Sale_Price,
+       CAST(ISNULL(v.PriceUnit, 0) AS decimal(18,4)) AS Price, CAST(ISNULL(v.CommisionValue, 0) AS decimal(18,4)) AS Discount,
+       CAST(CASE WHEN v.Item_ID IS NULL THEN 0 ELSE 1 END AS bit) AS Has_Price
+FROM Item i
+CROSS JOIN Price_Type_List p
+LEFT JOIN (SELECT Item_ID, Price_Type_List_ID, PriceUnit, CommisionValue,
+                  ROW_NUMBER() OVER (PARTITION BY Item_ID, Price_Type_List_ID ORDER BY ID) AS Rn
+           FROM Price_Type_Sell_Values WHERE ({typeId} = 0 OR Price_Type_List_ID = {typeId})) v
+       ON v.Item_ID = i.id AND v.Price_Type_List_ID = p.ID AND v.Rn = 1
+LEFT JOIN Item_Category c ON c.ID = i.Item_Category_ID
+LEFT JOIN unit u ON u.id = i.Unit_Id
+WHERE ({typeId} = 0 OR p.ID = {typeId})
+  AND (v.Item_ID IS NOT NULL OR (ISNULL(i.Active_flage, 1) NOT IN (0, -1) AND ({typeId} <> 0 OR ISNULL(p.IS_Active, 1) = 1)))
+  AND ({categoryId} = 0 OR i.Item_Category_ID = {categoryId})
+  AND ({t} = N'' OR i.Item_Name LIKE {like} OR i.code = {t} OR i.BarCode2 = {t} OR i.BarCode3 = {t})
+ORDER BY p.Price_Name, c.Category_Name, i.Item_Name").ToList());
             return Run(opp => opp.db.Database.SqlQuery<SellValue>($@"
 SELECT TOP ({n}) CAST(v.Price_Type_List_ID AS bigint) AS Type_Id, ISNULL(LTRIM(RTRIM(p.Price_Name)), N'') AS Type_Name,
        CAST(CASE WHEN ISNULL(p.Price_Type_List_Master_Id, -1) <= 0 OR p.Price_Type_List_Master_Id = p.ID THEN 0 ELSE 1 END AS bit) AS Is_Derived,
        CAST(i.id AS bigint) AS Item_Id, ISNULL(i.code, N'') AS Code, ISNULL(i.Item_Name, N'') AS Name, ISNULL(c.Category_Name, N'') AS Category,
        ISNULL(u.B_Unit, N'') AS Unit, CAST(ISNULL(i.S_price_LargeUnit, ISNULL(i.S_Price, 0)) AS decimal(18,4)) AS Item_Sale_Price,
-       CAST(ISNULL(v.PriceUnit, 0) AS decimal(18,4)) AS Price, CAST(ISNULL(v.CommisionValue, 0) AS decimal(18,4)) AS Discount
+       CAST(ISNULL(v.PriceUnit, 0) AS decimal(18,4)) AS Price, CAST(ISNULL(v.CommisionValue, 0) AS decimal(18,4)) AS Discount,
+       CAST(1 AS bit) AS Has_Price
 FROM (SELECT Item_ID, Price_Type_List_ID, PriceUnit, CommisionValue,
              ROW_NUMBER() OVER (PARTITION BY Item_ID, Price_Type_List_ID ORDER BY ID) AS Rn
       FROM Price_Type_Sell_Values WHERE ({typeId} = 0 OR Price_Type_List_ID = {typeId})) v
@@ -381,7 +407,8 @@ SELECT CAST(ISNULL(S_price_LargeUnit, ISNULL(S_Price, 0)) AS decimal(18,4)) AS V
 SELECT TOP 1 CAST(Price_Type_List_ID AS bigint) AS Type_Id, CAST(N'' AS nvarchar(1)) AS Type_Name, CAST(0 AS bit) AS Is_Derived,
        CAST(Item_ID AS bigint) AS Item_Id, CAST(N'' AS nvarchar(1)) AS Code, CAST(N'' AS nvarchar(1)) AS Name, CAST(N'' AS nvarchar(1)) AS Category,
        CAST(N'' AS nvarchar(1)) AS Unit, CAST(0 AS decimal(18,4)) AS Item_Sale_Price,
-       CAST(ISNULL(PriceUnit, 0) AS decimal(18,4)) AS Price, CAST(ISNULL(CommisionValue, 0) AS decimal(18,4)) AS Discount
+       CAST(ISNULL(PriceUnit, 0) AS decimal(18,4)) AS Price, CAST(ISNULL(CommisionValue, 0) AS decimal(18,4)) AS Discount,
+       CAST(1 AS bit) AS Has_Price
 FROM Price_Type_Sell_Values WHERE Item_ID = {itemId} AND Price_Type_List_ID = {typeId} ORDER BY ID").AsEnumerable().FirstOrDefault());
 
         // ===================== بحث أسعار الصنف (بدل SearchItemPrices_List_Values) =====================
@@ -489,15 +516,16 @@ ORDER BY CASE WHEN ISNULL(Category_Type_Id, 0) = {preferType} THEN 0 ELSE 1 END,
         /// <summary>
         /// نوع سعر = نوع سعر آخر ± (قيمة أو نسبة) — زرّا BtnEditByType (itemIds = null: كل أصناف المصدر) و BtnEditByType_Item (الأصناف المحددة فقط).
         /// الأصناف غير المسعَّرة فى الهدف تُضاف، والمسعَّرة يُستبدل سعرها. قرار حديث: الأصناف غير المحددة لا تُمس
-        /// (القديم كان ينسخ سعر المصدر كما هو لكل الأصناف غير المحددة). لا يُنسخ إلى نوع مشتق (يُعاد حسابه من أمه).
-        /// discount = null: الأصناف الموجودة تحتفظ بخصمها والجديدة بلا خصم. يرجع عدد الأصناف.
+        /// (القديم كان ينسخ سعر المصدر كما هو لكل الأصناف غير المحددة). الهدف المشتق يحتاج allowDerived (كالديسك توب الذى يحمّل كل الأنواع؛
+        /// سعره يُستبدل عند تغيّر سعر الأم). discount = null: الأصناف الموجودة تحتفظ بخصمها والجديدة بلا خصم. يرجع عدد الأصناف.
         /// </summary>
-        public int CopySellValues(long sourceTypeId, long targetTypeId, IReadOnlyCollection<long> itemIds, bool isRate, bool isPlus, decimal value, decimal? discount, decimal rounding)
+        public int CopySellValues(long sourceTypeId, long targetTypeId, IReadOnlyCollection<long> itemIds, bool isRate, bool isPlus, decimal value, decimal? discount, decimal rounding, bool allowDerived = false)
         {
             Demand();
             if (sourceTypeId == 0) throw new InvalidOperationException("اختر نوع السعر المصدر.");
             if (targetTypeId == 0) throw new InvalidOperationException("اختر نوع السعر المطلوب تعديله.");
-            if (sourceTypeId == targetTypeId) throw new InvalidOperationException("نوع السعر المطلوب هو نفس المصدر؛ استخدم تبويب «تعديل أسعار الأصناف المحددة».");
+            // أصناف محددة (التبويب 3): المطلوب قد يكون المصدر نفسه = تعديله ± التعديل؛ المنع لنسخ «كل الأصناف» فقط.
+            if (sourceTypeId == targetTypeId && itemIds == null) throw new InvalidOperationException("نوع السعر المطلوب هو نفس المصدر؛ استخدم تبويب «تعديل أسعار الأصناف المحددة».");
             if (itemIds != null && itemIds.Count == 0) throw new InvalidOperationException("اختر الأصناف المراد تعديل أسعارها.");
             CheckAdjust(isRate, isPlus, value, discount, rounding);
             return RunTx(opp =>
@@ -505,8 +533,8 @@ ORDER BY CASE WHEN ISNULL(Category_Type_Id, 0) = {preferType} THEN 0 ELSE 1 END,
                 var all = LoadTypes(opp);
                 if (all.All(x => x.Id != sourceTypeId)) throw new InvalidOperationException("نوع السعر المصدر غير موجود.");
                 var target = all.FirstOrDefault(x => x.Id == targetTypeId) ?? throw new InvalidOperationException("نوع السعر المطلوب غير موجود.");
-                if (target.Master_Id != 0)
-                    throw new InvalidOperationException($"«{target.Name}» قائمة مشتقة؛ أسعارها تُحسب تلقائياً من أمها. غيّر قاعدتها من «أنواع الأسعار».");
+                if (target.Master_Id != 0 && !allowDerived)
+                    throw new InvalidOperationException($"«{target.Name}» قائمة مشتقة؛ أسعارها تُحسب تلقائياً من أمها. فعّل «تعديل القائمة المشتقة» للتعديل على أى حال.");
                 if (Descendants(all, targetTypeId).Contains(sourceTypeId))
                     throw new InvalidOperationException("المصدر مشتق من النوع المطلوب؛ النسخ سيدور فى حلقة.");
                 var src = itemIds == null

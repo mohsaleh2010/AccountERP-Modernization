@@ -1,0 +1,184 @@
+@* استعلام أسعار صنف (طلب المستخدم 2026-11-08) — شاشة عرض فقط كشاشة الديسك توب SearchItemPrices_List_Values:
+   البحث عن الصنف يعرض «نوع السعر» و«السعر» (والخصم والصافى) لكل نوع سعر نشط مسجَّل للصنف — بلا تعديل.
+   تُفتح من القائمة الجديدة menuItemItemPriceInquiry ومن شاشة «بحث أسعار الصنف» (/items/prices/search)، وزر «تعديل الأسعار» يرجع إليها على نفس الصنف.
+   البيانات من PriceListService.GetItem / ListItemPrices (نفس شاشة البحث). ?item={id} يفتح الشاشة على صنف محدد. التصميم حسب ui-ux-pro-max ونظام inv-*. *@
+@page "/items/prices/inquiry"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using static AccountModelsLib.PriceListService
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Tr("IPQ_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .ipq-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .ipq-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                     background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .ipq-head .ico .mud-icon-root { font-size: 2rem; }
+    .ipq-head .titles { flex: 1 1 260px; min-width: 0; }
+    .ipq-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .ipq-head .acts { display: flex; flex-wrap: wrap; gap: 8px; }
+    .ipq-head .acts .mud-button-root { min-height: 44px; }
+    .ipq-gap { margin-top: 16px; }
+    .ipq-item { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 16px; margin-top: 14px; }
+    .ipq-fact { padding: 10px 14px; border-radius: 10px; background: color-mix(in srgb, var(--mud-palette-primary) 7%, transparent); min-width: 0; }
+    .ipq-fact .k { font-size: .78rem; color: var(--mud-palette-text-secondary); }
+    .ipq-fact .v { font-weight: 600; overflow-wrap: anywhere; }
+    .ipq-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin-bottom: 4px; font-size: .9rem; }
+    .ipq-bar .grow { flex: 1 1 auto; }
+    .ipq-bar .mud-button-root { min-height: 44px; }
+    .ipq-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .ipq-price { font-size: 1.05rem; font-weight: 700; }
+    .ipq-code { font-family: ui-monospace, Consolas, monospace; }
+    .ipq-muted { color: var(--mud-palette-text-secondary); font-size: .8rem; }
+    .ipq-disc { color: var(--mud-palette-warning-darken); }
+    .ipq-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    @@media (max-width: 899px) { .ipq-item { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 599px) { .ipq-item { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card">
+        <div class="ipq-head">
+            <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.LocalOffer" /></div>
+            <div class="titles">
+                <h1 class="inv-title">@Tr("IPQ_Title")</h1>
+                <div class="sub">@Tr("IPQ_Sub")</div>
+            </div>
+            <div class="acts">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ManageSearch"
+                           Href="@(_item == null ? "/items/prices/search" : $"/items/prices/search?item={_item.Item_Id}")">@Tr("SIP_Title")</MudButton>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Class="ipq-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    <section class="inv-card ipq-gap" aria-labelledby="ipq-item-h">
+        <h2 class="inv-card-title" id="ipq-item-h"><MudIcon Icon="@Icons.Material.Filled.Inventory2" />@Tr("SIP_Item")</h2>
+        <MudAutocomplete T="Option" Value="_pick" ValueChanged="@(async (Option? o) => { _pick = o; await LoadAsync(); })" SearchFunc="@SearchItemAsync"
+                         ToStringFunc="@(o => o?.Name ?? string.Empty)" Label="@Tr("IT_Name")" Variant="Variant.Outlined" AutoFocus="true"
+                         Clearable="true" DebounceInterval="300" ResetValueOnEmptyText="true" HelperText="@Tr("SPV_ItemHelp")"
+                         Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+        @if (_item != null)
+        {
+            <div class="ipq-item">
+                <div class="ipq-fact"><div class="k">@Tr("SIP_Code")</div><div class="v ipq-code">@_item.Code</div></div>
+                <div class="ipq-fact"><div class="k">@Tr("SPV_Category")</div><div class="v">@(string.IsNullOrEmpty(_item.Category) ? "—" : _item.Category)</div></div>
+                <div class="ipq-fact"><div class="k">@Tr("SIP_Unit")</div><div class="v">@(string.IsNullOrEmpty(_item.Unit) ? "—" : _item.Unit)</div></div>
+                <div class="ipq-fact"><div class="k">@Tr("SPV_CardPrice")</div><div class="v ipq-num">@Money(_item.Sale_Price)</div></div>
+            </div>
+        }
+    </section>
+
+    @if (_item != null)
+    {
+        <section class="inv-card ipq-gap" aria-labelledby="ipq-list-h">
+            <h2 class="inv-card-title" id="ipq-list-h"><MudIcon Icon="@Icons.Material.Filled.PriceChange" />@Tr("SIP_Prices")</h2>
+            <div class="ipq-bar" aria-live="polite">
+                <span>@Tr("SIP_Priced") <b class="ipq-num">@_rows.Count</b></span>
+                <span class="grow"></span>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" Href="@($"/items/prices/search?item={_item.Item_Id}")">@Tr("IPQ_EditPrices")</MudButton>
+            </div>
+            <MudTable Items="@_rows" T="ItemTypePrice" Hover="true" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Dense="true"
+                      Loading="_loading" LoadingProgressColor="Color.Primary">
+                <HeaderContent>
+                    <MudTh Style="width:48px">#</MudTh>
+                    <MudTh>@Tr("SPV_PriceType")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("SPV_SalePrice")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("SPV_Discount")</MudTh>
+                    <MudTh Style="text-align:end">@Tr("SPV_Net")</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="#"><span class="ipq-muted">@(_rows.IndexOf(context) + 1)</span></MudTd>
+                    <MudTd DataLabel="@Tr("SPV_PriceType")">@context.Type_Name
+                        @if (context.Is_Derived) { <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Info" title="@Tr("SIP_DerivedFrom", context.Master_Name ?? "")">@Tr("SPV_Derived")</MudChip> }
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("SPV_SalePrice")" Style="text-align:end"><span class="ipq-num ipq-price">@Money(context.Price ?? 0)</span></MudTd>
+                    <MudTd DataLabel="@Tr("SPV_Discount")" Style="text-align:end"><span class="ipq-num @(context.Discount > 0 ? "ipq-disc" : "ipq-muted")">@Money(context.Discount)</span></MudTd>
+                    <MudTd DataLabel="@Tr("SPV_Net")" Style="text-align:end"><span class="ipq-num">@Money((context.Price ?? 0) - context.Discount)</span></MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <div class="ipq-empty">
+                        <MudIcon Icon="@Icons.Material.Filled.PriceChange" Size="Size.Large" />
+                        <span>@Tr("SIP_NoPricesYet")</span>
+                    </div>
+                </NoRecordsContent>
+            </MudTable>
+        </section>
+    }
+    else
+    {
+        <div class="inv-card ipq-gap">
+            <div class="ipq-empty">
+                <MudIcon Icon="@Icons.Material.Filled.ManageSearch" Size="Size.Large" />
+                <span>@Tr("SIP_PickItem")</span>
+            </div>
+        </div>
+    }
+</div>
+</MudContainer>
+
+@code {
+    /// <summary>فتح الشاشة على صنف محدد (رابط من «بحث أسعار الصنف»).</summary>
+    [SupplyParameterFromQuery(Name = "item")] public long? ItemId { get; set; }
+
+    private readonly PriceListService _svc = new();
+    private List<ItemTypePrice> _rows = new();
+    private Option? _pick;
+    private ItemPrice? _item;
+    private bool _loading;
+    private string? _error;
+
+    protected override void OnInitialized() => LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ItemId is not long id || id <= 0) return;
+        try
+        {
+            var it = await Bg(() => _svc.GetItem(id));
+            if (it != null) { _pick = new Option { Id = it.Item_Id, Name = $"{it.Code} - {it.Name}" }; await LoadAsync(); }
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+    }
+
+    private Task<T> Bg<T>(Func<T> f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return f(); });
+
+    private Task<IEnumerable<Option>> SearchItemAsync(string? text, CancellationToken ct) => Bg(() => (IEnumerable<Option>)_svc.SearchItems(text));
+
+    /// <summary>كالديسك توب (Get_Prices_ListByItem_Id): أنواع الأسعار النشطة التى للصنف فيها سعر فقط، مرتبة بالاسم.</summary>
+    private async Task LoadAsync()
+    {
+        if (_pick == null) { _item = null; _rows = new(); return; }
+        _loading = true; _error = null;
+        long id = _pick.Id;
+        try
+        {
+            _item = await Bg(() => _svc.GetItem(id));
+            _rows = _item == null ? new() : (await Bg(() => _svc.ListItemPrices(id)))
+                .Where(r => r.Price != null && r.Is_Active).OrderBy(r => r.Type_Name).ToList();
+        }
+        catch (Exception ex) { _error = Inner(ex); }
+        finally { _loading = false; }
+    }
+
+    private static string Money(decimal v) => v.ToString("#,0.00", CultureInfo.InvariantCulture);
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

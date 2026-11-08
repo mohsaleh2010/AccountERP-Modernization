@@ -64,6 +64,9 @@
                 <div class="sub">@Tr("SIP_Sub")</div>
             </div>
             <div class="acts">
+                @* شاشة الاستعلام (عرض فقط) على نفس الصنف المختار — طلب 2026-11-08 *@
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.LocalOffer"
+                           Href="@(_item == null ? "/items/prices/inquiry" : $"/items/prices/inquiry?item={_item.Item_Id}")">@Tr("IPQ_Title")</MudButton>
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Sell" Href="/items/sales-prices">@Tr("SPV_Title")</MudButton>
             </div>
         </div>

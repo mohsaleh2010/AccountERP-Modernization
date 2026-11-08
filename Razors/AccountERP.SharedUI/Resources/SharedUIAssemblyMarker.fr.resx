@@ -2204,6 +2204,9 @@
   <data name="CVCostCenter" xml:space="preserve">
     <value>Cost center</value>
   </data>
+  <data name="CVBoxCostCenter" xml:space="preserve">
+    <value>Cash box cost center</value>
+  </data>
   <data name="CVAddLine" xml:space="preserve">
     <value>Add account</value>
   </data>
@@ -3094,6 +3097,16 @@
   <data name="FSRMaxCash" xml:space="preserve"><value>Plafond d'espèces</value></data>
   <data name="FSRMaxCashHint" xml:space="preserve"><value>Vide = sans limite</value></data>
   <data name="FSRSupervisor" xml:space="preserve"><value>Superviseur</value></data>
+  <data name="FSRCostCenter" xml:space="preserve"><value>Cost center (commissions and expenses)</value></data>
+  <data name="FACostCenter" xml:space="preserve"><value>Cost center</value></data>
+  <data name="DepEntrySettingsTitle" xml:space="preserve"><value>Depreciation entry settings</value></data>
+  <data name="DepPostEntries" xml:space="preserve"><value>Post a journal entry with each calculation</value></data>
+  <data name="DepExpenseAccount" xml:space="preserve"><value>Depreciation expense account (debit)</value></data>
+  <data name="DepAccumAccount" xml:space="preserve"><value>Accumulated depreciation account (credit)</value></data>
+  <data name="DepSaveSettings" xml:space="preserve"><value>Save settings</value></data>
+  <data name="DepSettingsSaved" xml:space="preserve"><value>Depreciation entry settings saved</value></data>
+  <data name="DepEntrySettingsHint" xml:space="preserve"><value>Off by default; when on, each asset gets an entry carrying its cost center, deleted together with its depreciation record.</value></data>
+  <data name="DepPostFailed" xml:space="preserve"><value>Depreciation calculated but the entry failed:</value></data>
   <data name="FSRAllowCredit" xml:space="preserve"><value>Ventes à crédit autorisées</value></data>
   <data name="FSRAllowBlind" xml:space="preserve"><value>Retours sans facture autorisés</value></data>
   <data name="FSRActive" xml:space="preserve"><value>Actif</value></data>
@@ -3946,6 +3959,19 @@
   <data name="SADSuggestDone" xml:space="preserve"><value>{0} comptes proposés</value></data>
   <data name="SADSuggestNone" xml:space="preserve"><value>Aucune proposition : pas de sous-compte unique par type, choisissez manuellement</value></data>
   <data name="SADSaved" xml:space="preserve"><value>Enregistré</value></data>
+  <data name="SIATitle" xml:space="preserve"><value>Compte de stock par magasin</value></data>
+  <data name="SIAHelp" xml:space="preserve"><value>Le compte qui porte la valeur des marchandises du magasin dans les écritures (débit à l’entrée, crédit à la sortie). Cliquez sur l’icône d’arbre pour le choisir ou le changer ; l’enregistrement est immédiat.</value></data>
+  <data name="SIAAccount" xml:space="preserve"><value>Compte de stock</value></data>
+  <data name="SIANotLinked" xml:space="preserve"><value>Non lié</value></data>
+  <data name="SIAPickTitle" xml:space="preserve"><value>Choisir le compte de stock : {0}</value></data>
+  <data name="SIAChangeConfirm" xml:space="preserve"><value>Le magasin « {0} » a déjà un compte de stock. Le changer ne déplace pas les anciennes écritures ; elles restent sur l’ancien compte et les nouvelles utilisent le nouveau. Continuer ?</value></data>
+  <data name="SIAChangeYes" xml:space="preserve"><value>Oui, changer</value></data>
+  <data name="SIAClear" xml:space="preserve"><value>Supprimer le compte lié</value></data>
+  <data name="SIAClearConfirm" xml:space="preserve"><value>Le compte de stock sera dissocié du magasin « {0} ». Les écritures passées ne changent pas. Continuer ?</value></data>
+  <data name="SIAClearYes" xml:space="preserve"><value>Oui, dissocier</value></data>
+  <data name="SADTableTitle" xml:space="preserve"><value>Comptes de contrepartie des mouvements de stock</value></data>
+  <data name="SADSelectedAccount" xml:space="preserve"><value>Compte sélectionné</value></data>
+  <data name="SADConfirm" xml:space="preserve"><value>Valider</value></data>
   <data name="SADNotWiredYet" xml:space="preserve"><value>Ces réglages ne sont pas encore utilisés dans les écritures ; le lien avec les bons et factures viendra plus tard.</value></data>
   <data name="SADSalesInvoices" xml:space="preserve"><value>Factures de vente</value></data>
   <data name="SADPurchaseInvoices" xml:space="preserve"><value>Factures d’achat</value></data>
@@ -4458,6 +4484,126 @@
   <data name="ICD_UNKNOWNREF" xml:space="preserve"><value>Entry reference type missing from the source registry (information only).</value></data>
   <data name="IC_LEDGER" xml:space="preserve"><value>Posted entries vs ledger balances</value></data>
   <data name="ICD_LEDGER" xml:space="preserve"><value>Total debit of posted entries does not match the ledger balances for a period/branch (partial posting or an entry edited after posting).</value></data>
+  <data name="CostCenterTypeLabel" xml:space="preserve"><value>Type</value></data>
+  <data name="CostCenterType0" xml:space="preserve"><value>General</value></data>
+  <data name="CostCenterType1" xml:space="preserve"><value>Project</value></data>
+  <data name="CostCenterType2" xml:space="preserve"><value>Phase</value></data>
+  <data name="CostCenterType3" xml:space="preserve"><value>Cost item</value></data>
+  <data name="CostCenterType4" xml:space="preserve"><value>Department</value></data>
+  <data name="CostCenterType5" xml:space="preserve"><value>Site / area</value></data>
+  <data name="CostCenterType6" xml:space="preserve"><value>Sales rep / route</value></data>
+  <data name="CostCenterNameELabel" xml:space="preserve"><value>Name (English)</value></data>
+  <data name="CostCenterStatus1" xml:space="preserve"><value>Active</value></data>
+  <data name="CostCenterStatus2" xml:space="preserve"><value>Suspended</value></data>
+  <data name="CostCenterStatus3" xml:space="preserve"><value>Closed</value></data>
+  <data name="CostCenterIsLeaf" xml:space="preserve"><value>Leaf (accepts postings)</value></data>
+  <data name="CostCenterNotLeaf" xml:space="preserve"><value>Has sub-centers</value></data>
+  <data name="CostCenterEntryLines" xml:space="preserve"><value>Entry lines</value></data>
+  <data name="CostCenterAccountLinks" xml:space="preserve"><value>Linked accounts</value></data>
+  <data name="MoveCostCenterButton" xml:space="preserve"><value>Move</value></data>
+  <data name="MoveCostCenterTitle" xml:space="preserve"><value>Move cost center under another parent</value></data>
+  <data name="MoveToRootButton" xml:space="preserve"><value>Make root</value></data>
+  <data name="MoveHereButton" xml:space="preserve"><value>Move under selected</value></data>
+  <data name="CostCenterMoved" xml:space="preserve"><value>Cost center moved</value></data>
+  <data name="CloseCostCenterButton" xml:space="preserve"><value>Close center</value></data>
+  <data name="ReopenCostCenterButton" xml:space="preserve"><value>Reopen</value></data>
+  <data name="CostCenterStatusChanged" xml:space="preserve"><value>Status changed</value></data>
+  <data name="CostCenterProjectCard" xml:space="preserve"><value>Project card</value></data>
+  <data name="ProjectCustomerLabel" xml:space="preserve"><value>Customer</value></data>
+  <data name="ProjectContractValueLabel" xml:space="preserve"><value>Contract value</value></data>
+  <data name="ProjectStartDateLabel" xml:space="preserve"><value>Start date</value></data>
+  <data name="ProjectEndDateLabel" xml:space="preserve"><value>End date</value></data>
+  <data name="ProjectStatusLabel" xml:space="preserve"><value>Project status</value></data>
+  <data name="ProjectStatus1" xml:space="preserve"><value>Planning</value></data>
+  <data name="ProjectStatus2" xml:space="preserve"><value>In progress</value></data>
+  <data name="ProjectStatus3" xml:space="preserve"><value>Completed</value></data>
+  <data name="ProjectStatus4" xml:space="preserve"><value>On hold</value></data>
+  <data name="ProjectRetentionLabel" xml:space="preserve"><value>Retention %</value></data>
+  <data name="SaveProjectButton" xml:space="preserve"><value>Save project</value></data>
+  <data name="ProjectSaved" xml:space="preserve"><value>Project saved</value></data>
+  <data name="CostCenterPolicyLabel" xml:space="preserve"><value>Cost center policy</value></data>
+  <data name="CostCenterPolicy0" xml:space="preserve"><value>Not allowed</value></data>
+  <data name="CostCenterPolicy1" xml:space="preserve"><value>Optional</value></data>
+  <data name="CostCenterPolicy2" xml:space="preserve"><value>Required</value></data>
+  <data name="DefaultCostCenterLabel" xml:space="preserve"><value>Default cost center</value></data>
+  <data name="DefaultCostCenterNone" xml:space="preserve"><value>No default center</value></data>
+  <data name="UseThisCenterButton" xml:space="preserve"><value>Use this center</value></data>
+  <data name="LinkTabByAccount" xml:space="preserve"><value>By account</value></data>
+  <data name="LinkTabByCenter" xml:space="preserve"><value>By cost center</value></data>
+  <data name="LinkTabGaps" xml:space="preserve"><value>Gap report</value></data>
+  <data name="BulkLinkAccountsButton" xml:space="preserve"><value>Link accounts</value></data>
+  <data name="LinkInheritNote" xml:space="preserve"><value>This center has sub-centers: linking applies to all of its leaf centers.</value></data>
+  <data name="NoAccountsLinkedYet" xml:space="preserve"><value>No accounts linked to this center yet</value></data>
+  <data name="GapRequiredOnly" xml:space="preserve"><value>Required only</value></data>
+  <data name="GapReportHint" xml:space="preserve"><value>Accounts with an optional/required policy that have no center links, or have entry lines without a center.</value></data>
+  <data name="NoGaps" xml:space="preserve"><value>No gaps found</value></data>
+  <data name="GapLinkCount" xml:space="preserve"><value>Links</value></data>
+  <data name="GapViolatingLines" xml:space="preserve"><value>Lines without center</value></data>
+  <data name="BulkLinkDone" xml:space="preserve"><value>{0} new links added</value></data>
+  <data name="Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="AccountNoLabel" xml:space="preserve"><value>Account no.</value></data>
+  <data name="SelectedCountLabel" xml:space="preserve"><value>Selected</value></data>
+  <data name="MEApplyCenterToAll" xml:space="preserve">
+    <value>Appliquer le centre « {0} » à toutes les lignes</value>
+  </data>
+  <data name="MEApplyCenterSkipped" xml:space="preserve">
+    <value>Centre non appliqué à {0} ligne(s) (non autorisé pour le compte)</value>
+  </data>
+  <data name="InvCostCenter" xml:space="preserve">
+    <value>Document cost center</value>
+  </data>
+  <data name="CCRTitle" xml:space="preserve"><value>Rapports des centres de coût</value></data>
+  <data name="CCRSub" xml:space="preserve"><value>Grand livre par centre, balance par centre, rentabilité et analyse des coûts de projet — en équivalent</value></data>
+  <data name="CCRAllCenters" xml:space="preserve"><value>Tous les centres</value></data>
+  <data name="CCRAllBranches" xml:space="preserve"><value>Toutes les succursales</value></data>
+  <data name="CCRPressShow" xml:space="preserve"><value>Choisissez les filtres puis appuyez sur Afficher.</value></data>
+  <data name="CCRWithChildren" xml:space="preserve"><value>Inclure les sous-centres</value></data>
+  <data name="CCRBalance" xml:space="preserve"><value>Solde</value></data>
+  <data name="CCRPrevBalance" xml:space="preserve"><value>Solde précédent</value></data>
+  <data name="CCRPeriodTotal" xml:space="preserve"><value>Total de la période</value></data>
+  <data name="CCRClosing" xml:space="preserve"><value>Solde de clôture</value></data>
+  <data name="CCRTabLedger" xml:space="preserve"><value>Grand livre du centre</value></data>
+  <data name="CCRTabTb" xml:space="preserve"><value>Balance par centre</value></data>
+  <data name="CCRTabProfit" xml:space="preserve"><value>Rentabilité des centres</value></data>
+  <data name="CCRTabProject" xml:space="preserve"><value>Analyse des coûts du projet</value></data>
+  <data name="CCRRollUp" xml:space="preserve"><value>Cumul (inclut les enfants)</value></data>
+  <data name="CCRRollUpNote" xml:space="preserve"><value>Un centre parent inclut ses enfants : n'additionnez pas les lignes ; le total général provient des mouvements réels.</value></data>
+  <data name="CCRLayoutCenterAccount" xml:space="preserve"><value>Centre puis compte</value></data>
+  <data name="CCRLayoutAccountCenter" xml:space="preserve"><value>Compte puis centre</value></data>
+  <data name="CCRColCenterCode" xml:space="preserve"><value>Code du centre</value></data>
+  <data name="CCROpenDebit" xml:space="preserve"><value>Débit d'ouverture</value></data>
+  <data name="CCROpenCredit" xml:space="preserve"><value>Crédit d'ouverture</value></data>
+  <data name="CCRCloseDebit" xml:space="preserve"><value>Solde débiteur</value></data>
+  <data name="CCRCloseCredit" xml:space="preserve"><value>Solde créditeur</value></data>
+  <data name="CCRTotal" xml:space="preserve"><value>Total</value></data>
+  <data name="CCRGrandTotal" xml:space="preserve"><value>Total général</value></data>
+  <data name="CCRCompare" xml:space="preserve"><value>Comparer à la période précédente équivalente</value></data>
+  <data name="CCRRevenue" xml:space="preserve"><value>Produits</value></data>
+  <data name="CCRCost" xml:space="preserve"><value>Coûts</value></data>
+  <data name="CCRProfit" xml:space="preserve"><value>Résultat</value></data>
+  <data name="CCRMargin" xml:space="preserve"><value>Marge</value></data>
+  <data name="CCRPrevProfit" xml:space="preserve"><value>Résultat période précédente</value></data>
+  <data name="CCRChange" xml:space="preserve"><value>Variation</value></data>
+  <data name="CCRPrevRange" xml:space="preserve"><value>Période précédente</value></data>
+  <data name="CCRPickProject" xml:space="preserve"><value>Choisissez le centre du projet dans les filtres puis appuyez sur Afficher.</value></data>
+  <data name="CCRContractValue" xml:space="preserve"><value>Valeur du contrat</value></data>
+  <data name="CCRActualCost" xml:space="preserve"><value>Coût réel</value></data>
+  <data name="CCRCostOfContract" xml:space="preserve"><value>Coût en % du contrat</value></data>
+  <data name="CCRRemaining" xml:space="preserve"><value>Reste du contrat</value></data>
+  <data name="CCRByGroup" xml:space="preserve"><value>Par groupe de comptes</value></data>
+  <data name="CCRByPhase" xml:space="preserve"><value>Par phase</value></data>
+  <data name="CCRColName" xml:space="preserve"><value>Libellé</value></data>
+  <data name="CCRAmount" xml:space="preserve"><value>Montant</value></data>
+  <data name="CCLTitle" xml:space="preserve"><value>Grand livre auxiliaire des centres de coût par période</value></data>
+  <data name="CCLSub" xml:space="preserve"><value>Centres avec mouvements sur la période et mouvements du centre choisi avec son solde d'ouverture ou reporté</value></data>
+  <data name="CCLCentersGrid" xml:space="preserve"><value>Centres de coût</value></data>
+  <data name="CCLPickCenter" xml:space="preserve"><value>Choisissez un centre de coût dans la liste pour voir ses mouvements.</value></data>
+  <data name="CCLNoCenters" xml:space="preserve"><value>Aucun centre de coût avec mouvements pour ces filtres.</value></data>
+  <data name="CCLUpdateFirstBalance" xml:space="preserve"><value>Mettre à jour le solde d'ouverture</value></data>
+  <data name="CCLUpdateConfirm" xml:space="preserve"><value>Le report des soldes des centres pour la période et la succursale choisies sera reconstruit à partir de la période précédente. Continuer ?</value></data>
+  <data name="CCLUpdatedOk" xml:space="preserve"><value>Solde d'ouverture mis à jour.</value></data>
+  <data name="CCLErrOutsidePeriod" xml:space="preserve"><value>Les dates doivent être dans la période comptable choisie</value></data>
+  <data name="IVRTitle" xml:space="preserve"><value>Rapport de valeur du stock</value></data>
   <data name="PT_Title" xml:space="preserve"><value>Types de prix des articles</value></data>
   <data name="PT_Sub" xml:space="preserve"><value>Chaque type de prix est soit une liste de base saisie à la main, soit égal à un autre type plus ou moins un taux ou un montant</value></data>
   <data name="PT_New" xml:space="preserve"><value>Nouveau type de prix</value></data>
@@ -4479,6 +4625,24 @@
   <data name="PT_Preview" xml:space="preserve"><value>Exemple : si le prix « {0} » = 100, le prix = {1}</value></data>
   <data name="PT_Rate" xml:space="preserve"><value>Taux</value></data>
   <data name="PT_Search" xml:space="preserve"><value>Rechercher par nom du type</value></data>
+  <data name="IVRSubAll" xml:space="preserve"><value>Valeur du stock par entrepôt</value></data>
+  <data name="IVRSubStore" xml:space="preserve"><value>Articles de l&apos;entrepôt : {0}</value></data>
+  <data name="IVRBack" xml:space="preserve"><value>Retour aux entrepôts</value></data>
+  <data name="IVRStores" xml:space="preserve"><value>Entrepôts</value></data>
+  <data name="IVRStore" xml:space="preserve"><value>Entrepôt</value></data>
+  <data name="IVRClickHint" xml:space="preserve"><value>Cliquez sur un entrepôt pour voir ses articles.</value></data>
+  <data name="IVRItemsCount" xml:space="preserve"><value>Articles</value></data>
+  <data name="IVRItem" xml:space="preserve"><value>Article</value></data>
+  <data name="IVRQty" xml:space="preserve"><value>Quantité</value></data>
+  <data name="IVRLastPrice" xml:space="preserve"><value>Dernier prix d&apos;achat</value></data>
+  <data name="IVRAvgCost" xml:space="preserve"><value>Coût moyen</value></data>
+  <data name="IVRLastTotal" xml:space="preserve"><value>Total au dernier prix d&apos;achat</value></data>
+  <data name="IVRAvgTotal" xml:space="preserve"><value>Total au coût moyen</value></data>
+  <data name="IVRGrandTotal" xml:space="preserve"><value>Total général</value></data>
+  <data name="IVREmpty" xml:space="preserve"><value>Aucun entrepôt avec stock</value></data>
+  <data name="IVREmptyStore" xml:space="preserve"><value>Aucun article en stock</value></data>
+  <data name="HelpTitle" xml:space="preserve"><value>Guide du comptable</value></data>
+  <data name="HelpOpenTab" xml:space="preserve"><value>Ouvrir dans un nouvel onglet</value></data>
   <data name="SPV_Title" xml:space="preserve"><value>Classement des prix de vente</value></data>
   <data name="SPV_Sub" xml:space="preserve"><value>Prix de vente et remise par article pour chaque type de prix, filtré par catégorie</value></data>
   <data name="SPV_ManageLists" xml:space="preserve"><value>Gérer les listes de prix</value></data>
@@ -4502,6 +4666,18 @@
   <data name="SPV_EditOf" xml:space="preserve"><value>Modifier le prix de {0}</value></data>
   <data name="SPV_DeleteOf" xml:space="preserve"><value>Supprimer le prix de {0}</value></data>
   <data name="SPV_Empty" xml:space="preserve"><value>Aucun prix pour cette sélection</value></data>
+  <data name="SPV_ShowUnpriced" xml:space="preserve"><value>Afficher aussi les articles sans prix</value></data>
+  <data name="SPV_ShowUnpricedHelp" xml:space="preserve"><value>Décoché : articles avec prix uniquement</value></data>
+  <data name="SPV_Search" xml:space="preserve"><value>Rechercher</value></data>
+  <data name="SPV_SearchBoxHelp" xml:space="preserve"><value>Appuyez sur Entrée ou sur Rechercher</value></data>
+  <data name="SPV_SearchHint" xml:space="preserve"><value>Choisissez le type de prix et la catégorie, puis appuyez sur Rechercher</value></data>
+  <data name="SPV_FiltersChanged" xml:space="preserve"><value>Filtres modifiés — appuyez sur Rechercher pour actualiser</value></data>
+  <data name="SPV_NoPrice" xml:space="preserve"><value>Sans prix</value></data>
+  <data name="SPV_Priced" xml:space="preserve"><value>Avec prix</value></data>
+  <data name="SPV_AddPrice" xml:space="preserve"><value>Ajouter un prix</value></data>
+  <data name="SPV_AddPriceOf" xml:space="preserve"><value>Ajouter un prix pour {0}</value></data>
+  <data name="EPV_PricedCount" xml:space="preserve"><value>{0} articles avec prix</value></data>
+  <data name="EPV_UnpricedSkipped" xml:space="preserve"><value>Les articles sans prix sont en lecture seule et non sélectionnables</value></data>
   <data name="SPV_AddTitle" xml:space="preserve"><value>Ajouter un prix d'article</value></data>
   <data name="SPV_EditTitle" xml:space="preserve"><value>Modifier le prix d'article</value></data>
   <data name="SPV_ItemHelp" xml:space="preserve"><value>Recherche par nom, code ou code-barres</value></data>
@@ -4524,8 +4700,9 @@
   <data name="EPV_HowToChange" xml:space="preserve"><value>Mode de modification</value></data>
   <data name="EPV_Types" xml:space="preserve"><value>Types de prix cible et source</value></data>
   <data name="EPV_Target" xml:space="preserve"><value>Type de prix à modifier</value></data>
-  <data name="EPV_TargetHelp" xml:space="preserve"><value>Types de base uniquement ; les dérivés sont calculés depuis leur parent</value></data>
+  <data name="EPV_TargetHelp" xml:space="preserve"><value>Tous les types de prix ; un type dérivé exige « Modifier la liste dérivée quand même »</value></data>
   <data name="EPV_Source" xml:space="preserve"><value>Égal au type de prix</value></data>
+  <data name="EPV_SourceType" xml:space="preserve"><value>Type de prix source</value></data>
   <data name="EPV_SourceCount" xml:space="preserve"><value>Articles tarifés dans la source :</value></data>
   <data name="EPV_Selected" xml:space="preserve"><value>Sélectionnés :</value></data>
   <data name="EPV_SelectAll" xml:space="preserve"><value>Tout sélectionner</value></data>
@@ -4652,168 +4829,8 @@
   <data name="PHB_D_PurchasePrices" xml:space="preserve"><value>Prix d'achat de chaque article par fournisseur et type</value></data>
   <data name="PHB_D_Suppliers" xml:space="preserve"><value>Prix fournisseurs dans l'écran des listes de prix</value></data>
   <data name="PHB_D_Sheet" xml:space="preserve"><value>Fiche imprimable des prix sur plusieurs listes</value></data>
-  <data name="SIATitle" xml:space="preserve"><value>Compte de stock par magasin</value></data>
-  <data name="SIAHelp" xml:space="preserve"><value>Le compte qui porte la valeur des marchandises du magasin dans les écritures (débit à l’entrée, crédit à la sortie). Cliquez sur l’icône d’arbre pour le choisir ou le changer ; l’enregistrement est immédiat.</value></data>
-  <data name="SIAAccount" xml:space="preserve"><value>Compte de stock</value></data>
-  <data name="SIANotLinked" xml:space="preserve"><value>Non lié</value></data>
-  <data name="SIAPickTitle" xml:space="preserve"><value>Choisir le compte de stock : {0}</value></data>
-  <data name="SIAChangeConfirm" xml:space="preserve"><value>Le magasin « {0} » a déjà un compte de stock. Le changer ne déplace pas les anciennes écritures ; elles restent sur l’ancien compte et les nouvelles utilisent le nouveau. Continuer ?</value></data>
-  <data name="SIAChangeYes" xml:space="preserve"><value>Oui, changer</value></data>
-  <data name="SIAClear" xml:space="preserve"><value>Supprimer le compte lié</value></data>
-  <data name="SIAClearConfirm" xml:space="preserve"><value>Le compte de stock sera dissocié du magasin « {0} ». Les écritures passées ne changent pas. Continuer ?</value></data>
-  <data name="SIAClearYes" xml:space="preserve"><value>Oui, dissocier</value></data>
-  <data name="SADTableTitle" xml:space="preserve"><value>Comptes de contrepartie des mouvements de stock</value></data>
-  <data name="SADSelectedAccount" xml:space="preserve"><value>Compte sélectionné</value></data>
-  <data name="SADConfirm" xml:space="preserve"><value>Valider</value></data>
-  <data name="IVRTitle" xml:space="preserve"><value>Rapport de valeur du stock</value></data>
-  <data name="IVRSubAll" xml:space="preserve"><value>Valeur du stock par entrepôt</value></data>
-  <data name="IVRSubStore" xml:space="preserve"><value>Articles de l&apos;entrepôt : {0}</value></data>
-  <data name="IVRBack" xml:space="preserve"><value>Retour aux entrepôts</value></data>
-  <data name="IVRStores" xml:space="preserve"><value>Entrepôts</value></data>
-  <data name="IVRStore" xml:space="preserve"><value>Entrepôt</value></data>
-  <data name="IVRClickHint" xml:space="preserve"><value>Cliquez sur un entrepôt pour voir ses articles.</value></data>
-  <data name="IVRItemsCount" xml:space="preserve"><value>Articles</value></data>
-  <data name="IVRItem" xml:space="preserve"><value>Article</value></data>
-  <data name="IVRQty" xml:space="preserve"><value>Quantité</value></data>
-  <data name="IVRLastPrice" xml:space="preserve"><value>Dernier prix d&apos;achat</value></data>
-  <data name="IVRAvgCost" xml:space="preserve"><value>Coût moyen</value></data>
-  <data name="IVRLastTotal" xml:space="preserve"><value>Total au dernier prix d&apos;achat</value></data>
-  <data name="IVRAvgTotal" xml:space="preserve"><value>Total au coût moyen</value></data>
-  <data name="IVRGrandTotal" xml:space="preserve"><value>Total général</value></data>
-  <data name="IVREmpty" xml:space="preserve"><value>Aucun entrepôt avec stock</value></data>
-  <data name="IVREmptyStore" xml:space="preserve"><value>Aucun article en stock</value></data>
-  <data name="HelpTitle" xml:space="preserve"><value>Guide du comptable</value></data>
-  <data name="HelpOpenTab" xml:space="preserve"><value>Ouvrir dans un nouvel onglet</value></data>
-  <data name="CVBoxCostCenter" xml:space="preserve">
-    <value>Cash box cost center</value>
-  </data>
-  <data name="FSRCostCenter" xml:space="preserve"><value>Cost center (commissions and expenses)</value></data>
-  <data name="FACostCenter" xml:space="preserve"><value>Cost center</value></data>
-  <data name="CostCenterTypeLabel" xml:space="preserve"><value>Type</value></data>
-  <data name="CostCenterType0" xml:space="preserve"><value>General</value></data>
-  <data name="CostCenterType1" xml:space="preserve"><value>Project</value></data>
-  <data name="CostCenterType2" xml:space="preserve"><value>Phase</value></data>
-  <data name="CostCenterType3" xml:space="preserve"><value>Cost item</value></data>
-  <data name="CostCenterType4" xml:space="preserve"><value>Department</value></data>
-  <data name="CostCenterType5" xml:space="preserve"><value>Site / area</value></data>
-  <data name="CostCenterType6" xml:space="preserve"><value>Sales rep / route</value></data>
-  <data name="CostCenterNameELabel" xml:space="preserve"><value>Name (English)</value></data>
-  <data name="CostCenterStatus1" xml:space="preserve"><value>Active</value></data>
-  <data name="CostCenterStatus2" xml:space="preserve"><value>Suspended</value></data>
-  <data name="CostCenterStatus3" xml:space="preserve"><value>Closed</value></data>
-  <data name="CostCenterIsLeaf" xml:space="preserve"><value>Leaf (accepts postings)</value></data>
-  <data name="CostCenterNotLeaf" xml:space="preserve"><value>Has sub-centers</value></data>
-  <data name="CostCenterEntryLines" xml:space="preserve"><value>Entry lines</value></data>
-  <data name="CostCenterAccountLinks" xml:space="preserve"><value>Linked accounts</value></data>
-  <data name="MoveCostCenterButton" xml:space="preserve"><value>Move</value></data>
-  <data name="MoveCostCenterTitle" xml:space="preserve"><value>Move cost center under another parent</value></data>
-  <data name="MoveToRootButton" xml:space="preserve"><value>Make root</value></data>
-  <data name="MoveHereButton" xml:space="preserve"><value>Move under selected</value></data>
-  <data name="CostCenterMoved" xml:space="preserve"><value>Cost center moved</value></data>
-  <data name="CloseCostCenterButton" xml:space="preserve"><value>Close center</value></data>
-  <data name="ReopenCostCenterButton" xml:space="preserve"><value>Reopen</value></data>
-  <data name="CostCenterStatusChanged" xml:space="preserve"><value>Status changed</value></data>
-  <data name="CostCenterProjectCard" xml:space="preserve"><value>Project card</value></data>
-  <data name="ProjectCustomerLabel" xml:space="preserve"><value>Customer</value></data>
-  <data name="ProjectContractValueLabel" xml:space="preserve"><value>Contract value</value></data>
-  <data name="ProjectStartDateLabel" xml:space="preserve"><value>Start date</value></data>
-  <data name="ProjectEndDateLabel" xml:space="preserve"><value>End date</value></data>
-  <data name="ProjectStatusLabel" xml:space="preserve"><value>Project status</value></data>
-  <data name="ProjectStatus1" xml:space="preserve"><value>Planning</value></data>
-  <data name="ProjectStatus2" xml:space="preserve"><value>In progress</value></data>
-  <data name="ProjectStatus3" xml:space="preserve"><value>Completed</value></data>
-  <data name="ProjectStatus4" xml:space="preserve"><value>On hold</value></data>
-  <data name="ProjectRetentionLabel" xml:space="preserve"><value>Retention %</value></data>
-  <data name="SaveProjectButton" xml:space="preserve"><value>Save project</value></data>
-  <data name="ProjectSaved" xml:space="preserve"><value>Project saved</value></data>
-  <data name="CostCenterPolicyLabel" xml:space="preserve"><value>Cost center policy</value></data>
-  <data name="CostCenterPolicy0" xml:space="preserve"><value>Not allowed</value></data>
-  <data name="CostCenterPolicy1" xml:space="preserve"><value>Optional</value></data>
-  <data name="CostCenterPolicy2" xml:space="preserve"><value>Required</value></data>
-  <data name="DefaultCostCenterLabel" xml:space="preserve"><value>Default cost center</value></data>
-  <data name="DefaultCostCenterNone" xml:space="preserve"><value>No default center</value></data>
-  <data name="UseThisCenterButton" xml:space="preserve"><value>Use this center</value></data>
-  <data name="LinkTabByAccount" xml:space="preserve"><value>By account</value></data>
-  <data name="LinkTabByCenter" xml:space="preserve"><value>By cost center</value></data>
-  <data name="LinkTabGaps" xml:space="preserve"><value>Gap report</value></data>
-  <data name="BulkLinkAccountsButton" xml:space="preserve"><value>Link accounts</value></data>
-  <data name="LinkInheritNote" xml:space="preserve"><value>This center has sub-centers: linking applies to all of its leaf centers.</value></data>
-  <data name="NoAccountsLinkedYet" xml:space="preserve"><value>No accounts linked to this center yet</value></data>
-  <data name="GapRequiredOnly" xml:space="preserve"><value>Required only</value></data>
-  <data name="GapReportHint" xml:space="preserve"><value>Accounts with an optional/required policy that have no center links, or have entry lines without a center.</value></data>
-  <data name="NoGaps" xml:space="preserve"><value>No gaps found</value></data>
-  <data name="GapLinkCount" xml:space="preserve"><value>Links</value></data>
-  <data name="GapViolatingLines" xml:space="preserve"><value>Lines without center</value></data>
-  <data name="BulkLinkDone" xml:space="preserve"><value>{0} new links added</value></data>
-  <data name="Refresh" xml:space="preserve"><value>Refresh</value></data>
-  <data name="AccountNoLabel" xml:space="preserve"><value>Account no.</value></data>
-  <data name="SelectedCountLabel" xml:space="preserve"><value>Selected</value></data>
-  <data name="MEApplyCenterToAll" xml:space="preserve">
-    <value>Appliquer le centre « {0} » à toutes les lignes</value>
-  </data>
-  <data name="MEApplyCenterSkipped" xml:space="preserve">
-    <value>Centre non appliqué à {0} ligne(s) (non autorisé pour le compte)</value>
-  </data>
-  <data name="InvCostCenter" xml:space="preserve">
-    <value>Document cost center</value>
-  </data>
-  <data name="CCRTitle" xml:space="preserve"><value>Rapports des centres de coût</value></data>
-  <data name="CCRSub" xml:space="preserve"><value>Grand livre par centre, balance par centre, rentabilité et analyse des coûts de projet — en équivalent</value></data>
-  <data name="CCRAllCenters" xml:space="preserve"><value>Tous les centres</value></data>
-  <data name="CCRAllBranches" xml:space="preserve"><value>Toutes les succursales</value></data>
-  <data name="CCRPressShow" xml:space="preserve"><value>Choisissez les filtres puis appuyez sur Afficher.</value></data>
-  <data name="CCRWithChildren" xml:space="preserve"><value>Inclure les sous-centres</value></data>
-  <data name="CCRBalance" xml:space="preserve"><value>Solde</value></data>
-  <data name="CCRPrevBalance" xml:space="preserve"><value>Solde précédent</value></data>
-  <data name="CCRPeriodTotal" xml:space="preserve"><value>Total de la période</value></data>
-  <data name="CCRClosing" xml:space="preserve"><value>Solde de clôture</value></data>
-  <data name="CCRTabLedger" xml:space="preserve"><value>Grand livre du centre</value></data>
-  <data name="CCRTabTb" xml:space="preserve"><value>Balance par centre</value></data>
-  <data name="CCRTabProfit" xml:space="preserve"><value>Rentabilité des centres</value></data>
-  <data name="CCRTabProject" xml:space="preserve"><value>Analyse des coûts du projet</value></data>
-  <data name="CCRRollUp" xml:space="preserve"><value>Cumul (inclut les enfants)</value></data>
-  <data name="CCRRollUpNote" xml:space="preserve"><value>Un centre parent inclut ses enfants : n'additionnez pas les lignes ; le total général provient des mouvements réels.</value></data>
-  <data name="CCRLayoutCenterAccount" xml:space="preserve"><value>Centre puis compte</value></data>
-  <data name="CCRLayoutAccountCenter" xml:space="preserve"><value>Compte puis centre</value></data>
-  <data name="CCRColCenterCode" xml:space="preserve"><value>Code du centre</value></data>
-  <data name="CCROpenDebit" xml:space="preserve"><value>Débit d'ouverture</value></data>
-  <data name="CCROpenCredit" xml:space="preserve"><value>Crédit d'ouverture</value></data>
-  <data name="CCRCloseDebit" xml:space="preserve"><value>Solde débiteur</value></data>
-  <data name="CCRCloseCredit" xml:space="preserve"><value>Solde créditeur</value></data>
-  <data name="CCRTotal" xml:space="preserve"><value>Total</value></data>
-  <data name="CCRGrandTotal" xml:space="preserve"><value>Total général</value></data>
-  <data name="CCRCompare" xml:space="preserve"><value>Comparer à la période précédente équivalente</value></data>
-  <data name="CCRRevenue" xml:space="preserve"><value>Produits</value></data>
-  <data name="CCRCost" xml:space="preserve"><value>Coûts</value></data>
-  <data name="CCRProfit" xml:space="preserve"><value>Résultat</value></data>
-  <data name="CCRMargin" xml:space="preserve"><value>Marge</value></data>
-  <data name="CCRPrevProfit" xml:space="preserve"><value>Résultat période précédente</value></data>
-  <data name="CCRChange" xml:space="preserve"><value>Variation</value></data>
-  <data name="CCRPrevRange" xml:space="preserve"><value>Période précédente</value></data>
-  <data name="CCRPickProject" xml:space="preserve"><value>Choisissez le centre du projet dans les filtres puis appuyez sur Afficher.</value></data>
-  <data name="CCRContractValue" xml:space="preserve"><value>Valeur du contrat</value></data>
-  <data name="CCRActualCost" xml:space="preserve"><value>Coût réel</value></data>
-  <data name="CCRCostOfContract" xml:space="preserve"><value>Coût en % du contrat</value></data>
-  <data name="CCRRemaining" xml:space="preserve"><value>Reste du contrat</value></data>
-  <data name="CCRByGroup" xml:space="preserve"><value>Par groupe de comptes</value></data>
-  <data name="CCRByPhase" xml:space="preserve"><value>Par phase</value></data>
-  <data name="CCRColName" xml:space="preserve"><value>Libellé</value></data>
-  <data name="CCRAmount" xml:space="preserve"><value>Montant</value></data>
-  <data name="CCLTitle" xml:space="preserve"><value>Grand livre auxiliaire des centres de coût par période</value></data>
-  <data name="CCLSub" xml:space="preserve"><value>Centres avec mouvements sur la période et mouvements du centre choisi avec son solde d'ouverture ou reporté</value></data>
-  <data name="CCLCentersGrid" xml:space="preserve"><value>Centres de coût</value></data>
-  <data name="CCLPickCenter" xml:space="preserve"><value>Choisissez un centre de coût dans la liste pour voir ses mouvements.</value></data>
-  <data name="CCLNoCenters" xml:space="preserve"><value>Aucun centre de coût avec mouvements pour ces filtres.</value></data>
-  <data name="CCLUpdateFirstBalance" xml:space="preserve"><value>Mettre à jour le solde d'ouverture</value></data>
-  <data name="CCLUpdateConfirm" xml:space="preserve"><value>Le report des soldes des centres pour la période et la succursale choisies sera reconstruit à partir de la période précédente. Continuer ?</value></data>
-  <data name="CCLUpdatedOk" xml:space="preserve"><value>Solde d'ouverture mis à jour.</value></data>
-  <data name="CCLErrOutsidePeriod" xml:space="preserve"><value>Les dates doivent être dans la période comptable choisie</value></data>
-  <data name="DepEntrySettingsTitle" xml:space="preserve"><value>Depreciation entry settings</value></data>
-  <data name="DepPostEntries" xml:space="preserve"><value>Post a journal entry with each calculation</value></data>
-  <data name="DepExpenseAccount" xml:space="preserve"><value>Depreciation expense account (debit)</value></data>
-  <data name="DepAccumAccount" xml:space="preserve"><value>Accumulated depreciation account (credit)</value></data>
-  <data name="DepSaveSettings" xml:space="preserve"><value>Save settings</value></data>
-  <data name="DepSettingsSaved" xml:space="preserve"><value>Depreciation entry settings saved</value></data>
-  <data name="DepEntrySettingsHint" xml:space="preserve"><value>Off by default; when on, each asset gets an entry carrying its cost center, deleted together with its depreciation record.</value></data>
-  <data name="DepPostFailed" xml:space="preserve"><value>Depreciation calculated but the entry failed:</value></data>
+  <data name="IPQ_Title" xml:space="preserve"><value>Consultation des prix d'un article</value></data>
+  <data name="IPQ_Sub" xml:space="preserve"><value>Trouvez un article pour voir son prix dans chaque type de prix (lecture seule)</value></data>
+  <data name="IPQ_EditPrices" xml:space="preserve"><value>Modifier les prix</value></data>
+  <data name="PHB_D_Inquiry" xml:space="preserve"><value>Aperçu rapide du prix d'un article dans chaque type, sans modification</value></data>
 </root>

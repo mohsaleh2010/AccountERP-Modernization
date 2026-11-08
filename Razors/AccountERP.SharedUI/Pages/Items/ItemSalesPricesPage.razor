@@ -1,5 +1,6 @@
 @* تصنيف أسعار مبيعات الأصناف (بدل Prices_List_Edit_Values «قيم أسعار بيع الاصناف» — عنصر القائمة menuPriceCategory).
-   اختيار فئة الصنف ونوع السعر يعرض: نوع السعر، الفئة، الصنف، سعر البيع، خصم البيع. الإضافة والتعديل فى نافذة منبثقة.
+   اختيار فئة الصنف ونوع السعر ثم زر «بحث» يعرض: نوع السعر، الفئة، الصنف، سعر البيع، خصم البيع (تغيير الفلاتر لا يبحث تلقائياً).
+   خيار «عرض الأصناف بدون سعر أيضاً» يضيف الأصناف النشطة التى ليس لها سعر فى النوع؛ الضغط عليها يفتح إضافة السعر. الإضافة والتعديل فى نافذة منبثقة.
    القواعد فى PriceListService (ListSellValues / SaveSellValue / SetPrice للحذف): المشتقة يعاد حسابها، الصلاحية 917.
    شاشة القوائم الكاملة /items/prices/lists باقية بعنصر «إدارة قوائم الأسعار». التصميم حسب ui-ux-pro-max ونظام inv-*. *@
 @page "/items/sales-prices"
@@ -28,7 +29,12 @@
     .spv-head .acts { display: flex; flex-wrap: wrap; gap: 8px; }
     .spv-head .acts .mud-button-root { min-height: 44px; }
     .spv-gap { margin-top: 16px; }
-    .spv-filters { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(0, 2fr); gap: 12px; align-items: center; }
+    .spv-filters { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.8fr) auto; gap: 12px; align-items: center; }
+    .spv-filters .go { min-height: 56px; min-width: 120px; }
+    .spv-opts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin-top: 4px; }
+    .spv-opts .help { font-size: .8rem; color: var(--mud-palette-text-secondary); }
+    .spv-dirty { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; color: var(--mud-palette-warning-darken); }
+    .spv-unpriced { background: color-mix(in srgb, var(--mud-palette-warning) 6%, transparent); }
     .spv-sum { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 12px; padding: 10px 16px; border-radius: 10px;
                background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent); font-size: .9rem; }
     .spv-sum b { font-variant-numeric: tabular-nums; }
@@ -43,7 +49,7 @@
     .spv-net { display: flex; flex-wrap: wrap; gap: 6px 20px; padding: 10px 14px; border-radius: 10px; font-size: .9rem;
                background: color-mix(in srgb, var(--mud-palette-primary) 7%, transparent); }
     .spv-net b { font-variant-numeric: tabular-nums; }
-    @@media (max-width: 899px) { .spv-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .spv-filters .wide { grid-column: 1 / -1; } }
+    @@media (max-width: 899px) { .spv-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .spv-filters .wide, .spv-filters .go { grid-column: 1 / -1; } }
     @@media (max-width: 599px) { .spv-filters, .spv-dlg { grid-template-columns: minmax(0, 1fr); } }
 </style>
 
@@ -68,28 +74,47 @@
     <section class="inv-card spv-gap" aria-labelledby="spv-list-h">
         <h2 class="inv-card-title" id="spv-list-h"><MudIcon Icon="@Icons.Material.Filled.FilterList" />@Tr("SPV_Filter")</h2>
         <div class="spv-filters">
-            <MudSelect T="long" Value="_typeId" ValueChanged="@(async (long v) => { _typeId = v; await LoadAsync(); })" Label="@Tr("SPV_PriceType")" Variant="Variant.Outlined"
+            <MudSelect T="long" @bind-Value="_typeId" Label="@Tr("SPV_PriceType")" Variant="Variant.Outlined"
                        ToStringFunc="@(id => id == 0 ? Tr("SPV_AllTypes") : _types.FirstOrDefault(x => x.Id == id)?.Name ?? string.Empty)">
                 <MudSelectItem T="long" Value="0L">@Tr("SPV_AllTypes")</MudSelectItem>
                 @foreach (var t in _types) { <MudSelectItem T="long" Value="t.Id">@t.Name@(t.Is_Active ? "" : $" ({Tr("SPV_Inactive")})")</MudSelectItem> }
             </MudSelect>
-            <MudSelect T="long" Value="_catId" ValueChanged="@(async (long v) => { _catId = v; await LoadAsync(); })" Label="@Tr("SPV_Category")" Variant="Variant.Outlined"
+            <MudSelect T="long" @bind-Value="_catId" Label="@Tr("SPV_Category")" Variant="Variant.Outlined"
                        ToStringFunc="@(id => id == 0 ? Tr("IC_AllCats") : _cats.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
                 <MudSelectItem T="long" Value="0L">@Tr("IC_AllCats")</MudSelectItem>
                 @foreach (var c in _cats) { <MudSelectItem T="long" Value="c.Id">@c.Name · @CatType(c.Type_Id)</MudSelectItem> }
             </MudSelect>
-            <MudTextField T="string" Value="_text" ValueChanged="@(async (string? v) => { _text = v; await LoadAsync(); })" Label="@Tr("IT_Search")" Class="wide"
-                          Variant="Variant.Outlined" Immediate="true" DebounceInterval="300" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+            <MudTextField T="string" @bind-Value="_text" Label="@Tr("IT_Search")" Placeholder="@Tr("SPV_SearchBoxHelp")" Class="wide"
+                          Variant="Variant.Outlined" Immediate="true" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ManageSearch"
+                          OnKeyDown="OnSearchKeyAsync" />
+            <MudButton Class="go" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" Disabled="_loading" OnClick="SearchAsync">
+                @if (_loading) { <MudProgressCircular Class="me-2" Size="Size.Small" Indeterminate="true" /> }
+                @Tr("SPV_Search")
+            </MudButton>
         </div>
-        <div class="spv-sum" aria-live="polite">
-            <span>@Tr("SPV_Count") <b>@_rows.Count</b></span>
-            <span>@Tr("SPV_Items") <b>@_rows.Select(r => r.Item_Id).Distinct().Count()</b></span>
-            <span>@Tr("SPV_WithDiscount") <b>@_rows.Count(r => r.Discount > 0)</b></span>
-            @if (_rows.Count >= Top) { <span class="spv-muted">@Tr("SPV_TopNote", Top)</span> }
+        <div class="spv-opts">
+            <MudCheckBox T="bool" @bind-Value="_withUnpriced" Color="Color.Primary" Label="@Tr("SPV_ShowUnpriced")" />
+            <span class="help">@Tr("SPV_ShowUnpricedHelp")</span>
+            @if (IsDirty) { <span class="spv-dirty" role="status"><MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />@Tr("SPV_FiltersChanged")</span> }
         </div>
+        @if (_searched)
+        {
+            <div class="spv-sum" aria-live="polite">
+                <span>@Tr("SPV_Count") <b>@_rows.Count</b></span>
+                <span>@Tr("SPV_Items") <b>@_rows.Select(r => r.Item_Id).Distinct().Count()</b></span>
+                @if (_applied.Unpriced)
+                {
+                    <span>@Tr("SPV_Priced") <b>@_rows.Count(r => r.Has_Price)</b></span>
+                    <span>@Tr("SPV_NoPrice") <b>@_rows.Count(r => !r.Has_Price)</b></span>
+                }
+                <span>@Tr("SPV_WithDiscount") <b>@_rows.Count(r => r.Discount > 0)</b></span>
+                @if (_rows.Count >= Top) { <span class="spv-muted">@Tr("SPV_TopNote", Top)</span> }
+            </div>
+        }
 
         <MudTable Items="@_rows" T="SellValue" Hover="true" Elevation="0" Class="inv-table spv-gap" Breakpoint="Breakpoint.Sm" Dense="true"
-                  Loading="_loading" LoadingProgressColor="Color.Primary" RowClass="spv-row" OnRowClick="@((TableRowClickEventArgs<SellValue> e) => OpenEdit(e.Item!))">
+                  Loading="_loading" LoadingProgressColor="Color.Primary" RowClassFunc="@((r, _) => r.Has_Price ? "spv-row" : "spv-row spv-unpriced")"
+                  OnRowClick="@((TableRowClickEventArgs<SellValue> e) => OpenRow(e.Item!))">
             <HeaderContent>
                 <MudTh Style="width:48px">#</MudTh>
                 <MudTh>@Tr("SPV_PriceType")</MudTh>
@@ -109,20 +134,45 @@
                 <MudTd DataLabel="@Tr("SPV_Category")">@(string.IsNullOrEmpty(context.Category) ? "—" : context.Category)</MudTd>
                 <MudTd DataLabel="@Tr("IT_Name")">@context.Name<div class="spv-code">@context.Code@(string.IsNullOrEmpty(context.Unit) ? "" : $" · {context.Unit}")</div></MudTd>
                 <MudTd DataLabel="@Tr("SPV_CardPrice")" Style="text-align:end"><span class="spv-num spv-muted">@Money(context.Item_Sale_Price)</span></MudTd>
-                <MudTd DataLabel="@Tr("SPV_SalePrice")" Style="text-align:end"><b class="spv-num">@Money(context.Price)</b></MudTd>
-                <MudTd DataLabel="@Tr("SPV_Discount")" Style="text-align:end"><span class="spv-num @(context.Discount > 0 ? "spv-disc" : "spv-muted")">@Money(context.Discount)</span></MudTd>
-                <MudTd DataLabel="@Tr("SPV_Net")" Style="text-align:end"><span class="spv-num">@Money(context.Price - context.Discount)</span></MudTd>
+                @if (context.Has_Price)
+                {
+                    <MudTd DataLabel="@Tr("SPV_SalePrice")" Style="text-align:end"><b class="spv-num">@Money(context.Price)</b></MudTd>
+                    <MudTd DataLabel="@Tr("SPV_Discount")" Style="text-align:end"><span class="spv-num @(context.Discount > 0 ? "spv-disc" : "spv-muted")">@Money(context.Discount)</span></MudTd>
+                    <MudTd DataLabel="@Tr("SPV_Net")" Style="text-align:end"><span class="spv-num">@Money(context.Price - context.Discount)</span></MudTd>
+                }
+                else
+                {
+                    <MudTd DataLabel="@Tr("SPV_SalePrice")" Style="text-align:end"><MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning">@Tr("SPV_NoPrice")</MudChip></MudTd>
+                    <MudTd DataLabel="@Tr("SPV_Discount")" Style="text-align:end"><span class="spv-muted">—</span></MudTd>
+                    <MudTd DataLabel="@Tr("SPV_Net")" Style="text-align:end"><span class="spv-muted">—</span></MudTd>
+                }
                 <MudTd Style="white-space:nowrap"><span @onclick:stopPropagation="true">
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" aria-label="@Tr("SPV_EditOf", context.Name)" title="@Tr("SPV_Edit")" OnClick="@(() => OpenEdit(context))" />
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" aria-label="@Tr("SPV_DeleteOf", context.Name)" title="@Tr("Delete")"
-                                   Disabled="_busy" OnClick="@(() => DeleteAsync(context))" />
+                    @if (context.Has_Price)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" aria-label="@Tr("SPV_EditOf", context.Name)" title="@Tr("SPV_Edit")" OnClick="@(() => OpenEdit(context))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" aria-label="@Tr("SPV_DeleteOf", context.Name)" title="@Tr("Delete")"
+                                       Disabled="_busy" OnClick="@(() => DeleteAsync(context))" />
+                    }
+                    else
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.AddCircleOutline" Size="Size.Medium" Color="Color.Primary" aria-label="@Tr("SPV_AddPriceOf", context.Name)" title="@Tr("SPV_AddPrice")"
+                                       OnClick="@(() => OpenAddFor(context))" />
+                    }
                 </span></MudTd>
             </RowTemplate>
             <NoRecordsContent>
                 <div class="spv-empty">
-                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" />
-                    <span>@Tr("SPV_Empty")</span>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAdd">@Tr("SPV_Add")</MudButton>
+                    @if (!_searched)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.ManageSearch" Size="Size.Large" />
+                        <span>@Tr("SPV_SearchHint")</span>
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" />
+                        <span>@Tr("SPV_Empty")</span>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAdd">@Tr("SPV_Add")</MudButton>
+                    }
                 </div>
             </NoRecordsContent>
         </MudTable>
@@ -194,8 +244,16 @@
     private List<SellValue> _rows = new();
     private long _typeId, _catId;
     private string? _text;
+    private bool _withUnpriced;
     private bool _loading, _busy;
     private string? _error;
+
+    /// <summary>الفلاتر المطبَّقة فى آخر «بحث» — الحفظ والحذف يعيدان التحميل بها، وتغيير الفلاتر لا يبحث تلقائياً.</summary>
+    private record Filters(long Type, long Cat, string Text, bool Unpriced);
+    private Filters _applied = new(0, 0, "", false);
+    private bool _searched;
+    private Filters Current => new(_typeId, _catId, (_text ?? "").Trim(), _withUnpriced);
+    private bool IsDirty => _searched && Current != _applied;
 
     // النافذة
     private bool _dlgOpen, _isEdit, _overrideDerived;
@@ -219,20 +277,47 @@
         {
             _cats = await Bg(() => _svc.ListCategories(1));
             _types = await Bg(() => _svc.ListTypes());
-            await LoadAsync();
         }
         catch (Exception ex) { _error = Inner(ex); }
     }
 
     private Task<T> Bg<T>(Func<T> f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return f(); });
 
+    /// <summary>زر «بحث» أو Enter فى مربع البحث: يثبّت الفلاتر الحالية ثم يحمّل.</summary>
+    private async Task SearchAsync()
+    {
+        if (_loading) return;
+        _applied = Current;
+        _searched = true;
+        await LoadAsync();
+    }
+
+    private async Task OnSearchKeyAsync(KeyboardEventArgs e)
+    {
+        if (e.Key is "Enter" or "NumpadEnter") await SearchAsync();
+    }
+
     private async Task LoadAsync()
     {
-        _loading = true;
-        long t = _typeId, c = _catId; string? x = _text;
-        try { _rows = await Bg(() => _svc.ListSellValues(t, c, x, Top)); }
+        if (!_searched) return;
+        _loading = true; _error = null;
+        var f = _applied;
+        try { _rows = await Bg(() => _svc.ListSellValues(f.Type, f.Cat, f.Text, Top, f.Unpriced)); }
         catch (Exception ex) { _error = Inner(ex); }
         finally { _loading = false; }
+    }
+
+    private Task OpenRow(SellValue r) { if (r.Has_Price) OpenEdit(r); else OpenAddFor(r); return Task.CompletedTask; }
+
+    /// <summary>صف بدون سعر: إضافة السعر بنوعه وصنفه جاهزين، والسعر المقترح سعر البطاقة.</summary>
+    private void OpenAddFor(SellValue r)
+    {
+        _isEdit = false; _dlgError = null; _existing = null; _overrideDerived = false;
+        _dType = r.Type_Id;
+        _dItem = new Option { Id = r.Item_Id, Name = $"{r.Code} - {r.Name}" };
+        _dCardPrice = r.Item_Sale_Price;
+        _dPrice = r.Item_Sale_Price; _dDiscount = 0;
+        _dlgOpen = true;
     }
 
     private Task<IEnumerable<Option>> SearchItemAsync(string? text, CancellationToken ct) => Bg(() => (IEnumerable<Option>)_svc.SearchItems(text));
