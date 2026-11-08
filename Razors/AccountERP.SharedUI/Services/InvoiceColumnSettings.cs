@@ -55,9 +55,21 @@ namespace AccountERP.SharedUI.Services
         public static string StatementLabel(string fallback) => CustomOr(Common.Statement_Name, fallback);
         public static string MerchantLabel(string fallback) => CustomOr(Common.Tager_Kontra_Name, fallback);
 
-        // أى حقل إضافى مفعّل => يظهر قسم «بيانات إضافية للصنف» فى الحوار
-        public static bool AnyDialogField =>
-            ItemCommissionRate || ItemCommissionValue || UnitCommissionValue || (ItemNo && ItemNoEditable) || TaxSalesRate || ATS05Rate
-            || StatementNo || OperationNo || MerchantName || Tash3ela || FreeQuantity || FreeItemNo || ExpireDate;
+        // 🟢 حقول شاشة إضافة الصنف (الحوار) تتبع ItemData.SetConfigDataonMonitor فى الديسك توب بالضبط - وهى تختلف عن أعمدة الجدول:
+        // الحقل يظهر دائماً، ولا يُخفى إلا إذا كان الإعداد الرئيسى Is_ActiveOrNot_Show_ColumnInvoiceMonitor = 1 وإعداده الفرعى = 0.
+        // الضريبة فى الأصل تُخفى بإعداد المجموعة وحده (النسبة والقيمة معاً)، والعمولة بإعداد Show_Commision_Value (الأصل يعطّلها بقيمة صفر فنخفيها).
+        private static bool DlgOn(int flag) => !Master || flag == 1;
+        public static bool DlgCommission => DlgOn(Common.Show_Commision_Value_OnInvoiceMonitor);
+        public static bool DlgItemNo => DlgOn(Common.Show_ItemNo_OnInvoiceMonitor);
+        public static bool DlgItemNoEditable => DlgItemNo && ItemNoEditable;
+        public static bool DlgTaxSales => DlgOn(Common.Show_Item_TaxSale10_OnInvoiceMonitor);
+        public static bool DlgATS05 => DlgOn(Common.Show_Item_ATS05_OnInvoiceMonitor);
+        public static bool DlgStatementNo => DlgOn(Common.Show_StatementNo_Value_OnInvoiceMonitor);
+        public static bool DlgOperationNo => DlgOn(Common.Show_OperstionNo_Value_OnInvoiceMonitor);
+        public static bool DlgMerchantName => DlgOn(Common.Show_Merchant_Name_OnInvoiceMonitor);
+        public static bool DlgTash3ela => DlgOn(Common.Show_Tash3ela_OnInvoiceMonitor);
+        public static bool DlgFreeQuantity => DlgOn(Common.Show_ItemsQnty_Free_OnInvoiceMonitor);
+        public static bool DlgFreeItemNo => DlgOn(Common.Show_Item_No_Free_OnInvoiceMonitor);
+        public static bool DlgExpireDate => DlgOn(Common.Show_Item_Expire_Date_OnInvoiceMonitor);
     }
 }

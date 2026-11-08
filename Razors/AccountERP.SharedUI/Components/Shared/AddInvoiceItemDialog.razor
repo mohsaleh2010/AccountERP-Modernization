@@ -18,264 +18,298 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<MudDialog Visible="Visible" VisibleChanged="OnMudDialogVisibleChangedAsync" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true })">
-    <TitleContent>@(_isEditMode ? Tr("EditItemTitle") : Tr("AddItemTitle"))</TitleContent>
+<style>
+    /* 🟢 حوار إضافة الصنف ملء الشاشة ومتجاوب (موبايل/تابلت/ديسك توب): المحتوى يتمرر والأزرار ثابتة أسفل الشاشة. */
+    .aid-dialog.mud-dialog { display: flex; flex-direction: column; }
+    .aid-content { flex: 1 1 auto; overflow-y: auto; padding: 12px 16px !important; background: var(--mud-palette-background); }
+    .aid-wrap { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+    .aid-section { padding: 14px 16px; border-radius: 10px; background: var(--mud-palette-surface); }
+    .aid-section-title { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; color: var(--mud-palette-primary); font-weight: 600; }
+    .aid-options { display: flex; flex-wrap: wrap; column-gap: 24px; row-gap: 4px; margin-top: 4px; }
+    .aid-item-name { font-weight: 600; font-size: 1.05rem; margin-bottom: 8px; word-break: break-word; }
+    .aid-total input { font-weight: 700 !important; color: var(--mud-palette-primary) !important; }
+    .aid-actions { position: sticky; bottom: 0; border-top: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface);
+                   padding: 10px 16px !important; padding-bottom: calc(10px + env(safe-area-inset-bottom)) !important; gap: 8px; flex-wrap: wrap; }
+    .aid-actions .mud-button-root { min-height: 44px; min-width: 120px; }
+    @@media (max-width: 599.98px) {
+        .aid-content { padding: 8px !important; }
+        .aid-section { padding: 10px; }
+        .aid-actions .mud-button-root { flex: 1 1 0; }
+    }
+</style>
+
+<MudDialog Visible="Visible" VisibleChanged="OnMudDialogVisibleChangedAsync" Class="aid-dialog" ContentClass="aid-content" ActionsClass="aid-actions"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullScreen = true, CloseButton = true })">
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@(_isEditMode ? Icons.Material.Filled.EditNote : Icons.Material.Filled.AddShoppingCart)" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">@(_isEditMode ? Tr("EditItemTitle") : Tr("AddItemTitle"))</MudText>
+        </MudStack>
+    </TitleContent>
     <DialogContent>
-        <MudStack Spacing="2" Style="min-width: 520px;">
-            <MudGrid Spacing="2">
-                @* 🟢 نوع السعر (يقابل UserControl price_Type_List1 فى ItemData الأصلية): يظهر فقط عند تفعيل الإعداد IS_Use_Price_Type_List=1.
-                   لو للعميل نوع سعر (Customer.Price_Type_List_ID) يُحدَّد ويُقفَل عليه؛ وإلا تُعرض الأنواع الفعالة ويبقى اختيار الصنف مقفلاً
-                   حتى يُختار نوع (أو يُختار الأول تلقائياً عند SelectFirstPriceListOnInvoice=1). السعر يُقرأ من Price_Type_Sell_Values. *@
-                @if (_usePriceTypes)
-                {
-                    <MudItem xs="12">
-                        @if (PriceTypeId != 0)
+        <div class="aid-wrap">
+            @* ── القسم 1: اختيار الصنف (نوع السعر + المخزن + البحث) ── *@
+            <MudPaper Outlined="true" Class="aid-section">
+                <MudGrid Spacing="2">
+                    @* 🟢 نوع السعر (يقابل UserControl price_Type_List1 فى ItemData الأصلية): يظهر فقط عند تفعيل الإعداد IS_Use_Price_Type_List=1.
+                       لو للعميل نوع سعر (Customer.Price_Type_List_ID) يُحدَّد ويُقفَل عليه؛ وإلا تُعرض الأنواع الفعالة ويبقى اختيار الصنف مقفلاً
+                       حتى يُختار نوع (أو يُختار الأول تلقائياً عند SelectFirstPriceListOnInvoice=1). السعر يُقرأ من Price_Type_Sell_Values. *@
+                    @if (_usePriceTypes)
+                    {
+                        <MudItem xs="12" sm="6" md="3">
+                            @if (PriceTypeId != 0)
+                            {
+                                @* نوع سعر العميل (Customer.Price_Type_List_ID) ثابت: يُعرض باسمه للقراءة فقط كما فى الأصل (القائمة تحوى نوع العميل وحده). *@
+                                <MudTextField T="string" Value="@CurrentPriceTypeName" ReadOnly="true" Label="@Tr("PriceTypeLabel")" Variant="Variant.Outlined"
+                                              Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Lock" />
+                            }
+                            else
+                            {
+                                <MudSelect T="long" Value="_priceTypeId" ValueChanged="OnPriceTypeChangedAsync" Label="@Tr("PriceTypeLabel")"
+                                           Placeholder="@Tr("PriceTypeLabel")" Variant="Variant.Outlined" Disabled="_isEditMode" Required="true">
+                                    @foreach (var t in _priceTypes)
+                                    {
+                                        <MudSelectItem T="long" Value="@t.Id">@t.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            }
+                        </MudItem>
+                    }
+                    @* 🟢 بطلب المستخدم صراحة: لو للفرع مخزن واحد فقط، اختياره تلقائياً وإخفاء قائمة الاختيار (لا فائدة عملية
+                       منها فى هذه الحالة) - البحث عن الصنف يعتمد وقتها مباشرة على رقم هذا المخزن الوحيد. *@
+                    @if (_stores.Count > 1)
+                    {
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudSelect T="long" Value="_storeId" Label="@Tr("StoreLabel")" Variant="Variant.Outlined"
+                                       Disabled="_isEditMode" ValueChanged="OnStoreChangedAsync">
+                                @foreach (var s in _stores)
+                                {
+                                    <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                    }
+                    <MudItem xs="12" md="@SearchColumns">
+                        @if (_searchByCode)
                         {
-                            @* نوع سعر العميل (Customer.Price_Type_List_ID) ثابت: يُعرض باسمه للقراءة فقط كما فى الأصل (القائمة تحوى نوع العميل وحده). *@
-                            <MudTextField T="string" Value="@CurrentPriceTypeName" ReadOnly="true" Label="@Tr("PriceTypeLabel")" Variant="Variant.Outlined"
-                                          Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Lock" />
+                            <MudTextField T="string" @bind-Value="_codeSearchText" Label="@Tr("SearchByCodeLabel")" Variant="Variant.Outlined"
+                                          Disabled="_isEditMode || _storeId == 0 || !ItemsEnabled" Immediate="true"
+                                          OnKeyDown="OnCodeSearchKeyDownAsync" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                                          OnAdornmentClick="@(() => SearchByCodeAsync(_codeSearchText))" AdornmentAriaLabel="@Tr("SearchByCodeLabel")" />
                         }
                         else
                         {
-                            <MudSelect T="long" Value="_priceTypeId" ValueChanged="OnPriceTypeChangedAsync" Label="@Tr("PriceTypeLabel")"
-                                       Placeholder="@Tr("PriceTypeLabel")" Variant="Variant.Outlined" Disabled="_isEditMode" Required="true">
-                                @foreach (var t in _priceTypes)
-                                {
-                                    <MudSelectItem T="long" Value="@t.Id">@t.Name</MudSelectItem>
-                                }
-                            </MudSelect>
+                            <MudAutocomplete T="ItemOption" Value="_selectedItem" SearchFunc="SearchItemsAsync"
+                                              ToStringFunc="@(o => o?.Name ?? "")" Label="@Tr("ItemLabel")" Variant="Variant.Outlined"
+                                              ValueChanged="OnItemPickedAsync" ResetValueOnEmptyText="true" Disabled="_isEditMode || _storeId == 0 || !ItemsEnabled"
+                                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
                         }
-                    </MudItem>
-                }
-                @* 🟢 بطلب المستخدم صراحة: لو للفرع مخزن واحد فقط، اختياره تلقائياً وإخفاء قائمة الاختيار (لا فائدة عملية
-                   منها فى هذه الحالة) - البحث عن الصنف يعتمد وقتها مباشرة على رقم هذا المخزن الوحيد. *@
-                @if (_stores.Count > 1)
-                {
-                    <MudItem xs="12" sm="6">
-                        <MudSelect T="long" Value="_storeId" Label="@Tr("StoreLabel")" Variant="Variant.Outlined"
-                                   Disabled="_isEditMode" ValueChanged="OnStoreChangedAsync">
-                            @foreach (var s in _stores)
-                            {
-                                <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudItem>
-                }
-                <MudItem xs="12" sm="@(_stores.Count > 1 ? 6 : 12)">
-                    @if (_searchByCode)
-                    {
-                        <MudTextField T="string" @bind-Value="_codeSearchText" Label="@Tr("SearchByCodeLabel")" Variant="Variant.Outlined"
-                                      Disabled="_isEditMode || _storeId == 0 || !ItemsEnabled" Immediate="true"
-                                      OnKeyDown="OnCodeSearchKeyDownAsync" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
-                                      OnAdornmentClick="@(() => SearchByCodeAsync(_codeSearchText))" />
-                    }
-                    else
-                    {
-                        <MudAutocomplete T="ItemOption" Value="_selectedItem" SearchFunc="SearchItemsAsync"
-                                          ToStringFunc="@(o => o?.Name ?? "")" Label="@Tr("ItemLabel")" Variant="Variant.Outlined"
-                                          ValueChanged="OnItemPickedAsync" ResetValueOnEmptyText="true" Disabled="_isEditMode || _storeId == 0 || !ItemsEnabled" />
-                    }
-                </MudItem>
-            </MudGrid>
-
-            @* 🟢 يقابل ItemData.cbSearchByCode (بحث بالاسم/بالكود) + خيار جديد لإظهار/إخفاء الأصناف بدون رصيد بطلب المستخدم صراحة *@
-            <MudStack Row="true" Spacing="4">
-                <MudCheckBox T="bool" Value="_searchByCode" ValueChanged="OnSearchByCodeChangedAsync" Label="@Tr("SearchByCodeToggleLabel")" Disabled="_isEditMode" Dense="true" />
-                <MudCheckBox T="bool" Value="_showItemsWithoutBalance" ValueChanged="OnShowWithoutBalanceChangedAsync" Label="@Tr("ShowItemsWithoutBalanceLabel")" Disabled="_isEditMode" Dense="true" />
-            </MudStack>
-
-            @if (_selectedItem is not null)
-            {
-                <MudGrid Spacing="2">
-                    <MudItem xs="6" sm="@(_isWithoutBalance ? 4 : 3)">
-                        <MudTextField T="string" Value="@_line.code" ReadOnly="true" Label="@Tr("ItemCodeLabel")" Variant="Variant.Outlined" />
-                    </MudItem>
-                    @* 🟢 حقلا الرصيد يظهران فقط للأصناف المخزنية العادية؛ يُخفَيان تلقائياً للأصناف/الخدمات التى
-                       عليها Item.Is_ItemWithoutBalance = 1 (خدمة لا رصيد لها) - بقرار المستخدم صراحة. *@
-                    @if (!_isWithoutBalance)
-                    {
-                        <MudItem xs="6" sm="3">
-                            <MudTextField T="string" Value="@($"{_line.Available_Larg_Balance:0.##} {_largUnit}")" ReadOnly="true" Label="@Tr("LargBalanceLabel")" Variant="Variant.Outlined" />
-                        </MudItem>
-                        <MudItem xs="6" sm="3">
-                            <MudTextField T="string" Value="@($"{_line.Available_Small_Balance:0.##} {_smallUnit}")" ReadOnly="true" Label="@Tr("SmallBalanceLabel")" Variant="Variant.Outlined" />
-                        </MudItem>
-                    }
-                    <MudItem xs="6" sm="@(_isWithoutBalance ? 4 : 3)">
-                        <MudNumericField T="decimal" Value="_priceUnit" Label="@Tr("UnitPriceLabel")" Variant="Variant.Outlined"
-                                          ValueChanged="OnPriceChanged" Format="0.00" />
-                    </MudItem>
-
-                    <MudItem xs="6" sm="4">
-                        <MudNumericField T="decimal" @ref="_largQntyField" Value="_largQnty" Label="@($"{Tr("QuantityLabel")} ({_largUnit})")"
-                                          Variant="Variant.Outlined" ValueChanged="OnLargQntyChanged" Format="0.##"
-                                          Immediate="true" OnKeyDown="OnQtyKeyDownAsync" />
-                    </MudItem>
-                    @if (_unitSmallValue > 1)
-                    {
-                        <MudItem xs="6" sm="4">
-                            <MudNumericField T="decimal" Value="_smallQnty" Label="@($"{Tr("QuantityLabel")} ({_smallUnit})")"
-                                              Variant="Variant.Outlined" ValueChanged="OnSmallQntyChanged" Format="0.##"
-                                              Immediate="true" OnKeyDown="OnQtyKeyDownAsync" />
-                        </MudItem>
-                    }
-                    <MudItem xs="6" sm="4">
-                        <MudTextField T="string" Value="@_line.Item_Net_Total_Price?.ToString("0.00")" ReadOnly="true" Label="@Tr("LineTotalLabel")" Variant="Variant.Outlined" />
                     </MudItem>
                 </MudGrid>
 
-                @* 🟢 بيانات الصنف الإضافية: تقابل حقول ItemData الأصلية التى تُخفى بإعدادات Show_*_OnInvoiceMonitor (SetConfigDataonMonitor)؛
-                   تظهر هنا فقط لصفحة فاتورة المبيعات (ShowExtraFields) وبنفس الإعدادات (InvoiceColumnSettings)، وكل تغيير يعيد حساب السطر. *@
-                @if (ShowExtraFields && InvoiceColumnSettings.AnyDialogField)
-                {
-                    <MudDivider />
-                    <MudText Typo="Typo.subtitle2" Color="Color.Primary">@Tr("ItemExtrasTitle")</MudText>
+                @* 🟢 يقابل ItemData.cbSearchByCode (بحث بالاسم/بالكود) + خيار جديد لإظهار/إخفاء الأصناف بدون رصيد بطلب المستخدم صراحة *@
+                <div class="aid-options">
+                    <MudCheckBox T="bool" Value="_searchByCode" ValueChanged="OnSearchByCodeChangedAsync" Label="@Tr("SearchByCodeToggleLabel")" Disabled="_isEditMode" />
+                    <MudCheckBox T="bool" Value="_showItemsWithoutBalance" ValueChanged="OnShowWithoutBalanceChangedAsync" Label="@Tr("ShowItemsWithoutBalanceLabel")" Disabled="_isEditMode" />
+                </div>
+            </MudPaper>
+
+            @if (_selectedItem is null)
+            {
+                <MudPaper Outlined="true" Class="aid-section">
+                    <MudStack AlignItems="AlignItems.Center" Spacing="1" Class="py-6">
+                        <MudIcon Icon="@Icons.Material.Outlined.Inventory2" Size="Size.Large" Color="Color.Default" />
+                        <MudText Typo="Typo.body2" Color="Color.Default">@(ItemsEnabled ? Tr("SOSelectItem") : Tr("SelectPriceTypeFirst"))</MudText>
+                    </MudStack>
+                </MudPaper>
+            }
+            else
+            {
+                @* ── القسم 2: الكمية والسعر ── *@
+                <MudPaper Outlined="true" Class="aid-section">
+                    <div class="aid-item-name">@_line.Invoice_Item_Name</div>
                     <MudGrid Spacing="2">
-                        @if (InvoiceColumnSettings.ItemNo && InvoiceColumnSettings.ItemNoEditable)
+                        <MudItem xs="6" sm="4" md="2">
+                            <MudTextField T="string" Value="@_line.code" ReadOnly="true" Label="@Tr("ItemCodeLabel")" Variant="Variant.Outlined" />
+                        </MudItem>
+                        @* 🟢 حقلا الرصيد يظهران فقط للأصناف المخزنية العادية؛ يُخفَيان تلقائياً للأصناف/الخدمات التى
+                           عليها Item.Is_ItemWithoutBalance = 1 (خدمة لا رصيد لها) - بقرار المستخدم صراحة. *@
+                        @if (!_isWithoutBalance)
                         {
-                        <MudItem xs="6" sm="4">
-                            <MudNumericField T="decimal?" Value="_line.Qnty_Another" ValueChanged="@((decimal? v) => SetExtra(() => _line.Qnty_Another = v ?? 0))"
-                                             Label="@Tr("ItemNoLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" />
-                        </MudItem>
+                            <MudItem xs="6" sm="4" md="2">
+                                <MudTextField T="string" Value="@($"{_line.Available_Larg_Balance:0.##} {_largUnit}")" ReadOnly="true" Label="@Tr("LargBalanceLabel")" Variant="Variant.Outlined" />
+                            </MudItem>
+                            <MudItem xs="6" sm="4" md="2">
+                                <MudTextField T="string" Value="@($"{_line.Available_Small_Balance:0.##} {_smallUnit}")" ReadOnly="true" Label="@Tr("SmallBalanceLabel")" Variant="Variant.Outlined" />
+                            </MudItem>
                         }
-                        @if (InvoiceColumnSettings.ItemCommissionRate)
+                        <MudItem xs="6" sm="4" md="2">
+                            <MudNumericField T="decimal" Value="_priceUnit" Label="@Tr("UnitPriceLabel")" Variant="Variant.Outlined"
+                                              ValueChanged="OnPriceChanged" Format="0.00" HideSpinButtons="true" />
+                        </MudItem>
+                        <MudItem xs="6" sm="4" md="2">
+                            <MudNumericField T="decimal" @ref="_largQntyField" Value="_largQnty" Label="@($"{Tr("QuantityLabel")} ({_largUnit})")"
+                                              Variant="Variant.Outlined" ValueChanged="OnLargQntyChanged" Format="0.##"
+                                              Immediate="true" OnKeyDown="OnQtyKeyDownAsync" HideSpinButtons="true" />
+                        </MudItem>
+                        @if (_unitSmallValue > 1)
                         {
-                        <MudItem xs="6" sm="4">
-                            <MudNumericField T="decimal?" Value="_line.Item_CommissionRate" ValueChanged="@((decimal? v) => SetExtra(() => _line.Item_CommissionRate = v ?? 0))"
-                                             Label="@Tr("ItemCommissionRateLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" />
-                        </MudItem>
+                            <MudItem xs="6" sm="4" md="2">
+                                <MudNumericField T="decimal" Value="_smallQnty" Label="@($"{Tr("QuantityLabel")} ({_smallUnit})")"
+                                                  Variant="Variant.Outlined" ValueChanged="OnSmallQntyChanged" Format="0.##"
+                                                  Immediate="true" OnKeyDown="OnQtyKeyDownAsync" HideSpinButtons="true" />
+                            </MudItem>
                         }
-                        @if (InvoiceColumnSettings.ItemCommissionValue)
-                        {
-                        <MudItem xs="6" sm="4">
-                            <MudNumericField T="decimal?" Value="_line.Item_CommissionValue" ValueChanged="@((decimal? v) => SetExtra(() => _line.Item_CommissionValue = v ?? 0))"
-                                             Label="@Tr("ItemCommissionValueLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" />
+                        <MudItem xs="12" sm="4" md="2">
+                            <MudTextField T="string" Value="@_line.Item_Net_Total_Price?.ToString("0.00")" ReadOnly="true" Label="@Tr("LineTotalLabel")"
+                                          Variant="Variant.Outlined" Class="aid-total" />
                         </MudItem>
-                        }
-                        @if (InvoiceColumnSettings.UnitCommissionValue)
-                        {
-                        <MudItem xs="6" sm="4">
-                            <MudNumericField T="decimal?" Value="_line.Unit_CommissionValue" ValueChanged="@((decimal? v) => SetExtra(() => _line.Unit_CommissionValue = v ?? 0))"
-                                             Label="@Tr("UnitCommissionLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" />
-                        </MudItem>
-                        }
-                        @if (InvoiceColumnSettings.ItemCommissionTotal)
-                        {
-                        <MudItem xs="6" sm="4">
-                            <MudTextField T="string" Value="@((_line.ItemCommissionTotal ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("ItemCommissionTotalLabel")" Variant="Variant.Outlined" />
-                        </MudItem>
-                        }
-                        @if (InvoiceColumnSettings.TaxSalesRate)
-                        {
-                        <MudItem xs="6" sm="4">
-                            <MudNumericField T="decimal?" Value="_line.Item_TaxSales10" ValueChanged="@((decimal? v) => SetExtra(() => _line.Item_TaxSales10 = v ?? 0))"
-                                             Label="@Tr("ItemTaxRateLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" Disabled="!IsTaxPerItem" />
-                        </MudItem>
-                        }
-                        @if (InvoiceColumnSettings.TaxSalesValue)
-                        {
-                        <MudItem xs="6" sm="4">
-                            <MudTextField T="string" Value="@((_line.Item_TaxSales10_Value ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("ItemTaxValueLabel")" Variant="Variant.Outlined" />
-                        </MudItem>
-                        }
-                        @if (InvoiceColumnSettings.ATS05Rate)
-                        {
-                        <MudItem xs="6" sm="4">
-                            <MudNumericField T="decimal?" Value="_line.Item_ATS05" ValueChanged="@((decimal? v) => SetExtra(() => _line.Item_ATS05 = v ?? 0))"
-                                             Label="@Tr("ItemATS05RateLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" Disabled="!IsTaxPerItem" />
-                        </MudItem>
-                        }
-                        @if (InvoiceColumnSettings.ATS05Value)
-                        {
-                        <MudItem xs="6" sm="4">
-                            <MudTextField T="string" Value="@((_line.Item_ATS05_Value ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("ItemATS05ValueLabel")" Variant="Variant.Outlined" />
-                        </MudItem>
-                        }
-                        @if (InvoiceColumnSettings.ThreeMola)
-                        {
-                        <MudItem xs="6" sm="4">
-                            <MudTextField T="string" Value="@((_line.Total3Mola ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("Total3MolaLabel")" Variant="Variant.Outlined" />
-                        </MudItem>
-                        }
-                        @if (InvoiceColumnSettings.StatementNo)
-                        {
-                        <MudItem xs="6" sm="4">
-                            <MudTextField T="string" @bind-Value="_line.StatementNo" Label="@InvoiceColumnSettings.StatementLabel(Tr("StatementNoLabel"))" Variant="Variant.Outlined" />
-                        </MudItem>
-                        }
-                        @if (InvoiceColumnSettings.OperationNo)
-                        {
-                        <MudItem xs="6" sm="4">
-                            <MudTextField T="string" @bind-Value="_line.OperationNo" Label="@Tr("OperationNoLabel")" Variant="Variant.Outlined" />
-                        </MudItem>
-                        }
-                        @if (InvoiceColumnSettings.MerchantName)
-                        {
-                        <MudItem xs="6" sm="4">
-                            <MudTextField T="string" @bind-Value="_line.Merchant_Name" Label="@InvoiceColumnSettings.MerchantLabel(Tr("MerchantNameLabel"))" Variant="Variant.Outlined" />
-                        </MudItem>
-                        }
-                        @if (InvoiceColumnSettings.Tash3ela)
-                        {
-                        <MudItem xs="6" sm="4">
-                            <MudTextField T="string" @bind-Value="_line.Tash3ela" Label="@Tr("BatchLabel")" Variant="Variant.Outlined" />
-                        </MudItem>
-                        }
-                        @if (InvoiceColumnSettings.FreeQuantity)
-                        {
-                        <MudItem xs="6" sm="4">
-                            <MudNumericField T="decimal?" Value="_line.LargItemsQnty_Free" ValueChanged="@((decimal? v) => SetExtra(() => _line.LargItemsQnty_Free = v ?? 0))"
-                                             Label="@($"{Tr("FreeQuantityLabel")} ({_largUnit})")" Variant="Variant.Outlined" Format="0.##" Immediate="true" />
-                        </MudItem>
-                            @if (_unitSmallValue > 1)
-                            {
-                        <MudItem xs="6" sm="4">
-                            <MudNumericField T="decimal?" Value="_line.SmallItemsQnty_Free" ValueChanged="@((decimal? v) => SetExtra(() => _line.SmallItemsQnty_Free = v ?? 0))"
-                                             Label="@($"{Tr("FreeQuantityLabel")} ({_smallUnit})")" Variant="Variant.Outlined" Format="0.##" Immediate="true" />
-                        </MudItem>
-                            }
-                        }
-                        @if (InvoiceColumnSettings.FreeItemNo)
-                        {
-                        <MudItem xs="6" sm="4">
-                            <MudNumericField T="decimal?" Value="_line.Item_No_Free" ValueChanged="@((decimal? v) => SetExtra(() => _line.Item_No_Free = v ?? 0))"
-                                             Label="@Tr("FreeItemNoLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" />
-                        </MudItem>
-                        }
-                        @if (InvoiceColumnSettings.ExpireDate)
-                        {
-                        <MudItem xs="6" sm="4">
-                            <MudDatePicker T="DateTime?" Date="_line.Item_Expire_Date" DateChanged="@((DateTime? d) => SetExtra(() => _line.Item_Expire_Date = d ?? DateTime.Now.Date))"
-                                           Label="@Tr("ExpireDateLabel")" Variant="Variant.Outlined" />
-                        </MudItem>
-                        }
-                        @if (InvoiceColumnSettings.TotalNoTax)
-                        {
-                        <MudItem xs="6" sm="4">
-                            <MudTextField T="string" Value="@((_line.Item_Total_WithoutTax ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("TotalNoTaxLabel")" Variant="Variant.Outlined" />
-                        </MudItem>
-                        }
-                        @if (InvoiceColumnSettings.QntyValue)
-                        {
-                        <MudItem xs="6" sm="4">
-                            <MudTextField T="string" Value="@((_line.Qnty_value ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("QntyValueLabel")" Variant="Variant.Outlined" />
-                        </MudItem>
-                        }
                     </MudGrid>
+                </MudPaper>
+
+                @* 🟢 بيانات الصنف الإضافية: تقابل حقول ItemData الأصلية وتُخفى بنفس قواعد SetConfigDataonMonitor فى الديسك توب
+                   (InvoiceColumnSettings.Dlg*: ظاهرة دائماً إلا إذا فُعّل Is_ActiveOrNot_Show_ColumnInvoiceMonitor وأُخفى إعداد الحقل).
+                   تظهر لصفحة فاتورة المبيعات فقط (ShowExtraFields)، وكل تغيير يعيد حساب السطر. *@
+                @if (ShowExtraFields)
+                {
+                    <MudPaper Outlined="true" Class="aid-section">
+                        <div class="aid-section-title">
+                            <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+                            <span>@Tr("ItemExtrasTitle")</span>
+                        </div>
+                        <MudGrid Spacing="2">
+                            @if (InvoiceColumnSettings.DlgItemNo)
+                            {
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudNumericField T="decimal?" Value="_line.Qnty_Another" ValueChanged="@((decimal? v) => SetExtra(() => _line.Qnty_Another = v ?? 0))"
+                                                 Label="@Tr("ItemNoLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" HideSpinButtons="true"
+                                                 Disabled="!InvoiceColumnSettings.DlgItemNoEditable" />
+                            </MudItem>
+                            }
+                            @if (InvoiceColumnSettings.DlgCommission)
+                            {
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudNumericField T="decimal?" Value="_line.Item_CommissionRate" ValueChanged="@((decimal? v) => SetExtra(() => _line.Item_CommissionRate = v ?? 0))"
+                                                 Label="@Tr("ItemCommissionRateLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" HideSpinButtons="true" />
+                            </MudItem>
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudNumericField T="decimal?" Value="_line.Item_CommissionValue" ValueChanged="@((decimal? v) => SetExtra(() => _line.Item_CommissionValue = v ?? 0))"
+                                                 Label="@Tr("ItemCommissionValueLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" HideSpinButtons="true" />
+                            </MudItem>
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudNumericField T="decimal?" Value="_line.Unit_CommissionValue" ValueChanged="@((decimal? v) => SetExtra(() => _line.Unit_CommissionValue = v ?? 0))"
+                                                 Label="@Tr("UnitCommissionLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" HideSpinButtons="true" />
+                            </MudItem>
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudTextField T="string" Value="@((_line.ItemCommissionTotal ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("ItemCommissionTotalLabel")" Variant="Variant.Outlined" />
+                            </MudItem>
+                            }
+                            @if (InvoiceColumnSettings.DlgTaxSales)
+                            {
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudNumericField T="decimal?" Value="_line.Item_TaxSales10" ValueChanged="@((decimal? v) => SetExtra(() => _line.Item_TaxSales10 = v ?? 0))"
+                                                 Label="@Tr("ItemTaxRateLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" HideSpinButtons="true" Disabled="!IsTaxPerItem" />
+                            </MudItem>
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudTextField T="string" Value="@((_line.Item_TaxSales10_Value ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("ItemTaxValueLabel")" Variant="Variant.Outlined" />
+                            </MudItem>
+                            }
+                            @if (InvoiceColumnSettings.DlgATS05)
+                            {
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudNumericField T="decimal?" Value="_line.Item_ATS05" ValueChanged="@((decimal? v) => SetExtra(() => _line.Item_ATS05 = v ?? 0))"
+                                                 Label="@Tr("ItemATS05RateLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" HideSpinButtons="true" Disabled="!IsTaxPerItem" />
+                            </MudItem>
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudTextField T="string" Value="@((_line.Item_ATS05_Value ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("ItemATS05ValueLabel")" Variant="Variant.Outlined" />
+                            </MudItem>
+                            }
+                            @if (InvoiceColumnSettings.DlgFreeQuantity)
+                            {
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudNumericField T="decimal?" Value="_line.LargItemsQnty_Free" ValueChanged="@((decimal? v) => SetExtra(() => _line.LargItemsQnty_Free = v ?? 0))"
+                                                 Label="@($"{Tr("FreeQuantityLabel")} ({_largUnit})")" Variant="Variant.Outlined" Format="0.##" Immediate="true" HideSpinButtons="true" />
+                            </MudItem>
+                                @if (_unitSmallValue > 1)
+                                {
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudNumericField T="decimal?" Value="_line.SmallItemsQnty_Free" ValueChanged="@((decimal? v) => SetExtra(() => _line.SmallItemsQnty_Free = v ?? 0))"
+                                                 Label="@($"{Tr("FreeQuantityLabel")} ({_smallUnit})")" Variant="Variant.Outlined" Format="0.##" Immediate="true" HideSpinButtons="true" />
+                            </MudItem>
+                                }
+                            }
+                            @if (InvoiceColumnSettings.DlgFreeItemNo)
+                            {
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudNumericField T="decimal?" Value="_line.Item_No_Free" ValueChanged="@((decimal? v) => SetExtra(() => _line.Item_No_Free = v ?? 0))"
+                                                 Label="@Tr("FreeItemNoLabel")" Variant="Variant.Outlined" Format="0.##" Immediate="true" HideSpinButtons="true" />
+                            </MudItem>
+                            }
+                            @if (InvoiceColumnSettings.DlgStatementNo)
+                            {
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudTextField T="string" @bind-Value="_line.StatementNo" Label="@InvoiceColumnSettings.StatementLabel(Tr("StatementNoLabel"))" Variant="Variant.Outlined" />
+                            </MudItem>
+                            }
+                            @if (InvoiceColumnSettings.DlgOperationNo)
+                            {
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudTextField T="string" @bind-Value="_line.OperationNo" Label="@Tr("OperationNoLabel")" Variant="Variant.Outlined" />
+                            </MudItem>
+                            }
+                            @if (InvoiceColumnSettings.DlgMerchantName)
+                            {
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudTextField T="string" @bind-Value="_line.Merchant_Name" Label="@InvoiceColumnSettings.MerchantLabel(Tr("MerchantNameLabel"))" Variant="Variant.Outlined" />
+                            </MudItem>
+                            }
+                            @if (InvoiceColumnSettings.DlgTash3ela)
+                            {
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudTextField T="string" @bind-Value="_line.Tash3ela" Label="@Tr("BatchLabel")" Variant="Variant.Outlined" />
+                            </MudItem>
+                            }
+                            @if (InvoiceColumnSettings.DlgExpireDate)
+                            {
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudDatePicker T="DateTime?" Date="_line.Item_Expire_Date" DateChanged="@((DateTime? d) => SetExtra(() => _line.Item_Expire_Date = d ?? DateTime.Now.Date))"
+                                               Label="@Tr("ExpireDateLabel")" Variant="Variant.Outlined" />
+                            </MudItem>
+                            }
+                            @if (InvoiceColumnSettings.ThreeMola)
+                            {
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudTextField T="string" Value="@((_line.Total3Mola ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("Total3MolaLabel")" Variant="Variant.Outlined" />
+                            </MudItem>
+                            }
+                            @if (InvoiceColumnSettings.QntyValue)
+                            {
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudTextField T="string" Value="@((_line.Qnty_value ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("QntyValueLabel")" Variant="Variant.Outlined" />
+                            </MudItem>
+                            }
+                            @* الإجمالى بدون ضريبة ظاهر دائماً فى الأصل (txtItemTotalNoTax). *@
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudTextField T="string" Value="@((_line.Item_Total_WithoutTax ?? 0).ToString("0.00"))" ReadOnly="true" Label="@Tr("TotalNoTaxLabel")" Variant="Variant.Outlined" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
                 }
 
                 @if (!string.IsNullOrEmpty(_errorMessage))
                 {
-                    <MudAlert Severity="Severity.Error" Dense="true">@_errorMessage</MudAlert>
+                    <MudAlert Severity="Severity.Error" Dense="true" role="alert">@_errorMessage</MudAlert>
                 }
             }
-        </MudStack>
+        </div>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="CloseAsync">@Tr("Cancel")</MudButton>
+        <MudSpacer />
+        <MudButton Variant="Variant.Outlined" OnClick="CloseAsync">@Tr("Cancel")</MudButton>
         @* 🟢 زر واحد مناسب للعملية (بطلب المستخدم): إضافة صنف جديد = «إضافة» (يُضيف الصنف ويُبقى الحوار مفتوحاً لإضافة التالى)،
            وتعديل صنف موجود = «حفظ التعديل» (يحفظ ويغلق). *@
         <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="_selectedItem is null"
+                   StartIcon="@(_isEditMode ? Icons.Material.Filled.Save : Icons.Material.Filled.Add)"
                    OnClick="@(() => _isEditMode ? SaveAndCloseAsync() : AddAndKeepOpenAsync())">@Tr(_isEditMode ? "ItemDlgSaveEditButton" : "ItemDlgAddButton")</MudButton>
     </DialogActions>
 </MudDialog>
@@ -344,6 +378,8 @@
     private long _priceTypeId;
     private long _priceTypesLoadedFor = -1;
     private bool ItemsEnabled => !_usePriceTypes || _priceTypeId != 0;
+    // عرض خانة البحث على الديسك توب: الباقى من الصف بعد نوع السعر والمخزن (كل منهما 3 أعمدة).
+    private int SearchColumns => 12 - (_usePriceTypes ? 3 : 0) - (_stores.Count > 1 ? 3 : 0);
     private string CurrentPriceTypeName => _priceTypes.FirstOrDefault(t => t.Id == _priceTypeId)?.Name ?? "";
 
     protected override async Task OnParametersSetAsync()
