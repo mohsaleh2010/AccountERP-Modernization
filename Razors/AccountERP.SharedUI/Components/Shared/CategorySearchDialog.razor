@@ -1,0 +1,161 @@
+@* 🟢 شاشة البحث عن فئة الصنف: تُفتح من خانة «اسم الفئة» فى شاشة الصنف (بالضغط على الخانة نفسها بعيداً عن السهم، أو F9).
+   قائمة الفئات النشطة مع فلاتر بالاسم والنوع الرئيسى و«تستخدم لـ»؛ اختيار سطر ثم «موافق» (أو ضغط مزدوج / Enter) يُرجع الفئة ويغلق الشاشة.
+   التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using static AccountModelsLib.ItemEditorService
+@inject LanguageService LangService
+
+<style>
+    .cs-filters { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+    .cs-list { margin-top: 12px; max-height: 55vh; overflow: auto; border: 1px solid var(--mud-palette-lines-default); border-radius: 10px; }
+    .cs-list table { width: 100%; border-collapse: collapse; }
+    .cs-list th { position: sticky; top: 0; z-index: 1; background: var(--mud-palette-surface); text-align: start; font-size: .8rem; font-weight: 600;
+                  color: var(--mud-palette-text-secondary); padding: 10px 12px; border-bottom: 1px solid var(--mud-palette-lines-default); }
+    .cs-list td { padding: 10px 12px; border-bottom: 1px solid var(--mud-palette-table-lines, var(--mud-palette-lines-default)); }
+    .cs-list tbody tr { cursor: pointer; transition: background-color .15s; }
+    .cs-list tbody tr:hover { background: var(--mud-palette-action-default-hover); }
+    .cs-list tbody tr.sel { background: color-mix(in srgb, var(--mud-palette-primary) 16%, transparent); }
+    .cs-list tbody tr.sel td:first-child { font-weight: 600; color: var(--mud-palette-primary); }
+    .cs-empty { padding: 24px; text-align: center; color: var(--mud-palette-text-secondary); }
+    .cs-foot { font-size: .8rem; color: var(--mud-palette-text-secondary); margin-top: 8px; }
+    @@media (max-width: 649px) { .cs-filters { grid-template-columns: minmax(0, 1fr); } .cs-list .cs-hide-sm { display: none; } }
+    @@media (prefers-reduced-motion: reduce) { .cs-list tbody tr { transition: none; } }
+</style>
+
+<MudDialog Visible="Visible" VisibleChanged="OnMudDialogVisibleChangedAsync"
+           Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true, BackdropClick = true })">
+    <TitleContent>
+        <div style="display:flex;align-items:center;gap:8px"><MudIcon Icon="@Icons.Material.Filled.ManageSearch" Color="Color.Primary" />@Tr("CS_Title")</div>
+    </TitleContent>
+    <DialogContent>
+        <div @onkeydown="OnKeyDown" style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+            <div class="cs-filters" role="search" aria-label="@Tr("CS_Title")">
+                <MudTextField T="string" Value="_text" ValueChanged="OnTextChanged" Label="@Tr("CS_ByName")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                              Immediate="true" Clearable="true" AutoFocus="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+                <MudSelect T="long" Value="_mainId" ValueChanged="OnMainChanged" Label="@Tr("IC_Main")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                           ToStringFunc="@(id => id == 0 ? Tr("IC_AllMains") : Mains.FirstOrDefault(m => m.Id == id).Name ?? string.Empty)">
+                    <MudSelectItem T="long" Value="0L">@Tr("IC_AllMains")</MudSelectItem>
+                    @foreach (var m in Mains) { <MudSelectItem T="long" Value="m.Id">@m.Name</MudSelectItem> }
+                </MudSelect>
+                <MudSelect T="int" Value="_kind" ValueChanged="OnKindChanged" Label="@Tr("IC_Kind")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                           ToStringFunc="@(k => KindName(k))">
+                    <MudSelectItem T="int" Value="-1">@Tr("IT_KindAll")</MudSelectItem>
+                    <MudSelectItem T="int" Value="1">@Tr("IC_Items")</MudSelectItem>
+                    <MudSelectItem T="int" Value="2">@Tr("IC_Services")</MudSelectItem>
+                </MudSelect>
+            </div>
+
+            <div class="cs-list" role="listbox" aria-label="@Tr("IC_AllCats")">
+                @if (_rows.Count == 0)
+                {
+                    <div class="cs-empty">@Tr("CS_NoResults")</div>
+                }
+                else
+                {
+                    <table>
+                        <thead><tr><th>@Tr("IC_CatName")</th><th>@Tr("IC_Main")</th><th class="cs-hide-sm">@Tr("IC_Kind")</th></tr></thead>
+                        <tbody>
+                            @foreach (var c in _rows)
+                            {
+                                var row = c;
+                                <tr class="@(row.Id == _selId ? "sel" : null)" role="option" aria-selected="@(row.Id == _selId ? "true" : "false")"
+                                    @onclick="@(() => _selId = row.Id)" @ondblclick="@(() => ConfirmAsync(row.Id))">
+                                    <td>@row.Name</td>
+                                    <td>@row.Main_Name</td>
+                                    <td class="cs-hide-sm">@KindName(row.Item_Or_Service)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+            <div class="cs-foot">@Tr("CS_Count", _rows.Count) · @Tr("CS_KeysHint")</div>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseAsync">@Tr("Cancel")</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Disabled="@(_selId == 0)" OnClick="@(() => ConfirmAsync(_selId))">@Tr("OkButton")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    /// <summary>الفئات المتاحة (نفس قائمة كومبو الفئة).</summary>
+    [Parameter] public List<CategoryOption> Categories { get; set; } = new();
+    /// <summary>الفئة المختارة حالياً فى الكومبو — تظهر محددة عند فتح الشاشة.</summary>
+    [Parameter] public long SelectedId { get; set; }
+    [Parameter] public EventCallback<long> OnSelected { get; set; }
+
+    private string _text = "";
+    private long _mainId, _selId;
+    private int _kind = -1;
+    private bool _wasVisible;
+    private List<CategoryOption> _rows = new();
+
+    private IEnumerable<(long Id, string Name)> Mains => Categories.Where(c => c.Main_Id != 0)
+        .GroupBy(c => c.Main_Id).Select(g => (g.Key, g.First().Main_Name ?? "")).OrderBy(m => m.Item2);
+
+    protected override void OnParametersSet()
+    {
+        // كل فتح جديد: فلاتر فارغة والفئة الحالية محددة
+        if (Visible && !_wasVisible) { _text = ""; _mainId = 0; _kind = -1; _selId = SelectedId; Filter(); }
+        _wasVisible = Visible;
+    }
+
+    private void OnTextChanged(string? v) { _text = v ?? ""; Filter(); }
+    private void OnMainChanged(long v) { _mainId = v; Filter(); }
+    private void OnKindChanged(int v) { _kind = v; Filter(); }
+
+    /// <summary>«تستخدم لـ»: فئة غير محددة (0) تصلح للأصناف والخدمات معاً، كقائمة الإضافة السريعة.</summary>
+    private void Filter()
+    {
+        string t = _text.Trim();
+        _rows = Categories.Where(c => (t.Length == 0 || (c.Name ?? "").Contains(t, StringComparison.CurrentCultureIgnoreCase))
+                                   && (_mainId == 0 || c.Main_Id == _mainId)
+                                   && (_kind < 0 || c.Item_Or_Service == _kind || c.Item_Or_Service == 0)).ToList();
+        if (_rows.All(r => r.Id != _selId)) _selId = _rows.Count == 1 ? _rows[0].Id : 0;
+    }
+
+    /// <summary>الأسهم تنقل التحديد، وEnter يوافق.</summary>
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key is "ArrowDown" or "ArrowUp" && _rows.Count > 0)
+        {
+            int i = _rows.FindIndex(r => r.Id == _selId);
+            i = e.Key == "ArrowDown" ? Math.Min(i + 1, _rows.Count - 1) : Math.Max(i - 1, 0);
+            _selId = _rows[i].Id;
+        }
+        else if (e.Key == "Enter" && _selId != 0) await ConfirmAsync(_selId);
+    }
+
+    private async Task ConfirmAsync(long id)
+    {
+        if (id == 0) return;
+        await CloseAsync();
+        await OnSelected.InvokeAsync(id);
+    }
+
+    private string KindName(int k) => k switch { 1 => Tr("IC_Items"), 2 => Tr("IC_Services"), -1 => Tr("IT_KindAll"), _ => Tr("IC_Unspecified") };
+
+    private async Task CloseAsync()
+    {
+        Visible = false; _wasVisible = false;
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task OnMudDialogVisibleChangedAsync(bool visible)
+    {
+        Visible = visible; _wasVisible = visible;
+        await VisibleChanged.InvokeAsync(visible);
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key, args]; }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

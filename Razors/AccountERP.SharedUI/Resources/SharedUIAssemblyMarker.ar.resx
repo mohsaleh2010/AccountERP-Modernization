@@ -4831,4 +4831,10 @@
   <data name="IPQ_Sub" xml:space="preserve"><value>ابحث عن الصنف لعرض سعره فى كل نوع سعر (عرض فقط)</value></data>
   <data name="IPQ_EditPrices" xml:space="preserve"><value>تعديل الأسعار</value></data>
   <data name="PHB_D_Inquiry" xml:space="preserve"><value>عرض سريع لسعر الصنف فى كل نوع سعر بدون تعديل</value></data>
+  <data name="CS_Title" xml:space="preserve"><value>بحث عن فئة</value></data>
+  <data name="CS_ByName" xml:space="preserve"><value>بحث بالاسم</value></data>
+  <data name="CS_NoResults" xml:space="preserve"><value>لا توجد فئات مطابقة للبحث</value></data>
+  <data name="CS_Count" xml:space="preserve"><value>{0} فئة</value></data>
+  <data name="CS_KeysHint" xml:space="preserve"><value>الأسهم للتنقل، Enter أو ضغط مزدوج للاختيار</value></data>
+  <data name="CS_FieldHint" xml:space="preserve"><value>اضغط على الخانة أو F9 للبحث، والسهم للقائمة</value></data>
 </root>

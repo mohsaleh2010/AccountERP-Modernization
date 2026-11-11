@@ -180,6 +180,9 @@ namespace AccountModelsLib
         {
             public string Profile { get; set; }
             public int Item_Or_Service { get; set; }
+            /// <summary>النوع الرئيسى للفئة (Item_Main_Category) — لفلتر شاشة البحث عن الفئة.</summary>
+            public long Main_Id { get; set; }
+            public string Main_Name { get; set; }
         }
 
         public class Lookups
@@ -250,8 +253,10 @@ namespace AccountModelsLib
         {
             var l = new Lookups
             {
-                Categories = opp.db.Database.SqlQuery<CategoryOption>($@"SELECT ID AS Id, ISNULL(Category_Name, N'') AS Name, ISNULL(Item_Profile, N'') AS Profile, ISNULL(Is_ItemOrService, 0) AS Item_Or_Service
-FROM Item_Category WHERE ISNULL(IS_Active, 1) = 1 ORDER BY Category_Name").ToList(),
+                Categories = opp.db.Database.SqlQuery<CategoryOption>($@"SELECT c.ID AS Id, ISNULL(c.Category_Name, N'') AS Name, ISNULL(c.Item_Profile, N'') AS Profile, ISNULL(c.Is_ItemOrService, 0) AS Item_Or_Service,
+       CAST(ISNULL(c.Main_Item_Category_Id, 0) AS bigint) AS Main_Id, ISNULL(m.Main_Category_Name, N'') AS Main_Name
+FROM Item_Category c LEFT JOIN Item_Main_Category m ON m.ID = c.Main_Item_Category_Id
+WHERE ISNULL(c.IS_Active, 1) = 1 ORDER BY c.Category_Name").ToList(),
                 Groups = opp.db.Database.SqlQuery<Option>($"SELECT CAST(Id AS bigint) AS Id, ISNULL(Name, N'') AS Name FROM Items_Group ORDER BY Name").ToList(),
                 Natures = opp.db.Database.SqlQuery<Option>($"SELECT CAST(Id AS bigint) AS Id, ISNULL(ItemsNature_Name, N'') AS Name FROM Items_Nature WHERE ISNULL(IsActive, 1) = 1 ORDER BY ItemsNature_Name").ToList(),
                 Units = opp.db.Database.SqlQuery<UnitOption>($@"SELECT id AS Id, u_name AS Name, B_Unit AS Big_Unit, S_unit AS Small_Unit, CAST(ISNULL(S_unit_Value, 1) AS decimal(18,4)) AS Factor,

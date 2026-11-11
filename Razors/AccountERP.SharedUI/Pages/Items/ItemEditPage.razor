@@ -52,6 +52,9 @@
     .ie-addstore .mud-button-root { min-height: 44px; }
     .ie-sub { font-size: 1rem; margin-top: 16px; }
     .ie-retail { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 16px; align-items: center; margin-top: 8px; }
+    .ie-catpick { position: relative; }
+    /* طبقة فوق جسم الخانة فقط (56px) مع ترك منطقة السهم فى نهاية السطر لفتح القائمة العادية */
+    .ie-catpick-hit { position: absolute; top: 0; height: 56px; inset-inline-start: 0; inset-inline-end: 48px; cursor: pointer; z-index: 1; }
     .ie-warn { color: var(--mud-palette-warning-darken, var(--mud-palette-warning)); }
     @@media (max-width: 649px) { .ie-retail { grid-template-columns: minmax(0, 1fr); } }
     @@media (max-width: 1099px) { .ie-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -94,16 +97,21 @@
     <section class="inv-card ie-gap" aria-labelledby="ie-basic">
         <h2 class="inv-card-title" id="ie-basic"><MudIcon Icon="@Icons.Material.Filled.Badge" />@Tr("IT_Basic")</h2>
         <div class="ie-grid">
-            <MudTextField T="string" @bind-Value="_f.Name" Label="@Tr("IT_Name")" Variant="Variant.Outlined" Required="true" MaxLength="500" Class="span2" AutoFocus="@_isNew" />
+            <MudTextField T="string" Value="_f.Name" ValueChanged="OnNameChanged" Immediate="true" Label="@Tr("IT_Name")" Variant="Variant.Outlined" Required="true" MaxLength="500" Class="span2" AutoFocus="@_isNew" />
             <MudTextField T="string" @bind-Value="_f.Code" Label="@Tr("IT_Code")" Variant="Variant.Outlined" MaxLength="50"
                           Disabled="@(_isNew && _lk!.Auto_Code)" Placeholder="@(_isNew && _lk!.Auto_Code ? Tr("IT_AutoCode") : null)"
                           HelperText="@(_isNew && _lk!.Auto_Code ? Tr("IT_AutoCodeHelp") : null)" />
             <MudTextField T="string" @bind-Value="_f.Name_On_Invoice" Label="@Tr("IT_NameOnInvoice")" Variant="Variant.Outlined" MaxLength="500" HelperText="@Tr("IT_NameOnInvoiceHelp")" />
             <MudTextField T="string" @bind-Value="_f.Other_Name" Label="@Tr("IT_OtherName")" Variant="Variant.Outlined" MaxLength="500" />
-            <MudSelect T="long" @bind-Value="_f.Category_Id" Label="@Tr("IC_CatName")" Variant="Variant.Outlined" Required="true"
-                       ToStringFunc="@(id => _lk!.Categories.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
-                @foreach (var c in _lk!.Categories) { <MudSelectItem T="long" Value="c.Id">@c.Name</MudSelectItem> }
-            </MudSelect>
+            @* السهم يفتح قائمة الفئات كما هى؛ الضغط على الخانة نفسها أو F9 يفتح شاشة البحث عن الفئة *@
+            <div class="ie-catpick" @onkeydown="OnCategoryKeyDown">
+                <MudSelect @ref="_catSelect" T="long" @bind-Value="_f.Category_Id" Label="@Tr("IC_CatName")" Variant="Variant.Outlined" Required="true"
+                           HelperText="@Tr("CS_FieldHint")"
+                           ToStringFunc="@(id => _lk!.Categories.FirstOrDefault(c => c.Id == id)?.Name ?? string.Empty)">
+                    @foreach (var c in _lk!.Categories) { <MudSelectItem T="long" Value="c.Id">@c.Name</MudSelectItem> }
+                </MudSelect>
+                <div class="ie-catpick-hit" title="@Tr("CS_FieldHint")" @onclick="OpenCategorySearch"></div>
+            </div>
             @if (Lookups)
             {
             <MudSelect T="long" @bind-Value="_f.Group_Id" Label="@Tr("IL_groups")" Variant="Variant.Outlined" Clearable="true"
@@ -412,6 +420,11 @@
 </div>
 </MudContainer>
 
+@if (_lk != null)
+{
+    <CategorySearchDialog @bind-Visible="_catSearchOpen" Categories="_lk.Categories" SelectedId="_f.Category_Id" OnSelected="OnCategoryPicked" />
+}
+
 @code {
     [Parameter] public long? Id { get; set; }
     [SupplyParameterFromQuery(Name = "kind")] public string? KindQuery { get; set; }
@@ -519,6 +532,34 @@
     {
         _f.Store_Used_Type = t;
         if (_isNew && FormStores.All(s => s.Id != _f.Store_Id)) _f.Store_Id = FormStores.FirstOrDefault()?.Id ?? 0;
+    }
+
+    /// <summary>اسم الصنف الجديد يُنسخ إلى «الاسم على الفاتورة» و«اسم آخر» إن كانا فارغين
+    /// (أو ما زالا يساويان الاسم السابق المنسوخ تلقائياً، فيتبعان تعديل الاسم ما لم يكتب المستخدم فيهما شيئاً مختلفاً).</summary>
+    private void OnNameChanged(string? v)
+    {
+        string old = _f.Name ?? "";
+        _f.Name = v;
+        if (!_isNew) return;
+        if (string.IsNullOrWhiteSpace(_f.Name_On_Invoice) || _f.Name_On_Invoice == old) _f.Name_On_Invoice = v;
+        if (string.IsNullOrWhiteSpace(_f.Other_Name) || _f.Other_Name == old) _f.Other_Name = v;
+    }
+
+    private MudSelect<long>? _catSelect;
+    private bool _catSearchOpen;
+
+    private void OpenCategorySearch() => _catSearchOpen = true;
+
+    private void OnCategoryKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "F9") OpenCategorySearch();
+    }
+
+    private async Task OnCategoryPicked(long id)
+    {
+        _f.Category_Id = id;
+        StateHasChanged();
+        if (_catSelect != null) await _catSelect.FocusAsync();
     }
 
     private void OnRetailChanged(bool v)

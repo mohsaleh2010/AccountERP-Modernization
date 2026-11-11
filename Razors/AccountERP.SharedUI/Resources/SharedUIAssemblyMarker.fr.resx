@@ -4833,4 +4833,10 @@
   <data name="IPQ_Sub" xml:space="preserve"><value>Trouvez un article pour voir son prix dans chaque type de prix (lecture seule)</value></data>
   <data name="IPQ_EditPrices" xml:space="preserve"><value>Modifier les prix</value></data>
   <data name="PHB_D_Inquiry" xml:space="preserve"><value>Aperçu rapide du prix d'un article dans chaque type, sans modification</value></data>
+  <data name="CS_Title" xml:space="preserve"><value>Rechercher une catégorie</value></data>
+  <data name="CS_ByName" xml:space="preserve"><value>Rechercher par nom</value></data>
+  <data name="CS_NoResults" xml:space="preserve"><value>Aucune catégorie ne correspond</value></data>
+  <data name="CS_Count" xml:space="preserve"><value>{0} catégories</value></data>
+  <data name="CS_KeysHint" xml:space="preserve"><value>Flèches pour naviguer, Entrée ou double-clic pour choisir</value></data>
+  <data name="CS_FieldHint" xml:space="preserve"><value>Cliquez sur le champ ou F9 pour rechercher ; flèche pour la liste</value></data>
 </root>
