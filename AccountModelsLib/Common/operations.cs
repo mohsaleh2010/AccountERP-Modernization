@@ -10,6 +10,7 @@ using System.Data;
 using System.Data.OleDb;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -580,6 +581,14 @@ namespace AccountModelsLib
 
             return dd;
 
+        }
+        public static string Get_DateToInsert2(DateTime cutoffDate)
+        {
+            // Standard invariant format (compatible with SQL Server CONVERT style 120)
+            string cutoffDateStr = cutoffDate.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+            return cutoffDateStr;
+            // Or date only (compatible with style 23 or standard date comparison)
+            // string cutoffDateStr = cutoffDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         }
         public static string Get_DateToInsert(DateTime? mydate)
         {
