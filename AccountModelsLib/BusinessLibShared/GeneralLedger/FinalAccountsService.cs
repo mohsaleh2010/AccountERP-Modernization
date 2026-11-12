@@ -26,8 +26,13 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
         public record PeriodRow(long Id, string Name, DateTime DateFrom, DateTime DateTo, bool IsActive = false);
         public record Option(long Id, string Name);
 
-        /// <summary>عملة «بالمكافىء» فى الديسكتوب (القيمة -1): كل القيود بما يعادلها بالعملة الأساسية.</summary>
-        public const long EquivalentCurrencyId = -1;
+        /// <summary>
+        /// عملة «بالمكافىء» = 0: كل القيود بما يعادلها بالعملة الأساسية (Equivalent_Import/Export_Value وصفوف الأرصدة بـ Equivalent_Account_Currency_Id = 0).
+        /// هذا ما تمرره كل شاشات الديسكتوب الختامية (`Currency_Data_AllItems("بالمكافىء")` بمعامل واحد ⇒ "0" فى Currency_List_2)،
+        /// والمحرك (Mezan_MorgaaCLS / AccountEntry_CLS) لا يعرف إلا &gt;0 أو ==0. القيمة -1 (النسخة ذات المعاملين) لا تستعملها أى شاشة ختامية
+        /// وكانت تنتج استعلاماً ناقصاً (financial-statements-review-plan.md أ-1، ف2). لا توجد عملة بقيمة 0 فى جدول Currency.
+        /// </summary>
+        public const long EquivalentCurrencyId = 0;
 
         public List<PeriodRow> GetPeriods()
         {
@@ -39,7 +44,7 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
                 dt.Columns.Contains("IS_Active") && r["IS_Active"] != DBNull.Value && Convert.ToInt32(r["IS_Active"]) == 1)).ToList();
         }
 
-        /// <summary>العملات: الاختيار الأول «بالمكافىء» (-1) ثم عملات الجدول بقيمتها (Value) كما فى Currency_List_2.</summary>
+        /// <summary>العملات: الاختيار الأول «بالمكافىء» (0) ثم عملات الجدول بقيمتها (Value) كما فى Currency_List_2.</summary>
         public List<Option> GetCurrencies(string equivalentText)
         {
             var list = new List<Option> { new(EquivalentCurrencyId, equivalentText) };
@@ -455,7 +460,7 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
         // ---------------- قائمة المركز المالى (م5) ----------------
 
         /// <summary>عملة «المكافىء» كما تمررها Get_Account_BalanceFRM2 فى الديسكتوب (0 ثابتة، بلا اختيار عملة).</summary>
-        public const long BaseEquivalentCurrencyId = 0;
+        public const long BaseEquivalentCurrencyId = EquivalentCurrencyId;
 
         public enum BalanceSection { Assets = 1, Liabilities = 2, Equity = 3 }
 
