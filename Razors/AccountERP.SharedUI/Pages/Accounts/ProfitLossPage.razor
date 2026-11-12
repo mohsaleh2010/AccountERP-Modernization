@@ -1,8 +1,7 @@
 @* 🟢 «حساب التشغيل / المتاجرة / الأرباح والخسائر» (بدل Profit_Loss_StatFRMNew(1/2/3)، خطة final-accounts-razor-plan.md م4).
    صفحة واحدة بثلاثة تبويبات؛ tab=1|2|3 يحدد التبويب المفتوح كما يفعل معامل الفورم. «عرض» يحسب الثلاثة معاً كالأصل:
-   FinalAccountsService.GetProfitLoss ⇒ Get_Mezan_Morgaa_ByPeiodNew ثم Incoming_StatementCLS.Get_Final_AccountsArba7 بلا تعديل
-   (التشغيل يُرحَّل للمتاجرة، والمتاجرة تُرحَّل للأرباح والخسائر، والأرباح والخسائر تُرحَّل للميزانية).
-   الديسكتوب يستدعى UpdateFirstBalance قبل كل عرض: لا يُستدعى هنا (نفس قرار ميزان المراجعة).
+   FinalAccountsService.GetProfitLoss على محرك القراءة LedgerBalanceEngine (ف4): حركة المدى المختار فقط، نفس نطاق قائمة الدخل فيتطابق صافيهما
+   (التشغيل يُقفل فى المتاجرة، والمتاجرة فى الأرباح والخسائر، والأرباح والخسائر فى الميزانية، بالإشارة الصحيحة). بلا جداول مؤقتة ولا كتابة.
    الطباعة معطَّلة فى الديسكتوب؛ هنا window.print تطبع التبويب الظاهر. التصميم بنظام inv-* المشترك (ui-ux-pro-max). *@
 @page "/accounts/final/profit-loss"
 
@@ -68,7 +67,7 @@
                        Disabled="@(_loading || _result == null)" OnClick="PrintAsync">@Tr("FAPrint")</MudButton>
             @if (_loading) { <MudProgressCircular Indeterminate="true" Size="Size.Small" /> }
         </div>
-        <MudAlert Severity="Severity.Info" Dense="true" Class="fs-status" role="note">@Tr("FSFirstBalanceHint")</MudAlert>
+        <MudAlert Severity="Severity.Info" Dense="true" Class="fs-status" role="note">@Tr("FSEngineHint")</MudAlert>
     </div>
 
     @if (!string.IsNullOrEmpty(_error))

@@ -1,7 +1,7 @@
 @* 🟢 «قائمة الدخل» (بدل Incoming_StatementByDate، خطة final-accounts-razor-plan.md م4).
-   الحساب: FinalAccountsService.GetIncomeStatement ⇒ Mezan_MorgaaCLS.Get_Mezan_Morgaa_ByPeiodNew ثم Incoming_StatementCLS.Get_Incoming_Statement بلا تعديل
-   (حسابات التشغيل والمتاجرة والأرباح والخسائر ذات الرصيد، ومجموع كل مجموعة، ثم إجمالى الإيرادات والمصروفات وصافى الربح/الخسارة).
-   الديسكتوب يستدعى UpdateFirstBalance قبل كل عرض (يعيد كتابة Account_Entry_Master_Balance): لا يُستدعى هنا، نفس قرار ميزان المراجعة.
+   الحساب (ف4 من financial-statements-review-plan.md): FinalAccountsService.GetIncomeStatement على محرك القراءة LedgerBalanceEngine —
+   حسابات التشغيل والمتاجرة والأرباح والخسائر بصافى حركة المدى المختار فقط (نفس نطاق حساب الأرباح والخسائر)، مجموعة بالحساب الأب،
+   ثم إجمالى الإيرادات والمصروفات وصافى الربح/الخسارة. بلا جداول مؤقتة ولا كتابة.
    الطباعة بـ window.print مع CSS للطباعة بدل IncomeStatementFrm_RPT. التصميم بنظام inv-* المشترك (ui-ux-pro-max). *@
 @page "/accounts/final/income-statement"
 
@@ -67,7 +67,7 @@
                        Disabled="@(_loading || _result == null)" OnClick="PrintAsync">@Tr("FAPrint")</MudButton>
             @if (_loading) { <MudProgressCircular Indeterminate="true" Size="Size.Small" /> }
         </div>
-        <MudAlert Severity="Severity.Info" Dense="true" Class="fs-status" role="note">@Tr("FSFirstBalanceHint")</MudAlert>
+        <MudAlert Severity="Severity.Info" Dense="true" Class="fs-status" role="note">@Tr("FSEngineHint")</MudAlert>
     </div>
 
     @if (!string.IsNullOrEmpty(_error))
@@ -124,8 +124,8 @@
     private DateTime? PeriodFrom => _periods.FirstOrDefault(p => p.Id == _periodId)?.DateFrom;
     private DateTime? PeriodTo => _periods.FirstOrDefault(p => p.Id == _periodId)?.DateTo;
     // من صفى الإجمالى اللذين يضيفهما المحرك (إجمالى الإيرادات فى الدائن، إجمالى المصروفات فى المدين)
-    private decimal Revenue => _result?.Rows.FirstOrDefault(r => r.LabelKey == "ISRevenueTotal")?.LastDa2n ?? 0;
-    private decimal Expenses => _result?.Rows.FirstOrDefault(r => r.LabelKey == "ISExpenseTotal")?.LastMadin ?? 0;
+    private decimal Revenue => _result?.Revenue ?? 0;
+    private decimal Expenses => _result?.Expenses ?? 0;
 
     protected override async Task OnInitializedAsync()
     {

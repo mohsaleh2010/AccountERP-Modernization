@@ -4847,7 +4847,6 @@
   <data name="ISExpenseTotal" xml:space="preserve"><value>إجمالى المصروفات</value></data>
   <data name="ISNetProfit" xml:space="preserve"><value>صافى الربح</value></data>
   <data name="ISNetLoss" xml:space="preserve"><value>صافى الخسارة</value></data>
-  <data name="FSFirstBalanceHint" xml:space="preserve"><value>عرض فقط: الديسكتوب يعيد بناء أرصدة أول المدة قبل كل عرض؛ هنا تُقرأ الأرصدة كما هى (مثل ميزان المراجعة). لو اختلف رقم عن الديسكتوب فافتح الشاشة فى الديسكتوب مرة لتحديث الأرصدة ثم أعد العرض</value></data>
   <data name="PLTitle" xml:space="preserve"><value>الحسابات الختامية: التشغيل والمتاجرة والأرباح والخسائر</value></data>
   <data name="PLSub" xml:space="preserve"><value>«عرض» يحسب الثلاثة معاً: نتيجة التشغيل تُرحَّل للمتاجرة، ومجمل الربح يُرحَّل للأرباح والخسائر، وصافى الربح يُرحَّل للميزانية</value></data>
   <data name="PLTabOperating" xml:space="preserve"><value>حساب التشغيل</value></data>
@@ -4875,15 +4874,18 @@
   <data name="BSTotalLiabilities" xml:space="preserve"><value>إجمالى الخصوم</value></data>
   <data name="BSTotalEquity" xml:space="preserve"><value>إجمالى حقوق الملكية</value></data>
   <data name="BSTotalLiabEquity" xml:space="preserve"><value>إجمالى الخصوم وحقوق الملكية</value></data>
-  <data name="BSNetProfit" xml:space="preserve"><value>صافى ربح الفترة</value></data>
-  <data name="BSNetLoss" xml:space="preserve"><value>صافى خسارة الفترة</value></data>
+  <data name="BSNetProfit" xml:space="preserve"><value>صافى الربح غير المقفل</value></data>
+  <data name="BSNetLoss" xml:space="preserve"><value>صافى الخسارة غير المقفلة</value></data>
+  <data name="BSPriorUnclosed" xml:space="preserve"><value>الربح غير المقفل يشمل {0} من أرصدة أول مدة لحسابات النتيجة (فترات سابقة لم تُقفل على الأرباح المرحَّلة).</value></data>
+  <data name="BSUnclassifiedAccounts" xml:space="preserve"><value>يوجد {0} حساب له رصيد وليس مصنَّفاً ميزانية ولا نتيجة (الحساب الختامى غير محدد أو الحساب محذوف)، فلا يظهر فى القائمة؛ صافيها {1} ويفسر جزءاً من فرق الاتزان. صحّح تصنيفها من دليل الحسابات.</value></data>
+  <data name="FSEngineHintBS" xml:space="preserve"><value>الأرصدة حتى نهاية الفترة محسوبة من رصيد أول المدة المسجَّل والقيود المعتمدة؛ كل حساب له حركة يظهر حتى لو لم يكن له رصيد أول مدة، وصافى حسابات النتيجة يظهر سطراً محسوباً فى حقوق الملكية لأن الفترة لم تُقفل. عرض فقط: لا يُكتب شىء.</value></data>
+  <data name="FSEngineHint" xml:space="preserve"><value>القائمة محسوبة مباشرة من القيود المعتمدة (لها رقم قيد) فى المدى المختار فقط، من بداية يوم «من» حتى نهاية يوم «إلى»، لذلك تتطابق قائمة الدخل وحساب الأرباح والخسائر لنفس المدى؛ كل حساب له حركة يظهر حتى لو لم يكن له رصيد أول مدة. عرض فقط: لا يُكتب شىء.</value></data>
   <data name="BSLevel" xml:space="preserve"><value>مستوى العرض</value></data>
   <data name="BSAllLevels" xml:space="preserve"><value>كل المستويات</value></data>
   <data name="BSShowZero" xml:space="preserve"><value>إظهار الحسابات الصفرية</value></data>
   <data name="BSBalanced" xml:space="preserve"><value>القائمة متزنة</value></data>
   <data name="BSNotBalanced" xml:space="preserve"><value>القائمة غير متزنة — الفرق {0}</value></data>
   <data name="BSDifference" xml:space="preserve"><value>الفرق</value></data>
-  <data name="BSMissingAccounts" xml:space="preserve"><value>يوجد {0} حساب له قيود فى هذه الفترة وليس له رصيد أول مدة مسجَّل، فلن يظهر هنا؛ افتح «قائمة المركز المالى» أو «تحديث رصيد أول المدة» فى الديسكتوب مرة ثم أعد العرض</value></data>
   <data name="BSAccount" xml:space="preserve"><value>الحساب</value></data>
   <data name="BSAmount" xml:space="preserve"><value>الرصيد</value></data>
   <data name="BSChooseHint" xml:space="preserve"><value>اختر الفترة والفرع ثم اضغط «عرض»</value></data>

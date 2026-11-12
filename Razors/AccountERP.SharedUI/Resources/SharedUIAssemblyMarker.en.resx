@@ -4847,7 +4847,6 @@
   <data name="ISExpenseTotal" xml:space="preserve"><value>Total expenses</value></data>
   <data name="ISNetProfit" xml:space="preserve"><value>Net profit</value></data>
   <data name="ISNetLoss" xml:space="preserve"><value>Net loss</value></data>
-  <data name="FSFirstBalanceHint" xml:space="preserve"><value>View only: the desktop rebuilds opening balances before each display; here balances are read as they are (like the trial balance). If a figure differs from the desktop, open the screen once in the desktop to refresh balances, then show again</value></data>
   <data name="PLTitle" xml:space="preserve"><value>Final accounts: operating, trading, profit and loss</value></data>
   <data name="PLSub" xml:space="preserve"><value>"Show" computes all three: the operating result carries to trading, gross profit carries to profit and loss, and net profit carries to the balance sheet</value></data>
   <data name="PLTabOperating" xml:space="preserve"><value>Operating account</value></data>
@@ -4875,15 +4874,18 @@
   <data name="BSTotalLiabilities" xml:space="preserve"><value>Total liabilities</value></data>
   <data name="BSTotalEquity" xml:space="preserve"><value>Total equity</value></data>
   <data name="BSTotalLiabEquity" xml:space="preserve"><value>Total liabilities and equity</value></data>
-  <data name="BSNetProfit" xml:space="preserve"><value>Net profit for the period</value></data>
-  <data name="BSNetLoss" xml:space="preserve"><value>Net loss for the period</value></data>
+  <data name="BSNetProfit" xml:space="preserve"><value>Unclosed net profit</value></data>
+  <data name="BSNetLoss" xml:space="preserve"><value>Unclosed net loss</value></data>
+  <data name="BSPriorUnclosed" xml:space="preserve"><value>The unclosed profit includes {0} from opening balances of result accounts (earlier periods not closed to retained earnings).</value></data>
+  <data name="BSUnclassifiedAccounts" xml:space="preserve"><value>{0} account(s) have a balance but are classified neither as balance sheet nor result accounts (final account not set, or account deleted), so they are not shown; their net {1} explains part of the difference. Fix their classification in the chart of accounts.</value></data>
+  <data name="FSEngineHintBS" xml:space="preserve"><value>Balances to period end are computed from the recorded opening balance plus posted entries; every account with movement appears even without an opening row, and the net of result accounts is shown as a computed line in equity because the period is not closed. View only: nothing is written.</value></data>
+  <data name="FSEngineHint" xml:space="preserve"><value>Computed directly from posted entries (with an entry number) in the selected range only, from the start of the "from" day to the end of the "to" day, so the income statement and the profit and loss account agree for the same range; every account with movement appears even without an opening balance. View only: nothing is written.</value></data>
   <data name="BSLevel" xml:space="preserve"><value>Display level</value></data>
   <data name="BSAllLevels" xml:space="preserve"><value>All levels</value></data>
   <data name="BSShowZero" xml:space="preserve"><value>Show zero-balance accounts</value></data>
   <data name="BSBalanced" xml:space="preserve"><value>The balance sheet balances</value></data>
   <data name="BSNotBalanced" xml:space="preserve"><value>The balance sheet does not balance — difference {0}</value></data>
   <data name="BSDifference" xml:space="preserve"><value>Difference</value></data>
-  <data name="BSMissingAccounts" xml:space="preserve"><value>{0} account(s) have entries in this period but no recorded opening balance, so they are not shown; open the balance sheet or «update opening balance» once in the desktop, then show again</value></data>
   <data name="BSAccount" xml:space="preserve"><value>Account</value></data>
   <data name="BSAmount" xml:space="preserve"><value>Balance</value></data>
   <data name="BSChooseHint" xml:space="preserve"><value>Choose the period and branch, then press «Show»</value></data>

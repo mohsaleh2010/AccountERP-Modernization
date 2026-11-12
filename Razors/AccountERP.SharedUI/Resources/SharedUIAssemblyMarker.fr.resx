@@ -4849,7 +4849,6 @@
   <data name="ISExpenseTotal" xml:space="preserve"><value>Total des charges</value></data>
   <data name="ISNetProfit" xml:space="preserve"><value>Bénéfice net</value></data>
   <data name="ISNetLoss" xml:space="preserve"><value>Perte nette</value></data>
-  <data name="FSFirstBalanceHint" xml:space="preserve"><value>Consultation seule : le bureau reconstruit les soldes d'ouverture avant chaque affichage ; ici les soldes sont lus tels quels (comme la balance). Si un chiffre diffère, ouvrez l'écran une fois dans le bureau puis réaffichez</value></data>
   <data name="PLTitle" xml:space="preserve"><value>Comptes de fin d'exercice : exploitation, commerce, pertes et profits</value></data>
   <data name="PLSub" xml:space="preserve"><value>« Afficher » calcule les trois : le résultat d'exploitation est reporté au compte commercial, la marge brute aux pertes et profits, et le résultat net au bilan</value></data>
   <data name="PLTabOperating" xml:space="preserve"><value>Compte d'exploitation</value></data>
@@ -4877,15 +4876,18 @@
   <data name="BSTotalLiabilities" xml:space="preserve"><value>Total passif</value></data>
   <data name="BSTotalEquity" xml:space="preserve"><value>Total capitaux propres</value></data>
   <data name="BSTotalLiabEquity" xml:space="preserve"><value>Total passif et capitaux propres</value></data>
-  <data name="BSNetProfit" xml:space="preserve"><value>Bénéfice net de l'exercice</value></data>
-  <data name="BSNetLoss" xml:space="preserve"><value>Perte nette de l'exercice</value></data>
+  <data name="BSNetProfit" xml:space="preserve"><value>Bénéfice net non clôturé</value></data>
+  <data name="BSNetLoss" xml:space="preserve"><value>Perte nette non clôturée</value></data>
+  <data name="BSPriorUnclosed" xml:space="preserve"><value>Le bénéfice non clôturé inclut {0} provenant des soldes d'ouverture des comptes de résultat (exercices antérieurs non clôturés en report à nouveau).</value></data>
+  <data name="BSUnclassifiedAccounts" xml:space="preserve"><value>{0} compte(s) ont un solde mais ne sont classés ni en bilan ni en résultat (compte final non défini ou compte supprimé) et ne sont pas affichés ; leur net {1} explique une partie de l'écart. Corrigez leur classement dans le plan comptable.</value></data>
+  <data name="FSEngineHintBS" xml:space="preserve"><value>Soldes à la fin de l'exercice calculés à partir du solde d'ouverture enregistré et des écritures validées ; tout compte mouvementé apparaît même sans solde d'ouverture, et le net des comptes de résultat figure en ligne calculée dans les capitaux propres car l'exercice n'est pas clôturé. Consultation seule : rien n'est écrit.</value></data>
+  <data name="FSEngineHint" xml:space="preserve"><value>Calculé directement à partir des écritures validées (avec numéro) sur la seule période choisie, du début du jour « du » à la fin du jour « au » ; le compte de résultat et le compte de pertes et profits concordent donc pour la même période. Tout compte mouvementé apparaît même sans solde d'ouverture. Consultation seule : rien n'est écrit.</value></data>
   <data name="BSLevel" xml:space="preserve"><value>Niveau d'affichage</value></data>
   <data name="BSAllLevels" xml:space="preserve"><value>Tous les niveaux</value></data>
   <data name="BSShowZero" xml:space="preserve"><value>Afficher les comptes à solde nul</value></data>
   <data name="BSBalanced" xml:space="preserve"><value>Le bilan est équilibré</value></data>
   <data name="BSNotBalanced" xml:space="preserve"><value>Le bilan n'est pas équilibré — écart {0}</value></data>
   <data name="BSDifference" xml:space="preserve"><value>Écart</value></data>
-  <data name="BSMissingAccounts" xml:space="preserve"><value>{0} compte(s) ont des écritures sur cet exercice sans solde d'ouverture enregistré et ne sont pas affichés ; ouvrez une fois le bilan ou « mettre à jour le solde d'ouverture » sur le bureau, puis réaffichez</value></data>
   <data name="BSAccount" xml:space="preserve"><value>Compte</value></data>
   <data name="BSAmount" xml:space="preserve"><value>Solde</value></data>
   <data name="BSChooseHint" xml:space="preserve"><value>Choisissez l'exercice et l'agence puis appuyez sur « Afficher »</value></data>

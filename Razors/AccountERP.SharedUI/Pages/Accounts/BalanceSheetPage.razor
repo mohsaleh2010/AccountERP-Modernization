@@ -1,7 +1,7 @@
 @* 🟢 «قائمة المركز المالى» (بدل Get_Account_BalanceFRM2، خطة final-accounts-razor-plan.md م5).
-   الحساب: FinalAccountsService.GetBalanceSheet ⇒ Mezan_MorgaaCLS.Get_Mezan_Morgaa_ByPeiodNew بنفس معاملات الديسكتوب (الفترة كاملة، العملة 0 = المكافىء)
-   ثم أرصدة حسابات الميزانية (Account_Follows = 4) وصافى الربح من Incoming_StatementCLS. الشجرة تُبنى بالصافى فى الخدمة (لا يُستدعى BalanceCLS.GetBalanceData_WithLevel)،
-   والأقسام حسب نوع جذر الحساب بدل ثبات الحساب 3. لا يُستدعى UpdateFirstBalance (قراءة فقط). الطباعة بـ window.print. التصميم بنظام inv-*/fs-* (ui-ux-pro-max). *@
+   الحساب (ف4): FinalAccountsService.GetBalanceSheet على محرك القراءة LedgerBalanceEngine (الفترة كاملة، العملة 0 = المكافىء):
+   ختامى حسابات الميزانية (Account_Follows = 4)، والربح غير المقفل = −ختامى حسابات النتيجة سطر محسوب فى حقوق الملكية (بلا إقفال ولا كتابة).
+   الشجرة تُبنى بالصافى فى الخدمة، والأقسام حسب نوع جذر الحساب. تنبيه للحسابات غير المصنفة ذات الرصيد وللربح غير المقفل من فترات سابقة. الطباعة بـ window.print. التصميم بنظام inv-*/fs-* (ui-ux-pro-max). *@
 @page "/accounts/final/balance-sheet"
 
 @using System.Globalization
@@ -85,7 +85,7 @@
             <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.CurrencyExchange">@Tr("BSCurrencyNote")</MudChip>
             @if (_loading) { <MudProgressCircular Indeterminate="true" Size="Size.Small" /> }
         </div>
-        <MudAlert Severity="Severity.Info" Dense="true" Class="fs-status" role="note">@Tr("FSFirstBalanceHint")</MudAlert>
+        <MudAlert Severity="Severity.Info" Dense="true" Class="fs-status" role="note">@Tr("FSEngineHintBS")</MudAlert>
     </div>
 
     @if (!string.IsNullOrEmpty(_error))
@@ -100,9 +100,13 @@
 
     @if (_result != null)
     {
-        @if (_result.MissingAccounts > 0)
+        @if (_result.UnclassifiedAccounts > 0)
         {
-            <MudAlert Severity="Severity.Warning" Dense="true" Class="fs-gap fs-noprint" role="status">@Tr("BSMissingAccounts", _result.MissingAccounts)</MudAlert>
+            <MudAlert Severity="Severity.Warning" Dense="true" Class="fs-gap fs-noprint" role="status">@Tr("BSUnclassifiedAccounts", _result.UnclassifiedAccounts, N(_result.UnclassifiedAmount))</MudAlert>
+        }
+        @if (Math.Abs(_result.PriorUnclosedProfit) >= 0.005m)
+        {
+            <MudAlert Severity="Severity.Info" Dense="true" Class="fs-gap fs-noprint" role="status">@Tr("BSPriorUnclosed", N(_result.PriorUnclosedProfit))</MudAlert>
         }
 
         <div class="fs-kpis fs-gap">

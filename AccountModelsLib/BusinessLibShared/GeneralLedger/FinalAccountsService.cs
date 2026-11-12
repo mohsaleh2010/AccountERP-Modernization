@@ -13,8 +13,8 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
     /// المحرك يفرّغ ويملأ جدولين مؤقتين عالميين (Account_Entry_Master_Balance_MezanTemp / ..._TransactionTemp) فى كل عرض،
     /// لذلك كل استدعاء له يمر من قفل واحد على مستوى العملية حتى لا يفسد مستخدمان نتائج بعضهما.
     /// القفل لا يحمى من شاشة ديسكتوب مفتوحة بالتوازى (موثَّق فى الخطة).
-    /// ميزان المراجعة انتقل (ف3 من financial-statements-review-plan.md) إلى محرك القراءة LedgerBalanceEngine بلا جداول مؤقتة؛
-    /// الدخل والأرباح والخسائر والمركز المالى تنتقل إليه فى ف4.
+    /// ميزان المراجعة (ف3) وقائمة الدخل والتشغيل/المتاجرة/الأرباح والخسائر والمركز المالى (ف4 من financial-statements-review-plan.md)
+    /// انتقلت إلى محرك القراءة LedgerBalanceEngine بلا جداول مؤقتة ولا قفل؛ الباقى على المحرك القديم: الأستاذ المساعد وأستاذ المراكز.
     /// </summary>
     public class FinalAccountsService
     {
@@ -295,9 +295,9 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
             return BuildTrialBalance(balances, filter);
         }
 
-        // ---------------- قائمة الدخل والتشغيل/المتاجرة/الأرباح والخسائر (م4) ----------------
+        // ---------------- قائمة الدخل والتشغيل/المتاجرة/الأرباح والخسائر (م4، على المحرك منذ ف4) ----------------
 
-        /// <summary>نوع صف القائمة كما يضيفه المحرك: حساب، رأس مجموعة (-20)، إجمالى مجموعة أو إجمالى عام (-10)، سطر مُرحَّل (بلا معرّف).</summary>
+        /// <summary>نوع صف القائمة: حساب، رأس مجموعة (الحساب الأب)، مجموع مجموعة، إجمالى، سطر مُرحَّل.</summary>
         public enum StatementRowKind { Account, GroupHeader, SubTotal, Total, Carry }
 
         public class StatementRow
@@ -305,21 +305,27 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
             public StatementRowKind Kind { get; set; }
             public long AccountId { get; set; }
             public string Code { get; set; } = "";
-            /// <summary>النص كما يعيده المحرك (اسم الحساب/المجموعة بعد إزالة بادئة «إجمالى» فى صفوف إجمالى المجموعة).</summary>
+            /// <summary>اسم الحساب/المجموعة (فى مجموع المجموعة: اسم الأب بلا بادئة).</summary>
             public string Name { get; set; } = "";
-            /// <summary>مفتاح ترجمة للنصوص الثابتة فى المحرك (المرحَّل، الإجماليات، صافى الربح/الخسارة)، أو فارغ.</summary>
+            /// <summary>مفتاح ترجمة للنصوص الثابتة (المرحَّل، الإجماليات، صافى الربح/الخسارة)، أو فارغ.</summary>
             public string LabelKey { get; set; } = "";
+            /// <summary>مجموع الحركة المدينة فى المدى.</summary>
             public decimal Import { get; set; }
+            /// <summary>مجموع الحركة الدائنة فى المدى.</summary>
             public decimal Export { get; set; }
+            /// <summary>صافى الحركة مقسوماً: مدين.</summary>
             public decimal LastMadin { get; set; }
+            /// <summary>صافى الحركة مقسوماً: دائن.</summary>
             public decimal LastDa2n { get; set; }
         }
 
         public class IncomeStatementResult
         {
             public List<StatementRow> Rows { get; set; } = new();
-            /// <summary>صافى الربح كما يعيده المحرك: إجمالى الدائن (الإيرادات) ناقص إجمالى المدين (المصروفات)؛ السالب خسارة.</summary>
+            /// <summary>صافى الربح = إجمالى الدائن (الإيرادات) − إجمالى المدين (المصروفات)؛ السالب خسارة.</summary>
             public decimal NetProfit { get; set; }
+            public decimal Revenue { get; set; }
+            public decimal Expenses { get; set; }
             public int AccountCount => Rows.Count(r => r.Kind == StatementRowKind.Account);
         }
 
@@ -328,138 +334,140 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
             public List<StatementRow> Operating { get; set; } = new();
             public List<StatementRow> Trading { get; set; } = new();
             public List<StatementRow> ProfitLoss { get; set; } = new();
+            /// <summary>صافى الربح المرحَّل للميزانية (السالب خسارة)؛ يساوى صافى قائمة الدخل لنفس المدى.</summary>
+            public decimal NetProfit { get; set; }
         }
 
-        // النصوص الثابتة فى Incoming_StatementCLS ⇒ مفاتيح ترجمة (المسافات تُوحَّد قبل المطابقة).
-        private static readonly Dictionary<string, string> EngineLabels = new()
-        {
-            ["إجمالى الإيرادات"] = "ISRevenueTotal",
-            ["إجمالى المصروفات"] = "ISExpenseTotal",
-            ["صافى الربح"] = "ISNetProfit",
-            ["صافى الخساره"] = "ISNetLoss",
-            ["****الإجمالى***"] = "PLTotal",
-            ["تكلفة التشغيل مرحل الى حساب المتاجرة"] = "PLCarryOpToTrading",
-            ["تكلفة التشغيل - مرحل من حساب التشغيل"] = "PLCarryFromOp",
-            ["مرحل من حساب المتاجره"] = "PLCarryFromTrading",
-            ["مجمل الخسارة مرحل الى حساب أرباح وخسائر"] = "PLGrossLossToPL",
-            ["مجمل الربح مرحل الى حساب أرباح وخسائر"] = "PLGrossProfitToPL",
-            ["مرحل الى حساب أرباح وخسائر"] = "PLToPL",
-            ["صافى خسارة الفتره مرحل الى الميزانيه"] = "PLNetLossToBS",
-            ["صافى ربح الفتره مرحل الى الميزانيه"] = "PLNetProfitToBS",
-            ["مرحل الى الميزانيه"] = "PLToBS",
-        };
+        /// <summary>Account_Follows لحسابات النتيجة: 1 تشغيل، 2 متاجرة، 3 أرباح وخسائر؛ 4 ميزانية.</summary>
+        private static bool IsResultAccount(LedgerBalanceEngine.AccountBalance b) => b.AccountExists && b.AccountFollows is 1 or 2 or 3;
 
-        private static string Norm(string s) => string.Join(" ", (s ?? "").Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries));
-
-        private static decimal Dz(DataRow r, string col)
+        private LedgerBalanceEngine.Query RangeQuery(PeriodRow period, long branchId, long currencyId, DateTime from, DateTime to)
         {
-            if (!r.Table.Columns.Contains(col) || r[col] == DBNull.Value) return 0m;
-            var v = r[col];
-            if (v is decimal d) return d;
-            return decimal.TryParse(Convert.ToString(v, System.Globalization.CultureInfo.InvariantCulture),
-                System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var x) ? x : 0m;
-        }
-
-        /// <summary>يحوّل جدول المحرك (بعد إضافاته للرؤوس والإجماليات والمرحَّل) إلى صفوف مكتوبة النوع بنفس الترتيب. يُسقط الصفوف الفارغة تماماً.</summary>
-        internal static List<StatementRow> BuildStatement(DataTable dt)
-        {
-            var list = new List<StatementRow>();
-            foreach (DataRow r in dt.Rows)
-            {
-                bool hasId = r.Table.Columns.Contains("Submain_Account_ID") && r["Submain_Account_ID"] != DBNull.Value;
-                long id = hasId ? Convert.ToInt64(r["Submain_Account_ID"]) : 0;
-                string name = Norm(S(r, "Account_Name"));
-                var row = new StatementRow
-                {
-                    AccountId = id > 0 ? id : 0,
-                    Code = S(r, "Account_Code"),
-                    Import = Dz(r, "Final_Import_Value"),
-                    Export = Dz(r, "Final_Export_Value"),
-                    LastMadin = Dz(r, "Final_Last_Balance_Madin"),
-                    LastDa2n = Dz(r, "Final_Last_Balance_Da2n"),
-                };
-                EngineLabels.TryGetValue(name, out var key);
-                if (id == -20)
-                {
-                    row.Kind = StatementRowKind.GroupHeader;
-                    row.Name = name.Trim('*', ' ');
-                    if (row.Name == "") continue; // رأس فارغ يضيفه المحرك قبل صفوف الإجمالى/المرحَّل
-                }
-                else if (id == -10)
-                {
-                    row.Kind = key != null ? StatementRowKind.Total : StatementRowKind.SubTotal;
-                    row.LabelKey = key ?? "";
-                    row.Name = key != null ? name : (name.StartsWith("إجمالى") ? name.Substring("إجمالى".Length).Trim() : name);
-                }
-                else if (id > 0)
-                {
-                    row.Kind = StatementRowKind.Account;
-                    row.Name = name;
-                }
-                else
-                {
-                    if (name == "" && row.Import == 0 && row.Export == 0 && row.LastMadin == 0 && row.LastDa2n == 0) continue;
-                    row.Kind = StatementRowKind.Carry;
-                    row.LabelKey = key ?? "";
-                    row.Name = name;
-                }
-                list.Add(row);
-            }
-            return list;
+            var err = ValidateRange(period, from, to);
+            if (err != null) throw new ArgumentException(err);
+            return new LedgerBalanceEngine.Query { PeriodId = period.Id, PeriodFrom = period.DateFrom, From = from, To = to, BranchId = branchId, CurrencyId = currencyId };
         }
 
         /// <summary>
-        /// قائمة الدخل (Incoming_StatementByDate): نفس خطوات الديسكتوب ⇒ يملأ المحرك الجدول المؤقت (Is_To_Show_Prev=False وكل الحسابات كما فى ShowData)
-        /// ثم Incoming_StatementCLS.Get_Incoming_Statement بالحسابات ذات الرصيد (1) — الاثنان داخل القفل لأن الجدول المؤقت عالمى.
-        /// لا يُستدعى UpdateFirstBalance (يعيد كتابة Account_Entry_Master_Balance)؛ نفس قرار ميزان المراجعة (الخطة §3.4).
+        /// قائمة الدخل (بدل Incoming_StatementByDate) على محرك القراءة (ف4، أ-8): حسابات التشغيل والمتاجرة والأرباح والخسائر
+        /// بصافى حركة المدى المختار فقط [من، إلى] — لا الافتتاحى المخزَّن ولا حركة ما قبل «من»، فتطابق «حساب الأرباح والخسائر» لنفس المدى.
+        /// بلا جداول مؤقتة ولا قفل ولا كتابة، وكل حساب له حركة يظهر حتى بلا صف فى جدول الأرصدة.
         /// </summary>
         public IncomeStatementResult GetIncomeStatement(PeriodRow period, long branchId, long currencyId, DateTime from, DateTime to)
         {
-            var err = ValidateRange(period, from, to);
-            if (err != null) throw new ArgumentException(err);
-
-            var dt = new DataTable(); var dtPrint = new DataTable();
-            decimal profit;
-            EngineLock.Wait();
-            try
-            {
-                int excp = 0; string msg = "";
-                new Mezan_MorgaaCLS().Get_Mezan_Morgaa_ByPeiodNew(ref excp, ref msg, false, 0, branchId, from, to, 0, currencyId, period.Id, false, false, period.DateFrom);
-                if (!string.IsNullOrEmpty(msg)) throw new InvalidOperationException(msg);
-                profit = new Incoming_StatementCLS().Get_Incoming_Statement(ref dt, ref dtPrint, branchId, period.Id, 1, currencyId);
-            }
-            finally { EngineLock.Release(); }
-
-            return new IncomeStatementResult { Rows = BuildStatement(dt), NetProfit = profit };
+            var balances = new LedgerBalanceEngine(_newOpp).GetBalances(RangeQuery(period, branchId, currencyId, from, to));
+            return BuildIncomeStatement(balances);
         }
 
         /// <summary>
-        /// حساب التشغيل والمتاجرة والأرباح والخسائر (Profit_Loss_StatFRMNew): يملأ المحرك الجدول المؤقت كما فى GetTOShowData
-        /// (Is_To_Show_Prev = بداية البحث بعد بداية الفترة) ثم Get_Final_AccountsArba7 الذى يحسب الثلاثة معاً بكل الحسابات (0)، داخل القفل.
-        /// لا يُستدعى UpdateFirstBalance (نفس قرار ميزان المراجعة).
+        /// حساب التشغيل والمتاجرة والأرباح والخسائر (بدل Profit_Loss_StatFRMNew) على المحرك بنفس نطاق قائمة الدخل (حركة المدى).
+        /// التشغيل يُقفل فى المتاجرة، والمتاجرة فى الأرباح والخسائر، والأرباح والخسائر فى الميزانية — بالإشارة الصحيحة
+        /// (الأصل كان يضع صافى التشغيل دائماً فى الجانب الدائن بالقيمة المطلقة).
         /// </summary>
         public ProfitLossResult GetProfitLoss(PeriodRow period, long branchId, long currencyId, DateTime from, DateTime to)
         {
-            var err = ValidateRange(period, from, to);
-            if (err != null) throw new ArgumentException(err);
-
-            DataTable op = new(), tr = new(), pl = new();
-            EngineLock.Wait();
-            try
-            {
-                int excp = 0; string msg = "";
-                bool showPrev = from.Date > period.DateFrom.Date;
-                new Mezan_MorgaaCLS().Get_Mezan_Morgaa_ByPeiodNew(ref excp, ref msg, showPrev, 0, branchId, from, to, 0, currencyId, period.Id, false, false, period.DateFrom);
-                if (!string.IsNullOrEmpty(msg)) throw new InvalidOperationException(msg);
-                decimal madin = 0, da2n = 0;
-                new Incoming_StatementCLS().Get_Final_AccountsArba7(ref op, ref tr, ref pl, ref madin, ref da2n, branchId, period.Id, currencyId, 0);
-            }
-            finally { EngineLock.Release(); }
-
-            return new ProfitLossResult { Operating = BuildStatement(op), Trading = BuildStatement(tr), ProfitLoss = BuildStatement(pl) };
+            var balances = new LedgerBalanceEngine(_newOpp).GetBalances(RangeQuery(period, branchId, currencyId, from, to));
+            return BuildProfitLoss(balances);
         }
 
-        // ---------------- قائمة المركز المالى (م5) ----------------
+        private static StatementRow AccountRow(LedgerBalanceEngine.AccountBalance b)
+        {
+            var (m, d) = LedgerBalanceEngine.Split(b.Movement);
+            return new StatementRow
+            {
+                Kind = StatementRowKind.Account, AccountId = b.AccountId, Code = b.Code, Name = b.Name,
+                Import = b.Debit, Export = b.Credit, LastMadin = m, LastDa2n = d,
+            };
+        }
+
+        private static StatementRow NetRow(StatementRowKind kind, string labelKey, decimal net, decimal import = 0, decimal export = 0)
+        {
+            var (m, d) = LedgerBalanceEngine.Split(net);
+            return new StatementRow { Kind = kind, LabelKey = labelKey, Import = import, Export = export, LastMadin = m, LastDa2n = d };
+        }
+
+        /// <summary>
+        /// صفوف الحسابات مجمَّعة بالحساب الأب بترتيب المحرك (Head_Main_Account ثم الأب ثم الأكواد): رأس المجموعة ثم حساباتها ثم مجموعها.
+        /// (الأصل SetParentTotal كان يُسقط مجموع المجموعة الأخيرة أحياناً؛ هنا لكل مجموعة مجموع.)
+        /// </summary>
+        private static List<StatementRow> Grouped(IEnumerable<LedgerBalanceEngine.AccountBalance> accounts)
+        {
+            var rows = new List<StatementRow>();
+            var group = new List<LedgerBalanceEngine.AccountBalance>();
+            void Flush()
+            {
+                if (group.Count == 0) return;
+                var first = group[0];
+                rows.Add(new StatementRow { Kind = StatementRowKind.GroupHeader, Code = first.ParentNumber, Name = first.ParentName });
+                rows.AddRange(group.Select(AccountRow));
+                decimal dr = group.Sum(b => b.Debit), cr = group.Sum(b => b.Credit);
+                var sub = NetRow(StatementRowKind.SubTotal, "", dr - cr, dr, cr);
+                sub.Name = first.ParentName;
+                rows.Add(sub);
+                group.Clear();
+            }
+            foreach (var b in accounts)
+            {
+                if (group.Count > 0 && (group[0].ParentNumber != b.ParentNumber || group[0].ParentName != b.ParentName)) Flush();
+                group.Add(b);
+            }
+            Flush();
+            return rows;
+        }
+
+        /// <summary>
+        /// دالة نقية: قائمة الدخل من أرصدة المحرك. حسابات النتيجة (Follows 1/2/3) ذات صافى حركة ≠ 0 («لها رصيد» كالديسكتوب).
+        /// الإيرادات = مجموع الجانب الدائن والمصروفات = مجموع الجانب المدين، وصافى الربح = الإيرادات − المصروفات (يُعرض فى الجانب المقابل كالأصل).
+        /// </summary>
+        public static IncomeStatementResult BuildIncomeStatement(IEnumerable<LedgerBalanceEngine.AccountBalance> balances)
+        {
+            var accounts = balances.Where(b => IsResultAccount(b) && b.Movement != 0).ToList();
+            var rows = Grouped(accounts);
+            decimal revenue = accounts.Sum(b => LedgerBalanceEngine.Split(b.Movement).Credit);
+            decimal expenses = accounts.Sum(b => LedgerBalanceEngine.Split(b.Movement).Debit);
+            decimal profit = revenue - expenses;
+            rows.Add(new StatementRow { Kind = StatementRowKind.Total, LabelKey = "ISRevenueTotal", LastDa2n = revenue });
+            rows.Add(new StatementRow { Kind = StatementRowKind.Total, LabelKey = "ISExpenseTotal", LastMadin = expenses });
+            rows.Add(profit > 0
+                ? new StatementRow { Kind = StatementRowKind.Total, LabelKey = "ISNetProfit", LastMadin = profit }
+                : new StatementRow { Kind = StatementRowKind.Total, LabelKey = "ISNetLoss", LastDa2n = -profit });
+            return new IncomeStatementResult { Rows = rows, NetProfit = profit, Revenue = revenue, Expenses = expenses };
+        }
+
+        /// <summary>
+        /// دالة نقية: التشغيل/المتاجرة/الأرباح والخسائر من أرصدة المحرك (الحسابات ذات حركة فى المدى).
+        /// صافى كل قسم (مدين موجب) = حركة حساباته + المرحَّل إليه؛ سطر الإقفال يعكسه للقسم التالى، وصافى الأخير يُرحَّل للميزانية.
+        /// </summary>
+        public static ProfitLossResult BuildProfitLoss(IEnumerable<LedgerBalanceEngine.AccountBalance> balances)
+        {
+            var list = balances.Where(b => IsResultAccount(b) && (b.Debit != 0 || b.Credit != 0)).ToList();
+            var result = new ProfitLossResult();
+
+            decimal Section(List<StatementRow> rows, int follows, string carryInKey, decimal carryIn)
+            {
+                var acc = list.Where(b => b.AccountFollows == follows).ToList();
+                rows.AddRange(Grouped(acc));
+                if (carryInKey != null) rows.Add(NetRow(StatementRowKind.Carry, carryInKey, carryIn));
+                decimal dr = acc.Sum(b => b.Debit), cr = acc.Sum(b => b.Credit);
+                decimal net = dr - cr + carryIn;
+                rows.Add(NetRow(StatementRowKind.Total, "PLTotal", net, dr, cr));
+                return net;
+            }
+
+            decimal op = Section(result.Operating, 1, null, 0m);
+            result.Operating.Add(NetRow(StatementRowKind.Carry, "PLCarryOpToTrading", -op));
+
+            decimal tr = Section(result.Trading, 2, "PLCarryFromOp", op);
+            result.Trading.Add(NetRow(StatementRowKind.Carry, tr < 0 ? "PLGrossProfitToPL" : tr > 0 ? "PLGrossLossToPL" : "PLToPL", -tr));
+
+            decimal pl = Section(result.ProfitLoss, 3, "PLCarryFromTrading", tr);
+            result.ProfitLoss.Add(NetRow(StatementRowKind.Carry, pl < 0 ? "PLNetProfitToBS" : pl > 0 ? "PLNetLossToBS" : "PLToBS", -pl));
+
+            result.NetProfit = -pl;
+            return result;
+        }
+
+        // ---------------- قائمة المركز المالى (م5، على المحرك منذ ف4) ----------------
 
         /// <summary>عملة «المكافىء» كما تمررها Get_Account_BalanceFRM2 فى الديسكتوب (0 ثابتة، بلا اختيار عملة).</summary>
         public const long BaseEquivalentCurrencyId = EquivalentCurrencyId;
@@ -493,60 +501,69 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
             public BalanceSheetSection Assets { get; set; } = new() { Section = BalanceSection.Assets };
             public BalanceSheetSection Liabilities { get; set; } = new() { Section = BalanceSection.Liabilities };
             public BalanceSheetSection Equity { get; set; } = new() { Section = BalanceSection.Equity };
-            /// <summary>صافى الربح من Get_ProfitFrom_Incoming_Statement (السالب خسارة)، داخل إجمالى حقوق الملكية.</summary>
+            /// <summary>الربح غير المقفل = −(ختامى حسابات النتيجة) حتى تاريخ المركز (السالب خسارة)، سطر محسوب داخل حقوق الملكية.</summary>
             public decimal NetProfit { get; set; }
+            /// <summary>جزء الربح غير المقفل الآتى من افتتاحى حسابات النتيجة المخزَّن (فترات سابقة لم تُقفل)؛ 0 لو أُقفلت صحيحاً.</summary>
+            public decimal PriorUnclosedProfit { get; set; }
             public decimal TotalLiabilitiesAndEquity => Liabilities.Total + Equity.Total;
             public decimal Difference => Assets.Total - TotalLiabilitiesAndEquity;
             public bool IsBalanced => Math.Abs(Difference) < 0.005m;
-            /// <summary>حسابات ميزانية لها قيود مرحَّلة فى الفترة والفرع وليس لها صف فى أرصدة أول المدة (لن تظهر بلا UpdateFirstBalance).</summary>
-            public int MissingAccounts { get; set; }
+            /// <summary>حسابات لها رصيد وليست ميزانية ولا نتيجة (Account_Follows غير 1..4 أو حساب محذوف): خارج القائمة، وصافيها يفسر جزءاً من الفرق.</summary>
+            public int UnclassifiedAccounts { get; set; }
+            public decimal UnclassifiedAmount { get; set; }
             public int AccountCount { get; set; }
             public DateTime AsOf { get; set; }
         }
 
         /// <summary>
-        /// قائمة المركز المالى (بدل Get_Account_BalanceFRM2): يملأ المحرك الجدول المؤقت بنفس معاملات الديسكتوب (الفترة كاملة، العملة 0، كل الحسابات)
-        /// ثم تُقرأ حسابات الميزانية (Account_Follows = 4) بنفس شرط BalanceCLS، وصافى الربح من Get_ProfitFrom_Incoming_Statement — داخل القفل.
-        /// لا يُستدعى BalanceCLS.GetBalanceData_WithLevel (يفرّغ جدولاً عالمياً ثانياً وينفّذ ALTER TABLE ويكرر صفوف الأب ويجمع المدين+الدائن بالقيمة المطلقة
-        /// ويثبّت الحساب 3)؛ الشجرة تُبنى هنا بالصافى، والأقسام حسب Head_Main_Account لجذر الحساب. لا يُستدعى UpdateFirstBalance (الخطة §3.4).
+        /// قائمة المركز المالى (بدل Get_Account_BalanceFRM2) على محرك القراءة (ف4): الفترة كاملة، العملة 0 (المكافىء).
+        /// حسابات الميزانية (Account_Follows = 4) بختامها، والربح غير المقفل = −Σ ختامى حسابات النتيجة (افتتاحيها المخزَّن + حركة الفترة)
+        /// سطر محسوب فى حقوق الملكية، فتتزن القائمة دون إقفال ولا كتابة. كل حساب له حركة يظهر حتى بلا صف فى جدول الأرصدة.
         /// </summary>
         public BalanceSheetResult GetBalanceSheet(PeriodRow period, long branchId)
         {
             if (period == null) throw new ArgumentException("PeriodRequired");
             if (branchId <= 0) throw new ArgumentException("BranchRequired");
 
-            DataTable leaves; decimal profit;
-            EngineLock.Wait();
-            try
+            var balances = new LedgerBalanceEngine(_newOpp).GetBalances(new LedgerBalanceEngine.Query
             {
-                int excp = 0; string msg = "";
-                new Mezan_MorgaaCLS().Get_Mezan_Morgaa_ByPeiodNew(ref excp, ref msg, false, 0, branchId, period.DateFrom, period.DateTo, 0,
-                    BaseEquivalentCurrencyId, period.Id, false, false, period.DateFrom);
-                if (!string.IsNullOrEmpty(msg)) throw new InvalidOperationException(msg);
-                leaves = _newOpp().return_DataTable(
-                    "SELECT s.Id, m.Final_Last_Balance_Madin, m.Final_Last_Balance_Da2n FROM Account_Entry_Master_Balance_MezanTemp m " +
-                    "INNER JOIN Submain_Account s ON s.Id = m.Submain_Account_ID " +
-                    "WHERE m.Year_Financial_Period_Id = " + period.Id + " AND m.Branch_Id = " + branchId +
-                    " AND s.Account_Follows = 4 AND m.Equivalent_Account_Currency_Id = " + BaseEquivalentCurrencyId);
-                profit = new Incoming_StatementCLS().Get_ProfitFrom_Incoming_Statement(branchId, period.Id, 1, BaseEquivalentCurrencyId);
-            }
-            finally { EngineLock.Release(); }
-
+                PeriodId = period.Id, PeriodFrom = period.DateFrom, From = period.DateFrom, To = period.DateTo,
+                BranchId = branchId, CurrencyId = BaseEquivalentCurrencyId,
+            });
             var accounts = _newOpp().return_DataTable(
                 "SELECT Id, Main_Account_Id, SubAccount_Name, Account_Code, SubAccount_NO, Head_Main_Account FROM Submain_Account");
-            var result = BuildBalanceSheet(accounts, leaves, profit);
+            var result = BuildBalanceSheet(accounts, balances);
             result.AsOf = period.DateTo;
+            return result;
+        }
 
-            // تنبيه التغطية (قراءة فقط): حسابات ميزانية لها قيود مرحَّلة فى الفترة والفرع بلا صف فى Account_Entry_Master_Balance للعملة 0.
-            var miss = _newOpp().return_DataTable(
-                "SELECT COUNT(DISTINCT d.Submain_Account_ID) AS N FROM Account_Entry_Details d " +
-                "INNER JOIN Account_Entry_List l ON d.Account_Entry_List_ID = l.Id " +
-                "INNER JOIN Submain_Account s ON s.Id = d.Submain_Account_ID " +
-                "WHERE l.Entry_No IS NOT NULL AND s.Account_Follows = 4 AND l.Branch_Id_Entry = " + branchId +
-                " AND l.Entry_Date >= " + operations.Get_DateToInsert(period.DateFrom.Date) + " AND l.Entry_Date <= " + operations.Get_DateToInsert(period.DateTo.Date) +
-                " AND NOT EXISTS (SELECT 1 FROM Account_Entry_Master_Balance b WHERE b.Submain_Account_ID = d.Submain_Account_ID" +
-                " AND b.Year_Financial_Period_Id = " + period.Id + " AND b.Branch_Id = " + branchId + " AND b.Equivalent_Account_Currency_Id = " + BaseEquivalentCurrencyId + ")");
-            if (miss.Rows.Count > 0 && miss.Rows[0]["N"] != DBNull.Value) result.MissingAccounts = Convert.ToInt32(miss.Rows[0]["N"]);
+        /// <summary>دالة نقية: تقسيم أرصدة المحرك إلى ميزانية/نتيجة/غير مصنَّف ثم بناء الشجرة.</summary>
+        public static BalanceSheetResult BuildBalanceSheet(DataTable accounts, IEnumerable<LedgerBalanceEngine.AccountBalance> balances)
+        {
+            var net = new Dictionary<long, decimal>();
+            decimal profit = 0, prior = 0, unclassified = 0;
+            int unclassifiedCount = 0;
+            foreach (var b in balances)
+            {
+                if (b.AccountExists && b.AccountFollows == 4)
+                {
+                    if (b.Closing != 0) net[b.AccountId] = (net.TryGetValue(b.AccountId, out var v) ? v : 0m) + b.Closing;
+                }
+                else if (IsResultAccount(b))
+                {
+                    profit -= b.Closing;
+                    prior -= b.StoredOpening;
+                }
+                else if (b.Closing != 0)
+                {
+                    unclassifiedCount++;
+                    unclassified += b.Closing;
+                }
+            }
+            var result = BuildBalanceSheet(accounts, net, profit);
+            result.PriorUnclosedProfit = prior;
+            result.UnclassifiedAccounts = unclassifiedCount;
+            result.UnclassifiedAmount = unclassified;
             return result;
         }
 
@@ -555,7 +572,7 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
         /// القسم = Head_Main_Account لجذر الحساب (Main_Account_Id = 0): 1 أصول، 2 خصوم، 3 حقوق ملكية؛ غير ذلك ⇒ أصول.
         /// صافى الربح سطر أخير فى حقوق الملكية وداخل إجماليها.
         /// </summary>
-        internal static BalanceSheetResult BuildBalanceSheet(DataTable accounts, DataTable leaves, decimal profit)
+        internal static BalanceSheetResult BuildBalanceSheet(DataTable accounts, Dictionary<long, decimal> net, decimal profit)
         {
             var info = new Dictionary<long, (long Parent, string Name, string Code, int Head)>();
             foreach (DataRow r in accounts.Rows)
@@ -564,13 +581,6 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
                 long parent = r["Main_Account_Id"] == DBNull.Value ? 0 : Convert.ToInt64(r["Main_Account_Id"]);
                 int head = r["Head_Main_Account"] == DBNull.Value ? 0 : Convert.ToInt32(r["Head_Main_Account"]);
                 info[id] = (parent == id ? 0 : parent, S(r, "SubAccount_Name"), S(r, "Account_Code") != "" ? S(r, "Account_Code") : S(r, "SubAccount_NO"), head);
-            }
-
-            var net = new Dictionary<long, decimal>();
-            foreach (DataRow r in leaves.Rows)
-            {
-                long id = Convert.ToInt64(r["Id"]);
-                net[id] = (net.TryGetValue(id, out var v) ? v : 0m) + D(r, "Final_Last_Balance_Madin") - D(r, "Final_Last_Balance_Da2n");
             }
 
             var nodes = new Dictionary<long, BalanceNode>();

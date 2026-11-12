@@ -4849,7 +4849,6 @@
   <data name="ISExpenseTotal" xml:space="preserve"><value>Summe Aufwendungen</value></data>
   <data name="ISNetProfit" xml:space="preserve"><value>Reingewinn</value></data>
   <data name="ISNetLoss" xml:space="preserve"><value>Reinverlust</value></data>
-  <data name="FSFirstBalanceHint" xml:space="preserve"><value>Nur Ansicht: Der Desktop baut vor jeder Anzeige die Eröffnungssalden neu auf; hier werden die Salden unverändert gelesen (wie bei der Saldenliste). Weicht ein Wert ab, öffnen Sie die Maske einmal im Desktop und zeigen Sie dann erneut an</value></data>
   <data name="PLTitle" xml:space="preserve"><value>Abschlusskonten: Betrieb, Handel, Gewinn und Verlust</value></data>
   <data name="PLSub" xml:space="preserve"><value>„Anzeigen“ berechnet alle drei: Das Betriebsergebnis geht ins Handelskonto, der Rohgewinn in die GuV und der Reingewinn in die Bilanz</value></data>
   <data name="PLTabOperating" xml:space="preserve"><value>Betriebskonto</value></data>
@@ -4877,15 +4876,18 @@
   <data name="BSTotalLiabilities" xml:space="preserve"><value>Summe Verbindlichkeiten</value></data>
   <data name="BSTotalEquity" xml:space="preserve"><value>Summe Eigenkapital</value></data>
   <data name="BSTotalLiabEquity" xml:space="preserve"><value>Summe Passiva und Eigenkapital</value></data>
-  <data name="BSNetProfit" xml:space="preserve"><value>Periodengewinn</value></data>
-  <data name="BSNetLoss" xml:space="preserve"><value>Periodenverlust</value></data>
+  <data name="BSNetProfit" xml:space="preserve"><value>Nicht abgeschlossener Gewinn</value></data>
+  <data name="BSNetLoss" xml:space="preserve"><value>Nicht abgeschlossener Verlust</value></data>
+  <data name="BSPriorUnclosed" xml:space="preserve"><value>Der nicht abgeschlossene Gewinn enthält {0} aus Anfangssalden von Erfolgskonten (frühere Perioden nicht auf Gewinnvortrag abgeschlossen).</value></data>
+  <data name="BSUnclassifiedAccounts" xml:space="preserve"><value>{0} Konto/Konten haben einen Saldo, sind aber weder Bilanz- noch Erfolgskonten (Abschlusskonto nicht gesetzt oder Konto gelöscht) und werden nicht angezeigt; ihr Saldo {1} erklärt einen Teil der Differenz. Korrigieren Sie die Zuordnung im Kontenplan.</value></data>
+  <data name="FSEngineHintBS" xml:space="preserve"><value>Salden bis Periodenende aus erfasstem Anfangssaldo plus gebuchten Belegen; jedes Konto mit Bewegung erscheint auch ohne Anfangssaldo, und der Saldo der Erfolgskonten erscheint als berechnete Zeile im Eigenkapital, da die Periode nicht abgeschlossen ist. Nur Ansicht: es wird nichts geschrieben.</value></data>
+  <data name="FSEngineHint" xml:space="preserve"><value>Direkt aus gebuchten Belegen (mit Belegnummer) nur im gewählten Zeitraum berechnet, vom Beginn des «Von»-Tags bis zum Ende des «Bis»-Tags; daher stimmen GuV-Rechnung und Erfolgsrechnung für denselben Zeitraum überein. Jedes Konto mit Bewegung erscheint auch ohne Anfangssaldo. Nur Ansicht: es wird nichts geschrieben.</value></data>
   <data name="BSLevel" xml:space="preserve"><value>Anzeigeebene</value></data>
   <data name="BSAllLevels" xml:space="preserve"><value>Alle Ebenen</value></data>
   <data name="BSShowZero" xml:space="preserve"><value>Konten mit Nullsaldo anzeigen</value></data>
   <data name="BSBalanced" xml:space="preserve"><value>Die Bilanz ist ausgeglichen</value></data>
   <data name="BSNotBalanced" xml:space="preserve"><value>Die Bilanz ist nicht ausgeglichen — Differenz {0}</value></data>
   <data name="BSDifference" xml:space="preserve"><value>Differenz</value></data>
-  <data name="BSMissingAccounts" xml:space="preserve"><value>{0} Konto/Konten haben Buchungen in dieser Periode, aber keinen erfassten Anfangssaldo und werden nicht angezeigt; öffnen Sie die Bilanz oder «Anfangssaldo aktualisieren» einmal im Desktop und zeigen Sie dann erneut an</value></data>
   <data name="BSAccount" xml:space="preserve"><value>Konto</value></data>
   <data name="BSAmount" xml:space="preserve"><value>Saldo</value></data>
   <data name="BSChooseHint" xml:space="preserve"><value>Periode und Filiale wählen und dann «Anzeigen» drücken</value></data>
