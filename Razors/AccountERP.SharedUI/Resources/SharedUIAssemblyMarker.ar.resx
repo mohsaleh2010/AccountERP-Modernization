@@ -4885,4 +4885,32 @@
   <data name="BSChooseHint" xml:space="preserve"><value>اختر الفترة والفرع ثم اضغط «عرض»</value></data>
   <data name="FAErrBranchRequired" xml:space="preserve"><value>يجب اختيار الفرع</value></data>
   <data name="BSCurrencyNote" xml:space="preserve"><value>العملة: بالمكافىء بالعملة الأساسية (كالديسكتوب)</value></data>
+  <data name="CPTitle" xml:space="preserve"><value>طباعة شجرة الحسابات</value></data>
+  <data name="CPSub" xml:space="preserve"><value>دليل الحسابات بأكوادها ومستوياتها وتصنيفها، جاهز للطباعة، مع الحسابات المشتركة بين الفروع</value></data>
+  <data name="CPUpToLevel" xml:space="preserve"><value>حتى مستوى</value></data>
+  <data name="CPRoot" xml:space="preserve"><value>التصنيف الرئيسى</value></data>
+  <data name="CPFollows" xml:space="preserve"><value>الحساب الختامى</value></data>
+  <data name="CPAll" xml:space="preserve"><value>الكل</value></data>
+  <data name="CPIncludeShared" xml:space="preserve"><value>إظهار الحسابات المشتركة بين الفروع</value></data>
+  <data name="CPLeafOnly" xml:space="preserve"><value>الحسابات الفرعية فقط</value></data>
+  <data name="CPChooseHint" xml:space="preserve"><value>اختر الفرع ثم اضغط «عرض»</value></data>
+  <data name="CPPrintedBy" xml:space="preserve"><value>طبعه {0} فى {1}</value></data>
+  <data name="CPColNumber" xml:space="preserve"><value>رقم الحساب</value></data>
+  <data name="CPColName" xml:space="preserve"><value>اسم الحساب</value></data>
+  <data name="CPColLevel" xml:space="preserve"><value>المستوى</value></data>
+  <data name="CPColParent" xml:space="preserve"><value>الحساب الأب</value></data>
+  <data name="CPColKind" xml:space="preserve"><value>النوع</value></data>
+  <data name="CPColCurrency" xml:space="preserve"><value>العملة</value></data>
+  <data name="CPNoRows" xml:space="preserve"><value>لا توجد حسابات تطابق المرشحات</value></data>
+  <data name="CPShared" xml:space="preserve"><value>مشترك</value></data>
+  <data name="CPLeaf" xml:space="preserve"><value>فرعى</value></data>
+  <data name="CPMain" xml:space="preserve"><value>رئيسى</value></data>
+  <data name="CPCount" xml:space="preserve"><value>عدد الحسابات: {0}</value></data>
+  <data name="CPCountLeaf" xml:space="preserve"><value>الفرعية: {0}</value></data>
+  <data name="CPCountMain" xml:space="preserve"><value>الرئيسية: {0}</value></data>
+  <data name="SPBTitle" xml:space="preserve"><value>بيانات أرصدة المواد عن فترة</value></data>
+  <data name="SPBSub" xml:space="preserve"><value>الشاشة قيد الإنشاء</value></data>
+  <data name="SPBWhy" xml:space="preserve"><value>هذه الشاشة معطلة فى نسخة الديسكتوب أيضاً، فلا توجد شاشة أصلية تُنقل الآن. ستُبنى لاحقاً على محرك أرصدة الأصناف.</value></data>
+  <data name="SPBMeanwhile" xml:space="preserve"><value>إلى أن تُبنى، استخدم أرصدة أول المدة للأصناف لكل فترة مالية.</value></data>
+  <data name="SPBOpeningLink" xml:space="preserve"><value>أرصدة أول المدة للأصناف</value></data>
 </root>

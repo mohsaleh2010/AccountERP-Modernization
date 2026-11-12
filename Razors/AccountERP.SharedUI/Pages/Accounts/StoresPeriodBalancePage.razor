@@ -1,0 +1,56 @@
+@* 🟡 «بيانات أرصدة المواد عن فترة» (menuItemFinancial_Period_Stores_Balance، خطة final-accounts-razor-plan.md م6).
+   معالج القائمة فى الديسكتوب معلَّق بالكامل (الفورم فى مجلد _1Old)، فلا توجد شاشة أصلية تُنقل. صفحة «قيد الإنشاء»
+   توضح ذلك وتوجّه إلى أرصدة أول المدة للأصناف لكل فترة (/store/opening-balances) وأرصدة الأصناف. *@
+@page "/accounts/final/stores-period-balance"
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@implements IDisposable
+
+<PageTitle>@Tr("SPBTitle")</PageTitle>
+
+<InvoiceStyles />
+<FinalStatementStyles />
+<style>
+    .spb-body { display: grid; gap: 12px; max-width: 70ch; }
+    .spb-links { display: flex; flex-wrap: wrap; gap: 8px; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card fs-head">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Construction" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("SPBTitle")</h1>
+            <div class="sub">@Tr("SPBSub")</div>
+        </div>
+    </div>
+
+    <div class="inv-card fs-gap spb-body">
+        <MudAlert Severity="Severity.Info" role="status">@Tr("SPBWhy")</MudAlert>
+        <p>@Tr("SPBMeanwhile")</p>
+        <div class="spb-links">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Inventory" Href="/store/opening-balances">@Tr("SPBOpeningLink")</MudButton>
+        </div>
+    </div>
+</div>
+</MudContainer>
+
+@code {
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    protected override void OnInitialized() => LangService.OnLanguageChanged += OnLanguageChangedHandler;
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

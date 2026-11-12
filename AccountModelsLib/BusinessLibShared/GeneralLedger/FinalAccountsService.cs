@@ -685,6 +685,89 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
             return result;
         }
 
+        // ---------------- طباعة شجرة الحسابات (م6، بدل Submain_AccountPrintFrm) ----------------
+
+        public class ChartAccountRow
+        {
+            public long Id { get; set; }
+            public long ParentId { get; set; }
+            public string Number { get; set; } = "";
+            public string Name { get; set; } = "";
+            public string ParentNumber { get; set; } = "";
+            public string ParentName { get; set; } = "";
+            /// <summary>العمق من الجذر (الجذر = 1)، محسوب من الشجرة نفسها لا من Account_Level المخزَّن.</summary>
+            public int Depth { get; set; }
+            public long RootId { get; set; }
+            public string RootName { get; set; } = "";
+            public int Follows { get; set; }
+            public bool IsLeaf { get; set; }
+            public string Currency { get; set; } = "";
+            public bool IsShared { get; set; }
+        }
+
+        /// <summary>
+        /// شجرة الحسابات للطباعة (قراءة فقط). الأصل `Submain_AccountCLS.get_TreeToPrint` يصفّى بـ Branch_Id = الفرع فقط
+        /// (فيسقط الحسابات المشتركة Branch_ID = -1) ويهمل مرشح المستوى؛ هنا تُضمّ المشتركة اختيارياً والمرشحات تُطبَّق فى الصفحة.
+        /// الترتيب كالأصل (Head_Main_Account ثم AccountCode1..6)، و«فرعى» = ليس له أبناء فى الشجرة.
+        /// branchId = 0 ⇒ كل الفروع.
+        /// </summary>
+        public List<ChartAccountRow> GetChartOfAccounts(long branchId, bool includeShared)
+        {
+            string where = branchId > 0
+                ? " WHERE (s.Branch_ID = " + branchId + (includeShared ? " OR s.Branch_ID = -1" : "") + ")"
+                : "";
+            var dt = _newOpp().return_DataTable(
+                "SELECT s.Id, ISNULL(s.Main_Account_Id, 0) AS Main_Account_Id, s.SubAccount_NO, s.SubAccount_Name, ISNULL(s.Account_Follows, 0) AS Account_Follows, " +
+                "ISNULL(s.Branch_ID, 0) AS Branch_ID, c.Currency_Name FROM Submain_Account s LEFT OUTER JOIN Currency c ON s.Currency_Id = c.Value" + where +
+                " ORDER BY s.Head_Main_Account, s.AccountCode1, s.AccountCode2, s.AccountCode3, s.AccountCode4, s.AccountCode5, s.AccountCode6, s.Id");
+            // كل الحسابات (بلا مرشح فرع) لحساب الأب والجذر والعمق حتى لو كان الأب فى فرع آخر أو مشتركاً
+            var all = _newOpp().return_DataTable("SELECT Id, ISNULL(Main_Account_Id, 0) AS Main_Account_Id, SubAccount_NO, SubAccount_Name FROM Submain_Account");
+            return BuildChart(dt, all);
+        }
+
+        /// <summary>دالة نقية: تبنى صفوف الطباعة (الأب، الجذر، العمق، فرعى/رئيسى) من جدولين.</summary>
+        public static List<ChartAccountRow> BuildChart(DataTable rows, DataTable all)
+        {
+            var parent = new Dictionary<long, long>();
+            var info = new Dictionary<long, (string No, string Name)>();
+            var hasChild = new HashSet<long>();
+            foreach (DataRow r in all.Rows)
+            {
+                long id = Convert.ToInt64(r["Id"]), p = Convert.ToInt64(r["Main_Account_Id"]);
+                parent[id] = p;
+                info[id] = (r["SubAccount_NO"]?.ToString() ?? "", r["SubAccount_Name"]?.ToString() ?? "");
+                if (p > 0) hasChild.Add(p);
+            }
+
+            var list = new List<ChartAccountRow>();
+            foreach (DataRow r in rows.Rows)
+            {
+                long id = Convert.ToInt64(r["Id"]), p = Convert.ToInt64(r["Main_Account_Id"]);
+                // صعود للجذر مع حماية من الحلقات والآباء غير الموجودين
+                int depth = 1; long root = id; var seen = new HashSet<long> { id };
+                while (parent.TryGetValue(root, out var up) && up > 0 && info.ContainsKey(up) && seen.Add(up)) { root = up; depth++; }
+                info.TryGetValue(p, out var pi);
+                info.TryGetValue(root, out var ri);
+                list.Add(new ChartAccountRow
+                {
+                    Id = id,
+                    ParentId = p,
+                    Number = r["SubAccount_NO"]?.ToString() ?? "",
+                    Name = r["SubAccount_Name"]?.ToString() ?? "",
+                    ParentNumber = p > 0 ? pi.No ?? "" : "",
+                    ParentName = p > 0 ? pi.Name ?? "" : "",
+                    Depth = depth,
+                    RootId = root,
+                    RootName = ri.Name ?? "",
+                    Follows = Convert.ToInt32(r["Account_Follows"]),
+                    IsLeaf = !hasChild.Contains(id),
+                    Currency = r["Currency_Name"] == DBNull.Value ? "" : r["Currency_Name"]?.ToString() ?? "",
+                    IsShared = Convert.ToInt64(r["Branch_ID"]) == -1,
+                });
+            }
+            return list;
+        }
+
         private static void Accumulate(TrialBalanceRow to, TrialBalanceRow r)
         {
             to.FirstMadin += r.FirstMadin; to.FirstDa2n += r.FirstDa2n;

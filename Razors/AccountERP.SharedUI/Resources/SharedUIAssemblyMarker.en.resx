@@ -4885,4 +4885,32 @@
   <data name="BSChooseHint" xml:space="preserve"><value>Choose the period and branch, then press «Show»</value></data>
   <data name="FAErrBranchRequired" xml:space="preserve"><value>A branch must be selected</value></data>
   <data name="BSCurrencyNote" xml:space="preserve"><value>Currency: base-currency equivalent (same as desktop)</value></data>
+  <data name="CPTitle" xml:space="preserve"><value>Chart of accounts print</value></data>
+  <data name="CPSub" xml:space="preserve"><value>Chart of accounts with codes, levels and classification, ready to print, including accounts shared between branches</value></data>
+  <data name="CPUpToLevel" xml:space="preserve"><value>Up to level</value></data>
+  <data name="CPRoot" xml:space="preserve"><value>Main classification</value></data>
+  <data name="CPFollows" xml:space="preserve"><value>Final account</value></data>
+  <data name="CPAll" xml:space="preserve"><value>All</value></data>
+  <data name="CPIncludeShared" xml:space="preserve"><value>Show accounts shared between branches</value></data>
+  <data name="CPLeafOnly" xml:space="preserve"><value>Sub (posting) accounts only</value></data>
+  <data name="CPChooseHint" xml:space="preserve"><value>Choose the branch, then press "Show"</value></data>
+  <data name="CPPrintedBy" xml:space="preserve"><value>Printed by {0} on {1}</value></data>
+  <data name="CPColNumber" xml:space="preserve"><value>Account no.</value></data>
+  <data name="CPColName" xml:space="preserve"><value>Account name</value></data>
+  <data name="CPColLevel" xml:space="preserve"><value>Level</value></data>
+  <data name="CPColParent" xml:space="preserve"><value>Parent account</value></data>
+  <data name="CPColKind" xml:space="preserve"><value>Kind</value></data>
+  <data name="CPColCurrency" xml:space="preserve"><value>Currency</value></data>
+  <data name="CPNoRows" xml:space="preserve"><value>No accounts match the filters</value></data>
+  <data name="CPShared" xml:space="preserve"><value>Shared</value></data>
+  <data name="CPLeaf" xml:space="preserve"><value>Sub</value></data>
+  <data name="CPMain" xml:space="preserve"><value>Main</value></data>
+  <data name="CPCount" xml:space="preserve"><value>Accounts: {0}</value></data>
+  <data name="CPCountLeaf" xml:space="preserve"><value>Sub: {0}</value></data>
+  <data name="CPCountMain" xml:space="preserve"><value>Main: {0}</value></data>
+  <data name="SPBTitle" xml:space="preserve"><value>Stores balances per period</value></data>
+  <data name="SPBSub" xml:space="preserve"><value>This screen is under construction</value></data>
+  <data name="SPBWhy" xml:space="preserve"><value>This screen is disabled in the desktop version too, so there is no original screen to port yet. It will be built later on the item-balances engine.</value></data>
+  <data name="SPBMeanwhile" xml:space="preserve"><value>Until then, use item opening balances per financial period.</value></data>
+  <data name="SPBOpeningLink" xml:space="preserve"><value>Item opening balances</value></data>
 </root>

@@ -1,0 +1,238 @@
+@* 🟢 «طباعة شجرة الحسابات» (بدل Submain_AccountPrintFrm + Submain_Account.rdlc، خطة final-accounts-razor-plan.md م6).
+   القراءة: FinalAccountsService.GetChartOfAccounts (قراءة فقط). يصحّح خطأين فى الأصل: مرشح المستوى كان مهملاً
+   (get_TreeToPrint يستبدل الاستعلام)، ومرشح الفرع كان يُسقط الحسابات المشتركة (Branch_ID = -1).
+   المستوى = العمق من الجذر محسوباً من الشجرة. الطباعة بـ window.print وأنماط FinalStatementStyles (ui-ux-pro-max). *@
+@page "/accounts/final/chart-print"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.BusinessLibShared.GeneralLedger
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject IJSRuntime JS
+@implements IDisposable
+
+<PageTitle>@Tr("CPTitle")</PageTitle>
+
+<InvoiceStyles />
+<FinalStatementStyles />
+<style>
+    .cp-filters { grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; }
+    table.cp-table td.name .ind { display: inline-block; }
+    table.cp-table tr.cp-root td { font-weight: 800; background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent); }
+    table.cp-table tr.cp-parent td.name { font-weight: 700; }
+    table.cp-table td.code { font-variant-numeric: tabular-nums; direction: ltr; text-align: end; }
+    table.cp-table td.ctr { text-align: center; }
+    .cp-tag { font-size: .75rem; padding: 0 6px; border-radius: 6px; border: 1px solid var(--mud-palette-lines-default); color: var(--mud-palette-text-secondary); margin-inline-start: 6px; }
+    .cp-foot { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 12px; font-weight: 700; }
+    @@media (max-width: 1099px) { .cp-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 599px) { .cp-filters { grid-template-columns: minmax(0, 1fr); } }
+    @@media print {
+        @@page { size: A4 portrait; margin: 12mm; }
+        table.cp-table thead { display: table-header-group; }
+        table.cp-table tr { break-inside: avoid; }
+        table.cp-table th, table.cp-table td { padding: 3px 6px; font-size: 11px; }
+    }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-card fs-head fs-noprint">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.AccountTree" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("CPTitle")</h1>
+            <div class="sub">@Tr("CPSub")</div>
+        </div>
+    </div>
+
+    <div class="inv-card fs-gap fs-noprint">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.FilterList" />@Tr("SOFiltersTitle")</h2>
+        <div class="fs-filters cp-filters">
+            <MudSelect T="long" Value="_branch" ValueChanged="@(v => { _branch = v; Reset(); })" Label="@Tr("FABranch")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => _branches.FirstOrDefault(b => b.Id == v)?.Name ?? "")">
+                @foreach (var b in _branches)
+                {
+                    <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="int" @bind-Value="_level" Label="@Tr("CPUpToLevel")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("BSAllLevels") : v.ToString(CultureInfo.InvariantCulture))">
+                <MudSelectItem T="int" Value="0">@Tr("BSAllLevels")</MudSelectItem>
+                @for (int i = 1; i <= 9; i++)
+                {
+                    var lv = i;
+                    <MudSelectItem T="int" Value="@lv">@lv</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="long" @bind-Value="_root" Label="@Tr("CPRoot")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("CPAll") : _roots.FirstOrDefault(r => r.Id == v)?.Name ?? "")">
+                <MudSelectItem T="long" Value="0L">@Tr("CPAll")</MudSelectItem>
+                @foreach (var r in _roots)
+                {
+                    <MudSelectItem T="long" Value="@r.Id">@r.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="int" @bind-Value="_follows" Label="@Tr("CPFollows")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("CPAll") : AccountLookups.GetAccountFollowsText(v))">
+                <MudSelectItem T="int" Value="0">@Tr("CPAll")</MudSelectItem>
+                @foreach (var f in AccountLookups.AccountFollows)
+                {
+                    var fv = int.Parse(f.Value, CultureInfo.InvariantCulture);
+                    <MudSelectItem T="int" Value="@fv">@f.TextAr</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField T="string" @bind-Value="_search" Immediate="true" Label="@Tr("TBSearch")" Variant="Variant.Outlined"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+            <MudSwitch T="bool" Value="_includeShared" ValueChanged="@((bool v) => { _includeShared = v; Reset(); })" Color="Color.Primary" Label="@Tr("CPIncludeShared")" />
+            <MudSwitch T="bool" @bind-Value="_leafOnly" Color="Color.Primary" Label="@Tr("CPLeafOnly")" />
+        </div>
+        <div class="fs-btns">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility"
+                       Disabled="@_loading" OnClick="ShowAsync">@Tr("FAShow")</MudButton>
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Print"
+                       Disabled="@(_loading || _rows == null)" OnClick="PrintAsync">@Tr("FAPrint")</MudButton>
+            @if (_loading) { <MudProgressCircular Indeterminate="true" Size="Size.Small" /> }
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="fs-gap" role="alert">@_error</MudAlert>
+    }
+
+    @if (_rows == null && string.IsNullOrEmpty(_error) && !_loading)
+    {
+        <MudAlert Severity="Severity.Normal" Dense="true" Class="fs-gap fs-noprint" role="status">@Tr("CPChooseHint")</MudAlert>
+    }
+
+    @if (_rows != null)
+    {
+        var shown = Visible().ToList();
+        <div class="inv-card fs-gap">
+            <div class="fs-print-title">
+                <strong>@Tr("CPTitle")</strong> — @(_branches.FirstOrDefault(b => b.Id == _shownBranch)?.Name)
+                — @Tr("CPPrintedBy", AccountModelsLib.Common.FullUserName, DateTime.Now.ToString("yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture))
+            </div>
+            <h2 class="inv-card-title fs-noprint"><MudIcon Icon="@Icons.Material.Filled.AccountTree" />@Tr("CPTitle")</h2>
+            <div class="fs-wrap">
+                <table class="fs cp-table">
+                    <thead>
+                        <tr>
+                            <th>@Tr("CPColNumber")</th>
+                            <th>@Tr("CPColName")</th>
+                            <th>@Tr("CPColLevel")</th>
+                            <th>@Tr("CPColParent")</th>
+                            <th>@Tr("CPRoot")</th>
+                            <th>@Tr("CPFollows")</th>
+                            <th>@Tr("CPColKind")</th>
+                            <th>@Tr("CPColCurrency")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (shown.Count == 0)
+                        {
+                            <tr><td colspan="8" class="ctr">@Tr("CPNoRows")</td></tr>
+                        }
+                        @foreach (var r in shown)
+                        {
+                            <tr class="@(r.Depth == 1 ? "cp-root" : r.IsLeaf ? "" : "cp-parent")">
+                                <td class="code">@r.Number</td>
+                                <td class="name"><span class="ind" style="@($"width:{(r.Depth - 1) * 18}px")"></span>@r.Name @if (r.IsShared) { <span class="cp-tag">@Tr("CPShared")</span> }</td>
+                                <td class="ctr">@r.Depth</td>
+                                <td>@(string.IsNullOrEmpty(r.ParentName) ? "" : $"{r.ParentNumber} {r.ParentName}")</td>
+                                <td>@r.RootName</td>
+                                <td>@(r.Follows > 0 ? AccountLookups.GetAccountFollowsText(r.Follows) : "")</td>
+                                <td class="ctr">@Tr(r.IsLeaf ? "CPLeaf" : "CPMain")</td>
+                                <td>@r.Currency</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="cp-foot" role="status" aria-live="polite">
+                <span>@Tr("CPCount", shown.Count)</span>
+                <span>@Tr("CPCountLeaf", shown.Count(r => r.IsLeaf))</span>
+                <span>@Tr("CPCountMain", shown.Count(r => !r.IsLeaf))</span>
+            </div>
+        </div>
+    }
+</div>
+</MudContainer>
+
+@code {
+    private readonly FinalAccountsService _svc = new();
+    private List<FinalAccountsService.Option> _branches = new();
+    private List<FinalAccountsService.Option> _roots = new();
+    private List<FinalAccountsService.ChartAccountRow>? _rows;
+    private long _branch, _shownBranch, _root;
+    private int _level, _follows;
+    private bool _includeShared = true, _leafOnly;
+    private string _search = "";
+    private string? _error;
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); _branches = _svc.GetBranches(); });
+            _branch = _branches.Any(b => b.Id == AccountModelsLib.Common.Branch_Id) ? AccountModelsLib.Common.Branch_Id : _branches.FirstOrDefault()?.Id ?? 0;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private void Reset() { _rows = null; _error = null; }
+
+    private async Task ShowAsync()
+    {
+        _error = null; _rows = null;
+        if (_branch <= 0) { _error = Tr("FAErrBranchRequired"); return; }
+        _loading = true;
+        try
+        {
+            long branch = _branch; bool shared = _includeShared;
+            _rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetChartOfAccounts(branch, shared); });
+            _roots = _rows.Where(r => r.Depth == 1).Select(r => new FinalAccountsService.Option(r.Id, r.Name)).ToList();
+            if (_root != 0 && !_roots.Any(r => r.Id == _root)) _root = 0;
+            _shownBranch = branch;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _loading = false; }
+    }
+
+    private IEnumerable<FinalAccountsService.ChartAccountRow> Visible()
+    {
+        if (_rows == null) yield break;
+        var q = _search?.Trim() ?? "";
+        foreach (var r in _rows)
+        {
+            if (_level > 0 && r.Depth > _level) continue;
+            if (_root != 0 && r.RootId != _root) continue;
+            if (_follows != 0 && r.Follows != _follows) continue;
+            if (_leafOnly && !r.IsLeaf) continue;
+            if (q.Length > 0 && !r.Name.Contains(q, StringComparison.OrdinalIgnoreCase) && !r.Number.Contains(q, StringComparison.OrdinalIgnoreCase)) continue;
+            yield return r;
+        }
+    }
+
+    private async Task PrintAsync() => await JS.InvokeVoidAsync("window.print");
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

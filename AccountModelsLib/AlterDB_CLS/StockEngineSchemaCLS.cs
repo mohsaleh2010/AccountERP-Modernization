@@ -387,6 +387,9 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("ToolStripMenuItemArba7Wa7hsa2r", "/accounts/final/profit-loss?tab=3"),
             // م5: قائمة المركز المالى بدل Get_Account_BalanceFRM2.
             ("toolStripMenuItemAccountBalance", "/accounts/final/balance-sheet"),
+            // م6: طباعة شجرة الحسابات بدل Submain_AccountPrintFrm، و«أرصدة المواد عن فترة» (معطَّلة فى الديسكتوب) صفحة «قيد الإنشاء».
+            ("toolStripMenuItemPrintTreeAccount", "/accounts/final/chart-print"),
+            ("menuItemFinancial_Period_Stores_Balance", "/accounts/final/stores-period-balance"),
             // مراجعة القيود (473) بدل Review_Account_Entry.
             ("ToolStripMenuAccountEntryReview", "/accounts/journal-entries"),
             // إنشاء قيود الصندوق آلياً بدل Make_Account_Entry_Automatic.

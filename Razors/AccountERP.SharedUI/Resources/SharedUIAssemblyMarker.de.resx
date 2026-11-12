@@ -4887,4 +4887,32 @@
   <data name="BSChooseHint" xml:space="preserve"><value>Periode und Filiale wählen und dann «Anzeigen» drücken</value></data>
   <data name="FAErrBranchRequired" xml:space="preserve"><value>Eine Filiale muss ausgewählt werden</value></data>
   <data name="BSCurrencyNote" xml:space="preserve"><value>Währung: Gegenwert in Basiswährung (wie Desktop)</value></data>
+  <data name="CPTitle" xml:space="preserve"><value>Kontenplan drucken</value></data>
+  <data name="CPSub" xml:space="preserve"><value>Kontenplan mit Nummern, Ebenen und Klassifizierung, druckfertig, einschließlich filialübergreifender Konten</value></data>
+  <data name="CPUpToLevel" xml:space="preserve"><value>Bis Ebene</value></data>
+  <data name="CPRoot" xml:space="preserve"><value>Hauptklassifizierung</value></data>
+  <data name="CPFollows" xml:space="preserve"><value>Abschlusskonto</value></data>
+  <data name="CPAll" xml:space="preserve"><value>Alle</value></data>
+  <data name="CPIncludeShared" xml:space="preserve"><value>Filialübergreifende Konten anzeigen</value></data>
+  <data name="CPLeafOnly" xml:space="preserve"><value>Nur Buchungskonten</value></data>
+  <data name="CPChooseHint" xml:space="preserve"><value>Filiale wählen und dann „Anzeigen“ drücken</value></data>
+  <data name="CPPrintedBy" xml:space="preserve"><value>Gedruckt von {0} am {1}</value></data>
+  <data name="CPColNumber" xml:space="preserve"><value>Kontonr.</value></data>
+  <data name="CPColName" xml:space="preserve"><value>Kontoname</value></data>
+  <data name="CPColLevel" xml:space="preserve"><value>Ebene</value></data>
+  <data name="CPColParent" xml:space="preserve"><value>Übergeordnetes Konto</value></data>
+  <data name="CPColKind" xml:space="preserve"><value>Art</value></data>
+  <data name="CPColCurrency" xml:space="preserve"><value>Währung</value></data>
+  <data name="CPNoRows" xml:space="preserve"><value>Keine Konten entsprechen den Filtern</value></data>
+  <data name="CPShared" xml:space="preserve"><value>Gemeinsam</value></data>
+  <data name="CPLeaf" xml:space="preserve"><value>Unterkonto</value></data>
+  <data name="CPMain" xml:space="preserve"><value>Hauptkonto</value></data>
+  <data name="CPCount" xml:space="preserve"><value>Konten: {0}</value></data>
+  <data name="CPCountLeaf" xml:space="preserve"><value>Unterkonten: {0}</value></data>
+  <data name="CPCountMain" xml:space="preserve"><value>Hauptkonten: {0}</value></data>
+  <data name="SPBTitle" xml:space="preserve"><value>Lagerbestände je Periode</value></data>
+  <data name="SPBSub" xml:space="preserve"><value>Diese Seite ist im Aufbau</value></data>
+  <data name="SPBWhy" xml:space="preserve"><value>Diese Maske ist auch in der Desktop-Version deaktiviert, daher gibt es noch keine Vorlage zum Portieren. Sie wird später auf der Artikelbestands-Engine aufgebaut.</value></data>
+  <data name="SPBMeanwhile" xml:space="preserve"><value>Bis dahin verwenden Sie die Artikel-Eröffnungsbestände je Geschäftsperiode.</value></data>
+  <data name="SPBOpeningLink" xml:space="preserve"><value>Artikel-Eröffnungsbestände</value></data>
 </root>

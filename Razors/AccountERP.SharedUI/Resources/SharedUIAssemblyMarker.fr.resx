@@ -4887,4 +4887,32 @@
   <data name="BSChooseHint" xml:space="preserve"><value>Choisissez l'exercice et l'agence puis appuyez sur « Afficher »</value></data>
   <data name="FAErrBranchRequired" xml:space="preserve"><value>Une agence doit être sélectionnée</value></data>
   <data name="BSCurrencyNote" xml:space="preserve"><value>Devise : contre-valeur en devise de base (comme sur le bureau)</value></data>
+  <data name="CPTitle" xml:space="preserve"><value>Impression du plan comptable</value></data>
+  <data name="CPSub" xml:space="preserve"><value>Plan comptable avec codes, niveaux et classification, prêt à imprimer, y compris les comptes partagés entre agences</value></data>
+  <data name="CPUpToLevel" xml:space="preserve"><value>Jusqu'au niveau</value></data>
+  <data name="CPRoot" xml:space="preserve"><value>Classification principale</value></data>
+  <data name="CPFollows" xml:space="preserve"><value>Compte final</value></data>
+  <data name="CPAll" xml:space="preserve"><value>Tous</value></data>
+  <data name="CPIncludeShared" xml:space="preserve"><value>Afficher les comptes partagés entre agences</value></data>
+  <data name="CPLeafOnly" xml:space="preserve"><value>Comptes de détail uniquement</value></data>
+  <data name="CPChooseHint" xml:space="preserve"><value>Choisissez l'agence puis appuyez sur « Afficher »</value></data>
+  <data name="CPPrintedBy" xml:space="preserve"><value>Imprimé par {0} le {1}</value></data>
+  <data name="CPColNumber" xml:space="preserve"><value>N° de compte</value></data>
+  <data name="CPColName" xml:space="preserve"><value>Nom du compte</value></data>
+  <data name="CPColLevel" xml:space="preserve"><value>Niveau</value></data>
+  <data name="CPColParent" xml:space="preserve"><value>Compte parent</value></data>
+  <data name="CPColKind" xml:space="preserve"><value>Type</value></data>
+  <data name="CPColCurrency" xml:space="preserve"><value>Devise</value></data>
+  <data name="CPNoRows" xml:space="preserve"><value>Aucun compte ne correspond aux filtres</value></data>
+  <data name="CPShared" xml:space="preserve"><value>Partagé</value></data>
+  <data name="CPLeaf" xml:space="preserve"><value>Détail</value></data>
+  <data name="CPMain" xml:space="preserve"><value>Principal</value></data>
+  <data name="CPCount" xml:space="preserve"><value>Comptes : {0}</value></data>
+  <data name="CPCountLeaf" xml:space="preserve"><value>Détail : {0}</value></data>
+  <data name="CPCountMain" xml:space="preserve"><value>Principaux : {0}</value></data>
+  <data name="SPBTitle" xml:space="preserve"><value>Soldes des stocks par période</value></data>
+  <data name="SPBSub" xml:space="preserve"><value>Écran en construction</value></data>
+  <data name="SPBWhy" xml:space="preserve"><value>Cet écran est aussi désactivé dans la version bureau ; il n'y a donc pas encore d'écran d'origine à porter. Il sera construit plus tard sur le moteur des soldes d'articles.</value></data>
+  <data name="SPBMeanwhile" xml:space="preserve"><value>En attendant, utilisez les soldes d'ouverture des articles par période financière.</value></data>
+  <data name="SPBOpeningLink" xml:space="preserve"><value>Soldes d'ouverture des articles</value></data>
 </root>
