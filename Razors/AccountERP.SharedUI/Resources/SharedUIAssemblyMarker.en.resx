@@ -4837,4 +4837,28 @@
   <data name="CS_Count" xml:space="preserve"><value>{0} categories</value></data>
   <data name="CS_KeysHint" xml:space="preserve"><value>Arrows to move, Enter or double-click to choose</value></data>
   <data name="CS_FieldHint" xml:space="preserve"><value>Click the field or press F9 to search; arrow for the list</value></data>
+  <data name="ISTitle" xml:space="preserve"><value>Income statement</value></data>
+  <data name="ISSub" xml:space="preserve"><value>Revenues, expenses and net profit or loss for accounts with a balance in the selected period, branch and currency, calculated exactly as in the desktop</value></data>
+  <data name="ISRevenueTotal" xml:space="preserve"><value>Total revenues</value></data>
+  <data name="ISExpenseTotal" xml:space="preserve"><value>Total expenses</value></data>
+  <data name="ISNetProfit" xml:space="preserve"><value>Net profit</value></data>
+  <data name="ISNetLoss" xml:space="preserve"><value>Net loss</value></data>
+  <data name="FSFirstBalanceHint" xml:space="preserve"><value>View only: the desktop rebuilds opening balances before each display; here balances are read as they are (like the trial balance). If a figure differs from the desktop, open the screen once in the desktop to refresh balances, then show again</value></data>
+  <data name="PLTitle" xml:space="preserve"><value>Final accounts: operating, trading, profit and loss</value></data>
+  <data name="PLSub" xml:space="preserve"><value>"Show" computes all three: the operating result carries to trading, gross profit carries to profit and loss, and net profit carries to the balance sheet</value></data>
+  <data name="PLTabOperating" xml:space="preserve"><value>Operating account</value></data>
+  <data name="PLTabTrading" xml:space="preserve"><value>Trading account</value></data>
+  <data name="PLTabProfitLoss" xml:space="preserve"><value>Profit and loss account</value></data>
+  <data name="PLPressShow" xml:space="preserve"><value>Choose the period, branch and currency, then press "Show"</value></data>
+  <data name="PLNoAccounts" xml:space="preserve"><value>No accounts of this kind in the selected period; only totals and carried amounts are shown</value></data>
+  <data name="PLTotal" xml:space="preserve"><value>Total</value></data>
+  <data name="PLCarryOpToTrading" xml:space="preserve"><value>Operating cost carried to the trading account</value></data>
+  <data name="PLCarryFromOp" xml:space="preserve"><value>Operating cost — carried from the operating account</value></data>
+  <data name="PLCarryFromTrading" xml:space="preserve"><value>Carried from the trading account</value></data>
+  <data name="PLGrossLossToPL" xml:space="preserve"><value>Gross loss carried to profit and loss</value></data>
+  <data name="PLGrossProfitToPL" xml:space="preserve"><value>Gross profit carried to profit and loss</value></data>
+  <data name="PLToPL" xml:space="preserve"><value>Carried to profit and loss</value></data>
+  <data name="PLNetLossToBS" xml:space="preserve"><value>Net loss for the period carried to the balance sheet</value></data>
+  <data name="PLNetProfitToBS" xml:space="preserve"><value>Net profit for the period carried to the balance sheet</value></data>
+  <data name="PLToBS" xml:space="preserve"><value>Carried to the balance sheet</value></data>
 </root>

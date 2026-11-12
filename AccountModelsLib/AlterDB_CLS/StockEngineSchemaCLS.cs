@@ -381,6 +381,10 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("ToolStripMenuItemMasterCostCenter", "/accounts/final/cost-center-ledger"), ("ToolStripMenuItemMasterCostCenter1", "/accounts/final/cost-center-ledger"),
             ("ToolStripMenuItem_Mezan_Morgaa", "/accounts/final/trial-balance?mode=closing"),
             ("ToolStripMenuItemMezanByPeriodToolStripMenuItemMezanByPeriodMagame3Arseda", "/accounts/final/trial-balance?mode=closing"),
+            // م4: قائمة الدخل، والتشغيل/المتاجرة/الأرباح والخسائر (نفس الصفحة بثلاثة تبويبات كما Profit_Loss_StatFRMNew(1/2/3)).
+            ("toolStripMenuItemIncoming_Statement", "/accounts/final/income-statement"),
+            ("ToolStripMenuItemTash7heelAccount", "/accounts/final/profit-loss?tab=1"), ("ToolStripMenuItemMotagra", "/accounts/final/profit-loss?tab=2"),
+            ("ToolStripMenuItemArba7Wa7hsa2r", "/accounts/final/profit-loss?tab=3"),
             // مراجعة القيود (473) بدل Review_Account_Entry.
             ("ToolStripMenuAccountEntryReview", "/accounts/journal-entries"),
             // إنشاء قيود الصندوق آلياً بدل Make_Account_Entry_Automatic.

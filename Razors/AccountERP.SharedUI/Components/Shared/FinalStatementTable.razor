@@ -1,0 +1,89 @@
+@* جدول قائمة ختامية (قائمة الدخل / التشغيل / المتاجرة / الأرباح والخسائر): يعرض صفوف FinalAccountsService.BuildStatement بترتيب المحرك نفسه.
+   الصفوف: رأس مجموعة، حساب، مجموع مجموعة، إجمالى، مرحَّل. النصوص الثابتة فى المحرك تُترجم بمفاتيحها (LabelKey).
+   البحث يخفى صفوف الحسابات غير المطابقة فقط ويُبقى الإجماليات والمرحَّل كما هى (كالديسكتوب: الفلتر على الشبكة). *@
+@using System.Globalization
+@using AccountModelsLib.BusinessLibShared.GeneralLedger
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+
+<div class="fs-wrap">
+    <table class="fs">
+        <thead>
+            <tr>
+                <th>@Tr("TBColCode")</th>
+                <th>@Tr("TBColAccount")</th>
+                @if (ShowMovement)
+                {
+                    <th>@Tr("TBMoveDebit")</th><th>@Tr("TBMoveCredit")</th>
+                }
+                <th>@Tr("TBLastDebit")</th><th>@Tr("TBLastCredit")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Visible)
+            {
+                switch (r.Kind)
+                {
+                    case FinalAccountsService.StatementRowKind.GroupHeader:
+                        <tr class="grp"><td>@r.Code</td><td colspan="@(ColCount - 1)">@r.Name</td></tr>
+                        break;
+                    case FinalAccountsService.StatementRowKind.Account:
+                        <tr class="acc">
+                            <td>@r.Code</td><td class="name">@r.Name</td>
+                            @Nums(r)
+                        </tr>
+                        break;
+                    case FinalAccountsService.StatementRowKind.SubTotal:
+                        <tr class="sub"><td></td><td class="name">@Tr("TBSubTotal") @r.Name</td>@Nums(r)</tr>
+                        break;
+                    case FinalAccountsService.StatementRowKind.Total:
+                        <tr class="grand"><td></td><td class="name">@Label(r)</td>@Nums(r)</tr>
+                        break;
+                    default:
+                        <tr class="carry"><td></td><td class="name">@Label(r)</td>@Nums(r)</tr>
+                        break;
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter] public List<FinalAccountsService.StatementRow> Rows { get; set; } = new();
+    /// <summary>عمودا مجموع الحركة المدينة/الدائنة (ظاهران فى التشغيل/المتاجرة/الأرباح، مخفيان فى قائمة الدخل كالديسكتوب).</summary>
+    [Parameter] public bool ShowMovement { get; set; }
+    [Parameter] public string Search { get; set; } = "";
+
+    private int ColCount => ShowMovement ? 6 : 4;
+
+    private IEnumerable<FinalAccountsService.StatementRow> Visible =>
+        string.IsNullOrWhiteSpace(Search)
+            ? Rows
+            : Rows.Where(r => r.Kind != FinalAccountsService.StatementRowKind.Account
+                              || r.Name.Contains(Search.Trim(), StringComparison.OrdinalIgnoreCase)
+                              || r.Code.Contains(Search.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    private RenderFragment Nums(FinalAccountsService.StatementRow r) => __builder =>
+    {
+        if (ShowMovement)
+        {
+            <td class="num">@N(r.Import)</td><td class="num">@N(r.Export)</td>
+        }
+        <td class="num">@N(r.LastMadin)</td><td class="num">@N(r.LastDa2n)</td>
+    };
+
+    private string Label(FinalAccountsService.StatementRow r) => string.IsNullOrEmpty(r.LabelKey) ? r.Name : Tr(r.LabelKey);
+
+    private static string N(decimal v) => v == 0 ? "" : v.ToString("N2", CultureInfo.InvariantCulture);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

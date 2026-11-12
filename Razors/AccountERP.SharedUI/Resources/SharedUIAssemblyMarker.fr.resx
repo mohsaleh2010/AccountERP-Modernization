@@ -4839,4 +4839,28 @@
   <data name="CS_Count" xml:space="preserve"><value>{0} catégories</value></data>
   <data name="CS_KeysHint" xml:space="preserve"><value>Flèches pour naviguer, Entrée ou double-clic pour choisir</value></data>
   <data name="CS_FieldHint" xml:space="preserve"><value>Cliquez sur le champ ou F9 pour rechercher ; flèche pour la liste</value></data>
+  <data name="ISTitle" xml:space="preserve"><value>Compte de résultat</value></data>
+  <data name="ISSub" xml:space="preserve"><value>Produits, charges et résultat net des comptes soldés pour la période, l'agence et la devise choisies, calculés comme dans le bureau</value></data>
+  <data name="ISRevenueTotal" xml:space="preserve"><value>Total des produits</value></data>
+  <data name="ISExpenseTotal" xml:space="preserve"><value>Total des charges</value></data>
+  <data name="ISNetProfit" xml:space="preserve"><value>Bénéfice net</value></data>
+  <data name="ISNetLoss" xml:space="preserve"><value>Perte nette</value></data>
+  <data name="FSFirstBalanceHint" xml:space="preserve"><value>Consultation seule : le bureau reconstruit les soldes d'ouverture avant chaque affichage ; ici les soldes sont lus tels quels (comme la balance). Si un chiffre diffère, ouvrez l'écran une fois dans le bureau puis réaffichez</value></data>
+  <data name="PLTitle" xml:space="preserve"><value>Comptes de fin d'exercice : exploitation, commerce, pertes et profits</value></data>
+  <data name="PLSub" xml:space="preserve"><value>« Afficher » calcule les trois : le résultat d'exploitation est reporté au compte commercial, la marge brute aux pertes et profits, et le résultat net au bilan</value></data>
+  <data name="PLTabOperating" xml:space="preserve"><value>Compte d'exploitation</value></data>
+  <data name="PLTabTrading" xml:space="preserve"><value>Compte commercial</value></data>
+  <data name="PLTabProfitLoss" xml:space="preserve"><value>Compte de pertes et profits</value></data>
+  <data name="PLPressShow" xml:space="preserve"><value>Choisissez la période, l'agence et la devise, puis « Afficher »</value></data>
+  <data name="PLNoAccounts" xml:space="preserve"><value>Aucun compte de ce type pour la période choisie ; seuls les totaux et reports sont affichés</value></data>
+  <data name="PLTotal" xml:space="preserve"><value>Total</value></data>
+  <data name="PLCarryOpToTrading" xml:space="preserve"><value>Coût d'exploitation reporté au compte commercial</value></data>
+  <data name="PLCarryFromOp" xml:space="preserve"><value>Coût d'exploitation — reporté du compte d'exploitation</value></data>
+  <data name="PLCarryFromTrading" xml:space="preserve"><value>Reporté du compte commercial</value></data>
+  <data name="PLGrossLossToPL" xml:space="preserve"><value>Perte brute reportée aux pertes et profits</value></data>
+  <data name="PLGrossProfitToPL" xml:space="preserve"><value>Marge brute reportée aux pertes et profits</value></data>
+  <data name="PLToPL" xml:space="preserve"><value>Reporté aux pertes et profits</value></data>
+  <data name="PLNetLossToBS" xml:space="preserve"><value>Perte nette de la période reportée au bilan</value></data>
+  <data name="PLNetProfitToBS" xml:space="preserve"><value>Bénéfice net de la période reporté au bilan</value></data>
+  <data name="PLToBS" xml:space="preserve"><value>Reporté au bilan</value></data>
 </root>

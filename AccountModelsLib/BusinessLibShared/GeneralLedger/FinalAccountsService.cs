@@ -288,6 +288,170 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
             return BuildTrialBalance(dt);
         }
 
+        // ---------------- قائمة الدخل والتشغيل/المتاجرة/الأرباح والخسائر (م4) ----------------
+
+        /// <summary>نوع صف القائمة كما يضيفه المحرك: حساب، رأس مجموعة (-20)، إجمالى مجموعة أو إجمالى عام (-10)، سطر مُرحَّل (بلا معرّف).</summary>
+        public enum StatementRowKind { Account, GroupHeader, SubTotal, Total, Carry }
+
+        public class StatementRow
+        {
+            public StatementRowKind Kind { get; set; }
+            public long AccountId { get; set; }
+            public string Code { get; set; } = "";
+            /// <summary>النص كما يعيده المحرك (اسم الحساب/المجموعة بعد إزالة بادئة «إجمالى» فى صفوف إجمالى المجموعة).</summary>
+            public string Name { get; set; } = "";
+            /// <summary>مفتاح ترجمة للنصوص الثابتة فى المحرك (المرحَّل، الإجماليات، صافى الربح/الخسارة)، أو فارغ.</summary>
+            public string LabelKey { get; set; } = "";
+            public decimal Import { get; set; }
+            public decimal Export { get; set; }
+            public decimal LastMadin { get; set; }
+            public decimal LastDa2n { get; set; }
+        }
+
+        public class IncomeStatementResult
+        {
+            public List<StatementRow> Rows { get; set; } = new();
+            /// <summary>صافى الربح كما يعيده المحرك: إجمالى الدائن (الإيرادات) ناقص إجمالى المدين (المصروفات)؛ السالب خسارة.</summary>
+            public decimal NetProfit { get; set; }
+            public int AccountCount => Rows.Count(r => r.Kind == StatementRowKind.Account);
+        }
+
+        public class ProfitLossResult
+        {
+            public List<StatementRow> Operating { get; set; } = new();
+            public List<StatementRow> Trading { get; set; } = new();
+            public List<StatementRow> ProfitLoss { get; set; } = new();
+        }
+
+        // النصوص الثابتة فى Incoming_StatementCLS ⇒ مفاتيح ترجمة (المسافات تُوحَّد قبل المطابقة).
+        private static readonly Dictionary<string, string> EngineLabels = new()
+        {
+            ["إجمالى الإيرادات"] = "ISRevenueTotal",
+            ["إجمالى المصروفات"] = "ISExpenseTotal",
+            ["صافى الربح"] = "ISNetProfit",
+            ["صافى الخساره"] = "ISNetLoss",
+            ["****الإجمالى***"] = "PLTotal",
+            ["تكلفة التشغيل مرحل الى حساب المتاجرة"] = "PLCarryOpToTrading",
+            ["تكلفة التشغيل - مرحل من حساب التشغيل"] = "PLCarryFromOp",
+            ["مرحل من حساب المتاجره"] = "PLCarryFromTrading",
+            ["مجمل الخسارة مرحل الى حساب أرباح وخسائر"] = "PLGrossLossToPL",
+            ["مجمل الربح مرحل الى حساب أرباح وخسائر"] = "PLGrossProfitToPL",
+            ["مرحل الى حساب أرباح وخسائر"] = "PLToPL",
+            ["صافى خسارة الفتره مرحل الى الميزانيه"] = "PLNetLossToBS",
+            ["صافى ربح الفتره مرحل الى الميزانيه"] = "PLNetProfitToBS",
+            ["مرحل الى الميزانيه"] = "PLToBS",
+        };
+
+        private static string Norm(string s) => string.Join(" ", (s ?? "").Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries));
+
+        private static decimal Dz(DataRow r, string col)
+        {
+            if (!r.Table.Columns.Contains(col) || r[col] == DBNull.Value) return 0m;
+            var v = r[col];
+            if (v is decimal d) return d;
+            return decimal.TryParse(Convert.ToString(v, System.Globalization.CultureInfo.InvariantCulture),
+                System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var x) ? x : 0m;
+        }
+
+        /// <summary>يحوّل جدول المحرك (بعد إضافاته للرؤوس والإجماليات والمرحَّل) إلى صفوف مكتوبة النوع بنفس الترتيب. يُسقط الصفوف الفارغة تماماً.</summary>
+        internal static List<StatementRow> BuildStatement(DataTable dt)
+        {
+            var list = new List<StatementRow>();
+            foreach (DataRow r in dt.Rows)
+            {
+                bool hasId = r.Table.Columns.Contains("Submain_Account_ID") && r["Submain_Account_ID"] != DBNull.Value;
+                long id = hasId ? Convert.ToInt64(r["Submain_Account_ID"]) : 0;
+                string name = Norm(S(r, "Account_Name"));
+                var row = new StatementRow
+                {
+                    AccountId = id > 0 ? id : 0,
+                    Code = S(r, "Account_Code"),
+                    Import = Dz(r, "Final_Import_Value"),
+                    Export = Dz(r, "Final_Export_Value"),
+                    LastMadin = Dz(r, "Final_Last_Balance_Madin"),
+                    LastDa2n = Dz(r, "Final_Last_Balance_Da2n"),
+                };
+                EngineLabels.TryGetValue(name, out var key);
+                if (id == -20)
+                {
+                    row.Kind = StatementRowKind.GroupHeader;
+                    row.Name = name.Trim('*', ' ');
+                    if (row.Name == "") continue; // رأس فارغ يضيفه المحرك قبل صفوف الإجمالى/المرحَّل
+                }
+                else if (id == -10)
+                {
+                    row.Kind = key != null ? StatementRowKind.Total : StatementRowKind.SubTotal;
+                    row.LabelKey = key ?? "";
+                    row.Name = key != null ? name : (name.StartsWith("إجمالى") ? name.Substring("إجمالى".Length).Trim() : name);
+                }
+                else if (id > 0)
+                {
+                    row.Kind = StatementRowKind.Account;
+                    row.Name = name;
+                }
+                else
+                {
+                    if (name == "" && row.Import == 0 && row.Export == 0 && row.LastMadin == 0 && row.LastDa2n == 0) continue;
+                    row.Kind = StatementRowKind.Carry;
+                    row.LabelKey = key ?? "";
+                    row.Name = name;
+                }
+                list.Add(row);
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// قائمة الدخل (Incoming_StatementByDate): نفس خطوات الديسكتوب ⇒ يملأ المحرك الجدول المؤقت (Is_To_Show_Prev=False وكل الحسابات كما فى ShowData)
+        /// ثم Incoming_StatementCLS.Get_Incoming_Statement بالحسابات ذات الرصيد (1) — الاثنان داخل القفل لأن الجدول المؤقت عالمى.
+        /// لا يُستدعى UpdateFirstBalance (يعيد كتابة Account_Entry_Master_Balance)؛ نفس قرار ميزان المراجعة (الخطة §3.4).
+        /// </summary>
+        public IncomeStatementResult GetIncomeStatement(PeriodRow period, long branchId, long currencyId, DateTime from, DateTime to)
+        {
+            var err = ValidateRange(period, from, to);
+            if (err != null) throw new ArgumentException(err);
+
+            var dt = new DataTable(); var dtPrint = new DataTable();
+            decimal profit;
+            EngineLock.Wait();
+            try
+            {
+                int excp = 0; string msg = "";
+                new Mezan_MorgaaCLS().Get_Mezan_Morgaa_ByPeiodNew(ref excp, ref msg, false, 0, branchId, from, to, 0, currencyId, period.Id, false, false, period.DateFrom);
+                if (!string.IsNullOrEmpty(msg)) throw new InvalidOperationException(msg);
+                profit = new Incoming_StatementCLS().Get_Incoming_Statement(ref dt, ref dtPrint, branchId, period.Id, 1, currencyId);
+            }
+            finally { EngineLock.Release(); }
+
+            return new IncomeStatementResult { Rows = BuildStatement(dt), NetProfit = profit };
+        }
+
+        /// <summary>
+        /// حساب التشغيل والمتاجرة والأرباح والخسائر (Profit_Loss_StatFRMNew): يملأ المحرك الجدول المؤقت كما فى GetTOShowData
+        /// (Is_To_Show_Prev = بداية البحث بعد بداية الفترة) ثم Get_Final_AccountsArba7 الذى يحسب الثلاثة معاً بكل الحسابات (0)، داخل القفل.
+        /// لا يُستدعى UpdateFirstBalance (نفس قرار ميزان المراجعة).
+        /// </summary>
+        public ProfitLossResult GetProfitLoss(PeriodRow period, long branchId, long currencyId, DateTime from, DateTime to)
+        {
+            var err = ValidateRange(period, from, to);
+            if (err != null) throw new ArgumentException(err);
+
+            DataTable op = new(), tr = new(), pl = new();
+            EngineLock.Wait();
+            try
+            {
+                int excp = 0; string msg = "";
+                bool showPrev = from.Date > period.DateFrom.Date;
+                new Mezan_MorgaaCLS().Get_Mezan_Morgaa_ByPeiodNew(ref excp, ref msg, showPrev, 0, branchId, from, to, 0, currencyId, period.Id, false, false, period.DateFrom);
+                if (!string.IsNullOrEmpty(msg)) throw new InvalidOperationException(msg);
+                decimal madin = 0, da2n = 0;
+                new Incoming_StatementCLS().Get_Final_AccountsArba7(ref op, ref tr, ref pl, ref madin, ref da2n, branchId, period.Id, currencyId, 0);
+            }
+            finally { EngineLock.Release(); }
+
+            return new ProfitLossResult { Operating = BuildStatement(op), Trading = BuildStatement(tr), ProfitLoss = BuildStatement(pl) };
+        }
+
         private static decimal D(DataRow r, string col) =>
             r.Table.Columns.Contains(col) && r[col] != DBNull.Value ? Convert.ToDecimal(r[col]) : 0m;
 

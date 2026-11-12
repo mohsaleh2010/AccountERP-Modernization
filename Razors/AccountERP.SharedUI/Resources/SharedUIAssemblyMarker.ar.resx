@@ -4837,4 +4837,28 @@
   <data name="CS_Count" xml:space="preserve"><value>{0} فئة</value></data>
   <data name="CS_KeysHint" xml:space="preserve"><value>الأسهم للتنقل، Enter أو ضغط مزدوج للاختيار</value></data>
   <data name="CS_FieldHint" xml:space="preserve"><value>اضغط على الخانة أو F9 للبحث، والسهم للقائمة</value></data>
+  <data name="ISTitle" xml:space="preserve"><value>قائمة الدخل</value></data>
+  <data name="ISSub" xml:space="preserve"><value>الإيرادات والمصروفات وصافى الربح أو الخسارة للحسابات ذات الرصيد فى الفترة والفرع والعملة المختارة، بنفس حساب الديسكتوب</value></data>
+  <data name="ISRevenueTotal" xml:space="preserve"><value>إجمالى الإيرادات</value></data>
+  <data name="ISExpenseTotal" xml:space="preserve"><value>إجمالى المصروفات</value></data>
+  <data name="ISNetProfit" xml:space="preserve"><value>صافى الربح</value></data>
+  <data name="ISNetLoss" xml:space="preserve"><value>صافى الخسارة</value></data>
+  <data name="FSFirstBalanceHint" xml:space="preserve"><value>عرض فقط: الديسكتوب يعيد بناء أرصدة أول المدة قبل كل عرض؛ هنا تُقرأ الأرصدة كما هى (مثل ميزان المراجعة). لو اختلف رقم عن الديسكتوب فافتح الشاشة فى الديسكتوب مرة لتحديث الأرصدة ثم أعد العرض</value></data>
+  <data name="PLTitle" xml:space="preserve"><value>الحسابات الختامية: التشغيل والمتاجرة والأرباح والخسائر</value></data>
+  <data name="PLSub" xml:space="preserve"><value>«عرض» يحسب الثلاثة معاً: نتيجة التشغيل تُرحَّل للمتاجرة، ومجمل الربح يُرحَّل للأرباح والخسائر، وصافى الربح يُرحَّل للميزانية</value></data>
+  <data name="PLTabOperating" xml:space="preserve"><value>حساب التشغيل</value></data>
+  <data name="PLTabTrading" xml:space="preserve"><value>حساب المتاجرة</value></data>
+  <data name="PLTabProfitLoss" xml:space="preserve"><value>حساب الأرباح والخسائر</value></data>
+  <data name="PLPressShow" xml:space="preserve"><value>اختر الفترة والفرع والعملة ثم اضغط «عرض»</value></data>
+  <data name="PLNoAccounts" xml:space="preserve"><value>لا توجد حسابات من هذا النوع فى الفترة المختارة؛ تظهر الإجماليات والمرحَّل فقط</value></data>
+  <data name="PLTotal" xml:space="preserve"><value>الإجمالى</value></data>
+  <data name="PLCarryOpToTrading" xml:space="preserve"><value>تكلفة التشغيل مرحَّلة إلى حساب المتاجرة</value></data>
+  <data name="PLCarryFromOp" xml:space="preserve"><value>تكلفة التشغيل — مرحَّلة من حساب التشغيل</value></data>
+  <data name="PLCarryFromTrading" xml:space="preserve"><value>مرحَّل من حساب المتاجرة</value></data>
+  <data name="PLGrossLossToPL" xml:space="preserve"><value>مجمل الخسارة مرحَّل إلى حساب الأرباح والخسائر</value></data>
+  <data name="PLGrossProfitToPL" xml:space="preserve"><value>مجمل الربح مرحَّل إلى حساب الأرباح والخسائر</value></data>
+  <data name="PLToPL" xml:space="preserve"><value>مرحَّل إلى حساب الأرباح والخسائر</value></data>
+  <data name="PLNetLossToBS" xml:space="preserve"><value>صافى خسارة الفترة مرحَّل إلى الميزانية</value></data>
+  <data name="PLNetProfitToBS" xml:space="preserve"><value>صافى ربح الفترة مرحَّل إلى الميزانية</value></data>
+  <data name="PLToBS" xml:space="preserve"><value>مرحَّل إلى الميزانية</value></data>
 </root>

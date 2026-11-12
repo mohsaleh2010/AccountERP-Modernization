@@ -1,0 +1,37 @@
+@* أنماط مشتركة لصفحات القوائم الختامية (قائمة الدخل، التشغيل/المتاجرة/الأرباح والخسائر) ولمكوّن FinalStatementTable. *@
+<style>
+    .fs-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+    .fs-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .fs-head .ico .mud-icon-root { font-size: 2rem; }
+    .fs-head .titles { flex: 1 1 260px; min-width: 0; }
+    .fs-head .sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .fs-gap { margin-top: 16px; }
+    .fs-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: start; }
+    .fs-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+    .fs-status { margin-top: 12px; }
+    .fs-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .fs-kpi .lbl { font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .fs-kpi .val { margin-top: 4px; font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .fs-kpi.pos .val { color: var(--mud-palette-success); }
+    .fs-kpi.neg .val { color: var(--mud-palette-error); }
+    .fs-wrap { overflow-x: auto; }
+    table.fs { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    table.fs th, table.fs td { padding: 6px 10px; border-bottom: 1px solid var(--mud-palette-lines-default); white-space: nowrap; }
+    table.fs thead th { position: sticky; top: 0; background: var(--mud-palette-surface); font-weight: 700; text-align: center; z-index: 1; }
+    table.fs td.num { text-align: end; }
+    table.fs td.name { white-space: normal; min-width: 220px; }
+    table.fs tr.grp td { background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent); font-weight: 700; }
+    table.fs tr.sub td { font-weight: 700; border-top: 1px solid var(--mud-palette-text-secondary); }
+    table.fs tr.carry td { font-style: italic; background: color-mix(in srgb, var(--mud-palette-info) 8%, transparent); }
+    table.fs tr.grand td { font-weight: 800; background: color-mix(in srgb, var(--mud-palette-primary) 16%, transparent); border-top: 2px solid var(--mud-palette-primary); }
+    .fs-print-title { display: none; }
+    @@media (max-width: 1099px) { .fs-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 599px) { .fs-filters, .fs-kpis { grid-template-columns: minmax(0, 1fr); } }
+    @@media print {
+        .fs-noprint, .mud-appbar, .mud-drawer, nav, .mud-tabs-tabbar { display: none !important; }
+        .fs-print-title { display: block; margin-bottom: 8px; }
+        .fs-wrap { overflow: visible; }
+        table.fs thead th { position: static; }
+    }
+</style>

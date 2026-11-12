@@ -4839,4 +4839,28 @@
   <data name="CS_Count" xml:space="preserve"><value>{0} Kategorien</value></data>
   <data name="CS_KeysHint" xml:space="preserve"><value>Pfeiltasten zum Wechseln, Enter oder Doppelklick zum Auswählen</value></data>
   <data name="CS_FieldHint" xml:space="preserve"><value>Feld anklicken oder F9 zum Suchen; Pfeil für die Liste</value></data>
+  <data name="ISTitle" xml:space="preserve"><value>Gewinn- und Verlustrechnung</value></data>
+  <data name="ISSub" xml:space="preserve"><value>Erträge, Aufwendungen und Reingewinn oder -verlust der Konten mit Saldo in der gewählten Periode, Filiale und Währung, wie im Desktop berechnet</value></data>
+  <data name="ISRevenueTotal" xml:space="preserve"><value>Summe Erträge</value></data>
+  <data name="ISExpenseTotal" xml:space="preserve"><value>Summe Aufwendungen</value></data>
+  <data name="ISNetProfit" xml:space="preserve"><value>Reingewinn</value></data>
+  <data name="ISNetLoss" xml:space="preserve"><value>Reinverlust</value></data>
+  <data name="FSFirstBalanceHint" xml:space="preserve"><value>Nur Ansicht: Der Desktop baut vor jeder Anzeige die Eröffnungssalden neu auf; hier werden die Salden unverändert gelesen (wie bei der Saldenliste). Weicht ein Wert ab, öffnen Sie die Maske einmal im Desktop und zeigen Sie dann erneut an</value></data>
+  <data name="PLTitle" xml:space="preserve"><value>Abschlusskonten: Betrieb, Handel, Gewinn und Verlust</value></data>
+  <data name="PLSub" xml:space="preserve"><value>„Anzeigen“ berechnet alle drei: Das Betriebsergebnis geht ins Handelskonto, der Rohgewinn in die GuV und der Reingewinn in die Bilanz</value></data>
+  <data name="PLTabOperating" xml:space="preserve"><value>Betriebskonto</value></data>
+  <data name="PLTabTrading" xml:space="preserve"><value>Handelskonto</value></data>
+  <data name="PLTabProfitLoss" xml:space="preserve"><value>Gewinn- und Verlustkonto</value></data>
+  <data name="PLPressShow" xml:space="preserve"><value>Periode, Filiale und Währung wählen, dann „Anzeigen“ drücken</value></data>
+  <data name="PLNoAccounts" xml:space="preserve"><value>Keine Konten dieser Art in der gewählten Periode; nur Summen und Überträge werden angezeigt</value></data>
+  <data name="PLTotal" xml:space="preserve"><value>Summe</value></data>
+  <data name="PLCarryOpToTrading" xml:space="preserve"><value>Betriebskosten ins Handelskonto übertragen</value></data>
+  <data name="PLCarryFromOp" xml:space="preserve"><value>Betriebskosten — aus dem Betriebskonto übertragen</value></data>
+  <data name="PLCarryFromTrading" xml:space="preserve"><value>Aus dem Handelskonto übertragen</value></data>
+  <data name="PLGrossLossToPL" xml:space="preserve"><value>Rohverlust in die GuV übertragen</value></data>
+  <data name="PLGrossProfitToPL" xml:space="preserve"><value>Rohgewinn in die GuV übertragen</value></data>
+  <data name="PLToPL" xml:space="preserve"><value>In die GuV übertragen</value></data>
+  <data name="PLNetLossToBS" xml:space="preserve"><value>Periodenverlust in die Bilanz übertragen</value></data>
+  <data name="PLNetProfitToBS" xml:space="preserve"><value>Periodengewinn in die Bilanz übertragen</value></data>
+  <data name="PLToBS" xml:space="preserve"><value>In die Bilanz übertragen</value></data>
 </root>

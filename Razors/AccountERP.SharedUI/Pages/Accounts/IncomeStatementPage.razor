@@ -1,0 +1,201 @@
+@* 🟢 «قائمة الدخل» (بدل Incoming_StatementByDate، خطة final-accounts-razor-plan.md م4).
+   الحساب: FinalAccountsService.GetIncomeStatement ⇒ Mezan_MorgaaCLS.Get_Mezan_Morgaa_ByPeiodNew ثم Incoming_StatementCLS.Get_Incoming_Statement بلا تعديل
+   (حسابات التشغيل والمتاجرة والأرباح والخسائر ذات الرصيد، ومجموع كل مجموعة، ثم إجمالى الإيرادات والمصروفات وصافى الربح/الخسارة).
+   الديسكتوب يستدعى UpdateFirstBalance قبل كل عرض (يعيد كتابة Account_Entry_Master_Balance): لا يُستدعى هنا، نفس قرار ميزان المراجعة.
+   الطباعة بـ window.print مع CSS للطباعة بدل IncomeStatementFrm_RPT. التصميم بنظام inv-* المشترك (ui-ux-pro-max). *@
+@page "/accounts/final/income-statement"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.BusinessLibShared.GeneralLedger
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject IJSRuntime JS
+@implements IDisposable
+
+<PageTitle>@Tr("ISTitle")</PageTitle>
+
+<InvoiceStyles />
+<FinalStatementStyles />
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-card fs-head fs-noprint">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.QueryStats" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("ISTitle")</h1>
+            <div class="sub">@Tr("ISSub")</div>
+        </div>
+    </div>
+
+    <div class="inv-card fs-gap fs-noprint">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.FilterList" />@Tr("SOFiltersTitle")</h2>
+        <div class="fs-filters">
+            <MudSelect T="long" Value="_periodId" ValueChanged="OnPeriod" Label="@Tr("FAPeriod")" Variant="Variant.Outlined" ToStringFunc="@(v => PeriodText(v))">
+                @foreach (var p in _periods)
+                {
+                    <MudSelectItem T="long" Value="@p.Id">@PeriodText(p.Id)</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="long" Value="_branch" ValueChanged="@(v => { _branch = v; Reset(); })" Label="@Tr("FABranch")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => _branches.FirstOrDefault(b => b.Id == v)?.Name ?? "")">
+                @foreach (var b in _branches)
+                {
+                    <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="long" Value="_currency" ValueChanged="@(v => { _currency = v; Reset(); })" Label="@Tr("FACurrency")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => _currencies.FirstOrDefault(c => c.Id == v)?.Name ?? "")">
+                @foreach (var c in _currencies)
+                {
+                    <MudSelectItem T="long" Value="@c.Id">@c.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField T="string" @bind-Value="_search" Immediate="true" Label="@Tr("TBSearch")" Variant="Variant.Outlined"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+            <MudDatePicker T="DateTime?" Date="_from" DateChanged="@(d => { _from = d; Reset(); })" Label="@Tr("FADateFrom")" Variant="Variant.Outlined"
+                           MinDate="@PeriodFrom" MaxDate="@PeriodTo" Editable="true" />
+            <MudDatePicker T="DateTime?" Date="_to" DateChanged="@(d => { _to = d; Reset(); })" Label="@Tr("FADateTo")" Variant="Variant.Outlined"
+                           MinDate="@PeriodFrom" MaxDate="@PeriodTo" Editable="true" />
+        </div>
+        <div class="fs-btns">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility"
+                       Disabled="@_loading" OnClick="ShowAsync">@Tr("FAShow")</MudButton>
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Print"
+                       Disabled="@(_loading || _result == null)" OnClick="PrintAsync">@Tr("FAPrint")</MudButton>
+            @if (_loading) { <MudProgressCircular Indeterminate="true" Size="Size.Small" /> }
+        </div>
+        <MudAlert Severity="Severity.Info" Dense="true" Class="fs-status" role="note">@Tr("FSFirstBalanceHint")</MudAlert>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="fs-gap" role="alert">@_error</MudAlert>
+    }
+
+    @if (_result != null)
+    {
+        <div class="fs-kpis fs-gap">
+            <div class="inv-card fs-kpi">
+                <div class="lbl">@Tr("ISRevenueTotal")</div>
+                <div class="val">@N(Revenue)</div>
+            </div>
+            <div class="inv-card fs-kpi">
+                <div class="lbl">@Tr("ISExpenseTotal")</div>
+                <div class="val">@N(Expenses)</div>
+            </div>
+            <div class="inv-card fs-kpi @(_result.NetProfit >= 0 ? "pos" : "neg")">
+                <div class="lbl">@Tr(_result.NetProfit >= 0 ? "ISNetProfit" : "ISNetLoss")</div>
+                <div class="val">@N(Math.Abs(_result.NetProfit))</div>
+            </div>
+        </div>
+
+        <div class="inv-card fs-gap">
+            <div class="fs-print-title">
+                <strong>@Tr("ISTitle")</strong> — @PeriodText(_periodId) — @(_branches.FirstOrDefault(b => b.Id == _branch)?.Name) — @(_currencies.FirstOrDefault(c => c.Id == _currency)?.Name)
+                (@_from?.ToString("yyyy/MM/dd") → @_to?.ToString("yyyy/MM/dd"))
+            </div>
+            @if (_result.AccountCount == 0)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" role="status">@Tr("TBNoData")</MudAlert>
+            }
+            else
+            {
+                <FinalStatementTable Rows="_result.Rows" Search="@_search" />
+            }
+        </div>
+    }
+</div>
+</MudContainer>
+
+@code {
+    private readonly FinalAccountsService _svc = new();
+    private List<FinalAccountsService.PeriodRow> _periods = new();
+    private List<FinalAccountsService.Option> _branches = new(), _currencies = new();
+    private long _periodId, _branch, _currency = FinalAccountsService.EquivalentCurrencyId;
+    private DateTime? _from, _to;
+    private string _search = "";
+    private FinalAccountsService.IncomeStatementResult? _result;
+    private string? _error;
+    private bool _loading;
+
+    private DateTime? PeriodFrom => _periods.FirstOrDefault(p => p.Id == _periodId)?.DateFrom;
+    private DateTime? PeriodTo => _periods.FirstOrDefault(p => p.Id == _periodId)?.DateTo;
+    // من صفى الإجمالى اللذين يضيفهما المحرك (إجمالى الإيرادات فى الدائن، إجمالى المصروفات فى المدين)
+    private decimal Revenue => _result?.Rows.FirstOrDefault(r => r.LabelKey == "ISRevenueTotal")?.LastDa2n ?? 0;
+    private decimal Expenses => _result?.Rows.FirstOrDefault(r => r.LabelKey == "ISExpenseTotal")?.LastMadin ?? 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            var equivalent = Tr("TBEquivalent");
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                _periods = _svc.GetPeriods();
+                _branches = _svc.GetBranches();
+                _currencies = _svc.GetCurrencies(equivalent);
+            });
+            var today = DateTime.Today;
+            var cur = _periods.FirstOrDefault(p => p.DateFrom <= today && today <= p.DateTo) ?? _periods.LastOrDefault();
+            _periodId = cur?.Id ?? 0;
+            _from = cur?.DateFrom; _to = cur?.DateTo;
+            _branch = _branches.Any(b => b.Id == AccountModelsLib.Common.Branch_Id) ? AccountModelsLib.Common.Branch_Id : _branches.FirstOrDefault()?.Id ?? 0;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private void Reset() { _result = null; _error = null; }
+
+    private void OnPeriod(long id) { _periodId = id; _from = PeriodFrom; _to = PeriodTo; Reset(); }
+
+    private string PeriodText(long id)
+    {
+        var p = _periods.FirstOrDefault(x => x.Id == id);
+        return p == null ? "" : $"{(string.IsNullOrWhiteSpace(p.Name) ? "" : p.Name + "  ")}{p.DateFrom:yyyy/MM/dd} — {p.DateTo:yyyy/MM/dd}";
+    }
+
+    private async Task ShowAsync()
+    {
+        _error = null; _result = null;
+        var period = _periods.FirstOrDefault(p => p.Id == _periodId);
+        var bad = FinalAccountsService.ValidateRange(period!, _from ?? default, _to ?? default);
+        if (period == null || _from == null || _to == null || bad != null)
+        {
+            _error = Tr("FAErr" + (bad ?? "PeriodRequired"));
+            return;
+        }
+        _loading = true;
+        try
+        {
+            long branch = _branch, currency = _currency; DateTime from = _from.Value, to = _to.Value;
+            _result = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetIncomeStatement(period, branch, currency, from, to); });
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _loading = false; }
+    }
+
+    private async Task PrintAsync() => await JS.InvokeVoidAsync("window.print");
+
+    private static string N(decimal v) => v.ToString("N2", CultureInfo.InvariantCulture);
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}
