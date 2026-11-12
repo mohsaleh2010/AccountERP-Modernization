@@ -958,6 +958,11 @@ FROM            Money_Transaction_Box INNER JOIN
 WHERE     (Submain_Account_ID = " + Submain_Account_ID + ") AND (Year_Financial_Period_Id = " + Year_Financial_Period_Id + ") AND (Branch_Id = " + Branch_Id + ") AND (Account_Currency_ID = " + Account_Currency_ID + ")";
 
             DataTable dt = opp.return_DataTable(mysql);
+            if (dt.Rows.Count == 0)
+            {
+                // لا تكرار لمفتاح جدول الأرصدة (الحساب، الفترة، الفرع، Equivalent_Account_Currency_Id): إن وُجد صف بعملة المكافىء التى ستُضاف يُستعمل ويُعدَّل بدل إضافة صف ثانٍ
+                dt = opp.return_DataTable(@"SELECT  * FROM  Account_Entry_Master_Balance WHERE (Submain_Account_ID = " + Submain_Account_ID + ") AND (Year_Financial_Period_Id = " + Year_Financial_Period_Id + ") AND (Branch_Id = " + Branch_Id + ") AND (Equivalent_Account_Currency_Id = " + Common.Entry_Currency_Id + ")");
+            }
             if (dt.Rows.Count == 0)  //الحساب غير موجود فى جدول الاستاذ ويجب اضافتة
             {
                 mysql = "INSERT INTO Account_Entry_Master_Balance(Submain_Account_ID,SubAccount_Name, Year_Financial_Period_Id, Branch_Id,Account_Currency_Id,Equivalent_Account_Currency_Id, First_Balance, First_Balance_Madin, First_Balance_Da2n, Madin_Value, Da2n_Value, Balance, Balance_Madin, Balance_Da2n)";

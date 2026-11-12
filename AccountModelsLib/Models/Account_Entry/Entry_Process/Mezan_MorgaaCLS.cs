@@ -1014,71 +1014,13 @@ FROM            Account_Entry_Master_Balance INNER JOIN
                          (Id NOT IN
                              (SELECT        Submain_Account_ID
                                 FROM            Account_Entry_Master_Balance
-                                WHERE        (Year_Financial_Period_Id = " + Year_Financial_Period_Id + ") AND (Branch_Id = " + Branch_ID + "))) AND (Branch_ID = " + Branch_ID + ") OR  (Branch_ID = - 1)";
+                                WHERE        (Year_Financial_Period_Id = " + Year_Financial_Period_Id + ") AND (Branch_Id = " + Branch_ID + "))) AND ((Branch_ID = " + Branch_ID + ") OR  (Branch_ID = - 1))";
 
             //DataTable dt = opp.return_DataTable(mysql);
             opp.insert_me(mysql);
 
             mysql = "";
-            CurrencyFactorsCLS_ cc = new CurrencyFactorsCLS_();
-
-            // 1. جلب البيانات المتميزة من الجدول المؤقت مرة واحدة فقط خارج اللوب (لتجنب تكرار الـ Queries على الداتابيز)
-            var tempItems = opp.db.Account_Entry_Master_BalanceFirstAccount_Temp
-                .Select(x => new
-                {
-                    x.Submain_Account_ID,
-                    x.SubAccount_Name,
-                    x.Account_Currency_Id
-                })
-                .Distinct()
-                .ToList();// إن لم تكن البيانات موجودة لن ندخل في اللوب أصلاً
-            if (tempItems.Count > 0)
-            {
-                var newEntries = new List<Account_Entry_Master_Balance>();
-                bool generateIdManually = Common.Use_Auto_Identity_Column == 0;
-
-                // 1. Fetch all active currencies (using their Value column)
-                List<int> activeCurrencyValues = opp.db.Currency
-                    .AsNoTracking()
-                    .Where(c => c.Active == 1)
-                    .OrderBy(c => c.Value)
-                    .Select(c => c.Value)
-                    .ToList();
-
-                // 2. معالجة البيانات حسب العملات المتعددة في الـ Memory
-                //for (int equivalentCurrencyId = 0; equivalentCurrencyId < Common.Currency_Count; equivalentCurrencyId++)
-                //{
-                foreach (int equivalentCurrencyId in activeCurrencyValues)
-                {
-                    decimal factor = Common.RoundMe(cc.GetFactors(Common.Entry_Currency_Id, equivalentCurrencyId));
-
-                    foreach (var item in tempItems)
-                    {
-                        var entry = new Account_Entry_Master_Balance
-                        {
-                            Submain_Account_ID = item.Submain_Account_ID,
-                            SubAccount_Name = item.SubAccount_Name,
-                            Account_Currency_Id = item.Account_Currency_Id,
-                            Year_Financial_Period_Id = Year_Financial_Period_Id,
-                            Branch_Id = Branch_ID,
-                            Equivalent_Account_Currency_Id = equivalentCurrencyId,
-                            Factor = factor
-                        };
-
-                        // إسناد الـ ID يدويًا فقط في حال عدم استخدام Auto Identity
-                        if (generateIdManually)
-                        {
-                            entry.Id = CallSnowflakeIdGenerate.GenerateNewId();
-                        }
-
-                        newEntries.Add(entry);
-                    }
-                }
-
-                // 3. إدراج جميع السجلات والحفظ دفعة واحدة (Bulk Insert) في استعلام واحد للـ Database
-                opp.db.Account_Entry_Master_Balance.AddRange(newEntries);
-                opp.db.SaveChanges();
-            }
+            AddMissingZeroBalanceRows(ref opp, Branch_ID, Year_Financial_Period_Id);
 
             //for (long Equivalent_Account_Currency_Id = 0; Equivalent_Account_Currency_Id < Common.Currency_Count; Equivalent_Account_Currency_Id++)
             //{
@@ -1091,6 +1033,63 @@ FROM            Account_Entry_Master_Balance INNER JOIN
 
             //}
 
+        }
+
+        /// <summary>
+        /// يضيف صفوف رصيد صفرية للحسابات الجديدة (من Account_Entry_Master_BalanceFirstAccount_Temp) لكل عملة فعالة،
+        /// ولا يضيف أبداً صفاً لمفتاح موجود: (الحساب، الفترة، الفرع، Equivalent_Account_Currency_Id) صف واحد فقط، والموجود يُترك ليُعدَّل بالحفظ.
+        /// كان Set_NewAccountInFirstBalanceZero يكرر الحسابات المشتركة (Branch_ID = -1) مع كل فتح لشاشة أرصدة أول المدة
+        /// لأن «OR (Branch_ID = -1)» بلا أقواس كان يتخطى شرط «ليس له صف» (311 حساباً × 10 مرات فى الفترة 5 بقاعدة التطوير). الصفوف القديمة لا تُمس.
+        /// </summary>
+        void AddMissingZeroBalanceRows(ref operations opp, long Branch_ID, long Year_Financial_Period_Id)
+        {
+            CurrencyFactorsCLS_ cc = new CurrencyFactorsCLS_();
+            var tempItems = opp.db.Account_Entry_Master_BalanceFirstAccount_Temp
+                .Select(x => new { x.Submain_Account_ID, x.SubAccount_Name, x.Account_Currency_Id })
+                .Distinct()
+                .ToList();
+            if (tempItems.Count == 0) return;
+
+            // المفاتيح الموجودة للفترة والفرع مرة واحدة (بدل استعلام لكل حساب وعملة)، وتُحدَّث أثناء الإضافة فلا يتكرر حساب ظهر مرتين فى المؤقت
+            var existing = new HashSet<(long, long)>(opp.db.Account_Entry_Master_Balance.AsNoTracking()
+                .Where(a => a.Year_Financial_Period_Id == Year_Financial_Period_Id && a.Branch_Id == Branch_ID)
+                .Select(a => new { a.Submain_Account_ID, a.Equivalent_Account_Currency_Id })
+                .ToList()
+                .Select(a => (a.Submain_Account_ID ?? 0, a.Equivalent_Account_Currency_Id ?? -1)));
+
+            List<int> activeCurrencyValues = opp.db.Currency.AsNoTracking()
+                .Where(c => c.Active == 1).OrderBy(c => c.Value).Select(c => c.Value).ToList();
+
+            var newEntries = new List<Account_Entry_Master_Balance>();
+            bool generateIdManually = Common.Use_Auto_Identity_Column == 0;
+            foreach (int equivalentCurrencyId in activeCurrencyValues)
+            {
+                decimal factor = Common.RoundMe(cc.GetFactors(Common.Entry_Currency_Id, equivalentCurrencyId));
+                foreach (var item in tempItems)
+                {
+                    if (item.Submain_Account_ID == null) continue;
+                    if (!existing.Add((item.Submain_Account_ID.Value, equivalentCurrencyId))) continue; // موجود ⇒ لا إضافة
+                    var entry = new Account_Entry_Master_Balance
+                    {
+                        Submain_Account_ID = item.Submain_Account_ID,
+                        SubAccount_Name = item.SubAccount_Name,
+                        Account_Currency_Id = item.Account_Currency_Id,
+                        Year_Financial_Period_Id = Year_Financial_Period_Id,
+                        Branch_Id = Branch_ID,
+                        Equivalent_Account_Currency_Id = equivalentCurrencyId,
+                        Factor = factor,
+                        First_Balance = 0m, Equivalent_First_Balance = 0m, First_Balance_Madin = 0m, First_Balance_Da2n = 0m,
+                        Madin_Value = 0m, Da2n_Value = 0m, Balance = 0m, Balance_Madin = 0m, Balance_Da2n = 0m,
+                        Equivalent_First_Balance_Madin = 0m, Equivalent_First_Balance_Da2n = 0m, Equivalent_Madin_Value = 0m,
+                        Equivalent_Da2n_Value = 0m, Equivalent_Balance_Madin = 0m, Equivalent_Balance_Da2n = 0m
+                    };
+                    if (generateIdManually) entry.Id = CallSnowflakeIdGenerate.GenerateNewId();
+                    newEntries.Add(entry);
+                }
+            }
+            if (newEntries.Count == 0) return;
+            opp.db.Account_Entry_Master_Balance.AddRange(newEntries);
+            opp.db.SaveChanges();
         }
 
         public void Check_NewAccountInFirstBalanceZero(long Branch_ID, long Year_Financial_Period_Id)
@@ -1121,89 +1120,7 @@ FROM            Account_Entry_Master_Balance INNER JOIN
             opp.insert_me(mysql);
 
             mysql = "";
-            CurrencyFactorsCLS_ cc = new CurrencyFactorsCLS_();
-
-            // 1. جلب البيانات المتميزة من الجدول المؤقت مرة واحدة فقط خارج اللوب (لتجنب تكرار الـ Queries على الداتابيز)
-            var tempItems = opp.db.Account_Entry_Master_BalanceFirstAccount_Temp
-                .Select(x => new
-                {
-                    x.Submain_Account_ID,
-                    x.SubAccount_Name,
-                    x.Account_Currency_Id
-
-                })
-                .Distinct()
-                .ToList();// إن لم تكن البيانات موجودة لن ندخل في اللوب أصلاً
-            if (tempItems.Count > 0)
-            {
-                var newEntries = new List<Account_Entry_Master_Balance>();
-                bool generateIdManually = Common.Use_Auto_Identity_Column == 0;
-
-                // 1. Fetch all active currencies (using their Value column)
-                List<int> activeCurrencyValues = opp.db.Currency
-                    .AsNoTracking()
-                    .Where(c => c.Active == 1)
-                    .OrderBy(c => c.Value)
-                    .Select(c => c.Value)
-                    .ToList();
-
-                // 2. معالجة البيانات حسب العملات المتعددة في الـ Memory
-                //for (int equivalentCurrencyId = 0; equivalentCurrencyId < Common.Currency_Count; equivalentCurrencyId++)
-                //{
-                foreach (int equivalentCurrencyId in activeCurrencyValues)
-                {
-                    decimal factor = Common.RoundMe(cc.GetFactors(Common.Entry_Currency_Id, equivalentCurrencyId));
-
-                    foreach (var item in tempItems)
-                    {
-                        var aemb = opp.db.Account_Entry_Master_Balance.AsNoTracking().Where(a => a.Submain_Account_ID == item.Submain_Account_ID & a.Equivalent_Account_Currency_Id == equivalentCurrencyId & a.Branch_Id == Branch_ID & a.Year_Financial_Period_Id == Year_Financial_Period_Id).FirstOrDefault();
-                        if (aemb != null)
-                        {
-                            continue;
-                        }
-                        var entry = new Account_Entry_Master_Balance
-                        {
-                            Submain_Account_ID = item.Submain_Account_ID,
-                            SubAccount_Name = item.SubAccount_Name,
-                            Account_Currency_Id = item.Account_Currency_Id,
-                            Year_Financial_Period_Id = Year_Financial_Period_Id,
-                            Branch_Id = Branch_ID,
-                            Equivalent_Account_Currency_Id = equivalentCurrencyId,
-                            Factor = factor,
-
-                            // Decimal Fields Initialized to 0
-                            First_Balance = 0m,
-                            Equivalent_First_Balance = 0m,
-                            First_Balance_Madin = 0m,
-                            First_Balance_Da2n = 0m,
-                            Madin_Value = 0m,
-                            Da2n_Value = 0m,
-                            Balance = 0m,
-                            Balance_Madin = 0m,
-                            Balance_Da2n = 0m,
-                            Equivalent_First_Balance_Madin = 0m,
-                            Equivalent_First_Balance_Da2n = 0m,
-                            Equivalent_Madin_Value = 0m,
-                            Equivalent_Da2n_Value = 0m,
-                            Equivalent_Balance_Madin = 0m,
-                            Equivalent_Balance_Da2n = 0m
-
-                        };
-
-                        // إسناد الـ ID يدويًا فقط في حال عدم استخدام Auto Identity
-                        if (generateIdManually)
-                        {
-                            entry.Id = CallSnowflakeIdGenerate.GenerateNewId();
-                        }
-
-                        newEntries.Add(entry);
-                    }
-                }
-
-                // 3. إدراج جميع السجلات والحفظ دفعة واحدة (Bulk Insert) في استعلام واحد للـ Database
-                opp.db.Account_Entry_Master_Balance.AddRange(newEntries);
-                opp.db.SaveChanges();
-            }
+            AddMissingZeroBalanceRows(ref opp, Branch_ID, Year_Financial_Period_Id);
 
             //for (long Equivalent_Account_Currency_Id = 0; Equivalent_Account_Currency_Id < Common.Currency_Count; Equivalent_Account_Currency_Id++)
             //{
@@ -1285,7 +1202,7 @@ WHERE        (Cost_Center_Tree.Id NOT IN
                          (SubAccount_Id NOT IN
                              (SELECT        Submain_Account_ID
                                 FROM            Account_Entry_Master_Balance
-                                WHERE        (Year_Financial_Period_Id = " + Year_Financial_Period_Id + ") AND (Branch_Id = " + Branch_Id + "))) AND (Branch_ID = " + Branch_Id + ") OR  (Branch_ID = - 1)";
+                                WHERE        (Year_Financial_Period_Id = " + Year_Financial_Period_Id + ") AND (Branch_Id = " + Branch_Id + "))) AND ((Branch_ID = " + Branch_Id + ") OR  (Branch_ID = - 1))";
 
 
             DataTable dt = opp.return_DataTable(mysql);
