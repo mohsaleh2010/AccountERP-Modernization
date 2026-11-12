@@ -677,10 +677,14 @@
   <data name="TBSubTotal" xml:space="preserve"><value>Total</value></data>
   <data name="TBTotal" xml:space="preserve"><value>Total général</value></data>
   <data name="TBNoData" xml:space="preserve"><value>Aucune donnée pour la période, l'agence et la devise choisies</value></data>
-  <data name="TBBalanced" xml:space="preserve"><value>Équilibrée : le total des mouvements débit égale celui du crédit</value></data>
-  <data name="TBUnbalanced" xml:space="preserve"><value>Non équilibrée : écart {0}</value></data>
+  <data name="TBBalanced" xml:space="preserve"><value>Équilibrée : ouverture, mouvements et clôture — débit égal au crédit pour les trois</value></data>
+  <data name="TBUnbalanced" xml:space="preserve"><value>Non équilibrée : {0}</value></data>
   <data name="TBEquivalent" xml:space="preserve"><value>Contre-valeur</value></data>
   <data name="TBWritesHint" xml:space="preserve"><value>Consultation seule : « reporter le solde de clôture » et « mettre à jour le solde d'ouverture » réécrivent les soldes et restent pour l'instant sur le poste de bureau.</value></data>
+  <data name="TBEngineHint" xml:space="preserve"><value>Les soldes sont calculés directement à partir des écritures validées (avec numéro) jusqu'à la fin du jour « au » ; la table des soldes d'ouverture ne fournit que l'ouverture, et tout compte mouvementé apparaît même sans ligne d'ouverture.</value></data>
+  <data name="TBPairClosing" xml:space="preserve"><value>clôture (écart {0})</value></data>
+  <data name="TBPairMovement" xml:space="preserve"><value>mouvements (écart {0})</value></data>
+  <data name="TBPairOpening" xml:space="preserve"><value>ouverture (écart {0})</value></data>
   <data name="LGTitleRange" xml:space="preserve"><value>Grand livre auxiliaire sur période</value></data>
   <data name="LGTitleFiscal" xml:space="preserve"><value>Grand livre auxiliaire par période fiscale</value></data>
   <data name="LGSubRange" xml:space="preserve"><value>Mouvements d'un compte entre deux dates libres, solde d'ouverture reporté, avec le moteur du poste de bureau</value></data>

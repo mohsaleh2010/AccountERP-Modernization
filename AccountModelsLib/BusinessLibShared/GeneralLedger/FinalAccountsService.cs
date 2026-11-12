@@ -13,6 +13,8 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
     /// المحرك يفرّغ ويملأ جدولين مؤقتين عالميين (Account_Entry_Master_Balance_MezanTemp / ..._TransactionTemp) فى كل عرض،
     /// لذلك كل استدعاء له يمر من قفل واحد على مستوى العملية حتى لا يفسد مستخدمان نتائج بعضهما.
     /// القفل لا يحمى من شاشة ديسكتوب مفتوحة بالتوازى (موثَّق فى الخطة).
+    /// ميزان المراجعة انتقل (ف3 من financial-statements-review-plan.md) إلى محرك القراءة LedgerBalanceEngine بلا جداول مؤقتة؛
+    /// الدخل والأرباح والخسائر والمركز المالى تنتقل إليه فى ف4.
     /// </summary>
     public class FinalAccountsService
     {
@@ -257,6 +259,12 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
             public List<TrialBalanceGroup> Groups { get; set; } = new();
             public TrialBalanceRow Total { get; set; } = new();
             public int RowCount => Groups.Sum(g => g.Rows.Count);
+            /// <summary>مجاميع كل الحسابات قبل مرشح العرض، لفحوص الاتزان الثلاثة (أ-10): المرشح قد يخفى حسابات تؤثر فى المجاميع.</summary>
+            public TrialBalanceRow CheckTotal { get; set; } = new();
+            public decimal OpeningDifference => CheckTotal.FirstMadin - CheckTotal.FirstDa2n;
+            public decimal MovementDifference => CheckTotal.Import - CheckTotal.Export;
+            public decimal ClosingDifference => CheckTotal.LastMadin - CheckTotal.LastDa2n;
+            public bool IsBalanced => Math.Abs(OpeningDifference) < 0.005m && Math.Abs(MovementDifference) < 0.005m && Math.Abs(ClosingDifference) < 0.005m;
         }
 
         /// <summary>نفس تحققات ValidateDate فى الديسكتوب: التاريخان داخل الفترة المالية والنهاية لا تسبق البداية. يعيد رسالة الخطأ أو null.</summary>
@@ -270,27 +278,21 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
         }
 
         /// <summary>
-        /// يستدعى المحرك بنفس معاملات الديسكتوب: Is_To_Show_Prev = (بداية البحث بعد بداية الفترة)، وبقية العلامات False/0.
-        /// المحرك لا يقبل فواصل ثابتة للمهلة؛ أى خطأ SQL يعود فى Msg ويُرمى كاستثناء.
+        /// ميزان المراجعة على محرك القراءة LedgerBalanceEngine (ف3): بلا جداول مؤقتة ولا قفل.
+        /// الافتتاحى = المخزَّن + حركة الفترة قبل «من» (يعادل Is_To_Show_Prev فى الديسكتوب)، والحركة من القيود المعتمدة بحدود نصف مفتوحة،
+        /// ويظهر كل حساب له حركة حتى لو لم يكن له صف فى Account_Entry_Master_Balance. الأرقام قد تختلف عن ديسكتوب لم يُحدَّث افتتاحيه (الويب أصح).
         /// </summary>
         public TrialBalanceResult GetTrialBalance(PeriodRow period, long branchId, long currencyId, DateTime from, DateTime to, BalanceFilter filter)
         {
             var err = ValidateRange(period, from, to);
             if (err != null) throw new ArgumentException(err);
+            if (branchId <= 0) throw new ArgumentException("BranchRequired");
 
-            DataTable dt;
-            EngineLock.Wait();
-            try
+            var balances = new LedgerBalanceEngine(_newOpp).GetBalances(new LedgerBalanceEngine.Query
             {
-                int excp = 0; string msg = "";
-                bool showPrev = from.Date > period.DateFrom.Date;
-                dt = new Mezan_MorgaaCLS().Get_Mezan_Morgaa_ByPeiodNew(ref excp, ref msg, showPrev, (int)filter, branchId, from, to,
-                    0, currencyId, period.Id, false, false, period.DateFrom);
-                if (!string.IsNullOrEmpty(msg)) throw new InvalidOperationException(msg);
-            }
-            finally { EngineLock.Release(); }
-
-            return BuildTrialBalance(dt);
+                PeriodId = period.Id, PeriodFrom = period.DateFrom, From = from, To = to, BranchId = branchId, CurrencyId = currencyId,
+            });
+            return BuildTrialBalance(balances, filter);
         }
 
         // ---------------- قائمة الدخل والتشغيل/المتاجرة/الأرباح والخسائر (م4) ----------------
@@ -655,29 +657,36 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
         private static string S(DataRow r, string col) =>
             r.Table.Columns.Contains(col) && r[col] != DBNull.Value ? r[col].ToString()?.Trim() ?? "" : "";
 
-        internal static TrialBalanceResult BuildTrialBalance(DataTable dt)
+        /// <summary>
+        /// دالة نقية: أرصدة المحرك ⇒ صفوف الميزان بأعمدته القديمة (الافتتاحى والحركة الصافية والختامى مقسومة مدين/دائن).
+        /// المرشح كما فى الديسكتوب: «لها رصيد» = ختامى ≠ 0، «لها حركات» = مدين المدى + دائنه ≠ 0. المجموعات بالحساب الأب بترتيب الظهور.
+        /// فحوص الاتزان على كل الحسابات قبل المرشح.
+        /// </summary>
+        public static TrialBalanceResult BuildTrialBalance(IEnumerable<LedgerBalanceEngine.AccountBalance> balances, BalanceFilter filter)
         {
             var result = new TrialBalanceResult();
             TrialBalanceGroup group = null;
-            foreach (DataRow r in dt.Rows)
+            foreach (var b in balances)
             {
+                var (fm, fd) = LedgerBalanceEngine.Split(b.Opening);
+                var (tm, td) = LedgerBalanceEngine.Split(b.Movement);
+                var (lm, ld) = LedgerBalanceEngine.Split(b.Closing);
                 var row = new TrialBalanceRow
                 {
-                    AccountId = r.Table.Columns.Contains("Submain_Account_ID") && r["Submain_Account_ID"] != DBNull.Value ? Convert.ToInt64(r["Submain_Account_ID"]) : 0,
-                    Code = S(r, "Account_Code") != "" ? S(r, "Account_Code") : S(r, "SubAccount_NO"),
-                    AccountName = S(r, "Account_Name"),
-                    MainCode = S(r, "MainCode"),
-                    MainAccountName = S(r, "MainAccount_Name"),
-                    FirstMadin = D(r, "Final_Fist_Balance_Madin"),
-                    FirstDa2n = D(r, "Final_Fist_Balance_Da2n"),
-                    Import = D(r, "Final_Import_Value"),
-                    Export = D(r, "Final_Export_Value"),
-                    TransactionMadin = D(r, "Final_Transaction_Madin"),
-                    TransactionDa2n = D(r, "Final_Transaction_Da2n"),
-                    LastMadin = D(r, "Final_Last_Balance_Madin"),
-                    LastDa2n = D(r, "Final_Last_Balance_Da2n"),
+                    AccountId = b.AccountId,
+                    Code = b.Code,
+                    AccountName = b.AccountExists ? b.Name : "#" + b.AccountId,
+                    MainCode = b.ParentNumber,
+                    MainAccountName = b.ParentName,
+                    FirstMadin = fm, FirstDa2n = fd,
+                    Import = b.Debit, Export = b.Credit,
+                    TransactionMadin = tm, TransactionDa2n = td,
+                    LastMadin = lm, LastDa2n = ld,
                 };
-                // مجموعات الحساب الرئيسى (MainCode) بترتيب ظهورها كما يعيدها المحرك
+                Accumulate(result.CheckTotal, row);
+                if (filter == BalanceFilter.WithBalance && lm + ld == 0) continue;
+                if (filter == BalanceFilter.MovementOnly && row.Import + row.Export == 0) continue;
+                // مجموعات الحساب الرئيسى (MainCode) بترتيب الظهور
                 if (group == null || group.MainCode != row.MainCode || group.MainAccountName != row.MainAccountName)
                 {
                     group = new TrialBalanceGroup { MainCode = row.MainCode, MainAccountName = row.MainAccountName };

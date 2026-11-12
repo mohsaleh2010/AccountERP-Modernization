@@ -676,10 +676,14 @@
   <data name="TBSubTotal" xml:space="preserve"><value>Total</value></data>
   <data name="TBTotal" xml:space="preserve"><value>Grand total</value></data>
   <data name="TBNoData" xml:space="preserve"><value>No data for the selected period, branch and currency</value></data>
-  <data name="TBBalanced" xml:space="preserve"><value>Balanced: total debit movement equals total credit movement</value></data>
-  <data name="TBUnbalanced" xml:space="preserve"><value>Unbalanced: difference {0}</value></data>
+  <data name="TBBalanced" xml:space="preserve"><value>Balanced: opening, movement and closing — debit equals credit in all three</value></data>
+  <data name="TBUnbalanced" xml:space="preserve"><value>Unbalanced: {0}</value></data>
   <data name="TBEquivalent" xml:space="preserve"><value>Equivalent</value></data>
   <data name="TBWritesHint" xml:space="preserve"><value>View only: "carry closing balance to next period" and "update opening balance" rewrite balances and stay in the desktop for now.</value></data>
+  <data name="TBEngineHint" xml:space="preserve"><value>Balances are computed directly from posted entries (with an entry number) through the end of the "to" day; the opening-balance table supplies the opening only, and every account with movement appears even without an opening row.</value></data>
+  <data name="TBPairClosing" xml:space="preserve"><value>closing (difference {0})</value></data>
+  <data name="TBPairMovement" xml:space="preserve"><value>movement (difference {0})</value></data>
+  <data name="TBPairOpening" xml:space="preserve"><value>opening (difference {0})</value></data>
   <data name="LGTitleRange" xml:space="preserve"><value>Sub-ledger for a period</value></data>
   <data name="LGTitleFiscal" xml:space="preserve"><value>Sub-ledger by fiscal period</value></data>
   <data name="LGSubRange" xml:space="preserve"><value>Account movements between two free dates, with the opening balance carried from everything before, using the desktop engine</value></data>

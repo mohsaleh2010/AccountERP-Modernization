@@ -676,10 +676,14 @@
   <data name="TBSubTotal" xml:space="preserve"><value>مجموع</value></data>
   <data name="TBTotal" xml:space="preserve"><value>الإجمالى</value></data>
   <data name="TBNoData" xml:space="preserve"><value>لا توجد بيانات للفترة والفرع والعملة المختارة</value></data>
-  <data name="TBBalanced" xml:space="preserve"><value>الميزان متزن: مجموع الحركة المدينة يساوى الدائنة</value></data>
-  <data name="TBUnbalanced" xml:space="preserve"><value>الميزان غير متزن: الفرق {0}</value></data>
+  <data name="TBBalanced" xml:space="preserve"><value>الميزان متزن: الافتتاحى والحركة والختامى — المدين يساوى الدائن فى الثلاثة</value></data>
+  <data name="TBUnbalanced" xml:space="preserve"><value>الميزان غير متزن: {0}</value></data>
   <data name="TBEquivalent" xml:space="preserve"><value>بالمكافىء</value></data>
   <data name="TBWritesHint" xml:space="preserve"><value>عرض فقط: «ترحيل الرصيد الختامى للفترة التالية» و«تحديث رصيد أول المدة» تعيدان كتابة الأرصدة وتبقيان فى الديسكتوب حالياً.</value></data>
+  <data name="TBEngineHint" xml:space="preserve"><value>الأرصدة محسوبة مباشرة من القيود المعتمدة (لها رقم قيد) حتى نهاية يوم «إلى»، وجدول أرصدة أول المدة مصدر الافتتاحى فقط؛ كل حساب له حركة يظهر حتى لو لم يكن له رصيد أول مدة.</value></data>
+  <data name="TBPairClosing" xml:space="preserve"><value>الختامى (الفرق {0})</value></data>
+  <data name="TBPairMovement" xml:space="preserve"><value>الحركة (الفرق {0})</value></data>
+  <data name="TBPairOpening" xml:space="preserve"><value>الافتتاحى (الفرق {0})</value></data>
   <data name="LGTitleRange" xml:space="preserve"><value>الأستاذ المساعد عن فترة</value></data>
   <data name="LGTitleFiscal" xml:space="preserve"><value>الأستاذ المساعد بالفترة المالية</value></data>
   <data name="LGSubRange" xml:space="preserve"><value>حركة حساب بين تاريخين حرين، ورصيد أول المدة منقول من كل ما سبق، بنفس محرك الديسكتوب</value></data>

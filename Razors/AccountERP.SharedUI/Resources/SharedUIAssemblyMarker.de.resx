@@ -677,10 +677,14 @@
   <data name="TBSubTotal" xml:space="preserve"><value>Summe</value></data>
   <data name="TBTotal" xml:space="preserve"><value>Gesamtsumme</value></data>
   <data name="TBNoData" xml:space="preserve"><value>Keine Daten für die gewählte Periode, Filiale und Währung</value></data>
-  <data name="TBBalanced" xml:space="preserve"><value>Ausgeglichen: Soll- und Haben-Bewegung sind gleich</value></data>
-  <data name="TBUnbalanced" xml:space="preserve"><value>Nicht ausgeglichen: Differenz {0}</value></data>
+  <data name="TBBalanced" xml:space="preserve"><value>Ausgeglichen: Eröffnung, Bewegung und Schluss — Soll gleich Haben in allen drei</value></data>
+  <data name="TBUnbalanced" xml:space="preserve"><value>Nicht ausgeglichen: {0}</value></data>
   <data name="TBEquivalent" xml:space="preserve"><value>Gegenwert</value></data>
   <data name="TBWritesHint" xml:space="preserve"><value>Nur Ansicht: „Schlusssaldo in die nächste Periode übertragen“ und „Eröffnungssaldo aktualisieren“ schreiben Salden neu und bleiben vorerst im Desktop.</value></data>
+  <data name="TBEngineHint" xml:space="preserve"><value>Die Salden werden direkt aus gebuchten Belegen (mit Belegnummer) bis zum Ende des „Bis“-Tages berechnet; die Eröffnungssaldo-Tabelle liefert nur die Eröffnung, und jedes Konto mit Bewegung erscheint auch ohne Eröffnungszeile.</value></data>
+  <data name="TBPairClosing" xml:space="preserve"><value>Schluss (Differenz {0})</value></data>
+  <data name="TBPairMovement" xml:space="preserve"><value>Bewegung (Differenz {0})</value></data>
+  <data name="TBPairOpening" xml:space="preserve"><value>Eröffnung (Differenz {0})</value></data>
   <data name="LGTitleRange" xml:space="preserve"><value>Nebenbuch für einen Zeitraum</value></data>
   <data name="LGTitleFiscal" xml:space="preserve"><value>Nebenbuch nach Geschäftsperiode</value></data>
   <data name="LGSubRange" xml:space="preserve"><value>Kontobewegungen zwischen zwei freien Daten, Eröffnungssaldo aus allem Früheren, mit der Desktop-Logik</value></data>

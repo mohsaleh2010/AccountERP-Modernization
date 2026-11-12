@@ -1,6 +1,7 @@
 @* 🟢 «ميزان المراجعة» (بدل Mezan_Morgaa_ByPeriod وMezan_Morgaa_ByPeriodByAccountDeletePrevious وطباعتيهما RDLC): صفحة واحدة بوضعين.
    mode=totals: مجاميع الحركة ورصيد الفترة (Mezan_Morgaa_ByPeriod(false))؛ mode=closing: رصيد أول المدة + الحركة + الرصيد الختامى (النسخة الكاملة).
-   الحساب نفسه فى الاثنين: FinalAccountsService ⇒ Mezan_MorgaaCLS.Get_Mezan_Morgaa_ByPeiodNew بلا تعديل (ويمر من قفل لأن جداوله المؤقتة عالمية).
+   الحساب نفسه فى الاثنين: FinalAccountsService.GetTrialBalance ⇒ LedgerBalanceEngine (ف3 من financial-statements-review-plan.md): قراءة فقط من القيود
+   + الافتتاحى المخزَّن، بلا جداول مؤقتة ولا قفل؛ شريط الاتزان يفحص الافتتاحى والحركة والختامى.
    «ترحيل الرصيد الختامى» و«تحديث رصيد أول المدة» (صلاحيتا 317/318) لا تُنقلان هنا: تعيدان كتابة Account_Entry_Master_Balance وتنتظران قراراً (خطة final-accounts-razor-plan.md §3.4).
    الطباعة بـ window.print مع CSS للطباعة بدل تقرير RDLC. التصميم حسب ui-ux-pro-max ونظام inv-* المشترك. *@
 @page "/accounts/final/trial-balance"
@@ -104,7 +105,7 @@
                        Disabled="@(_loading || _result == null)" OnClick="PrintAsync">@Tr("FAPrint")</MudButton>
             @if (_loading) { <MudProgressCircular Indeterminate="true" Size="Size.Small" /> }
         </div>
-        <MudAlert Severity="Severity.Info" Dense="true" Class="tb-status" role="note">@Tr("TBWritesHint")</MudAlert>
+        <MudAlert Severity="Severity.Info" Dense="true" Class="tb-status" role="note">@Tr("TBEngineHint") @Tr("TBWritesHint")</MudAlert>
     </div>
 
     @if (!string.IsNullOrEmpty(_error))
@@ -206,8 +207,8 @@
                         </tbody>
                     </table>
                 </div>
-                <MudAlert Severity="@(Balanced ? Severity.Success : Severity.Warning)" Dense="true" Class="tb-status tb-noprint" role="status">
-                    @(Balanced ? Tr("TBBalanced") : Tr("TBUnbalanced", N(Math.Abs(_result.Total.Import - _result.Total.Export))))
+                <MudAlert Severity="@(_result.IsBalanced ? Severity.Success : Severity.Warning)" Dense="true" Class="tb-status tb-noprint" role="status">
+                    @(_result.IsBalanced ? Tr("TBBalanced") : Tr("TBUnbalanced", UnbalancedText))
                 </MudAlert>
             }
         </div>
@@ -234,8 +235,13 @@
     private int ColCount => Closing ? 8 : 6;
     private DateTime? PeriodFrom => _periods.FirstOrDefault(p => p.Id == _periodId)?.DateFrom;
     private DateTime? PeriodTo => _periods.FirstOrDefault(p => p.Id == _periodId)?.DateTo;
-    // مجموع الحركة المدينة = الدائنة فى ميزان سليم
-    private bool Balanced => _result != null && _result.Total.Import == _result.Total.Export;
+    // ثلاثة أزواج (أ-10): الافتتاحى والحركة والختامى، مدين = دائن، على كل الحسابات قبل المرشح
+    private string UnbalancedText => string.Join(" — ", new[]
+    {
+        (Key: "TBPairOpening", Diff: _result!.OpeningDifference),
+        (Key: "TBPairMovement", Diff: _result.MovementDifference),
+        (Key: "TBPairClosing", Diff: _result.ClosingDifference),
+    }.Where(p => Math.Abs(p.Diff) >= 0.005m).Select(p => Tr(p.Key, N(Math.Abs(p.Diff)))));
 
     // التصفية بالاسم تخفى الصفوف غير المطابقة مع إبقاء مجاميع المجموعة والإجمالى من النتيجة الكاملة (كما فى الديسكتوب: الفلتر على الشبكة فقط)
     private IEnumerable<FinalAccountsService.TrialBalanceGroup> VisibleGroups =>
@@ -302,6 +308,7 @@
             _error = Tr("FAErr" + (bad ?? "PeriodRequired"));
             return;
         }
+        if (_branch <= 0) { _error = Tr("FAErrBranchRequired"); return; }
         _loading = true;
         try
         {
