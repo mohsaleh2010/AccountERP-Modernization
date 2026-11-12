@@ -1,0 +1,74 @@
+@* قسم من قائمة المركز المالى (الأصول / الخصوم / حقوق الملكية): شجرة مسطّحة بإزاحة حسب العمق، الآباء بخط عريض، ثم إجمالى القسم.
+   الأرقام بطبيعة القسم؛ الرصيد العكسى يظهر بين قوسين. البحث يخفى الحسابات غير المطابقة ويُبقى الإجمالى وسطر صافى الربح. *@
+@using System.Globalization
+@using AccountModelsLib.BusinessLibShared.GeneralLedger
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+
+<div class="fs-wrap">
+    <table class="fs bs-table" aria-label="@Title">
+        <thead>
+            <tr class="bs-sec"><th colspan="3">@Title</th></tr>
+            <tr>
+                <th>@Tr("TBColCode")</th>
+                <th>@Tr("BSAccount")</th>
+                <th>@Tr("BSAmount")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{ var rows = Visible.ToList(); }
+            @if (rows.Count == 0)
+            {
+                <tr><td colspan="3" class="bs-empty">@Tr("TBNoData")</td></tr>
+            }
+            @foreach (var n in rows)
+            {
+                <tr class="@(n.IsProfit ? "carry" : n.IsLeaf ? "acc" : "bs-parent")">
+                    <td>@n.Code</td>
+                    <td class="name" style="padding-inline-start:@(10 + n.Depth * 20)px">@(n.IsProfit ? Tr(n.LabelKey) : n.Name)</td>
+                    <td class="num">@N(n.IsProfit ? Math.Abs(n.Amount) : n.Amount)</td>
+                </tr>
+            }
+            <tr class="grand">
+                <td></td>
+                <td class="name">@TotalLabel</td>
+                <td class="num">@N(Section.Total)</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public FinalAccountsService.BalanceSheetSection Section { get; set; } = new();
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string TotalLabel { get; set; } = "";
+    /// <summary>عمق العرض (0 = كل المستويات). الإجمالى محسوب دائماً من الشجرة كاملة.</summary>
+    [Parameter] public int Level { get; set; }
+    [Parameter] public bool ShowZero { get; set; }
+    [Parameter] public string Search { get; set; } = "";
+
+    private IEnumerable<FinalAccountsService.BalanceNode> Visible
+    {
+        get
+        {
+            var all = FinalAccountsService.Flatten(Section, Level, ShowZero);
+            if (string.IsNullOrWhiteSpace(Search)) return all;
+            var s = Search.Trim();
+            return all.Where(n => n.IsProfit || n.Name.Contains(s, StringComparison.OrdinalIgnoreCase) || n.Code.Contains(s, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    // الرصيد العكسى (سالب بطبيعة القسم) بين قوسين كالعرف المحاسبى.
+    private static string N(decimal v) => v < 0 ? "(" + (-v).ToString("N2", CultureInfo.InvariantCulture) + ")" : v.ToString("N2", CultureInfo.InvariantCulture);
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

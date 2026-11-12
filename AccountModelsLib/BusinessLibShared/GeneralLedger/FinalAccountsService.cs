@@ -452,6 +452,198 @@ namespace AccountModelsLib.BusinessLibShared.GeneralLedger
             return new ProfitLossResult { Operating = BuildStatement(op), Trading = BuildStatement(tr), ProfitLoss = BuildStatement(pl) };
         }
 
+        // ---------------- قائمة المركز المالى (م5) ----------------
+
+        /// <summary>عملة «المكافىء» كما تمررها Get_Account_BalanceFRM2 فى الديسكتوب (0 ثابتة، بلا اختيار عملة).</summary>
+        public const long BaseEquivalentCurrencyId = 0;
+
+        public enum BalanceSection { Assets = 1, Liabilities = 2, Equity = 3 }
+
+        public class BalanceNode
+        {
+            public long AccountId { get; set; }
+            public string Code { get; set; } = "";
+            public string Name { get; set; } = "";
+            /// <summary>مفتاح ترجمة لسطر صافى الربح/الخسارة الصناعى، أو فارغ.</summary>
+            public string LabelKey { get; set; } = "";
+            public int Depth { get; set; }
+            public bool IsProfit { get; set; }
+            /// <summary>الرصيد بطبيعة القسم: الأصول مدين صافى، الخصوم وحقوق الملكية دائن صافى (السالب رصيد عكسى).</summary>
+            public decimal Amount { get; set; }
+            public List<BalanceNode> Children { get; set; } = new();
+            public bool IsLeaf => Children.Count == 0;
+        }
+
+        public class BalanceSheetSection
+        {
+            public BalanceSection Section { get; set; }
+            public List<BalanceNode> Roots { get; set; } = new();
+            public decimal Total { get; set; }
+        }
+
+        public class BalanceSheetResult
+        {
+            public BalanceSheetSection Assets { get; set; } = new() { Section = BalanceSection.Assets };
+            public BalanceSheetSection Liabilities { get; set; } = new() { Section = BalanceSection.Liabilities };
+            public BalanceSheetSection Equity { get; set; } = new() { Section = BalanceSection.Equity };
+            /// <summary>صافى الربح من Get_ProfitFrom_Incoming_Statement (السالب خسارة)، داخل إجمالى حقوق الملكية.</summary>
+            public decimal NetProfit { get; set; }
+            public decimal TotalLiabilitiesAndEquity => Liabilities.Total + Equity.Total;
+            public decimal Difference => Assets.Total - TotalLiabilitiesAndEquity;
+            public bool IsBalanced => Math.Abs(Difference) < 0.005m;
+            /// <summary>حسابات ميزانية لها قيود مرحَّلة فى الفترة والفرع وليس لها صف فى أرصدة أول المدة (لن تظهر بلا UpdateFirstBalance).</summary>
+            public int MissingAccounts { get; set; }
+            public int AccountCount { get; set; }
+            public DateTime AsOf { get; set; }
+        }
+
+        /// <summary>
+        /// قائمة المركز المالى (بدل Get_Account_BalanceFRM2): يملأ المحرك الجدول المؤقت بنفس معاملات الديسكتوب (الفترة كاملة، العملة 0، كل الحسابات)
+        /// ثم تُقرأ حسابات الميزانية (Account_Follows = 4) بنفس شرط BalanceCLS، وصافى الربح من Get_ProfitFrom_Incoming_Statement — داخل القفل.
+        /// لا يُستدعى BalanceCLS.GetBalanceData_WithLevel (يفرّغ جدولاً عالمياً ثانياً وينفّذ ALTER TABLE ويكرر صفوف الأب ويجمع المدين+الدائن بالقيمة المطلقة
+        /// ويثبّت الحساب 3)؛ الشجرة تُبنى هنا بالصافى، والأقسام حسب Head_Main_Account لجذر الحساب. لا يُستدعى UpdateFirstBalance (الخطة §3.4).
+        /// </summary>
+        public BalanceSheetResult GetBalanceSheet(PeriodRow period, long branchId)
+        {
+            if (period == null) throw new ArgumentException("PeriodRequired");
+            if (branchId <= 0) throw new ArgumentException("BranchRequired");
+
+            DataTable leaves; decimal profit;
+            EngineLock.Wait();
+            try
+            {
+                int excp = 0; string msg = "";
+                new Mezan_MorgaaCLS().Get_Mezan_Morgaa_ByPeiodNew(ref excp, ref msg, false, 0, branchId, period.DateFrom, period.DateTo, 0,
+                    BaseEquivalentCurrencyId, period.Id, false, false, period.DateFrom);
+                if (!string.IsNullOrEmpty(msg)) throw new InvalidOperationException(msg);
+                leaves = _newOpp().return_DataTable(
+                    "SELECT s.Id, m.Final_Last_Balance_Madin, m.Final_Last_Balance_Da2n FROM Account_Entry_Master_Balance_MezanTemp m " +
+                    "INNER JOIN Submain_Account s ON s.Id = m.Submain_Account_ID " +
+                    "WHERE m.Year_Financial_Period_Id = " + period.Id + " AND m.Branch_Id = " + branchId +
+                    " AND s.Account_Follows = 4 AND m.Equivalent_Account_Currency_Id = " + BaseEquivalentCurrencyId);
+                profit = new Incoming_StatementCLS().Get_ProfitFrom_Incoming_Statement(branchId, period.Id, 1, BaseEquivalentCurrencyId);
+            }
+            finally { EngineLock.Release(); }
+
+            var accounts = _newOpp().return_DataTable(
+                "SELECT Id, Main_Account_Id, SubAccount_Name, Account_Code, SubAccount_NO, Head_Main_Account FROM Submain_Account");
+            var result = BuildBalanceSheet(accounts, leaves, profit);
+            result.AsOf = period.DateTo;
+
+            // تنبيه التغطية (قراءة فقط): حسابات ميزانية لها قيود مرحَّلة فى الفترة والفرع بلا صف فى Account_Entry_Master_Balance للعملة 0.
+            var miss = _newOpp().return_DataTable(
+                "SELECT COUNT(DISTINCT d.Submain_Account_ID) AS N FROM Account_Entry_Details d " +
+                "INNER JOIN Account_Entry_List l ON d.Account_Entry_List_ID = l.Id " +
+                "INNER JOIN Submain_Account s ON s.Id = d.Submain_Account_ID " +
+                "WHERE l.Entry_No IS NOT NULL AND s.Account_Follows = 4 AND l.Branch_Id_Entry = " + branchId +
+                " AND l.Entry_Date >= " + operations.Get_DateToInsert(period.DateFrom.Date) + " AND l.Entry_Date <= " + operations.Get_DateToInsert(period.DateTo.Date) +
+                " AND NOT EXISTS (SELECT 1 FROM Account_Entry_Master_Balance b WHERE b.Submain_Account_ID = d.Submain_Account_ID" +
+                " AND b.Year_Financial_Period_Id = " + period.Id + " AND b.Branch_Id = " + branchId + " AND b.Equivalent_Account_Currency_Id = " + BaseEquivalentCurrencyId + ")");
+            if (miss.Rows.Count > 0 && miss.Rows[0]["N"] != DBNull.Value) result.MissingAccounts = Convert.ToInt32(miss.Rows[0]["N"]);
+            return result;
+        }
+
+        /// <summary>
+        /// يبنى الشجرة من دليل الحسابات وأرصدة الحسابات الورقية: صافى الحساب = مدين − دائن، والأب = مجموع صافى أبنائه (صف واحد لكل حساب).
+        /// القسم = Head_Main_Account لجذر الحساب (Main_Account_Id = 0): 1 أصول، 2 خصوم، 3 حقوق ملكية؛ غير ذلك ⇒ أصول.
+        /// صافى الربح سطر أخير فى حقوق الملكية وداخل إجماليها.
+        /// </summary>
+        internal static BalanceSheetResult BuildBalanceSheet(DataTable accounts, DataTable leaves, decimal profit)
+        {
+            var info = new Dictionary<long, (long Parent, string Name, string Code, int Head)>();
+            foreach (DataRow r in accounts.Rows)
+            {
+                long id = Convert.ToInt64(r["Id"]);
+                long parent = r["Main_Account_Id"] == DBNull.Value ? 0 : Convert.ToInt64(r["Main_Account_Id"]);
+                int head = r["Head_Main_Account"] == DBNull.Value ? 0 : Convert.ToInt32(r["Head_Main_Account"]);
+                info[id] = (parent == id ? 0 : parent, S(r, "SubAccount_Name"), S(r, "Account_Code") != "" ? S(r, "Account_Code") : S(r, "SubAccount_NO"), head);
+            }
+
+            var net = new Dictionary<long, decimal>();
+            foreach (DataRow r in leaves.Rows)
+            {
+                long id = Convert.ToInt64(r["Id"]);
+                net[id] = (net.TryGetValue(id, out var v) ? v : 0m) + D(r, "Final_Last_Balance_Madin") - D(r, "Final_Last_Balance_Da2n");
+            }
+
+            var nodes = new Dictionary<long, BalanceNode>();
+            var roots = new List<BalanceNode>();
+            BalanceNode Node(long id)
+            {
+                if (nodes.TryGetValue(id, out var n)) return n;
+                info.TryGetValue(id, out var a);
+                n = new BalanceNode { AccountId = id, Name = a.Name ?? "", Code = a.Code ?? "" };
+                nodes[id] = n;
+                return n;
+            }
+
+            // كل حساب له رصيد يُربط بسلسلة آبائه حتى الجذر (مع حماية من الدورات).
+            foreach (var id in net.Keys)
+            {
+                var child = Node(id);
+                var seen = new HashSet<long> { id };
+                long cur = id;
+                while (true)
+                {
+                    long parent = info.TryGetValue(cur, out var a) ? a.Parent : 0;
+                    if (parent == 0 || !info.ContainsKey(parent) || !seen.Add(parent))
+                    {
+                        if (!roots.Contains(child)) roots.Add(child);
+                        break;
+                    }
+                    bool existed = nodes.ContainsKey(parent);
+                    var p = Node(parent);
+                    if (!p.Children.Contains(child)) p.Children.Add(child);
+                    if (existed) break; // باقى السلسلة مربوط سابقاً
+                    child = p; cur = parent;
+                }
+            }
+
+            decimal Sum(BalanceNode n, int depth)
+            {
+                n.Depth = depth;
+                n.Amount = n.Children.Count == 0 ? (net.TryGetValue(n.AccountId, out var v) ? v : 0m)
+                    : n.Children.Sum(c => Sum(c, depth + 1)) + (net.TryGetValue(n.AccountId, out var own) ? own : 0m);
+                return n.Amount;
+            }
+            void Flip(BalanceNode n) { n.Amount = -n.Amount; n.Children.ForEach(Flip); }
+            void Order(BalanceNode n) { n.Children = n.Children.OrderBy(c => c.Code).ThenBy(c => c.AccountId).ToList(); n.Children.ForEach(Order); }
+
+            var result = new BalanceSheetResult { NetProfit = profit, AccountCount = net.Count };
+            foreach (var root in roots.OrderBy(r => r.Code).ThenBy(r => r.AccountId))
+            {
+                Sum(root, 0);
+                Order(root);
+                int head = info.TryGetValue(root.AccountId, out var a) ? a.Head : 0;
+                var section = head == 2 ? result.Liabilities : head == 3 ? result.Equity : result.Assets;
+                if (section.Section != BalanceSection.Assets) Flip(root);
+                section.Roots.Add(root);
+            }
+
+            result.Equity.Roots.Add(new BalanceNode
+            {
+                IsProfit = true, Depth = 0, Amount = profit,
+                LabelKey = profit >= 0 ? "BSNetProfit" : "BSNetLoss",
+            });
+            foreach (var s in new[] { result.Assets, result.Liabilities, result.Equity })
+                s.Total = s.Roots.Sum(r => r.Amount);
+            return result;
+        }
+
+        /// <summary>تسطيح القسم للعرض: حتى العمق المطلوب (0 = الكل)، ويُخفى الصفرى إلا إن طُلب (سطر صافى الربح يظهر دائماً).</summary>
+        public static IEnumerable<BalanceNode> Flatten(BalanceSheetSection s, int maxLevel, bool showZero)
+        {
+            IEnumerable<BalanceNode> Walk(BalanceNode n)
+            {
+                if (maxLevel > 0 && n.Depth + 1 > maxLevel) yield break;
+                if (!n.IsProfit && !showZero && Math.Abs(n.Amount) < 0.005m) yield break;
+                yield return n;
+                foreach (var c in n.Children)
+                    foreach (var x in Walk(c)) yield return x;
+            }
+            return s.Roots.SelectMany(Walk);
+        }
+
         private static decimal D(DataRow r, string col) =>
             r.Table.Columns.Contains(col) && r[col] != DBNull.Value ? Convert.ToDecimal(r[col]) : 0m;
 

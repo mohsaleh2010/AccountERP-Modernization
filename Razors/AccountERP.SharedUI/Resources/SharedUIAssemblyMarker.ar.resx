@@ -4861,4 +4861,28 @@
   <data name="PLNetLossToBS" xml:space="preserve"><value>صافى خسارة الفترة مرحَّل إلى الميزانية</value></data>
   <data name="PLNetProfitToBS" xml:space="preserve"><value>صافى ربح الفترة مرحَّل إلى الميزانية</value></data>
   <data name="PLToBS" xml:space="preserve"><value>مرحَّل إلى الميزانية</value></data>
+  <data name="BSTitle" xml:space="preserve"><value>قائمة المركز المالى</value></data>
+  <data name="BSSub" xml:space="preserve"><value>الأصول مقابل الخصوم وحقوق الملكية فى نهاية الفترة المالية، بالمكافىء بالعملة الأساسية، مع صافى ربح الفترة وفحص الاتزان</value></data>
+  <data name="BSTitleAsOf" xml:space="preserve"><value>قائمة المركز المالى فى {0}</value></data>
+  <data name="BSAssets" xml:space="preserve"><value>الأصول</value></data>
+  <data name="BSLiabilities" xml:space="preserve"><value>الخصوم</value></data>
+  <data name="BSEquity" xml:space="preserve"><value>حقوق الملكية</value></data>
+  <data name="BSTotalAssets" xml:space="preserve"><value>إجمالى الأصول</value></data>
+  <data name="BSTotalLiabilities" xml:space="preserve"><value>إجمالى الخصوم</value></data>
+  <data name="BSTotalEquity" xml:space="preserve"><value>إجمالى حقوق الملكية</value></data>
+  <data name="BSTotalLiabEquity" xml:space="preserve"><value>إجمالى الخصوم وحقوق الملكية</value></data>
+  <data name="BSNetProfit" xml:space="preserve"><value>صافى ربح الفترة</value></data>
+  <data name="BSNetLoss" xml:space="preserve"><value>صافى خسارة الفترة</value></data>
+  <data name="BSLevel" xml:space="preserve"><value>مستوى العرض</value></data>
+  <data name="BSAllLevels" xml:space="preserve"><value>كل المستويات</value></data>
+  <data name="BSShowZero" xml:space="preserve"><value>إظهار الحسابات الصفرية</value></data>
+  <data name="BSBalanced" xml:space="preserve"><value>القائمة متزنة</value></data>
+  <data name="BSNotBalanced" xml:space="preserve"><value>القائمة غير متزنة — الفرق {0}</value></data>
+  <data name="BSDifference" xml:space="preserve"><value>الفرق</value></data>
+  <data name="BSMissingAccounts" xml:space="preserve"><value>يوجد {0} حساب له قيود فى هذه الفترة وليس له رصيد أول مدة مسجَّل، فلن يظهر هنا؛ افتح «قائمة المركز المالى» أو «تحديث رصيد أول المدة» فى الديسكتوب مرة ثم أعد العرض</value></data>
+  <data name="BSAccount" xml:space="preserve"><value>الحساب</value></data>
+  <data name="BSAmount" xml:space="preserve"><value>الرصيد</value></data>
+  <data name="BSChooseHint" xml:space="preserve"><value>اختر الفترة والفرع ثم اضغط «عرض»</value></data>
+  <data name="FAErrBranchRequired" xml:space="preserve"><value>يجب اختيار الفرع</value></data>
+  <data name="BSCurrencyNote" xml:space="preserve"><value>العملة: بالمكافىء بالعملة الأساسية (كالديسكتوب)</value></data>
 </root>

@@ -1,0 +1,239 @@
+@* 🟢 «قائمة المركز المالى» (بدل Get_Account_BalanceFRM2، خطة final-accounts-razor-plan.md م5).
+   الحساب: FinalAccountsService.GetBalanceSheet ⇒ Mezan_MorgaaCLS.Get_Mezan_Morgaa_ByPeiodNew بنفس معاملات الديسكتوب (الفترة كاملة، العملة 0 = المكافىء)
+   ثم أرصدة حسابات الميزانية (Account_Follows = 4) وصافى الربح من Incoming_StatementCLS. الشجرة تُبنى بالصافى فى الخدمة (لا يُستدعى BalanceCLS.GetBalanceData_WithLevel)،
+   والأقسام حسب نوع جذر الحساب بدل ثبات الحساب 3. لا يُستدعى UpdateFirstBalance (قراءة فقط). الطباعة بـ window.print. التصميم بنظام inv-*/fs-* (ui-ux-pro-max). *@
+@page "/accounts/final/balance-sheet"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.BusinessLibShared.GeneralLedger
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject IJSRuntime JS
+@implements IDisposable
+
+<PageTitle>@Tr("BSTitle")</PageTitle>
+
+<InvoiceStyles />
+<FinalStatementStyles />
+<style>
+    .bs-filters { grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; }
+    .bs-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+    .bs-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    table.bs-table tr.bs-sec th { font-size: 1.05rem; background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent); text-align: start; }
+    table.bs-table tr.bs-parent td { font-weight: 700; }
+    table.bs-table td.bs-empty { text-align: center; color: var(--mud-palette-text-secondary); }
+    .bs-check { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding: 14px 16px; border-radius: 12px;
+                border: 1px solid var(--mud-palette-lines-default); }
+    .bs-check.ok { background: color-mix(in srgb, var(--mud-palette-success) 10%, transparent); border-color: var(--mud-palette-success); }
+    .bs-check.bad { background: color-mix(in srgb, var(--mud-palette-warning) 12%, transparent); border-color: var(--mud-palette-warning); }
+    .bs-check .item .lbl { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .bs-check .item .val { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .bs-check .state { display: flex; align-items: center; gap: 6px; font-weight: 700; margin-inline-start: auto; }
+    @@media (max-width: 1099px) { .bs-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 899px) { .bs-cols { grid-template-columns: minmax(0, 1fr); } }
+    @@media (max-width: 599px) { .bs-filters { grid-template-columns: minmax(0, 1fr); } }
+    @@media print { .bs-cols { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-card fs-head fs-noprint">
+        <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.AccountBalance" /></div>
+        <div class="titles">
+            <h1 class="inv-title">@Tr("BSTitle")</h1>
+            <div class="sub">@Tr("BSSub")</div>
+        </div>
+    </div>
+
+    <div class="inv-card fs-gap fs-noprint">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.FilterList" />@Tr("SOFiltersTitle")</h2>
+        <div class="fs-filters bs-filters">
+            <MudSelect T="long" Value="_periodId" ValueChanged="@(v => { _periodId = v; Reset(); })" Label="@Tr("FAPeriod")" Variant="Variant.Outlined" ToStringFunc="@(v => PeriodText(v))">
+                @foreach (var p in _periods)
+                {
+                    <MudSelectItem T="long" Value="@p.Id">@PeriodText(p.Id)</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="long" Value="_branch" ValueChanged="@(v => { _branch = v; Reset(); })" Label="@Tr("FABranch")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => _branches.FirstOrDefault(b => b.Id == v)?.Name ?? "")">
+                @foreach (var b in _branches)
+                {
+                    <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="int" @bind-Value="_level" Label="@Tr("BSLevel")" Variant="Variant.Outlined"
+                       ToStringFunc="@(v => v == 0 ? Tr("BSAllLevels") : v.ToString(CultureInfo.InvariantCulture))">
+                <MudSelectItem T="int" Value="0">@Tr("BSAllLevels")</MudSelectItem>
+                @for (int i = 1; i <= 9; i++)
+                {
+                    var lv = i;
+                    <MudSelectItem T="int" Value="@lv">@lv</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField T="string" @bind-Value="_search" Immediate="true" Label="@Tr("TBSearch")" Variant="Variant.Outlined"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+            <MudSwitch T="bool" @bind-Value="_showZero" Color="Color.Primary" Label="@Tr("BSShowZero")" />
+        </div>
+        <div class="fs-btns">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility"
+                       Disabled="@_loading" OnClick="ShowAsync">@Tr("FAShow")</MudButton>
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Print"
+                       Disabled="@(_loading || _result == null)" OnClick="PrintAsync">@Tr("FAPrint")</MudButton>
+            <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.CurrencyExchange">@Tr("BSCurrencyNote")</MudChip>
+            @if (_loading) { <MudProgressCircular Indeterminate="true" Size="Size.Small" /> }
+        </div>
+        <MudAlert Severity="Severity.Info" Dense="true" Class="fs-status" role="note">@Tr("FSFirstBalanceHint")</MudAlert>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="fs-gap" role="alert">@_error</MudAlert>
+    }
+
+    @if (_result == null && string.IsNullOrEmpty(_error) && !_loading)
+    {
+        <MudAlert Severity="Severity.Normal" Dense="true" Class="fs-gap fs-noprint" role="status">@Tr("BSChooseHint")</MudAlert>
+    }
+
+    @if (_result != null)
+    {
+        @if (_result.MissingAccounts > 0)
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true" Class="fs-gap fs-noprint" role="status">@Tr("BSMissingAccounts", _result.MissingAccounts)</MudAlert>
+        }
+
+        <div class="fs-kpis fs-gap">
+            <div class="inv-card fs-kpi">
+                <div class="lbl">@Tr("BSTotalAssets")</div>
+                <div class="val">@N(_result.Assets.Total)</div>
+            </div>
+            <div class="inv-card fs-kpi">
+                <div class="lbl">@Tr("BSTotalLiabEquity")</div>
+                <div class="val">@N(_result.TotalLiabilitiesAndEquity)</div>
+            </div>
+            <div class="inv-card fs-kpi @(_result.NetProfit >= 0 ? "pos" : "neg")">
+                <div class="lbl">@Tr(_result.NetProfit >= 0 ? "BSNetProfit" : "BSNetLoss")</div>
+                <div class="val">@N(Math.Abs(_result.NetProfit))</div>
+            </div>
+        </div>
+
+        <div class="inv-card fs-gap">
+            <div class="fs-print-title">
+                <strong>@Tr("BSTitleAsOf", _result.AsOf.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture))</strong>
+                — @(_branches.FirstOrDefault(b => b.Id == _shownBranch)?.Name) — @Tr("TBEquivalent")
+            </div>
+            <h2 class="inv-card-title fs-noprint"><MudIcon Icon="@Icons.Material.Filled.AccountTree" />@Tr("BSTitleAsOf", _result.AsOf.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture))</h2>
+
+            <div class="bs-cols">
+                <div class="bs-col">
+                    <BalanceSheetSectionTable Section="_result.Assets" Title="@Tr("BSAssets")" TotalLabel="@Tr("BSTotalAssets")"
+                                              Level="_level" ShowZero="_showZero" Search="@_search" />
+                </div>
+                <div class="bs-col">
+                    <BalanceSheetSectionTable Section="_result.Liabilities" Title="@Tr("BSLiabilities")" TotalLabel="@Tr("BSTotalLiabilities")"
+                                              Level="_level" ShowZero="_showZero" Search="@_search" />
+                    <BalanceSheetSectionTable Section="_result.Equity" Title="@Tr("BSEquity")" TotalLabel="@Tr("BSTotalEquity")"
+                                              Level="_level" ShowZero="_showZero" Search="@_search" />
+                </div>
+            </div>
+
+            <div class="bs-check fs-gap @(_result.IsBalanced ? "ok" : "bad")" role="status" aria-live="polite">
+                <div class="item"><div class="lbl">@Tr("BSTotalAssets")</div><div class="val">@N(_result.Assets.Total)</div></div>
+                <div class="item"><div class="lbl">@Tr("BSTotalLiabEquity")</div><div class="val">@N(_result.TotalLiabilitiesAndEquity)</div></div>
+                <div class="item"><div class="lbl">@Tr("BSDifference")</div><div class="val">@N(_result.Difference)</div></div>
+                <div class="state">
+                    @if (_result.IsBalanced)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" aria-hidden="true" />@Tr("BSBalanced")
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" aria-hidden="true" />@Tr("BSNotBalanced", N(_result.Difference))
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+</MudContainer>
+
+@code {
+    private readonly FinalAccountsService _svc = new();
+    private List<FinalAccountsService.PeriodRow> _periods = new();
+    private List<FinalAccountsService.Option> _branches = new();
+    private long _periodId, _branch, _shownBranch;
+    private int _level;
+    private bool _showZero;
+    private string _search = "";
+    private FinalAccountsService.BalanceSheetResult? _result;
+    private string? _error;
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try
+        {
+            await Task.Run(() =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                _periods = _svc.GetPeriods();
+                _branches = _svc.GetBranches();
+            });
+            var today = DateTime.Today;
+            var cur = _periods.FirstOrDefault(p => p.IsActive)
+                      ?? _periods.FirstOrDefault(p => p.DateFrom <= today && today <= p.DateTo) ?? _periods.LastOrDefault();
+            _periodId = cur?.Id ?? 0;
+            _branch = _branches.Any(b => b.Id == AccountModelsLib.Common.Branch_Id) ? AccountModelsLib.Common.Branch_Id : _branches.FirstOrDefault()?.Id ?? 0;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+
+    private void Reset() { _result = null; _error = null; }
+
+    private string PeriodText(long id)
+    {
+        var p = _periods.FirstOrDefault(x => x.Id == id);
+        return p == null ? "" : $"{(string.IsNullOrWhiteSpace(p.Name) ? "" : p.Name + "  ")}{p.DateFrom:yyyy/MM/dd} — {p.DateTo:yyyy/MM/dd}";
+    }
+
+    private async Task ShowAsync()
+    {
+        _error = null; _result = null;
+        var period = _periods.FirstOrDefault(p => p.Id == _periodId);
+        if (period == null) { _error = Tr("FAErrPeriodRequired"); return; }
+        if (_branch <= 0) { _error = Tr("FAErrBranchRequired"); return; }
+        _loading = true;
+        try
+        {
+            long branch = _branch;
+            _result = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetBalanceSheet(period, branch); });
+            _shownBranch = branch;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        finally { _loading = false; }
+    }
+
+    private async Task PrintAsync() => await JS.InvokeVoidAsync("window.print");
+
+    private static string N(decimal v) => v < 0 ? "(" + (-v).ToString("N2", CultureInfo.InvariantCulture) + ")" : v.ToString("N2", CultureInfo.InvariantCulture);
+
+    private static string Inner(Exception ex) { while (ex.InnerException != null) ex = ex.InnerException; return ex.Message; }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally { CultureInfo.CurrentUICulture = previousCulture; }
+    }
+}

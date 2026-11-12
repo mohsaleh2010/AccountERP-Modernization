@@ -4863,4 +4863,28 @@
   <data name="PLNetLossToBS" xml:space="preserve"><value>Perte nette de la période reportée au bilan</value></data>
   <data name="PLNetProfitToBS" xml:space="preserve"><value>Bénéfice net de la période reporté au bilan</value></data>
   <data name="PLToBS" xml:space="preserve"><value>Reporté au bilan</value></data>
+  <data name="BSTitle" xml:space="preserve"><value>Bilan</value></data>
+  <data name="BSSub" xml:space="preserve"><value>Actif face au passif et aux capitaux propres à la fin de l'exercice, en contre-valeur de la devise de base, avec le résultat net et un contrôle d'équilibre</value></data>
+  <data name="BSTitleAsOf" xml:space="preserve"><value>Bilan au {0}</value></data>
+  <data name="BSAssets" xml:space="preserve"><value>Actif</value></data>
+  <data name="BSLiabilities" xml:space="preserve"><value>Passif</value></data>
+  <data name="BSEquity" xml:space="preserve"><value>Capitaux propres</value></data>
+  <data name="BSTotalAssets" xml:space="preserve"><value>Total actif</value></data>
+  <data name="BSTotalLiabilities" xml:space="preserve"><value>Total passif</value></data>
+  <data name="BSTotalEquity" xml:space="preserve"><value>Total capitaux propres</value></data>
+  <data name="BSTotalLiabEquity" xml:space="preserve"><value>Total passif et capitaux propres</value></data>
+  <data name="BSNetProfit" xml:space="preserve"><value>Bénéfice net de l'exercice</value></data>
+  <data name="BSNetLoss" xml:space="preserve"><value>Perte nette de l'exercice</value></data>
+  <data name="BSLevel" xml:space="preserve"><value>Niveau d'affichage</value></data>
+  <data name="BSAllLevels" xml:space="preserve"><value>Tous les niveaux</value></data>
+  <data name="BSShowZero" xml:space="preserve"><value>Afficher les comptes à solde nul</value></data>
+  <data name="BSBalanced" xml:space="preserve"><value>Le bilan est équilibré</value></data>
+  <data name="BSNotBalanced" xml:space="preserve"><value>Le bilan n'est pas équilibré — écart {0}</value></data>
+  <data name="BSDifference" xml:space="preserve"><value>Écart</value></data>
+  <data name="BSMissingAccounts" xml:space="preserve"><value>{0} compte(s) ont des écritures sur cet exercice sans solde d'ouverture enregistré et ne sont pas affichés ; ouvrez une fois le bilan ou « mettre à jour le solde d'ouverture » sur le bureau, puis réaffichez</value></data>
+  <data name="BSAccount" xml:space="preserve"><value>Compte</value></data>
+  <data name="BSAmount" xml:space="preserve"><value>Solde</value></data>
+  <data name="BSChooseHint" xml:space="preserve"><value>Choisissez l'exercice et l'agence puis appuyez sur « Afficher »</value></data>
+  <data name="FAErrBranchRequired" xml:space="preserve"><value>Une agence doit être sélectionnée</value></data>
+  <data name="BSCurrencyNote" xml:space="preserve"><value>Devise : contre-valeur en devise de base (comme sur le bureau)</value></data>
 </root>

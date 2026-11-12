@@ -4861,4 +4861,28 @@
   <data name="PLNetLossToBS" xml:space="preserve"><value>Net loss for the period carried to the balance sheet</value></data>
   <data name="PLNetProfitToBS" xml:space="preserve"><value>Net profit for the period carried to the balance sheet</value></data>
   <data name="PLToBS" xml:space="preserve"><value>Carried to the balance sheet</value></data>
+  <data name="BSTitle" xml:space="preserve"><value>Balance sheet</value></data>
+  <data name="BSSub" xml:space="preserve"><value>Assets against liabilities and equity at the end of the financial period, in base-currency equivalent, with the period's net profit and a balance check</value></data>
+  <data name="BSTitleAsOf" xml:space="preserve"><value>Balance sheet as of {0}</value></data>
+  <data name="BSAssets" xml:space="preserve"><value>Assets</value></data>
+  <data name="BSLiabilities" xml:space="preserve"><value>Liabilities</value></data>
+  <data name="BSEquity" xml:space="preserve"><value>Equity</value></data>
+  <data name="BSTotalAssets" xml:space="preserve"><value>Total assets</value></data>
+  <data name="BSTotalLiabilities" xml:space="preserve"><value>Total liabilities</value></data>
+  <data name="BSTotalEquity" xml:space="preserve"><value>Total equity</value></data>
+  <data name="BSTotalLiabEquity" xml:space="preserve"><value>Total liabilities and equity</value></data>
+  <data name="BSNetProfit" xml:space="preserve"><value>Net profit for the period</value></data>
+  <data name="BSNetLoss" xml:space="preserve"><value>Net loss for the period</value></data>
+  <data name="BSLevel" xml:space="preserve"><value>Display level</value></data>
+  <data name="BSAllLevels" xml:space="preserve"><value>All levels</value></data>
+  <data name="BSShowZero" xml:space="preserve"><value>Show zero-balance accounts</value></data>
+  <data name="BSBalanced" xml:space="preserve"><value>The balance sheet balances</value></data>
+  <data name="BSNotBalanced" xml:space="preserve"><value>The balance sheet does not balance — difference {0}</value></data>
+  <data name="BSDifference" xml:space="preserve"><value>Difference</value></data>
+  <data name="BSMissingAccounts" xml:space="preserve"><value>{0} account(s) have entries in this period but no recorded opening balance, so they are not shown; open the balance sheet or «update opening balance» once in the desktop, then show again</value></data>
+  <data name="BSAccount" xml:space="preserve"><value>Account</value></data>
+  <data name="BSAmount" xml:space="preserve"><value>Balance</value></data>
+  <data name="BSChooseHint" xml:space="preserve"><value>Choose the period and branch, then press «Show»</value></data>
+  <data name="FAErrBranchRequired" xml:space="preserve"><value>A branch must be selected</value></data>
+  <data name="BSCurrencyNote" xml:space="preserve"><value>Currency: base-currency equivalent (same as desktop)</value></data>
 </root>

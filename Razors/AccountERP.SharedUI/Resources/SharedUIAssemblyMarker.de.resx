@@ -4863,4 +4863,28 @@
   <data name="PLNetLossToBS" xml:space="preserve"><value>Periodenverlust in die Bilanz übertragen</value></data>
   <data name="PLNetProfitToBS" xml:space="preserve"><value>Periodengewinn in die Bilanz übertragen</value></data>
   <data name="PLToBS" xml:space="preserve"><value>In die Bilanz übertragen</value></data>
+  <data name="BSTitle" xml:space="preserve"><value>Bilanz</value></data>
+  <data name="BSSub" xml:space="preserve"><value>Aktiva gegenüber Passiva und Eigenkapital zum Ende der Geschäftsperiode, im Gegenwert der Basiswährung, mit Periodenergebnis und Ausgleichsprüfung</value></data>
+  <data name="BSTitleAsOf" xml:space="preserve"><value>Bilanz zum {0}</value></data>
+  <data name="BSAssets" xml:space="preserve"><value>Aktiva</value></data>
+  <data name="BSLiabilities" xml:space="preserve"><value>Verbindlichkeiten</value></data>
+  <data name="BSEquity" xml:space="preserve"><value>Eigenkapital</value></data>
+  <data name="BSTotalAssets" xml:space="preserve"><value>Summe Aktiva</value></data>
+  <data name="BSTotalLiabilities" xml:space="preserve"><value>Summe Verbindlichkeiten</value></data>
+  <data name="BSTotalEquity" xml:space="preserve"><value>Summe Eigenkapital</value></data>
+  <data name="BSTotalLiabEquity" xml:space="preserve"><value>Summe Passiva und Eigenkapital</value></data>
+  <data name="BSNetProfit" xml:space="preserve"><value>Periodengewinn</value></data>
+  <data name="BSNetLoss" xml:space="preserve"><value>Periodenverlust</value></data>
+  <data name="BSLevel" xml:space="preserve"><value>Anzeigeebene</value></data>
+  <data name="BSAllLevels" xml:space="preserve"><value>Alle Ebenen</value></data>
+  <data name="BSShowZero" xml:space="preserve"><value>Konten mit Nullsaldo anzeigen</value></data>
+  <data name="BSBalanced" xml:space="preserve"><value>Die Bilanz ist ausgeglichen</value></data>
+  <data name="BSNotBalanced" xml:space="preserve"><value>Die Bilanz ist nicht ausgeglichen — Differenz {0}</value></data>
+  <data name="BSDifference" xml:space="preserve"><value>Differenz</value></data>
+  <data name="BSMissingAccounts" xml:space="preserve"><value>{0} Konto/Konten haben Buchungen in dieser Periode, aber keinen erfassten Anfangssaldo und werden nicht angezeigt; öffnen Sie die Bilanz oder «Anfangssaldo aktualisieren» einmal im Desktop und zeigen Sie dann erneut an</value></data>
+  <data name="BSAccount" xml:space="preserve"><value>Konto</value></data>
+  <data name="BSAmount" xml:space="preserve"><value>Saldo</value></data>
+  <data name="BSChooseHint" xml:space="preserve"><value>Periode und Filiale wählen und dann «Anzeigen» drücken</value></data>
+  <data name="FAErrBranchRequired" xml:space="preserve"><value>Eine Filiale muss ausgewählt werden</value></data>
+  <data name="BSCurrencyNote" xml:space="preserve"><value>Währung: Gegenwert in Basiswährung (wie Desktop)</value></data>
 </root>

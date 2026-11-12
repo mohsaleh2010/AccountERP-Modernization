@@ -385,6 +385,8 @@ VALUES ({id}, 321, {E(StoreTransferPolicy.DirectPermissionKey)}, {E(desc)}, 2, {
             ("toolStripMenuItemIncoming_Statement", "/accounts/final/income-statement"),
             ("ToolStripMenuItemTash7heelAccount", "/accounts/final/profit-loss?tab=1"), ("ToolStripMenuItemMotagra", "/accounts/final/profit-loss?tab=2"),
             ("ToolStripMenuItemArba7Wa7hsa2r", "/accounts/final/profit-loss?tab=3"),
+            // م5: قائمة المركز المالى بدل Get_Account_BalanceFRM2.
+            ("toolStripMenuItemAccountBalance", "/accounts/final/balance-sheet"),
             // مراجعة القيود (473) بدل Review_Account_Entry.
             ("ToolStripMenuAccountEntryReview", "/accounts/journal-entries"),
             // إنشاء قيود الصندوق آلياً بدل Make_Account_Entry_Automatic.
