@@ -278,6 +278,10 @@ namespace AccountModelsLib
         public DateTime CreatedAt { get; set; }
         /// <summary>P2: الأدوات التى نفّذها المساعد لإعداد هذا الرد (للعرض تحت الرسالة: ماذا قرأ وبأى استعلام).</summary>
         public List<AiToolCallView> Tools { get; set; } = new List<AiToolCallView>();
+        /// <summary>P3: التقارير التى رسمها المساعد فى هذا الرد (بطاقة «عرض التقرير»).</summary>
+        public List<AiReportCard> Reports { get; set; } = new List<AiReportCard>();
+        /// <summary>P3: الشاشات التى اقترح فتحها (بطاقة «افتح الشاشة»).</summary>
+        public List<AiScreenLinkView> Screens { get; set; } = new List<AiScreenLinkView>();
     }
 
     // ───────────── P2: الأدوات (قراءة فقط) ─────────────
@@ -300,6 +304,9 @@ namespace AccountModelsLib
         public int? RowCount { get; set; }
         public int? DurationMs { get; set; }
         public string ErrorText { get; set; } = "";
+        /// <summary>P3: معرّف البيانات كما أُعطى للنموذج وأعمدتها (لرسائل المتابعة؛ لا يُعرض).</summary>
+        public string DatasetId { get; set; } = "";
+        public string DatasetColumns { get; set; } = "";
     }
 
     /// <summary>
@@ -312,6 +319,8 @@ namespace AccountModelsLib
         public long BranchId { get; set; }
         public bool IsAdmin { get; set; }
         public List<string> AllowedRoutes { get; set; } = new List<string>();
+        /// <summary>P3: نفس الشاشات بعناوينها (لأداة find_screen).</summary>
+        public List<AiScreenRef> AllowedScreens { get; set; } = new List<AiScreenRef>();
     }
 
     /// <summary>صف من سجل تدقيق الأدوات (تبويب «سجل التدقيق» فى /settings/ai).</summary>
@@ -380,5 +389,17 @@ namespace AccountModelsLib
         /// <param name="onStatus">P2: نص حالة قصير أثناء تنفيذ الأدوات («أبحث فى البيانات…»)؛ null عند انتهاء الأداة.</param>
         Task<AiChatTurnResult> SendAsync(long conversationId, string text, AiScreenContext context, AiUserContext user,
                                          Action<string> onDelta, Action<string> onStatus, CancellationToken ct = default);
+
+        // ───── P3: التقارير ─────
+        /// <summary>التقرير جاهزاً للعرض (لصاحبه فقط)؛ null إن لم يوجد.</summary>
+        AiReportDoc GetReport(long reportId, long userId);
+        /// <summary>تقاريرى المحفوظة (المثبّتة أولاً).</summary>
+        List<AiSavedReportView> GetSavedReports(long userId);
+        /// <summary>حفظ التقرير فى «تقاريرى» (بعنوان جديد اختيارياً) أو تثبيته/إلغاء تثبيته.</summary>
+        void SaveReport(long reportId, string title, bool pinned, long userId);
+        /// <summary>إزالته من «تقاريرى» (يبقى فى محادثته إن وُجدت).</summary>
+        void UnsaveReport(long reportId, long userId);
+        /// <summary>إعادة تشغيل مصادر التقرير ببيانات اليوم، وبفترة جديدة إن أُعطيت؛ الصلاحيات تُفحص من جديد.</summary>
+        Task<AiReportDoc> RerunReportAsync(long reportId, DateTime? from, DateTime? to, AiUserContext user, CancellationToken ct = default);
     }
 }

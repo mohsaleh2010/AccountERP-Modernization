@@ -16,6 +16,10 @@ namespace AccountERP.AI.Tools
         /// <summary>-1 الكل، 1 الضريبية فقط، 0 غير الضريبية فقط (Common.PermissionToShowTaxInvoiceOrNotORAll كالشاشات).</summary>
         public int TaxFilter { get; init; } = -1;
         public CancellationToken Ct { get; init; }
+        /// <summary>P3: المحادثة الحالية (يُضبط بعد إنشائها) لربط التقارير المرسومة بها.</summary>
+        public long? ConversationId { get; set; }
+        /// <summary>P3: التقارير التى رُسمت أثناء هذه الرسالة (تُربط برسالة المساعد بعد حفظها).</summary>
+        public List<long> ReportIds { get; } = new();
 
         public bool HasRoute(string route)
         {
@@ -41,6 +45,10 @@ namespace AccountERP.AI.Tools
         public string? Sql { get; init; }
         public int? RowCount { get; init; }
         public string Title { get; init; } = "";
+        /// <summary>P3: البيانات الكاملة (تبقى على الخادم؛ النموذج يرى dataset_id وعيّنة).</summary>
+        public AiDataset? Dataset { get; init; }
+        /// <summary>P3: كتلة تُضاف لمحتوى رد المساعد (بطاقة تقرير أو «افتح الشاشة»).</summary>
+        public JsonObject? Block { get; init; }
     }
 
     /// <summary>
@@ -54,9 +62,16 @@ namespace AccountERP.AI.Tools
         private const int MaxContentChars = 40000;
 
         private readonly ReadOnlySqlExecutor _sql;
-        public AiToolRegistry(ReadOnlySqlExecutor sql) => _sql = sql;
+        private readonly AiDatasetCache _datasets;
+        private readonly AiReportsCLS _reports = new();
+        public AiToolRegistry(ReadOnlySqlExecutor sql, AiDatasetCache datasets)
+        {
+            _sql = sql;
+            _datasets = datasets;
+        }
 
         public ReadOnlySqlExecutor Sql => _sql;
+        public AiDatasetCache Datasets => _datasets;
 
         private sealed record ToolSpec(AiToolDef Def, Func<AiToolContext, bool> Allowed, Func<JsonObject, AiToolContext, AiToolResult> Run);
 
@@ -67,7 +82,7 @@ namespace AccountERP.AI.Tools
         private static JsonObject Schema(JsonObject props, params string[] required) =>
             new() { ["type"] = "object", ["properties"] = props, ["required"] = new JsonArray(required.Select(r => (JsonNode)JsonValue.Create(r)!).ToArray()) };
 
-        private IEnumerable<ToolSpec> Specs()
+        private IEnumerable<ToolSpec> Specs(AiToolContext ctx)
         {
             yield return new ToolSpec(new AiToolDef
             {
@@ -79,8 +94,16 @@ namespace AccountERP.AI.Tools
             yield return new ToolSpec(new AiToolDef
             {
                 Name = "run_readonly_query",
-                Description = "نفّذ استعلام SELECT واحداً (T-SQL، SQL Server) على Views المساعد ai.v_... فقط. ممنوع أى تعديل. يعيد الأعمدة وعدد الصفوف وأول 50 صفاً ومجاميع الأعمدة الرقمية. استخدم التجميع (SUM/COUNT/GROUP BY) بدل جلب صفوف كثيرة، والتواريخ بصيغة 'yyyy-MM-dd'.",
-                Schema = Schema(new JsonObject { ["sql"] = Str("استعلام SELECT واحد"), ["purpose"] = Str("ماذا يحسب هذا الاستعلام بالعربية (يظهر للمستخدم)") }, "sql", "purpose"),
+                Description = "نفّذ استعلام SELECT واحداً (T-SQL، SQL Server) على Views المساعد ai.v_... فقط. ممنوع أى تعديل. يعيد الأعمدة وعدد الصفوف وأول 50 صفاً ومجاميع الأعمدة الرقمية. استخدم التجميع (SUM/COUNT/GROUP BY) بدل جلب صفوف كثيرة، والتواريخ بصيغة 'yyyy-MM-dd'. " +
+                              "الناتج يبدأ بـ dataset_id لاستخدامه فى render_report. إن كان الاستعلام لفترة فمرّر date_from وdate_to واستخدم داخله المعاملين @date_from و@date_to بدل كتابة التاريخين " +
+                              "(مثال: WHERE invoice_date >= @date_from AND invoice_date < DATEADD(day, 1, @date_to))، فيمكن إعادة تشغيل التقرير بفترة أخرى.",
+                Schema = Schema(new JsonObject
+                {
+                    ["sql"] = Str("استعلام SELECT واحد"),
+                    ["purpose"] = Str("ماذا يحسب هذا الاستعلام بالعربية (يظهر للمستخدم)"),
+                    ["date_from"] = Str("بداية الفترة yyyy-MM-dd = المعامل @date_from (اختيارى)"),
+                    ["date_to"] = Str("نهاية الفترة yyyy-MM-dd = المعامل @date_to (اختيارى)"),
+                }, "sql", "purpose"),
             }, c => c.AllowedViews.Count > 0, RunQuery);
 
             yield return new ToolSpec(new AiToolDef
@@ -126,13 +149,56 @@ namespace AccountERP.AI.Tools
                     ["branch_id"] = Int("الفرع (اختيارى؛ الافتراضى فرع المستخدم)"),
                 }, "kind", "from", "to"),
             }, c => c.HasRoute(AiSchemaCatalog.RIncome) || c.HasRoute(AiSchemaCatalog.RProfitLoss) || c.HasRoute(AiSchemaCatalog.RBalanceSheet), FinancialStatement);
+
+            // ───── P3: التقارير وفتح الشاشات ─────
+            yield return new ToolSpec(new AiToolDef
+            {
+                Name = "render_report",
+                Description = "اعرض للمستخدم تقريراً منسّقاً (مؤشرات، جداول، رسوم بيانية bar/line/pie/stacked، ملاحظات) من datasets أعادتها أدوات البيانات (dataset_id). " +
+                              "أنت تحدد الشكل فقط؛ الأرقام تُحسب على الخادم من البيانات الكاملة. استخدمها حين يطلب المستخدم تقريراً أو جدولاً أو رسماً، أو حين تكون النتيجة أكثر من بضعة صفوف. " +
+                              "بعدها لخّص أهم النتائج فى سطرين أو ثلاثة ولا تكرر الجدول فى النص.",
+                Schema = AiReportEngine.ToolSchema(),
+            }, c => c.AllowedViews.Count > 0 || HasAnyFinancial(c), RenderReport);
+
+            yield return new ToolSpec(new AiToolDef
+            {
+                Name = "open_screen",
+                Description = "اعرض للمستخدم زر «افتح الشاشة» لشاشة من النظام (لا تُفتح تلقائياً). استخدمها حين توجد شاشة أو تقرير قائم يجيب الطلب (ميزان المراجعة، القوائم المالية، فاتورة بعينها...) بدل رسم تقرير. " +
+                              "إما screen من القائمة التالية مع params، أو path من نتيجة find_screen (بلا params). الشاشات ذات الباراميترات المسموحة:" + AiScreenCatalog.Describe(ctx.HasRoute),
+                Schema = Schema(new JsonObject
+                {
+                    ["screen"] = Str("مفتاح الشاشة من القائمة (مثل trial_balance)"),
+                    ["path"] = Str("أو: مسار شاشة كما أعادته find_screen"),
+                    ["params"] = new JsonObject
+                    {
+                        ["type"] = "object",
+                        ["description"] = "باراميترات الشاشة المدعومة فقط",
+                        ["properties"] = new JsonObject
+                        {
+                            [AiScreenCatalog.PFrom] = Str("yyyy-MM-dd"),
+                            [AiScreenCatalog.PTo] = Str("yyyy-MM-dd"),
+                            [AiScreenCatalog.PBranch] = Int("معرّف الفرع"),
+                            [AiScreenCatalog.PMode] = Enum("ميزان المراجعة: بالمجاميع أو بالأرصدة", "totals", "closing"),
+                            [AiScreenCatalog.PFilter] = Enum("ميزان المراجعة: الحسابات المعروضة", "all", "with_balance", "movement_only"),
+                            [AiScreenCatalog.PId] = Int("معرّف المستند أو العميل"),
+                        },
+                    },
+                }),
+            }, c => true, OpenScreen);
+
+            yield return new ToolSpec(new AiToolDef
+            {
+                Name = "find_screen",
+                Description = "ابحث فى شاشات قائمة المستخدم بالاسم (مثل «كشف حساب عميل»، «تحويل بين المخازن») لتحصل على مسارها، ثم اعرضها بـ open_screen.",
+                Schema = Schema(new JsonObject { ["text"] = Str("كلمات من اسم الشاشة") }, "text"),
+            }, c => c.User.AllowedScreens.Count > 0, FindScreen);
         }
 
         private static bool HasAnyFinancial(AiToolContext c) =>
             c.HasRoute(AiSchemaCatalog.RTrialBalance) || c.HasRoute(AiSchemaCatalog.RIncome) || c.HasRoute(AiSchemaCatalog.RProfitLoss) || c.HasRoute(AiSchemaCatalog.RBalanceSheet);
 
         /// <summary>تعريفات الأدوات المسموحة لهذا المستخدم فقط.</summary>
-        public List<AiToolDef> ToolsFor(AiToolContext ctx) => Specs().Where(s => s.Allowed(ctx)).Select(s => s.Def).ToList();
+        public List<AiToolDef> ToolsFor(AiToolContext ctx) => Specs(ctx).Where(s => s.Allowed(ctx)).Select(s => s.Def).ToList();
 
         public static string TitleOf(string toolName) => toolName switch
         {
@@ -142,13 +208,16 @@ namespace AccountERP.AI.Tools
             "get_periods_and_branches" => "الفترات والفروع",
             "get_trial_balance" => "ميزان المراجعة",
             "get_financial_statement" => "قائمة مالية",
+            "render_report" => "رسم تقرير",
+            "open_screen" => "فتح شاشة",
+            "find_screen" => "بحث عن شاشة",
             _ => toolName,
         };
 
         /// <summary>ينفّذ أداة بعد التحقق من الصلاحية والمدخلات. لا يرمى إلا OperationCanceledException.</summary>
         public AiToolResult Execute(string name, string inputJson, AiToolContext ctx)
         {
-            var spec = Specs().FirstOrDefault(s => s.Def.Name == name);
+            var spec = Specs(ctx).FirstOrDefault(s => s.Def.Name == name);
             if (spec == null) return Fail("الأداة «" + name + "» غير موجودة.", AiToolOutcome.Error, name);
             if (!spec.Allowed(ctx)) return Fail("لا تملك صلاحية استخدام هذه الأداة (الشاشة المقابلة غير مسموحة لك).", AiToolOutcome.Denied, name);
             JsonObject args;
@@ -156,7 +225,20 @@ namespace AccountERP.AI.Tools
             catch (JsonException) { return Fail("مدخلات الأداة ليست كائن JSON صحيحاً.", AiToolOutcome.Error, name); }
             try
             {
-                return spec.Run(args, ctx);
+                var res = spec.Run(args, ctx);
+                if (res.Dataset == null || res.IsError) return res;
+                // P3: البيانات الكاملة تبقى على الخادم، والنموذج يأخذ معرّفها أول الناتج (يبقى ظاهراً حتى لو قُطع الباقى).
+                res.Dataset.Title = res.Title;
+                res.Dataset.Tool = name;
+                res.Dataset.Args = (JsonObject)args.DeepClone();
+                res.Dataset.Sql ??= res.Sql;
+                string id = _datasets.Add(ctx.User.UserId, res.Dataset);
+                string body = res.Content.TrimStart();
+                return new AiToolResult
+                {
+                    Content = body.StartsWith('{') ? "{\"dataset_id\":\"" + id + "\"," + body[1..].TrimStart() : "{\"dataset_id\":\"" + id + "\"}\n" + body,
+                    Outcome = res.Outcome, Sql = res.Sql, RowCount = res.RowCount, Title = res.Title, Dataset = res.Dataset, Block = res.Block,
+                };
             }
             catch (OperationCanceledException) { throw; }
             catch (AiSqlRejectedException ex) { return Fail(ex.Message, AiToolOutcome.Denied, name, Arg(args, "sql")); }
@@ -197,13 +279,24 @@ namespace AccountERP.AI.Tools
         private AiToolResult RunQuery(JsonObject a, AiToolContext c)
         {
             string sql = Arg(a, "sql"), purpose = Arg(a, "purpose");
-            var r = _sql.Execute(sql, c.AllowedViews, Session(c), null, c.Ct);
+            Dictionary<string, object>? p = null;
+            string df = Arg(a, "date_from"), dt = Arg(a, "date_to");
+            if (df.Length > 0 || dt.Length > 0)
+            {
+                if (!DateTime.TryParseExact(df, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var from) ||
+                    !DateTime.TryParseExact(dt, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var to))
+                    throw new ArgumentException("date_from وdate_to يُمرَّران معاً بصيغة yyyy-MM-dd.");
+                if (to < from) throw new ArgumentException("ToBeforeFrom");
+                p = new Dictionary<string, object> { ["@date_from"] = from, ["@date_to"] = to };
+            }
+            var r = _sql.Execute(sql, c.AllowedViews, Session(c), p, c.Ct);
             return new AiToolResult
             {
                 Content = Cap(FormatResult(r)),
-                Sql = sql,
+                Sql = p == null ? sql : sql + $"  -- @date_from = {df}, @date_to = {dt}",
                 RowCount = r.Rows.Count,
                 Title = purpose.Length > 0 ? Short(purpose, 120) : "استعلام قراءة",
+                Dataset = AiDataset.FromQuery(r),
             };
         }
 
@@ -285,7 +378,11 @@ namespace AccountERP.AI.Tools
                 accounts = rows.Take(200).Select(Row),
                 accounts_truncated = rows.Count > 200,
             };
-            return new AiToolResult { Content = Cap(JsonSerializer.Serialize(o, Json)), RowCount = rows.Count, Title = $"ميزان المراجعة {from:yyyy-MM-dd} → {to:yyyy-MM-dd}" };
+            var ds = AiDataset.FromRows(
+                new[] { "code", "account", "main_account", "opening_debit", "opening_credit", "movement_debit", "movement_credit", "closing_debit", "closing_credit" },
+                new[] { AiDataset.TText, AiDataset.TText, AiDataset.TText, AiDataset.TNumber, AiDataset.TNumber, AiDataset.TNumber, AiDataset.TNumber, AiDataset.TNumber, AiDataset.TNumber },
+                r.Groups.SelectMany(g => g.Rows.Select(x => new object?[] { x.Code, x.AccountName, g.MainAccountName, x.FirstMadin, x.FirstDa2n, x.Import, x.Export, x.LastMadin, x.LastDa2n })));
+            return new AiToolResult { Content = Cap(JsonSerializer.Serialize(o, Json)), RowCount = rows.Count, Title = $"ميزان المراجعة {from:yyyy-MM-dd} → {to:yyyy-MM-dd}", Dataset = ds };
         }
 
         private static AiToolResult FinancialStatement(JsonObject a, AiToolContext c)
@@ -305,6 +402,11 @@ namespace AccountERP.AI.Tools
             object o;
             int count;
             string title;
+            AiDataset ds;
+            static object?[] SRow(string section, FinalAccountsService.StatementRow x) =>
+                new object?[] { section, x.Kind.ToString(), x.Code, string.IsNullOrEmpty(x.Name) ? x.LabelKey : x.Name, x.LastMadin, x.LastDa2n };
+            string[] sCols = { "section", "kind", "code", "name", "debit", "credit" };
+            string[] sTypes = { AiDataset.TText, AiDataset.TText, AiDataset.TText, AiDataset.TText, AiDataset.TNumber, AiDataset.TNumber };
             switch (kind)
             {
                 case "income":
@@ -313,6 +415,7 @@ namespace AccountERP.AI.Tools
                               revenue = inc.Revenue, expenses = inc.Expenses, net_profit = inc.NetProfit,
                               columns = new[] { "kind", "code", "name", "debit", "credit" }, rows = Rows(inc.Rows) };
                     count = inc.Rows.Count; title = "قائمة الدخل";
+                    ds = AiDataset.FromRows(sCols, sTypes, inc.Rows.Select(x => SRow("income", x)));
                     break;
                 case "profit_loss":
                     var pl = svc.GetProfitLoss(period, branch, FinalAccountsService.EquivalentCurrencyId, from, to);
@@ -320,6 +423,7 @@ namespace AccountERP.AI.Tools
                               columns = new[] { "kind", "code", "name", "debit", "credit" },
                               operating = Rows(pl.Operating), trading = Rows(pl.Trading), profit_loss = Rows(pl.ProfitLoss) };
                     count = pl.Operating.Count + pl.Trading.Count + pl.ProfitLoss.Count; title = "التشغيل والمتاجرة والأرباح والخسائر";
+                    ds = AiDataset.FromRows(sCols, sTypes, pl.Operating.Select(x => SRow("operating", x)).Concat(pl.Trading.Select(x => SRow("trading", x))).Concat(pl.ProfitLoss.Select(x => SRow("profit_loss", x))));
                     break;
                 default:
                     var bs = svc.GetBalanceSheet(period, branch);
@@ -333,9 +437,105 @@ namespace AccountERP.AI.Tools
                               assets = Sec(bs.Assets), liabilities = Sec(bs.Liabilities), equity = Sec(bs.Equity),
                               net_profit = bs.NetProfit, is_balanced = bs.IsBalanced, difference = bs.Difference };
                     count = bs.AccountCount; title = "المركز المالى";
+                    IEnumerable<object?[]> BRows(string section, FinalAccountsService.BalanceSheetSection sec) =>
+                        sec.Roots.SelectMany(r => new[] { r }.Concat(r.Children)).Select(n => new object?[] { section, n.Depth, n.Code, string.IsNullOrEmpty(n.Name) ? n.LabelKey : n.Name, n.Amount });
+                    ds = AiDataset.FromRows(new[] { "section", "depth", "code", "name", "amount" },
+                        new[] { AiDataset.TText, AiDataset.TNumber, AiDataset.TText, AiDataset.TText, AiDataset.TNumber },
+                        BRows("assets", bs.Assets).Concat(BRows("liabilities", bs.Liabilities)).Concat(BRows("equity", bs.Equity)));
                     break;
             }
-            return new AiToolResult { Content = Cap(JsonSerializer.Serialize(o, Json)), RowCount = count, Title = $"{title} {from:yyyy-MM-dd} → {to:yyyy-MM-dd}" };
+            return new AiToolResult { Content = Cap(JsonSerializer.Serialize(o, Json)), RowCount = count, Title = $"{title} {from:yyyy-MM-dd} → {to:yyyy-MM-dd}", Dataset = ds };
+        }
+
+        // ───────────── P3: التقارير وفتح الشاشات ─────────────
+
+        private AiToolResult RenderReport(JsonObject a, AiToolContext c)
+        {
+            var (spec, data) = AiReportEngine.Prepare(a, id => _datasets.Get(id, c.User.UserId));
+            var doc = AiReportEngine.Materialize(spec, data);   // يتحقق أن البناء ينجح قبل الحفظ
+            var (from, to) = AiReportEngine.PeriodOf(spec, data);
+            long id = _reports.Insert(new AiReportRow
+            {
+                User_Id = c.User.UserId,
+                Conversation_Id = c.ConversationId,
+                Title = doc.Title,
+                SpecJson = spec.ToJsonString(Json),
+                SourcesJson = AiReportEngine.SourcesJson(data),
+                DataJson = AiReportEngine.DataJson(data),
+                PeriodFrom = from,
+                PeriodTo = to,
+            });
+            c.ReportIds.Add(id);
+            return new AiToolResult
+            {
+                Content = JsonSerializer.Serialize(new
+                {
+                    ok = true,
+                    report_id = id.ToString(CultureInfo.InvariantCulture),
+                    shown = "عُرض التقرير للمستخدم كبطاقة فيها زر «عرض التقرير» (طباعة، Excel، حفظ، إعادة تشغيل بفترة أخرى).",
+                    kpis = doc.Kpis.Select(k => new { label = k.Label, value = k.Value }),
+                    next = "لخّص أهم النتائج فى سطرين أو ثلاثة، ولا تكرر الجدول ولا تكتب رابطاً.",
+                }, Json),
+                RowCount = data.Values.Sum(d => d.Rows.Count),
+                Title = "تقرير: " + Short(doc.Title, 100),
+                Block = new JsonObject
+                {
+                    ["type"] = "report",
+                    ["report_id"] = id.ToString(CultureInfo.InvariantCulture),
+                    ["title"] = doc.Title,
+                    ["subtitle"] = from != null && to != null ? $"{from:yyyy-MM-dd} → {to:yyyy-MM-dd}" : doc.Subtitle,
+                },
+            };
+        }
+
+        private static AiToolResult OpenScreen(JsonObject a, AiToolContext c)
+        {
+            string key = Arg(a, "screen"), path = Arg(a, "path");
+            string title, url, detail = "";
+            if (key.Length > 0)
+            {
+                var s = AiScreenCatalog.Find(key) ?? throw new ArgumentException($"الشاشة «{key}» ليست فى القائمة. استخدم find_screen للبحث بالاسم.");
+                if (!c.HasRoute(s.Route)) return Fail("لا تملك صلاحية هذه الشاشة.", AiToolOutcome.Denied, "open_screen");
+                (url, detail) = AiScreenCatalog.Build(s, a["params"] as JsonObject);
+                title = s.TitleAr;
+            }
+            else if (path.Length > 0)
+            {
+                // مسار من قائمة المستخدم نفسها فقط (لا روابط خارجية).
+                if (!path.StartsWith('/') || path.StartsWith("//") || path.Contains('\\') || path.Contains(':'))
+                    return Fail("مسار غير صالح. استخدم find_screen.", AiToolOutcome.Denied, "open_screen");
+                var hit = c.User.AllowedScreens.FirstOrDefault(x => string.Equals((x.Path ?? "").Trim(), path, StringComparison.OrdinalIgnoreCase))
+                          ?? c.User.AllowedRoutes.Where(r => string.Equals((r ?? "").Trim(), path, StringComparison.OrdinalIgnoreCase))
+                                                 .Select(r => new AiScreenRef { Path = r.Trim(), Title = "" }).FirstOrDefault();
+                if (hit == null) return Fail("هذا المسار ليس من شاشات قائمتك. استخدم find_screen.", AiToolOutcome.Denied, "open_screen");
+                if (a["params"] is JsonObject po && po.Count > 0) throw new ArgumentException("الشاشات من find_screen تُفتح بلا params.");
+                url = hit.Path.Trim();
+                title = string.IsNullOrWhiteSpace(hit.Title) ? url : hit.Title.Trim();
+            }
+            else throw new ArgumentException("حدّد screen أو path.");
+            return new AiToolResult
+            {
+                Content = JsonSerializer.Serialize(new { ok = true, shown = "ظهر للمستخدم زر «افتح الشاشة: " + title + "». لا تكتب الرابط فى النص.", title, detail }, Json),
+                Title = "فتح شاشة: " + title + (detail.Length > 0 ? " (" + detail + ")" : ""),
+                Block = new JsonObject { ["type"] = "screen", ["title"] = title, ["url"] = url, ["detail"] = detail },
+            };
+        }
+
+        private static AiToolResult FindScreen(JsonObject a, AiToolContext c)
+        {
+            string text = Arg(a, "text");
+            if (text.Length == 0) throw new ArgumentException("أدخل كلمات من اسم الشاشة.");
+            var hits = AiScreenCatalog.Search(c.User.AllowedScreens, text);
+            return new AiToolResult
+            {
+                Content = JsonSerializer.Serialize(new
+                {
+                    matches = hits.Select(h => new { path = h.Path, title = h.Title }),
+                    note = hits.Count == 0 ? "لا توجد شاشة مطابقة فى قائمة المستخدم." : null,
+                }, Json),
+                RowCount = hits.Count,
+                Title = "بحث عن شاشة «" + Short(text, 40) + "»",
+            };
         }
 
         // ───────────── التنسيق ─────────────

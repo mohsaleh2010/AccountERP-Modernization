@@ -40,6 +40,13 @@
     .aip-toggle { display: none !important; }
     .aip-body { flex: 1; min-height: 0; }
     .aip-scrim { display: none; }
+    .aip-reports { flex: none; max-height: 38%; overflow-y: auto; border-top: 1px solid var(--mud-palette-lines-default); padding: 4px 8px 8px; }
+    .aip-report { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 10px; border-radius: 10px; font-size: .85rem;
+                  color: var(--mud-palette-text-primary); text-decoration: none; }
+    .aip-report span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .aip-report .mud-icon-root { color: var(--mud-palette-primary); flex: none; }
+    .aip-report:hover { background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent); }
+    .aip-report:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: -2px; }
     @@media (max-width: 900px) {
         .aip { height: calc(100dvh - 130px); }
         .aip-toggle { display: inline-flex !important; }
@@ -92,6 +99,20 @@
                     }
                 }
             </nav>
+            @* P3: «تقاريرى» - التقارير المحفوظة من المحادثات (المثبّتة أولاً) *@
+            @if (_chat.SavedReports.Count > 0)
+            {
+                <div class="aip-reports" role="region" aria-label="@Tr("AIR_MyReports")">
+                    <div class="aip-group">@Tr("AIR_MyReports")</div>
+                    @foreach (var r in _chat.SavedReports.Take(12))
+                    {
+                        <a class="aip-report" href="@($"/assistant/report/{r.Id}")" title="@r.Title" @key="r.Id">
+                            <MudIcon Icon="@(r.IsPinned ? Icons.Material.Filled.PushPin : Icons.Material.Outlined.Assessment)" Size="Size.Small" aria-hidden="true" />
+                            <span>@r.Title</span>
+                        </a>
+                    }
+                </div>
+            }
         </aside>
         <div class="aip-scrim" @onclick="() => _sideOpen = false"></div>
     }
@@ -138,7 +159,11 @@
         {
             _chat.OnChanged += OnChanged;
             _search = _chat.Search;
-            if (_chat.HasAccess) await _chat.RefreshAsync();
+            if (_chat.HasAccess)
+            {
+                await _chat.RefreshAsync();
+                await _chat.RefreshSavedReportsAsync();
+            }
         }
     }
 

@@ -5147,4 +5147,45 @@
   <data name="AI_AuditDetails" xml:space="preserve"><value>التفاصيل</value></data>
   <data name="AI_AuditShow" xml:space="preserve"><value>عرض الاستعلام</value></data>
   <data name="AI_AuditEmpty" xml:space="preserve"><value>لا توجد سجلات بعد.</value></data>
+  <data name="AIC_OpenScreen" xml:space="preserve"><value>افتح الشاشة</value></data>
+  <data name="AIC_ReportCard" xml:space="preserve"><value>تقرير من المساعد</value></data>
+  <data name="AIC_ScreenCard" xml:space="preserve"><value>شاشة من النظام</value></data>
+  <data name="AIC_ViewReport" xml:space="preserve"><value>عرض التقرير</value></data>
+  <data name="AIR_BackToAssistant" xml:space="preserve"><value>العودة للمساعد</value></data>
+  <data name="AIR_ChangePeriod" xml:space="preserve"><value>فترة أخرى</value></data>
+  <data name="AIR_ChartData" xml:space="preserve"><value>بيانات الرسم</value></data>
+  <data name="AIR_ErrRange" xml:space="preserve"><value>تاريخ النهاية قبل البداية.</value></data>
+  <data name="AIR_Excel" xml:space="preserve"><value>تصدير Excel</value></data>
+  <data name="AIR_From" xml:space="preserve"><value>من تاريخ</value></data>
+  <data name="AIR_To" xml:space="preserve"><value>إلى تاريخ</value></data>
+  <data name="AIR_MyReports" xml:space="preserve"><value>تقاريرى</value></data>
+  <data name="AIR_NoData" xml:space="preserve"><value>لا توجد بيانات.</value></data>
+  <data name="AIR_OpenPage" xml:space="preserve"><value>فتح فى صفحة</value></data>
+  <data name="AIR_PageTitle" xml:space="preserve"><value>تقرير المساعد</value></data>
+  <data name="AIR_Period" xml:space="preserve"><value>الفترة: {0} → {1}</value></data>
+  <data name="AIR_Print" xml:space="preserve"><value>طباعة</value></data>
+  <data name="AIR_Refresh" xml:space="preserve"><value>تحديث البيانات</value></data>
+  <data name="AIR_RefreshTip" xml:space="preserve"><value>إعادة تشغيل التقرير ببيانات اليوم لنفس الفترة</value></data>
+  <data name="AIR_RerunDone" xml:space="preserve"><value>أُعيد تشغيل التقرير.</value></data>
+  <data name="AIR_RerunHint" xml:space="preserve"><value>تُنفَّذ نفس الاستعلامات بالفترة الجديدة وبصلاحياتك الحالية، دون استدعاء النموذج.</value></data>
+  <data name="AIR_RowsOf" xml:space="preserve"><value>{0} من {1} صف</value></data>
+  <data name="AIR_Run" xml:space="preserve"><value>تشغيل</value></data>
+  <data name="AIR_Running" xml:space="preserve"><value>جارٍ التشغيل…</value></data>
+  <data name="AIR_RunAt" xml:space="preserve"><value>آخر تشغيل: {0}</value></data>
+  <data name="AIR_Save" xml:space="preserve"><value>حفظ فى تقاريرى</value></data>
+  <data name="AIR_SavePin" xml:space="preserve"><value>حفظ وتثبيت</value></data>
+  <data name="AIR_SaveMenu" xml:space="preserve"><value>حفظ التقرير</value></data>
+  <data name="AIR_Saved" xml:space="preserve"><value>محفوظ</value></data>
+  <data name="AIR_Pinned" xml:space="preserve"><value>مثبّت</value></data>
+  <data name="AIR_Pin" xml:space="preserve"><value>تثبيت</value></data>
+  <data name="AIR_Unpin" xml:space="preserve"><value>إلغاء التثبيت</value></data>
+  <data name="AIR_Unsave" xml:space="preserve"><value>إزالة من تقاريرى</value></data>
+  <data name="AIR_SavedDone" xml:space="preserve"><value>حُفظ التقرير فى «تقاريرى».</value></data>
+  <data name="AIR_PinnedDone" xml:space="preserve"><value>حُفظ التقرير وثُبّت.</value></data>
+  <data name="AIR_UnsavedDone" xml:space="preserve"><value>أُزيل التقرير من «تقاريرى».</value></data>
+  <data name="AIR_SourceTruncated" xml:space="preserve"><value>عُرض جزء من الصفوف</value></data>
+  <data name="AIR_Summary" xml:space="preserve"><value>ملخص</value></data>
+  <data name="AIR_Table" xml:space="preserve"><value>جدول</value></data>
+  <data name="AIR_Total" xml:space="preserve"><value>الإجمالى</value></data>
+  <data name="AIR_Truncated" xml:space="preserve"><value>يُعرض أول {0} صف فقط؛ صدّر إلى Excel للكل.</value></data>
 </root>

@@ -1,0 +1,78 @@
+@* 🤖 المساعد الذكى P3: صفحة تقرير المساعد /assistant/report/{id} - للتقارير المحفوظة («تقاريرى») وفتح تقرير من المحادثة فى تبويب.
+   التقرير لصاحبه فقط (GetReport يتحقق من User_Id)، والصلاحية عنصر قائمة المساعد menuItemAiAssistant. *@
+@page "/assistant/report/{Id:long}"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Assistant
+@using Microsoft.Extensions.DependencyInjection
+@inject LanguageService LangService
+@inject IServiceProvider ServiceProvider
+@implements IDisposable
+
+<PageTitle>@(_doc?.Title ?? Tr("AIR_PageTitle"))</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-4" Style="padding-inline: 16px;">
+    <div dir="@(LangService.IsRtl ? "rtl" : "ltr")">
+        <div class="no-print" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoAwesome" Href="/assistant">@Tr("AIR_BackToAssistant")</MudButton>
+        </div>
+        @if (_chat == null || !_chat.HasAccess)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@Tr(_chat == null ? "AIC_NotAvailable" : "AIC_NoAccess")</MudAlert>
+        }
+        else if (_error != null)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@_error</MudAlert>
+        }
+        else if (_doc == null)
+        {
+            <div style="text-align:center;padding:48px;"><MudProgressCircular Indeterminate="true" Color="Color.Primary" /></div>
+        }
+        else
+        {
+            <AiReportView Doc="_doc" ShowOpenPage="false" DocChanged="d => _doc = d" />
+        }
+    </div>
+</MudContainer>
+
+@code {
+    [Parameter] public long Id { get; set; }
+
+    private AssistantSessionService? _chat;
+    private AiReportDoc? _doc;
+    private string? _error;
+    private long _loaded;
+
+    protected override void OnInitialized()
+    {
+        _chat = ServiceProvider.GetService<AssistantSessionService>();
+        LangService.OnLanguageChanged += OnChanged;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_chat == null || !_chat.HasAccess || _loaded == Id) return;
+        _loaded = Id; _doc = null; _error = null;
+        try { _doc = await _chat.GetReportAsync(Id); }
+        catch (Exception ex) { _error = ex.Message; }
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnChanged;
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

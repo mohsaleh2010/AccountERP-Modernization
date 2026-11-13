@@ -109,6 +109,24 @@ namespace AccountModelsLib
     [Outcome] [nvarchar](20) NOT NULL,
     [ErrorText] [nvarchar](1000) NULL,",
              @"CREATE NONCLUSTERED INDEX [IX_AI_ToolCalls_Audit_CreatedAt] ON [dbo].[AI_ToolCalls_Audit]([CreatedAt] DESC);"),
+
+            // P3: كل تقرير يرسمه المساعد (render_report) صف هنا: SpecJson = الشكل بعد التحقق، SourcesJson = الأداة ومدخلاتها لكل مصدر بيانات
+            // (لإعادة التشغيل بفترة جديدة)، DataJson = لقطة البيانات وقت الرسم. IsSaved = فى «تقاريرى»؛ غير المحفوظ يُحذف مع محادثته.
+            ("AI_SavedReports", @"
+    [User_Id] [bigint] NOT NULL,
+    [Conversation_Id] [bigint] NULL,
+    [Message_Id] [bigint] NULL,
+    [Title] [nvarchar](200) NOT NULL,
+    [SpecJson] [nvarchar](max) NOT NULL,
+    [SourcesJson] [nvarchar](max) NULL,
+    [DataJson] [nvarchar](max) NULL,
+    [PeriodFrom] [date] NULL,
+    [PeriodTo] [date] NULL,
+    [IsSaved] [bit] NOT NULL DEFAULT (0),
+    [IsPinned] [bit] NOT NULL DEFAULT (0),
+    [IsShared] [bit] NOT NULL DEFAULT (0),
+    [LastRunAt] [datetime] NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_AI_SavedReports_User] ON [dbo].[AI_SavedReports]([User_Id], [IsSaved], [IsPinned]);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>

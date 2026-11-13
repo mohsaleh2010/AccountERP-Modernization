@@ -1,0 +1,42 @@
+@* 🤖 المساعد الذكى P3: حوار عرض تقرير المساعد من المحادثة (ملء الشاشة على الموبايل، عريض على الشاشات الكبيرة). *@
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@inject AssistantSessionService Chat
+
+<MudDialog ContentStyle="max-height: calc(100vh - 140px); overflow-y: auto;">
+    <TitleContent>
+        <div style="display:flex;align-items:center;gap:8px;">
+            <MudIcon Icon="@Icons.Material.Outlined.Assessment" Color="Color.Primary" aria-hidden="true" />
+            <span style="font-weight:700;">@(_doc?.Title ?? Title)</span>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        @if (_error != null)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@_error</MudAlert>
+        }
+        else if (_doc == null)
+        {
+            <div style="text-align:center;padding:32px;"><MudProgressCircular Indeterminate="true" Color="Color.Primary" /></div>
+        }
+        else
+        {
+            <AiReportView Doc="_doc" DocChanged="d => _doc = d" OnNavigate="() => MudDialog.Close()" />
+        }
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public long ReportId { get; set; }
+    [Parameter] public string Title { get; set; } = "";
+
+    private AiReportDoc? _doc;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _doc = await Chat.GetReportAsync(ReportId); }
+        catch (Exception ex) { _error = ex.Message; }
+    }
+}

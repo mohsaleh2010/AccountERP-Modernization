@@ -5149,4 +5149,45 @@
   <data name="AI_AuditDetails" xml:space="preserve"><value>Détails</value></data>
   <data name="AI_AuditShow" xml:space="preserve"><value>Afficher la requête</value></data>
   <data name="AI_AuditEmpty" xml:space="preserve"><value>Aucune entrée pour l'instant.</value></data>
+  <data name="AIC_OpenScreen" xml:space="preserve"><value>Ouvrir l'écran</value></data>
+  <data name="AIC_ReportCard" xml:space="preserve"><value>Rapport de l'assistant</value></data>
+  <data name="AIC_ScreenCard" xml:space="preserve"><value>Écran du système</value></data>
+  <data name="AIC_ViewReport" xml:space="preserve"><value>Voir le rapport</value></data>
+  <data name="AIR_BackToAssistant" xml:space="preserve"><value>Retour à l'assistant</value></data>
+  <data name="AIR_ChangePeriod" xml:space="preserve"><value>Autre période</value></data>
+  <data name="AIR_ChartData" xml:space="preserve"><value>Données du graphique</value></data>
+  <data name="AIR_ErrRange" xml:space="preserve"><value>La date de fin précède la date de début.</value></data>
+  <data name="AIR_Excel" xml:space="preserve"><value>Exporter vers Excel</value></data>
+  <data name="AIR_From" xml:space="preserve"><value>Du</value></data>
+  <data name="AIR_To" xml:space="preserve"><value>Au</value></data>
+  <data name="AIR_MyReports" xml:space="preserve"><value>Mes rapports</value></data>
+  <data name="AIR_NoData" xml:space="preserve"><value>Aucune donnée.</value></data>
+  <data name="AIR_OpenPage" xml:space="preserve"><value>Ouvrir en page</value></data>
+  <data name="AIR_PageTitle" xml:space="preserve"><value>Rapport de l'assistant</value></data>
+  <data name="AIR_Period" xml:space="preserve"><value>Période : {0} → {1}</value></data>
+  <data name="AIR_Print" xml:space="preserve"><value>Imprimer</value></data>
+  <data name="AIR_Refresh" xml:space="preserve"><value>Actualiser les données</value></data>
+  <data name="AIR_RefreshTip" xml:space="preserve"><value>Relancer avec les données du jour pour la même période</value></data>
+  <data name="AIR_RerunDone" xml:space="preserve"><value>Rapport relancé.</value></data>
+  <data name="AIR_RerunHint" xml:space="preserve"><value>Les mêmes requêtes sont exécutées pour la nouvelle période avec vos droits actuels, sans appeler le modèle.</value></data>
+  <data name="AIR_RowsOf" xml:space="preserve"><value>{0} sur {1} lignes</value></data>
+  <data name="AIR_Run" xml:space="preserve"><value>Exécuter</value></data>
+  <data name="AIR_Running" xml:space="preserve"><value>Exécution…</value></data>
+  <data name="AIR_RunAt" xml:space="preserve"><value>Dernière exécution : {0}</value></data>
+  <data name="AIR_Save" xml:space="preserve"><value>Enregistrer dans mes rapports</value></data>
+  <data name="AIR_SavePin" xml:space="preserve"><value>Enregistrer et épingler</value></data>
+  <data name="AIR_SaveMenu" xml:space="preserve"><value>Enregistrer le rapport</value></data>
+  <data name="AIR_Saved" xml:space="preserve"><value>Enregistré</value></data>
+  <data name="AIR_Pinned" xml:space="preserve"><value>Épinglé</value></data>
+  <data name="AIR_Pin" xml:space="preserve"><value>Épingler</value></data>
+  <data name="AIR_Unpin" xml:space="preserve"><value>Désépingler</value></data>
+  <data name="AIR_Unsave" xml:space="preserve"><value>Retirer de mes rapports</value></data>
+  <data name="AIR_SavedDone" xml:space="preserve"><value>Rapport enregistré dans Mes rapports.</value></data>
+  <data name="AIR_PinnedDone" xml:space="preserve"><value>Rapport enregistré et épinglé.</value></data>
+  <data name="AIR_UnsavedDone" xml:space="preserve"><value>Rapport retiré de Mes rapports.</value></data>
+  <data name="AIR_SourceTruncated" xml:space="preserve"><value>lignes partielles</value></data>
+  <data name="AIR_Summary" xml:space="preserve"><value>Résumé</value></data>
+  <data name="AIR_Table" xml:space="preserve"><value>Tableau</value></data>
+  <data name="AIR_Total" xml:space="preserve"><value>Total</value></data>
+  <data name="AIR_Truncated" xml:space="preserve"><value>Seules les {0} premières lignes sont affichées ; exportez vers Excel pour tout voir.</value></data>
 </root>

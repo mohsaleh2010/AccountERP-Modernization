@@ -26,7 +26,8 @@
         .aiw-fab .mud-icon-root { font-size: 1.6rem; }
         .aiw-badge { position: absolute; top: 2px; inset-inline-end: 2px; width: 14px; height: 14px; border-radius: 50%;
                      background: var(--mud-palette-error); border: 2px solid var(--mud-palette-surface); }
-        .aiw-panel { position: fixed; bottom: 92px; z-index: 1250; width: 400px; height: min(600px, calc(100dvh - 120px));
+        /* النافذة مكان الأيقونة (الأيقونة تختفى وهى مفتوحة)، وارتفاعها لا يتجاوز المساحة تحت شريط التطبيق العلوى فيبقى رأسها ظاهراً */
+        .aiw-panel { position: fixed; bottom: 24px; z-index: 1250; width: 400px; height: min(640px, calc(100dvh - var(--mud-appbar-height, 64px) - 40px));
                      display: flex; flex-direction: column; border-radius: 16px; overflow: hidden;
                      background: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); box-shadow: var(--mud-elevation-12);
                      animation: aiw-in .18s ease-out; }
@@ -39,7 +40,7 @@
         .aiw-start { inset-inline-start: 24px; } .aiw-end { inset-inline-end: 24px; }
         @@media (max-width: 600px) {
             .aiw-fab { bottom: 16px; } .aiw-start { inset-inline-start: 16px; } .aiw-end { inset-inline-end: 16px; }
-            .aiw-panel { inset: 0; width: auto; height: auto; border-radius: 0; border: 0; }
+            .aiw-panel { inset: var(--mud-appbar-height, 64px) 0 0 0; width: auto; height: auto; border-radius: 0; border: 0; }
         }
         @@media print { .aiw-fab, .aiw-panel { display: none !important; } }
     </style>
@@ -61,20 +62,24 @@
                 </MudTooltip>
             </div>
             <div class="aiw-body">
-                <AssistantChat @ref="_chatView" Compact="true" ContextProvider="CurrentContext" />
+                <AssistantChat @ref="_chatView" Compact="true" ContextProvider="CurrentContext" OnNavigated="CloseAsync" />
             </div>
         </div>
     }
 
-    <button type="button" class="aiw-fab @SideClass" @ref="_fab" @onclick="ToggleAsync"
-            aria-label="@Tr(_open ? "AIC_Minimize" : "AIC_OpenAssistant")" aria-expanded="@(_open ? "true" : "false")" title="@Tr("AIC_OpenAssistant")">
-        <MudIcon Icon="@(_open ? Icons.Material.Filled.Close : Icons.Material.Filled.AutoAwesome)" />
-        @if (_unseen && !_open)
-        {
-            <span class="aiw-badge" aria-hidden="true"></span>
-            <span class="aic-sr" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">@Tr("AIC_NewReply")</span>
-        }
-    </button>
+    else
+    {
+        @* الأيقونة تظهر فقط والنافذة مغلقة؛ الإغلاق من زر «تصغير» فى رأس النافذة أو Escape *@
+        <button type="button" class="aiw-fab @SideClass" @ref="_fab" @onclick="ToggleAsync"
+                aria-label="@Tr("AIC_OpenAssistant")" aria-expanded="false" title="@Tr("AIC_OpenAssistant")">
+            <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" />
+            @if (_unseen)
+            {
+                <span class="aiw-badge" aria-hidden="true"></span>
+                <span class="aic-sr" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">@Tr("AIC_NewReply")</span>
+            }
+        </button>
+    }
 }
 
 @code {
@@ -83,7 +88,7 @@
     private ElementReference _fab, _panel;
     private IJSObjectReference? _module;
     private DotNetObjectReference<AssistantWidget>? _self;
-    private bool _open, _unseen, _focusOnRender, _escBound;
+    private bool _open, _unseen, _focusOnRender, _escBound, _focusFab;
 
     private string SideClass => Prefs.AiAssistantIconPosition == "start" ? "aiw-start" : "aiw-end";
 
@@ -153,8 +158,9 @@
     {
         _open = false;
         _escBound = false;
+        _focusFab = true;   // الأيقونة تُرسم من جديد بعد الإغلاق؛ التركيز يعود لها بعد العرض
         StateHasChanged();
-        try { await _fab.FocusAsync(); } catch { }
+        await Task.CompletedTask;
     }
 
     [JSInvokable]
@@ -174,7 +180,15 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!_open) return;
+        if (!_open)
+        {
+            if (_focusFab)
+            {
+                _focusFab = false;
+                try { await _fab.FocusAsync(); } catch { }
+            }
+            return;
+        }
         try
         {
             if (!_escBound)

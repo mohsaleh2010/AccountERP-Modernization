@@ -1,0 +1,394 @@
+@* 🤖 المساعد الذكى P3 (ai-assistant-plan.md §5): عرض تقرير المساعد من AiReportDoc (يُبنى على الخادم من ReportSpec + البيانات؛ لا HTML من النموذج).
+   شريط أدوات: إعادة التشغيل بفترة جديدة، حفظ/تثبيت فى «تقاريرى»، Excel (MiniExcel)، طباعة (printElement)، فتح فى صفحة.
+   التصميم حسب ui-ux-pro-max: مؤشرات أعلى التقرير، أرقام بمحاذاة وأرقام جدولية، رأس جدول ثابت وسطر إجمالى، أهداف لمس 44px، فاتح/داكن، RTL/LTR. *@
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@inject AssistantSessionService Chat
+@inject LanguageService LangService
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<style>
+    .air { display: flex; flex-direction: column; gap: 16px; color: var(--mud-palette-text-primary); }
+    .air-head { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 16px; }
+    .air-head .ttl { flex: 1 1 260px; min-width: 0; }
+    .air-head h2 { margin: 0; font-size: 1.25rem; font-weight: 700; line-height: 1.4; }
+    .air-head .sub { margin-top: 2px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .air-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; font-size: .78rem; color: var(--mud-palette-text-secondary); }
+    .air-meta span { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--mud-palette-lines-default); }
+    .air-tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .air-tools .mud-button-root { min-height: 40px; }
+    .air-rerun { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px;
+                 border: 1px dashed var(--mud-palette-lines-inputs); background: var(--mud-palette-background); }
+    .air-rerun .mud-input-control { width: 170px; flex: 0 0 auto; margin: 0; }
+    .air-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+    .air-kpi { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); min-width: 0; }
+    .air-kpi .l { font-size: .8rem; color: var(--mud-palette-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .air-kpi .v { margin-top: 4px; font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; direction: ltr; text-align: start; unicode-bidi: plaintext; overflow-wrap: anywhere; }
+    .air-sec { border: 1px solid var(--mud-palette-lines-default); border-radius: 12px; background: var(--mud-palette-surface); overflow: hidden; }
+    .air-sec > h3 { margin: 0; padding: 10px 14px; font-size: .95rem; font-weight: 700; border-bottom: 1px solid var(--mud-palette-lines-default); display: flex; gap: 8px; align-items: center; }
+    .air-sec > h3 .n { margin-inline-start: auto; font-size: .75rem; font-weight: 400; color: var(--mud-palette-text-secondary); }
+    .air-sec .body { padding: 12px 14px; }
+    .air-sec.text .body { white-space: pre-wrap; line-height: 1.8; font-size: .92rem; }
+    .air-table-wrap { overflow: auto; max-height: 560px; }
+    .air-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .air-table th, .air-table td { padding: 8px 10px; border-bottom: 1px solid var(--mud-palette-lines-default); text-align: start; white-space: nowrap; }
+    .air-table thead th { position: sticky; top: 0; z-index: 1; background: var(--mud-palette-background-gray); font-weight: 700; color: var(--mud-palette-text-primary); }
+    .air-table td.num, .air-table th.num { text-align: end; font-variant-numeric: tabular-nums; direction: ltr; }
+    .air-table tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--mud-palette-background-gray) 45%, transparent); }
+    .air-table tbody tr:hover td { background: color-mix(in srgb, var(--mud-palette-primary) 7%, transparent); }
+    .air-table tfoot td { font-weight: 700; border-top: 2px solid var(--mud-palette-lines-inputs); background: var(--mud-palette-background-gray); position: sticky; bottom: 0; }
+    .air-note { font-size: .78rem; color: var(--mud-palette-text-secondary); padding: 6px 14px 10px; }
+    .air-src { font-size: .8rem; border: 1px solid var(--mud-palette-lines-default); border-radius: 10px; }
+    .air-src > summary { min-height: 40px; display: flex; align-items: center; gap: 6px; padding: 6px 12px; cursor: pointer; color: var(--mud-palette-text-secondary); }
+    .air-src > summary:focus-visible, .aich-data > summary:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .air-src ol { margin: 0; padding: 6px 28px 10px; }
+    .air-src pre { margin: 4px 0 0; padding: 6px 8px; border-radius: 8px; background: var(--mud-palette-background-gray); font-family: Consolas, 'Courier New', monospace;
+                   font-size: .74rem; white-space: pre-wrap; overflow-wrap: anywhere; text-align: left; max-height: 160px; overflow-y: auto; }
+    /* الرسوم */
+    .aich-svg { width: 100%; height: auto; display: block; max-height: 340px; }
+    .aich-svg .grid { stroke: var(--mud-palette-lines-default); stroke-width: 1; }
+    .aich-svg .axis0 { stroke: var(--mud-palette-text-secondary); stroke-width: 1; }
+    .aich-svg .tick, .aich-svg .lbl { fill: var(--mud-palette-text-secondary); font-size: 11px; font-family: inherit; }
+    .aich-pie { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+    .aich-svg.pie { width: 220px; max-width: 100%; flex: none; }
+    .aich-legend { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .8rem; }
+    .aich-legend li { display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .aich-legend .sw { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+    .aich-legend.pie { flex-direction: column; flex: 1 1 220px; min-width: 0; gap: 6px; }
+    .aich-legend.pie li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto auto; gap: 8px; }
+    .aich-legend.pie .lb { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .aich-legend.pie .pc { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .aich-legend.pie .vl { color: var(--mud-palette-text-secondary); font-variant-numeric: tabular-nums; direction: ltr; }
+    .aich-empty { padding: 16px; text-align: center; color: var(--mud-palette-text-secondary); }
+    .aich-data { margin-top: 10px; font-size: .8rem; }
+    .aich-data > summary { cursor: pointer; color: var(--mud-palette-text-secondary); min-height: 32px; display: flex; align-items: center; }
+    .aich-data-scroll { overflow: auto; max-height: 260px; }
+    .aich-data table { border-collapse: collapse; width: 100%; }
+    .aich-data th, .aich-data td { padding: 4px 8px; border-bottom: 1px solid var(--mud-palette-lines-default); text-align: start; white-space: nowrap; }
+    .aich-data td { text-align: end; font-variant-numeric: tabular-nums; direction: ltr; }
+    @@media print {
+        .air .no-print { display: none !important; }
+        .air-table-wrap { max-height: none; overflow: visible; }
+        .air-table thead th, .air-table tfoot td { position: static; }
+        .air-sec { break-inside: avoid-page; }
+        .aich-data { display: none; }
+    }
+</style>
+
+<div class="air" id="@_domId" dir="@(Rtl ? "rtl" : "ltr")">
+    <div class="air-head">
+        <div class="ttl">
+            <h2>@Doc.Title</h2>
+            @if (!string.IsNullOrWhiteSpace(Doc.Subtitle))
+            {
+                <div class="sub">@Doc.Subtitle</div>
+            }
+            <div class="air-meta">
+                @if (Doc.PeriodFrom != null && Doc.PeriodTo != null)
+                {
+                    <span><MudIcon Icon="@Icons.Material.Outlined.DateRange" Size="Size.Small" aria-hidden="true" /> @Tr("AIR_Period", D(Doc.PeriodFrom), D(Doc.PeriodTo))</span>
+                }
+                <span><MudIcon Icon="@Icons.Material.Outlined.Schedule" Size="Size.Small" aria-hidden="true" /> @Tr("AIR_RunAt", (Doc.LastRunAt ?? Doc.CreatedAt).ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture))</span>
+                @if (Doc.IsSaved)
+                {
+                    <span><MudIcon Icon="@(Doc.IsPinned ? Icons.Material.Filled.PushPin : Icons.Material.Filled.Bookmark)" Size="Size.Small" Color="Color.Primary" aria-hidden="true" /> @Tr(Doc.IsPinned ? "AIR_Pinned" : "AIR_Saved")</span>
+                }
+            </div>
+        </div>
+        <div class="air-tools no-print">
+            @if (Doc.CanRerun)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.EventRepeat" Disabled="_busy"
+                           OnClick="() => _showRerun = !_showRerun" aria-expanded="@(_showRerun ? "true" : "false")">@Tr("AIR_ChangePeriod")</MudButton>
+            }
+            <MudTooltip Text="@Tr("AIR_RefreshTip")">
+                <MudIconButton Icon="@Icons.Material.Filled.Refresh" aria-label="@Tr("AIR_Refresh")" Disabled="_busy" OnClick="() => RerunAsync(false)" />
+            </MudTooltip>
+            <MudMenu Icon="@(Doc.IsSaved ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)" AriaLabel="@Tr("AIR_SaveMenu")" Disabled="_busy" Dense="true">
+                @if (!Doc.IsSaved)
+                {
+                    <MudMenuItem Icon="@Icons.Material.Outlined.BookmarkAdd" OnClick="() => SaveAsync(false)">@Tr("AIR_Save")</MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Outlined.PushPin" OnClick="() => SaveAsync(true)">@Tr("AIR_SavePin")</MudMenuItem>
+                }
+                else
+                {
+                    <MudMenuItem Icon="@Icons.Material.Outlined.PushPin" OnClick="() => SaveAsync(!Doc.IsPinned)">@Tr(Doc.IsPinned ? "AIR_Unpin" : "AIR_Pin")</MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Outlined.BookmarkRemove" IconColor="Color.Error" OnClick="UnsaveAsync">@Tr("AIR_Unsave")</MudMenuItem>
+                }
+            </MudMenu>
+            <MudTooltip Text="@Tr("AIR_Excel")">
+                <MudIconButton Icon="@Icons.Material.Outlined.TableView" aria-label="@Tr("AIR_Excel")" Disabled="_busy" OnClick="ExcelAsync" />
+            </MudTooltip>
+            <MudTooltip Text="@Tr("AIR_Print")">
+                <MudIconButton Icon="@Icons.Material.Outlined.Print" aria-label="@Tr("AIR_Print")" OnClick="PrintAsync" />
+            </MudTooltip>
+            @if (ShowOpenPage)
+            {
+                <MudTooltip Text="@Tr("AIR_OpenPage")">
+                    <MudIconButton Icon="@Icons.Material.Outlined.OpenInNew" aria-label="@Tr("AIR_OpenPage")" OnClick="OpenPage" />
+                </MudTooltip>
+            }
+        </div>
+    </div>
+
+    @if (_showRerun && Doc.CanRerun)
+    {
+        <div class="air-rerun no-print">
+            <MudDatePicker T="DateTime?" @bind-Date="_from" Label="@Tr("AIR_From")" Variant="Variant.Outlined" Margin="Margin.Dense" DateFormat="yyyy-MM-dd" Editable="true" />
+            <MudDatePicker T="DateTime?" @bind-Date="_to" Label="@Tr("AIR_To")" Variant="Variant.Outlined" Margin="Margin.Dense" DateFormat="yyyy-MM-dd" Editable="true" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" Disabled="@(_busy || _from == null || _to == null)"
+                       OnClick="() => RerunAsync(true)">@(_busy ? Tr("AIR_Running") : Tr("AIR_Run"))</MudButton>
+            <span class="air-note" style="padding:0;">@Tr("AIR_RerunHint")</span>
+        </div>
+    }
+    @if (_busy)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="no-print" />
+    }
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" ShowCloseIcon="true" CloseIconClicked="() => _error = null">@_error</MudAlert>
+    }
+
+    @if (Doc.Kpis.Count > 0)
+    {
+        <div class="air-kpis">
+            @foreach (var k in Doc.Kpis)
+            {
+                <div class="air-kpi">
+                    <div class="l" title="@k.Label">@k.Label</div>
+                    <div class="v">@AiReportFmt.Number(k.Value, k.Format)</div>
+                </div>
+            }
+        </div>
+    }
+
+    @foreach (var s in Doc.Sections)
+    {
+        @if (s.Kind == "text")
+        {
+            <section class="air-sec text">
+                @if (!string.IsNullOrWhiteSpace(s.Title)) { <h3>@s.Title</h3> }
+                <div class="body">@s.Text</div>
+            </section>
+        }
+        else if (s.Kind == "chart")
+        {
+            <section class="air-sec">
+                @if (!string.IsNullOrWhiteSpace(s.Title)) { <h3>@s.Title</h3> }
+                <div class="body"><AiChart Section="s" Rtl="Rtl" EmptyText="@Tr("AIR_NoData")" DataText="@Tr("AIR_ChartData")" /></div>
+            </section>
+        }
+        else
+        {
+            <section class="air-sec">
+                <h3>
+                    <span>@(string.IsNullOrWhiteSpace(s.Title) ? Tr("AIR_Table") : s.Title)</span>
+                    <span class="n">@Tr("AIR_RowsOf", s.Rows.Count.ToString("N0", CultureInfo.InvariantCulture), s.TotalRows.ToString("N0", CultureInfo.InvariantCulture))</span>
+                </h3>
+                @if (s.Rows.Count == 0)
+                {
+                    <div class="aich-empty">@Tr("AIR_NoData")</div>
+                }
+                else
+                {
+                    <div class="air-table-wrap" tabindex="0" aria-label="@(string.IsNullOrWhiteSpace(s.Title) ? Tr("AIR_Table") : s.Title)">
+                        <table class="air-table">
+                            <thead>
+                                <tr>
+                                    @foreach (var c in s.Columns)
+                                    {
+                                        <th scope="col" class="@(c.IsNumeric ? "num" : "")">@c.Label</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var r in s.Rows)
+                                {
+                                    <tr>
+                                        @for (int j = 0; j < s.Columns.Count; j++)
+                                        {
+                                            var c = s.Columns[j];
+                                            <td class="@(c.IsNumeric ? "num" : "")">@AiReportFmt.Format(j < r.Length ? r[j] : null, c.Format)</td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                            @if (s.ShowTotals)
+                            {
+                                <tfoot>
+                                    <tr>
+                                        @for (int j = 0; j < s.Columns.Count; j++)
+                                        {
+                                            var c = s.Columns[j];
+                                            var t = j < s.Totals.Count ? s.Totals[j] : null;
+                                            <td class="@(c.IsNumeric ? "num" : "")">@(t != null ? AiReportFmt.Number(t, c.Format) : j == FirstTextColumn(s) ? Tr("AIR_Total") : "")</td>
+                                        }
+                                    </tr>
+                                </tfoot>
+                            }
+                        </table>
+                    </div>
+                    @if (s.TotalRows > s.Rows.Count)
+                    {
+                        <div class="air-note">@Tr("AIR_Truncated", s.Rows.Count.ToString("N0", CultureInfo.InvariantCulture))</div>
+                    }
+                }
+            </section>
+        }
+    }
+
+    @if (Doc.Sources.Count > 0)
+    {
+        <details class="air-src no-print">
+            <summary><MudIcon Icon="@Icons.Material.Outlined.Storage" Size="Size.Small" aria-hidden="true" /> @Tr("AIC_Sources", Doc.Sources.Count)</summary>
+            <ol>
+                @foreach (var src in Doc.Sources)
+                {
+                    <li>
+                        <strong>@src.Title</strong> — @Tr("AIC_ToolRows", src.RowCount.ToString("N0", CultureInfo.InvariantCulture))
+                        @if (src.Truncated) { <span> (@Tr("AIR_SourceTruncated"))</span> }
+                        @if (!string.IsNullOrEmpty(src.Sql)) { <pre dir="ltr">@src.Sql</pre> }
+                    </li>
+                }
+            </ol>
+        </details>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public AiReportDoc Doc { get; set; } = new();
+    /// <summary>زر «فتح فى صفحة» (فى المحادثة والحوار؛ لا يظهر داخل صفحة التقرير نفسها).</summary>
+    [Parameter] public bool ShowOpenPage { get; set; } = true;
+    [Parameter] public EventCallback<AiReportDoc> DocChanged { get; set; }
+    [Parameter] public EventCallback OnNavigate { get; set; }
+
+    private readonly string _domId = "air-" + Guid.NewGuid().ToString("N")[..8];
+    private bool _busy, _showRerun;
+    private string? _error;
+    private DateTime? _from, _to;
+    private long _forId;
+
+    private bool Rtl => LangService.IsRtl;
+
+    protected override void OnParametersSet()
+    {
+        if (_forId != Doc.Id)
+        {
+            _forId = Doc.Id;
+            _from = Doc.PeriodFrom; _to = Doc.PeriodTo;
+            _showRerun = false; _error = null;
+        }
+    }
+
+    private static string D(DateTime? d) => d?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "";
+
+    private static int FirstTextColumn(AiReportSection s)
+    {
+        for (int j = 0; j < s.Columns.Count; j++)
+            if (!s.Columns[j].IsNumeric && (j >= s.Totals.Count || s.Totals[j] == null)) return j;
+        return -1;
+    }
+
+    private async Task SetDoc(AiReportDoc d)
+    {
+        Doc = d;
+        _forId = d.Id;
+        await DocChanged.InvokeAsync(d);
+    }
+
+    private async Task RerunAsync(bool withPeriod)
+    {
+        if (_busy) return;
+        if (withPeriod && (_from == null || _to == null)) return;
+        if (withPeriod && _to < _from) { _error = Tr("AIR_ErrRange"); return; }
+        _busy = true; _error = null;
+        try
+        {
+            var d = await Chat.RerunReportAsync(Doc.Id, withPeriod ? _from : null, withPeriod ? _to : null);
+            await SetDoc(d);
+            _from = d.PeriodFrom; _to = d.PeriodTo;
+            _showRerun = false;
+            Snackbar.Add(Tr("AIR_RerunDone"), Severity.Success);
+        }
+        catch (Exception ex) { _error = ex is InvalidOperationException ? ex.Message : Tr("SystemError", ex.InnerException?.Message ?? ex.Message); }
+        finally { _busy = false; }
+    }
+
+    private async Task SaveAsync(bool pinned)
+    {
+        _busy = true; _error = null;
+        try
+        {
+            await Chat.SaveReportAsync(Doc.Id, Doc.Title, pinned);
+            Doc.IsSaved = true; Doc.IsPinned = pinned;
+            await DocChanged.InvokeAsync(Doc);
+            Snackbar.Add(Tr(pinned ? "AIR_PinnedDone" : "AIR_SavedDone"), Severity.Success);
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task UnsaveAsync()
+    {
+        _busy = true; _error = null;
+        try
+        {
+            await Chat.UnsaveReportAsync(Doc.Id);
+            Doc.IsSaved = false; Doc.IsPinned = false;
+            await DocChanged.InvokeAsync(Doc);
+            Snackbar.Add(Tr("AIR_UnsavedDone"), Severity.Info);
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task ExcelAsync()
+    {
+        try
+        {
+            var bytes = AiReportExcel.Build(Doc, Tr("AIR_Summary"), Tr("AIR_Total"));
+            string name = "report-" + Doc.Id.ToString(CultureInfo.InvariantCulture) + "-" + DateTime.Now.ToString("yyyyMMdd-HHmm", CultureInfo.InvariantCulture) + ".xlsx";
+            await JS.InvokeVoidAsync("accountErpInterop.downloadBase64", name,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", Convert.ToBase64String(bytes));
+        }
+        catch (JSDisconnectedException) { }
+        catch (Exception ex) { _error = Tr("SystemError", ex.InnerException?.Message ?? ex.Message); }
+    }
+
+    private async Task PrintAsync()
+    {
+        try { await JS.InvokeVoidAsync("accountErpInterop.printElement", "#" + _domId, Doc.Title, Rtl ? "rtl" : "ltr", PrintCss); }
+        catch (JSDisconnectedException) { }
+    }
+
+    // الطباعة على ورق أبيض حتى فى الثيم الداكن: نص أسود وخلفيات فاتحة، وألوان الرسوم كما هى.
+    private const string PrintCss =
+        ".air, .air h2, .air h3, .air .sub, .air-meta, .air-kpi .l, .air-table th, .air-table td, .aich-legend, .air-sec .body { color: #000 !important; }" +
+        ".air-kpi, .air-sec, .air-table thead th, .air-table tfoot td, .air-table tbody tr td { background: #fff !important; }" +
+        ".air-table thead th, .air-table tfoot td { background: #f1f1f1 !important; } .air-kpi, .air-sec, .air-table th, .air-table td { border-color: #bbb !important; }" +
+        ".aich-svg .tick, .aich-svg .lbl { fill: #333 !important; } .aich-svg .grid { stroke: #ddd !important; } .air .no-print, .aich-data { display: none !important; }";
+
+    private async Task OpenPage()
+    {
+        await OnNavigate.InvokeAsync();
+        Nav.NavigateTo("/assistant/report/" + Doc.Id.ToString(CultureInfo.InvariantCulture));
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+}

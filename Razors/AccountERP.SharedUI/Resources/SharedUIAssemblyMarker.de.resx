@@ -5149,4 +5149,45 @@
   <data name="AI_AuditDetails" xml:space="preserve"><value>Details</value></data>
   <data name="AI_AuditShow" xml:space="preserve"><value>Abfrage anzeigen</value></data>
   <data name="AI_AuditEmpty" xml:space="preserve"><value>Noch keine Einträge.</value></data>
+  <data name="AIC_OpenScreen" xml:space="preserve"><value>Bildschirm öffnen</value></data>
+  <data name="AIC_ReportCard" xml:space="preserve"><value>Assistenten-Bericht</value></data>
+  <data name="AIC_ScreenCard" xml:space="preserve"><value>Systembildschirm</value></data>
+  <data name="AIC_ViewReport" xml:space="preserve"><value>Bericht anzeigen</value></data>
+  <data name="AIR_BackToAssistant" xml:space="preserve"><value>Zurück zum Assistenten</value></data>
+  <data name="AIR_ChangePeriod" xml:space="preserve"><value>Anderer Zeitraum</value></data>
+  <data name="AIR_ChartData" xml:space="preserve"><value>Diagrammdaten</value></data>
+  <data name="AIR_ErrRange" xml:space="preserve"><value>Enddatum liegt vor dem Startdatum.</value></data>
+  <data name="AIR_Excel" xml:space="preserve"><value>Nach Excel exportieren</value></data>
+  <data name="AIR_From" xml:space="preserve"><value>Von</value></data>
+  <data name="AIR_To" xml:space="preserve"><value>Bis</value></data>
+  <data name="AIR_MyReports" xml:space="preserve"><value>Meine Berichte</value></data>
+  <data name="AIR_NoData" xml:space="preserve"><value>Keine Daten.</value></data>
+  <data name="AIR_OpenPage" xml:space="preserve"><value>Als Seite öffnen</value></data>
+  <data name="AIR_PageTitle" xml:space="preserve"><value>Assistenten-Bericht</value></data>
+  <data name="AIR_Period" xml:space="preserve"><value>Zeitraum: {0} → {1}</value></data>
+  <data name="AIR_Print" xml:space="preserve"><value>Drucken</value></data>
+  <data name="AIR_Refresh" xml:space="preserve"><value>Daten aktualisieren</value></data>
+  <data name="AIR_RefreshTip" xml:space="preserve"><value>Mit aktuellen Daten für denselben Zeitraum neu ausführen</value></data>
+  <data name="AIR_RerunDone" xml:space="preserve"><value>Bericht neu ausgeführt.</value></data>
+  <data name="AIR_RerunHint" xml:space="preserve"><value>Dieselben Abfragen laufen für den neuen Zeitraum mit Ihren aktuellen Rechten, ohne das Modell aufzurufen.</value></data>
+  <data name="AIR_RowsOf" xml:space="preserve"><value>{0} von {1} Zeilen</value></data>
+  <data name="AIR_Run" xml:space="preserve"><value>Ausführen</value></data>
+  <data name="AIR_Running" xml:space="preserve"><value>Wird ausgeführt…</value></data>
+  <data name="AIR_RunAt" xml:space="preserve"><value>Zuletzt ausgeführt: {0}</value></data>
+  <data name="AIR_Save" xml:space="preserve"><value>In meinen Berichten speichern</value></data>
+  <data name="AIR_SavePin" xml:space="preserve"><value>Speichern und anheften</value></data>
+  <data name="AIR_SaveMenu" xml:space="preserve"><value>Bericht speichern</value></data>
+  <data name="AIR_Saved" xml:space="preserve"><value>Gespeichert</value></data>
+  <data name="AIR_Pinned" xml:space="preserve"><value>Angeheftet</value></data>
+  <data name="AIR_Pin" xml:space="preserve"><value>Anheften</value></data>
+  <data name="AIR_Unpin" xml:space="preserve"><value>Lösen</value></data>
+  <data name="AIR_Unsave" xml:space="preserve"><value>Aus meinen Berichten entfernen</value></data>
+  <data name="AIR_SavedDone" xml:space="preserve"><value>Bericht unter Meine Berichte gespeichert.</value></data>
+  <data name="AIR_PinnedDone" xml:space="preserve"><value>Bericht gespeichert und angeheftet.</value></data>
+  <data name="AIR_UnsavedDone" xml:space="preserve"><value>Bericht aus Meine Berichte entfernt.</value></data>
+  <data name="AIR_SourceTruncated" xml:space="preserve"><value>Teilmenge der Zeilen</value></data>
+  <data name="AIR_Summary" xml:space="preserve"><value>Zusammenfassung</value></data>
+  <data name="AIR_Table" xml:space="preserve"><value>Tabelle</value></data>
+  <data name="AIR_Total" xml:space="preserve"><value>Summe</value></data>
+  <data name="AIR_Truncated" xml:space="preserve"><value>Nur die ersten {0} Zeilen werden angezeigt; für alle nach Excel exportieren.</value></data>
 </root>

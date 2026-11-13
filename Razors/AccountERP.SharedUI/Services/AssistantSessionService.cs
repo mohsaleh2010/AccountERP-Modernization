@@ -124,14 +124,7 @@ namespace AccountERP.SharedUI.Services
             text = (text ?? "").Trim();
             if (_gw == null || IsSending || text.Length == 0) return;
             var gw = _gw; long convId = ConversationId;
-            // P2: ما يحق له قراءته = نفس شاشات قائمة الويب (RazorPath)؛ المساعد لا يرى أداة/View لشاشة غير مسموحة.
-            var user = new AiUserContext
-            {
-                UserId = UserId,
-                BranchId = BranchId,
-                IsAdmin = (_session?.Is_User_Admin ?? 0) == 1,
-                AllowedRoutes = (_menu.UserAllowedMenus ?? new()).Select(m => m.RazorPath ?? "").Where(p => p.Length > 0).Distinct().ToList(),
-            };
+            var user = BuildUser();
             _cts = new CancellationTokenSource();
             var ct = _cts.Token;
             lock (_lock) _streaming.Clear();
@@ -167,6 +160,24 @@ namespace AccountERP.SharedUI.Services
             await RefreshAsync();
             if (ConversationId != 0)
                 ConversationTitle = Conversations.FirstOrDefault(c => c.Id == ConversationId)?.Title ?? ConversationTitle;
+        }
+
+        /// <summary>
+        /// P2: ما يحق له قراءته = نفس شاشات قائمة الويب (RazorPath)؛ المساعد لا يرى أداة/View لشاشة غير مسموحة.
+        /// P3: نفس الشاشات بعناوينها لأداتى find_screen/open_screen.
+        /// </summary>
+        private AiUserContext BuildUser()
+        {
+            var menus = (_menu.UserAllowedMenus ?? new()).Where(m => !string.IsNullOrWhiteSpace(m.RazorPath)).ToList();
+            return new AiUserContext
+            {
+                UserId = UserId,
+                BranchId = BranchId,
+                IsAdmin = (_session?.Is_User_Admin ?? 0) == 1,
+                AllowedRoutes = menus.Select(m => m.RazorPath!.Trim()).Distinct().ToList(),
+                AllowedScreens = menus.Select(m => new AiScreenRef { Path = m.RazorPath!.Trim(), Title = (m.Description ?? "").Trim() })
+                                      .GroupBy(x => x.Path, StringComparer.OrdinalIgnoreCase).Select(g => g.First()).ToList(),
+            };
         }
 
         private static string TitleOf(string text)
@@ -230,6 +241,58 @@ namespace AccountERP.SharedUI.Services
 
         public void ClearError() { Error = null; Notify(); }
 
+        // ───────────── P3: التقارير ─────────────
+
+        /// <summary>«تقاريرى»: المحفوظة، المثبّتة أولاً.</summary>
+        public List<AiSavedReportView> SavedReports { get; private set; } = new();
+
+        public async Task RefreshSavedReportsAsync()
+        {
+            if (!HasAccess || _gw == null) return;
+            var gw = _gw; long uid = UserId;
+            try { SavedReports = await Bg(() => gw.GetSavedReports(uid)); }
+            catch (Exception ex) { Error = Err(ex); }
+            Notify();
+        }
+
+        /// <summary>التقرير للعرض؛ يرمى InvalidOperationException برسالة عربية.</summary>
+        public async Task<AiReportDoc> GetReportAsync(long reportId)
+        {
+            if (_gw == null || !HasAccess) throw new InvalidOperationException("المساعد غير متاح.");
+            var gw = _gw; long uid = UserId;
+            return await Bg(() => gw.GetReport(reportId, uid)) ?? throw new InvalidOperationException("التقرير غير موجود.");
+        }
+
+        public async Task SaveReportAsync(long reportId, string title, bool pinned)
+        {
+            if (_gw == null) return;
+            var gw = _gw; long uid = UserId;
+            await Bg(() => gw.SaveReport(reportId, title, pinned, uid));
+            await RefreshSavedReportsAsync();
+        }
+
+        public async Task UnsaveReportAsync(long reportId)
+        {
+            if (_gw == null) return;
+            var gw = _gw; long uid = UserId;
+            await Bg(() => gw.UnsaveReport(reportId, uid));
+            await RefreshSavedReportsAsync();
+        }
+
+        /// <summary>إعادة التشغيل ببيانات اليوم وبفترة جديدة اختيارياً (الصلاحيات الحالية تُطبَّق).</summary>
+        public async Task<AiReportDoc> RerunReportAsync(long reportId, DateTime? from, DateTime? to)
+        {
+            if (_gw == null || !HasAccess) throw new InvalidOperationException("المساعد غير متاح.");
+            var gw = _gw; var user = BuildUser();
+            var doc = await Task.Run(async () =>
+            {
+                AccountCultureGuard.EnsureInvariant();
+                return await gw.RerunReportAsync(reportId, from, to, user);
+            });
+            await RefreshSavedReportsAsync();
+            return doc;
+        }
+
         // ───────────── الإعداد السريع (للمدير) ─────────────
 
         /// <summary>المدير (صلاحية إعدادات الذكاء الاصطناعى) يختار نموذج المحادثة من صفحة المساعد نفسها بدل الذهاب للإعدادات.</summary>
@@ -279,6 +342,7 @@ namespace AccountERP.SharedUI.Services
             ConversationTitle = "";
             Messages = new();
             Conversations = new();
+            SavedReports = new();
             Search = "";
             Error = null;
             AvailabilityLoaded = false;

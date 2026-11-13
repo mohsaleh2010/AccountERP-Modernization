@@ -5147,4 +5147,45 @@
   <data name="AI_AuditDetails" xml:space="preserve"><value>Details</value></data>
   <data name="AI_AuditShow" xml:space="preserve"><value>Show query</value></data>
   <data name="AI_AuditEmpty" xml:space="preserve"><value>No entries yet.</value></data>
+  <data name="AIC_OpenScreen" xml:space="preserve"><value>Open screen</value></data>
+  <data name="AIC_ReportCard" xml:space="preserve"><value>Assistant report</value></data>
+  <data name="AIC_ScreenCard" xml:space="preserve"><value>System screen</value></data>
+  <data name="AIC_ViewReport" xml:space="preserve"><value>View report</value></data>
+  <data name="AIR_BackToAssistant" xml:space="preserve"><value>Back to assistant</value></data>
+  <data name="AIR_ChangePeriod" xml:space="preserve"><value>Another period</value></data>
+  <data name="AIR_ChartData" xml:space="preserve"><value>Chart data</value></data>
+  <data name="AIR_ErrRange" xml:space="preserve"><value>End date is before start date.</value></data>
+  <data name="AIR_Excel" xml:space="preserve"><value>Export to Excel</value></data>
+  <data name="AIR_From" xml:space="preserve"><value>From</value></data>
+  <data name="AIR_To" xml:space="preserve"><value>To</value></data>
+  <data name="AIR_MyReports" xml:space="preserve"><value>My reports</value></data>
+  <data name="AIR_NoData" xml:space="preserve"><value>No data.</value></data>
+  <data name="AIR_OpenPage" xml:space="preserve"><value>Open as page</value></data>
+  <data name="AIR_PageTitle" xml:space="preserve"><value>Assistant report</value></data>
+  <data name="AIR_Period" xml:space="preserve"><value>Period: {0} → {1}</value></data>
+  <data name="AIR_Print" xml:space="preserve"><value>Print</value></data>
+  <data name="AIR_Refresh" xml:space="preserve"><value>Refresh data</value></data>
+  <data name="AIR_RefreshTip" xml:space="preserve"><value>Re-run with today's data for the same period</value></data>
+  <data name="AIR_RerunDone" xml:space="preserve"><value>Report re-run.</value></data>
+  <data name="AIR_RerunHint" xml:space="preserve"><value>The same queries run for the new period with your current permissions, without calling the model.</value></data>
+  <data name="AIR_RowsOf" xml:space="preserve"><value>{0} of {1} rows</value></data>
+  <data name="AIR_Run" xml:space="preserve"><value>Run</value></data>
+  <data name="AIR_Running" xml:space="preserve"><value>Running…</value></data>
+  <data name="AIR_RunAt" xml:space="preserve"><value>Last run: {0}</value></data>
+  <data name="AIR_Save" xml:space="preserve"><value>Save to my reports</value></data>
+  <data name="AIR_SavePin" xml:space="preserve"><value>Save and pin</value></data>
+  <data name="AIR_SaveMenu" xml:space="preserve"><value>Save report</value></data>
+  <data name="AIR_Saved" xml:space="preserve"><value>Saved</value></data>
+  <data name="AIR_Pinned" xml:space="preserve"><value>Pinned</value></data>
+  <data name="AIR_Pin" xml:space="preserve"><value>Pin</value></data>
+  <data name="AIR_Unpin" xml:space="preserve"><value>Unpin</value></data>
+  <data name="AIR_Unsave" xml:space="preserve"><value>Remove from my reports</value></data>
+  <data name="AIR_SavedDone" xml:space="preserve"><value>Report saved to My reports.</value></data>
+  <data name="AIR_PinnedDone" xml:space="preserve"><value>Report saved and pinned.</value></data>
+  <data name="AIR_UnsavedDone" xml:space="preserve"><value>Report removed from My reports.</value></data>
+  <data name="AIR_SourceTruncated" xml:space="preserve"><value>partial rows</value></data>
+  <data name="AIR_Summary" xml:space="preserve"><value>Summary</value></data>
+  <data name="AIR_Table" xml:space="preserve"><value>Table</value></data>
+  <data name="AIR_Total" xml:space="preserve"><value>Total</value></data>
+  <data name="AIR_Truncated" xml:space="preserve"><value>Only the first {0} rows are shown; export to Excel for all.</value></data>
 </root>

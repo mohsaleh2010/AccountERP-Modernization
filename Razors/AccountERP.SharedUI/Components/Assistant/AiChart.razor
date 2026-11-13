@@ -1,0 +1,271 @@
+@* 🤖 المساعد الذكى P3: رسم بيانى SVG خفيف لتقارير المساعد (bar / line / pie / stacked) - بلا JS، يُطبع كما هو، يتبع ألوان الثيم (فاتح/داكن)
+   ويعكس الاتجاه فى RTL. إتاحة الوصول (ui-ux-pro-max: Charts): وصف نصى aria-label، قيمة كل نقطة فى <title>، أنماط خطوط مختلفة لكل سلسلة
+   لا اللون وحده، نسب مئوية مكتوبة على مفتاح الدائرى، وجدول البيانات أسفل الرسم كبديل. *@
+@using System.Globalization
+@using AccountModelsLib
+
+<div class="aich">
+    @if (Section.ChartLabels.Count == 0 || Section.Series.Count == 0)
+    {
+        <div class="aich-empty">@EmptyText</div>
+    }
+    else if (Section.ChartKind == AiChartKinds.Pie)
+    {
+        var vals = Section.Series[0].Values.Select(v => Math.Max(0m, v)).ToList();
+        decimal total = vals.Sum();
+        <div class="aich-pie">
+            <svg viewBox="0 0 240 240" role="img" aria-label="@AriaText()" class="aich-svg pie">
+                @if (total <= 0)
+                {
+                    <circle cx="120" cy="120" r="100" fill="none" stroke="var(--mud-palette-lines-default)" stroke-width="40" />
+                }
+                else
+                {
+                    double a0 = -Math.PI / 2;
+                    for (int i = 0; i < vals.Count; i++)
+                    {
+                        if (vals[i] <= 0) continue;
+                        double frac = (double)(vals[i] / total);
+                        double a1 = a0 + frac * 2 * Math.PI;
+                        string tip = $"{Section.ChartLabels[i]}: {AiReportFmt.Number(vals[i], Section.ValueFormat)} ({Pct(vals[i], total)})";
+                        if (frac >= 0.9999)
+                        {
+                            <circle cx="120" cy="120" r="80" fill="none" stroke="@Color(i)" stroke-width="60"><title>@tip</title></circle>
+                        }
+                        else
+                        {
+                            <path d="@Slice(120, 120, 110, 50, Mirror(a0), Mirror(a1))" fill="@Color(i)" stroke="var(--mud-palette-surface)" stroke-width="2"><title>@tip</title></path>
+                        }
+                        a0 = a1;
+                    }
+                }
+            </svg>
+            <ul class="aich-legend pie">
+                @for (int i = 0; i < vals.Count; i++)
+                {
+                    <li>
+                        <span class="sw" style="background:@Color(i)"></span>
+                        <span class="lb" title="@Section.ChartLabels[i]">@Section.ChartLabels[i]</span>
+                        <span class="pc">@Pct(vals[i], total)</span>
+                        <span class="vl">@AiReportFmt.Number(vals[i], Section.ValueFormat)</span>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+    else
+    {
+        var g = Geometry();
+        <svg viewBox="0 0 @W @H" role="img" aria-label="@AriaText()" class="aich-svg" preserveAspectRatio="xMidYMid meet">
+            @foreach (var t in g.Ticks)
+            {
+                double y = g.Y(t);
+                <line x1="@F(g.X0)" x2="@F(g.X1)" y1="@F(y)" y2="@F(y)" class="@(t == 0 ? "axis0" : "grid")" />
+                @SvgText($"x=\"{F(Rtl ? g.X1 + 6 : g.X0 - 6)}\" y=\"{F(y + 4)}\" text-anchor=\"{(Rtl ? "start" : "end")}\" class=\"tick\"", AiReportFmt.Compact(t))
+            }
+            @for (int i = 0; i < g.N; i++)
+            {
+                double cx = g.Cx(i);
+                string label = Short(Section.ChartLabels[i], g.Rotate ? 12 : 16);
+                if (g.ShowLabel(i))
+                {
+                    @if (g.Rotate)
+                    {
+                        @SvgText($"transform=\"translate({F(cx)},{F(g.YBase + 14)}) rotate({(Rtl ? 35 : -35)})\" text-anchor=\"end\" class=\"lbl\"", label)
+                    }
+                    else
+                    {
+                        @SvgText($"x=\"{F(cx)}\" y=\"{F(g.YBase + 16)}\" text-anchor=\"middle\" class=\"lbl\"", label)
+                    }
+                }
+            }
+
+            @if (Section.ChartKind == AiChartKinds.Line)
+            {
+                for (int s = 0; s < Section.Series.Count; s++)
+                {
+                    var ser = Section.Series[s];
+                    string pts = string.Join(" ", Enumerable.Range(0, g.N).Select(i => F(g.Cx(i)) + "," + F(g.Y(Val(ser, i)))));
+                    <polyline points="@pts" fill="none" stroke="@Color(s)" stroke-width="2.5" stroke-dasharray="@Dash(s)" stroke-linejoin="round" stroke-linecap="round" />
+                    @for (int i = 0; i < g.N; i++)
+                    {
+                        <circle cx="@F(g.Cx(i))" cy="@F(g.Y(Val(ser, i)))" r="@(g.N > 24 ? "2.5" : "3.5")" fill="var(--mud-palette-surface)" stroke="@Color(s)" stroke-width="2">
+                            <title>@Tip(ser, i)</title>
+                        </circle>
+                    }
+                }
+            }
+            else if (Section.ChartKind == AiChartKinds.Stacked)
+            {
+                for (int i = 0; i < g.N; i++)
+                {
+                    decimal pos = 0, neg = 0;
+                    double bw = g.Band * 0.62, bx = g.Cx(i) - bw / 2;
+                    for (int s = 0; s < Section.Series.Count; s++)
+                    {
+                        decimal v = Val(Section.Series[s], i);
+                        if (v == 0) continue;
+                        decimal from = v > 0 ? pos : neg, to = from + v;
+                        if (v > 0) pos = to; else neg = to;
+                        double y1 = g.Y(Math.Max(from, to)), y2 = g.Y(Math.Min(from, to));
+                        <rect x="@F(bx)" y="@F(y1)" width="@F(bw)" height="@F(Math.Max(1, y2 - y1))" fill="@Color(s)" stroke="var(--mud-palette-surface)" stroke-width="1">
+                            <title>@Tip(Section.Series[s], i)</title>
+                        </rect>
+                    }
+                }
+            }
+            else
+            {
+                int sc = Section.Series.Count;
+                double groupW = g.Band * 0.72, bw = groupW / sc;
+                for (int i = 0; i < g.N; i++)
+                {
+                    for (int s = 0; s < sc; s++)
+                    {
+                        decimal v = Val(Section.Series[s], i);
+                        int slot = Rtl ? sc - 1 - s : s;
+                        double bx = g.Cx(i) - groupW / 2 + slot * bw;
+                        double y1 = g.Y(Math.Max(0, v)), y2 = g.Y(Math.Min(0, v));
+                        <rect x="@F(bx + 1)" y="@F(y1)" width="@F(Math.Max(1, bw - 2))" height="@F(Math.Max(1, y2 - y1))" rx="2" fill="@Color(s)">
+                            <title>@Tip(Section.Series[s], i)</title>
+                        </rect>
+                    }
+                }
+            }
+        </svg>
+        @if (Section.Series.Count > 1)
+        {
+            <ul class="aich-legend">
+                @for (int s = 0; s < Section.Series.Count; s++)
+                {
+                    <li>
+                        @if (Section.ChartKind == AiChartKinds.Line)
+                        {
+                            <svg width="26" height="10" aria-hidden="true"><line x1="1" x2="25" y1="5" y2="5" stroke="@Color(s)" stroke-width="2.5" stroke-dasharray="@Dash(s)" /></svg>
+                        }
+                        else
+                        {
+                            <span class="sw" style="background:@Color(s)"></span>
+                        }
+                        <span>@Section.Series[s].Name</span>
+                    </li>
+                }
+            </ul>
+        }
+    }
+
+    @if (Section.ChartLabels.Count > 0 && Section.Series.Count > 0)
+    {
+        <details class="aich-data">
+            <summary>@DataText</summary>
+            <div class="aich-data-scroll">
+                <table>
+                    <thead><tr><th></th>@foreach (var s in Section.Series) { <th>@s.Name</th> }</tr></thead>
+                    <tbody>
+                        @for (int i = 0; i < Section.ChartLabels.Count; i++)
+                        {
+                            <tr><th scope="row">@Section.ChartLabels[i]</th>@foreach (var s in Section.Series) { <td>@AiReportFmt.Number(Val(s, i), Section.ValueFormat)</td> }</tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </details>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public AiReportSection Section { get; set; } = new();
+    [Parameter] public bool Rtl { get; set; }
+    [Parameter] public string EmptyText { get; set; } = "";
+    [Parameter] public string DataText { get; set; } = "";
+
+    private const double W = 720, H = 300;
+
+    private static readonly string[] Palette =
+    {
+        "var(--mud-palette-primary)", "var(--mud-palette-info)", "var(--mud-palette-success)",
+        "var(--mud-palette-warning)", "var(--mud-palette-secondary)", "var(--mud-palette-error)",
+    };
+    private static readonly string[] Dashes = { "", "7 4", "2 3", "10 3 2 3", "4 4", "1 2" };
+
+    /// <summary>عنصر SVG text (الوسم محجوز فى Razor): الخصائص من أرقام محسوبة فقط، والنص مُرمَّز.</summary>
+    private static MarkupString SvgText(string attrs, string content) =>
+        new("<text " + attrs + ">" + System.Net.WebUtility.HtmlEncode(content) + "</text>");
+
+    private static string Color(int i) => Palette[i % Palette.Length];
+    private static string Dash(int i) => Dashes[i % Dashes.Length];
+    private static string F(double v) => v.ToString("0.##", CultureInfo.InvariantCulture);
+    private static decimal Val(AiChartSeries s, int i) => i < s.Values.Count ? s.Values[i] : 0m;
+    private static string Short(string s, int max) => s.Length > max ? s[..max] + "…" : s;
+    private static string Pct(decimal v, decimal total) => total <= 0 ? "" : (v / total * 100m).ToString("0.#", CultureInfo.InvariantCulture) + "%";
+    private string Tip(AiChartSeries s, int i) =>
+        $"{Section.ChartLabels[i]} — {s.Name}: {AiReportFmt.Number(Val(s, i), Section.ValueFormat)}";
+
+    private string AriaText()
+    {
+        string kind = Section.ChartKind switch { AiChartKinds.Line => "رسم خطى", AiChartKinds.Pie => "رسم دائرى", AiChartKinds.Stacked => "أعمدة متراكمة", _ => "رسم بالأعمدة" };
+        return $"{kind}: {Section.Title} — {Section.ChartLabels.Count} نقطة، {string.Join("، ", Section.Series.Select(s => s.Name))}";
+    }
+
+    /// <summary>الدائرى فى RTL يدور عكس عقارب الساعة (البداية من أعلى كما هى).</summary>
+    private double Mirror(double a) => Rtl ? -Math.PI - a : a;
+
+    private static string Slice(double cx, double cy, double r, double r0, double a0, double a1)
+    {
+        if (a1 < a0) (a0, a1) = (a1, a0);
+        int large = a1 - a0 > Math.PI ? 1 : 0;
+        (double x, double y) P(double rad, double a) => (cx + rad * Math.Cos(a), cy + rad * Math.Sin(a));
+        var (x1, y1) = P(r, a0); var (x2, y2) = P(r, a1); var (x3, y3) = P(r0, a1); var (x4, y4) = P(r0, a0);
+        return $"M{F(x1)},{F(y1)} A{F(r)},{F(r)} 0 {large} 1 {F(x2)},{F(y2)} L{F(x3)},{F(y3)} A{F(r0)},{F(r0)} 0 {large} 0 {F(x4)},{F(y4)} Z";
+    }
+
+    private sealed class Geo
+    {
+        public double X0, X1, YTop, YBase, Band;
+        public int N;
+        public bool Rtl, Rotate;
+        public decimal Min, Max;
+        public List<decimal> Ticks = new();
+        public double Y(decimal v) => Max == Min ? YBase : YBase - (double)((v - Min) / (Max - Min)) * (YBase - YTop);
+        public double Cx(int i) => Rtl ? X1 - (i + 0.5) * Band : X0 + (i + 0.5) * Band;
+        /// <summary>عند كثرة النقاط تُكتب تسمية كل k نقطة فقط حتى لا تتداخل.</summary>
+        public bool ShowLabel(int i) { int k = Math.Max(1, (int)Math.Ceiling(N / 20.0)); return i % k == 0 || i == N - 1; }
+    }
+
+    private Geo Geometry()
+    {
+        int n = Section.ChartLabels.Count;
+        decimal min = 0, max = 0;
+        for (int i = 0; i < n; i++)
+        {
+            if (Section.ChartKind == AiChartKinds.Stacked)
+            {
+                decimal pos = Section.Series.Sum(s => Math.Max(0, Val(s, i))), neg = Section.Series.Sum(s => Math.Min(0, Val(s, i)));
+                max = Math.Max(max, pos); min = Math.Min(min, neg);
+            }
+            else foreach (var s in Section.Series) { max = Math.Max(max, Val(s, i)); min = Math.Min(min, Val(s, i)); }
+        }
+        if (max == min) max = min + 1;
+        decimal step = Nice((max - min) / 4m);
+        decimal lo = Math.Floor(min / step) * step, hi = Math.Ceiling(max / step) * step;
+        bool rotate = n > 8 || Section.ChartLabels.Any(l => l.Length > 12 && n > 4);
+        var g = new Geo
+        {
+            N = n, Rtl = Rtl, Rotate = rotate, Min = lo, Max = hi,
+            X0 = Rtl ? 12 : 60, X1 = Rtl ? W - 60 : W - 12, YTop = 12, YBase = H - (rotate ? 78 : 30),
+        };
+        g.Band = (g.X1 - g.X0) / Math.Max(1, n);
+        for (decimal t = lo; t <= hi + step / 2; t += step) g.Ticks.Add(Math.Round(t, 6));
+        return g;
+    }
+
+    private static decimal Nice(decimal raw)
+    {
+        if (raw <= 0) return 1;
+        double exp = Math.Floor(Math.Log10((double)raw));
+        decimal pow = (decimal)Math.Pow(10, exp);
+        decimal f = raw / pow;
+        decimal nf = f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5m ? 2.5m : f <= 5 ? 5 : 10;
+        return nf * pow;
+    }
+}

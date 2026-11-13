@@ -9,6 +9,7 @@
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
 @inject NavigationManager Nav
+@inject IDialogService DialogService
 @implements IAsyncDisposable
 
 <style>
@@ -93,6 +94,18 @@
     .aic-tool .err { margin-top: 2px; color: var(--mud-palette-error); }
     .aic-tool pre { margin: 4px 0 0; padding: 6px 8px; border-radius: 8px; background: var(--mud-palette-background-gray); font-family: Consolas, 'Courier New', monospace;
                     font-size: .75rem; white-space: pre-wrap; overflow-wrap: anywhere; text-align: left; max-height: 180px; overflow-y: auto; }
+    .aic-cards { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .aic-card { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; min-height: 56px;
+                border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 35%, var(--mud-palette-lines-default));
+                background: color-mix(in srgb, var(--mud-palette-primary) 5%, var(--mud-palette-surface)); }
+    .aic-card .ic { flex: none; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .aic-card .tx { flex: 1; min-width: 0; }
+    .aic-card .tx .t { font-weight: 700; font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .aic-card .tx .s { font-size: .78rem; color: var(--mud-palette-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .aic-card .mud-button-root { min-height: 40px; flex: none; }
+    .aic.compact .aic-card { flex-wrap: wrap; }
+    .aic.compact .aic-card .mud-button-root { width: 100%; }
     .aic-toolnow { display: flex; align-items: center; gap: 8px; padding: 8px 2px; font-size: .85rem; color: var(--mud-palette-text-secondary); }
 </style>
 
@@ -233,6 +246,35 @@
                                                 }
                                             </ol>
                                         </details>
+                                    }
+                                    @if (m.Reports.Count > 0 || m.Screens.Count > 0)
+                                    {
+                                        <div class="aic-cards">
+                                            @foreach (var r in m.Reports)
+                                            {
+                                                <div class="aic-card">
+                                                    <div class="ic" aria-hidden="true"><MudIcon Icon="@Icons.Material.Outlined.Assessment" /></div>
+                                                    <div class="tx">
+                                                        <div class="t" title="@r.Title">@r.Title</div>
+                                                        <div class="s">@(string.IsNullOrWhiteSpace(r.Subtitle) ? Tr("AIC_ReportCard") : r.Subtitle)</div>
+                                                    </div>
+                                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Visibility"
+                                                               OnClick="() => ShowReportAsync(r)">@Tr("AIC_ViewReport")</MudButton>
+                                                </div>
+                                            }
+                                            @foreach (var sc in m.Screens)
+                                            {
+                                                <div class="aic-card">
+                                                    <div class="ic" aria-hidden="true"><MudIcon Icon="@Icons.Material.Outlined.Launch" /></div>
+                                                    <div class="tx">
+                                                        <div class="t" title="@sc.Title">@sc.Title</div>
+                                                        <div class="s" title="@sc.Detail">@(string.IsNullOrWhiteSpace(sc.Detail) ? Tr("AIC_ScreenCard") : sc.Detail)</div>
+                                                    </div>
+                                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" EndIcon="@Icons.Material.Filled.ArrowOutward"
+                                                               OnClick="() => OpenScreen(sc)">@Tr("AIC_OpenScreen")</MudButton>
+                                                </div>
+                                            }
+                                        </div>
                                     }
                                     <div class="aic-meta">
                                         @if (m.Status == AiMessageStatus.Stopped)
@@ -460,6 +502,27 @@
             try { await _module.InvokeVoidAsync("setComposer", _input, text); }
             catch (JSDisconnectedException) { }
         }
+    }
+
+    // ───── P3: بطاقات التقارير والشاشات ─────
+    /// <summary>النافذة العائمة تُصغَّر عند فتح شاشة حتى تظهر الشاشة.</summary>
+    [Parameter] public EventCallback OnNavigated { get; set; }
+
+    private async Task ShowReportAsync(AiReportCard r)
+    {
+        var p = new DialogParameters<AiReportDialog> { { x => x.ReportId, r.Id }, { x => x.Title, r.Title } };
+        var o = new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.ExtraLarge, CloseButton = true, FullScreen = _narrow };
+        await DialogService.ShowAsync<AiReportDialog>(r.Title, p, o);
+    }
+
+    private bool _narrow => Compact;
+
+    private async Task OpenScreen(AiScreenLinkView sc)
+    {
+        // الرابط من نتيجة أداة تحققت منه (مسار داخلى من قائمة المستخدم)؛ نتحقق مرة أخرى قبل التنقل.
+        if (string.IsNullOrEmpty(sc.Url) || !sc.Url.StartsWith('/') || sc.Url.StartsWith("//")) return;
+        await OnNavigated.InvokeAsync();
+        Nav.NavigateTo(sc.Url);
     }
 
     private async Task UseSuggestion(string key)

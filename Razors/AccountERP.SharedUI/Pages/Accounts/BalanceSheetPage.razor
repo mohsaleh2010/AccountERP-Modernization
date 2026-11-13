@@ -165,6 +165,12 @@
 </MudContainer>
 
 @code {
+    // P3 المساعد الذكى (open_screen): ?from=&to=&branch=&run=1 اختيارية؛ بدونها السلوك الافتراضى كما هو.
+    [SupplyParameterFromQuery(Name = "from")] public string? FromQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "to")] public string? ToQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "branch")] public long? BranchQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "run")] public int? RunQuery { get; set; }
+
     private readonly FinalAccountsService _svc = new();
     private List<FinalAccountsService.PeriodRow> _periods = new();
     private List<FinalAccountsService.Option> _branches = new();
@@ -192,8 +198,23 @@
                       ?? _periods.FirstOrDefault(p => p.DateFrom <= today && today <= p.DateTo) ?? _periods.LastOrDefault();
             _periodId = cur?.Id ?? 0;
             _branch = _branches.Any(b => b.Id == AccountModelsLib.Common.Branch_Id) ? AccountModelsLib.Common.Branch_Id : _branches.FirstOrDefault()?.Id ?? 0;
+            DateTime? qFrom = null, qTo = null;
+            FinalAccountsQuery.Apply(FromQuery, ToQuery, BranchQuery, _periods, _branches, ref _periodId, ref qFrom, ref qTo, ref _branch);
         }
         catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
+        _pendingRun = RunQuery == 1 && _error == null && _periodId != 0;
+    }
+
+    // التشغيل التلقائى (run=1) بعد أول عرض تفاعلى لا أثناء التهيئة: منتقيا التاريخ يستدعيان DateChanged ← Reset عند أول عرض لهما،
+    // فلو كانت النتيجة جاهزة وقتها تُمسح أثناء العرض نفسه (NullReference). OnAfterRender لا يعمل فى العرض المسبق.
+    private bool _pendingRun;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_pendingRun) return;
+        _pendingRun = false;
+        await ShowAsync();
+        StateHasChanged();
     }
 
     private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
