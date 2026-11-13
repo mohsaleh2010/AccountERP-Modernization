@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="Anthropic" Version="13.8.0" />
+    <PackageReference Include="Microsoft.SqlServer.TransactSql.ScriptDom" Version="180.140.0" />
   </ItemGroup>
 
 </Project>

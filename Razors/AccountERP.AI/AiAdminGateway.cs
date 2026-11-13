@@ -17,14 +17,30 @@ namespace AccountERP.AI
         private readonly ProviderRegistry _registry;
         private readonly AiSignInStore _signInStore;
         private readonly AiSignInService _signIn;
+        private readonly Tools.ReadOnlySqlExecutor _sql;
+        private readonly AiToolAuditCLS _audit = new();
 
-        public AiAdminGateway(AiKeyProtector keys, ProviderRegistry registry, AiSignInStore signInStore, AiSignInService signIn)
+        public AiAdminGateway(AiKeyProtector keys, ProviderRegistry registry, AiSignInStore signInStore, AiSignInService signIn, Tools.ReadOnlySqlExecutor sql)
         {
             _keys = keys;
             _registry = registry;
             _signInStore = signInStore;
             _signIn = signIn;
+            _sql = sql;
         }
+
+        // ───────────── P2: سجل تدقيق الأدوات وحالة اتصال القراءة ─────────────
+
+        public List<AiToolAuditView> GetToolAudit(string outcome, string search, int top = 300) => _audit.List(outcome, search, top);
+
+        public AiReadOnlyStatus GetReadOnlyStatus() => _sql.HasDedicatedLogin
+            ? new AiReadOnlyStatus { DedicatedLogin = true, Message = "المساعد يقرأ بحساب قاعدة بيانات مخصص للقراءة فقط (ConnectionStrings:AiReadOnly)." }
+            : new AiReadOnlyStatus
+            {
+                DedicatedLogin = false,
+                Message = "المساعد يقرأ بالاتصال الرئيسى مع الحماية البرمجية (SELECT واحد على Views المساعد فقط، ومعاملة تُلغى دائماً). " +
+                          "للحماية الكاملة أنشئ حساب قراءة فقط بالسكربت docs/ai-readonly-login.sql وأضفه فى ConnectionStrings:AiReadOnly.",
+            };
 
         public List<AiProviderView> GetProviders()
         {

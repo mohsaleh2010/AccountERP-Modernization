@@ -5085,10 +5085,10 @@
   <data name="AIC_OpenSettings" xml:space="preserve"><value>افتح إعدادات الذكاء الاصطناعى</value></data>
   <data name="AIC_AskAdmin" xml:space="preserve"><value>اطلب من مدير النظام إكمال الإعداد.</value></data>
   <data name="AIC_EmptyTitle" xml:space="preserve"><value>كيف أساعدك اليوم؟</value></data>
-  <data name="AIC_EmptySub" xml:space="preserve"><value>اسأل عن المحاسبة والضرائب أو طريقة استخدام النظام. (قراءة بيانات شركتك تأتى فى مرحلة لاحقة.)</value></data>
-  <data name="AIC_Sugg1" xml:space="preserve"><value>كيف أعمل فاتورة مبيعات ضريبية فى النظام؟</value></data>
+  <data name="AIC_EmptySub" xml:space="preserve"><value>اسأل عن مبيعاتك ومشترياتك وأرصدة مخازنك وحساباتك، أو عن المحاسبة والضرائب وطريقة استخدام النظام. المساعد يقرأ فقط ولا يعدّل أى بيانات.</value></data>
+  <data name="AIC_Sugg1" xml:space="preserve"><value>كم إجمالى مبيعات الشهر الحالى؟</value></data>
   <data name="AIC_Sugg2" xml:space="preserve"><value>اشرح ضريبة القيمة المضافة فى مصر ونسبها</value></data>
-  <data name="AIC_Sugg3" xml:space="preserve"><value>ما الفرق بين ميزان المراجعة وقائمة الدخل؟</value></data>
+  <data name="AIC_Sugg3" xml:space="preserve"><value>ما أكثر 10 أصناف مبيعاً هذا العام؟</value></data>
   <data name="AIC_Sugg4" xml:space="preserve"><value>اكتب رسالة مهذبة لتذكير عميل بسداد مستحقاته</value></data>
   <data name="AIC_ReplyFailed" xml:space="preserve"><value>تعذّر الحصول على رد.</value></data>
   <data name="AIC_Stopped" xml:space="preserve"><value>أُوقف</value></data>
@@ -5125,4 +5125,26 @@
   <data name="AIC_SetupDone" xml:space="preserve"><value>تم اختيار {0} للمحادثة</value></data>
   <data name="AI_ModelSearchHint" xml:space="preserve"><value>اكتب للبحث فى النماذج</value></data>
   <data name="AI_RoutingUnsaved" xml:space="preserve"><value>لديك تغييرات غير محفوظة فى ربط المهام.</value></data>
+  <data name="AIC_Sources" xml:space="preserve"><value>مصادر البيانات ({0})</value></data>
+  <data name="AIC_SourcesIssues" xml:space="preserve"><value>بعضها لم يكتمل</value></data>
+  <data name="AIC_ToolRows" xml:space="preserve"><value>{0} صف</value></data>
+  <data name="AIC_ToolDenied" xml:space="preserve"><value>مرفوض</value></data>
+  <data name="AIC_ToolError" xml:space="preserve"><value>خطأ</value></data>
+  <data name="AI_TabAudit" xml:space="preserve"><value>سجل التدقيق</value></data>
+  <data name="AI_AuditOutcome" xml:space="preserve"><value>النتيجة</value></data>
+  <data name="AI_AuditAll" xml:space="preserve"><value>الكل</value></data>
+  <data name="AI_AuditOk" xml:space="preserve"><value>نجح</value></data>
+  <data name="AI_AuditDenied" xml:space="preserve"><value>مرفوض</value></data>
+  <data name="AI_AuditError" xml:space="preserve"><value>خطأ</value></data>
+  <data name="AI_AuditSearch" xml:space="preserve"><value>بحث فى الأداة أو الاستعلام أو المستخدم</value></data>
+  <data name="AI_AuditRefresh" xml:space="preserve"><value>تحديث</value></data>
+  <data name="AI_AuditHint" xml:space="preserve"><value>كل استدعاء أداة قام به المساعد (المقبول والمرفوض) مع الاستعلام كما نُفّذ. آخر 500 سجل.</value></data>
+  <data name="AI_AuditWhen" xml:space="preserve"><value>الوقت</value></data>
+  <data name="AI_AuditUser" xml:space="preserve"><value>المستخدم</value></data>
+  <data name="AI_AuditTool" xml:space="preserve"><value>الأداة</value></data>
+  <data name="AI_AuditRows" xml:space="preserve"><value>الصفوف</value></data>
+  <data name="AI_AuditMs" xml:space="preserve"><value>المدة (ms)</value></data>
+  <data name="AI_AuditDetails" xml:space="preserve"><value>التفاصيل</value></data>
+  <data name="AI_AuditShow" xml:space="preserve"><value>عرض الاستعلام</value></data>
+  <data name="AI_AuditEmpty" xml:space="preserve"><value>لا توجد سجلات بعد.</value></data>
 </root>

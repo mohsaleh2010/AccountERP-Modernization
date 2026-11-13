@@ -54,6 +54,8 @@ namespace AccountERP.SharedUI.Services
         public string? Error { get; private set; }
 
         public string StreamingText { get { lock (_lock) return _streaming.ToString(); } }
+        /// <summary>P2: ما ينفّذه المساعد الآن («استعلام قراءة…»)؛ null عند عدم تنفيذ أداة.</summary>
+        public string? ToolStatus { get; private set; }
 
         /// <summary>أى تغيير فى الحالة (يُستدعى من خيوط خلفية أثناء البث؛ المكوّن يستدعى InvokeAsync(StateHasChanged)).</summary>
         public event Action? OnChanged;
@@ -121,7 +123,15 @@ namespace AccountERP.SharedUI.Services
         {
             text = (text ?? "").Trim();
             if (_gw == null || IsSending || text.Length == 0) return;
-            var gw = _gw; long uid = UserId, branch = BranchId, convId = ConversationId;
+            var gw = _gw; long convId = ConversationId;
+            // P2: ما يحق له قراءته = نفس شاشات قائمة الويب (RazorPath)؛ المساعد لا يرى أداة/View لشاشة غير مسموحة.
+            var user = new AiUserContext
+            {
+                UserId = UserId,
+                BranchId = BranchId,
+                IsAdmin = (_session?.Is_User_Admin ?? 0) == 1,
+                AllowedRoutes = (_menu.UserAllowedMenus ?? new()).Select(m => m.RazorPath ?? "").Where(p => p.Length > 0).Distinct().ToList(),
+            };
             _cts = new CancellationTokenSource();
             var ct = _cts.Token;
             lock (_lock) _streaming.Clear();
@@ -132,7 +142,7 @@ namespace AccountERP.SharedUI.Services
                 var result = await Task.Run(async () =>
                 {
                     AccountCultureGuard.EnsureInvariant();
-                    return await gw.SendAsync(convId, text, context, uid, branch, OnDelta, ct);
+                    return await gw.SendAsync(convId, text, context, user, OnDelta, OnToolStatus, ct);
                 });
                 // المستخدم ربما فتح محادثة أخرى أثناء البث: لا نخلط الرسائل.
                 if (ConversationId == convId)
@@ -148,6 +158,7 @@ namespace AccountERP.SharedUI.Services
             {
                 IsSending = false;
                 PendingUserText = null;
+                ToolStatus = null;
                 lock (_lock) _streaming.Clear();
                 _cts?.Dispose(); _cts = null;
             }
@@ -162,6 +173,13 @@ namespace AccountERP.SharedUI.Services
         {
             string t = string.Join(' ', text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
             return t.Length > 60 ? t[..60].TrimEnd() + "…" : t;
+        }
+
+        /// <summary>حالة الأداة الجارية (خيط خلفى): تُعرض فوراً.</summary>
+        private void OnToolStatus(string? status)
+        {
+            ToolStatus = string.IsNullOrEmpty(status) ? null : status;
+            Notify();
         }
 
         /// <summary>جزء نصى من البث (خيط خلفى): يُجمع، وتحديث الواجهة كل 60ms على الأكثر.</summary>

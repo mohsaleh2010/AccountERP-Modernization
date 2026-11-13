@@ -92,7 +92,7 @@
     }
     else
     {
-        <MudTabs @bind-ActivePanelIndex="_tab" Elevation="0" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pt-4" Class="ai-gap">
+        <MudTabs ActivePanelIndex="_tab" ActivePanelIndexChanged="OnTabChangedAsync" Elevation="0" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pt-4" Class="ai-gap">
             @* ───────────── تبويب المزوّدين ───────────── *@
             <MudTabPanel Text="@Tr("AI_TabProviders")" Icon="@Icons.Material.Filled.Hub">
                 @if (_edit != null)
@@ -412,6 +412,66 @@
                 </section>
 
             </MudTabPanel>
+
+            @* ═════════ P2: سجل تدقيق أدوات المساعد ═════════ *@
+            <MudTabPanel Text="@Tr("AI_TabAudit")" Icon="@Icons.Material.Filled.FactCheck">
+                <section class="ai-section">
+                    @if (_readOnly != null)
+                    {
+                        <MudAlert Severity="@(_readOnly.DedicatedLogin ? Severity.Success : Severity.Info)" Variant="Variant.Outlined" Dense="true" Class="mb-3">@_readOnly.Message</MudAlert>
+                    }
+                    <div class="d-flex flex-wrap align-center" style="gap:12px;">
+                        <MudSelect T="string" Value="_auditOutcome" ValueChanged="@(async v => { _auditOutcome = v; await LoadAuditAsync(); })" Label="@Tr("AI_AuditOutcome")"
+                                   Variant="Variant.Outlined" Dense="true" Style="min-width:160px;max-width:220px;">
+                            <MudSelectItem T="string" Value="@("")">@Tr("AI_AuditAll")</MudSelectItem>
+                            <MudSelectItem T="string" Value="@AiToolOutcome.Ok">@Tr("AI_AuditOk")</MudSelectItem>
+                            <MudSelectItem T="string" Value="@AiToolOutcome.Denied">@Tr("AI_AuditDenied")</MudSelectItem>
+                            <MudSelectItem T="string" Value="@AiToolOutcome.Error">@Tr("AI_AuditError")</MudSelectItem>
+                        </MudSelect>
+                        <MudTextField T="string" @bind-Value="_auditSearch" Label="@Tr("AI_AuditSearch")" Variant="Variant.Outlined" Dense="true" Clearable="true"
+                                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="false" OnBlur="@(_ => LoadAuditAsync())"
+                                      OnKeyDown="@(async e => { if (e.Key == "Enter") await LoadAuditAsync(); })" Style="min-width:220px;flex:1;" />
+                        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" Disabled="_auditLoading" OnClick="LoadAuditAsync" Style="min-height:40px;">@Tr("AI_AuditRefresh")</MudButton>
+                    </div>
+                    <MudText Typo="Typo.caption" Class="mt-2 d-block" Style="color:var(--mud-palette-text-secondary);">@Tr("AI_AuditHint")</MudText>
+                    <MudTable Items="_audit" T="AiToolAuditView" Dense="true" Hover="true" Bordered="true" Loading="_auditLoading" Class="mt-2" Breakpoint="Breakpoint.Sm" RowsPerPage="50">
+                        <HeaderContent>
+                            <MudTh>@Tr("AI_AuditWhen")</MudTh>
+                            <MudTh>@Tr("AI_AuditUser")</MudTh>
+                            <MudTh>@Tr("AI_AuditTool")</MudTh>
+                            <MudTh>@Tr("AI_AuditOutcome")</MudTh>
+                            <MudTh Style="text-align:end;">@Tr("AI_AuditRows")</MudTh>
+                            <MudTh Style="text-align:end;">@Tr("AI_AuditMs")</MudTh>
+                            <MudTh>@Tr("AI_AuditDetails")</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="@Tr("AI_AuditWhen")" Style="white-space:nowrap;">@context.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)</MudTd>
+                            <MudTd DataLabel="@Tr("AI_AuditUser")">@(string.IsNullOrEmpty(context.UserName) ? context.UserId.ToString(CultureInfo.InvariantCulture) : context.UserName)</MudTd>
+                            <MudTd DataLabel="@Tr("AI_AuditTool")" Style="direction:ltr;">@context.ToolName</MudTd>
+                            <MudTd DataLabel="@Tr("AI_AuditOutcome")">
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                                         Color="@(context.Outcome == AiToolOutcome.Ok ? Color.Success : context.Outcome == AiToolOutcome.Denied ? Color.Warning : Color.Error)">
+                                    @Tr(context.Outcome == AiToolOutcome.Ok ? "AI_AuditOk" : context.Outcome == AiToolOutcome.Denied ? "AI_AuditDenied" : "AI_AuditError")
+                                </MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="@Tr("AI_AuditRows")" Style="text-align:end;">@context.RowCount?.ToString("N0", CultureInfo.InvariantCulture)</MudTd>
+                            <MudTd DataLabel="@Tr("AI_AuditMs")" Style="text-align:end;">@context.DurationMs?.ToString("N0", CultureInfo.InvariantCulture)</MudTd>
+                            <MudTd DataLabel="@Tr("AI_AuditDetails")" Style="max-width:520px;">
+                                @if (!string.IsNullOrEmpty(context.ErrorText))
+                                {
+                                    <div style="color:var(--mud-palette-error);font-size:.8rem;">@context.ErrorText</div>
+                                }
+                                <details>
+                                    <summary style="cursor:pointer;font-size:.8rem;color:var(--mud-palette-primary);">@Tr("AI_AuditShow")</summary>
+                                    <pre dir="ltr" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:.75rem;margin:4px 0 0;padding:6px;border-radius:6px;background:var(--mud-palette-background-gray);text-align:left;">@(string.IsNullOrEmpty(context.SqlText) ? context.ArgsJson : context.SqlText)</pre>
+                                </details>
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent><div class="ai-empty"><MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Large" />@Tr("AI_AuditEmpty")</div></NoRecordsContent>
+                        <PagerContent><MudTablePager PageSizeOptions="new[] { 25, 50, 100 }" /></PagerContent>
+                    </MudTable>
+                </section>
+            </MudTabPanel>
         </MudTabs>
     }
 </div>
@@ -448,6 +508,33 @@
     private CancellationTokenSource? _pollCts;
     private bool _loading, _busy;
     private long _testingId;
+    // P2: سجل التدقيق (يُحمَّل عند فتح التبويب)
+    private const int AuditTab = 2;
+    private List<AiToolAuditView> _audit = new();
+    private AiReadOnlyStatus? _readOnly;
+    private string _auditOutcome = "";
+    private string? _auditSearch;
+    private bool _auditLoading;
+
+    private async Task OnTabChangedAsync(int index)
+    {
+        _tab = index;
+        if (index == AuditTab) await LoadAuditAsync();
+    }
+
+    private async Task LoadAuditAsync()
+    {
+        if (!CanEdit || _gw == null || _auditLoading) return;
+        _auditLoading = true;
+        StateHasChanged();
+        try
+        {
+            var gw = _gw; string oc = _auditOutcome, q = _auditSearch ?? "";
+            (_audit, _readOnly) = await Bg(() => (gw.GetToolAudit(oc, q, 500), gw.GetReadOnlyStatus()));
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Err(ex)); }
+        finally { _auditLoading = false; }
+    }
 
     private bool CanEdit => (MenuState.UserAllowedMenus ?? new()).Any(m => string.Equals((m.KeysData ?? "").Trim(), MenuKey, StringComparison.OrdinalIgnoreCase));
 

@@ -94,6 +94,21 @@ namespace AccountModelsLib
     [ErrorText] [nvarchar](1000) NULL,
     [DurationMs] [int] NULL,",
              @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_Messages_Conv_Seq] ON [dbo].[AI_Messages]([Conversation_Id], [Seq]);"),
+
+            // P2: سجل تدقيق كل استدعاء أداة (§2.1 طبقة 6): يُدرج لحظة التنفيذ (Message_Id يُربط بعد حفظ رد المساعد)، فالمرفوض يُسجَّل حتى لو انقطع الرد.
+            // Outcome: ok / denied / error. SqlText = الاستعلام كما نُفّذ (أو كما رُفض).
+            ("AI_ToolCalls_Audit", @"
+    [Conversation_Id] [bigint] NULL,
+    [Message_Id] [bigint] NULL,
+    [User_Id] [bigint] NOT NULL,
+    [ToolName] [nvarchar](100) NOT NULL,
+    [ArgsJson] [nvarchar](max) NULL,
+    [SqlText] [nvarchar](max) NULL,
+    [RowCount] [int] NULL,
+    [DurationMs] [int] NULL,
+    [Outcome] [nvarchar](20) NOT NULL,
+    [ErrorText] [nvarchar](1000) NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_AI_ToolCalls_Audit_CreatedAt] ON [dbo].[AI_ToolCalls_Audit]([CreatedAt] DESC);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>
@@ -119,6 +134,7 @@ namespace AccountModelsLib
             Step("AiSettingsSeed", () => SeedSettings(opp));
             Step("AiSettingsMenu", () => SettingsMenu(opp));
             Step("AiAssistantMenu", () => AssistantMenu(opp));
+            Step("AiReadViews", () => AiReadViewsCLS.Ensure(opp));   // P2: schema ai وViews القراءة
         }
 
         /// <summary>

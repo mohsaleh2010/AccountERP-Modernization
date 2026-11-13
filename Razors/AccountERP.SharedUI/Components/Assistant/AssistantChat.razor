@@ -78,6 +78,22 @@
     .aic-setup .mud-button-root { min-height: 44px; }
     .aic-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     [dir="rtl"] .aic-send .mud-icon-root.flip { transform: scaleX(-1); }
+    .aic-tools { margin-top: 8px; border: 1px solid var(--mud-palette-lines-default); border-radius: 10px; background: var(--mud-palette-surface); font-size: .8rem; }
+    .aic-tools > summary { display: flex; align-items: center; gap: 6px; min-height: 36px; padding: 6px 10px; cursor: pointer; color: var(--mud-palette-text-secondary); list-style: none; }
+    .aic-tools > summary::-webkit-details-marker { display: none; }
+    .aic-tools > summary:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; border-radius: 10px; }
+    .aic-tools[open] > summary { border-bottom: 1px solid var(--mud-palette-lines-default); }
+    .aic-tool-flag { margin-inline-start: auto; color: var(--mud-palette-warning-darken); font-weight: 600; }
+    .aic-tools ol { margin: 0; padding: 8px 10px; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .aic-tool .h { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .aic-tool .ttl { font-weight: 600; color: var(--mud-palette-text-primary); }
+    .aic-tool .n { color: var(--mud-palette-text-secondary); }
+    .aic-tool.ok .mud-icon-root { color: var(--mud-palette-success); }
+    .aic-tool.denied .mud-icon-root, .aic-tool.error .mud-icon-root { color: var(--mud-palette-error); }
+    .aic-tool .err { margin-top: 2px; color: var(--mud-palette-error); }
+    .aic-tool pre { margin: 4px 0 0; padding: 6px 8px; border-radius: 8px; background: var(--mud-palette-background-gray); font-family: Consolas, 'Courier New', monospace;
+                    font-size: .75rem; white-space: pre-wrap; overflow-wrap: anywhere; text-align: left; max-height: 180px; overflow-y: auto; }
+    .aic-toolnow { display: flex; align-items: center; gap: 8px; padding: 8px 2px; font-size: .85rem; color: var(--mud-palette-text-secondary); }
 </style>
 
 <div class="aic @(Compact ? "compact" : "")" dir="@(LangService.IsRtl ? "rtl" : "ltr")">
@@ -178,6 +194,46 @@
                                     {
                                         <MudAlert Severity="Severity.Warning" Dense="true" Variant="Variant.Outlined" Class="mt-1">@m.ErrorText</MudAlert>
                                     }
+                                    @if (m.Tools.Count > 0)
+                                    {
+                                        <details class="aic-tools">
+                                            <summary>
+                                                <MudIcon Icon="@Icons.Material.Outlined.Storage" Size="Size.Small" aria-hidden="true" />
+                                                <span>@Tr("AIC_Sources", m.Tools.Count)</span>
+                                                @if (m.Tools.Any(t => t.Outcome != AiToolOutcome.Ok))
+                                                {
+                                                    <span class="aic-tool-flag">@Tr("AIC_SourcesIssues")</span>
+                                                }
+                                            </summary>
+                                            <ol>
+                                                @foreach (var t in m.Tools)
+                                                {
+                                                    <li class="@("aic-tool " + t.Outcome)">
+                                                        <div class="h">
+                                                            <MudIcon Icon="@ToolIcon(t.Outcome)" Size="Size.Small" aria-hidden="true" />
+                                                            <span class="ttl">@t.Title</span>
+                                                            @if (t.RowCount.HasValue && t.Outcome == AiToolOutcome.Ok)
+                                                            {
+                                                                <span class="n">@Tr("AIC_ToolRows", t.RowCount.Value.ToString("N0", CultureInfo.InvariantCulture))</span>
+                                                            }
+                                                            @if (t.Outcome != AiToolOutcome.Ok)
+                                                            {
+                                                                <span class="n">@Tr(t.Outcome == AiToolOutcome.Denied ? "AIC_ToolDenied" : "AIC_ToolError")</span>
+                                                            }
+                                                        </div>
+                                                        @if (!string.IsNullOrEmpty(t.ErrorText))
+                                                        {
+                                                            <div class="err">@t.ErrorText</div>
+                                                        }
+                                                        @if (!string.IsNullOrEmpty(t.Sql))
+                                                        {
+                                                            <pre dir="ltr">@t.Sql</pre>
+                                                        }
+                                                    </li>
+                                                }
+                                            </ol>
+                                        </details>
+                                    }
                                     <div class="aic-meta">
                                         @if (m.Status == AiMessageStatus.Stopped)
                                         {
@@ -209,14 +265,19 @@
                         <div class="aic-row asst">
                             <div class="aic-avatar" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.AutoAwesome" /></div>
                             <div class="aic-bubble">
-                                @{ var live = Chat.StreamingText; }
-                                @if (live.Length == 0)
+                                @{ var live = Chat.StreamingText; var toolNow = Chat.ToolStatus; }
+                                @if (live.Length > 0)
+                                {
+                                    <div class="aic-md">@AiMarkdown.Render(live)</div>
+                                    @if (toolNow == null) { <span class="aic-cursor" aria-hidden="true"></span> }
+                                }
+                                @if (toolNow != null)
+                                {
+                                    <div class="aic-toolnow"><MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary" /><span>@toolNow</span></div>
+                                }
+                                else if (live.Length == 0)
                                 {
                                     <span class="aic-dots" aria-hidden="true"><span></span><span></span><span></span></span>
-                                }
-                                else
-                                {
-                                    <div class="aic-md">@AiMarkdown.Render(live)</div><span class="aic-cursor" aria-hidden="true"></span>
                                 }
                             </div>
                         </div>
@@ -263,11 +324,18 @@
     /// <summary>سياق الشاشة الحالية (النافذة العائمة تمرر مسار الشاشة وعنوانها).</summary>
     [Parameter] public Func<AiScreenContext>? ContextProvider { get; set; }
 
+    private static string ToolIcon(string outcome) => outcome switch
+    {
+        AiToolOutcome.Ok => Icons.Material.Outlined.CheckCircle,
+        AiToolOutcome.Denied => Icons.Material.Outlined.Block,
+        _ => Icons.Material.Outlined.ErrorOutline,
+    };
+
     private static readonly (string Icon, string Key)[] Suggestions =
     {
         (Icons.Material.Outlined.Receipt, "AIC_Sugg1"),
         (Icons.Material.Outlined.Percent, "AIC_Sugg2"),
-        (Icons.Material.Outlined.School, "AIC_Sugg3"),
+        (Icons.Material.Outlined.TrendingUp, "AIC_Sugg3"),
         (Icons.Material.Outlined.Mail, "AIC_Sugg4"),
     };
 

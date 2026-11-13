@@ -24,7 +24,9 @@ namespace AccountERP.AI
             services.AddSingleton<SignIn.AiSignInStore>();
             services.AddSingleton<SignIn.AiSignInService>();
             services.AddScoped<IAiAdminGateway, AiAdminGateway>();
-            services.AddScoped<IAiChatGateway, Chat.AiChatGateway>();   // P1: المحادثة
+            services.AddSingleton(sp => new Tools.ReadOnlySqlExecutor(config));   // P2: مسار القراءة الوحيد
+            services.AddSingleton<Tools.AiToolRegistry>();
+            services.AddScoped<IAiChatGateway, Chat.AiChatGateway>();   // P1: المحادثة، P2: مع أدوات القراءة
             return services;
         }
     }

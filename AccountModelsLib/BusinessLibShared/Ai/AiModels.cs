@@ -237,6 +237,10 @@ namespace AccountModelsLib
         Task<AiSignInStatus> CompleteSignInWithCodeAsync(string handle, string code, long userId, CancellationToken ct = default);
         /// <summary>يمسح المفتاح المحفوظ محلياً (المفتاح البعيد يبقى فى حساب المزوّد).</summary>
         void Disconnect(long providerId, long userId);
+
+        // P2: سجل تدقيق الأدوات وحالة اتصال القراءة
+        List<AiToolAuditView> GetToolAudit(string outcome, string search, int top = 300);
+        AiReadOnlyStatus GetReadOnlyStatus();
     }
 
     // ───────────── P1: المحادثة ─────────────
@@ -272,6 +276,66 @@ namespace AccountModelsLib
         public int? OutputTokens { get; set; }
         public decimal? CostEstimate { get; set; }
         public DateTime CreatedAt { get; set; }
+        /// <summary>P2: الأدوات التى نفّذها المساعد لإعداد هذا الرد (للعرض تحت الرسالة: ماذا قرأ وبأى استعلام).</summary>
+        public List<AiToolCallView> Tools { get; set; } = new List<AiToolCallView>();
+    }
+
+    // ───────────── P2: الأدوات (قراءة فقط) ─────────────
+
+    public static class AiToolOutcome
+    {
+        public const string Ok = "ok";
+        public const string Denied = "denied";
+        public const string Error = "error";
+    }
+
+    /// <summary>استدعاء أداة واحد كما يظهر تحت رد المساعد.</summary>
+    public class AiToolCallView
+    {
+        public string ToolName { get; set; } = "";
+        /// <summary>وصف عربى قصير لما فعلته الأداة («استعلام: مبيعات الشهر»).</summary>
+        public string Title { get; set; } = "";
+        public string Outcome { get; set; } = AiToolOutcome.Ok;
+        public string Sql { get; set; } = "";
+        public int? RowCount { get; set; }
+        public int? DurationMs { get; set; }
+        public string ErrorText { get; set; } = "";
+    }
+
+    /// <summary>
+    /// من يسأل، وماذا يحق له أن يقرأ: AllowedRoutes = مسارات الشاشات المسموحة له (RazorPath من نفس قائمة الويب MenuStateService)،
+    /// فكل أداة/View تُتاح فقط إن كان يملك الشاشة المقابلة (§2.3). الأدوات غير المسموحة لا تُرسل للنموذج أصلاً.
+    /// </summary>
+    public class AiUserContext
+    {
+        public long UserId { get; set; }
+        public long BranchId { get; set; }
+        public bool IsAdmin { get; set; }
+        public List<string> AllowedRoutes { get; set; } = new List<string>();
+    }
+
+    /// <summary>صف من سجل تدقيق الأدوات (تبويب «سجل التدقيق» فى /settings/ai).</summary>
+    public class AiToolAuditView
+    {
+        public long Id { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public long UserId { get; set; }
+        public string UserName { get; set; } = "";
+        public long? ConversationId { get; set; }
+        public string ToolName { get; set; } = "";
+        public string ArgsJson { get; set; } = "";
+        public string SqlText { get; set; } = "";
+        public int? RowCount { get; set; }
+        public int? DurationMs { get; set; }
+        public string Outcome { get; set; } = "";
+        public string ErrorText { get; set; } = "";
+    }
+
+    /// <summary>حالة اتصال القراءة: هل ضُبط حساب قاعدة بيانات للقراءة فقط (ConnectionStrings:AiReadOnly) أم يُستخدم الاتصال الرئيسى مع الحماية البرمجية.</summary>
+    public class AiReadOnlyStatus
+    {
+        public bool DedicatedLogin { get; set; }
+        public string Message { get; set; } = "";
     }
 
     /// <summary>سياق الشاشة الحالية (المسار وعنوانها) ليفهم المساعد «هذه الفاتورة» أو «هذا العميل».</summary>
@@ -313,7 +377,8 @@ namespace AccountModelsLib
         /// يرسل رسالة المستخدم ويبثّ الرد: onDelta يُستدعى لكل جزء نصى (من خيط خلفى). conversationId = 0 ينشئ محادثة جديدة.
         /// الإلغاء (زر الإيقاف) يحفظ الجزء المكتوب بحالة stopped ولا يرمى استثناء.
         /// </summary>
-        Task<AiChatTurnResult> SendAsync(long conversationId, string text, AiScreenContext context, long userId, long branchId,
-                                         Action<string> onDelta, CancellationToken ct = default);
+        /// <param name="onStatus">P2: نص حالة قصير أثناء تنفيذ الأدوات («أبحث فى البيانات…»)؛ null عند انتهاء الأداة.</param>
+        Task<AiChatTurnResult> SendAsync(long conversationId, string text, AiScreenContext context, AiUserContext user,
+                                         Action<string> onDelta, Action<string> onStatus, CancellationToken ct = default);
     }
 }

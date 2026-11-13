@@ -5087,10 +5087,10 @@
   <data name="AIC_OpenSettings" xml:space="preserve"><value>Open AI settings</value></data>
   <data name="AIC_AskAdmin" xml:space="preserve"><value>Ask your administrator to finish the setup.</value></data>
   <data name="AIC_EmptyTitle" xml:space="preserve"><value>How can I help today?</value></data>
-  <data name="AIC_EmptySub" xml:space="preserve"><value>Ask about accounting, taxes or how to use the system. (Reading your company data comes in a later phase.)</value></data>
-  <data name="AIC_Sugg1" xml:space="preserve"><value>How do I create a tax sales invoice in the system?</value></data>
+  <data name="AIC_EmptySub" xml:space="preserve"><value>Fragen Sie nach Verkäufen, Einkäufen, Lagerbeständen und Konten oder zu Buchhaltung, Steuern und Bedienung. Der Assistent liest nur und ändert keine Daten.</value></data>
+  <data name="AIC_Sugg1" xml:space="preserve"><value>Wie hoch ist der Umsatz in diesem Monat?</value></data>
   <data name="AIC_Sugg2" xml:space="preserve"><value>Explain VAT in Egypt and its rates</value></data>
-  <data name="AIC_Sugg3" xml:space="preserve"><value>What is the difference between a trial balance and an income statement?</value></data>
+  <data name="AIC_Sugg3" xml:space="preserve"><value>Welche 10 Artikel wurden dieses Jahr am meisten verkauft?</value></data>
   <data name="AIC_Sugg4" xml:space="preserve"><value>Write a polite reminder to a customer about an overdue payment</value></data>
   <data name="AIC_ReplyFailed" xml:space="preserve"><value>Could not get a reply.</value></data>
   <data name="AIC_Stopped" xml:space="preserve"><value>Stopped</value></data>
@@ -5127,4 +5127,26 @@
   <data name="AIC_SetupDone" xml:space="preserve"><value>{0} is now the chat model</value></data>
   <data name="AI_ModelSearchHint" xml:space="preserve"><value>Type to search models</value></data>
   <data name="AI_RoutingUnsaved" xml:space="preserve"><value>You have unsaved changes in task routing.</value></data>
+  <data name="AIC_Sources" xml:space="preserve"><value>Datenquellen ({0})</value></data>
+  <data name="AIC_SourcesIssues" xml:space="preserve"><value>teilweise fehlgeschlagen</value></data>
+  <data name="AIC_ToolRows" xml:space="preserve"><value>{0} Zeilen</value></data>
+  <data name="AIC_ToolDenied" xml:space="preserve"><value>Abgelehnt</value></data>
+  <data name="AIC_ToolError" xml:space="preserve"><value>Fehler</value></data>
+  <data name="AI_TabAudit" xml:space="preserve"><value>Prüfprotokoll</value></data>
+  <data name="AI_AuditOutcome" xml:space="preserve"><value>Ergebnis</value></data>
+  <data name="AI_AuditAll" xml:space="preserve"><value>Alle</value></data>
+  <data name="AI_AuditOk" xml:space="preserve"><value>Erfolgreich</value></data>
+  <data name="AI_AuditDenied" xml:space="preserve"><value>Abgelehnt</value></data>
+  <data name="AI_AuditError" xml:space="preserve"><value>Fehler</value></data>
+  <data name="AI_AuditSearch" xml:space="preserve"><value>Werkzeug, Abfrage oder Benutzer suchen</value></data>
+  <data name="AI_AuditRefresh" xml:space="preserve"><value>Aktualisieren</value></data>
+  <data name="AI_AuditHint" xml:space="preserve"><value>Jeder Werkzeugaufruf des Assistenten (erlaubt und abgelehnt) mit der ausgeführten Abfrage. Letzte 500 Einträge.</value></data>
+  <data name="AI_AuditWhen" xml:space="preserve"><value>Zeit</value></data>
+  <data name="AI_AuditUser" xml:space="preserve"><value>Benutzer</value></data>
+  <data name="AI_AuditTool" xml:space="preserve"><value>Werkzeug</value></data>
+  <data name="AI_AuditRows" xml:space="preserve"><value>Zeilen</value></data>
+  <data name="AI_AuditMs" xml:space="preserve"><value>Dauer (ms)</value></data>
+  <data name="AI_AuditDetails" xml:space="preserve"><value>Details</value></data>
+  <data name="AI_AuditShow" xml:space="preserve"><value>Abfrage anzeigen</value></data>
+  <data name="AI_AuditEmpty" xml:space="preserve"><value>Noch keine Einträge.</value></data>
 </root>
