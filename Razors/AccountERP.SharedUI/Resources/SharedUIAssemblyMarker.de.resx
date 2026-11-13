@@ -5065,4 +5065,66 @@
   <data name="AI_Disconnect" xml:space="preserve"><value>Disconnect</value></data>
   <data name="AI_ConfirmDisconnect" xml:space="preserve"><value>Disconnect «{0}»? The key is removed from this system only; to delete it from your account remove it on the provider's keys page (openrouter.ai/settings/keys).</value></data>
   <data name="AI_Disconnected" xml:space="preserve"><value>Disconnected</value></data>
+  <data name="AIC_Title" xml:space="preserve"><value>AI assistant</value></data>
+  <data name="AIC_NewChat" xml:space="preserve"><value>New chat</value></data>
+  <data name="AIC_Search" xml:space="preserve"><value>Search chats</value></data>
+  <data name="AIC_Conversations" xml:space="preserve"><value>Chats</value></data>
+  <data name="AIC_ConvActions" xml:space="preserve"><value>Chat options</value></data>
+  <data name="AIC_NoConversations" xml:space="preserve"><value>No chats yet. Start with a question.</value></data>
+  <data name="AIC_NoSearchResults" xml:space="preserve"><value>No matching chats</value></data>
+  <data name="AIC_Untitled" xml:space="preserve"><value>Untitled chat</value></data>
+  <data name="AIC_GroupToday" xml:space="preserve"><value>Today</value></data>
+  <data name="AIC_GroupWeek" xml:space="preserve"><value>Last 7 days</value></data>
+  <data name="AIC_GroupOlder" xml:space="preserve"><value>Older</value></data>
+  <data name="AIC_Rename" xml:space="preserve"><value>Rename</value></data>
+  <data name="AIC_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="AIC_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="AIC_DeleteTitle" xml:space="preserve"><value>Delete chat</value></data>
+  <data name="AIC_DeleteConfirm" xml:space="preserve"><value>Delete the chat “{0}” and all its messages? This cannot be undone.</value></data>
+  <data name="AIC_ModelTip" xml:space="preserve"><value>Model used for chat</value></data>
+  <data name="AIC_NotAvailable" xml:space="preserve"><value>The AI assistant is not available on this device. Use it from the web version.</value></data>
+  <data name="AIC_NoAccess" xml:space="preserve"><value>You do not have access to the AI assistant. Ask your administrator.</value></data>
+  <data name="AIC_OpenSettings" xml:space="preserve"><value>Open AI settings</value></data>
+  <data name="AIC_AskAdmin" xml:space="preserve"><value>Ask your administrator to finish the setup.</value></data>
+  <data name="AIC_EmptyTitle" xml:space="preserve"><value>How can I help today?</value></data>
+  <data name="AIC_EmptySub" xml:space="preserve"><value>Ask about accounting, taxes or how to use the system. (Reading your company data comes in a later phase.)</value></data>
+  <data name="AIC_Sugg1" xml:space="preserve"><value>How do I create a tax sales invoice in the system?</value></data>
+  <data name="AIC_Sugg2" xml:space="preserve"><value>Explain VAT in Egypt and its rates</value></data>
+  <data name="AIC_Sugg3" xml:space="preserve"><value>What is the difference between a trial balance and an income statement?</value></data>
+  <data name="AIC_Sugg4" xml:space="preserve"><value>Write a polite reminder to a customer about an overdue payment</value></data>
+  <data name="AIC_ReplyFailed" xml:space="preserve"><value>Could not get a reply.</value></data>
+  <data name="AIC_Stopped" xml:space="preserve"><value>Stopped</value></data>
+  <data name="AIC_Tokens" xml:space="preserve"><value>{0} in · {1} out</value></data>
+  <data name="AIC_TokensTip" xml:space="preserve"><value>Tokens sent and received for this reply</value></data>
+  <data name="AIC_Copy" xml:space="preserve"><value>Copy reply</value></data>
+  <data name="AIC_Copied" xml:space="preserve"><value>Copied</value></data>
+  <data name="AIC_CopyFailed" xml:space="preserve"><value>Copy failed</value></data>
+  <data name="AIC_InputLabel" xml:space="preserve"><value>Your message to the assistant</value></data>
+  <data name="AIC_Placeholder" xml:space="preserve"><value>Type your question… (Enter to send, Shift+Enter for a new line)</value></data>
+  <data name="AIC_Send" xml:space="preserve"><value>Send</value></data>
+  <data name="AIC_Stop" xml:space="preserve"><value>Stop reply</value></data>
+  <data name="AIC_Hint" xml:space="preserve"><value>The assistant can make mistakes; check important information.</value></data>
+  <data name="AIC_StatusWriting" xml:space="preserve"><value>The assistant is writing a reply</value></data>
+  <data name="AIC_StatusDone" xml:space="preserve"><value>Reply complete</value></data>
+  <data name="AIC_OpenAssistant" xml:space="preserve"><value>Open the AI assistant</value></data>
+  <data name="AIC_OpenFull" xml:space="preserve"><value>Open full page</value></data>
+  <data name="AIC_Minimize" xml:space="preserve"><value>Minimize</value></data>
+  <data name="AIC_NewReply" xml:space="preserve"><value>New reply from the assistant</value></data>
+  <data name="AIC_PrefsTitle" xml:space="preserve"><value>AI assistant</value></data>
+  <data name="AIC_PrefShowIcon" xml:space="preserve"><value>Show the floating assistant icon</value></data>
+  <data name="AIC_PrefShowIconHint" xml:space="preserve"><value>A round button at the bottom of the screen that opens the chat from any screen</value></data>
+  <data name="AIC_PrefPosition" xml:space="preserve"><value>Icon position</value></data>
+  <data name="AIC_PosLeft" xml:space="preserve"><value>Bottom left</value></data>
+  <data name="AIC_PosRight" xml:space="preserve"><value>Bottom right</value></data>
+  <data name="AIC_SetupTitle" xml:space="preserve"><value>Choose the chat model</value></data>
+  <data name="AIC_SetupSub" xml:space="preserve"><value>No chat model is set yet. Pick one of the added models ({0}) — type part of its name to search.</value></data>
+  <data name="AIC_SetupModel" xml:space="preserve"><value>Chat model</value></data>
+  <data name="AIC_SetupSearch" xml:space="preserve"><value>e.g. claude opus, gpt or gemini</value></data>
+  <data name="AIC_SetupSave" xml:space="preserve"><value>Save and start chatting</value></data>
+  <data name="AIC_SetupSaving" xml:space="preserve"><value>Saving…</value></data>
+  <data name="AIC_SetupHint" xml:space="preserve"><value>You can change it or add a fallback later in AI settings → Models and tasks.</value></data>
+  <data name="AIC_SetupMore" xml:space="preserve"><value>For full control (fallback model, effort, max tokens) use the settings screen.</value></data>
+  <data name="AIC_SetupDone" xml:space="preserve"><value>{0} is now the chat model</value></data>
+  <data name="AI_ModelSearchHint" xml:space="preserve"><value>Type to search models</value></data>
+  <data name="AI_RoutingUnsaved" xml:space="preserve"><value>You have unsaved changes in task routing.</value></data>
 </root>

@@ -31,6 +31,10 @@ namespace AccountERP.SharedUI.Services
         // الديسك توب/الموبايل) سارياً بدون أى تغيير غير مقصود.
         public string? Language { get; private set; }
 
+        // 🤖 المساعد الذكى P1: الأيقونة العائمة (إظهار + الموضع start = بداية السطر / end = نهايته، يتبع اتجاه اللغة).
+        public bool ShowAiAssistantIcon { get; private set; } = true;
+        public string AiAssistantIconPosition { get; private set; } = "end";
+
         public event Action? OnChanged;
 
         public void Load()
@@ -48,6 +52,8 @@ namespace AccountERP.SharedUI.Services
                 Language = settings.TryGetValue(UserSettingKeys.Language, out var language) && !string.IsNullOrWhiteSpace(language)
                     ? language
                     : null;
+                ShowAiAssistantIcon = !settings.TryGetValue(UserSettingKeys.ShowAiAssistantIcon, out var showAi) || showAi != "false";
+                AiAssistantIconPosition = settings.TryGetValue(UserSettingKeys.AiAssistantIconPosition, out var aiPos) && aiPos == "start" ? "start" : "end";
             }
             catch
             {
@@ -58,6 +64,8 @@ namespace AccountERP.SharedUI.Services
                 BreadcrumbSubMenus = true;
                 DateFormat = DefaultDateFormat;
                 Language = null;
+                ShowAiAssistantIcon = true;
+                AiAssistantIconPosition = "end";
             }
 
             IsLoaded = true;
@@ -75,6 +83,25 @@ namespace AccountERP.SharedUI.Services
             BreadcrumbSubMenus = true;
             DateFormat = DefaultDateFormat;
             Language = null;
+            ShowAiAssistantIcon = true;
+            AiAssistantIconPosition = "end";
+            OnChanged?.Invoke();
+        }
+
+        public void SetShowAiAssistantIcon(bool value)
+        {
+            if (ShowAiAssistantIcon == value) return;
+            ShowAiAssistantIcon = value;
+            TrySave(UserSettingKeys.ShowAiAssistantIcon, value);
+            OnChanged?.Invoke();
+        }
+
+        public void SetAiAssistantIconPosition(string value)
+        {
+            value = value == "start" ? "start" : "end";
+            if (AiAssistantIconPosition == value) return;
+            AiAssistantIconPosition = value;
+            TrySave(UserSettingKeys.AiAssistantIconPosition, value);
             OnChanged?.Invoke();
         }
 

@@ -7,6 +7,7 @@
 @inject UserPreferencesService Prefs
 @inject LanguageService LangService
 @inject NavigationManager NavigationManager
+@inject IServiceProvider ServiceProvider
 @implements IDisposable
 
 <div class="themes-menu-overlay @(Open ? "open" : "")" @onclick="@(() => SetOpenAsync(false))"></div>
@@ -66,6 +67,25 @@
 
         <MudDivider Class="my-3" />
 
+        @* 🤖 المساعد الذكى P1: إظهار الأيقونة العائمة وموضعها - لمن يملك صلاحية المساعد فقط (AssistantSessionService مسجّلة على الويب فقط) *@
+        @if (_assistant?.HasAccess == true)
+        {
+            <MudStack Spacing="1" Class="mb-2">
+                <MudText Typo="Typo.body2" Class="fw-bold">@Tr("AIC_PrefsTitle")</MudText>
+                <MudSwitch T="bool" Value="@Prefs.ShowAiAssistantIcon" ValueChanged="@((bool v) => Prefs.SetShowAiAssistantIcon(v))"
+                           Color="Color.Primary" Label="@Tr("AIC_PrefShowIcon")" />
+                <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="margin-inline-start:52px;">@Tr("AIC_PrefShowIconHint")</MudText>
+                <MudSelect T="string" Value="@Prefs.AiAssistantIconPosition" ValueChanged="@((string v) => Prefs.SetAiAssistantIconPosition(v))"
+                           Disabled="@(!Prefs.ShowAiAssistantIcon)" Label="@Tr("AIC_PrefPosition")"
+                           Variant="Variant.Outlined" Margin="Margin.Dense" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelectItem T="string" Value="@("end")">@Tr(LangService.IsRtl ? "AIC_PosLeft" : "AIC_PosRight")</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("start")">@Tr(LangService.IsRtl ? "AIC_PosRight" : "AIC_PosLeft")</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+
+            <MudDivider Class="my-3" />
+        }
+
         @* 🟢 يفتح شاشة إعادة ترتيب القوائم (بطاقات الشاشة الرئيسية + القائمة الجانبية) - راجع
            MenuOrderSettings.razor. أُغلقت اللوحة أولاً (SetOpenAsync(false)) قبل التنقّل حتى لا تبقى مفتوحة
            فوق الصفحة الجديدة. *@
@@ -85,8 +105,11 @@
     [Parameter] public bool Open { get; set; }
     [Parameter] public EventCallback<bool> OpenChanged { get; set; }
 
+    private AssistantSessionService? _assistant;
+
     protected override void OnInitialized()
     {
+        _assistant = ServiceProvider.GetService(typeof(AssistantSessionService)) as AssistantSessionService;
         LangService.OnLanguageChanged += OnChangedHandler;
         // 🟢 لتحديث المفتاحين فوراً لو تغيّرت التفضيلات من مكان آخر (نادر، لكن نفس مبدأ ThemeService) -
         // بلا هذا الاشتراك تبقى اللوحة على أول قيم قرأتها عند فتحها حتى لو تغيّرت Prefs بعد ذلك.

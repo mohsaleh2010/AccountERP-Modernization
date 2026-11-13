@@ -1,0 +1,234 @@
+@* 🤖 المساعد الذكى P1 (ai-assistant-plan.md §7.1): صفحة /assistant - عمود جانبى بالمحادثات (بحث، مجمّعة اليوم/هذا الأسبوع/أقدم، إعادة تسمية وحذف)
+   ومنطقة المحادثة المشتركة AssistantChat. على الشاشات الضيقة يتحول العمود الجانبى لقائمة منبثقة. الصلاحية: عنصر القائمة menuItemAiAssistant.
+   نفس الحالة مع النافذة العائمة عبر AssistantSessionService (Scoped). التصميم حسب ui-ux-pro-max (أهداف لمس 44px، تركيز ظاهر، فاتح/داكن، RTL/LTR). *@
+@page "/assistant"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Assistant
+@using Microsoft.Extensions.DependencyInjection
+@inject LanguageService LangService
+@inject IServiceProvider ServiceProvider
+@inject IDialogService DialogService
+@implements IDisposable
+
+<PageTitle>@Tr("AIC_Title")</PageTitle>
+
+<style>
+    .aip { display: flex; height: calc(100dvh - 170px); min-height: 480px; border-radius: 16px; overflow: hidden; position: relative;
+           border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); }
+    .aip-side { flex: none; width: 290px; display: flex; flex-direction: column; min-height: 0;
+                border-inline-end: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); }
+    .aip-side-head { flex: none; display: flex; flex-direction: column; gap: 10px; padding: 14px; }
+    .aip-side-head .mud-button-root { min-height: 44px; }
+    .aip-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0 8px 12px; }
+    .aip-group { margin: 12px 8px 4px; font-size: .72rem; font-weight: 700; letter-spacing: .02em; color: var(--mud-palette-text-secondary); }
+    .aip-item { display: flex; align-items: center; gap: 2px; border-radius: 10px; min-height: 44px; }
+    .aip-item:hover { background: var(--mud-palette-action-default-hover); }
+    .aip-item.active { background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent); }
+    .aip-item > button.title { flex: 1; min-width: 0; min-height: 44px; padding: 8px 10px; border: 0; background: transparent; cursor: pointer; text-align: start;
+                                font: inherit; font-size: .875rem; color: var(--mud-palette-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 10px; }
+    .aip-item.active > button.title { font-weight: 600; color: var(--mud-palette-primary); }
+    .aip-item > button.title:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: -2px; }
+    .aip-item .mud-input-control { margin: 4px 6px; }
+    .aip-none { padding: 24px 12px; text-align: center; font-size: .85rem; color: var(--mud-palette-text-secondary); }
+    .aip-main { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
+    .aip-top { flex: none; display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 12px;
+               border-bottom: 1px solid var(--mud-palette-lines-default); }
+    .aip-top .title { flex: 1; min-width: 0; font-weight: 600; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .aip-toggle { display: none !important; }
+    .aip-body { flex: 1; min-height: 0; }
+    .aip-scrim { display: none; }
+    @@media (max-width: 900px) {
+        .aip { height: calc(100dvh - 130px); }
+        .aip-toggle { display: inline-flex !important; }
+        .aip-side { position: absolute; inset-block: 0; inset-inline-start: 0; z-index: 3; width: min(320px, 86%); transform: translateX(-105%);
+                    transition: transform .2s ease-out; box-shadow: var(--mud-elevation-8); }
+        [dir="rtl"] .aip-side { transform: translateX(105%); }
+        .aip.side-open .aip-side { transform: none; }
+        .aip.side-open .aip-scrim { display: block; position: absolute; inset: 0; z-index: 2; background: rgba(0,0,0,.35); }
+    }
+    @@media (prefers-reduced-motion: reduce) { .aip-side { transition: none; } }
+</style>
+
+<div class="aip @(_sideOpen ? "side-open" : "")" dir="@(LangService.IsRtl ? "rtl" : "ltr")">
+    @if (_chat?.HasAccess == true)
+    {
+        <aside class="aip-side" aria-label="@Tr("AIC_Conversations")">
+            <div class="aip-side-head">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Add"
+                           Disabled="_chat.IsSending" OnClick="NewChatAsync">@Tr("AIC_NewChat")</MudButton>
+                <MudTextField T="string" Value="_search" ValueChanged="OnSearchChanged" Immediate="true" DebounceInterval="350"
+                              Placeholder="@Tr("AIC_Search")" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" aria-label="@Tr("AIC_Search")" />
+            </div>
+            <nav class="aip-list">
+                @if (_chat.Conversations.Count == 0)
+                {
+                    <div class="aip-none">@Tr(string.IsNullOrEmpty(_search) ? "AIC_NoConversations" : "AIC_NoSearchResults")</div>
+                }
+                @foreach (var g in Groups())
+                {
+                    <div class="aip-group">@g.Title</div>
+                    @foreach (var c in g.Items)
+                    {
+                        <div class="aip-item @(c.Id == _chat.ConversationId ? "active" : "")" @key="c.Id">
+                            @if (_renamingId == c.Id)
+                            {
+                                <MudTextField T="string" @bind-Value="_renameText" Variant="Variant.Outlined" Margin="Margin.Dense" AutoFocus="true" MaxLength="200"
+                                              aria-label="@Tr("AIC_Rename")" OnKeyDown="e => OnRenameKey(e, c.Id)" OnBlur="() => SaveRenameAsync(c.Id)" />
+                            }
+                            else
+                            {
+                                <button type="button" class="title" title="@c.Title" aria-current="@(c.Id == _chat.ConversationId ? "page" : null)"
+                                        @onclick="() => OpenAsync(c.Id)">@(string.IsNullOrWhiteSpace(c.Title) ? Tr("AIC_Untitled") : c.Title)</button>
+                                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" AriaLabel="@Tr("AIC_ConvActions")" Dense="true">
+                                    <MudMenuItem Icon="@Icons.Material.Outlined.Edit" OnClick="() => StartRename(c)">@Tr("AIC_Rename")</MudMenuItem>
+                                    <MudMenuItem Icon="@Icons.Material.Outlined.Delete" IconColor="Color.Error" OnClick="() => DeleteAsync(c)">@Tr("AIC_Delete")</MudMenuItem>
+                                </MudMenu>
+                            }
+                        </div>
+                    }
+                }
+            </nav>
+        </aside>
+        <div class="aip-scrim" @onclick="() => _sideOpen = false"></div>
+    }
+
+    <section class="aip-main">
+        <div class="aip-top">
+            @if (_chat?.HasAccess == true)
+            {
+                <MudIconButton Class="aip-toggle" Icon="@Icons.Material.Filled.Menu" aria-label="@Tr("AIC_Conversations")" OnClick="() => _sideOpen = !_sideOpen" />
+            }
+            <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Color="Color.Primary" aria-hidden="true" />
+            <h1 class="title" style="margin:0;">@(_chat == null || _chat.ConversationId == 0 || string.IsNullOrWhiteSpace(_chat.ConversationTitle) ? Tr("AIC_Title") : _chat.ConversationTitle)</h1>
+            @if (_chat?.Availability.Ready == true && !string.IsNullOrEmpty(_chat.Availability.ModelName))
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Outlined.Memory" title="@Tr("AIC_ModelTip")">@_chat.Availability.ModelName</MudChip>
+            }
+        </div>
+        <div class="aip-body">
+            @if (_chat == null)
+            {
+                <div style="padding:24px;"><MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("AIC_NotAvailable")</MudAlert></div>
+            }
+            else
+            {
+                <AssistantChat @ref="_chatView" />
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    private AssistantSessionService? _chat;
+    private AssistantChat? _chatView;
+    private bool _sideOpen;
+    private string? _search;
+    private long _renamingId;
+    private string _renameText = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _chat = ServiceProvider.GetService<AssistantSessionService>();
+        LangService.OnLanguageChanged += OnChanged;
+        if (_chat != null)
+        {
+            _chat.OnChanged += OnChanged;
+            _search = _chat.Search;
+            if (_chat.HasAccess) await _chat.RefreshAsync();
+        }
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private sealed record Group(string Title, List<AiConversationView> Items);
+
+    /// <summary>تجميع المحادثات: اليوم / آخر 7 أيام / أقدم.</summary>
+    private IEnumerable<Group> Groups()
+    {
+        if (_chat == null) yield break;
+        var today = DateTime.Today;
+        var list = _chat.Conversations;
+        DateTime When(AiConversationView c) => c.LastMessageAt ?? c.CreatedAt;
+        var g1 = list.Where(c => When(c) >= today).ToList();
+        var g2 = list.Where(c => When(c) < today && When(c) >= today.AddDays(-7)).ToList();
+        var g3 = list.Where(c => When(c) < today.AddDays(-7)).ToList();
+        if (g1.Count > 0) yield return new Group(Tr("AIC_GroupToday"), g1);
+        if (g2.Count > 0) yield return new Group(Tr("AIC_GroupWeek"), g2);
+        if (g3.Count > 0) yield return new Group(Tr("AIC_GroupOlder"), g3);
+    }
+
+    private async Task NewChatAsync()
+    {
+        if (_chat == null) return;
+        _chat.NewConversation();
+        _sideOpen = false;
+        if (_chatView != null) await _chatView.FocusInputAsync();
+    }
+
+    private async Task OpenAsync(long id)
+    {
+        if (_chat == null) return;
+        _sideOpen = false;
+        await _chat.OpenAsync(id);
+    }
+
+    private async Task OnSearchChanged(string? text)
+    {
+        _search = text;
+        if (_chat != null) await _chat.SetSearchAsync(text);
+    }
+
+    private void StartRename(AiConversationView c)
+    {
+        _renamingId = c.Id;
+        _renameText = c.Title;
+    }
+
+    private async Task OnRenameKey(KeyboardEventArgs e, long id)
+    {
+        if (e.Key == "Enter") await SaveRenameAsync(id);
+        else if (e.Key == "Escape") _renamingId = 0;
+    }
+
+    private async Task SaveRenameAsync(long id)
+    {
+        if (_renamingId != id || _chat == null) return;
+        _renamingId = 0;
+        string title = (_renameText ?? "").Trim();
+        var current = _chat.Conversations.FirstOrDefault(c => c.Id == id);
+        if (title.Length == 0 || current == null || title == current.Title) return;
+        await _chat.RenameAsync(id, title);
+    }
+
+    private async Task DeleteAsync(AiConversationView c)
+    {
+        if (_chat == null) return;
+        bool? ok = await DialogService.ShowMessageBoxAsync(Tr("AIC_DeleteTitle"), Tr("AIC_DeleteConfirm", string.IsNullOrWhiteSpace(c.Title) ? Tr("AIC_Untitled") : c.Title),
+            yesText: Tr("AIC_Delete"), cancelText: Tr("AIC_Cancel"));
+        if (ok == true) await _chat.DeleteAsync(c.Id);
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnChanged;
+        if (_chat != null) _chat.OnChanged -= OnChanged;
+    }
+}

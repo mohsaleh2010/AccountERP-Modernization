@@ -29,6 +29,10 @@ namespace AccountModelsLib
         // حتى تُستعاد لغة المستخدم تلقائياً عند تسجيل الدخول من أي جهاز/متصفح، بما فى ذلك الديسك توب/الموبايل
         // (MAUI) التى لا يوجد لديها أصلاً أي آلية حفظ كوكي.
         public const string Language = "Language";
+
+        // 🤖 المساعد الذكى P1: إظهار الأيقونة العائمة (افتراضى true) وموضعها start/end (منطقى لا يسار/يمين ليتوافق مع RTL/LTR).
+        public const string ShowAiAssistantIcon = "ShowAiAssistantIcon";
+        public const string AiAssistantIconPosition = "AiAssistantIconPosition";
     }
 
     // 🟢 نفس نمط SysConfigMenusPERMATIONSCLS المجاور (SysConfigMenusCLS.cs): كلاس بسيط بلا حقن تبعيات

@@ -304,7 +304,62 @@
 
             @* ───────────── تبويب النماذج والمهام ───────────── *@
             <MudTabPanel Text="@Tr("AI_TabModels")" Icon="@Icons.Material.Filled.Memory">
-                <section class="inv-card" aria-labelledby="ai-models-h">
+                <section class="inv-card" aria-labelledby="ai-route-h">
+                    <div class="inv-card-head" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; justify-content: space-between;">
+                        <h2 class="inv-card-title" id="ai-route-h"><MudIcon Icon="@Icons.Material.Filled.AltRoute" />@Tr("AI_RoutingTitle")</h2>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="_busy" OnClick="SaveRoutingAsync">@Tr("AI_SaveRouting")</MudButton>
+                    </div>
+                    <div class="ai-sub mb-2">@Tr("AI_RoutingHelp")</div>
+                    @foreach (var task in AiTaskKeys.All)
+                    {
+                        var rows = _routing.Where(r => r.TaskKey == task).OrderBy(r => r.Priority).ToList();
+                        <div class="ai-task">
+                            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                                <strong>@Tr("AI_Task_" + task)</strong>
+                                <span class="ai-sub" style="margin: 0;">@Tr("AI_TaskDesc_" + task)</span>
+                                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="@(_busy || _models.Count == 0)" OnClick="@(() => AddRoute(task))">
+                                    @(rows.Count == 0 ? Tr("AI_AddPrimary") : Tr("AI_AddFallback"))
+                                </MudButton>
+                            </div>
+                            @foreach (var r in rows)
+                            {
+                                var model = _models.FirstOrDefault(m => m.Id == r.Model_Id);
+                                <div class="ai-task-row">
+                                    <span class="prio" title="@Tr("AI_Priority")">#@r.Priority</span>
+                                    @* بحث بالكتابة: مزوّد مثل OpenRouter يضيف مئات النماذج فلا تصلح قائمة منسدلة عادية *@
+                                    <MudAutocomplete T="AiModelRow" Value="model" ValueChanged="@((AiModelRow? m) => { if (m != null) r.Model_Id = m.Id; })"
+                                                     SearchFunc="@((string q, CancellationToken ct) => SearchModels(q, r.Model_Id))" ToStringFunc="@(m => m == null ? "" : $"{m.ProviderName} · {m.ModelId}")"
+                                                     Label="@Tr("AI_ColModel")" Placeholder="@Tr("AI_ModelSearchHint")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                     MaxItems="60" ResetValueOnEmptyText="false" CoerceText="true" SelectOnActivation="false" />
+                                    <MudSelect T="string" @bind-Value="r.Effort" Label="@Tr("AI_Effort")" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                                        @foreach (var e in Efforts) { <MudSelectItem Value="@e">@e</MudSelectItem> }
+                                    </MudSelect>
+                                    <MudNumericField T="int?" @bind-Value="r.MaxTokens" Label="@Tr("AI_MaxTokens")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="1" Max="128000" HideSpinButtons="true" Culture="CultureInfo.InvariantCulture" />
+                                    @if (model?.SupportsTemperature == true)
+                                    {
+                                        <MudNumericField T="decimal?" @bind-Value="r.Temperature" Label="@Tr("AI_Temperature")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Max="2" Step="0.1m" HideSpinButtons="true" Culture="CultureInfo.InvariantCulture" />
+                                    }
+                                    else
+                                    {
+                                        <span class="ai-sub" style="margin: 0;" title="@Tr("AI_NoTempHelp")">@Tr("AI_NoTemp")</span>
+                                    }
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close" aria-label="@Tr("AI_Delete")" Disabled="_busy" OnClick="@(() => RemoveRoute(r))" />
+                                </div>
+                            }
+                        </div>
+                    }
+                    @if (RoutingDirty)
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mt-3" Icon="@Icons.Material.Filled.Info">
+                            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;">
+                                <span>@Tr("AI_RoutingUnsaved")</span>
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="_busy" OnClick="SaveRoutingAsync">@Tr("AI_SaveRouting")</MudButton>
+                            </div>
+                        </MudAlert>
+                    }
+                </section>
+
+                <section class="inv-card ai-gap" aria-labelledby="ai-models-h">
                     <h2 class="inv-card-title" id="ai-models-h"><MudIcon Icon="@Icons.Material.Filled.Memory" />@Tr("AI_ModelsTitle")<span class="inv-count">@_models.Count</span></h2>
                     <div class="ai-form">
                         <MudSelect T="long" @bind-Value="_newModel.Provider_Id" Label="@Tr("AI_ColProvider")" Variant="Variant.Outlined">
@@ -318,7 +373,7 @@
                     </div>
                     <div class="mud-typography mud-typography-caption mt-2 mb-3">@Tr("AI_ModelsHelp")</div>
 
-                    <MudTable Items="@_models" T="AiModelRow" Hover="true" Elevation="0" Class="inv-table" Dense="true" Breakpoint="Breakpoint.Md" Loading="_loading" LoadingProgressColor="Color.Primary">
+                    <MudTable Items="@_models" T="AiModelRow" Hover="true" Elevation="0" Class="inv-table" Dense="true" Breakpoint="Breakpoint.Md" RowsPerPage="25" Loading="_loading" LoadingProgressColor="Color.Primary">
                         <HeaderContent>
                             <MudTh>@Tr("AI_ColProvider")</MudTh>
                             <MudTh>@Tr("AI_ColModelId")</MudTh>
@@ -352,55 +407,10 @@
                             </MudTd>
                         </RowTemplate>
                         <NoRecordsContent><div class="ai-empty"><MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Large" />@Tr("AI_NoModels")</div></NoRecordsContent>
+                        <PagerContent><MudTablePager PageSizeOptions="new[] { 25, 50, 100 }" HideRowsPerPage="false" /></PagerContent>
                     </MudTable>
                 </section>
 
-                <section class="inv-card ai-gap" aria-labelledby="ai-route-h">
-                    <div class="inv-card-head" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; justify-content: space-between;">
-                        <h2 class="inv-card-title" id="ai-route-h"><MudIcon Icon="@Icons.Material.Filled.AltRoute" />@Tr("AI_RoutingTitle")</h2>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="_busy" OnClick="SaveRoutingAsync">@Tr("AI_SaveRouting")</MudButton>
-                    </div>
-                    <div class="ai-sub mb-2">@Tr("AI_RoutingHelp")</div>
-                    @foreach (var task in AiTaskKeys.All)
-                    {
-                        var rows = _routing.Where(r => r.TaskKey == task).OrderBy(r => r.Priority).ToList();
-                        <div class="ai-task">
-                            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                                <strong>@Tr("AI_Task_" + task)</strong>
-                                <span class="ai-sub" style="margin: 0;">@Tr("AI_TaskDesc_" + task)</span>
-                                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="@(_busy || _models.Count == 0)" OnClick="@(() => AddRoute(task))">
-                                    @(rows.Count == 0 ? Tr("AI_AddPrimary") : Tr("AI_AddFallback"))
-                                </MudButton>
-                            </div>
-                            @foreach (var r in rows)
-                            {
-                                var model = _models.FirstOrDefault(m => m.Id == r.Model_Id);
-                                <div class="ai-task-row">
-                                    <span class="prio" title="@Tr("AI_Priority")">#@r.Priority</span>
-                                    <MudSelect T="long" @bind-Value="r.Model_Id" Label="@Tr("AI_ColModel")" Variant="Variant.Outlined" Margin="Margin.Dense">
-                                        @foreach (var m in _models.Where(m => m.IsEnabled || m.Id == r.Model_Id))
-                                        {
-                                            <MudSelectItem Value="@m.Id">@($"{m.ProviderName} · {m.ModelId}")</MudSelectItem>
-                                        }
-                                    </MudSelect>
-                                    <MudSelect T="string" @bind-Value="r.Effort" Label="@Tr("AI_Effort")" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
-                                        @foreach (var e in Efforts) { <MudSelectItem Value="@e">@e</MudSelectItem> }
-                                    </MudSelect>
-                                    <MudNumericField T="int?" @bind-Value="r.MaxTokens" Label="@Tr("AI_MaxTokens")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="1" Max="128000" HideSpinButtons="true" Culture="CultureInfo.InvariantCulture" />
-                                    @if (model?.SupportsTemperature == true)
-                                    {
-                                        <MudNumericField T="decimal?" @bind-Value="r.Temperature" Label="@Tr("AI_Temperature")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Max="2" Step="0.1m" HideSpinButtons="true" Culture="CultureInfo.InvariantCulture" />
-                                    }
-                                    else
-                                    {
-                                        <span class="ai-sub" style="margin: 0;" title="@Tr("AI_NoTempHelp")">@Tr("AI_NoTemp")</span>
-                                    }
-                                    <MudIconButton Icon="@Icons.Material.Filled.Close" aria-label="@Tr("AI_Delete")" Disabled="_busy" OnClick="@(() => RemoveRoute(r))" />
-                                </div>
-                            }
-                        </div>
-                    }
-                </section>
             </MudTabPanel>
         </MudTabs>
     }
@@ -491,6 +501,7 @@
         {
             var gw = _gw;
             (_providers, _models, _routing) = await Bg(() => (gw.GetProviders(), gw.GetModels(), gw.GetRouting()));
+            _savedRouting = RoutingSnapshot(_routing);
             if (_newModel.Provider_Id == 0 || _providers.All(p => p.Id != _newModel.Provider_Id))
                 _newModel.Provider_Id = _providers.FirstOrDefault()?.Id ?? 0;
         }
@@ -742,6 +753,28 @@
     }
 
     // ───────────── ربط المهام ─────────────
+
+    private string _savedRouting = "";
+
+    private static string RoutingSnapshot(IEnumerable<AiTaskRoutingRow> rows) =>
+        string.Join("|", rows.OrderBy(r => r.TaskKey).ThenBy(r => r.Priority)
+            .Select(r => $"{r.TaskKey}:{r.Priority}:{r.Model_Id}:{r.Effort}:{r.MaxTokens}:{r.Temperature}"));
+
+    private bool RoutingDirty => RoutingSnapshot(_routing) != _savedRouting;
+
+    /// <summary>بحث النماذج المفعّلة بالمزوّد أو المعرّف أو الاسم (أول 60)، مع إبقاء النموذج المختار حالياً.</summary>
+    private Task<IEnumerable<AiModelRow>> SearchModels(string? q, long currentId)
+    {
+        var list = _models.Where(m => m.IsEnabled || m.Id == currentId);
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var words = q.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            list = list.Where(m => words.All(w => m.ModelId.Contains(w, StringComparison.OrdinalIgnoreCase)
+                                               || m.DisplayName.Contains(w, StringComparison.OrdinalIgnoreCase)
+                                               || m.ProviderName.Contains(w, StringComparison.OrdinalIgnoreCase)));
+        }
+        return Task.FromResult(list.OrderBy(m => m.ModelId, StringComparer.OrdinalIgnoreCase).Take(60).AsEnumerable());
+    }
 
     private void AddRoute(string task)
     {

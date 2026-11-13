@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace AccountModelsLib
 {
     /// <summary>
-    /// ترقية القاعدة للمساعد الذكى (.claude/docs/ai-assistant-plan.md §8، المرحلة P0): جداول المزوّدين والنماذج وربط المهام والإعدادات،
+    /// ترقية القاعدة للمساعد الذكى (.claude/docs/ai-assistant-plan.md §8، المرحلتان P0/P1): جداول المزوّدين والنماذج وربط المهام والإعدادات والمحادثات،
     /// وعنصر قائمة «إعدادات الذكاء الاصطناعى» (/settings/ai). كل الجداول جديدة ببادئة AI_ ومعرّفها bigint بـ Snowflake، ولا مفاتيح أجنبية
     /// على جداول النظام القائمة. إدراج فقط (IF NOT EXISTS)، لا يغيّر أى صف قائم، وآمنة للتكرار. جداول المراحل التالية تُضاف فى مراحلها.
     /// </summary>
@@ -68,6 +68,32 @@ namespace AccountModelsLib
     [SettingKey] [nvarchar](100) NOT NULL,
     [SettingValue] [nvarchar](max) NULL,",
              @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_Settings_Key] ON [dbo].[AI_Settings]([SettingKey]);"),
+
+            // P1: المحادثات ورسائلها. User_Id مرجع منطقى فقط (لا مفتاح أجنبى على USER_DETAILES). Status: Active / Archived.
+            ("AI_Conversations", @"
+    [User_Id] [bigint] NOT NULL,
+    [Branch_Id] [bigint] NULL,
+    [Title] [nvarchar](200) NULL,
+    [Status] [nvarchar](20) NOT NULL DEFAULT (N'Active'),
+    [LastMessageAt] [datetime] NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_AI_Conversations_User] ON [dbo].[AI_Conversations]([User_Id], [Status], [LastMessageAt] DESC);"),
+
+            // ContentJson = كتل المحتوى ([{""type"":""text"",""text"":...}]) لتتسع للأدوات فى P2. Status: ok / stopped / error.
+            ("AI_Messages", @"
+    [Conversation_Id] [bigint] NOT NULL,
+    [Seq] [int] NOT NULL,
+    [Role] [nvarchar](20) NOT NULL,
+    [ContentJson] [nvarchar](max) NULL,
+    [Model_Id] [bigint] NULL,
+    [ModelName] [nvarchar](200) NULL,
+    [InputTokens] [int] NULL,
+    [OutputTokens] [int] NULL,
+    [CacheReadTokens] [int] NULL,
+    [CostEstimate] [decimal](18, 6) NULL,
+    [Status] [nvarchar](20) NULL,
+    [ErrorText] [nvarchar](1000) NULL,
+    [DurationMs] [int] NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_Messages_Conv_Seq] ON [dbo].[AI_Messages]([Conversation_Id], [Seq]);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>
@@ -92,6 +118,34 @@ namespace AccountModelsLib
             Step("AiAddedColumns", () => AddedColumns(opp));
             Step("AiSettingsSeed", () => SeedSettings(opp));
             Step("AiSettingsMenu", () => SettingsMenu(opp));
+            Step("AiAssistantMenu", () => AssistantMenu(opp));
+        }
+
+        /// <summary>
+        /// P1: عنصر «المساعد الذكى» تحت «ملف» (menuItemFile) يفتح /assistant - نفس نمط «دليل المحاسب» (/help).
+        /// الصلاحية للمديرين فقط افتراضياً (المحادثة تستهلك رصيد المزوّد) والباقون من شاشة الصلاحيات. إدراج فقط، لا يتكرر.
+        /// </summary>
+        private static void AssistantMenu(operations opp)
+        {
+            const string key = "menuItemAiAssistant";
+            const string desc = "المساعد الذكى";
+            var menus = opp.db.Database.SqlQueryRaw<StoreTransferPolicy.KeyValueRow>("SELECT Id, KeysData, Value FROM SysConfigMenus").ToList();
+            string Key(StoreTransferPolicy.KeyValueRow r) => r.KeysData == null ? "" : Common.DecryptMe(r.KeysData).Trim();
+            if (menus.Any(m => Key(m) == key)) return;
+            var parent = menus.FirstOrDefault(m => Key(m) == "menuItemFile");
+            if (parent == null) return;
+            string E(string s) => Common.EncryptMe(s);
+            long id = menus.Max(m => m.Id) + 1;
+            opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenus (Id, Parent_Id, KeysData, Description, PROJECT_ID, Value, DefaultValue, DefaultDescription,
+                            POS, Market, Factory, Tourism, AlFawzan, Client_A, Client_B, UserSells, IsShowToUser, RazorPath)
+VALUES ({id}, {parent.Id}, {E(key)}, {E(desc)}, 2, {E("1")}, {E("1")}, {E(desc)},
+        {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, 1, {E("/assistant")})");
+            var admins = opp.db.Database.SqlQueryRaw<long>("SELECT Id AS Value FROM USER_DETAILES WHERE ISNULL(AdminFlage, 0) = 1").ToList();
+            foreach (long user in admins)
+                opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenusPERMATIONS (Id, Menu_ID, Parent_Id, USER_ID, PERMATION, PROJECT_ID, IsShowToUser)
+VALUES ({CallSnowflakeIdGenerate.GenerateNewId()}, {id}, {parent.Id}, {user}, {E("1")}, 2, 1)");
         }
 
         private static void CreateTable(operations opp, string table, string columns, string indexes)

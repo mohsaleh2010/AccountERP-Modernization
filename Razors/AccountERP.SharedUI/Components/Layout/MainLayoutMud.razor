@@ -226,6 +226,8 @@
 
 <ThemesMenu @bind-Open="_themesMenuOpen" />
 <UserSettingsMenu @bind-Open="_userSettingsMenuOpen" />
+@* 🤖 المساعد الذكى P1: الأيقونة العائمة ونافذة المحادثة - تُخفى ذاتياً (قبل الدخول، بلا صلاحية، فى /assistant، أو إن أخفاها المستخدم) *@
+<AccountERP.SharedUI.Components.Assistant.AssistantWidget />
 
 @* واجهة الأخطاء العادية للمتصفح *@
 <div id="blazor-error-ui" data-nosnippet>

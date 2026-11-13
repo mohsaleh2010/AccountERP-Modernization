@@ -5063,4 +5063,66 @@
   <data name="AI_Disconnect" xml:space="preserve"><value>إلغاء الربط</value></data>
   <data name="AI_ConfirmDisconnect" xml:space="preserve"><value>إلغاء ربط «{0}»؟ يُمسح المفتاح من هذا النظام فقط؛ لحذفه نهائياً من حسابك احذفه من صفحة المفاتيح لدى المزوّد (openrouter.ai/settings/keys).</value></data>
   <data name="AI_Disconnected" xml:space="preserve"><value>تم إلغاء الربط</value></data>
+  <data name="AIC_Title" xml:space="preserve"><value>المساعد الذكى</value></data>
+  <data name="AIC_NewChat" xml:space="preserve"><value>محادثة جديدة</value></data>
+  <data name="AIC_Search" xml:space="preserve"><value>بحث فى المحادثات</value></data>
+  <data name="AIC_Conversations" xml:space="preserve"><value>المحادثات</value></data>
+  <data name="AIC_ConvActions" xml:space="preserve"><value>خيارات المحادثة</value></data>
+  <data name="AIC_NoConversations" xml:space="preserve"><value>لا توجد محادثات بعد. ابدأ بسؤال.</value></data>
+  <data name="AIC_NoSearchResults" xml:space="preserve"><value>لا توجد محادثات مطابقة</value></data>
+  <data name="AIC_Untitled" xml:space="preserve"><value>محادثة بلا عنوان</value></data>
+  <data name="AIC_GroupToday" xml:space="preserve"><value>اليوم</value></data>
+  <data name="AIC_GroupWeek" xml:space="preserve"><value>آخر 7 أيام</value></data>
+  <data name="AIC_GroupOlder" xml:space="preserve"><value>أقدم</value></data>
+  <data name="AIC_Rename" xml:space="preserve"><value>إعادة تسمية</value></data>
+  <data name="AIC_Delete" xml:space="preserve"><value>حذف</value></data>
+  <data name="AIC_Cancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="AIC_DeleteTitle" xml:space="preserve"><value>حذف المحادثة</value></data>
+  <data name="AIC_DeleteConfirm" xml:space="preserve"><value>حذف المحادثة «{0}» وكل رسائلها؟ لا يمكن التراجع.</value></data>
+  <data name="AIC_ModelTip" xml:space="preserve"><value>النموذج المستخدم للمحادثة</value></data>
+  <data name="AIC_NotAvailable" xml:space="preserve"><value>المساعد الذكى غير متاح على هذا الجهاز. استخدمه من نسخة الويب.</value></data>
+  <data name="AIC_NoAccess" xml:space="preserve"><value>لا تملك صلاحية «المساعد الذكى». اطلبها من مدير النظام.</value></data>
+  <data name="AIC_OpenSettings" xml:space="preserve"><value>افتح إعدادات الذكاء الاصطناعى</value></data>
+  <data name="AIC_AskAdmin" xml:space="preserve"><value>اطلب من مدير النظام إكمال الإعداد.</value></data>
+  <data name="AIC_EmptyTitle" xml:space="preserve"><value>كيف أساعدك اليوم؟</value></data>
+  <data name="AIC_EmptySub" xml:space="preserve"><value>اسأل عن المحاسبة والضرائب أو طريقة استخدام النظام. (قراءة بيانات شركتك تأتى فى مرحلة لاحقة.)</value></data>
+  <data name="AIC_Sugg1" xml:space="preserve"><value>كيف أعمل فاتورة مبيعات ضريبية فى النظام؟</value></data>
+  <data name="AIC_Sugg2" xml:space="preserve"><value>اشرح ضريبة القيمة المضافة فى مصر ونسبها</value></data>
+  <data name="AIC_Sugg3" xml:space="preserve"><value>ما الفرق بين ميزان المراجعة وقائمة الدخل؟</value></data>
+  <data name="AIC_Sugg4" xml:space="preserve"><value>اكتب رسالة مهذبة لتذكير عميل بسداد مستحقاته</value></data>
+  <data name="AIC_ReplyFailed" xml:space="preserve"><value>تعذّر الحصول على رد.</value></data>
+  <data name="AIC_Stopped" xml:space="preserve"><value>أُوقف</value></data>
+  <data name="AIC_Tokens" xml:space="preserve"><value>{0} دخل · {1} خرج</value></data>
+  <data name="AIC_TokensTip" xml:space="preserve"><value>عدد التوكنز المرسلة والمستلمة لهذا الرد</value></data>
+  <data name="AIC_Copy" xml:space="preserve"><value>نسخ الرد</value></data>
+  <data name="AIC_Copied" xml:space="preserve"><value>تم النسخ</value></data>
+  <data name="AIC_CopyFailed" xml:space="preserve"><value>تعذّر النسخ</value></data>
+  <data name="AIC_InputLabel" xml:space="preserve"><value>رسالتك للمساعد</value></data>
+  <data name="AIC_Placeholder" xml:space="preserve"><value>اكتب سؤالك… (Enter للإرسال، Shift+Enter لسطر جديد)</value></data>
+  <data name="AIC_Send" xml:space="preserve"><value>إرسال</value></data>
+  <data name="AIC_Stop" xml:space="preserve"><value>إيقاف الرد</value></data>
+  <data name="AIC_Hint" xml:space="preserve"><value>قد يخطئ المساعد؛ راجع المعلومات المهمة.</value></data>
+  <data name="AIC_StatusWriting" xml:space="preserve"><value>المساعد يكتب الرد</value></data>
+  <data name="AIC_StatusDone" xml:space="preserve"><value>اكتمل الرد</value></data>
+  <data name="AIC_OpenAssistant" xml:space="preserve"><value>افتح المساعد الذكى</value></data>
+  <data name="AIC_OpenFull" xml:space="preserve"><value>فتح فى صفحة كاملة</value></data>
+  <data name="AIC_Minimize" xml:space="preserve"><value>تصغير</value></data>
+  <data name="AIC_NewReply" xml:space="preserve"><value>رد جديد من المساعد</value></data>
+  <data name="AIC_PrefsTitle" xml:space="preserve"><value>المساعد الذكى</value></data>
+  <data name="AIC_PrefShowIcon" xml:space="preserve"><value>إظهار أيقونة المساعد العائمة</value></data>
+  <data name="AIC_PrefShowIconHint" xml:space="preserve"><value>زر دائرى فى أسفل الشاشة يفتح نافذة المحادثة من أى شاشة</value></data>
+  <data name="AIC_PrefPosition" xml:space="preserve"><value>موضع الأيقونة</value></data>
+  <data name="AIC_PosLeft" xml:space="preserve"><value>أسفل اليسار</value></data>
+  <data name="AIC_PosRight" xml:space="preserve"><value>أسفل اليمين</value></data>
+  <data name="AIC_SetupTitle" xml:space="preserve"><value>اختر نموذج المحادثة</value></data>
+  <data name="AIC_SetupSub" xml:space="preserve"><value>لم يُحدَّد نموذج للمحادثة بعد. اختر واحداً من النماذج المضافة ({0}) — اكتب جزءاً من اسمه للبحث.</value></data>
+  <data name="AIC_SetupModel" xml:space="preserve"><value>نموذج المحادثة</value></data>
+  <data name="AIC_SetupSearch" xml:space="preserve"><value>مثال: claude opus أو gpt أو gemini</value></data>
+  <data name="AIC_SetupSave" xml:space="preserve"><value>حفظ وابدأ المحادثة</value></data>
+  <data name="AIC_SetupSaving" xml:space="preserve"><value>جارٍ الحفظ…</value></data>
+  <data name="AIC_SetupHint" xml:space="preserve"><value>يمكن تغييره أو إضافة نموذج بديل لاحقاً من «إعدادات الذكاء الاصطناعى» ← «النماذج والمهام».</value></data>
+  <data name="AIC_SetupMore" xml:space="preserve"><value>للتحكم الكامل (نموذج بديل، الجهد، أقصى توكنز) استخدم شاشة الإعدادات.</value></data>
+  <data name="AIC_SetupDone" xml:space="preserve"><value>تم اختيار {0} للمحادثة</value></data>
+  <data name="AI_ModelSearchHint" xml:space="preserve"><value>اكتب للبحث فى النماذج</value></data>
+  <data name="AI_RoutingUnsaved" xml:space="preserve"><value>لديك تغييرات غير محفوظة فى ربط المهام.</value></data>
 </root>

@@ -29,11 +29,17 @@ namespace AccountERP.AI.Providers
         }
     }
 
-    /// <summary>واجهة كل مزوّد: اختبار الاتصال وجلب النماذج (P0). المحادثة تُضاف فى P1 عبر IChatClient.</summary>
+    /// <summary>واجهة كل مزوّد: اختبار الاتصال وجلب النماذج (P0) والمحادثة بالبث (P1).</summary>
     public interface IAiProviderAdapter
     {
         /// <summary>يعيد عدد النماذج المتاحة كدليل على صحة العنوان والمفتاح. يرمى AiProviderException برسالة عربية.</summary>
         Task<List<AiRemoteModel>> ListModelsAsync(ProviderConnection c, CancellationToken ct);
+
+        /// <summary>
+        /// يبثّ الرد: onDelta لكل جزء نصى. يرمى AiProviderException برسالة عربية عند الرفض أو الخطأ،
+        /// وOperationCanceledException عند الإيقاف (ct)؛ المستدعى يجمع النص المبثوث من onDelta فيحفظ الجزء المكتوب.
+        /// </summary>
+        Task<Chat.AiChatOutcome> StreamChatAsync(ProviderConnection c, Chat.AiChatCall call, Action<string> onDelta, CancellationToken ct);
     }
 
     /// <summary>خطأ من المزوّد برسالة عربية جاهزة للعرض (بلا مفاتيح).</summary>

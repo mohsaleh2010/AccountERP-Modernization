@@ -238,4 +238,82 @@ namespace AccountModelsLib
         /// <summary>يمسح المفتاح المحفوظ محلياً (المفتاح البعيد يبقى فى حساب المزوّد).</summary>
         void Disconnect(long providerId, long userId);
     }
+
+    // ───────────── P1: المحادثة ─────────────
+
+    /// <summary>حالة رسالة المساعد فى AI_Messages.Status.</summary>
+    public static class AiMessageStatus
+    {
+        public const string Ok = "ok";
+        public const string Stopped = "stopped";
+        public const string Error = "error";
+    }
+
+    public class AiConversationView
+    {
+        public long Id { get; set; }
+        public string Title { get; set; } = "";
+        public DateTime CreatedAt { get; set; }
+        public DateTime? LastMessageAt { get; set; }
+    }
+
+    /// <summary>رسالة كما تعرضها شاشة المحادثة (النص فقط فى P1).</summary>
+    public class AiChatMessage
+    {
+        public long Id { get; set; }
+        public int Seq { get; set; }
+        /// <summary>user / assistant.</summary>
+        public string Role { get; set; } = "user";
+        public string Text { get; set; } = "";
+        public string Status { get; set; } = AiMessageStatus.Ok;
+        public string ErrorText { get; set; } = "";
+        public string ModelName { get; set; } = "";
+        public int? InputTokens { get; set; }
+        public int? OutputTokens { get; set; }
+        public decimal? CostEstimate { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    /// <summary>سياق الشاشة الحالية (المسار وعنوانها) ليفهم المساعد «هذه الفاتورة» أو «هذا العميل».</summary>
+    public class AiScreenContext
+    {
+        public string Route { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string Language { get; set; } = "ar";
+    }
+
+    /// <summary>جاهزية المحادثة: هل يوجد نموذج مربوط بمهمة «محادثة»؟ Message رسالة عربية عند عدم الجاهزية.</summary>
+    public class AiChatAvailability
+    {
+        public bool Ready { get; set; }
+        public string ModelName { get; set; } = "";
+        public string Message { get; set; } = "";
+    }
+
+    public class AiChatTurnResult
+    {
+        public long ConversationId { get; set; }
+        public AiChatMessage UserMessage { get; set; }
+        public AiChatMessage AssistantMessage { get; set; }
+    }
+
+    /// <summary>
+    /// بوابة المحادثة (P1) لصفحة /assistant والنافذة العائمة. تُنفَّذ فى AccountERP.AI ويسجّلها مضيف الويب فقط؛ على مضيف بلا تسجيل
+    /// يختفى المساعد. كل دالة تتحقق أن المحادثة تخص userId نفسه. الأخطاء رسائل عربية (InvalidOperationException).
+    /// </summary>
+    public interface IAiChatGateway
+    {
+        AiChatAvailability GetAvailability();
+        List<AiConversationView> GetConversations(long userId, string search);
+        List<AiChatMessage> GetMessages(long conversationId, long userId);
+        void RenameConversation(long conversationId, string title, long userId);
+        void DeleteConversation(long conversationId, long userId);
+
+        /// <summary>
+        /// يرسل رسالة المستخدم ويبثّ الرد: onDelta يُستدعى لكل جزء نصى (من خيط خلفى). conversationId = 0 ينشئ محادثة جديدة.
+        /// الإلغاء (زر الإيقاف) يحفظ الجزء المكتوب بحالة stopped ولا يرمى استثناء.
+        /// </summary>
+        Task<AiChatTurnResult> SendAsync(long conversationId, string text, AiScreenContext context, long userId, long branchId,
+                                         Action<string> onDelta, CancellationToken ct = default);
+    }
 }

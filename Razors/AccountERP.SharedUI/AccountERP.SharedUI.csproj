@@ -37,6 +37,9 @@
  
 		<PackageReference Include="MiniExcel" Version="1.41.3" />
 
+		<!-- المساعد الذكى P1: عرض ردود المساعد (Markdown) بأمان - HTML الخام معطّل والروابط/الصور تُنقّى فى AiMarkdown.cs -->
+		<PackageReference Include="Markdig" Version="0.40.0" />
+
 		<PackageReference Include="MudBlazor" Version="9.7.0" />
 
 		<!-- توليد صور الباركود لشاشتَى "إعدادات طباعة الباركود"/"تست طباعة الباركود" من الخادم -->

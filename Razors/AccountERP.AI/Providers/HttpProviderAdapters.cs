@@ -6,6 +6,9 @@ namespace AccountERP.AI.Providers
     /// <summary>OpenAI وLM Studio وأى خدمة متوافقة مع OpenAI (OpenRouter / LiteLLM / Groq / DeepSeek / Mistral / vLLM): GET {base}/models.</summary>
     internal sealed class OpenAiCompatibleAdapter : IAiProviderAdapter
     {
+        public Task<Chat.AiChatOutcome> StreamChatAsync(ProviderConnection c, Chat.AiChatCall call, Action<string> onDelta, CancellationToken ct) =>
+            HttpChatStreaming.OpenAiCompatibleAsync(c, call, onDelta, ct);
+
         public async Task<List<AiRemoteModel>> ListModelsAsync(ProviderConnection c, CancellationToken ct)
         {
             using var doc = await AiHttp.GetJsonAsync(c, "models", null, ct);
@@ -36,6 +39,9 @@ namespace AccountERP.AI.Providers
     /// <summary>Ollama: GET {base}/api/tags (العنوان الافتراضى http://localhost:11434).</summary>
     internal sealed class OllamaAdapter : IAiProviderAdapter
     {
+        public Task<Chat.AiChatOutcome> StreamChatAsync(ProviderConnection c, Chat.AiChatCall call, Action<string> onDelta, CancellationToken ct) =>
+            HttpChatStreaming.OllamaAsync(c, call, onDelta, ct);
+
         public async Task<List<AiRemoteModel>> ListModelsAsync(ProviderConnection c, CancellationToken ct)
         {
             using var doc = await AiHttp.GetJsonAsync(c, "api/tags", null, ct);
@@ -60,6 +66,9 @@ namespace AccountERP.AI.Providers
     /// <summary>Google Gemini: GET {base}/models بـ x-goog-api-key (العنوان الافتراضى https://generativelanguage.googleapis.com/v1beta).</summary>
     internal sealed class GeminiAdapter : IAiProviderAdapter
     {
+        public Task<Chat.AiChatOutcome> StreamChatAsync(ProviderConnection c, Chat.AiChatCall call, Action<string> onDelta, CancellationToken ct) =>
+            HttpChatStreaming.GeminiAsync(c, call, onDelta, ct);
+
         public async Task<List<AiRemoteModel>> ListModelsAsync(ProviderConnection c, CancellationToken ct)
         {
             using var doc = await AiHttp.GetJsonAsync(c, "models?pageSize=1000", "x-goog-api-key", ct);
@@ -92,6 +101,9 @@ namespace AccountERP.AI.Providers
     /// </summary>
     internal sealed class AzureOpenAiAdapter : IAiProviderAdapter
     {
+        public Task<Chat.AiChatOutcome> StreamChatAsync(ProviderConnection c, Chat.AiChatCall call, Action<string> onDelta, CancellationToken ct) =>
+            HttpChatStreaming.AzureAsync(c, call, onDelta, ct);
+
         public async Task<List<AiRemoteModel>> ListModelsAsync(ProviderConnection c, CancellationToken ct)
         {
             using var doc = await AiHttp.GetJsonAsync(c, "openai/models?api-version=" + Uri.EscapeDataString(c.AzureApiVersion), "api-key", ct);
