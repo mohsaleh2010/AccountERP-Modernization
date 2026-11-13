@@ -310,6 +310,8 @@ namespace AccountModelsLib
         public List<AiScreenLinkView> Screens { get; set; } = new List<AiScreenLinkView>();
         /// <summary>P4: سؤال المساعد للمستخدم إن وُجد.</summary>
         public AiAskView Ask { get; set; }
+        /// <summary>P5: المسودات التى أعدّها المساعد (بطاقة «مسودة جاهزة»).</summary>
+        public List<AiDraftCard> Drafts { get; set; } = new List<AiDraftCard>();
     }
 
     // ───────────── P2: الأدوات (قراءة فقط) ─────────────

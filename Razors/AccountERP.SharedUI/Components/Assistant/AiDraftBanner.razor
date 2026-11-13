@@ -1,0 +1,66 @@
+@* P5 (ai-assistant-plan.md §6): شريط «مسودة من المساعد — راجع قبل الحفظ» أعلى شاشة المستند المفتوحة بـ ?aiDraft=.
+   يعرض البنود غير المطابقة (لا تُضاف تلقائياً) والتحذيرات، وزر «تجاهل المسودة». لا يحفظ شيئاً؛ الحفظ بزر الشاشة نفسها. *@
+@using System.Globalization
+@using AccountModelsLib
+@inject LanguageService LangService
+
+@if (Payload is not null)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mb-3 aid-banner" Icon="@Icons.Material.Filled.AutoAwesome"
+              role="status">
+        <div class="aid-hd">
+            <b>@Tr("AID_Banner")</b>
+            @if (OnDiscard.HasDelegate)
+            {
+                <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Default" StartIcon="@Icons.Material.Filled.Close"
+                           OnClick="OnDiscard" Class="aid-discard">@Tr("AID_Discard")</MudButton>
+            }
+        </div>
+        <div class="aid-sub">@Tr("AID_BannerHint")</div>
+        @if (Payload.Unmatched.Count > 0)
+        {
+            <div class="aid-sec">@Tr("AID_Unmatched")</div>
+            <ul class="aid-list">
+                @foreach (var u in Payload.Unmatched)
+                {
+                    <li><b>@(string.IsNullOrWhiteSpace(u.Text) ? "—" : u.Text)</b> · @QtyText(u.QtyLarge, u.QtySmall)@(u.Price is > 0 ? " · " + u.Price.Value.ToString("N2", CultureInfo.InvariantCulture) : "") <span class="aid-why">(@u.Reason)</span></li>
+                }
+            </ul>
+        }
+        @{ var warnings = Payload.Warnings.Where(w => !w.Contains("غير مطابق")).Concat(Extra ?? Enumerable.Empty<string>()).ToList(); }
+        @if (warnings.Count > 0)
+        {
+            <div class="aid-sec">@Tr("AID_Warnings")</div>
+            <ul class="aid-list">
+                @foreach (var w in warnings) { <li>@w</li> }
+            </ul>
+        }
+    </MudAlert>
+}
+
+<style>
+    .aid-banner .mud-alert-message { width: 100%; }
+    .aid-banner .aid-hd { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .aid-banner .aid-sub { font-size: .8rem; opacity: .85; margin-top: 2px; }
+    .aid-banner .aid-sec { font-size: .8rem; font-weight: 700; margin-top: 8px; }
+    .aid-banner .aid-list { margin: 2px 0 0; padding-inline-start: 18px; font-size: .82rem; line-height: 1.7; }
+    .aid-banner .aid-why { color: var(--mud-palette-text-secondary); }
+    .aid-banner .aid-discard { min-height: 36px; }
+</style>
+
+@code {
+    [Parameter] public AiDraftPayload? Payload { get; set; }
+    /// <summary>تحذيرات الشاشة نفسها وقت التحميل (صنف لم يعد فى المخزن، جهة غير متاحة...).</summary>
+    [Parameter] public IEnumerable<string>? Extra { get; set; }
+    [Parameter] public EventCallback OnDiscard { get; set; }
+
+    private static string QtyText(decimal l, decimal s) =>
+        s != 0 ? $"{l.ToString("0.##", CultureInfo.InvariantCulture)} + {s.ToString("0.##", CultureInfo.InvariantCulture)}" : l.ToString("0.##", CultureInfo.InvariantCulture);
+
+    private string Tr(string key)
+    {
+        var previous = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key]; }
+        finally { CultureInfo.CurrentUICulture = previous; }
+    }
+}

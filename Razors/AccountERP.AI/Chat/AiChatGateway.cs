@@ -25,6 +25,7 @@ namespace AccountERP.AI.Chat
         private readonly AiChatCLS _chat = new();
         private readonly AiToolAuditCLS _audit = new();
         private readonly AiReportsCLS _reports = new();
+        private readonly AiDraftsCLS _drafts = new();
         private readonly ProviderRegistry _registry;
         private readonly AiToolRegistry _tools;
 
@@ -87,7 +88,24 @@ namespace AccountERP.AI.Chat
         public List<AiChatMessage> GetMessages(long conversationId, long userId)
         {
             if (!_chat.OwnsConversation(conversationId, userId)) throw new InvalidOperationException("المحادثة غير موجودة.");
-            return _chat.GetMessages(conversationId).Select(ToView).ToList();
+            var list = _chat.GetMessages(conversationId).Select(ToView).ToList();
+            FillDraftStatuses(list, userId);
+            return list;
+        }
+
+        /// <summary>P5: حالة كل مسودة (معلّقة / حُفظت برقم ...) من AI_Drafts، لأن البطاقة نفسها محفوظة لحظة الإنشاء.</summary>
+        private void FillDraftStatuses(List<AiChatMessage> list, long userId)
+        {
+            var cards = list.SelectMany(m => m.Drafts).ToList();
+            if (cards.Count == 0) return;
+            try
+            {
+                var map = _drafts.Statuses(cards.Select(c => c.Id), userId);
+                foreach (var c in cards)
+                    if (map.TryGetValue(c.Id, out var st)) { c.Status = st.Status; c.DocNo = st.DocNo ?? ""; }
+                    else c.Status = AiDraftStatus.Discarded;
+            }
+            catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
         }
 
         public void RenameConversation(long conversationId, string title, long userId)
@@ -102,6 +120,8 @@ namespace AccountERP.AI.Chat
         {
             if (!_chat.OwnsConversation(conversationId, userId)) throw new InvalidOperationException("المحادثة غير موجودة.");
             try { _reports.DeleteForConversation(conversationId, userId); }   // P3: غير المحفوظ فقط
+            catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
+            try { _drafts.DetachConversation(conversationId, userId); }   // P5: المعلّقة تُلغى، المستهلكة تبقى للتدقيق
             catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
             _chat.DeleteConversation(conversationId, userId);
         }
@@ -384,6 +404,7 @@ namespace AccountERP.AI.Chat
             }
             try { _audit.LinkMessage(auditIds, asstRow.Id); } catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
             try { _reports.LinkMessage(toolCtx.ReportIds, asstRow.Id, userId); } catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
+            try { _drafts.LinkMessage(toolCtx.DraftIds, asstRow.Id, userId); } catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
 
             return new AiChatTurnResult { ConversationId = conversationId, UserMessage = ToView(userRow), AssistantMessage = ToView(asstRow) };
         }
@@ -721,7 +742,9 @@ namespace AccountERP.AI.Chat
             {
                 sb.AppendLine();
                 sb.AppendLine("## الوصول للبيانات (قراءة فقط)");
-                sb.AppendLine("- لديك أدوات قراءة فقط. لا تستطيع ولا يحق لك تعديل أو حذف أو إضافة أى بيانات؛ إن طُلب ذلك فاعتذر بوضوح ووجّه المستخدم للشاشة المناسبة فى النظام.");
+                sb.AppendLine(AiDraftTools.Any(tools)
+                    ? "- أدواتك للقراءة، وأدوات المسودات (create_*_draft) تُعدّ مسودة فقط. لا تستطيع ولا يحق لك حفظ أو تعديل أو حذف أى مستند أو بيانات؛ الحفظ يتم بيد المستخدم فى الشاشة."
+                    : "- لديك أدوات قراءة فقط. لا تستطيع ولا يحق لك تعديل أو حذف أو إضافة أى بيانات؛ إن طُلب ذلك فاعتذر بوضوح ووجّه المستخدم للشاشة المناسبة فى النظام.");
                 sb.AppendLine("- كل رقم أو اسم تذكره عن بيانات الشركة يجب أن يأتى من نتيجة أداة فى هذه المحادثة. لا تخمّن ولا تكمل أرقاماً ناقصة.");
                 sb.AppendLine("- أرصدة الحسابات وميزان المراجعة وقائمة الدخل والميزانية: استخدم الأدوات المالية (إن وُجدت) لا الاستعلام الحر، فتطابق شاشات النظام.");
                 sb.AppendLine("- اسم عميل/مورد/صنف/مخزن ذكره المستخدم: ابحث عنه أولاً بـ find_entity ثم استعلم بالمعرّف. إن تعددت المطابقات المعقولة أو لم توجد مطابقة فاسأل المستخدم بـ ask_user (خيارات بالاسم والكود) ولا تختر عنه.");
@@ -739,6 +762,15 @@ namespace AccountERP.AI.Chat
                 sb.AppendLine("- فى التقارير ذات الفترة استخدم @date_from/@date_to مع date_from/date_to فى run_readonly_query ومرّر date_from/date_to لـ render_report، ولا تكتب التواريخ فى العنوان.");
                 sb.AppendLine("- أسماء الأعمدة فى الاستعلام بالإنجليزية (snake_case) وعناوينها العربية فى columns[].label داخل render_report.");
                 sb.AppendLine("- بعد render_report أو open_screen لا تكتب رابطاً ولا تكرر محتوى البطاقة؛ اكتب خلاصة قصيرة فقط.");
+                if (AiDraftTools.Any(tools))
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("## المسودات (فواتير المبيعات والمشتريات وأذون المخزن)");
+                    sb.AppendLine("- حين يطلب المستخدم إدخال فاتورة أو إذن: حدّد العميل/المورد والمخزن وكل صنف بمعرّفه عبر find_entity، ثم استدعِ أداة المسودة المناسبة مرة واحدة بكل البنود.");
+                    sb.AppendLine("- إن تعددت المطابقات أو لم يُذكر المخزن أو كانت الوحدة/الكمية غير واضحة فاسأل بـ ask_user. لا تختر عن المستخدم ولا تخترع صنفاً؛ الصنف غير الموجود يُرسل بـ item_text بلا item_id فيظهر «غير مطابق».");
+                    sb.AppendLine("- لا تذكر سعراً لم يقله المستخدم (الشاشة تطبّق سعر العميل/الصنف). الكميات بالوحدة الكبرى ما لم يذكر الصغرى.");
+                    sb.AppendLine("- بعد إعداد المسودة اكتب سطراً أو سطرين: ما أُعدّ والتحذيرات المهمة، ونبّه أن المستند لم يُحفظ بعد وأنه يُراجع ويُحفظ من زر «فتح فى الشاشة». لا تقل «تم الحفظ».");
+                }
                 var views = AiSchemaCatalog.Views.Where(v => tools.AllowedViews.Contains(v.Name)).ToList();
                 sb.AppendLine();
                 if (views.Count > 0)
@@ -818,7 +850,9 @@ namespace AccountERP.AI.Chat
         }
 
         /// <summary>P3: بطاقات التقارير والشاشات المحفوظة فى محتوى الرد.</summary>
-        internal static (List<AiReportCard> Reports, List<AiScreenLinkView> Screens) ReadCards(string? json)
+        internal static (List<AiReportCard> Reports, List<AiScreenLinkView> Screens) ReadCards(string? json) => ReadCards(json, null);
+
+        internal static (List<AiReportCard> Reports, List<AiScreenLinkView> Screens) ReadCards(string? json, List<AiDraftCard>? drafts)
         {
             var reports = new List<AiReportCard>();
             var screens = new List<AiScreenLinkView>();
@@ -838,6 +872,13 @@ namespace AccountERP.AI.Chat
                             break;
                         case "screen" when S("url").StartsWith('/') && !S("url").StartsWith("//"):
                             screens.Add(new AiScreenLinkView { Title = S("title"), Url = S("url"), Detail = S("detail") });
+                            break;
+                        case "draft" when drafts != null && long.TryParse(S("draft_id"), out long did) && S("url").StartsWith('/') && !S("url").StartsWith("//"):
+                            var card = new AiDraftCard { Id = did, Kind = S("kind"), Title = S("title"), Subtitle = S("subtitle"), Url = S("url") };
+                            if (b.TryGetProperty("warnings", out var wa) && wa.ValueKind == JsonValueKind.Array)
+                                foreach (var w in wa.EnumerateArray())
+                                    if (w.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(w.GetString())) card.Warnings.Add(w.GetString()!);
+                            drafts.Add(card);
                             break;
                     }
                 }
@@ -872,7 +913,7 @@ namespace AccountERP.AI.Chat
             var m = ToViewCore(r);
             if (r.Role == "assistant")
             {
-                (m.Reports, m.Screens) = ReadCards(r.ContentJson);
+                (m.Reports, m.Screens) = ReadCards(r.ContentJson, m.Drafts);
                 m.Ask = ReadAsk(r.ContentJson, r.Status);   // P4
             }
             return m;

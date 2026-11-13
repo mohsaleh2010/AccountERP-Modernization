@@ -206,6 +206,27 @@ WHERE u.Store_id = {storeId} AND ISNULL(u.Store_Type, 4) = {storeType}
 ORDER BY i.Item_Name").ToList());
         }
 
+        /// <summary>P5 (المساعد الذكى): أسطر مخزون بعينها (معرّفات Unit_item من المسودة) بنفس أعمدة وشروط SearchLines بلا شرط الرصيد.</summary>
+        public List<StockLineOption> GetLinesByIds(int storeType, long storeId, IEnumerable<long> unitItemIds)
+        {
+            var ids = unitItemIds?.Where(i => i > 0).Distinct().ToList() ?? new List<long>();
+            if (storeId <= 0 || ids.Count == 0) return new List<StockLineOption>();
+            string inList = string.Join(",", ids);   // أرقام long فقط
+            return Run(opp => opp.db.Database.SqlQueryRaw<StockLineOption>(@"
+SELECT u.id AS Id, u.Item_id AS Item_Id, i.Item_Name, ISNULL(u.Code, i.code) AS Code,
+       ISNULL(un.B_Unit, '') AS B_Unit, ISNULL(un.S_unit, '') AS S_Unit,
+       CAST(CASE WHEN ISNULL(u.Small_unit, 0) <= 0 THEN 1 ELSE u.Small_unit END AS decimal(18,6)) AS Factor,
+       CAST(ISNULL(u.Full_qua, 0) AS decimal(18,4)) AS Full_qua, CAST(ISNULL(u.D_Qua, 0) AS decimal(18,4)) AS D_Qua,
+       CAST(ISNULL(u.P_priceAvgCost, 0) AS decimal(18,6)) AS Avg_Cost_Large,
+       CAST(CASE WHEN ISNULL(i.Is_ItemWithoutBalance, 0) = 1 THEN 1 ELSE 0 END AS bit) AS Without_Balance
+FROM Unit_item u
+INNER JOIN Item i ON i.id = u.Item_id
+LEFT JOIN unit un ON un.id = u.unit_id
+WHERE u.Store_id = {0} AND ISNULL(u.Store_Type, 4) = {1}
+  AND ISNULL(i.Active_flage, 1) = 1 AND ISNULL(u.active_flage, 1) = 1
+  AND u.id IN (" + inList + ")", storeId, storeType).ToList());
+        }
+
         // ============================== دورة المستند ==============================
 
         public long SaveDraft(OrderInput input, long draftId) => RunTx(opp => new StoreOrderService(opp).SaveDraft(input, draftId));

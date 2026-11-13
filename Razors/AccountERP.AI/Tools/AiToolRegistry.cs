@@ -20,6 +20,10 @@ namespace AccountERP.AI.Tools
         public long? ConversationId { get; set; }
         /// <summary>P3: التقارير التى رُسمت أثناء هذه الرسالة (تُربط برسالة المساعد بعد حفظها).</summary>
         public List<long> ReportIds { get; } = new();
+        /// <summary>P5: المسودات التى أُعدّت أثناء هذه الرسالة (تُربط برسالة المساعد بعد حفظها).</summary>
+        public List<long> DraftIds { get; } = new();
+        /// <summary>P5: أنواع أذون المخزن المسموحة (تُحسب مرة لكل رسالة).</summary>
+        internal List<AiDraftTools.OrderTypeInfo>? CachedOrderTypes { get; set; }
 
         public bool HasRoute(string route)
         {
@@ -117,7 +121,7 @@ namespace AccountERP.AI.Tools
                     ["type"] = Enum("نوع الكيان", "customer", "supplier", "item", "store", "branch"),
                     ["text"] = Str("جزء من الاسم أو الكود"),
                 }, "type", "text"),
-            }, c => c.AllowedViews.Count > 0, FindEntity);
+            }, c => c.AllowedViews.Count > 0 || AiDraftTools.Any(c), FindEntity);
 
             yield return new ToolSpec(new AiToolDef
             {
@@ -215,6 +219,12 @@ namespace AccountERP.AI.Tools
                     ["multi"] = new JsonObject { ["type"] = "boolean", ["description"] = "يسمح باختيار أكثر من خيار (الافتراضى false)" },
                 }, "question", "options"),
             }, _ => true, AskUser);
+
+            // ───── P5: المسودات (لا حفظ ولا أثر على المخزون؛ الشاشة الحقيقية تحفظ) ─────
+            yield return new ToolSpec(AiDraftTools.SalesDef(), AiDraftTools.CanSales, AiDraftTools.CreateSales);
+            yield return new ToolSpec(AiDraftTools.PurchaseDef(), AiDraftTools.CanPurchase, AiDraftTools.CreatePurchase);
+            if (AiDraftTools.CanStoreOrder(ctx))
+                yield return new ToolSpec(AiDraftTools.StoreOrderDef(ctx), AiDraftTools.CanStoreOrder, AiDraftTools.CreateStoreOrder);
         }
 
         public const string AskUserTool = "ask_user";
@@ -274,6 +284,9 @@ namespace AccountERP.AI.Tools
             "open_screen" => "فتح شاشة",
             "find_screen" => "بحث عن شاشة",
             AskUserTool => "سؤال للمستخدم",
+            AiDraftTools.SalesTool => "مسودة فاتورة مبيعات",
+            AiDraftTools.PurchaseTool => "مسودة فاتورة مشتريات",
+            AiDraftTools.StoreOrderTool => "مسودة إذن مخزن",
             _ => toolName,
         };
 
@@ -376,7 +389,10 @@ namespace AccountERP.AI.Tools
                 "branch" => ("v_branches", "branch_id", "branch_name", "branch_code"),
                 _ => throw new ArgumentException("نوع غير معروف: " + type),
             };
-            if (!c.AllowedViews.Contains(view))
+            // P5: من يملك شاشة مستند (فاتورة/إذن) يبحث عن كياناته ولو لم يملك شاشة القوائم.
+            var views = new HashSet<string>(c.AllowedViews, StringComparer.OrdinalIgnoreCase);
+            views.UnionWith(AiDraftTools.ImpliedViews(c));
+            if (!views.Contains(view))
                 return Fail("لا تملك صلاحية البحث فى هذا النوع.", AiToolOutcome.Denied, "find_entity");
             // القيمة معامل (@q) لا نص مدمج؛ نفس مسار القراءة والتدقيق.
             string sql = $"SELECT TOP (8) {id} AS id, {name} AS name, CAST({code} AS nvarchar(100)) AS code FROM ai.{view} " +
@@ -384,7 +400,7 @@ namespace AccountERP.AI.Tools
                          $"ORDER BY CASE WHEN CAST({code} AS nvarchar(100)) = @exact OR {name} = @exact THEN 0 WHEN {name} LIKE @starts THEN 1 ELSE 2 END, {name}";
             string esc = text.Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
             var p = new Dictionary<string, object> { ["@q"] = "%" + esc + "%", ["@starts"] = esc + "%", ["@exact"] = text };
-            var r = _sql.Execute(sql, c.AllowedViews, Session(c), p, c.Ct);
+            var r = _sql.Execute(sql, views, Session(c), p, c.Ct);
             return new AiToolResult { Content = FormatResult(r), Sql = sql + "  -- @q = " + text, RowCount = r.Rows.Count, Title = "بحث عن «" + Short(text, 40) + "»" };
         }
 

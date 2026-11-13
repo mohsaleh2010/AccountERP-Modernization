@@ -16,6 +16,7 @@
 @using AccountModelsLib.Models
 @using AccountERP.SharedUI.Services
 @using AccountERP.SharedUI.Components.Shared
+@using AccountERP.SharedUI.Components.Assistant
 @inject LanguageService LangService
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
@@ -41,6 +42,11 @@
             <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Close" OnClick="@(() => Nav.NavigateTo("/"))">@Tr("Cancel")</MudButton>
         </div>
     </div>
+
+    @if (_aiDraft is not null)
+    {
+        <AiDraftBanner Payload="_aiDraft" Extra="_aiDraftExtra" OnDiscard="DiscardAiDraftAsync" />
+    }
 
     <MudGrid Spacing="3">
         <MudItem xs="12">
@@ -310,6 +316,11 @@
     [SupplyParameterFromQuery(Name = "agile")] public int? AgileQuery { get; set; }
     [SupplyParameterFromQuery(Name = "saveDirectly")] public int? SaveDirectlyQuery { get; set; }
     [SupplyParameterFromQuery(Name = "type")] public int? TypeQuery { get; set; }
+    // 🤖 P5: مسودة من المساعد الذكى (AI_Drafts): تعبّئ فاتورة جديدة فقط، ولا يُحفظ شىء قبل ضغط المستخدم «حفظ».
+    [SupplyParameterFromQuery(Name = "aiDraft")] public long? AiDraftQuery { get; set; }
+    private long _aiDraftId;
+    private AiDraftPayload? _aiDraft;
+    private readonly List<string> _aiDraftExtra = new();
 
     private readonly SupplierCLS _supplierCls = new();
     private bool _isReverse;
@@ -441,6 +452,7 @@
         else
         {
             await InitializeNewInvoiceAsync();
+            if (AiDraftQuery is > 0 && !_isReverse) await LoadFromAiDraftAsync(AiDraftQuery.Value);
         }
 
         if (IsExistingInvoice && _header.Invoice_Id.HasValue)
@@ -789,8 +801,93 @@
         _isTaxInvoice = false;
         _invL_O = new BillOperationListCLS_New(_isReverse ? 1 : 0);
         _invD_O = new BillOperationCLS_New(_isReverse ? 1 : 0);
+        _aiDraftId = 0;
+        _aiDraft = null;
+        _aiDraftExtra.Clear();
         await InitializeNewInvoiceAsync();
         UpdateTitle();
+    }
+
+    // ===== 🤖 P5: مسودة من المساعد الذكى =====
+
+    // يعبّئ فاتورة جديدة من AI_Drafts بنفس قيم السطر التى يضبطها AddBillItemDialog.OnItemPickedAsync: سعر المسودة إن ذكره المستخدم وإلا آخر
+    // سعر شراء للصنف فى المخزن، وضريبة الصنف عبر OnTaxInvoiceChanged نفسها (الفاتورة الضريبية = ضريبة لكل صنف). غير المطابق لا يُضاف.
+    private async Task LoadFromAiDraftAsync(long draftId)
+    {
+        try
+        {
+            var res = await AiDraftPageHelper.LoadAsync(draftId, AiDraftKind.Purchase);
+            if (res.AlreadyUsed)
+            {
+                Snackbar.Add(string.Format(CultureInfo.InvariantCulture, Tr("AID_AlreadyUsed"), res.Row?.Target_Doc_No ?? ""), Severity.Info);
+                if (res.Row?.Target_Doc_Id is long docId and > 0) Nav.NavigateTo($"/accounts/invoices/purchase-invoice/{docId}", replace: true);
+                return;
+            }
+            if (res.ErrorKey is not null || res.Payload is null) { Snackbar.Add(Tr(res.ErrorKey ?? "AID_NotFound"), Severity.Warning); return; }
+            var p = res.Payload;
+            _aiDraftId = draftId;
+            _aiDraft = p;
+
+            await OnSupplierPickedAsync(new PartyOption(p.PartyId, p.PartyName));
+            if (p.Date is DateTime d) _invoiceDate = d.Date + DateTime.Now.TimeOfDay;
+            if (!string.IsNullOrWhiteSpace(p.Notes) && string.IsNullOrWhiteSpace(_notes)) _notes = p.Notes!;
+            if (p.TaxInvoice is bool tax && tax != _isTaxInvoice) OnTaxInvoiceChanged(tax);
+
+            var stock = await AiDraftPageHelper.StockAsync(p.Lines.Select(l => l.UnitItemId));
+            foreach (var dl in p.Lines)
+            {
+                var r = stock.FirstOrDefault(x => x.UnitItemId == dl.UnitItemId);
+                if (r is null || !r.ItemActive) { _aiDraftExtra.Add(string.Format(CultureInfo.InvariantCulture, Tr("AID_LineGone"), dl.ItemName)); continue; }
+                decimal price = dl.Price ?? r.PurchasePrice;
+                var line = new IBills_Details
+                {
+                    Item_Id = r.ItemId,
+                    Unit_Item_Table_Id = r.UnitItemId,
+                    Invoice_Item_Name = r.ItemName,
+                    code = r.Code,
+                    Store_Id = r.StoreId,
+                    Store_Name = r.StoreName,
+                    Available_Larg_Balance = r.FullQua,
+                    Available_Small_Balance = r.DQua,
+                    UnitStr = r.BUnit,
+                    UnitSmallStr = r.SUnit,
+                    Unit_Used_for_Price = 1,
+                    Make_Order = 0,
+                    Unit_Item_ExpireDate_Id = 0,
+                    Audience_price = r.SalePrice,
+                    Item_TaxSales10 = _isTaxInvoice ? _defaultTaxSales : 0,
+                    Item_ATS05 = _isTaxInvoice ? _defaultATS05 : 0,
+                    Item_Expire_Date = DateTime.Now.Date,
+                    Tash3ela = "",
+                    Larg_Qnty = dl.QtyLarge,
+                    Small_Qnty = dl.QtySmall,
+                    PriceUnit = price,
+                    Larg_Unit_Price = price,
+                    Item_DeletedFlage = 0,
+                    Item_ProcessedFlage = 0
+                };
+                if (price <= 0) _aiDraftExtra.Add(string.Format(CultureInfo.InvariantCulture, Tr("AID_NoPrice"), r.ItemName));
+                BillLineCalculator.ComputeLine(line, r.SmallPerLarge);
+                _invD_O.invDlst.Add(line);
+            }
+            RecomputeTotals();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task DiscardAiDraftAsync()
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("AID_Discard"), Tr("AID_DiscardConfirm"), yesText: Tr("AID_Discard"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        try { await AiDraftPageHelper.DiscardAsync(_aiDraftId); }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); return; }
+        _isSaved = true;   // يتخطى تأكيد «تجاهل التغييرات» فى NewInvoiceAsync؛ يعود false داخلها
+        await NewInvoiceAsync();
+        Snackbar.Add(Tr("AID_DiscardedDone"), Severity.Info);
+        Nav.NavigateTo(NewInvoiceUrl(), replace: true);
     }
 
     private void CloseStaleNewInvoiceTab(string relativeWithQuery)
@@ -928,6 +1025,12 @@
             }
             else
             {
+                if (_aiDraftId > 0)
+                {
+                    await AiDraftPageHelper.MarkConsumedAsync(_aiDraftId, _header.Id, Convert.ToString(_header.Invoice_Id, CultureInfo.InvariantCulture) ?? "");
+                    _aiDraftId = 0;
+                    _aiDraft = null;
+                }
                 _isSaved = true;
                 var oldRelative = Nav.ToBaseRelativePath(Nav.Uri);
                 Nav.NavigateTo($"/accounts/invoices/{(_isReverse ? "purchase-return" : "purchase-invoice")}/{_header.Id}", replace: true);

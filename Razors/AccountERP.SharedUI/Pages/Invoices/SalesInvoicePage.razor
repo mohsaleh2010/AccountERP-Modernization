@@ -36,6 +36,7 @@
 @using AccountModelsLib.Models
 @using AccountERP.SharedUI.Services
 @using AccountERP.SharedUI.Components.Shared
+@using AccountERP.SharedUI.Components.Assistant
 @inject LanguageService LangService
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
@@ -127,6 +128,11 @@
     @if (_repLinkedShiftId is long linkedShift)
     {
         <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3" Icon="@Icons.Material.Filled.LocalShipping">@Tr("FSVLinkedReadOnly")</MudAlert>
+    }
+
+    @if (_aiDraft is not null)
+    {
+        <AiDraftBanner Payload="_aiDraft" Extra="_aiDraftExtra" OnDiscard="DiscardAiDraftAsync" />
     }
 
     @if (_fromOrderId > 0)
@@ -510,6 +516,11 @@
     [SupplyParameterFromQuery(Name = "alloc")] public string? AllocQuery { get; set; }
     private long _fromOrderId;
     private long _fromOrderNo;
+    // 🤖 P5: مسودة من المساعد الذكى (AI_Drafts): تعبّئ فاتورة جديدة فقط، ولا يُحفظ شىء قبل ضغط المستخدم «حفظ».
+    [SupplyParameterFromQuery(Name = "aiDraft")] public long? AiDraftQuery { get; set; }
+    private long _aiDraftId;
+    private AiDraftPayload? _aiDraft;
+    private readonly List<string> _aiDraftExtra = new();
     private List<CustomerOrdersService.Allocation> _orderAllocations = new();
     private long _costCenterId;
     private bool _ccAny;
@@ -757,6 +768,7 @@
         {
             await InitializeNewInvoiceAsync();
             if (FromOrderQuery is > 0) await LoadFromOrderAsync(FromOrderQuery.Value, AllocQuery ?? "");
+            else if (AiDraftQuery is > 0 && !_isReverse) await LoadFromAiDraftAsync(AiDraftQuery.Value);
         }
         await InitRepModeAsync();
 
@@ -1368,6 +1380,9 @@
         _repDocGuid = Guid.NewGuid();
         _repViolations = new();
         _repWarnings = new();
+        _aiDraftId = 0;
+        _aiDraft = null;
+        _aiDraftExtra.Clear();
         await InitializeNewInvoiceAsync();
         await InitRepModeAsync();
     }
@@ -1573,6 +1588,12 @@
             }
             else
             {
+                if (_aiDraftId > 0)
+                {
+                    await AiDraftPageHelper.MarkConsumedAsync(_aiDraftId, _header.Id, Convert.ToString(_header.Invoice_Id, CultureInfo.InvariantCulture) ?? "");
+                    _aiDraftId = 0;
+                    _aiDraft = null;
+                }
                 _isSaved = true;
                 var oldRelative = Nav.ToBaseRelativePath(Nav.Uri);
                 var savedUrl = $"/accounts/invoices/{(_isReverse ? "sales-return" : "sales-invoice")}/{_header.Id}";
@@ -1697,6 +1718,100 @@
         {
             Snackbar.Add(ex.Message, Severity.Error);
         }
+    }
+
+    // ===================== 🤖 P5: مسودة من المساعد الذكى =====================
+
+    // يعبّئ فاتورة جديدة من AI_Drafts بنفس قيم السطر الافتراضية التى يضبطها حوار الصنف (AddInvoiceItemDialog.OnItemPickedAsync) وبنفس
+    // ترتيب أسعاره: سعر المسودة إن ذكره المستخدم، وإلا سعر العميل الخاص (PriceListService)، وإلا سعر الصنف فى المخزن. الضريبة من إعداد الشاشة
+    // (أو علم الفاتورة الضريبية فى المسودة عبر ApplyTaxSettings نفسها). البنود غير المطابقة لا تُضاف؛ تظهر فى الشريط ليختارها المستخدم.
+    private async Task LoadFromAiDraftAsync(long draftId)
+    {
+        try
+        {
+            var res = await AiDraftPageHelper.LoadAsync(draftId, AiDraftKind.Sales);
+            if (res.AlreadyUsed)
+            {
+                Snackbar.Add(string.Format(CultureInfo.InvariantCulture, Tr("AID_AlreadyUsed"), res.Row?.Target_Doc_No ?? ""), Severity.Info);
+                if (res.Row?.Target_Doc_Id is long docId and > 0) Nav.NavigateTo($"/accounts/invoices/sales-invoice/{docId}", replace: true);
+                return;
+            }
+            if (res.ErrorKey is not null || res.Payload is null) { Snackbar.Add(Tr(res.ErrorKey ?? "AID_NotFound"), Severity.Warning); return; }
+            var p = res.Payload;
+            _aiDraftId = draftId;
+            _aiDraft = p;
+
+            await OnCustomerPickedAsync(new CustomerOption(p.PartyId, p.PartyName), skipCashCustomerConfirm: true);
+            _customerLocked = false;
+            if (p.Date is DateTime d) _invoiceDate = d.Date + DateTime.Now.TimeOfDay;
+            if (!string.IsNullOrWhiteSpace(p.Notes) && string.IsNullOrWhiteSpace(_notes)) _notes = p.Notes!;
+            if (p.TaxInvoice is bool tax && tax != _isTaxInvoice) { _isTaxInvoice = tax; ApplyTaxSettings(); }
+
+            var stock = await AiDraftPageHelper.StockAsync(p.Lines.Select(l => l.UnitItemId));
+            var perItemTax = _isTaxInvoice && _isTaxPerItem;
+            var priceSvc = new AccountModelsLib.PriceListService();
+            foreach (var dl in p.Lines)
+            {
+                var r = stock.FirstOrDefault(x => x.UnitItemId == dl.UnitItemId);
+                if (r is null || !r.ItemActive) { _aiDraftExtra.Add(string.Format(CultureInfo.InvariantCulture, Tr("AID_LineGone"), dl.ItemName)); continue; }
+                decimal price = dl.Price ?? 0;
+                if (dl.Price is null)
+                {
+                    long cust = p.PartyId, item = r.ItemId, store = r.StoreId;
+                    decimal? custPrice = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return priceSvc.GetCustomerPrice(cust, item, store); });
+                    price = custPrice ?? r.SalePrice;
+                }
+                var line = new IInvoices_Details
+                {
+                    Item_Id = r.ItemId,
+                    Unit_Item_Table_Id = r.UnitItemId,
+                    Invoice_Item_Name = r.ItemName,
+                    code = r.Code,
+                    Store_Id = r.StoreId,
+                    Store_Name = r.StoreName,
+                    Available_Larg_Balance = r.FullQua,
+                    Available_Small_Balance = r.DQua,
+                    UnitStr = r.BUnit,
+                    UnitSmallStr = r.SUnit,
+                    Unit_Used_for_Price = 1,
+                    Make_Order = 0,
+                    Unit_Item_ExpireDate_Id = 0,
+                    Bills_Details_Id = 0,
+                    Item_Expire_Date = DateTime.Now.Date,
+                    Tash3ela = "",
+                    StatementNo = "",
+                    OperationNo = "",
+                    Merchant_Name = "",
+                    Item_TaxSales10 = perItemTax ? _defaultTaxSales : 0,
+                    Item_ATS05 = perItemTax ? _defaultATS05 : 0,
+                    Larg_Qnty = dl.QtyLarge,
+                    Small_Qnty = dl.QtySmall,
+                    PriceUnit = price,
+                    Larg_Unit_Price = price,
+                    Item_DeletedFlage = 0,
+                    Item_ProcessedFlage = 0
+                };
+                if (price <= 0) _aiDraftExtra.Add(string.Format(CultureInfo.InvariantCulture, Tr("AID_NoPrice"), r.ItemName));
+                InvoiceLineCalculator.ComputeLine(line, r.SmallPerLarge);
+                _invD_O.invDlst.Add(line);
+            }
+            RecomputeTotals();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task DiscardAiDraftAsync()
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("AID_Discard"), Tr("AID_DiscardConfirm"), yesText: Tr("AID_Discard"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        try { await AiDraftPageHelper.DiscardAsync(_aiDraftId); }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); return; }
+        await ResetToNewInvoiceAsync();
+        Snackbar.Add(Tr("AID_DiscardedDone"), Severity.Info);
+        Nav.NavigateTo(NewInvoiceUrl(), replace: true);
     }
 
     // بعد نجاح حفظ الفاتورة: فاتورة جديدة من طلبية → تسجيل الربط؛ فاتورة موجودة → مطابقة روابطها مع كمياتها الجديدة (يُرجع المحذوف للطلبية).

@@ -5199,4 +5199,26 @@
   <data name="AIC_AskPlaceholder" xml:space="preserve"><value>Type your answer to the assistant's question…</value></data>
   <data name="AIC_AskStatus" xml:space="preserve"><value>The assistant is waiting for your answer</value></data>
   <data name="AIC_AskWaiting" xml:space="preserve"><value>Waiting for your answer</value></data>
+  <data name="AIC_DraftPending" xml:space="preserve"><value>Not saved yet — review it on the screen</value></data>
+  <data name="AIC_DraftSaved" xml:space="preserve"><value>Saved as no. {0}</value></data>
+  <data name="AIC_DraftDiscarded" xml:space="preserve"><value>Draft discarded</value></data>
+  <data name="AIC_DraftOpen" xml:space="preserve"><value>Open on screen</value></data>
+  <data name="AIC_DraftOpenSaved" xml:space="preserve"><value>View document</value></data>
+  <data name="AIC_DraftWarnings" xml:space="preserve"><value>Draft warnings</value></data>
+  <data name="AIC_DraftNote" xml:space="preserve"><value>The assistant never saves documents; you save it with the screen's Save button after review.</value></data>
+  <data name="AID_Banner" xml:space="preserve"><value>Assistant draft — review before saving</value></data>
+  <data name="AID_BannerHint" xml:space="preserve"><value>Filled from the chat; nothing is saved yet. Check the party, items, quantities and prices, then save.</value></data>
+  <data name="AID_Unmatched" xml:space="preserve"><value>Unmatched lines (not added; pick them manually):</value></data>
+  <data name="AID_Warnings" xml:space="preserve"><value>Warnings:</value></data>
+  <data name="AID_Discard" xml:space="preserve"><value>Discard draft</value></data>
+  <data name="AID_DiscardConfirm" xml:space="preserve"><value>Discard the assistant draft and start an empty document?</value></data>
+  <data name="AID_DiscardedDone" xml:space="preserve"><value>Draft discarded.</value></data>
+  <data name="AID_NotFound" xml:space="preserve"><value>Assistant draft not found or not yours.</value></data>
+  <data name="AID_WrongScreen" xml:space="preserve"><value>This draft belongs to another screen.</value></data>
+  <data name="AID_Discarded" xml:space="preserve"><value>This draft was discarded.</value></data>
+  <data name="AID_AlreadyUsed" xml:space="preserve"><value>This draft was already saved as no. {0}.</value></data>
+  <data name="AID_LineGone" xml:space="preserve"><value>Item "{0}" is no longer available in this store, so it was not added.</value></data>
+  <data name="AID_NoPrice" xml:space="preserve"><value>Item "{0}" has no price; enter it before saving.</value></data>
+  <data name="AID_StoreNotAvailable" xml:space="preserve"><value>Store "{0}" is not available for this order; pick the store and items manually.</value></data>
+  <data name="AID_OtherPartyNotAvailable" xml:space="preserve"><value>The other party in the draft is not available; pick it manually.</value></data>
 </root>

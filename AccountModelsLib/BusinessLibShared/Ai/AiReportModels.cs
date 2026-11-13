@@ -42,6 +42,19 @@ namespace AccountModelsLib
         public string Detail { get; set; } = "";
     }
 
+    /// <summary>P5: بطاقة «مسودة جاهزة» تحت رد المساعد: ملخص + تحذيرات + زر «فتح فى الشاشة». الحالة تُقرأ من AI_Drafts عند العرض.</summary>
+    public class AiDraftCard
+    {
+        public long Id { get; set; }
+        public string Kind { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string Subtitle { get; set; } = "";
+        public string Url { get; set; } = "";
+        public List<string> Warnings { get; set; } = new List<string>();
+        public string Status { get; set; } = AiDraftStatus.Pending;
+        public string DocNo { get; set; } = "";
+    }
+
     public class AiReportKpi
     {
         public string Label { get; set; } = "";

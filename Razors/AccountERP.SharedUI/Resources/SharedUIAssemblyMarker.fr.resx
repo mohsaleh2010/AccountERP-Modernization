@@ -5201,4 +5201,26 @@
   <data name="AIC_AskPlaceholder" xml:space="preserve"><value>Saisissez votre réponse à la question de l'assistant…</value></data>
   <data name="AIC_AskStatus" xml:space="preserve"><value>L'assistant attend votre réponse</value></data>
   <data name="AIC_AskWaiting" xml:space="preserve"><value>En attente de votre réponse</value></data>
+  <data name="AIC_DraftPending" xml:space="preserve"><value>Pas encore enregistré — vérifiez-le à l'écran</value></data>
+  <data name="AIC_DraftSaved" xml:space="preserve"><value>Enregistré sous le n° {0}</value></data>
+  <data name="AIC_DraftDiscarded" xml:space="preserve"><value>Brouillon abandonné</value></data>
+  <data name="AIC_DraftOpen" xml:space="preserve"><value>Ouvrir à l'écran</value></data>
+  <data name="AIC_DraftOpenSaved" xml:space="preserve"><value>Voir le document</value></data>
+  <data name="AIC_DraftWarnings" xml:space="preserve"><value>Avertissements du brouillon</value></data>
+  <data name="AIC_DraftNote" xml:space="preserve"><value>L'assistant n'enregistre jamais les documents ; vous l'enregistrez avec le bouton « Enregistrer » après vérification.</value></data>
+  <data name="AID_Banner" xml:space="preserve"><value>Brouillon de l'assistant — vérifiez avant d'enregistrer</value></data>
+  <data name="AID_BannerHint" xml:space="preserve"><value>Rempli depuis la conversation ; rien n'est encore enregistré. Vérifiez le tiers, les articles, quantités et prix, puis enregistrez.</value></data>
+  <data name="AID_Unmatched" xml:space="preserve"><value>Lignes non reconnues (non ajoutées ; choisissez-les manuellement) :</value></data>
+  <data name="AID_Warnings" xml:space="preserve"><value>Avertissements :</value></data>
+  <data name="AID_Discard" xml:space="preserve"><value>Abandonner le brouillon</value></data>
+  <data name="AID_DiscardConfirm" xml:space="preserve"><value>Abandonner le brouillon et commencer un document vide ?</value></data>
+  <data name="AID_DiscardedDone" xml:space="preserve"><value>Brouillon abandonné.</value></data>
+  <data name="AID_NotFound" xml:space="preserve"><value>Brouillon introuvable ou ne vous appartient pas.</value></data>
+  <data name="AID_WrongScreen" xml:space="preserve"><value>Ce brouillon appartient à un autre écran.</value></data>
+  <data name="AID_Discarded" xml:space="preserve"><value>Ce brouillon a été abandonné.</value></data>
+  <data name="AID_AlreadyUsed" xml:space="preserve"><value>Ce brouillon a déjà été enregistré sous le n° {0}.</value></data>
+  <data name="AID_LineGone" xml:space="preserve"><value>L'article « {0} » n'est plus disponible dans ce magasin ; il n'a pas été ajouté.</value></data>
+  <data name="AID_NoPrice" xml:space="preserve"><value>L'article « {0} » n'a pas de prix ; saisissez-le avant d'enregistrer.</value></data>
+  <data name="AID_StoreNotAvailable" xml:space="preserve"><value>Le magasin « {0} » n'est pas disponible pour ce bon ; choisissez le magasin et les articles manuellement.</value></data>
+  <data name="AID_OtherPartyNotAvailable" xml:space="preserve"><value>L'autre partie du brouillon n'est pas disponible ; choisissez-la manuellement.</value></data>
 </root>

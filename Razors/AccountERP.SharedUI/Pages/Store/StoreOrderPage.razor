@@ -9,6 +9,7 @@
 @using AccountModelsLib
 @using AccountERP.SharedUI.Services
 @using AccountERP.SharedUI.Components.Shared
+@using AccountERP.SharedUI.Components.Assistant
 @using static AccountModelsLib.StoreOrderService
 @using static AccountModelsLib.StoreOrderPageService
 @inject LanguageService LangService
@@ -197,6 +198,11 @@
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_isBusy" OnClick="NewOrderAsync">@Tr("DstNewButton")</MudButton>
         </div>
     </div>
+    }
+
+    @if (_aiDraft is not null)
+    {
+        <div class="so-section-gap"><AiDraftBanner Payload="_aiDraft" Extra="_aiDraftExtra" OnDiscard="DiscardAiDraftAsync" /></div>
     }
 
     @if (_settings is not null && IsReceiptType)
@@ -572,6 +578,11 @@
     /// <summary>نوع جهة «من»/«إلى» المبدئى من القائمة (مثلاً «إذن صرف لقسم» = 1001 مع to=20).</summary>
     [SupplyParameterFromQuery(Name = "from")] public int? FromQuery { get; set; }
     [SupplyParameterFromQuery(Name = "to")] public int? ToQuery { get; set; }
+    // 🤖 P5: مسودة من المساعد الذكى (AI_Drafts): تعبّئ إذناً جديداً فقط؛ لا يُكتب الإذن ولا يتحرك الرصيد قبل «حفظ مسودة» أو «ترحيل».
+    [SupplyParameterFromQuery(Name = "aiDraft")] public long? AiDraftQuery { get; set; }
+    private long _aiDraftId;
+    private AiDraftPayload? _aiDraft;
+    private readonly List<string> _aiDraftExtra = new();
 
     private readonly StoreOrderPageService _svc = new();
     private OrderTypeSettings? _settings;
@@ -692,7 +703,11 @@
             if (_settings.Is_Transfer && !IsReceiptType)
                 _transferUi = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetTransferUi(); });
             if (IdQuery is > 0) await LoadOrderAsync(IdQuery.Value);
-            else await ResetPartiesAsync();
+            else
+            {
+                await ResetPartiesAsync();
+                if (AiDraftQuery is > 0 && !IsReceiptType) await LoadFromAiDraftAsync(AiDraftQuery.Value);
+            }
         }
         catch (Exception ex) { _errorMessage = ErrText(ex); }
     }
@@ -818,6 +833,7 @@
         {
             var id = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.SaveDraft(input, draftId); });
             await LoadOrderAsync(id);
+            await ConsumeAiDraftAsync(id);
             Snackbar.Add(Tr("SODraftSaved", _orderNo), Severity.Success);
             Nav.NavigateTo($"/store/order/{OrderType}?id={id}", replace: true);
         }
@@ -836,6 +852,7 @@
         {
             var id = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.SaveAndPost(input, draftId, _directRequested); });
             await LoadOrderAsync(id);
+            await ConsumeAiDraftAsync(id);
             Snackbar.Add(Tr("SOPosted", _orderNo), Severity.Success);
             Nav.NavigateTo($"/store/order/{OrderType}?id={id}", replace: true);
         }
@@ -963,8 +980,98 @@
         finally { _isBusy = false; }
     }
 
+    // ============================== 🤖 P5: مسودة من المساعد الذكى ==============================
+
+    // جهة المخزون = مخزن المسودة (بنوع المخزن أو القسم المتاح لهذا الإذن)، والجهة الأخرى إن ذكرتها المسودة وكانت فى قائمتها؛ وإلا تبقى
+    // افتراضية مع تحذير. الأسطر تُقرأ بنفس أعمدة SearchLines (الرصيد ومتوسط التكلفة)، والتكلفة اليدوية = تكلفة المسودة أو المتوسط.
+    private async Task LoadFromAiDraftAsync(long draftId)
+    {
+        try
+        {
+            var res = await AiDraftPageHelper.LoadAsync(draftId, AiDraftKind.StoreOrder, OrderType);
+            if (res.AlreadyUsed)
+            {
+                Snackbar.Add(Tr("AID_AlreadyUsed", res.Row?.Target_Doc_No ?? ""), Severity.Info);
+                if (res.Row?.Target_Doc_Id is long docId and > 0) Nav.NavigateTo($"/store/order/{OrderType}?id={docId}", replace: true);
+                return;
+            }
+            if (res.ErrorKey is not null || res.Payload is null) { Snackbar.Add(Tr(res.ErrorKey ?? "AID_NotFound"), Severity.Warning); return; }
+            var p = res.Payload;
+            _aiDraftId = draftId;
+            _aiDraft = p;
+            bool storeIsFrom = _settings!.StoreIsFrom;
+
+            // جهة المخزون
+            int current = storeIsFrom ? _typeFrom : _typeTo;
+            var storeTypes = (storeIsFrom ? _settings.FromParties : _settings.ToParties)
+                .Where(t => t is PartyStore or PartyDepartment).OrderBy(t => t == current ? 0 : 1).ToList();
+            bool storeSet = false;
+            foreach (var t in storeTypes)
+            {
+                if (t != (storeIsFrom ? _typeFrom : _typeTo)) { if (storeIsFrom) await OnTypeFromChangedAsync(t); else await OnTypeToChangedAsync(t); }
+                var list = storeIsFrom ? _fromList : _toList;
+                if (list.Any(o => o.Id == p.StoreId)) { if (storeIsFrom) _idFrom = p.StoreId; else _idTo = p.StoreId; storeSet = true; break; }
+            }
+            if (!storeSet) { _aiDraftExtra.Add(Tr("AID_StoreNotAvailable", p.StoreName)); return; }
+
+            // الجهة الأخرى
+            if (p.OtherPartyType > 0)
+            {
+                var allowed = storeIsFrom ? _settings.ToParties : _settings.FromParties;
+                if (allowed.Contains(p.OtherPartyType))
+                {
+                    if (storeIsFrom && _typeTo != p.OtherPartyType) await OnTypeToChangedAsync(p.OtherPartyType);
+                    if (!storeIsFrom && _typeFrom != p.OtherPartyType) await OnTypeFromChangedAsync(p.OtherPartyType);
+                    var list = storeIsFrom ? _toList : _fromList;
+                    if (p.OtherPartyId > 0 && list.Any(o => o.Id == p.OtherPartyId)) { if (storeIsFrom) _idTo = p.OtherPartyId; else _idFrom = p.OtherPartyId; }
+                    else if (p.OtherPartyId > 0) _aiDraftExtra.Add(Tr("AID_OtherPartyNotAvailable"));
+                }
+                else _aiDraftExtra.Add(Tr("AID_OtherPartyNotAvailable"));
+            }
+            // التحويل لا يكون لنفس المخزن: الجهة الأخرى تُفرَّغ ليختارها المستخدم.
+            if (_settings.Is_Transfer && _typeFrom == _typeTo && _idFrom == _idTo) { if (storeIsFrom) _idTo = 0; else _idFrom = 0; }
+            if (p.Date is DateTime d) _date = d.Date;
+            if (!string.IsNullOrWhiteSpace(p.Notes)) _notes = p.Notes;
+
+            int st = StoreType; long sid = StoreId;
+            var ids = p.Lines.Select(l => l.UnitItemId).ToList();
+            var rows = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetLinesByIds(st, sid, ids); });
+            foreach (var dl in p.Lines)
+            {
+                var r = rows.FirstOrDefault(x => x.Id == dl.UnitItemId);
+                if (r is null) { _aiDraftExtra.Add(string.Format(CultureInfo.InvariantCulture, Tr("AID_LineGone"), dl.ItemName)); continue; }
+                if (_lines.Any(l => l.UnitItemId == r.Id)) continue;
+                decimal? cost = _settings.IsManualPrice ? (dl.Price is > 0 ? dl.Price : r.Avg_Cost_Large) : null;
+                _lines.Add(new LineRow(r.Id, r.Item_Name, r.Code, r.B_Unit, r.S_Unit, r.Factor, dl.QtyLarge, dl.QtySmall, cost, dl.Notes ?? "",
+                    r.Full_qua * r.Factor + r.D_Qua));
+            }
+        }
+        catch (Exception ex) { _errorMessage = ErrText(ex); }
+    }
+
+    private async Task ConsumeAiDraftAsync(long orderId)
+    {
+        if (_aiDraftId <= 0) return;
+        await AiDraftPageHelper.MarkConsumedAsync(_aiDraftId, orderId, _orderNo.ToString(CultureInfo.InvariantCulture));
+        _aiDraftId = 0;
+        _aiDraft = null;
+        _aiDraftExtra.Clear();
+    }
+
+    private async Task DiscardAiDraftAsync()
+    {
+        var ok = await DialogService.ShowMessageBoxAsync(Tr("AID_Discard"), Tr("AID_DiscardConfirm"), yesText: Tr("AID_Discard"), cancelText: Tr("Cancel"));
+        if (ok != true) return;
+        try { await AiDraftPageHelper.DiscardAsync(_aiDraftId); }
+        catch (Exception ex) { _errorMessage = ErrText(ex); return; }
+        await NewOrderAsync();
+        Snackbar.Add(Tr("AID_DiscardedDone"), Severity.Info);
+        Nav.NavigateTo($"/store/order/{OrderType}", replace: true);
+    }
+
     private async Task NewOrderAsync()
     {
+        _aiDraftId = 0; _aiDraft = null; _aiDraftExtra.Clear();
         _header = null; _orderId = 0; _orderNo = 0; _status = -1; _lines = new(); _notes = null; _costCenterId = 0; _errorMessage = null; _showReverse = false;
         _date = DateTime.Today;
         ClearPicker();

@@ -5201,4 +5201,26 @@
   <data name="AIC_AskPlaceholder" xml:space="preserve"><value>Schreiben Sie Ihre Antwort auf die Frage des Assistenten…</value></data>
   <data name="AIC_AskStatus" xml:space="preserve"><value>Der Assistent wartet auf Ihre Antwort</value></data>
   <data name="AIC_AskWaiting" xml:space="preserve"><value>Wartet auf Ihre Antwort</value></data>
+  <data name="AIC_DraftPending" xml:space="preserve"><value>Noch nicht gespeichert — im Formular prüfen</value></data>
+  <data name="AIC_DraftSaved" xml:space="preserve"><value>Gespeichert als Nr. {0}</value></data>
+  <data name="AIC_DraftDiscarded" xml:space="preserve"><value>Entwurf verworfen</value></data>
+  <data name="AIC_DraftOpen" xml:space="preserve"><value>Im Formular öffnen</value></data>
+  <data name="AIC_DraftOpenSaved" xml:space="preserve"><value>Beleg anzeigen</value></data>
+  <data name="AIC_DraftWarnings" xml:space="preserve"><value>Hinweise zum Entwurf</value></data>
+  <data name="AIC_DraftNote" xml:space="preserve"><value>Der Assistent speichert keine Belege; Sie speichern nach Prüfung mit der Schaltfläche „Speichern“.</value></data>
+  <data name="AID_Banner" xml:space="preserve"><value>Entwurf des Assistenten — vor dem Speichern prüfen</value></data>
+  <data name="AID_BannerHint" xml:space="preserve"><value>Aus dem Chat ausgefüllt; noch nichts gespeichert. Partner, Artikel, Mengen und Preise prüfen, dann speichern.</value></data>
+  <data name="AID_Unmatched" xml:space="preserve"><value>Nicht zugeordnete Positionen (nicht hinzugefügt; manuell wählen):</value></data>
+  <data name="AID_Warnings" xml:space="preserve"><value>Hinweise:</value></data>
+  <data name="AID_Discard" xml:space="preserve"><value>Entwurf verwerfen</value></data>
+  <data name="AID_DiscardConfirm" xml:space="preserve"><value>Entwurf verwerfen und mit einem leeren Beleg beginnen?</value></data>
+  <data name="AID_DiscardedDone" xml:space="preserve"><value>Entwurf verworfen.</value></data>
+  <data name="AID_NotFound" xml:space="preserve"><value>Entwurf nicht gefunden oder gehört nicht Ihnen.</value></data>
+  <data name="AID_WrongScreen" xml:space="preserve"><value>Dieser Entwurf gehört zu einem anderen Formular.</value></data>
+  <data name="AID_Discarded" xml:space="preserve"><value>Dieser Entwurf wurde verworfen.</value></data>
+  <data name="AID_AlreadyUsed" xml:space="preserve"><value>Dieser Entwurf wurde bereits als Nr. {0} gespeichert.</value></data>
+  <data name="AID_LineGone" xml:space="preserve"><value>Artikel „{0}“ ist in diesem Lager nicht mehr verfügbar und wurde nicht hinzugefügt.</value></data>
+  <data name="AID_NoPrice" xml:space="preserve"><value>Artikel „{0}“ hat keinen Preis; vor dem Speichern eingeben.</value></data>
+  <data name="AID_StoreNotAvailable" xml:space="preserve"><value>Lager „{0}“ ist für diesen Beleg nicht verfügbar; Lager und Artikel manuell wählen.</value></data>
+  <data name="AID_OtherPartyNotAvailable" xml:space="preserve"><value>Die andere Partei im Entwurf ist nicht verfügbar; manuell wählen.</value></data>
 </root>

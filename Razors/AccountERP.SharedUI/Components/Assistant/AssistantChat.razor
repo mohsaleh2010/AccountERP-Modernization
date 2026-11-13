@@ -106,6 +106,19 @@
     .aic-card .mud-button-root { min-height: 40px; flex: none; }
     .aic.compact .aic-card { flex-wrap: wrap; }
     .aic.compact .aic-card .mud-button-root { width: 100%; }
+    /* P5: بطاقة «مسودة جاهزة» — لون التحذير لأن المستند لم يُحفظ بعد؛ والمحفوظة بلون النجاح */
+    .aic-draft { flex-direction: column; align-items: stretch; gap: 8px;
+                 border-color: color-mix(in srgb, var(--mud-palette-warning) 45%, var(--mud-palette-lines-default));
+                 background: color-mix(in srgb, var(--mud-palette-warning) 6%, var(--mud-palette-surface)); }
+    .aic-draft .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .aic-draft .ic { background: color-mix(in srgb, var(--mud-palette-warning) 16%, transparent); color: var(--mud-palette-warning-darken); }
+    .aic-draft.done { border-color: color-mix(in srgb, var(--mud-palette-success) 45%, var(--mud-palette-lines-default));
+                      background: color-mix(in srgb, var(--mud-palette-success) 6%, var(--mud-palette-surface)); }
+    .aic-draft.done .ic { background: color-mix(in srgb, var(--mud-palette-success) 16%, transparent); color: var(--mud-palette-success-darken); }
+    .aic-draft.off { opacity: .7; }
+    .aic-draft .state { font-size: .75rem; font-weight: 600; }
+    .aic-draft .warn { margin: 0; padding-inline-start: 18px; font-size: .8rem; line-height: 1.6; color: var(--mud-palette-text-primary); }
+    .aic-draft .note { font-size: .75rem; color: var(--mud-palette-text-secondary); }
     .aic-ask { margin-top: 10px; padding: 12px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); }
     .aic-ask.live { border-color: var(--mud-palette-info); background: color-mix(in srgb, var(--mud-palette-info) 6%, var(--mud-palette-surface)); }
     .aic-ask .hd { display: flex; align-items: center; gap: 6px; font-size: .75rem; font-weight: 600; color: var(--mud-palette-text-secondary); }
@@ -270,7 +283,7 @@
                                             </ol>
                                         </details>
                                     }
-                                    @if (m.Reports.Count > 0 || m.Screens.Count > 0)
+                                    @if (m.Reports.Count > 0 || m.Screens.Count > 0 || m.Drafts.Count > 0)
                                     {
                                         <div class="aic-cards">
                                             @foreach (var r in m.Reports)
@@ -295,6 +308,36 @@
                                                     </div>
                                                     <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" EndIcon="@Icons.Material.Filled.ArrowOutward"
                                                                OnClick="() => OpenScreen(sc)">@Tr("AIC_OpenScreen")</MudButton>
+                                                </div>
+                                            }
+                                            @foreach (var d in m.Drafts)
+                                            {
+                                                bool done = d.Status == AiDraftStatus.Consumed;
+                                                bool off = d.Status == AiDraftStatus.Discarded;
+                                                <div class="@("aic-card aic-draft" + (done ? " done" : off ? " off" : ""))" role="group" aria-label="@d.Title">
+                                                    <div class="row">
+                                                        <div class="ic" aria-hidden="true"><MudIcon Icon="@(done ? Icons.Material.Outlined.TaskAlt : d.Kind == AiDraftKind.StoreOrder ? Icons.Material.Outlined.Inventory2 : Icons.Material.Outlined.ReceiptLong)" /></div>
+                                                        <div class="tx">
+                                                            <div class="t" title="@d.Title">@d.Title</div>
+                                                            <div class="s" title="@d.Subtitle">@d.Subtitle</div>
+                                                            <div class="state">@(done ? Tr("AIC_DraftSaved", d.DocNo) : off ? Tr("AIC_DraftDiscarded") : Tr("AIC_DraftPending"))</div>
+                                                        </div>
+                                                        @if (!off)
+                                                        {
+                                                            <MudButton Variant="@(done ? Variant.Outlined : Variant.Filled)" Color="@(done ? Color.Success : Color.Primary)" Size="Size.Small"
+                                                                       EndIcon="@Icons.Material.Filled.ArrowOutward" OnClick="() => OpenDraft(d)">@Tr(done ? "AIC_DraftOpenSaved" : "AIC_DraftOpen")</MudButton>
+                                                        }
+                                                    </div>
+                                                    @if (!done && !off && d.Warnings.Count > 0)
+                                                    {
+                                                        <ul class="warn" aria-label="@Tr("AIC_DraftWarnings")">
+                                                            @foreach (var w in d.Warnings) { <li>@w</li> }
+                                                        </ul>
+                                                    }
+                                                    @if (!done && !off)
+                                                    {
+                                                        <div class="note">@Tr("AIC_DraftNote")</div>
+                                                    }
                                                 </div>
                                             }
                                         </div>
@@ -652,6 +695,14 @@
         if (string.IsNullOrEmpty(sc.Url) || !sc.Url.StartsWith('/') || sc.Url.StartsWith("//")) return;
         await OnNavigated.InvokeAsync();
         Nav.NavigateTo(sc.Url);
+    }
+
+    private async Task OpenDraft(AiDraftCard d)
+    {
+        // الرابط من الأداة (مسار الشاشة + ?aiDraft=)؛ الشاشة نفسها تتحقق من المالك والحالة. المحفوظة تفتح المسودة فتحوّل للمستند الناتج.
+        if (string.IsNullOrEmpty(d.Url) || !d.Url.StartsWith('/') || d.Url.StartsWith("//")) return;
+        await OnNavigated.InvokeAsync();
+        Nav.NavigateTo(d.Url);
     }
 
     private async Task UseSuggestion(string key)

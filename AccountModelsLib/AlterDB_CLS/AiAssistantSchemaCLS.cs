@@ -127,6 +127,22 @@ namespace AccountModelsLib
     [IsShared] [bit] NOT NULL DEFAULT (0),
     [LastRunAt] [datetime] NULL,",
              @"CREATE NONCLUSTERED INDEX [IX_AI_SavedReports_User] ON [dbo].[AI_SavedReports]([User_Id], [IsSaved], [IsPinned]);"),
+
+            // P5: مسودات المساعد (فاتورة مبيعات / مشتريات / إذن مخزن). لا يُكتب شىء فى جداول المستندات قبل ضغط المستخدم «حفظ» فى الشاشة الحقيقية؛
+            // الشاشة تفتح ?aiDraft={Id} وتعبّئ نفسها، وبعد الحفظ: Status = Consumed + معرّف/رقم المستند الناتج (للتدقيق).
+            // DraftType: sales / purchase / store_order. Status: Pending / Consumed / Discarded.
+            ("AI_Drafts", @"
+    [User_Id] [bigint] NOT NULL,
+    [Conversation_Id] [bigint] NULL,
+    [Message_Id] [bigint] NULL,
+    [DraftType] [nvarchar](30) NOT NULL,
+    [Title] [nvarchar](200) NULL,
+    [PayloadJson] [nvarchar](max) NOT NULL,
+    [Status] [nvarchar](20) NOT NULL DEFAULT (N'Pending'),
+    [Target_Doc_Id] [bigint] NULL,
+    [Target_Doc_No] [nvarchar](50) NULL,
+    [ConsumedAt] [datetime] NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_AI_Drafts_User] ON [dbo].[AI_Drafts]([User_Id], [Status], [CreatedAt] DESC);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>

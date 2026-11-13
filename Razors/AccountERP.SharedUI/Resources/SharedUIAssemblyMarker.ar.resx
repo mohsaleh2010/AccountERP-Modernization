@@ -5199,4 +5199,26 @@
   <data name="AIC_AskPlaceholder" xml:space="preserve"><value>اكتب إجابتك على سؤال المساعد…</value></data>
   <data name="AIC_AskStatus" xml:space="preserve"><value>المساعد ينتظر إجابتك</value></data>
   <data name="AIC_AskWaiting" xml:space="preserve"><value>بانتظار إجابتك</value></data>
+  <data name="AIC_DraftPending" xml:space="preserve"><value>لم تُحفظ بعد — راجعها فى الشاشة</value></data>
+  <data name="AIC_DraftSaved" xml:space="preserve"><value>حُفظت برقم {0}</value></data>
+  <data name="AIC_DraftDiscarded" xml:space="preserve"><value>أُلغيت المسودة</value></data>
+  <data name="AIC_DraftOpen" xml:space="preserve"><value>فتح فى الشاشة</value></data>
+  <data name="AIC_DraftOpenSaved" xml:space="preserve"><value>عرض المستند</value></data>
+  <data name="AIC_DraftWarnings" xml:space="preserve"><value>تنبيهات المسودة</value></data>
+  <data name="AIC_DraftNote" xml:space="preserve"><value>المساعد لا يحفظ المستندات؛ تُحفظ بزر «حفظ» فى الشاشة بعد مراجعتك.</value></data>
+  <data name="AID_Banner" xml:space="preserve"><value>مسودة من المساعد — راجع قبل الحفظ</value></data>
+  <data name="AID_BannerHint" xml:space="preserve"><value>البيانات معبّأة من المحادثة ولم يُحفظ شىء بعد. راجع العميل/المورد والأصناف والكميات والأسعار ثم احفظ.</value></data>
+  <data name="AID_Unmatched" xml:space="preserve"><value>بنود غير مطابقة (لم تُضف؛ اخترها يدوياً):</value></data>
+  <data name="AID_Warnings" xml:space="preserve"><value>تنبيهات:</value></data>
+  <data name="AID_Discard" xml:space="preserve"><value>تجاهل المسودة</value></data>
+  <data name="AID_DiscardConfirm" xml:space="preserve"><value>تجاهل مسودة المساعد وبدء مستند فارغ؟</value></data>
+  <data name="AID_DiscardedDone" xml:space="preserve"><value>أُلغيت المسودة.</value></data>
+  <data name="AID_NotFound" xml:space="preserve"><value>مسودة المساعد غير موجودة أو ليست لك.</value></data>
+  <data name="AID_WrongScreen" xml:space="preserve"><value>هذه المسودة لشاشة أخرى.</value></data>
+  <data name="AID_Discarded" xml:space="preserve"><value>أُلغيت هذه المسودة من قبل.</value></data>
+  <data name="AID_AlreadyUsed" xml:space="preserve"><value>هذه المسودة حُفظت من قبل برقم {0}.</value></data>
+  <data name="AID_LineGone" xml:space="preserve"><value>الصنف «{0}» لم يعد متاحاً فى هذا المخزن فلم يُضف.</value></data>
+  <data name="AID_NoPrice" xml:space="preserve"><value>الصنف «{0}» بلا سعر؛ أدخل السعر قبل الحفظ.</value></data>
+  <data name="AID_StoreNotAvailable" xml:space="preserve"><value>المخزن «{0}» غير متاح لهذا الإذن؛ اختر المخزن والأصناف يدوياً.</value></data>
+  <data name="AID_OtherPartyNotAvailable" xml:space="preserve"><value>الجهة الأخرى المذكورة فى المسودة غير متاحة؛ اخترها يدوياً.</value></data>
 </root>
