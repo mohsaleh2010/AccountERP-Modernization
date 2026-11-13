@@ -106,6 +106,29 @@
     .aic-card .mud-button-root { min-height: 40px; flex: none; }
     .aic.compact .aic-card { flex-wrap: wrap; }
     .aic.compact .aic-card .mud-button-root { width: 100%; }
+    .aic-ask { margin-top: 10px; padding: 12px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); }
+    .aic-ask.live { border-color: var(--mud-palette-info); background: color-mix(in srgb, var(--mud-palette-info) 6%, var(--mud-palette-surface)); }
+    .aic-ask .hd { display: flex; align-items: center; gap: 6px; font-size: .75rem; font-weight: 600; color: var(--mud-palette-text-secondary); }
+    .aic-ask.live .hd { color: var(--mud-palette-info-darken); }
+    .aic-ask .q { margin: 4px 0 10px; font-weight: 700; font-size: .95rem; line-height: 1.6; white-space: pre-wrap; }
+    .aic-ask .opts { display: flex; flex-direction: column; gap: 6px; }
+    .aic-ask .opt { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border-radius: 10px; text-align: start; font: inherit; font-size: .9rem;
+                    border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-background); color: var(--mud-palette-text-primary); }
+    .aic-ask button.opt { cursor: pointer; transition: border-color .15s, background-color .15s; }
+    .aic-ask button.opt:hover:not(:disabled) { border-color: var(--mud-palette-primary); background: color-mix(in srgb, var(--mud-palette-primary) 6%, var(--mud-palette-background)); }
+    .aic-ask button.opt:focus-visible, .aic-ask .free input:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .aic-ask button.opt:disabled { opacity: .55; cursor: not-allowed; }
+    .aic-ask .opt .mud-icon-root { flex: none; color: var(--mud-palette-text-secondary); }
+    .aic-ask .opt.on { border-color: var(--mud-palette-primary); background: color-mix(in srgb, var(--mud-palette-primary) 10%, var(--mud-palette-background)); font-weight: 600; }
+    .aic-ask .opt.on .mud-icon-root { color: var(--mud-palette-primary); }
+    .aic-ask .opt.done:not(.on) { color: var(--mud-palette-text-secondary); }
+    .aic-ask .free { margin-top: 8px; }
+    .aic-ask .free input { width: 100%; min-height: 44px; padding: 8px 12px; border-radius: 10px; font: inherit; font-size: .9rem;
+                           border: 1px solid var(--mud-palette-lines-inputs); background: var(--mud-palette-background); color: var(--mud-palette-text-primary); }
+    .aic-ask .send { margin-top: 8px; min-height: 40px; }
+    .aic-ask .hint { margin-top: 6px; font-size: .75rem; color: var(--mud-palette-text-secondary); }
+    .aic-ask .ans { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: .85rem; }
+    .aic-ask .ans.muted { color: var(--mud-palette-text-secondary); }
     .aic-toolnow { display: flex; align-items: center; gap: 8px; padding: 8px 2px; font-size: .85rem; color: var(--mud-palette-text-secondary); }
 </style>
 
@@ -276,7 +299,74 @@
                                             }
                                         </div>
                                     }
+                                    @if (m.Ask is { } ask)
+                                    {
+                                        @* P4: سؤال المساعد — خيار واحد يُرسل بالضغط، المتعدد بزر إرسال، والإجابة الحرة هنا أو فى خانة الرسالة *@
+                                        bool live = ask.Pending && ReferenceEquals(m, Chat.PendingAsk);
+                                        string qid = "aic-ask-" + m.Id.ToString(CultureInfo.InvariantCulture);
+                                        <div class="@("aic-ask" + (live ? " live" : ""))" role="group" aria-labelledby="@qid">
+                                            <div class="hd"><MudIcon Icon="@Icons.Material.Outlined.HelpOutline" Size="Size.Small" aria-hidden="true" /><span>@Tr("AIC_AskTitle")</span></div>
+                                            <div class="q" id="@qid">@ask.Question</div>
+                                            @if (ask.Options.Count > 0)
+                                            {
+                                                <div class="opts">
+                                                    @foreach (var opt in ask.Options)
+                                                    {
+                                                        bool chosen = live ? _askSel.Contains(opt) : AnswerHas(ask, opt);
+                                                        @if (live && !ask.Multi)
+                                                        {
+                                                            <button type="button" class="opt" disabled="@Chat.IsSending" @onclick="() => AnswerOptionAsync(m, opt)">
+                                                                <MudIcon Icon="@Icons.Material.Outlined.RadioButtonUnchecked" Size="Size.Small" aria-hidden="true" /><span>@opt</span>
+                                                            </button>
+                                                        }
+                                                        else if (live)
+                                                        {
+                                                            <button type="button" class="@("opt" + (chosen ? " on" : ""))" aria-pressed="@(chosen ? "true" : "false")" disabled="@Chat.IsSending"
+                                                                    @onclick="() => ToggleOption(m, opt)">
+                                                                <MudIcon Icon="@(chosen ? Icons.Material.Filled.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)" Size="Size.Small" aria-hidden="true" /><span>@opt</span>
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="@("opt done" + (chosen ? " on" : ""))">
+                                                                <MudIcon Icon="@(chosen ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.Circle)" Size="Size.Small" aria-hidden="true" /><span>@opt</span>
+                                                            </div>
+                                                        }
+                                                    }
+                                                </div>
+                                            }
+                                            @if (live)
+                                            {
+                                                @if (ask.AllowFreeText)
+                                                {
+                                                    <div class="free">
+                                                        <input type="text" maxlength="2000" value="@_askFree" @oninput="e => _askFree = e.Value?.ToString() ?? string.Empty"
+                                                               @onkeydown="e => FreeKeyAsync(e, m)" placeholder="@Tr("AIC_AskOtherPh")" aria-label="@Tr("AIC_AskOther")" disabled="@Chat.IsSending" />
+                                                    </div>
+                                                }
+                                                @if (ask.Multi || ask.AllowFreeText)
+                                                {
+                                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Send" Class="send"
+                                                               Disabled="@(Chat.IsSending || (_askSel.Count == 0 && string.IsNullOrWhiteSpace(_askFree)))"
+                                                               OnClick="() => AnswerSelectedAsync(m)">@Tr("AIC_AskSend")</MudButton>
+                                                }
+                                                <div class="hint">@Tr(ask.Multi ? "AIC_AskMultiHint" : "AIC_AskHint")</div>
+                                            }
+                                            else if (!string.IsNullOrEmpty(ask.Answer))
+                                            {
+                                                <div class="ans"><MudIcon Icon="@Icons.Material.Filled.Reply" Size="Size.Small" aria-hidden="true" /><span>@Tr("AIC_AskAnswered", ask.Answer)</span></div>
+                                            }
+                                            else if (ask.Skipped || !ask.Pending)
+                                            {
+                                                <div class="ans muted">@Tr("AIC_AskSkipped")</div>
+                                            }
+                                        </div>
+                                    }
                                     <div class="aic-meta">
+                                        @if (m.Status == AiMessageStatus.Awaiting && m.Ask?.Pending == true)
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@Tr("AIC_AskWaiting")</MudChip>
+                                        }
                                         @if (m.Status == AiMessageStatus.Stopped)
                                         {
                                             <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning">@Tr("AIC_Stopped")</MudChip>
@@ -339,7 +429,7 @@
 
         <div class="aic-composer">
             <div class="aic-box">
-                <textarea @ref="_input" rows="1" maxlength="8000" aria-label="@Tr("AIC_InputLabel")" placeholder="@Tr("AIC_Placeholder")"
+                <textarea @ref="_input" rows="1" maxlength="8000" aria-label="@Tr("AIC_InputLabel")" placeholder="@(Chat.PendingAsk != null ? Tr("AIC_AskPlaceholder") : Tr("AIC_Placeholder"))"
                           disabled="@(!Chat.Availability.Ready)"></textarea>
                 @if (Chat.IsSending)
                 {
@@ -451,9 +541,12 @@
     {
         if (Chat.IsSending != _wasSending)
         {
-            _status = Chat.IsSending ? Tr("AIC_StatusWriting") : Tr("AIC_StatusDone");
+            _status = Chat.IsSending ? Tr("AIC_StatusWriting") : Chat.PendingAsk != null ? Tr("AIC_AskStatus") : Tr("AIC_StatusDone");
             _wasSending = Chat.IsSending;
         }
+        // P4: سؤال جديد ⇒ اختيارات فارغة.
+        long askId = Chat.PendingAsk?.Id ?? 0;
+        if (askId != _askFor) { _askFor = askId; _askSel.Clear(); _askFree = ""; }
         if (Chat.Messages.Count != _lastCount) { _forceScroll = true; _lastCount = Chat.Messages.Count; }
         StateHasChanged();
     });
@@ -502,6 +595,42 @@
             try { await _module.InvokeVoidAsync("setComposer", _input, text); }
             catch (JSDisconnectedException) { }
         }
+    }
+
+    // ───── P4: سؤال المساعد ─────
+    private readonly HashSet<string> _askSel = new(StringComparer.OrdinalIgnoreCase);
+    private string _askFree = "";
+    private long _askFor;
+
+    private AiScreenContext Ctx() => ContextProvider?.Invoke() ?? new AiScreenContext { Language = LangService.CurrentCultureInfo.Name };
+
+    /// <summary>الإجابة المسجّلة تحتوى هذا الخيار (للعرض بعد الإجابة).</summary>
+    private static bool AnswerHas(AiAskView a, string opt) => a.Selected.Contains(opt, StringComparer.OrdinalIgnoreCase);
+
+    private void ToggleOption(AiChatMessage m, string opt)
+    {
+        if (m.Id != _askFor) { _askFor = m.Id; _askSel.Clear(); }
+        if (!_askSel.Remove(opt)) _askSel.Add(opt);
+    }
+
+    private async Task AnswerOptionAsync(AiChatMessage m, string opt)
+    {
+        _forceScroll = true;
+        await Chat.AnswerAsync(m.Id, new List<string> { opt }, null, Ctx());
+    }
+
+    private async Task AnswerSelectedAsync(AiChatMessage m)
+    {
+        var sel = m.Ask?.Multi == true ? _askSel.ToList() : new List<string>();
+        string free = _askFree;
+        if (sel.Count == 0 && string.IsNullOrWhiteSpace(free)) return;
+        _forceScroll = true;
+        await Chat.AnswerAsync(m.Id, sel, free, Ctx());
+    }
+
+    private async Task FreeKeyAsync(KeyboardEventArgs e, AiChatMessage m)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey && !e.IsComposing) await AnswerSelectedAsync(m);
     }
 
     // ───── P3: بطاقات التقارير والشاشات ─────

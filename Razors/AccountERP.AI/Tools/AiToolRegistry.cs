@@ -49,6 +49,8 @@ namespace AccountERP.AI.Tools
         public AiDataset? Dataset { get; init; }
         /// <summary>P3: كتلة تُضاف لمحتوى رد المساعد (بطاقة تقرير أو «افتح الشاشة»).</summary>
         public JsonObject? Block { get; init; }
+        /// <summary>P4: ask_user — الحلقة تتوقف هنا حتى يجيب المستخدم (Block = بطاقة السؤال).</summary>
+        public bool PauseForUser { get; init; }
     }
 
     /// <summary>
@@ -192,6 +194,66 @@ namespace AccountERP.AI.Tools
                 Description = "ابحث فى شاشات قائمة المستخدم بالاسم (مثل «كشف حساب عميل»، «تحويل بين المخازن») لتحصل على مسارها، ثم اعرضها بـ open_screen.",
                 Schema = Schema(new JsonObject { ["text"] = Str("كلمات من اسم الشاشة") }, "text"),
             }, c => c.User.AllowedScreens.Count > 0, FindScreen);
+
+            // ───── P4: قرار المستخدم ─────
+            yield return new ToolSpec(new AiToolDef
+            {
+                Name = AskUserTool,
+                Description = "اسأل المستخدم سؤالاً واحداً حين تحتاج قراره قبل أن تكمل: أكثر من مطابقة لاسم عميل/مورد/صنف، أو لا مطابقة، أو فترة/فرع/وحدة غير واضحة وتؤثر على النتيجة. " +
+                              "تتوقف المحادثة حتى يجيب، وإجابته تعود نتيجةً لهذه الأداة. أعطِ من 2 إلى 6 خيارات قصيرة يميّز كل منها نفسه (مثل «شركة النور — كود 1203»). " +
+                              "لا تكتب السؤال نفسه فى النص (يظهر فى البطاقة)، ولا تسأل عمّا تستطيع معرفته من الأدوات، ولا تسأل أكثر من سؤال فى المرة.",
+                Schema = Schema(new JsonObject
+                {
+                    ["question"] = Str("السؤال بلغة المستخدم، سطر أو سطران"),
+                    ["options"] = new JsonObject
+                    {
+                        ["type"] = "array",
+                        ["description"] = "الخيارات (2 إلى 6، كل خيار حتى 120 حرفاً)",
+                        ["items"] = new JsonObject { ["type"] = "string" },
+                    },
+                    ["allow_free_text"] = new JsonObject { ["type"] = "boolean", ["description"] = "يسمح للمستخدم بكتابة إجابة أخرى (الافتراضى true)" },
+                    ["multi"] = new JsonObject { ["type"] = "boolean", ["description"] = "يسمح باختيار أكثر من خيار (الافتراضى false)" },
+                }, "question", "options"),
+            }, _ => true, AskUser);
+        }
+
+        public const string AskUserTool = "ask_user";
+        public const int MaxAskOptions = 6, MaxAskOptionChars = 120, MaxAskQuestionChars = 500;
+
+        /// <summary>P4: يتحقق من السؤال ويعيد بطاقته؛ الحلقة (AiChatGateway) تتوقف عند PauseForUser.</summary>
+        private static AiToolResult AskUser(JsonObject a, AiToolContext c)
+        {
+            string q = Arg(a, "question");
+            if (q.Length == 0) throw new ArgumentException("اكتب السؤال.");
+            if (q.Length > MaxAskQuestionChars) throw new ArgumentException($"السؤال أطول من {MaxAskQuestionChars} حرف؛ اختصره.");
+            var opts = new List<string>();
+            if (a["options"] is JsonArray arr)
+                foreach (var n in arr)
+                {
+                    string s = n is JsonValue v && v.TryGetValue<string>(out var t) ? string.Join(' ', t.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)) : "";
+                    if (s.Length == 0) continue;
+                    if (s.Length > MaxAskOptionChars) throw new ArgumentException($"الخيار «{Short(s, 40)}» أطول من {MaxAskOptionChars} حرف؛ اختصره.");
+                    if (!opts.Contains(s, StringComparer.OrdinalIgnoreCase)) opts.Add(s);
+                }
+            if (opts.Count > MaxAskOptions) throw new ArgumentException($"الخيارات أكثر من {MaxAskOptions}؛ ضيّقها أو استخدم find_entity بكلمة أدق.");
+            bool free = a["allow_free_text"] is not JsonValue fv || !fv.TryGetValue<bool>(out bool fb) || fb;
+            bool multi = a["multi"] is JsonValue mv && mv.TryGetValue<bool>(out bool mb) && mb;
+            if (opts.Count < 2 && !free) throw new ArgumentException("أعطِ خيارين على الأقل، أو اسمح بالإجابة الحرة.");
+            if (opts.Count < 2) multi = false;
+            return new AiToolResult
+            {
+                Content = "{}",   // النتيجة الحقيقية = إجابة المستخدم عند الاستئناف
+                Title = "سؤال للمستخدم: " + Short(q, 80),
+                PauseForUser = true,
+                Block = new JsonObject
+                {
+                    ["type"] = "ask",
+                    ["question"] = q,
+                    ["options"] = new JsonArray(opts.Select(o => (JsonNode)JsonValue.Create(o)!).ToArray()),
+                    ["allow_free_text"] = free,
+                    ["multi"] = multi,
+                },
+            };
         }
 
         private static bool HasAnyFinancial(AiToolContext c) =>
@@ -211,6 +273,7 @@ namespace AccountERP.AI.Tools
             "render_report" => "رسم تقرير",
             "open_screen" => "فتح شاشة",
             "find_screen" => "بحث عن شاشة",
+            AskUserTool => "سؤال للمستخدم",
             _ => toolName,
         };
 

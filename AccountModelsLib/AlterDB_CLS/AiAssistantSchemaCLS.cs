@@ -200,6 +200,8 @@ CREATE TABLE [dbo].[{table}](
             ("AI_Providers", "AuthMethod", "[nvarchar](20) NULL"),
             ("AI_Providers", "SignInAt", "[datetime] NULL"),
             ("AI_Providers", "SignInBy", "[bigint] NULL"),
+            // P4 (ask_user): حالة حلقة الأدوات المتوقفة على سؤال للمستخدم (الأدوار الجارية + نتائج الدورة) لاستئنافها بعد الإجابة؛ تُمسح عند الإجابة.
+            ("AI_Messages", "PendingJson", "[nvarchar](max) NULL"),
         };
 
         private static void AddedColumns(operations opp)

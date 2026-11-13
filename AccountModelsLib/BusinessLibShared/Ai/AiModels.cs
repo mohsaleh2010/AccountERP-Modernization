@@ -251,6 +251,32 @@ namespace AccountModelsLib
         public const string Ok = "ok";
         public const string Stopped = "stopped";
         public const string Error = "error";
+        /// <summary>P4: المساعد توقف على سؤال للمستخدم (ask_user) وينتظر الإجابة.</summary>
+        public const string Awaiting = "awaiting";
+    }
+
+    /// <summary>P4: سؤال المساعد للمستخدم (بطاقة خيارات تحت الرد).</summary>
+    public class AiAskView
+    {
+        public string Question { get; set; } = "";
+        public List<string> Options { get; set; } = new List<string>();
+        public bool AllowFreeText { get; set; } = true;
+        public bool Multi { get; set; }
+        /// <summary>ما زال ينتظر الإجابة (آخر رسالة وحالتها awaiting).</summary>
+        public bool Pending { get; set; }
+        /// <summary>الإجابة كما اختارها/كتبها المستخدم (بعد الإجابة).</summary>
+        public string Answer { get; set; } = "";
+        /// <summary>الخيارات التى اختارها (لتمييزها فى البطاقة بعد الإجابة).</summary>
+        public List<string> Selected { get; set; } = new List<string>();
+        /// <summary>تجاوزه المستخدم بإرسال رسالة جديدة دون إجابة.</summary>
+        public bool Skipped { get; set; }
+    }
+
+    /// <summary>P4: إجابة المستخدم: خيارات مختارة (من خيارات السؤال فقط) و/أو نص حر.</summary>
+    public class AiAskAnswer
+    {
+        public List<string> Selected { get; set; } = new List<string>();
+        public string FreeText { get; set; } = "";
     }
 
     public class AiConversationView
@@ -282,6 +308,8 @@ namespace AccountModelsLib
         public List<AiReportCard> Reports { get; set; } = new List<AiReportCard>();
         /// <summary>P3: الشاشات التى اقترح فتحها (بطاقة «افتح الشاشة»).</summary>
         public List<AiScreenLinkView> Screens { get; set; } = new List<AiScreenLinkView>();
+        /// <summary>P4: سؤال المساعد للمستخدم إن وُجد.</summary>
+        public AiAskView Ask { get; set; }
     }
 
     // ───────────── P2: الأدوات (قراءة فقط) ─────────────
@@ -389,6 +417,13 @@ namespace AccountModelsLib
         /// <param name="onStatus">P2: نص حالة قصير أثناء تنفيذ الأدوات («أبحث فى البيانات…»)؛ null عند انتهاء الأداة.</param>
         Task<AiChatTurnResult> SendAsync(long conversationId, string text, AiScreenContext context, AiUserContext user,
                                          Action<string> onDelta, Action<string> onStatus, CancellationToken ct = default);
+
+        /// <summary>
+        /// P4: إجابة سؤال المساعد المعلّق (رسالة messageId بحالة awaiting) ثم استئناف الحلقة وبثّ الرد. الإجابة تُحفظ رسالة مستخدم،
+        /// وتعود للنموذج كنتيجة الأداة ask_user (أو كنص إن تغيّر النموذج). يرفض إن لم يعد السؤال معلّقاً.
+        /// </summary>
+        Task<AiChatTurnResult> AnswerAsync(long conversationId, long messageId, AiAskAnswer answer, AiScreenContext context, AiUserContext user,
+                                           Action<string> onDelta, Action<string> onStatus, CancellationToken ct = default);
 
         // ───── P3: التقارير ─────
         /// <summary>التقرير جاهزاً للعرض (لصاحبه فقط)؛ null إن لم يوجد.</summary>

@@ -119,34 +119,69 @@ namespace AccountERP.SharedUI.Services
             Notify();
         }
 
-        public async Task SendAsync(string text, AiScreenContext context)
+        /// <summary>P4: رسالة المساعد التى تنتظر إجابة سؤاله (آخر رسالة فقط)؛ null إن لا يوجد.</summary>
+        public AiChatMessage? PendingAsk =>
+            Messages.Count > 0 && Messages[^1] is { Role: "assistant", Ask.Pending: true } m ? m : null;
+
+        /// <summary>رسالة جديدة؛ وإن كان للمساعد سؤال معلّق فالنص المكتوب إجابة حرة عليه (P4).</summary>
+        public Task SendAsync(string text, AiScreenContext context)
         {
             text = (text ?? "").Trim();
-            if (_gw == null || IsSending || text.Length == 0) return;
+            if (_gw == null || IsSending || text.Length == 0) return Task.CompletedTask;
+            var ask = PendingAsk;
+            if (ask != null) return AnswerAsync(ask.Id, new List<string>(), text, context);
             var gw = _gw; long convId = ConversationId;
             var user = BuildUser();
+            return RunTurnAsync(text, convId, ct => gw.SendAsync(convId, text, context, user, OnDelta, OnToolStatus, ct), null);
+        }
+
+        /// <summary>P4: إجابة سؤال المساعد (خيارات مختارة و/أو نص حر) ثم استئناف الرد.</summary>
+        public Task AnswerAsync(long messageId, List<string> selected, string? freeText, AiScreenContext context)
+        {
+            if (_gw == null || IsSending || ConversationId == 0) return Task.CompletedTask;
+            var answer = new AiAskAnswer { Selected = selected ?? new(), FreeText = (freeText ?? "").Trim() };
+            if (answer.Selected.Count == 0 && answer.FreeText.Length == 0) return Task.CompletedTask;
+            string shown = string.Join("، ", answer.Selected);
+            if (answer.FreeText.Length > 0) shown = shown.Length > 0 ? shown + " — " + answer.FreeText : answer.FreeText;
+            var gw = _gw; long convId = ConversationId;
+            var user = BuildUser();
+            return RunTurnAsync(shown, convId, ct => gw.AnswerAsync(convId, messageId, answer, context, user, OnDelta, OnToolStatus, ct), messageId);
+        }
+
+        private async Task RunTurnAsync(string shownText, long convId, Func<CancellationToken, Task<AiChatTurnResult>> call, long? askMessageId)
+        {
             _cts = new CancellationTokenSource();
             var ct = _cts.Token;
             lock (_lock) _streaming.Clear();
-            IsSending = true; Error = null; PendingUserText = text;
+            IsSending = true; Error = null; PendingUserText = shownText;
             Notify();
+            bool resync = false;
             try
             {
                 var result = await Task.Run(async () =>
                 {
                     AccountCultureGuard.EnsureInvariant();
-                    return await gw.SendAsync(convId, text, context, user, OnDelta, OnToolStatus, ct);
+                    return await call(ct);
                 });
                 // المستخدم ربما فتح محادثة أخرى أثناء البث: لا نخلط الرسائل.
                 if (ConversationId == convId)
                 {
                     ConversationId = result.ConversationId;
-                    Messages.Add(result.UserMessage);
-                    Messages.Add(result.AssistantMessage);
-                    if (convId == 0) ConversationTitle = TitleOf(text);
+                    // السؤال المعلّق السابق أُغلق على الخادم (بإجابة أو بتجاوزه): نعيد قراءة الرسائل بدل ترقيعها.
+                    if (askMessageId != null || Messages.Any(x => x.Ask?.Pending == true)) resync = true;
+                    else
+                    {
+                        Messages.Add(result.UserMessage);
+                        Messages.Add(result.AssistantMessage);
+                    }
+                    if (convId == 0) ConversationTitle = TitleOf(shownText);
                 }
             }
-            catch (Exception ex) { Error = Err(ex); }
+            catch (Exception ex)
+            {
+                Error = Err(ex);
+                resync = askMessageId != null;   // «أُجيب بالفعل» من نافذة أخرى: نعرض الحالة الحقيقية
+            }
             finally
             {
                 IsSending = false;
@@ -154,6 +189,12 @@ namespace AccountERP.SharedUI.Services
                 ToolStatus = null;
                 lock (_lock) _streaming.Clear();
                 _cts?.Dispose(); _cts = null;
+            }
+            if (resync && ConversationId == convId && convId != 0 && _gw != null)
+            {
+                var gw = _gw; long uid = UserId;
+                try { Messages = await Bg(() => gw.GetMessages(convId, uid)); }
+                catch (Exception ex) { Error ??= Err(ex); }
             }
             Notify();
             OnReplyCompleted?.Invoke();

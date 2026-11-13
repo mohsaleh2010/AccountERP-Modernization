@@ -5190,4 +5190,15 @@
   <data name="AIR_Table" xml:space="preserve"><value>Tableau</value></data>
   <data name="AIR_Total" xml:space="preserve"><value>Total</value></data>
   <data name="AIR_Truncated" xml:space="preserve"><value>Seules les {0} premières lignes sont affichées ; exportez vers Excel pour tout voir.</value></data>
+  <data name="AIC_AskTitle" xml:space="preserve"><value>Question de l'assistant</value></data>
+  <data name="AIC_AskOther" xml:space="preserve"><value>Autre réponse</value></data>
+  <data name="AIC_AskOtherPh" xml:space="preserve"><value>Autre réponse… (facultatif)</value></data>
+  <data name="AIC_AskSend" xml:space="preserve"><value>Envoyer la réponse</value></data>
+  <data name="AIC_AskHint" xml:space="preserve"><value>Choisissez une option, ou saisissez votre réponse ici ou dans la zone de message.</value></data>
+  <data name="AIC_AskMultiHint" xml:space="preserve"><value>Vous pouvez choisir plusieurs options, puis «Envoyer la réponse».</value></data>
+  <data name="AIC_AskAnswered" xml:space="preserve"><value>Votre réponse : {0}</value></data>
+  <data name="AIC_AskSkipped" xml:space="preserve"><value>Vous n'avez pas répondu à cette question.</value></data>
+  <data name="AIC_AskPlaceholder" xml:space="preserve"><value>Saisissez votre réponse à la question de l'assistant…</value></data>
+  <data name="AIC_AskStatus" xml:space="preserve"><value>L'assistant attend votre réponse</value></data>
+  <data name="AIC_AskWaiting" xml:space="preserve"><value>En attente de votre réponse</value></data>
 </root>

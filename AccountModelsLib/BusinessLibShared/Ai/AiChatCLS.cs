@@ -139,6 +139,37 @@ VALUES ({m.Id}, {m.Conversation_Id}, {m.Seq}, {m.Role}, {m.ContentJson}, {m.Mode
             return m;
         }
 
+        // ───────────── P4: السؤال المعلّق (ask_user) ─────────────
+
+        /// <summary>يحفظ حالة الحلقة المتوقفة على رسالة المساعد (رسائل المحادثة الجديدة فقط).</summary>
+        public void SetPending(long messageId, string pendingJson) =>
+            _newOpp().db.Database.ExecuteSqlInterpolated($"UPDATE AI_Messages SET PendingJson = {pendingJson} WHERE Id = {messageId}");
+
+        /// <summary>حالة الحلقة المعلّقة لرسالة فى محادثة يملكها المستخدم؛ null إن لم توجد.</summary>
+        public string GetPending(long messageId, long userId)
+        {
+            var db = _newOpp().db;
+            string json = null;
+            Exec(db, @"SELECT m.PendingJson FROM AI_Messages m JOIN AI_Conversations c ON c.Id = m.Conversation_Id
+                       WHERE m.Id = @m AND c.User_Id = @u AND c.Status = N'Active'",
+                cmd => { Add(cmd, "@m", messageId); Add(cmd, "@u", userId); },
+                r => json = r.IsDBNull(0) ? null : r.GetString(0));
+            return json;
+        }
+
+        /// <summary>
+        /// يُغلق السؤال ذرّياً: يكتب المحتوى الجديد (السؤال مع إجابته) ويمسح الحالة بشرط أنها ما زالت معلّقة،
+        /// فإجابتان متزامنتان لا تستأنفان الحلقة مرتين. يعيد true لمن أغلقه فقط.
+        /// </summary>
+        public bool ClosePending(long messageId, string contentJson, string status, long userId)
+        {
+            int n = _newOpp().db.Database.ExecuteSqlInterpolated($@"
+UPDATE m SET m.ContentJson = {contentJson}, m.Status = {status}, m.PendingJson = NULL
+FROM AI_Messages m JOIN AI_Conversations c ON c.Id = m.Conversation_Id
+WHERE m.Id = {messageId} AND c.User_Id = {userId} AND m.Status = N'awaiting'");
+            return n == 1;
+        }
+
         // ───────────── أدوات ─────────────
 
         private static string Cut(string s, int max) => s == null ? null : (s.Length > max ? s.Substring(0, max) : s);
