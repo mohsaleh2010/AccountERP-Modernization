@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- المساعد الذكى (ai-assistant-plan.md، P0): المزوّدون، اختبار الاتصال، جلب النماذج، وتشفير المفاتيح.
+       يرجع له AccountERP.Web فقط؛ AccountModelsLib وAccountERP.SharedUI لا يحملان حزم LLM (الأول ثنائى الاستهداف والثانى يستخدمه MAUI). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>AccountERP.AI</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AccountModelsLib\AccountModelsLib.csproj" SetTargetFramework="TargetFramework=net10.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Anthropic" Version="13.8.0" />
+  </ItemGroup>
+
+</Project>

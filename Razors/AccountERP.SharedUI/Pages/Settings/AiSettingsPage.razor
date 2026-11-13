@@ -1,0 +1,897 @@
+@* 🤖 المساعد الذكى — P0 (.claude/docs/ai-assistant-plan.md §7.4): إعدادات الذكاء الاصطناعى. تبويب «المزوّدون» (Anthropic/OpenAI/Gemini/Azure/Ollama/LM Studio
+   + مزوّدون مخصصون بالـ API والـ URL) وتبويب «النماذج والمهام». كل العمليات عبر IAiAdminGateway (AccountERP.AI على الويب فقط): المفتاح يُشفَّر على الخادم
+   ولا يعود للمتصفح إلا مقنّعاً. الصلاحية: عنصر القائمة menuItemAiSettings (للمديرين افتراضياً). التصميم حسب ui-ux-pro-max ونظام inv-*. *@
+@page "/settings/ai"
+
+@using System.Globalization
+@using Microsoft.Extensions.DependencyInjection
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@inject LanguageService LangService
+@inject MenuStateService MenuState
+@inject IServiceProvider ServiceProvider
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>@Tr("AI_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .ai-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .ai-head .ico { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+                    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); }
+    .ai-head .ico .mud-icon-root { font-size: 2rem; }
+    .ai-head .titles { flex: 1 1 260px; min-width: 0; }
+    .ai-sub { margin-top: 4px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
+    .ai-gap { margin-top: 16px; }
+    .ai-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .ai-prov { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 14px; border: 1px solid var(--mud-palette-lines-default);
+               background: var(--mud-palette-surface); min-width: 0; }
+    .ai-prov.off { opacity: .7; }
+    .ai-prov.add { border-style: dashed; align-items: flex-start; justify-content: center; background: transparent; }
+    .ai-prov .top { display: flex; align-items: center; gap: 10px; }
+    .ai-prov .top .name { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ai-prov .logo { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
+                     background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent); color: var(--mud-palette-primary); }
+    .ai-kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: .875rem; }
+    .ai-kv dt { color: var(--mud-palette-text-secondary); }
+    .ai-kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; direction: ltr; text-align: start; }
+    .ai-msg { font-size: .8125rem; padding: 8px 10px; border-radius: 10px; background: var(--mud-palette-background-gray); overflow-wrap: anywhere; }
+    .ai-msg.ok { color: var(--mud-palette-success-darken, var(--mud-palette-success)); }
+    .ai-msg.bad { color: var(--mud-palette-error); }
+    .ai-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+    .ai-actions .mud-button-root, .ai-head .mud-button-root, .ai-form-actions .mud-button-root { min-height: 44px; }
+    .ai-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px 16px; align-items: start; }
+    .ai-form .wide { grid-column: 1 / -1; }
+    .ai-form-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .ai-ltr input, .ai-ltr textarea { direction: ltr; text-align: left; }
+    .ai-num { max-width: 150px; }
+    .ai-task { padding: 12px 0; border-bottom: 1px solid var(--mud-palette-lines-default); }
+    .ai-task:last-child { border-bottom: 0; }
+    .ai-task-row { display: grid; grid-template-columns: 40px minmax(220px, 2fr) minmax(130px, 1fr) minmax(120px, 1fr) minmax(110px, 1fr) 48px; gap: 8px 12px; align-items: center; margin-top: 8px; }
+    .ai-task-row .prio { font-weight: 600; color: var(--mud-palette-text-secondary); text-align: center; }
+    @@media (max-width: 760px) { .ai-task-row { grid-template-columns: 1fr 1fr; } .ai-task-row .prio { text-align: start; } }
+    .ai-method { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 14px; border-radius: 12px; margin-bottom: 16px;
+                 background: color-mix(in srgb, var(--mud-palette-primary) 6%, transparent); }
+    .ai-method .lbl { font-weight: 600; }
+    .ai-steps { margin: 0 0 12px; padding-inline-start: 20px; line-height: 1.9; }
+    .ai-signin-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; }
+    .ai-signin-row .mud-input-control { flex: 1 1 280px; }
+    .ai-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-card">
+        <div class="ai-head">
+            <div class="ico" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.AutoAwesome" /></div>
+            <div class="titles">
+                <h1 class="inv-title">@Tr("AI_Title")</h1>
+                <div class="ai-sub">@Tr("AI_Sub")</div>
+            </div>
+            @if (CanEdit && _gw != null)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" Disabled="_busy" OnClick="LoadAsync">@Tr("AI_Reload")</MudButton>
+            }
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_error)) { <MudAlert Severity="Severity.Warning" Class="ai-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert> }
+
+    @if (!CanEdit)
+    {
+        <div class="inv-card ai-gap"><div class="ai-empty"><MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" />@Tr("AI_NoAccess")</div></div>
+    }
+    else if (_gw == null)
+    {
+        <div class="inv-card ai-gap"><div class="ai-empty"><MudIcon Icon="@Icons.Material.Filled.CloudOff" Size="Size.Large" />@Tr("AI_NotAvailable")</div></div>
+    }
+    else
+    {
+        <MudTabs @bind-ActivePanelIndex="_tab" Elevation="0" Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pt-4" Class="ai-gap">
+            @* ───────────── تبويب المزوّدين ───────────── *@
+            <MudTabPanel Text="@Tr("AI_TabProviders")" Icon="@Icons.Material.Filled.Hub">
+                @if (_edit != null)
+                {
+                    <section class="inv-card" aria-labelledby="ai-edit-h">
+                        <h2 class="inv-card-title" id="ai-edit-h"><MudIcon Icon="@Icons.Material.Filled.EditNote" />@(_edit.Id == 0 ? Tr("AI_AddProvider") : Tr("AI_EditProvider")): @TypeName(_edit.ProviderType)</h2>
+                        @if (AiProviderTypes.SupportsSignIn(_edit.ProviderType))
+                        {
+                            <div class="ai-method" role="group" aria-label="@Tr("AI_Method")">
+                                <span class="lbl">@Tr("AI_Method")</span>
+                                <MudRadioGroup T="string" @bind-Value="_editMethod">
+                                    <MudRadio T="string" Value="@AiAuthMethods.SignIn" Color="Color.Primary">@Tr("AI_MethodSignIn")</MudRadio>
+                                    <MudRadio T="string" Value="@AiAuthMethods.ApiKey" Color="Color.Primary">@Tr("AI_MethodKey")</MudRadio>
+                                </MudRadioGroup>
+                            </div>
+                        }
+                        else if (AiProviderTypes.KeysPageUrl(_edit.ProviderType) is { Length: > 0 } keysUrl)
+                        {
+                            <div class="ai-method">
+                                <span class="ai-sub" style="margin: 0; flex: 1 1 260px;">@Tr("AI_AssistedNote")</span>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew" Href="@keysUrl" Target="_blank" Rel="noopener noreferrer">@Tr("AI_OpenKeysPage")</MudButton>
+                            </div>
+                        }
+                        <div class="ai-form">
+                            <MudTextField @bind-Value="_edit.DisplayName" Label="@Tr("AI_FName")" Variant="Variant.Outlined" Required="true" MaxLength="200" />
+                            <MudTextField @bind-Value="_edit.BaseUrl" Label="@Tr("AI_FUrl")" Variant="Variant.Outlined" Class="ai-ltr" MaxLength="500"
+                                          Placeholder="@(DefaultUrl(_edit.ProviderType) is { Length: > 0 } d ? d : "https://api.example.com/v1")"
+                                          HelperText="@(_edit.ProviderType == AiProviderTypes.Azure ? "https://<resource>.openai.azure.com" : Tr("AI_FUrlHelp"))" />
+                            @if (!EditUsesSignIn)
+                            {
+                                <MudTextField @bind-Value="_edit.ApiKey" Label="@Tr("AI_FKey")" Variant="Variant.Outlined" Class="ai-ltr"
+                                              InputType="@(_showKey ? InputType.Text : InputType.Password)" autocomplete="new-password"
+                                              Adornment="Adornment.End" AdornmentIcon="@(_showKey ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                                              OnAdornmentClick="@(() => _showKey = !_showKey)" AdornmentAriaLabel="@Tr("AI_ShowHideKey")"
+                                              HelperText="@KeyHelp()" />
+                            }
+                            @if (_edit.ProviderType == AiProviderTypes.Azure)
+                            {
+                                <MudTextField @bind-Value="_edit.AzureDeployment" Label="@Tr("AI_FDeployment")" Variant="Variant.Outlined" Class="ai-ltr" />
+                                <MudTextField @bind-Value="_edit.AzureApiVersion" Label="@Tr("AI_FApiVersion")" Variant="Variant.Outlined" Class="ai-ltr" Placeholder="2024-10-21" />
+                            }
+                            @if (_edit.ProviderType == AiProviderTypes.Custom)
+                            {
+                                <MudSelect T="string" @bind-Value="_edit.ApiProtocol" Label="@Tr("AI_FProtocol")" Variant="Variant.Outlined" HelperText="@Tr("AI_FProtocolHelp")">
+                                    <MudSelectItem Value="@AiApiProtocols.OpenAI">OpenAI-compatible (/chat/completions)</MudSelectItem>
+                                    <MudSelectItem Value="@AiApiProtocols.Anthropic">Anthropic-compatible (/v1/messages)</MudSelectItem>
+                                    <MudSelectItem Value="@AiApiProtocols.Gemini">Gemini-compatible</MudSelectItem>
+                                </MudSelect>
+                                <MudTextField @bind-Value="_edit.AuthHeaderName" Label="@Tr("AI_FAuthHeader")" Variant="Variant.Outlined" Class="ai-ltr" Placeholder="Authorization: Bearer" HelperText="@Tr("AI_FAuthHeaderHelp")" MaxLength="100" />
+                                <MudTextField @bind-Value="_edit.ExtraHeaders" Label="@Tr("AI_FHeaders")" Variant="Variant.Outlined" Class="ai-ltr wide" Lines="3"
+                                              InputType="InputType.Text" HelperText="@(_editHasHeaders ? Tr("AI_FHeadersKeep") : Tr("AI_FHeadersHelp"))" />
+                                @if (_editHasHeaders)
+                                {
+                                    <MudCheckBox T="bool" @bind-Value="_edit.ClearExtraHeaders" Label="@Tr("AI_FClearHeaders")" Color="Color.Error" />
+                                }
+                            }
+                            <MudNumericField T="int" @bind-Value="_edit.TimeoutSeconds" Label="@Tr("AI_FTimeout")" Variant="Variant.Outlined" Min="5" Max="600" Class="ai-num" Culture="CultureInfo.InvariantCulture" />
+                            <MudSwitch T="bool" @bind-Value="_edit.IsEnabled" Label="@Tr("AI_FEnabled")" Color="Color.Primary" />
+                            @if (_editHasKey && !EditUsesSignIn)
+                            {
+                                <MudCheckBox T="bool" @bind-Value="_edit.ClearKey" Label="@Tr("AI_FClearKey")" Color="Color.Error" />
+                            }
+                        </div>
+                        <div class="mud-typography mud-typography-caption mt-2">@Tr("AI_SecurityNote")</div>
+                        <div class="ai-form-actions">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@(EditUsesSignIn ? Icons.Material.Filled.Login : Icons.Material.Filled.Save)" Disabled="_busy" OnClick="SaveProviderAsync">@(EditUsesSignIn ? Tr("AI_SaveAndSignIn") : Tr("Save"))</MudButton>
+                            <MudButton Variant="Variant.Text" Disabled="_busy" OnClick="@(() => _edit = null)">@Tr("AI_Cancel")</MudButton>
+                        </div>
+                    </section>
+                }
+
+                @if (_signIn != null)
+                {
+                    <section class="inv-card ai-gap" aria-labelledby="ai-signin-h" aria-live="polite">
+                        <h2 class="inv-card-title" id="ai-signin-h"><MudIcon Icon="@Icons.Material.Filled.Login" />@Tr("AI_SignInTitle", _signInProviderName)</h2>
+                        @if (_signInStatus?.State is "failed" or "expired")
+                        {
+                            <MudAlert Severity="Severity.Error" Class="mb-3">@_signInStatus.Message</MudAlert>
+                            <div class="ai-form-actions">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" Disabled="_busy" OnClick="@(() => StartSignInAsync(_signInProviderId, _signInProviderName))">@Tr("AI_SignInRetry")</MudButton>
+                                <MudButton Variant="Variant.Text" OnClick="CloseSignIn">@Tr("AI_Close")</MudButton>
+                            </div>
+                        }
+                        else
+                        {
+                            <ol class="ai-steps">
+                                <li>@Tr("AI_SignInStep1")</li>
+                                <li>@Tr("AI_SignInStep2")</li>
+                                <li>@(_signIn.Mode == "callback" ? Tr("AI_SignInStep3Callback") : Tr("AI_SignInStep3Code"))</li>
+                            </ol>
+                            <div class="ai-form-actions" style="margin-top: 0;">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew" Href="@_signIn.AuthorizeUrl" Target="_blank" Rel="noopener noreferrer">@Tr("AI_OpenSignInPage", _signInProviderName)</MudButton>
+                                <MudButton Variant="Variant.Text" OnClick="CloseSignIn">@Tr("AI_Cancel")</MudButton>
+                            </div>
+                            @if (_signIn.Mode == "callback")
+                            {
+                                <div class="ai-sub mt-3" style="display: flex; align-items: center; gap: 8px;"><MudProgressCircular Size="Size.Small" Indeterminate="true" />@Tr("AI_SignInWaiting")</div>
+                            }
+                            <div class="ai-signin-row mt-3">
+                                <MudTextField @bind-Value="_signInCode" Label="@Tr("AI_SignInCode")" Variant="Variant.Outlined" Class="ai-ltr" autocomplete="off" Immediate="true"
+                                              HelperText="@(_signIn.Mode == "callback" ? Tr("AI_SignInCodeFallback") : Tr("AI_SignInCodeHelp"))" />
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Link" Style="min-height: 56px;" Disabled="@(_busy || string.IsNullOrWhiteSpace(_signInCode))" OnClick="CompleteWithCodeAsync">@Tr("AI_SignInComplete")</MudButton>
+                            </div>
+                            <div class="mud-typography mud-typography-caption mt-2">@Tr("AI_SignInExpires")</div>
+                        }
+                    </section>
+                }
+
+                @if (_fetched != null)
+                {
+                    <section class="inv-card ai-gap" aria-labelledby="ai-fetch-h">
+                        <h2 class="inv-card-title" id="ai-fetch-h"><MudIcon Icon="@Icons.Material.Filled.CloudDownload" />@Tr("AI_FetchedTitle", _fetchedProviderName)<span class="inv-count">@_fetched.Count</span></h2>
+                        <MudTextField @bind-Value="_fetchFilter" Label="@Tr("AI_Search")" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" Class="mb-3" Clearable="true" />
+                        <MudTable Items="@FilteredFetched" T="AiRemoteModel" Hover="true" Elevation="0" Class="inv-table" Dense="true" Breakpoint="Breakpoint.Sm"
+                                  MultiSelection="true" @bind-SelectedItems="_fetchSelected" FixedHeader="true" Height="360px">
+                            <HeaderContent>
+                                <MudTh>@Tr("AI_ColModelId")</MudTh>
+                                <MudTh>@Tr("AI_ColDisplay")</MudTh>
+                                <MudTh>@Tr("AI_ColContext")</MudTh>
+                                <MudTh>@Tr("AI_ColStatus")</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="@Tr("AI_ColModelId")"><span dir="ltr">@context.ModelId</span></MudTd>
+                                <MudTd DataLabel="@Tr("AI_ColDisplay")">@context.DisplayName</MudTd>
+                                <MudTd DataLabel="@Tr("AI_ColContext")">@(context.ContextTokens?.ToString("N0") ?? "—")</MudTd>
+                                <MudTd DataLabel="@Tr("AI_ColStatus")">
+                                    @if (IsAdded(_fetchedProviderId, context.ModelId)) { <span class="inv-chip success">@Tr("AI_Added")</span> }
+                                </MudTd>
+                            </RowTemplate>
+                            <NoRecordsContent><div class="ai-empty">@Tr("AI_NoFetched")</div></NoRecordsContent>
+                        </MudTable>
+                        <div class="ai-form-actions">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlaylistAdd" Disabled="@(_busy || _fetchSelected.Count == 0)" OnClick="AddFetchedAsync">@Tr("AI_AddSelected", _fetchSelected.Count)</MudButton>
+                            <MudButton Variant="Variant.Text" OnClick="@(() => { _fetched = null; _fetchSelected = new(); })">@Tr("AI_Close")</MudButton>
+                        </div>
+                    </section>
+                }
+
+                <div class="ai-grid ai-gap">
+                    @foreach (var p in _providers)
+                    {
+                        <article class="ai-prov @(p.IsEnabled ? "" : "off")" aria-label="@p.DisplayName">
+                            <div class="top">
+                                <div class="logo" aria-hidden="true"><MudIcon Icon="@TypeIcon(p.ProviderType)" /></div>
+                                <div class="name" title="@p.DisplayName">@p.DisplayName</div>
+                                @if (!p.IsEnabled) { <span class="inv-chip">@Tr("AI_Disabled")</span> }
+                                else if (p.LastTestOk == true) { <span class="inv-chip success">@Tr("AI_Connected")</span> }
+                                else if (p.LastTestOk == false) { <span class="inv-chip warn">@Tr("AI_Failed")</span> }
+                                else { <span class="inv-chip">@Tr("AI_NotTested")</span> }
+                            </div>
+                            <dl class="ai-kv">
+                                <dt>@Tr("AI_KType")</dt><dd style="direction: inherit">@TypeName(p.ProviderType)@(p.IsCustom ? " · " + p.ApiProtocol : "")</dd>
+                                <dt>URL</dt><dd>@p.BaseUrl</dd>
+                                <dt>@Tr("AI_KKey")</dt><dd>@(p.HasKey ? p.MaskedKey : Tr("AI_NoKey"))</dd>
+                                @if (p.AuthMethod == AiAuthMethods.SignIn && p.HasKey)
+                                {
+                                    <dt>@Tr("AI_KMethod")</dt><dd style="direction: inherit"><span class="inv-chip primary">@Tr("AI_SignedIn")</span> @p.SignInAt?.ToString("yyyy-MM-dd HH:mm")</dd>
+                                }
+                                <dt>@Tr("AI_KModels")</dt><dd>@p.ModelCount</dd>
+                                <dt>@Tr("AI_KScope")</dt><dd style="direction: inherit">@(p.IsLocal ? Tr("AI_Local") : Tr("AI_Cloud"))</dd>
+                            </dl>
+                            @if (!string.IsNullOrEmpty(p.LastTestMessage))
+                            {
+                                <div class="ai-msg @(p.LastTestOk == true ? "ok" : "bad")" role="status">@p.LastTestMessage</div>
+                            }
+                            <div class="ai-actions">
+                                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.NetworkCheck" Disabled="@(_busy || !p.IsEnabled)" OnClick="@(() => TestAsync(p))">
+                                    @(_testingId == p.Id ? Tr("AI_Testing") : Tr("AI_Test"))
+                                </MudButton>
+                                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudDownload" Disabled="@(_busy || !p.IsEnabled)" OnClick="@(() => FetchAsync(p))">@Tr("AI_Fetch")</MudButton>
+                                @if (AiProviderTypes.SupportsSignIn(p.ProviderType))
+                                {
+                                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login" Disabled="@(_busy || !p.IsEnabled)" OnClick="@(() => StartSignInAsync(p.Id, p.DisplayName))">@(p.HasKey ? Tr("AI_SignInAgain") : Tr("AI_SignIn"))</MudButton>
+                                }
+                                @if (p.HasKey && p.AuthMethod == AiAuthMethods.SignIn)
+                                {
+                                    <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.LinkOff" Disabled="_busy" OnClick="@(() => DisconnectAsync(p))">@Tr("AI_Disconnect")</MudButton>
+                                }
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="@Tr("AI_EditProvider")" Disabled="_busy" OnClick="@(() => BeginEdit(p))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Color="Color.Error" aria-label="@Tr("AI_Delete")" Disabled="_busy" OnClick="@(() => DeleteProviderAsync(p))" />
+                            </div>
+                        </article>
+                    }
+                    @foreach (var t in AiProviderTypes.BuiltIn.Where(t => !_providers.Any(p => p.ProviderType == t)))
+                    {
+                        <article class="ai-prov add">
+                            <div class="top"><div class="logo" aria-hidden="true"><MudIcon Icon="@TypeIcon(t)" /></div><div class="name">@TypeName(t)</div></div>
+                            <div class="ai-sub">@Tr("AI_TypeDesc_" + t)</div>
+                            @if (AiProviderTypes.SupportsSignIn(t))
+                            {
+                                <div class="ai-actions">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login" Disabled="_busy" OnClick="@(() => AddAndSignInAsync(t))">@Tr("AI_SignInWith", TypeName(t))</MudButton>
+                                    <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Key" Disabled="_busy" OnClick="@(() => BeginAdd(t, AiAuthMethods.ApiKey))">@Tr("AI_MethodKey")</MudButton>
+                                </div>
+                            }
+                            else
+                            {
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_busy" OnClick="@(() => BeginAdd(t))">@Tr("AI_Connect")</MudButton>
+                            }
+                        </article>
+                    }
+                    <article class="ai-prov add">
+                        <div class="top"><div class="logo" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Link" /></div><div class="name">@Tr("AI_CustomTitle")</div></div>
+                        <div class="ai-sub">@Tr("AI_CustomDesc")</div>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_busy" OnClick="@(() => BeginAdd(AiProviderTypes.Custom))">@Tr("AI_AddCustom")</MudButton>
+                    </article>
+                </div>
+            </MudTabPanel>
+
+            @* ───────────── تبويب النماذج والمهام ───────────── *@
+            <MudTabPanel Text="@Tr("AI_TabModels")" Icon="@Icons.Material.Filled.Memory">
+                <section class="inv-card" aria-labelledby="ai-models-h">
+                    <h2 class="inv-card-title" id="ai-models-h"><MudIcon Icon="@Icons.Material.Filled.Memory" />@Tr("AI_ModelsTitle")<span class="inv-count">@_models.Count</span></h2>
+                    <div class="ai-form">
+                        <MudSelect T="long" @bind-Value="_newModel.Provider_Id" Label="@Tr("AI_ColProvider")" Variant="Variant.Outlined">
+                            @foreach (var p in _providers) { <MudSelectItem Value="@p.Id">@p.DisplayName</MudSelectItem> }
+                        </MudSelect>
+                        <MudTextField @bind-Value="_newModel.ModelId" Label="@Tr("AI_ColModelId")" Variant="Variant.Outlined" Class="ai-ltr" Placeholder="claude-opus-5-5" MaxLength="200" />
+                        <MudTextField @bind-Value="_newModel.DisplayName" Label="@Tr("AI_ColDisplay")" Variant="Variant.Outlined" MaxLength="200" />
+                        <div class="ai-form-actions" style="margin-top: 4px;">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="@(_busy || _newModel.Provider_Id == 0 || string.IsNullOrWhiteSpace(_newModel.ModelId))" OnClick="AddManualModelAsync">@Tr("AI_AddModel")</MudButton>
+                        </div>
+                    </div>
+                    <div class="mud-typography mud-typography-caption mt-2 mb-3">@Tr("AI_ModelsHelp")</div>
+
+                    <MudTable Items="@_models" T="AiModelRow" Hover="true" Elevation="0" Class="inv-table" Dense="true" Breakpoint="Breakpoint.Md" Loading="_loading" LoadingProgressColor="Color.Primary">
+                        <HeaderContent>
+                            <MudTh>@Tr("AI_ColProvider")</MudTh>
+                            <MudTh>@Tr("AI_ColModelId")</MudTh>
+                            <MudTh>@Tr("AI_ColCaps")</MudTh>
+                            <MudTh>@Tr("AI_ColContext")</MudTh>
+                            <MudTh>@Tr("AI_ColPriceIn")</MudTh>
+                            <MudTh>@Tr("AI_ColPriceOut")</MudTh>
+                            <MudTh>@Tr("AI_FEnabled")</MudTh>
+                            <MudTh></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="@Tr("AI_ColProvider")">@context.ProviderName</MudTd>
+                            <MudTd DataLabel="@Tr("AI_ColModelId")"><div dir="ltr" style="text-align: start">@context.ModelId</div><div class="ai-sub">@context.DisplayName</div></MudTd>
+                            <MudTd DataLabel="@Tr("AI_ColCaps")">
+                                <div class="inv-badges">
+                                    <MudCheckBox T="bool" @bind-Value="context.SupportsTools" Label="@Tr("AI_CapTools")" Dense="true" />
+                                    <MudCheckBox T="bool" @bind-Value="context.SupportsVision" Label="@Tr("AI_CapVision")" Dense="true" />
+                                    <MudCheckBox T="bool" @bind-Value="context.SupportsTemperature" Label="@Tr("AI_CapTemp")" Dense="true" />
+                                    <MudCheckBox T="bool" @bind-Value="context.SupportsEmbeddings" Label="@Tr("AI_CapEmbed")" Dense="true" />
+                                </div>
+                            </MudTd>
+                            <MudTd DataLabel="@Tr("AI_ColContext")"><MudNumericField T="int?" @bind-Value="context.ContextTokens" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" HideSpinButtons="true" Class="ai-num" Culture="CultureInfo.InvariantCulture" aria-label="@Tr("AI_ColContext")" /></MudTd>
+                            <MudTd DataLabel="@Tr("AI_ColPriceIn")"><MudNumericField T="decimal?" @bind-Value="context.InputPricePerM" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" HideSpinButtons="true" Class="ai-num" Adornment="Adornment.Start" AdornmentText="$" Culture="CultureInfo.InvariantCulture" aria-label="@Tr("AI_ColPriceIn")" /></MudTd>
+                            <MudTd DataLabel="@Tr("AI_ColPriceOut")"><MudNumericField T="decimal?" @bind-Value="context.OutputPricePerM" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" HideSpinButtons="true" Class="ai-num" Adornment="Adornment.Start" AdornmentText="$" Culture="CultureInfo.InvariantCulture" aria-label="@Tr("AI_ColPriceOut")" /></MudTd>
+                            <MudTd DataLabel="@Tr("AI_FEnabled")"><MudSwitch T="bool" @bind-Value="context.IsEnabled" Color="Color.Primary" aria-label="@Tr("AI_FEnabled")" /></MudTd>
+                            <MudTd>
+                                <div class="inv-badges">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Save" Color="Color.Primary" aria-label="@Tr("Save")" Disabled="_busy" OnClick="@(() => SaveModelAsync(context))" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Color="Color.Error" aria-label="@Tr("AI_Delete")" Disabled="_busy" OnClick="@(() => DeleteModelAsync(context))" />
+                                </div>
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent><div class="ai-empty"><MudIcon Icon="@Icons.Material.Filled.Memory" Size="Size.Large" />@Tr("AI_NoModels")</div></NoRecordsContent>
+                    </MudTable>
+                </section>
+
+                <section class="inv-card ai-gap" aria-labelledby="ai-route-h">
+                    <div class="inv-card-head" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; justify-content: space-between;">
+                        <h2 class="inv-card-title" id="ai-route-h"><MudIcon Icon="@Icons.Material.Filled.AltRoute" />@Tr("AI_RoutingTitle")</h2>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="_busy" OnClick="SaveRoutingAsync">@Tr("AI_SaveRouting")</MudButton>
+                    </div>
+                    <div class="ai-sub mb-2">@Tr("AI_RoutingHelp")</div>
+                    @foreach (var task in AiTaskKeys.All)
+                    {
+                        var rows = _routing.Where(r => r.TaskKey == task).OrderBy(r => r.Priority).ToList();
+                        <div class="ai-task">
+                            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                                <strong>@Tr("AI_Task_" + task)</strong>
+                                <span class="ai-sub" style="margin: 0;">@Tr("AI_TaskDesc_" + task)</span>
+                                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="@(_busy || _models.Count == 0)" OnClick="@(() => AddRoute(task))">
+                                    @(rows.Count == 0 ? Tr("AI_AddPrimary") : Tr("AI_AddFallback"))
+                                </MudButton>
+                            </div>
+                            @foreach (var r in rows)
+                            {
+                                var model = _models.FirstOrDefault(m => m.Id == r.Model_Id);
+                                <div class="ai-task-row">
+                                    <span class="prio" title="@Tr("AI_Priority")">#@r.Priority</span>
+                                    <MudSelect T="long" @bind-Value="r.Model_Id" Label="@Tr("AI_ColModel")" Variant="Variant.Outlined" Margin="Margin.Dense">
+                                        @foreach (var m in _models.Where(m => m.IsEnabled || m.Id == r.Model_Id))
+                                        {
+                                            <MudSelectItem Value="@m.Id">@($"{m.ProviderName} · {m.ModelId}")</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                    <MudSelect T="string" @bind-Value="r.Effort" Label="@Tr("AI_Effort")" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                                        @foreach (var e in Efforts) { <MudSelectItem Value="@e">@e</MudSelectItem> }
+                                    </MudSelect>
+                                    <MudNumericField T="int?" @bind-Value="r.MaxTokens" Label="@Tr("AI_MaxTokens")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="1" Max="128000" HideSpinButtons="true" Culture="CultureInfo.InvariantCulture" />
+                                    @if (model?.SupportsTemperature == true)
+                                    {
+                                        <MudNumericField T="decimal?" @bind-Value="r.Temperature" Label="@Tr("AI_Temperature")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Max="2" Step="0.1m" HideSpinButtons="true" Culture="CultureInfo.InvariantCulture" />
+                                    }
+                                    else
+                                    {
+                                        <span class="ai-sub" style="margin: 0;" title="@Tr("AI_NoTempHelp")">@Tr("AI_NoTemp")</span>
+                                    }
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close" aria-label="@Tr("AI_Delete")" Disabled="_busy" OnClick="@(() => RemoveRoute(r))" />
+                                </div>
+                            }
+                        </div>
+                    }
+                </section>
+            </MudTabPanel>
+        </MudTabs>
+    }
+</div>
+</MudContainer>
+
+@code {
+    private const string MenuKey = "menuItemAiSettings";
+    private static readonly string[] Efforts = { "low", "medium", "high", "xhigh", "max" };
+
+    private IAiAdminGateway? _gw;
+    private long _userId;
+    private int _tab;
+    private List<AiProviderView> _providers = new();
+    private List<AiModelRow> _models = new();
+    private List<AiTaskRoutingRow> _routing = new();
+    private AiProviderSaveRequest? _edit;
+    private bool _editHasKey, _editHasHeaders, _showKey;
+    private string _editMaskedKey = "";
+    private List<AiRemoteModel>? _fetched;
+    private HashSet<AiRemoteModel> _fetchSelected = new();
+    private long _fetchedProviderId;
+    private string _fetchedProviderName = "";
+    private string? _fetchFilter;
+    private AiModelRow _newModel = new();
+    private string? _error;
+    // P0.1: الربط بتسجيل الدخول لدى المزوّد
+    private string _editMethod = AiAuthMethods.ApiKey;
+    private bool EditUsesSignIn => _edit != null && AiProviderTypes.SupportsSignIn(_edit.ProviderType) && _editMethod == AiAuthMethods.SignIn;
+    private AiSignInStart? _signIn;
+    private AiSignInStatus? _signInStatus;
+    private long _signInProviderId;
+    private string _signInProviderName = "";
+    private string? _signInCode;
+    private CancellationTokenSource? _pollCts;
+    private bool _loading, _busy;
+    private long _testingId;
+
+    private bool CanEdit => (MenuState.UserAllowedMenus ?? new()).Any(m => string.Equals((m.KeysData ?? "").Trim(), MenuKey, StringComparison.OrdinalIgnoreCase));
+
+    private IEnumerable<AiRemoteModel> FilteredFetched => string.IsNullOrWhiteSpace(_fetchFilter) || _fetched == null
+        ? (_fetched ?? new())
+        : _fetched.Where(m => m.ModelId.Contains(_fetchFilter, StringComparison.OrdinalIgnoreCase) || m.DisplayName.Contains(_fetchFilter, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        _gw = ServiceProvider.GetService<IAiAdminGateway>();
+        _userId = ServiceProvider.GetService<UserSession>()?.User_Id ?? 0;
+        LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        MenuState.OnAuthChanged += OnAuthChanged;
+        await LoadAsync();
+    }
+
+    private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
+    private void OnAuthChanged() => InvokeAsync(async () => { await LoadAsync(); StateHasChanged(); });
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+        MenuState.OnAuthChanged -= OnAuthChanged;
+        _pollCts?.Cancel();
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    private Task<T> Bg<T>(Func<T> f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return f(); });
+    private Task Bg(Action f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); f(); });
+
+    private static string Err(Exception ex) => ex is InvalidOperationException ? ex.Message : (ex.InnerException?.Message ?? ex.Message);
+
+    private async Task LoadAsync()
+    {
+        if (!CanEdit || _gw == null) return;
+        _loading = true;
+        try
+        {
+            var gw = _gw;
+            (_providers, _models, _routing) = await Bg(() => (gw.GetProviders(), gw.GetModels(), gw.GetRouting()));
+            if (_newModel.Provider_Id == 0 || _providers.All(p => p.Id != _newModel.Provider_Id))
+                _newModel.Provider_Id = _providers.FirstOrDefault()?.Id ?? 0;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Err(ex)); }
+        finally { _loading = false; }
+    }
+
+    // ───────────── المزوّدون ─────────────
+
+    private static string DefaultUrl(string type) => type switch
+    {
+        AiProviderTypes.Anthropic => "https://api.anthropic.com",
+        AiProviderTypes.OpenAI => "https://api.openai.com/v1",
+        AiProviderTypes.Gemini => "https://generativelanguage.googleapis.com/v1beta",
+        AiProviderTypes.Ollama => "http://localhost:11434",
+        AiProviderTypes.LmStudio => "http://localhost:1234/v1",
+        AiProviderTypes.OpenRouter => "https://openrouter.ai/api/v1",
+        _ => "",
+    };
+
+    private string TypeName(string type) => Tr("AI_Type_" + type);
+
+    private static string TypeIcon(string type) => type switch
+    {
+        AiProviderTypes.Anthropic => Icons.Material.Filled.AutoAwesome,
+        AiProviderTypes.OpenAI => Icons.Material.Filled.Psychology,
+        AiProviderTypes.Gemini => Icons.Material.Filled.Diamond,
+        AiProviderTypes.Azure => Icons.Material.Filled.Cloud,
+        AiProviderTypes.Ollama => Icons.Material.Filled.Computer,
+        AiProviderTypes.LmStudio => Icons.Material.Filled.DesktopWindows,
+        AiProviderTypes.OpenRouter => Icons.Material.Filled.Hub,
+        _ => Icons.Material.Filled.Link,
+    };
+
+    private string KeyHelp()
+    {
+        if (_editHasKey) return Tr("AI_FKeyKeep", _editMaskedKey);
+        return _edit?.ProviderType is AiProviderTypes.Ollama or AiProviderTypes.LmStudio or AiProviderTypes.Custom ? Tr("AI_FKeyOptional") : Tr("AI_FKeyHelp");
+    }
+
+    private void BeginAdd(string type, string? method = null)
+    {
+        _fetched = null;
+        CloseSignIn();
+        _editMethod = method ?? (AiProviderTypes.SupportsSignIn(type) ? AiAuthMethods.SignIn : AiAuthMethods.ApiKey);
+        _edit = new AiProviderSaveRequest
+        {
+            ProviderType = type,
+            DisplayName = type == AiProviderTypes.Custom ? "" : TypeName(type),
+            BaseUrl = DefaultUrl(type),
+            ApiProtocol = AiApiProtocols.OpenAI,
+            TimeoutSeconds = type is AiProviderTypes.Ollama or AiProviderTypes.LmStudio ? 120 : 60,
+            AzureApiVersion = type == AiProviderTypes.Azure ? "2024-10-21" : "",
+        };
+        _editHasKey = _editHasHeaders = _showKey = false;
+        _editMaskedKey = "";
+    }
+
+    private void BeginEdit(AiProviderView p)
+    {
+        _fetched = null;
+        CloseSignIn();
+        _editMethod = AiProviderTypes.SupportsSignIn(p.ProviderType) && p.AuthMethod == AiAuthMethods.SignIn ? AiAuthMethods.SignIn : AiAuthMethods.ApiKey;
+        _edit = new AiProviderSaveRequest
+        {
+            Id = p.Id,
+            ProviderType = p.ProviderType,
+            DisplayName = p.DisplayName,
+            BaseUrl = p.BaseUrl,
+            ApiProtocol = p.ApiProtocol,
+            AuthHeaderName = p.AuthHeaderName,
+            AzureDeployment = p.AzureDeployment,
+            AzureApiVersion = p.AzureApiVersion,
+            TimeoutSeconds = p.TimeoutSeconds,
+            IsEnabled = p.IsEnabled,
+        };
+        _editHasKey = p.HasKey;
+        _editMaskedKey = p.MaskedKey;
+        _editHasHeaders = p.HasExtraHeaders;
+        _showKey = false;
+    }
+
+    private async Task SaveProviderAsync()
+    {
+        if (_edit == null || _gw == null) return;
+        _error = null;
+        _busy = true;
+        var req = _edit;
+        bool signIn = EditUsesSignIn;
+        if (signIn) { req.ApiKey = null; req.ClearKey = false; }
+        try
+        {
+            var gw = _gw; long uid = _userId;
+            long id = await Bg(() => gw.SaveProvider(req, uid));
+            _edit = null;
+            Snackbar.Add(Tr("AI_Saved"), Severity.Success);
+            await LoadAsync();
+            // اختبار تلقائى بعد الحفظ حتى يرى المدير النتيجة مباشرة.
+            var saved = _providers.FirstOrDefault(p => p.Id == id);
+            if (signIn && saved != null) { _busy = false; await StartSignInAsync(saved.Id, saved.DisplayName); }
+            else if (saved is { IsEnabled: true } && (saved.HasKey || saved.IsLocal)) await TestAsync(saved);
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task TestAsync(AiProviderView p)
+    {
+        if (_gw == null) return;
+        _busy = true;
+        _testingId = p.Id;
+        StateHasChanged();
+        try
+        {
+            var gw = _gw;
+            var result = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return gw.TestConnectionAsync(p.Id); });
+            Snackbar.Add(result.Message, result.Ok ? Severity.Success : Severity.Error);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = false; _testingId = 0; }
+    }
+
+    private async Task FetchAsync(AiProviderView p)
+    {
+        if (_gw == null) return;
+        _error = null;
+        _busy = true;
+        try
+        {
+            var gw = _gw;
+            var list = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return gw.FetchModelsAsync(p.Id); });
+            _edit = null;
+            _fetched = list;
+            _fetchSelected = new();
+            _fetchFilter = null;
+            _fetchedProviderId = p.Id;
+            _fetchedProviderName = p.DisplayName;
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = false; }
+    }
+
+    private bool IsAdded(long providerId, string modelId) => _models.Any(m => m.Provider_Id == providerId && string.Equals(m.ModelId, modelId, StringComparison.OrdinalIgnoreCase));
+
+    private async Task AddFetchedAsync()
+    {
+        if (_gw == null) return;
+        _busy = true;
+        int added = 0;
+        try
+        {
+            var gw = _gw; long uid = _userId, pid = _fetchedProviderId;
+            var toAdd = _fetchSelected.Where(m => !IsAdded(pid, m.ModelId)).ToList();
+            await Bg(() =>
+            {
+                foreach (var m in toAdd)
+                {
+                    gw.SaveModel(new AiModelRow
+                    {
+                        Provider_Id = pid,
+                        ModelId = m.ModelId,
+                        DisplayName = m.DisplayName,
+                        ContextTokens = m.ContextTokens,
+                        SupportsVision = m.SupportsVision == true,
+                        SupportsEmbeddings = m.SupportsEmbeddings == true,
+                        SupportsTools = m.SupportsEmbeddings != true,
+                    }, uid);
+                    added++;
+                }
+            });
+            Snackbar.Add(Tr("AI_ModelsAdded", added), Severity.Success);
+            _fetchSelected = new();
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Err(ex); await LoadAsync(); }
+        finally { _busy = false; }
+    }
+
+    private async Task DeleteProviderAsync(AiProviderView p)
+    {
+        if (_gw == null) return;
+        bool? ok = await DialogService.ShowMessageBoxAsync(Tr("AI_Delete"), Tr("AI_ConfirmDeleteProvider", p.DisplayName, p.ModelCount), yesText: Tr("AI_Delete"), cancelText: Tr("AI_Cancel"));
+        if (ok != true) return;
+        _busy = true;
+        try
+        {
+            var gw = _gw;
+            await Bg(() => gw.DeleteProvider(p.Id));
+            if (_fetchedProviderId == p.Id) _fetched = null;
+            Snackbar.Add(Tr("AI_Deleted"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = false; }
+    }
+
+    // ───────────── النماذج ─────────────
+
+    private async Task AddManualModelAsync()
+    {
+        if (_gw == null) return;
+        _error = null;
+        _busy = true;
+        try
+        {
+            var gw = _gw; long uid = _userId;
+            var m = new AiModelRow { Provider_Id = _newModel.Provider_Id, ModelId = _newModel.ModelId, DisplayName = _newModel.DisplayName };
+            await Bg(() => gw.SaveModel(m, uid));
+            _newModel = new AiModelRow { Provider_Id = _newModel.Provider_Id };
+            Snackbar.Add(Tr("AI_Saved"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task SaveModelAsync(AiModelRow m)
+    {
+        if (_gw == null) return;
+        _error = null;
+        _busy = true;
+        try
+        {
+            var gw = _gw; long uid = _userId;
+            await Bg(() => gw.SaveModel(m, uid));
+            Snackbar.Add(Tr("AI_Saved"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task DeleteModelAsync(AiModelRow m)
+    {
+        if (_gw == null) return;
+        bool? ok = await DialogService.ShowMessageBoxAsync(Tr("AI_Delete"), Tr("AI_ConfirmDeleteModel", m.ModelId), yesText: Tr("AI_Delete"), cancelText: Tr("AI_Cancel"));
+        if (ok != true) return;
+        _busy = true;
+        try
+        {
+            var gw = _gw;
+            await Bg(() => gw.DeleteModel(m.Id));
+            Snackbar.Add(Tr("AI_Deleted"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = false; }
+    }
+
+    // ───────────── ربط المهام ─────────────
+
+    private void AddRoute(string task)
+    {
+        int next = _routing.Where(r => r.TaskKey == task).Select(r => r.Priority).DefaultIfEmpty(0).Max() + 1;
+        var preferred = _models.FirstOrDefault(m => m.IsEnabled && (task == AiTaskKeys.Embedding ? m.SupportsEmbeddings : task == AiTaskKeys.Vision ? m.SupportsVision : !m.SupportsEmbeddings))
+                        ?? _models.First();
+        _routing.Add(new AiTaskRoutingRow { TaskKey = task, Priority = next, Model_Id = preferred.Id, Effort = task == AiTaskKeys.Fast ? "low" : "" });
+    }
+
+    private void RemoveRoute(AiTaskRoutingRow r)
+    {
+        _routing.Remove(r);
+        int i = 1;
+        foreach (var x in _routing.Where(x => x.TaskKey == r.TaskKey).OrderBy(x => x.Priority)) x.Priority = i++;
+    }
+
+    private async Task SaveRoutingAsync()
+    {
+        if (_gw == null) return;
+        _error = null;
+        _busy = true;
+        try
+        {
+            var gw = _gw; long uid = _userId; var rows = _routing.ToList();
+            await Bg(() => gw.SaveRouting(rows, uid));
+            Snackbar.Add(Tr("AI_RoutingSaved"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = false; }
+    }
+
+    // ───────────── P0.1: الربط بتسجيل الدخول لدى المزوّد ─────────────
+
+    private async Task AddAndSignInAsync(string type)
+    {
+        if (_gw == null) return;
+        _error = null;
+        _busy = true;
+        try
+        {
+            var gw = _gw; long uid = _userId; string name = TypeName(type);
+            var req = new AiProviderSaveRequest { ProviderType = type, DisplayName = name, BaseUrl = DefaultUrl(type), IsEnabled = true, TimeoutSeconds = 60 };
+            long id = await Bg(() => gw.SaveProvider(req, uid));
+            await LoadAsync();
+            _busy = false;
+            await StartSignInAsync(id, name);
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task StartSignInAsync(long providerId, string providerName)
+    {
+        if (_gw == null) return;
+        _error = null;
+        _edit = null;
+        _fetched = null;
+        _busy = true;
+        try
+        {
+            var gw = _gw; long uid = _userId; string origin = Nav.BaseUri;
+            var start = await Bg(() => gw.StartSignIn(providerId, origin, uid));
+            _pollCts?.Cancel();
+            _signIn = start;
+            _signInStatus = null;
+            _signInCode = null;
+            _signInProviderId = providerId;
+            _signInProviderName = providerName;
+            _pollCts = new CancellationTokenSource();
+            _ = PollAsync(start.Handle, _pollCts.Token);
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = false; }
+    }
+
+    /// <summary>استعلام كل ثانيتين عن نتيجة الربط (يكتمل من نقطة الرجوع فى تبويب آخر).</summary>
+    private async Task PollAsync(string handle, CancellationToken ct)
+    {
+        try
+        {
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(2));
+            while (await timer.WaitForNextTickAsync(ct))
+            {
+                var gw = _gw; long uid = _userId;
+                if (gw == null) return;
+                var st = gw.GetSignInStatus(handle, uid);
+                if (st.State == "pending") continue;
+                await InvokeAsync(async () => await OnSignInFinishedAsync(st));
+                return;
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex) { await InvokeAsync(() => { _error = Err(ex); StateHasChanged(); }); }
+    }
+
+    private async Task CompleteWithCodeAsync()
+    {
+        if (_gw == null || _signIn == null) return;
+        _busy = true;
+        try
+        {
+            var gw = _gw; long uid = _userId; string handle = _signIn.Handle, code = _signInCode ?? "";
+            var st = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return gw.CompleteSignInWithCodeAsync(handle, code, uid); });
+            _busy = false;
+            await OnSignInFinishedAsync(st);
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task OnSignInFinishedAsync(AiSignInStatus st)
+    {
+        _pollCts?.Cancel();
+        _signInStatus = st;
+        _signInCode = null;
+        if (st.State == "done")
+        {
+            Snackbar.Add(Tr("AI_SignInDone"), Severity.Success);
+            _signIn = null;
+            _signInStatus = null;
+            await LoadAsync();
+            var p = _providers.FirstOrDefault(x => x.Id == _signInProviderId);
+            if (p is { IsEnabled: true }) await TestAsync(p);
+        }
+        StateHasChanged();
+    }
+
+    private void CloseSignIn()
+    {
+        _pollCts?.Cancel();
+        _signIn = null;
+        _signInStatus = null;
+        _signInCode = null;
+    }
+
+    private async Task DisconnectAsync(AiProviderView p)
+    {
+        if (_gw == null) return;
+        bool? ok = await DialogService.ShowMessageBoxAsync(Tr("AI_Disconnect"), Tr("AI_ConfirmDisconnect", p.DisplayName), yesText: Tr("AI_Disconnect"), cancelText: Tr("AI_Cancel"));
+        if (ok != true) return;
+        _busy = true;
+        try
+        {
+            var gw = _gw; long uid = _userId;
+            await Bg(() => gw.Disconnect(p.Id, uid));
+            Snackbar.Add(Tr("AI_Disconnected"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = false; }
+    }
+}

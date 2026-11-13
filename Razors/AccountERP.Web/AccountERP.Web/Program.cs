@@ -56,6 +56,8 @@ try { AccountModelsLib.SystemSettingsLoader.LoadTenantSettings(); } catch { }
 // بدونها لا تصل ربوط القوائم الجديدة (مثل «إدخال القيود») لقاعدة لم يُشغَّل عليها الديسك توب فتظهر «قريباً». الفشل لا يمنع الإقلاع.
 try { AccountModelsLib.StockEngineSchemaCLS.EnsureSchema(); } catch (Exception ee) { AccountModelsLib.operations.DataDictionaryLogerException(ee); }
 try { AccountModelsLib.SalesRepSchemaCLS.EnsureSchema(); } catch (Exception ee) { AccountModelsLib.operations.DataDictionaryLogerException(ee); }
+// 🤖 المساعد الذكى P0: جداول AI_* (إدراج فقط) وعنصر قائمة «إعدادات الذكاء الاصطناعى».
+try { AccountModelsLib.AiAssistantSchemaCLS.EnsureSchema(); } catch (Exception ee) { AccountModelsLib.operations.DataDictionaryLogerException(ee); }
 
 // 2. تسجيل الخدمة وتمرير الـ string داخل الـ Constructor مانيوال
 builder.Services.AddScoped<My_DbContext>(provider => new My_DbContext(connectionString));
@@ -119,6 +121,8 @@ builder.Services.AddScoped<AccountERP.SharedUI.Services.ThemeService>();
 builder.Services.AddScoped<AccountERP.SharedUI.Services.NotificationCenterService>();
 // 📨 المرحلة 8: مرسل إشعارات عملاء المندوبين (SMS/WhatsApp) من طابور الإرسال.
 builder.Services.AddHostedService<AccountERP.Web.Services.SalesRepNotifyWorker>();
+// 🤖 المساعد الذكى (Razors/AccountERP.AI): تشفير مفاتيح المزوّدين واختبار الاتصال وجلب النماذج لشاشة /settings/ai.
+AccountERP.AI.AiServiceCollectionExtensions.AddAccountErpAi(builder.Services, builder.Configuration);
 builder.Services.AddMudServices();
 var app = builder.Build();
 
@@ -154,6 +158,9 @@ app.MapStaticAssets();
 
 // 📱 المرحلة 7: واجهة جهاز المندوب (/api/v1) - راجع Api/SalesRepMobileApi.cs.
 AccountERP.Web.Api.SalesRepMobileApi.MapSalesRepMobileApi(app);
+
+// 🤖 المساعد الذكى P0.1: رجوع المزوّد بعد «تسجيل الدخول لدى المزوّد» (OpenRouter PKCE) - راجع AccountERP.AI/SignIn/AiSignInEndpoints.cs.
+AccountERP.AI.SignIn.AiSignInEndpoints.MapAiSignInEndpoints(app).RequireRateLimiting(AccountERP.Web.Api.SalesRepMobileApi.AuthRateLimitPolicy);
 
 // 🔥 3. جلب وتفعيل إعدادات اللغات (يجب أن تكون قبل عمل Map للـ Components)
 // تأكد أن كلاس LanguageService يحتوي على تفريغ الـ Providers لتعطيل لغة المتصفح

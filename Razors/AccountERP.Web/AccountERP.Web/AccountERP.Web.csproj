@@ -25,6 +25,8 @@
   <ItemGroup>
  
     <ProjectReference Include="..\..\AccountERP.SharedUI\AccountERP.SharedUI.csproj" />
+    <!-- المساعد الذكى (ai-assistant-plan.md): المزوّدون وتشفير المفاتيح؛ الويب وحده يرجع له. -->
+    <ProjectReference Include="..\..\AccountERP.AI\AccountERP.AI.csproj" />
  
     <ProjectReference Include="..\AccountERP.Web.Client\AccountERP.Web.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.9" />

@@ -1,0 +1,465 @@
+# خطة تنفيذ «المساعد الذكي» (AI Assistant) لنظام AccountERP
+
+> الخطة مبنية على قراءة فعلية للمستودع. ما لم أتحقق منه مُعلَّم بـ **[يحتاج تحقق]** ويُحسم فى بداية المرحلة المعنية.
+> المسارات نسبية إلى `E:\MohSaleh\MyWorkAll\SIT_Projects .Net\SIT_Projects`.
+
+---
+
+## 1) الملخص التنفيذى والمعمارية المستهدفة
+
+**الهدف:** مساعد محادثة داخل تطبيق الويب (Blazor / .NET 10) يفهم مخطط القاعدة وقواعد العمل، يجيب عن الأسئلة والتقارير بقراءة آمنة فقط، يفتح الشاشة المناسبة أو يرسم تقريراً، وينشئ **مسودات** فواتير وأذون مخزن يراجعها المستخدم ويحفظها من الشاشة الحقيقية. تطبيق WinForms لا يُمَس.
+
+**القرارات المعمارية الأساسية (موصى بها):**
+
+| القرار | التوصية | السبب |
+|---|---|---|
+| مكان التنفيذ | الخادم فقط (`InteractiveServer`) | مفاتيح الـ API والـ SQL لا تصل للمتصفح أو WASM أبداً |
+| تجريد المزوّدين | `Microsoft.Extensions.AI` (`IChatClient`, `AIFunction`, `IEmbeddingGenerator`) كواجهة داخلية موحّدة | معيار .NET الحالى، ويغطى OpenAI / Azure OpenAI / Ollama / أى OpenAI-compatible |
+| Claude | Adapter خاص فوق حزمة NuGet الرسمية `Anthropic` (وليس عبر shim متوافق مع OpenAI) | للاستفادة من prompt caching و adaptive thinking و `effort` ومعالجة `stop_reason: "refusal"`. **[يحتاج تحقق فى P0]:** هل الحزمة الرسمية تعطى `IChatClient` جاهزاً؛ إن لم تفعل نكتب Adapter رفيعاً |
+| حلقة الوكيل | حلقة يدوية نملكها (`AssistantOrchestrator`) | نحتاج بوابات صلاحيات، تدقيق، إيقاف عند `ask_user`، وحدود تكلفة قبل كل tool call |
+| الكتابة | مسودة فى جدول `AI_Drafts` ثم تعبئة الشاشة الحقيقية؛ الحفظ بزر المستخدم فقط | النموذج لا ينفّذ INSERT أبداً؛ منطق المخزون والضريبة والقيود يبقى فى مكانه |
+| التقارير | `ReportSpec` (JSON) يرسمه مكوّن Blazor، والأرقام تُربط بـ `datasetId` من الخادم | النموذج لا ينسخ أرقاماً (لا هلوسة أرقام) ولا HTML خام (لا XSS) |
+| مشروع جديد | `Razors/AccountERP.AI` (net10.0) يرجع له `AccountERP.Web` فقط | `AccountModelsLib` ثنائى الاستهداف (net48)، و`AccountERP.SharedUI` يستخدمه MAUI؛ لا نحمّلهما حزم LLM |
+
+```mermaid
+flowchart TD
+  subgraph UI["AccountERP.SharedUI (Blazor, MudBlazor 9.7)"]
+    P["AssistantPage.razor  /assistant"]
+    W["AssistantWidget.razor (FAB + نافذة عائمة) داخل MainLayoutMud"]
+    C["AssistantChat.razor (مشترك: رسائل، مرفقات، بطاقات، ask_user)"]
+    R["AiReportView.razor (يرسم ReportSpec)"]
+    P --> C
+    W --> C
+    C --> R
+  end
+  C -->|IAssistantSession (Scoped لكل Circuit)| O
+  subgraph AI["Razors/AccountERP.AI (جديد)"]
+    O["AssistantOrchestrator: حلقة الوكيل + بثّ + حدود + تدقيق"]
+    PR["ProviderRegistry: IChatClient لكل مزوّد"]
+    T["ToolRegistry + PermissionGate"]
+    K["KnowledgeService: قاموس دلالى + أمثلة + بحث"]
+    O --> PR
+    O --> T
+    O --> K
+  end
+  PR --> A1["Anthropic"]
+  PR --> A2["OpenAI / Azure OpenAI"]
+  PR --> A3["Gemini"]
+  PR --> A4["Ollama / LM Studio / OpenAI-compatible"]
+  PR --> A5["مزوّد مخصص: API Key + URL (أى خدمة)"]
+  T --> RO["ReadOnlySqlExecutor: ScriptDom + allow-list + اتصال قراءة فقط"]
+  T --> BS["خدمات قائمة: LedgerBalanceEngine, FinalAccountsService, StoreOrderService..."]
+  T --> DR["AiDraftsCLS -> AI_Drafts"]
+  T --> NAV["open_screen -> TabWorkspaceService / NavigationManager"]
+  RO --> DB[("SQL Server: schema ai.* (views)")]
+  BS --> DB
+  DR --> DB
+  O --> AUD["AI_Messages / AI_ToolCalls_Audit / AI_Usage"]
+```
+
+**حقائق تحقّقت منها وتؤثر فى التصميم:**
+- `Razors/AccountERP.Web/AccountERP.Web/Program.cs` يسجّل الخدمات Scoped لكل Circuit (`TabWorkspaceService`, `UserPreferencesService`, `NotificationCenterService`) وجلسة المستخدم `AccountModelsLib.UserSession` (`User_Id`, `Branch_Id`, `Is_User_Admin`) عبر `UserSessionContext` و`UserSessionCircuitHandler`. خدمة المحادثة تتبع نفس النمط، فتتشارك الصفحة والنافذة العائمة نفس الحالة تلقائياً.
+- `IDataProtectionProvider` مستخدم فعلاً فى `Api/SalesRepMobileApi.cs`، فنستخدمه لتشفير مفاتيح المزوّدين.
+- `StoreOrderPage.razor` فيه `SaveDraft` و`SaveAndPost` عبر `StoreOrderService` (`AccountModelsLib/BusinessLibShared/Store/StoreOrderService.cs`): دورة مسودة ثم ترحيل موجودة فعلاً لأذون المخزن.
+- `SalesInvoicePage.razor` و`PurchaseInvoicePage.razor`: منطق الحفظ داخل الصفحة (`SaveInvoiceCoreAsync`)، ولم أجد مفهوم مسودة للفواتير فى `BusinessLibInvoice`. توجد سابقة تعبئة من مستند آخر (`?fromOrder=`). لذلك مسودة الفاتورة تكون فى `AI_Drafts` وتُعبّأ بها الصفحة عبر `?aiDraft={id}`.
+- إضافة القوائم: نمط `HelpMenu` و`InventoryValueMenu` فى `AccountModelsLib/AlterDB_CLS/StockEngineSchemaCLS.cs` (إدراج فقط، `KeysData` مشفّر بـ `Common.EncryptMe`، صلاحيات فى `SysConfigMenusPERMATIONS`).
+- آخر رقم اختبار فى `.claude/docs/master-user-test-plan.md` هو **م-350**، فاختبارات هذه الخطة تبدأ من **م-351**.
+- الاتصال الحالى `Integrated Security` على قاعدة محلية؛ إصدار SQL Server **[يحتاج تحقق]** (يحسم خيار المتجهات).
+
+---
+
+## 2) نموذج الأمان والسلامة
+
+### 2.1 مسار القراءة (SQL للقراءة فقط) — دفاع متعدد الطبقات
+
+| الطبقة | الإجراء |
+|---|---|
+| 1. هوية القاعدة | Login/User مستقل (مثل `erp_ai_reader`) له `SELECT` على schema `ai` فقط، و`DENY` على كل ما عداه. الـ connection string فى `ConnectionStrings:AiReadOnly` من user-secrets أو متغير بيئة، ولا يُكتب فى المستودع ولا السجلات (قاعدة CLAUDE.md رقم 6). إنشاء الـ Login خطوة يدوية للمسؤول بسكربت نسلّمه، لا تُنفَّذ تلقائياً |
+| 2. سطح البيانات | النموذج يرى Views فقط (`ai.v_sales`, `ai.v_stock`...) بأسماء أعمدة واضحة، وليس الجداول الخام. تُستبعد كلياً: `USER_DETAILES` (كلمات المرور)، `SysConfig*` (قيم مشفّرة)، جداول `AI_*` نفسها، وأى جدول تراخيص أو اتصال |
+| 3. فحص الاستعلام | `Microsoft.SqlServer.TransactSql.ScriptDom`: عبارة واحدة فقط من نوع `SELECT`؛ رفض `INTO`, `EXEC`, `OPENROWSET/OPENQUERY`, `xp_*`, `WAITFOR`, linked servers, أسماء ثلاثية/رباعية؛ كل كائن مرجعى يجب أن يكون فى allow-list؛ حقن `TOP (N)` إن غاب |
+| 4. حدود التنفيذ | `CommandTimeout` 15 ثانية، حد أقصى 5000 صف، وحد لحجم النتيجة المرسلة للنموذج (أول 50 صفاً + إحصاءات؛ الباقى يبقى على الخادم كـ `datasetId`) |
+| 5. تقييد الفرع | `sp_set_session_context 'branch_id'/'user_id'` على اتصال القراءة، والـ Views تفلتر بـ `SESSION_CONTEXT`. **[يحتاج تحقق]:** أى الجداول تحمل `Branch_Id` فعلاً (من `ERP_V1_3.md`) قبل كتابة كل View |
+| 6. التدقيق | كل SQL يُسجَّل نصاً مع المستخدم والمدة وعدد الصفوف فى `AI_ToolCalls_Audit` |
+
+### 2.2 مسار الكتابة
+- لا توجد أداة تنفّذ DML على جداول النظام. أدوات الكتابة تكتب صفاً فى `AI_Drafts` فقط (جدول جديد).
+- المستخدم يفتح الشاشة الحقيقية معبّأة، يراجع، ويضغط حفظ؛ فيمر الحفظ بكل المنطق القائم: `Unit_Item.Full_Qua`/`D_Qua`، `IsInvoiceTaxInfo`، `Is_Tax_Per_Item`، ترقيم `Make_New_Invoice_No`، القيود.
+- لا يُستخدم `saveDirectly=1` من المساعد إطلاقاً.
+- لا UPDATE/DELETE على صفوف قائمة (تفضيل المستخدم). جداول `AI_*` نفسها تتبع دورة حالة (`Status`) بدل الحذف.
+
+### 2.3 الصلاحيات
+- `PermissionGate` قبل كل tool call: كل أداة تعلن `RequiredMenuKey` (مفتاح `SysConfigMenus`)، وتُفحص مقابل `MenuStateService` للمستخدم الحالى. الأدوات غير المسموحة **لا تُرسل للنموذج أصلاً** (فلا يحاول استخدامها).
+- `open_screen` يقبل فقط مسارات من كتالوج الشاشات المتقاطع مع قوائم المستخدم.
+- Views التقارير تُربط بصلاحية القائمة المقابلة (مثلاً `ai.v_gl_entries` يتطلب صلاحية كشف الحساب).
+- استخدام المساعد نفسه صلاحية قائمة (`menuItemAiAssistant`)، وإعداداته صلاحية أخرى للمديرين (`AdminFlage`).
+
+### 2.4 حقن التعليمات (Prompt Injection)
+- محتوى الملفات والصور ونتائج الاستعلامات وأسماء الأصناف والعملاء = **بيانات لا تعليمات**؛ تُغلَّف بوسوم واضحة ويُنصّ على ذلك فى system prompt.
+- لا أدوات شبكة (لا web fetch) فى الإصدار الأول، فلا قناة تسريب.
+- التقرير يُرسم من spec بلا سكربت؛ الروابط داخلية فقط من الكتالوج.
+- الضمان الحقيقى ليس الـ prompt بل الطبقات: حساب قراءة فقط + allow-list + مسودات فقط + تأكيد بشرى.
+
+### 2.5 الخصوصية والمفاتيح والتكلفة
+- المفاتيح مشفّرة بـ `IDataProtector` (purpose: `AI.ProviderKeys`) فى `AI_Providers.ApiKeyEnc`؛ تُعرض مقنّعة (`••••1234`) ولا تُسجَّل. **تنبيه نشر:** يجب تثبيت مسار مفاتيح Data Protection (`PersistKeysToFileSystem`) وإلا ضاعت المفاتيح عند إعادة النشر **[يحتاج تحقق من الإعداد الحالى]**.
+- وضع «محلى فقط»: يمنع أى مزوّد سحابى على مستوى المنشأة.
+- وضع «تقليل البيانات»: يُرسل للنموذج المخطط والإحصاءات فقط دون صفوف العملاء (الأرقام تُعرض من الخادم مباشرة).
+- حدود: توكنز يومية/شهرية لكل مستخدم، حد أقصى لدورات الأدوات فى الرسالة (مثلاً 12)، حد للمرفقات (10MB، PDF/صور/Excel)، و rate limit بنفس أسلوب `AddRateLimiter` الموجود.
+- سجل تدقيق كامل: الرسائل، استدعاءات الأدوات، SQL، التوكنز، التكلفة التقديرية، المزوّد والنموذج.
+
+---
+
+## 3) طبقة المعرفة: كيف «يفهم» المساعد النظام
+
+**التوصية: قاموس دلالى منسّق + بحث هجين، وليس RAG متجهى على كل شىء من اليوم الأول.**
+
+| المكوّن | المصدر | التخزين |
+|---|---|---|
+| قاموس البيانات | توليد أولى من `ERP_V1_3.md` (تقطيع حسب الجدول) + مطابقة مع `INFORMATION_SCHEMA` الحية (الحقيقة للأعمدة/الأنواع، ولا نفترض PK/FK دون DDL) | `AI_Knowledge` (Kind=`table`) |
+| Views الأعمال | `ai.v_sales`, `ai.v_sales_lines`, `ai.v_purchases`, `ai.v_purchase_lines`, `ai.v_stock_balance`, `ai.v_stock_moves`, `ai.v_gl_entries`, `ai.v_customers`, `ai.v_suppliers`, `ai.v_items`, `ai.v_cash_vouchers` — تُخفى فيها الأخطاء الإملائية (`Purshing`, `Detailes`) خلف أسماء واضحة دون تغيير أى جدول | schema `ai` |
+| المسرد العربى | مدين=`Madin`، دائن=`Da2n`، صرف=`Sarf`، مشتريات=`Purshing`، إذن إضافة=1007، إذن صرف=1008، آجل/نقدى... من `docs/coding-naming.md` | `AI_Knowledge` (Kind=`glossary`) |
+| قواعد العمل | الضريبة (`IsInvoiceTaxInfo`, `Is_Tax_Per_Item`، وعدم استخدام `Invoice_Type` كعلم ضريبى)، اتجاه حركة المخزون لكل نوع مستند | Kind=`rule` |
+| أمثلة موثّقة | سؤال عربى ← SQL صحيح على Views (من مجموعة التقييم) | Kind=`example` |
+| كتالوج الشاشات | من `Services/KnownRoutes.cs` و`RoutePageRegistry.cs` + `SysConfigMenus.RazorPath` + وصف وباراميترات كل شاشة (`?mode=closing`, `?tab=1..3`...) | Kind=`screen` |
+
+**الاسترجاع:** system prompt ثابت (مخبّأ بالـ prompt caching) يحتوى ملخص Views والمسرد والقواعد؛ والتفاصيل تُجلب بأداة `search_schema`.
+
+**خيارات البحث:**
+
+| الخيار | مزايا | عيوب | الحكم |
+|---|---|---|---|
+| كلمات مفتاحية + مسرد (LIKE / Full-Text) | بلا تبعيات، يعمل أوفلاين | أضعف مع الصياغات الحرة | **البداية (P2)** |
+| Embeddings فى `VARBINARY` + cosine فى الذاكرة | بسيط؛ المعرفة بضعة آلاف مقطع فقط | يحتاج نموذج embeddings | **الترقية (P7)** |
+| SQL Server 2025 `VECTOR` | بحث داخل القاعدة | يتطلب إصداراً قد لا يكون عند العملاء | فقط إن ثبت الإصدار |
+| قاعدة متجهات خارجية | قابلية توسع | تعقيد نشر بلا حاجة لهذا الحجم | مرفوض |
+
+ملاحظة: Anthropic لا تقدّم embeddings؛ نموذج الـ embeddings يأتى من مزوّد آخر أو محلياً (نموذج متعدد اللغات عبر Ollama).
+
+---
+
+## 4) كتالوج الأدوات (Function Calling)
+
+| الأداة | المدخلات | المخرجات | النوع | الصلاحية |
+|---|---|---|---|---|
+| `search_schema` | `query`, `kinds[]` | مقاطع معرفة (Views/أعمدة/أمثلة/قواعد) | قراءة | استخدام المساعد |
+| `run_readonly_query` | `sql`, `purpose` | `datasetId`, أعمدة، عدد الصفوف، عيّنة 50 صفاً، مجاميع | قراءة | حسب Views المستعملة |
+| `find_entity` | `type` (customer/supplier/item/store/account), `text` | أفضل 5 مطابقات مع درجة تشابه | قراءة | حسب النوع |
+| `get_trial_balance` | `from`, `to`, `mode` (closing/totals), `level` | `datasetId` + ملخص | قراءة | ميزان المراجعة |
+| `get_financial_statement` | `kind` (income/profit_loss/balance_sheet), الفترة | `datasetId` + ملخص | قراءة | القوائم الختامية |
+| `get_account_statement` | `partyType`, `partyId`, `from`, `to` | `datasetId` + رصيد افتتاحى/ختامى | قراءة | كشف حساب |
+| `get_stock_balance` | `itemId?`, `storeId?`, `asOf?` | `datasetId` | قراءة | أرصدة المخازن |
+| `get_item_card` | `itemId`, `storeId?`, الفترة | `datasetId` | قراءة | كارت الصنف |
+| `open_screen` | `routeKey`, `params{}` | بطاقة «فتح الشاشة» فى المحادثة | واجهة | صلاحية الشاشة |
+| `render_report` | `ReportSpec` (يشير إلى `datasetId`s) | `reportId` + عرض فورى | واجهة | — |
+| `ask_user` | `question`, `options[]`, `allowFreeText`, `multi` | إجابة المستخدم | تفاعل | — |
+| `create_sales_invoice_draft` | عميل، مخزن، تاريخ، علم ضريبى، بنود (صنف/وحدة/كمية/سعر/خصم) | `draftId` + تحذيرات تحقق | **مسودة** | فاتورة مبيعات |
+| `create_purchase_invoice_draft` | مورد، مخزن، رقم فاتورة المورد، بنود | `draftId` | **مسودة** | فاتورة مشتريات |
+| `create_store_order_draft` | `orderType` (1007/1008), مخزن، بنود | `draftId` | **مسودة** | إذن المخزن بنوعه |
+| `extract_document` | `attachmentId`, `docType` | JSON منظّم (رأس + بنود + ثقة لكل حقل) | قراءة | استخدام المساعد |
+
+قواعد التنفيذ:
+- الأدوات المالية تستدعى `LedgerBalanceEngine.GetBalances(Query)` وبناة `FinalAccountsService` (`BuildTrialBalance`, `BuildIncomeStatement`, `BuildProfitLoss`, `BuildBalanceSheet`) نفسها، فتتطابق أرقام المساعد مع الشاشات. هذه مفضّلة على SQL حر، ويُوجَّه النموذج لاستخدامها أولاً.
+- مخطط كل أداة `strict` مع `additionalProperties:false`، ويُتحقق من المدخلات على الخادم قبل التنفيذ.
+- أدوات المسودات تتحقق من وجود الكيانات فعلياً (لا تُنشأ عملاء/أصناف جديدة)، وتعيد تحذيرات (كمية أكبر من الرصيد، سعر يختلف عن آخر سعر).
+- التنفيذ داخل `UserSessionContext.Use(session)` مع `AccountCultureGuard.EnsureInvariant()` كما تفعل الصفحات الحالية داخل `Task.Run`.
+
+---
+
+## 5) مخرجات التقارير
+
+**التوصية: `ReportSpec` يرسمه `AiReportView.razor`، لا HTML خام من النموذج.**
+
+لماذا:
+1. الأمان: لا سكربت ولا HTML من النموذج داخل جلسة المستخدم المصادق.
+2. الدقة: كل رقم يأتى من `datasetId` على الخادم؛ النموذج يحدد الشكل فقط.
+3. الاتساق: نفس ثيم MudBlazor (فاتح/داكن، RTL، `Prefs.DateFormat`).
+4. إعادة التشغيل: التقرير المحفوظ = spec + استعلامات بباراميترات، فيُعاد تنفيذه ببيانات اليوم.
+5. تكلفة أقل: spec صغير بدل آلاف توكنز HTML.
+
+**مكوّنات `ReportSpec`:** `title`, `subtitle`, `filters[]`, `kpis[]`, `sections[]` من الأنواع `table` (أعمدة بتنسيق: مبلغ/كمية/تاريخ/نسبة، مجاميع، ترتيب)، `chart` (bar/line/pie/stacked عبر MudChart)، `text` (ملاحظات تحليلية)، `drilldown` (رابط شاشة من الكتالوج).
+
+**الوظائف:** طباعة (CSS print كما فى `StoreOrderPage`)، تصدير Excel عبر `MiniExcel` الموجود، PDF عبر طباعة المتصفح فى الإصدار الأول، حفظ/تثبيت فى `AI_SavedReports`، إعادة تشغيل بفترة جديدة، فتح فى تبويب عبر `TabWorkspaceService`.
+
+**متى يفتح شاشة بدل رسم تقرير؟** إن طابق الطلب تقريراً قائماً (ميزان مراجعة، كشف حساب عميل، أرصدة مخزن، كارت صنف) يستدعى `open_screen` بالباراميترات ويعرض ملخصاً قصيراً فى المحادثة. التقرير المرسوم للأسئلة التى لا شاشة لها.
+**[يحتاج عمل]:** بعض الشاشات لا تقبل كل الفلاتر عبر query string؛ نضيف `SupplyParameterFromQuery` حسب الحاجة فى P3 (إضافة فقط، بلا تغيير السلوك الافتراضى).
+
+**وضع «تصميم حر» (اختيارى، مؤجّل):** HTML داخل `<iframe sandbox>` بلا `allow-same-origin` وبلا سكربت، مع CSP صارمة والبيانات محقونة من الخادم. مغلق افتراضياً.
+
+---
+
+## 6) تدفق إدخال البيانات
+
+```
+طلب نصى أو ملف/صورة
+  -> extract_document (نموذج رؤية -> JSON منظّم + ثقة)
+  -> find_entity لكل من المورد/العميل/المخزن/الأصناف
+  -> ask_user عند الغموض (أكثر من مطابقة، أو لا مطابقة، أو وحدة غير واضحة)
+  -> create_*_draft  (صف فى AI_Drafts، Status=Pending)
+  -> بطاقة «مسودة جاهزة» فى المحادثة: ملخص + تحذيرات + زر «فتح فى شاشة الفاتورة»
+  -> الشاشة الحقيقية ?aiDraft={id} معبّأة مع شريط «مسودة من المساعد — راجع قبل الحفظ»
+  -> المستخدم يحفظ بالزر العادى -> المنطق القائم (مخزون، ضريبة، قيود)
+  -> AI_Drafts.Status=Consumed + رقم المستند الناتج (للتدقيق)
+```
+
+- **الفواتير:** تعبئة `SalesInvoicePage` / `PurchaseInvoicePage` من `AI_Drafts` على غرار `?fromOrder=` الموجود. تمر البنود عبر نفس مسار إضافة البند (`OnItemDialogSaved`) كى تُحسب الضريبة والأسعار بمنطق الصفحة لا بمنطق النموذج.
+- **إذن المخزن:** الخيار المفضّل إنشاء مسودة حقيقية عبر `StoreOrderService.SaveDraft` ثم فتح `/store/order/{type}?id=`، لأن دورة مسودة→ترحيل موجودة فعلاً. **[يحتاج تحقق فى P5]:** أن `SaveDraft` لا يحرّك المخزون؛ وإلا نستخدم `AI_Drafts` كما فى الفواتير.
+- **مطابقة الكيانات:** تطبيع عربى (أ/إ/آ، ة/ه، ى/ي، التشكيل) + تشابه نصى + باركود/كود الصنف. الصنف غير الموجود لا يُنشأ؛ يُعرض كبند «غير مطابق» يختاره المستخدم.
+- **منع التكرار:** فحص رقم فاتورة المورد + المورد + التاريخ قبل إنشاء مسودة مشتريات، مع تحذير.
+- **`ask_user`:** الحلقة تتوقف وتُحفظ الحالة فى `AI_Messages`؛ الواجهة تعرض السؤال مع أزرار خيارات وحقل حر؛ الإجابة تعود كـ tool result. يعمل أيضاً بعد إعادة تحميل الصفحة.
+
+---
+
+## 7) تصميم الواجهة
+
+كل شاشة جديدة تُصمَّم بمهارة `ui-ux-pro-max` (MudBlazor، متجاوبة، فاتح/داكن، RTL/LTR، أربع لغات عبر `Resources/SharedUIAssemblyMarker.*.resx`).
+
+### 7.1 صفحة المساعد `/assistant` — `Pages/Assistant/AssistantPage.razor`
+- **عمود جانبى (280px، يُطوى على الموبايل):** زر «محادثة جديدة»، بحث، قائمة المحادثات مجمّعة (اليوم/هذا الأسبوع/أقدم)، قسم «تقاريرى المثبّتة».
+- **المنطقة الرئيسية:** شريط علوى (عنوان المحادثة، شارة النموذج الحالى، عدّاد الاستخدام). عند الفراغ: بطاقات اقتراح (مبيعات اليوم، أكبر 10 عملاء مديونية، أصناف تحت حد الطلب، إدخال فاتورة مشتريات من صورة).
+- **الرسائل:** بثّ نصى حىّ؛ مؤشرات خطوات قابلة للطى («يبحث فى المخطط»، «ينفّذ استعلاماً» مع عرض الـ SQL لمن له صلاحية)؛ بطاقات نتيجة (تقرير، فتح شاشة، مسودة، سؤال).
+- **شريط الإدخال:** حقل متعدد الأسطر، إرفاق (`MudFileUpload` كما فى `ItemOpeningBalancesPage`) + سحب وإفلات + لصق صورة، زر إيقاف أثناء التوليد.
+- **لوحة التقرير:** على الشاشات العريضة يُفتح التقرير فى لوحة جانبية قابلة للتوسيع (نمط artifact)، وعلى الموبايل ملء الشاشة.
+
+### 7.2 النافذة العائمة — `Components/Assistant/AssistantWidget.razor` داخل `MainLayoutMud.razor`
+- FAB دائرى 56px بأيقونة واضحة، `position:fixed` أسفل اليسار أو اليمين حسب التفضيل، فوق المحتوى وتحت الحوارات، مع شارة عند وجود رد جديد.
+- عند النقر: نافذة 400×600 (ملء الشاشة تحت 600px) بنفس `AssistantChat`، وأزرار: تصغير، فتح فى الصفحة الكاملة، محادثة جديدة.
+- نفس خدمة الجلسة Scoped، فالمحادثة واحدة بين النافذة والصفحة. يُخفى الـ FAB فى صفحة `/assistant` وفى صفحات الدخول (`AuthLayout`) ولمن لا يملك الصلاحية.
+- يُمرَّر سياق الشاشة الحالية (المسار وعنوانها) للمساعد ليفهم «هذه الفاتورة» أو «هذا العميل».
+
+### 7.3 تفضيلات المستخدم
+- `UserSettingKeys` (فى `AccountModelsLib/Models/Config/UserSettings/UserSettingsCLS.cs`): إضافة `ShowAiAssistantIcon` (افتراضى true) و`AiAssistantIconPosition` (`start`/`end`؛ منطقى لا يسار/يمين ليتوافق مع RTL، مع تسمية واضحة فى الواجهة).
+- `UserPreferencesService`: خاصيتان + `SetShowAiAssistantIcon` / `SetAiAssistantIconPosition` بنفس النمط.
+- `UserSettingsMenu.razor`: قسم «المساعد الذكى»: `MudSwitch` للإظهار + اختيار الموضع.
+
+### 7.4 شاشة إعدادات الذكاء الاصطناعى `/settings/ai` — `Pages/Settings/AiSettingsPage.razor`
+تبويبات:
+1. **المزوّدون:** بطاقات (Anthropic، OpenAI، Google Gemini، Azure OpenAI، Ollama، LM Studio / OpenAI-compatible مخصص). لكل بطاقة: حالة، مفتاح API مقنّع، Base URL (والـ deployment لـ Azure)، زر «اختبار الاتصال»، زر «جلب النماذج» من endpoint النماذج، مفتاح تفعيل.
+   - **«مزوّد مخصص» بالـ API + URL (أُضيف 2026-11-13 بطلب المستخدم):** زر «إضافة مزوّد مخصص» يسمح بربط **أى** خدمة ذكاء اصطناعى (عالمية جديدة، أو خادم داخل الشركة، أو بوابة مثل OpenRouter / LiteLLM / Groq / DeepSeek / Mistral / خوادم vLLM) بإدخال:
+     - **الاسم** الظاهر للمزوّد.
+     - **عنوان الـ URL** (Base URL)، مثل `https://api.example.com/v1` أو `http://192.168.1.50:8000/v1`.
+     - **مفتاح الـ API** (اختيارى للخوادم المحلية)، مشفّر ومقنّع كباقى المفاتيح.
+     - **البروتوكول:** OpenAI-compatible (الافتراضى، `/chat/completions`) أو Anthropic-compatible (`/v1/messages`) أو Gemini-compatible.
+     - **طريقة إرسال المفتاح:** `Authorization: Bearer` (افتراضى) أو اسم Header مخصص (مثل `x-api-key` أو `api-key`)، مع **Headers إضافية** اختيارية (مشفّرة).
+     - **النماذج:** «جلب النماذج» من `/models` إن كانت الخدمة تدعمه، وإلا إدخال معرّف النموذج يدوياً، مع تحديد قدراته (أدوات، رؤية، embeddings) وأسعاره لحساب التكلفة.
+     - **مهلة الاتصال** وعلامة «محلى» (فتُسمح فى وضع «محلى فقط» إن كان العنوان داخل الشبكة).
+     - زر **«اختبار الاتصال»** يرسل طلباً قصيراً ويعرض النتيجة والزمن ورسالة الخطأ الواضحة (عنوان خاطئ، مفتاح مرفوض، نموذج غير موجود).
+     - يمكن إضافة أكثر من مزوّد مخصص، ويظهر كل واحد كبطاقة مستقلة ويُختار فى «النماذج والمهام» كأى مزوّد.
+     - أمان: يُقبل `https` فقط للعناوين الخارجية (`http` مسموح للشبكة المحلية فقط)، ولا يُرسل المفتاح إلا للعنوان المسجّل نفسه.
+2. **النماذج والمهام:** جدول ربط مهمة ← نموذج: محادثة/وكيل، استدلال عميق، استخراج/رؤية، سريع/رخيص (عناوين وتصنيف)، embeddings؛ مع ترتيب البدائل (fallback) و`max tokens` ومستوى الجهد. **حقول العيّنة (temperature) تظهر حسب قدرات النموذج فقط:** نماذج Claude الحالية ترفض `temperature` و`budget_tokens` وفرض `tool_choice` بخطأ 400، ويُتحكم فيها بـ `effort`.
+3. **الخصوصية والحدود:** وضع محلى فقط، تقليل البيانات، حدود توكنز لكل مستخدم/دور، مدة الاحتفاظ بالمحادثات.
+4. **الصلاحيات:** من يستخدم المساعد وأى مجموعات أدوات (قراءة/مسودات/استخراج) — مبنية فوق صلاحيات القوائم.
+5. **الاستخدام والتكلفة:** لوحة (توكنز وتكلفة تقديرية حسب المستخدم/النموذج/اليوم، أكثر الأدوات استخداماً، نسبة الأخطاء).
+6. **المعرفة:** إعادة بناء القاموس، تحرير المسرد والأمثلة، تشغيل مجموعة التقييم.
+
+---
+
+## 8) تغييرات قاعدة البيانات (جداول جديدة فقط)
+
+تُنشأ فى ملف جديد `AccountModelsLib/AlterDB_CLS/AiAssistantSchemaCLS.cs` بنمط `SalesRepSchemaCLS.EnsureSchema()` (`IF NOT EXISTS`، إدراج فقط)، ويُستدعى من `Program.cs` للويب بجوار الاستدعاءات الحالية. المعرّفات بـ `CallSnowflakeIdGenerate.GenerateNewId()` كالمتبع.
+
+| الجدول | الأعمدة الأساسية |
+|---|---|
+| `AI_Providers` | `Id`, `ProviderType`, `DisplayName`, `BaseUrl`, `ApiKeyEnc`, `ExtraJson` (deployment/api-version), `ApiProtocol` (openai/anthropic/gemini — للمزوّد المخصص), `AuthHeaderName` (nullable = Bearer), `ExtraHeadersEnc`, `TimeoutSeconds`, `IsCustom`, `IsEnabled`, `IsLocal`, `CreatedBy/At`, `UpdatedBy/At` |
+| `AI_Models` | `Id`, `Provider_Id`, `ModelId`, `DisplayName`, `SupportsTools`, `SupportsVision`, `SupportsTemperature`, `ContextTokens`, `InputPricePerM`, `OutputPricePerM`, `IsEnabled` |
+| `AI_TaskRouting` | `Id`, `TaskKey` (chat/reasoning/vision/fast/embedding), `Model_Id`, `Priority` (للـ fallback), `Effort`, `MaxTokens`, `Temperature` (nullable) |
+| `AI_Settings` | `SettingKey`, `SettingValue` (LocalOnly, DataMinimization, RetentionDays, حدود افتراضية) |
+| `AI_UserLimits` | `Id`, `User_Id` (nullable = افتراضى), `DailyTokens`, `MonthlyTokens`, `AllowDrafts`, `AllowUploads` |
+| `AI_Conversations` | `Id`, `User_Id`, `Branch_Id`, `Title`, `Status` (Active/Archived), `CreatedAt`, `LastMessageAt` |
+| `AI_Messages` | `Id`, `Conversation_Id`, `Seq`, `Role`, `ContentJson` (كتل النص/الأدوات كما أعادها المزوّد)، `Model_Id`, `InputTokens`, `OutputTokens`, `CacheReadTokens`, `CostEstimate`, `CreatedAt` |
+| `AI_ToolCalls_Audit` | `Id`, `Message_Id`, `User_Id`, `ToolName`, `ArgsJson`, `SqlText`, `RowCount`, `DurationMs`, `Outcome` (Ok/Denied/Error), `ErrorText`, `CreatedAt` |
+| `AI_Attachments` | `Id`, `Conversation_Id`, `FileName`, `MimeType`, `SizeBytes`, `StoragePath`, `Sha256`, `CreatedAt` |
+| `AI_Drafts` | `Id`, `Conversation_Id`, `User_Id`, `Branch_Id`, `DocType`, `PayloadJson`, `WarningsJson`, `Status` (Pending/Consumed/Discarded/Expired), `ResultDocId`, `CreatedAt`, `ConsumedAt` |
+| `AI_SavedReports` | `Id`, `User_Id`, `Title`, `SpecJson`, `QueriesJson`, `IsPinned`, `IsShared`, `CreatedAt`, `LastRunAt` |
+| `AI_Knowledge` | `Id`, `Kind`, `KeyName`, `TitleAr`, `Content`, `Embedding` (VARBINARY nullable), `Source`, `Version`, `IsActive` |
+| `AI_EvalCases` / `AI_EvalRuns` | سؤال، SQL/نتيجة متوقعة، وسوم؛ وتشغيلات مع النموذج والنتيجة |
+
+- لا مفاتيح أجنبية على جداول النظام القائمة (مرجع منطقى بـ `User_Id` فقط)، فلا تتأثر الجداول القديمة.
+- **Schema `ai` والـ Views:** تُنشأ فى نفس الملف بـ `CREATE OR ALTER VIEW` (كائنات جديدة فقط).
+- **القوائم:** `menuItemAiAssistant` («المساعد الذكى» → `/assistant`) كعنصر رئيسى، و`menuItemAiSettings` («إعدادات الذكاء الاصطناعى» → `/settings/ai`) تحت الإعدادات للمديرين فقط — بنمط `HelpMenu`/`InventoryValueMenu`. **[يحتاج تحقق فى P0]:** قيمة `Parent_Id` و`PROJECT_ID` للعناصر الجذرية، وكيف يظهر عنصر بـ `RazorPath` فقط فى قائمة الديسك توب (سابقة `/help` موجودة فنتبعها).
+- تسجيل المسارين فى `KnownRoutes.cs` و`RoutePageRegistry.cs` وأيقونة فى `MenuIcons.cs`.
+
+---
+
+## 9) خارطة المراحل (كل مرحلة = مهمة واحدة)
+
+اختبارات المستخدم تُضاف إلى `.claude/docs/master-user-test-plan.md` بدءاً من م-351.
+
+### P0 — الأساسات والمزوّدون والإعدادات
+- **النطاق:** مشروع `Razors/AccountERP.AI`؛ `AiAssistantSchemaCLS`؛ DAL بنمط CLS (`AccountModelsLib/BusinessLibShared/Ai/AiProvidersCLS.cs` ...)؛ `ProviderRegistry` + Adapters؛ تشفير المفاتيح؛ `AiSettingsPage` (تبويبا المزوّدين والنماذج)؛ عنصرا القائمة.
+- **ملفات:** جديد: المشروع، `AiAssistantSchemaCLS.cs`، `Pages/Settings/AiSettingsPage.razor`. تعديل: `Program.cs`، `AccountERP.Web.csproj`، `AccountsNet.sln`، `KnownRoutes.cs`، `RoutePageRegistry.cs`، ملفات resx.
+- **القبول:** اختبار اتصال ناجح مع مزوّد سحابى ومحلى؛ المفتاح لا يظهر فى القاعدة نصاً ولا فى السجلات؛ إعادة التشغيل لا تكرر صفوفاً.
+- **اختبارات:** م-351 «ظهور شاشة إعدادات الذكاء الاصطناعى للمدير فقط»؛ م-352 «إضافة مزوّد واختبار الاتصال»؛ م-353 «المفتاح محفوظ مشفّراً ويظهر مقنّعاً»؛ م-354 «ربط نموذج محلى Ollama وجلب قائمة النماذج»؛ م-382 «إضافة مزوّد مخصص بالـ API والـ URL واختبار الاتصال واستخدامه فى المحادثة».
+- **مخاطر:** ثبات مفاتيح Data Protection؛ اختلاف واجهات المزوّدين (تُعزل داخل الـ Adapter).
+- ✅ **تم التنفيذ 2026-11-13 (Opus 5.5):**
+  - مشروع `Razors/AccountERP.AI` (net10.0، حزمة `Anthropic` 13.8.0، يرجع له الويب فقط، مضاف للحل تحت Razors): `AiKeyProtector` (purpose `AI.ProviderKeys`، المفتاح مشفّر + آخر 4 أحرف للعرض)، `AiUrlPolicy` (https للخارجى، http للشبكة المحلية فقط، رفض userinfo)، Adapters: Anthropic عبر الـ SDK الرسمى (`Models.List` كاختبار بلا توكنز)، OpenAI-compatible (OpenAI/LM Studio/مخصص)، Gemini، Azure، Ollama؛ `AiHttp` بلا Redirect ورسائل أخطاء عربية مع حذف المفتاح من أى رسالة؛ `AiAdminGateway` + `AddAccountErpAi`.
+  - `AccountModelsLib`: `AlterDB_CLS/AiAssistantSchemaCLS.cs` (جداول **P0 فقط**: AI_Providers / AI_Models / AI_TaskRouting / AI_Settings + بذور الإعدادات + عنصر القائمة)، `BusinessLibShared/Ai/AiModels.cs` (DTOs + `IAiAdminGateway`)، `BusinessLibShared/Ai/AiProvidersCLS.cs` (DAL). باقى جداول §8 تُنشأ فى مراحلها.
+  - شاشة `SharedUI/Pages/Settings/AiSettingsPage.razor` (`/settings/ai`): تبويب المزوّدين (بطاقات + تعديل + اختبار تلقائى بعد الحفظ + جلب النماذج وإضافة المحدد) وتبويب النماذج والمهام (قدرات وأسعار لكل نموذج + ربط مهمة ← نموذج أساسى وبدائل، temperature تظهر وتُحفظ فقط لنموذج يدعمها). 114 مفتاح ترجمة `AI_*`.
+  - **قرارات أثناء التنفيذ:** (1) عنصر القائمة `menuItemAiSettings` بجوار «بيانات المعدلات الضريبية» تحت «ملف»، للمديرين فقط؛ عنصر «المساعد الذكى» (`/assistant`) **يُضاف فى P1** مع الصفحة نفسها حتى لا يظهر عنصر بلا شاشة. (2) `KnownRoutes`/`RoutePageRegistry` لا تحتاج تعديلاً (تُبنى بالـ Reflection)، والأيقونة من كلمة «إعدادات» تلقائياً. (3) علامة «محلى» تُحسب من العنوان لا من اختيار المستخدم حتى لا يتجاوز مزوّد سحابى وضع «محلى فقط». (4) `DataProtection:KeysPath` اختيارى فى appsettings؛ بدونه يبقى مسار المفاتيح الافتراضى كما هو (لا يُبطل كوكى الدخول الحالى) — **يجب ضبطه عند النشر على IIS**.
+  - **تحقق:** بناء الويب ناجح؛ الجداول والقائمة أُنشئت على ClientNew؛ اختبار خدمة (33/33) شمل: عدم التكرار عند إعادة EnsureSchema، تشفير المفتاح والـ Headers، القناع، Bearer + Header إضافى، 401 برسالة عربية، عدم اتباع التحويل، عنوان لا يرد، Ollama، Anthropic بمفتاح وهمى (401 حقيقى)، ربط المهام وإسقاط temperature؛ وحُذفت صفوف الاختبار. اختبارات المستخدم م-351…م-354، م-382 فى `master-user-test-plan.md` (القسم ٦ط).
+
+### P0.1 — الربط بتسجيل الدخول لدى المزوّد (طلب المستخدم 2026-11-13، خطة Fable 5.2)
+- **الهدف:** طريقة ربط ثانية فى `/settings/ai` بجانب «مفتاح API»: يفتح المستخدم صفحة تسجيل الدخول لدى المزوّد فى تبويب جديد، يسجّل دخوله، فيرتبط النظام تلقائياً. طريقة المفتاح والـ URL تبقى كما هى.
+- **حقائق تحقّقت منها (توثيق المزوّدين 2026-11-13):** OpenRouter يدعم OAuth PKCE بلا تسجيل تطبيق (`https://openrouter.ai/auth` ← `POST https://openrouter.ai/api/v1/auth/keys` يعيد `key`، ووضع «الكود» بلا `callback_url`). Gemini وAzure يدعمان OAuth لكن يلزم كل عميل إنشاء OAuth Client خاص به وعنوان رجوع https. Anthropic وOpenAI لا يتيحان OAuth لتطبيقات الطرف الثالث (واستخدام معرّف عميل Anthropic الخاص بأدواته انتحال غير مسموح، واشتراكات Claude الاستهلاكية لا تُستخدم لتشغيل تطبيقات أخرى).
+- **النطاق (نسخة صغيرة وصادقة):**
+  1. **OpenRouter — ربط حقيقى (OAuth PKCE S256):** نوع مزوّد جاهز جديد `openrouter` (بروتوكول OpenAI، `https://openrouter.ai/api/v1`) يتيح نماذج Claude/GPT/Gemini بحساب واحد. الناتج مفتاح API عادى يُحفظ مشفّراً فى `ApiKeyEnc`.
+  2. **Anthropic / OpenAI / Gemini / Azure — ربط مُساعَد:** زر «افتح صفحة المفاتيح لدى المزوّد» يفتح لوحة المزوّد فى تبويب جديد، ينشئ المستخدم مفتاحاً ويلصقه. نص الشاشة يوضّح أن هؤلاء لا يتيحون ربطاً مباشراً ويشير إلى OpenRouter.
+  3. **مؤجّل إلى P0.2 (عند طلب فعلى):** OAuth لـ Google/Azure Entra وOAuth2 العام (تسجيل تطبيق، refresh token، انتهاء صلاحية، ClientSecretEnc/TokenEnc/RefreshTokenEnc/TokenExpiresAt).
+- **القرارات:**
+  | القرار | الاختيار | السبب |
+  |---|---|---|
+  | من يحصل على ربط حقيقى | OpenRouter فقط | الوحيد الذى يعمل «افتح صفحة الدخول ← مربوط» بلا إعداد مسبق |
+  | الحالة المعلّقة | فى الذاكرة (`AiSignInStore` Singleton): 10 دقائق، مرة واحدة، 5 لكل مستخدم | سرّ مؤقت يختفى بإعادة التشغيل؛ لا جدول للـ verifier |
+  | عنوان الرجوع | `{origin}/ai/signin/callback`، والـ origin من `NavigationManager.BaseUri` داخل الدائرة | لا نثق بـ Host الطلب عند الرجوع |
+  | الشبكة المحلية http | وضع رجوع إن كان العنوان https أو localhost، وإلا وضع «الكود» (بلا `callback_url`) يلصقه المستخدم؛ حقل اللصق ظاهر دائماً | يعمل على `http://192.168.x.x:5256` أياً كانت قيود المزوّد. **[يحتاج تحقق]:** قبول OpenRouter لرجوع http على localhost |
+  | فتح صفحة المزوّد | رابط حقيقى `<a target="_blank" rel="noopener noreferrer">` بعد تجهيز الرابط | `window.open` من الخادم يحجبه المتصفح؛ ودائرة Blazor تبقى حيّة |
+  | تحديث الشاشة | استعلام كل ثانيتين حتى «تم» أو انتهاء المهلة | بسيط بلا أحداث بين الدوائر |
+  | تحديث التوكن | لا يوجد فى P0.1 | مفتاح OpenRouter لا ينتهى |
+  | عنوان التبديل | ثابت `https://openrouter.ai/api/v1/auth/keys` لا من BaseUrl الصف | لا يُرسل الكود والـ verifier لعنوان آخر |
+  | إلغاء الربط | يمسح المفتاح محلياً فقط مع تنبيه بحذفه من openrouter.ai/settings/keys | صادق: لا نحذف المفتاح البعيد |
+- **قاعدة البيانات (إضافة أعمدة إن لم توجد، بلا مساس بالصفوف):** `AI_Providers.AuthMethod nvarchar(20) NULL` (`apikey` / `signin`)، `SignInAt datetime NULL`، `SignInBy bigint NULL`.
+- **الملفات:** جديد: `Razors/AccountERP.AI/SignIn/AiSignInStore.cs`، `SignIn/OpenRouterSignIn.cs`، `SignIn/AiSignInEndpoints.cs` (`GET /ai/signin/callback`). معدّل: `AiAssistantSchemaCLS.cs`، `AiModels.cs` (`openrouter`، DTOs `AiSignInStart/AiSignInStatus`، دوال `StartSignIn/GetSignInStatus/CompleteSignInWithCodeAsync/Disconnect`)، `AiProvidersCLS.cs`، `AiAdminGateway.cs`، `ProviderRegistry.cs`، `AiServiceCollectionExtensions.cs`، `Program.cs`، `AiSettingsPage.razor`، ملفات resx، `master-user-test-plan.md`.
+- **الأمان:** نقطة الرجوع تتحقق من state (موجود، غير منتهٍ، يُستهلك ذرّياً)، وأن كوكى الدخول يخص نفس المستخدم الذى بدأ الربط، وأنه ما زال يملك صلاحية الشاشة؛ `StartSignIn` يرفض من لا يملك الصلاحية؛ الكود والـ verifier والمفتاح لا تُسجَّل ولا تصل للمتصفح؛ صفحة الرجوع HTML ثابتة بـ `Cache-Control: no-store` و`Referrer-Policy: no-referrer`؛ Rate limit على المسار.
+- **القبول:** الربط بالمفتاح كما هو (م-352، م-382)؛ ربط OpenRouter ينتهى بمفتاح مشفّر مقنّع وشارة واختبار ناجح بلا كتابة مفتاح؛ يعمل على LAN http بوضع الكود؛ state مكرر/منتهٍ/من مستخدم آخر يُرفض؛ إعادة EnsureSchema لا تكرر الأعمدة.
+- **اختبارات:** م-383 «ربط OpenRouter بتسجيل الدخول وظهور شارة مربوط»؛ م-384 «الربط بلصق الكود على الشبكة المحلية http»؛ م-385 «جلب النماذج واختبار الاتصال بعد الربط بتسجيل الدخول»؛ م-386 «فتح صفحة المفاتيح لدى Anthropic وOpenAI ثم لصق المفتاح»؛ م-387 «إلغاء الربط يمسح المفتاح»؛ م-388 «انتهاء مهلة الربط بعد 10 دقائق برسالة واضحة»؛ م-389 «مستخدم بلا صلاحية لا يبدأ الربط ولا يكمله»؛ م-390 «الربط بمفتاح API ما زال يعمل».
+- **مخاطر:** قيود عنوان الرجوع (يعالجها وضع الكود)؛ إعادة تشغيل الخادم أثناء الربط (رسالة «أعد المحاولة»)؛ المفتاح يبقى فى حساب OpenRouter بعد إلغاء الربط (تنبيه)؛ تغيّر واجهة OpenRouter (معزولة فى ملف واحد).
+- ✅ **تم التنفيذ 2026-11-13 (Opus 5.5):** `SignIn/AiSignInStore.cs` + `OpenRouterSignIn.cs` + `AiSignInService.cs` (إكمال مشترك بين الرجوع ولصق الكود، تحقق صلاحية بنفس قاعدة MenuRepository عبر `AiProvidersCLS.UserHasMenu`) + `AiSignInEndpoints.cs` (Rate limit بسياسة المندوبين الموجودة)؛ أعمدة AuthMethod/SignInAt/SignInBy؛ نوع `openrouter`؛ الشاشة: اختيار طريقة الربط، لوحة تسجيل الدخول (رابط حقيقى + استعلام كل ثانيتين + لصق الكود)، شارة «مربوط بتسجيل الدخول»، «إلغاء الربط»، وزر «افتح صفحة المفاتيح» للمزوّدين الآخرين. **تحقق:** بناء ناجح؛ اختبار خدمة 26/26 (الأعمدة وعدم التكرار، PKCE، الصلاحية، وضع الكود على LAN ووضع الرجوع على localhost/https، كود وهمى يرفضه OpenRouter فعلياً برسالة عربية بلا حفظ، الاستخدام مرة واحدة، مستخدم آخر، حد 5 طلبات، الحفظ وإلغاء الربط، رفض Anthropic، نقطة الرجوع بـ state مزيف على الخادم الحى ← صفحة فشل آمنة no-store). الربط الكامل بحساب OpenRouter حقيقى يختبره المستخدم (م-383…م-390).
+
+### P1 — واجهة المحادثة والنافذة العائمة
+- **النطاق:** `AssistantChat`, `AssistantPage`, `AssistantWidget`؛ `AssistantSessionService` (Scoped)؛ بثّ؛ حفظ المحادثات؛ تفضيلا الأيقونة؛ محادثة نصية بلا أدوات.
+- **ملفات:** جديد: `Pages/Assistant/*`, `Components/Assistant/*`. تعديل: `MainLayoutMud.razor`، `UserSettingsMenu.razor`، `UserPreferencesService.cs`، `UserSettingsCLS.cs` (إضافة مفاتيح فقط).
+- **القبول:** نفس المحادثة فى الصفحة والنافذة؛ إخفاء/نقل الأيقونة يُحفظ للحساب؛ RTL وداكن سليمان؛ زر الإيقاف يعمل.
+- **اختبارات:** م-355 «فتح صفحة المساعد من القائمة الرئيسية»؛ م-356 «الأيقونة العائمة تفتح نافذة المحادثة»؛ م-357 «إخفاء الأيقونة وتغيير موضعها من إعدادات الحساب»؛ م-358 «استمرار المحادثة بين النافذة والصفحة وبعد إعادة التحميل»؛ م-359 «العرض على الموبايل والوضع الداكن».
+- **مخاطر:** تعارض z-index مع الحوارات وTabHost؛ انقطاع الـ Circuit أثناء البث (الحالة محفوظة فى القاعدة فتُستكمل).
+
+### P2 — أسئلة وأجوبة للقراءة فقط
+- **النطاق:** Views `ai.*` (مجموعة أولى: مبيعات، مشتريات، مخزون، عملاء، موردون، أصناف)؛ `ReadOnlySqlExecutor`؛ `PermissionGate`؛ الأدوات `search_schema`, `run_readonly_query`, `find_entity` والأدوات المالية؛ القاموس والمسرد؛ التدقيق والحدود.
+- **القبول:** أى محاولة DML/DDL تُرفض وتُسجَّل؛ أرقام ميزان المراجعة من المساعد = شاشة الميزان؛ مستخدم بلا صلاحية لا يحصل على بيانات التقرير.
+- **اختبارات:** م-360 «سؤال عن مبيعات فترة ومطابقته بتقرير النظام»؛ م-361 «رصيد صنف فى مخزن محدد»؛ م-362 «رفض طلب تعديل أو حذف بيانات»؛ م-363 «مستخدم بلا صلاحية كشف حساب لا يرى أرصدة العملاء»؛ م-364 «ظهور الاستعلام المنفّذ فى سجل التدقيق».
+- **مخاطر:** دقة Text-to-SQL على مخطط قديم (تُعالَج بالـ Views والأدوات الجاهزة والأمثلة)؛ ترميز Windows-1256 فى بعض البيانات **[يحتاج تحقق]**؛ أداء استعلامات ثقيلة (timeout وحد صفوف).
+
+### P3 — رسم التقارير وفتح الشاشات
+- **النطاق:** `ReportSpec` + `AiReportView`؛ `render_report`, `open_screen`؛ كتالوج الشاشات؛ طباعة، Excel، حفظ/تثبيت، إعادة تشغيل.
+- **اختبارات:** م-365 «تقرير بجدول ورسم بيانى من طلب عربى»؛ م-366 «فتح ميزان المراجعة بالفترة المطلوبة من المحادثة»؛ م-367 «تصدير التقرير إلى Excel وطباعته»؛ م-368 «حفظ تقرير وإعادة تشغيله بفترة جديدة».
+- **مخاطر:** شاشات لا تقبل باراميترات query (تُضاف تدريجياً).
+
+### P4 — قرارات المستخدم `ask_user`
+- **النطاق:** إيقاف/استئناف الحلقة، بطاقة السؤال بخيارات، استمرار بعد إعادة التحميل.
+- **اختبارات:** م-369 «المساعد يسأل عند تشابه أسماء عملاء ويكمل بعد الاختيار»؛ م-370 «السؤال المعلّق يبقى بعد إعادة تحميل الصفحة».
+
+### P5 — إدخال المسودات (مبيعات / مشتريات / إذن مخزن)
+- **النطاق:** `AI_Drafts`؛ أدوات المسودات الثلاث؛ تعبئة `SalesInvoicePage`/`PurchaseInvoicePage` بـ `?aiDraft=`؛ مسار إذن المخزن؛ شريط «مسودة من المساعد».
+- **القبول:** لا صف فى جداول الفواتير ولا تغيير فى `Unit_Item.Full_Qua`/`D_Qua` قبل ضغط المستخدم «حفظ»؛ بعد الحفظ يتحرك المخزون فى الاتجاه الصحيح لكل مخزن؛ أعلام الضريبة صحيحة.
+- **اختبارات:** م-371 «مسودة فاتورة مبيعات من طلب نصى ولا أثر على المخزون قبل الحفظ»؛ م-372 «حفظ المسودة ينقص رصيد المخزن بالكمية الصحيحة»؛ م-373 «مسودة فاتورة مشتريات ضريبية بضريبة على الصنف»؛ م-374 «إذن إضافة وإذن صرف من المحادثة»؛ م-375 «مستخدم بلا صلاحية فاتورة المبيعات لا يستطيع إنشاء مسودة».
+- **مخاطر (الأعلى فى الخطة):** منطق الحفظ داخل صفحات كبيرة؛ التعبئة يجب أن تمر بمسار إضافة البند نفسه. تحقق من النسخ المتشابهة للصفحات قبل التعديل (قاعدة CLAUDE.md رقم 3).
+
+### P6 — استخراج المستندات والصور
+- **النطاق:** الرفع والتخزين، `extract_document` بنموذج رؤية (صور، PDF، Excel)، ثقة لكل حقل، فحص التكرار، ربط بـ P5.
+- **اختبارات:** م-376 «صورة فاتورة مورد تتحول إلى مسودة مشتريات»؛ م-377 «صنف غير معروف فى الصورة يُعرض للاختيار ولا يُنشأ»؛ م-378 «تحذير عند تكرار رقم فاتورة المورد»؛ م-379 «رفض ملف بحجم أو نوع غير مسموح».
+- **مخاطر:** خط اليد والصور الرديئة والأرقام الهندية (٠-٩)؛ تُعرض الحقول ضعيفة الثقة مميّزة.
+
+### P7 — تحسين المعرفة والتقييم
+- **النطاق:** embeddings + بحث هجين، مجموعة الأسئلة الذهبية، شاشة تشغيل التقييم، تغذية راجعة (إعجاب/عدم إعجاب) تتحول لأمثلة بعد مراجعة.
+- **اختبارات:** م-380 «تشغيل مجموعة التقييم وعرض نسبة النجاح»؛ م-381 «مقارنة نموذجين على نفس المجموعة».
+
+### P8 — مزايا «النظام الذكى» (كل ميزة مهمة فرعية مستقلة، انظر القسم 10).
+
+**الترتيب والاعتماديات:** P0 → P1 → P2 → P3 → P4 → P5 → P6؛ P7 بالتوازى بعد P2.
+
+---
+
+## 10) خارطة «ERP ذكى» بعد المساعد
+
+| # | الميزة | القيمة | الجهد | ملاحظات |
+|---|---|---|---|---|
+| 1 | الموجز اليومى للمدير (مبيعات، تحصيلات، سيولة، تنبيهات) عبر `NotificationCenterService` | عالية | منخفض | يعيد استخدام أدوات P2/P3؛ Worker مجدول مثل `SalesRepNotifyWorker` |
+| 2 | بحث باللغة الطبيعية فى كل النظام (Ctrl+K: شاشات، عملاء، أصناف، مستندات) | عالية | منخفض | فوق `find_entity` وكتالوج الشاشات |
+| 3 | شرح أخطاء الفاتورة الإلكترونية المصرية واقتراح التصحيح | عالية | منخفض-متوسط | قيمة محلية مباشرة |
+| 4 | كشف الشذوذ فى القيود (مبالغ غير معتادة، تكرار، قيود خارج الدوام، حسابات نادرة) | عالية | متوسط | قواعد إحصائية أولاً ثم شرح بالنموذج؛ يكمل `EntriesIntegrityPage` |
+| 5 | أولويات التحصيل (ترتيب العملاء حسب العمر والسلوك + مسودة رسالة تذكير) | عالية | متوسط | الإرسال بتأكيد المستخدم |
+| 6 | إعادة الطلب الذكية وتوقع الطلب | عالية | متوسط-عالٍ | يكمل `StoreNeedsPage`؛ تنبؤ إحصائى والنموذج للشرح |
+| 7 | توقع التدفق النقدى (13 أسبوعاً) | متوسطة-عالية | متوسط | من الاستحقاقات والأقساط والشيكات |
+| 8 | تصنيف تلقائى (حساب/مركز تكلفة مقترح للمصروف، مجموعة للصنف الجديد) | متوسطة | منخفض-متوسط | اقتراح فقط، القرار للمستخدم |
+| 9 | مساعد سياقى داخل كل شاشة («اشرح هذا الرصيد»، «لماذا لا يتزن؟») | متوسطة | منخفض | سياق الشاشة موجود من P1 |
+| 10 | MCP Server يكشف أدوات القراءة لعملاء خارجيين (Claude Desktop وغيره) | متوسطة | متوسط | نفس `ToolRegistry` و`PermissionGate`؛ قراءة فقط أولاً بتوكن لكل مستخدم |
+| 11 | إدخال صوتى بالعربية | متوسطة | متوسط | بعد استقرار P5 |
+| 12 | مطابقة بنكية ذكية من كشف البنك (PDF/Excel) | عالية | عالٍ | تعتمد على P6 |
+
+التنفيذ المقترح: 1 → 2 → 3 → 4 → 5 ثم الباقى حسب طلب العملاء.
+
+---
+
+## 11) توصيات النماذج والتكلفة والخصوصية
+
+**نماذج Claude (أسعار API الرسمية لكل مليون توكن، من مرجع محدّث 2026-11-03):**
+
+| النموذج | Model ID | إدخال / إخراج | الدور المقترح |
+|---|---|---|---|
+| Claude Opus 5.5 | `claude-opus-5-5` | $4 / $20 | **الوكيل الافتراضى** (استدلال، Text-to-SQL، مسودات) بجهد `medium` |
+| Claude Sonnet 5.5 | `claude-sonnet-5-5` | $2 / $10 | بديل اقتصادى للوكيل إن أثبتت مجموعة التقييم كفايته؛ استخراج الفواتير |
+| Claude Haiku 5.5 | `claude-haiku-5-5` | $0.10 / $0.50 | مهام سريعة: عناوين المحادثات، التصنيف، التطبيع |
+| Claude Fable 5.2 | `claude-fable-5-2` | $8 / $40 | اختيارى للتحليلات الأثقل فقط؛ يتطلب احتفاظ بيانات 30 يوماً لدى المزوّد، فلا يناسب من يشترط عدم الاحتفاظ |
+
+قيود تقنية يجب أن يراعيها الـ Adapter (تؤثر على شاشة الإعدادات):
+- `temperature`/`top_p` و`budget_tokens` مرفوضة (400) على هذه النماذج؛ التحكم بـ `output_config.effort`، والتفكير adaptive.
+- فرض `tool_choice` (`any`/`tool`) مرفوض على Opus 5.5 / Sonnet 5.5 / Fable 5.2؛ نستخدم `auto` + `strict: true`.
+- يجب فحص `stop_reason` (ومنه `refusal`) قبل قراءة المحتوى.
+- prompt caching للـ system prompt وتعريف الأدوات (ثابتان) يخفض التكلفة والزمن كثيراً.
+
+**OpenAI / Gemini / Azure OpenAI:** مدعومة عبر نفس التجريد. لا أسمّى إصدارات محددة لأنها تتغير؛ قائمة النماذج وأسعارها تُجلب/تُدخل من شاشة الإعدادات. المطلوب من أى نموذج للوكيل: tool calling موثوق + مخرجات منظّمة؛ وللاستخراج: رؤية.
+
+**المحلى (Ollama / LM Studio):** عائلات Qwen و Llama التى تدعم tool calling. توقع واقعى: جودة أقل فى Text-to-SQL والعربية والأدوات المتعددة، وتحتاج GPU مناسب (تقريباً 24GB VRAM فأكثر لنموذج محترم). مناسبة لـ: الخصوصية التامة، الأوفلاين، والمهام البسيطة. الحكم بمجموعة التقييم لا بالانطباع.
+
+**العربية:** النماذج الكبرى الحالية جيدة فى الفصحى والعامية المصرية؛ نقاط الضعف المتوقعة: المصطلحات المحاسبية المحلية والأسماء المنقحرة فى المخطط (يعالجها المسرد)، والأرقام الهندية وخط اليد فى الصور (تعالجها درجات الثقة والمراجعة).
+
+**تقدير تكلفة تقريبى (افتراضات: سؤال متوسط = 4 دورات أدوات، نحو 25 ألف توكن إدخال أغلبها من الكاش، ونحو 2000 توكن إخراج):**
+
+| النموذج | تكلفة السؤال تقريباً | 20 مستخدماً × 30 سؤالاً × 22 يوماً |
+|---|---|---|
+| Opus 5.5 | نحو $0.06 | نحو $800 شهرياً |
+| Sonnet 5.5 | نحو $0.03 | نحو $400 شهرياً |
+| Haiku 5.5 | أقل من $0.005 | نحو $30–60 شهرياً |
+
+استخراج صورة فاتورة واحدة: نحو $0.01–0.03. هذه تقديرات حسابية لا قياسات؛ تُستبدل بأرقام لوحة الاستخدام بعد P2.
+
+**خيارات الخصوصية:** (أ) محلى فقط؛ (ب) سحابى مع تقليل البيانات (مخطط وإحصاءات فقط)؛ (ج) سحابى كامل. ويمكن التوجيه حسب المهمة (مثلاً الاستخراج سحابى والأسئلة المالية محلية).
+
+---
+
+## 12) قرارات مفتوحة للمستخدم (مع التوصية)
+
+> ✅ **2026-11-13: وافق المستخدم على كل التوصيات الست كما هى** («موافق على التوصيات»). القرارات محسومة.
+
+قرارات تحتاج اختيارك فعلاً:
+
+| # | القرار | التوصية |
+|---|---|---|
+| 1 | هل يُسمح بإرسال بيانات المنشأة لمزوّد سحابى؟ | نعم مع «تقليل البيانات» افتراضياً، ووضع «محلى فقط» متاح لكل منشأة |
+| 2 | النموذج الافتراضى للوكيل | `claude-opus-5-5`؛ والنزول إلى `claude-sonnet-5-5` فقط إن حافظ على نتيجة مجموعة التقييم |
+| 3 | من يدفع ويملك مفتاح الـ API (أنت كمورّد أم كل عميل)؟ | كل عميل بمفتاحه (الجداول تدعم ذلك)، مع إمكانية مفتاح مركزى لاحقاً |
+| 4 | إنشاء Login قراءة فقط على SQL Server عند كل عميل | نعم (سكربت نسلّمه)؛ البديل الأضعف: نفس الاتصال مع الاعتماد على الفاحص فقط — لا أنصح به |
+| 5 | ظهور عنصر «المساعد الذكى» فى قائمة الديسك توب (الجدول مشترك) | يتبع سابقة `/help` الحالية؛ نتحقق من مظهره فى P0 ونقرر |
+| 6 | مدة الاحتفاظ بالمحادثات والمرفقات | 12 شهراً للمحادثات، 90 يوماً للمرفقات، بالأرشفة لا الحذف |
+
+قرارات حسمتها بالخيار الحديث (تُراجع إن اعترضت): تجريد `Microsoft.Extensions.AI` + Adapter رسمى لـ Claude؛ تقارير spec لا HTML خام؛ مسودات فقط للكتابة؛ بحث كلمات أولاً ثم embeddings فى الذاكرة؛ مشروع مستقل `AccountERP.AI`؛ الموضع المنطقى `start/end` للأيقونة.
+
+---
+
+## 13) استراتيجية التقييم والاختبار
+
+- **المجموعة الذهبية (`AI_EvalCases`):** 60–100 سؤال عربى (فصحى وعامية مصرية) موزعة: مبيعات، مشتريات، مخزون، حسابات، عملاء/موردون، أسئلة غامضة يجب أن تولّد `ask_user`، وأسئلة يجب أن تُرفض (تعديل/حذف، بيانات مستخدمين). لكل حالة: الأداة المتوقعة، SQL مرجعى أو نتيجة متوقعة، ووسوم.
+- **المقارنة:** بالنتيجة لا بنص الـ SQL (تنفيذ المرجعى والمولَّد على قاعدة اختبار ثابتة ومقارنة الجداول مع تسامح فى الترتيب والتقريب). الحالات المالية تُطابق مخرجات `FinalAccountsService`.
+- **المقاييس:** نسبة النجاح، صحة اختيار الأداة، عدد الدورات، التوكنز، الزمن، التكلفة لكل حالة ناجحة.
+- **الانحدار:** تشغيل إلزامى عند تغيير نموذج، أو system prompt، أو View، أو تعريف أداة؛ النتائج فى `AI_EvalRuns` وتُقارن من شاشة الإعدادات. التشغيل يستهلك رصيداً حقيقياً فيتم بموافقة المدير.
+- **اختبارات الأمان (آلية، بلا نموذج):** مجموعة استعلامات خبيثة ضد `ReadOnlySqlExecutor` (DML، عبارات متعددة، `EXEC`, `INTO`, كائنات خارج القائمة، تعليقات مخادعة) يجب رفضها 100%؛ واختبار حقن عبر ملف مرفوع يحتوى تعليمات.
+- **اختبارات الإدخال:** لكل نوع مستند: قراءة `Unit_Item.Full_Qua`/`D_Qua` قبل المسودة، بعد المسودة (بلا تغيير)، وبعد الحفظ (تغيير صحيح لكل مخزن) — وفق قاعدة CLAUDE.md رقم 12.
+- **اختبارات المستخدم:** م-351 إلى م-381 أعلاه، تُضاف لكل مرحلة عند تنفيذها.
+
+---
+
+### Critical Files for Implementation
+- `E:\MohSaleh\MyWorkAll\SIT_Projects .Net\SIT_Projects\Razors\AccountERP.Web\AccountERP.Web\Program.cs` — تسجيل خدمات المساعد واستدعاء `AiAssistantSchemaCLS.EnsureSchema()`
+- `E:\MohSaleh\MyWorkAll\SIT_Projects .Net\SIT_Projects\AccountModelsLib\AlterDB_CLS\StockEngineSchemaCLS.cs` — النمط المرجعى لإضافة القوائم والجداول (`HelpMenu`, `InventoryValueMenu`) الذى يُحاكيه الملف الجديد `AiAssistantSchemaCLS.cs`
+- `E:\MohSaleh\MyWorkAll\SIT_Projects .Net\SIT_Projects\Razors\AccountERP.SharedUI\Components\Layout\MainLayoutMud.razor` — تركيب `AssistantWidget` (الأيقونة العائمة)
+- `E:\MohSaleh\MyWorkAll\SIT_Projects .Net\SIT_Projects\AccountModelsLib\Models\Config\UserSettings\UserSettingsCLS.cs` (مع `Razors\AccountERP.SharedUI\Services\UserPreferencesService.cs` و`Components\Shared\UserSettingsMenu.razor`) — تفضيلا إظهار الأيقونة وموضعها
+- `E:\MohSaleh\MyWorkAll\SIT_Projects .Net\SIT_Projects\Razors\AccountERP.SharedUI\Pages\Invoices\SalesInvoicePage.razor` (ومثلها `PurchaseInvoicePage.razor` و`Pages\Store\StoreOrderPage.razor`) — تعبئة المسودة `?aiDraft=` عبر مسار الحفظ القائم
+- `E:\MohSaleh\MyWorkAll\SIT_Projects .Net\SIT_Projects\AccountModelsLib\BusinessLibShared\GeneralLedger\FinalAccountsService.cs` و`LedgerBalanceEngine.cs` — أساس الأدوات المالية للقراءة
+- `E:\MohSaleh\MyWorkAll\SIT_Projects .Net\SIT_Projects\ERP_V1_3.md` — مصدر القاموس الدلالى و Views الأعمال

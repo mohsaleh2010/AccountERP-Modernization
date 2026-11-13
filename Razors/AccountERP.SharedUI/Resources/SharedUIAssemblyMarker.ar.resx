@@ -4919,4 +4919,148 @@
   <data name="SPBWhy" xml:space="preserve"><value>هذه الشاشة معطلة فى نسخة الديسكتوب أيضاً، فلا توجد شاشة أصلية تُنقل الآن. ستُبنى لاحقاً على محرك أرصدة الأصناف.</value></data>
   <data name="SPBMeanwhile" xml:space="preserve"><value>إلى أن تُبنى، استخدم أرصدة أول المدة للأصناف لكل فترة مالية.</value></data>
   <data name="SPBOpeningLink" xml:space="preserve"><value>أرصدة أول المدة للأصناف</value></data>
+  <data name="AI_Title" xml:space="preserve"><value>إعدادات الذكاء الاصطناعى</value></data>
+  <data name="AI_Sub" xml:space="preserve"><value>ربط مزوّدى الذكاء الاصطناعى (سحابى أو محلى)، اختبار الاتصال، واختيار النموذج لكل مهمة</value></data>
+  <data name="AI_NoAccess" xml:space="preserve"><value>لا تملك صلاحية شاشة إعدادات الذكاء الاصطناعى</value></data>
+  <data name="AI_NotAvailable" xml:space="preserve"><value>إعدادات الذكاء الاصطناعى متاحة من تطبيق الويب فقط</value></data>
+  <data name="AI_Reload" xml:space="preserve"><value>تحديث</value></data>
+  <data name="AI_TabProviders" xml:space="preserve"><value>المزوّدون</value></data>
+  <data name="AI_TabModels" xml:space="preserve"><value>النماذج والمهام</value></data>
+  <data name="AI_AddProvider" xml:space="preserve"><value>ربط مزوّد</value></data>
+  <data name="AI_EditProvider" xml:space="preserve"><value>تعديل المزوّد</value></data>
+  <data name="AI_FName" xml:space="preserve"><value>الاسم الظاهر</value></data>
+  <data name="AI_FUrl" xml:space="preserve"><value>عنوان الـ URL (Base URL)</value></data>
+  <data name="AI_FUrlHelp" xml:space="preserve"><value>https للعناوين الخارجية؛ http مسموح للشبكة المحلية فقط</value></data>
+  <data name="AI_FKey" xml:space="preserve"><value>مفتاح الـ API</value></data>
+  <data name="AI_FKeyHelp" xml:space="preserve"><value>يُحفظ مشفّراً ولا يظهر بعد الحفظ إلا مقنّعاً</value></data>
+  <data name="AI_FKeyOptional" xml:space="preserve"><value>اختيارى للخوادم المحلية؛ يُحفظ مشفّراً</value></data>
+  <data name="AI_FKeyKeep" xml:space="preserve"><value>المفتاح الحالى {0} — اتركه فارغاً للإبقاء عليه</value></data>
+  <data name="AI_ShowHideKey" xml:space="preserve"><value>إظهار/إخفاء المفتاح</value></data>
+  <data name="AI_FClearKey" xml:space="preserve"><value>مسح المفتاح المحفوظ</value></data>
+  <data name="AI_FDeployment" xml:space="preserve"><value>اسم الـ Deployment</value></data>
+  <data name="AI_FApiVersion" xml:space="preserve"><value>إصدار الـ API</value></data>
+  <data name="AI_FProtocol" xml:space="preserve"><value>البروتوكول</value></data>
+  <data name="AI_FProtocolHelp" xml:space="preserve"><value>أغلب الخدمات والبوابات (OpenRouter، LiteLLM، Groq، vLLM) متوافقة مع OpenAI</value></data>
+  <data name="AI_FAuthHeader" xml:space="preserve"><value>اسم Header المفتاح</value></data>
+  <data name="AI_FAuthHeaderHelp" xml:space="preserve"><value>فارغ = Authorization: Bearer. أمثلة: x-api-key أو api-key</value></data>
+  <data name="AI_FHeaders" xml:space="preserve"><value>Headers إضافية</value></data>
+  <data name="AI_FHeadersHelp" xml:space="preserve"><value>سطر لكل Header بالشكل «الاسم: القيمة»؛ تُحفظ مشفّرة</value></data>
+  <data name="AI_FHeadersKeep" xml:space="preserve"><value>توجد Headers محفوظة (مشفّرة). اكتب جديدة لاستبدالها أو اتركه فارغاً للإبقاء عليها</value></data>
+  <data name="AI_FClearHeaders" xml:space="preserve"><value>مسح الـ Headers المحفوظة</value></data>
+  <data name="AI_FTimeout" xml:space="preserve"><value>مهلة الاتصال (ثانية)</value></data>
+  <data name="AI_FEnabled" xml:space="preserve"><value>مفعّل</value></data>
+  <data name="AI_SecurityNote" xml:space="preserve"><value>المفتاح يُرسل للعنوان المسجّل فقط (بلا تحويل لعناوين أخرى)، ولا يُكتب فى السجلات.</value></data>
+  <data name="AI_Cancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="AI_Close" xml:space="preserve"><value>إغلاق</value></data>
+  <data name="AI_Saved" xml:space="preserve"><value>تم الحفظ</value></data>
+  <data name="AI_Deleted" xml:space="preserve"><value>تم الحذف</value></data>
+  <data name="AI_Delete" xml:space="preserve"><value>حذف</value></data>
+  <data name="AI_Test" xml:space="preserve"><value>اختبار الاتصال</value></data>
+  <data name="AI_Testing" xml:space="preserve"><value>جارٍ الاختبار…</value></data>
+  <data name="AI_Fetch" xml:space="preserve"><value>جلب النماذج</value></data>
+  <data name="AI_Connect" xml:space="preserve"><value>ربط</value></data>
+  <data name="AI_Connected" xml:space="preserve"><value>متصل</value></data>
+  <data name="AI_Failed" xml:space="preserve"><value>فشل الاتصال</value></data>
+  <data name="AI_NotTested" xml:space="preserve"><value>لم يُختبر</value></data>
+  <data name="AI_Disabled" xml:space="preserve"><value>معطّل</value></data>
+  <data name="AI_KType" xml:space="preserve"><value>النوع</value></data>
+  <data name="AI_KKey" xml:space="preserve"><value>المفتاح</value></data>
+  <data name="AI_KModels" xml:space="preserve"><value>النماذج المضافة</value></data>
+  <data name="AI_KScope" xml:space="preserve"><value>النطاق</value></data>
+  <data name="AI_Local" xml:space="preserve"><value>محلى (داخل الشبكة)</value></data>
+  <data name="AI_Cloud" xml:space="preserve"><value>سحابى</value></data>
+  <data name="AI_NoKey" xml:space="preserve"><value>بدون مفتاح</value></data>
+  <data name="AI_CustomTitle" xml:space="preserve"><value>مزوّد مخصص (API + URL)</value></data>
+  <data name="AI_CustomDesc" xml:space="preserve"><value>اربط أى خدمة ذكاء اصطناعى: خدمة عالمية جديدة، خادم داخل الشركة، أو بوابة مثل OpenRouter / LiteLLM / Groq / DeepSeek / Mistral / vLLM.</value></data>
+  <data name="AI_AddCustom" xml:space="preserve"><value>إضافة مزوّد مخصص</value></data>
+  <data name="AI_Type_anthropic" xml:space="preserve"><value>Anthropic (Claude)</value></data>
+  <data name="AI_Type_openai" xml:space="preserve"><value>OpenAI</value></data>
+  <data name="AI_Type_gemini" xml:space="preserve"><value>Google Gemini</value></data>
+  <data name="AI_Type_azure" xml:space="preserve"><value>Azure OpenAI</value></data>
+  <data name="AI_Type_ollama" xml:space="preserve"><value>Ollama (محلى)</value></data>
+  <data name="AI_Type_lmstudio" xml:space="preserve"><value>LM Studio (محلى)</value></data>
+  <data name="AI_Type_custom" xml:space="preserve"><value>مخصص</value></data>
+  <data name="AI_TypeDesc_anthropic" xml:space="preserve"><value>نماذج Claude — الموصى به للوكيل (claude-opus-5-5)</value></data>
+  <data name="AI_TypeDesc_openai" xml:space="preserve"><value>نماذج OpenAI بمفتاح API</value></data>
+  <data name="AI_TypeDesc_gemini" xml:space="preserve"><value>نماذج Google Gemini بمفتاح API</value></data>
+  <data name="AI_TypeDesc_azure" xml:space="preserve"><value>OpenAI عبر اشتراك Azure (Endpoint + Deployment)</value></data>
+  <data name="AI_TypeDesc_ollama" xml:space="preserve"><value>نماذج تعمل على جهاز داخل الشركة — خصوصية تامة</value></data>
+  <data name="AI_TypeDesc_lmstudio" xml:space="preserve"><value>خادم LM Studio المحلى (متوافق مع OpenAI)</value></data>
+  <data name="AI_FetchedTitle" xml:space="preserve"><value>النماذج المتاحة لدى {0}</value></data>
+  <data name="AI_Search" xml:space="preserve"><value>بحث</value></data>
+  <data name="AI_ColModelId" xml:space="preserve"><value>معرّف النموذج</value></data>
+  <data name="AI_ColDisplay" xml:space="preserve"><value>الاسم الظاهر</value></data>
+  <data name="AI_ColContext" xml:space="preserve"><value>السياق (توكنز)</value></data>
+  <data name="AI_ColStatus" xml:space="preserve"><value>الحالة</value></data>
+  <data name="AI_Added" xml:space="preserve"><value>مضاف</value></data>
+  <data name="AI_NoFetched" xml:space="preserve"><value>لم تُرجع الخدمة نماذج</value></data>
+  <data name="AI_AddSelected" xml:space="preserve"><value>إضافة المحدد ({0})</value></data>
+  <data name="AI_ModelsAdded" xml:space="preserve"><value>تمت إضافة {0} نموذج</value></data>
+  <data name="AI_ConfirmDeleteProvider" xml:space="preserve"><value>حذف المزوّد «{0}» ونماذجه ({1}) وربطها بالمهام؟</value></data>
+  <data name="AI_ConfirmDeleteModel" xml:space="preserve"><value>حذف النموذج «{0}» وربطه بالمهام؟</value></data>
+  <data name="AI_ModelsTitle" xml:space="preserve"><value>النماذج</value></data>
+  <data name="AI_ModelsHelp" xml:space="preserve"><value>أضف النماذج بـ «جلب النماذج» من بطاقة المزوّد، أو يدوياً بالمعرّف إن كانت الخدمة لا تدعم قائمة النماذج. الأسعار لكل مليون توكن لحساب التكلفة التقديرية.</value></data>
+  <data name="AI_ColProvider" xml:space="preserve"><value>المزوّد</value></data>
+  <data name="AI_ColCaps" xml:space="preserve"><value>القدرات</value></data>
+  <data name="AI_ColPriceIn" xml:space="preserve"><value>سعر الإدخال / مليون</value></data>
+  <data name="AI_ColPriceOut" xml:space="preserve"><value>سعر الإخراج / مليون</value></data>
+  <data name="AI_CapTools" xml:space="preserve"><value>أدوات</value></data>
+  <data name="AI_CapVision" xml:space="preserve"><value>رؤية</value></data>
+  <data name="AI_CapTemp" xml:space="preserve"><value>temperature</value></data>
+  <data name="AI_CapEmbed" xml:space="preserve"><value>embeddings</value></data>
+  <data name="AI_AddModel" xml:space="preserve"><value>إضافة نموذج</value></data>
+  <data name="AI_NoModels" xml:space="preserve"><value>لا توجد نماذج بعد — اربط مزوّداً ثم «جلب النماذج»</value></data>
+  <data name="AI_RoutingTitle" xml:space="preserve"><value>ربط المهام بالنماذج</value></data>
+  <data name="AI_RoutingHelp" xml:space="preserve"><value>لكل مهمة نموذج أساسى (#1) وبدائل تُجرَّب بالترتيب عند الفشل. نماذج Claude الحالية لا تقبل temperature؛ يُتحكم فيها بمستوى الجهد.</value></data>
+  <data name="AI_SaveRouting" xml:space="preserve"><value>حفظ الربط</value></data>
+  <data name="AI_RoutingSaved" xml:space="preserve"><value>تم حفظ ربط المهام</value></data>
+  <data name="AI_AddPrimary" xml:space="preserve"><value>تحديد النموذج</value></data>
+  <data name="AI_AddFallback" xml:space="preserve"><value>إضافة بديل</value></data>
+  <data name="AI_Priority" xml:space="preserve"><value>الترتيب</value></data>
+  <data name="AI_ColModel" xml:space="preserve"><value>النموذج</value></data>
+  <data name="AI_Effort" xml:space="preserve"><value>مستوى الجهد</value></data>
+  <data name="AI_MaxTokens" xml:space="preserve"><value>أقصى توكنز</value></data>
+  <data name="AI_Temperature" xml:space="preserve"><value>Temperature</value></data>
+  <data name="AI_NoTemp" xml:space="preserve"><value>بدون temperature</value></data>
+  <data name="AI_NoTempHelp" xml:space="preserve"><value>النموذج لا يدعم temperature (فعّلها من قدرات النموذج إن كان يدعمها)</value></data>
+  <data name="AI_Task_chat" xml:space="preserve"><value>المحادثة / الوكيل</value></data>
+  <data name="AI_Task_reasoning" xml:space="preserve"><value>الاستدلال العميق</value></data>
+  <data name="AI_Task_vision" xml:space="preserve"><value>الاستخراج والرؤية</value></data>
+  <data name="AI_Task_fast" xml:space="preserve"><value>سريع / اقتصادى</value></data>
+  <data name="AI_Task_embedding" xml:space="preserve"><value>Embeddings</value></data>
+  <data name="AI_TaskDesc_chat" xml:space="preserve"><value>الأسئلة والتقارير وإنشاء المسودات</value></data>
+  <data name="AI_TaskDesc_reasoning" xml:space="preserve"><value>التحليلات الأثقل</value></data>
+  <data name="AI_TaskDesc_vision" xml:space="preserve"><value>قراءة صور ومستندات الفواتير</value></data>
+  <data name="AI_TaskDesc_fast" xml:space="preserve"><value>عناوين المحادثات والتصنيف</value></data>
+  <data name="AI_TaskDesc_embedding" xml:space="preserve"><value>البحث الدلالى فى المعرفة</value></data>
+  <data name="AI_Type_openrouter" xml:space="preserve"><value>OpenRouter</value></data>
+  <data name="AI_TypeDesc_openrouter" xml:space="preserve"><value>ربط بتسجيل الدخول بلا مفتاح — حساب واحد لنماذج Claude وGPT وGemini وغيرها</value></data>
+  <data name="AI_Method" xml:space="preserve"><value>طريقة الربط</value></data>
+  <data name="AI_MethodSignIn" xml:space="preserve"><value>تسجيل الدخول لدى المزوّد</value></data>
+  <data name="AI_MethodKey" xml:space="preserve"><value>مفتاح API</value></data>
+  <data name="AI_AssistedNote" xml:space="preserve"><value>هذا المزوّد لا يتيح ربطاً مباشراً بتسجيل الدخول للأنظمة الأخرى: افتح صفحة المفاتيح، سجّل دخولك وأنشئ مفتاحاً ثم الصقه هنا. للربط بتسجيل الدخول مباشرة استخدم OpenRouter (يتيح نماذج Claude وGPT وGemini).</value></data>
+  <data name="AI_OpenKeysPage" xml:space="preserve"><value>افتح صفحة المفاتيح لدى المزوّد</value></data>
+  <data name="AI_SaveAndSignIn" xml:space="preserve"><value>حفظ ثم تسجيل الدخول</value></data>
+  <data name="AI_SignInTitle" xml:space="preserve"><value>الربط بتسجيل الدخول لدى {0}</value></data>
+  <data name="AI_SignInStep1" xml:space="preserve"><value>اضغط الزر بالأسفل فتفتح صفحة تسجيل الدخول لدى المزوّد فى تبويب جديد.</value></data>
+  <data name="AI_SignInStep2" xml:space="preserve"><value>سجّل دخولك بحسابك ووافق على ربط النظام.</value></data>
+  <data name="AI_SignInStep3Callback" xml:space="preserve"><value>سيكتمل الربط تلقائياً وتتحدث هذه الشاشة وحدها.</value></data>
+  <data name="AI_SignInStep3Code" xml:space="preserve"><value>سيعرض المزوّد كوداً: انسخه والصقه فى الخانة بالأسفل ثم اضغط «إكمال الربط».</value></data>
+  <data name="AI_OpenSignInPage" xml:space="preserve"><value>افتح صفحة تسجيل الدخول لدى {0}</value></data>
+  <data name="AI_SignInWaiting" xml:space="preserve"><value>بانتظار إكمال تسجيل الدخول فى التبويب الآخر…</value></data>
+  <data name="AI_SignInCode" xml:space="preserve"><value>الكود من صفحة المزوّد</value></data>
+  <data name="AI_SignInCodeHelp" xml:space="preserve"><value>الصق الكود الذى عرضه المزوّد بعد تسجيل الدخول</value></data>
+  <data name="AI_SignInCodeFallback" xml:space="preserve"><value>احتياطى: إن عرض المزوّد كوداً بدلاً من الرجوع التلقائى الصقه هنا</value></data>
+  <data name="AI_SignInComplete" xml:space="preserve"><value>إكمال الربط</value></data>
+  <data name="AI_SignInExpires" xml:space="preserve"><value>صلاحية طلب الربط 10 دقائق. المفتاح الناتج يُحفظ مشفّراً ولا يظهر إلا مقنّعاً.</value></data>
+  <data name="AI_SignInRetry" xml:space="preserve"><value>إعادة تسجيل الدخول</value></data>
+  <data name="AI_SignInDone" xml:space="preserve"><value>تم الربط بتسجيل الدخول بنجاح</value></data>
+  <data name="AI_KMethod" xml:space="preserve"><value>الربط</value></data>
+  <data name="AI_SignedIn" xml:space="preserve"><value>مربوط بتسجيل الدخول</value></data>
+  <data name="AI_SignIn" xml:space="preserve"><value>تسجيل الدخول</value></data>
+  <data name="AI_SignInAgain" xml:space="preserve"><value>إعادة تسجيل الدخول</value></data>
+  <data name="AI_SignInWith" xml:space="preserve"><value>تسجيل الدخول لدى {0}</value></data>
+  <data name="AI_Disconnect" xml:space="preserve"><value>إلغاء الربط</value></data>
+  <data name="AI_ConfirmDisconnect" xml:space="preserve"><value>إلغاء ربط «{0}»؟ يُمسح المفتاح من هذا النظام فقط؛ لحذفه نهائياً من حسابك احذفه من صفحة المفاتيح لدى المزوّد (openrouter.ai/settings/keys).</value></data>
+  <data name="AI_Disconnected" xml:space="preserve"><value>تم إلغاء الربط</value></data>
 </root>

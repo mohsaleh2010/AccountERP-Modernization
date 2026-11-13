@@ -1,0 +1,241 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace AccountModelsLib
+{
+    /// <summary>أنواع المزوّدين المدعومة فى AI_Providers.ProviderType.</summary>
+    public static class AiProviderTypes
+    {
+        public const string Anthropic = "anthropic";
+        public const string OpenAI = "openai";
+        public const string Gemini = "gemini";
+        public const string Azure = "azure";
+        public const string Ollama = "ollama";
+        public const string LmStudio = "lmstudio";
+        public const string OpenRouter = "openrouter";
+        public const string Custom = "custom";
+
+        public static readonly string[] BuiltIn = { Anthropic, OpenRouter, OpenAI, Gemini, Azure, Ollama, LmStudio };
+
+        /// <summary>P0.1: المزوّدون الذين يتيحون ربطاً حقيقياً بتسجيل الدخول (OAuth PKCE بلا تسجيل تطبيق).</summary>
+        public static bool SupportsSignIn(string type) => type == OpenRouter;
+
+        /// <summary>صفحة إنشاء المفاتيح لدى المزوّد (الربط المُساعَد): يفتحها المستخدم ويسجّل دخوله وينشئ مفتاحاً ويلصقه.</summary>
+        public static string KeysPageUrl(string type) => type switch
+        {
+            Anthropic => "https://console.anthropic.com/settings/keys",
+            OpenAI => "https://platform.openai.com/api-keys",
+            Gemini => "https://aistudio.google.com/app/apikey",
+            Azure => "https://portal.azure.com/",
+            OpenRouter => "https://openrouter.ai/settings/keys",
+            _ => "",
+        };
+    }
+
+    /// <summary>طريقة ربط المزوّد (AI_Providers.AuthMethod؛ NULL = مفتاح كالقديم).</summary>
+    public static class AiAuthMethods
+    {
+        public const string ApiKey = "apikey";
+        public const string SignIn = "signin";
+    }
+
+    /// <summary>بروتوكول المزوّد المخصص (AI_Providers.ApiProtocol).</summary>
+    public static class AiApiProtocols
+    {
+        public const string OpenAI = "openai";
+        public const string Anthropic = "anthropic";
+        public const string Gemini = "gemini";
+    }
+
+    /// <summary>مفاتيح جدول AI_TaskRouting.TaskKey.</summary>
+    public static class AiTaskKeys
+    {
+        public const string Chat = "chat";
+        public const string Reasoning = "reasoning";
+        public const string Vision = "vision";
+        public const string Fast = "fast";
+        public const string Embedding = "embedding";
+
+        public static readonly string[] All = { Chat, Reasoning, Vision, Fast, Embedding };
+    }
+
+    /// <summary>مفاتيح جدول AI_Settings.</summary>
+    public static class AiSettingKeys
+    {
+        public const string LocalOnly = "LocalOnly";
+        public const string DataMinimization = "DataMinimization";
+        public const string ChatRetentionDays = "ChatRetentionDays";
+        public const string AttachmentRetentionDays = "AttachmentRetentionDays";
+        public const string MaxToolRoundsPerMessage = "MaxToolRoundsPerMessage";
+        public const string MaxUploadMb = "MaxUploadMb";
+    }
+
+    /// <summary>صف AI_Providers كما يُخزَّن (المفتاح مشفّر). لا يصل للواجهة؛ الواجهة ترى AiProviderView.</summary>
+    public class AiProviderRow
+    {
+        public long Id { get; set; }
+        public string ProviderType { get; set; } = "";
+        public string DisplayName { get; set; } = "";
+        public string BaseUrl { get; set; }
+        public string ApiKeyEnc { get; set; }
+        public string ApiKeyHint { get; set; }
+        public string ExtraJson { get; set; }
+        public string ApiProtocol { get; set; }
+        public string AuthHeaderName { get; set; }
+        public string ExtraHeadersEnc { get; set; }
+        public int TimeoutSeconds { get; set; } = 60;
+        public bool IsCustom { get; set; }
+        public bool IsEnabled { get; set; } = true;
+        public bool IsLocal { get; set; }
+        public DateTime? LastTestAt { get; set; }
+        public bool? LastTestOk { get; set; }
+        public string LastTestMessage { get; set; }
+        public string AuthMethod { get; set; }
+        public DateTime? SignInAt { get; set; }
+        public long? SignInBy { get; set; }
+    }
+
+    /// <summary>المزوّد كما تراه الشاشة: المفتاح مقنّع فقط (••••1234) ولا تُعاد Headers الإضافية.</summary>
+    public class AiProviderView
+    {
+        public long Id { get; set; }
+        public string ProviderType { get; set; } = "";
+        public string DisplayName { get; set; } = "";
+        public string BaseUrl { get; set; } = "";
+        public bool HasKey { get; set; }
+        public string MaskedKey { get; set; } = "";
+        public bool HasExtraHeaders { get; set; }
+        public string ApiProtocol { get; set; } = AiApiProtocols.OpenAI;
+        public string AuthHeaderName { get; set; } = "";
+        public string AzureDeployment { get; set; } = "";
+        public string AzureApiVersion { get; set; } = "";
+        public int TimeoutSeconds { get; set; } = 60;
+        public bool IsCustom { get; set; }
+        public bool IsEnabled { get; set; } = true;
+        public bool IsLocal { get; set; }
+        public DateTime? LastTestAt { get; set; }
+        public bool? LastTestOk { get; set; }
+        public string LastTestMessage { get; set; } = "";
+        public int ModelCount { get; set; }
+        /// <summary>apikey / signin (فارغ = مفتاح).</summary>
+        public string AuthMethod { get; set; } = "";
+        public DateTime? SignInAt { get; set; }
+    }
+
+    /// <summary>طلب حفظ مزوّد. ApiKey/ExtraHeaders = null تعنى «بلا تغيير»، وClearKey تمسح المفتاح.</summary>
+    public class AiProviderSaveRequest
+    {
+        public long Id { get; set; }
+        public string ProviderType { get; set; } = "";
+        public string DisplayName { get; set; } = "";
+        public string BaseUrl { get; set; } = "";
+        public string ApiKey { get; set; }
+        public bool ClearKey { get; set; }
+        public string ApiProtocol { get; set; } = AiApiProtocols.OpenAI;
+        public string AuthHeaderName { get; set; } = "";
+        /// <summary>سطر لكل Header بالشكل «الاسم: القيمة».</summary>
+        public string ExtraHeaders { get; set; }
+        public bool ClearExtraHeaders { get; set; }
+        public string AzureDeployment { get; set; } = "";
+        public string AzureApiVersion { get; set; } = "";
+        public int TimeoutSeconds { get; set; } = 60;
+        public bool IsEnabled { get; set; } = true;
+        public bool IsLocal { get; set; }
+    }
+
+    public class AiModelRow
+    {
+        public long Id { get; set; }
+        public long Provider_Id { get; set; }
+        public string ModelId { get; set; } = "";
+        public string DisplayName { get; set; } = "";
+        public bool SupportsTools { get; set; } = true;
+        public bool SupportsVision { get; set; }
+        public bool SupportsTemperature { get; set; }
+        public bool SupportsEmbeddings { get; set; }
+        public int? ContextTokens { get; set; }
+        public decimal? InputPricePerM { get; set; }
+        public decimal? OutputPricePerM { get; set; }
+        public bool IsEnabled { get; set; } = true;
+        /// <summary>للعرض فقط (اسم المزوّد).</summary>
+        public string ProviderName { get; set; } = "";
+    }
+
+    public class AiTaskRoutingRow
+    {
+        public long Id { get; set; }
+        public string TaskKey { get; set; } = AiTaskKeys.Chat;
+        public long Model_Id { get; set; }
+        public int Priority { get; set; } = 1;
+        public string Effort { get; set; } = "";
+        public int? MaxTokens { get; set; }
+        public decimal? Temperature { get; set; }
+    }
+
+    /// <summary>نموذج أعاده المزوّد من endpoint النماذج (قبل حفظه فى AI_Models).</summary>
+    public class AiRemoteModel
+    {
+        public string ModelId { get; set; } = "";
+        public string DisplayName { get; set; } = "";
+        public int? ContextTokens { get; set; }
+        public bool? SupportsVision { get; set; }
+        public bool? SupportsEmbeddings { get; set; }
+    }
+
+    public class AiTestResult
+    {
+        public bool Ok { get; set; }
+        public string Message { get; set; } = "";
+        public long ElapsedMs { get; set; }
+        public int ModelCount { get; set; }
+    }
+
+    /// <summary>بداية ربط بتسجيل الدخول: الرابط يُفتح فى تبويب جديد. Mode = callback (يرجع المزوّد تلقائياً) أو code (يلصق المستخدم الكود).</summary>
+    public class AiSignInStart
+    {
+        public string Handle { get; set; } = "";
+        public string AuthorizeUrl { get; set; } = "";
+        public string Mode { get; set; } = "code";
+        public DateTime ExpiresAtUtc { get; set; }
+    }
+
+    /// <summary>حالة الربط: pending / done / failed / expired.</summary>
+    public class AiSignInStatus
+    {
+        public string State { get; set; } = "pending";
+        public string Message { get; set; } = "";
+        public long ProviderId { get; set; }
+    }
+
+    /// <summary>
+    /// بوابة إدارة المزوّدين لشاشة /settings/ai. تُنفَّذ فى AccountERP.AI (تشفير المفاتيح والاتصال بالمزوّدين) ويسجّلها مضيف الويب فقط؛
+    /// على مضيف بلا تسجيل (MAUI) تعرض الشاشة «غير متاح». كل الدوال ترمى استثناء برسالة عربية واضحة عند الرفض.
+    /// </summary>
+    public interface IAiAdminGateway
+    {
+        List<AiProviderView> GetProviders();
+        long SaveProvider(AiProviderSaveRequest request, long userId);
+        void DeleteProvider(long providerId);
+        Task<AiTestResult> TestConnectionAsync(long providerId, CancellationToken ct = default);
+        Task<List<AiRemoteModel>> FetchModelsAsync(long providerId, CancellationToken ct = default);
+
+        List<AiModelRow> GetModels();
+        long SaveModel(AiModelRow model, long userId);
+        void DeleteModel(long modelId);
+
+        List<AiTaskRoutingRow> GetRouting();
+        void SaveRouting(List<AiTaskRoutingRow> rows, long userId);
+
+        Dictionary<string, string> GetSettings();
+
+        // P0.1: الربط بتسجيل الدخول لدى المزوّد
+        /// <summary>origin = عنوان التطبيق كما يراه المتصفح (NavigationManager.BaseUri). يرفض من لا يملك صلاحية الشاشة.</summary>
+        AiSignInStart StartSignIn(long providerId, string origin, long userId);
+        AiSignInStatus GetSignInStatus(string handle, long userId);
+        Task<AiSignInStatus> CompleteSignInWithCodeAsync(string handle, string code, long userId, CancellationToken ct = default);
+        /// <summary>يمسح المفتاح المحفوظ محلياً (المفتاح البعيد يبقى فى حساب المزوّد).</summary>
+        void Disconnect(long providerId, long userId);
+    }
+}

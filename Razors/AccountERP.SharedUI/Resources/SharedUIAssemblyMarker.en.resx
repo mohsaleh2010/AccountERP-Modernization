@@ -4919,4 +4919,148 @@
   <data name="SPBWhy" xml:space="preserve"><value>This screen is disabled in the desktop version too, so there is no original screen to port yet. It will be built later on the item-balances engine.</value></data>
   <data name="SPBMeanwhile" xml:space="preserve"><value>Until then, use item opening balances per financial period.</value></data>
   <data name="SPBOpeningLink" xml:space="preserve"><value>Item opening balances</value></data>
+  <data name="AI_Title" xml:space="preserve"><value>AI settings</value></data>
+  <data name="AI_Sub" xml:space="preserve"><value>Connect AI providers (cloud or local), test the connection and choose a model per task</value></data>
+  <data name="AI_NoAccess" xml:space="preserve"><value>You do not have access to the AI settings screen</value></data>
+  <data name="AI_NotAvailable" xml:space="preserve"><value>AI settings are available from the web application only</value></data>
+  <data name="AI_Reload" xml:space="preserve"><value>Refresh</value></data>
+  <data name="AI_TabProviders" xml:space="preserve"><value>Providers</value></data>
+  <data name="AI_TabModels" xml:space="preserve"><value>Models &amp; tasks</value></data>
+  <data name="AI_AddProvider" xml:space="preserve"><value>Connect provider</value></data>
+  <data name="AI_EditProvider" xml:space="preserve"><value>Edit provider</value></data>
+  <data name="AI_FName" xml:space="preserve"><value>Display name</value></data>
+  <data name="AI_FUrl" xml:space="preserve"><value>Base URL</value></data>
+  <data name="AI_FUrlHelp" xml:space="preserve"><value>https for external addresses; http allowed on the local network only</value></data>
+  <data name="AI_FKey" xml:space="preserve"><value>API key</value></data>
+  <data name="AI_FKeyHelp" xml:space="preserve"><value>Stored encrypted; shown masked only after saving</value></data>
+  <data name="AI_FKeyOptional" xml:space="preserve"><value>Optional for local servers; stored encrypted</value></data>
+  <data name="AI_FKeyKeep" xml:space="preserve"><value>Current key {0} — leave empty to keep it</value></data>
+  <data name="AI_ShowHideKey" xml:space="preserve"><value>Show/hide key</value></data>
+  <data name="AI_FClearKey" xml:space="preserve"><value>Clear the saved key</value></data>
+  <data name="AI_FDeployment" xml:space="preserve"><value>Deployment name</value></data>
+  <data name="AI_FApiVersion" xml:space="preserve"><value>API version</value></data>
+  <data name="AI_FProtocol" xml:space="preserve"><value>Protocol</value></data>
+  <data name="AI_FProtocolHelp" xml:space="preserve"><value>Most services and gateways (OpenRouter, LiteLLM, Groq, vLLM) are OpenAI-compatible</value></data>
+  <data name="AI_FAuthHeader" xml:space="preserve"><value>Key header name</value></data>
+  <data name="AI_FAuthHeaderHelp" xml:space="preserve"><value>Empty = Authorization: Bearer. Examples: x-api-key or api-key</value></data>
+  <data name="AI_FHeaders" xml:space="preserve"><value>Extra headers</value></data>
+  <data name="AI_FHeadersHelp" xml:space="preserve"><value>One header per line as «Name: Value»; stored encrypted</value></data>
+  <data name="AI_FHeadersKeep" xml:space="preserve"><value>Saved headers exist (encrypted). Type new ones to replace them or leave empty to keep them</value></data>
+  <data name="AI_FClearHeaders" xml:space="preserve"><value>Clear saved headers</value></data>
+  <data name="AI_FTimeout" xml:space="preserve"><value>Timeout (seconds)</value></data>
+  <data name="AI_FEnabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="AI_SecurityNote" xml:space="preserve"><value>The key is sent only to the registered address (no redirects) and is never logged.</value></data>
+  <data name="AI_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="AI_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="AI_Saved" xml:space="preserve"><value>Saved</value></data>
+  <data name="AI_Deleted" xml:space="preserve"><value>Deleted</value></data>
+  <data name="AI_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="AI_Test" xml:space="preserve"><value>Test connection</value></data>
+  <data name="AI_Testing" xml:space="preserve"><value>Testing…</value></data>
+  <data name="AI_Fetch" xml:space="preserve"><value>Fetch models</value></data>
+  <data name="AI_Connect" xml:space="preserve"><value>Connect</value></data>
+  <data name="AI_Connected" xml:space="preserve"><value>Connected</value></data>
+  <data name="AI_Failed" xml:space="preserve"><value>Connection failed</value></data>
+  <data name="AI_NotTested" xml:space="preserve"><value>Not tested</value></data>
+  <data name="AI_Disabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="AI_KType" xml:space="preserve"><value>Type</value></data>
+  <data name="AI_KKey" xml:space="preserve"><value>Key</value></data>
+  <data name="AI_KModels" xml:space="preserve"><value>Added models</value></data>
+  <data name="AI_KScope" xml:space="preserve"><value>Scope</value></data>
+  <data name="AI_Local" xml:space="preserve"><value>Local (on-network)</value></data>
+  <data name="AI_Cloud" xml:space="preserve"><value>Cloud</value></data>
+  <data name="AI_NoKey" xml:space="preserve"><value>No key</value></data>
+  <data name="AI_CustomTitle" xml:space="preserve"><value>Custom provider (API + URL)</value></data>
+  <data name="AI_CustomDesc" xml:space="preserve"><value>Connect any AI service: a new global service, an in-house server, or a gateway such as OpenRouter / LiteLLM / Groq / DeepSeek / Mistral / vLLM.</value></data>
+  <data name="AI_AddCustom" xml:space="preserve"><value>Add custom provider</value></data>
+  <data name="AI_Type_anthropic" xml:space="preserve"><value>Anthropic (Claude)</value></data>
+  <data name="AI_Type_openai" xml:space="preserve"><value>OpenAI</value></data>
+  <data name="AI_Type_gemini" xml:space="preserve"><value>Google Gemini</value></data>
+  <data name="AI_Type_azure" xml:space="preserve"><value>Azure OpenAI</value></data>
+  <data name="AI_Type_ollama" xml:space="preserve"><value>Ollama (local)</value></data>
+  <data name="AI_Type_lmstudio" xml:space="preserve"><value>LM Studio (local)</value></data>
+  <data name="AI_Type_custom" xml:space="preserve"><value>Custom</value></data>
+  <data name="AI_TypeDesc_anthropic" xml:space="preserve"><value>Claude models — recommended for the agent (claude-opus-5-5)</value></data>
+  <data name="AI_TypeDesc_openai" xml:space="preserve"><value>OpenAI models with an API key</value></data>
+  <data name="AI_TypeDesc_gemini" xml:space="preserve"><value>Google Gemini models with an API key</value></data>
+  <data name="AI_TypeDesc_azure" xml:space="preserve"><value>OpenAI through an Azure subscription (endpoint + deployment)</value></data>
+  <data name="AI_TypeDesc_ollama" xml:space="preserve"><value>Models running on an in-house machine — full privacy</value></data>
+  <data name="AI_TypeDesc_lmstudio" xml:space="preserve"><value>Local LM Studio server (OpenAI-compatible)</value></data>
+  <data name="AI_FetchedTitle" xml:space="preserve"><value>Models available at {0}</value></data>
+  <data name="AI_Search" xml:space="preserve"><value>Search</value></data>
+  <data name="AI_ColModelId" xml:space="preserve"><value>Model ID</value></data>
+  <data name="AI_ColDisplay" xml:space="preserve"><value>Display name</value></data>
+  <data name="AI_ColContext" xml:space="preserve"><value>Context (tokens)</value></data>
+  <data name="AI_ColStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="AI_Added" xml:space="preserve"><value>Added</value></data>
+  <data name="AI_NoFetched" xml:space="preserve"><value>The service returned no models</value></data>
+  <data name="AI_AddSelected" xml:space="preserve"><value>Add selected ({0})</value></data>
+  <data name="AI_ModelsAdded" xml:space="preserve"><value>{0} model(s) added</value></data>
+  <data name="AI_ConfirmDeleteProvider" xml:space="preserve"><value>Delete provider «{0}», its models ({1}) and their task links?</value></data>
+  <data name="AI_ConfirmDeleteModel" xml:space="preserve"><value>Delete model «{0}» and its task links?</value></data>
+  <data name="AI_ModelsTitle" xml:space="preserve"><value>Models</value></data>
+  <data name="AI_ModelsHelp" xml:space="preserve"><value>Add models via «Fetch models» on the provider card, or manually by ID if the service has no models list. Prices are per million tokens for cost estimates.</value></data>
+  <data name="AI_ColProvider" xml:space="preserve"><value>Provider</value></data>
+  <data name="AI_ColCaps" xml:space="preserve"><value>Capabilities</value></data>
+  <data name="AI_ColPriceIn" xml:space="preserve"><value>Input price / M</value></data>
+  <data name="AI_ColPriceOut" xml:space="preserve"><value>Output price / M</value></data>
+  <data name="AI_CapTools" xml:space="preserve"><value>Tools</value></data>
+  <data name="AI_CapVision" xml:space="preserve"><value>Vision</value></data>
+  <data name="AI_CapTemp" xml:space="preserve"><value>Temperature</value></data>
+  <data name="AI_CapEmbed" xml:space="preserve"><value>Embeddings</value></data>
+  <data name="AI_AddModel" xml:space="preserve"><value>Add model</value></data>
+  <data name="AI_NoModels" xml:space="preserve"><value>No models yet — connect a provider then «Fetch models»</value></data>
+  <data name="AI_RoutingTitle" xml:space="preserve"><value>Task → model routing</value></data>
+  <data name="AI_RoutingHelp" xml:space="preserve"><value>Each task has a primary model (#1) and fallbacks tried in order on failure. Current Claude models reject temperature; they are controlled by effort.</value></data>
+  <data name="AI_SaveRouting" xml:space="preserve"><value>Save routing</value></data>
+  <data name="AI_RoutingSaved" xml:space="preserve"><value>Task routing saved</value></data>
+  <data name="AI_AddPrimary" xml:space="preserve"><value>Choose model</value></data>
+  <data name="AI_AddFallback" xml:space="preserve"><value>Add fallback</value></data>
+  <data name="AI_Priority" xml:space="preserve"><value>Priority</value></data>
+  <data name="AI_ColModel" xml:space="preserve"><value>Model</value></data>
+  <data name="AI_Effort" xml:space="preserve"><value>Effort</value></data>
+  <data name="AI_MaxTokens" xml:space="preserve"><value>Max tokens</value></data>
+  <data name="AI_Temperature" xml:space="preserve"><value>Temperature</value></data>
+  <data name="AI_NoTemp" xml:space="preserve"><value>No temperature</value></data>
+  <data name="AI_NoTempHelp" xml:space="preserve"><value>The model does not support temperature (enable it in the model capabilities if it does)</value></data>
+  <data name="AI_Task_chat" xml:space="preserve"><value>Chat / agent</value></data>
+  <data name="AI_Task_reasoning" xml:space="preserve"><value>Deep reasoning</value></data>
+  <data name="AI_Task_vision" xml:space="preserve"><value>Extraction &amp; vision</value></data>
+  <data name="AI_Task_fast" xml:space="preserve"><value>Fast / cheap</value></data>
+  <data name="AI_Task_embedding" xml:space="preserve"><value>Embeddings</value></data>
+  <data name="AI_TaskDesc_chat" xml:space="preserve"><value>Questions, reports and drafts</value></data>
+  <data name="AI_TaskDesc_reasoning" xml:space="preserve"><value>Heavier analyses</value></data>
+  <data name="AI_TaskDesc_vision" xml:space="preserve"><value>Reading invoice images and documents</value></data>
+  <data name="AI_TaskDesc_fast" xml:space="preserve"><value>Conversation titles and classification</value></data>
+  <data name="AI_TaskDesc_embedding" xml:space="preserve"><value>Semantic knowledge search</value></data>
+  <data name="AI_Type_openrouter" xml:space="preserve"><value>OpenRouter</value></data>
+  <data name="AI_TypeDesc_openrouter" xml:space="preserve"><value>Sign in without a key — one account for Claude, GPT, Gemini and more</value></data>
+  <data name="AI_Method" xml:space="preserve"><value>Connection method</value></data>
+  <data name="AI_MethodSignIn" xml:space="preserve"><value>Sign in at the provider</value></data>
+  <data name="AI_MethodKey" xml:space="preserve"><value>API key</value></data>
+  <data name="AI_AssistedNote" xml:space="preserve"><value>This provider does not offer direct sign-in for other systems: open the keys page, sign in, create a key and paste it here. For direct sign-in use OpenRouter (it offers Claude, GPT and Gemini models).</value></data>
+  <data name="AI_OpenKeysPage" xml:space="preserve"><value>Open the provider's keys page</value></data>
+  <data name="AI_SaveAndSignIn" xml:space="preserve"><value>Save, then sign in</value></data>
+  <data name="AI_SignInTitle" xml:space="preserve"><value>Sign in at {0}</value></data>
+  <data name="AI_SignInStep1" xml:space="preserve"><value>Press the button below to open the provider's sign-in page in a new tab.</value></data>
+  <data name="AI_SignInStep2" xml:space="preserve"><value>Sign in with your account and approve the connection.</value></data>
+  <data name="AI_SignInStep3Callback" xml:space="preserve"><value>The connection completes automatically and this screen updates by itself.</value></data>
+  <data name="AI_SignInStep3Code" xml:space="preserve"><value>The provider will show a code: copy it, paste it below and press «Complete connection».</value></data>
+  <data name="AI_OpenSignInPage" xml:space="preserve"><value>Open the {0} sign-in page</value></data>
+  <data name="AI_SignInWaiting" xml:space="preserve"><value>Waiting for the sign-in in the other tab…</value></data>
+  <data name="AI_SignInCode" xml:space="preserve"><value>Code from the provider page</value></data>
+  <data name="AI_SignInCodeHelp" xml:space="preserve"><value>Paste the code the provider showed after signing in</value></data>
+  <data name="AI_SignInCodeFallback" xml:space="preserve"><value>Fallback: if the provider shows a code instead of returning automatically, paste it here</value></data>
+  <data name="AI_SignInComplete" xml:space="preserve"><value>Complete connection</value></data>
+  <data name="AI_SignInExpires" xml:space="preserve"><value>The sign-in request is valid for 10 minutes. The resulting key is stored encrypted and shown masked only.</value></data>
+  <data name="AI_SignInRetry" xml:space="preserve"><value>Sign in again</value></data>
+  <data name="AI_SignInDone" xml:space="preserve"><value>Connected by sign-in successfully</value></data>
+  <data name="AI_KMethod" xml:space="preserve"><value>Connection</value></data>
+  <data name="AI_SignedIn" xml:space="preserve"><value>Connected by sign-in</value></data>
+  <data name="AI_SignIn" xml:space="preserve"><value>Sign in</value></data>
+  <data name="AI_SignInAgain" xml:space="preserve"><value>Sign in again</value></data>
+  <data name="AI_SignInWith" xml:space="preserve"><value>Sign in with {0}</value></data>
+  <data name="AI_Disconnect" xml:space="preserve"><value>Disconnect</value></data>
+  <data name="AI_ConfirmDisconnect" xml:space="preserve"><value>Disconnect «{0}»? The key is removed from this system only; to delete it from your account remove it on the provider's keys page (openrouter.ai/settings/keys).</value></data>
+  <data name="AI_Disconnected" xml:space="preserve"><value>Disconnected</value></data>
 </root>
