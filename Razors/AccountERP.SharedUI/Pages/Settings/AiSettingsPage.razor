@@ -488,6 +488,11 @@
             <MudTabPanel Text="@Tr("AIF_Tab")" Icon="@Icons.Material.Filled.ThumbsUpDown" BadgeData="@(_feedbackNew > 0 ? _feedbackNew : null)" BadgeColor="Color.Error">
                 <AiFeedbackTab @ref="_feedbackTab" UserId="_userId" OnNewCountChanged="@(n => _feedbackNew = n)" />
             </MudTabPanel>
+
+            @* ═════════ P8.1.6: الموجز اليومى (الجدولة، السرد والتكلفة، العتبات، المشتركون، تشغيل تجريبى، السجل) ═════════ *@
+            <MudTabPanel Text="@Tr("AIB_Tab")" Icon="@Icons.Material.Filled.Summarize">
+                <AiBriefTab />
+            </MudTabPanel>
         </MudTabs>
     }
 </div>

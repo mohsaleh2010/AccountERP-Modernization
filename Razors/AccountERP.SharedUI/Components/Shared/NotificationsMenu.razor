@@ -5,6 +5,7 @@
 @using AccountERP.SharedUI.Services
 @inject LanguageService LangService
 @inject NotificationCenterService NotificationCenter
+@inject NavigationManager NavigationManager
 @implements IDisposable
 
 @* 🟢 ملاحظة تصميم مهمة: تعمّدنا عدم وضع MudIconButton منفصل داخل ActivatorContent (كما كانت المحاولة الأولى) -
@@ -13,7 +14,7 @@
    المدمج فى MudMenu نفسه (بنفس نمط LanguageSwitcher المؤكد عمله) هو الحل الموثوق. *@
 <MudTooltip Text="@Tr("NavNotifications")">
     <MudBadge Content="@NotificationCenter.UnreadCount" Overlap="true" Color="Color.Error" Visible="@(NotificationCenter.UnreadCount > 0)" BadgeClass="notification-badge">
-        <MudMenu Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit"
+        <MudMenu @ref="_menu" Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit"
                  AnchorOrigin="@(LangService.IsRtl ? Origin.BottomLeft : Origin.BottomRight)"
                  TransformOrigin="@(LangService.IsRtl ? Origin.TopLeft : Origin.TopRight)"
                  OpenChanged="OnMenuOpenChanged">
@@ -32,7 +33,15 @@
                 {
                     <div class="d-flex align-items-start px-4 py-2" style="gap:8px; min-width:220px; max-width:320px; white-space:normal;">
                         <MudIcon Icon="@SeverityIcon(item.Severity)" Color="@SeverityColor(item.Severity)" Size="Size.Small" Class="mt-1" />
-                        <span class="flex-grow-1">@item.Message</span>
+                        @if (item.Href != null)
+                        {
+                            @* P8.1.5 (ق3): إشعار له رابط (مثل الموجز اليومى) يفتح شاشته ويغلق القائمة *@
+                            <a class="flex-grow-1 notif-link" href="@item.Href" @onclick="() => OpenAsync(item)" @onclick:preventDefault="true">@item.Message</a>
+                        }
+                        else
+                        {
+                            <span class="flex-grow-1">@item.Message</span>
+                        }
                         <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Class="mt-n1"
                                        OnClick="@(() => NotificationCenter.Remove(item))" />
                     </div>
@@ -42,7 +51,21 @@
     </MudBadge>
 </MudTooltip>
 
+<style>
+    .notif-link { color: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .notif-link:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; border-radius: 4px; }
+</style>
+
 @code {
+    private MudMenu? _menu;
+
+    private async Task OpenAsync(NotificationRecord item)
+    {
+        if (item.Href == null) return;
+        if (_menu != null) await _menu.CloseMenuAsync();
+        NavigationManager.NavigateTo(item.Href);
+    }
+
     protected override void OnInitialized()
     {
         LangService.OnLanguageChanged += OnRerenderNeeded;

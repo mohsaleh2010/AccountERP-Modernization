@@ -1,0 +1,109 @@
+@* 🤖 P8.1.5 (ق23): بطاقة الموجز المصغّرة فى الصفحة الرئيسية للمشترك: 3 مؤشرات + عدد التنبيهات + «عرض الموجز».
+   تظهر لأحدث موجز (اليوم أو أمس — فرق توقيت الخادم) ما لم تُخفَ؛ «إخفاء لليوم» يكتب HomeDismissedAt لهذا الموجز فقط،
+   فموجز الغد يظهر من جديد. بلا AiBriefService (MAUI) أو بلا صلاحية لا ترسم شيئاً. *@
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using Microsoft.Extensions.DependencyInjection
+@inject IServiceProvider ServiceProvider
+@inject LanguageService LangService
+@inject MenuStateService MenuState
+@implements IDisposable
+
+@if (_detail != null && _facts != null)
+{
+    <MudPaper Outlined="true" Class="pa-4 mb-6 rounded-lg aibc" role="region" aria-label="@Tr("AIB_Title")">
+        <div class="aibc-head">
+            <MudIcon Icon="@Icons.Material.Outlined.Summarize" Color="Color.Primary" aria-hidden="true" />
+            <div class="aibc-title">
+                <div class="t">@Tr("AIB_Title")</div>
+                <div class="s">@Tr("AIB_Period", AiBriefText.Day(_detail.Brief.PeriodFrom), AiBriefText.Day(_detail.Brief.PeriodTo))</div>
+            </div>
+            <MudTooltip Text="@Tr("AIB_Dismiss")">
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Medium" aria-label="@Tr("AIB_Dismiss")" OnClick="DismissAsync" />
+            </MudTooltip>
+        </div>
+        <div class="aibc-kpis">
+            @if (_facts.Sales != null)
+            {
+                <div class="k"><div class="l">@Tr("AIB_KpiNetSales")</div><div class="v">@AiBriefText.Money(_facts.Sales.NetSales)</div></div>
+                <div class="k"><div class="l">@Tr("AIB_KpiInvoices")</div><div class="v">@AiBriefText.Count(_facts.Sales.Invoices)</div></div>
+            }
+            @if (_facts.Collections?.ByCurrency is { Count: 1 } cc)
+            {
+                <div class="k"><div class="l">@Tr("AIB_KpiNetCash")</div><div class="v">@AiBriefText.Money(cc[0].Net)</div></div>
+            }
+            else if (_facts.Liquidity?.ByCurrency is { Count: 1 } lc)
+            {
+                <div class="k"><div class="l">@Tr("AIB_KpiBoxBalance")</div><div class="v">@AiBriefText.Money(lc[0].Balance)</div></div>
+            }
+            <div class="k @(_detail.Brief.AlertCount > 0 ? "warn" : "")"><div class="l">@Tr("AIB_SecAlerts")</div><div class="v">@_detail.Brief.AlertCount</div></div>
+        </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" StartIcon="@Icons.Material.Filled.Visibility"
+                   Href="@($"/assistant/brief/{_detail.Brief.Id}")">@Tr("AIB_OpenBrief")</MudButton>
+    </MudPaper>
+    <style>
+        .aibc-head { display: flex; align-items: center; gap: 12px; }
+        .aibc-title { flex: 1; min-width: 0; }
+        .aibc-title .t { font-weight: 700; font-size: 1.05rem; }
+        .aibc-title .s { font-size: .8rem; color: var(--mud-palette-text-secondary); }
+        .aibc-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 12px; }
+        .aibc-kpis .k { border-radius: 12px; padding: 10px 12px; background: var(--mud-palette-background-gray); }
+        .aibc-kpis .k.warn { background: color-mix(in srgb, var(--mud-palette-warning) 14%, transparent); }
+        .aibc-kpis .l { font-size: .75rem; color: var(--mud-palette-text-secondary); }
+        .aibc-kpis .v { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: plaintext; }
+        .aibc .mud-button-root { min-height: 44px; }
+    </style>
+}
+
+@code {
+    private AiBriefService? _brief;
+    private AiBriefDetail? _detail;
+    private AiBriefFacts? _facts;
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _brief = ServiceProvider.GetService<AiBriefService>();
+        LangService.OnLanguageChanged += OnChanged;
+        MenuState.OnAuthChanged += OnAuthChanged;
+        await LoadAsync();
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+    private void OnAuthChanged() => InvokeAsync(async () => { await LoadAsync(); StateHasChanged(); });
+
+    private async Task LoadAsync()
+    {
+        if (_brief == null || !_brief.IsAvailable || _loading) return;
+        _loading = true;
+        try
+        {
+            var d = await _brief.LoadAsync(0, _brief.Language);
+            bool show = d?.Brief != null && d.Delivery != null && d.Delivery.HomeDismissedAt == null
+                        && d.Brief.BriefDate.Date >= DateTime.Today.AddDays(-1)
+                        && (d.Brief.Status == AiBriefStatus.Ready || d.Brief.Status == AiBriefStatus.Partial);
+            _detail = show ? d : null;
+            _facts = show ? AiBriefText.ParseFacts(d!.Brief.FactsJson) : null;
+        }
+        catch (Exception ex) { operations.DataDictionaryLogerException(ex); _detail = null; }
+        finally { _loading = false; }
+    }
+
+    private async Task DismissAsync()
+    {
+        if (_brief == null || _detail == null) return;
+        long id = _detail.Brief.Id;
+        _detail = null;
+        try { await _brief.DismissHomeAsync(id); }
+        catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
+    }
+
+    private string Tr(string key, params object[] args) => AiBriefText.T(Lang, LangService.CurrentCultureInfo, key, args);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnChanged;
+        MenuState.OnAuthChanged -= OnAuthChanged;
+    }
+}

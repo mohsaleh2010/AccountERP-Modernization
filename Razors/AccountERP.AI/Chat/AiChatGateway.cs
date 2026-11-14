@@ -984,9 +984,11 @@ namespace AccountERP.AI.Chat
         /// يبنى أدوار المحادثة: يتجاهل ردود الخطأ والردود الفارغة، يدمج الأدوار المتتالية من نفس النوع (تبادل user/assistant صارم لدى بعض المزوّدين)،
         /// ويُسقط الأقدم إن تجاوز الحد. أول دور دائماً من المستخدم.
         /// </summary>
-        internal static List<AiChatTurn> BuildTurns(IEnumerable<AiMessageRow> history, string newUserText)
+        internal static List<AiChatTurn> BuildTurns(IEnumerable<AiMessageRow> history, string newUserText, Func<long, string?>? briefFactsJson = null)
         {
             var raw = new List<AiChatTurn>();
+            // P8.1.5: الافتراضى يقرأ حقائق الموجز من القاعدة؛ الاختبارات تحقن بديلاً.
+            var briefFacts = briefFactsJson ?? (id => new AiBriefCLS().Get(id)?.FactsJson);
             foreach (var m in history)
             {
                 if (m.Role == "assistant" && m.Status == AiMessageStatus.Error) continue;
@@ -994,6 +996,7 @@ namespace AccountERP.AI.Chat
                 if (m.Role == "assistant" && ReadAsk(m.ContentJson, m.Status) is { } ask) t = (t + AskAsText(ask)).Trim();   // P4
                 else if (m.Role == "user" && IsAnswer(m.ContentJson)) t = AnswerPrefix + t;
                 else if (m.Role == "user") t = ModelUserText(m.ContentJson);   // P6: مع سطر المرفقات
+                if (m.Role == "assistant") t = ExpandBriefs(m.ContentJson, briefFacts, t);   // P8.1.5
                 if (string.IsNullOrWhiteSpace(t)) continue;
                 if (m.Role == "assistant")
                 {
@@ -1018,6 +1021,12 @@ namespace AccountERP.AI.Chat
             while (merged.Count > 1 && total > MaxHistoryChars)
             {
                 total -= merged[0].Text.Length;
+                merged.RemoveAt(0);
+            }
+            // P8.1.5: رسالة مساعد أولى (الموجز) لا تُسقط مع الترتيب: تُدمج كسياق فى أول دور مستخدم.
+            if (merged.Count > 1 && merged[0].Role == "assistant" && merged[1].Role == "user")
+            {
+                merged[1] = merged[1] with { Text = "[سياق سابق من المساعد]\n" + merged[0].Text + "\n\n" + merged[1].Text };
                 merged.RemoveAt(0);
             }
             while (merged.Count > 1 && merged[0].Role != "user") merged.RemoveAt(0);
@@ -1252,6 +1261,46 @@ namespace AccountERP.AI.Chat
             return (reports, screens);
         }
 
+        /// <summary>P8.1.5: كتل «موجز يومى» فى محتوى الرد (تُكتب بـ StartConversation، لا يكتبها النموذج).</summary>
+        internal static List<AiBriefLinkView> ReadBriefs(string? json)
+        {
+            var list = new List<AiBriefLinkView>();
+            if (string.IsNullOrWhiteSpace(json)) return list;
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                if (doc.RootElement.ValueKind != JsonValueKind.Array) return list;
+                foreach (var b in doc.RootElement.EnumerateArray())
+                {
+                    if (b.ValueKind != JsonValueKind.Object || !b.TryGetProperty("type", out var ty) || ty.GetString() != "brief") continue;
+                    string S(string k) => b.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() ?? "" : "";
+                    if (!long.TryParse(S("brief_id"), out long id) || id <= 0) continue;
+                    list.Add(new AiBriefLinkView { Id = id, BriefDate = S("brief_date"), PeriodFrom = S("period_from"), PeriodTo = S("period_to"), Url = $"/assistant/brief/{id}" });
+                }
+            }
+            catch (JsonException) { }
+            return list;
+        }
+
+        /// <summary>P8.1.5 (ق22): حد حقائق الموجز التى تُضاف إلى أدوار النموذج (أحرف).</summary>
+        internal const int MaxBriefFactsChars = 6000;
+
+        /// <summary>
+        /// P8.1.5 (ق22): كتلة brief فى رسالة مساعد تتمدد إلى حقائق الموجز (JSON مقتطع عند الحد) حتى يجيب النموذج عن أرقامه بأدواته العادية.
+        /// الحقائق بيانات لا تعليمات (تعليمات النظام تقول ذلك).
+        /// </summary>
+        internal static string ExpandBriefs(string? json, Func<long, string?> factsJson, string text)
+        {
+            foreach (var b in ReadBriefs(json))
+            {
+                string f = factsJson(b.Id) ?? "";
+                if (f.Length == 0) continue;
+                if (f.Length > MaxBriefFactsChars) f = f[..MaxBriefFactsChars] + "…(مقتطع)";
+                text = (text + "\n\n(موجز يومى بتاريخ " + b.BriefDate + "، الفترة من " + b.PeriodFrom + " إلى " + b.PeriodTo + "، حقائقه: " + f + ")").Trim();
+            }
+            return text;
+        }
+
         internal static List<AiToolCallView> ReadTools(string? json)
         {
             var list = new List<AiToolCallView>();
@@ -1280,6 +1329,7 @@ namespace AccountERP.AI.Chat
             {
                 (m.Reports, m.Screens) = ReadCards(r.ContentJson, m.Drafts, m.Extractions);
                 m.Ask = ReadAsk(r.ContentJson, r.Status);   // P4
+                m.Briefs = ReadBriefs(r.ContentJson);       // P8.1.5
             }
             else m.Attachments = ReadAttachments(r.ContentJson);   // P6
             return m;

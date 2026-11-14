@@ -386,6 +386,8 @@ namespace AccountModelsLib
         public List<AiExtractionCard> Extractions { get; set; } = new List<AiExtractionCard>();
         /// <summary>P7.6: 👍/👎 المستخدم على هذا الرد (null = لم يقيّمه).</summary>
         public AiFeedbackView Feedback { get; set; }
+        /// <summary>P8.1.5: كتلة «موجز يومى» (بطاقة «افتح الموجز»).</summary>
+        public List<AiBriefLinkView> Briefs { get; set; } = new List<AiBriefLinkView>();
     }
 
     // ───────────── P6: المرفقات والاستخراج ─────────────

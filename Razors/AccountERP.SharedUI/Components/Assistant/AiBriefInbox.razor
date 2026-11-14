@@ -1,0 +1,43 @@
+@* 🤖 P8.1.5 (ق2): جسر غير مرئى فى MainLayoutMud بين إشارة «موجز جديد» (خيط خلفى) وجرس الإشعارات.
+   الإشارة تُنقل لسياق الدائرة بـ InvokeAsync ثم AiBriefService.CatchUpAsync يضيف الإشعار من الجدول.
+   بلا AiBriefService (MAUI) لا يفعل شيئاً. *@
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using Microsoft.Extensions.DependencyInjection
+@inject IServiceProvider ServiceProvider
+@inject MenuStateService MenuState
+@implements IDisposable
+
+@code {
+    private AiBriefService? _brief;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _brief = ServiceProvider.GetService<AiBriefService>();
+        if (_brief == null) return;
+        _brief.Arrived += OnArrived;
+        MenuState.OnAuthChanged += OnAuthChanged;
+        await StartAsync();
+    }
+
+    // القوائم تُحمَّل بعد استعادة الجلسة؛ نحاول البدء عند كل تغيير دخول.
+    private void OnAuthChanged() => InvokeAsync(StartAsync);
+
+    private void OnArrived() => InvokeAsync(async () => { if (_brief != null) await _brief.CatchUpAsync(); });
+
+    private async Task StartAsync()
+    {
+        if (_brief == null) return;
+        try
+        {
+            if (_brief.TryStart()) await _brief.CatchUpAsync();
+        }
+        catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
+    }
+
+    public void Dispose()
+    {
+        if (_brief != null) _brief.Arrived -= OnArrived;
+        MenuState.OnAuthChanged -= OnAuthChanged;
+    }
+}

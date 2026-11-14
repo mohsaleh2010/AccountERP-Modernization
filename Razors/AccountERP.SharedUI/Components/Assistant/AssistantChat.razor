@@ -326,6 +326,24 @@
                                             </ol>
                                         </details>
                                     }
+                                    @if (m.Briefs.Count > 0)
+                                    {
+                                        @* P8.1.5 (ق22): بطاقة الموجز أول رسالة فى محادثة «اسأل المساعد»؛ أسئلة المتابعة تُجاب من حقائقه وبأدوات المساعد. *@
+                                        <div class="aic-cards">
+                                            @foreach (var bl in m.Briefs)
+                                            {
+                                                <div class="aic-card">
+                                                    <div class="ic" aria-hidden="true"><MudIcon Icon="@Icons.Material.Outlined.Summarize" /></div>
+                                                    <div class="tx">
+                                                        <div class="t">@Tr("AIB_Title") — @bl.BriefDate</div>
+                                                        <div class="s">@Tr("AIB_ChatHint")</div>
+                                                    </div>
+                                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Visibility"
+                                                               Href="@bl.Url">@Tr("AIB_OpenBrief")</MudButton>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
                                     @foreach (var xc in m.Extractions)
                                     {
                                         <AiExtractionView Card="xc" Open="@(m.Drafts.Count == 0)" />

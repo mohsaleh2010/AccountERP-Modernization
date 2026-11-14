@@ -1,0 +1,299 @@
+@* 🤖 P8.1.5: عرض موجز يومى واحد. المؤشرات والجداول تُرسم من FactsJson مباشرة (النموذج لا يغيّرها — §2)،
+   والعناوين والقالب ونصوص التنبيهات من resx بلغة الواجهة (ق7). يظهر فقط ما حُسب للمستلم (Facts.Sections — ق11).
+   التصميم بنمط صفحات المساعد (ui-ux-pro-max): بطاقات بحدود خفيفة، أهداف لمس 44px، ألوان من لوحة MudBlazor (فاتح/داكن)، RTL/LTR. *@
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+
+<style>
+    .aib { display: flex; flex-direction: column; gap: 16px; }
+    .aib-sec { border: 1px solid var(--mud-palette-lines-default); border-radius: 14px; background: var(--mud-palette-surface); padding: 16px; }
+    .aib-sec h3 { margin: 0 0 12px; font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .aib-sec h3 .mud-icon-root { color: var(--mud-palette-primary); }
+    .aib-narr { border-inline-start: 4px solid var(--mud-palette-primary); }
+    .aib-narr p { margin: 0; line-height: 1.8; white-space: pre-line; }
+    .aib-badge { display: inline-flex; align-items: center; gap: 4px; font-size: .72rem; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+                 background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent); color: var(--mud-palette-primary); }
+    .aib-note { margin-top: 8px; font-size: .8rem; color: var(--mud-palette-text-secondary); }
+    .aib-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .aib-kpi { border-radius: 12px; padding: 10px 12px; background: var(--mud-palette-background-gray); min-width: 0; }
+    .aib-kpi .l { font-size: .75rem; color: var(--mud-palette-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .aib-kpi .v { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: plaintext; }
+    .aib-kpi .v.up { color: var(--mud-palette-success); }
+    .aib-kpi .v.down { color: var(--mud-palette-error); }
+    .aib-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 14px; }
+    .aib-list h4 { margin: 0 0 6px; font-size: .82rem; font-weight: 700; color: var(--mud-palette-text-secondary); }
+    .aib-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .aib-table th { text-align: start; font-weight: 600; color: var(--mud-palette-text-secondary); padding: 6px 8px; border-bottom: 1px solid var(--mud-palette-lines-default); }
+    .aib-table td { padding: 6px 8px; border-bottom: 1px solid var(--mud-palette-lines-default); }
+    .aib-table td.n { text-align: end; font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: plaintext; white-space: nowrap; }
+    .aib-table tr:last-child td { border-bottom: 0; }
+    .aib-wrap { overflow-x: auto; }
+    .aib-alert { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); }
+    .aib-alert + .aib-alert { margin-top: 10px; }
+    .aib-alert.high { border-color: color-mix(in srgb, var(--mud-palette-error) 45%, transparent); background: color-mix(in srgb, var(--mud-palette-error) 6%, transparent); }
+    .aib-alert.medium { border-color: color-mix(in srgb, var(--mud-palette-warning) 45%, transparent); background: color-mix(in srgb, var(--mud-palette-warning) 6%, transparent); }
+    .aib-alert .tx { flex: 1; min-width: 0; }
+    .aib-alert .t { font-weight: 700; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .aib-alert .d { margin-top: 4px; font-size: .88rem; line-height: 1.7; }
+    .aib-alert .mud-button-root { min-height: 40px; flex: none; }
+    .aib-qs { margin: 10px 0 0; padding-inline-start: 18px; font-size: .88rem; }
+    @@media (max-width: 600px) {
+        .aib-sec { padding: 12px; }
+        .aib-alert { flex-direction: column; }
+    }
+</style>
+
+@if (_f == null)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@Tr("AIB_ErrNotFound")</MudAlert>
+}
+else
+{
+    <div class="aib" dir="@(LangService.IsRtl ? "rtl" : "ltr")">
+        @if (Detail.Brief.Status == AiBriefStatus.Partial)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">@Tr("AIB_Partial")</MudAlert>
+        }
+
+        @* السرد: سرد النموذج المقبول بلغة الواجهة، وإلا القالب (ق6) *@
+        <section class="aib-sec aib-narr" aria-label="@Tr("AIB_Title")">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+                <span class="aib-badge">
+                    <MudIcon Icon="@(UseModel ? Icons.Material.Filled.AutoAwesome : Icons.Material.Outlined.Summarize)" Size="Size.Small" aria-hidden="true" />
+                    @Tr(UseModel ? "AIB_SourceModel" : "AIB_SourceTemplate")
+                </span>
+                <span class="aib-note" style="margin:0;">@Tr("AIB_Period", AiBriefText.Day(Detail.Brief.PeriodFrom), AiBriefText.Day(Detail.Brief.PeriodTo))</span>
+            </div>
+            <p>@(UseModel ? Detail.Narrative!.NarrativeText : AiBriefText.Template(Lang, Culture, _f, _alerts))</p>
+            @if (UseModel && _questions.Count > 0)
+            {
+                <ul class="aib-qs">
+                    @foreach (var q in _questions) { <li>@q</li> }
+                </ul>
+            }
+            @if (OtherLanguageNarrative)
+            {
+                <div class="aib-note">@Tr("AIB_NarrativeOtherLang")</div>
+            }
+        </section>
+
+        @if (_f.Sections.Contains(AiBriefSections.Alerts))
+        {
+            <section class="aib-sec" aria-label="@Tr("AIB_SecAlerts")">
+                <h3><MudIcon Icon="@Icons.Material.Outlined.NotificationImportant" aria-hidden="true" />@Tr("AIB_SecAlerts") (@_alerts.Count)</h3>
+                @if (_alerts.Count == 0)
+                {
+                    <div class="aib-note" style="margin:0;">@Tr("AIB_NoAlerts")</div>
+                }
+                @foreach (var a in _alerts.OrderBy(x => AiBriefSeverity.Rank(x.Severity)))
+                {
+                    var url = AiBriefText.AlertUrl(a);
+                    <div class="aib-alert @a.Severity" role="group" aria-label="@AiBriefText.AlertTitle(Lang, Culture, a)">
+                        <MudIcon Icon="@SevIcon(a.Severity)" Color="@SevColor(a.Severity)" aria-hidden="true" />
+                        <div class="tx">
+                            <div class="t">@AiBriefText.AlertTitle(Lang, Culture, a)
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@SevColor(a.Severity)" Text="@Tr(AiBriefText.SeverityKey(a.Severity))" />
+                            </div>
+                            <div class="d">@AiBriefText.AlertText(Lang, Culture, a)</div>
+                        </div>
+                        @if (url != null)
+                        {
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" EndIcon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)"
+                                       Href="@url">@Tr("AIB_OpenScreen")</MudButton>
+                        }
+                    </div>
+                }
+            </section>
+        }
+
+        @if (_f.Sales is { } s)
+        {
+            <section class="aib-sec" aria-label="@Tr("AIB_SecSales")">
+                <h3><MudIcon Icon="@Icons.Material.Outlined.PointOfSale" aria-hidden="true" />@Tr("AIB_SecSales")</h3>
+                <div class="aib-kpis">
+                    @Kpi("AIB_KpiNetSales", AiBriefText.Money(s.NetSales))
+                    @Kpi("AIB_KpiInvoices", AiBriefText.Count(s.Invoices))
+                    @Kpi("AIB_KpiAvgInvoice", AiBriefText.Money(s.AvgInvoice))
+                    @Kpi("AIB_KpiCash", AiBriefText.Money(s.CashSales))
+                    @Kpi("AIB_KpiCredit", AiBriefText.Money(s.CreditSales))
+                    @Kpi("AIB_KpiReturns", AiBriefText.Money(s.Returns))
+                    @Kpi("AIB_KpiMtd", AiBriefText.Money(s.Mtd))
+                    @Kpi("AIB_KpiVsWeekday", Signed(s.VsWeekdayPct), Trend(s.VsWeekdayPct))
+                    @Kpi("AIB_KpiVsPrevMonth", Signed(s.VsPrevMonthPct), Trend(s.VsPrevMonthPct))
+                    @Kpi("AIB_KpiMargin", s.MarginPct == null ? "—" : AiBriefText.Pct(s.MarginPct) + " (" + Tr("AIB_Approximate") + ")")
+                </div>
+                <div class="aib-cols">
+                    @NamedList("AIB_TopCustomers", s.TopCustomers)
+                    @NamedList("AIB_TopItems", s.TopItems)
+                </div>
+                @if (s.ByBranch.Count > 1)
+                {
+                    <div class="aib-list aib-wrap" style="margin-top:14px;">
+                        <h4>@Tr("AIB_SecByBranch")</h4>
+                        <table class="aib-table">
+                            <thead><tr><th>@Tr("AIB_ColName")</th><th>@Tr("AIB_ColInvoices")</th><th>@Tr("AIB_ColNet")</th><th>@Tr("AIB_KpiReturns")</th></tr></thead>
+                            <tbody>
+                                @foreach (var b in s.ByBranch)
+                                {
+                                    <tr><td>@b.BranchName</td><td class="n">@AiBriefText.Count(b.Invoices)</td><td class="n">@AiBriefText.Money(b.Net)</td><td class="n">@AiBriefText.Money(b.Returns)</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </section>
+        }
+
+        @if (_f.Collections is { } c)
+        {
+            <section class="aib-sec" aria-label="@Tr("AIB_SecCollections")">
+                <h3><MudIcon Icon="@Icons.Material.Outlined.Payments" aria-hidden="true" />@Tr("AIB_SecCollections")</h3>
+                <div class="aib-wrap">
+                    <table class="aib-table">
+                        <thead><tr><th></th><th>@Tr("AIB_KpiReceipts")</th><th>@Tr("AIB_KpiPayments")</th><th>@Tr("AIB_KpiNetCash")</th></tr></thead>
+                        <tbody>
+                            @foreach (var cur in c.ByCurrency)
+                            {
+                                <tr><td>@CurrencyName(cur.CurrencyName, cur.CurrencyNameEn)</td><td class="n">@AiBriefText.Money(cur.Receipts)</td><td class="n">@AiBriefText.Money(cur.Payments)</td><td class="n">@AiBriefText.Money(cur.Net)</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="aib-cols">@NamedList("AIB_TopReceipts", c.TopReceipts)</div>
+            </section>
+        }
+
+        @if (_f.Liquidity is { } l)
+        {
+            <section class="aib-sec" aria-label="@Tr("AIB_SecLiquidity")">
+                <h3><MudIcon Icon="@Icons.Material.Outlined.AccountBalanceWallet" aria-hidden="true" />@Tr("AIB_SecLiquidity")</h3>
+                <div class="aib-kpis">
+                    @foreach (var cur in l.ByCurrency)
+                    {
+                        @Kpi("AIB_KpiBoxBalance", AiBriefText.Money(cur.Balance), null, CurrencyName(cur.CurrencyName, cur.CurrencyNameEn))
+                    }
+                </div>
+                @if (l.Boxes.Count > 0)
+                {
+                    <div class="aib-wrap" style="margin-top:14px;">
+                        <table class="aib-table">
+                            <thead><tr><th>@Tr("AIB_ColName")</th><th>@Tr("AIB_ColBalance")</th><th>@Tr("AIB_ColChange")</th></tr></thead>
+                            <tbody>
+                                @foreach (var b in l.Boxes)
+                                {
+                                    <tr><td>@b.BoxName</td><td class="n">@AiBriefText.Money(b.Balance)</td><td class="n">@AiBriefText.Money(b.PeriodEnd - b.PeriodStart)</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </section>
+        }
+
+        @if (_f.Receivables is { } r)
+        {
+            <section class="aib-sec" aria-label="@Tr("AIB_SecReceivables")">
+                <h3><MudIcon Icon="@Icons.Material.Outlined.RequestQuote" aria-hidden="true" />@Tr("AIB_SecReceivables")</h3>
+                <div class="aib-kpis">
+                    @Kpi("AIB_KpiOpenCredit", AiBriefText.Money(r.OpenCredit), null, AiBriefText.Count(r.OpenCount))
+                    @Kpi("AIB_KpiOverdue", AiBriefText.Money(r.Overdue.Sum(o => o.Amount)), null, AiBriefText.Count(r.Overdue.Sum(o => o.Count)))
+                </div>
+                <div class="aib-note">@Tr("AIB_Approximate")</div>
+            </section>
+        }
+
+        @if (_f.Purchases is { } p)
+        {
+            <section class="aib-sec" aria-label="@Tr("AIB_SecPurchases")">
+                <h3><MudIcon Icon="@Icons.Material.Outlined.ShoppingCart" aria-hidden="true" />@Tr("AIB_SecPurchases")</h3>
+                <div class="aib-kpis">
+                    @Kpi("AIB_KpiPurchases", AiBriefText.Money(p.NetPurchases))
+                    @Kpi("AIB_KpiInvoices", AiBriefText.Count(p.Invoices))
+                    @Kpi("AIB_KpiReturns", AiBriefText.Money(p.Returns))
+                </div>
+            </section>
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public AiBriefDetail Detail { get; set; } = default!;
+
+    private AiBriefFacts? _f;
+    private List<AiBriefAlert> _alerts = new();
+    private List<string> _questions = new();
+    private AiBriefDetail? _parsed;
+
+    private CultureInfo Culture => LangService.CurrentCultureInfo;
+    private string CurrentLang => AiBriefConst.NormalizeLanguage(LangService.CurrentLanguage);
+
+    /// <summary>سرد النموذج يُعرض فقط إن قُبل (Source = model) وكان بلغة الواجهة؛ غير ذلك القالب.</summary>
+    private bool UseModel => Detail.Narrative is { } n && n.Source == AiBriefNarrativeSource.Model
+                             && !string.IsNullOrWhiteSpace(n.NarrativeText) && n.Language == CurrentLang;
+
+    private bool OtherLanguageNarrative => Detail.Narrative is { } n && n.Source == AiBriefNarrativeSource.Model && n.Language != CurrentLang;
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(_parsed, Detail)) return;
+        _parsed = Detail;
+        _f = AiBriefText.ParseFacts(Detail.Brief?.FactsJson);
+        _alerts = AiBriefText.ParseAlerts(Detail.Brief?.AlertsJson);
+        _questions = new();
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(Detail.Narrative?.QuestionsJson))
+                _questions = System.Text.Json.JsonSerializer.Deserialize<List<string>>(Detail.Narrative.QuestionsJson) ?? new();
+        }
+        catch (System.Text.Json.JsonException) { }
+    }
+
+    private string Tr(string key, params object[] args) => AiBriefText.T(Lang, Culture, key, args);
+
+    private string CurrencyName(string ar, string en) => LangService.IsArabic || string.IsNullOrWhiteSpace(en) ? ar : en;
+
+    private static string Signed(decimal? v) => v == null ? "—" : (v > 0 ? "+" : "") + AiBriefText.Pct(v);
+    private static string? Trend(decimal? v) => v == null || v == 0 ? null : v > 0 ? "up" : "down";
+
+    private RenderFragment Kpi(string labelKey, string value, string? trend = null, string? sub = null) => __builder =>
+    {
+        <div class="aib-kpi">
+            <div class="l" title="@Tr(labelKey)">@Tr(labelKey)@(string.IsNullOrEmpty(sub) ? "" : " · " + sub)</div>
+            <div class="v @trend">@value</div>
+        </div>
+    };
+
+    private RenderFragment NamedList(string titleKey, List<AiBriefNamedValue> items) => __builder =>
+    {
+        @if (items != null && items.Count > 0)
+        {
+            <div class="aib-list aib-wrap">
+                <h4>@Tr(titleKey)</h4>
+                <table class="aib-table">
+                    <tbody>
+                        @foreach (var x in items)
+                        {
+                            <tr><td>@x.Name</td><td class="n">@AiBriefText.Money(x.Value)</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    };
+
+    private static string SevIcon(string s) => s switch
+    {
+        AiBriefSeverity.High => Icons.Material.Filled.Error,
+        AiBriefSeverity.Medium => Icons.Material.Filled.Warning,
+        _ => Icons.Material.Filled.Info,
+    };
+
+    private static Color SevColor(string s) => s switch
+    {
+        AiBriefSeverity.High => Color.Error,
+        AiBriefSeverity.Medium => Color.Warning,
+        _ => Color.Info,
+    };
+}

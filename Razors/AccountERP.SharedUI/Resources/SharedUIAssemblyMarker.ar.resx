@@ -5596,4 +5596,153 @@
   <data name="AIC_Archive" xml:space="preserve"><value>أرشفة</value></data>
   <data name="AIC_Unarchive" xml:space="preserve"><value>استعادة</value></data>
   <data name="AIC_ArchivedBanner" xml:space="preserve"><value>هذه المحادثة مؤرشفة وللقراءة فقط. استعِدها لتكمل فيها.</value></data>
+  <data name="AIB_Title" xml:space="preserve"><value>الموجز اليومى</value></data>
+  <data name="AIB_Tab" xml:space="preserve"><value>الموجز اليومى</value></data>
+  <data name="AIB_Period" xml:space="preserve"><value>الفترة: من {0} إلى {1}</value></data>
+  <data name="AIB_History" xml:space="preserve"><value>الموجزات السابقة</value></data>
+  <data name="AIB_Older" xml:space="preserve"><value>موجز أقدم</value></data>
+  <data name="AIB_Newer" xml:space="preserve"><value>موجز أحدث</value></data>
+  <data name="AIB_Refresh" xml:space="preserve"><value>تحديث الآن</value></data>
+  <data name="AIB_AskAssistant" xml:space="preserve"><value>اسأل المساعد</value></data>
+  <data name="AIB_OpenBrief" xml:space="preserve"><value>عرض الموجز</value></data>
+  <data name="AIB_OpenScreen" xml:space="preserve"><value>افتح الشاشة</value></data>
+  <data name="AIB_Dismiss" xml:space="preserve"><value>إخفاء لليوم</value></data>
+  <data name="AIB_SourceModel" xml:space="preserve"><value>صياغة المساعد</value></data>
+  <data name="AIB_SourceTemplate" xml:space="preserve"><value>ملخص تلقائى</value></data>
+  <data name="AIB_NarrativeOtherLang" xml:space="preserve"><value>صياغة المساعد لهذا الموجز بلغة أخرى، فيظهر هنا الملخص التلقائى بلغتك.</value></data>
+  <data name="AIB_Partial" xml:space="preserve"><value>تعذّر حساب بعض الأقسام؛ الباقى معروض.</value></data>
+  <data name="AIB_EmptyNotSubscribed" xml:space="preserve"><value>لست مشتركاً فى الموجز اليومى. فعّل الاشتراك من «اشتراكى فى الموجز» أسفل الصفحة.</value></data>
+  <data name="AIB_EmptyDisabled" xml:space="preserve"><value>الموجز اليومى غير مفعّل حالياً من الإدارة.</value></data>
+  <data name="AIB_EmptyNotYet" xml:space="preserve"><value>لم يصدر لك موجز بعد. يصدر كل يوم بعد الموعد المحدد فى الإعدادات، أو اضغط «تحديث الآن».</value></data>
+  <data name="AIB_NotifyHeadline" xml:space="preserve"><value>الموجز اليومى جاهز ({0})</value></data>
+  <data name="AIB_NotifyHeadlineAlerts" xml:space="preserve"><value>الموجز اليومى جاهز ({0}) — {1} تنبيه</value></data>
+  <data name="AIB_Approximate" xml:space="preserve"><value>تقريبى</value></data>
+  <data name="AIB_ChatHint" xml:space="preserve"><value>اسأل عن أى رقم فى هذا الموجز؛ الإجابة من حقائقه وبصلاحياتك.</value></data>
+  <data name="AIB_ErrNotFound" xml:space="preserve"><value>الموجز غير موجود أو لا تملك صلاحية عرضه.</value></data>
+  <data name="AIB_ErrBusy" xml:space="preserve"><value>الموجز قيد التحديث الآن؛ أعد المحاولة بعد قليل.</value></data>
+  <data name="AIB_ErrSkipped" xml:space="preserve"><value>لا يوجد ما يُعرض فى الموجز لصلاحياتك (لا أقسام أو لا فروع مسموحة).</value></data>
+  <data name="AIB_SecSales" xml:space="preserve"><value>المبيعات</value></data>
+  <data name="AIB_SecCollections" xml:space="preserve"><value>المقبوضات والمدفوعات</value></data>
+  <data name="AIB_SecLiquidity" xml:space="preserve"><value>أرصدة الخزن</value></data>
+  <data name="AIB_SecReceivables" xml:space="preserve"><value>الآجل على العملاء</value></data>
+  <data name="AIB_SecPurchases" xml:space="preserve"><value>المشتريات</value></data>
+  <data name="AIB_SecAlerts" xml:space="preserve"><value>التنبيهات</value></data>
+  <data name="AIB_SecByBranch" xml:space="preserve"><value>حسب الفرع</value></data>
+  <data name="AIB_KpiNetSales" xml:space="preserve"><value>صافى المبيعات</value></data>
+  <data name="AIB_KpiInvoices" xml:space="preserve"><value>عدد الفواتير</value></data>
+  <data name="AIB_KpiAvgInvoice" xml:space="preserve"><value>متوسط الفاتورة</value></data>
+  <data name="AIB_KpiCash" xml:space="preserve"><value>مبيعات نقدية</value></data>
+  <data name="AIB_KpiCredit" xml:space="preserve"><value>مبيعات آجلة</value></data>
+  <data name="AIB_KpiReturns" xml:space="preserve"><value>المرتجعات</value></data>
+  <data name="AIB_KpiMtd" xml:space="preserve"><value>الشهر حتى تاريخه</value></data>
+  <data name="AIB_KpiVsWeekday" xml:space="preserve"><value>مقابل المعتاد لنفس اليوم</value></data>
+  <data name="AIB_KpiVsPrevMonth" xml:space="preserve"><value>مقابل نفس الأيام من الشهر السابق</value></data>
+  <data name="AIB_KpiMargin" xml:space="preserve"><value>هامش الربح</value></data>
+  <data name="AIB_KpiReceipts" xml:space="preserve"><value>المقبوضات</value></data>
+  <data name="AIB_KpiPayments" xml:space="preserve"><value>المدفوعات</value></data>
+  <data name="AIB_KpiNetCash" xml:space="preserve"><value>صافى حركة الخزينة</value></data>
+  <data name="AIB_KpiBoxBalance" xml:space="preserve"><value>رصيد الخزن الآن</value></data>
+  <data name="AIB_KpiOpenCredit" xml:space="preserve"><value>آجل غير مسدد</value></data>
+  <data name="AIB_KpiOverdue" xml:space="preserve"><value>متأخر عن الاستحقاق</value></data>
+  <data name="AIB_KpiPurchases" xml:space="preserve"><value>صافى المشتريات</value></data>
+  <data name="AIB_TopCustomers" xml:space="preserve"><value>أعلى العملاء</value></data>
+  <data name="AIB_TopItems" xml:space="preserve"><value>أعلى الأصناف</value></data>
+  <data name="AIB_TopReceipts" xml:space="preserve"><value>أعلى المقبوضات من العملاء</value></data>
+  <data name="AIB_ColName" xml:space="preserve"><value>الاسم</value></data>
+  <data name="AIB_ColInvoices" xml:space="preserve"><value>الفواتير</value></data>
+  <data name="AIB_ColNet" xml:space="preserve"><value>الصافى</value></data>
+  <data name="AIB_ColBalance" xml:space="preserve"><value>الرصيد الآن</value></data>
+  <data name="AIB_ColChange" xml:space="preserve"><value>تغير الفترة</value></data>
+  <data name="AIB_Al_sales_drop" xml:space="preserve"><value>انخفاض المبيعات</value></data>
+  <data name="AIB_Al_sales_drop_Text" xml:space="preserve"><value>صافى المبيعات {net} أقل من المعتاد لنفس اليوم ({baseline}) بنسبة {drop_pct}٪ (العتبة {threshold_pct}٪).</value></data>
+  <data name="AIB_Al_no_sales" xml:space="preserve"><value>يوم عمل بلا فواتير</value></data>
+  <data name="AIB_Al_no_sales_Text" xml:space="preserve"><value>لا توجد فواتير بيع فى {days} يوم عمل: {items}.</value></data>
+  <data name="AIB_Al_returns_high" xml:space="preserve"><value>مرتجعات مرتفعة</value></data>
+  <data name="AIB_Al_returns_high_Text" xml:space="preserve"><value>المرتجعات {returns} تمثل {pct}٪ من صافى المبيعات {net} (العتبة {threshold_pct}٪).</value></data>
+  <data name="AIB_Al_below_cost" xml:space="preserve"><value>بيع بأقل من التكلفة</value></data>
+  <data name="AIB_Al_below_cost_Text" xml:space="preserve"><value>{lines} سطر بيع بسعر أقل من متوسط التكلفة، بخسارة تقريبية {loss}. أمثلة: {items}.</value></data>
+  <data name="AIB_Al_cash_low" xml:space="preserve"><value>رصيد خزينة منخفض</value></data>
+  <data name="AIB_Al_cash_low_Text" xml:space="preserve"><value>{boxes} صندوق رصيده أقل من الحد {min_balance} (منها {negative} سالب آخر الفترة): {items}.</value></data>
+  <data name="AIB_Al_overdue_receivables" xml:space="preserve"><value>آجل متأخر</value></data>
+  <data name="AIB_Al_overdue_receivables_Text" xml:space="preserve"><value>{count} فاتورة آجلة متأخرة بمبلغ {amount}، أقصى تأخير {max_days} يوم (العتبة {threshold_days} يوم).</value></data>
+  <data name="AIB_Al_negative_stock" xml:space="preserve"><value>رصيد مخزون سالب</value></data>
+  <data name="AIB_Al_negative_stock_Text" xml:space="preserve"><value>{count} صنف رصيده سالب الآن. أمثلة: {items}.</value></data>
+  <data name="AIB_Al_large_payment" xml:space="preserve"><value>مدفوعات أكبر من المعتاد</value></data>
+  <data name="AIB_Al_large_payment_Text" xml:space="preserve"><value>مدفوعات الفترة {payments} ({items})، بمتوسط يومى {per_day} مقابل {avg_30} معتاد فى آخر 30 يوماً (المعامل {factor}).</value></data>
+  <data name="AIB_SevHigh" xml:space="preserve"><value>مرتفع</value></data>
+  <data name="AIB_SevMedium" xml:space="preserve"><value>متوسط</value></data>
+  <data name="AIB_SevInfo" xml:space="preserve"><value>للعلم</value></data>
+  <data name="AIB_NoAlerts" xml:space="preserve"><value>لا توجد تنبيهات لهذه الفترة.</value></data>
+  <data name="AIB_T_Sales" xml:space="preserve"><value>صافى مبيعات الفترة {0} من {1} فاتورة.</value></data>
+  <data name="AIB_T_SalesUp" xml:space="preserve"><value>وهى أعلى من المعتاد لنفس اليوم بنسبة {0}٪.</value></data>
+  <data name="AIB_T_SalesDown" xml:space="preserve"><value>وهى أقل من المعتاد لنفس اليوم بنسبة {0}٪.</value></data>
+  <data name="AIB_T_Collections" xml:space="preserve"><value>المقبوضات {0} والمدفوعات {1}.</value></data>
+  <data name="AIB_T_Liquidity" xml:space="preserve"><value>رصيد الخزن الآن {0}.</value></data>
+  <data name="AIB_T_Alerts" xml:space="preserve"><value>يوجد {0} تنبيه يحتاج متابعة.</value></data>
+  <data name="AIB_T_NoAlerts" xml:space="preserve"><value>لا توجد تنبيهات.</value></data>
+  <data name="AIB_Sub_Title" xml:space="preserve"><value>اشتراكى فى الموجز</value></data>
+  <data name="AIB_Sub_Enable" xml:space="preserve"><value>استلام الموجز كل يوم</value></data>
+  <data name="AIB_Sub_Branches" xml:space="preserve"><value>الفروع</value></data>
+  <data name="AIB_Sub_AllBranches" xml:space="preserve"><value>كل الفروع المسموحة لى</value></data>
+  <data name="AIB_Sub_Sections" xml:space="preserve"><value>الأقسام</value></data>
+  <data name="AIB_Sub_Language" xml:space="preserve"><value>لغة الموجز</value></data>
+  <data name="AIB_Sub_Save" xml:space="preserve"><value>حفظ الاشتراك</value></data>
+  <data name="AIB_Sub_Saved" xml:space="preserve"><value>تم حفظ الاشتراك.</value></data>
+  <data name="AIB_Set_Schedule" xml:space="preserve"><value>الجدولة</value></data>
+  <data name="AIB_Set_Enabled" xml:space="preserve"><value>تفعيل الموجز اليومى</value></data>
+  <data name="AIB_Set_Time" xml:space="preserve"><value>موعد الإصدار (HH:mm)</value></data>
+  <data name="AIB_Set_TimeZone" xml:space="preserve"><value>المنطقة الزمنية</value></data>
+  <data name="AIB_Set_ServerTime" xml:space="preserve"><value>فارغ = توقيت الخادم ({0})</value></data>
+  <data name="AIB_Set_Days" xml:space="preserve"><value>أيام الإصدار</value></data>
+  <data name="AIB_Set_Narrative" xml:space="preserve"><value>السرد والتكلفة</value></data>
+  <data name="AIB_Set_NarrativeOn" xml:space="preserve"><value>كتابة فقرة الملخص بالنموذج (وإلا ملخص تلقائى مجانى)</value></data>
+  <data name="AIB_Set_Model" xml:space="preserve"><value>يُستخدم ربط مهمة «سريع» ثم أول نموذج «محادثة»، بلا أدوات وحتى 600 توكن، وأى رقم غير موجود فى الحقائق يُرفض ويُستخدم الملخص التلقائى.</value></data>
+  <data name="AIB_Set_MaxCost" xml:space="preserve"><value>الحد الشهرى لتكلفة السرد ($)</value></data>
+  <data name="AIB_Set_MaxCostHint" xml:space="preserve"><value>0 = بلا حد. عند بلوغه يُستخدم الملخص التلقائى حتى بداية الشهر التالى.</value></data>
+  <data name="AIB_Set_MonthCost" xml:space="preserve"><value>تكلفة السرد هذا الشهر (تقريبية)</value></data>
+  <data name="AIB_Set_Thresholds" xml:space="preserve"><value>عتبات التنبيهات</value></data>
+  <data name="AIB_Set_SalesDrop" xml:space="preserve"><value>انخفاض المبيعات عن المعتاد</value></data>
+  <data name="AIB_Set_Returns" xml:space="preserve"><value>نسبة المرتجعات</value></data>
+  <data name="AIB_Set_MinCash" xml:space="preserve"><value>الحد الأدنى لرصيد الصندوق</value></data>
+  <data name="AIB_Set_OverdueDays" xml:space="preserve"><value>أيام التأخير قبل التنبيه</value></data>
+  <data name="AIB_Set_LargePayment" xml:space="preserve"><value>معامل المدفوعات الكبيرة</value></data>
+  <data name="AIB_Set_Save" xml:space="preserve"><value>حفظ الإعدادات</value></data>
+  <data name="AIB_Set_Saved" xml:space="preserve"><value>تم حفظ إعدادات الموجز.</value></data>
+  <data name="AIB_Set_RunNow" xml:space="preserve"><value>تشغيل الآن لى (تجربة)</value></data>
+  <data name="AIB_Set_RunNowConfirm" xml:space="preserve"><value>سيُصدر موجز اليوم لك أنت فقط ولو كانت الميزة موقوفة، وقد يستدعى النموذج لكتابة الملخص (تكلفة بسيطة). متابعة؟</value></data>
+  <data name="AIB_Set_RunNowYes" xml:space="preserve"><value>تشغيل</value></data>
+  <data name="AIB_Set_Cancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="AIB_Set_RunDone" xml:space="preserve"><value>صدر موجز التجربة.</value></data>
+  <data name="AIB_Set_Subscribers" xml:space="preserve"><value>المشتركون</value></data>
+  <data name="AIB_Set_AddSubscriber" xml:space="preserve"><value>إضافة مشترك</value></data>
+  <data name="AIB_Set_Add" xml:space="preserve"><value>إضافة</value></data>
+  <data name="AIB_Set_NoSubscribers" xml:space="preserve"><value>لا يوجد مشتركون بعد.</value></data>
+  <data name="AIB_Set_Active" xml:space="preserve"><value>مفعّل</value></data>
+  <data name="AIB_Set_UserInactive" xml:space="preserve"><value>مستخدم موقوف</value></data>
+  <data name="AIB_Set_Runs" xml:space="preserve"><value>آخر 30 تشغيلاً</value></data>
+  <data name="AIB_Set_NoRuns" xml:space="preserve"><value>لم يُشغَّل الموجز بعد.</value></data>
+  <data name="AIB_Set_RunDate" xml:space="preserve"><value>اليوم</value></data>
+  <data name="AIB_Set_RunPeriod" xml:space="preserve"><value>الفترة</value></data>
+  <data name="AIB_Set_RunStatus" xml:space="preserve"><value>الحالة</value></data>
+  <data name="AIB_Set_RunTrigger" xml:space="preserve"><value>المصدر</value></data>
+  <data name="AIB_Set_RunRecipients" xml:space="preserve"><value>المستلمون</value></data>
+  <data name="AIB_Set_RunSources" xml:space="preserve"><value>السرد</value></data>
+  <data name="AIB_Set_RunCost" xml:space="preserve"><value>التكلفة</value></data>
+  <data name="AIB_Set_RunMs" xml:space="preserve"><value>المدة (ms)</value></data>
+  <data name="AIB_Set_StatusReady" xml:space="preserve"><value>جاهز</value></data>
+  <data name="AIB_Set_StatusPartial" xml:space="preserve"><value>جزئى</value></data>
+  <data name="AIB_Set_StatusFailed" xml:space="preserve"><value>فشل</value></data>
+  <data name="AIB_Set_StatusRunning" xml:space="preserve"><value>قيد التشغيل</value></data>
+  <data name="AIB_Set_Trigger_schedule" xml:space="preserve"><value>مجدول</value></data>
+  <data name="AIB_Set_Trigger_manual" xml:space="preserve"><value>تحديث يدوى</value></data>
+  <data name="AIB_Set_Trigger_test" xml:space="preserve"><value>تجربة</value></data>
+  <data name="AIB_Set_ErrNotAdmin" xml:space="preserve"><value>إعدادات الموجز متاحة لمن يملك صلاحية شاشة «إعدادات الذكاء الاصطناعى» فقط.</value></data>
+  <data name="AIB_Set_NoPermission" xml:space="preserve"><value>لا تملك (أو المستخدم لا يملك) صلاحية شاشة «الموجز اليومى»، أو المستخدم موقوف. امنح الصلاحية من شاشة الصلاحيات أولاً.</value></data>
+  <data name="AIB_Set_ErrTime" xml:space="preserve"><value>وقت الموجز غير صالح؛ اكتبه بصيغة HH:mm (مثل 08:00).</value></data>
+  <data name="AIB_Set_ErrTimeZone" xml:space="preserve"><value>المنطقة الزمنية غير معروفة (مثال صحيح: Africa/Cairo أو Egypt Standard Time).</value></data>
+  <data name="AIB_Set_ErrDays" xml:space="preserve"><value>أيام الإصدار غير صالحة.</value></data>
+  <data name="AIB_Set_ErrPct" xml:space="preserve"><value>النسب يجب أن تكون من 1 إلى 100.</value></data>
+  <data name="AIB_Set_ErrFactor" xml:space="preserve"><value>معامل المدفوعات الكبيرة يجب أن يكون من 1 إلى 100.</value></data>
+  <data name="AIB_Set_ErrCost" xml:space="preserve"><value>الحد الشهرى للتكلفة غير صالح.</value></data>
+  <data name="AIB_Set_ErrOverdueDays" xml:space="preserve"><value>أيام التأخير غير صالحة (0 إلى 3650).</value></data>
 </root>

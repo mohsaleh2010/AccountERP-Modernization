@@ -5598,4 +5598,153 @@
   <data name="AIC_Archive" xml:space="preserve"><value>Archivieren</value></data>
   <data name="AIC_Unarchive" xml:space="preserve"><value>Wiederherstellen</value></data>
   <data name="AIC_ArchivedBanner" xml:space="preserve"><value>Dieser Chat ist archiviert und schreibgeschützt. Wiederherstellen, um fortzufahren.</value></data>
+  <data name="AIB_Title" xml:space="preserve"><value>Tagesbericht</value></data>
+  <data name="AIB_Tab" xml:space="preserve"><value>Tagesbericht</value></data>
+  <data name="AIB_Period" xml:space="preserve"><value>Zeitraum: {0} bis {1}</value></data>
+  <data name="AIB_History" xml:space="preserve"><value>Frühere Berichte</value></data>
+  <data name="AIB_Older" xml:space="preserve"><value>Älterer Bericht</value></data>
+  <data name="AIB_Newer" xml:space="preserve"><value>Neuerer Bericht</value></data>
+  <data name="AIB_Refresh" xml:space="preserve"><value>Jetzt aktualisieren</value></data>
+  <data name="AIB_AskAssistant" xml:space="preserve"><value>Assistenten fragen</value></data>
+  <data name="AIB_OpenBrief" xml:space="preserve"><value>Bericht öffnen</value></data>
+  <data name="AIB_OpenScreen" xml:space="preserve"><value>Bildschirm öffnen</value></data>
+  <data name="AIB_Dismiss" xml:space="preserve"><value>Für heute ausblenden</value></data>
+  <data name="AIB_SourceModel" xml:space="preserve"><value>Vom Assistenten formuliert</value></data>
+  <data name="AIB_SourceTemplate" xml:space="preserve"><value>Automatische Zusammenfassung</value></data>
+  <data name="AIB_NarrativeOtherLang" xml:space="preserve"><value>Der Assistententext liegt in einer anderen Sprache vor; daher wird die automatische Zusammenfassung in Ihrer Sprache angezeigt.</value></data>
+  <data name="AIB_Partial" xml:space="preserve"><value>Einige Abschnitte konnten nicht berechnet werden; der Rest wird angezeigt.</value></data>
+  <data name="AIB_EmptyNotSubscribed" xml:space="preserve"><value>Sie haben den Tagesbericht nicht abonniert. Aktivieren Sie ihn unten unter „Mein Berichtsabo“.</value></data>
+  <data name="AIB_EmptyDisabled" xml:space="preserve"><value>Der Tagesbericht ist derzeit vom Administrator deaktiviert.</value></data>
+  <data name="AIB_EmptyNotYet" xml:space="preserve"><value>Für Sie wurde noch kein Bericht erstellt. Er wird täglich nach der geplanten Zeit erstellt, oder klicken Sie auf „Jetzt aktualisieren“.</value></data>
+  <data name="AIB_NotifyHeadline" xml:space="preserve"><value>Tagesbericht bereit ({0})</value></data>
+  <data name="AIB_NotifyHeadlineAlerts" xml:space="preserve"><value>Tagesbericht bereit ({0}) — {1} Warnung(en)</value></data>
+  <data name="AIB_Approximate" xml:space="preserve"><value>ungefähr</value></data>
+  <data name="AIB_ChatHint" xml:space="preserve"><value>Fragen Sie nach jeder Zahl dieses Berichts; Antworten nutzen seine Fakten und Ihre Rechte.</value></data>
+  <data name="AIB_ErrNotFound" xml:space="preserve"><value>Der Bericht wurde nicht gefunden oder Sie dürfen ihn nicht sehen.</value></data>
+  <data name="AIB_ErrBusy" xml:space="preserve"><value>Der Bericht wird gerade aktualisiert; versuchen Sie es gleich erneut.</value></data>
+  <data name="AIB_ErrSkipped" xml:space="preserve"><value>Für Ihre Rechte gibt es nichts anzuzeigen (keine erlaubten Abschnitte oder Filialen).</value></data>
+  <data name="AIB_SecSales" xml:space="preserve"><value>Verkauf</value></data>
+  <data name="AIB_SecCollections" xml:space="preserve"><value>Ein- und Auszahlungen</value></data>
+  <data name="AIB_SecLiquidity" xml:space="preserve"><value>Kassenbestände</value></data>
+  <data name="AIB_SecReceivables" xml:space="preserve"><value>Kundenforderungen</value></data>
+  <data name="AIB_SecPurchases" xml:space="preserve"><value>Einkauf</value></data>
+  <data name="AIB_SecAlerts" xml:space="preserve"><value>Warnungen</value></data>
+  <data name="AIB_SecByBranch" xml:space="preserve"><value>Nach Filiale</value></data>
+  <data name="AIB_KpiNetSales" xml:space="preserve"><value>Nettoumsatz</value></data>
+  <data name="AIB_KpiInvoices" xml:space="preserve"><value>Rechnungen</value></data>
+  <data name="AIB_KpiAvgInvoice" xml:space="preserve"><value>Ø Rechnung</value></data>
+  <data name="AIB_KpiCash" xml:space="preserve"><value>Barverkäufe</value></data>
+  <data name="AIB_KpiCredit" xml:space="preserve"><value>Zielverkäufe</value></data>
+  <data name="AIB_KpiReturns" xml:space="preserve"><value>Retouren</value></data>
+  <data name="AIB_KpiMtd" xml:space="preserve"><value>Monat bis heute</value></data>
+  <data name="AIB_KpiVsWeekday" xml:space="preserve"><value>ggü. üblichem Wochentag</value></data>
+  <data name="AIB_KpiVsPrevMonth" xml:space="preserve"><value>ggü. gleichen Tagen Vormonat</value></data>
+  <data name="AIB_KpiMargin" xml:space="preserve"><value>Marge</value></data>
+  <data name="AIB_KpiReceipts" xml:space="preserve"><value>Einzahlungen</value></data>
+  <data name="AIB_KpiPayments" xml:space="preserve"><value>Auszahlungen</value></data>
+  <data name="AIB_KpiNetCash" xml:space="preserve"><value>Netto-Kassenbewegung</value></data>
+  <data name="AIB_KpiBoxBalance" xml:space="preserve"><value>Kassenbestand jetzt</value></data>
+  <data name="AIB_KpiOpenCredit" xml:space="preserve"><value>Offene Forderungen</value></data>
+  <data name="AIB_KpiOverdue" xml:space="preserve"><value>Überfällig</value></data>
+  <data name="AIB_KpiPurchases" xml:space="preserve"><value>Nettoeinkauf</value></data>
+  <data name="AIB_TopCustomers" xml:space="preserve"><value>Top-Kunden</value></data>
+  <data name="AIB_TopItems" xml:space="preserve"><value>Top-Artikel</value></data>
+  <data name="AIB_TopReceipts" xml:space="preserve"><value>Höchste Kundeneinzahlungen</value></data>
+  <data name="AIB_ColName" xml:space="preserve"><value>Name</value></data>
+  <data name="AIB_ColInvoices" xml:space="preserve"><value>Rechnungen</value></data>
+  <data name="AIB_ColNet" xml:space="preserve"><value>Netto</value></data>
+  <data name="AIB_ColBalance" xml:space="preserve"><value>Saldo jetzt</value></data>
+  <data name="AIB_ColChange" xml:space="preserve"><value>Veränderung</value></data>
+  <data name="AIB_Al_sales_drop" xml:space="preserve"><value>Umsatzrückgang</value></data>
+  <data name="AIB_Al_sales_drop_Text" xml:space="preserve"><value>Nettoumsatz {net} liegt {drop_pct}% unter dem Üblichen für den Wochentag ({baseline}); Schwelle {threshold_pct}%.</value></data>
+  <data name="AIB_Al_no_sales" xml:space="preserve"><value>Arbeitstag ohne Verkauf</value></data>
+  <data name="AIB_Al_no_sales_Text" xml:space="preserve"><value>Keine Verkaufsrechnungen an {days} Arbeitstag(en): {items}.</value></data>
+  <data name="AIB_Al_returns_high" xml:space="preserve"><value>Hohe Retouren</value></data>
+  <data name="AIB_Al_returns_high_Text" xml:space="preserve"><value>Retouren {returns} sind {pct}% des Nettoumsatzes {net} (Schwelle {threshold_pct}%).</value></data>
+  <data name="AIB_Al_below_cost" xml:space="preserve"><value>Verkauf unter Kosten</value></data>
+  <data name="AIB_Al_below_cost_Text" xml:space="preserve"><value>{lines} Verkaufszeile(n) unter Durchschnittskosten, ca. Verlust {loss}. Beispiele: {items}.</value></data>
+  <data name="AIB_Al_cash_low" xml:space="preserve"><value>Niedriger Kassenbestand</value></data>
+  <data name="AIB_Al_cash_low_Text" xml:space="preserve"><value>{boxes} Kasse(n) unter dem Minimum {min_balance} ({negative} negativ am Periodenende): {items}.</value></data>
+  <data name="AIB_Al_overdue_receivables" xml:space="preserve"><value>Überfällige Forderungen</value></data>
+  <data name="AIB_Al_overdue_receivables_Text" xml:space="preserve"><value>{count} überfällige Zielrechnung(en) über {amount}; längste Verzögerung {max_days} Tag(e) (Schwelle {threshold_days}).</value></data>
+  <data name="AIB_Al_negative_stock" xml:space="preserve"><value>Negativer Bestand</value></data>
+  <data name="AIB_Al_negative_stock_Text" xml:space="preserve"><value>{count} Artikel haben derzeit negativen Bestand. Beispiele: {items}.</value></data>
+  <data name="AIB_Al_large_payment" xml:space="preserve"><value>Ungewöhnlich hohe Auszahlungen</value></data>
+  <data name="AIB_Al_large_payment_Text" xml:space="preserve"><value>Auszahlungen {payments} ({items}) im Schnitt {per_day} pro Tag ggü. üblich {avg_30} in 30 Tagen (Faktor {factor}).</value></data>
+  <data name="AIB_SevHigh" xml:space="preserve"><value>Hoch</value></data>
+  <data name="AIB_SevMedium" xml:space="preserve"><value>Mittel</value></data>
+  <data name="AIB_SevInfo" xml:space="preserve"><value>Info</value></data>
+  <data name="AIB_NoAlerts" xml:space="preserve"><value>Keine Warnungen für diesen Zeitraum.</value></data>
+  <data name="AIB_T_Sales" xml:space="preserve"><value>Der Nettoumsatz des Zeitraums betrug {0} aus {1} Rechnungen.</value></data>
+  <data name="AIB_T_SalesUp" xml:space="preserve"><value>Das sind {0}% über dem Üblichen für den Wochentag.</value></data>
+  <data name="AIB_T_SalesDown" xml:space="preserve"><value>Das sind {0}% unter dem Üblichen für den Wochentag.</value></data>
+  <data name="AIB_T_Collections" xml:space="preserve"><value>Einzahlungen {0}, Auszahlungen {1}.</value></data>
+  <data name="AIB_T_Liquidity" xml:space="preserve"><value>Der Kassenbestand beträgt jetzt {0}.</value></data>
+  <data name="AIB_T_Alerts" xml:space="preserve"><value>Es gibt {0} Warnung(en) zur Nachverfolgung.</value></data>
+  <data name="AIB_T_NoAlerts" xml:space="preserve"><value>Keine Warnungen.</value></data>
+  <data name="AIB_Sub_Title" xml:space="preserve"><value>Mein Berichtsabo</value></data>
+  <data name="AIB_Sub_Enable" xml:space="preserve"><value>Bericht täglich erhalten</value></data>
+  <data name="AIB_Sub_Branches" xml:space="preserve"><value>Filialen</value></data>
+  <data name="AIB_Sub_AllBranches" xml:space="preserve"><value>Alle erlaubten Filialen</value></data>
+  <data name="AIB_Sub_Sections" xml:space="preserve"><value>Abschnitte</value></data>
+  <data name="AIB_Sub_Language" xml:space="preserve"><value>Berichtssprache</value></data>
+  <data name="AIB_Sub_Save" xml:space="preserve"><value>Abo speichern</value></data>
+  <data name="AIB_Sub_Saved" xml:space="preserve"><value>Abo gespeichert.</value></data>
+  <data name="AIB_Set_Schedule" xml:space="preserve"><value>Zeitplan</value></data>
+  <data name="AIB_Set_Enabled" xml:space="preserve"><value>Tagesbericht aktivieren</value></data>
+  <data name="AIB_Set_Time" xml:space="preserve"><value>Erstellungszeit (HH:mm)</value></data>
+  <data name="AIB_Set_TimeZone" xml:space="preserve"><value>Zeitzone</value></data>
+  <data name="AIB_Set_ServerTime" xml:space="preserve"><value>Leer = Serverzeit ({0})</value></data>
+  <data name="AIB_Set_Days" xml:space="preserve"><value>Erstellungstage</value></data>
+  <data name="AIB_Set_Narrative" xml:space="preserve"><value>Text und Kosten</value></data>
+  <data name="AIB_Set_NarrativeOn" xml:space="preserve"><value>Zusammenfassung mit dem Modell schreiben (sonst kostenlose automatische Zusammenfassung)</value></data>
+  <data name="AIB_Set_Model" xml:space="preserve"><value>Verwendet die Zuordnung „schnell“, dann das erste „Chat“-Modell; keine Werkzeuge, bis 600 Token. Zahlen, die nicht in den Fakten stehen, werden abgelehnt.</value></data>
+  <data name="AIB_Set_MaxCost" xml:space="preserve"><value>Monatliches Kostenlimit ($)</value></data>
+  <data name="AIB_Set_MaxCostHint" xml:space="preserve"><value>0 = kein Limit. Danach wird bis zum nächsten Monat die automatische Zusammenfassung verwendet.</value></data>
+  <data name="AIB_Set_MonthCost" xml:space="preserve"><value>Textkosten diesen Monat (ca.)</value></data>
+  <data name="AIB_Set_Thresholds" xml:space="preserve"><value>Warnschwellen</value></data>
+  <data name="AIB_Set_SalesDrop" xml:space="preserve"><value>Umsatzrückgang ggü. üblich</value></data>
+  <data name="AIB_Set_Returns" xml:space="preserve"><value>Retourenquote</value></data>
+  <data name="AIB_Set_MinCash" xml:space="preserve"><value>Mindestkassenbestand</value></data>
+  <data name="AIB_Set_OverdueDays" xml:space="preserve"><value>Verzugstage vor Warnung</value></data>
+  <data name="AIB_Set_LargePayment" xml:space="preserve"><value>Faktor hohe Auszahlungen</value></data>
+  <data name="AIB_Set_Save" xml:space="preserve"><value>Einstellungen speichern</value></data>
+  <data name="AIB_Set_Saved" xml:space="preserve"><value>Berichtseinstellungen gespeichert.</value></data>
+  <data name="AIB_Set_RunNow" xml:space="preserve"><value>Jetzt für mich ausführen (Test)</value></data>
+  <data name="AIB_Set_RunNowConfirm" xml:space="preserve"><value>Der heutige Bericht wird nur für Sie erstellt, auch wenn die Funktion aus ist; das Modell kann aufgerufen werden (geringe Kosten). Fortfahren?</value></data>
+  <data name="AIB_Set_RunNowYes" xml:space="preserve"><value>Ausführen</value></data>
+  <data name="AIB_Set_Cancel" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="AIB_Set_RunDone" xml:space="preserve"><value>Testbericht erstellt.</value></data>
+  <data name="AIB_Set_Subscribers" xml:space="preserve"><value>Abonnenten</value></data>
+  <data name="AIB_Set_AddSubscriber" xml:space="preserve"><value>Abonnent hinzufügen</value></data>
+  <data name="AIB_Set_Add" xml:space="preserve"><value>Hinzufügen</value></data>
+  <data name="AIB_Set_NoSubscribers" xml:space="preserve"><value>Noch keine Abonnenten.</value></data>
+  <data name="AIB_Set_Active" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="AIB_Set_UserInactive" xml:space="preserve"><value>inaktiver Benutzer</value></data>
+  <data name="AIB_Set_Runs" xml:space="preserve"><value>Letzte 30 Läufe</value></data>
+  <data name="AIB_Set_NoRuns" xml:space="preserve"><value>Der Bericht wurde noch nicht ausgeführt.</value></data>
+  <data name="AIB_Set_RunDate" xml:space="preserve"><value>Datum</value></data>
+  <data name="AIB_Set_RunPeriod" xml:space="preserve"><value>Zeitraum</value></data>
+  <data name="AIB_Set_RunStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="AIB_Set_RunTrigger" xml:space="preserve"><value>Auslöser</value></data>
+  <data name="AIB_Set_RunRecipients" xml:space="preserve"><value>Empfänger</value></data>
+  <data name="AIB_Set_RunSources" xml:space="preserve"><value>Text</value></data>
+  <data name="AIB_Set_RunCost" xml:space="preserve"><value>Kosten</value></data>
+  <data name="AIB_Set_RunMs" xml:space="preserve"><value>Dauer (ms)</value></data>
+  <data name="AIB_Set_StatusReady" xml:space="preserve"><value>Bereit</value></data>
+  <data name="AIB_Set_StatusPartial" xml:space="preserve"><value>Teilweise</value></data>
+  <data name="AIB_Set_StatusFailed" xml:space="preserve"><value>Fehlgeschlagen</value></data>
+  <data name="AIB_Set_StatusRunning" xml:space="preserve"><value>Läuft</value></data>
+  <data name="AIB_Set_Trigger_schedule" xml:space="preserve"><value>Geplant</value></data>
+  <data name="AIB_Set_Trigger_manual" xml:space="preserve"><value>Manuell</value></data>
+  <data name="AIB_Set_Trigger_test" xml:space="preserve"><value>Test</value></data>
+  <data name="AIB_Set_ErrNotAdmin" xml:space="preserve"><value>Berichtseinstellungen sind nur mit Zugriff auf die KI-Einstellungen verfügbar.</value></data>
+  <data name="AIB_Set_NoPermission" xml:space="preserve"><value>Sie (oder der Benutzer) haben keinen Zugriff auf den Tagesbericht oder der Benutzer ist inaktiv. Erteilen Sie zuerst die Berechtigung.</value></data>
+  <data name="AIB_Set_ErrTime" xml:space="preserve"><value>Ungültige Zeit; Format HH:mm (z. B. 08:00).</value></data>
+  <data name="AIB_Set_ErrTimeZone" xml:space="preserve"><value>Unbekannte Zeitzone (z. B. Africa/Cairo).</value></data>
+  <data name="AIB_Set_ErrDays" xml:space="preserve"><value>Ungültige Erstellungstage.</value></data>
+  <data name="AIB_Set_ErrPct" xml:space="preserve"><value>Prozentwerte müssen zwischen 1 und 100 liegen.</value></data>
+  <data name="AIB_Set_ErrFactor" xml:space="preserve"><value>Der Faktor muss zwischen 1 und 100 liegen.</value></data>
+  <data name="AIB_Set_ErrCost" xml:space="preserve"><value>Ungültiges Kostenlimit.</value></data>
+  <data name="AIB_Set_ErrOverdueDays" xml:space="preserve"><value>Ungültige Verzugstage (0 bis 3650).</value></data>
 </root>

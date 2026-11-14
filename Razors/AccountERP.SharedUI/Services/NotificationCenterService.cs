@@ -11,6 +11,10 @@ namespace AccountERP.SharedUI.Services
         public Severity Severity { get; init; }
         public DateTime TimestampUtc { get; init; }
         public bool IsRead { get; set; }
+        /// <summary>P8.1.5: مسار داخلى (يبدأ بـ / ولا يبدأ بـ //) يفتحه الضغط على الإشعار؛ null = نص فقط.</summary>
+        public string? Href { get; init; }
+        /// <summary>P8.1.5: مفتاح منع التكرار (مثلاً brief:123)؛ إشعار بنفس المفتاح لا يُضاف مرتين.</summary>
+        public string? Key { get; init; }
     }
 
     // خدمة بسيطة لحفظ آخر الإشعارات التى ظهرت كـ Snackbar (مثل تنبيه "الشاشة قيد الإنشاء") فى الجلسة
@@ -33,9 +37,11 @@ namespace AccountERP.SharedUI.Services
 
         public event Action? OnChanged;
 
-        public void Add(string message, Severity severity = Severity.Info)
+        public void Add(string message, Severity severity = Severity.Info, string? href = null, string? key = null)
         {
-            _items.Insert(0, new NotificationRecord { Message = message, Severity = severity, TimestampUtc = DateTime.UtcNow });
+            if (key != null && _items.Any(i => i.Key == key)) return;
+            string? link = href is { Length: > 0 } h && h.StartsWith('/') && !h.StartsWith("//") ? h : null;
+            _items.Insert(0, new NotificationRecord { Message = message, Severity = severity, TimestampUtc = DateTime.UtcNow, Href = link, Key = key });
             if (_items.Count > MaxItems) _items.RemoveAt(_items.Count - 1);
             OnChanged?.Invoke();
         }

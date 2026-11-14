@@ -35,6 +35,12 @@
     var currentLevelMenus = MenuState?.UserAllowedMenus?.Where(m => m != null && m.ParentId == CurrentParentId).ToList() ?? new();
 }
 
+@* 🤖 P8.1.5 (ق23): بطاقة الموجز اليومى للمشترك (لا تظهر بلا صلاحية أو فى MAUI) *@
+@if (_path.Count == 0)
+{
+    <AccountERP.SharedUI.Components.Assistant.AiBriefCard />
+}
+
 @if (_path.Count > 0)
 {
     <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">

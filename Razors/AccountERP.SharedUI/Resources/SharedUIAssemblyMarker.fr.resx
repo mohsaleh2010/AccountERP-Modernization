@@ -5598,4 +5598,153 @@
   <data name="AIC_Archive" xml:space="preserve"><value>Archiver</value></data>
   <data name="AIC_Unarchive" xml:space="preserve"><value>Restaurer</value></data>
   <data name="AIC_ArchivedBanner" xml:space="preserve"><value>Cette discussion est archivée et en lecture seule. Restaurez-la pour continuer.</value></data>
+  <data name="AIB_Title" xml:space="preserve"><value>Brief quotidien</value></data>
+  <data name="AIB_Tab" xml:space="preserve"><value>Brief quotidien</value></data>
+  <data name="AIB_Period" xml:space="preserve"><value>Période : du {0} au {1}</value></data>
+  <data name="AIB_History" xml:space="preserve"><value>Briefs précédents</value></data>
+  <data name="AIB_Older" xml:space="preserve"><value>Brief plus ancien</value></data>
+  <data name="AIB_Newer" xml:space="preserve"><value>Brief plus récent</value></data>
+  <data name="AIB_Refresh" xml:space="preserve"><value>Actualiser maintenant</value></data>
+  <data name="AIB_AskAssistant" xml:space="preserve"><value>Demander à l'assistant</value></data>
+  <data name="AIB_OpenBrief" xml:space="preserve"><value>Ouvrir le brief</value></data>
+  <data name="AIB_OpenScreen" xml:space="preserve"><value>Ouvrir l'écran</value></data>
+  <data name="AIB_Dismiss" xml:space="preserve"><value>Masquer pour aujourd'hui</value></data>
+  <data name="AIB_SourceModel" xml:space="preserve"><value>Rédigé par l'assistant</value></data>
+  <data name="AIB_SourceTemplate" xml:space="preserve"><value>Résumé automatique</value></data>
+  <data name="AIB_NarrativeOtherLang" xml:space="preserve"><value>Le texte de l'assistant est dans une autre langue ; le résumé automatique est donc affiché dans votre langue.</value></data>
+  <data name="AIB_Partial" xml:space="preserve"><value>Certaines sections n'ont pas pu être calculées ; le reste est affiché.</value></data>
+  <data name="AIB_EmptyNotSubscribed" xml:space="preserve"><value>Vous n'êtes pas abonné au brief quotidien. Activez-le ci-dessous dans « Mon abonnement ».</value></data>
+  <data name="AIB_EmptyDisabled" xml:space="preserve"><value>Le brief quotidien est actuellement désactivé par l'administrateur.</value></data>
+  <data name="AIB_EmptyNotYet" xml:space="preserve"><value>Aucun brief n'a encore été émis pour vous. Il est émis chaque jour après l'heure prévue, ou cliquez sur « Actualiser maintenant ».</value></data>
+  <data name="AIB_NotifyHeadline" xml:space="preserve"><value>Brief quotidien prêt ({0})</value></data>
+  <data name="AIB_NotifyHeadlineAlerts" xml:space="preserve"><value>Brief quotidien prêt ({0}) — {1} alerte(s)</value></data>
+  <data name="AIB_Approximate" xml:space="preserve"><value>approximatif</value></data>
+  <data name="AIB_ChatHint" xml:space="preserve"><value>Posez une question sur n'importe quel chiffre ; les réponses utilisent ses faits et vos droits.</value></data>
+  <data name="AIB_ErrNotFound" xml:space="preserve"><value>Brief introuvable ou non autorisé.</value></data>
+  <data name="AIB_ErrBusy" xml:space="preserve"><value>Le brief est en cours de mise à jour ; réessayez dans un instant.</value></data>
+  <data name="AIB_ErrSkipped" xml:space="preserve"><value>Rien à afficher pour vos droits (aucune section ou succursale autorisée).</value></data>
+  <data name="AIB_SecSales" xml:space="preserve"><value>Ventes</value></data>
+  <data name="AIB_SecCollections" xml:space="preserve"><value>Encaissements et décaissements</value></data>
+  <data name="AIB_SecLiquidity" xml:space="preserve"><value>Soldes de caisse</value></data>
+  <data name="AIB_SecReceivables" xml:space="preserve"><value>Créances clients</value></data>
+  <data name="AIB_SecPurchases" xml:space="preserve"><value>Achats</value></data>
+  <data name="AIB_SecAlerts" xml:space="preserve"><value>Alertes</value></data>
+  <data name="AIB_SecByBranch" xml:space="preserve"><value>Par succursale</value></data>
+  <data name="AIB_KpiNetSales" xml:space="preserve"><value>Ventes nettes</value></data>
+  <data name="AIB_KpiInvoices" xml:space="preserve"><value>Factures</value></data>
+  <data name="AIB_KpiAvgInvoice" xml:space="preserve"><value>Facture moyenne</value></data>
+  <data name="AIB_KpiCash" xml:space="preserve"><value>Ventes au comptant</value></data>
+  <data name="AIB_KpiCredit" xml:space="preserve"><value>Ventes à crédit</value></data>
+  <data name="AIB_KpiReturns" xml:space="preserve"><value>Retours</value></data>
+  <data name="AIB_KpiMtd" xml:space="preserve"><value>Mois à date</value></data>
+  <data name="AIB_KpiVsWeekday" xml:space="preserve"><value>vs jour habituel</value></data>
+  <data name="AIB_KpiVsPrevMonth" xml:space="preserve"><value>vs mêmes jours du mois dernier</value></data>
+  <data name="AIB_KpiMargin" xml:space="preserve"><value>Marge</value></data>
+  <data name="AIB_KpiReceipts" xml:space="preserve"><value>Encaissements</value></data>
+  <data name="AIB_KpiPayments" xml:space="preserve"><value>Décaissements</value></data>
+  <data name="AIB_KpiNetCash" xml:space="preserve"><value>Flux de caisse net</value></data>
+  <data name="AIB_KpiBoxBalance" xml:space="preserve"><value>Solde de caisse actuel</value></data>
+  <data name="AIB_KpiOpenCredit" xml:space="preserve"><value>Créances ouvertes</value></data>
+  <data name="AIB_KpiOverdue" xml:space="preserve"><value>En retard</value></data>
+  <data name="AIB_KpiPurchases" xml:space="preserve"><value>Achats nets</value></data>
+  <data name="AIB_TopCustomers" xml:space="preserve"><value>Meilleurs clients</value></data>
+  <data name="AIB_TopItems" xml:space="preserve"><value>Meilleurs articles</value></data>
+  <data name="AIB_TopReceipts" xml:space="preserve"><value>Principaux encaissements clients</value></data>
+  <data name="AIB_ColName" xml:space="preserve"><value>Nom</value></data>
+  <data name="AIB_ColInvoices" xml:space="preserve"><value>Factures</value></data>
+  <data name="AIB_ColNet" xml:space="preserve"><value>Net</value></data>
+  <data name="AIB_ColBalance" xml:space="preserve"><value>Solde actuel</value></data>
+  <data name="AIB_ColChange" xml:space="preserve"><value>Variation</value></data>
+  <data name="AIB_Al_sales_drop" xml:space="preserve"><value>Baisse des ventes</value></data>
+  <data name="AIB_Al_sales_drop_Text" xml:space="preserve"><value>Ventes nettes {net} inférieures de {drop_pct}% à l'habitude ({baseline}) ; seuil {threshold_pct}%.</value></data>
+  <data name="AIB_Al_no_sales" xml:space="preserve"><value>Jour ouvré sans vente</value></data>
+  <data name="AIB_Al_no_sales_Text" xml:space="preserve"><value>Aucune facture de vente sur {days} jour(s) ouvré(s) : {items}.</value></data>
+  <data name="AIB_Al_returns_high" xml:space="preserve"><value>Retours élevés</value></data>
+  <data name="AIB_Al_returns_high_Text" xml:space="preserve"><value>Les retours {returns} représentent {pct}% des ventes nettes {net} (seuil {threshold_pct}%).</value></data>
+  <data name="AIB_Al_below_cost" xml:space="preserve"><value>Vente à perte</value></data>
+  <data name="AIB_Al_below_cost_Text" xml:space="preserve"><value>{lines} ligne(s) vendue(s) sous le coût moyen, perte approx. {loss}. Exemples : {items}.</value></data>
+  <data name="AIB_Al_cash_low" xml:space="preserve"><value>Solde de caisse bas</value></data>
+  <data name="AIB_Al_cash_low_Text" xml:space="preserve"><value>{boxes} caisse(s) sous le minimum {min_balance} ({negative} négative(s) en fin de période) : {items}.</value></data>
+  <data name="AIB_Al_overdue_receivables" xml:space="preserve"><value>Créances en retard</value></data>
+  <data name="AIB_Al_overdue_receivables_Text" xml:space="preserve"><value>{count} facture(s) à crédit en retard pour {amount} ; retard max. {max_days} jour(s) (seuil {threshold_days}).</value></data>
+  <data name="AIB_Al_negative_stock" xml:space="preserve"><value>Stock négatif</value></data>
+  <data name="AIB_Al_negative_stock_Text" xml:space="preserve"><value>{count} article(s) ont un stock négatif. Exemples : {items}.</value></data>
+  <data name="AIB_Al_large_payment" xml:space="preserve"><value>Décaissements inhabituels</value></data>
+  <data name="AIB_Al_large_payment_Text" xml:space="preserve"><value>Décaissements {payments} ({items}) : {per_day} par jour contre {avg_30} habituellement sur 30 jours (facteur {factor}).</value></data>
+  <data name="AIB_SevHigh" xml:space="preserve"><value>Élevé</value></data>
+  <data name="AIB_SevMedium" xml:space="preserve"><value>Moyen</value></data>
+  <data name="AIB_SevInfo" xml:space="preserve"><value>Info</value></data>
+  <data name="AIB_NoAlerts" xml:space="preserve"><value>Aucune alerte pour cette période.</value></data>
+  <data name="AIB_T_Sales" xml:space="preserve"><value>Les ventes nettes de la période sont de {0} sur {1} factures.</value></data>
+  <data name="AIB_T_SalesUp" xml:space="preserve"><value>C'est {0}% au-dessus de l'habitude pour ce jour.</value></data>
+  <data name="AIB_T_SalesDown" xml:space="preserve"><value>C'est {0}% en dessous de l'habitude pour ce jour.</value></data>
+  <data name="AIB_T_Collections" xml:space="preserve"><value>Encaissements {0} et décaissements {1}.</value></data>
+  <data name="AIB_T_Liquidity" xml:space="preserve"><value>Le solde de caisse est maintenant de {0}.</value></data>
+  <data name="AIB_T_Alerts" xml:space="preserve"><value>Il y a {0} alerte(s) à suivre.</value></data>
+  <data name="AIB_T_NoAlerts" xml:space="preserve"><value>Aucune alerte.</value></data>
+  <data name="AIB_Sub_Title" xml:space="preserve"><value>Mon abonnement au brief</value></data>
+  <data name="AIB_Sub_Enable" xml:space="preserve"><value>Recevoir le brief chaque jour</value></data>
+  <data name="AIB_Sub_Branches" xml:space="preserve"><value>Succursales</value></data>
+  <data name="AIB_Sub_AllBranches" xml:space="preserve"><value>Toutes mes succursales autorisées</value></data>
+  <data name="AIB_Sub_Sections" xml:space="preserve"><value>Sections</value></data>
+  <data name="AIB_Sub_Language" xml:space="preserve"><value>Langue du brief</value></data>
+  <data name="AIB_Sub_Save" xml:space="preserve"><value>Enregistrer l'abonnement</value></data>
+  <data name="AIB_Sub_Saved" xml:space="preserve"><value>Abonnement enregistré.</value></data>
+  <data name="AIB_Set_Schedule" xml:space="preserve"><value>Planification</value></data>
+  <data name="AIB_Set_Enabled" xml:space="preserve"><value>Activer le brief quotidien</value></data>
+  <data name="AIB_Set_Time" xml:space="preserve"><value>Heure d'émission (HH:mm)</value></data>
+  <data name="AIB_Set_TimeZone" xml:space="preserve"><value>Fuseau horaire</value></data>
+  <data name="AIB_Set_ServerTime" xml:space="preserve"><value>Vide = heure du serveur ({0})</value></data>
+  <data name="AIB_Set_Days" xml:space="preserve"><value>Jours d'émission</value></data>
+  <data name="AIB_Set_Narrative" xml:space="preserve"><value>Texte et coût</value></data>
+  <data name="AIB_Set_NarrativeOn" xml:space="preserve"><value>Rédiger le résumé avec le modèle (sinon résumé automatique gratuit)</value></data>
+  <data name="AIB_Set_Model" xml:space="preserve"><value>Utilise le routage « rapide », puis le premier modèle « chat » ; sans outils, jusqu'à 600 jetons. Tout chiffre absent des faits est rejeté.</value></data>
+  <data name="AIB_Set_MaxCost" xml:space="preserve"><value>Plafond mensuel ($)</value></data>
+  <data name="AIB_Set_MaxCostHint" xml:space="preserve"><value>0 = sans plafond. Une fois atteint, le résumé automatique est utilisé jusqu'au mois suivant.</value></data>
+  <data name="AIB_Set_MonthCost" xml:space="preserve"><value>Coût du texte ce mois-ci (approx.)</value></data>
+  <data name="AIB_Set_Thresholds" xml:space="preserve"><value>Seuils d'alerte</value></data>
+  <data name="AIB_Set_SalesDrop" xml:space="preserve"><value>Baisse des ventes vs habitude</value></data>
+  <data name="AIB_Set_Returns" xml:space="preserve"><value>Taux de retours</value></data>
+  <data name="AIB_Set_MinCash" xml:space="preserve"><value>Solde minimal de caisse</value></data>
+  <data name="AIB_Set_OverdueDays" xml:space="preserve"><value>Jours de retard avant alerte</value></data>
+  <data name="AIB_Set_LargePayment" xml:space="preserve"><value>Facteur gros décaissements</value></data>
+  <data name="AIB_Set_Save" xml:space="preserve"><value>Enregistrer les paramètres</value></data>
+  <data name="AIB_Set_Saved" xml:space="preserve"><value>Paramètres du brief enregistrés.</value></data>
+  <data name="AIB_Set_RunNow" xml:space="preserve"><value>Exécuter maintenant pour moi (test)</value></data>
+  <data name="AIB_Set_RunNowConfirm" xml:space="preserve"><value>Le brief du jour sera émis pour vous seul, même si la fonction est désactivée ; le modèle peut être appelé (faible coût). Continuer ?</value></data>
+  <data name="AIB_Set_RunNowYes" xml:space="preserve"><value>Exécuter</value></data>
+  <data name="AIB_Set_Cancel" xml:space="preserve"><value>Annuler</value></data>
+  <data name="AIB_Set_RunDone" xml:space="preserve"><value>Brief de test émis.</value></data>
+  <data name="AIB_Set_Subscribers" xml:space="preserve"><value>Abonnés</value></data>
+  <data name="AIB_Set_AddSubscriber" xml:space="preserve"><value>Ajouter un abonné</value></data>
+  <data name="AIB_Set_Add" xml:space="preserve"><value>Ajouter</value></data>
+  <data name="AIB_Set_NoSubscribers" xml:space="preserve"><value>Aucun abonné pour l'instant.</value></data>
+  <data name="AIB_Set_Active" xml:space="preserve"><value>Actif</value></data>
+  <data name="AIB_Set_UserInactive" xml:space="preserve"><value>utilisateur inactif</value></data>
+  <data name="AIB_Set_Runs" xml:space="preserve"><value>30 dernières exécutions</value></data>
+  <data name="AIB_Set_NoRuns" xml:space="preserve"><value>Le brief n'a pas encore été exécuté.</value></data>
+  <data name="AIB_Set_RunDate" xml:space="preserve"><value>Date</value></data>
+  <data name="AIB_Set_RunPeriod" xml:space="preserve"><value>Période</value></data>
+  <data name="AIB_Set_RunStatus" xml:space="preserve"><value>Statut</value></data>
+  <data name="AIB_Set_RunTrigger" xml:space="preserve"><value>Déclencheur</value></data>
+  <data name="AIB_Set_RunRecipients" xml:space="preserve"><value>Destinataires</value></data>
+  <data name="AIB_Set_RunSources" xml:space="preserve"><value>Texte</value></data>
+  <data name="AIB_Set_RunCost" xml:space="preserve"><value>Coût</value></data>
+  <data name="AIB_Set_RunMs" xml:space="preserve"><value>Durée (ms)</value></data>
+  <data name="AIB_Set_StatusReady" xml:space="preserve"><value>Prêt</value></data>
+  <data name="AIB_Set_StatusPartial" xml:space="preserve"><value>Partiel</value></data>
+  <data name="AIB_Set_StatusFailed" xml:space="preserve"><value>Échec</value></data>
+  <data name="AIB_Set_StatusRunning" xml:space="preserve"><value>En cours</value></data>
+  <data name="AIB_Set_Trigger_schedule" xml:space="preserve"><value>Planifié</value></data>
+  <data name="AIB_Set_Trigger_manual" xml:space="preserve"><value>Manuel</value></data>
+  <data name="AIB_Set_Trigger_test" xml:space="preserve"><value>Test</value></data>
+  <data name="AIB_Set_ErrNotAdmin" xml:space="preserve"><value>Les paramètres du brief sont réservés aux utilisateurs ayant accès aux paramètres IA.</value></data>
+  <data name="AIB_Set_NoPermission" xml:space="preserve"><value>Vous (ou l'utilisateur) n'avez pas accès à l'écran du brief, ou l'utilisateur est inactif. Accordez d'abord l'autorisation.</value></data>
+  <data name="AIB_Set_ErrTime" xml:space="preserve"><value>Heure invalide ; format HH:mm (ex. 08:00).</value></data>
+  <data name="AIB_Set_ErrTimeZone" xml:space="preserve"><value>Fuseau horaire inconnu (ex. Africa/Cairo).</value></data>
+  <data name="AIB_Set_ErrDays" xml:space="preserve"><value>Jours d'émission invalides.</value></data>
+  <data name="AIB_Set_ErrPct" xml:space="preserve"><value>Les pourcentages doivent être entre 1 et 100.</value></data>
+  <data name="AIB_Set_ErrFactor" xml:space="preserve"><value>Le facteur doit être entre 1 et 100.</value></data>
+  <data name="AIB_Set_ErrCost" xml:space="preserve"><value>Plafond mensuel invalide.</value></data>
+  <data name="AIB_Set_ErrOverdueDays" xml:space="preserve"><value>Jours de retard invalides (0 à 3650).</value></data>
 </root>

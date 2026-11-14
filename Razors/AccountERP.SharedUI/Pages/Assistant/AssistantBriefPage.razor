@@ -1,0 +1,285 @@
+@* 🤖 المساعد الذكى P8.1.5: صفحة الموجز اليومى /assistant/brief (أحدث موجز) و /assistant/brief/{id} (من الإشعار أو السجل).
+   الصلاحية عنصر القائمة menuItemAiDailyBrief (ق9)، والبوابة تشترط صف تسليم للمستخدم لكل موجز. فتح الموجز يعلّم ReadAt.
+   تصفح آخر 60 يوماً، «تحديث الآن»، «اسأل المساعد» (محادثة فيها بطاقة الموجز — ق22)، ولوحة الاشتراك.
+   التصميم بنمط صفحات المساعد (ui-ux-pro-max): أهداف لمس 44px، تركيز ظاهر، فاتح/داكن، RTL/LTR، موبايل. *@
+@page "/assistant/brief"
+@page "/assistant/brief/{Id:long}"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Assistant
+@using Microsoft.Extensions.DependencyInjection
+@inject LanguageService LangService
+@inject IServiceProvider ServiceProvider
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject MenuStateService MenuState
+@implements IDisposable
+
+<PageTitle>@Tr("AIB_Title")</PageTitle>
+
+<style>
+    .aibp-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .aibp-top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; flex: 1; min-width: 180px; }
+    .aibp-top .mud-button-root { min-height: 44px; }
+    .aibp-nav { display: flex; align-items: center; gap: 4px; }
+    .aibp-nav .mud-select { min-width: 200px; }
+    .aibp-sub { margin-top: 20px; }
+    .aibp-sub .row { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+    .aibp-empty { text-align: center; padding: 40px 16px; border: 1px dashed var(--mud-palette-lines-default); border-radius: 14px; }
+    .aibp-empty .mud-icon-root { font-size: 3rem; color: var(--mud-palette-text-secondary); }
+    @@media (max-width: 600px) { .aibp-nav { width: 100%; } .aibp-nav .mud-select { flex: 1; min-width: 0; } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-4" Style="padding-inline: 16px;">
+    <div dir="@(LangService.IsRtl ? "rtl" : "ltr")">
+        @if (_brief == null || !_brief.IsAvailable)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@Tr(_brief == null ? "AIC_NotAvailable" : "AIB_Set_NoPermission")</MudAlert>
+        }
+        else
+        {
+            <div class="aibp-top">
+                <h1>@Tr("AIB_Title")@(_detail != null ? " — " + AiBriefText.Day(_detail.Brief.BriefDate) : "")</h1>
+                @if (_history.Count > 0)
+                {
+                    <div class="aibp-nav">
+                        <MudIconButton Icon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)"
+                                       aria-label="@Tr("AIB_Older")" Disabled="@(!HasOlder)" OnClick="() => StepAsync(+1)" />
+                        <MudSelect T="long" Value="CurrentId" ValueChanged="OpenAsync" Label="@Tr("AIB_History")" Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true">
+                            @foreach (var h in _history)
+                            {
+                                <MudSelectItem T="long" Value="h.Brief_Id">@(AiBriefText.Day(h.BriefDate) + (h.AlertCount > 0 ? " · ⚠ " + h.AlertCount : "") + (h.ReadAt == null ? " •" : ""))</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudIconButton Icon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)"
+                                       aria-label="@Tr("AIB_Newer")" Disabled="@(!HasNewer)" OnClick="() => StepAsync(-1)" />
+                    </div>
+                }
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" Disabled="_busy" OnClick="RefreshAsync">
+                    @if (_busy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                    @Tr("AIB_Refresh")
+                </MudButton>
+                @if (_detail != null)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoAwesome" Disabled="_busy" OnClick="AskAsync">@Tr("AIB_AskAssistant")</MudButton>
+                }
+            </div>
+
+            @if (_error != null)
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-3" ShowCloseIcon="true" CloseIconClicked="() => _error = null">@_error</MudAlert>
+            }
+
+            @if (!_loaded)
+            {
+                <div style="text-align:center;padding:48px;"><MudProgressCircular Indeterminate="true" Color="Color.Primary" /></div>
+            }
+            else if (_detail != null)
+            {
+                <AiBriefView Detail="_detail" />
+            }
+            else
+            {
+                <div class="aibp-empty" role="status">
+                    <MudIcon Icon="@Icons.Material.Outlined.Summarize" aria-hidden="true" />
+                    <MudText Typo="Typo.body1" Class="mt-2">@Tr(_sub?.IsEnabled == true ? "AIB_EmptyNotYet" : "AIB_EmptyNotSubscribed")</MudText>
+                </div>
+            }
+
+            @* لوحة الاشتراك: يشترك المستخدم بنفسه (ق10)؛ الفروع تُقصر على المسموحة له على الخادم *@
+            @if (_sub != null)
+            {
+                <MudExpansionPanels Class="aibp-sub" Outlined="true" Elevation="0">
+                    <MudExpansionPanel Text="@Tr("AIB_Sub_Title")" Expanded="@(!_sub.IsEnabled)" ExpandedChanged="OnSubPanelAsync">
+                        <MudSwitch T="bool" @bind-Value="_subEnabled" Color="Color.Primary" Label="@Tr("AIB_Sub_Enable")" />
+                        <MudText Typo="Typo.subtitle2" Class="mt-3 mb-1">@Tr("AIB_Sub_Sections")</MudText>
+                        <div class="row">
+                            @foreach (var sec in AiBriefSections.All)
+                            {
+                                var key = sec;
+                                <MudCheckBox T="bool" Value="_subSections.Contains(key)" ValueChanged="v => Toggle(_subSections, key, v)" Label="@Tr(AiBriefText.SectionKey(key))" Dense="true" />
+                            }
+                        </div>
+                        <MudText Typo="Typo.subtitle2" Class="mt-3 mb-1">@Tr("AIB_Sub_Branches")</MudText>
+                        <div class="row">
+                            <MudCheckBox T="bool" Value="_subBranches.Count == 0" ValueChanged="v => { if (v) _subBranches.Clear(); }" Label="@Tr("AIB_Sub_AllBranches")" Dense="true" />
+                            @foreach (var b in _branches)
+                            {
+                                var id = b.Id;
+                                <MudCheckBox T="bool" Value="_subBranches.Contains(id)" ValueChanged="v => ToggleBranch(id, v)" Label="@b.Name" Dense="true" />
+                            }
+                        </div>
+                        <MudSelect T="string" @bind-Value="_subLang" Label="@Tr("AIB_Sub_Language")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-3" Style="max-width:280px;">
+                            @foreach (var l in LanguageService.SupportedLanguages.Where(x => AiBriefConst.Languages.Contains(AiBriefConst.NormalizeLanguage(x.CultureCode))))
+                            {
+                                <MudSelectItem T="string" Value="@AiBriefConst.NormalizeLanguage(l.CultureCode)">@l.NativeName</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" StartIcon="@Icons.Material.Filled.Save" Disabled="_busy" OnClick="SaveSubAsync" Style="min-height:44px;">@Tr("AIB_Sub_Save")</MudButton>
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+            }
+        }
+    </div>
+</MudContainer>
+
+@code {
+    [Parameter] public long Id { get; set; }
+
+    private AiBriefService? _brief;
+    private AiBriefDetail? _detail;
+    private List<AiBriefDeliveryRow> _history = new();
+    private AiBriefSubscriptionRow? _sub;
+    private bool _loaded, _busy;
+    private string? _error;
+    private long _loadedId = -1;
+    private string _loadedLang = "";
+
+    private bool _subEnabled;
+    private HashSet<string> _subSections = new();
+    private HashSet<long> _subBranches = new();
+    private string _subLang = AiBriefConst.Languages[0];
+    private List<(long Id, string Name)> _branches = new();
+    private bool _branchesLoaded;
+
+    private long CurrentId => _detail?.Brief.Id ?? 0;
+    private int CurrentIndex => _history.FindIndex(h => h.Brief_Id == CurrentId);
+    private bool HasOlder => CurrentIndex >= 0 && CurrentIndex < _history.Count - 1;
+    private bool HasNewer => CurrentIndex > 0;
+
+    protected override void OnInitialized()
+    {
+        _brief = ServiceProvider.GetService<AiBriefService>();
+        LangService.OnLanguageChanged += OnLanguageChanged;
+        MenuState.OnAuthChanged += OnAuthChanged;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_brief == null || !_brief.IsAvailable) return;
+        if (_loaded && _loadedId == Id && _loadedLang == _brief.Language) return;
+        await LoadAsync(Id);
+    }
+
+    // تبديل اللغة: العناوين تتبدل فوراً، والسرد يُعاد طلبه بلغة الواجهة.
+    private void OnLanguageChanged() => InvokeAsync(async () => { if (_brief?.IsAvailable == true) await LoadAsync(CurrentId > 0 ? CurrentId : Id); StateHasChanged(); });
+    private void OnAuthChanged() => InvokeAsync(async () => { _loaded = false; if (_brief?.IsAvailable == true) await LoadAsync(Id); StateHasChanged(); });
+
+    private async Task LoadAsync(long id)
+    {
+        if (_brief == null) return;
+        string lang = _brief.Language;
+        _error = null;
+        try
+        {
+            _history = await _brief.HistoryAsync();
+            _sub ??= await _brief.GetSubscriptionAsync();
+            FillSubForm();
+            _detail = await _brief.LoadAsync(id, lang);
+            if (_detail == null && id > 0) _error = Tr("AIB_ErrNotFound");
+            if (_detail?.Delivery is { ReadAt: null } d)
+            {
+                await _brief.MarkReadAsync(_detail.Brief.Id);
+                d.ReadAt = DateTime.Now;
+                var h = _history.FirstOrDefault(x => x.Brief_Id == _detail.Brief.Id);
+                if (h != null) h.ReadAt = d.ReadAt;
+            }
+        }
+        catch (Exception ex) { _error = _brief.ErrorText(ex); }
+        _loaded = true;
+        _loadedId = id;
+        _loadedLang = lang;
+    }
+
+    private async Task OpenAsync(long briefId)
+    {
+        if (briefId <= 0 || briefId == CurrentId) return;
+        Nav.NavigateTo($"/assistant/brief/{briefId}");
+        await Task.CompletedTask;
+    }
+
+    private Task StepAsync(int delta)
+    {
+        int i = CurrentIndex + delta;
+        return i >= 0 && i < _history.Count ? OpenAsync(_history[i].Brief_Id) : Task.CompletedTask;
+    }
+
+    private async Task RefreshAsync()
+    {
+        if (_brief == null || _busy) return;
+        _busy = true; _error = null;
+        try
+        {
+            _detail = await _brief.RefreshAsync(_brief.Language);
+            _history = await _brief.HistoryAsync();
+            if (_detail?.Delivery is { ReadAt: null }) { await _brief.MarkReadAsync(_detail.Brief.Id); _detail.Delivery.ReadAt = DateTime.Now; }
+        }
+        catch (Exception ex) { _error = _brief.ErrorText(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task AskAsync()
+    {
+        if (_brief == null || _detail == null || _busy) return;
+        _busy = true;
+        try
+        {
+            await _brief.AskAsync(_detail.Brief.Id);
+            Nav.NavigateTo("/assistant");
+        }
+        catch (Exception ex) { Snackbar.Add(_brief.ErrorText(ex), Severity.Error); }
+        finally { _busy = false; }
+    }
+
+    private void FillSubForm()
+    {
+        if (_sub == null) return;
+        _subEnabled = _sub.IsEnabled;
+        _subSections = (_sub.Sections.Count > 0 ? _sub.Sections : AiBriefSections.Default.ToList()).ToHashSet();
+        _subBranches = _sub.BranchIds.ToHashSet();
+        _subLang = AiBriefConst.NormalizeLanguage(string.IsNullOrWhiteSpace(_sub.Language) ? _brief!.Language : _sub.Language);
+    }
+
+    private async Task OnSubPanelAsync(bool expanded)
+    {
+        if (!expanded || _branchesLoaded || _brief == null) return;
+        _branchesLoaded = true;
+        try { _branches = await _brief.BranchesAsync(); }
+        catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
+    }
+
+    private static void Toggle(HashSet<string> set, string key, bool on) { if (on) set.Add(key); else set.Remove(key); }
+    private void ToggleBranch(long id, bool on) { if (on) _subBranches.Add(id); else _subBranches.Remove(id); }
+
+    private async Task SaveSubAsync()
+    {
+        if (_brief == null || _busy) return;
+        _busy = true;
+        try
+        {
+            var row = new AiBriefSubscriptionRow
+            {
+                IsEnabled = _subEnabled,
+                BranchIdsCsv = _subBranches.Count == 0 ? null : AiBriefCsv.Join(_subBranches),
+                SectionsCsv = AiBriefCsv.Join(_subSections),
+                Language = _subLang,
+            };
+            await _brief.SaveSubscriptionAsync(row);
+            _sub = await _brief.GetSubscriptionAsync();
+            FillSubForm();
+            Snackbar.Add(Tr("AIB_Sub_Saved"), Severity.Success);
+        }
+        catch (Exception ex) { Snackbar.Add(_brief.ErrorText(ex), Severity.Error); }
+        finally { _busy = false; }
+    }
+
+    private string Tr(string key, params object[] args) => AiBriefText.T(Lang, LangService.CurrentCultureInfo, key, args);
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChanged;
+        MenuState.OnAuthChanged -= OnAuthChanged;
+    }
+}

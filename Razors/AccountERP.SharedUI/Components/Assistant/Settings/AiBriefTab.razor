@@ -1,0 +1,316 @@
+@* 🤖 P8.1.6 (ق24): تبويب «الموجز اليومى» فى /settings/ai — مكوّن مستقل يحمّل نفسه عند أول عرض (نمط P7).
+   التفعيل والموعد والمنطقة الزمنية والأيام، السرد وحد التكلفة الشهرى، العتبات، المشتركون، «تشغيل الآن لى (تجربة)» بتأكيد، وسجل آخر 30 تشغيلاً.
+   كل حفظ يمر بتحقق خادمى (AiBriefGateway.Validate)، وغير المدير يُرفض على الخادم. لا تعديل على بيانات النظام: الإعدادات فى AI_Settings
+   والاشتراكات فى AI_BriefSubscriptions فقط. *@
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using Microsoft.Extensions.DependencyInjection
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IServiceProvider ServiceProvider
+@implements IDisposable
+
+<style>
+    .aibt { display: flex; flex-direction: column; gap: 16px; }
+    .aibt-card { border: 1px solid var(--mud-palette-lines-default); border-radius: 14px; padding: 16px; background: var(--mud-palette-surface); }
+    .aibt-card h3 { margin: 0 0 12px; font-size: 1rem; font-weight: 700; display: flex; gap: 8px; align-items: center; }
+    .aibt-card h3 .mud-icon-root { color: var(--mud-palette-primary); }
+    .aibt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px 16px; align-items: start; }
+    .aibt-days { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+    .aibt-hint { font-size: .8rem; color: var(--mud-palette-text-secondary); margin-top: 4px; }
+    .aibt-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .aibt-actions .mud-button-root { min-height: 44px; }
+    .aibt-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .aibt-table th { text-align: start; font-weight: 600; color: var(--mud-palette-text-secondary); padding: 6px 8px; border-bottom: 1px solid var(--mud-palette-lines-default); white-space: nowrap; }
+    .aibt-table td { padding: 6px 8px; border-bottom: 1px solid var(--mud-palette-lines-default); vertical-align: middle; }
+    .aibt-table td.n { text-align: end; font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: plaintext; white-space: nowrap; }
+    .aibt-wrap { overflow-x: auto; }
+    .aibt-st { font-size: .75rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--mud-palette-background-gray); white-space: nowrap; }
+    .aibt-st.Ready { color: var(--mud-palette-success); }
+    .aibt-st.Partial { color: var(--mud-palette-warning); }
+    .aibt-st.Failed { color: var(--mud-palette-error); }
+</style>
+
+<div class="aibt" dir="@(LangService.IsRtl ? "rtl" : "ltr")">
+    @if (_brief == null)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("AIC_NotAvailable")</MudAlert>
+    }
+    else if (!_brief.CanManage)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@Tr("AIB_Set_ErrNotAdmin")</MudAlert>
+    }
+    else if (_s == null)
+    {
+        @if (_error != null)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@_error</MudAlert>
+        }
+        else
+        {
+            <div style="text-align:center;padding:32px;"><MudProgressCircular Indeterminate="true" Color="Color.Primary" /></div>
+        }
+    }
+    else
+    {
+        @if (_error != null)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" ShowCloseIcon="true" CloseIconClicked="() => _error = null">@_error</MudAlert>
+        }
+
+        @* ─── الجدولة ─── *@
+        <section class="aibt-card" aria-label="@Tr("AIB_Set_Schedule")">
+            <h3><MudIcon Icon="@Icons.Material.Outlined.Schedule" aria-hidden="true" />@Tr("AIB_Set_Schedule")</h3>
+            <MudSwitch T="bool" @bind-Value="_s.Enabled" Color="Color.Primary" Label="@Tr("AIB_Set_Enabled")" />
+            <div class="aibt-grid mt-2">
+                <div>
+                    <MudTextField T="string" @bind-Value="_time" Label="@Tr("AIB_Set_Time")" Placeholder="08:00" Variant="Variant.Outlined" Margin="Margin.Dense" InputMode="InputMode.numeric" MaxLength="5" />
+                </div>
+                <div>
+                    <MudTextField T="string" @bind-Value="_s.TimeZone" Label="@Tr("AIB_Set_TimeZone")" Placeholder="Africa/Cairo" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="100" />
+                    <div class="aibt-hint">@Tr("AIB_Set_ServerTime", TimeZoneInfo.Local.Id)</div>
+                </div>
+            </div>
+            <MudText Typo="Typo.subtitle2" Class="mt-3 mb-1">@Tr("AIB_Set_Days")</MudText>
+            <div class="aibt-days" role="group" aria-label="@Tr("AIB_Set_Days")">
+                @foreach (int d in DayOrder)
+                {
+                    var day = d;
+                    <MudCheckBox T="bool" Value="_s.WeekDays.Contains(day)" ValueChanged="v => ToggleDay(day, v)" Label="@LangService.CurrentCultureInfo.DateTimeFormat.GetDayName((DayOfWeek)day)" Dense="true" />
+                }
+            </div>
+        </section>
+
+        @* ─── السرد والتكلفة (ق8، ق25) ─── *@
+        <section class="aibt-card" aria-label="@Tr("AIB_Set_Narrative")">
+            <h3><MudIcon Icon="@Icons.Material.Outlined.AutoAwesome" aria-hidden="true" />@Tr("AIB_Set_Narrative")</h3>
+            <MudSwitch T="bool" @bind-Value="_s.Narrative" Color="Color.Primary" Label="@Tr("AIB_Set_NarrativeOn")" />
+            <div class="aibt-hint">@Tr("AIB_Set_Model")</div>
+            <div class="aibt-grid mt-3">
+                <div>
+                    <MudNumericField T="decimal" @bind-Value="_s.MaxCostPerMonth" Label="@Tr("AIB_Set_MaxCost")" Min="0" Max="1000000" Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true" />
+                    <div class="aibt-hint">@Tr("AIB_Set_MaxCostHint")</div>
+                </div>
+                <div>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("AIB_Set_MonthCost")</MudText>
+                    <MudText Typo="Typo.h6" Style="direction:ltr;unicode-bidi:plaintext;">$@MonthCost.ToString("0.0000", CultureInfo.InvariantCulture)</MudText>
+                </div>
+            </div>
+        </section>
+
+        @* ─── العتبات (ق20) ─── *@
+        <section class="aibt-card" aria-label="@Tr("AIB_Set_Thresholds")">
+            <h3><MudIcon Icon="@Icons.Material.Outlined.Tune" aria-hidden="true" />@Tr("AIB_Set_Thresholds")</h3>
+            <div class="aibt-grid">
+                <MudNumericField T="int" @bind-Value="_s.SalesDropPct" Label="@Tr("AIB_Set_SalesDrop")" Min="1" Max="100" Adornment="Adornment.End" AdornmentText="%" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField T="int" @bind-Value="_s.ReturnsPct" Label="@Tr("AIB_Set_Returns")" Min="1" Max="100" Adornment="Adornment.End" AdornmentText="%" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField T="decimal" @bind-Value="_s.MinCashBalance" Label="@Tr("AIB_Set_MinCash")" Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true" />
+                <MudNumericField T="int" @bind-Value="_s.OverdueDays" Label="@Tr("AIB_Set_OverdueDays")" Min="0" Max="3650" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField T="decimal" @bind-Value="_s.LargePaymentFactor" Label="@Tr("AIB_Set_LargePayment")" Min="1" Max="100" Adornment="Adornment.End" AdornmentText="×" Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true" />
+            </div>
+        </section>
+
+        <div class="aibt-actions">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="_busy" OnClick="SaveAsync">@Tr("AIB_Set_Save")</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" Disabled="_busy" OnClick="RunNowAsync">
+                @if (_running) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                @Tr("AIB_Set_RunNow")
+            </MudButton>
+        </div>
+
+        @* ─── المشتركون (ق10) ─── *@
+        <section class="aibt-card" aria-label="@Tr("AIB_Set_Subscribers")">
+            <h3><MudIcon Icon="@Icons.Material.Outlined.Group" aria-hidden="true" />@Tr("AIB_Set_Subscribers") (@_subs.Count(x => x.IsEnabled))</h3>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
+                <MudSelect T="long" @bind-Value="_addUser" Label="@Tr("AIB_Set_AddSubscriber")" Variant="Variant.Outlined" Margin="Margin.Dense" Style="min-width:240px;max-width:360px;">
+                    @foreach (var u in _users.Where(u => u.Active && !_subs.Any(s => s.User_Id == u.Id && s.IsEnabled)))
+                    {
+                        <MudSelectItem T="long" Value="u.Id">@(string.IsNullOrWhiteSpace(u.Name) ? u.USER_NAME : u.Name)</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" Disabled="@(_busy || _addUser <= 0)"
+                           OnClick="() => SetSubAsync(_addUser, true)" Style="min-height:44px;">@Tr("AIB_Set_Add")</MudButton>
+            </div>
+            @if (_subs.Count == 0)
+            {
+                <div class="aibt-hint">@Tr("AIB_Set_NoSubscribers")</div>
+            }
+            else
+            {
+                <div class="aibt-wrap">
+                    <table class="aibt-table">
+                        <thead><tr><th>@Tr("AIB_ColName")</th><th>@Tr("AIB_Sub_Language")</th><th>@Tr("AIB_Sub_Sections")</th><th>@Tr("AIB_Set_Active")</th></tr></thead>
+                        <tbody>
+                            @foreach (var s in _subs)
+                            {
+                                var uid = s.User_Id;
+                                <tr>
+                                    <td>@s.UserName @(s.UserActive ? "" : "(" + Tr("AIB_Set_UserInactive") + ")")</td>
+                                    <td>@s.Language</td>
+                                    <td>@string.Join("، ", (s.Sections.Count > 0 ? s.Sections : AiBriefSections.Default.ToList()).Select(k => Tr(AiBriefText.SectionKey(k))))</td>
+                                    <td><MudSwitch T="bool" Value="s.IsEnabled" ValueChanged="v => SetSubAsync(uid, v)" Color="Color.Primary" Disabled="_busy" aria-label="@Tr("AIB_Set_Active")" /></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        @* ─── سجل آخر 30 تشغيلاً ─── *@
+        <section class="aibt-card" aria-label="@Tr("AIB_Set_Runs")">
+            <h3><MudIcon Icon="@Icons.Material.Outlined.History" aria-hidden="true" />@Tr("AIB_Set_Runs")</h3>
+            @if (_runs.Count == 0)
+            {
+                <div class="aibt-hint">@Tr("AIB_Set_NoRuns")</div>
+            }
+            else
+            {
+                <div class="aibt-wrap">
+                    <table class="aibt-table">
+                        <thead>
+                            <tr><th>@Tr("AIB_Set_RunDate")</th><th>@Tr("AIB_Set_RunPeriod")</th><th>@Tr("AIB_Set_RunStatus")</th><th>@Tr("AIB_Set_RunTrigger")</th>
+                                <th>@Tr("AIB_SecAlerts")</th><th>@Tr("AIB_Set_RunRecipients")</th><th>@Tr("AIB_Set_RunSources")</th><th>@Tr("AIB_Set_RunCost")</th><th>@Tr("AIB_Set_RunMs")</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in _runs)
+                            {
+                                <tr title="@r.ErrorsJson">
+                                    <td class="n">@AiBriefText.Day(r.BriefDate)</td>
+                                    <td class="n">@(AiBriefText.Day(r.PeriodFrom) + " → " + AiBriefText.Day(r.PeriodTo))</td>
+                                    <td><span class="aibt-st @r.Status">@Tr("AIB_Set_Status" + r.Status)</span></td>
+                                    <td>@Tr("AIB_Set_Trigger_" + (string.IsNullOrEmpty(r.TriggeredBy) ? AiBriefTrigger.Schedule : r.TriggeredBy))</td>
+                                    <td class="n">@r.AlertCount</td>
+                                    <td class="n">@r.Recipients</td>
+                                    <td>@r.NarrativeSources</td>
+                                    <td class="n">$@r.NarrativeCost.ToString("0.0000", CultureInfo.InvariantCulture)</td>
+                                    <td class="n">@(r.DurationMs?.ToString("N0", CultureInfo.InvariantCulture) ?? "—")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    /// <summary>ترتيب الأسبوع المصرى: السبت أولاً.</summary>
+    private static readonly int[] DayOrder = { 6, 0, 1, 2, 3, 4, 5 };
+
+    private AiBriefService? _brief;
+    private AiBriefSettings? _s;
+    private string _time = "08:00";
+    private List<AiBriefSubscriptionRow> _subs = new();
+    private List<UserAdminRow> _users = new();
+    private List<AiBriefRunView> _runs = new();
+    private long _addUser;
+    private bool _busy, _running;
+    private string? _error;
+
+    /// <summary>تكلفة السرد هذا الشهر من سجل التشغيلات المعروض (تقريبية: آخر 30 تشغيلاً).</summary>
+    private decimal MonthCost
+    {
+        get
+        {
+            var first = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+            return _runs.Where(r => (r.CreatedAt ?? r.BriefDate) >= first).Sum(r => r.NarrativeCost);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _brief = ServiceProvider.GetService<AiBriefService>();
+        LangService.OnLanguageChanged += OnLang;
+        await LoadAsync();
+    }
+
+    private void OnLang() => InvokeAsync(StateHasChanged);
+
+    public async Task LoadAsync()
+    {
+        if (_brief == null || !_brief.CanManage) return;
+        _error = null;
+        try
+        {
+            _s = await _brief.GetSettingsAsync();
+            _time = _s.Time.ToString(@"hh\:mm", CultureInfo.InvariantCulture);
+            _subs = await _brief.SubscribersAsync();
+            _runs = await _brief.RunsAsync();
+            if (_users.Count == 0) _users = await _brief.UsersAsync();
+        }
+        catch (Exception ex) { _error = _brief.ErrorText(ex); }
+    }
+
+    private void ToggleDay(int day, bool on)
+    {
+        if (_s == null) return;
+        if (on && !_s.WeekDays.Contains(day)) _s.WeekDays.Add(day);
+        if (!on) _s.WeekDays.Remove(day);
+        _s.WeekDays.Sort();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_brief == null || _s == null || _busy) return;
+        if (!AiBriefSettings.TryParseTime(_time, out var t))
+        {
+            _error = Tr("AIB_Set_ErrTime");
+            return;
+        }
+        _s.Time = t;
+        _s.TimeZone = (_s.TimeZone ?? "").Trim();
+        _busy = true; _error = null;
+        try
+        {
+            await _brief.SaveSettingsAsync(_s);
+            Snackbar.Add(Tr("AIB_Set_Saved"), Severity.Success);
+            _s = await _brief.GetSettingsAsync();
+            _time = _s.Time.ToString(@"hh\:mm", CultureInfo.InvariantCulture);
+        }
+        catch (Exception ex) { _error = _brief.ErrorText(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task SetSubAsync(long userId, bool enabled)
+    {
+        if (_brief == null || _busy || userId <= 0) return;
+        _busy = true; _error = null;
+        try
+        {
+            await _brief.SetSubscriberAsync(userId, enabled);
+            _subs = await _brief.SubscribersAsync();
+            if (enabled) _addUser = 0;
+        }
+        catch (Exception ex) { _error = _brief.ErrorText(ex); }
+        finally { _busy = false; }
+    }
+
+    /// <summary>«تشغيل الآن لى (تجربة)»: يعمل ولو كانت الميزة موقوفة، ويستدعى النموذج للسرد (تكلفة) — لذلك بتأكيد.</summary>
+    private async Task RunNowAsync()
+    {
+        if (_brief == null || _busy) return;
+        bool? ok = await DialogService.ShowMessageBoxAsync(Tr("AIB_Set_RunNow"), Tr("AIB_Set_RunNowConfirm"), yesText: Tr("AIB_Set_RunNowYes"), cancelText: Tr("AIB_Set_Cancel"));
+        if (ok != true) return;
+        _busy = true; _running = true; _error = null;
+        StateHasChanged();
+        try
+        {
+            var d = await _brief.RunNowForMeAsync(_brief.Language);
+            _runs = await _brief.RunsAsync();
+            Snackbar.Add(Tr("AIB_Set_RunDone"), Severity.Success, o => { o.Action = Tr("AIB_OpenBrief"); o.OnClick = _ => { NavTo($"/assistant/brief/{d.Brief.Id}"); return Task.CompletedTask; }; });
+        }
+        catch (Exception ex) { _error = _brief.ErrorText(ex); }
+        finally { _busy = false; _running = false; }
+    }
+
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+    private void NavTo(string url) => Nav.NavigateTo(url);
+
+    private string Tr(string key, params object[] args) => AiBriefText.T(Lang, LangService.CurrentCultureInfo, key, args);
+
+    public void Dispose() => LangService.OnLanguageChanged -= OnLang;
+}

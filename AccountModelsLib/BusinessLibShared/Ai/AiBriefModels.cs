@@ -283,6 +283,16 @@ namespace AccountModelsLib
         List<AiBriefRunView> ListRuns(AiUserContext admin, int top = 30);
     }
 
+    /// <summary>بطاقة الموجز داخل محادثة (كتلة brief فى رسالة المساعد) — P8.1.5.</summary>
+    public class AiBriefLinkView
+    {
+        public long Id { get; set; }
+        public string BriefDate { get; set; } = "";
+        public string PeriodFrom { get; set; } = "";
+        public string PeriodTo { get; set; } = "";
+        public string Url { get; set; } = "";
+    }
+
     /// <summary>
     /// خطأ تحقق أو صلاحية من بوابة الموجز. Code = مفتاح resx (AIB_Set_Err* …) لتترجمه الواجهة؛ Message نص عربى احتياطى.
     /// </summary>

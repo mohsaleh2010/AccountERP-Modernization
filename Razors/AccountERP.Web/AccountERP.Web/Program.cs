@@ -126,6 +126,7 @@ AccountERP.AI.AiServiceCollectionExtensions.AddAccountErpAi(builder.Services, bu
 builder.Services.AddHostedService<AccountERP.Web.Services.AiSchedulerWorker>();   // P8 ق17: مهام المساعد الدورية (الموجز اليومى)
 // 🤖 المساعد الذكى P1: حالة المحادثة لكل دائرة (تتشاركها صفحة /assistant والنافذة العائمة).
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AssistantSessionService>();
+builder.Services.AddScoped<AccountERP.SharedUI.Services.AiBriefService>();   // P8.1.5: صفحة الموجز والبطاقة والإشعار
 builder.Services.AddMudServices();
 var app = builder.Build();
 
