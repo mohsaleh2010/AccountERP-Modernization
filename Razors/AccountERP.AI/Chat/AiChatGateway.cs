@@ -40,35 +40,59 @@ namespace AccountERP.AI.Chat
         }
 
         /// <summary>نموذج مرشح للمحادثة بعد التحقق من التفعيل ووضع «محلى فقط».</summary>
-        internal sealed record Candidate(AiTaskRoutingRow Route, AiModelRow Model, AiProviderRow Provider);
+        public sealed record Candidate(AiTaskRoutingRow Route, AiModelRow Model, AiProviderRow Provider);
 
-        private List<Candidate> Candidates(out string reason)
+        private List<Candidate> Candidates(out string reason) => CandidatesFor(_providers, new[] { AiTaskKeys.Chat }, out reason);
+
+        /// <summary>P8.1.3: مرشحو مهام بالترتيب (المهمة الأولى بأولوياتها ثم التالية)، من إعدادات القاعدة.</summary>
+        public static List<Candidate> CandidatesFor(AiProvidersCLS providers, IReadOnlyList<string> taskKeys, out string reason) =>
+            CandidatesFor(providers.GetRouting(), providers.GetModels(), providers.GetProviders(), providers.GetSettings(), taskKeys, out reason);
+
+        /// <summary>
+        /// P8.1.3 (مستخرجة من Candidates): مرشحو مهمة أو أكثر بالترتيب — كل مهمة بأولوياتها ثم التالية، بلا تكرار للنموذج،
+        /// بعد التحقق من تفعيل النموذج والمزوّد ووضع «محلى فقط». نماذج الـ Embeddings لا تصلح للنص فتُستبعد. دالة نقية (تُختبر بصفوف فى الذاكرة).
+        /// </summary>
+        public static List<Candidate> CandidatesFor(IEnumerable<AiTaskRoutingRow> routingRows, IEnumerable<AiModelRow> modelRows, IEnumerable<AiProviderRow> providerRows,
+                                                    IReadOnlyDictionary<string, string>? settings, IReadOnlyList<string> taskKeys, out string reason)
         {
             reason = "";
-            var routing = _providers.GetRouting().Where(r => r.TaskKey == AiTaskKeys.Chat).OrderBy(r => r.Priority).ToList();
-            if (routing.Count == 0)
+            var allRouting = routingRows.ToList();
+            string names = string.Join(" أو ", taskKeys.Select(TaskTitle));
+            if (!allRouting.Any(r => taskKeys.Contains(r.TaskKey)))
             {
-                reason = "لم يُحدَّد نموذج للمحادثة بعد. من «إعدادات الذكاء الاصطناعى» ← «النماذج والمهام» اختر نموذجاً لمهمة «محادثة».";
+                reason = taskKeys.Count == 1 && taskKeys[0] == AiTaskKeys.Chat
+                    ? "لم يُحدَّد نموذج للمحادثة بعد. من «إعدادات الذكاء الاصطناعى» ← «النماذج والمهام» اختر نموذجاً لمهمة «محادثة»."
+                    : $"لم يُحدَّد نموذج لمهمة {names}. من «إعدادات الذكاء الاصطناعى» ← «النماذج والمهام» اختر نموذجاً لها.";
                 return new();
             }
-            var models = _providers.GetModels().ToDictionary(m => m.Id);
-            var providers = _providers.GetProviders().ToDictionary(p => p.Id);
-            var settings = _providers.GetSettings();
-            bool localOnly = settings.TryGetValue(AiSettingKeys.LocalOnly, out var lo) && lo == "1";
+            var models = modelRows.ToDictionary(m => m.Id);
+            var providers = providerRows.ToDictionary(p => p.Id);
+            bool localOnly = settings != null && settings.TryGetValue(AiSettingKeys.LocalOnly, out var lo) && lo == "1";
             var list = new List<Candidate>();
-            foreach (var r in routing)
-            {
-                if (!models.TryGetValue(r.Model_Id, out var m) || !m.IsEnabled) continue;
-                if (!providers.TryGetValue(m.Provider_Id, out var p) || !p.IsEnabled) continue;
-                if (localOnly && !p.IsLocal) continue;
-                list.Add(new Candidate(r, m, p));
-            }
+            foreach (var key in taskKeys)
+                foreach (var r in allRouting.Where(r => r.TaskKey == key).OrderBy(r => r.Priority))
+                {
+                    if (!models.TryGetValue(r.Model_Id, out var m) || !m.IsEnabled || m.SupportsEmbeddings) continue;
+                    if (!providers.TryGetValue(m.Provider_Id, out var p) || !p.IsEnabled) continue;
+                    if (localOnly && !p.IsLocal) continue;
+                    if (list.Any(c => c.Model.Id == m.Id)) continue;
+                    list.Add(new Candidate(r, m, p));
+                }
             if (list.Count == 0)
                 reason = localOnly
-                    ? "وضع «محلى فقط» مفعّل ولا يوجد نموذج محلى مفعّل لمهمة «محادثة»."
-                    : "النماذج المختارة لمهمة «محادثة» أو مزوّدوها معطّلون. راجع «إعدادات الذكاء الاصطناعى».";
+                    ? $"وضع «محلى فقط» مفعّل ولا يوجد نموذج محلى مفعّل لمهمة {names}."
+                    : $"النماذج المختارة لمهمة {names} أو مزوّدوها معطّلون. راجع «إعدادات الذكاء الاصطناعى».";
             return list;
         }
+
+        private static string TaskTitle(string key) => key switch
+        {
+            AiTaskKeys.Chat => "«محادثة»",
+            AiTaskKeys.Fast => "«سريع / اقتصادى»",
+            AiTaskKeys.Reasoning => "«الاستدلال العميق»",
+            AiTaskKeys.Vision => "«الاستخراج والرؤية»",
+            _ => "«" + key + "»",
+        };
 
         public AiChatAvailability GetAvailability()
         {
