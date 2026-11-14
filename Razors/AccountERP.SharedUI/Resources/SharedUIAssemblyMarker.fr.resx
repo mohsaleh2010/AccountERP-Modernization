@@ -5255,4 +5255,74 @@
   <data name="AID_Source" xml:space="preserve"><value>Depuis le fichier « {0} »</value></data>
   <data name="AID_RefNo" xml:space="preserve"><value>Facture fournisseur n° {0}</value></data>
   <data name="AID_DocTotal" xml:space="preserve"><value>Total du document {0}</value></data>
+  <data name="AIK_Tab" xml:space="preserve"><value>Connaissances</value></data>
+  <data name="AIK_Loading" xml:space="preserve"><value>Chargement…</value></data>
+  <data name="AIK_IndexTitle" xml:space="preserve"><value>Index de recherche sémantique</value></data>
+  <data name="AIK_Indexed" xml:space="preserve"><value>{0} sur {1} indexés avec le modèle « {2} »</value></data>
+  <data name="AIK_NoModel" xml:space="preserve"><value>Recherche par mots-clés uniquement (aucun modèle d’embedding associé)</value></data>
+  <data name="AIK_HybridHint" xml:space="preserve"><value>Une fois l’index construit, l’assistant combine mots-clés et sens, ce qui gère les formulations familières. La construction consomme du crédit fournisseur.</value></data>
+  <data name="AIK_NoModelHint" xml:space="preserve"><value>Pour activer la recherche sémantique, associez un modèle d’embedding à la tâche « Embedding » dans « Modèles et tâches », puis construisez l’index ici.</value></data>
+  <data name="AIK_Stale" xml:space="preserve"><value>{0} indexés avec un ancien modèle</value></data>
+  <data name="AIK_Paused" xml:space="preserve"><value>Recherche sémantique suspendue jusqu’à {0} après une erreur</value></data>
+  <data name="AIK_Rebuild" xml:space="preserve"><value>Construire l’index</value></data>
+  <data name="AIK_RebuildAll" xml:space="preserve"><value>Tout reconstruire</value></data>
+  <data name="AIK_NothingToIndex" xml:space="preserve"><value>Toutes les entrées sont déjà indexées.</value></data>
+  <data name="AIK_ConfirmRebuild" xml:space="preserve"><value>{0} entrées seront envoyées au modèle d’embedding « {1} », ce qui consomme du crédit fournisseur. Continuer ?</value></data>
+  <data name="AIK_TryTitle" xml:space="preserve"><value>Tester la recherche</value></data>
+  <data name="AIK_TryLabel" xml:space="preserve"><value>Saisissez une question comme un utilisateur</value></data>
+  <data name="AIK_TryHelp" xml:space="preserve"><value>Affiche les entrées que l’outil search_schema trouverait (droits complets) et leur source.</value></data>
+  <data name="AIK_TryRun" xml:space="preserve"><value>Rechercher</value></data>
+  <data name="AIK_TryCount" xml:space="preserve"><value>{0} résultats · {1} ms</value></data>
+  <data name="AIK_ModeKeyword" xml:space="preserve"><value>Mots-clés</value></data>
+  <data name="AIK_ModeHybrid" xml:space="preserve"><value>Hybride (sens + mots-clés)</value></data>
+  <data name="AIK_ModeFallback" xml:space="preserve"><value>Repli du code (table illisible)</value></data>
+  <data name="AIK_Add" xml:space="preserve"><value>Ajouter une entrée</value></data>
+  <data name="AIK_Edit" xml:space="preserve"><value>Modifier l’entrée</value></data>
+  <data name="AIK_SeedEditNote" xml:space="preserve"><value>Entrée d’origine. Une fois modifiée, les mises à jour ne la changeront plus ; « Restaurer l’original » reste possible.</value></data>
+  <data name="AIK_Kind" xml:space="preserve"><value>Type</value></data>
+  <data name="AIK_KAll" xml:space="preserve"><value>Tous ({0})</value></data>
+  <data name="AIK_KView" xml:space="preserve"><value>Vue de données</value></data>
+  <data name="AIK_KGlossary" xml:space="preserve"><value>Glossaire</value></data>
+  <data name="AIK_KRule" xml:space="preserve"><value>Règle</value></data>
+  <data name="AIK_KExample" xml:space="preserve"><value>Exemple de requête</value></data>
+  <data name="AIK_KScreen" xml:space="preserve"><value>Écran</value></data>
+  <data name="AIK_HGlossary" xml:space="preserve"><value>Sens d’un terme ou d’une colonne (ex. débit = Madin).</value></data>
+  <data name="AIK_HRule" xml:space="preserve"><value>Règle métier que l’assistant doit respecter dans ses calculs.</value></data>
+  <data name="AIK_HExample" xml:space="preserve"><value>Un seul SELECT sur les vues de l’assistant (ai.v_...) comme modèle.</value></data>
+  <data name="AIK_FTitle" xml:space="preserve"><value>Titre</value></data>
+  <data name="AIK_FContent" xml:space="preserve"><value>Contenu</value></data>
+  <data name="AIK_FSql" xml:space="preserve"><value>Requête d’exemple (SQL)</value></data>
+  <data name="AIK_FSqlHelp" xml:space="preserve"><value>Vérifiée à l’enregistrement : un seul SELECT en lecture sur ai.v_* ; @date_from et @date_to autorisés. Visible seulement pour qui a accès à toutes ses vues.</value></data>
+  <data name="AIK_FContentHelp" xml:space="preserve"><value>Restez bref et clair ; ce texte est envoyé tel quel au modèle.</value></data>
+  <data name="AIK_FKeywords" xml:space="preserve"><value>Mots-clés</value></data>
+  <data name="AIK_FKeywordsHelp" xml:space="preserve"><value>Mots que les utilisateurs tapent pour ce sens, y compris familiers (séparés par des espaces).</value></data>
+  <data name="AIK_ListTitle" xml:space="preserve"><value>Entrées de connaissances</value></data>
+  <data name="AIK_State" xml:space="preserve"><value>État</value></data>
+  <data name="AIK_SAll" xml:space="preserve"><value>Tous</value></data>
+  <data name="AIK_SActive" xml:space="preserve"><value>Actif</value></data>
+  <data name="AIK_SInactive" xml:space="preserve"><value>Désactivé</value></data>
+  <data name="AIK_SEdited" xml:space="preserve"><value>Origine modifiée</value></data>
+  <data name="AIK_SUnindexed" xml:space="preserve"><value>À indexer</value></data>
+  <data name="AIK_Search" xml:space="preserve"><value>Filtrer les entrées</value></data>
+  <data name="AIK_Status" xml:space="preserve"><value>Source et index</value></data>
+  <data name="AIK_Active" xml:space="preserve"><value>Actif</value></data>
+  <data name="AIK_Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="AIK_ReadOnly" xml:space="preserve"><value>Lecture seule</value></data>
+  <data name="AIK_SrcManual" xml:space="preserve"><value>Ajouté par l’admin</value></data>
+  <data name="AIK_SrcFeedback" xml:space="preserve"><value>Issu des retours</value></data>
+  <data name="AIK_SrcEdited" xml:space="preserve"><value>Origine modifiée</value></data>
+  <data name="AIK_SrcSeed" xml:space="preserve"><value>D’origine</value></data>
+  <data name="AIK_IxOk" xml:space="preserve"><value>Indexé</value></data>
+  <data name="AIK_IxNo" xml:space="preserve"><value>Non indexé</value></data>
+  <data name="AIK_IxStale" xml:space="preserve"><value>Ancien modèle</value></data>
+  <data name="AIK_ToggleAria" xml:space="preserve"><value>Activer ou désactiver « {0} »</value></data>
+  <data name="AIK_EditAria" xml:space="preserve"><value>Modifier « {0} »</value></data>
+  <data name="AIK_Restore" xml:space="preserve"><value>Restaurer l’original</value></data>
+  <data name="AIK_RestoreAria" xml:space="preserve"><value>Restaurer le texte d’origine de « {0} »</value></data>
+  <data name="AIK_ConfirmRestore" xml:space="preserve"><value>Votre modification de « {0} » sera remplacée par le texte d’origine. Continuer ?</value></data>
+  <data name="AIK_Restored" xml:space="preserve"><value>Texte d’origine restauré.</value></data>
+  <data name="AIK_Saved" xml:space="preserve"><value>Entrée enregistrée. Si la recherche sémantique est active, cliquez sur « Construire l’index ».</value></data>
+  <data name="AIK_Enabled" xml:space="preserve"><value>« {0} » activé.</value></data>
+  <data name="AIK_Disabled" xml:space="preserve"><value>« {0} » désactivé ; la recherche de l’assistant ne le renverra plus.</value></data>
+  <data name="AIK_Empty" xml:space="preserve"><value>Aucune entrée ne correspond au filtre.</value></data>
 </root>

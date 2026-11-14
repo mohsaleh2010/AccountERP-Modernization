@@ -187,6 +187,23 @@ UPDATE AI_Knowledge SET Embedding = {data}, EmbeddingModel_Id = {embeddingModelI
 WHERE Id = {id} AND ISNULL(ContentHash, '') = {contentHash ?? ""}") > 0;
         }
 
+        /// <summary>
+        /// P7.3: تعديل المدير (مسرد/قاعدة/مثال). edited=true يحمى الصف من تحديثات الكود، وfalse عند «استعادة الأصل».
+        /// المتجه يُمسح إن تغيّر المحتوى (يُعاد بناؤه بـ «بناء الفهرس»).
+        /// </summary>
+        public void UpdateByAdmin(AiKnowledgeRow k, bool edited, long? userId)
+        {
+            _newOpp().db.Database.ExecuteSqlInterpolated($@"
+UPDATE AI_Knowledge SET TitleAr = {Cut(k.TitleAr, 300)}, Content = {k.Content ?? ""}, Keywords = {Cut(k.Keywords, 1000)}, ViewsCsv = {Cut(k.ViewsCsv, 500)},
+       Version = {k.Version}, IsEdited = {edited}, ContentHash = {k.ContentHash},
+       Embedding = CASE WHEN ISNULL(ContentHash, '') = {k.ContentHash ?? ""} THEN Embedding ELSE NULL END,
+       EmbeddingModel_Id = CASE WHEN ISNULL(ContentHash, '') = {k.ContentHash ?? ""} THEN EmbeddingModel_Id ELSE NULL END,
+       EmbeddingDim = CASE WHEN ISNULL(ContentHash, '') = {k.ContentHash ?? ""} THEN EmbeddingDim ELSE NULL END,
+       EmbeddedAt = CASE WHEN ISNULL(ContentHash, '') = {k.ContentHash ?? ""} THEN EmbeddedAt ELSE NULL END,
+       UpdatedBy = {userId}, UpdatedAt = {DateTime.Now}
+WHERE Id = {k.Id}");
+        }
+
         public void SetActive(long id, bool active, long? userId)
         {
             _newOpp().db.Database.ExecuteSqlInterpolated(

@@ -247,6 +247,37 @@ namespace AccountModelsLib
         AiKnowledgeIndexStatus GetKnowledgeIndexStatus();
         /// <summary>all=false: غير المفهرس بالنموذج الحالى فقط. يرمى InvalidOperationException برسالة عربية.</summary>
         Task<AiKnowledgeRebuildResult> RebuildKnowledgeIndexAsync(bool all, CancellationToken ct = default);
+
+        // P7.3: تبويب «المعرفة»
+        /// <summary>كل المقاطع (المفعّلة وغيرها) بلا المتجهات.</summary>
+        List<AiKnowledgeRow> GetKnowledge();
+        /// <summary>إضافة/تعديل مسرد أو قاعدة أو مثال (الـ Views للقراءة فقط). المثال يُتحقق منه كاستعلام قراءة. يعيد Id.</summary>
+        long SaveKnowledge(AiKnowledgeSaveRequest request, long userId);
+        void SetKnowledgeActive(long id, bool active, long userId);
+        /// <summary>يعيد مقطعاً مزروعاً عدّله المدير إلى نصّه الأصلى فى الكود.</summary>
+        void RestoreKnowledgeSeed(long id, long userId);
+        /// <summary>«تجربة البحث» بصلاحية كاملة (كل الـ Views والشاشات).</summary>
+        Task<AiKnowledgeSearchTest> TestKnowledgeSearchAsync(string query, CancellationToken ct = default);
+    }
+
+    /// <summary>P7.3: طلب حفظ مقطع معرفة من تبويب «المعرفة».</summary>
+    public class AiKnowledgeSaveRequest
+    {
+        public long Id { get; set; }
+        public string Kind { get; set; } = AiKnowledgeKinds.Glossary;
+        public string TitleAr { get; set; } = "";
+        public string Content { get; set; } = "";
+        public string Keywords { get; set; } = "";
+    }
+
+    /// <summary>P7.3: نتيجة «تجربة البحث»: Mode = keyword / hybrid / fallback.</summary>
+    public class AiKnowledgeSearchTest
+    {
+        public string Mode { get; set; } = "keyword";
+        public List<AiKnowledgeRow> Rows { get; set; } = new();
+        /// <summary>نص الناتج كما يراه النموذج.</summary>
+        public string Text { get; set; } = "";
+        public long DurationMs { get; set; }
     }
 
     // ───────────── P1: المحادثة ─────────────

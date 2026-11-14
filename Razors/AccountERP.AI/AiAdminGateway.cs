@@ -236,6 +236,16 @@ namespace AccountERP.AI
         public Task<AiKnowledgeRebuildResult> RebuildKnowledgeIndexAsync(bool all, CancellationToken ct = default) =>
             _knowledge == null ? throw new InvalidOperationException("خدمة المعرفة غير مفعّلة.") : _knowledge.RebuildIndexAsync(all, ct);
 
+        // ───────────── P7.3: تبويب «المعرفة» ─────────────
+
+        private Knowledge.AiKnowledgeService K => _knowledge ?? throw new InvalidOperationException("خدمة المعرفة غير مفعّلة.");
+
+        public List<AiKnowledgeRow> GetKnowledge() => K.ListForAdmin();
+        public long SaveKnowledge(AiKnowledgeSaveRequest request, long userId) => K.SaveAdmin(request, userId);
+        public void SetKnowledgeActive(long id, bool active, long userId) => K.SetActiveAdmin(id, active, userId);
+        public void RestoreKnowledgeSeed(long id, long userId) => K.RestoreSeedAdmin(id, userId);
+        public Task<AiKnowledgeSearchTest> TestKnowledgeSearchAsync(string query, CancellationToken ct = default) => K.TestSearchAsync(query, ct);
+
         public Dictionary<string, string> GetSettings() => _cls.GetSettings();
 
         // ───────────── P0.1: الربط بتسجيل الدخول لدى المزوّد ─────────────

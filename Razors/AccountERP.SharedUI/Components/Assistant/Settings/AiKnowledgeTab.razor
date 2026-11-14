@@ -1,0 +1,494 @@
+@* 🤖 المساعد الذكى — P7.3 (.claude/docs/ai-assistant-p7-plan.md): تبويب «المعرفة» فى /settings/ai.
+   حالة الفهرس الدلالى + «بناء الفهرس» بتأكيد، تجربة البحث بشارة المصدر (كلمات/هجين/احتياطى)، قائمة المقاطع بفلتر النوع والحالة والبحث،
+   إضافة/تعديل مسرد وقاعدة ومثال (المثال يُتحقق منه كاستعلام قراءة على الخادم)، تفعيل/تعطيل، «استعادة الأصل» للمقطع المزروع المعدَّل.
+   الـ Views للقراءة فقط (تُدار من الكود وتتبع الصلاحيات). التصميم حسب ui-ux-pro-max ونظام inv-* / ai-* للصفحة الأم. *@
+
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@implements IDisposable
+
+<style>
+    .aik-status { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .aik-status .ico { flex: none; width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center;
+                       background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent); color: var(--mud-palette-primary); }
+    .aik-status .ico.warn { background: color-mix(in srgb, var(--mud-palette-warning) 14%, transparent); color: var(--mud-palette-warning); }
+    .aik-status .body { flex: 1 1 280px; min-width: 0; }
+    .aik-status .msg { font-weight: 600; overflow-wrap: anywhere; }
+    .aik-status .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .aik-status .acts { display: flex; flex-wrap: wrap; gap: 8px; }
+    .aik-status .acts .mud-button-root, .aik-try .mud-button-root, .aik-tools .mud-button-root, .aik-form-actions .mud-button-root { min-height: 44px; }
+    .aik-progress { margin-top: 10px; }
+    .aik-try { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 12px; }
+    .aik-try .mud-input-control { flex: 1 1 280px; }
+    .aik-results { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; counter-reset: aik; }
+    .aik-results li { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 12px;
+                      border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); counter-increment: aik; }
+    .aik-results li::before { content: counter(aik); flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+                              font-size: .8rem; font-weight: 600; background: var(--mud-palette-background-gray); color: var(--mud-palette-text-secondary); }
+    .aik-results .t { font-weight: 600; }
+    .aik-results .c { font-size: .8125rem; color: var(--mud-palette-text-secondary); overflow-wrap: anywhere;
+                      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .aik-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .aik-tools .grow { flex: 1 1 220px; min-width: 0; }
+    .aik-tools .sel { min-width: 150px; max-width: 200px; }
+    .aik-title { font-weight: 600; }
+    .aik-key { font-size: .75rem; color: var(--mud-palette-text-secondary); direction: ltr; unicode-bidi: isolate; }
+    .aik-content { font-size: .8125rem; color: var(--mud-palette-text-secondary); overflow-wrap: anywhere; max-width: 520px;
+                   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; }
+    .aik-content.sql { direction: ltr; text-align: left; font-family: Consolas, 'Courier New', monospace; }
+    .aik-badges { display: flex; flex-wrap: wrap; gap: 4px; }
+    .aik-off { opacity: .6; }
+    .aik-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px 16px; align-items: start; }
+    .aik-form .wide { grid-column: 1 / -1; }
+    .aik-form .sql textarea { direction: ltr; text-align: left; font-family: Consolas, 'Courier New', monospace; }
+    .aik-form-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .aik-row-acts { display: flex; gap: 2px; justify-content: flex-end; }
+    .aik-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 28px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    @@media (prefers-reduced-motion: reduce) { .aik-progress * { transition: none !important; } }
+</style>
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <MudAlert Severity="Severity.Warning" Class="mb-3" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert>
+}
+
+@* ───────────── حالة الفهرس ───────────── *@
+<section class="inv-card" aria-labelledby="aik-st-h">
+    <h2 class="inv-card-title" id="aik-st-h"><MudIcon Icon="@Icons.Material.Filled.Hub" />@Tr("AIK_IndexTitle")</h2>
+    @if (_status == null)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("AIK_Loading")" />
+    }
+    else
+    {
+        <div class="aik-status" aria-live="polite">
+            <div class="@("ico" + (_status.HasModel && _status.Indexed == _status.Total ? "" : " warn"))" aria-hidden="true">
+                <MudIcon Icon="@(_status.HasModel ? (_status.Indexed == _status.Total ? Icons.Material.Filled.TaskAlt : Icons.Material.Filled.PendingActions) : Icons.Material.Filled.TextFields)" />
+            </div>
+            <div class="body">
+                <div class="msg">@(_status.HasModel ? Tr("AIK_Indexed", _status.Indexed, _status.Total, _status.ModelName) : Tr("AIK_NoModel"))</div>
+                <div class="ai-sub">@(_status.HasModel ? Tr("AIK_HybridHint") : Tr("AIK_NoModelHint"))</div>
+                <div class="meta">
+                    @if (_status.Stale > 0)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning" Icon="@Icons.Material.Filled.History">@Tr("AIK_Stale", _status.Stale)</MudChip>
+                    }
+                    @if (_status.PausedUntilUtc is DateTime until && until > DateTime.UtcNow)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Error" Icon="@Icons.Material.Filled.PauseCircle">@Tr("AIK_Paused", until.ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture))</MudChip>
+                    }
+                </div>
+                @if (_status.HasModel && _status.Total > 0)
+                {
+                    <MudProgressLinear Class="aik-progress" Color="@(_status.Indexed == _status.Total ? Color.Success : Color.Primary)" Rounded="true" Size="Size.Medium"
+                                       Value="@(100.0 * _status.Indexed / _status.Total)" aria-label="@Tr("AIK_Indexed", _status.Indexed, _status.Total, _status.ModelName)" />
+                }
+                @if (!string.IsNullOrEmpty(_status.LastError))
+                {
+                    <div class="ai-msg bad mt-2">@_status.LastError</div>
+                }
+            </div>
+            <div class="acts">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Build" Disabled="@(!_status.HasModel || _busy)"
+                           OnClick="@(() => RebuildAsync(false))">
+                    @if (_rebuilding) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                    @Tr("AIK_Rebuild")
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.RestartAlt" Disabled="@(!_status.HasModel || _busy)"
+                           OnClick="@(() => RebuildAsync(true))">@Tr("AIK_RebuildAll")</MudButton>
+            </div>
+        </div>
+    }
+</section>
+
+@* ───────────── تجربة البحث ───────────── *@
+<section class="inv-card ai-gap" aria-labelledby="aik-try-h">
+    <h2 class="inv-card-title" id="aik-try-h"><MudIcon Icon="@Icons.Material.Filled.ManageSearch" />@Tr("AIK_TryTitle")</h2>
+    <div class="aik-try">
+        <MudTextField T="string" @bind-Value="_tryQuery" Label="@Tr("AIK_TryLabel")" Variant="Variant.Outlined" Immediate="true" Clearable="true"
+                      HelperText="@Tr("AIK_TryHelp")" OnKeyDown="@(async e => { if (e.Key == "Enter") await TrySearchAsync(); })" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" Disabled="@(_trying || string.IsNullOrWhiteSpace(_tryQuery))" OnClick="TrySearchAsync">
+            @if (_trying) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+            @Tr("AIK_TryRun")
+        </MudButton>
+    </div>
+    @if (_try != null)
+    {
+        <div class="d-flex flex-wrap align-center mt-3" style="gap:8px;" aria-live="polite">
+            <MudChip T="string" Size="Size.Small" Color="@ModeColor(_try.Mode)" Icon="@ModeIcon(_try.Mode)">@Tr(ModeKey(_try.Mode))</MudChip>
+            <span class="ai-sub" style="margin:0;">@Tr("AIK_TryCount", _try.Rows.Count, _try.DurationMs)</span>
+        </div>
+        @if (_try.Rows.Count > 0)
+        {
+            <ol class="aik-results">
+                @foreach (var r in _try.Rows)
+                {
+                    <li>
+                        <div style="min-width:0;flex:1;">
+                            <div class="d-flex flex-wrap align-center" style="gap:6px;">
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@KindColor(r.Kind)">@Tr(KindKey(r.Kind))</MudChip>
+                                <span class="t">@r.TitleAr</span>
+                                @if (r.Kind == AiKnowledgeKinds.View) { <span class="aik-key">ai.@r.KeyName</span> }
+                            </div>
+                            <div class="@("c" + (r.Kind == AiKnowledgeKinds.Example ? " aik-content sql" : ""))">@r.Content</div>
+                        </div>
+                    </li>
+                }
+            </ol>
+        }
+        else
+        {
+            <div class="ai-msg mt-3">@_try.Text</div>
+        }
+    }
+</section>
+
+@* ───────────── نموذج الإضافة/التعديل ───────────── *@
+@if (_edit != null)
+{
+    <section class="inv-card ai-gap" aria-labelledby="aik-ed-h">
+        <h2 class="inv-card-title" id="aik-ed-h"><MudIcon Icon="@Icons.Material.Filled.EditNote" />@(_edit.Id == 0 ? Tr("AIK_Add") : Tr("AIK_Edit"))</h2>
+        @if (_editIsSeed)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">@Tr("AIK_SeedEditNote")</MudAlert>
+        }
+        <div class="aik-form">
+            <MudSelect T="string" @bind-Value="_edit.Kind" Label="@Tr("AIK_Kind")" Variant="Variant.Outlined" Disabled="@(_edit.Id != 0)" HelperText="@Tr(KindHelpKey(_edit.Kind))">
+                <MudSelectItem Value="@AiKnowledgeKinds.Glossary">@Tr("AIK_KGlossary")</MudSelectItem>
+                <MudSelectItem Value="@AiKnowledgeKinds.Rule">@Tr("AIK_KRule")</MudSelectItem>
+                <MudSelectItem Value="@AiKnowledgeKinds.Example">@Tr("AIK_KExample")</MudSelectItem>
+            </MudSelect>
+            <MudTextField T="string" @bind-Value="_edit.TitleAr" Label="@Tr("AIK_FTitle")" Variant="Variant.Outlined" Required="true" MaxLength="300" Counter="300" />
+            <MudTextField T="string" @bind-Value="_edit.Content" Label="@(_edit.Kind == AiKnowledgeKinds.Example ? Tr("AIK_FSql") : Tr("AIK_FContent"))" Variant="Variant.Outlined"
+                          Required="true" Lines="@(_edit.Kind == AiKnowledgeKinds.Example ? 6 : 4)" MaxLength="4000" Counter="4000"
+                          Class="@("wide" + (_edit.Kind == AiKnowledgeKinds.Example ? " sql" : ""))"
+                          HelperText="@(_edit.Kind == AiKnowledgeKinds.Example ? Tr("AIK_FSqlHelp") : Tr("AIK_FContentHelp"))" />
+            <MudTextField T="string" @bind-Value="_edit.Keywords" Label="@Tr("AIK_FKeywords")" Variant="Variant.Outlined" MaxLength="1000" Class="wide"
+                          HelperText="@Tr("AIK_FKeywordsHelp")" />
+        </div>
+        @if (!string.IsNullOrEmpty(_editError))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3" role="alert">@_editError</MudAlert>
+        }
+        <div class="aik-form-actions">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="_busy" OnClick="SaveAsync">@Tr("Save")</MudButton>
+            <MudButton Variant="Variant.Text" Disabled="_busy" OnClick="@(() => { _edit = null; _editError = null; })">@Tr("AI_Cancel")</MudButton>
+        </div>
+    </section>
+}
+
+@* ───────────── قائمة المقاطع ───────────── *@
+<section class="inv-card ai-gap" aria-labelledby="aik-ls-h">
+    <h2 class="inv-card-title" id="aik-ls-h"><MudIcon Icon="@Icons.Material.Filled.MenuBook" />@Tr("AIK_ListTitle")</h2>
+    <div class="aik-tools">
+        <MudSelect T="string" @bind-Value="_kind" Label="@Tr("AIK_Kind")" Variant="Variant.Outlined" Dense="true" Class="sel">
+            <MudSelectItem Value="@("")">@Tr("AIK_KAll", _rows.Count)</MudSelectItem>
+            @foreach (var k in AiKnowledgeKinds.All.Where(k => _rows.Any(r => r.Kind == k)))
+            {
+                <MudSelectItem Value="@k">@($"{Tr(KindKey(k))} ({_rows.Count(r => r.Kind == k)})")</MudSelectItem>
+            }
+        </MudSelect>
+        <MudSelect T="string" @bind-Value="_state" Label="@Tr("AIK_State")" Variant="Variant.Outlined" Dense="true" Class="sel">
+            <MudSelectItem Value="@("")">@Tr("AIK_SAll")</MudSelectItem>
+            <MudSelectItem Value="@("on")">@Tr("AIK_SActive")</MudSelectItem>
+            <MudSelectItem Value="@("off")">@Tr("AIK_SInactive")</MudSelectItem>
+            <MudSelectItem Value="@("edited")">@Tr("AIK_SEdited")</MudSelectItem>
+            <MudSelectItem Value="@("unindexed")">@Tr("AIK_SUnindexed")</MudSelectItem>
+        </MudSelect>
+        <MudTextField T="string" @bind-Value="_filter" Label="@Tr("AIK_Search")" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Immediate="true" DebounceInterval="250"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="grow" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_busy" OnClick="BeginAdd">@Tr("AIK_Add")</MudButton>
+    </div>
+    <MudTable Items="@Filtered" T="AiKnowledgeRow" Hover="true" Elevation="0" Class="inv-table mt-3" Dense="true" Breakpoint="Breakpoint.Md" RowsPerPage="25"
+              Loading="_loading" LoadingProgressColor="Color.Primary" RowClassFunc="@((r, _) => r.IsActive ? "" : "aik-off")">
+        <HeaderContent>
+            <MudTh>@Tr("AIK_Kind")</MudTh>
+            <MudTh>@Tr("AIK_FTitle")</MudTh>
+            <MudTh>@Tr("AIK_FContent")</MudTh>
+            <MudTh>@Tr("AIK_Status")</MudTh>
+            <MudTh>@Tr("AIK_Active")</MudTh>
+            <MudTh Style="text-align:end;">@Tr("AIK_Actions")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("AIK_Kind")"><MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@KindColor(context.Kind)">@Tr(KindKey(context.Kind))</MudChip></MudTd>
+            <MudTd DataLabel="@Tr("AIK_FTitle")">
+                <div class="aik-title">@context.TitleAr</div>
+                @if (context.Kind == AiKnowledgeKinds.View) { <div class="aik-key">ai.@context.KeyName</div> }
+            </MudTd>
+            <MudTd DataLabel="@Tr("AIK_FContent")"><div class="@("aik-content" + (context.Kind == AiKnowledgeKinds.Example ? " sql" : ""))" title="@context.Content">@context.Content</div></MudTd>
+            <MudTd DataLabel="@Tr("AIK_Status")">
+                <div class="aik-badges">
+                    @if (context.Kind == AiKnowledgeKinds.View)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.Lock">@Tr("AIK_ReadOnly")</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="@(context.IsEdited ? Color.Warning : Color.Default)">@Tr(SourceKey(context))</MudChip>
+                    }
+                    @if (IndexKey(context) is { } ik)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="@(ik == "AIK_IxOk" ? Color.Success : Color.Warning)"
+                                 Icon="@(ik == "AIK_IxOk" ? Icons.Material.Filled.CheckCircleOutline : Icons.Material.Filled.ErrorOutline)">@Tr(ik)</MudChip>
+                    }
+                </div>
+            </MudTd>
+            <MudTd DataLabel="@Tr("AIK_Active")">
+                @if (context.Kind == AiKnowledgeKinds.View)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Success" Size="Size.Small" aria-label="@Tr("AIK_SActive")" />
+                }
+                else
+                {
+                    <MudSwitch T="bool" Value="context.IsActive" ValueChanged="@(v => ToggleAsync(context, v))" Color="Color.Primary" Disabled="_busy"
+                               aria-label="@Tr("AIK_ToggleAria", context.TitleAr)" />
+                }
+            </MudTd>
+            <MudTd DataLabel="@Tr("AIK_Actions")">
+                @if (context.Kind != AiKnowledgeKinds.View)
+                {
+                    <div class="aik-row-acts">
+                        <MudTooltip Text="@Tr("AIK_Edit")">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="@Tr("AIK_EditAria", context.TitleAr)" Disabled="_busy" OnClick="@(() => BeginEdit(context))" />
+                        </MudTooltip>
+                        @if (context.Source == AiKnowledgeSources.Seed && context.IsEdited)
+                        {
+                            <MudTooltip Text="@Tr("AIK_Restore")">
+                                <MudIconButton Icon="@Icons.Material.Filled.SettingsBackupRestore" aria-label="@Tr("AIK_RestoreAria", context.TitleAr)" Disabled="_busy" OnClick="@(() => RestoreAsync(context))" />
+                            </MudTooltip>
+                        }
+                    </div>
+                }
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent><div class="aik-empty"><MudIcon Icon="@Icons.Material.Filled.MenuBook" Size="Size.Large" />@Tr("AIK_Empty")</div></NoRecordsContent>
+        <PagerContent><MudTablePager PageSizeOptions="new[] { 25, 50, 100 }" /></PagerContent>
+    </MudTable>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public IAiAdminGateway Gateway { get; set; } = default!;
+    [Parameter] public long UserId { get; set; }
+
+    private List<AiKnowledgeRow> _rows = new();
+    private AiKnowledgeIndexStatus? _status;
+    private AiKnowledgeSearchTest? _try;
+    private AiKnowledgeSaveRequest? _edit;
+    private bool _editIsSeed;
+    private string? _error, _editError, _filter, _tryQuery;
+    private string _kind = "", _state = "";
+    private bool _loading, _busy, _rebuilding, _trying, _loaded;
+
+    protected override void OnInitialized() => LangService.OnLanguageChanged += OnLang;
+    public void Dispose() => LangService.OnLanguageChanged -= OnLang;
+    private void OnLang() => InvokeAsync(StateHasChanged);
+
+    /// <summary>يُستدعى من الصفحة عند فتح التبويب (تحميل كسول، ومرة أخرى بعد «إعادة التحميل»).</summary>
+    public async Task LoadAsync()
+    {
+        if (_loading) return;
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var gw = Gateway;
+            (_rows, _status) = await Bg(() => (gw.GetKnowledge(), gw.GetKnowledgeIndexStatus()));
+            _loaded = true;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Err(ex)); }
+        finally { _loading = false; StateHasChanged(); }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool first)
+    {
+        if (first && !_loaded) await LoadAsync();
+    }
+
+    private IEnumerable<AiKnowledgeRow> Filtered
+    {
+        get
+        {
+            IEnumerable<AiKnowledgeRow> q = _rows;
+            if (_kind.Length > 0) q = q.Where(r => r.Kind == _kind);
+            q = _state switch
+            {
+                "on" => q.Where(r => r.IsActive),
+                "off" => q.Where(r => !r.IsActive),
+                "edited" => q.Where(r => r.IsEdited),
+                "unindexed" => q.Where(r => r.IsActive && IndexKey(r) is "AIK_IxNo" or "AIK_IxStale"),
+                _ => q,
+            };
+            if (!string.IsNullOrWhiteSpace(_filter))
+            {
+                string f = _filter.Trim();
+                q = q.Where(r => r.TitleAr.Contains(f, StringComparison.OrdinalIgnoreCase) || r.Content.Contains(f, StringComparison.OrdinalIgnoreCase)
+                              || (r.Keywords ?? "").Contains(f, StringComparison.OrdinalIgnoreCase) || r.KeyName.Contains(f, StringComparison.OrdinalIgnoreCase));
+            }
+            return q;
+        }
+    }
+
+    // ───────────── الفهرس ─────────────
+
+    private async Task RebuildAsync(bool all)
+    {
+        if (_status == null || !_status.HasModel) return;
+        int count = all ? _status.Total : Math.Max(0, _status.Total - _status.Indexed);
+        if (count == 0 && !all) { Snackbar.Add(Tr("AIK_NothingToIndex"), Severity.Info); return; }
+        bool? ok = await DialogService.ShowMessageBoxAsync(all ? Tr("AIK_RebuildAll") : Tr("AIK_Rebuild"),
+            Tr("AIK_ConfirmRebuild", count, _status.ModelName), yesText: Tr("AIK_Rebuild"), cancelText: Tr("AI_Cancel"));
+        if (ok != true) return;
+        _busy = _rebuilding = true;
+        StateHasChanged();
+        try
+        {
+            var gw = Gateway;
+            var res = await Task.Run(async () => { AccountCultureGuard.EnsureInvariant(); return await gw.RebuildKnowledgeIndexAsync(all); });
+            Snackbar.Add(res.Message, res.Failed > 0 ? Severity.Warning : Severity.Success);
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = _rebuilding = false; }
+        await LoadAsync();
+    }
+
+    private async Task TrySearchAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_tryQuery) || _trying) return;
+        _trying = true;
+        StateHasChanged();
+        try
+        {
+            var gw = Gateway; string q = _tryQuery.Trim();
+            _try = await Task.Run(async () => { AccountCultureGuard.EnsureInvariant(); return await gw.TestKnowledgeSearchAsync(q); });
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Err(ex)); }
+        finally { _trying = false; }
+    }
+
+    // ───────────── تحرير المقاطع ─────────────
+
+    private void BeginAdd()
+    {
+        _edit = new AiKnowledgeSaveRequest { Kind = _kind is AiKnowledgeKinds.Rule or AiKnowledgeKinds.Example ? _kind : AiKnowledgeKinds.Glossary };
+        _editIsSeed = false;
+        _editError = null;
+    }
+
+    private void BeginEdit(AiKnowledgeRow r)
+    {
+        _edit = new AiKnowledgeSaveRequest { Id = r.Id, Kind = r.Kind, TitleAr = r.TitleAr, Content = r.Content, Keywords = r.Keywords ?? "" };
+        _editIsSeed = r.Source == AiKnowledgeSources.Seed;
+        _editError = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_edit == null) return;
+        _busy = true;
+        _editError = null;
+        try
+        {
+            var gw = Gateway; var req = _edit; long uid = UserId;
+            await Bg(() => gw.SaveKnowledge(req, uid));
+            Snackbar.Add(Tr("AIK_Saved"), Severity.Success);
+            _edit = null;
+        }
+        catch (Exception ex) { _editError = Err(ex); }
+        finally { _busy = false; }
+        if (_edit == null) await LoadAsync();
+    }
+
+    private async Task ToggleAsync(AiKnowledgeRow r, bool active)
+    {
+        _busy = true;
+        try
+        {
+            var gw = Gateway; long uid = UserId, id = r.Id;
+            await Bg(() => gw.SetKnowledgeActive(id, active, uid));
+            r.IsActive = active;
+            Snackbar.Add(Tr(active ? "AIK_Enabled" : "AIK_Disabled", r.TitleAr), Severity.Success);
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = false; }
+        _status = await Bg(() => Gateway.GetKnowledgeIndexStatus());
+    }
+
+    private async Task RestoreAsync(AiKnowledgeRow r)
+    {
+        bool? ok = await DialogService.ShowMessageBoxAsync(Tr("AIK_Restore"), Tr("AIK_ConfirmRestore", r.TitleAr), yesText: Tr("AIK_Restore"), cancelText: Tr("AI_Cancel"));
+        if (ok != true) return;
+        _busy = true;
+        try
+        {
+            var gw = Gateway; long uid = UserId, id = r.Id;
+            await Bg(() => gw.RestoreKnowledgeSeed(id, uid));
+            Snackbar.Add(Tr("AIK_Restored"), Severity.Success);
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = false; }
+        await LoadAsync();
+    }
+
+    // ───────────── عرض ─────────────
+
+    private string? IndexKey(AiKnowledgeRow r)
+    {
+        if (_status == null || !_status.HasModel || !r.IsActive) return null;
+        if (r.EmbeddingModel_Id == _status.ModelId && r.EmbeddedAt.HasValue) return "AIK_IxOk";
+        return r.EmbeddingModel_Id.HasValue ? "AIK_IxStale" : "AIK_IxNo";
+    }
+
+    private static string KindKey(string k) => k switch
+    {
+        AiKnowledgeKinds.View => "AIK_KView",
+        AiKnowledgeKinds.Glossary => "AIK_KGlossary",
+        AiKnowledgeKinds.Rule => "AIK_KRule",
+        AiKnowledgeKinds.Example => "AIK_KExample",
+        _ => "AIK_KScreen",
+    };
+
+    private static string KindHelpKey(string k) => k switch
+    {
+        AiKnowledgeKinds.Rule => "AIK_HRule",
+        AiKnowledgeKinds.Example => "AIK_HExample",
+        _ => "AIK_HGlossary",
+    };
+
+    private static Color KindColor(string k) => k switch
+    {
+        AiKnowledgeKinds.View => Color.Info,
+        AiKnowledgeKinds.Glossary => Color.Primary,
+        AiKnowledgeKinds.Rule => Color.Secondary,
+        AiKnowledgeKinds.Example => Color.Tertiary,
+        _ => Color.Default,
+    };
+
+    private static string SourceKey(AiKnowledgeRow r) => r.Source switch
+    {
+        AiKnowledgeSources.Manual => "AIK_SrcManual",
+        AiKnowledgeSources.Feedback => "AIK_SrcFeedback",
+        _ => r.IsEdited ? "AIK_SrcEdited" : "AIK_SrcSeed",
+    };
+
+    private static string ModeKey(string m) => m switch { "hybrid" => "AIK_ModeHybrid", "fallback" => "AIK_ModeFallback", _ => "AIK_ModeKeyword" };
+    private static Color ModeColor(string m) => m switch { "hybrid" => Color.Success, "fallback" => Color.Warning, _ => Color.Default };
+    private static string ModeIcon(string m) => m switch { "hybrid" => Icons.Material.Filled.AutoAwesome, "fallback" => Icons.Material.Filled.ReportProblem, _ => Icons.Material.Filled.TextFields };
+
+    private string Tr(string key, params object[] args)
+    {
+        var previous = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally { CultureInfo.CurrentUICulture = previous; }
+    }
+
+    private static Task<T> Bg<T>(Func<T> f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return f(); });
+    private static Task Bg(Action f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); f(); });
+    private static string Err(Exception ex) => ex is InvalidOperationException ? ex.Message : (ex.InnerException?.Message ?? ex.Message);
+}

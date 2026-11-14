@@ -8,6 +8,7 @@
 @using AccountModelsLib
 @using AccountERP.SharedUI.Services
 @using AccountERP.SharedUI.Components.Shared
+@using AccountERP.SharedUI.Components.Assistant.Settings
 @inject LanguageService LangService
 @inject MenuStateService MenuState
 @inject IServiceProvider ServiceProvider
@@ -472,6 +473,11 @@
                     </MudTable>
                 </section>
             </MudTabPanel>
+
+            @* ═════════ P7.3: المعرفة (المسرد والقواعد والأمثلة وفهرس البحث الدلالى) ═════════ *@
+            <MudTabPanel Text="@Tr("AIK_Tab")" Icon="@Icons.Material.Filled.MenuBook">
+                <AiKnowledgeTab @ref="_knowledgeTab" Gateway="_gw" UserId="_userId" />
+            </MudTabPanel>
         </MudTabs>
     }
 </div>
@@ -515,6 +521,10 @@
     private string _auditOutcome = "";
     private string? _auditSearch;
     private bool _auditLoading;
+
+    // P7.3: تبويب المعرفة (مكوّن مستقل يحمّل نفسه عند أول عرض، ويُعاد تحميله مع «إعادة التحميل»)
+    private const int KnowledgeTab = 3;
+    private AiKnowledgeTab? _knowledgeTab;
 
     private async Task OnTabChangedAsync(int index)
     {
@@ -591,6 +601,7 @@
             _savedRouting = RoutingSnapshot(_routing);
             if (_newModel.Provider_Id == 0 || _providers.All(p => p.Id != _newModel.Provider_Id))
                 _newModel.Provider_Id = _providers.FirstOrDefault()?.Id ?? 0;
+            if (_tab == KnowledgeTab && _knowledgeTab != null) await _knowledgeTab.LoadAsync();
         }
         catch (Exception ex) { _error = Tr("SystemError", Err(ex)); }
         finally { _loading = false; }

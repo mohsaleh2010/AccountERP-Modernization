@@ -218,11 +218,24 @@ namespace AccountERP.AI.Knowledge
         /// </summary>
         public async Task<string> SearchAsync(string query, ISet<string> allowedViews, Func<string, bool> hasRoute, CancellationToken ct, int top = 6)
         {
+            var (rows, mode) = await RankAsync(query, allowedViews, hasRoute, ct, top);
+            LastSearchMode = mode;
+            LastSearchUsedFallback = mode == SearchModes.Fallback;
+            if (rows == null) return AiSchemaCatalog.Search(query, AiSchemaCatalog.Views.Where(v => allowedViews.Contains(v.Name)), top);
+            return rows.Count == 0 ? NoResults : string.Join("\n\n", rows.Select(Format));
+        }
+
+        /// <summary>
+        /// P7.3: الترتيب نفسه الذى تستخدمه SearchAsync، بصفوف منظَّمة (لـ «تجربة البحث»). Rows = null ⇒ fallback (بحث الكود).
+        /// </summary>
+        public async Task<(List<AiKnowledgeRow>? Rows, string Mode)> RankAsync(string query, ISet<string> allowedViews, Func<string, bool> hasRoute, CancellationToken ct, int top = 6)
+        {
             var rows = ActiveRows();
-            if (rows == null || rows.Count == 0 || _embed == null) return Search(query, allowedViews, hasRoute, top);
+            if (rows == null || rows.Count == 0) return (null, SearchModes.Fallback);
 
             var visible = rows.Where(r => Visible(r, allowedViews, hasRoute)).ToList();
             var keyword = KeywordRank(query, visible).Select(h => h.Row).ToList();
+            if (_embed == null) return (keyword.Take(top).ToList(), SearchModes.Keyword);
             List<AiKnowledgeRow> vector = new();
             // فهرس فارغ لهذا النموذج (لم يُبنَ بعد) = لا داعى لتضمين السؤال وصرف رصيد بلا فائدة.
             var route = _embed.CurrentRoute(out _);
@@ -242,16 +255,114 @@ namespace AccountERP.AI.Knowledge
                 if (qv != null && modelId == route!.Model.Id)
                     vector = AiKnowledgeIndex.VectorRank(qv, visible, vectors).Select(h => h.Row).ToList();
             }
-            LastSearchUsedFallback = false;
-            if (vector.Count == 0)
+            if (vector.Count == 0) return (keyword.Take(top).ToList(), SearchModes.Keyword);
+            return (AiKnowledgeIndex.Fuse(keyword.Take(AiKnowledgeIndex.Depth).ToList(), vector, top), SearchModes.Hybrid);
+        }
+
+        // ───────────── P7.3: إدارة المقاطع من تبويب «المعرفة» ─────────────
+
+        public const int MaxTitle = 300, MaxContent = 4000, MaxKeywords = 1000;
+
+        /// <summary>كل المقاطع للإدارة (بعد المزامنة): الـ Views بترتيب الكتالوج ثم المسرد والقواعد والأمثلة.</summary>
+        public List<AiKnowledgeRow> ListForAdmin()
+        {
+            EnsureSynced();
+            var viewOrder = AiSchemaCatalog.Views.Select((v, i) => (v.Name, i)).ToDictionary(x => x.Name, x => x.i, StringComparer.OrdinalIgnoreCase);
+            return _cls.ListAll()
+                .OrderBy(r => { int k = Array.IndexOf(AiKnowledgeKinds.All, r.Kind); return k < 0 ? 99 : k; })
+                .ThenBy(r => r.Kind == AiKnowledgeKinds.View && viewOrder.TryGetValue(r.KeyName, out int i) ? i : int.MaxValue)
+                .ThenBy(r => r.Id).ToList();
+        }
+
+        /// <summary>
+        /// حفظ مسرد/قاعدة/مثال. الـ Views للقراءة فقط (من الكود). المثال = SELECT واحد على Views المساعد (ReadOnlySqlExecutor.Validate)
+        /// وViewsCsv مستنتج منه. المقطع المزروع يُعلَّم «معدَّل» فلا يغيّره الكود بعد ذلك. يرمى InvalidOperationException برسالة عربية.
+        /// </summary>
+        public long SaveAdmin(AiKnowledgeSaveRequest r, long userId)
+        {
+            string kind = (r.Kind ?? "").Trim().ToLowerInvariant();
+            string title = (r.TitleAr ?? "").Trim(), content = (r.Content ?? "").Trim(), keywords = (r.Keywords ?? "").Trim();
+            if (kind != AiKnowledgeKinds.Glossary && kind != AiKnowledgeKinds.Rule && kind != AiKnowledgeKinds.Example)
+                throw new InvalidOperationException("نوع المقطع غير مسموح (مسرد أو قاعدة أو مثال فقط).");
+            if (title.Length == 0) throw new InvalidOperationException("أدخل عنوان المقطع.");
+            if (content.Length == 0) throw new InvalidOperationException(kind == AiKnowledgeKinds.Example ? "أدخل استعلام المثال." : "أدخل نص المقطع.");
+            if (title.Length > MaxTitle) throw new InvalidOperationException($"العنوان أطول من {MaxTitle} حرف.");
+            if (content.Length > MaxContent) throw new InvalidOperationException($"النص أطول من {MaxContent} حرف.");
+            if (keywords.Length > MaxKeywords) throw new InvalidOperationException($"الكلمات المفتاحية أطول من {MaxKeywords} حرف.");
+
+            string? views = null;
+            if (kind == AiKnowledgeKinds.Example)
             {
-                LastSearchMode = SearchModes.Keyword;
-                var best = keyword.Take(top).Select(Format).ToList();
-                return best.Count == 0 ? NoResults : string.Join("\n\n", best);
+                var all = new HashSet<string>(AiSchemaCatalog.Views.Select(v => v.Name), StringComparer.OrdinalIgnoreCase);
+                try { ReadOnlySqlExecutor.Validate(content, all, new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "date_from", "date_to" }); }
+                catch (AiSqlRejectedException ee) { throw new InvalidOperationException("استعلام المثال مرفوض: " + ee.Message); }
+                views = ViewsOf(content) ?? throw new InvalidOperationException("استعلام المثال لا يستخدم أى View من Views المساعد (ai.v_...).");
             }
-            LastSearchMode = SearchModes.Hybrid;
-            var fused = AiKnowledgeIndex.Fuse(keyword.Take(AiKnowledgeIndex.Depth).ToList(), vector, top);
-            return string.Join("\n\n", fused.Select(Format));
+
+            EnsureSynced();
+            long id;
+            if (r.Id == 0)
+            {
+                var row = Hash(new AiKnowledgeRow
+                {
+                    Id = CallSnowflakeIdGenerate.GenerateNewId(),
+                    Kind = kind, TitleAr = title, Content = content, Keywords = keywords.Length == 0 ? null : keywords, ViewsCsv = views,
+                    Source = AiKnowledgeSources.Manual, Version = 1, IsActive = true,
+                });
+                row.KeyName = "manual_" + row.Id.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                _cls.Insert(row, userId);
+                id = row.Id;
+            }
+            else
+            {
+                var cur = _cls.Get(r.Id) ?? throw new InvalidOperationException("المقطع غير موجود (ربما حُذف).");
+                if (cur.Kind == AiKnowledgeKinds.View || cur.Kind == AiKnowledgeKinds.Screen)
+                    throw new InvalidOperationException("مقاطع الـ Views تُدار من الكود ولا تُعدَّل من هنا.");
+                if (cur.Kind != kind) throw new InvalidOperationException("لا يمكن تغيير نوع مقطع موجود؛ أضف مقطعاً جديداً.");
+                var row = Hash(new AiKnowledgeRow
+                {
+                    Id = cur.Id, Kind = kind, TitleAr = title, Content = content, Keywords = keywords.Length == 0 ? null : keywords,
+                    ViewsCsv = views, RoutesCsv = cur.RoutesCsv, Version = cur.Version,
+                });
+                if (row.ContentHash == cur.ContentHash) return cur.Id;   // لا تغيير
+                _cls.UpdateByAdmin(row, edited: cur.Source == AiKnowledgeSources.Seed || cur.IsEdited, userId);
+                id = cur.Id;
+            }
+            Invalidate();
+            return id;
+        }
+
+        public void SetActiveAdmin(long id, bool active, long userId)
+        {
+            var cur = _cls.Get(id) ?? throw new InvalidOperationException("المقطع غير موجود (ربما حُذف).");
+            if (cur.Kind == AiKnowledgeKinds.View) throw new InvalidOperationException("مقاطع الـ Views تتبع صلاحيات المستخدم ولا تُعطَّل من هنا.");
+            _cls.SetActive(id, active, userId);
+            Invalidate();
+        }
+
+        /// <summary>يعيد مقطعاً مزروعاً معدَّلاً إلى نص الكود الحالى ويرفع علامة «معدَّل».</summary>
+        public void RestoreSeedAdmin(long id, long userId)
+        {
+            var cur = _cls.Get(id) ?? throw new InvalidOperationException("المقطع غير موجود (ربما حُذف).");
+            if (cur.Source != AiKnowledgeSources.Seed || !cur.IsEdited) throw new InvalidOperationException("هذا المقطع ليس مقطعاً أصلياً معدَّلاً.");
+            var seed = SeedRows().FirstOrDefault(s => s.Kind == cur.Kind && string.Equals(s.KeyName, cur.KeyName, StringComparison.OrdinalIgnoreCase))
+                       ?? throw new InvalidOperationException("لم يعد هذا المقطع موجوداً فى الكود.");
+            seed.Id = cur.Id;
+            _cls.UpdateByAdmin(seed, edited: false, userId);
+            Invalidate();
+        }
+
+        /// <summary>«تجربة البحث» كمدير: كل الـ Views وكل الشاشات، بنفس ترتيب search_schema.</summary>
+        public async Task<AiKnowledgeSearchTest> TestSearchAsync(string query, CancellationToken ct)
+        {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            var all = new HashSet<string>(AiSchemaCatalog.Views.Select(v => v.Name), StringComparer.OrdinalIgnoreCase);
+            var (rows, mode) = await RankAsync(query ?? "", all, _ => true, ct);
+            var res = new AiKnowledgeSearchTest { Mode = mode, Rows = rows ?? new() };
+            res.Text = rows == null ? AiSchemaCatalog.Search(query ?? "", AiSchemaCatalog.Views, 6)
+                     : rows.Count == 0 ? NoResults : string.Join("\n\n", rows.Select(Format));
+            res.DurationMs = sw.ElapsedMilliseconds;
+            return res;
         }
 
         private const string NoResults = "لا نتائج. الـ Views المتاحة مذكورة فى التعليمات.";

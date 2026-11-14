@@ -5253,4 +5253,74 @@
   <data name="AID_Source" xml:space="preserve"><value>من الملف «{0}»</value></data>
   <data name="AID_RefNo" xml:space="preserve"><value>رقم فاتورة المورد {0}</value></data>
   <data name="AID_DocTotal" xml:space="preserve"><value>إجمالى المستند {0}</value></data>
+  <data name="AIK_Tab" xml:space="preserve"><value>المعرفة</value></data>
+  <data name="AIK_Loading" xml:space="preserve"><value>جارٍ التحميل…</value></data>
+  <data name="AIK_IndexTitle" xml:space="preserve"><value>فهرس البحث الدلالى</value></data>
+  <data name="AIK_Indexed" xml:space="preserve"><value>مفهرس {0} من {1} بالنموذج «{2}»</value></data>
+  <data name="AIK_NoModel" xml:space="preserve"><value>البحث بالكلمات فقط (لا يوجد نموذج تضمين مربوط)</value></data>
+  <data name="AIK_HybridHint" xml:space="preserve"><value>بعد اكتمال الفهرس يجمع المساعد بين البحث بالكلمات والبحث بالمعنى، فيفهم الصياغات العامية. البناء يستهلك رصيداً من المزوّد.</value></data>
+  <data name="AIK_NoModelHint" xml:space="preserve"><value>لتفعيل البحث بالمعنى: اربط نموذج تضمين بمهمة «تضمين» فى تبويب «النماذج والمهام» ثم ابنِ الفهرس هنا.</value></data>
+  <data name="AIK_Stale" xml:space="preserve"><value>{0} مفهرس بنموذج سابق</value></data>
+  <data name="AIK_Paused" xml:space="preserve"><value>البحث بالمعنى موقوف مؤقتاً حتى {0} بعد خطأ</value></data>
+  <data name="AIK_Rebuild" xml:space="preserve"><value>بناء الفهرس</value></data>
+  <data name="AIK_RebuildAll" xml:space="preserve"><value>إعادة بناء الكل</value></data>
+  <data name="AIK_NothingToIndex" xml:space="preserve"><value>كل المقاطع مفهرسة بالفعل.</value></data>
+  <data name="AIK_ConfirmRebuild" xml:space="preserve"><value>سيُرسَل {0} مقطعاً إلى نموذج التضمين «{1}» لفهرستها، وهذا يستهلك رصيداً من حساب المزوّد. متابعة؟</value></data>
+  <data name="AIK_TryTitle" xml:space="preserve"><value>تجربة البحث</value></data>
+  <data name="AIK_TryLabel" xml:space="preserve"><value>اكتب سؤالاً كما يكتبه المستخدم</value></data>
+  <data name="AIK_TryHelp" xml:space="preserve"><value>يعرض المقاطع التى سيجدها المساعد بأداة search_schema (بصلاحية كاملة) ومصدر النتيجة.</value></data>
+  <data name="AIK_TryRun" xml:space="preserve"><value>بحث</value></data>
+  <data name="AIK_TryCount" xml:space="preserve"><value>{0} نتيجة · {1} مللى ثانية</value></data>
+  <data name="AIK_ModeKeyword" xml:space="preserve"><value>بالكلمات</value></data>
+  <data name="AIK_ModeHybrid" xml:space="preserve"><value>هجين (المعنى + الكلمات)</value></data>
+  <data name="AIK_ModeFallback" xml:space="preserve"><value>احتياطى من الكود (تعذّرت قراءة الجدول)</value></data>
+  <data name="AIK_Add" xml:space="preserve"><value>إضافة مقطع</value></data>
+  <data name="AIK_Edit" xml:space="preserve"><value>تعديل المقطع</value></data>
+  <data name="AIK_SeedEditNote" xml:space="preserve"><value>هذا مقطع أصلى من النظام. بعد تعديله لن تغيّره تحديثات البرنامج، ويمكنك «استعادة الأصل» فى أى وقت.</value></data>
+  <data name="AIK_Kind" xml:space="preserve"><value>النوع</value></data>
+  <data name="AIK_KAll" xml:space="preserve"><value>الكل ({0})</value></data>
+  <data name="AIK_KView" xml:space="preserve"><value>View بيانات</value></data>
+  <data name="AIK_KGlossary" xml:space="preserve"><value>مسرد</value></data>
+  <data name="AIK_KRule" xml:space="preserve"><value>قاعدة</value></data>
+  <data name="AIK_KExample" xml:space="preserve"><value>مثال استعلام</value></data>
+  <data name="AIK_KScreen" xml:space="preserve"><value>شاشة</value></data>
+  <data name="AIK_HGlossary" xml:space="preserve"><value>معنى مصطلح أو اسم عمود (مثل: مدين = Madin).</value></data>
+  <data name="AIK_HRule" xml:space="preserve"><value>قاعدة عمل يجب أن يلتزم بها المساعد عند الحساب.</value></data>
+  <data name="AIK_HExample" xml:space="preserve"><value>استعلام SELECT واحد على Views المساعد (ai.v_...) يتعلّم منه المساعد.</value></data>
+  <data name="AIK_FTitle" xml:space="preserve"><value>العنوان</value></data>
+  <data name="AIK_FContent" xml:space="preserve"><value>المحتوى</value></data>
+  <data name="AIK_FSql" xml:space="preserve"><value>استعلام المثال (SQL)</value></data>
+  <data name="AIK_FSqlHelp" xml:space="preserve"><value>يُتحقق منه عند الحفظ: SELECT واحد للقراءة فقط على ai.v_* ويمكن استخدام @date_from و@date_to. يظهر المثال فقط لمن يملك صلاحية كل الـ Views المستخدمة.</value></data>
+  <data name="AIK_FContentHelp" xml:space="preserve"><value>اكتب جملاً قصيرة وواضحة؛ هذا النص يُرسل للنموذج كما هو.</value></data>
+  <data name="AIK_FKeywords" xml:space="preserve"><value>كلمات مفتاحية</value></data>
+  <data name="AIK_FKeywordsHelp" xml:space="preserve"><value>كلمات يكتبها المستخدمون للبحث عن هذا المعنى، بما فيها العامية (مفصولة بمسافات).</value></data>
+  <data name="AIK_ListTitle" xml:space="preserve"><value>مقاطع المعرفة</value></data>
+  <data name="AIK_State" xml:space="preserve"><value>الحالة</value></data>
+  <data name="AIK_SAll" xml:space="preserve"><value>الكل</value></data>
+  <data name="AIK_SActive" xml:space="preserve"><value>مفعّل</value></data>
+  <data name="AIK_SInactive" xml:space="preserve"><value>معطّل</value></data>
+  <data name="AIK_SEdited" xml:space="preserve"><value>أصلى معدَّل</value></data>
+  <data name="AIK_SUnindexed" xml:space="preserve"><value>يحتاج فهرسة</value></data>
+  <data name="AIK_Search" xml:space="preserve"><value>بحث فى المقاطع</value></data>
+  <data name="AIK_Status" xml:space="preserve"><value>المصدر والفهرسة</value></data>
+  <data name="AIK_Active" xml:space="preserve"><value>مفعّل</value></data>
+  <data name="AIK_Actions" xml:space="preserve"><value>إجراءات</value></data>
+  <data name="AIK_ReadOnly" xml:space="preserve"><value>للقراءة فقط</value></data>
+  <data name="AIK_SrcManual" xml:space="preserve"><value>أضافه المدير</value></data>
+  <data name="AIK_SrcFeedback" xml:space="preserve"><value>من الملاحظات</value></data>
+  <data name="AIK_SrcEdited" xml:space="preserve"><value>أصلى معدَّل</value></data>
+  <data name="AIK_SrcSeed" xml:space="preserve"><value>أصلى</value></data>
+  <data name="AIK_IxOk" xml:space="preserve"><value>مفهرس</value></data>
+  <data name="AIK_IxNo" xml:space="preserve"><value>غير مفهرس</value></data>
+  <data name="AIK_IxStale" xml:space="preserve"><value>نموذج سابق</value></data>
+  <data name="AIK_ToggleAria" xml:space="preserve"><value>تفعيل أو تعطيل «{0}»</value></data>
+  <data name="AIK_EditAria" xml:space="preserve"><value>تعديل «{0}»</value></data>
+  <data name="AIK_Restore" xml:space="preserve"><value>استعادة الأصل</value></data>
+  <data name="AIK_RestoreAria" xml:space="preserve"><value>استعادة النص الأصلى لـ «{0}»</value></data>
+  <data name="AIK_ConfirmRestore" xml:space="preserve"><value>سيُستبدل تعديلك على «{0}» بالنص الأصلى من البرنامج. متابعة؟</value></data>
+  <data name="AIK_Restored" xml:space="preserve"><value>تمت استعادة النص الأصلى.</value></data>
+  <data name="AIK_Saved" xml:space="preserve"><value>تم حفظ المقطع. إن كان البحث بالمعنى مفعّلاً فاضغط «بناء الفهرس» لفهرسته.</value></data>
+  <data name="AIK_Enabled" xml:space="preserve"><value>تم تفعيل «{0}».</value></data>
+  <data name="AIK_Disabled" xml:space="preserve"><value>تم تعطيل «{0}»؛ لن يظهر فى بحث المساعد.</value></data>
+  <data name="AIK_Empty" xml:space="preserve"><value>لا توجد مقاطع تطابق الفلتر.</value></data>
 </root>
