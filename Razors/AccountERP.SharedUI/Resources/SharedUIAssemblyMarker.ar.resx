@@ -5495,4 +5495,70 @@
   <data name="AIE_Worse" xml:space="preserve"><value>أسوأ فى ب</value></data>
   <data name="AIE_Differs" xml:space="preserve"><value>مختلف</value></data>
   <data name="AIE_NoDiffs" xml:space="preserve"><value>لا اختلافات بين التشغيلين.</value></data>
+  <data name="AIC_FbUp" xml:space="preserve"><value>الرد مفيد</value></data>
+  <data name="AIC_FbDown" xml:space="preserve"><value>الرد غير مفيد</value></data>
+  <data name="AIC_FbUndo" xml:space="preserve"><value>سحب التقييم</value></data>
+  <data name="AIC_FbLocked" xml:space="preserve"><value>راجع المدير هذا التقييم فلا يمكن تغييره</value></data>
+  <data name="AIC_FbEdit" xml:space="preserve"><value>تعديل السبب</value></data>
+  <data name="AIC_FbWhy" xml:space="preserve"><value>ما المشكلة فى الرد؟</value></data>
+  <data name="AIC_FbComment" xml:space="preserve"><value>تعليق (اختيارى)</value></data>
+  <data name="AIC_FbSend" xml:space="preserve"><value>إرسال</value></data>
+  <data name="AIC_FbThanks" xml:space="preserve"><value>شكراً، وصلت ملاحظتك</value></data>
+  <data name="AIC_FbRemoved" xml:space="preserve"><value>سُحب التقييم</value></data>
+  <data name="AIC_FbRWrong" xml:space="preserve"><value>رقم أو نتيجة خاطئة</value></data>
+  <data name="AIC_FbRMisunderstood" xml:space="preserve"><value>لم يفهم السؤال</value></data>
+  <data name="AIC_FbRIncomplete" xml:space="preserve"><value>إجابة ناقصة</value></data>
+  <data name="AIC_FbRSlow" xml:space="preserve"><value>بطىء جداً</value></data>
+  <data name="AIC_FbROther" xml:space="preserve"><value>سبب آخر</value></data>
+  <data name="AIF_Tab" xml:space="preserve"><value>الملاحظات</value></data>
+  <data name="AIF_Title" xml:space="preserve"><value>ملاحظات المستخدمين على الردود</value></data>
+  <data name="AIF_Sub" xml:space="preserve"><value>راجع 👍/👎: اعتمد الرد الجيد مثالاً يتعلم منه المساعد، أو حوّل الرد غير المُرضى لحالة تقييم، أو ارفض الملاحظة.</value></data>
+  <data name="AIF_Reload" xml:space="preserve"><value>تحديث</value></data>
+  <data name="AIF_KNew" xml:space="preserve"><value>جديدة</value></data>
+  <data name="AIF_KNewDown" xml:space="preserve"><value>👎 جديدة</value></data>
+  <data name="AIF_KAccepted" xml:space="preserve"><value>معتمدة</value></data>
+  <data name="AIF_KRejected" xml:space="preserve"><value>مرفوضة</value></data>
+  <data name="AIF_Status" xml:space="preserve"><value>الحالة</value></data>
+  <data name="AIF_Rating" xml:space="preserve"><value>التقييم</value></data>
+  <data name="AIF_All" xml:space="preserve"><value>الكل</value></data>
+  <data name="AIF_Up" xml:space="preserve"><value>مفيد</value></data>
+  <data name="AIF_Down" xml:space="preserve"><value>غير مفيد</value></data>
+  <data name="AIF_Search" xml:space="preserve"><value>بحث فى السؤال أو الرد أو التعليق أو المستخدم</value></data>
+  <data name="AIF_When" xml:space="preserve"><value>التاريخ</value></data>
+  <data name="AIF_User" xml:space="preserve"><value>المستخدم</value></data>
+  <data name="AIF_Question" xml:space="preserve"><value>السؤال</value></data>
+  <data name="AIF_Model" xml:space="preserve"><value>النموذج</value></data>
+  <data name="AIF_IsExample" xml:space="preserve"><value>مثال</value></data>
+  <data name="AIF_IsCase" xml:space="preserve"><value>حالة تقييم</value></data>
+  <data name="AIF_Empty" xml:space="preserve"><value>لا توجد ملاحظات بهذا الاختيار.</value></data>
+  <data name="AIF_SNew" xml:space="preserve"><value>جديدة</value></data>
+  <data name="AIF_SAccepted" xml:space="preserve"><value>معتمدة</value></data>
+  <data name="AIF_SRejected" xml:space="preserve"><value>مرفوضة</value></data>
+  <data name="AIF_Answer" xml:space="preserve"><value>الرد</value></data>
+  <data name="AIF_Comment" xml:space="preserve"><value>تعليق المستخدم</value></data>
+  <data name="AIF_Tools" xml:space="preserve"><value>الأدوات ({0})</value></data>
+  <data name="AIF_Rows" xml:space="preserve"><value>{0} صف</value></data>
+  <data name="AIF_ReviewedBy" xml:space="preserve"><value>راجعها {0} فى {1}</value></data>
+  <data name="AIF_AcceptExample" xml:space="preserve"><value>اعتماد كمثال</value></data>
+  <data name="AIF_AcceptExampleTip" xml:space="preserve"><value>يضيف السؤال والاستعلام مثالاً فى «المعرفة» يستعين به المساعد فى الأسئلة المشابهة</value></data>
+  <data name="AIF_ExampleHelp" xml:space="preserve"><value>صحّح الاستعلام إن لزم؛ يُقبل SELECT واحد على Views المساعد فقط.</value></data>
+  <data name="AIF_ExTitle" xml:space="preserve"><value>العنوان (السؤال)</value></data>
+  <data name="AIF_ExSql" xml:space="preserve"><value>استعلام المثال</value></data>
+  <data name="AIF_ExKeywords" xml:space="preserve"><value>كلمات مفتاحية (اختيارى)</value></data>
+  <data name="AIF_Save" xml:space="preserve"><value>حفظ</value></data>
+  <data name="AIF_AddCase" xml:space="preserve"><value>حالة تقييم</value></data>
+  <data name="AIF_AddCaseTip" xml:space="preserve"><value>يضيف السؤال لمجموعة «التقييم» ليُقاس عليه كل نموذج لاحقاً</value></data>
+  <data name="AIF_CaseHelpDown" xml:space="preserve"><value>الرد كان غير مُرضٍ: صحّح الاستعلام المرجعى أو الأدوات المتوقعة حتى تمثّل الإجابة الصحيحة.</value></data>
+  <data name="AIF_CaseHelpUp" xml:space="preserve"><value>الرد كان صحيحاً: الاستعلام المرجعى منه، راجعه قبل الحفظ.</value></data>
+  <data name="AIF_CaseNote" xml:space="preserve"><value>من ملاحظة {1} بتاريخ {0}</value></data>
+  <data name="AIF_NoSql" xml:space="preserve"><value>لا يوجد استعلام قراءة فى هذا الرد</value></data>
+  <data name="AIF_AlreadyExample" xml:space="preserve"><value>اعتُمدت مثالاً من قبل</value></data>
+  <data name="AIF_AlreadyCase" xml:space="preserve"><value>أُضيفت حالة تقييم من قبل</value></data>
+  <data name="AIF_RejectNote" xml:space="preserve"><value>سبب الرفض (اختيارى)</value></data>
+  <data name="AIF_Reject" xml:space="preserve"><value>رفض</value></data>
+  <data name="AIF_Reopen" xml:space="preserve"><value>إعادة فتح</value></data>
+  <data name="AIF_ExampleSaved" xml:space="preserve"><value>اعتُمد المثال وأُضيف إلى «المعرفة»</value></data>
+  <data name="AIF_CaseSaved" xml:space="preserve"><value>أُضيفت حالة التقييم</value></data>
+  <data name="AIF_Rejected" xml:space="preserve"><value>رُفضت الملاحظة</value></data>
+  <data name="AIF_Reopened" xml:space="preserve"><value>أُعيد فتح الملاحظة</value></data>
 </root>

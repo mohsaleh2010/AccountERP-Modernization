@@ -40,6 +40,15 @@
     .aic-md .ai-md-table th { background: var(--mud-palette-background-gray); font-weight: 600; }
     .aic-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 6px; font-size: .75rem; color: var(--mud-palette-text-secondary); }
     .aic-meta .mud-icon-button { padding: 6px; }
+    .aic-fb-reason { border: 0; background: transparent; color: var(--mud-palette-error); font: inherit; cursor: pointer; padding: 4px 2px; text-decoration: underline dotted; }
+    .aic-fb-reason:focus-visible, .aic-fb-chip:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .aic-fb { margin-top: 8px; padding: 12px; border: 1px solid var(--mud-palette-lines-default); border-radius: 12px; background: var(--mud-palette-surface); display: grid; gap: 10px; }
+    .aic-fb .t { font-size: .85rem; font-weight: 600; }
+    .aic-fb .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .aic-fb-chip { min-height: 36px; padding: 0 12px; border-radius: 18px; border: 1px solid var(--mud-palette-lines-default); background: transparent;
+                   color: var(--mud-palette-text-primary); font: inherit; font-size: .8125rem; cursor: pointer; }
+    .aic-fb-chip[aria-pressed="true"] { border-color: var(--mud-palette-error); color: var(--mud-palette-error); background: color-mix(in srgb, var(--mud-palette-error) 10%, transparent); }
+    .aic-fb .acts { display: flex; flex-wrap: wrap; gap: 8px; }
     .aic-cursor { display: inline-block; width: .5em; height: 1.1em; vertical-align: text-bottom; margin-inline-start: 2px;
                   background: var(--mud-palette-primary); border-radius: 2px; animation: aic-blink 1s steps(2) infinite; }
     @@keyframes aic-blink { 50% { opacity: 0; } }
@@ -462,7 +471,51 @@
                                                 <MudIconButton Icon="@Icons.Material.Outlined.ContentCopy" Size="Size.Small" aria-label="@Tr("AIC_Copy")" OnClick="() => CopyAsync(m.Text)" />
                                             </MudTooltip>
                                         }
+                                        @if (m.Id > 0 && m.Status == AiMessageStatus.Ok)
+                                        {
+                                            @* P7.6: 👍/👎 — الضغط على الزر المفعّل يسحب التقييم ما لم يراجعه المدير *@
+                                            var fb = m.Feedback;
+                                            bool up = fb?.Rating == AiFeedbackRatings.Up, down = fb?.Rating == AiFeedbackRatings.Down, locked = fb?.Reviewed == true;
+                                            <MudTooltip Text="@Tr(locked ? "AIC_FbLocked" : up ? "AIC_FbUndo" : "AIC_FbUp")">
+                                                <MudIconButton Icon="@(up ? Icons.Material.Filled.ThumbUp : Icons.Material.Outlined.ThumbUpOffAlt)" Color="@(up ? Color.Success : Color.Default)"
+                                                               Size="Size.Small" Disabled="@(locked || _fbBusy)" aria-label="@Tr("AIC_FbUp")" aria-pressed="@(up ? "true" : "false")"
+                                                               OnClick="() => ThumbUpAsync(m)" />
+                                            </MudTooltip>
+                                            <MudTooltip Text="@Tr(locked ? "AIC_FbLocked" : down ? "AIC_FbUndo" : "AIC_FbDown")">
+                                                <MudIconButton Icon="@(down ? Icons.Material.Filled.ThumbDown : Icons.Material.Outlined.ThumbDownOffAlt)" Color="@(down ? Color.Error : Color.Default)"
+                                                               Size="Size.Small" Disabled="@(locked || _fbBusy)" aria-label="@Tr("AIC_FbDown")" aria-pressed="@(down ? "true" : "false")"
+                                                               OnClick="() => ThumbDownAsync(m)" />
+                                            </MudTooltip>
+                                            @if (down && !locked && _fbOpen != m.Id)
+                                            {
+                                                <button type="button" class="aic-fb-reason" title="@Tr("AIC_FbEdit")" @onclick="() => OpenDown(m)">
+                                                    @(string.IsNullOrEmpty(fb!.Reason) ? Tr("AIC_FbEdit") : Tr(ReasonKey(fb.Reason)))
+                                                </button>
+                                            }
+                                            else if (down && !string.IsNullOrEmpty(fb!.Reason))
+                                            {
+                                                <span>@Tr(ReasonKey(fb.Reason))</span>
+                                            }
+                                        }
                                     </div>
+                                    @if (_fbOpen == m.Id)
+                                    {
+                                        <div class="aic-fb" role="group" aria-labelledby="@($"aic-fb-{m.Id}")">
+                                            <div class="t" id="@($"aic-fb-{m.Id}")">@Tr("AIC_FbWhy")</div>
+                                            <div class="chips">
+                                                @foreach (var r in AiFeedbackReasons.All)
+                                                {
+                                                    string reason = r;
+                                                    <button type="button" class="aic-fb-chip" aria-pressed="@(_fbReason == reason ? "true" : "false")" @onclick="() => _fbReason = _fbReason == reason ? string.Empty : reason">@Tr(ReasonKey(reason))</button>
+                                                }
+                                            </div>
+                                            <MudTextField T="string" @bind-Value="_fbComment" Label="@Tr("AIC_FbComment")" Variant="Variant.Outlined" Lines="2" MaxLength="1000" Margin="Margin.Dense" />
+                                            <div class="acts">
+                                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="_fbBusy" OnClick="() => SubmitDownAsync(m)">@Tr("AIC_FbSend")</MudButton>
+                                                <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="() => _fbOpen = 0">@Tr("AI_Cancel")</MudButton>
+                                            </div>
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         }
@@ -833,6 +886,53 @@
     {
         if (_module != null) await _module.InvokeVoidAsync("setComposer", _input, Tr(key));
     }
+
+    // ───── P7.6: 👍/👎 ─────
+    private long _fbOpen;
+    private string _fbReason = "";
+    private string? _fbComment;
+    private bool _fbBusy;
+
+    internal static string ReasonKey(string r) => r switch
+    {
+        AiFeedbackReasons.WrongResult => "AIC_FbRWrong", AiFeedbackReasons.Misunderstood => "AIC_FbRMisunderstood",
+        AiFeedbackReasons.Incomplete => "AIC_FbRIncomplete", AiFeedbackReasons.Slow => "AIC_FbRSlow", _ => "AIC_FbROther",
+    };
+
+    private async Task SaveFeedbackAsync(AiChatMessage m, int rating, string reason, string? comment)
+    {
+        _fbBusy = true;
+        try
+        {
+            string? err = await Chat.SetFeedbackAsync(m.Id, rating, reason, comment);
+            if (err != null) Snackbar.Add(err, Severity.Warning);
+            else
+            {
+                _fbOpen = 0;
+                Snackbar.Add(Tr(rating == 0 ? "AIC_FbRemoved" : "AIC_FbThanks"), rating == 0 ? Severity.Info : Severity.Success);
+            }
+        }
+        finally { _fbBusy = false; }
+    }
+
+    private Task ThumbUpAsync(AiChatMessage m) =>
+        SaveFeedbackAsync(m, m.Feedback?.Rating == AiFeedbackRatings.Up ? 0 : AiFeedbackRatings.Up, "", null);
+
+    private async Task ThumbDownAsync(AiChatMessage m)
+    {
+        if (m.Feedback?.Rating == AiFeedbackRatings.Down) { await SaveFeedbackAsync(m, 0, "", null); return; }
+        OpenDown(m);
+    }
+
+    private void OpenDown(AiChatMessage m)
+    {
+        bool down = m.Feedback?.Rating == AiFeedbackRatings.Down;
+        _fbReason = down ? m.Feedback!.Reason : "";
+        _fbComment = down ? m.Feedback!.Comment : null;
+        _fbOpen = m.Id;
+    }
+
+    private Task SubmitDownAsync(AiChatMessage m) => SaveFeedbackAsync(m, AiFeedbackRatings.Down, _fbReason, _fbComment);
 
     private async Task CopyAsync(string text)
     {

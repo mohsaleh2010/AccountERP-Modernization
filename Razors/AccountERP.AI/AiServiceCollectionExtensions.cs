@@ -35,6 +35,7 @@ namespace AccountERP.AI
             services.AddScoped<IAiChatGateway, Chat.AiChatGateway>();   // P1: المحادثة، P2: مع أدوات القراءة
             services.AddSingleton<Eval.AiEvalRunner>();   // P7.4: تشغيل التقييم فى الخلفية (واحد فى المرة)
             services.AddScoped<IAiEvalGateway, Eval.AiEvalGateway>();   // P7.4: محرك التقييم (تبويب «التقييم» P7.5)
+            services.AddScoped<IAiFeedbackGateway, Feedback.AiFeedbackGateway>();   // P7.6: مراجعة ملاحظات 👍/👎 (تبويب «الملاحظات»)
             return services;
         }
     }

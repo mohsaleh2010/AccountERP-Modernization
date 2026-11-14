@@ -307,9 +307,10 @@ namespace AccountERP.AI.Knowledge
                 {
                     Id = CallSnowflakeIdGenerate.GenerateNewId(),
                     Kind = kind, TitleAr = title, Content = content, Keywords = keywords.Length == 0 ? null : keywords, ViewsCsv = views,
-                    Source = AiKnowledgeSources.Manual, Version = 1, IsActive = true,
+                    Source = r.Source == AiKnowledgeSources.Feedback ? AiKnowledgeSources.Feedback : AiKnowledgeSources.Manual,
+                    Source_Ref_Id = r.Source == AiKnowledgeSources.Feedback ? r.Source_Ref_Id : null, Version = 1, IsActive = true,
                 });
-                row.KeyName = "manual_" + row.Id.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                row.KeyName = row.Source + "_" + row.Id.ToString(System.Globalization.CultureInfo.InvariantCulture);
                 _cls.Insert(row, userId);
                 id = row.Id;
             }

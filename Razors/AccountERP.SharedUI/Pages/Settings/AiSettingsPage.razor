@@ -483,6 +483,11 @@
             <MudTabPanel Text="@Tr("AIE_Tab")" Icon="@Icons.Material.Filled.Science">
                 <AiEvalTab @ref="_evalTab" Admin="_gw" UserId="_userId" />
             </MudTabPanel>
+
+            @* ═════════ P7.6: الملاحظات (مراجعة 👍/👎: اعتماد كمثال، حالة تقييم، رفض) — الشارة = الجديدة ═════════ *@
+            <MudTabPanel Text="@Tr("AIF_Tab")" Icon="@Icons.Material.Filled.ThumbsUpDown" BadgeData="@(_feedbackNew > 0 ? _feedbackNew : null)" BadgeColor="Color.Error">
+                <AiFeedbackTab @ref="_feedbackTab" UserId="_userId" OnNewCountChanged="@(n => _feedbackNew = n)" />
+            </MudTabPanel>
         </MudTabs>
     }
 </div>
@@ -533,6 +538,10 @@
     // P7.5: تبويب التقييم (يحمّل نفسه عند أول عرض، ويُعاد تحميله مع «إعادة التحميل»)
     private const int EvalTab = 4;
     private AiEvalTab? _evalTab;
+    // P7.6: تبويب الملاحظات (يحمّل نفسه عند أول عرض)؛ عدد الجديدة يُقرأ مع تحميل الصفحة للشارة
+    private const int FeedbackTab = 5;
+    private AiFeedbackTab? _feedbackTab;
+    private int _feedbackNew;
 
     private async Task OnTabChangedAsync(int index)
     {
@@ -611,6 +620,12 @@
                 _newModel.Provider_Id = _providers.FirstOrDefault()?.Id ?? 0;
             if (_tab == KnowledgeTab && _knowledgeTab != null) await _knowledgeTab.LoadAsync();
             if (_tab == EvalTab && _evalTab != null) await _evalTab.LoadAsync();
+            if (_tab == FeedbackTab && _feedbackTab != null) await _feedbackTab.LoadAsync();
+            else if (ServiceProvider.GetService(typeof(IAiFeedbackGateway)) is IAiFeedbackGateway fbg)
+            {
+                try { _feedbackNew = (await Bg(() => fbg.GetCounts())).New; }
+                catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
+            }
         }
         catch (Exception ex) { _error = Tr("SystemError", Err(ex)); }
         finally { _loading = false; }

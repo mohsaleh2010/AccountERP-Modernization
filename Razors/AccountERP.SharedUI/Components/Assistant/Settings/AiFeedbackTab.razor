@@ -1,0 +1,462 @@
+@* 🤖 المساعد الذكى — P7.6 (.claude/docs/ai-assistant-p7-plan.md): تبويب «الملاحظات» فى /settings/ai (م-437…م-440).
+   قائمة مراجعة 👍/👎 التى يضعها المستخدمون على ردود المساعد: فلاتر الحالة/التقييم/بحث، تفاصيل كل ملاحظة (السؤال، الرد، التعليق، الأدوات والاستعلام)،
+   وثلاثة إجراءات: «اعتماد كمثال» (مقطع example فى «المعرفة» بعد التحقق من الاستعلام)، «حالة تقييم» (حالة فى «التقييم»)، «رفض» (مع إعادة الفتح).
+   كل الكتابة عبر IAiFeedbackGateway (AccountERP.AI، للمدير فقط). التصميم حسب ui-ux-pro-max ونظام inv-* / ai-*. *@
+
+@using System.Globalization
+@using System.Text.Json
+@using Microsoft.Extensions.DependencyInjection
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IServiceProvider ServiceProvider
+@implements IDisposable
+
+<style>
+    .aif-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+    .aif-head .body { flex: 1 1 280px; min-width: 0; }
+    .aif-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 12px; }
+    .aif-kpi { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); min-width: 0; }
+    .aif-kpi .l { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .aif-kpi .v { font-size: 1.25rem; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .aif-kpi.new .v { color: var(--mud-palette-info); } .aif-kpi.bad .v { color: var(--mud-palette-error); } .aif-kpi.good .v { color: var(--mud-palette-success); }
+    .aif-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .aif-tools .grow { flex: 1 1 220px; min-width: 0; }
+    .aif-tools .sel { min-width: 150px; max-width: 210px; }
+    .aif-tools .mud-button-root, .aif-acts .mud-button-root { min-height: 44px; }
+    .aif-seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--mud-palette-lines-default); border-radius: 12px; overflow: hidden; }
+    .aif-seg button { min-height: 44px; padding: 0 14px; border: 0; background: transparent; color: var(--mud-palette-text-primary); cursor: pointer; font: inherit; }
+    .aif-seg button[aria-pressed="true"] { background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); font-weight: 600; }
+    .aif-seg button:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: -2px; }
+    .aif-q { overflow-wrap: anywhere; max-width: 460px; }
+    .aif-n { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; white-space: nowrap; }
+    .aif-detail { display: grid; gap: 10px; padding: 12px 4px; }
+    .aif-detail .lbl { font-size: .8125rem; font-weight: 600; color: var(--mud-palette-text-secondary); }
+    .aif-detail .txt { white-space: pre-wrap; overflow-wrap: anywhere; padding: 10px 12px; border-radius: 10px; background: var(--mud-palette-background-gray); max-height: 260px; overflow-y: auto; }
+    .aif-detail .sql { direction: ltr; text-align: left; font-family: Consolas, 'Courier New', monospace; font-size: .75rem; }
+    .aif-tl { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+    .aif-tl li { padding: 8px 10px; border-radius: 10px; border: 1px solid var(--mud-palette-lines-default); }
+    .aif-tl .sql { direction: ltr; text-align: left; font-family: Consolas, 'Courier New', monospace; font-size: .75rem; white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 4px; }
+    .aif-tl .err { color: var(--mud-palette-error); font-size: .8125rem; overflow-wrap: anywhere; margin-top: 4px; }
+    .aif-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .aif-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px 16px; align-items: start; padding: 12px; border-radius: 12px;
+                border: 1px solid var(--mud-palette-primary); background: color-mix(in srgb, var(--mud-palette-primary) 4%, transparent); }
+    .aif-form .wide { grid-column: 1 / -1; }
+    .aif-form .ltr textarea, .aif-form .ltr input { direction: ltr; text-align: left; font-family: Consolas, 'Courier New', monospace; }
+    .aif-sel { background: color-mix(in srgb, var(--mud-palette-primary) 6%, transparent); }
+    .aif-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 28px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+</style>
+
+@if (_fb == null)
+{
+    <div class="inv-card"><div class="aif-empty"><MudIcon Icon="@Icons.Material.Filled.CloudOff" Size="Size.Large" />@Tr("AI_NotAvailable")</div></div>
+    return;
+}
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <MudAlert Severity="Severity.Warning" Class="mb-3" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert>
+}
+
+<section class="inv-card" aria-labelledby="aif-h">
+    <div class="aif-head">
+        <div class="body">
+            <h2 class="inv-card-title" id="aif-h" style="margin:0;"><MudIcon Icon="@Icons.Material.Filled.ThumbsUpDown" />@Tr("AIF_Title")</h2>
+            <div class="ai-sub">@Tr("AIF_Sub")</div>
+        </div>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" Disabled="_loading" OnClick="LoadAsync">@Tr("AIF_Reload")</MudButton>
+    </div>
+    <div class="aif-kpis">
+        <div class="aif-kpi new"><div class="l">@Tr("AIF_KNew")</div><div class="v">@_counts.New</div></div>
+        <div class="aif-kpi bad"><div class="l">@Tr("AIF_KNewDown")</div><div class="v">@_counts.NewDown</div></div>
+        <div class="aif-kpi good"><div class="l">@Tr("AIF_KAccepted")</div><div class="v">@_counts.Accepted</div></div>
+        <div class="aif-kpi"><div class="l">@Tr("AIF_KRejected")</div><div class="v">@_counts.Rejected</div></div>
+    </div>
+</section>
+
+<section class="inv-card ai-gap" aria-label="@Tr("AIF_Title")">
+    <div class="aif-tools">
+        <div class="aif-seg" role="group" aria-label="@Tr("AIF_Status")">
+            @foreach (var (val, key) in StatusFilters)
+            {
+                string v = val;
+                <button type="button" aria-pressed="@(_status == v ? "true" : "false")" @onclick="() => SetStatusAsync(v)">@Tr(key)</button>
+            }
+        </div>
+        <MudSelect T="int" Value="_rating" ValueChanged="SetRatingAsync" Label="@Tr("AIF_Rating")" Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true" Class="sel">
+            <MudSelectItem T="int" Value="0">@Tr("AIF_All")</MudSelectItem>
+            <MudSelectItem T="int" Value="1">👍 @Tr("AIF_Up")</MudSelectItem>
+            <MudSelectItem T="int" Value="-1">👎 @Tr("AIF_Down")</MudSelectItem>
+        </MudSelect>
+        <MudTextField T="string" @bind-Value="_search" Label="@Tr("AIF_Search")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="grow" Clearable="true"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" DebounceInterval="400" OnDebounceIntervalElapsed="@(_ => LoadAsync())" />
+    </div>
+
+    <MudTable Items="_rows" T="AiFeedbackRow" Dense="true" Hover="true" Elevation="0" Class="inv-table mt-3" Breakpoint="Breakpoint.Sm" RowsPerPage="25"
+              Loading="_loading" LoadingProgressColor="Color.Primary" OnRowClick="@(e => Toggle(e.Item!))" RowClassFunc="@((r, _) => r.Id == _open ? "aif-sel" : "")">
+        <HeaderContent>
+            <MudTh>@Tr("AIF_When")</MudTh>
+            <MudTh>@Tr("AIF_User")</MudTh>
+            <MudTh>@Tr("AIF_Rating")</MudTh>
+            <MudTh>@Tr("AIF_Question")</MudTh>
+            <MudTh>@Tr("AIF_Model")</MudTh>
+            <MudTh>@Tr("AIF_Status")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("AIF_When")"><span class="aif-n">@When(context.CreatedAt)</span></MudTd>
+            <MudTd DataLabel="@Tr("AIF_User")">@(string.IsNullOrEmpty(context.UserName) ? context.User_Id.ToString(CultureInfo.InvariantCulture) : context.UserName)</MudTd>
+            <MudTd DataLabel="@Tr("AIF_Rating")">
+                @if (context.Rating > 0)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.ThumbUp" Color="Color.Success" Size="Size.Small" aria-label="@Tr("AIF_Up")" />
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.ThumbDown" Color="Color.Error" Size="Size.Small" aria-label="@Tr("AIF_Down")" />
+                    @if (!string.IsNullOrEmpty(context.Reason)) { <span class="ms-1">@Tr(AssistantChat.ReasonKey(context.Reason))</span> }
+                }
+            </MudTd>
+            <MudTd DataLabel="@Tr("AIF_Question")"><div class="aif-q">@Short(context.QuestionText, 140)</div></MudTd>
+            <MudTd DataLabel="@Tr("AIF_Model")">@context.ModelName</MudTd>
+            <MudTd DataLabel="@Tr("AIF_Status")">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@StatusColor(context.ReviewStatus)">@Tr(StatusKey(context.ReviewStatus))</MudChip>
+                @if (context.Knowledge_Id != null) { <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.MenuBook">@Tr("AIF_IsExample")</MudChip> }
+                @if (context.EvalCase_Id != null) { <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.Science">@Tr("AIF_IsCase")</MudChip> }
+            </MudTd>
+        </RowTemplate>
+        <ChildRowContent>
+            @if (context.Id == _open)
+            {
+                <MudTr>
+                    <td colspan="6">
+                        @Detail(context)
+                    </td>
+                </MudTr>
+            }
+        </ChildRowContent>
+        <NoRecordsContent><div class="aif-empty"><MudIcon Icon="@Icons.Material.Filled.ThumbsUpDown" Size="Size.Large" />@Tr("AIF_Empty")</div></NoRecordsContent>
+        <PagerContent><MudTablePager PageSizeOptions="new[] { 25, 50, 100 }" /></PagerContent>
+    </MudTable>
+</section>
+
+@code {
+    [Parameter] public long UserId { get; set; }
+    /// <summary>عدد الملاحظات الجديدة (شارة التبويب فى الصفحة).</summary>
+    [Parameter] public EventCallback<int> OnNewCountChanged { get; set; }
+
+    private static readonly (string Val, string Key)[] StatusFilters =
+    {
+        (AiFeedbackStatus.New, "AIF_SNew"), ("", "AIF_All"), (AiFeedbackStatus.Accepted, "AIF_SAccepted"), (AiFeedbackStatus.Rejected, "AIF_SRejected"),
+    };
+
+    private IAiFeedbackGateway? _fb;
+    private List<AiFeedbackRow> _rows = new();
+    private AiFeedbackCounts _counts = new();
+    private string _status = AiFeedbackStatus.New;
+    private int _rating;
+    private string? _search, _error, _formError, _rejectNote;
+    private long _open;
+    private bool _loading, _busy, _loaded;
+    // النموذجان المضمّنان تحت الملاحظة المفتوحة
+    private AiFeedbackExampleRequest? _example;
+    private AiEvalCaseSaveRequest? _case;
+
+    protected override void OnInitialized()
+    {
+        _fb = ServiceProvider.GetService<IAiFeedbackGateway>();
+        LangService.OnLanguageChanged += OnLang;
+    }
+
+    public void Dispose() => LangService.OnLanguageChanged -= OnLang;
+
+    private void OnLang() => InvokeAsync(StateHasChanged);
+
+    protected override async Task OnAfterRenderAsync(bool first)
+    {
+        if (first && !_loaded) await LoadAsync();
+    }
+
+    /// <summary>يُستدعى من الصفحة عند «إعادة التحميل» ومن أول عرض.</summary>
+    public async Task LoadAsync()
+    {
+        if (_fb == null || _loading) return;
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var fb = _fb; string st = _status, q = _search ?? ""; int rt = _rating;
+            (_rows, _counts) = await Bg(() => (fb.GetFeedback(st, rt, q, 500), fb.GetCounts()));
+            _loaded = true;
+            if (_rows.All(r => r.Id != _open)) CloseForms(0);
+            await OnNewCountChanged.InvokeAsync(_counts.New);
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Err(ex)); }
+        finally { _loading = false; StateHasChanged(); }
+    }
+
+    private async Task SetStatusAsync(string s) { _status = s; await LoadAsync(); }
+    private async Task SetRatingAsync(int r) { _rating = r; await LoadAsync(); }
+
+    private void Toggle(AiFeedbackRow r) => CloseForms(_open == r.Id ? 0 : r.Id);
+
+    private void CloseForms(long open)
+    {
+        _open = open;
+        _example = null;
+        _case = null;
+        _formError = null;
+        _rejectNote = null;
+    }
+
+    // ───────────── التفاصيل والإجراءات ─────────────
+
+    private RenderFragment Detail(AiFeedbackRow f) => __builder =>
+    {
+        var tools = ParseTools(f.ToolsJson);
+        bool rejected = f.ReviewStatus == AiFeedbackStatus.Rejected;
+        <div class="aif-detail">
+            <div class="lbl">@Tr("AIF_Question")</div>
+            <div class="txt">@(string.IsNullOrEmpty(f.QuestionText) ? "—" : f.QuestionText)</div>
+            <div class="lbl">@Tr("AIF_Answer")</div>
+            <div class="txt">@(string.IsNullOrEmpty(f.AnswerText) ? "—" : f.AnswerText)</div>
+            @if (!string.IsNullOrEmpty(f.Comment))
+            {
+                <div class="lbl">@Tr("AIF_Comment")</div>
+                <div class="txt">@f.Comment</div>
+            }
+            @if (tools.Count > 0)
+            {
+                <div class="lbl">@Tr("AIF_Tools", tools.Count)</div>
+                <ol class="aif-tl">
+                    @foreach (var t in tools)
+                    {
+                        <li>
+                            <b>@(string.IsNullOrEmpty(t.Title) ? t.Name : t.Title)</b>
+                            <span class="ms-2" style="color:var(--mud-palette-text-secondary)">@t.Name · @t.Outcome@(t.Rows != null ? " · " + Tr("AIF_Rows", t.Rows.Value) : "")</span>
+                            @if (!string.IsNullOrEmpty(t.Sql)) { <div class="sql">@t.Sql</div> }
+                            @if (!string.IsNullOrEmpty(t.Error)) { <div class="err">@t.Error</div> }
+                        </li>
+                    }
+                </ol>
+            }
+            @if (f.ReviewStatus != AiFeedbackStatus.New)
+            {
+                <div class="ai-sub" style="margin:0;">@Tr("AIF_ReviewedBy", string.IsNullOrEmpty(f.ReviewedByName) ? "—" : f.ReviewedByName, When(f.ReviewedAt))
+                    @if (!string.IsNullOrEmpty(f.ReviewNote)) { <span> — @f.ReviewNote</span> }</div>
+            }
+
+            @if (_example != null)
+            {
+                <div class="aif-form" role="group" aria-label="@Tr("AIF_AcceptExample")">
+                    <div class="wide"><b>@Tr("AIF_AcceptExample")</b><div class="ai-sub" style="margin:0;">@Tr("AIF_ExampleHelp")</div></div>
+                    <MudTextField T="string" @bind-Value="_example.TitleAr" Label="@Tr("AIF_ExTitle")" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="300" Class="wide" />
+                    <MudTextField T="string" @bind-Value="_example.Sql" Label="@Tr("AIF_ExSql")" Variant="Variant.Outlined" Lines="6" Margin="Margin.Dense" Class="wide ltr" />
+                    <MudTextField T="string" @bind-Value="_example.Keywords" Label="@Tr("AIF_ExKeywords")" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="1000" Class="wide" />
+                    @if (!string.IsNullOrEmpty(_formError)) { <MudAlert Severity="Severity.Error" Dense="true" Class="wide" role="alert">@_formError</MudAlert> }
+                    <div class="wide aif-acts">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Check" Disabled="_busy" OnClick="() => SaveExampleAsync(f)">@Tr("AIF_Save")</MudButton>
+                        <MudButton Variant="Variant.Text" OnClick="() => CloseForms(f.Id)">@Tr("AI_Cancel")</MudButton>
+                    </div>
+                </div>
+            }
+            else if (_case != null)
+            {
+                <div class="aif-form" role="group" aria-label="@Tr("AIF_AddCase")">
+                    <div class="wide"><b>@Tr("AIF_AddCase")</b><div class="ai-sub" style="margin:0;">@Tr(f.Rating < 0 ? "AIF_CaseHelpDown" : "AIF_CaseHelpUp")</div></div>
+                    <MudTextField T="string" @bind-Value="_case.Question" Label="@Tr("AIF_Question")" Variant="Variant.Outlined" Lines="2" Margin="Margin.Dense" MaxLength="2000" Class="wide" />
+                    <MudSelect T="string" @bind-Value="_case.Category" Label="@Tr("AIE_Category")" Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true">
+                        @foreach (var c in AiEvalCategories.All) { <MudSelectItem T="string" Value="c">@Tr(AiEvalTab.CatKey(c))</MudSelectItem> }
+                    </MudSelect>
+                    <MudSelect T="string" @bind-Value="_case.CheckType" Label="@Tr("AIE_CheckType")" Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true">
+                        @foreach (var c in AiEvalCheckTypes.All) { <MudSelectItem T="string" Value="c">@Tr(AiEvalTab.CheckKey(c))</MudSelectItem> }
+                    </MudSelect>
+                    <MudSelect T="string" @bind-Value="_case.Dialect" Label="@Tr("AIE_Dialect")" Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true">
+                        <MudSelectItem T="string" Value="@("msa")">@Tr("AIE_DMsa")</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("eg")">@Tr("AIE_DEg")</MudSelectItem>
+                    </MudSelect>
+                    @if (_case.CheckType == AiEvalCheckTypes.Result)
+                    {
+                        <MudTextField T="string" @bind-Value="_case.ReferenceSql" Label="@Tr("AIE_RefSql")" Variant="Variant.Outlined" Lines="5" Margin="Margin.Dense" Class="wide ltr" />
+                    }
+                    else if (_case.CheckType == AiEvalCheckTypes.Financial)
+                    {
+                        <MudTextField T="string" @bind-Value="_case.ReferenceArgsJson" Label="@Tr("AIE_RefArgs")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="wide ltr" />
+                    }
+                    <MudTextField T="string" @bind-Value="_case.ExpectedTools" Label="@Tr("AIE_ExpectedTools")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ltr" />
+                    <MudTextField T="string" @bind-Value="_case.ForbiddenTools" Label="@Tr("AIE_ForbiddenTools")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ltr" />
+                    <MudTextField T="string" @bind-Value="_case.ExpectedText" Label="@Tr("AIE_ExpectedText")" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    <MudTextField T="string" @bind-Value="_case.Notes" Label="@Tr("AIE_Notes")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="wide" />
+                    @if (!string.IsNullOrEmpty(_formError)) { <MudAlert Severity="Severity.Error" Dense="true" Class="wide" role="alert">@_formError</MudAlert> }
+                    <div class="wide aif-acts">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Check" Disabled="_busy" OnClick="() => SaveCaseAsync(f)">@Tr("AIF_Save")</MudButton>
+                        <MudButton Variant="Variant.Text" OnClick="() => CloseForms(f.Id)">@Tr("AI_Cancel")</MudButton>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="aif-acts">
+                    @if (!rejected)
+                    {
+                        <MudTooltip Text="@Tr(string.IsNullOrEmpty(f.SqlText) ? "AIF_NoSql" : f.Knowledge_Id != null ? "AIF_AlreadyExample" : "AIF_AcceptExampleTip")">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.MenuBook"
+                                       Disabled="@(_busy || string.IsNullOrEmpty(f.SqlText) || f.Knowledge_Id != null)" OnClick="() => BeginExample(f)">@Tr("AIF_AcceptExample")</MudButton>
+                        </MudTooltip>
+                        <MudTooltip Text="@Tr(f.EvalCase_Id != null ? "AIF_AlreadyCase" : "AIF_AddCaseTip")">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Science"
+                                       Disabled="@(_busy || f.EvalCase_Id != null)" OnClick="() => BeginCase(f)">@Tr("AIF_AddCase")</MudButton>
+                        </MudTooltip>
+                    }
+                    @if (f.ReviewStatus == AiFeedbackStatus.New)
+                    {
+                        <MudTextField T="string" @bind-Value="_rejectNote" Label="@Tr("AIF_RejectNote")" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="1000" Style="min-width:200px;flex:1 1 200px;" />
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Block" Disabled="_busy" OnClick="() => RejectAsync(f)">@Tr("AIF_Reject")</MudButton>
+                    }
+                    else if (rejected)
+                    {
+                        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Undo" Disabled="_busy" OnClick="() => ReopenAsync(f)">@Tr("AIF_Reopen")</MudButton>
+                    }
+                </div>
+            }
+        </div>
+    };
+
+    private void BeginExample(AiFeedbackRow f)
+    {
+        CloseForms(f.Id);
+        string q = (f.QuestionText ?? "").Trim();
+        _example = new AiFeedbackExampleRequest { FeedbackId = f.Id, TitleAr = q.Length > 300 ? q[..300] : q, Sql = f.SqlText ?? "", Keywords = "" };
+    }
+
+    private void BeginCase(AiFeedbackRow f)
+    {
+        CloseForms(f.Id);
+        bool sql = !string.IsNullOrEmpty(f.SqlText);
+        string q = (f.QuestionText ?? "").Trim();
+        _case = new AiEvalCaseSaveRequest
+        {
+            Question = q.Length > 2000 ? q[..2000] : q,
+            Category = AiEvalCategories.Sales,
+            CheckType = sql ? AiEvalCheckTypes.Result : AiEvalCheckTypes.Tool,
+            ReferenceSql = f.SqlText ?? "",
+            ExpectedTools = sql ? "run_readonly_query" : string.Join(",", ParseTools(f.ToolsJson).Where(t => t.Outcome == AiToolOutcome.Ok).Select(t => t.Name).Distinct()),
+            Notes = Tr("AIF_CaseNote", When(f.CreatedAt), f.Rating > 0 ? "👍" : "👎"),
+        };
+    }
+
+    private async Task SaveExampleAsync(AiFeedbackRow f)
+    {
+        if (_fb == null || _example == null) return;
+        _busy = true;
+        _formError = null;
+        try
+        {
+            var fb = _fb; var req = _example; long uid = UserId;
+            await Bg(() => fb.AcceptAsExample(req, uid));
+            Snackbar.Add(Tr("AIF_ExampleSaved"), Severity.Success);
+            CloseForms(f.Id);
+        }
+        catch (Exception ex) { _formError = Err(ex); }
+        finally { _busy = false; }
+        if (_example == null) await LoadAsync();
+    }
+
+    private async Task SaveCaseAsync(AiFeedbackRow f)
+    {
+        if (_fb == null || _case == null) return;
+        _busy = true;
+        _formError = null;
+        try
+        {
+            var fb = _fb; var req = _case; long uid = UserId, id = f.Id;
+            await Bg(() => fb.AddAsEvalCase(id, req, uid));
+            Snackbar.Add(Tr("AIF_CaseSaved"), Severity.Success);
+            CloseForms(f.Id);
+        }
+        catch (Exception ex) { _formError = Err(ex); }
+        finally { _busy = false; }
+        if (_case == null) await LoadAsync();
+    }
+
+    private async Task RejectAsync(AiFeedbackRow f)
+    {
+        if (_fb == null) return;
+        _busy = true;
+        try
+        {
+            var fb = _fb; long uid = UserId, id = f.Id; string note = _rejectNote ?? "";
+            await Bg(() => fb.Reject(id, note, uid));
+            Snackbar.Add(Tr("AIF_Rejected"), Severity.Info);
+            CloseForms(0);
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = false; }
+        await LoadAsync();
+    }
+
+    private async Task ReopenAsync(AiFeedbackRow f)
+    {
+        if (_fb == null) return;
+        _busy = true;
+        try
+        {
+            var fb = _fb; long uid = UserId, id = f.Id;
+            await Bg(() => fb.Reopen(id, uid));
+            Snackbar.Add(Tr("AIF_Reopened"), Severity.Info);
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = false; }
+        await LoadAsync();
+    }
+
+    // ───────────── عرض ─────────────
+
+    private sealed record ToolLine(string Name, string Title, string Outcome, string? Sql, int? Rows, string? Error);
+
+    private static List<ToolLine> ParseTools(string? json)
+    {
+        var list = new List<ToolLine>();
+        if (string.IsNullOrWhiteSpace(json)) return list;
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.ValueKind != JsonValueKind.Array) return list;
+            foreach (var e in doc.RootElement.EnumerateArray())
+            {
+                string? S(string p) => e.TryGetProperty(p, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+                int? rows = e.TryGetProperty("rows", out var rv) && rv.ValueKind == JsonValueKind.Number && rv.TryGetInt32(out int n) ? n : null;
+                list.Add(new ToolLine(S("name") ?? "", S("title") ?? "", S("outcome") ?? "", S("sql"), rows, S("error")));
+            }
+        }
+        catch (JsonException) { }
+        return list;
+    }
+
+    private static string StatusKey(string s) => s switch
+    {
+        AiFeedbackStatus.Accepted => "AIF_SAccepted", AiFeedbackStatus.Rejected => "AIF_SRejected", _ => "AIF_SNew",
+    };
+
+    private static Color StatusColor(string s) => s switch
+    {
+        AiFeedbackStatus.Accepted => Color.Success, AiFeedbackStatus.Rejected => Color.Default, _ => Color.Info,
+    };
+
+    private static string When(DateTime? d) => d?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) ?? "—";
+    private static string Short(string? s, int max) => string.IsNullOrEmpty(s) ? "—" : s.Length > max ? s[..max] + "…" : s;
+
+    private string Tr(string key, params object[] args)
+    {
+        var previous = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally { CultureInfo.CurrentUICulture = previous; }
+    }
+
+    private static Task<T> Bg<T>(Func<T> f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return f(); });
+    private static Task Bg(Action f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); f(); });
+    private static string Err(Exception ex) => ex is InvalidOperationException ? ex.Message : (ex.InnerException?.Message ?? ex.Message);
+}

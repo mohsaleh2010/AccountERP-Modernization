@@ -272,6 +272,9 @@ namespace AccountModelsLib
         public string TitleAr { get; set; } = "";
         public string Content { get; set; } = "";
         public string Keywords { get; set; } = "";
+        /// <summary>P7.6: manual (الافتراضى) أو feedback (اعتماد رد من قائمة الملاحظات) — للإضافة فقط.</summary>
+        public string Source { get; set; } = "";
+        public long? Source_Ref_Id { get; set; }
     }
 
     /// <summary>P7.3: نتيجة «تجربة البحث»: Mode = keyword / hybrid / fallback.</summary>
@@ -357,6 +360,8 @@ namespace AccountModelsLib
         public List<AiAttachmentView> Attachments { get; set; } = new List<AiAttachmentView>();
         /// <summary>P6: البيانات المستخرجة من المرفقات فى هذا الرد (بطاقة بالحقول والثقة).</summary>
         public List<AiExtractionCard> Extractions { get; set; } = new List<AiExtractionCard>();
+        /// <summary>P7.6: 👍/👎 المستخدم على هذا الرد (null = لم يقيّمه).</summary>
+        public AiFeedbackView Feedback { get; set; }
     }
 
     // ───────────── P6: المرفقات والاستخراج ─────────────
@@ -569,5 +574,12 @@ namespace AccountModelsLib
         void UnsaveReport(long reportId, long userId);
         /// <summary>إعادة تشغيل مصادر التقرير ببيانات اليوم، وبفترة جديدة إن أُعطيت؛ الصلاحيات تُفحص من جديد.</summary>
         Task<AiReportDoc> RerunReportAsync(long reportId, DateTime? from, DateTime? to, AiUserContext user, CancellationToken ct = default);
+
+        // ───── P7.6: الملاحظات ─────
+        /// <summary>
+        /// 👍 (1) / 👎 (-1) على رد مساعد مكتمل فى محادثة يملكها المستخدم؛ rating = 0 يسحب الملاحظة. التعديل والسحب مسموحان ما لم يراجعها المدير.
+        /// يعيد الحالة الجديدة (null بعد السحب).
+        /// </summary>
+        AiFeedbackView SetFeedback(long messageId, int rating, string reason, string comment, long userId);
     }
 }

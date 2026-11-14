@@ -261,6 +261,30 @@ CREATE NONCLUSTERED INDEX [IX_AI_EvalRuns_Started] ON [dbo].[AI_EvalRuns]([Start
     [CostEstimate] [decimal](18, 6) NULL,
     [DurationMs] [int] NULL,",
              @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_EvalResults_Run_Case] ON [dbo].[AI_EvalResults]([Run_Id], [Case_Id]);"),
+
+            // P7.6: 👍/👎 على ردود المساعد. Rating: 1 / -1. لقطة من السؤال والرد والاستعلام والأدوات وقت التقييم (تبقى للمراجعة لو حُذفت المحادثة).
+            // ReviewStatus: New / Accepted / Rejected. Knowledge_Id = اعتُمد مثالاً، EvalCase_Id = صار حالة تقييم.
+            ("AI_Feedback", @"
+    [Message_Id] [bigint] NOT NULL,
+    [Conversation_Id] [bigint] NOT NULL,
+    [User_Id] [bigint] NOT NULL,
+    [Rating] [smallint] NOT NULL,
+    [Reason] [nvarchar](30) NULL,
+    [Comment] [nvarchar](1000) NULL,
+    [QuestionText] [nvarchar](max) NULL,
+    [AnswerText] [nvarchar](max) NULL,
+    [SqlText] [nvarchar](max) NULL,
+    [ToolsJson] [nvarchar](max) NULL,
+    [Model_Id] [bigint] NULL,
+    [ModelName] [nvarchar](200) NULL,
+    [ReviewStatus] [nvarchar](20) NOT NULL DEFAULT (N'New'),
+    [ReviewedBy] [bigint] NULL,
+    [ReviewedAt] [datetime] NULL,
+    [ReviewNote] [nvarchar](1000) NULL,
+    [Knowledge_Id] [bigint] NULL,
+    [EvalCase_Id] [bigint] NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_Feedback_Message_User] ON [dbo].[AI_Feedback]([Message_Id], [User_Id]);
+CREATE NONCLUSTERED INDEX [IX_AI_Feedback_Status] ON [dbo].[AI_Feedback]([ReviewStatus], [CreatedAt] DESC);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>

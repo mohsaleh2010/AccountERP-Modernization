@@ -27,6 +27,7 @@ namespace AccountERP.AI.Chat
         private readonly AiReportsCLS _reports = new();
         private readonly AiDraftsCLS _drafts = new();
         private readonly AiAttachmentsCLS _attachments = new();
+        private readonly AiFeedbackCLS _feedback = new();
         private readonly ProviderRegistry _registry;
         private readonly AiToolRegistry _tools;
         private readonly Files.AiAttachmentStore? _store;
@@ -93,7 +94,106 @@ namespace AccountERP.AI.Chat
             if (!_chat.OwnsConversation(conversationId, userId)) throw new InvalidOperationException("المحادثة غير موجودة.");
             var list = _chat.GetMessages(conversationId).Select(ToView).ToList();
             FillDraftStatuses(list, userId);
+            FillFeedback(list, conversationId, userId);
             return list;
+        }
+
+        /// <summary>P7.6: 👍/👎 المستخدم على ردود المحادثة.</summary>
+        private void FillFeedback(List<AiChatMessage> list, long conversationId, long userId)
+        {
+            try
+            {
+                var map = _feedback.ForConversation(conversationId, userId);
+                if (map.Count == 0) return;
+                foreach (var m in list)
+                    if (map.TryGetValue(m.Id, out var f)) m.Feedback = f;
+            }
+            catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
+        }
+
+        // ───────────── P7.6: الملاحظات ─────────────
+
+        public const int MaxFeedbackComment = 1000;
+
+        public AiFeedbackView? SetFeedback(long messageId, int rating, string reason, string comment, long userId)
+        {
+            if (rating is not (AiFeedbackRatings.Up or AiFeedbackRatings.Down or 0)) throw new InvalidOperationException("تقييم غير صالح.");
+            var owned = userId > 0 ? _feedback.OwnedMessage(messageId, userId) : null;
+            if (owned == null) throw new InvalidOperationException("الرسالة غير موجودة.");
+            if (owned.Value.Role != "assistant") throw new InvalidOperationException("التقييم لردود المساعد فقط.");
+            string status = string.IsNullOrEmpty(owned.Value.Status) ? AiMessageStatus.Ok : owned.Value.Status;
+            if (status != AiMessageStatus.Ok) throw new InvalidOperationException("يمكن تقييم الرد بعد اكتماله فقط.");
+
+            reason = (reason ?? "").Trim().ToLowerInvariant();
+            comment = (comment ?? "").Trim();
+            if (rating == AiFeedbackRatings.Up) reason = "";
+            else if (reason.Length > 0 && !AiFeedbackReasons.All.Contains(reason)) throw new InvalidOperationException("سبب غير معروف.");
+            if (comment.Length > MaxFeedbackComment) throw new InvalidOperationException($"التعليق أطول من {MaxFeedbackComment} حرف.");
+
+            var cur = _feedback.GetByMessage(messageId, userId);
+            if (cur != null && cur.ReviewStatus != AiFeedbackStatus.New)
+                throw new InvalidOperationException("راجع المدير هذه الملاحظة فلا يمكن تغييرها.");
+            if (rating == 0)
+            {
+                if (cur != null && !_feedback.Delete(cur.Id, userId)) throw new InvalidOperationException("راجع المدير هذه الملاحظة فلا يمكن تغييرها.");
+                return null;
+            }
+            string? r = reason.Length == 0 ? null : reason, c = comment.Length == 0 ? null : comment;
+            if (cur != null)
+            {
+                if (!_feedback.UpdateRating(cur.Id, rating, r, c, userId)) throw new InvalidOperationException("راجع المدير هذه الملاحظة فلا يمكن تغييرها.");
+            }
+            else
+            {
+                var row = Snapshot(owned.Value.ConversationId, messageId);
+                row.User_Id = userId;
+                row.Rating = rating;
+                row.Reason = r;
+                row.Comment = c;
+                _feedback.Insert(row, userId);
+            }
+            return new AiFeedbackView { Rating = rating, Reason = reason, Comment = comment };
+        }
+
+        /// <summary>
+        /// لقطة الملاحظة: سؤال المستخدم (آخر رسالة له قبل الرد ليست إجابة سؤال، مع إجاباته بعدها)، نص الرد، آخر استعلام قراءة ناجح، وملخص الأدوات
+        /// بنفس شكل ToolsJson فى التقييم. تُحفظ نسخة لأن المحادثة قد تُحذف قبل المراجعة.
+        /// </summary>
+        private AiFeedbackRow Snapshot(long conversationId, long messageId)
+        {
+            var msgs = _chat.GetMessages(conversationId);
+            int idx = msgs.FindIndex(m => m.Id == messageId);
+            if (idx < 0) throw new InvalidOperationException("الرسالة غير موجودة.");
+            var me = msgs[idx];
+            var answers = new List<string>();
+            string question = "";
+            for (int i = idx - 1; i >= 0; i--)
+            {
+                if (msgs[i].Role != "user") continue;
+                string t = ReadText(msgs[i].ContentJson).Trim();
+                if (IsAnswer(msgs[i].ContentJson)) { if (t.Length > 0) answers.Insert(0, t); continue; }
+                question = t;
+                break;
+            }
+            if (answers.Count > 0) question = (question + "\n" + string.Join("\n", answers.Select(a => "(إجابة: " + a + ")"))).Trim();
+
+            var tools = ReadTools(me.ContentJson);
+            string? sql = tools.LastOrDefault(t => t.ToolName == "run_readonly_query" && t.Outcome == AiToolOutcome.Ok && t.Sql.Length > 0)?.Sql
+                          ?? tools.LastOrDefault(t => t.Outcome == AiToolOutcome.Ok && t.Sql.Length > 0)?.Sql;
+            var arr = new JsonArray();
+            foreach (var t in tools)
+                arr.Add(new JsonObject
+                {
+                    ["name"] = t.ToolName, ["title"] = t.Title, ["outcome"] = t.Outcome,
+                    ["sql"] = t.Sql.Length == 0 ? null : t.Sql, ["rows"] = t.RowCount, ["error"] = t.ErrorText.Length == 0 ? null : t.ErrorText,
+                });
+            return new AiFeedbackRow
+            {
+                Message_Id = messageId, Conversation_Id = conversationId,
+                QuestionText = question, AnswerText = ReadText(me.ContentJson), SqlText = sql,
+                ToolsJson = arr.Count == 0 ? null : arr.ToJsonString(StoreJson),
+                Model_Id = me.Model_Id, ModelName = me.ModelName,
+            };
         }
 
         /// <summary>P5: حالة كل مسودة (معلّقة / حُفظت برقم ...) من AI_Drafts، لأن البطاقة نفسها محفوظة لحظة الإنشاء.</summary>

@@ -349,6 +349,24 @@ namespace AccountERP.SharedUI.Services
 
         public void ClearError() { Error = null; Notify(); }
 
+        // ───────────── P7.6: 👍/👎 ─────────────
+
+        /// <summary>يحفظ تقييم الرد (rating = 0 يسحبه) ويحدّث الرسالة المعروضة. يعيد رسالة الخطأ أو null.</summary>
+        public async Task<string?> SetFeedbackAsync(long messageId, int rating, string? reason, string? comment)
+        {
+            if (_gw == null || !HasAccess) return "المساعد غير متاح.";
+            var gw = _gw; long uid = UserId;
+            try
+            {
+                var fb = await Bg(() => gw.SetFeedback(messageId, rating, reason ?? "", comment ?? "", uid));
+                var m = Messages.FirstOrDefault(x => x.Id == messageId);
+                if (m != null) m.Feedback = fb;
+                Notify();
+                return null;
+            }
+            catch (Exception ex) { return Err(ex); }
+        }
+
         // ───────────── P3: التقارير ─────────────
 
         /// <summary>«تقاريرى»: المحفوظة، المثبّتة أولاً.</summary>
