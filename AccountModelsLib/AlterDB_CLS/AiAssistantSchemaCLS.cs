@@ -191,6 +191,76 @@ CREATE NONCLUSTERED INDEX [IX_AI_Attachments_Sha] ON [dbo].[AI_Attachments]([Sha
     [EmbeddingDim] [int] NULL,
     [EmbeddedAt] [datetime] NULL,",
              @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_Knowledge_Kind_Key] ON [dbo].[AI_Knowledge]([Kind], [KeyName]);"),
+
+            // P7.4: مجموعة أسئلة التقييم. CheckType: result / tool / financial / ask / refuse. ExpectedTools/ForbiddenTools = أسماء أدوات مفصولة بفاصلة.
+            // ReferenceSql = استعلام قراءة مرجعى يُنفَّذ حياً وقت التقييم (result)، ReferenceArgsJson = مدخلات الأداة المالية المرجعية (financial)،
+            // ExpectedText = عبارات بديلة مفصولة بـ | يجب أن تظهر إحداها فى الرد (اختيارى). الحالات المزروعة تُدرج مرة (CaseKey) ثم الجدول هو المرجع.
+            ("AI_EvalCases", @"
+    [CaseKey] [nvarchar](100) NOT NULL,
+    [Question] [nvarchar](2000) NOT NULL,
+    [Category] [nvarchar](30) NOT NULL,
+    [Dialect] [nvarchar](10) NOT NULL DEFAULT (N'msa'),
+    [CheckType] [nvarchar](20) NOT NULL,
+    [ExpectedTools] [nvarchar](300) NULL,
+    [ForbiddenTools] [nvarchar](300) NULL,
+    [ReferenceSql] [nvarchar](max) NULL,
+    [ReferenceArgsJson] [nvarchar](2000) NULL,
+    [ExpectedText] [nvarchar](1000) NULL,
+    [Tags] [nvarchar](300) NULL,
+    [Notes] [nvarchar](1000) NULL,
+    [Source] [nvarchar](30) NOT NULL DEFAULT (N'seed'),
+    [Source_Ref_Id] [bigint] NULL,
+    [Version] [int] NOT NULL DEFAULT ((1)),
+    [IsEdited] [bit] NOT NULL DEFAULT ((0)),
+    [IsActive] [bit] NOT NULL DEFAULT ((1)),",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_EvalCases_Key] ON [dbo].[AI_EvalCases]([CaseKey]);"),
+
+            // P7.4: تشغيل تقييم لنموذج واحد. Group_Id يجمع نموذجين أُطلقا معاً على نفس الحالات (للمقارنة). Status: Running / Done / Cancelled / Interrupted / CostCap / Failed.
+            ("AI_EvalRuns", @"
+    [Group_Id] [bigint] NOT NULL,
+    [User_Id] [bigint] NOT NULL,
+    [Model_Id] [bigint] NOT NULL,
+    [ModelName] [nvarchar](200) NULL,
+    [ProviderName] [nvarchar](200) NULL,
+    [Effort] [nvarchar](20) NULL,
+    [MaxTokens] [int] NULL,
+    [Status] [nvarchar](20) NOT NULL,
+    [FilterJson] [nvarchar](2000) NULL,
+    [ConfigJson] [nvarchar](max) NULL,
+    [PromptHash] [char](64) NULL,
+    [TotalCases] [int] NOT NULL DEFAULT ((0)),
+    [DoneCases] [int] NOT NULL DEFAULT ((0)),
+    [PassedCases] [int] NOT NULL DEFAULT ((0)),
+    [FailedCases] [int] NOT NULL DEFAULT ((0)),
+    [ErrorCases] [int] NOT NULL DEFAULT ((0)),
+    [ToolOkCases] [int] NOT NULL DEFAULT ((0)),
+    [InputTokens] [bigint] NULL,
+    [OutputTokens] [bigint] NULL,
+    [CostEstimate] [decimal](18, 6) NULL,
+    [DurationMs] [bigint] NULL,
+    [StartedAt] [datetime] NULL,
+    [FinishedAt] [datetime] NULL,
+    [ErrorText] [nvarchar](1000) NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_AI_EvalRuns_Group] ON [dbo].[AI_EvalRuns]([Group_Id]);
+CREATE NONCLUSTERED INDEX [IX_AI_EvalRuns_Started] ON [dbo].[AI_EvalRuns]([StartedAt] DESC);"),
+
+            // P7.4: نتيجة كل حالة فى كل تشغيل. Outcome: pass / fail / error / skipped. ToolsJson = الأدوات المنفّذة (الاسم، المدخلات، النتيجة، الاستعلام، الصفوف).
+            ("AI_EvalResults", @"
+    [Run_Id] [bigint] NOT NULL,
+    [Case_Id] [bigint] NOT NULL,
+    [CaseKey] [nvarchar](100) NOT NULL,
+    [CaseVersion] [int] NOT NULL,
+    [Outcome] [nvarchar](20) NOT NULL,
+    [ToolOk] [bit] NOT NULL DEFAULT ((0)),
+    [FailReason] [nvarchar](1000) NULL,
+    [AnswerText] [nvarchar](max) NULL,
+    [ToolsJson] [nvarchar](max) NULL,
+    [Rounds] [int] NULL,
+    [InputTokens] [int] NULL,
+    [OutputTokens] [int] NULL,
+    [CostEstimate] [decimal](18, 6) NULL,
+    [DurationMs] [int] NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_EvalResults_Run_Case] ON [dbo].[AI_EvalResults]([Run_Id], [Case_Id]);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>
@@ -202,6 +272,8 @@ CREATE NONCLUSTERED INDEX [IX_AI_Attachments_Sha] ON [dbo].[AI_Attachments]([Sha
             (AiSettingKeys.AttachmentRetentionDays, "90"),
             (AiSettingKeys.MaxToolRoundsPerMessage, "12"),
             (AiSettingKeys.MaxUploadMb, "10"),
+            (AiSettingKeys.EvalMaxCasesPerRun, "100"),
+            (AiSettingKeys.EvalMaxCostPerRun, "0"),   // 0 = بلا حد (التشغيل يتطلب موافقة المدير على التكلفة التقديرية دائماً)
         };
 
         public static readonly List<string> LastErrors = new List<string>();
@@ -270,6 +342,8 @@ CREATE TABLE [dbo].[{table}](
             ("AI_Drafts", "Party_Id", "[bigint] NULL"),
             ("AI_Drafts", "Ref_No", "[nvarchar](60) NULL"),
             ("AI_Drafts", "Source_Attachment_Id", "[bigint] NULL"),
+            // P7.4: استدعاءات أدوات أثناء تشغيل تقييم (بلا محادثة).
+            ("AI_ToolCalls_Audit", "EvalRun_Id", "[bigint] NULL"),
         };
 
         private static void AddedColumns(operations opp)

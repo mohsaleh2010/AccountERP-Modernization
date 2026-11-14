@@ -16,7 +16,7 @@ namespace AccountERP.AI.Tools
     {
         public const string Tool = "extract_document";
 
-        public static bool Allowed(AiToolContext c) => c.Attachments.Count > 0;
+        public static bool Allowed(AiToolContext c) => !c.IsEval && c.Attachments.Count > 0;
 
         public static AiToolDef Def(AiToolContext c)
         {

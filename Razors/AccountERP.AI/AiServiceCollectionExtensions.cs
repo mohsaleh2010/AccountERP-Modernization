@@ -33,6 +33,8 @@ namespace AccountERP.AI
             services.AddSingleton(sp => new Knowledge.AiKnowledgeService(null, sp.GetRequiredService<Knowledge.AiEmbeddingService>(), sp.GetRequiredService<Knowledge.AiKnowledgeIndex>()));   // P7: معرفة المساعد من AI_Knowledge
             services.AddSingleton<Tools.AiToolRegistry>();
             services.AddScoped<IAiChatGateway, Chat.AiChatGateway>();   // P1: المحادثة، P2: مع أدوات القراءة
+            services.AddSingleton<Eval.AiEvalRunner>();   // P7.4: تشغيل التقييم فى الخلفية (واحد فى المرة)
+            services.AddScoped<IAiEvalGateway, Eval.AiEvalGateway>();   // P7.4: محرك التقييم (تبويب «التقييم» P7.5)
             return services;
         }
     }

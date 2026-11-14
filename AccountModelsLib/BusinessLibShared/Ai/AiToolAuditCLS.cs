@@ -21,9 +21,21 @@ namespace AccountModelsLib
         }
 
         public long Insert(long? conversationId, long userId, string toolName, string argsJson, string sqlText,
-                           int? rowCount, int? durationMs, string outcome, string errorText)
+                           int? rowCount, int? durationMs, string outcome, string errorText) =>
+            Insert(conversationId, userId, toolName, argsJson, sqlText, rowCount, durationMs, outcome, errorText, null);
+
+        /// <summary>P7.4: evalRunId = استدعاء أثناء تشغيل تقييم (AI_ToolCalls_Audit.EvalRun_Id)؛ بدونه نفس الإدراج السابق حرفياً.</summary>
+        public long Insert(long? conversationId, long userId, string toolName, string argsJson, string sqlText,
+                           int? rowCount, int? durationMs, string outcome, string errorText, long? evalRunId)
         {
             long id = CallSnowflakeIdGenerate.GenerateNewId();
+            if (evalRunId != null)
+            {
+                _newOpp().db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO AI_ToolCalls_Audit (Id, Conversation_Id, Message_Id, User_Id, ToolName, ArgsJson, SqlText, [RowCount], DurationMs, Outcome, ErrorText, EvalRun_Id, CreatedBy, CreatedAt)
+VALUES ({id}, {conversationId}, NULL, {userId}, {Cut(toolName, 100)}, {argsJson}, {sqlText}, {rowCount}, {durationMs}, {Cut(outcome, 20)}, {Cut(errorText, 1000)}, {evalRunId}, {userId}, {DateTime.Now})");
+                return id;
+            }
             _newOpp().db.Database.ExecuteSqlInterpolated($@"
 INSERT INTO AI_ToolCalls_Audit (Id, Conversation_Id, Message_Id, User_Id, ToolName, ArgsJson, SqlText, [RowCount], DurationMs, Outcome, ErrorText, CreatedBy, CreatedAt)
 VALUES ({id}, {conversationId}, NULL, {userId}, {Cut(toolName, 100)}, {argsJson}, {sqlText}, {rowCount}, {durationMs}, {Cut(outcome, 20)}, {Cut(errorText, 1000)}, {userId}, {DateTime.Now})");

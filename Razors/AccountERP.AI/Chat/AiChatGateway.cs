@@ -39,7 +39,7 @@ namespace AccountERP.AI.Chat
         }
 
         /// <summary>نموذج مرشح للمحادثة بعد التحقق من التفعيل ووضع «محلى فقط».</summary>
-        private sealed record Candidate(AiTaskRoutingRow Route, AiModelRow Model, AiProviderRow Provider);
+        internal sealed record Candidate(AiTaskRoutingRow Route, AiModelRow Model, AiProviderRow Provider);
 
         private List<Candidate> Candidates(out string reason)
         {
@@ -245,10 +245,123 @@ namespace AccountERP.AI.Chat
             int maxRounds = MaxToolRounds();
 
             var sw = Stopwatch.StartNew();
+            var loop = await LoopAsync(candidates, initialTurns, toolCtx, context, conversationId, maxRounds, onDelta, onStatus, ct);
+            sw.Stop();
+            onStatus(null!);
+
+            var used = loop.Used;
+            var outcome = loop.Outcome;
+            string? error = loop.Error;
+            bool stopped = loop.Stopped, roundsExhausted = loop.RoundsExhausted;
+            int inTok = loop.InTok, outTok = loop.OutTok, cacheTok = loop.CacheTok;
+            bool anyUsage = loop.AnyUsage;
+            var toolViews = loop.ToolViews;
+            var blocks = loop.Blocks;
+            var auditIds = loop.AuditIds;
+            var tried = loop.Tried;
+            var pending = loop.Pending;
+            string finalText = loop.Text;
+            string status = stopped ? AiMessageStatus.Stopped
+                : pending != null ? AiMessageStatus.Awaiting
+                : error != null && (outcome == null || finalText.Length == 0) ? AiMessageStatus.Error
+                : AiMessageStatus.Ok;
+            string? errorText = null;
+            if (status == AiMessageStatus.Awaiting) { }
+            else if (status == AiMessageStatus.Error)
+                errorText = (error == "refused" ? "اعتذر النموذج عن الإجابة." : error) + (tried.Count > 1 ? $" (جُرّبت النماذج: {string.Join("، ", tried)})" : "");
+            else if (error != null && !stopped)
+                errorText = "انقطع الرد: " + error;
+            else if (outcome?.Refused == true)
+            {
+                status = AiMessageStatus.Error;
+                errorText = "اعتذر النموذج عن الإجابة على هذا الطلب لأسباب تتعلق بالسلامة. أعد صياغة السؤال.";
+            }
+            else if (outcome?.Truncated == true)
+                errorText = "توقّف الرد عند الحد الأقصى للتوكنز. اطلب «أكمل» أو ارفع الحد من إعدادات المهام.";
+            else if (roundsExhausted)
+                errorText = $"توقّف المساعد بعد {maxRounds} دورة أدوات (الحد الأقصى للرسالة). جرّب سؤالاً أضيق.";
+            // سؤال لم يُطرح فعلاً (توقف/خطأ قبل الحفظ) لا تبقى بطاقته.
+            if (status != AiMessageStatus.Awaiting) blocks.RemoveAll(b => b["type"] is JsonValue tv && tv.TryGetValue<string>(out var t) && t == "ask");
+
+            var model = used?.Model;
+            decimal? cost = null;
+            if (model != null && anyUsage && (model.InputPricePerM != null || model.OutputPricePerM != null))
+                cost = Math.Round((inTok * (model.InputPricePerM ?? 0) + outTok * (model.OutputPricePerM ?? 0)) / 1_000_000m, 6);
+
+            var asstRow = _chat.AddMessage(new AiMessageRow
+            {
+                Conversation_Id = conversationId,
+                Role = "assistant",
+                ContentJson = ContentJson(finalText, toolViews, blocks),
+                Model_Id = model?.Id,
+                ModelName = model?.DisplayName,
+                InputTokens = anyUsage ? inTok : null,
+                OutputTokens = anyUsage ? outTok : null,
+                CacheReadTokens = anyUsage ? cacheTok : null,
+                CostEstimate = cost,
+                Status = status,
+                ErrorText = errorText,
+                DurationMs = (int)Math.Min(int.MaxValue, sw.ElapsedMilliseconds),
+            }, userId);
+            // بلا حالة محفوظة يبقى السؤال قابلاً للإجابة (تُرسل الإجابة نصاً).
+            if (pending != null)
+            {
+                try
+                {
+                    string pj = JsonSerializer.Serialize(pending, StoreJson);
+                    if (pj.Length <= MaxPendingChars) _chat.SetPending(asstRow.Id, pj);
+                }
+                catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
+            }
+            try { _audit.LinkMessage(auditIds, asstRow.Id); } catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
+            try { _reports.LinkMessage(toolCtx.ReportIds, asstRow.Id, userId); } catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
+            try { _drafts.LinkMessage(toolCtx.DraftIds, asstRow.Id, userId); } catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
+
+            return new AiChatTurnResult { ConversationId = conversationId, UserMessage = ToView(userRow), AssistantMessage = ToView(asstRow) };
+        }
+
+        /// <summary>نتيجة حلقة الرد (بلا أى حفظ): ما يحتاجه RunAsync للحفظ، وما يحتاجه التقييم (P7.4) للحكم.</summary>
+        internal sealed class LoopResult
+        {
+            public Candidate? Used { get; init; }
+            public AiChatOutcome? Outcome { get; init; }
+            public string? Error { get; init; }
+            public bool Stopped { get; init; }
+            public bool RoundsExhausted { get; init; }
+            public int InTok { get; init; }
+            public int OutTok { get; init; }
+            public int CacheTok { get; init; }
+            public int Rounds { get; init; }
+            public bool AnyUsage { get; init; }
+            public List<AiToolCallView> ToolViews { get; init; } = new();
+            public List<JsonObject> Blocks { get; init; } = new();
+            public List<long> AuditIds { get; init; } = new();
+            public List<string> Tried { get; init; } = new();
+            public AiPendingState? Pending { get; init; }
+            /// <summary>النص المعروض كله (TrimEnd).</summary>
+            public string Text { get; init; } = "";
+            /// <summary>P7.4: كل أداة نُفّذت بمدخلاتها وناتجها الكامل (للحكم فى التقييم).</summary>
+            public List<ExecutedTool> Executed { get; init; } = new();
+        }
+
+        internal sealed record ExecutedTool(string Name, string InputJson, AiToolResult Result);
+
+        /// <summary>
+        /// حلقة الرد نفسها (P7.4: مستخرجة من RunAsync كما هى): النموذج المرشح ثم البدائل، تنفيذ الأدوات وتسجيلها فى التدقيق، التوقف عند ask_user.
+        /// لا تحفظ رسائل ولا تربط تقارير/مسودات؛ ذلك على المستدعى. التقييم يمرّر مرشحاً واحداً صريحاً وسياق أدوات IsEval.
+        /// </summary>
+        internal async Task<LoopResult> LoopAsync(List<Candidate> candidates, Func<Candidate, List<AiChatTurn>> initialTurns, AiToolContext toolCtx,
+                                                  AiScreenContext? context, long? conversationId, int maxRounds,
+                                                  Action<string> onDelta, Action<string> onStatus, CancellationToken ct)
+        {
+            long userId = toolCtx.User.UserId;
+            onDelta ??= _ => { };
+            onStatus ??= _ => { };
             var streamed = new StringBuilder();
             void Relay(string piece) { streamed.Append(piece); onDelta(piece); }
 
             Candidate? used = null;
+            var executed = new List<ExecutedTool>();
             AiChatOutcome? outcome = null;
             string? error = null;
             bool stopped = false, roundsExhausted = false;
@@ -309,10 +422,11 @@ namespace AccountERP.AI.Chat
                             AiToolResult res = await _tools.ExecuteAsync(tc.Name, tc.InputJson, toolCtx);
                             tsw.Stop();
                             int ms = (int)Math.Min(int.MaxValue, tsw.ElapsedMilliseconds);
+                            executed.Add(new ExecutedTool(tc.Name, tc.InputJson, res));
                             try
                             {
                                 auditIds.Add(_audit.Insert(conversationId, userId, tc.Name, Cut(tc.InputJson, 20000), res.Sql, res.RowCount, ms, res.Outcome,
-                                                           res.IsError ? ReadError(res.Content) : null));
+                                                           res.IsError ? ReadError(res.Content) : null, toolCtx.EvalRunId));
                             }
                             catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
                             if (res.PauseForUser && !res.IsError && res.Block != null)
@@ -362,67 +476,13 @@ namespace AccountERP.AI.Chat
                     if (streamed.Length > 0 || rounds > 0) break;
                 }
             }
-            sw.Stop();
-            onStatus(null!);
-
-            string finalText = streamed.ToString().TrimEnd();
-            string status = stopped ? AiMessageStatus.Stopped
-                : pending != null ? AiMessageStatus.Awaiting
-                : error != null && (outcome == null || finalText.Length == 0) ? AiMessageStatus.Error
-                : AiMessageStatus.Ok;
-            string? errorText = null;
-            if (status == AiMessageStatus.Awaiting) { }
-            else if (status == AiMessageStatus.Error)
-                errorText = (error == "refused" ? "اعتذر النموذج عن الإجابة." : error) + (tried.Count > 1 ? $" (جُرّبت النماذج: {string.Join("، ", tried)})" : "");
-            else if (error != null && !stopped)
-                errorText = "انقطع الرد: " + error;
-            else if (outcome?.Refused == true)
+            return new LoopResult
             {
-                status = AiMessageStatus.Error;
-                errorText = "اعتذر النموذج عن الإجابة على هذا الطلب لأسباب تتعلق بالسلامة. أعد صياغة السؤال.";
-            }
-            else if (outcome?.Truncated == true)
-                errorText = "توقّف الرد عند الحد الأقصى للتوكنز. اطلب «أكمل» أو ارفع الحد من إعدادات المهام.";
-            else if (roundsExhausted)
-                errorText = $"توقّف المساعد بعد {maxRounds} دورة أدوات (الحد الأقصى للرسالة). جرّب سؤالاً أضيق.";
-            // سؤال لم يُطرح فعلاً (توقف/خطأ قبل الحفظ) لا تبقى بطاقته.
-            if (status != AiMessageStatus.Awaiting) blocks.RemoveAll(b => b["type"] is JsonValue tv && tv.TryGetValue<string>(out var t) && t == "ask");
-
-            var model = used?.Model;
-            decimal? cost = null;
-            if (model != null && anyUsage && (model.InputPricePerM != null || model.OutputPricePerM != null))
-                cost = Math.Round((inTok * (model.InputPricePerM ?? 0) + outTok * (model.OutputPricePerM ?? 0)) / 1_000_000m, 6);
-
-            var asstRow = _chat.AddMessage(new AiMessageRow
-            {
-                Conversation_Id = conversationId,
-                Role = "assistant",
-                ContentJson = ContentJson(finalText, toolViews, blocks),
-                Model_Id = model?.Id,
-                ModelName = model?.DisplayName,
-                InputTokens = anyUsage ? inTok : null,
-                OutputTokens = anyUsage ? outTok : null,
-                CacheReadTokens = anyUsage ? cacheTok : null,
-                CostEstimate = cost,
-                Status = status,
-                ErrorText = errorText,
-                DurationMs = (int)Math.Min(int.MaxValue, sw.ElapsedMilliseconds),
-            }, userId);
-            // بلا حالة محفوظة يبقى السؤال قابلاً للإجابة (تُرسل الإجابة نصاً).
-            if (pending != null)
-            {
-                try
-                {
-                    string pj = JsonSerializer.Serialize(pending, StoreJson);
-                    if (pj.Length <= MaxPendingChars) _chat.SetPending(asstRow.Id, pj);
-                }
-                catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
-            }
-            try { _audit.LinkMessage(auditIds, asstRow.Id); } catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
-            try { _reports.LinkMessage(toolCtx.ReportIds, asstRow.Id, userId); } catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
-            try { _drafts.LinkMessage(toolCtx.DraftIds, asstRow.Id, userId); } catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
-
-            return new AiChatTurnResult { ConversationId = conversationId, UserMessage = ToView(userRow), AssistantMessage = ToView(asstRow) };
+                Used = used, Outcome = outcome, Error = error, Stopped = stopped, RoundsExhausted = roundsExhausted,
+                InTok = inTok, OutTok = outTok, CacheTok = cacheTok, Rounds = rounds, AnyUsage = anyUsage,
+                ToolViews = toolViews, Blocks = blocks, AuditIds = auditIds, Tried = tried, Pending = pending,
+                Text = streamed.ToString().TrimEnd(), Executed = executed,
+            };
         }
 
         // ───────────── P6: المرفقات ─────────────

@@ -26,6 +26,9 @@ namespace AccountERP.AI.Tools
         internal List<AiDraftTools.OrderTypeInfo>? CachedOrderTypes { get; set; }
         /// <summary>P6: مرفقات المحادثة الحالية (لأداة extract_document؛ فارغة ⇒ الأداة لا تُعرض).</summary>
         public List<AiAttachmentView> Attachments { get; set; } = new();
+        /// <summary>P7.4: تشغيل تقييم — لا مسودات ولا قراءة مرفقات، والتقارير تُتحقق ولا تُحفظ، والتدقيق يُربط بـ EvalRun_Id.</summary>
+        public bool IsEval { get; init; }
+        public long? EvalRunId { get; init; }
 
         public bool HasRoute(string route)
         {
@@ -567,7 +570,8 @@ namespace AccountERP.AI.Tools
             var (spec, data) = AiReportEngine.Prepare(a, id => _datasets.Get(id, c.User.UserId));
             var doc = AiReportEngine.Materialize(spec, data);   // يتحقق أن البناء ينجح قبل الحفظ
             var (from, to) = AiReportEngine.PeriodOf(spec, data);
-            long id = _reports.Insert(new AiReportRow
+            // P7.4: التقييم يتحقق من التقرير فقط ولا يحفظه (لا يظهر فى «تقاريرى» ولا يبقى صف).
+            long id = c.IsEval ? 0 : _reports.Insert(new AiReportRow
             {
                 User_Id = c.User.UserId,
                 Conversation_Id = c.ConversationId,
@@ -578,7 +582,7 @@ namespace AccountERP.AI.Tools
                 PeriodFrom = from,
                 PeriodTo = to,
             });
-            c.ReportIds.Add(id);
+            if (id > 0) c.ReportIds.Add(id);
             return new AiToolResult
             {
                 Content = JsonSerializer.Serialize(new

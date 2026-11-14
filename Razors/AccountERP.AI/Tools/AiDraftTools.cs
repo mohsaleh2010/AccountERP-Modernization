@@ -28,9 +28,10 @@ namespace AccountERP.AI.Tools
         /// <summary>أنواع أذون الاستلام من التحويل تُنشأ من شاشة «استلام التحويل» فقط (كالشاشة).</summary>
         private static readonly int[] ReceiptTypes = { 1016, 1017 };
 
-        public static bool CanSales(AiToolContext c) => c.HasRoute(RSalesInvoice);
-        public static bool CanPurchase(AiToolContext c) => c.HasRoute(RPurchaseInvoice);
-        public static bool CanStoreOrder(AiToolContext c) => StoreOrderTypes(c).Count > 0;
+        // P7.4: لا مسودات أثناء التقييم (لا تُعرض الأدوات ولا تُنفَّذ ولو طلبها النموذج).
+        public static bool CanSales(AiToolContext c) => !c.IsEval && c.HasRoute(RSalesInvoice);
+        public static bool CanPurchase(AiToolContext c) => !c.IsEval && c.HasRoute(RPurchaseInvoice);
+        public static bool CanStoreOrder(AiToolContext c) => !c.IsEval && StoreOrderTypes(c).Count > 0;
         public static bool Any(AiToolContext c) => CanSales(c) || CanPurchase(c) || CanStoreOrder(c);
 
         /// <summary>Views يحتاجها find_entity لمن يملك شاشة مستند فقط (بلا شاشة القوائم): العميل للمبيعات، المورد للمشتريات، الصنف والمخزن لأى مسودة.</summary>

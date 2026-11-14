@@ -71,6 +71,10 @@ namespace AccountModelsLib
         public const string AttachmentRetentionDays = "AttachmentRetentionDays";
         public const string MaxToolRoundsPerMessage = "MaxToolRoundsPerMessage";
         public const string MaxUploadMb = "MaxUploadMb";
+        /// <summary>P7.4: أقصى عدد حالات فى تشغيل تقييم واحد (لكل نموذج).</summary>
+        public const string EvalMaxCasesPerRun = "EvalMaxCasesPerRun";
+        /// <summary>P7.4: أقصى تكلفة تقديرية لتشغيل واحد (0 = بلا حد)؛ عند بلوغها يتوقف التشغيل بحالة CostCap.</summary>
+        public const string EvalMaxCostPerRun = "EvalMaxCostPerRun";
     }
 
     /// <summary>صف AI_Providers كما يُخزَّن (المفتاح مشفّر). لا يصل للواجهة؛ الواجهة ترى AiProviderView.</summary>
