@@ -5587,4 +5587,13 @@
   <data name="AIK_AxFew" xml:space="preserve"><value>Only {0} cases in common between the two runs; at least {1} are needed.</value></data>
   <data name="AIK_AxBetter" xml:space="preserve"><value>“{0}”: {1} passed with examples vs {2} without, out of {3} common cases — improved.</value></data>
   <data name="AIK_AxNotBetter" xml:space="preserve"><value>“{0}”: {1} passed with examples vs {2} without, out of {3} common cases — no gain.</value></data>
+  <data name="AIC_ShowArchived" xml:space="preserve"><value>Archived chats</value></data>
+  <data name="AIC_BackToChats" xml:space="preserve"><value>Back to chats</value></data>
+  <data name="AIC_ArchivedTitle" xml:space="preserve"><value>Archived</value></data>
+  <data name="AIC_ArchivedHint" xml:space="preserve"><value>A chat is archived automatically after {0} days without messages; nothing is deleted. Restore it to continue.</value></data>
+  <data name="AIC_ArchivedHintManual" xml:space="preserve"><value>Chats you archived yourself. Restore one to continue.</value></data>
+  <data name="AIC_NoArchived" xml:space="preserve"><value>No archived chats.</value></data>
+  <data name="AIC_Archive" xml:space="preserve"><value>Archive</value></data>
+  <data name="AIC_Unarchive" xml:space="preserve"><value>Restore</value></data>
+  <data name="AIC_ArchivedBanner" xml:space="preserve"><value>This chat is archived and read-only. Restore it to continue.</value></data>
 </root>

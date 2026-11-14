@@ -47,6 +47,10 @@ namespace AccountERP.SharedUI.Services
         public List<AiChatMessage> Messages { get; private set; } = new();
         public List<AiConversationView> Conversations { get; private set; } = new();
         public string Search { get; private set; } = "";
+        /// <summary>القائمة الجانبية تعرض المؤرشفة بدل النشطة.</summary>
+        public bool ShowArchived { get; private set; }
+        /// <summary>المحادثة المفتوحة مؤرشفة: للقراءة فقط حتى تُستعاد.</summary>
+        public bool ConversationArchived { get; private set; }
         public bool IsSending { get; private set; }
         public bool IsLoading { get; private set; }
         /// <summary>الرسالة التى يكتبها المستخدم الآن (تُعرض فوراً قبل حفظها).</summary>
@@ -76,10 +80,10 @@ namespace AccountERP.SharedUI.Services
         public async Task RefreshAsync()
         {
             if (!HasAccess || _gw == null) return;
-            var gw = _gw; long uid = UserId; string search = Search;
+            var gw = _gw; long uid = UserId; string search = Search; bool archived = ShowArchived;
             try
             {
-                var (av, list) = await Bg(() => (gw.GetAvailability(), gw.GetConversations(uid, search)));
+                var (av, list) = await Bg(() => (gw.GetAvailability(), gw.GetConversations(uid, search, archived)));
                 Availability = av;
                 Conversations = list;
                 AvailabilityLoaded = true;
@@ -94,6 +98,27 @@ namespace AccountERP.SharedUI.Services
             await RefreshAsync();
         }
 
+        public async Task SetShowArchivedAsync(bool archived)
+        {
+            if (ShowArchived == archived) return;
+            ShowArchived = archived;
+            await RefreshAsync();
+        }
+
+        /// <summary>أرشفة محادثة أو استعادتها؛ المفتوحة تبقى مفتوحة وتتغير حالتها.</summary>
+        public async Task SetArchivedAsync(long conversationId, bool archived)
+        {
+            if (_gw == null || (IsSending && conversationId == ConversationId)) return;
+            var gw = _gw; long uid = UserId;
+            try
+            {
+                await Bg(() => gw.SetConversationArchived(conversationId, archived, uid));
+                if (conversationId == ConversationId) ConversationArchived = archived;
+            }
+            catch (Exception ex) { Error = Err(ex); }
+            await RefreshAsync();
+        }
+
         public async Task OpenAsync(long conversationId)
         {
             if (_gw == null || IsSending || conversationId == ConversationId) return;
@@ -103,7 +128,9 @@ namespace AccountERP.SharedUI.Services
             {
                 Messages = await Bg(() => gw.GetMessages(conversationId, uid));
                 ConversationId = conversationId;
-                ConversationTitle = Conversations.FirstOrDefault(c => c.Id == conversationId)?.Title ?? "";
+                var conv = Conversations.FirstOrDefault(c => c.Id == conversationId);
+                ConversationTitle = conv?.Title ?? "";
+                ConversationArchived = conv?.IsArchived ?? false;
             }
             catch (Exception ex) { Error = Err(ex); }
             finally { IsLoading = false; Notify(); }
@@ -114,6 +141,7 @@ namespace AccountERP.SharedUI.Services
             if (IsSending) return;
             ConversationId = 0;
             ConversationTitle = "";
+            ConversationArchived = false;
             Messages = new();
             Error = null;
             Notify();
@@ -127,7 +155,7 @@ namespace AccountERP.SharedUI.Services
         public Task SendAsync(string text, AiScreenContext context)
         {
             text = (text ?? "").Trim();
-            if (_gw == null || IsSending || IsUploading || (text.Length == 0 && PendingAttachments.Count == 0)) return Task.CompletedTask;
+            if (_gw == null || IsSending || IsUploading || ConversationArchived || (text.Length == 0 && PendingAttachments.Count == 0)) return Task.CompletedTask;
             var ask = PendingAsk;
             if (ask != null && PendingAttachments.Count == 0) return AnswerAsync(ask.Id, new List<string>(), text, context);
             var gw = _gw; long convId = ConversationId;
@@ -201,7 +229,7 @@ namespace AccountERP.SharedUI.Services
         /// <summary>P4: إجابة سؤال المساعد (خيارات مختارة و/أو نص حر) ثم استئناف الرد.</summary>
         public Task AnswerAsync(long messageId, List<string> selected, string? freeText, AiScreenContext context)
         {
-            if (_gw == null || IsSending || ConversationId == 0) return Task.CompletedTask;
+            if (_gw == null || IsSending || ConversationId == 0 || ConversationArchived) return Task.CompletedTask;
             var answer = new AiAskAnswer { Selected = selected ?? new(), FreeText = (freeText ?? "").Trim() };
             if (answer.Selected.Count == 0 && answer.FreeText.Length == 0) return Task.CompletedTask;
             string shown = string.Join("، ", answer.Selected);
@@ -466,11 +494,13 @@ namespace AccountERP.SharedUI.Services
             Stop();
             ConversationId = 0;
             ConversationTitle = "";
+            ConversationArchived = false;
             Messages = new();
             Conversations = new();
             SavedReports = new();
             PendingAttachments = new();
             Search = "";
+            ShowArchived = false;
             Error = null;
             AvailabilityLoaded = false;
             Notify();

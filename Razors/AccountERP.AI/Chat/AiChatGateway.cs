@@ -75,9 +75,10 @@ namespace AccountERP.AI.Chat
             try
             {
                 var c = Candidates(out string reason);
+                int days = ChatRetentionDays();
                 return c.Count == 0
-                    ? new AiChatAvailability { Ready = false, Message = reason }
-                    : new AiChatAvailability { Ready = true, ModelName = c[0].Model.DisplayName };
+                    ? new AiChatAvailability { Ready = false, Message = reason, ChatRetentionDays = days }
+                    : new AiChatAvailability { Ready = true, ModelName = c[0].Model.DisplayName, ChatRetentionDays = days };
             }
             catch (Exception ex)
             {
@@ -86,12 +87,49 @@ namespace AccountERP.AI.Chat
             }
         }
 
-        public List<AiConversationView> GetConversations(long userId, string search) =>
-            userId <= 0 ? new() : _chat.GetConversations(userId, search);
+        public List<AiConversationView> GetConversations(long userId, string search, bool archived = false)
+        {
+            if (userId <= 0) return new();
+            ArchiveSweep();
+            return _chat.GetConversations(userId, search, archived: archived);
+        }
+
+        public void SetConversationArchived(long conversationId, bool archived, long userId)
+        {
+            if (!_chat.OwnsConversation(conversationId, userId, includeArchived: true)) throw new InvalidOperationException("المحادثة غير موجودة.");
+            _chat.SetArchived(conversationId, archived, userId);
+        }
+
+        private static DateTime _lastArchiveSweep = DateTime.MinValue;
+        private static readonly object ArchiveSweepLock = new();
+        private const int DefaultChatRetentionDays = 365;
+
+        /// <summary>مدة الاحتفاظ بالمحادثات (ChatRetentionDays؛ 0 = بلا أرشفة تلقائية). تُطبَّق مع فتح القائمة، مرة كل 6 ساعات على الأكثر.</summary>
+        internal int ChatRetentionDays()
+        {
+            var s = SafeSettings();
+            if (!s.TryGetValue(AiSettingKeys.ChatRetentionDays, out var v)) return DefaultChatRetentionDays;
+            return int.TryParse(v, out int n) ? Math.Max(0, n) : DefaultChatRetentionDays;
+        }
+
+        private void ArchiveSweep()
+        {
+            lock (ArchiveSweepLock)
+            {
+                if (DateTime.UtcNow - _lastArchiveSweep < TimeSpan.FromHours(6)) return;
+                _lastArchiveSweep = DateTime.UtcNow;
+            }
+            try
+            {
+                int days = ChatRetentionDays();
+                if (days > 0) _chat.ArchiveInactive(days);
+            }
+            catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
+        }
 
         public List<AiChatMessage> GetMessages(long conversationId, long userId)
         {
-            if (!_chat.OwnsConversation(conversationId, userId)) throw new InvalidOperationException("المحادثة غير موجودة.");
+            if (!_chat.OwnsConversation(conversationId, userId, includeArchived: true)) throw new InvalidOperationException("المحادثة غير موجودة.");
             var list = _chat.GetMessages(conversationId).Select(ToView).ToList();
             FillDraftStatuses(list, userId);
             FillFeedback(list, conversationId, userId);
@@ -221,7 +259,7 @@ namespace AccountERP.AI.Chat
 
         public void DeleteConversation(long conversationId, long userId)
         {
-            if (!_chat.OwnsConversation(conversationId, userId)) throw new InvalidOperationException("المحادثة غير موجودة.");
+            if (!_chat.OwnsConversation(conversationId, userId, includeArchived: true)) throw new InvalidOperationException("المحادثة غير موجودة.");
             try { _reports.DeleteForConversation(conversationId, userId); }   // P3: غير المحفوظ فقط
             catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
             try { _drafts.DetachConversation(conversationId, userId); }   // P5: المعلّقة تُلغى، المستهلكة تبقى للتدقيق
@@ -253,7 +291,9 @@ namespace AccountERP.AI.Chat
             if (conversationId == 0)
                 conversationId = _chat.CreateConversation(userId, user!.BranchId, TitleFrom(text.Length > 0 ? text : files[0].FileName));
             else if (!_chat.OwnsConversation(conversationId, userId))
-                throw new InvalidOperationException("المحادثة غير موجودة (ربما حُذفت).");
+                throw new InvalidOperationException(_chat.IsArchived(conversationId, userId)
+                    ? "هذه المحادثة مؤرشفة؛ استعِدها أولاً لتكمل فيها."
+                    : "المحادثة غير موجودة (ربما حُذفت).");
 
             var history = _chat.GetMessages(conversationId);
             // P4: سؤال معلّق تجاوزه المستخدم برسالة جديدة: يُغلق «تجاوزه المستخدم» ويبقى فى التاريخ نصاً.

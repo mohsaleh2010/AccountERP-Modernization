@@ -5587,4 +5587,13 @@
   <data name="AIK_AxFew" xml:space="preserve"><value>الحالات المشتركة بين التشغيلين {0} فقط؛ يلزم {1} على الأقل لمقارنة يُعتد بها.</value></data>
   <data name="AIK_AxBetter" xml:space="preserve"><value>«{0}»: نجحت {1} حالة بالأمثلة مقابل {2} بدونها من {3} حالة مشتركة — تحسّن.</value></data>
   <data name="AIK_AxNotBetter" xml:space="preserve"><value>«{0}»: نجحت {1} حالة بالأمثلة مقابل {2} بدونها من {3} حالة مشتركة — لا تحسّن.</value></data>
+  <data name="AIC_ShowArchived" xml:space="preserve"><value>المحادثات المؤرشفة</value></data>
+  <data name="AIC_BackToChats" xml:space="preserve"><value>رجوع إلى المحادثات</value></data>
+  <data name="AIC_ArchivedTitle" xml:space="preserve"><value>المؤرشفة</value></data>
+  <data name="AIC_ArchivedHint" xml:space="preserve"><value>تُؤرشف المحادثة تلقائياً إذا لم تصلها رسالة منذ {0} يوماً، ولا يُحذف منها شىء. استعِدها لتكمل فيها.</value></data>
+  <data name="AIC_ArchivedHintManual" xml:space="preserve"><value>المحادثات التى أرشفتها بنفسك. استعِدها لتكمل فيها.</value></data>
+  <data name="AIC_NoArchived" xml:space="preserve"><value>لا توجد محادثات مؤرشفة.</value></data>
+  <data name="AIC_Archive" xml:space="preserve"><value>أرشفة</value></data>
+  <data name="AIC_Unarchive" xml:space="preserve"><value>استعادة</value></data>
+  <data name="AIC_ArchivedBanner" xml:space="preserve"><value>هذه المحادثة مؤرشفة وللقراءة فقط. استعِدها لتكمل فيها.</value></data>
 </root>

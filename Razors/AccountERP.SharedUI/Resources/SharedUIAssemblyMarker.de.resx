@@ -5589,4 +5589,13 @@
   <data name="AIK_AxFew" xml:space="preserve"><value>Nur {0} gemeinsame Fälle; mindestens {1} erforderlich.</value></data>
   <data name="AIK_AxBetter" xml:space="preserve"><value>„{0}“: {1} bestanden mit Beispielen gegenüber {2} ohne, von {3} gemeinsamen Fällen – besser.</value></data>
   <data name="AIK_AxNotBetter" xml:space="preserve"><value>„{0}“: {1} bestanden mit Beispielen gegenüber {2} ohne, von {3} gemeinsamen Fällen – keine Verbesserung.</value></data>
+  <data name="AIC_ShowArchived" xml:space="preserve"><value>Archivierte Chats</value></data>
+  <data name="AIC_BackToChats" xml:space="preserve"><value>Zurück zu den Chats</value></data>
+  <data name="AIC_ArchivedTitle" xml:space="preserve"><value>Archiviert</value></data>
+  <data name="AIC_ArchivedHint" xml:space="preserve"><value>Ein Chat wird nach {0} Tagen ohne Nachricht automatisch archiviert; nichts wird gelöscht. Wiederherstellen, um fortzufahren.</value></data>
+  <data name="AIC_ArchivedHintManual" xml:space="preserve"><value>Von Ihnen archivierte Chats. Zum Fortfahren wiederherstellen.</value></data>
+  <data name="AIC_NoArchived" xml:space="preserve"><value>Keine archivierten Chats.</value></data>
+  <data name="AIC_Archive" xml:space="preserve"><value>Archivieren</value></data>
+  <data name="AIC_Unarchive" xml:space="preserve"><value>Wiederherstellen</value></data>
+  <data name="AIC_ArchivedBanner" xml:space="preserve"><value>Dieser Chat ist archiviert und schreibgeschützt. Wiederherstellen, um fortzufahren.</value></data>
 </root>

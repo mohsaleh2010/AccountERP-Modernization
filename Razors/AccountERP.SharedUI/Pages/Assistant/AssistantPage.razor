@@ -69,11 +69,22 @@
                 <MudTextField T="string" Value="_search" ValueChanged="OnSearchChanged" Immediate="true" DebounceInterval="350"
                               Placeholder="@Tr("AIC_Search")" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"
                               Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" aria-label="@Tr("AIC_Search")" />
+                @* مدة الاحتفاظ: المحادثات الخاملة تُؤرشف (لا تُحذف) وتُستعاد من هنا *@
+                <MudButton Variant="Variant.Text" Size="Size.Small" Color="@(_chat.ShowArchived ? Color.Primary : Color.Default)" FullWidth="true"
+                           StartIcon="@(_chat.ShowArchived ? Icons.Material.Filled.ArrowBack : Icons.Material.Outlined.Inventory2)"
+                           aria-pressed="@(_chat.ShowArchived ? "true" : "false")" OnClick="ToggleArchivedAsync">
+                    @Tr(_chat.ShowArchived ? "AIC_BackToChats" : "AIC_ShowArchived")
+                </MudButton>
             </div>
             <nav class="aip-list">
+                @if (_chat.ShowArchived)
+                {
+                    <div class="aip-group">@Tr("AIC_ArchivedTitle")</div>
+                    <div class="aip-none" style="padding:4px 10px 8px;text-align:start;">@(_chat.Availability.ChatRetentionDays > 0 ? Tr("AIC_ArchivedHint", _chat.Availability.ChatRetentionDays) : Tr("AIC_ArchivedHintManual"))</div>
+                }
                 @if (_chat.Conversations.Count == 0)
                 {
-                    <div class="aip-none">@Tr(string.IsNullOrEmpty(_search) ? "AIC_NoConversations" : "AIC_NoSearchResults")</div>
+                    <div class="aip-none">@Tr(!string.IsNullOrEmpty(_search) ? "AIC_NoSearchResults" : _chat.ShowArchived ? "AIC_NoArchived" : "AIC_NoConversations")</div>
                 }
                 @foreach (var g in Groups())
                 {
@@ -92,6 +103,14 @@
                                         @onclick="() => OpenAsync(c.Id)">@(string.IsNullOrWhiteSpace(c.Title) ? Tr("AIC_Untitled") : c.Title)</button>
                                 <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" AriaLabel="@Tr("AIC_ConvActions")" Dense="true">
                                     <MudMenuItem Icon="@Icons.Material.Outlined.Edit" OnClick="() => StartRename(c)">@Tr("AIC_Rename")</MudMenuItem>
+                                    @if (c.IsArchived)
+                                    {
+                                        <MudMenuItem Icon="@Icons.Material.Outlined.Unarchive" OnClick="() => _chat.SetArchivedAsync(c.Id, false)">@Tr("AIC_Unarchive")</MudMenuItem>
+                                    }
+                                    else
+                                    {
+                                        <MudMenuItem Icon="@Icons.Material.Outlined.Archive" Disabled="@(_chat.IsSending && c.Id == _chat.ConversationId)" OnClick="() => _chat.SetArchivedAsync(c.Id, true)">@Tr("AIC_Archive")</MudMenuItem>
+                                    }
                                     <MudMenuItem Icon="@Icons.Material.Outlined.Delete" IconColor="Color.Error" OnClick="() => DeleteAsync(c)">@Tr("AIC_Delete")</MudMenuItem>
                                 </MudMenu>
                             }
@@ -199,6 +218,12 @@
         if (_chat == null) return;
         _sideOpen = false;
         await _chat.OpenAsync(id);
+    }
+
+    private async Task ToggleArchivedAsync()
+    {
+        if (_chat == null) return;
+        await _chat.SetShowArchivedAsync(!_chat.ShowArchived);
     }
 
     private async Task OnSearchChanged(string? text)

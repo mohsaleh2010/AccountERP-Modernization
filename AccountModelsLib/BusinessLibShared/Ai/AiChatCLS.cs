@@ -40,19 +40,24 @@ namespace AccountModelsLib
             _newOpp = newOpp ?? (() => new operations());
         }
 
-        public List<AiConversationView> GetConversations(long userId, string search, int top = 200)
+        public const string StatusActive = "Active";
+        public const string StatusArchived = "Archived";
+
+        /// <summary>archived = false: النشطة (الافتراضى)؛ true: المؤرشفة (بعد مدة الاحتفاظ أو يدوياً).</summary>
+        public List<AiConversationView> GetConversations(long userId, string search, int top = 200, bool archived = false)
         {
             var db = _newOpp().db;
             string like = string.IsNullOrWhiteSpace(search) ? null : "%" + search.Trim().Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]") + "%";
             var list = new List<AiConversationView>();
             Exec(db, @"SELECT TOP (@top) c.Id, c.Title, c.CreatedAt, c.LastMessageAt FROM AI_Conversations c
-                       WHERE c.User_Id = @u AND c.Status = N'Active'
+                       WHERE c.User_Id = @u AND c.Status = @st
                          AND (@q IS NULL OR c.Title LIKE @q
                               OR EXISTS (SELECT 1 FROM AI_Messages m WHERE m.Conversation_Id = c.Id AND m.ContentJson LIKE @q))
                        ORDER BY ISNULL(c.LastMessageAt, c.CreatedAt) DESC",
-                cmd => { Add(cmd, "@top", top); Add(cmd, "@u", userId); Add(cmd, "@q", like); },
+                cmd => { Add(cmd, "@top", top); Add(cmd, "@u", userId); Add(cmd, "@q", like); Add(cmd, "@st", archived ? StatusArchived : StatusActive); },
                 r => list.Add(new AiConversationView
                 {
+                    IsArchived = archived,
                     Id = r.GetInt64(0),
                     Title = r.IsDBNull(1) ? "" : r.GetString(1),
                     CreatedAt = r.IsDBNull(2) ? DateTime.Now : r.GetDateTime(2),
@@ -61,11 +66,40 @@ namespace AccountModelsLib
             return list;
         }
 
-        public bool OwnsConversation(long conversationId, long userId)
+        /// <summary>includeArchived = true للقراءة والحذف والاستعادة؛ الإرسال يحتاج محادثة نشطة.</summary>
+        public bool OwnsConversation(long conversationId, long userId, bool includeArchived = false)
         {
             if (conversationId <= 0 || userId <= 0) return false;
-            return _newOpp().db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM AI_Conversations WHERE Id = {conversationId} AND User_Id = {userId} AND Status = N'Active'")
+            return (includeArchived
+                    ? _newOpp().db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM AI_Conversations WHERE Id = {conversationId} AND User_Id = {userId} AND Status IN (N'Active', N'Archived')")
+                    : _newOpp().db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM AI_Conversations WHERE Id = {conversationId} AND User_Id = {userId} AND Status = N'Active'"))
                 .AsEnumerable().First() > 0;
+        }
+
+        /// <summary>هل المحادثة مؤرشفة (لصاحبها).</summary>
+        public bool IsArchived(long conversationId, long userId) =>
+            conversationId > 0 && userId > 0 &&
+            _newOpp().db.Database.SqlQuery<int>($"SELECT COUNT(*) AS Value FROM AI_Conversations WHERE Id = {conversationId} AND User_Id = {userId} AND Status = N'Archived'").AsEnumerable().First() > 0;
+
+        /// <summary>أرشفة/استعادة يدوية بواسطة صاحب المحادثة.</summary>
+        public bool SetArchived(long conversationId, bool archived, long userId)
+        {
+            string to = archived ? StatusArchived : StatusActive, from = archived ? StatusActive : StatusArchived;
+            return _newOpp().db.Database.ExecuteSqlInterpolated(
+                $"UPDATE AI_Conversations SET Status = {to}, UpdatedBy = {userId}, UpdatedAt = GETDATE() WHERE Id = {conversationId} AND User_Id = {userId} AND Status = {from}") > 0;
+        }
+
+        /// <summary>
+        /// مدة الاحتفاظ (ChatRetentionDays، قرار 2026-11-13: بالأرشفة لا الحذف): المحادثات النشطة التى لم تصلها رسالة منذ المدة تصير «مؤرشفة».
+        /// لا حذف لأى رسالة؛ تُستعاد من قائمة «المؤرشفة». يعيد عدد ما أُرشف (دفعة واحدة بحد top).
+        /// </summary>
+        public int ArchiveInactive(int retentionDays, int top = 1000)
+        {
+            if (retentionDays < 1) return 0;
+            DateTime cutoff = DateTime.Now.AddDays(-retentionDays);
+            return _newOpp().db.Database.ExecuteSqlInterpolated($@"
+UPDATE TOP ({top}) AI_Conversations SET Status = N'Archived', UpdatedAt = GETDATE()
+WHERE Status = N'Active' AND ISNULL(LastMessageAt, CreatedAt) < {cutoff}");
         }
 
         public long CreateConversation(long userId, long branchId, string title)

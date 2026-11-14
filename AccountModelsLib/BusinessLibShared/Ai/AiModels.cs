@@ -332,6 +332,8 @@ namespace AccountModelsLib
         public string Title { get; set; } = "";
         public DateTime CreatedAt { get; set; }
         public DateTime? LastMessageAt { get; set; }
+        /// <summary>مؤرشفة بعد مدة الاحتفاظ أو يدوياً: للقراءة فقط حتى تُستعاد.</summary>
+        public bool IsArchived { get; set; }
     }
 
     /// <summary>رسالة كما تعرضها شاشة المحادثة (النص فقط فى P1).</summary>
@@ -520,6 +522,8 @@ namespace AccountModelsLib
         public bool Ready { get; set; }
         public string ModelName { get; set; } = "";
         public string Message { get; set; } = "";
+        /// <summary>مدة الاحتفاظ بالمحادثات بالأيام (0 = بلا أرشفة تلقائية) — للعرض فى قائمة «المؤرشفة».</summary>
+        public int ChatRetentionDays { get; set; } = 365;
     }
 
     public class AiChatTurnResult
@@ -536,7 +540,10 @@ namespace AccountModelsLib
     public interface IAiChatGateway
     {
         AiChatAvailability GetAvailability();
-        List<AiConversationView> GetConversations(long userId, string search);
+        /// <summary>archived = true: المؤرشفة (بعد مدة الاحتفاظ ChatRetentionDays أو يدوياً). يطبّق الأرشفة التلقائية مرة كل 6 ساعات على الأكثر.</summary>
+        List<AiConversationView> GetConversations(long userId, string search, bool archived = false);
+        /// <summary>أرشفة محادثة أو استعادتها (صاحبها فقط).</summary>
+        void SetConversationArchived(long conversationId, bool archived, long userId);
         List<AiChatMessage> GetMessages(long conversationId, long userId);
         void RenameConversation(long conversationId, string title, long userId);
         void DeleteConversation(long conversationId, long userId);

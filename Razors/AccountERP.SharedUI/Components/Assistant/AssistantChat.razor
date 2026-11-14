@@ -86,6 +86,10 @@
     .aic-setup .t { display: flex; align-items: center; gap: 8px; font-weight: 700; }
     .aic-setup p { margin: 6px 0 12px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
     .aic-setup .mud-button-root { min-height: 44px; }
+    .aic-archived { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; max-width: 860px; margin: 0 auto 8px; padding: 8px 12px; border-radius: 12px;
+                    background: color-mix(in srgb, var(--mud-palette-warning) 12%, transparent); color: var(--mud-palette-text-primary); font-size: .875rem; }
+    .aic-archived > span { flex: 1 1 200px; min-width: 0; }
+    .aic-archived .mud-button-root { min-height: 40px; }
     .aic-pending { display: flex; flex-wrap: wrap; gap: 6px; max-width: 860px; margin: 0 auto 8px; }
     .aic-files { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
     .aic-file { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-height: 36px; padding: 4px 10px; border-radius: 10px; font: inherit; font-size: .8rem;
@@ -571,6 +575,16 @@
         <div class="aic-sr" role="status" aria-atomic="true">@_status</div>
 
         <div class="aic-composer">
+            @if (Chat.ConversationArchived)
+            {
+                @* مدة الاحتفاظ: المحادثة المؤرشفة للقراءة فقط حتى تُستعاد *@
+                <div class="aic-archived" role="status">
+                    <MudIcon Icon="@Icons.Material.Outlined.Inventory2" Size="Size.Small" aria-hidden="true" />
+                    <span>@Tr("AIC_ArchivedBanner")</span>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Outlined.Unarchive"
+                               OnClick="() => Chat.SetArchivedAsync(Chat.ConversationId, false)">@Tr("AIC_Unarchive")</MudButton>
+                </div>
+            }
             @if (Chat.PendingAttachments.Count > 0 || Chat.IsUploading)
             {
                 <div class="aic-pending" aria-label="@Tr("AIC_FilesPending")">
@@ -592,14 +606,14 @@
                 @if (Chat.CanUpload)
                 {
                     <label class="aic-attach" for="@_fileId" title="@Tr("AIC_Attach", Chat.UploadLimits.MaxMb)" aria-label="@Tr("AIC_Attach", Chat.UploadLimits.MaxMb)"
-                           data-disabled="@(!Chat.Availability.Ready || Chat.IsSending || Chat.IsUploading ? "1" : "0")">
+                           data-disabled="@(!Chat.Availability.Ready || Chat.IsSending || Chat.IsUploading || Chat.ConversationArchived ? "1" : "0")">
                         <MudIcon Icon="@Icons.Material.Filled.AttachFile" />
                     </label>
                     <InputFile id="@_fileId" class="aic-fileinput" OnChange="OnFilesAsync" multiple accept="@Chat.UploadLimits.Accept"
-                               disabled="@(!Chat.Availability.Ready || Chat.IsSending || Chat.IsUploading)" />
+                               disabled="@(!Chat.Availability.Ready || Chat.IsSending || Chat.IsUploading || Chat.ConversationArchived)" />
                 }
                 <textarea @ref="_input" rows="1" maxlength="8000" aria-label="@Tr("AIC_InputLabel")" placeholder="@(Chat.PendingAsk != null ? Tr("AIC_AskPlaceholder") : Tr("AIC_Placeholder"))"
-                          disabled="@(!Chat.Availability.Ready)"></textarea>
+                          disabled="@(!Chat.Availability.Ready || Chat.ConversationArchived)"></textarea>
                 @if (Chat.IsSending)
                 {
                     <button type="button" class="aic-send stop" @onclick="Chat.Stop" aria-label="@Tr("AIC_Stop")" title="@Tr("AIC_Stop")">
@@ -609,7 +623,7 @@
                 else
                 {
                     <button type="button" class="aic-send" @onclick="SendFromButtonAsync" aria-label="@Tr("AIC_Send")" title="@Tr("AIC_Send")"
-                            disabled="@(!Chat.Availability.Ready)">
+                            disabled="@(!Chat.Availability.Ready || Chat.ConversationArchived)">
                         <MudIcon Icon="@Icons.Material.Filled.Send" Class="flip" />
                     </button>
                 }

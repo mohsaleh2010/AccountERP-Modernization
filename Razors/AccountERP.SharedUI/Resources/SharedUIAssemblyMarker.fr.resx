@@ -5589,4 +5589,13 @@
   <data name="AIK_AxFew" xml:space="preserve"><value>Seulement {0} cas communs ; il en faut au moins {1}.</value></data>
   <data name="AIK_AxBetter" xml:space="preserve"><value>« {0} » : {1} réussis avec exemples contre {2} sans, sur {3} cas communs — amélioration.</value></data>
   <data name="AIK_AxNotBetter" xml:space="preserve"><value>« {0} » : {1} réussis avec exemples contre {2} sans, sur {3} cas communs — pas de gain.</value></data>
+  <data name="AIC_ShowArchived" xml:space="preserve"><value>Discussions archivées</value></data>
+  <data name="AIC_BackToChats" xml:space="preserve"><value>Retour aux discussions</value></data>
+  <data name="AIC_ArchivedTitle" xml:space="preserve"><value>Archivées</value></data>
+  <data name="AIC_ArchivedHint" xml:space="preserve"><value>Une discussion est archivée automatiquement après {0} jours sans message ; rien n'est supprimé. Restaurez-la pour continuer.</value></data>
+  <data name="AIC_ArchivedHintManual" xml:space="preserve"><value>Discussions que vous avez archivées. Restaurez-en une pour continuer.</value></data>
+  <data name="AIC_NoArchived" xml:space="preserve"><value>Aucune discussion archivée.</value></data>
+  <data name="AIC_Archive" xml:space="preserve"><value>Archiver</value></data>
+  <data name="AIC_Unarchive" xml:space="preserve"><value>Restaurer</value></data>
+  <data name="AIC_ArchivedBanner" xml:space="preserve"><value>Cette discussion est archivée et en lecture seule. Restaurez-la pour continuer.</value></data>
 </root>
