@@ -123,16 +123,79 @@ namespace AccountERP.SharedUI.Services
         public AiChatMessage? PendingAsk =>
             Messages.Count > 0 && Messages[^1] is { Role: "assistant", Ask.Pending: true } m ? m : null;
 
-        /// <summary>رسالة جديدة؛ وإن كان للمساعد سؤال معلّق فالنص المكتوب إجابة حرة عليه (P4).</summary>
+        /// <summary>رسالة جديدة؛ وإن كان للمساعد سؤال معلّق فالنص المكتوب إجابة حرة عليه (P4). P6: المرفقات المرفوعة تُرسل معها.</summary>
         public Task SendAsync(string text, AiScreenContext context)
         {
             text = (text ?? "").Trim();
-            if (_gw == null || IsSending || text.Length == 0) return Task.CompletedTask;
+            if (_gw == null || IsSending || IsUploading || (text.Length == 0 && PendingAttachments.Count == 0)) return Task.CompletedTask;
             var ask = PendingAsk;
-            if (ask != null) return AnswerAsync(ask.Id, new List<string>(), text, context);
+            if (ask != null && PendingAttachments.Count == 0) return AnswerAsync(ask.Id, new List<string>(), text, context);
             var gw = _gw; long convId = ConversationId;
             var user = BuildUser();
-            return RunTurnAsync(text, convId, ct => gw.SendAsync(convId, text, context, user, OnDelta, OnToolStatus, ct), null);
+            var files = PendingAttachments.ToList();
+            var ids = files.Select(f => f.Id).ToList();
+            PendingAttachments = new();
+            string shown = text.Length > 0 ? text : string.Join("، ", files.Select(f => f.FileName));
+            PendingUserFiles = files;
+            return RunTurnAsync(shown, convId, ct => gw.SendAsync(convId, text, ids, context, user, OnDelta, OnToolStatus, ct), null, files);
+        }
+
+        // ───────────── P6: المرفقات ─────────────
+
+        /// <summary>ملفات رُفعت ولم تُرسل بعد (شرائح فوق مربع الكتابة).</summary>
+        public List<AiAttachmentView> PendingAttachments { get; private set; } = new();
+        /// <summary>مرفقات الرسالة الجارية (تُعرض فوراً مع نصها).</summary>
+        public List<AiAttachmentView> PendingUserFiles { get; private set; } = new();
+        public bool IsUploading { get; private set; }
+        private AiUploadLimits? _limits;
+
+        public AiUploadLimits UploadLimits
+        {
+            get
+            {
+                if (_limits == null && _gw != null)
+                {
+                    try { _limits = _gw.GetUploadLimits(); } catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
+                }
+                return _limits ?? new AiUploadLimits { Accept = "" };
+            }
+        }
+
+        public bool CanUpload => HasAccess && UploadLimits.Accept.Length > 0;
+
+        /// <summary>يرفع ملفاً (يتحقق الخادم من النوع والحجم). يرجع رسالة الخطأ أو null.</summary>
+        public async Task<string?> UploadAsync(string fileName, string contentType, Stream content, CancellationToken ct = default)
+        {
+            if (_gw == null || !CanUpload) return "رفع الملفات غير متاح.";
+            if (PendingAttachments.Count >= UploadLimits.MaxFiles) return $"حد الملفات فى الرسالة {UploadLimits.MaxFiles}.";
+            var gw = _gw; long uid = UserId;
+            IsUploading = true; Notify();
+            try
+            {
+                var view = await gw.UploadAttachmentAsync(uid, fileName, contentType, content, ct);
+                PendingAttachments = PendingAttachments.Append(view).ToList();
+                return null;
+            }
+            catch (Exception ex) { return Err(ex); }
+            finally { IsUploading = false; Notify(); }
+        }
+
+        public async Task RemovePendingAsync(long attachmentId)
+        {
+            if (_gw == null) return;
+            PendingAttachments = PendingAttachments.Where(a => a.Id != attachmentId).ToList();
+            Notify();
+            var gw = _gw; long uid = UserId;
+            try { await Bg(() => gw.RemoveAttachment(attachmentId, uid)); }
+            catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
+        }
+
+        /// <summary>الملف للمعاينة (null إن انتهت مدة الاحتفاظ).</summary>
+        public async Task<AiAttachmentFile?> GetAttachmentFileAsync(long attachmentId)
+        {
+            if (_gw == null || !HasAccess) return null;
+            var gw = _gw; long uid = UserId;
+            return await Bg(() => gw.GetAttachmentFile(attachmentId, uid));
         }
 
         /// <summary>P4: إجابة سؤال المساعد (خيارات مختارة و/أو نص حر) ثم استئناف الرد.</summary>
@@ -148,7 +211,8 @@ namespace AccountERP.SharedUI.Services
             return RunTurnAsync(shown, convId, ct => gw.AnswerAsync(convId, messageId, answer, context, user, OnDelta, OnToolStatus, ct), messageId);
         }
 
-        private async Task RunTurnAsync(string shownText, long convId, Func<CancellationToken, Task<AiChatTurnResult>> call, long? askMessageId)
+        private async Task RunTurnAsync(string shownText, long convId, Func<CancellationToken, Task<AiChatTurnResult>> call, long? askMessageId,
+                                        List<AiAttachmentView>? files = null)
         {
             _cts = new CancellationTokenSource();
             var ct = _cts.Token;
@@ -181,11 +245,14 @@ namespace AccountERP.SharedUI.Services
             {
                 Error = Err(ex);
                 resync = askMessageId != null;   // «أُجيب بالفعل» من نافذة أخرى: نعرض الحالة الحقيقية
+                // P6: لم تُرسل الرسالة ⇒ المرفقات تعود لمربع الكتابة (إن لم تُربط برسالة على الخادم يمكن إرسالها مجدداً)
+                if (files != null && files.Count > 0 && ConversationId == convId) PendingAttachments = files.Concat(PendingAttachments).ToList();
             }
             finally
             {
                 IsSending = false;
                 PendingUserText = null;
+                PendingUserFiles = new();
                 ToolStatus = null;
                 lock (_lock) _streaming.Clear();
                 _cts?.Dispose(); _cts = null;
@@ -384,6 +451,7 @@ namespace AccountERP.SharedUI.Services
             Messages = new();
             Conversations = new();
             SavedReports = new();
+            PendingAttachments = new();
             Search = "";
             Error = null;
             AvailabilityLoaded = false;

@@ -5221,4 +5221,36 @@
   <data name="AID_NoPrice" xml:space="preserve"><value>الصنف «{0}» بلا سعر؛ أدخل السعر قبل الحفظ.</value></data>
   <data name="AID_StoreNotAvailable" xml:space="preserve"><value>المخزن «{0}» غير متاح لهذا الإذن؛ اختر المخزن والأصناف يدوياً.</value></data>
   <data name="AID_OtherPartyNotAvailable" xml:space="preserve"><value>الجهة الأخرى المذكورة فى المسودة غير متاحة؛ اخترها يدوياً.</value></data>
+  <data name="AIC_Attach" xml:space="preserve"><value>إرفاق ملف (صورة، PDF، Excel — حتى {0}MB)</value></data>
+  <data name="AIC_FilesPending" xml:space="preserve"><value>ملفات ستُرسل مع الرسالة</value></data>
+  <data name="AIC_FileRemove" xml:space="preserve"><value>إزالة «{0}»</value></data>
+  <data name="AIC_Uploading" xml:space="preserve"><value>جارٍ الرفع…</value></data>
+  <data name="AIC_FileTooBig" xml:space="preserve"><value>الملف «{0}» أكبر من الحد المسموح ({1}MB).</value></data>
+  <data name="AIC_FileAdded" xml:space="preserve"><value>أُرفق «{0}»</value></data>
+  <data name="AIC_FilesMax" xml:space="preserve"><value>حد الملفات فى الرسالة {0}؛ أُخذ أولها فقط.</value></data>
+  <data name="AIC_FileOpen" xml:space="preserve"><value>معاينة الملف</value></data>
+  <data name="AIC_FileExpired" xml:space="preserve"><value>انتهت مدة الاحتفاظ بهذا الملف وحُذف.</value></data>
+  <data name="AIX_Title" xml:space="preserve"><value>بيانات مستخرجة من «{0}»</value></data>
+  <data name="AIX_Kind_purchase_invoice" xml:space="preserve"><value>فاتورة مورد</value></data>
+  <data name="AIX_Kind_sales_invoice" xml:space="preserve"><value>طلب/فاتورة عميل</value></data>
+  <data name="AIX_Kind_items_list" xml:space="preserve"><value>قائمة أصناف</value></data>
+  <data name="AIX_Kind_other" xml:space="preserve"><value>نص المستند</value></data>
+  <data name="AIX_Lines" xml:space="preserve"><value>{0} بند</value></data>
+  <data name="AIX_Low" xml:space="preserve"><value>{0} يحتاج مراجعة</value></data>
+  <data name="AIX_LowTip" xml:space="preserve"><value>حقول أو بنود قُرئت بثقة ضعيفة أو لا تتسق حسابياً</value></data>
+  <data name="AIX_Warnings" xml:space="preserve"><value>تحذيرات</value></data>
+  <data name="AIX_Conf" xml:space="preserve"><value>الثقة {0}</value></data>
+  <data name="AIX_Check" xml:space="preserve"><value>راجع</value></data>
+  <data name="AIX_LinesTitle" xml:space="preserve"><value>بنود المستند</value></data>
+  <data name="AIX_Desc" xml:space="preserve"><value>الوصف</value></data>
+  <data name="AIX_Code" xml:space="preserve"><value>الكود</value></data>
+  <data name="AIX_Qty" xml:space="preserve"><value>الكمية</value></data>
+  <data name="AIX_Unit" xml:space="preserve"><value>الوحدة</value></data>
+  <data name="AIX_Price" xml:space="preserve"><value>السعر</value></data>
+  <data name="AIX_Total" xml:space="preserve"><value>الإجمالى</value></data>
+  <data name="AIX_ConfCol" xml:space="preserve"><value>الثقة</value></data>
+  <data name="AIX_Note" xml:space="preserve"><value>قراءة آلية للمستند — لا يُحفظ شىء منها إلا بعد مراجعتك فى الشاشة.</value></data>
+  <data name="AID_Source" xml:space="preserve"><value>من الملف «{0}»</value></data>
+  <data name="AID_RefNo" xml:space="preserve"><value>رقم فاتورة المورد {0}</value></data>
+  <data name="AID_DocTotal" xml:space="preserve"><value>إجمالى المستند {0}</value></data>
 </root>

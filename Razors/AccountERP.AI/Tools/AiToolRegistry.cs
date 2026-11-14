@@ -24,6 +24,8 @@ namespace AccountERP.AI.Tools
         public List<long> DraftIds { get; } = new();
         /// <summary>P5: أنواع أذون المخزن المسموحة (تُحسب مرة لكل رسالة).</summary>
         internal List<AiDraftTools.OrderTypeInfo>? CachedOrderTypes { get; set; }
+        /// <summary>P6: مرفقات المحادثة الحالية (لأداة extract_document؛ فارغة ⇒ الأداة لا تُعرض).</summary>
+        public List<AiAttachmentView> Attachments { get; set; } = new();
 
         public bool HasRoute(string route)
         {
@@ -70,16 +72,22 @@ namespace AccountERP.AI.Tools
         private readonly ReadOnlySqlExecutor _sql;
         private readonly AiDatasetCache _datasets;
         private readonly AiReportsCLS _reports = new();
-        public AiToolRegistry(ReadOnlySqlExecutor sql, AiDatasetCache datasets)
+        private readonly Files.AiDocumentExtractor? _extractor;
+        public AiToolRegistry(ReadOnlySqlExecutor sql, AiDatasetCache datasets, Files.AiDocumentExtractor? extractor = null)
         {
             _sql = sql;
             _datasets = datasets;
+            _extractor = extractor;
         }
 
         public ReadOnlySqlExecutor Sql => _sql;
         public AiDatasetCache Datasets => _datasets;
 
-        private sealed record ToolSpec(AiToolDef Def, Func<AiToolContext, bool> Allowed, Func<JsonObject, AiToolContext, AiToolResult> Run);
+        /// <summary>RunAsync (P6) للأدوات التى تستدعى نموذجاً (extract_document)؛ Run للباقى.</summary>
+        private sealed record ToolSpec(AiToolDef Def, Func<AiToolContext, bool> Allowed, Func<JsonObject, AiToolContext, AiToolResult> Run)
+        {
+            public Func<JsonObject, AiToolContext, Task<AiToolResult>>? RunAsync { get; init; }
+        }
 
         private static JsonObject Str(string desc) => new() { ["type"] = "string", ["description"] = desc };
         private static JsonObject Enum(string desc, params string[] values) =>
@@ -225,6 +233,15 @@ namespace AccountERP.AI.Tools
             yield return new ToolSpec(AiDraftTools.PurchaseDef(), AiDraftTools.CanPurchase, AiDraftTools.CreatePurchase);
             if (AiDraftTools.CanStoreOrder(ctx))
                 yield return new ToolSpec(AiDraftTools.StoreOrderDef(ctx), AiDraftTools.CanStoreOrder, AiDraftTools.CreateStoreOrder);
+
+            // ───── P6: قراءة المرفقات (نموذج رؤية) ─────
+            if (_extractor != null && AiExtractTools.Allowed(ctx))
+            {
+                var extractor = _extractor;
+                yield return new ToolSpec(AiExtractTools.Def(ctx), AiExtractTools.Allowed,
+                    (_, _) => throw new InvalidOperationException("extract_document تُنفَّذ بـ ExecuteAsync"))
+                { RunAsync = (a, c) => AiExtractTools.RunAsync(a, c, extractor) };
+            }
         }
 
         public const string AskUserTool = "ask_user";
@@ -287,11 +304,15 @@ namespace AccountERP.AI.Tools
             AiDraftTools.SalesTool => "مسودة فاتورة مبيعات",
             AiDraftTools.PurchaseTool => "مسودة فاتورة مشتريات",
             AiDraftTools.StoreOrderTool => "مسودة إذن مخزن",
+            AiExtractTools.Tool => "قراءة مستند",
             _ => toolName,
         };
 
         /// <summary>ينفّذ أداة بعد التحقق من الصلاحية والمدخلات. لا يرمى إلا OperationCanceledException.</summary>
-        public AiToolResult Execute(string name, string inputJson, AiToolContext ctx)
+        public AiToolResult Execute(string name, string inputJson, AiToolContext ctx) => ExecuteAsync(name, inputJson, ctx).GetAwaiter().GetResult();
+
+        /// <summary>P6: نفس Execute، والأدوات غير المتزامنة (extract_document) تُنتظر.</summary>
+        public async Task<AiToolResult> ExecuteAsync(string name, string inputJson, AiToolContext ctx)
         {
             var spec = Specs(ctx).FirstOrDefault(s => s.Def.Name == name);
             if (spec == null) return Fail("الأداة «" + name + "» غير موجودة.", AiToolOutcome.Error, name);
@@ -301,7 +322,7 @@ namespace AccountERP.AI.Tools
             catch (JsonException) { return Fail("مدخلات الأداة ليست كائن JSON صحيحاً.", AiToolOutcome.Error, name); }
             try
             {
-                var res = spec.Run(args, ctx);
+                var res = spec.RunAsync != null ? await spec.RunAsync(args, ctx) : spec.Run(args, ctx);
                 if (res.Dataset == null || res.IsError) return res;
                 // P3: البيانات الكاملة تبقى على الخادم، والنموذج يأخذ معرّفها أول الناتج (يبقى ظاهراً حتى لو قُطع الباقى).
                 res.Dataset.Title = res.Title;

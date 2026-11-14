@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -312,6 +313,86 @@ namespace AccountModelsLib
         public AiAskView Ask { get; set; }
         /// <summary>P5: المسودات التى أعدّها المساعد (بطاقة «مسودة جاهزة»).</summary>
         public List<AiDraftCard> Drafts { get; set; } = new List<AiDraftCard>();
+        /// <summary>P6: ملفات رسالة المستخدم.</summary>
+        public List<AiAttachmentView> Attachments { get; set; } = new List<AiAttachmentView>();
+        /// <summary>P6: البيانات المستخرجة من المرفقات فى هذا الرد (بطاقة بالحقول والثقة).</summary>
+        public List<AiExtractionCard> Extractions { get; set; } = new List<AiExtractionCard>();
+    }
+
+    // ───────────── P6: المرفقات والاستخراج ─────────────
+
+    /// <summary>ملف مرفق كما يظهر فى المحادثة. Kind = image / pdf / sheet.</summary>
+    public class AiAttachmentView
+    {
+        public long Id { get; set; }
+        public string FileName { get; set; } = "";
+        public string MimeType { get; set; } = "";
+        public long SizeBytes { get; set; }
+        public string Kind { get; set; } = "image";
+        /// <summary>انتهت مدة الاحتفاظ وحُذف الملف (يبقى الاسم فقط).</summary>
+        public bool Expired { get; set; }
+    }
+
+    /// <summary>الملف نفسه للمعاينة (لصاحبه فقط).</summary>
+    public class AiAttachmentFile
+    {
+        public string FileName { get; set; } = "";
+        public string MimeType { get; set; } = "";
+        public byte[] Data { get; set; } = Array.Empty<byte>();
+    }
+
+    /// <summary>حدود الرفع للواجهة (accept وحجم أقصى وعدد ملفات الرسالة).</summary>
+    public class AiUploadLimits
+    {
+        public int MaxMb { get; set; } = 10;
+        public int MaxFiles { get; set; } = 5;
+        public string Accept { get; set; } = "";
+    }
+
+    /// <summary>حقل رأس مستخرج بثقته (0..1). Low = يحتاج مراجعة (ثقة ضعيفة أو لا يتسق حسابياً).</summary>
+    public class AiExtractField
+    {
+        public string Key { get; set; } = "";
+        public string Label { get; set; } = "";
+        public string Value { get; set; } = "";
+        public double Confidence { get; set; }
+        public bool Low { get; set; }
+    }
+
+    public class AiExtractLine
+    {
+        public int No { get; set; }
+        public string Description { get; set; } = "";
+        public string Code { get; set; } = "";
+        public decimal? Qty { get; set; }
+        public string Unit { get; set; } = "";
+        public decimal? UnitPrice { get; set; }
+        public decimal? Discount { get; set; }
+        public decimal? Tax { get; set; }
+        public decimal? LineTotal { get; set; }
+        public double Confidence { get; set; }
+        /// <summary>أسماء الحقول ضعيفة الثقة فى السطر (qty، unit_price، line_total...).</summary>
+        public List<string> LowFields { get; set; } = new List<string>();
+    }
+
+    /// <summary>ناتج extract_document بعد التطبيع والتحقق على الخادم.</summary>
+    public class AiExtraction
+    {
+        public string DocType { get; set; } = "";
+        public string Currency { get; set; } = "";
+        public List<AiExtractField> Fields { get; set; } = new List<AiExtractField>();
+        public List<AiExtractLine> Lines { get; set; } = new List<AiExtractLine>();
+        public List<string> Warnings { get; set; } = new List<string>();
+        /// <summary>doc_type = other: نص المستند/ملخصه.</summary>
+        public string Text { get; set; } = "";
+        public string Field(string key) => Fields.FirstOrDefault(f => f.Key == key)?.Value ?? "";
+    }
+
+    public class AiExtractionCard
+    {
+        public long AttachmentId { get; set; }
+        public string FileName { get; set; } = "";
+        public AiExtraction Extraction { get; set; } = new AiExtraction();
     }
 
     // ───────────── P2: الأدوات (قراءة فقط) ─────────────
@@ -417,8 +498,18 @@ namespace AccountModelsLib
         /// الإلغاء (زر الإيقاف) يحفظ الجزء المكتوب بحالة stopped ولا يرمى استثناء.
         /// </summary>
         /// <param name="onStatus">P2: نص حالة قصير أثناء تنفيذ الأدوات («أبحث فى البيانات…»)؛ null عند انتهاء الأداة.</param>
-        Task<AiChatTurnResult> SendAsync(long conversationId, string text, AiScreenContext context, AiUserContext user,
+        /// <param name="attachmentIds">P6: مرفقات رفعها المستخدم (UploadAttachmentAsync) ولم تُرسل بعد؛ النص قد يكون فارغاً معها.</param>
+        Task<AiChatTurnResult> SendAsync(long conversationId, string text, IReadOnlyList<long> attachmentIds, AiScreenContext context, AiUserContext user,
                                          Action<string> onDelta, Action<string> onStatus, CancellationToken ct = default);
+
+        // ───── P6: المرفقات ─────
+        AiUploadLimits GetUploadLimits();
+        /// <summary>يتحقق من النوع (بالمحتوى لا الامتداد فقط) والحجم ثم يحفظ الملف؛ يرمى InvalidOperationException برسالة عربية عند الرفض.</summary>
+        Task<AiAttachmentView> UploadAttachmentAsync(long userId, string fileName, string contentType, System.IO.Stream content, CancellationToken ct = default);
+        /// <summary>إزالة مرفق قبل إرساله.</summary>
+        void RemoveAttachment(long attachmentId, long userId);
+        /// <summary>الملف للمعاينة (لصاحبه فقط)؛ null إن انتهت مدة الاحتفاظ أو لم يوجد.</summary>
+        AiAttachmentFile GetAttachmentFile(long attachmentId, long userId);
 
         /// <summary>
         /// P4: إجابة سؤال المساعد المعلّق (رسالة messageId بحالة awaiting) ثم استئناف الحلقة وبثّ الرد. الإجابة تُحفظ رسالة مستخدم،

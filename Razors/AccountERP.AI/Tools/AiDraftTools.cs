@@ -146,8 +146,11 @@ namespace AccountERP.AI.Tools
                 ["lines"] = LinesSchema(true, "سعر شراء الوحدة الكبرى إن ذُكر"),
                 ["credit"] = Bool("فاتورة آجلة (الافتراضى نقدى)"),
                 ["tax_invoice"] = Bool("فاتورة ضريبية (ضريبة على الصنف)؛ اتركه فارغاً لإعداد الشاشة الافتراضى"),
-                ["invoice_date"] = Str("yyyy-MM-dd (الافتراضى اليوم)"),
+                ["invoice_date"] = Str("yyyy-MM-dd (الافتراضى اليوم؛ من مستند مرفق: تاريخ فاتورة المورد)"),
                 ["notes"] = Str("ملاحظات الفاتورة"),
+                ["supplier_invoice_no"] = Str("رقم فاتورة المورد كما فى مستنده (من extract_document: doc_no) — يُكشف به التكرار ويُكتب فى الملاحظات"),
+                ["source_attachment_id"] = Int("معرّف المرفق الذى قُرئت منه الفاتورة (اختيارى)"),
+                ["doc_total"] = Num("الإجمالى النهائى فى مستند المورد (اختيارى؛ للمقارنة وكشف التكرار)"),
             }, "supplier_id", "store_id", "lines"),
         };
 
@@ -201,11 +204,12 @@ namespace AccountERP.AI.Tools
                 Date = Date(a, "invoice_date"),
                 Notes = Notes(a),
             };
+            if (!sales) SourceAndDuplicates(a, p, c, dal);   // P6
             ReadLines(a, p, dal, checkBalance: sales, mergeDuplicates: false, allowPrice: true);
             string kindAr = sales ? "فاتورة مبيعات" : "فاتورة مشتريات";
             string title = $"مسودة {kindAr} — {partyName}";
             string url = (sales ? RSalesInvoice : RPurchaseInvoice) + "?aiDraft={id}" + (p.Credit ? "&agile=1" : "");
-            return Save(c, dal, p, title, url, $"{partyName} · {storeName}");
+            return Save(c, dal, p, title, url, $"{partyName} · {storeName}" + (string.IsNullOrEmpty(p.RefNo) ? "" : " · رقم المورد " + p.RefNo));
         }
 
         public static AiToolResult CreateStoreOrder(JsonObject a, AiToolContext c)
@@ -248,6 +252,45 @@ namespace AccountERP.AI.Tools
             string title = $"مسودة {info.Name} — {storeName}";
             string url = RStoreOrderPrefix + type.ToString(CultureInfo.InvariantCulture) + "?aiDraft={id}";
             return Save(c, dal, p, title, url, info.Name);
+        }
+
+        /// <summary>
+        /// P6: رقم فاتورة المورد ومصدرها: يُكتب الرقم فى الملاحظات (SupplierRefPrefix) فيبقى مع الفاتورة بعد الحفظ، ويُفحص التكرار
+        /// (مسودات سابقة بنفس المورد والرقم، فاتورة مشتريات محفوظة تحمل الرقم، أو نفس اليوم ونفس الصافى). تحذير لا منع: القرار للمستخدم.
+        /// </summary>
+        private static void SourceAndDuplicates(JsonObject a, AiDraftPayload p, AiToolContext c, AiDraftsCLS dal)
+        {
+            string refNo = Text(a, "supplier_invoice_no", 60);
+            refNo = Files.AiExtractionNormalizer.LatinDigits(refNo).Trim();
+            if (refNo.Length > 0)
+            {
+                p.RefNo = refNo;
+                string tag = AiDraftPayload.SupplierRefPrefix + refNo;
+                p.Notes = string.IsNullOrWhiteSpace(p.Notes) ? tag : (p.Notes!.Contains(tag) ? p.Notes : tag + " — " + p.Notes);
+                if (p.Notes!.Length > MaxNotes) p.Notes = p.Notes[..MaxNotes];
+            }
+            long att = Long(a, "source_attachment_id");
+            if (att > 0)
+            {
+                var f = c.Attachments.FirstOrDefault(x => x.Id == att);
+                if (f != null) { p.SourceAttachmentId = att; p.SourceFileName = f.FileName; }
+            }
+            if (a["doc_total"] is JsonValue) { decimal t = Dec(a, "doc_total"); if (t > 0) p.DocTotal = t; }
+            try
+            {
+                foreach (var h in dal.FindPurchaseDuplicates(p.PartyId, p.RefNo, p.Date, p.DocTotal))
+                {
+                    string date = h.Date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "";
+                    p.Warnings.Add(h.Source switch
+                    {
+                        "bill" => $"تكرار محتمل: رقم فاتورة المورد «{p.RefNo}» مسجّل بالفعل فى فاتورة المشتريات رقم {h.DocNo} ({date}).",
+                        "bill_amount" => $"تكرار محتمل: فاتورة مشتريات رقم {h.DocNo} لنفس المورد بنفس التاريخ ونفس الإجمالى.",
+                        _ when h.Status == AiDraftStatus.Consumed => $"تكرار محتمل: رقم فاتورة المورد «{p.RefNo}» استُخدم فى مسودة سابقة حُفظت برقم {h.DocNo} ({date}).",
+                        _ => $"تكرار محتمل: يوجد مسودة أخرى معلّقة بنفس رقم فاتورة المورد «{p.RefNo}» ({date}).",
+                    });
+                }
+            }
+            catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
         }
 
         private static (long Id, string Name) Store(JsonObject a, AiDraftsCLS dal)
@@ -337,6 +380,7 @@ namespace AccountERP.AI.Tools
                     matched_lines = p.Lines.Select(l => new { l.ItemName, l.Code, qty_large = l.QtyLarge, qty_small = l.QtySmall, price = l.Price }),
                     unmatched = p.Unmatched.Select(u => new { u.Text, u.Reason }),
                     warnings = p.Warnings,
+                    duplicate_warning = p.Warnings.Any(w => w.StartsWith("تكرار محتمل")) ? "نبّه المستخدم بوضوح لاحتمال التكرار." : null,
                 }, Json),
                 RowCount = p.Lines.Count,
                 Title = title,

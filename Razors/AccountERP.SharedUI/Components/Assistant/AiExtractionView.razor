@@ -1,0 +1,133 @@
+@* P6 (ai-assistant-plan.md §6): بطاقة «بيانات مستخرجة من الملف» تحت رد المساعد: حقول الرأس وبنود المستند بالثقة، والضعيف منها مميّز
+   (لون + أيقونة + نص «راجع» فلا يعتمد على اللون وحده)، والتحذيرات (حسابات لا تتسق، تكرار). عرض فقط؛ لا يحفظ شيئاً. *@
+@using System.Globalization
+@using AccountModelsLib
+@inject LanguageService LangService
+
+@{ var x = Card.Extraction; int low = x.Fields.Count(f => f.Low) + x.Lines.Count(l => l.LowFields.Count > 0); }
+<details class="aix" open="@Open">
+    <summary>
+        <MudIcon Icon="@Icons.Material.Outlined.DocumentScanner" Size="Size.Small" aria-hidden="true" />
+        <span class="t">@Tr("AIX_Title", Card.FileName)</span>
+        <span class="s">@Tr("AIX_Kind_" + (string.IsNullOrEmpty(x.DocType) ? "other" : x.DocType))@(x.Lines.Count > 0 ? " · " + Tr("AIX_Lines", x.Lines.Count) : "")</span>
+        @if (low > 0)
+        {
+            <span class="badge" title="@Tr("AIX_LowTip")"><MudIcon Icon="@Icons.Material.Filled.WarningAmber" Size="Size.Small" aria-hidden="true" />@Tr("AIX_Low", low)</span>
+        }
+    </summary>
+    <div class="bd">
+        @if (x.Warnings.Count > 0)
+        {
+            <ul class="warn" aria-label="@Tr("AIX_Warnings")">
+                @foreach (var w in x.Warnings) { <li>@w</li> }
+            </ul>
+        }
+        @{ var fields = x.Fields.Where(f => f.Value.Length > 0).ToList(); }
+        @if (fields.Count > 0)
+        {
+            <dl class="hdr">
+                @foreach (var f in fields)
+                {
+                    <div class="@("fld" + (f.Low ? " low" : ""))" title="@Tr("AIX_Conf", Pct(f.Confidence))">
+                        <dt>@f.Label</dt>
+                        <dd>
+                            <bdi>@f.Value</bdi>
+                            @if (f.Low) { <span class="chk"><MudIcon Icon="@Icons.Material.Filled.WarningAmber" Size="Size.Small" aria-hidden="true" />@Tr("AIX_Check")</span> }
+                        </dd>
+                    </div>
+                }
+            </dl>
+        }
+        @if (x.Lines.Count > 0)
+        {
+            <div class="tbl" role="region" aria-label="@Tr("AIX_LinesTitle")" tabindex="0">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">@Tr("AIX_Desc")</th>
+                            <th scope="col">@Tr("AIX_Code")</th>
+                            <th scope="col" class="n">@Tr("AIX_Qty")</th>
+                            <th scope="col">@Tr("AIX_Unit")</th>
+                            <th scope="col" class="n">@Tr("AIX_Price")</th>
+                            <th scope="col" class="n">@Tr("AIX_Total")</th>
+                            <th scope="col" class="n">@Tr("AIX_ConfCol")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var l in x.Lines)
+                        {
+                            <tr class="@(l.LowFields.Count > 0 ? "low" : "")">
+                                <td>@l.No</td>
+                                <td class="@C(l, "description")">@l.Description</td>
+                                <td class="@C(l, "code")"><bdi>@l.Code</bdi></td>
+                                <td class="@("n " + C(l, "qty"))">@N(l.Qty)</td>
+                                <td class="@C(l, "unit")">@l.Unit</td>
+                                <td class="@("n " + C(l, "unit_price"))">@N(l.UnitPrice)</td>
+                                <td class="@("n " + C(l, "line_total"))">@N(l.LineTotal)</td>
+                                <td class="n">@if (l.LowFields.Count > 0) {<MudIcon Icon="@Icons.Material.Filled.WarningAmber" Size="Size.Small" Class="wi" aria-label="@Tr("AIX_Check")" />}@Pct(l.Confidence)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        @if (!string.IsNullOrWhiteSpace(x.Text))
+        {
+            <pre class="txt">@x.Text</pre>
+        }
+        <div class="note">@Tr("AIX_Note")</div>
+    </div>
+</details>
+
+<style>
+    .aix { margin-top: 10px; border: 1px solid var(--mud-palette-lines-default); border-radius: 12px; background: var(--mud-palette-surface); overflow: hidden; }
+    .aix > summary { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; cursor: pointer; min-height: 44px; list-style: none; }
+    .aix > summary::-webkit-details-marker { display: none; }
+    .aix > summary:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: -2px; }
+    .aix > summary .mud-icon-root { color: var(--mud-palette-primary); }
+    .aix .t { font-weight: 700; font-size: .875rem; min-width: 0; overflow-wrap: anywhere; }
+    .aix .s { font-size: .78rem; color: var(--mud-palette-text-secondary); }
+    .aix .badge { display: inline-flex; align-items: center; gap: 4px; font-size: .75rem; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+                  color: var(--mud-palette-warning-darken); background: color-mix(in srgb, var(--mud-palette-warning) 14%, transparent); }
+    .aix .badge .mud-icon-root { color: inherit; }
+    .aix .bd { padding: 0 12px 12px; }
+    .aix .warn { margin: 0 0 10px; padding-inline-start: 18px; font-size: .8rem; line-height: 1.7; color: var(--mud-palette-warning-darken); }
+    .aix .hdr { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px; margin: 0 0 10px; }
+    .aix .fld { padding: 6px 8px; border-radius: 8px; background: var(--mud-palette-background); border: 1px solid transparent; }
+    .aix .fld dt { font-size: .72rem; color: var(--mud-palette-text-secondary); }
+    .aix .fld dd { margin: 0; font-size: .85rem; font-weight: 600; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; overflow-wrap: anywhere; }
+    .aix .low.fld { border-color: var(--mud-palette-warning); background: color-mix(in srgb, var(--mud-palette-warning) 8%, var(--mud-palette-background)); }
+    .aix .chk { display: inline-flex; align-items: center; gap: 2px; font-size: .72rem; font-weight: 600; color: var(--mud-palette-warning-darken); }
+    .aix .chk .mud-icon-root { color: inherit; font-size: 1rem; }
+    .aix .tbl { overflow-x: auto; border: 1px solid var(--mud-palette-lines-default); border-radius: 8px; max-height: 360px; }
+    .aix table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    .aix th { position: sticky; top: 0; background: var(--mud-palette-background-gray, var(--mud-palette-background)); font-weight: 600; text-align: start; padding: 6px 8px; white-space: nowrap; }
+    .aix td { padding: 6px 8px; border-top: 1px solid var(--mud-palette-lines-default); vertical-align: top; }
+    .aix .n { text-align: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .aix td.lowc { background: color-mix(in srgb, var(--mud-palette-warning) 16%, transparent); font-weight: 600; text-decoration: underline dotted var(--mud-palette-warning-darken); }
+    .aix .wi { color: var(--mud-palette-warning-darken); vertical-align: middle; font-size: 1rem; margin-inline-end: 2px; }
+    .aix .txt { white-space: pre-wrap; font: inherit; font-size: .82rem; max-height: 300px; overflow: auto; margin: 0; padding: 8px; border-radius: 8px; background: var(--mud-palette-background); }
+    .aix .note { margin-top: 8px; font-size: .74rem; color: var(--mud-palette-text-secondary); }
+</style>
+
+@code {
+    [Parameter, EditorRequired] public AccountModelsLib.AiExtractionCard Card { get; set; } = new();
+    [Parameter] public bool Open { get; set; } = true;
+
+    private static string C(AiExtractLine l, string key) => l.LowFields.Contains(key) ? "lowc" : "";
+    private static string N(decimal? v) => v?.ToString("#,0.##", CultureInfo.InvariantCulture) ?? "";
+    private static string Pct(double c) => ((int)Math.Round(c * 100)).ToString(CultureInfo.InvariantCulture) + "%";
+
+    private string Tr(string key, params object[] args)
+    {
+        var previous = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            string s = Lang[key];
+            return args.Length == 0 ? s : string.Format(CultureInfo.InvariantCulture, s, args);
+        }
+        finally { CultureInfo.CurrentUICulture = previous; }
+    }
+}

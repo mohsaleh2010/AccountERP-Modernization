@@ -5223,4 +5223,36 @@
   <data name="AID_NoPrice" xml:space="preserve"><value>L'article « {0} » n'a pas de prix ; saisissez-le avant d'enregistrer.</value></data>
   <data name="AID_StoreNotAvailable" xml:space="preserve"><value>Le magasin « {0} » n'est pas disponible pour ce bon ; choisissez le magasin et les articles manuellement.</value></data>
   <data name="AID_OtherPartyNotAvailable" xml:space="preserve"><value>L'autre partie du brouillon n'est pas disponible ; choisissez-la manuellement.</value></data>
+  <data name="AIC_Attach" xml:space="preserve"><value>Joindre un fichier (image, PDF, Excel — jusqu'à {0} Mo)</value></data>
+  <data name="AIC_FilesPending" xml:space="preserve"><value>Fichiers envoyés avec le message</value></data>
+  <data name="AIC_FileRemove" xml:space="preserve"><value>Retirer « {0} »</value></data>
+  <data name="AIC_Uploading" xml:space="preserve"><value>Envoi…</value></data>
+  <data name="AIC_FileTooBig" xml:space="preserve"><value>« {0} » dépasse la taille autorisée ({1} Mo).</value></data>
+  <data name="AIC_FileAdded" xml:space="preserve"><value>« {0} » joint</value></data>
+  <data name="AIC_FilesMax" xml:space="preserve"><value>{0} fichiers maximum par message ; seuls les premiers ont été pris.</value></data>
+  <data name="AIC_FileOpen" xml:space="preserve"><value>Aperçu du fichier</value></data>
+  <data name="AIC_FileExpired" xml:space="preserve"><value>La durée de conservation est dépassée ; le fichier a été supprimé.</value></data>
+  <data name="AIX_Title" xml:space="preserve"><value>Données lues dans « {0} »</value></data>
+  <data name="AIX_Kind_purchase_invoice" xml:space="preserve"><value>Facture fournisseur</value></data>
+  <data name="AIX_Kind_sales_invoice" xml:space="preserve"><value>Commande/facture client</value></data>
+  <data name="AIX_Kind_items_list" xml:space="preserve"><value>Liste d'articles</value></data>
+  <data name="AIX_Kind_other" xml:space="preserve"><value>Texte du document</value></data>
+  <data name="AIX_Lines" xml:space="preserve"><value>{0} lignes</value></data>
+  <data name="AIX_Low" xml:space="preserve"><value>{0} à vérifier</value></data>
+  <data name="AIX_LowTip" xml:space="preserve"><value>Champs ou lignes lus avec peu de confiance ou incohérents</value></data>
+  <data name="AIX_Warnings" xml:space="preserve"><value>Avertissements</value></data>
+  <data name="AIX_Conf" xml:space="preserve"><value>Confiance {0}</value></data>
+  <data name="AIX_Check" xml:space="preserve"><value>À vérifier</value></data>
+  <data name="AIX_LinesTitle" xml:space="preserve"><value>Lignes du document</value></data>
+  <data name="AIX_Desc" xml:space="preserve"><value>Description</value></data>
+  <data name="AIX_Code" xml:space="preserve"><value>Code</value></data>
+  <data name="AIX_Qty" xml:space="preserve"><value>Qté</value></data>
+  <data name="AIX_Unit" xml:space="preserve"><value>Unité</value></data>
+  <data name="AIX_Price" xml:space="preserve"><value>Prix</value></data>
+  <data name="AIX_Total" xml:space="preserve"><value>Total</value></data>
+  <data name="AIX_ConfCol" xml:space="preserve"><value>Confiance</value></data>
+  <data name="AIX_Note" xml:space="preserve"><value>Lecture automatique — rien n'est enregistré avant votre vérification à l'écran.</value></data>
+  <data name="AID_Source" xml:space="preserve"><value>Depuis le fichier « {0} »</value></data>
+  <data name="AID_RefNo" xml:space="preserve"><value>Facture fournisseur n° {0}</value></data>
+  <data name="AID_DocTotal" xml:space="preserve"><value>Total du document {0}</value></data>
 </root>

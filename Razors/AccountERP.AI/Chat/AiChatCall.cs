@@ -8,6 +8,17 @@ namespace AccountERP.AI.Chat
     public sealed class AiBlock
     {
         public const string KText = "text", KThinking = "thinking", KToolUse = "tool_use", KToolResult = "tool_result";
+        /// <summary>P6: ملف للنموذج (صورة أو PDF) بـ base64 — يُستخدم فى طلب الاستخراج فقط ولا يُحفظ فى التاريخ.</summary>
+        public const string KMedia = "media";
+
+        /// <summary>P6: image/png، image/jpeg، image/webp، application/pdf.</summary>
+        public string MediaType { get; init; } = "";
+        public string Base64 { get; init; } = "";
+        public string FileName { get; init; } = "";
+        public bool IsPdf => MediaType == "application/pdf";
+
+        public static AiBlock Media(string mediaType, byte[] data, string fileName) =>
+            new() { Kind = KMedia, MediaType = mediaType, Base64 = Convert.ToBase64String(data), FileName = fileName };
 
         public string Kind { get; init; } = KText;
         public string Text { get; set; } = "";

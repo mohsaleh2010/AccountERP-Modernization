@@ -77,6 +77,21 @@
     .aic-setup .t { display: flex; align-items: center; gap: 8px; font-weight: 700; }
     .aic-setup p { margin: 6px 0 12px; font-size: .875rem; color: var(--mud-palette-text-secondary); }
     .aic-setup .mud-button-root { min-height: 44px; }
+    .aic-pending { display: flex; flex-wrap: wrap; gap: 6px; max-width: 860px; margin: 0 auto 8px; }
+    .aic-files { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .aic-file { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-height: 36px; padding: 4px 10px; border-radius: 10px; font: inherit; font-size: .8rem;
+                border: 1px solid var(--mud-palette-lines-inputs); background: var(--mud-palette-surface); color: var(--mud-palette-text-primary); }
+    button.aic-file { cursor: pointer; }
+    button.aic-file:disabled { cursor: default; opacity: .6; }
+    button.aic-file:focus-visible, .aic-file .x:focus-visible, .aic-attach:focus-within { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .aic-file .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+    .aic-file .sz { color: var(--mud-palette-text-secondary); font-size: .72rem; white-space: nowrap; }
+    .aic-file .x { display: grid; place-items: center; width: 28px; height: 28px; margin-inline-end: -6px; border: 0; border-radius: 8px; background: transparent; cursor: pointer; color: var(--mud-palette-text-secondary); }
+    .aic-file .x:hover { background: var(--mud-palette-action-default-hover); }
+    .aic-attach { flex: none; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; cursor: pointer; color: var(--mud-palette-text-secondary); }
+    .aic-attach:hover { background: var(--mud-palette-action-default-hover); color: var(--mud-palette-primary); }
+    .aic-attach[data-disabled="1"] { opacity: .45; pointer-events: none; }
+    .aic-fileinput { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
     .aic-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     [dir="rtl"] .aic-send .mud-icon-root.flip { transform: scaleX(-1); }
     .aic-tools { margin-top: 8px; border: 1px solid var(--mud-palette-lines-default); border-radius: 10px; background: var(--mud-palette-surface); font-size: .8rem; }
@@ -224,7 +239,22 @@
                     {
                         @if (m.Role == "user")
                         {
-                            <div class="aic-row user" @key="m.Id"><div class="aic-bubble">@m.Text</div></div>
+                            <div class="aic-row user" @key="m.Id">
+                                <div class="aic-bubble">
+                                    @if (m.Text.Length > 0) { @m.Text }
+                                    @if (m.Attachments.Count > 0)
+                                    {
+                                        <div class="aic-files">
+                                            @foreach (var f in m.Attachments)
+                                            {
+                                                <button type="button" class="aic-file" title="@(f.Expired ? Tr("AIC_FileExpired") : Tr("AIC_FileOpen"))" disabled="@f.Expired" @onclick="() => OpenFileAsync(f)">
+                                                    <MudIcon Icon="@FileIcon(f)" Size="Size.Small" aria-hidden="true" /><span class="nm">@f.FileName</span><span class="sz">@FileSize(f.SizeBytes)</span>
+                                                </button>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
                         }
                         else
                         {
@@ -282,6 +312,10 @@
                                                 }
                                             </ol>
                                         </details>
+                                    }
+                                    @foreach (var xc in m.Extractions)
+                                    {
+                                        <AiExtractionView Card="xc" Open="@(m.Drafts.Count == 0)" />
                                     }
                                     @if (m.Reports.Count > 0 || m.Screens.Count > 0 || m.Drafts.Count > 0)
                                     {
@@ -436,7 +470,20 @@
 
                     @if (Chat.PendingUserText != null)
                     {
-                        <div class="aic-row user"><div class="aic-bubble">@Chat.PendingUserText</div></div>
+                        <div class="aic-row user">
+                            <div class="aic-bubble">
+                                @if (Chat.PendingUserFiles.Count == 0) { @Chat.PendingUserText }
+                                else
+                                {
+                                    <div class="aic-files">
+                                        @foreach (var f in Chat.PendingUserFiles)
+                                        {
+                                            <span class="aic-file"><MudIcon Icon="@FileIcon(f)" Size="Size.Small" aria-hidden="true" /><span class="nm">@f.FileName</span></span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
                         <div class="aic-row asst">
                             <div class="aic-avatar" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.AutoAwesome" /></div>
                             <div class="aic-bubble">
@@ -471,7 +518,33 @@
         <div class="aic-sr" role="status" aria-atomic="true">@_status</div>
 
         <div class="aic-composer">
+            @if (Chat.PendingAttachments.Count > 0 || Chat.IsUploading)
+            {
+                <div class="aic-pending" aria-label="@Tr("AIC_FilesPending")">
+                    @foreach (var f in Chat.PendingAttachments)
+                    {
+                        <span class="aic-file" @key="f.Id">
+                            <MudIcon Icon="@FileIcon(f)" Size="Size.Small" aria-hidden="true" /><span class="nm" title="@f.FileName">@f.FileName</span><span class="sz">@FileSize(f.SizeBytes)</span>
+                            <button type="button" class="x" aria-label="@Tr("AIC_FileRemove", f.FileName)" title="@Tr("AIC_FileRemove", f.FileName)"
+                                    disabled="@Chat.IsSending" @onclick="() => Chat.RemovePendingAsync(f.Id)"><MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" /></button>
+                        </span>
+                    }
+                    @if (Chat.IsUploading)
+                    {
+                        <span class="aic-file"><MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary" /><span class="nm">@Tr("AIC_Uploading")</span></span>
+                    }
+                </div>
+            }
             <div class="aic-box">
+                @if (Chat.CanUpload)
+                {
+                    <label class="aic-attach" for="@_fileId" title="@Tr("AIC_Attach", Chat.UploadLimits.MaxMb)" aria-label="@Tr("AIC_Attach", Chat.UploadLimits.MaxMb)"
+                           data-disabled="@(!Chat.Availability.Ready || Chat.IsSending || Chat.IsUploading ? "1" : "0")">
+                        <MudIcon Icon="@Icons.Material.Filled.AttachFile" />
+                    </label>
+                    <InputFile id="@_fileId" class="aic-fileinput" OnChange="OnFilesAsync" multiple accept="@Chat.UploadLimits.Accept"
+                               disabled="@(!Chat.Availability.Ready || Chat.IsSending || Chat.IsUploading)" />
+                }
                 <textarea @ref="_input" rows="1" maxlength="8000" aria-label="@Tr("AIC_InputLabel")" placeholder="@(Chat.PendingAsk != null ? Tr("AIC_AskPlaceholder") : Tr("AIC_Placeholder"))"
                           disabled="@(!Chat.Availability.Ready)"></textarea>
                 @if (Chat.IsSending)
@@ -605,6 +678,7 @@
             {
                 _self ??= DotNetObjectReference.Create(this);
                 await _module.InvokeVoidAsync("bindComposer", _input, _self);
+                if (Chat.CanUpload) await _module.InvokeVoidAsync("bindPaste", _input, _fileId);   // P6
                 _bound = true;
                 await _module.InvokeVoidAsync("focus", _input);
             }
@@ -628,7 +702,7 @@
     private async Task SubmitAsync(string? text)
     {
         text = (text ?? "").Trim();
-        if (text.Length == 0 || Chat.IsSending || !Chat.Availability.Ready) return;
+        if ((text.Length == 0 && Chat.PendingAttachments.Count == 0) || Chat.IsSending || Chat.IsUploading || !Chat.Availability.Ready) return;
         if (_module != null) await _module.InvokeVoidAsync("clearComposer", _input);
         _forceScroll = true;
         await Chat.SendAsync(text, ContextProvider?.Invoke() ?? new AiScreenContext { Language = LangService.CurrentCultureInfo.Name });
@@ -638,6 +712,56 @@
             try { await _module.InvokeVoidAsync("setComposer", _input, text); }
             catch (JSDisconnectedException) { }
         }
+    }
+
+    // ───── P6: المرفقات ─────
+    private readonly string _fileId = "aic-file-" + Guid.NewGuid().ToString("N")[..8];
+
+    private static string FileIcon(AiAttachmentView f) => f.Kind switch
+    {
+        "pdf" => Icons.Material.Outlined.PictureAsPdf,
+        "sheet" => Icons.Material.Outlined.TableChart,
+        _ => Icons.Material.Outlined.Image,
+    };
+
+    private static string FileSize(long bytes) => bytes >= 1024 * 1024
+        ? (bytes / 1048576.0).ToString("0.#", CultureInfo.InvariantCulture) + " MB"
+        : Math.Max(1, bytes / 1024).ToString(CultureInfo.InvariantCulture) + " KB";
+
+    private async Task OnFilesAsync(InputFileChangeEventArgs e)
+    {
+        var limits = Chat.UploadLimits;
+        long max = limits.MaxMb * 1024L * 1024L;
+        foreach (var file in e.GetMultipleFiles(limits.MaxFiles))
+        {
+            if (file.Size > max) { Snackbar.Add(Tr("AIC_FileTooBig", file.Name, limits.MaxMb), Severity.Warning); continue; }
+            string? err;
+            try
+            {
+                await using var stream = file.OpenReadStream(max + 1);
+                err = await Chat.UploadAsync(file.Name, file.ContentType, stream);
+            }
+            catch (IOException) { err = Tr("AIC_FileTooBig", file.Name, limits.MaxMb); }
+            if (err != null) { Snackbar.Add(err, Severity.Warning); _status = err; }
+            else _status = Tr("AIC_FileAdded", file.Name);
+        }
+        if (e.FileCount > limits.MaxFiles) Snackbar.Add(Tr("AIC_FilesMax", limits.MaxFiles), Severity.Info);
+        try { if (_module != null) await _module.InvokeVoidAsync("focus", _input); } catch (JSDisconnectedException) { }
+    }
+
+    /// <summary>معاينة الملف فى تبويب جديد (blob محلى؛ لا رابط عام للملف).</summary>
+    private async Task OpenFileAsync(AiAttachmentView f)
+    {
+        try
+        {
+            var file = await Chat.GetAttachmentFileAsync(f.Id);
+            if (file == null) { Snackbar.Add(Tr("AIC_FileExpired"), Severity.Info); return; }
+            if (_module == null) return;
+            using var streamRef = new DotNetStreamReference(new MemoryStream(file.Data));
+            await _module.InvokeVoidAsync("openBlob", streamRef, file.MimeType, file.FileName);
+        }
+        catch (JSDisconnectedException) { }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
     }
 
     // ───── P4: سؤال المساعد ─────

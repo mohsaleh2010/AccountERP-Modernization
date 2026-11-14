@@ -143,6 +143,31 @@ namespace AccountModelsLib
     [Target_Doc_No] [nvarchar](50) NULL,
     [ConsumedAt] [datetime] NULL,",
              @"CREATE NONCLUSTERED INDEX [IX_AI_Drafts_User] ON [dbo].[AI_Drafts]([User_Id], [Status], [CreatedAt] DESC);"),
+
+            // P6: الملفات التى يرفعها المستخدم للمساعد (صور، PDF، Excel/CSV). الملف نفسه على القرص (StoragePath نسبى لمجلد المرفقات) لا فى القاعدة.
+            // Sha256 لكشف رفع نفس الملف مرة أخرى. ExtractJson = آخر استخراج منظّم (يُعاد استخدامه بلا استدعاء نموذج لنفس النوع).
+            // Status: Active / Expired (بعد مدة الاحتفاظ يُحذف الملف من القرص ويبقى الصف للتدقيق).
+            ("AI_Attachments", @"
+    [User_Id] [bigint] NOT NULL,
+    [Conversation_Id] [bigint] NULL,
+    [Message_Id] [bigint] NULL,
+    [FileName] [nvarchar](260) NOT NULL,
+    [MimeType] [nvarchar](100) NOT NULL,
+    [SizeBytes] [bigint] NOT NULL,
+    [Sha256] [char](64) NOT NULL,
+    [StoragePath] [nvarchar](400) NOT NULL,
+    [Status] [nvarchar](20) NOT NULL DEFAULT (N'Active'),
+    [ExtractDocType] [nvarchar](30) NULL,
+    [ExtractJson] [nvarchar](max) NULL,
+    [ExtractModel_Id] [bigint] NULL,
+    [ExtractInputTokens] [int] NULL,
+    [ExtractOutputTokens] [int] NULL,
+    [ExtractCost] [decimal](18, 6) NULL,
+    [ExtractedAt] [datetime] NULL,
+    [Doc_No] [nvarchar](60) NULL,
+    [ExpiredAt] [datetime] NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_AI_Attachments_User] ON [dbo].[AI_Attachments]([User_Id], [CreatedAt] DESC);
+CREATE NONCLUSTERED INDEX [IX_AI_Attachments_Sha] ON [dbo].[AI_Attachments]([Sha256]);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>
@@ -218,6 +243,10 @@ CREATE TABLE [dbo].[{table}](
             ("AI_Providers", "SignInBy", "[bigint] NULL"),
             // P4 (ask_user): حالة حلقة الأدوات المتوقفة على سؤال للمستخدم (الأدوار الجارية + نتائج الدورة) لاستئنافها بعد الإجابة؛ تُمسح عند الإجابة.
             ("AI_Messages", "PendingJson", "[nvarchar](max) NULL"),
+            // P6 (جدول المساعد نفسه من P5): المورد/العميل ورقم فاتورة المورد ومصدر المسودة (المرفق) لكشف التكرار.
+            ("AI_Drafts", "Party_Id", "[bigint] NULL"),
+            ("AI_Drafts", "Ref_No", "[nvarchar](60) NULL"),
+            ("AI_Drafts", "Source_Attachment_Id", "[bigint] NULL"),
         };
 
         private static void AddedColumns(operations opp)

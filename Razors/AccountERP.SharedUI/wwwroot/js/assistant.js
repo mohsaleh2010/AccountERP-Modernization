@@ -64,3 +64,31 @@ export function bindEscape(el, dotnet) {
         if (e.key === 'Escape') { e.stopPropagation(); dotnet.invokeMethodAsync('CloseFromKeyboard'); }
     });
 }
+
+// P6: معاينة مرفق المساعد: الملف يصل من الدائرة كتيار (لا رابط عام له)، يُفتح فى تبويب جديد، وإن منع المتصفح النافذة يُنزَّل.
+export async function openBlob(streamRef, mime, name) {
+    const buf = await streamRef.arrayBuffer();
+    const url = URL.createObjectURL(new Blob([buf], { type: mime || 'application/octet-stream' }));
+    const win = window.open(url, '_blank');
+    if (!win) {
+        const a = document.createElement('a');
+        a.href = url; a.download = name || 'file'; document.body.appendChild(a); a.click(); a.remove();
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+// P6: لصق صورة (لقطة شاشة/صورة فاتورة) فى حقل الكتابة = رفعها كمرفق عبر نفس InputFile (نفس التحقق على الخادم).
+export function bindPaste(textarea, inputId) {
+    if (!textarea || textarea.__aiPaste) return;
+    textarea.__aiPaste = true;
+    textarea.addEventListener('paste', e => {
+        const files = e.clipboardData && e.clipboardData.files;
+        const input = document.getElementById(inputId);
+        if (!files || files.length === 0 || !input || input.disabled) return;
+        e.preventDefault();
+        const dt = new DataTransfer();
+        for (const f of files) dt.items.add(f);
+        input.files = dt.files;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+}

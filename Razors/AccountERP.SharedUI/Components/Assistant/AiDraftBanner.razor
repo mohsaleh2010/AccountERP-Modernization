@@ -17,6 +17,15 @@
             }
         </div>
         <div class="aid-sub">@Tr("AID_BannerHint")</div>
+        @if (!string.IsNullOrWhiteSpace(Payload.SourceFileName) || !string.IsNullOrWhiteSpace(Payload.RefNo))
+        {
+            @* P6: مصدر المسودة (الملف المرفق) ورقم فاتورة المورد *@
+            <div class="aid-sub">
+                @if (!string.IsNullOrWhiteSpace(Payload.SourceFileName)) { <span>@string.Format(CultureInfo.InvariantCulture, Tr("AID_Source"), Payload.SourceFileName)</span> }
+                @if (!string.IsNullOrWhiteSpace(Payload.RefNo)) { <span> · @string.Format(CultureInfo.InvariantCulture, Tr("AID_RefNo"), Payload.RefNo)</span> }
+                @if (Payload.DocTotal is decimal dt) { <span> · @string.Format(CultureInfo.InvariantCulture, Tr("AID_DocTotal"), dt.ToString("N2", CultureInfo.InvariantCulture))</span> }
+            </div>
+        }
         @if (Payload.Unmatched.Count > 0)
         {
             <div class="aid-sec">@Tr("AID_Unmatched")</div>

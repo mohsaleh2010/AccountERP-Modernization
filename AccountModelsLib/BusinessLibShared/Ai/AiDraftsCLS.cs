@@ -69,6 +69,16 @@ namespace AccountModelsLib
         public List<AiDraftLine> Lines { get; set; } = new List<AiDraftLine>();
         public List<AiDraftUnmatched> Unmatched { get; set; } = new List<AiDraftUnmatched>();
         public List<string> Warnings { get; set; } = new List<string>();
+        /// <summary>P6: رقم فاتورة المورد (أو مستند العميل) كما فى المستند المرفق؛ يُكتب فى الملاحظات بالبادئة SupplierRefPrefix.</summary>
+        public string RefNo { get; set; }
+        /// <summary>P6: المرفق الذى استُخرجت منه المسودة واسمه.</summary>
+        public long SourceAttachmentId { get; set; }
+        public string SourceFileName { get; set; }
+        /// <summary>P6: إجمالى المستند كما قرأه المساعد (للمقارنة بعد تعبئة الشاشة).</summary>
+        public decimal? DocTotal { get; set; }
+
+        /// <summary>P6: بادئة رقم فاتورة المورد فى ملاحظات الفاتورة (Bills_List.Notes) — بها يُكشف التكرار بعد الحفظ.</summary>
+        public const string SupplierRefPrefix = "فاتورة المورد رقم: ";
 
         public string ToJson() => JsonConvert.SerializeObject(this);
         public static AiDraftPayload FromJson(string json)
@@ -137,10 +147,76 @@ namespace AccountModelsLib
             DateTime now = DateTime.Now;
             string json = payload.ToJson();
             _newOpp().db.Database.ExecuteSqlInterpolated($@"
-INSERT INTO AI_Drafts (Id, User_Id, Conversation_Id, Message_Id, DraftType, Title, PayloadJson, Status, CreatedBy, CreatedAt)
-VALUES ({id}, {userId}, {conversationId}, NULL, {payload.Kind}, {Cut(title, 200)}, {json}, {AiDraftStatus.Pending}, {userId}, {now})");
+INSERT INTO AI_Drafts (Id, User_Id, Conversation_Id, Message_Id, DraftType, Title, PayloadJson, Status, CreatedBy, CreatedAt,
+                       Party_Id, Ref_No, Source_Attachment_Id)
+VALUES ({id}, {userId}, {conversationId}, NULL, {payload.Kind}, {Cut(title, 200)}, {json}, {AiDraftStatus.Pending}, {userId}, {now},
+        {(payload.PartyId > 0 ? payload.PartyId : (long?)null)}, {Cut(NormalizeRef(payload.RefNo), 60)}, {(payload.SourceAttachmentId > 0 ? payload.SourceAttachmentId : (long?)null)})");
             return id;
         }
+
+        /// <summary>رقم المستند للمقارنة: بلا مسافات، أرقام لاتينية، أحرف كبيرة. فارغ ⇒ null.</summary>
+        public static string NormalizeRef(string s)
+        {
+            if (string.IsNullOrWhiteSpace(s)) return null;
+            var sb = new System.Text.StringBuilder();
+            foreach (char ch in s.Trim())
+            {
+                if (char.IsWhiteSpace(ch)) continue;
+                if (ch >= '٠' && ch <= '٩') sb.Append((char)('0' + (ch - '٠')));
+                else if (ch >= '۰' && ch <= '۹') sb.Append((char)('0' + (ch - '۰')));
+                else sb.Append(char.ToUpperInvariant(ch));
+            }
+            return sb.Length == 0 ? null : sb.ToString();
+        }
+
+        /// <summary>تكرار محتمل لمستند من نفس الجهة.</summary>
+        public class DuplicateHit
+        {
+            /// <summary>draft = مسودة سابقة للمساعد، bill = فاتورة مشتريات محفوظة (رقم المورد فى ملاحظاتها)، bill_amount = نفس التاريخ والإجمالى.</summary>
+            public string Source { get; set; } = "";
+            public long Id { get; set; }
+            public string DocNo { get; set; } = "";
+            public string Status { get; set; } = "";
+            public DateTime? Date { get; set; }
+        }
+
+        /// <summary>
+        /// P6: كشف تكرار فاتورة المورد (ممارسة الأنظمة الحديثة: نفس المورد + نفس رقم فاتورته، وإلا نفس التاريخ والإجمالى). قراءة فقط:
+        /// مسودات المساعد المعلّقة/المحفوظة، وفواتير المشتريات غير المحذوفة التى تحمل رقم المورد فى ملاحظاتها، وفواتير نفس اليوم بنفس الصافى.
+        /// </summary>
+        public List<DuplicateHit> FindPurchaseDuplicates(long supplierId, string refNo, DateTime? docDate, decimal? docTotal, long excludeDraftId = 0)
+        {
+            var hits = new List<DuplicateHit>();
+            if (supplierId <= 0) return hits;
+            var db = _newOpp().db;
+            string norm = NormalizeRef(refNo);
+            if (norm != null)
+            {
+                Exec(db, @"SELECT TOP 5 Id, Status, Target_Doc_No, CreatedAt FROM AI_Drafts
+WHERE DraftType = @k AND Party_Id = @p AND Ref_No = @r AND Status IN (@s1, @s2) AND Id <> @x ORDER BY CreatedAt DESC",
+                    cmd => { Add(cmd, "@k", AiDraftKind.Purchase); Add(cmd, "@p", supplierId); Add(cmd, "@r", norm); Add(cmd, "@s1", AiDraftStatus.Pending); Add(cmd, "@s2", AiDraftStatus.Consumed); Add(cmd, "@x", excludeDraftId); },
+                    r => hits.Add(new DuplicateHit { Source = "draft", Id = r.GetInt64(0), Status = r.IsDBNull(1) ? "" : r.GetString(1), DocNo = r.IsDBNull(2) ? "" : r.GetString(2), Date = r.IsDBNull(3) ? (DateTime?)null : r.GetDateTime(3) }));
+                string like = "%" + AiDraftPayload.SupplierRefPrefix + EscapeLike(refNo.Trim()) + "%";
+                Exec(db, @"SELECT TOP 5 ID, Invoice_Id, Invoice_Date FROM Bills_List
+WHERE Supplier_Id = @p AND ISNULL(Deleted, 0) = 0 AND Notes LIKE @l ESCAPE '\' ORDER BY Invoice_Date DESC",
+                    cmd => { Add(cmd, "@p", supplierId); Add(cmd, "@l", like); },
+                    r => hits.Add(new DuplicateHit { Source = "bill", Id = Convert.ToInt64(r.GetValue(0)), DocNo = r.IsDBNull(1) ? "" : Convert.ToString(r.GetValue(1)), Date = r.IsDBNull(2) ? (DateTime?)null : r.GetDateTime(2) }));
+            }
+            if (docDate != null && docTotal is decimal t && t > 0)
+                Exec(db, @"SELECT TOP 5 ID, Invoice_Id, Invoice_Date FROM Bills_List
+WHERE Supplier_Id = @p AND ISNULL(Deleted, 0) = 0 AND Invoice_Date >= @d AND Invoice_Date < DATEADD(day, 1, @d) AND ABS(ISNULL(Net_Total, 0) - @t) < 0.01
+ORDER BY Invoice_Date DESC",
+                    cmd => { Add(cmd, "@p", supplierId); Add(cmd, "@d", docDate.Value.Date); Add(cmd, "@t", t); },
+                    r =>
+                    {
+                        long id = Convert.ToInt64(r.GetValue(0));
+                        if (hits.Any(h => h.Source == "bill" && h.Id == id)) return;
+                        hits.Add(new DuplicateHit { Source = "bill_amount", Id = id, DocNo = r.IsDBNull(1) ? "" : Convert.ToString(r.GetValue(1)), Date = r.IsDBNull(2) ? (DateTime?)null : r.GetDateTime(2) });
+                    });
+            return hits;
+        }
+
+        private static string EscapeLike(string s) => s.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_").Replace("[", "\\[");
 
         public void LinkMessage(IEnumerable<long> ids, long messageId, long userId)
         {

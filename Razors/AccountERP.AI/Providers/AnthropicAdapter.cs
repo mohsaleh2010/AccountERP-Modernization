@@ -162,10 +162,22 @@ namespace AccountERP.AI.Providers
                     case Chat.AiBlock.KToolResult:
                         content.Add(new ToolResultBlockParam { ToolUseID = b.ToolId, Content = b.Text, IsError = b.IsError });
                         break;
+                    case Chat.AiBlock.KMedia:   // P6: صورة أو PDF للاستخراج
+                        if (b.IsPdf) content.Add(new DocumentBlockParam { Source = new Base64PdfSource { Data = b.Base64 } });
+                        else content.Add(new ImageBlockParam { Source = new Base64ImageSource { Data = b.Base64, MediaType = ImageMediaType(b.MediaType) } });
+                        break;
                 }
             }
             return m.Role == "assistant" ? new AssistantMessageParam { Content = content } : new UserMessageParam { Content = content };
         }
+
+        private static MediaType ImageMediaType(string mime) => mime switch
+        {
+            "image/png" => MediaType.ImagePng,
+            "image/webp" => MediaType.ImageWebP,
+            "image/gif" => MediaType.ImageGif,
+            _ => MediaType.ImageJpeg,
+        };
 
         private static IReadOnlyDictionary<string, System.Text.Json.JsonElement> ParseInput(string json)
         {

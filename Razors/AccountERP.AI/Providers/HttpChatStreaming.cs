@@ -39,6 +39,8 @@ namespace AccountERP.AI.Providers
                     if (calls.Count > 0) msg["tool_calls"] = calls;
                     messages.Add(msg);
                 }
+                else if (m.Blocks.Any(b => b.Kind == AiBlock.KMedia))
+                    messages.Add(MediaUserMessage(m.Blocks, argumentsAsObject));   // P6: رسالة الاستخراج (نص + صورة/PDF)
                 else
                 {
                     foreach (var b in m.Blocks)
@@ -53,6 +55,33 @@ namespace AccountERP.AI.Providers
                 }
             }
             return messages;
+        }
+
+        /// <summary>
+        /// P6: رسالة مستخدم بنص وملفات. OpenAI-compatible: أجزاء text / image_url (data URI) / file (PDF بـ file_data كما فى OpenAI وOpenRouter).
+        /// Ollama: content نصى + images (base64)؛ لا يقرأ PDF.
+        /// </summary>
+        private static JsonObject MediaUserMessage(IReadOnlyList<AiBlock> blocks, bool ollama)
+        {
+            string text = string.Join("\n\n", blocks.Where(b => b.Kind == AiBlock.KText && b.Text.Length > 0).Select(b => b.Text));
+            var media = blocks.Where(b => b.Kind == AiBlock.KMedia).ToList();
+            if (ollama)
+            {
+                if (media.Any(b => b.IsPdf)) throw new AiProviderException("نماذج Ollama لا تقرأ ملفات PDF. ارفع صورة للمستند أو اختر نموذج رؤية سحابياً لمهمة «استخراج/رؤية».");
+                return new JsonObject
+                {
+                    ["role"] = "user",
+                    ["content"] = text,
+                    ["images"] = new JsonArray(media.Select(b => (JsonNode)JsonValue.Create(b.Base64)!).ToArray()),
+                };
+            }
+            var parts = new JsonArray();
+            if (text.Length > 0) parts.Add(new JsonObject { ["type"] = "text", ["text"] = text });
+            foreach (var b in media)
+                parts.Add(b.IsPdf
+                    ? new JsonObject { ["type"] = "file", ["file"] = new JsonObject { ["filename"] = string.IsNullOrWhiteSpace(b.FileName) ? "document.pdf" : b.FileName, ["file_data"] = "data:application/pdf;base64," + b.Base64 } }
+                    : new JsonObject { ["type"] = "image_url", ["image_url"] = new JsonObject { ["url"] = "data:" + b.MediaType + ";base64," + b.Base64 } });
+            return new JsonObject { ["role"] = "user", ["content"] = parts };
         }
 
         private static JsonArray OpenAiTools(AiChatCall call)
@@ -169,6 +198,8 @@ namespace AccountERP.AI.Providers
                     foreach (var b in m.Blocks)
                     {
                         if (b.Kind == AiBlock.KText && b.Text.Length > 0) parts.Add(new JsonObject { ["text"] = b.Text });
+                        else if (b.Kind == AiBlock.KMedia)   // P6: صورة أو PDF
+                            parts.Add(new JsonObject { ["inlineData"] = new JsonObject { ["mimeType"] = b.MediaType, ["data"] = b.Base64 } });
                         else if (b.Kind == AiBlock.KToolUse)
                         {
                             var part = new JsonObject { ["functionCall"] = new JsonObject { ["name"] = b.ToolName, ["args"] = ParseObject(b.InputJson) } };

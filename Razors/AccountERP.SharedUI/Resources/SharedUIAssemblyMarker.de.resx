@@ -5223,4 +5223,36 @@
   <data name="AID_NoPrice" xml:space="preserve"><value>Artikel „{0}“ hat keinen Preis; vor dem Speichern eingeben.</value></data>
   <data name="AID_StoreNotAvailable" xml:space="preserve"><value>Lager „{0}“ ist für diesen Beleg nicht verfügbar; Lager und Artikel manuell wählen.</value></data>
   <data name="AID_OtherPartyNotAvailable" xml:space="preserve"><value>Die andere Partei im Entwurf ist nicht verfügbar; manuell wählen.</value></data>
+  <data name="AIC_Attach" xml:space="preserve"><value>Datei anhängen (Bild, PDF, Excel — bis {0} MB)</value></data>
+  <data name="AIC_FilesPending" xml:space="preserve"><value>Dateien, die mit der Nachricht gesendet werden</value></data>
+  <data name="AIC_FileRemove" xml:space="preserve"><value>„{0}“ entfernen</value></data>
+  <data name="AIC_Uploading" xml:space="preserve"><value>Wird hochgeladen…</value></data>
+  <data name="AIC_FileTooBig" xml:space="preserve"><value>„{0}“ ist größer als erlaubt ({1} MB).</value></data>
+  <data name="AIC_FileAdded" xml:space="preserve"><value>„{0}“ angehängt</value></data>
+  <data name="AIC_FilesMax" xml:space="preserve"><value>Höchstens {0} Dateien pro Nachricht; nur die ersten wurden übernommen.</value></data>
+  <data name="AIC_FileOpen" xml:space="preserve"><value>Datei ansehen</value></data>
+  <data name="AIC_FileExpired" xml:space="preserve"><value>Die Aufbewahrungsfrist ist abgelaufen; die Datei wurde gelöscht.</value></data>
+  <data name="AIX_Title" xml:space="preserve"><value>Aus „{0}“ gelesene Daten</value></data>
+  <data name="AIX_Kind_purchase_invoice" xml:space="preserve"><value>Lieferantenrechnung</value></data>
+  <data name="AIX_Kind_sales_invoice" xml:space="preserve"><value>Kundenauftrag/-rechnung</value></data>
+  <data name="AIX_Kind_items_list" xml:space="preserve"><value>Artikelliste</value></data>
+  <data name="AIX_Kind_other" xml:space="preserve"><value>Dokumenttext</value></data>
+  <data name="AIX_Lines" xml:space="preserve"><value>{0} Positionen</value></data>
+  <data name="AIX_Low" xml:space="preserve"><value>{0} prüfen</value></data>
+  <data name="AIX_LowTip" xml:space="preserve"><value>Felder oder Positionen mit geringer Sicherheit oder rechnerisch unstimmig</value></data>
+  <data name="AIX_Warnings" xml:space="preserve"><value>Warnungen</value></data>
+  <data name="AIX_Conf" xml:space="preserve"><value>Sicherheit {0}</value></data>
+  <data name="AIX_Check" xml:space="preserve"><value>Prüfen</value></data>
+  <data name="AIX_LinesTitle" xml:space="preserve"><value>Dokumentpositionen</value></data>
+  <data name="AIX_Desc" xml:space="preserve"><value>Beschreibung</value></data>
+  <data name="AIX_Code" xml:space="preserve"><value>Code</value></data>
+  <data name="AIX_Qty" xml:space="preserve"><value>Menge</value></data>
+  <data name="AIX_Unit" xml:space="preserve"><value>Einheit</value></data>
+  <data name="AIX_Price" xml:space="preserve"><value>Preis</value></data>
+  <data name="AIX_Total" xml:space="preserve"><value>Summe</value></data>
+  <data name="AIX_ConfCol" xml:space="preserve"><value>Sicherheit</value></data>
+  <data name="AIX_Note" xml:space="preserve"><value>Automatisch gelesen — nichts wird gespeichert, bevor Sie es in der Maske prüfen.</value></data>
+  <data name="AID_Source" xml:space="preserve"><value>Aus Datei „{0}“</value></data>
+  <data name="AID_RefNo" xml:space="preserve"><value>Lieferantenrechnung Nr. {0}</value></data>
+  <data name="AID_DocTotal" xml:space="preserve"><value>Dokumentsumme {0}</value></data>
 </root>
