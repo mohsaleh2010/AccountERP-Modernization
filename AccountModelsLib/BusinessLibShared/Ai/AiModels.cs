@@ -78,6 +78,25 @@ namespace AccountModelsLib
         /// <summary>P7.7: عدد الأمثلة المعتمدة المشابهة التى تُلحق بسؤال المستخدم (للنموذج فقط). 0 = موقوفة (الافتراضى) حتى يثبت التقييم فائدتها.</summary>
         public const string KnowledgeAutoExamples = "KnowledgeAutoExamples";
         public const int MaxAutoExamples = 5;
+
+        // ───── P8.1: الموجز اليومى (ai-assistant-p8-plan.md §4) ─────
+        /// <summary>1 = الميزة مفعّلة (الافتراضى 0 حتى يفعّلها المدير).</summary>
+        public const string BriefEnabled = "BriefEnabled";
+        /// <summary>موعد التوليد HH:mm بتوقيت BriefTimeZone.</summary>
+        public const string BriefTime = "BriefTime";
+        /// <summary>معرّف TimeZoneInfo؛ فارغ = توقيت الخادم.</summary>
+        public const string BriefTimeZone = "BriefTimeZone";
+        /// <summary>أيام التوليد بترقيم DayOfWeek مفصولة بفاصلة (الافتراضى السبت–الخميس: 0,1,2,3,4,6).</summary>
+        public const string BriefWeekDays = "BriefWeekDays";
+        /// <summary>1 = سرد بالنموذج، 0 = القالب فقط.</summary>
+        public const string BriefNarrative = "BriefNarrative";
+        /// <summary>حد تكلفة السرد الشهرى (0 = بلا حد)؛ عند بلوغه يُستخدم القالب.</summary>
+        public const string BriefMaxCostPerMonth = "BriefMaxCostPerMonth";
+        public const string BriefSalesDropPct = "BriefSalesDropPct";
+        public const string BriefReturnsPct = "BriefReturnsPct";
+        public const string BriefMinCashBalance = "BriefMinCashBalance";
+        public const string BriefOverdueDays = "BriefOverdueDays";
+        public const string BriefLargePaymentFactor = "BriefLargePaymentFactor";
     }
 
     /// <summary>صف AI_Providers كما يُخزَّن (المفتاح مشفّر). لا يصل للواجهة؛ الواجهة ترى AiProviderView.</summary>

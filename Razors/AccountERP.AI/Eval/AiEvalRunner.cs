@@ -345,7 +345,7 @@ namespace AccountERP.AI.Eval
                 if (string.IsNullOrWhiteSpace(c.ReferenceSql)) return (null, null);
                 try
                 {
-                    var session = new Dictionary<string, object> { ["ai_tax"] = plan.TaxFilter, ["ai_user"] = plan.User.UserId };
+                    var session = ReadOnlySqlExecutor.SessionFor(plan.TaxFilter, plan.User.UserId);
                     var r = _tools.Sql.Execute(c.ReferenceSql, plan.AllowedViews, session, null, ct);
                     Audit(plan, runId, c, c.ReferenceSql, r.Rows.Count, sw, AiToolOutcome.Ok, null);
                     if (r.Truncated) return (null, $"الاستعلام المرجعى أعاد أكثر من {ReadOnlySqlExecutor.MaxRows} صف؛ لا يمكن المقارنة.");

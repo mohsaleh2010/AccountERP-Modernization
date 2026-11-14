@@ -77,6 +77,17 @@ namespace AccountERP.AI.Tools
         }
 
         /// <summary>
+        /// قيود الـ Views لمستخدم: ai_tax (-1/0/1)، ai_user، و ai_box_perm (P8.1: 1 = الصناديق بصلاحية SysConfigBanksPERMATIONS كالشاشات
+        /// حين IS_Used_SandoukWithPermission = 1، و0 = كل الصناديق). مصدر واحد لكل من ينفّذ استعلام قراءة (الأدوات، التقييم، الموجز).
+        /// </summary>
+        public static Dictionary<string, object> SessionFor(int taxFilter, long userId) => new()
+        {
+            ["ai_tax"] = taxFilter,
+            ["ai_user"] = userId,
+            ["ai_box_perm"] = AccountModelsLib.Common.IS_Used_SandoukWithPermission == 1 ? 1 : 0,
+        };
+
+        /// <summary>
         /// ينفّذ استعلاماً سبق التحقق منه (يُعاد التحقق هنا احتياطاً). sessionValues تُضبط بـ sp_set_session_context للقراءة فقط
         /// (ai_tax: -1/0/1). المعاملة تُلغى دائماً حتى لو تسلل شىء، فلا يبقى أى أثر.
         /// </summary>

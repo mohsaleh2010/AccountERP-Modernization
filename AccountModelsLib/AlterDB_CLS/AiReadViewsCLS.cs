@@ -48,7 +48,7 @@ SELECT l.ID AS sale_id, l.Invoice_Id AS invoice_no, CONVERT(date, l.Invoice_Date
        l.DAMGHAT AS stamp_duty, l.Net_Total AS net_total, l.Equivalent_Net_Total AS net_total_equivalent, l.Currency_id AS currency_id,
        l.IsInvoiceTaxInfo AS is_tax_invoice, l.Is_Tax_Per_Item AS is_tax_per_item, l.Is_Invoice_Agile AS is_credit,
        l.PaidValue AS paid_value, l.RestValue AS rest_value, l.Salesman_Id AS salesman_id, l.IsMaintainceInvoice AS is_maintenance,
-       l.IS_Posted_Flage AS is_posted, l.Notes AS notes
+       l.IS_Posted_Flage AS is_posted, l.Notes AS notes, CONVERT(date, l.InvoiceDueDate) AS due_date
 FROM dbo.Invoices_List l
 LEFT JOIN dbo.Customer c ON c.Id = l.Customer_Id
 LEFT JOIN dbo.Account_Branches b ON b.Id = l.Branch_Id
@@ -148,7 +148,38 @@ FROM dbo.Unit_item ui
 LEFT JOIN dbo.Item i ON i.id = ui.Item_id
 LEFT JOIN dbo.Store s ON s.id = ui.Store_id
 LEFT JOIN dbo.unit u ON u.id = ui.unit_id;"),
+            // P8.1: سطور إذون النقدية (سند قبض = 1، صرف = 2) كما تقرؤها «قوائم الإذونات» (CashVouchersService.SearchVouchers): الإذن له رقم (≠ 0، -1).
+            // العملة = عملة الصندوق (Banks.Currency_Id؛ عملة السطر قد تخالفها)، والفرع = فرع الصندوق (Branch_Id السطر صفر غالباً؛ 0/-1 = كل الفروع).
+            // الطرف: عميل إن Customer_Id > 0، وإلا مورد إن Supplier_Id > 0، وإلا حساب (Account_Type غير موثوق). المعادل = القيمة × Factor.
+            // صلاحية الصناديق (SysConfigBanksPERMATIONS) حين IS_Used_SandoukWithPermission = 1 عبر SESSION_CONTEXT ai_box_perm؛ بلا سياق لا صفوف.
+            ("v_cash_vouchers", @"CREATE OR ALTER VIEW ai.v_cash_vouchers AS
+SELECT m.Id AS line_id, o.Id AS voucher_id, o.Order_No AS voucher_no, CONVERT(date, m.Transaction_Date) AS voucher_date,
+       m.Transaction_Type AS transaction_type, CASE WHEN m.Transaction_Type = 1 THEN 1 ELSE 0 END AS is_receipt,
+       m.Bank_Id AS box_id, b.Bank_Name AS box_name, b.Is_Bank AS is_bank, b.Branch_Id AS branch_id, b.Currency_Id AS currency_id,
+       ISNULL(m.Transaction_Value, 0) AS amount, ISNULL(NULLIF(m.Factor, 0), 1) AS factor,
+       ISNULL(m.Transaction_Value, 0) * ISNULL(NULLIF(m.Factor, 0), 1) AS amount_equivalent,
+       CASE WHEN m.Customer_Id > 0 THEN N'customer' WHEN m.Supplier_Id > 0 THEN N'supplier' ELSE N'account' END AS party_type,
+       CASE WHEN m.Customer_Id > 0 THEN m.Customer_Id WHEN m.Supplier_Id > 0 THEN m.Supplier_Id ELSE m.SubAccount_Id END AS party_id,
+       COALESCE(CASE WHEN m.Customer_Id > 0 THEN cu.Name END, CASE WHEN m.Supplier_Id > 0 THEN su.Name END, m.Account_Name) AS party_name,
+       m.Lookup_CashPaymentMethodName AS payment_method, COALESCE(NULLIF(m.Notes, N''), o.Order_Notes) AS notes,
+       m.DataDictionaryProcessesListsId AS source_doc_type, m.Reference_Type_Table_Id AS source_doc_id
+FROM dbo.Money_Transaction_Box m
+INNER JOIN dbo.Order_Money o ON o.Id = m.Order_Mony_Id
+LEFT JOIN dbo.Banks b ON b.id = m.Bank_Id
+LEFT JOIN dbo.Customer cu ON cu.Id = m.Customer_Id
+LEFT JOIN dbo.Supplier su ON su.Id = m.Supplier_Id
+WHERE o.Order_No <> 0 AND o.Order_No <> -1
+  AND (CAST(SESSION_CONTEXT(N'ai_box_perm') AS int) = 0
+       OR (CAST(SESSION_CONTEXT(N'ai_box_perm') AS int) = 1 AND " + BoxPermToken + @"));"),
         };
+
+        /// <summary>
+        /// جدول صلاحيات الصناديق ليس فى كل القواعد (غير موجود فى ERP_V1_3.md ولا فى قاعدة التطوير)، فيُكتب شرطه وقت الإنشاء:
+        /// موجود ⇒ الصناديق الممنوحة للمستخدم فقط؛ غير موجود ⇒ لا صناديق ممنوحة (1 = 0). يُعاد التقييم مع كل EnsureSchema.
+        /// </summary>
+        private const string BoxPermToken = "/*AI_BOX_PERM*/";
+        private const string BoxPermExists = @"EXISTS (SELECT 1 FROM dbo.SysConfigBanksPERMATIONS p
+                       WHERE p.Account_Branks_Id = m.Bank_Id AND p.USER_DETAILES_Id = CAST(SESSION_CONTEXT(N'ai_user') AS bigint))";
 
         public static IReadOnlyCollection<string> ViewNames => Views.Select(v => v.Name).ToList();
 
@@ -156,8 +187,10 @@ LEFT JOIN dbo.unit u ON u.id = ui.unit_id;"),
         public static void Ensure(operations opp)
         {
             opp.db.Database.ExecuteSqlRaw("IF SCHEMA_ID(N'ai') IS NULL EXEC(N'CREATE SCHEMA ai');");
+            bool hasBoxPerm = opp.db.Database.SqlQueryRaw<int>(
+                "SELECT CASE WHEN OBJECT_ID(N'dbo.SysConfigBanksPERMATIONS', N'U') IS NULL THEN 0 ELSE 1 END AS Value").AsEnumerable().First() == 1;
             foreach (var (_, sql) in Views)
-                opp.db.Database.ExecuteSqlRaw(sql);
+                opp.db.Database.ExecuteSqlRaw(sql.Replace(BoxPermToken, hasBoxPerm ? BoxPermExists : "1 = 0"));
         }
     }
 }

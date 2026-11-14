@@ -285,6 +285,62 @@ CREATE NONCLUSTERED INDEX [IX_AI_EvalRuns_Started] ON [dbo].[AI_EvalRuns]([Start
     [EvalCase_Id] [bigint] NULL,",
              @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_Feedback_Message_User] ON [dbo].[AI_Feedback]([Message_Id], [User_Id]);
 CREATE NONCLUSTERED INDEX [IX_AI_Feedback_Status] ON [dbo].[AI_Feedback]([ReviewStatus], [CreatedAt] DESC);"),
+
+            // P8.1 (ai-assistant-p8-plan.md §4): الموجز اليومى. صف لكل (يوم، نطاق): ScopeKey = بصمة كل ما يغيّر الأرقام (الفروع، الأقسام، TaxFilter، الصناديق،
+            // إصدار الجامع)، فالمستخدمون المتطابقون يتشاركون صفاً واحداً. الحجز بإدراج صف Running تحت الفهرس الفريد (آمن مع التزامن وإعادة التشغيل).
+            // FactsJson/AlertsJson محايدة لغوياً (أكواد + أرقام + أسماء كيانات). Status: Running / Ready / Partial / Failed. TriggeredBy: schedule / manual / test.
+            ("AI_Briefs", @"
+    [BriefDate] [date] NOT NULL,
+    [PeriodFrom] [date] NOT NULL,
+    [PeriodTo] [date] NOT NULL,
+    [ScopeKey] [char](64) NOT NULL,
+    [BranchIdsCsv] [nvarchar](500) NULL,
+    [SectionsCsv] [nvarchar](200) NULL,
+    [TaxFilter] [int] NOT NULL DEFAULT ((-1)),
+    [FactsJson] [nvarchar](max) NULL,
+    [AlertsJson] [nvarchar](max) NULL,
+    [AlertCount] [int] NOT NULL DEFAULT ((0)),
+    [ErrorsJson] [nvarchar](max) NULL,
+    [Status] [nvarchar](20) NOT NULL DEFAULT (N'Running'),
+    [CollectorVersion] [int] NOT NULL DEFAULT ((1)),
+    [DurationMs] [int] NULL,
+    [TriggeredBy] [nvarchar](20) NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_Briefs_Date_Scope] ON [dbo].[AI_Briefs]([BriefDate], [ScopeKey]);"),
+
+            // P8.1: سرد النموذج (أو القالب) لكل موجز ولغة. Source: model / rejected / error / capped / off (غير model ⇒ الواجهة ترسم القالب من الحقائق).
+            ("AI_BriefNarratives", @"
+    [Brief_Id] [bigint] NOT NULL,
+    [Language] [nvarchar](5) NOT NULL,
+    [NarrativeText] [nvarchar](max) NULL,
+    [QuestionsJson] [nvarchar](1000) NULL,
+    [Source] [nvarchar](20) NOT NULL,
+    [Model_Id] [bigint] NULL,
+    [ModelName] [nvarchar](150) NULL,
+    [InputTokens] [int] NULL,
+    [OutputTokens] [int] NULL,
+    [CostEstimate] [decimal](18, 6) NULL,
+    [RejectReason] [nvarchar](300) NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_BriefNarratives_Brief_Lang] ON [dbo].[AI_BriefNarratives]([Brief_Id], [Language]);"),
+
+            // P8.1: تسليم الموجز لكل مستلم (هو مصدر الإشعار وصلاحية فتح الموجز). Conversation_Id = محادثة «اسأل المساعد» المفتوحة منه.
+            ("AI_BriefDeliveries", @"
+    [Brief_Id] [bigint] NOT NULL,
+    [User_Id] [bigint] NOT NULL,
+    [Language] [nvarchar](5) NOT NULL,
+    [ReadAt] [datetime] NULL,
+    [HomeDismissedAt] [datetime] NULL,
+    [Conversation_Id] [bigint] NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_BriefDeliveries_Brief_User] ON [dbo].[AI_BriefDeliveries]([Brief_Id], [User_Id]);
+CREATE NONCLUSTERED INDEX [IX_AI_BriefDeliveries_User_Read] ON [dbo].[AI_BriefDeliveries]([User_Id], [ReadAt]);"),
+
+            // P8.1: الاشتراك اختيارى لكل مستخدم. BranchIdsCsv/SectionsCsv فارغة = كل المسموح له.
+            ("AI_BriefSubscriptions", @"
+    [User_Id] [bigint] NOT NULL,
+    [IsEnabled] [bit] NOT NULL DEFAULT ((1)),
+    [BranchIdsCsv] [nvarchar](500) NULL,
+    [SectionsCsv] [nvarchar](200) NULL,
+    [Language] [nvarchar](5) NOT NULL DEFAULT (N'ar-EG'),",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_BriefSubscriptions_User] ON [dbo].[AI_BriefSubscriptions]([User_Id]);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>
@@ -299,6 +355,18 @@ CREATE NONCLUSTERED INDEX [IX_AI_Feedback_Status] ON [dbo].[AI_Feedback]([Review
             (AiSettingKeys.EvalMaxCasesPerRun, "100"),
             (AiSettingKeys.EvalMaxCostPerRun, "0"),   // 0 = بلا حد (التشغيل يتطلب موافقة المدير على التكلفة التقديرية دائماً)
             (AiSettingKeys.KnowledgeAutoExamples, "0"),   // P7.7: موقوفة حتى يُظهر التقييم تحسّناً
+            // P8.1 الموجز اليومى: موقوف حتى يفعّله المدير (ق10). الأيام بترقيم DayOfWeek (0 = الأحد … 6 = السبت): السبت–الخميس.
+            (AiSettingKeys.BriefEnabled, "0"),
+            (AiSettingKeys.BriefTime, "08:00"),
+            (AiSettingKeys.BriefTimeZone, ""),
+            (AiSettingKeys.BriefWeekDays, "0,1,2,3,4,6"),
+            (AiSettingKeys.BriefNarrative, "1"),
+            (AiSettingKeys.BriefMaxCostPerMonth, "0"),
+            (AiSettingKeys.BriefSalesDropPct, "30"),
+            (AiSettingKeys.BriefReturnsPct, "10"),
+            (AiSettingKeys.BriefMinCashBalance, "0"),
+            (AiSettingKeys.BriefOverdueDays, "0"),
+            (AiSettingKeys.BriefLargePaymentFactor, "2"),
         };
 
         public static readonly List<string> LastErrors = new List<string>();
@@ -313,7 +381,35 @@ CREATE NONCLUSTERED INDEX [IX_AI_Feedback_Status] ON [dbo].[AI_Feedback]([Review
             Step("AiSettingsSeed", () => SeedSettings(opp));
             Step("AiSettingsMenu", () => SettingsMenu(opp));
             Step("AiAssistantMenu", () => AssistantMenu(opp));
+            Step("AiBriefMenu", () => BriefMenu(opp));   // P8.1
             Step("AiReadViews", () => AiReadViewsCLS.Ensure(opp));   // P2: schema ai وViews القراءة
+        }
+
+        /// <summary>
+        /// P8.1 (ق9): عنصر «الموجز اليومى» تحت «ملف» بجوار «المساعد الذكى» يفتح /assistant/brief، بأسماء اللغات الأربع.
+        /// الصلاحية للمديرين فقط افتراضياً والباقون من شاشة الصلاحيات. إدراج فقط، لا يتكرر.
+        /// </summary>
+        private static void BriefMenu(operations opp)
+        {
+            const string key = "menuItemAiDailyBrief";
+            const string desc = "الموجز اليومى";
+            var menus = opp.db.Database.SqlQueryRaw<StoreTransferPolicy.KeyValueRow>("SELECT Id, KeysData, Value FROM SysConfigMenus").ToList();
+            string Key(StoreTransferPolicy.KeyValueRow r) => r.KeysData == null ? "" : Common.DecryptMe(r.KeysData).Trim();
+            if (menus.Any(m => Key(m) == key)) return;
+            var parent = menus.FirstOrDefault(m => Key(m) == "menuItemFile");
+            if (parent == null) return;
+            string E(string s) => Common.EncryptMe(s);
+            long id = menus.Max(m => m.Id) + 1;
+            opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenus (Id, Parent_Id, KeysData, Description, Description_En, Description_Fr, Description_DE, PROJECT_ID, Value, DefaultValue, DefaultDescription,
+                            POS, Market, Factory, Tourism, AlFawzan, Client_A, Client_B, UserSells, IsShowToUser, RazorPath)
+VALUES ({id}, {parent.Id}, {E(key)}, {E(desc)}, {E("Daily brief")}, {E("Synthèse quotidienne")}, {E("Tagesbriefing")}, 2, {E("1")}, {E("1")}, {E(desc)},
+        {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, 1, {E("/assistant/brief")})");
+            var admins = opp.db.Database.SqlQueryRaw<long>("SELECT Id AS Value FROM USER_DETAILES WHERE ISNULL(AdminFlage, 0) = 1").ToList();
+            foreach (long user in admins)
+                opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenusPERMATIONS (Id, Menu_ID, Parent_Id, USER_ID, PERMATION, PROJECT_ID, IsShowToUser)
+VALUES ({CallSnowflakeIdGenerate.GenerateNewId()}, {id}, {parent.Id}, {user}, {E("1")}, 2, 1)");
         }
 
         /// <summary>

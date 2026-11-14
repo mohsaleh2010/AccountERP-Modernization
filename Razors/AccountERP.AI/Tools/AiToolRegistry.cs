@@ -387,7 +387,7 @@ namespace AccountERP.AI.Tools
             return new AiToolResult { Content = await _knowledge.SearchAsync(q, c.AllowedViews, c.HasRoute, c.Ct), Title = "بحث فى القاموس: " + Short(q, 60) };
         }
 
-        private Dictionary<string, object> Session(AiToolContext c) => new() { ["ai_tax"] = c.TaxFilter, ["ai_user"] = c.User.UserId };
+        private Dictionary<string, object> Session(AiToolContext c) => ReadOnlySqlExecutor.SessionFor(c.TaxFilter, c.User.UserId);
 
         private AiToolResult RunQuery(JsonObject a, AiToolContext c)
         {

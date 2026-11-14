@@ -20,7 +20,9 @@ namespace AccountERP.AI.Tools
         public const string RSales = "/accounts/invoices/list", RPurchases = "/accounts/invoices/purchases-list", RStock = "/store/balances",
             RItems = "/items", RCustomers = "/customers/list", RSuppliers = "/suppliers/list", RCustomerBalances = "/accounts/customer-balance-summary",
             RSupplierBalances = "/accounts/supplier-balance-summary", RTrialBalance = "/accounts/final/trial-balance",
-            RIncome = "/accounts/final/income-statement", RProfitLoss = "/accounts/final/profit-loss", RBalanceSheet = "/accounts/final/balance-sheet";
+            RIncome = "/accounts/final/income-statement", RProfitLoss = "/accounts/final/profit-loss", RBalanceSheet = "/accounts/final/balance-sheet",
+            // P8.1: شاشات الخزينة (قائمة الإذونات، إجمالى يوميات الخزينة، كشف حركة صندوق).
+            RCashVouchers = "/accounts/cash/vouchers", RCashTotals = "/accounts/cash/box-totals", RCashBoxStatement = "/accounts/cash/box-statement";
 
         /// <summary>Views مرجعية بلا بيانات مالية (الفروع والمخازن): متاحة لكل من يملك المساعد.</summary>
         public static readonly string[] Always = Array.Empty<string>();
@@ -58,7 +60,8 @@ namespace AccountERP.AI.Tools
                 new (string, string)[] { ("sale_id", "معرّف الفاتورة (للربط مع السطور)"), ("invoice_no", "رقم الفاتورة"), ("invoice_date", "التاريخ (date)"), ("invoice_datetime", "التاريخ والوقت"),
                         ("customer_id", "العميل"), ("customer_name", "اسم العميل"), ("branch_id", "الفرع"), ("branch_name", "اسم الفرع") }
                     .Concat(SaleHead).Concat(new[] { ("is_tax_per_item", "1 = الضريبة على مستوى الصنف"), ("paid_value", "المدفوع"), ("rest_value", "الباقى"),
-                        ("salesman_id", "المندوب"), ("is_maintenance", "1 = فاتورة صيانة سيارات"), ("is_posted", "1 = مرحّلة") }).ToArray()),
+                        ("salesman_id", "المندوب"), ("is_maintenance", "1 = فاتورة صيانة سيارات"), ("is_posted", "1 = مرحّلة"),
+                        ("due_date", "تاريخ استحقاق الآجل (date؛ فارغ فى أغلب الفواتير)") }).ToArray()),
             new("v_sales_lines", "سطور المبيعات", "أصناف فواتير المبيعات (سطر لكل صنف) مع رأس الفاتورة.", new[] { RSales },
                 new (string, string)[] { ("line_id", "معرّف السطر"), ("sale_id", "الفاتورة"), ("invoice_no", "رقم الفاتورة"), ("invoice_date", "التاريخ"), ("customer_id", "العميل"),
                         ("customer_name", "اسم العميل"), ("branch_id", "الفرع") }.Concat(LineCols)
@@ -87,6 +90,16 @@ namespace AccountERP.AI.Tools
                         ("branch_id", "فرع المخزن"), ("large_qty", "الرصيد بالوحدة الكبرى"), ("small_qty", "الرصيد بالوحدة الصغرى (الكسر)"), ("large_unit", "اسم الكبرى"),
                         ("small_unit", "اسم الصغرى"), ("small_per_large", "عدد الصغرى فى الكبرى"), ("total_small_qty", "الرصيد كله بالصغرى"),
                         ("avg_cost_large", "متوسط التكلفة"), ("purchase_price_large", "سعر الشراء للكبرى"), ("sale_price_large", "سعر البيع للكبرى") }),
+            new("v_cash_vouchers", "إذون النقدية", "سطور سندات القبض والصرف (سطر لكل حساب فى الإذن، كقائمة الإذونات). الإذن قد يضم أكثر من سطر، فعدد الإذون = COUNT(DISTINCT voucher_id). " +
+                    "تظهر فقط الصناديق التى يحق للمستخدم استخدامها. لا تجمع amount بين عملات مختلفة؛ للإجمالى بالعملة المحلية استخدم amount_equivalent.",
+                new[] { RCashVouchers, RCashTotals, RCashBoxStatement },
+                new[] { ("line_id", "معرّف السطر (قد يتكرر فى بيانات قديمة)"), ("voucher_id", "معرّف الإذن"), ("voucher_no", "رقم الإذن"), ("voucher_date", "تاريخ الإذن (date)"),
+                        ("transaction_type", "1 = قبض (استلام)، 2 = صرف"), ("is_receipt", "1 = سند قبض، 0 = سند صرف"), ("box_id", "الصندوق/البنك"), ("box_name", "اسم الصندوق"),
+                        ("is_bank", "1 = بنك، 0 = صندوق نقدية"), ("branch_id", "فرع الصندوق (0 أو -1 = كل الفروع)"), ("currency_id", "عملة الصندوق"),
+                        ("amount", "القيمة بعملة الصندوق"), ("factor", "معامل التحويل للعملة المحلية"), ("amount_equivalent", "القيمة بالعملة المحلية"),
+                        ("party_type", "customer = عميل، supplier = مورد، account = حساب عام"), ("party_id", "معرّف العميل/المورد أو الحساب الفرعى"),
+                        ("party_name", "اسم الطرف"), ("payment_method", "طريقة الدفع"), ("notes", "البيان"),
+                        ("source_doc_type", "نوع المستند المرتبط (فاتورة …) إن وُجد"), ("source_doc_id", "معرّف المستند المرتبط") }),
         };
 
         public static readonly AiKnowledgeItem[] Knowledge =
@@ -104,7 +117,10 @@ namespace AccountERP.AI.Tools
             new("example", "أكثر الأصناف مبيعاً", "SELECT TOP 10 item_name, SUM(line_net) AS value, SUM(qty) AS qty FROM ai.v_sales_lines WHERE invoice_date >= '2026-01-01' GROUP BY item_name ORDER BY value DESC", "اكثر اصناف مبيعا افضل top", "top_items"),
             new("example", "رصيد صنف فى مخزن", "SELECT store_name, large_qty, large_unit, small_qty, small_unit, total_small_qty FROM ai.v_stock_balance WHERE item_id = 123 AND store_id = 4", "رصيد صنف مخزن كمية متاح", "item_store_balance"),
             new("example", "مبيعات عميل", "SELECT invoice_no, invoice_date, net_total FROM ai.v_sales WHERE customer_id = 55 ORDER BY invoice_date DESC", "مبيعات عميل فواتير", "customer_sales"),
-            new("example", "مشتريات مورد", "SELECT SUM(net_total) FROM ai.v_purchases WHERE supplier_id = 9 AND invoice_date >= '2026-01-01'", "مشتريات مورد", "supplier_purchases"),
+            new("rule", "القبض والصرف", "التحصيلات = سندات القبض (is_receipt = 1)، والمدفوعات = سندات الصرف (is_receipt = 0) من ai.v_cash_vouchers. تحصيلات العملاء = party_type = 'customer' مع is_receipt = 1. " +
+                "أرصدة الصناديق الحالية لا تُحسب من هذا الـ View (فيه الحركات فقط بلا الرصيد الافتتاحى)؛ تؤخذ من شاشة «إجمالى يوميات الخزينة».", "قبض صرف تحصيل تحصيلات مدفوعات خزينة صندوق سند اذن نقدية", "cash_vouchers"),
+            new("example", "تحصيلات العملاء فى يوم", "SELECT party_name, SUM(amount_equivalent) AS collected FROM ai.v_cash_vouchers WHERE is_receipt = 1 AND party_type = 'customer' AND voucher_date = '2026-11-01' GROUP BY party_name ORDER BY collected DESC", "تحصيلات عملاء قبض يوم", "daily_collections"),
+            new("example", "مشتريات مورد","SELECT SUM(net_total) FROM ai.v_purchases WHERE supplier_id = 9 AND invoice_date >= '2026-01-01'", "مشتريات مورد", "supplier_purchases"),
         };
 
         public static AiViewDoc? Find(string name) => Views.FirstOrDefault(v => string.Equals(v.Name, name, StringComparison.OrdinalIgnoreCase));
