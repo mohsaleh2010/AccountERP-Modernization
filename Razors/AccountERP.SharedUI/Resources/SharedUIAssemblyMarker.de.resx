@@ -5747,4 +5747,41 @@
   <data name="AIB_Set_ErrFactor" xml:space="preserve"><value>Der Faktor muss zwischen 1 und 100 liegen.</value></data>
   <data name="AIB_Set_ErrCost" xml:space="preserve"><value>Ungültiges Kostenlimit.</value></data>
   <data name="AIB_Set_ErrOverdueDays" xml:space="preserve"><value>Ungültige Verzugstage (0 bis 3650).</value></data>
+  <data name="AIS_Title" xml:space="preserve"><value>Schnellsuche</value></data>
+  <data name="AIS_TriggerText" xml:space="preserve"><value>Suchen…</value></data>
+  <data name="AIS_TriggerAria" xml:space="preserve"><value>Schnellsuche öffnen</value></data>
+  <data name="AIS_Placeholder" xml:space="preserve"><value>Bildschirm, Kunde, Artikel oder Rechnungsnummer suchen…</value></data>
+  <data name="AIS_Close" xml:space="preserve"><value>Schließen</value></data>
+  <data name="AIS_GrpRecent" xml:space="preserve"><value>Zuletzt verwendet</value></data>
+  <data name="AIS_GrpScreens" xml:space="preserve"><value>Bildschirme</value></data>
+  <data name="AIS_GrpCustomers" xml:space="preserve"><value>Kunden</value></data>
+  <data name="AIS_GrpSuppliers" xml:space="preserve"><value>Lieferanten</value></data>
+  <data name="AIS_GrpItems" xml:space="preserve"><value>Artikel</value></data>
+  <data name="AIS_GrpDocuments" xml:space="preserve"><value>Belege</value></data>
+  <data name="AIS_KindSale" xml:space="preserve"><value>Verkaufsrechnung</value></data>
+  <data name="AIS_KindSaleReturn" xml:space="preserve"><value>Verkaufsretoure</value></data>
+  <data name="AIS_KindPurchase" xml:space="preserve"><value>Einkaufsrechnung</value></data>
+  <data name="AIS_KindPurchaseReturn" xml:space="preserve"><value>Einkaufsretoure</value></data>
+  <data name="AIS_DocNo" xml:space="preserve"><value>Nr. {0}</value></data>
+  <data name="AIS_Code" xml:space="preserve"><value>Code {0}</value></data>
+  <data name="AIS_AskAssistant" xml:space="preserve"><value>Assistent fragen: {0}</value></data>
+  <data name="AIS_AskHint" xml:space="preserve"><value>Sendet Ihre Frage an den KI-Assistenten</value></data>
+  <data name="AIS_AssistantBusy" xml:space="preserve"><value>Der Assistent antwortet noch. Warten Sie, bis er fertig ist, und fragen Sie dann erneut.</value></data>
+  <data name="AIS_NoResults" xml:space="preserve"><value>Keine passenden Ergebnisse</value></data>
+  <data name="AIS_NoResultsAsk" xml:space="preserve"><value>Keine Ergebnisse. Enter drücken, um den Assistenten zu fragen.</value></data>
+  <data name="AIS_Searching" xml:space="preserve"><value>Daten werden durchsucht…</value></data>
+  <data name="AIS_DataSlow" xml:space="preserve"><value>Die Datensuche dauert. Tippen Sie weiter, um sie einzugrenzen.</value></data>
+  <data name="AIS_DataError" xml:space="preserve"><value>Die Datensuche ist gerade nicht verfügbar.</value></data>
+  <data name="AIS_EmptyHint" xml:space="preserve"><value>Geben Sie einen Bildschirm-, Kunden- oder Artikelnamen oder eine Rechnungsnummer ein.</value></data>
+  <data name="AIS_HintScopes" xml:space="preserve"><value>Versuchen Sie: „Kunde Ahmed“, „Artikel Zucker“, „Rechnung 120“ oder enden Sie mit ?, um den Assistenten zu fragen</value></data>
+  <data name="AIS_ClearRecent" xml:space="preserve"><value>Verlauf löschen</value></data>
+  <data name="AIS_RecentCleared" xml:space="preserve"><value>Verlauf gelöscht</value></data>
+  <data name="AIS_KeyNavigate" xml:space="preserve"><value>Navigieren</value></data>
+  <data name="AIS_KeyOpen" xml:space="preserve"><value>Öffnen</value></data>
+  <data name="AIS_KeyClose" xml:space="preserve"><value>Schließen</value></data>
+  <data name="AIS_ResultsCount" xml:space="preserve"><value>{0} Ergebnisse</value></data>
+  <data name="AIS_PrefShortcuts" xml:space="preserve"><value>Tastenkürzel der Schnellsuche (Strg+K und /)</value></data>
+  <data name="AIS_PrefShortcutsHint" xml:space="preserve"><value>Wenn deaktiviert, bleibt die Suchschaltfläche in der oberen Leiste</value></data>
+  <data name="AIS_ShortcutCtrlK" xml:space="preserve"><value>Strg K</value></data>
+  <data name="AIS_ShortcutCmdK" xml:space="preserve"><value>⌘ K</value></data>
 </root>

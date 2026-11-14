@@ -66,6 +66,8 @@ namespace AccountERP.MobileDesktop
 
             // ⚙️ نفس تسجيل AccountERP.Web\Program.cs بالضبط (راجع "mirror-web-changes-to-mobiledesktop").
             builder.Services.AddScoped<AccountERP.SharedUI.Services.UserPreferencesService>();
+            // 🔎 P8.2.2: لوحة البحث السريع Ctrl+K (مجموعة الشاشات فقط على MAUI - بلا بوابة بحث البيانات ولا المساعد).
+            builder.Services.AddScoped<AccountERP.SharedUI.Services.CommandPaletteService>();
 
             // 1. نص الاتصال يُقرأ الآن من appsettings.json مُضمَّن كملف MauiAsset (Resources\Raw\appsettings.json)
             // - نفس بنية appsettings.json فى AccountERP.Web بالضبط (ConnectionStrings:DefaultConnection) -

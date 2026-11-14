@@ -1,0 +1,286 @@
+@* 🔎 لوحة البحث السريع Ctrl+K (P8.2.2، ai-assistant-p82-plan.md س23–س29). مكوّن خاص لا MudDialog (س27): طبقة + لوحة بنمط ARIA combobox.
+   تُرسم خارج MudRTLProvider بجوار AssistantWidget وتضبط dir بنفسها. P8.2.2 = مجموعة الشاشات فقط (فورية، فى الذاكرة).
+   الأسهم وHome/End وTab وEsc فى palette.js؛ Enter يستدعى ActivateFromKeyboard برقم الصف النشط. aria-selected وaria-activedescendant يضبطهما JS فقط.
+   z-index 1450: فوق حوارات MudBlazor (1400) وتحت رسائل التنبيه (1500). على MAUI تعمل كما هى (بلا بحث بيانات). *@
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using Microsoft.Extensions.DependencyInjection
+@inject IServiceProvider ServiceProvider
+@inject MenuStateService MenuState
+@inject LanguageService LangService
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+@if (_svc != null)
+{
+    <style>
+        /* زر الشريط العلوى (MainLayoutMud) — على خلفية اللون الأساسى */
+        .cmdk-trigger { display: flex; align-items: center; gap: 8px; height: 36px; min-width: 200px; max-width: 360px; width: 32vw;
+                        padding-inline: 10px 6px; border-radius: 8px; cursor: pointer; font: inherit; font-size: .875rem; color: inherit;
+                        background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.28); transition: background-color .15s ease-out; }
+        .cmdk-trigger:hover { background: rgba(255,255,255,.22); }
+        .cmdk-trigger:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+        .cmdk-trigger .cmdk-trigger-text { flex: 1; text-align: start; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cmdk-trigger kbd { font: 600 .75rem/1 system-ui, sans-serif; padding: 4px 6px; border-radius: 4px; direction: ltr;
+                            background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3); color: inherit; }
+
+        .cmdk-scrim { position: fixed; inset: 0; z-index: 1449; background: var(--mud-palette-overlay-dark, rgba(33,33,33,.5)); animation: cmdk-fade .12s ease-out; }
+        .cmdk-panel { position: fixed; z-index: 1450; top: 12vh; inset-inline: 0; margin-inline: auto;
+                      width: min(640px, calc(100vw - 32px)); display: flex; flex-direction: column; overflow: hidden;
+                      background: var(--mud-palette-surface); color: var(--mud-palette-text-primary);
+                      border: 1px solid var(--mud-palette-lines-default); border-radius: 12px; box-shadow: var(--mud-elevation-16);
+                      animation: cmdk-in .14s ease-out; }
+        @@keyframes cmdk-fade { from { opacity: 0; } to { opacity: 1; } }
+        @@keyframes cmdk-in { from { opacity: 0; margin-top: -8px; } to { opacity: 1; margin-top: 0; } }
+
+        .cmdk-head { display: flex; align-items: center; gap: 8px; min-height: 56px; padding-inline: 16px 6px; border-bottom: 1px solid var(--mud-palette-lines-default); }
+        .cmdk-head:focus-within { box-shadow: inset 0 -2px 0 var(--mud-palette-primary); }
+        .cmdk-head .cmdk-search-icon { color: var(--mud-palette-text-secondary); flex: none; }
+        .cmdk-input { flex: 1; min-width: 0; height: 44px; border: 0; outline: 0; background: transparent; color: inherit; font: inherit; font-size: 1.0625rem; }
+        .cmdk-input::placeholder { color: var(--mud-palette-text-secondary); opacity: 1; }
+        .cmdk-close { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 8px; cursor: pointer;
+                      background: transparent; color: var(--mud-palette-text-secondary); }
+        .cmdk-close:hover { background: var(--mud-palette-action-default-hover); }
+        .cmdk-close:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: -2px; }
+
+        .cmdk-list { max-height: min(60vh, 480px); overflow-y: auto; overscroll-behavior: contain; padding: 6px; }
+        .cmdk-group-label { padding: 10px 10px 4px; font-size: .75rem; font-weight: 700; letter-spacing: .02em; color: var(--mud-palette-text-secondary); }
+        .cmdk-opt { position: relative; display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+        .cmdk-opt[aria-selected="true"] { background: color-mix(in srgb, var(--mud-palette-primary) 12%, var(--mud-palette-surface)); }
+        .cmdk-opt[aria-selected="true"]::before { content: ""; position: absolute; inset-block: 8px; inset-inline-start: 0; width: 3px; border-radius: 3px; background: var(--mud-palette-primary); }
+        .cmdk-opt-icon { flex: none; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px;
+                         background: color-mix(in srgb, var(--mud-palette-primary) 10%, var(--mud-palette-surface)); color: var(--mud-palette-primary); }
+        .cmdk-opt-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .cmdk-opt-title { font-size: .95rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cmdk-opt-sub { font-size: .8rem; color: var(--mud-palette-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cmdk-opt-enter { flex: none; visibility: hidden; color: var(--mud-palette-text-secondary); }
+        .cmdk-opt[aria-selected="true"] .cmdk-opt-enter { visibility: visible; }
+        .cmdk-empty { padding: 28px 16px; text-align: center; color: var(--mud-palette-text-secondary); font-size: .9rem; }
+
+        .cmdk-foot { display: flex; align-items: center; gap: 16px; padding: 8px 16px; border-top: 1px solid var(--mud-palette-lines-default);
+                     font-size: .75rem; color: var(--mud-palette-text-secondary); }
+        .cmdk-foot kbd { font: 600 .7rem/1 system-ui, sans-serif; padding: 3px 5px; margin-inline-end: 4px; border-radius: 4px; direction: ltr; display: inline-block;
+                         border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-background-gray, transparent); color: var(--mud-palette-text-primary); }
+        .cmdk-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+        @@media (max-width: 600px) {
+            .cmdk-panel { inset: 0; width: auto; height: 100dvh; border-radius: 0; border: 0; }
+            .cmdk-list { max-height: none; flex: 1; }
+            .cmdk-foot { display: none; }
+        }
+        @@media (prefers-reduced-motion: reduce) { .cmdk-scrim, .cmdk-panel { animation: none; } .cmdk-trigger { transition: none; } }
+        @@media print { .cmdk-scrim, .cmdk-panel, .cmdk-trigger { display: none !important; } }
+    </style>
+
+    @if (_open)
+    {
+        string dir = LangService.IsRtl ? "rtl" : "ltr";
+        <div class="cmdk-scrim" aria-hidden="true" @onclick="() => CloseAsync(false)"></div>
+        <div class="cmdk-panel" role="dialog" aria-modal="true" aria-label="@Tr("AIS_Title")" dir="@dir" @ref="_panel">
+            <div class="cmdk-head">
+                <MudIcon Icon="@Icons.Material.Filled.Search" Class="cmdk-search-icon" aria-hidden="true" />
+                <input id="cmdk-input" class="cmdk-input" type="text" @ref="_input"
+                       role="combobox" aria-expanded="@(_items.Count > 0 ? "true" : "false")" aria-controls="cmdk-list" aria-autocomplete="list"
+                       aria-label="@Tr("AIS_Title")" placeholder="@Tr("AIS_Placeholder")"
+                       autocomplete="off" spellcheck="false" maxlength="@AiSearchConst.MaxQueryChars" enterkeyhint="go"
+                       @oninput="OnInput" />
+                <button type="button" class="cmdk-close" aria-label="@Tr("AIS_Close")" title="@Tr("AIS_Close")" @onclick="() => CloseAsync(false)">
+                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-hidden="true" />
+                </button>
+            </div>
+
+            <div id="cmdk-list" class="cmdk-list" role="listbox" aria-label="@Tr("AIS_Title")" @ref="_list">
+                @if (_items.Count > 0)
+                {
+                    <div role="group" aria-labelledby="cmdk-grp-screens">
+                        <div id="cmdk-grp-screens" class="cmdk-group-label" role="presentation">@Tr("AIS_GrpScreens")</div>
+                        @for (int i = 0; i < _items.Count; i++)
+                        {
+                            var item = _items[i];
+                            int idx = i;
+                            <div id="cmdk-opt-@idx" class="cmdk-opt" role="option" data-idx="@idx"
+                                 @onmousedown:preventDefault="true" @onclick="() => ActivateAsync(item)">
+                                <span class="cmdk-opt-icon" aria-hidden="true"><MudIcon Icon="@item.Icon" Size="Size.Small" /></span>
+                                <span class="cmdk-opt-text">
+                                    <span class="cmdk-opt-title">@item.Title</span>
+                                    @if (!string.IsNullOrEmpty(item.Subtitle))
+                                    {
+                                        <span class="cmdk-opt-sub">@item.Subtitle</span>
+                                    }
+                                </span>
+                                <span class="cmdk-opt-enter" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.KeyboardReturn" Size="Size.Small" /></span>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="cmdk-empty" role="presentation">@(string.IsNullOrWhiteSpace(_text) ? Tr("AIS_EmptyHint") : Tr("AIS_NoResults"))</div>
+                }
+            </div>
+
+            <div class="cmdk-foot" aria-hidden="true">
+                <span><kbd>↑</kbd><kbd>↓</kbd>@Tr("AIS_KeyNavigate")</span>
+                <span><kbd>↵</kbd>@Tr("AIS_KeyOpen")</span>
+                <span><kbd>Esc</kbd>@Tr("AIS_KeyClose")</span>
+            </div>
+            <div class="cmdk-sr" aria-live="polite" aria-atomic="true">@LiveText</div>
+        </div>
+    }
+}
+
+@code {
+    private CommandPaletteService? _svc;
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<CommandPalette>? _self;
+    private ElementReference _panel, _input, _list;
+    private bool _open, _openedPending, _syncPending;
+    private string _text = "";
+    private List<PaletteItem> _items = new();
+
+    private string LiveText =>
+        string.IsNullOrWhiteSpace(_text) ? "" :
+        _items.Count == 0 ? Tr("AIS_NoResults") : Tr("AIS_ResultsCount", _items.Count);
+
+    protected override void OnInitialized()
+    {
+        _svc = ServiceProvider.GetService<CommandPaletteService>();
+        if (_svc == null) return;
+        _svc.OpenRequested += OnOpenRequested;
+        MenuState.OnAuthChanged += OnAuthChanged;
+        LangService.OnLanguageChanged += OnLanguageChanged;
+        Nav.LocationChanged += OnLocationChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_svc == null) return;
+        try
+        {
+            if (firstRender)
+            {
+                _module = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/AccountERP.SharedUI/js/palette.js");
+                _self = DotNetObjectReference.Create(this);
+                bool isMac = await _module.InvokeAsync<bool>("init", _self, new { shortcuts = true });
+                _svc.SetIsMac(isMac);
+            }
+            if (_module == null) return;
+            if (_open && _openedPending)
+            {
+                _openedPending = false;
+                _syncPending = false;
+                await _module.InvokeVoidAsync("opened", _panel, _input, _list);
+            }
+            else if (_open && _syncPending)
+            {
+                _syncPending = false;
+                await _module.InvokeVoidAsync("sync");
+            }
+        }
+        catch (JSDisconnectedException) { }
+        catch (InvalidOperationException) { }
+        catch (JSException) { }
+    }
+
+    private void OnOpenRequested() => InvokeAsync(Open);
+
+    private void Open()
+    {
+        if (_svc == null || !_svc.IsAvailable || _open) return;
+        _open = true;
+        _openedPending = true;
+        _text = "";
+        _items = new List<PaletteItem>();
+        StateHasChanged();
+    }
+
+    private void OnInput(ChangeEventArgs e)
+    {
+        _text = e.Value?.ToString() ?? "";
+        _items = _svc?.SearchScreens(_text, null) ?? new List<PaletteItem>();
+        _syncPending = true;
+    }
+
+    private async Task CloseAsync(bool navigating)
+    {
+        if (!_open) return;
+        _open = false;
+        _openedPending = _syncPending = false;
+        try
+        {
+            if (_module != null)
+            {
+                if (navigating) await _module.InvokeVoidAsync("forgetRestore");
+                await _module.InvokeVoidAsync("closed");
+            }
+        }
+        catch (JSDisconnectedException) { }
+        catch (InvalidOperationException) { }
+        catch (JSException) { }
+        StateHasChanged();
+    }
+
+    private async Task ActivateAsync(PaletteItem item)
+    {
+        if (item == null || !AiSearchText.IsSafeInternalUrl(item.Url)) return;   // س17
+        await CloseAsync(true);
+        Nav.NavigateTo(item.Url);
+    }
+
+    [JSInvokable]
+    public Task OpenFromShortcut() => InvokeAsync(Open);
+
+    [JSInvokable]
+    public Task CloseFromKeyboard() => InvokeAsync(() => CloseAsync(false));
+
+    [JSInvokable]
+    public Task ActivateFromKeyboard(int index) => InvokeAsync(async () =>
+    {
+        if (!_open || index < 0 || index >= _items.Count) return;
+        await ActivateAsync(_items[index]);
+    });
+
+    private void OnAuthChanged() => InvokeAsync(() => CloseAsync(false));
+    private void OnLanguageChanged() => InvokeAsync(() =>
+    {
+        if (_open) _items = _svc?.SearchScreens(_text, null) ?? new List<PaletteItem>();
+        _syncPending = _open;
+        StateHasChanged();
+    });
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e) => InvokeAsync(() => CloseAsync(true));
+
+    private string Tr(string key, params object[] args)
+    {
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_svc != null) _svc.OpenRequested -= OnOpenRequested;
+        MenuState.OnAuthChanged -= OnAuthChanged;
+        LangService.OnLanguageChanged -= OnLanguageChanged;
+        Nav.LocationChanged -= OnLocationChanged;
+        try
+        {
+            if (_module != null)
+            {
+                await _module.InvokeVoidAsync("dispose");
+                await _module.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException) { }
+        catch (JSException) { }
+        _self?.Dispose();
+    }
+}

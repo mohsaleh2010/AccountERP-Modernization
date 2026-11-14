@@ -5745,4 +5745,41 @@
   <data name="AIB_Set_ErrFactor" xml:space="preserve"><value>The large payments factor must be between 1 and 100.</value></data>
   <data name="AIB_Set_ErrCost" xml:space="preserve"><value>Invalid monthly cost cap.</value></data>
   <data name="AIB_Set_ErrOverdueDays" xml:space="preserve"><value>Invalid overdue days (0 to 3650).</value></data>
+  <data name="AIS_Title" xml:space="preserve"><value>Quick search</value></data>
+  <data name="AIS_TriggerText" xml:space="preserve"><value>Search…</value></data>
+  <data name="AIS_TriggerAria" xml:space="preserve"><value>Open quick search</value></data>
+  <data name="AIS_Placeholder" xml:space="preserve"><value>Search a screen, customer, item or invoice number…</value></data>
+  <data name="AIS_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="AIS_GrpRecent" xml:space="preserve"><value>Recent</value></data>
+  <data name="AIS_GrpScreens" xml:space="preserve"><value>Screens</value></data>
+  <data name="AIS_GrpCustomers" xml:space="preserve"><value>Customers</value></data>
+  <data name="AIS_GrpSuppliers" xml:space="preserve"><value>Suppliers</value></data>
+  <data name="AIS_GrpItems" xml:space="preserve"><value>Items</value></data>
+  <data name="AIS_GrpDocuments" xml:space="preserve"><value>Documents</value></data>
+  <data name="AIS_KindSale" xml:space="preserve"><value>Sales invoice</value></data>
+  <data name="AIS_KindSaleReturn" xml:space="preserve"><value>Sales return</value></data>
+  <data name="AIS_KindPurchase" xml:space="preserve"><value>Purchase invoice</value></data>
+  <data name="AIS_KindPurchaseReturn" xml:space="preserve"><value>Purchase return</value></data>
+  <data name="AIS_DocNo" xml:space="preserve"><value>No. {0}</value></data>
+  <data name="AIS_Code" xml:space="preserve"><value>Code {0}</value></data>
+  <data name="AIS_AskAssistant" xml:space="preserve"><value>Ask the assistant: {0}</value></data>
+  <data name="AIS_AskHint" xml:space="preserve"><value>Sends your question to the AI assistant</value></data>
+  <data name="AIS_AssistantBusy" xml:space="preserve"><value>The assistant is still replying. Wait for it to finish, then ask again.</value></data>
+  <data name="AIS_NoResults" xml:space="preserve"><value>No matching results</value></data>
+  <data name="AIS_NoResultsAsk" xml:space="preserve"><value>No results. Press Enter to ask the assistant.</value></data>
+  <data name="AIS_Searching" xml:space="preserve"><value>Searching data…</value></data>
+  <data name="AIS_DataSlow" xml:space="preserve"><value>Data search is slow. Keep typing to narrow it.</value></data>
+  <data name="AIS_DataError" xml:space="preserve"><value>Data search is unavailable right now.</value></data>
+  <data name="AIS_EmptyHint" xml:space="preserve"><value>Type a screen, customer or item name, or an invoice number.</value></data>
+  <data name="AIS_HintScopes" xml:space="preserve"><value>Try: "customer Ahmed", "item sugar", "invoice 120", or end with ? to ask the assistant</value></data>
+  <data name="AIS_ClearRecent" xml:space="preserve"><value>Clear recent</value></data>
+  <data name="AIS_RecentCleared" xml:space="preserve"><value>Recent list cleared</value></data>
+  <data name="AIS_KeyNavigate" xml:space="preserve"><value>Navigate</value></data>
+  <data name="AIS_KeyOpen" xml:space="preserve"><value>Open</value></data>
+  <data name="AIS_KeyClose" xml:space="preserve"><value>Close</value></data>
+  <data name="AIS_ResultsCount" xml:space="preserve"><value>{0} results</value></data>
+  <data name="AIS_PrefShortcuts" xml:space="preserve"><value>Quick search shortcuts (Ctrl+K and /)</value></data>
+  <data name="AIS_PrefShortcutsHint" xml:space="preserve"><value>When off, the search button stays in the top bar</value></data>
+  <data name="AIS_ShortcutCtrlK" xml:space="preserve"><value>Ctrl K</value></data>
+  <data name="AIS_ShortcutCmdK" xml:space="preserve"><value>⌘ K</value></data>
 </root>

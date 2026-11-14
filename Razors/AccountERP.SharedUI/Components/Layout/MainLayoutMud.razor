@@ -104,6 +104,21 @@
 
             <MudSpacer />
 
+            @* 🔎 P8.2.2: زر البحث السريع (Ctrl+K) — نص وشارة الاختصار من sm فما فوق، وأيقونة فقط على الهاتف. اللوحة نفسها CommandPalette أسفل الملف. *@
+            @if (MenuState.IsLoaded && _palette != null)
+            {
+                <button type="button" class="cmdk-trigger d-none d-sm-flex" @onclick="@(() => _palette.RequestOpen())"
+                        aria-label="@Tr("AIS_TriggerAria")" aria-keyshortcuts="Control+K Meta+K /" aria-haspopup="dialog">
+                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" aria-hidden="true" />
+                    <span class="cmdk-trigger-text">@Tr("AIS_TriggerText")</span>
+                    <kbd aria-hidden="true">@(_palette.IsMac ? Tr("AIS_ShortcutCmdK") : Tr("AIS_ShortcutCtrlK"))</kbd>
+                </button>
+                <MudIconButton Class="d-sm-none" Icon="@Icons.Material.Filled.Search" Color="Color.Inherit"
+                               aria-label="@Tr("AIS_TriggerAria")" aria-keyshortcuts="Control+K" aria-haspopup="dialog"
+                               OnClick="@(() => _palette.RequestOpen())" />
+                <MudSpacer />
+            }
+
             <!-- إجراءات الشريط العلوي: من نحن، الإشعارات، الثيم، اللغة، وحالة المستخدم -->
             <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
 
@@ -229,6 +244,8 @@
 <UserSettingsMenu @bind-Open="_userSettingsMenuOpen" />
 @* 🤖 المساعد الذكى P1: الأيقونة العائمة ونافذة المحادثة - تُخفى ذاتياً (قبل الدخول، بلا صلاحية، فى /assistant، أو إن أخفاها المستخدم) *@
 <AccountERP.SharedUI.Components.Assistant.AssistantWidget />
+@* 🔎 P8.2.2: لوحة البحث السريع Ctrl+K - لا ترسم شيئاً على مضيف بلا CommandPaletteService *@
+<CommandPalette />
 
 @* واجهة الأخطاء العادية للمتصفح *@
 <div id="blazor-error-ui" data-nosnippet>
@@ -239,6 +256,7 @@
 
 @code {
     private bool _drawerOpen = true;
+    private CommandPaletteService? _palette;   // P8.2.2: null إن لم تُسجَّل الخدمة على المضيف
     private bool _themesMenuOpen = false;
     private bool _userSettingsMenuOpen = false;
 
@@ -263,6 +281,8 @@
     {
         _currentTheme = AppTheme.Build(ThemeService.PrimaryColor);
         ApplySnackbarPosition();
+        _palette = ServiceProvider.GetService<CommandPaletteService>();
+        if (_palette != null) _palette.Changed += OnPaletteChanged;
 
         // 🔄 الاشتراك في الأحداث
         MenuState.OnMainMenuChanged += OnMenuChanged;
@@ -576,6 +596,8 @@
         NavigationManager.NavigateTo("/login", forceLoad: true);
     }
 
+    private void OnPaletteChanged() => InvokeAsync(StateHasChanged);
+
     public void Dispose()
     {
         // إلغاء كافة الاشتراكات لحماية الذاكرة من الـ Memory Leak
@@ -586,5 +608,6 @@
         NavigationManager.LocationChanged -= OnLocationChanged;
         TabWorkspace.OnChanged -= OnTabWorkspaceChanged;
         Prefs.OnChanged -= OnPrefsChanged;
+        if (_palette != null) _palette.Changed -= OnPaletteChanged;
     }
 }
