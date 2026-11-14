@@ -123,6 +123,7 @@ builder.Services.AddScoped<AccountERP.SharedUI.Services.NotificationCenterServic
 builder.Services.AddHostedService<AccountERP.Web.Services.SalesRepNotifyWorker>();
 // 🤖 المساعد الذكى (Razors/AccountERP.AI): تشفير مفاتيح المزوّدين واختبار الاتصال وجلب النماذج لشاشة /settings/ai.
 AccountERP.AI.AiServiceCollectionExtensions.AddAccountErpAi(builder.Services, builder.Configuration);
+builder.Services.AddHostedService<AccountERP.Web.Services.AiSchedulerWorker>();   // P8 ق17: مهام المساعد الدورية (الموجز اليومى)
 // 🤖 المساعد الذكى P1: حالة المحادثة لكل دائرة (تتشاركها صفحة /assistant والنافذة العائمة).
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AssistantSessionService>();
 builder.Services.AddMudServices();

@@ -284,6 +284,32 @@ namespace AccountModelsLib
     }
 
     /// <summary>
+    /// خطأ تحقق أو صلاحية من بوابة الموجز. Code = مفتاح resx (AIB_Set_Err* …) لتترجمه الواجهة؛ Message نص عربى احتياطى.
+    /// </summary>
+    public class AiBriefException : InvalidOperationException
+    {
+        public string Code { get; }
+        public AiBriefException(string code, string message) : base(message) { Code = code ?? ""; }
+    }
+
+    public static class AiBriefErrors
+    {
+        public const string NotAdmin = "AIB_Set_ErrNotAdmin";
+        public const string NoPermission = "AIB_Set_NoPermission";
+        public const string Time = "AIB_Set_ErrTime";
+        public const string TimeZone = "AIB_Set_ErrTimeZone";
+        public const string Days = "AIB_Set_ErrDays";
+        public const string Pct = "AIB_Set_ErrPct";
+        public const string Factor = "AIB_Set_ErrFactor";
+        public const string Cost = "AIB_Set_ErrCost";
+        public const string OverdueDays = "AIB_Set_ErrOverdueDays";
+        public const string Disabled = "AIB_EmptyDisabled";
+        public const string NotFound = "AIB_ErrNotFound";
+        public const string Busy = "AIB_ErrBusy";
+        public const string Skipped = "AIB_ErrSkipped";
+    }
+
+    /// <summary>
     /// إشارة داخل العملية (ق2): يطلقها المشغّل بعد إدراج صف التسليم، وتشترك فيها خدمة الإشعار لكل دائرة متصلة.
     /// خطأ مشترك لا يمنع الباقين ولا يُسقط المشغّل. غير المتصل يرى الموجز عند أول دخول من الجدول.
     /// </summary>
