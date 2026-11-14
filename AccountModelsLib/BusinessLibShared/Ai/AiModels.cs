@@ -97,6 +97,10 @@ namespace AccountModelsLib
         public const string BriefMinCashBalance = "BriefMinCashBalance";
         public const string BriefOverdueDays = "BriefOverdueDays";
         public const string BriefLargePaymentFactor = "BriefLargePaymentFactor";
+
+        // ───── P8.2: لوحة البحث السريع (ai-assistant-p82-plan.md س33) ─────
+        /// <summary>1 = بحث البيانات (العملاء/الموردون/الأصناف/المستندات) فى لوحة Ctrl+K مفعّل (الافتراضى)؛ 0 = الشاشات فقط.</summary>
+        public const string PaletteDataSearch = "PaletteDataSearch";
     }
 
     /// <summary>صف AI_Providers كما يُخزَّن (المفتاح مشفّر). لا يصل للواجهة؛ الواجهة ترى AiProviderView.</summary>

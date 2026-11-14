@@ -33,6 +33,9 @@ namespace AccountModelsLib
         // 🤖 المساعد الذكى P1: إظهار الأيقونة العائمة (افتراضى true) وموضعها start/end (منطقى لا يسار/يمين ليتوافق مع RTL/LTR).
         public const string ShowAiAssistantIcon = "ShowAiAssistantIcon";
         public const string AiAssistantIconPosition = "AiAssistantIconPosition";
+
+        // 🔎 P8.2 (س25): اختصارا لوحة البحث السريع Ctrl+K و/ (افتراضى true). الإيقاف يبقى زر البحث فى الشريط العلوى.
+        public const string SearchShortcuts = "SearchShortcuts";
     }
 
     // 🟢 نفس نمط SysConfigMenusPERMATIONSCLS المجاور (SysConfigMenusCLS.cs): كلاس بسيط بلا حقن تبعيات

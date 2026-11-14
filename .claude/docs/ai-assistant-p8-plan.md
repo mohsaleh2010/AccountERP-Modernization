@@ -283,10 +283,7 @@
 ## P8.2 … P8.12 — باقى مزايا القسم 10 (كل ميزة مهمة مستقلة؛ تُفصَّل بنفس القالب عند البدء)
 
 ### P8.2 — بحث Ctrl+K باللغة الطبيعية
-- **القرار:** بحث ثابت فورى بلا نموذج (شاشات + كيانات + مستندات بالرقم)، وآخر صف «اسأل المساعد: …». السبب: لوحات الأوامر الحديثة فورية ومجانية.
-- **البيانات:** الشاشات من `AiUserContext.AllowedScreens`؛ الكيانات بنفس `FindEntity` عبر `ReadOnlySqlExecutor`؛ المستندات من `v_sales`/`v_purchases`؛ الفتح عبر `AiScreenCatalog`.
-- **اختيارى:** ترتيب هجين عبر `AiKnowledgeService` إن وُجد فهرس.
-- **جديد:** `Search/AiSearchGateway.cs`، `Components/Shared/CommandPalette.razor` + JS لـ Ctrl+K فى `MainLayoutMud`، جدول `AI_SearchRecent`، مفاتيح `AIS_*`.
+- **الخطة التفصيلية:** `ai-assistant-p82-plan.md` (Fable 5.2، 2026-11-15): القرارات س1…س35، الأجزاء P8.2.1…P8.2.5، اختبارات م-469…م-486.
 
 ### P8.3 — شرح أخطاء الفاتورة الإلكترونية المصرية
 - **القيد:** لا تغيير فى `AccountsEInvoicesLIB`. قراءة ما يخزّنه النظام فقط.

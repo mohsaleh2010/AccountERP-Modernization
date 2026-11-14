@@ -341,6 +341,21 @@ CREATE NONCLUSTERED INDEX [IX_AI_BriefDeliveries_User_Read] ON [dbo].[AI_BriefDe
     [SectionsCsv] [nvarchar](200) NULL,
     [Language] [nvarchar](5) NOT NULL DEFAULT (N'ar-EG'),",
              @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_BriefSubscriptions_User] ON [dbo].[AI_BriefSubscriptions]([User_Id]);"),
+
+            // P8.2 (ai-assistant-p82-plan.md س19–س21): آخر ما فتحه المستخدم من لوحة البحث السريع. صف لكل (مستخدم، نوع، مفتاح).
+            // RefKey: للشاشة = المسار بأحرف صغيرة، للبيانات = المعرّف. HiddenAt = «مسح الأخيرة» بلا حذف.
+            ("AI_SearchRecent", @"
+    [User_Id] [bigint] NOT NULL,
+    [Kind] [nvarchar](20) NOT NULL,
+    [RefKey] [nvarchar](300) NOT NULL,
+    [Title] [nvarchar](300) NOT NULL,
+    [Subtitle] [nvarchar](300) NULL,
+    [Url] [nvarchar](400) NOT NULL,
+    [HitCount] [int] NOT NULL DEFAULT ((1)),
+    [LastUsedAt] [datetime] NOT NULL DEFAULT (getdate()),
+    [HiddenAt] [datetime] NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_SearchRecent_User_Kind_Key] ON [dbo].[AI_SearchRecent]([User_Id], [Kind], [RefKey]);
+CREATE NONCLUSTERED INDEX [IX_AI_SearchRecent_User_Last] ON [dbo].[AI_SearchRecent]([User_Id], [LastUsedAt] DESC);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>
@@ -367,6 +382,8 @@ CREATE NONCLUSTERED INDEX [IX_AI_BriefDeliveries_User_Read] ON [dbo].[AI_BriefDe
             (AiSettingKeys.BriefMinCashBalance, "0"),
             (AiSettingKeys.BriefOverdueDays, "0"),
             (AiSettingKeys.BriefLargePaymentFactor, "2"),
+            // P8.2 (س33): بحث البيانات فى لوحة Ctrl+K مفعّل؛ 0 يوقفه للجميع وتبقى الشاشات.
+            (AiSettingKeys.PaletteDataSearch, "1"),
         };
 
         public static readonly List<string> LastErrors = new List<string>();
