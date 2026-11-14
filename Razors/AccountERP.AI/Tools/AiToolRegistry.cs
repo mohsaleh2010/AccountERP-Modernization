@@ -73,12 +73,17 @@ namespace AccountERP.AI.Tools
         private readonly AiDatasetCache _datasets;
         private readonly AiReportsCLS _reports = new();
         private readonly Files.AiDocumentExtractor? _extractor;
-        public AiToolRegistry(ReadOnlySqlExecutor sql, AiDatasetCache datasets, Files.AiDocumentExtractor? extractor = null)
+        private readonly Knowledge.AiKnowledgeService _knowledge;
+        public AiToolRegistry(ReadOnlySqlExecutor sql, AiDatasetCache datasets, Files.AiDocumentExtractor? extractor = null,
+            Knowledge.AiKnowledgeService? knowledge = null)
         {
             _sql = sql;
             _datasets = datasets;
             _extractor = extractor;
+            _knowledge = knowledge ?? new Knowledge.AiKnowledgeService();
         }
+
+        public Knowledge.AiKnowledgeService KnowledgeService => _knowledge;
 
         public ReadOnlySqlExecutor Sql => _sql;
         public AiDatasetCache Datasets => _datasets;
@@ -367,8 +372,8 @@ namespace AccountERP.AI.Tools
         {
             string q = Arg(a, "query");
             if (q.Length == 0) throw new ArgumentException("أدخل كلمات البحث.");
-            var views = AiSchemaCatalog.Views.Where(v => c.AllowedViews.Contains(v.Name));
-            return new AiToolResult { Content = AiSchemaCatalog.Search(q, views), Title = "بحث فى القاموس: " + Short(q, 60) };
+            // P7.1: من AI_Knowledge مع فلترة الصلاحية (الكود احتياطى إن تعذّرت قراءة الجدول).
+            return new AiToolResult { Content = _knowledge.Search(q, c.AllowedViews, c.HasRoute), Title = "بحث فى القاموس: " + Short(q, 60) };
         }
 
         private Dictionary<string, object> Session(AiToolContext c) => new() { ["ai_tax"] = c.TaxFilter, ["ai_user"] = c.User.UserId };

@@ -6,7 +6,8 @@ namespace AccountERP.AI.Tools
     public sealed record AiViewDoc(string Name, string TitleAr, string Description, string[] Routes, (string Col, string Desc)[] Columns);
 
     /// <summary>مقطع معرفة (مسرد / قاعدة / مثال) تبحث فيه أداة search_schema.</summary>
-    public sealed record AiKnowledgeItem(string Kind, string Title, string Content, string Keywords);
+    /// P7: Key ثابت (مفتاح الصف فى AI_Knowledge مع Kind)، و Version يُرفع عند تعديل المحتوى هنا ليُحدَّث الصف المزروع غير المعدَّل.
+    public sealed record AiKnowledgeItem(string Kind, string Title, string Content, string Keywords, string Key, int Version = 1);
 
     /// <summary>
     /// طبقة المعرفة الأولى (ai-assistant-plan.md §3، P2): قاموس الـ Views والمسرد العربى وقواعد العمل وأمثلة موثّقة، فى الكود.
@@ -90,20 +91,20 @@ namespace AccountERP.AI.Tools
 
         public static readonly AiKnowledgeItem[] Knowledge =
         {
-            new("glossary", "مدين ودائن", "مدين = Madin، دائن = Da2n فى أسماء الأعمدة القديمة. رصيد العميل المدين = مستحق لنا عليه، والدائن = مستحق له علينا.", "مدين دائن madin da2n رصيد"),
-            new("glossary", "المشتريات", "Purshing = مشتريات (خطأ إملائى قديم فى أسماء الجداول)، Detailes = تفاصيل. Views المساعد تُخفى هذه الأسماء.", "مشتريات purshing detailes"),
-            new("glossary", "آجل ونقدى", "الفاتورة الآجلة is_credit = 1، والنقدية is_credit = 0.", "آجل اجل نقدى نقدي كاش credit"),
-            new("glossary", "الوحدات", "لكل صنف وحدة كبرى (كرتونة مثلاً) وصغرى (قطعة)، small_per_large = عدد الصغرى فى الكبرى. الكمية الكلية بالصغرى = large_qty * small_per_large + small_qty.", "وحدة كبرى صغرى كرتونة قطعة كمية"),
-            new("glossary", "إذن الإضافة والصرف", "إذن إضافة مخزنى = 1007، إذن صرف = 1008 (فى شاشات الأذون). لا View لهما فى هذه المرحلة.", "اذن اضافة صرف 1007 1008 مخزن"),
-            new("rule", "الضريبة", "is_tax_invoice = 1 فاتورة ضريبية. is_tax_per_item = 1 الضريبة محسوبة لكل صنف فلا تُحسب على الإجمالى مرة أخرى. لا تستخدم نوع الفاتورة كعلم ضريبى.", "ضريبة ضريبية قيمة مضافة tax vat"),
-            new("rule", "صافى المبيعات", "إجمالى المبيعات المعتمد = SUM(net_total) من v_sales. صافى المبيعات بعد المرتجعات = مبيعات الفترة - SUM(net_total) من v_sales_returns لنفس الفترة.", "صافى مبيعات اجمالى مرتجع"),
-            new("rule", "أرقام الحسابات", "أرصدة الحسابات والميزان وقائمة الدخل والميزانية تؤخذ من الأدوات المالية (get_trial_balance، get_financial_statement) لا من الـ Views، لتطابق شاشات النظام.", "ميزان مراجعة قائمة دخل ميزانية ارباح خسائر حسابات"),
-            new("rule", "المحذوف والصلاحيات", "الـ Views تستبعد الفواتير المحذوفة، وتعرض للمستخدم فقط الفواتير الضريبية/غير الضريبية التى يملك صلاحية رؤيتها؛ لذلك قد تختلف الأرقام بين مستخدمين.", "محذوف صلاحية ضريبية"),
-            new("example", "مبيعات شهر", "SELECT SUM(net_total) AS sales, COUNT(*) AS invoices FROM ai.v_sales WHERE invoice_date >= '2026-10-01' AND invoice_date < '2026-11-01'", "مبيعات شهر اجمالى فواتير عدد"),
-            new("example", "أكثر الأصناف مبيعاً", "SELECT TOP 10 item_name, SUM(line_net) AS value, SUM(qty) AS qty FROM ai.v_sales_lines WHERE invoice_date >= '2026-01-01' GROUP BY item_name ORDER BY value DESC", "اكثر اصناف مبيعا افضل top"),
-            new("example", "رصيد صنف فى مخزن", "SELECT store_name, large_qty, large_unit, small_qty, small_unit, total_small_qty FROM ai.v_stock_balance WHERE item_id = 123 AND store_id = 4", "رصيد صنف مخزن كمية متاح"),
-            new("example", "مبيعات عميل", "SELECT invoice_no, invoice_date, net_total FROM ai.v_sales WHERE customer_id = 55 ORDER BY invoice_date DESC", "مبيعات عميل فواتير"),
-            new("example", "مشتريات مورد", "SELECT SUM(net_total) FROM ai.v_purchases WHERE supplier_id = 9 AND invoice_date >= '2026-01-01'", "مشتريات مورد"),
+            new("glossary", "مدين ودائن", "مدين = Madin، دائن = Da2n فى أسماء الأعمدة القديمة. رصيد العميل المدين = مستحق لنا عليه، والدائن = مستحق له علينا.", "مدين دائن madin da2n رصيد", "debit_credit"),
+            new("glossary", "المشتريات", "Purshing = مشتريات (خطأ إملائى قديم فى أسماء الجداول)، Detailes = تفاصيل. Views المساعد تُخفى هذه الأسماء.", "مشتريات purshing detailes", "purchases_names"),
+            new("glossary", "آجل ونقدى", "الفاتورة الآجلة is_credit = 1، والنقدية is_credit = 0.", "آجل اجل نقدى نقدي كاش credit", "credit_cash"),
+            new("glossary", "الوحدات", "لكل صنف وحدة كبرى (كرتونة مثلاً) وصغرى (قطعة)، small_per_large = عدد الصغرى فى الكبرى. الكمية الكلية بالصغرى = large_qty * small_per_large + small_qty.", "وحدة كبرى صغرى كرتونة قطعة كمية", "units"),
+            new("glossary", "إذن الإضافة والصرف", "إذن إضافة مخزنى = 1007، إذن صرف = 1008 (فى شاشات الأذون). لا View لهما فى هذه المرحلة.", "اذن اضافة صرف 1007 1008 مخزن", "store_orders"),
+            new("rule", "الضريبة", "is_tax_invoice = 1 فاتورة ضريبية. is_tax_per_item = 1 الضريبة محسوبة لكل صنف فلا تُحسب على الإجمالى مرة أخرى. لا تستخدم نوع الفاتورة كعلم ضريبى.", "ضريبة ضريبية قيمة مضافة tax vat", "tax"),
+            new("rule", "صافى المبيعات", "إجمالى المبيعات المعتمد = SUM(net_total) من v_sales. صافى المبيعات بعد المرتجعات = مبيعات الفترة - SUM(net_total) من v_sales_returns لنفس الفترة.", "صافى مبيعات اجمالى مرتجع", "net_sales"),
+            new("rule", "أرقام الحسابات", "أرصدة الحسابات والميزان وقائمة الدخل والميزانية تؤخذ من الأدوات المالية (get_trial_balance، get_financial_statement) لا من الـ Views، لتطابق شاشات النظام.", "ميزان مراجعة قائمة دخل ميزانية ارباح خسائر حسابات", "account_figures"),
+            new("rule", "المحذوف والصلاحيات", "الـ Views تستبعد الفواتير المحذوفة، وتعرض للمستخدم فقط الفواتير الضريبية/غير الضريبية التى يملك صلاحية رؤيتها؛ لذلك قد تختلف الأرقام بين مستخدمين.", "محذوف صلاحية ضريبية", "deleted_permissions"),
+            new("example", "مبيعات شهر", "SELECT SUM(net_total) AS sales, COUNT(*) AS invoices FROM ai.v_sales WHERE invoice_date >= '2026-10-01' AND invoice_date < '2026-11-01'", "مبيعات شهر اجمالى فواتير عدد", "monthly_sales"),
+            new("example", "أكثر الأصناف مبيعاً", "SELECT TOP 10 item_name, SUM(line_net) AS value, SUM(qty) AS qty FROM ai.v_sales_lines WHERE invoice_date >= '2026-01-01' GROUP BY item_name ORDER BY value DESC", "اكثر اصناف مبيعا افضل top", "top_items"),
+            new("example", "رصيد صنف فى مخزن", "SELECT store_name, large_qty, large_unit, small_qty, small_unit, total_small_qty FROM ai.v_stock_balance WHERE item_id = 123 AND store_id = 4", "رصيد صنف مخزن كمية متاح", "item_store_balance"),
+            new("example", "مبيعات عميل", "SELECT invoice_no, invoice_date, net_total FROM ai.v_sales WHERE customer_id = 55 ORDER BY invoice_date DESC", "مبيعات عميل فواتير", "customer_sales"),
+            new("example", "مشتريات مورد", "SELECT SUM(net_total) FROM ai.v_purchases WHERE supplier_id = 9 AND invoice_date >= '2026-01-01'", "مشتريات مورد", "supplier_purchases"),
         };
 
         public static AiViewDoc? Find(string name) => Views.FirstOrDefault(v => string.Equals(v.Name, name, StringComparison.OrdinalIgnoreCase));
@@ -124,7 +125,7 @@ namespace AccountERP.AI.Tools
             return sb.ToString();
         }
 
-        /// <summary>بحث بالكلمات فى الـ Views المسموحة والمسرد والقواعد والأمثلة (P2؛ المتجهات فى P7).</summary>
+        /// <summary>بحث بالكلمات فى الكود (P2). منذ P7 البحث من AI_Knowledge (AiKnowledgeService)، وهذه احتياطية إن تعذّرت قراءة الجدول.</summary>
         public static string Search(string query, IEnumerable<AiViewDoc> allowed, int top = 6)
         {
             var words = (query ?? "").ToLowerInvariant()
@@ -148,7 +149,7 @@ namespace AccountERP.AI.Tools
         }
 
         /// <summary>توحيد الهمزات والتاء المربوطة والياء حتى تتطابق الصياغات العربية.</summary>
-        private static string Normalize(string s) => s
+        public static string Normalize(string s) => s
             .Replace('أ', 'ا').Replace('إ', 'ا').Replace('آ', 'ا').Replace('ة', 'ه').Replace('ى', 'ي').Replace("ـ", "");
     }
 }

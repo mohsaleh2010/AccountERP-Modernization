@@ -168,6 +168,29 @@ namespace AccountModelsLib
     [ExpiredAt] [datetime] NULL,",
              @"CREATE NONCLUSTERED INDEX [IX_AI_Attachments_User] ON [dbo].[AI_Attachments]([User_Id], [CreatedAt] DESC);
 CREATE NONCLUSTERED INDEX [IX_AI_Attachments_Sha] ON [dbo].[AI_Attachments]([Sha256]);"),
+
+            // P7: معرفة المساعد (قاموس الـ Views، المسرد، القواعد، الأمثلة). Kind: view / glossary / rule / example / screen.
+            // صفوف view تُنسخ من الكود (AiSchemaCatalog) عند كل مزامنة؛ الباقى يُزرع مرة ثم الجدول هو المرجع (IsEdited = عدّله المدير فلا يُمس).
+            // ViewsCsv = الـ Views اللازمة كلها لرؤية المقطع، RoutesCsv = شاشات تمنحه. Embedding = float32 مطبّع (P7.2) لنموذج EmbeddingModel_Id.
+            ("AI_Knowledge", @"
+    [Kind] [nvarchar](20) NOT NULL,
+    [KeyName] [nvarchar](150) NOT NULL,
+    [TitleAr] [nvarchar](300) NOT NULL,
+    [Content] [nvarchar](max) NOT NULL,
+    [Keywords] [nvarchar](1000) NULL,
+    [ViewsCsv] [nvarchar](500) NULL,
+    [RoutesCsv] [nvarchar](1000) NULL,
+    [Source] [nvarchar](30) NOT NULL DEFAULT (N'seed'),
+    [Source_Ref_Id] [bigint] NULL,
+    [Version] [int] NOT NULL DEFAULT ((1)),
+    [IsEdited] [bit] NOT NULL DEFAULT ((0)),
+    [IsActive] [bit] NOT NULL DEFAULT ((1)),
+    [ContentHash] [char](64) NULL,
+    [Embedding] [varbinary](max) NULL,
+    [EmbeddingModel_Id] [bigint] NULL,
+    [EmbeddingDim] [int] NULL,
+    [EmbeddedAt] [datetime] NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_Knowledge_Kind_Key] ON [dbo].[AI_Knowledge]([Kind], [KeyName]);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>
