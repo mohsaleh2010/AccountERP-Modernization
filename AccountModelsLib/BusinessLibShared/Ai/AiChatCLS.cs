@@ -167,7 +167,7 @@ VALUES ({id}, {userId}, {(branchId > 0 ? branchId : (long?)null)}, {Cut(title, 2
 INSERT INTO AI_Messages (Id, Conversation_Id, Seq, Role, ContentJson, Model_Id, ModelName, InputTokens, OutputTokens, CacheReadTokens,
                          CostEstimate, Status, ErrorText, DurationMs, CreatedBy, CreatedAt)
 VALUES ({m.Id}, {m.Conversation_Id}, {m.Seq}, {m.Role}, {m.ContentJson}, {m.Model_Id}, {Cut(m.ModelName, 200)}, {m.InputTokens}, {m.OutputTokens}, {m.CacheReadTokens},
-        {m.CostEstimate}, {m.Status}, {Cut(m.ErrorText, 1000)}, {m.DurationMs}, {userId}, {m.CreatedAt})");
+        {AiSqlParams.Cost(m.CostEstimate)}, {m.Status}, {Cut(m.ErrorText, 1000)}, {m.DurationMs}, {userId}, {m.CreatedAt})");
             db.Database.ExecuteSqlInterpolated($"UPDATE AI_Conversations SET LastMessageAt = {m.CreatedAt} WHERE Id = {m.Conversation_Id}");
             tx.Commit();
             return m;

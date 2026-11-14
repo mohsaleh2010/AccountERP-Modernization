@@ -183,7 +183,7 @@ FROM AI_BriefNarratives n";
             string lang = Cut(n.Language, 5) ?? "";
             int updated = db.Database.ExecuteSqlInterpolated($@"
 UPDATE AI_BriefNarratives SET NarrativeText = {n.NarrativeText}, QuestionsJson = {Cut(n.QuestionsJson, 1000)}, Source = {Cut(n.Source, 20)}, Model_Id = {n.Model_Id},
-       ModelName = {Cut(n.ModelName, 150)}, InputTokens = {n.InputTokens}, OutputTokens = {n.OutputTokens}, CostEstimate = {Money(n.CostEstimate)},
+       ModelName = {Cut(n.ModelName, 150)}, InputTokens = {n.InputTokens}, OutputTokens = {n.OutputTokens}, CostEstimate = {AiSqlParams.Cost(n.CostEstimate)},
        RejectReason = {Cut(n.RejectReason, 300)}, UpdatedBy = {userId}, UpdatedAt = {DateTime.Now}
 WHERE Brief_Id = {n.Brief_Id} AND Language = {lang}");
             if (updated > 0) return;
@@ -191,7 +191,7 @@ WHERE Brief_Id = {n.Brief_Id} AND Language = {lang}");
             db.Database.ExecuteSqlInterpolated($@"
 INSERT INTO AI_BriefNarratives (Id, Brief_Id, Language, NarrativeText, QuestionsJson, Source, Model_Id, ModelName, InputTokens, OutputTokens, CostEstimate, RejectReason, CreatedBy, CreatedAt)
 SELECT {id}, {n.Brief_Id}, {lang}, {n.NarrativeText}, {Cut(n.QuestionsJson, 1000)}, {Cut(n.Source, 20)}, {n.Model_Id}, {Cut(n.ModelName, 150)}, {n.InputTokens}, {n.OutputTokens},
-       {Money(n.CostEstimate)}, {Cut(n.RejectReason, 300)}, {userId}, {DateTime.Now}
+       {AiSqlParams.Cost(n.CostEstimate)}, {Cut(n.RejectReason, 300)}, {userId}, {DateTime.Now}
 WHERE NOT EXISTS (SELECT 1 FROM AI_BriefNarratives WITH (UPDLOCK, HOLDLOCK) WHERE Brief_Id = {n.Brief_Id} AND Language = {lang})");
             n.Id = id;
         }
@@ -342,10 +342,6 @@ WHERE NOT EXISTS (SELECT 1 FROM AI_BriefSubscriptions WITH (UPDLOCK, HOLDLOCK) W
         private static string S(DbDataReader r, int i) => r.IsDBNull(i) ? null : Convert.ToString(r.GetValue(i));
 
         private static string Cut(string s, int max) => s == null ? null : (s.Length > max ? s.Substring(0, max) : s);
-
-        /// <summary>تكلفة بدقة 6 خانات: المعامل العشرى غير المحدد فى ExecuteSqlInterpolated يُرسل decimal(18,2) فتصير 0.003 صفراً.</summary>
-        private static Microsoft.Data.SqlClient.SqlParameter Money(decimal? value) =>
-            new Microsoft.Data.SqlClient.SqlParameter { SqlDbType = SqlDbType.Decimal, Precision = 18, Scale = 6, Value = (object)value ?? DBNull.Value };
 
         private static void Add(DbCommand cmd, string name, object value)
         {

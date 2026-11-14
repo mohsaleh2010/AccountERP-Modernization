@@ -126,7 +126,7 @@ WHERE Id = {id} AND User_Id = {userId} AND Message_Id IS NULL AND Status = {AiAt
             DateTime now = DateTime.Now;
             _newOpp().db.Database.ExecuteSqlInterpolated($@"
 UPDATE AI_Attachments SET ExtractDocType = {docType}, ExtractJson = {json}, ExtractModel_Id = {modelId}, ExtractInputTokens = {inTok},
-       ExtractOutputTokens = {outTok}, ExtractCost = {cost}, ExtractedAt = {now}, Doc_No = {Cut(docNo, 60)}, UpdatedBy = {userId}, UpdatedAt = {now}
+       ExtractOutputTokens = {outTok}, ExtractCost = {AiSqlParams.Cost(cost)}, ExtractedAt = {now}, Doc_No = {Cut(docNo, 60)}, UpdatedBy = {userId}, UpdatedAt = {now}
 WHERE Id = {id} AND User_Id = {userId}");
         }
 

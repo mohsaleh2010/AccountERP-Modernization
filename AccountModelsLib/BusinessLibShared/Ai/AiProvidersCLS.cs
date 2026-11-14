@@ -164,14 +164,14 @@ WHERE Id = {providerId}");
 INSERT INTO AI_Models (Id, Provider_Id, ModelId, DisplayName, SupportsTools, SupportsVision, SupportsTemperature, SupportsEmbeddings,
                        ContextTokens, InputPricePerM, OutputPricePerM, IsEnabled, CreatedBy, CreatedAt)
 VALUES ({m.Id}, {m.Provider_Id}, {m.ModelId}, {m.DisplayName}, {m.SupportsTools}, {m.SupportsVision}, {m.SupportsTemperature}, {m.SupportsEmbeddings},
-        {m.ContextTokens}, {m.InputPricePerM}, {m.OutputPricePerM}, {m.IsEnabled}, {userId}, GETDATE())");
+        {m.ContextTokens}, {AiSqlParams.PricePerM(m.InputPricePerM)}, {AiSqlParams.PricePerM(m.OutputPricePerM)}, {m.IsEnabled}, {userId}, GETDATE())");
             }
             else
             {
                 db.Database.ExecuteSqlInterpolated($@"
 UPDATE AI_Models SET DisplayName = {m.DisplayName}, SupportsTools = {m.SupportsTools}, SupportsVision = {m.SupportsVision},
        SupportsTemperature = {m.SupportsTemperature}, SupportsEmbeddings = {m.SupportsEmbeddings}, ContextTokens = {m.ContextTokens},
-       InputPricePerM = {m.InputPricePerM}, OutputPricePerM = {m.OutputPricePerM}, IsEnabled = {m.IsEnabled}, UpdatedBy = {userId}, UpdatedAt = GETDATE()
+       InputPricePerM = {AiSqlParams.PricePerM(m.InputPricePerM)}, OutputPricePerM = {AiSqlParams.PricePerM(m.OutputPricePerM)}, IsEnabled = {m.IsEnabled}, UpdatedBy = {userId}, UpdatedAt = GETDATE()
 WHERE Id = {m.Id}");
             }
             return m.Id;

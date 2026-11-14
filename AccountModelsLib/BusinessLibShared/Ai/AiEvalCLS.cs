@@ -150,7 +150,7 @@ VALUES ({x.Id}, {x.Group_Id}, {x.User_Id}, {x.Model_Id}, {Cut(x.ModelName, 200)}
         {
             _newOpp().db.Database.ExecuteSqlInterpolated($@"
 UPDATE AI_EvalRuns SET DoneCases = {x.DoneCases}, PassedCases = {x.PassedCases}, FailedCases = {x.FailedCases}, ErrorCases = {x.ErrorCases},
-       ToolOkCases = {x.ToolOkCases}, InputTokens = {x.InputTokens}, OutputTokens = {x.OutputTokens}, CostEstimate = {x.CostEstimate},
+       ToolOkCases = {x.ToolOkCases}, InputTokens = {x.InputTokens}, OutputTokens = {x.OutputTokens}, CostEstimate = {AiSqlParams.Cost(x.CostEstimate)},
        DurationMs = {x.DurationMs}, UpdatedAt = {DateTime.Now}
 WHERE Id = {x.Id}");
         }
@@ -222,7 +222,7 @@ WHERE r.Model_Id = @m AND res.InputTokens IS NOT NULL AND res.Outcome <> 'skippe
 INSERT INTO AI_EvalResults (Id, Run_Id, Case_Id, CaseKey, CaseVersion, Outcome, ToolOk, FailReason, AnswerText, ToolsJson, Rounds,
                             InputTokens, OutputTokens, CostEstimate, DurationMs, CreatedAt)
 VALUES ({x.Id}, {x.Run_Id}, {x.Case_Id}, {Cut(x.CaseKey, 100)}, {x.CaseVersion}, {Cut(x.Outcome, 20)}, {x.ToolOk}, {Cut(x.FailReason, 1000)},
-        {x.AnswerText}, {x.ToolsJson}, {x.Rounds}, {x.InputTokens}, {x.OutputTokens}, {x.CostEstimate}, {x.DurationMs}, {DateTime.Now})");
+        {x.AnswerText}, {x.ToolsJson}, {x.Rounds}, {x.InputTokens}, {x.OutputTokens}, {AiSqlParams.Cost(x.CostEstimate)}, {x.DurationMs}, {DateTime.Now})");
         }
 
         public List<AiEvalResultRow> ListResults(long runId)
