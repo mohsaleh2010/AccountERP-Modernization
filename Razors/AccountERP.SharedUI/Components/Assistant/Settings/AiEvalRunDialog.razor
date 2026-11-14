@@ -1,0 +1,198 @@
+@* 🤖 المساعد الذكى — P7.5 (.claude/docs/ai-assistant-p7-plan.md): نافذة تشغيل التقييم.
+   نموذج أو نموذجان (للمقارنة على نفس الحالات)، فلاتر الحالات، «حساب التقدير» (العدد والتوكنز والتكلفة لكل نموذج وسبب المنع إن وُجد)،
+   ومربع موافقة إلزامى لأن التقييم يستهلك رصيداً حقيقياً. التشغيل نفسه على الخادم (IAiEvalGateway.Start) ويعيد GroupId للمتابعة. *@
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+
+<style>
+    .aier-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px 16px; align-items: start; }
+    .aier-form .wide { grid-column: 1 / -1; }
+    .aier-est { margin-top: 16px; padding: 12px 14px; border-radius: 12px; background: color-mix(in srgb, var(--mud-palette-primary) 6%, transparent); }
+    .aier-est table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    .aier-est th, .aier-est td { padding: 6px 8px; text-align: start; border-bottom: 1px solid var(--mud-palette-lines-default); }
+    .aier-est td.n { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
+    .aier-est .total { font-weight: 700; margin-top: 8px; }
+    .aier-acts .mud-button-root { min-height: 44px; }
+</style>
+
+<MudDialog>
+    <TitleContent>
+        <div style="display:flex;align-items:center;gap:8px;">
+            <MudIcon Icon="@Icons.Material.Filled.Science" Color="Color.Primary" aria-hidden="true" />
+            <span style="font-weight:700;">@Tr("AIE_RunTitle")</span>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        @if (PresetCaseIds.Count > 0)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">@Tr("AIE_PresetCases", PresetCaseIds.Count)</MudAlert>
+        }
+        <div class="aier-form">
+            <MudSelect T="long" @bind-Value="_modelA" Label="@Tr("AIE_ModelA")" Variant="Variant.Outlined" Required="true" HelperText="@Tr("AIE_ModelHelp")">
+                @foreach (var m in Models) { <MudSelectItem Value="@m.Id">@ModelText(m)</MudSelectItem> }
+            </MudSelect>
+            <MudSelect T="long" @bind-Value="_modelB" Label="@Tr("AIE_ModelB")" Variant="Variant.Outlined" HelperText="@Tr("AIE_ModelBHelp")">
+                <MudSelectItem Value="0L">@Tr("AIE_None")</MudSelectItem>
+                @foreach (var m in Models.Where(m => m.Id != _modelA)) { <MudSelectItem Value="@m.Id">@ModelText(m)</MudSelectItem> }
+            </MudSelect>
+            @if (PresetCaseIds.Count == 0)
+            {
+                <MudSelect T="string" MultiSelection="true" @bind-SelectedValues="_cats" Label="@Tr("AIE_Categories")" Variant="Variant.Outlined"
+                           HelperText="@Tr("AIE_EmptyAll")" MultiSelectionTextFunc="@(l => l.Count == 0 ? "" : string.Join("، ", l.Select(c => Tr(AiEvalTab.CatKey(c!)))))">
+                    @foreach (var c in AiEvalCategories.All) { <MudSelectItem Value="@c">@Tr(AiEvalTab.CatKey(c))</MudSelectItem> }
+                </MudSelect>
+                <MudSelect T="string" MultiSelection="true" @bind-SelectedValues="_checks" Label="@Tr("AIE_CheckType")" Variant="Variant.Outlined"
+                           HelperText="@Tr("AIE_EmptyAll")" MultiSelectionTextFunc="@(l => l.Count == 0 ? "" : string.Join("، ", l.Select(c => Tr(AiEvalTab.CheckKey(c!)))))">
+                    @foreach (var c in AiEvalCheckTypes.All) { <MudSelectItem Value="@c">@Tr(AiEvalTab.CheckKey(c))</MudSelectItem> }
+                </MudSelect>
+                <MudSelect T="string" @bind-Value="_dialect" Label="@Tr("AIE_Dialect")" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("")">@Tr("AIE_DialectAll")</MudSelectItem>
+                    <MudSelectItem Value="@("msa")">@Tr("AIE_DMsa")</MudSelectItem>
+                    <MudSelectItem Value="@("eg")">@Tr("AIE_DEg")</MudSelectItem>
+                </MudSelect>
+                <MudNumericField T="int?" @bind-Value="_limit" Label="@Tr("AIE_Limit")" Variant="Variant.Outlined" Min="1" Max="1000" HelperText="@Tr("AIE_LimitHelp")" Clearable="true" />
+            }
+        </div>
+
+        <div class="d-flex flex-wrap align-center mt-3 aier-acts" style="gap:8px;">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Calculate" Disabled="@(_busy || _modelA == 0)" OnClick="EstimateAsync">
+                @if (_estimating) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                @Tr("AIE_Estimate")
+            </MudButton>
+            <span class="ai-sub" style="margin:0;">@Tr("AIE_EstimateHint")</span>
+        </div>
+
+        @if (_est != null)
+        {
+            <div class="aier-est" aria-live="polite">
+                <div class="mb-2">@Tr("AIE_EstCases", _est.CaseCount, _est.MaxCases)</div>
+                <table>
+                    <thead><tr><th>@Tr("AIE_Model")</th><th>@Tr("AIE_InTok")</th><th>@Tr("AIE_OutTok")</th><th>@Tr("AIE_Cost")</th><th>@Tr("AIE_Basis")</th></tr></thead>
+                    <tbody>
+                        @foreach (var m in _est.Models)
+                        {
+                            <tr>
+                                <td>@m.ModelName</td>
+                                <td class="n">@m.InputTokens.ToString("N0", CultureInfo.InvariantCulture)</td>
+                                <td class="n">@m.OutputTokens.ToString("N0", CultureInfo.InvariantCulture)</td>
+                                <td class="n">@(m.Cost is decimal c ? "$" + c.ToString("0.####", CultureInfo.InvariantCulture) : Tr("AIE_NoPrice"))</td>
+                                <td>@Tr(m.Basis == "history" ? "AIE_BasisHistory" : "AIE_BasisDefault")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <div class="total">@(_est.TotalCost is decimal t ? Tr("AIE_EstTotal", "$" + t.ToString("0.####", CultureInfo.InvariantCulture)) : Tr("AIE_EstTotalUnknown"))</div>
+                @if (_est.MaxCostPerRun > 0)
+                {
+                    <div class="ai-sub">@Tr("AIE_CostCap", "$" + _est.MaxCostPerRun.ToString("0.##", CultureInfo.InvariantCulture))</div>
+                }
+            </div>
+            @if (!string.IsNullOrEmpty(_est.Blocked))
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3" role="alert">@_est.Blocked</MudAlert>
+            }
+            else
+            {
+                <MudCheckBox T="bool" @bind-Value="_confirmed" Color="Color.Primary" Class="mt-3" Label="@Tr("AIE_Consent")" />
+            }
+        }
+
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3" role="alert">@_error</MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <div class="aier-acts d-flex" style="gap:8px;padding:0 8px 8px;">
+            <MudButton Variant="Variant.Text" OnClick="@(() => MudDialog.Cancel())">@Tr("AI_Cancel")</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow"
+                       Disabled="@(_busy || _est == null || !string.IsNullOrEmpty(_est.Blocked) || !_confirmed || EstimateStale)" OnClick="StartAsync">
+                @if (_starting) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                @Tr("AIE_Start")
+            </MudButton>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter, EditorRequired] public IAiEvalGateway Eval { get; set; } = default!;
+    [Parameter, EditorRequired] public AiUserContext User { get; set; } = default!;
+    /// <summary>النماذج المفعّلة التى تدعم الأدوات.</summary>
+    [Parameter] public List<AiModelRow> Models { get; set; } = new();
+    [Parameter] public long DefaultModelId { get; set; }
+    /// <summary>تشغيل حالات محددة (من قائمة الحالات) بدل الفلاتر.</summary>
+    [Parameter] public List<long> PresetCaseIds { get; set; } = new();
+
+    private long _modelA, _modelB;
+    private IReadOnlyCollection<string> _cats = new HashSet<string>(), _checks = new HashSet<string>();
+    private string _dialect = "";
+    private int? _limit;
+    private AiEvalEstimate? _est;
+    private string? _estKey, _error;
+    private bool _confirmed, _busy, _estimating, _starting;
+
+    protected override void OnInitialized()
+    {
+        _modelA = Models.Any(m => m.Id == DefaultModelId) ? DefaultModelId : Models.FirstOrDefault()?.Id ?? 0;
+    }
+
+    private string ModelText(AiModelRow m) => string.IsNullOrEmpty(m.ProviderName) ? m.DisplayName : $"{m.DisplayName} — {m.ProviderName}";
+
+    private AiEvalStartRequest Request() => new()
+    {
+        ModelIds = new[] { _modelA, _modelB }.Where(i => i > 0).Distinct().ToList(),
+        Filter = PresetCaseIds.Count > 0
+            ? new AiEvalFilter { CaseIds = PresetCaseIds.ToList() }
+            : new AiEvalFilter { Categories = _cats.ToList(), CheckTypes = _checks.ToList(), Dialect = _dialect, Limit = _limit },
+        Confirmed = _confirmed,
+    };
+
+    /// <summary>أى تغيير بعد التقدير يُلزم بإعادة حسابه (فلا يوافق المدير على رقم قديم).</summary>
+    private string Key() => string.Join("|", _modelA, _modelB, string.Join(",", _cats.OrderBy(x => x)), string.Join(",", _checks.OrderBy(x => x)), _dialect, _limit);
+    private bool EstimateStale => _est != null && _estKey != Key();
+
+    private async Task EstimateAsync()
+    {
+        _busy = _estimating = true;
+        _error = null;
+        _confirmed = false;
+        try
+        {
+            var gw = Eval; var req = Request(); var user = User;
+            _est = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return gw.Estimate(req, user); });
+            _estKey = Key();
+        }
+        catch (Exception ex) { _est = null; _error = Err(ex); }
+        finally { _busy = _estimating = false; }
+    }
+
+    private async Task StartAsync()
+    {
+        if (EstimateStale) { _error = Tr("AIE_EstimateStale"); return; }
+        _busy = _starting = true;
+        _error = null;
+        try
+        {
+            var gw = Eval; var req = Request(); var user = User;
+            var res = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return gw.Start(req, user); });
+            MudDialog.Close(DialogResult.Ok(res));
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = _starting = false; }
+    }
+
+    private string Tr(string key, params object[] args)
+    {
+        var previous = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally { CultureInfo.CurrentUICulture = previous; }
+    }
+
+    private static string Err(Exception ex) => ex is InvalidOperationException ? ex.Message : (ex.InnerException?.Message ?? ex.Message);
+}

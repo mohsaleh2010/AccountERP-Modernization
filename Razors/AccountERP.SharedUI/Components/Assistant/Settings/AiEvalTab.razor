@@ -1,0 +1,839 @@
+@* 🤖 المساعد الذكى — P7.5 (.claude/docs/ai-assistant-p7-plan.md): تبويب «التقييم» فى /settings/ai (م-380، م-381، م-431…م-436).
+   «التشغيلات»: تقدّم حى للتشغيل الجارى مع «إيقاف»، سجل التشغيلات (اختيار تشغيلين للمقارنة)، تفاصيل تشغيل (مؤشرات، رسم النجاح لكل تصنيف،
+   جدول الحالات وتفاصيل كل حالة: الرد وسبب الفشل والأدوات)، ومقارنة تشغيلين (AiEvalCompareView).
+   «الحالات»: القائمة بالفلاتر، إضافة/تعديل (يُتحقق على الخادم)، تفعيل/تعطيل، وتشغيل حالة واحدة.
+   كل التشغيل عبر IAiEvalGateway (AccountERP.AI)؛ نافذة التشغيل AiEvalRunDialog تطلب الموافقة على العدد والتكلفة. التصميم حسب ui-ux-pro-max ونظام inv-* / ai-*. *@
+
+@using System.Globalization
+@using System.Text.Json
+@using Microsoft.Extensions.DependencyInjection
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IServiceProvider ServiceProvider
+@implements IDisposable
+
+<style>
+    .aie-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+    .aie-head .body { flex: 1 1 280px; min-width: 0; }
+    .aie-head .mud-button-root, .aie-tools .mud-button-root, .aie-form-actions .mud-button-root, .aie-back .mud-button-root { min-height: 44px; }
+    .aie-seg { display: inline-flex; border: 1px solid var(--mud-palette-lines-default); border-radius: 12px; overflow: hidden; }
+    .aie-seg button { min-height: 44px; padding: 0 16px; border: 0; background: transparent; color: var(--mud-palette-text-primary); cursor: pointer; font: inherit;
+                      display: inline-flex; align-items: center; gap: 6px; }
+    .aie-seg button[aria-pressed="true"] { background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent); color: var(--mud-palette-primary); font-weight: 600; }
+    .aie-seg button:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: -2px; }
+    .aie-live { display: grid; gap: 12px; }
+    .aie-live .run { display: grid; gap: 4px; }
+    .aie-live .row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: .875rem; }
+    .aie-live .cur { font-size: .8125rem; color: var(--mud-palette-text-secondary); overflow-wrap: anywhere; }
+    .aie-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+    .aie-kpi { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); min-width: 0; }
+    .aie-kpi .l { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .aie-kpi .v { font-size: 1.25rem; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .aie-kpi.good .v { color: var(--mud-palette-success); } .aie-kpi.bad .v { color: var(--mud-palette-error); }
+    .aie-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .aie-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .aie-tools .grow { flex: 1 1 220px; min-width: 0; }
+    .aie-tools .sel { min-width: 150px; max-width: 210px; }
+    .aie-q { overflow-wrap: anywhere; max-width: 520px; }
+    .aie-n { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; white-space: nowrap; }
+    .aie-detail { display: grid; gap: 10px; padding: 12px 4px; }
+    .aie-detail .lbl { font-size: .8125rem; font-weight: 600; color: var(--mud-palette-text-secondary); }
+    .aie-detail .ans { white-space: pre-wrap; overflow-wrap: anywhere; padding: 10px 12px; border-radius: 10px; background: var(--mud-palette-background-gray); max-height: 260px; overflow-y: auto; }
+    .aie-tl { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+    .aie-tl li { padding: 8px 10px; border-radius: 10px; border: 1px solid var(--mud-palette-lines-default); }
+    .aie-tl .sql { direction: ltr; text-align: left; font-family: Consolas, 'Courier New', monospace; font-size: .75rem; white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 4px; }
+    .aie-tl .err { color: var(--mud-palette-error); font-size: .8125rem; overflow-wrap: anywhere; margin-top: 4px; }
+    .aie-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px 16px; align-items: start; }
+    .aie-form .wide { grid-column: 1 / -1; }
+    .aie-form .ltr textarea, .aie-form .ltr input { direction: ltr; text-align: left; font-family: Consolas, 'Courier New', monospace; }
+    .aie-form-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .aie-row-acts { display: flex; gap: 2px; justify-content: flex-end; }
+    .aie-off { opacity: .6; }
+    .aie-sel { background: color-mix(in srgb, var(--mud-palette-primary) 6%, transparent); }
+    .aie-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 28px 12px; color: var(--mud-palette-text-secondary); text-align: center; }
+    @@media (prefers-reduced-motion: reduce) { .aie-live * { transition: none !important; } }
+</style>
+
+@if (_eval == null)
+{
+    <div class="inv-card"><div class="aie-empty"><MudIcon Icon="@Icons.Material.Filled.CloudOff" Size="Size.Large" />@Tr("AI_NotAvailable")</div></div>
+    return;
+}
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <MudAlert Severity="Severity.Warning" Class="mb-3" role="alert" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">@_error</MudAlert>
+}
+
+@* ───────────── الرأس ───────────── *@
+<section class="inv-card" aria-labelledby="aie-h">
+    <div class="aie-head">
+        <div class="body">
+            <h2 class="inv-card-title" id="aie-h" style="margin:0;"><MudIcon Icon="@Icons.Material.Filled.Science" />@Tr("AIE_Title")</h2>
+            <div class="ai-sub">@Tr("AIE_Sub")</div>
+        </div>
+        <div class="aie-seg" role="group" aria-label="@Tr("AIE_Title")">
+            <button type="button" aria-pressed="@(_view == "runs" ? "true" : "false")" @onclick="@(() => _view = "runs")"><MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />@Tr("AIE_ViewRuns")</button>
+            <button type="button" aria-pressed="@(_view == "cases" ? "true" : "false")" @onclick="ShowCasesAsync"><MudIcon Icon="@Icons.Material.Filled.Checklist" Size="Size.Small" />@Tr("AIE_ViewCases", _cases.Count(c => c.IsActive))</button>
+        </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" Disabled="@(_busy || IsActive)" OnClick="@(() => OpenRunDialogAsync(null))">@Tr("AIE_RunNew")</MudButton>
+    </div>
+</section>
+
+@* ───────────── التشغيل الجارى ───────────── *@
+@if (_progress != null && _progress.Active)
+{
+    <section class="inv-card ai-gap" aria-labelledby="aie-live-h">
+        <div class="aie-head">
+            <h2 class="inv-card-title" id="aie-live-h" style="margin:0;flex:1 1 auto;"><MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" Class="me-2" />@Tr("AIE_Running")</h2>
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.StopCircle" Disabled="_stopping" OnClick="StopAsync">@Tr("AIE_Stop")</MudButton>
+        </div>
+        <div class="aie-live mt-3" aria-live="polite">
+            @foreach (var r in _progress.Runs)
+            {
+                <div class="run">
+                    <div class="row"><b>@r.ModelName</b><span class="aie-n">@Tr("AIE_LiveCounts", r.DoneCases, r.TotalCases, r.PassedCases, r.FailedCases, r.ErrorCases)</span></div>
+                    <MudProgressLinear Color="Color.Primary" Rounded="true" Size="Size.Medium" Value="@(r.TotalCases == 0 ? 0 : 100.0 * r.DoneCases / r.TotalCases)"
+                                       aria-label="@Tr("AIE_LiveCounts", r.DoneCases, r.TotalCases, r.PassedCases, r.FailedCases, r.ErrorCases)" />
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(_progress.CurrentCase)) { <div class="cur">@Tr("AIE_CurrentCase", _progress.CurrentCase)</div> }
+            <div class="ai-sub" style="margin:0;">@Tr("AIE_LiveHint")</div>
+        </div>
+    </section>
+}
+
+@if (_view == "runs")
+{
+    @* ───────────── المقارنة ───────────── *@
+    @if (_cmpA != null && _cmpB != null)
+    {
+        <section class="inv-card ai-gap" aria-labelledby="aie-cmp-h">
+            <div class="aie-head mb-3 aie-back">
+                <h2 class="inv-card-title" id="aie-cmp-h" style="margin:0;flex:1 1 auto;"><MudIcon Icon="@Icons.Material.Filled.CompareArrows" />@Tr("AIE_CompareTitle")</h2>
+                <MudButton Variant="Variant.Text" StartIcon="@(LangService.IsRtl ? Icons.Material.Filled.ArrowForward : Icons.Material.Filled.ArrowBack)" OnClick="CloseCompare">@Tr("AIE_Back")</MudButton>
+            </div>
+            <AiEvalCompareView A="_cmpA" B="_cmpB" ResultsA="_cmpResA" ResultsB="_cmpResB" />
+        </section>
+    }
+    @* ───────────── تفاصيل تشغيل ───────────── *@
+    else if (_run != null)
+    {
+        <section class="inv-card ai-gap" aria-labelledby="aie-run-h">
+            <div class="aie-head mb-3 aie-back">
+                <div class="body">
+                    <h2 class="inv-card-title" id="aie-run-h" style="margin:0;"><MudIcon Icon="@Icons.Material.Filled.Assessment" />@Tr("AIE_RunDetails", _run.ModelName)</h2>
+                    <div class="aie-meta">
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@StatusColor(_run.Status)">@Tr(StatusKey(_run.Status))</MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.Schedule">@When(_run)</MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.Person">@UserText(_run)</MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.Hub">@_run.ProviderName</MudChip>
+                        @if (!string.IsNullOrEmpty(_run.Effort)) { <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@Tr("AIE_Effort", _run.Effort)</MudChip> }
+                        <MudTooltip Text="@Tr("AIE_PromptHashHelp")"><MudChip T="string" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.Fingerprint">@Short(_run.PromptHash)</MudChip></MudTooltip>
+                    </div>
+                </div>
+                @if (Siblings(_run) is { } sib)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CompareArrows" OnClick="@(() => CompareAsync(_run, sib))">@Tr("AIE_CompareWith", sib.ModelName)</MudButton>
+                }
+                <MudButton Variant="Variant.Text" StartIcon="@(LangService.IsRtl ? Icons.Material.Filled.ArrowForward : Icons.Material.Filled.ArrowBack)" OnClick="@(() => { _run = null; _openResult = 0; })">@Tr("AIE_Back")</MudButton>
+            </div>
+            @if (!string.IsNullOrEmpty(_run.ErrorText)) { <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">@_run.ErrorText</MudAlert> }
+
+            <div class="aie-kpis">
+                @Kpi(Tr("AIE_KPassRate"), _run.PassRate == null ? "—" : _run.PassRate.Value.ToString("0.#", CultureInfo.InvariantCulture) + "%", _run.PassRate >= 80 ? "good" : _run.PassRate < 50 ? "bad" : "")
+                @Kpi(Tr("AIE_OPass"), N(_run.PassedCases), "good")
+                @Kpi(Tr("AIE_OFail"), N(_run.FailedCases), _run.FailedCases > 0 ? "bad" : "")
+                @Kpi(Tr("AIE_OError"), N(_run.ErrorCases), _run.ErrorCases > 0 ? "bad" : "")
+                @Kpi(Tr("AIE_OSkipped"), N(_run.SkippedCases), "")
+                @Kpi(Tr("AIE_KToolOk"), $"{N(_run.ToolOkCases)} / {N(_run.DoneCases)}", "")
+                @Kpi(Tr("AIE_KTokens"), N((_run.InputTokens ?? 0) + (_run.OutputTokens ?? 0)), "")
+                @Kpi(Tr("AIE_KCost"), Money(_run.CostEstimate), "")
+                @Kpi(Tr("AIE_KDuration"), Secs(_run.DurationMs), "")
+            </div>
+
+            <h3 class="inv-card-title ai-gap" style="font-size:1rem;"><MudIcon Icon="@Icons.Material.Filled.BarChart" />@Tr("AIE_ByCategory")</h3>
+            <AiChart Section="RunChart" Rtl="LangService.IsRtl" EmptyText="@Tr("AIE_NoResults")" DataText="@Tr("AIE_ChartData")" />
+
+            <div class="aie-tools ai-gap">
+                <MudSelect T="string" @bind-Value="_resOutcome" Label="@Tr("AIE_Outcome")" Variant="Variant.Outlined" Dense="true" Class="sel">
+                    <MudSelectItem Value="@("")">@Tr("AIE_All", _results.Count)</MudSelectItem>
+                    @foreach (var o in new[] { AiEvalOutcomes.Fail, AiEvalOutcomes.Error, AiEvalOutcomes.Pass, AiEvalOutcomes.Skipped })
+                    {
+                        <MudSelectItem Value="@o">@($"{Tr(OutcomeKey(o))} ({_results.Count(r => r.Outcome == o)})")</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudSelect T="string" @bind-Value="_resCat" Label="@Tr("AIE_Category")" Variant="Variant.Outlined" Dense="true" Class="sel">
+                    <MudSelectItem Value="@("")">@Tr("AIE_AllCats")</MudSelectItem>
+                    @foreach (var c in AiEvalCategories.All.Where(c => _results.Any(r => r.Category == c))) { <MudSelectItem Value="@c">@Tr(CatKey(c))</MudSelectItem> }
+                </MudSelect>
+                <MudTextField T="string" @bind-Value="_resSearch" Label="@Tr("AIE_Search")" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Immediate="true" DebounceInterval="250"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="grow" />
+            </div>
+            <MudTable Items="@FilteredResults" T="AiEvalResultRow" Hover="true" Elevation="0" Class="inv-table mt-3" Dense="true" Breakpoint="Breakpoint.Md" RowsPerPage="25"
+                      Loading="_resLoading" LoadingProgressColor="Color.Primary" OnRowClick="@(e => { if (e.Item != null) ToggleResult(e.Item); })" RowClassFunc="@((r, _) => r.Id == _openResult ? "aie-sel" : "")"
+                      RowStyle="cursor:pointer;">
+                <HeaderContent>
+                    <MudTh>@Tr("AIE_Outcome")</MudTh>
+                    <MudTh>@Tr("AIE_Category")</MudTh>
+                    <MudTh>@Tr("AIE_Question")</MudTh>
+                    <MudTh>@Tr("AIE_CheckType")</MudTh>
+                    <MudTh>@Tr("AIE_KTools")</MudTh>
+                    <MudTh>@Tr("AIE_Time")</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@Tr("AIE_Outcome")"><MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@OutcomeColor(context.Outcome)" Icon="@OutcomeIcon(context.Outcome)">@Tr(OutcomeKey(context.Outcome))</MudChip></MudTd>
+                    <MudTd DataLabel="@Tr("AIE_Category")">@Tr(CatKey(context.Category))</MudTd>
+                    <MudTd DataLabel="@Tr("AIE_Question")">
+                        <button type="button" class="aie-q" style="all:unset;cursor:pointer;" aria-expanded="@(context.Id == _openResult ? "true" : "false")"
+                                aria-label="@Tr("AIE_ShowCase", context.Question)">@context.Question</button>
+                        @if (!string.IsNullOrEmpty(context.FailReason) && context.Outcome != AiEvalOutcomes.Pass) { <div class="ai-sub" style="margin:2px 0 0;">@context.FailReason</div> }
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("AIE_CheckType")">@Tr(CheckKey(context.CheckType))</MudTd>
+                    <MudTd DataLabel="@Tr("AIE_KTools")">
+                        <MudIcon Icon="@(context.ToolOk ? Icons.Material.Filled.CheckCircleOutline : Icons.Material.Filled.HighlightOff)" Color="@(context.ToolOk ? Color.Success : Color.Default)" Size="Size.Small"
+                                 aria-label="@Tr(context.ToolOk ? "AIE_ToolOkYes" : "AIE_ToolOkNo")" />
+                    </MudTd>
+                    <MudTd DataLabel="@Tr("AIE_Time")"><span class="aie-n">@Secs(context.DurationMs)</span></MudTd>
+                </RowTemplate>
+                <ChildRowContent>
+                    @if (context.Id == _openResult)
+                    {
+                        <tr class="aie-sel"><td colspan="6">
+                            <div class="aie-detail">
+                                <div class="aie-meta" style="margin:0;">
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@context.CaseKey · v@(context.CaseVersion)</MudChip>
+                                    @if (context.Rounds is int rd) { <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@Tr("AIE_Rounds", rd)</MudChip> }
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@Tr("AIE_CaseTokens", N((context.InputTokens ?? 0) + (context.OutputTokens ?? 0)), Money(context.CostEstimate))</MudChip>
+                                </div>
+                                @if (!string.IsNullOrEmpty(context.FailReason))
+                                {
+                                    <div><div class="lbl">@Tr("AIE_FailReason")</div><div>@context.FailReason</div></div>
+                                }
+                                <div><div class="lbl">@Tr("AIE_Answer")</div><div class="ans">@(string.IsNullOrWhiteSpace(context.AnswerText) ? "—" : context.AnswerText)</div></div>
+                                <div>
+                                    <div class="lbl">@Tr("AIE_ToolsUsed")</div>
+                                    @if (ParseTools(context.ToolsJson) is { Count: > 0 } tl)
+                                    {
+                                        <ol class="aie-tl">
+                                            @foreach (var t in tl)
+                                            {
+                                                <li>
+                                                    <div class="d-flex flex-wrap align-center" style="gap:6px;">
+                                                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@(t.Outcome is "ok" or "asked" ? Color.Success : Color.Error)">@t.Outcome</MudChip>
+                                                        <b>@(string.IsNullOrEmpty(t.Title) ? t.Name : t.Title)</b><span class="aik-key">@t.Name</span>
+                                                        @if (t.Rows is int n) { <span class="ai-sub" style="margin:0;">@Tr("AIE_ToolRows", n)</span> }
+                                                    </div>
+                                                    @if (!string.IsNullOrEmpty(t.Sql)) { <div class="sql">@t.Sql</div> }
+                                                    @if (!string.IsNullOrEmpty(t.Error)) { <div class="err">@t.Error</div> }
+                                                </li>
+                                            }
+                                        </ol>
+                                    }
+                                    else { <div class="ai-sub" style="margin:0;">@Tr("AIE_NoTools")</div> }
+                                </div>
+                            </div>
+                        </td></tr>
+                    }
+                </ChildRowContent>
+                <NoRecordsContent><div class="aie-empty"><MudIcon Icon="@Icons.Material.Filled.Checklist" Size="Size.Large" />@Tr("AIE_NoResults")</div></NoRecordsContent>
+                <PagerContent><MudTablePager PageSizeOptions="new[] { 25, 50, 100 }" /></PagerContent>
+            </MudTable>
+        </section>
+    }
+
+    @* ───────────── سجل التشغيلات ───────────── *@
+    <section class="inv-card ai-gap" aria-labelledby="aie-ls-h">
+        <div class="aie-tools">
+            <h2 class="inv-card-title" id="aie-ls-h" style="margin:0;flex:1 1 auto;"><MudIcon Icon="@Icons.Material.Filled.History" />@Tr("AIE_History")</h2>
+            <span class="ai-sub" style="margin:0;">@Tr("AIE_SelectHint")</span>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CompareArrows" Disabled="@(_selected.Count != 2)" OnClick="CompareSelectedAsync">@Tr("AIE_CompareSelected", _selected.Count)</MudButton>
+        </div>
+        <MudTable Items="@_runs" T="AiEvalRunRow" Hover="true" Elevation="0" Class="inv-table mt-3" Dense="true" Breakpoint="Breakpoint.Md" RowsPerPage="25"
+                  Loading="_loading" LoadingProgressColor="Color.Primary" RowClassFunc="@((r, _) => _run?.Id == r.Id ? "aie-sel" : "")">
+            <HeaderContent>
+                <MudTh Style="width:48px;"><span class="sr-only">@Tr("AIE_Select")</span></MudTh>
+                <MudTh>@Tr("AIE_Started")</MudTh>
+                <MudTh>@Tr("AIE_Model")</MudTh>
+                <MudTh>@Tr("AIE_Status")</MudTh>
+                <MudTh>@Tr("AIE_Cases")</MudTh>
+                <MudTh>@Tr("AIE_KPassRate")</MudTh>
+                <MudTh>@Tr("AIE_KToolOk")</MudTh>
+                <MudTh>@Tr("AIE_KCost")</MudTh>
+                <MudTh>@Tr("AIE_User")</MudTh>
+                <MudTh Style="text-align:end;">@Tr("AIE_Actions")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("AIE_Select")">
+                    <MudCheckBox T="bool" Value="@_selected.Contains(context.Id)" ValueChanged="@(v => ToggleSelect(context.Id, v))" Color="Color.Primary"
+                                 Disabled="@(!_selected.Contains(context.Id) && _selected.Count >= 2)" aria-label="@Tr("AIE_SelectAria", context.ModelName, When(context))" />
+                </MudTd>
+                <MudTd DataLabel="@Tr("AIE_Started")"><span class="aie-n">@When(context)</span></MudTd>
+                <MudTd DataLabel="@Tr("AIE_Model")"><div style="font-weight:600;">@context.ModelName</div><div class="ai-sub" style="margin:0;">@context.ProviderName</div></MudTd>
+                <MudTd DataLabel="@Tr("AIE_Status")"><MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@StatusColor(context.Status)">@Tr(StatusKey(context.Status))</MudChip></MudTd>
+                <MudTd DataLabel="@Tr("AIE_Cases")"><span class="aie-n">@context.DoneCases / @context.TotalCases</span></MudTd>
+                <MudTd DataLabel="@Tr("AIE_KPassRate")"><b class="aie-n">@(context.PassRate == null ? "—" : context.PassRate.Value.ToString("0.#", CultureInfo.InvariantCulture) + "%")</b></MudTd>
+                <MudTd DataLabel="@Tr("AIE_KToolOk")"><span class="aie-n">@context.ToolOkCases</span></MudTd>
+                <MudTd DataLabel="@Tr("AIE_KCost")"><span class="aie-n">@Money(context.CostEstimate)</span></MudTd>
+                <MudTd DataLabel="@Tr("AIE_User")">@UserText(context)</MudTd>
+                <MudTd DataLabel="@Tr("AIE_Actions")">
+                    <div class="aie-row-acts">
+                        <MudTooltip Text="@Tr("AIE_Details")">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" aria-label="@Tr("AIE_DetailsAria", context.ModelName, When(context))" OnClick="@(() => OpenRunAsync(context))" />
+                        </MudTooltip>
+                        @if (Siblings(context) is { } sib)
+                        {
+                            <MudTooltip Text="@Tr("AIE_CompareWith", sib.ModelName)">
+                                <MudIconButton Icon="@Icons.Material.Filled.CompareArrows" aria-label="@Tr("AIE_CompareWith", sib.ModelName)" OnClick="@(() => CompareAsync(context, sib))" />
+                            </MudTooltip>
+                        }
+                    </div>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent><div class="aie-empty"><MudIcon Icon="@Icons.Material.Filled.Science" Size="Size.Large" />@Tr("AIE_NoRuns")</div></NoRecordsContent>
+            <PagerContent><MudTablePager PageSizeOptions="new[] { 25, 50, 100 }" /></PagerContent>
+        </MudTable>
+    </section>
+}
+else
+{
+    @* ───────────── نموذج الحالة ───────────── *@
+    @if (_edit != null)
+    {
+        <section class="inv-card ai-gap" aria-labelledby="aie-ed-h">
+            <h2 class="inv-card-title" id="aie-ed-h"><MudIcon Icon="@Icons.Material.Filled.EditNote" />@(_edit.Id == 0 ? Tr("AIE_AddCase") : Tr("AIE_EditCase"))</h2>
+            @if (_editIsSeed)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">@Tr("AIE_SeedEditNote")</MudAlert>
+            }
+            <div class="aie-form">
+                <MudTextField T="string" @bind-Value="_edit.Question" Label="@Tr("AIE_Question")" Variant="Variant.Outlined" Required="true" Lines="2" MaxLength="2000" Counter="2000" Class="wide" />
+                <MudSelect T="string" @bind-Value="_edit.Category" Label="@Tr("AIE_Category")" Variant="Variant.Outlined">
+                    @foreach (var c in AiEvalCategories.All) { <MudSelectItem Value="@c">@Tr(CatKey(c))</MudSelectItem> }
+                </MudSelect>
+                <MudSelect T="string" @bind-Value="_edit.Dialect" Label="@Tr("AIE_Dialect")" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("msa")">@Tr("AIE_DMsa")</MudSelectItem>
+                    <MudSelectItem Value="@("eg")">@Tr("AIE_DEg")</MudSelectItem>
+                </MudSelect>
+                <MudSelect T="string" @bind-Value="_edit.CheckType" Label="@Tr("AIE_CheckType")" Variant="Variant.Outlined" HelperText="@Tr(CheckHelpKey(_edit.CheckType))">
+                    @foreach (var c in AiEvalCheckTypes.All) { <MudSelectItem Value="@c">@Tr(CheckKey(c))</MudSelectItem> }
+                </MudSelect>
+                <MudTextField T="string" @bind-Value="_edit.ExpectedTools" Label="@Tr("AIE_ExpectedTools")" Variant="Variant.Outlined" Class="ltr" HelperText="@Tr("AIE_ToolsHelp")" />
+                <MudTextField T="string" @bind-Value="_edit.ForbiddenTools" Label="@Tr("AIE_ForbiddenTools")" Variant="Variant.Outlined" Class="ltr" HelperText="@Tr("AIE_ToolsHelp")" />
+                @if (_edit.CheckType == AiEvalCheckTypes.Result)
+                {
+                    <MudTextField T="string" @bind-Value="_edit.ReferenceSql" Label="@Tr("AIE_RefSql")" Variant="Variant.Outlined" Lines="6" Required="true" Class="wide ltr" HelperText="@Tr("AIE_RefSqlHelp")" />
+                }
+                @if (_edit.CheckType == AiEvalCheckTypes.Financial)
+                {
+                    <MudTextField T="string" @bind-Value="_edit.ReferenceArgsJson" Label="@Tr("AIE_RefArgs")" Variant="Variant.Outlined" Lines="3" Class="wide ltr" HelperText="@Tr("AIE_RefArgsHelp")" />
+                }
+                <MudTextField T="string" @bind-Value="_edit.ExpectedText" Label="@Tr("AIE_ExpectedText")" Variant="Variant.Outlined" HelperText="@Tr("AIE_ExpectedTextHelp")" />
+                <MudTextField T="string" @bind-Value="_edit.Tags" Label="@Tr("AIE_Tags")" Variant="Variant.Outlined" />
+                <MudTextField T="string" @bind-Value="_edit.Notes" Label="@Tr("AIE_Notes")" Variant="Variant.Outlined" Lines="2" Class="wide" />
+            </div>
+            @if (!string.IsNullOrEmpty(_editError)) { <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3" role="alert">@_editError</MudAlert> }
+            <div class="aie-form-actions">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="_busy" OnClick="SaveCaseAsync">@Tr("Save")</MudButton>
+                <MudButton Variant="Variant.Text" Disabled="_busy" OnClick="@(() => { _edit = null; _editError = null; })">@Tr("AI_Cancel")</MudButton>
+            </div>
+        </section>
+    }
+
+    @* ───────────── قائمة الحالات ───────────── *@
+    <section class="inv-card ai-gap" aria-labelledby="aie-cs-h">
+        <h2 class="inv-card-title" id="aie-cs-h"><MudIcon Icon="@Icons.Material.Filled.Checklist" />@Tr("AIE_CasesTitle")</h2>
+        <div class="aie-tools">
+            <MudSelect T="string" @bind-Value="_caseCat" Label="@Tr("AIE_Category")" Variant="Variant.Outlined" Dense="true" Class="sel">
+                <MudSelectItem Value="@("")">@Tr("AIE_All", _cases.Count)</MudSelectItem>
+                @foreach (var c in AiEvalCategories.All) { <MudSelectItem Value="@c">@($"{Tr(CatKey(c))} ({_cases.Count(x => x.Category == c)})")</MudSelectItem> }
+            </MudSelect>
+            <MudSelect T="string" @bind-Value="_caseCheck" Label="@Tr("AIE_CheckType")" Variant="Variant.Outlined" Dense="true" Class="sel">
+                <MudSelectItem Value="@("")">@Tr("AIE_AllChecks")</MudSelectItem>
+                @foreach (var c in AiEvalCheckTypes.All) { <MudSelectItem Value="@c">@Tr(CheckKey(c))</MudSelectItem> }
+            </MudSelect>
+            <MudSelect T="string" @bind-Value="_caseState" Label="@Tr("AIE_State")" Variant="Variant.Outlined" Dense="true" Class="sel">
+                <MudSelectItem Value="@("")">@Tr("AIE_SAll")</MudSelectItem>
+                <MudSelectItem Value="@("on")">@Tr("AIE_SActive")</MudSelectItem>
+                <MudSelectItem Value="@("off")">@Tr("AIE_SInactive")</MudSelectItem>
+                <MudSelectItem Value="@("mine")">@Tr("AIE_SMine")</MudSelectItem>
+            </MudSelect>
+            <MudTextField T="string" @bind-Value="_caseSearch" Label="@Tr("AIE_Search")" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Immediate="true" DebounceInterval="250"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="grow" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_busy" OnClick="BeginAdd">@Tr("AIE_AddCase")</MudButton>
+        </div>
+        <MudTable Items="@FilteredCases" T="AiEvalCaseRow" Hover="true" Elevation="0" Class="inv-table mt-3" Dense="true" Breakpoint="Breakpoint.Md" RowsPerPage="25"
+                  Loading="_casesLoading" LoadingProgressColor="Color.Primary" RowClassFunc="@((r, _) => r.IsActive ? "" : "aie-off")">
+            <HeaderContent>
+                <MudTh>@Tr("AIE_Category")</MudTh>
+                <MudTh>@Tr("AIE_Question")</MudTh>
+                <MudTh>@Tr("AIE_CheckType")</MudTh>
+                <MudTh>@Tr("AIE_Source")</MudTh>
+                <MudTh>@Tr("AIE_Active")</MudTh>
+                <MudTh Style="text-align:end;">@Tr("AIE_Actions")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("AIE_Category")">@Tr(CatKey(context.Category))</MudTd>
+                <MudTd DataLabel="@Tr("AIE_Question")">
+                    <div class="aie-q">@context.Question</div>
+                    <div class="aik-key">@context.CaseKey · v@(context.Version) · @(context.Dialect == "eg" ? Tr("AIE_DEg") : Tr("AIE_DMsa"))</div>
+                </MudTd>
+                <MudTd DataLabel="@Tr("AIE_CheckType")">@Tr(CheckKey(context.CheckType))</MudTd>
+                <MudTd DataLabel="@Tr("AIE_Source")"><MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="@(context.IsEdited ? Color.Warning : Color.Default)">@Tr(SourceKey(context))</MudChip></MudTd>
+                <MudTd DataLabel="@Tr("AIE_Active")">
+                    <MudSwitch T="bool" Value="context.IsActive" ValueChanged="@(v => ToggleCaseAsync(context, v))" Color="Color.Primary" Disabled="_busy" aria-label="@Tr("AIE_ToggleAria", context.Question)" />
+                </MudTd>
+                <MudTd DataLabel="@Tr("AIE_Actions")">
+                    <div class="aie-row-acts">
+                        <MudTooltip Text="@Tr("AIE_EditCase")">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" aria-label="@Tr("AIE_EditAria", context.Question)" Disabled="_busy" OnClick="@(() => BeginEdit(context))" />
+                        </MudTooltip>
+                        <MudTooltip Text="@Tr("AIE_RunCase")">
+                            <MudIconButton Icon="@Icons.Material.Filled.PlayCircleOutline" aria-label="@Tr("AIE_RunCaseAria", context.Question)" Disabled="@(_busy || IsActive || !context.IsActive)"
+                                           OnClick="@(() => OpenRunDialogAsync(new List<long> { context.Id }))" />
+                        </MudTooltip>
+                    </div>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent><div class="aie-empty"><MudIcon Icon="@Icons.Material.Filled.Checklist" Size="Size.Large" />@Tr("AIE_NoCases")</div></NoRecordsContent>
+            <PagerContent><MudTablePager PageSizeOptions="new[] { 25, 50, 100 }" /></PagerContent>
+        </MudTable>
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired] public IAiAdminGateway Admin { get; set; } = default!;
+    [Parameter] public long UserId { get; set; }
+
+    private IAiEvalGateway? _eval;
+    private AssistantSessionService? _chat;
+    private string _view = "runs";
+    private List<AiEvalRunRow> _runs = new();
+    private List<AiEvalCaseRow> _cases = new();
+    private AiEvalProgress? _progress;
+    private CancellationTokenSource? _pollCts;
+    private readonly HashSet<long> _selected = new();
+    // تفاصيل تشغيل
+    private AiEvalRunRow? _run;
+    private List<AiEvalResultRow> _results = new();
+    private AiReportSection RunChart = new();
+    private string _resOutcome = "", _resCat = "";
+    private string? _resSearch;
+    private long _openResult;
+    // مقارنة
+    private AiEvalRunRow? _cmpA, _cmpB;
+    private List<AiEvalResultRow> _cmpResA = new(), _cmpResB = new();
+    // الحالات
+    private AiEvalCaseSaveRequest? _edit;
+    private bool _editIsSeed;
+    private string _caseCat = "", _caseCheck = "", _caseState = "";
+    private string? _caseSearch, _error, _editError;
+    private bool _loading, _resLoading, _casesLoading, _busy, _stopping, _loaded;
+
+    private bool IsActive => _progress?.Active == true;
+
+    protected override void OnInitialized()
+    {
+        _eval = ServiceProvider.GetService<IAiEvalGateway>();
+        _chat = ServiceProvider.GetService<AssistantSessionService>();
+        LangService.OnLanguageChanged += OnLang;
+    }
+
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLang;
+        _pollCts?.Cancel();
+    }
+
+    private void OnLang() => InvokeAsync(StateHasChanged);
+
+    protected override async Task OnAfterRenderAsync(bool first)
+    {
+        if (first && !_loaded) await LoadAsync();
+    }
+
+    /// <summary>يُستدعى من الصفحة عند «إعادة التحميل» ومن أول عرض.</summary>
+    public async Task LoadAsync()
+    {
+        if (_eval == null || _loading) return;
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var ev = _eval;
+            (_runs, _cases, var active) = await Bg(() => (ev.GetRuns(100), ev.GetCases(), ev.ActiveGroupId()));
+            _selected.IntersectWith(_runs.Select(r => r.Id));
+            _loaded = true;
+            if (active is long g && (_progress == null || _progress.GroupId != g || !_progress.Active)) StartPolling(g);
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Err(ex)); }
+        finally { _loading = false; StateHasChanged(); }
+    }
+
+    // ───────────── التشغيل والمتابعة ─────────────
+
+    private async Task OpenRunDialogAsync(List<long>? caseIds)
+    {
+        if (_eval == null || _chat == null) { _error = Tr("AI_NotAvailable"); return; }
+        List<AiModelRow> models;
+        List<AiTaskRoutingRow> routing;
+        try
+        {
+            var gw = Admin;
+            (models, routing) = await Bg(() => (gw.GetModels(), gw.GetRouting()));
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Err(ex)); return; }
+        models = models.Where(m => m.IsEnabled && m.SupportsTools).OrderBy(m => m.DisplayName).ToList();
+        if (models.Count == 0) { _error = Tr("AIE_NoModels"); return; }
+        long def = routing.Where(r => r.TaskKey == AiTaskKeys.Chat).OrderBy(r => r.Priority).Select(r => r.Model_Id).FirstOrDefault(id => models.Any(m => m.Id == id));
+        var p = new DialogParameters<AiEvalRunDialog>
+        {
+            { x => x.Eval, _eval }, { x => x.User, _chat.BuildUser() }, { x => x.Models, models }, { x => x.DefaultModelId, def },
+            { x => x.PresetCaseIds, caseIds ?? new List<long>() },
+        };
+        var o = new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true, BackdropClick = false };
+        var dlg = await DialogService.ShowAsync<AiEvalRunDialog>(Tr("AIE_RunTitle"), p, o);
+        var res = await dlg.Result;
+        if (res is { Canceled: false, Data: AiEvalStartResult started })
+        {
+            Snackbar.Add(Tr("AIE_StartedMsg", started.CaseCount, started.RunIds.Count), Severity.Success);
+            _view = "runs";
+            _run = null; _cmpA = _cmpB = null;
+            StartPolling(started.GroupId);
+            await LoadAsync();
+        }
+    }
+
+    private void StartPolling(long groupId)
+    {
+        _pollCts?.Cancel();
+        var cts = _pollCts = new CancellationTokenSource();
+        _progress = new AiEvalProgress { GroupId = groupId, Active = true };
+        _ = PollAsync(groupId, cts.Token);
+    }
+
+    /// <summary>متابعة كل ثانيتين حتى ينتهى التشغيل، ثم إعادة تحميل السجل وفتح تفاصيله/مقارنته.</summary>
+    private async Task PollAsync(long groupId, CancellationToken ct)
+    {
+        try
+        {
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(2));
+            do
+            {
+                var ev = _eval!;
+                var pr = await Bg(() => ev.GetProgress(groupId));
+                if (ct.IsCancellationRequested) return;
+                _progress = pr;
+                await InvokeAsync(StateHasChanged);
+                if (!pr.Active)
+                {
+                    await InvokeAsync(async () =>
+                    {
+                        Snackbar.Add(Tr("AIE_Finished"), Severity.Info);
+                        await LoadAsync();
+                        var runs = _runs.Where(r => r.Group_Id == groupId).ToList();
+                        if (runs.Count == 2) await CompareAsync(runs[0], runs[1]);
+                        else if (runs.Count == 1) await OpenRunAsync(runs[0]);
+                    });
+                    return;
+                }
+            } while (await timer.WaitForNextTickAsync(ct));
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex) { _error = Tr("SystemError", Err(ex)); await InvokeAsync(StateHasChanged); }
+    }
+
+    private async Task StopAsync()
+    {
+        if (_progress == null || _eval == null) return;
+        bool? ok = await DialogService.ShowMessageBoxAsync(Tr("AIE_Stop"), Tr("AIE_ConfirmStop"), yesText: Tr("AIE_Stop"), cancelText: Tr("AI_Cancel"));
+        if (ok != true) return;
+        _stopping = true;
+        try
+        {
+            var ev = _eval; long g = _progress.GroupId, uid = UserId;
+            await Bg(() => ev.Cancel(g, uid));
+            Snackbar.Add(Tr("AIE_Stopping"), Severity.Info);
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _stopping = false; }
+    }
+
+    // ───────────── التفاصيل والمقارنة ─────────────
+
+    private async Task OpenRunAsync(AiEvalRunRow r)
+    {
+        _cmpA = _cmpB = null;
+        _run = r;
+        _openResult = 0;
+        _resOutcome = _resCat = "";
+        _resSearch = null;
+        _resLoading = true;
+        StateHasChanged();
+        try
+        {
+            var ev = _eval!; long id = r.Id;
+            _results = await Bg(() => ev.GetResults(id));
+            var cats = AiEvalCategories.All.Where(c => _results.Any(x => x.Category == c)).ToList();
+            RunChart = new AiReportSection
+            {
+                Kind = "chart", ChartKind = AiChartKinds.Bar, ValueFormat = AiReportFormats.Percent,
+                ChartLabels = cats.Select(c => Tr(CatKey(c))).ToList(),
+                Series = new() { new AiChartSeries { Name = Tr("AIE_KPassRate"), Values = cats.Select(c => CatRate(_results, c)).ToList() } },
+            };
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Err(ex)); }
+        finally { _resLoading = false; }
+    }
+
+    private async Task CompareAsync(AiEvalRunRow a, AiEvalRunRow b)
+    {
+        // الأقدم A، والأحدث B (فى نفس المجموعة: بترتيب الإنشاء).
+        if ((a.StartedAt ?? DateTime.MinValue) > (b.StartedAt ?? DateTime.MinValue) || (a.StartedAt == b.StartedAt && a.Id > b.Id)) (a, b) = (b, a);
+        try
+        {
+            var ev = _eval!; long ia = a.Id, ib = b.Id;
+            (_cmpResA, _cmpResB) = await Bg(() => (ev.GetResults(ia), ev.GetResults(ib)));
+            _cmpA = a; _cmpB = b;
+            _run = null;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Err(ex)); }
+    }
+
+    private async Task CompareSelectedAsync()
+    {
+        var pick = _runs.Where(r => _selected.Contains(r.Id)).ToList();
+        if (pick.Count == 2) await CompareAsync(pick[0], pick[1]);
+    }
+
+    private void CloseCompare() { _cmpA = _cmpB = null; }
+
+    private void ToggleSelect(long id, bool on)
+    {
+        if (on) { if (_selected.Count < 2) _selected.Add(id); }
+        else _selected.Remove(id);
+    }
+
+    private void ToggleResult(AiEvalResultRow r) => _openResult = _openResult == r.Id ? 0 : r.Id;
+
+    /// <summary>التشغيل الآخر فى نفس المجموعة (نموذجان على نفس الحالات) أو null.</summary>
+    private AiEvalRunRow? Siblings(AiEvalRunRow r) => _runs.FirstOrDefault(x => x.Group_Id == r.Group_Id && x.Id != r.Id);
+
+    private IEnumerable<AiEvalResultRow> FilteredResults
+    {
+        get
+        {
+            IEnumerable<AiEvalResultRow> q = _results;
+            if (_resOutcome.Length > 0) q = q.Where(r => r.Outcome == _resOutcome);
+            if (_resCat.Length > 0) q = q.Where(r => r.Category == _resCat);
+            if (!string.IsNullOrWhiteSpace(_resSearch))
+            {
+                string f = _resSearch.Trim();
+                q = q.Where(r => r.Question.Contains(f, StringComparison.OrdinalIgnoreCase) || r.CaseKey.Contains(f, StringComparison.OrdinalIgnoreCase)
+                              || (r.FailReason ?? "").Contains(f, StringComparison.OrdinalIgnoreCase));
+            }
+            return q;
+        }
+    }
+
+    private sealed record ToolLine(string Name, string Title, string Outcome, string? Sql, int? Rows, string? Error);
+
+    private static List<ToolLine> ParseTools(string? json)
+    {
+        var list = new List<ToolLine>();
+        if (string.IsNullOrWhiteSpace(json)) return list;
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.ValueKind != JsonValueKind.Array) return list;
+            foreach (var e in doc.RootElement.EnumerateArray())
+            {
+                string? S(string p) => e.TryGetProperty(p, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+                int? rows = e.TryGetProperty("rows", out var rv) && rv.ValueKind == JsonValueKind.Number && rv.TryGetInt32(out int n) ? n : null;
+                list.Add(new ToolLine(S("name") ?? "", S("title") ?? "", S("outcome") ?? "", S("sql"), rows, S("error")));
+            }
+        }
+        catch (JsonException) { }
+        return list;
+    }
+
+    // ───────────── الحالات ─────────────
+
+    private async Task ShowCasesAsync()
+    {
+        _view = "cases";
+        await LoadCasesAsync();
+    }
+
+    private async Task LoadCasesAsync()
+    {
+        if (_eval == null) return;
+        _casesLoading = true;
+        StateHasChanged();
+        try { var ev = _eval; _cases = await Bg(() => ev.GetCases()); }
+        catch (Exception ex) { _error = Tr("SystemError", Err(ex)); }
+        finally { _casesLoading = false; }
+    }
+
+    private IEnumerable<AiEvalCaseRow> FilteredCases
+    {
+        get
+        {
+            IEnumerable<AiEvalCaseRow> q = _cases;
+            if (_caseCat.Length > 0) q = q.Where(c => c.Category == _caseCat);
+            if (_caseCheck.Length > 0) q = q.Where(c => c.CheckType == _caseCheck);
+            q = _caseState switch
+            {
+                "on" => q.Where(c => c.IsActive),
+                "off" => q.Where(c => !c.IsActive),
+                "mine" => q.Where(c => c.Source != "seed" || c.IsEdited),
+                _ => q,
+            };
+            if (!string.IsNullOrWhiteSpace(_caseSearch))
+            {
+                string f = _caseSearch.Trim();
+                q = q.Where(c => c.Question.Contains(f, StringComparison.OrdinalIgnoreCase) || c.CaseKey.Contains(f, StringComparison.OrdinalIgnoreCase)
+                              || (c.Tags ?? "").Contains(f, StringComparison.OrdinalIgnoreCase));
+            }
+            return q;
+        }
+    }
+
+    private void BeginAdd()
+    {
+        _edit = new AiEvalCaseSaveRequest { Category = _caseCat.Length > 0 ? _caseCat : AiEvalCategories.Sales, CheckType = _caseCheck.Length > 0 ? _caseCheck : AiEvalCheckTypes.Result };
+        _editIsSeed = false;
+        _editError = null;
+    }
+
+    private void BeginEdit(AiEvalCaseRow c)
+    {
+        _edit = new AiEvalCaseSaveRequest
+        {
+            Id = c.Id, Question = c.Question, Category = c.Category, Dialect = c.Dialect, CheckType = c.CheckType,
+            ExpectedTools = c.ExpectedTools ?? "", ForbiddenTools = c.ForbiddenTools ?? "", ReferenceSql = c.ReferenceSql ?? "",
+            ReferenceArgsJson = c.ReferenceArgsJson ?? "", ExpectedText = c.ExpectedText ?? "", Tags = c.Tags ?? "", Notes = c.Notes ?? "",
+            Source = c.Source, Source_Ref_Id = c.Source_Ref_Id,
+        };
+        _editIsSeed = c.Source == "seed";
+        _editError = null;
+    }
+
+    private async Task SaveCaseAsync()
+    {
+        if (_edit == null || _eval == null) return;
+        _busy = true;
+        _editError = null;
+        try
+        {
+            var ev = _eval; var req = _edit; long uid = UserId;
+            await Bg(() => ev.SaveCase(req, uid));
+            Snackbar.Add(Tr("AIE_CaseSaved"), Severity.Success);
+            _edit = null;
+        }
+        catch (Exception ex) { _editError = Err(ex); }
+        finally { _busy = false; }
+        if (_edit == null) await LoadCasesAsync();
+    }
+
+    private async Task ToggleCaseAsync(AiEvalCaseRow c, bool active)
+    {
+        if (_eval == null) return;
+        _busy = true;
+        try
+        {
+            var ev = _eval; long uid = UserId, id = c.Id;
+            await Bg(() => ev.SetCaseActive(id, active, uid));
+            c.IsActive = active;
+            Snackbar.Add(Tr(active ? "AIE_CaseOn" : "AIE_CaseOff"), Severity.Success);
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _busy = false; }
+    }
+
+    // ───────────── عرض ─────────────
+
+    private RenderFragment Kpi(string label, string value, string cls) => __builder =>
+    {
+        <div class="@("aie-kpi " + cls)"><div class="l">@label</div><div class="v">@value</div></div>
+    };
+
+    /// <summary>نسبة النجاح لتصنيف (بلا المتخطاة)؛ 0 إن لم تُحكم حالة.</summary>
+    internal static decimal CatRate(IEnumerable<AiEvalResultRow> rows, string cat)
+    {
+        var judged = rows.Where(r => r.Category == cat && r.Outcome != AiEvalOutcomes.Skipped).ToList();
+        return judged.Count == 0 ? 0 : Math.Round(judged.Count(r => r.Outcome == AiEvalOutcomes.Pass) * 100m / judged.Count, 1);
+    }
+
+    internal static string CatKey(string c) => c switch
+    {
+        AiEvalCategories.Sales => "AIE_CSales", AiEvalCategories.Purchases => "AIE_CPurchases", AiEvalCategories.Stock => "AIE_CStock",
+        AiEvalCategories.Accounts => "AIE_CAccounts", AiEvalCategories.Parties => "AIE_CParties", AiEvalCategories.Screens => "AIE_CScreens",
+        AiEvalCategories.Ambiguous => "AIE_CAmbiguous", _ => "AIE_CRefuse",
+    };
+
+    internal static string CheckKey(string c) => c switch
+    {
+        AiEvalCheckTypes.Result => "AIE_TResult", AiEvalCheckTypes.Tool => "AIE_TTool", AiEvalCheckTypes.Financial => "AIE_TFinancial",
+        AiEvalCheckTypes.Ask => "AIE_TAsk", _ => "AIE_TRefuse",
+    };
+
+    private static string CheckHelpKey(string c) => CheckKey(c) + "Help";
+
+    internal static string OutcomeKey(string o) => o switch
+    {
+        AiEvalOutcomes.Pass => "AIE_OPass", AiEvalOutcomes.Fail => "AIE_OFail", AiEvalOutcomes.Error => "AIE_OError", _ => "AIE_OSkipped",
+    };
+
+    internal static Color OutcomeColor(string o) => o switch
+    {
+        AiEvalOutcomes.Pass => Color.Success, AiEvalOutcomes.Fail => Color.Error, AiEvalOutcomes.Error => Color.Warning, _ => Color.Default,
+    };
+
+    internal static string OutcomeIcon(string o) => o switch
+    {
+        AiEvalOutcomes.Pass => Icons.Material.Filled.CheckCircle, AiEvalOutcomes.Fail => Icons.Material.Filled.Cancel,
+        AiEvalOutcomes.Error => Icons.Material.Filled.ReportProblem, _ => Icons.Material.Filled.RemoveCircleOutline,
+    };
+
+    private static string StatusKey(string s) => s switch
+    {
+        AiEvalRunStatus.Running => "AIE_StRunning", AiEvalRunStatus.Done => "AIE_StDone", AiEvalRunStatus.Cancelled => "AIE_StCancelled",
+        AiEvalRunStatus.Interrupted => "AIE_StInterrupted", AiEvalRunStatus.CostCap => "AIE_StCostCap", _ => "AIE_StFailed",
+    };
+
+    private static Color StatusColor(string s) => s switch
+    {
+        AiEvalRunStatus.Running => Color.Info, AiEvalRunStatus.Done => Color.Success, AiEvalRunStatus.Cancelled => Color.Default,
+        AiEvalRunStatus.Interrupted or AiEvalRunStatus.CostCap => Color.Warning, _ => Color.Error,
+    };
+
+    private static string SourceKey(AiEvalCaseRow c) => c.Source switch
+    {
+        "manual" => "AIE_SrcManual", "feedback" => "AIE_SrcFeedback", _ => c.IsEdited ? "AIE_SrcEdited" : "AIE_SrcSeed",
+    };
+
+    private static string N(long v) => v.ToString("N0", CultureInfo.InvariantCulture);
+    private static string Money(decimal? v) => v == null ? "—" : "$" + v.Value.ToString("0.####", CultureInfo.InvariantCulture);
+    private static string Secs(long? ms) => ms == null ? "—" : (ms.Value / 1000m).ToString("0.#", CultureInfo.InvariantCulture) + "s";
+    private static string When(AiEvalRunRow r) => r.StartedAt?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) ?? "";
+    private static string Short(string? h) => string.IsNullOrEmpty(h) ? "—" : h.Length > 8 ? h[..8] : h;
+    private static string UserText(AiEvalRunRow r) => string.IsNullOrEmpty(r.UserName) ? r.User_Id.ToString(CultureInfo.InvariantCulture) : r.UserName;
+
+    private string Tr(string key, params object[] args)
+    {
+        var previous = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally { CultureInfo.CurrentUICulture = previous; }
+    }
+
+    private static Task<T> Bg<T>(Func<T> f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return f(); });
+    private static Task Bg(Action f) => Task.Run(() => { AccountCultureGuard.EnsureInvariant(); f(); });
+    private static string Err(Exception ex) => ex is InvalidOperationException ? ex.Message : (ex.InnerException?.Message ?? ex.Message);
+}

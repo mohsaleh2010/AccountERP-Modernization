@@ -1,0 +1,180 @@
+@* 🤖 المساعد الذكى — P7.5 (.claude/docs/ai-assistant-p7-plan.md): مقارنة تشغيلَى تقييم (نموذجان فى نفس المجموعة أو تشغيلان سابقان).
+   فروق المؤشرات (النجاح، الأدوات، التوكنز، التكلفة، الزمن)، رسم نسبة النجاح لكل تصنيف للتشغيلين، وجدول الحالات بالمفتاح مع «الاختلافات فقط».
+   شريط تنبيه إن اختلفت بصمة التعليمات والأدوات أو نسخة حالة أو مجموعة الحالات (المقارنة حينها ليست على نفس الأساس). *@
+@using System.Globalization
+@using AccountERP.SharedUI.Services
+@inject LanguageService LangService
+
+<style>
+    .aiec-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+    .aiec-kpi { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); min-width: 0; }
+    .aiec-kpi .l { font-size: .8125rem; color: var(--mud-palette-text-secondary); }
+    .aiec-kpi .v { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .aiec-kpi .v b { font-size: 1.05rem; }
+    .aiec-kpi .d { font-size: .8125rem; font-weight: 600; direction: ltr; unicode-bidi: isolate; }
+    .aiec-kpi .d.up { color: var(--mud-palette-success); } .aiec-kpi .d.down { color: var(--mud-palette-error); }
+    .aiec-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+    .aiec-head .run { display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .aiec-q { overflow-wrap: anywhere; max-width: 460px; }
+    .aiec-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+</style>
+
+@if (A == null || B == null) { return; }
+
+@if (Warnings.Count > 0)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-3" role="status">
+        <div style="font-weight:600;">@Tr("AIE_CmpMismatch")</div>
+        <ul style="margin:4px 0 0;padding-inline-start:20px;">@foreach (var w in Warnings) { <li>@w</li> }</ul>
+    </MudAlert>
+}
+
+<div class="aiec-head mb-3">
+    <div class="run"><MudChip T="string" Size="Size.Small" Color="Color.Primary">A</MudChip>@A.ModelName <span class="ai-sub" style="margin:0;">@When(A)</span></div>
+    <div class="run"><MudChip T="string" Size="Size.Small" Color="Color.Secondary">B</MudChip>@B.ModelName <span class="ai-sub" style="margin:0;">@When(B)</span></div>
+</div>
+
+<div class="aiec-kpis" aria-label="@Tr("AIE_CmpKpis")">
+    @Kpi(Tr("AIE_KPassRate"), Pct(A.PassRate), Pct(B.PassRate), Diff(A.PassRate, B.PassRate), "%", true)
+    @Kpi(Tr("AIE_KPassed"), N(A.PassedCases), N(B.PassedCases), B.PassedCases - A.PassedCases, "", true)
+    @Kpi(Tr("AIE_KToolOk"), N(A.ToolOkCases), N(B.ToolOkCases), B.ToolOkCases - A.ToolOkCases, "", true)
+    @Kpi(Tr("AIE_KTokens"), N((A.InputTokens ?? 0) + (A.OutputTokens ?? 0)), N((B.InputTokens ?? 0) + (B.OutputTokens ?? 0)),
+         (B.InputTokens ?? 0) + (B.OutputTokens ?? 0) - (A.InputTokens ?? 0) - (A.OutputTokens ?? 0), "", false)
+    @Kpi(Tr("AIE_KCost"), Money(A.CostEstimate), Money(B.CostEstimate), A.CostEstimate == null || B.CostEstimate == null ? null : B.CostEstimate - A.CostEstimate, "$", false)
+    @Kpi(Tr("AIE_KDuration"), Secs(A.DurationMs), Secs(B.DurationMs), A.DurationMs == null || B.DurationMs == null ? null : Math.Round((B.DurationMs.Value - A.DurationMs.Value) / 1000m, 1), "s", false)
+</div>
+
+<section class="ai-gap" aria-label="@Tr("AIE_ByCategory")">
+    <h3 class="inv-card-title" style="font-size:1rem;"><MudIcon Icon="@Icons.Material.Filled.BarChart" />@Tr("AIE_ByCategory")</h3>
+    <AiChart Section="CategoryChart" Rtl="LangService.IsRtl" EmptyText="@Tr("AIE_NoResults")" DataText="@Tr("AIE_ChartData")" />
+</section>
+
+<section class="ai-gap">
+    <div class="aiec-tools">
+        <h3 class="inv-card-title" style="font-size:1rem;margin:0;flex:1 1 auto;"><MudIcon Icon="@Icons.Material.Filled.CompareArrows" />@Tr("AIE_CmpCases", Rows.Count(r => r.Changed))</h3>
+        <MudSwitch T="bool" @bind-Value="_diffOnly" Color="Color.Primary" Label="@Tr("AIE_DiffOnly")" />
+    </div>
+    <MudTable Items="@(_diffOnly ? Rows.Where(r => r.Changed) : Rows)" T="CmpRow" Hover="true" Elevation="0" Class="inv-table mt-2" Dense="true" Breakpoint="Breakpoint.Md" RowsPerPage="50">
+        <HeaderContent>
+            <MudTh>@Tr("AIE_Category")</MudTh>
+            <MudTh>@Tr("AIE_Question")</MudTh>
+            <MudTh>A</MudTh>
+            <MudTh>B</MudTh>
+            <MudTh>@Tr("AIE_Change")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@Tr("AIE_Category")">@Tr(AiEvalTab.CatKey(context.Category))</MudTd>
+            <MudTd DataLabel="@Tr("AIE_Question")"><div class="aiec-q">@context.Question</div><div class="aik-key">@context.CaseKey</div></MudTd>
+            <MudTd DataLabel="A">@Outcome(context.A)</MudTd>
+            <MudTd DataLabel="B">@Outcome(context.B)</MudTd>
+            <MudTd DataLabel="@Tr("AIE_Change")">
+                @if (context.VersionDiffers)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Warning" Icon="@Icons.Material.Filled.History">@Tr("AIE_VersionDiff")</MudChip>
+                }
+                else if (context.Delta > 0)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Success" Icon="@Icons.Material.Filled.TrendingUp">@Tr("AIE_Better")</MudChip>
+                }
+                else if (context.Delta < 0)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Error" Icon="@Icons.Material.Filled.TrendingDown">@Tr("AIE_Worse")</MudChip>
+                }
+                else if (context.Changed)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.SwapHoriz">@Tr("AIE_Differs")</MudChip>
+                }
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent><div class="aik-empty"><MudIcon Icon="@Icons.Material.Filled.DoneAll" Size="Size.Large" />@Tr(_diffOnly ? "AIE_NoDiffs" : "AIE_NoResults")</div></NoRecordsContent>
+        <PagerContent><MudTablePager PageSizeOptions="new[] { 50, 100 }" /></PagerContent>
+    </MudTable>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public AiEvalRunRow? A { get; set; }
+    [Parameter, EditorRequired] public AiEvalRunRow? B { get; set; }
+    [Parameter] public List<AiEvalResultRow> ResultsA { get; set; } = new();
+    [Parameter] public List<AiEvalResultRow> ResultsB { get; set; } = new();
+
+    private bool _diffOnly = true;
+
+    private sealed record CmpRow(string CaseKey, string Category, string Question, AiEvalResultRow? A, AiEvalResultRow? B, bool VersionDiffers)
+    {
+        public int Delta => Score(B) - Score(A);
+        public bool Changed => VersionDiffers || A?.Outcome != B?.Outcome || (A?.ToolOk ?? false) != (B?.ToolOk ?? false);
+        private static int Score(AiEvalResultRow? r) => r?.Outcome == AiEvalOutcomes.Pass ? 1 : 0;
+    }
+
+    private List<CmpRow> Rows = new();
+    private List<string> Warnings = new();
+    private AiReportSection CategoryChart = new();
+
+    protected override void OnParametersSet()
+    {
+        if (A == null || B == null) return;
+        var a = ResultsA.GroupBy(r => r.CaseKey).ToDictionary(g => g.Key, g => g.First());
+        var b = ResultsB.GroupBy(r => r.CaseKey).ToDictionary(g => g.Key, g => g.First());
+        Rows = a.Keys.Union(b.Keys).Select(k =>
+        {
+            a.TryGetValue(k, out var x); b.TryGetValue(k, out var y);
+            var any = x ?? y!;
+            return new CmpRow(k, any.Category, any.Question, x, y, x != null && y != null && x.CaseVersion != y.CaseVersion);
+        }).OrderBy(r => Array.IndexOf(AiEvalCategories.All, r.Category) is int i && i >= 0 ? i : 99).ThenBy(r => r.CaseKey, StringComparer.Ordinal).ToList();
+
+        Warnings = new();
+        if (!string.Equals(A.PromptHash ?? "", B.PromptHash ?? "", StringComparison.Ordinal)) Warnings.Add(Tr("AIE_WPrompt"));
+        int ver = Rows.Count(r => r.VersionDiffers);
+        if (ver > 0) Warnings.Add(Tr("AIE_WVersion", ver));
+        int onlyOne = Rows.Count(r => r.A == null || r.B == null);
+        if (onlyOne > 0) Warnings.Add(Tr("AIE_WCases", onlyOne));
+        if (A.User_Id != B.User_Id) Warnings.Add(Tr("AIE_WUser"));
+
+        var cats = AiEvalCategories.All.Where(c => Rows.Any(r => r.Category == c)).ToList();
+        CategoryChart = new AiReportSection
+        {
+            Kind = "chart", ChartKind = AiChartKinds.Bar, ValueFormat = AiReportFormats.Percent,
+            ChartLabels = cats.Select(c => Tr(AiEvalTab.CatKey(c))).ToList(),
+            Series = new()
+            {
+                new AiChartSeries { Name = "A — " + A.ModelName, Values = cats.Select(c => AiEvalTab.CatRate(ResultsA, c)).ToList() },
+                new AiChartSeries { Name = "B — " + B.ModelName, Values = cats.Select(c => AiEvalTab.CatRate(ResultsB, c)).ToList() },
+            },
+        };
+    }
+
+    private RenderFragment Kpi(string label, string a, string b, decimal? delta, string unit, bool higherIsBetter) => __builder =>
+    {
+        string cls = delta is null or 0 ? "d" : ((delta > 0) == higherIsBetter ? "d up" : "d down");
+        <div class="aiec-kpi">
+            <div class="l">@label</div>
+            <div class="v"><span>A <b>@a</b></span><span>B <b>@b</b></span>
+                @if (delta is decimal d && d != 0) { <span class="@cls">@((d > 0 ? "+" : "") + d.ToString("#,0.####", CultureInfo.InvariantCulture) + unit)</span> }
+            </div>
+        </div>
+    };
+
+    private RenderFragment Outcome(AiEvalResultRow? r) => __builder =>
+    {
+        if (r == null) { <span class="ai-sub" style="margin:0;">—</span> return; }
+        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@AiEvalTab.OutcomeColor(r.Outcome)" Icon="@AiEvalTab.OutcomeIcon(r.Outcome)">@Tr(AiEvalTab.OutcomeKey(r.Outcome))</MudChip>
+    };
+
+    private static decimal? Diff(decimal? a, decimal? b) => a == null || b == null ? null : Math.Round(b.Value - a.Value, 1);
+    private static string Pct(decimal? v) => v == null ? "—" : v.Value.ToString("0.#", CultureInfo.InvariantCulture) + "%";
+    private static string N(long v) => v.ToString("N0", CultureInfo.InvariantCulture);
+    private static string Money(decimal? v) => v == null ? "—" : "$" + v.Value.ToString("0.####", CultureInfo.InvariantCulture);
+    private static string Secs(long? ms) => ms == null ? "—" : (ms.Value / 1000m).ToString("0.#", CultureInfo.InvariantCulture) + "s";
+    private static string When(AiEvalRunRow r) => r.StartedAt?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) ?? "";
+
+    private string Tr(string key, params object[] args)
+    {
+        var previous = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo;
+            return Lang[key, args];
+        }
+        finally { CultureInfo.CurrentUICulture = previous; }
+    }
+}

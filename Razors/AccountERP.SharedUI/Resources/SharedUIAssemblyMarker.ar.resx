@@ -5323,4 +5323,176 @@
   <data name="AIK_Enabled" xml:space="preserve"><value>تم تفعيل «{0}».</value></data>
   <data name="AIK_Disabled" xml:space="preserve"><value>تم تعطيل «{0}»؛ لن يظهر فى بحث المساعد.</value></data>
   <data name="AIK_Empty" xml:space="preserve"><value>لا توجد مقاطع تطابق الفلتر.</value></data>
+  <data name="AIE_Tab" xml:space="preserve"><value>التقييم</value></data>
+  <data name="AIE_Title" xml:space="preserve"><value>تقييم المساعد</value></data>
+  <data name="AIE_Sub" xml:space="preserve"><value>شغّل مجموعة أسئلة ثابتة على نموذج أو نموذجين وقِس نسبة الإجابات الصحيحة واستخدام الأدوات. لا ينشئ محادثات ولا مسودات ولا يغيّر الربط، لكنه يستهلك رصيداً حقيقياً.</value></data>
+  <data name="AIE_ViewRuns" xml:space="preserve"><value>التشغيلات</value></data>
+  <data name="AIE_ViewCases" xml:space="preserve"><value>الحالات ({0})</value></data>
+  <data name="AIE_RunNew" xml:space="preserve"><value>تشغيل تقييم</value></data>
+  <data name="AIE_RunTitle" xml:space="preserve"><value>تشغيل تقييم</value></data>
+  <data name="AIE_Running" xml:space="preserve"><value>تقييم يعمل الآن</value></data>
+  <data name="AIE_Stop" xml:space="preserve"><value>إيقاف</value></data>
+  <data name="AIE_ConfirmStop" xml:space="preserve"><value>إيقاف التقييم بعد الحالة الجارية؟ تبقى نتائج الحالات المنتهية محفوظة.</value></data>
+  <data name="AIE_Stopping" xml:space="preserve"><value>جارٍ الإيقاف بعد الحالة الحالية…</value></data>
+  <data name="AIE_LiveCounts" xml:space="preserve"><value>{0} من {1} · نجح {2} · فشل {3} · خطأ {4}</value></data>
+  <data name="AIE_CurrentCase" xml:space="preserve"><value>الحالة الحالية: {0}</value></data>
+  <data name="AIE_LiveHint" xml:space="preserve"><value>يمكنك مغادرة الصفحة؛ التقييم يكمل على الخادم.</value></data>
+  <data name="AIE_StartedMsg" xml:space="preserve"><value>بدأ التقييم: {0} حالة على {1} نموذج.</value></data>
+  <data name="AIE_Finished" xml:space="preserve"><value>انتهى التقييم.</value></data>
+  <data name="AIE_CompareTitle" xml:space="preserve"><value>مقارنة تشغيلين</value></data>
+  <data name="AIE_Back" xml:space="preserve"><value>رجوع</value></data>
+  <data name="AIE_RunDetails" xml:space="preserve"><value>نتائج «{0}»</value></data>
+  <data name="AIE_Effort" xml:space="preserve"><value>الجهد: {0}</value></data>
+  <data name="AIE_PromptHashHelp" xml:space="preserve"><value>بصمة التعليمات والأدوات. اختلافها بين تشغيلين يعنى أن المساعد تغيّر بينهما.</value></data>
+  <data name="AIE_CompareWith" xml:space="preserve"><value>مقارنة مع «{0}»</value></data>
+  <data name="AIE_KPassRate" xml:space="preserve"><value>نسبة النجاح</value></data>
+  <data name="AIE_KPassed" xml:space="preserve"><value>نجحت</value></data>
+  <data name="AIE_KToolOk" xml:space="preserve"><value>استخدام أدوات صحيح</value></data>
+  <data name="AIE_KTools" xml:space="preserve"><value>الأدوات</value></data>
+  <data name="AIE_KTokens" xml:space="preserve"><value>التوكنز</value></data>
+  <data name="AIE_KCost" xml:space="preserve"><value>التكلفة</value></data>
+  <data name="AIE_KDuration" xml:space="preserve"><value>المدة</value></data>
+  <data name="AIE_OPass" xml:space="preserve"><value>نجح</value></data>
+  <data name="AIE_OFail" xml:space="preserve"><value>فشل</value></data>
+  <data name="AIE_OError" xml:space="preserve"><value>خطأ</value></data>
+  <data name="AIE_OSkipped" xml:space="preserve"><value>متخطاة</value></data>
+  <data name="AIE_ByCategory" xml:space="preserve"><value>نسبة النجاح لكل تصنيف</value></data>
+  <data name="AIE_ChartData" xml:space="preserve"><value>بيانات الرسم</value></data>
+  <data name="AIE_Outcome" xml:space="preserve"><value>النتيجة</value></data>
+  <data name="AIE_All" xml:space="preserve"><value>الكل ({0})</value></data>
+  <data name="AIE_AllCats" xml:space="preserve"><value>كل التصنيفات</value></data>
+  <data name="AIE_AllChecks" xml:space="preserve"><value>كل أنواع الحكم</value></data>
+  <data name="AIE_Category" xml:space="preserve"><value>التصنيف</value></data>
+  <data name="AIE_Categories" xml:space="preserve"><value>التصنيفات</value></data>
+  <data name="AIE_Search" xml:space="preserve"><value>بحث</value></data>
+  <data name="AIE_Question" xml:space="preserve"><value>السؤال</value></data>
+  <data name="AIE_CheckType" xml:space="preserve"><value>نوع الحكم</value></data>
+  <data name="AIE_Time" xml:space="preserve"><value>الزمن</value></data>
+  <data name="AIE_ShowCase" xml:space="preserve"><value>عرض تفاصيل: {0}</value></data>
+  <data name="AIE_ToolOkYes" xml:space="preserve"><value>الأدوات صحيحة</value></data>
+  <data name="AIE_ToolOkNo" xml:space="preserve"><value>الأدوات غير صحيحة</value></data>
+  <data name="AIE_Rounds" xml:space="preserve"><value>{0} جولة</value></data>
+  <data name="AIE_CaseTokens" xml:space="preserve"><value>{0} توكن · {1}</value></data>
+  <data name="AIE_FailReason" xml:space="preserve"><value>سبب الحكم</value></data>
+  <data name="AIE_Answer" xml:space="preserve"><value>رد المساعد</value></data>
+  <data name="AIE_ToolsUsed" xml:space="preserve"><value>الأدوات المستدعاة</value></data>
+  <data name="AIE_ToolRows" xml:space="preserve"><value>{0} صف</value></data>
+  <data name="AIE_NoTools" xml:space="preserve"><value>لم يستدعِ أى أداة.</value></data>
+  <data name="AIE_NoResults" xml:space="preserve"><value>لا توجد نتائج.</value></data>
+  <data name="AIE_History" xml:space="preserve"><value>سجل التشغيلات</value></data>
+  <data name="AIE_SelectHint" xml:space="preserve"><value>اختر تشغيلين للمقارنة.</value></data>
+  <data name="AIE_CompareSelected" xml:space="preserve"><value>مقارنة المحدد ({0}/2)</value></data>
+  <data name="AIE_Select" xml:space="preserve"><value>اختيار</value></data>
+  <data name="AIE_SelectAria" xml:space="preserve"><value>اختيار تشغيل «{0}» بتاريخ {1} للمقارنة</value></data>
+  <data name="AIE_Started" xml:space="preserve"><value>البدء</value></data>
+  <data name="AIE_Model" xml:space="preserve"><value>النموذج</value></data>
+  <data name="AIE_Status" xml:space="preserve"><value>الحالة</value></data>
+  <data name="AIE_Cases" xml:space="preserve"><value>الحالات</value></data>
+  <data name="AIE_User" xml:space="preserve"><value>المستخدم</value></data>
+  <data name="AIE_Actions" xml:space="preserve"><value>إجراءات</value></data>
+  <data name="AIE_Details" xml:space="preserve"><value>التفاصيل</value></data>
+  <data name="AIE_DetailsAria" xml:space="preserve"><value>تفاصيل تشغيل «{0}» بتاريخ {1}</value></data>
+  <data name="AIE_NoRuns" xml:space="preserve"><value>لا توجد تشغيلات بعد. اضغط «تشغيل تقييم».</value></data>
+  <data name="AIE_StRunning" xml:space="preserve"><value>يعمل</value></data>
+  <data name="AIE_StDone" xml:space="preserve"><value>انتهى</value></data>
+  <data name="AIE_StCancelled" xml:space="preserve"><value>أُوقف</value></data>
+  <data name="AIE_StInterrupted" xml:space="preserve"><value>انقطع</value></data>
+  <data name="AIE_StCostCap" xml:space="preserve"><value>حد التكلفة</value></data>
+  <data name="AIE_StFailed" xml:space="preserve"><value>فشل</value></data>
+  <data name="AIE_AddCase" xml:space="preserve"><value>إضافة حالة</value></data>
+  <data name="AIE_EditCase" xml:space="preserve"><value>تعديل الحالة</value></data>
+  <data name="AIE_SeedEditNote" xml:space="preserve"><value>هذه حالة مزروعة؛ بعد تعديلها تُعلَّم «معدَّلة» ولا يغيّرها تحديث النظام. تتغيّر نسختها فقط إن غيّرت ما يُحكم به.</value></data>
+  <data name="AIE_Dialect" xml:space="preserve"><value>اللهجة</value></data>
+  <data name="AIE_DMsa" xml:space="preserve"><value>فصحى</value></data>
+  <data name="AIE_DEg" xml:space="preserve"><value>عامية مصرية</value></data>
+  <data name="AIE_DialectAll" xml:space="preserve"><value>الاثنتان</value></data>
+  <data name="AIE_ExpectedTools" xml:space="preserve"><value>الأدوات المتوقعة</value></data>
+  <data name="AIE_ForbiddenTools" xml:space="preserve"><value>الأدوات الممنوعة</value></data>
+  <data name="AIE_ToolsHelp" xml:space="preserve"><value>أسماء مفصولة بفاصلة، مثل run_readonly_query, render_report</value></data>
+  <data name="AIE_RefSql" xml:space="preserve"><value>الاستعلام المرجعى</value></data>
+  <data name="AIE_RefSqlHelp" xml:space="preserve"><value>SELECT على Views المساعد (ai.v_*) فقط؛ يُنفَّذ حياً وقت التقييم، ويمكن استخدام GETDATE() للتواريخ النسبية.</value></data>
+  <data name="AIE_RefArgs" xml:space="preserve"><value>مدخلات الأداة المرجعية (JSON)</value></data>
+  <data name="AIE_RefArgsHelp" xml:space="preserve"><value>مثل {"from":"{month_start}","to":"{today}"}</value></data>
+  <data name="AIE_ExpectedText" xml:space="preserve"><value>نص متوقع (اختيارى)</value></data>
+  <data name="AIE_ExpectedTextHelp" xml:space="preserve"><value>كلمة أو عبارة يجب أن يحتويها الرد.</value></data>
+  <data name="AIE_Tags" xml:space="preserve"><value>وسوم</value></data>
+  <data name="AIE_Notes" xml:space="preserve"><value>ملاحظات</value></data>
+  <data name="AIE_CasesTitle" xml:space="preserve"><value>حالات التقييم</value></data>
+  <data name="AIE_State" xml:space="preserve"><value>الحالة</value></data>
+  <data name="AIE_SAll" xml:space="preserve"><value>الكل</value></data>
+  <data name="AIE_SActive" xml:space="preserve"><value>مفعّلة</value></data>
+  <data name="AIE_SInactive" xml:space="preserve"><value>معطّلة</value></data>
+  <data name="AIE_SMine" xml:space="preserve"><value>المضافة والمعدَّلة</value></data>
+  <data name="AIE_Source" xml:space="preserve"><value>المصدر</value></data>
+  <data name="AIE_Active" xml:space="preserve"><value>مفعّلة</value></data>
+  <data name="AIE_SrcSeed" xml:space="preserve"><value>مزروعة</value></data>
+  <data name="AIE_SrcEdited" xml:space="preserve"><value>مزروعة معدَّلة</value></data>
+  <data name="AIE_SrcManual" xml:space="preserve"><value>يدوية</value></data>
+  <data name="AIE_SrcFeedback" xml:space="preserve"><value>من الملاحظات</value></data>
+  <data name="AIE_ToggleAria" xml:space="preserve"><value>تفعيل/تعطيل الحالة: {0}</value></data>
+  <data name="AIE_EditAria" xml:space="preserve"><value>تعديل الحالة: {0}</value></data>
+  <data name="AIE_RunCase" xml:space="preserve"><value>تشغيل هذه الحالة</value></data>
+  <data name="AIE_RunCaseAria" xml:space="preserve"><value>تشغيل الحالة: {0}</value></data>
+  <data name="AIE_NoCases" xml:space="preserve"><value>لا توجد حالات تطابق الفلتر.</value></data>
+  <data name="AIE_CaseSaved" xml:space="preserve"><value>تم حفظ الحالة.</value></data>
+  <data name="AIE_CaseOn" xml:space="preserve"><value>تم تفعيل الحالة.</value></data>
+  <data name="AIE_CaseOff" xml:space="preserve"><value>تم تعطيل الحالة؛ لن تدخل التشغيلات القادمة.</value></data>
+  <data name="AIE_NoModels" xml:space="preserve"><value>لا يوجد نموذج مفعّل يدعم الأدوات. أضف نموذجاً من تبويب «النماذج والمهام».</value></data>
+  <data name="AIE_CSales" xml:space="preserve"><value>المبيعات</value></data>
+  <data name="AIE_CPurchases" xml:space="preserve"><value>المشتريات</value></data>
+  <data name="AIE_CStock" xml:space="preserve"><value>المخزون</value></data>
+  <data name="AIE_CAccounts" xml:space="preserve"><value>الحسابات</value></data>
+  <data name="AIE_CParties" xml:space="preserve"><value>العملاء والموردون</value></data>
+  <data name="AIE_CScreens" xml:space="preserve"><value>الشاشات</value></data>
+  <data name="AIE_CAmbiguous" xml:space="preserve"><value>أسئلة غامضة</value></data>
+  <data name="AIE_CRefuse" xml:space="preserve"><value>رفض</value></data>
+  <data name="AIE_TResult" xml:space="preserve"><value>نتيجة الاستعلام</value></data>
+  <data name="AIE_TTool" xml:space="preserve"><value>الأداة</value></data>
+  <data name="AIE_TFinancial" xml:space="preserve"><value>قائمة مالية</value></data>
+  <data name="AIE_TAsk" xml:space="preserve"><value>سؤال للمستخدم</value></data>
+  <data name="AIE_TRefuse" xml:space="preserve"><value>رفض</value></data>
+  <data name="AIE_TResultHelp" xml:space="preserve"><value>ينجح إن احتوت بيانات المساعد صفوف الاستعلام المرجعى.</value></data>
+  <data name="AIE_TToolHelp" xml:space="preserve"><value>ينجح إن نجحت أداة متوقعة ولم تُستدعَ أداة ممنوعة.</value></data>
+  <data name="AIE_TFinancialHelp" xml:space="preserve"><value>ينجح إن طابقت بيانات الأداة المالية استدعاءها المباشر بالمدخلات المرجعية.</value></data>
+  <data name="AIE_TAskHelp" xml:space="preserve"><value>ينجح إن سأل المساعد المستخدم بدل التخمين.</value></data>
+  <data name="AIE_TRefuseHelp" xml:space="preserve"><value>ينجح إن لم ينشئ مسودة ولم ينفّذ استعلام بيانات.</value></data>
+  <data name="AIE_ModelA" xml:space="preserve"><value>النموذج (أ)</value></data>
+  <data name="AIE_ModelB" xml:space="preserve"><value>نموذج للمقارنة (ب)</value></data>
+  <data name="AIE_ModelHelp" xml:space="preserve"><value>النماذج المفعّلة التى تدعم الأدوات فقط.</value></data>
+  <data name="AIE_ModelBHelp" xml:space="preserve"><value>اختيارى: يُشغَّل على نفس الحالات للمقارنة.</value></data>
+  <data name="AIE_None" xml:space="preserve"><value>بدون</value></data>
+  <data name="AIE_EmptyAll" xml:space="preserve"><value>فارغ = الكل</value></data>
+  <data name="AIE_Limit" xml:space="preserve"><value>أقصى عدد حالات</value></data>
+  <data name="AIE_LimitHelp" xml:space="preserve"><value>فارغ = كل الحالات المطابقة.</value></data>
+  <data name="AIE_PresetCases" xml:space="preserve"><value>سيُشغَّل {0} حالة محددة.</value></data>
+  <data name="AIE_Estimate" xml:space="preserve"><value>حساب التقدير</value></data>
+  <data name="AIE_EstimateHint" xml:space="preserve"><value>مطلوب قبل التشغيل.</value></data>
+  <data name="AIE_EstimateStale" xml:space="preserve"><value>تغيّر الاختيار بعد التقدير؛ احسب التقدير من جديد.</value></data>
+  <data name="AIE_EstCases" xml:space="preserve"><value>{0} حالة (الحد {1} لكل تشغيل)</value></data>
+  <data name="AIE_InTok" xml:space="preserve"><value>توكنز الإدخال</value></data>
+  <data name="AIE_OutTok" xml:space="preserve"><value>توكنز الإخراج</value></data>
+  <data name="AIE_Cost" xml:space="preserve"><value>التكلفة التقديرية</value></data>
+  <data name="AIE_Basis" xml:space="preserve"><value>الأساس</value></data>
+  <data name="AIE_BasisHistory" xml:space="preserve"><value>متوسط تشغيلات سابقة</value></data>
+  <data name="AIE_BasisDefault" xml:space="preserve"><value>تقدير ثابت</value></data>
+  <data name="AIE_NoPrice" xml:space="preserve"><value>السعر غير مسجّل</value></data>
+  <data name="AIE_EstTotal" xml:space="preserve"><value>الإجمالى التقديرى: {0}</value></data>
+  <data name="AIE_EstTotalUnknown" xml:space="preserve"><value>الإجمالى غير معروف (سعر نموذج غير مسجّل).</value></data>
+  <data name="AIE_CostCap" xml:space="preserve"><value>حد التكلفة لكل تشغيل: {0}</value></data>
+  <data name="AIE_Consent" xml:space="preserve"><value>أوافق على تشغيل هذه الحالات واستهلاك الرصيد التقديرى أعلاه.</value></data>
+  <data name="AIE_Start" xml:space="preserve"><value>بدء التقييم</value></data>
+  <data name="AIE_CmpMismatch" xml:space="preserve"><value>المقارنة ليست على نفس الأساس تماماً:</value></data>
+  <data name="AIE_WPrompt" xml:space="preserve"><value>تعليمات المساعد أو أدواته تغيّرت بين التشغيلين.</value></data>
+  <data name="AIE_WVersion" xml:space="preserve"><value>{0} حالة تغيّرت نسختها بين التشغيلين.</value></data>
+  <data name="AIE_WCases" xml:space="preserve"><value>{0} حالة موجودة فى تشغيل واحد فقط.</value></data>
+  <data name="AIE_WUser" xml:space="preserve"><value>التشغيلان أطلقهما مستخدمان مختلفان (قد تختلف الصلاحيات).</value></data>
+  <data name="AIE_CmpKpis" xml:space="preserve"><value>مؤشرات المقارنة</value></data>
+  <data name="AIE_CmpCases" xml:space="preserve"><value>الحالات ({0} مختلفة)</value></data>
+  <data name="AIE_DiffOnly" xml:space="preserve"><value>الاختلافات فقط</value></data>
+  <data name="AIE_Change" xml:space="preserve"><value>التغيّر</value></data>
+  <data name="AIE_VersionDiff" xml:space="preserve"><value>نسخة مختلفة</value></data>
+  <data name="AIE_Better" xml:space="preserve"><value>أفضل فى ب</value></data>
+  <data name="AIE_Worse" xml:space="preserve"><value>أسوأ فى ب</value></data>
+  <data name="AIE_Differs" xml:space="preserve"><value>مختلف</value></data>
+  <data name="AIE_NoDiffs" xml:space="preserve"><value>لا اختلافات بين التشغيلين.</value></data>
 </root>

@@ -478,6 +478,11 @@
             <MudTabPanel Text="@Tr("AIK_Tab")" Icon="@Icons.Material.Filled.MenuBook">
                 <AiKnowledgeTab @ref="_knowledgeTab" Gateway="_gw" UserId="_userId" />
             </MudTabPanel>
+
+            @* ═════════ P7.5: التقييم (تشغيل مجموعة الحالات على نموذج أو نموذجين، السجل، التفاصيل، المقارنة، الحالات) ═════════ *@
+            <MudTabPanel Text="@Tr("AIE_Tab")" Icon="@Icons.Material.Filled.Science">
+                <AiEvalTab @ref="_evalTab" Admin="_gw" UserId="_userId" />
+            </MudTabPanel>
         </MudTabs>
     }
 </div>
@@ -525,6 +530,9 @@
     // P7.3: تبويب المعرفة (مكوّن مستقل يحمّل نفسه عند أول عرض، ويُعاد تحميله مع «إعادة التحميل»)
     private const int KnowledgeTab = 3;
     private AiKnowledgeTab? _knowledgeTab;
+    // P7.5: تبويب التقييم (يحمّل نفسه عند أول عرض، ويُعاد تحميله مع «إعادة التحميل»)
+    private const int EvalTab = 4;
+    private AiEvalTab? _evalTab;
 
     private async Task OnTabChangedAsync(int index)
     {
@@ -602,6 +610,7 @@
             if (_newModel.Provider_Id == 0 || _providers.All(p => p.Id != _newModel.Provider_Id))
                 _newModel.Provider_Id = _providers.FirstOrDefault()?.Id ?? 0;
             if (_tab == KnowledgeTab && _knowledgeTab != null) await _knowledgeTab.LoadAsync();
+            if (_tab == EvalTab && _evalTab != null) await _evalTab.LoadAsync();
         }
         catch (Exception ex) { _error = Tr("SystemError", Err(ex)); }
         finally { _loading = false; }

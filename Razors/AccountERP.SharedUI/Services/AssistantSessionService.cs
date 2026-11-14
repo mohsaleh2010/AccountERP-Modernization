@@ -274,7 +274,7 @@ namespace AccountERP.SharedUI.Services
         /// P2: ما يحق له قراءته = نفس شاشات قائمة الويب (RazorPath)؛ المساعد لا يرى أداة/View لشاشة غير مسموحة.
         /// P3: نفس الشاشات بعناوينها لأداتى find_screen/open_screen.
         /// </summary>
-        private AiUserContext BuildUser()
+        public AiUserContext BuildUser()
         {
             var menus = (_menu.UserAllowedMenus ?? new()).Where(m => !string.IsNullOrWhiteSpace(m.RazorPath)).ToList();
             return new AiUserContext

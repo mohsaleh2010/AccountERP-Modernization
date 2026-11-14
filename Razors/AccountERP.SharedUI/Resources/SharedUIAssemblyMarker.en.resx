@@ -5323,4 +5323,176 @@
   <data name="AIK_Enabled" xml:space="preserve"><value>“{0}” enabled.</value></data>
   <data name="AIK_Disabled" xml:space="preserve"><value>“{0}” disabled; the assistant’s search won’t return it.</value></data>
   <data name="AIK_Empty" xml:space="preserve"><value>No entries match the filter.</value></data>
+  <data name="AIE_Tab" xml:space="preserve"><value>Evaluation</value></data>
+  <data name="AIE_Title" xml:space="preserve"><value>Assistant evaluation</value></data>
+  <data name="AIE_Sub" xml:space="preserve"><value>Run a fixed set of questions on one or two models and measure correct answers and tool use. It creates no chats or drafts and does not change routing, but it uses real credit.</value></data>
+  <data name="AIE_ViewRuns" xml:space="preserve"><value>Runs</value></data>
+  <data name="AIE_ViewCases" xml:space="preserve"><value>Cases ({0})</value></data>
+  <data name="AIE_RunNew" xml:space="preserve"><value>Run evaluation</value></data>
+  <data name="AIE_RunTitle" xml:space="preserve"><value>Run evaluation</value></data>
+  <data name="AIE_Running" xml:space="preserve"><value>Evaluation running</value></data>
+  <data name="AIE_Stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="AIE_ConfirmStop" xml:space="preserve"><value>Stop the evaluation after the current case? Results of finished cases are kept.</value></data>
+  <data name="AIE_Stopping" xml:space="preserve"><value>Stopping after the current case…</value></data>
+  <data name="AIE_LiveCounts" xml:space="preserve"><value>{0} of {1} · passed {2} · failed {3} · error {4}</value></data>
+  <data name="AIE_CurrentCase" xml:space="preserve"><value>Current case: {0}</value></data>
+  <data name="AIE_LiveHint" xml:space="preserve"><value>You can leave this page; the evaluation continues on the server.</value></data>
+  <data name="AIE_StartedMsg" xml:space="preserve"><value>Evaluation started: {0} cases on {1} model(s).</value></data>
+  <data name="AIE_Finished" xml:space="preserve"><value>Evaluation finished.</value></data>
+  <data name="AIE_CompareTitle" xml:space="preserve"><value>Compare two runs</value></data>
+  <data name="AIE_Back" xml:space="preserve"><value>Back</value></data>
+  <data name="AIE_RunDetails" xml:space="preserve"><value>Results of “{0}”</value></data>
+  <data name="AIE_Effort" xml:space="preserve"><value>Effort: {0}</value></data>
+  <data name="AIE_PromptHashHelp" xml:space="preserve"><value>Fingerprint of instructions and tools. If it differs between two runs, the assistant changed between them.</value></data>
+  <data name="AIE_CompareWith" xml:space="preserve"><value>Compare with “{0}”</value></data>
+  <data name="AIE_KPassRate" xml:space="preserve"><value>Pass rate</value></data>
+  <data name="AIE_KPassed" xml:space="preserve"><value>Passed</value></data>
+  <data name="AIE_KToolOk" xml:space="preserve"><value>Correct tool use</value></data>
+  <data name="AIE_KTools" xml:space="preserve"><value>Tools</value></data>
+  <data name="AIE_KTokens" xml:space="preserve"><value>Tokens</value></data>
+  <data name="AIE_KCost" xml:space="preserve"><value>Cost</value></data>
+  <data name="AIE_KDuration" xml:space="preserve"><value>Duration</value></data>
+  <data name="AIE_OPass" xml:space="preserve"><value>Pass</value></data>
+  <data name="AIE_OFail" xml:space="preserve"><value>Fail</value></data>
+  <data name="AIE_OError" xml:space="preserve"><value>Error</value></data>
+  <data name="AIE_OSkipped" xml:space="preserve"><value>Skipped</value></data>
+  <data name="AIE_ByCategory" xml:space="preserve"><value>Pass rate by category</value></data>
+  <data name="AIE_ChartData" xml:space="preserve"><value>Chart data</value></data>
+  <data name="AIE_Outcome" xml:space="preserve"><value>Outcome</value></data>
+  <data name="AIE_All" xml:space="preserve"><value>All ({0})</value></data>
+  <data name="AIE_AllCats" xml:space="preserve"><value>All categories</value></data>
+  <data name="AIE_AllChecks" xml:space="preserve"><value>All check types</value></data>
+  <data name="AIE_Category" xml:space="preserve"><value>Category</value></data>
+  <data name="AIE_Categories" xml:space="preserve"><value>Categories</value></data>
+  <data name="AIE_Search" xml:space="preserve"><value>Search</value></data>
+  <data name="AIE_Question" xml:space="preserve"><value>Question</value></data>
+  <data name="AIE_CheckType" xml:space="preserve"><value>Check type</value></data>
+  <data name="AIE_Time" xml:space="preserve"><value>Time</value></data>
+  <data name="AIE_ShowCase" xml:space="preserve"><value>Show details: {0}</value></data>
+  <data name="AIE_ToolOkYes" xml:space="preserve"><value>Tools correct</value></data>
+  <data name="AIE_ToolOkNo" xml:space="preserve"><value>Tools not correct</value></data>
+  <data name="AIE_Rounds" xml:space="preserve"><value>{0} rounds</value></data>
+  <data name="AIE_CaseTokens" xml:space="preserve"><value>{0} tokens · {1}</value></data>
+  <data name="AIE_FailReason" xml:space="preserve"><value>Reason</value></data>
+  <data name="AIE_Answer" xml:space="preserve"><value>Assistant answer</value></data>
+  <data name="AIE_ToolsUsed" xml:space="preserve"><value>Tools called</value></data>
+  <data name="AIE_ToolRows" xml:space="preserve"><value>{0} rows</value></data>
+  <data name="AIE_NoTools" xml:space="preserve"><value>No tool was called.</value></data>
+  <data name="AIE_NoResults" xml:space="preserve"><value>No results.</value></data>
+  <data name="AIE_History" xml:space="preserve"><value>Run history</value></data>
+  <data name="AIE_SelectHint" xml:space="preserve"><value>Select two runs to compare.</value></data>
+  <data name="AIE_CompareSelected" xml:space="preserve"><value>Compare selected ({0}/2)</value></data>
+  <data name="AIE_Select" xml:space="preserve"><value>Select</value></data>
+  <data name="AIE_SelectAria" xml:space="preserve"><value>Select run “{0}” of {1} for comparison</value></data>
+  <data name="AIE_Started" xml:space="preserve"><value>Started</value></data>
+  <data name="AIE_Model" xml:space="preserve"><value>Model</value></data>
+  <data name="AIE_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="AIE_Cases" xml:space="preserve"><value>Cases</value></data>
+  <data name="AIE_User" xml:space="preserve"><value>User</value></data>
+  <data name="AIE_Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="AIE_Details" xml:space="preserve"><value>Details</value></data>
+  <data name="AIE_DetailsAria" xml:space="preserve"><value>Details of run “{0}” of {1}</value></data>
+  <data name="AIE_NoRuns" xml:space="preserve"><value>No runs yet. Click “Run evaluation”.</value></data>
+  <data name="AIE_StRunning" xml:space="preserve"><value>Running</value></data>
+  <data name="AIE_StDone" xml:space="preserve"><value>Done</value></data>
+  <data name="AIE_StCancelled" xml:space="preserve"><value>Stopped</value></data>
+  <data name="AIE_StInterrupted" xml:space="preserve"><value>Interrupted</value></data>
+  <data name="AIE_StCostCap" xml:space="preserve"><value>Cost cap</value></data>
+  <data name="AIE_StFailed" xml:space="preserve"><value>Failed</value></data>
+  <data name="AIE_AddCase" xml:space="preserve"><value>Add case</value></data>
+  <data name="AIE_EditCase" xml:space="preserve"><value>Edit case</value></data>
+  <data name="AIE_SeedEditNote" xml:space="preserve"><value>This is a seeded case; after editing it is marked “edited” and system updates won't overwrite it. Its version changes only if you change what is checked.</value></data>
+  <data name="AIE_Dialect" xml:space="preserve"><value>Dialect</value></data>
+  <data name="AIE_DMsa" xml:space="preserve"><value>Standard Arabic</value></data>
+  <data name="AIE_DEg" xml:space="preserve"><value>Egyptian</value></data>
+  <data name="AIE_DialectAll" xml:space="preserve"><value>Both</value></data>
+  <data name="AIE_ExpectedTools" xml:space="preserve"><value>Expected tools</value></data>
+  <data name="AIE_ForbiddenTools" xml:space="preserve"><value>Forbidden tools</value></data>
+  <data name="AIE_ToolsHelp" xml:space="preserve"><value>Comma-separated names, e.g. run_readonly_query, render_report</value></data>
+  <data name="AIE_RefSql" xml:space="preserve"><value>Reference query</value></data>
+  <data name="AIE_RefSqlHelp" xml:space="preserve"><value>SELECT on assistant views (ai.v_*) only; runs live during evaluation; use GETDATE() for relative dates.</value></data>
+  <data name="AIE_RefArgs" xml:space="preserve"><value>Reference tool input (JSON)</value></data>
+  <data name="AIE_RefArgsHelp" xml:space="preserve"><value>e.g. {"from":"{month_start}","to":"{today}"}</value></data>
+  <data name="AIE_ExpectedText" xml:space="preserve"><value>Expected text (optional)</value></data>
+  <data name="AIE_ExpectedTextHelp" xml:space="preserve"><value>A word or phrase the answer must contain.</value></data>
+  <data name="AIE_Tags" xml:space="preserve"><value>Tags</value></data>
+  <data name="AIE_Notes" xml:space="preserve"><value>Notes</value></data>
+  <data name="AIE_CasesTitle" xml:space="preserve"><value>Evaluation cases</value></data>
+  <data name="AIE_State" xml:space="preserve"><value>State</value></data>
+  <data name="AIE_SAll" xml:space="preserve"><value>All</value></data>
+  <data name="AIE_SActive" xml:space="preserve"><value>Active</value></data>
+  <data name="AIE_SInactive" xml:space="preserve"><value>Inactive</value></data>
+  <data name="AIE_SMine" xml:space="preserve"><value>Added or edited</value></data>
+  <data name="AIE_Source" xml:space="preserve"><value>Source</value></data>
+  <data name="AIE_Active" xml:space="preserve"><value>Active</value></data>
+  <data name="AIE_SrcSeed" xml:space="preserve"><value>Seeded</value></data>
+  <data name="AIE_SrcEdited" xml:space="preserve"><value>Seeded, edited</value></data>
+  <data name="AIE_SrcManual" xml:space="preserve"><value>Manual</value></data>
+  <data name="AIE_SrcFeedback" xml:space="preserve"><value>From feedback</value></data>
+  <data name="AIE_ToggleAria" xml:space="preserve"><value>Enable/disable case: {0}</value></data>
+  <data name="AIE_EditAria" xml:space="preserve"><value>Edit case: {0}</value></data>
+  <data name="AIE_RunCase" xml:space="preserve"><value>Run this case</value></data>
+  <data name="AIE_RunCaseAria" xml:space="preserve"><value>Run case: {0}</value></data>
+  <data name="AIE_NoCases" xml:space="preserve"><value>No cases match the filter.</value></data>
+  <data name="AIE_CaseSaved" xml:space="preserve"><value>Case saved.</value></data>
+  <data name="AIE_CaseOn" xml:space="preserve"><value>Case enabled.</value></data>
+  <data name="AIE_CaseOff" xml:space="preserve"><value>Case disabled; it won't be included in future runs.</value></data>
+  <data name="AIE_NoModels" xml:space="preserve"><value>No enabled model supports tools. Add one in the “Models &amp; tasks” tab.</value></data>
+  <data name="AIE_CSales" xml:space="preserve"><value>Sales</value></data>
+  <data name="AIE_CPurchases" xml:space="preserve"><value>Purchases</value></data>
+  <data name="AIE_CStock" xml:space="preserve"><value>Stock</value></data>
+  <data name="AIE_CAccounts" xml:space="preserve"><value>Accounts</value></data>
+  <data name="AIE_CParties" xml:space="preserve"><value>Customers &amp; suppliers</value></data>
+  <data name="AIE_CScreens" xml:space="preserve"><value>Screens</value></data>
+  <data name="AIE_CAmbiguous" xml:space="preserve"><value>Ambiguous</value></data>
+  <data name="AIE_CRefuse" xml:space="preserve"><value>Refusal</value></data>
+  <data name="AIE_TResult" xml:space="preserve"><value>Query result</value></data>
+  <data name="AIE_TTool" xml:space="preserve"><value>Tool</value></data>
+  <data name="AIE_TFinancial" xml:space="preserve"><value>Financial statement</value></data>
+  <data name="AIE_TAsk" xml:space="preserve"><value>Asks the user</value></data>
+  <data name="AIE_TRefuse" xml:space="preserve"><value>Refusal</value></data>
+  <data name="AIE_TResultHelp" xml:space="preserve"><value>Passes if the assistant's data contains the reference query rows.</value></data>
+  <data name="AIE_TToolHelp" xml:space="preserve"><value>Passes if an expected tool succeeded and no forbidden tool was called.</value></data>
+  <data name="AIE_TFinancialHelp" xml:space="preserve"><value>Passes if the financial tool's data matches a direct call with the reference input.</value></data>
+  <data name="AIE_TAskHelp" xml:space="preserve"><value>Passes if the assistant asks the user instead of guessing.</value></data>
+  <data name="AIE_TRefuseHelp" xml:space="preserve"><value>Passes if no draft is created and no data query runs.</value></data>
+  <data name="AIE_ModelA" xml:space="preserve"><value>Model (A)</value></data>
+  <data name="AIE_ModelB" xml:space="preserve"><value>Comparison model (B)</value></data>
+  <data name="AIE_ModelHelp" xml:space="preserve"><value>Only enabled models that support tools.</value></data>
+  <data name="AIE_ModelBHelp" xml:space="preserve"><value>Optional: runs on the same cases for comparison.</value></data>
+  <data name="AIE_None" xml:space="preserve"><value>None</value></data>
+  <data name="AIE_EmptyAll" xml:space="preserve"><value>Empty = all</value></data>
+  <data name="AIE_Limit" xml:space="preserve"><value>Max cases</value></data>
+  <data name="AIE_LimitHelp" xml:space="preserve"><value>Empty = all matching cases.</value></data>
+  <data name="AIE_PresetCases" xml:space="preserve"><value>{0} selected case(s) will run.</value></data>
+  <data name="AIE_Estimate" xml:space="preserve"><value>Estimate</value></data>
+  <data name="AIE_EstimateHint" xml:space="preserve"><value>Required before running.</value></data>
+  <data name="AIE_EstimateStale" xml:space="preserve"><value>The selection changed after estimating; estimate again.</value></data>
+  <data name="AIE_EstCases" xml:space="preserve"><value>{0} cases (limit {1} per run)</value></data>
+  <data name="AIE_InTok" xml:space="preserve"><value>Input tokens</value></data>
+  <data name="AIE_OutTok" xml:space="preserve"><value>Output tokens</value></data>
+  <data name="AIE_Cost" xml:space="preserve"><value>Estimated cost</value></data>
+  <data name="AIE_Basis" xml:space="preserve"><value>Basis</value></data>
+  <data name="AIE_BasisHistory" xml:space="preserve"><value>Average of previous runs</value></data>
+  <data name="AIE_BasisDefault" xml:space="preserve"><value>Fixed estimate</value></data>
+  <data name="AIE_NoPrice" xml:space="preserve"><value>Price not set</value></data>
+  <data name="AIE_EstTotal" xml:space="preserve"><value>Estimated total: {0}</value></data>
+  <data name="AIE_EstTotalUnknown" xml:space="preserve"><value>Total unknown (a model has no price).</value></data>
+  <data name="AIE_CostCap" xml:space="preserve"><value>Cost cap per run: {0}</value></data>
+  <data name="AIE_Consent" xml:space="preserve"><value>I agree to run these cases and spend the estimated credit above.</value></data>
+  <data name="AIE_Start" xml:space="preserve"><value>Start evaluation</value></data>
+  <data name="AIE_CmpMismatch" xml:space="preserve"><value>The comparison is not on exactly the same basis:</value></data>
+  <data name="AIE_WPrompt" xml:space="preserve"><value>The assistant's instructions or tools changed between the runs.</value></data>
+  <data name="AIE_WVersion" xml:space="preserve"><value>{0} case(s) changed version between the runs.</value></data>
+  <data name="AIE_WCases" xml:space="preserve"><value>{0} case(s) exist in only one run.</value></data>
+  <data name="AIE_WUser" xml:space="preserve"><value>The runs were started by different users (permissions may differ).</value></data>
+  <data name="AIE_CmpKpis" xml:space="preserve"><value>Comparison metrics</value></data>
+  <data name="AIE_CmpCases" xml:space="preserve"><value>Cases ({0} different)</value></data>
+  <data name="AIE_DiffOnly" xml:space="preserve"><value>Differences only</value></data>
+  <data name="AIE_Change" xml:space="preserve"><value>Change</value></data>
+  <data name="AIE_VersionDiff" xml:space="preserve"><value>Different version</value></data>
+  <data name="AIE_Better" xml:space="preserve"><value>Better in B</value></data>
+  <data name="AIE_Worse" xml:space="preserve"><value>Worse in B</value></data>
+  <data name="AIE_Differs" xml:space="preserve"><value>Different</value></data>
+  <data name="AIE_NoDiffs" xml:space="preserve"><value>No differences between the runs.</value></data>
 </root>
