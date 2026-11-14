@@ -75,6 +75,9 @@ namespace AccountModelsLib
         public const string EvalMaxCasesPerRun = "EvalMaxCasesPerRun";
         /// <summary>P7.4: أقصى تكلفة تقديرية لتشغيل واحد (0 = بلا حد)؛ عند بلوغها يتوقف التشغيل بحالة CostCap.</summary>
         public const string EvalMaxCostPerRun = "EvalMaxCostPerRun";
+        /// <summary>P7.7: عدد الأمثلة المعتمدة المشابهة التى تُلحق بسؤال المستخدم (للنموذج فقط). 0 = موقوفة (الافتراضى) حتى يثبت التقييم فائدتها.</summary>
+        public const string KnowledgeAutoExamples = "KnowledgeAutoExamples";
+        public const int MaxAutoExamples = 5;
     }
 
     /// <summary>صف AI_Providers كما يُخزَّن (المفتاح مشفّر). لا يصل للواجهة؛ الواجهة ترى AiProviderView.</summary>

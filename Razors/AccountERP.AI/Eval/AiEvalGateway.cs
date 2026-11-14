@@ -135,7 +135,7 @@ namespace AccountERP.AI.Eval
         // ───────────── التشغيل ─────────────
 
         private sealed record Prepared(List<AiEvalCaseRow> Cases, List<(AiModelRow Model, AiProviderRow Provider, AiTaskRoutingRow Route)> Models,
-                                       int MaxCases, decimal MaxCost, int MaxRounds, string Blocked);
+                                       int MaxCases, decimal MaxCost, int MaxRounds, string Blocked, int AutoExamples);
 
         private Prepared Prepare(AiEvalStartRequest r)
         {
@@ -146,6 +146,8 @@ namespace AccountERP.AI.Eval
                               decimal.TryParse(mx, NumberStyles.Number, CultureInfo.InvariantCulture, out var d) && d > 0 ? d : 0;
             int maxRounds = settings.TryGetValue(AiSettingKeys.MaxToolRoundsPerMessage, out var mr) && int.TryParse(mr, out int rr) && rr is >= 1 and <= 30 ? rr : 12;
             bool localOnly = settings.TryGetValue(AiSettingKeys.LocalOnly, out var lo) && lo == "1";
+            // P7.7: الطلب يحدد (0 = بدونها) وإلا الإعداد الحالى.
+            int autoEx = r.AutoExamples is int ax ? Math.Clamp(ax, 0, AiSettingKeys.MaxAutoExamples) : AiChatGateway.AutoExamples(settings);
 
             var ids = (r.ModelIds ?? new List<long>()).Where(i => i > 0).Distinct().ToList();
             if (ids.Count is < 1 or > 2) throw new InvalidOperationException("اختر نموذجاً واحداً أو نموذجين للمقارنة.");
@@ -175,7 +177,7 @@ namespace AccountERP.AI.Eval
             string blocked = cases.Count == 0 ? "لا توجد حالات مفعّلة تطابق الاختيار."
                 : cases.Count > maxCases ? $"عدد الحالات ({cases.Count}) أكبر من الحد ({maxCases}) لكل تشغيل. ضيّق الاختيار."
                 : "";
-            return new Prepared(cases, list, maxCases, maxCost, maxRounds, blocked);
+            return new Prepared(cases, list, maxCases, maxCost, maxRounds, blocked, autoEx);
         }
 
         /// <summary>المفعّلة فقط، ثم الفلاتر، بترتيب ثابت (التصنيف ثم المفتاح) فيأخذ النموذجان نفس الحالات.</summary>
@@ -200,7 +202,7 @@ namespace AccountERP.AI.Eval
 
         private AiEvalEstimate EstimateOf(Prepared p)
         {
-            var e = new AiEvalEstimate { CaseCount = p.Cases.Count, MaxCases = p.MaxCases, MaxCostPerRun = p.MaxCost, Blocked = p.Blocked };
+            var e = new AiEvalEstimate { CaseCount = p.Cases.Count, MaxCases = p.MaxCases, MaxCostPerRun = p.MaxCost, Blocked = p.Blocked, AutoExamples = p.AutoExamples };
             bool allPriced = true;
             decimal total = 0;
             foreach (var (m, _, _) in p.Models)
@@ -246,7 +248,7 @@ namespace AccountERP.AI.Eval
                 ["tax_filter"] = baseCtx.TaxFilter,
                 ["is_admin"] = user!.IsAdmin,
                 ["views"] = baseCtx.AllowedViews.Count,
-                ["knowledge_auto_examples"] = 0,
+                ["knowledge_auto_examples"] = p.AutoExamples,
                 ["estimate"] = est.TotalCost,
             }.ToJsonString(Json);
             string filter = JsonSerializer.Serialize(r.Filter ?? new AiEvalFilter(), Json);
@@ -264,7 +266,7 @@ namespace AccountERP.AI.Eval
             var plan = new AiEvalRunner.GroupPlan
             {
                 GroupId = groupId, User = user, AllowedViews = baseCtx.AllowedViews, TaxFilter = baseCtx.TaxFilter,
-                Cases = p.Cases, Runs = runs, MaxRounds = p.MaxRounds, MaxCost = p.MaxCost,
+                Cases = p.Cases, Runs = runs, MaxRounds = p.MaxRounds, MaxCost = p.MaxCost, AutoExamples = p.AutoExamples,
             };
             if (!_runner.TryStart(plan, out string reason)) throw new InvalidOperationException(reason);
             return new AiEvalStartResult { GroupId = groupId, RunIds = runs.Select(x => x.Run.Id).ToList(), CaseCount = p.Cases.Count };
@@ -302,6 +304,65 @@ namespace AccountERP.AI.Eval
         }
 
         public List<AiEvalResultRow> GetResults(long runId) => _db.ListResults(runId);
+
+        // ───────────── P7.7: الأمثلة التلقائية ─────────────
+
+        public AiAutoExamplesStatus GetAutoExamplesStatus(int? count = null)
+        {
+            int current = AiChatGateway.AutoExamples(_providers.GetSettings());
+            int n = Math.Clamp(count ?? (current > 0 ? current : 3), 1, AiSettingKeys.MaxAutoExamples);
+            var st = new AiAutoExamplesStatus { Current = current, Count = n };
+            try { st.ActiveExamples = _tools.KnowledgeService.ActiveExampleCount(); }
+            catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
+
+            var done = _db.ListRuns(500).Where(r => r.Status == AiEvalRunStatus.Done && r.DoneCases > 0).ToList();   // الأحدث أولاً
+            var on = done.FirstOrDefault(r => AiEvalConfig.AutoExamplesOf(r.ConfigJson) == n);
+            if (on == null) return st;
+            var off = done.FirstOrDefault(r => r.Model_Id == on.Model_Id && AiEvalConfig.AutoExamplesOf(r.ConfigJson) == 0);
+            st.ModelName = on.ModelName;
+            st.RunOnId = on.Id;
+            st.OnAt = on.StartedAt;
+            if (off == null) return st;
+            st.RunOffId = off.Id;
+            st.OffAt = off.StartedAt;
+            var (common, passOn, passOff) = PairedPasses(_db.ListResults(on.Id), _db.ListResults(off.Id));
+            st.CommonCases = common;
+            st.PassOn = passOn;
+            st.PassOff = passOff;
+            st.HasEvidence = common >= AiAutoExamplesStatus.MinCommonCases;
+            st.Improved = st.HasEvidence && passOn > passOff;
+            return st;
+        }
+
+        /// <summary>P7.7 (D18): مقارنة مزدوجة على الحالات المشتركة بنفس المفتاح والإصدار (المتخطّاة لا تُحسب).</summary>
+        internal static (int Common, int PassOn, int PassOff) PairedPasses(IEnumerable<AiEvalResultRow> on, IEnumerable<AiEvalResultRow> off)
+        {
+            var a = on.Where(x => x.Outcome != AiEvalOutcomes.Skipped).GroupBy(x => x.CaseKey).ToDictionary(g => g.Key, g => g.First());
+            int common = 0, pOn = 0, pOff = 0;
+            foreach (var y in off.Where(x => x.Outcome != AiEvalOutcomes.Skipped).GroupBy(x => x.CaseKey).Select(g => g.First()))
+            {
+                if (!a.TryGetValue(y.CaseKey, out var x) || x.CaseVersion != y.CaseVersion) continue;
+                common++;
+                if (x.Outcome == AiEvalOutcomes.Pass) pOn++;
+                if (y.Outcome == AiEvalOutcomes.Pass) pOff++;
+            }
+            return (common, pOn, pOff);
+        }
+
+        public void SetAutoExamples(int count, bool overrideEvidence, long userId)
+        {
+            EnsureAdmin(userId);
+            if (count < 0 || count > AiSettingKeys.MaxAutoExamples) throw new InvalidOperationException($"عدد الأمثلة من 0 إلى {AiSettingKeys.MaxAutoExamples}.");
+            if (count > 0 && !overrideEvidence)
+            {
+                var st = GetAutoExamplesStatus(count);
+                if (!st.Improved)
+                    throw new InvalidOperationException(!st.HasEvidence
+                        ? $"لا يوجد دليل من التقييم بعد: شغّل التقييم لنفس النموذج مرة بدون أمثلة ومرة بـ {count} أمثلة (على {AiAutoExamplesStatus.MinCommonCases} حالات مشتركة على الأقل)، أو أكّد التفعيل رغم ذلك."
+                        : $"آخر مقارنة لم تُظهر تحسّناً ({st.PassOn} مقابل {st.PassOff} من {st.CommonCases}). أكّد التفعيل رغم ذلك إن أردت.");
+            }
+            _providers.SetSetting(AiSettingKeys.KnowledgeAutoExamples, count.ToString(CultureInfo.InvariantCulture), userId);
+        }
 
         private static readonly JsonSerializerOptions Json = new() { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
     }

@@ -5561,4 +5561,30 @@
   <data name="AIF_CaseSaved" xml:space="preserve"><value>Eval case added</value></data>
   <data name="AIF_Rejected" xml:space="preserve"><value>Feedback rejected</value></data>
   <data name="AIF_Reopened" xml:space="preserve"><value>Feedback reopened</value></data>
+  <data name="AIE_AutoEx" xml:space="preserve"><value>Auto examples</value></data>
+  <data name="AIE_AutoExHelp" xml:space="preserve"><value>To measure them: run the same model once without and once with, then compare.</value></data>
+  <data name="AIE_AutoExCurrent" xml:space="preserve"><value>Current setting ({0})</value></data>
+  <data name="AIE_AutoExOff" xml:space="preserve"><value>Without examples</value></data>
+  <data name="AIE_AutoExN" xml:space="preserve"><value>{0} examples</value></data>
+  <data name="AIE_EstAutoEx" xml:space="preserve"><value>Each case is sent with up to {0} similar approved examples.</value></data>
+  <data name="AIE_EstAutoExOff" xml:space="preserve"><value>Without auto examples.</value></data>
+  <data name="AIE_RunAutoEx" xml:space="preserve"><value>Examples: {0}</value></data>
+  <data name="AIE_RunAutoExOff" xml:space="preserve"><value>No examples</value></data>
+  <data name="AIE_WAutoEx" xml:space="preserve"><value>Auto examples differ: A = {0}, B = {1} (expected when measuring them).</value></data>
+  <data name="AIK_AxTitle" xml:space="preserve"><value>Auto examples</value></data>
+  <data name="AIK_AxOn" xml:space="preserve"><value>On: up to {0} examples per question</value></data>
+  <data name="AIK_AxOff" xml:space="preserve"><value>Off</value></data>
+  <data name="AIK_AxHint" xml:space="preserve"><value>Adds the closest approved examples to the user's question for the model only (not shown in the chat). Turn on only if evaluation shows a gain.</value></data>
+  <data name="AIK_AxActive" xml:space="preserve"><value>Active examples in knowledge: {0}</value></data>
+  <data name="AIK_AxCount" xml:space="preserve"><value>Number of examples</value></data>
+  <data name="AIK_AxOverride" xml:space="preserve"><value>Turn on even without evidence of a gain from evaluation</value></data>
+  <data name="AIK_AxEnable" xml:space="preserve"><value>Turn on ({0})</value></data>
+  <data name="AIK_AxDisable" xml:space="preserve"><value>Turn off</value></data>
+  <data name="AIK_AxSavedOn" xml:space="preserve"><value>Auto examples turned on ({0}).</value></data>
+  <data name="AIK_AxSavedOff" xml:space="preserve"><value>Auto examples turned off.</value></data>
+  <data name="AIK_AxNoOn" xml:space="preserve"><value>No completed evaluation run with {0} examples yet. In the Evaluation tab, run the same model once without examples and once with this number.</value></data>
+  <data name="AIK_AxNoOff" xml:space="preserve"><value>There is a run with examples for “{0}” but no completed run without them for the same model.</value></data>
+  <data name="AIK_AxFew" xml:space="preserve"><value>Only {0} cases in common between the two runs; at least {1} are needed.</value></data>
+  <data name="AIK_AxBetter" xml:space="preserve"><value>“{0}”: {1} passed with examples vs {2} without, out of {3} common cases — improved.</value></data>
+  <data name="AIK_AxNotBetter" xml:space="preserve"><value>“{0}”: {1} passed with examples vs {2} without, out of {3} common cases — no gain.</value></data>
 </root>

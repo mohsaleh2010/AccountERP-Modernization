@@ -129,6 +129,8 @@
         int onlyOne = Rows.Count(r => r.A == null || r.B == null);
         if (onlyOne > 0) Warnings.Add(Tr("AIE_WCases", onlyOne));
         if (A.User_Id != B.User_Id) Warnings.Add(Tr("AIE_WUser"));
+        int exA = AiEvalConfig.AutoExamplesOf(A.ConfigJson), exB = AiEvalConfig.AutoExamplesOf(B.ConfigJson);
+        if (exA != exB) Warnings.Add(Tr("AIE_WAutoEx", exA, exB));   // P7.7: مقصود عند قياس الأمثلة التلقائية، لكن يُذكر صراحة
 
         var cats = AiEvalCategories.All.Where(c => Rows.Any(r => r.Category == c)).ToList();
         CategoryChart = new AiReportSection

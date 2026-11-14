@@ -132,6 +132,7 @@
                         <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.Hub">@_run.ProviderName</MudChip>
                         @if (!string.IsNullOrEmpty(_run.Effort)) { <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@Tr("AIE_Effort", _run.Effort)</MudChip> }
                         <MudTooltip Text="@Tr("AIE_PromptHashHelp")"><MudChip T="string" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.Fingerprint">@Short(_run.PromptHash)</MudChip></MudTooltip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Icon="@Icons.Material.Filled.School">@AutoExText(_run)</MudChip>
                     </div>
                 </div>
                 @if (Siblings(_run) is { } sib)
@@ -271,7 +272,7 @@
                                  Disabled="@(!_selected.Contains(context.Id) && _selected.Count >= 2)" aria-label="@Tr("AIE_SelectAria", context.ModelName, When(context))" />
                 </MudTd>
                 <MudTd DataLabel="@Tr("AIE_Started")"><span class="aie-n">@When(context)</span></MudTd>
-                <MudTd DataLabel="@Tr("AIE_Model")"><div style="font-weight:600;">@context.ModelName</div><div class="ai-sub" style="margin:0;">@context.ProviderName</div></MudTd>
+                <MudTd DataLabel="@Tr("AIE_Model")"><div style="font-weight:600;">@context.ModelName</div><div class="ai-sub" style="margin:0;">@context.ProviderName@(AiEvalConfig.AutoExamplesOf(context.ConfigJson) > 0 ? " · " + AutoExText(context) : "")</div></MudTd>
                 <MudTd DataLabel="@Tr("AIE_Status")"><MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@StatusColor(context.Status)">@Tr(StatusKey(context.Status))</MudChip></MudTd>
                 <MudTd DataLabel="@Tr("AIE_Cases")"><span class="aie-n">@context.DoneCases / @context.TotalCases</span></MudTd>
                 <MudTd DataLabel="@Tr("AIE_KPassRate")"><b class="aie-n">@(context.PassRate == null ? "—" : context.PassRate.Value.ToString("0.#", CultureInfo.InvariantCulture) + "%")</b></MudTd>
@@ -474,15 +475,19 @@ else
 
     // ───────────── التشغيل والمتابعة ─────────────
 
+    /// <summary>P7.7: عدد الأمثلة التلقائية فى التشغيل (من ConfigJson).</summary>
+    internal string AutoExText(AiEvalRunRow r) => AiEvalConfig.AutoExamplesOf(r.ConfigJson) is int n && n > 0 ? Tr("AIE_RunAutoEx", n) : Tr("AIE_RunAutoExOff");
+
     private async Task OpenRunDialogAsync(List<long>? caseIds)
     {
         if (_eval == null || _chat == null) { _error = Tr("AI_NotAvailable"); return; }
         List<AiModelRow> models;
         List<AiTaskRoutingRow> routing;
+        Dictionary<string, string> settings;
         try
         {
             var gw = Admin;
-            (models, routing) = await Bg(() => (gw.GetModels(), gw.GetRouting()));
+            (models, routing, settings) = await Bg(() => (gw.GetModels(), gw.GetRouting(), gw.GetSettings()));
         }
         catch (Exception ex) { _error = Tr("SystemError", Err(ex)); return; }
         models = models.Where(m => m.IsEnabled && m.SupportsTools).OrderBy(m => m.DisplayName).ToList();
@@ -492,6 +497,7 @@ else
         {
             { x => x.Eval, _eval }, { x => x.User, _chat.BuildUser() }, { x => x.Models, models }, { x => x.DefaultModelId, def },
             { x => x.PresetCaseIds, caseIds ?? new List<long>() },
+            { x => x.CurrentAutoExamples, settings.TryGetValue(AiSettingKeys.KnowledgeAutoExamples, out var ax) && int.TryParse(ax, out int axn) ? axn : 0 },
         };
         var o = new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true, BackdropClick = false };
         var dlg = await DialogService.ShowAsync<AiEvalRunDialog>(Tr("AIE_RunTitle"), p, o);

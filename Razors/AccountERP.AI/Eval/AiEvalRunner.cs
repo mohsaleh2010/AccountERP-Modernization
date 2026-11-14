@@ -61,6 +61,8 @@ namespace AccountERP.AI.Eval
             public int MaxRounds { get; init; } = 12;
             /// <summary>0 = بلا حد.</summary>
             public decimal MaxCost { get; init; }
+            /// <summary>P7.7: عدد الأمثلة التلقائية لكل حالة (0 = بدونها).</summary>
+            public int AutoExamples { get; init; }
         }
 
         private sealed class ActiveGroup
@@ -164,10 +166,11 @@ namespace AccountERP.AI.Eval
                     if (ct.IsCancellationRequested || live.Count == 0) break;
                     active.Current = c.Question;
                     var (reference, refError) = await ReferenceAsync(c, plan, live[0].Run.Id, ct);
+                    string examples = await ExamplesAsync(c, plan, ct);   // نفس الأمثلة للنموذجين
                     foreach (var rp in live.ToList())
                     {
                         if (ct.IsCancellationRequested) break;
-                        var res = await RunCaseAsync(gw, plan, rp, c, reference, refError, ct);
+                        var res = await RunCaseAsync(gw, plan, rp, c, reference, refError, ct, examples);
                         if (res == null) break;   // أُوقف: الحالة الجارية لا تُحفظ
                         Record(rp.Run, res);
                         if (plan.MaxCost > 0 && (rp.Run.CostEstimate ?? 0) >= plan.MaxCost)
@@ -211,6 +214,25 @@ namespace AccountERP.AI.Eval
 
         // ───────────── الحالة الواحدة ─────────────
 
+        /// <summary>
+        /// P7.7: كتلة الأمثلة التلقائية للحالة بصلاحيات من أطلق التقييم. يُستبعد المثال الذى هو الحالة نفسها (نفس السؤال، أو نفس الاستعلام المرجعى،
+        /// أو من نفس الملاحظة) حتى لا يُقاس «حفظ الإجابة» بدل الفائدة الفعلية. لا يرمى (فشل البحث = بلا أمثلة).
+        /// </summary>
+        private async Task<string> ExamplesAsync(AiEvalCaseRow c, GroupPlan plan, CancellationToken ct)
+        {
+            if (plan.AutoExamples <= 0) return "";
+            string q = string.Join(" ", Knowledge.AiKnowledgeService.Words(c.Question));
+            bool Same(AiKnowledgeRow r) =>
+                (c.Source_Ref_Id != null && r.Source == "feedback" && r.Source_Ref_Id == c.Source_Ref_Id)
+                || string.Join(" ", Knowledge.AiKnowledgeService.Words(r.TitleAr)) == q
+                || (!string.IsNullOrWhiteSpace(c.ReferenceSql) && NormSql(r.Content) == NormSql(c.ReferenceSql));
+            var probe = new AiToolContext { User = plan.User, AllowedViews = plan.AllowedViews, TaxFilter = plan.TaxFilter, Ct = ct, IsEval = true };
+            var ex = await _tools.KnowledgeService.ExamplesAsync(c.Question, plan.AllowedViews, probe.HasRoute, plan.AutoExamples, ct, Same);
+            return Knowledge.AiKnowledgeService.ExamplesBlock(ex);
+        }
+
+        private static string NormSql(string? s) => string.Join(" ", (s ?? "").Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)).TrimEnd(';').ToLowerInvariant();
+
         private AiToolContext Context(GroupPlan plan, long runId, CancellationToken ct) => new()
         {
             User = plan.User, AllowedViews = plan.AllowedViews, TaxFilter = plan.TaxFilter, Ct = ct, IsEval = true, EvalRunId = runId,
@@ -218,7 +240,7 @@ namespace AccountERP.AI.Eval
 
         /// <summary>يعيد null إن أُوقف التشغيل كله أثناء الحالة.</summary>
         private async Task<AiEvalResultRow?> RunCaseAsync(AiChatGateway gw, GroupPlan plan, RunPlan rp, AiEvalCaseRow c,
-                                                          AiDataset? reference, string? refError, CancellationToken ct)
+                                                          AiDataset? reference, string? refError, CancellationToken ct, string examples = "")
         {
             var sw = Stopwatch.StartNew();
             AiChatGateway.LoopResult loop;
@@ -228,7 +250,7 @@ namespace AccountERP.AI.Eval
                 using var caseCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
                 caseCts.CancelAfter(CaseTimeout);
                 var ctx = Context(plan, rp.Run.Id, caseCts.Token);
-                loop = await gw.LoopAsync(new List<AiChatGateway.Candidate> { rp.Candidate }, _ => new List<AiChatTurn> { new("user", c.Question) },
+                loop = await gw.LoopAsync(new List<AiChatGateway.Candidate> { rp.Candidate }, _ => new List<AiChatTurn> { new("user", c.Question + examples) },
                                           ctx, null, null, plan.MaxRounds, null!, null!, caseCts.Token);
                 if (loop.Stopped && ct.IsCancellationRequested) return null;
                 // 429 (حد المعدل) قبل أى نص أو أداة: إعادة واحدة بعد انتظار قصير.

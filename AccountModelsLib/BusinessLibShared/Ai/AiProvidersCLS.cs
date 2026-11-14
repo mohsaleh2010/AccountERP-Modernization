@@ -223,6 +223,15 @@ VALUES ({id}, {r.TaskKey}, {r.Model_Id}, {r.Priority}, {effort}, {r.MaxTokens}, 
             Read("SELECT SettingKey, SettingValue FROM AI_Settings", r => (Key: Str(r, 0), Value: Str(r, 1)))
                 .GroupBy(x => x.Key).ToDictionary(g => g.Key, g => g.First().Value, StringComparer.OrdinalIgnoreCase);
 
+        /// <summary>P7.7: يحفظ قيمة إعداد واحد (تحديث إن وُجد، وإلا إدراج).</summary>
+        public void SetSetting(string key, string value, long userId)
+        {
+            var db = _newOpp().db;
+            int n = db.Database.ExecuteSqlInterpolated($"UPDATE AI_Settings SET SettingValue = {value}, UpdatedBy = {userId}, UpdatedAt = GETDATE() WHERE SettingKey = {key}");
+            if (n == 0)
+                db.Database.ExecuteSqlInterpolated($"INSERT INTO AI_Settings (Id, SettingKey, SettingValue, CreatedBy) VALUES ({CallSnowflakeIdGenerate.GenerateNewId()}, {key}, {value}, {userId})");
+        }
+
         // ───────────── أدوات ─────────────
 
         private List<T> Read<T>(string sql, Func<DbDataReader, T> map)

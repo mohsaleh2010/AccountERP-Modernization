@@ -161,6 +161,8 @@ namespace AccountModelsLib
         /// <summary>فارغ = إعداد ربط «محادثة» لنفس النموذج إن وُجد.</summary>
         public string Effort { get; set; }
         public int? MaxTokens { get; set; }
+        /// <summary>P7.7: عدد الأمثلة التلقائية لهذا التشغيل؛ null = الإعداد الحالى KnowledgeAutoExamples، 0 = بدونها.</summary>
+        public int? AutoExamples { get; set; }
         /// <summary>وافق المدير على العدد والتكلفة التقديرية (مربع الموافقة). بدونه يُرفض التشغيل.</summary>
         public bool Confirmed { get; set; }
     }
@@ -188,6 +190,49 @@ namespace AccountModelsLib
         public decimal? TotalCost { get; set; }
         /// <summary>سبب منع التشغيل (فارغ = مسموح).</summary>
         public string Blocked { get; set; } = "";
+        /// <summary>P7.7: عدد الأمثلة التلقائية الفعلى لهذا التشغيل.</summary>
+        public int AutoExamples { get; set; }
+    }
+
+    /// <summary>
+    /// P7.7: دليل التقييم على فائدة الأمثلة التلقائية: أحدث تشغيل مكتمل بها (بنفس العدد) وأحدث تشغيل مكتمل بدونها لنفس النموذج،
+    /// مقارنةً على الحالات المشتركة (نفس المفتاح والإصدار). التفعيل بلا تحسّن يحتاج تأكيداً صريحاً من المدير.
+    /// </summary>
+    public class AiAutoExamplesStatus
+    {
+        /// <summary>الإعداد الحالى (0 = موقوفة).</summary>
+        public int Current { get; set; }
+        /// <summary>العدد الذى حُسب له الدليل.</summary>
+        public int Count { get; set; }
+        /// <summary>أمثلة «المعرفة» المفعّلة (مصدر الأمثلة التلقائية).</summary>
+        public int ActiveExamples { get; set; }
+        public bool HasEvidence { get; set; }
+        public bool Improved { get; set; }
+        public string ModelName { get; set; } = "";
+        public long? RunOnId { get; set; }
+        public long? RunOffId { get; set; }
+        public DateTime? OnAt { get; set; }
+        public DateTime? OffAt { get; set; }
+        public int CommonCases { get; set; }
+        public int PassOn { get; set; }
+        public int PassOff { get; set; }
+        /// <summary>أقل عدد حالات مشتركة ليُعتد بالمقارنة.</summary>
+        public const int MinCommonCases = 10;
+    }
+
+    public static class AiEvalConfig
+    {
+        /// <summary>P7.7: knowledge_auto_examples من ConfigJson لتشغيل (0 إن غاب أو تعذّرت القراءة).</summary>
+        public static int AutoExamplesOf(string configJson)
+        {
+            if (string.IsNullOrWhiteSpace(configJson)) return 0;
+            try
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(configJson);
+                return doc.RootElement.TryGetProperty("knowledge_auto_examples", out var v) && v.ValueKind == System.Text.Json.JsonValueKind.Number && v.TryGetInt32(out int n) ? n : 0;
+            }
+            catch (System.Text.Json.JsonException) { return 0; }
+        }
     }
 
     public class AiEvalStartResult
@@ -244,5 +289,11 @@ namespace AccountModelsLib
         AiEvalProgress GetProgress(long groupId);
         List<AiEvalRunRow> GetRuns(int top = 100);
         List<AiEvalResultRow> GetResults(long runId);
+
+        // P7.7: الأمثلة التلقائية (موقوفة افتراضياً؛ تُفعَّل بدليل من التقييم)
+        /// <summary>count = العدد المراد تقييمه؛ null = الإعداد الحالى (أو 3 إن كان موقوفاً).</summary>
+        AiAutoExamplesStatus GetAutoExamplesStatus(int? count = null);
+        /// <summary>0 = إيقاف (مسموح دائماً). التفعيل بلا دليل تحسّن يُرفض إلا مع overrideEvidence.</summary>
+        void SetAutoExamples(int count, bool overrideEvidence, long userId);
     }
 }

@@ -5563,4 +5563,30 @@
   <data name="AIF_CaseSaved" xml:space="preserve"><value>Cas d'évaluation ajouté</value></data>
   <data name="AIF_Rejected" xml:space="preserve"><value>Avis rejeté</value></data>
   <data name="AIF_Reopened" xml:space="preserve"><value>Avis rouvert</value></data>
+  <data name="AIE_AutoEx" xml:space="preserve"><value>Exemples automatiques</value></data>
+  <data name="AIE_AutoExHelp" xml:space="preserve"><value>Pour les mesurer : lancez le même modèle une fois sans et une fois avec, puis comparez.</value></data>
+  <data name="AIE_AutoExCurrent" xml:space="preserve"><value>Réglage actuel ({0})</value></data>
+  <data name="AIE_AutoExOff" xml:space="preserve"><value>Sans exemples</value></data>
+  <data name="AIE_AutoExN" xml:space="preserve"><value>{0} exemples</value></data>
+  <data name="AIE_EstAutoEx" xml:space="preserve"><value>Chaque cas est envoyé avec jusqu'à {0} exemples approuvés similaires.</value></data>
+  <data name="AIE_EstAutoExOff" xml:space="preserve"><value>Sans exemples automatiques.</value></data>
+  <data name="AIE_RunAutoEx" xml:space="preserve"><value>Exemples : {0}</value></data>
+  <data name="AIE_RunAutoExOff" xml:space="preserve"><value>Sans exemples</value></data>
+  <data name="AIE_WAutoEx" xml:space="preserve"><value>Exemples automatiques différents : A = {0}, B = {1} (voulu pour les mesurer).</value></data>
+  <data name="AIK_AxTitle" xml:space="preserve"><value>Exemples automatiques</value></data>
+  <data name="AIK_AxOn" xml:space="preserve"><value>Activés : jusqu'à {0} exemples par question</value></data>
+  <data name="AIK_AxOff" xml:space="preserve"><value>Désactivés</value></data>
+  <data name="AIK_AxHint" xml:space="preserve"><value>Ajoute à la question, pour le modèle seulement, les exemples approuvés les plus proches (invisibles dans la discussion). À activer seulement si l'évaluation montre un gain.</value></data>
+  <data name="AIK_AxActive" xml:space="preserve"><value>Exemples actifs dans la base : {0}</value></data>
+  <data name="AIK_AxCount" xml:space="preserve"><value>Nombre d'exemples</value></data>
+  <data name="AIK_AxOverride" xml:space="preserve"><value>Activer même sans preuve de gain par l'évaluation</value></data>
+  <data name="AIK_AxEnable" xml:space="preserve"><value>Activer ({0})</value></data>
+  <data name="AIK_AxDisable" xml:space="preserve"><value>Désactiver</value></data>
+  <data name="AIK_AxSavedOn" xml:space="preserve"><value>Exemples automatiques activés ({0}).</value></data>
+  <data name="AIK_AxSavedOff" xml:space="preserve"><value>Exemples automatiques désactivés.</value></data>
+  <data name="AIK_AxNoOn" xml:space="preserve"><value>Aucune évaluation terminée avec {0} exemples. Dans l'onglet Évaluation, lancez le même modèle une fois sans exemples et une fois avec ce nombre.</value></data>
+  <data name="AIK_AxNoOff" xml:space="preserve"><value>Il existe une évaluation avec exemples pour « {0} » mais aucune terminée sans pour le même modèle.</value></data>
+  <data name="AIK_AxFew" xml:space="preserve"><value>Seulement {0} cas communs ; il en faut au moins {1}.</value></data>
+  <data name="AIK_AxBetter" xml:space="preserve"><value>« {0} » : {1} réussis avec exemples contre {2} sans, sur {3} cas communs — amélioration.</value></data>
+  <data name="AIK_AxNotBetter" xml:space="preserve"><value>« {0} » : {1} réussis avec exemples contre {2} sans, sur {3} cas communs — pas de gain.</value></data>
 </root>

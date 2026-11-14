@@ -36,6 +36,12 @@
                 <MudSelectItem Value="0L">@Tr("AIE_None")</MudSelectItem>
                 @foreach (var m in Models.Where(m => m.Id != _modelA)) { <MudSelectItem Value="@m.Id">@ModelText(m)</MudSelectItem> }
             </MudSelect>
+            @* P7.7: قياس الأمثلة التلقائية — تشغيل بدونها وآخر بها لنفس النموذج ثم المقارنة *@
+            <MudSelect T="int" @bind-Value="_autoEx" Label="@Tr("AIE_AutoEx")" Variant="Variant.Outlined" HelperText="@Tr("AIE_AutoExHelp")">
+                <MudSelectItem Value="-1">@Tr("AIE_AutoExCurrent", CurrentAutoExamples)</MudSelectItem>
+                <MudSelectItem Value="0">@Tr("AIE_AutoExOff")</MudSelectItem>
+                @foreach (var n in new[] { 1, 2, 3, 5 }) { <MudSelectItem Value="@n">@Tr("AIE_AutoExN", n)</MudSelectItem> }
+            </MudSelect>
             @if (PresetCaseIds.Count == 0)
             {
                 <MudSelect T="string" MultiSelection="true" @bind-SelectedValues="_cats" Label="@Tr("AIE_Categories")" Variant="Variant.Outlined"
@@ -67,6 +73,7 @@
         {
             <div class="aier-est" aria-live="polite">
                 <div class="mb-2">@Tr("AIE_EstCases", _est.CaseCount, _est.MaxCases)</div>
+                <div class="mb-2">@(_est.AutoExamples > 0 ? Tr("AIE_EstAutoEx", _est.AutoExamples) : Tr("AIE_EstAutoExOff"))</div>
                 <table>
                     <thead><tr><th>@Tr("AIE_Model")</th><th>@Tr("AIE_InTok")</th><th>@Tr("AIE_OutTok")</th><th>@Tr("AIE_Cost")</th><th>@Tr("AIE_Basis")</th></tr></thead>
                     <tbody>
@@ -124,8 +131,11 @@
     [Parameter] public long DefaultModelId { get; set; }
     /// <summary>تشغيل حالات محددة (من قائمة الحالات) بدل الفلاتر.</summary>
     [Parameter] public List<long> PresetCaseIds { get; set; } = new();
+    /// <summary>P7.7: الإعداد الحالى KnowledgeAutoExamples (للعرض فى الخيار «حسب الإعداد»).</summary>
+    [Parameter] public int CurrentAutoExamples { get; set; }
 
     private long _modelA, _modelB;
+    private int _autoEx = -1;
     private IReadOnlyCollection<string> _cats = new HashSet<string>(), _checks = new HashSet<string>();
     private string _dialect = "";
     private int? _limit;
@@ -146,11 +156,12 @@
         Filter = PresetCaseIds.Count > 0
             ? new AiEvalFilter { CaseIds = PresetCaseIds.ToList() }
             : new AiEvalFilter { Categories = _cats.ToList(), CheckTypes = _checks.ToList(), Dialect = _dialect, Limit = _limit },
+        AutoExamples = _autoEx < 0 ? null : _autoEx,
         Confirmed = _confirmed,
     };
 
     /// <summary>أى تغيير بعد التقدير يُلزم بإعادة حسابه (فلا يوافق المدير على رقم قديم).</summary>
-    private string Key() => string.Join("|", _modelA, _modelB, string.Join(",", _cats.OrderBy(x => x)), string.Join(",", _checks.OrderBy(x => x)), _dialect, _limit);
+    private string Key() => string.Join("|", _modelA, _modelB, string.Join(",", _cats.OrderBy(x => x)), string.Join(",", _checks.OrderBy(x => x)), _dialect, _limit, _autoEx);
     private bool EstimateStale => _est != null && _estKey != Key();
 
     private async Task EstimateAsync()

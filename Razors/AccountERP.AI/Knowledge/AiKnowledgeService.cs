@@ -228,13 +228,18 @@ namespace AccountERP.AI.Knowledge
         /// <summary>
         /// P7.3: الترتيب نفسه الذى تستخدمه SearchAsync، بصفوف منظَّمة (لـ «تجربة البحث»). Rows = null ⇒ fallback (بحث الكود).
         /// </summary>
-        public async Task<(List<AiKnowledgeRow>? Rows, string Mode)> RankAsync(string query, ISet<string> allowedViews, Func<string, bool> hasRoute, CancellationToken ct, int top = 6)
+        public Task<(List<AiKnowledgeRow>? Rows, string Mode)> RankAsync(string query, ISet<string> allowedViews, Func<string, bool> hasRoute, CancellationToken ct, int top = 6) =>
+            RankAsync(query, allowedViews, hasRoute, ct, top, null, 1);
+
+        private async Task<(List<AiKnowledgeRow>? Rows, string Mode)> RankAsync(string query, ISet<string> allowedViews, Func<string, bool> hasRoute, CancellationToken ct, int top,
+                                                                                Func<AiKnowledgeRow, bool>? only, int minKeywordScore)
         {
             var rows = ActiveRows();
             if (rows == null || rows.Count == 0) return (null, SearchModes.Fallback);
 
-            var visible = rows.Where(r => Visible(r, allowedViews, hasRoute)).ToList();
-            var keyword = KeywordRank(query, visible).Select(h => h.Row).ToList();
+            var visible = rows.Where(r => Visible(r, allowedViews, hasRoute) && (only == null || only(r))).ToList();
+            if (visible.Count == 0) return (new List<AiKnowledgeRow>(), SearchModes.Keyword);
+            var keyword = KeywordRank(query, visible).Where(h => h.Score >= minKeywordScore).Select(h => h.Row).ToList();
             if (_embed == null) return (keyword.Take(top).ToList(), SearchModes.Keyword);
             List<AiKnowledgeRow> vector = new();
             // فهرس فارغ لهذا النموذج (لم يُبنَ بعد) = لا داعى لتضمين السؤال وصرف رصيد بلا فائدة.
@@ -258,6 +263,45 @@ namespace AccountERP.AI.Knowledge
             if (vector.Count == 0) return (keyword.Take(top).ToList(), SearchModes.Keyword);
             return (AiKnowledgeIndex.Fuse(keyword.Take(AiKnowledgeIndex.Depth).ToList(), vector, top), SearchModes.Hybrid);
         }
+
+        // ───────────── P7.7: الأمثلة التلقائية (few-shot) ─────────────
+
+        /// <summary>
+        /// P7.7: أقرب أمثلة معتمدة (Kind=example) لسؤال المستخدم من المرئى له فقط، بنفس الترتيب الهجين. بالكلمات وحدها يُشترط تطابق كلمتين
+        /// (أو كل كلمات سؤال قصير) حتى لا يُلحق مثال بعيد. exclude: يُستبعد ما يطابق نصه (التقييم يستبعد مثالاً هو السؤال نفسه). لا يرمى.
+        /// </summary>
+        public async Task<List<AiKnowledgeRow>> ExamplesAsync(string query, ISet<string> allowedViews, Func<string, bool> hasRoute, int count, CancellationToken ct,
+                                                              Func<AiKnowledgeRow, bool>? exclude = null)
+        {
+            if (count <= 0 || string.IsNullOrWhiteSpace(query)) return new();
+            try
+            {
+                int words = Words(query).Count;
+                if (words == 0) return new();
+                var (rows, _) = await RankAsync(query, allowedViews, hasRoute, ct, count, r => r.Kind == AiKnowledgeKinds.Example && (exclude == null || !exclude(r)), Math.Min(2, words));
+                return rows ?? new();
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
+            catch (Exception ex)
+            {
+                LastError = ex.Message;
+                operations.DataDictionaryLogerException(ex);
+                return new();
+            }
+        }
+
+        /// <summary>P7.7: كتلة الأمثلة كما تُلحق بآخر رسالة للمستخدم (للنموذج فقط، لا تُحفظ فى المحادثة).</summary>
+        public static string ExamplesBlock(IReadOnlyList<AiKnowledgeRow> examples)
+        {
+            if (examples == null || examples.Count == 0) return "";
+            var sb = new System.Text.StringBuilder("\n\n---\n(أمثلة معتمدة مشابهة من قاعدة المعرفة، للاسترشاد فقط: تأكّد أنها تناسب السؤال وعدّل الاستعلام حسبه، ولا تذكرها للمستخدم.)");
+            int i = 0;
+            foreach (var r in examples) sb.Append('\n').Append(++i).Append(") ").Append(r.TitleAr).Append(":\n").Append(r.Content);
+            return sb.ToString();
+        }
+
+        /// <summary>P7.7: عدد المقاطع المفعّلة من نوع مثال.</summary>
+        public int ActiveExampleCount() => ActiveRows()?.Count(r => r.Kind == AiKnowledgeKinds.Example) ?? 0;
 
         // ───────────── P7.3: إدارة المقاطع من تبويب «المعرفة» ─────────────
 

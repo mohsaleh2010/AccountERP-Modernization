@@ -5561,4 +5561,30 @@
   <data name="AIF_CaseSaved" xml:space="preserve"><value>أُضيفت حالة التقييم</value></data>
   <data name="AIF_Rejected" xml:space="preserve"><value>رُفضت الملاحظة</value></data>
   <data name="AIF_Reopened" xml:space="preserve"><value>أُعيد فتح الملاحظة</value></data>
+  <data name="AIE_AutoEx" xml:space="preserve"><value>الأمثلة التلقائية</value></data>
+  <data name="AIE_AutoExHelp" xml:space="preserve"><value>لقياس فائدتها: شغّل نفس النموذج مرة بدونها ومرة بها ثم قارن.</value></data>
+  <data name="AIE_AutoExCurrent" xml:space="preserve"><value>حسب الإعداد الحالى ({0})</value></data>
+  <data name="AIE_AutoExOff" xml:space="preserve"><value>بدون أمثلة</value></data>
+  <data name="AIE_AutoExN" xml:space="preserve"><value>{0} أمثلة</value></data>
+  <data name="AIE_EstAutoEx" xml:space="preserve"><value>كل حالة تُرسل مع حتى {0} أمثلة معتمدة مشابهة.</value></data>
+  <data name="AIE_EstAutoExOff" xml:space="preserve"><value>بدون أمثلة تلقائية.</value></data>
+  <data name="AIE_RunAutoEx" xml:space="preserve"><value>أمثلة: {0}</value></data>
+  <data name="AIE_RunAutoExOff" xml:space="preserve"><value>بلا أمثلة</value></data>
+  <data name="AIE_WAutoEx" xml:space="preserve"><value>عدد الأمثلة التلقائية مختلف: A = {0}، B = {1} (مقصود عند قياس فائدتها).</value></data>
+  <data name="AIK_AxTitle" xml:space="preserve"><value>الأمثلة التلقائية</value></data>
+  <data name="AIK_AxOn" xml:space="preserve"><value>مفعّلة: حتى {0} أمثلة لكل سؤال</value></data>
+  <data name="AIK_AxOff" xml:space="preserve"><value>موقوفة</value></data>
+  <data name="AIK_AxHint" xml:space="preserve"><value>تُلحق أقرب الأمثلة المعتمدة بسؤال المستخدم للنموذج فقط (لا تظهر فى المحادثة). فعّلها فقط إذا أظهر التقييم تحسّناً.</value></data>
+  <data name="AIK_AxActive" xml:space="preserve"><value>أمثلة مفعّلة فى المعرفة: {0}</value></data>
+  <data name="AIK_AxCount" xml:space="preserve"><value>عدد الأمثلة</value></data>
+  <data name="AIK_AxOverride" xml:space="preserve"><value>أفعّلها رغم عدم وجود دليل تحسّن من التقييم</value></data>
+  <data name="AIK_AxEnable" xml:space="preserve"><value>تفعيل ({0})</value></data>
+  <data name="AIK_AxDisable" xml:space="preserve"><value>إيقاف</value></data>
+  <data name="AIK_AxSavedOn" xml:space="preserve"><value>فُعّلت الأمثلة التلقائية ({0}).</value></data>
+  <data name="AIK_AxSavedOff" xml:space="preserve"><value>أُوقفت الأمثلة التلقائية.</value></data>
+  <data name="AIK_AxNoOn" xml:space="preserve"><value>لا يوجد تشغيل تقييم مكتمل بـ {0} أمثلة بعد. من تبويب «التقييم» شغّل النموذج نفسه مرة «بدون أمثلة» ومرة بهذا العدد.</value></data>
+  <data name="AIK_AxNoOff" xml:space="preserve"><value>يوجد تشغيل بالأمثلة لـ «{0}» لكن لا تشغيل مكتمل بدونها لنفس النموذج للمقارنة.</value></data>
+  <data name="AIK_AxFew" xml:space="preserve"><value>الحالات المشتركة بين التشغيلين {0} فقط؛ يلزم {1} على الأقل لمقارنة يُعتد بها.</value></data>
+  <data name="AIK_AxBetter" xml:space="preserve"><value>«{0}»: نجحت {1} حالة بالأمثلة مقابل {2} بدونها من {3} حالة مشتركة — تحسّن.</value></data>
+  <data name="AIK_AxNotBetter" xml:space="preserve"><value>«{0}»: نجحت {1} حالة بالأمثلة مقابل {2} بدونها من {3} حالة مشتركة — لا تحسّن.</value></data>
 </root>

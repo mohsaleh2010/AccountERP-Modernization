@@ -298,6 +298,7 @@ CREATE NONCLUSTERED INDEX [IX_AI_Feedback_Status] ON [dbo].[AI_Feedback]([Review
             (AiSettingKeys.MaxUploadMb, "10"),
             (AiSettingKeys.EvalMaxCasesPerRun, "100"),
             (AiSettingKeys.EvalMaxCostPerRun, "0"),   // 0 = بلا حد (التشغيل يتطلب موافقة المدير على التكلفة التقديرية دائماً)
+            (AiSettingKeys.KnowledgeAutoExamples, "0"),   // P7.7: موقوفة حتى يُظهر التقييم تحسّناً
         };
 
         public static readonly List<string> LastErrors = new List<string>();

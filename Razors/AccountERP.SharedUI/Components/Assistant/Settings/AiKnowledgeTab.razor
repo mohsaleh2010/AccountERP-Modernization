@@ -4,10 +4,12 @@
    الـ Views للقراءة فقط (تُدار من الكود وتتبع الصلاحيات). التصميم حسب ui-ux-pro-max ونظام inv-* / ai-* للصفحة الأم. *@
 
 @using System.Globalization
+@using Microsoft.Extensions.DependencyInjection
 @using AccountERP.SharedUI.Services
 @inject LanguageService LangService
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject IServiceProvider ServiceProvider
 @implements IDisposable
 
 <style>
@@ -103,6 +105,54 @@
         </div>
     }
 </section>
+
+@* ───────────── P7.7: الأمثلة التلقائية (موقوفة افتراضياً؛ تُفعَّل بدليل من التقييم) ───────────── *@
+@if (_evalGw != null)
+{
+    <section class="inv-card ai-gap" aria-labelledby="aik-ax-h">
+        <h2 class="inv-card-title" id="aik-ax-h"><MudIcon Icon="@Icons.Material.Filled.School" />@Tr("AIK_AxTitle")</h2>
+        @if (_ax == null)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" aria-label="@Tr("AIK_Loading")" />
+        }
+        else
+        {
+            <div class="aik-status" aria-live="polite">
+                <div class="@("ico" + (_ax.Current > 0 ? "" : " warn"))" aria-hidden="true">
+                    <MudIcon Icon="@(_ax.Current > 0 ? Icons.Material.Filled.TaskAlt : Icons.Material.Filled.PauseCircle)" />
+                </div>
+                <div class="body">
+                    <div class="msg">@(_ax.Current > 0 ? Tr("AIK_AxOn", _ax.Current) : Tr("AIK_AxOff"))</div>
+                    <div class="ai-sub">@Tr("AIK_AxHint")</div>
+                    <div class="meta">
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Code">@Tr("AIK_AxActive", _ax.ActiveExamples)</MudChip>
+                    </div>
+                    <div class="aik-try mt-3">
+                        <MudSelect T="int" Value="_axCount" ValueChanged="AxCountChangedAsync" Label="@Tr("AIK_AxCount")" Variant="Variant.Outlined" Style="max-width:220px;" Disabled="_axBusy">
+                            @foreach (var n in new[] { 1, 2, 3, 5 }) { <MudSelectItem Value="@n">@Tr("AIE_AutoExN", n)</MudSelectItem> }
+                        </MudSelect>
+                    </div>
+                    <div class="@("ai-msg mt-2 " + (_ax.Improved ? "ok" : _ax.HasEvidence ? "bad" : ""))">@AxEvidence(_ax)</div>
+                    @if (!_ax.Improved)
+                    {
+                        <MudCheckBox T="bool" @bind-Value="_axOverride" Color="Color.Warning" Class="mt-2" Label="@Tr("AIK_AxOverride")" Disabled="_axBusy" />
+                    }
+                </div>
+                <div class="acts">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow"
+                               Disabled="@(_axBusy || (!_ax.Improved && !_axOverride) || _ax.Current == _axCount)" OnClick="@(() => SetAxAsync(_axCount))">
+                        @if (_axBusy) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                        @Tr("AIK_AxEnable", _axCount)
+                    </MudButton>
+                    @if (_ax.Current > 0)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Block" Disabled="_axBusy" OnClick="@(() => SetAxAsync(0))">@Tr("AIK_AxDisable")</MudButton>
+                    }
+                </div>
+            </div>
+        }
+    </section>
+}
 
 @* ───────────── تجربة البحث ───────────── *@
 <section class="inv-card ai-gap" aria-labelledby="aik-try-h">
@@ -282,9 +332,59 @@
     private string _kind = "", _state = "";
     private bool _loading, _busy, _rebuilding, _trying, _loaded;
 
-    protected override void OnInitialized() => LangService.OnLanguageChanged += OnLang;
+    // P7.7: الأمثلة التلقائية
+    private IAiEvalGateway? _evalGw;
+    private AiAutoExamplesStatus? _ax;
+    private int _axCount = 3;
+    private bool _axOverride, _axBusy;
+
+    protected override void OnInitialized()
+    {
+        LangService.OnLanguageChanged += OnLang;
+        _evalGw = ServiceProvider.GetService<IAiEvalGateway>();
+    }
     public void Dispose() => LangService.OnLanguageChanged -= OnLang;
     private void OnLang() => InvokeAsync(StateHasChanged);
+
+    private async Task LoadAxAsync(int? count)
+    {
+        if (_evalGw == null) return;
+        try
+        {
+            var gw = _evalGw;
+            _ax = await Bg(() => gw.GetAutoExamplesStatus(count));
+            _axCount = _ax.Count;
+            _axOverride = false;
+        }
+        catch (Exception ex) { _error = Tr("SystemError", Err(ex)); }
+    }
+
+    private async Task AxCountChangedAsync(int n)
+    {
+        _axCount = n;
+        await LoadAxAsync(n);
+    }
+
+    private async Task SetAxAsync(int n)
+    {
+        if (_evalGw == null) return;
+        _axBusy = true;
+        try
+        {
+            var gw = _evalGw; bool force = _axOverride; long uid = UserId;
+            await Bg(() => { gw.SetAutoExamples(n, force, uid); return 0; });
+            Snackbar.Add(n > 0 ? Tr("AIK_AxSavedOn", n) : Tr("AIK_AxSavedOff"), Severity.Success);
+            await LoadAxAsync(n > 0 ? n : _axCount);
+        }
+        catch (Exception ex) { _error = Err(ex); }
+        finally { _axBusy = false; }
+    }
+
+    private string AxEvidence(AiAutoExamplesStatus s) =>
+        s.RunOnId == null ? Tr("AIK_AxNoOn", s.Count)
+        : s.RunOffId == null ? Tr("AIK_AxNoOff", s.ModelName)
+        : !s.HasEvidence ? Tr("AIK_AxFew", s.CommonCases, AiAutoExamplesStatus.MinCommonCases)
+        : Tr(s.Improved ? "AIK_AxBetter" : "AIK_AxNotBetter", s.ModelName, s.PassOn, s.PassOff, s.CommonCases);
 
     /// <summary>يُستدعى من الصفحة عند فتح التبويب (تحميل كسول، ومرة أخرى بعد «إعادة التحميل»).</summary>
     public async Task LoadAsync()
@@ -297,6 +397,7 @@
             var gw = Gateway;
             (_rows, _status) = await Bg(() => (gw.GetKnowledge(), gw.GetKnowledgeIndexStatus()));
             _loaded = true;
+            await LoadAxAsync(_ax?.Count);
         }
         catch (Exception ex) { _error = Tr("SystemError", Err(ex)); }
         finally { _loading = false; StateHasChanged(); }

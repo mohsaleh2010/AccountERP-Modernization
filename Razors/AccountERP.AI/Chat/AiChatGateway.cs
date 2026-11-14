@@ -273,7 +273,7 @@ namespace AccountERP.AI.Chat
                 throw new InvalidOperationException("أحد المرفقات أُرسل بالفعل من نافذة أخرى.");
 
             var baseTurns = BuildTurns(history, ModelUserText(userRow.ContentJson));
-            return await RunAsync(conversationId, userRow, user!, context, candidates, _ => new List<AiChatTurn>(baseTurns), onDelta, onStatus, ct);
+            return await RunAsync(conversationId, userRow, user!, context, candidates, _ => new List<AiChatTurn>(baseTurns), onDelta, onStatus, ct, text);
         }
 
         /// <summary>
@@ -333,7 +333,7 @@ namespace AccountERP.AI.Chat
         /// <summary>حلقة الرد المشتركة (رسالة جديدة أو استئناف بعد إجابة): النموذج، الأدوات، التوقف عند ask_user، الحفظ.</summary>
         private async Task<AiChatTurnResult> RunAsync(long conversationId, AiMessageRow userRow, AiUserContext user, AiScreenContext context,
                                                       List<Candidate> candidates, Func<Candidate, List<AiChatTurn>> initialTurns,
-                                                      Action<string> onDelta, Action<string> onStatus, CancellationToken ct)
+                                                      Action<string> onDelta, Action<string> onStatus, CancellationToken ct, string? exampleQuery = null)
         {
             long userId = user.UserId;
             onStatus ??= _ => { };
@@ -343,6 +343,14 @@ namespace AccountERP.AI.Chat
             try { toolCtx.Attachments = _attachments.ListForConversation(conversationId, userId).Where(a => a.Status == AiAttachmentStatus.Active).Select(Files.AiAttachmentStore.View).ToList(); }
             catch (Exception ex) { operations.DataDictionaryLogerException(ex); }
             int maxRounds = MaxToolRounds();
+
+            // P7.7: أمثلة معتمدة مشابهة تُلحق بالسؤال الجديد للنموذج فقط (لا تُحفظ)، إن فعّلها المدير بعد أن أثبت التقييم فائدتها.
+            int autoN = string.IsNullOrWhiteSpace(exampleQuery) ? 0 : AutoExamples(SafeSettings());
+            if (autoN > 0 && toolCtx.AllowedViews.Count > 0)
+            {
+                var ex = await _tools.KnowledgeService.ExamplesAsync(exampleQuery!, toolCtx.AllowedViews, toolCtx.HasRoute, autoN, ct);
+                initialTurns = WithExamples(initialTurns, Knowledge.AiKnowledgeService.ExamplesBlock(ex));
+            }
 
             var sw = Stopwatch.StartNew();
             var loop = await LoopAsync(candidates, initialTurns, toolCtx, context, conversationId, maxRounds, onDelta, onStatus, ct);
@@ -849,6 +857,29 @@ namespace AccountERP.AI.Chat
             try { tax = Common.PermissionToShowTaxInvoiceOrNotORAll(); }
             catch (Exception ex) { operations.DataDictionaryLogerException(ex); tax = -2; }
             return new AiToolContext { User = user, AllowedViews = AiToolContext.ViewsFor(user, probe.HasRoute), TaxFilter = tax, Ct = ct };
+        }
+
+        /// <summary>P7.7: يُلحق كتلة الأمثلة بآخر دور نصى للمستخدم، للنماذج التى تدعم الأدوات فقط (الأمثلة استعلامات). لا شىء إن كانت فارغة.</summary>
+        internal static Func<Candidate, List<AiChatTurn>> WithExamples(Func<Candidate, List<AiChatTurn>> inner, string block)
+        {
+            if (string.IsNullOrEmpty(block)) return inner;
+            return c =>
+            {
+                var turns = inner(c);
+                if (c.Model.SupportsTools && turns.Count > 0 && turns[^1] is { Role: "user", Blocks: null } last)
+                    turns[^1] = last with { Text = last.Text + block };
+                return turns;
+            };
+        }
+
+        /// <summary>P7.7: قيمة KnowledgeAutoExamples مقيّدة بـ 0…MaxAutoExamples.</summary>
+        internal static int AutoExamples(IReadOnlyDictionary<string, string> settings) =>
+            settings.TryGetValue(AiSettingKeys.KnowledgeAutoExamples, out var v) && int.TryParse(v, out int n) ? Math.Clamp(n, 0, AiSettingKeys.MaxAutoExamples) : 0;
+
+        private Dictionary<string, string> SafeSettings()
+        {
+            try { return _providers.GetSettings(); }
+            catch (Exception ex) { operations.DataDictionaryLogerException(ex); return new(); }
         }
 
         private int MaxToolRounds()
