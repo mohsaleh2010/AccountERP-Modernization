@@ -51,6 +51,43 @@ namespace AccountModelsLib
         public DateTime? EmbeddedAt { get; set; }
     }
 
+    /// <summary>P7.2: متجه تضمين مخزّن (float32 LE مطبّع L2).</summary>
+    public class AiKnowledgeVector
+    {
+        public long Id { get; set; }
+        public string ContentHash { get; set; }
+        public int Dim { get; set; }
+        public byte[] Data { get; set; }
+    }
+
+    /// <summary>P7.2: حالة فهرس البحث الدلالى (لتبويب المعرفة P7.3).</summary>
+    public class AiKnowledgeIndexStatus
+    {
+        /// <summary>يوجد نموذج تضمين مربوط ومفعّل.</summary>
+        public bool HasModel { get; set; }
+        public long? ModelId { get; set; }
+        public string ModelName { get; set; } = "";
+        /// <summary>المقاطع المفعّلة.</summary>
+        public int Total { get; set; }
+        /// <summary>المفهرس منها بالنموذج الحالى.</summary>
+        public int Indexed { get; set; }
+        /// <summary>مفهرس بنموذج آخر (يحتاج إعادة بناء).</summary>
+        public int Stale { get; set; }
+        /// <summary>البحث الدلالى موقوف مؤقتاً بعد خطأ (حتى هذا الوقت UTC).</summary>
+        public DateTime? PausedUntilUtc { get; set; }
+        public string LastError { get; set; }
+        public string Message { get; set; } = "";
+    }
+
+    /// <summary>P7.2: نتيجة «بناء الفهرس».</summary>
+    public class AiKnowledgeRebuildResult
+    {
+        public int Embedded { get; set; }
+        public int Skipped { get; set; }
+        public int Failed { get; set; }
+        public string Message { get; set; } = "";
+    }
+
     /// <summary>
     /// P7: مقاطع معرفة المساعد (AI_Knowledge، جدول جديد): قاموس الـ Views والمسرد والقواعد والأمثلة. لا قراءة ولا كتابة فى جداول النظام القائمة.
     /// </summary>
@@ -124,6 +161,30 @@ UPDATE AI_Knowledge SET TitleAr = {Cut(k.TitleAr, 300)}, Content = {k.Content ??
        EmbeddedAt = CASE WHEN ISNULL(ContentHash, '') = {k.ContentHash ?? ""} THEN EmbeddedAt ELSE NULL END,
        UpdatedAt = {DateTime.Now}
 WHERE Id = {k.Id}");
+        }
+
+        /// <summary>P7.2: متجهات الصفوف المفعّلة لنموذج تضمين معيّن (صفوف نموذج آخر لا تُقرأ = قديمة).</summary>
+        public List<AiKnowledgeVector> ListVectors(long embeddingModelId)
+        {
+            var list = new List<AiKnowledgeVector>();
+            Exec(_newOpp().db, @"SELECT Id, ContentHash, EmbeddingDim, Embedding FROM AI_Knowledge
+WHERE IsActive = 1 AND EmbeddingModel_Id = @m AND Embedding IS NOT NULL", cmd => Add(cmd, "@m", embeddingModelId),
+                r => list.Add(new AiKnowledgeVector
+                {
+                    Id = r.GetInt64(0),
+                    ContentHash = r.IsDBNull(1) ? null : r.GetString(1).Trim(),
+                    Dim = r.IsDBNull(2) ? 0 : r.GetInt32(2),
+                    Data = (byte[])r.GetValue(3),
+                }));
+            return list;
+        }
+
+        /// <summary>P7.2: يحفظ متجه صف فقط إن لم يتغيّر محتواه منذ قراءته (ContentHash نفسه). يعيد false إن تغيّر.</summary>
+        public bool SetEmbedding(long id, string contentHash, byte[] data, long embeddingModelId, int dim)
+        {
+            return _newOpp().db.Database.ExecuteSqlInterpolated($@"
+UPDATE AI_Knowledge SET Embedding = {data}, EmbeddingModel_Id = {embeddingModelId}, EmbeddingDim = {dim}, EmbeddedAt = {DateTime.Now}
+WHERE Id = {id} AND ISNULL(ContentHash, '') = {contentHash ?? ""}") > 0;
         }
 
         public void SetActive(long id, bool active, long? userId)

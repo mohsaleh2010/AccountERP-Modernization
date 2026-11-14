@@ -14,6 +14,10 @@ namespace AccountERP.AI.Providers
     {
         public const string DefaultBaseUrl = "https://api.anthropic.com";
 
+        /// <summary>P7.2: Anthropic لا يوفّر واجهة تضمين؛ رسالة واضحة بدل فشل غامض.</summary>
+        public Task<List<float[]>> EmbedAsync(ProviderConnection c, string model, IReadOnlyList<string> texts, bool isQuery, TimeSpan timeout, CancellationToken ct) =>
+            throw new AiProviderException("مزوّد Anthropic لا يوفّر نماذج تضمين (embedding). اختر لمهمة «تضمين» نموذجاً من OpenAI أو Gemini أو Ollama أو خدمة متوافقة مع OpenAI.");
+
         private static AnthropicClient CreateClient(ProviderConnection c, HttpClient http, TimeSpan timeout)
         {
             if (string.IsNullOrEmpty(c.ApiKey))

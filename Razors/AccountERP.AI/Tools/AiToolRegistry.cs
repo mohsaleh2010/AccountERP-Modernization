@@ -108,7 +108,7 @@ namespace AccountERP.AI.Tools
                 Name = "search_schema",
                 Description = "ابحث فى قاموس بيانات النظام: الـ Views وأعمدتها، المسرد العربى للمصطلحات، قواعد العمل (الضريبة، صافى المبيعات...)، وأمثلة استعلامات موثّقة. استخدمها قبل كتابة استعلام عند الشك.",
                 Schema = Schema(new JsonObject { ["query"] = Str("كلمات البحث بالعربية أو الإنجليزية") }, "query"),
-            }, _ => true, SearchSchema);
+            }, _ => true, SearchSchema) { RunAsync = SearchSchemaAsync };
 
             yield return new ToolSpec(new AiToolDef
             {
@@ -374,6 +374,14 @@ namespace AccountERP.AI.Tools
             if (q.Length == 0) throw new ArgumentException("أدخل كلمات البحث.");
             // P7.1: من AI_Knowledge مع فلترة الصلاحية (الكود احتياطى إن تعذّرت قراءة الجدول).
             return new AiToolResult { Content = _knowledge.Search(q, c.AllowedViews, c.HasRoute), Title = "بحث فى القاموس: " + Short(q, 60) };
+        }
+
+        /// <summary>P7.2: البحث الهجين (كلمات + متجهات) إن وُجد نموذج تضمين، وإلا نفس SearchSchema.</summary>
+        private async Task<AiToolResult> SearchSchemaAsync(JsonObject a, AiToolContext c)
+        {
+            string q = Arg(a, "query");
+            if (q.Length == 0) throw new ArgumentException("أدخل كلمات البحث.");
+            return new AiToolResult { Content = await _knowledge.SearchAsync(q, c.AllowedViews, c.HasRoute, c.Ct), Title = "بحث فى القاموس: " + Short(q, 60) };
         }
 
         private Dictionary<string, object> Session(AiToolContext c) => new() { ["ai_tax"] = c.TaxFilter, ["ai_user"] = c.User.UserId };

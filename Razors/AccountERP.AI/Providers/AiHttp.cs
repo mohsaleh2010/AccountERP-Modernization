@@ -26,16 +26,24 @@ namespace AccountERP.AI.Providers
         }
 
         /// <summary>يرسل GET ويعيد JSON. defaultAuthHeader: null = Bearer.</summary>
-        public static async Task<JsonDocument> GetJsonAsync(ProviderConnection c, string relativeOrAbsolute, string? defaultAuthHeader, CancellationToken ct)
+        public static Task<JsonDocument> GetJsonAsync(ProviderConnection c, string relativeOrAbsolute, string? defaultAuthHeader, CancellationToken ct) =>
+            SendJsonAsync(c, HttpMethod.Get, relativeOrAbsolute, null, defaultAuthHeader, c.Timeout, ct);
+
+        /// <summary>P7.2: POST JSON بمفتاح المزوّد ويعيد JSON (التضمين). timeout = مهلة هذا الطلب.</summary>
+        public static Task<JsonDocument> PostJsonAsync(ProviderConnection c, string relativeOrAbsolute, string jsonBody, string? defaultAuthHeader, TimeSpan timeout, CancellationToken ct) =>
+            SendJsonAsync(c, HttpMethod.Post, relativeOrAbsolute, jsonBody, defaultAuthHeader, timeout, ct);
+
+        private static async Task<JsonDocument> SendJsonAsync(ProviderConnection c, HttpMethod method, string relativeOrAbsolute, string? jsonBody, string? defaultAuthHeader, TimeSpan timeout, CancellationToken ct)
         {
             var url = relativeOrAbsolute.StartsWith("http", StringComparison.OrdinalIgnoreCase)
                 ? new Uri(relativeOrAbsolute)
                 : new Uri(c.BaseUrl.AbsoluteUri.TrimEnd('/') + "/" + relativeOrAbsolute.TrimStart('/'));
             using var http = CreateClient(c);
-            using var req = new HttpRequestMessage(HttpMethod.Get, url);
+            using var req = new HttpRequestMessage(method, url);
+            if (jsonBody != null) req.Content = new StringContent(jsonBody, System.Text.Encoding.UTF8, "application/json");
             ApplyAuth(req, c, defaultAuthHeader);
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            cts.CancelAfter(c.Timeout);
+            cts.CancelAfter(timeout);
             HttpResponseMessage resp;
             try
             {
@@ -43,7 +51,7 @@ namespace AccountERP.AI.Providers
             }
             catch (OperationCanceledException) when (!ct.IsCancellationRequested)
             {
-                throw new AiProviderException($"انتهت مهلة الاتصال ({(int)c.Timeout.TotalSeconds} ثانية). تأكد أن الخدمة تعمل وأن العنوان صحيح.");
+                throw new AiProviderException($"انتهت مهلة الاتصال ({Math.Max(1, (int)timeout.TotalSeconds)} ثانية). تأكد أن الخدمة تعمل وأن العنوان صحيح.");
             }
             catch (HttpRequestException ex)
             {

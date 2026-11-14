@@ -19,9 +19,12 @@ namespace AccountERP.AI
         private readonly AiSignInService _signIn;
         private readonly Tools.ReadOnlySqlExecutor _sql;
         private readonly AiToolAuditCLS _audit = new();
+        private readonly Knowledge.AiKnowledgeService? _knowledge;
 
-        public AiAdminGateway(AiKeyProtector keys, ProviderRegistry registry, AiSignInStore signInStore, AiSignInService signIn, Tools.ReadOnlySqlExecutor sql)
+        public AiAdminGateway(AiKeyProtector keys, ProviderRegistry registry, AiSignInStore signInStore, AiSignInService signIn, Tools.ReadOnlySqlExecutor sql,
+            Knowledge.AiKnowledgeService? knowledge = null)
         {
+            _knowledge = knowledge;
             _keys = keys;
             _registry = registry;
             _signInStore = signInStore;
@@ -218,7 +221,20 @@ namespace AccountERP.AI
                 }
             }
             _cls.ReplaceRouting(clean, userId);
+            _knowledge?.Embeddings?.InvalidateRoute();   // P7.2: نموذج «تضمين» الجديد يُقرأ فوراً
         }
+
+        // ───────────── P7.2: فهرس البحث الدلالى ─────────────
+
+        public AiKnowledgeIndexStatus GetKnowledgeIndexStatus()
+        {
+            if (_knowledge == null) return new AiKnowledgeIndexStatus { Message = "خدمة المعرفة غير مفعّلة." };
+            _knowledge.Embeddings?.InvalidateRoute();
+            return _knowledge.GetIndexStatus();
+        }
+
+        public Task<AiKnowledgeRebuildResult> RebuildKnowledgeIndexAsync(bool all, CancellationToken ct = default) =>
+            _knowledge == null ? throw new InvalidOperationException("خدمة المعرفة غير مفعّلة.") : _knowledge.RebuildIndexAsync(all, ct);
 
         public Dictionary<string, string> GetSettings() => _cls.GetSettings();
 

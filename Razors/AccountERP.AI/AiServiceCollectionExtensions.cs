@@ -28,7 +28,9 @@ namespace AccountERP.AI
             services.AddSingleton<Tools.AiDatasetCache>();   // P3: بيانات التقارير على الخادم
             services.AddSingleton<Files.AiAttachmentStore>();   // P6: مرفقات المساعد (AI:AttachmentsPath اختيارى)
             services.AddSingleton<Files.AiDocumentExtractor>();   // P6: extract_document بنموذج الرؤية
-            services.AddSingleton<Knowledge.AiKnowledgeService>();   // P7: معرفة المساعد من AI_Knowledge
+            services.AddSingleton<Knowledge.AiEmbeddingService>();   // P7.2: نموذج التضمين (مهمة «تضمين») + قاطع
+            services.AddSingleton<Knowledge.AiKnowledgeIndex>();   // P7.2: متجهات المعرفة فى الذاكرة
+            services.AddSingleton(sp => new Knowledge.AiKnowledgeService(null, sp.GetRequiredService<Knowledge.AiEmbeddingService>(), sp.GetRequiredService<Knowledge.AiKnowledgeIndex>()));   // P7: معرفة المساعد من AI_Knowledge
             services.AddSingleton<Tools.AiToolRegistry>();
             services.AddScoped<IAiChatGateway, Chat.AiChatGateway>();   // P1: المحادثة، P2: مع أدوات القراءة
             return services;

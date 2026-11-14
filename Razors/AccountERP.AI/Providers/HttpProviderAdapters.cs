@@ -9,6 +9,9 @@ namespace AccountERP.AI.Providers
         public Task<Chat.AiChatOutcome> StreamChatAsync(ProviderConnection c, Chat.AiChatCall call, Action<string> onDelta, CancellationToken ct) =>
             HttpChatStreaming.OpenAiCompatibleAsync(c, call, onDelta, ct);
 
+        public Task<List<float[]>> EmbedAsync(ProviderConnection c, string model, IReadOnlyList<string> texts, bool isQuery, TimeSpan timeout, CancellationToken ct) =>
+            HttpEmbeddings.OpenAiCompatibleAsync(c, model, texts, timeout, ct);
+
         public async Task<List<AiRemoteModel>> ListModelsAsync(ProviderConnection c, CancellationToken ct)
         {
             using var doc = await AiHttp.GetJsonAsync(c, "models", null, ct);
@@ -42,6 +45,9 @@ namespace AccountERP.AI.Providers
         public Task<Chat.AiChatOutcome> StreamChatAsync(ProviderConnection c, Chat.AiChatCall call, Action<string> onDelta, CancellationToken ct) =>
             HttpChatStreaming.OllamaAsync(c, call, onDelta, ct);
 
+        public Task<List<float[]>> EmbedAsync(ProviderConnection c, string model, IReadOnlyList<string> texts, bool isQuery, TimeSpan timeout, CancellationToken ct) =>
+            HttpEmbeddings.OllamaAsync(c, model, texts, timeout, ct);
+
         public async Task<List<AiRemoteModel>> ListModelsAsync(ProviderConnection c, CancellationToken ct)
         {
             using var doc = await AiHttp.GetJsonAsync(c, "api/tags", null, ct);
@@ -68,6 +74,9 @@ namespace AccountERP.AI.Providers
     {
         public Task<Chat.AiChatOutcome> StreamChatAsync(ProviderConnection c, Chat.AiChatCall call, Action<string> onDelta, CancellationToken ct) =>
             HttpChatStreaming.GeminiAsync(c, call, onDelta, ct);
+
+        public Task<List<float[]>> EmbedAsync(ProviderConnection c, string model, IReadOnlyList<string> texts, bool isQuery, TimeSpan timeout, CancellationToken ct) =>
+            HttpEmbeddings.GeminiAsync(c, model, texts, isQuery, timeout, ct);
 
         public async Task<List<AiRemoteModel>> ListModelsAsync(ProviderConnection c, CancellationToken ct)
         {
@@ -103,6 +112,9 @@ namespace AccountERP.AI.Providers
     {
         public Task<Chat.AiChatOutcome> StreamChatAsync(ProviderConnection c, Chat.AiChatCall call, Action<string> onDelta, CancellationToken ct) =>
             HttpChatStreaming.AzureAsync(c, call, onDelta, ct);
+
+        public Task<List<float[]>> EmbedAsync(ProviderConnection c, string model, IReadOnlyList<string> texts, bool isQuery, TimeSpan timeout, CancellationToken ct) =>
+            HttpEmbeddings.AzureAsync(c, model, texts, timeout, ct);
 
         public async Task<List<AiRemoteModel>> ListModelsAsync(ProviderConnection c, CancellationToken ct)
         {

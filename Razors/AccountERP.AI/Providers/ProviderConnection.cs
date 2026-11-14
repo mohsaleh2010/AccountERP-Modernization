@@ -40,6 +40,12 @@ namespace AccountERP.AI.Providers
         /// وOperationCanceledException عند الإيقاف (ct)؛ المستدعى يجمع النص المبثوث من onDelta فيحفظ الجزء المكتوب.
         /// </summary>
         Task<Chat.AiChatOutcome> StreamChatAsync(ProviderConnection c, Chat.AiChatCall call, Action<string> onDelta, CancellationToken ct);
+
+        /// <summary>
+        /// P7.2: متجه تضمين لكل نص بنفس الترتيب (غير مطبّع؛ المستدعى يطبّعه). isQuery يفرّق سؤال المستخدم عن المقاطع (Gemini taskType).
+        /// timeout يغلب مهلة المزوّد (3 ثوانٍ لسؤال البحث). يرمى AiProviderException برسالة عربية.
+        /// </summary>
+        Task<List<float[]>> EmbedAsync(ProviderConnection c, string model, IReadOnlyList<string> texts, bool isQuery, TimeSpan timeout, CancellationToken ct);
     }
 
     /// <summary>خطأ من المزوّد برسالة عربية جاهزة للعرض (بلا مفاتيح).</summary>

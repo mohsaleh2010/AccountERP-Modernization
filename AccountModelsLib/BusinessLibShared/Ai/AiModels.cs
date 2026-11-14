@@ -242,6 +242,11 @@ namespace AccountModelsLib
         // P2: سجل تدقيق الأدوات وحالة اتصال القراءة
         List<AiToolAuditView> GetToolAudit(string outcome, string search, int top = 300);
         AiReadOnlyStatus GetReadOnlyStatus();
+
+        // P7.2: فهرس البحث الدلالى للمعرفة
+        AiKnowledgeIndexStatus GetKnowledgeIndexStatus();
+        /// <summary>all=false: غير المفهرس بالنموذج الحالى فقط. يرمى InvalidOperationException برسالة عربية.</summary>
+        Task<AiKnowledgeRebuildResult> RebuildKnowledgeIndexAsync(bool all, CancellationToken ct = default);
     }
 
     // ───────────── P1: المحادثة ─────────────
