@@ -207,6 +207,27 @@ LEFT JOIN dbo.Supplier su ON su.Id = m.Supplier_Id
 WHERE o.Order_No <> 0 AND o.Order_No <> -1
   AND (CAST(SESSION_CONTEXT(N'ai_box_perm') AS int) = 0
        OR (CAST(SESSION_CONTEXT(N'ai_box_perm') AS int) = 1 AND " + BoxPermToken + @"));"),
+            // P8.4 (ai-assistant-p84-plan.md ش23، §4): صف لكل سطر قيد. is_manual = Reference_Type 0 (فحص 6)؛ Journal_Name ممتلئ دائماً (فحص 11).
+            // لا فلتر ضريبى ولا SESSION_CONTEXT (القيود ليست فواتير). الماسح يقرأ منه للقراءة فقط.
+            ("v_gl_entries", @"CREATE OR ALTER VIEW ai.v_gl_entries AS
+SELECT d.ID AS line_id, l.ID AS entry_id, l.Entry_No AS entry_no, CONVERT(date, l.Entry_Date) AS entry_date,
+       l.Insert_ServerDateTime AS inserted_at, l.journal_Code AS journal_code, l.Journal_Name AS journal_name,
+       l.Branch_Id_Entry AS branch_id, b.Branch_Name AS branch_name, l.Year_Financial_Period_Id AS period_id,
+       ISNULL(l.Reference_Type, 0) AS reference_type, l.Reference_Type_Table_Id AS reference_id,
+       CASE WHEN ISNULL(l.Reference_Type, 0) = 0 THEN 1 ELSE 0 END AS is_manual,
+       CASE WHEN ISNULL(l.IS_Transfer_To_Gl_Flage, 0) = 1 THEN 1 ELSE 0 END AS is_posted,
+       CASE WHEN ISNULL(l.IS_FirstBalance, 0) = 1 THEN 1 ELSE 0 END AS is_opening,
+       CASE WHEN ISNULL(l.IsProfitLossClose, 0) = 1 THEN 1 ELSE 0 END AS is_closing,
+       l.User_ID_Login AS user_id, l.Entry_Notes AS entry_notes,
+       d.Line_No AS line_no, d.Submain_Account_ID AS account_id, a.SubAccount_NO AS account_no,
+       COALESCE(a.SubAccount_Name, d.Account_Name) AS account_name, d.CostCenter_Id AS cost_center_id,
+       ISNULL(d.Import_Value, 0) AS debit, ISNULL(d.Export_Value, 0) AS credit,
+       ISNULL(d.Equivalent_Import_Value, 0) AS debit_equivalent, ISNULL(d.Equivalent_Export_Value, 0) AS credit_equivalent,
+       d.Entry_Currency_ID AS currency_id, d.Notes_Details AS line_notes
+FROM dbo.Account_Entry_Details d
+INNER JOIN dbo.Account_Entry_List l ON l.ID = d.Account_Entry_List_ID
+LEFT JOIN dbo.Submain_Account a ON a.Id = d.Submain_Account_ID
+LEFT JOIN dbo.Account_Branches b ON b.Id = l.Branch_Id_Entry;"),
         };
 
         /// <summary>

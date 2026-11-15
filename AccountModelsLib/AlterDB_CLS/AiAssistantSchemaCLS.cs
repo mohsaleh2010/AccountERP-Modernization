@@ -356,6 +356,70 @@ CREATE NONCLUSTERED INDEX [IX_AI_BriefDeliveries_User_Read] ON [dbo].[AI_BriefDe
     [HiddenAt] [datetime] NULL,",
              @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_SearchRecent_User_Kind_Key] ON [dbo].[AI_SearchRecent]([User_Id], [Kind], [RefKey]);
 CREATE NONCLUSTERED INDEX [IX_AI_SearchRecent_User_Last] ON [dbo].[AI_SearchRecent]([User_Id], [LastUsedAt] DESC);"),
+
+            // P8.4 (ai-assistant-p84-plan.md ش17–ش19): شذوذ القيود. صف لكل (قيد، قاعدة) = لقطة وقت الكشف؛ القيد نفسه لا يُمس.
+            // Status: New / Reviewed / Dismissed (على مستوى القيد). IsBackfill = نتيجة مسح تاريخى طلبه المدير.
+            ("AI_Anomalies", @"
+    [Entry_Id] [bigint] NOT NULL,
+    [RuleCode] [nvarchar](30) NOT NULL,
+    [Line_Id] [bigint] NULL,
+    [Severity] [nvarchar](10) NOT NULL,
+    [Score] [decimal](18, 4) NULL,
+    [Amount] [decimal](18, 3) NULL,
+    [EntryTotal] [decimal](18, 3) NULL,
+    [Account_Id] [bigint] NULL,
+    [AccountName] [nvarchar](500) NULL,
+    [Branch_Id] [bigint] NOT NULL DEFAULT ((0)),
+    [EntryNo] [bigint] NULL,
+    [EntryDate] [date] NULL,
+    [EntryInsertedAt] [datetime] NULL,
+    [JournalCode] [int] NULL,
+    [ReferenceType] [int] NULL,
+    [EntryUser_Id] [bigint] NULL,
+    [DetailsJson] [nvarchar](max) NULL,
+    [Run_Id] [bigint] NOT NULL,
+    [IsBackfill] [bit] NOT NULL DEFAULT ((0)),
+    [DetectedAt] [datetime] NOT NULL DEFAULT (getdate()),
+    [Status] [nvarchar](20) NOT NULL DEFAULT (N'New'),
+    [ReviewedBy] [bigint] NULL,
+    [ReviewedAt] [datetime] NULL,
+    [ReviewNote] [nvarchar](500) NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_Anomalies_Entry_Rule] ON [dbo].[AI_Anomalies]([Entry_Id], [RuleCode]);
+CREATE NONCLUSTERED INDEX [IX_AI_Anomalies_Status_Detected] ON [dbo].[AI_Anomalies]([Status], [DetectedAt] DESC);
+CREATE NONCLUSTERED INDEX [IX_AI_Anomalies_Branch_Date] ON [dbo].[AI_Anomalies]([Branch_Id], [EntryDate]);"),
+
+            // P8.4 (ش16): تشغيلات المسح = الحجز + العلامة المائية (ToTs لآخر Done) + السجل. RunKey: s:yyyy-MM-dd للمجدول، m:/b: + معرّف لليدوى والتاريخى.
+            // Status: Queued / Running / Done / Failed. TriggeredBy: schedule / manual / backfill / test.
+            ("AI_AnomalyRuns", @"
+    [RunKey] [nvarchar](40) NOT NULL,
+    [TriggeredBy] [nvarchar](20) NOT NULL,
+    [FromTs] [datetime] NULL,
+    [ToTs] [datetime] NULL,
+    [Status] [nvarchar](20) NOT NULL DEFAULT (N'Running'),
+    [RulesCsv] [nvarchar](200) NULL,
+    [EntriesScanned] [int] NOT NULL DEFAULT ((0)),
+    [Found] [int] NOT NULL DEFAULT ((0)),
+    [Inserted] [int] NOT NULL DEFAULT ((0)),
+    [Truncated] [bit] NOT NULL DEFAULT ((0)),
+    [DurationMs] [int] NULL,
+    [ErrorText] [nvarchar](1000) NULL,
+    [RequestedBy] [bigint] NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_AnomalyRuns_Key] ON [dbo].[AI_AnomalyRuns]([RunKey]);
+CREATE NONCLUSTERED INDEX [IX_AI_AnomalyRuns_Status] ON [dbo].[AI_AnomalyRuns]([Status], [CreatedAt] DESC);"),
+
+            // P8.4 (ش24): شرح النموذج لكل (قيد، لغة). Source: model / rejected / error / capped / off (غير model ⇒ الواجهة تعرض القالب وحده).
+            ("AI_AnomalyExplains", @"
+    [Entry_Id] [bigint] NOT NULL,
+    [Language] [nvarchar](5) NOT NULL,
+    [ExplainText] [nvarchar](max) NULL,
+    [Source] [nvarchar](20) NOT NULL,
+    [Model_Id] [bigint] NULL,
+    [ModelName] [nvarchar](150) NULL,
+    [InputTokens] [int] NULL,
+    [OutputTokens] [int] NULL,
+    [CostEstimate] [decimal](18, 6) NULL,
+    [RejectReason] [nvarchar](300) NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_AnomalyExplains_Entry_Lang] ON [dbo].[AI_AnomalyExplains]([Entry_Id], [Language]);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>
@@ -384,6 +448,28 @@ CREATE NONCLUSTERED INDEX [IX_AI_SearchRecent_User_Last] ON [dbo].[AI_SearchRece
             (AiSettingKeys.BriefLargePaymentFactor, "2"),
             // P8.2 (س33): بحث البيانات فى لوحة Ctrl+K مفعّل؛ 0 يوقفه للجميع وتبقى الشاشات.
             (AiSettingKeys.PaletteDataSearch, "1"),
+            // P8.4 شذوذ القيود: موقوف حتى يفعّله المدير (ش30). AnomalyActivatedAt يُكتب عند التفعيل فقط (ش6). الأيام بترقيم DayOfWeek.
+            (AiSettingKeys.AnomalyEnabled, "0"),
+            (AiSettingKeys.AnomalyActivatedAt, ""),
+            (AiSettingKeys.AnomalyScanTime, "02:00"),
+            (AiSettingKeys.AnomalyRules, "amount_outlier,duplicate,off_hours,rare_account,round_large"),
+            (AiSettingKeys.AnomalyManualOnly, "1"),
+            (AiSettingKeys.AnomalyBaselineHistory, "1"),
+            (AiSettingKeys.AnomalyBaselineDays, "365"),
+            (AiSettingKeys.AnomalyZThreshold, "3"),
+            (AiSettingKeys.AnomalyMinSample, "30"),
+            (AiSettingKeys.AnomalyMinAmount, "1000"),
+            (AiSettingKeys.AnomalyRoundUnit, "1000"),
+            (AiSettingKeys.AnomalyRoundMinAmount, "50000"),
+            (AiSettingKeys.AnomalyWorkStart, "08:00"),
+            (AiSettingKeys.AnomalyWorkEnd, "22:00"),
+            (AiSettingKeys.AnomalyWorkDays, "0,1,2,3,4,6"),
+            (AiSettingKeys.AnomalyHolidays, ""),
+            (AiSettingKeys.AnomalyRareMaxUses, "2"),
+            (AiSettingKeys.AnomalyDupDays, "7"),
+            (AiSettingKeys.AnomalyMaxPerRun, "500"),
+            (AiSettingKeys.AnomalyExplain, "1"),
+            (AiSettingKeys.AnomalyExplainMaxPerDay, "50"),
         };
 
         public static readonly List<string> LastErrors = new List<string>();

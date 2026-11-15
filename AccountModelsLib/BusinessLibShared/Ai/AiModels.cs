@@ -101,6 +101,30 @@ namespace AccountModelsLib
         // ───── P8.2: لوحة البحث السريع (ai-assistant-p82-plan.md س33) ─────
         /// <summary>1 = بحث البيانات (العملاء/الموردون/الأصناف/المستندات) فى لوحة Ctrl+K مفعّل (الافتراضى)؛ 0 = الشاشات فقط.</summary>
         public const string PaletteDataSearch = "PaletteDataSearch";
+
+        // ───── P8.4: شذوذ القيود (ai-assistant-p84-plan.md §4) ─────
+        public const string AnomalyEnabled = "AnomalyEnabled";
+        /// <summary>لحظة آخر تفعيل (yyyy-MM-dd HH:mm:ss بتوقيت الخادم). المسح المجدول لا يفحص قيداً أُدخل قبلها (ش3، ش6).</summary>
+        public const string AnomalyActivatedAt = "AnomalyActivatedAt";
+        public const string AnomalyScanTime = "AnomalyScanTime";
+        public const string AnomalyRules = "AnomalyRules";
+        public const string AnomalyManualOnly = "AnomalyManualOnly";
+        public const string AnomalyBaselineHistory = "AnomalyBaselineHistory";
+        public const string AnomalyBaselineDays = "AnomalyBaselineDays";
+        public const string AnomalyZThreshold = "AnomalyZThreshold";
+        public const string AnomalyMinSample = "AnomalyMinSample";
+        public const string AnomalyMinAmount = "AnomalyMinAmount";
+        public const string AnomalyRoundUnit = "AnomalyRoundUnit";
+        public const string AnomalyRoundMinAmount = "AnomalyRoundMinAmount";
+        public const string AnomalyWorkStart = "AnomalyWorkStart";
+        public const string AnomalyWorkEnd = "AnomalyWorkEnd";
+        public const string AnomalyWorkDays = "AnomalyWorkDays";
+        public const string AnomalyHolidays = "AnomalyHolidays";
+        public const string AnomalyRareMaxUses = "AnomalyRareMaxUses";
+        public const string AnomalyDupDays = "AnomalyDupDays";
+        public const string AnomalyMaxPerRun = "AnomalyMaxPerRun";
+        public const string AnomalyExplain = "AnomalyExplain";
+        public const string AnomalyExplainMaxPerDay = "AnomalyExplainMaxPerDay";
     }
 
     /// <summary>صف AI_Providers كما يُخزَّن (المفتاح مشفّر). لا يصل للواجهة؛ الواجهة ترى AiProviderView.</summary>

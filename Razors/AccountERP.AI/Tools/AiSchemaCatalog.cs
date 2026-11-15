@@ -22,7 +22,9 @@ namespace AccountERP.AI.Tools
             RSupplierBalances = "/accounts/supplier-balance-summary", RTrialBalance = "/accounts/final/trial-balance",
             RIncome = "/accounts/final/income-statement", RProfitLoss = "/accounts/final/profit-loss", RBalanceSheet = "/accounts/final/balance-sheet",
             // P8.1: شاشات الخزينة (قائمة الإذونات، إجمالى يوميات الخزينة، كشف حركة صندوق).
-            RCashVouchers = "/accounts/cash/vouchers", RCashTotals = "/accounts/cash/box-totals", RCashBoxStatement = "/accounts/cash/box-statement";
+            RCashVouchers = "/accounts/cash/vouchers", RCashTotals = "/accounts/cash/box-totals", RCashBoxStatement = "/accounts/cash/box-statement",
+            // P8.4: مراجعة القيود وصفحة شذوذ القيود.
+            RJournalEntries = "/accounts/journal-entries", REntryAnomalies = "/accounts/entries-anomalies";
 
         /// <summary>Views مرجعية بلا بيانات مالية (الفروع والمخازن): متاحة لكل من يملك المساعد.</summary>
         public static readonly string[] Always = Array.Empty<string>();
@@ -108,6 +110,18 @@ namespace AccountERP.AI.Tools
                         ("party_type", "customer = عميل، supplier = مورد، account = حساب عام"), ("party_id", "معرّف العميل/المورد أو الحساب الفرعى"),
                         ("party_name", "اسم الطرف"), ("payment_method", "طريقة الدفع"), ("notes", "البيان"),
                         ("source_doc_type", "نوع المستند المرتبط (فاتورة …) إن وُجد"), ("source_doc_id", "معرّف المستند المرتبط") }),
+            // P8.4 (ش23): سطور القيود اليومية (لمن يملك مراجعة القيود أو صفحة الشذوذ).
+            new("v_gl_entries", "سطور القيود", "سطر لكل حساب فى القيد اليومى مع رأس القيد. القيد الواحد عدة سطور، فعدد القيود = COUNT(DISTINCT entry_id). " +
+                    "الأرصدة والميزان لا تُحسب من هذا الـ View؛ تؤخذ من الأدوات المالية. للإجمالى بالعملة المحلية استخدم debit_equivalent وcredit_equivalent.",
+                new[] { RJournalEntries, REntryAnomalies },
+                new[] { ("line_id", "معرّف السطر"), ("entry_id", "معرّف القيد"), ("entry_no", "رقم القيد"), ("entry_date", "تاريخ القيد (date)"),
+                        ("inserted_at", "وقت إدخال القيد على الخادم"), ("journal_code", "كود اليومية"), ("journal_name", "اسم اليومية"), ("branch_id", "الفرع"),
+                        ("branch_name", "اسم الفرع"), ("period_id", "الفترة المالية"), ("reference_type", "مصدر القيد (0 = يدوى، 1 = مبيعات، 2 = مشتريات، 6 = سند صندوق …)"),
+                        ("reference_id", "معرّف المستند المصدر"), ("is_manual", "1 = قيد يدوى"), ("is_posted", "1 = مرحّل للأستاذ"), ("is_opening", "1 = قيد افتتاحى"),
+                        ("is_closing", "1 = قيد إقفال الأرباح والخسائر"), ("user_id", "المستخدم الذى أدخله"), ("entry_notes", "بيان القيد"), ("line_no", "رقم السطر"),
+                        ("account_id", "الحساب الفرعى"), ("account_no", "رقم الحساب"), ("account_name", "اسم الحساب"), ("cost_center_id", "مركز التكلفة"),
+                        ("debit", "مدين بعملة السطر"), ("credit", "دائن بعملة السطر"), ("debit_equivalent", "مدين بالعملة المحلية"),
+                        ("credit_equivalent", "دائن بالعملة المحلية"), ("currency_id", "العملة"), ("line_notes", "بيان السطر") }),
         };
 
         public static readonly AiKnowledgeItem[] Knowledge =
@@ -128,6 +142,9 @@ namespace AccountERP.AI.Tools
             new("rule", "القبض والصرف", "التحصيلات = سندات القبض (is_receipt = 1)، والمدفوعات = سندات الصرف (is_receipt = 0) من ai.v_cash_vouchers. تحصيلات العملاء = party_type = 'customer' مع is_receipt = 1. " +
                 "أرصدة الصناديق الحالية لا تُحسب من هذا الـ View (فيه الحركات فقط بلا الرصيد الافتتاحى)؛ تؤخذ من شاشة «إجمالى يوميات الخزينة».", "قبض صرف تحصيل تحصيلات مدفوعات خزينة صندوق سند اذن نقدية", "cash_vouchers"),
             new("example", "تحصيلات العملاء فى يوم", "SELECT party_name, SUM(amount_equivalent) AS collected FROM ai.v_cash_vouchers WHERE is_receipt = 1 AND party_type = 'customer' AND voucher_date = '2026-11-01' GROUP BY party_name ORDER BY collected DESC", "تحصيلات عملاء قبض يوم", "daily_collections"),
+            new("rule", "القيود", "مدين = debit، دائن = credit فى ai.v_gl_entries. القيد المتزن مجموع مدينه = مجموع دائنه. is_manual = 1 قيد يدوى (أدخله محاسب)، وغيره قيد آلى من مستند. " +
+                "أرصدة الحسابات تؤخذ من الأدوات المالية لا من هذا الـ View.", "قيد قيود يومية مدين دائن يدوى آلى journal entry", "gl_entries"),
+            new("example", "قيود يدوية فى فترة", "SELECT entry_no, entry_date, journal_name, SUM(debit_equivalent) AS total FROM ai.v_gl_entries WHERE is_manual = 1 AND entry_date >= '2026-10-01' AND entry_date < '2026-11-01' GROUP BY entry_id, entry_no, entry_date, journal_name ORDER BY entry_date", "قيود يدوية فترة شهر", "manual_entries"),
             new("example", "مشتريات مورد","SELECT SUM(net_total) FROM ai.v_purchases WHERE supplier_id = 9 AND invoice_date >= '2026-01-01'", "مشتريات مورد", "supplier_purchases"),
         };
 
