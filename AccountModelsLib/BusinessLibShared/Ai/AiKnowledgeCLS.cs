@@ -15,8 +15,10 @@ namespace AccountModelsLib
         public const string Rule = "rule";
         public const string Example = "example";
         public const string Screen = "screen";
+        /// <summary>P8.3: كتالوج أخطاء الفاتورة الإلكترونية المصرية (لا يدخل search_schema العام — ف7).</summary>
+        public const string EtaError = "eta_error";
 
-        public static readonly string[] All = { View, Glossary, Rule, Example, Screen };
+        public static readonly string[] All = { View, Glossary, Rule, Example, Screen, EtaError };
     }
 
     /// <summary>P7: مصدر المقطع — seed (من الكود) / manual (أضافه المدير) / feedback (من تقييمات المستخدمين بعد المراجعة).</summary>

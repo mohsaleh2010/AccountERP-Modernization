@@ -62,6 +62,14 @@ namespace AccountERP.AI.Tools
                     .Concat(SaleHead).Concat(new[] { ("is_tax_per_item", "1 = الضريبة على مستوى الصنف"), ("paid_value", "المدفوع"), ("rest_value", "الباقى"),
                         ("salesman_id", "المندوب"), ("is_maintenance", "1 = فاتورة صيانة سيارات"), ("is_posted", "1 = مرحّلة"),
                         ("due_date", "تاريخ استحقاق الآجل (date؛ فارغ فى أغلب الفواتير)") }).ToArray()),
+            // P8.3 (ف9): حالة رفع الفاتورة الإلكترونية (لمن يملك قائمة فواتير المبيعات).
+            new("v_einvoice_status", "حالة الفاتورة الإلكترونية", "صف لكل فاتورة أو مرتجع مبيعات ضريبى مع آخر محاولة رفع إلى بوابة الضرائب. «sent» = أُرسلت (لا يعنى قبول المصلحة؛ حالة البوابة غير مخزّنة). نص خطأ الرفض غالباً غير محفوظ، فاطلب من المستخدم لصقه واستعمل explain_einvoice_error.", new[] { RSales },
+                new (string, string)[] { ("doc_kind", "invoice = فاتورة، return = مرتجع"), ("sale_id", "معرّف الفاتورة/المرتجع"), ("invoice_no", "الرقم"), ("invoice_date", "التاريخ"),
+                        ("customer_id", "العميل"), ("customer_name", "اسم العميل"), ("branch_id", "الفرع"), ("net_total", "الصافى"), ("tax_invoice_no", "رقم الفاتورة الضريبية"),
+                        ("internal_id", "الرقم الداخلى المرسل"), ("is_uploaded", "1 = معلَّمة كمرفوعة"), ("uuid", "الرقم التعريفى من البوابة"), ("submission_id", "رقم الإرسال"),
+                        ("sent_date", "تاريخ الإرسال"), ("send_state", "1 = الإرسال السارى، 2 = أُعيد إرساله"), ("errors_text", "نص أخطاء محفوظ (غالباً فارغ)"),
+                        ("portal_status", "حالة البوابة إن حُفظت (غالباً فارغ)"), ("attempts", "عدد مرات الإرسال المسجّلة"),
+                        ("upload_state", "not_sent / sent / superseded / flag_only") }),
             new("v_sales_lines", "سطور المبيعات", "أصناف فواتير المبيعات (سطر لكل صنف) مع رأس الفاتورة.", new[] { RSales },
                 new (string, string)[] { ("line_id", "معرّف السطر"), ("sale_id", "الفاتورة"), ("invoice_no", "رقم الفاتورة"), ("invoice_date", "التاريخ"), ("customer_id", "العميل"),
                         ("customer_name", "اسم العميل"), ("branch_id", "الفرع") }.Concat(LineCols)

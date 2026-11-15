@@ -54,6 +54,42 @@ LEFT JOIN dbo.Customer c ON c.Id = l.Customer_Id
 LEFT JOIN dbo.Account_Branches b ON b.Id = l.Branch_Id
 WHERE ISNULL(l.Is_DeletedProcessed, 0) <> 1
   AND CAST(SESSION_CONTEXT(N'ai_tax') AS int) IN (-1, ISNULL(l.IsInvoiceTaxInfo, 0));"),
+            // P8.3 (ف9–ف11): حالة رفع الفاتورة الإلكترونية لكل فاتورة/مرتجع ضريبى. Taxdocuments* تُنشأ مع إعداد المنظومة فقط،
+            // فإن غابت يُستبدل الرمز بجدول مشتق فارغ بنفس الأعمدة (الحالة من IsUploadToPortal وحده). لا hashKey ولا أسرار البوابة.
+            ("v_einvoice_status", @"CREATE OR ALTER VIEW ai.v_einvoice_status AS
+SELECT N'invoice' AS doc_kind, l.ID AS sale_id, l.Invoice_Id AS invoice_no, CONVERT(date, l.Invoice_Date) AS invoice_date,
+       l.Customer_Id AS customer_id, c.Name AS customer_name, l.Branch_Id AS branch_id, l.Net_Total AS net_total,
+       l.TaxInvoiceNo AS tax_invoice_no, l.TaxInternalId AS internal_id, ISNULL(l.IsUploadToPortal, 0) AS is_uploaded,
+       t.uuid AS uuid, t.submissionId AS submission_id, t.DateOfSent AS sent_date, t.IsSuccessded AS send_state,
+       t.Errors AS errors_text, t.StausStr AS portal_status, ISNULL(n.cnt, 0) AS attempts,
+       CASE WHEN t.Id IS NULL AND ISNULL(l.IsUploadToPortal, 0) <> 1 THEN N'not_sent'
+            WHEN t.Id IS NULL THEN N'flag_only'
+            WHEN t.IsSuccessded = 1 THEN N'sent' ELSE N'superseded' END AS upload_state
+FROM dbo.Invoices_List l
+LEFT JOIN dbo.Customer c ON c.Id = l.Customer_Id
+OUTER APPLY (SELECT TOP (1) d.Id, d.uuid, d.submissionId, d.DateOfSent, d.IsSuccessded, d.Errors, d.StausStr
+             FROM /*AI_TAXDOC*/ d WHERE d.invoices_ListId = l.ID
+             ORDER BY CASE WHEN d.IsSuccessded = 1 THEN 0 ELSE 1 END, d.Id DESC) t
+OUTER APPLY (SELECT COUNT(*) AS cnt FROM /*AI_TAXDOC*/ d WHERE d.invoices_ListId = l.ID) n
+WHERE ISNULL(l.Is_DeletedProcessed, 0) <> 1 AND ISNULL(l.IsInvoiceTaxInfo, 0) = 1
+  AND CAST(SESSION_CONTEXT(N'ai_tax') AS int) IN (-1, 1)
+UNION ALL
+SELECT N'return' AS doc_kind, l.ID AS sale_id, l.Invoice_Id AS invoice_no, CONVERT(date, l.Invoice_Date) AS invoice_date,
+       l.Customer_Id AS customer_id, c.Name AS customer_name, l.Branch_Id AS branch_id, l.Net_Total AS net_total,
+       l.TaxInvoiceNo AS tax_invoice_no, l.TaxInternalId AS internal_id, ISNULL(l.IsUploadToPortal, 0) AS is_uploaded,
+       t.uuid AS uuid, t.submissionId AS submission_id, t.DateOfSent AS sent_date, t.IsSuccessded AS send_state,
+       t.Errors AS errors_text, t.StausStr AS portal_status, ISNULL(n.cnt, 0) AS attempts,
+       CASE WHEN t.Id IS NULL AND ISNULL(l.IsUploadToPortal, 0) <> 1 THEN N'not_sent'
+            WHEN t.Id IS NULL THEN N'flag_only'
+            WHEN t.IsSuccessded = 1 THEN N'sent' ELSE N'superseded' END AS upload_state
+FROM dbo.Invoices_List_Reverse l
+LEFT JOIN dbo.Customer c ON c.Id = l.Customer_Id
+OUTER APPLY (SELECT TOP (1) d.Id, d.uuid, d.submissionId, d.DateOfSent, d.IsSuccessded, d.Errors, d.StausStr
+             FROM /*AI_TAXDOC_REV*/ d WHERE d.invoices_ListId = l.ID
+             ORDER BY CASE WHEN d.IsSuccessded = 1 THEN 0 ELSE 1 END, d.Id DESC) t
+OUTER APPLY (SELECT COUNT(*) AS cnt FROM /*AI_TAXDOC_REV*/ d WHERE d.invoices_ListId = l.ID) n
+WHERE ISNULL(l.Is_DeletedProcessed, 0) <> 1 AND ISNULL(l.IsInvoiceTaxInfo, 0) = 1
+  AND CAST(SESSION_CONTEXT(N'ai_tax') AS int) IN (-1, 1);"),
             ("v_sales_lines", @"CREATE OR ALTER VIEW ai.v_sales_lines AS
 SELECT d.Id AS line_id, l.ID AS sale_id, l.Invoice_Id AS invoice_no, CONVERT(date, l.Invoice_Date) AS invoice_date,
        l.Customer_Id AS customer_id, c.Name AS customer_name, l.Branch_Id AS branch_id,
@@ -181,6 +217,11 @@ WHERE o.Order_No <> 0 AND o.Order_No <> -1
         private const string BoxPermExists = @"EXISTS (SELECT 1 FROM dbo.SysConfigBanksPERMATIONS p
                        WHERE p.Account_Branks_Id = m.Bank_Id AND p.USER_DETAILES_Id = CAST(SESSION_CONTEXT(N'ai_user') AS bigint))";
 
+        private const string TaxDocToken = "/*AI_TAXDOC*/", TaxDocRevToken = "/*AI_TAXDOC_REV*/";
+        private const string TaxDocEmpty = "(SELECT TOP (0) CAST(NULL AS bigint) AS Id, CAST(NULL AS bigint) AS invoices_ListId, CAST(NULL AS nvarchar(max)) AS uuid, " +
+            "CAST(NULL AS nvarchar(max)) AS submissionId, CAST(NULL AS datetime) AS DateOfSent, CAST(NULL AS int) AS IsSuccessded, " +
+            "CAST(NULL AS nvarchar(max)) AS Errors, CAST(NULL AS nvarchar(50)) AS StausStr)";
+
         public static IReadOnlyCollection<string> ViewNames => Views.Select(v => v.Name).ToList();
 
         /// <summary>ينشئ schema ai ويحدّث الـ Views (CREATE OR ALTER آمن للتكرار، ولا بيانات فيه).</summary>
@@ -189,8 +230,14 @@ WHERE o.Order_No <> 0 AND o.Order_No <> -1
             opp.db.Database.ExecuteSqlRaw("IF SCHEMA_ID(N'ai') IS NULL EXEC(N'CREATE SCHEMA ai');");
             bool hasBoxPerm = opp.db.Database.SqlQueryRaw<int>(
                 "SELECT CASE WHEN OBJECT_ID(N'dbo.SysConfigBanksPERMATIONS', N'U') IS NULL THEN 0 ELSE 1 END AS Value").AsEnumerable().First() == 1;
+            bool hasTaxDoc = TableExists(opp, "dbo.Taxdocuments"), hasTaxDocRev = TableExists(opp, "dbo.TaxdocumentsReverse");
             foreach (var (_, sql) in Views)
-                opp.db.Database.ExecuteSqlRaw(sql.Replace(BoxPermToken, hasBoxPerm ? BoxPermExists : "1 = 0"));
+                opp.db.Database.ExecuteSqlRaw(sql.Replace(BoxPermToken, hasBoxPerm ? BoxPermExists : "1 = 0")
+                    .Replace(TaxDocToken, hasTaxDoc ? "dbo.Taxdocuments" : TaxDocEmpty)
+                    .Replace(TaxDocRevToken, hasTaxDocRev ? "dbo.TaxdocumentsReverse" : TaxDocEmpty));
         }
+
+        private static bool TableExists(operations opp, string name) =>
+            opp.db.Database.SqlQueryRaw<int>("SELECT CASE WHEN OBJECT_ID({0}, N'U') IS NULL THEN 0 ELSE 1 END AS Value", name).AsEnumerable().First() == 1;
     }
 }

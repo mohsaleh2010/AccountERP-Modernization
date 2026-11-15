@@ -131,6 +131,19 @@ namespace AccountERP.AI.Knowledge
                     Source = AiKnowledgeSources.Seed,
                     Version = k.Version,
                 }));
+            // P8.3 (ف2، ف8): كتالوج أخطاء الفاتورة الإلكترونية، لمن يملك شاشات المبيعات.
+            foreach (var k in AiEtaErrorCatalog.Items)
+                list.Add(Hash(new AiKnowledgeRow
+                {
+                    Kind = k.Kind,
+                    KeyName = k.Key,
+                    TitleAr = k.Title,
+                    Content = k.Content,
+                    Keywords = k.Keywords,
+                    RoutesCsv = AiEInvoiceConst.RoutesCsv,
+                    Source = AiKnowledgeSources.Seed,
+                    Version = k.Version,
+                }));
             return list;
         }
 
@@ -237,7 +250,8 @@ namespace AccountERP.AI.Knowledge
             var rows = ActiveRows();
             if (rows == null || rows.Count == 0) return (null, SearchModes.Fallback);
 
-            var visible = rows.Where(r => Visible(r, allowedViews, hasRoute) && (only == null || only(r))).ToList();
+            // P8.3 (ف7): مقاطع eta_error لا تدخل البحث العام؛ تُطلب صراحة بـ only.
+            var visible = rows.Where(r => Visible(r, allowedViews, hasRoute) && (only == null ? r.Kind != AiKnowledgeKinds.EtaError : only(r))).ToList();
             if (visible.Count == 0) return (new List<AiKnowledgeRow>(), SearchModes.Keyword);
             var keyword = KeywordRank(query, visible).Where(h => h.Score >= minKeywordScore).Select(h => h.Row).ToList();
             if (_embed == null) return (keyword.Take(top).ToList(), SearchModes.Keyword);
@@ -270,6 +284,23 @@ namespace AccountERP.AI.Knowledge
         /// P7.7: أقرب أمثلة معتمدة (Kind=example) لسؤال المستخدم من المرئى له فقط، بنفس الترتيب الهجين. بالكلمات وحدها يُشترط تطابق كلمتين
         /// (أو كل كلمات سؤال قصير) حتى لا يُلحق مثال بعيد. exclude: يُستبعد ما يطابق نصه (التقييم يستبعد مثالاً هو السؤال نفسه). لا يرمى.
         /// </summary>
+        /// <summary>P8.3: مقاطع eta_error المفعّلة التى يراها المستخدم (للمطابقة الثابتة).</summary>
+        public List<AiKnowledgeRow> EtaErrorRows(Func<string, bool> hasRoute)
+        {
+            var none = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            return (ActiveRows() ?? new List<AiKnowledgeRow>())
+                .Where(r => r.Kind == AiKnowledgeKinds.EtaError && Visible(r, none, hasRoute)).ToList();
+        }
+
+        /// <summary>P8.3 (ف5): أقرب مقاطع eta_error حين لا مطابقة ثابتة (كلمتان على الأقل أو تضمين)، موسومة «تقريبى» عند المستدعى.</summary>
+        public async Task<List<AiKnowledgeRow>> EtaApproxAsync(string text, Func<string, bool> hasRoute, int top, CancellationToken ct)
+        {
+            var none = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            string q = (text ?? "").Length > 1000 ? text!.Substring(0, 1000) : text ?? "";
+            var (rows, _) = await RankAsync(q, none, hasRoute, ct, top, r => r.Kind == AiKnowledgeKinds.EtaError, 2);
+            return rows ?? new List<AiKnowledgeRow>();
+        }
+
         public async Task<List<AiKnowledgeRow>> ExamplesAsync(string query, ISet<string> allowedViews, Func<string, bool> hasRoute, int count, CancellationToken ct,
                                                               Func<AiKnowledgeRow, bool>? exclude = null)
         {
@@ -326,8 +357,8 @@ namespace AccountERP.AI.Knowledge
         {
             string kind = (r.Kind ?? "").Trim().ToLowerInvariant();
             string title = (r.TitleAr ?? "").Trim(), content = (r.Content ?? "").Trim(), keywords = (r.Keywords ?? "").Trim();
-            if (kind != AiKnowledgeKinds.Glossary && kind != AiKnowledgeKinds.Rule && kind != AiKnowledgeKinds.Example)
-                throw new InvalidOperationException("نوع المقطع غير مسموح (مسرد أو قاعدة أو مثال فقط).");
+            if (kind != AiKnowledgeKinds.Glossary && kind != AiKnowledgeKinds.Rule && kind != AiKnowledgeKinds.Example && kind != AiKnowledgeKinds.EtaError)
+                throw new InvalidOperationException("نوع المقطع غير مسموح (مسرد أو قاعدة أو مثال أو خطأ فاتورة إلكترونية فقط).");
             if (title.Length == 0) throw new InvalidOperationException("أدخل عنوان المقطع.");
             if (content.Length == 0) throw new InvalidOperationException(kind == AiKnowledgeKinds.Example ? "أدخل استعلام المثال." : "أدخل نص المقطع.");
             if (title.Length > MaxTitle) throw new InvalidOperationException($"العنوان أطول من {MaxTitle} حرف.");
@@ -351,6 +382,7 @@ namespace AccountERP.AI.Knowledge
                 {
                     Id = CallSnowflakeIdGenerate.GenerateNewId(),
                     Kind = kind, TitleAr = title, Content = content, Keywords = keywords.Length == 0 ? null : keywords, ViewsCsv = views,
+                    RoutesCsv = kind == AiKnowledgeKinds.EtaError ? AiEInvoiceConst.RoutesCsv : null,   // P8.3 (ف8، ف21)
                     Source = r.Source == AiKnowledgeSources.Feedback ? AiKnowledgeSources.Feedback : AiKnowledgeSources.Manual,
                     Source_Ref_Id = r.Source == AiKnowledgeSources.Feedback ? r.Source_Ref_Id : null, Version = 1, IsActive = true,
                 });
@@ -503,7 +535,7 @@ namespace AccountERP.AI.Knowledge
             }
             LastSearchUsedFallback = false;
             LastSearchMode = SearchModes.Keyword;
-            var best = KeywordRank(query, rows.Where(r => Visible(r, allowedViews, hasRoute))).Take(top).Select(h => Format(h.Row)).ToList();
+            var best = KeywordRank(query, rows.Where(r => r.Kind != AiKnowledgeKinds.EtaError && Visible(r, allowedViews, hasRoute))).Take(top).Select(h => Format(h.Row)).ToList();
             return best.Count == 0 ? NoResults : string.Join("\n\n", best);
         }
     }
