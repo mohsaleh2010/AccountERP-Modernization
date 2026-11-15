@@ -36,6 +36,9 @@ namespace AccountERP.AI
             services.AddSingleton<Eval.AiEvalRunner>();   // P7.4: تشغيل التقييم فى الخلفية (واحد فى المرة)
             services.AddScoped<IAiEvalGateway, Eval.AiEvalGateway>();   // P7.4: محرك التقييم (تبويب «التقييم» P7.5)
             services.AddScoped<IAiFeedbackGateway, Feedback.AiFeedbackGateway>();   // P7.6: مراجعة ملاحظات 👍/👎 (تبويب «الملاحظات»)
+            // P8.4.2 (ش28): مهمة الشذوذ تُسجَّل قبل الموجز فيمسح الخادم المطفأ ليلاً عند الإقلاع قبل موجز نفس النبضة.
+            services.AddSingleton(sp => new Anomalies.AiAnomalyJob(sp.GetRequiredService<Tools.ReadOnlySqlExecutor>()));
+            services.AddSingleton<Scheduling.IAiScheduledJob>(sp => sp.GetRequiredService<Anomalies.AiAnomalyJob>());
             services.AddSingleton(sp => new Brief.AiBriefJob(sp.GetRequiredService<Tools.ReadOnlySqlExecutor>(), sp.GetRequiredService<ProviderRegistry>()));   // P8.1.4: مشغّل الموجز اليومى
             services.AddSingleton<Scheduling.IAiScheduledJob>(sp => sp.GetRequiredService<Brief.AiBriefJob>());   // ق17: مهام AiSchedulerWorker
             services.AddScoped<IAiBriefGateway>(sp => new Brief.AiBriefGateway(sp.GetRequiredService<Brief.AiBriefJob>()));   // P8.1.4: صفحة الموجز والإعدادات (P8.1.5/P8.1.6)
