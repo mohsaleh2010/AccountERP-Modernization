@@ -151,6 +151,11 @@ namespace AccountModelsLib
         public const string CollectReminderMinDays = "CollectReminderMinDays";
         public const string CollectBriefAlert = "CollectBriefAlert";
         public const string CollectBriefTop = "CollectBriefTop";
+        // P8.9: المساعد داخل الشاشات (ص26).
+        public const string ScreenAssist = "ScreenAssist";
+        public const string ScreenAssistNarrative = "ScreenAssistNarrative";
+        public const string ScreenAssistMaxPerDay = "ScreenAssistMaxPerDay";
+        public const string ScreenContextAmbient = "ScreenContextAmbient";
     }
 
     /// <summary>صف AI_Providers كما يُخزَّن (المفتاح مشفّر). لا يصل للواجهة؛ الواجهة ترى AiProviderView.</summary>
@@ -589,6 +594,8 @@ namespace AccountModelsLib
         public string Route { get; set; } = "";
         public string Title { get; set; } = "";
         public string Language { get; set; } = "ar";
+        /// <summary>P8.9 (ص3): محددات الشاشة (اختيارى). غيابه = السلوك السابق حرفياً.</summary>
+        public AiScreenPayload Payload { get; set; }
     }
 
     /// <summary>جاهزية المحادثة: هل يوجد نموذج مربوط بمهمة «محادثة»؟ Message رسالة عربية عند عدم الجاهزية.</summary>

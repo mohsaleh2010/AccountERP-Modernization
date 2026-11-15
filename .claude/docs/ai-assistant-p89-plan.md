@@ -679,3 +679,13 @@ Rules:
 - `Razors/AccountERP.SharedUI/Services/AssistantSessionService.cs` + `Components/Assistant/AssistantWidget.razor` + `AssistantChat.razor` + `EInvoiceErrorDialog.razor` (نمط الحوار) + `Razors/AccountERP.Web/AccountERP.Web/Program.cs`
 
 ملفات جديدة: `AccountModelsLib/BusinessLibShared/Ai/AiScreenAssistModels.cs`، `AiScreenAssistRules.cs`؛ `Razors/AccountERP.AI/ScreenAssist/AiScreenFactsBuilder.cs`، `AiScreenAssistGateway.cs`، `AiScreenExplainer.cs`؛ `Razors/AccountERP.SharedUI/Services/AiScreenAssistService.cs`؛ `Razors/AccountERP.SharedUI/Components/Assistant/ScreenExplainDialog.razor`؛ `Razors/AccountERP.SharedUI/Components/Assistant/Settings/AiScreenAssistTab.razor`.
+
+---
+
+### تم التنفيذ
+
+**P8.9.1 (2026-11-15):**
+- الفحوص: (2) `Validate` يقبل عبارة القيود غير المتزنة (CTE + `HAVING ABS(SUM())` + استعلامان فرعيان + `TOP (@top)`) ✔. (3) على قاعدة التطوير: فرق الحركة = مجموع فروق القيود غير المتزنة 8/8، وفرق الافتتاحى = قيود ما قبل «من» + المخزَّن 8/8 (منها مدى فيه فرق حقيقى −401,309.60) ⇒ `tb_move_all` يبقى. (4) رصيد `ai.v_customer_ledger` = مجموع الجدول الوسيط لعشرة عملاء فتح المستخدم كشفهم؛ الكشف يعرض صفوف `Flage_View = 1` لكن رصيده من كل الصفوف ⇒ `opening`/`closing` تبقى مع `AIH_StmtNote`. (5) `server.Run(GetBranches/GetTrialBalance)` يعمل خارج الدائرة (المستخدمون غير المديرين فى قاعدة التطوير بلا فروع). (9) `AIH_` وم-554…م-568 غير مستعملة ✔. (6، مبكراً) `CountSince` ≈ 5 ms.
+- إضافات على الخطة: `AiScreenFacts.PromptJson`/`PromptJsonMin`/`ChatJson`/`Names`/`CustomerId`/`StatementNote` (الصيغ الثلاث تُبنى مرة فى البانى بـ `Namer`)؛ `AiScreenValue.Format`؛ `AiScreenNarrative.Facts`؛ `AiScreenAssistRules.RoutesOf`/`KindOfRoute`/`DaysOverdue`؛ البوابة `BuildServer`/`EnsureUse`/`AmbientFor` (للمحادثة P8.9.4). `AiScreenExplainer` كُتب مع هذا الجزء لأن البوابة تأخذه (المنطق الكامل؛ الواجهة فى P8.9.2).
+- ملاحظة للفحص 8: أحدث فاتورة فى قاعدة التطوير أعطت `inv_tax_mismatch` ⇒ يُفحص تعريف `line_sales_tax` فى P8.9.3 قبل الإبقاء على القاعدة.
+- harness `p891test` 87/87 (scratchpad جلسة 116aac4e)، وnet48/C# 7.3 للملفين (`p891lang`).

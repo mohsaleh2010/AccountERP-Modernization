@@ -539,6 +539,11 @@ CREATE NONCLUSTERED INDEX [IX_AI_CollectionActions_Type_Status] ON [dbo].[AI_Col
             (AiSettingKeys.CollectReminderMinDays, "3"),
             (AiSettingKeys.CollectBriefAlert, "1"),
             (AiSettingKeys.CollectBriefTop, "5"),
+            // P8.9 (ص26)
+            (AiSettingKeys.ScreenAssist, "1"),
+            (AiSettingKeys.ScreenAssistNarrative, "1"),
+            (AiSettingKeys.ScreenAssistMaxPerDay, "200"),
+            (AiSettingKeys.ScreenContextAmbient, "1"),
         };
 
         public static readonly List<string> LastErrors = new List<string>();

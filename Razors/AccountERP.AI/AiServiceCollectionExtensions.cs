@@ -42,6 +42,10 @@ namespace AccountERP.AI
             services.AddScoped<IAiAnomalyGateway>(sp => new Anomalies.AiAnomalyGateway(sp.GetRequiredService<Anomalies.AiAnomalyJob>(), sp.GetRequiredService<ProviderRegistry>()));   // P8.4.3: صفحة الشذوذ وتبويب الإعدادات
             services.AddSingleton(sp => new Collections.AiCollectionsScorer(sp.GetRequiredService<Tools.ReadOnlySqlExecutor>()));   // P8.5.2: حاسب أولويات التحصيل (ذاكرة لكل نطاق)
             services.AddScoped<IAiCollectionsGateway>(sp => new Collections.AiCollectionsGateway(sp.GetRequiredService<Collections.AiCollectionsScorer>(), sp.GetRequiredService<ProviderRegistry>()));   // P8.5.2: صفحة أولويات التحصيل وتبويبها
+            services.AddSingleton(sp => new ScreenAssist.AiScreenFactsBuilder(sp.GetRequiredService<Tools.ReadOnlySqlExecutor>(), sp.GetRequiredService<Collections.AiCollectionsScorer>()));   // P8.9: حقائق الشاشات
+            services.AddSingleton(sp => new ScreenAssist.AiScreenExplainer(sp.GetRequiredService<ProviderRegistry>()));   // P8.9.2: فقرة «شرح المساعد»
+            services.AddScoped(sp => new ScreenAssist.AiScreenAssistGateway(sp.GetRequiredService<ScreenAssist.AiScreenFactsBuilder>(), sp.GetRequiredService<ProviderRegistry>(), sp.GetRequiredService<ScreenAssist.AiScreenExplainer>()));
+            services.AddScoped<IAiScreenAssistGateway>(sp => sp.GetRequiredService<ScreenAssist.AiScreenAssistGateway>());   // P8.9: المساعد داخل الشاشات
             services.AddSingleton(sp => new Brief.AiBriefJob(sp.GetRequiredService<Tools.ReadOnlySqlExecutor>(), sp.GetRequiredService<ProviderRegistry>())
             { Collections = sp.GetRequiredService<Collections.AiCollectionsScorer>() });   // P8.1.4: مشغّل الموجز اليومى
             services.AddSingleton<Scheduling.IAiScheduledJob>(sp => sp.GetRequiredService<Brief.AiBriefJob>());   // ق17: مهام AiSchedulerWorker

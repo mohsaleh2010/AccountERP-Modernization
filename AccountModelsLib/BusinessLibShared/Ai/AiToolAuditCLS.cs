@@ -84,6 +84,16 @@ VALUES ({id}, {conversationId}, NULL, {userId}, {Cut(toolName, 100)}, {argsJson}
             return list;
         }
 
+        /// <summary>P8.9 (ص18): عدد صفوف أداة بنتيجة معينة منذ تاريخ (فهرس CreatedAt).</summary>
+        public int CountSince(string toolName, string outcome, DateTime from)
+        {
+            int n = 0;
+            Exec(_newOpp().db, "SELECT COUNT(*) FROM AI_ToolCalls_Audit WHERE CreatedAt >= @f AND ToolName = @t AND Outcome = @o",
+                cmd => { Add(cmd, "@f", from); Add(cmd, "@t", toolName ?? ""); Add(cmd, "@o", outcome ?? ""); },
+                r => n = r.GetInt32(0));
+            return n;
+        }
+
         private static string Cut(string s, int max) => s == null ? null : (s.Length > max ? s.Substring(0, max) : s);
 
         private static void Add(DbCommand cmd, string name, object value)
