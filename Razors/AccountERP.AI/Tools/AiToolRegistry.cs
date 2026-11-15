@@ -77,9 +77,11 @@ namespace AccountERP.AI.Tools
         private readonly AiReportsCLS _reports = new();
         private readonly Files.AiDocumentExtractor? _extractor;
         private readonly Knowledge.AiKnowledgeService _knowledge;
+        private readonly Collections.AiCollectionsScorer? _collections;
         public AiToolRegistry(ReadOnlySqlExecutor sql, AiDatasetCache datasets, Files.AiDocumentExtractor? extractor = null,
-            Knowledge.AiKnowledgeService? knowledge = null)
+            Knowledge.AiKnowledgeService? knowledge = null, Collections.AiCollectionsScorer? collections = null)
         {
+            _collections = collections;
             _sql = sql;
             _datasets = datasets;
             _extractor = extractor;
@@ -87,6 +89,9 @@ namespace AccountERP.AI.Tools
         }
 
         public Knowledge.AiKnowledgeService KnowledgeService => _knowledge;
+        /// <summary>P8.5.5 خطافا اختبار لأداة get_collections_priority.</summary>
+        public Func<AiCollectSettings>? CollectSettingsSource { get; set; }
+        public Func<AiToolContext, List<long>?>? CollectBranchSource { get; set; }
 
         public ReadOnlySqlExecutor Sql => _sql;
         public AiDatasetCache Datasets => _datasets;
@@ -257,6 +262,14 @@ namespace AccountERP.AI.Tools
             }, EInvoice.AiEInvoiceLogic.Allowed, (_, _) => throw new InvalidOperationException("explain_einvoice_error تُنفَّذ بـ ExecuteAsync"))
             { RunAsync = ExplainEInvoiceAsync };
 
+            // ───── P8.5.5: أولويات التحصيل (نفس حاسب الشاشة، قراءة فقط) ─────
+            if (_collections != null)
+            {
+                var scorer = _collections;
+                yield return new ToolSpec(AiCollectTools.Def(), AiCollectTools.Allowed,
+                    (a, c) => AiCollectTools.Run(a, c, scorer, CollectSettingsSource, CollectBranchSource));
+            }
+
             // ───── P6: قراءة المرفقات (نموذج رؤية) ─────
             if (_extractor != null && AiExtractTools.Allowed(ctx))
             {
@@ -324,6 +337,7 @@ namespace AccountERP.AI.Tools
             "open_screen" => "فتح شاشة",
             "find_screen" => "بحث عن شاشة",
             AskUserTool => "سؤال للمستخدم",
+            AiCollectConst.ToolName => AiCollectTools.Title,
             AiDraftTools.SalesTool => "مسودة فاتورة مبيعات",
             AiDraftTools.PurchaseTool => "مسودة فاتورة مشتريات",
             AiDraftTools.StoreOrderTool => "مسودة إذن مخزن",

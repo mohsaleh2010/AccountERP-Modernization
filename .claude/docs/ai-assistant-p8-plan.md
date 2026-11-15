@@ -299,6 +299,7 @@
 - **جديد:** View `ai.v_gl_entries`، جدول `AI_Anomalies`، صفحة `/accounts/entries-anomalies` بجوار `EntriesIntegrityPage`، تنبيه `anomalies_new` فى الموجز. لا تعديل على القيود.
 
 ### P8.5 — أولويات التحصيل
+- **الخطة التفصيلية:** `ai-assistant-p85-plan.md` (Fable 5.2، 2026-11-15): القرارات ت1…ت34، الأجزاء P8.5.1…P8.5.5، اختبارات م-537…م-553. **منفّذة بالكامل.**
 - **القرار:** درجة ثابتة لكل عميل (عمر الدين، المبلغ، متوسط أيام السداد، تجاوز حد الائتمان، آخر تحصيل) ثم قائمة مرتبة. النموذج يكتب مسودة رسالة تذكير فقط؛ الإرسال بضغطة المستخدم (عبر `SalesRep_Notify_Outbox` إن وافق المستخدم، وإلا «نسخ»).
 - **فحص أول:** مصدر أعمار الديون دون `SetFirstBalanceForAllCustomers`.
 - **جديد:** `Collections/AiCollectionsScorer.cs`، جدول `AI_CollectionActions`، صفحة `/accounts/collections-priority`، أداة `get_collections_priority`، قسم فى الموجز.

@@ -51,6 +51,8 @@ namespace AccountERP.AI.Brief
         private readonly SemaphoreSlim _gate = new(1, 1);
 
         public AiBriefNarrator Narrator { get; }
+        /// <summary>P8.5: حاسب أولويات التحصيل لمجموعة حقائق collect (يُضبط من DI).</summary>
+        public Collections.AiCollectionsScorer? Collections { get => _collector.Collections; set => _collector.Collections = value; }
         /// <summary>حد كل نطاق (جمع + سرد) — §3: 60 ث.</summary>
         public TimeSpan ScopeTimeout { get; set; } = TimeSpan.FromSeconds(60);
         /// <summary>ساعة UTC (قابلة للحقن فى الاختبار) — تستعملها البوابة لـ «اليوم».</summary>

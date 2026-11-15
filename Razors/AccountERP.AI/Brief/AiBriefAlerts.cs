@@ -122,6 +122,17 @@ namespace AccountERP.AI.Brief
                 list.Add(a);
             }
 
+            // P8.5 (ت31): أولوية تحصيل عالية أو وعود مستحقة اليوم أو وعود لم تُوفَ.
+            var co = facts.Collect;
+            if (co != null && (co.HighCount > 0 || co.PromisesDueToday > 0 || co.BrokenPromises > 0) && hasRoute(AiSchemaCatalog.RCollections))
+            {
+                var a = New(AiBriefAlertCodes.CollectionsPriority, co.BrokenPromises > 0 ? AiBriefSeverity.High : AiBriefSeverity.Medium, AiSchemaCatalog.RCollections,
+                    new Dictionary<string, string>(), ("high", co.HighCount), ("high_amount", R2(co.HighAmount)), ("promises_due", co.PromisesDueToday),
+                    ("broken", co.BrokenPromises), ("overdue_customers", co.OverdueCustomers));
+                a.Items.AddRange((co.Top ?? new List<AiBriefNamedValue>()).Take(MaxItems).Select(x => x.Name + " — " + R2(x.Value).ToString("N2", CultureInfo.InvariantCulture)));
+                list.Add(a);
+            }
+
             return list.OrderBy(a => AiBriefSeverity.Rank(a.Severity)).ThenBy(a => Array.IndexOf(AiBriefAlertCodes.All, a.Code)).ToList();
         }
 

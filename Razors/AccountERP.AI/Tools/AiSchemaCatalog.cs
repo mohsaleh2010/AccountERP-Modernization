@@ -158,6 +158,8 @@ namespace AccountERP.AI.Tools
                 "أرصدة الحسابات تؤخذ من الأدوات المالية لا من هذا الـ View.", "قيد قيود يومية مدين دائن يدوى آلى journal entry", "gl_entries"),
             new("example", "قيود يدوية فى فترة", "SELECT entry_no, entry_date, journal_name, SUM(debit_equivalent) AS total FROM ai.v_gl_entries WHERE is_manual = 1 AND entry_date >= '2026-10-01' AND entry_date < '2026-11-01' GROUP BY entry_id, entry_no, entry_date, journal_name ORDER BY entry_date", "قيود يدوية فترة شهر", "manual_entries"),
             new("rule", "رصيد العميل", "رصيد العميل = SUM(debit - credit) من ai.v_customer_ledger؛ الموجب = مستحق على العميل. لأولويات التحصيل وأعمار الديون استخدم أداة get_collections_priority لا استعلاماً يدوياً.", "رصيد عميل مديونية دين ذمم مدينة", "customer_balance"),
+            new("rule", "أولويات التحصيل", "لسؤال «من أولى العملاء بالتحصيل؟» أو أعمار ديون العملاء أو المتأخرات استخدم أداة get_collections_priority (نفس ترتيب شاشة أولويات التحصيل)، " +
+                "ولفتح الشاشة open_screen بالمسار /accounts/collections-priority. لا ترسل رسائل للعملاء من المحادثة.", "تحصيل اولويات متاخرات اعمار ديون مديونية متابعة عملاء", "collections_priority"),
             new("example", "أعلى 10 عملاء رصيداً", "SELECT TOP 10 c.customer_name, SUM(g.debit - g.credit) AS balance FROM ai.v_customer_ledger g INNER JOIN ai.v_customers c ON c.customer_id = g.customer_id GROUP BY c.customer_name ORDER BY balance DESC", "اعلى عملاء رصيد مديونية", "top_customer_balances"),
             new("example", "مشتريات مورد","SELECT SUM(net_total) FROM ai.v_purchases WHERE supplier_id = 9 AND invoice_date >= '2026-01-01'", "مشتريات مورد", "supplier_purchases"),
         };

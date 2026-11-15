@@ -56,6 +56,10 @@ namespace AccountERP.AI.Brief
         /// <summary>P8.4 خطافا اختبار: تفعيل الكشف وأعداد AI_Anomalies (بدل AI_Settings/AiAnomalyCLS).</summary>
         public Func<bool>? AnomalyEnabled { get; set; }
         public Func<IList<long>, DateTime, AiAnomalyBriefCounts>? AnomalySource { get; set; }
+        /// <summary>P8.5: حاسب أولويات التحصيل (غائب ⇒ أصفار) وخطافا اختبار.</summary>
+        public Collections.AiCollectionsScorer? Collections { get; set; }
+        public Func<bool>? CollectEnabled { get; set; }
+        public Func<AiBriefScope, AiCollectBriefCounts>? CollectSource { get; set; }
 
         public static AiBriefFacts? ParseFacts(string? json) =>
             string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<AiBriefFacts>(json, Json);
@@ -101,6 +105,7 @@ namespace AccountERP.AI.Brief
                 Group(result, AiBriefSections.Purchases, scope, ct, () => facts.Purchases = run.Purchases());
                 Group(result, AiBriefScopes.StockGroup, scope, ct, () => facts.Stock = run.Stock());
                 Group(result, AiBriefScopes.AnomalyGroup, scope, ct, () => facts.Anomalies = run.Anomalies());   // P8.4 (ش27)
+                Group(result, AiBriefScopes.CollectGroup, scope, ct, () => facts.Collect = run.Collect());   // P8.5 (ت31)
             }
             finally { CultureInfo.CurrentCulture = prevCulture; }
 
@@ -404,6 +409,36 @@ FROM ai.v_purchase_returns WHERE return_date >= @date_from AND return_date <= @d
                 result.Queries++;
                 Audit("entry_anomalies", "AiAnomalyCLS.BriefCounts(branches, " + Day(from) + ")", new { group = AiBriefScopes.AnomalyGroup, query = "entry_anomalies", from = Day(from), to = Day(to) },
                       c.OpenTotal, sw.ElapsedMilliseconds, AiToolOutcome.Ok, null);
+                return f;
+            }
+
+            /// <summary>P8.5: أعداد أولويات التحصيل بنطاق المستلم (فروعه وصلاحيته الضريبية). التنبيه موقوف أو لا حاسب ⇒ أصفار.</summary>
+            public AiBriefCollectFacts Collect()
+            {
+                var f = new AiBriefCollectFacts();
+                var sw = Stopwatch.StartNew();
+                AiCollectSettings? s = null;
+                bool on = owner.CollectEnabled?.Invoke() ?? (s = AiCollectSettings.From(new AiProvidersCLS().GetSettings())).BriefAlert;
+                if (!on) return f;
+                AiCollectBriefCounts c;
+                if (owner.CollectSource != null) c = owner.CollectSource(scope);
+                else if (owner.Collections != null)
+                {
+                    s ??= AiCollectSettings.From(new AiProvidersCLS().GetSettings());
+                    var cs = new Collections.AiCollectScope
+                    {
+                        UserId = scope.Server.UserId, IsAdmin = scope.Server.User.IsAdmin, TaxFilter = scope.TaxFilter,
+                        BranchIds = scope.Server.User.IsAdmin ? null : scope.BranchIds.ToList(),
+                    };
+                    c = owner.Collections.BriefCounts(cs, s, ct);
+                }
+                else return f;
+                f.HighCount = c.HighCount; f.HighAmount = c.HighAmount; f.OverdueCustomers = c.OverdueCustomers; f.OverdueAmount = c.OverdueAmount;
+                f.PromisesDueToday = c.PromisesDueToday; f.BrokenPromises = c.BrokenPromises;
+                f.Top = c.Top.Select(t => new AiBriefNamedValue { Name = t.Name ?? "", Value = t.Overdue }).ToList();
+                result.Queries++;
+                Audit("collections_priority", "AiCollectionsScorer.BriefCounts(scope)", new { group = AiBriefScopes.CollectGroup, query = "collections_priority", from = Day(from), to = Day(to) },
+                      c.OverdueCustomers, sw.ElapsedMilliseconds, AiToolOutcome.Ok, null);
                 return f;
             }
 

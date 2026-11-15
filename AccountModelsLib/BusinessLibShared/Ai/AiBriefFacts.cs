@@ -26,6 +26,8 @@ namespace AccountModelsLib
         public AiBriefStockFacts Stock { get; set; }
         /// <summary>P8.4 (ش27): للتنبيه anomalies_new فقط (بصلاحية صفحة شذوذ القيود)؛ ليس قسماً مستقلاً.</summary>
         public AiBriefAnomalyFacts Anomalies { get; set; }
+        /// <summary>P8.5 (ت31): للتنبيه collections_priority فقط (بصلاحية صفحة أولويات التحصيل)؛ ليس قسماً مستقلاً.</summary>
+        public AiBriefCollectFacts Collect { get; set; }
 
         public int PeriodDays => Math.Max(1, (int)(PeriodTo.Date - PeriodFrom.Date).TotalDays + 1);
     }
@@ -197,6 +199,19 @@ namespace AccountModelsLib
         public List<string> Top { get; set; } = new List<string>();
     }
 
+    /// <summary>P8.5: أعداد أولويات التحصيل لنطاق المستلم (نفس حاسب الشاشة).</summary>
+    public class AiBriefCollectFacts
+    {
+        public int HighCount { get; set; }
+        public decimal HighAmount { get; set; }
+        public int OverdueCustomers { get; set; }
+        public decimal OverdueAmount { get; set; }
+        public int PromisesDueToday { get; set; }
+        public int BrokenPromises { get; set; }
+        /// <summary>أعلى العملاء أولوية: الاسم والمتأخر.</summary>
+        public List<AiBriefNamedValue> Top { get; set; } = new List<AiBriefNamedValue>();
+    }
+
     public static class AiBriefAlertCodes
     {
         public const string SalesDrop = "sales_drop";
@@ -209,8 +224,10 @@ namespace AccountModelsLib
         public const string LargePayment = "large_payment";
         /// <summary>P8.4 (ش27).</summary>
         public const string AnomaliesNew = "anomalies_new";
+        /// <summary>P8.5 (ت31).</summary>
+        public const string CollectionsPriority = "collections_priority";
 
-        public static readonly string[] All = { SalesDrop, NoSales, ReturnsHigh, BelowCost, CashLow, OverdueReceivables, NegativeStock, LargePayment, AnomaliesNew };
+        public static readonly string[] All = { SalesDrop, NoSales, ReturnsHigh, BelowCost, CashLow, OverdueReceivables, NegativeStock, LargePayment, AnomaliesNew, CollectionsPriority };
     }
 
     public static class AiBriefSeverity
