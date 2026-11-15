@@ -96,6 +96,70 @@ FROM AI_Suggestions WHERE Id = @id", c => Add(c, "@id", id), r => row = new AiSu
             return n;
         }
 
+        // ───────────── السوابق (ص6، ص7، ص16) ─────────────
+
+        /// <summary>
+        /// سوابق سندات المصروف/القبض (ai.v_expense_history) لكل الصناديق (ai_box_perm = 0؛ الترشيح بالفروع فى الخدمة).
+        /// قراءة مباشرة لأن ReadOnlySqlExecutor يقف عند 5000 صف؛ SESSION_CONTEXT يُضبط على نفس الاتصال ويمسحه إرجاعه للمجمّع.
+        /// </summary>
+        public List<AiSuggestPrecedent> LoadExpenseHistory(int months, int maxRows)
+        {
+            var list = new List<AiSuggestPrecedent>();
+            ExecWithContext(@"SELECT TOP (@max) voucher_date, ISNULL(transaction_type, 0), notes, sub_account_id, account_code, account_name,
+       ISNULL(cost_center_id, 0), cost_center_name, ISNULL(branch_id, 0)
+FROM ai.v_expense_history
+WHERE voucher_date >= @from AND notes IS NOT NULL AND LEN(notes) >= 2
+ORDER BY voucher_date DESC, line_id DESC",
+                c => { Add(c, "@max", Math.Max(1, maxRows)); Add(c, "@from", DateTime.Today.AddMonths(-Math.Max(1, months))); },
+                r => list.Add(new AiSuggestPrecedent
+                {
+                    Date = r.IsDBNull(0) ? DateTime.MinValue : r.GetDateTime(0),
+                    SubType = Convert.ToInt32(r.GetValue(1), CultureInfo.InvariantCulture),
+                    Text = S(r, 2),
+                    TargetId = r.IsDBNull(3) ? 0 : Convert.ToInt64(r.GetValue(3), CultureInfo.InvariantCulture),
+                    TargetCode = S(r, 4),
+                    TargetName = S(r, 5),
+                    SecondaryId = Convert.ToInt64(r.GetValue(6), CultureInfo.InvariantCulture),
+                    SecondaryName = S(r, 7),
+                    BranchId = Convert.ToInt64(r.GetValue(8), CultureInfo.InvariantCulture),
+                }));
+            return list;
+        }
+
+        /// <summary>سوابق الأصناف (ai.v_item_classes): الهدف = الفئة، الثانوى = المجموعة، النوع = صنف/خدمة.</summary>
+        public List<AiSuggestPrecedent> LoadItemClasses(int maxRows)
+        {
+            var list = new List<AiSuggestPrecedent>();
+            ExecWithContext(@"SELECT TOP (@max) ISNULL(created_date, '2000-01-01'), item_or_service, item_name, category_id, category_name,
+       ISNULL(group_id, 0), group_name
+FROM ai.v_item_classes WHERE item_name IS NOT NULL ORDER BY item_id DESC",
+                c => Add(c, "@max", Math.Max(1, maxRows)),
+                r => list.Add(new AiSuggestPrecedent
+                {
+                    Date = r.GetDateTime(0),
+                    SubType = Convert.ToInt32(r.GetValue(1), CultureInfo.InvariantCulture),
+                    Text = S(r, 2),
+                    TargetId = Convert.ToInt64(r.GetValue(3), CultureInfo.InvariantCulture),
+                    TargetName = S(r, 4),
+                    SecondaryId = Convert.ToInt64(r.GetValue(5), CultureInfo.InvariantCulture),
+                    SecondaryName = S(r, 6),
+                }));
+            return list;
+        }
+
+        /// <summary>هل الحساب الفرعى ما زال موجوداً (لا اقتراح لحساب محذوف).</summary>
+        public HashSet<long> ExistingSubAccounts(IEnumerable<long> ids)
+        {
+            var set = new HashSet<long>();
+            var arr = new List<long>(ids ?? new long[0]);
+            if (arr.Count == 0) return set;
+            var parts = new List<string>();
+            foreach (var x in arr) parts.Add(x.ToString(CultureInfo.InvariantCulture));
+            Exec("SELECT Id FROM Submain_Account WHERE Id IN (" + string.Join(",", parts) + ")", c => { },
+                r => set.Add(Convert.ToInt64(r.GetValue(0), CultureInfo.InvariantCulture)));
+            return set;
+        }
+
         // ───────────── المتجهات (ص8) ─────────────
 
         /// <summary>كل متجهات نوع لنموذج تضمين: TextHash → (Text, Embedding).</summary>
@@ -151,6 +215,43 @@ VALUES (@id, @k, @h, @t, @e, @m, @d, GETDATE())",
             p.ParameterName = name;
             p.Value = value ?? DBNull.Value;
             cmd.Parameters.Add(p);
+        }
+
+        private void ExecWithContext(string sql, Action<DbCommand> bind, Action<DbDataReader> row)
+        {
+            var db = _newOpp().db;
+            var conn = db.Database.GetDbConnection();
+            bool wasClosed = conn.State != ConnectionState.Open;
+            if (wasClosed) conn.Open();
+            try
+            {
+                using (var ctx = conn.CreateCommand())
+                {
+                    ctx.CommandText = "EXEC sp_set_session_context @key = N'ai_box_perm', @value = 0; EXEC sp_set_session_context @key = N'ai_tax', @value = -1;";
+                    ctx.ExecuteNonQuery();
+                }
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = sql;
+                    cmd.CommandTimeout = 120;
+                    bind(cmd);
+                    using (var r = cmd.ExecuteReader())
+                        while (r.Read()) row(r);
+                }
+            }
+            finally
+            {
+                try
+                {
+                    using (var clr = conn.CreateCommand())
+                    {
+                        clr.CommandText = "EXEC sp_set_session_context @key = N'ai_box_perm', @value = NULL; EXEC sp_set_session_context @key = N'ai_tax', @value = NULL;";
+                        clr.ExecuteNonQuery();
+                    }
+                }
+                catch (Exception) { }
+                if (wasClosed) conn.Close();
+            }
         }
 
         private void Exec(string sql, Action<DbCommand> bind, Action<DbDataReader> row)

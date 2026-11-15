@@ -274,6 +274,15 @@ WHERE o.Order_No <> 0 AND o.Order_No <> -1
   AND ISNULL(m.Customer_Id, 0) = 0 AND ISNULL(m.Supplier_Id, 0) = 0 AND ISNULL(m.SubAccount_Id, 0) > 0
   AND (CAST(SESSION_CONTEXT(N'ai_box_perm') AS int) = 0
        OR (CAST(SESSION_CONTEXT(N'ai_box_perm') AS int) = 1 AND " + BoxPermToken + @"));"),
+            // P8.8 (ص16): سوابق تصنيف الأصناف = الأصناف النشطة بفئتها ومجموعتها ونوعها (صنف/خدمة).
+            ("v_item_classes", @"CREATE OR ALTER VIEW ai.v_item_classes AS
+SELECT i.id AS item_id, i.Item_Name AS item_name, i.Item_Category_ID AS category_id, c.Category_Name AS category_name,
+       NULLIF(i.Items_GroupsId, 0) AS group_id, g.Name AS group_name, ISNULL(i.Is_ItemOrService, 1) AS item_or_service,
+       CONVERT(date, COALESCE(i.Insert_ServerDateTime, i.OperationDate)) AS created_date
+FROM dbo.Item i
+LEFT JOIN dbo.Item_Category c ON c.ID = i.Item_Category_ID
+LEFT JOIN dbo.Items_Group g ON g.Id = i.Items_GroupsId
+WHERE ISNULL(i.Active_flage, 1) = 1 AND ISNULL(i.Item_Category_ID, 0) > 0;"),
         };
 
         /// <summary>

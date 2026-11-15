@@ -152,6 +152,33 @@ namespace AccountModelsLib
         public double AcceptRate => (Applied + Overridden + Dismissed) == 0 ? 0 : (double)Applied / (Applied + Overridden + Dismissed);
     }
 
+    /// <summary>طلب اقتراح من الشاشة.</summary>
+    public class AiSuggestRequest
+    {
+        public string Kind { get; set; }
+        public string Text { get; set; }
+        /// <summary>expense: نوع الحركة (0 = الكل)؛ item: 1 صنف / 2 خدمة.</summary>
+        public int SubType { get; set; }
+        public long BranchId { get; set; }
+        public string Screen { get; set; }
+        public string Language { get; set; }
+    }
+
+    /// <summary>
+    /// P8.8 — بوابة الاقتراح (Scoped، ويب فقط). null من Suggest = لا شريحة. الإعدادات والتبويب للمدير.
+    /// </summary>
+    public interface IAiSuggestGateway
+    {
+        bool IsEnabledFor(AiUserContext user);
+        System.Threading.Tasks.Task<AiSuggestion> SuggestAsync(AiSuggestRequest request, AiUserContext user, System.Threading.CancellationToken ct);
+        bool RecordOutcome(long suggestionId, string outcome, string finalJson, AiUserContext user);
+        AiSuggestSettings GetSettings(AiUserContext user);
+        void SaveSettings(AiSuggestSettings settings, AiUserContext user);
+        List<AiSuggestIndexStatus> IndexStatus(AiUserContext user);
+        void RebuildIndex(AiUserContext user);
+        List<AiSuggestStats> Stats(int days, AiUserContext user);
+    }
+
     /// <summary>حالة الفهرس للتبويب.</summary>
     public class AiSuggestIndexStatus
     {
