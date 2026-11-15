@@ -420,6 +420,50 @@ CREATE NONCLUSTERED INDEX [IX_AI_AnomalyRuns_Status] ON [dbo].[AI_AnomalyRuns]([
     [CostEstimate] [decimal](18, 6) NULL,
     [RejectReason] [nvarchar](300) NULL,",
              @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_AnomalyExplains_Entry_Lang] ON [dbo].[AI_AnomalyExplains]([Entry_Id], [Language]);"),
+
+            // P8.5 (ai-assistant-p85-plan.md ت18، ت28): سجل متابعة التحصيل لكل عميل. لا حذف؛ الإلغاء Status = Cancelled.
+            // ActionType: call / promise / note / snooze / dispute / reminder_copied / reminder_sent. Status: Open / Closed / Cancelled.
+            // اللقطة (BalanceAt…ScoreAt) وقت الإجراء. Outbox_Id = صف SalesRep_Notify_Outbox عند reminder_sent (يُقرأ فقط).
+            ("AI_CollectionActions", @"
+    [Customer_Id] [bigint] NOT NULL,
+    [ActionType] [nvarchar](20) NOT NULL,
+    [Status] [nvarchar](20) NOT NULL DEFAULT (N'Open'),
+    [Note] [nvarchar](1000) NULL,
+    [PromiseDate] [date] NULL,
+    [PromiseAmount] [decimal](18, 3) NULL,
+    [NextActionDate] [date] NULL,
+    [Channel] [int] NULL,
+    [MessageText] [nvarchar](1000) NULL,
+    [MessageSource] [nvarchar](20) NULL,
+    [Language] [nvarchar](5) NULL,
+    [DunningLevel] [int] NULL,
+    [Outbox_Id] [bigint] NULL,
+    [BalanceAt] [decimal](18, 3) NULL,
+    [OverdueAt] [decimal](18, 3) NULL,
+    [OldestDaysAt] [int] NULL,
+    [ScoreAt] [int] NULL,
+    [Branch_Id] [bigint] NOT NULL DEFAULT ((0)),
+    [ClosedBy] [bigint] NULL,
+    [ClosedAt] [datetime] NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_AI_CollectionActions_Customer] ON [dbo].[AI_CollectionActions]([Customer_Id], [CreatedAt] DESC);
+CREATE NONCLUSTERED INDEX [IX_AI_CollectionActions_Type_Status] ON [dbo].[AI_CollectionActions]([ActionType], [Status], [NextActionDate]);"),
+
+            // P8.5 (ت21، ت22): مسودة النموذج لكل (عميل، لغة). FactsHash = بصمة الحقائق والمستوى؛ اختلافها ⇒ إعادة التوليد.
+            // Source: model / rejected / error (غير model ⇒ الواجهة تعرض القالب الثابت).
+            ("AI_CollectionDrafts", @"
+    [Customer_Id] [bigint] NOT NULL,
+    [Language] [nvarchar](5) NOT NULL,
+    [DunningLevel] [int] NOT NULL,
+    [FactsHash] [nvarchar](64) NOT NULL,
+    [DraftText] [nvarchar](max) NULL,
+    [Source] [nvarchar](20) NOT NULL,
+    [Model_Id] [bigint] NULL,
+    [ModelName] [nvarchar](150) NULL,
+    [InputTokens] [int] NULL,
+    [OutputTokens] [int] NULL,
+    [CostEstimate] [decimal](18, 6) NULL,
+    [RejectReason] [nvarchar](300) NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_CollectionDrafts_Customer_Lang] ON [dbo].[AI_CollectionDrafts]([Customer_Id], [Language]);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>
@@ -470,6 +514,31 @@ CREATE NONCLUSTERED INDEX [IX_AI_AnomalyRuns_Status] ON [dbo].[AI_AnomalyRuns]([
             (AiSettingKeys.AnomalyMaxPerRun, "500"),
             (AiSettingKeys.AnomalyExplain, "1"),
             (AiSettingKeys.AnomalyExplainMaxPerDay, "50"),
+            // P8.5 أولويات التحصيل (ت5–ت31). الإرسال موقوف حتى يفعّله المدير (ت24).
+            (AiSettingKeys.CollectTermsDays, "30"),
+            (AiSettingKeys.CollectMinBalance, "100"),
+            (AiSettingKeys.CollectInvoiceMonths, "24"),
+            (AiSettingKeys.CollectMaxCustomers, "2000"),
+            (AiSettingKeys.CollectWeights, "35,25,15,15,10"),
+            (AiSettingKeys.CollectAgeCapDays, "120"),
+            (AiSettingKeys.CollectAmountCap, "100000"),
+            (AiSettingKeys.CollectDsoWindowDays, "180"),
+            (AiSettingKeys.CollectDsoCapDays, "90"),
+            (AiSettingKeys.CollectIdleStartDays, "30"),
+            (AiSettingKeys.CollectIdleCapDays, "90"),
+            (AiSettingKeys.CollectHighScore, "70"),
+            (AiSettingKeys.CollectMediumScore, "40"),
+            (AiSettingKeys.CollectLevel2Days, "30"),
+            (AiSettingKeys.CollectLevel3Days, "60"),
+            (AiSettingKeys.CollectBrokenPromiseBonus, "10"),
+            (AiSettingKeys.CollectBrokenPromiseDays, "30"),
+            (AiSettingKeys.CollectCacheMinutes, "5"),
+            (AiSettingKeys.CollectDraft, "1"),
+            (AiSettingKeys.CollectDraftMaxPerDay, "50"),
+            (AiSettingKeys.CollectSendEnabled, "0"),
+            (AiSettingKeys.CollectReminderMinDays, "3"),
+            (AiSettingKeys.CollectBriefAlert, "1"),
+            (AiSettingKeys.CollectBriefTop, "5"),
         };
 
         public static readonly List<string> LastErrors = new List<string>();

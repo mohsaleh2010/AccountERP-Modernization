@@ -35,7 +35,8 @@ LEFT JOIN dbo.Item_Category c ON c.ID = i.Item_Category_ID
 LEFT JOIN dbo.unit u ON u.id = i.Unit_Id;"),
             ("v_customers", @"CREATE OR ALTER VIEW ai.v_customers AS
 SELECT c.Id AS customer_id, c.Code AS customer_code, c.Name AS customer_name, c.Active AS active_flag,
-       c.General_Customer_Flage AS is_general_customer, c.Branch_Id AS branch_id
+       c.General_Customer_Flage AS is_general_customer, c.Branch_Id AS branch_id,
+       c.Customer_Type AS customer_type, c.Group_Id AS group_id, c.Currency_Id AS currency_id
 FROM dbo.Customer c;"),
             ("v_suppliers", @"CREATE OR ALTER VIEW ai.v_suppliers AS
 SELECT s.Id AS supplier_id, s.Code AS supplier_code, s.Name AS supplier_name, s.Active AS active_flag,
@@ -228,6 +229,33 @@ FROM dbo.Account_Entry_Details d
 INNER JOIN dbo.Account_Entry_List l ON l.ID = d.Account_Entry_List_ID
 LEFT JOIN dbo.Submain_Account a ON a.Id = d.Submain_Account_ID
 LEFT JOIN dbo.Account_Branches b ON b.Id = l.Branch_Id_Entry;"),
+            // P8.5 (ai-assistant-p85-plan.md ت3): دفتر العميل = Customers_Accounts (Reference_Type <> 25 حرفياً كالشاشة) + دفتر المورد المرتبط.
+            // الرصيد = SUM(debit - credit) بلا أى كتابة (لا SetFirstBalanceForAllCustomers ولا الجدول الوسيط). بلا هاتف (ت23).
+            ("v_customer_ledger", @"CREATE OR ALTER VIEW ai.v_customer_ledger AS
+SELECT a.Id AS movement_id, a.Customer_Id AS customer_id, CONVERT(date, a.Transaction_Date) AS movement_date,
+       ISNULL(a.Export, 0) AS debit, ISNULL(a.Import, 0) AS credit,
+       a.Reference_Type AS reference_type, a.Reference_Type_Table_Id AS reference_id,
+       ISNULL(a.Branch_Id, 0) AS branch_id, N'customer' AS ledger_source, a.Notes AS notes
+FROM dbo.Customers_Accounts a
+INNER JOIN dbo.Customer c ON c.Id = a.Customer_Id
+WHERE a.Reference_Type <> 25
+UNION ALL
+SELECT sa.Id, sp.Ref_Cust_Supplier_Id, CONVERT(date, sa.Transaction_Date),
+       ISNULL(sa.Export, 0), ISNULL(sa.Import, 0),
+       sa.Reference_Type, sa.Reference_Type_Table_Id,
+       ISNULL(sa.Branch_Id, 0), N'linked_supplier', sa.Notes
+FROM dbo.Suppliers_Accounts sa
+INNER JOIN dbo.Supplier sp ON sp.Id = sa.Supplier_Id
+WHERE sa.Reference_Type <> 25 AND sp.Ref_Cust_Supplier_Id > 0;"),
+            // P8.5 (ت10): حد الائتمان من SalesRep_Credit_Policy (العميل يغلب المجموعة). الجدول غائب ⇒ جدول مشتق فارغ (فحص 5).
+            ("v_customer_credit", @"CREATE OR ALTER VIEW ai.v_customer_credit AS
+SELECT c.Id AS customer_id, c.Group_Id AS group_id,
+       COALESCE(pc.Credit_Limit, pg.Credit_Limit) AS credit_limit,
+       COALESCE(pc.Max_Overdue_Days, pg.Max_Overdue_Days) AS max_overdue_days,
+       CASE WHEN pc.Id IS NOT NULL THEN N'customer' WHEN pg.Id IS NOT NULL THEN N'group' END AS limit_source
+FROM dbo.Customer c
+LEFT JOIN " + CreditToken + @" pc ON pc.Customer_Id = c.Id
+LEFT JOIN " + CreditToken + @" pg ON pc.Id IS NULL AND pg.Customer_Id IS NULL AND pg.Group_Id = c.Group_Id;"),
         };
 
         /// <summary>
@@ -237,6 +265,10 @@ LEFT JOIN dbo.Account_Branches b ON b.Id = l.Branch_Id_Entry;"),
         private const string BoxPermToken = "/*AI_BOX_PERM*/";
         private const string BoxPermExists = @"EXISTS (SELECT 1 FROM dbo.SysConfigBanksPERMATIONS p
                        WHERE p.Account_Branks_Id = m.Bank_Id AND p.USER_DETAILES_Id = CAST(SESSION_CONTEXT(N'ai_user') AS bigint))";
+
+        private const string CreditToken = "/*AI_CREDIT*/";
+        private const string CreditEmpty = "(SELECT TOP (0) CAST(NULL AS bigint) AS Id, CAST(NULL AS bigint) AS Customer_Id, CAST(NULL AS bigint) AS Group_Id, " +
+            "CAST(NULL AS decimal(18,4)) AS Credit_Limit, CAST(NULL AS int) AS Max_Overdue_Days)";
 
         private const string TaxDocToken = "/*AI_TAXDOC*/", TaxDocRevToken = "/*AI_TAXDOC_REV*/";
         private const string TaxDocEmpty = "(SELECT TOP (0) CAST(NULL AS bigint) AS Id, CAST(NULL AS bigint) AS invoices_ListId, CAST(NULL AS nvarchar(max)) AS uuid, " +
@@ -252,10 +284,12 @@ LEFT JOIN dbo.Account_Branches b ON b.Id = l.Branch_Id_Entry;"),
             bool hasBoxPerm = opp.db.Database.SqlQueryRaw<int>(
                 "SELECT CASE WHEN OBJECT_ID(N'dbo.SysConfigBanksPERMATIONS', N'U') IS NULL THEN 0 ELSE 1 END AS Value").AsEnumerable().First() == 1;
             bool hasTaxDoc = TableExists(opp, "dbo.Taxdocuments"), hasTaxDocRev = TableExists(opp, "dbo.TaxdocumentsReverse");
+            bool hasCredit = TableExists(opp, "dbo.SalesRep_Credit_Policy");
             foreach (var (_, sql) in Views)
                 opp.db.Database.ExecuteSqlRaw(sql.Replace(BoxPermToken, hasBoxPerm ? BoxPermExists : "1 = 0")
                     .Replace(TaxDocToken, hasTaxDoc ? "dbo.Taxdocuments" : TaxDocEmpty)
-                    .Replace(TaxDocRevToken, hasTaxDocRev ? "dbo.TaxdocumentsReverse" : TaxDocEmpty));
+                    .Replace(TaxDocRevToken, hasTaxDocRev ? "dbo.TaxdocumentsReverse" : TaxDocEmpty)
+                    .Replace(CreditToken, hasCredit ? "dbo.SalesRep_Credit_Policy" : CreditEmpty));
         }
 
         private static bool TableExists(operations opp, string name) =>

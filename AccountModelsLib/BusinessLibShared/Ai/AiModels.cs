@@ -125,6 +125,32 @@ namespace AccountModelsLib
         public const string AnomalyMaxPerRun = "AnomalyMaxPerRun";
         public const string AnomalyExplain = "AnomalyExplain";
         public const string AnomalyExplainMaxPerDay = "AnomalyExplainMaxPerDay";
+
+        // ───── P8.5: أولويات التحصيل (ai-assistant-p85-plan.md §4) ─────
+        public const string CollectTermsDays = "CollectTermsDays";
+        public const string CollectMinBalance = "CollectMinBalance";
+        public const string CollectInvoiceMonths = "CollectInvoiceMonths";
+        public const string CollectMaxCustomers = "CollectMaxCustomers";
+        public const string CollectWeights = "CollectWeights";
+        public const string CollectAgeCapDays = "CollectAgeCapDays";
+        public const string CollectAmountCap = "CollectAmountCap";
+        public const string CollectDsoWindowDays = "CollectDsoWindowDays";
+        public const string CollectDsoCapDays = "CollectDsoCapDays";
+        public const string CollectIdleStartDays = "CollectIdleStartDays";
+        public const string CollectIdleCapDays = "CollectIdleCapDays";
+        public const string CollectHighScore = "CollectHighScore";
+        public const string CollectMediumScore = "CollectMediumScore";
+        public const string CollectLevel2Days = "CollectLevel2Days";
+        public const string CollectLevel3Days = "CollectLevel3Days";
+        public const string CollectBrokenPromiseBonus = "CollectBrokenPromiseBonus";
+        public const string CollectBrokenPromiseDays = "CollectBrokenPromiseDays";
+        public const string CollectCacheMinutes = "CollectCacheMinutes";
+        public const string CollectDraft = "CollectDraft";
+        public const string CollectDraftMaxPerDay = "CollectDraftMaxPerDay";
+        public const string CollectSendEnabled = "CollectSendEnabled";
+        public const string CollectReminderMinDays = "CollectReminderMinDays";
+        public const string CollectBriefAlert = "CollectBriefAlert";
+        public const string CollectBriefTop = "CollectBriefTop";
     }
 
     /// <summary>صف AI_Providers كما يُخزَّن (المفتاح مشفّر). لا يصل للواجهة؛ الواجهة ترى AiProviderView.</summary>

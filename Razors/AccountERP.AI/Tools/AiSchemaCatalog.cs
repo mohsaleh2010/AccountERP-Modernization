@@ -24,7 +24,9 @@ namespace AccountERP.AI.Tools
             // P8.1: شاشات الخزينة (قائمة الإذونات، إجمالى يوميات الخزينة، كشف حركة صندوق).
             RCashVouchers = "/accounts/cash/vouchers", RCashTotals = "/accounts/cash/box-totals", RCashBoxStatement = "/accounts/cash/box-statement",
             // P8.4: مراجعة القيود وصفحة شذوذ القيود.
-            RJournalEntries = "/accounts/journal-entries", REntryAnomalies = "/accounts/entries-anomalies";
+            RJournalEntries = "/accounts/journal-entries", REntryAnomalies = "/accounts/entries-anomalies",
+            // P8.5: أولويات التحصيل.
+            RCollections = "/accounts/collections-priority";
 
         /// <summary>Views مرجعية بلا بيانات مالية (الفروع والمخازن): متاحة لكل من يملك المساعد.</summary>
         public static readonly string[] Always = Array.Empty<string>();
@@ -55,7 +57,8 @@ namespace AccountERP.AI.Tools
                         ("sale_price_large", "سعر البيع للكبرى"), ("sale_price_small", "سعر البيع للصغرى"), ("purchase_price_large", "سعر الشراء للكبرى"),
                         ("purchase_price_small", "سعر الشراء للصغرى"), ("avg_cost", "متوسط التكلفة") }),
             new("v_customers", "العملاء", "بيانات العملاء الأساسية (بلا أرصدة ولا بيانات اتصال).", new[] { RCustomers, RSales, RCustomerBalances },
-                new[] { ("customer_id", "معرّف العميل"), ("customer_code", "الكود"), ("customer_name", "الاسم"), ("active_flag", "علم التفعيل"), ("is_general_customer", "1 = عميل نقدى عام"), ("branch_id", "الفرع") }),
+                new[] { ("customer_id", "معرّف العميل"), ("customer_code", "الكود"), ("customer_name", "الاسم"), ("active_flag", "علم التفعيل"), ("is_general_customer", "1 = عميل نقدى عام"), ("branch_id", "الفرع"),
+                        ("customer_type", "نوع الحساب (1 = عميل)"), ("group_id", "مجموعة العملاء"), ("currency_id", "عملة العميل") }),
             new("v_suppliers", "الموردون", "بيانات الموردين الأساسية (بلا أرصدة ولا بيانات اتصال).", new[] { RSuppliers, RPurchases, RSupplierBalances },
                 new[] { ("supplier_id", "معرّف المورد"), ("supplier_code", "الكود"), ("supplier_name", "الاسم"), ("active_flag", "علم التفعيل"), ("is_shipment_company", "1 = شركة شحن"), ("branch_id", "الفرع") }),
             new("v_sales", "فواتير المبيعات", "رأس فاتورة المبيعات (فاتورة واحدة لكل صف). المحذوف مستبعد، ويظهر فقط ما يحق للمستخدم من الفواتير الضريبية/غير الضريبية.", new[] { RSales },
@@ -122,6 +125,15 @@ namespace AccountERP.AI.Tools
                         ("account_id", "الحساب الفرعى"), ("account_no", "رقم الحساب"), ("account_name", "اسم الحساب"), ("cost_center_id", "مركز التكلفة"),
                         ("debit", "مدين بعملة السطر"), ("credit", "دائن بعملة السطر"), ("debit_equivalent", "مدين بالعملة المحلية"),
                         ("credit_equivalent", "دائن بالعملة المحلية"), ("currency_id", "العملة"), ("line_notes", "بيان السطر") }),
+            // P8.5 (ت3، ت10): دفتر العميل وحد الائتمان (لمن يملك أرصدة العملاء أو أولويات التحصيل).
+            new("v_customer_ledger", "دفتر حساب العميل", "حركات حساب العميل (فواتير آجلة، إذون استلام، مرتجعات، أرصدة أول) + حساب المورد المرتبط به. رصيد العميل = SUM(debit - credit)؛ الموجب مستحق على العميل. " +
+                    "لأولويات التحصيل والأعمار استخدم get_collections_priority لا استعلاماً يدوياً.", new[] { RCustomerBalances, RCollections },
+                new[] { ("movement_id", "معرّف الحركة"), ("customer_id", "العميل"), ("movement_date", "تاريخ الحركة"), ("debit", "مدين (على العميل)"), ("credit", "دائن (للعميل)"),
+                        ("reference_type", "نوع المستند"), ("reference_id", "معرّف المستند"), ("branch_id", "الفرع (0 = بلا فرع)"),
+                        ("ledger_source", "customer = حساب العميل، linked_supplier = حساب المورد المرتبط"), ("notes", "البيان") }),
+            new("v_customer_credit", "حد ائتمان العميل", "حد الائتمان من سياسات الائتمان: سياسة العميل تغلب سياسة مجموعته؛ فارغ = بلا حد.", new[] { RCustomerBalances, RCollections },
+                new[] { ("customer_id", "العميل"), ("group_id", "المجموعة"), ("credit_limit", "حد الائتمان"), ("max_overdue_days", "أقصى أيام تأخير مسموح"),
+                        ("limit_source", "customer = سياسة العميل، group = سياسة المجموعة") }),
         };
 
         public static readonly AiKnowledgeItem[] Knowledge =
@@ -145,6 +157,8 @@ namespace AccountERP.AI.Tools
             new("rule", "القيود", "مدين = debit، دائن = credit فى ai.v_gl_entries. القيد المتزن مجموع مدينه = مجموع دائنه. is_manual = 1 قيد يدوى (أدخله محاسب)، وغيره قيد آلى من مستند. " +
                 "أرصدة الحسابات تؤخذ من الأدوات المالية لا من هذا الـ View.", "قيد قيود يومية مدين دائن يدوى آلى journal entry", "gl_entries"),
             new("example", "قيود يدوية فى فترة", "SELECT entry_no, entry_date, journal_name, SUM(debit_equivalent) AS total FROM ai.v_gl_entries WHERE is_manual = 1 AND entry_date >= '2026-10-01' AND entry_date < '2026-11-01' GROUP BY entry_id, entry_no, entry_date, journal_name ORDER BY entry_date", "قيود يدوية فترة شهر", "manual_entries"),
+            new("rule", "رصيد العميل", "رصيد العميل = SUM(debit - credit) من ai.v_customer_ledger؛ الموجب = مستحق على العميل. لأولويات التحصيل وأعمار الديون استخدم أداة get_collections_priority لا استعلاماً يدوياً.", "رصيد عميل مديونية دين ذمم مدينة", "customer_balance"),
+            new("example", "أعلى 10 عملاء رصيداً", "SELECT TOP 10 c.customer_name, SUM(g.debit - g.credit) AS balance FROM ai.v_customer_ledger g INNER JOIN ai.v_customers c ON c.customer_id = g.customer_id GROUP BY c.customer_name ORDER BY balance DESC", "اعلى عملاء رصيد مديونية", "top_customer_balances"),
             new("example", "مشتريات مورد","SELECT SUM(net_total) FROM ai.v_purchases WHERE supplier_id = 9 AND invoice_date >= '2026-01-01'", "مشتريات مورد", "supplier_purchases"),
         };
 
