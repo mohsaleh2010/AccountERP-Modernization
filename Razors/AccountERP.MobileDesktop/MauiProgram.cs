@@ -121,6 +121,7 @@ namespace AccountERP.MobileDesktop
             builder.Services.AddScoped<AccountERP.SharedUI.Services.ThemeService>();
             // سجلّ الإشعارات (جرس الإشعارات فى الشريط العلوي) - نفس الخدمة المستخدمة في مشروع الويب
             builder.Services.AddScoped<AccountERP.SharedUI.Services.NotificationCenterService>();
+            builder.Services.AddScoped<AccountERP.SharedUI.Services.AiSuggestUiService>();   // P8.8.3: التصنيف التلقائى (بلا بوابة فى MAUI ⇒ لا شريحة)
             builder.Services.AddMudServices();
             return builder.Build();
         }

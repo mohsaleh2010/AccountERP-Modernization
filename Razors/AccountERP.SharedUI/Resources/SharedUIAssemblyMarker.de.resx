@@ -6365,4 +6365,15 @@
   <data name="AIH_Set_Saved" xml:space="preserve"><value>Einstellungen gespeichert</value></data>
   <data name="AIH_Set_ErrMax" xml:space="preserve"><value>Der Wert muss zwischen 0 und 5000 liegen.</value></data>
   <data name="AIH_Set_ErrNotAdmin" xml:space="preserve"><value>Die Einstellungen des Assistenten in den Masken sind nur für Administratoren.</value></data>
+  <data name="AIG_Suggest" xml:space="preserve"><value>Vorschlag</value></data>
+  <data name="AIG_Confidence" xml:space="preserve"><value>Konfidenz</value></data>
+  <data name="AIG_Apply" xml:space="preserve"><value>Übernehmen</value></data>
+  <data name="AIG_Why" xml:space="preserve"><value>Warum?</value></data>
+  <data name="AIG_Dismiss" xml:space="preserve"><value>Vorschlag verwerfen</value></data>
+  <data name="AIG_Evidence" xml:space="preserve"><value>Ähnliche frühere Buchungen:</value></data>
+  <data name="AIG_NoEvidence" xml:space="preserve"><value>Keine früheren Buchungen.</value></data>
+  <data name="AIG_SrcExact" xml:space="preserve"><value>gleicher Text zuvor</value></data>
+  <data name="AIG_SrcNeighbors" xml:space="preserve"><value>ähnliche Buchungen</value></data>
+  <data name="AIG_SrcModel" xml:space="preserve"><value>Wahl des Assistenten</value></data>
+  <data name="AIG_ItemGroup" xml:space="preserve"><value>Gruppe</value></data>
 </root>

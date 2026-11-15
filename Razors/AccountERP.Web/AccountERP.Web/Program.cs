@@ -131,6 +131,7 @@ builder.Services.AddScoped<AccountERP.SharedUI.Services.AiAnomalyService>();   /
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AiCollectService>();   // P8.5.2: أولويات التحصيل (صفحة + تبويب) — ويب فقط (ت33)
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AiEInvoiceService>();   // P8.3.3: حوار شرح خطأ الفاتورة الإلكترونية
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AiScreenAssistService>();   // P8.9: المساعد داخل الشاشات — ويب فقط (ص27)
+builder.Services.AddScoped<AccountERP.SharedUI.Services.AiSuggestUiService>();   // P8.8.3: التصنيف التلقائى (بلا بوابة فى MAUI ⇒ لا شريحة)
 builder.Services.AddScoped<AccountERP.SharedUI.Services.CommandPaletteService>();   // P8.2.2: لوحة البحث السريع Ctrl+K
 builder.Services.AddMudServices();
 var app = builder.Build();

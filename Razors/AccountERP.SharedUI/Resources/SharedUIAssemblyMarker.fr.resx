@@ -6365,4 +6365,15 @@
   <data name="AIH_Set_Saved" xml:space="preserve"><value>Paramètres enregistrés</value></data>
   <data name="AIH_Set_ErrMax" xml:space="preserve"><value>La valeur doit être comprise entre 0 et 5000.</value></data>
   <data name="AIH_Set_ErrNotAdmin" xml:space="preserve"><value>Les paramètres de l'assistant dans les écrans sont réservés aux administrateurs.</value></data>
+  <data name="AIG_Suggest" xml:space="preserve"><value>Suggestion</value></data>
+  <data name="AIG_Confidence" xml:space="preserve"><value>Confiance</value></data>
+  <data name="AIG_Apply" xml:space="preserve"><value>Appliquer</value></data>
+  <data name="AIG_Why" xml:space="preserve"><value>Pourquoi ?</value></data>
+  <data name="AIG_Dismiss" xml:space="preserve"><value>Ignorer la suggestion</value></data>
+  <data name="AIG_Evidence" xml:space="preserve"><value>Saisies similaires passées :</value></data>
+  <data name="AIG_NoEvidence" xml:space="preserve"><value>Aucune saisie passée à afficher.</value></data>
+  <data name="AIG_SrcExact" xml:space="preserve"><value>même texte auparavant</value></data>
+  <data name="AIG_SrcNeighbors" xml:space="preserve"><value>saisies proches</value></data>
+  <data name="AIG_SrcModel" xml:space="preserve"><value>choix de l'assistant</value></data>
+  <data name="AIG_ItemGroup" xml:space="preserve"><value>Groupe</value></data>
 </root>

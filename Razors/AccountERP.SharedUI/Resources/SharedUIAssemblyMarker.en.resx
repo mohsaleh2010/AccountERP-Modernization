@@ -6363,4 +6363,15 @@
   <data name="AIH_Set_Saved" xml:space="preserve"><value>Settings saved</value></data>
   <data name="AIH_Set_ErrMax" xml:space="preserve"><value>Value must be between 0 and 5000.</value></data>
   <data name="AIH_Set_ErrNotAdmin" xml:space="preserve"><value>In-screen assistant settings are for administrators only.</value></data>
+  <data name="AIG_Suggest" xml:space="preserve"><value>Suggestion</value></data>
+  <data name="AIG_Confidence" xml:space="preserve"><value>Confidence</value></data>
+  <data name="AIG_Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="AIG_Why" xml:space="preserve"><value>Why?</value></data>
+  <data name="AIG_Dismiss" xml:space="preserve"><value>Dismiss suggestion</value></data>
+  <data name="AIG_Evidence" xml:space="preserve"><value>Similar past entries:</value></data>
+  <data name="AIG_NoEvidence" xml:space="preserve"><value>No past entries to show.</value></data>
+  <data name="AIG_SrcExact" xml:space="preserve"><value>same text before</value></data>
+  <data name="AIG_SrcNeighbors" xml:space="preserve"><value>similar entries</value></data>
+  <data name="AIG_SrcModel" xml:space="preserve"><value>assistant's pick</value></data>
+  <data name="AIG_ItemGroup" xml:space="preserve"><value>Group</value></data>
 </root>

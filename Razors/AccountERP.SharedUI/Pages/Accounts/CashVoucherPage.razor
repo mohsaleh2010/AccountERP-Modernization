@@ -17,6 +17,7 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject NavigationManager Nav
+@inject AiSuggestUiService Suggest
 @implements IDisposable
 
 <PageTitle>@Title</PageTitle>
@@ -86,7 +87,9 @@
                     <MudNumericField T="decimal" @bind-Value="_lineAmount" Label="@Tr("CVAmountLabel")" Variant="Variant.Outlined" Immediate="true" HideSpinButtons="true" Format="0.##" />
                 </MudItem>
                 <MudItem xs="12" sm="6" md="5">
-                    <MudTextField T="string" @bind-Value="_lineNotes" Label="@Tr("CVLineNotes")" Variant="Variant.Outlined" />
+                    <MudTextField T="string" Value="_lineNotes" ValueChanged="OnLineNotesChangedAsync" Immediate="true" Label="@Tr("CVLineNotes")" Variant="Variant.Outlined" />
+                    @* P8.8.3: اقتراح الحساب ومركز التكلفة من نص الملاحظة (اقتراح فقط) *@
+                    <AccountERP.SharedUI.Components.Assistant.AiSuggestChip Suggestion="_sug" SecondaryLabel="@Tr("CVCostCenter")" OnApply="ApplySuggestionAsync" OnDismiss="DismissSuggestion" />
                 </MudItem>
             </MudGrid>
             @if (!string.IsNullOrEmpty(_lineError))
@@ -194,6 +197,54 @@
     private long _lineAccountCurrency = 1;
     private int _selectorKey;
 
+    // P8.8.3: التصنيف التلقائى
+    private AiSuggestion? _sug;
+    private AiSuggestion? _appliedSug;
+
+    private async Task OnLineNotesChangedAsync(string? v)
+    {
+        _lineNotes = v;
+        if (_readOnly || _subId != 0 || !Suggest.IsAvailable) { _sug = null; return; }
+        var text = v ?? "";
+        var r = await Suggest.SuggestDebouncedAsync("cv-line", new AiSuggestRequest
+        {
+            Kind = AiSuggestKinds.Expense, Text = text, SubType = _type, BranchId = AccountModelsLib.Common.Branch_Id, Screen = "/accounts/cash/voucher",
+            Language = LangService.CurrentCultureInfo.Name,
+        });
+        if (_subId != 0 || (_lineNotes ?? "") != text) return;   // اختار حساباً يدوياً أو كتب أكثر
+        _sug = r;
+        StateHasChanged();
+    }
+
+    private async Task ApplySuggestionAsync(AiSuggestion s)
+    {
+        _selection = 0; _customerId = 0; _supplierId = 0;
+        _subName = s.TargetName ?? "";
+        _accountType = AccountModelsLib.Common.Account_Type_ForOther;
+        await OnSubAccountChangedAsync(s.TargetId);
+        if (s.SecondaryId != 0) _costCenterId = s.SecondaryId;   // CostCenterField يبقيه إن كان مسموحاً للحساب، وإلا الافتراضى
+        _selectorKey++;
+        _appliedSug = s;
+        _sug = null;
+        Suggest.Record(s.Id, AiSuggestOutcomes.Applied);
+    }
+
+    private void DismissSuggestion(AiSuggestion s)
+    {
+        Suggest.Record(s.Id, AiSuggestOutcomes.Dismissed);
+        _sug = null;
+    }
+
+    /// <summary>ص14: عند إضافة السطر: حساب مختلف عن المطبَّق = overridden.</summary>
+    private void TrackSuggestionOnAdd()
+    {
+        if (_appliedSug is { } a && a.TargetId != _subId)
+            Suggest.Record(a.Id, AiSuggestOutcomes.Overridden, $"{{\"target\":{_subId},\"cc\":{_cc?.Id ?? 0}}}");
+        _appliedSug = null;
+        _sug = null;
+        Suggest.Cancel("cv-line");
+    }
+
     private decimal _total => _rows.Sum(r => r.Amount);
     private string _tafkeet => _svc.Tafkeet(_total, _box?.CurrencyId ?? 1);
     private bool CanSave => !_isBusy && !_readOnly && _boxId > 0 && _rows.Count > 0 && !string.IsNullOrWhiteSpace(_manName) && !string.IsNullOrWhiteSpace(_orderNotes);
@@ -245,13 +296,14 @@
         }
     }
 
-    private void OnSelectionChanged(int value) { _selection = value; _subId = 0; _subName = ""; _customerId = 0; _supplierId = 0; _cc = null; _costCenterId = 0; }
+    private void OnSelectionChanged(int value) { _sug = null; _selection = value; _subId = 0; _subName = ""; _customerId = 0; _supplierId = 0; _cc = null; _costCenterId = 0; }
 
     // عند تحديد الحساب (عميل/مورد/حساب آخر) نحمّل كوده وعملته ومراكز تكلفته.
     private async Task OnSubAccountChangedAsync(long id)
     {
         _subId = id;
         _cc = null; _costCenterId = 0; _lineError = null;
+        if (id != 0) _sug = null;
         if (id == 0) return;
         var info = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.AccountInfo(id); });
         _lineAccountCode = info.Code; _lineAccountCurrency = info.CurrencyId;
@@ -273,6 +325,7 @@
         else if (_accountType == AccountModelsLib.Common.Supplier_Account_Type) after = _type == 2 ? _balanceBefore - _lineAmount : _balanceBefore + _lineAmount;
 
         if (cc != null) _lastCcId = cc.Id;
+        TrackSuggestionOnAdd();
         _rows.Add(new LineRow(_subId, _accountType, _subName, _lineAccountCode, _lineAccountCurrency, _lineAmount, cc?.Id ?? 0, cc?.Name ?? "", _lineNotes ?? "", _balanceBefore, after));
         _lineAmount = 0; _lineNotes = null; _subId = 0; _subName = ""; _customerId = 0; _supplierId = 0; _cc = null; _costCenterId = 0; _balanceBefore = 0;
         _selectorKey++;

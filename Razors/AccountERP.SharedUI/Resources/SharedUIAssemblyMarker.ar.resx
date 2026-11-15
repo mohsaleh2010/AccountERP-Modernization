@@ -6363,4 +6363,15 @@
   <data name="AIH_Set_Saved" xml:space="preserve"><value>حُفظت الإعدادات</value></data>
   <data name="AIH_Set_ErrMax" xml:space="preserve"><value>القيمة بين 0 و5000.</value></data>
   <data name="AIH_Set_ErrNotAdmin" xml:space="preserve"><value>إعدادات المساعد داخل الشاشات للمدير فقط.</value></data>
+  <data name="AIG_Suggest" xml:space="preserve"><value>اقتراح</value></data>
+  <data name="AIG_Confidence" xml:space="preserve"><value>درجة الثقة</value></data>
+  <data name="AIG_Apply" xml:space="preserve"><value>تطبيق</value></data>
+  <data name="AIG_Why" xml:space="preserve"><value>لماذا؟</value></data>
+  <data name="AIG_Dismiss" xml:space="preserve"><value>تجاهل الاقتراح</value></data>
+  <data name="AIG_Evidence" xml:space="preserve"><value>سوابق مشابهة:</value></data>
+  <data name="AIG_NoEvidence" xml:space="preserve"><value>لا سوابق للعرض.</value></data>
+  <data name="AIG_SrcExact" xml:space="preserve"><value>نفس النص سابقاً</value></data>
+  <data name="AIG_SrcNeighbors" xml:space="preserve"><value>سوابق قريبة</value></data>
+  <data name="AIG_SrcModel" xml:space="preserve"><value>اختيار المساعد</value></data>
+  <data name="AIG_ItemGroup" xml:space="preserve"><value>المجموعة</value></data>
 </root>

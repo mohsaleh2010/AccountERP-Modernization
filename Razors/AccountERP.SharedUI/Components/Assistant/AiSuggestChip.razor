@@ -1,0 +1,108 @@
+@* P8.8.3 (ai-assistant-p88-plan.md ص4): شريحة اقتراح تحت الحقل — «اقتراح: الحساب (72%) · المركز» + تطبيق / تجاهل / لماذا؟
+   لا ملء تلقائى أبداً؛ «تطبيق» يستدعى OnApply والشاشة تضبط حقولها بمساراتها المعتادة. التصميم حسب ui-ux-pro-max (لمس ≥ 36px، تباين، RTL). *@
+@using System.Globalization
+@using AccountModelsLib
+@inject LanguageService LangService
+
+@if (Suggestion is not null)
+{
+    <div class="aisg" role="status" aria-live="polite">
+        <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Size="Size.Small" Class="aisg-ico" />
+        <div class="aisg-txt">
+            <span class="aisg-lbl">@Tr("AIG_Suggest"):</span>
+            <b>@Label()</b>
+            <span class="aisg-conf" title="@Tr("AIG_Confidence")">(@((Suggestion.Confidence * 100).ToString("0", CultureInfo.InvariantCulture))%)</span>
+            @if (Suggestion.SecondaryId != 0 && !string.IsNullOrWhiteSpace(Suggestion.SecondaryName))
+            {
+                <span class="aisg-sec">· @SecondaryLabel: @Suggestion.SecondaryName</span>
+            }
+            <span class="aisg-src">· @SourceText()</span>
+        </div>
+        <div class="aisg-act">
+            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyAsync" Class="aisg-btn">@Tr("AIG_Apply")</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@(() => _why = !_why)" Class="aisg-btn" aria-expanded="@(_why ? "true" : "false")">@Tr("AIG_Why")</MudButton>
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="DismissAsync" aria-label="@Tr("AIG_Dismiss")" title="@Tr("AIG_Dismiss")" />
+        </div>
+        @if (_why)
+        {
+            <div class="aisg-why">
+                @if (!string.IsNullOrWhiteSpace(Suggestion.Why))
+                {
+                    <div class="aisg-model">@Suggestion.Why</div>
+                }
+                @if (Suggestion.Evidence.Count == 0)
+                {
+                    <div>@Tr("AIG_NoEvidence")</div>
+                }
+                else
+                {
+                    <div class="aisg-evh">@Tr("AIG_Evidence")</div>
+                    <ul>
+                        @foreach (var e in Suggestion.Evidence)
+                        {
+                            <li><span class="aisg-date">@(e.Date > DateTime.MinValue ? e.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "")</span> «@e.Text» → @e.TargetName</li>
+                        }
+                    </ul>
+                }
+            </div>
+        }
+    </div>
+}
+
+<style>
+    .aisg { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 6px; padding: 6px 10px; border-radius: 10px;
+            border: 1px dashed color-mix(in srgb, var(--mud-palette-primary) 45%, transparent);
+            background: color-mix(in srgb, var(--mud-palette-primary) 6%, transparent); font-size: .85rem; }
+    .aisg-ico { color: var(--mud-palette-primary); }
+    .aisg-txt { flex: 1 1 220px; min-width: 0; line-height: 1.5; }
+    .aisg-lbl, .aisg-conf, .aisg-src, .aisg-sec { color: var(--mud-palette-text-secondary); }
+    .aisg-act { display: flex; align-items: center; gap: 4px; }
+    .aisg-btn { min-height: 36px; }
+    .aisg-why { flex-basis: 100%; font-size: .8rem; color: var(--mud-palette-text-secondary); }
+    .aisg-why ul { margin: 2px 0 0; padding-inline-start: 18px; line-height: 1.7; }
+    .aisg-evh { font-weight: 600; margin-top: 2px; }
+    .aisg-model { font-style: italic; }
+    .aisg-date { font-variant-numeric: tabular-nums; }
+</style>
+
+@code {
+    [Parameter] public AiSuggestion? Suggestion { get; set; }
+    /// <summary>عنوان الحقل الثانوى (مركز التكلفة / المجموعة).</summary>
+    [Parameter] public string SecondaryLabel { get; set; } = "";
+    [Parameter] public EventCallback<AiSuggestion> OnApply { get; set; }
+    [Parameter] public EventCallback<AiSuggestion> OnDismiss { get; set; }
+
+    private bool _why;
+
+    protected override void OnParametersSet()
+    {
+        if (Suggestion is null) _why = false;
+    }
+
+    private string Label() =>
+        string.IsNullOrWhiteSpace(Suggestion!.TargetCode) ? (Suggestion.TargetName ?? "") : $"{Suggestion.TargetName} ({Suggestion.TargetCode})";
+
+    private string SourceText() => Suggestion!.Source switch
+    {
+        AiSuggestSources.Exact => Tr("AIG_SrcExact"),
+        AiSuggestSources.Model => Tr("AIG_SrcModel"),
+        _ => Tr("AIG_SrcNeighbors"),
+    };
+
+    private async Task ApplyAsync()
+    {
+        if (Suggestion is { } s) await OnApply.InvokeAsync(s);
+    }
+
+    private async Task DismissAsync()
+    {
+        if (Suggestion is { } s) await OnDismiss.InvokeAsync(s);
+    }
+
+    private string Tr(string key)
+    {
+        var previous = CultureInfo.CurrentUICulture;
+        try { CultureInfo.CurrentUICulture = LangService.CurrentCultureInfo; return Lang[key]; }
+        finally { CultureInfo.CurrentUICulture = previous; }
+    }
+}
