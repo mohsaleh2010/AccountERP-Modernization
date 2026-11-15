@@ -151,6 +151,20 @@ namespace AccountERP.SharedUI.Services
         public AiChatMessage? PendingAsk =>
             Messages.Count > 0 && Messages[^1] is { Role: "assistant", Ask.Pending: true } m ? m : null;
 
+        /// <summary>
+        /// P8.2.5 (س30): «اسأل المساعد» من لوحة Ctrl+K — محادثة جديدة ثم الإرسال بلا انتظار (يكمل فى الخلفية على نفس الدائرة،
+        /// وصفحة /assistant تعرض البث). false = لا صلاحية أو رد جارٍ أو نص فارغ، فلا يُرسل شىء.
+        /// </summary>
+        public bool TryAskNew(string text, AiScreenContext context)
+        {
+            text = (text ?? "").Trim();
+            if (!HasAccess || IsSending || IsUploading || text.Length == 0) return false;
+            NewConversation();
+            if (ConversationId != 0) return false;
+            _ = SendAsync(text, context);
+            return true;
+        }
+
         /// <summary>رسالة جديدة؛ وإن كان للمساعد سؤال معلّق فالنص المكتوب إجابة حرة عليه (P4). P6: المرفقات المرفوعة تُرسل معها.</summary>
         public Task SendAsync(string text, AiScreenContext context)
         {

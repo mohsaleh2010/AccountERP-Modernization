@@ -33,6 +33,8 @@ namespace AccountERP.SharedUI.Services
 
         // 🤖 المساعد الذكى P1: الأيقونة العائمة (إظهار + الموضع start = بداية السطر / end = نهايته، يتبع اتجاه اللغة).
         public bool ShowAiAssistantIcon { get; private set; } = true;
+        // 🔎 P8.2.5 (س25): اختصارا لوحة البحث السريع (Ctrl+K و /). الإيقاف يبقى زر الشريط العلوى (WCAG 2.1.4).
+        public bool SearchShortcuts { get; private set; } = true;
         public string AiAssistantIconPosition { get; private set; } = "end";
 
         public event Action? OnChanged;
@@ -54,6 +56,7 @@ namespace AccountERP.SharedUI.Services
                     : null;
                 ShowAiAssistantIcon = !settings.TryGetValue(UserSettingKeys.ShowAiAssistantIcon, out var showAi) || showAi != "false";
                 AiAssistantIconPosition = settings.TryGetValue(UserSettingKeys.AiAssistantIconPosition, out var aiPos) && aiPos == "start" ? "start" : "end";
+                SearchShortcuts = !settings.TryGetValue(UserSettingKeys.SearchShortcuts, out var shortcuts) || shortcuts != "false";
             }
             catch
             {
@@ -66,6 +69,7 @@ namespace AccountERP.SharedUI.Services
                 Language = null;
                 ShowAiAssistantIcon = true;
                 AiAssistantIconPosition = "end";
+                SearchShortcuts = true;
             }
 
             IsLoaded = true;
@@ -85,6 +89,15 @@ namespace AccountERP.SharedUI.Services
             Language = null;
             ShowAiAssistantIcon = true;
             AiAssistantIconPosition = "end";
+            SearchShortcuts = true;
+            OnChanged?.Invoke();
+        }
+
+        public void SetSearchShortcuts(bool value)
+        {
+            if (SearchShortcuts == value) return;
+            SearchShortcuts = value;
+            TrySave(UserSettingKeys.SearchShortcuts, value);
             OnChanged?.Invoke();
         }
 

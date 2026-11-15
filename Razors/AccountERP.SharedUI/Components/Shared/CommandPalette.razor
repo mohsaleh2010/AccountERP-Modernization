@@ -113,7 +113,7 @@
             <div id="cmdk-list" class="cmdk-list" role="listbox" aria-label="@Tr("AIS_Title")" aria-busy="@(_showBusy ? "true" : "false")" @ref="_list">
                 @foreach (var g in _groups)
                 {
-                    <div role="group" aria-labelledby="cmdk-grp-@g.Key">
+                    <div role="group" aria-labelledby="@(g.Label.Length > 0 ? "cmdk-grp-" + g.Key : null)" aria-label="@(g.Label.Length > 0 ? null : Tr("AIS_AskHint"))">
                         @if (g.Clearable)
                         {
                             <div class="cmdk-group-head" role="presentation">
@@ -121,7 +121,7 @@
                                 <button type="button" class="cmdk-clear" @onmousedown:preventDefault="true" @onclick="ClearRecentAsync">@Tr("AIS_ClearRecent")</button>
                             </div>
                         }
-                        else
+                        else if (g.Label.Length > 0)
                         {
                             <div id="cmdk-grp-@g.Key" class="cmdk-group-label" role="presentation">@g.Label</div>
                         }
@@ -161,9 +161,19 @@
                 {
                     <div class="cmdk-note cmdk-warn" role="presentation">@Tr("AIS_DataError")</div>
                 }
-                @if (_items.Count == 0 && _dataState != DataState.Pending)
+                @if (string.IsNullOrWhiteSpace(_text) && _items.Count == 0)
                 {
-                    <div class="cmdk-empty" role="presentation">@(string.IsNullOrWhiteSpace(_text) ? Tr("AIS_EmptyHint") : Tr("AIS_NoResults"))</div>
+                    <div class="cmdk-empty" role="presentation">
+                        @Tr("AIS_EmptyHint")
+                        @if (_svc.HasData)
+                        {
+                            <div class="cmdk-note" style="padding-top: 6px;">@Tr("AIS_HintScopes")</div>
+                        }
+                    </div>
+                }
+                else if (!string.IsNullOrWhiteSpace(_text) && _dataState != DataState.Pending && !HasNonAsk)
+                {
+                    <div class="cmdk-empty" role="presentation">@(HasAsk ? Tr("AIS_NoResultsAsk") : Tr("AIS_NoResults"))</div>
                 }
             </div>
 
@@ -200,17 +210,23 @@
     private UserPreferencesService? _prefs;
     private string _live = "";
 
+    // P8.2.5
+    private PaletteItem? _ask;
+    private bool HasAsk => _ask != null;
+    private bool HasNonAsk => _items.Any(i => i.Kind != AiSearchKinds.Ask);
+
     private string LiveText =>
         _live.Length > 0 ? _live :
         string.IsNullOrWhiteSpace(_text) ? "" :
         _dataState == DataState.Pending ? "" :
-        _items.Count == 0 ? Tr("AIS_NoResults") : Tr("AIS_ResultsCount", _items.Count);
+        !HasNonAsk ? (HasAsk ? Tr("AIS_NoResultsAsk") : Tr("AIS_NoResults")) : Tr("AIS_ResultsCount", _items.Count(i => i.Kind != AiSearchKinds.Ask));
 
     protected override void OnInitialized()
     {
         _svc = ServiceProvider.GetService<CommandPaletteService>();
         if (_svc == null) return;
         _prefs = ServiceProvider.GetService<UserPreferencesService>();
+        if (_prefs != null) _prefs.OnChanged += OnPrefsChanged;
         _svc.OpenRequested += OnOpenRequested;
         MenuState.OnAuthChanged += OnAuthChanged;
         LangService.OnLanguageChanged += OnLanguageChanged;
@@ -226,8 +242,9 @@
             {
                 _module = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/AccountERP.SharedUI/js/palette.js");
                 _self = DotNetObjectReference.Create(this);
-                bool isMac = await _module.InvokeAsync<bool>("init", _self, new { shortcuts = true });
+                bool isMac = await _module.InvokeAsync<bool>("init", _self, new { shortcuts = _prefs?.SearchShortcuts ?? true });
                 _svc.SetIsMac(isMac);
+                _lastShortcuts = _prefs?.SearchShortcuts ?? true;
             }
             if (_module == null) return;
             if (_open && _openedPending)
@@ -251,6 +268,19 @@
 
     private void OnOpenRequested() => InvokeAsync(Open);
 
+    // س25: إيقاف التفضيل يعطّل Ctrl+K و / ويبقى زر الشريط العلوى.
+    private bool _lastShortcuts = true;
+    private void OnPrefsChanged() => InvokeAsync(async () =>
+    {
+        bool on = _prefs?.SearchShortcuts ?? true;
+        if (on == _lastShortcuts || _module == null) return;
+        _lastShortcuts = on;
+        try { await _module.InvokeVoidAsync("setOptions", new { shortcuts = on }); }
+        catch (JSDisconnectedException) { }
+        catch (InvalidOperationException) { }
+        catch (JSException) { }
+    });
+
     private void Open()
     {
         if (_svc == null || !_svc.IsAvailable || _open) return;
@@ -261,6 +291,7 @@
         _screens = new(); _data = new(); _recent = new(); _dataHits = new();
         _dataState = DataState.None;
         _showBusy = _pendingEnter = false;
+        _ask = null;
         Rebuild();
         StateHasChanged();
         if (_svc.HasData) _ = LoadRecentAsync();
@@ -298,6 +329,13 @@
         int seq = ++_seq;
 
         var q = AiSearchText.Parse(_text);
+        // س30/س31: صف «اسأل المساعد» لمن يملكه ونص ≥ حرفين؛ ؟ أولاً أو آخراً ⇒ هو الصف الوحيد.
+        string question = _text.Trim();
+        _ask = _svc != null && _svc.CanAsk && q.Normalized.Length >= AiSearchConst.MinChars
+            ? new PaletteItem { Kind = AiSearchKinds.Ask, Title = Tr("AIS_AskAssistant", Short(question, 80)), Subtitle = Tr("AIS_AskHint"),
+                                Icon = Icons.Material.Filled.AutoAwesome, Url = "/assistant", RefKey = question }
+            : null;
+        if (q.AskOnly) _screens = new();
         bool wantData = _svc != null && _svc.HasData && !q.AskOnly && q.HasDataText &&
                         (q.DocNumber != null || q.Tokens.Count > 0);
         _dataState = wantData ? DataState.Pending : DataState.None;
@@ -386,6 +424,7 @@
             Add("suppliers", Tr("AIS_GrpSuppliers"), _data.Where(d => d.Kind == AiSearchKinds.Supplier));
             Add("items", Tr("AIS_GrpItems"), _data.Where(d => d.Kind == AiSearchKinds.Item));
             Add("docs", Tr("AIS_GrpDocuments"), _data.Where(d => AiSearchKinds.IsDocument(d.Kind)));
+            if (_ask != null) Add("ask", "", new[] { _ask });
         }
         _items = items;
         _groups = groups;
@@ -429,6 +468,20 @@
             Icon = icon.Length > 0 ? icon : Icons.Material.Filled.History,
         };
     }
+
+    /// <summary>سياق الشاشة الحالية للمساعد (نفس منطق AssistantWidget.CurrentContext).</summary>
+    private AiScreenContext CurrentContext()
+    {
+        string rel = Nav.ToBaseRelativePath(Nav.Uri);
+        string path = rel.Split('?', '#')[0];
+        string title = "";
+        try { title = MenuState.UserAllowedMenus.FindMenuForRoute(rel)?.GetLocalizedDescription(LangService.CurrentLanguage) ?? ""; }
+        catch { }
+        if (path.Length == 0) title = Tr("NavHome");
+        return new AiScreenContext { Route = "/" + path, Title = title, Language = LangService.CurrentCultureInfo.Name };
+    }
+
+    private static string Short(string s, int n) => s.Length <= n ? s : s.Substring(0, n).TrimEnd() + "…";
 
     private string KindLabel(string kind) => kind switch
     {
@@ -492,6 +545,15 @@
     private async Task ActivateAsync(PaletteItem item)
     {
         if (item == null || !AiSearchText.IsSafeInternalUrl(item.Url)) return;   // س17
+        if (item.Kind == AiSearchKinds.Ask)
+        {
+            // س30: محادثة جديدة بلا انتظار ثم صفحة المساعد؛ رد جارٍ ⇒ تنبيه بلا إرسال.
+            if (_svc == null || !_svc.TryAsk(item.RefKey, CurrentContext()))
+                Snackbar.Add(Tr("AIS_AssistantBusy"), Severity.Warning);
+            await CloseAsync(true);
+            Nav.NavigateTo("/assistant");
+            return;
+        }
         _svc?.Touch(item);
         await CloseAsync(true);
         Nav.NavigateTo(item.Url);
@@ -507,9 +569,9 @@
     public Task ActivateFromKeyboard(int index) => InvokeAsync(async () =>
     {
         if (!_open) return;
-        if (index >= 0 && index < _items.Count) { await ActivateAsync(_items[index]); return; }
-        // س29: لا صفوف بعد والبيانات قيد البحث ⇒ يُنفَّذ Enter عند وصولها.
-        if (_items.Count == 0 && _dataState == DataState.Pending) _pendingEnter = true;
+        // س29: لا صفوف (أو «اسأل المساعد» وحده) والبيانات قيد البحث ⇒ يُنفَّذ Enter عند وصولها، فلا يُرسل للنموذج قبل اكتمال البحث.
+        if (_dataState == DataState.Pending && !HasNonAsk) { _pendingEnter = true; return; }
+        if (index >= 0 && index < _items.Count) await ActivateAsync(_items[index]);
     });
 
     private void OnAuthChanged() => InvokeAsync(() => CloseAsync(false));
@@ -543,6 +605,7 @@
     public async ValueTask DisposeAsync()
     {
         if (_svc != null) _svc.OpenRequested -= OnOpenRequested;
+        if (_prefs != null) _prefs.OnChanged -= OnPrefsChanged;
         _cts?.Cancel();
         MenuState.OnAuthChanged -= OnAuthChanged;
         LangService.OnLanguageChanged -= OnLanguageChanged;

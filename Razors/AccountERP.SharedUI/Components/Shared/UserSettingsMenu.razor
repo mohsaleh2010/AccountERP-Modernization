@@ -67,6 +67,15 @@
 
         <MudDivider Class="my-3" />
 
+        @* 🔎 P8.2.5 (س25): اختصارا البحث السريع Ctrl+K و / — للجميع (اللوحة تعمل على الويب وMAUI) *@
+        <MudStack Spacing="1" Class="mb-2">
+            <MudSwitch T="bool" Value="@Prefs.SearchShortcuts" ValueChanged="@((bool v) => Prefs.SetSearchShortcuts(v))"
+                       Color="Color.Primary" Label="@Tr("AIS_PrefShortcuts")" />
+            <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="margin-inline-start:52px;">@Tr("AIS_PrefShortcutsHint")</MudText>
+        </MudStack>
+
+        <MudDivider Class="my-3" />
+
         @* 🤖 المساعد الذكى P1: إظهار الأيقونة العائمة وموضعها - لمن يملك صلاحية المساعد فقط (AssistantSessionService مسجّلة على الويب فقط) *@
         @if (_assistant?.HasAccess == true)
         {

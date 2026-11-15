@@ -46,6 +46,12 @@ namespace AccountERP.SharedUI.Services
         /// <summary>P8.2.4: بحث البيانات و«الأخيرة» متاحان (ويب + مستخدم حقيقى). على MAUI false فتبقى الشاشات وحدها (س32).</summary>
         public bool HasData => _gw != null && _chat != null && _chat.UserId > 0;
 
+        /// <summary>P8.2.5: صف «اسأل المساعد» يظهر لمن يملك المساعد فقط (س30).</summary>
+        public bool CanAsk => _chat?.HasAccess == true;
+
+        /// <summary>P8.2.5: محادثة جديدة بالسؤال (بلا انتظار). false = رد جارٍ أو لا صلاحية.</summary>
+        public bool TryAsk(string text, AiScreenContext context) => _chat?.TryAskNew(text, context) == true;
+
         /// <summary>يُضبط من palette.js (init) لعرض ⌘ K بدل Ctrl K على أجهزة Apple.</summary>
         public bool IsMac { get; private set; }
 
