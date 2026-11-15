@@ -256,6 +256,24 @@ SELECT c.Id AS customer_id, c.Group_Id AS group_id,
 FROM dbo.Customer c
 LEFT JOIN " + CreditToken + @" pc ON pc.Customer_Id = c.Id
 LEFT JOIN " + CreditToken + @" pg ON pc.Id IS NULL AND pg.Customer_Id IS NULL AND pg.Group_Id = c.Group_Id;"),
+            // P8.8 (ai-assistant-p88-plan.md ص6): سوابق التصنيف = أسطر سندات الخزينة إلى حساب عام (لا عميل ولا مورد) مع مركز التكلفة.
+            // قراءة فقط؛ نفس شرط الصلاحية والسندات الحقيقية كـ v_cash_vouchers.
+            ("v_expense_history", @"CREATE OR ALTER VIEW ai.v_expense_history AS
+SELECT m.Id AS line_id, CONVERT(date, m.Transaction_Date) AS voucher_date, m.Transaction_Type AS transaction_type,
+       COALESCE(NULLIF(LTRIM(RTRIM(CONVERT(nvarchar(400), m.Notes))), N''), CONVERT(nvarchar(400), o.Order_Notes)) AS notes,
+       m.SubAccount_Id AS sub_account_id, CONVERT(nvarchar(100), m.Account_Code) AS account_code,
+       CONVERT(nvarchar(300), COALESCE(a.SubAccount_Name, m.Account_Name)) AS account_name, m.Account_Type AS account_type,
+       NULLIF(m.Account_Cost_Center_Tree_Id, 0) AS cost_center_id,
+       CONVERT(nvarchar(300), COALESCE(NULLIF(m.CostCenter_Name, N''), m.Cost_Center)) AS cost_center_name,
+       b.Branch_Id AS branch_id, m.User_Id AS user_id
+FROM dbo.Money_Transaction_Box m
+INNER JOIN dbo.Order_Money o ON o.Id = m.Order_Mony_Id
+LEFT JOIN dbo.Banks b ON b.id = m.Bank_Id
+LEFT JOIN dbo.Submain_Account a ON a.Id = m.SubAccount_Id
+WHERE o.Order_No <> 0 AND o.Order_No <> -1
+  AND ISNULL(m.Customer_Id, 0) = 0 AND ISNULL(m.Supplier_Id, 0) = 0 AND ISNULL(m.SubAccount_Id, 0) > 0
+  AND (CAST(SESSION_CONTEXT(N'ai_box_perm') AS int) = 0
+       OR (CAST(SESSION_CONTEXT(N'ai_box_perm') AS int) = 1 AND " + BoxPermToken + @"));"),
         };
 
         /// <summary>

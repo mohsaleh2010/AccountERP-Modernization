@@ -1,0 +1,175 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using System.Globalization;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+
+namespace AccountModelsLib
+{
+    /// <summary>
+    /// P8.8.1 (ai-assistant-p88-plan.md §4): طبقة بيانات AI_Suggestions وAI_Suggestions_Vectors بنمط AiCollectCLS.
+    /// الكتابة على هذين الجدولين فقط.
+    /// </summary>
+    public class AiSuggestCLS
+    {
+        private readonly Func<operations> _newOpp;
+
+        public AiSuggestCLS(Func<operations> newOpp = null)
+        {
+            _newOpp = newOpp ?? (() => new operations());
+        }
+
+        public long Insert(AiSuggestionRow s)
+        {
+            long id = s.Id != 0 ? s.Id : CallSnowflakeIdGenerate.GenerateNewId();
+            _newOpp().db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO AI_Suggestions (Id, Kind, User_Id, Branch_Id, InputText, InputHash, SuggestedJson, Source, Confidence, Outcome, Screen, CreatedBy, CreatedAt)
+VALUES ({id}, {Cut(s.Kind, 20)}, {s.User_Id}, {s.Branch_Id}, {Cut(s.InputText, 400)}, {Cut(s.InputHash, 64)}, {s.SuggestedJson}, {Cut(s.Source, 20)},
+        {AiSqlParams.Dec(s.Confidence, 9, 4)}, {Cut(s.Outcome ?? AiSuggestOutcomes.Shown, 20)}, {Cut(s.Screen, 200)}, {s.User_Id}, {DateTime.Now})");
+            s.Id = id;
+            return id;
+        }
+
+        /// <summary>ص14: يسجل قرار المستخدم على اقتراحه هو فقط. false إن لم يوجد أو لم يكن له.</summary>
+        public bool RecordOutcome(long id, long userId, string outcome, string finalJson)
+        {
+            if (!AiSuggestOutcomes.IsValid(outcome)) return false;
+            return _newOpp().db.Database.ExecuteSqlInterpolated($@"
+UPDATE AI_Suggestions SET Outcome = {outcome}, FinalJson = {finalJson}, DecidedAt = {DateTime.Now}, UpdatedBy = {userId}, UpdatedAt = {DateTime.Now}
+WHERE Id = {id} AND User_Id = {userId}") == 1;
+        }
+
+        public AiSuggestionRow Get(long id)
+        {
+            AiSuggestionRow row = null;
+            Exec(@"SELECT Id, Kind, User_Id, Branch_Id, InputText, InputHash, SuggestedJson, Source, Confidence, Outcome, FinalJson, Screen, CreatedAt, DecidedAt
+FROM AI_Suggestions WHERE Id = @id", c => Add(c, "@id", id), r => row = new AiSuggestionRow
+            {
+                Id = r.GetInt64(0),
+                Kind = S(r, 1),
+                User_Id = r.GetInt64(2),
+                Branch_Id = r.IsDBNull(3) ? 0 : r.GetInt64(3),
+                InputText = S(r, 4),
+                InputHash = S(r, 5),
+                SuggestedJson = S(r, 6),
+                Source = S(r, 7),
+                Confidence = r.IsDBNull(8) ? (decimal?)null : Convert.ToDecimal(r.GetValue(8), CultureInfo.InvariantCulture),
+                Outcome = S(r, 9),
+                FinalJson = S(r, 10),
+                Screen = S(r, 11),
+                CreatedAt = r.IsDBNull(12) ? (DateTime?)null : r.GetDateTime(12),
+                DecidedAt = r.IsDBNull(13) ? (DateTime?)null : r.GetDateTime(13),
+            });
+            return row;
+        }
+
+        /// <summary>ص18: نسبة القبول آخر N يوماً لكل نوع.</summary>
+        public List<AiSuggestStats> Stats(int days)
+        {
+            var map = new Dictionary<string, AiSuggestStats>(StringComparer.Ordinal);
+            Exec(@"SELECT Kind, Outcome, COUNT(*) FROM AI_Suggestions WHERE CreatedAt >= @from GROUP BY Kind, Outcome",
+                c => Add(c, "@from", DateTime.Now.AddDays(-Math.Max(1, days))), r =>
+                {
+                    string k = S(r, 0) ?? "";
+                    AiSuggestStats st;
+                    if (!map.TryGetValue(k, out st)) map[k] = st = new AiSuggestStats { Kind = k };
+                    int n = Convert.ToInt32(r.GetValue(2), CultureInfo.InvariantCulture);
+                    switch (S(r, 1))
+                    {
+                        case AiSuggestOutcomes.Applied: st.Applied += n; break;
+                        case AiSuggestOutcomes.Dismissed: st.Dismissed += n; break;
+                        case AiSuggestOutcomes.Overridden: st.Overridden += n; break;
+                        default: st.Shown += n; break;
+                    }
+                });
+            return new List<AiSuggestStats>(map.Values);
+        }
+
+        /// <summary>عدد اقتراحات المستخدم اليوم (حد يومى للنموذج).</summary>
+        public int CountModelToday(long userId)
+        {
+            int n = 0;
+            Exec("SELECT COUNT(*) FROM AI_Suggestions WHERE User_Id = @u AND Source = N'model' AND CreatedAt >= @d",
+                c => { Add(c, "@u", userId); Add(c, "@d", DateTime.Today); }, r => n = Convert.ToInt32(r.GetValue(0), CultureInfo.InvariantCulture));
+            return n;
+        }
+
+        // ───────────── المتجهات (ص8) ─────────────
+
+        /// <summary>كل متجهات نوع لنموذج تضمين: TextHash → (Text, Embedding).</summary>
+        public Dictionary<string, KeyValuePair<string, byte[]>> LoadVectors(string kind, long modelId)
+        {
+            var map = new Dictionary<string, KeyValuePair<string, byte[]>>(StringComparer.Ordinal);
+            Exec(@"SELECT TextHash, Text, Embedding FROM AI_Suggestions_Vectors WHERE Kind = @k AND EmbeddingModel_Id = @m AND Embedding IS NOT NULL",
+                c => { Add(c, "@k", kind); Add(c, "@m", modelId); },
+                r => map[r.GetString(0)] = new KeyValuePair<string, byte[]>(r.GetString(1), (byte[])r.GetValue(2)));
+            return map;
+        }
+
+        public HashSet<string> VectorHashes(string kind, long modelId)
+        {
+            var set = new HashSet<string>(StringComparer.Ordinal);
+            Exec("SELECT TextHash FROM AI_Suggestions_Vectors WHERE Kind = @k AND EmbeddingModel_Id = @m",
+                c => { Add(c, "@k", kind); Add(c, "@m", modelId); }, r => set.Add(r.GetString(0)));
+            return set;
+        }
+
+        public int CountVectors(string kind)
+        {
+            int n = 0;
+            Exec("SELECT COUNT(*) FROM AI_Suggestions_Vectors WHERE Kind = @k AND Embedding IS NOT NULL",
+                c => Add(c, "@k", kind), r => n = Convert.ToInt32(r.GetValue(0), CultureInfo.InvariantCulture));
+            return n;
+        }
+
+        public void InsertVector(string kind, string textHash, string text, byte[] embedding, long modelId, int dim)
+        {
+            long id = CallSnowflakeIdGenerate.GenerateNewId();
+            var blob = new SqlParameter("@e", SqlDbType.VarBinary, -1) { Value = (object)embedding ?? DBNull.Value };
+            _newOpp().db.Database.ExecuteSqlRaw(@"
+IF NOT EXISTS (SELECT 1 FROM AI_Suggestions_Vectors WHERE Kind = @k AND TextHash = @h AND EmbeddingModel_Id = @m)
+INSERT INTO AI_Suggestions_Vectors (Id, Kind, TextHash, Text, Embedding, EmbeddingModel_Id, EmbeddingDim, CreatedAt)
+VALUES (@id, @k, @h, @t, @e, @m, @d, GETDATE())",
+                new SqlParameter("@id", id), new SqlParameter("@k", kind), new SqlParameter("@h", textHash),
+                new SqlParameter("@t", Cut(text, 400) ?? ""), blob, new SqlParameter("@m", modelId), new SqlParameter("@d", dim));
+        }
+
+        /// <summary>عند تغيير نموذج التضمين: يحذف متجهات النماذج الأخرى (جدولنا فقط).</summary>
+        public int DeleteVectorsExceptModel(long modelId) =>
+            _newOpp().db.Database.ExecuteSqlInterpolated($"DELETE FROM AI_Suggestions_Vectors WHERE EmbeddingModel_Id <> {modelId}");
+
+        // ───────────── أدوات ─────────────
+
+        private static string S(DbDataReader r, int i) => r.IsDBNull(i) ? null : Convert.ToString(r.GetValue(i), CultureInfo.InvariantCulture);
+        private static string Cut(string s, int max) => s == null ? null : (s.Length > max ? s.Substring(0, max) : s);
+
+        private static void Add(DbCommand cmd, string name, object value)
+        {
+            var p = cmd.CreateParameter();
+            p.ParameterName = name;
+            p.Value = value ?? DBNull.Value;
+            cmd.Parameters.Add(p);
+        }
+
+        private void Exec(string sql, Action<DbCommand> bind, Action<DbDataReader> row)
+        {
+            var db = _newOpp().db;
+            var conn = db.Database.GetDbConnection();
+            bool wasClosed = conn.State != ConnectionState.Open;
+            if (wasClosed) conn.Open();
+            try
+            {
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = sql;
+                    bind(cmd);
+                    using (var r = cmd.ExecuteReader())
+                        while (r.Read()) row(r);
+                }
+            }
+            finally { if (wasClosed) conn.Close(); }
+        }
+    }
+}

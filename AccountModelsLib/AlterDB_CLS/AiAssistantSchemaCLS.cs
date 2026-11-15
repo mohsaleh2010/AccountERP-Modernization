@@ -464,6 +464,33 @@ CREATE NONCLUSTERED INDEX [IX_AI_CollectionActions_Type_Status] ON [dbo].[AI_Col
     [CostEstimate] [decimal](18, 6) NULL,
     [RejectReason] [nvarchar](300) NULL,",
              @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_CollectionDrafts_Customer_Lang] ON [dbo].[AI_CollectionDrafts]([Customer_Id], [Language]);"),
+
+            // P8.8 (ai-assistant-p88-plan.md ص13): سجل الاقتراحات (لا مصدر حقيقة). Kind: expense / item. Source: exact / neighbors / model.
+            // Outcome: shown / applied / dismissed / overridden. FinalJson = ما حفظه المستخدم فعلاً.
+            ("AI_Suggestions", @"
+    [Kind] [nvarchar](20) NOT NULL,
+    [User_Id] [bigint] NOT NULL,
+    [Branch_Id] [bigint] NOT NULL DEFAULT ((0)),
+    [InputText] [nvarchar](400) NULL,
+    [InputHash] [nvarchar](64) NULL,
+    [SuggestedJson] [nvarchar](max) NULL,
+    [Source] [nvarchar](20) NULL,
+    [Confidence] [decimal](9, 4) NULL,
+    [Outcome] [nvarchar](20) NOT NULL DEFAULT (N'shown'),
+    [FinalJson] [nvarchar](max) NULL,
+    [Screen] [nvarchar](200) NULL,
+    [DecidedAt] [datetime] NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_AI_Suggestions_Kind_CreatedAt] ON [dbo].[AI_Suggestions]([Kind], [CreatedAt] DESC);"),
+
+            // P8.8 (ص8): متجهات النصوص المميزة للسوابق (float32 LE مطبّعة) لكل نموذج تضمين.
+            ("AI_Suggestions_Vectors", @"
+    [Kind] [nvarchar](20) NOT NULL,
+    [TextHash] [nvarchar](64) NOT NULL,
+    [Text] [nvarchar](400) NOT NULL,
+    [Embedding] [varbinary](max) NULL,
+    [EmbeddingModel_Id] [bigint] NOT NULL,
+    [EmbeddingDim] [int] NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_SuggVec_Kind_Hash_Model] ON [dbo].[AI_Suggestions_Vectors]([Kind], [TextHash], [EmbeddingModel_Id]);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>
@@ -544,6 +571,13 @@ CREATE NONCLUSTERED INDEX [IX_AI_CollectionActions_Type_Status] ON [dbo].[AI_Col
             (AiSettingKeys.ScreenAssistNarrative, "1"),
             (AiSettingKeys.ScreenAssistMaxPerDay, "200"),
             (AiSettingKeys.ScreenContextAmbient, "1"),
+            // P8.8 (ص17): موقوف افتراضياً
+            (AiSettingKeys.SuggestEnabled, "0"),
+            (AiSettingKeys.SuggestUseModel, "1"),
+            (AiSettingKeys.SuggestMinConfidence, "0.35"),
+            (AiSettingKeys.SuggestHistoryMonths, "24"),
+            (AiSettingKeys.SuggestMaxRows, "50000"),
+            (AiSettingKeys.SuggestForAllUsers, "0"),
         };
 
         public static readonly List<string> LastErrors = new List<string>();

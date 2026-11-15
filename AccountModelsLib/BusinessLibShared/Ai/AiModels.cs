@@ -156,6 +156,13 @@ namespace AccountModelsLib
         public const string ScreenAssistNarrative = "ScreenAssistNarrative";
         public const string ScreenAssistMaxPerDay = "ScreenAssistMaxPerDay";
         public const string ScreenContextAmbient = "ScreenContextAmbient";
+        // P8.8 (ai-assistant-p88-plan.md ص17): التصنيف التلقائى (اقتراح فقط)
+        public const string SuggestEnabled = "SuggestEnabled";
+        public const string SuggestUseModel = "SuggestUseModel";
+        public const string SuggestMinConfidence = "SuggestMinConfidence";
+        public const string SuggestHistoryMonths = "SuggestHistoryMonths";
+        public const string SuggestMaxRows = "SuggestMaxRows";
+        public const string SuggestForAllUsers = "SuggestForAllUsers";
     }
 
     /// <summary>صف AI_Providers كما يُخزَّن (المفتاح مشفّر). لا يصل للواجهة؛ الواجهة ترى AiProviderView.</summary>
