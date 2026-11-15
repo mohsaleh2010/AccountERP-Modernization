@@ -24,6 +24,8 @@ namespace AccountModelsLib
         public AiBriefPurchasesFacts Purchases { get; set; }
         /// <summary>للتنبيه negative_stock فقط (بصلاحية أرصدة المخازن)؛ ليس قسماً مستقلاً.</summary>
         public AiBriefStockFacts Stock { get; set; }
+        /// <summary>P8.4 (ش27): للتنبيه anomalies_new فقط (بصلاحية صفحة شذوذ القيود)؛ ليس قسماً مستقلاً.</summary>
+        public AiBriefAnomalyFacts Anomalies { get; set; }
 
         public int PeriodDays => Math.Max(1, (int)(PeriodTo.Date - PeriodFrom.Date).TotalDays + 1);
     }
@@ -185,6 +187,16 @@ namespace AccountModelsLib
         public List<AiBriefNegativeItem> NegativeTop { get; set; } = new List<AiBriefNegativeItem>();
     }
 
+    /// <summary>P8.4: شذوذ غير مراجَع (ليس تاريخياً) فى فروع النطاق. NewCount/HighCount = ما كُشف منذ بداية الفترة، OpenTotal = كل المفتوح.</summary>
+    public class AiBriefAnomalyFacts
+    {
+        public int NewCount { get; set; }
+        public int HighCount { get; set; }
+        public int OpenTotal { get; set; }
+        /// <summary>أعلى 5: «#رقم القيد — اسم الحساب».</summary>
+        public List<string> Top { get; set; } = new List<string>();
+    }
+
     public static class AiBriefAlertCodes
     {
         public const string SalesDrop = "sales_drop";
@@ -195,8 +207,10 @@ namespace AccountModelsLib
         public const string OverdueReceivables = "overdue_receivables";
         public const string NegativeStock = "negative_stock";
         public const string LargePayment = "large_payment";
+        /// <summary>P8.4 (ش27).</summary>
+        public const string AnomaliesNew = "anomalies_new";
 
-        public static readonly string[] All = { SalesDrop, NoSales, ReturnsHigh, BelowCost, CashLow, OverdueReceivables, NegativeStock, LargePayment };
+        public static readonly string[] All = { SalesDrop, NoSales, ReturnsHigh, BelowCost, CashLow, OverdueReceivables, NegativeStock, LargePayment, AnomaliesNew };
     }
 
     public static class AiBriefSeverity

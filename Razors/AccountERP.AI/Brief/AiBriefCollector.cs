@@ -53,6 +53,10 @@ namespace AccountERP.AI.Brief
             _audit = audit ?? new AiToolAuditCLS();
         }
 
+        /// <summary>P8.4 خطافا اختبار: تفعيل الكشف وأعداد AI_Anomalies (بدل AI_Settings/AiAnomalyCLS).</summary>
+        public Func<bool>? AnomalyEnabled { get; set; }
+        public Func<IList<long>, DateTime, AiAnomalyBriefCounts>? AnomalySource { get; set; }
+
         public static AiBriefFacts? ParseFacts(string? json) =>
             string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<AiBriefFacts>(json, Json);
 
@@ -96,6 +100,7 @@ namespace AccountERP.AI.Brief
                 Group(result, AiBriefSections.Receivables, scope, ct, () => facts.Receivables = run.Receivables());
                 Group(result, AiBriefSections.Purchases, scope, ct, () => facts.Purchases = run.Purchases());
                 Group(result, AiBriefScopes.StockGroup, scope, ct, () => facts.Stock = run.Stock());
+                Group(result, AiBriefScopes.AnomalyGroup, scope, ct, () => facts.Anomalies = run.Anomalies());   // P8.4 (ش27)
             }
             finally { CultureInfo.CurrentCulture = prevCulture; }
 
@@ -382,6 +387,23 @@ FROM ai.v_purchases WHERE invoice_date >= @date_from AND invoice_date <= @date_t
 SELECT COUNT(*) AS returns, SUM(ISNULL(net_total_equivalent, 0)) AS net
 FROM ai.v_purchase_returns WHERE return_date >= @date_from AND return_date <= @date_to AND {bIn}", p);
                 if (r.Rows.Count > 0) { f.ReturnCount = I(r.Rows[0][0]); f.Returns = D(r.Rows[0][1]); }
+                return f;
+            }
+
+            /// <summary>P8.4: أعداد AI_Anomalies (جدولنا؛ ليس عبر الـ Views) منذ بداية الفترة. الميزة موقوفة ⇒ أصفار.</summary>
+            public AiBriefAnomalyFacts Anomalies()
+            {
+                var f = new AiBriefAnomalyFacts();
+                var sw = Stopwatch.StartNew();
+                bool on = owner.AnomalyEnabled?.Invoke() ?? AiAnomalySettings.From(new AiProvidersCLS().GetSettings()).Enabled;
+                if (!on) return f;
+                var c = owner.AnomalySource != null ? owner.AnomalySource(scope.BranchIds, from) : new AiAnomalyCLS().BriefCounts(scope.BranchIds, from);
+                f.NewCount = c.NewCount; f.HighCount = c.HighCount; f.OpenTotal = c.OpenTotal;
+                f.Top = c.Top.Select(t => "#" + (t.EntryNo?.ToString(CultureInfo.InvariantCulture) ?? t.EntryId.ToString(CultureInfo.InvariantCulture))
+                                          + (string.IsNullOrWhiteSpace(t.AccountName) ? "" : " — " + t.AccountName)).ToList();
+                result.Queries++;
+                Audit("entry_anomalies", "AiAnomalyCLS.BriefCounts(branches, " + Day(from) + ")", new { group = AiBriefScopes.AnomalyGroup, query = "entry_anomalies", from = Day(from), to = Day(to) },
+                      c.OpenTotal, sw.ElapsedMilliseconds, AiToolOutcome.Ok, null);
                 return f;
             }
 

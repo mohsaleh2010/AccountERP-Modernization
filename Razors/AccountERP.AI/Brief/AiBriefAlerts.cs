@@ -112,6 +112,16 @@ namespace AccountERP.AI.Brief
                 }
             }
 
+            // P8.4 (ش27): شذوذ قيود جديد غير مراجَع منذ بداية الفترة (المسح التاريخى لا يدخل).
+            var an = facts.Anomalies;
+            if (an != null && an.NewCount > 0 && hasRoute(AiSchemaCatalog.REntryAnomalies))
+            {
+                var a = New(AiBriefAlertCodes.AnomaliesNew, an.HighCount > 0 ? AiBriefSeverity.High : AiBriefSeverity.Medium, AiSchemaCatalog.REntryAnomalies,
+                    new Dictionary<string, string>(), ("count", an.NewCount), ("high", an.HighCount), ("open_total", an.OpenTotal));
+                a.Items.AddRange((an.Top ?? new List<string>()).Take(MaxItems));
+                list.Add(a);
+            }
+
             return list.OrderBy(a => AiBriefSeverity.Rank(a.Severity)).ThenBy(a => Array.IndexOf(AiBriefAlertCodes.All, a.Code)).ToList();
         }
 

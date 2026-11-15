@@ -20,6 +20,7 @@ namespace AccountERP.AI.Anomalies
         private readonly AiAnomalyCLS _dal;
         private readonly AiProvidersCLS _providers;
         private readonly Func<long, AiServerUser> _users;
+        private readonly AiToolAuditCLS _audit = new();
 
         /// <summary>اختيارى للاختبار: كتابة الإعداد بدل AI_Settings.</summary>
         public Action<string, string, long>? SettingWriter { get; set; }
@@ -107,8 +108,47 @@ FROM ai.v_gl_entries WHERE entry_id = @e ORDER BY line_no, line_id", GlView, Rea
             if (updated == 0) throw new AiAnomalyException(AiAnomalyErrors.NotFound, "القيد غير موجود فى قائمة الشذوذ.");
         }
 
-        public Task<AiAnomalyExplainRow> ExplainAsync(long entryId, string language, bool regenerate, AiUserContext user, CancellationToken ct) =>
-            throw new NotSupportedException("P8.4.5");
+        /// <summary>
+        /// P8.4.5 (ش24–ش26): صلاحية وفرع؛ الشرح موقوف ⇒ off؛ شرح مخزَّن (model/rejected) لنفس اللغة ولا regenerate ⇒ يُعاد بلا استدعاء؛
+        /// regenerate للمدير فقط؛ الحد اليومى ⇒ capped (لا يُحفظ)؛ غير ذلك استدعاء واحد ثم الحفظ والتدقيق anomaly_explain.
+        /// </summary>
+        public async Task<AiAnomalyExplainRow> ExplainAsync(long entryId, string language, bool regenerate, AiUserContext user, CancellationToken ct)
+        {
+            var server = EnsureView(user);
+            string lang = AiBriefConst.NormalizeLanguage(language);
+            var s = _job.Settings();
+            if (_dal.GetEntryView(entryId, Branches(server)) == null)
+                throw new AiAnomalyException(AiAnomalyErrors.NotFound, "القيد غير موجود فى قائمة الشذوذ.");
+            if (!s.Explain) return new AiAnomalyExplainRow { Entry_Id = entryId, Language = lang, Source = AiBriefNarrativeSource.Off };
+            if (regenerate && !IsAdmin(server)) throw new AiAnomalyException(AiAnomalyErrors.NotAdmin, "إعادة الشرح للمدير فقط.");
+            var existing = _dal.GetExplain(entryId, lang);
+            if (!regenerate && existing != null && (existing.Source == AiBriefNarrativeSource.Model || existing.Source == AiBriefNarrativeSource.Rejected))
+                return existing;
+            if (_dal.ExplainCountSince(Today().Date) >= s.ExplainMaxPerDay)
+                return new AiAnomalyExplainRow { Entry_Id = entryId, Language = lang, Source = AiBriefNarrativeSource.Capped };
+            var detail = GetEntry(entryId, user);
+            bool minimize = !(_providers.GetSettings().TryGetValue(AiSettingKeys.DataMinimization, out var dm) && dm == "0");
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            var row = await Explainer.ExplainAsync(detail, lang, s, minimize, ct);
+            row.Entry_Id = entryId;
+            if (row.Source != AiBriefNarrativeSource.Off) _dal.SaveExplain(row, server.UserId);
+            try
+            {
+                _audit.Insert(null, server.UserId, AiAnomalyConst.ExplainAuditTool,
+                    System.Text.Json.JsonSerializer.Serialize(new { entry_id = entryId, language = lang, source = row.Source, model = row.ModelName, minimize }),
+                    null, null, (int)sw.ElapsedMilliseconds, row.Source == AiBriefNarrativeSource.Model ? AiToolOutcome.Ok : AiToolOutcome.Error, row.RejectReason);
+            }
+            catch (Exception ex) { try { operations.DataDictionaryLogerException(ex); } catch { } }
+            return row;
+        }
+
+        private AiAnomalyExplainer? _explainer;
+        /// <summary>المفسّر (قابل للحقن فى الاختبار).</summary>
+        public AiAnomalyExplainer Explainer
+        {
+            get => _explainer ??= new AiAnomalyExplainer(_registry ?? throw new InvalidOperationException("no provider registry"), _providers);
+            set => _explainer = value;
+        }
 
         // ───────────── الإدارة ─────────────
 
