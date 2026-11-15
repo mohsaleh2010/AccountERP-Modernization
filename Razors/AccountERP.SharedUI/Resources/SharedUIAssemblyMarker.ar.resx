@@ -5812,4 +5812,167 @@
   <data name="AIEI_Error" xml:space="preserve"><value>تعذّر شرح الخطأ الآن.</value></data>
   <data name="AIEI_KEta" xml:space="preserve"><value>خطأ فاتورة إلكترونية</value></data>
   <data name="AIEI_HEta" xml:space="preserve"><value>مفاتيح المطابقة فى «الكلمات المفتاحية»: code:… ; path:… ; step:… ; phrase:…</value></data>
+  <data name="AIJ_Title" xml:space="preserve"><value>شذوذ القيود</value></data>
+  <data name="AIJ_Sub" xml:space="preserve"><value>قيود غير معتادة كشفتها قواعد ثابتة. للمراجعة فقط؛ لا يُعدَّل أى قيد.</value></data>
+  <data name="AIJ_LinkIntegrity" xml:space="preserve"><value>فحص سلامة القيود</value></data>
+  <data name="AIJ_LinkSettings" xml:space="preserve"><value>إعدادات الكشف</value></data>
+  <data name="AIJ_EmptyDisabled" xml:space="preserve"><value>كشف الشذوذ غير مفعّل. يفعّله المدير من إعدادات الذكاء الاصطناعى.</value></data>
+  <data name="AIJ_NotAvailable" xml:space="preserve"><value>هذه الصفحة متاحة فى نسخة الويب فقط.</value></data>
+  <data name="AIJ_EmptyNone" xml:space="preserve"><value>لا قيود شاذة بهذه الفلاتر.</value></data>
+  <data name="AIJ_KpiNew" xml:space="preserve"><value>جديدة</value></data>
+  <data name="AIJ_KpiHigh" xml:space="preserve"><value>عالية الخطورة</value></data>
+  <data name="AIJ_KpiReviewed" xml:space="preserve"><value>روجعت هذا الشهر</value></data>
+  <data name="AIJ_LastRun" xml:space="preserve"><value>آخر مسح: {0}</value></data>
+  <data name="AIJ_LastRunFailed" xml:space="preserve"><value>آخر مسح فشل: {0}</value></data>
+  <data name="AIJ_NeverRun" xml:space="preserve"><value>لم يجرِ مسح بعد</value></data>
+  <data name="AIJ_FStatus" xml:space="preserve"><value>الحالة</value></data>
+  <data name="AIJ_FRule" xml:space="preserve"><value>القاعدة</value></data>
+  <data name="AIJ_FSeverity" xml:space="preserve"><value>الخطورة</value></data>
+  <data name="AIJ_FBranch" xml:space="preserve"><value>الفرع</value></data>
+  <data name="AIJ_FFrom" xml:space="preserve"><value>من تاريخ</value></data>
+  <data name="AIJ_FTo" xml:space="preserve"><value>إلى تاريخ</value></data>
+  <data name="AIJ_FEntryNo" xml:space="preserve"><value>رقم القيد</value></data>
+  <data name="AIJ_FAll" xml:space="preserve"><value>الكل</value></data>
+  <data name="AIJ_FBackfill" xml:space="preserve"><value>إظهار نتائج المسح التاريخى</value></data>
+  <data name="AIJ_FSearch" xml:space="preserve"><value>عرض</value></data>
+  <data name="AIJ_FReset" xml:space="preserve"><value>مسح الفلاتر</value></data>
+  <data name="AIJ_ColDate" xml:space="preserve"><value>تاريخ القيد</value></data>
+  <data name="AIJ_ColEntryNo" xml:space="preserve"><value>رقم القيد</value></data>
+  <data name="AIJ_ColJournal" xml:space="preserve"><value>اليومية</value></data>
+  <data name="AIJ_ColSource" xml:space="preserve"><value>المصدر</value></data>
+  <data name="AIJ_ColBranch" xml:space="preserve"><value>الفرع</value></data>
+  <data name="AIJ_ColTotal" xml:space="preserve"><value>الإجمالى</value></data>
+  <data name="AIJ_ColRules" xml:space="preserve"><value>القواعد</value></data>
+  <data name="AIJ_ColSeverity" xml:space="preserve"><value>الخطورة</value></data>
+  <data name="AIJ_ColStatus" xml:space="preserve"><value>الحالة</value></data>
+  <data name="AIJ_Rule_amount_outlier" xml:space="preserve"><value>مبلغ خارج المعتاد</value></data>
+  <data name="AIJ_Rule_duplicate" xml:space="preserve"><value>قيد مكرر</value></data>
+  <data name="AIJ_Rule_off_hours" xml:space="preserve"><value>خارج الدوام</value></data>
+  <data name="AIJ_Rule_rare_account" xml:space="preserve"><value>حساب نادر الاستعمال</value></data>
+  <data name="AIJ_Rule_round_large" xml:space="preserve"><value>مبلغ مدوّر كبير</value></data>
+  <data name="AIJ_Why_amount_outlier" xml:space="preserve"><value>المبلغ {0} على الحساب «{1}» يساوى {2} انحرافاً معيارياً فوق متوسطه {3} (من {4} حركة سابقة).</value></data>
+  <data name="AIJ_Why_duplicate" xml:space="preserve"><value>يطابق القيد رقم {0} بتاريخ {1} فى كل السطور والمبالغ، وبينهما {2} يوم.</value></data>
+  <data name="AIJ_Why_off_hours_night" xml:space="preserve"><value>أُدخل الساعة {0}، خارج الدوام ({1}–{2}).</value></data>
+  <data name="AIJ_Why_off_hours_weekend" xml:space="preserve"><value>أُدخل يوم {0} وهو ليس يوم عمل.</value></data>
+  <data name="AIJ_Why_off_hours_holiday" xml:space="preserve"><value>أُدخل يوم {0} وهو عطلة مسجّلة.</value></data>
+  <data name="AIJ_Why_rare_account" xml:space="preserve"><value>الحساب «{0}» استُعمل {1} مرة فقط خلال آخر {2} يوماً.</value></data>
+  <data name="AIJ_Why_round_large" xml:space="preserve"><value>إجمالى القيد {0} مبلغ مدوّر (مضاعف {1}) ويتجاوز الحد {2}.</value></data>
+  <data name="AIJ_Sev_high" xml:space="preserve"><value>عالية</value></data>
+  <data name="AIJ_Sev_medium" xml:space="preserve"><value>متوسطة</value></data>
+  <data name="AIJ_Sev_info" xml:space="preserve"><value>للعلم</value></data>
+  <data name="AIJ_St_New" xml:space="preserve"><value>جديدة</value></data>
+  <data name="AIJ_St_Reviewed" xml:space="preserve"><value>تمت المراجعة</value></data>
+  <data name="AIJ_St_Dismissed" xml:space="preserve"><value>ليس شذوذاً</value></data>
+  <data name="AIJ_ChipBackfill" xml:space="preserve"><value>مسح تاريخى</value></data>
+  <data name="AIJ_ChipChanged" xml:space="preserve"><value>عُدِّل بعد الكشف</value></data>
+  <data name="AIJ_ChipMissing" xml:space="preserve"><value>القيد لم يعد موجوداً</value></data>
+  <data name="AIJ_Src_Manual" xml:space="preserve"><value>قيد يدوى</value></data>
+  <data name="AIJ_Src_Auto" xml:space="preserve"><value>قيد آلى ({0})</value></data>
+  <data name="AIJ_Lines" xml:space="preserve"><value>سطور القيد</value></data>
+  <data name="AIJ_Why" xml:space="preserve"><value>لماذا عُلِّم</value></data>
+  <data name="AIJ_LnAccount" xml:space="preserve"><value>الحساب</value></data>
+  <data name="AIJ_LnDebit" xml:space="preserve"><value>مدين</value></data>
+  <data name="AIJ_LnCredit" xml:space="preserve"><value>دائن</value></data>
+  <data name="AIJ_LnNotes" xml:space="preserve"><value>البيان</value></data>
+  <data name="AIJ_LnFlagged" xml:space="preserve"><value>السطر المعلَّم</value></data>
+  <data name="AIJ_ActOpen" xml:space="preserve"><value>فتح القيد</value></data>
+  <data name="AIJ_ActReviewed" xml:space="preserve"><value>تمت المراجعة</value></data>
+  <data name="AIJ_ActDismiss" xml:space="preserve"><value>ليس شذوذاً</value></data>
+  <data name="AIJ_ActReopen" xml:space="preserve"><value>إعادة الفتح</value></data>
+  <data name="AIJ_ActExplain" xml:space="preserve"><value>اشرح</value></data>
+  <data name="AIJ_ActReviewSelected" xml:space="preserve"><value>تمت مراجعة المحدد ({0})</value></data>
+  <data name="AIJ_ActExpand" xml:space="preserve"><value>عرض التفاصيل</value></data>
+  <data name="AIJ_ActSelect" xml:space="preserve"><value>تحديد القيد {0}</value></data>
+  <data name="AIJ_ActSelectAll" xml:space="preserve"><value>تحديد كل الصفحة</value></data>
+  <data name="AIJ_Note" xml:space="preserve"><value>ملاحظة المراجعة (اختيارية)</value></data>
+  <data name="AIJ_Saved" xml:space="preserve"><value>حُفظت حالة المراجعة</value></data>
+  <data name="AIJ_ReviewedBy" xml:space="preserve"><value>راجعه {0} فى {1}</value></data>
+  <data name="AIJ_ExplainTitle" xml:space="preserve"><value>صياغة المساعد</value></data>
+  <data name="AIJ_Explaining" xml:space="preserve"><value>جارٍ إعداد الشرح…</value></data>
+  <data name="AIJ_ExplainUnavailable" xml:space="preserve"><value>تعذّر شرح المساعد الآن. الأسباب أعلاه من قواعد الكشف.</value></data>
+  <data name="AIJ_ExplainCapped" xml:space="preserve"><value>بلغ الشرح حده اليومى. جرّب غداً.</value></data>
+  <data name="AIJ_ExplainOff" xml:space="preserve"><value>شرح المساعد موقوف من الإعدادات.</value></data>
+  <data name="AIJ_ExplainRegenerate" xml:space="preserve"><value>إعادة الشرح</value></data>
+  <data name="AIJ_ShowingPage" xml:space="preserve"><value>{0}–{1} من {2}</value></data>
+  <data name="AIJ_Prev" xml:space="preserve"><value>السابق</value></data>
+  <data name="AIJ_Next" xml:space="preserve"><value>التالى</value></data>
+  <data name="AIJ_ErrNoPermission" xml:space="preserve"><value>لا تملك صلاحية هذه الشاشة.</value></data>
+  <data name="AIJ_ErrNotFound" xml:space="preserve"><value>القيد غير موجود فى قائمة الشذوذ.</value></data>
+  <data name="AIJ_ErrBusy" xml:space="preserve"><value>مسح آخر يعمل الآن. أعد المحاولة بعد قليل.</value></data>
+  <data name="AIJ_Set_Tab" xml:space="preserve"><value>شذوذ القيود</value></data>
+  <data name="AIJ_Set_Activation" xml:space="preserve"><value>التفعيل</value></data>
+  <data name="AIJ_Set_Enable" xml:space="preserve"><value>تفعيل كشف الشذوذ فى القيود</value></data>
+  <data name="AIJ_Set_ActivatedAt" xml:space="preserve"><value>يفحص القيود المُدخلة من {0} فصاعداً. القيود الأقدم لا تُفحص.</value></data>
+  <data name="AIJ_Set_NotActivated" xml:space="preserve"><value>عند التفعيل يبدأ الفحص من لحظة التفعيل. القيود القائمة لا تُفحص.</value></data>
+  <data name="AIJ_Set_ScanTime" xml:space="preserve"><value>موعد المسح الليلى</value></data>
+  <data name="AIJ_Set_ServerNow" xml:space="preserve"><value>الوقت الآن على الخادم: {0}</value></data>
+  <data name="AIJ_Set_Rules" xml:space="preserve"><value>القواعد</value></data>
+  <data name="AIJ_Set_Desc_amount_outlier" xml:space="preserve"><value>سطر مبلغه أعلى كثيراً من معتاد نفس الحساب (كل القيود).</value></data>
+  <data name="AIJ_Set_Desc_duplicate" xml:space="preserve"><value>قيد يطابق قيداً سابقاً فى نفس الفرع سطراً بسطر.</value></data>
+  <data name="AIJ_Set_Desc_off_hours" xml:space="preserve"><value>قيد أُدخل خارج الدوام أو فى يوم عطلة.</value></data>
+  <data name="AIJ_Set_Desc_rare_account" xml:space="preserve"><value>سطر على حساب لا يكاد يُستعمل.</value></data>
+  <data name="AIJ_Set_Desc_round_large" xml:space="preserve"><value>قيد إجماليه كبير ومدوّر تماماً.</value></data>
+  <data name="AIJ_Set_OffHoursHint" xml:space="preserve"><value>الدوام والأيام والعطلات فى بطاقة «الدوام» أدناه.</value></data>
+  <data name="AIJ_Set_ManualOnly" xml:space="preserve"><value>قصر قواعد الدوام والحساب النادر والمدوّر والتكرار على القيود اليدوية</value></data>
+  <data name="AIJ_Set_BaselineHistory" xml:space="preserve"><value>استخدام حركة الحسابات السابقة كمرجع إحصائى (مجاميع فقط)</value></data>
+  <data name="AIJ_Set_Z" xml:space="preserve"><value>عدد الانحرافات المعيارية</value></data>
+  <data name="AIJ_Set_MinSample" xml:space="preserve"><value>أقل عدد حركات للحساب</value></data>
+  <data name="AIJ_Set_BaselineDays" xml:space="preserve"><value>أيام المرجع</value></data>
+  <data name="AIJ_Set_MinAmount" xml:space="preserve"><value>أقل مبلغ يُفحص</value></data>
+  <data name="AIJ_Set_RoundUnit" xml:space="preserve"><value>وحدة التدوير</value></data>
+  <data name="AIJ_Set_RoundMin" xml:space="preserve"><value>حد المبلغ المدوّر</value></data>
+  <data name="AIJ_Set_RareMax" xml:space="preserve"><value>أقصى استعمال للحساب النادر</value></data>
+  <data name="AIJ_Set_DupDays" xml:space="preserve"><value>أيام البحث عن التكرار</value></data>
+  <data name="AIJ_Set_Work" xml:space="preserve"><value>الدوام</value></data>
+  <data name="AIJ_Set_WorkStart" xml:space="preserve"><value>من</value></data>
+  <data name="AIJ_Set_WorkEnd" xml:space="preserve"><value>إلى</value></data>
+  <data name="AIJ_Set_WorkDays" xml:space="preserve"><value>أيام العمل</value></data>
+  <data name="AIJ_Set_Holidays" xml:space="preserve"><value>العطلات</value></data>
+  <data name="AIJ_Set_AddHoliday" xml:space="preserve"><value>إضافة عطلة</value></data>
+  <data name="AIJ_Set_RemoveHoliday" xml:space="preserve"><value>إزالة</value></data>
+  <data name="AIJ_Set_ExplainTitle" xml:space="preserve"><value>الشرح بالنموذج</value></data>
+  <data name="AIJ_Set_Explain" xml:space="preserve"><value>السماح بشرح المساعد عند الطلب</value></data>
+  <data name="AIJ_Set_ExplainMax" xml:space="preserve"><value>الحد اليومى للشرح</value></data>
+  <data name="AIJ_Set_MaxPerRun" xml:space="preserve"><value>أقصى نتائج جديدة للمسح الواحد</value></data>
+  <data name="AIJ_Set_Save" xml:space="preserve"><value>حفظ الإعدادات</value></data>
+  <data name="AIJ_Set_Saved" xml:space="preserve"><value>حُفظت الإعدادات</value></data>
+  <data name="AIJ_Set_RunNow" xml:space="preserve"><value>تشغيل الآن</value></data>
+  <data name="AIJ_Set_Runs" xml:space="preserve"><value>آخر عمليات المسح</value></data>
+  <data name="AIJ_Set_RunType" xml:space="preserve"><value>النوع</value></data>
+  <data name="AIJ_Set_RunFrom" xml:space="preserve"><value>من</value></data>
+  <data name="AIJ_Set_RunTo" xml:space="preserve"><value>إلى</value></data>
+  <data name="AIJ_Set_RunStatus" xml:space="preserve"><value>الحالة</value></data>
+  <data name="AIJ_Set_RunScanned" xml:space="preserve"><value>فُحص</value></data>
+  <data name="AIJ_Set_RunFound" xml:space="preserve"><value>وُجد</value></data>
+  <data name="AIJ_Set_RunInserted" xml:space="preserve"><value>جديد</value></data>
+  <data name="AIJ_Set_RunDuration" xml:space="preserve"><value>المدة</value></data>
+  <data name="AIJ_Set_RunError" xml:space="preserve"><value>الخطأ</value></data>
+  <data name="AIJ_Set_Truncated" xml:space="preserve"><value>بلغ الحد الأقصى للنتائج؛</value></data>
+  <data name="AIJ_Trg_schedule" xml:space="preserve"><value>ليلى</value></data>
+  <data name="AIJ_Trg_manual" xml:space="preserve"><value>يدوى</value></data>
+  <data name="AIJ_Trg_backfill" xml:space="preserve"><value>تاريخى</value></data>
+  <data name="AIJ_Trg_test" xml:space="preserve"><value>اختبار</value></data>
+  <data name="AIJ_Run_Queued" xml:space="preserve"><value>بالانتظار</value></data>
+  <data name="AIJ_Run_Running" xml:space="preserve"><value>يعمل</value></data>
+  <data name="AIJ_Run_Done" xml:space="preserve"><value>تم</value></data>
+  <data name="AIJ_Run_Failed" xml:space="preserve"><value>فشل</value></data>
+  <data name="AIJ_Set_Backfill" xml:space="preserve"><value>مسح فترة سابقة</value></data>
+  <data name="AIJ_Set_BackfillHint" xml:space="preserve"><value>يفحص قيوداً قائمة قبل التفعيل، ولا يجرى إلا بطلبك. حتى 92 يوماً للطلب.</value></data>
+  <data name="AIJ_Set_BackfillRun" xml:space="preserve"><value>مسح هذه الفترة</value></data>
+  <data name="AIJ_Set_BackfillConfirmTitle" xml:space="preserve"><value>تأكيد مسح فترة سابقة</value></data>
+  <data name="AIJ_Set_BackfillConfirm" xml:space="preserve"><value>سيفحص القيود من {0} إلى {1}. لن يُعدَّل أى قيد.</value></data>
+  <data name="AIJ_Set_BackfillOk" xml:space="preserve"><value>امسح الفترة</value></data>
+  <data name="AIJ_Set_BackfillCancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="AIJ_Set_BackfillQueued" xml:space="preserve"><value>بدأ المسح. تظهر نتيجته فى السجل.</value></data>
+  <data name="AIJ_Set_ErrNotAdmin" xml:space="preserve"><value>هذا الإعداد للمدير فقط.</value></data>
+  <data name="AIJ_Set_ErrTime" xml:space="preserve"><value>اكتب الوقت بصيغة ساعة:دقيقة، مثل 02:00.</value></data>
+  <data name="AIJ_Set_ErrWork" xml:space="preserve"><value>وقت بداية الدوام ونهايته يجب أن يختلفا.</value></data>
+  <data name="AIJ_Set_ErrDays" xml:space="preserve"><value>اختر يوم عمل واحداً على الأقل.</value></data>
+  <data name="AIJ_Set_ErrZ" xml:space="preserve"><value>عدد الانحرافات بين 2 و10.</value></data>
+  <data name="AIJ_Set_ErrSample" xml:space="preserve"><value>أقل عدد حركات بين 10 و1000.</value></data>
+  <data name="AIJ_Set_ErrAmount" xml:space="preserve"><value>المبلغ يجب ألا يكون سالباً.</value></data>
+  <data name="AIJ_Set_ErrRange" xml:space="preserve"><value>القيمة خارج المدى المسموح.</value></data>
+  <data name="AIJ_Set_ErrBackfillRange" xml:space="preserve"><value>الفترة يجب ألا تتجاوز 92 يوماً ولا تتخطى اليوم.</value></data>
+  <data name="AIB_Al_anomalies_new" xml:space="preserve"><value>قيود غير معتادة</value></data>
+  <data name="AIB_Al_anomalies_new_Text" xml:space="preserve"><value>{count} قيد جديد يحتاج مراجعة، منها {high} عالى الخطورة.</value></data>
 </root>

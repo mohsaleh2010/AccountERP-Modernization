@@ -5814,4 +5814,167 @@
   <data name="AIEI_Error" xml:space="preserve"><value>Der Fehler kann gerade nicht erklärt werden.</value></data>
   <data name="AIEI_KEta" xml:space="preserve"><value>E-Rechnungsfehler</value></data>
   <data name="AIEI_HEta" xml:space="preserve"><value>Abgleichschlüssel in den Schlüsselwörtern: code:… ; path:… ; step:… ; phrase:…</value></data>
+  <data name="AIJ_Title" xml:space="preserve"><value>Buchungsauffälligkeiten</value></data>
+  <data name="AIJ_Sub" xml:space="preserve"><value>Ungewöhnliche Buchungen, erkannt durch feste Regeln. Nur zur Prüfung; keine Buchung wird geändert.</value></data>
+  <data name="AIJ_LinkIntegrity" xml:space="preserve"><value>Buchungsintegritätsprüfung</value></data>
+  <data name="AIJ_LinkSettings" xml:space="preserve"><value>Erkennungseinstellungen</value></data>
+  <data name="AIJ_EmptyDisabled" xml:space="preserve"><value>Die Auffälligkeitserkennung ist aus. Ein Administrator kann sie in den KI-Einstellungen aktivieren.</value></data>
+  <data name="AIJ_NotAvailable" xml:space="preserve"><value>Diese Seite ist nur in der Webversion verfügbar.</value></data>
+  <data name="AIJ_EmptyNone" xml:space="preserve"><value>Keine auffälligen Buchungen für diese Filter.</value></data>
+  <data name="AIJ_KpiNew" xml:space="preserve"><value>Neu</value></data>
+  <data name="AIJ_KpiHigh" xml:space="preserve"><value>Hohe Schwere</value></data>
+  <data name="AIJ_KpiReviewed" xml:space="preserve"><value>Diesen Monat geprüft</value></data>
+  <data name="AIJ_LastRun" xml:space="preserve"><value>Letzter Scan: {0}</value></data>
+  <data name="AIJ_LastRunFailed" xml:space="preserve"><value>Letzter Scan fehlgeschlagen: {0}</value></data>
+  <data name="AIJ_NeverRun" xml:space="preserve"><value>Noch kein Scan gelaufen</value></data>
+  <data name="AIJ_FStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="AIJ_FRule" xml:space="preserve"><value>Regel</value></data>
+  <data name="AIJ_FSeverity" xml:space="preserve"><value>Schwere</value></data>
+  <data name="AIJ_FBranch" xml:space="preserve"><value>Filiale</value></data>
+  <data name="AIJ_FFrom" xml:space="preserve"><value>Von Datum</value></data>
+  <data name="AIJ_FTo" xml:space="preserve"><value>Bis Datum</value></data>
+  <data name="AIJ_FEntryNo" xml:space="preserve"><value>Buchungsnr.</value></data>
+  <data name="AIJ_FAll" xml:space="preserve"><value>Alle</value></data>
+  <data name="AIJ_FBackfill" xml:space="preserve"><value>Ergebnisse früherer Zeiträume anzeigen</value></data>
+  <data name="AIJ_FSearch" xml:space="preserve"><value>Anzeigen</value></data>
+  <data name="AIJ_FReset" xml:space="preserve"><value>Filter zurücksetzen</value></data>
+  <data name="AIJ_ColDate" xml:space="preserve"><value>Buchungsdatum</value></data>
+  <data name="AIJ_ColEntryNo" xml:space="preserve"><value>Buchungsnr.</value></data>
+  <data name="AIJ_ColJournal" xml:space="preserve"><value>Journal</value></data>
+  <data name="AIJ_ColSource" xml:space="preserve"><value>Quelle</value></data>
+  <data name="AIJ_ColBranch" xml:space="preserve"><value>Filiale</value></data>
+  <data name="AIJ_ColTotal" xml:space="preserve"><value>Summe</value></data>
+  <data name="AIJ_ColRules" xml:space="preserve"><value>Regeln</value></data>
+  <data name="AIJ_ColSeverity" xml:space="preserve"><value>Schwere</value></data>
+  <data name="AIJ_ColStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="AIJ_Rule_amount_outlier" xml:space="preserve"><value>Ungewöhnlicher Betrag</value></data>
+  <data name="AIJ_Rule_duplicate" xml:space="preserve"><value>Doppelte Buchung</value></data>
+  <data name="AIJ_Rule_off_hours" xml:space="preserve"><value>Außerhalb der Arbeitszeit</value></data>
+  <data name="AIJ_Rule_rare_account" xml:space="preserve"><value>Selten genutztes Konto</value></data>
+  <data name="AIJ_Rule_round_large" xml:space="preserve"><value>Großer runder Betrag</value></data>
+  <data name="AIJ_Why_amount_outlier" xml:space="preserve"><value>Der Betrag {0} auf Konto „{1}“ liegt {2} Standardabweichungen über seinem Durchschnitt von {3} (aus {4} früheren Bewegungen).</value></data>
+  <data name="AIJ_Why_duplicate" xml:space="preserve"><value>Entspricht Buchung Nr. {0} vom {1} in allen Zeilen und Beträgen, {2} Tag(e) Abstand.</value></data>
+  <data name="AIJ_Why_off_hours_night" xml:space="preserve"><value>Erfasst um {0}, außerhalb der Arbeitszeit ({1}–{2}).</value></data>
+  <data name="AIJ_Why_off_hours_weekend" xml:space="preserve"><value>Erfasst am {0}, kein Arbeitstag.</value></data>
+  <data name="AIJ_Why_off_hours_holiday" xml:space="preserve"><value>Erfasst am {0}, einem eingetragenen Feiertag.</value></data>
+  <data name="AIJ_Why_rare_account" xml:space="preserve"><value>Konto „{0}“ wurde in den letzten {2} Tagen nur {1}-mal verwendet.</value></data>
+  <data name="AIJ_Why_round_large" xml:space="preserve"><value>Die Buchungssumme {0} ist ein runder Betrag (Vielfaches von {1}) und übersteigt die Grenze {2}.</value></data>
+  <data name="AIJ_Sev_high" xml:space="preserve"><value>Hoch</value></data>
+  <data name="AIJ_Sev_medium" xml:space="preserve"><value>Mittel</value></data>
+  <data name="AIJ_Sev_info" xml:space="preserve"><value>Info</value></data>
+  <data name="AIJ_St_New" xml:space="preserve"><value>Neu</value></data>
+  <data name="AIJ_St_Reviewed" xml:space="preserve"><value>Geprüft</value></data>
+  <data name="AIJ_St_Dismissed" xml:space="preserve"><value>Keine Auffälligkeit</value></data>
+  <data name="AIJ_ChipBackfill" xml:space="preserve"><value>Früherer Zeitraum</value></data>
+  <data name="AIJ_ChipChanged" xml:space="preserve"><value>Nach Erkennung geändert</value></data>
+  <data name="AIJ_ChipMissing" xml:space="preserve"><value>Buchung existiert nicht mehr</value></data>
+  <data name="AIJ_Src_Manual" xml:space="preserve"><value>Manuelle Buchung</value></data>
+  <data name="AIJ_Src_Auto" xml:space="preserve"><value>Automatische Buchung ({0})</value></data>
+  <data name="AIJ_Lines" xml:space="preserve"><value>Buchungszeilen</value></data>
+  <data name="AIJ_Why" xml:space="preserve"><value>Warum markiert</value></data>
+  <data name="AIJ_LnAccount" xml:space="preserve"><value>Konto</value></data>
+  <data name="AIJ_LnDebit" xml:space="preserve"><value>Soll</value></data>
+  <data name="AIJ_LnCredit" xml:space="preserve"><value>Haben</value></data>
+  <data name="AIJ_LnNotes" xml:space="preserve"><value>Beschreibung</value></data>
+  <data name="AIJ_LnFlagged" xml:space="preserve"><value>Markierte Zeile</value></data>
+  <data name="AIJ_ActOpen" xml:space="preserve"><value>Buchung öffnen</value></data>
+  <data name="AIJ_ActReviewed" xml:space="preserve"><value>Als geprüft markieren</value></data>
+  <data name="AIJ_ActDismiss" xml:space="preserve"><value>Keine Auffälligkeit</value></data>
+  <data name="AIJ_ActReopen" xml:space="preserve"><value>Wieder öffnen</value></data>
+  <data name="AIJ_ActExplain" xml:space="preserve"><value>Erklären</value></data>
+  <data name="AIJ_ActReviewSelected" xml:space="preserve"><value>Auswahl als geprüft markieren ({0})</value></data>
+  <data name="AIJ_ActExpand" xml:space="preserve"><value>Details anzeigen</value></data>
+  <data name="AIJ_ActSelect" xml:space="preserve"><value>Buchung {0} auswählen</value></data>
+  <data name="AIJ_ActSelectAll" xml:space="preserve"><value>Ganze Seite auswählen</value></data>
+  <data name="AIJ_Note" xml:space="preserve"><value>Prüfnotiz (optional)</value></data>
+  <data name="AIJ_Saved" xml:space="preserve"><value>Prüfstatus gespeichert</value></data>
+  <data name="AIJ_ReviewedBy" xml:space="preserve"><value>Geprüft von {0} am {1}</value></data>
+  <data name="AIJ_ExplainTitle" xml:space="preserve"><value>Formulierung des Assistenten</value></data>
+  <data name="AIJ_Explaining" xml:space="preserve"><value>Erklärung wird vorbereitet…</value></data>
+  <data name="AIJ_ExplainUnavailable" xml:space="preserve"><value>Der Assistent konnte das jetzt nicht erklären. Die Gründe oben stammen aus den Erkennungsregeln.</value></data>
+  <data name="AIJ_ExplainCapped" xml:space="preserve"><value>Das tägliche Erklärungslimit ist erreicht. Morgen erneut versuchen.</value></data>
+  <data name="AIJ_ExplainOff" xml:space="preserve"><value>Erklärungen des Assistenten sind in den Einstellungen deaktiviert.</value></data>
+  <data name="AIJ_ExplainRegenerate" xml:space="preserve"><value>Erneut erklären</value></data>
+  <data name="AIJ_ShowingPage" xml:space="preserve"><value>{0}–{1} von {2}</value></data>
+  <data name="AIJ_Prev" xml:space="preserve"><value>Zurück</value></data>
+  <data name="AIJ_Next" xml:space="preserve"><value>Weiter</value></data>
+  <data name="AIJ_ErrNoPermission" xml:space="preserve"><value>Sie haben keine Berechtigung für diese Seite.</value></data>
+  <data name="AIJ_ErrNotFound" xml:space="preserve"><value>Die Buchung ist nicht in der Auffälligkeitsliste.</value></data>
+  <data name="AIJ_ErrBusy" xml:space="preserve"><value>Ein anderer Scan läuft. Bitte gleich erneut versuchen.</value></data>
+  <data name="AIJ_Set_Tab" xml:space="preserve"><value>Buchungsauffälligkeiten</value></data>
+  <data name="AIJ_Set_Activation" xml:space="preserve"><value>Aktivierung</value></data>
+  <data name="AIJ_Set_Enable" xml:space="preserve"><value>Auffälligkeitserkennung für Buchungen aktivieren</value></data>
+  <data name="AIJ_Set_ActivatedAt" xml:space="preserve"><value>Prüft Buchungen ab {0}. Ältere Buchungen werden nicht geprüft.</value></data>
+  <data name="AIJ_Set_NotActivated" xml:space="preserve"><value>Nach der Aktivierung beginnt die Prüfung ab diesem Moment. Bestehende Buchungen werden nicht geprüft.</value></data>
+  <data name="AIJ_Set_ScanTime" xml:space="preserve"><value>Uhrzeit des Nachtscans</value></data>
+  <data name="AIJ_Set_ServerNow" xml:space="preserve"><value>Serverzeit jetzt: {0}</value></data>
+  <data name="AIJ_Set_Rules" xml:space="preserve"><value>Regeln</value></data>
+  <data name="AIJ_Set_Desc_amount_outlier" xml:space="preserve"><value>Eine Zeile weit über dem üblichen Betrag desselben Kontos (alle Buchungen).</value></data>
+  <data name="AIJ_Set_Desc_duplicate" xml:space="preserve"><value>Eine Buchung, die Zeile für Zeile einer früheren in derselben Filiale entspricht.</value></data>
+  <data name="AIJ_Set_Desc_off_hours" xml:space="preserve"><value>Eine Buchung außerhalb der Arbeitszeit oder an einem freien Tag.</value></data>
+  <data name="AIJ_Set_Desc_rare_account" xml:space="preserve"><value>Eine Zeile auf einem fast nie genutzten Konto.</value></data>
+  <data name="AIJ_Set_Desc_round_large" xml:space="preserve"><value>Eine Buchung mit großer, exakt runder Summe.</value></data>
+  <data name="AIJ_Set_OffHoursHint" xml:space="preserve"><value>Zeiten, Tage und Feiertage stehen in der Karte „Arbeitszeit“ unten.</value></data>
+  <data name="AIJ_Set_ManualOnly" xml:space="preserve"><value>Arbeitszeit-, Selten-Konto-, Rund- und Doppelregeln auf manuelle Buchungen beschränken</value></data>
+  <data name="AIJ_Set_BaselineHistory" xml:space="preserve"><value>Frühere Kontobewegungen als statistische Referenz nutzen (nur Summen)</value></data>
+  <data name="AIJ_Set_Z" xml:space="preserve"><value>Standardabweichungen</value></data>
+  <data name="AIJ_Set_MinSample" xml:space="preserve"><value>Mindestbewegungen pro Konto</value></data>
+  <data name="AIJ_Set_BaselineDays" xml:space="preserve"><value>Referenztage</value></data>
+  <data name="AIJ_Set_MinAmount" xml:space="preserve"><value>Geprüfter Mindestbetrag</value></data>
+  <data name="AIJ_Set_RoundUnit" xml:space="preserve"><value>Rundungseinheit</value></data>
+  <data name="AIJ_Set_RoundMin" xml:space="preserve"><value>Schwelle für runde Beträge</value></data>
+  <data name="AIJ_Set_RareMax" xml:space="preserve"><value>Max. Nutzungen für ein seltenes Konto</value></data>
+  <data name="AIJ_Set_DupDays" xml:space="preserve"><value>Rückblicktage für Duplikate</value></data>
+  <data name="AIJ_Set_Work" xml:space="preserve"><value>Arbeitszeit</value></data>
+  <data name="AIJ_Set_WorkStart" xml:space="preserve"><value>Von</value></data>
+  <data name="AIJ_Set_WorkEnd" xml:space="preserve"><value>Bis</value></data>
+  <data name="AIJ_Set_WorkDays" xml:space="preserve"><value>Arbeitstage</value></data>
+  <data name="AIJ_Set_Holidays" xml:space="preserve"><value>Feiertage</value></data>
+  <data name="AIJ_Set_AddHoliday" xml:space="preserve"><value>Feiertag hinzufügen</value></data>
+  <data name="AIJ_Set_RemoveHoliday" xml:space="preserve"><value>Entfernen</value></data>
+  <data name="AIJ_Set_ExplainTitle" xml:space="preserve"><value>Modellerklärungen</value></data>
+  <data name="AIJ_Set_Explain" xml:space="preserve"><value>Erklärungen des Assistenten auf Anfrage erlauben</value></data>
+  <data name="AIJ_Set_ExplainMax" xml:space="preserve"><value>Tägliches Erklärungslimit</value></data>
+  <data name="AIJ_Set_MaxPerRun" xml:space="preserve"><value>Max. neue Ergebnisse pro Scan</value></data>
+  <data name="AIJ_Set_Save" xml:space="preserve"><value>Einstellungen speichern</value></data>
+  <data name="AIJ_Set_Saved" xml:space="preserve"><value>Einstellungen gespeichert</value></data>
+  <data name="AIJ_Set_RunNow" xml:space="preserve"><value>Jetzt ausführen</value></data>
+  <data name="AIJ_Set_Runs" xml:space="preserve"><value>Letzte Scans</value></data>
+  <data name="AIJ_Set_RunType" xml:space="preserve"><value>Art</value></data>
+  <data name="AIJ_Set_RunFrom" xml:space="preserve"><value>Von</value></data>
+  <data name="AIJ_Set_RunTo" xml:space="preserve"><value>Bis</value></data>
+  <data name="AIJ_Set_RunStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="AIJ_Set_RunScanned" xml:space="preserve"><value>Geprüft</value></data>
+  <data name="AIJ_Set_RunFound" xml:space="preserve"><value>Gefunden</value></data>
+  <data name="AIJ_Set_RunInserted" xml:space="preserve"><value>Neu</value></data>
+  <data name="AIJ_Set_RunDuration" xml:space="preserve"><value>Dauer</value></data>
+  <data name="AIJ_Set_RunError" xml:space="preserve"><value>Fehler</value></data>
+  <data name="AIJ_Set_Truncated" xml:space="preserve"><value>Ergebnislimit erreicht;</value></data>
+  <data name="AIJ_Trg_schedule" xml:space="preserve"><value>Nächtlich</value></data>
+  <data name="AIJ_Trg_manual" xml:space="preserve"><value>Manuell</value></data>
+  <data name="AIJ_Trg_backfill" xml:space="preserve"><value>Früherer Zeitraum</value></data>
+  <data name="AIJ_Trg_test" xml:space="preserve"><value>Test</value></data>
+  <data name="AIJ_Run_Queued" xml:space="preserve"><value>Wartend</value></data>
+  <data name="AIJ_Run_Running" xml:space="preserve"><value>Läuft</value></data>
+  <data name="AIJ_Run_Done" xml:space="preserve"><value>Fertig</value></data>
+  <data name="AIJ_Run_Failed" xml:space="preserve"><value>Fehlgeschlagen</value></data>
+  <data name="AIJ_Set_Backfill" xml:space="preserve"><value>Früheren Zeitraum scannen</value></data>
+  <data name="AIJ_Set_BackfillHint" xml:space="preserve"><value>Prüft bestehende Buchungen vor der Aktivierung, nur auf Ihre Anfrage. Bis zu 92 Tage pro Anfrage.</value></data>
+  <data name="AIJ_Set_BackfillRun" xml:space="preserve"><value>Diesen Zeitraum scannen</value></data>
+  <data name="AIJ_Set_BackfillConfirmTitle" xml:space="preserve"><value>Scan des früheren Zeitraums bestätigen</value></data>
+  <data name="AIJ_Set_BackfillConfirm" xml:space="preserve"><value>Es werden Buchungen von {0} bis {1} geprüft. Keine Buchung wird geändert.</value></data>
+  <data name="AIJ_Set_BackfillOk" xml:space="preserve"><value>Zeitraum scannen</value></data>
+  <data name="AIJ_Set_BackfillCancel" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="AIJ_Set_BackfillQueued" xml:space="preserve"><value>Scan gestartet. Das Ergebnis erscheint im Protokoll.</value></data>
+  <data name="AIJ_Set_ErrNotAdmin" xml:space="preserve"><value>Diese Einstellung ist nur für Administratoren.</value></data>
+  <data name="AIJ_Set_ErrTime" xml:space="preserve"><value>Uhrzeit als Stunde:Minute eingeben, z. B. 02:00.</value></data>
+  <data name="AIJ_Set_ErrWork" xml:space="preserve"><value>Beginn und Ende der Arbeitszeit müssen sich unterscheiden.</value></data>
+  <data name="AIJ_Set_ErrDays" xml:space="preserve"><value>Mindestens einen Arbeitstag wählen.</value></data>
+  <data name="AIJ_Set_ErrZ" xml:space="preserve"><value>Standardabweichungen müssen zwischen 2 und 10 liegen.</value></data>
+  <data name="AIJ_Set_ErrSample" xml:space="preserve"><value>Mindestbewegungen müssen zwischen 10 und 1000 liegen.</value></data>
+  <data name="AIJ_Set_ErrAmount" xml:space="preserve"><value>Der Betrag darf nicht negativ sein.</value></data>
+  <data name="AIJ_Set_ErrRange" xml:space="preserve"><value>Der Wert liegt außerhalb des erlaubten Bereichs.</value></data>
+  <data name="AIJ_Set_ErrBackfillRange" xml:space="preserve"><value>Der Zeitraum darf höchstens 92 Tage umfassen und nicht über heute hinausgehen.</value></data>
+  <data name="AIB_Al_anomalies_new" xml:space="preserve"><value>Ungewöhnliche Buchungen</value></data>
+  <data name="AIB_Al_anomalies_new_Text" xml:space="preserve"><value>{count} neue Buchungen müssen geprüft werden, davon {high} mit hoher Schwere.</value></data>
 </root>

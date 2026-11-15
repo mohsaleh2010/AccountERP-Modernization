@@ -39,6 +39,7 @@ namespace AccountERP.AI
             // P8.4.2 (ش28): مهمة الشذوذ تُسجَّل قبل الموجز فيمسح الخادم المطفأ ليلاً عند الإقلاع قبل موجز نفس النبضة.
             services.AddSingleton(sp => new Anomalies.AiAnomalyJob(sp.GetRequiredService<Tools.ReadOnlySqlExecutor>()));
             services.AddSingleton<Scheduling.IAiScheduledJob>(sp => sp.GetRequiredService<Anomalies.AiAnomalyJob>());
+            services.AddScoped<IAiAnomalyGateway>(sp => new Anomalies.AiAnomalyGateway(sp.GetRequiredService<Anomalies.AiAnomalyJob>(), sp.GetRequiredService<ProviderRegistry>()));   // P8.4.3: صفحة الشذوذ وتبويب الإعدادات
             services.AddSingleton(sp => new Brief.AiBriefJob(sp.GetRequiredService<Tools.ReadOnlySqlExecutor>(), sp.GetRequiredService<ProviderRegistry>()));   // P8.1.4: مشغّل الموجز اليومى
             services.AddSingleton<Scheduling.IAiScheduledJob>(sp => sp.GetRequiredService<Brief.AiBriefJob>());   // ق17: مهام AiSchedulerWorker
             services.AddScoped<IAiBriefGateway>(sp => new Brief.AiBriefGateway(sp.GetRequiredService<Brief.AiBriefJob>()));   // P8.1.4: صفحة الموجز والإعدادات (P8.1.5/P8.1.6)

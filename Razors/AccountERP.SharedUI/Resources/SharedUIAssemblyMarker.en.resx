@@ -5812,4 +5812,167 @@
   <data name="AIEI_Error" xml:space="preserve"><value>Could not explain the error right now.</value></data>
   <data name="AIEI_KEta" xml:space="preserve"><value>E-invoice error</value></data>
   <data name="AIEI_HEta" xml:space="preserve"><value>Match keys go in Keywords: code:… ; path:… ; step:… ; phrase:…</value></data>
+  <data name="AIJ_Title" xml:space="preserve"><value>Entry anomalies</value></data>
+  <data name="AIJ_Sub" xml:space="preserve"><value>Unusual journal entries found by fixed rules. For review only; no entry is changed.</value></data>
+  <data name="AIJ_LinkIntegrity" xml:space="preserve"><value>Entries integrity check</value></data>
+  <data name="AIJ_LinkSettings" xml:space="preserve"><value>Detection settings</value></data>
+  <data name="AIJ_EmptyDisabled" xml:space="preserve"><value>Anomaly detection is off. An administrator can turn it on in the AI settings.</value></data>
+  <data name="AIJ_NotAvailable" xml:space="preserve"><value>This page is available in the web version only.</value></data>
+  <data name="AIJ_EmptyNone" xml:space="preserve"><value>No unusual entries match these filters.</value></data>
+  <data name="AIJ_KpiNew" xml:space="preserve"><value>New</value></data>
+  <data name="AIJ_KpiHigh" xml:space="preserve"><value>High severity</value></data>
+  <data name="AIJ_KpiReviewed" xml:space="preserve"><value>Reviewed this month</value></data>
+  <data name="AIJ_LastRun" xml:space="preserve"><value>Last scan: {0}</value></data>
+  <data name="AIJ_LastRunFailed" xml:space="preserve"><value>Last scan failed: {0}</value></data>
+  <data name="AIJ_NeverRun" xml:space="preserve"><value>No scan has run yet</value></data>
+  <data name="AIJ_FStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="AIJ_FRule" xml:space="preserve"><value>Rule</value></data>
+  <data name="AIJ_FSeverity" xml:space="preserve"><value>Severity</value></data>
+  <data name="AIJ_FBranch" xml:space="preserve"><value>Branch</value></data>
+  <data name="AIJ_FFrom" xml:space="preserve"><value>From date</value></data>
+  <data name="AIJ_FTo" xml:space="preserve"><value>To date</value></data>
+  <data name="AIJ_FEntryNo" xml:space="preserve"><value>Entry no.</value></data>
+  <data name="AIJ_FAll" xml:space="preserve"><value>All</value></data>
+  <data name="AIJ_FBackfill" xml:space="preserve"><value>Show past-period scan results</value></data>
+  <data name="AIJ_FSearch" xml:space="preserve"><value>Show</value></data>
+  <data name="AIJ_FReset" xml:space="preserve"><value>Clear filters</value></data>
+  <data name="AIJ_ColDate" xml:space="preserve"><value>Entry date</value></data>
+  <data name="AIJ_ColEntryNo" xml:space="preserve"><value>Entry no.</value></data>
+  <data name="AIJ_ColJournal" xml:space="preserve"><value>Journal</value></data>
+  <data name="AIJ_ColSource" xml:space="preserve"><value>Source</value></data>
+  <data name="AIJ_ColBranch" xml:space="preserve"><value>Branch</value></data>
+  <data name="AIJ_ColTotal" xml:space="preserve"><value>Total</value></data>
+  <data name="AIJ_ColRules" xml:space="preserve"><value>Rules</value></data>
+  <data name="AIJ_ColSeverity" xml:space="preserve"><value>Severity</value></data>
+  <data name="AIJ_ColStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="AIJ_Rule_amount_outlier" xml:space="preserve"><value>Unusual amount</value></data>
+  <data name="AIJ_Rule_duplicate" xml:space="preserve"><value>Duplicate entry</value></data>
+  <data name="AIJ_Rule_off_hours" xml:space="preserve"><value>Outside working hours</value></data>
+  <data name="AIJ_Rule_rare_account" xml:space="preserve"><value>Rarely used account</value></data>
+  <data name="AIJ_Rule_round_large" xml:space="preserve"><value>Large round amount</value></data>
+  <data name="AIJ_Why_amount_outlier" xml:space="preserve"><value>The amount {0} on account “{1}” is {2} standard deviations above its average of {3} (from {4} earlier movements).</value></data>
+  <data name="AIJ_Why_duplicate" xml:space="preserve"><value>Matches entry no. {0} dated {1} in every line and amount, {2} day(s) apart.</value></data>
+  <data name="AIJ_Why_off_hours_night" xml:space="preserve"><value>Entered at {0}, outside working hours ({1}–{2}).</value></data>
+  <data name="AIJ_Why_off_hours_weekend" xml:space="preserve"><value>Entered on {0}, which is not a working day.</value></data>
+  <data name="AIJ_Why_off_hours_holiday" xml:space="preserve"><value>Entered on {0}, a recorded holiday.</value></data>
+  <data name="AIJ_Why_rare_account" xml:space="preserve"><value>Account “{0}” was used only {1} time(s) in the last {2} days.</value></data>
+  <data name="AIJ_Why_round_large" xml:space="preserve"><value>The entry total {0} is a round amount (a multiple of {1}) and exceeds the limit {2}.</value></data>
+  <data name="AIJ_Sev_high" xml:space="preserve"><value>High</value></data>
+  <data name="AIJ_Sev_medium" xml:space="preserve"><value>Medium</value></data>
+  <data name="AIJ_Sev_info" xml:space="preserve"><value>Info</value></data>
+  <data name="AIJ_St_New" xml:space="preserve"><value>New</value></data>
+  <data name="AIJ_St_Reviewed" xml:space="preserve"><value>Reviewed</value></data>
+  <data name="AIJ_St_Dismissed" xml:space="preserve"><value>Not an anomaly</value></data>
+  <data name="AIJ_ChipBackfill" xml:space="preserve"><value>Past-period scan</value></data>
+  <data name="AIJ_ChipChanged" xml:space="preserve"><value>Changed after detection</value></data>
+  <data name="AIJ_ChipMissing" xml:space="preserve"><value>Entry no longer exists</value></data>
+  <data name="AIJ_Src_Manual" xml:space="preserve"><value>Manual entry</value></data>
+  <data name="AIJ_Src_Auto" xml:space="preserve"><value>Automatic entry ({0})</value></data>
+  <data name="AIJ_Lines" xml:space="preserve"><value>Entry lines</value></data>
+  <data name="AIJ_Why" xml:space="preserve"><value>Why it was flagged</value></data>
+  <data name="AIJ_LnAccount" xml:space="preserve"><value>Account</value></data>
+  <data name="AIJ_LnDebit" xml:space="preserve"><value>Debit</value></data>
+  <data name="AIJ_LnCredit" xml:space="preserve"><value>Credit</value></data>
+  <data name="AIJ_LnNotes" xml:space="preserve"><value>Description</value></data>
+  <data name="AIJ_LnFlagged" xml:space="preserve"><value>Flagged line</value></data>
+  <data name="AIJ_ActOpen" xml:space="preserve"><value>Open entry</value></data>
+  <data name="AIJ_ActReviewed" xml:space="preserve"><value>Mark reviewed</value></data>
+  <data name="AIJ_ActDismiss" xml:space="preserve"><value>Not an anomaly</value></data>
+  <data name="AIJ_ActReopen" xml:space="preserve"><value>Reopen</value></data>
+  <data name="AIJ_ActExplain" xml:space="preserve"><value>Explain</value></data>
+  <data name="AIJ_ActReviewSelected" xml:space="preserve"><value>Mark selected reviewed ({0})</value></data>
+  <data name="AIJ_ActExpand" xml:space="preserve"><value>Show details</value></data>
+  <data name="AIJ_ActSelect" xml:space="preserve"><value>Select entry {0}</value></data>
+  <data name="AIJ_ActSelectAll" xml:space="preserve"><value>Select whole page</value></data>
+  <data name="AIJ_Note" xml:space="preserve"><value>Review note (optional)</value></data>
+  <data name="AIJ_Saved" xml:space="preserve"><value>Review status saved</value></data>
+  <data name="AIJ_ReviewedBy" xml:space="preserve"><value>Reviewed by {0} on {1}</value></data>
+  <data name="AIJ_ExplainTitle" xml:space="preserve"><value>Assistant's wording</value></data>
+  <data name="AIJ_Explaining" xml:space="preserve"><value>Preparing the explanation…</value></data>
+  <data name="AIJ_ExplainUnavailable" xml:space="preserve"><value>The assistant could not explain this now. The reasons above come from the detection rules.</value></data>
+  <data name="AIJ_ExplainCapped" xml:space="preserve"><value>The daily explanation limit was reached. Try again tomorrow.</value></data>
+  <data name="AIJ_ExplainOff" xml:space="preserve"><value>Assistant explanations are turned off in the settings.</value></data>
+  <data name="AIJ_ExplainRegenerate" xml:space="preserve"><value>Explain again</value></data>
+  <data name="AIJ_ShowingPage" xml:space="preserve"><value>{0}–{1} of {2}</value></data>
+  <data name="AIJ_Prev" xml:space="preserve"><value>Previous</value></data>
+  <data name="AIJ_Next" xml:space="preserve"><value>Next</value></data>
+  <data name="AIJ_ErrNoPermission" xml:space="preserve"><value>You don't have permission for this screen.</value></data>
+  <data name="AIJ_ErrNotFound" xml:space="preserve"><value>The entry is not in the anomaly list.</value></data>
+  <data name="AIJ_ErrBusy" xml:space="preserve"><value>Another scan is running. Try again shortly.</value></data>
+  <data name="AIJ_Set_Tab" xml:space="preserve"><value>Entry anomalies</value></data>
+  <data name="AIJ_Set_Activation" xml:space="preserve"><value>Activation</value></data>
+  <data name="AIJ_Set_Enable" xml:space="preserve"><value>Turn on anomaly detection for journal entries</value></data>
+  <data name="AIJ_Set_ActivatedAt" xml:space="preserve"><value>Checks entries posted from {0} onward. Older entries are not checked.</value></data>
+  <data name="AIJ_Set_NotActivated" xml:space="preserve"><value>Once turned on, checking starts from that moment. Existing entries are not checked.</value></data>
+  <data name="AIJ_Set_ScanTime" xml:space="preserve"><value>Nightly scan time</value></data>
+  <data name="AIJ_Set_ServerNow" xml:space="preserve"><value>Server time now: {0}</value></data>
+  <data name="AIJ_Set_Rules" xml:space="preserve"><value>Rules</value></data>
+  <data name="AIJ_Set_Desc_amount_outlier" xml:space="preserve"><value>A line far above the usual amount for the same account (all entries).</value></data>
+  <data name="AIJ_Set_Desc_duplicate" xml:space="preserve"><value>An entry identical, line by line, to an earlier one in the same branch.</value></data>
+  <data name="AIJ_Set_Desc_off_hours" xml:space="preserve"><value>An entry posted outside working hours or on a day off.</value></data>
+  <data name="AIJ_Set_Desc_rare_account" xml:space="preserve"><value>A line on an account that is almost never used.</value></data>
+  <data name="AIJ_Set_Desc_round_large" xml:space="preserve"><value>An entry with a large, exactly round total.</value></data>
+  <data name="AIJ_Set_OffHoursHint" xml:space="preserve"><value>Hours, days and holidays are in the “Working hours” card below.</value></data>
+  <data name="AIJ_Set_ManualOnly" xml:space="preserve"><value>Limit the hours, rare-account, round-amount and duplicate rules to manual entries</value></data>
+  <data name="AIJ_Set_BaselineHistory" xml:space="preserve"><value>Use earlier account movements as a statistical reference (totals only)</value></data>
+  <data name="AIJ_Set_Z" xml:space="preserve"><value>Standard deviations</value></data>
+  <data name="AIJ_Set_MinSample" xml:space="preserve"><value>Minimum movements per account</value></data>
+  <data name="AIJ_Set_BaselineDays" xml:space="preserve"><value>Reference days</value></data>
+  <data name="AIJ_Set_MinAmount" xml:space="preserve"><value>Minimum amount checked</value></data>
+  <data name="AIJ_Set_RoundUnit" xml:space="preserve"><value>Rounding unit</value></data>
+  <data name="AIJ_Set_RoundMin" xml:space="preserve"><value>Round amount threshold</value></data>
+  <data name="AIJ_Set_RareMax" xml:space="preserve"><value>Maximum uses for a rare account</value></data>
+  <data name="AIJ_Set_DupDays" xml:space="preserve"><value>Days to look back for duplicates</value></data>
+  <data name="AIJ_Set_Work" xml:space="preserve"><value>Working hours</value></data>
+  <data name="AIJ_Set_WorkStart" xml:space="preserve"><value>From</value></data>
+  <data name="AIJ_Set_WorkEnd" xml:space="preserve"><value>To</value></data>
+  <data name="AIJ_Set_WorkDays" xml:space="preserve"><value>Working days</value></data>
+  <data name="AIJ_Set_Holidays" xml:space="preserve"><value>Holidays</value></data>
+  <data name="AIJ_Set_AddHoliday" xml:space="preserve"><value>Add holiday</value></data>
+  <data name="AIJ_Set_RemoveHoliday" xml:space="preserve"><value>Remove</value></data>
+  <data name="AIJ_Set_ExplainTitle" xml:space="preserve"><value>Model explanations</value></data>
+  <data name="AIJ_Set_Explain" xml:space="preserve"><value>Allow the assistant to explain on request</value></data>
+  <data name="AIJ_Set_ExplainMax" xml:space="preserve"><value>Daily explanation limit</value></data>
+  <data name="AIJ_Set_MaxPerRun" xml:space="preserve"><value>Maximum new results per scan</value></data>
+  <data name="AIJ_Set_Save" xml:space="preserve"><value>Save settings</value></data>
+  <data name="AIJ_Set_Saved" xml:space="preserve"><value>Settings saved</value></data>
+  <data name="AIJ_Set_RunNow" xml:space="preserve"><value>Run now</value></data>
+  <data name="AIJ_Set_Runs" xml:space="preserve"><value>Recent scans</value></data>
+  <data name="AIJ_Set_RunType" xml:space="preserve"><value>Type</value></data>
+  <data name="AIJ_Set_RunFrom" xml:space="preserve"><value>From</value></data>
+  <data name="AIJ_Set_RunTo" xml:space="preserve"><value>To</value></data>
+  <data name="AIJ_Set_RunStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="AIJ_Set_RunScanned" xml:space="preserve"><value>Checked</value></data>
+  <data name="AIJ_Set_RunFound" xml:space="preserve"><value>Found</value></data>
+  <data name="AIJ_Set_RunInserted" xml:space="preserve"><value>New</value></data>
+  <data name="AIJ_Set_RunDuration" xml:space="preserve"><value>Duration</value></data>
+  <data name="AIJ_Set_RunError" xml:space="preserve"><value>Error</value></data>
+  <data name="AIJ_Set_Truncated" xml:space="preserve"><value>Result limit reached;</value></data>
+  <data name="AIJ_Trg_schedule" xml:space="preserve"><value>Nightly</value></data>
+  <data name="AIJ_Trg_manual" xml:space="preserve"><value>Manual</value></data>
+  <data name="AIJ_Trg_backfill" xml:space="preserve"><value>Past period</value></data>
+  <data name="AIJ_Trg_test" xml:space="preserve"><value>Test</value></data>
+  <data name="AIJ_Run_Queued" xml:space="preserve"><value>Queued</value></data>
+  <data name="AIJ_Run_Running" xml:space="preserve"><value>Running</value></data>
+  <data name="AIJ_Run_Done" xml:space="preserve"><value>Done</value></data>
+  <data name="AIJ_Run_Failed" xml:space="preserve"><value>Failed</value></data>
+  <data name="AIJ_Set_Backfill" xml:space="preserve"><value>Scan a past period</value></data>
+  <data name="AIJ_Set_BackfillHint" xml:space="preserve"><value>Checks existing entries from before activation, only when you ask. Up to 92 days per request.</value></data>
+  <data name="AIJ_Set_BackfillRun" xml:space="preserve"><value>Scan this period</value></data>
+  <data name="AIJ_Set_BackfillConfirmTitle" xml:space="preserve"><value>Confirm past-period scan</value></data>
+  <data name="AIJ_Set_BackfillConfirm" xml:space="preserve"><value>This will check entries from {0} to {1}. No entry will be changed.</value></data>
+  <data name="AIJ_Set_BackfillOk" xml:space="preserve"><value>Scan the period</value></data>
+  <data name="AIJ_Set_BackfillCancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="AIJ_Set_BackfillQueued" xml:space="preserve"><value>Scan started. Its result appears in the log.</value></data>
+  <data name="AIJ_Set_ErrNotAdmin" xml:space="preserve"><value>This setting is for administrators only.</value></data>
+  <data name="AIJ_Set_ErrTime" xml:space="preserve"><value>Enter the time as hour:minute, e.g. 02:00.</value></data>
+  <data name="AIJ_Set_ErrWork" xml:space="preserve"><value>Working hours must start and end at different times.</value></data>
+  <data name="AIJ_Set_ErrDays" xml:space="preserve"><value>Choose at least one working day.</value></data>
+  <data name="AIJ_Set_ErrZ" xml:space="preserve"><value>Standard deviations must be between 2 and 10.</value></data>
+  <data name="AIJ_Set_ErrSample" xml:space="preserve"><value>Minimum movements must be between 10 and 1000.</value></data>
+  <data name="AIJ_Set_ErrAmount" xml:space="preserve"><value>The amount can't be negative.</value></data>
+  <data name="AIJ_Set_ErrRange" xml:space="preserve"><value>The value is outside the allowed range.</value></data>
+  <data name="AIJ_Set_ErrBackfillRange" xml:space="preserve"><value>The period must be at most 92 days and can't go past today.</value></data>
+  <data name="AIB_Al_anomalies_new" xml:space="preserve"><value>Unusual journal entries</value></data>
+  <data name="AIB_Al_anomalies_new_Text" xml:space="preserve"><value>{count} new entries need review, {high} of them high severity.</value></data>
 </root>

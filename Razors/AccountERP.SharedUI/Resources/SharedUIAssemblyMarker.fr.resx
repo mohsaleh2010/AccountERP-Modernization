@@ -5814,4 +5814,167 @@
   <data name="AIEI_Error" xml:space="preserve"><value>Impossible d'expliquer l'erreur pour le moment.</value></data>
   <data name="AIEI_KEta" xml:space="preserve"><value>Erreur de facture électronique</value></data>
   <data name="AIEI_HEta" xml:space="preserve"><value>Clés de correspondance dans les mots-clés : code:… ; path:… ; step:… ; phrase:…</value></data>
+  <data name="AIJ_Title" xml:space="preserve"><value>Anomalies des écritures</value></data>
+  <data name="AIJ_Sub" xml:space="preserve"><value>Écritures inhabituelles détectées par des règles fixes. Pour revue uniquement ; aucune écriture n'est modifiée.</value></data>
+  <data name="AIJ_LinkIntegrity" xml:space="preserve"><value>Contrôle d'intégrité des écritures</value></data>
+  <data name="AIJ_LinkSettings" xml:space="preserve"><value>Paramètres de détection</value></data>
+  <data name="AIJ_EmptyDisabled" xml:space="preserve"><value>La détection d'anomalies est désactivée. Un administrateur peut l'activer dans les paramètres IA.</value></data>
+  <data name="AIJ_NotAvailable" xml:space="preserve"><value>Cette page n'est disponible que dans la version web.</value></data>
+  <data name="AIJ_EmptyNone" xml:space="preserve"><value>Aucune écriture inhabituelle pour ces filtres.</value></data>
+  <data name="AIJ_KpiNew" xml:space="preserve"><value>Nouvelles</value></data>
+  <data name="AIJ_KpiHigh" xml:space="preserve"><value>Gravité élevée</value></data>
+  <data name="AIJ_KpiReviewed" xml:space="preserve"><value>Revues ce mois-ci</value></data>
+  <data name="AIJ_LastRun" xml:space="preserve"><value>Dernière analyse : {0}</value></data>
+  <data name="AIJ_LastRunFailed" xml:space="preserve"><value>Dernière analyse échouée : {0}</value></data>
+  <data name="AIJ_NeverRun" xml:space="preserve"><value>Aucune analyse encore</value></data>
+  <data name="AIJ_FStatus" xml:space="preserve"><value>Statut</value></data>
+  <data name="AIJ_FRule" xml:space="preserve"><value>Règle</value></data>
+  <data name="AIJ_FSeverity" xml:space="preserve"><value>Gravité</value></data>
+  <data name="AIJ_FBranch" xml:space="preserve"><value>Agence</value></data>
+  <data name="AIJ_FFrom" xml:space="preserve"><value>Date de début</value></data>
+  <data name="AIJ_FTo" xml:space="preserve"><value>Date de fin</value></data>
+  <data name="AIJ_FEntryNo" xml:space="preserve"><value>N° d'écriture</value></data>
+  <data name="AIJ_FAll" xml:space="preserve"><value>Tous</value></data>
+  <data name="AIJ_FBackfill" xml:space="preserve"><value>Afficher les résultats des périodes passées</value></data>
+  <data name="AIJ_FSearch" xml:space="preserve"><value>Afficher</value></data>
+  <data name="AIJ_FReset" xml:space="preserve"><value>Effacer les filtres</value></data>
+  <data name="AIJ_ColDate" xml:space="preserve"><value>Date d'écriture</value></data>
+  <data name="AIJ_ColEntryNo" xml:space="preserve"><value>N° d'écriture</value></data>
+  <data name="AIJ_ColJournal" xml:space="preserve"><value>Journal</value></data>
+  <data name="AIJ_ColSource" xml:space="preserve"><value>Source</value></data>
+  <data name="AIJ_ColBranch" xml:space="preserve"><value>Agence</value></data>
+  <data name="AIJ_ColTotal" xml:space="preserve"><value>Total</value></data>
+  <data name="AIJ_ColRules" xml:space="preserve"><value>Règles</value></data>
+  <data name="AIJ_ColSeverity" xml:space="preserve"><value>Gravité</value></data>
+  <data name="AIJ_ColStatus" xml:space="preserve"><value>Statut</value></data>
+  <data name="AIJ_Rule_amount_outlier" xml:space="preserve"><value>Montant inhabituel</value></data>
+  <data name="AIJ_Rule_duplicate" xml:space="preserve"><value>Écriture en double</value></data>
+  <data name="AIJ_Rule_off_hours" xml:space="preserve"><value>Hors heures de travail</value></data>
+  <data name="AIJ_Rule_rare_account" xml:space="preserve"><value>Compte rarement utilisé</value></data>
+  <data name="AIJ_Rule_round_large" xml:space="preserve"><value>Gros montant rond</value></data>
+  <data name="AIJ_Why_amount_outlier" xml:space="preserve"><value>Le montant {0} sur le compte « {1} » est {2} écarts-types au-dessus de sa moyenne de {3} (sur {4} mouvements antérieurs).</value></data>
+  <data name="AIJ_Why_duplicate" xml:space="preserve"><value>Identique à l'écriture n° {0} du {1} pour toutes les lignes et montants, à {2} jour(s) d'écart.</value></data>
+  <data name="AIJ_Why_off_hours_night" xml:space="preserve"><value>Saisie à {0}, hors heures de travail ({1}–{2}).</value></data>
+  <data name="AIJ_Why_off_hours_weekend" xml:space="preserve"><value>Saisie un {0}, qui n'est pas un jour ouvré.</value></data>
+  <data name="AIJ_Why_off_hours_holiday" xml:space="preserve"><value>Saisie le {0}, un jour férié enregistré.</value></data>
+  <data name="AIJ_Why_rare_account" xml:space="preserve"><value>Le compte « {0} » n'a été utilisé que {1} fois au cours des {2} derniers jours.</value></data>
+  <data name="AIJ_Why_round_large" xml:space="preserve"><value>Le total de l'écriture {0} est un montant rond (multiple de {1}) et dépasse le seuil {2}.</value></data>
+  <data name="AIJ_Sev_high" xml:space="preserve"><value>Élevée</value></data>
+  <data name="AIJ_Sev_medium" xml:space="preserve"><value>Moyenne</value></data>
+  <data name="AIJ_Sev_info" xml:space="preserve"><value>Info</value></data>
+  <data name="AIJ_St_New" xml:space="preserve"><value>Nouvelle</value></data>
+  <data name="AIJ_St_Reviewed" xml:space="preserve"><value>Revue</value></data>
+  <data name="AIJ_St_Dismissed" xml:space="preserve"><value>Pas une anomalie</value></data>
+  <data name="AIJ_ChipBackfill" xml:space="preserve"><value>Période passée</value></data>
+  <data name="AIJ_ChipChanged" xml:space="preserve"><value>Modifiée après détection</value></data>
+  <data name="AIJ_ChipMissing" xml:space="preserve"><value>L'écriture n'existe plus</value></data>
+  <data name="AIJ_Src_Manual" xml:space="preserve"><value>Écriture manuelle</value></data>
+  <data name="AIJ_Src_Auto" xml:space="preserve"><value>Écriture automatique ({0})</value></data>
+  <data name="AIJ_Lines" xml:space="preserve"><value>Lignes de l'écriture</value></data>
+  <data name="AIJ_Why" xml:space="preserve"><value>Pourquoi signalée</value></data>
+  <data name="AIJ_LnAccount" xml:space="preserve"><value>Compte</value></data>
+  <data name="AIJ_LnDebit" xml:space="preserve"><value>Débit</value></data>
+  <data name="AIJ_LnCredit" xml:space="preserve"><value>Crédit</value></data>
+  <data name="AIJ_LnNotes" xml:space="preserve"><value>Libellé</value></data>
+  <data name="AIJ_LnFlagged" xml:space="preserve"><value>Ligne signalée</value></data>
+  <data name="AIJ_ActOpen" xml:space="preserve"><value>Ouvrir l'écriture</value></data>
+  <data name="AIJ_ActReviewed" xml:space="preserve"><value>Marquer comme revue</value></data>
+  <data name="AIJ_ActDismiss" xml:space="preserve"><value>Pas une anomalie</value></data>
+  <data name="AIJ_ActReopen" xml:space="preserve"><value>Rouvrir</value></data>
+  <data name="AIJ_ActExplain" xml:space="preserve"><value>Expliquer</value></data>
+  <data name="AIJ_ActReviewSelected" xml:space="preserve"><value>Marquer la sélection comme revue ({0})</value></data>
+  <data name="AIJ_ActExpand" xml:space="preserve"><value>Afficher les détails</value></data>
+  <data name="AIJ_ActSelect" xml:space="preserve"><value>Sélectionner l'écriture {0}</value></data>
+  <data name="AIJ_ActSelectAll" xml:space="preserve"><value>Sélectionner toute la page</value></data>
+  <data name="AIJ_Note" xml:space="preserve"><value>Note de revue (facultative)</value></data>
+  <data name="AIJ_Saved" xml:space="preserve"><value>Statut de revue enregistré</value></data>
+  <data name="AIJ_ReviewedBy" xml:space="preserve"><value>Revue par {0} le {1}</value></data>
+  <data name="AIJ_ExplainTitle" xml:space="preserve"><value>Formulation de l'assistant</value></data>
+  <data name="AIJ_Explaining" xml:space="preserve"><value>Préparation de l'explication…</value></data>
+  <data name="AIJ_ExplainUnavailable" xml:space="preserve"><value>L'assistant n'a pas pu l'expliquer pour l'instant. Les raisons ci-dessus proviennent des règles de détection.</value></data>
+  <data name="AIJ_ExplainCapped" xml:space="preserve"><value>La limite quotidienne d'explications est atteinte. Réessayez demain.</value></data>
+  <data name="AIJ_ExplainOff" xml:space="preserve"><value>Les explications de l'assistant sont désactivées dans les paramètres.</value></data>
+  <data name="AIJ_ExplainRegenerate" xml:space="preserve"><value>Réexpliquer</value></data>
+  <data name="AIJ_ShowingPage" xml:space="preserve"><value>{0}–{1} sur {2}</value></data>
+  <data name="AIJ_Prev" xml:space="preserve"><value>Précédent</value></data>
+  <data name="AIJ_Next" xml:space="preserve"><value>Suivant</value></data>
+  <data name="AIJ_ErrNoPermission" xml:space="preserve"><value>Vous n'avez pas l'autorisation pour cet écran.</value></data>
+  <data name="AIJ_ErrNotFound" xml:space="preserve"><value>L'écriture ne figure pas dans la liste des anomalies.</value></data>
+  <data name="AIJ_ErrBusy" xml:space="preserve"><value>Une autre analyse est en cours. Réessayez dans un instant.</value></data>
+  <data name="AIJ_Set_Tab" xml:space="preserve"><value>Anomalies des écritures</value></data>
+  <data name="AIJ_Set_Activation" xml:space="preserve"><value>Activation</value></data>
+  <data name="AIJ_Set_Enable" xml:space="preserve"><value>Activer la détection d'anomalies des écritures</value></data>
+  <data name="AIJ_Set_ActivatedAt" xml:space="preserve"><value>Contrôle les écritures saisies à partir du {0}. Les écritures plus anciennes ne sont pas contrôlées.</value></data>
+  <data name="AIJ_Set_NotActivated" xml:space="preserve"><value>Une fois activé, le contrôle commence à partir de ce moment. Les écritures existantes ne sont pas contrôlées.</value></data>
+  <data name="AIJ_Set_ScanTime" xml:space="preserve"><value>Heure de l'analyse nocturne</value></data>
+  <data name="AIJ_Set_ServerNow" xml:space="preserve"><value>Heure actuelle du serveur : {0}</value></data>
+  <data name="AIJ_Set_Rules" xml:space="preserve"><value>Règles</value></data>
+  <data name="AIJ_Set_Desc_amount_outlier" xml:space="preserve"><value>Une ligne bien au-dessus du montant habituel du même compte (toutes écritures).</value></data>
+  <data name="AIJ_Set_Desc_duplicate" xml:space="preserve"><value>Une écriture identique ligne par ligne à une précédente dans la même agence.</value></data>
+  <data name="AIJ_Set_Desc_off_hours" xml:space="preserve"><value>Une écriture saisie hors heures de travail ou un jour chômé.</value></data>
+  <data name="AIJ_Set_Desc_rare_account" xml:space="preserve"><value>Une ligne sur un compte presque jamais utilisé.</value></data>
+  <data name="AIJ_Set_Desc_round_large" xml:space="preserve"><value>Une écriture au total élevé et parfaitement rond.</value></data>
+  <data name="AIJ_Set_OffHoursHint" xml:space="preserve"><value>Heures, jours et fériés se trouvent dans la carte « Heures de travail » ci-dessous.</value></data>
+  <data name="AIJ_Set_ManualOnly" xml:space="preserve"><value>Limiter les règles d'horaires, de compte rare, de montant rond et de doublon aux écritures manuelles</value></data>
+  <data name="AIJ_Set_BaselineHistory" xml:space="preserve"><value>Utiliser les mouvements antérieurs des comptes comme référence statistique (totaux uniquement)</value></data>
+  <data name="AIJ_Set_Z" xml:space="preserve"><value>Écarts-types</value></data>
+  <data name="AIJ_Set_MinSample" xml:space="preserve"><value>Mouvements minimum par compte</value></data>
+  <data name="AIJ_Set_BaselineDays" xml:space="preserve"><value>Jours de référence</value></data>
+  <data name="AIJ_Set_MinAmount" xml:space="preserve"><value>Montant minimum contrôlé</value></data>
+  <data name="AIJ_Set_RoundUnit" xml:space="preserve"><value>Unité d'arrondi</value></data>
+  <data name="AIJ_Set_RoundMin" xml:space="preserve"><value>Seuil de montant rond</value></data>
+  <data name="AIJ_Set_RareMax" xml:space="preserve"><value>Utilisations max. d'un compte rare</value></data>
+  <data name="AIJ_Set_DupDays" xml:space="preserve"><value>Jours de recherche des doublons</value></data>
+  <data name="AIJ_Set_Work" xml:space="preserve"><value>Heures de travail</value></data>
+  <data name="AIJ_Set_WorkStart" xml:space="preserve"><value>De</value></data>
+  <data name="AIJ_Set_WorkEnd" xml:space="preserve"><value>À</value></data>
+  <data name="AIJ_Set_WorkDays" xml:space="preserve"><value>Jours ouvrés</value></data>
+  <data name="AIJ_Set_Holidays" xml:space="preserve"><value>Jours fériés</value></data>
+  <data name="AIJ_Set_AddHoliday" xml:space="preserve"><value>Ajouter un férié</value></data>
+  <data name="AIJ_Set_RemoveHoliday" xml:space="preserve"><value>Retirer</value></data>
+  <data name="AIJ_Set_ExplainTitle" xml:space="preserve"><value>Explications par le modèle</value></data>
+  <data name="AIJ_Set_Explain" xml:space="preserve"><value>Autoriser les explications de l'assistant sur demande</value></data>
+  <data name="AIJ_Set_ExplainMax" xml:space="preserve"><value>Limite quotidienne d'explications</value></data>
+  <data name="AIJ_Set_MaxPerRun" xml:space="preserve"><value>Nouveaux résultats max. par analyse</value></data>
+  <data name="AIJ_Set_Save" xml:space="preserve"><value>Enregistrer les paramètres</value></data>
+  <data name="AIJ_Set_Saved" xml:space="preserve"><value>Paramètres enregistrés</value></data>
+  <data name="AIJ_Set_RunNow" xml:space="preserve"><value>Lancer maintenant</value></data>
+  <data name="AIJ_Set_Runs" xml:space="preserve"><value>Analyses récentes</value></data>
+  <data name="AIJ_Set_RunType" xml:space="preserve"><value>Type</value></data>
+  <data name="AIJ_Set_RunFrom" xml:space="preserve"><value>De</value></data>
+  <data name="AIJ_Set_RunTo" xml:space="preserve"><value>À</value></data>
+  <data name="AIJ_Set_RunStatus" xml:space="preserve"><value>Statut</value></data>
+  <data name="AIJ_Set_RunScanned" xml:space="preserve"><value>Contrôlées</value></data>
+  <data name="AIJ_Set_RunFound" xml:space="preserve"><value>Trouvées</value></data>
+  <data name="AIJ_Set_RunInserted" xml:space="preserve"><value>Nouvelles</value></data>
+  <data name="AIJ_Set_RunDuration" xml:space="preserve"><value>Durée</value></data>
+  <data name="AIJ_Set_RunError" xml:space="preserve"><value>Erreur</value></data>
+  <data name="AIJ_Set_Truncated" xml:space="preserve"><value>Limite de résultats atteinte ;</value></data>
+  <data name="AIJ_Trg_schedule" xml:space="preserve"><value>Nocturne</value></data>
+  <data name="AIJ_Trg_manual" xml:space="preserve"><value>Manuelle</value></data>
+  <data name="AIJ_Trg_backfill" xml:space="preserve"><value>Période passée</value></data>
+  <data name="AIJ_Trg_test" xml:space="preserve"><value>Test</value></data>
+  <data name="AIJ_Run_Queued" xml:space="preserve"><value>En attente</value></data>
+  <data name="AIJ_Run_Running" xml:space="preserve"><value>En cours</value></data>
+  <data name="AIJ_Run_Done" xml:space="preserve"><value>Terminée</value></data>
+  <data name="AIJ_Run_Failed" xml:space="preserve"><value>Échouée</value></data>
+  <data name="AIJ_Set_Backfill" xml:space="preserve"><value>Analyser une période passée</value></data>
+  <data name="AIJ_Set_BackfillHint" xml:space="preserve"><value>Contrôle des écritures existantes antérieures à l'activation, uniquement à votre demande. Jusqu'à 92 jours par demande.</value></data>
+  <data name="AIJ_Set_BackfillRun" xml:space="preserve"><value>Analyser cette période</value></data>
+  <data name="AIJ_Set_BackfillConfirmTitle" xml:space="preserve"><value>Confirmer l'analyse de la période passée</value></data>
+  <data name="AIJ_Set_BackfillConfirm" xml:space="preserve"><value>Les écritures du {0} au {1} seront contrôlées. Aucune écriture ne sera modifiée.</value></data>
+  <data name="AIJ_Set_BackfillOk" xml:space="preserve"><value>Analyser la période</value></data>
+  <data name="AIJ_Set_BackfillCancel" xml:space="preserve"><value>Annuler</value></data>
+  <data name="AIJ_Set_BackfillQueued" xml:space="preserve"><value>Analyse lancée. Son résultat apparaît dans le journal.</value></data>
+  <data name="AIJ_Set_ErrNotAdmin" xml:space="preserve"><value>Ce paramètre est réservé aux administrateurs.</value></data>
+  <data name="AIJ_Set_ErrTime" xml:space="preserve"><value>Saisissez l'heure au format heure:minute, par ex. 02:00.</value></data>
+  <data name="AIJ_Set_ErrWork" xml:space="preserve"><value>Le début et la fin des heures de travail doivent être différents.</value></data>
+  <data name="AIJ_Set_ErrDays" xml:space="preserve"><value>Choisissez au moins un jour ouvré.</value></data>
+  <data name="AIJ_Set_ErrZ" xml:space="preserve"><value>Les écarts-types doivent être entre 2 et 10.</value></data>
+  <data name="AIJ_Set_ErrSample" xml:space="preserve"><value>Le minimum de mouvements doit être entre 10 et 1000.</value></data>
+  <data name="AIJ_Set_ErrAmount" xml:space="preserve"><value>Le montant ne peut pas être négatif.</value></data>
+  <data name="AIJ_Set_ErrRange" xml:space="preserve"><value>La valeur est hors de la plage autorisée.</value></data>
+  <data name="AIJ_Set_ErrBackfillRange" xml:space="preserve"><value>La période doit faire au plus 92 jours et ne pas dépasser aujourd'hui.</value></data>
+  <data name="AIB_Al_anomalies_new" xml:space="preserve"><value>Écritures inhabituelles</value></data>
+  <data name="AIB_Al_anomalies_new_Text" xml:space="preserve"><value>{count} nouvelles écritures à revoir, dont {high} de gravité élevée.</value></data>
 </root>

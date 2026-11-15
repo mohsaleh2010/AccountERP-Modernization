@@ -493,6 +493,11 @@
             <MudTabPanel Text="@Tr("AIB_Tab")" Icon="@Icons.Material.Filled.Summarize">
                 <AiBriefTab />
             </MudTabPanel>
+
+            @* ═════════ P8.4.3: شذوذ القيود (التفعيل، القواعد والعتبات، الدوام، الشرح، التشغيل والسجل، المسح التاريخى) ═════════ *@
+            <MudTabPanel Text="@Tr("AIJ_Set_Tab")" Icon="@Icons.Material.Filled.QueryStats">
+                <AiAnomalyTab />
+            </MudTabPanel>
         </MudTabs>
     }
 </div>

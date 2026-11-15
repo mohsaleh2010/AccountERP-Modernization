@@ -319,6 +319,8 @@ LEFT JOIN dbo.Account_Branches b ON b.Id = l.Branch_Id_Entry;
 - مفاتيح `AIJ_Set_*` ×4 (§6).
 - القبول: التفعيل يكتب `AnomalyActivatedAt` ويظهر فى البطاقة؛ إيقاف ثم تفعيل يحدّثه؛ قيم خاطئة (z = 0، دوام من = إلى، حد سالب) تُرفض برسائلها؛ «تشغيل الآن» يضيف صفاً للسجل؛ مسح تاريخى لأكثر من 92 يوماً يُرفض؛ الإلغاء من حوار التأكيد لا يدرج شيئاً؛ التأكيد ينتج صفوف `IsBackfill = 1` فقط؛ غير المدير لا يرى التبويب والبوابة ترفضه.
 
+> **تم التنفيذ P8.4.3 (2026-11-15):** فحص 12: التبويبات `MudTabPanel` مباشرة فى `AiSettingsPage.razor` ⇒ تبويب ثامن `<AiAnomalyTab />` بنمط `AiBriefTab`. جديد `Anomalies/AiAnomalyGateway.cs` (كامل عدا `ExplainAsync` — `List`/`GetEntry`/`SetStatus` نُفّذت هنا مبكراً لأنها خادمية فقط، والصفحة فى P8.4.4)، `Services/AiAnomalyService.cs` (+ `AiAnomalyText`: الخطأ وجملة «لماذا عُلِّم» من DetailsJson والأيقونة واللون)، `Components/Assistant/Settings/AiAnomalyTab.razor`، تسجيل `IAiAnomalyGateway` (AI) و`AiAnomalyService` (Program.cs فقط). 163 مفتاحاً ×4 (`AIJ_*` كاملة للصفحة والشرح + `AIB_Al_anomalies_new*`) بسكربت addkeys.py. قرارات: (أ) `AiAnomalyJob.Sql` مكشوف للبوابة؛ (ب) المدير يرى كل الفروع (`null`)، وغيره فروع `FinalAccountsService.GetBranches()`؛ (ج) `Changed`/`Missing` بمقارنة الإجمالى الحى فقط (بديل الفحص 4)؛ (د) خطافات اختبار `SettingWriter`/`BranchSource`/`WakeJobOnBackfill`/`Today`؛ (هـ) زر الحفظ معطّل ما دامت أخطاء التحقق قائمة، والأخطاء تحت حقولها. harness `p843test` 42/42 (مستخدمون وهميون، إعدادات فى الذاكرة؛ AI_Settings الحقيقية بقيت موقوفة).
+
 **P8.4.4 — صفحة «شذوذ القيود» والقائمة والمراجعة**
 
 - أول خطوة: مهارة `ui-ux-pro-max`، والفحوص المفتوحة 4، 10.

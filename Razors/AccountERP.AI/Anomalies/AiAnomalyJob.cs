@@ -51,10 +51,13 @@ namespace AccountERP.AI.Anomalies
         {
             _dal = dal ?? new AiAnomalyCLS();
             _providers = providers ?? new AiProvidersCLS();
+            Sql = sql;
             Scanner = new AiAnomalyScanner(sql, _dal);
         }
 
         public AiAnomalyCLS Dal => _dal;
+        /// <summary>منفّذ القراءة (للبوابة: سطور القيد الحية).</summary>
+        public ReadOnlySqlExecutor Sql { get; }
 
         public AiAnomalySettings Settings() => SettingsSource?.Invoke() ?? AiAnomalySettings.From(_providers.GetSettings());
 

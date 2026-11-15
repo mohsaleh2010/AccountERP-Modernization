@@ -1,0 +1,416 @@
+@* 🤖 P8.4.3 (ai-assistant-p84-plan.md ش30): تبويب «شذوذ القيود» فى /settings/ai — مكوّن مستقل يحمّل نفسه عند أول عرض (نمط AiBriefTab).
+   التفعيل (يكتب تاريخ بدء الفحص على الخادم — ش6)، القواعد وعتباتها، الدوام والعطلات، الشرح بالنموذج، «تشغيل الآن» وسجل آخر 30 تشغيلاً،
+   و«مسح فترة سابقة» بحوار تأكيد صريح (ش5). التحقق فى الحقل عند تغييره (Validate) ثم مرة أخرى على الخادم. لا مساس بأى قيد. *@
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using Microsoft.Extensions.DependencyInjection
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IServiceProvider ServiceProvider
+@implements IDisposable
+
+<style>
+    .aijt { display: flex; flex-direction: column; gap: 16px; }
+    .aijt-card { border: 1px solid var(--mud-palette-lines-default); border-radius: 14px; padding: 16px; background: var(--mud-palette-surface); }
+    .aijt-card h3 { margin: 0 0 12px; font-size: 1rem; font-weight: 700; display: flex; gap: 8px; align-items: center; }
+    .aijt-card h3 .mud-icon-root { color: var(--mud-palette-primary); }
+    .aijt-card.warn { border-color: var(--mud-palette-warning); }
+    .aijt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px 16px; align-items: start; }
+    .aijt-rule { display: grid; grid-template-columns: minmax(220px, 1fr) 2fr; gap: 8px 16px; padding: 12px 0; border-top: 1px solid var(--mud-palette-lines-default); }
+    .aijt-rule:first-of-type { border-top: 0; padding-top: 0; }
+    @@media (max-width: 720px) { .aijt-rule { grid-template-columns: 1fr; } }
+    .aijt-rule .desc { font-size: .8rem; color: var(--mud-palette-text-secondary); margin-inline-start: 4px; }
+    .aijt-days { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+    .aijt-hint { font-size: .8rem; color: var(--mud-palette-text-secondary); margin-top: 4px; }
+    .aijt-err { font-size: .8rem; color: var(--mud-palette-error); margin-top: 4px; }
+    .aijt-act { font-size: .9rem; padding: 8px 12px; border-radius: 10px; background: var(--mud-palette-background-gray); margin-top: 8px; }
+    .aijt-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .aijt-actions .mud-button-root { min-height: 44px; }
+    .aijt-hol { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .aijt-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .aijt-table th { text-align: start; font-weight: 600; color: var(--mud-palette-text-secondary); padding: 6px 8px; border-bottom: 1px solid var(--mud-palette-lines-default); white-space: nowrap; }
+    .aijt-table td { padding: 6px 8px; border-bottom: 1px solid var(--mud-palette-lines-default); vertical-align: middle; }
+    .aijt-table td.n { text-align: end; font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: plaintext; white-space: nowrap; }
+    .aijt-wrap { overflow-x: auto; }
+    .aijt-st { font-size: .75rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--mud-palette-background-gray); white-space: nowrap; }
+    .aijt-st.Done { color: var(--mud-palette-success); }
+    .aijt-st.Running, .aijt-st.Queued { color: var(--mud-palette-info); }
+    .aijt-st.Failed { color: var(--mud-palette-error); }
+</style>
+
+<div class="aijt" dir="@(LangService.IsRtl ? "rtl" : "ltr")">
+    @if (_svc == null || !_svc.HasGateway)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("AIJ_NotAvailable")</MudAlert>
+    }
+    else if (!_svc.CanManage)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@Tr("AIJ_Set_ErrNotAdmin")</MudAlert>
+    }
+    else if (_s == null)
+    {
+        @if (_error != null)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@_error</MudAlert>
+        }
+        else
+        {
+            <div style="text-align:center;padding:32px;"><MudProgressCircular Indeterminate="true" Color="Color.Primary" /></div>
+        }
+    }
+    else
+    {
+        @if (_error != null)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" ShowCloseIcon="true" CloseIconClicked="() => _error = null">@_error</MudAlert>
+        }
+
+        @* ─── التفعيل (ش3، ش6) ─── *@
+        <section class="aijt-card" aria-label="@Tr("AIJ_Set_Activation")">
+            <h3><MudIcon Icon="@Icons.Material.Outlined.PowerSettingsNew" aria-hidden="true" />@Tr("AIJ_Set_Activation")</h3>
+            <MudSwitch T="bool" @bind-Value="_s.Enabled" Color="Color.Primary" Label="@Tr("AIJ_Set_Enable")" />
+            <div class="aijt-act" role="status">
+                @if (_saved != null && _saved.Enabled && _saved.ActivatedAt.HasValue)
+                {
+                    @Tr("AIJ_Set_ActivatedAt", AiAnomalyText.Stamp(_saved.ActivatedAt))
+                }
+                else
+                {
+                    @Tr("AIJ_Set_NotActivated")
+                }
+            </div>
+            <div class="aijt-grid mt-3">
+                <div>
+                    <MudTextField T="string" @bind-Value="_scan" @bind-Value:after="Revalidate" Label="@Tr("AIJ_Set_ScanTime")" Placeholder="02:00" Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" InputMode="InputMode.numeric" MaxLength="5" Error="@(!TimeOk(_scan))" ErrorText="@Tr("AIJ_Set_ErrTime")" />
+                    <div class="aijt-hint">@Tr("AIJ_Set_ServerNow", AiAnomalyText.Stamp(DateTime.Now))</div>
+                </div>
+            </div>
+        </section>
+
+        @* ─── القواعد وعتباتها (ش8–ش14) ─── *@
+        <section class="aijt-card" aria-label="@Tr("AIJ_Set_Rules")">
+            <h3><MudIcon Icon="@Icons.Material.Outlined.Rule" aria-hidden="true" />@Tr("AIJ_Set_Rules")</h3>
+
+            <div class="aijt-rule">
+                <div>
+                    <MudSwitch T="bool" Value="_s.RuleOn(AiAnomalyRuleCodes.AmountOutlier)" ValueChanged="v => ToggleRule(AiAnomalyRuleCodes.AmountOutlier, v)" Color="Color.Primary" Label="@Tr("AIJ_Rule_amount_outlier")" />
+                    <div class="desc">@Tr("AIJ_Set_Desc_amount_outlier")</div>
+                </div>
+                <div class="aijt-grid">
+                    <MudNumericField T="decimal" @bind-Value="_s.ZThreshold" @bind-Value:after="Revalidate" Label="@Tr("AIJ_Set_Z")" Min="2" Max="10" Step="0.5m" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                     Error="@Has(AiAnomalyErrors.Z)" ErrorText="@Tr("AIJ_Set_ErrZ")" />
+                    <MudNumericField T="int" @bind-Value="_s.MinSample" @bind-Value:after="Revalidate" Label="@Tr("AIJ_Set_MinSample")" Min="10" Max="1000" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                     Error="@Has(AiAnomalyErrors.Sample)" ErrorText="@Tr("AIJ_Set_ErrSample")" />
+                    <MudNumericField T="int" @bind-Value="_s.BaselineDays" @bind-Value:after="Revalidate" Label="@Tr("AIJ_Set_BaselineDays")" Min="30" Max="1095" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                     Error="@(_s.BaselineDays < 30 || _s.BaselineDays > 1095)" ErrorText="@Tr("AIJ_Set_ErrRange")" />
+                    <MudNumericField T="decimal" @bind-Value="_s.MinAmount" @bind-Value:after="Revalidate" Label="@Tr("AIJ_Set_MinAmount")" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true"
+                                     Error="@(_s.MinAmount < 0)" ErrorText="@Tr("AIJ_Set_ErrAmount")" />
+                </div>
+            </div>
+
+            <div class="aijt-rule">
+                <div>
+                    <MudSwitch T="bool" Value="_s.RuleOn(AiAnomalyRuleCodes.Duplicate)" ValueChanged="v => ToggleRule(AiAnomalyRuleCodes.Duplicate, v)" Color="Color.Primary" Label="@Tr("AIJ_Rule_duplicate")" />
+                    <div class="desc">@Tr("AIJ_Set_Desc_duplicate")</div>
+                </div>
+                <div class="aijt-grid">
+                    <MudNumericField T="int" @bind-Value="_s.DupDays" @bind-Value:after="Revalidate" Label="@Tr("AIJ_Set_DupDays")" Min="1" Max="60" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                     Error="@(_s.DupDays < 1 || _s.DupDays > 60)" ErrorText="@Tr("AIJ_Set_ErrRange")" />
+                </div>
+            </div>
+
+            <div class="aijt-rule">
+                <div>
+                    <MudSwitch T="bool" Value="_s.RuleOn(AiAnomalyRuleCodes.OffHours)" ValueChanged="v => ToggleRule(AiAnomalyRuleCodes.OffHours, v)" Color="Color.Primary" Label="@Tr("AIJ_Rule_off_hours")" />
+                    <div class="desc">@Tr("AIJ_Set_Desc_off_hours")</div>
+                </div>
+                <div class="aijt-hint">@Tr("AIJ_Set_OffHoursHint")</div>
+            </div>
+
+            <div class="aijt-rule">
+                <div>
+                    <MudSwitch T="bool" Value="_s.RuleOn(AiAnomalyRuleCodes.RareAccount)" ValueChanged="v => ToggleRule(AiAnomalyRuleCodes.RareAccount, v)" Color="Color.Primary" Label="@Tr("AIJ_Rule_rare_account")" />
+                    <div class="desc">@Tr("AIJ_Set_Desc_rare_account")</div>
+                </div>
+                <div class="aijt-grid">
+                    <MudNumericField T="int" @bind-Value="_s.RareMaxUses" @bind-Value:after="Revalidate" Label="@Tr("AIJ_Set_RareMax")" Min="0" Max="100" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                     Error="@(_s.RareMaxUses < 0 || _s.RareMaxUses > 100)" ErrorText="@Tr("AIJ_Set_ErrRange")" />
+                </div>
+            </div>
+
+            <div class="aijt-rule">
+                <div>
+                    <MudSwitch T="bool" Value="_s.RuleOn(AiAnomalyRuleCodes.RoundLarge)" ValueChanged="v => ToggleRule(AiAnomalyRuleCodes.RoundLarge, v)" Color="Color.Primary" Label="@Tr("AIJ_Rule_round_large")" />
+                    <div class="desc">@Tr("AIJ_Set_Desc_round_large")</div>
+                </div>
+                <div class="aijt-grid">
+                    <MudNumericField T="decimal" @bind-Value="_s.RoundUnit" @bind-Value:after="Revalidate" Label="@Tr("AIJ_Set_RoundUnit")" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true"
+                                     Error="@(_s.RoundUnit <= 0)" ErrorText="@Tr("AIJ_Set_ErrRange")" />
+                    <MudNumericField T="decimal" @bind-Value="_s.RoundMinAmount" @bind-Value:after="Revalidate" Label="@Tr("AIJ_Set_RoundMin")" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true"
+                                     Error="@(_s.RoundMinAmount < 0)" ErrorText="@Tr("AIJ_Set_ErrAmount")" />
+                </div>
+            </div>
+
+            <div class="aijt-rule">
+                <div>
+                    <MudSwitch T="bool" @bind-Value="_s.ManualOnly" Color="Color.Primary" Label="@Tr("AIJ_Set_ManualOnly")" />
+                </div>
+                <div>
+                    <MudSwitch T="bool" @bind-Value="_s.BaselineHistory" Color="Color.Primary" Label="@Tr("AIJ_Set_BaselineHistory")" />
+                </div>
+            </div>
+        </section>
+
+        @* ─── الدوام والعطلات (ش12) ─── *@
+        <section class="aijt-card" aria-label="@Tr("AIJ_Set_Work")">
+            <h3><MudIcon Icon="@Icons.Material.Outlined.WorkHistory" aria-hidden="true" />@Tr("AIJ_Set_Work")</h3>
+            <div class="aijt-grid">
+                <MudTextField T="string" @bind-Value="_ws" @bind-Value:after="Revalidate" Label="@Tr("AIJ_Set_WorkStart")" Placeholder="08:00" Variant="Variant.Outlined" Margin="Margin.Dense"
+                              InputMode="InputMode.numeric" MaxLength="5" Error="@(!TimeOk(_ws))" ErrorText="@Tr("AIJ_Set_ErrTime")" />
+                <MudTextField T="string" @bind-Value="_we" @bind-Value:after="Revalidate" Label="@Tr("AIJ_Set_WorkEnd")" Placeholder="22:00" Variant="Variant.Outlined" Margin="Margin.Dense"
+                              InputMode="InputMode.numeric" MaxLength="5" Error="@(!TimeOk(_we))" ErrorText="@Tr("AIJ_Set_ErrTime")" />
+            </div>
+            @if (Has(AiAnomalyErrors.Work))
+            {
+                <div class="aijt-err" role="alert">@Tr("AIJ_Set_ErrWork")</div>
+            }
+            <MudText Typo="Typo.subtitle2" Class="mt-3 mb-1">@Tr("AIJ_Set_WorkDays")</MudText>
+            <div class="aijt-days" role="group" aria-label="@Tr("AIJ_Set_WorkDays")">
+                @foreach (int d in DayOrder)
+                {
+                    var day = d;
+                    <MudCheckBox T="bool" Value="_s.WorkDays.Contains(day)" ValueChanged="v => ToggleDay(day, v)" Label="@LangService.CurrentCultureInfo.DateTimeFormat.GetDayName((DayOfWeek)day)" Dense="true" />
+                }
+            </div>
+            @if (Has(AiAnomalyErrors.Days))
+            {
+                <div class="aijt-err" role="alert">@Tr("AIJ_Set_ErrDays")</div>
+            }
+            <MudText Typo="Typo.subtitle2" Class="mt-3 mb-1">@Tr("AIJ_Set_Holidays")</MudText>
+            <div class="aijt-actions">
+                <MudDatePicker @bind-Date="_holiday" Label="@Tr("AIJ_Set_AddHoliday")" Variant="Variant.Outlined" Margin="Margin.Dense" DateFormat="yyyy-MM-dd" Style="max-width:220px;" />
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="@(_holiday == null)" OnClick="AddHoliday">@Tr("AIJ_Set_AddHoliday")</MudButton>
+            </div>
+            <div class="aijt-hol">
+                @foreach (var h in _s.Holidays.OrderBy(x => x))
+                {
+                    var day = h;
+                    <MudChip T="string" OnClose="@(_ => RemoveHoliday(day))" Style="direction:ltr;" aria-label="@(Tr("AIJ_Set_RemoveHoliday") + " " + AiAnomalyText.Day(day))">@AiAnomalyText.Day(day)</MudChip>
+                }
+            </div>
+        </section>
+
+        @* ─── الشرح بالنموذج (ش24) ─── *@
+        <section class="aijt-card" aria-label="@Tr("AIJ_Set_ExplainTitle")">
+            <h3><MudIcon Icon="@Icons.Material.Outlined.AutoAwesome" aria-hidden="true" />@Tr("AIJ_Set_ExplainTitle")</h3>
+            <MudSwitch T="bool" @bind-Value="_s.Explain" Color="Color.Primary" Label="@Tr("AIJ_Set_Explain")" />
+            <div class="aijt-grid mt-2">
+                <MudNumericField T="int" @bind-Value="_s.ExplainMaxPerDay" @bind-Value:after="Revalidate" Label="@Tr("AIJ_Set_ExplainMax")" Min="0" Max="1000" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                 Error="@(_s.ExplainMaxPerDay < 0 || _s.ExplainMaxPerDay > 1000)" ErrorText="@Tr("AIJ_Set_ErrRange")" />
+                <MudNumericField T="int" @bind-Value="_s.MaxPerRun" @bind-Value:after="Revalidate" Label="@Tr("AIJ_Set_MaxPerRun")" Min="1" Max="5000" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                 Error="@(_s.MaxPerRun < 1 || _s.MaxPerRun > 5000)" ErrorText="@Tr("AIJ_Set_ErrRange")" />
+            </div>
+        </section>
+
+        <div class="aijt-actions">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_busy || _errs.Count > 0)" OnClick="SaveAsync">@Tr("AIJ_Set_Save")</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" Disabled="@(_busy || _saved == null || !_saved.Enabled)" OnClick="RunNowAsync">
+                @if (_running) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" /> }
+                @Tr("AIJ_Set_RunNow")
+            </MudButton>
+        </div>
+
+        @* ─── سجل آخر 30 تشغيلاً ─── *@
+        <section class="aijt-card" aria-label="@Tr("AIJ_Set_Runs")">
+            <h3><MudIcon Icon="@Icons.Material.Outlined.History" aria-hidden="true" />@Tr("AIJ_Set_Runs")</h3>
+            @if (_runs.Count == 0)
+            {
+                <div class="aijt-hint">@Tr("AIJ_NeverRun")</div>
+            }
+            else
+            {
+                <div class="aijt-wrap">
+                    <table class="aijt-table">
+                        <thead>
+                            <tr><th>@Tr("AIJ_Set_RunType")</th><th>@Tr("AIJ_Set_RunFrom")</th><th>@Tr("AIJ_Set_RunTo")</th><th>@Tr("AIJ_Set_RunStatus")</th>
+                                <th>@Tr("AIJ_Set_RunScanned")</th><th>@Tr("AIJ_Set_RunFound")</th><th>@Tr("AIJ_Set_RunInserted")</th><th>@Tr("AIJ_Set_RunDuration")</th><th>@Tr("AIJ_Set_RunError")</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in _runs)
+                            {
+                                bool bf = r.TriggeredBy == AiAnomalyTrigger.Backfill;
+                                <tr>
+                                    <td>@Tr("AIJ_Trg_" + r.TriggeredBy)</td>
+                                    <td class="n">@(bf ? AiAnomalyText.Day(r.FromTs) : AiAnomalyText.Stamp(r.FromTs))</td>
+                                    <td class="n">@(bf ? AiAnomalyText.Day(r.ToTs) : AiAnomalyText.Stamp(r.ToTs))</td>
+                                    <td><span class="aijt-st @r.Status">@Tr("AIJ_Run_" + r.Status)</span></td>
+                                    <td class="n">@r.EntriesScanned.ToString("N0", CultureInfo.InvariantCulture)</td>
+                                    <td class="n">@r.Found.ToString("N0", CultureInfo.InvariantCulture)</td>
+                                    <td class="n">@r.Inserted.ToString("N0", CultureInfo.InvariantCulture)@(r.Truncated ? " +" : "")</td>
+                                    <td class="n">@(r.DurationMs.HasValue ? (r.DurationMs.Value / 1000m).ToString("0.0", CultureInfo.InvariantCulture) + " s" : "—")</td>
+                                    <td style="max-width:280px;overflow-wrap:anywhere;">@(r.Truncated ? Tr("AIJ_Set_Truncated") + " " : "")@r.ErrorText</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        @* ─── مسح فترة سابقة (ش5): بتأكيد صريح فقط ─── *@
+        <section class="aijt-card warn" aria-label="@Tr("AIJ_Set_Backfill")">
+            <h3><MudIcon Icon="@Icons.Material.Outlined.ManageHistory" aria-hidden="true" Style="color:var(--mud-palette-warning);" />@Tr("AIJ_Set_Backfill")</h3>
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Text" Dense="true">@Tr("AIJ_Set_BackfillHint")</MudAlert>
+            <div class="aijt-actions mt-2">
+                <MudDatePicker @bind-Date="_bfFrom" Label="@Tr("AIJ_FFrom")" Variant="Variant.Outlined" Margin="Margin.Dense" DateFormat="yyyy-MM-dd" MaxDate="DateTime.Today" Style="max-width:200px;" />
+                <MudDatePicker @bind-Date="_bfTo" Label="@Tr("AIJ_FTo")" Variant="Variant.Outlined" Margin="Margin.Dense" DateFormat="yyyy-MM-dd" MaxDate="DateTime.Today" Style="max-width:200px;" />
+                <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.ManageSearch" Disabled="@(_busy || _bfFrom == null || _bfTo == null)" OnClick="BackfillAsync">@Tr("AIJ_Set_BackfillRun")</MudButton>
+            </div>
+            @if (_bfError != null)
+            {
+                <div class="aijt-err" role="alert">@_bfError</div>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    /// <summary>ترتيب الأسبوع المصرى: السبت أولاً.</summary>
+    private static readonly int[] DayOrder = { 6, 0, 1, 2, 3, 4, 5 };
+
+    private AiAnomalyService? _svc;
+    private AiAnomalySettings? _s, _saved;
+    private string _scan = "02:00", _ws = "08:00", _we = "22:00";
+    private DateTime? _holiday, _bfFrom, _bfTo;
+    private List<AiAnomalyRunRow> _runs = new();
+    private List<string> _errs = new();
+    private bool _busy, _running;
+    private string? _error, _bfError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _svc = ServiceProvider.GetService<AiAnomalyService>();
+        LangService.OnLanguageChanged += OnLang;
+        await LoadAsync();
+    }
+
+    private void OnLang() => InvokeAsync(StateHasChanged);
+
+    public async Task LoadAsync()
+    {
+        if (_svc == null || !_svc.HasGateway || !_svc.CanManage) return;
+        _error = null;
+        try
+        {
+            _saved = await _svc.GetSettingsAsync();
+            _s = _saved.Clone();
+            _scan = T(_s.ScanTime); _ws = T(_s.WorkStart); _we = T(_s.WorkEnd);
+            _runs = await _svc.RunsAsync();
+            Revalidate();
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+    }
+
+    private static string T(TimeSpan t) => t.ToString(@"hh\:mm", CultureInfo.InvariantCulture);
+    private static bool TimeOk(string s) => AiBriefSettings.TryParseTime(s, out _);
+    private bool Has(string code) => _errs.Contains(code);
+
+    /// <summary>تحقق فورى عند تغيير أى حقل (نفس Validate الذى تعيده البوابة).</summary>
+    private void Revalidate()
+    {
+        if (_s == null) return;
+        if (AiBriefSettings.TryParseTime(_scan, out var a)) _s.ScanTime = a;
+        if (AiBriefSettings.TryParseTime(_ws, out var b)) _s.WorkStart = b;
+        if (AiBriefSettings.TryParseTime(_we, out var c)) _s.WorkEnd = c;
+        _errs = _s.Validate();
+        if (!TimeOk(_scan) || !TimeOk(_ws) || !TimeOk(_we)) _errs.Add(AiAnomalyErrors.Time);
+    }
+
+    private void ToggleRule(string code, bool on)
+    {
+        if (_s == null) return;
+        _s.Rules.Remove(code);
+        if (on) _s.Rules.Add(code);
+    }
+
+    private void ToggleDay(int day, bool on)
+    {
+        if (_s == null) return;
+        if (on && !_s.WorkDays.Contains(day)) _s.WorkDays.Add(day);
+        if (!on) _s.WorkDays.Remove(day);
+        _s.WorkDays.Sort();
+        Revalidate();
+    }
+
+    private void AddHoliday()
+    {
+        if (_s == null || _holiday == null) return;
+        var d = _holiday.Value.Date;
+        if (!_s.Holidays.Contains(d)) _s.Holidays.Add(d);
+        _holiday = null;
+    }
+
+    private void RemoveHoliday(DateTime d) => _s?.Holidays.Remove(d);
+
+    private async Task SaveAsync()
+    {
+        if (_svc == null || _s == null || _busy) return;
+        Revalidate();
+        if (_errs.Count > 0) return;
+        _busy = true; _error = null;
+        try
+        {
+            await _svc.SaveSettingsAsync(_s);
+            Snackbar.Add(Tr("AIJ_Set_Saved"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task RunNowAsync()
+    {
+        if (_svc == null || _busy) return;
+        _busy = true; _running = true; _error = null;
+        StateHasChanged();
+        try
+        {
+            var r = await _svc.RunNowAsync();
+            _runs = await _svc.RunsAsync();
+            Snackbar.Add(Tr("AIJ_Run_" + r.Status) + " — " + Tr("AIJ_Set_RunInserted") + ": " + r.Inserted.ToString(CultureInfo.InvariantCulture),
+                         r.Status == AiAnomalyRunStatus.Done ? Severity.Success : Severity.Error);
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+        finally { _busy = false; _running = false; }
+    }
+
+    /// <summary>ش5: حوار تأكيد صريح نصه الفترة؛ الإلغاء لا يدرج شيئاً.</summary>
+    private async Task BackfillAsync()
+    {
+        if (_svc == null || _busy || _bfFrom == null || _bfTo == null) return;
+        _bfError = null;
+        DateTime f = _bfFrom.Value.Date, t = _bfTo.Value.Date;
+        if (t < f || t > DateTime.Today || (t - f).TotalDays + 1 > AiAnomalyConst.MaxBackfillDays) { _bfError = Tr("AIJ_Set_ErrBackfillRange"); return; }
+        bool? ok = await DialogService.ShowMessageBoxAsync(Tr("AIJ_Set_BackfillConfirmTitle"),
+            Tr("AIJ_Set_BackfillConfirm", AiAnomalyText.Day(f), AiAnomalyText.Day(t)), yesText: Tr("AIJ_Set_BackfillOk"), cancelText: Tr("AIJ_Set_BackfillCancel"));
+        if (ok != true) return;
+        _busy = true;
+        try
+        {
+            await _svc.QueueBackfillAsync(f, t);
+            Snackbar.Add(Tr("AIJ_Set_BackfillQueued"), Severity.Info);
+            _bfFrom = _bfTo = null;
+            await Task.Delay(800);
+            _runs = await _svc.RunsAsync();
+        }
+        catch (Exception ex) { _bfError = _svc.ErrorText(ex); }
+        finally { _busy = false; }
+    }
+
+    private string Tr(string key, params object[] args) => AiAnomalyText.T(Lang, LangService.CurrentCultureInfo, key, args);
+
+    public void Dispose() => LangService.OnLanguageChanged -= OnLang;
+}
