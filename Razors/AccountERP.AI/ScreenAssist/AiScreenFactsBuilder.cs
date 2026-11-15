@@ -563,7 +563,8 @@ FROM ai.v_sales WHERE sale_id = @id";
             f.Values.Add(new AiScreenValue { Key = "lines", Number = lines, Format = "int" });
             if (custBal.HasValue) f.Values.Add(new AiScreenValue { Key = "customer_balance", Number = Math.Abs(custBal.Value), Side = Side(custBal.Value) });
             if (einv != null) f.Values.Add(new AiScreenValue { Key = "einvoice", Text = "E_" + einv, Format = "code" });
-            f.Findings = R.InvoiceFindings(ret, total, lines > 0 ? lt : (decimal?)null, tax, lines > 0 && perItem ? ltax : (decimal?)null,
+            // الفحص 8: Invoices_Details.TaxSales10_Value = 0 دائماً فى فواتير الضريبة لكل صنف ⇒ لا مقارنة ضريبة (inv_tax_mismatch محذوف).
+            f.Findings = R.InvoiceFindings(ret, total, lines > 0 ? lt : (decimal?)null, tax, null,
                                            isTax, perItem, credit, rest, due, today, einv ?? "", posted);
             if (top.Count > 0)
                 f.Tables.Add(new AiScreenTable
@@ -588,7 +589,7 @@ FROM ai.v_sales WHERE sale_id = @id";
                 if (!ret) { o["paid"] = paid; o["rest"] = rest; }
                 if (due.HasValue) o["due_date"] = R.D(due.Value);
                 if (overdue > 0) o["days_overdue"] = overdue;
-                o["lines_count"] = lines; o["lines_total"] = lt; o["lines_tax"] = ltax; o["lines_net"] = lnet;
+                o["lines_count"] = lines; o["lines_total"] = lt; o["lines_net"] = lnet;
                 o["top_lines"] = new JsonArray(top.Select(t => (JsonNode)new JsonObject
                 { ["item"] = n.Item(Str(t[0])), ["qty"] = M(t[1]), ["unit_price"] = M(t[3]), ["line_net"] = M(t[4]) }).ToArray());
                 if (einv != null) o["einvoice_state"] = einv;

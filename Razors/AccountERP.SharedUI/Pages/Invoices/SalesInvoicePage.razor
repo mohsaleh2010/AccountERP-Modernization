@@ -480,6 +480,18 @@
                 <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Payments"
                            OnClick="@(() => Nav.NavigateTo($"/accounts/cash/voucher-party?doc={Id}&dtype={(_isReverse ? 7 : 1)}"))">@Tr("InvCashVoucherButton")</MudButton>
             }
+            @if (IsExistingInvoice && ScreenAssistOn)
+            {
+                @* P8.9.3 (ص5): «اشرح الفاتورة» للفاتورة المحفوظة بلا تعديلات معلّقة فقط؛ قراءة فقط *@
+                bool dirty = Fingerprint() != _baseline;
+                <MudTooltip Text="@(dirty ? Tr("AIH_SaveFirst") : "")" Disabled="@(!dirty)">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoAwesome"
+                               Disabled="@(_isSaving || dirty)" OnClick="ExplainInvoiceAsync"
+                               UserAttributes="@(dirty ? new Dictionary<string, object> { ["aria-description"] = Tr("AIH_SaveFirst") } : null)">
+                        @Tr(_isReverse ? "AIH_Btn_ExplainReturn" : "AIH_Btn_ExplainInvoice")
+                    </MudButton>
+                </MudTooltip>
+            }
             @if (IsExistingInvoice && _isTaxInvoice && EInvoiceAvailable)
             {
                 @* P8.3.3 (ف14): شرح خطأ الفاتورة الإلكترونية — للفاتورة الضريبية المحفوظة فقط؛ لا تعديل ولا إعادة إرسال *@
@@ -562,6 +574,21 @@
 
     // P8.3.3: زر «اشرح خطأ الفاتورة الإلكترونية» (البوابة مسجّلة على الويب فقط — ف23).
     private bool EInvoiceAvailable => ServiceProvider.GetService(typeof(AiEInvoiceService)) is AiEInvoiceService s && s.IsAvailable;
+
+    // P8.9.3: «اشرح الفاتورة» (الخدمة مسجّلة على الويب فقط — ص27). الحقائق من الـ Views بصلاحيات المستخدم؛ علما الضريبة من الـ View (القاعدة 11).
+    private bool ScreenAssistOn => ServiceProvider.GetService(typeof(AiScreenAssistService)) is AiScreenAssistService s
+                                   && s.IsAvailable(_isReverse ? AiScreenKinds.SalesReturn : AiScreenKinds.SalesInvoice);
+
+    private async Task ExplainInvoiceAsync()
+    {
+        if (ServiceProvider.GetService(typeof(AiScreenAssistService)) is not AiScreenAssistService s || !IsExistingInvoice || Fingerprint() != _baseline) return;
+        var p = new AiScreenPayload
+        {
+            Kind = _isReverse ? AiScreenKinds.SalesReturn : AiScreenKinds.SalesInvoice, Question = AiScreenQuestions.ExplainInvoice, EntityId = _header.Id,
+        };
+        await s.OpenDialogAsync(DialogService, p, _isReverse ? "/accounts/invoices/sales-return" : "/accounts/invoices/sales-invoice",
+                                Tr(_isReverse ? "AIH_Btn_ExplainReturn" : "AIH_Btn_ExplainInvoice"));
+    }
 
     private async Task OpenEInvoiceErrorAsync()
     {

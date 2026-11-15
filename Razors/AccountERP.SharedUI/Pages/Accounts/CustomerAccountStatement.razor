@@ -39,6 +39,8 @@
 @using AccountERP.SharedUI.Components.Shared
 @inject LanguageService LangService
 @inject NavigationManager Nav
+@inject IServiceProvider ServiceProvider
+@inject IDialogService DialogService
 @implements IDisposable
 
 <PageTitle>@Tr("CustomerAccountStatementTitle")</PageTitle>
@@ -117,6 +119,14 @@
                        OnClick="RefreshAccountAsync" Disabled="@(_customerId == null || _isLoadingAccount)">
                 @Tr("RefreshButton")
             </MudButton>
+            @if (AssistOn)
+            {
+                @* P8.9.3: «اشرح هذا الرصيد» — محددات الكشف المعروض فقط (ص2) *@
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoAwesome"
+                           OnClick="ExplainBalanceAsync" Disabled="@(_assistPayload == null || _isLoadingAccount)">
+                    @Tr("AIH_Btn_ExplainBalance")
+                </MudButton>
+            }
             <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.AccountBalanceWallet"
                        OnClick="OpenFirstBalanceDialog" Disabled="@(_customerId == null)">
                 @Tr("FirstBalanceButton")
@@ -327,6 +337,7 @@
                 _customerId = null;
                 _customerName = "";
                 _rows = new();
+                _assistPayload = null;
             }
         }
         catch (Exception ex)
@@ -349,6 +360,7 @@
         else
         {
             _rows = new();
+            _assistPayload = null;
         }
     }
 
@@ -365,6 +377,7 @@
         _errorMessage = null;
         _isLoadingAccount = true;
         _selectedRow = null;
+        _assistPayload = null;
         StateHasChanged();
 
         _customerId = customerId;
@@ -424,6 +437,11 @@
                     r.Table.Columns.Contains("TaxInternalId") ? r["TaxInternalId"]?.ToString() ?? "" : ""));
             }
             _rows = rows;
+            _assistPayload = new AiScreenPayload
+            {
+                Kind = AiScreenKinds.CustomerStatement, Question = AiScreenQuestions.ExplainBalance, EntityId = customerId, Mode = withPeriod ? "period" : "normal",
+                From = dtFromEnabled ? dtFromValue.Date : null, To = dtToEnabled ? dtToValue.Date : null,
+            };
         }
         catch (Exception ex)
         {
@@ -433,6 +451,17 @@
         {
             _isLoadingAccount = false;
         }
+    }
+
+    // ───── P8.9.3: المساعد داخل الشاشة (ويب فقط — الخدمة غير مسجّلة فى MAUI) ─────
+    private AiScreenPayload? _assistPayload;   // محددات آخر كشف معروض
+    private AiScreenAssistService? Assist => ServiceProvider.GetService(typeof(AiScreenAssistService)) as AiScreenAssistService;
+    private bool AssistOn => Assist?.IsAvailable(AiScreenKinds.CustomerStatement) == true;
+
+    private async Task ExplainBalanceAsync()
+    {
+        if (Assist is { } a && _assistPayload != null)
+            await a.OpenDialogAsync(DialogService, _assistPayload.Clone(), "/accounts/customer-account-statement/" + (WithPeriod ? "period" : "normal"), Tr("CustomerAccountStatementTitle"));
     }
 
     // 🟢 قاموس "العملية" منقول حرفياً من Customer_AccountMokhtalatEF_Period.cs's fill_Customer_Account (لا يوجد

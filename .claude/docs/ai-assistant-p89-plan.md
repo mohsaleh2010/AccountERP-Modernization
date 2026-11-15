@@ -695,3 +695,9 @@ Rules:
 - ملاحظة: مستخدم بلا صلاحية التفصيل لا يرى أرقام القيود فى الحقائق، فأى فقرة تذكرها تُرفض (سلوك صحيح ومختبَر).
 - الواجهة: `Services/AiScreenAssistService.cs` (+ `AiScreenAssistText`)، `Components/Assistant/ScreenExplainDialog.razor`، `Components/Assistant/Settings/AiScreenAssistTab.razor` (التبويب العاشر)، أزرار ميزان المراجعة وشريط اختيار الصف. مفاتيح `AIH_*` ×4 (190 مفتاحاً، ترجمة كاملة) أُضيفت كلها هنا بدل P8.9.5، ومعها `AIH_Sev_*` (نص الخطورة لقارئ الشاشة) و`AIH_NotAvailable` و`AIH_Set_ErrNotAdmin`. زر «اسأل المساعد» مخفى حتى P8.9.4.
 - harness `p892test` 20/20 (مزوّد وهمى).
+
+**P8.9.3 (2026-11-15):**
+- الفحص 8: `SUM(Invoices_Details.Total)` = `Invoices_List.Total` فى 1622/1626 فاتورة ⇒ `inv_lines_mismatch` يبقى. لكن `Invoices_Details.TaxSales10_Value` = 0 فى كل فواتير الضريبة لكل صنف (49/49) ⇒ `inv_tax_mismatch` حُذف من البانى (القاعدة النقية باقية بلا استدعاء) و`lines_tax` حُذف من الحمولة.
+- الفحص 4 (التنفيذ): الحمولة تُلتقط عند نجاح `LoadAccountAsync` (التواريخ المفعّلة فعلاً والوضع) فتطابق الكشف المعروض لا الحقول المعدّلة بعده.
+- `CustomerAccountStatement.razor`: زر «اشرح هذا الرصيد» بعد «تحديث». `SalesInvoicePage.razor`: زر «اشرح الفاتورة/المرتجع» قبل زر الفاتورة الإلكترونية، معطّل مع تعديلات غير محفوظة وتلميح `AIH_SaveFirst`.
+- harness `p891test` 87/87 بعد التعديل.
