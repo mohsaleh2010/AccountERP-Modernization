@@ -708,3 +708,10 @@ Rules:
 - الخادم: `AiChatGateway.ScreenContextFor` (Attach ⇒ `AiScreenAssistGateway.BuildServer` + كتلة؛ وإلا `AmbientFor`)، `ScreenBlock`، `ReadScreenBlock/ReadScreenFacts`، `ModelUserText` يمدّ الحقائق (≤ 6000)، فقرة «## سياق الشاشة» فى `SystemPrompt` + سطر `Describe` بعد سطر الشاشة. `AnswerAsync` لا يرفق حقائق (السطر المحيط فقط). المنشئ أخذ `AiScreenAssistGateway? screen = null` بدل البانى (يحتاج نفس تحقق الصلاحية).
 - الواجهة: `AiScreenFactsChip` + `AiChatMessage.ScreenFacts`؛ `OnOpenRequested/RequestOpen`؛ شريحة «سياق الشاشة» فوق مربع الكتابة وشريحة «حقائق من الشاشة» فى فقاعة المستخدم؛ `CurrentContext()` فى النافذة واللوحة يضيف الحمولة؛ «اسأل المساعد عن هذا» يعمل (`AskAssistant` ⇒ النافذة أو `/assistant`)؛ الصفحات الثلاث تسجّل السياق بعد العرض وتزيله عند المسح/الإغلاق (فاتورة المبيعات أخذت `@implements IDisposable`).
 - harness `p894test` 22/22 (نص الطلب يُفك من `\uXXXX` قبل الفحص)؛ انحدار P8.1.5 25/25؛ P7.4 136/141 والخمسة الفاشلة كلها توقُّع قديم «60 حالة بذرة» (البذرة 63 منذ P8.3/P8.5) لا علاقة لها بالتغيير.
+
+**P8.9.5 (2026-11-15) — P8.9 مكتمل:**
+- الفحص 12 (كشف المورد، اختيارى): **لم يُنفَّذ** — يحتاج View جديداً `ai.v_supplier_ledger` (ملاحظة الخطة «لا View») ومقارنة أرصدة عشرة موردين بالشاشة على بيانات القاعدة الحالية، والمستخدم طلب ألا تُجرى فحوص على بياناته الحالية. يُنفَّذ عند طلب عميل.
+- مفاتيح `AIH_*` اكتملت فى P8.9.2 (190 ×4، عدد متساوٍ).
+- `AiSchemaCatalog`: `RCustomerStatement`/`RCustomerStatementPeriod` أُضيفا لمسارات `v_customers` و`v_customer_ledger`؛ مقطع معرفة `rule` «سياق الشاشة» (المفتاح `screen_context`).
+- اختبارات المستخدم م-554…م-568 فى `master-user-test-plan.md` (قسم «P8.9: المساعد داخل الشاشات») وأُعيد توليد لوحة المتابعة.
+- بناء الويب وMAUI (windows) ناجح؛ انحدار P8.1.1 117/117، P8.5.5 25/25.

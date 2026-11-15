@@ -26,7 +26,9 @@ namespace AccountERP.AI.Tools
             // P8.4: مراجعة القيود وصفحة شذوذ القيود.
             RJournalEntries = "/accounts/journal-entries", REntryAnomalies = "/accounts/entries-anomalies",
             // P8.5: أولويات التحصيل.
-            RCollections = "/accounts/collections-priority";
+            RCollections = "/accounts/collections-priority",
+            // P8.9.5: كشف حساب العميل (مالكه يتابع أسئلته على ما يراه فى شاشته).
+            RCustomerStatement = "/accounts/customer-account-statement/normal", RCustomerStatementPeriod = "/accounts/customer-account-statement/period";
 
         /// <summary>Views مرجعية بلا بيانات مالية (الفروع والمخازن): متاحة لكل من يملك المساعد.</summary>
         public static readonly string[] Always = Array.Empty<string>();
@@ -56,7 +58,7 @@ namespace AccountERP.AI.Tools
                         ("active_flag", "علم التفعيل كما فى النظام"), ("large_unit", "الوحدة الكبرى"), ("small_unit", "الوحدة الصغرى"), ("small_per_large", "عدد الصغرى فى الكبرى"),
                         ("sale_price_large", "سعر البيع للكبرى"), ("sale_price_small", "سعر البيع للصغرى"), ("purchase_price_large", "سعر الشراء للكبرى"),
                         ("purchase_price_small", "سعر الشراء للصغرى"), ("avg_cost", "متوسط التكلفة") }),
-            new("v_customers", "العملاء", "بيانات العملاء الأساسية (بلا أرصدة ولا بيانات اتصال).", new[] { RCustomers, RSales, RCustomerBalances },
+            new("v_customers", "العملاء", "بيانات العملاء الأساسية (بلا أرصدة ولا بيانات اتصال).", new[] { RCustomers, RSales, RCustomerBalances, RCustomerStatement, RCustomerStatementPeriod },
                 new[] { ("customer_id", "معرّف العميل"), ("customer_code", "الكود"), ("customer_name", "الاسم"), ("active_flag", "علم التفعيل"), ("is_general_customer", "1 = عميل نقدى عام"), ("branch_id", "الفرع"),
                         ("customer_type", "نوع الحساب (1 = عميل)"), ("group_id", "مجموعة العملاء"), ("currency_id", "عملة العميل") }),
             new("v_suppliers", "الموردون", "بيانات الموردين الأساسية (بلا أرصدة ولا بيانات اتصال).", new[] { RSuppliers, RPurchases, RSupplierBalances },
@@ -127,7 +129,7 @@ namespace AccountERP.AI.Tools
                         ("credit_equivalent", "دائن بالعملة المحلية"), ("currency_id", "العملة"), ("line_notes", "بيان السطر") }),
             // P8.5 (ت3، ت10): دفتر العميل وحد الائتمان (لمن يملك أرصدة العملاء أو أولويات التحصيل).
             new("v_customer_ledger", "دفتر حساب العميل", "حركات حساب العميل (فواتير آجلة، إذون استلام، مرتجعات، أرصدة أول) + حساب المورد المرتبط به. رصيد العميل = SUM(debit - credit)؛ الموجب مستحق على العميل. " +
-                    "لأولويات التحصيل والأعمار استخدم get_collections_priority لا استعلاماً يدوياً.", new[] { RCustomerBalances, RCollections },
+                    "لأولويات التحصيل والأعمار استخدم get_collections_priority لا استعلاماً يدوياً.", new[] { RCustomerBalances, RCollections, RCustomerStatement, RCustomerStatementPeriod },
                 new[] { ("movement_id", "معرّف الحركة"), ("customer_id", "العميل"), ("movement_date", "تاريخ الحركة"), ("debit", "مدين (على العميل)"), ("credit", "دائن (للعميل)"),
                         ("reference_type", "نوع المستند"), ("reference_id", "معرّف المستند"), ("branch_id", "الفرع (0 = بلا فرع)"),
                         ("ledger_source", "customer = حساب العميل، linked_supplier = حساب المورد المرتبط"), ("notes", "البيان") }),
@@ -161,6 +163,8 @@ namespace AccountERP.AI.Tools
             new("rule", "أولويات التحصيل", "لسؤال «من أولى العملاء بالتحصيل؟» أو أعمار ديون العملاء أو المتأخرات استخدم أداة get_collections_priority (نفس ترتيب شاشة أولويات التحصيل)، " +
                 "ولفتح الشاشة open_screen بالمسار /accounts/collections-priority. لا ترسل رسائل للعملاء من المحادثة.", "تحصيل اولويات متاخرات اعمار ديون مديونية متابعة عملاء", "collections_priority"),
             new("example", "أعلى 10 عملاء رصيداً", "SELECT TOP 10 c.customer_name, SUM(g.debit - g.credit) AS balance FROM ai.v_customer_ledger g INNER JOIN ai.v_customers c ON c.customer_id = g.customer_id GROUP BY c.customer_name ORDER BY balance DESC", "اعلى عملاء رصيد مديونية", "top_customer_balances"),
+            new("rule", "سياق الشاشة", "إن وردت فى رسالة المستخدم كتلة «سياق الشاشة» (حقائق حسبها الخادم من ميزان المراجعة أو كشف حساب العميل أو الفاتورة بصلاحياته) فابدأ منها ومن findings ولا تُعد حسابها؛ " +
+                "للتفصيل الإضافى استعمل الأدوات المالية (get_trial_balance) أو run_readonly_query على v_gl_entries/v_customer_ledger/v_sales. سطر «المعروض فيها الآن» فيه محددات الشاشة (الفترة والفرع والمعرّف) فاستعملها حين يقول المستخدم «هذا» أو «هنا».", "سياق الشاشة هذا هنا هذه الشاشة شرح لماذا لا يتزن رصيد فاتورة", "screen_context"),
             new("example", "مشتريات مورد","SELECT SUM(net_total) FROM ai.v_purchases WHERE supplier_id = 9 AND invoice_date >= '2026-01-01'", "مشتريات مورد", "supplier_purchases"),
         };
 
