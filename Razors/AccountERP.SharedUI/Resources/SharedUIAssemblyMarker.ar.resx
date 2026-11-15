@@ -6409,4 +6409,98 @@
   <data name="AIG_Set_AcceptRate" xml:space="preserve"><value>نسبة القبول</value></data>
   <data name="AIG_KindExpense" xml:space="preserve"><value>سطور سندات الخزينة</value></data>
   <data name="AIG_KindItem" xml:space="preserve"><value>الأصناف الجديدة</value></data>
+  <data name="AIW_Title" xml:space="preserve"><value>توقع التدفق النقدى (13 أسبوعاً)</value></data>
+  <data name="AIW_Disclaimer" xml:space="preserve"><value>توقع إدارى تقديرى وليس تقريراً محاسبياً؛ لا يُنشئ قيوداً.</value></data>
+  <data name="AIW_NotAvailable" xml:space="preserve"><value>توقع التدفق النقدى متاح فى نسخة الويب فقط.</value></data>
+  <data name="AIW_Branch" xml:space="preserve"><value>الفرع</value></data>
+  <data name="AIW_AllBranches" xml:space="preserve"><value>كل الفروع المسموحة</value></data>
+  <data name="AIW_Base" xml:space="preserve"><value>أساسى</value></data>
+  <data name="AIW_Conservative" xml:space="preserve"><value>متحفظ</value></data>
+  <data name="AIW_Recompute" xml:space="preserve"><value>إعادة الحساب</value></data>
+  <data name="AIW_Print" xml:space="preserve"><value>طباعة</value></data>
+  <data name="AIW_WarnEstimated" xml:space="preserve"><value>{0}% من استحقاقات العملاء والموردين تقديرية (لا تاريخ استحقاق مسجّل؛ استُعملت مدة السداد).</value></data>
+  <data name="AIW_WarnNegativeBoxes" xml:space="preserve"><value>بعض الخزائن رصيدها سالب؛ الرصيد الافتتاحى يشملها كما هى.</value></data>
+  <data name="AIW_Opening" xml:space="preserve"><value>الرصيد الحالى (خزائن وبنوك)</value></data>
+  <data name="AIW_Lowest" xml:space="preserve"><value>أدنى رصيد متوقع</value></data>
+  <data name="AIW_EndBalance" xml:space="preserve"><value>الرصيد بعد 13 أسبوعاً</value></data>
+  <data name="AIW_MinBalance" xml:space="preserve"><value>أول أسبوع تحت {0}</value></data>
+  <data name="AIW_Never" xml:space="preserve"><value>لا يوجد</value></data>
+  <data name="AIW_WeekN" xml:space="preserve"><value>أسبوع {0}</value></data>
+  <data name="AIW_ComputedAt" xml:space="preserve"><value>حُسب فى {0}</value></data>
+  <data name="AIW_Chart" xml:space="preserve"><value>الرصيد المتوقع آخر كل أسبوع</value></data>
+  <data name="AIW_MinLine" xml:space="preserve"><value>الحد الأدنى</value></data>
+  <data name="AIW_Table" xml:space="preserve"><value>التفاصيل الأسبوعية</value></data>
+  <data name="AIW_TableHint" xml:space="preserve"><value>اضغط أى رقم لعرض مصادره. ⚠ = بنود متأخرة وُضعت فى الأسبوع الأول.</value></data>
+  <data name="AIW_Line" xml:space="preserve"><value>البند</value></data>
+  <data name="AIW_RowOpening" xml:space="preserve"><value>رصيد أول الأسبوع</value></data>
+  <data name="AIW_RowCustomers" xml:space="preserve"><value>تحصيلات العملاء (آجل)</value></data>
+  <data name="AIW_RowChequesIn" xml:space="preserve"><value>شيكات واردة</value></data>
+  <data name="AIW_RowCashSales" xml:space="preserve"><value>مبيعات نقدية متوقعة</value></data>
+  <data name="AIW_RowManualIn" xml:space="preserve"><value>مقبوضات يدوية</value></data>
+  <data name="AIW_RowInflows" xml:space="preserve"><value>إجمالى المقبوضات</value></data>
+  <data name="AIW_RowSuppliers" xml:space="preserve"><value>مدفوعات الموردين (آجل)</value></data>
+  <data name="AIW_RowChequesOut" xml:space="preserve"><value>شيكات صادرة</value></data>
+  <data name="AIW_RowRecurring" xml:space="preserve"><value>مصروفات متكررة</value></data>
+  <data name="AIW_RowManualOut" xml:space="preserve"><value>مدفوعات يدوية</value></data>
+  <data name="AIW_RowOutflows" xml:space="preserve"><value>إجمالى المدفوعات</value></data>
+  <data name="AIW_RowNet" xml:space="preserve"><value>الصافى</value></data>
+  <data name="AIW_RowClosing" xml:space="preserve"><value>رصيد آخر الأسبوع</value></data>
+  <data name="AIW_Narrative" xml:space="preserve"><value>قراءة المساعد</value></data>
+  <data name="AIW_Accuracy" xml:space="preserve"><value>دقة توقع الأسبوع الماضى</value></data>
+  <data name="AIW_AccIn" xml:space="preserve"><value>المقبوض فعلاً</value></data>
+  <data name="AIW_AccOut" xml:space="preserve"><value>المدفوع فعلاً</value></data>
+  <data name="AIW_AccForecast" xml:space="preserve"><value>المتوقع: {0}</value></data>
+  <data name="AIW_AccError" xml:space="preserve"><value>نسبة الخطأ</value></data>
+  <data name="AIW_Adjustments" xml:space="preserve"><value>تعديلات يدوية</value></data>
+  <data name="AIW_AdjHint" xml:space="preserve"><value>أضف ما لا يعرفه النظام (قسط قرض، دفعة متوقعة…). يدخل الحساب فوراً.</value></data>
+  <data name="AIW_AdjWeek" xml:space="preserve"><value>الأسبوع</value></data>
+  <data name="AIW_AdjDirection" xml:space="preserve"><value>الاتجاه</value></data>
+  <data name="AIW_AdjIn" xml:space="preserve"><value>مقبوض</value></data>
+  <data name="AIW_AdjOut" xml:space="preserve"><value>مدفوع</value></data>
+  <data name="AIW_AdjAmount" xml:space="preserve"><value>المبلغ</value></data>
+  <data name="AIW_AdjDescription" xml:space="preserve"><value>الوصف</value></data>
+  <data name="AIW_AdjAdd" xml:space="preserve"><value>إضافة</value></data>
+  <data name="AIW_AdjAdded" xml:space="preserve"><value>أُضيف التعديل</value></data>
+  <data name="AIW_AdjBy" xml:space="preserve"><value>بواسطة</value></data>
+  <data name="AIW_AdjCancel" xml:space="preserve"><value>إلغاء التعديل</value></data>
+  <data name="AIW_CellEmpty" xml:space="preserve"><value>لا بنود.</value></data>
+  <data name="AIW_CellDate" xml:space="preserve"><value>التاريخ</value></data>
+  <data name="AIW_CellItem" xml:space="preserve"><value>البند</value></data>
+  <data name="AIW_CellEstimated" xml:space="preserve"><value>* تاريخ مقدّر.</value></data>
+  <data name="AIW_Open" xml:space="preserve"><value>فتح</value></data>
+  <data name="AIW_Overdue" xml:space="preserve"><value>يشمل بنوداً متأخرة</value></data>
+  <data name="AIW_LblInvoice" xml:space="preserve"><value>فاتورة مبيعات {0}</value></data>
+  <data name="AIW_LblPurchase" xml:space="preserve"><value>فاتورة شراء {0}</value></data>
+  <data name="AIW_LblCheque" xml:space="preserve"><value>شيك {0}</value></data>
+  <data name="AIW_LblOldBalance" xml:space="preserve"><value>رصيد سابق بلا فاتورة</value></data>
+  <data name="AIW_ErrGeneric" xml:space="preserve"><value>تعذّر حساب التوقع.</value></data>
+  <data name="AIW_ErrNoAccess" xml:space="preserve"><value>لا تملك صلاحية توقع التدفق النقدى.</value></data>
+  <data name="AIW_ErrDisabled" xml:space="preserve"><value>توقع التدفق النقدى موقوف من إعدادات المساعد.</value></data>
+  <data name="AIW_ErrNotAdmin" xml:space="preserve"><value>إعدادات التوقع للمدير فقط.</value></data>
+  <data name="AIW_ErrAmount" xml:space="preserve"><value>المبلغ يجب أن يكون أكبر من صفر.</value></data>
+  <data name="AIW_ErrDescription" xml:space="preserve"><value>الوصف مطلوب.</value></data>
+  <data name="AIW_ErrWeek" xml:space="preserve"><value>الأسبوع خارج أفق التوقع.</value></data>
+  <data name="AIW_Set_Tab" xml:space="preserve"><value>التدفق النقدى</value></data>
+  <data name="AIW_Set_Enabled" xml:space="preserve"><value>تفعيل توقع التدفق النقدى</value></data>
+  <data name="AIW_Set_EnabledHint" xml:space="preserve"><value>موقوف افتراضياً. الشاشة من القائمة بجوار «أولويات التحصيل»، ولقطة أسبوعية كل سبت 07:00.</value></data>
+  <data name="AIW_Set_CashSales" xml:space="preserve"><value>تضمين المبيعات النقدية المتوقعة</value></data>
+  <data name="AIW_Set_CashSalesHint" xml:space="preserve"><value>متوسط المبيعات النقدية لآخر 8 أسابيع.</value></data>
+  <data name="AIW_Set_SupplierTerms" xml:space="preserve"><value>مدة سداد الموردين (يوم)</value></data>
+  <data name="AIW_Set_SupplierTermsHint" xml:space="preserve"><value>فواتير الشراء بلا تاريخ استحقاق.</value></data>
+  <data name="AIW_Set_BaseDelay" xml:space="preserve"><value>تأخير العملاء — أساسى (يوم)</value></data>
+  <data name="AIW_Set_ConsDelay" xml:space="preserve"><value>تأخير العملاء — متحفظ (يوم)</value></data>
+  <data name="AIW_Set_ConsPct" xml:space="preserve"><value>نسبة التحصيل — متحفظ (%)</value></data>
+  <data name="AIW_Set_RecurringMonths" xml:space="preserve"><value>أشهر التكرار المطلوبة (من 4)</value></data>
+  <data name="AIW_Set_MinBalance" xml:space="preserve"><value>الحد الأدنى للرصيد (تنبيه)</value></data>
+  <data name="AIW_Set_MinBalanceHint" xml:space="preserve"><value>0 = بلا تنبيه.</value></data>
+  <data name="AIW_Set_CustomerTermsNote" xml:space="preserve"><value>مدة سداد العملاء {0} يوماً (من إعدادات أولويات التحصيل).</value></data>
+  <data name="AIW_Set_Save" xml:space="preserve"><value>حفظ</value></data>
+  <data name="AIW_Set_Saved" xml:space="preserve"><value>حُفظت الإعدادات</value></data>
+  <data name="AIW_Set_Recurring" xml:space="preserve"><value>المصروفات المتكررة المكتشفة</value></data>
+  <data name="AIW_Set_RecurringHint" xml:space="preserve"><value>حسابات عامة صُرف لها بمبلغ متقارب فى معظم آخر 4 أشهر. أوقف ما لا يتكرر فعلاً.</value></data>
+  <data name="AIW_Set_LoadRecurring" xml:space="preserve"><value>عرض القائمة</value></data>
+  <data name="AIW_Set_NoRecurring" xml:space="preserve"><value>لا مصروفات متكررة.</value></data>
+  <data name="AIW_Set_Account" xml:space="preserve"><value>الحساب</value></data>
+  <data name="AIW_Set_Day" xml:space="preserve"><value>يوم الشهر</value></data>
+  <data name="AIW_Set_Include" xml:space="preserve"><value>يدخل التوقع</value></data>
 </root>

@@ -634,6 +634,8 @@ CREATE NONCLUSTERED INDEX [IX_AI_CollectionActions_Type_Status] ON [dbo].[AI_Col
             Step("AiBriefMenu", () => BriefMenu(opp));   // P8.1
             Step("AiAnomaliesMenu", () => AnomaliesMenu(opp));   // P8.4.4
             Step("AiCollectionsMenu", () => CollectionsMenu(opp));   // P8.5.3
+            Step("AiCashflowMenu", () => SiblingMenu(opp, AiCashflowConst.MenuKey, "توقع التدفق النقدى", "Cash-flow forecast", "Prévision de trésorerie",
+                                                     "Liquiditätsprognose", AiCashflowConst.Route, AiCollectConst.MenuKey));   // P8.7.3
             Step("AiReadViews", () => AiReadViewsCLS.Ensure(opp));   // P2: schema ai وViews القراءة
         }
 
@@ -662,6 +664,40 @@ VALUES ({id}, {parent.Id}, {E(key)}, {E(desc)}, {E("Daily brief")}, {E("Synthès
                 opp.db.Database.ExecuteSqlInterpolated($@"
 INSERT INTO SysConfigMenusPERMATIONS (Id, Menu_ID, Parent_Id, USER_ID, PERMATION, PROJECT_ID, IsShowToUser)
 VALUES ({CallSnowflakeIdGenerate.GenerateNewId()}, {id}, {parent.Id}, {user}, {E("1")}, 2, 1)");
+        }
+
+        /// <summary>
+        /// P8.7.3+: عنصر قائمة جديد بجوار عنصر قائم (نفس الأب)، وإن غاب الأخ ⇒ تحت «ملف». للمديرين فقط افتراضياً والباقون من شاشة الصلاحيات.
+        /// إدراج فقط، لا يتكرر (نفس نمط CollectionsMenu).
+        /// </summary>
+        private static void SiblingMenu(operations opp, string key, string desc, string en, string fr, string de, string route, string siblingKey)
+        {
+            var menus = opp.db.Database.SqlQueryRaw<StoreTransferPolicy.KeyValueRow>("SELECT Id, KeysData, Value FROM SysConfigMenus").ToList();
+            string Key(StoreTransferPolicy.KeyValueRow r) => r.KeysData == null ? "" : Common.DecryptMe(r.KeysData).Trim();
+            if (menus.Any(m => Key(m) == key)) return;
+            var sibling = menus.FirstOrDefault(m => Key(m) == siblingKey);
+            long parentId;
+            if (sibling != null)
+                parentId = opp.db.Database.SqlQueryRaw<long>("SELECT ISNULL(Parent_Id, 0) AS Value FROM SysConfigMenus WHERE Id = {0}", sibling.Id).AsEnumerable().First();
+            else
+            {
+                var file = menus.FirstOrDefault(m => Key(m) == "menuItemFile");
+                if (file == null) return;
+                parentId = file.Id;
+            }
+            if (parentId <= 0) return;
+            string E(string v) => Common.EncryptMe(v);
+            long id = menus.Max(m => m.Id) + 1;
+            opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenus (Id, Parent_Id, KeysData, Description, Description_En, Description_Fr, Description_DE, PROJECT_ID, Value, DefaultValue, DefaultDescription,
+                            POS, Market, Factory, Tourism, AlFawzan, Client_A, Client_B, UserSells, IsShowToUser, RazorPath)
+VALUES ({id}, {parentId}, {E(key)}, {E(desc)}, {E(en)}, {E(fr)}, {E(de)}, 2, {E("1")}, {E("1")}, {E(desc)},
+        {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, 1, {E(route)})");
+            var admins = opp.db.Database.SqlQueryRaw<long>("SELECT Id AS Value FROM USER_DETAILES WHERE ISNULL(AdminFlage, 0) = 1").ToList();
+            foreach (long user in admins)
+                opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenusPERMATIONS (Id, Menu_ID, Parent_Id, USER_ID, PERMATION, PROJECT_ID, IsShowToUser)
+VALUES ({CallSnowflakeIdGenerate.GenerateNewId()}, {id}, {parentId}, {user}, {E("1")}, 2, 1)");
         }
 
         /// <summary>

@@ -6411,4 +6411,98 @@
   <data name="AIG_Set_AcceptRate" xml:space="preserve"><value>Annahmequote</value></data>
   <data name="AIG_KindExpense" xml:space="preserve"><value>Kassenbelegzeilen</value></data>
   <data name="AIG_KindItem" xml:space="preserve"><value>Neue Artikel</value></data>
+  <data name="AIW_Title" xml:space="preserve"><value>Liquiditätsprognose (13 Wochen)</value></data>
+  <data name="AIW_Disclaimer" xml:space="preserve"><value>Eine Management-Schätzung, kein Buchhaltungsbericht; es entstehen keine Buchungen.</value></data>
+  <data name="AIW_NotAvailable" xml:space="preserve"><value>Die Liquiditätsprognose ist nur in der Webversion verfügbar.</value></data>
+  <data name="AIW_Branch" xml:space="preserve"><value>Filiale</value></data>
+  <data name="AIW_AllBranches" xml:space="preserve"><value>Alle erlaubten Filialen</value></data>
+  <data name="AIW_Base" xml:space="preserve"><value>Basis</value></data>
+  <data name="AIW_Conservative" xml:space="preserve"><value>Vorsichtig</value></data>
+  <data name="AIW_Recompute" xml:space="preserve"><value>Neu berechnen</value></data>
+  <data name="AIW_Print" xml:space="preserve"><value>Drucken</value></data>
+  <data name="AIW_WarnEstimated" xml:space="preserve"><value>{0}% der Fälligkeiten sind geschätzt (kein Fälligkeitsdatum; Zahlungsziel verwendet).</value></data>
+  <data name="AIW_WarnNegativeBoxes" xml:space="preserve"><value>Einige Kassen haben einen negativen Saldo; er ist im Anfangssaldo enthalten.</value></data>
+  <data name="AIW_Opening" xml:space="preserve"><value>Aktueller Saldo (Kassen und Banken)</value></data>
+  <data name="AIW_Lowest" xml:space="preserve"><value>Niedrigster erwarteter Saldo</value></data>
+  <data name="AIW_EndBalance" xml:space="preserve"><value>Saldo nach 13 Wochen</value></data>
+  <data name="AIW_MinBalance" xml:space="preserve"><value>Erste Woche unter {0}</value></data>
+  <data name="AIW_Never" xml:space="preserve"><value>Keine</value></data>
+  <data name="AIW_WeekN" xml:space="preserve"><value>Woche {0}</value></data>
+  <data name="AIW_ComputedAt" xml:space="preserve"><value>Berechnet am {0}</value></data>
+  <data name="AIW_Chart" xml:space="preserve"><value>Erwarteter Saldo am Wochenende</value></data>
+  <data name="AIW_MinLine" xml:space="preserve"><value>Mindestsaldo</value></data>
+  <data name="AIW_Table" xml:space="preserve"><value>Wochendetails</value></data>
+  <data name="AIW_TableHint" xml:space="preserve"><value>Klicken Sie auf eine Zahl, um die Quellen zu sehen. ⚠ = überfällige Posten in Woche 1.</value></data>
+  <data name="AIW_Line" xml:space="preserve"><value>Zeile</value></data>
+  <data name="AIW_RowOpening" xml:space="preserve"><value>Anfangssaldo</value></data>
+  <data name="AIW_RowCustomers" xml:space="preserve"><value>Kundeneingänge (Kredit)</value></data>
+  <data name="AIW_RowChequesIn" xml:space="preserve"><value>Eingehende Schecks</value></data>
+  <data name="AIW_RowCashSales" xml:space="preserve"><value>Erwartete Barverkäufe</value></data>
+  <data name="AIW_RowManualIn" xml:space="preserve"><value>Manuelle Eingänge</value></data>
+  <data name="AIW_RowInflows" xml:space="preserve"><value>Summe Eingänge</value></data>
+  <data name="AIW_RowSuppliers" xml:space="preserve"><value>Lieferantenzahlungen (Kredit)</value></data>
+  <data name="AIW_RowChequesOut" xml:space="preserve"><value>Ausgehende Schecks</value></data>
+  <data name="AIW_RowRecurring" xml:space="preserve"><value>Wiederkehrende Ausgaben</value></data>
+  <data name="AIW_RowManualOut" xml:space="preserve"><value>Manuelle Ausgänge</value></data>
+  <data name="AIW_RowOutflows" xml:space="preserve"><value>Summe Ausgänge</value></data>
+  <data name="AIW_RowNet" xml:space="preserve"><value>Netto</value></data>
+  <data name="AIW_RowClosing" xml:space="preserve"><value>Endsaldo</value></data>
+  <data name="AIW_Narrative" xml:space="preserve"><value>Einschätzung des Assistenten</value></data>
+  <data name="AIW_Accuracy" xml:space="preserve"><value>Genauigkeit der Vorwoche</value></data>
+  <data name="AIW_AccIn" xml:space="preserve"><value>Tatsächliche Eingänge</value></data>
+  <data name="AIW_AccOut" xml:space="preserve"><value>Tatsächliche Ausgänge</value></data>
+  <data name="AIW_AccForecast" xml:space="preserve"><value>Prognose: {0}</value></data>
+  <data name="AIW_AccError" xml:space="preserve"><value>Fehlerquote</value></data>
+  <data name="AIW_Adjustments" xml:space="preserve"><value>Manuelle Anpassungen</value></data>
+  <data name="AIW_AdjHint" xml:space="preserve"><value>Fügen Sie hinzu, was das System nicht kennt (Kreditrate, erwartete Zahlung…).</value></data>
+  <data name="AIW_AdjWeek" xml:space="preserve"><value>Woche</value></data>
+  <data name="AIW_AdjDirection" xml:space="preserve"><value>Richtung</value></data>
+  <data name="AIW_AdjIn" xml:space="preserve"><value>Eingang</value></data>
+  <data name="AIW_AdjOut" xml:space="preserve"><value>Ausgang</value></data>
+  <data name="AIW_AdjAmount" xml:space="preserve"><value>Betrag</value></data>
+  <data name="AIW_AdjDescription" xml:space="preserve"><value>Beschreibung</value></data>
+  <data name="AIW_AdjAdd" xml:space="preserve"><value>Hinzufügen</value></data>
+  <data name="AIW_AdjAdded" xml:space="preserve"><value>Anpassung hinzugefügt</value></data>
+  <data name="AIW_AdjBy" xml:space="preserve"><value>Von</value></data>
+  <data name="AIW_AdjCancel" xml:space="preserve"><value>Anpassung stornieren</value></data>
+  <data name="AIW_CellEmpty" xml:space="preserve"><value>Keine Posten.</value></data>
+  <data name="AIW_CellDate" xml:space="preserve"><value>Datum</value></data>
+  <data name="AIW_CellItem" xml:space="preserve"><value>Posten</value></data>
+  <data name="AIW_CellEstimated" xml:space="preserve"><value>* Geschätztes Datum.</value></data>
+  <data name="AIW_Open" xml:space="preserve"><value>Öffnen</value></data>
+  <data name="AIW_Overdue" xml:space="preserve"><value>Enthält überfällige Posten</value></data>
+  <data name="AIW_LblInvoice" xml:space="preserve"><value>Verkaufsrechnung {0}</value></data>
+  <data name="AIW_LblPurchase" xml:space="preserve"><value>Einkaufsrechnung {0}</value></data>
+  <data name="AIW_LblCheque" xml:space="preserve"><value>Scheck {0}</value></data>
+  <data name="AIW_LblOldBalance" xml:space="preserve"><value>Älterer Saldo ohne Rechnung</value></data>
+  <data name="AIW_ErrGeneric" xml:space="preserve"><value>Prognose konnte nicht berechnet werden.</value></data>
+  <data name="AIW_ErrNoAccess" xml:space="preserve"><value>Kein Zugriff auf die Liquiditätsprognose.</value></data>
+  <data name="AIW_ErrDisabled" xml:space="preserve"><value>Die Prognose ist in den Einstellungen deaktiviert.</value></data>
+  <data name="AIW_ErrNotAdmin" xml:space="preserve"><value>Prognose-Einstellungen nur für Administratoren.</value></data>
+  <data name="AIW_ErrAmount" xml:space="preserve"><value>Betrag muss größer als null sein.</value></data>
+  <data name="AIW_ErrDescription" xml:space="preserve"><value>Beschreibung erforderlich.</value></data>
+  <data name="AIW_ErrWeek" xml:space="preserve"><value>Woche außerhalb des Horizonts.</value></data>
+  <data name="AIW_Set_Tab" xml:space="preserve"><value>Liquidität</value></data>
+  <data name="AIW_Set_Enabled" xml:space="preserve"><value>Liquiditätsprognose aktivieren</value></data>
+  <data name="AIW_Set_EnabledHint" xml:space="preserve"><value>Standardmäßig aus. Wöchentlicher Schnappschuss samstags 07:00.</value></data>
+  <data name="AIW_Set_CashSales" xml:space="preserve"><value>Erwartete Barverkäufe einbeziehen</value></data>
+  <data name="AIW_Set_CashSalesHint" xml:space="preserve"><value>Durchschnitt der letzten 8 Wochen.</value></data>
+  <data name="AIW_Set_SupplierTerms" xml:space="preserve"><value>Lieferanten-Zahlungsziel (Tage)</value></data>
+  <data name="AIW_Set_SupplierTermsHint" xml:space="preserve"><value>Einkaufsrechnungen haben kein Fälligkeitsdatum.</value></data>
+  <data name="AIW_Set_BaseDelay" xml:space="preserve"><value>Kundenverzug — Basis (Tage)</value></data>
+  <data name="AIW_Set_ConsDelay" xml:space="preserve"><value>Kundenverzug — vorsichtig (Tage)</value></data>
+  <data name="AIW_Set_ConsPct" xml:space="preserve"><value>Einzugsquote — vorsichtig (%)</value></data>
+  <data name="AIW_Set_RecurringMonths" xml:space="preserve"><value>Erforderliche Monate (von 4)</value></data>
+  <data name="AIW_Set_MinBalance" xml:space="preserve"><value>Mindestsaldo (Warnung)</value></data>
+  <data name="AIW_Set_MinBalanceHint" xml:space="preserve"><value>0 = keine Warnung.</value></data>
+  <data name="AIW_Set_CustomerTermsNote" xml:space="preserve"><value>Kunden-Zahlungsziel {0} Tage (aus Inkasso-Einstellungen).</value></data>
+  <data name="AIW_Set_Save" xml:space="preserve"><value>Speichern</value></data>
+  <data name="AIW_Set_Saved" xml:space="preserve"><value>Einstellungen gespeichert</value></data>
+  <data name="AIW_Set_Recurring" xml:space="preserve"><value>Erkannte wiederkehrende Ausgaben</value></data>
+  <data name="AIW_Set_RecurringHint" xml:space="preserve"><value>Konten mit ähnlichen Zahlungen in den letzten 4 Monaten.</value></data>
+  <data name="AIW_Set_LoadRecurring" xml:space="preserve"><value>Liste anzeigen</value></data>
+  <data name="AIW_Set_NoRecurring" xml:space="preserve"><value>Keine wiederkehrenden Ausgaben.</value></data>
+  <data name="AIW_Set_Account" xml:space="preserve"><value>Konto</value></data>
+  <data name="AIW_Set_Day" xml:space="preserve"><value>Tag im Monat</value></data>
+  <data name="AIW_Set_Include" xml:space="preserve"><value>Einbezogen</value></data>
 </root>

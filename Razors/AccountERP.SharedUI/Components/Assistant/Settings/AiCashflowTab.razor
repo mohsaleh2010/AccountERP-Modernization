@@ -1,0 +1,149 @@
+@* 🤖 P8.7.3 (ai-assistant-p87-plan.md و17): تبويب «التدفق النقدى» فى /settings/ai — التفعيل والمدد والتأخير والحد الأدنى، وقائمة المصروفات المتكررة
+   المكتشفة مع الاستبعاد. لا مساس ببيانات النظام (الكتابة على AI_Settings/AI_CashflowExclusions فقط). *@
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using Microsoft.Extensions.DependencyInjection
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IServiceProvider ServiceProvider
+@implements IDisposable
+
+<style>
+    .aiws { display: flex; flex-direction: column; gap: 16px; }
+    .aiws-card { border: 1px solid var(--mud-palette-lines-default); border-radius: 14px; padding: 16px; background: var(--mud-palette-surface); display: flex; flex-direction: column; gap: 14px; }
+    .aiws-card h3 { margin: 0; font-size: 1rem; font-weight: 700; display: flex; gap: 8px; align-items: center; }
+    .aiws-card h3 .mud-icon-root { color: var(--mud-palette-primary); }
+    .aiws-hint { font-size: .8rem; color: var(--mud-palette-text-secondary); margin-inline-start: 48px; }
+    .aiws-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .aiws-actions .mud-button-root { min-height: 44px; }
+</style>
+
+<div class="aiws" dir="@(LangService.IsRtl ? "rtl" : "ltr")">
+    @if (_svc == null || !_svc.HasGateway)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("AIW_NotAvailable")</MudAlert>
+    }
+    else if (!_svc.CanManage)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@Tr("AIW_ErrNotAdmin")</MudAlert>
+    }
+    else if (_s == null)
+    {
+        @if (_error != null) { <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@_error</MudAlert> }
+        else { <div style="text-align:center;padding:32px;"><MudProgressCircular Indeterminate="true" Color="Color.Primary" /></div> }
+    }
+    else
+    {
+        @if (_error != null)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" ShowCloseIcon="true" CloseIconClicked="() => _error = null">@_error</MudAlert>
+        }
+        <section class="aiws-card" aria-label="@Tr("AIW_Set_Tab")">
+            <h3><MudIcon Icon="@Icons.Material.Filled.Timeline" aria-hidden="true" />@Tr("AIW_Set_Tab")</h3>
+            <div>
+                <MudSwitch T="bool" @bind-Value="_s.Enabled" Color="Color.Primary" Label="@Tr("AIW_Set_Enabled")" />
+                <div class="aiws-hint">@Tr("AIW_Set_EnabledHint")</div>
+            </div>
+            <div>
+                <MudSwitch T="bool" @bind-Value="_s.IncludeCashSales" Color="Color.Primary" Label="@Tr("AIW_Set_CashSales")" />
+                <div class="aiws-hint">@Tr("AIW_Set_CashSalesHint")</div>
+            </div>
+            <div class="aiws-grid">
+                <MudNumericField T="int" @bind-Value="_s.SupplierTermsDays" Label="@Tr("AIW_Set_SupplierTerms")" Min="0" Max="365" Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@Tr("AIW_Set_SupplierTermsHint")" />
+                <MudNumericField T="int" @bind-Value="_s.BaseDelayDays" Label="@Tr("AIW_Set_BaseDelay")" Min="0" Max="120" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField T="int" @bind-Value="_s.ConservativeDelayDays" Label="@Tr("AIW_Set_ConsDelay")" Min="0" Max="180" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField T="int" @bind-Value="_s.ConservativeCollectPct" Label="@Tr("AIW_Set_ConsPct")" Min="0" Max="100" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField T="int" @bind-Value="_s.RecurringMinMonths" Label="@Tr("AIW_Set_RecurringMonths")" Min="2" Max="4" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField T="decimal" @bind-Value="_s.MinBalance" Label="@Tr("AIW_Set_MinBalance")" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@Tr("AIW_Set_MinBalanceHint")" HideSpinButtons="true" />
+            </div>
+            <div class="aiws-hint" style="margin-inline-start:0">@Tr("AIW_Set_CustomerTermsNote", _s.CustomerTermsDays)</div>
+            <div class="aiws-actions">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@_busy" OnClick="SaveAsync">@Tr("AIW_Set_Save")</MudButton>
+            </div>
+        </section>
+
+        <section class="aiws-card" aria-label="@Tr("AIW_Set_Recurring")">
+            <h3><MudIcon Icon="@Icons.Material.Filled.EventRepeat" aria-hidden="true" />@Tr("AIW_Set_Recurring")</h3>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">@Tr("AIW_Set_RecurringHint")</MudText>
+            @if (_recurring == null)
+            {
+                <div class="aiws-actions"><MudButton Variant="Variant.Outlined" Disabled="@(_busy || !_s.Enabled)" OnClick="LoadRecurringAsync">@Tr("AIW_Set_LoadRecurring")</MudButton></div>
+            }
+            else if (_recurring.Count == 0)
+            {
+                <MudText Typo="Typo.body2">@Tr("AIW_Set_NoRecurring")</MudText>
+            }
+            else
+            {
+                <MudSimpleTable Dense="true">
+                    <thead><tr><th>@Tr("AIW_Set_Account")</th><th>@Tr("AIW_AdjAmount")</th><th>@Tr("AIW_Set_Day")</th><th>@Tr("AIW_Set_Include")</th></tr></thead>
+                    <tbody>
+                        @foreach (var r in _recurring)
+                        {
+                            <tr>
+                                <td>@r.Name</td>
+                                <td style="font-variant-numeric:tabular-nums">@r.Amount.ToString("N0", CultureInfo.InvariantCulture)</td>
+                                <td>@r.Day</td>
+                                <td><MudSwitch T="bool" Value="@(!r.Excluded)" ValueChanged="@(v => ToggleAsync(r, v))" Color="Color.Primary" /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    private AiCashflowUiService? _svc;
+    private AiCashflowSettings? _s;
+    private List<AiCashflowRecurringRow>? _recurring;
+    private bool _busy;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _svc = ServiceProvider.GetService<AiCashflowUiService>();
+        LangService.OnLanguageChanged += OnLang;
+        if (_svc == null || !_svc.HasGateway || !_svc.CanManage) return;
+        try { _s = await _svc.GetSettingsAsync(); }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+    }
+
+    private void OnLang() => InvokeAsync(StateHasChanged);
+
+    private async Task SaveAsync()
+    {
+        if (_svc == null || _s == null || _busy) return;
+        _busy = true; _error = null;
+        try
+        {
+            await _svc.SaveSettingsAsync(_s);
+            _s = await _svc.GetSettingsAsync();
+            Snackbar.Add(Tr("AIW_Set_Saved"), Severity.Success);
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task LoadRecurringAsync()
+    {
+        if (_svc == null || _busy) return;
+        _busy = true; _error = null;
+        try { _recurring = await _svc.RecurringAsync(); }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task ToggleAsync(AiCashflowRecurringRow r, bool include)
+    {
+        if (_svc == null) return;
+        try { await _svc.SetExcludedAsync(r.SubAccountId, !include); r.Excluded = !include; }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+    }
+
+    private string Tr(string key, params object[] args) => AiBriefText.T(Lang, LangService.CurrentCultureInfo, key, args);
+
+    public void Dispose() => LangService.OnLanguageChanged -= OnLang;
+}

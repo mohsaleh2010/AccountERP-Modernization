@@ -513,6 +513,11 @@
             <MudTabPanel Text="@Tr("AIG_Set_Tab")" Icon="@Icons.Material.Filled.Category">
                 <AiSuggestTab />
             </MudTabPanel>
+
+            @* ═════════ P8.7.3: توقع التدفق النقدى (التفعيل، المدد، السيناريو المتحفظ، الحد الأدنى، المتكررات) ═════════ *@
+            <MudTabPanel Text="@Tr("AIW_Set_Tab")" Icon="@Icons.Material.Filled.Timeline">
+                <AiCashflowTab />
+            </MudTabPanel>
         </MudTabs>
     }
 </div>

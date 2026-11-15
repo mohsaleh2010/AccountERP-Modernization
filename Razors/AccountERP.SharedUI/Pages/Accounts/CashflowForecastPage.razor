@@ -1,0 +1,393 @@
+@* 🤖 P8.7.3 (ai-assistant-p87-plan.md §2): «توقع التدفق النقدى» 13 أسبوعاً — أساسى/متحفظ، رسم للرصيد، جدول قابل للنقر (مصادر الخلية)،
+   سرد مدقَّق، دقة الأسبوع الماضى، تعديلات يدوية. توقع إدارى وليس تقريراً محاسبياً؛ لا قيود ولا تعديل لأى بيانات (الكتابة على AI_Cashflow* فقط).
+   كل شىء عبر AiCashflowUiService ⇒ IAiCashflowGateway (ويب فقط). التصميم حسب ui-ux-pro-max: ≥ 44px، أرقام جدولية، عمود أسطر ثابت، RTL، طباعة A4 أفقى. *@
+@page "/accounts/cashflow-forecast"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using Microsoft.Extensions.DependencyInjection
+@using Microsoft.JSInterop
+@inject LanguageService LangService
+@inject IServiceProvider ServiceProvider
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@implements IDisposable
+
+<PageTitle>@Tr("AIW_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .cf-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+    .cf-filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .cf-filters .mud-input-control { min-width: 200px; }
+    .cf-gap { margin-top: 16px; }
+    .cf-note { font-size: .85rem; color: var(--mud-palette-text-secondary); }
+    .cf-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+    .cf-kpi { border: 1px solid var(--mud-palette-lines-default); border-radius: 12px; padding: 12px; }
+    .cf-kpi .l { font-size: .8rem; color: var(--mud-palette-text-secondary); }
+    .cf-kpi .v { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .cf-kpi.bad .v { color: var(--mud-palette-error); }
+    .cf-scroll { overflow-x: auto; border: 1px solid var(--mud-palette-lines-default); border-radius: 12px; }
+    .cf-tbl { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; font-size: .85rem; }
+    .cf-tbl th, .cf-tbl td { padding: 8px 10px; border-bottom: 1px solid var(--mud-palette-lines-default); text-align: end; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .cf-tbl th:first-child, .cf-tbl td:first-child { position: sticky; inset-inline-start: 0; background: var(--mud-palette-surface); text-align: start; z-index: 1; font-weight: 600; }
+    .cf-tbl thead th { background: var(--mud-palette-background-gray); font-weight: 600; }
+    .cf-tbl tr.sum td { font-weight: 700; background: color-mix(in srgb, var(--mud-palette-primary) 5%, transparent); }
+    .cf-tbl td.neg { color: var(--mud-palette-error); }
+    .cf-tbl td.low { background: color-mix(in srgb, var(--mud-palette-error) 10%, transparent); }
+    .cf-cell { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; min-height: 32px; text-decoration: underline dotted; }
+    .cf-cell:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .cf-od { color: var(--mud-palette-warning); margin-inline-start: 4px; }
+    .cf-chart { width: 100%; height: 220px; }
+    .cf-legend { display: flex; gap: 16px; font-size: .8rem; flex-wrap: wrap; }
+    .cf-legend i { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-inline-end: 6px; border-radius: 2px; }
+    .cf-adj { display: grid; grid-template-columns: minmax(160px, 1fr) 130px minmax(120px, 1fr) minmax(200px, 2fr) auto; gap: 8px; align-items: start; }
+    @@media (max-width: 899px) { .cf-adj { grid-template-columns: minmax(0, 1fr); } }
+    @@media print { body * { visibility: hidden; } .cf-print, .cf-print * { visibility: visible; } .cf-print { position: absolute; inset-inline-start: 0; top: 0; width: 100%; } .cf-noprint { display: none !important; } .cf-scroll { overflow: visible; } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page cf-print">
+    <div class="inv-head inv-card cf-head">
+        <div>
+            <h1 class="inv-title">@Tr("AIW_Title")</h1>
+            <div class="cf-note">@Tr("AIW_Disclaimer")</div>
+        </div>
+        @if (_svc != null && _svc.HasGateway && _view != null)
+        {
+            <div class="cf-filters cf-noprint">
+                <MudSelect T="long" Value="_branchId" ValueChanged="OnBranchAsync" Label="@Tr("AIW_Branch")" Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true">
+                    <MudSelectItem T="long" Value="0L">@Tr("AIW_AllBranches")</MudSelectItem>
+                    @foreach (var b in _branches) { <MudSelectItem T="long" Value="b.Id">@b.Name</MudSelectItem> }
+                </MudSelect>
+                <MudToggleGroup T="string" Value="_scenario" ValueChanged="@(v => _scenario = v)" Color="Color.Primary" Size="Size.Small">
+                    <MudToggleItem Value="@AiCashflowConst.ScenarioBase" Text="@Tr("AIW_Base")" />
+                    <MudToggleItem Value="@AiCashflowConst.ScenarioConservative" Text="@Tr("AIW_Conservative")" />
+                </MudToggleGroup>
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" Disabled="_busy" OnClick="@(() => LoadAsync(true))" Style="min-height:44px">@Tr("AIW_Recompute")</MudButton>
+                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Print" OnClick="PrintAsync" Style="min-height:44px">@Tr("AIW_Print")</MudButton>
+            </div>
+        }
+    </div>
+
+    @if (_svc == null || !_svc.HasGateway)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("AIW_NotAvailable")</MudAlert>
+    }
+    else if (_error != null)
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="cf-gap">@_error</MudAlert>
+    }
+    else if (_view == null || _busy && _view == null)
+    {
+        <div style="text-align:center;padding:40px;"><MudProgressCircular Indeterminate="true" Color="Color.Primary" /></div>
+    }
+    else
+    {
+        var f = Facts;
+        @if (f.Warnings.Contains("estimated_due"))
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true" Variant="Variant.Outlined" Class="cf-gap">@Tr("AIW_WarnEstimated", (f.EstimatedShare * 100).ToString("0", CultureInfo.InvariantCulture))</MudAlert>
+        }
+        @if (f.Warnings.Contains("negative_boxes"))
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true" Variant="Variant.Outlined" Class="cf-gap">@Tr("AIW_WarnNegativeBoxes")</MudAlert>
+        }
+
+        <div class="inv-card cf-gap">
+            <div class="cf-kpis">
+                <div class="cf-kpi"><div class="l">@Tr("AIW_Opening")</div><div class="v">@N(f.Opening)</div></div>
+                <div class="cf-kpi @(f.LowestClosing < 0 ? "bad" : "")"><div class="l">@Tr("AIW_Lowest")</div><div class="v">@N(f.LowestClosing)</div><div class="l">@Tr("AIW_WeekN", f.LowestWeek + 1) · @f.Weeks[f.LowestWeek].Start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</div></div>
+                <div class="cf-kpi"><div class="l">@Tr("AIW_EndBalance")</div><div class="v">@N(f.Weeks[^1].Closing)</div></div>
+                @if (f.MinBalance > 0)
+                {
+                    <div class="cf-kpi @(f.LowWeek >= 0 ? "bad" : "")"><div class="l">@Tr("AIW_MinBalance", N(f.MinBalance))</div><div class="v">@(f.LowWeek >= 0 ? Tr("AIW_WeekN", f.LowWeek + 1) : Tr("AIW_Never"))</div></div>
+                }
+            </div>
+            <div class="cf-note" style="margin-top:8px">@Tr("AIW_ComputedAt", _view.ComputedAt?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) ?? "")</div>
+        </div>
+
+        <div class="inv-card cf-gap">
+            <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.ShowChart" />@Tr("AIW_Chart")</h2>
+            @((MarkupString)ChartSvg())
+            <div class="cf-legend">
+                <span><i style="background:var(--mud-palette-primary)"></i>@Tr("AIW_Base")</span>
+                <span><i style="background:var(--mud-palette-warning)"></i>@Tr("AIW_Conservative")</span>
+                @if (f.MinBalance > 0) { <span><i style="background:var(--mud-palette-error)"></i>@Tr("AIW_MinLine")</span> }
+            </div>
+        </div>
+
+        <div class="inv-card cf-gap">
+            <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.TableChart" />@Tr("AIW_Table")</h2>
+            <div class="cf-scroll" role="region" aria-label="@Tr("AIW_Table")" tabindex="0">
+                <table class="cf-tbl">
+                    <thead>
+                        <tr>
+                            <th scope="col">@Tr("AIW_Line")</th>
+                            @foreach (var w in f.Weeks) { <th scope="col">@Tr("AIW_WeekN", w.Index + 1)<br /><span class="cf-note">@w.Start.ToString("MM-dd", CultureInfo.InvariantCulture)</span></th> }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="sum"><td>@Tr("AIW_RowOpening")</td>@foreach (var w in f.Weeks) { <td class="@(w.Opening < 0 ? "neg" : "")">@N(w.Opening)</td> }</tr>
+                        @Row(AiCashflowConst.SrcCustomer, "AIW_RowCustomers", w => w.Customers)
+                        @Row(AiCashflowConst.SrcChequeIn, "AIW_RowChequesIn", w => w.ChequesIn)
+                        @Row(AiCashflowConst.SrcCashSales, "AIW_RowCashSales", w => w.CashSales)
+                        @Row(AiCashflowConst.SrcManualIn, "AIW_RowManualIn", w => w.ManualIn)
+                        <tr class="sum"><td>@Tr("AIW_RowInflows")</td>@foreach (var w in f.Weeks) { <td>@N(w.Inflows)</td> }</tr>
+                        @Row(AiCashflowConst.SrcSupplier, "AIW_RowSuppliers", w => w.Suppliers)
+                        @Row(AiCashflowConst.SrcChequeOut, "AIW_RowChequesOut", w => w.ChequesOut)
+                        @Row(AiCashflowConst.SrcRecurring, "AIW_RowRecurring", w => w.Recurring)
+                        @Row(AiCashflowConst.SrcManualOut, "AIW_RowManualOut", w => w.ManualOut)
+                        <tr class="sum"><td>@Tr("AIW_RowOutflows")</td>@foreach (var w in f.Weeks) { <td>@N(w.Outflows)</td> }</tr>
+                        <tr><td>@Tr("AIW_RowNet")</td>@foreach (var w in f.Weeks) { <td class="@(w.Net < 0 ? "neg" : "")">@N(w.Net)</td> }</tr>
+                        <tr class="sum"><td>@Tr("AIW_RowClosing")</td>@foreach (var w in f.Weeks) { <td class="@(w.Closing < 0 ? "neg" : "") @(f.MinBalance > 0 && w.Closing < f.MinBalance ? "low" : "")">@N(w.Closing)</td> }</tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="cf-note" style="margin-top:6px">@Tr("AIW_TableHint")</div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(_view.Narrative))
+        {
+            <div class="inv-card cf-gap">
+                <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.AutoAwesome" />@Tr("AIW_Narrative")</h2>
+                <div style="white-space:pre-line;line-height:1.8">@_view.Narrative</div>
+            </div>
+        }
+
+        @if (_view.Accuracy is { } acc)
+        {
+            <div class="inv-card cf-gap">
+                <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Rule" />@Tr("AIW_Accuracy")</h2>
+                <div class="cf-kpis">
+                    <div class="cf-kpi"><div class="l">@Tr("AIW_AccIn")</div><div class="v">@N(acc.ActualIn)</div><div class="l">@Tr("AIW_AccForecast", N(acc.ForecastIn))</div></div>
+                    <div class="cf-kpi"><div class="l">@Tr("AIW_AccOut")</div><div class="v">@N(acc.ActualOut)</div><div class="l">@Tr("AIW_AccForecast", N(acc.ForecastOut))</div></div>
+                    <div class="cf-kpi"><div class="l">@Tr("AIW_AccError")</div><div class="v">@acc.ErrorPct.ToString("0.#", CultureInfo.InvariantCulture)%</div></div>
+                </div>
+            </div>
+        }
+
+        <div class="inv-card cf-gap cf-noprint">
+            <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.EditNote" />@Tr("AIW_Adjustments")</h2>
+            <div class="cf-note" style="margin-bottom:8px">@Tr("AIW_AdjHint")</div>
+            <div class="cf-adj">
+                <MudSelect T="DateTime" @bind-Value="_adjWeek" Label="@Tr("AIW_AdjWeek")" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    @foreach (var w in Facts.Weeks) { <MudSelectItem T="DateTime" Value="w.Start">@Tr("AIW_WeekN", w.Index + 1) · @w.Start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</MudSelectItem> }
+                </MudSelect>
+                <MudSelect T="string" @bind-Value="_adjDir" Label="@Tr("AIW_AdjDirection")" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    <MudSelectItem T="string" Value="@("in")">@Tr("AIW_AdjIn")</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("out")">@Tr("AIW_AdjOut")</MudSelectItem>
+                </MudSelect>
+                <MudNumericField T="decimal" @bind-Value="_adjAmount" Label="@Tr("AIW_AdjAmount")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" HideSpinButtons="true" />
+                <MudTextField T="string" @bind-Value="_adjDesc" Label="@Tr("AIW_AdjDescription")" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="300" />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="_busy" OnClick="AddAdjustmentAsync" Style="min-height:44px">@Tr("AIW_AdjAdd")</MudButton>
+            </div>
+            @if (_view.Adjustments.Count > 0)
+            {
+                <MudSimpleTable Dense="true" Class="cf-gap">
+                    <thead><tr><th>@Tr("AIW_AdjWeek")</th><th>@Tr("AIW_AdjDirection")</th><th>@Tr("AIW_AdjAmount")</th><th>@Tr("AIW_AdjDescription")</th><th>@Tr("AIW_AdjBy")</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var a in _view.Adjustments)
+                        {
+                            <tr>
+                                <td>@a.WeekStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</td>
+                                <td>@(a.Direction == "out" ? Tr("AIW_AdjOut") : Tr("AIW_AdjIn"))</td>
+                                <td style="font-variant-numeric:tabular-nums">@N(a.Amount)</td>
+                                <td>@a.Description</td>
+                                <td>@a.UserName</td>
+                                <td><MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-label="@Tr("AIW_AdjCancel")" title="@Tr("AIW_AdjCancel")" OnClick="@(() => CancelAdjustmentAsync(a.Id))" /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            }
+        </div>
+    }
+</div>
+</MudContainer>
+
+<MudDialog @bind-Visible="_cellOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Medium, CloseButton = true })">
+    <TitleContent>@_cellTitle</TitleContent>
+    <DialogContent>
+        @if (_cellItems.Count == 0)
+        {
+            <MudText>@Tr("AIW_CellEmpty")</MudText>
+        }
+        else
+        {
+            <MudSimpleTable Dense="true">
+                <thead><tr><th>@Tr("AIW_CellDate")</th><th>@Tr("AIW_CellItem")</th><th>@Tr("AIW_AdjAmount")</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var it in _cellItems)
+                    {
+                        <tr>
+                            <td>@it.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)@(it.Estimated ? " *" : "")</td>
+                            <td>@ItemLabel(it)</td>
+                            <td style="font-variant-numeric:tabular-nums">@N(it.Amount)</td>
+                            <td>@if (!string.IsNullOrEmpty(it.Url) && AiSearchText.IsSafeInternalUrl(it.Url)) { <MudLink Href="@it.Url">@Tr("AIW_Open")</MudLink> }</td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+            <div class="cf-note" style="margin-top:6px">@Tr("AIW_CellEstimated")</div>
+        }
+    </DialogContent>
+</MudDialog>
+
+@code {
+    private AiCashflowUiService? _svc;
+    private AiCashflowView? _view;
+    private List<(long Id, string Name)> _branches = new();
+    private long _branchId;
+    private string _scenario = AiCashflowConst.ScenarioBase;
+    private bool _busy;
+    private string? _error;
+    private DateTime _adjWeek;
+    private string _adjDir = "in";
+    private decimal _adjAmount;
+    private string? _adjDesc;
+    private bool _cellOpen;
+    private string _cellTitle = "";
+    private List<AiCashflowItem> _cellItems = new();
+
+    private AiCashflowFacts Facts => _scenario == AiCashflowConst.ScenarioConservative ? _view!.Conservative : _view!.Base;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _svc = ServiceProvider.GetService<AiCashflowUiService>();
+        LangService.OnLanguageChanged += OnLang;
+        if (_svc == null || !_svc.HasGateway) return;
+        try { _branches = await _svc.BranchesAsync(); } catch { }
+        await LoadAsync(false);
+    }
+
+    private void OnLang() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLang;
+
+    private async Task LoadAsync(bool recompute)
+    {
+        if (_svc == null) return;
+        _busy = true; _error = null;
+        try
+        {
+            _view = await _svc.GetAsync(_branchId, recompute);
+            if (_view.Base.Weeks.Count > 0 && (_adjWeek == default || _view.Base.Weeks.All(w => w.Start != _adjWeek))) _adjWeek = _view.Base.Weeks[0].Start;
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task OnBranchAsync(long id)
+    {
+        _branchId = id;
+        await LoadAsync(false);
+    }
+
+    private RenderFragment Row(string source, string key, Func<AiCashflowWeek, decimal> get) => __builder =>
+    {
+        <tr>
+            <td>@Tr(key)</td>
+            @foreach (var w in Facts.Weeks)
+            {
+                var v = get(w);
+                <td>
+                    @if (v != 0)
+                    {
+                        <button type="button" class="cf-cell" @onclick="@(() => OpenCell(source, w, key))">@N(v)</button>
+                        @if (w.Index == 0 && w.OverdueItems > 0 && Facts.Items.Any(i => i.Source == source && i.Date == w.Start)) { <span class="cf-od" title="@Tr("AIW_Overdue")">⚠</span> }
+                    }
+                    else { <span>—</span> }
+                </td>
+            }
+        </tr>
+    };
+
+    private void OpenCell(string source, AiCashflowWeek w, string key)
+    {
+        var end = w.Start.AddDays(7);
+        _cellItems = Facts.Items.Where(i => i.Source == source && i.Date >= w.Start && i.Date < end).OrderByDescending(i => i.Amount).ToList();
+        _cellTitle = $"{Tr(key)} · {Tr("AIW_WeekN", w.Index + 1)} ({w.Start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)})";
+        _cellOpen = true;
+    }
+
+    private string ItemLabel(AiCashflowItem it)
+    {
+        if (it.Source == AiCashflowConst.SrcCashSales) return Tr("AIW_RowCashSales");
+        string l = it.Label ?? "";
+        if (l.StartsWith("invoice ", StringComparison.Ordinal)) return Tr("AIW_LblInvoice", l.Substring(8));
+        if (l.StartsWith("purchase ", StringComparison.Ordinal)) return Tr("AIW_LblPurchase", l.Substring(9));
+        if (l.StartsWith("cheque ", StringComparison.Ordinal)) return Tr("AIW_LblCheque", l.Substring(7));
+        if (l.StartsWith("customer#", StringComparison.Ordinal)) return Tr("AIW_LblOldBalance");
+        return l;
+    }
+
+    private async Task AddAdjustmentAsync()
+    {
+        if (_svc == null || _busy) return;
+        _busy = true;
+        try
+        {
+            await _svc.AddAdjustmentAsync(new AiCashflowAdjustmentRow { WeekStart = _adjWeek, Direction = _adjDir, Amount = _adjAmount, Description = _adjDesc, Branch_Id = _branchId });
+            _adjAmount = 0; _adjDesc = null;
+            Snackbar.Add(Tr("AIW_AdjAdded"), Severity.Success);
+            _busy = false;
+            await LoadAsync(true);
+        }
+        catch (Exception ex) { Snackbar.Add(_svc.ErrorText(ex), Severity.Error); }
+        finally { _busy = false; }
+    }
+
+    private async Task CancelAdjustmentAsync(long id)
+    {
+        if (_svc == null || _busy) return;
+        try
+        {
+            await _svc.CancelAdjustmentAsync(id);
+            await LoadAsync(true);
+        }
+        catch (Exception ex) { Snackbar.Add(_svc.ErrorText(ex), Severity.Error); }
+    }
+
+    private async Task PrintAsync()
+    {
+        try { await JS.InvokeVoidAsync("accountErpInterop.printElement", ".cf-print", Tr("AIW_Title"), LangService.IsRtl ? "rtl" : "ltr", "@page { size: A4 landscape; margin: 10mm; }"); }
+        catch { try { await JS.InvokeVoidAsync("window.print"); } catch { } }
+    }
+
+    /// <summary>رسم خطى SVG للرصيد الختامى (الأساسى والمتحفظ) وخط الحد الأدنى.</summary>
+    private string ChartSvg()
+    {
+        var b = _view!.Base.Weeks; var c = _view.Conservative.Weeks;
+        if (b.Count == 0) return "";
+        var vals = b.Select(w => w.Closing).Concat(c.Select(w => w.Closing)).Append(_view.Base.Opening).ToList();
+        if (_view.Base.MinBalance > 0) vals.Add(_view.Base.MinBalance);
+        decimal min = Math.Min(0, vals.Min()), max = vals.Max();
+        if (max == min) max = min + 1;
+        const double W = 780, H = 200, P = 36;
+        double X(int i) => P + i * (W - 2 * P) / Math.Max(1, b.Count - 1);
+        double Y(decimal v) => H - 20 - (double)((v - min) / (max - min)) * (H - 40);
+        string Path(IList<AiCashflowWeek> ws) => string.Join(" ", ws.Select((w, i) => (i == 0 ? "M" : "L") + X(i).ToString("0.#", CultureInfo.InvariantCulture) + "," + Y(w.Closing).ToString("0.#", CultureInfo.InvariantCulture)));
+        bool rtl = LangService.IsRtl;
+        var sb = new System.Text.StringBuilder();
+        sb.Append($"<svg class=\"cf-chart\" viewBox=\"0 0 {W} {H}\" role=\"img\" aria-label=\"{System.Net.WebUtility.HtmlEncode(Tr("AIW_Chart"))}\" style=\"{(rtl ? "transform:scaleX(-1)" : "")}\">");
+        double y0 = Y(0);
+        sb.Append($"<line x1=\"{P}\" x2=\"{W - P}\" y1=\"{y0.ToString("0.#", CultureInfo.InvariantCulture)}\" y2=\"{y0.ToString("0.#", CultureInfo.InvariantCulture)}\" stroke=\"var(--mud-palette-lines-default)\" />");
+        if (_view.Base.MinBalance > 0)
+        {
+            double ym = Y(_view.Base.MinBalance);
+            sb.Append($"<line x1=\"{P}\" x2=\"{W - P}\" y1=\"{ym.ToString("0.#", CultureInfo.InvariantCulture)}\" y2=\"{ym.ToString("0.#", CultureInfo.InvariantCulture)}\" stroke=\"var(--mud-palette-error)\" stroke-dasharray=\"6 4\" />");
+        }
+        sb.Append($"<path d=\"{Path(c)}\" fill=\"none\" stroke=\"var(--mud-palette-warning)\" stroke-width=\"2.5\" />");
+        sb.Append($"<path d=\"{Path(b)}\" fill=\"none\" stroke=\"var(--mud-palette-primary)\" stroke-width=\"2.5\" />");
+        for (int i = 0; i < b.Count; i++)
+            sb.Append($"<circle cx=\"{X(i).ToString("0.#", CultureInfo.InvariantCulture)}\" cy=\"{Y(b[i].Closing).ToString("0.#", CultureInfo.InvariantCulture)}\" r=\"3\" fill=\"var(--mud-palette-primary)\"><title>{Tr("AIW_WeekN", i + 1)}: {N(b[i].Closing)}</title></circle>");
+        sb.Append("</svg>");
+        return sb.ToString();
+    }
+
+    private static string N(decimal v) => v.ToString("N0", CultureInfo.InvariantCulture);
+
+    private string Tr(string key, params object[] args) => AiBriefText.T(Lang, LangService.CurrentCultureInfo, key, args);
+}
