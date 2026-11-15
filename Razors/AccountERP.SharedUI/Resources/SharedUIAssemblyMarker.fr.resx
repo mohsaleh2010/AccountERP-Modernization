@@ -6376,4 +6376,39 @@
   <data name="AIG_SrcNeighbors" xml:space="preserve"><value>saisies proches</value></data>
   <data name="AIG_SrcModel" xml:space="preserve"><value>choix de l'assistant</value></data>
   <data name="AIG_ItemGroup" xml:space="preserve"><value>Groupe</value></data>
+  <data name="AIG_NotAvailable" xml:space="preserve"><value>La classification automatique n'est disponible que dans la version web.</value></data>
+  <data name="AIG_Set_ErrNotAdmin" xml:space="preserve"><value>Paramètres réservés aux administrateurs.</value></data>
+  <data name="AIG_Set_Tab" xml:space="preserve"><value>Classification</value></data>
+  <data name="AIG_Set_Intro" xml:space="preserve"><value>Suggère le compte et le centre de coût d'une ligne de bon de caisse à partir de son libellé, et la catégorie et le groupe d'un nouvel article à partir de son nom. Suggestions uniquement : rien n'est rempli sans clic sur « Appliquer ».</value></data>
+  <data name="AIG_Set_Enabled" xml:space="preserve"><value>Activer la classification automatique</value></data>
+  <data name="AIG_Set_EnabledHint" xml:space="preserve"><value>Désactivé par défaut. Basé sur les bons et articles passés.</value></data>
+  <data name="AIG_Set_UseModel" xml:space="preserve"><value>Utiliser le modèle en cas d'ambiguïté</value></data>
+  <data name="AIG_Set_UseModelHint" xml:space="preserve"><value>Le modèle choisit uniquement parmi les candidats les plus proches.</value></data>
+  <data name="AIG_Set_AllUsers" xml:space="preserve"><value>Pour tous les utilisateurs</value></data>
+  <data name="AIG_Set_AllUsersHint" xml:space="preserve"><value>Sinon seuls les utilisateurs ayant l'assistant IA voient les suggestions.</value></data>
+  <data name="AIG_Set_MinConfidence" xml:space="preserve"><value>Confiance minimale</value></data>
+  <data name="AIG_Set_MinConfidenceHint" xml:space="preserve"><value>0 à 1 (défaut 0,35)</value></data>
+  <data name="AIG_Set_HistoryMonths" xml:space="preserve"><value>Mois d'historique</value></data>
+  <data name="AIG_Set_MaxRows" xml:space="preserve"><value>Lignes maximales</value></data>
+  <data name="AIG_Set_Save" xml:space="preserve"><value>Enregistrer</value></data>
+  <data name="AIG_Set_Saved" xml:space="preserve"><value>Paramètres enregistrés</value></data>
+  <data name="AIG_Set_Index" xml:space="preserve"><value>Index des précédents</value></data>
+  <data name="AIG_Set_Kind" xml:space="preserve"><value>Type</value></data>
+  <data name="AIG_Set_Rows" xml:space="preserve"><value>Lignes</value></data>
+  <data name="AIG_Set_Distinct" xml:space="preserve"><value>Textes distincts</value></data>
+  <data name="AIG_Set_Vectors" xml:space="preserve"><value>Vecteurs</value></data>
+  <data name="AIG_Set_BuiltAt" xml:space="preserve"><value>Dernière construction</value></data>
+  <data name="AIG_Set_NotBuilt" xml:space="preserve"><value>Pas encore construit</value></data>
+  <data name="AIG_Set_IndexHint" xml:space="preserve"><value>Construit au premier usage et actualisé toutes les 6 heures ; vecteurs construits la nuit si un modèle d'embedding est défini.</value></data>
+  <data name="AIG_Set_Rebuild" xml:space="preserve"><value>Reconstruire l'index</value></data>
+  <data name="AIG_Set_Rebuilt" xml:space="preserve"><value>Index reconstruit</value></data>
+  <data name="AIG_Set_Stats" xml:space="preserve"><value>Taux d'acceptation, 30 derniers jours</value></data>
+  <data name="AIG_Set_NoStats" xml:space="preserve"><value>Aucune suggestion pour l'instant.</value></data>
+  <data name="AIG_Set_Shown" xml:space="preserve"><value>Affichées</value></data>
+  <data name="AIG_Set_Applied" xml:space="preserve"><value>Appliquées</value></data>
+  <data name="AIG_Set_Dismissed" xml:space="preserve"><value>Ignorées</value></data>
+  <data name="AIG_Set_Overridden" xml:space="preserve"><value>Modifiées après application</value></data>
+  <data name="AIG_Set_AcceptRate" xml:space="preserve"><value>Taux d'acceptation</value></data>
+  <data name="AIG_KindExpense" xml:space="preserve"><value>Lignes de bons de caisse</value></data>
+  <data name="AIG_KindItem" xml:space="preserve"><value>Nouveaux articles</value></data>
 </root>

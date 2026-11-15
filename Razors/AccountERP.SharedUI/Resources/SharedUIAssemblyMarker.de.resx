@@ -6376,4 +6376,39 @@
   <data name="AIG_SrcNeighbors" xml:space="preserve"><value>ähnliche Buchungen</value></data>
   <data name="AIG_SrcModel" xml:space="preserve"><value>Wahl des Assistenten</value></data>
   <data name="AIG_ItemGroup" xml:space="preserve"><value>Gruppe</value></data>
+  <data name="AIG_NotAvailable" xml:space="preserve"><value>Die automatische Klassifizierung ist nur in der Webversion verfügbar.</value></data>
+  <data name="AIG_Set_ErrNotAdmin" xml:space="preserve"><value>Die Einstellungen sind nur für Administratoren.</value></data>
+  <data name="AIG_Set_Tab" xml:space="preserve"><value>Klassifizierung</value></data>
+  <data name="AIG_Set_Intro" xml:space="preserve"><value>Schlägt Konto und Kostenstelle für eine Kassenbelegzeile anhand des Textes sowie Kategorie und Gruppe für einen neuen Artikel anhand des Namens vor. Nur Vorschläge: nichts wird ohne Klick auf „Übernehmen“ ausgefüllt.</value></data>
+  <data name="AIG_Set_Enabled" xml:space="preserve"><value>Automatische Klassifizierung aktivieren</value></data>
+  <data name="AIG_Set_EnabledHint" xml:space="preserve"><value>Standardmäßig aus. Basiert auf früheren Belegen und Artikeln.</value></data>
+  <data name="AIG_Set_UseModel" xml:space="preserve"><value>Modell bei Mehrdeutigkeit verwenden</value></data>
+  <data name="AIG_Set_UseModelHint" xml:space="preserve"><value>Das Modell wählt nur unter den nächsten Kandidaten.</value></data>
+  <data name="AIG_Set_AllUsers" xml:space="preserve"><value>Für alle Benutzer</value></data>
+  <data name="AIG_Set_AllUsersHint" xml:space="preserve"><value>Sonst nur Benutzer mit KI-Assistent-Berechtigung.</value></data>
+  <data name="AIG_Set_MinConfidence" xml:space="preserve"><value>Mindestkonfidenz</value></data>
+  <data name="AIG_Set_MinConfidenceHint" xml:space="preserve"><value>0 bis 1 (Standard 0,35)</value></data>
+  <data name="AIG_Set_HistoryMonths" xml:space="preserve"><value>Monate Historie</value></data>
+  <data name="AIG_Set_MaxRows" xml:space="preserve"><value>Maximale Zeilen</value></data>
+  <data name="AIG_Set_Save" xml:space="preserve"><value>Speichern</value></data>
+  <data name="AIG_Set_Saved" xml:space="preserve"><value>Einstellungen gespeichert</value></data>
+  <data name="AIG_Set_Index" xml:space="preserve"><value>Vorgangsindex</value></data>
+  <data name="AIG_Set_Kind" xml:space="preserve"><value>Art</value></data>
+  <data name="AIG_Set_Rows" xml:space="preserve"><value>Zeilen</value></data>
+  <data name="AIG_Set_Distinct" xml:space="preserve"><value>Eindeutige Texte</value></data>
+  <data name="AIG_Set_Vectors" xml:space="preserve"><value>Vektoren</value></data>
+  <data name="AIG_Set_BuiltAt" xml:space="preserve"><value>Zuletzt erstellt</value></data>
+  <data name="AIG_Set_NotBuilt" xml:space="preserve"><value>Noch nicht erstellt</value></data>
+  <data name="AIG_Set_IndexHint" xml:space="preserve"><value>Wird bei erster Nutzung erstellt und alle 6 Stunden aktualisiert; Vektoren nachts, falls ein Embedding-Modell gesetzt ist.</value></data>
+  <data name="AIG_Set_Rebuild" xml:space="preserve"><value>Index neu erstellen</value></data>
+  <data name="AIG_Set_Rebuilt" xml:space="preserve"><value>Index neu erstellt</value></data>
+  <data name="AIG_Set_Stats" xml:space="preserve"><value>Annahmequote, letzte 30 Tage</value></data>
+  <data name="AIG_Set_NoStats" xml:space="preserve"><value>Noch keine Vorschläge.</value></data>
+  <data name="AIG_Set_Shown" xml:space="preserve"><value>Angezeigt</value></data>
+  <data name="AIG_Set_Applied" xml:space="preserve"><value>Übernommen</value></data>
+  <data name="AIG_Set_Dismissed" xml:space="preserve"><value>Verworfen</value></data>
+  <data name="AIG_Set_Overridden" xml:space="preserve"><value>Nach Übernahme geändert</value></data>
+  <data name="AIG_Set_AcceptRate" xml:space="preserve"><value>Annahmequote</value></data>
+  <data name="AIG_KindExpense" xml:space="preserve"><value>Kassenbelegzeilen</value></data>
+  <data name="AIG_KindItem" xml:space="preserve"><value>Neue Artikel</value></data>
 </root>

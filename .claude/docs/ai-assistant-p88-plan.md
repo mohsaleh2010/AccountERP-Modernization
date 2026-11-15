@@ -126,4 +126,8 @@
 
 ### تم التنفيذ
 
-(فارغ)
+- **P8.8.1 `24fe6fc` (2026-11-16):** View `ai.v_expense_history` (أسطر سندات إلى حساب عام: لا عميل ولا مورد، `SubAccount_Id > 0`)، جدولا `AI_Suggestions`/`AI_Suggestions_Vectors`، 6 إعدادات، `AiSuggestModels`، `AiSuggestCLS`، `AiSuggestText` (يعيد استعمال `AiSearchText.Normalize`)، `AiSuggestRanker` (تطابق تام ×3، تغطية Dice مرجّحة بـ IDF بدل BM25 الكامل لأن النصوص قصيرة، حداثة نصف عمر 180 يوماً، التضمين يضيف تشابهاً ≥ 0.72 بدل RRF).
+- **P8.8.2 `730e9da`:** View `ai.v_item_classes`؛ `Suggest/AiSuggestIndex` (فهرس لكل نوع، 6 ساعات، فشل التحميل ⇒ إعادة بعد 10 دقائق)، `AiSuggestPicker` (سريع ثم محادثة، 8 ث، JSON {pick,why}، رفض خارج المرشحين)، `AiSuggestGateway` (مستخدم الخادم مخزّن دقيقتين، ترشيح بالفروع، حساب محذوف يُسقط، حد 300 استدعاء نموذج/مستخدم/يوم)، `AiSuggestVectorJob` (02:00، 2000 نص). **قرار:** السوابق تُقرأ مباشرة عبر `AiSuggestCLS.LoadExpenseHistory` مع `sp_set_session_context` لأن `ReadOnlySqlExecutor` يقف عند 5000 صف.
+- **P8.8.3 `57be7a8`:** `AiSuggestUiService` (ويب + MAUI مسجّل، بلا بوابة فى MAUI ⇒ لا شريحة)، `AiSuggestChip`، الربط فى `CashVoucherPage` على ملاحظة السطر فقط (البيان العام لا)؛ overridden يُسجَّل عند «إضافة السطر» لا عند الحفظ.
+- **P8.8.4:** الربط فى `ItemEditPage` (جديد فقط؛ الفئة غير الموجودة فى قائمة الشاشة تُسقط)، تبويب `AiSuggestTab` (ص18)، 46 مفتاح `AIG_` ×4.
+- **الاختبارات (harness ومستخدم م-569…م-583) مؤجلة بطلب المستخدم 2026-11-16 حتى انتهاء كل خطط المساعد. لم تُنفَّذ فحوص §10.**

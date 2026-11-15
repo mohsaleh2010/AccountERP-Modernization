@@ -6374,4 +6374,39 @@
   <data name="AIG_SrcNeighbors" xml:space="preserve"><value>سوابق قريبة</value></data>
   <data name="AIG_SrcModel" xml:space="preserve"><value>اختيار المساعد</value></data>
   <data name="AIG_ItemGroup" xml:space="preserve"><value>المجموعة</value></data>
+  <data name="AIG_NotAvailable" xml:space="preserve"><value>التصنيف التلقائى متاح فى نسخة الويب فقط.</value></data>
+  <data name="AIG_Set_ErrNotAdmin" xml:space="preserve"><value>إعدادات التصنيف التلقائى للمدير فقط.</value></data>
+  <data name="AIG_Set_Tab" xml:space="preserve"><value>التصنيف</value></data>
+  <data name="AIG_Set_Intro" xml:space="preserve"><value>يقترح الحساب ومركز التكلفة لسطر سند الخزينة من نص الملاحظة، والفئة والمجموعة للصنف الجديد من اسمه. اقتراح فقط: لا يُملأ شىء إلا بضغطة «تطبيق».</value></data>
+  <data name="AIG_Set_Enabled" xml:space="preserve"><value>تفعيل التصنيف التلقائى</value></data>
+  <data name="AIG_Set_EnabledHint" xml:space="preserve"><value>موقوف افتراضياً. يعتمد على السوابق المحفوظة فى السندات والأصناف.</value></data>
+  <data name="AIG_Set_UseModel" xml:space="preserve"><value>استعمال النموذج عند الغموض</value></data>
+  <data name="AIG_Set_UseModelHint" xml:space="preserve"><value>النموذج يختار فقط من أقرب المرشحين حين تتقارب السوابق.</value></data>
+  <data name="AIG_Set_AllUsers" xml:space="preserve"><value>لكل المستخدمين</value></data>
+  <data name="AIG_Set_AllUsersHint" xml:space="preserve"><value>بدون هذا يظهر الاقتراح لمن يملك صلاحية «المساعد الذكى» فقط.</value></data>
+  <data name="AIG_Set_MinConfidence" xml:space="preserve"><value>أقل ثقة لعرض الاقتراح</value></data>
+  <data name="AIG_Set_MinConfidenceHint" xml:space="preserve"><value>من 0 إلى 1 (الافتراضى 0.35)</value></data>
+  <data name="AIG_Set_HistoryMonths" xml:space="preserve"><value>أشهر السوابق</value></data>
+  <data name="AIG_Set_MaxRows" xml:space="preserve"><value>أقصى عدد سوابق</value></data>
+  <data name="AIG_Set_Save" xml:space="preserve"><value>حفظ</value></data>
+  <data name="AIG_Set_Saved" xml:space="preserve"><value>حُفظت الإعدادات</value></data>
+  <data name="AIG_Set_Index" xml:space="preserve"><value>فهرس السوابق</value></data>
+  <data name="AIG_Set_Kind" xml:space="preserve"><value>النوع</value></data>
+  <data name="AIG_Set_Rows" xml:space="preserve"><value>السوابق</value></data>
+  <data name="AIG_Set_Distinct" xml:space="preserve"><value>نصوص مميزة</value></data>
+  <data name="AIG_Set_Vectors" xml:space="preserve"><value>متجهات</value></data>
+  <data name="AIG_Set_BuiltAt" xml:space="preserve"><value>آخر بناء</value></data>
+  <data name="AIG_Set_NotBuilt" xml:space="preserve"><value>لم يُبنَ بعد</value></data>
+  <data name="AIG_Set_IndexHint" xml:space="preserve"><value>يُبنى عند أول اقتراح ويتحدث كل 6 ساعات؛ المتجهات تُبنى ليلاً إن وُجد نموذج تضمين.</value></data>
+  <data name="AIG_Set_Rebuild" xml:space="preserve"><value>إعادة بناء الفهرس</value></data>
+  <data name="AIG_Set_Rebuilt" xml:space="preserve"><value>أُعيد بناء الفهرس</value></data>
+  <data name="AIG_Set_Stats" xml:space="preserve"><value>نسبة القبول آخر 30 يوماً</value></data>
+  <data name="AIG_Set_NoStats" xml:space="preserve"><value>لا اقتراحات بعد.</value></data>
+  <data name="AIG_Set_Shown" xml:space="preserve"><value>المعروضة</value></data>
+  <data name="AIG_Set_Applied" xml:space="preserve"><value>المطبّقة</value></data>
+  <data name="AIG_Set_Dismissed" xml:space="preserve"><value>المتجاهلة</value></data>
+  <data name="AIG_Set_Overridden" xml:space="preserve"><value>المغيّرة بعد التطبيق</value></data>
+  <data name="AIG_Set_AcceptRate" xml:space="preserve"><value>نسبة القبول</value></data>
+  <data name="AIG_KindExpense" xml:space="preserve"><value>سطور سندات الخزينة</value></data>
+  <data name="AIG_KindItem" xml:space="preserve"><value>الأصناف الجديدة</value></data>
 </root>

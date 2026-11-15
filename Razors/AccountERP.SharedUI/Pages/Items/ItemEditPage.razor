@@ -20,6 +20,7 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager Nav
 @inject TabWorkspaceService TabWorkspace
+@inject AiSuggestUiService AiSuggest
 @implements IDisposable
 
 <PageTitle>@(_isNew ? Tr(NewTitleKey) : _f.Name)</PageTitle>
@@ -112,6 +113,11 @@
                 </MudSelect>
                 <div class="ie-catpick-hit" title="@Tr("CS_FieldHint")" @onclick="OpenCategorySearch"></div>
             </div>
+            @if (_sug is not null)
+            {
+                @* P8.8.4: اقتراح الفئة والمجموعة من اسم الصنف الجديد (اقتراح فقط) *@
+                <div class="span2"><AccountERP.SharedUI.Components.Assistant.AiSuggestChip Suggestion="_sug" SecondaryLabel="@Tr("AIG_ItemGroup")" OnApply="ApplySuggestionAsync" OnDismiss="DismissSuggestion" /></div>
+            }
             @if (Lookups)
             {
             <MudSelect T="long" @bind-Value="_f.Group_Id" Label="@Tr("IL_groups")" Variant="Variant.Outlined" Clearable="true"
@@ -543,6 +549,40 @@
         if (!_isNew) return;
         if (string.IsNullOrWhiteSpace(_f.Name_On_Invoice) || _f.Name_On_Invoice == old) _f.Name_On_Invoice = v;
         if (string.IsNullOrWhiteSpace(_f.Other_Name) || _f.Other_Name == old) _f.Other_Name = v;
+        _ = SuggestForNameAsync(v ?? "");
+    }
+
+    // P8.8.4: التصنيف التلقائى للصنف الجديد فقط (ص3، ص16)
+    private AiSuggestion? _sug, _appliedSug;
+
+    private async Task SuggestForNameAsync(string name)
+    {
+        if (!_isNew || !AiSuggest.IsAvailable) { _sug = null; return; }
+        var r = await AiSuggest.SuggestDebouncedAsync("item-name", new AiSuggestRequest
+        {
+            Kind = AiSuggestKinds.Item, Text = name, SubType = _f.Item_Or_Service, Screen = "/items/new", Language = LangService.CurrentCultureInfo.Name,
+        });
+        if ((_f.Name ?? "") != name) return;
+        // لا اقتراح لفئة غير موجودة فى قائمة الشاشة، ولا اقتراح يساوى المختار حالياً
+        if (r != null && (_lk?.Categories.All(c => c.Id != r.TargetId) ?? true)) r = null;
+        if (r != null && r.TargetId == _f.Category_Id && (r.SecondaryId == 0 || r.SecondaryId == _f.Group_Id)) r = null;
+        _sug = r;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ApplySuggestionAsync(AiSuggestion s)
+    {
+        await OnCategoryPicked(s.TargetId);
+        if (s.SecondaryId != 0 && (_lk?.Groups.Any(g => g.Id == s.SecondaryId) ?? false)) _f.Group_Id = s.SecondaryId;
+        _appliedSug = s;
+        _sug = null;
+        AiSuggest.Record(s.Id, AiSuggestOutcomes.Applied);
+    }
+
+    private void DismissSuggestion(AiSuggestion s)
+    {
+        AiSuggest.Record(s.Id, AiSuggestOutcomes.Dismissed);
+        _sug = null;
     }
 
     private MudSelect<long>? _catSelect;
@@ -599,6 +639,9 @@
     {
         _busy = true; _error = null;
         var f = _f; bool isNew = _isNew;
+        if (isNew && _appliedSug is { } a && a.TargetId != f.Category_Id)
+            AiSuggest.Record(a.Id, AiSuggestOutcomes.Overridden, $"{{\"target\":{f.Category_Id},\"group\":{f.Group_Id}}}");
+        _appliedSug = null; _sug = null;
         try
         {
             long id = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.Save(f); });

@@ -6374,4 +6374,39 @@
   <data name="AIG_SrcNeighbors" xml:space="preserve"><value>similar entries</value></data>
   <data name="AIG_SrcModel" xml:space="preserve"><value>assistant's pick</value></data>
   <data name="AIG_ItemGroup" xml:space="preserve"><value>Group</value></data>
+  <data name="AIG_NotAvailable" xml:space="preserve"><value>Auto-classification is available in the web version only.</value></data>
+  <data name="AIG_Set_ErrNotAdmin" xml:space="preserve"><value>Auto-classification settings are for administrators only.</value></data>
+  <data name="AIG_Set_Tab" xml:space="preserve"><value>Classification</value></data>
+  <data name="AIG_Set_Intro" xml:space="preserve"><value>Suggests the account and cost center for a cash-voucher line from its note, and the category and group for a new item from its name. Suggestions only: nothing is filled until the user clicks Apply.</value></data>
+  <data name="AIG_Set_Enabled" xml:space="preserve"><value>Enable auto-classification</value></data>
+  <data name="AIG_Set_EnabledHint" xml:space="preserve"><value>Off by default. Based on past vouchers and items.</value></data>
+  <data name="AIG_Set_UseModel" xml:space="preserve"><value>Use the model when ambiguous</value></data>
+  <data name="AIG_Set_UseModelHint" xml:space="preserve"><value>The model only picks among the closest candidates when past entries are close.</value></data>
+  <data name="AIG_Set_AllUsers" xml:space="preserve"><value>For all users</value></data>
+  <data name="AIG_Set_AllUsersHint" xml:space="preserve"><value>Otherwise only users with the AI assistant permission see suggestions.</value></data>
+  <data name="AIG_Set_MinConfidence" xml:space="preserve"><value>Minimum confidence to show</value></data>
+  <data name="AIG_Set_MinConfidenceHint" xml:space="preserve"><value>0 to 1 (default 0.35)</value></data>
+  <data name="AIG_Set_HistoryMonths" xml:space="preserve"><value>History months</value></data>
+  <data name="AIG_Set_MaxRows" xml:space="preserve"><value>Maximum past rows</value></data>
+  <data name="AIG_Set_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="AIG_Set_Saved" xml:space="preserve"><value>Settings saved</value></data>
+  <data name="AIG_Set_Index" xml:space="preserve"><value>Precedent index</value></data>
+  <data name="AIG_Set_Kind" xml:space="preserve"><value>Kind</value></data>
+  <data name="AIG_Set_Rows" xml:space="preserve"><value>Rows</value></data>
+  <data name="AIG_Set_Distinct" xml:space="preserve"><value>Distinct texts</value></data>
+  <data name="AIG_Set_Vectors" xml:space="preserve"><value>Vectors</value></data>
+  <data name="AIG_Set_BuiltAt" xml:space="preserve"><value>Last built</value></data>
+  <data name="AIG_Set_NotBuilt" xml:space="preserve"><value>Not built yet</value></data>
+  <data name="AIG_Set_IndexHint" xml:space="preserve"><value>Built on first use and refreshed every 6 hours; vectors are built nightly if an embedding model is set.</value></data>
+  <data name="AIG_Set_Rebuild" xml:space="preserve"><value>Rebuild index</value></data>
+  <data name="AIG_Set_Rebuilt" xml:space="preserve"><value>Index rebuilt</value></data>
+  <data name="AIG_Set_Stats" xml:space="preserve"><value>Acceptance, last 30 days</value></data>
+  <data name="AIG_Set_NoStats" xml:space="preserve"><value>No suggestions yet.</value></data>
+  <data name="AIG_Set_Shown" xml:space="preserve"><value>Shown</value></data>
+  <data name="AIG_Set_Applied" xml:space="preserve"><value>Applied</value></data>
+  <data name="AIG_Set_Dismissed" xml:space="preserve"><value>Dismissed</value></data>
+  <data name="AIG_Set_Overridden" xml:space="preserve"><value>Changed after applying</value></data>
+  <data name="AIG_Set_AcceptRate" xml:space="preserve"><value>Acceptance rate</value></data>
+  <data name="AIG_KindExpense" xml:space="preserve"><value>Cash voucher lines</value></data>
+  <data name="AIG_KindItem" xml:space="preserve"><value>New items</value></data>
 </root>

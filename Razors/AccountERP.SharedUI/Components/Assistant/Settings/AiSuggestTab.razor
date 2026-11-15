@@ -1,0 +1,189 @@
+@* 🤖 P8.8.4 (ai-assistant-p88-plan.md ص18): تبويب «التصنيف» فى /settings/ai — التفعيل والحدود وحالة الفهرس وإعادة البناء ونسبة القبول آخر 30 يوماً.
+   مكوّن مستقل يحمّل نفسه (نمط AiScreenAssistTab). لا مساس ببيانات النظام. *@
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using Microsoft.Extensions.DependencyInjection
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IServiceProvider ServiceProvider
+@implements IDisposable
+
+<style>
+    .aigs { display: flex; flex-direction: column; gap: 16px; }
+    .aigs-card { border: 1px solid var(--mud-palette-lines-default); border-radius: 14px; padding: 16px; background: var(--mud-palette-surface); display: flex; flex-direction: column; gap: 14px; }
+    .aigs-card h3 { margin: 0; font-size: 1rem; font-weight: 700; display: flex; gap: 8px; align-items: center; }
+    .aigs-card h3 .mud-icon-root { color: var(--mud-palette-primary); }
+    .aigs-hint { font-size: .8rem; color: var(--mud-palette-text-secondary); margin-top: 2px; margin-inline-start: 48px; }
+    .aigs-row .mud-switch { min-height: 44px; }
+    .aigs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .aigs-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .aigs-actions .mud-button-root { min-height: 44px; }
+    .aigs-tbl { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    .aigs-tbl th, .aigs-tbl td { padding: 8px; border-bottom: 1px solid var(--mud-palette-lines-default); text-align: start; }
+    .aigs-tbl td.n { font-variant-numeric: tabular-nums; }
+</style>
+
+<div class="aigs" dir="@(LangService.IsRtl ? "rtl" : "ltr")">
+    @if (_svc == null || !_svc.HasGateway)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("AIG_NotAvailable")</MudAlert>
+    }
+    else if (_notAdmin)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@Tr("AIG_Set_ErrNotAdmin")</MudAlert>
+    }
+    else if (_s == null)
+    {
+        @if (_error != null) { <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@_error</MudAlert> }
+        else { <div style="text-align:center;padding:32px;"><MudProgressCircular Indeterminate="true" Color="Color.Primary" /></div> }
+    }
+    else
+    {
+        @if (_error != null)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" ShowCloseIcon="true" CloseIconClicked="() => _error = null">@_error</MudAlert>
+        }
+        <section class="aigs-card" aria-label="@Tr("AIG_Set_Tab")">
+            <h3><MudIcon Icon="@Icons.Material.Filled.Category" aria-hidden="true" />@Tr("AIG_Set_Tab")</h3>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">@Tr("AIG_Set_Intro")</MudText>
+            <div class="aigs-row">
+                <MudSwitch T="bool" @bind-Value="_s.Enabled" Color="Color.Primary" Label="@Tr("AIG_Set_Enabled")" />
+                <div class="aigs-hint">@Tr("AIG_Set_EnabledHint")</div>
+            </div>
+            <div class="aigs-row">
+                <MudSwitch T="bool" @bind-Value="_s.UseModel" Color="Color.Primary" Label="@Tr("AIG_Set_UseModel")" Disabled="@(!_s.Enabled)" />
+                <div class="aigs-hint">@Tr("AIG_Set_UseModelHint")</div>
+            </div>
+            <div class="aigs-row">
+                <MudSwitch T="bool" @bind-Value="_s.ForAllUsers" Color="Color.Primary" Label="@Tr("AIG_Set_AllUsers")" Disabled="@(!_s.Enabled)" />
+                <div class="aigs-hint">@Tr("AIG_Set_AllUsersHint")</div>
+            </div>
+            <div class="aigs-grid">
+                <MudNumericField T="double" @bind-Value="_s.MinConfidence" Label="@Tr("AIG_Set_MinConfidence")" Min="0" Max="1" Step="0.05" Format="0.##"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@Tr("AIG_Set_MinConfidenceHint")" />
+                <MudNumericField T="int" @bind-Value="_s.HistoryMonths" Label="@Tr("AIG_Set_HistoryMonths")" Min="1" Max="120" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField T="int" @bind-Value="_s.MaxRows" Label="@Tr("AIG_Set_MaxRows")" Min="100" Max="500000" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            </div>
+            <div class="aigs-actions">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@_busy" OnClick="SaveAsync">@Tr("AIG_Set_Save")</MudButton>
+            </div>
+        </section>
+
+        <section class="aigs-card" aria-label="@Tr("AIG_Set_Index")">
+            <h3><MudIcon Icon="@Icons.Material.Filled.Storage" aria-hidden="true" />@Tr("AIG_Set_Index")</h3>
+            <table class="aigs-tbl">
+                <thead><tr><th>@Tr("AIG_Set_Kind")</th><th>@Tr("AIG_Set_Rows")</th><th>@Tr("AIG_Set_Distinct")</th><th>@Tr("AIG_Set_Vectors")</th><th>@Tr("AIG_Set_BuiltAt")</th></tr></thead>
+                <tbody>
+                    @foreach (var st in _index)
+                    {
+                        <tr>
+                            <td>@KindName(st.Kind)</td>
+                            <td class="n">@st.Rows.ToString("N0", CultureInfo.InvariantCulture)</td>
+                            <td class="n">@st.DistinctTexts.ToString("N0", CultureInfo.InvariantCulture)</td>
+                            <td class="n">@st.Vectors.ToString("N0", CultureInfo.InvariantCulture)</td>
+                            <td class="n">@(st.BuiltAt?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) ?? Tr("AIG_Set_NotBuilt"))@(string.IsNullOrEmpty(st.Error) ? "" : " ⚠ " + st.Error)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="aigs-hint" style="margin-inline-start:0">@Tr("AIG_Set_IndexHint")</div>
+            <div class="aigs-actions">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" Disabled="@_busy" OnClick="RebuildAsync">@Tr("AIG_Set_Rebuild")</MudButton>
+            </div>
+        </section>
+
+        <section class="aigs-card" aria-label="@Tr("AIG_Set_Stats")">
+            <h3><MudIcon Icon="@Icons.Material.Filled.Insights" aria-hidden="true" />@Tr("AIG_Set_Stats")</h3>
+            @if (_stats.Count == 0)
+            {
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">@Tr("AIG_Set_NoStats")</MudText>
+            }
+            else
+            {
+                <table class="aigs-tbl">
+                    <thead><tr><th>@Tr("AIG_Set_Kind")</th><th>@Tr("AIG_Set_Shown")</th><th>@Tr("AIG_Set_Applied")</th><th>@Tr("AIG_Set_Dismissed")</th><th>@Tr("AIG_Set_Overridden")</th><th>@Tr("AIG_Set_AcceptRate")</th></tr></thead>
+                    <tbody>
+                        @foreach (var st in _stats)
+                        {
+                            <tr>
+                                <td>@KindName(st.Kind)</td>
+                                <td class="n">@st.Total</td>
+                                <td class="n">@st.Applied</td>
+                                <td class="n">@st.Dismissed</td>
+                                <td class="n">@st.Overridden</td>
+                                <td class="n">@((st.AcceptRate * 100).ToString("0", CultureInfo.InvariantCulture))%</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    private AiSuggestUiService? _svc;
+    private AiSuggestSettings? _s;
+    private List<AiSuggestIndexStatus> _index = new();
+    private List<AiSuggestStats> _stats = new();
+    private bool _busy, _notAdmin;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _svc = ServiceProvider.GetService<AiSuggestUiService>();
+        LangService.OnLanguageChanged += OnLang;
+        await LoadAsync();
+    }
+
+    private void OnLang() => InvokeAsync(StateHasChanged);
+
+    private async Task LoadAsync()
+    {
+        if (_svc == null || !_svc.HasGateway) return;
+        _error = null;
+        try
+        {
+            _s = await _svc.GetSettingsAsync();
+            _index = await _svc.IndexStatusAsync();
+            _stats = await _svc.StatsAsync(30);
+        }
+        catch (UnauthorizedAccessException) { _notAdmin = true; }
+        catch (Exception ex) { _error = ex.Message; }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_svc == null || _s == null || _busy) return;
+        _busy = true; _error = null;
+        try
+        {
+            await _svc.SaveSettingsAsync(_s);
+            Snackbar.Add(Tr("AIG_Set_Saved"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task RebuildAsync()
+    {
+        if (_svc == null || _busy) return;
+        _busy = true; _error = null;
+        try
+        {
+            await _svc.RebuildAsync();
+            _index = await _svc.IndexStatusAsync();
+            Snackbar.Add(Tr("AIG_Set_Rebuilt"), Severity.Success);
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private string KindName(string kind) => kind == AiSuggestKinds.Item ? Tr("AIG_KindItem") : Tr("AIG_KindExpense");
+
+    private string Tr(string key, params object[] args) => AiBriefText.T(Lang, LangService.CurrentCultureInfo, key, args);
+
+    public void Dispose() => LangService.OnLanguageChanged -= OnLang;
+}
