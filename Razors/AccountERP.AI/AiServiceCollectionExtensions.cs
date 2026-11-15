@@ -39,6 +39,7 @@ namespace AccountERP.AI
             services.AddSingleton(sp => new Brief.AiBriefJob(sp.GetRequiredService<Tools.ReadOnlySqlExecutor>(), sp.GetRequiredService<ProviderRegistry>()));   // P8.1.4: مشغّل الموجز اليومى
             services.AddSingleton<Scheduling.IAiScheduledJob>(sp => sp.GetRequiredService<Brief.AiBriefJob>());   // ق17: مهام AiSchedulerWorker
             services.AddScoped<IAiBriefGateway>(sp => new Brief.AiBriefGateway(sp.GetRequiredService<Brief.AiBriefJob>()));   // P8.1.4: صفحة الموجز والإعدادات (P8.1.5/P8.1.6)
+            services.AddScoped<IAiSearchGateway>(sp => new Search.AiSearchGateway(sp.GetRequiredService<Tools.ReadOnlySqlExecutor>()));   // P8.2.3: بحث البيانات فى لوحة Ctrl+K (بلا نموذج)
             return services;
         }
     }

@@ -30,6 +30,8 @@ namespace AccountERP.AI.Tools
             new("purchase_invoice", "/accounts/invoices/purchase-invoice", "فاتورة مشتريات", "id (معرّف الفاتورة؛ بدونه = جديدة)", new[] { PId }),
             new("purchase_return", "/accounts/invoices/purchase-return", "مرتجع مشتريات", "id (معرّف المرتجع؛ بدونه = جديد)", new[] { PId }),
             new("customer_info", "/customers/info", "بيانات العميل", "id (customer_id؛ بدونه = عميل جديد)", new[] { PId }),
+            new("supplier_info", "/suppliers/info", "بيانات المورد", "id (supplier_id؛ بدونه = مورد جديد)", new[] { PId }),   // P8.2.3 (س18)
+            new("item_card", "/items", "بطاقة الصنف", "id (item_id؛ مطلوب)", new[] { PId }),   // P8.2.3 (س18): /items/{id}
             new("sales_invoices_list", AiSchemaCatalog.RSales, "قائمة فواتير المبيعات", "", Array.Empty<string>()),
             new("purchase_invoices_list", AiSchemaCatalog.RPurchases, "قائمة فواتير المشتريات", "", Array.Empty<string>()),
             new("store_balances", AiSchemaCatalog.RStock, "أرصدة المخازن", "", Array.Empty<string>()),
