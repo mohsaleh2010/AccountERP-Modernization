@@ -159,11 +159,20 @@ export function opened(panel, input, list) {
     setActive(0, false);
 }
 
-// بعد كل رسم للنتائج: الصف الأول نشط.
-export function sync() {
+// بعد كل رسم للنتائج: الصف الأول نشط. keep (P8.2.4: وصول نتائج البيانات بعد الشاشات) يُبقى الصف النشط ومكان التمرير.
+export function sync(keep) {
     if (!S.open) return;
+    if (keep && S.active >= 0) {
+        setActive(S.active, false);
+        return;
+    }
     setActive(0);
     if (S.list) S.list.scrollTop = 0;
+}
+
+// بعد «مسح الأخيرة»: التركيز يعود للحقل (الزر اختفى).
+export function focusInput() {
+    if (S.open && S.input) S.input.focus({ preventScroll: true });
 }
 
 export function closed() {
