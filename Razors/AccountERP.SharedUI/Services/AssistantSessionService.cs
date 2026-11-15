@@ -66,6 +66,57 @@ namespace AccountERP.SharedUI.Services
         /// <summary>اكتمل رد (للشارة على الأيقونة العائمة).</summary>
         public event Action? OnReplyCompleted;
 
+        // ───── P8.9.4: فتح النافذة العائمة من شاشة + سياق الشاشة المحيط (ص22، ص23) ─────
+
+        /// <summary>طلب فتح النافذة العائمة فى مكانها (يشترك فيه AssistantWidget).</summary>
+        public event Action? OnOpenRequested;
+        public void RequestOpen() => OnOpenRequested?.Invoke();
+
+        // التبويبات تبقى حية عند التبديل (KeepPanelsAlive، الفحص 11) ⇒ سياق لكل مسار، ويُختار سياق المسار الظاهر الآن.
+        private readonly Dictionary<string, (AiScreenPayload Payload, string Label)> _ambient = new(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _ambientDismissed = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>المسار بلا معاملات الاستعلام ولا «/» الأخيرة (مفتاح السياق).</summary>
+        public static string PathKey(string? uriOrPath)
+        {
+            string s = uriOrPath ?? "";
+            int q = s.IndexOfAny(new[] { '?', '#' });
+            if (q >= 0) s = s[..q];
+            if (Uri.TryCreate(s, UriKind.Absolute, out var u)) s = u.AbsolutePath;
+            s = "/" + s.Trim().Trim('/');
+            return s.ToLowerInvariant();
+        }
+
+        /// <summary>تسجّله الشاشة بعد عرض بياناتها: محددات فقط + وصف قصير للشريحة (لا أرقام مالية).</summary>
+        public void SetAmbient(string route, AiScreenPayload payload, string label)
+        {
+            if (payload == null) return;
+            string k = PathKey(route);
+            var p = payload.Clone(); p.Attach = false;
+            bool changed = !_ambient.TryGetValue(k, out var old) || old.Payload.Fingerprint() != p.Fingerprint();
+            _ambient[k] = (p, label ?? "");
+            if (changed) _ambientDismissed.Remove(k);   // سياق جديد يظهر من جديد
+            Notify();
+        }
+
+        public void ClearAmbient(string route)
+        {
+            string k = PathKey(route);
+            if (_ambient.Remove(k)) { _ambientDismissed.Remove(k); Notify(); }
+        }
+
+        public void DismissAmbient(string route)
+        {
+            if (_ambientDismissed.Add(PathKey(route))) Notify();
+        }
+
+        /// <summary>سياق المسار الظاهر (null إن لا يوجد أو أزاله المستخدم).</summary>
+        public (AiScreenPayload Payload, string Label)? AmbientFor(string route)
+        {
+            string k = PathKey(route);
+            return _ambient.TryGetValue(k, out var v) && !_ambientDismissed.Contains(k) ? v : null;
+        }
+
         private bool HasMenu(string key) =>
             (_menu.UserAllowedMenus ?? new()).Any(m => string.Equals((m.KeysData ?? "").Trim(), key, StringComparison.OrdinalIgnoreCase));
 
@@ -516,6 +567,8 @@ namespace AccountERP.SharedUI.Services
             Search = "";
             ShowArchived = false;
             Error = null;
+            _ambient.Clear();
+            _ambientDismissed.Clear();
             AvailabilityLoaded = false;
             Notify();
         }

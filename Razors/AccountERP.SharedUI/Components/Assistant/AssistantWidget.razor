@@ -116,6 +116,7 @@
         {
             _chat.OnChanged += OnChanged;
             _chat.OnReplyCompleted += OnReplyCompleted;
+            _chat.OnOpenRequested += OnOpenRequested;
         }
     }
 
@@ -142,8 +143,19 @@
         try { title = MenuState.UserAllowedMenus.FindMenuForRoute(rel)?.GetLocalizedDescription(LangService.CurrentLanguage) ?? ""; }
         catch { }
         if (path.Length == 0) title = Tr("NavHome");
-        return new AiScreenContext { Route = "/" + path, Title = title, Language = LangService.CurrentCultureInfo.Name };
+        // P8.9.4 (ص22): سياق الشاشة المحيط للمسار الظاهر (الشريحة فوق مربع الكتابة؛ يُسقط إن أزاله المستخدم).
+        var amb = _chat?.AmbientFor("/" + path);
+        return new AiScreenContext { Route = "/" + path, Title = title, Language = LangService.CurrentCultureInfo.Name, Payload = amb?.Payload.Clone() };
     }
+
+    /// <summary>P8.9.4 (ص23): «اسأل المساعد عن هذا» من حوار الشاشة يفتح النافذة فى مكانها.</summary>
+    private void OnOpenRequested() => InvokeAsync(async () =>
+    {
+        if (!Visible) return;
+        _open = true; _unseen = false; _focusOnRender = true;
+        if (_chat != null && !_chat.AvailabilityLoaded) await _chat.RefreshAsync();
+        StateHasChanged();
+    });
 
     private async Task ToggleAsync()
     {
@@ -232,6 +244,7 @@
         {
             _chat.OnChanged -= OnChanged;
             _chat.OnReplyCompleted -= OnReplyCompleted;
+            _chat.OnOpenRequested -= OnOpenRequested;
         }
         try { if (_module != null) await _module.DisposeAsync(); }
         catch (JSDisconnectedException) { }

@@ -17,10 +17,13 @@ namespace AccountERP.SharedUI.Services
         private AiScreenAssistState? _state;
         private long _stateUser;
 
+        private readonly UserPreferencesService? _prefs;
+
         public AiScreenAssistService(IServiceProvider sp)
         {
             _chat = sp.GetService<AssistantSessionService>();
             _gw = sp.GetService<IAiScreenAssistGateway>();
+            _prefs = sp.GetService<UserPreferencesService>();
         }
 
         /// <summary>الحالة تُحمَّل مرة لكل دائرة ومستخدم، وتُجدَّد بعد حفظ الإعدادات (Refresh).</summary>
@@ -79,13 +82,35 @@ namespace AccountERP.SharedUI.Services
         public bool GatewayRegistered => _gw != null && _chat != null;
         public bool CanManage => GatewayRegistered && _chat!.UserId > 0 && (_chat.BuildUser().IsAdmin || _chat.CanOpenSettings);
 
-        // ───── «اسأل المساعد عن هذا» (P8.9.4) ─────
+        // ───── «اسأل المساعد عن هذا» والسياق المحيط (P8.9.4) ─────
         public enum AskResult { Busy, OpenWidget, OpenPage }
 
-        /// <summary>P8.9.4 يفعّلها (كتلة screen_facts فى المحادثة).</summary>
-        public bool CanAskAssistant => false;
+        public bool CanAskAssistant => _chat != null && _chat.HasAccess;
 
-        public AskResult AskAssistant(AiScreenPayload p, string text, string route, string title, string language) => AskResult.Busy;
+        /// <summary>النافذة العائمة ظاهرة حسب تفضيل المستخدم (وإلا يُفتح /assistant — ص23).</summary>
+        public bool WidgetVisible => _prefs?.ShowAiAssistantIcon ?? false;
+
+        /// <summary>
+        /// ص20/ص23: محادثة جديدة بنص ثابت + الحمولة بـ Attach = true (الخادم يبنى الحقائق ويحفظها كتلة screen_facts)، ثم فتح النافذة فى مكانها.
+        /// </summary>
+        public AskResult AskAssistant(AiScreenPayload p, string text, string route, string title, string language)
+        {
+            if (_chat == null || !_chat.HasAccess || p == null) return AskResult.Busy;
+            var copy = p.Clone(); copy.Attach = true;
+            bool ok = _chat.TryAskNew(text, new AiScreenContext { Route = route ?? "", Title = title ?? "", Language = language ?? "ar", Payload = copy });
+            if (!ok) return AskResult.Busy;
+            if (WidgetVisible) { _chat.RequestOpen(); return AskResult.OpenWidget; }
+            return AskResult.OpenPage;
+        }
+
+        /// <summary>تسجّله الشاشة بعد عرض بياناتها (لا شىء إن السياق المحيط موقوف أو النوع غير متاح).</summary>
+        public void SetContext(string route, AiScreenPayload p, string label)
+        {
+            if (_chat == null || p == null || !State.Ambient || !IsAvailable(p.Kind)) return;
+            _chat.SetAmbient(route, p, label);
+        }
+
+        public void ClearContext(string route) => _chat?.ClearAmbient(route);
 
         /// <summary>يفتح حوار «شرح المساعد» للحمولة.</summary>
         public async Task OpenDialogAsync(IDialogService dialogs, AiScreenPayload p, string route, string title)

@@ -341,9 +341,18 @@
     }
 
     private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
-    public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+    public void Dispose()
+    {
+        LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+        try { Assist?.ClearContext(Route); } catch { }
+    }
 
-    private void Reset() { _result = null; _error = null; _selectedAccountId = 0; }
+    // مسار هذا التبويب (يبقى حياً عند التبديل — الفحص 11)، يُلتقط عند فتحه.
+    private string _route = "";
+    private string Route => _route.Length > 0 ? _route : Nav.Uri;
+    protected override void OnParametersSet() { if (_route.Length == 0) _route = Nav.Uri; }
+
+    private void Reset() { _result = null; _error = null; _selectedAccountId = 0; Assist?.ClearContext(Route); }
 
     // ───── P8.9.2: المساعد داخل الشاشة (ويب فقط — الخدمة غير مسجّلة فى MAUI فلا يظهر شىء) ─────
     private long _selectedAccountId;
@@ -414,6 +423,8 @@
         {
             long branch = _branch, currency = _currency; DateTime from = _from.Value, to = _to.Value; var filter = _filter;
             _result = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.GetTrialBalance(period, branch, currency, from, to, filter); });
+            // P8.9.4 (ص22): سياق الشاشة المحيط للمساعد — المحددات المعروضة فقط
+            Assist?.SetContext(Route, Payload(""), $"{Title} {from:yyyy/MM/dd} → {to:yyyy/MM/dd} — {_branches.FirstOrDefault(b => b.Id == branch)?.Name}");
         }
         catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
         finally { _loading = false; }

@@ -239,7 +239,13 @@
     public void Dispose()
     {
         LangService.OnLanguageChanged -= OnLanguageChangedHandler;
+        try { Assist?.ClearContext(Route); } catch { }
     }
+
+    // P8.9.4: مسار هذا التبويب (يبقى حياً عند التبديل — الفحص 11)
+    private string _route = "";
+    private string Route => _route.Length > 0 ? _route : Nav.Uri;
+    protected override void OnParametersSet() { if (_route.Length == 0) _route = Nav.Uri; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -338,6 +344,7 @@
                 _customerName = "";
                 _rows = new();
                 _assistPayload = null;
+                Assist?.ClearContext(Route);
             }
         }
         catch (Exception ex)
@@ -361,6 +368,7 @@
         {
             _rows = new();
             _assistPayload = null;
+            Assist?.ClearContext(Route);
         }
     }
 
@@ -378,6 +386,7 @@
         _isLoadingAccount = true;
         _selectedRow = null;
         _assistPayload = null;
+        Assist?.ClearContext(Route);
         StateHasChanged();
 
         _customerId = customerId;
@@ -442,6 +451,9 @@
                 Kind = AiScreenKinds.CustomerStatement, Question = AiScreenQuestions.ExplainBalance, EntityId = customerId, Mode = withPeriod ? "period" : "normal",
                 From = dtFromEnabled ? dtFromValue.Date : null, To = dtToEnabled ? dtToValue.Date : null,
             };
+            // P8.9.4 (ص22): سياق الشاشة المحيط (المحددات فقط تصل للخادم؛ الاسم للشريحة فى الواجهة)
+            var ambient = _assistPayload.Clone(); ambient.Question = "";
+            Assist?.SetContext(Route, ambient, _customerName);
         }
         catch (Exception ex)
         {

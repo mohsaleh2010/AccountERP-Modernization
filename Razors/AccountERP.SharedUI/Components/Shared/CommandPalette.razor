@@ -478,7 +478,9 @@
         try { title = MenuState.UserAllowedMenus.FindMenuForRoute(rel)?.GetLocalizedDescription(LangService.CurrentLanguage) ?? ""; }
         catch { }
         if (path.Length == 0) title = Tr("NavHome");
-        return new AiScreenContext { Route = "/" + path, Title = title, Language = LangService.CurrentCultureInfo.Name };
+        // P8.9.4 (ص22): سياق الشاشة المحيط للمسار الظاهر (محددات فقط؛ الخادم يتحقق ويسقطه إن لم يُسمح).
+        var amb = ServiceProvider.GetService<AssistantSessionService>()?.AmbientFor("/" + path);
+        return new AiScreenContext { Route = "/" + path, Title = title, Language = LangService.CurrentCultureInfo.Name, Payload = amb?.Payload.Clone() };
     }
 
     private static string Short(string s, int n) => s.Length <= n ? s : s.Substring(0, n).TrimEnd() + "…";

@@ -44,6 +44,7 @@
 @inject TabWorkspaceService TabWorkspace
 @inject MenuStateService MenuState
 @inject IServiceProvider ServiceProvider
+@implements IDisposable
 
 <PageTitle>@_pageTitle</PageTitle>
 
@@ -579,6 +580,29 @@
     private bool ScreenAssistOn => ServiceProvider.GetService(typeof(AiScreenAssistService)) is AiScreenAssistService s
                                    && s.IsAvailable(_isReverse ? AiScreenKinds.SalesReturn : AiScreenKinds.SalesInvoice);
 
+    // P8.9.4 (ص22): سياق الشاشة المحيط للفاتورة المحفوظة فقط (المعرّف وحده يصل للخادم)؛ الجديدة غير المحفوظة لا تسجّل شيئاً.
+    private string _assistRoute = "";
+    private void RegisterAssistContext()
+    {
+        try
+        {
+            if (!IsExistingInvoice || ServiceProvider.GetService(typeof(AiScreenAssistService)) is not AiScreenAssistService s) return;
+            _assistRoute = Nav.Uri;
+            s.SetContext(_assistRoute, new AiScreenPayload { Kind = _isReverse ? AiScreenKinds.SalesReturn : AiScreenKinds.SalesInvoice, EntityId = _header.Id },
+                         Tr(_isReverse ? "AIH_K_sales_return" : "AIH_K_sales_invoice") + " " + _header.Invoice_Id);
+        }
+        catch { }
+    }
+
+    public void Dispose()
+    {
+        try
+        {
+            if (_assistRoute.Length > 0 && ServiceProvider.GetService(typeof(AiScreenAssistService)) is AiScreenAssistService s) s.ClearContext(_assistRoute);
+        }
+        catch { }
+    }
+
     private async Task ExplainInvoiceAsync()
     {
         if (ServiceProvider.GetService(typeof(AiScreenAssistService)) is not AiScreenAssistService s || !IsExistingInvoice || Fingerprint() != _baseline) return;
@@ -813,6 +837,7 @@
         {
             await LoadExistingInvoiceAsync(Id.Value);
             _baseline = Fingerprint();
+            RegisterAssistContext();
         }
         else
         {
@@ -1472,6 +1497,7 @@
         _editingLine = null;
         await LoadExistingInvoiceAsync(Id!.Value);
         _baseline = Fingerprint();
+        RegisterAssistContext();
     }
 
     private async Task SaveInvoiceCoreAsync()

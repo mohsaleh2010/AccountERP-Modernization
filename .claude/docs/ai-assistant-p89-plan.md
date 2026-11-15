@@ -701,3 +701,10 @@ Rules:
 - الفحص 4 (التنفيذ): الحمولة تُلتقط عند نجاح `LoadAccountAsync` (التواريخ المفعّلة فعلاً والوضع) فتطابق الكشف المعروض لا الحقول المعدّلة بعده.
 - `CustomerAccountStatement.razor`: زر «اشرح هذا الرصيد» بعد «تحديث». `SalesInvoicePage.razor`: زر «اشرح الفاتورة/المرتجع» قبل زر الفاتورة الإلكترونية، معطّل مع تعديلات غير محفوظة وتلميح `AIH_SaveFirst`.
 - harness `p891test` 87/87 بعد التعديل.
+
+**P8.9.4 (2026-11-15):**
+- الفحص 10: `UserJson` يستدعيه `SendAsync` وحده؛ التقييم يستدعى `SystemPrompt(null, …)`؛ `AiEvalRunner` يبنى `new AiChatGateway(registry, tools)` ⇒ المعاملات الاختيارية آمنة، والبوابة بلا خدمة الشاشة تتجاهل الحمولة (مختبَر).
+- الفحص 11: تبديل تبويبات التطبيق يغيّر الرابط (`TabHost` يستدعى `NavigateTo`) لكن الصفحات تبقى حية (`KeepPanelsAlive`) ولا تُستدعى `Dispose` إلا عند إغلاق التبويب ⇒ بدل سياق واحد فى الجلسة: **قاموس سياق لكل مسار** (`AssistantSessionService.SetAmbient/ClearAmbient/DismissAmbient/AmbientFor` بمفتاح `PathKey`)، والنافذة تأخذ سياق المسار الظاهر. `ScreenContextAmbient` يبقى افتراضياً 1.
+- الخادم: `AiChatGateway.ScreenContextFor` (Attach ⇒ `AiScreenAssistGateway.BuildServer` + كتلة؛ وإلا `AmbientFor`)، `ScreenBlock`، `ReadScreenBlock/ReadScreenFacts`، `ModelUserText` يمدّ الحقائق (≤ 6000)، فقرة «## سياق الشاشة» فى `SystemPrompt` + سطر `Describe` بعد سطر الشاشة. `AnswerAsync` لا يرفق حقائق (السطر المحيط فقط). المنشئ أخذ `AiScreenAssistGateway? screen = null` بدل البانى (يحتاج نفس تحقق الصلاحية).
+- الواجهة: `AiScreenFactsChip` + `AiChatMessage.ScreenFacts`؛ `OnOpenRequested/RequestOpen`؛ شريحة «سياق الشاشة» فوق مربع الكتابة وشريحة «حقائق من الشاشة» فى فقاعة المستخدم؛ `CurrentContext()` فى النافذة واللوحة يضيف الحمولة؛ «اسأل المساعد عن هذا» يعمل (`AskAssistant` ⇒ النافذة أو `/assistant`)؛ الصفحات الثلاث تسجّل السياق بعد العرض وتزيله عند المسح/الإغلاق (فاتورة المبيعات أخذت `@implements IDisposable`).
+- harness `p894test` 22/22 (نص الطلب يُفك من `\uXXXX` قبل الفحص)؛ انحدار P8.1.5 25/25؛ P7.4 136/141 والخمسة الفاشلة كلها توقُّع قديم «60 حالة بذرة» (البذرة 63 منذ P8.3/P8.5) لا علاقة لها بالتغيير.

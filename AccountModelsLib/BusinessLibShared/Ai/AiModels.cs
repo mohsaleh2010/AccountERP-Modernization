@@ -447,6 +447,18 @@ namespace AccountModelsLib
         public AiFeedbackView Feedback { get; set; }
         /// <summary>P8.1.5: كتلة «موجز يومى» (بطاقة «افتح الموجز»).</summary>
         public List<AiBriefLinkView> Briefs { get; set; } = new List<AiBriefLinkView>();
+        /// <summary>P8.9.4: رسالة مستخدم بحقائق شاشة مرفقة (شريحة «حقائق من الشاشة»).</summary>
+        public AiScreenFactsChip ScreenFacts { get; set; }
+    }
+
+    /// <summary>P8.9.4 (ص20): ملخص كتلة screen_facts للعرض (بلا الأرقام).</summary>
+    public class AiScreenFactsChip
+    {
+        public string Kind { get; set; } = "";
+        public string Question { get; set; } = "";
+        public string Subject { get; set; } = "";
+        public string From { get; set; } = "";
+        public string To { get; set; } = "";
     }
 
     // ───────────── P6: المرفقات والاستخراج ─────────────

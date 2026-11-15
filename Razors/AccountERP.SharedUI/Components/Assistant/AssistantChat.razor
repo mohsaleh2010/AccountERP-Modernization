@@ -10,6 +10,7 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager Nav
 @inject IDialogService DialogService
+@inject IServiceProvider ServiceProvider
 @implements IAsyncDisposable
 
 <style>
@@ -69,6 +70,11 @@
     .aic-sugg button:hover { border-color: var(--mud-palette-primary); background: color-mix(in srgb, var(--mud-palette-primary) 6%, var(--mud-palette-surface)); }
     .aic-sugg button:focus-visible, .aic-send:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
     .aic-sugg .mud-icon-root { color: var(--mud-palette-primary); flex: none; }
+    .aic-ctxchip { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; padding: 2px 4px 2px 10px; border-radius: 999px; font-size: .82rem;
+                   border: 1px solid var(--mud-palette-primary); color: var(--mud-palette-text-primary); background: color-mix(in srgb, var(--mud-palette-primary) 8%, transparent); width: fit-content; max-width: 100%; }
+    .aic-ctxchip .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .aic-ctxchip .mud-icon-button { min-width: 44px; min-height: 44px; }
+    .aic-sfacts { display: flex; align-items: center; gap: 6px; font-size: .8rem; opacity: .9; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px dashed currentColor; }
     .aic-composer { flex: none; padding: 10px 16px 14px; border-top: 1px solid var(--mud-palette-lines-default); background: var(--mud-palette-surface); }
     .aic-box { display: flex; align-items: flex-end; gap: 8px; max-width: 860px; margin-inline: auto; padding: 6px 6px 6px 12px; border-radius: 16px;
                border: 1px solid var(--mud-palette-lines-inputs); background: var(--mud-palette-background); }
@@ -254,6 +260,11 @@
                         {
                             <div class="aic-row user" @key="m.Id">
                                 <div class="aic-bubble">
+                                    @if (m.ScreenFacts != null)
+                                    {
+                                        @* P8.9.4 (ص20): حقائق محسوبة من الشاشة أُرفقت بالرسالة *@
+                                        <div class="aic-sfacts"><MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Size="Size.Small" aria-hidden="true" /><span>@Tr("AIH_MsgFacts", FactsLabel(m.ScreenFacts))</span></div>
+                                    }
                                     @if (m.Text.Length > 0) { @m.Text }
                                     @if (m.Attachments.Count > 0)
                                     {
@@ -603,6 +614,16 @@
                                OnClick="() => Chat.SetArchivedAsync(Chat.ConversationId, false)">@Tr("AIC_Unarchive")</MudButton>
                 </div>
             }
+            @if (!Chat.ConversationArchived && AmbientNow is { } amb)
+            {
+                @* P8.9.4 (ص22): سياق الشاشة المحيط — محددات فقط، ظاهرة وقابلة للإزالة *@
+                <div class="aic-ctxchip" title="@Tr("AIH_ChipHint")">
+                    <MudIcon Icon="@Icons.Material.Outlined.CenterFocusStrong" Size="Size.Small" aria-hidden="true" />
+                    <span class="t">@Tr("AIH_Chip", amb.Label)</span>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-label="@Tr("AIH_ChipRemove")" Title="@Tr("AIH_ChipRemove")"
+                                   OnClick="@(() => Chat.DismissAmbient(Ctx().Route))" />
+                </div>
+            }
             @if (Chat.PendingAttachments.Count > 0 || Chat.IsUploading)
             {
                 <div class="aic-pending" aria-label="@Tr("AIC_FilesPending")">
@@ -855,6 +876,28 @@
     private long _askFor;
 
     private AiScreenContext Ctx() => ContextProvider?.Invoke() ?? new AiScreenContext { Language = LangService.CurrentCultureInfo.Name };
+
+    // ───── P8.9.4: سياق الشاشة ─────
+    /// <summary>سياق المسار الظاهر إن كانت الميزة والسياق المحيط مفعّلين ويملك المستخدم نوع الشاشة.</summary>
+    private (AiScreenPayload Payload, string Label)? AmbientNow
+    {
+        get
+        {
+            if (ContextProvider == null || ServiceProvider.GetService(typeof(AiScreenAssistService)) is not AiScreenAssistService s) return null;
+            var a = Chat.AmbientFor(Ctx().Route);
+            if (a == null || !s.State.Ambient || !s.IsAvailable(a.Value.Payload.Kind)) return null;
+            return a;
+        }
+    }
+
+    private string FactsLabel(AiScreenFactsChip c)
+    {
+        var parts = new List<string> { Tr("AIH_K_" + c.Kind) };
+        if (!string.IsNullOrWhiteSpace(c.Subject)) parts.Add(c.Subject);
+        if (c.From.Length > 0 && c.To.Length > 0 && c.From != c.To) parts.Add(Tr("AIH_Ctx_Range", c.From, c.To));
+        else if (c.From.Length > 0) parts.Add(c.From);
+        return string.Join(" — ", parts);
+    }
 
     /// <summary>الإجابة المسجّلة تحتوى هذا الخيار (للعرض بعد الإجابة).</summary>
     private static bool AnswerHas(AiAskView a, string opt) => a.Selected.Contains(opt, StringComparer.OrdinalIgnoreCase);
