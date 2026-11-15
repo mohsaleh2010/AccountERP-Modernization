@@ -1,0 +1,447 @@
+@* 🤖 P8.4.4 (ai-assistant-p84-plan.md ش18–ش21، §5): «شذوذ القيود» — قيود غير معتادة كشفتها قواعد ثابتة (AiAnomalyScanner). للمراجعة فقط:
+   الحالة على صفوف AI_Anomalies وحدها، والقيد نفسه لا يُمس. كل قراءة/تعديل عبر AiAnomalyService ⇒ IAiAnomalyGateway (ويب فقط — ش31)
+   بصلاحية الشاشة وفروع المستخدم. التصميم بنمط EntriesIntegrityPage (inv-*) وحسب ui-ux-pro-max: صفوف ≥ 44px، تركيز ظاهر،
+   الخطورة لون + أيقونة + نص، aria-expanded، منطقة حية لنتيجة الإجراء، تمرير أفقى على الهاتف مع تثبيت عمود الرقم. *@
+@page "/accounts/entries-anomalies"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountModelsLib.BusinessLibShared.GeneralLedger
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using Microsoft.Extensions.DependencyInjection
+@inject LanguageService LangService
+@inject IServiceProvider ServiceProvider
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>@Tr("AIJ_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .ja-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+    .ja-links { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ja-links a { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 10px; color: var(--mud-palette-primary); text-decoration: none; }
+    .ja-links a:hover { background: var(--mud-palette-action-default-hover); }
+    .ja-links a:focus-visible, .ja-row:focus-visible, .ja-exp:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .ja-gap { margin-top: 16px; }
+    .ja-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .ja-kpi { border: 1px solid var(--mud-palette-lines-default); border-radius: 14px; padding: 12px 16px; background: var(--mud-palette-surface); }
+    .ja-kpi .v { font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .ja-kpi .l { color: var(--mud-palette-text-secondary); font-size: .85rem; }
+    .ja-kpi.high .v { color: var(--mud-palette-error); }
+    .ja-last { margin-top: 8px; font-size: .85rem; color: var(--mud-palette-text-secondary); }
+    .ja-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: start; }
+    @@media (max-width: 1100px) { .ja-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 599px) { .ja-filters, .ja-kpis { grid-template-columns: minmax(0, 1fr); } }
+    .ja-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .ja-actions .mud-button-root { min-height: 44px; }
+    .ja-scroll { overflow-x: auto; }
+    .ja-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .875rem; }
+    .ja-table th { text-align: start; font-weight: 600; color: var(--mud-palette-text-secondary); padding: 8px; border-bottom: 1px solid var(--mud-palette-lines-default); white-space: nowrap; background: var(--mud-palette-surface); }
+    .ja-table td { padding: 6px 8px; border-bottom: 1px solid var(--mud-palette-lines-default); vertical-align: middle; background: var(--mud-palette-surface); }
+    .ja-row { min-height: 44px; cursor: pointer; }
+    .ja-row:hover td { background: var(--mud-palette-action-default-hover); }
+    .ja-table td.n { text-align: end; font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: plaintext; white-space: nowrap; }
+    .ja-sticky { position: sticky; inset-inline-start: 0; z-index: 1; }
+    .ja-chip { display: inline-flex; align-items: center; gap: 4px; font-size: .75rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--mud-palette-background-gray); white-space: nowrap; margin: 2px; }
+    .ja-sev { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; white-space: nowrap; }
+    .ja-sev.high { color: var(--mud-palette-error); }
+    .ja-sev.medium { color: var(--mud-palette-warning-darken); }
+    .ja-sev.info { color: var(--mud-palette-info); }
+    .ja-flag { color: var(--mud-palette-warning-darken); }
+    .ja-detail { padding: 12px 16px 16px; background: var(--mud-palette-background-gray); border-bottom: 1px solid var(--mud-palette-lines-default); }
+    .ja-why { margin: 0 0 12px; padding-inline-start: 18px; }
+    .ja-why li { margin-bottom: 6px; line-height: 1.5; }
+    .ja-lines { width: 100%; border-collapse: collapse; font-size: .85rem; margin-bottom: 12px; }
+    .ja-lines th, .ja-lines td { padding: 4px 8px; border-bottom: 1px solid var(--mud-palette-lines-default); text-align: start; }
+    .ja-lines td.n { text-align: end; direction: ltr; unicode-bidi: plaintext; font-variant-numeric: tabular-nums; }
+    .ja-lines tr.flag td { background: var(--mud-palette-warning-lighten); color: var(--mud-palette-dark); }
+    .ja-explain { border-inline-start: 3px solid var(--mud-palette-primary); padding: 8px 12px; margin: 8px 0 12px; background: var(--mud-palette-surface); border-radius: 6px; white-space: pre-line; unicode-bidi: plaintext; }
+    .ja-explain .t { font-size: .75rem; font-weight: 700; color: var(--mud-palette-primary); margin-bottom: 4px; }
+    .ja-bar { position: sticky; bottom: 0; z-index: 2; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 8px 12px; border-radius: 12px; background: var(--mud-palette-primary); color: var(--mud-palette-primary-text); }
+    .ja-pager { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 8px; flex-wrap: wrap; }
+    .ja-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    @@media (prefers-reduced-motion: reduce) { .ja-row td, .ja-links a { transition: none !important; } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-card ja-head">
+        <div>
+            <h1 class="inv-title">@Tr("AIJ_Title")</h1>
+            <div class="mud-text-secondary">@Tr("AIJ_Sub")</div>
+        </div>
+        <nav class="ja-links" aria-label="@Tr("AIJ_Title")">
+            <a href="/accounts/entries-integrity"><MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" aria-hidden="true" />@Tr("AIJ_LinkIntegrity")</a>
+            @if (_svc?.CanManage == true)
+            {
+                <a href="/settings/ai"><MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" aria-hidden="true" />@Tr("AIJ_LinkSettings")</a>
+            }
+        </nav>
+    </div>
+
+    <div class="ja-sr" role="status" aria-live="polite">@_live</div>
+
+    @if (_svc == null || !_svc.HasGateway)
+    {
+        <div class="inv-card ja-gap"><MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("AIJ_NotAvailable")</MudAlert></div>
+    }
+    else if (!_svc.IsAvailable)
+    {
+        <div class="inv-card ja-gap"><MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@Tr("AIJ_ErrNoPermission")</MudAlert></div>
+    }
+    else if (_summary == null)
+    {
+        @if (_error != null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="ja-gap" role="alert">@_error</MudAlert>
+        }
+        else
+        {
+            <MudProgressLinear Indeterminate="true" Class="ja-gap" />
+        }
+    }
+    else if (!_summary.Enabled && _summary.NewCount == 0 && _summary.LastRunAt == null)
+    {
+        <div class="inv-card ja-gap"><MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("AIJ_EmptyDisabled")</MudAlert></div>
+    }
+    else
+    {
+        <div class="ja-kpis ja-gap">
+            <div class="ja-kpi"><div class="v">@_summary.NewCount.ToString("N0", Inv)</div><div class="l">@Tr("AIJ_KpiNew")</div></div>
+            <div class="ja-kpi high"><div class="v">@_summary.HighCount.ToString("N0", Inv)</div><div class="l">@Tr("AIJ_KpiHigh")</div></div>
+            <div class="ja-kpi"><div class="v">@_summary.ReviewedThisMonth.ToString("N0", Inv)</div><div class="l">@Tr("AIJ_KpiReviewed")</div></div>
+        </div>
+        <div class="ja-last">
+            @if (_summary.LastRunAt == null) { @Tr("AIJ_NeverRun") }
+            else if (_summary.LastRunStatus == AiAnomalyRunStatus.Failed) { <span style="color:var(--mud-palette-error)">@Tr("AIJ_LastRunFailed", AiAnomalyText.Stamp(_summary.LastRunAt))</span> }
+            else { @Tr("AIJ_LastRun", AiAnomalyText.Stamp(_summary.LastRunAt)) }
+            @if (!_summary.Enabled) { <span> — @Tr("AIJ_EmptyDisabled")</span> }
+        </div>
+
+        @* ─── الفلاتر ─── *@
+        <div class="inv-card ja-gap">
+            <div class="ja-filters">
+                <MudSelect T="string" @bind-Value="_f.Status" Label="@Tr("AIJ_FStatus")" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    <MudSelectItem T="string" Value="@("")">@Tr("AIJ_FAll")</MudSelectItem>
+                    @foreach (var st in AiAnomalyStatus.All) { <MudSelectItem T="string" Value="@st">@Tr("AIJ_St_" + st)</MudSelectItem> }
+                </MudSelect>
+                <MudSelect T="string" @bind-Value="_f.RuleCode" Label="@Tr("AIJ_FRule")" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    <MudSelectItem T="string" Value="@("")">@Tr("AIJ_FAll")</MudSelectItem>
+                    @foreach (var r in AiAnomalyRuleCodes.All) { <MudSelectItem T="string" Value="@r">@Tr("AIJ_Rule_" + r)</MudSelectItem> }
+                </MudSelect>
+                <MudSelect T="string" @bind-Value="_f.Severity" Label="@Tr("AIJ_FSeverity")" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    <MudSelectItem T="string" Value="@("")">@Tr("AIJ_FAll")</MudSelectItem>
+                    @foreach (var sv in new[] { AiAnomalySeverity.High, AiAnomalySeverity.Medium, AiAnomalySeverity.Info }) { <MudSelectItem T="string" Value="@sv">@Tr("AIJ_Sev_" + sv)</MudSelectItem> }
+                </MudSelect>
+                <MudSelect T="long" @bind-Value="_f.BranchId" Label="@Tr("AIJ_FBranch")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                           ToStringFunc="@(v => v == 0 ? Tr("AIJ_FAll") : _branches.FirstOrDefault(b => b.Id == v).Name ?? "")">
+                    <MudSelectItem T="long" Value="0L">@Tr("AIJ_FAll")</MudSelectItem>
+                    @foreach (var b in _branches) { <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem> }
+                </MudSelect>
+                <MudDatePicker @bind-Date="_f.From" Label="@Tr("AIJ_FFrom")" Variant="Variant.Outlined" Margin="Margin.Dense" Editable="true" DateFormat="yyyy-MM-dd" Clearable="true" />
+                <MudDatePicker @bind-Date="_f.To" Label="@Tr("AIJ_FTo")" Variant="Variant.Outlined" Margin="Margin.Dense" Editable="true" DateFormat="yyyy-MM-dd" Clearable="true" />
+                <MudNumericField T="long?" @bind-Value="_f.EntryNo" Label="@Tr("AIJ_FEntryNo")" Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true" Clearable="true" />
+                <MudSwitch T="bool" @bind-Value="_f.IncludeBackfill" Color="Color.Primary" Label="@Tr("AIJ_FBackfill")" />
+            </div>
+            <div class="ja-actions mt-3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FilterAlt" Disabled="_busy" OnClick="() => LoadPageAsync(0)">@Tr("AIJ_FSearch")</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.FilterAltOff" Disabled="_busy" OnClick="ResetAsync">@Tr("AIJ_FReset")</MudButton>
+            </div>
+            @if (_busy) { <MudProgressLinear Indeterminate="true" Class="mt-2" /> }
+        </div>
+
+        @if (_error != null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="ja-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="() => _error = null">@_error</MudAlert>
+        }
+
+        @* ─── الجدول ─── *@
+        <div class="inv-card ja-gap">
+            @if (_page.Items.Count == 0)
+            {
+                <div class="mud-text-secondary" style="padding:16px 0;text-align:center;">@Tr("AIJ_EmptyNone")</div>
+            }
+            else
+            {
+                <div class="ja-scroll">
+                    <table class="ja-table">
+                        <thead>
+                            <tr>
+                                <th class="ja-sticky"><MudCheckBox T="bool" Value="AllSelected" ValueChanged="SelectAll" Dense="true" aria-label="@Tr("AIJ_ActSelectAll")" /></th>
+                                <th>@Tr("AIJ_ColEntryNo")</th><th>@Tr("AIJ_ColDate")</th><th>@Tr("AIJ_ColJournal")</th><th>@Tr("AIJ_ColSource")</th>
+                                <th>@Tr("AIJ_ColBranch")</th><th>@Tr("AIJ_ColTotal")</th><th>@Tr("AIJ_ColRules")</th><th>@Tr("AIJ_ColSeverity")</th><th>@Tr("AIJ_ColStatus")</th><th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var e in _page.Items)
+                            {
+                                var entry = e;
+                                bool open = _open == entry.EntryId;
+                                <tr class="ja-row" @key="entry.EntryId">
+                                    <td class="ja-sticky" @onclick:stopPropagation="true">
+                                        <MudCheckBox T="bool" Value="_sel.Contains(entry.EntryId)" ValueChanged="v => Select(entry.EntryId, v)" Dense="true" aria-label="@Tr("AIJ_ActSelect", entry.EntryNo?.ToString(Inv) ?? "")" />
+                                    </td>
+                                    <td class="n" @onclick="() => ToggleAsync(entry.EntryId)">@(entry.EntryNo?.ToString(Inv) ?? "—")</td>
+                                    <td class="n" @onclick="() => ToggleAsync(entry.EntryId)">@AiAnomalyText.Day(entry.EntryDate)</td>
+                                    <td @onclick="() => ToggleAsync(entry.EntryId)">@(entry.JournalName ?? entry.JournalCode.ToString(Inv))</td>
+                                    <td @onclick="() => ToggleAsync(entry.EntryId)">@Source(entry.ReferenceType)</td>
+                                    <td @onclick="() => ToggleAsync(entry.EntryId)">@entry.BranchName</td>
+                                    <td class="n" @onclick="() => ToggleAsync(entry.EntryId)">@AiAnomalyText.Money(entry.EntryTotal)</td>
+                                    <td @onclick="() => ToggleAsync(entry.EntryId)">
+                                        @foreach (var r in entry.Rules) { <span class="ja-chip">@Tr("AIJ_Rule_" + r.RuleCode)</span> }
+                                        @if (entry.IsBackfill) { <span class="ja-chip"><MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" aria-hidden="true" />@Tr("AIJ_ChipBackfill")</span> }
+                                        @if (entry.Missing) { <span class="ja-chip" style="color:var(--mud-palette-error)">@Tr("AIJ_ChipMissing")</span> }
+                                        else if (entry.Changed) { <span class="ja-chip" style="color:var(--mud-palette-warning-darken)">@Tr("AIJ_ChipChanged")</span> }
+                                    </td>
+                                    <td @onclick="() => ToggleAsync(entry.EntryId)">
+                                        <span class="ja-sev @entry.Severity"><MudIcon Icon="@AiAnomalyText.SeverityIcon(entry.Severity)" Size="Size.Small" aria-hidden="true" />@Tr("AIJ_Sev_" + entry.Severity)</span>
+                                    </td>
+                                    <td @onclick="() => ToggleAsync(entry.EntryId)">@Tr("AIJ_St_" + entry.Status)</td>
+                                    <td>
+                                        <MudIconButton Class="ja-exp" Icon="@(open ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" OnClick="() => ToggleAsync(entry.EntryId)"
+                                                       aria-expanded="@(open ? "true" : "false")" aria-label="@Tr("AIJ_ActExpand")" Style="min-width:44px;min-height:44px;" />
+                                    </td>
+                                </tr>
+                                @if (open)
+                                {
+                                    <tr>
+                                        <td colspan="11" class="ja-detail">
+                                            @if (_detail == null || _detail.Entry.EntryId != entry.EntryId)
+                                            {
+                                                <MudProgressLinear Indeterminate="true" />
+                                            }
+                                            else
+                                            {
+                                                <MudText Typo="Typo.subtitle2" Class="mb-1">@Tr("AIJ_Why")</MudText>
+                                                <ul class="ja-why">
+                                                    @foreach (var r in _detail.Entry.Rules)
+                                                    {
+                                                        <li><strong>@Tr("AIJ_Rule_" + r.RuleCode):</strong> @AiAnomalyText.Why(Lang, LangService.CurrentCultureInfo, r)</li>
+                                                    }
+                                                </ul>
+                                                @if (_explaining)
+                                                {
+                                                    <div class="ja-explain"><div class="t">@Tr("AIJ_ExplainTitle")</div><MudProgressLinear Indeterminate="true" Class="my-1" />@Tr("AIJ_Explaining")</div>
+                                                }
+                                                else if (_detail.Explain != null)
+                                                {
+                                                    @if (_detail.Explain.Source == AiBriefNarrativeSource.Model && !string.IsNullOrWhiteSpace(_detail.Explain.ExplainText))
+                                                    {
+                                                        <div class="ja-explain" dir="auto"><div class="t">@Tr("AIJ_ExplainTitle") · @_detail.Explain.ModelName</div>@_detail.Explain.ExplainText</div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="mud-text-secondary mb-2" role="note">@ExplainNote(_detail.Explain.Source)</div>
+                                                    }
+                                                }
+                                                <MudText Typo="Typo.subtitle2" Class="mb-1">@Tr("AIJ_Lines")</MudText>
+                                                @if (_detail.Lines.Count == 0)
+                                                {
+                                                    <div class="mud-text-secondary mb-2">@Tr("AIJ_ChipMissing")</div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="ja-scroll">
+                                                        <table class="ja-lines">
+                                                            <thead><tr><th>@Tr("AIJ_LnAccount")</th><th>@Tr("AIJ_LnDebit")</th><th>@Tr("AIJ_LnCredit")</th><th>@Tr("AIJ_LnNotes")</th></tr></thead>
+                                                            <tbody>
+                                                                @foreach (var l in _detail.Lines)
+                                                                {
+                                                                    <tr class="@(l.Flagged ? "flag" : "")">
+                                                                        <td>
+                                                                            @if (l.Flagged) { <MudIcon Icon="@Icons.Material.Filled.Flag" Size="Size.Small" Class="ja-flag" aria-label="@Tr("AIJ_LnFlagged")" /> }
+                                                                            @(string.IsNullOrEmpty(l.AccountNo) ? "" : l.AccountNo + " — ")@l.AccountName
+                                                                        </td>
+                                                                        <td class="n">@(l.DebitEquivalent == 0 ? "" : AiAnomalyText.Money(l.DebitEquivalent))</td>
+                                                                        <td class="n">@(l.CreditEquivalent == 0 ? "" : AiAnomalyText.Money(l.CreditEquivalent))</td>
+                                                                        <td dir="auto">@l.Notes</td>
+                                                                    </tr>
+                                                                }
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                }
+                                                @if (_detail.Entry.ReviewedAt.HasValue)
+                                                {
+                                                    <div class="mud-text-secondary mb-2">@Tr("AIJ_ReviewedBy", _detail.Entry.ReviewedByName ?? "", AiAnomalyText.Stamp(_detail.Entry.ReviewedAt))
+                                                        @if (!string.IsNullOrWhiteSpace(_detail.Entry.ReviewNote)) { <span> — «@_detail.Entry.ReviewNote»</span> }
+                                                    </div>
+                                                }
+                                                <MudTextField T="string" @bind-Value="_note" Label="@Tr("AIJ_Note")" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="500" Counter="500" Class="mb-2" />
+                                                <div class="ja-actions">
+                                                    @if (_detail.Entry.CanOpen)
+                                                    {
+                                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew"
+                                                                   Href="@($"{AiAnomalyConst.EntryRoute}?id={entry.EntryId.ToString(Inv)}")">@Tr("AIJ_ActOpen")</MudButton>
+                                                    }
+                                                    @if (_detail.Entry.Status == AiAnomalyStatus.New)
+                                                    {
+                                                        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.TaskAlt" Disabled="_acting" OnClick="() => SetAsync(new[] { entry.EntryId }, AiAnomalyStatus.Reviewed)">@Tr("AIJ_ActReviewed")</MudButton>
+                                                        <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.DoNotDisturbOn" Disabled="_acting" OnClick="() => SetAsync(new[] { entry.EntryId }, AiAnomalyStatus.Dismissed)">@Tr("AIJ_ActDismiss")</MudButton>
+                                                    }
+                                                    else
+                                                    {
+                                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Replay" Disabled="_acting" OnClick="() => SetAsync(new[] { entry.EntryId }, AiAnomalyStatus.New)">@Tr("AIJ_ActReopen")</MudButton>
+                                                    }
+                                                    <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoAwesome" Disabled="@(_explaining || _acting)" OnClick="() => ExplainAsync(false)">@Tr("AIJ_ActExplain")</MudButton>
+                                                    @if (_svc.CanManage && _detail.Explain?.Source == AiBriefNarrativeSource.Model)
+                                                    {
+                                                        <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" Disabled="@(_explaining || _acting)" OnClick="() => ExplainAsync(true)">@Tr("AIJ_ExplainRegenerate")</MudButton>
+                                                    }
+                                                </div>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="ja-pager">
+                    <span class="mud-text-secondary" style="direction:ltr;unicode-bidi:plaintext;">@Tr("AIJ_ShowingPage", (_f.Page * PageSize + 1).ToString(Inv), Math.Min(_page.Total, (_f.Page + 1) * PageSize).ToString(Inv), _page.Total.ToString(Inv))</span>
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(_busy || _f.Page == 0)" OnClick="() => LoadPageAsync(_f.Page - 1)" Style="min-height:44px;">@Tr("AIJ_Prev")</MudButton>
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="@(_busy || (_f.Page + 1) * PageSize >= _page.Total)" OnClick="() => LoadPageAsync(_f.Page + 1)" Style="min-height:44px;">@Tr("AIJ_Next")</MudButton>
+                </div>
+            }
+        </div>
+
+        @if (_sel.Count > 0)
+        {
+            <div class="ja-bar ja-gap" role="region" aria-label="@Tr("AIJ_ActReviewSelected", _sel.Count)">
+                <MudButton Variant="Variant.Filled" Color="Color.Surface" StartIcon="@Icons.Material.Filled.DoneAll" Disabled="_acting" OnClick="() => SetAsync(_sel.ToList(), AiAnomalyStatus.Reviewed)" Style="min-height:44px;">
+                    @Tr("AIJ_ActReviewSelected", _sel.Count)
+                </MudButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="() => _sel.Clear()" aria-label="@Tr("AIJ_Set_BackfillCancel")" Style="min-width:44px;min-height:44px;" />
+            </div>
+        }
+    }
+</div>
+</MudContainer>
+
+@code {
+    private const int PageSize = AiAnomalyConst.PageSize;
+    private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+
+    private AiAnomalyService? _svc;
+    private AiAnomalySummary? _summary;
+    private AiAnomalyFilter _f = new();
+    private AiAnomalyPage _page = new();
+    private List<(long Id, string Name)> _branches = new();
+    private readonly HashSet<long> _sel = new();
+    private long _open;
+    private AiAnomalyEntryDetail? _detail;
+    private string? _note, _error, _live;
+    private bool _busy, _acting, _explaining;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _svc = ServiceProvider.GetService<AiAnomalyService>();
+        LangService.OnLanguageChanged += OnLang;
+        if (_svc == null || !_svc.IsAvailable) return;
+        try
+        {
+            _branches = await _svc.BranchesAsync();
+            _summary = await _svc.SummaryAsync();
+            await LoadPageAsync(0);
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+    }
+
+    private void OnLang() => InvokeAsync(StateHasChanged);
+    public void Dispose() => LangService.OnLanguageChanged -= OnLang;
+
+    private async Task LoadPageAsync(int page)
+    {
+        if (_svc == null) return;
+        _busy = true; _error = null;
+        try
+        {
+            _f.Page = Math.Max(0, page);
+            var f = new AiAnomalyFilter
+            {
+                Status = _f.Status ?? "", RuleCode = string.IsNullOrEmpty(_f.RuleCode) ? null : _f.RuleCode, Severity = string.IsNullOrEmpty(_f.Severity) ? null : _f.Severity,
+                BranchId = _f.BranchId, From = _f.From, To = _f.To, EntryNo = _f.EntryNo, IncludeBackfill = _f.IncludeBackfill, Page = _f.Page,
+            };
+            _page = await _svc.ListAsync(f);
+            _sel.IntersectWith(_page.Items.Select(i => i.EntryId));
+            if (_open != 0 && _page.Items.All(i => i.EntryId != _open)) { _open = 0; _detail = null; }
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task ResetAsync()
+    {
+        _f = new AiAnomalyFilter();
+        await LoadPageAsync(0);
+    }
+
+    private async Task ToggleAsync(long entryId)
+    {
+        if (_svc == null) return;
+        if (_open == entryId) { _open = 0; _detail = null; return; }
+        _open = entryId; _detail = null; _note = null;
+        try { _detail = await _svc.GetEntryAsync(entryId); _note = _detail.Entry.ReviewNote; }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); _open = 0; }
+    }
+
+    private bool AllSelected => _page.Items.Count > 0 && _page.Items.All(i => _sel.Contains(i.EntryId));
+    private void SelectAll(bool on) { foreach (var i in _page.Items) { if (on) _sel.Add(i.EntryId); else _sel.Remove(i.EntryId); } }
+    private void Select(long id, bool on) { if (on) _sel.Add(id); else _sel.Remove(id); }
+
+    private async Task SetAsync(IList<long> ids, string status)
+    {
+        if (_svc == null || _acting || ids.Count == 0) return;
+        _acting = true; _error = null;
+        try
+        {
+            string? note = ids.Count == 1 && _open == ids[0] ? _note : null;
+            await _svc.SetStatusAsync(ids, status, note ?? "");
+            _live = Tr("AIJ_Saved");
+            Snackbar.Add(Tr("AIJ_Saved"), Severity.Success);
+            foreach (var id in ids) _sel.Remove(id);
+            _summary = await _svc.SummaryAsync();
+            long keepOpen = _open;
+            await LoadPageAsync(_f.Page);
+            if (keepOpen != 0 && _page.Items.Any(i => i.EntryId == keepOpen)) { _detail = await _svc.GetEntryAsync(keepOpen); _open = keepOpen; }
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+        finally { _acting = false; }
+    }
+
+    private async Task ExplainAsync(bool regenerate)
+    {
+        if (_svc == null || _detail == null || _explaining) return;
+        _explaining = true;
+        long id = _detail.Entry.EntryId;
+        try
+        {
+            var ex = await _svc.ExplainAsync(id, regenerate);
+            if (_detail != null && _detail.Entry.EntryId == id) _detail.Explain = ex;
+            _live = ex.Source == AiBriefNarrativeSource.Model ? Tr("AIJ_ExplainTitle") : ExplainNote(ex.Source);
+        }
+        catch (Exception e)
+        {
+            if (_detail != null) _detail.Explain = new AiAnomalyExplainRow { Entry_Id = id, Source = AiBriefNarrativeSource.Error };
+            _live = _svc.ErrorText(e);
+        }
+        finally { _explaining = false; }
+    }
+
+    private string ExplainNote(string source) => source switch
+    {
+        AiBriefNarrativeSource.Capped => Tr("AIJ_ExplainCapped"),
+        AiBriefNarrativeSource.Off => Tr("AIJ_ExplainOff"),
+        _ => Tr("AIJ_ExplainUnavailable"),
+    };
+
+    private string Source(int referenceType) =>
+        referenceType == 0 ? Tr("AIJ_Src_Manual")
+        : LangService.IsRtl ? EntrySourceRegistry.NameOf(referenceType) : Tr("AIJ_Src_Auto", referenceType.ToString(Inv));
+
+    private string Tr(string key, params object[] args) => AiAnomalyText.T(Lang, LangService.CurrentCultureInfo, key, args);
+}

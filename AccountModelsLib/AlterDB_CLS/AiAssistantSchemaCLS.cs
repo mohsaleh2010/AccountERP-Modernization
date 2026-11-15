@@ -485,6 +485,7 @@ CREATE NONCLUSTERED INDEX [IX_AI_AnomalyRuns_Status] ON [dbo].[AI_AnomalyRuns]([
             Step("AiSettingsMenu", () => SettingsMenu(opp));
             Step("AiAssistantMenu", () => AssistantMenu(opp));
             Step("AiBriefMenu", () => BriefMenu(opp));   // P8.1
+            Step("AiAnomaliesMenu", () => AnomaliesMenu(opp));   // P8.4.4
             Step("AiReadViews", () => AiReadViewsCLS.Ensure(opp));   // P2: schema ai وViews القراءة
         }
 
@@ -508,6 +509,34 @@ INSERT INTO SysConfigMenus (Id, Parent_Id, KeysData, Description, Description_En
                             POS, Market, Factory, Tourism, AlFawzan, Client_A, Client_B, UserSells, IsShowToUser, RazorPath)
 VALUES ({id}, {parent.Id}, {E(key)}, {E(desc)}, {E("Daily brief")}, {E("Synthèse quotidienne")}, {E("Tagesbriefing")}, 2, {E("1")}, {E("1")}, {E(desc)},
         {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, 1, {E("/assistant/brief")})");
+            var admins = opp.db.Database.SqlQueryRaw<long>("SELECT Id AS Value FROM USER_DETAILES WHERE ISNULL(AdminFlage, 0) = 1").ToList();
+            foreach (long user in admins)
+                opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenusPERMATIONS (Id, Menu_ID, Parent_Id, USER_ID, PERMATION, PROJECT_ID, IsShowToUser)
+VALUES ({CallSnowflakeIdGenerate.GenerateNewId()}, {id}, {parent.Id}, {user}, {E("1")}, 2, 1)");
+        }
+
+        /// <summary>
+        /// P8.4.4 (ai-assistant-p84-plan.md ش20): «شذوذ القيود» تحت «القيود» (ToolStripMenuAccountEntry) بجوار «فحص سلامة القيود»، يفتح
+        /// /accounts/entries-anomalies بأسماء اللغات الأربع. للمديرين فقط افتراضياً والباقون من شاشة الصلاحيات. إدراج فقط، لا يتكرر؛
+        /// قاعدة بلا أب «القيود» ⇒ لا إدراج (نفس EntriesIntegrityMenu).
+        /// </summary>
+        private static void AnomaliesMenu(operations opp)
+        {
+            const string key = AiAnomalyConst.MenuKey;
+            const string desc = "شذوذ القيود";
+            var menus = opp.db.Database.SqlQueryRaw<StoreTransferPolicy.KeyValueRow>("SELECT Id, KeysData, Value FROM SysConfigMenus").ToList();
+            string Key(StoreTransferPolicy.KeyValueRow r) => r.KeysData == null ? "" : Common.DecryptMe(r.KeysData).Trim();
+            if (menus.Any(m => Key(m) == key)) return;
+            var parent = menus.FirstOrDefault(m => Key(m) == "ToolStripMenuAccountEntry");
+            if (parent == null) return;
+            string E(string s) => Common.EncryptMe(s);
+            long id = menus.Max(m => m.Id) + 1;
+            opp.db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO SysConfigMenus (Id, Parent_Id, KeysData, Description, Description_En, Description_Fr, Description_DE, PROJECT_ID, Value, DefaultValue, DefaultDescription,
+                            POS, Market, Factory, Tourism, AlFawzan, Client_A, Client_B, UserSells, IsShowToUser, RazorPath)
+VALUES ({id}, {parent.Id}, {E(key)}, {E(desc)}, {E("Entry anomalies")}, {E("Anomalies des écritures")}, {E("Buchungsauffälligkeiten")}, 2, {E("1")}, {E("1")}, {E(desc)},
+        {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, {E("1")}, 1, {E(AiAnomalyConst.Route)})");
             var admins = opp.db.Database.SqlQueryRaw<long>("SELECT Id AS Value FROM USER_DETAILES WHERE ISNULL(AdminFlage, 0) = 1").ToList();
             foreach (long user in admins)
                 opp.db.Database.ExecuteSqlInterpolated($@"
