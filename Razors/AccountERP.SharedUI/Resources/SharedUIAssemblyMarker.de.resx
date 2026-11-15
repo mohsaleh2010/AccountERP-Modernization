@@ -5784,4 +5784,34 @@
   <data name="AIS_PrefShortcutsHint" xml:space="preserve"><value>Wenn deaktiviert, bleibt die Suchschaltfläche in der oberen Leiste</value></data>
   <data name="AIS_ShortcutCtrlK" xml:space="preserve"><value>Strg K</value></data>
   <data name="AIS_ShortcutCmdK" xml:space="preserve"><value>⌘ K</value></data>
+  <data name="AIEI_Button" xml:space="preserve"><value>E-Rechnungsfehler erklären</value></data>
+  <data name="AIEI_Title" xml:space="preserve"><value>Erklärung des E-Rechnungsfehlers</value></data>
+  <data name="AIEI_TitleFor" xml:space="preserve"><value>Erklärung des E-Rechnungsfehlers — Rechnung {0}</value></data>
+  <data name="AIEI_StateNotSent" xml:space="preserve"><value>Diese Rechnung wurde noch nicht an das Steuerportal gesendet</value></data>
+  <data name="AIEI_StateSent" xml:space="preserve"><value>Am {0} an das Steuerportal gesendet</value></data>
+  <data name="AIEI_StateSuperseded" xml:space="preserve"><value>Früher gesendet und erneut gesendet; keine gültige Übermittlung erfasst</value></data>
+  <data name="AIEI_StateFlagOnly" xml:space="preserve"><value>Als hochgeladen markiert, ohne Übermittlungsdatensatz</value></data>
+  <data name="AIEI_StateUnknown" xml:space="preserve"><value>Rechnungsstatus konnte nicht gelesen werden</value></data>
+  <data name="AIEI_Attempts" xml:space="preserve"><value>Übermittlungen: {0}</value></data>
+  <data name="AIEI_Uuid" xml:space="preserve"><value>Kennung (UUID)</value></data>
+  <data name="AIEI_PasteLabel" xml:space="preserve"><value>Text der Fehlermeldung</value></data>
+  <data name="AIEI_PasteHint" xml:space="preserve"><value>Fügen Sie die Meldung so ein, wie sie im System oder im Steuerportal erschien (mit Strg+C aus dem Meldungsfenster kopierbar)</value></data>
+  <data name="AIEI_StoredErrorNote" xml:space="preserve"><value>Dieser Text ist mit der letzten Übermittlung dieser Rechnung gespeichert</value></data>
+  <data name="AIEI_Explain" xml:space="preserve"><value>Erklären</value></data>
+  <data name="AIEI_Explaining" xml:space="preserve"><value>Abgleich läuft…</value></data>
+  <data name="AIEI_ResultsCount" xml:space="preserve"><value>{0} passende Ursache(n)</value></data>
+  <data name="AIEI_MatchCode" xml:space="preserve"><value>Nach Code</value></data>
+  <data name="AIEI_MatchPath" xml:space="preserve"><value>Nach Feld</value></data>
+  <data name="AIEI_MatchStep" xml:space="preserve"><value>Nach Prüfschritt</value></data>
+  <data name="AIEI_MatchPhrase" xml:space="preserve"><value>Nach Text</value></data>
+  <data name="AIEI_MatchApprox" xml:space="preserve"><value>Ungefähr</value></data>
+  <data name="AIEI_Unmatched" xml:space="preserve"><value>Keine Erklärung gefunden für</value></data>
+  <data name="AIEI_NoMatch" xml:space="preserve"><value>Dieser Fehler ist nicht im Katalog. Prüfen Sie die Meldung im Steuerportal oder fragen Sie den Assistenten.</value></data>
+  <data name="AIEI_AskAssistant" xml:space="preserve"><value>Ausführliche Erklärung vom Assistenten</value></data>
+  <data name="AIEI_CopyExplanation" xml:space="preserve"><value>Erklärung kopieren</value></data>
+  <data name="AIEI_Copied" xml:space="preserve"><value>Erklärung kopiert</value></data>
+  <data name="AIEI_Disclaimer" xml:space="preserve"><value>Die Erklärung dient nur zur Orientierung. Hier wird nichts geändert oder erneut gesendet.</value></data>
+  <data name="AIEI_Error" xml:space="preserve"><value>Der Fehler kann gerade nicht erklärt werden.</value></data>
+  <data name="AIEI_KEta" xml:space="preserve"><value>E-Rechnungsfehler</value></data>
+  <data name="AIEI_HEta" xml:space="preserve"><value>Abgleichschlüssel in den Schlüsselwörtern: code:… ; path:… ; step:… ; phrase:…</value></data>
 </root>

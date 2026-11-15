@@ -5782,4 +5782,34 @@
   <data name="AIS_PrefShortcutsHint" xml:space="preserve"><value>عند الإيقاف يبقى زر البحث فى الشريط العلوى</value></data>
   <data name="AIS_ShortcutCtrlK" xml:space="preserve"><value>Ctrl K</value></data>
   <data name="AIS_ShortcutCmdK" xml:space="preserve"><value>⌘ K</value></data>
+  <data name="AIEI_Button" xml:space="preserve"><value>اشرح خطأ الفاتورة الإلكترونية</value></data>
+  <data name="AIEI_Title" xml:space="preserve"><value>شرح خطأ الفاتورة الإلكترونية</value></data>
+  <data name="AIEI_TitleFor" xml:space="preserve"><value>شرح خطأ الفاتورة الإلكترونية — فاتورة {0}</value></data>
+  <data name="AIEI_StateNotSent" xml:space="preserve"><value>لم تُرسل هذه الفاتورة إلى بوابة الضرائب بعد</value></data>
+  <data name="AIEI_StateSent" xml:space="preserve"><value>أُرسلت إلى بوابة الضرائب بتاريخ {0}</value></data>
+  <data name="AIEI_StateSuperseded" xml:space="preserve"><value>أُرسلت سابقاً ثم أُعيد إرسالها؛ لا يوجد إرسال سارٍ مسجَّل</value></data>
+  <data name="AIEI_StateFlagOnly" xml:space="preserve"><value>معلَّمة كمرفوعة بلا سجل إرسال</value></data>
+  <data name="AIEI_StateUnknown" xml:space="preserve"><value>تعذّر قراءة حالة الفاتورة</value></data>
+  <data name="AIEI_Attempts" xml:space="preserve"><value>عدد مرات الإرسال: {0}</value></data>
+  <data name="AIEI_Uuid" xml:space="preserve"><value>الرقم التعريفى (UUID)</value></data>
+  <data name="AIEI_PasteLabel" xml:space="preserve"><value>نص رسالة الخطأ</value></data>
+  <data name="AIEI_PasteHint" xml:space="preserve"><value>الصق الرسالة كما ظهرت فى النظام أو فى بوابة الضرائب (يمكن نسخها بـ Ctrl+C من نافذة الرسالة)</value></data>
+  <data name="AIEI_StoredErrorNote" xml:space="preserve"><value>هذا النص محفوظ مع آخر إرسال لهذه الفاتورة</value></data>
+  <data name="AIEI_Explain" xml:space="preserve"><value>اشرح</value></data>
+  <data name="AIEI_Explaining" xml:space="preserve"><value>جارٍ المطابقة…</value></data>
+  <data name="AIEI_ResultsCount" xml:space="preserve"><value>{0} سبب مطابق</value></data>
+  <data name="AIEI_MatchCode" xml:space="preserve"><value>مطابقة بالكود</value></data>
+  <data name="AIEI_MatchPath" xml:space="preserve"><value>مطابقة بالحقل</value></data>
+  <data name="AIEI_MatchStep" xml:space="preserve"><value>مطابقة بخطوة التحقق</value></data>
+  <data name="AIEI_MatchPhrase" xml:space="preserve"><value>مطابقة بالنص</value></data>
+  <data name="AIEI_MatchApprox" xml:space="preserve"><value>تقريبى</value></data>
+  <data name="AIEI_Unmatched" xml:space="preserve"><value>لم نجد له شرحاً</value></data>
+  <data name="AIEI_NoMatch" xml:space="preserve"><value>لم نجد هذا الخطأ فى الكتالوج. راجع الرسالة فى بوابة الضرائب أو اسأل المساعد.</value></data>
+  <data name="AIEI_AskAssistant" xml:space="preserve"><value>شرح مفصّل من المساعد</value></data>
+  <data name="AIEI_CopyExplanation" xml:space="preserve"><value>نسخ الشرح</value></data>
+  <data name="AIEI_Copied" xml:space="preserve"><value>نُسخ الشرح</value></data>
+  <data name="AIEI_Disclaimer" xml:space="preserve"><value>الشرح إرشادى. لا يُعدَّل شىء ولا يُعاد الإرسال من هنا.</value></data>
+  <data name="AIEI_Error" xml:space="preserve"><value>تعذّر شرح الخطأ الآن.</value></data>
+  <data name="AIEI_KEta" xml:space="preserve"><value>خطأ فاتورة إلكترونية</value></data>
+  <data name="AIEI_HEta" xml:space="preserve"><value>مفاتيح المطابقة فى «الكلمات المفتاحية»: code:… ; path:… ; step:… ; phrase:…</value></data>
 </root>

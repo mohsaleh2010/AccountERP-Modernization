@@ -5782,4 +5782,34 @@
   <data name="AIS_PrefShortcutsHint" xml:space="preserve"><value>When off, the search button stays in the top bar</value></data>
   <data name="AIS_ShortcutCtrlK" xml:space="preserve"><value>Ctrl K</value></data>
   <data name="AIS_ShortcutCmdK" xml:space="preserve"><value>⌘ K</value></data>
+  <data name="AIEI_Button" xml:space="preserve"><value>Explain e-invoice error</value></data>
+  <data name="AIEI_Title" xml:space="preserve"><value>E-invoice error explanation</value></data>
+  <data name="AIEI_TitleFor" xml:space="preserve"><value>E-invoice error explanation — invoice {0}</value></data>
+  <data name="AIEI_StateNotSent" xml:space="preserve"><value>This invoice has not been sent to the tax portal yet</value></data>
+  <data name="AIEI_StateSent" xml:space="preserve"><value>Sent to the tax portal on {0}</value></data>
+  <data name="AIEI_StateSuperseded" xml:space="preserve"><value>Sent earlier and then resent; no current submission is recorded</value></data>
+  <data name="AIEI_StateFlagOnly" xml:space="preserve"><value>Marked as uploaded without a submission record</value></data>
+  <data name="AIEI_StateUnknown" xml:space="preserve"><value>Could not read the invoice status</value></data>
+  <data name="AIEI_Attempts" xml:space="preserve"><value>Submissions: {0}</value></data>
+  <data name="AIEI_Uuid" xml:space="preserve"><value>Identifier (UUID)</value></data>
+  <data name="AIEI_PasteLabel" xml:space="preserve"><value>Error message text</value></data>
+  <data name="AIEI_PasteHint" xml:space="preserve"><value>Paste the message as it appeared in the system or the tax portal (you can copy it with Ctrl+C from the message box)</value></data>
+  <data name="AIEI_StoredErrorNote" xml:space="preserve"><value>This text is stored with this invoice's last submission</value></data>
+  <data name="AIEI_Explain" xml:space="preserve"><value>Explain</value></data>
+  <data name="AIEI_Explaining" xml:space="preserve"><value>Matching…</value></data>
+  <data name="AIEI_ResultsCount" xml:space="preserve"><value>{0} matching cause(s)</value></data>
+  <data name="AIEI_MatchCode" xml:space="preserve"><value>Matched by code</value></data>
+  <data name="AIEI_MatchPath" xml:space="preserve"><value>Matched by field</value></data>
+  <data name="AIEI_MatchStep" xml:space="preserve"><value>Matched by validation step</value></data>
+  <data name="AIEI_MatchPhrase" xml:space="preserve"><value>Matched by text</value></data>
+  <data name="AIEI_MatchApprox" xml:space="preserve"><value>Approximate</value></data>
+  <data name="AIEI_Unmatched" xml:space="preserve"><value>No explanation found for</value></data>
+  <data name="AIEI_NoMatch" xml:space="preserve"><value>This error is not in the catalog. Check the message on the tax portal or ask the assistant.</value></data>
+  <data name="AIEI_AskAssistant" xml:space="preserve"><value>Detailed explanation from the assistant</value></data>
+  <data name="AIEI_CopyExplanation" xml:space="preserve"><value>Copy explanation</value></data>
+  <data name="AIEI_Copied" xml:space="preserve"><value>Explanation copied</value></data>
+  <data name="AIEI_Disclaimer" xml:space="preserve"><value>The explanation is guidance only. Nothing is changed or resent from here.</value></data>
+  <data name="AIEI_Error" xml:space="preserve"><value>Could not explain the error right now.</value></data>
+  <data name="AIEI_KEta" xml:space="preserve"><value>E-invoice error</value></data>
+  <data name="AIEI_HEta" xml:space="preserve"><value>Match keys go in Keywords: code:… ; path:… ; step:… ; phrase:…</value></data>
 </root>

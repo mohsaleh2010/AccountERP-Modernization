@@ -18,6 +18,8 @@
 @using AccountERP.SharedUI.Services
 @inject LanguageService LangService
 @inject NavigationManager Nav
+@inject IServiceProvider ServiceProvider
+@inject IDialogService DialogService
 @implements IDisposable
 
 <PageTitle>@_title</PageTitle>
@@ -122,6 +124,11 @@
             <MudTd>
                 <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small" Color="Color.Primary"
                                OnClick="@(() => Open(context.Id))" title="@Tr("ShowInvoiceButton")" />
+                @if (_eInvoiceAvailable && context.IsTax)
+                {
+                    <MudIconButton Icon="@Icons.Material.Outlined.ReportProblem" Size="Size.Small" Color="Color.Warning"
+                                   OnClick="@(() => OpenEInvoiceErrorAsync(context))" title="@Tr("AIEI_Button")" aria-label="@Tr("AIEI_Button")" />
+                }
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>
@@ -133,7 +140,23 @@
 @code {
     private record CustomerOption(long Id, string Name);
     private record InvoiceRow(long Id, int Serial, string Customer, long InvoiceNo, DateTime? Date, decimal Total, decimal Commission,
-                              decimal TaxSales, decimal Ats05, decimal StampDuty, decimal Net, string Notes, string User, DateTime? Inserted);
+                              decimal TaxSales, decimal Ats05, decimal StampDuty, decimal Net, string Notes, string User, DateTime? Inserted, bool IsTax = false);
+
+    // P8.3.3 (ف14): «اشرح خطأ الفاتورة الإلكترونية» لصف الفاتورة الضريبية (البوابة على الويب فقط — ف23).
+    private bool _eInvoiceAvailable;
+
+    private async Task OpenEInvoiceErrorAsync(InvoiceRow row)
+    {
+        var p = new DialogParameters<AccountERP.SharedUI.Components.Assistant.EInvoiceErrorDialog>
+        {
+            { x => x.SaleId, row.Id },
+            { x => x.InvoiceNo, row.InvoiceNo },
+            { x => x.DocKind, _isReturn ? AiEInvoiceConst.DocReturn : AiEInvoiceConst.DocInvoice },
+            { x => x.Route, "/accounts/invoices/list" },
+        };
+        var o = new DialogOptions { CloseOnEscapeKey = true, CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        await DialogService.ShowAsync<AccountERP.SharedUI.Components.Assistant.EInvoiceErrorDialog>(Tr("AIEI_Title"), p, o);
+    }
 
     [SupplyParameterFromQuery(Name = "return")] public int? ReturnQuery { get; set; }
     [SupplyParameterFromQuery(Name = "type")] public int? TypeQuery { get; set; }
@@ -162,6 +185,7 @@
         LangService.OnLanguageChanged += OnLanguageChangedHandler;
         _isReturn = ReturnQuery == 1;
         _title = Tr(_isReturn ? "ReturnInvoicesListTitle" : "InvoicesListTitle");
+        _eInvoiceAvailable = ServiceProvider.GetService(typeof(AiEInvoiceService)) is AiEInvoiceService s && s.IsAvailable;
     }
 
     private void OnLanguageChangedHandler()
@@ -248,7 +272,8 @@
                     Convert.ToInt64(r["Id"]), serial, r["Name"]?.ToString()?.Trim() ?? "",
                     r["Invoice_Id"] == DBNull.Value ? 0 : Convert.ToInt64(r["Invoice_Id"]), Dt(r, "Invoice_Date"),
                     Dec(r, "Total"), Dec(r, "commission"), Dec(r, "TaxSales10_Value"), Dec(r, "ATS05_Value"), Dec(r, "DAMGHAT"), net,
-                    r["Notes"]?.ToString() ?? "", r["USER_NAME"]?.ToString() ?? "", Dt(r, "Insert_ServerDateTime")));
+                    r["Notes"]?.ToString() ?? "", r["USER_NAME"]?.ToString() ?? "", Dt(r, "Insert_ServerDateTime"),
+                    Dec(r, "IsInvoiceTaxInfo") == 1));
             }
 
             _rows = rows;

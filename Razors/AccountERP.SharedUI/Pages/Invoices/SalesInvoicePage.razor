@@ -43,6 +43,7 @@
 @inject NavigationManager Nav
 @inject TabWorkspaceService TabWorkspace
 @inject MenuStateService MenuState
+@inject IServiceProvider ServiceProvider
 
 <PageTitle>@_pageTitle</PageTitle>
 
@@ -479,6 +480,12 @@
                 <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Payments"
                            OnClick="@(() => Nav.NavigateTo($"/accounts/cash/voucher-party?doc={Id}&dtype={(_isReverse ? 7 : 1)}"))">@Tr("InvCashVoucherButton")</MudButton>
             }
+            @if (IsExistingInvoice && _isTaxInvoice && EInvoiceAvailable)
+            {
+                @* P8.3.3 (ف14): شرح خطأ الفاتورة الإلكترونية — للفاتورة الضريبية المحفوظة فقط؛ لا تعديل ولا إعادة إرسال *@
+                <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Outlined.ReportProblem"
+                           OnClick="OpenEInvoiceErrorAsync">@Tr("AIEI_Button")</MudButton>
+            }
             @if (IsExistingInvoice && _repLinkedShiftId is null)
             {
                 <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever"
@@ -552,6 +559,22 @@
     private string _balanceLabel = "";
     private string _pageTitle = "";
     private bool _isSaved;
+
+    // P8.3.3: زر «اشرح خطأ الفاتورة الإلكترونية» (البوابة مسجّلة على الويب فقط — ف23).
+    private bool EInvoiceAvailable => ServiceProvider.GetService(typeof(AiEInvoiceService)) is AiEInvoiceService s && s.IsAvailable;
+
+    private async Task OpenEInvoiceErrorAsync()
+    {
+        var p = new DialogParameters<EInvoiceErrorDialog>
+        {
+            { x => x.SaleId, _header.Id },
+            { x => x.InvoiceNo, _header.Invoice_Id },
+            { x => x.DocKind, _isReverse ? AiEInvoiceConst.DocReturn : AiEInvoiceConst.DocInvoice },
+            { x => x.Route, _isReverse ? "/accounts/invoices/sales-return" : "/accounts/invoices/sales-invoice" },
+        };
+        var o = new DialogOptions { CloseOnEscapeKey = true, CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        await DialogService.ShowAsync<EInvoiceErrorDialog>(Tr("AIEI_Title"), p, o);
+    }
     // 🟢 زر الحفظ: يُعطَّل أثناء الحفظ (منع الضغط المتكرر الذى يضاعف الطلبات على الخادم)، وبعد الحفظ يبقى معطَّلاً حتى يتغير أى شىء
     // فى بيانات الفاتورة عن آخر حالة محفوظة/محمَّلة (بصمة الحالة أدناه)، فيُفعَّل ويُحفَظ التعديل بالضغط عليه. الفاتورة الجديدة غير المحفوظة
     // يكفى لتفعيله وجود صنف واحد على الأقل.

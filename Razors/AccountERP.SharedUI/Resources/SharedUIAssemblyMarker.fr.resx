@@ -5784,4 +5784,34 @@
   <data name="AIS_PrefShortcutsHint" xml:space="preserve"><value>Désactivés, le bouton de recherche reste dans la barre supérieure</value></data>
   <data name="AIS_ShortcutCtrlK" xml:space="preserve"><value>Ctrl K</value></data>
   <data name="AIS_ShortcutCmdK" xml:space="preserve"><value>⌘ K</value></data>
+  <data name="AIEI_Button" xml:space="preserve"><value>Expliquer l'erreur de facture électronique</value></data>
+  <data name="AIEI_Title" xml:space="preserve"><value>Explication de l'erreur de facture électronique</value></data>
+  <data name="AIEI_TitleFor" xml:space="preserve"><value>Explication de l'erreur de facture électronique — facture {0}</value></data>
+  <data name="AIEI_StateNotSent" xml:space="preserve"><value>Cette facture n'a pas encore été envoyée au portail fiscal</value></data>
+  <data name="AIEI_StateSent" xml:space="preserve"><value>Envoyée au portail fiscal le {0}</value></data>
+  <data name="AIEI_StateSuperseded" xml:space="preserve"><value>Envoyée puis renvoyée ; aucune soumission en vigueur n'est enregistrée</value></data>
+  <data name="AIEI_StateFlagOnly" xml:space="preserve"><value>Marquée comme envoyée sans enregistrement de soumission</value></data>
+  <data name="AIEI_StateUnknown" xml:space="preserve"><value>Impossible de lire l'état de la facture</value></data>
+  <data name="AIEI_Attempts" xml:space="preserve"><value>Nombre d'envois : {0}</value></data>
+  <data name="AIEI_Uuid" xml:space="preserve"><value>Identifiant (UUID)</value></data>
+  <data name="AIEI_PasteLabel" xml:space="preserve"><value>Texte du message d'erreur</value></data>
+  <data name="AIEI_PasteHint" xml:space="preserve"><value>Collez le message tel qu'il est apparu dans le système ou sur le portail fiscal (copiable avec Ctrl+C depuis la fenêtre du message)</value></data>
+  <data name="AIEI_StoredErrorNote" xml:space="preserve"><value>Ce texte est enregistré avec le dernier envoi de cette facture</value></data>
+  <data name="AIEI_Explain" xml:space="preserve"><value>Expliquer</value></data>
+  <data name="AIEI_Explaining" xml:space="preserve"><value>Correspondance en cours…</value></data>
+  <data name="AIEI_ResultsCount" xml:space="preserve"><value>{0} cause(s) correspondante(s)</value></data>
+  <data name="AIEI_MatchCode" xml:space="preserve"><value>Par code</value></data>
+  <data name="AIEI_MatchPath" xml:space="preserve"><value>Par champ</value></data>
+  <data name="AIEI_MatchStep" xml:space="preserve"><value>Par étape de validation</value></data>
+  <data name="AIEI_MatchPhrase" xml:space="preserve"><value>Par texte</value></data>
+  <data name="AIEI_MatchApprox" xml:space="preserve"><value>Approximatif</value></data>
+  <data name="AIEI_Unmatched" xml:space="preserve"><value>Aucune explication trouvée pour</value></data>
+  <data name="AIEI_NoMatch" xml:space="preserve"><value>Cette erreur ne figure pas dans le catalogue. Vérifiez le message sur le portail fiscal ou demandez à l'assistant.</value></data>
+  <data name="AIEI_AskAssistant" xml:space="preserve"><value>Explication détaillée par l'assistant</value></data>
+  <data name="AIEI_CopyExplanation" xml:space="preserve"><value>Copier l'explication</value></data>
+  <data name="AIEI_Copied" xml:space="preserve"><value>Explication copiée</value></data>
+  <data name="AIEI_Disclaimer" xml:space="preserve"><value>L'explication est indicative. Rien n'est modifié ni renvoyé d'ici.</value></data>
+  <data name="AIEI_Error" xml:space="preserve"><value>Impossible d'expliquer l'erreur pour le moment.</value></data>
+  <data name="AIEI_KEta" xml:space="preserve"><value>Erreur de facture électronique</value></data>
+  <data name="AIEI_HEta" xml:space="preserve"><value>Clés de correspondance dans les mots-clés : code:… ; path:… ; step:… ; phrase:…</value></data>
 </root>

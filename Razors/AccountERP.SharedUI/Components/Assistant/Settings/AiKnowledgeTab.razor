@@ -210,6 +210,7 @@
                 <MudSelectItem Value="@AiKnowledgeKinds.Glossary">@Tr("AIK_KGlossary")</MudSelectItem>
                 <MudSelectItem Value="@AiKnowledgeKinds.Rule">@Tr("AIK_KRule")</MudSelectItem>
                 <MudSelectItem Value="@AiKnowledgeKinds.Example">@Tr("AIK_KExample")</MudSelectItem>
+                <MudSelectItem Value="@AiKnowledgeKinds.EtaError">@Tr("AIEI_KEta")</MudSelectItem>
             </MudSelect>
             <MudTextField T="string" @bind-Value="_edit.TitleAr" Label="@Tr("AIK_FTitle")" Variant="Variant.Outlined" Required="true" MaxLength="300" Counter="300" />
             <MudTextField T="string" @bind-Value="_edit.Content" Label="@(_edit.Kind == AiKnowledgeKinds.Example ? Tr("AIK_FSql") : Tr("AIK_FContent"))" Variant="Variant.Outlined"
@@ -217,7 +218,7 @@
                           Class="@("wide" + (_edit.Kind == AiKnowledgeKinds.Example ? " sql" : ""))"
                           HelperText="@(_edit.Kind == AiKnowledgeKinds.Example ? Tr("AIK_FSqlHelp") : Tr("AIK_FContentHelp"))" />
             <MudTextField T="string" @bind-Value="_edit.Keywords" Label="@Tr("AIK_FKeywords")" Variant="Variant.Outlined" MaxLength="1000" Class="wide"
-                          HelperText="@Tr("AIK_FKeywordsHelp")" />
+                          HelperText="@(_edit.Kind == AiKnowledgeKinds.EtaError ? Tr("AIEI_HEta") : Tr("AIK_FKeywordsHelp"))" />
         </div>
         @if (!string.IsNullOrEmpty(_editError))
         {
@@ -473,7 +474,7 @@
 
     private void BeginAdd()
     {
-        _edit = new AiKnowledgeSaveRequest { Kind = _kind is AiKnowledgeKinds.Rule or AiKnowledgeKinds.Example ? _kind : AiKnowledgeKinds.Glossary };
+        _edit = new AiKnowledgeSaveRequest { Kind = _kind is AiKnowledgeKinds.Rule or AiKnowledgeKinds.Example or AiKnowledgeKinds.EtaError ? _kind : AiKnowledgeKinds.Glossary };
         _editIsSeed = false;
         _editError = null;
     }
@@ -548,6 +549,7 @@
         AiKnowledgeKinds.Glossary => "AIK_KGlossary",
         AiKnowledgeKinds.Rule => "AIK_KRule",
         AiKnowledgeKinds.Example => "AIK_KExample",
+        AiKnowledgeKinds.EtaError => "AIEI_KEta",
         _ => "AIK_KScreen",
     };
 
@@ -555,6 +557,7 @@
     {
         AiKnowledgeKinds.Rule => "AIK_HRule",
         AiKnowledgeKinds.Example => "AIK_HExample",
+        AiKnowledgeKinds.EtaError => "AIEI_HEta",
         _ => "AIK_HGlossary",
     };
 
@@ -564,6 +567,7 @@
         AiKnowledgeKinds.Glossary => Color.Primary,
         AiKnowledgeKinds.Rule => Color.Secondary,
         AiKnowledgeKinds.Example => Color.Tertiary,
+        AiKnowledgeKinds.EtaError => Color.Warning,
         _ => Color.Default,
     };
 
