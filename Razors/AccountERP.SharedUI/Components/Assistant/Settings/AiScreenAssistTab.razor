@@ -1,0 +1,112 @@
+@* 🤖 P8.9.2 (ص26): تبويب «داخل الشاشات» فى /settings/ai — مكوّن مستقل يحمّل نفسه عند أول عرض (نمط AiCollectTab).
+   أزرار «اشرح» داخل الشاشات، فقرة النموذج، الحد اليومى مع استعمال اليوم، وإرسال سياق الشاشة مع المحادثة. لا مساس بأى بيانات. *@
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using Microsoft.Extensions.DependencyInjection
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IServiceProvider ServiceProvider
+@implements IDisposable
+
+<style>
+    .aihs { display: flex; flex-direction: column; gap: 16px; }
+    .aihs-card { border: 1px solid var(--mud-palette-lines-default); border-radius: 14px; padding: 16px; background: var(--mud-palette-surface); display: flex; flex-direction: column; gap: 14px; }
+    .aihs-card h3 { margin: 0; font-size: 1rem; font-weight: 700; display: flex; gap: 8px; align-items: center; }
+    .aihs-card h3 .mud-icon-root { color: var(--mud-palette-primary); }
+    .aihs-hint { font-size: .8rem; color: var(--mud-palette-text-secondary); margin-top: 2px; margin-inline-start: 48px; }
+    .aihs-row .mud-switch { min-height: 44px; }
+    .aihs-num { max-width: 280px; }
+    .aihs-actions .mud-button-root { min-height: 44px; }
+</style>
+
+<div class="aihs" dir="@(LangService.IsRtl ? "rtl" : "ltr")">
+    @if (_svc == null || !_svc.GatewayRegistered)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("AIH_NotAvailable")</MudAlert>
+    }
+    else if (!_svc.CanManage)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@Tr("AIH_Set_ErrNotAdmin")</MudAlert>
+    }
+    else if (_s == null)
+    {
+        @if (_error != null) { <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@_error</MudAlert> }
+        else { <div style="text-align:center;padding:32px;"><MudProgressCircular Indeterminate="true" Color="Color.Primary" /></div> }
+    }
+    else
+    {
+        @if (_error != null)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" ShowCloseIcon="true" CloseIconClicked="() => _error = null">@_error</MudAlert>
+        }
+        <section class="aihs-card" aria-label="@Tr("AIH_Set_Tab")">
+            <h3><MudIcon Icon="@Icons.Material.Filled.Lightbulb" aria-hidden="true" />@Tr("AIH_Set_Tab")</h3>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">@Tr("AIH_Set_Screens")</MudText>
+
+            <div class="aihs-row">
+                <MudSwitch T="bool" @bind-Value="_s.Enabled" Color="Color.Primary" Label="@Tr("AIH_Set_Enabled")" />
+                <div class="aihs-hint">@Tr("AIH_Set_EnabledHint")</div>
+            </div>
+            <div class="aihs-row">
+                <MudSwitch T="bool" @bind-Value="_s.Narrative" Color="Color.Primary" Label="@Tr("AIH_Set_Narrative")" Disabled="@(!_s.Enabled)" />
+                <div class="aihs-hint">@Tr("AIH_Set_NarrativeHint")</div>
+            </div>
+            <div class="aihs-num">
+                <MudNumericField T="int" @bind-Value="_s.MaxPerDay" Label="@Tr("AIH_Set_MaxPerDay")" Min="0" Max="5000" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                 Disabled="@(!_s.Enabled || !_s.Narrative)" Error="@Bad" ErrorText="@Tr("AIH_Set_ErrMax")" HelperText="@Tr("AIH_Set_MaxPerDayHint")" />
+                <div class="aihs-hint" style="margin-inline-start:0">@Tr("AIH_Set_UsedToday", _s.UsedToday)</div>
+            </div>
+            <div class="aihs-row">
+                <MudSwitch T="bool" @bind-Value="_s.Ambient" Color="Color.Primary" Label="@Tr("AIH_Set_Ambient")" Disabled="@(!_s.Enabled)" />
+                <div class="aihs-hint">@Tr("AIH_Set_AmbientHint")</div>
+            </div>
+            <div class="aihs-actions">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_busy || Bad)" OnClick="SaveAsync">@Tr("AIH_Set_Save")</MudButton>
+            </div>
+        </section>
+    }
+</div>
+
+@code {
+    private AiScreenAssistService? _svc;
+    private AiScreenAssistSettings? _s;
+    private bool _busy;
+    private string? _error;
+
+    private bool Bad => _s != null && _s.Validate().Count > 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _svc = ServiceProvider.GetService<AiScreenAssistService>();
+        LangService.OnLanguageChanged += OnLang;
+        await LoadAsync();
+    }
+
+    private void OnLang() => InvokeAsync(StateHasChanged);
+
+    private async Task LoadAsync()
+    {
+        if (_svc == null || !_svc.GatewayRegistered || !_svc.CanManage) return;
+        _error = null;
+        try { _s = await _svc.GetSettingsAsync(); }
+        catch (Exception ex) { _error = Tr(AiScreenAssistText.ErrorKey(ex), ex.Message); }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_svc == null || _s == null || _busy || Bad) return;
+        _busy = true; _error = null;
+        try
+        {
+            await _svc.SaveSettingsAsync(_s);
+            Snackbar.Add(Tr("AIH_Set_Saved"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = Tr(AiScreenAssistText.ErrorKey(ex), ex.Message); }
+        finally { _busy = false; }
+    }
+
+    private string Tr(string key, params object[] args) => AiBriefText.T(Lang, LangService.CurrentCultureInfo, key, args);
+
+    public void Dispose() => LangService.OnLanguageChanged -= OnLang;
+}

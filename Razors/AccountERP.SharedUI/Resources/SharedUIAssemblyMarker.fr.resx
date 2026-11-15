@@ -6175,4 +6175,194 @@
   <data name="AIB_Al_collections_priority" xml:space="preserve"><value>Priorités de recouvrement</value></data>
   <data name="AIB_Al_collections_priority_Text" xml:space="preserve"><value>{high} clients en priorité élevée avec {high_amount} en retard ; {promises_due} promesses dues aujourd'hui et {broken} non tenues.</value></data>
   <data name="FSJEvent20" xml:space="preserve"><value>Relance de recouvrement</value></data>
+  <data name="AIH_Title" xml:space="preserve"><value>Explication de l'assistant</value></data>
+  <data name="AIH_Btn_WhyUnbalanced" xml:space="preserve"><value>Pourquoi n'est-elle pas équilibrée ?</value></data>
+  <data name="AIH_Btn_ExplainBalance" xml:space="preserve"><value>Expliquer ce solde</value></data>
+  <data name="AIH_Btn_ExplainInvoice" xml:space="preserve"><value>Expliquer la facture</value></data>
+  <data name="AIH_Btn_ExplainReturn" xml:space="preserve"><value>Expliquer le retour</value></data>
+  <data name="AIH_SaveFirst" xml:space="preserve"><value>Enregistrez d'abord vos modifications ; l'assistant n'explique que la facture enregistrée.</value></data>
+  <data name="AIH_RowHint" xml:space="preserve"><value>Sélectionnez un compte dans le tableau pour que l'assistant explique son solde.</value></data>
+  <data name="AIH_SelectedAccount" xml:space="preserve"><value>Compte sélectionné : {0}</value></data>
+  <data name="AIH_ClearSelection" xml:space="preserve"><value>Effacer la sélection</value></data>
+  <data name="AIH_T_trial_balance_why_unbalanced" xml:space="preserve"><value>Pourquoi la balance n'est-elle pas équilibrée ?</value></data>
+  <data name="AIH_T_trial_balance_explain_account" xml:space="preserve"><value>Solde du compte expliqué</value></data>
+  <data name="AIH_T_customer_statement_explain_balance" xml:space="preserve"><value>Solde client expliqué</value></data>
+  <data name="AIH_T_sales_invoice_explain_invoice" xml:space="preserve"><value>Facture de vente expliquée</value></data>
+  <data name="AIH_T_sales_return_explain_invoice" xml:space="preserve"><value>Retour de vente expliqué</value></data>
+  <data name="AIH_Ctx_Range" xml:space="preserve"><value>Du {0} au {1}</value></data>
+  <data name="AIH_Ctx_Branch" xml:space="preserve"><value>Agence : {0}</value></data>
+  <data name="AIH_ComputedAt" xml:space="preserve"><value>Calculé à l'instant avec le moteur de l'écran et vos droits : {0}</value></data>
+  <data name="AIH_Loading" xml:space="preserve"><value>Collecte des faits…</value></data>
+  <data name="AIH_Retry" xml:space="preserve"><value>Réessayer</value></data>
+  <data name="AIH_FactsTitle" xml:space="preserve"><value>Ce que nous avons trouvé (règles fixes)</value></data>
+  <data name="AIH_NoFindings" xml:space="preserve"><value>Les règles n'ont trouvé aucune cause précise. Consultez les tableaux ci-dessous ou interrogez l'assistant.</value></data>
+  <data name="AIH_NarrTitle" xml:space="preserve"><value>Explication de l'assistant</value></data>
+  <data name="AIH_NarrWorking" xml:space="preserve"><value>L'assistant rédige l'explication…</value></data>
+  <data name="AIH_NarrModel" xml:space="preserve"><value>Rédigé par le modèle : {0}</value></data>
+  <data name="AIH_NarrOff" xml:space="preserve"><value>L'explication du modèle est désactivée ou aucun modèle n'est associé. Les faits ci-dessus sont complets.</value></data>
+  <data name="AIH_NarrRejected" xml:space="preserve"><value>L'explication du modèle a été écartée car elle citait un nombre absent des faits. Fiez-vous aux faits ci-dessus.</value></data>
+  <data name="AIH_NarrError" xml:space="preserve"><value>Impossible d'obtenir l'explication pour l'instant. Les faits ci-dessus sont complets.</value></data>
+  <data name="AIH_NarrCapped" xml:space="preserve"><value>La limite quotidienne d'explications est atteinte. Les faits ci-dessus sont complets.</value></data>
+  <data name="AIH_Disclaimer" xml:space="preserve"><value>L'explication est indicative et ne modifie aucune donnée. Tous les chiffres proviennent du système.</value></data>
+  <data name="AIH_Copy" xml:space="preserve"><value>Copier</value></data>
+  <data name="AIH_Copied" xml:space="preserve"><value>Explication copiée</value></data>
+  <data name="AIH_AskAssistant" xml:space="preserve"><value>Interroger l'assistant à ce sujet</value></data>
+  <data name="AIH_DetailHidden" xml:space="preserve"><value>Le détail des écritures nécessite le droit « Écritures » ou « Grand livre ». Seuls les nombres et totaux sont affichés.</value></data>
+  <data name="AIH_TaxRestricted" xml:space="preserve"><value>L'antériorité est calculée uniquement sur les factures que vous pouvez voir.</value></data>
+  <data name="AIH_StmtNote" xml:space="preserve"><value>Le solde provient directement du compte client ; l'ordre peut différer du relevé.</value></data>
+  <data name="AIH_NotAvailable" xml:space="preserve"><value>L'assistant dans les écrans n'est pas disponible ici.</value></data>
+  <data name="AIH_Sev_high" xml:space="preserve"><value>Important</value></data>
+  <data name="AIH_Sev_warn" xml:space="preserve"><value>Attention</value></data>
+  <data name="AIH_Sev_info" xml:space="preserve"><value>Info</value></data>
+  <data name="AIH_Err_NoPermission" xml:space="preserve"><value>Vous n'avez pas le droit d'utiliser l'assistant ou cet écran.</value></data>
+  <data name="AIH_Err_Off" xml:space="preserve"><value>L'assistant dans les écrans est désactivé dans les paramètres.</value></data>
+  <data name="AIH_Err_BadRequest" xml:space="preserve"><value>Les données de l'écran sont incomplètes. Affichez l'écran puis réessayez.</value></data>
+  <data name="AIH_Err_Branch" xml:space="preserve"><value>Cette agence ne vous est pas autorisée.</value></data>
+  <data name="AIH_Err_Period" xml:space="preserve"><value>Les deux dates doivent être dans une même période financière.</value></data>
+  <data name="AIH_Err_NotVisible" xml:space="preserve"><value>Le document n'existe pas ou vous n'avez pas le droit de le voir.</value></data>
+  <data name="AIH_Err_NotFound" xml:space="preserve"><value>L'élément demandé est introuvable.</value></data>
+  <data name="AIH_Err_Failed" xml:space="preserve"><value>Impossible de collecter les faits : {0}</value></data>
+  <data name="AIH_V_opening_diff" xml:space="preserve"><value>Écart d'ouverture</value></data>
+  <data name="AIH_V_movement_diff" xml:space="preserve"><value>Écart des mouvements</value></data>
+  <data name="AIH_V_closing_diff" xml:space="preserve"><value>Écart de clôture</value></data>
+  <data name="AIH_V_opening" xml:space="preserve"><value>Solde d'ouverture</value></data>
+  <data name="AIH_V_movement_debit" xml:space="preserve"><value>Mouvements débit</value></data>
+  <data name="AIH_V_movement_credit" xml:space="preserve"><value>Mouvements crédit</value></data>
+  <data name="AIH_V_closing" xml:space="preserve"><value>Solde de clôture</value></data>
+  <data name="AIH_V_entries_count" xml:space="preserve"><value>Écritures</value></data>
+  <data name="AIH_V_group_share" xml:space="preserve"><value>Part du groupe</value></data>
+  <data name="AIH_V_balance" xml:space="preserve"><value>Solde actuel</value></data>
+  <data name="AIH_V_range_debit" xml:space="preserve"><value>Débit de la période</value></data>
+  <data name="AIH_V_range_credit" xml:space="preserve"><value>Crédit de la période</value></data>
+  <data name="AIH_V_overdue" xml:space="preserve"><value>En retard</value></data>
+  <data name="AIH_V_oldest_days" xml:space="preserve"><value>Retard le plus ancien (jours)</value></data>
+  <data name="AIH_V_last_receipt" xml:space="preserve"><value>Dernier encaissement</value></data>
+  <data name="AIH_V_credit_limit" xml:space="preserve"><value>Plafond de crédit</value></data>
+  <data name="AIH_V_total" xml:space="preserve"><value>Total</value></data>
+  <data name="AIH_V_commission" xml:space="preserve"><value>Commission</value></data>
+  <data name="AIH_V_sales_tax" xml:space="preserve"><value>TVA</value></data>
+  <data name="AIH_V_ats05" xml:space="preserve"><value>Retenue à la source</value></data>
+  <data name="AIH_V_stamp" xml:space="preserve"><value>Droit de timbre</value></data>
+  <data name="AIH_V_net" xml:space="preserve"><value>Net</value></data>
+  <data name="AIH_V_paid" xml:space="preserve"><value>Payé</value></data>
+  <data name="AIH_V_rest" xml:space="preserve"><value>Reste</value></data>
+  <data name="AIH_V_due_date" xml:space="preserve"><value>Date d'échéance</value></data>
+  <data name="AIH_V_lines" xml:space="preserve"><value>Lignes</value></data>
+  <data name="AIH_V_customer_balance" xml:space="preserve"><value>Solde client actuel</value></data>
+  <data name="AIH_V_einvoice" xml:space="preserve"><value>Facture électronique</value></data>
+  <data name="AIH_Side_Debit" xml:space="preserve"><value>Débit</value></data>
+  <data name="AIH_Side_Credit" xml:space="preserve"><value>Crédit</value></data>
+  <data name="AIH_F_tb_balanced" xml:space="preserve"><value>La balance est maintenant équilibrée. Une écriture a peut-être été corrigée après l'affichage ; réaffichez-la.</value></data>
+  <data name="AIH_F_tb_currency" xml:space="preserve"><value>La balance est affichée dans une seule devise ; les écritures multidevises ne s'équilibrent pas dans une seule devise. Affichez-la « en équivalent » pour vérifier.</value></data>
+  <data name="AIH_F_tb_move_entries" xml:space="preserve"><value>{count} écritures déséquilibrées dans la période, écarts totaux {total}.</value></data>
+  <data name="AIH_F_tb_move_all" xml:space="preserve"><value>Ces écritures expliquent tout l'écart des mouvements.</value></data>
+  <data name="AIH_F_tb_move_rest" xml:space="preserve"><value>{rest} de l'écart des mouvements n'est pas expliqué par les écritures déséquilibrées.</value></data>
+  <data name="AIH_F_tb_open_entries" xml:space="preserve"><value>{count} écritures déséquilibrées avant la date « Du » dans la période, écarts totaux {total} ; elles entrent dans l'ouverture.</value></data>
+  <data name="AIH_F_tb_open_stored" xml:space="preserve"><value>Les soldes d'ouverture enregistrés sont déséquilibrés de {total}. Vérifiez-les avec « Mettre à jour le solde d'ouverture » dans le logiciel de bureau.</value></data>
+  <data name="AIH_F_tb_none" xml:space="preserve"><value>Aucune écriture déséquilibrée trouvée dans la période. Consultez l'écran « Intégrité des écritures ».</value></data>
+  <data name="AIH_F_acc_no_movement" xml:space="preserve"><value>Aucun mouvement sur le compte dans la période ; son solde est celui d'ouverture.</value></data>
+  <data name="AIH_F_acc_group_share" xml:space="preserve"><value>Le compte représente {pct}% du solde de son groupe.</value></data>
+  <data name="AIH_F_acc_top_source" xml:space="preserve"><value>Principale source des mouvements : {source} à {pct}%.</value></data>
+  <data name="AIH_F_acc_dominant" xml:space="preserve"><value>L'écriture n° {entry_no} représente à elle seule {pct}% des mouvements.</value></data>
+  <data name="AIH_F_acc_manual" xml:space="preserve"><value>Les écritures manuelles représentent {pct}% des mouvements ({count} écritures).</value></data>
+  <data name="AIH_F_cu_zero" xml:space="preserve"><value>Le solde du client est nul.</value></data>
+  <data name="AIH_F_cu_credit_side" xml:space="preserve"><value>Solde créditeur : nous devons {amount} au client.</value></data>
+  <data name="AIH_F_cu_overdue" xml:space="preserve"><value>{amount} en retard sur {count} factures ouvertes ; la plus ancienne a {days} jours de retard.</value></data>
+  <data name="AIH_F_cu_unallocated" xml:space="preserve"><value>{amount} du solde n'est lié à aucune facture des {months} derniers mois (ancien solde ou écritures).</value></data>
+  <data name="AIH_F_cu_no_receipt" xml:space="preserve"><value>Dernier encaissement du client il y a {days} jours.</value></data>
+  <data name="AIH_F_cu_never_receipt" xml:space="preserve"><value>Aucun encaissement n'a été enregistré pour ce client.</value></data>
+  <data name="AIH_F_cu_over_limit" xml:space="preserve"><value>Le solde dépasse le plafond de crédit ({limit}) de {amount}.</value></data>
+  <data name="AIH_F_cu_range_up" xml:space="preserve"><value>Le solde a augmenté de {amount} sur la période.</value></data>
+  <data name="AIH_F_cu_range_down" xml:space="preserve"><value>Le solde a diminué de {amount} sur la période.</value></data>
+  <data name="AIH_F_inv_lines_mismatch" xml:space="preserve"><value>Le total des lignes {lines} ne correspond pas au total de la facture {total} (écart {diff}).</value></data>
+  <data name="AIH_F_inv_tax_per_item" xml:space="preserve"><value>La taxe est calculée par article ; elle n'est donc pas appliquée de nouveau au total.</value></data>
+  <data name="AIH_F_inv_tax_mismatch" xml:space="preserve"><value>La taxe des lignes {lines} ne correspond pas à la taxe de la facture {total} (écart {diff}).</value></data>
+  <data name="AIH_F_inv_unpaid" xml:space="preserve"><value>La facture est à crédit avec {amount} restant dû.</value></data>
+  <data name="AIH_F_inv_overdue" xml:space="preserve"><value>Elle a dépassé l'échéance de {days} jours.</value></data>
+  <data name="AIH_F_inv_no_due" xml:space="preserve"><value>À crédit sans date d'échéance enregistrée.</value></data>
+  <data name="AIH_F_inv_einv_not_sent" xml:space="preserve"><value>Facture fiscale pas encore envoyée au portail fiscal.</value></data>
+  <data name="AIH_F_inv_einv_sent" xml:space="preserve"><value>Envoyée au portail fiscal (l'envoi ne vaut pas acceptation).</value></data>
+  <data name="AIH_F_inv_not_posted" xml:space="preserve"><value>Pas encore comptabilisée.</value></data>
+  <data name="AIH_Tb_entries" xml:space="preserve"><value>Écritures déséquilibrées</value></data>
+  <data name="AIH_Tb_prior_entries" xml:space="preserve"><value>Écritures déséquilibrées avant « Du »</value></data>
+  <data name="AIH_Tb_sources" xml:space="preserve"><value>Mouvements par source</value></data>
+  <data name="AIH_Tb_top_entries" xml:space="preserve"><value>Plus grosses écritures</value></data>
+  <data name="AIH_Tb_monthly" xml:space="preserve"><value>Mouvement net par mois</value></data>
+  <data name="AIH_Tb_types" xml:space="preserve"><value>Mouvements par type</value></data>
+  <data name="AIH_Tb_top_moves" xml:space="preserve"><value>Plus gros mouvements</value></data>
+  <data name="AIH_Tb_aging" xml:space="preserve"><value>Antériorité du solde</value></data>
+  <data name="AIH_Tb_top_lines" xml:space="preserve"><value>Plus grosses lignes</value></data>
+  <data name="AIH_C_entry_no" xml:space="preserve"><value>N° d'écriture</value></data>
+  <data name="AIH_C_date" xml:space="preserve"><value>Date</value></data>
+  <data name="AIH_C_journal" xml:space="preserve"><value>Journal</value></data>
+  <data name="AIH_C_source" xml:space="preserve"><value>Source</value></data>
+  <data name="AIH_C_debit" xml:space="preserve"><value>Débit</value></data>
+  <data name="AIH_C_credit" xml:space="preserve"><value>Crédit</value></data>
+  <data name="AIH_C_diff" xml:space="preserve"><value>Écart</value></data>
+  <data name="AIH_C_count" xml:space="preserve"><value>Nombre</value></data>
+  <data name="AIH_C_share" xml:space="preserve"><value>Part %</value></data>
+  <data name="AIH_C_type" xml:space="preserve"><value>Type</value></data>
+  <data name="AIH_C_month" xml:space="preserve"><value>Mois</value></data>
+  <data name="AIH_C_bucket" xml:space="preserve"><value>Tranche</value></data>
+  <data name="AIH_C_amount" xml:space="preserve"><value>Montant</value></data>
+  <data name="AIH_C_item" xml:space="preserve"><value>Article</value></data>
+  <data name="AIH_C_qty" xml:space="preserve"><value>Quantité</value></data>
+  <data name="AIH_C_price" xml:space="preserve"><value>Prix</value></data>
+  <data name="AIH_C_net" xml:space="preserve"><value>Net</value></data>
+  <data name="AIH_Src_manual" xml:space="preserve"><value>Écritures manuelles</value></data>
+  <data name="AIH_Src_sales" xml:space="preserve"><value>Ventes</value></data>
+  <data name="AIH_Src_purchases" xml:space="preserve"><value>Achats</value></data>
+  <data name="AIH_Src_cash" xml:space="preserve"><value>Caisse</value></data>
+  <data name="AIH_Src_opening" xml:space="preserve"><value>Écriture d'ouverture</value></data>
+  <data name="AIH_Src_closing" xml:space="preserve"><value>Écriture de clôture</value></data>
+  <data name="AIH_Src_other" xml:space="preserve"><value>Autres sources</value></data>
+  <data name="AIH_Ty_invoices" xml:space="preserve"><value>Factures de vente</value></data>
+  <data name="AIH_Ty_receipts" xml:space="preserve"><value>Encaissements</value></data>
+  <data name="AIH_Ty_payments" xml:space="preserve"><value>Paiements au client</value></data>
+  <data name="AIH_Ty_returns" xml:space="preserve"><value>Retours</value></data>
+  <data name="AIH_Ty_opening" xml:space="preserve"><value>Solde d'ouverture</value></data>
+  <data name="AIH_Ty_linked" xml:space="preserve"><value>Compte fournisseur lié</value></data>
+  <data name="AIH_Ty_other" xml:space="preserve"><value>Ajustements et autres</value></data>
+  <data name="AIH_B_not_due" xml:space="preserve"><value>Non échu</value></data>
+  <data name="AIH_B_1_30" xml:space="preserve"><value>1–30 jours</value></data>
+  <data name="AIH_B_31_60" xml:space="preserve"><value>31–60 jours</value></data>
+  <data name="AIH_B_61_90" xml:space="preserve"><value>61–90 jours</value></data>
+  <data name="AIH_B_over_90" xml:space="preserve"><value>Plus de 90 jours</value></data>
+  <data name="AIH_B_unallocated" xml:space="preserve"><value>Non lié à des factures</value></data>
+  <data name="AIH_E_not_sent" xml:space="preserve"><value>Non envoyée</value></data>
+  <data name="AIH_E_sent" xml:space="preserve"><value>Envoyée</value></data>
+  <data name="AIH_E_superseded" xml:space="preserve"><value>Renvoyée</value></data>
+  <data name="AIH_E_flag_only" xml:space="preserve"><value>Marquée comme envoyée</value></data>
+  <data name="AIH_L_integrity" xml:space="preserve"><value>Intégrité des écritures</value></data>
+  <data name="AIH_L_entries" xml:space="preserve"><value>Écritures</value></data>
+  <data name="AIH_L_ledger" xml:space="preserve"><value>Grand livre</value></data>
+  <data name="AIH_L_collections" xml:space="preserve"><value>Priorités de recouvrement</value></data>
+  <data name="AIH_L_statement" xml:space="preserve"><value>Relevé client</value></data>
+  <data name="AIH_Ask_why_unbalanced" xml:space="preserve"><value>Pourquoi la balance affichée n'est-elle pas équilibrée ? Indique les écritures en cause et ce que je dois vérifier.</value></data>
+  <data name="AIH_Ask_explain_account" xml:space="preserve"><value>Explique le solde du compte sélectionné dans la balance : de quoi se compose-t-il et quels sont ses principaux mouvements ?</value></data>
+  <data name="AIH_Ask_explain_balance" xml:space="preserve"><value>Explique le solde de ce client : de quoi se compose-t-il et quelle part est en retard ?</value></data>
+  <data name="AIH_Ask_explain_invoice" xml:space="preserve"><value>Explique cette facture : comment le net a-t-il été calculé et quel est son état de paiement ?</value></data>
+  <data name="AIH_Chip" xml:space="preserve"><value>Contexte de l'écran : {0}</value></data>
+  <data name="AIH_ChipRemove" xml:space="preserve"><value>Retirer le contexte de l'écran du message</value></data>
+  <data name="AIH_ChipHint" xml:space="preserve"><value>Seule votre sélection à l'écran (période, agence, identifiant) est envoyée à l'assistant, sans montants.</value></data>
+  <data name="AIH_MsgFacts" xml:space="preserve"><value>Faits de l'écran : {0}</value></data>
+  <data name="AIH_K_trial_balance" xml:space="preserve"><value>Balance</value></data>
+  <data name="AIH_K_customer_statement" xml:space="preserve"><value>Relevé client</value></data>
+  <data name="AIH_K_sales_invoice" xml:space="preserve"><value>Facture de vente</value></data>
+  <data name="AIH_K_sales_return" xml:space="preserve"><value>Retour de vente</value></data>
+  <data name="AIH_Set_Tab" xml:space="preserve"><value>Dans les écrans</value></data>
+  <data name="AIH_Set_Enabled" xml:space="preserve"><value>Boutons « Expliquer » dans les écrans</value></data>
+  <data name="AIH_Set_EnabledHint" xml:space="preserve"><value>Visibles pour les utilisateurs ayant le droit à l'assistant et à l'écran.</value></data>
+  <data name="AIH_Set_Narrative" xml:space="preserve"><value>Paragraphe d'explication rédigé par le modèle</value></data>
+  <data name="AIH_Set_NarrativeHint" xml:space="preserve"><value>Désactivé, seuls les faits calculés sont affichés, sans coût.</value></data>
+  <data name="AIH_Set_MaxPerDay" xml:space="preserve"><value>Nombre maximal d'explications par jour</value></data>
+  <data name="AIH_Set_MaxPerDayHint" xml:space="preserve"><value>Pour toute l'entreprise. Zéro arrête les appels au modèle.</value></data>
+  <data name="AIH_Set_UsedToday" xml:space="preserve"><value>Utilisé aujourd'hui : {0}</value></data>
+  <data name="AIH_Set_Ambient" xml:space="preserve"><value>Envoyer le contexte de l'écran avec les messages</value></data>
+  <data name="AIH_Set_AmbientHint" xml:space="preserve"><value>Uniquement les sélections de l'écran (période, agence, identifiant) pour que l'assistant comprenne « cet écran ». L'utilisateur la voit et peut la retirer.</value></data>
+  <data name="AIH_Set_Screens" xml:space="preserve"><value>Écrans couverts : balance, relevé client, facture et retour de vente.</value></data>
+  <data name="AIH_Set_Save" xml:space="preserve"><value>Enregistrer</value></data>
+  <data name="AIH_Set_Saved" xml:space="preserve"><value>Paramètres enregistrés</value></data>
+  <data name="AIH_Set_ErrMax" xml:space="preserve"><value>La valeur doit être comprise entre 0 et 5000.</value></data>
+  <data name="AIH_Set_ErrNotAdmin" xml:space="preserve"><value>Les paramètres de l'assistant dans les écrans sont réservés aux administrateurs.</value></data>
 </root>

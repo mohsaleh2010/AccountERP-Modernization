@@ -6175,4 +6175,194 @@
   <data name="AIB_Al_collections_priority" xml:space="preserve"><value>Inkassoprioritäten</value></data>
   <data name="AIB_Al_collections_priority_Text" xml:space="preserve"><value>{high} Kunden mit hoher Inkassopriorität und {high_amount} überfällig; {promises_due} Zusagen heute fällig, {broken} gebrochen.</value></data>
   <data name="FSJEvent20" xml:space="preserve"><value>Inkassoerinnerung</value></data>
+  <data name="AIH_Title" xml:space="preserve"><value>Erklärung des Assistenten</value></data>
+  <data name="AIH_Btn_WhyUnbalanced" xml:space="preserve"><value>Warum nicht ausgeglichen?</value></data>
+  <data name="AIH_Btn_ExplainBalance" xml:space="preserve"><value>Diesen Saldo erklären</value></data>
+  <data name="AIH_Btn_ExplainInvoice" xml:space="preserve"><value>Rechnung erklären</value></data>
+  <data name="AIH_Btn_ExplainReturn" xml:space="preserve"><value>Retoure erklären</value></data>
+  <data name="AIH_SaveFirst" xml:space="preserve"><value>Speichern Sie zuerst Ihre Änderungen; der Assistent erklärt nur die gespeicherte Rechnung.</value></data>
+  <data name="AIH_RowHint" xml:space="preserve"><value>Wählen Sie ein Konto in der Tabelle, der Assistent erklärt dessen Saldo.</value></data>
+  <data name="AIH_SelectedAccount" xml:space="preserve"><value>Ausgewähltes Konto: {0}</value></data>
+  <data name="AIH_ClearSelection" xml:space="preserve"><value>Auswahl aufheben</value></data>
+  <data name="AIH_T_trial_balance_why_unbalanced" xml:space="preserve"><value>Warum ist die Probebilanz nicht ausgeglichen?</value></data>
+  <data name="AIH_T_trial_balance_explain_account" xml:space="preserve"><value>Kontosaldo erklärt</value></data>
+  <data name="AIH_T_customer_statement_explain_balance" xml:space="preserve"><value>Kundensaldo erklärt</value></data>
+  <data name="AIH_T_sales_invoice_explain_invoice" xml:space="preserve"><value>Verkaufsrechnung erklärt</value></data>
+  <data name="AIH_T_sales_return_explain_invoice" xml:space="preserve"><value>Verkaufsretoure erklärt</value></data>
+  <data name="AIH_Ctx_Range" xml:space="preserve"><value>Von {0} bis {1}</value></data>
+  <data name="AIH_Ctx_Branch" xml:space="preserve"><value>Filiale: {0}</value></data>
+  <data name="AIH_ComputedAt" xml:space="preserve"><value>Soeben mit der Logik der Maske und Ihren Rechten berechnet: {0}</value></data>
+  <data name="AIH_Loading" xml:space="preserve"><value>Fakten werden gesammelt…</value></data>
+  <data name="AIH_Retry" xml:space="preserve"><value>Erneut versuchen</value></data>
+  <data name="AIH_FactsTitle" xml:space="preserve"><value>Was wir gefunden haben (feste Regeln)</value></data>
+  <data name="AIH_NoFindings" xml:space="preserve"><value>Die Regeln fanden keine konkrete Ursache. Prüfen Sie die Tabellen unten oder fragen Sie den Assistenten.</value></data>
+  <data name="AIH_NarrTitle" xml:space="preserve"><value>Erklärung des Assistenten</value></data>
+  <data name="AIH_NarrWorking" xml:space="preserve"><value>Der Assistent schreibt die Erklärung…</value></data>
+  <data name="AIH_NarrModel" xml:space="preserve"><value>Formuliert vom Modell: {0}</value></data>
+  <data name="AIH_NarrOff" xml:space="preserve"><value>Die Modellerklärung ist aus oder kein Modell verknüpft. Die Fakten oben sind vollständig.</value></data>
+  <data name="AIH_NarrRejected" xml:space="preserve"><value>Die Modellerklärung wurde verworfen, weil sie eine Zahl nannte, die nicht in den Fakten steht. Verlassen Sie sich auf die Fakten oben.</value></data>
+  <data name="AIH_NarrError" xml:space="preserve"><value>Die Erklärung konnte gerade nicht abgerufen werden. Die Fakten oben sind vollständig.</value></data>
+  <data name="AIH_NarrCapped" xml:space="preserve"><value>Das Tageslimit für Erklärungen ist erreicht. Die Fakten oben sind vollständig.</value></data>
+  <data name="AIH_Disclaimer" xml:space="preserve"><value>Die Erklärung dient nur zur Orientierung und ändert keine Daten. Alle Zahlen stammen aus dem System.</value></data>
+  <data name="AIH_Copy" xml:space="preserve"><value>Kopieren</value></data>
+  <data name="AIH_Copied" xml:space="preserve"><value>Erklärung kopiert</value></data>
+  <data name="AIH_AskAssistant" xml:space="preserve"><value>Den Assistenten dazu fragen</value></data>
+  <data name="AIH_DetailHidden" xml:space="preserve"><value>Buchungsdetails erfordern das Recht „Buchungen“ oder „Hauptbuch“. Es werden nur Anzahlen und Summen angezeigt.</value></data>
+  <data name="AIH_TaxRestricted" xml:space="preserve"><value>Die Altersstruktur basiert nur auf den Rechnungen, die Sie sehen dürfen.</value></data>
+  <data name="AIH_StmtNote" xml:space="preserve"><value>Der Saldo stammt direkt aus dem Kundenkonto; die Reihenfolge kann vom Auszug abweichen.</value></data>
+  <data name="AIH_NotAvailable" xml:space="preserve"><value>Der Assistent in den Masken ist hier nicht verfügbar.</value></data>
+  <data name="AIH_Sev_high" xml:space="preserve"><value>Wichtig</value></data>
+  <data name="AIH_Sev_warn" xml:space="preserve"><value>Hinweis</value></data>
+  <data name="AIH_Sev_info" xml:space="preserve"><value>Info</value></data>
+  <data name="AIH_Err_NoPermission" xml:space="preserve"><value>Sie haben keine Berechtigung für den Assistenten oder diese Maske.</value></data>
+  <data name="AIH_Err_Off" xml:space="preserve"><value>Der Assistent in den Masken ist in den Einstellungen deaktiviert.</value></data>
+  <data name="AIH_Err_BadRequest" xml:space="preserve"><value>Die Maskendaten sind unvollständig. Zeigen Sie die Maske an und versuchen Sie es erneut.</value></data>
+  <data name="AIH_Err_Branch" xml:space="preserve"><value>Diese Filiale ist für Sie nicht freigegeben.</value></data>
+  <data name="AIH_Err_Period" xml:space="preserve"><value>Beide Daten müssen in einer Geschäftsperiode liegen.</value></data>
+  <data name="AIH_Err_NotVisible" xml:space="preserve"><value>Der Beleg existiert nicht oder Sie dürfen ihn nicht sehen.</value></data>
+  <data name="AIH_Err_NotFound" xml:space="preserve"><value>Das angeforderte Element wurde nicht gefunden.</value></data>
+  <data name="AIH_Err_Failed" xml:space="preserve"><value>Fakten konnten nicht gesammelt werden: {0}</value></data>
+  <data name="AIH_V_opening_diff" xml:space="preserve"><value>Differenz Eröffnung</value></data>
+  <data name="AIH_V_movement_diff" xml:space="preserve"><value>Differenz Bewegung</value></data>
+  <data name="AIH_V_closing_diff" xml:space="preserve"><value>Differenz Abschluss</value></data>
+  <data name="AIH_V_opening" xml:space="preserve"><value>Anfangssaldo</value></data>
+  <data name="AIH_V_movement_debit" xml:space="preserve"><value>Sollbewegung</value></data>
+  <data name="AIH_V_movement_credit" xml:space="preserve"><value>Habenbewegung</value></data>
+  <data name="AIH_V_closing" xml:space="preserve"><value>Endsaldo</value></data>
+  <data name="AIH_V_entries_count" xml:space="preserve"><value>Buchungen</value></data>
+  <data name="AIH_V_group_share" xml:space="preserve"><value>Anteil an der Gruppe</value></data>
+  <data name="AIH_V_balance" xml:space="preserve"><value>Aktueller Saldo</value></data>
+  <data name="AIH_V_range_debit" xml:space="preserve"><value>Soll im Zeitraum</value></data>
+  <data name="AIH_V_range_credit" xml:space="preserve"><value>Haben im Zeitraum</value></data>
+  <data name="AIH_V_overdue" xml:space="preserve"><value>Überfällig</value></data>
+  <data name="AIH_V_oldest_days" xml:space="preserve"><value>Älteste Überfälligkeit (Tage)</value></data>
+  <data name="AIH_V_last_receipt" xml:space="preserve"><value>Letzter Zahlungseingang</value></data>
+  <data name="AIH_V_credit_limit" xml:space="preserve"><value>Kreditlimit</value></data>
+  <data name="AIH_V_total" xml:space="preserve"><value>Gesamt</value></data>
+  <data name="AIH_V_commission" xml:space="preserve"><value>Provision</value></data>
+  <data name="AIH_V_sales_tax" xml:space="preserve"><value>Umsatzsteuer</value></data>
+  <data name="AIH_V_ats05" xml:space="preserve"><value>Quellensteuer</value></data>
+  <data name="AIH_V_stamp" xml:space="preserve"><value>Stempelgebühr</value></data>
+  <data name="AIH_V_net" xml:space="preserve"><value>Netto</value></data>
+  <data name="AIH_V_paid" xml:space="preserve"><value>Bezahlt</value></data>
+  <data name="AIH_V_rest" xml:space="preserve"><value>Offen</value></data>
+  <data name="AIH_V_due_date" xml:space="preserve"><value>Fälligkeitsdatum</value></data>
+  <data name="AIH_V_lines" xml:space="preserve"><value>Positionen</value></data>
+  <data name="AIH_V_customer_balance" xml:space="preserve"><value>Kundensaldo jetzt</value></data>
+  <data name="AIH_V_einvoice" xml:space="preserve"><value>E-Rechnung</value></data>
+  <data name="AIH_Side_Debit" xml:space="preserve"><value>Soll</value></data>
+  <data name="AIH_Side_Credit" xml:space="preserve"><value>Haben</value></data>
+  <data name="AIH_F_tb_balanced" xml:space="preserve"><value>Die Probebilanz ist jetzt ausgeglichen. Vielleicht wurde eine Buchung nach der Anzeige korrigiert; zeigen Sie sie erneut an.</value></data>
+  <data name="AIH_F_tb_currency" xml:space="preserve"><value>Die Probebilanz wird in einer Währung angezeigt; Buchungen in mehreren Währungen gleichen sich in einer Währung nicht aus. Zur Prüfung „im Gegenwert“ anzeigen.</value></data>
+  <data name="AIH_F_tb_move_entries" xml:space="preserve"><value>{count} unausgeglichene Buchungen im Zeitraum, Differenzen insgesamt {total}.</value></data>
+  <data name="AIH_F_tb_move_all" xml:space="preserve"><value>Diese Buchungen erklären die gesamte Bewegungsdifferenz.</value></data>
+  <data name="AIH_F_tb_move_rest" xml:space="preserve"><value>{rest} der Bewegungsdifferenz wird durch die unausgeglichenen Buchungen nicht erklärt.</value></data>
+  <data name="AIH_F_tb_open_entries" xml:space="preserve"><value>{count} unausgeglichene Buchungen vor dem „Von“-Datum in der Periode, Differenzen insgesamt {total}; sie fließen in den Anfangssaldo ein.</value></data>
+  <data name="AIH_F_tb_open_stored" xml:space="preserve"><value>Die gespeicherten Anfangssalden weichen um {total} ab. Prüfen Sie sie mit „Anfangssaldo aktualisieren“ im Desktop-Programm.</value></data>
+  <data name="AIH_F_tb_none" xml:space="preserve"><value>Im Zeitraum wurde keine unausgeglichene Buchung gefunden. Prüfen Sie die Maske „Buchungsintegrität“.</value></data>
+  <data name="AIH_F_acc_no_movement" xml:space="preserve"><value>Keine Bewegung auf dem Konto im Zeitraum; sein Saldo ist der Anfangssaldo.</value></data>
+  <data name="AIH_F_acc_group_share" xml:space="preserve"><value>Das Konto macht {pct}% des Gruppensaldos aus.</value></data>
+  <data name="AIH_F_acc_top_source" xml:space="preserve"><value>Größte Quelle der Kontobewegung: {source} mit {pct}%.</value></data>
+  <data name="AIH_F_acc_dominant" xml:space="preserve"><value>Buchung Nr. {entry_no} allein macht {pct}% der Kontobewegung aus.</value></data>
+  <data name="AIH_F_acc_manual" xml:space="preserve"><value>Manuelle Buchungen machen {pct}% der Kontobewegung aus ({count} Buchungen).</value></data>
+  <data name="AIH_F_cu_zero" xml:space="preserve"><value>Der Kundensaldo ist null.</value></data>
+  <data name="AIH_F_cu_credit_side" xml:space="preserve"><value>Habensaldo: wir schulden dem Kunden {amount}.</value></data>
+  <data name="AIH_F_cu_overdue" xml:space="preserve"><value>{amount} überfällig in {count} offenen Rechnungen; die älteste ist {days} Tage überfällig.</value></data>
+  <data name="AIH_F_cu_unallocated" xml:space="preserve"><value>{amount} des Saldos ist keinen Rechnungen der letzten {months} Monate zugeordnet (Altsaldo oder Buchungen).</value></data>
+  <data name="AIH_F_cu_no_receipt" xml:space="preserve"><value>Der letzte Zahlungseingang des Kunden war vor {days} Tagen.</value></data>
+  <data name="AIH_F_cu_never_receipt" xml:space="preserve"><value>Vom Kunden wurde kein Zahlungseingang erfasst.</value></data>
+  <data name="AIH_F_cu_over_limit" xml:space="preserve"><value>Der Saldo überschreitet das Kreditlimit ({limit}) um {amount}.</value></data>
+  <data name="AIH_F_cu_range_up" xml:space="preserve"><value>Der Saldo stieg im Zeitraum um {amount}.</value></data>
+  <data name="AIH_F_cu_range_down" xml:space="preserve"><value>Der Saldo sank im Zeitraum um {amount}.</value></data>
+  <data name="AIH_F_inv_lines_mismatch" xml:space="preserve"><value>Die Positionssumme {lines} entspricht nicht der Rechnungssumme {total} (Differenz {diff}).</value></data>
+  <data name="AIH_F_inv_tax_per_item" xml:space="preserve"><value>Die Steuer wird je Position berechnet und daher nicht nochmals auf die Summe erhoben.</value></data>
+  <data name="AIH_F_inv_tax_mismatch" xml:space="preserve"><value>Die Positionssteuer {lines} entspricht nicht der Rechnungssteuer {total} (Differenz {diff}).</value></data>
+  <data name="AIH_F_inv_unpaid" xml:space="preserve"><value>Die Rechnung ist auf Ziel mit {amount} offen.</value></data>
+  <data name="AIH_F_inv_overdue" xml:space="preserve"><value>Sie ist {days} Tage überfällig.</value></data>
+  <data name="AIH_F_inv_no_due" xml:space="preserve"><value>Auf Ziel ohne erfasstes Fälligkeitsdatum.</value></data>
+  <data name="AIH_F_inv_einv_not_sent" xml:space="preserve"><value>Eine Steuerrechnung, die noch nicht an das Steuerportal gesendet wurde.</value></data>
+  <data name="AIH_F_inv_einv_sent" xml:space="preserve"><value>An das Steuerportal gesendet (Senden heißt nicht angenommen).</value></data>
+  <data name="AIH_F_inv_not_posted" xml:space="preserve"><value>Noch nicht in die Buchhaltung gebucht.</value></data>
+  <data name="AIH_Tb_entries" xml:space="preserve"><value>Unausgeglichene Buchungen</value></data>
+  <data name="AIH_Tb_prior_entries" xml:space="preserve"><value>Unausgeglichene Buchungen vor „Von“</value></data>
+  <data name="AIH_Tb_sources" xml:space="preserve"><value>Bewegung nach Quelle</value></data>
+  <data name="AIH_Tb_top_entries" xml:space="preserve"><value>Größte Buchungen</value></data>
+  <data name="AIH_Tb_monthly" xml:space="preserve"><value>Nettobewegung je Monat</value></data>
+  <data name="AIH_Tb_types" xml:space="preserve"><value>Bewegung nach Art</value></data>
+  <data name="AIH_Tb_top_moves" xml:space="preserve"><value>Größte Bewegungen</value></data>
+  <data name="AIH_Tb_aging" xml:space="preserve"><value>Altersstruktur des Saldos</value></data>
+  <data name="AIH_Tb_top_lines" xml:space="preserve"><value>Größte Positionen</value></data>
+  <data name="AIH_C_entry_no" xml:space="preserve"><value>Buchungs-Nr.</value></data>
+  <data name="AIH_C_date" xml:space="preserve"><value>Datum</value></data>
+  <data name="AIH_C_journal" xml:space="preserve"><value>Journal</value></data>
+  <data name="AIH_C_source" xml:space="preserve"><value>Quelle</value></data>
+  <data name="AIH_C_debit" xml:space="preserve"><value>Soll</value></data>
+  <data name="AIH_C_credit" xml:space="preserve"><value>Haben</value></data>
+  <data name="AIH_C_diff" xml:space="preserve"><value>Differenz</value></data>
+  <data name="AIH_C_count" xml:space="preserve"><value>Anzahl</value></data>
+  <data name="AIH_C_share" xml:space="preserve"><value>Anteil %</value></data>
+  <data name="AIH_C_type" xml:space="preserve"><value>Art</value></data>
+  <data name="AIH_C_month" xml:space="preserve"><value>Monat</value></data>
+  <data name="AIH_C_bucket" xml:space="preserve"><value>Klasse</value></data>
+  <data name="AIH_C_amount" xml:space="preserve"><value>Betrag</value></data>
+  <data name="AIH_C_item" xml:space="preserve"><value>Artikel</value></data>
+  <data name="AIH_C_qty" xml:space="preserve"><value>Menge</value></data>
+  <data name="AIH_C_price" xml:space="preserve"><value>Preis</value></data>
+  <data name="AIH_C_net" xml:space="preserve"><value>Netto</value></data>
+  <data name="AIH_Src_manual" xml:space="preserve"><value>Manuelle Buchungen</value></data>
+  <data name="AIH_Src_sales" xml:space="preserve"><value>Verkauf</value></data>
+  <data name="AIH_Src_purchases" xml:space="preserve"><value>Einkauf</value></data>
+  <data name="AIH_Src_cash" xml:space="preserve"><value>Kasse</value></data>
+  <data name="AIH_Src_opening" xml:space="preserve"><value>Eröffnungsbuchung</value></data>
+  <data name="AIH_Src_closing" xml:space="preserve"><value>Abschlussbuchung</value></data>
+  <data name="AIH_Src_other" xml:space="preserve"><value>Andere Quellen</value></data>
+  <data name="AIH_Ty_invoices" xml:space="preserve"><value>Verkaufsrechnungen</value></data>
+  <data name="AIH_Ty_receipts" xml:space="preserve"><value>Zahlungseingänge</value></data>
+  <data name="AIH_Ty_payments" xml:space="preserve"><value>Zahlungen an den Kunden</value></data>
+  <data name="AIH_Ty_returns" xml:space="preserve"><value>Retouren</value></data>
+  <data name="AIH_Ty_opening" xml:space="preserve"><value>Anfangssaldo</value></data>
+  <data name="AIH_Ty_linked" xml:space="preserve"><value>Verknüpftes Lieferantenkonto</value></data>
+  <data name="AIH_Ty_other" xml:space="preserve"><value>Korrekturen und Sonstiges</value></data>
+  <data name="AIH_B_not_due" xml:space="preserve"><value>Nicht fällig</value></data>
+  <data name="AIH_B_1_30" xml:space="preserve"><value>1–30 Tage</value></data>
+  <data name="AIH_B_31_60" xml:space="preserve"><value>31–60 Tage</value></data>
+  <data name="AIH_B_61_90" xml:space="preserve"><value>61–90 Tage</value></data>
+  <data name="AIH_B_over_90" xml:space="preserve"><value>Über 90 Tage</value></data>
+  <data name="AIH_B_unallocated" xml:space="preserve"><value>Keinen Rechnungen zugeordnet</value></data>
+  <data name="AIH_E_not_sent" xml:space="preserve"><value>Nicht gesendet</value></data>
+  <data name="AIH_E_sent" xml:space="preserve"><value>Gesendet</value></data>
+  <data name="AIH_E_superseded" xml:space="preserve"><value>Erneut gesendet</value></data>
+  <data name="AIH_E_flag_only" xml:space="preserve"><value>Als hochgeladen markiert</value></data>
+  <data name="AIH_L_integrity" xml:space="preserve"><value>Buchungsintegrität</value></data>
+  <data name="AIH_L_entries" xml:space="preserve"><value>Buchungen</value></data>
+  <data name="AIH_L_ledger" xml:space="preserve"><value>Hauptbuch</value></data>
+  <data name="AIH_L_collections" xml:space="preserve"><value>Inkassoprioritäten</value></data>
+  <data name="AIH_L_statement" xml:space="preserve"><value>Kundenkontoauszug</value></data>
+  <data name="AIH_Ask_why_unbalanced" xml:space="preserve"><value>Warum ist die angezeigte Probebilanz nicht ausgeglichen? Nenne die verursachenden Buchungen und was ich prüfen soll.</value></data>
+  <data name="AIH_Ask_explain_account" xml:space="preserve"><value>Erkläre den Saldo des ausgewählten Kontos in der Probebilanz: woraus besteht er und was sind die wichtigsten Bewegungen?</value></data>
+  <data name="AIH_Ask_explain_balance" xml:space="preserve"><value>Erkläre den Saldo dieses Kunden: woraus besteht er und wie viel ist überfällig?</value></data>
+  <data name="AIH_Ask_explain_invoice" xml:space="preserve"><value>Erkläre diese Rechnung: wie wurde der Nettobetrag berechnet und wie ist der Zahlungsstatus?</value></data>
+  <data name="AIH_Chip" xml:space="preserve"><value>Maskenkontext: {0}</value></data>
+  <data name="AIH_ChipRemove" xml:space="preserve"><value>Maskenkontext aus der Nachricht entfernen</value></data>
+  <data name="AIH_ChipHint" xml:space="preserve"><value>Nur Ihre Auswahl in der Maske (Zeitraum, Filiale, ID) wird an den Assistenten gesendet, keine Beträge.</value></data>
+  <data name="AIH_MsgFacts" xml:space="preserve"><value>Fakten aus der Maske: {0}</value></data>
+  <data name="AIH_K_trial_balance" xml:space="preserve"><value>Probebilanz</value></data>
+  <data name="AIH_K_customer_statement" xml:space="preserve"><value>Kundenkontoauszug</value></data>
+  <data name="AIH_K_sales_invoice" xml:space="preserve"><value>Verkaufsrechnung</value></data>
+  <data name="AIH_K_sales_return" xml:space="preserve"><value>Verkaufsretoure</value></data>
+  <data name="AIH_Set_Tab" xml:space="preserve"><value>In den Masken</value></data>
+  <data name="AIH_Set_Enabled" xml:space="preserve"><value>„Erklären“-Schaltflächen in den Masken</value></data>
+  <data name="AIH_Set_EnabledHint" xml:space="preserve"><value>Sichtbar für Benutzer mit Assistenten- und Maskenrecht.</value></data>
+  <data name="AIH_Set_Narrative" xml:space="preserve"><value>Vom Modell geschriebener Erklärungsabsatz</value></data>
+  <data name="AIH_Set_NarrativeHint" xml:space="preserve"><value>Wenn aus, werden nur die berechneten Fakten angezeigt, ohne Kosten.</value></data>
+  <data name="AIH_Set_MaxPerDay" xml:space="preserve"><value>Maximale Modellerklärungen pro Tag</value></data>
+  <data name="AIH_Set_MaxPerDayHint" xml:space="preserve"><value>Für das ganze Unternehmen. Null stoppt Modellaufrufe.</value></data>
+  <data name="AIH_Set_UsedToday" xml:space="preserve"><value>Heute verwendet: {0}</value></data>
+  <data name="AIH_Set_Ambient" xml:space="preserve"><value>Maskenkontext mit Chatnachrichten senden</value></data>
+  <data name="AIH_Set_AmbientHint" xml:space="preserve"><value>Nur die Maskenauswahl (Zeitraum, Filiale, ID), damit der Assistent „diese Maske“ versteht. Benutzer sehen sie und können sie entfernen.</value></data>
+  <data name="AIH_Set_Screens" xml:space="preserve"><value>Abgedeckte Masken: Probebilanz, Kundenkontoauszug, Verkaufsrechnung und -retoure.</value></data>
+  <data name="AIH_Set_Save" xml:space="preserve"><value>Speichern</value></data>
+  <data name="AIH_Set_Saved" xml:space="preserve"><value>Einstellungen gespeichert</value></data>
+  <data name="AIH_Set_ErrMax" xml:space="preserve"><value>Der Wert muss zwischen 0 und 5000 liegen.</value></data>
+  <data name="AIH_Set_ErrNotAdmin" xml:space="preserve"><value>Die Einstellungen des Assistenten in den Masken sind nur für Administratoren.</value></data>
 </root>

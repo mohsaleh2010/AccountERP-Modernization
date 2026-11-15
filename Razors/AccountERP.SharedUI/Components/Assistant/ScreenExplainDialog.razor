@@ -1,0 +1,342 @@
+@* 🤖 P8.9.2 (ص1، ص16، ص28–ص30): حوار «شرح المساعد» داخل الشاشة. الحقائق والنتائج بقواعد ثابتة تظهر فوراً (محسوبة على الخادم من محددات
+   الشاشة فقط)، ثم فقرة واحدة من النموذج مدقَّقة الأرقام فى منطقة حالة. لا يغيّر أى بيانات (ص31). يملأ الشاشة تحت 600px، ولا يُطبع. *@
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using Microsoft.Extensions.DependencyInjection
+@inject IServiceProvider ServiceProvider
+@inject LanguageService LangService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<style>
+    .sx-dialog { width: min(880px, 96vw); }
+    @@media (max-width: 600px) {
+        .sx-dialog { width: 100vw !important; max-width: 100vw !important; height: 100dvh; max-height: 100dvh !important; margin: 0 !important; border-radius: 0 !important; }
+    }
+    @@media print { .sx-dialog, .mud-overlay { display: none !important; } }
+    .sx { display: flex; flex-direction: column; gap: 16px; }
+    .sx-ctx { font-size: .88rem; color: var(--mud-palette-text-secondary); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+    .sx-ctx bdi { font-weight: 600; color: var(--mud-palette-text-primary); }
+    .sx-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .sx-card { border: 1px solid var(--mud-palette-lines-default); border-radius: 8px; padding: 10px 12px; background: var(--mud-palette-surface); min-height: 64px; }
+    .sx-card .k { font-size: .78rem; color: var(--mud-palette-text-secondary); }
+    .sx-card .v { font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; text-align: start; display: block; }
+    .sx-card .s { font-size: .78rem; font-weight: 600; color: var(--mud-palette-text-secondary); }
+    .sx h3 { font-size: .98rem; font-weight: 700; margin: 0 0 8px; }
+    .sx-find { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .sx-find li { display: flex; gap: 10px; align-items: flex-start; border-inline-start: 4px solid var(--mud-palette-lines-default); padding: 6px 10px; border-radius: 4px; background: var(--mud-palette-background-gray); line-height: 1.6; }
+    .sx-find li.high { border-inline-start-color: var(--mud-palette-error); }
+    .sx-find li.warn { border-inline-start-color: var(--mud-palette-warning); }
+    .sx-find li.info { border-inline-start-color: var(--mud-palette-info); }
+    .sx-tbl-wrap { overflow-x: auto; }
+    .sx-tbl { width: 100%; border-collapse: collapse; font-size: .86rem; }
+    .sx-tbl th, .sx-tbl td { padding: 6px 8px; border-bottom: 1px solid var(--mud-palette-lines-default); text-align: start; white-space: nowrap; }
+    .sx-tbl th { font-weight: 700; color: var(--mud-palette-text-secondary); background: var(--mud-palette-background-gray); }
+    .sx-tbl td.n { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; text-align: end; }
+    @@media (max-width: 600px) {
+        .sx-tbl thead { display: none; }
+        .sx-tbl tr { display: block; border: 1px solid var(--mud-palette-lines-default); border-radius: 6px; margin-bottom: 8px; padding: 4px 8px; }
+        .sx-tbl td { display: flex; justify-content: space-between; gap: 12px; border: 0; white-space: normal; }
+        .sx-tbl td::before { content: attr(data-label); font-weight: 600; color: var(--mud-palette-text-secondary); }
+        .sx-tbl td.n { text-align: end; }
+    }
+    .sx-narr { border: 1px solid var(--mud-palette-lines-default); border-inline-start: 4px solid var(--mud-palette-primary); border-radius: 8px; padding: 12px 14px; }
+    .sx-narr .t { white-space: pre-wrap; line-height: 1.8; }
+    .sx-narr .m { font-size: .78rem; color: var(--mud-palette-text-secondary); margin-top: 6px; }
+    .sx-skel { display: flex; flex-direction: column; gap: 10px; }
+    .sx-actions .mud-button-root { min-height: 44px; }
+    .sx-links { display: flex; flex-wrap: wrap; gap: 6px; }
+    .sx-links .mud-button-root { min-height: 44px; }
+    @@media (prefers-reduced-motion: reduce) { .sx * { animation: none !important; transition: none !important; } }
+</style>
+
+<MudDialog Class="sx-dialog" ContentStyle="max-height: calc(100dvh - 150px); overflow-y: auto;">
+    <TitleContent>
+        <div style="display:flex;align-items:center;gap:8px;">
+            <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Color="Color.Primary" aria-hidden="true" />
+            <span style="font-weight:700;" tabindex="-1" @ref="_titleRef">@Tr(AiScreenAssistText.TitleKey(Payload.Kind, Payload.Question))</span>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <div class="sx" aria-busy="@(_loading ? "true" : "false")">
+            @if (_loading)
+            {
+                <div class="sx-skel" role="status">
+                    <span class="mud-text-secondary">@Tr("AIH_Loading")</span>
+                    <MudSkeleton Height="60px" />
+                    <MudSkeleton Height="24px" Width="80%" />
+                    <MudSkeleton Height="24px" Width="60%" />
+                </div>
+            }
+            else if (_error != null)
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" role="alert">
+                    @_error
+                    <div class="mt-2"><MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync" Style="min-height:44px">@Tr("AIH_Retry")</MudButton></div>
+                </MudAlert>
+            }
+            else if (_facts != null)
+            {
+                <div class="sx-ctx">
+                    @if (!string.IsNullOrWhiteSpace(_facts.Subject))
+                    {
+                        <span><bdi>@_facts.Subject</bdi>@(string.IsNullOrWhiteSpace(_facts.SubjectCode) ? "" : " (" + _facts.SubjectCode + ")")</span>
+                    }
+                    @if (_facts.From.HasValue && _facts.To.HasValue && _facts.From != _facts.To)
+                    {
+                        <span>@Tr("AIH_Ctx_Range", D(_facts.From.Value), D(_facts.To.Value))</span>
+                    }
+                    else if (_facts.From.HasValue)
+                    {
+                        <span>@D(_facts.From.Value)</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(_facts.BranchName))
+                    {
+                        <span>@Tr("AIH_Ctx_Branch", _facts.BranchName)</span>
+                    }
+                    <span>@Tr("AIH_ComputedAt", _facts.ComputedAt.ToString("HH:mm", CultureInfo.InvariantCulture))</span>
+                </div>
+
+                @if (_facts.Values.Count > 0)
+                {
+                    <div class="sx-cards">
+                        @foreach (var v in _facts.Values)
+                        {
+                            <div class="sx-card">
+                                <div class="k">@Tr("AIH_V_" + v.Key)</div>
+                                <span class="v">@AiScreenAssistText.Value(v, Culture, Tk)</span>
+                                @if (!string.IsNullOrEmpty(v.Side))
+                                {
+                                    <span class="s">@Tr(v.Side == "debit" ? "AIH_Side_Debit" : "AIH_Side_Credit")</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+
+                <section aria-labelledby="sx-find-h">
+                    <h3 id="sx-find-h">@Tr("AIH_FactsTitle")</h3>
+                    @if (_facts.Findings.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">@Tr("AIH_NoFindings")</MudText>
+                    }
+                    else
+                    {
+                        <ul class="sx-find">
+                            @foreach (var f in _facts.Findings)
+                            {
+                                var (color, icon) = AiScreenAssistText.Severity(f.Severity);
+                                <li class="@f.Severity">
+                                    <MudIcon Icon="@icon" Color="@color" Size="Size.Small" Style="margin-top:3px" aria-hidden="true" />
+                                    <span><span class="visually-hidden" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">@Tr(AiScreenAssistText.SeverityKey(f.Severity)): </span>@AiScreenAssistText.Finding(f, Culture, Tk)</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </section>
+
+                @if (_facts.DetailHidden)
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true" Icon="@Icons.Material.Outlined.Lock">@Tr("AIH_DetailHidden")</MudAlert>
+                }
+                @if (_facts.TaxRestricted)
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true" Icon="@Icons.Material.Outlined.FilterAlt">@Tr("AIH_TaxRestricted")</MudAlert>
+                }
+                @if (_facts.StatementNote)
+                {
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@Tr("AIH_StmtNote")</MudText>
+                }
+
+                @foreach (var t in _facts.Tables)
+                {
+                    <section>
+                        <h3>@Tr("AIH_Tb_" + t.Key)</h3>
+                        <div class="sx-tbl-wrap">
+                            <table class="sx-tbl">
+                                <thead><tr>@foreach (var c in t.Columns) { <th scope="col">@Tr("AIH_C_" + c)</th> }</tr></thead>
+                                <tbody>
+                                    @foreach (var r in t.Rows)
+                                    {
+                                        <tr>
+                                            @for (int i = 0; i < t.Columns.Length && i < r.Length; i++)
+                                            {
+                                                var type = i < t.Types.Length ? t.Types[i] : "text";
+                                                bool num = type is "number" or "int" or "pct";
+                                                <td class="@(num ? "n" : "")" data-label="@Tr("AIH_C_" + t.Columns[i])" dir="@(type == "text" ? "auto" : null)">@AiScreenAssistText.Cell(r[i], type, Culture, Tk)</td>
+                                            }
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                }
+
+                <section aria-labelledby="sx-narr-h">
+                    <h3 id="sx-narr-h">@Tr("AIH_NarrTitle")</h3>
+                    <div class="sx-narr" role="status" aria-atomic="true">
+                        @if (_narrWorking)
+                        {
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" aria-hidden="true" />
+                                <span>@Tr("AIH_NarrWorking")</span>
+                            </div>
+                        }
+                        else if (_narr?.Source == AiBriefNarrativeSource.Model && !string.IsNullOrWhiteSpace(_narr.Text))
+                        {
+                            <div class="t" dir="auto">@_narr.Text</div>
+                            <div class="m">@Tr("AIH_NarrModel", _narr.ModelName)</div>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Class="mud-text-secondary">@Tr(NarrKey)</MudText>
+                        }
+                    </div>
+                </section>
+
+                @if (_facts.Links.Count > 0)
+                {
+                    <div class="sx-links">
+                        @foreach (var l in _facts.Links)
+                        {
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.OpenInNew" OnClick="@(() => Go(l.Url))">@Tr("AIH_L_" + l.Key)</MudButton>
+                        }
+                    </div>
+                }
+
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    <MudIcon Icon="@Icons.Material.Outlined.Info" Size="Size.Small" Style="vertical-align:middle" aria-hidden="true" /> @Tr("AIH_Disclaimer")
+                </MudText>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <div class="sx-actions" style="display:flex;gap:8px;flex-wrap:wrap;width:100%;justify-content:flex-end;">
+            @if (_facts != null)
+            {
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.ContentCopy" OnClick="CopyAsync">@Tr("AIH_Copy")</MudButton>
+                @if (CanAsk)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Forum" OnClick="AskAssistant">@Tr("AIH_AskAssistant")</MudButton>
+                }
+            }
+            <MudButton Variant="Variant.Text" OnClick="@(() => MudDialog.Close())">@Tr("AI_Close")</MudButton>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public AiScreenPayload Payload { get; set; } = new();
+    [Parameter] public string Route { get; set; } = "";
+    [Parameter] public string ScreenTitle { get; set; } = "";
+
+    private AiScreenAssistService? _svc;
+    private AiScreenFacts? _facts;
+    private AiScreenNarrative? _narr;
+    private bool _loading = true, _narrWorking;
+    private string? _error;
+    private IJSObjectReference? _module;
+    private ElementReference _titleRef;
+    private bool _focused;
+    private readonly CancellationTokenSource _cts = new();
+
+    private CultureInfo Culture => LangService.CurrentCultureInfo;
+    private string Tk(string key) => Tr(key);
+    private static string D(DateTime d) => d.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture);
+
+    private bool CanAsk => _svc != null && _svc.CanAskAssistant;
+
+    private string NarrKey => _narr?.Source switch
+    {
+        AiBriefNarrativeSource.Rejected => "AIH_NarrRejected",
+        AiBriefNarrativeSource.Error => "AIH_NarrError",
+        AiBriefNarrativeSource.Capped => "AIH_NarrCapped",
+        _ => "AIH_NarrOff",
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _svc = ServiceProvider.GetService<AiScreenAssistService>();
+        await LoadAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_focused) { _focused = true; try { await _titleRef.FocusAsync(); } catch { } }
+    }
+
+    private async Task LoadAsync()
+    {
+        if (_svc == null) { _loading = false; _error = Tr("AIH_Err_NoPermission"); return; }
+        _loading = true; _error = null; _narr = null;
+        StateHasChanged();
+        try { _facts = await _svc.BuildAsync(Payload); }
+        catch (Exception ex)
+        {
+            string key = AiScreenAssistText.ErrorKey(ex);
+            _error = key == "AIH_Err_Failed" ? Tr(key, ex.Message) : Tr(key);
+            _facts = null;
+        }
+        finally { _loading = false; }
+        StateHasChanged();
+        if (_facts != null && _svc.NarrativeOn) await NarrateAsync();
+    }
+
+    private async Task NarrateAsync()
+    {
+        if (_svc == null || _facts == null) return;
+        _narrWorking = true;
+        StateHasChanged();
+        try
+        {
+            var n = await _svc.ExplainAsync(Payload, _facts.Hash, LangService.CurrentLanguage, _cts.Token);
+            if (n.Facts != null) _facts = n.Facts;
+            _narr = n;
+        }
+        catch (OperationCanceledException) { return; }
+        catch { _narr = new AiScreenNarrative { Source = AiBriefNarrativeSource.Error }; }
+        finally { _narrWorking = false; }
+        if (!_cts.IsCancellationRequested) StateHasChanged();
+    }
+
+    private void Go(string url)
+    {
+        MudDialog.Close();
+        Nav.NavigateTo(url);
+    }
+
+    private void AskAssistant()
+    {
+        if (_svc == null) return;
+        var r = _svc.AskAssistant(Payload, Tr("AIH_Ask_" + Payload.Question), Route, ScreenTitle, LangService.CurrentLanguage);
+        if (r == AiScreenAssistService.AskResult.Busy) { Snackbar.Add(Tr("AIS_AssistantBusy"), Severity.Warning); return; }
+        MudDialog.Close();
+        if (r == AiScreenAssistService.AskResult.OpenPage) Nav.NavigateTo("/assistant");
+    }
+
+    private async Task CopyAsync()
+    {
+        if (_facts == null) return;
+        try
+        {
+            _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./_content/AccountERP.SharedUI/js/assistant.js");
+            await _module.InvokeAsync<bool>("copyText", AiScreenAssistText.PlainText(_facts, _narr, Culture, Tk));
+            Snackbar.Add(Tr("AIH_Copied"), Severity.Success);
+        }
+        catch { }
+    }
+
+    private string Tr(string key, params object[] args) => AiBriefText.T(Lang, LangService.CurrentCultureInfo, key, args);
+
+    public async ValueTask DisposeAsync()
+    {
+        try { _cts.Cancel(); } catch { }
+        _cts.Dispose();
+        if (_module != null) { try { await _module.DisposeAsync(); } catch { } }
+    }
+}

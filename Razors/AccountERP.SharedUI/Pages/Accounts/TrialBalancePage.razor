@@ -14,6 +14,8 @@
 @inject LanguageService LangService
 @inject IJSRuntime JS
 @inject NavigationManager Nav
+@inject IServiceProvider ServiceProvider
+@inject IDialogService DialogService
 @implements IDisposable
 
 <PageTitle>@Title</PageTitle>
@@ -41,6 +43,15 @@
     table.tb tr.grand td { font-weight: 800; background: color-mix(in srgb, var(--mud-palette-primary) 16%, transparent); border-top: 2px solid var(--mud-palette-primary); }
     .tb-status { margin-top: 12px; }
     .tb-print-title { display: none; }
+    /* P8.9.2: اختيار صف لشرح رصيده (حين المساعد متاح فقط) */
+    table.tb tr.selectable { cursor: pointer; }
+    table.tb tr.selectable:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: -2px; }
+    table.tb tr.sel td { background: var(--mud-palette-action-default-hover); }
+    table.tb tr.sel td:first-child { border-inline-start: 4px solid var(--mud-palette-primary); }
+    .tb-selbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 10px; padding: 8px 12px; border-radius: 8px;
+                 border: 1px dashed var(--mud-palette-lines-default); font-size: .9rem; color: var(--mud-palette-text-secondary); }
+    .tb-selbar .mud-button-root { min-height: 44px; }
+    .tb-selbar .mud-icon-button { min-width: 44px; min-height: 44px; }
     @@media (max-width: 1099px) { .tb-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @@media (max-width: 599px) { .tb-filters { grid-template-columns: minmax(0, 1fr); } }
     @@media print {
@@ -48,6 +59,7 @@
         .tb-print-title { display: block; margin-bottom: 8px; }
         .tb-wrap { overflow: visible; }
         table.tb thead th { position: static; }
+        table.tb tr.sel td { background: none !important; border-inline-start: 0 !important; }
     }
 </style>
 
@@ -126,6 +138,22 @@
             }
             else
             {
+                @if (AssistOn)
+                {
+                    <div class="tb-selbar tb-noprint" role="region" aria-live="polite" aria-label="@Tr("AIH_Title")">
+                        <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Size="Size.Small" Color="Color.Primary" aria-hidden="true" />
+                        @if (SelectedRow == null)
+                        {
+                            <span>@Tr("AIH_RowHint")</span>
+                        }
+                        else
+                        {
+                            <span style="color:var(--mud-palette-text-primary);font-weight:600;">@Tr("AIH_SelectedAccount", SelectedRow.Code + " " + SelectedRow.AccountName)</span>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="ExplainAccountAsync">@Tr("AIH_Btn_ExplainBalance")</MudButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-label="@Tr("AIH_ClearSelection")" Title="@Tr("AIH_ClearSelection")" OnClick="@(() => _selectedAccountId = 0)" />
+                        }
+                    </div>
+                }
                 <div class="tb-wrap">
                     <table class="tb">
                         <thead>
@@ -153,8 +181,12 @@
                                 <tr class="grp"><td colspan="@ColCount">@g.MainCode @g.MainAccountName</td></tr>
                                 @foreach (var r in g.Rows)
                                 {
-                                    <tr>
-                                        <td>@r.Code</td>
+                                    var row = r;
+                                    bool sel = AssistOn && row.AccountId == _selectedAccountId;
+                                    <tr class="@(AssistOn ? (sel ? "selectable sel" : "selectable") : null)" tabindex="@(AssistOn ? "0" : null)"
+                                        aria-selected="@(AssistOn ? (sel ? "true" : "false") : null)"
+                                        @onclick="@(() => SelectRow(row.AccountId))" @onkeydown="@(e => RowKey(e, row.AccountId))">
+                                        <td>@if (sel) { <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Style="vertical-align:middle" aria-hidden="true" /> }@r.Code</td>
                                         <td class="name">@r.AccountName</td>
                                         @if (Closing)
                                         {
@@ -208,7 +240,13 @@
                     </table>
                 </div>
                 <MudAlert Severity="@(_result.IsBalanced ? Severity.Success : Severity.Warning)" Dense="true" Class="tb-status tb-noprint" role="status">
-                    @(_result.IsBalanced ? Tr("TBBalanced") : Tr("TBUnbalanced", UnbalancedText))
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;">
+                        <span>@(_result.IsBalanced ? Tr("TBBalanced") : Tr("TBUnbalanced", UnbalancedText))</span>
+                        @if (!_result.IsBalanced && AssistOn)
+                        {
+                            <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Warning" Style="min-height:40px" StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="ExplainUnbalancedAsync">@Tr("AIH_Btn_WhyUnbalanced")</MudButton>
+                        }
+                    </div>
                 </MudAlert>
             }
         </div>
@@ -305,7 +343,42 @@
     private void OnLanguageChangedHandler() => InvokeAsync(StateHasChanged);
     public void Dispose() => LangService.OnLanguageChanged -= OnLanguageChangedHandler;
 
-    private void Reset() { _result = null; _error = null; }
+    private void Reset() { _result = null; _error = null; _selectedAccountId = 0; }
+
+    // ───── P8.9.2: المساعد داخل الشاشة (ويب فقط — الخدمة غير مسجّلة فى MAUI فلا يظهر شىء) ─────
+    private long _selectedAccountId;
+    private AiScreenAssistService? Assist => ServiceProvider.GetService(typeof(AiScreenAssistService)) as AiScreenAssistService;
+    private bool AssistOn => Assist?.IsAvailable(AiScreenKinds.TrialBalance) == true;
+    private FinalAccountsService.TrialBalanceRow? SelectedRow =>
+        _selectedAccountId == 0 || _result == null ? null : _result.Groups.SelectMany(g => g.Rows).FirstOrDefault(r => r.AccountId == _selectedAccountId);
+
+    private void SelectRow(long accountId)
+    {
+        if (AssistOn) _selectedAccountId = _selectedAccountId == accountId ? 0 : accountId;
+    }
+
+    private void RowKey(KeyboardEventArgs e, long accountId)
+    {
+        if (e.Key is "Enter" or " " or "Spacebar") SelectRow(accountId);
+    }
+
+    /// <summary>محددات الشاشة المعروضة فقط (ص2): المدى والفرع والعملة والمرشح والوضع (+ الحساب).</summary>
+    private AiScreenPayload Payload(string question, long accountId = 0) => new()
+    {
+        Kind = AiScreenKinds.TrialBalance, Question = question, From = _from, To = _to, BranchId = _branch, CurrencyId = _currency,
+        Filter = _filter switch { FinalAccountsService.BalanceFilter.WithBalance => "with_balance", FinalAccountsService.BalanceFilter.MovementOnly => "movement_only", _ => "all" },
+        Mode = Closing ? "closing" : "totals", EntityId = accountId,
+    };
+
+    private async Task ExplainUnbalancedAsync()
+    {
+        if (Assist is { } a) await a.OpenDialogAsync(DialogService, Payload(AiScreenQuestions.WhyUnbalanced), "/accounts/final/trial-balance", Title);
+    }
+
+    private async Task ExplainAccountAsync()
+    {
+        if (Assist is { } a && _selectedAccountId != 0) await a.OpenDialogAsync(DialogService, Payload(AiScreenQuestions.ExplainAccount, _selectedAccountId), "/accounts/final/trial-balance", Title);
+    }
 
     private void OnPeriodAsync(long id)
     {

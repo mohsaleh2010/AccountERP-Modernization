@@ -689,3 +689,9 @@ Rules:
 - إضافات على الخطة: `AiScreenFacts.PromptJson`/`PromptJsonMin`/`ChatJson`/`Names`/`CustomerId`/`StatementNote` (الصيغ الثلاث تُبنى مرة فى البانى بـ `Namer`)؛ `AiScreenValue.Format`؛ `AiScreenNarrative.Facts`؛ `AiScreenAssistRules.RoutesOf`/`KindOfRoute`/`DaysOverdue`؛ البوابة `BuildServer`/`EnsureUse`/`AmbientFor` (للمحادثة P8.9.4). `AiScreenExplainer` كُتب مع هذا الجزء لأن البوابة تأخذه (المنطق الكامل؛ الواجهة فى P8.9.2).
 - ملاحظة للفحص 8: أحدث فاتورة فى قاعدة التطوير أعطت `inv_tax_mismatch` ⇒ يُفحص تعريف `line_sales_tax` فى P8.9.3 قبل الإبقاء على القاعدة.
 - harness `p891test` 87/87 (scratchpad جلسة 116aac4e)، وnet48/C# 7.3 للملفين (`p891lang`).
+
+**P8.9.2 (2026-11-15):**
+- الفحوص: (1) `Verify` يقبل أرقام القيود (1532) والتواريخ والنسب (62.5%، 80%) ويرفض رقماً مخترعاً (37.5) ⇒ أرقام القيود تبقى فى الحمولة. (6) `CountSince` ≈ 5 ms ⇒ لا عدّاد فى الذاكرة. (7) شاشة القيود لا تفتح قيداً بمعرّفه (معاملاتها referenceType/referenceTypeTableId فقط) ⇒ رقم القيد نص، ورابطا `AIH_L_integrity` و`AIH_L_entries` العامان.
+- ملاحظة: مستخدم بلا صلاحية التفصيل لا يرى أرقام القيود فى الحقائق، فأى فقرة تذكرها تُرفض (سلوك صحيح ومختبَر).
+- الواجهة: `Services/AiScreenAssistService.cs` (+ `AiScreenAssistText`)، `Components/Assistant/ScreenExplainDialog.razor`، `Components/Assistant/Settings/AiScreenAssistTab.razor` (التبويب العاشر)، أزرار ميزان المراجعة وشريط اختيار الصف. مفاتيح `AIH_*` ×4 (190 مفتاحاً، ترجمة كاملة) أُضيفت كلها هنا بدل P8.9.5، ومعها `AIH_Sev_*` (نص الخطورة لقارئ الشاشة) و`AIH_NotAvailable` و`AIH_Set_ErrNotAdmin`. زر «اسأل المساعد» مخفى حتى P8.9.4.
+- harness `p892test` 20/20 (مزوّد وهمى).
