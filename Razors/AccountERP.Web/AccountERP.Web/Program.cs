@@ -128,6 +128,7 @@ builder.Services.AddHostedService<AccountERP.Web.Services.AiSchedulerWorker>(); 
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AssistantSessionService>();
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AiBriefService>();   // P8.1.5: صفحة الموجز والبطاقة والإشعار
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AiAnomalyService>();   // P8.4.3: شذوذ القيود (صفحة + تبويب) — ويب فقط (ش31)
+builder.Services.AddScoped<AccountERP.SharedUI.Services.AiCollectService>();   // P8.5.2: أولويات التحصيل (صفحة + تبويب) — ويب فقط (ت33)
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AiEInvoiceService>();   // P8.3.3: حوار شرح خطأ الفاتورة الإلكترونية
 builder.Services.AddScoped<AccountERP.SharedUI.Services.CommandPaletteService>();   // P8.2.2: لوحة البحث السريع Ctrl+K
 builder.Services.AddMudServices();

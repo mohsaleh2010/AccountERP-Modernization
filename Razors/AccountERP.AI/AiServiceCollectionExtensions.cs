@@ -40,6 +40,8 @@ namespace AccountERP.AI
             services.AddSingleton(sp => new Anomalies.AiAnomalyJob(sp.GetRequiredService<Tools.ReadOnlySqlExecutor>()));
             services.AddSingleton<Scheduling.IAiScheduledJob>(sp => sp.GetRequiredService<Anomalies.AiAnomalyJob>());
             services.AddScoped<IAiAnomalyGateway>(sp => new Anomalies.AiAnomalyGateway(sp.GetRequiredService<Anomalies.AiAnomalyJob>(), sp.GetRequiredService<ProviderRegistry>()));   // P8.4.3: صفحة الشذوذ وتبويب الإعدادات
+            services.AddSingleton(sp => new Collections.AiCollectionsScorer(sp.GetRequiredService<Tools.ReadOnlySqlExecutor>()));   // P8.5.2: حاسب أولويات التحصيل (ذاكرة لكل نطاق)
+            services.AddScoped<IAiCollectionsGateway>(sp => new Collections.AiCollectionsGateway(sp.GetRequiredService<Collections.AiCollectionsScorer>(), sp.GetRequiredService<ProviderRegistry>()));   // P8.5.2: صفحة أولويات التحصيل وتبويبها
             services.AddSingleton(sp => new Brief.AiBriefJob(sp.GetRequiredService<Tools.ReadOnlySqlExecutor>(), sp.GetRequiredService<ProviderRegistry>()));   // P8.1.4: مشغّل الموجز اليومى
             services.AddSingleton<Scheduling.IAiScheduledJob>(sp => sp.GetRequiredService<Brief.AiBriefJob>());   // ق17: مهام AiSchedulerWorker
             services.AddScoped<IAiBriefGateway>(sp => new Brief.AiBriefGateway(sp.GetRequiredService<Brief.AiBriefJob>()));   // P8.1.4: صفحة الموجز والإعدادات (P8.1.5/P8.1.6)

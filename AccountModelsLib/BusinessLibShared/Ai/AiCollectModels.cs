@@ -469,24 +469,24 @@ namespace AccountModelsLib
     public static class AiCollectErrors
     {
         public const string NotAdmin = "AIL_Set_ErrNotAdmin";
-        public const string NoPermission = "AIL_ErrNoPermission";
-        public const string NotFound = "AIL_ErrNotFound";
+        public const string NoPermission = "AIL_Err_Denied";
+        public const string NotFound = "AIL_Err_NotInScope";
         public const string Weights = "AIL_Set_ErrWeights";
-        public const string WeightsZero = "AIL_Set_ErrWeightsZero";
-        public const string Scores = "AIL_Set_ErrScores";
+        public const string WeightsZero = "AIL_Set_ErrWeights";
+        public const string Scores = "AIL_Set_ErrBands";
         public const string Levels = "AIL_Set_ErrLevels";
-        public const string Amount = "AIL_Set_ErrAmount";
+        public const string Amount = "AIL_Set_ErrPositive";
         public const string Range = "AIL_Set_ErrRange";
         public const string ActionType = "AIL_Err_ActionType";
         public const string PromiseDate = "AIL_Err_PromiseDate";
         public const string PromiseAmount = "AIL_Err_PromiseAmount";
         public const string SnoozeDate = "AIL_Err_SnoozeDate";
-        public const string NoteLength = "AIL_Err_NoteLength";
+        public const string NoteLength = "AIL_Err_NoteLong";
         public const string CancelNotAllowed = "AIL_Err_CancelNotAllowed";
         public const string SendOff = "AIL_Err_SendOff";
         public const string NotConfirmed = "AIL_Err_NotConfirmed";
-        public const string MessageEmpty = "AIL_Err_MessageEmpty";
-        public const string MessageLength = "AIL_Err_MessageLength";
+        public const string MessageEmpty = "AIL_Err_TextEmpty";
+        public const string MessageLength = "AIL_Err_TextLong";
         public const string Disputed = "AIL_Err_Disputed";
         public const string TooSoon = "AIL_Err_TooSoon";
         public const string NoPhone = "AIL_Err_NoPhone";

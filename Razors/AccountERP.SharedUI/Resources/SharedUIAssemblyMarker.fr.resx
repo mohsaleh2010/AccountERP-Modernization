@@ -5977,4 +5977,202 @@
   <data name="AIJ_Set_ErrBackfillRange" xml:space="preserve"><value>La période doit faire au plus 92 jours et ne pas dépasser aujourd'hui.</value></data>
   <data name="AIB_Al_anomalies_new" xml:space="preserve"><value>Écritures inhabituelles</value></data>
   <data name="AIB_Al_anomalies_new_Text" xml:space="preserve"><value>{count} nouvelles écritures à revoir, dont {high} de gravité élevée.</value></data>
+  <data name="AIL_Title" xml:space="preserve"><value>Priorités de recouvrement</value></data>
+  <data name="AIL_Sub" xml:space="preserve"><value>Clients débiteurs classés selon des règles fixes. Pour le suivi uniquement ; aucun solde ni facture n'est modifié.</value></data>
+  <data name="AIL_LinkBalances" xml:space="preserve"><value>Soldes clients</value></data>
+  <data name="AIL_LinkSettings" xml:space="preserve"><value>Paramètres du classement</value></data>
+  <data name="AIL_Refresh" xml:space="preserve"><value>Actualiser</value></data>
+  <data name="AIL_ComputedAt" xml:space="preserve"><value>Dernier calcul : {0}</value></data>
+  <data name="AIL_NotAvailable" xml:space="preserve"><value>Cette page n'est disponible que dans la version web.</value></data>
+  <data name="AIL_EmptyNone" xml:space="preserve"><value>Aucun client pour ces filtres.</value></data>
+  <data name="AIL_TaxRestricted" xml:space="preserve"><value>L'ancienneté utilise uniquement les factures que vous pouvez voir ; les soldes sont ceux de l'écran des soldes.</value></data>
+  <data name="AIL_BranchNote" xml:space="preserve"><value>Les soldes incluent toutes les agences comme à l'écran des soldes ; l'ancienneté utilise uniquement les factures de vos agences.</value></data>
+  <data name="AIL_Truncated" xml:space="preserve"><value>La liste n'affiche que les {0} clients au solde le plus élevé.</value></data>
+  <data name="AIL_MixedCurrency" xml:space="preserve"><value>Certains clients ont d'autres devises ; montants dans la devise de chaque client, totaux approximatifs.</value></data>
+  <data name="AIL_KpiOverdue" xml:space="preserve"><value>Total en retard</value></data>
+  <data name="AIL_KpiHigh" xml:space="preserve"><value>Priorité élevée</value></data>
+  <data name="AIL_KpiPromisesToday" xml:space="preserve"><value>Promesses dues aujourd'hui</value></data>
+  <data name="AIL_KpiBroken" xml:space="preserve"><value>Promesses non tenues</value></data>
+  <data name="AIL_KpiCustomers" xml:space="preserve"><value>{0} clients</value></data>
+  <data name="AIL_AgingTitle" xml:space="preserve"><value>Ancienneté des créances</value></data>
+  <data name="AIL_BucketNotDue" xml:space="preserve"><value>Non échu</value></data>
+  <data name="AIL_Bucket1_30" xml:space="preserve"><value>1–30 jours</value></data>
+  <data name="AIL_Bucket31_60" xml:space="preserve"><value>31–60 jours</value></data>
+  <data name="AIL_Bucket61_90" xml:space="preserve"><value>61–90 jours</value></data>
+  <data name="AIL_BucketOver90" xml:space="preserve"><value>Plus de 90 jours</value></data>
+  <data name="AIL_BucketUnallocated" xml:space="preserve"><value>Solde non rattaché à des factures</value></data>
+  <data name="AIL_FltPriority" xml:space="preserve"><value>Priorité</value></data>
+  <data name="AIL_FltState" xml:space="preserve"><value>Statut</value></data>
+  <data name="AIL_FltBranch" xml:space="preserve"><value>Agence</value></data>
+  <data name="AIL_FltSearch" xml:space="preserve"><value>Rechercher par nom ou code</value></data>
+  <data name="AIL_FltOverdueOnly" xml:space="preserve"><value>En retard uniquement</value></data>
+  <data name="AIL_FltMinOverdue" xml:space="preserve"><value>Retard minimum</value></data>
+  <data name="AIL_All" xml:space="preserve"><value>Tous</value></data>
+  <data name="AIL_PrHigh" xml:space="preserve"><value>Élevée</value></data>
+  <data name="AIL_PrMedium" xml:space="preserve"><value>Moyenne</value></data>
+  <data name="AIL_PrLow" xml:space="preserve"><value>Faible</value></data>
+  <data name="AIL_StDue" xml:space="preserve"><value>À relancer</value></data>
+  <data name="AIL_StPromised" xml:space="preserve"><value>Promis</value></data>
+  <data name="AIL_StBroken" xml:space="preserve"><value>Promesse non tenue</value></data>
+  <data name="AIL_StSnoozed" xml:space="preserve"><value>Reporté</value></data>
+  <data name="AIL_StDisputed" xml:space="preserve"><value>Litigieux</value></data>
+  <data name="AIL_ColRank" xml:space="preserve"><value>#</value></data>
+  <data name="AIL_ColCustomer" xml:space="preserve"><value>Client</value></data>
+  <data name="AIL_ColScore" xml:space="preserve"><value>Score</value></data>
+  <data name="AIL_ColOverdue" xml:space="preserve"><value>En retard</value></data>
+  <data name="AIL_ColBalance" xml:space="preserve"><value>Solde</value></data>
+  <data name="AIL_ColOldest" xml:space="preserve"><value>Retard le plus ancien</value></data>
+  <data name="AIL_ColLastReceipt" xml:space="preserve"><value>Dernier encaissement</value></data>
+  <data name="AIL_ColLimit" xml:space="preserve"><value>Limite de crédit</value></data>
+  <data name="AIL_ColState" xml:space="preserve"><value>Statut</value></data>
+  <data name="AIL_ColLastAction" xml:space="preserve"><value>Dernière action</value></data>
+  <data name="AIL_Days" xml:space="preserve"><value>{0} jours</value></data>
+  <data name="AIL_DaysAgo" xml:space="preserve"><value>il y a {0} jours</value></data>
+  <data name="AIL_NeverPaid" xml:space="preserve"><value>Jamais encaissé</value></data>
+  <data name="AIL_NoLimit" xml:space="preserve"><value>Sans limite</value></data>
+  <data name="AIL_LimitExceeded" xml:space="preserve"><value>Limite dépassée</value></data>
+  <data name="AIL_UntilDate" xml:space="preserve"><value>jusqu'au {0}</value></data>
+  <data name="AIL_Expand" xml:space="preserve"><value>Afficher les détails</value></data>
+  <data name="AIL_WhyTitle" xml:space="preserve"><value>Pourquoi ce score</value></data>
+  <data name="AIL_WhyAge" xml:space="preserve"><value>Retard le plus ancien {days} jours ⇒ {pts} sur {max}</value></data>
+  <data name="AIL_WhyAmount" xml:space="preserve"><value>En retard {amount} ⇒ {pts} sur {max}</value></data>
+  <data name="AIL_WhyDso" xml:space="preserve"><value>Délai de paiement estimé {days} jours ⇒ {pts} sur {max}</value></data>
+  <data name="AIL_WhyDsoNone" xml:space="preserve"><value>Aucune vente à crédit récente avec un solde restant ⇒ {pts} sur {max}</value></data>
+  <data name="AIL_WhyLimit" xml:space="preserve"><value>Solde {balance} pour une limite de {limit} ⇒ {pts} sur {max}</value></data>
+  <data name="AIL_WhyLimitNone" xml:space="preserve"><value>Aucune limite de crédit enregistrée ⇒ 0 sur {max}</value></data>
+  <data name="AIL_WhyIdle" xml:space="preserve"><value>Dernier encaissement il y a {days} jours ⇒ {pts} sur {max}</value></data>
+  <data name="AIL_WhyIdleNever" xml:space="preserve"><value>Jamais encaissé ⇒ {pts} sur {max}</value></data>
+  <data name="AIL_WhyBroken" xml:space="preserve"><value>Promesse de paiement non tenue ⇒ +{pts}</value></data>
+  <data name="AIL_InvTitle" xml:space="preserve"><value>Factures ouvertes</value></data>
+  <data name="AIL_InvNo" xml:space="preserve"><value>N° de facture</value></data>
+  <data name="AIL_InvDate" xml:space="preserve"><value>Date</value></data>
+  <data name="AIL_InvDue" xml:space="preserve"><value>Échéance</value></data>
+  <data name="AIL_InvNet" xml:space="preserve"><value>Net</value></data>
+  <data name="AIL_InvOpen" xml:space="preserve"><value>Ouvert</value></data>
+  <data name="AIL_InvOverdueDays" xml:space="preserve"><value>Jours de retard</value></data>
+  <data name="AIL_InvoicesHidden" xml:space="preserve"><value>Le détail des factures nécessite l'accès à l'écran des factures de vente.</value></data>
+  <data name="AIL_InvEstimated" xml:space="preserve"><value>Les montants ouverts sont estimés en imputant le solde aux factures les plus récentes d'abord.</value></data>
+  <data name="AIL_HistTitle" xml:space="preserve"><value>Historique de suivi</value></data>
+  <data name="AIL_HistEmpty" xml:space="preserve"><value>Aucune action enregistrée pour ce client.</value></data>
+  <data name="AIL_ActCall" xml:space="preserve"><value>Noter un appel</value></data>
+  <data name="AIL_ActPromise" xml:space="preserve"><value>Promesse de paiement</value></data>
+  <data name="AIL_ActSnooze" xml:space="preserve"><value>Reporter</value></data>
+  <data name="AIL_ActDispute" xml:space="preserve"><value>Litige</value></data>
+  <data name="AIL_ActNote" xml:space="preserve"><value>Note</value></data>
+  <data name="AIL_ActStatement" xml:space="preserve"><value>Relevé de compte</value></data>
+  <data name="AIL_ActDraft" xml:space="preserve"><value>Brouillon de relance</value></data>
+  <data name="AIL_Type_call" xml:space="preserve"><value>Appel</value></data>
+  <data name="AIL_Type_promise" xml:space="preserve"><value>Promesse de paiement</value></data>
+  <data name="AIL_Type_note" xml:space="preserve"><value>Note</value></data>
+  <data name="AIL_Type_snooze" xml:space="preserve"><value>Report</value></data>
+  <data name="AIL_Type_dispute" xml:space="preserve"><value>Litige</value></data>
+  <data name="AIL_Type_reminder_copied" xml:space="preserve"><value>Relance copiée</value></data>
+  <data name="AIL_Type_reminder_sent" xml:space="preserve"><value>Relance envoyée</value></data>
+  <data name="AIL_ActCancel" xml:space="preserve"><value>Annuler l'action</value></data>
+  <data name="AIL_ActClose" xml:space="preserve"><value>Clôturer</value></data>
+  <data name="AIL_DlgPromiseDate" xml:space="preserve"><value>Date de paiement promise</value></data>
+  <data name="AIL_DlgPromiseAmount" xml:space="preserve"><value>Montant promis (facultatif)</value></data>
+  <data name="AIL_DlgSnoozeDate" xml:space="preserve"><value>Reporter jusqu'au</value></data>
+  <data name="AIL_DlgNote" xml:space="preserve"><value>Note</value></data>
+  <data name="AIL_Save" xml:space="preserve"><value>Enregistrer</value></data>
+  <data name="AIL_Cancel" xml:space="preserve"><value>Annuler</value></data>
+  <data name="AIL_MsgSaved" xml:space="preserve"><value>Action enregistrée.</value></data>
+  <data name="AIL_MsgClosed" xml:space="preserve"><value>Action clôturée.</value></data>
+  <data name="AIL_Err_PromiseDate" xml:space="preserve"><value>La date promise doit être aujourd'hui ou plus tard.</value></data>
+  <data name="AIL_Err_PromiseAmount" xml:space="preserve"><value>Le montant promis doit être supérieur à zéro sans dépasser le solde.</value></data>
+  <data name="AIL_Err_SnoozeDate" xml:space="preserve"><value>La date de report doit être après aujourd'hui et sous 90 jours.</value></data>
+  <data name="AIL_Err_NoteLong" xml:space="preserve"><value>La note dépasse 1000 caractères.</value></data>
+  <data name="AIL_Err_NotInScope" xml:space="preserve"><value>Ce client n'est pas dans votre liste.</value></data>
+  <data name="AIL_Err_Denied" xml:space="preserve"><value>Vous n'avez pas l'autorisation pour cet écran.</value></data>
+  <data name="AIL_Err_ActionType" xml:space="preserve"><value>Type d'action inconnu.</value></data>
+  <data name="AIL_Err_CancelNotAllowed" xml:space="preserve"><value>Seul l'auteur de l'action ou un administrateur peut l'annuler.</value></data>
+  <data name="AIL_Err_Channel" xml:space="preserve"><value>Canal d'envoi non valide.</value></data>
+  <data name="AIL_DraftTitle" xml:space="preserve"><value>Brouillon de relance de paiement</value></data>
+  <data name="AIL_DraftLang" xml:space="preserve"><value>Langue du message</value></data>
+  <data name="AIL_Level1" xml:space="preserve"><value>Amical</value></data>
+  <data name="AIL_Level2" xml:space="preserve"><value>Ferme</value></data>
+  <data name="AIL_Level3" xml:space="preserve"><value>Dernier</value></data>
+  <data name="AIL_Tpl_L1" xml:space="preserve"><value>Cher/Chère {customer}, nous vous rappelons qu'un montant de {amount} est dû. Merci de bien vouloir le régler dès que possible.</value></data>
+  <data name="AIL_Tpl_L2" xml:space="preserve"><value>Cher/Chère {customer}, {amount} est en retard depuis {days} jours. Merci de régler rapidement ou de nous contacter pour convenir d'une date.</value></data>
+  <data name="AIL_Tpl_L3" xml:space="preserve"><value>Cher/Chère {customer}, dernier rappel : {amount} est en retard depuis {days} jours. Merci de régler immédiatement ou de nous contacter aujourd'hui pour éviter la suspension du crédit.</value></data>
+  <data name="AIL_DraftAsk" xml:space="preserve"><value>Rédiger avec l'assistant</value></data>
+  <data name="AIL_DraftByModel" xml:space="preserve"><value>Formulation de l'assistant</value></data>
+  <data name="AIL_DraftWorking" xml:space="preserve"><value>Préparation de la formulation…</value></data>
+  <data name="AIL_DraftUnavailable" xml:space="preserve"><value>L'assistant n'a pas pu rédiger pour l'instant ; utilisez le modèle.</value></data>
+  <data name="AIL_DraftCapped" xml:space="preserve"><value>La limite quotidienne de brouillons est atteinte ; utilisez le modèle.</value></data>
+  <data name="AIL_DraftRejected" xml:space="preserve"><value>La formulation a été rejetée car les chiffres ne correspondaient pas ; le modèle est conservé.</value></data>
+  <data name="AIL_Chars" xml:space="preserve"><value>{0} sur {1} caractères</value></data>
+  <data name="AIL_Copy" xml:space="preserve"><value>Copier</value></data>
+  <data name="AIL_MsgCopied" xml:space="preserve"><value>Message copié.</value></data>
+  <data name="AIL_Send" xml:space="preserve"><value>Envoyer…</value></data>
+  <data name="AIL_SendTitle" xml:space="preserve"><value>Confirmer l'envoi de la relance</value></data>
+  <data name="AIL_SendTo" xml:space="preserve"><value>À</value></data>
+  <data name="AIL_SendChannel" xml:space="preserve"><value>Canal</value></data>
+  <data name="AIL_SendPhone" xml:space="preserve"><value>Numéro</value></data>
+  <data name="AIL_ChannelSms" xml:space="preserve"><value>SMS</value></data>
+  <data name="AIL_ChannelWhatsApp" xml:space="preserve"><value>WhatsApp</value></data>
+  <data name="AIL_SendWarn" xml:space="preserve"><value>Ce message sera envoyé au client au nom de l'entreprise et ne pourra pas être rappelé.</value></data>
+  <data name="AIL_SendNow" xml:space="preserve"><value>Envoyer maintenant</value></data>
+  <data name="AIL_MsgQueued" xml:space="preserve"><value>Le message a été ajouté à la file d'envoi.</value></data>
+  <data name="AIL_OutPending" xml:space="preserve"><value>En attente d'envoi</value></data>
+  <data name="AIL_OutSent" xml:space="preserve"><value>Envoyé</value></data>
+  <data name="AIL_OutFailed" xml:space="preserve"><value>Échec de l'envoi</value></data>
+  <data name="AIL_Err_SendOff" xml:space="preserve"><value>L'envoi depuis cet écran est désactivé. Utilisez « Copier ».</value></data>
+  <data name="AIL_Err_NotConfirmed" xml:space="preserve"><value>L'envoi nécessite une confirmation explicite.</value></data>
+  <data name="AIL_Err_NoPhone" xml:space="preserve"><value>Aucun numéro de téléphone valide n'est enregistré pour ce client.</value></data>
+  <data name="AIL_Err_OptOut" xml:space="preserve"><value>Le client a refusé les messages sur ce canal.</value></data>
+  <data name="AIL_Err_Disputed" xml:space="preserve"><value>Ce client a un litige ouvert ; clôturez-le avant l'envoi.</value></data>
+  <data name="AIL_Err_TooSoon" xml:space="preserve"><value>Une relance a été envoyée à ce client au cours des {0} derniers jours.</value></data>
+  <data name="AIL_Err_TextEmpty" xml:space="preserve"><value>Le texte du message est vide.</value></data>
+  <data name="AIL_Err_TextLong" xml:space="preserve"><value>Le message dépasse 1000 caractères.</value></data>
+  <data name="AIL_Set_Tab" xml:space="preserve"><value>Priorités de recouvrement</value></data>
+  <data name="AIL_Set_CardList" xml:space="preserve"><value>Liste</value></data>
+  <data name="AIL_Set_Terms" xml:space="preserve"><value>Délai de paiement par défaut (jours)</value></data>
+  <data name="AIL_Set_TermsHint" xml:space="preserve"><value>Utilisé pour les factures sans date d'échéance.</value></data>
+  <data name="AIL_Set_MinBalance" xml:space="preserve"><value>Solde débiteur minimum</value></data>
+  <data name="AIL_Set_InvoiceMonths" xml:space="preserve"><value>Fenêtre des factures (mois)</value></data>
+  <data name="AIL_Set_MaxCustomers" xml:space="preserve"><value>Nombre maximal de clients</value></data>
+  <data name="AIL_Set_Cache" xml:space="preserve"><value>Conserver le calcul (minutes)</value></data>
+  <data name="AIL_Set_CardScore" xml:space="preserve"><value>Score</value></data>
+  <data name="AIL_Set_WAge" xml:space="preserve"><value>Poids : ancienneté</value></data>
+  <data name="AIL_Set_WAmount" xml:space="preserve"><value>Poids : montant en retard</value></data>
+  <data name="AIL_Set_WDso" xml:space="preserve"><value>Poids : comportement de paiement</value></data>
+  <data name="AIL_Set_WLimit" xml:space="preserve"><value>Poids : dépassement de limite</value></data>
+  <data name="AIL_Set_WIdle" xml:space="preserve"><value>Poids : temps depuis le dernier encaissement</value></data>
+  <data name="AIL_Set_WSum" xml:space="preserve"><value>Somme des poids : {0}</value></data>
+  <data name="AIL_Set_AgeCap" xml:space="preserve"><value>Retard donnant le facteur complet (jours)</value></data>
+  <data name="AIL_Set_AmountCap" xml:space="preserve"><value>Retard donnant le facteur complet</value></data>
+  <data name="AIL_Set_DsoWindow" xml:space="preserve"><value>Fenêtre du délai de paiement (jours)</value></data>
+  <data name="AIL_Set_DsoCap" xml:space="preserve"><value>Jours au-delà du délai donnant le facteur complet</value></data>
+  <data name="AIL_Set_IdleStart" xml:space="preserve"><value>Jours sans encaissement avant que le facteur commence</value></data>
+  <data name="AIL_Set_IdleCap" xml:space="preserve"><value>Jours supplémentaires donnant le facteur complet</value></data>
+  <data name="AIL_Set_High" xml:space="preserve"><value>Seuil de priorité élevée</value></data>
+  <data name="AIL_Set_Medium" xml:space="preserve"><value>Seuil de priorité moyenne</value></data>
+  <data name="AIL_Set_CardLevels" xml:space="preserve"><value>Niveaux de relance et promesses</value></data>
+  <data name="AIL_Set_Level2" xml:space="preserve"><value>Niveau ferme à partir de (jours de retard)</value></data>
+  <data name="AIL_Set_Level3" xml:space="preserve"><value>Dernier niveau à partir de (jours de retard)</value></data>
+  <data name="AIL_Set_BrokenBonus" xml:space="preserve"><value>Points pour promesse non tenue</value></data>
+  <data name="AIL_Set_BrokenDays" xml:space="preserve"><value>Durée du badge de promesse non tenue (jours)</value></data>
+  <data name="AIL_Set_CardDraft" xml:space="preserve"><value>Brouillons de l'assistant</value></data>
+  <data name="AIL_Set_Draft" xml:space="preserve"><value>Autoriser l'assistant à rédiger les relances</value></data>
+  <data name="AIL_Set_DraftMax" xml:space="preserve"><value>Limite quotidienne de brouillons</value></data>
+  <data name="AIL_Set_CardSend" xml:space="preserve"><value>Envoi</value></data>
+  <data name="AIL_Set_Send" xml:space="preserve"><value>Autoriser l'envoi des relances depuis l'écran</value></data>
+  <data name="AIL_Set_SendHint" xml:space="preserve"><value>L'envoi nécessite toujours le clic et la confirmation de l'utilisateur. Rien n'est envoyé automatiquement. Désactivé, seul « Copier » reste disponible.</value></data>
+  <data name="AIL_Set_SendProviderOff" xml:space="preserve"><value>Le fournisseur de notifications est désactivé ; activez-le d'abord dans les notifications clients.</value></data>
+  <data name="AIL_Set_SendProviderLink" xml:space="preserve"><value>Notifications clients</value></data>
+  <data name="AIL_Set_ReminderMinDays" xml:space="preserve"><value>Délai minimum entre deux relances (jours)</value></data>
+  <data name="AIL_Set_CardBrief" xml:space="preserve"><value>Synthèse quotidienne</value></data>
+  <data name="AIL_Set_Brief" xml:space="preserve"><value>Alerte de recouvrement dans la synthèse</value></data>
+  <data name="AIL_Set_BriefTop" xml:space="preserve"><value>Nombre de clients dans l'alerte</value></data>
+  <data name="AIL_Set_Saved" xml:space="preserve"><value>Paramètres enregistrés.</value></data>
+  <data name="AIL_Set_ErrNotAdmin" xml:space="preserve"><value>Ce paramètre est réservé aux administrateurs.</value></data>
+  <data name="AIL_Set_ErrWeights" xml:space="preserve"><value>Les poids doivent être positifs ou nuls et leur somme supérieure à zéro.</value></data>
+  <data name="AIL_Set_ErrBands" xml:space="preserve"><value>Le seuil élevé doit dépasser le seuil moyen, tous deux entre 1 et 100.</value></data>
+  <data name="AIL_Set_ErrLevels" xml:space="preserve"><value>Le dernier niveau doit commencer après le niveau ferme.</value></data>
+  <data name="AIL_Set_ErrPositive" xml:space="preserve"><value>La valeur doit être supérieure à zéro.</value></data>
+  <data name="AIL_Set_ErrRange" xml:space="preserve"><value>La valeur est hors de la plage autorisée.</value></data>
+  <data name="AIB_Al_collections_priority" xml:space="preserve"><value>Priorités de recouvrement</value></data>
+  <data name="AIB_Al_collections_priority_Text" xml:space="preserve"><value>{high} clients en priorité élevée avec {high_amount} en retard ; {promises_due} promesses dues aujourd'hui et {broken} non tenues.</value></data>
+  <data name="FSJEvent20" xml:space="preserve"><value>Relance de recouvrement</value></data>
 </root>

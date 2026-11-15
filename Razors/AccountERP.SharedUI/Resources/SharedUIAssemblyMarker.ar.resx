@@ -5975,4 +5975,202 @@
   <data name="AIJ_Set_ErrBackfillRange" xml:space="preserve"><value>الفترة يجب ألا تتجاوز 92 يوماً ولا تتخطى اليوم.</value></data>
   <data name="AIB_Al_anomalies_new" xml:space="preserve"><value>قيود غير معتادة</value></data>
   <data name="AIB_Al_anomalies_new_Text" xml:space="preserve"><value>{count} قيد جديد يحتاج مراجعة، منها {high} عالى الخطورة.</value></data>
+  <data name="AIL_Title" xml:space="preserve"><value>أولويات التحصيل</value></data>
+  <data name="AIL_Sub" xml:space="preserve"><value>العملاء المدينون مرتبون بقواعد ثابتة. للمتابعة فقط؛ لا يُعدَّل أى رصيد أو فاتورة.</value></data>
+  <data name="AIL_LinkBalances" xml:space="preserve"><value>أرصدة العملاء</value></data>
+  <data name="AIL_LinkSettings" xml:space="preserve"><value>إعدادات الترتيب</value></data>
+  <data name="AIL_Refresh" xml:space="preserve"><value>تحديث</value></data>
+  <data name="AIL_ComputedAt" xml:space="preserve"><value>آخر حساب: {0}</value></data>
+  <data name="AIL_NotAvailable" xml:space="preserve"><value>هذه الصفحة متاحة فى نسخة الويب فقط.</value></data>
+  <data name="AIL_EmptyNone" xml:space="preserve"><value>لا عملاء بهذه الفلاتر.</value></data>
+  <data name="AIL_TaxRestricted" xml:space="preserve"><value>الأعمار محسوبة من الفواتير المسموح لك برؤيتها فقط؛ الرصيد كما فى شاشة الأرصدة.</value></data>
+  <data name="AIL_BranchNote" xml:space="preserve"><value>الرصيد يشمل حركات كل الفروع كما فى شاشة الأرصدة؛ الأعمار من فواتير فروعك فقط.</value></data>
+  <data name="AIL_Truncated" xml:space="preserve"><value>القائمة تعرض أعلى {0} عميل رصيداً فقط.</value></data>
+  <data name="AIL_MixedCurrency" xml:space="preserve"><value>بعض العملاء بعملات مختلفة؛ المبالغ بعملة حساب كل عميل والإجماليات تقريبية.</value></data>
+  <data name="AIL_KpiOverdue" xml:space="preserve"><value>إجمالى المتأخر</value></data>
+  <data name="AIL_KpiHigh" xml:space="preserve"><value>أولوية عالية</value></data>
+  <data name="AIL_KpiPromisesToday" xml:space="preserve"><value>وعود مستحقة اليوم</value></data>
+  <data name="AIL_KpiBroken" xml:space="preserve"><value>وعود لم تُوفَ</value></data>
+  <data name="AIL_KpiCustomers" xml:space="preserve"><value>{0} عميل</value></data>
+  <data name="AIL_AgingTitle" xml:space="preserve"><value>أعمار الديون</value></data>
+  <data name="AIL_BucketNotDue" xml:space="preserve"><value>غير مستحق</value></data>
+  <data name="AIL_Bucket1_30" xml:space="preserve"><value>1–30 يوماً</value></data>
+  <data name="AIL_Bucket31_60" xml:space="preserve"><value>31–60 يوماً</value></data>
+  <data name="AIL_Bucket61_90" xml:space="preserve"><value>61–90 يوماً</value></data>
+  <data name="AIL_BucketOver90" xml:space="preserve"><value>أكثر من 90 يوماً</value></data>
+  <data name="AIL_BucketUnallocated" xml:space="preserve"><value>رصيد غير مرتبط بفواتير</value></data>
+  <data name="AIL_FltPriority" xml:space="preserve"><value>الأولوية</value></data>
+  <data name="AIL_FltState" xml:space="preserve"><value>الحالة</value></data>
+  <data name="AIL_FltBranch" xml:space="preserve"><value>الفرع</value></data>
+  <data name="AIL_FltSearch" xml:space="preserve"><value>بحث بالاسم أو الكود</value></data>
+  <data name="AIL_FltOverdueOnly" xml:space="preserve"><value>المتأخرون فقط</value></data>
+  <data name="AIL_FltMinOverdue" xml:space="preserve"><value>أدنى متأخر</value></data>
+  <data name="AIL_All" xml:space="preserve"><value>الكل</value></data>
+  <data name="AIL_PrHigh" xml:space="preserve"><value>عالية</value></data>
+  <data name="AIL_PrMedium" xml:space="preserve"><value>متوسطة</value></data>
+  <data name="AIL_PrLow" xml:space="preserve"><value>منخفضة</value></data>
+  <data name="AIL_StDue" xml:space="preserve"><value>تحتاج متابعة</value></data>
+  <data name="AIL_StPromised" xml:space="preserve"><value>موعود</value></data>
+  <data name="AIL_StBroken" xml:space="preserve"><value>وعد لم يُوفَ</value></data>
+  <data name="AIL_StSnoozed" xml:space="preserve"><value>مؤجَّل</value></data>
+  <data name="AIL_StDisputed" xml:space="preserve"><value>متنازع عليه</value></data>
+  <data name="AIL_ColRank" xml:space="preserve"><value>#</value></data>
+  <data name="AIL_ColCustomer" xml:space="preserve"><value>العميل</value></data>
+  <data name="AIL_ColScore" xml:space="preserve"><value>الدرجة</value></data>
+  <data name="AIL_ColOverdue" xml:space="preserve"><value>المتأخر</value></data>
+  <data name="AIL_ColBalance" xml:space="preserve"><value>الرصيد</value></data>
+  <data name="AIL_ColOldest" xml:space="preserve"><value>أقدم تأخير</value></data>
+  <data name="AIL_ColLastReceipt" xml:space="preserve"><value>آخر تحصيل</value></data>
+  <data name="AIL_ColLimit" xml:space="preserve"><value>حد الائتمان</value></data>
+  <data name="AIL_ColState" xml:space="preserve"><value>الحالة</value></data>
+  <data name="AIL_ColLastAction" xml:space="preserve"><value>آخر إجراء</value></data>
+  <data name="AIL_Days" xml:space="preserve"><value>{0} يوماً</value></data>
+  <data name="AIL_DaysAgo" xml:space="preserve"><value>منذ {0} يوماً</value></data>
+  <data name="AIL_NeverPaid" xml:space="preserve"><value>لم يُحصَّل منه</value></data>
+  <data name="AIL_NoLimit" xml:space="preserve"><value>بلا حد</value></data>
+  <data name="AIL_LimitExceeded" xml:space="preserve"><value>تجاوز الحد</value></data>
+  <data name="AIL_UntilDate" xml:space="preserve"><value>حتى {0}</value></data>
+  <data name="AIL_Expand" xml:space="preserve"><value>عرض التفاصيل</value></data>
+  <data name="AIL_WhyTitle" xml:space="preserve"><value>لماذا هذه الدرجة</value></data>
+  <data name="AIL_WhyAge" xml:space="preserve"><value>أقدم تأخير {days} يوماً ⇒ {pts} من {max}</value></data>
+  <data name="AIL_WhyAmount" xml:space="preserve"><value>المتأخر {amount} ⇒ {pts} من {max}</value></data>
+  <data name="AIL_WhyDso" xml:space="preserve"><value>متوسط مدة السداد التقديرى {days} يوماً ⇒ {pts} من {max}</value></data>
+  <data name="AIL_WhyDsoNone" xml:space="preserve"><value>لا مبيعات آجلة حديثة والرصيد قائم ⇒ {pts} من {max}</value></data>
+  <data name="AIL_WhyLimit" xml:space="preserve"><value>الرصيد {balance} مقابل حد {limit} ⇒ {pts} من {max}</value></data>
+  <data name="AIL_WhyLimitNone" xml:space="preserve"><value>لا حد ائتمان مسجّل ⇒ 0 من {max}</value></data>
+  <data name="AIL_WhyIdle" xml:space="preserve"><value>آخر تحصيل منذ {days} يوماً ⇒ {pts} من {max}</value></data>
+  <data name="AIL_WhyIdleNever" xml:space="preserve"><value>لم يُحصَّل منه من قبل ⇒ {pts} من {max}</value></data>
+  <data name="AIL_WhyBroken" xml:space="preserve"><value>وعد بالسداد لم يُوفَ ⇒ +{pts}</value></data>
+  <data name="AIL_InvTitle" xml:space="preserve"><value>الفواتير المفتوحة</value></data>
+  <data name="AIL_InvNo" xml:space="preserve"><value>رقم الفاتورة</value></data>
+  <data name="AIL_InvDate" xml:space="preserve"><value>التاريخ</value></data>
+  <data name="AIL_InvDue" xml:space="preserve"><value>الاستحقاق</value></data>
+  <data name="AIL_InvNet" xml:space="preserve"><value>الصافى</value></data>
+  <data name="AIL_InvOpen" xml:space="preserve"><value>المفتوح</value></data>
+  <data name="AIL_InvOverdueDays" xml:space="preserve"><value>أيام التأخير</value></data>
+  <data name="AIL_InvoicesHidden" xml:space="preserve"><value>تفاصيل الفواتير تحتاج صلاحية شاشة فواتير المبيعات.</value></data>
+  <data name="AIL_InvEstimated" xml:space="preserve"><value>المفتوح مقدَّر بتوزيع الرصيد على أحدث الفواتير أولاً.</value></data>
+  <data name="AIL_HistTitle" xml:space="preserve"><value>سجل المتابعة</value></data>
+  <data name="AIL_HistEmpty" xml:space="preserve"><value>لا إجراءات مسجّلة لهذا العميل.</value></data>
+  <data name="AIL_ActCall" xml:space="preserve"><value>تسجيل اتصال</value></data>
+  <data name="AIL_ActPromise" xml:space="preserve"><value>وعد بالسداد</value></data>
+  <data name="AIL_ActSnooze" xml:space="preserve"><value>تأجيل</value></data>
+  <data name="AIL_ActDispute" xml:space="preserve"><value>نزاع</value></data>
+  <data name="AIL_ActNote" xml:space="preserve"><value>ملاحظة</value></data>
+  <data name="AIL_ActStatement" xml:space="preserve"><value>كشف الحساب</value></data>
+  <data name="AIL_ActDraft" xml:space="preserve"><value>مسودة تذكير</value></data>
+  <data name="AIL_Type_call" xml:space="preserve"><value>اتصال</value></data>
+  <data name="AIL_Type_promise" xml:space="preserve"><value>وعد بالسداد</value></data>
+  <data name="AIL_Type_note" xml:space="preserve"><value>ملاحظة</value></data>
+  <data name="AIL_Type_snooze" xml:space="preserve"><value>تأجيل</value></data>
+  <data name="AIL_Type_dispute" xml:space="preserve"><value>نزاع</value></data>
+  <data name="AIL_Type_reminder_copied" xml:space="preserve"><value>تذكير منسوخ</value></data>
+  <data name="AIL_Type_reminder_sent" xml:space="preserve"><value>تذكير مرسل</value></data>
+  <data name="AIL_ActCancel" xml:space="preserve"><value>إلغاء الإجراء</value></data>
+  <data name="AIL_ActClose" xml:space="preserve"><value>إنهاء</value></data>
+  <data name="AIL_DlgPromiseDate" xml:space="preserve"><value>تاريخ السداد الموعود</value></data>
+  <data name="AIL_DlgPromiseAmount" xml:space="preserve"><value>المبلغ الموعود (اختيارى)</value></data>
+  <data name="AIL_DlgSnoozeDate" xml:space="preserve"><value>تأجيل حتى</value></data>
+  <data name="AIL_DlgNote" xml:space="preserve"><value>ملاحظة</value></data>
+  <data name="AIL_Save" xml:space="preserve"><value>حفظ</value></data>
+  <data name="AIL_Cancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="AIL_MsgSaved" xml:space="preserve"><value>سُجِّل الإجراء.</value></data>
+  <data name="AIL_MsgClosed" xml:space="preserve"><value>أُنهى الإجراء.</value></data>
+  <data name="AIL_Err_PromiseDate" xml:space="preserve"><value>تاريخ الوعد يجب أن يكون اليوم أو بعده.</value></data>
+  <data name="AIL_Err_PromiseAmount" xml:space="preserve"><value>المبلغ الموعود يجب أن يكون أكبر من صفر ولا يتجاوز الرصيد.</value></data>
+  <data name="AIL_Err_SnoozeDate" xml:space="preserve"><value>تاريخ التأجيل يجب أن يكون بعد اليوم وخلال 90 يوماً.</value></data>
+  <data name="AIL_Err_NoteLong" xml:space="preserve"><value>الملاحظة أطول من 1000 حرف.</value></data>
+  <data name="AIL_Err_NotInScope" xml:space="preserve"><value>هذا العميل خارج قائمتك.</value></data>
+  <data name="AIL_Err_Denied" xml:space="preserve"><value>لا تملك صلاحية هذه الشاشة.</value></data>
+  <data name="AIL_Err_ActionType" xml:space="preserve"><value>نوع إجراء غير معروف.</value></data>
+  <data name="AIL_Err_CancelNotAllowed" xml:space="preserve"><value>الإلغاء لمن سجّل الإجراء أو للمدير.</value></data>
+  <data name="AIL_Err_Channel" xml:space="preserve"><value>قناة إرسال غير صالحة.</value></data>
+  <data name="AIL_DraftTitle" xml:space="preserve"><value>مسودة تذكير بالسداد</value></data>
+  <data name="AIL_DraftLang" xml:space="preserve"><value>لغة الرسالة</value></data>
+  <data name="AIL_Level1" xml:space="preserve"><value>ودّى</value></data>
+  <data name="AIL_Level2" xml:space="preserve"><value>حازم</value></data>
+  <data name="AIL_Level3" xml:space="preserve"><value>أخير</value></data>
+  <data name="AIL_Tpl_L1" xml:space="preserve"><value>السيد/ {customer}، نذكّركم بأن عليكم مبلغ {amount} مستحق السداد. نرجو التكرم بالسداد فى أقرب وقت. شاكرين تعاونكم.</value></data>
+  <data name="AIL_Tpl_L2" xml:space="preserve"><value>السيد/ {customer}، نود إفادتكم بأن مبلغ {amount} متأخر السداد منذ {days} يوماً. نرجو سرعة السداد أو التواصل معنا لترتيب موعد.</value></data>
+  <data name="AIL_Tpl_L3" xml:space="preserve"><value>السيد/ {customer}، تذكير أخير: مبلغ {amount} متأخر منذ {days} يوماً. نرجو السداد فوراً أو التواصل معنا اليوم لتفادى إيقاف التعامل الآجل.</value></data>
+  <data name="AIL_DraftAsk" xml:space="preserve"><value>صياغة بالمساعد</value></data>
+  <data name="AIL_DraftByModel" xml:space="preserve"><value>صياغة المساعد</value></data>
+  <data name="AIL_DraftWorking" xml:space="preserve"><value>جارٍ إعداد الصياغة…</value></data>
+  <data name="AIL_DraftUnavailable" xml:space="preserve"><value>تعذّرت صياغة المساعد الآن؛ يمكنك استخدام القالب.</value></data>
+  <data name="AIL_DraftCapped" xml:space="preserve"><value>بلغت صياغات المساعد حدها اليومى؛ يمكنك استخدام القالب.</value></data>
+  <data name="AIL_DraftRejected" xml:space="preserve"><value>رُفضت صياغة المساعد لعدم مطابقة الأرقام؛ بقى القالب.</value></data>
+  <data name="AIL_Chars" xml:space="preserve"><value>{0} من {1} حرف</value></data>
+  <data name="AIL_Copy" xml:space="preserve"><value>نسخ</value></data>
+  <data name="AIL_MsgCopied" xml:space="preserve"><value>نُسخت الرسالة.</value></data>
+  <data name="AIL_Send" xml:space="preserve"><value>إرسال…</value></data>
+  <data name="AIL_SendTitle" xml:space="preserve"><value>تأكيد إرسال التذكير</value></data>
+  <data name="AIL_SendTo" xml:space="preserve"><value>إلى</value></data>
+  <data name="AIL_SendChannel" xml:space="preserve"><value>القناة</value></data>
+  <data name="AIL_SendPhone" xml:space="preserve"><value>الرقم</value></data>
+  <data name="AIL_ChannelSms" xml:space="preserve"><value>رسالة نصية</value></data>
+  <data name="AIL_ChannelWhatsApp" xml:space="preserve"><value>واتساب</value></data>
+  <data name="AIL_SendWarn" xml:space="preserve"><value>ستُرسل هذه الرسالة باسم الشركة إلى العميل ولا يمكن استرجاعها بعد الإرسال.</value></data>
+  <data name="AIL_SendNow" xml:space="preserve"><value>إرسال الآن</value></data>
+  <data name="AIL_MsgQueued" xml:space="preserve"><value>أُضيفت الرسالة لطابور الإرسال.</value></data>
+  <data name="AIL_OutPending" xml:space="preserve"><value>بانتظار الإرسال</value></data>
+  <data name="AIL_OutSent" xml:space="preserve"><value>أُرسلت</value></data>
+  <data name="AIL_OutFailed" xml:space="preserve"><value>فشل الإرسال</value></data>
+  <data name="AIL_Err_SendOff" xml:space="preserve"><value>الإرسال من هذه الشاشة غير مفعّل. استخدم «نسخ».</value></data>
+  <data name="AIL_Err_NotConfirmed" xml:space="preserve"><value>الإرسال يحتاج تأكيداً صريحاً.</value></data>
+  <data name="AIL_Err_NoPhone" xml:space="preserve"><value>لا رقم هاتف صالح مسجّل لهذا العميل.</value></data>
+  <data name="AIL_Err_OptOut" xml:space="preserve"><value>العميل سحب موافقته على الرسائل بهذه القناة.</value></data>
+  <data name="AIL_Err_Disputed" xml:space="preserve"><value>على هذا العميل نزاع مفتوح؛ أنهِ النزاع قبل الإرسال.</value></data>
+  <data name="AIL_Err_TooSoon" xml:space="preserve"><value>أُرسل تذكير لهذا العميل خلال آخر {0} أيام.</value></data>
+  <data name="AIL_Err_TextEmpty" xml:space="preserve"><value>نص الرسالة فارغ.</value></data>
+  <data name="AIL_Err_TextLong" xml:space="preserve"><value>نص الرسالة أطول من 1000 حرف.</value></data>
+  <data name="AIL_Set_Tab" xml:space="preserve"><value>أولويات التحصيل</value></data>
+  <data name="AIL_Set_CardList" xml:space="preserve"><value>القائمة</value></data>
+  <data name="AIL_Set_Terms" xml:space="preserve"><value>مهلة السداد الافتراضية (يوم)</value></data>
+  <data name="AIL_Set_TermsHint" xml:space="preserve"><value>تُستخدم للفواتير التى بلا تاريخ استحقاق.</value></data>
+  <data name="AIL_Set_MinBalance" xml:space="preserve"><value>أدنى رصيد مدين</value></data>
+  <data name="AIL_Set_InvoiceMonths" xml:space="preserve"><value>نافذة الفواتير (شهر)</value></data>
+  <data name="AIL_Set_MaxCustomers" xml:space="preserve"><value>أقصى عدد عملاء</value></data>
+  <data name="AIL_Set_Cache" xml:space="preserve"><value>مدة الاحتفاظ بالحساب (دقيقة)</value></data>
+  <data name="AIL_Set_CardScore" xml:space="preserve"><value>الدرجة</value></data>
+  <data name="AIL_Set_WAge" xml:space="preserve"><value>وزن عمر الدين</value></data>
+  <data name="AIL_Set_WAmount" xml:space="preserve"><value>وزن المبلغ المتأخر</value></data>
+  <data name="AIL_Set_WDso" xml:space="preserve"><value>وزن سلوك السداد</value></data>
+  <data name="AIL_Set_WLimit" xml:space="preserve"><value>وزن تجاوز حد الائتمان</value></data>
+  <data name="AIL_Set_WIdle" xml:space="preserve"><value>وزن مدة آخر تحصيل</value></data>
+  <data name="AIL_Set_WSum" xml:space="preserve"><value>مجموع الأوزان: {0}</value></data>
+  <data name="AIL_Set_AgeCap" xml:space="preserve"><value>تأخير يعطى العامل كاملاً (يوم)</value></data>
+  <data name="AIL_Set_AmountCap" xml:space="preserve"><value>متأخر يعطى العامل كاملاً</value></data>
+  <data name="AIL_Set_DsoWindow" xml:space="preserve"><value>نافذة حساب مدة السداد (يوم)</value></data>
+  <data name="AIL_Set_DsoCap" xml:space="preserve"><value>أيام فوق المهلة تعطى العامل كاملاً</value></data>
+  <data name="AIL_Set_IdleStart" xml:space="preserve"><value>أيام بلا تحصيل يبدأ بعدها العامل</value></data>
+  <data name="AIL_Set_IdleCap" xml:space="preserve"><value>أيام إضافية تعطى العامل كاملاً</value></data>
+  <data name="AIL_Set_High" xml:space="preserve"><value>حد الأولوية العالية</value></data>
+  <data name="AIL_Set_Medium" xml:space="preserve"><value>حد الأولوية المتوسطة</value></data>
+  <data name="AIL_Set_CardLevels" xml:space="preserve"><value>مستويات المطالبة والوعود</value></data>
+  <data name="AIL_Set_Level2" xml:space="preserve"><value>بداية المستوى الحازم (يوم تأخير)</value></data>
+  <data name="AIL_Set_Level3" xml:space="preserve"><value>بداية المستوى الأخير (يوم تأخير)</value></data>
+  <data name="AIL_Set_BrokenBonus" xml:space="preserve"><value>نقاط الوعد غير الموفى</value></data>
+  <data name="AIL_Set_BrokenDays" xml:space="preserve"><value>مدة بقاء شارة الوعد غير الموفى (يوم)</value></data>
+  <data name="AIL_Set_CardDraft" xml:space="preserve"><value>مسودة المساعد</value></data>
+  <data name="AIL_Set_Draft" xml:space="preserve"><value>السماح بصياغة التذكير بالمساعد</value></data>
+  <data name="AIL_Set_DraftMax" xml:space="preserve"><value>الحد اليومى للصياغات</value></data>
+  <data name="AIL_Set_CardSend" xml:space="preserve"><value>الإرسال</value></data>
+  <data name="AIL_Set_Send" xml:space="preserve"><value>السماح بإرسال التذكير من الشاشة</value></data>
+  <data name="AIL_Set_SendHint" xml:space="preserve"><value>الإرسال دائماً بضغطة المستخدم وتأكيده. لا إرسال تلقائى. بدون تفعيله يبقى «نسخ» فقط.</value></data>
+  <data name="AIL_Set_SendProviderOff" xml:space="preserve"><value>مزوّد الإشعارات غير مفعّل؛ فعّله من شاشة إشعارات العملاء أولاً.</value></data>
+  <data name="AIL_Set_SendProviderLink" xml:space="preserve"><value>إشعارات العملاء</value></data>
+  <data name="AIL_Set_ReminderMinDays" xml:space="preserve"><value>أقل فاصل بين تذكيرين للعميل (يوم)</value></data>
+  <data name="AIL_Set_CardBrief" xml:space="preserve"><value>الموجز اليومى</value></data>
+  <data name="AIL_Set_Brief" xml:space="preserve"><value>تنبيه أولويات التحصيل فى الموجز</value></data>
+  <data name="AIL_Set_BriefTop" xml:space="preserve"><value>عدد العملاء فى التنبيه</value></data>
+  <data name="AIL_Set_Saved" xml:space="preserve"><value>حُفظت الإعدادات.</value></data>
+  <data name="AIL_Set_ErrNotAdmin" xml:space="preserve"><value>هذا الإعداد للمدير فقط.</value></data>
+  <data name="AIL_Set_ErrWeights" xml:space="preserve"><value>الأوزان أرقام غير سالبة ومجموعها أكبر من صفر.</value></data>
+  <data name="AIL_Set_ErrBands" xml:space="preserve"><value>حد الأولوية العالية يجب أن يكون أكبر من المتوسطة وكلاهما بين 1 و100.</value></data>
+  <data name="AIL_Set_ErrLevels" xml:space="preserve"><value>بداية المستوى الأخير يجب أن تكون بعد المستوى الحازم.</value></data>
+  <data name="AIL_Set_ErrPositive" xml:space="preserve"><value>القيمة يجب أن تكون أكبر من صفر.</value></data>
+  <data name="AIL_Set_ErrRange" xml:space="preserve"><value>القيمة خارج المدى المسموح.</value></data>
+  <data name="AIB_Al_collections_priority" xml:space="preserve"><value>أولويات التحصيل</value></data>
+  <data name="AIB_Al_collections_priority_Text" xml:space="preserve"><value>{high} عملاء بأولوية تحصيل عالية بإجمالى متأخر {high_amount}، و{promises_due} وعود مستحقة اليوم، و{broken} وعود لم تُوفَ.</value></data>
+  <data name="FSJEvent20" xml:space="preserve"><value>تذكير تحصيل</value></data>
 </root>

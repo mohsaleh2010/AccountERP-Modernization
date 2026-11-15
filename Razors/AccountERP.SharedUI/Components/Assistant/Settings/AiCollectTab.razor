@@ -1,0 +1,219 @@
+@* 🤖 P8.5.2 (ai-assistant-p85-plan.md ت32): تبويب «أولويات التحصيل» فى /settings/ai — مكوّن مستقل يحمّل نفسه عند أول عرض (نمط AiAnomalyTab).
+   القائمة، أوزان الدرجة وسقوفها وحدود الأولوية، مستويات المطالبة والوعود، مسودة المساعد، الإرسال (موقوف افتراضياً — ت24) والموجز.
+   التحقق فى الحقل عند تغييره (AiCollectSettings.Validate) ثم على الخادم. لا مساس بأى رصيد أو فاتورة. *@
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using Microsoft.Extensions.DependencyInjection
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IServiceProvider ServiceProvider
+@implements IDisposable
+
+<style>
+    .ailt { display: flex; flex-direction: column; gap: 16px; }
+    .ailt-card { border: 1px solid var(--mud-palette-lines-default); border-radius: 14px; padding: 16px; background: var(--mud-palette-surface); }
+    .ailt-card h3 { margin: 0 0 12px; font-size: 1rem; font-weight: 700; display: flex; gap: 8px; align-items: center; }
+    .ailt-card h3 .mud-icon-root { color: var(--mud-palette-primary); }
+    .ailt-card.warn { border-color: var(--mud-palette-warning); }
+    .ailt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px 16px; align-items: start; }
+    .ailt-hint { font-size: .8rem; color: var(--mud-palette-text-secondary); margin-top: 4px; }
+    .ailt-err { font-size: .8rem; color: var(--mud-palette-error); margin-top: 4px; }
+    .ailt-bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin-top: 8px; background: var(--mud-palette-background-gray); }
+    .ailt-bar span { display: block; height: 100%; }
+    .ailt-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .8rem; margin-top: 6px; }
+    .ailt-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-inline-end: 4px; vertical-align: middle; }
+    .ailt-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .ailt-actions .mud-button-root { min-height: 44px; }
+    .ailt-link { color: var(--mud-palette-primary); }
+</style>
+
+<div class="ailt" dir="@(LangService.IsRtl ? "rtl" : "ltr")">
+    @if (_svc == null || !_svc.HasGateway)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("AIL_NotAvailable")</MudAlert>
+    }
+    else if (!_svc.CanManage)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@Tr("AIL_Set_ErrNotAdmin")</MudAlert>
+    }
+    else if (_s == null)
+    {
+        @if (_error != null) { <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@_error</MudAlert> }
+        else { <div style="text-align:center;padding:32px;"><MudProgressCircular Indeterminate="true" Color="Color.Primary" /></div> }
+    }
+    else
+    {
+        @if (_error != null)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" ShowCloseIcon="true" CloseIconClicked="() => _error = null">@_error</MudAlert>
+        }
+
+        <section class="ailt-card" aria-label="@Tr("AIL_Set_CardList")">
+            <h3><MudIcon Icon="@Icons.Material.Outlined.FormatListNumbered" aria-hidden="true" />@Tr("AIL_Set_CardList")</h3>
+            <div class="ailt-grid">
+                <div>
+                    <MudNumericField T="int" @bind-Value="_s.TermsDays" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_Terms")" Min="0" Max="365" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                     Error="@(_s.TermsDays < 0 || _s.TermsDays > 365)" ErrorText="@Tr("AIL_Set_ErrRange")" />
+                    <div class="ailt-hint">@Tr("AIL_Set_TermsHint")</div>
+                </div>
+                <MudNumericField T="decimal" @bind-Value="_s.MinBalance" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_MinBalance")" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true"
+                                 Error="@(_s.MinBalance < 0)" ErrorText="@Tr("AIL_Set_ErrPositive")" />
+                <MudNumericField T="int" @bind-Value="_s.InvoiceMonths" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_InvoiceMonths")" Min="1" Max="120" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                 Error="@(_s.InvoiceMonths < 1 || _s.InvoiceMonths > 120)" ErrorText="@Tr("AIL_Set_ErrRange")" />
+                <MudNumericField T="int" @bind-Value="_s.MaxCustomers" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_MaxCustomers")" Min="10" Max="4999" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                 Error="@(_s.MaxCustomers < 10 || _s.MaxCustomers > 4999)" ErrorText="@Tr("AIL_Set_ErrRange")" />
+                <MudNumericField T="int" @bind-Value="_s.CacheMinutes" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_Cache")" Min="0" Max="120" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                 Error="@(_s.CacheMinutes < 0 || _s.CacheMinutes > 120)" ErrorText="@Tr("AIL_Set_ErrRange")" />
+            </div>
+        </section>
+
+        <section class="ailt-card" aria-label="@Tr("AIL_Set_CardScore")">
+            <h3><MudIcon Icon="@Icons.Material.Outlined.Scoreboard" aria-hidden="true" />@Tr("AIL_Set_CardScore")</h3>
+            <div class="ailt-grid">
+                @for (int i = 0; i < 5; i++)
+                {
+                    int k = i;
+                    <MudNumericField T="decimal" Value="_s.Weights[k]" ValueChanged="v => SetWeight(k, v)" Label="@Tr(WeightKeys[k])" Min="0" Max="100" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                     Error="@Has(AiCollectErrors.Weights)" ErrorText="@Tr("AIL_Set_ErrWeights")" />
+                }
+            </div>
+            <div class="ailt-hint" aria-live="polite">@Tr("AIL_Set_WSum", _s.Weights.Sum().ToString("0.##", CultureInfo.InvariantCulture))</div>
+            @if (_s.Weights.Sum() > 0)
+            {
+                <div class="ailt-bar" role="img" aria-label="@Tr("AIL_Set_WSum", _s.Weights.Sum().ToString("0.##", CultureInfo.InvariantCulture))">
+                    @for (int i = 0; i < 5; i++)
+                    {
+                        <span style="@($"width:{(_s.Weights[i] * 100 / _s.Weights.Sum()).ToString("0.##", CultureInfo.InvariantCulture)}%;background:{BarColors[i]}")"></span>
+                    }
+                </div>
+                <div class="ailt-legend">
+                    @for (int i = 0; i < 5; i++)
+                    {
+                        <span><i style="@($"background:{BarColors[i]}")"></i>@Tr(WeightKeys[i]) @((_s.Weights[i] * 100 / _s.Weights.Sum()).ToString("0", CultureInfo.InvariantCulture))%</span>
+                    }
+                </div>
+            }
+            <div class="ailt-grid mt-3">
+                <MudNumericField T="int" @bind-Value="_s.AgeCapDays" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_AgeCap")" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField T="decimal" @bind-Value="_s.AmountCap" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_AmountCap")" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true"
+                                 Error="@(_s.AmountCap <= 0)" ErrorText="@Tr("AIL_Set_ErrPositive")" />
+                <MudNumericField T="int" @bind-Value="_s.DsoWindowDays" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_DsoWindow")" Min="30" Max="730" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                 Error="@(_s.DsoWindowDays < 30 || _s.DsoWindowDays > 730)" ErrorText="@Tr("AIL_Set_ErrRange")" />
+                <MudNumericField T="int" @bind-Value="_s.DsoCapDays" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_DsoCap")" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField T="int" @bind-Value="_s.IdleStartDays" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_IdleStart")" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField T="int" @bind-Value="_s.IdleCapDays" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_IdleCap")" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField T="int" @bind-Value="_s.HighScore" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_High")" Min="1" Max="100" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                 Error="@Has(AiCollectErrors.Scores)" ErrorText="@Tr("AIL_Set_ErrBands")" />
+                <MudNumericField T="int" @bind-Value="_s.MediumScore" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_Medium")" Min="1" Max="100" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                 Error="@Has(AiCollectErrors.Scores)" ErrorText="@Tr("AIL_Set_ErrBands")" />
+            </div>
+        </section>
+
+        <section class="ailt-card" aria-label="@Tr("AIL_Set_CardLevels")">
+            <h3><MudIcon Icon="@Icons.Material.Outlined.Stairs" aria-hidden="true" />@Tr("AIL_Set_CardLevels")</h3>
+            <div class="ailt-grid">
+                <MudNumericField T="int" @bind-Value="_s.Level2Days" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_Level2")" Min="2" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                 Error="@Has(AiCollectErrors.Levels)" ErrorText="@Tr("AIL_Set_ErrLevels")" />
+                <MudNumericField T="int" @bind-Value="_s.Level3Days" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_Level3")" Min="3" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                 Error="@Has(AiCollectErrors.Levels)" ErrorText="@Tr("AIL_Set_ErrLevels")" />
+                <MudNumericField T="int" @bind-Value="_s.BrokenPromiseBonus" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_BrokenBonus")" Min="0" Max="100" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField T="int" @bind-Value="_s.BrokenPromiseDays" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_BrokenDays")" Min="1" Max="365" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            </div>
+        </section>
+
+        <section class="ailt-card" aria-label="@Tr("AIL_Set_CardDraft")">
+            <h3><MudIcon Icon="@Icons.Material.Outlined.AutoAwesome" aria-hidden="true" />@Tr("AIL_Set_CardDraft")</h3>
+            <MudSwitch T="bool" @bind-Value="_s.Draft" Color="Color.Primary" Label="@Tr("AIL_Set_Draft")" />
+            <div class="ailt-grid mt-2">
+                <MudNumericField T="int" @bind-Value="_s.DraftMaxPerDay" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_DraftMax")" Min="0" Max="1000" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            </div>
+        </section>
+
+        <section class="ailt-card warn" aria-label="@Tr("AIL_Set_CardSend")">
+            <h3><MudIcon Icon="@Icons.Material.Outlined.Send" aria-hidden="true" Style="color:var(--mud-palette-warning);" />@Tr("AIL_Set_CardSend")</h3>
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Text" Dense="true">@Tr("AIL_Set_SendHint")</MudAlert>
+            <MudSwitch T="bool" @bind-Value="_s.SendEnabled" Color="Color.Warning" Label="@Tr("AIL_Set_Send")" Class="mt-2" />
+            @if (!_providerOn)
+            {
+                <div class="ailt-hint">@Tr("AIL_Set_SendProviderOff") <a class="ailt-link" href="/salesrep/notifications">@Tr("AIL_Set_SendProviderLink")</a></div>
+            }
+            <div class="ailt-grid mt-2">
+                <MudNumericField T="int" @bind-Value="_s.ReminderMinDays" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_ReminderMinDays")" Min="0" Max="365" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            </div>
+        </section>
+
+        <section class="ailt-card" aria-label="@Tr("AIL_Set_CardBrief")">
+            <h3><MudIcon Icon="@Icons.Material.Outlined.Summarize" aria-hidden="true" />@Tr("AIL_Set_CardBrief")</h3>
+            <MudSwitch T="bool" @bind-Value="_s.BriefAlert" Color="Color.Primary" Label="@Tr("AIL_Set_Brief")" />
+            <div class="ailt-grid mt-2">
+                <MudNumericField T="int" @bind-Value="_s.BriefTop" @bind-Value:after="Revalidate" Label="@Tr("AIL_Set_BriefTop")" Min="1" Max="20" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            </div>
+        </section>
+
+        @if (Has(AiCollectErrors.Range) || Has(AiCollectErrors.Amount))
+        {
+            <div class="ailt-err" role="alert">@Tr(Has(AiCollectErrors.Range) ? "AIL_Set_ErrRange" : "AIL_Set_ErrPositive")</div>
+        }
+        <div class="ailt-actions">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_busy || _errs.Count > 0)" OnClick="SaveAsync">@Tr("AIL_Save")</MudButton>
+        </div>
+    }
+</div>
+
+@code {
+    private static readonly string[] WeightKeys = { "AIL_Set_WAge", "AIL_Set_WAmount", "AIL_Set_WDso", "AIL_Set_WLimit", "AIL_Set_WIdle" };
+    private static readonly string[] BarColors = { "var(--mud-palette-error)", "var(--mud-palette-warning)", "var(--mud-palette-info)", "var(--mud-palette-secondary)", "var(--mud-palette-tertiary)" };
+
+    private AiCollectService? _svc;
+    private AiCollectSettings? _s;
+    private List<string> _errs = new();
+    private bool _busy, _providerOn = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _svc = ServiceProvider.GetService<AiCollectService>();
+        LangService.OnLanguageChanged += OnLang;
+        await LoadAsync();
+    }
+
+    private void OnLang() => InvokeAsync(StateHasChanged);
+
+    public async Task LoadAsync()
+    {
+        if (_svc == null || !_svc.HasGateway || !_svc.CanManage) return;
+        _error = null;
+        try
+        {
+            _s = await _svc.GetSettingsAsync();
+            _providerOn = await _svc.NotifyProviderOnAsync();
+            Revalidate();
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+    }
+
+    private bool Has(string code) => _errs.Contains(code);
+    private void Revalidate() { if (_s != null) _errs = _s.Validate(); }
+    private void SetWeight(int i, decimal v) { if (_s == null) return; _s.Weights[i] = v; Revalidate(); }
+
+    private async Task SaveAsync()
+    {
+        if (_svc == null || _s == null || _busy) return;
+        Revalidate();
+        if (_errs.Count > 0) return;
+        _busy = true; _error = null;
+        try
+        {
+            await _svc.SaveSettingsAsync(_s);
+            Snackbar.Add(Tr("AIL_Set_Saved"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+        finally { _busy = false; }
+    }
+
+    private string Tr(string key, params object[] args) => AiCollectText.T(Lang, LangService.CurrentCultureInfo, key, args);
+
+    public void Dispose() => LangService.OnLanguageChanged -= OnLang;
+}
