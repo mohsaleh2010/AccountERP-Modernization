@@ -274,6 +274,8 @@ LEFT JOIN dbo.Account_Branches b ON b.Id = l.Branch_Id_Entry;
 - تعديل: `AlterDB_CLS/AiAssistantSchemaCLS.cs` (الجداول الثلاثة + الإعدادات)، `AlterDB_CLS/AiReadViewsCLS.cs` (`v_gl_entries`)، `BusinessLibShared/Ai/AiModels.cs` (`AiSettingKeys.Anomaly*`)، `Razors/AccountERP.AI/Tools/AiSchemaCatalog.cs` (`RJournalEntries`, `REntryAnomalies`، وصف الـ View، مقطعا المعرفة).
 - القبول: `EnsureSchema` مرتين بلا خطأ و`LastErrors` فارغة؛ `SELECT COUNT(*) FROM ai.v_gl_entries` = عدد سطور `Account_Entry_Details` التى لها رأس؛ أعمدة الكتالوج تطابق الـ View؛ حالات `AiAnomalyRules` تمر؛ `InsertIfNew` مرتين ⇒ صف واحد؛ `Score` 3.1416 و`Amount` 1234.567 يُقرآن كما كُتبا؛ 8 خيوط `TryReserveRun` بنفس المفتاح ⇒ واحد ينجح؛ ملفات النماذج والقواعد تُبنى net48 بـ C# 7.3؛ انحدار harness P8.1.1 وP8.2.
 
+> **فحوص P8.4.1 (2026-11-15، قراءة فقط، لم يبدأ الكود بعد):** (1) `Submain_Account` فيه `Id` و`SubAccount_NO` و`SubAccount_Name`، وكل سطور `Account_Entry_Details` (6245) لها حساب مطابق؛ **لا عمود لتاريخ إنشاء الحساب** ⇒ شرط عمر 90 يوماً فى ش13 يُحذف ويُكتفى بعدد مرات الاستعمال. (6) التوزيع: `Reference_Type = 0` يقابله دائماً `IsAutomaticEntryOrManualy = 2` (قيدان) ⇒ `is_manual` = `Reference_Type = 0` كما فى الـ View. (11) `Journal_Name` ممتلئ فى 3118/3118 ⇒ لا حاجة لـ `Journal_Codes`. `Account_Branches.Branch_Name` موجود. أداة الاستعلام: scratchpad الجلسة 909b6f89 `probe` (`dotnet run -- file.sql`).
+
 **P8.4.2 — الماسح والمهمة الليلية (بلا واجهة)**
 
 - أول خطوة: الفحوص المفتوحة 2، 3، 5، 9.
