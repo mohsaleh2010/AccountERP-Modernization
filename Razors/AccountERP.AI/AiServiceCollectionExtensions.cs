@@ -59,6 +59,10 @@ namespace AccountERP.AI
             services.AddSingleton<Scheduling.IAiScheduledJob>(sp => sp.GetRequiredService<Suggest.AiSuggestVectorJob>());
             services.AddScoped<IAiSuggestGateway>(sp => new Suggest.AiSuggestGateway(sp.GetRequiredService<Suggest.AiSuggestIndex>(),
                 sp.GetRequiredService<Suggest.AiSuggestPicker>(), sp.GetRequiredService<Knowledge.AiEmbeddingService>()));
+            // P8.7.2: توقع التدفق النقدى (خدمة + لقطة أسبوعية + بوابة)
+            services.AddSingleton(sp => new Cashflow.AiCashflowService(sp.GetRequiredService<Tools.ReadOnlySqlExecutor>(), sp.GetRequiredService<ProviderRegistry>()));
+            services.AddSingleton<Scheduling.IAiScheduledJob>(sp => sp.GetRequiredService<Cashflow.AiCashflowService>());
+            services.AddScoped<IAiCashflowGateway>(sp => new Cashflow.AiCashflowGateway(sp.GetRequiredService<Cashflow.AiCashflowService>()));
             return services;
         }
     }

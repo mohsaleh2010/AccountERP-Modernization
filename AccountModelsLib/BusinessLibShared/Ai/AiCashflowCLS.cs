@@ -61,6 +61,15 @@ ORDER BY AsOf ASC, CreatedAt ASC", c => { Add(c, "@u", userId); Add(c, "@b", bra
             FactsJson = S(r, 6), Narrative = S(r, 7), Language = S(r, 8), Status = S(r, 9), CreatedAt = r.IsDBNull(10) ? (DateTime?)null : r.GetDateTime(10),
         };
 
+        /// <summary>المستخدمون ونطاقاتهم ذوو لقطة يدوية خلال N يوماً (للقطة الأسبوعية).</summary>
+        public List<(long UserId, string BranchIds)> RecentUsers(int days)
+        {
+            var list = new List<(long, string)>();
+            Exec(@"SELECT DISTINCT User_Id, ISNULL(BranchIds, N'') FROM AI_CashflowRuns WHERE Source = N'manual' AND CreatedAt >= @f",
+                c => Add(c, "@f", DateTime.Now.AddDays(-Math.Max(1, days))), r => list.Add((r.GetInt64(0), S(r, 1) ?? "")));
+            return list;
+        }
+
         // ───────────── التعديلات اليدوية ─────────────
 
         public long InsertAdjustment(AiCashflowAdjustmentRow a)
