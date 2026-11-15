@@ -404,6 +404,11 @@ namespace AccountModelsLib
         public bool TaxRestricted { get; set; }
         public bool Truncated { get; set; }
         public DateTime ComputedAt { get; set; }
+        /// <summary>قيم إعدادات للعرض (لغير المدير الذى لا يقرأ الإعدادات): الأوزان ونقاط الوعد وحدّا القائمة والتذكير.</summary>
+        public decimal[] Weights { get; set; } = { 35, 25, 15, 15, 10 };
+        public int BrokenPromiseBonus { get; set; } = 10;
+        public int MaxCustomers { get; set; } = 2000;
+        public int ReminderMinDays { get; set; } = 3;
     }
 
     public class AiCollectActionInput

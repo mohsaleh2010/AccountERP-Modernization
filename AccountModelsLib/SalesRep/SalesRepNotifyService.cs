@@ -231,6 +231,56 @@ namespace AccountModelsLib.SalesRep
 
         private class CustomerContact { public string Name { get; set; } = ""; public string Mobile { get; set; } public string Tel { get; set; } public string Tel2 { get; set; } }
 
+        /// <summary>P8.5.4: بيانات الإرسال اليدوى لعميل (الرقم يُحسب على الخادم فقط).</summary>
+        public class ManualContact
+        {
+            public string Name { get; set; } = "";
+            /// <summary>null = لا رقم صالح.</summary>
+            public string Phone { get; set; }
+            public List<int> OptOutChannels { get; set; } = new List<int>();
+            public int Provider { get; set; }
+        }
+
+        /// <summary>P8.5.4 (أولويات التحصيل): اسم العميل ورقمه الصالح وسحب موافقته ومزوّد الإشعارات — قراءة فقط. null = العميل غير موجود.</summary>
+        public static ManualContact GetManualContact(operations opp, long customerId)
+        {
+            var settings = opp.db.SalesRep_Notify_Settings.AsNoTracking().OrderBy(x => x.Id).FirstOrDefault();
+            var cust = opp.db.Database.SqlQuery<CustomerContact>($"SELECT ISNULL(Name, N'') AS Name, Mobile, Tel, Tel2 FROM Customer WHERE Id = {customerId}").AsEnumerable().FirstOrDefault();
+            if (cust == null) return null;
+            return new ManualContact
+            {
+                Name = cust.Name ?? "",
+                Phone = FirstValidPhone(settings?.Default_Country_Code, cust.Mobile, cust.Tel, cust.Tel2),
+                OptOutChannels = opp.db.SalesRep_Notify_OptOuts.AsNoTracking().Where(x => x.Customer_Id == customerId).Select(x => x.Channel).ToList(),
+                Provider = settings?.Provider ?? (int)SalesRepNotifyProvider.Off,
+            };
+        }
+
+        /// <summary>
+        /// P8.5.4 (أولويات التحصيل، ت24–ت27): إدراج رسالة يدوية واحدة Pending فى الطابور داخل معاملة المستدعى. على عكس Enqueue ترمى عند أى فشل
+        /// (المزوّد موقوف، رقم فارغ، تكرار المرجع عبر الفهرس الفريد) ليتراجع المستدعى. eventType خارج enum SalesRepNotifyEvent عمداً
+        /// (فلا تظهر له صفوف قوالب). لا تمس أى صف قائم.
+        /// </summary>
+        public static long EnqueueManual(operations opp, int eventType, int channel, long customerId, long refId, string phone, string message)
+        {
+            var settings = opp.db.SalesRep_Notify_Settings.AsNoTracking().OrderBy(x => x.Id).FirstOrDefault();
+            if (settings == null || settings.Provider == (int)SalesRepNotifyProvider.Off) throw new InvalidOperationException("مزوّد الإشعارات غير مفعّل.");
+            if (channel != (int)SalesRepNotifyChannel.Sms && channel != (int)SalesRepNotifyChannel.WhatsApp) throw new ArgumentException("channel");
+            if (string.IsNullOrWhiteSpace(phone)) throw new ArgumentException("phone");
+            string text = (message ?? "").Trim();
+            if (text.Length == 0) throw new ArgumentException("message");
+            if (text.Length > 1000) text = text.Substring(0, 1000);
+            var row = new SalesRep_Notify_Outbox
+            {
+                Id = CallSnowflakeIdGenerate.GenerateNewId(), Event_Type = eventType, Channel = channel, Customer_Id = customerId, Rep_Id = null, Ref_Id = refId,
+                Phone = phone, Message = text, Status = (int)SalesRepNotifyStatus.Pending, Next_Attempt_At = DateTime.Now,
+            };
+            row.StampInsert(Common.Branch_Id);
+            opp.db.SalesRep_Notify_Outboxes.Add(row);
+            opp.db.SaveChanges();
+            return row.Id;
+        }
+
         public static string Render(string template, string customer, string rep, string docNo, decimal? amount, DateTime date)
         {
             string text = (template ?? "")

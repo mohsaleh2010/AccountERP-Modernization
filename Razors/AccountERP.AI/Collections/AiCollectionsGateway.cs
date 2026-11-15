@@ -62,6 +62,7 @@ namespace AccountERP.AI.Collections
                 Buckets = new[] { res.Rows.Sum(r => r.NotDue), res.Rows.Sum(r => r.D1_30), res.Rows.Sum(r => r.D31_60), res.Rows.Sum(r => r.D61_90), res.Rows.Sum(r => r.DOver90), res.Rows.Sum(r => r.Unallocated) },
                 MixedCurrency = res.Rows.Select(r => r.CurrencyId ?? 0).Distinct().Count() > 1,
                 DraftAvailable = s.Draft, TaxRestricted = res.TaxRestricted, Truncated = res.Truncated, ComputedAt = res.ComputedAt,
+                Weights = (decimal[])s.Weights.Clone(), BrokenPromiseBonus = s.BrokenPromiseBonus, MaxCustomers = s.MaxCustomers, ReminderMinDays = s.ReminderMinDays,
             };
             sum.SendAvailable = s.SendEnabled && NotifyProvider() != (int)SalesRepNotifyProvider.Off;
             if (sum.SendAvailable) sum.SendChannels = new List<int> { (int)SalesRepNotifyChannel.Sms, (int)SalesRepNotifyChannel.WhatsApp };

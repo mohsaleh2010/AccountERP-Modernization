@@ -1,0 +1,704 @@
+@* 🤖 P8.5.3/P8.5.4 (ai-assistant-p85-plan.md ت12–ت29): «أولويات التحصيل» — العملاء المدينون مرتبون بدرجة ثابتة (AiCollectionsScorer) مع أعمار الديون
+   وسجل المتابعة (وعد، تأجيل، نزاع، اتصال، ملاحظة) ومسودة تذكير (قالب أو صياغة المساعد) تُنسخ أو تُرسل بتأكيد صريح فقط.
+   لا يُعدَّل أى رصيد أو فاتورة؛ الكتابة على AI_Collection* وطابور الإشعارات عند الإرسال المؤكَّد. كل شىء عبر AiCollectService ⇒ IAiCollectionsGateway
+   (ويب فقط — ت33). التصميم بنمط EntriesAnomaliesPage وحسب ui-ux-pro-max: ≥ 44px، تركيز ظاهر، الأولوية لون + أيقونة + نص، aria-expanded، منطقة حية. *@
+@page "/accounts/collections-priority"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using Microsoft.Extensions.DependencyInjection
+@using Microsoft.JSInterop
+@inject LanguageService LangService
+@inject IServiceProvider ServiceProvider
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<PageTitle>@Tr("AIL_Title")</PageTitle>
+
+<InvoiceStyles />
+
+<style>
+    .cp-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+    .cp-links { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .cp-links a { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 10px; color: var(--mud-palette-primary); text-decoration: none; }
+    .cp-links a:hover { background: var(--mud-palette-action-default-hover); }
+    .cp-links a:focus-visible, .cp-exp:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .cp-gap { margin-top: 16px; }
+    .cp-note { display: flex; gap: 8px; align-items: flex-start; font-size: .85rem; padding: 8px 12px; border-radius: 10px; background: var(--mud-palette-background-gray); margin-top: 8px; }
+    .cp-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .cp-kpi { border: 1px solid var(--mud-palette-lines-default); border-radius: 14px; padding: 12px 16px; background: var(--mud-palette-surface); }
+    .cp-kpi .v { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: plaintext; }
+    .cp-kpi .l { color: var(--mud-palette-text-secondary); font-size: .85rem; }
+    .cp-kpi.high .v { color: var(--mud-palette-error); }
+    .cp-kpi.warn .v { color: var(--mud-palette-warning-darken); }
+    .cp-aging { display: flex; height: 18px; border-radius: 9px; overflow: hidden; background: var(--mud-palette-background-gray); margin-top: 8px; }
+    .cp-aging span { display: block; height: 100%; }
+    .cp-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .8rem; margin-top: 8px; }
+    .cp-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-inline-end: 4px; vertical-align: middle; }
+    .cp-legend b { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: plaintext; }
+    .cp-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+    @@media (max-width: 1100px) { .cp-filters, .cp-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @@media (max-width: 599px) { .cp-filters, .cp-kpis { grid-template-columns: minmax(0, 1fr); } }
+    .cp-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .cp-actions .mud-button-root { min-height: 44px; }
+    .cp-scroll { overflow-x: auto; }
+    .cp-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .875rem; }
+    .cp-table th { text-align: start; font-weight: 600; color: var(--mud-palette-text-secondary); padding: 8px; border-bottom: 1px solid var(--mud-palette-lines-default); white-space: nowrap; background: var(--mud-palette-surface); }
+    .cp-table td { padding: 6px 8px; border-bottom: 1px solid var(--mud-palette-lines-default); vertical-align: middle; background: var(--mud-palette-surface); }
+    .cp-row { cursor: pointer; }
+    .cp-row td { height: 48px; }
+    .cp-row:hover td { background: var(--mud-palette-action-default-hover); }
+    .cp-table td.n, .cp-sub td.n { text-align: end; font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: plaintext; white-space: nowrap; }
+    .cp-sticky { position: sticky; inset-inline-start: 0; z-index: 1; min-width: 180px; }
+    .cp-code { font-size: .75rem; color: var(--mud-palette-text-secondary); }
+    .cp-score { display: flex; align-items: center; gap: 6px; }
+    .cp-score .bar { width: 48px; height: 6px; border-radius: 3px; background: var(--mud-palette-background-gray); overflow: hidden; }
+    .cp-score .bar i { display: block; height: 100%; background: var(--mud-palette-primary); }
+    .cp-chip { display: inline-flex; align-items: center; gap: 4px; font-size: .75rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--mud-palette-background-gray); white-space: nowrap; }
+    .cp-pr.high { color: var(--mud-palette-error); }
+    .cp-pr.medium { color: var(--mud-palette-warning-darken); }
+    .cp-pr.low { color: var(--mud-palette-info); }
+    .cp-detail { padding: 12px 16px 16px; background: var(--mud-palette-background-gray); border-bottom: 1px solid var(--mud-palette-lines-default); }
+    .cp-detail h4 { margin: 12px 0 6px; font-size: .9rem; font-weight: 700; }
+    .cp-why { margin: 0; padding-inline-start: 18px; }
+    .cp-why li { margin-bottom: 4px; line-height: 1.5; }
+    .cp-sub { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .cp-sub th, .cp-sub td { padding: 4px 8px; border-bottom: 1px solid var(--mud-palette-lines-default); text-align: start; }
+    .cp-draft { border: 1px solid var(--mud-palette-lines-default); border-radius: 12px; padding: 12px; background: var(--mud-palette-surface); margin-top: 8px; }
+    .cp-draft textarea { unicode-bidi: plaintext; }
+    .cp-pager { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 8px; flex-wrap: wrap; }
+    .cp-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .cp-confirm dt { font-weight: 600; color: var(--mud-palette-text-secondary); font-size: .8rem; }
+    .cp-confirm dd { margin: 0 0 8px; }
+    .cp-confirm pre { white-space: pre-wrap; unicode-bidi: plaintext; font-family: inherit; background: var(--mud-palette-background-gray); padding: 8px; border-radius: 8px; margin: 0; }
+    @@media (prefers-reduced-motion: reduce) { .cp-row td, .cp-links a { transition: none !important; } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+
+    <div class="inv-card cp-head">
+        <div>
+            <h1 class="inv-title">@Tr("AIL_Title")</h1>
+            <div class="mud-text-secondary">@Tr("AIL_Sub")</div>
+        </div>
+        <div class="cp-links">
+            @if (_svc?.CanSeeBalances == true) { <a href="@AiCollectConst.BalancesRoute"><MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" Size="Size.Small" aria-hidden="true" />@Tr("AIL_LinkBalances")</a> }
+            @if (_svc?.CanManage == true) { <a href="/settings/ai"><MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" aria-hidden="true" />@Tr("AIL_LinkSettings")</a> }
+            @if (_summary != null)
+            {
+                <span class="mud-text-secondary" style="font-size:.8rem;">@Tr("AIL_ComputedAt", _summary.ComputedAt.ToString("HH:mm", CultureInfo.InvariantCulture))</span>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" Disabled="_busy" OnClick="RefreshAsync" Style="min-height:44px;">@Tr("AIL_Refresh")</MudButton>
+            }
+        </div>
+    </div>
+
+    <div class="cp-sr" role="status" aria-live="polite">@_live</div>
+
+    @if (_svc == null || !_svc.HasGateway)
+    {
+        <div class="inv-card cp-gap"><MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("AIL_NotAvailable")</MudAlert></div>
+    }
+    else if (!_svc.IsAvailable)
+    {
+        <div class="inv-card cp-gap"><MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@Tr("AIL_Err_Denied")</MudAlert></div>
+    }
+    else if (_summary == null)
+    {
+        @if (_error != null) { <MudAlert Severity="Severity.Error" Dense="true" Class="cp-gap" role="alert">@_error</MudAlert> }
+        else
+        {
+            <div class="cp-kpis cp-gap">@for (int i = 0; i < 4; i++) { <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="78px" Style="border-radius:14px;" /> }</div>
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="240px" Class="cp-gap" Style="border-radius:14px;" />
+        }
+    }
+    else
+    {
+        @if (_summary.TaxRestricted) { <div class="cp-note" role="note"><MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" aria-hidden="true" />@Tr("AIL_TaxRestricted")</div> }
+        @if (!_isAdmin) { <div class="cp-note" role="note"><MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" aria-hidden="true" />@Tr("AIL_BranchNote")</div> }
+        @if (_summary.Truncated) { <div class="cp-note" role="note"><MudIcon Icon="@Icons.Material.Filled.ContentCut" Size="Size.Small" aria-hidden="true" />@Tr("AIL_Truncated", _settings?.MaxCustomers ?? 2000)</div> }
+        @if (_summary.MixedCurrency) { <div class="cp-note" role="note"><MudIcon Icon="@Icons.Material.Filled.CurrencyExchange" Size="Size.Small" aria-hidden="true" />@Tr("AIL_MixedCurrency")</div> }
+
+        <div class="cp-kpis cp-gap">
+            <div class="cp-kpi"><div class="v">@AiCollectText.Money(_summary.OverdueTotal)</div><div class="l">@Tr("AIL_KpiOverdue") · @Tr("AIL_KpiCustomers", _summary.OverdueCustomers)</div></div>
+            <div class="cp-kpi high"><div class="v">@_summary.HighCount.ToString("N0", Inv)</div><div class="l">@Tr("AIL_KpiHigh") · @AiCollectText.Money(_summary.HighAmount)</div></div>
+            <div class="cp-kpi"><div class="v">@_summary.PromisesDueToday.ToString("N0", Inv)</div><div class="l">@Tr("AIL_KpiPromisesToday")</div></div>
+            <div class="cp-kpi warn"><div class="v">@_summary.BrokenPromises.ToString("N0", Inv)</div><div class="l">@Tr("AIL_KpiBroken")</div></div>
+        </div>
+
+        <div class="inv-card cp-gap">
+            <h2 class="inv-card-title">@Tr("AIL_AgingTitle")</h2>
+            @{ decimal agingTotal = _summary.Buckets.Sum(); }
+            @if (agingTotal > 0)
+            {
+                <div class="cp-aging" aria-hidden="true">
+                    @for (int i = 0; i < 6; i++) { <span style="@($"width:{(_summary.Buckets[i] * 100 / agingTotal).ToString("0.##", Inv)}%;background:{BucketColors[i]}")"></span> }
+                </div>
+            }
+            <div class="cp-legend">
+                @for (int i = 0; i < 6; i++) { <span><i style="@($"background:{BucketColors[i]}")"></i>@Tr(BucketKeys[i]): <b>@AiCollectText.Money(_summary.Buckets[i])</b></span> }
+            </div>
+        </div>
+
+        <div class="inv-card cp-gap">
+            <div class="cp-filters">
+                <MudSelect T="string" @bind-Value="_f.Priority" Label="@Tr("AIL_FltPriority")" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    <MudSelectItem T="string" Value="@("")">@Tr("AIL_All")</MudSelectItem>
+                    @foreach (var p in new[] { AiCollectPriority.High, AiCollectPriority.Medium, AiCollectPriority.Low }) { <MudSelectItem T="string" Value="@p">@Tr(AiCollectText.PriorityKey(p))</MudSelectItem> }
+                </MudSelect>
+                <MudSelect T="string" @bind-Value="_f.State" Label="@Tr("AIL_FltState")" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    <MudSelectItem T="string" Value="@("all")">@Tr("AIL_All")</MudSelectItem>
+                    @foreach (var st in AiCollectState.All) { <MudSelectItem T="string" Value="@st">@Tr(AiCollectText.StateKey(st))</MudSelectItem> }
+                </MudSelect>
+                <MudSelect T="long" @bind-Value="_f.BranchId" Label="@Tr("AIL_FltBranch")" Variant="Variant.Outlined" Margin="Margin.Dense"
+                           ToStringFunc="@(v => v == 0 ? Tr("AIL_All") : _branches.FirstOrDefault(b => b.Id == v).Name ?? "")">
+                    <MudSelectItem T="long" Value="0L">@Tr("AIL_All")</MudSelectItem>
+                    @foreach (var b in _branches) { <MudSelectItem T="long" Value="@b.Id">@b.Name</MudSelectItem> }
+                </MudSelect>
+                <MudTextField T="string" Value="_f.Search" ValueChanged="OnSearch" Label="@Tr("AIL_FltSearch")" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" DebounceInterval="300" Clearable="true"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+                <MudNumericField T="decimal" @bind-Value="_f.MinOverdue" Label="@Tr("AIL_FltMinOverdue")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" HideSpinButtons="true" />
+                <MudSwitch T="bool" @bind-Value="_f.OverdueOnly" Color="Color.Primary" Label="@Tr("AIL_FltOverdueOnly")" />
+            </div>
+            <div class="cp-actions mt-3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FilterAlt" Disabled="_busy" OnClick="() => LoadPageAsync(0, false)">@Tr("AIL_Refresh")</MudButton>
+            </div>
+            @if (_busy) { <MudProgressLinear Indeterminate="true" Class="mt-2" /> }
+        </div>
+
+        @if (_error != null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="cp-gap" role="alert" ShowCloseIcon="true" CloseIconClicked="() => _error = null">@_error</MudAlert>
+        }
+
+        <div class="inv-card cp-gap">
+            @if (_page.Items.Count == 0)
+            {
+                <div class="mud-text-secondary" style="padding:16px 0;text-align:center;">@Tr("AIL_EmptyNone")</div>
+            }
+            else
+            {
+                <div class="cp-scroll">
+                    <table class="cp-table">
+                        <thead>
+                            <tr>
+                                <th>@Tr("AIL_ColRank")</th><th class="cp-sticky">@Tr("AIL_ColCustomer")</th><th>@Tr("AIL_ColScore")</th><th>@Tr("AIL_ColOverdue")</th><th>@Tr("AIL_ColBalance")</th>
+                                <th>@Tr("AIL_ColOldest")</th><th>@Tr("AIL_ColLastReceipt")</th><th>@Tr("AIL_ColLimit")</th><th>@Tr("AIL_ColState")</th><th>@Tr("AIL_ColLastAction")</th><th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int rank = _f.Page * PageSize; }
+                            @foreach (var r in _page.Items)
+                            {
+                                var row = r;
+                                bool open = _open == row.CustomerId;
+                                rank++;
+                                <tr class="cp-row" @key="row.CustomerId" @onclick="() => ToggleAsync(row.CustomerId)">
+                                    <td class="n">@rank</td>
+                                    <td class="cp-sticky"><div>@row.Name</div><div class="cp-code">@row.Code</div></td>
+                                    <td>
+                                        <div class="cp-score">
+                                            <b style="font-variant-numeric:tabular-nums;">@row.Score</b>
+                                            <span class="bar" aria-hidden="true"><i style="@($"width:{row.Score}%")"></i></span>
+                                            <span class="cp-chip cp-pr @row.Priority"><MudIcon Icon="@AiCollectText.PriorityIcon(row.Priority)" Size="Size.Small" aria-hidden="true" />@Tr(AiCollectText.PriorityKey(row.Priority))</span>
+                                        </div>
+                                    </td>
+                                    <td class="n">@AiCollectText.Money(row.Overdue)</td>
+                                    <td class="n">@AiCollectText.Money(row.Balance)</td>
+                                    <td class="n">@(row.OldestDays > 0 ? Tr("AIL_Days", row.OldestDays) : "—")</td>
+                                    <td>@(row.LastReceiptDate.HasValue ? AiCollectText.Day(row.LastReceiptDate) + " · " + Tr("AIL_DaysAgo", row.IdleDays ?? 0) : Tr("AIL_NeverPaid"))</td>
+                                    <td>
+                                        @if (row.CreditLimit.HasValue)
+                                        {
+                                            <span style="direction:ltr;unicode-bidi:plaintext;">@AiCollectText.Money(row.CreditLimit.Value)</span>
+                                            @if (row.OverLimit) { <span class="cp-chip" style="color:var(--mud-palette-error)"><MudIcon Icon="@Icons.Material.Filled.Block" Size="Size.Small" aria-hidden="true" />@Tr("AIL_LimitExceeded")</span> }
+                                        }
+                                        else { <span class="mud-text-secondary">@Tr("AIL_NoLimit")</span> }
+                                    </td>
+                                    <td>
+                                        <span class="cp-chip"><MudIcon Icon="@AiCollectText.StateIcon(row.State)" Size="Size.Small" aria-hidden="true" />@Tr(AiCollectText.StateKey(row.State))</span>
+                                        @if (row.State == AiCollectState.Promised && row.PromiseDate.HasValue) { <div class="cp-code">@Tr("AIL_UntilDate", AiCollectText.Day(row.PromiseDate))</div> }
+                                        @if (row.State == AiCollectState.Snoozed && row.SnoozeUntil.HasValue) { <div class="cp-code">@Tr("AIL_UntilDate", AiCollectText.Day(row.SnoozeUntil))</div> }
+                                    </td>
+                                    <td>@(row.LastActionType == null ? "—" : Tr("AIL_Type_" + row.LastActionType) + " · " + AiCollectText.Day(row.LastActionAt))</td>
+                                    <td @onclick:stopPropagation="true">
+                                        <MudIconButton Class="cp-exp" Icon="@(open ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" OnClick="() => ToggleAsync(row.CustomerId)"
+                                                       aria-expanded="@(open ? "true" : "false")" aria-label="@(Tr("AIL_Expand") + " " + row.Name)" Style="min-width:44px;min-height:44px;" />
+                                    </td>
+                                </tr>
+                                @if (open)
+                                {
+                                    <tr><td colspan="11" class="cp-detail">@DetailFragment(row)</td></tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="cp-pager">
+                    <span class="mud-text-secondary" style="direction:ltr;unicode-bidi:plaintext;">@((_f.Page * PageSize + 1).ToString(Inv))–@(Math.Min(_page.Total, (_f.Page + 1) * PageSize).ToString(Inv)) / @_page.Total.ToString(Inv)</span>
+                    <MudIconButton Icon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)" Disabled="@(_busy || _f.Page == 0)" OnClick="() => LoadPageAsync(_f.Page - 1, false)" aria-label="‹" Style="min-width:44px;min-height:44px;" />
+                    <MudIconButton Icon="@(LangService.IsRtl ? Icons.Material.Filled.ChevronLeft : Icons.Material.Filled.ChevronRight)" Disabled="@(_busy || (_f.Page + 1) * PageSize >= _page.Total)" OnClick="() => LoadPageAsync(_f.Page + 1, false)" aria-label="›" Style="min-width:44px;min-height:44px;" />
+                </div>
+            }
+        </div>
+    }
+</div>
+</MudContainer>
+
+@* ─── حوار الإجراء (وعد / تأجيل / نزاع / اتصال / ملاحظة) ─── *@
+<MudDialog @bind-Visible="_actOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true })">
+    <TitleContent><MudText Typo="Typo.h6">@(_actType == null ? "" : Tr(ActKey(_actType)))</MudText></TitleContent>
+    <DialogContent>
+        <div dir="@(LangService.IsRtl ? "rtl" : "ltr")">
+            @if (_actType == AiCollectActionTypes.Promise)
+            {
+                <MudDatePicker @bind-Date="_actDate" Label="@Tr("AIL_DlgPromiseDate")" Variant="Variant.Outlined" Margin="Margin.Dense" DateFormat="yyyy-MM-dd" MinDate="DateTime.Today"
+                               Error="@(_actErr == AiCollectErrors.PromiseDate)" ErrorText="@Tr("AIL_Err_PromiseDate")" />
+                <MudNumericField T="decimal?" @bind-Value="_actAmount" Label="@Tr("AIL_DlgPromiseAmount")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" HideSpinButtons="true" Class="mt-2"
+                                 Error="@(_actErr == AiCollectErrors.PromiseAmount)" ErrorText="@Tr("AIL_Err_PromiseAmount")" />
+            }
+            @if (_actType == AiCollectActionTypes.Snooze)
+            {
+                <MudDatePicker @bind-Date="_actDate" Label="@Tr("AIL_DlgSnoozeDate")" Variant="Variant.Outlined" Margin="Margin.Dense" DateFormat="yyyy-MM-dd" MinDate="DateTime.Today.AddDays(1)" MaxDate="DateTime.Today.AddDays(90)"
+                               Error="@(_actErr == AiCollectErrors.SnoozeDate)" ErrorText="@Tr("AIL_Err_SnoozeDate")" />
+            }
+            <MudTextField T="string" @bind-Value="_actNote" Label="@Tr("AIL_DlgNote")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" MaxLength="1000" Counter="1000" Class="mt-2"
+                          Error="@(_actErr == AiCollectErrors.NoteLength)" ErrorText="@Tr("AIL_Err_NoteLong")" />
+            @if (_actErr != null && _actErr != AiCollectErrors.PromiseDate && _actErr != AiCollectErrors.PromiseAmount && _actErr != AiCollectErrors.SnoozeDate && _actErr != AiCollectErrors.NoteLength)
+            {
+                <div style="color:var(--mud-palette-error);font-size:.85rem;margin-top:6px;" role="alert">@Tr(_actErr)</div>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _actOpen = false" Style="min-height:44px;">@Tr("AIL_Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_acting" OnClick="SaveActionAsync" Style="min-height:44px;">@Tr("AIL_Save")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* ─── حوار تأكيد الإرسال (ت25): المستلم والقناة والرقم والنص كاملاً، وزر «إلغاء» يأخذ التركيز ─── *@
+<MudDialog @bind-Visible="_sendOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true, BackdropClick = false })">
+    <TitleContent><MudText Typo="Typo.h6">@Tr("AIL_SendTitle")</MudText></TitleContent>
+    <DialogContent>
+        @if (_preview != null)
+        {
+            <dl class="cp-confirm" dir="@(LangService.IsRtl ? "rtl" : "ltr")">
+                <dt>@Tr("AIL_SendTo")</dt><dd>@_preview.CustomerName</dd>
+                <dt>@Tr("AIL_SendChannel")</dt><dd>@Tr(_preview.Channel == 2 ? "AIL_ChannelWhatsApp" : "AIL_ChannelSms")</dd>
+                <dt>@Tr("AIL_SendPhone")</dt><dd style="direction:ltr;unicode-bidi:plaintext;text-align:start;">@_preview.PhoneShown</dd>
+                <dt>@Tr("AIL_DraftTitle")</dt><dd><pre>@_draftText</pre></dd>
+            </dl>
+            @if (_preview.CanSend) { <MudAlert Severity="Severity.Warning" Dense="true">@Tr("AIL_SendWarn")</MudAlert> }
+            else { <MudAlert Severity="Severity.Error" Dense="true" role="alert">@BlockText(_preview.BlockCode)</MudAlert> }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _sendOpen = false" Variant="Variant.Outlined" Style="min-height:44px;" autofocus>@Tr("AIL_Cancel")</MudButton>
+        @if (_preview?.CanSend == true)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Send" Disabled="_acting" OnClick="ConfirmSendAsync" Style="min-height:44px;">@Tr("AIL_SendNow")</MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private const int PageSize = AiCollectConst.PageSize;
+    private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+    private static readonly string[] BucketKeys = { "AIL_BucketNotDue", "AIL_Bucket1_30", "AIL_Bucket31_60", "AIL_Bucket61_90", "AIL_BucketOver90", "AIL_BucketUnallocated" };
+    private static readonly string[] BucketColors = { "var(--mud-palette-success)", "var(--mud-palette-info)", "var(--mud-palette-warning)", "var(--mud-palette-warning-darken)", "var(--mud-palette-error)", "var(--mud-palette-secondary)" };
+    private static readonly string[] DraftLangs = { "ar-EG", "en-US", "de-DE", "fr-FR" };
+
+    private AiCollectService? _svc;
+    private AiCollectSummary? _summary;
+    private AiCollectSettings? _settings;
+    private AiCollectFilter _f = new();
+    private AiCollectPage _page = new();
+    private List<(long Id, string Name)> _branches = new();
+    private long _open;
+    private AiCollectDetail? _detail;
+    private string? _error, _live;
+    private bool _busy, _acting, _isAdmin;
+    private IJSObjectReference? _module;
+
+    // الإجراء
+    private bool _actOpen;
+    private string? _actType, _actNote, _actErr;
+    private DateTime? _actDate;
+    private decimal? _actAmount;
+
+    // المسودة والإرسال
+    private string _draftLang = "ar-EG", _draftText = "", _draftSource = AiCollectDraftSource.Template;
+    private string? _draftModel, _draftNote;
+    private bool _drafting, _sendOpen;
+    private AiCollectSendPreview? _preview;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _svc = ServiceProvider.GetService<AiCollectService>();
+        LangService.OnLanguageChanged += OnLang;
+        if (_svc == null || !_svc.IsAvailable) return;
+        _isAdmin = _svc.CanManage;
+        _draftLang = _svc.Language;
+        try
+        {
+            _branches = await _svc.BranchesAsync();
+            _summary = await _svc.SummaryAsync();
+            _settings = SettingsView(_summary);
+            await LoadPageAsync(0, false);
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+    }
+
+    private void OnLang() => InvokeAsync(StateHasChanged);
+
+    private async Task RefreshAsync()
+    {
+        if (_svc == null) return;
+        await LoadPageAsync(_f.Page, true);
+        try { _summary = await _svc.SummaryAsync(); _settings = SettingsView(_summary); } catch (Exception ex) { _error = _svc.ErrorText(ex); }
+        if (_open != 0) await LoadDetailAsync(_open);
+    }
+
+    private async Task LoadPageAsync(int page, bool refresh)
+    {
+        if (_svc == null) return;
+        _busy = true; _error = null;
+        try
+        {
+            _f.Page = Math.Max(0, page);
+            _page = await _svc.ListAsync(new AiCollectFilter
+            {
+                Priority = string.IsNullOrEmpty(_f.Priority) ? null : _f.Priority, State = _f.State, BranchId = _f.BranchId, Search = _f.Search,
+                OverdueOnly = _f.OverdueOnly, MinOverdue = _f.MinOverdue, Page = _f.Page,
+            }, refresh);
+            if (_open != 0 && _page.Items.All(i => i.CustomerId != _open)) { _open = 0; _detail = null; }
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task OnSearch(string v) { _f.Search = v; await LoadPageAsync(0, false); }
+
+    private async Task ToggleAsync(long id)
+    {
+        if (_open == id) { _open = 0; _detail = null; return; }
+        _open = id; _detail = null;
+        await LoadDetailAsync(id);
+    }
+
+    private async Task LoadDetailAsync(long id)
+    {
+        if (_svc == null) return;
+        try
+        {
+            _detail = await _svc.GetCustomerAsync(id);
+            _draftText = AiCollectText.Template(Lang, _draftLang, _detail.Customer);
+            _draftSource = AiCollectDraftSource.Template; _draftModel = null; _draftNote = null;
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); _open = 0; }
+    }
+
+    // ───────────── تفصيل العميل ─────────────
+
+    private RenderFragment DetailFragment(AiCollectRow row) => __builder =>
+    {
+        if (_detail == null || _detail.Customer.CustomerId != row.CustomerId)
+        {
+            <MudProgressLinear Indeterminate="true" />
+            return;
+        }
+        var c = _detail.Customer;
+        <h4>@Tr("AIL_WhyTitle")</h4>
+        <ul class="cp-why">
+            @foreach (var line in AiCollectText.Why(Lang, LangService.CurrentCultureInfo, c, _settings ?? new AiCollectSettings())) { <li>@line</li> }
+        </ul>
+
+        <h4>@Tr("AIL_AgingTitle")</h4>
+        <div class="cp-legend">
+            @{ var b = new[] { c.NotDue, c.D1_30, c.D31_60, c.D61_90, c.DOver90, c.Unallocated }; }
+            @for (int i = 0; i < 6; i++) { <span><i style="@($"background:{BucketColors[i]}")"></i>@Tr(BucketKeys[i]): <b>@AiCollectText.Money(b[i])</b></span> }
+        </div>
+
+        <h4>@Tr("AIL_InvTitle")</h4>
+        if (_detail.InvoicesHidden)
+        {
+            <div class="mud-text-secondary">@Tr("AIL_InvoicesHidden")</div>
+        }
+        else if (_detail.Invoices.Count > 0)
+        {
+            <div class="cp-scroll">
+                <table class="cp-sub">
+                    <thead><tr><th>@Tr("AIL_InvNo")</th><th>@Tr("AIL_InvDate")</th><th>@Tr("AIL_InvDue")</th><th>@Tr("AIL_InvNet")</th><th>@Tr("AIL_InvOpen")</th><th>@Tr("AIL_InvOverdueDays")</th></tr></thead>
+                    <tbody>
+                        @foreach (var inv in _detail.Invoices)
+                        {
+                            <tr>
+                                <td><a href="@($"/accounts/invoices/sales-invoice/{inv.SaleId.ToString(Inv)}")" style="color:var(--mud-palette-primary)">@inv.InvoiceNo</a></td>
+                                <td class="n">@AiCollectText.Day(inv.InvoiceDate)</td><td class="n">@AiCollectText.Day(inv.Due)</td>
+                                <td class="n">@AiCollectText.Money(inv.NetTotal)</td><td class="n">@AiCollectText.Money(inv.OpenAmount)</td><td class="n">@inv.DaysOverdue</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="mud-text-secondary" style="font-size:.8rem;margin-top:4px;">@Tr("AIL_InvEstimated")</div>
+        }
+        if (c.Unallocated > 0)
+        {
+            <div class="mud-text-secondary" style="margin-top:4px;">@Tr("AIL_BucketUnallocated"): <b style="direction:ltr;unicode-bidi:plaintext;">@AiCollectText.Money(c.Unallocated)</b></div>
+        }
+
+        <h4>@Tr("AIL_HistTitle")</h4>
+        if (_detail.Actions.Count == 0)
+        {
+            <div class="mud-text-secondary">@Tr("AIL_HistEmpty")</div>
+        }
+        else
+        {
+            <div class="cp-scroll">
+                <table class="cp-sub">
+                    <tbody>
+                        @foreach (var a in _detail.Actions)
+                        {
+                            var act = a;
+                            <tr style="@(act.Status == AiCollectActionStatus.Cancelled ? "opacity:.6;text-decoration:line-through;" : "")">
+                                <td>@Tr("AIL_Type_" + act.ActionType)</td>
+                                <td class="n">@(act.CreatedAt?.ToString("yyyy-MM-dd HH:mm", Inv))</td>
+                                <td>@act.UserName</td>
+                                <td dir="auto">
+                                    @if (act.PromiseDate.HasValue) { <span>@Tr("AIL_UntilDate", AiCollectText.Day(act.PromiseDate))@(act.PromiseAmount.HasValue ? " · " + AiCollectText.Money(act.PromiseAmount.Value) : "") </span> }
+                                    @if (act.NextActionDate.HasValue) { <span>@Tr("AIL_UntilDate", AiCollectText.Day(act.NextActionDate)) </span> }
+                                    @(act.Note ?? act.MessageText)
+                                </td>
+                                <td>@OutboxText(act)</td>
+                                <td>
+                                    @if (act.Status == AiCollectActionStatus.Open)
+                                    {
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" Disabled="_acting" OnClick="() => CloseActionAsync(act.Id, false)" Style="min-height:36px;">@Tr("AIL_ActClose")</MudButton>
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error" Disabled="_acting" OnClick="() => CloseActionAsync(act.Id, true)" Style="min-height:36px;">@Tr("AIL_ActCancel")</MudButton>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <div class="cp-actions mt-3">
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Call" OnClick="() => OpenAction(AiCollectActionTypes.Call)">@Tr("AIL_ActCall")</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Handshake" OnClick="() => OpenAction(AiCollectActionTypes.Promise)">@Tr("AIL_ActPromise")</MudButton>
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Snooze" OnClick="() => OpenAction(AiCollectActionTypes.Snooze)">@Tr("AIL_ActSnooze")</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Gavel" OnClick="() => OpenAction(AiCollectActionTypes.Dispute)">@Tr("AIL_ActDispute")</MudButton>
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.StickyNote2" OnClick="() => OpenAction(AiCollectActionTypes.Note)">@Tr("AIL_ActNote")</MudButton>
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ReceiptLong" Href="@($"/accounts/customer-account-statement/normal?customer={c.CustomerId.ToString(Inv)}")">@Tr("AIL_ActStatement")</MudButton>
+        </div>
+
+        @* ─── مسودة التذكير (ت21–ت25) ─── *@
+        <div class="cp-draft">
+            <div class="cp-actions" style="justify-content:space-between;">
+                <strong>@Tr("AIL_DraftTitle")</strong>
+                <span class="cp-chip">@Tr(AiCollectText.LevelKey(Math.Max(1, c.Level)))</span>
+            </div>
+            <div class="cp-actions mt-2">
+                <MudSelect T="string" Value="_draftLang" ValueChanged="OnDraftLang" Label="@Tr("AIL_DraftLang")" Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width:200px;">
+                    @foreach (var l in DraftLangs) { <MudSelectItem T="string" Value="@l">@LangName(l)</MudSelectItem> }
+                </MudSelect>
+                @if (_summary?.DraftAvailable == true)
+                {
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoAwesome" Disabled="_drafting" OnClick="() => DraftAsync(false)">@Tr("AIL_DraftAsk")</MudButton>
+                }
+            </div>
+            @if (_drafting) { <MudProgressLinear Indeterminate="true" Class="my-1" /><div class="mud-text-secondary" style="font-size:.85rem;">@Tr("AIL_DraftWorking")</div> }
+            @if (_draftSource == AiCollectDraftSource.Model) { <div class="cp-chip mt-2" style="color:var(--mud-palette-primary)"><MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Size="Size.Small" aria-hidden="true" />@Tr("AIL_DraftByModel") · @_draftModel</div> }
+            @if (_draftNote != null) { <div class="mud-text-secondary mt-2" role="note" style="font-size:.85rem;">@_draftNote</div> }
+            <MudTextField T="string" @bind-Value="_draftText" Variant="Variant.Outlined" Lines="4" MaxLength="1000" Class="mt-2" Immediate="true" InputMode="InputMode.text" Label="@Tr("AIL_DraftTitle")"
+                          HelperText="@Tr("AIL_Chars", (_draftText ?? "").Length, 1000)" />
+            <div class="cp-actions mt-2">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" Disabled="@(_acting || string.IsNullOrWhiteSpace(_draftText))" OnClick="CopyAsync">@Tr("AIL_Copy")</MudButton>
+                @if (_summary?.SendAvailable == true)
+                {
+                    foreach (var ch in _summary.SendChannels)
+                    {
+                        int channel = ch;
+                        <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@(channel == 2 ? Icons.Custom.Brands.WhatsApp : Icons.Material.Filled.Sms)" Disabled="@(_acting || string.IsNullOrWhiteSpace(_draftText))"
+                                   OnClick="() => OpenSendAsync(channel)">@Tr("AIL_Send") @Tr(channel == 2 ? "AIL_ChannelWhatsApp" : "AIL_ChannelSms")</MudButton>
+                    }
+                }
+            </div>
+        </div>
+    };
+
+    // ───────────── الإجراءات ─────────────
+
+    private static string ActKey(string t) => t switch
+    {
+        AiCollectActionTypes.Promise => "AIL_ActPromise", AiCollectActionTypes.Snooze => "AIL_ActSnooze", AiCollectActionTypes.Dispute => "AIL_ActDispute",
+        AiCollectActionTypes.Note => "AIL_ActNote", _ => "AIL_ActCall",
+    };
+
+    private void OpenAction(string type)
+    {
+        _actType = type; _actNote = null; _actErr = null; _actAmount = null;
+        _actDate = type == AiCollectActionTypes.Promise ? DateTime.Today.AddDays(3) : type == AiCollectActionTypes.Snooze ? DateTime.Today.AddDays(7) : null;
+        _actOpen = true;
+    }
+
+    private async Task SaveActionAsync()
+    {
+        if (_svc == null || _detail == null || _actType == null || _acting) return;
+        _acting = true; _actErr = null;
+        try
+        {
+            await _svc.AddActionAsync(new AiCollectActionInput
+            {
+                CustomerId = _detail.Customer.CustomerId, ActionType = _actType, Note = _actNote,
+                PromiseDate = _actType == AiCollectActionTypes.Promise ? _actDate : null, PromiseAmount = _actType == AiCollectActionTypes.Promise ? _actAmount : null,
+                NextActionDate = _actType == AiCollectActionTypes.Snooze ? _actDate : null,
+            });
+            _actOpen = false;
+            _live = Tr("AIL_MsgSaved");
+            Snackbar.Add(Tr("AIL_MsgSaved"), Severity.Success);
+            await AfterActionAsync();
+        }
+        catch (AiCollectException ex) { _actErr = ex.Code; }
+        catch (Exception ex) { _actErr = null; _error = _svc.ErrorText(ex); _actOpen = false; }
+        finally { _acting = false; }
+    }
+
+    private async Task CloseActionAsync(long id, bool cancel)
+    {
+        if (_svc == null || _acting) return;
+        _acting = true;
+        try
+        {
+            await _svc.CloseActionAsync(id, cancel);
+            _live = Tr("AIL_MsgClosed");
+            Snackbar.Add(Tr("AIL_MsgClosed"), Severity.Success);
+            await AfterActionAsync();
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+        finally { _acting = false; }
+    }
+
+    private async Task AfterActionAsync()
+    {
+        if (_svc == null) return;
+        long keep = _open;
+        _summary = await _svc.SummaryAsync();
+        await LoadPageAsync(_f.Page, false);
+        if (keep != 0)
+        {
+            try { _detail = await _svc.GetCustomerAsync(keep); _open = keep; }
+            catch { _open = 0; _detail = null; }
+        }
+    }
+
+    // ───────────── المسودة والنسخ والإرسال ─────────────
+
+    private string LangName(string l) => CultureInfo.GetCultureInfo(l).NativeName;
+
+    private async Task OnDraftLang(string lang)
+    {
+        _draftLang = lang;
+        if (_detail == null) return;
+        _draftText = AiCollectText.Template(Lang, lang, _detail.Customer);
+        _draftSource = AiCollectDraftSource.Template; _draftModel = null; _draftNote = null;
+        await Task.CompletedTask;
+    }
+
+    private async Task DraftAsync(bool regenerate)
+    {
+        if (_svc == null || _detail == null || _drafting) return;
+        _drafting = true; _draftNote = null;
+        try
+        {
+            var d = await _svc.DraftAsync(_detail.Customer.CustomerId, _draftLang, true, regenerate);
+            if (d.Source == AiCollectDraftSource.Model && !string.IsNullOrWhiteSpace(d.Text))
+            {
+                _draftText = d.Text!; _draftSource = d.Source; _draftModel = d.ModelName;
+                _live = Tr("AIL_DraftByModel");
+            }
+            else
+            {
+                _draftNote = d.Source == AiCollectDraftSource.Capped ? Tr("AIL_DraftCapped") : d.Source == AiCollectDraftSource.Rejected ? Tr("AIL_DraftRejected") : Tr("AIL_DraftUnavailable");
+                _live = _draftNote;
+            }
+        }
+        catch (Exception ex) { _draftNote = Tr("AIL_DraftUnavailable"); _live = _svc.ErrorText(ex); }
+        finally { _drafting = false; }
+    }
+
+    private async Task CopyAsync()
+    {
+        if (_svc == null || _detail == null || string.IsNullOrWhiteSpace(_draftText)) return;
+        _acting = true;
+        try
+        {
+            _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./_content/AccountERP.SharedUI/js/assistant.js");
+            await _module.InvokeAsync<bool>("copyText", _draftText);
+            await _svc.LogCopiedAsync(_detail.Customer.CustomerId, _draftText, _draftSource, _draftLang);
+            _live = Tr("AIL_MsgCopied");
+            Snackbar.Add(Tr("AIL_MsgCopied"), Severity.Success);
+            await AfterActionAsync();
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+        finally { _acting = false; }
+    }
+
+    private async Task OpenSendAsync(int channel)
+    {
+        if (_svc == null || _detail == null) return;
+        try
+        {
+            _preview = await _svc.PreviewSendAsync(_detail.Customer.CustomerId, channel);
+            _sendOpen = true;
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+    }
+
+    private async Task ConfirmSendAsync()
+    {
+        if (_svc == null || _detail == null || _preview == null || !_preview.CanSend || _acting) return;
+        _acting = true;
+        try
+        {
+            await _svc.SendAsync(_detail.Customer.CustomerId, _preview.Channel, _draftText, _draftSource, _draftLang);
+            _sendOpen = false;
+            _live = Tr("AIL_MsgQueued");
+            Snackbar.Add(Tr("AIL_MsgQueued"), Severity.Success);
+            await AfterActionAsync();
+        }
+        catch (Exception ex) { _sendOpen = false; _error = _svc.ErrorText(ex); }
+        finally { _acting = false; }
+    }
+
+    private static AiCollectSettings SettingsView(AiCollectSummary s) => new()
+    {
+        Weights = s.Weights, BrokenPromiseBonus = s.BrokenPromiseBonus, MaxCustomers = s.MaxCustomers, ReminderMinDays = s.ReminderMinDays,
+    };
+
+    private string BlockText(string? code) => code == AiCollectErrors.TooSoon ? Tr(code, _settings?.ReminderMinDays ?? 3) : Tr(code ?? "AIL_Err_SendOff");
+
+    private string OutboxText(AiCollectActionRow a)
+    {
+        if (a.ActionType != AiCollectActionTypes.ReminderSent || a.OutboxStatus == null) return "";
+        return a.OutboxStatus switch
+        {
+            1 => Tr("AIL_OutSent"),
+            2 => Tr("AIL_OutFailed") + (string.IsNullOrWhiteSpace(a.OutboxError) ? "" : " — " + a.OutboxError),
+            _ => Tr("AIL_OutPending"),
+        };
+    }
+
+    private string Tr(string key, params object[] args) => AiCollectText.T(Lang, LangService.CurrentCultureInfo, key, args);
+
+    public async ValueTask DisposeAsync()
+    {
+        LangService.OnLanguageChanged -= OnLang;
+        if (_module != null) { try { await _module.DisposeAsync(); } catch { } }
+    }
+}

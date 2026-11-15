@@ -183,6 +183,8 @@
 
 @code {
     [Parameter] public string Mode { get; set; } = "normal";
+    /// <summary>P8.5.3: فتح الكشف لعميل محدد من «أولويات التحصيل» (?customer=). نفس مسار اختياره يدوياً.</summary>
+    [SupplyParameterFromQuery(Name = "customer")] public long? CustomerFromQuery { get; set; }
     private bool WithPeriod => string.Equals(Mode, "period", StringComparison.OrdinalIgnoreCase);
 
     private record GroupOption(long Id, string Name);
@@ -237,6 +239,7 @@
         {
             await LoadPeriodsAsync();
         }
+        if (CustomerFromQuery is > 0) _customerId = CustomerFromQuery;
         await SearchCustomersAsync();
     }
 
