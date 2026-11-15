@@ -242,6 +242,21 @@ namespace AccountERP.AI.Tools
             if (AiDraftTools.CanStoreOrder(ctx))
                 yield return new ToolSpec(AiDraftTools.StoreOrderDef(ctx), AiDraftTools.CanStoreOrder, AiDraftTools.CreateStoreOrder);
 
+            // ───── P8.3: شرح خطأ الفاتورة الإلكترونية (مطابقة ثابتة بالكتالوج، قراءة فقط) ─────
+            yield return new ToolSpec(new AiToolDef
+            {
+                Name = AiEInvoiceConst.ToolName,
+                Description = "يشرح خطأ رفع فاتورة إلكترونية مصرية (بوابة ETA) من كتالوج الأخطاء الموثَّق، ويعيد حالة رفع الفاتورة إن أُعطى sale_id. " +
+                              "مرّر error_text = نص الخطأ كما لصقه المستخدم حرفياً (رسالة النظام أو JSON رد البوابة أو خطوات التحقق)، و/أو sale_id. قراءة فقط: لا ترسل ولا تعدّل.",
+                Schema = Schema(new JsonObject
+                {
+                    ["error_text"] = Str("نص الخطأ كما ظهر للمستخدم، حرفياً بلا تلخيص (حتى 8000 حرف)"),
+                    ["sale_id"] = Int("معرّف الفاتورة أو المرتجع (sale_id من ai.v_einvoice_status) إن كان معروفاً"),
+                    ["doc_kind"] = Enum("invoice = فاتورة مبيعات (الافتراضى)، return = مرتجع مبيعات", "invoice", "return"),
+                }),
+            }, EInvoice.AiEInvoiceLogic.Allowed, (_, _) => throw new InvalidOperationException("explain_einvoice_error تُنفَّذ بـ ExecuteAsync"))
+            { RunAsync = ExplainEInvoiceAsync };
+
             // ───── P6: قراءة المرفقات (نموذج رؤية) ─────
             if (_extractor != null && AiExtractTools.Allowed(ctx))
             {
@@ -313,6 +328,7 @@ namespace AccountERP.AI.Tools
             AiDraftTools.PurchaseTool => "مسودة فاتورة مشتريات",
             AiDraftTools.StoreOrderTool => "مسودة إذن مخزن",
             AiExtractTools.Tool => "قراءة مستند",
+            AiEInvoiceConst.ToolName => "شرح خطأ فاتورة إلكترونية",
             _ => toolName,
         };
 
@@ -439,6 +455,17 @@ namespace AccountERP.AI.Tools
             var p = new Dictionary<string, object> { ["@q"] = "%" + esc + "%", ["@starts"] = esc + "%", ["@exact"] = text };
             var r = _sql.Execute(sql, views, Session(c), p, c.Ct);
             return new AiToolResult { Content = FormatResult(r), Sql = sql + "  -- @q = " + text, RowCount = r.Rows.Count, Title = "بحث عن «" + Short(text, 40) + "»" };
+        }
+
+        /// <summary>P8.3 (ف12): الحالة + المطابقة الثابتة بالكتالوج (ف3–ف6)، ونص المستخدم محاط بعلامات (ف20).</summary>
+        private async Task<AiToolResult> ExplainEInvoiceAsync(JsonObject a, AiToolContext c)
+        {
+            string text = Arg(a, "error_text");
+            long? saleId = a["sale_id"] is JsonValue v && v.TryGetValue<long>(out long n) && n > 0 ? n
+                         : long.TryParse(Arg(a, "sale_id"), NumberStyles.None, CultureInfo.InvariantCulture, out long m) && m > 0 ? m : null;
+            if (text.Length == 0 && saleId == null) throw new ArgumentException("أعطِ error_text (نص الخطأ كما لصقه المستخدم) أو sale_id.");
+            var r = await EInvoice.AiEInvoiceLogic.ExplainAsync(_sql, _knowledge, c, text, saleId, Arg(a, "doc_kind"));
+            return new AiToolResult { Content = EInvoice.AiEInvoiceLogic.ToolContent(r), RowCount = r.Matches.Count, Title = "شرح خطأ فاتورة إلكترونية" };
         }
 
         private static AiToolResult PeriodsAndBranches(JsonObject a, AiToolContext c)

@@ -40,6 +40,7 @@ namespace AccountERP.AI
             services.AddSingleton<Scheduling.IAiScheduledJob>(sp => sp.GetRequiredService<Brief.AiBriefJob>());   // ق17: مهام AiSchedulerWorker
             services.AddScoped<IAiBriefGateway>(sp => new Brief.AiBriefGateway(sp.GetRequiredService<Brief.AiBriefJob>()));   // P8.1.4: صفحة الموجز والإعدادات (P8.1.5/P8.1.6)
             services.AddScoped<IAiSearchGateway>(sp => new Search.AiSearchGateway(sp.GetRequiredService<Tools.ReadOnlySqlExecutor>()));   // P8.2.3: بحث البيانات فى لوحة Ctrl+K (بلا نموذج)
+            services.AddScoped<IAiEInvoiceGateway>(sp => new EInvoice.AiEInvoiceGateway(sp.GetRequiredService<Tools.ReadOnlySqlExecutor>(), sp.GetRequiredService<Knowledge.AiKnowledgeService>()));   // P8.3: شرح خطأ الفاتورة الإلكترونية (بلا نموذج)
             return services;
         }
     }
