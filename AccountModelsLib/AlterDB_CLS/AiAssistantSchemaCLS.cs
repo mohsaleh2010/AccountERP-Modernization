@@ -491,6 +491,36 @@ CREATE NONCLUSTERED INDEX [IX_AI_CollectionActions_Type_Status] ON [dbo].[AI_Col
     [EmbeddingModel_Id] [bigint] NOT NULL,
     [EmbeddingDim] [int] NULL,",
              @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_SuggVec_Kind_Hash_Model] ON [dbo].[AI_Suggestions_Vectors]([Kind], [TextHash], [EmbeddingModel_Id]);"),
+
+            // P8.7 (ai-assistant-p87-plan.md و10): لقطة توقع التدفق النقدى. BranchIds = CSV (فارغ = الكل). Scenario: base / conservative.
+            ("AI_CashflowRuns", @"
+    [User_Id] [bigint] NOT NULL,
+    [BranchIds] [nvarchar](400) NULL,
+    [AsOf] [date] NOT NULL,
+    [Scenario] [nvarchar](20) NOT NULL,
+    [Source] [nvarchar](20) NOT NULL DEFAULT (N'manual'),
+    [FactsJson] [nvarchar](max) NULL,
+    [Narrative] [nvarchar](max) NULL,
+    [Language] [nvarchar](5) NULL,
+    [Status] [nvarchar](20) NOT NULL DEFAULT (N'Done'),
+    [ErrorText] [nvarchar](500) NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_AI_CashflowRuns_User_Created] ON [dbo].[AI_CashflowRuns]([User_Id], [CreatedAt] DESC);"),
+
+            // P8.7 (و9): تعديلات يدوية. Direction: in / out. IsActive = 0 ⇒ ملغى (لا حذف).
+            ("AI_CashflowAdjustments", @"
+    [User_Id] [bigint] NOT NULL,
+    [Branch_Id] [bigint] NOT NULL DEFAULT ((0)),
+    [WeekStart] [date] NOT NULL,
+    [Direction] [nvarchar](5) NOT NULL,
+    [Amount] [decimal](18, 3) NOT NULL,
+    [Description] [nvarchar](300) NULL,
+    [IsActive] [int] NOT NULL DEFAULT ((1)),",
+             @"CREATE NONCLUSTERED INDEX [IX_AI_CashflowAdjustments_Week] ON [dbo].[AI_CashflowAdjustments]([IsActive], [WeekStart]);"),
+
+            // P8.7 (و6): حسابات مستبعدة من المصروفات المتكررة (لكل الشركة).
+            ("AI_CashflowExclusions", @"
+    [SubAccount_Id] [bigint] NOT NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_CashflowExclusions_Account] ON [dbo].[AI_CashflowExclusions]([SubAccount_Id]);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>
@@ -578,6 +608,15 @@ CREATE NONCLUSTERED INDEX [IX_AI_CollectionActions_Type_Status] ON [dbo].[AI_Col
             (AiSettingKeys.SuggestHistoryMonths, "24"),
             (AiSettingKeys.SuggestMaxRows, "50000"),
             (AiSettingKeys.SuggestForAllUsers, "0"),
+            // P8.7 (و17): موقوف افتراضياً
+            (AiSettingKeys.CashflowEnabled, "0"),
+            (AiSettingKeys.CashflowSupplierTermsDays, "30"),
+            (AiSettingKeys.CashflowMinBalance, "0"),
+            (AiSettingKeys.CashflowIncludeCashSales, "1"),
+            (AiSettingKeys.CashflowRecurringMinMonths, "3"),
+            (AiSettingKeys.CashflowConservativeDelayDays, "14"),
+            (AiSettingKeys.CashflowBaseDelayDays, "7"),
+            (AiSettingKeys.CashflowConservativeCollectPct, "80"),
         };
 
         public static readonly List<string> LastErrors = new List<string>();

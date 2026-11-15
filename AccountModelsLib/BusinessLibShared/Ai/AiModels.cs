@@ -163,6 +163,15 @@ namespace AccountModelsLib
         public const string SuggestHistoryMonths = "SuggestHistoryMonths";
         public const string SuggestMaxRows = "SuggestMaxRows";
         public const string SuggestForAllUsers = "SuggestForAllUsers";
+        // P8.7 (ai-assistant-p87-plan.md و17): توقع التدفق النقدى
+        public const string CashflowEnabled = "CashflowEnabled";
+        public const string CashflowSupplierTermsDays = "CashflowSupplierTermsDays";
+        public const string CashflowMinBalance = "CashflowMinBalance";
+        public const string CashflowIncludeCashSales = "CashflowIncludeCashSales";
+        public const string CashflowRecurringMinMonths = "CashflowRecurringMinMonths";
+        public const string CashflowConservativeDelayDays = "CashflowConservativeDelayDays";
+        public const string CashflowBaseDelayDays = "CashflowBaseDelayDays";
+        public const string CashflowConservativeCollectPct = "CashflowConservativeCollectPct";
     }
 
     /// <summary>صف AI_Providers كما يُخزَّن (المفتاح مشفّر). لا يصل للواجهة؛ الواجهة ترى AiProviderView.</summary>

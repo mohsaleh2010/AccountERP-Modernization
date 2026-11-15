@@ -283,6 +283,14 @@ FROM dbo.Item i
 LEFT JOIN dbo.Item_Category c ON c.ID = i.Item_Category_ID
 LEFT JOIN dbo.Items_Group g ON g.Id = i.Items_GroupsId
 WHERE ISNULL(i.Active_flage, 1) = 1 AND ISNULL(i.Item_Category_ID, 0) > 0;"),
+            // P8.7 (ai-assistant-p87-plan.md §3): الشيكات من Checks_Memory بلا تفسير — المعنى (وارد/صادر/محصّل) يُحسم فى المحرك (فحص 1 مفتوح).
+            ("v_cheques", @"CREATE OR ALTER VIEW ai.v_cheques AS
+SELECT c.id AS cheque_id, c.Check_No AS cheque_no, CONVERT(date, c.Day_Date) AS issue_date, CONVERT(date, c.Due_Date) AS due_date,
+       ISNULL(c.Check_Value, 0) AS amount, ISNULL(c.Check_Value, 0) * ISNULL(NULLIF(c.Factor, 0), 1) AS amount_equivalent,
+       ISNULL(c.Transaction_Type, 0) AS transaction_type, ISNULL(c.Receipt, 0) AS receipt, c.Spent_Date AS spent_date,
+       NULLIF(c.Customer_Id, 0) AS customer_id, NULLIF(c.Supplier_Id, 0) AS supplier_id, c.Bank_id AS bank_id,
+       ISNULL(c.Branch_Id, 0) AS branch_id, c.Currency_Id AS currency_id, ISNULL(c.IS_Posted_Flage, 0) AS is_posted
+FROM dbo.Checks_Memory c;"),
         };
 
         /// <summary>
