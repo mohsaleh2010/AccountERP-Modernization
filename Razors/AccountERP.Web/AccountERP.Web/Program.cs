@@ -136,6 +136,7 @@ builder.Services.AddScoped<AccountERP.SharedUI.Services.AiSuggestUiService>();  
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AiCashflowUiService>();   // P8.7.3: توقع التدفق النقدى — ويب فقط
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AiReorderUiService>();   // P8.6.3: إعادة الطلب الذكية — ويب فقط
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AiMcpUiService>();   // P8.10.3: توكنات MCP — ويب فقط
+builder.Services.AddScoped<AccountERP.SharedUI.Services.AiBankRecUiService>();   // P8.12.4: المطابقة البنكية — ويب فقط
 builder.Services.AddScoped<AccountERP.SharedUI.Services.CommandPaletteService>();   // P8.2.2: لوحة البحث السريع Ctrl+K
 builder.Services.AddMudServices();
 var app = builder.Build();

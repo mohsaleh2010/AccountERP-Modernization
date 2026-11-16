@@ -6648,4 +6648,86 @@
   <data name="AIV_Set_NotReady" xml:space="preserve"><value>Kein geeignetes Modell für Sprache.</value></data>
   <data name="AIV_Set_Save" xml:space="preserve"><value>Speichern</value></data>
   <data name="AIV_Set_Saved" xml:space="preserve"><value>Einstellungen gespeichert</value></data>
+  <data name="AIN_Title" xml:space="preserve"><value>Bankabstimmung</value></data>
+  <data name="AIN_Intro" xml:space="preserve"><value>Kontoauszug importieren und mit den Buchungen abgleichen. Vorschläge werden von Ihnen bestätigt.</value></data>
+  <data name="AIN_NotAvailable" xml:space="preserve"><value>Nur in der Webversion nach Aktivierung verfügbar.</value></data>
+  <data name="AIN_Bank" xml:space="preserve"><value>Bank</value></data>
+  <data name="AIN_Statement" xml:space="preserve"><value>Auszug</value></data>
+  <data name="AIN_Import" xml:space="preserve"><value>Auszug importieren</value></data>
+  <data name="AIN_ImportHint" xml:space="preserve"><value>CSV/Excel (am genauesten) oder PDF/Bild über den Assistenten.</value></data>
+  <data name="AIN_ColDate" xml:space="preserve"><value>Datumsspalte</value></data>
+  <data name="AIN_ColValueDate" xml:space="preserve"><value>Valutaspalte</value></data>
+  <data name="AIN_ColDescription" xml:space="preserve"><value>Beschreibung</value></data>
+  <data name="AIN_ColReference" xml:space="preserve"><value>Referenz / Schecknr.</value></data>
+  <data name="AIN_ColDebit" xml:space="preserve"><value>Soll-Spalte</value></data>
+  <data name="AIN_ColCredit" xml:space="preserve"><value>Haben-Spalte</value></data>
+  <data name="AIN_ColAmount" xml:space="preserve"><value>Betragsspalte (negativ = Abbuchung)</value></data>
+  <data name="AIN_ColBalance" xml:space="preserve"><value>Saldospalte</value></data>
+  <data name="AIN_DateOrder" xml:space="preserve"><value>Datumsformat</value></data>
+  <data name="AIN_Opening" xml:space="preserve"><value>Anfangssaldo</value></data>
+  <data name="AIN_Closing" xml:space="preserve"><value>Endsaldo</value></data>
+  <data name="AIN_DoImport" xml:space="preserve"><value>Importieren</value></data>
+  <data name="AIN_Imported" xml:space="preserve"><value>{0} Zeilen importiert; Saldo stimmt.</value></data>
+  <data name="AIN_Unbalanced" xml:space="preserve"><value>Auszug stimmt nicht: Differenz {0}.</value></data>
+  <data name="AIN_LowConf" xml:space="preserve"><value>Einige Zeilen mit geringer Konfidenz.</value></data>
+  <data name="AIN_RepBank" xml:space="preserve"><value>Banksaldo (Auszug)</value></data>
+  <data name="AIN_RepDeposits" xml:space="preserve"><value>Einzahlungen unterwegs</value></data>
+  <data name="AIN_RepPayments" xml:space="preserve"><value>Offene Zahlungen</value></data>
+  <data name="AIN_RepAdjusted" xml:space="preserve"><value>Bereinigter Banksaldo</value></data>
+  <data name="AIN_RepBankOnly" xml:space="preserve"><value>Nur in der Bank (netto)</value></data>
+  <data name="AIN_RepBook" xml:space="preserve"><value>Buchsaldo (aktuell)</value></data>
+  <data name="AIN_RepDiff" xml:space="preserve"><value>Unerklärte Differenz</value></data>
+  <data name="AIN_RepNote" xml:space="preserve"><value>Der Buchsaldo ist der aktuelle Saldo.</value></data>
+  <data name="AIN_Match" xml:space="preserve"><value>Abgleichen</value></data>
+  <data name="AIN_Matched" xml:space="preserve"><value>{0} vorgeschlagene Zuordnungen.</value></data>
+  <data name="AIN_ConfirmExact" xml:space="preserve"><value>Alle exakten bestätigen</value></data>
+  <data name="AIN_Confirmed" xml:space="preserve"><value>{0} bestätigt.</value></data>
+  <data name="AIN_Manual" xml:space="preserve"><value>Manuell ({0} ↔ {1})</value></data>
+  <data name="AIN_Print" xml:space="preserve"><value>Bericht drucken</value></data>
+  <data name="AIN_StatementLines" xml:space="preserve"><value>Auszugszeilen</value></data>
+  <data name="AIN_BookLines" xml:space="preserve"><value>Bankbuchungen</value></data>
+  <data name="AIN_Date" xml:space="preserve"><value>Datum</value></data>
+  <data name="AIN_In" xml:space="preserve"><value>Eingang</value></data>
+  <data name="AIN_Out" xml:space="preserve"><value>Ausgang</value></data>
+  <data name="AIN_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="AIN_Voucher" xml:space="preserve"><value>Beleg</value></data>
+  <data name="AIN_Party" xml:space="preserve"><value>Partner</value></data>
+  <data name="AIN_BankOnly" xml:space="preserve"><value>Nur Bank</value></data>
+  <data name="AIN_BookOnly" xml:space="preserve"><value>Nur Buch</value></data>
+  <data name="AIN_StConfirmed" xml:space="preserve"><value>Bestätigt</value></data>
+  <data name="AIN_Kind_exact" xml:space="preserve"><value>Exakt</value></data>
+  <data name="AIN_Kind_group" xml:space="preserve"><value>Gruppiert</value></data>
+  <data name="AIN_Kind_model" xml:space="preserve"><value>Assistent</value></data>
+  <data name="AIN_Kind_manual" xml:space="preserve"><value>Manuell</value></data>
+  <data name="AIN_Confirm" xml:space="preserve"><value>Bestätigen</value></data>
+  <data name="AIN_Reject" xml:space="preserve"><value>Ablehnen</value></data>
+  <data name="AIN_SuggestEntry" xml:space="preserve"><value>Buchung vorschlagen</value></data>
+  <data name="AIN_EntryHint" xml:space="preserve"><value>Gegenkonto wählen; ein Buchungsentwurf wird geöffnet.</value></data>
+  <data name="AIN_CreateDraft" xml:space="preserve"><value>Entwurf erstellen</value></data>
+  <data name="AIN_ErrGeneric" xml:space="preserve"><value>Vorgang fehlgeschlagen.</value></data>
+  <data name="AIN_ErrNoAccess" xml:space="preserve"><value>Kein Zugriff.</value></data>
+  <data name="AIN_ErrDisabled" xml:space="preserve"><value>Deaktiviert.</value></data>
+  <data name="AIN_ErrNotAdmin" xml:space="preserve"><value>Nur Administratoren.</value></data>
+  <data name="AIN_ErrFormat" xml:space="preserve"><value>Format nicht unterstützt.</value></data>
+  <data name="AIN_ErrEmpty" xml:space="preserve"><value>Keine gültigen Zeilen.</value></data>
+  <data name="AIN_ErrTooLarge" xml:space="preserve"><value>Datei größer als 10 MB.</value></data>
+  <data name="AIN_ErrMapDate" xml:space="preserve"><value>Datumsspalte wählen.</value></data>
+  <data name="AIN_ErrMapAmount" xml:space="preserve"><value>Betragsspalte(n) wählen.</value></data>
+  <data name="AIN_ErrBank" xml:space="preserve"><value>Bank nicht gefunden.</value></data>
+  <data name="AIN_ErrNotFound" xml:space="preserve"><value>Nicht gefunden.</value></data>
+  <data name="AIN_ErrUnbalanced" xml:space="preserve"><value>Auszug stimmt nicht.</value></data>
+  <data name="AIN_ErrManual" xml:space="preserve"><value>Zeile und Buchung wählen.</value></data>
+  <data name="AIN_ErrManualSum" xml:space="preserve"><value>Summen ungleich.</value></data>
+  <data name="AIN_ErrAccount" xml:space="preserve"><value>Gegenkonto wählen.</value></data>
+  <data name="AIN_ErrBankAccount" xml:space="preserve"><value>Bank ohne Konto.</value></data>
+  <data name="AIN_ErrNoModel" xml:space="preserve"><value>Kein Modell:</value></data>
+  <data name="AIN_ErrExtract" xml:space="preserve"><value>Auszug nicht lesbar:</value></data>
+  <data name="AIN_Set_Tab" xml:space="preserve"><value>Bankabstimmung</value></data>
+  <data name="AIN_Set_Intro" xml:space="preserve"><value>Bildschirm neben der Liquiditätsprognose.</value></data>
+  <data name="AIN_Set_Enabled" xml:space="preserve"><value>Bankabstimmung aktivieren</value></data>
+  <data name="AIN_Set_UseModel" xml:space="preserve"><value>Assistent für offene Zeilen</value></data>
+  <data name="AIN_Set_Days" xml:space="preserve"><value>Datumstoleranz (Tage)</value></data>
+  <data name="AIN_Set_Group" xml:space="preserve"><value>Max. Posten je Gruppe</value></data>
+  <data name="AIN_Set_Save" xml:space="preserve"><value>Speichern</value></data>
+  <data name="AIN_Set_Saved" xml:space="preserve"><value>Einstellungen gespeichert</value></data>
 </root>

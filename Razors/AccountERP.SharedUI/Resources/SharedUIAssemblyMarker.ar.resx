@@ -6646,4 +6646,86 @@
   <data name="AIV_Set_NotReady" xml:space="preserve"><value>لا يوجد نموذج مناسب لمهمة «الصوت» (Anthropic وOllama لا يدعمان التفريغ، ووضع «محلى فقط» يرفض السحابى).</value></data>
   <data name="AIV_Set_Save" xml:space="preserve"><value>حفظ</value></data>
   <data name="AIV_Set_Saved" xml:space="preserve"><value>حُفظت الإعدادات</value></data>
+  <data name="AIN_Title" xml:space="preserve"><value>المطابقة البنكية</value></data>
+  <data name="AIN_Intro" xml:space="preserve"><value>استورد كشف البنك وطابقه بحركات البنك فى الدفاتر. المطابقات اقتراحات تؤكدها أنت؛ الفروق تُقترح مسودات قيود تراجعها وتحفظها بنفسك.</value></data>
+  <data name="AIN_NotAvailable" xml:space="preserve"><value>المطابقة البنكية متاحة فى نسخة الويب فقط وبعد تفعيلها من إعدادات المساعد.</value></data>
+  <data name="AIN_Bank" xml:space="preserve"><value>البنك</value></data>
+  <data name="AIN_Statement" xml:space="preserve"><value>الكشف</value></data>
+  <data name="AIN_Import" xml:space="preserve"><value>استيراد كشف</value></data>
+  <data name="AIN_ImportHint" xml:space="preserve"><value>CSV أو Excel (الأدق: تعيّن الأعمدة مرة ويُحفظ للبنك)، أو PDF/صورة يقرؤها المساعد (راجع الأسطر المعلَّمة ⚠).</value></data>
+  <data name="AIN_ColDate" xml:space="preserve"><value>عمود التاريخ</value></data>
+  <data name="AIN_ColValueDate" xml:space="preserve"><value>عمود تاريخ الاستحقاق</value></data>
+  <data name="AIN_ColDescription" xml:space="preserve"><value>البيان</value></data>
+  <data name="AIN_ColReference" xml:space="preserve"><value>المرجع / رقم الشيك</value></data>
+  <data name="AIN_ColDebit" xml:space="preserve"><value>عمود المسحوب (مدين)</value></data>
+  <data name="AIN_ColCredit" xml:space="preserve"><value>عمود المودع (دائن)</value></data>
+  <data name="AIN_ColAmount" xml:space="preserve"><value>عمود مبلغ واحد (سالب = سحب)</value></data>
+  <data name="AIN_ColBalance" xml:space="preserve"><value>عمود الرصيد</value></data>
+  <data name="AIN_DateOrder" xml:space="preserve"><value>ترتيب التاريخ</value></data>
+  <data name="AIN_Opening" xml:space="preserve"><value>الرصيد الافتتاحى</value></data>
+  <data name="AIN_Closing" xml:space="preserve"><value>الرصيد الختامى</value></data>
+  <data name="AIN_DoImport" xml:space="preserve"><value>استيراد</value></data>
+  <data name="AIN_Imported" xml:space="preserve"><value>استُورد {0} سطراً والرصيد يتزن.</value></data>
+  <data name="AIN_Unbalanced" xml:space="preserve"><value>الكشف لا يتزن: الفرق {0}. صحّح الأرصدة أو الأسطر قبل المطابقة.</value></data>
+  <data name="AIN_LowConf" xml:space="preserve"><value>أسطر قرأها المساعد بثقة منخفضة؛ راجعها.</value></data>
+  <data name="AIN_RepBank" xml:space="preserve"><value>رصيد البنك (الكشف)</value></data>
+  <data name="AIN_RepDeposits" xml:space="preserve"><value>إيداعات بالطريق</value></data>
+  <data name="AIN_RepPayments" xml:space="preserve"><value>مدفوعات لم تُصرف</value></data>
+  <data name="AIN_RepAdjusted" xml:space="preserve"><value>رصيد البنك المعدَّل</value></data>
+  <data name="AIN_RepBankOnly" xml:space="preserve"><value>فى البنك لا فى الدفاتر (صافى)</value></data>
+  <data name="AIN_RepBook" xml:space="preserve"><value>رصيد البنك فى الدفاتر (الآن)</value></data>
+  <data name="AIN_RepDiff" xml:space="preserve"><value>الفرق غير المفسَّر</value></data>
+  <data name="AIN_RepNote" xml:space="preserve"><value>رصيد الدفاتر هو الرصيد الحالى للبنك فى النظام؛ إن كانت هناك حركات بعد نهاية الكشف فستظهر فى الفرق.</value></data>
+  <data name="AIN_Match" xml:space="preserve"><value>مطابقة</value></data>
+  <data name="AIN_Matched" xml:space="preserve"><value>{0} مطابقة مقترحة.</value></data>
+  <data name="AIN_ConfirmExact" xml:space="preserve"><value>تأكيد كل المطابقات الدقيقة</value></data>
+  <data name="AIN_Confirmed" xml:space="preserve"><value>أُكدت {0} مطابقة.</value></data>
+  <data name="AIN_Manual" xml:space="preserve"><value>مطابقة يدوية ({0} ↔ {1})</value></data>
+  <data name="AIN_Print" xml:space="preserve"><value>طباعة التقرير</value></data>
+  <data name="AIN_StatementLines" xml:space="preserve"><value>أسطر الكشف</value></data>
+  <data name="AIN_BookLines" xml:space="preserve"><value>حركات البنك فى الدفاتر</value></data>
+  <data name="AIN_Date" xml:space="preserve"><value>التاريخ</value></data>
+  <data name="AIN_In" xml:space="preserve"><value>إيداع</value></data>
+  <data name="AIN_Out" xml:space="preserve"><value>سحب</value></data>
+  <data name="AIN_Status" xml:space="preserve"><value>الحالة</value></data>
+  <data name="AIN_Voucher" xml:space="preserve"><value>السند</value></data>
+  <data name="AIN_Party" xml:space="preserve"><value>الطرف</value></data>
+  <data name="AIN_BankOnly" xml:space="preserve"><value>فى البنك فقط</value></data>
+  <data name="AIN_BookOnly" xml:space="preserve"><value>فى الدفاتر فقط</value></data>
+  <data name="AIN_StConfirmed" xml:space="preserve"><value>مؤكدة</value></data>
+  <data name="AIN_Kind_exact" xml:space="preserve"><value>مقترحة دقيقة</value></data>
+  <data name="AIN_Kind_group" xml:space="preserve"><value>مقترحة مجمّعة</value></data>
+  <data name="AIN_Kind_model" xml:space="preserve"><value>اقتراح المساعد</value></data>
+  <data name="AIN_Kind_manual" xml:space="preserve"><value>يدوية</value></data>
+  <data name="AIN_Confirm" xml:space="preserve"><value>تأكيد</value></data>
+  <data name="AIN_Reject" xml:space="preserve"><value>رفض</value></data>
+  <data name="AIN_SuggestEntry" xml:space="preserve"><value>اقتراح قيد للفرق</value></data>
+  <data name="AIN_EntryHint" xml:space="preserve"><value>اختر الحساب المقابل (رسوم بنكية، فوائد، دمغة…). تُنشأ مسودة قيد بسيط تفتح فى شاشة القيود لتراجعها وتحفظها.</value></data>
+  <data name="AIN_CreateDraft" xml:space="preserve"><value>إنشاء مسودة القيد</value></data>
+  <data name="AIN_ErrGeneric" xml:space="preserve"><value>تعذّرت العملية.</value></data>
+  <data name="AIN_ErrNoAccess" xml:space="preserve"><value>لا تملك صلاحية المطابقة البنكية.</value></data>
+  <data name="AIN_ErrDisabled" xml:space="preserve"><value>المطابقة البنكية موقوفة من إعدادات المساعد.</value></data>
+  <data name="AIN_ErrNotAdmin" xml:space="preserve"><value>للمدير فقط.</value></data>
+  <data name="AIN_ErrFormat" xml:space="preserve"><value>صيغة الملف غير مدعومة.</value></data>
+  <data name="AIN_ErrEmpty" xml:space="preserve"><value>الملف بلا أسطر صالحة.</value></data>
+  <data name="AIN_ErrTooLarge" xml:space="preserve"><value>الملف أكبر من 10 MB.</value></data>
+  <data name="AIN_ErrMapDate" xml:space="preserve"><value>حدّد عمود التاريخ.</value></data>
+  <data name="AIN_ErrMapAmount" xml:space="preserve"><value>حدّد عمود المبلغ أو عمودى المسحوب والمودع.</value></data>
+  <data name="AIN_ErrBank" xml:space="preserve"><value>البنك غير موجود.</value></data>
+  <data name="AIN_ErrNotFound" xml:space="preserve"><value>غير موجود.</value></data>
+  <data name="AIN_ErrUnbalanced" xml:space="preserve"><value>الكشف لا يتزن؛ صحّحه قبل المطابقة.</value></data>
+  <data name="AIN_ErrManual" xml:space="preserve"><value>حدّد سطراً من الكشف وحركة من الدفاتر.</value></data>
+  <data name="AIN_ErrManualSum" xml:space="preserve"><value>المجموعان غير متساويين.</value></data>
+  <data name="AIN_ErrAccount" xml:space="preserve"><value>اختر الحساب المقابل.</value></data>
+  <data name="AIN_ErrBankAccount" xml:space="preserve"><value>البنك غير مربوط بحساب فى شجرة الحسابات.</value></data>
+  <data name="AIN_ErrNoModel" xml:space="preserve"><value>لا يوجد نموذج مناسب لقراءة الكشف:</value></data>
+  <data name="AIN_ErrExtract" xml:space="preserve"><value>تعذّر قراءة الكشف:</value></data>
+  <data name="AIN_Set_Tab" xml:space="preserve"><value>المطابقة البنكية</value></data>
+  <data name="AIN_Set_Intro" xml:space="preserve"><value>شاشة فى القائمة بجوار «توقع التدفق النقدى». المطابقة الدقيقة = نفس المبلغ والاتجاه وتاريخ ± أيام؛ المجمّعة = سطر يقابل عدة حركات بنفس المجموع.</value></data>
+  <data name="AIN_Set_Enabled" xml:space="preserve"><value>تفعيل المطابقة البنكية</value></data>
+  <data name="AIN_Set_UseModel" xml:space="preserve"><value>استعمال المساعد للأسطر غير المطابقة (حتى 20 سطراً)</value></data>
+  <data name="AIN_Set_Days" xml:space="preserve"><value>تسامح التاريخ (يوم)</value></data>
+  <data name="AIN_Set_Group" xml:space="preserve"><value>أقصى حركات فى المطابقة المجمّعة</value></data>
+  <data name="AIN_Set_Save" xml:space="preserve"><value>حفظ</value></data>
+  <data name="AIN_Set_Saved" xml:space="preserve"><value>حُفظت الإعدادات</value></data>
 </root>

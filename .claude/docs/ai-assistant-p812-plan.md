@@ -89,4 +89,7 @@
 
 ### تم التنفيذ
 
-(فارغ)
+- **P8.12.1 `e4ac5db` (2026-11-16):** 4 جداول (`AI_BankStatements`, `AI_BankStatementLines`, `AI_BankMatches`, `AI_BankImportProfiles`)، 4 إعدادات، نوع مسودة `journal` + `AiJournalDraftLine`، `AiBankRecModels` (+ `AiBankMatcher` pure: دقيق ثم تجميع فى الاتجاهين بـ DFS ≤ 15 عنصراً)، `AiBankRecCLS`. **قرار (فحص 1 لم يُنفَّذ):** حركات الدفاتر = `Money_Transaction_Box` على البنك فقط (Transaction_Type 1 = إيداع)؛ لا View جديد ولا `Money_Transaction_Bank`/`Checks_Memory`.
+- **P8.12.2+3 `ff81531`:** `BankRec/AiBankImport` (CSV UTF-8/1256 بفاصل مكتشف، xlsx بـ MiniExcel، أرقام عربية وأقواس سالبة، تواريخ dmy/mdy/ymd وتاريخ Excel)، `AiBankRecGateway` (فحص الرصيد ⇒ Unbalanced يمنع المطابقة، استخراج PDF/صورة بنموذج الرؤية بمطالبة خاصة لا بنوع جديد فى `AiDocumentExtractor`، المطابقة: تمسح المقترح وتبقى المؤكد، النموذج لحتى 20 سطراً يختار من 10 مرشحين، تقرير التسوية برصيد الدفاتر الحالى `BoxBalance`، مسودة القيد بالحساب الفرعى للبنك).
+- **P8.12.4:** `ManualEntryEditor` يقبل `AiDraftId` (جديد فقط، بانر `AiDraftBanner`، يُستهلك بعد الحفظ)، `JournalEntrySimplePage ?aiDraft=`، صفحة `/accounts/bank-reconciliation` (عنصر قائمة بجوار «توقع التدفق النقدى»)، `AiBankRecUiService`، تبويب `AiBankTab`، 82 مفتاح `AIN_` ×4.
+- **الاختبارات (م-636…م-652) مؤجلة.**

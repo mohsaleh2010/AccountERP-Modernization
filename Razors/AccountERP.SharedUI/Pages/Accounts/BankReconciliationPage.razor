@@ -1,0 +1,400 @@
+@* 🤖 P8.12.4 (ai-assistant-p812-plan.md §2، ب1–ب11): «المطابقة البنكية» — استيراد كشف البنك (CSV/Excel بتعيين أعمدة يُحفظ لكل بنك، أو PDF/صورة بالمساعد)،
+   فحص الرصيد، مطابقة مقترحة (دقيقة/مجمّعة/المساعد) تُؤكد أو تُرفض، مطابقة يدوية، اقتراح مسودة قيد لسطر غير مطابق، وتقرير التسوية للطباعة.
+   لا تسوية ولا قيد تلقائى؛ الكتابة على AI_Bank* وAI_Drafts فقط. التصميم حسب ui-ux-pro-max (≥ 44px، الحالة لون + نص، جدولان أو تبويبان على الشاشة الضيقة). *@
+@page "/accounts/bank-reconciliation"
+
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Shared
+@using Microsoft.Extensions.DependencyInjection
+@using Microsoft.JSInterop
+@inject LanguageService LangService
+@inject IServiceProvider ServiceProvider
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<PageTitle>@Tr("AIN_Title")</PageTitle>
+<InvoiceStyles />
+
+<style>
+    .br-gap { margin-top: 16px; }
+    .br-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .br-row .mud-input-control { min-width: 200px; }
+    .br-map { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+    .br-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @@media (max-width: 1099px) { .br-cols { grid-template-columns: minmax(0, 1fr); } }
+    .br-tbl { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    .br-tbl th, .br-tbl td { padding: 6px 8px; border-bottom: 1px solid var(--mud-palette-lines-default); text-align: start; vertical-align: top; }
+    .br-tbl td.n { text-align: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .br-st { display: inline-flex; align-items: center; gap: 4px; font-size: .75rem; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+    .br-st.ok { background: color-mix(in srgb, var(--mud-palette-success) 14%, transparent); color: var(--mud-palette-success); }
+    .br-st.sug { background: color-mix(in srgb, var(--mud-palette-info) 14%, transparent); color: var(--mud-palette-info); }
+    .br-st.none { background: color-mix(in srgb, var(--mud-palette-warning) 14%, transparent); color: var(--mud-palette-warning); }
+    .br-low { color: var(--mud-palette-warning); }
+    .br-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+    .br-kpi { border: 1px solid var(--mud-palette-lines-default); border-radius: 12px; padding: 10px; }
+    .br-kpi .l { font-size: .8rem; color: var(--mud-palette-text-secondary); } .br-kpi .v { font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .br-note { font-size: .85rem; color: var(--mud-palette-text-secondary); }
+    .br-scroll { max-height: 60vh; overflow: auto; }
+    .mud-button-root { min-height: 40px; }
+    @@media print { body * { visibility: hidden; } .br-print, .br-print * { visibility: visible; } .br-print { position: absolute; inset-inline-start: 0; top: 0; width: 100%; } .br-noprint { display: none !important; } }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+<div class="inv-page">
+    <div class="inv-head inv-card br-noprint">
+        <h1 class="inv-title">@Tr("AIN_Title")</h1>
+        <div class="br-note">@Tr("AIN_Intro")</div>
+    </div>
+
+    @if (_svc == null || !_svc.HasGateway)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="br-gap">@Tr("AIN_NotAvailable")</MudAlert>
+    }
+    else if (_fatal != null)
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="br-gap">@_fatal</MudAlert>
+    }
+    else
+    {
+        <div class="inv-card br-gap br-noprint">
+            <div class="br-row">
+                <MudSelect T="long" Value="_bankId" ValueChanged="OnBankAsync" Label="@Tr("AIN_Bank")" Variant="Variant.Outlined" Dense="true">
+                    @foreach (var b in _banks) { <MudSelectItem T="long" Value="b.Id">@b.Name</MudSelectItem> }
+                </MudSelect>
+                @if (_statements.Count > 0)
+                {
+                    <MudSelect T="long" Value="_stId" ValueChanged="OnStatementAsync" Label="@Tr("AIN_Statement")" Variant="Variant.Outlined" Dense="true">
+                        @foreach (var s in _statements)
+                        {
+                            <MudSelectItem T="long" Value="s.Id">@($"{s.PeriodFrom:yyyy-MM-dd} → {s.PeriodTo:yyyy-MM-dd} · {s.LineCount} · {s.Source}")</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+            </div>
+        </div>
+
+        @if (_bankId > 0)
+        {
+            <div class="inv-card br-gap br-noprint">
+                <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.UploadFile" />@Tr("AIN_Import")</h2>
+                <div class="br-note" style="margin-bottom:8px">@Tr("AIN_ImportHint")</div>
+                <InputFile OnChange="OnFileAsync" accept=".csv,.txt,.xlsx,.pdf,.png,.jpg,.jpeg,.webp" />
+                @if (_headers != null)
+                {
+                    <div class="br-map br-gap">
+                        @MapSelect("AIN_ColDate", _map.Date, v => _map.Date = v)
+                        @MapSelect("AIN_ColValueDate", _map.ValueDate, v => _map.ValueDate = v)
+                        @MapSelect("AIN_ColDescription", _map.Description, v => _map.Description = v)
+                        @MapSelect("AIN_ColReference", _map.Reference, v => _map.Reference = v)
+                        @MapSelect("AIN_ColDebit", _map.Debit, v => _map.Debit = v)
+                        @MapSelect("AIN_ColCredit", _map.Credit, v => _map.Credit = v)
+                        @MapSelect("AIN_ColAmount", _map.Amount, v => _map.Amount = v)
+                        @MapSelect("AIN_ColBalance", _map.Balance, v => _map.Balance = v)
+                        <MudSelect T="string" @bind-Value="_map.DateOrder" Label="@Tr("AIN_DateOrder")" Variant="Variant.Outlined" Margin="Margin.Dense">
+                            <MudSelectItem T="string" Value="@("dmy")">dd/MM/yyyy</MudSelectItem>
+                            <MudSelectItem T="string" Value="@("mdy")">MM/dd/yyyy</MudSelectItem>
+                            <MudSelectItem T="string" Value="@("ymd")">yyyy-MM-dd</MudSelectItem>
+                        </MudSelect>
+                        <MudNumericField T="decimal?" @bind-Value="_opening" Label="@Tr("AIN_Opening")" Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true" />
+                        <MudNumericField T="decimal?" @bind-Value="_closing" Label="@Tr("AIN_Closing")" Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true" />
+                    </div>
+                    <MudButton Class="br-gap" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FileDownloadDone" Disabled="_busy" OnClick="ImportAsync">@Tr("AIN_DoImport")</MudButton>
+                }
+                @if (_busy) { <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="br-gap" /> }
+            </div>
+        }
+
+        @if (_view != null)
+        {
+            var v = _view;
+            var matchedLines = v.Matches.SelectMany(m => m.Lines.Select(l => (l, m))).GroupBy(x => x.l).ToDictionary(g => g.Key, g => g.First().m);
+            var matchedRefs = new HashSet<long>(v.Matches.SelectMany(m => m.SystemRefs));
+            <div class="br-print">
+                <div class="inv-card br-gap">
+                    <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.AccountBalance" />@v.Statement.BankName · @($"{v.Statement.PeriodFrom:yyyy-MM-dd} → {v.Statement.PeriodTo:yyyy-MM-dd}")</h2>
+                    @if (v.Statement.Status == "Unbalanced")
+                    {
+                        <MudAlert Severity="Severity.Error" Dense="true">@Tr("AIN_Unbalanced", N(v.Statement.BalanceDiff ?? 0))</MudAlert>
+                    }
+                    <div class="br-kpis br-gap">
+                        <div class="br-kpi"><div class="l">@Tr("AIN_RepBank")</div><div class="v">@N(v.Report.BankClosing)</div></div>
+                        <div class="br-kpi"><div class="l">@Tr("AIN_RepDeposits")</div><div class="v">+ @N(v.Report.OutstandingDeposits)</div></div>
+                        <div class="br-kpi"><div class="l">@Tr("AIN_RepPayments")</div><div class="v">− @N(v.Report.OutstandingPayments)</div></div>
+                        <div class="br-kpi"><div class="l">@Tr("AIN_RepAdjusted")</div><div class="v">@N(v.Report.AdjustedBank)</div></div>
+                        <div class="br-kpi"><div class="l">@Tr("AIN_RepBankOnly")</div><div class="v">@N(v.Report.BankOnlyIn - v.Report.BankOnlyOut)</div></div>
+                        <div class="br-kpi"><div class="l">@Tr("AIN_RepBook")</div><div class="v">@N(v.Report.BookBalance)</div></div>
+                        <div class="br-kpi"><div class="l">@Tr("AIN_RepDiff")</div><div class="v">@N(v.Report.Difference)</div></div>
+                    </div>
+                    <div class="br-note br-gap">@Tr("AIN_RepNote")</div>
+                    <div class="br-row br-gap br-noprint">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CompareArrows" Disabled="@(_busy || v.Statement.Status == "Unbalanced")" OnClick="MatchAsync">@Tr("AIN_Match")</MudButton>
+                        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.DoneAll" Disabled="@(_busy || !v.Matches.Any(m => m.Status == AiBankConst.StatusSuggested && m.Kind == AiBankConst.KindExact))" OnClick="ConfirmExactAsync">@Tr("AIN_ConfirmExact")</MudButton>
+                        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Link" Disabled="@(_busy || _selLines.Count == 0 || _selRefs.Count == 0)" OnClick="ManualAsync">@Tr("AIN_Manual", _selLines.Count, _selRefs.Count)</MudButton>
+                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Print" OnClick="PrintAsync">@Tr("AIN_Print")</MudButton>
+                    </div>
+                </div>
+
+                <div class="br-cols br-gap">
+                    <div class="inv-card">
+                        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.Receipt" />@Tr("AIN_StatementLines") (@v.Lines.Count)</h2>
+                        <div class="br-scroll">
+                            <table class="br-tbl">
+                                <thead><tr><th class="br-noprint"></th><th>@Tr("AIN_Date")</th><th>@Tr("AIN_ColDescription")</th><th>@Tr("AIN_In")</th><th>@Tr("AIN_Out")</th><th>@Tr("AIN_Status")</th><th class="br-noprint"></th></tr></thead>
+                                <tbody>
+                                    @foreach (var l in v.Lines)
+                                    {
+                                        matchedLines.TryGetValue(l.LineNo, out var m);
+                                        <tr>
+                                            <td class="br-noprint">@if (m == null) { <MudCheckBox T="bool" Value="_selLines.Contains(l.LineNo)" ValueChanged="@(c => Toggle(_selLines, l.LineNo, c))" Dense="true" /> }</td>
+                                            <td>@l.Date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)@if (l.Confidence is < 0.75m) { <span class="br-low" title="@Tr("AIN_LowConf")"> ⚠</span> }</td>
+                                            <td>@l.Description<div class="br-note">@l.Reference</div></td>
+                                            <td class="n">@(l.Credit > 0 ? N(l.Credit) : "")</td>
+                                            <td class="n">@(l.Debit > 0 ? N(l.Debit) : "")</td>
+                                            <td>@StatusChip(m)</td>
+                                            <td class="br-noprint">
+                                                @if (m != null && m.Status == AiBankConst.StatusSuggested)
+                                                {
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Success" title="@Tr("AIN_Confirm")" aria-label="@Tr("AIN_Confirm")" OnClick="@(() => ConfirmOneAsync(m.Id))" />
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Color="Color.Error" title="@Tr("AIN_Reject")" aria-label="@Tr("AIN_Reject")" OnClick="@(() => RejectAsync(m.Id))" />
+                                                }
+                                                else if (m == null)
+                                                {
+                                                    <MudIconButton Icon="@Icons.Material.Filled.PostAdd" Size="Size.Small" title="@Tr("AIN_SuggestEntry")" aria-label="@Tr("AIN_SuggestEntry")" OnClick="@(() => OpenEntry(l))" />
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="inv-card">
+                        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.MenuBook" />@Tr("AIN_BookLines") (@v.Book.Count(b => !b.Confirmed))</h2>
+                        <div class="br-scroll">
+                            <table class="br-tbl">
+                                <thead><tr><th class="br-noprint"></th><th>@Tr("AIN_Date")</th><th>@Tr("AIN_Voucher")</th><th>@Tr("AIN_Party")</th><th>@Tr("AIN_In")</th><th>@Tr("AIN_Out")</th><th>@Tr("AIN_Status")</th></tr></thead>
+                                <tbody>
+                                    @foreach (var b in v.Book.Where(x => !x.Confirmed))
+                                    {
+                                        bool matched = matchedRefs.Contains(b.LineId);
+                                        <tr>
+                                            <td class="br-noprint">@if (!matched) { <MudCheckBox T="bool" Value="_selRefs.Contains(b.LineId)" ValueChanged="@(c => Toggle(_selRefs, b.LineId, c))" Dense="true" /> }</td>
+                                            <td>@b.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</td>
+                                            <td>@b.VoucherNo</td>
+                                            <td>@b.Party<div class="br-note">@b.Notes</div></td>
+                                            <td class="n">@(b.Signed > 0 ? N(b.Signed) : "")</td>
+                                            <td class="n">@(b.Signed < 0 ? N(-b.Signed) : "")</td>
+                                            <td>@StatusChip(matched ? v.Matches.First(x => x.SystemRefs.Contains(b.LineId)) : null, true)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+</MudContainer>
+
+<MudDialog @bind-Visible="_entryOpen" Options="@(new DialogOptions { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.Small, CloseButton = true })">
+    <TitleContent>@Tr("AIN_SuggestEntry")</TitleContent>
+    <DialogContent>
+        @if (_entryLine != null)
+        {
+            <div class="br-note">@_entryLine.Description · @N(Math.Abs(_entryLine.Signed)) · @(_entryLine.Signed > 0 ? Tr("AIN_In") : Tr("AIN_Out"))</div>
+            <div class="br-note br-gap">@Tr("AIN_EntryHint")</div>
+            <AccountSelector @key="_entryKey" ShowPartyChoice="false" AccountSelection="0" SubAccountId="_entryAcc" SubAccountIdChanged="@(id => _entryAcc = id)"
+                             SubAccountName="_entryAccName" SubAccountNameChanged="@(n => _entryAccName = n)" BranchId="AccountModelsLib.Common.Branch_Id" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _entryOpen = false)">@Tr("Cancel")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(_entryAcc <= 0 || _busy)" OnClick="CreateEntryAsync">@Tr("AIN_CreateDraft")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private AiBankRecUiService? _svc;
+    private List<(long Id, string Name)> _banks = new();
+    private List<AiBankStatementRow> _statements = new();
+    private long _bankId, _stId;
+    private AiBankView? _view;
+    private bool _busy;
+    private string? _fatal;
+    private byte[]? _file;
+    private string? _fileName, _fileMime;
+    private List<string>? _headers;
+    private AiBankColumnMap _map = new();
+    private decimal? _opening, _closing;
+    private readonly HashSet<int> _selLines = new();
+    private readonly HashSet<long> _selRefs = new();
+    private bool _entryOpen;
+    private AiBankLine? _entryLine;
+    private long _entryAcc;
+    private string _entryAccName = "";
+    private int _entryKey;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _svc = ServiceProvider.GetService<AiBankRecUiService>();
+        if (_svc == null || !_svc.HasGateway) return;
+        try
+        {
+            _banks = await _svc.BanksAsync();
+            if (_banks.Count > 0) await OnBankAsync(_banks[0].Id);
+        }
+        catch (Exception ex) { _fatal = _svc.ErrorText(ex); }
+    }
+
+    private async Task OnBankAsync(long id)
+    {
+        _bankId = id; _view = null; _stId = 0; _headers = null;
+        try
+        {
+            _statements = await _svc!.StatementsAsync(id);
+            _map = await _svc.ProfileAsync(id);
+            if (_statements.Count > 0) await OnStatementAsync(_statements[0].Id);
+        }
+        catch (Exception ex) { Snackbar.Add(_svc!.ErrorText(ex), Severity.Error); }
+    }
+
+    private async Task OnStatementAsync(long id)
+    {
+        _stId = id; _selLines.Clear(); _selRefs.Clear();
+        try { _view = await _svc!.GetAsync(id); }
+        catch (Exception ex) { Snackbar.Add(_svc!.ErrorText(ex), Severity.Error); }
+    }
+
+    private async Task OnFileAsync(InputFileChangeEventArgs e)
+    {
+        if (_svc == null) return;
+        var f = e.File;
+        if (f.Size > 10 * 1024 * 1024) { Snackbar.Add(Tr("AIN_ErrTooLarge"), Severity.Warning); return; }
+        using var ms = new MemoryStream();
+        await f.OpenReadStream(10 * 1024 * 1024).CopyToAsync(ms);
+        _file = ms.ToArray(); _fileName = f.Name; _fileMime = f.ContentType;
+        string ext = Path.GetExtension(f.Name).ToLowerInvariant();
+        if (ext is ".csv" or ".txt" or ".xlsx")
+        {
+            try { _headers = await _svc.HeadersAsync(_file, _fileName); }
+            catch (Exception ex) { _headers = null; Snackbar.Add(_svc.ErrorText(ex), Severity.Error); }
+        }
+        else
+        {
+            _headers = null;
+            string mime = ext switch { ".pdf" => "application/pdf", ".png" => "image/png", ".webp" => "image/webp", _ => "image/jpeg" };
+            _busy = true;
+            try { Done(await _svc.ExtractAsync(_bankId, _file, _fileName, mime)); await ReloadStatementsAsync(); }
+            catch (Exception ex) { Snackbar.Add(_svc.ErrorText(ex), Severity.Error); }
+            finally { _busy = false; }
+        }
+    }
+
+    private async Task ImportAsync()
+    {
+        if (_svc == null || _file == null || _fileName == null) return;
+        _busy = true;
+        try { Done(await _svc.ImportAsync(_bankId, _file, _fileName, _map, _opening, _closing)); _headers = null; await ReloadStatementsAsync(); }
+        catch (Exception ex) { Snackbar.Add(_svc.ErrorText(ex), Severity.Error); }
+        finally { _busy = false; }
+    }
+
+    private void Done(AiBankImportResult r)
+    {
+        _stId = r.StatementId;
+        if (r.Balanced) Snackbar.Add(Tr("AIN_Imported", r.Lines), Severity.Success);
+        else Snackbar.Add(Tr("AIN_Unbalanced", N(r.Diff ?? 0)), Severity.Error);
+        if (r.Warnings.Contains("low_confidence")) Snackbar.Add(Tr("AIN_LowConf"), Severity.Warning);
+    }
+
+    private async Task ReloadStatementsAsync()
+    {
+        long keep = _stId;
+        _statements = await _svc!.StatementsAsync(_bankId);
+        if (keep > 0) await OnStatementAsync(keep);
+    }
+
+    private async Task MatchAsync()
+    {
+        _busy = true;
+        try { int n = await _svc!.MatchAsync(_stId); Snackbar.Add(Tr("AIN_Matched", n), Severity.Info); await OnStatementAsync(_stId); }
+        catch (Exception ex) { Snackbar.Add(_svc!.ErrorText(ex), Severity.Error); }
+        finally { _busy = false; }
+    }
+
+    private async Task ConfirmExactAsync()
+    {
+        if (_view == null) return;
+        var ids = _view.Matches.Where(m => m.Status == AiBankConst.StatusSuggested && m.Kind == AiBankConst.KindExact).Select(m => m.Id).ToList();
+        try { int n = await _svc!.ConfirmAsync(_stId, ids); Snackbar.Add(Tr("AIN_Confirmed", n), Severity.Success); await OnStatementAsync(_stId); }
+        catch (Exception ex) { Snackbar.Add(_svc!.ErrorText(ex), Severity.Error); }
+    }
+
+    private async Task ConfirmOneAsync(long id)
+    {
+        try { await _svc!.ConfirmAsync(_stId, new List<long> { id }); await OnStatementAsync(_stId); }
+        catch (Exception ex) { Snackbar.Add(_svc!.ErrorText(ex), Severity.Error); }
+    }
+
+    private async Task RejectAsync(long id)
+    {
+        try { await _svc!.RejectAsync(id); await OnStatementAsync(_stId); }
+        catch (Exception ex) { Snackbar.Add(_svc!.ErrorText(ex), Severity.Error); }
+    }
+
+    private async Task ManualAsync()
+    {
+        try { await _svc!.ManualAsync(_stId, _selLines.ToList(), _selRefs.ToList()); await OnStatementAsync(_stId); }
+        catch (Exception ex) { Snackbar.Add(_svc!.ErrorText(ex), Severity.Error); }
+    }
+
+    private void OpenEntry(AiBankLine l)
+    {
+        _entryLine = l; _entryAcc = 0; _entryAccName = ""; _entryKey++; _entryOpen = true;
+    }
+
+    private async Task CreateEntryAsync()
+    {
+        if (_entryLine == null) return;
+        _busy = true;
+        try
+        {
+            long id = await _svc!.JournalDraftAsync(_stId, _entryLine.LineNo, _entryAcc);
+            _entryOpen = false;
+            Nav.NavigateTo("/accounts/journal-entry/simple?aiDraft=" + id.ToString(CultureInfo.InvariantCulture));
+        }
+        catch (Exception ex) { Snackbar.Add(_svc!.ErrorText(ex), Severity.Error); }
+        finally { _busy = false; }
+    }
+
+    private static void Toggle<T>(HashSet<T> set, T v, bool on) { if (on) set.Add(v); else set.Remove(v); }
+
+    private RenderFragment MapSelect(string key, string? value, Action<string?> set) => __builder =>
+    {
+        <MudSelect T="string" Value="value" ValueChanged="@(v => set(v))" Label="@Tr(key)" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+            @foreach (var h in _headers ?? new List<string>()) { <MudSelectItem T="string" Value="h">@h</MudSelectItem> }
+        </MudSelect>
+    };
+
+    private RenderFragment StatusChip(AiBankMatchRow? m, bool book = false) => __builder =>
+    {
+        if (m == null) { <span class="br-st none">@Tr(book ? "AIN_BookOnly" : "AIN_BankOnly")</span> }
+        else if (m.Status == AiBankConst.StatusConfirmed) { <span class="br-st ok">✓ @Tr("AIN_StConfirmed")</span> }
+        else { <span class="br-st sug" title="@m.Reason">≈ @Tr("AIN_Kind_" + m.Kind) (@((m.Score * 100).ToString("0", CultureInfo.InvariantCulture))%)</span> }
+    };
+
+    private async Task PrintAsync()
+    {
+        try { await JS.InvokeVoidAsync("accountErpInterop.printElement", ".br-print", Tr("AIN_Title"), LangService.IsRtl ? "rtl" : "ltr", "@page { size: A4 landscape; margin: 10mm; }"); }
+        catch { try { await JS.InvokeVoidAsync("window.print"); } catch { } }
+    }
+
+    private static string N(decimal v) => v.ToString("N2", CultureInfo.InvariantCulture);
+
+    private string Tr(string key, params object[] args) => AiBriefText.T(Lang, LangService.CurrentCultureInfo, key, args);
+}

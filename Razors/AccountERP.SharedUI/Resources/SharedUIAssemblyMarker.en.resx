@@ -6646,4 +6646,86 @@
   <data name="AIV_Set_NotReady" xml:space="preserve"><value>No suitable model for the Speech task (Anthropic and Ollama cannot transcribe; local-only mode rejects cloud models).</value></data>
   <data name="AIV_Set_Save" xml:space="preserve"><value>Save</value></data>
   <data name="AIV_Set_Saved" xml:space="preserve"><value>Settings saved</value></data>
+  <data name="AIN_Title" xml:space="preserve"><value>Bank reconciliation</value></data>
+  <data name="AIN_Intro" xml:space="preserve"><value>Import the bank statement and match it to the bank movements in the books. Matches are suggestions you confirm; differences become journal drafts you review and save.</value></data>
+  <data name="AIN_NotAvailable" xml:space="preserve"><value>Bank reconciliation is available in the web version only, after it is enabled in the assistant settings.</value></data>
+  <data name="AIN_Bank" xml:space="preserve"><value>Bank</value></data>
+  <data name="AIN_Statement" xml:space="preserve"><value>Statement</value></data>
+  <data name="AIN_Import" xml:space="preserve"><value>Import statement</value></data>
+  <data name="AIN_ImportHint" xml:space="preserve"><value>CSV or Excel (most accurate: map the columns once and it is saved for the bank), or a PDF/image read by the assistant (check lines marked ⚠).</value></data>
+  <data name="AIN_ColDate" xml:space="preserve"><value>Date column</value></data>
+  <data name="AIN_ColValueDate" xml:space="preserve"><value>Value date column</value></data>
+  <data name="AIN_ColDescription" xml:space="preserve"><value>Description</value></data>
+  <data name="AIN_ColReference" xml:space="preserve"><value>Reference / cheque no.</value></data>
+  <data name="AIN_ColDebit" xml:space="preserve"><value>Withdrawal (debit) column</value></data>
+  <data name="AIN_ColCredit" xml:space="preserve"><value>Deposit (credit) column</value></data>
+  <data name="AIN_ColAmount" xml:space="preserve"><value>Single amount column (negative = withdrawal)</value></data>
+  <data name="AIN_ColBalance" xml:space="preserve"><value>Balance column</value></data>
+  <data name="AIN_DateOrder" xml:space="preserve"><value>Date order</value></data>
+  <data name="AIN_Opening" xml:space="preserve"><value>Opening balance</value></data>
+  <data name="AIN_Closing" xml:space="preserve"><value>Closing balance</value></data>
+  <data name="AIN_DoImport" xml:space="preserve"><value>Import</value></data>
+  <data name="AIN_Imported" xml:space="preserve"><value>{0} lines imported; the balance checks out.</value></data>
+  <data name="AIN_Unbalanced" xml:space="preserve"><value>The statement does not balance: difference {0}. Fix the balances or lines before matching.</value></data>
+  <data name="AIN_LowConf" xml:space="preserve"><value>Some lines were read with low confidence; please review them.</value></data>
+  <data name="AIN_RepBank" xml:space="preserve"><value>Bank balance (statement)</value></data>
+  <data name="AIN_RepDeposits" xml:space="preserve"><value>Deposits in transit</value></data>
+  <data name="AIN_RepPayments" xml:space="preserve"><value>Outstanding payments</value></data>
+  <data name="AIN_RepAdjusted" xml:space="preserve"><value>Adjusted bank balance</value></data>
+  <data name="AIN_RepBankOnly" xml:space="preserve"><value>In bank, not in books (net)</value></data>
+  <data name="AIN_RepBook" xml:space="preserve"><value>Bank balance in books (now)</value></data>
+  <data name="AIN_RepDiff" xml:space="preserve"><value>Unexplained difference</value></data>
+  <data name="AIN_RepNote" xml:space="preserve"><value>The book balance is the bank's current balance in the system; movements after the statement end appear in the difference.</value></data>
+  <data name="AIN_Match" xml:space="preserve"><value>Match</value></data>
+  <data name="AIN_Matched" xml:space="preserve"><value>{0} suggested matches.</value></data>
+  <data name="AIN_ConfirmExact" xml:space="preserve"><value>Confirm all exact matches</value></data>
+  <data name="AIN_Confirmed" xml:space="preserve"><value>{0} matches confirmed.</value></data>
+  <data name="AIN_Manual" xml:space="preserve"><value>Manual match ({0} ↔ {1})</value></data>
+  <data name="AIN_Print" xml:space="preserve"><value>Print report</value></data>
+  <data name="AIN_StatementLines" xml:space="preserve"><value>Statement lines</value></data>
+  <data name="AIN_BookLines" xml:space="preserve"><value>Bank movements in the books</value></data>
+  <data name="AIN_Date" xml:space="preserve"><value>Date</value></data>
+  <data name="AIN_In" xml:space="preserve"><value>In</value></data>
+  <data name="AIN_Out" xml:space="preserve"><value>Out</value></data>
+  <data name="AIN_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="AIN_Voucher" xml:space="preserve"><value>Voucher</value></data>
+  <data name="AIN_Party" xml:space="preserve"><value>Party</value></data>
+  <data name="AIN_BankOnly" xml:space="preserve"><value>Bank only</value></data>
+  <data name="AIN_BookOnly" xml:space="preserve"><value>Books only</value></data>
+  <data name="AIN_StConfirmed" xml:space="preserve"><value>Confirmed</value></data>
+  <data name="AIN_Kind_exact" xml:space="preserve"><value>Exact suggestion</value></data>
+  <data name="AIN_Kind_group" xml:space="preserve"><value>Group suggestion</value></data>
+  <data name="AIN_Kind_model" xml:space="preserve"><value>Assistant suggestion</value></data>
+  <data name="AIN_Kind_manual" xml:space="preserve"><value>Manual</value></data>
+  <data name="AIN_Confirm" xml:space="preserve"><value>Confirm</value></data>
+  <data name="AIN_Reject" xml:space="preserve"><value>Reject</value></data>
+  <data name="AIN_SuggestEntry" xml:space="preserve"><value>Suggest an entry for the difference</value></data>
+  <data name="AIN_EntryHint" xml:space="preserve"><value>Choose the counter account (bank fees, interest, stamp duty…). A simple journal draft opens in the entries screen for review and saving.</value></data>
+  <data name="AIN_CreateDraft" xml:space="preserve"><value>Create journal draft</value></data>
+  <data name="AIN_ErrGeneric" xml:space="preserve"><value>The operation failed.</value></data>
+  <data name="AIN_ErrNoAccess" xml:space="preserve"><value>You do not have access to bank reconciliation.</value></data>
+  <data name="AIN_ErrDisabled" xml:space="preserve"><value>Bank reconciliation is turned off in the assistant settings.</value></data>
+  <data name="AIN_ErrNotAdmin" xml:space="preserve"><value>Administrators only.</value></data>
+  <data name="AIN_ErrFormat" xml:space="preserve"><value>Unsupported file format.</value></data>
+  <data name="AIN_ErrEmpty" xml:space="preserve"><value>The file has no valid lines.</value></data>
+  <data name="AIN_ErrTooLarge" xml:space="preserve"><value>The file is larger than 10 MB.</value></data>
+  <data name="AIN_ErrMapDate" xml:space="preserve"><value>Choose the date column.</value></data>
+  <data name="AIN_ErrMapAmount" xml:space="preserve"><value>Choose the amount column or the withdrawal and deposit columns.</value></data>
+  <data name="AIN_ErrBank" xml:space="preserve"><value>Bank not found.</value></data>
+  <data name="AIN_ErrNotFound" xml:space="preserve"><value>Not found.</value></data>
+  <data name="AIN_ErrUnbalanced" xml:space="preserve"><value>The statement does not balance; fix it before matching.</value></data>
+  <data name="AIN_ErrManual" xml:space="preserve"><value>Select a statement line and a book movement.</value></data>
+  <data name="AIN_ErrManualSum" xml:space="preserve"><value>The two totals are not equal.</value></data>
+  <data name="AIN_ErrAccount" xml:space="preserve"><value>Choose the counter account.</value></data>
+  <data name="AIN_ErrBankAccount" xml:space="preserve"><value>The bank is not linked to an account in the chart of accounts.</value></data>
+  <data name="AIN_ErrNoModel" xml:space="preserve"><value>No suitable model to read the statement:</value></data>
+  <data name="AIN_ErrExtract" xml:space="preserve"><value>Could not read the statement:</value></data>
+  <data name="AIN_Set_Tab" xml:space="preserve"><value>Bank reconciliation</value></data>
+  <data name="AIN_Set_Intro" xml:space="preserve"><value>A screen in the menu next to the cash-flow forecast. Exact match = same amount and direction and date ± days; group = one line equals several movements with the same total.</value></data>
+  <data name="AIN_Set_Enabled" xml:space="preserve"><value>Enable bank reconciliation</value></data>
+  <data name="AIN_Set_UseModel" xml:space="preserve"><value>Use the assistant for unmatched lines (up to 20)</value></data>
+  <data name="AIN_Set_Days" xml:space="preserve"><value>Date tolerance (days)</value></data>
+  <data name="AIN_Set_Group" xml:space="preserve"><value>Maximum items in a group match</value></data>
+  <data name="AIN_Set_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="AIN_Set_Saved" xml:space="preserve"><value>Settings saved</value></data>
 </root>

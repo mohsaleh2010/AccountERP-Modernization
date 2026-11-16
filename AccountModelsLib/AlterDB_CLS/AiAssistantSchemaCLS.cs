@@ -771,6 +771,8 @@ CREATE NONCLUSTERED INDEX [IX_AI_ApiTokens_User] ON [dbo].[AI_ApiTokens]([User_I
             Step("AiCollectionsMenu", () => CollectionsMenu(opp));   // P8.5.3
             Step("AiCashflowMenu", () => SiblingMenu(opp, AiCashflowConst.MenuKey, "توقع التدفق النقدى", "Cash-flow forecast", "Prévision de trésorerie",
                                                      "Liquiditätsprognose", AiCashflowConst.Route, AiCollectConst.MenuKey));   // P8.7.3
+            Step("AiBankRecMenu", () => SiblingMenu(opp, AiBankConst.MenuKey, "المطابقة البنكية", "Bank reconciliation", "Rapprochement bancaire",
+                                                    "Bankabstimmung", AiBankConst.Route, AiCashflowConst.MenuKey));   // P8.12.4
             Step("AiReadViews", () => AiReadViewsCLS.Ensure(opp));   // P2: schema ai وViews القراءة
         }
 

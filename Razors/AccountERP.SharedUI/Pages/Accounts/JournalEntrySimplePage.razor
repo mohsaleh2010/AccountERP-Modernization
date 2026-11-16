@@ -6,11 +6,12 @@
 
 <PageTitle>@Title</PageTitle>
 
-<ManualEntryEditor Title="@Title" Mode="Pair" EntryId="IdQuery" CopyFromId="CopyQuery" BasePath="/accounts/journal-entry/simple" @key="(IdQuery, CopyQuery)" />
+<ManualEntryEditor Title="@Title" Mode="Pair" EntryId="IdQuery" CopyFromId="CopyQuery" AiDraftId="AiDraftQuery" BasePath="/accounts/journal-entry/simple" @key="(IdQuery, CopyQuery, AiDraftQuery)" />
 
 @code {
     [SupplyParameterFromQuery(Name = "id")] public long? IdQuery { get; set; }
     [SupplyParameterFromQuery(Name = "copy")] public long? CopyQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "aiDraft")] public long? AiDraftQuery { get; set; }   // P8.12 (ب6)
 
     private string Title => Tr("METitleSimple");
 

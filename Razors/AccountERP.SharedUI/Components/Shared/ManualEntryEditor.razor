@@ -44,6 +44,8 @@
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
 <div class="inv-page me-print">
 
+    @if (_aiDraft != null) { <AccountERP.SharedUI.Components.Assistant.AiDraftBanner Payload="_aiDraft" OnDiscard="DiscardAiDraftAsync" /> }
+    @if (_aiDraftError != null) { <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">@_aiDraftError</MudAlert> }
     <div class="inv-head inv-card">
         <h1 class="inv-title">@Title</h1>
         <div class="inv-badges">
@@ -233,6 +235,8 @@
     [Parameter] public long? EntryId { get; set; }
     /// <summary>نسخ قيد سابق: يفتح محتوى هذا القيد كقيد جديد (تاريخ اليوم ورقم جديد).</summary>
     [Parameter] public long? CopyFromId { get; set; }
+    /// <summary>P8.12 (ب6): مسودة قيد من المساعد (AI_Drafts نوع journal) — جديد فقط؛ تُستهلك بعد الحفظ الناجح.</summary>
+    [Parameter] public long? AiDraftId { get; set; }
     /// <summary>نمط الإدخال: Typed | Columns | Pair (انظر أعلى الملف).</summary>
     [Parameter] public string Mode { get; set; } = "Columns";
     /// <summary>مسار الصفحة الحالية (للعودة لقيد جديد/النسخ).</summary>
@@ -284,7 +288,11 @@
             });
             if (EntryId is > 0) await LoadAsync(EntryId.Value);
             else if (CopyFromId is > 0) await CopyLoadAsync(CopyFromId.Value);
-            else await ResetNewAsync();
+            else
+            {
+                await ResetNewAsync();
+                if (AiDraftId is > 0) await LoadAiDraftAsync(AiDraftId.Value);
+            }
         }
         catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
     }
@@ -453,6 +461,40 @@
         if (EntryId is > 0 || CopyFromId is > 0) Nav.NavigateTo(BasePath);
     }
 
+    // ───────────── P8.12: مسودة قيد من المساعد ─────────────
+    private AiDraftPayload? _aiDraft;
+    private long _aiDraftId;
+    private string? _aiDraftError;
+
+    private async Task LoadAiDraftAsync(long id)
+    {
+        var res = await AiDraftPageHelper.LoadAsync(id, AiDraftKind.Journal);
+        if (res.ErrorKey != null) { _aiDraftError = Tr(res.ErrorKey); return; }
+        if (res.AlreadyUsed || res.Payload == null) { _aiDraftError = Tr("AID_AlreadyUsed"); return; }
+        _aiDraft = res.Payload; _aiDraftId = id;
+        if (_aiDraft.Date is DateTime d) { _head.Date = d.Date; await RefreshNumberAsync(); }
+        if (!string.IsNullOrWhiteSpace(_aiDraft.Notes)) _head.Notes = _aiDraft.Notes;
+        var lines = new List<ManualEntryService.Line>();
+        foreach (var l in _aiDraft.JournalLines.Where(x => x.SubAccountId > 0 && x.Amount > 0))
+        {
+            var info = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _svc.AccountInfo(l.SubAccountId); });
+            lines.Add(new ManualEntryService.Line
+            {
+                SubAccountId = l.SubAccountId, AccountName = l.AccountName ?? "", AccountCode = info.Code, AccountType = info.AccountType, MainAccountId = info.MainAccountId,
+                AccountCurrencyId = info.CurrencyId, IsDebit = l.IsDebit, Amount = l.Amount, Notes = l.Notes ?? "",
+            });
+        }
+        _lines = lines;
+    }
+
+    private async Task DiscardAiDraftAsync()
+    {
+        if (_aiDraftId > 0) { try { await AiDraftPageHelper.DiscardAsync(_aiDraftId); } catch { } }
+        _aiDraft = null; _aiDraftId = 0;
+        await ResetNewAsync();
+        Nav.NavigateTo(BasePath);
+    }
+
     private async Task SaveAsync()
     {
         _error = null; _warnings = new();
@@ -466,6 +508,11 @@
             if (!r.Ok) { _error = r.Message; return; }
             var warnings = r.Warnings.Select(w => w.ToString()).ToList();
             Snackbar.Add(Tr("MESaved", r.EntryNo), Severity.Success);
+            if (_aiDraftId > 0 && head.Id == 0)
+            {
+                await AiDraftPageHelper.MarkConsumedAsync(_aiDraftId, r.EntryId, r.EntryNo.ToString(CultureInfo.InvariantCulture));
+                _aiDraft = null; _aiDraftId = 0;
+            }
             // بعد الحفظ نعيد تحميل القيد من القاعدة (يعرض ما حُفظ فعلاً ويقفل الرأس).
             await LoadAsync(head.Id > 0 ? head.Id : r.EntryId);
             _warnings = warnings;
