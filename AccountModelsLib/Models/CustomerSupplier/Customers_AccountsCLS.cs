@@ -85,13 +85,13 @@ namespace AccountModelsLib.Models
                 }
                 if (Customers_Accounts_Id > 0)
                 {
-                    mysql = " Update Customers_Accounts Set Transaction_Date='" + operations.dateFormat(datBalance) + "' , Notes=N'" + Notes + "',Balance = " + Balance + " ,Export=" + Export + ",Import=" + Import + " Where Id=" + Customers_Accounts_Id;
+                    mysql = " Update Customers_Accounts Set Transaction_Date='" + operations.dateFormat(datBalance) + "' , Notes=N'" + global::AccountModelsLib.SqlText.Q(Notes) + "',Balance = " + Balance + " ,Export=" + Export + ",Import=" + Import + " Where Id=" + Customers_Accounts_Id;
                     opp.insert_me(mysql);
                 }
                 else
                 {
                     mysql = " INSERT INTO Customers_Accounts (Customer_Id, Reference_Id,Reference_Type_Table_Id, Export,Import, Balance, Transaction_Type, Transaction_Date,Reference_Type,Notes) ";
-                    mysql += " VALUES(" + Customer_Id + ",0," + Customer_Id + "," + Export + "," + Import + "," + Balance + ",2,'" + operations.dateFormat(datBalance) + "',-7,N'" + Notes + "')";
+                    mysql += " VALUES(" + Customer_Id + ",0," + Customer_Id + "," + Export + "," + Import + "," + Balance + ",2,'" + operations.dateFormat(datBalance) + "',-7,N'" + global::AccountModelsLib.SqlText.Q(Notes) + "')";
                     opp.insert_me(mysql);
 
 

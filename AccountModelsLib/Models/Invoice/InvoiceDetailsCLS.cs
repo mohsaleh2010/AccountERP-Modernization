@@ -191,7 +191,7 @@ namespace AccountModelsLib.Models
             /*
             try
             {
-                string mysql = " Update Invoices_Details Set  OperationNo='" + invD.OperationNo + "',StatementNo='" + invD.StatementNo + "',Merchant_Name='" + invD.Merchant_Name + "', Larg_Qnty=" + invD.Larg_Qnty + ", Small_Qnty=" + invD.Small_Qnty + ",Qnty_Another='" + invD.Qnty_Another + "', Larg_Unit_Price=" + invD.Larg_Unit_Price + ",   Qnty_value=" + invD.Qnty_value + ",Total=" + invD.Item_Net_Total_Price + ",Item_Net_Total_Price=" + invD.Item_Net_Total_Price + ", ATS05=" + invD.Item_ATS05 + " ";
+                string mysql = " Update Invoices_Details Set  OperationNo='" + invD.OperationNo + "',StatementNo='" + global::AccountModelsLib.SqlText.Q(invD.StatementNo) + "',Merchant_Name='" + invD.Merchant_Name + "', Larg_Qnty=" + invD.Larg_Qnty + ", Small_Qnty=" + invD.Small_Qnty + ",Qnty_Another='" + invD.Qnty_Another + "', Larg_Unit_Price=" + invD.Larg_Unit_Price + ",   Qnty_value=" + invD.Qnty_value + ",Total=" + invD.Item_Net_Total_Price + ",Item_Net_Total_Price=" + invD.Item_Net_Total_Price + ", ATS05=" + invD.Item_ATS05 + " ";
                 mysql = mysql + " , TaxSales10=" + invD.Item_TaxSales10 + ",TaxSales10_Value=" + invD.Item_TaxSales10_Value + ",ATS05_Value=" + invD.Item_ATS05_Value + ",Unit_Used_for_Price=" + invD.Unit_Used_for_Price + " , Specification='" + invD.Specification + "' ,Invoice_Item_Name=N'" + invD.Invoice_Item_Name + "',NameSpecification=N'" + invD.NameSpecification + "'";
 
 
@@ -414,7 +414,7 @@ namespace AccountModelsLib.Models
             /*
             try
             {
-                string mysql = " Update Invoices_Details_Reverse Set  OperationNo='" + invD.OperationNo + "',StatementNo='" + invD.StatementNo + "',Merchant_Name='" + invD.Merchant_Name + "', Larg_Qnty =" + invD.Larg_Qnty + ", Small_Qnty =" + invD.Small_Qnty + ",Qnty_Another='" + invD.Qnty_Another + "', Larg_Unit_Price =" + invD.Larg_Unit_Price + ",   Qnty_value =" + invD.Qnty_value + ",Total =" + invD.Item_Net_Total_Price + ",Item_Net_Total_Price =" + invD.Item_Net_Total_Price + ", ATS05 =" + invD.Item_ATS05 + " ";
+                string mysql = " Update Invoices_Details_Reverse Set  OperationNo='" + invD.OperationNo + "',StatementNo='" + global::AccountModelsLib.SqlText.Q(invD.StatementNo) + "',Merchant_Name='" + invD.Merchant_Name + "', Larg_Qnty =" + invD.Larg_Qnty + ", Small_Qnty =" + invD.Small_Qnty + ",Qnty_Another='" + invD.Qnty_Another + "', Larg_Unit_Price =" + invD.Larg_Unit_Price + ",   Qnty_value =" + invD.Qnty_value + ",Total =" + invD.Item_Net_Total_Price + ",Item_Net_Total_Price =" + invD.Item_Net_Total_Price + ", ATS05 =" + invD.Item_ATS05 + " ";
                 mysql = mysql + " , TaxSales10 =" + invD.Item_TaxSales10 + ",TaxSales10_Value =" + invD.Item_TaxSales10_Value + ",ATS05_Value =" + invD.Item_ATS05_Value + ",Unit_Used_for_Price =" + invD.Unit_Used_for_Price + " , Specification='" + invD.Specification + "' ,Invoice_Item_Name=N'" + invD.Invoice_Item_Name + "',NameSpecification=N'" + invD.NameSpecification + "'";
 
                 mysql = mysql + " , Item_ATS05 =" + invD.Item_ATS05 + ",Item_ATS05_Value =" + invD.Item_ATS05_Value + ",Item_TaxSales10 =" + invD.Item_TaxSales10 + ",Item_TaxSales10_Value  =" + invD.Item_TaxSales10_Value + " ";

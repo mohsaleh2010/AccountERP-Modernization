@@ -64,7 +64,7 @@ namespace AccountModelsLib
         {
             string sql;
             sql = "INSERT INTO Machin_list(Machin_Name, price_of_nazlla, Code,  Speed,  Machine_Width,  Description,Abstract_Hadafat)";
-            sql += "VALUES('" + MACHINE + " ' , " + price_of_nazlla + ",'" + Code + "'," + Speed + "," + Machine_Width + ",'" + Description + "'," + Abstract_Hadafat + ")";
+            sql += "VALUES('" + MACHINE + " ' , " + price_of_nazlla + ",'" + Code + "'," + Speed + "," + Machine_Width + ",'" + global::AccountModelsLib.SqlText.Q(Description) + "'," + Abstract_Hadafat + ")";
             opp.insert_me(sql);
 
         }
@@ -76,7 +76,7 @@ namespace AccountModelsLib
 
         public void update_machine(int id, string MACHINE, decimal price_of_nazlla, string Code, decimal Speed, int Machine_Width, string Description, decimal Abstract_Hadafat)
         {
-            string mysql = "UPDATE Machin_list SET Machin_Name = '" + MACHINE + "', price_of_nazlla = " + price_of_nazlla + " , Code='" + Code + "',   Speed=" + Speed + ", Machine_Width=" + Machine_Width + ", Description='" + Description + "' ,Abstract_Hadafat=" + Abstract_Hadafat + "";
+            string mysql = "UPDATE Machin_list SET Machin_Name = '" + MACHINE + "', price_of_nazlla = " + price_of_nazlla + " , Code='" + Code + "',   Speed=" + Speed + ", Machine_Width=" + Machine_Width + ", Description='" + global::AccountModelsLib.SqlText.Q(Description) + "' ,Abstract_Hadafat=" + Abstract_Hadafat + "";
             mysql = mysql + " WHERE(Id = " + id + ")";
             opp.update_me(mysql);
         }

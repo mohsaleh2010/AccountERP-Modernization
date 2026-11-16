@@ -829,7 +829,7 @@ namespace AccountModelsLib
 				arr.Add(mysql);
 				
 
-				mysql=" UPDATE Bills_Details SET Larg_Qnty ="+Larg_Qnty+", Small_Qnty ="+Small_Qnty+", Larg_Unit_Price ="+Larg_Unit_Price+", Small_Unit_Price ="+Small_Unit_Price+", Total ="+New_Total_Value+", ATS05 ="+ATS05+", TaxSales10 ="+TaxSales10+", Notes ='"+Notes+"', Qnty_Another ="+Qnty_Another+" ";
+				mysql=" UPDATE Bills_Details SET Larg_Qnty ="+Larg_Qnty+", Small_Qnty ="+Small_Qnty+", Larg_Unit_Price ="+Larg_Unit_Price+", Small_Unit_Price ="+Small_Unit_Price+", Total ="+New_Total_Value+", ATS05 ="+ATS05+", TaxSales10 ="+TaxSales10+", Notes ='"+global::AccountModelsLib.SqlText.Q(Notes)+"', Qnty_Another ="+Qnty_Another+" ";
 				mysql=mysql + " WHERE (Id ="+Bills_DetailsTable_Id+") ";
 				arr.Add(mysql);
 				mysql="UPDATE Bills_List SET Total =Total + "+Diff_Totals+" , Net_Total =Total + "+Diff_Totals+" WHERE ( Id = "+Bills_List_table_Id+")";
@@ -1049,7 +1049,7 @@ namespace AccountModelsLib
                 UpdateProcessNo(ref Excp, ref opp, "Bills_List", Invoice_No);
 
                 mysql = " INSERT INTO Suppliers_Accounts (ProcessNo,Notes,Supplier_Id, Reference_Id,Reference_Type_Table_Id, Import, Balance, Transaction_Type, Transaction_Date,Reference_Type) ";
-                mysql = mysql + " SELECT Bills_List.ProcessNo, N'" + Notes + "',Bills_List.Supplier_Id, Bills_List.Invoice_Id,Bills_List.id, Bills_List.Net_Total, Supplier.Balance , 1 AS Transaction_Type,Bills_List.Invoice_Date,2 AS Reference_Type ";
+                mysql = mysql + " SELECT Bills_List.ProcessNo, N'" + global::AccountModelsLib.SqlText.Q(Notes) + "',Bills_List.Supplier_Id, Bills_List.Invoice_Id,Bills_List.id, Bills_List.Net_Total, Supplier.Balance , 1 AS Transaction_Type,Bills_List.Invoice_Date,2 AS Reference_Type ";
                 mysql = mysql + " FROM Supplier INNER JOIN  Bills_List ON Supplier.Id = Bills_List.Supplier_Id ";
                 mysql = mysql + " WHERE (Supplier.Id = " + Supplier_Id + ") AND (Bills_List.Id = " + Invoice_No + ") ";
                 arr.Add(mysql);
@@ -1154,7 +1154,7 @@ namespace AccountModelsLib
 
 
             mysql = " INSERT INTO Suppliers_Accounts (ProcessNo,Notes,Supplier_Id, Reference_Id,Reference_Type_Table_Id, Export, Balance, Transaction_Type, Transaction_Date,Reference_Type) ";
-            mysql = mysql + " SELECT Bills_List_Reverse.ProcessNo,N'" + Notes + "', Bills_List_Reverse.Supplier_Id, Bills_List_Reverse.Invoice_Id,Bills_List_Reverse.id, Bills_List_Reverse.Net_Total, Supplier.Balance , 2 AS Transaction_Type,Bills_List_Reverse.Invoice_Date,8 AS Reference_Type ";
+            mysql = mysql + " SELECT Bills_List_Reverse.ProcessNo,N'" + global::AccountModelsLib.SqlText.Q(Notes) + "', Bills_List_Reverse.Supplier_Id, Bills_List_Reverse.Invoice_Id,Bills_List_Reverse.id, Bills_List_Reverse.Net_Total, Supplier.Balance , 2 AS Transaction_Type,Bills_List_Reverse.Invoice_Date,8 AS Reference_Type ";
             mysql = mysql + " FROM Supplier INNER JOIN  Bills_List_Reverse ON Supplier.Id = Bills_List_Reverse.Supplier_Id ";
             mysql = mysql + " WHERE (Supplier.Id = " + Supplier_Id + ") AND (Bills_List_Reverse.Id = " + Bills_List_Reverse_Id + ") ";
             opp.insert_me(mysql);
@@ -1210,7 +1210,7 @@ namespace AccountModelsLib
 
             string str = "";
             str = @" INSERT INTO Suppliers_Accounts (ProcessNo, Notes, Supplier_Id, Reference_Id, Reference_Type_Table_Id, Export, Balance, Transaction_Type, Transaction_Date, Reference_Type)  ";
-            str = str + @" SELECT Bills_List.ProcessNo, '" + Notes + "' AS Notes, Bills_List.Supplier_Id, Bills_List.Invoice_Id, Bills_List.ID, " + Value + ", Supplier.Balance,  2 AS Transaction_Type, Bills_List.Invoice_Date, " + Common.Bill_Type_Id.ToString() + " AS Reference_Type ";
+            str = str + @" SELECT Bills_List.ProcessNo, '" + global::AccountModelsLib.SqlText.Q(Notes) + "' AS Notes, Bills_List.Supplier_Id, Bills_List.Invoice_Id, Bills_List.ID, " + Value + ", Supplier.Balance,  2 AS Transaction_Type, Bills_List.Invoice_Date, " + Common.Bill_Type_Id.ToString() + " AS Reference_Type ";
             str = str + @" FROM Supplier INNER JOIN Bills_List ON Supplier.Id = Bills_List.Supplier_Id ";
             str = str + @" WHERE  (Bills_List.Id = " + New_Bill_ListTable_id.ToString() + ") ";
 
@@ -1221,7 +1221,7 @@ namespace AccountModelsLib
 
             string str = "";
             str = @" INSERT INTO Suppliers_Accounts (ProcessNo, Notes, Supplier_Id, Reference_Id, Reference_Type_Table_Id,Import, Export, Balance, Transaction_Type, Transaction_Date, Reference_Type)  ";
-            str = str + @" SELECT Bills_List.ProcessNo, '" + Notes + "' AS Notes, Bills_List.Supplier_Id, Bills_List.Invoice_Id, Bills_List.ID," + ValueImport + ", " + ValueExport + ", Supplier.Balance,  " + Transaction_Type + " AS Transaction_Type, Bills_List.Invoice_Date, " + Common.Bill_Type_Id.ToString() + " AS Reference_Type ";
+            str = str + @" SELECT Bills_List.ProcessNo, '" + global::AccountModelsLib.SqlText.Q(Notes) + "' AS Notes, Bills_List.Supplier_Id, Bills_List.Invoice_Id, Bills_List.ID," + ValueImport + ", " + ValueExport + ", Supplier.Balance,  " + Transaction_Type + " AS Transaction_Type, Bills_List.Invoice_Date, " + Common.Bill_Type_Id.ToString() + " AS Reference_Type ";
             str = str + @" FROM Supplier INNER JOIN Bills_List ON Supplier.Id = Bills_List.Supplier_Id ";
             str = str + @" WHERE  (Bills_List.Id = " + New_Bill_ListTable_id.ToString() + ") ";
 
@@ -1232,7 +1232,7 @@ namespace AccountModelsLib
 
             string str = "";
             str = @" INSERT INTO Suppliers_Accounts (ProcessNo, Notes, Supplier_Id, Reference_Id, Reference_Type_Table_Id,Import, Export, Balance, Transaction_Type, Transaction_Date, Reference_Type)  ";
-            str = str + @" SELECT Bills_List_Reverse.ProcessNo, '" + Notes + "' AS Notes, Bills_List_Reverse.Supplier_Id, Bills_List_Reverse.Invoice_Id, Bills_List_Reverse.ID," + ValueImport + ", " + ValueExport + ", Supplier.Balance,  " + Transaction_Type + " AS Transaction_Type, Bills_List_Reverse.Invoice_Date, " + Common.Bill_Type_Id.ToString() + " AS Reference_Type ";
+            str = str + @" SELECT Bills_List_Reverse.ProcessNo, '" + global::AccountModelsLib.SqlText.Q(Notes) + "' AS Notes, Bills_List_Reverse.Supplier_Id, Bills_List_Reverse.Invoice_Id, Bills_List_Reverse.ID," + ValueImport + ", " + ValueExport + ", Supplier.Balance,  " + Transaction_Type + " AS Transaction_Type, Bills_List_Reverse.Invoice_Date, " + Common.Bill_Type_Id.ToString() + " AS Reference_Type ";
             str = str + @" FROM Supplier INNER JOIN Bills_List_Reverse ON Supplier.Id = Bills_List_Reverse.Supplier_Id ";
             str = str + @" WHERE  (Bills_List_Reverse.Id = " + New_Bill_ListTable_id.ToString() + ") ";
 
@@ -1571,7 +1571,7 @@ namespace AccountModelsLib
             //string Supplier_Id= dt.Rows[0]["Supplier_Id"].ToString();
             string str = "";
             str = @" INSERT INTO Suppliers_Accounts (ProcessNo, Notes, Supplier_Id, Reference_Id, Reference_Type_Table_Id,Import, Export, Balance, Transaction_Type, Transaction_Date, Reference_Type)  ";
-            str = str + @" SELECT Bills_List.ProcessNo, '" + Notes + "' AS Notes, Bills_List.Supplier_Id, Bills_List.Invoice_Id, Bills_List.ID," + ValueImport + ",  " + ValueExport + ", Supplier.Balance,  " + Transaction_Type + " AS Transaction_Type, Bills_List.Invoice_Date, " + Common.Bill_Type_Id.ToString() + " AS Reference_Type ";
+            str = str + @" SELECT Bills_List.ProcessNo, '" + global::AccountModelsLib.SqlText.Q(Notes) + "' AS Notes, Bills_List.Supplier_Id, Bills_List.Invoice_Id, Bills_List.ID," + ValueImport + ",  " + ValueExport + ", Supplier.Balance,  " + Transaction_Type + " AS Transaction_Type, Bills_List.Invoice_Date, " + Common.Bill_Type_Id.ToString() + " AS Reference_Type ";
             str = str + @" FROM Supplier INNER JOIN Bills_List ON Supplier.Id = Bills_List.Supplier_Id ";
             str = str + @" WHERE  (Bills_List.Id = " + New_Bill_ListTable_id.ToString() + ") ";
 
@@ -1586,7 +1586,7 @@ namespace AccountModelsLib
             //string Supplier_Id= dt.Rows[0]["Supplier_Id"].ToString();
             string str = "";
             str = @" INSERT INTO Suppliers_Accounts (ProcessNo, Notes, Supplier_Id, Reference_Id, Reference_Type_Table_Id,Import, Export, Balance, Transaction_Type, Transaction_Date, Reference_Type)  ";
-            str = str + @" SELECT Bills_List_Reverse.ProcessNo, '" + Notes + "' AS Notes, Bills_List_Reverse.Supplier_Id, Bills_List_Reverse.Invoice_Id, Bills_List_Reverse.ID," + ValueImport + ",  " + ValueExport + ", Supplier.Balance,  " + Transaction_Type + " AS Transaction_Type, Bills_List_Reverse.Invoice_Date, " + Common.BilleReverse_Type_Id.ToString() + " AS Reference_Type ";
+            str = str + @" SELECT Bills_List_Reverse.ProcessNo, '" + global::AccountModelsLib.SqlText.Q(Notes) + "' AS Notes, Bills_List_Reverse.Supplier_Id, Bills_List_Reverse.Invoice_Id, Bills_List_Reverse.ID," + ValueImport + ",  " + ValueExport + ", Supplier.Balance,  " + Transaction_Type + " AS Transaction_Type, Bills_List_Reverse.Invoice_Date, " + Common.BilleReverse_Type_Id.ToString() + " AS Reference_Type ";
             str = str + @" FROM Supplier INNER JOIN Bills_List_Reverse ON Supplier.Id = Bills_List_Reverse.Supplier_Id ";
             str = str + @" WHERE  (Bills_List_Reverse.Id = " + New_Bill_ListTable_id.ToString() + ") ";
 
@@ -1630,7 +1630,7 @@ namespace AccountModelsLib
             UpdateProcessNo(ref Excp, ref opp, "Money_Transaction_Box", Money_Transaction_BoxId);
 
             mysql = " INSERT INTO Suppliers_Accounts  (ProcessNo,Notes,Reference_Id, Reference_Type_Table_Id, Balance, Supplier_Id, Export,Reference_Type, Transaction_Type, Transaction_Date,Payment_Type) ";
-            mysql = mysql + " SELECT Money_Transaction_Box.ProcessNo, N'" + Notes + "',Order_Money.Order_No, Money_Transaction_Box.Id, Supplier.Balance, Money_Transaction_Box.Supplier_Id,  Money_Transaction_Box.Transaction_Value,4 AS Reference_Type , " + Transaction_Type + " AS Transaction_Type, Money_Transaction_Box.Transaction_Date ,1 AS Payment_Type";
+            mysql = mysql + " SELECT Money_Transaction_Box.ProcessNo, N'" + global::AccountModelsLib.SqlText.Q(Notes) + "',Order_Money.Order_No, Money_Transaction_Box.Id, Supplier.Balance, Money_Transaction_Box.Supplier_Id,  Money_Transaction_Box.Transaction_Value,4 AS Reference_Type , " + Transaction_Type + " AS Transaction_Type, Money_Transaction_Box.Transaction_Date ,1 AS Payment_Type";
             mysql = mysql + " FROM Money_Transaction_Box INNER JOIN  Supplier ON Money_Transaction_Box.Supplier_Id = Supplier.Id ";
             mysql = mysql + "  INNER JOIN Order_Money ON Money_Transaction_Box.Order_Mony_Id = Order_Money.Id ";
             mysql = mysql + " WHERE (Money_Transaction_Box.Order_Mony_Id = " + Order_Mony_Id + ") AND (Money_Transaction_Box.Supplier_Id = " + Supplier_Id + ")  AND (Money_Transaction_Box.id=" + Money_Transaction_BoxId + ")";
@@ -1656,7 +1656,7 @@ namespace AccountModelsLib
             UpdateProcessNo(ref Excp, ref opp, "Money_Transaction_Box", Money_Transaction_BoxId);
 
             mysql = " INSERT INTO Suppliers_Accounts  (ProcessNo,Notes,Reference_Id, Reference_Type_Table_Id, Balance, Supplier_Id, Import,Reference_Type, Transaction_Type, Transaction_Date,Payment_Type) ";
-            mysql = mysql + " SELECT  Money_Transaction_Box.ProcessNo,N'" + Notes + "',Order_Money.Order_No, Money_Transaction_Box.Id, Supplier.Balance, Money_Transaction_Box.Supplier_Id,  Money_Transaction_Box.Transaction_Value,3 AS Reference_Type , " + Transaction_Type + " AS Transaction_Type, Money_Transaction_Box.Transaction_Date ,1 AS Payment_Type";
+            mysql = mysql + " SELECT  Money_Transaction_Box.ProcessNo,N'" + global::AccountModelsLib.SqlText.Q(Notes) + "',Order_Money.Order_No, Money_Transaction_Box.Id, Supplier.Balance, Money_Transaction_Box.Supplier_Id,  Money_Transaction_Box.Transaction_Value,3 AS Reference_Type , " + Transaction_Type + " AS Transaction_Type, Money_Transaction_Box.Transaction_Date ,1 AS Payment_Type";
             mysql = mysql + " FROM Money_Transaction_Box INNER JOIN  Supplier ON Money_Transaction_Box.Supplier_Id = Supplier.Id ";
             mysql = mysql + "  INNER JOIN Order_Money ON Money_Transaction_Box.Order_Mony_Id = Order_Money.Id ";
             mysql = mysql + " WHERE (Money_Transaction_Box.Order_Mony_Id = " + Order_Mony_Id + ") AND (Money_Transaction_Box.Supplier_Id = " + Supplier_Id + ")  AND (Money_Transaction_Box.id=" + Money_Transaction_BoxId + ")";
@@ -1702,7 +1702,7 @@ namespace AccountModelsLib
             UpdateProcessNo(ref Excp, ref opp, "Checks_Memory", Checks_MemoryId);
 
             mysql = " INSERT INTO Suppliers_Accounts  (ProcessNo,Reference_Id, Reference_Type_Table_Id, Export, Reference_Type, Balance, Supplier_Id , Transaction_Type, Transaction_Date,Payment_Type,Flage_View,Notes ) ";
-            mysql = mysql + " SELECT Checks_Memory.ProcessNo,Order_Money_Check.Order_No, Checks_Memory.id, Checks_Memory.Check_Value, 6 AS Reference_Type, 0,   " + Supplier_Id + ", " + Transaction_Type + " AS Transaction_Type, '" + operations.dateFormat(ProcessDate) + "',2 AS Payment_Type ," + Common.Flage_AccountDetails_View + " AS Flage_View ,N'" + Notes + "' ";
+            mysql = mysql + " SELECT Checks_Memory.ProcessNo,Order_Money_Check.Order_No, Checks_Memory.id, Checks_Memory.Check_Value, 6 AS Reference_Type, 0,   " + Supplier_Id + ", " + Transaction_Type + " AS Transaction_Type, '" + operations.dateFormat(ProcessDate) + "',2 AS Payment_Type ," + Common.Flage_AccountDetails_View + " AS Flage_View ,N'" + global::AccountModelsLib.SqlText.Q(Notes) + "' ";
             mysql = mysql + @" FROM            Checks_Memory INNER JOIN
                          Supplier ON Checks_Memory.SubAccount_Id_RelatedFrom = Supplier.SubAccount_Id INNER JOIN
                          Order_Money_Check ON Checks_Memory.Order_Mony_Id = Order_Money_Check.Id ";
@@ -1732,7 +1732,7 @@ namespace AccountModelsLib
             UpdateProcessNo(ref Excp, ref opp, "Checks_Memory", Checks_MemoryId);
 
             mysql = " INSERT INTO Suppliers_Accounts  (ProcessNo,Reference_Id, Reference_Type_Table_Id, Import, Reference_Type, Balance,Supplier_Id , Transaction_Type, Transaction_Date,Payment_Type,Flage_View,Notes ) ";
-            mysql = mysql + " SELECT Checks_Memory.ProcessNo,Order_Money_Check.Order_No, Checks_Memory.id, Checks_Memory.Check_Value, 5 AS Reference_Type, Supplier.Balance,  " + Supplier_Id + " , " + Transaction_Type + " AS Transaction_Type, '" + operations.dateFormat(ProcessDate) + "',2 AS Payment_Type ," + Common.Flage_AccountDetails_View + " AS Flage_View ,N'" + Notes + "'";
+            mysql = mysql + " SELECT Checks_Memory.ProcessNo,Order_Money_Check.Order_No, Checks_Memory.id, Checks_Memory.Check_Value, 5 AS Reference_Type, Supplier.Balance,  " + Supplier_Id + " , " + Transaction_Type + " AS Transaction_Type, '" + operations.dateFormat(ProcessDate) + "',2 AS Payment_Type ," + Common.Flage_AccountDetails_View + " AS Flage_View ,N'" + global::AccountModelsLib.SqlText.Q(Notes) + "'";
             mysql = mysql + @" FROM            Checks_Memory INNER JOIN
                          Supplier ON Checks_Memory.SubAccount_Id_RelatedTo = Supplier.SubAccount_Id INNER JOIN
                          Order_Money_Check ON Checks_Memory.Order_Mony_Id = Order_Money_Check.Id ";
@@ -1864,7 +1864,7 @@ namespace AccountModelsLib
 
             // mysql = " INSERT INTO Suppliers_Accounts(ProcessNo, Larg_Unit_Price, Item_Id, Item_Name, Notes, Supplier_Id, Reference_Id, Reference_Type_Table_Id, Export, Balance, Transaction_Type, Transaction_Date, Reference_Type, Qnty, Larg_Qnty, Small_Qnty, Item_No, Item_Size, Qnty_Size, Qnty_value, Height_Width_Item)
             mysql = " INSERT INTO Suppliers_Accounts(ProcessNo,Larg_Unit_Price,Notes,Supplier_Id, Reference_Id,Reference_Type_Table_Id, Export, Balance, Transaction_Type, Transaction_Date,Reference_Type,Qnty, Larg_Qnty) ";
-            mysql = mysql + "  SELECT Suppliers_Destruction.ProcessNo,Suppliers_Destruction.Price, N'" + Notes + "' AS Expr1, Suppliers_Destruction.supplier_id, Suppliers_Destruction.ProcessNo AS Expr2, Suppliers_Destruction.id, Suppliers_Destruction.total, Supplier.Balance,  2 AS Transaction_Type, Suppliers_Destruction.dt_date, " + Common.Bill_Suppliers_Destruction_Id + " AS Reference_Type   ,Suppliers_Destruction.quantity,Suppliers_Destruction.quantity";
+            mysql = mysql + "  SELECT Suppliers_Destruction.ProcessNo,Suppliers_Destruction.Price, N'" + global::AccountModelsLib.SqlText.Q(Notes) + "' AS Expr1, Suppliers_Destruction.supplier_id, Suppliers_Destruction.ProcessNo AS Expr2, Suppliers_Destruction.id, Suppliers_Destruction.total, Supplier.Balance,  2 AS Transaction_Type, Suppliers_Destruction.dt_date, " + Common.Bill_Suppliers_Destruction_Id + " AS Reference_Type   ,Suppliers_Destruction.quantity,Suppliers_Destruction.quantity";
             mysql = mysql + " FROM Supplier INNER JOIN Suppliers_Destruction ON Supplier.Id = Suppliers_Destruction.supplier_id ";
             mysql = mysql + " WHERE (Supplier.Id = " + Supplier_Id + ") AND (Suppliers_Destruction.Id = " + Suppliers_Destruction_Id + ") ";
             opp.insert_me(mysql);
@@ -1918,13 +1918,13 @@ namespace AccountModelsLib
 
             if (Customers_Accounts_Id > 0)
             {
-                mysql = " Update Suppliers_Accounts Set Transaction_Date='" + operations.dateFormat(datBalance) + "' , Notes=N'" + Notes + "',Balance = " + Balance + ",Export=" + Export + ",Import=" + Import + "  Where Id=" + Customers_Accounts_Id;
+                mysql = " Update Suppliers_Accounts Set Transaction_Date='" + operations.dateFormat(datBalance) + "' , Notes=N'" + global::AccountModelsLib.SqlText.Q(Notes) + "',Balance = " + Balance + ",Export=" + Export + ",Import=" + Import + "  Where Id=" + Customers_Accounts_Id;
                 opp.insert_me(mysql);
             }
             else
             {
                 mysql = " INSERT INTO Suppliers_Accounts (Supplier_Id, Reference_Id,Reference_Type_Table_Id, Export,Import, Balance, Transaction_Type, Transaction_Date,Reference_Type,Notes) ";
-                mysql += " VALUES(" + Supplier_Id + ",0," + Supplier_Id + "," + Export + "," + Import + "," + Balance + ",2,'" + operations.dateFormat(datBalance) + "',-7,N'" + Notes + "')";
+                mysql += " VALUES(" + Supplier_Id + ",0," + Supplier_Id + "," + Export + "," + Import + "," + Balance + ",2,'" + operations.dateFormat(datBalance) + "',-7,N'" + global::AccountModelsLib.SqlText.Q(Notes) + "')";
                 opp.insert_me(mysql);
             }
         }

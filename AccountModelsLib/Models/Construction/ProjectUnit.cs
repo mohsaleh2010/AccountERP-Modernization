@@ -142,7 +142,7 @@ FROM            ConsProjectUnites INNER JOIN
         {
 
             string mysql = @"INSERT INTO ConsProjectUnites(ProjectId, ResidentialbuildingId, ResidentialbuildingName, UnitNo, UnitCode, UnitTypeId, ServicesGroupId,ProjectSpacesGroupId, [Size], WaterCounterTypeId,  WaterCounterNo, CustomerId, SubAccount_Id,IsRelatedCustomer,Notes )";
-            mysql = mysql + " VALUES (  " + ProjectId + " , " + ResidentialbuildingId + " ,  '" + ResidentialbuildingName + "'  ,  '" + UnitNo + "',  '" + UnitCode + "', " + UnitTypeId + " , " + ServicesGroupId + " ," + ProjectSpacesGroupId + " , " + Size + "  , " + WaterCounterTypeId + ",  '" + WaterCounterNo + "' , " + CustomerId + ", " + SubAccount_Id + " , " + IsRelatedCustomer + ", '" + Notes + "')";
+            mysql = mysql + " VALUES (  " + ProjectId + " , " + ResidentialbuildingId + " ,  '" + ResidentialbuildingName + "'  ,  '" + UnitNo + "',  '" + UnitCode + "', " + UnitTypeId + " , " + ServicesGroupId + " ," + ProjectSpacesGroupId + " , " + Size + "  , " + WaterCounterTypeId + ",  '" + WaterCounterNo + "' , " + CustomerId + ", " + SubAccount_Id + " , " + IsRelatedCustomer + ", '" + global::AccountModelsLib.SqlText.Q(Notes) + "')";
 
             Id = opp.Insert_me_Return_Last_Identify(mysql);
 
@@ -151,7 +151,7 @@ FROM            ConsProjectUnites INNER JOIN
         public void UpdateProjectUnites(ref operations opp)
         {
 
-            string mysql = @"Update    ConsProjectUnites Set ProjectId=  " + ProjectId + " , ResidentialbuildingId= " + ResidentialbuildingId + "  , ResidentialbuildingName= '" + ResidentialbuildingName + "'  , UnitNo=  '" + UnitNo + "' , UnitCode='" + UnitCode + "'  , UnitTypeId= " + UnitTypeId + "  ,ServicesGroupId=" + ServicesGroupId + ", ProjectSpacesGroupId=  " + ProjectSpacesGroupId + " , [Size]=" + Size + "  , WaterCounterTypeId= " + WaterCounterTypeId + " ,  WaterCounterNo= '" + WaterCounterNo + "'   , CustomerId=" + CustomerId + "  , SubAccount_Id=" + SubAccount_Id + " ,IsRelatedCustomer=" + IsRelatedCustomer + "  ,Notes ='" + Notes + "' ";
+            string mysql = @"Update    ConsProjectUnites Set ProjectId=  " + ProjectId + " , ResidentialbuildingId= " + ResidentialbuildingId + "  , ResidentialbuildingName= '" + ResidentialbuildingName + "'  , UnitNo=  '" + UnitNo + "' , UnitCode='" + UnitCode + "'  , UnitTypeId= " + UnitTypeId + "  ,ServicesGroupId=" + ServicesGroupId + ", ProjectSpacesGroupId=  " + ProjectSpacesGroupId + " , [Size]=" + Size + "  , WaterCounterTypeId= " + WaterCounterTypeId + " ,  WaterCounterNo= '" + WaterCounterNo + "'   , CustomerId=" + CustomerId + "  , SubAccount_Id=" + SubAccount_Id + " ,IsRelatedCustomer=" + IsRelatedCustomer + "  ,Notes ='" + global::AccountModelsLib.SqlText.Q(Notes) + "' ";
             mysql = mysql + " Where Id=" + Id;
 
             opp.insert_me(mysql);

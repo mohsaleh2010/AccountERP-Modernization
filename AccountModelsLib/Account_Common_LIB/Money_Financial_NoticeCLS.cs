@@ -104,7 +104,7 @@ namespace AccountModelsLib
             {
 
                 mysql = "INSERT INTO Money_Financial_Notice_Items  (OrderNo, OrderDate, Transaction_Type,Transaction_TypeStr, Order_Value, Order_Value_Str, Account_Type, Account_Id, SubAccount_Id, Currency_Id, Notes,Compete_SubAccount_Id,Account_Selection,Customer_Id,Supplier_Id,Reference_Type) ";
-                mysql = mysql + " VALUES(" + OrderNo + ",'" + operations.dateFormat(OrderDate) + "'," + Transaction_Type + ",'" + Transaction_TypeStr + "'," + Order_Value + ",N'" + Order_Value_Str + "'," + Account_Type + "," + Account_Id + "," + SubAccount_Id + "," + Currency_Id + ",'" + Notes + "'," + Compete_SubAccount_Id + "," + Account_Selection_ + "," + Customer_Id + "," + Supplier_Id + "," + Reference_Type + ")";
+                mysql = mysql + " VALUES(" + OrderNo + ",'" + operations.dateFormat(OrderDate) + "'," + Transaction_Type + ",'" + Transaction_TypeStr + "'," + Order_Value + ",N'" + Order_Value_Str + "'," + Account_Type + "," + Account_Id + "," + SubAccount_Id + "," + Currency_Id + ",'" + global::AccountModelsLib.SqlText.Q(Notes) + "'," + Compete_SubAccount_Id + "," + Account_Selection_ + "," + Customer_Id + "," + Supplier_Id + "," + Reference_Type + ")";
 
                 // 🟢 Money_Financial_Notice_Items.Id ليست IDENTITY حقيقية (تحقَّق مباشرة عبر sys.columns)، لكن
                 // Insert_me_Return_Last_Identify الأصلية تفترض @@IDENTITY طالما Common.Use_Auto_Identity_Column=1
@@ -143,7 +143,7 @@ namespace AccountModelsLib
                         else
                         { Balance = 0; }
                         mysql = " INSERT INTO Customers_Accounts (Notes,Customer_Id, Reference_Id, Reference_Type_Table_Id, Import , Balance, Reference_Type, Transaction_Type, Transaction_Date,Payment_Type) ";
-                        mysql = mysql + " Values ('" + Notes + "'," + Customer_Id + "," + OrderNo + "," + Money_Financial_Notice_Id + "," + Order_Value + "," + Balance + "," + Reference_Type + "," + Transaction_Type + ",'" + operations.dateFormat(OrderDate) + "',0)";
+                        mysql = mysql + " Values ('" + global::AccountModelsLib.SqlText.Q(Notes) + "'," + Customer_Id + "," + OrderNo + "," + Money_Financial_Notice_Id + "," + Order_Value + "," + Balance + "," + Reference_Type + "," + Transaction_Type + ",'" + operations.dateFormat(OrderDate) + "',0)";
                         InsertWithManualId(opp, mysql);
                     }
                     if (Transaction_Type == 2)  // صرف نقدية
@@ -163,7 +163,7 @@ namespace AccountModelsLib
                         else
                         { Balance = 0; }
                         mysql = " INSERT INTO Customers_Accounts (Notes,Customer_Id, Reference_Id, Reference_Type_Table_Id, Export , Balance, Reference_Type, Transaction_Type, Transaction_Date,Payment_Type) ";
-                        mysql = mysql + " Values ('" + Notes + "'," + Customer_Id + "," + OrderNo + "," + Money_Financial_Notice_Id + "," + Order_Value + "," + Balance + "," + Reference_Type + "," + Transaction_Type + ",'" + operations.dateFormat(OrderDate) + "',0)";
+                        mysql = mysql + " Values ('" + global::AccountModelsLib.SqlText.Q(Notes) + "'," + Customer_Id + "," + OrderNo + "," + Money_Financial_Notice_Id + "," + Order_Value + "," + Balance + "," + Reference_Type + "," + Transaction_Type + ",'" + operations.dateFormat(OrderDate) + "',0)";
                         InsertWithManualId(opp, mysql);
                     }
                 }
@@ -188,7 +188,7 @@ namespace AccountModelsLib
                         else
                         { Balance = 0; }
                         mysql = " INSERT INTO Suppliers_Accounts  (Notes,Supplier_Id,Reference_Id, Reference_Type_Table_Id, Import,Balance,Reference_Type, Transaction_Type, Transaction_Date,Payment_Type) ";
-                        mysql = mysql + " Values ('" + Notes + "'," + Supplier_Id + "," + OrderNo + "," + Money_Financial_Notice_Id + "," + Order_Value + "," + Balance + "," + Reference_Type + "," + Transaction_Type + ",'" + operations.dateFormat(OrderDate) + "',0)";
+                        mysql = mysql + " Values ('" + global::AccountModelsLib.SqlText.Q(Notes) + "'," + Supplier_Id + "," + OrderNo + "," + Money_Financial_Notice_Id + "," + Order_Value + "," + Balance + "," + Reference_Type + "," + Transaction_Type + ",'" + operations.dateFormat(OrderDate) + "',0)";
                         InsertWithManualId(opp, mysql);
                     }
                     ////////////***********************************************************************************
@@ -210,7 +210,7 @@ namespace AccountModelsLib
                         else
                         { Balance = 0; }
                         mysql = " INSERT INTO Suppliers_Accounts  (Notes,Supplier_Id,Reference_Id, Reference_Type_Table_Id,Export ,Balance,Reference_Type, Transaction_Type, Transaction_Date,Payment_Type) ";
-                        mysql = mysql + " Values ('" + Notes + "'," + Supplier_Id + "," + OrderNo + "," + Money_Financial_Notice_Id + "," + Order_Value + "," + Balance + "," + Reference_Type + "," + Transaction_Type + ",'" + operations.dateFormat(OrderDate) + "',0)";
+                        mysql = mysql + " Values ('" + global::AccountModelsLib.SqlText.Q(Notes) + "'," + Supplier_Id + "," + OrderNo + "," + Money_Financial_Notice_Id + "," + Order_Value + "," + Balance + "," + Reference_Type + "," + Transaction_Type + ",'" + operations.dateFormat(OrderDate) + "',0)";
                         InsertWithManualId(opp, mysql);
                     }
 

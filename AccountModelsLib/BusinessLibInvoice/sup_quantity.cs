@@ -265,7 +265,7 @@ namespace AccountModelsLib
             try
             {
                 string mysql = "INSERT INTO Suppliers_Destruction (supplier_id, SubAccount_Id, quantity,  price, total,dt_date,Notes) VALUES ";
-                mysql = mysql + " (" + Supplier_Id + "," + SubAccount_Id + "," + kelo + ", " + price + "," + total + ",'" + operations.dateFormat(dt_date) + "','" + Notes + "')";
+                mysql = mysql + " (" + Supplier_Id + "," + SubAccount_Id + "," + kelo + ", " + price + "," + total + ",'" + operations.dateFormat(dt_date) + "','" + global::AccountModelsLib.SqlText.Q(Notes) + "')";
 
                 long Suppliers_Destruction_Id = opp.Insert_me_Return_Last_Identify(mysql, ref Excp);
 

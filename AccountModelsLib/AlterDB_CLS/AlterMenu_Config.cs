@@ -1441,7 +1441,7 @@ CREATE TABLE [dbo].[SysConfig](
         }
         private static void UpdateMenuName(ref operations opp, long SysConfigMenusId, string Description, string KeysData)
         {
-            string mysql = " Update  SysConfigMenus Set Description=N'" + Description + "' ";
+            string mysql = " Update  SysConfigMenus Set Description=N'" + global::AccountModelsLib.SqlText.Q(Description) + "' ";
             if (KeysData.Trim() != "")
             {
                 mysql = mysql + " , KeysData=N'" + KeysData + "' ";

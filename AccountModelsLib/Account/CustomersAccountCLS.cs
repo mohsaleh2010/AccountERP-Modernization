@@ -42,7 +42,7 @@ namespace AccountModelsLib
 				arr.Add(mysql);
 				
 
-				mysql=" UPDATE Invoices_Details SET Larg_Qnty ="+Larg_Qnty+", Small_Qnty ="+Small_Qnty+", Larg_Unit_Price ="+Larg_Unit_Price+", Small_Unit_Price ="+Small_Unit_Price+", Total ="+New_Total_Value+", ATS05 ="+ATS05+", TaxSales10 ="+TaxSales10+", Notes ='"+Notes+"', Qnty_Another ="+Qnty_Another+" ";
+				mysql=" UPDATE Invoices_Details SET Larg_Qnty ="+Larg_Qnty+", Small_Qnty ="+Small_Qnty+", Larg_Unit_Price ="+Larg_Unit_Price+", Small_Unit_Price ="+Small_Unit_Price+", Total ="+New_Total_Value+", ATS05 ="+ATS05+", TaxSales10 ="+TaxSales10+", Notes ='"+global::AccountModelsLib.SqlText.Q(Notes)+"', Qnty_Another ="+Qnty_Another+" ";
 				mysql=mysql + " WHERE (Id ="+Invoices_DetailsTable_Id+") ";
 				arr.Add(mysql);
 				mysql="UPDATE Invoices_List SET Total =Total + "+Diff_Totals+" , Net_Total =Total + "+Diff_Totals+" WHERE ( Id = "+Invoices_list_table_Id+")";
@@ -115,7 +115,7 @@ namespace AccountModelsLib
             UpdateProcessNo(ref Excp, ref opp, "Invoices_List", New_Invoice_ListTable_id);
 
             mysql = " INSERT INTO Customers_Accounts (ProcessNo,Notes,Customer_Id, Reference_Id,Reference_Type_Table_Id, Export, Balance, Transaction_Type, Transaction_Date,Reference_Type) ";
-            mysql = mysql + " SELECT Invoices_List.ProcessNo,N'" + Notes + "' ,Invoices_List.Customer_Id, Invoices_List.Invoice_Id,Invoices_List.id, Invoices_List.Net_Total, Customer.Balance, 2 AS Transaction_Type, Invoices_List.Invoice_Date ,1 as Reference_Type";
+            mysql = mysql + " SELECT Invoices_List.ProcessNo,N'" + global::AccountModelsLib.SqlText.Q(Notes) + "' ,Invoices_List.Customer_Id, Invoices_List.Invoice_Id,Invoices_List.id, Invoices_List.Net_Total, Customer.Balance, 2 AS Transaction_Type, Invoices_List.Invoice_Date ,1 as Reference_Type";
             mysql = mysql + " FROM Customer INNER JOIN  Invoices_List ON Customer.Id = Invoices_List.Customer_Id ";
             mysql = mysql + " WHERE (Customer.Id = " + Customer_Id + ") AND (Invoices_List.id = " + New_Invoice_ListTable_id + ") ";
             opp.insert_me(mysql);
@@ -214,7 +214,7 @@ namespace AccountModelsLib
 
 
             str = " INSERT INTO Customers_Accounts (CarsId,CarNumber,CustomerName, CarsWorkOrdersId, WorkOrderNumber,TaxInternalId,ProcessNo,Notes,Customer_Id,Customer_Id_RelatedToAccount, Reference_Id,Reference_Type_Table_Id, Import, Balance, Transaction_Type, Transaction_Date,Reference_Type) ";
-            str = str + " SELECT Invoices_List_Reverse.CarsId,Invoices_List_Reverse.CarNumber,Invoices_List_Reverse.CustomerName, Invoices_List_Reverse.CarsWorkOrdersId, Invoices_List_Reverse.WorkOrderNumber, Invoices_List_Reverse.TaxInternalId,Invoices_List_Reverse.ProcessNo,N'" + Notes + "'," + Customer_Id_RelatedToAccount + ",Invoices_List_Reverse.Customer_Id, Invoices_List_Reverse.Invoice_Id,Invoices_List_Reverse.id, Invoices_List_Reverse.Net_Total, Customer.Balance, 2 AS Transaction_Type, Invoices_List_Reverse.Invoice_Date ,7 as Reference_Type ";
+            str = str + " SELECT Invoices_List_Reverse.CarsId,Invoices_List_Reverse.CarNumber,Invoices_List_Reverse.CustomerName, Invoices_List_Reverse.CarsWorkOrdersId, Invoices_List_Reverse.WorkOrderNumber, Invoices_List_Reverse.TaxInternalId,Invoices_List_Reverse.ProcessNo,N'" + global::AccountModelsLib.SqlText.Q(Notes) + "'," + Customer_Id_RelatedToAccount + ",Invoices_List_Reverse.Customer_Id, Invoices_List_Reverse.Invoice_Id,Invoices_List_Reverse.id, Invoices_List_Reverse.Net_Total, Customer.Balance, 2 AS Transaction_Type, Invoices_List_Reverse.Invoice_Date ,7 as Reference_Type ";
             str = str + "  FROM Customer INNER JOIN  Invoices_List_Reverse ON Customer.Id = Invoices_List_Reverse.Customer_Id ";
             str = str + "  WHERE (Customer.Id = " + Customer_Id.ToString() + ") AND (Invoices_List_Reverse.id = " + New_Invoice_ListTable_id.ToString() + ") ";
 
@@ -415,7 +415,7 @@ namespace AccountModelsLib
 
             string str = "";
             str = @" INSERT INTO Customers_Accounts (ProcessNo, Notes, Customer_Id, Reference_Id, Reference_Type_Table_Id,Import, Export, Balance, Transaction_Type, Transaction_Date, Reference_Type)  ";
-            str = str + @" SELECT Invoices_List.ProcessNo, '" + Notes + "' AS Notes, Invoices_List.Customer_Id, Invoices_List.Invoice_Id, Invoices_List.ID," + ValueImport + ",  " + ValueExport + ", Customer.Balance,  " + Transaction_Type + " AS Transaction_Type, Invoices_List.Invoice_Date, " + Common.Invoice_Type_Id.ToString() + " AS Reference_Type ";
+            str = str + @" SELECT Invoices_List.ProcessNo, '" + global::AccountModelsLib.SqlText.Q(Notes) + "' AS Notes, Invoices_List.Customer_Id, Invoices_List.Invoice_Id, Invoices_List.ID," + ValueImport + ",  " + ValueExport + ", Customer.Balance,  " + Transaction_Type + " AS Transaction_Type, Invoices_List.Invoice_Date, " + Common.Invoice_Type_Id.ToString() + " AS Reference_Type ";
             str = str + @" FROM Customer INNER JOIN Invoices_List ON Customer.Id = Invoices_List.Customer_Id ";
             str = str + @" WHERE  (Invoices_List.Id = " + New_Invoice_ListTable_id.ToString() + ") ";
 
@@ -558,7 +558,7 @@ namespace AccountModelsLib
 
             string str = "";
             str = @" INSERT INTO Customers_Accounts (ProcessNo, Notes, Customer_Id, Reference_Id, Reference_Type_Table_Id,Import, Export, Balance, Transaction_Type, Transaction_Date, Reference_Type)  ";
-            str = str + @" SELECT Invoices_List_Reverse.ProcessNo, '" + Notes + "' AS Notes, Invoices_List_Reverse.Customer_Id, Invoices_List_Reverse.Invoice_Id, Invoices_List_Reverse.ID," + ValueImport + ",  " + ValueExport + ", Customer.Balance,  " + Transaction_Type + " AS Transaction_Type, Invoices_List_Reverse.Invoice_Date, " + Common.InvoiceReverse_Type_Id.ToString() + " AS Reference_Type ";
+            str = str + @" SELECT Invoices_List_Reverse.ProcessNo, '" + global::AccountModelsLib.SqlText.Q(Notes) + "' AS Notes, Invoices_List_Reverse.Customer_Id, Invoices_List_Reverse.Invoice_Id, Invoices_List_Reverse.ID," + ValueImport + ",  " + ValueExport + ", Customer.Balance,  " + Transaction_Type + " AS Transaction_Type, Invoices_List_Reverse.Invoice_Date, " + Common.InvoiceReverse_Type_Id.ToString() + " AS Reference_Type ";
             str = str + @" FROM Customer INNER JOIN Invoices_List_Reverse ON Customer.Id = Invoices_List_Reverse.Customer_Id ";
             str = str + @" WHERE  (Invoices_List_Reverse.Id = " + New_Bill_ListTable_id.ToString() + ") ";
 
@@ -1715,7 +1715,7 @@ namespace AccountModelsLib
 
 
             str = " INSERT INTO Customers_Accounts ( CarsId,CarNumber,CustomerName, CarsWorkOrdersId, WorkOrderNumber,TaxInternalId,ProcessNo,Notes,Customer_Id,Customer_Id_RelatedToAccount, Reference_Id,Reference_Type_Table_Id, Export, Balance, Transaction_Type, Transaction_Date,Reference_Type) ";
-            str = str + " SELECT  Invoices_List.CarsId,Invoices_List.CarNumber,Invoices_List.CustomerName, Invoices_List.CarsWorkOrdersId, Invoices_List.WorkOrderNumber, Invoices_List.TaxInternalId,Invoices_List.ProcessNo,N'" + Notes + "' ," + Customer_Id_RelatedToAccount + ",Invoices_List.Customer_Id, Invoices_List.Invoice_Id,Invoices_List.id, Invoices_List.Net_Total, Customer.Balance, 2 AS Transaction_Type, Invoices_List.Invoice_Date ,1 as Reference_Type   FROM Customer INNER JOIN  Invoices_List ON Customer.Id = Invoices_List.Customer_Id ";
+            str = str + " SELECT  Invoices_List.CarsId,Invoices_List.CarNumber,Invoices_List.CustomerName, Invoices_List.CarsWorkOrdersId, Invoices_List.WorkOrderNumber, Invoices_List.TaxInternalId,Invoices_List.ProcessNo,N'" + global::AccountModelsLib.SqlText.Q(Notes) + "' ," + Customer_Id_RelatedToAccount + ",Invoices_List.Customer_Id, Invoices_List.Invoice_Id,Invoices_List.id, Invoices_List.Net_Total, Customer.Balance, 2 AS Transaction_Type, Invoices_List.Invoice_Date ,1 as Reference_Type   FROM Customer INNER JOIN  Invoices_List ON Customer.Id = Invoices_List.Customer_Id ";
             str = str + " WHERE (Customer.Id = " + Customer_Id.ToString() + ") AND (Invoices_List.id = " + New_Invoice_ListTable_id.ToString() + ") ";
 
             int C = opp.insert_me(str);
@@ -1744,7 +1744,7 @@ namespace AccountModelsLib
 
 
             str = " INSERT INTO Customers_Accounts ( CarsId,CarNumber,CustomerName, CarsWorkOrdersId, WorkOrderNumber,TaxInternalId,ProcessNo,Notes,Customer_Id, Customer_Id_RelatedToAccount,Reference_Id,Reference_Type_Table_Id, Export, Balance, Transaction_Type, Transaction_Date,Reference_Type) ";
-            str = str + " SELECT  Invoices_List.CarsId,Invoices_List.CarNumber,Invoices_List.CustomerName, Invoices_List.CarsWorkOrdersId, Invoices_List.WorkOrderNumber, Invoices_List.TaxInternalId,Invoices_List.ProcessNo,N'" + Notes + "' ," + Customer_Id_RelatedToAccount + ",Invoices_List.Customer_Id, Invoices_List.Invoice_Id,Invoices_List.id, Invoices_List.Net_Total, Customer.Balance, 2 AS Transaction_Type, Invoices_List.Invoice_Date ,1 as Reference_Type   FROM Customer INNER JOIN  Invoices_List ON Customer.Id = Invoices_List.Customer_Id ";
+            str = str + " SELECT  Invoices_List.CarsId,Invoices_List.CarNumber,Invoices_List.CustomerName, Invoices_List.CarsWorkOrdersId, Invoices_List.WorkOrderNumber, Invoices_List.TaxInternalId,Invoices_List.ProcessNo,N'" + global::AccountModelsLib.SqlText.Q(Notes) + "' ," + Customer_Id_RelatedToAccount + ",Invoices_List.Customer_Id, Invoices_List.Invoice_Id,Invoices_List.id, Invoices_List.Net_Total, Customer.Balance, 2 AS Transaction_Type, Invoices_List.Invoice_Date ,1 as Reference_Type   FROM Customer INNER JOIN  Invoices_List ON Customer.Id = Invoices_List.Customer_Id ";
             str = str + " WHERE (Customer.Id = " + Customer_Id.ToString() + ") AND (Invoices_List.id = " + New_Invoice_ListTable_id.ToString() + ") ";
 
             int C = opp.insert_me(str);
@@ -1924,7 +1924,7 @@ namespace AccountModelsLib
             //UpdateProcessNo(ref Excp, ref opp, "Money_Transaction_Box", Money_Transaction_BoxId);
 
             mysql = " INSERT INTO Customers_Accounts (CarsId, CarNumber, CustomerName, CarsWorkOrdersId, WorkOrderNumber, TaxInternalId,ProcessNo,Notes,Customer_Id,Customer_Id_RelatedToAccount, Reference_Id, Reference_Type_Table_Id, Import , Balance, Reference_Type, Transaction_Type, Transaction_Date,Payment_Type) ";
-            mysql = mysql + " SELECT  dbo.Money_Transaction_Box.CarsId, dbo.Money_Transaction_Box.CarNumber, dbo.Money_Transaction_Box.Account_Name, dbo.Money_Transaction_Box.CarsWorkOrdersId, dbo.Money_Transaction_Box.WorkOrderNumber, dbo.Money_Transaction_Box.TaxInternalId, dbo.Money_Transaction_Box.ProcessNo, N'" + Notes + "'," + Customer_Id_RelatedToAccount + ",dbo.Money_Transaction_Box.Customer_Id, dbo.Order_Money.Order_No, dbo.Money_Transaction_Box.Id, dbo.Money_Transaction_Box.Transaction_Value,  dbo.Customer.Balance," + Reference_Type + " as  Reference_Type," + Transaction_Type + " AS Transaction_Type, dbo.Money_Transaction_Box.Transaction_Date ,1 AS Payment_Type";
+            mysql = mysql + " SELECT  dbo.Money_Transaction_Box.CarsId, dbo.Money_Transaction_Box.CarNumber, dbo.Money_Transaction_Box.Account_Name, dbo.Money_Transaction_Box.CarsWorkOrdersId, dbo.Money_Transaction_Box.WorkOrderNumber, dbo.Money_Transaction_Box.TaxInternalId, dbo.Money_Transaction_Box.ProcessNo, N'" + global::AccountModelsLib.SqlText.Q(Notes) + "'," + Customer_Id_RelatedToAccount + ",dbo.Money_Transaction_Box.Customer_Id, dbo.Order_Money.Order_No, dbo.Money_Transaction_Box.Id, dbo.Money_Transaction_Box.Transaction_Value,  dbo.Customer.Balance," + Reference_Type + " as  Reference_Type," + Transaction_Type + " AS Transaction_Type, dbo.Money_Transaction_Box.Transaction_Date ,1 AS Payment_Type";
             mysql = mysql + @"  FROM            dbo.Money_Transaction_Box   WITH (NOLOCK)  
                     INNER JOIN     dbo.Customer WITH (NOLOCK) ON dbo.Money_Transaction_Box.Customer_Id = dbo.Customer.Id INNER JOIN
                          dbo.Order_Money WITH (NOLOCK) ON dbo.Money_Transaction_Box.Order_Mony_Id = dbo.Order_Money.Id ";
@@ -1952,7 +1952,7 @@ namespace AccountModelsLib
             //UpdateProcessNo(ref Excp, ref opp, "Money_Transaction_Box", Money_Transaction_BoxId);
 
             mysql = " INSERT INTO Customers_Accounts (CarsId, CarNumber, CustomerName, CarsWorkOrdersId, WorkOrderNumber, TaxInternalId,ProcessNo,Notes,Customer_Id,Customer_Id_RelatedToAccount, Reference_Id, Reference_Type_Table_Id, Export , Balance, Reference_Type, Transaction_Type, Transaction_Date,Payment_Type) ";
-            mysql = mysql + " SELECT  Money_Transaction_Box.CarsId, Money_Transaction_Box.CarNumber, Account_Name, Money_Transaction_Box.CarsWorkOrdersId, Money_Transaction_Box.WorkOrderNumber, Money_Transaction_Box.TaxInternalId, Money_Transaction_Box.ProcessNo,N'" + Notes + "'," + Customer_Id_RelatedToAccount + ", Money_Transaction_Box.Customer_Id, Order_Money.Order_No, Money_Transaction_Box.Id, Money_Transaction_Box.Transaction_Value,  Customer.Balance," + Reference_Type + " as  Reference_Type," + Transaction_Type + " AS Transaction_Type, Money_Transaction_Box.Transaction_Date ,1 AS Payment_Type";
+            mysql = mysql + " SELECT  Money_Transaction_Box.CarsId, Money_Transaction_Box.CarNumber, Account_Name, Money_Transaction_Box.CarsWorkOrdersId, Money_Transaction_Box.WorkOrderNumber, Money_Transaction_Box.TaxInternalId, Money_Transaction_Box.ProcessNo,N'" + global::AccountModelsLib.SqlText.Q(Notes) + "'," + Customer_Id_RelatedToAccount + ", Money_Transaction_Box.Customer_Id, Order_Money.Order_No, Money_Transaction_Box.Id, Money_Transaction_Box.Transaction_Value,  Customer.Balance," + Reference_Type + " as  Reference_Type," + Transaction_Type + " AS Transaction_Type, Money_Transaction_Box.Transaction_Date ,1 AS Payment_Type";
             mysql = mysql + "  FROM Money_Transaction_Box INNER JOIN  Customer ON Money_Transaction_Box.Customer_Id = Customer.Id ";
             mysql = mysql + "  INNER JOIN Order_Money ON Money_Transaction_Box.Order_Mony_Id = Order_Money.Id ";
             mysql = mysql + " WHERE (Money_Transaction_Box.Order_Mony_Id = " + Order_Mony_Id + ") AND (Money_Transaction_Box.Customer_Id = " + Customer_Id + ") AND (Money_Transaction_Box.id=" + Money_Transaction_BoxId + ")";
@@ -1999,7 +1999,7 @@ namespace AccountModelsLib
             //UpdateProcessNo(ref Excp, ref opp, "Checks_Memory", Checks_MemoryId);
 
             mysql = " INSERT INTO Customers_Accounts (ProcessNo,Customer_Id, Reference_Id, Reference_Type_Table_Id, Import, Balance, Reference_Type, Transaction_Type, Transaction_Date,Payment_Type,Flage_View,Notes) ";
-            mysql = mysql + @" SELECT Checks_Memory.ProcessNo, " + Customer_Id + ", Order_Money_Check.Order_No, Checks_Memory.id, Checks_Memory.Check_Value, Customer.Balance, 5 AS Reference_Type, 2 AS Transaction_Type, '" + operations.dateFormat(ProcessDate) + "',  2 AS Payment_Type, 1 AS Flage_View ,N'" + Notes + "'";
+            mysql = mysql + @" SELECT Checks_Memory.ProcessNo, " + Customer_Id + ", Order_Money_Check.Order_No, Checks_Memory.id, Checks_Memory.Check_Value, Customer.Balance, 5 AS Reference_Type, 2 AS Transaction_Type, '" + operations.dateFormat(ProcessDate) + "',  2 AS Payment_Type, 1 AS Flage_View ,N'" + global::AccountModelsLib.SqlText.Q(Notes) + "'";
             mysql = mysql + @" FROM Order_Money_Check INNER JOIN
                          Checks_Memory ON Order_Money_Check.Id = Checks_Memory.Order_Mony_Id INNER JOIN
                          Customer ON Checks_Memory.SubAccount_Id_RelatedTo = Customer.SubAccount_Id ";
@@ -2033,7 +2033,7 @@ namespace AccountModelsLib
             //UpdateProcessNo(ref Excp, ref opp, "Checks_Memory", Checks_MemoryId);
 
             mysql = " INSERT INTO Customers_Accounts (ProcessNo,Customer_Id, Reference_Id, Reference_Type_Table_Id, Export, Balance, Reference_Type, Transaction_Type, Transaction_Date,Payment_Type,Flage_View,Notes) ";
-            mysql = mysql + " SELECT Checks_Memory.ProcessNo, " + Customer_Id + ".Id, Order_Money_Check.Order_No, Checks_Memory.id, Checks_Memory.Check_Value, Customer.Balance,  " + Reference_Type + " AS Reference_Type , 2 AS Transaction_Type, '" + operations.dateFormat(ProcessDate) + "',2 AS Payment_Type ," + Common.Flage_AccountDetails_View + " AS Flage_View , N'" + Notes + "'";
+            mysql = mysql + " SELECT Checks_Memory.ProcessNo, " + Customer_Id + ".Id, Order_Money_Check.Order_No, Checks_Memory.id, Checks_Memory.Check_Value, Customer.Balance,  " + Reference_Type + " AS Reference_Type , 2 AS Transaction_Type, '" + operations.dateFormat(ProcessDate) + "',2 AS Payment_Type ," + Common.Flage_AccountDetails_View + " AS Flage_View , N'" + global::AccountModelsLib.SqlText.Q(Notes) + "'";
             mysql = mysql + @" FROM Order_Money_Check INNER JOIN
                          Checks_Memory ON Order_Money_Check.Id = Checks_Memory.Order_Mony_Id INNER JOIN
                          Customer ON Checks_Memory.SubAccount_Id_RelatedFrom = Customer.SubAccount_Id  ";
@@ -2062,7 +2062,7 @@ namespace AccountModelsLib
             //UpdateProcessNo(ref Excp, ref opp, "CarsExaminations", CarsExaminationsId);
 
             mysql = " INSERT INTO Customers_Accounts (ProcessNo,Customer_Id, Reference_Id, Reference_Type_Table_Id, Export, Balance, Reference_Type, Transaction_Type, Transaction_Date,Payment_Type,Flage_View,Notes) ";
-            mysql = mysql + " SELECT CarsExaminations.ProcessNo, " + Customer_Id + ".Id, CarsExaminations.ExaminationNumber, CarsExaminations.Id, CarsExaminations.CarsExaminationValue, Customer.Balance,  " + Reference_Type + " AS Reference_Type , 2 AS Transaction_Type, '" + operations.dateFormat(ProcessDate) + "',2 AS Payment_Type ," + Common.Flage_AccountDetails_View + " AS Flage_View , N'" + Notes + "'";
+            mysql = mysql + " SELECT CarsExaminations.ProcessNo, " + Customer_Id + ".Id, CarsExaminations.ExaminationNumber, CarsExaminations.Id, CarsExaminations.CarsExaminationValue, Customer.Balance,  " + Reference_Type + " AS Reference_Type , 2 AS Transaction_Type, '" + operations.dateFormat(ProcessDate) + "',2 AS Payment_Type ," + Common.Flage_AccountDetails_View + " AS Flage_View , N'" + global::AccountModelsLib.SqlText.Q(Notes) + "'";
             mysql = mysql + @" FROM CarsExaminations INNER JOIN
                           
                          Customer ON CarsExaminations.SubAccount_Id  = Customer.SubAccount_Id  ";

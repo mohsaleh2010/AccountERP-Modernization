@@ -459,7 +459,7 @@ namespace AccountModelsLib.Models
             long OrderTable_id = opp.Insert_me_Return_Last_Identify(mysql);
             string Notes_From = "رصيد أول المدة";
             mysql = " INSERT INTO Detailes_Purshing (OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Balance_Id_To_Larg_Qnty, Balance_Id_TO_Small_Qnty,Balance_Id_TO_Item_No,Balance_Id_From_Larg_Qnty,Balance_Id_From_Small_Qnty,Balance_Id_From_Item_No,To_Store_Unit_Item_Table_Id,Notes_From,Notes_To) ";
-            mysql = mysql + "  VALUES (" + OrderTable_id + "," + um.id + "," + um.Full_qua + "," + um.D_Qua + "," + um.Item_No + ",0,0,0," + um.Full_qua + "," + um.D_Qua + "," + um.Item_No + ",0,'" + Notes_From + "','" + Notes_From + "')";
+            mysql = mysql + "  VALUES (" + OrderTable_id + "," + um.id + "," + um.Full_qua + "," + um.D_Qua + "," + um.Item_No + ",0,0,0," + um.Full_qua + "," + um.D_Qua + "," + um.Item_No + ",0,'" + global::AccountModelsLib.SqlText.Q(Notes_From) + "','" + global::AccountModelsLib.SqlText.Q(Notes_From) + "')";
 
         }
 

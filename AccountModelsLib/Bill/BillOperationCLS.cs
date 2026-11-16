@@ -433,7 +433,7 @@ namespace AccountModelsLib
 
             try
             {
-                string mysql = " Update Bills_Details Set  OperationNo='" + OperationNo + "',StatementNo='" + StatementNo + "',Merchant_Name='" + Merchant_Name + "', Larg_Qnty=" + Larg_Qnty + ", Small_Qnty=" + Small_Qnty + ",Qnty_Another='" + Qnty_Another + "', Larg_Unit_Price=" + Larg_Unit_Price + ",   Qnty_value=" + Qnty_value + ",Total=" + Item_Net_Total_Price + ",Item_Net_Total_Price=" + Item_Net_Total_Price + ", ATS05=" + Item_ATS05 + " ";
+                string mysql = " Update Bills_Details Set  OperationNo='" + OperationNo + "',StatementNo='" + global::AccountModelsLib.SqlText.Q(StatementNo) + "',Merchant_Name='" + Merchant_Name + "', Larg_Qnty=" + Larg_Qnty + ", Small_Qnty=" + Small_Qnty + ",Qnty_Another='" + Qnty_Another + "', Larg_Unit_Price=" + Larg_Unit_Price + ",   Qnty_value=" + Qnty_value + ",Total=" + Item_Net_Total_Price + ",Item_Net_Total_Price=" + Item_Net_Total_Price + ", ATS05=" + Item_ATS05 + " ";
                 mysql = mysql + " , TaxSales10=" + Item_TaxSales10 + ",TaxSales10_Value=" + Item_TaxSales10_Value + ",ATS05_Value=" + Item_ATS05_Value + ",Unit_Used_for_Price=" + Unit_Used_for_Price + " , Specification='" + Specification + "' ,Invoice_Item_Name=N'" + Invoice_Item_Name + "',NameSpecification=N'" + NameSpecification + "'";
 
 
@@ -627,7 +627,7 @@ namespace AccountModelsLib
 
             try
             {
-                string mysql = " Update Invoices_Details_Reverse Set  OperationNo='" + OperationNo + "',StatementNo='" + StatementNo + "',Merchant_Name='" + Merchant_Name + "', Larg_Qnty=" + Larg_Qnty + ", Small_Qnty=" + Small_Qnty + ",Qnty_Another='" + Qnty_Another + "', Larg_Unit_Price=" + Larg_Unit_Price + ",   Qnty_value=" + Qnty_value + ",Total=" + Item_Net_Total_Price + ",Item_Net_Total_Price=" + Item_Net_Total_Price + ", ATS05=" + Item_ATS05 + " ";
+                string mysql = " Update Invoices_Details_Reverse Set  OperationNo='" + OperationNo + "',StatementNo='" + global::AccountModelsLib.SqlText.Q(StatementNo) + "',Merchant_Name='" + Merchant_Name + "', Larg_Qnty=" + Larg_Qnty + ", Small_Qnty=" + Small_Qnty + ",Qnty_Another='" + Qnty_Another + "', Larg_Unit_Price=" + Larg_Unit_Price + ",   Qnty_value=" + Qnty_value + ",Total=" + Item_Net_Total_Price + ",Item_Net_Total_Price=" + Item_Net_Total_Price + ", ATS05=" + Item_ATS05 + " ";
                 mysql = mysql + " , TaxSales10=" + Item_TaxSales10 + ",TaxSales10_Value=" + Item_TaxSales10_Value + ",ATS05_Value=" + Item_ATS05_Value + ",Unit_Used_for_Price=" + Unit_Used_for_Price + " , Specification='" + Specification + "' ,Invoice_Item_Name=N'" + Invoice_Item_Name + "',NameSpecification=N'" + NameSpecification + "'";
 
 

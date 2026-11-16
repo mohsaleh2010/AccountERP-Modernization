@@ -4399,7 +4399,7 @@ FROM            Order_Money INNER JOIN
             long Year_Financial_Period_Id = Financial_PeriodCLS.Get_Year_Financial_Period_Id(Order_Date);
 
             //Id,Serial,
-            mysql = " Update  Order_Money Set  Order_No=" + Order_No + ",Order_Date=" + operations.Get_DateToInsert(Order_Date) + ",  Man_Name='" + Man_Name + "',User_Id=" + Common.User_Id + ",Year_Financial_Period_Id=" + Year_Financial_Period_Id + ",Order_Tafkeet_Value='" + Tafkeet_Value + "',Order_Notes='" + Order_Notes + "',Factor=" + Factor + ", Edit_User_Id=" + Common.User_Id + ", EditOperationDate=GETDATE() ";
+            mysql = " Update  Order_Money Set  Order_No=" + Order_No + ",Order_Date=" + operations.Get_DateToInsert(Order_Date) + ",  Man_Name='" + Man_Name + "',User_Id=" + Common.User_Id + ",Year_Financial_Period_Id=" + Year_Financial_Period_Id + ",Order_Tafkeet_Value='" + Tafkeet_Value + "',Order_Notes='" + global::AccountModelsLib.SqlText.Q(Order_Notes) + "',Factor=" + Factor + ", Edit_User_Id=" + Common.User_Id + ", EditOperationDate=GETDATE() ";
 
 
             mysql = mysql + " Where Id=" + Order_Money_Id;
@@ -4567,7 +4567,7 @@ FROM            Order_Money INNER JOIN
             //    //Purchase_Ticket_Value,Commission_Value 
 
             //    mysql = " INSERT INTO Money_Transaction_Box(Id,Serial,Bank_Balance, Order_Mony_Id, Transaction_Date, Transaction_Type, Import_Value, Export_Value, Transaction_Value, Transaction_Value_, Bank_Id, Supplier_Id, Customer_Id, Account_Id, SubAccount_Id, Notes, Balance_Before, Balance_After, BankAccount_Id,DestructionSales, Order_mony_id_transform,User_Id,Branch_Id,Tafkeet_Value,TotalValueWillPaid,Rest_Value,Account_Cost_Center_Tree_Id,Account_Type,Equivalent_Value,Purchase_Ticket_Value,Commission_Value ,Account_Name,CostCenter_Name,Cost_Center,Factor) ";
-            //    mysql = mysql + " Values(" + B_Id + "," + Id + "," + Last_Balance + ", " + Order_Mony_Id + ", " + operations.Get_DateToInsert(Order_Date) + " ," + Transaction_Type + "," + Import_Value + "," + Export_Value + "," + Transaction_Value + ",'" + Transaction_Value.ToString() + "'," + Bank_Id + "," + Supplier_Id + "," + Customer_Id + "," + SubAccount_Customer_Supplier_Id + "," + SubAccount_Customer_Supplier_Id + ",  '" + Notes + "'," + Balance_Before + "," + Balance_After + "," + BankAccount_Id + "," + DestructionSales + "," + Order_mony_id_Transform + " ," + Common.User_Id + "," + Common.Branch_Id + ",'" + Tafkeet_Value + "'," + Total_Value + "," + Rest_Value + "," + Account_Cost_Center_Tree_Id + "," + Account_Type_Value + "," + Equivalent_ValueBetween_Banks + "," + Purchase_Ticket_Value + "," + Commission_Value + ",'" + Account_Name + "','" + CostCenter_Name + "','" + CostCenter_Name + "'," + Factor + ")";
+            //    mysql = mysql + " Values(" + B_Id + "," + Id + "," + Last_Balance + ", " + Order_Mony_Id + ", " + operations.Get_DateToInsert(Order_Date) + " ," + Transaction_Type + "," + Import_Value + "," + Export_Value + "," + Transaction_Value + ",'" + Transaction_Value.ToString() + "'," + Bank_Id + "," + Supplier_Id + "," + Customer_Id + "," + SubAccount_Customer_Supplier_Id + "," + SubAccount_Customer_Supplier_Id + ",  '" + global::AccountModelsLib.SqlText.Q(Notes) + "'," + Balance_Before + "," + Balance_After + "," + BankAccount_Id + "," + DestructionSales + "," + Order_mony_id_Transform + " ," + Common.User_Id + "," + Common.Branch_Id + ",'" + Tafkeet_Value + "'," + Total_Value + "," + Rest_Value + "," + Account_Cost_Center_Tree_Id + "," + Account_Type_Value + "," + Equivalent_ValueBetween_Banks + "," + Purchase_Ticket_Value + "," + Commission_Value + ",'" + Account_Name + "','" + CostCenter_Name + "','" + CostCenter_Name + "'," + Factor + ")";
 
             //    opp.insert_me(mysql);
 
@@ -4577,7 +4577,7 @@ FROM            Order_Money INNER JOIN
             //{
 
             //    mysql = " INSERT INTO Money_Transaction_Box(Serial,Bank_Balance, Order_Mony_Id, Transaction_Date, Transaction_Type, Import_Value, Export_Value, Transaction_Value, Transaction_Value_, Bank_Id, Supplier_Id, Customer_Id, Account_Id, SubAccount_Id, Notes, Balance_Before, Balance_After, BankAccount_Id,DestructionSales, Order_mony_id_transform,User_Id,Branch_Id,Tafkeet_Value,TotalValueWillPaid,Rest_Value,Account_Cost_Center_Tree_Id,Account_Type,Equivalent_Value,Purchase_Ticket_Value,Commission_Value,Account_Name,CostCenter_Name ,Cost_Center,Factor) ";
-            //    mysql = mysql + " Values(  " + Id + "," + Last_Balance + "," + Order_Mony_Id + ", " + operations.Get_DateToInsert(Order_Date) + " ," + Transaction_Type + "," + Import_Value + "," + Export_Value + "," + Transaction_Value + ",'" + Transaction_Value.ToString() + "'," + Bank_Id + "," + Supplier_Id + "," + Customer_Id + "," + SubAccount_Customer_Supplier_Id + "," + SubAccount_Customer_Supplier_Id + ", '" + Notes + "'," + Balance_Before + "," + Balance_After + "," + BankAccount_Id + "," + DestructionSales + "," + Order_mony_id_Transform + " ," + Common.User_Id + "," + Common.Branch_Id + ",'" + Tafkeet_Value + "'," + Total_Value + "," + Rest_Value + "," + Account_Cost_Center_Tree_Id + "," + Account_Type_Value + "," + Equivalent_ValueBetween_Banks + "," + Purchase_Ticket_Value + "," + Commission_Value + ",'" + CostCenter_Name + "','" + CostCenter_Name + "'," + Factor + ")";
+            //    mysql = mysql + " Values(  " + Id + "," + Last_Balance + "," + Order_Mony_Id + ", " + operations.Get_DateToInsert(Order_Date) + " ," + Transaction_Type + "," + Import_Value + "," + Export_Value + "," + Transaction_Value + ",'" + Transaction_Value.ToString() + "'," + Bank_Id + "," + Supplier_Id + "," + Customer_Id + "," + SubAccount_Customer_Supplier_Id + "," + SubAccount_Customer_Supplier_Id + ", '" + global::AccountModelsLib.SqlText.Q(Notes) + "'," + Balance_Before + "," + Balance_After + "," + BankAccount_Id + "," + DestructionSales + "," + Order_mony_id_Transform + " ," + Common.User_Id + "," + Common.Branch_Id + ",'" + Tafkeet_Value + "'," + Total_Value + "," + Rest_Value + "," + Account_Cost_Center_Tree_Id + "," + Account_Type_Value + "," + Equivalent_ValueBetween_Banks + "," + Purchase_Ticket_Value + "," + Commission_Value + ",'" + CostCenter_Name + "','" + CostCenter_Name + "'," + Factor + ")";
 
 
             //    B_Id = opp.Insert_me_Return_Last_Identify(mysql);
@@ -4678,7 +4678,7 @@ FROM            Order_Money INNER JOIN
 
         //            Bank_Balance = Bank_Balance + Cash_Value;
         //            mysql = " INSERT INTO Money_Transaction_Box (Order_Mony_Id, Transaction_Date, Transaction_Type,Import_Value, Transaction_Value, Transaction_Value_, Bank_Id, Bank_Balance, Supplier_Id, Customer_Id,Account_Id, Notes,Balance_Before,Balance_After) ";
-        //            mysql = mysql + " VALUES (" + Order_Mony_Id + ",'" + operations.dateFormat(Day_Date) + "'," + Transaction_Type + "," + Cash_Value + "," + Cash_Value + ",'" + Cash_Value_ + "'," + Bank_id + "," + Bank_Balance + "," + Supplier_Id + "," + Customer_Id + "," + Account_Id + ",'" + Notes + "'," + Balance_Before + "," + Balance_After + ")";
+        //            mysql = mysql + " VALUES (" + Order_Mony_Id + ",'" + operations.dateFormat(Day_Date) + "'," + Transaction_Type + "," + Cash_Value + "," + Cash_Value + ",'" + Cash_Value_ + "'," + Bank_id + "," + Bank_Balance + "," + Supplier_Id + "," + Customer_Id + "," + Account_Id + ",'" + global::AccountModelsLib.SqlText.Q(Notes) + "'," + Balance_Before + "," + Balance_After + ")";
         //            // arr.Add(mysql);
 
         //            Identity = opp.Insert_me_Return_Last_Identify(mysql, ref Excp);
@@ -4712,7 +4712,7 @@ FROM            Order_Money INNER JOIN
         //            // Balance_After = Balance_Before +  Cash_Value;
         //            Bank_Balance = Bank_Balance - Cash_Value;
         //            mysql = " INSERT INTO Money_Transaction_Box (Order_Mony_Id, Transaction_Date, Transaction_Type,Export_Value, Transaction_Value, Transaction_Value_, Bank_Id, Bank_Balance, Supplier_Id, Customer_Id,Account_Id, Notes, Balance_Before,Balance_After) ";
-        //            mysql = mysql + " VALUES (" + Order_Mony_Id + ",'" + operations.dateFormat(Day_Date) + "'," + Transaction_Type + "," + Cash_Value + "," + Cash_Value + ",'" + Cash_Value_ + "'," + Bank_id + "," + Bank_Balance + "," + Supplier_Id + "," + Customer_Id + "," + Account_Id + ",'" + Notes + "'," + Balance_Before + "," + Balance_After + ")";
+        //            mysql = mysql + " VALUES (" + Order_Mony_Id + ",'" + operations.dateFormat(Day_Date) + "'," + Transaction_Type + "," + Cash_Value + "," + Cash_Value + ",'" + Cash_Value_ + "'," + Bank_id + "," + Bank_Balance + "," + Supplier_Id + "," + Customer_Id + "," + Account_Id + ",'" + global::AccountModelsLib.SqlText.Q(Notes) + "'," + Balance_Before + "," + Balance_After + ")";
         //            //arr.Add(mysql);
 
 

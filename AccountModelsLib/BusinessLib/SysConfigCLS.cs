@@ -561,8 +561,8 @@ namespace AccountModelsLib
                 mysql = mysql + @" Update SysConfig Set KeysData = N'" + KeysData + "' ,  ";
                 mysql = mysql + "  DefaultValue = N'" + DefaultValue + "' ,";
                 mysql = mysql + " Value = N'" + Value + "' ,";
-                mysql = mysql + " DefaultDescription = N'" + DefaultDescription + "' ,";
-                mysql = mysql + " Description = N'" + Description + "',  ";
+                mysql = mysql + " DefaultDescription = N'" + global::AccountModelsLib.SqlText.Q(DefaultDescription) + "' ,";
+                mysql = mysql + " Description = N'" + global::AccountModelsLib.SqlText.Q(Description) + "',  ";
 
                 mysql = mysql + " POS = N'" + POS + "' , ";
                 mysql = mysql + " Market = N'" + Market + "' , ";
@@ -641,8 +641,8 @@ namespace AccountModelsLib
                 mysql = mysql + @" Update SysConfigMenus Set KeysData = N'" + KeysData + "' ,  ";
                 mysql = mysql + "  DefaultValue = N'" + DefaultValue + "' ,";
                 mysql = mysql + " Value = N'" + Value + "' ,";
-                mysql = mysql + " DefaultDescription = N'" + DefaultDescription + "' ,";
-                mysql = mysql + " Description = N'" + Description + "' , ";
+                mysql = mysql + " DefaultDescription = N'" + global::AccountModelsLib.SqlText.Q(DefaultDescription) + "' ,";
+                mysql = mysql + " Description = N'" + global::AccountModelsLib.SqlText.Q(Description) + "' , ";
                 mysql = mysql + " Description_En = N'" + Description_En.ToSqlSafe() + "' , ";
                 mysql = mysql + " Description_Fr = N'" + Description_Fr.ToSqlSafe() + "' , ";
                 mysql = mysql + " Description_DE = N'" + Description_DE.ToSqlSafe() + "' , ";
@@ -773,8 +773,8 @@ namespace AccountModelsLib
                 mysql = mysql + @" Update SysConfig Set KeysData = N'" + KeysData + "' ,  ";
                 mysql = mysql + "  DefaultValue = N'" + DefaultValue + "' ,";
                 mysql = mysql + " Value = N'" + Value + "' ,";
-                mysql = mysql + " DefaultDescription = N'" + DefaultDescription + "' ,";
-                mysql = mysql + " Description = N'" + Description + "',  ";
+                mysql = mysql + " DefaultDescription = N'" + global::AccountModelsLib.SqlText.Q(DefaultDescription) + "' ,";
+                mysql = mysql + " Description = N'" + global::AccountModelsLib.SqlText.Q(Description) + "',  ";
 
                 mysql = mysql + " POS = N'" + POS + "' , ";
                 mysql = mysql + " Market = N'" + Market + "' , ";
@@ -848,8 +848,8 @@ namespace AccountModelsLib
                 mysql = mysql + @" Update SysConfigMenus Set KeysData = N'" + KeysData + "' ,  ";
                 mysql = mysql + "  DefaultValue = N'" + DefaultValue + "' ,";
                 mysql = mysql + " Value = N'" + Value + "' ,";
-                mysql = mysql + " DefaultDescription = N'" + DefaultDescription + "' ,";
-                mysql = mysql + " Description = N'" + Description + "' , ";
+                mysql = mysql + " DefaultDescription = N'" + global::AccountModelsLib.SqlText.Q(DefaultDescription) + "' ,";
+                mysql = mysql + " Description = N'" + global::AccountModelsLib.SqlText.Q(Description) + "' , ";
 
                 mysql = mysql + " POS = N'" + POS + "' , ";
                 mysql = mysql + " Market = N'" + Market + "' , ";
@@ -920,8 +920,8 @@ namespace AccountModelsLib
                 mysql = @" Update SysConfigMenus Set KeysData = N'" + KeysData + "' ,  ";
                 mysql = mysql + "  DefaultValue = N'" + DefaultValue + "' ,";
                 mysql = mysql + " Value = N'" + Value + "' ,";
-                mysql = mysql + " DefaultDescription = N'" + DefaultDescription + "' ,";
-                mysql = mysql + " Description = N'" + Description + "' , ";
+                mysql = mysql + " DefaultDescription = N'" + global::AccountModelsLib.SqlText.Q(DefaultDescription) + "' ,";
+                mysql = mysql + " Description = N'" + global::AccountModelsLib.SqlText.Q(Description) + "' , ";
                 mysql = mysql + " Description_En = N'" + Description_En.ToSqlSafe() + "' , ";
                 mysql = mysql + " Description_Fr = N'" + Description_Fr.ToSqlSafe() + "' , ";
                 mysql = mysql + " Description_DE = N'" + Description_DE.ToSqlSafe() + "' , ";

@@ -2179,7 +2179,7 @@ namespace AccountModelsLib
                 //***********************************
                 //Bills_List  Bills_Details
 
-                //mysql = "UPDATE Bills_List_Reverse SET Invoice_Date = '" + AccountModelsLib.operations.dateFormat(Invoice_Date) + "', Notes=N'" + Notes + "',Load_Payment_OnTax=" + Load_Payment_OnTax + " ,Total =" + TotalSecond + ",  Net_Total=" + NetInvoiceTotal + " ,commission=" + Commision + ",ATS05_Value=" + ATS05_Value + " ,ATS05=" + ATS05 + ",TaxSales10_Value=" + TaxSales10_Value + " ,TaxSales10=" + TaxSales10 + " ,SupplierAccountAfter=" + SupplierAccountAfter + " WHERE (id = " + Invoice_List_Table_Id + ")";
+                //mysql = "UPDATE Bills_List_Reverse SET Invoice_Date = '" + AccountModelsLib.operations.dateFormat(Invoice_Date) + "', Notes=N'" + global::AccountModelsLib.SqlText.Q(Notes) + "',Load_Payment_OnTax=" + Load_Payment_OnTax + " ,Total =" + TotalSecond + ",  Net_Total=" + NetInvoiceTotal + " ,commission=" + Commision + ",ATS05_Value=" + ATS05_Value + " ,ATS05=" + ATS05 + ",TaxSales10_Value=" + TaxSales10_Value + " ,TaxSales10=" + TaxSales10 + " ,SupplierAccountAfter=" + SupplierAccountAfter + " WHERE (id = " + Invoice_List_Table_Id + ")";
                 //opp.insert_me(mysql);
 
                 if (Excp == 1)

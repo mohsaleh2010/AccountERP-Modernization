@@ -76,7 +76,7 @@ namespace AccountModelsLib.Models
         {
             
             string mysql = " INSERT INTO Order_Purshing (Order_Purshing_No, Order_Date, Order_Type, Type_From, Id_From, Type_To, Id_To, Invoice_ID,User_Id,Branch_ID,Id_FromStr,Id_ToStr,MainOrderTable_id,Is_Converted,NotesAll,IsMoreTheOneOrderShow) ";
-            mysql = mysql + " VALUES   (" + Order_Purshing_No + ",'" + operations.dateFormat(Order_Date) + "'," + Order_Type + "," + Type_From + "," + Id_From + "," + Type_To + "," + Id_To + "," + InvoiceTable_ID + "," + Common.User_Id + "," + Common.Branch_Id + ",'" + Id_FromStr + "','" + Id_ToStr + "'," + MainOrderTable_id + "," + Is_Converted + ",N'" + NotesAll + "',"+ IsMoreTheOneOrderShow + ") ";
+            mysql = mysql + " VALUES   (" + Order_Purshing_No + ",'" + operations.dateFormat(Order_Date) + "'," + Order_Type + "," + Type_From + "," + Id_From + "," + Type_To + "," + Id_To + "," + InvoiceTable_ID + "," + Common.User_Id + "," + Common.Branch_Id + ",'" + Id_FromStr + "','" + Id_ToStr + "'," + MainOrderTable_id + "," + Is_Converted + ",N'" + global::AccountModelsLib.SqlText.Q(NotesAll) + "',"+ IsMoreTheOneOrderShow + ") ";
 
             return mysql;
 
@@ -407,7 +407,7 @@ namespace AccountModelsLib.Models
 
 
                 //mysql = " INSERT INTO Detailes_Purshing (OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Balance_Id_From_Larg_Qnty, Balance_Id_From_Small_Qnty,Balance_Id_From_Item_No,Balance_Id_To_Larg_Qnty,Balance_Id_To_Small_Qnty,Balance_Id_To_Item_No,To_Store_Unit_Item_Table_Id , Notes_From,Notes_To,Notes,Machine_Id) ";
-                //mysql = mysql + "  VALUES (" + OrderTable_id + "," + Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + "," + Balance_Id_From_Larg_Qnty + "," + Balance_Id_From_Small_Qnty + "," + Balance_Id_From_Item_No + "," + Balance_Id_To_Larg_Qnty + "," + Balance_Id_To_Small_Qnty + "," + Balance_Id_To_Item_No + "," + To_Store_Unit_Item_Table_Id + " , '" + Notes_From + "','" + Notes_To + "','" + Notes + "',"+Machine_Id+")";
+                //mysql = mysql + "  VALUES (" + OrderTable_id + "," + Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + "," + Balance_Id_From_Larg_Qnty + "," + Balance_Id_From_Small_Qnty + "," + Balance_Id_From_Item_No + "," + Balance_Id_To_Larg_Qnty + "," + Balance_Id_To_Small_Qnty + "," + Balance_Id_To_Item_No + "," + To_Store_Unit_Item_Table_Id + " , '" + global::AccountModelsLib.SqlText.Q(Notes_From) + "','" + global::AccountModelsLib.SqlText.Q(Notes_To) + "','" + global::AccountModelsLib.SqlText.Q(Notes) + "',"+Machine_Id+")";
                 ////arr.Add(mysql);
                 //opp.insert_me(mysql);
 
@@ -447,7 +447,7 @@ namespace AccountModelsLib.Models
             //     //arr.Add(mysql);
 
             //     mysql = " INSERT INTO Detailes_Purshing (OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Balance_Id_TO_Larg_Qnty, Balance_Id_TO_Small_Qnty,Balance_Id_TO_Item_No,Balance_Id_From_Larg_Qnty,Balance_Id_From_Small_Qnty,Balance_Id_From_Item_No,To_Store_Unit_Item_Table_Id, Notes_From,Notes_To,Notes) ";
-            //     mysql = mysql + "  VALUES (" + OrderTable_id + "," + Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + "," + Balance_Id_From_Larg_Qnty + "," + Balance_Id_From_Small_Qnty + "," + Balance_Id_From_Item_No + "," + Balance_Id_To_Larg_Qnty + "," + Balance_Id_To_Small_Qnty + "," + Balance_Id_To_Item_No + "," + To_Store_Unit_Item_Table_Id + ", '"+Notes_From+"','"+Notes_To+"','"+Notes+"')";
+            //     mysql = mysql + "  VALUES (" + OrderTable_id + "," + Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + "," + Balance_Id_From_Larg_Qnty + "," + Balance_Id_From_Small_Qnty + "," + Balance_Id_From_Item_No + "," + Balance_Id_To_Larg_Qnty + "," + Balance_Id_To_Small_Qnty + "," + Balance_Id_To_Item_No + "," + To_Store_Unit_Item_Table_Id + ", '"+global::AccountModelsLib.SqlText.Q(Notes_From)+"','"+global::AccountModelsLib.SqlText.Q(Notes_To)+"','"+global::AccountModelsLib.SqlText.Q(Notes)+"')";
             //     arr.Add(mysql);
             // }
             #endregion
@@ -494,12 +494,12 @@ namespace AccountModelsLib.Models
                 Related_Detailes_Purshing_Id = InsertToDetailes_Purshing(ref opp, Order_Estlam_Sarf_Flage, Order_Type, OrderTable_id, Unit_Item_Table_Id, Larg_Qnty, Small_Qnty, ItemNO, Balance_Id_From_Larg_Qnty, Balance_Id_From_Small_Qnty, Balance_Id_From_Item_No, Balance_Id_To_Larg_Qnty, Balance_Id_To_Small_Qnty, Balance_Id_To_Item_No, To_Store_Unit_Item_Table_Id, Notes_From, Notes_To, Notes, Machine_Id, Qua_Befor, Part_qua_Befor, Item_No_Befor, Qua_After, Part_qua_After, Item_No_After, S_unit_Value, 0, Notes_Item, FromStoreId, ToStoreId);
 
                 ////mysql = " INSERT INTO Detailes_Purshing (OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Balance_Id_From_Larg_Qnty, Balance_Id_From_Small_Qnty,Balance_Id_From_Item_No,Balance_Id_To_Larg_Qnty,Balance_Id_To_Small_Qnty,Balance_Id_To_Item_No,To_Store_Unit_Item_Table_Id, Notes_From,Notes_To,Machine_Id) ";
-                ////mysql = mysql + "  VALUES (" + OrderTable_id + "," + Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + ",0,0,0," + Balance_Id_To_Larg_Qnty + "," + Balance_Id_To_Small_Qnty + "," + Balance_Id_To_Item_No + ",-1, '" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ")";
+                ////mysql = mysql + "  VALUES (" + OrderTable_id + "," + Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + ",0,0,0," + Balance_Id_To_Larg_Qnty + "," + Balance_Id_To_Small_Qnty + "," + Balance_Id_To_Item_No + ",-1, '" + global::AccountModelsLib.SqlText.Q(Notes_From) + "','" + global::AccountModelsLib.SqlText.Q(Notes_To) + "'," + Machine_Id + ")";
                 //////arr.Add(mysql);
                 ////opp.insert_me(mysql);
 
                 //mysql = " INSERT INTO Detailes_Purshing (OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Balance_Id_From_Larg_Qnty, Balance_Id_From_Small_Qnty,Balance_Id_From_Item_No,Balance_Id_To_Larg_Qnty,Balance_Id_To_Small_Qnty,Balance_Id_To_Item_No,To_Store_Unit_Item_Table_Id, Notes_From,Notes_To,Machine_Id) ";
-                //mysql = mysql + "  VALUES (" + OrderTable_id + "," + Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + "," + Balance_Id_From_Larg_Qnty + "," + Balance_Id_From_Small_Qnty + "," + Balance_Id_From_Item_No + "," + Balance_Id_To_Larg_Qnty + "," + Balance_Id_To_Small_Qnty + "," + Balance_Id_To_Item_No + "," + To_Store_Unit_Item_Table_Id + ", '" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ")";
+                //mysql = mysql + "  VALUES (" + OrderTable_id + "," + Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + "," + Balance_Id_From_Larg_Qnty + "," + Balance_Id_From_Small_Qnty + "," + Balance_Id_From_Item_No + "," + Balance_Id_To_Larg_Qnty + "," + Balance_Id_To_Small_Qnty + "," + Balance_Id_To_Item_No + "," + To_Store_Unit_Item_Table_Id + ", '" + global::AccountModelsLib.SqlText.Q(Notes_From) + "','" + global::AccountModelsLib.SqlText.Q(Notes_To) + "'," + Machine_Id + ")";
                 ////arr.Add(mysql);
                 //opp.insert_me(mysql);
             }
@@ -549,11 +549,11 @@ namespace AccountModelsLib.Models
                 Related_Detailes_Purshing_Id = InsertToDetailes_Purshing(ref opp, Order_Estlam_Sarf_Flage, Order_Type, OrderTable_id, Unit_Item_Table_Id, Larg_Qnty, Small_Qnty, ItemNO, Balance_Id_From_Larg_Qnty, Balance_Id_From_Small_Qnty, Balance_Id_From_Item_No, Balance_Id_To_Larg_Qnty, Balance_Id_To_Small_Qnty, Balance_Id_To_Item_No, To_Store_Unit_Item_Table_Id, Notes_From, Notes_To, Notes, Machine_Id, Qua_Befor, Part_qua_Befor, Item_No_Befor, Qua_After, Part_qua_After, Item_No_After, S_unit_Value, 0, Notes_Item, FromStoreId, ToStoreId);
 
                 ////mysql = " INSERT INTO Detailes_Purshing (OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Balance_Id_From_Larg_Qnty, Balance_Id_From_Small_Qnty,Balance_Id_From_Item_No,Balance_Id_To_Larg_Qnty,Balance_Id_To_Small_Qnty,Balance_Id_To_Item_No,To_Store_Unit_Item_Table_Id, Notes_From,Notes_To,Notes,Machine_Id) ";
-                ////mysql = mysql + "  VALUES (" + OrderTable_id + "," + Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + "," + Balance_Id_From_Larg_Qnty + "," + Balance_Id_From_Small_Qnty + "," + Balance_Id_From_Item_No + ",0,0,0,-1, '" + Notes_From + "','" + Notes_To + "','" + Notes + "'," + Machine_Id + ")";
+                ////mysql = mysql + "  VALUES (" + OrderTable_id + "," + Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + "," + Balance_Id_From_Larg_Qnty + "," + Balance_Id_From_Small_Qnty + "," + Balance_Id_From_Item_No + ",0,0,0,-1, '" + global::AccountModelsLib.SqlText.Q(Notes_From) + "','" + global::AccountModelsLib.SqlText.Q(Notes_To) + "','" + global::AccountModelsLib.SqlText.Q(Notes) + "'," + Machine_Id + ")";
                 //////arr.Add(mysql);
                 ////opp.insert_me(mysql);
                 //mysql = " INSERT INTO Detailes_Purshing (OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Balance_Id_From_Larg_Qnty, Balance_Id_From_Small_Qnty,Balance_Id_From_Item_No,Balance_Id_To_Larg_Qnty,Balance_Id_To_Small_Qnty,Balance_Id_To_Item_No,To_Store_Unit_Item_Table_Id, Notes_From,Notes_To,Notes,Machine_Id) ";
-                //mysql = mysql + "  VALUES (" + OrderTable_id + "," + Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + "," + Balance_Id_From_Larg_Qnty + "," + Balance_Id_From_Small_Qnty + "," + Balance_Id_From_Item_No + "," + Balance_Id_To_Larg_Qnty + "," + Balance_Id_To_Small_Qnty + "," + Balance_Id_To_Item_No + "," + To_Store_Unit_Item_Table_Id + ", '" + Notes_From + "','" + Notes_To + "','" + Notes + "'," + Machine_Id + ")";
+                //mysql = mysql + "  VALUES (" + OrderTable_id + "," + Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + "," + Balance_Id_From_Larg_Qnty + "," + Balance_Id_From_Small_Qnty + "," + Balance_Id_From_Item_No + "," + Balance_Id_To_Larg_Qnty + "," + Balance_Id_To_Small_Qnty + "," + Balance_Id_To_Item_No + "," + To_Store_Unit_Item_Table_Id + ", '" + global::AccountModelsLib.SqlText.Q(Notes_From) + "','" + global::AccountModelsLib.SqlText.Q(Notes_To) + "','" + global::AccountModelsLib.SqlText.Q(Notes) + "'," + Machine_Id + ")";
                 ////arr.Add(mysql);
                 //opp.insert_me(mysql);
 
@@ -604,7 +604,7 @@ namespace AccountModelsLib.Models
 
 
             mysql = " INSERT INTO Detailes_Purshing (OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Balance_Id_From_Larg_Qnty, Balance_Id_From_Small_Qnty,Balance_Id_From_Item_No,Balance_Id_To_Larg_Qnty,Balance_Id_To_Small_Qnty,Balance_Id_To_Item_No,To_Store_Unit_Item_Table_Id , Notes_From,Notes_To,Notes,Machine_Id, Qua_Befor,Part_qua_Befor,Item_No_Befor,Qua_After,Part_qua_After,Item_No_After,Related_Detailes_Purshing_Id,Transaction_Type,Notes_Item, FromStoreId,ToStoreId) ";
-            mysql = mysql + "  VALUES (" + OrderTable_id + "," + Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + "," + Balance_Id_From_Larg_Qnty + "," + Balance_Id_From_Small_Qnty + "," + Balance_Id_From_Item_No + "," + Balance_Id_To_Larg_Qnty + "," + Balance_Id_To_Small_Qnty + "," + Balance_Id_To_Item_No + "," + To_Store_Unit_Item_Table_Id + " , N'" + Notes_From + "',N'" + Notes_To + "',N'" + Notes + "'," + Machine_Id + " ," + Qua_Befor + "," + Part_qua_Befor + "," + Item_No_Befor + "," + Qua_After + "," + Part_qua_After + "," + Item_No_After + "," + Related_Detailes_Purshing_Id + "," + Order_Estlam_Sarf_Flage + ",N'" + Notes_Item + "'," + FromStoreId + "," + ToStoreId + ")";
+            mysql = mysql + "  VALUES (" + OrderTable_id + "," + Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + "," + Balance_Id_From_Larg_Qnty + "," + Balance_Id_From_Small_Qnty + "," + Balance_Id_From_Item_No + "," + Balance_Id_To_Larg_Qnty + "," + Balance_Id_To_Small_Qnty + "," + Balance_Id_To_Item_No + "," + To_Store_Unit_Item_Table_Id + " , N'" + global::AccountModelsLib.SqlText.Q(Notes_From) + "',N'" + global::AccountModelsLib.SqlText.Q(Notes_To) + "',N'" + global::AccountModelsLib.SqlText.Q(Notes) + "'," + Machine_Id + " ," + Qua_Befor + "," + Part_qua_Befor + "," + Item_No_Befor + "," + Qua_After + "," + Part_qua_After + "," + Item_No_After + "," + Related_Detailes_Purshing_Id + "," + Order_Estlam_Sarf_Flage + ",N'" + global::AccountModelsLib.SqlText.Q(Notes_Item) + "'," + FromStoreId + "," + ToStoreId + ")";
             //arr.Add(mysql);
             long Detailes_Purshing_Id = opp.Insert_me_Return_Last_Identify(mysql);
 
@@ -664,7 +664,7 @@ namespace AccountModelsLib.Models
             string NotesTitle = OrderTitle;
 
             //mysql = "INSERT INTO Detailes_Purshing_Import_Export(OrderTable_id,Detailes_Purshing_Id, Unit_item_Table_Id, qua, Part_qua, Item_No, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Notes_From_To,Notes_From,Notes_To, Notes, Machine_Id,Transaction_Type, qua_Import ,Part_Qua_Import ,Item_No_Import,Quantity_Import ,qua_Export ,Part_Qua_Export,Item_No_Export,Quantity_Export ,Quantity ,Quantity_Balance,IS_To_Converted,Process_Date,Notes_Item, Invoice_Id,Invoice_Type_Id,Invoice_Type_Str,User_Id,OperationDate) ";
-            //mysql = mysql + " VALUES (" + OrderTable_id + "," + Detailes_Purshing_Id + "," + Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + "," + Balance_Larg_Qnty + "," + Balance_Small_Qnty + "," + Balance_Item_No + ",'" + Notes_From_To + "  -  " + Notes_To + "','" + Notes_From + "','" + Notes_To + "','" + NotesTitle + "'," + Machine_Id + "," + Order_Estlam_Sarf_Flage + "," + qua_Import + "," + Part_Qua_Import + "," + Item_No_Import + "," + Quantity_Import + "," + qua_Export + "," + Part_Qua_Export + "," + Item_No_Export + "," + Quantity_Export + "," + Quantity + "," + Quantity_Balance + "," + IS_To_Converted + ",'" + operations.dateFormat(Order_Date) + "',N'" + Notes_Item + "', " + Invoice_Id + "," + Invoice_Type_Id + ",N'" + Invoice_Type_Str + "', " + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ") ";
+            //mysql = mysql + " VALUES (" + OrderTable_id + "," + Detailes_Purshing_Id + "," + Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + "," + Balance_Larg_Qnty + "," + Balance_Small_Qnty + "," + Balance_Item_No + ",'" + Notes_From_To + "  -  " + Notes_To + "','" + global::AccountModelsLib.SqlText.Q(Notes_From) + "','" + global::AccountModelsLib.SqlText.Q(Notes_To) + "','" + global::AccountModelsLib.SqlText.Q(NotesTitle) + "'," + Machine_Id + "," + Order_Estlam_Sarf_Flage + "," + qua_Import + "," + Part_Qua_Import + "," + Item_No_Import + "," + Quantity_Import + "," + qua_Export + "," + Part_Qua_Export + "," + Item_No_Export + "," + Quantity_Export + "," + Quantity + "," + Quantity_Balance + "," + IS_To_Converted + ",'" + operations.dateFormat(Order_Date) + "',N'" + global::AccountModelsLib.SqlText.Q(Notes_Item) + "', " + Invoice_Id + "," + Invoice_Type_Id + ",N'" + Invoice_Type_Str + "', " + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ") ";
             //opp.insert_me(mysql);
 
            
@@ -733,7 +733,7 @@ namespace AccountModelsLib.Models
 
             //      IS_To_Converted =1;
             //    mysql = "INSERT INTO Detailes_Purshing_Import_Export(OrderTable_id,Detailes_Purshing_Id, Unit_item_Table_Id, qua, Part_qua, Item_No, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Notes_From_To, Notes, Machine_Id,Transaction_Type, qua_Import ,Part_Qua_Import ,Item_No_Import,Quantity_Import ,qua_Export ,Part_Qua_Export,Item_No_Export,Quantity_Export ,Quantity ,Quantity_Balance,IS_To_Converted) ";
-            //    mysql = mysql + " VALUES (" + OrderTable_id + "," + Detailes_Purshing_Id + "," + To_Store_Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + "," + Balance_Id_To_Larg_Qnty + "," + Balance_Id_To_Small_Qnty + "," + Balance_Id_To_Item_No + ",'" + Notes_From + "','" + Notes + "'," + Machine_Id + "," + Transaction_Type1 + "," + qua_Import + "," + Part_Qua_Import + "," + Item_No_Import + "," + Quantity_Import + "," + qua_Export + "," + Part_Qua_Export + "," + Item_No_Export + "," + Quantity_Export + "," + Quantity + "," + Quantity_Balance + ","+ IS_To_Converted + ") ";
+            //    mysql = mysql + " VALUES (" + OrderTable_id + "," + Detailes_Purshing_Id + "," + To_Store_Unit_Item_Table_Id + "," + Larg_Qnty + "," + Small_Qnty + "," + ItemNO + "," + Balance_Id_To_Larg_Qnty + "," + Balance_Id_To_Small_Qnty + "," + Balance_Id_To_Item_No + ",'" + global::AccountModelsLib.SqlText.Q(Notes_From) + "','" + global::AccountModelsLib.SqlText.Q(Notes) + "'," + Machine_Id + "," + Transaction_Type1 + "," + qua_Import + "," + Part_Qua_Import + "," + Item_No_Import + "," + Quantity_Import + "," + qua_Export + "," + Part_Qua_Export + "," + Item_No_Export + "," + Quantity_Export + "," + Quantity + "," + Quantity_Balance + ","+ IS_To_Converted + ") ";
             //    opp.insert_me(mysql);
             //}
 
@@ -1625,7 +1625,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
 
                             long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                             mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
-                            mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + OrderTable_id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ",0,0,0,0, " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",1,'" + operations.dateFormat(DateTime.Now.Date) + "',," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
+                            mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + OrderTable_id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ",0,0,0,0, " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",'" + global::AccountModelsLib.SqlText.Q(Notes_From_To) + "','" + global::AccountModelsLib.SqlText.Q(Notes) + "','" + global::AccountModelsLib.SqlText.Q(Notes_From) + "','" + global::AccountModelsLib.SqlText.Q(Notes_To) + "'," + Machine_Id + ",1,'" + operations.dateFormat(DateTime.Now.Date) + "',," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                             opp.insert_me(mysql);
 
                             mysql = "Delete from Detailes_Purshing_Import_Export Where ID  =" + Detailes_Purshing_Import_Export_Id + "   ";
@@ -1672,7 +1672,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
                             Notes = " Êã ÊÚÏíá ÇáÞíãÉ ÇáæÇÑÉ ãä ÇáÕäÝ";
                             long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                             mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,user_Id,OperationDate)";
-                            mysql = mysql + " VALUES(" + Related_Detailes_Purshing_Id + "," + MainOrderTable_id + "," + To_Store_Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",0,0,0,0,'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",2,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
+                            mysql = mysql + " VALUES(" + Related_Detailes_Purshing_Id + "," + MainOrderTable_id + "," + To_Store_Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",0,0,0,0,'" + global::AccountModelsLib.SqlText.Q(Notes_From_To) + "','" + global::AccountModelsLib.SqlText.Q(Notes) + "','" + global::AccountModelsLib.SqlText.Q(Notes_From) + "','" + global::AccountModelsLib.SqlText.Q(Notes_To) + "'," + Machine_Id + ",2,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                             opp.insert_me(mysql);
                             //Detailes_Purshing_Import_Export_Id = long.Parse(dt.Rows[0]["Id"].ToString());
                             mysql = "Delete from Detailes_Purshing_Import_Export Where ID  =" + Detailes_Purshing_Import_Export_Id + "   ";
@@ -1739,7 +1739,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
 
                             long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                             mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
-                            mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + OrderTable_id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ",0,0,0,0, " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",2,'" + operations.dateFormat(DateTime.Now.Date) + "',," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
+                            mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + OrderTable_id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ",0,0,0,0, " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",'" + global::AccountModelsLib.SqlText.Q(Notes_From_To) + "','" + global::AccountModelsLib.SqlText.Q(Notes) + "','" + global::AccountModelsLib.SqlText.Q(Notes_From) + "','" + global::AccountModelsLib.SqlText.Q(Notes_To) + "'," + Machine_Id + ",2,'" + operations.dateFormat(DateTime.Now.Date) + "',," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                             opp.insert_me(mysql);
 
                             Detailes_Purshing_Import_Export_Id = long.Parse(dt.Rows[0]["Id"].ToString());
@@ -1786,7 +1786,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
                             Notes = " Êã ÊÚÏíá ÇáÞíãÉ ÇáãäÕÑÝå ãä ÇáÕäÝ";
                             long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                             mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
-                            mysql = mysql + " VALUES(" + Related_Detailes_Purshing_Id + "," + MainOrderTable_id + "," + To_Store_Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",0,0,0,0,'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",1,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
+                            mysql = mysql + " VALUES(" + Related_Detailes_Purshing_Id + "," + MainOrderTable_id + "," + To_Store_Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",0,0,0,0,'" + global::AccountModelsLib.SqlText.Q(Notes_From_To) + "','" + global::AccountModelsLib.SqlText.Q(Notes) + "','" + global::AccountModelsLib.SqlText.Q(Notes_From) + "','" + global::AccountModelsLib.SqlText.Q(Notes_To) + "'," + Machine_Id + ",1,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                             opp.insert_me(mysql);
 
                             Detailes_Purshing_Import_Export_Id = long.Parse(dt.Rows[0]["Id"].ToString());
@@ -1877,7 +1877,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
 
                         long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                         mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
-                        mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + OrderTable_id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ",0,0,0,0, " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",2,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
+                        mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + OrderTable_id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ",0,0,0,0, " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",'" + global::AccountModelsLib.SqlText.Q(Notes_From_To) + "','" + global::AccountModelsLib.SqlText.Q(Notes) + "','" + global::AccountModelsLib.SqlText.Q(Notes_From) + "','" + global::AccountModelsLib.SqlText.Q(Notes_To) + "'," + Machine_Id + ",2,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                         opp.insert_me(mysql);
 
                         Detailes_Purshing_Import_Export_Id = long.Parse(dt.Rows[0]["Id"].ToString());
@@ -1929,7 +1929,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
 
                         long Machine_Id = long.Parse(dt.Rows[0]["Machine_Id"].ToString());
                         mysql = " INSERT INTO Detailes_Purshing_Import_Export(Detailes_Purshing_Id, OrderTable_id, Unit_item_Table_Id, qua, Part_qua, Item_No, Quantity, Balance_Larg_Qnty, Balance_Small_Qnty, Balance_Item_No, Quantity_Balance, qua_Import, Part_Qua_Import,Item_No_Import, Quantity_Import, qua_Export, Part_Qua_Export, Item_No_Export, Quantity_Export, Notes_From_To, Notes, Notes_From, Notes_To, Machine_Id, Transaction_Type,Process_Date,User_Id,OperationDate)";
-                        mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + OrderTable_id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",0,0,0,0,'" + Notes_From_To + "','" + Notes + "','" + Notes_From + "','" + Notes_To + "'," + Machine_Id + ",1,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
+                        mysql = mysql + " VALUES(" + Detailes_Purshing_Id + "," + OrderTable_id + "," + Unit_Item_Table_Id + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ", " + Balance_Larg_Qnty + "," + Balance_Small_Qnty + ", " + Balance_Item_No + "," + Quantity_Balance + ", " + New_Larg_Qnty + "," + New_Small_Qnty + "," + New_ItemNO + "," + Quantity + ",0,0,0,0,'" + global::AccountModelsLib.SqlText.Q(Notes_From_To) + "','" + global::AccountModelsLib.SqlText.Q(Notes) + "','" + global::AccountModelsLib.SqlText.Q(Notes_From) + "','" + global::AccountModelsLib.SqlText.Q(Notes_To) + "'," + Machine_Id + ",1,'" + operations.dateFormat(DateTime.Now.Date) + "'," + Common.User_Id + "," + operations.Get_DateTimeToInsert(DateTime.Now) + ")";
                         opp.insert_me(mysql);
 
                         Detailes_Purshing_Import_Export_Id = long.Parse(dt.Rows[0]["Id"].ToString());
@@ -2050,7 +2050,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
                 }
 
             }
-            mysql = " Update Order_Purshing Set Order_date='" + operations.dateFormat(Order_Date) + "',NotesAll=N'" + NotesAll + "' Where Id=" + OrderTable_id;
+            mysql = " Update Order_Purshing Set Order_date='" + operations.dateFormat(Order_Date) + "',NotesAll=N'" + global::AccountModelsLib.SqlText.Q(NotesAll) + "' Where Id=" + OrderTable_id;
             opp.insert_me(mysql);
             try
             {
@@ -2124,7 +2124,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
 
                         string Notes_List = "Êã ÅÕÏÇÑ ÇáÅÐä æÇáÅÑÊÈÇØ ÈÔßá ÇæÊæãÇÊíßì ãä ãÚÇÏáÉ ÇáÇäÊÇÌ";
                         Notes_List = Notes_List + " .. " + NotesAll;
-                        mysql = " Update Item_Raw_MaterialsFor_Entage_List  Set Process_Date='" + operations.dateFormat(Order_Date) + "',Notes_List=N'" + Notes_List + "' Where Id=" + Item_Raw_MaterialsFor_Entage_List_Id;
+                        mysql = " Update Item_Raw_MaterialsFor_Entage_List  Set Process_Date='" + operations.dateFormat(Order_Date) + "',Notes_List=N'" + global::AccountModelsLib.SqlText.Q(Notes_List) + "' Where Id=" + Item_Raw_MaterialsFor_Entage_List_Id;
                         opp2.insert_me(mysql);
 
                         mysql = "DELETE FROM Item_Raw_MaterialsFor_Entage_Details WHERE(Order_Purshing_Id = " + OrderTable_id + ")";
@@ -2310,14 +2310,14 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
             DataTable dt = opp.return_DataTable(mysql);
             if (dt.Rows.Count > 0)
             {
-                mysql = " Update Item_Raw_MaterialsFor_Entage_List Set   Process_No=" + Process_No + ", Notes_List='" + Notes_List + "', Process_Date='" + operations.dateFormat(dt_Order) + "' ";
+                mysql = " Update Item_Raw_MaterialsFor_Entage_List Set   Process_No=" + Process_No + ", Notes_List='" + global::AccountModelsLib.SqlText.Q(Notes_List) + "', Process_Date='" + operations.dateFormat(dt_Order) + "' ";
                 mysql = mysql + "  Where ID=" + Item_Raw_MaterialsFor_Entage_List_Id;
                 opp.insert_me(mysql);
             }
             else
             {
                 mysql = " INSERT INTO Item_Raw_MaterialsFor_Entage_List (Process_No, Notes_List, Process_Date) ";
-                mysql = mysql + " VALUES(" + Process_No + ",'" + Notes_List + "','" + operations.dateFormat(dt_Order) + "')";
+                mysql = mysql + " VALUES(" + Process_No + ",'" + global::AccountModelsLib.SqlText.Q(Notes_List) + "','" + operations.dateFormat(dt_Order) + "')";
                 Item_Raw_MaterialsFor_Entage_List_Id = opp.Insert_me_Return_Last_Identify(mysql);
 
             }
@@ -2342,7 +2342,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
 
             operations opp = new operations(1);
             string mysql = " INSERT INTO Item_Raw_MaterialsFor_Entage_List (Process_No, Notes_List, Process_Date) ";
-            mysql = mysql + " VALUES(" + Process_No + ",'" + Notes_List + "','" + operations.dateFormat(dt_Order) + "')";
+            mysql = mysql + " VALUES(" + Process_No + ",'" + global::AccountModelsLib.SqlText.Q(Notes_List) + "','" + operations.dateFormat(dt_Order) + "')";
             long Item_Raw_MaterialsFor_Entage_List_Id = opp.Insert_me_Return_Last_Identify(mysql);
             MakeNewOrderTOEntag_Estlam(ref Excp, ref Msg, ref opp, Item_Raw_MaterialsFor_Entage_List_Id, dt_NewOrder_Estlam, dt_Order);
             MakeNewOrderTOEntag_Sarf(ref Excp, ref Msg, ref opp, Item_Raw_MaterialsFor_Entage_List_Id, dt_NewOrder_Sarf, dt_Order);
@@ -2461,7 +2461,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
                     Make_Order_Details_AllOneClick(ref Excp, ref opp, ref Related_Detailes_Purshing_Id, Order_Estlam_Sarf_Flage, Sub_OrderTable_idNew, Unit_Item_Table_Id, Item_id, Larg_Qnty, Small_Qnty, Item_NO, Balance_Now_Larg_Qnty, Balance_Now_Small_Qnty, Balance_Now_Item_No, S_unit_Value, Notes_From, Notes_To, Notes, Notes_Item,   FromStoreId, ToStoreId);
 
                     string mysql = "  INSERT INTO Item_Raw_MaterialsFor_Entage_Details(Item_Raw_MaterialsFor_Entage_List_Id, Unit_Item_Id, Item_Id, Store_Id, Larg_Qnty, Small_Qnty, Order_Purshing_Id, Detailes_Purshing_Id, Order_Estlam_Sarf_Flage,Notes_Item)";
-                    mysql = mysql + " VALUES(" + Item_Raw_MaterialsFor_Entage_List_Id + "," + Unit_Item_Table_Id + "," + Item_id + "," + Store_id + "," + Larg_Qnty + "," + Small_Qnty + "," + Sub_OrderTable_idNew + "," + Related_Detailes_Purshing_Id + "," + Order_Estlam_Sarf_Flage + ",N'" + Notes_Item + "') ";
+                    mysql = mysql + " VALUES(" + Item_Raw_MaterialsFor_Entage_List_Id + "," + Unit_Item_Table_Id + "," + Item_id + "," + Store_id + "," + Larg_Qnty + "," + Small_Qnty + "," + Sub_OrderTable_idNew + "," + Related_Detailes_Purshing_Id + "," + Order_Estlam_Sarf_Flage + ",N'" + global::AccountModelsLib.SqlText.Q(Notes_Item) + "') ";
                     opp.insert_me(mysql);
                     //if (Excp == 1)
                     //{
@@ -2593,7 +2593,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
                     Make_Order_Details_AllOneClick(ref Excp, ref opp, ref Related_Detailes_Purshing_Id, Order_Estlam_Sarf_Flage, Sub_OrderTable_idNew, Unit_Item_Table_Id, Item_id, Larg_Qnty, Small_Qnty, Item_NO, Balance_Now_Larg_Qnty, Balance_Now_Small_Qnty, Balance_Now_Item_No, S_unit_Value, Notes_From, Notes_To, Notes, Notes_Item, FromStoreId, ToStoreId);
 
                     string mysql = "  INSERT INTO Item_Raw_MaterialsFor_Entage_Details(Item_Raw_MaterialsFor_Entage_List_Id, Unit_Item_Id, Item_Id, Store_Id, Larg_Qnty, Small_Qnty, Order_Purshing_Id, Detailes_Purshing_Id, Order_Estlam_Sarf_Flage,Notes_Item)";
-                    mysql = mysql + " VALUES(" + Item_Raw_MaterialsFor_Entage_List_Id + "," + Unit_Item_Table_Id + "," + Item_id + "," + Store_id + "," + Larg_Qnty + "," + Small_Qnty + "," + Sub_OrderTable_idNew + "," + Related_Detailes_Purshing_Id + "," + Order_Estlam_Sarf_Flage + ",N'" + Notes_Item + "') ";
+                    mysql = mysql + " VALUES(" + Item_Raw_MaterialsFor_Entage_List_Id + "," + Unit_Item_Table_Id + "," + Item_id + "," + Store_id + "," + Larg_Qnty + "," + Small_Qnty + "," + Sub_OrderTable_idNew + "," + Related_Detailes_Purshing_Id + "," + Order_Estlam_Sarf_Flage + ",N'" + global::AccountModelsLib.SqlText.Q(Notes_Item) + "') ";
                     opp.insert_me(mysql);
                     //if (Excp == 1)
                     //{
@@ -2691,7 +2691,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
                     Notes_List = Notes_List + " .. " + NotesAll;
 
                     string mysql = " INSERT INTO Item_Raw_MaterialsFor_Entage_List (Process_No, Notes_List, Process_Date) ";
-                    mysql = mysql + " VALUES(" + Process_No + ",'" + Notes_List + "','" + operations.dateFormat(dt_Order) + "')";
+                    mysql = mysql + " VALUES(" + Process_No + ",'" + global::AccountModelsLib.SqlText.Q(Notes_List) + "','" + operations.dateFormat(dt_Order) + "')";
                     Item_Raw_MaterialsFor_Entage_List_Id = opp.Insert_me_Return_Last_Identify(mysql);
                 }
                 if (Excp > 0)
@@ -3136,7 +3136,7 @@ WHERE(Item_Raw_MaterialsFor_Entage_Details.Item_Raw_MaterialsFor_Entage_List_Id 
                         SubOrderTable_id = OrderTable_id;
                     }
                     string mysql = "INSERT INTO Item_Raw_MaterialsFor_Entage(MainOrderTable_id,SubOrderTable_id, Process_Date, MainItem_Id, SubItem_Id, MainItem_Name, SubItem_Name, Big_unit, Small_unit, Unit_Id, S_unit_Value, Raw_Full_qua, Raw_D_Qua, Raw_Quantity, Larg_Qnty, Small_Qnty,Qnty, Main_Larg_Qnty, Main_Small_Qnty, Main_Qnty,SubUnit_item_id, MainStore_Id, SubStore_Id,SubStore_Name,Notes_Item) ";
-                    mysql = mysql + " VALUES(" + MainOrderTable_id + "," + SubOrderTable_id + ",'" + operations.dateFormat(Process_Date) + "'," + MainItem_Id + "," + SubItem_Id + ",'" + MainItem_Name + "','" + SubItem_Name + "','" + Big_unit + "','" + Small_unit + "'," + Unit_Id + "," + S_unit_Value + "," + Raw_Full_qua + "," + Raw_D_Qua + "," + Raw_Quantity + "," + Larg_Qnty + "," + Small_Qnty + "," + Qnty + "," + Main_Larg_Qnty + "," + Main_Small_Qnty + "," + Main_Qnty + "," + SubUnit_item_id + "," + MainStore_Id + ", " + SubStore_Id + ",'" + SubStore_Name + "',N'" + Notes_Item + "')";
+                    mysql = mysql + " VALUES(" + MainOrderTable_id + "," + SubOrderTable_id + ",'" + operations.dateFormat(Process_Date) + "'," + MainItem_Id + "," + SubItem_Id + ",'" + MainItem_Name + "','" + SubItem_Name + "','" + Big_unit + "','" + Small_unit + "'," + Unit_Id + "," + S_unit_Value + "," + Raw_Full_qua + "," + Raw_D_Qua + "," + Raw_Quantity + "," + Larg_Qnty + "," + Small_Qnty + "," + Qnty + "," + Main_Larg_Qnty + "," + Main_Small_Qnty + "," + Main_Qnty + "," + SubUnit_item_id + "," + MainStore_Id + ", " + SubStore_Id + ",'" + SubStore_Name + "',N'" + global::AccountModelsLib.SqlText.Q(Notes_Item) + "')";
                     opp.insert_me(mysql);
                 }
             }

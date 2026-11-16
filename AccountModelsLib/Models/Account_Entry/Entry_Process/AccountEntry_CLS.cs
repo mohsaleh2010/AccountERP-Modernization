@@ -1837,7 +1837,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
 
                     //يتم وضع المبلغ فى الصادر    
 
-                    mysql = mysql + " SELECT " + Cach_Value + "  as All_Import," + Transform_Type + " AS Transform_Type, " + Account_Entry_List_ID + " AS Account_Entry_List_ID," + Transaction_Date + " AS Transaction_Date," + Transaction_Type_Employee + "  AS TransactionType," + PriceTypeFlage + " as PriceTypeFlage,N'" + Notes + "' AS Notes ,";
+                    mysql = mysql + " SELECT " + Cach_Value + "  as All_Import," + Transform_Type + " AS Transform_Type, " + Account_Entry_List_ID + " AS Account_Entry_List_ID," + Transaction_Date + " AS Transaction_Date," + Transaction_Type_Employee + "  AS TransactionType," + PriceTypeFlage + " as PriceTypeFlage,N'" + global::AccountModelsLib.SqlText.Q(Notes) + "' AS Notes ,";
                     mysql = mysql + "  " + Cach_Value + "   as Import, 0   as Export," + Customer_Type + " as Customer_Type,'" + PaymentMethod + "' AS PaymentMethod ," + Currency_Id + " AS Currency_ID ,";
                     //  mysql = mysql + " " + User_ID_login + " AS User_ID_login, " + Branch_ID_login + " AS Branch_ID_login ,";
                     mysql = mysql + " 0 AS User_ID_login,  Customer.ID AS  Customer_ID  ,";
@@ -1859,7 +1859,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
 
                     //يتم وضع المبلغ فى الصادر    
 
-                    mysql = mysql + " SELECT " + Cach_Value + "  as All_Import," + Account_Customer_ID + " as Company_Tourism_ID," + Transform_Type + " AS Transform_Type, " + Account_Entry_List_ID + " AS Account_Entry_List_ID," + Transaction_Date + " AS Transaction_Date," + Transaction_Type_Employee + "  AS TransactionType," + PriceTypeFlage + " as PriceTypeFlage,N'" + Notes + "' AS Notes ,";
+                    mysql = mysql + " SELECT " + Cach_Value + "  as All_Import," + Account_Customer_ID + " as Company_Tourism_ID," + Transform_Type + " AS Transform_Type, " + Account_Entry_List_ID + " AS Account_Entry_List_ID," + Transaction_Date + " AS Transaction_Date," + Transaction_Type_Employee + "  AS TransactionType," + PriceTypeFlage + " as PriceTypeFlage,N'" + global::AccountModelsLib.SqlText.Q(Notes) + "' AS Notes ,";
                     mysql = mysql + "  " + Cach_Value + "  as Import, 0   as Export," + Customer_Type + " as Customer_Type,'" + PaymentMethod + "' AS PaymentMethod ," + Currency_Id + " AS Currency_ID ,";
                     //   mysql = mysql + " " + User_ID_login + " AS User_ID_login, " + Branch_ID_login + " AS Branch_ID_login ,";
                     mysql = mysql + " 0 AS USER_Balance_Air, 0 AS USER_Balance_Road , ";
@@ -1880,7 +1880,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
 
                     //يتم وضع المبلغ فى الصادر للموظف
 
-                    mysql = mysql + " SELECT " + Cach_Value + "  as All_Import, " + Transform_Type + " AS Transform_Type, " + Account_Entry_List_ID + " AS Account_Entry_List_ID," + Transaction_Date + "," + Transaction_Type_Employee + "  AS TransactionType," + PriceTypeFlage + " as PriceTypeFlage, N'" + Notes + "' AS Notes ,";
+                    mysql = mysql + " SELECT " + Cach_Value + "  as All_Import, " + Transform_Type + " AS Transform_Type, " + Account_Entry_List_ID + " AS Account_Entry_List_ID," + Transaction_Date + "," + Transaction_Type_Employee + "  AS TransactionType," + PriceTypeFlage + " as PriceTypeFlage, N'" + global::AccountModelsLib.SqlText.Q(Notes) + "' AS Notes ,";
                     mysql = mysql + "  " + Cach_Value + "  as Import, 0  as Export," + Customer_Type + " as Customer_Type,'" + PaymentMethod + "' AS PaymentMethod ," + Currency_Id + " AS Currency_ID ,";
                     mysql = mysql + " USER_DETAILES.Id, USER_DETAILES.Branch_Id,";
                     mysql = mysql + " USER_DETAILES.Balance_Air AS USER_Balance_Air, USER_DETAILES.Balance_Road AS USER_Balance_Road , ";
@@ -1984,7 +1984,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
 
                     //يتم وضع المبلغ فى الصادر    
 
-                    mysql = mysql + " SELECT " + Transform_Type + " AS Transform_Type, " + Account_Entry_List_ID + " AS Account_Entry_List_ID," + Transaction_Date + "," + Transaction_Type_Employee + "  AS TransactionType," + PriceTypeFlage + " as PriceTypeFlage,N'" + Notes + "' AS Notes ,";
+                    mysql = mysql + " SELECT " + Transform_Type + " AS Transform_Type, " + Account_Entry_List_ID + " AS Account_Entry_List_ID," + Transaction_Date + "," + Transaction_Type_Employee + "  AS TransactionType," + PriceTypeFlage + " as PriceTypeFlage,N'" + global::AccountModelsLib.SqlText.Q(Notes) + "' AS Notes ,";
                     mysql = mysql + "  0   as Import, " + Cach_Value + "   as Export," + Customer_Type + " as Customer_Type,'" + PaymentMethod + "' AS PaymentMethod ," + Currency_Id + " AS Currency_ID ,";
                     //  mysql = mysql + " " + User_ID_login + " AS User_ID_login, " + Branch_ID_login + " AS Branch_ID_login ,";
                     mysql = mysql + " 0 AS User_ID_login,  Customer.ID AS  Customer_ID  ,";
@@ -2006,7 +2006,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
 
                     //يتم وضع المبلغ فى الصادر    
 
-                    mysql = mysql + " SELECT " + Account_Customer_ID + " as Company_Tourism_ID," + Transform_Type + " AS Transform_Type, " + Account_Entry_List_ID + " AS Account_Entry_List_ID," + Transaction_Date + "," + Transaction_Type_Employee + "  AS TransactionType," + PriceTypeFlage + " as PriceTypeFlage,N'" + Notes + "' AS Notes ,";
+                    mysql = mysql + " SELECT " + Account_Customer_ID + " as Company_Tourism_ID," + Transform_Type + " AS Transform_Type, " + Account_Entry_List_ID + " AS Account_Entry_List_ID," + Transaction_Date + "," + Transaction_Type_Employee + "  AS TransactionType," + PriceTypeFlage + " as PriceTypeFlage,N'" + global::AccountModelsLib.SqlText.Q(Notes) + "' AS Notes ,";
                     mysql = mysql + "  0   as Import, " + Cach_Value + "   as Export," + Customer_Type + " as Customer_Type,'" + PaymentMethod + "' AS PaymentMethod ," + Currency_Id + " AS Currency_ID ,";
                     //   mysql = mysql + " " + User_ID_login + " AS User_ID_login, " + Branch_ID_login + " AS Branch_ID_login ,";
                     mysql = mysql + " 0 AS USER_Balance_Air, 0 AS USER_Balance_Road , ";
@@ -2027,7 +2027,7 @@ WHERE        (Account_Entry_List.Id = - 1)";
 
                     //يتم وضع المبلغ فى الصادر للموظف
 
-                    mysql = mysql + " SELECT " + Transform_Type + " AS Transform_Type, " + Account_Entry_List_ID + " AS Account_Entry_List_ID," + Transaction_Date + "," + Transaction_Type_Employee + "  AS TransactionType," + PriceTypeFlage + " as PriceTypeFlage,N'" + Notes + "' AS Notes ,";
+                    mysql = mysql + " SELECT " + Transform_Type + " AS Transform_Type, " + Account_Entry_List_ID + " AS Account_Entry_List_ID," + Transaction_Date + "," + Transaction_Type_Employee + "  AS TransactionType," + PriceTypeFlage + " as PriceTypeFlage,N'" + global::AccountModelsLib.SqlText.Q(Notes) + "' AS Notes ,";
                     mysql = mysql + "  0   as Import, " + Cach_Value + "   as Export," + Customer_Type + " as Customer_Type,'" + PaymentMethod + "' AS PaymentMethod ," + Currency_Id + " AS Currency_ID ,";
                     mysql = mysql + " USER_DETAILES.Id, USER_DETAILES.Branch_Id,";
                     mysql = mysql + " USER_DETAILES.Balance_Air AS USER_Balance_Air, USER_DETAILES.Balance_Road AS USER_Balance_Road , ";

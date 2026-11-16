@@ -257,7 +257,7 @@ namespace AccountModelsLib
                 }
 
                 //mysql = " INSERT INTO Submain_Account (FirstSubCode,Code,SubAccount_Id,Main_Account_Id,lastPartIncrease,SubAccount_NO, Account_Code, SubAccount_Name, Head_Main_Account, Submain_Account_Balance, Currency_Id,Account_Follows, Notes,Branch_ID,Account_Customer_Type_Value,Account_Level,Account_Nature_Type,Accept_Cost_Center_Flage) ";
-                //mysql = mysql + " VALUES ('" + FirstSubCode + "'," + Head_Main_Account + "," + Submain_Account_Id + "," + Main_Account_Id + "," + Head_Main_Account + "," + Head_Main_Account + "," + Head_Main_Account + ", '" + Account_Name_ + "', " + Head_Main_Account + "," + Primary_Balance + "," + Currency_Id + "," + Account_Follows + ",'" + Notes + "' ," + Branch_Id + "," + Account_Customer_Type_Value + "," + Account_Level + "," + Account_Nature_Type + "," + Accept_Cost_Center_Flage + ")";
+                //mysql = mysql + " VALUES ('" + FirstSubCode + "'," + Head_Main_Account + "," + Submain_Account_Id + "," + Main_Account_Id + "," + Head_Main_Account + "," + Head_Main_Account + "," + Head_Main_Account + ", '" + Account_Name_ + "', " + Head_Main_Account + "," + Primary_Balance + "," + Currency_Id + "," + Account_Follows + ",'" + global::AccountModelsLib.SqlText.Q(Notes) + "' ," + Branch_Id + "," + Account_Customer_Type_Value + "," + Account_Level + "," + Account_Nature_Type + "," + Accept_Cost_Center_Flage + ")";
 
                 //opp.insert_me(mysql);
                 Submain_Account newSubAccount = new Submain_Account

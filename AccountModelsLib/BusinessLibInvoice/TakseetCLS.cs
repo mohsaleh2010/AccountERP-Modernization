@@ -24,7 +24,7 @@ namespace AccountModelsLib
 
 
                 string mysql = " INSERT INTO Takset_List(Customer_Id,Invoice_List_Id, Invoices_Details_Id, Total_Money, First_PaymentMoney, Statements_No, Notebooks_No, Guarantor_Name, Guarantor_Id, DateDay_Payment, Notes, kest_Value_needed,Takset_Number, Total_Takset_Value,Increased_Values,DateOfProcess, DateOfFirst_Takset,DateOfFirst_PaymentMoney) ";
-                mysql = mysql + " VALUES (" + Customer_Id + "  , " + Invoice_List_Id + "  ,  " + Invoices_Details_Id + "  ,  " + Total_Money + "  ,  " + First_PaymentMoney + "  ,  '" + Statements_No + "'  , ' " + Notebooks_No + "'  ,  '" + Guarantor_Name + "'  , ' " + Guarantor_Id + "'  ,  " + DateDay_Payment + "  ,  '" + Notes + "'  , " + kest_Value_needed + ", " + Takset_Number + "  ,  " + Total_Takset_Value + "," + Increased_Values + ",'" + operations.dateFormat(DateOfProcess) + "','" + operations.dateFormat(DateOfFirst_Takset) + "','" + operations.dateFormat(DateOfFirst_PaymentMoney) + "' ) ";
+                mysql = mysql + " VALUES (" + Customer_Id + "  , " + Invoice_List_Id + "  ,  " + Invoices_Details_Id + "  ,  " + Total_Money + "  ,  " + First_PaymentMoney + "  ,  '" + global::AccountModelsLib.SqlText.Q(Statements_No) + "'  , ' " + Notebooks_No + "'  ,  '" + Guarantor_Name + "'  , ' " + Guarantor_Id + "'  ,  " + DateDay_Payment + "  ,  '" + global::AccountModelsLib.SqlText.Q(Notes) + "'  , " + kest_Value_needed + ", " + Takset_Number + "  ,  " + Total_Takset_Value + "," + Increased_Values + ",'" + operations.dateFormat(DateOfProcess) + "','" + operations.dateFormat(DateOfFirst_Takset) + "','" + operations.dateFormat(DateOfFirst_PaymentMoney) + "' ) ";
                 Takset_List_Id = opp.Insert_me_Return_Last_Identify(mysql);
 
                 mysql = " Delete From  Takset_Details Where Takset_List_Id=" + Takset_List_Id + "";
@@ -84,7 +84,7 @@ namespace AccountModelsLib
                 decimal Increased_Values = 0;
                 //  mysql = " Update   Takset_List Set ";
                 //mysql = mysql + " Invoice_List_Id =" + Invoice_List_Id + "  ,   Invoices_Details_Id =  " + Invoices_Details_Id + "  ,   Total_Money =  " + Total_Money + "  ,   First_PaymentMoney =  " + First_PaymentMoney + "   ,    DateDay_Payment=  " + DateDay_Payment + "   ,    kest_Value_needed= " + kest_Value_needed + ",Takset_Number= " + Takset_Number + "  ,   Total_Takset_Value =  " + Total_Takset_Value + ",Increased_Values=" + Increased_Values + ",DateOfProcess='" + operations.dateFormat(DateOfProcess) + "',DateOfFirst_Takset='" + operations.dateFormat(DateOfFirst_Takset) + "',DateOfFirst_PaymentMoney='" + operations.dateFormat(DateOfFirst_PaymentMoney) + "'  ";
-                //mysql = mysql + " ,  Notes=  '" + Notes + "'  ,   Statements_No =  '" + Statements_No + "'  ,    Notebooks_No= ' " + Notebooks_No + "'  ,   Guarantor_Name =  '" + Guarantor_Name + "'  ,   Guarantor_Id = ' " + Guarantor_Id + "'  ";
+                //mysql = mysql + " ,  Notes=  '" + global::AccountModelsLib.SqlText.Q(Notes) + "'  ,   Statements_No =  '" + global::AccountModelsLib.SqlText.Q(Statements_No) + "'  ,    Notebooks_No= ' " + Notebooks_No + "'  ,   Guarantor_Name =  '" + Guarantor_Name + "'  ,   Guarantor_Id = ' " + Guarantor_Id + "'  ";
                 //mysql = mysql + " Where Id=" + Takset_List_Id + "";
                 //opp.insert_me(mysql);
 
@@ -97,7 +97,7 @@ namespace AccountModelsLib
 
 
                 mysql = " INSERT INTO Takset_List(Customer_Id,Invoice_List_Id, Invoices_Details_Id, Total_Money, First_PaymentMoney, Statements_No, Notebooks_No, Guarantor_Name, Guarantor_Id, DateDay_Payment, Notes, kest_Value_needed,Takset_Number, Total_Takset_Value,Increased_Values,DateOfProcess, DateOfFirst_Takset,DateOfFirst_PaymentMoney) ";
-                mysql = mysql + " VALUES (" + Customer_Id + "  , " + Invoice_List_Id + "  ,  " + Invoices_Details_Id + "  ,  " + Total_Money + "  ,  " + First_PaymentMoney + "  ,  '" + Statements_No + "'  , ' " + Notebooks_No + "'  ,  '" + Guarantor_Name + "'  , ' " + Guarantor_Id + "'  ,  " + DateDay_Payment + "  ,  '" + Notes + "'  , " + kest_Value_needed + ", " + Takset_Number + "  ,  " + Total_Takset_Value + "," + Increased_Values + ",'" + operations.dateFormat(DateOfProcess) + "','" + operations.dateFormat(DateOfFirst_Takset) + "','" + operations.dateFormat(DateOfFirst_PaymentMoney) + "' ) ";
+                mysql = mysql + " VALUES (" + Customer_Id + "  , " + Invoice_List_Id + "  ,  " + Invoices_Details_Id + "  ,  " + Total_Money + "  ,  " + First_PaymentMoney + "  ,  '" + global::AccountModelsLib.SqlText.Q(Statements_No) + "'  , ' " + Notebooks_No + "'  ,  '" + Guarantor_Name + "'  , ' " + Guarantor_Id + "'  ,  " + DateDay_Payment + "  ,  '" + global::AccountModelsLib.SqlText.Q(Notes) + "'  , " + kest_Value_needed + ", " + Takset_Number + "  ,  " + Total_Takset_Value + "," + Increased_Values + ",'" + operations.dateFormat(DateOfProcess) + "','" + operations.dateFormat(DateOfFirst_Takset) + "','" + operations.dateFormat(DateOfFirst_PaymentMoney) + "' ) ";
               long  Takset_List_IdNew = opp.Insert_me_Return_Last_Identify(mysql);
 
                 Make_Takset_Details(ref opp, Takset_List_IdNew, Is_First_PaymentMoney, First_PaymentMoney, DateOfFirst_PaymentMoney, Takset_Number, kest_Value_needed, DateOfFirst_Takset, DateDay_Payment);
@@ -336,7 +336,7 @@ FROM            Item INNER JOIN
                 Notes = " يوجد مبلغ زائد عن القسط";
             }
 
-            string mysql = " Update Takset_Details Set Total_Value_Payed="+ Total_Value_Payed + ",OrderNo='"+ OrderNo + "' ,Increased_ValuesSaved=Increased_Values,Payed_ValueSaved=  Payed_Value ,Rest_ValueSaved=Rest_Value,Order_Mony_Id=" + Order_Mony_Id + ",  DateOfPayment='" + operations.dateFormat(DateOfPayment) + "' ,  Payed_Value=Payed_Value + " + Payed_Value_New + ", Rest_Value=" + Rest_Value_New + ",Increased_Values =" + Increased_Values_New + " ,Notes='" + Notes + "' ";
+            string mysql = " Update Takset_Details Set Total_Value_Payed="+ Total_Value_Payed + ",OrderNo='"+ OrderNo + "' ,Increased_ValuesSaved=Increased_Values,Payed_ValueSaved=  Payed_Value ,Rest_ValueSaved=Rest_Value,Order_Mony_Id=" + Order_Mony_Id + ",  DateOfPayment='" + operations.dateFormat(DateOfPayment) + "' ,  Payed_Value=Payed_Value + " + Payed_Value_New + ", Rest_Value=" + Rest_Value_New + ",Increased_Values =" + Increased_Values_New + " ,Notes='" + global::AccountModelsLib.SqlText.Q(Notes) + "' ";
             mysql = mysql + " Where Id=" + Takset_Details_Id + "";
 
             opp.insert_me(mysql);

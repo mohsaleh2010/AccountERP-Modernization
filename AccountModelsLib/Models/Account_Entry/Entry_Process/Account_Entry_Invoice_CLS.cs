@@ -465,7 +465,7 @@ FROM            Invoices_List INNER JOIN
 
         string GetSQLForCustomer(string Notes, long SubAccount_Id)
         {
-            string mysql = @" SELECT    '" + Notes + "' AS Notes, ";
+            string mysql = @" SELECT    '" + global::AccountModelsLib.SqlText.Q(Notes) + "' AS Notes, ";
             mysql = mysql + @"  1 AS Factor, 0 AS Id_Test, 0 AS CostCenter_Id, 'لا يوجد' AS Cost_Center_Name, Main_Account_Id, SubAccount_NO, code, FirstSubCode, lastPartIncrease, Is_Last_Level, Head_Main_Account, 
                          CanDelete, Account_Follows, Account_Nature_Type, Accept_Cost_Center_Flage, Cost_Center_Tree_ID, Account_Level, Account_Code, Company_ID_For_GL, Company_Name_For_GL, 
                          Account_Customer_Type_Value, Account_Customer_Type_ID, Transform_Type,  Branch_ID, ConnectWith_Gl_Flage, Currency_Id AS Account_Currency_ID, Currency_Id, SubAccount_Name, 
