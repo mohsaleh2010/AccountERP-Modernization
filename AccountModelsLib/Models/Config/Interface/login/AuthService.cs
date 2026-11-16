@@ -121,11 +121,31 @@ namespace AccountModelsLib.Models
 
         public async Task Is_SavedPW(LoginViewModel loginModel)
         { }
+        // 🔐 دخول الإدارة الخاص فى الويب مقفول افتراضياً. الثوابت المشفّرة فى Common.InvoiceSettingUser1/2
+        // مفتاح فكّها فى نفس الكود، فلا تصلح كسر لدخول ويب مكشوف على الشبكة. يتفعّل فقط لو المسؤول ضبط
+        // متغيرى البيئة ACCOUNTERP_ADMIN_USER و ACCOUNTERP_ADMIN_PASSWORD على السيرفر (قيم خارج الكود).
+        // الديسكتوب (LoginPro / Alter_DataBase) لم يتغيّر.
+        internal const string AdminUserEnvVar = "ACCOUNTERP_ADMIN_USER";
+        internal const string AdminPasswordEnvVar = "ACCOUNTERP_ADMIN_PASSWORD";
+
+        private static bool FixedTimeEquals(string a, string b)
+        {
+            if (a == null || b == null) return false;
+            int diff = a.Length ^ b.Length;
+            for (int i = 0; i < a.Length && i < b.Length; i++)
+                diff |= a[i] ^ b[i];
+            return diff == 0;
+        }
+
         private bool AdministrationLogin(LoginViewModel loginModel)
         {
             Common.IsAdministration_AlterDBLogin = 0;
             bool LoginAdministrationValid = false;
-            if ((loginModel.Username == en.decrypt(Common.InvoiceSettingUser1)) & (loginModel.Password == en.decrypt(Common.InvoiceSettingUser2)))
+            string adminUser = Environment.GetEnvironmentVariable(AdminUserEnvVar);
+            string adminPassword = Environment.GetEnvironmentVariable(AdminPasswordEnvVar);
+            if (string.IsNullOrWhiteSpace(adminUser) || string.IsNullOrEmpty(adminPassword))
+                return false;
+            if (FixedTimeEquals(loginModel.Username, adminUser) & FixedTimeEquals(loginModel.Password, adminPassword))
             {
                 Common.IsAdministration_AlterDBLogin = 1;
                 //this.Is_SaveUserNameLogin = false;
