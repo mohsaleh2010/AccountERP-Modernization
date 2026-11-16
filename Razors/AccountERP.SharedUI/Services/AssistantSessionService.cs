@@ -490,6 +490,35 @@ namespace AccountERP.SharedUI.Services
             await RefreshSavedReportsAsync();
         }
 
+        /// <summary>بقايا ب1: «تقارير مشتركة» من الآخرين.</summary>
+        public List<AiSavedReportView> SharedReports { get; private set; } = new();
+
+        public async Task RefreshSharedReportsAsync()
+        {
+            if (!HasAccess || _gw == null) return;
+            var gw = _gw; long uid = UserId;
+            try { SharedReports = await Bg(() => gw.GetSharedReports(uid)); }
+            catch (Exception ex) { Error = Err(ex); }
+            Notify();
+        }
+
+        public async Task<bool> ShareReportAsync(long reportId, bool shared)
+        {
+            if (_gw == null) return false;
+            var gw = _gw; long uid = UserId;
+            bool ok = await Bg(() => gw.ShareReport(reportId, shared, uid));
+            await RefreshSavedReportsAsync();
+            return ok;
+        }
+
+        /// <summary>يعيد معرّف النسخة الخاصة؛ يرمى InvalidOperationException برسالة عربية.</summary>
+        public async Task<long> OpenSharedReportAsync(long reportId)
+        {
+            if (_gw == null || !HasAccess) throw new InvalidOperationException("المساعد غير متاح.");
+            var gw = _gw; var user = BuildUser();
+            return await Task.Run(async () => { AccountCultureGuard.EnsureInvariant(); return await gw.OpenSharedReportAsync(reportId, user); });
+        }
+
         public async Task UnsaveReportAsync(long reportId)
         {
             if (_gw == null) return;

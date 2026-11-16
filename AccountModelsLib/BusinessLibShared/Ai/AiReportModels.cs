@@ -136,5 +136,9 @@ namespace AccountModelsLib
         public DateTime? LastRunAt { get; set; }
         public DateTime? PeriodFrom { get; set; }
         public DateTime? PeriodTo { get; set; }
+        /// <summary>بقايا ب1: مشترك مع الشركة.</summary>
+        public bool IsShared { get; set; }
+        /// <summary>فى قائمة «تقارير مشتركة»: صاحب التقرير.</summary>
+        public string OwnerName { get; set; } = "";
     }
 }

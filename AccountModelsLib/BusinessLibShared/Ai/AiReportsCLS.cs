@@ -73,7 +73,7 @@ VALUES ({id}, {r.User_Id}, {r.Conversation_Id}, NULL, {Cut(r.Title, 200)}, {r.Sp
         public List<AiSavedReportView> ListSaved(long userId, int top = 100)
         {
             var list = new List<AiSavedReportView>();
-            Exec(_newOpp().db, @"SELECT TOP (@top) Id, Title, IsPinned, CreatedAt, LastRunAt, PeriodFrom, PeriodTo FROM AI_SavedReports
+            Exec(_newOpp().db, @"SELECT TOP (@top) Id, Title, IsPinned, CreatedAt, LastRunAt, PeriodFrom, PeriodTo, ISNULL(IsShared, 0) FROM AI_SavedReports
                                  WHERE User_Id = @u AND IsSaved = 1 ORDER BY IsPinned DESC, ISNULL(LastRunAt, CreatedAt) DESC, Id DESC",
                 cmd => { Add(cmd, "@top", top); Add(cmd, "@u", userId); },
                 r => list.Add(new AiSavedReportView
@@ -85,9 +85,52 @@ VALUES ({id}, {r.User_Id}, {r.Conversation_Id}, NULL, {Cut(r.Title, 200)}, {r.Sp
                     LastRunAt = r.IsDBNull(4) ? (DateTime?)null : r.GetDateTime(4),
                     PeriodFrom = r.IsDBNull(5) ? (DateTime?)null : r.GetDateTime(5),
                     PeriodTo = r.IsDBNull(6) ? (DateTime?)null : r.GetDateTime(6),
+                    IsShared = Convert.ToBoolean(r.GetValue(7)),
                 }));
             return list;
         }
+
+        // ───────────── بقايا ب1: المشاركة ─────────────
+
+        /// <summary>مشاركة/إلغاء مشاركة تقرير محفوظ — لصاحبه فقط.</summary>
+        public bool SetShared(long id, bool shared, long userId) =>
+            _newOpp().db.Database.ExecuteSqlInterpolated($@"
+UPDATE AI_SavedReports SET IsShared = {shared}, UpdatedBy = {userId}, UpdatedAt = {DateTime.Now}
+WHERE Id = {id} AND User_Id = {userId} AND IsSaved = 1") == 1;
+
+        /// <summary>التقارير المشتركة من مستخدمين آخرين (بلا البيانات).</summary>
+        public List<AiSavedReportView> ListShared(long excludeUserId, int top = 100)
+        {
+            var list = new List<AiSavedReportView>();
+            Exec(_newOpp().db, @"SELECT TOP (@top) r.Id, r.Title, r.CreatedAt, r.LastRunAt, r.PeriodFrom, r.PeriodTo, ISNULL(u.USER_NAME, N'')
+FROM AI_SavedReports r LEFT JOIN USER_DETAILES u ON u.Id = r.User_Id
+WHERE r.IsShared = 1 AND r.IsSaved = 1 AND r.User_Id <> @u ORDER BY ISNULL(r.LastRunAt, r.CreatedAt) DESC, r.Id DESC",
+                cmd => { Add(cmd, "@top", top); Add(cmd, "@u", excludeUserId); },
+                r => list.Add(new AiSavedReportView
+                {
+                    Id = r.GetInt64(0), Title = r.IsDBNull(1) ? "" : r.GetString(1), CreatedAt = r.IsDBNull(2) ? DateTime.MinValue : r.GetDateTime(2),
+                    LastRunAt = r.IsDBNull(3) ? (DateTime?)null : r.GetDateTime(3), PeriodFrom = r.IsDBNull(4) ? (DateTime?)null : r.GetDateTime(4),
+                    PeriodTo = r.IsDBNull(5) ? (DateTime?)null : r.GetDateTime(5), IsShared = true, OwnerName = r.IsDBNull(6) ? "" : r.GetString(6),
+                }));
+            return list;
+        }
+
+        /// <summary>نسخة خاصة (غير محفوظة) من تقرير مشترك للمستخدم، بلا بيانات صاحبه (DataJson = NULL). 0 = غير مشترك.</summary>
+        public long CopyShared(long id, long toUserId)
+        {
+            long newId = CallSnowflakeIdGenerate.GenerateNewId();
+            DateTime now = DateTime.Now;
+            int n = _newOpp().db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO AI_SavedReports (Id, User_Id, Conversation_Id, Message_Id, Title, SpecJson, SourcesJson, DataJson, PeriodFrom, PeriodTo,
+                             IsSaved, IsPinned, IsShared, LastRunAt, CreatedBy, CreatedAt)
+SELECT {newId}, {toUserId}, NULL, NULL, Title, SpecJson, SourcesJson, NULL, PeriodFrom, PeriodTo, 0, 0, 0, NULL, {toUserId}, {now}
+FROM AI_SavedReports WHERE Id = {id} AND IsShared = 1 AND IsSaved = 1");
+            return n == 1 ? newId : 0;
+        }
+
+        /// <summary>حذف نسخة غير محفوظة للمستخدم نفسه (فشل فتح تقرير مشترك).</summary>
+        public void DeleteUnsaved(long id, long userId) =>
+            _newOpp().db.Database.ExecuteSqlInterpolated($"DELETE FROM AI_SavedReports WHERE Id = {id} AND User_Id = {userId} AND IsSaved = 0");
 
         public void SetSaved(long id, string title, bool saved, bool pinned, long userId)
         {

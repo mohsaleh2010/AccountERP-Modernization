@@ -6730,4 +6730,10 @@
   <data name="AIN_Set_Group" xml:space="preserve"><value>Max. Posten je Gruppe</value></data>
   <data name="AIN_Set_Save" xml:space="preserve"><value>Speichern</value></data>
   <data name="AIN_Set_Saved" xml:space="preserve"><value>Einstellungen gespeichert</value></data>
+  <data name="AIU_Share" xml:space="preserve"><value>Mit dem Unternehmen teilen</value></data>
+  <data name="AIU_Unshare" xml:space="preserve"><value>Teilen beenden</value></data>
+  <data name="AIU_Shared" xml:space="preserve"><value>Bericht geteilt; andere öffnen ihn mit eigenen Berechtigungen.</value></data>
+  <data name="AIU_Unshared" xml:space="preserve"><value>Teilen beendet.</value></data>
+  <data name="AIU_SharedReports" xml:space="preserve"><value>Geteilte Berichte</value></data>
+  <data name="AIU_OpenSharedHint" xml:space="preserve"><value>Öffnet als eigene Kopie mit Ihren Daten</value></data>
 </root>

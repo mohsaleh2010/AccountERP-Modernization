@@ -11,6 +11,8 @@
 @inject LanguageService LangService
 @inject IServiceProvider ServiceProvider
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
 @implements IDisposable
 
 <PageTitle>@Tr("AIC_Title")</PageTitle>
@@ -41,6 +43,10 @@
     .aip-body { flex: 1; min-height: 0; }
     .aip-scrim { display: none; }
     .aip-reports { flex: none; max-height: 38%; overflow-y: auto; border-top: 1px solid var(--mud-palette-lines-default); padding: 4px 8px 8px; }
+    .aip-report-row { display: flex; align-items: center; gap: 2px; }
+    .aip-report-row .aip-report { flex: 1 1 auto; min-width: 0; }
+    .aip-share { flex: none; }
+    .aip-owner { font-size: .75rem; color: var(--mud-palette-text-secondary); margin-inline-start: auto; }
     .aip-report { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 10px; border-radius: 10px; font-size: .85rem;
                   color: var(--mud-palette-text-primary); text-decoration: none; }
     .aip-report span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -125,10 +131,32 @@
                     <div class="aip-group">@Tr("AIR_MyReports")</div>
                     @foreach (var r in _chat.SavedReports.Take(12))
                     {
-                        <a class="aip-report" href="@($"/assistant/report/{r.Id}")" title="@r.Title" @key="r.Id">
-                            <MudIcon Icon="@(r.IsPinned ? Icons.Material.Filled.PushPin : Icons.Material.Outlined.Assessment)" Size="Size.Small" aria-hidden="true" />
+                        <div class="aip-report-row" @key="r.Id">
+                            <a class="aip-report" href="@($"/assistant/report/{r.Id}")" title="@r.Title">
+                                <MudIcon Icon="@(r.IsPinned ? Icons.Material.Filled.PushPin : Icons.Material.Outlined.Assessment)" Size="Size.Small" aria-hidden="true" />
+                                <span>@r.Title</span>
+                            </a>
+                            @* بقايا ب1: مشاركة مع الشركة (صاحب التقرير فقط) *@
+                            <MudIconButton Class="aip-share" Size="Size.Small" Icon="@(r.IsShared ? Icons.Material.Filled.Group : Icons.Material.Outlined.GroupAdd)"
+                                           Color="@(r.IsShared ? Color.Primary : Color.Default)" aria-pressed="@(r.IsShared ? "true" : "false")"
+                                           title="@(r.IsShared ? Tr("AIU_Unshare") : Tr("AIU_Share"))" aria-label="@(r.IsShared ? Tr("AIU_Unshare") : Tr("AIU_Share"))"
+                                           OnClick="@(() => ToggleShareAsync(r))" />
+                        </div>
+                    }
+                </div>
+            }
+            @if (_chat.SharedReports.Count > 0)
+            {
+                <div class="aip-reports" role="region" aria-label="@Tr("AIU_SharedReports")">
+                    <div class="aip-group">@Tr("AIU_SharedReports")</div>
+                    @foreach (var r in _chat.SharedReports.Take(12))
+                    {
+                        <button type="button" class="aip-report" style="border:0;background:none;width:100%;text-align:start;cursor:pointer;font:inherit;color:inherit"
+                                title="@Tr("AIU_OpenSharedHint")" disabled="@_opening" @onclick="@(() => OpenSharedAsync(r.Id))" @key="r.Id">
+                            <MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Small" aria-hidden="true" />
                             <span>@r.Title</span>
-                        </a>
+                            <span class="aip-owner">@r.OwnerName</span>
+                        </button>
                     }
                 </div>
             }
@@ -182,8 +210,37 @@
             {
                 await _chat.RefreshAsync();
                 await _chat.RefreshSavedReportsAsync();
+                await _chat.RefreshSharedReportsAsync();   // بقايا ب1
             }
         }
+    }
+
+    // ───────────── بقايا ب1: مشاركة التقارير ─────────────
+    private bool _opening;
+
+    private async Task ToggleShareAsync(AiSavedReportView r)
+    {
+        if (_chat == null) return;
+        try
+        {
+            bool ok = await _chat.ShareReportAsync(r.Id, !r.IsShared);
+            if (ok) Snackbar.Add(Tr(r.IsShared ? "AIU_Unshared" : "AIU_Shared"), Severity.Success);
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+    }
+
+    private async Task OpenSharedAsync(long id)
+    {
+        if (_chat == null || _opening) return;
+        _opening = true;
+        try
+        {
+            long copy = await _chat.OpenSharedReportAsync(id);
+            Nav.NavigateTo($"/assistant/report/{copy}");
+        }
+        catch (InvalidOperationException ex) { Snackbar.Add(ex.Message, Severity.Warning); }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        finally { _opening = false; }
     }
 
     private void OnChanged() => InvokeAsync(StateHasChanged);

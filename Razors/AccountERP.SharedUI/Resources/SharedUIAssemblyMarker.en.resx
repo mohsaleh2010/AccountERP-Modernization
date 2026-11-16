@@ -6728,4 +6728,10 @@
   <data name="AIN_Set_Group" xml:space="preserve"><value>Maximum items in a group match</value></data>
   <data name="AIN_Set_Save" xml:space="preserve"><value>Save</value></data>
   <data name="AIN_Set_Saved" xml:space="preserve"><value>Settings saved</value></data>
+  <data name="AIU_Share" xml:space="preserve"><value>Share with the company</value></data>
+  <data name="AIU_Unshare" xml:space="preserve"><value>Stop sharing</value></data>
+  <data name="AIU_Shared" xml:space="preserve"><value>The report is now shared; others open it with their own data and permissions.</value></data>
+  <data name="AIU_Unshared" xml:space="preserve"><value>Sharing stopped.</value></data>
+  <data name="AIU_SharedReports" xml:space="preserve"><value>Shared reports</value></data>
+  <data name="AIU_OpenSharedHint" xml:space="preserve"><value>Opens as your own copy computed with your data and permissions</value></data>
 </root>

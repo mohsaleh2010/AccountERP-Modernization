@@ -712,6 +712,11 @@ namespace AccountModelsLib
         AiReportDoc GetReport(long reportId, long userId);
         /// <summary>تقاريرى المحفوظة (المثبّتة أولاً).</summary>
         List<AiSavedReportView> GetSavedReports(long userId);
+        /// <summary>بقايا ب1: مشاركة تقرير محفوظ مع الشركة (لصاحبه فقط).</summary>
+        bool ShareReport(long reportId, bool shared, long userId);
+        List<AiSavedReportView> GetSharedReports(long userId);
+        /// <summary>يفتح تقريراً مشتركاً كنسخة خاصة تُعاد بصلاحيات المستخدم؛ يرمى InvalidOperationException إن لم يملك صلاحية بياناته.</summary>
+        Task<long> OpenSharedReportAsync(long reportId, AiUserContext user, CancellationToken ct = default);
         /// <summary>حفظ التقرير فى «تقاريرى» (بعنوان جديد اختيارياً) أو تثبيته/إلغاء تثبيته.</summary>
         void SaveReport(long reportId, string title, bool pinned, long userId);
         /// <summary>إزالته من «تقاريرى» (يبقى فى محادثته إن وُجدت).</summary>

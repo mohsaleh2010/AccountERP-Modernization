@@ -6728,4 +6728,10 @@
   <data name="AIN_Set_Group" xml:space="preserve"><value>أقصى حركات فى المطابقة المجمّعة</value></data>
   <data name="AIN_Set_Save" xml:space="preserve"><value>حفظ</value></data>
   <data name="AIN_Set_Saved" xml:space="preserve"><value>حُفظت الإعدادات</value></data>
+  <data name="AIU_Share" xml:space="preserve"><value>مشاركة مع الشركة</value></data>
+  <data name="AIU_Unshare" xml:space="preserve"><value>إلغاء المشاركة</value></data>
+  <data name="AIU_Shared" xml:space="preserve"><value>التقرير مشترك الآن؛ يفتحه الآخرون ببياناتهم وصلاحياتهم.</value></data>
+  <data name="AIU_Unshared" xml:space="preserve"><value>أُلغيت المشاركة.</value></data>
+  <data name="AIU_SharedReports" xml:space="preserve"><value>تقارير مشتركة</value></data>
+  <data name="AIU_OpenSharedHint" xml:space="preserve"><value>يُفتح كنسخة خاصة بك تُحسب ببياناتك وصلاحياتك</value></data>
 </root>

@@ -6730,4 +6730,10 @@
   <data name="AIN_Set_Group" xml:space="preserve"><value>Éléments max. par groupe</value></data>
   <data name="AIN_Set_Save" xml:space="preserve"><value>Enregistrer</value></data>
   <data name="AIN_Set_Saved" xml:space="preserve"><value>Paramètres enregistrés</value></data>
+  <data name="AIU_Share" xml:space="preserve"><value>Partager avec l'entreprise</value></data>
+  <data name="AIU_Unshare" xml:space="preserve"><value>Arrêter le partage</value></data>
+  <data name="AIU_Shared" xml:space="preserve"><value>Rapport partagé ; les autres l'ouvrent avec leurs propres droits.</value></data>
+  <data name="AIU_Unshared" xml:space="preserve"><value>Partage arrêté.</value></data>
+  <data name="AIU_SharedReports" xml:space="preserve"><value>Rapports partagés</value></data>
+  <data name="AIU_OpenSharedHint" xml:space="preserve"><value>S'ouvre comme votre copie avec vos données</value></data>
 </root>

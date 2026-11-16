@@ -902,6 +902,29 @@ namespace AccountERP.AI.Chat
         /// إعادة التشغيل: كل مصدر يُنفَّذ من جديد بنفس الأداة ونفس المدخلات (مع الفترة الجديدة إن أُعطيت) عبر نفس مسار الأدوات —
         /// الصلاحيات الحالية للمستخدم تُفحص من جديد، والتنفيذ يُسجَّل فى التدقيق. لا يُستدعى أى نموذج.
         /// </summary>
+        public bool ShareReport(long reportId, bool shared, long userId) => userId > 0 && _reports.SetShared(reportId, shared, userId);
+
+        public List<AiSavedReportView> GetSharedReports(long userId) => userId <= 0 ? new List<AiSavedReportView>() : _reports.ListShared(userId);
+
+        /// <summary>بقايا ب1 (3): نسخة خاصة ثم إعادة تشغيل بصلاحيات الفاتح؛ الفشل ⇒ حذف النسخة ورسالة المنع (لا تُعرض لقطة صاحبه).</summary>
+        public async Task<long> OpenSharedReportAsync(long reportId, AiUserContext user, CancellationToken ct = default)
+        {
+            long userId = user?.UserId ?? 0;
+            if (userId <= 0) throw new InvalidOperationException("سجّل الدخول أولاً.");
+            long copy = _reports.CopyShared(reportId, userId);
+            if (copy == 0) throw new InvalidOperationException("التقرير لم يعد مشتركاً.");
+            try
+            {
+                await RerunReportAsync(copy, null, null, user!, ct);
+                return copy;
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or Tools.AiSqlRejectedException)
+            {
+                try { _reports.DeleteUnsaved(copy, userId); } catch { }
+                throw new InvalidOperationException("لا تملك صلاحية بيانات هذا التقرير، أو تعذّر تشغيله ببياناتك: " + ex.Message);
+            }
+        }
+
         public Task<AiReportDoc> RerunReportAsync(long reportId, DateTime? from, DateTime? to, AiUserContext user, CancellationToken ct = default)
         {
             long userId = user?.UserId ?? 0;
