@@ -6621,4 +6621,31 @@
   <data name="AIM_Set_Saved" xml:space="preserve"><value>Einstellungen gespeichert</value></data>
   <data name="AIM_Set_All" xml:space="preserve"><value>Tokens aller Benutzer</value></data>
   <data name="AIM_Set_NoTokens" xml:space="preserve"><value>Noch keine Tokens.</value></data>
+  <data name="AI_Task_speech" xml:space="preserve"><value>Sprache</value></data>
+  <data name="AI_TaskDesc_speech" xml:space="preserve"><value>Spracheingabe in Text umwandeln</value></data>
+  <data name="AIV_Start" xml:space="preserve"><value>Sprechen (Spracheingabe)</value></data>
+  <data name="AIV_Stop" xml:space="preserve"><value>Stoppen und umwandeln</value></data>
+  <data name="AIV_NotAvailable" xml:space="preserve"><value>Spracheingabe nur in der Webversion.</value></data>
+  <data name="AIV_ErrDenied" xml:space="preserve"><value>Mikrofonzugriff verweigert.</value></data>
+  <data name="AIV_ErrNoDevice" xml:space="preserve"><value>Kein Mikrofon verfügbar.</value></data>
+  <data name="AIV_ErrUnsupported" xml:space="preserve"><value>Browser unterstützt keine Aufnahme.</value></data>
+  <data name="AIV_ErrEmpty" xml:space="preserve"><value>Aufnahme leer oder zu kurz.</value></data>
+  <data name="AIV_ErrTooLarge" xml:space="preserve"><value>Aufnahme zu groß.</value></data>
+  <data name="AIV_ErrFormat" xml:space="preserve"><value>Nicht unterstütztes Format.</value></data>
+  <data name="AIV_ErrNothing" xml:space="preserve"><value>Keine Sprache erkannt.</value></data>
+  <data name="AIV_ErrNoModel" xml:space="preserve"><value>Kein Modell für Sprache.</value></data>
+  <data name="AIV_ErrProvider" xml:space="preserve"><value>Anbieter konnte nicht umwandeln:</value></data>
+  <data name="AIV_ErrDisabled" xml:space="preserve"><value>Spracheingabe ist aus.</value></data>
+  <data name="AIV_ErrNoAccess" xml:space="preserve"><value>Keine Berechtigung.</value></data>
+  <data name="AIV_ErrNotAdmin" xml:space="preserve"><value>Nur Administratoren.</value></data>
+  <data name="AIV_ErrGeneric" xml:space="preserve"><value>Umwandlung fehlgeschlagen.</value></data>
+  <data name="AIV_Set_Tab" xml:space="preserve"><value>Sprache</value></data>
+  <data name="AIV_Set_Intro" xml:space="preserve"><value>Ein Mikrofonknopf wandelt Sprache in Text um; Audio wird nicht gespeichert.</value></data>
+  <data name="AIV_Set_Enabled" xml:space="preserve"><value>Spracheingabe aktivieren</value></data>
+  <data name="AIV_Set_MaxSeconds" xml:space="preserve"><value>Maximale Aufnahmedauer (s)</value></data>
+  <data name="AIV_Set_Language" xml:space="preserve"><value>Gesprochene Sprache</value></data>
+  <data name="AIV_Set_Ready" xml:space="preserve"><value>Sprachaufgabe ist konfiguriert.</value></data>
+  <data name="AIV_Set_NotReady" xml:space="preserve"><value>Kein geeignetes Modell für Sprache.</value></data>
+  <data name="AIV_Set_Save" xml:space="preserve"><value>Speichern</value></data>
+  <data name="AIV_Set_Saved" xml:space="preserve"><value>Einstellungen gespeichert</value></data>
 </root>

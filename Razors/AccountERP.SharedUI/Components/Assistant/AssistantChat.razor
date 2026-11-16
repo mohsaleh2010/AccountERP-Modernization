@@ -107,6 +107,13 @@
     .aic-file .sz { color: var(--mud-palette-text-secondary); font-size: .72rem; white-space: nowrap; }
     .aic-file .x { display: grid; place-items: center; width: 28px; height: 28px; margin-inline-end: -6px; border: 0; border-radius: 8px; background: transparent; cursor: pointer; color: var(--mud-palette-text-secondary); }
     .aic-file .x:hover { background: var(--mud-palette-action-default-hover); }
+    /* P8.11.2: زر الميكروفون — نفس مقاس زر الإرفاق؛ أثناء التسجيل لون الخطأ مع العداد */
+    .aic-mic { flex: none; min-width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: 0; background: none; cursor: pointer; color: var(--mud-palette-text-secondary); padding: 0 6px; font: inherit; }
+    .aic-mic:hover { background: var(--mud-palette-action-default-hover); }
+    .aic-mic:focus-visible { outline: 2px solid var(--mud-palette-primary); outline-offset: 2px; }
+    .aic-mic.rec { color: var(--mud-palette-error); background: color-mix(in srgb, var(--mud-palette-error) 10%, transparent); }
+    .aic-mic[disabled] { opacity: .45; cursor: default; }
+    .aic-mic .sec { font-size: .8rem; font-variant-numeric: tabular-nums; }
     .aic-attach { flex: none; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; cursor: pointer; color: var(--mud-palette-text-secondary); }
     .aic-attach:hover { background: var(--mud-palette-action-default-hover); color: var(--mud-palette-primary); }
     .aic-attach[data-disabled="1"] { opacity: .45; pointer-events: none; }
@@ -651,6 +658,17 @@
                     <InputFile id="@_fileId" class="aic-fileinput" OnChange="OnFilesAsync" multiple accept="@Chat.UploadLimits.Accept"
                                disabled="@(!Chat.Availability.Ready || Chat.IsSending || Chat.IsUploading || Chat.ConversationArchived)" />
                 }
+                @if (SpeechAvailable)
+                {
+                    <button type="button" class="aic-mic @(_recState == 1 ? "rec" : "")" @onclick="ToggleRecordingAsync"
+                            disabled="@(_recState == 2 || !Chat.Availability.Ready || Chat.IsSending || Chat.ConversationArchived)"
+                            aria-pressed="@(_recState == 1 ? "true" : "false")"
+                            aria-label="@(_recState == 1 ? Tr("AIV_Stop") : Tr("AIV_Start"))" title="@(_recState == 1 ? Tr("AIV_Stop") : Tr("AIV_Start"))">
+                        @if (_recState == 2) { <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary" /> }
+                        else if (_recState == 1) { <MudIcon Icon="@Icons.Material.Filled.StopCircle" /><span class="sec" aria-live="off">@_recSeconds</span> }
+                        else { <MudIcon Icon="@Icons.Material.Filled.Mic" /> }
+                    </button>
+                }
                 <textarea @ref="_input" rows="1" maxlength="8000" aria-label="@Tr("AIC_InputLabel")" placeholder="@(Chat.PendingAsk != null ? Tr("AIC_AskPlaceholder") : Tr("AIC_Placeholder"))"
                           disabled="@(!Chat.Availability.Ready || Chat.ConversationArchived)"></textarea>
                 @if (Chat.IsSending)
@@ -705,6 +723,7 @@
         Chat.OnChanged += OnChatChanged;
         LangService.OnLanguageChanged += OnChatChanged;
         if (Chat.HasAccess && !Chat.AvailabilityLoaded) await Chat.RefreshAsync();
+        await LoadSpeechAsync();   // P8.11.2
     }
 
     // ───── الإعداد السريع (المدير بلا نموذج محادثة) ─────
@@ -797,6 +816,94 @@
 
     [JSInvokable]
     public Task SubmitFromKeyboard(string text) => SubmitAsync(text);
+
+    // ───────────── P8.11.2: الإدخال الصوتى (النص يُلحق بالمؤلف ولا يُرسل تلقائياً — ص7) ─────────────
+    private IAiSpeechGateway? _speechGw;
+    private AiSpeechConfig? _speechCfg;
+    private int _recState;   // 0 جاهز، 1 يسجّل، 2 يفرّغ
+    private int _recSeconds;
+    private System.Threading.Timer? _recTimer;
+
+    private bool SpeechAvailable => _speechGw != null && _speechCfg is { Enabled: true, Ready: true };
+
+    private async Task LoadSpeechAsync()
+    {
+        _speechGw = ServiceProvider.GetService(typeof(IAiSpeechGateway)) as IAiSpeechGateway;
+        if (_speechGw == null || !Chat.HasAccess) return;
+        var gw = _speechGw; var user = Chat.BuildUser();
+        try { _speechCfg = await Task.Run(() => gw.GetConfig(user)); } catch { _speechCfg = null; }
+    }
+
+    private async Task ToggleRecordingAsync()
+    {
+        if (_module == null || _speechCfg == null) return;
+        if (_recState == 1) { await FinishRecordingAsync(); return; }
+        if (_recState != 0) return;
+        _self ??= DotNetObjectReference.Create(this);
+        string r;
+        try { r = await _module.InvokeAsync<string>("startRecording", _self, _speechCfg.MaxSeconds); }
+        catch (JSException) { r = "unsupported"; }
+        if (r != "ok")
+        {
+            Snackbar.Add(Tr(r == "denied" ? "AIV_ErrDenied" : r == "nodevice" ? "AIV_ErrNoDevice" : "AIV_ErrUnsupported"), Severity.Warning);
+            return;
+        }
+        _recState = 1; _recSeconds = 0;
+        _recTimer = new System.Threading.Timer(_ => InvokeAsync(() => { if (_recState == 1) { _recSeconds++; StateHasChanged(); } }), null, 1000, 1000);
+    }
+
+    [JSInvokable]
+    public Task OnRecordingAutoStopped() => InvokeAsync(FinishRecordingAsync);
+
+    private async Task FinishRecordingAsync()
+    {
+        if (_recState != 1 || _module == null || _speechGw == null || _speechCfg == null) return;
+        _recTimer?.Dispose(); _recTimer = null;
+        _recState = 2;
+        StateHasChanged();
+        try
+        {
+            var meta = await _module.InvokeAsync<RecordingMeta?>("stopRecording");
+            if (meta == null || meta.size <= 0) { Snackbar.Add(Tr("AIV_ErrEmpty"), Severity.Warning); return; }
+            if (meta.size > _speechCfg.MaxBytes) { Snackbar.Add(Tr("AIV_ErrTooLarge"), Severity.Warning); return; }
+            var streamRef = await _module.InvokeAsync<IJSStreamReference>("takeRecording");
+            byte[] bytes;
+            await using (var stream = await streamRef.OpenReadStreamAsync(_speechCfg.MaxBytes + 1024))
+            using (var ms = new System.IO.MemoryStream())
+            {
+                await stream.CopyToAsync(ms);
+                bytes = ms.ToArray();
+            }
+            var gw = _speechGw; var user = Chat.BuildUser(); string mime = meta.mime ?? "audio/webm";
+            string text = await Task.Run(async () => await gw.TranscribeAsync(bytes, mime, user, CancellationToken.None));
+            if (string.IsNullOrWhiteSpace(text)) { Snackbar.Add(Tr("AIV_ErrNothing"), Severity.Info); return; }
+            await _module.InvokeVoidAsync("appendComposer", _input, text);
+        }
+        catch (AiSpeechException ex) { Snackbar.Add(SpeechError(ex), Severity.Warning); }
+        catch (JSDisconnectedException) { }
+        catch (Exception ex)
+        {
+            try { operations.DataDictionaryLogerException(ex); } catch { }
+            Snackbar.Add(Tr("AIV_ErrGeneric"), Severity.Error);
+        }
+        finally
+        {
+            _recState = 0;
+            StateHasChanged();
+        }
+    }
+
+    private string SpeechError(AiSpeechException ex)
+    {
+        string t = Tr(ex.Code);
+        return string.IsNullOrEmpty(t) || t == ex.Code ? ex.Message : (ex.Code == "AIV_ErrProvider" ? t + " " + ex.Message : t);
+    }
+
+    private sealed class RecordingMeta
+    {
+        public string? mime { get; set; }
+        public long size { get; set; }
+    }
 
     private async Task SendFromButtonAsync()
     {
@@ -1039,6 +1146,8 @@
 
     public async ValueTask DisposeAsync()
     {
+        _recTimer?.Dispose();
+        try { if (_module != null && _recState == 1) await _module.InvokeVoidAsync("cancelRecording"); } catch { }
         Chat.OnChanged -= OnChatChanged;
         LangService.OnLanguageChanged -= OnChatChanged;
         try { if (_module != null) await _module.DisposeAsync(); }

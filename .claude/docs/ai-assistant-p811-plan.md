@@ -73,4 +73,6 @@
 
 ### تم التنفيذ
 
-(فارغ)
+- **P8.11.1 `64f12c3` (2026-11-16):** `AiTaskKeys.Speech` (يظهر تلقائياً فى تبويب الربط)، 4 إعدادات، `AiHttp.PostContentAsync` (multipart)، `Providers/HttpTranscription` (OpenAI المتوافق `audio/transcriptions` multipart بـ `language` و`prompt` مفردات، Azure deployments، Gemini `generateContent` بصوت inline؛ Anthropic وOllama مرفوضان)، `Chat/AiSpeechGateway` (`IAiSpeechGateway` منفصل عن بوابة المحادثة؛ ≤ 5 MB، الصيغ webm/ogg/mp4/mpeg/wav، مهلة 30 ث، يجرب المرشحين بالترتيب، لا تخزين للصوت). **تسجيل التكلفة بالثوانى (ص8) لم يُنفَّذ** (فحص 1 مفتوح).
+- **P8.11.2:** `assistant.js` (`startRecording/stopRecording/takeRecording/cancelRecording/appendComposer` بـ MediaRecorder؛ إيقاف تلقائى عند الحد)، زر ميكروفون فى `AssistantChat` بحالات (جاهز/يسجّل مع عداد/يفرّغ)، الصوت ينقل كـ `IJSStreamReference`، النص يُلحق بالمؤلف ولا يُرسل. تبويب `AiSpeechTab`، 27 مفتاح `AIV_`/`AI_Task_speech` ×4. Web Speech API غير مستعمل (الإعداد `SpeechAllowBrowser` محفوظ للمستقبل).
+- **الاختبارات (م-626…م-635) مؤجلة.**

@@ -1,0 +1,83 @@
+@* 🤖 P8.11.2 (ai-assistant-p811-plan.md ص9): تبويب «الصوت» فى /settings/ai — التفعيل، أقصى مدة، اللغة، وحالة ربط مهمة «الصوت» (من تبويب النماذج والربط). *@
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using Microsoft.Extensions.DependencyInjection
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IServiceProvider ServiceProvider
+
+<div class="aims" dir="@(LangService.IsRtl ? "rtl" : "ltr")" style="display:flex;flex-direction:column;gap:16px">
+    @if (_gw == null || _chat == null)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("AIV_NotAvailable")</MudAlert>
+    }
+    else if (_error != null && _s == null)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@_error</MudAlert>
+    }
+    else if (_s != null)
+    {
+        <section style="border:1px solid var(--mud-palette-lines-default);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px;background:var(--mud-palette-surface)" aria-label="@Tr("AIV_Set_Tab")">
+            <h3 style="margin:0;font-size:1rem;font-weight:700;display:flex;gap:8px;align-items:center"><MudIcon Icon="@Icons.Material.Filled.Mic" Color="Color.Primary" aria-hidden="true" />@Tr("AIV_Set_Tab")</h3>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">@Tr("AIV_Set_Intro")</MudText>
+            <MudSwitch T="bool" @bind-Value="_s.Enabled" Color="Color.Primary" Label="@Tr("AIV_Set_Enabled")" />
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+                <MudNumericField T="int" @bind-Value="_s.MaxSeconds" Label="@Tr("AIV_Set_MaxSeconds")" Min="5" Max="300" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudTextField T="string" @bind-Value="_s.Language" Label="@Tr("AIV_Set_Language")" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="10" HelperText="ar, en, de, fr" />
+            </div>
+            @if (_cfg != null && _s.Enabled)
+            {
+                <MudAlert Severity="@(_cfg.Ready ? Severity.Success : Severity.Warning)" Dense="true" Variant="Variant.Outlined">
+                    @(_cfg.Ready ? Tr("AIV_Set_Ready") : Tr("AIV_Set_NotReady"))
+                </MudAlert>
+            }
+            <div><MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="_busy" OnClick="SaveAsync" Style="min-height:44px">@Tr("AIV_Set_Save")</MudButton></div>
+        </section>
+    }
+</div>
+
+@code {
+    private IAiSpeechGateway? _gw;
+    private AssistantSessionService? _chat;
+    private AiSpeechSettings? _s;
+    private AiSpeechConfig? _cfg;
+    private bool _busy;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _gw = ServiceProvider.GetService<IAiSpeechGateway>();
+        _chat = ServiceProvider.GetService<AssistantSessionService>();
+        if (_gw == null || _chat == null) return;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var gw = _gw!; var user = _chat!.BuildUser();
+        try
+        {
+            _s = await Task.Run(() => gw.GetSettings(user));
+            _cfg = await Task.Run(() => gw.GetConfig(user));
+        }
+        catch (AiSpeechException ex) { _error = Tr(ex.Code) is var t && t != ex.Code ? t : ex.Message; }
+        catch (Exception ex) { _error = ex.Message; }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_gw == null || _chat == null || _s == null) return;
+        _busy = true;
+        var gw = _gw; var user = _chat.BuildUser(); var s = _s;
+        try
+        {
+            await Task.Run(() => gw.SaveSettings(s, user));
+            Snackbar.Add(Tr("AIV_Set_Saved"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { Snackbar.Add(ex.Message, Severity.Error); }
+        finally { _busy = false; }
+    }
+
+    private string Tr(string key, params object[] args) => AiBriefText.T(Lang, LangService.CurrentCultureInfo, key, args);
+}

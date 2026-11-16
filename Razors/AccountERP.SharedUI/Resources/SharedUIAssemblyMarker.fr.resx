@@ -6621,4 +6621,31 @@
   <data name="AIM_Set_Saved" xml:space="preserve"><value>Paramètres enregistrés</value></data>
   <data name="AIM_Set_All" xml:space="preserve"><value>Jetons de tous les utilisateurs</value></data>
   <data name="AIM_Set_NoTokens" xml:space="preserve"><value>Aucun jeton.</value></data>
+  <data name="AI_Task_speech" xml:space="preserve"><value>Voix</value></data>
+  <data name="AI_TaskDesc_speech" xml:space="preserve"><value>Transcrire la saisie vocale en texte</value></data>
+  <data name="AIV_Start" xml:space="preserve"><value>Parler (saisie vocale)</value></data>
+  <data name="AIV_Stop" xml:space="preserve"><value>Arrêter et transcrire</value></data>
+  <data name="AIV_NotAvailable" xml:space="preserve"><value>Saisie vocale uniquement dans la version web.</value></data>
+  <data name="AIV_ErrDenied" xml:space="preserve"><value>Accès au micro refusé.</value></data>
+  <data name="AIV_ErrNoDevice" xml:space="preserve"><value>Aucun micro disponible.</value></data>
+  <data name="AIV_ErrUnsupported" xml:space="preserve"><value>Navigateur non compatible.</value></data>
+  <data name="AIV_ErrEmpty" xml:space="preserve"><value>Enregistrement vide ou trop court.</value></data>
+  <data name="AIV_ErrTooLarge" xml:space="preserve"><value>Enregistrement trop volumineux.</value></data>
+  <data name="AIV_ErrFormat" xml:space="preserve"><value>Format audio non pris en charge.</value></data>
+  <data name="AIV_ErrNothing" xml:space="preserve"><value>Aucune parole reconnue.</value></data>
+  <data name="AIV_ErrNoModel" xml:space="preserve"><value>Aucun modèle pour la voix.</value></data>
+  <data name="AIV_ErrProvider" xml:space="preserve"><value>Le fournisseur n'a pas pu transcrire :</value></data>
+  <data name="AIV_ErrDisabled" xml:space="preserve"><value>Saisie vocale désactivée.</value></data>
+  <data name="AIV_ErrNoAccess" xml:space="preserve"><value>Pas d'autorisation.</value></data>
+  <data name="AIV_ErrNotAdmin" xml:space="preserve"><value>Administrateurs uniquement.</value></data>
+  <data name="AIV_ErrGeneric" xml:space="preserve"><value>Conversion impossible.</value></data>
+  <data name="AIV_Set_Tab" xml:space="preserve"><value>Voix</value></data>
+  <data name="AIV_Set_Intro" xml:space="preserve"><value>Un bouton micro transcrit votre voix ; l'audio n'est pas conservé.</value></data>
+  <data name="AIV_Set_Enabled" xml:space="preserve"><value>Activer la saisie vocale</value></data>
+  <data name="AIV_Set_MaxSeconds" xml:space="preserve"><value>Durée maximale (s)</value></data>
+  <data name="AIV_Set_Language" xml:space="preserve"><value>Langue parlée</value></data>
+  <data name="AIV_Set_Ready" xml:space="preserve"><value>La tâche Voix est configurée.</value></data>
+  <data name="AIV_Set_NotReady" xml:space="preserve"><value>Aucun modèle adapté pour la voix.</value></data>
+  <data name="AIV_Set_Save" xml:space="preserve"><value>Enregistrer</value></data>
+  <data name="AIV_Set_Saved" xml:space="preserve"><value>Paramètres enregistrés</value></data>
 </root>

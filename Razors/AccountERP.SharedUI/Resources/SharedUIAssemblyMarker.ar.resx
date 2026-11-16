@@ -6619,4 +6619,31 @@
   <data name="AIM_Set_Saved" xml:space="preserve"><value>حُفظت الإعدادات</value></data>
   <data name="AIM_Set_All" xml:space="preserve"><value>توكنات كل المستخدمين</value></data>
   <data name="AIM_Set_NoTokens" xml:space="preserve"><value>لا توكنات بعد.</value></data>
+  <data name="AI_Task_speech" xml:space="preserve"><value>الصوت</value></data>
+  <data name="AI_TaskDesc_speech" xml:space="preserve"><value>تفريغ الإدخال الصوتى إلى نص (Whisper / gpt-4o-transcribe / Gemini)</value></data>
+  <data name="AIV_Start" xml:space="preserve"><value>تحدّث (تسجيل صوتى)</value></data>
+  <data name="AIV_Stop" xml:space="preserve"><value>إيقاف التسجيل وتحويله لنص</value></data>
+  <data name="AIV_NotAvailable" xml:space="preserve"><value>الإدخال الصوتى متاح فى نسخة الويب فقط.</value></data>
+  <data name="AIV_ErrDenied" xml:space="preserve"><value>رُفض إذن الميكروفون. اسمح به من إعدادات المتصفح.</value></data>
+  <data name="AIV_ErrNoDevice" xml:space="preserve"><value>لا يوجد ميكروفون متاح.</value></data>
+  <data name="AIV_ErrUnsupported" xml:space="preserve"><value>المتصفح لا يدعم التسجيل الصوتى.</value></data>
+  <data name="AIV_ErrEmpty" xml:space="preserve"><value>التسجيل فارغ أو قصير جداً.</value></data>
+  <data name="AIV_ErrTooLarge" xml:space="preserve"><value>التسجيل أكبر من الحد المسموح.</value></data>
+  <data name="AIV_ErrFormat" xml:space="preserve"><value>صيغة صوت غير مدعومة.</value></data>
+  <data name="AIV_ErrNothing" xml:space="preserve"><value>لم يُفهم كلام فى التسجيل.</value></data>
+  <data name="AIV_ErrNoModel" xml:space="preserve"><value>لا يوجد نموذج مربوط بمهمة «الصوت».</value></data>
+  <data name="AIV_ErrProvider" xml:space="preserve"><value>تعذّر التفريغ لدى المزوّد:</value></data>
+  <data name="AIV_ErrDisabled" xml:space="preserve"><value>الإدخال الصوتى موقوف.</value></data>
+  <data name="AIV_ErrNoAccess" xml:space="preserve"><value>لا تملك صلاحية المساعد الذكى.</value></data>
+  <data name="AIV_ErrNotAdmin" xml:space="preserve"><value>إعدادات الصوت للمدير فقط.</value></data>
+  <data name="AIV_ErrGeneric" xml:space="preserve"><value>تعذّر تحويل الصوت إلى نص.</value></data>
+  <data name="AIV_Set_Tab" xml:space="preserve"><value>الصوت</value></data>
+  <data name="AIV_Set_Intro" xml:space="preserve"><value>زر ميكروفون فى المحادثة يحوّل كلامك إلى نص يظهر فى خانة الكتابة لتراجعه قبل الإرسال. الصوت لا يُحفظ. اربط نموذج تفريغ بمهمة «الصوت» من تبويب النماذج والربط.</value></data>
+  <data name="AIV_Set_Enabled" xml:space="preserve"><value>تفعيل الإدخال الصوتى</value></data>
+  <data name="AIV_Set_MaxSeconds" xml:space="preserve"><value>أقصى مدة للتسجيل (ثانية)</value></data>
+  <data name="AIV_Set_Language" xml:space="preserve"><value>لغة الكلام</value></data>
+  <data name="AIV_Set_Ready" xml:space="preserve"><value>مهمة «الصوت» مربوطة بنموذج يدعم التفريغ.</value></data>
+  <data name="AIV_Set_NotReady" xml:space="preserve"><value>لا يوجد نموذج مناسب لمهمة «الصوت» (Anthropic وOllama لا يدعمان التفريغ، ووضع «محلى فقط» يرفض السحابى).</value></data>
+  <data name="AIV_Set_Save" xml:space="preserve"><value>حفظ</value></data>
+  <data name="AIV_Set_Saved" xml:space="preserve"><value>حُفظت الإعدادات</value></data>
 </root>

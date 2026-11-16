@@ -92,3 +92,66 @@ export function bindPaste(textarea, inputId) {
         input.dispatchEvent(new Event('change', { bubbles: true }));
     });
 }
+
+// P8.11.2 (ai-assistant-p811-plan.md ص3، ص7): تسجيل الصوت بـ MediaRecorder (webm/opus أو mp4 على Safari). لا Web Speech API (ص4).
+let _rec = null;
+let _lastBlob = null;
+
+export async function startRecording(dotnet, maxSeconds) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') return 'unsupported';
+    if (_rec) return 'busy';
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    catch (e) { return (e && e.name === 'NotAllowedError') ? 'denied' : 'nodevice'; }
+    const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/ogg'];
+    const mime = types.find(t => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || '';
+    let rec;
+    try { rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined); }
+    catch { stream.getTracks().forEach(t => t.stop()); return 'unsupported'; }
+    const chunks = [];
+    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    const done = new Promise(res => {
+        rec.onstop = () => {
+            stream.getTracks().forEach(t => t.stop());
+            res(new Blob(chunks, { type: rec.mimeType || mime || 'audio/webm' }));
+        };
+    });
+    rec.start(250);
+    const timer = setTimeout(() => {
+        if (rec.state !== 'inactive') { try { dotnet.invokeMethodAsync('OnRecordingAutoStopped'); } catch { } }
+    }, Math.max(5, maxSeconds || 60) * 1000);
+    _rec = { rec, done, timer };
+    return 'ok';
+}
+
+export async function stopRecording() {
+    if (!_rec) return null;
+    const r = _rec; _rec = null;
+    clearTimeout(r.timer);
+    if (r.rec.state !== 'inactive') r.rec.stop();
+    _lastBlob = await r.done;
+    return { mime: _lastBlob.type || 'audio/webm', size: _lastBlob.size };
+}
+
+export async function takeRecording() {
+    const b = _lastBlob; _lastBlob = null;
+    if (!b) return new Uint8Array(0);
+    return new Uint8Array(await b.arrayBuffer());
+}
+
+export function cancelRecording() {
+    if (!_rec) return;
+    const r = _rec; _rec = null;
+    clearTimeout(r.timer);
+    try { if (r.rec.state !== 'inactive') r.rec.stop(); } catch { }
+    _lastBlob = null;
+}
+
+export function appendComposer(textarea, text) {
+    if (!textarea || !text) return;
+    const cur = textarea.value || '';
+    textarea.value = cur.length && !/\s$/.test(cur) ? cur + ' ' + text : cur + text;
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    textarea.focus({ preventScroll: true });
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+}

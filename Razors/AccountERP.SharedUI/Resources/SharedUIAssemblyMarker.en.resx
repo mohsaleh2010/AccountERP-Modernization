@@ -6619,4 +6619,31 @@
   <data name="AIM_Set_Saved" xml:space="preserve"><value>Settings saved</value></data>
   <data name="AIM_Set_All" xml:space="preserve"><value>All users' tokens</value></data>
   <data name="AIM_Set_NoTokens" xml:space="preserve"><value>No tokens yet.</value></data>
+  <data name="AI_Task_speech" xml:space="preserve"><value>Speech</value></data>
+  <data name="AI_TaskDesc_speech" xml:space="preserve"><value>Transcribe voice input to text (Whisper / gpt-4o-transcribe / Gemini)</value></data>
+  <data name="AIV_Start" xml:space="preserve"><value>Speak (voice input)</value></data>
+  <data name="AIV_Stop" xml:space="preserve"><value>Stop and transcribe</value></data>
+  <data name="AIV_NotAvailable" xml:space="preserve"><value>Voice input is available in the web version only.</value></data>
+  <data name="AIV_ErrDenied" xml:space="preserve"><value>Microphone permission was denied. Allow it in the browser settings.</value></data>
+  <data name="AIV_ErrNoDevice" xml:space="preserve"><value>No microphone is available.</value></data>
+  <data name="AIV_ErrUnsupported" xml:space="preserve"><value>This browser does not support voice recording.</value></data>
+  <data name="AIV_ErrEmpty" xml:space="preserve"><value>The recording is empty or too short.</value></data>
+  <data name="AIV_ErrTooLarge" xml:space="preserve"><value>The recording is too large.</value></data>
+  <data name="AIV_ErrFormat" xml:space="preserve"><value>Unsupported audio format.</value></data>
+  <data name="AIV_ErrNothing" xml:space="preserve"><value>No speech was recognized.</value></data>
+  <data name="AIV_ErrNoModel" xml:space="preserve"><value>No model is assigned to the Speech task.</value></data>
+  <data name="AIV_ErrProvider" xml:space="preserve"><value>The provider could not transcribe:</value></data>
+  <data name="AIV_ErrDisabled" xml:space="preserve"><value>Voice input is off.</value></data>
+  <data name="AIV_ErrNoAccess" xml:space="preserve"><value>You do not have the AI assistant permission.</value></data>
+  <data name="AIV_ErrNotAdmin" xml:space="preserve"><value>Speech settings are for administrators only.</value></data>
+  <data name="AIV_ErrGeneric" xml:space="preserve"><value>Could not convert speech to text.</value></data>
+  <data name="AIV_Set_Tab" xml:space="preserve"><value>Speech</value></data>
+  <data name="AIV_Set_Intro" xml:space="preserve"><value>A microphone button in the chat turns your speech into text in the input box for review before sending. Audio is not stored. Assign a transcription model to the Speech task in the models and routing tab.</value></data>
+  <data name="AIV_Set_Enabled" xml:space="preserve"><value>Enable voice input</value></data>
+  <data name="AIV_Set_MaxSeconds" xml:space="preserve"><value>Maximum recording length (seconds)</value></data>
+  <data name="AIV_Set_Language" xml:space="preserve"><value>Spoken language</value></data>
+  <data name="AIV_Set_Ready" xml:space="preserve"><value>The Speech task has a model that supports transcription.</value></data>
+  <data name="AIV_Set_NotReady" xml:space="preserve"><value>No suitable model for the Speech task (Anthropic and Ollama cannot transcribe; local-only mode rejects cloud models).</value></data>
+  <data name="AIV_Set_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="AIV_Set_Saved" xml:space="preserve"><value>Settings saved</value></data>
 </root>
