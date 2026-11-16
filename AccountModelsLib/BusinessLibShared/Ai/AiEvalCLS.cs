@@ -215,6 +215,37 @@ WHERE r.Model_Id = @m AND res.InputTokens IS NOT NULL AND res.Outcome <> 'skippe
 
         // ───────────── النتائج ─────────────
 
+        /// <summary>بقايا ب3.</summary>
+        public void InsertJudgement(long resultId, long runId, long? modelId, decimal score, string scoresJson, string reason, decimal? cost)
+        {
+            long id = CallSnowflakeIdGenerate.GenerateNewId();
+            _newOpp().db.Database.ExecuteSqlInterpolated($@"
+INSERT INTO AI_EvalJudgements (Id, Result_Id, Run_Id, Judge_Model_Id, Score, ScoresJson, Reason, CostEstimate, CreatedAt)
+VALUES ({id}, {resultId}, {runId}, {modelId}, {AiSqlParams.Dec(score, 9, 2)}, {scoresJson}, {reason}, {AiSqlParams.Cost(cost)}, {DateTime.Now})");
+        }
+
+        public Dictionary<long, (decimal Score, string Reason)> Judgements(long runId)
+        {
+            var map = new Dictionary<long, (decimal, string)>();
+            var db = _newOpp().db;
+            var conn = db.Database.GetDbConnection();
+            bool wasClosed = conn.State != System.Data.ConnectionState.Open;
+            if (wasClosed) conn.Open();
+            try
+            {
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "SELECT Result_Id, ISNULL(Score, 0), Reason FROM AI_EvalJudgements WHERE Run_Id = @r";
+                    var p = cmd.CreateParameter(); p.ParameterName = "@r"; p.Value = runId; cmd.Parameters.Add(p);
+                    using (var r = cmd.ExecuteReader())
+                        while (r.Read()) map[r.GetInt64(0)] = (Convert.ToDecimal(r.GetValue(1)), r.IsDBNull(2) ? "" : r.GetString(2));
+                }
+            }
+            catch (Exception) { }
+            finally { if (wasClosed) conn.Close(); }
+            return map;
+        }
+
         public void InsertResult(AiEvalResultRow x)
         {
             if (x.Id == 0) x.Id = CallSnowflakeIdGenerate.GenerateNewId();

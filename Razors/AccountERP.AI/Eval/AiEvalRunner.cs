@@ -173,6 +173,7 @@ namespace AccountERP.AI.Eval
                         var res = await RunCaseAsync(gw, plan, rp, c, reference, refError, ct, examples);
                         if (res == null) break;   // أُوقف: الحالة الجارية لا تُحفظ
                         Record(rp.Run, res);
+                        await JudgeAsync(rp, c, res, ct);   // بقايا ب3
                         if (plan.MaxCost > 0 && (rp.Run.CostEstimate ?? 0) >= plan.MaxCost)
                         {
                             _db.Finish(rp.Run.Id, AiEvalRunStatus.CostCap, $"توقّف عند حد التكلفة ({plan.MaxCost.ToString("0.##", CultureInfo.InvariantCulture)}).");
@@ -195,6 +196,23 @@ namespace AccountERP.AI.Eval
                 lock (_lock) { if (ReferenceEquals(_active, active)) _active = null; }
                 active.Cts.Dispose();
             }
+        }
+
+        /// <summary>بقايا ب3: حكم النموذج (اختيارى) بعد حفظ النتيجة؛ تكلفته تدخل حد التكلفة. أى فشل يُتجاهل.</summary>
+        private async Task JudgeAsync(RunPlan rp, AiEvalCaseRow c, AiEvalResultRow res, CancellationToken ct)
+        {
+            try
+            {
+                if (res.Outcome == AiEvalOutcomes.Error || string.IsNullOrWhiteSpace(res.AnswerText)) return;
+                var judge = new AiEvalLlmJudge(_registry);
+                if (!judge.Enabled()) return;
+                var v = await judge.JudgeAsync(c, res, rp.Candidate.Model.Id, ct);
+                if (v == null) return;
+                _db.InsertJudgement(res.Id, rp.Run.Id, v.ModelId, v.Average, v.ScoresJson, v.Reason, v.Cost);
+                if (v.Cost != null) rp.Run.CostEstimate = (rp.Run.CostEstimate ?? 0) + v.Cost.Value;
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex) { try { operations.DataDictionaryLogerException(ex); } catch { } }
         }
 
         private void Record(AiEvalRunRow run, AiEvalResultRow res)

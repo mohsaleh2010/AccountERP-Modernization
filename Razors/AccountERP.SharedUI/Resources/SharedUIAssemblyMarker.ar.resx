@@ -6734,4 +6734,10 @@
   <data name="AIU_Unshared" xml:space="preserve"><value>أُلغيت المشاركة.</value></data>
   <data name="AIU_SharedReports" xml:space="preserve"><value>تقارير مشتركة</value></data>
   <data name="AIU_OpenSharedHint" xml:space="preserve"><value>يُفتح كنسخة خاصة بك تُحسب ببياناتك وصلاحياتك</value></data>
+  <data name="AIU_LlmJudge" xml:space="preserve"><value>حَكَم النموذج فى التقييم</value></data>
+  <data name="AIU_LlmJudgeHint" xml:space="preserve"><value>درجة 1–5 وسبب لكل إجابة بنموذج آخر؛ عمود إضافى لا يغيّر النجاح/الفشل، وتكلفته داخل حد التكلفة.</value></data>
+  <data name="AIU_ScreenChunks" xml:space="preserve"><value>مقاطع الشاشات فى المعرفة</value></data>
+  <data name="AIU_ScreenChunksHint" xml:space="preserve"><value>يجيب «فين شاشة…؟» من المعرفة (مقطعان كحد أقصى). فعّلها بعد تشغيل تقييم قبل/بعد على نفس النموذج.</value></data>
+  <data name="AIU_JudgeCol" xml:space="preserve"><value>حكم النموذج</value></data>
+  <data name="AIU_FlagSaved" xml:space="preserve"><value>حُفظ الإعداد</value></data>
 </root>

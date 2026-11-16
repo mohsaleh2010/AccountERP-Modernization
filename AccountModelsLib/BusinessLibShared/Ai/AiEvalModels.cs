@@ -139,6 +139,9 @@ namespace AccountModelsLib
         public string Question { get; set; } = "";
         public string Category { get; set; } = "";
         public string CheckType { get; set; } = "";
+        /// <summary>بقايا ب3: متوسط درجات حكم النموذج (1–5) وسببه؛ null = لم يُحكَم.</summary>
+        public decimal? JudgeScore { get; set; }
+        public string JudgeReason { get; set; }
     }
 
     /// <summary>P7.4: أى الحالات تدخل التشغيل. الفارغ = الكل (المفعّلة فقط دائماً).</summary>
@@ -295,5 +298,9 @@ namespace AccountModelsLib
         AiAutoExamplesStatus GetAutoExamplesStatus(int? count = null);
         /// <summary>0 = إيقاف (مسموح دائماً). التفعيل بلا دليل تحسّن يُرفض إلا مع overrideEvidence.</summary>
         void SetAutoExamples(int count, bool overrideEvidence, long userId);
+
+        // بقايا ب2، ب3: مقاطع الشاشات فى المعرفة وحكم النموذج (موقوفان افتراضياً؛ للمدير)
+        bool GetFlag(string key);
+        void SetFlag(string key, bool on, long userId);
     }
 }

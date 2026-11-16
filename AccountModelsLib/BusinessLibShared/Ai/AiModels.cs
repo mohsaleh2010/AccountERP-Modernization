@@ -196,6 +196,10 @@ namespace AccountModelsLib
         public const string BankMatchDays = "BankMatchDays";
         public const string BankGroupMaxItems = "BankGroupMaxItems";
         public const string BankUseModel = "BankUseModel";
+        // بقايا ب2: مقاطع الشاشات فى المعرفة (موقوفة حتى يثبت التقييم أنها لا تضر)
+        public const string KnowledgeScreenChunks = "KnowledgeScreenChunks";
+        // بقايا ب3: حَكَم النموذج فى التقييم
+        public const string EvalLlmJudge = "EvalLlmJudge";
     }
 
     /// <summary>صف AI_Providers كما يُخزَّن (المفتاح مشفّر). لا يصل للواجهة؛ الواجهة ترى AiProviderView.</summary>

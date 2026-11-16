@@ -6736,4 +6736,10 @@
   <data name="AIU_Unshared" xml:space="preserve"><value>Partage arrêté.</value></data>
   <data name="AIU_SharedReports" xml:space="preserve"><value>Rapports partagés</value></data>
   <data name="AIU_OpenSharedHint" xml:space="preserve"><value>S'ouvre comme votre copie avec vos données</value></data>
+  <data name="AIU_LlmJudge" xml:space="preserve"><value>Modèle juge dans l'évaluation</value></data>
+  <data name="AIU_LlmJudgeHint" xml:space="preserve"><value>Note 1–5 par réponse ; ne change pas réussite/échec.</value></data>
+  <data name="AIU_ScreenChunks" xml:space="preserve"><value>Écrans dans la base de connaissances</value></data>
+  <data name="AIU_ScreenChunksHint" xml:space="preserve"><value>Répond « où est l'écran… ? » (deux au plus).</value></data>
+  <data name="AIU_JudgeCol" xml:space="preserve"><value>Juge</value></data>
+  <data name="AIU_FlagSaved" xml:space="preserve"><value>Paramètre enregistré</value></data>
 </root>

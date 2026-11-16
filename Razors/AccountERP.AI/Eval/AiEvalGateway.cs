@@ -303,7 +303,27 @@ namespace AccountERP.AI.Eval
             return _db.ListRuns(top);
         }
 
-        public List<AiEvalResultRow> GetResults(long runId) => _db.ListResults(runId);
+        public List<AiEvalResultRow> GetResults(long runId)
+        {
+            var list = _db.ListResults(runId);
+            var j = _db.Judgements(runId);   // بقايا ب3
+            foreach (var r in list)
+                if (j.TryGetValue(r.Id, out var v)) { r.JudgeScore = v.Score; r.JudgeReason = v.Reason; }
+            return list;
+        }
+
+        // ───────────── بقايا ب2، ب3 ─────────────
+
+        private static readonly HashSet<string> Flags = new(new[] { AiSettingKeys.KnowledgeScreenChunks, AiSettingKeys.EvalLlmJudge });
+
+        public bool GetFlag(string key) => Flags.Contains(key) && _providers.GetSettings().TryGetValue(key, out var v) && v == "1";
+
+        public void SetFlag(string key, bool on, long userId)
+        {
+            if (!Flags.Contains(key)) throw new InvalidOperationException("إعداد غير معروف.");
+            if (userId <= 0 || !_providers.UserHasMenu(userId, AiSignInService.MenuKey)) throw new UnauthorizedAccessException("للمدير فقط.");
+            _providers.SetSetting(key, on ? "1" : "0", userId);
+        }
 
         // ───────────── P7.7: الأمثلة التلقائية ─────────────
 

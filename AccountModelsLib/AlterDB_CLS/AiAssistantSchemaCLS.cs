@@ -634,6 +634,18 @@ CREATE NONCLUSTERED INDEX [IX_AI_ApiTokens_User] ON [dbo].[AI_ApiTokens]([User_I
     [Bank_Id] [bigint] NOT NULL,
     [ColumnsJson] [nvarchar](max) NOT NULL,",
              @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_BankImportProfiles_Bank] ON [dbo].[AI_BankImportProfiles]([Bank_Id]);"),
+
+            // بقايا ب3: حكم النموذج لكل نتيجة تقييم (جدول جديد؛ AI_EvalResults لا يُعدَّل). ScoresJson = {correct, complete, language, tools}.
+            ("AI_EvalJudgements", @"
+    [Result_Id] [bigint] NOT NULL,
+    [Run_Id] [bigint] NOT NULL,
+    [Judge_Model_Id] [bigint] NULL,
+    [Score] [decimal](9, 2) NULL,
+    [ScoresJson] [nvarchar](400) NULL,
+    [Reason] [nvarchar](300) NULL,
+    [CostEstimate] [decimal](18, 6) NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_EvalJudgements_Result] ON [dbo].[AI_EvalJudgements]([Result_Id]);
+CREATE NONCLUSTERED INDEX [IX_AI_EvalJudgements_Run] ON [dbo].[AI_EvalJudgements]([Run_Id]);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>
@@ -752,6 +764,9 @@ CREATE NONCLUSTERED INDEX [IX_AI_ApiTokens_User] ON [dbo].[AI_ApiTokens]([User_I
             (AiSettingKeys.BankMatchDays, "3"),
             (AiSettingKeys.BankGroupMaxItems, "4"),
             (AiSettingKeys.BankUseModel, "1"),
+            // بقايا ب2، ب3: موقوفان افتراضياً
+            (AiSettingKeys.KnowledgeScreenChunks, "0"),
+            (AiSettingKeys.EvalLlmJudge, "0"),
         };
 
         public static readonly List<string> LastErrors = new List<string>();

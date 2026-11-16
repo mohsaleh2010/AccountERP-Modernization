@@ -80,6 +80,17 @@
         </div>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" Disabled="@(_busy || IsActive)" OnClick="@(() => OpenRunDialogAsync(null))">@Tr("AIE_RunNew")</MudButton>
     </div>
+    @* بقايا ب2، ب3: خيارات تُفعَّل بعد دليل من التقييم *@
+    <div style="display:flex;flex-wrap:wrap;gap:4px 24px;margin-top:8px">
+        <div>
+            <MudSwitch T="bool" Value="_llmJudge" ValueChanged="@(v => SetFlagAsync(AccountModelsLib.AiSettingKeys.EvalLlmJudge, v))" Color="Color.Primary" Label="@Tr("AIU_LlmJudge")" />
+            <div class="ai-sub" style="margin:0">@Tr("AIU_LlmJudgeHint")</div>
+        </div>
+        <div>
+            <MudSwitch T="bool" Value="_screenChunks" ValueChanged="@(v => SetFlagAsync(AccountModelsLib.AiSettingKeys.KnowledgeScreenChunks, v))" Color="Color.Primary" Label="@Tr("AIU_ScreenChunks")" />
+            <div class="ai-sub" style="margin:0">@Tr("AIU_ScreenChunksHint")</div>
+        </div>
+    </div>
 </section>
 
 @* ───────────── التشغيل الجارى ───────────── *@
@@ -183,6 +194,7 @@
                     <MudTh>@Tr("AIE_CheckType")</MudTh>
                     <MudTh>@Tr("AIE_KTools")</MudTh>
                     <MudTh>@Tr("AIE_Time")</MudTh>
+                    <MudTh>@Tr("AIU_JudgeCol")</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="@Tr("AIE_Outcome")"><MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@OutcomeColor(context.Outcome)" Icon="@OutcomeIcon(context.Outcome)">@Tr(OutcomeKey(context.Outcome))</MudChip></MudTd>
@@ -198,6 +210,7 @@
                                  aria-label="@Tr(context.ToolOk ? "AIE_ToolOkYes" : "AIE_ToolOkNo")" />
                     </MudTd>
                     <MudTd DataLabel="@Tr("AIE_Time")"><span class="aie-n">@Secs(context.DurationMs)</span></MudTd>
+                    <MudTd DataLabel="@Tr("AIU_JudgeCol")"><span class="aie-n" title="@context.JudgeReason">@(context.JudgeScore?.ToString("0.0", CultureInfo.InvariantCulture) ?? "—")</span></MudTd>
                 </RowTemplate>
                 <ChildRowContent>
                     @if (context.Id == _openResult)
@@ -455,6 +468,22 @@ else
         if (first && !_loaded) await LoadAsync();
     }
 
+    // بقايا ب2، ب3
+    private bool _llmJudge, _screenChunks;
+
+    private async Task SetFlagAsync(string key, bool on)
+    {
+        if (_eval == null) return;
+        var ev = _eval; long uid = UserId;
+        try
+        {
+            await Bg(() => { ev.SetFlag(key, on, uid); return 0; });
+            if (key == AccountModelsLib.AiSettingKeys.EvalLlmJudge) _llmJudge = on; else _screenChunks = on;
+            Snackbar.Add(Tr("AIU_FlagSaved"), Severity.Success);
+        }
+        catch (Exception ex) { Snackbar.Add(Err(ex), Severity.Error); }
+    }
+
     /// <summary>يُستدعى من الصفحة عند «إعادة التحميل» ومن أول عرض.</summary>
     public async Task LoadAsync()
     {
@@ -465,6 +494,7 @@ else
         {
             var ev = _eval;
             (_runs, _cases, var active) = await Bg(() => (ev.GetRuns(100), ev.GetCases(), ev.ActiveGroupId()));
+            (_llmJudge, _screenChunks) = await Bg(() => (ev.GetFlag(AccountModelsLib.AiSettingKeys.EvalLlmJudge), ev.GetFlag(AccountModelsLib.AiSettingKeys.KnowledgeScreenChunks)));
             _selected.IntersectWith(_runs.Select(r => r.Id));
             _loaded = true;
             if (active is long g && (_progress == null || _progress.GroupId != g || !_progress.Active)) StartPolling(g);

@@ -131,6 +131,9 @@ namespace AccountERP.AI.Knowledge
                     Source = AiKnowledgeSources.Seed,
                     Version = k.Version,
                 }));
+            // بقايا ب2: مقطع لكل شاشة معروفة (يراه من يملك مسارها فقط)؛ لا يدخل البحث إلا حين KnowledgeScreenChunks = 1.
+            foreach (var sc in ScreenChunks())
+                list.Add(Hash(sc));
             // P8.3 (ف2، ف8): كتالوج أخطاء الفاتورة الإلكترونية، لمن يملك شاشات المبيعات.
             foreach (var k in AiEtaErrorCatalog.Items)
                 list.Add(Hash(new AiKnowledgeRow
@@ -144,6 +147,64 @@ namespace AccountERP.AI.Knowledge
                     Source = AiKnowledgeSources.Seed,
                     Version = k.Version,
                 }));
+            return list;
+        }
+
+        /// <summary>بقايا ب2: الشاشات = كتالوج open_screen + شاشات المساعد (P8). المحتوى = العنوان والمسار والباراميترات.</summary>
+        public static IEnumerable<AiKnowledgeRow> ScreenChunks()
+        {
+            var extra = new (string Key, string Route, string Title, string Words)[]
+            {
+                ("collections_priority", AiCollectConst.Route, "أولويات التحصيل", "تحصيل متاخرات عملاء ديون متابعة"),
+                ("cashflow_forecast", AiCashflowConst.Route, "توقع التدفق النقدى", "سيولة نقدية توقع خزينة اسابيع"),
+                ("bank_reconciliation", AiBankConst.Route, "المطابقة البنكية", "بنك كشف حساب مطابقة تسوية"),
+                ("store_needs", AiReorderConst.Route, "احتياجات المخزن وإعادة الطلب", "نفاد احتياجات حد الطلب اعادة طلب"),
+                ("entries_anomalies", "/accounts/entries-anomalies", "شذوذ القيود", "قيود غير معتادة شذوذ مراجعة"),
+                ("daily_brief", "/assistant/brief", "الموجز اليومى", "موجز يومى ملخص المدير"),
+            };
+            foreach (var s in Tools.AiScreenCatalog.Screens)
+                yield return new AiKnowledgeRow
+                {
+                    Kind = AiKnowledgeKinds.Screen, KeyName = "screen_" + s.Key, TitleAr = s.TitleAr,
+                    Content = "شاشة «" + s.TitleAr + "» تُفتح بأداة open_screen (المفتاح " + s.Key + ")، المسار " + s.Route + (s.ParamsHelp.Length > 0 ? "، الباراميترات: " + s.ParamsHelp : "") + ".",
+                    Keywords = s.TitleAr + " شاشة فين افتح", RoutesCsv = s.Route, Source = AiKnowledgeSources.Seed, Version = 1,
+                };
+            foreach (var e in extra)
+                yield return new AiKnowledgeRow
+                {
+                    Kind = AiKnowledgeKinds.Screen, KeyName = "screen_" + e.Key, TitleAr = e.Title,
+                    Content = "شاشة «" + e.Title + "» بالمسار " + e.Route + "؛ افتحها بأداة open_screen بالمسار.",
+                    Keywords = e.Title + " " + e.Words + " شاشة فين افتح", RoutesCsv = e.Route, Source = AiKnowledgeSources.Seed, Version = 1,
+                };
+        }
+
+        /// <summary>بقايا ب2: الإعداد مخزّن 60 ث (اختبار: يغلبه ScreenChunksSource).</summary>
+        public Func<bool>? ScreenChunksSource { get; set; }
+        private static bool _screenOn;
+        private static DateTime _screenAt = DateTime.MinValue;
+        public const int MaxScreenHits = 2;
+
+        private bool ScreenChunksOn()
+        {
+            if (ScreenChunksSource != null) return ScreenChunksSource();
+            if (DateTime.UtcNow - _screenAt < TimeSpan.FromSeconds(60)) return _screenOn;
+            try { _screenOn = new AiProvidersCLS().GetSettings().TryGetValue(AiSettingKeys.KnowledgeScreenChunks, out var v) && v == "1"; }
+            catch { _screenOn = false; }
+            _screenAt = DateTime.UtcNow;
+            return _screenOn;
+        }
+
+        /// <summary>بقايا ب2: حد مقطعين للشاشات فى النتيجة (لا تزيح Views ومعرفة P2).</summary>
+        private static List<AiKnowledgeRow> CapScreens(IEnumerable<AiKnowledgeRow> rows, int top)
+        {
+            var list = new List<AiKnowledgeRow>();
+            int screens = 0;
+            foreach (var r in rows)
+            {
+                if (r.Kind == AiKnowledgeKinds.Screen && ++screens > MaxScreenHits) continue;
+                list.Add(r);
+                if (list.Count >= top) break;
+            }
             return list;
         }
 
@@ -251,10 +312,12 @@ namespace AccountERP.AI.Knowledge
             if (rows == null || rows.Count == 0) return (null, SearchModes.Fallback);
 
             // P8.3 (ف7): مقاطع eta_error لا تدخل البحث العام؛ تُطلب صراحة بـ only.
-            var visible = rows.Where(r => Visible(r, allowedViews, hasRoute) && (only == null ? r.Kind != AiKnowledgeKinds.EtaError : only(r))).ToList();
+            bool screensOn = only == null && ScreenChunksOn();
+            var visible = rows.Where(r => Visible(r, allowedViews, hasRoute)
+                                          && (only == null ? r.Kind != AiKnowledgeKinds.EtaError && (screensOn || r.Kind != AiKnowledgeKinds.Screen) : only(r))).ToList();
             if (visible.Count == 0) return (new List<AiKnowledgeRow>(), SearchModes.Keyword);
             var keyword = KeywordRank(query, visible).Where(h => h.Score >= minKeywordScore).Select(h => h.Row).ToList();
-            if (_embed == null) return (keyword.Take(top).ToList(), SearchModes.Keyword);
+            if (_embed == null) return (CapScreens(keyword, top), SearchModes.Keyword);
             List<AiKnowledgeRow> vector = new();
             // فهرس فارغ لهذا النموذج (لم يُبنَ بعد) = لا داعى لتضمين السؤال وصرف رصيد بلا فائدة.
             var route = _embed.CurrentRoute(out _);
@@ -274,8 +337,8 @@ namespace AccountERP.AI.Knowledge
                 if (qv != null && modelId == route!.Model.Id)
                     vector = AiKnowledgeIndex.VectorRank(qv, visible, vectors).Select(h => h.Row).ToList();
             }
-            if (vector.Count == 0) return (keyword.Take(top).ToList(), SearchModes.Keyword);
-            return (AiKnowledgeIndex.Fuse(keyword.Take(AiKnowledgeIndex.Depth).ToList(), vector, top), SearchModes.Hybrid);
+            if (vector.Count == 0) return (CapScreens(keyword, top), SearchModes.Keyword);
+            return (CapScreens(AiKnowledgeIndex.Fuse(keyword.Take(AiKnowledgeIndex.Depth).ToList(), vector, top + MaxScreenHits), top), SearchModes.Hybrid);
         }
 
         // ───────────── P7.7: الأمثلة التلقائية (few-shot) ─────────────
