@@ -61,9 +61,7 @@
 		<PackageReference Include="System.Net.Http" Version="4.3.4" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(RuntimeIdentifier)' != 'browser-wasm'">
-		<Reference Include="Pkcs11Interop">
-			<HintPath>..\packages\Einvoice-Express\Pkcs11Interop.dll</HintPath>
-		</Reference>
+		<PackageReference Include="Pkcs11Interop" Version="5.1.2" />
 	</ItemGroup>
 	<!-- 🛑 التعديل الجوهري: إضافة PrivateAssets="All" لمنع تسريب حزمة WinForms للمشاريع المشتركة ومشاريع MAUI -->
 	<ItemGroup Condition="'$(IsWinFormsTarget)' == 'true'">

@@ -369,3 +369,6 @@ deploy/creds.local.json
 # Generated codebase-analysis artifacts (graphify tool output)
 architecture-graph.md
 graphify-out/
+# Local secrets
+appsettings.Production.json
+appsettings.Development.json

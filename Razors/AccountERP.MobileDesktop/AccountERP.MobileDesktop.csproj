@@ -91,7 +91,6 @@
     </ItemGroup>
 	
     <ItemGroup>
-      <Content Include="..\..\..\MudTemplate\temp\MyMudAppAuth\MyMudAppAuth\wwwroot\favicon.ico" Link="wwwroot\favicon.ico" />
     </ItemGroup>
 
     <ItemGroup>
