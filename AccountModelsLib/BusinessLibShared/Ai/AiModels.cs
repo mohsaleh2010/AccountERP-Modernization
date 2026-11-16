@@ -58,8 +58,10 @@ namespace AccountModelsLib
         public const string Vision = "vision";
         public const string Fast = "fast";
         public const string Embedding = "embedding";
+        /// <summary>P8.11: تفريغ الصوت إلى نص.</summary>
+        public const string Speech = "speech";
 
-        public static readonly string[] All = { Chat, Reasoning, Vision, Fast, Embedding };
+        public static readonly string[] All = { Chat, Reasoning, Vision, Fast, Embedding, Speech };
     }
 
     /// <summary>مفاتيح جدول AI_Settings.</summary>
@@ -184,6 +186,11 @@ namespace AccountModelsLib
         public const string McpEnabled = "McpEnabled";
         public const string McpAllowSqlScope = "McpAllowSqlScope";
         public const string McpTokenMaxDays = "McpTokenMaxDays";
+        // P8.11 (ai-assistant-p811-plan.md ص9): الإدخال الصوتى
+        public const string SpeechEnabled = "SpeechEnabled";
+        public const string SpeechMaxSeconds = "SpeechMaxSeconds";
+        public const string SpeechAllowBrowser = "SpeechAllowBrowser";
+        public const string SpeechLanguage = "SpeechLanguage";
     }
 
     /// <summary>صف AI_Providers كما يُخزَّن (المفتاح مشفّر). لا يصل للواجهة؛ الواجهة ترى AiProviderView.</summary>

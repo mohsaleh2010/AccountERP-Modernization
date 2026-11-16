@@ -695,6 +695,11 @@ CREATE NONCLUSTERED INDEX [IX_AI_ApiTokens_User] ON [dbo].[AI_ApiTokens]([User_I
             (AiSettingKeys.McpEnabled, "0"),
             (AiSettingKeys.McpAllowSqlScope, "0"),
             (AiSettingKeys.McpTokenMaxDays, "365"),
+            // P8.11 (ص9): موقوف افتراضياً
+            (AiSettingKeys.SpeechEnabled, "0"),
+            (AiSettingKeys.SpeechMaxSeconds, "60"),
+            (AiSettingKeys.SpeechAllowBrowser, "0"),
+            (AiSettingKeys.SpeechLanguage, "ar"),
         };
 
         public static readonly List<string> LastErrors = new List<string>();

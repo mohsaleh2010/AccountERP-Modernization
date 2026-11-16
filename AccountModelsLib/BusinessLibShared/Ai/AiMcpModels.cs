@@ -219,3 +219,58 @@ UPDATE AI_ApiTokens SET LastUsedAt = {DateTime.Now}, LastUsedIp = {Cut(ip, 64)},
         }
     }
 }
+
+namespace AccountModelsLib
+{
+    /// <summary>P8.11 (ai-assistant-p811-plan.md ص9): إعدادات الإدخال الصوتى.</summary>
+    public class AiSpeechSettings
+    {
+        public bool Enabled { get; set; }
+        public int MaxSeconds { get; set; } = 60;
+        public bool AllowBrowser { get; set; }
+        public string Language { get; set; } = "ar";
+
+        public const int MaxBytes = 5 * 1024 * 1024;
+
+        public static AiSpeechSettings From(System.Collections.Generic.IDictionary<string, string> s)
+        {
+            var r = new AiSpeechSettings();
+            if (s == null) return r;
+            string v;
+            r.Enabled = s.TryGetValue(AiSettingKeys.SpeechEnabled, out v) && v == "1";
+            r.AllowBrowser = s.TryGetValue(AiSettingKeys.SpeechAllowBrowser, out v) && v == "1";
+            if (s.TryGetValue(AiSettingKeys.SpeechLanguage, out v) && !string.IsNullOrWhiteSpace(v)) r.Language = v.Trim();
+            int d;
+            if (s.TryGetValue(AiSettingKeys.SpeechMaxSeconds, out v) && int.TryParse(v, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out d))
+                r.MaxSeconds = System.Math.Max(5, System.Math.Min(300, d));
+            return r;
+        }
+    }
+
+    /// <summary>حالة الميكروفون للواجهة.</summary>
+    public class AiSpeechConfig
+    {
+        public bool Enabled { get; set; }
+        /// <summary>يوجد نموذج مربوط بمهمة «الصوت» يدعم التفريغ.</summary>
+        public bool Ready { get; set; }
+        public bool AllowBrowser { get; set; }
+        public int MaxSeconds { get; set; } = 60;
+        public int MaxBytes { get; set; } = AiSpeechSettings.MaxBytes;
+        public string Language { get; set; } = "ar";
+        public string Reason { get; set; }
+    }
+
+    public interface IAiSpeechGateway
+    {
+        AiSpeechConfig GetConfig(AiUserContext user);
+        System.Threading.Tasks.Task<string> TranscribeAsync(byte[] audio, string mime, AiUserContext user, System.Threading.CancellationToken ct);
+        AiSpeechSettings GetSettings(AiUserContext user);
+        void SaveSettings(AiSpeechSettings s, AiUserContext user);
+    }
+
+    public class AiSpeechException : System.InvalidOperationException
+    {
+        public string Code { get; }
+        public AiSpeechException(string code, string message) : base(message) { Code = code ?? ""; }
+    }
+}

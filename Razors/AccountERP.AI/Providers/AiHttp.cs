@@ -33,6 +33,36 @@ namespace AccountERP.AI.Providers
         public static Task<JsonDocument> PostJsonAsync(ProviderConnection c, string relativeOrAbsolute, string jsonBody, string? defaultAuthHeader, TimeSpan timeout, CancellationToken ct) =>
             SendJsonAsync(c, HttpMethod.Post, relativeOrAbsolute, jsonBody, defaultAuthHeader, timeout, ct);
 
+        /// <summary>P8.11: POST بمحتوى جاهز (multipart للصوت) ويعيد JSON بنفس معالجة الأخطاء.</summary>
+        public static async Task<JsonDocument> PostContentAsync(ProviderConnection c, string relativeOrAbsolute, HttpContent content, string? defaultAuthHeader, TimeSpan timeout, CancellationToken ct)
+        {
+            var url = relativeOrAbsolute.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                ? new Uri(relativeOrAbsolute)
+                : new Uri(c.BaseUrl.AbsoluteUri.TrimEnd('/') + "/" + relativeOrAbsolute.TrimStart('/'));
+            using var http = CreateClient(c);
+            using var req = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
+            ApplyAuth(req, c, defaultAuthHeader);
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            cts.CancelAfter(timeout);
+            HttpResponseMessage resp;
+            try { resp = await http.SendAsync(req, HttpCompletionOption.ResponseContentRead, cts.Token); }
+            catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+            {
+                throw new AiProviderException($"انتهت مهلة الاتصال ({Math.Max(1, (int)timeout.TotalSeconds)} ثانية).");
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new AiProviderException("تعذّر الوصول للعنوان " + c.BaseUrl.Host + ": " + c.Scrub(ex.InnerException?.Message ?? ex.Message));
+            }
+            using (resp)
+            {
+                string body = await resp.Content.ReadAsStringAsync(ct);
+                if (!resp.IsSuccessStatusCode) throw new AiProviderException(Describe(resp.StatusCode, c.Scrub(ExtractError(body))));
+                try { return JsonDocument.Parse(body); }
+                catch (JsonException) { throw new AiProviderException("الخدمة ردّت بمحتوى ليس JSON."); }
+            }
+        }
+
         private static async Task<JsonDocument> SendJsonAsync(ProviderConnection c, HttpMethod method, string relativeOrAbsolute, string? jsonBody, string? defaultAuthHeader, TimeSpan timeout, CancellationToken ct)
         {
             var url = relativeOrAbsolute.StartsWith("http", StringComparison.OrdinalIgnoreCase)

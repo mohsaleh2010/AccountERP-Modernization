@@ -70,6 +70,8 @@ namespace AccountERP.AI
             // P8.10: خادم MCP للقراءة + إدارة التوكنات
             services.AddSingleton(sp => new Mcp.AiMcpServer(sp.GetRequiredService<Tools.AiToolRegistry>()));
             services.AddScoped<IAiMcpGateway>(sp => new Mcp.AiMcpGateway());
+            // P8.11: الإدخال الصوتى (مهمة «الصوت»)
+            services.AddScoped<IAiSpeechGateway>(sp => new Chat.AiSpeechGateway(sp.GetRequiredService<ProviderRegistry>()));
             return services;
         }
     }
