@@ -152,7 +152,7 @@ namespace AccountModelsLib
         List<string> ReadHeaders(byte[] file, string fileName, AiUserContext user);
         AiBankColumnMap GetProfile(long bankId, AiUserContext user);
         AiBankImportResult Import(long bankId, byte[] file, string fileName, AiBankColumnMap map, decimal? opening, decimal? closing, AiUserContext user);
-        System.Threading.Tasks.Task<AiBankImportResult> ImportExtractAsync(long bankId, long attachmentId, AiUserContext user, System.Threading.CancellationToken ct);
+        System.Threading.Tasks.Task<AiBankImportResult> ImportExtractAsync(long bankId, byte[] file, string fileName, string mime, AiUserContext user, System.Threading.CancellationToken ct);
         List<AiBankStatementRow> Statements(long bankId, AiUserContext user);
         AiBankView Get(long statementId, AiUserContext user);
         System.Threading.Tasks.Task<int> MatchAsync(long statementId, AiUserContext user, System.Threading.CancellationToken ct);

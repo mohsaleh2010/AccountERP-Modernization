@@ -32,6 +32,15 @@ namespace AccountModelsLib
             return list;
         }
 
+        /// <summary>الحساب الفرعى للبنك (لمسودة القيد).</summary>
+        public (long SubAccountId, string Name) BankAccount(long bankId)
+        {
+            (long, string) r0 = (0, "");
+            Exec(@"SELECT ISNULL(b.SubAccount_Id, 0), COALESCE(a.SubAccount_Name, b.Bank_Name) FROM Banks b LEFT JOIN Submain_Account a ON a.Id = b.SubAccount_Id WHERE b.id = @b",
+                c => Add(c, "@b", bankId), r => r0 = (L(r, 0), S(r, 1) ?? ""));
+            return r0;
+        }
+
         // ───────────── الكشوف ─────────────
 
         public long InsertStatement(AiBankStatementRow st, IList<AiBankLine> lines, long by)

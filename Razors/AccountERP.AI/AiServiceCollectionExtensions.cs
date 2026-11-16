@@ -72,6 +72,8 @@ namespace AccountERP.AI
             services.AddScoped<IAiMcpGateway>(sp => new Mcp.AiMcpGateway());
             // P8.11: الإدخال الصوتى (مهمة «الصوت»)
             services.AddScoped<IAiSpeechGateway>(sp => new Chat.AiSpeechGateway(sp.GetRequiredService<ProviderRegistry>()));
+            // P8.12: المطابقة البنكية
+            services.AddScoped<IAiBankRecGateway>(sp => new BankRec.AiBankRecGateway(sp.GetRequiredService<ProviderRegistry>()));
             return services;
         }
     }
