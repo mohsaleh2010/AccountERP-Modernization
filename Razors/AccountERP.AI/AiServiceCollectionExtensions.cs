@@ -63,6 +63,10 @@ namespace AccountERP.AI
             services.AddSingleton(sp => new Cashflow.AiCashflowService(sp.GetRequiredService<Tools.ReadOnlySqlExecutor>(), sp.GetRequiredService<ProviderRegistry>()));
             services.AddSingleton<Scheduling.IAiScheduledJob>(sp => sp.GetRequiredService<Cashflow.AiCashflowService>());
             services.AddScoped<IAiCashflowGateway>(sp => new Cashflow.AiCashflowGateway(sp.GetRequiredService<Cashflow.AiCashflowService>()));
+            // P8.6.2: إعادة الطلب الذكية (تشغيل أسبوعى + بوابة)
+            services.AddSingleton<Reorder.AiReorderService>();
+            services.AddSingleton<Scheduling.IAiScheduledJob>(sp => sp.GetRequiredService<Reorder.AiReorderService>());
+            services.AddScoped<IAiReorderGateway>(sp => new Reorder.AiReorderGateway(sp.GetRequiredService<Reorder.AiReorderService>(), sp.GetRequiredService<ProviderRegistry>()));
             return services;
         }
     }
