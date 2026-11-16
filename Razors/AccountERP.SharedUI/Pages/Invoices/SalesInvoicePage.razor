@@ -786,6 +786,10 @@
     private bool _isKta3y;
     private bool _isSaveDirectly;
     private decimal _customerAccountBefore;
+    // 🟢 عميل الفاتورة المحفوظة ورصيده "قبل" المخزَّن عليها: الرصيد الحى لهذا العميل يشمل الفاتورة نفسها، فإعادة اختياره
+    // كانت تجعل "بعد" = الحى + الصافى فتُحسب الفاتورة مرتين. يقابل NewFrmInvoive سطر 325 (المحفوظ لا الحى).
+    private long _savedCustomerId;
+    private decimal _savedCustomerAccountBefore;
     // 🟢 نوع سعر العميل (Customer.Price_Type_List_ID) - يقابل invL_O.Price_Type_List_ID فى NewFrmInvoive.SelectCustomer؛ يُمرَّر لحوار الأصناف
     // ليُحدَّد نوع السعر فيه (لا يُخزَّن على الفاتورة نفسها: لا عمود له فى Invoices_List).
     private long _customerPriceTypeId;
@@ -994,6 +998,8 @@
             await LoadCustomerPriceTypeAsync(_header.Customer_Id.Value);
         }
         _customerAccountBefore = _header.CustomerAccountBefor ?? 0;
+        _savedCustomerId = _header.Customer_Id ?? 0;
+        _savedCustomerAccountBefore = _customerAccountBefore;
         // نقرأ علمى الضريبة المحفوظين كما هما (لا نعيد تطبيق النسب الافتراضية على فاتورة موجودة).
         _isTaxInvoice = _header.IsInvoiceTaxInfo == 1;
         _isTaxPerItem = _taxPerItemForced || _header.Is_Tax_Per_Item == 1;
@@ -1071,6 +1077,14 @@
         if (option is null) { _customerPriceTypeId = 0; _customerPriceTypeName = ""; }
         else await LoadCustomerPriceTypeAsync(option.Id);
         if (option is null) return;
+
+        // فاتورة محفوظة وأُعيد اختيار عميلها نفسه: نُبقى الرصيد المخزَّن (الحى يشمل الفاتورة فتُحسب مرتين).
+        if (IsExistingInvoice && _savedCustomerId > 0 && option.Id == _savedCustomerId)
+        {
+            _customerAccountBefore = _savedCustomerAccountBefore;
+            UpdateBalanceLabel();
+            return;
+        }
 
         var balance = await Task.Run(() =>
         {
@@ -1436,6 +1450,8 @@
         _customerPriceTypeId = 0;
         _customerPriceTypeName = "";
         _customerAccountBefore = 0;
+        _savedCustomerId = 0;
+        _savedCustomerAccountBefore = 0;
         _balanceLabel = "";
         _notes = "";
         _costCenterId = 0;
