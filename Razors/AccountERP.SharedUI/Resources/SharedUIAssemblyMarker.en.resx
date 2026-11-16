@@ -6576,4 +6576,47 @@
   <data name="AIQ_Set_RemoveLead" xml:space="preserve"><value>Remove lead time</value></data>
   <data name="AIB_Al_reorder_due" xml:space="preserve"><value>Items about to run out</value></data>
   <data name="AIB_Al_reorder_due_Text" xml:space="preserve"><value>{count} items are expected to run out within the lead time: {items}</value></data>
+  <data name="AIM_NotAvailable" xml:space="preserve"><value>External access (MCP) is available in the web version only.</value></data>
+  <data name="AIM_Disabled" xml:space="preserve"><value>External access (MCP) is off. An administrator can enable it in the assistant settings.</value></data>
+  <data name="AIM_PageTitle" xml:space="preserve"><value>My external access tokens (MCP)</value></data>
+  <data name="AIM_MineIntro" xml:space="preserve"><value>A token lets an external AI app (such as Claude Desktop or Claude Code) read ERP data with your own permissions only. Read-only. Do not share it.</value></data>
+  <data name="AIM_TokenName" xml:space="preserve"><value>Token name</value></data>
+  <data name="AIM_Days" xml:space="preserve"><value>Validity (days)</value></data>
+  <data name="AIM_SqlScope" xml:space="preserve"><value>Allow free query</value></data>
+  <data name="AIM_Create" xml:space="preserve"><value>Create token</value></data>
+  <data name="AIM_CopyNow" xml:space="preserve"><value>Copy the token now; it will not be shown again.</value></data>
+  <data name="AIM_Copy" xml:space="preserve"><value>Copy</value></data>
+  <data name="AIM_Copied" xml:space="preserve"><value>Copied</value></data>
+  <data name="AIM_Done" xml:space="preserve"><value>Done</value></data>
+  <data name="AIM_ConfigExample" xml:space="preserve"><value>Configuration example (put the token in place of &lt;TOKEN&gt;):</value></data>
+  <data name="AIM_Prefix" xml:space="preserve"><value>Prefix</value></data>
+  <data name="AIM_Scopes" xml:space="preserve"><value>Scopes</value></data>
+  <data name="AIM_Expires" xml:space="preserve"><value>Expires</value></data>
+  <data name="AIM_LastUsed" xml:space="preserve"><value>Last used</value></data>
+  <data name="AIM_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="AIM_Active" xml:space="preserve"><value>Active</value></data>
+  <data name="AIM_Expired" xml:space="preserve"><value>Expired</value></data>
+  <data name="AIM_Revoked" xml:space="preserve"><value>Revoked</value></data>
+  <data name="AIM_Revoke" xml:space="preserve"><value>Revoke</value></data>
+  <data name="AIM_RevokedOk" xml:space="preserve"><value>Token revoked</value></data>
+  <data name="AIM_User" xml:space="preserve"><value>User</value></data>
+  <data name="AIM_ErrGeneric" xml:space="preserve"><value>The operation failed.</value></data>
+  <data name="AIM_ErrNoAccess" xml:space="preserve"><value>You do not have the AI assistant permission.</value></data>
+  <data name="AIM_ErrNotAdmin" xml:space="preserve"><value>Administrators only.</value></data>
+  <data name="AIM_ErrDisabled" xml:space="preserve"><value>External access (MCP) is off.</value></data>
+  <data name="AIM_ErrName" xml:space="preserve"><value>Token name is required.</value></data>
+  <data name="AIM_ErrDays" xml:space="preserve"><value>Validity not allowed.</value></data>
+  <data name="AIM_ErrMax" xml:space="preserve"><value>You reached the maximum (5 active tokens). Revoke one first.</value></data>
+  <data name="AIM_ErrSqlScope" xml:space="preserve"><value>Free-query scope is not allowed.</value></data>
+  <data name="AIM_Set_Tab" xml:space="preserve"><value>External access (MCP)</value></data>
+  <data name="AIM_Set_Intro" xml:space="preserve"><value>The /mcp endpoint exposes read-only tools to external AI apps, with a personal token per user and that user's permissions. Every call is logged in the audit log as mcp:.</value></data>
+  <data name="AIM_Set_Enabled" xml:space="preserve"><value>Enable external access</value></data>
+  <data name="AIM_Set_EnabledHint" xml:space="preserve"><value>Off by default. Requires HTTPS outside the local machine.</value></data>
+  <data name="AIM_Set_Sql" xml:space="preserve"><value>Allow the free-query scope (run_readonly_query)</value></data>
+  <data name="AIM_Set_SqlHint" xml:space="preserve"><value>Read-only through the assistant views and the user's permissions; the user opts in when creating the token.</value></data>
+  <data name="AIM_Set_MaxDays" xml:space="preserve"><value>Maximum token validity (days)</value></data>
+  <data name="AIM_Set_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="AIM_Set_Saved" xml:space="preserve"><value>Settings saved</value></data>
+  <data name="AIM_Set_All" xml:space="preserve"><value>All users' tokens</value></data>
+  <data name="AIM_Set_NoTokens" xml:space="preserve"><value>No tokens yet.</value></data>
 </root>

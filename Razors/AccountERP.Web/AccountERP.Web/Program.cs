@@ -84,6 +84,7 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy(AccountERP.Web.Api.SalesRepMobileApi.AuthRateLimitPolicy, httpContext =>
         System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+    AccountERP.Web.Api.AiMcpEndpoint.AddAiMcpRateLimit(options);   // P8.10: 60 طلباً/دقيقة لكل توكن MCP
 });
 
 // 🔐 يتيحان استعادة جلسة الدخول بعد إعادة تحميل كاملة للصفحة (دائرة/Circuit جديدة) - راجع
@@ -134,6 +135,7 @@ builder.Services.AddScoped<AccountERP.SharedUI.Services.AiScreenAssistService>()
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AiSuggestUiService>();   // P8.8.3: التصنيف التلقائى (بلا بوابة فى MAUI ⇒ لا شريحة)
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AiCashflowUiService>();   // P8.7.3: توقع التدفق النقدى — ويب فقط
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AiReorderUiService>();   // P8.6.3: إعادة الطلب الذكية — ويب فقط
+builder.Services.AddScoped<AccountERP.SharedUI.Services.AiMcpUiService>();   // P8.10.3: توكنات MCP — ويب فقط
 builder.Services.AddScoped<AccountERP.SharedUI.Services.CommandPaletteService>();   // P8.2.2: لوحة البحث السريع Ctrl+K
 builder.Services.AddMudServices();
 var app = builder.Build();
@@ -170,6 +172,8 @@ app.MapStaticAssets();
 
 // 📱 المرحلة 7: واجهة جهاز المندوب (/api/v1) - راجع Api/SalesRepMobileApi.cs.
 AccountERP.Web.Api.SalesRepMobileApi.MapSalesRepMobileApi(app);
+// 🤖 P8.10: خادم MCP للقراءة (/mcp) — موقوف افتراضياً، توكن شخصى. راجع Api/AiMcpEndpoint.cs.
+AccountERP.Web.Api.AiMcpEndpoint.MapAiMcp(app);
 
 // 🤖 المساعد الذكى P0.1: رجوع المزوّد بعد «تسجيل الدخول لدى المزوّد» (OpenRouter PKCE) - راجع AccountERP.AI/SignIn/AiSignInEndpoints.cs.
 AccountERP.AI.SignIn.AiSignInEndpoints.MapAiSignInEndpoints(app).RequireRateLimiting(AccountERP.Web.Api.SalesRepMobileApi.AuthRateLimitPolicy);

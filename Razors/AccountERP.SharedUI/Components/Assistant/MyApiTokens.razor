@@ -1,0 +1,135 @@
+@* 🤖 P8.10.3 (ai-assistant-p810-plan.md م3، م4، م12): «توكناتى» — إنشاء توكن MCP شخصى (يُعرض مرة واحدة)، القائمة بآخر استعمال، الإلغاء،
+   ومثال إعداد عميل MCP. التوكن نفسه لا يُخزَّن (هاش فقط). التصميم حسب ui-ux-pro-max. *@
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using Microsoft.Extensions.DependencyInjection
+@using Microsoft.JSInterop
+@inject LanguageService LangService
+@inject IServiceProvider ServiceProvider
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+
+<style>
+    .mcpt { display: flex; flex-direction: column; gap: 14px; }
+    .mcpt-add { display: grid; grid-template-columns: minmax(200px, 2fr) 140px auto auto; gap: 8px; align-items: center; }
+    @@media (max-width: 699px) { .mcpt-add { grid-template-columns: minmax(0, 1fr); } }
+    .mcpt-token { font-family: ui-monospace, Consolas, monospace; word-break: break-all; padding: 10px; border-radius: 10px; background: var(--mud-palette-background-gray); }
+    .mcpt-code { font-family: ui-monospace, Consolas, monospace; font-size: .8rem; white-space: pre-wrap; padding: 10px; border-radius: 10px; background: var(--mud-palette-background-gray); direction: ltr; text-align: left; }
+    .mcpt-note { font-size: .85rem; color: var(--mud-palette-text-secondary); }
+    .mcpt .mud-button-root { min-height: 44px; }
+</style>
+
+<div class="mcpt">
+    @if (_svc == null || !_svc.HasGateway)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("AIM_NotAvailable")</MudAlert>
+    }
+    else if (_settings != null && !_settings.Enabled)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("AIM_Disabled")</MudAlert>
+    }
+    else if (_settings != null)
+    {
+        <div class="mcpt-note">@Tr("AIM_MineIntro")</div>
+        <div class="mcpt-add">
+            <MudTextField T="string" @bind-Value="_name" Label="@Tr("AIM_TokenName")" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="100" />
+            <MudNumericField T="int" @bind-Value="_days" Label="@Tr("AIM_Days")" Min="1" Max="@_settings.TokenMaxDays" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            @if (_settings.AllowSqlScope)
+            {
+                <MudCheckBox T="bool" @bind-Value="_sql" Label="@Tr("AIM_SqlScope")" Color="Color.Primary" />
+            }
+            else { <span></span> }
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Key" Disabled="@(_busy || string.IsNullOrWhiteSpace(_name))" OnClick="CreateAsync">@Tr("AIM_Create")</MudButton>
+        </div>
+
+        @if (_created != null)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+                <div><b>@Tr("AIM_CopyNow")</b></div>
+                <div class="mcpt-token" style="margin-top:6px">@_created</div>
+                <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyAsync">@Tr("AIM_Copy")</MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@(() => _created = null)">@Tr("AIM_Done")</MudButton>
+                </div>
+                <div class="mcpt-note" style="margin-top:8px">@Tr("AIM_ConfigExample")</div>
+                <div class="mcpt-code">@Example()</div>
+            </MudAlert>
+        }
+
+        @if (_rows.Count > 0)
+        {
+            <MudSimpleTable Dense="true">
+                <thead><tr><th>@Tr("AIM_TokenName")</th><th>@Tr("AIM_Prefix")</th><th>@Tr("AIM_Scopes")</th><th>@Tr("AIM_Expires")</th><th>@Tr("AIM_LastUsed")</th><th>@Tr("AIM_Status")</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var t in _rows)
+                    {
+                        <tr>
+                            <td>@t.Name</td>
+                            <td><code>@t.Prefix…</code></td>
+                            <td>@t.Scopes</td>
+                            <td>@t.ExpiresAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</td>
+                            <td>@(t.LastUsedAt?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) ?? "—") @(string.IsNullOrEmpty(t.LastUsedIp) ? "" : "· " + t.LastUsedIp)</td>
+                            <td>@(t.RevokedAt != null ? Tr("AIM_Revoked") : t.ExpiresAt <= DateTime.Now ? Tr("AIM_Expired") : Tr("AIM_Active"))</td>
+                            <td>@if (t.IsActive) { <MudButton Size="Size.Small" Color="Color.Error" Variant="Variant.Text" OnClick="@(() => RevokeAsync(t.Id))">@Tr("AIM_Revoke")</MudButton> }</td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        }
+    }
+</div>
+
+@code {
+    private AiMcpUiService? _svc;
+    private AiMcpSettings? _settings;
+    private List<AiApiTokenRow> _rows = new();
+    private string? _name, _created;
+    private int _days = AiMcpConst.DefaultDays;
+    private bool _sql, _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _svc = ServiceProvider.GetService<AiMcpUiService>();
+        if (_svc == null || !_svc.HasGateway) return;
+        try { _settings = await _svc.GetSettingsAsync(); _rows = await _svc.MineAsync(); }
+        catch (Exception ex) { Snackbar.Add(_svc.ErrorText(ex), Severity.Error); }
+    }
+
+    private async Task CreateAsync()
+    {
+        if (_svc == null || _busy) return;
+        _busy = true;
+        try
+        {
+            var r = await _svc.CreateAsync(_name ?? "", _days, _sql);
+            _created = r.Token;
+            _name = null; _sql = false;
+            _rows = await _svc.MineAsync();
+        }
+        catch (Exception ex) { Snackbar.Add(_svc.ErrorText(ex), Severity.Error); }
+        finally { _busy = false; }
+    }
+
+    private async Task RevokeAsync(long id)
+    {
+        if (_svc == null) return;
+        try { await _svc.RevokeAsync(id); _rows = await _svc.MineAsync(); Snackbar.Add(Tr("AIM_RevokedOk"), Severity.Success); }
+        catch (Exception ex) { Snackbar.Add(_svc.ErrorText(ex), Severity.Error); }
+    }
+
+    private async Task CopyAsync()
+    {
+        try { await JS.InvokeVoidAsync("navigator.clipboard.writeText", _created); Snackbar.Add(Tr("AIM_Copied"), Severity.Success); } catch { }
+    }
+
+    private string Example()
+    {
+        string url = Nav.BaseUri.TrimEnd('/') + AiMcpConst.Path;
+        return "claude mcp add --transport http accounterp " + url + " --header \"Authorization: Bearer <TOKEN>\"\n\n" +
+               "{\n  \"mcpServers\": {\n    \"accounterp\": {\n      \"type\": \"http\",\n      \"url\": \"" + url + "\",\n      \"headers\": { \"Authorization\": \"Bearer <TOKEN>\" }\n    }\n  }\n}";
+    }
+
+    private string Tr(string key, params object[] args) => AiBriefText.T(Lang, LangService.CurrentCultureInfo, key, args);
+}

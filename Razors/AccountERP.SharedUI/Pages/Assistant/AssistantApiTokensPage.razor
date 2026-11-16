@@ -1,0 +1,19 @@
+@* 🤖 P8.10.3 (ai-assistant-p810-plan.md م12): صفحة «توكناتى» للوصول الخارجى (MCP) لكل من يملك «المساعد الذكى». *@
+@page "/assistant/api-tokens"
+@using AccountERP.SharedUI.Services
+@using AccountERP.SharedUI.Components.Assistant
+@inject LanguageService LangService
+
+<PageTitle>@Tr("AIM_PageTitle")</PageTitle>
+<InvoiceStyles />
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4" Style="@($"direction: {(LangService.IsRtl ? "rtl" : "ltr")};")">
+    <div class="inv-page">
+        <div class="inv-head inv-card"><h1 class="inv-title">@Tr("AIM_PageTitle")</h1></div>
+        <div class="inv-card" style="margin-top:16px"><MyApiTokens /></div>
+    </div>
+</MudContainer>
+
+@code {
+    private string Tr(string key, params object[] args) => AiBriefText.T(Lang, LangService.CurrentCultureInfo, key, args);
+}

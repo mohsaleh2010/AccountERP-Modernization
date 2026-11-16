@@ -79,4 +79,5 @@
 
 ### تم التنفيذ
 
-(فارغ)
+- **P8.10 كاملة (2026-11-16):** جدول `AI_ApiTokens` (هاش SHA-256 فقط، بادئة 12 حرفاً، `UseCount`)، 3 إعدادات، `AiMcpModels.cs` (ثوابت، قائمة السماح، `AiMcpTokenText`، `AiApiTokensCLS`، `IAiMcpGateway`)، `Razors/AccountERP.AI/Mcp/AiMcpServer.cs` (**قرار م2:** معالج JSON-RPC يدوى — initialize/ping/tools/list/tools/call والإشعارات ⇒ 202؛ لا دفعات؛ المستخدم يُبنى بـ `ForUser` كل 60 ث ويُشترط «المساعد الذكى»؛ التنفيذ داخل `UserSessionContext.Use(server.Session)`؛ التدقيق `mcp:<tool>`؛ `structuredContent` حين يكون الناتج JSON) + `AiMcpGateway` (حد 5 نشطة، المدة ≤ الإعداد، نطاق sql فقط إن سمح المدير). الويب: `Api/AiMcpEndpoint.cs` (POST/GET `/mcp`، 404 عند الإيقاف، Origin مختلف ⇒ 403، HTTPS إلزامى إلا loopback، 401 مع WWW-Authenticate، حد 60/دقيقة لكل توكن و10 بلا توكن). الواجهة: `AiMcpUiService`، `MyApiTokens` (يعرض التوكن مرة واحدة + مثال `claude mcp add` وJSON)، صفحة `/assistant/api-tokens`، تبويب `AiMcpTab`، 43 مفتاح `AIM_` ×4.
+- **الاختبارات (م-614…م-625) مؤجلة. فحوص §5 لم تُنفَّذ (حزمة MCP الرسمية غير مستعملة).**

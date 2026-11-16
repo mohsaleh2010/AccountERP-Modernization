@@ -67,6 +67,9 @@ namespace AccountERP.AI
             services.AddSingleton<Reorder.AiReorderService>();
             services.AddSingleton<Scheduling.IAiScheduledJob>(sp => sp.GetRequiredService<Reorder.AiReorderService>());
             services.AddScoped<IAiReorderGateway>(sp => new Reorder.AiReorderGateway(sp.GetRequiredService<Reorder.AiReorderService>(), sp.GetRequiredService<ProviderRegistry>()));
+            // P8.10: خادم MCP للقراءة + إدارة التوكنات
+            services.AddSingleton(sp => new Mcp.AiMcpServer(sp.GetRequiredService<Tools.AiToolRegistry>()));
+            services.AddScoped<IAiMcpGateway>(sp => new Mcp.AiMcpGateway());
             return services;
         }
     }

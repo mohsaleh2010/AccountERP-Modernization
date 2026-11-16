@@ -1,0 +1,115 @@
+@* 🤖 P8.10.3 (ai-assistant-p810-plan.md م11، م12): تبويب «الوصول الخارجى (MCP)» — التفعيل، نطاق الاستعلام الحر، أقصى مدة، توكنات الجميع مع الإلغاء،
+   ورابط صفحة «توكناتى». *@
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using Microsoft.Extensions.DependencyInjection
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IServiceProvider ServiceProvider
+
+<style>
+    .aims { display: flex; flex-direction: column; gap: 16px; }
+    .aims-card { border: 1px solid var(--mud-palette-lines-default); border-radius: 14px; padding: 16px; background: var(--mud-palette-surface); display: flex; flex-direction: column; gap: 14px; }
+    .aims-card h3 { margin: 0; font-size: 1rem; font-weight: 700; display: flex; gap: 8px; align-items: center; }
+    .aims-card h3 .mud-icon-root { color: var(--mud-palette-primary); }
+    .aims-hint { font-size: .8rem; color: var(--mud-palette-text-secondary); margin-inline-start: 48px; }
+    .aims .mud-button-root { min-height: 44px; }
+</style>
+
+<div class="aims" dir="@(LangService.IsRtl ? "rtl" : "ltr")">
+    @if (_svc == null || !_svc.HasGateway)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("AIM_NotAvailable")</MudAlert>
+    }
+    else if (!_svc.CanManage)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@Tr("AIM_ErrNotAdmin")</MudAlert>
+    }
+    else if (_s != null)
+    {
+        <section class="aims-card" aria-label="@Tr("AIM_Set_Tab")">
+            <h3><MudIcon Icon="@Icons.Material.Filled.Api" aria-hidden="true" />@Tr("AIM_Set_Tab")</h3>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">@Tr("AIM_Set_Intro")</MudText>
+            <div>
+                <MudSwitch T="bool" @bind-Value="_s.Enabled" Color="Color.Primary" Label="@Tr("AIM_Set_Enabled")" />
+                <div class="aims-hint">@Tr("AIM_Set_EnabledHint")</div>
+            </div>
+            <div>
+                <MudSwitch T="bool" @bind-Value="_s.AllowSqlScope" Color="Color.Primary" Label="@Tr("AIM_Set_Sql")" />
+                <div class="aims-hint">@Tr("AIM_Set_SqlHint")</div>
+            </div>
+            <MudNumericField T="int" @bind-Value="_s.TokenMaxDays" Label="@Tr("AIM_Set_MaxDays")" Min="1" Max="3650" Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width:260px" />
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="_busy" OnClick="SaveAsync">@Tr("AIM_Set_Save")</MudButton>
+                <MudButton Variant="Variant.Outlined" Href="/assistant/api-tokens" StartIcon="@Icons.Material.Filled.Key">@Tr("AIM_PageTitle")</MudButton>
+            </div>
+        </section>
+
+        <section class="aims-card" aria-label="@Tr("AIM_Set_All")">
+            <h3><MudIcon Icon="@Icons.Material.Filled.People" aria-hidden="true" />@Tr("AIM_Set_All")</h3>
+            @if (_all.Count == 0)
+            {
+                <MudText Typo="Typo.body2">@Tr("AIM_Set_NoTokens")</MudText>
+            }
+            else
+            {
+                <MudSimpleTable Dense="true">
+                    <thead><tr><th>@Tr("AIM_User")</th><th>@Tr("AIM_TokenName")</th><th>@Tr("AIM_Scopes")</th><th>@Tr("AIM_Expires")</th><th>@Tr("AIM_LastUsed")</th><th>@Tr("AIM_Status")</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var t in _all)
+                        {
+                            <tr>
+                                <td>@t.UserName</td>
+                                <td>@t.Name <code>@t.Prefix…</code></td>
+                                <td>@t.Scopes</td>
+                                <td>@t.ExpiresAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</td>
+                                <td>@(t.LastUsedAt?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) ?? "—") · @t.UseCount</td>
+                                <td>@(t.RevokedAt != null ? Tr("AIM_Revoked") : t.ExpiresAt <= DateTime.Now ? Tr("AIM_Expired") : Tr("AIM_Active"))</td>
+                                <td>@if (t.IsActive) { <MudButton Size="Size.Small" Color="Color.Error" Variant="Variant.Text" OnClick="@(() => RevokeAsync(t.Id))">@Tr("AIM_Revoke")</MudButton> }</td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    private AiMcpUiService? _svc;
+    private AiMcpSettings? _s;
+    private List<AiApiTokenRow> _all = new();
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _svc = ServiceProvider.GetService<AiMcpUiService>();
+        if (_svc == null || !_svc.HasGateway || !_svc.CanManage) return;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        try { _s = await _svc!.GetSettingsAsync(); _all = await _svc.AllAsync(); }
+        catch (Exception ex) { Snackbar.Add(_svc!.ErrorText(ex), Severity.Error); }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_svc == null || _s == null) return;
+        _busy = true;
+        try { await _svc.SaveSettingsAsync(_s); Snackbar.Add(Tr("AIM_Set_Saved"), Severity.Success); }
+        catch (Exception ex) { Snackbar.Add(_svc.ErrorText(ex), Severity.Error); }
+        finally { _busy = false; }
+    }
+
+    private async Task RevokeAsync(long id)
+    {
+        if (_svc == null) return;
+        try { await _svc.RevokeAsync(id); _all = await _svc.AllAsync(); }
+        catch (Exception ex) { Snackbar.Add(_svc.ErrorText(ex), Severity.Error); }
+    }
+
+    private string Tr(string key, params object[] args) => AiBriefText.T(Lang, LangService.CurrentCultureInfo, key, args);
+}

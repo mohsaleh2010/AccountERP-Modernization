@@ -571,6 +571,22 @@ CREATE NONCLUSTERED INDEX [IX_AI_CollectionActions_Type_Status] ON [dbo].[AI_Col
     [Supplier_Id] [bigint] NOT NULL,
     [LeadDays] [int] NOT NULL,",
              @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_ReorderSupplierLead_Supplier] ON [dbo].[AI_ReorderSupplierLead]([Supplier_Id]);"),
+
+            // P8.10 (ai-assistant-p810-plan.md م3): توكنات MCP الشخصية — SHA-256 فقط (لا يُخزَّن التوكن). Scopes: CSV (read, sql). الإلغاء RevokedAt (لا حذف).
+            ("AI_ApiTokens", @"
+    [User_Id] [bigint] NOT NULL,
+    [Name] [nvarchar](100) NOT NULL,
+    [TokenHash] [nvarchar](64) NOT NULL,
+    [Prefix] [nvarchar](20) NOT NULL,
+    [Scopes] [nvarchar](100) NOT NULL DEFAULT (N'read'),
+    [ExpiresAt] [datetime] NOT NULL,
+    [LastUsedAt] [datetime] NULL,
+    [LastUsedIp] [nvarchar](64) NULL,
+    [UseCount] [bigint] NOT NULL DEFAULT ((0)),
+    [RevokedAt] [datetime] NULL,
+    [RevokedBy] [bigint] NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_ApiTokens_Hash] ON [dbo].[AI_ApiTokens]([TokenHash]);
+CREATE NONCLUSTERED INDEX [IX_AI_ApiTokens_User] ON [dbo].[AI_ApiTokens]([User_Id], [RevokedAt]);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>
@@ -675,6 +691,10 @@ CREATE NONCLUSTERED INDEX [IX_AI_CollectionActions_Type_Status] ON [dbo].[AI_Col
             (AiSettingKeys.ReorderHistoryWeeks, "52"),
             (AiSettingKeys.ReorderMaxItems, "20000"),
             (AiSettingKeys.ReorderBriefAlert, "1"),
+            // P8.10 (م11): موقوف افتراضياً
+            (AiSettingKeys.McpEnabled, "0"),
+            (AiSettingKeys.McpAllowSqlScope, "0"),
+            (AiSettingKeys.McpTokenMaxDays, "365"),
         };
 
         public static readonly List<string> LastErrors = new List<string>();

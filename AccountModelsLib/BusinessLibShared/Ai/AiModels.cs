@@ -180,6 +180,10 @@ namespace AccountModelsLib
         public const string ReorderHistoryWeeks = "ReorderHistoryWeeks";
         public const string ReorderMaxItems = "ReorderMaxItems";
         public const string ReorderBriefAlert = "ReorderBriefAlert";
+        // P8.10 (ai-assistant-p810-plan.md م11): خادم MCP للقراءة
+        public const string McpEnabled = "McpEnabled";
+        public const string McpAllowSqlScope = "McpAllowSqlScope";
+        public const string McpTokenMaxDays = "McpTokenMaxDays";
     }
 
     /// <summary>صف AI_Providers كما يُخزَّن (المفتاح مشفّر). لا يصل للواجهة؛ الواجهة ترى AiProviderView.</summary>
