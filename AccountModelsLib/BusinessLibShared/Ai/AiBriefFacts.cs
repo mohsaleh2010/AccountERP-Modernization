@@ -28,6 +28,8 @@ namespace AccountModelsLib
         public AiBriefAnomalyFacts Anomalies { get; set; }
         /// <summary>P8.5 (ت31): للتنبيه collections_priority فقط (بصلاحية صفحة أولويات التحصيل)؛ ليس قسماً مستقلاً.</summary>
         public AiBriefCollectFacts Collect { get; set; }
+        /// <summary>P8.7 (و12): للتنبيه cashflow_low فقط (بصلاحية شاشة التوقع)؛ ليس قسماً.</summary>
+        public AiBriefCashflowFacts Cashflow { get; set; }
 
         public int PeriodDays => Math.Max(1, (int)(PeriodTo.Date - PeriodFrom.Date).TotalDays + 1);
     }
@@ -212,6 +214,16 @@ namespace AccountModelsLib
         public List<AiBriefNamedValue> Top { get; set; } = new List<AiBriefNamedValue>();
     }
 
+    /// <summary>P8.7: أول أسبوع يقل فيه الرصيد المتحفظ عن الحد الأدنى.</summary>
+    public class AiBriefCashflowFacts
+    {
+        public int LowWeek { get; set; } = -1;
+        public DateTime? LowWeekStart { get; set; }
+        public decimal LowClosing { get; set; }
+        public decimal MinBalance { get; set; }
+        public decimal Opening { get; set; }
+    }
+
     public static class AiBriefAlertCodes
     {
         public const string SalesDrop = "sales_drop";
@@ -226,8 +238,10 @@ namespace AccountModelsLib
         public const string AnomaliesNew = "anomalies_new";
         /// <summary>P8.5 (ت31).</summary>
         public const string CollectionsPriority = "collections_priority";
+        /// <summary>P8.7 (و12).</summary>
+        public const string CashflowLow = "cashflow_low";
 
-        public static readonly string[] All = { SalesDrop, NoSales, ReturnsHigh, BelowCost, CashLow, OverdueReceivables, NegativeStock, LargePayment, AnomaliesNew, CollectionsPriority };
+        public static readonly string[] All = { SalesDrop, NoSales, ReturnsHigh, BelowCost, CashLow, OverdueReceivables, NegativeStock, LargePayment, AnomaliesNew, CollectionsPriority, CashflowLow };
     }
 
     public static class AiBriefSeverity

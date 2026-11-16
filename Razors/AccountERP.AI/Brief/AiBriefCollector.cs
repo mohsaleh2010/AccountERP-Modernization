@@ -60,6 +60,8 @@ namespace AccountERP.AI.Brief
         public Collections.AiCollectionsScorer? Collections { get; set; }
         public Func<bool>? CollectEnabled { get; set; }
         public Func<AiBriefScope, AiCollectBriefCounts>? CollectSource { get; set; }
+        /// <summary>P8.7 (و12): خدمة التوقع (null = لا تنبيه).</summary>
+        public Cashflow.AiCashflowService? Cashflow { get; set; }
 
         public static AiBriefFacts? ParseFacts(string? json) =>
             string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<AiBriefFacts>(json, Json);
@@ -106,6 +108,7 @@ namespace AccountERP.AI.Brief
                 Group(result, AiBriefScopes.StockGroup, scope, ct, () => facts.Stock = run.Stock());
                 Group(result, AiBriefScopes.AnomalyGroup, scope, ct, () => facts.Anomalies = run.Anomalies());   // P8.4 (ش27)
                 Group(result, AiBriefScopes.CollectGroup, scope, ct, () => facts.Collect = run.Collect());   // P8.5 (ت31)
+                Group(result, AiBriefScopes.CashflowGroup, scope, ct, () => facts.Cashflow = run.CashflowLow());   // P8.7 (و12)
             }
             finally { CultureInfo.CurrentCulture = prevCulture; }
 
@@ -439,6 +442,24 @@ FROM ai.v_purchase_returns WHERE return_date >= @date_from AND return_date <= @d
                 result.Queries++;
                 Audit("collections_priority", "AiCollectionsScorer.BriefCounts(scope)", new { group = AiBriefScopes.CollectGroup, query = "collections_priority", from = Day(from), to = Day(to) },
                       c.OverdueCustomers, sw.ElapsedMilliseconds, AiToolOutcome.Ok, null);
+                return f;
+            }
+
+            /// <summary>P8.7 (و12): السيناريو المتحفظ من لقطة اليوم (أو حساب جديد) لنطاق المستلم؛ فقط حين الميزة مفعّلة والحد الأدنى &gt; 0.</summary>
+            public AiBriefCashflowFacts? CashflowLow()
+            {
+                var svc = owner.Cashflow;
+                if (svc == null) return null;
+                var s = svc.Settings();
+                if (!s.Enabled || s.MinBalance <= 0) return null;
+                var sw = Stopwatch.StartNew();
+                IList<long>? branches = scope.Server.User.IsAdmin ? null : scope.BranchIds.ToList();
+                var r = svc.GetOrComputeAsync(scope.Server, branches, false, null, "brief", ct).GetAwaiter().GetResult();
+                var c = r.Conservative;
+                var f = new AiBriefCashflowFacts { LowWeek = c.LowWeek, MinBalance = c.MinBalance, Opening = c.Opening };
+                if (c.LowWeek >= 0) { f.LowWeekStart = c.Weeks[c.LowWeek].Start; f.LowClosing = c.Weeks[c.LowWeek].Closing; }
+                result.Queries++;
+                Audit("cashflow_low", "AiCashflowService.GetOrComputeAsync(scope)", new { group = AiBriefScopes.CashflowGroup }, c.Weeks.Count, sw.ElapsedMilliseconds, AiToolOutcome.Ok, null);
                 return f;
             }
 

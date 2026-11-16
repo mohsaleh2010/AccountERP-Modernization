@@ -6503,4 +6503,6 @@
   <data name="AIW_Set_Account" xml:space="preserve"><value>Account</value></data>
   <data name="AIW_Set_Day" xml:space="preserve"><value>Day of month</value></data>
   <data name="AIW_Set_Include" xml:space="preserve"><value>Included</value></data>
+  <data name="AIB_Al_cashflow_low" xml:space="preserve"><value>Expected cash below the minimum</value></data>
+  <data name="AIB_Al_cashflow_low_Text" xml:space="preserve"><value>In the conservative scenario the expected balance drops in week {week} to {closing} (minimum {min}).</value></data>
 </root>

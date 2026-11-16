@@ -6505,4 +6505,6 @@
   <data name="AIW_Set_Account" xml:space="preserve"><value>Konto</value></data>
   <data name="AIW_Set_Day" xml:space="preserve"><value>Tag im Monat</value></data>
   <data name="AIW_Set_Include" xml:space="preserve"><value>Einbezogen</value></data>
+  <data name="AIB_Al_cashflow_low" xml:space="preserve"><value>Erwartete Liquidität unter Minimum</value></data>
+  <data name="AIB_Al_cashflow_low_Text" xml:space="preserve"><value>Im vorsichtigen Szenario fällt der Saldo in Woche {week} auf {closing} (Minimum {min}).</value></data>
 </root>

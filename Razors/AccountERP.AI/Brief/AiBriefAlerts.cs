@@ -133,6 +133,15 @@ namespace AccountERP.AI.Brief
                 list.Add(a);
             }
 
+            // P8.7 (و12): الرصيد المتحفظ يقل عن الحد الأدنى خلال 13 أسبوعاً.
+            var cf = facts.Cashflow;
+            if (cf != null && cf.LowWeek >= 0 && hasRoute(AiCashflowConst.Route))
+            {
+                var a = New(AiBriefAlertCodes.CashflowLow, cf.LowWeek <= 3 ? AiBriefSeverity.High : AiBriefSeverity.Medium, AiCashflowConst.Route,
+                    new Dictionary<string, string>(), ("week", cf.LowWeek + 1), ("closing", R2(cf.LowClosing)), ("min", R2(cf.MinBalance)));
+                list.Add(a);
+            }
+
             return list.OrderBy(a => AiBriefSeverity.Rank(a.Severity)).ThenBy(a => Array.IndexOf(AiBriefAlertCodes.All, a.Code)).ToList();
         }
 

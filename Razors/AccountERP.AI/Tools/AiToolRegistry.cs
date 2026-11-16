@@ -78,10 +78,13 @@ namespace AccountERP.AI.Tools
         private readonly Files.AiDocumentExtractor? _extractor;
         private readonly Knowledge.AiKnowledgeService _knowledge;
         private readonly Collections.AiCollectionsScorer? _collections;
+        private readonly Cashflow.AiCashflowService? _cashflow;
         public AiToolRegistry(ReadOnlySqlExecutor sql, AiDatasetCache datasets, Files.AiDocumentExtractor? extractor = null,
-            Knowledge.AiKnowledgeService? knowledge = null, Collections.AiCollectionsScorer? collections = null)
+            Knowledge.AiKnowledgeService? knowledge = null, Collections.AiCollectionsScorer? collections = null,
+            Cashflow.AiCashflowService? cashflow = null)
         {
             _collections = collections;
+            _cashflow = cashflow;
             _sql = sql;
             _datasets = datasets;
             _extractor = extractor;
@@ -270,6 +273,14 @@ namespace AccountERP.AI.Tools
                     (a, c) => AiCollectTools.Run(a, c, scorer, CollectSettingsSource, CollectBranchSource));
             }
 
+            // ───── P8.7.4: توقع التدفق النقدى (نفس خدمة الشاشة، قراءة فقط) ─────
+            if (_cashflow != null)
+            {
+                var cf = _cashflow;
+                yield return new ToolSpec(AiCashflowTools.Def(), AiCashflowTools.Allowed, (_, _) => throw new InvalidOperationException("get_cashflow_forecast تُنفَّذ بـ ExecuteAsync"))
+                { RunAsync = (a, c) => AiCashflowTools.RunAsync(a, c, cf) };
+            }
+
             // ───── P6: قراءة المرفقات (نموذج رؤية) ─────
             if (_extractor != null && AiExtractTools.Allowed(ctx))
             {
@@ -338,6 +349,7 @@ namespace AccountERP.AI.Tools
             "find_screen" => "بحث عن شاشة",
             AskUserTool => "سؤال للمستخدم",
             AiCollectConst.ToolName => AiCollectTools.Title,
+            AiCashflowTools.ToolName => AiCashflowTools.Title,
             AiDraftTools.SalesTool => "مسودة فاتورة مبيعات",
             AiDraftTools.PurchaseTool => "مسودة فاتورة مشتريات",
             AiDraftTools.StoreOrderTool => "مسودة إذن مخزن",

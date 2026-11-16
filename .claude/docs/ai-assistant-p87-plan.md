@@ -109,4 +109,8 @@
 
 ### تم التنفيذ
 
-(فارغ)
+- **P8.7.1 `72dc818` (2026-11-16):** View `ai.v_cheques` (أعمدة خام)، جداول `AI_CashflowRuns`/`AI_CashflowAdjustments`/`AI_CashflowExclusions`، 8 إعدادات (أُضيف `CashflowBaseDelayDays`=7 و`CashflowConservativeCollectPct`=80)، `AiCashflowModels`، `AiCashflowEngine` (pure: السبت بداية الأسبوع، المتأخر ⇒ الأسبوع 1، كشف المتكرر، FIFO)، `AiCashflowCLS`.
+- **P8.7.2 `c4551c9`:** `Cashflow/AiCashflowReader` (الافتتاحى = BoxBalance × GetFactor لكل خزينة مسموحة بلا قص السالب + تنبيه؛ العملاء: رصيد `v_customer_ledger` ⇒ أحدث الفواتير الآجلة FIFO والباقى «رصيد سابق» متأخر للمدير فقط؛ الموردون: `RestValue` كما فى الشاشة + مدة الموردين؛ الشيكات: `receipt = 0 AND spent_date IS NULL`، **Transaction_Type 1 = وارد (افتراض، فحص 1 لم يُنفَّذ)**؛ المبيعات النقدية = متوسط 8 أسابيع من `v_sales is_credit = 0`)، `AiCashflowService` (لقطة 6 ساعات `Scenario = both`، الدقة، مهمة السبت 07:00 لمن له لقطة يدوية خلال 30 يوماً)، `AiCashflowNarrator`، `AiCashflowGateway`. **قرار:** تأخير العميل الأساسى إعداد ثابت (7 أيام) بدل الوسيط التاريخى لكل عميل (و4) — أبسط ويُضبط من التبويب.
+- **P8.7.3 `b471954`:** الصفحة `/accounts/cashflow-forecast`، عنصر قائمة بجوار «أولويات التحصيل» عبر مساعد عام جديد `SiblingMenu`، تبويب «التدفق النقدى»، 94 مفتاح `AIW_` ×4.
+- **P8.7.4:** أداة `get_cashflow_forecast` (RunAsync)، قاعدة معرفة `cashflow_forecast`، تنبيه الموجز `cashflow_low` (مجموعة `cashflow`، المتحفظ، فقط حين الحد الأدنى > 0)، مفتاحا `AIB_Al_cashflow_low` ×4.
+- **الاختبارات (harness ومستخدم م-584…م-598) مؤجلة بطلب المستخدم 2026-11-16. فحوص §8 لم تُنفَّذ.**

@@ -6505,4 +6505,6 @@
   <data name="AIW_Set_Account" xml:space="preserve"><value>Compte</value></data>
   <data name="AIW_Set_Day" xml:space="preserve"><value>Jour du mois</value></data>
   <data name="AIW_Set_Include" xml:space="preserve"><value>Inclus</value></data>
+  <data name="AIB_Al_cashflow_low" xml:space="preserve"><value>Trésorerie prévue sous le minimum</value></data>
+  <data name="AIB_Al_cashflow_low_Text" xml:space="preserve"><value>Dans le scénario prudent, le solde tombe en semaine {week} à {closing} (minimum {min}).</value></data>
 </root>

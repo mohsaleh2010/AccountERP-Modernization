@@ -6503,4 +6503,6 @@
   <data name="AIW_Set_Account" xml:space="preserve"><value>الحساب</value></data>
   <data name="AIW_Set_Day" xml:space="preserve"><value>يوم الشهر</value></data>
   <data name="AIW_Set_Include" xml:space="preserve"><value>يدخل التوقع</value></data>
+  <data name="AIB_Al_cashflow_low" xml:space="preserve"><value>النقدية المتوقعة تقل عن الحد الأدنى</value></data>
+  <data name="AIB_Al_cashflow_low_Text" xml:space="preserve"><value>فى السيناريو المتحفظ يقل الرصيد المتوقع فى الأسبوع {week} إلى {closing} (الحد الأدنى {min}).</value></data>
 </root>

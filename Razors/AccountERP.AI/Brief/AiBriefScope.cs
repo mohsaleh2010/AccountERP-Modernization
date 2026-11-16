@@ -46,6 +46,8 @@ namespace AccountERP.AI.Brief
         public const string AnomalyGroup = "anomalies";
         /// <summary>P8.5 (ت31): مجموعة حقائق تنبيه أولويات التحصيل (ليست قسماً).</summary>
         public const string CollectGroup = "collect";
+        /// <summary>P8.7 (و12): مجموعة حقائق تنبيه التدفق النقدى (ليست قسماً).</summary>
+        public const string CashflowGroup = "cashflow";
 
         public static class Skip
         {
@@ -84,6 +86,7 @@ namespace AccountERP.AI.Brief
             StockGroup => hasRoute(AiSchemaCatalog.RStock),
             AnomalyGroup => hasRoute(AiSchemaCatalog.REntryAnomalies),
             CollectGroup => hasRoute(AiSchemaCatalog.RCollections),
+            CashflowGroup => hasRoute(AiCashflowConst.Route),
             _ => false,
         };
 
@@ -91,7 +94,7 @@ namespace AccountERP.AI.Brief
         public static List<string> AlertGroups(Func<string, bool> hasRoute)
         {
             var list = new List<string>();
-            foreach (var g in new[] { AiBriefSections.Sales, AiBriefSections.Collections, AiBriefSections.Liquidity, AiBriefSections.Receivables, StockGroup, AnomalyGroup, CollectGroup })
+            foreach (var g in new[] { AiBriefSections.Sales, AiBriefSections.Collections, AiBriefSections.Liquidity, AiBriefSections.Receivables, StockGroup, AnomalyGroup, CollectGroup, CashflowGroup })
                 if (g != AiBriefSections.Alerts && Grants(g, hasRoute)) list.Add(g);
             return list;
         }
