@@ -172,6 +172,14 @@ namespace AccountModelsLib
         public const string CashflowConservativeDelayDays = "CashflowConservativeDelayDays";
         public const string CashflowBaseDelayDays = "CashflowBaseDelayDays";
         public const string CashflowConservativeCollectPct = "CashflowConservativeCollectPct";
+        // P8.6 (ai-assistant-p86-plan.md ط17): إعادة الطلب الذكية
+        public const string ReorderEnabled = "ReorderEnabled";
+        public const string ReorderLeadDays = "ReorderLeadDays";
+        public const string ReorderServiceLevel = "ReorderServiceLevel";
+        public const string ReorderMinSales = "ReorderMinSales";
+        public const string ReorderHistoryWeeks = "ReorderHistoryWeeks";
+        public const string ReorderMaxItems = "ReorderMaxItems";
+        public const string ReorderBriefAlert = "ReorderBriefAlert";
     }
 
     /// <summary>صف AI_Providers كما يُخزَّن (المفتاح مشفّر). لا يصل للواجهة؛ الواجهة ترى AiProviderView.</summary>

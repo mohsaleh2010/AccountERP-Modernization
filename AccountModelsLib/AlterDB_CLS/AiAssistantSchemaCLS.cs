@@ -521,6 +521,56 @@ CREATE NONCLUSTERED INDEX [IX_AI_CollectionActions_Type_Status] ON [dbo].[AI_Col
             ("AI_CashflowExclusions", @"
     [SubAccount_Id] [bigint] NOT NULL,",
              @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_CashflowExclusions_Account] ON [dbo].[AI_CashflowExclusions]([SubAccount_Id]);"),
+
+            // P8.6 (ai-assistant-p86-plan.md ط9): تشغيل أسبوعى لاقتراحات إعادة الطلب. Status: Running / Done / Failed.
+            ("AI_ReorderRuns", @"
+    [Status] [nvarchar](20) NOT NULL,
+    [Source] [nvarchar](20) NOT NULL DEFAULT (N'job'),
+    [Items] [int] NULL,
+    [Suggested] [int] NULL,
+    [DurationMs] [int] NULL,
+    [ErrorText] [nvarchar](500) NULL,
+    [FinishedAt] [datetime] NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_AI_ReorderRuns_Created] ON [dbo].[AI_ReorderRuns]([CreatedAt] DESC);"),
+
+            // P8.6 (ط9): اقتراح لكل (صنف، مخزن) فى تشغيل. الكميات بالوحدة الصغرى إلا SuggestQtyLarge/ManualReorderLarge. Status: open / drafted / dismissed.
+            ("AI_ReorderSuggestions", @"
+    [Run_Id] [bigint] NOT NULL,
+    [UnitItem_Id] [bigint] NOT NULL,
+    [Item_Id] [bigint] NOT NULL,
+    [Store_Id] [bigint] NOT NULL,
+    [Branch_Id] [bigint] NOT NULL DEFAULT ((0)),
+    [ItemName] [nvarchar](300) NULL,
+    [ItemCode] [nvarchar](100) NULL,
+    [StoreName] [nvarchar](200) NULL,
+    [LargeUnit] [nvarchar](50) NULL,
+    [Factor] [decimal](18, 4) NULL,
+    [Method] [nvarchar](20) NULL,
+    [AvgWeekly] [decimal](18, 4) NULL,
+    [Sigma] [decimal](18, 4) NULL,
+    [LeadDays] [int] NULL,
+    [ReorderPoint] [decimal](18, 4) NULL,
+    [SafetyStock] [decimal](18, 4) NULL,
+    [OnHand] [decimal](18, 4) NULL,
+    [SuggestQtySmall] [decimal](18, 4) NULL,
+    [SuggestQtyLarge] [decimal](18, 4) NULL,
+    [ManualReorderLarge] [decimal](18, 4) NULL,
+    [LastSupplier_Id] [bigint] NULL,
+    [LastSupplierName] [nvarchar](300) NULL,
+    [LastPrice] [decimal](18, 4) NULL,
+    [EstCost] [decimal](18, 3) NULL,
+    [StockoutDate] [date] NULL,
+    [Confidence] [nvarchar](10) NULL,
+    [SeriesJson] [nvarchar](max) NULL,
+    [Status] [nvarchar](20) NOT NULL DEFAULT (N'open'),
+    [Draft_Id] [bigint] NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_AI_ReorderSuggestions_Run] ON [dbo].[AI_ReorderSuggestions]([Run_Id], [Status], [StockoutDate]);"),
+
+            // P8.6 (ط4): مهلة توريد مخصصة لكل مورد.
+            ("AI_ReorderSupplierLead", @"
+    [Supplier_Id] [bigint] NOT NULL,
+    [LeadDays] [int] NOT NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_ReorderSupplierLead_Supplier] ON [dbo].[AI_ReorderSupplierLead]([Supplier_Id]);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>
@@ -617,6 +667,14 @@ CREATE NONCLUSTERED INDEX [IX_AI_CollectionActions_Type_Status] ON [dbo].[AI_Col
             (AiSettingKeys.CashflowConservativeDelayDays, "14"),
             (AiSettingKeys.CashflowBaseDelayDays, "7"),
             (AiSettingKeys.CashflowConservativeCollectPct, "80"),
+            // P8.6 (ط17): موقوف افتراضياً
+            (AiSettingKeys.ReorderEnabled, "0"),
+            (AiSettingKeys.ReorderLeadDays, "7"),
+            (AiSettingKeys.ReorderServiceLevel, "0.95"),
+            (AiSettingKeys.ReorderMinSales, "4"),
+            (AiSettingKeys.ReorderHistoryWeeks, "52"),
+            (AiSettingKeys.ReorderMaxItems, "20000"),
+            (AiSettingKeys.ReorderBriefAlert, "1"),
         };
 
         public static readonly List<string> LastErrors = new List<string>();
