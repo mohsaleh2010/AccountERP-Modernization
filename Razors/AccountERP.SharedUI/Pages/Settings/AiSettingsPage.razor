@@ -518,6 +518,11 @@
             <MudTabPanel Text="@Tr("AIW_Set_Tab")" Icon="@Icons.Material.Filled.Timeline">
                 <AiCashflowTab />
             </MudTabPanel>
+
+            @* ═════════ P8.6.4: إعادة الطلب الذكية (التفعيل، المهلة، مستوى الخدمة، تشغيل الآن، مهل الموردين) ═════════ *@
+            <MudTabPanel Text="@Tr("AIQ_Set_Tab")" Icon="@Icons.Material.Filled.Inventory">
+                <AiReorderTab />
+            </MudTabPanel>
         </MudTabs>
     }
 </div>

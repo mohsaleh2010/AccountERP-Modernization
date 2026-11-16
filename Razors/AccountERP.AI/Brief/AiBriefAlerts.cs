@@ -142,6 +142,15 @@ namespace AccountERP.AI.Brief
                 list.Add(a);
             }
 
+            // P8.6 (ط15): أصناف متوقع نفادها خلال مهلة التوريد.
+            var ro = facts.Reorder;
+            if (ro != null && ro.Count > 0 && hasRoute(AiReorderConst.Route))
+            {
+                var a = New(AiBriefAlertCodes.ReorderDue, AiBriefSeverity.Medium, AiReorderConst.Route, new Dictionary<string, string>(), ("count", ro.Count));
+                a.Items.AddRange((ro.Top ?? new List<string>()).Take(MaxItems));
+                list.Add(a);
+            }
+
             return list.OrderBy(a => AiBriefSeverity.Rank(a.Severity)).ThenBy(a => Array.IndexOf(AiBriefAlertCodes.All, a.Code)).ToList();
         }
 

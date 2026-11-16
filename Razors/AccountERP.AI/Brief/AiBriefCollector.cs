@@ -62,6 +62,8 @@ namespace AccountERP.AI.Brief
         public Func<AiBriefScope, AiCollectBriefCounts>? CollectSource { get; set; }
         /// <summary>P8.7 (و12): خدمة التوقع (null = لا تنبيه).</summary>
         public Cashflow.AiCashflowService? Cashflow { get; set; }
+        /// <summary>P8.6 (ط15): خدمة إعادة الطلب (null = لا تنبيه).</summary>
+        public Reorder.AiReorderService? Reorder { get; set; }
 
         public static AiBriefFacts? ParseFacts(string? json) =>
             string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<AiBriefFacts>(json, Json);
@@ -109,6 +111,7 @@ namespace AccountERP.AI.Brief
                 Group(result, AiBriefScopes.AnomalyGroup, scope, ct, () => facts.Anomalies = run.Anomalies());   // P8.4 (ش27)
                 Group(result, AiBriefScopes.CollectGroup, scope, ct, () => facts.Collect = run.Collect());   // P8.5 (ت31)
                 Group(result, AiBriefScopes.CashflowGroup, scope, ct, () => facts.Cashflow = run.CashflowLow());   // P8.7 (و12)
+                Group(result, AiBriefScopes.ReorderGroup, scope, ct, () => facts.Reorder = run.ReorderDue());   // P8.6 (ط15)
             }
             finally { CultureInfo.CurrentCulture = prevCulture; }
 
@@ -461,6 +464,18 @@ FROM ai.v_purchase_returns WHERE return_date >= @date_from AND return_date <= @d
                 result.Queries++;
                 Audit("cashflow_low", "AiCashflowService.GetOrComputeAsync(scope)", new { group = AiBriefScopes.CashflowGroup }, c.Weeks.Count, sw.ElapsedMilliseconds, AiToolOutcome.Ok, null);
                 return f;
+            }
+
+            /// <summary>P8.6 (ط15): من آخر تشغيل؛ فقط حين الميزة والتنبيه مفعّلان.</summary>
+            public AiBriefReorderFacts? ReorderDue()
+            {
+                var svc = owner.Reorder;
+                if (svc == null) return null;
+                var s = svc.Settings();
+                if (!s.Enabled || !s.BriefAlert) return null;
+                var (count, top) = svc.DueSoon(scope.Server.User.IsAdmin ? null : scope.BranchIds.ToList());
+                result.Queries++;
+                return new AiBriefReorderFacts { Count = count, Top = top };
             }
 
             public AiBriefStockFacts Stock()

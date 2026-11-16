@@ -1,0 +1,192 @@
+@* 🤖 P8.6.4 (ai-assistant-p86-plan.md ط17): تبويب «إعادة الطلب» فى /settings/ai — التفعيل والمهلة ومستوى الخدمة وحدود البيانات، «تشغيل الآن» وآخر تشغيل،
+   ومهل توريد مخصصة لكل مورد. الكتابة على AI_Settings/AI_ReorderSupplierLead فقط. *@
+@using System.Data
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using Microsoft.Extensions.DependencyInjection
+@inject LanguageService LangService
+@inject ISnackbar Snackbar
+@inject IServiceProvider ServiceProvider
+@implements IDisposable
+
+<style>
+    .aiqs { display: flex; flex-direction: column; gap: 16px; }
+    .aiqs-card { border: 1px solid var(--mud-palette-lines-default); border-radius: 14px; padding: 16px; background: var(--mud-palette-surface); display: flex; flex-direction: column; gap: 14px; }
+    .aiqs-card h3 { margin: 0; font-size: 1rem; font-weight: 700; display: flex; gap: 8px; align-items: center; }
+    .aiqs-card h3 .mud-icon-root { color: var(--mud-palette-primary); }
+    .aiqs-hint { font-size: .8rem; color: var(--mud-palette-text-secondary); margin-inline-start: 48px; }
+    .aiqs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .aiqs-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .aiqs-actions .mud-button-root { min-height: 44px; }
+    .aiqs-add { display: grid; grid-template-columns: minmax(220px, 2fr) minmax(120px, 1fr) auto; gap: 8px; align-items: start; }
+    @@media (max-width: 699px) { .aiqs-add { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<div class="aiqs" dir="@(LangService.IsRtl ? "rtl" : "ltr")">
+    @if (_svc == null || !_svc.HasGateway)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Tr("AIQ_NotAvailable")</MudAlert>
+    }
+    else if (!_svc.CanManage)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">@Tr("AIQ_ErrNotAdmin")</MudAlert>
+    }
+    else if (_s == null)
+    {
+        @if (_error != null) { <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@_error</MudAlert> }
+        else { <div style="text-align:center;padding:32px;"><MudProgressCircular Indeterminate="true" Color="Color.Primary" /></div> }
+    }
+    else
+    {
+        @if (_error != null)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" ShowCloseIcon="true" CloseIconClicked="() => _error = null">@_error</MudAlert>
+        }
+        <section class="aiqs-card" aria-label="@Tr("AIQ_Set_Tab")">
+            <h3><MudIcon Icon="@Icons.Material.Filled.Inventory" aria-hidden="true" />@Tr("AIQ_Set_Tab")</h3>
+            <div>
+                <MudSwitch T="bool" @bind-Value="_s.Enabled" Color="Color.Primary" Label="@Tr("AIQ_Set_Enabled")" />
+                <div class="aiqs-hint">@Tr("AIQ_Set_EnabledHint")</div>
+            </div>
+            <div>
+                <MudSwitch T="bool" @bind-Value="_s.BriefAlert" Color="Color.Primary" Label="@Tr("AIQ_Set_Brief")" />
+            </div>
+            <div class="aiqs-grid">
+                <MudNumericField T="int" @bind-Value="_s.LeadDays" Label="@Tr("AIQ_Set_Lead")" Min="0" Max="365" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField T="double" @bind-Value="_s.ServiceLevel" Label="@Tr("AIQ_Set_Service")" Min="0.5" Max="0.999" Step="0.01" Format="0.###" Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@Tr("AIQ_Set_ServiceHint")" />
+                <MudNumericField T="int" @bind-Value="_s.MinSales" Label="@Tr("AIQ_Set_MinSales")" Min="1" Max="52" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField T="int" @bind-Value="_s.HistoryWeeks" Label="@Tr("AIQ_Set_History")" Min="8" Max="156" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField T="int" @bind-Value="_s.MaxItems" Label="@Tr("AIQ_Set_MaxItems")" Min="100" Max="200000" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            </div>
+            <div class="aiqs-actions">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@_busy" OnClick="SaveAsync">@Tr("AIQ_Set_Save")</MudButton>
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.PlayArrow" Disabled="@(_busy || !_s.Enabled)" OnClick="RunAsync">@Tr("AIQ_Set_RunNow")</MudButton>
+                @if (_run != null)
+                {
+                    <span class="aiqs-hint" style="margin:0">@Tr("AIQ_Set_LastRun", _run.CreatedAt?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) ?? "", _run.Status ?? "", _run.Suggested ?? 0, ((_run.DurationMs ?? 0) / 1000.0).ToString("0.#", CultureInfo.InvariantCulture))</span>
+                }
+            </div>
+        </section>
+
+        <section class="aiqs-card" aria-label="@Tr("AIQ_Set_Leads")">
+            <h3><MudIcon Icon="@Icons.Material.Filled.LocalShipping" aria-hidden="true" />@Tr("AIQ_Set_Leads")</h3>
+            <div class="aiqs-hint" style="margin:0">@Tr("AIQ_Set_LeadsHint")</div>
+            <div class="aiqs-add">
+                <MudAutocomplete T="SupplierOpt" Value="_newSup" ValueChanged="@(v => _newSup = v)" SearchFunc="SearchSuppliersAsync" ToStringFunc="@(o => o?.Name ?? "")"
+                                 Label="@Tr("AIQ_Supplier")" Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true" />
+                <MudNumericField T="int" @bind-Value="_newDays" Label="@Tr("AIQ_Set_Lead")" Min="0" Max="365" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" Disabled="@(_busy || _newSup == null)" OnClick="AddLeadAsync" Style="min-height:44px">@Tr("AIQ_Set_AddLead")</MudButton>
+            </div>
+            @if (_leads.Count > 0)
+            {
+                <MudSimpleTable Dense="true">
+                    <thead><tr><th>@Tr("AIQ_Supplier")</th><th>@Tr("AIQ_Set_Lead")</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var l in _leads)
+                        {
+                            <tr>
+                                <td>@l.Name</td>
+                                <td>@l.LeadDays</td>
+                                <td><MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" aria-label="@Tr("AIQ_Set_RemoveLead")" title="@Tr("AIQ_Set_RemoveLead")" OnClick="@(() => RemoveLeadAsync(l.SupplierId))" /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    private sealed record SupplierOpt(long Id, string Name);
+
+    private AiReorderUiService? _svc;
+    private AiReorderSettings? _s;
+    private AiReorderRunRow? _run;
+    private List<(long SupplierId, string Name, int LeadDays)> _leads = new();
+    private SupplierOpt? _newSup;
+    private int _newDays = 7;
+    private bool _busy;
+    private string? _error;
+    private List<SupplierOpt>? _allSuppliers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _svc = ServiceProvider.GetService<AiReorderUiService>();
+        LangService.OnLanguageChanged += OnLang;
+        if (_svc == null || !_svc.HasGateway || !_svc.CanManage) return;
+        await LoadAsync();
+    }
+
+    private void OnLang() => InvokeAsync(StateHasChanged);
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            _s = await _svc!.GetSettingsAsync();
+            _leads = await _svc.SupplierLeadsAsync();
+            var p = await _svc.ListAsync(new AiReorderFilter());
+            _run = p.Run;
+        }
+        catch (AiReorderException ex) when (ex.Code == "AIQ_ErrDisabled") { _run = null; }
+        catch (Exception ex) { _error = _svc!.ErrorText(ex); }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_svc == null || _s == null || _busy) return;
+        _busy = true; _error = null;
+        try
+        {
+            await _svc.SaveSettingsAsync(_s);
+            Snackbar.Add(Tr("AIQ_Set_Saved"), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task RunAsync()
+    {
+        if (_svc == null || _busy) return;
+        _busy = true; _error = null;
+        try
+        {
+            _run = await _svc.RunNowAsync();
+            Snackbar.Add(Tr("AIQ_Set_RunDone", _run.Suggested ?? 0), Severity.Success);
+        }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+        finally { _busy = false; }
+    }
+
+    private async Task<IEnumerable<SupplierOpt>> SearchSuppliersAsync(string search, CancellationToken ct)
+    {
+        _allSuppliers ??= await Task.Run(() =>
+        {
+            AccountCultureGuard.EnsureInvariant();
+            var dt = new AccountModelsLib.Models.SupplierCLS().Get_SupplierListForStatement(0, 0, 0, true);
+            return dt.Rows.Cast<DataRow>().Select(r => new SupplierOpt(Convert.ToInt64(r["Id"]), r["Name"]?.ToString()?.Trim() ?? "")).ToList();
+        }, ct);
+        return _allSuppliers.Where(s => string.IsNullOrEmpty(search) || s.Name.Contains(search, StringComparison.OrdinalIgnoreCase)).Take(50);
+    }
+
+    private async Task AddLeadAsync()
+    {
+        if (_svc == null || _newSup == null) return;
+        try { await _svc.SetSupplierLeadAsync(_newSup.Id, _newDays); _leads = await _svc.SupplierLeadsAsync(); _newSup = null; }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+    }
+
+    private async Task RemoveLeadAsync(long id)
+    {
+        if (_svc == null) return;
+        try { await _svc.SetSupplierLeadAsync(id, null); _leads = await _svc.SupplierLeadsAsync(); }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+    }
+
+    private string Tr(string key, params object[] args) => AiBriefText.T(Lang, LangService.CurrentCultureInfo, key, args);
+
+    public void Dispose() => LangService.OnLanguageChanged -= OnLang;
+}

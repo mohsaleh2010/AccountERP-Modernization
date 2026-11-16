@@ -30,6 +30,8 @@ namespace AccountModelsLib
         public AiBriefCollectFacts Collect { get; set; }
         /// <summary>P8.7 (و12): للتنبيه cashflow_low فقط (بصلاحية شاشة التوقع)؛ ليس قسماً.</summary>
         public AiBriefCashflowFacts Cashflow { get; set; }
+        /// <summary>P8.6 (ط15): للتنبيه reorder_due فقط (بصلاحية شاشة الاحتياجات).</summary>
+        public AiBriefReorderFacts Reorder { get; set; }
 
         public int PeriodDays => Math.Max(1, (int)(PeriodTo.Date - PeriodFrom.Date).TotalDays + 1);
     }
@@ -224,6 +226,13 @@ namespace AccountModelsLib
         public decimal Opening { get; set; }
     }
 
+    /// <summary>P8.6: الأصناف المتوقع نفادها خلال مهلة التوريد.</summary>
+    public class AiBriefReorderFacts
+    {
+        public int Count { get; set; }
+        public List<string> Top { get; set; } = new List<string>();
+    }
+
     public static class AiBriefAlertCodes
     {
         public const string SalesDrop = "sales_drop";
@@ -240,8 +249,10 @@ namespace AccountModelsLib
         public const string CollectionsPriority = "collections_priority";
         /// <summary>P8.7 (و12).</summary>
         public const string CashflowLow = "cashflow_low";
+        /// <summary>P8.6 (ط15).</summary>
+        public const string ReorderDue = "reorder_due";
 
-        public static readonly string[] All = { SalesDrop, NoSales, ReturnsHigh, BelowCost, CashLow, OverdueReceivables, NegativeStock, LargePayment, AnomaliesNew, CollectionsPriority, CashflowLow };
+        public static readonly string[] All = { SalesDrop, NoSales, ReturnsHigh, BelowCost, CashLow, OverdueReceivables, NegativeStock, LargePayment, AnomaliesNew, CollectionsPriority, CashflowLow, ReorderDue };
     }
 
     public static class AiBriefSeverity

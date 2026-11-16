@@ -79,10 +79,12 @@ namespace AccountERP.AI.Tools
         private readonly Knowledge.AiKnowledgeService _knowledge;
         private readonly Collections.AiCollectionsScorer? _collections;
         private readonly Cashflow.AiCashflowService? _cashflow;
+        private readonly Reorder.AiReorderService? _reorder;
         public AiToolRegistry(ReadOnlySqlExecutor sql, AiDatasetCache datasets, Files.AiDocumentExtractor? extractor = null,
             Knowledge.AiKnowledgeService? knowledge = null, Collections.AiCollectionsScorer? collections = null,
-            Cashflow.AiCashflowService? cashflow = null)
+            Cashflow.AiCashflowService? cashflow = null, Reorder.AiReorderService? reorder = null)
         {
+            _reorder = reorder;
             _collections = collections;
             _cashflow = cashflow;
             _sql = sql;
@@ -281,6 +283,13 @@ namespace AccountERP.AI.Tools
                 { RunAsync = (a, c) => AiCashflowTools.RunAsync(a, c, cf) };
             }
 
+            // ───── P8.6.4: اقتراحات إعادة الطلب (آخر تشغيل، قراءة فقط) ─────
+            if (_reorder != null)
+            {
+                var ro = _reorder;
+                yield return new ToolSpec(AiReorderTools.Def(), AiReorderTools.Allowed, (a, c) => AiReorderTools.Run(a, c, ro));
+            }
+
             // ───── P6: قراءة المرفقات (نموذج رؤية) ─────
             if (_extractor != null && AiExtractTools.Allowed(ctx))
             {
@@ -350,6 +359,7 @@ namespace AccountERP.AI.Tools
             AskUserTool => "سؤال للمستخدم",
             AiCollectConst.ToolName => AiCollectTools.Title,
             AiCashflowTools.ToolName => AiCashflowTools.Title,
+            AiReorderTools.ToolName => AiReorderTools.Title,
             AiDraftTools.SalesTool => "مسودة فاتورة مبيعات",
             AiDraftTools.PurchaseTool => "مسودة فاتورة مشتريات",
             AiDraftTools.StoreOrderTool => "مسودة إذن مخزن",

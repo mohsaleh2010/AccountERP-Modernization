@@ -102,4 +102,7 @@
 
 ### تم التنفيذ
 
-(فارغ)
+- **P8.6.1 `9ae8aa7` (2026-11-16):** جداول `AI_ReorderRuns`/`AI_ReorderSuggestions`/`AI_ReorderSupplierLead`، 7 إعدادات (+ `ReorderBriefAlert`)، `AiReorderModels` (+ `AiForecast` pure: Holt α0.3/β0.1، Croston-SBA α0.1 حين > 50% أسابيع صفر، موسمى بمتوسط معاملى السنتين حين ≥ 104 أسبوعاً و|معامل − 1| ≥ 0.2، z بتقريب Abramowitz-Stegun)، `AiReorderCLS`. **قرار (فحص 1):** المدخلات بـ SELECT مباشر على `Invoices_Details(_Reverse)`/`Unit_item`/`Bills_Details` بنفس معادلات `GetNeeds` لا عبر Views (الحجم يتجاوز 5000 صف).
+- **P8.6.2 `4e7bdd9`:** `Reorder/AiReorderService` (الأحد 03:00 + «تشغيل الآن»، واحد فى المرة، الأسابيع قبل أول بيع لا تُحسب، يحفظ فقط ما كميته > 0)، `AiReorderGateway` (العرض بصلاحية `/store/needs`، الفروع لغير المدير، المسودات بصلاحية فاتورة الشراء: مسودة لكل (مورد، مخزن) عبر `AiDraftsCLS.Insert`، بلا مورد ⇒ يُتخطى ويُعد، «اشرح» بالنموذج + Verify). **الوارد المفتوح = 0 (فحص 3 لم يُنفَّذ).**
+- **P8.6.3+P8.6.4:** `AiReorderUiService`، `Components/Store/SmartReorderPanel.razor` (تبويبان فى `StoreNeedsPage`: «حد الطلب» كما هو | «الاقتراح الذكى» يظهر فقط حين البوابة والصلاحية والتفعيل)، `AiReorderTab` (مهل الموردين بالبحث عن المورد)، أداة `get_reorder_suggestions`، قاعدة معرفة `reorder`، تنبيه `reorder_due` (مجموعة `reorder`)، 71 مفتاح `AIQ_`/`AIB_Al_reorder_due` ×4.
+- **الاختبارات (harness ومستخدم م-599…م-613) مؤجلة بطلب المستخدم 2026-11-16.**

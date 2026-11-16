@@ -133,6 +133,7 @@ builder.Services.AddScoped<AccountERP.SharedUI.Services.AiEInvoiceService>();   
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AiScreenAssistService>();   // P8.9: المساعد داخل الشاشات — ويب فقط (ص27)
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AiSuggestUiService>();   // P8.8.3: التصنيف التلقائى (بلا بوابة فى MAUI ⇒ لا شريحة)
 builder.Services.AddScoped<AccountERP.SharedUI.Services.AiCashflowUiService>();   // P8.7.3: توقع التدفق النقدى — ويب فقط
+builder.Services.AddScoped<AccountERP.SharedUI.Services.AiReorderUiService>();   // P8.6.3: إعادة الطلب الذكية — ويب فقط
 builder.Services.AddScoped<AccountERP.SharedUI.Services.CommandPaletteService>();   // P8.2.2: لوحة البحث السريع Ctrl+K
 builder.Services.AddMudServices();
 var app = builder.Build();

@@ -6505,4 +6505,75 @@
   <data name="AIW_Set_Include" xml:space="preserve"><value>يدخل التوقع</value></data>
   <data name="AIB_Al_cashflow_low" xml:space="preserve"><value>النقدية المتوقعة تقل عن الحد الأدنى</value></data>
   <data name="AIB_Al_cashflow_low_Text" xml:space="preserve"><value>فى السيناريو المتحفظ يقل الرصيد المتوقع فى الأسبوع {week} إلى {closing} (الحد الأدنى {min}).</value></data>
+  <data name="AIQ_NotAvailable" xml:space="preserve"><value>إعادة الطلب الذكية متاحة فى نسخة الويب فقط.</value></data>
+  <data name="AIQ_TabManual" xml:space="preserve"><value>حد الطلب</value></data>
+  <data name="AIQ_TabSmart" xml:space="preserve"><value>الاقتراح الذكى</value></data>
+  <data name="AIQ_Title" xml:space="preserve"><value>اقتراحات إعادة الطلب</value></data>
+  <data name="AIQ_Intro" xml:space="preserve"><value>من توقع المبيعات الأسبوعية ومهلة التوريد ومخزون أمان. لا يغيّر حد الطلب المسجّل ولا المخزون؛ المسودة تُراجع وتُحفظ من فاتورة الشراء.</value></data>
+  <data name="AIQ_Store" xml:space="preserve"><value>المخزن</value></data>
+  <data name="AIQ_Within" xml:space="preserve"><value>ينفد خلال</value></data>
+  <data name="AIQ_WithinAll" xml:space="preserve"><value>الكل</value></data>
+  <data name="AIQ_WithinDays" xml:space="preserve"><value>{0} يوماً</value></data>
+  <data name="AIQ_ShowDismissed" xml:space="preserve"><value>إظهار المتجاهلة</value></data>
+  <data name="AIQ_RunInfo" xml:space="preserve"><value>آخر تشغيل {0} · {1} اقتراحاً</value></data>
+  <data name="AIQ_Running" xml:space="preserve"><value>تشغيل جديد جارٍ…</value></data>
+  <data name="AIQ_NoRun" xml:space="preserve"><value>لم يُشغَّل الحساب بعد. يعمل كل أحد 03:00 أو من «تشغيل الآن» فى إعدادات المساعد.</value></data>
+  <data name="AIQ_OnHand" xml:space="preserve"><value>الرصيد</value></data>
+  <data name="AIQ_AvgWeekly" xml:space="preserve"><value>متوقع أسبوعياً</value></data>
+  <data name="AIQ_Stockout" xml:space="preserve"><value>النفاد المتوقع</value></data>
+  <data name="AIQ_Suggested" xml:space="preserve"><value>الكمية المقترحة</value></data>
+  <data name="AIQ_Manual" xml:space="preserve"><value>حدك اليدوى</value></data>
+  <data name="AIQ_Supplier" xml:space="preserve"><value>المورد الأخير</value></data>
+  <data name="AIQ_Cost" xml:space="preserve"><value>التكلفة التقديرية</value></data>
+  <data name="AIQ_Confidence" xml:space="preserve"><value>الثقة</value></data>
+  <data name="AIQ_Conf_high" xml:space="preserve"><value>عالية</value></data>
+  <data name="AIQ_Conf_medium" xml:space="preserve"><value>متوسطة</value></data>
+  <data name="AIQ_Conf_low" xml:space="preserve"><value>بيانات غير كافية</value></data>
+  <data name="AIQ_Drafted" xml:space="preserve"><value>أُنشئت له مسودة</value></data>
+  <data name="AIQ_Details" xml:space="preserve"><value>التفاصيل</value></data>
+  <data name="AIQ_Dismiss" xml:space="preserve"><value>تجاهل حتى التشغيل القادم</value></data>
+  <data name="AIQ_Formula" xml:space="preserve"><value>مخزون الأمان {0} · نقطة إعادة الطلب {1} (بالكبرى) · مهلة {2} يوماً + مراجعة {3} أيام · الطريقة: {4}</value></data>
+  <data name="AIQ_Method_holt" xml:space="preserve"><value>اتجاه المبيعات (Holt)</value></data>
+  <data name="AIQ_Method_croston" xml:space="preserve"><value>مبيعات متقطعة (Croston)</value></data>
+  <data name="AIQ_Method_seasonal" xml:space="preserve"><value>موسمى</value></data>
+  <data name="AIQ_Explain" xml:space="preserve"><value>اشرح</value></data>
+  <data name="AIQ_Spark" xml:space="preserve"><value>المبيعات الأسبوعية</value></data>
+  <data name="AIQ_Empty" xml:space="preserve"><value>لا أصناف تحتاج إعادة طلب الآن.</value></data>
+  <data name="AIQ_CreateDrafts" xml:space="preserve"><value>إنشاء مسودات شراء ({0})</value></data>
+  <data name="AIQ_DraftsCreated" xml:space="preserve"><value>أُنشئت {0} مسودة</value></data>
+  <data name="AIQ_OpenDraft" xml:space="preserve"><value>فتح مسودة {0} ({1} صنف)</value></data>
+  <data name="AIQ_SkippedNoSupplier" xml:space="preserve"><value>{0} صنف بلا مورد سابق لم يدخل مسودة.</value></data>
+  <data name="AIQ_ErrGeneric" xml:space="preserve"><value>تعذّرت العملية.</value></data>
+  <data name="AIQ_ErrNoAccess" xml:space="preserve"><value>لا تملك صلاحية شاشة الاحتياجات.</value></data>
+  <data name="AIQ_ErrDisabled" xml:space="preserve"><value>إعادة الطلب الذكية موقوفة من الإعدادات.</value></data>
+  <data name="AIQ_ErrNotAdmin" xml:space="preserve"><value>إعدادات إعادة الطلب للمدير فقط.</value></data>
+  <data name="AIQ_ErrNoPurchase" xml:space="preserve"><value>لا تملك صلاحية فاتورة الشراء.</value></data>
+  <data name="AIQ_ErrNotFound" xml:space="preserve"><value>الاقتراح غير موجود.</value></data>
+  <data name="AIQ_ErrRunning" xml:space="preserve"><value>يوجد تشغيل آخر جارٍ.</value></data>
+  <data name="AIQ_ErrNoModel" xml:space="preserve"><value>لا يوجد نموذج مربوط للشرح.</value></data>
+  <data name="AIQ_ErrExplain" xml:space="preserve"><value>تعذّر الشرح الآن.</value></data>
+  <data name="AIQ_ErrExplainRejected" xml:space="preserve"><value>رُفض الشرح لأنه ذكر أرقاماً غير موجودة.</value></data>
+  <data name="AIQ_ErrSupplier" xml:space="preserve"><value>مورد غير صحيح.</value></data>
+  <data name="AIQ_ErrLead" xml:space="preserve"><value>المهلة بين 0 و365 يوماً.</value></data>
+  <data name="AIQ_Set_Tab" xml:space="preserve"><value>إعادة الطلب</value></data>
+  <data name="AIQ_Set_Enabled" xml:space="preserve"><value>تفعيل إعادة الطلب الذكية</value></data>
+  <data name="AIQ_Set_EnabledHint" xml:space="preserve"><value>موقوف افتراضياً. يظهر تبويب «الاقتراح الذكى» فى شاشة الاحتياجات، والحساب كل أحد 03:00.</value></data>
+  <data name="AIQ_Set_Brief" xml:space="preserve"><value>تنبيه فى الموجز اليومى بالأصناف القريبة من النفاد</value></data>
+  <data name="AIQ_Set_Lead" xml:space="preserve"><value>مهلة التوريد (يوم)</value></data>
+  <data name="AIQ_Set_Service" xml:space="preserve"><value>مستوى الخدمة</value></data>
+  <data name="AIQ_Set_ServiceHint" xml:space="preserve"><value>0.95 = تغطية 95% من حالات الطلب</value></data>
+  <data name="AIQ_Set_MinSales" xml:space="preserve"><value>أقل عدد أسابيع بيع للثقة</value></data>
+  <data name="AIQ_Set_History" xml:space="preserve"><value>أسابيع السجل</value></data>
+  <data name="AIQ_Set_MaxItems" xml:space="preserve"><value>أقصى عدد أصناف</value></data>
+  <data name="AIQ_Set_Save" xml:space="preserve"><value>حفظ</value></data>
+  <data name="AIQ_Set_Saved" xml:space="preserve"><value>حُفظت الإعدادات</value></data>
+  <data name="AIQ_Set_RunNow" xml:space="preserve"><value>تشغيل الآن</value></data>
+  <data name="AIQ_Set_RunDone" xml:space="preserve"><value>انتهى الحساب: {0} اقتراحاً</value></data>
+  <data name="AIQ_Set_LastRun" xml:space="preserve"><value>آخر تشغيل {0} · {1} · {2} اقتراحاً · {3} ث</value></data>
+  <data name="AIQ_Set_Leads" xml:space="preserve"><value>مهل توريد الموردين</value></data>
+  <data name="AIQ_Set_LeadsHint" xml:space="preserve"><value>مهلة مخصصة تغلب المهلة العامة للأصناف التى آخر مورد لها هذا المورد.</value></data>
+  <data name="AIQ_Set_AddLead" xml:space="preserve"><value>إضافة</value></data>
+  <data name="AIQ_Set_RemoveLead" xml:space="preserve"><value>حذف المهلة</value></data>
+  <data name="AIB_Al_reorder_due" xml:space="preserve"><value>أصناف قريبة من النفاد</value></data>
+  <data name="AIB_Al_reorder_due_Text" xml:space="preserve"><value>{count} صنفاً متوقع نفادها خلال مهلة التوريد: {items}</value></data>
 </root>

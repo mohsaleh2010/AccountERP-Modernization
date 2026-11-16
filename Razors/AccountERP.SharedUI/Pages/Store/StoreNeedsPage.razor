@@ -10,6 +10,7 @@
 @using static AccountModelsLib.StoreMovementReportService
 @inject LanguageService LangService
 @inject IJSRuntime JS
+@inject IServiceProvider ServiceProvider
 @implements IDisposable
 
 <PageTitle>@Tr("SNTitle")</PageTitle>
@@ -48,6 +49,23 @@
         </div>
         <MudButton Class="sn-noprint" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Print" Disabled="_loading" OnClick="PrintAsync">@Tr("PrintButton")</MudButton>
     </div>
+
+    @if (_smartAvailable)
+    {
+        @* P8.6.3: تبويبان — حد الطلب (كما هو) | الاقتراح الذكى *@
+        <div class="sn-gap sn-noprint">
+            <MudToggleGroup T="int" Value="_tab" ValueChanged="@(v => _tab = v)" Color="Color.Primary" Size="Size.Small">
+                <MudToggleItem Value="0" Text="@Tr("AIQ_TabManual")" />
+                <MudToggleItem Value="1" Text="@Tr("AIQ_TabSmart")" />
+            </MudToggleGroup>
+        </div>
+    }
+    @if (_tab == 1 && _smartAvailable)
+    {
+        <AccountERP.SharedUI.Components.Store.SmartReorderPanel Stores="_stores" />
+    }
+    else
+    {
 
     <div class="inv-card sn-gap sn-noprint" role="search">
         <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.FilterList" />@Tr("SOFiltersTitle")</h2>
@@ -109,6 +127,7 @@
             </div>
         }
     </div>
+    }
 </div>
 </MudContainer>
 
@@ -122,10 +141,13 @@
     private long _storeId;
     private string? _text, _error;
     private bool _loading = true;
+    private int _tab;
+    private bool _smartAvailable;
 
     protected override async Task OnInitializedAsync()
     {
         LangService.OnLanguageChanged += OnLanguageChangedHandler;
+        try { _smartAvailable = ServiceProvider.GetService(typeof(AiReorderUiService)) is AiReorderUiService rs && rs.CanView(); } catch { _smartAvailable = false; }
         try { _stores = await Task.Run(() => { AccountCultureGuard.EnsureInvariant(); return _bal.GetStores(4); }); }
         catch (Exception ex) { _error = Tr("SystemError", Inner(ex)); }
         await LoadAsync();

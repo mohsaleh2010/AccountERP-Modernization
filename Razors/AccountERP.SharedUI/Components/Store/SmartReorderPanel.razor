@@ -1,0 +1,235 @@
+@* 🤖 P8.6.3 (ai-assistant-p86-plan.md §2، ط6–ط13): تبويب «الاقتراح الذكى» فى شاشة الاحتياجات — آخر تشغيل أسبوعى مرتب بأقرب نفاد، مع رسم صغير للمبيعات
+   الأسبوعية، «اشرح»، «تجاهل»، وتحديد أسطر ⇒ «إنشاء مسودات شراء» (مسودة لكل مورد ومخزن تُفتح وتُحفظ من فاتورة الشراء). لا يغيّر حد الطلب ولا المخزون.
+   التصميم حسب ui-ux-pro-max: ≥ 44px، أرقام جدولية، الثقة لون + نص. *@
+@using System.Globalization
+@using AccountModelsLib
+@using AccountERP.SharedUI.Services
+@using Microsoft.Extensions.DependencyInjection
+@inject LanguageService LangService
+@inject IServiceProvider ServiceProvider
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<style>
+    .srp-filters { display: grid; grid-template-columns: minmax(200px, 1fr) minmax(220px, 1.4fr) minmax(180px, .8fr) auto; gap: 12px; align-items: start; }
+    @@media (max-width: 899px) { .srp-filters { grid-template-columns: minmax(0, 1fr); } }
+    .srp-num { font-variant-numeric: tabular-nums; }
+    .srp-conf { display: inline-flex; align-items: center; gap: 4px; font-size: .8rem; }
+    .srp-conf.high { color: var(--mud-palette-success); } .srp-conf.medium { color: var(--mud-palette-info); } .srp-conf.low { color: var(--mud-palette-warning); }
+    .srp-soon { color: var(--mud-palette-error); font-weight: 700; }
+    .srp-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+    .srp-actions .mud-button-root { min-height: 44px; }
+    .srp-spark { width: 120px; height: 28px; vertical-align: middle; }
+    .srp-detail { padding: 8px 12px; background: var(--mud-palette-background-gray); border-radius: 10px; font-size: .85rem; line-height: 1.8; }
+    .srp-note { font-size: .85rem; color: var(--mud-palette-text-secondary); }
+</style>
+
+@if (_svc == null || !_svc.HasGateway)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mt-4">@Tr("AIQ_NotAvailable")</MudAlert>
+}
+else if (_error != null && _page == null)
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mt-4">@_error</MudAlert>
+}
+else
+{
+    <div class="inv-card sn-gap" role="search">
+        <h2 class="inv-card-title"><MudIcon Icon="@Icons.Material.Filled.AutoAwesome" />@Tr("AIQ_Title")</h2>
+        <div class="srp-note" style="margin-bottom:12px">@Tr("AIQ_Intro")</div>
+        <div class="srp-filters">
+            <MudSelect T="long" Value="_f.StoreId" ValueChanged="OnStoreAsync" Label="@Tr("AIQ_Store")" Variant="Variant.Outlined">
+                <MudSelectItem T="long" Value="0L">@Tr("SBAll")</MudSelectItem>
+                @foreach (var s in Stores) { <MudSelectItem T="long" Value="@s.Id">@s.Name</MudSelectItem> }
+            </MudSelect>
+            <MudTextField T="string" Value="_f.Search" ValueChanged="OnSearchAsync" Label="@Tr("SOItemSearch")" Variant="Variant.Outlined" Immediate="true" DebounceInterval="400"
+                          Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+            <MudSelect T="int" Value="_f.StockoutWithinDays" ValueChanged="OnWithinAsync" Label="@Tr("AIQ_Within")" Variant="Variant.Outlined">
+                <MudSelectItem T="int" Value="0">@Tr("AIQ_WithinAll")</MudSelectItem>
+                <MudSelectItem T="int" Value="7">@Tr("AIQ_WithinDays", 7)</MudSelectItem>
+                <MudSelectItem T="int" Value="14">@Tr("AIQ_WithinDays", 14)</MudSelectItem>
+                <MudSelectItem T="int" Value="30">@Tr("AIQ_WithinDays", 30)</MudSelectItem>
+            </MudSelect>
+            <MudCheckBox T="bool" Value="_f.IncludeDismissed" ValueChanged="OnDismissedAsync" Label="@Tr("AIQ_ShowDismissed")" Color="Color.Primary" />
+        </div>
+        @if (_page?.Run is { } run)
+        {
+            <div class="srp-note" style="margin-top:8px">
+                @Tr("AIQ_RunInfo", run.CreatedAt?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) ?? "", run.Suggested ?? 0)
+                @if (run.Status == "Running") { <b> · @Tr("AIQ_Running")</b> }
+            </div>
+        }
+    </div>
+
+    <div class="inv-card sn-gap">
+        @if (_error != null) { <MudAlert Severity="Severity.Error" Dense="true" role="alert">@_error</MudAlert> }
+        @if (_page != null && _page.Run == null)
+        {
+            <MudAlert Severity="Severity.Info" Dense="true">@Tr("AIQ_NoRun")</MudAlert>
+        }
+        <MudTable Items="@(_page?.Items ?? new List<AiReorderRow>())" T="AiReorderRow" Hover="true" Elevation="0" Class="inv-table" Breakpoint="Breakpoint.Sm" Loading="_loading"
+                  MultiSelection="true" SelectedItems="_selected" SelectedItemsChanged="@(v => _selected = v)" SelectOnRowClick="false" LoadingProgressColor="Color.Primary">
+            <HeaderContent>
+                <MudTh>@Tr("SNItem")</MudTh>
+                <MudTh>@Tr("AIQ_Store")</MudTh>
+                <MudTh Style="text-align:end">@Tr("AIQ_OnHand")</MudTh>
+                <MudTh Style="text-align:end">@Tr("AIQ_AvgWeekly")</MudTh>
+                <MudTh>@Tr("AIQ_Stockout")</MudTh>
+                <MudTh Style="text-align:end">@Tr("AIQ_Suggested")</MudTh>
+                <MudTh Style="text-align:end">@Tr("AIQ_Manual")</MudTh>
+                <MudTh>@Tr("AIQ_Supplier")</MudTh>
+                <MudTh Style="text-align:end">@Tr("AIQ_Cost")</MudTh>
+                <MudTh>@Tr("AIQ_Confidence")</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Tr("SNItem")"><b>@context.ItemName</b><div class="srp-note">@context.ItemCode</div></MudTd>
+                <MudTd DataLabel="@Tr("AIQ_Store")">@context.StoreName</MudTd>
+                <MudTd DataLabel="@Tr("AIQ_OnHand")" Style="text-align:end"><span class="srp-num">@Large(context.OnHand, context) @context.LargeUnit</span></MudTd>
+                <MudTd DataLabel="@Tr("AIQ_AvgWeekly")" Style="text-align:end"><span class="srp-num">@Large(context.AvgWeekly, context)</span> @((MarkupString)Spark(context.SeriesJson))</MudTd>
+                <MudTd DataLabel="@Tr("AIQ_Stockout")"><span class="@(context.StockoutDate is { } d && d <= DateTime.Today.AddDays(context.LeadDays) ? "srp-soon" : "")">@(context.StockoutDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "—")</span></MudTd>
+                <MudTd DataLabel="@Tr("AIQ_Suggested")" Style="text-align:end"><b class="srp-num">@context.SuggestQtyLarge.ToString("N0", CultureInfo.InvariantCulture) @context.LargeUnit</b></MudTd>
+                <MudTd DataLabel="@Tr("AIQ_Manual")" Style="text-align:end"><span class="srp-num">@(context.ManualReorderLarge > 0 ? context.ManualReorderLarge.ToString("0.##", CultureInfo.InvariantCulture) : "—")</span></MudTd>
+                <MudTd DataLabel="@Tr("AIQ_Supplier")">@(string.IsNullOrWhiteSpace(context.LastSupplierName) ? "—" : context.LastSupplierName)</MudTd>
+                <MudTd DataLabel="@Tr("AIQ_Cost")" Style="text-align:end"><span class="srp-num">@(context.EstCost?.ToString("N2", CultureInfo.InvariantCulture) ?? "—")</span></MudTd>
+                <MudTd DataLabel="@Tr("AIQ_Confidence")"><span class="srp-conf @context.Confidence">● @Tr("AIQ_Conf_" + context.Confidence)</span>@if (context.Status == AiReorderConst.StatusDrafted) { <div class="srp-note">@Tr("AIQ_Drafted")</div> }</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Info" Size="Size.Small" aria-label="@Tr("AIQ_Details")" title="@Tr("AIQ_Details")" OnClick="@(() => Toggle(context.Id))" />
+                    @if (context.Status == AiReorderConst.StatusOpen)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.VisibilityOff" Size="Size.Small" aria-label="@Tr("AIQ_Dismiss")" title="@Tr("AIQ_Dismiss")" OnClick="@(() => DismissAsync(context.Id))" />
+                    }
+                </MudTd>
+            </RowTemplate>
+            <ChildRowContent>
+                @if (_open == context.Id)
+                {
+                    <MudTr><td colspan="12">
+                        <div class="srp-detail">
+                            <div>@Tr("AIQ_Formula", Large(context.SafetyStock, context), Large(context.ReorderPoint, context), context.LeadDays, AiReorderConst.ReviewDays, Tr("AIQ_Method_" + context.Method))</div>
+                            @if (_explain.TryGetValue(context.Id, out var ex)) { <div style="margin-top:6px;white-space:pre-line">@ex</div> }
+                            else
+                            {
+                                <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.AutoAwesome" Disabled="_explaining" OnClick="@(() => ExplainAsync(context.Id))" Class="mt-2">@Tr("AIQ_Explain")</MudButton>
+                            }
+                        </div>
+                    </td></MudTr>
+                }
+            </ChildRowContent>
+            <NoRecordsContent>
+                <div class="sn-empty"><MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Large" /><b>@Tr("AIQ_Empty")</b></div>
+            </NoRecordsContent>
+        </MudTable>
+        <div class="srp-actions">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ShoppingCart" Disabled="@(_busy || _selected.Count == 0)" OnClick="CreateDraftsAsync">
+                @Tr("AIQ_CreateDrafts", _selected.Count)
+            </MudButton>
+            @if (_page != null && _page.Total > AiReorderPage.PageSize)
+            {
+                <span class="srp-note">@Tr("SOPageInfo", _f.Page * AiReorderPage.PageSize + 1, Math.Min((_f.Page + 1) * AiReorderPage.PageSize, _page.Total), _page.Total)</span>
+                <MudButton Variant="Variant.Outlined" Disabled="@(_f.Page == 0 || _loading)" OnClick="@(() => PageAsync(-1))">@Tr("SOPrev")</MudButton>
+                <MudButton Variant="Variant.Outlined" Disabled="@((_f.Page + 1) * AiReorderPage.PageSize >= _page.Total || _loading)" OnClick="@(() => PageAsync(1))">@Tr("SONext")</MudButton>
+            }
+        </div>
+        @if (_drafts != null)
+        {
+            <MudAlert Severity="Severity.Success" Dense="true" Class="mt-2">
+                @foreach (var d in _drafts.Drafts)
+                {
+                    <div><MudLink Href="@($"{AiReorderConst.PurchaseRoute}?aiDraft={d.DraftId}")">@Tr("AIQ_OpenDraft", d.SupplierName, d.Lines)</MudLink></div>
+                }
+                @if (_drafts.SkippedNoSupplier > 0) { <div>@Tr("AIQ_SkippedNoSupplier", _drafts.SkippedNoSupplier)</div> }
+            </MudAlert>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public List<StoreBalancesService.Option> Stores { get; set; } = new();
+
+    private AiReorderUiService? _svc;
+    private AiReorderPage? _page;
+    private readonly AiReorderFilter _f = new();
+    private HashSet<AiReorderRow> _selected = new();
+    private readonly Dictionary<long, string> _explain = new();
+    private AiReorderDraftResult? _drafts;
+    private long _open;
+    private bool _loading, _busy, _explaining;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _svc = ServiceProvider.GetService<AiReorderUiService>();
+        if (_svc == null || !_svc.HasGateway) return;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        if (_svc == null) return;
+        _loading = true; _error = null;
+        try { _page = await _svc.ListAsync(_f); _selected = new(); }
+        catch (Exception ex) { _error = _svc.ErrorText(ex); }
+        finally { _loading = false; }
+    }
+
+    private async Task OnStoreAsync(long id) { _f.StoreId = id; _f.Page = 0; await LoadAsync(); }
+    private async Task OnSearchAsync(string? t) { _f.Search = t; _f.Page = 0; await LoadAsync(); }
+    private async Task OnWithinAsync(int d) { _f.StockoutWithinDays = d; _f.Page = 0; await LoadAsync(); }
+    private async Task OnDismissedAsync(bool v) { _f.IncludeDismissed = v; _f.Page = 0; await LoadAsync(); }
+    private async Task PageAsync(int dir) { _f.Page = Math.Max(0, _f.Page + dir); await LoadAsync(); }
+
+    private void Toggle(long id) => _open = _open == id ? 0 : id;
+
+    private async Task DismissAsync(long id)
+    {
+        if (_svc == null) return;
+        try { await _svc.DismissAsync(id); await LoadAsync(); }
+        catch (Exception ex) { Snackbar.Add(_svc.ErrorText(ex), Severity.Error); }
+    }
+
+    private async Task ExplainAsync(long id)
+    {
+        if (_svc == null) return;
+        _explaining = true;
+        try { _explain[id] = await _svc.ExplainAsync(id); }
+        catch (Exception ex) { Snackbar.Add(_svc.ErrorText(ex), Severity.Warning); }
+        finally { _explaining = false; }
+    }
+
+    private async Task CreateDraftsAsync()
+    {
+        if (_svc == null || _selected.Count == 0) return;
+        _busy = true;
+        try
+        {
+            _drafts = await _svc.CreateDraftsAsync(_selected.Select(r => r.Id).ToList());
+            Snackbar.Add(Tr("AIQ_DraftsCreated", _drafts.Drafts.Count), Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex) { Snackbar.Add(_svc.ErrorText(ex), Severity.Error); }
+        finally { _busy = false; }
+    }
+
+    private static string Large(decimal small, AiReorderRow r)
+    {
+        decimal f = r.Factor <= 0 ? 1 : r.Factor;
+        return (small / f).ToString("0.##", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>رسم صغير SVG لآخر 26 أسبوعاً من المبيعات.</summary>
+    private string Spark(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return "";
+        double[] v;
+        try { v = System.Text.Json.JsonSerializer.Deserialize<double[]>(json) ?? Array.Empty<double>(); } catch { return ""; }
+        if (v.Length < 2) return "";
+        double max = Math.Max(1e-9, v.Max());
+        var pts = string.Join(" ", v.Select((x, i) => (i * 120.0 / (v.Length - 1)).ToString("0.#", CultureInfo.InvariantCulture) + "," +
+                                                      (26 - x / max * 24).ToString("0.#", CultureInfo.InvariantCulture)));
+        string flip = LangService.IsRtl ? " style=\"transform:scaleX(-1)\"" : "";
+        return $"<svg class=\"srp-spark\" viewBox=\"0 0 120 28\" role=\"img\" aria-label=\"{System.Net.WebUtility.HtmlEncode(Tr("AIQ_Spark"))}\"{flip}><polyline points=\"{pts}\" fill=\"none\" stroke=\"var(--mud-palette-primary)\" stroke-width=\"1.5\" /></svg>";
+    }
+
+    private string Tr(string key, params object[] args) => AiBriefText.T(Lang, LangService.CurrentCultureInfo, key, args);
+}

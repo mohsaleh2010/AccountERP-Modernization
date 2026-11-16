@@ -6507,4 +6507,75 @@
   <data name="AIW_Set_Include" xml:space="preserve"><value>Einbezogen</value></data>
   <data name="AIB_Al_cashflow_low" xml:space="preserve"><value>Erwartete Liquidität unter Minimum</value></data>
   <data name="AIB_Al_cashflow_low_Text" xml:space="preserve"><value>Im vorsichtigen Szenario fällt der Saldo in Woche {week} auf {closing} (Minimum {min}).</value></data>
+  <data name="AIQ_NotAvailable" xml:space="preserve"><value>Intelligente Nachbestellung ist nur in der Webversion verfügbar.</value></data>
+  <data name="AIQ_TabManual" xml:space="preserve"><value>Meldebestand</value></data>
+  <data name="AIQ_TabSmart" xml:space="preserve"><value>Intelligenter Vorschlag</value></data>
+  <data name="AIQ_Title" xml:space="preserve"><value>Nachbestellvorschläge</value></data>
+  <data name="AIQ_Intro" xml:space="preserve"><value>Basierend auf Wochenprognose, Lieferzeit und Sicherheitsbestand. Ändert weder Meldebestand noch Lager.</value></data>
+  <data name="AIQ_Store" xml:space="preserve"><value>Lager</value></data>
+  <data name="AIQ_Within" xml:space="preserve"><value>Leer innerhalb</value></data>
+  <data name="AIQ_WithinAll" xml:space="preserve"><value>Alle</value></data>
+  <data name="AIQ_WithinDays" xml:space="preserve"><value>{0} Tagen</value></data>
+  <data name="AIQ_ShowDismissed" xml:space="preserve"><value>Verworfene anzeigen</value></data>
+  <data name="AIQ_RunInfo" xml:space="preserve"><value>Letzter Lauf {0} · {1} Vorschläge</value></data>
+  <data name="AIQ_Running" xml:space="preserve"><value>Neuer Lauf läuft…</value></data>
+  <data name="AIQ_NoRun" xml:space="preserve"><value>Noch nicht berechnet. Läuft sonntags 03:00 oder per „Jetzt ausführen“.</value></data>
+  <data name="AIQ_OnHand" xml:space="preserve"><value>Bestand</value></data>
+  <data name="AIQ_AvgWeekly" xml:space="preserve"><value>Wochenprognose</value></data>
+  <data name="AIQ_Stockout" xml:space="preserve"><value>Erwarteter Fehlbestand</value></data>
+  <data name="AIQ_Suggested" xml:space="preserve"><value>Vorgeschlagene Menge</value></data>
+  <data name="AIQ_Manual" xml:space="preserve"><value>Ihr Meldebestand</value></data>
+  <data name="AIQ_Supplier" xml:space="preserve"><value>Letzter Lieferant</value></data>
+  <data name="AIQ_Cost" xml:space="preserve"><value>Geschätzte Kosten</value></data>
+  <data name="AIQ_Confidence" xml:space="preserve"><value>Konfidenz</value></data>
+  <data name="AIQ_Conf_high" xml:space="preserve"><value>Hoch</value></data>
+  <data name="AIQ_Conf_medium" xml:space="preserve"><value>Mittel</value></data>
+  <data name="AIQ_Conf_low" xml:space="preserve"><value>Unzureichende Daten</value></data>
+  <data name="AIQ_Drafted" xml:space="preserve"><value>Entwurf erstellt</value></data>
+  <data name="AIQ_Details" xml:space="preserve"><value>Details</value></data>
+  <data name="AIQ_Dismiss" xml:space="preserve"><value>Bis zum nächsten Lauf verwerfen</value></data>
+  <data name="AIQ_Formula" xml:space="preserve"><value>Sicherheitsbestand {0} · Meldepunkt {1} · Lieferzeit {2} Tage + Prüfung {3} Tage · Methode: {4}</value></data>
+  <data name="AIQ_Method_holt" xml:space="preserve"><value>Trend (Holt)</value></data>
+  <data name="AIQ_Method_croston" xml:space="preserve"><value>Sporadisch (Croston)</value></data>
+  <data name="AIQ_Method_seasonal" xml:space="preserve"><value>Saisonal</value></data>
+  <data name="AIQ_Explain" xml:space="preserve"><value>Erklären</value></data>
+  <data name="AIQ_Spark" xml:space="preserve"><value>Wochenverkäufe</value></data>
+  <data name="AIQ_Empty" xml:space="preserve"><value>Derzeit keine Nachbestellung nötig.</value></data>
+  <data name="AIQ_CreateDrafts" xml:space="preserve"><value>Einkaufsentwürfe erstellen ({0})</value></data>
+  <data name="AIQ_DraftsCreated" xml:space="preserve"><value>{0} Entwürfe erstellt</value></data>
+  <data name="AIQ_OpenDraft" xml:space="preserve"><value>Entwurf {0} öffnen ({1} Artikel)</value></data>
+  <data name="AIQ_SkippedNoSupplier" xml:space="preserve"><value>{0} Artikel ohne Lieferant übersprungen.</value></data>
+  <data name="AIQ_ErrGeneric" xml:space="preserve"><value>Vorgang fehlgeschlagen.</value></data>
+  <data name="AIQ_ErrNoAccess" xml:space="preserve"><value>Kein Zugriff.</value></data>
+  <data name="AIQ_ErrDisabled" xml:space="preserve"><value>In den Einstellungen deaktiviert.</value></data>
+  <data name="AIQ_ErrNotAdmin" xml:space="preserve"><value>Nur für Administratoren.</value></data>
+  <data name="AIQ_ErrNoPurchase" xml:space="preserve"><value>Kein Zugriff auf Einkaufsrechnung.</value></data>
+  <data name="AIQ_ErrNotFound" xml:space="preserve"><value>Vorschlag nicht gefunden.</value></data>
+  <data name="AIQ_ErrRunning" xml:space="preserve"><value>Ein anderer Lauf läuft.</value></data>
+  <data name="AIQ_ErrNoModel" xml:space="preserve"><value>Kein Modell konfiguriert.</value></data>
+  <data name="AIQ_ErrExplain" xml:space="preserve"><value>Erklärung derzeit nicht möglich.</value></data>
+  <data name="AIQ_ErrExplainRejected" xml:space="preserve"><value>Erklärung abgelehnt (falsche Zahlen).</value></data>
+  <data name="AIQ_ErrSupplier" xml:space="preserve"><value>Ungültiger Lieferant.</value></data>
+  <data name="AIQ_ErrLead" xml:space="preserve"><value>Lieferzeit 0 bis 365 Tage.</value></data>
+  <data name="AIQ_Set_Tab" xml:space="preserve"><value>Nachbestellung</value></data>
+  <data name="AIQ_Set_Enabled" xml:space="preserve"><value>Intelligente Nachbestellung aktivieren</value></data>
+  <data name="AIQ_Set_EnabledHint" xml:space="preserve"><value>Standardmäßig aus. Berechnung sonntags 03:00.</value></data>
+  <data name="AIQ_Set_Brief" xml:space="preserve"><value>Tagesbriefing-Warnung</value></data>
+  <data name="AIQ_Set_Lead" xml:space="preserve"><value>Lieferzeit (Tage)</value></data>
+  <data name="AIQ_Set_Service" xml:space="preserve"><value>Servicegrad</value></data>
+  <data name="AIQ_Set_ServiceHint" xml:space="preserve"><value>0,95 = 95 % Abdeckung</value></data>
+  <data name="AIQ_Set_MinSales" xml:space="preserve"><value>Mindestverkaufswochen</value></data>
+  <data name="AIQ_Set_History" xml:space="preserve"><value>Historienwochen</value></data>
+  <data name="AIQ_Set_MaxItems" xml:space="preserve"><value>Maximale Artikel</value></data>
+  <data name="AIQ_Set_Save" xml:space="preserve"><value>Speichern</value></data>
+  <data name="AIQ_Set_Saved" xml:space="preserve"><value>Einstellungen gespeichert</value></data>
+  <data name="AIQ_Set_RunNow" xml:space="preserve"><value>Jetzt ausführen</value></data>
+  <data name="AIQ_Set_RunDone" xml:space="preserve"><value>Fertig: {0} Vorschläge</value></data>
+  <data name="AIQ_Set_LastRun" xml:space="preserve"><value>Letzter Lauf {0} · {1} · {2} · {3} s</value></data>
+  <data name="AIQ_Set_Leads" xml:space="preserve"><value>Lieferzeiten</value></data>
+  <data name="AIQ_Set_LeadsHint" xml:space="preserve"><value>Überschreibt die allgemeine Lieferzeit.</value></data>
+  <data name="AIQ_Set_AddLead" xml:space="preserve"><value>Hinzufügen</value></data>
+  <data name="AIQ_Set_RemoveLead" xml:space="preserve"><value>Entfernen</value></data>
+  <data name="AIB_Al_reorder_due" xml:space="preserve"><value>Artikel bald leer</value></data>
+  <data name="AIB_Al_reorder_due_Text" xml:space="preserve"><value>{count} Artikel laufen innerhalb der Lieferzeit leer: {items}</value></data>
 </root>
