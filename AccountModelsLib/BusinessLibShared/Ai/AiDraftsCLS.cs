@@ -13,6 +13,8 @@ namespace AccountModelsLib
         public const string Sales = "sales";
         public const string Purchase = "purchase";
         public const string StoreOrder = "store_order";
+        /// <summary>P8.12 (ب6): مسودة قيد بسيط (فروق المطابقة البنكية).</summary>
+        public const string Journal = "journal";
     }
 
     public static class AiDraftStatus
@@ -36,6 +38,16 @@ namespace AccountModelsLib
     }
 
     /// <summary>بند لم يُطابق صنفاً فى المخزن: لا يُنشأ صنف أبداً؛ يُعرض للمستخدم ليختاره بنفسه.</summary>
+    /// <summary>P8.12: سطر مسودة قيد.</summary>
+    public class AiJournalDraftLine
+    {
+        public long SubAccountId { get; set; }
+        public string AccountName { get; set; } = "";
+        public bool IsDebit { get; set; }
+        public decimal Amount { get; set; }
+        public string Notes { get; set; } = "";
+    }
+
     public class AiDraftUnmatched
     {
         public string Text { get; set; } = "";
@@ -67,6 +79,8 @@ namespace AccountModelsLib
         public bool Credit { get; set; }
         public string Notes { get; set; }
         public List<AiDraftLine> Lines { get; set; } = new List<AiDraftLine>();
+        /// <summary>P8.12 (ب6): أسطر مسودة القيد (Kind = journal).</summary>
+        public List<AiJournalDraftLine> JournalLines { get; set; } = new List<AiJournalDraftLine>();
         public List<AiDraftUnmatched> Unmatched { get; set; } = new List<AiDraftUnmatched>();
         public List<string> Warnings { get; set; } = new List<string>();
         /// <summary>P6: رقم فاتورة المورد (أو مستند العميل) كما فى المستند المرفق؛ يُكتب فى الملاحظات بالبادئة SupplierRefPrefix.</summary>

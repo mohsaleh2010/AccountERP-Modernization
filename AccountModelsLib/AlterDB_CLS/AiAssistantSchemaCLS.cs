@@ -587,6 +587,53 @@ CREATE NONCLUSTERED INDEX [IX_AI_CollectionActions_Type_Status] ON [dbo].[AI_Col
     [RevokedBy] [bigint] NULL,",
              @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_ApiTokens_Hash] ON [dbo].[AI_ApiTokens]([TokenHash]);
 CREATE NONCLUSTERED INDEX [IX_AI_ApiTokens_User] ON [dbo].[AI_ApiTokens]([User_Id], [RevokedAt]);"),
+
+            // P8.12 (ai-assistant-p812-plan.md ب9): كشوف البنك المستوردة. Source: csv / excel / extract. Status: Imported / Unbalanced / Reconciled.
+            ("AI_BankStatements", @"
+    [Bank_Id] [bigint] NOT NULL,
+    [PeriodFrom] [date] NULL,
+    [PeriodTo] [date] NULL,
+    [OpeningBalance] [decimal](18, 3) NULL,
+    [ClosingBalance] [decimal](18, 3) NULL,
+    [Source] [nvarchar](20) NOT NULL,
+    [FileName] [nvarchar](260) NULL,
+    [Attachment_Id] [bigint] NULL,
+    [Status] [nvarchar](20) NOT NULL DEFAULT (N'Imported'),
+    [LineCount] [int] NULL,
+    [BalanceDiff] [decimal](18, 3) NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_AI_BankStatements_Bank] ON [dbo].[AI_BankStatements]([Bank_Id], [CreatedAt] DESC);"),
+
+            ("AI_BankStatementLines", @"
+    [Statement_Id] [bigint] NOT NULL,
+    [LineNo] [int] NOT NULL,
+    [LineDate] [date] NULL,
+    [ValueDate] [date] NULL,
+    [Description] [nvarchar](500) NULL,
+    [Reference] [nvarchar](100) NULL,
+    [Debit] [decimal](18, 3) NOT NULL DEFAULT ((0)),
+    [Credit] [decimal](18, 3) NOT NULL DEFAULT ((0)),
+    [Balance] [decimal](18, 3) NULL,
+    [Confidence] [decimal](9, 4) NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_AI_BankStatementLines_Statement] ON [dbo].[AI_BankStatementLines]([Statement_Id], [LineNo]);"),
+
+            // P8.12 (ب3، ب4، ب10): Kind: exact / group / model / manual. Status: suggested / confirmed / rejected. LinesJson = أرقام أسطر الكشف، SystemRefsJson = line_id من v_cash_vouchers.
+            ("AI_BankMatches", @"
+    [Statement_Id] [bigint] NOT NULL,
+    [Kind] [nvarchar](20) NOT NULL,
+    [LinesJson] [nvarchar](max) NOT NULL,
+    [SystemRefsJson] [nvarchar](max) NOT NULL,
+    [Score] [decimal](9, 4) NULL,
+    [Status] [nvarchar](20) NOT NULL DEFAULT (N'suggested'),
+    [Reason] [nvarchar](300) NULL,
+    [DecidedBy] [bigint] NULL,
+    [DecidedAt] [datetime] NULL,",
+             @"CREATE NONCLUSTERED INDEX [IX_AI_BankMatches_Statement] ON [dbo].[AI_BankMatches]([Statement_Id], [Status]);"),
+
+            // P8.12 (ب1): تعيين أعمدة الاستيراد لكل بنك.
+            ("AI_BankImportProfiles", @"
+    [Bank_Id] [bigint] NOT NULL,
+    [ColumnsJson] [nvarchar](max) NOT NULL,",
+             @"CREATE UNIQUE NONCLUSTERED INDEX [UX_AI_BankImportProfiles_Bank] ON [dbo].[AI_BankImportProfiles]([Bank_Id]);"),
         };
 
         /// <summary>القيم الافتراضية (قرارات المستخدم 2026-11-13): سحابى مسموح مع تقليل البيانات، احتفاظ 12 شهراً للمحادثات و90 يوماً للمرفقات.</summary>
@@ -700,6 +747,11 @@ CREATE NONCLUSTERED INDEX [IX_AI_ApiTokens_User] ON [dbo].[AI_ApiTokens]([User_I
             (AiSettingKeys.SpeechMaxSeconds, "60"),
             (AiSettingKeys.SpeechAllowBrowser, "0"),
             (AiSettingKeys.SpeechLanguage, "ar"),
+            // P8.12 (ب12): موقوف افتراضياً
+            (AiSettingKeys.BankRecEnabled, "0"),
+            (AiSettingKeys.BankMatchDays, "3"),
+            (AiSettingKeys.BankGroupMaxItems, "4"),
+            (AiSettingKeys.BankUseModel, "1"),
         };
 
         public static readonly List<string> LastErrors = new List<string>();

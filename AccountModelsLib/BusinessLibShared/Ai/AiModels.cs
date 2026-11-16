@@ -191,6 +191,11 @@ namespace AccountModelsLib
         public const string SpeechMaxSeconds = "SpeechMaxSeconds";
         public const string SpeechAllowBrowser = "SpeechAllowBrowser";
         public const string SpeechLanguage = "SpeechLanguage";
+        // P8.12 (ai-assistant-p812-plan.md ب12): المطابقة البنكية
+        public const string BankRecEnabled = "BankRecEnabled";
+        public const string BankMatchDays = "BankMatchDays";
+        public const string BankGroupMaxItems = "BankGroupMaxItems";
+        public const string BankUseModel = "BankUseModel";
     }
 
     /// <summary>صف AI_Providers كما يُخزَّن (المفتاح مشفّر). لا يصل للواجهة؛ الواجهة ترى AiProviderView.</summary>
