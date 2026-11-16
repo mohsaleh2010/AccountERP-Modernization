@@ -35,13 +35,7 @@ namespace AccountModelsLib.Models
         public async Task<bool> LoginAsync(LoginViewModel loginModel)
         {
             
-            if (AdministrationLogin(loginModel) == true)
-            {
-                // 🔐 دخول الإدارة الخاص لا يمر بجدول القوائم (SysConfigMenus)، لكنه يظل دخولاً ناجحاً
-                // ويجب أن يفتح بوابة الحماية (IsAuthenticated) حتى لا تتم إعادة توجيهه إلى شاشة الدخول باستمرار
-                _menuState.SetAuthenticated(true);
-                return true;
-            }
+            // 🔐 لا يوجد دخول إدارة خاص فى الويب: المدير مستخدم عادى فى USER_DETAILES وعلامته AdminFlage = 1
             // 🔍 1. التحقق من المستخدم في قاعدة البيانات (يفضل تشفير الباسورد مستقبلاً)
             var user = await _dbContext.Set<USER_DETAILE>()
                 .FirstOrDefaultAsync(u => u.USER_NAME == loginModel.Username && u.USER_PASSWORD == loginModel.Password && u.Active == true);
@@ -121,47 +115,6 @@ namespace AccountModelsLib.Models
 
         public async Task Is_SavedPW(LoginViewModel loginModel)
         { }
-        // 🔐 دخول الإدارة الخاص فى الويب مقفول افتراضياً. الثوابت المشفّرة فى Common.InvoiceSettingUser1/2
-        // مفتاح فكّها فى نفس الكود، فلا تصلح كسر لدخول ويب مكشوف على الشبكة. يتفعّل فقط لو المسؤول ضبط
-        // متغيرى البيئة ACCOUNTERP_ADMIN_USER و ACCOUNTERP_ADMIN_PASSWORD على السيرفر (قيم خارج الكود).
-        // الديسكتوب (LoginPro / Alter_DataBase) لم يتغيّر.
-        internal const string AdminUserEnvVar = "ACCOUNTERP_ADMIN_USER";
-        internal const string AdminPasswordEnvVar = "ACCOUNTERP_ADMIN_PASSWORD";
-
-        private static bool FixedTimeEquals(string a, string b)
-        {
-            if (a == null || b == null) return false;
-            int diff = a.Length ^ b.Length;
-            for (int i = 0; i < a.Length && i < b.Length; i++)
-                diff |= a[i] ^ b[i];
-            return diff == 0;
-        }
-
-        private bool AdministrationLogin(LoginViewModel loginModel)
-        {
-            Common.IsAdministration_AlterDBLogin = 0;
-            bool LoginAdministrationValid = false;
-            string adminUser = Environment.GetEnvironmentVariable(AdminUserEnvVar);
-            string adminPassword = Environment.GetEnvironmentVariable(AdminPasswordEnvVar);
-            if (string.IsNullOrWhiteSpace(adminUser) || string.IsNullOrEmpty(adminPassword))
-                return false;
-            if (FixedTimeEquals(loginModel.Username, adminUser) & FixedTimeEquals(loginModel.Password, adminPassword))
-            {
-                Common.IsAdministration_AlterDBLogin = 1;
-                //this.Is_SaveUserNameLogin = false;
-                //this.Is_SaveUserPasswordLogin = false;
-                
-                Common.Is_User_Admin = 1;
-                
-                Common.User_Id = 0;
-               
-                Common.User_Name = "Force Admin";
-                Common.FullUserName = "Force Admin";
-                Common.Branch_Id = 1;
-                LoginAdministrationValid = true;
-            }
-            return LoginAdministrationValid;
-        }
         //private void Login_Click(object sender, EventArgs e)
         //{
         //    Common.IsAdministration_AlterDBLogin = 0;
